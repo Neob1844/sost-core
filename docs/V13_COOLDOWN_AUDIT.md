@@ -6,12 +6,14 @@ bump is `5 → 6`. The C9 audit (`tools/lottery_montecarlo.py`) selected
 `5` from a sweep over windows ∈ {0, 5, 10, 30}; this re-runs the same
 simulation core restricted to candidate windows ∈ {5, 6, 7}.
 
-This file ships the **aggregate-metric sweep** only. A
-structural-alignment review of the cooldown's interaction with the
-1-of-3 / 2-of-3 lottery cadence is a separate consideration the
-aggregates cannot capture; that review is added in a follow-up commit
-and the final V13 verdict is deferred until both inputs are on the
-table.
+**TL;DR — Bump `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` from 5 to 6
+at `V13_HEIGHT = 12000`.** The aggregate Monte Carlo sweep is a wash
+(small uniform regression on most axes); the bump is justified by the
+structural-alignment property documented below. This audit is the
+explicit record of that trade-off. The aggregate caveat is NOT hidden:
+the operator chose determinism / clean rule alignment over micro-level
+aggregate optimisation. That choice must remain visible in this file
+for as long as `V13_HEIGHT` does.
 
 ## What was tested
 
@@ -92,11 +94,106 @@ On the aggregate metrics alone, the data does not indicate a bump from
 bump), small enough that they may be operationally negligible, but the
 direction is unambiguous.
 
-This is **one input** to the V13 decision. The audit explicitly does
-NOT close on it: see the follow-up commit for the structural-alignment
-analysis, which addresses a property the aggregates cannot measure
-(deterministic vs alignment-fuzzy exclusion against the 1-of-3 lottery
-cadence in the permanent phase).
+This is **one input** to the V13 decision. It is not the load-bearing
+argument; the structural-alignment analysis below is.
+
+## Structural-alignment finding
+
+The aggregate sweep measures *outcomes*. It does not measure the
+*structural property* the cooldown is meant to provide: how many
+consecutive lottery firings is a recent block miner guaranteed to be
+excluded from?
+
+Lottery firings happen at a fixed cadence depending on phase:
+
+- High-frequency phase (first 5 000 blocks of Phase 2): 2 of every 3 blocks
+- Permanent phase (rest of the chain's lifetime): 1 of every 3 blocks
+
+When a miner mines a block at height `H`, the cooldown excludes them
+from lottery participation at heights `[H+1, H+window]`. The number of
+lottery *firings* inside that exclusion range depends on `H mod 3` AND
+on the window:
+
+### Permanent phase (1-of-3 lottery firings)
+
+| `H mod 3` | window=5 — firings excluded | window=6 — firings excluded |
+|----------:|----------------------------:|----------------------------:|
+| 0         | 1 (H+3 only)                | 2 (H+3, H+6)                |
+| 1         | 2 (H+2, H+5)                | 2 (H+2, H+5)                |
+| 2         | 2 (H+1, H+4)                | 2 (H+1, H+4)                |
+| **mean**  | **1.67**                    | **2.00**                    |
+
+### High-frequency phase (2-of-3 firings)
+
+| `H mod 3` | window=5 — firings excluded | window=6 — firings excluded |
+|----------:|----------------------------:|----------------------------:|
+| 0         | 4                           | 4                           |
+| 1         | 3                           | 4                           |
+| 2         | 3                           | 4                           |
+| **mean**  | **3.33**                    | **4.00**                    |
+
+`window=6` provides a **deterministic exclusion guarantee** in both
+phases: every recently-mining miner is excluded from *exactly* 2
+permanent-phase rounds (or 4 high-frequency rounds), with no
+dependence on `H mod 3`.
+
+`window=5` is alignment-fuzzy: a recent miner who happens to win a
+block at `H ≡ 0 (mod 3)` during the long permanent phase is excluded
+from only **1** lottery firing — not 2. That edge case is exactly the
+kind of regularity gap the cooldown parameter is supposed to close.
+
+The structural property does NOT show up clearly in the aggregates
+because:
+
+1. The dominant credits a single address (`dom_main`) and is
+   cooldown-saturated under any window ≥ 5. Bumping the window catches
+   no additional dominant share — the dominant is already maximally
+   excluded.
+2. Honest miners are rarely in cooldown at all (they win blocks
+   infrequently relative to the window length); the alignment-fuzz
+   only affects them in a 1/3 minority of their already-rare wins.
+3. The double-win rate moves slightly in `6`'s favour (~0.034 % less),
+   which is the visible-in-aggregate shadow of the structural
+   property.
+
+## Verdict
+
+**Bump `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW` from 5 to 6 at
+`V13_HEIGHT = 12000`.**
+
+Rationale:
+
+- `window=6` is the smallest window that provides a deterministic
+  2-firing exclusion in the permanent phase, and a deterministic
+  4-firing exclusion in the high-frequency phase. The cooldown
+  becomes a *clean rule* instead of a fuzzy one.
+- The aggregate Monte Carlo sweep does not improve in `6`'s favour —
+  on most axes it slightly regresses (~0.05 % dom_share, ~0.09 %
+  sybil_delta, similar magnitudes for honest_worst and rollover_max).
+  The magnitudes are small but the direction is unambiguous.
+- The fork accepts that aggregate cost as the price of the structural
+  guarantee. The cooldown rule's *intent* — reliable rotation against
+  recent winners — is better served by the deterministic form.
+
+Caveat (preserved on the record):
+
+> The bump is **not** an outcome optimisation. The aggregate metrics
+> point the other way. The decision is a deliberate trade of small
+> aggregate regression for clean structural alignment.
+
+If a future review concludes that aggregate fairness should win, this
+audit is also the file that documents how to reverse the decision —
+revert to `5` and re-run the sweep with the same `seed = 0xC0FFEE` for
+direct comparability.
+
+## V13 plan impact
+
+V13 fork scope (all changes gated at `V13_HEIGHT = 12000`):
+
+- `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW`  5 → 6
+- `MAX_FUTURE_DRIFT_STAGED`                 60 s → 10 s
+- Beacon Phase II-A activation
+- Phase III P2P scaffold remains DISABLED-by-default (`INT64_MAX` gate)
 
 ## Caveats
 
