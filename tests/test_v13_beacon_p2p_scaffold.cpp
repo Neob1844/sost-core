@@ -50,13 +50,15 @@ static void test_is_p2p_enabled_always_false() {
          !is_p2p_enabled(V13_HEIGHT));
     TEST("h=20000      → disabled",            !is_p2p_enabled(20000));
     TEST("h=2^60       → disabled",            !is_p2p_enabled((int64_t)1 << 60));
-    // INT64_MAX itself: cmp is `current_height >= BEACON_P2P_ACTIVATION_HEIGHT`,
-    // and since BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX, the only height
-    // that would make this true is INT64_MAX itself. The chain will never
-    // reach there, so this is documentation only — but the test pins the
-    // semantic so a future change cannot silently flip it.
-    TEST("h=INT64_MAX  → enabled (degenerate edge — chain never reaches)",
-         is_p2p_enabled(INT64_MAX));
+    // INT64_MAX itself: under the sentinel-aware implementation,
+    // is_p2p_enabled returns false BEFORE doing any height comparison
+    // when BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX. So even at the
+    // degenerate edge h == INT64_MAX, P2P stays disabled. The chain
+    // will never reach that height, but the contract is defensive
+    // by construction — the only way Phase III activates is to
+    // explicitly lower the gate.
+    TEST("h=INT64_MAX  → disabled (sentinel takes precedence)",
+         !is_p2p_enabled(INT64_MAX));
 }
 
 // ---------------------------------------------------------------------------

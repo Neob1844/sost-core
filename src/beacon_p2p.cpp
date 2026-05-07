@@ -17,11 +17,14 @@
 namespace sost::beacon::p2p {
 
 bool is_p2p_enabled(int64_t current_height) {
-    // Sentinel-disabled: when BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX
-    // the strict-greater-than-or-equal comparison is false for every
-    // finite height (current_height < INT64_MAX always holds). The
-    // helper survives a future commit that lowers the gate to a real
-    // value; nothing else has to change.
+    // Sentinel-disabled gate: BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX
+    // means "Phase III P2P never active under any height". The explicit
+    // sentinel check below preserves that semantic even at the
+    // degenerate edge `current_height == INT64_MAX`, where a plain
+    // greater-than-or-equal comparison would otherwise return true.
+    // The chain never reaches h = INT64_MAX, but a defensive
+    // contract is cheaper than a future debate over the edge case.
+    if (BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX) return false;
     return current_height >= BEACON_P2P_ACTIVATION_HEIGHT;
 }
 
