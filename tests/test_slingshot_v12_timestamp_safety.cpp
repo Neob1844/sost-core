@@ -19,9 +19,9 @@
 //
 // Tested invariants:
 //   1. Drift cap value is exactly MAX_FUTURE_DRIFT_STAGED = 60 s.
-//   2. To claim T1 (-6.5%) honestly fires at 901 s real elapsed.
+//   2. To claim T1 honestly fires at 1200 s real elapsed (= 20 min).
 //   3. To claim T1 via timestamp inflation requires real elapsed
-//      >= T1 - drift_cap = 841 s. Anything less would force
+//      >= T1 - drift_cap = 1140 s (= 19 min). Anything less would force
 //      block.timestamp > now + drift_cap → REJECT.
 //   4. The gap between honest threshold and earliest claim height
 //      is exactly drift_cap (= 60 s) for every tier.
