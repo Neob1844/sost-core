@@ -1,17 +1,29 @@
-# SOST Beacon — Phase 1
+# SOST Beacon
 
-Browser-only network notice channel. Phase 1 ships a signed-notice display
-path in the explorer; **it does not, and cannot, change consensus, mining,
-P2P sync, or RPC behaviour.** The C++ node does not link Beacon code.
+Signed network-notice channel. Multiple phases share a single notice
+schema and a single signing pubkey; each phase adds a new surface where
+notices appear. Phases ship one at a time so each new surface can be
+audited in isolation.
 
-## Hard rule
+| Phase    | Surface                            | Status                  | Activation             |
+|----------|------------------------------------|-------------------------|------------------------|
+| 1        | Browser explorer banner            | LIVE                    | (always-on, browser)   |
+| **II-A** | C++ node RPC + miner advisory      | **LIVE from V13_HEIGHT**| `BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT = 12 000` |
+| III      | P2P gossip across nodes            | DISABLED scaffold       | `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX` (sentinel)    |
+
+The Phase II-A operator runbook lives in `docs/V13_SPEC.md`. Phase III
+remains gated until a separate, explicit fork plan lowers
+`BEACON_P2P_ACTIVATION_HEIGHT`.
+
+## Hard rule (every phase)
 
 ```
-Beacon Phase 1 puede informar.
-Beacon Phase 1 no puede reiniciar.
-Beacon Phase 1 no puede bloquear.
-Beacon Phase 1 no puede cambiar consensus.
-Beacon Phase 1 no puede cambiar mining.
+Beacon puede informar.
+Beacon no puede reiniciar.
+Beacon no puede bloquear.
+Beacon no puede cambiar consensus.
+Beacon no puede cambiar mining.
+Beacon no puede ejecutar comandos (`commands` MUST be []).
 ```
 
 Any future phase that wants to do more must amend this document and ship
@@ -20,9 +32,16 @@ under a new explicit fork plan.
 ## Trust model
 
 A single **operator pubkey** signs every notice. The pubkey is hardcoded
-in `website/js/beacon.js` (`BEACON_PUBKEY_HEX`); it is never read from a
-file at runtime. To roll the key, the explorer file is edited, audited
-in PR review, and redeployed.
+in **two** places that must stay in sync:
+
+  1. `website/js/beacon.js` (`BEACON_PUBKEY_HEX`) — the explorer Phase 1 path.
+  2. `src/beacon.cpp` (`BEACON_PUBKEY_HEX`) — the node Phase II-A path.
+
+Neither is read from a file at runtime. To roll the key, both files are
+edited in the same PR, audited, redeployed (explorer redeploy + node
+binary roll). The shipped values in both files are placeholders that
+fail-close; the operator replaces them after running
+`scripts/beacon-keygen.sh` on an offline host.
 
 Cross-channel publication of the public key fingerprint is mandatory. At
 minimum it MUST appear in:
@@ -38,7 +57,7 @@ compromise warning — verify before trusting any banner.
 The fingerprint is `sha256(uncompressed pubkey hex)`. Both values are
 printed by `scripts/beacon-keygen.sh`.
 
-## Notice schema (Phase 1)
+## Notice schema (shared by Phase 1 and Phase II-A)
 
 ```json
 {
@@ -67,7 +86,7 @@ Required fields (all of them):
 | `activation_height` | integer | banner appears at tip ≥ this height |
 | `expires_height` | integer | banner stops appearing at tip ≥ this height |
 | `created_at` | string | ISO-8601 UTC, informational |
-| `commands` | array | MUST be `[]` in Phase 1 (reserved; no client acts on it) |
+| `commands` | array | MUST be `[]` (reserved; no Phase implemented so far acts on it; non-empty `commands` causes Phase II-A to reject the notice at the schema layer) |
 | `signature` | string | base64 of DER-encoded ECDSA-SHA256 of canonical payload |
 
 ## Canonical payload
@@ -100,7 +119,7 @@ scripts/beacon-verify.sh website/api/beacon-pub.pem signed.json
 # exits 0 if the signature verifies, 1 otherwise
 ```
 
-### Browser-side verification (production path)
+### Browser-side verification (Phase 1 — production path)
 
 `website/js/beacon.js` is loaded as `<script type="module">` at the very
 end of `<body>` in `website/sost-explorer.html`. It:
@@ -115,6 +134,26 @@ end of `<body>` in `website/sost-explorer.html`. It:
 6. Renders a banner only for notices that pass every check above.
 
 Any failure mode at any step ⇒ no banner. Beacon never throws to the page.
+
+### Node-side verification (Phase II-A — production path)
+
+`src/beacon.cpp` exposes `sost::beacon::load_active_notices(...)` which:
+
+1. Reads `<datadir>/notices.json` (no HTTP, 256 KB cap).
+2. Validates schema, drops malformed entries.
+3. Reproduces canonical payload via `canonical_payload()` — byte-identical
+   to the explorer's `canonicalize()`.
+4. Verifies ECDSA-SHA256 with libsecp256k1 against the same
+   `BEACON_PUBKEY_HEX` (mirrored in `src/beacon.cpp`). lowS is
+   normalised, not enforced — openssl produces both forms.
+5. Filters by `[activation_height, expires_height)` against the
+   chain tip and by network match against the active profile.
+6. Returns the surviving notices to `getbeaconnotices` RPC; the miner
+   polls and prints an advisory banner per unique `notice_id`.
+
+Pre-V13_HEIGHT the entire path returns empty regardless of file
+contents (Phase II-A dormancy gate). Any failure mode ⇒ empty result.
+Beacon never throws to a node or miner caller.
 
 ## Vendor integrity
 
@@ -163,10 +202,11 @@ change, hash function change), this test fails first.
 The old key remains valid for any cached `notices.json` until the next
 explorer refresh; this is acceptable for an informational banner.
 
-## Out of scope (deferred to later phases)
+## Out of scope (deferred)
 
-- Mandatory client-side action on a notice (`commands`) — must stay `[]`.
-- Multi-signer (k-of-n) — Phase 1 is single-signer.
-- Node-level Beacon — explicitly forbidden until a separate fork plan
-  exists.
-- i18n beyond `_en` fields — banners are English-only in Phase 1.
+- Mandatory client-side action on a notice (`commands`) — must stay `[]`
+  in every phase shipped so far.
+- Multi-signer (k-of-n) — current phases are single-signer.
+- P2P gossip — Phase III scaffold ships in V13 but is **DISABLED** by
+  the `INT64_MAX` activation gate. Enabling requires a separate fork.
+- i18n beyond `_en` fields — banners are English-only.
