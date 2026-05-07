@@ -568,29 +568,74 @@ function toggleV12Banner(){
 })();
 </script>
 
-<!-- ============== PHASE 2 RESUMED BANNER — block 7100 incident resolved ============== -->
+<!-- ============== SbPoW MINING — wallet + mining-key-label setup ============== -->
 <div class="phase2-resolved-banner" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
 <div style="background:linear-gradient(180deg,rgba(34,197,94,.08),rgba(0,0,0,.18));border:2px solid #22c55e;border-left:6px solid #22c55e;border-radius:4px;padding:14px 18px">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="color:#22c55e;font-size:15px;font-weight:900;letter-spacing:1.2px">✅ SOST V11 PHASE 2 — CHAIN RESUMED, LOTTERY LIVE</span>
-      <span class="phase2-centralised-pulse" style="background:rgba(251,1,13,.15);color:#fb010d;font-size:10px;font-weight:900;letter-spacing:1.8px;padding:5px 10px;border-radius:3px;text-transform:uppercase;white-space:nowrap">⚠ MINERS: UPDATE REQUIRED</span>
+      <span style="color:#22c55e;font-size:15px;font-weight:900;letter-spacing:1.2px">✅ SOST V11 PHASE 2 + V12 LIVE — wallet-backed SbPoW required</span>
+      <span class="phase2-centralised-pulse" style="background:rgba(251,1,13,.15);color:#fb010d;font-size:10px;font-weight:900;letter-spacing:1.8px;padding:5px 10px;border-radius:3px;text-transform:uppercase;white-space:nowrap">⚠ MINERS: --wallet + --mining-key-label</span>
     </div>
     <button id="phase2ResolvedToggle" onclick="togglePhase2Resolved()" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.65);color:#bbf7d0;cursor:pointer;font-family:var(--code);font-size:10px;font-weight:800;letter-spacing:1px;padding:6px 10px">COLLAPSE</button>
   </div>
   <div id="phase2ResolvedBody" style="color:var(--text);font-size:12px;line-height:1.65">
 
-    <!-- QUICK UPGRADE — must be the first thing operators see -->
+    <!-- ====== SbPoW LABEL WORKFLOW — front and center ====== -->
+    <div style="background:rgba(34,197,94,.06);border:2px solid #22c55e;border-radius:4px;padding:12px 14px;margin-bottom:14px">
+      <div style="color:#22c55e;font-size:13px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px">◆ HOW TO SET UP A MINING-KEY LABEL FOR SbPoW</div>
+      <div style="font-size:11.5px;line-height:1.75;color:var(--text);margin-bottom:10px">
+        From block <b>7,100</b> every block must carry a Schnorr signature from the miner. The miner key lives inside a wallet file and is referenced by a <b>label</b>. The miner is launched with <code>--wallet</code> + <code>--mining-key-label</code>; <code>--address</code> alone is rejected.
+      </div>
+
+      <div style="color:#22c55e;font-size:12px;font-weight:800;letter-spacing:0.8px;margin:10px 0 4px 0">OPTION A — create a NEW dedicated Phase 2 mining wallet</div>
+      <div style="font-size:11.5px;color:var(--text);margin-bottom:6px">Run on the miner machine, inside the build directory. The label can be anything memorable; <code>phase2-miner</code> below is just an example.</div>
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 8px 0">cd ~/SOST/sostcore/sost-core/build
+
+./sost-cli --wallet phase2-miner-wallet.json newwallet
+./sost-cli --wallet phase2-miner-wallet.json getnewaddress phase2-miner
+
+# confirm the label exists
+./sost-cli --wallet phase2-miner-wallet.json listaddresses
+
+# back up the wallet file (it holds your private key)
+cp -a phase2-miner-wallet.json phase2-miner-wallet.json.bak
+chmod 600 phase2-miner-wallet.json phase2-miner-wallet.json.bak</pre>
+      <div style="font-size:11.5px;color:var(--text);margin-bottom:6px">Then launch the miner with that wallet + label. Do NOT add <code>--address</code>; the miner derives the address from the wallet key automatically.</div>
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 8px 0">./sost-miner \
+  --wallet phase2-miner-wallet.json \
+  --mining-key-label phase2-miner \
+  --rpc 127.0.0.1:18232 --rpc-user USER --rpc-pass PASS \
+  --blocks 999999 --profile mainnet --threads N</pre>
+      <div style="font-size:11.5px;color:var(--text);margin-bottom:8px">Expected startup lines:
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:8px;margin:6px 0 0 0">SbPoW signing key: label='phase2-miner'
+Miner address: sost1...   (derived from wallet key)</pre>
+      </div>
+      <div style="font-size:11.5px;color:#fbbf24;margin-bottom:10px"><b>Note:</b> a brand-new address is <b>not lottery-eligible</b> until it mines its first valid block. Eligibility is per-address and unlocks automatically once the address mines once.</div>
+
+      <div style="color:#22c55e;font-size:12px;font-weight:800;letter-spacing:0.8px;margin:10px 0 4px 0">OPTION B — use an EXISTING wallet/address</div>
+      <div style="font-size:11.5px;color:var(--text);margin-bottom:6px">If your existing wallet already holds the address you want to mine with, just point the miner at it. First find the label:</div>
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 8px 0">cd ~/SOST/sostcore/sost-core/build
+./sost-cli --wallet wallet.json listaddresses</pre>
+      <div style="font-size:11.5px;color:var(--text);margin-bottom:6px">Then launch with that wallet and label (replace <code>YOUR_LABEL</code>):</div>
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 8px 0">./sost-miner \
+  --wallet wallet.json \
+  --mining-key-label YOUR_LABEL \
+  --rpc 127.0.0.1:18232 --rpc-user USER --rpc-pass PASS \
+  --blocks 999999 --profile mainnet --threads N</pre>
+      <div style="font-size:11.5px;color:var(--text);margin-bottom:0">If that address has already mined ≥ 1 block since genesis, it is already lottery-eligible. If it has never mined, eligibility unlocks after its first block.</div>
+    </div>
+
+    <!-- ====== UPGRADE — combined node+miner ====== -->
     <div style="background:rgba(251,1,13,.06);border:2px solid #fb010d;border-radius:4px;padding:12px 14px;margin-bottom:14px">
       <div style="color:#fb010d;font-size:13px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px">⚠ HOW TO KNOW IF YOU NEED TO UPGRADE</div>
       <div style="font-size:11.5px;line-height:1.75;color:var(--text);margin-bottom:10px">
-        Your node or miner needs upgrading if <b>any</b> of these is true:
+        Your node or miner is outdated if <b>any</b> of these is true:
         <ul style="margin:4px 0 0 18px;padding:0">
           <li>Your <code>getinfo</code> reports a chain height <b>below 7,100</b> while the public explorer is above it.</li>
           <li>Your node is connected to peers but its tip stays stuck (e.g. at 7087, 7097) — it is rejecting Phase II v2 blocks.</li>
           <li>Your miner exits with: <code>FATAL: Phase 2 active ... wallet-backed mining key required</code>.</li>
           <li>Your <code>submitblock</code> is rejected with: <code>v2 header missing miner_pubkey</code>.</li>
-          <li>Your miner is launched with <code>--address</code> only (post-7,100 needs wallet-backed signing).</li>
+          <li>Your miner is launched with <code>--address</code> only (post-7,100 needs the label workflow above).</li>
         </ul>
       </div>
       <div style="color:#fb010d;font-size:13px;font-weight:900;letter-spacing:1.5px;margin-bottom:6px">⚠ COMBINED UPGRADE — node + miner in one go</div>
@@ -598,9 +643,9 @@ function toggleV12Banner(){
 git pull --ff-only origin main
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
-make -j$(nproc) sost-node sost-miner
+make -j$(nproc) sost-node sost-miner sost-cli
 
-# Restart the node (it can now follow Phase II)
+# Restart the node (it can now follow Phase II + V12)
 sudo systemctl restart sost-node
 
 # If you also mine, restart with wallet-backed SbPoW signing
@@ -613,156 +658,35 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
       <div style="font-size:11.5px;line-height:1.75;color:var(--text)">
         Verify your node has caught up:
 <pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:8px;margin:6px 0 6px 0">curl -s -u "USER:PASS" -d '{"method":"getinfo"}' http://127.0.0.1:18232/</pre>
-        The <code>blocks</code> field in the response should match (or be within a couple of blocks of) the height shown at the top of this explorer. If it stays below <b>7,100</b>, the rebuild step did not complete or the wrong binary is running — re-check <code>which sost-node</code> and the systemd unit's <code>ExecStart=</code> path.
+        The <code>blocks</code> field should match (or be within a couple of blocks of) the height shown at the top of this explorer. If it stays stuck, the rebuild step did not complete or the wrong binary is running — check <code>which sost-node</code> and the systemd unit's <code>ExecStart=</code> path.
       </div>
     </div>
 
-    <div style="color:#f97316;font-weight:800;margin-bottom:8px">Network status update — block 7,100 incident resolved</div>
-
-    SOST V11 Phase 2 activated at block <b>7,100</b> with:
-    <ul style="margin:6px 0 10px 18px;padding:0">
-      <li><b>SbPoW</b> — miner identity bound to the block through miner_pubkey + signature</li>
-      <li><b>DTD Lottery</b> — deterministic lottery payout on scheduled reward blocks</li>
-      <li><b>PAYOUT coinbase shape</b> — miner share + lottery winner output</li>
+    <!-- ====== CURRENT STATE — short, since the 7100 incident is history ====== -->
+    <div style="color:#f97316;font-weight:800;margin-bottom:8px">What is currently active on chain</div>
+    <ul style="margin:6px 0 12px 18px;padding:0">
+      <li><b>V11 Phase 2</b> (since #7,100): SbPoW signed identity + DTD lottery + PAYOUT coinbase shape on triggered blocks.</li>
+      <li><b>V12</b> (since #7,350): H20 cASERT ceiling, same-block 4-tier Slingshot, V12 miner rebuild protection, capsules, <code>getminerstats</code> diagnostics.</li>
     </ul>
-
-    After activation, the network paused at height <b>7,099</b> because several external peers were submitting invalid v2 blocks rejected by validators with:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 10px 0">[BLOCK] REJECTED: submitblock: v2 header missing miner_pubkey</pre>
-
-    After review, the production source was verified. The issue was not a consensus rollback problem. A correctly rebuilt miner from current <code>main</code> produced valid Phase 2 blocks.<br><br>
-
-    <span style="color:#22c55e;font-weight:900">The chain has resumed successfully.</span>
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:8px 0 10px 0">First valid Phase 2 block: #7100
-Status now verified through: #7104
-SbPoW submit path: OK
-DTD lottery payouts: OK
-Gold / PoPC reactivation on normal blocks: OK
-Pending jackpot: 0</pre>
-
-    <b style="color:var(--cyan)">Blocks 7,098–7,104</b>
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">Block   Type                Miner          Lottery Winner   Gold   PoPC
-7098    NORMAL pre-Phase2   ca9097...bc18  —                25%    25%
-7099    NORMAL pre-Phase2   191f95...a21f  —                25%    25%
-7100    PAYOUT              ca9097...bc18  d0a1cf...45c9    0      0
-7101    NORMAL              ca9097...bc18  —                25%    25%
-7102    PAYOUT              ca9097...bc18  9f15d9...5e19    0      0
-7103    PAYOUT              ca9097...bc18  4dc422...1265    0      0
-7104    NORMAL              ca9097...bc18  —                25%    25%</pre>
-
-    <b style="color:#ff00ff">DTD lottery verification</b><br>
-    Phase 2 has already paid <b>3 deterministic lottery rewards</b>:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">#7100 -> d0a1cf...45c9 -> 3.92550431 SOST
-#7102 -> 9f15d9...5e19 -> 3.92550431 SOST
-#7103 -> 4dc422...1265 -> 3.92550431 SOST</pre>
-
-    Total DTD lottery paid:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">11.77651293 SOST = 3 x 3.92550431 SOST</pre>
-
-    There is currently <b>no pending jackpot</b>:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">pending_lottery_before = 0
-expected_pending_after = 0</pre>
-
-    The jackpot only accumulates if a scheduled lottery block has no eligible address after cooldown filtering. With <b>36 eligible addresses</b>, payouts cleared normally.<br><br>
 
     <b style="color:#fbbf24">Cooldown clarification</b><br>
     The 5-block cooldown applies to <b>miners who produced recent blocks</b>, not to lottery winners.
     <ul style="margin:6px 0 10px 18px;padding:0">
-      <li>An address that mines one of the previous 5 blocks is temporarily excluded from the lottery.</li>
+      <li>An address that mined any of the previous 5 blocks is temporarily excluded from the lottery.</li>
       <li>An address that only wins the DTD lottery remains eligible unless it also mined recently.</li>
-      <li>Winning lottery does not trigger cooldown.</li>
-      <li>Mining a block does not automatically win the lottery.</li>
+      <li>Winning the lottery does NOT trigger cooldown.</li>
+      <li>Mining a block does NOT automatically win the lottery.</li>
     </ul>
     This matches the C7.1 Phase 2 design.<br><br>
 
-    <b style="color:var(--cyan)">Explorer v121 update</b><br>
-    Explorer v121 adds a new address-panel field:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">DTD LOTTERY RECEIVED</pre>
-
-    Example:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">DTD LOTTERY RECEIVED   3.92550431 SOST   (1 win)</pre>
-
-    This lets any address verify lottery winnings directly from public chain data.<br><br>
-
-    If the field says:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">open DTD section to scan</pre>
-
-    open the DTD dashboard once and the explorer will compute lottery winnings per address.<br><br>
-
-    <b style="color:#fb010d">ACTION REQUIRED FOR MINERS AND NODE OPERATORS</b><br>
-    All miners and node operators should update to the latest <code>main</code> now.<br><br>
-
-    <b>Node operators:</b>
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">cd &lt;your sost-core directory&gt;
-git pull --ff-only origin main
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
-make -j$(nproc) sost-node
-sudo systemctl restart sost-node</pre>
-
-    Then verify:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">curl -s -u "USER:PASS" -d '{"method":"getinfo"}' http://127.0.0.1:18232/</pre>
-
-    You should see the chain above block <b>7,100</b>.<br><br>
-
-    <b>Miners:</b><br>
-    Stop old miners:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">pkill -9 -f sost-miner 2>/dev/null || true</pre>
-
-    Update and rebuild:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">cd &lt;your sost-core directory&gt;
-git pull --ff-only origin main
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
-make -j$(nproc) sost-miner</pre>
-
-    From block <b>7,100</b>, miners must run with wallet-backed SbPoW signing:
-
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);padding:10px;margin:6px 0 10px 0">./sost-miner \
-  --wallet YOUR_WALLET.json \
-  --mining-key-label YOUR_LABEL \
-  --rpc 127.0.0.1:18232 \
-  --rpc-user USER \
-  --rpc-pass PASS \
-  --blocks 999999 \
-  --profile mainnet \
-  --threads N</pre>
-
-    Do <b>not</b> use address-only mining after block <b>7,100</b>. Phase 2 requires the block to carry a valid miner_pubkey and SbPoW signature.<br><br>
-
-    <b>Important:</b>
-    <ul style="margin:6px 0 10px 18px;padding:0">
+    <b style="color:#fb010d">Important — common pitfalls</b>
+    <ul style="margin:6px 0 12px 18px;padding:0">
       <li>If you run only a node, update and restart the node.</li>
       <li>If you run only a miner, update and restart the miner.</li>
-      <li>If your node and miner are on different machines, update both.</li>
-      <li>If your miner starts with <code>--address</code> only, it will not produce valid Phase 2 blocks.</li>
-      <li>If your miner starts with <code>--wallet</code> and <code>--mining-key-label</code>, it is Phase 2 compatible.</li>
+      <li>If node and miner are on different machines, update both.</li>
+      <li><code>--address</code>-only mining is rejected post-#7,100. Use <code>--wallet</code> + <code>--mining-key-label</code>.</li>
+      <li>Never share your wallet file or private key. Treat <code>phase2-miner-wallet.json</code> as a secret.</li>
     </ul>
-
-    <b style="color:#22c55e">Final status</b>
-    <ul style="margin:6px 0 10px 18px;padding:0">
-      <li>Pre-7,100 chain history: <b>intact</b></li>
-      <li>Holder funds: <b>safe</b></li>
-      <li>Phase 2 activation: <b>live</b></li>
-      <li>SbPoW: <b>confirmed working with valid rebuilt miner</b></li>
-      <li>DTD lottery: <b>confirmed paid and verifiable</b></li>
-      <li>Gold / PoPC normal allocation: <b>confirmed on non-lottery blocks</b></li>
-      <li>Pending jackpot: <b>0</b></li>
-    </ul>
-
-    Thank you to everyone who stayed patient during the activation window.<br><br>
 
     — <b>NeoB</b>
   </div>
