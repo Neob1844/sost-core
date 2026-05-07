@@ -503,9 +503,10 @@ echo "PASS: $(openssl rand -hex 20)"</div>
 ./sost-node --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
     --genesis genesis_block.json --chain chain.json --profile mainnet
 
-<span class="comment"># Terminal 2 — Start miner (same credentials)</span>
+<span class="comment"># Terminal 2 — Start miner (Phase 2 wallet-backed, same RPC credentials)</span>
 ./sost-miner --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
-    --rpc 127.0.0.1:18232 --address sost1... \
+    --rpc 127.0.0.1:18232 \
+    --wallet phase2-miner-wallet.json --mining-key-label phase2-miner \
     --genesis genesis_block.json --blocks 999999 --realtime</div>
         </div>
 
@@ -569,10 +570,20 @@ echo "PASS: $(openssl rand -hex 20)"</div>
         <span class="spec-tag">TERMINAL 2</span>
       </div>
       <div class="spec-body">
-        <div class="code-snippet"><span class="comment"># Start mining with RPC mode (recommended)</span>
-<span class="comment"># --address is REQUIRED: your wallet address to receive mining rewards</span>
-<span class="comment"># --blocks 10 mines 10 blocks then stops; omit for continuous mining</span>
-./sost-miner --address sost1YOUR_ADDRESS_HERE \
+        <div style="background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.3);border-left:3px solid #ffa500;padding:14px 16px;border-radius:4px;margin-bottom:14px;">
+          <div style="font-size:11px;color:#ffa500;letter-spacing:2px;font-weight:700;margin-bottom:8px;">PHASE 2 MINING &mdash; ACTIVE SINCE BLOCK 7100</div>
+          <p style="margin:0;color:var(--text-secondary);font-size:12px;line-height:1.7;">All blocks require a <strong style="color:var(--text-primary);">SbPoW signature</strong> from a dedicated mining key. The miner reads this key from the wallet file and signs each block. Blocks without <code style="color:var(--cyan-primary);">miner_signature</code> are rejected by the network.</p>
+        </div>
+        <div class="code-snippet"><span class="comment"># One-time setup: create a dedicated wallet for the mining signing key</span>
+./sost-cli --wallet phase2-miner-wallet.json newwallet
+./sost-cli --wallet phase2-miner-wallet.json getnewaddress phase2-miner
+
+<span class="comment"># Start mining with RPC mode (recommended)</span>
+<span class="comment"># --wallet + --mining-key-label are REQUIRED for Phase 2 SbPoW signing</span>
+<span class="comment"># --blocks 10 mines 10 blocks then stops; use 999999 for continuous mining</span>
+./sost-miner \
+    --wallet phase2-miner-wallet.json \
+    --mining-key-label phase2-miner \
     --genesis genesis_block.json --chain chain.json \
     --rpc 127.0.0.1:18232 \
     --rpc-user myuser --rpc-pass mypass \
@@ -596,7 +607,8 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Flag</th><th>Default</th><th>Description</th></tr>
-          <tr><td class="value" style="font-family:var(--font-mono)">--address &lt;sost1..&gt;</td><td class="highlight">required</td><td class="value">Your wallet address to receive mining rewards</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--wallet &lt;path&gt;</td><td class="highlight">required</td><td class="value">Wallet file containing the Phase 2 SbPoW signing key</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--mining-key-label &lt;label&gt;</td><td class="highlight">required</td><td class="value">Label of the mining address inside the wallet file</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--genesis &lt;path&gt;</td><td class="highlight">required</td><td class="value">Genesis block JSON</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--chain &lt;path&gt;</td><td class="highlight">required</td><td class="value">Chain state file</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--rpc &lt;host:port&gt;</td><td class="label">—</td><td class="value">Submit blocks to node via RPC</td></tr>

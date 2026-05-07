@@ -546,8 +546,11 @@
       </div>
       <div class="step-body">
         <p>In the <strong style="color:var(--text-primary)">NEW terminal</strong>, run:</p>
+        <div style="background:rgba(255,165,0,0.08);border:1px solid rgba(255,165,0,0.3);border-left:3px solid #ffa500;padding:12px 14px;border-radius:4px;margin-bottom:12px;font-size:12px;color:var(--text-secondary);line-height:1.7;">
+          <strong style="color:#ffa500;">PHASE 2 MINING (active since block 7100):</strong> All blocks require a <strong style="color:var(--text-primary);">SbPoW signature</strong> from a mining key. The miner reads this key from the wallet file you created in Step 3 and signs each block. Blocks without <code style="color:var(--cyan-primary);">miner_signature</code> are rejected.
+        </div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">cd ~/sost-core/build</span></div>
-        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-miner</span> <span class="flag">--address</span> <span class="val">YOUR_ADDRESS_FROM_STEP_3</span> \
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">./sost-miner</span> <span class="flag">--wallet</span> <span class="val">wallet.json</span> <span class="flag">--mining-key-label</span> <span class="val">mining</span> \
     <span class="flag">--genesis</span> <span class="val">genesis_block.json</span> <span class="flag">--chain</span> <span class="val">chain.json</span> \
     <span class="flag">--rpc</span> <span class="val">127.0.0.1:18232</span> \
     <span class="flag">--rpc-user</span> <span class="val">SAME_USERNAME_AS_STEP_4</span> \
@@ -555,7 +558,8 @@
     <span class="flag">--blocks</span> <span class="val">999999</span> <span class="flag">--profile</span> <span class="val">mainnet</span> <span class="flag">--threads</span> <span class="val">4</span></div>
         <p>Replace:</p>
         <ul style="color:var(--text-secondary);margin:8px 0 16px 20px;line-height:2;">
-          <li><span style="color:var(--red-primary)">YOUR_ADDRESS_FROM_STEP_3</span> = the sost1... address you wrote down</li>
+          <li><span style="color:var(--cyan-primary)">wallet.json</span> = the wallet file you created in Step 3 (default name)</li>
+          <li><span style="color:var(--cyan-primary)">mining</span> = the label you used with <code>getnewaddress "mining"</code> in Step 3</li>
           <li><span style="color:var(--red-primary)">SAME_USERNAME_AS_STEP_4</span> = same username from Step 4</li>
           <li><span style="color:var(--red-primary)">SAME_PASSWORD_AS_STEP_4</span> = same password from Step 4</li>
         </ul>
