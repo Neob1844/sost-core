@@ -278,6 +278,16 @@ add_executable(test-v13-lottery-cooldown-fork tests/test_v13_lottery_cooldown_fo
 target_link_libraries(test-v13-lottery-cooldown-fork PRIVATE sost-core)
 add_test(NAME v13-lottery-cooldown-fork COMMAND test-v13-lottery-cooldown-fork)
 
+# V13 hard fork @ block 12000 — future-drift cap wire-up boundary.
+# Pins the validator inequality (block_ts > now + max_future_drift_at(h))
+# at every regime boundary: V13 (10 s), staged-relief (60 s) and the
+# legacy genesis-region (600 s). Confirms strict greater-than semantics
+# at ±1 s and that pre-V13 caps are byte-identical to the historical
+# branches the helper subsumes.
+add_executable(test-v13-drift-fork tests/test_v13_drift_fork.cpp)
+target_link_libraries(test-v13-drift-fork PRIVATE sost-core)
+add_test(NAME v13-drift-fork COMMAND test-v13-drift-fork)
+
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)

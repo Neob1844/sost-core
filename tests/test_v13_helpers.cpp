@@ -66,13 +66,18 @@ static_assert(lottery_exclusion_window_at(INT64_MAX) == 6,
               "Far-future heights must use the post-V13 window.");
 
 static_assert(max_future_drift_at(11999) == 60,
-              "Pre-V13 future-drift cap must remain 60 seconds.");
+              "Pre-V13 staged-relief drift cap must remain 60 seconds.");
 static_assert(max_future_drift_at(12000) == 10,
               "From V13_HEIGHT, future-drift cap must be 10 seconds.");
 static_assert(max_future_drift_at(12001) == 10,
               "Post-V13 future-drift cap must stay 10 seconds.");
-static_assert(max_future_drift_at(0) == 60,
-              "Genesis-region heights must use the pre-V13 drift cap.");
+static_assert(max_future_drift_at(0) == 600,
+              "Genesis-region heights must use the legacy 600 s drift cap "
+              "(pre-staged-relief regime).");
+static_assert(max_future_drift_at(CASERT_STAGED_RELIEF_HEIGHT - 1) == 600,
+              "Just-pre-staged heights must still use the 600 s legacy cap.");
+static_assert(max_future_drift_at(CASERT_STAGED_RELIEF_HEIGHT) == 60,
+              "Staged-relief activation must drop the cap to 60 s.");
 static_assert(max_future_drift_at(INT64_MAX) == 10,
               "Far-future heights must use the post-V13 drift cap.");
 
@@ -121,13 +126,29 @@ static void test_lottery_window_boundary() {
 
 static void test_future_drift_boundary() {
     printf("\n=== max_future_drift_at — boundary ===\n");
-    TEST("h=11999 → 60 (pre-V13)",        max_future_drift_at(11999) == 60);
-    TEST("h=12000 → 10 (post-V13)",       max_future_drift_at(12000) == 10);
-    TEST("h=12001 → 10 (post-V13 stays)", max_future_drift_at(12001) == 10);
-    TEST("h=0 → 60 (genesis region)",     max_future_drift_at(0) == 60);
-    TEST("h=INT64_MAX → 10 (far future)", max_future_drift_at(INT64_MAX) == 10);
+    // V13 boundary
+    TEST("h=11999 → 60 (pre-V13, staged regime)",
+         max_future_drift_at(11999) == 60);
+    TEST("h=12000 → 10 (post-V13)",
+         max_future_drift_at(12000) == 10);
+    TEST("h=12001 → 10 (post-V13 stays)",
+         max_future_drift_at(12001) == 10);
+    // Staged-relief boundary (preserved unchanged across V13 commit)
+    TEST("h=0 → 600 (genesis, pre-staged-relief, legacy cap)",
+         max_future_drift_at(0) == 600);
+    TEST("h=CASERT_STAGED_RELIEF_HEIGHT-1 → 600 (just before staged)",
+         max_future_drift_at(CASERT_STAGED_RELIEF_HEIGHT - 1) == 600);
+    TEST("h=CASERT_STAGED_RELIEF_HEIGHT → 60 (staged tightening kicks in)",
+         max_future_drift_at(CASERT_STAGED_RELIEF_HEIGHT) == 60);
+    // Sentinel
+    TEST("h=INT64_MAX → 10 (far future)",
+         max_future_drift_at(INT64_MAX) == 10);
+    // Pre-V13 helper output equals the underlying constant for the
+    // height region the production validator actually uses.
     TEST("h=V13_HEIGHT-1 returns MAX_FUTURE_DRIFT_STAGED",
          max_future_drift_at(V13_HEIGHT - 1) == MAX_FUTURE_DRIFT_STAGED);
+    TEST("h=CASERT_STAGED_RELIEF_HEIGHT-1 returns MAX_FUTURE_DRIFT",
+         max_future_drift_at(CASERT_STAGED_RELIEF_HEIGHT - 1) == MAX_FUTURE_DRIFT);
 }
 
 static void test_pre_fork_anchors() {

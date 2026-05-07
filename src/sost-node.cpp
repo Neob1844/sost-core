@@ -3839,16 +3839,21 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
     int64_t now_ts=(int64_t)time(nullptr);
-    // Future-drift cap. Tightened from MAX_FUTURE_DRIFT (600 s) to
-    // MAX_FUTURE_DRIFT_STAGED (60 s) at the staged-relief activation
-    // height — without this tightening a miner could set the
-    // candidate timestamp 600 s in the future and pre-mine the
-    // staged-relief stages that timestamp implies. The 60 s value
-    // matches CASERT_STAGED_STEP_SECONDS so no more than one cascade
-    // step can be anticipated by a future-timestamp.
-    int64_t future_drift = (height >= CASERT_STAGED_RELIEF_HEIGHT)
-                            ? MAX_FUTURE_DRIFT_STAGED
-                            : MAX_FUTURE_DRIFT;
+    // Future-drift cap, height-gated through V13:
+    //   - h < CASERT_STAGED_RELIEF_HEIGHT   → 600 s (legacy)
+    //   - h >= CASERT_STAGED_RELIEF_HEIGHT  → 60 s  (staged-relief tightening)
+    //   - h >= V13_HEIGHT                   → 10 s  (V13 timestamp-gaming defence)
+    //
+    // The staged 60 s value matches CASERT_STAGED_STEP_SECONDS so no more
+    // than one cascade step could be anticipated by a future timestamp.
+    // V13 reduces the gap by 6×, narrowing same-block Slingshot / cascade
+    // gaming margins. Pre-V13 behaviour is byte-identical to the prior
+    // branch — see include/sost/params.h::max_future_drift_at().
+    //
+    // OPERATOR REQUIREMENT (V13): every miner MUST run NTP, since a clock
+    // ahead of true time by more than 10 s will produce blocks rejected
+    // here. See docs/V13_SPEC.md and the operator checklist.
+    int64_t future_drift = sost::max_future_drift_at(height);
     if(ts64 > now_ts + future_drift){
         printf("[BLOCK] REJECTED: timestamp too far in future (drift cap=%lld)\n",
                (long long)future_drift);

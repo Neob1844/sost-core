@@ -264,7 +264,11 @@ inline constexpr int32_t  CASERT_STAGED_DROP_PER_STEP     = 3;
 // deterministic at validation time: declared profile = base - drop
 // exactly, no hidden lag-time arithmetic.
 //
-// Future-drift cap stays at MAX_FUTURE_DRIFT_STAGED = 60 s. The cap is
+// Future-drift cap stays at MAX_FUTURE_DRIFT_STAGED = 60 s up to V13_HEIGHT;
+// V13 (block 12 000) further tightens it to 10 s — see max_future_drift_at()
+// at the bottom of this file. For pre-V13 heights this comment block is
+// authoritative; for V13+ heights see docs/V13_COOLDOWN_AUDIT.md and the
+// V13 fork notes near max_future_drift_at(). The cap is
 // already aligned with the cascade STEP, so a future-timestamp attack
 // can at best steal one profile step (= 1 level under V10, vs. 3 under
 // V9). Tightening to +30 s would not improve the attack surface
@@ -834,12 +838,20 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
         : LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW;  // = 5
 }
 
-// Future-drift cap — height-gated. Returns 60 for pre-V13 heights, 10 from
-// V13_HEIGHT onwards. Type matches MAX_FUTURE_DRIFT_STAGED (int64_t).
+// Future-drift cap — height-gated. Three regimes, matching the production
+// validator history byte-for-byte:
+//   - height >= V13_HEIGHT                    → 10 s  (V13 tightening)
+//   - height >= CASERT_STAGED_RELIEF_HEIGHT   → 60 s  (staged-relief regime)
+//   - height < CASERT_STAGED_RELIEF_HEIGHT    → 600 s (legacy MAX_FUTURE_DRIFT)
+//
+// The pre-V13 branches are required to keep replay/validation of historical
+// blocks below CASERT_STAGED_RELIEF_HEIGHT bit-identical to the prior
+// behaviour (the legacy 600-second cap predates the staged-relief tightening).
+// Type matches MAX_FUTURE_DRIFT_STAGED / MAX_FUTURE_DRIFT (both int64_t).
 inline constexpr int64_t max_future_drift_at(int64_t height) {
-    return (height >= V13_HEIGHT)
-        ? 10
-        : MAX_FUTURE_DRIFT_STAGED;  // = 60
+    if (height >= V13_HEIGHT)                  return 10;
+    if (height >= CASERT_STAGED_RELIEF_HEIGHT) return MAX_FUTURE_DRIFT_STAGED;  // = 60
+    return MAX_FUTURE_DRIFT;                                                    // = 600
 }
 
 } // namespace sost
