@@ -45,6 +45,7 @@
 #include "sost/popc_model_b.h"
 #include "sost/proposals.h"
 #include "sost/lottery.h"
+#include "sost/beacon.h"
 
 #include <fstream>
 #include <sys/socket.h>
@@ -1452,6 +1453,67 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
         s << "\"" << cooldown_addrs[i] << "\"";
     }
     s << "]}";
+    return rpc_result(id, s.str());
+}
+
+// ===========================================================================
+// Beacon Phase II-A — local signed-notice channel.
+// ===========================================================================
+//
+// Returns a JSON object with a `notices` array. Empty array iff:
+//   - current_height < BEACON_PHASE2A_ACTIVATION_HEIGHT, or
+//   - no notices.json file present in the datadir, or
+//   - every notice in the file failed verification, schema or filter.
+//
+// Beacon never throws to the RPC layer. Any failure mode is silent and
+// produces an empty array.
+//
+// Datadir lookup: derived from g_chain_path's parent directory; falls
+// back to "." if g_chain_path is unset (e.g., not yet bootstrapped).
+//
+// Phase III P2P remains DISABLED (BEACON_P2P_ACTIVATION_HEIGHT =
+// INT64_MAX); the gate is reported here for operator visibility.
+static std::string handle_getbeaconnotices(const std::string& id,
+                                            const std::vector<std::string>&) {
+    int64_t                height_now;
+    std::string            datadir;
+    sost::beacon::Network  network;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        height_now = g_chain_height;
+        // Derive datadir from g_chain_path. If empty, fall back to ".".
+        if (g_chain_path.empty()) {
+            datadir = ".";
+        } else {
+            auto pos = g_chain_path.find_last_of('/');
+            datadir = (pos == std::string::npos) ? "." : g_chain_path.substr(0, pos);
+            if (datadir.empty()) datadir = "/";
+        }
+        if (ACTIVE_PROFILE == sost::Profile::MAINNET) {
+            network = sost::beacon::Network::MAINNET;
+        } else if (ACTIVE_PROFILE == sost::Profile::TESTNET) {
+            network = sost::beacon::Network::TESTNET;
+        } else {
+            // DEV profile maps to OTHER → every notice is rejected at
+            // the network filter, so Beacon stays silent on dev nodes.
+            network = sost::beacon::Network::OTHER;
+        }
+    }
+
+    auto notices = sost::beacon::load_active_notices(
+        datadir, height_now, network);
+
+    const bool dormant = (height_now < sost::BEACON_PHASE2A_ACTIVATION_HEIGHT);
+
+    std::ostringstream s;
+    s << "{\"phase\":\"phase-2a-local\""
+      << ",\"activation_height\":" << sost::BEACON_PHASE2A_ACTIVATION_HEIGHT
+      << ",\"current_height\":"    << height_now
+      << ",\"dormant\":"           << (dormant ? "true" : "false")
+      << ",\"p2p_activation_height\":" << sost::BEACON_P2P_ACTIVATION_HEIGHT
+      << ",\"p2p_enabled\":false"
+      << ",\"notices\":" << sost::beacon::serialize_notices_for_rpc(notices)
+      << "}";
     return rpc_result(id, s.str());
 }
 
@@ -3291,6 +3353,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getinfo",handle_getinfo},
     {"getlotterystate",handle_getlotterystate},
     {"getlotteryaudit",handle_getlotteryaudit},
+    {"getbeaconnotices",handle_getbeaconnotices},
     {"getbalance",handle_getbalance},
     {"getnewaddress",handle_getnewaddress},
     {"validateaddress",handle_validateaddress},

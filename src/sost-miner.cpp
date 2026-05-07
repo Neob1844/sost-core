@@ -46,6 +46,8 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <cctype>          // V13 Beacon Phase II-A — toupper for severity tag
+#include <set>             // V13 Beacon Phase II-A — dedup notice IDs
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -2410,6 +2412,80 @@ int main(int argc, char** argv) {
         consecutive_fails = 0;
         mined++;
         if (g_rpc_url.empty()) save_chain(chain_path);
+
+        // ===================================================================
+        // Beacon Phase II-A — advisory-only notice surfacing.
+        //
+        // After each successful mine, ask the node for any active beacon
+        // notices and surface them once-per-notice-id to stderr. Never
+        // blocks. Never aborts. Any RPC failure is silent (rpc_call
+        // already returns "" on error). The notice list comes from the
+        // node, which is the only component holding the pubkey + the
+        // notices.json file; the miner just relays the announcement so
+        // operators driving N miners against a single node still see
+        // operational warnings on every miner's terminal.
+        //
+        // Phase II-A only. NEVER affects mining decisions, candidate
+        // construction, validation, or block submission. NEVER calls a
+        // remote HTTP endpoint — only the local node RPC the miner is
+        // already configured against.
+        // ===================================================================
+        if (!g_rpc_url.empty()) {
+            static std::set<std::string> g_seen_beacon_ids;
+            std::string resp = rpc_call("getbeaconnotices");
+            if (!resp.empty()) {
+                // Walk the response looking for objects inside the
+                // "notices" array. Only string fields are extracted —
+                // we do NOT trust the integer fields here, since the
+                // node already filtered by activation/expires before
+                // returning them. Any parse failure leaves the set
+                // unmodified and prints nothing.
+                auto find_after = [&](size_t pos, const std::string& tag,
+                                      std::string& out_value) -> size_t {
+                    auto k = resp.find(tag, pos);
+                    if (k == std::string::npos) return std::string::npos;
+                    auto q1 = resp.find('"', k + tag.size());
+                    if (q1 == std::string::npos) return std::string::npos;
+                    auto q2 = resp.find('"', q1 + 1);
+                    if (q2 == std::string::npos) return std::string::npos;
+                    out_value = resp.substr(q1 + 1, q2 - q1 - 1);
+                    return q2;
+                };
+                auto arr = resp.find("\"notices\":[");
+                if (arr != std::string::npos) {
+                    size_t cursor = arr;
+                    while (true) {
+                        auto obj = resp.find('{', cursor + 1);
+                        if (obj == std::string::npos) break;
+                        // Stop if we passed the closing ']' of notices.
+                        auto end_arr = resp.find(']', cursor + 1);
+                        if (end_arr != std::string::npos && obj > end_arr) break;
+                        std::string nid, tit, msg, sev;
+                        size_t p = obj;
+                        if (find_after(p, "\"notice_id\":",  nid) == std::string::npos) break;
+                        find_after(p, "\"severity\":",   sev);
+                        find_after(p, "\"title_en\":",   tit);
+                        find_after(p, "\"message_en\":", msg);
+                        if (!nid.empty() && !g_seen_beacon_ids.count(nid)) {
+                            g_seen_beacon_ids.insert(nid);
+                            std::string sev_upper = sev;
+                            for (auto& c : sev_upper) c = (char)std::toupper((unsigned char)c);
+                            fprintf(stderr,
+                                    "\n*****************************************************\n"
+                                    "* BEACON [%s] %s\n"
+                                    "*   id      : %s\n"
+                                    "*   message : %s\n"
+                                    "* (advisory only — does not affect mining)\n"
+                                    "*****************************************************\n\n",
+                                    sev_upper.c_str(), tit.c_str(),
+                                    nid.c_str(), msg.c_str());
+                        }
+                        cursor = resp.find('}', obj + 1);
+                        if (cursor == std::string::npos) break;
+                    }
+                }
+            }
+        }
     }
 
     printf("\n=== Done: %d blocks mined, height=%lld ===\n",

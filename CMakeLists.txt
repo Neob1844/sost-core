@@ -136,6 +136,12 @@ add_library(sost-core STATIC
     # V11_PHASE2_HEIGHT == INT64_MAX in params.h; nothing in this file
     # is reached on real chain heights yet.
     src/lottery.cpp
+
+    # V13 — Beacon Phase II-A. Local signed-notice display path. Pure
+    # informational; no consensus, no P2P, no HTTP. See
+    # include/sost/beacon.h for the hard invariants and
+    # docs/V13_SPEC.md for the operator runbook.
+    src/beacon.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -287,6 +293,17 @@ add_test(NAME v13-lottery-cooldown-fork COMMAND test-v13-lottery-cooldown-fork)
 add_executable(test-v13-drift-fork tests/test_v13_drift_fork.cpp)
 target_link_libraries(test-v13-drift-fork PRIVATE sost-core)
 add_test(NAME v13-drift-fork COMMAND test-v13-drift-fork)
+
+# V13 Beacon Phase II-A — local notice load/verify/filter tests.
+# Exercises load_active_notices end-to-end: dormancy gate, valid signed
+# notice, tampered signature, expired, wrong network, non-empty commands
+# (Phase II-A invariant), malformed JSON, missing/oversized file, and
+# the fail-closed default-pubkey placeholder. Generates a real keypair
+# via libsecp256k1 directly so the verify path is exercised under a
+# known-good key.
+add_executable(test-v13-beacon-phase2a tests/test_v13_beacon_phase2a.cpp)
+target_link_libraries(test-v13-beacon-phase2a PRIVATE sost-core secp256k1)
+add_test(NAME v13-beacon-phase2a COMMAND test-v13-beacon-phase2a)
 
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
