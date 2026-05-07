@@ -142,6 +142,12 @@ add_library(sost-core STATIC
     # include/sost/beacon.h for the hard invariants and
     # docs/V13_SPEC.md for the operator runbook.
     src/beacon.cpp
+
+    # V13 — Beacon Phase III P2P scaffold. DORMANT, gated at INT64_MAX.
+    # Single-switch design: a future fork commit lowers the gate; this
+    # commit ships the inert handler and limits so that future enabling
+    # commit cannot relax the constraints by accident.
+    src/beacon_p2p.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -304,6 +310,15 @@ add_test(NAME v13-drift-fork COMMAND test-v13-drift-fork)
 add_executable(test-v13-beacon-phase2a tests/test_v13_beacon_phase2a.cpp)
 target_link_libraries(test-v13-beacon-phase2a PRIVATE sost-core secp256k1)
 add_test(NAME v13-beacon-phase2a COMMAND test-v13-beacon-phase2a)
+
+# V13 Beacon Phase III P2P scaffold — DISABLED-by-default tests.
+# Pins the gate sentinel (INT64_MAX), the four hard limits, and the
+# always-DiscardDormant behaviour for every input. A future commit that
+# lowers the gate or relaxes a limit fails the static_asserts here at
+# build time, forcing a deliberate update.
+add_executable(test-v13-beacon-p2p-scaffold tests/test_v13_beacon_p2p_scaffold.cpp)
+target_link_libraries(test-v13-beacon-p2p-scaffold PRIVATE sost-core)
+add_test(NAME v13-beacon-p2p-scaffold COMMAND test-v13-beacon-p2p-scaffold)
 
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
