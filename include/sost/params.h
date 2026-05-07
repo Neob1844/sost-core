@@ -786,4 +786,60 @@ inline constexpr int64_t MAX_FUTURE_DRIFT = 600;
 // the cap).
 inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 60;
 
+// =============================================================================
+// V13 hard fork — block V13_HEIGHT (12 000)
+// =============================================================================
+// Bundles three coordinated changes, all gated at V13_HEIGHT:
+//
+//   1. Lottery recent-winner exclusion window  5 → 6
+//      Justified by structural alignment with the 1-of-3 permanent-phase
+//      lottery cadence: window=6 gives a deterministic 2-firing exclusion
+//      regardless of (H mod 3); window=5 is alignment-fuzzy (1 firing at
+//      H ≡ 0 mod 3, 2 elsewhere). Aggregate Monte Carlo metrics regress
+//      slightly under window=6 — the bump is a deliberate trade documented
+//      in docs/V13_COOLDOWN_AUDIT.md.
+//
+//   2. MAX_FUTURE_DRIFT_STAGED  60 s → 10 s
+//      Tightens the timestamp-gaming margin: a miner can move at most 10
+//      seconds of future drift, instead of 60. Reduces same-block Slingshot
+//      and cascade gaming by 6×.
+//
+//   3. Beacon Phase II-A activation
+//      Node + miner local notice display path goes live. No P2P, no HTTP
+//      from C++, no consensus impact. Phase III (P2P gossip) remains
+//      DISABLED-by-default (BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX).
+//
+// The helpers below are the SINGLE source of truth for the height-gated
+// values. After the wire-up commits land, all consensus / RPC call sites
+// MUST go through these helpers and MUST NOT reference the underlying
+// constexprs directly when running on a fork-aware path. Pre-V13 behaviour
+// MUST be bit-identical: helpers return the pre-V13 constants for any
+// height < V13_HEIGHT.
+
+inline constexpr int64_t V13_HEIGHT                       = 12000;
+
+// Beacon activation gates. Phase II-A is gated to V13_HEIGHT. Phase III P2P
+// is intentionally sentinel-disabled (INT64_MAX) until a future fork commit
+// lowers the gate; the explorer-only Phase 1 already shipped.
+inline constexpr int64_t BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT;
+inline constexpr int64_t BEACON_P2P_ACTIVATION_HEIGHT     = INT64_MAX;
+
+// Lottery exclusion window — height-gated. Returns 5 for pre-V13 heights,
+// 6 from V13_HEIGHT onwards. Type matches LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW
+// (int32_t) so call sites that previously took the constant by value see no
+// signature change.
+inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
+    return (height >= V13_HEIGHT)
+        ? 6
+        : LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW;  // = 5
+}
+
+// Future-drift cap — height-gated. Returns 60 for pre-V13 heights, 10 from
+// V13_HEIGHT onwards. Type matches MAX_FUTURE_DRIFT_STAGED (int64_t).
+inline constexpr int64_t max_future_drift_at(int64_t height) {
+    return (height >= V13_HEIGHT)
+        ? 10
+        : MAX_FUTURE_DRIFT_STAGED;  // = 60
+}
+
 } // namespace sost

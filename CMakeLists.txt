@@ -259,6 +259,15 @@ add_executable(test-slingshot-v12-timestamp-safety tests/test_slingshot_v12_time
 target_link_libraries(test-slingshot-v12-timestamp-safety PRIVATE sost-core)
 add_test(NAME slingshot-v12-timestamp-safety COMMAND test-slingshot-v12-timestamp-safety)
 
+# V13 hard fork @ block 12000 — height-gated helpers boundary test.
+# Pins V13_HEIGHT, the lottery exclusion window helper (5 → 6), the
+# future-drift cap helper (60s → 10s), and the Beacon Phase II-A / P2P
+# activation gates. NO consensus call sites are exercised here — wire-up
+# commits ship their own end-to-end boundary tests.
+add_executable(test-v13-helpers tests/test_v13_helpers.cpp)
+target_link_libraries(test-v13-helpers PRIVATE sost-core)
+add_test(NAME v13-helpers COMMAND test-v13-helpers)
+
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)
