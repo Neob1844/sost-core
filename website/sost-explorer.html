@@ -6083,5 +6083,10 @@ window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawC
   };
 })();
 </script>
+<!-- SOST Beacon Phase 1 — informative-only banner. Fail-safe: any error
+     loading or verifying notices results in no banner; the explorer continues
+     to function exactly as if Beacon were absent. Loaded as an ESM module at
+     the very end of body so it never blocks initial render. -->
+<script type="module" src="js/beacon.js"></script>
 </body>
 </html>
