@@ -646,8 +646,11 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-title">Session</div>
-      <button class="sidebar-btn" id="endSessionBtn" onclick="endWalletSession()" title="Lock the wallet and clear keys from memory. You will need your password to come back in.">
+      <button class="sidebar-btn" id="endSessionBtn" onclick="endWalletSession()" title="Lock the wallet and clear keys from memory. You will need your password to come back in. The wallet stays cached in this browser.">
         <span class="icon" style="color:#fb010d">&#x1F510;</span> <span style="color:#fb010d">End Session</span>
+      </button>
+      <button class="sidebar-btn" id="switchWalletBtn" onclick="switchWallet()" title="Forget the current wallet from this browser and return to the welcome screen so a different wallet can be imported. Requires backup — use only if you have one.">
+        <span class="icon" style="color:#fbbf24">&#x21BB;</span> <span style="color:#fbbf24">Switch Wallet</span>
       </button>
     </div>
     <div class="sidebar-spacer"></div>
@@ -3369,6 +3372,61 @@ window.endWalletSession = function() {
     return;
   }
   lockWallet();
+};
+
+// Forget the cached wallet from THIS browser and return to the welcome
+// screen so a different wallet can be imported / restored / generated.
+//
+// Distinct from endWalletSession (which locks but keeps the wallet cached
+// for the password unlock flow) and from deleteWallet (which destroys it
+// permanently after a double-confirm). switchWallet sits between the two:
+// the wallet bytes are removed from THIS browser's localStorage, but the
+// user is expected to have a backup elsewhere (encrypted JSON / 12-word
+// seed / wallet.json on disk) and re-import it later if they want it back.
+//
+// Confirmation explicitly mentions backup so the user does not lose
+// access by clicking this without a backup. After clearing, location
+// reload guarantees no in-memory leakage and brings the user to a clean
+// welcome screen ready for Import / Restore / Generate.
+window.switchWallet = function() {
+  if (!confirm(
+        'Switch wallet?\n\n' +
+        'This forgets the current wallet from THIS browser only.\n' +
+        'It does NOT delete it elsewhere. You can re-import it later from your backup\n' +
+        '(encrypted JSON file, 12-word seed phrase, or wallet.json on disk).\n\n' +
+        'Have you backed up the current wallet? If not, click Cancel and back it up first.'))
+  {
+    return;
+  }
+  if (!confirm('Confirm: forget the current wallet from this browser and load a different one?'))
+  {
+    return;
+  }
+
+  try {
+    clearTimeout(lockTimer);
+
+    // Remove every wallet-scoped key this build writes to localStorage.
+    // Listed explicitly (not localStorage.clear()) so unrelated browser
+    // state outside this app survives the switch.
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    try { localStorage.removeItem(TOTP_KEY);    } catch (e) {}
+    try { localStorage.removeItem(SETTINGS_KEY);} catch (e) {}
+    try { localStorage.removeItem('sost_popc_registration'); } catch (e) {}
+    try { localStorage.removeItem('sost_wallet_settings');   } catch (e) {}
+    try { sessionStorage.clear(); } catch (e) {}
+
+    // Wipe in-memory state.
+    wallet = null;
+    walletPassword = null;
+  } catch (e) {
+    console.error('switchWallet cleanup error:', e);
+  }
+
+  // Hard reload so any module-scope variables (cached UTXOs, RPC creds,
+  // address book) reset to a clean baseline. Cache-busting query string
+  // also defeats Service Worker caches if any are added later.
+  location.replace(location.pathname + '?_swfresh=' + Date.now());
 };
 
 window.unlockWallet = async function() {
