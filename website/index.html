@@ -1132,6 +1132,63 @@
   .four-pillar-tag{font-size:11px;letter-spacing:2px;font-family:var(--font-mono);margin-bottom:8px}
   .four-pillar-headline{font-size:24px;font-weight:700;color:var(--text-primary);margin-bottom:8px}
   .four-pillar-body{font-size:12.5px;line-height:1.55;color:var(--text-secondary);margin:0}
+
+  /* ============= Headline effects: glow pulse + gradient flow + underline shimmer ============= */
+  .fp-title-wrap{position:relative;text-align:center;padding:8px 0 4px}
+  .fp-title{
+    display:inline-block;position:relative;
+    font-size:clamp(26px,4.6vw,46px);font-weight:700;letter-spacing:.4px;line-height:1.18;
+    color:var(--text-primary);
+    text-shadow:0 0 18px rgba(212,175,55,.10);
+    animation:fp-title-glow 4.2s ease-in-out infinite
+  }
+  @keyframes fp-title-glow{
+    0%,100%{text-shadow:0 0 18px rgba(212,175,55,.10)}
+    50%    {text-shadow:0 0 32px rgba(212,175,55,.28), 0 0 56px rgba(251,191,36,.12)}
+  }
+  /* Animated gold→orange→red→gold gradient flowing across the accent words. */
+  .fp-flow{
+    background:linear-gradient(90deg,
+      #fb010d 0%,
+      #fb923c 22%,
+      #fbbf24 44%,
+      #d4af37 60%,
+      #fb923c 80%,
+      #fb010d 100%);
+    background-size:220% 100%;
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+    animation:fp-flow-shift 9s linear infinite;
+    font-weight:700;
+  }
+  @keyframes fp-flow-shift{
+    0%   {background-position:0% 50%}
+    100% {background-position:220% 50%}
+  }
+  /* Decorative gold line below — width breathes in/out subtly. */
+  .fp-underline{
+    display:block;margin:16px auto 0;height:2px;width:88px;
+    background:linear-gradient(90deg,transparent,rgba(212,175,55,.85),transparent);
+    border-radius:2px;
+    animation:fp-underline-breathe 3.6s ease-in-out infinite
+  }
+  @keyframes fp-underline-breathe{
+    0%,100%{width:88px;opacity:.55;filter:blur(.2px)}
+    50%    {width:200px;opacity:1;filter:blur(0)}
+  }
+  /* Soft radial backdrop behind the title for depth. */
+  .fp-title-wrap::before{
+    content:"";position:absolute;inset:auto 0 -10px 0;height:80px;
+    background:radial-gradient(closest-side, rgba(212,175,55,.10), transparent 70%);
+    pointer-events:none;z-index:0
+  }
+  .fp-title-wrap > *{position:relative;z-index:1}
+  /* Respect users that prefer no motion */
+  @media (prefers-reduced-motion: reduce){
+    .fp-title,.fp-flow,.fp-underline,.tterv-banner,.tterv-banner::before{
+      animation:none !important
+    }
+  }
 </style>
 <section class="section" style="padding-top:30px;padding-bottom:34px">
   <div class="container">
@@ -1141,11 +1198,14 @@
     </div>
 
     <div class="section-header fade-in">
-      <div class="section-id">// FUNDAMENTALS &mdash; THE FOUR PILLARS</div>
-      <h2 class="section-title">What makes <span class="accent">SOST</span> sound money</h2>
+      <div class="section-id" style="text-align:center">// FUNDAMENTALS &mdash; THE FOUR PILLARS</div>
+      <div class="fp-title-wrap">
+        <h2 class="fp-title">What gives SOST <span class="fp-flow">intrinsic value</span></h2>
+        <span class="fp-underline" aria-hidden="true"></span>
+      </div>
     </div>
 
-    <p class="fade-in delay-1" style="text-align:center;max-width:780px;margin:6px auto 0;font-size:13px;line-height:1.6;color:var(--text-secondary)">
+    <p class="fade-in delay-1" style="text-align:center;max-width:780px;margin:18px auto 0;font-size:13px;line-height:1.6;color:var(--text-secondary)">
       Four properties hardcoded at genesis, immutable forever, with no governance override.
       Two enforce credibility (Time, Work). Two enforce value (Scarcity, Store of Value).
     </p>
