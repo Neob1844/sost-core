@@ -1008,6 +1008,254 @@
   </div>
 </section>
 
+
+<!-- ============== POSITIONING — comparison vs other PoW chains ============== -->
+<style>
+  .pos-table{width:100%;border-collapse:collapse;font-size:13px;margin:0;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:4px;overflow:hidden}
+  .pos-table th,.pos-table td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--border-dim);vertical-align:top}
+  .pos-table th{background:rgba(255,255,255,.025);color:var(--text-primary);font-weight:700;font-size:12px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.10)}
+  .pos-table tr:last-child td{border-bottom:none}
+  .pos-table tr.sost-row{background:rgba(251,1,13,.05)}
+  .pos-table tr.sost-row td:first-child{color:#fb010d;font-weight:700}
+  .pos-table .num{text-align:right;font-family:var(--font-mono);font-size:12.5px}
+  .pos-section{max-width:1080px;margin:0 auto}
+  .pos-snapshot{font-size:11.5px;color:var(--text-dim);font-family:var(--font-mono);letter-spacing:.5px;margin-bottom:14px}
+  .pos-tick{color:#22c55e;font-weight:700}
+  .pos-cross{color:#fb010d;font-weight:700}
+  .pos-partial{color:#fbbf24;font-weight:700}
+</style>
+<section class="section" id="sec-positioning">
+  <div class="container pos-section">
+    <div class="section-header">
+      <div class="section-id">// POSITIONING</div>
+      <h2 class="section-title">SOST vs other <span class="accent">PoW chains</span></h2>
+    </div>
+
+    <p style="font-size:14.5px;line-height:1.7;color:var(--text-secondary);max-width:840px;margin:6px 0 10px">
+      <b>SOST is not positioned as a Bitcoin clone.</b> It combines Bitcoin-like timing
+      discipline, CPU-heavy original work, mathematical scarcity, and a constitutional
+      reserve design. The four tables below place SOST against six well-known PoW chains
+      so the reader can see exactly where the design overlaps and where it diverges.
+    </p>
+
+    <p class="pos-snapshot">
+      Snapshot date: 2026-05-08 UTC &middot; Block heights and schedule drift change every
+      minute and are intentionally rounded. Sources: Blockchain.info (BTC), BlockCypher
+      (LTC, DOGE), localmonero.co (XMR), Blockchair (BCH, ZEC). SOST height read from the
+      production explorer at the same time.
+    </p>
+
+    <!-- TABLE 1 — Schedule -->
+    <h3 style="font-size:15px;color:var(--text-primary);margin:28px 0 10px">1. Schedule &mdash; ahead, behind, or on time</h3>
+    <table class="pos-table">
+      <thead>
+        <tr>
+          <th>Chain</th>
+          <th>Target / block</th>
+          <th class="num">Height now</th>
+          <th class="num">Expected</th>
+          <th class="num">Drift</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Bitcoin</td>      <td>600&nbsp;s (10&nbsp;min)</td>            <td class="num">948,511</td>   <td class="num">~912,200</td>   <td class="num">+36,300</td> <td>Ahead ~250 days</td></tr>
+        <tr><td>Litecoin</td>     <td>150&nbsp;s (2.5&nbsp;min)</td>           <td class="num">3,103,448</td> <td class="num">~3,063,000</td> <td class="num">+40,400</td> <td>Ahead ~70 days</td></tr>
+        <tr><td>Dogecoin</td>     <td>60&nbsp;s (1&nbsp;min)</td>              <td class="num">6,198,544</td> <td class="num">~6,531,800</td> <td class="num">&minus;333,300</td> <td>Behind ~232 days</td></tr>
+        <tr><td>Monero</td>       <td>120&nbsp;s (60&nbsp;s before 2016)</td>  <td class="num">3,669,797</td> <td class="num">~3,672,000</td> <td class="num">&minus;2,200</td>  <td>Essentially on time</td></tr>
+        <tr><td>Bitcoin Cash</td> <td>600&nbsp;s</td>                          <td class="num">950,193</td>   <td class="num">~938,800</td>   <td class="num">+11,400</td> <td>Ahead ~80 days</td></tr>
+        <tr><td>Zcash</td>        <td>75&nbsp;s (150&nbsp;s pre-Blossom)</td>  <td class="num">3,335,642</td> <td class="num">~3,349,000</td> <td class="num">&minus;13,000</td> <td>Essentially on time</td></tr>
+        <tr class="sost-row"><td>SOST</td> <td>600&nbsp;s</td>                 <td class="num">7,713</td>     <td class="num">~7,700</td>     <td class="num">+11&hellip;13</td> <td>Essentially on time</td></tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin:12px 0 6px">
+      <b>Reading:</b> chains with bulk retarget (BTC, LTC) accumulate large positive drift because
+      their hashrate has grown exponentially faster than two-week recalibration can correct.
+      BCH switched to ASERT in 2020 and the drift growth flattened. Dogecoin&rsquo;s drift is
+      negative because its merge-mining economy with Litecoin and DigiShield retarget combine
+      to produce blocks slower than its 1-minute target. Monero, Zcash and SOST track their
+      schedule within a fraction of a day &mdash; the property delivered by per-block retarget.
+    </p>
+
+    <!-- TABLE 2 — Emission -->
+    <h3 style="font-size:15px;color:var(--text-primary);margin:30px 0 10px">2. Emission and supply</h3>
+    <table class="pos-table">
+      <thead>
+        <tr>
+          <th>Chain</th>
+          <th>Block reward (now)</th>
+          <th>Next change</th>
+          <th>Final supply</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Bitcoin</td>      <td>3.125 BTC</td>            <td>2028 &rarr; 1.5625</td> <td>21,000,000 BTC</td> <td>Halvings every 210k blocks (~4 yr)</td></tr>
+        <tr><td>Litecoin</td>     <td>6.25 LTC</td>             <td>~2027 &rarr; 3.125</td> <td>84,000,000 LTC</td> <td>Halvings every 840k blocks (~4 yr)</td></tr>
+        <tr><td>Dogecoin</td>     <td>10,000 DOGE (fixed)</td>  <td>never</td>              <td>No cap</td>          <td>Perpetual inflation, ~5.26 B DOGE / yr</td></tr>
+        <tr><td>Monero</td>       <td>~0.6 XMR (tail)</td>      <td>fixed since 2022</td>   <td>~18.4 M + tail</td>  <td>Tail emission 0.6 XMR/block forever from June 2022</td></tr>
+        <tr><td>Bitcoin Cash</td> <td>3.125 BCH</td>            <td>2028 &rarr; 1.5625</td> <td>21,000,000 BCH</td> <td>Inherited BTC&rsquo;s halving calendar at the 2017 fork</td></tr>
+        <tr><td>Zcash</td>        <td>1.5625 ZEC</td>           <td>2028 &rarr; 0.78125</td><td>21,000,000 ZEC</td> <td>Halvings every 4 yr</td></tr>
+        <tr class="sost-row"><td>SOST</td> <td><b>7.85100863 SOST</b> (epoch 0)</td> <td>block 131,553 (~2.5 yr)</td> <td><b>4,669,201 SOST</b></td> <td>Continuous decay <code>q = e<sup>&minus;1/4</sup> &asymp; 0.7788</code> per epoch</td></tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin:12px 0 6px">
+      Bitcoin and its derivatives use <b>discrete halvings</b>. Monero and SOST use <b>continuous
+      decay</b>. Doge does not decay at all (perpetual inflation). Monero&rsquo;s tail emission means
+      its supply has no asymptote &mdash; only a curve that flattens to a constant absolute issuance.
+    </p>
+
+    <!-- TABLE 3 — PoW + retarget -->
+    <h3 style="font-size:15px;color:var(--text-primary);margin:30px 0 10px">3. PoW algorithm and difficulty retarget</h3>
+    <table class="pos-table">
+      <thead>
+        <tr>
+          <th>Chain</th>
+          <th>PoW algorithm</th>
+          <th>Dominant hardware</th>
+          <th>Retarget</th>
+          <th>Notable design</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Bitcoin</td>      <td>SHA-256d (double SHA-256)</td>             <td>ASIC</td>          <td>Bulk every 2,016 blocks (~14 d)</td>     <td>The original. Stateless flat hash.</td></tr>
+        <tr><td>Litecoin</td>     <td>Scrypt</td>                                <td>ASIC</td>          <td>Bulk every 2,016 blocks (~3.5 d)</td>     <td>Scrypt holds a 128 KB working buffer; ASIC-friendly since 2014.</td></tr>
+        <tr><td>Dogecoin</td>     <td>Scrypt (merge-mineable with LTC)</td>      <td>ASIC via LTC</td>  <td>DigiShield (per-block) since Feb 2014</td><td>Security tied to Litecoin&rsquo;s merge-mined hashrate.</td></tr>
+        <tr><td>Monero</td>       <td>RandomX</td>                                <td>CPU (deliberate)</td><td>LWMA (per-block, 720-block window)</td>  <td>CPU-oriented VM with JIT execution of randomised bytecode programs and a multi-MB-class dataset/cache plus per-execution scratchpads. ASIC-hostile by construction.</td></tr>
+        <tr><td>Bitcoin Cash</td> <td>SHA-256d (same as BTC)</td>                <td>ASIC</td>          <td>ASERT (per-block) since Nov 2020</td>     <td>Per-block since the post-fork DAA bug of 2017.</td></tr>
+        <tr><td>Zcash</td>        <td>Equihash &lang;200, 9&rang;</td>           <td>ASIC (since 2018)</td> <td>DigiShield-like (per-block, EMA)</td>  <td>Originally GPU-friendly memory-hard; ASICs reached the chain by mid-2018.</td></tr>
+        <tr class="sost-row"><td>SOST</td> <td><b>ConvergenceX</b></td>          <td><b>CPU + 8 GB RAM</b></td> <td><b>cASERT</b> (per-block, avg288 + E/B/H equalizer profiles)</td> <td>Native, original algorithm &mdash; not a fork. Solves a 32&times;32 SPD linear system across 100k sequential rounds of integer-only gradient descent and proves the solution sits in a stable basin (<i>Proof of Irreversible Convergence</i>). 256-op per-block program. 4 GB dataset + 4 GB scratchpad per mining thread.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- TABLE 4 — Distinctive properties -->
+    <h3 style="font-size:15px;color:var(--text-primary);margin:30px 0 10px">4. Properties at a glance</h3>
+    <table class="pos-table">
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th style="text-align:center">BTC</th>
+          <th style="text-align:center">LTC</th>
+          <th style="text-align:center">DOGE</th>
+          <th style="text-align:center">XMR</th>
+          <th style="text-align:center">BCH</th>
+          <th style="text-align:center">ZEC</th>
+          <th style="text-align:center;color:#fb010d">SOST</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Hard cap</td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> 21M</td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> 84M</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span> infinite</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span> tail</td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> 21M</td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> 21M</td>
+          <td style="text-align:center;color:#fb010d"><span class="pos-tick">&#10003;</span> 4.67M</td>
+        </tr>
+        <tr>
+          <td>Per-block retarget</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span> bulk</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span> bulk</td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> DigiShield</td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> LWMA</td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> ASERT</td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> DigiShield</td>
+          <td style="text-align:center;color:#fb010d"><span class="pos-tick">&#10003;</span> cASERT</td>
+        </tr>
+        <tr>
+          <td>CPU-oriented PoW</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> RandomX</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span> (was GPU)</td>
+          <td style="text-align:center;color:#fb010d"><span class="pos-tick">&#10003;</span> ConvergenceX</td>
+        </tr>
+        <tr>
+          <td>Memory-hard footprint</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-partial">~</span> 128 KB</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> RandomX (multi-MB class)</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-partial">~</span> partial</td>
+          <td style="text-align:center;color:#fb010d"><span class="pos-tick">&#10003;</span> 8 GB total</td>
+        </tr>
+        <tr>
+          <td>Native (not a fork)</td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-partial">~</span> CryptoNight lineage</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span> BTC fork</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span> Equihash</td>
+          <td style="text-align:center;color:#fb010d"><span class="pos-tick">&#10003;</span> ConvergenceX original</td>
+        </tr>
+        <tr>
+          <td>Constitutional reserve</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center;color:#fb010d"><span class="pos-tick">&#10003;</span> 50% gold-linked</td>
+        </tr>
+        <tr>
+          <td>Default-private transactions</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-tick">&#10003;</span> ring + stealth</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-partial">~</span> shielded opt-in</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span> (E2E layer in DEX/Talk)</td>
+        </tr>
+        <tr>
+          <td>Hard cap derived from a math constant</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center">n/a</td>
+          <td style="text-align:center">n/a</td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center"><span class="pos-cross">&#10007;</span></td>
+          <td style="text-align:center;color:#fb010d"><span class="pos-tick">&#10003;</span> Feigenbaum &delta;</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Where SOST is distinct -->
+    <h3 style="font-size:15px;color:var(--text-primary);margin:30px 0 10px">Where SOST stands out among the chains in this table</h3>
+    <ol style="font-size:13.5px;line-height:1.7;color:var(--text-secondary);margin:0 0 16px 24px">
+      <li>The only PoW algorithm in this table that is genuinely native and not derived. SHA-256d was Bitcoin&rsquo;s original; Scrypt comes from Tarsnap; Equihash from Wagner&rsquo;s generalised birthday. Monero&rsquo;s RandomX is the closest other example of an originally designed algorithm, but it carries CryptoNight ancestry. ConvergenceX shares no core structure with any of these.</li>
+      <li>The only hard cap in this table derived from a universal mathematical constant (Feigenbaum&rsquo;s &delta;). The other caps are round numbers chosen for marketing alignment.</li>
+      <li>The only chain in this table with a <b>protocol-level allocation toward gold-linked reserves and custody mechanisms</b>: 25% Perpetual Gold Vault one-way TWAP purchases, plus 25% PoPC. <em>This is not a peg, not a redemption claim, not a stablecoin mechanic.</em> The reserve ratio is observable on-chain, not contracted.</li>
+      <li>Among the chains in this table, SOST combines per-block retarget with the largest mining-RAM footprint (8 GB) of any production CPU-oriented design. Monero is the only direct competitor on the CPU-friendly axis but uses a smaller working set.</li>
+      <li>Tightest schedule alignment in the comparison: SOST is currently within ~13 blocks of its target, helped by cASERT&rsquo;s 288-block average and dynamic delta cap (0% / 0.5% / 1.5% / 2.5% / 3% by deviation).</li>
+      <li>Hard cap lower than the major PoW comparables in this table. With 4.67M coins capped, SOST&rsquo;s long-run scarcity is steeper than BTC, LTC, BCH, or ZEC. Whether that matters in market terms is a separate question.</li>
+    </ol>
+
+    <!-- Where SOST does NOT stand out -->
+    <h3 style="font-size:15px;color:var(--text-primary);margin:24px 0 10px">Where SOST does not stand out &mdash; honestly</h3>
+    <ul style="font-size:13.5px;line-height:1.7;color:var(--text-secondary);margin:0 0 6px 24px">
+      <li><b>Default privacy:</b> Monero wins on transaction privacy by default. SOST has end-to-end encryption in DEX/Talk but the base ledger is transparent like Bitcoin.</li>
+      <li><b>Track record / hashrate / market depth:</b> SOST is days&ndash;months old; BTC is 17 years old. Comparing security-economic depth today would be misleading.</li>
+      <li><b>Liquidity and exchange listings:</b> SOST is pre-market &mdash; public launch phase opens 2026-06-16, exchange outreach follows from there. The chains in this table all have active markets.</li>
+      <li><b>External security audit:</b> none yet. Independent reviewers welcome.</li>
+      <li><b>Post-quantum signature safety:</b> the current scheme uses secp256k1 + BIP-340 Schnorr and is not PQ-resistant. PQ migration is on the roadmap as a future hard fork.</li>
+    </ul>
+    <p style="font-size:11.5px;color:var(--text-dim);font-family:var(--font-mono);letter-spacing:.5px;margin:20px 0 0;text-align:right">
+      Comparison block last updated alongside the snapshot above. Tables refresh on each whitepaper revision.
+    </p>
+  </div>
+</section>
+
+
 <footer>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
