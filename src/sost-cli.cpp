@@ -43,6 +43,8 @@
 #include "sost/params.h"
 #include "sost/address.h"
 #include "sost/tx_signer.h"
+#include "sost/capsule.h"
+#include "sost/crypto.h"          // sha256(file bytes) for --capsule-file
 
 #include <cstdio>
 #include <cstdlib>
@@ -81,6 +83,16 @@ static std::string g_send_amount = "";     // --amount AMOUNT
 static std::string g_sost_dir;     // ~/.sost directory
 static std::string g_addressbook_path;
 static std::string g_policy_path;
+
+// V13 capsule wiring (B2). Public-mode capsule attachment for the `send`
+// command. Sealed-* modes are intentionally not wired here yet — they
+// require ECIES which has its own commit. Public modes accepted:
+//   none, open-note, doc-ref, structured, cert
+static std::string g_capsule_mode     = "none";  // --capsule-mode
+static std::string g_capsule_text     = "";       // --capsule-text   (mode-dependent)
+static std::string g_capsule_template = "";       // --capsule-template id name (structured only)
+static std::string g_capsule_locator  = "";       // --capsule-locator (doc-ref only)
+static std::string g_capsule_file     = "";       // --capsule-file <path> (doc-ref: hashed)
 
 static void init_sost_dir() {
     const char* home = getenv("HOME");
@@ -366,6 +378,188 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w) {
 //
 // This guarantees S8 compliance: fee >= tx_size × 1 stock/byte
 // =============================================================================
+// =============================================================================
+// V13 capsule helpers (B2)
+// =============================================================================
+// Build the SCPv1 payload bytes for the requested public mode.
+// Returns true on success and fills `out`. On any error returns false and
+// writes a human-readable message to stderr.
+//
+// Mode interpretation:
+//   none           → out left empty; caller treats as "no capsule".
+//   open-note      → --capsule-text becomes the body. Max 80 chars.
+//   doc-ref        → --capsule-file is hashed (SHA-256) for file_hash.
+//                    --capsule-locator (optional) becomes the locator,
+//                    treated as IPFS_CID if it starts with "ipfs://" or
+//                    "Qm"/"baf", otherwise HTTPS_URL.
+//   structured     → --capsule-text becomes the fields blob (max 128 B).
+//                    --capsule-template selects the template_id by name,
+//                    default = custom_kv_v1.
+//   cert           → --capsule-text becomes short_note (max 64 B).
+//                    Default cert_kind=1, instr_kind=1.
+//   sealed-*       → returns false with clear "not yet wired" error.
+
+static uint8_t parse_template_id_or_default(const std::string& name) {
+    if (name.empty() || name == "custom_kv" || name == "custom_kv_v1")
+        return (uint8_t)sost::TemplateId::CUSTOM_KV_V1;
+    if (name == "invoice" || name == "invoice_v1")
+        return (uint8_t)sost::TemplateId::INVOICE_V1;
+    if (name == "payment_receipt" || name == "payment_receipt_v1")
+        return (uint8_t)sost::TemplateId::PAYMENT_RECEIPT_V1;
+    if (name == "transfer_instruction" || name == "transfer_instruction_v1")
+        return (uint8_t)sost::TemplateId::TRANSFER_INSTRUCTION_V1;
+    if (name == "compliance_record" || name == "compliance_record_v1")
+        return (uint8_t)sost::TemplateId::COMPLIANCE_RECORD_V1;
+    if (name == "warranty_record" || name == "warranty_record_v1")
+        return (uint8_t)sost::TemplateId::WARRANTY_RECORD_V1;
+    if (name == "shipment_record" || name == "shipment_record_v1")
+        return (uint8_t)sost::TemplateId::SHIPMENT_RECORD_V1;
+    if (name == "gold_cert_note" || name == "gold_cert_note_v1")
+        return (uint8_t)sost::TemplateId::GOLD_CERT_NOTE_V1;
+    if (name == "contract_ref" || name == "contract_ref_v1")
+        return (uint8_t)sost::TemplateId::CONTRACT_REF_V1;
+    if (name == "escrow_note" || name == "escrow_note_v1")
+        return (uint8_t)sost::TemplateId::ESCROW_NOTE_V1;
+    return 0;  // 0 = unknown; caller will reject
+}
+
+static bool read_file_into_vec(const std::string& path,
+                                std::vector<sost::Byte>& out,
+                                std::string* err) {
+    FILE* f = fopen(path.c_str(), "rb");
+    if (!f) {
+        if (err) *err = "cannot open --capsule-file '" + path + "'";
+        return false;
+    }
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    if (sz < 0) { fclose(f); if (err) *err = "stat failed on " + path; return false; }
+    fseek(f, 0, SEEK_SET);
+    out.resize((size_t)sz);
+    size_t got = sz > 0 ? fread(out.data(), 1, (size_t)sz, f) : 0;
+    fclose(f);
+    if ((long)got != sz) {
+        if (err) *err = "short read on " + path;
+        return false;
+    }
+    return true;
+}
+
+// Detect locator kind from the user-supplied string.
+static sost::LocatorType detect_locator_type(const std::string& s) {
+    if (s.empty()) return sost::LocatorType::NONE;
+    if (s.rfind("ipfs://", 0) == 0)               return sost::LocatorType::IPFS_CID;
+    if (s.rfind("Qm", 0) == 0)                    return sost::LocatorType::IPFS_CID;
+    if (s.rfind("baf", 0) == 0)                   return sost::LocatorType::IPFS_CID;
+    if (s.rfind("https://", 0) == 0)              return sost::LocatorType::HTTPS_URL;
+    if (s.rfind("http://",  0) == 0)              return sost::LocatorType::HTTPS_URL;
+    return sost::LocatorType::OPAQUE_ID;
+}
+
+static bool build_capsule_for_mode(std::vector<sost::Byte>& out_payload) {
+    out_payload.clear();
+    if (g_capsule_mode.empty() || g_capsule_mode == "none") {
+        return true;  // no payload
+    }
+
+    // Sealed modes: explicit not-wired error so the user does not waste
+    // a fee constructing a tx that the node would reject.
+    if (g_capsule_mode == "sealed-note"
+     || g_capsule_mode == "sealed-doc-ref"
+     || g_capsule_mode == "sealed-structured") {
+        fprintf(stderr,
+            "ERROR: --capsule-mode '%s' is not wired in this build yet "
+            "(ECIES envelope is shipped in a separate commit).\n"
+            "Use a public mode for now: open-note, doc-ref, structured, cert.\n",
+            g_capsule_mode.c_str());
+        return false;
+    }
+
+    std::string err;
+    if (g_capsule_mode == "open-note") {
+        if (g_capsule_text.empty()) {
+            fprintf(stderr, "ERROR: --capsule-mode open-note requires --capsule-text\n");
+            return false;
+        }
+        if (!sost::BuildOpenNotePayload(g_capsule_text, out_payload, &err)) {
+            fprintf(stderr, "ERROR: build open-note: %s\n", err.c_str());
+            return false;
+        }
+        return true;
+    }
+
+    if (g_capsule_mode == "doc-ref") {
+        if (g_capsule_file.empty()) {
+            fprintf(stderr, "ERROR: --capsule-mode doc-ref requires --capsule-file <path>\n");
+            return false;
+        }
+        std::vector<sost::Byte> file_bytes;
+        if (!read_file_into_vec(g_capsule_file, file_bytes, &err)) {
+            fprintf(stderr, "ERROR: %s\n", err.c_str()); return false;
+        }
+        sost::DocRefParams p{};
+        p.capsule_id      = 0;
+        p.file_size_bytes = (uint32_t)file_bytes.size();
+        p.file_hash       = sost::sha256(file_bytes);
+        // manifest_hash left zero (not used in this MVP)
+        p.locator_type = detect_locator_type(g_capsule_locator);
+        p.locator_ref.assign(g_capsule_locator.begin(), g_capsule_locator.end());
+        if (!sost::BuildDocRefOpenPayload(p, out_payload, &err)) {
+            fprintf(stderr, "ERROR: build doc-ref: %s\n", err.c_str());
+            return false;
+        }
+        return true;
+    }
+
+    if (g_capsule_mode == "structured") {
+        if (g_capsule_text.empty()) {
+            fprintf(stderr, "ERROR: --capsule-mode structured requires --capsule-text\n");
+            return false;
+        }
+        sost::TemplateFieldsParams p{};
+        p.capsule_id  = 0;
+        p.template_id = parse_template_id_or_default(g_capsule_template);
+        if (p.template_id == 0) {
+            fprintf(stderr,
+                "ERROR: unknown --capsule-template '%s'.\n"
+                "  Known: custom_kv_v1, invoice_v1, payment_receipt_v1,\n"
+                "         transfer_instruction_v1, compliance_record_v1,\n"
+                "         warranty_record_v1, shipment_record_v1,\n"
+                "         gold_cert_note_v1, contract_ref_v1, escrow_note_v1\n",
+                g_capsule_template.c_str());
+            return false;
+        }
+        p.field_codec = 0x00;  // ASCII
+        p.fields.assign(g_capsule_text.begin(), g_capsule_text.end());
+        if (!sost::BuildTemplateFieldsOpenPayload(p, out_payload, &err)) {
+            fprintf(stderr, "ERROR: build structured: %s\n", err.c_str());
+            return false;
+        }
+        return true;
+    }
+
+    if (g_capsule_mode == "cert") {
+        sost::CertInstructionParams p{};
+        p.cert_kind  = 0x01;     // generic; advanced overrides could come later
+        p.instr_kind = 0x01;
+        p.cert_id    = 0;
+        p.ref_value  = 0;
+        p.expires_at = 0;
+        p.short_note = g_capsule_text;  // may be empty (validator allows note_len=0)
+        if (!sost::BuildCertInstructionPayload(p, out_payload, &err)) {
+            fprintf(stderr, "ERROR: build cert: %s\n", err.c_str());
+            return false;
+        }
+        return true;
+    }
+
+    fprintf(stderr, "ERROR: unknown --capsule-mode '%s'.\n"
+        "  Known: none, open-note, doc-ref, structured, cert\n"
+        "  (sealed-note, sealed-doc-ref, sealed-structured: not yet wired)\n",
+        g_capsule_mode.c_str());
+    return false;
+}
+
 static int64_t calculate_fee(int64_t tx_size_bytes) {
     int64_t fee = tx_size_bytes * g_fee_rate;
     if (fee < MIN_FEE_STOCKS) fee = MIN_FEE_STOCKS;
@@ -411,6 +605,19 @@ static void print_usage() {
     printf("  --fee-rate <n>         Fee rate in stocks/byte (default: 1)\n");
     printf("  --yes, -y              Skip confirmation prompts\n");
     printf("  --skip-warning         Skip first-send warning for scripts\n");
+    printf("\nCapsule attach (V12+ chain only — public modes wired):\n");
+    printf("  --capsule-mode <mode>  none | open-note | doc-ref | structured | cert\n");
+    printf("                         (sealed-note / sealed-doc-ref / sealed-structured\n");
+    printf("                          return a clear 'not yet wired' error)\n");
+    printf("  --capsule-text <text>  text body (open-note: <=80; structured: <=128;\n");
+    printf("                                    cert: <=64; ignored for doc-ref)\n");
+    printf("  --capsule-template <id>  structured: template name. Default custom_kv_v1.\n");
+    printf("                           Known: custom_kv_v1, invoice_v1, payment_receipt_v1,\n");
+    printf("                           transfer_instruction_v1, compliance_record_v1,\n");
+    printf("                           warranty_record_v1, shipment_record_v1,\n");
+    printf("                           gold_cert_note_v1, contract_ref_v1, escrow_note_v1\n");
+    printf("  --capsule-locator <s>  doc-ref: optional URL or IPFS reference\n");
+    printf("  --capsule-file <path>  doc-ref: file whose SHA-256 becomes file_hash\n");
     printf("\nFee calculation (v1.3 — automatic):\n");
     printf("  Fee = tx_size_bytes x fee_rate stocks/byte\n");
     printf("  Minimum: %s SOST (%lld stocks)\n",
@@ -419,6 +626,10 @@ static void print_usage() {
     printf("\nExamples:\n");
     printf("  sost-cli send sost1abc... 10              (auto fee, 1 stock/byte)\n");
     printf("  sost-cli --fee-rate 2 send sost1abc... 10 (priority: 2 stocks/byte)\n");
+    printf("  sost-cli send sost1abc... 10 --capsule-mode open-note --capsule-text 'donation'\n");
+    printf("  sost-cli send sost1abc... 10 --capsule-mode structured \\\n");
+    printf("    --capsule-template payment_receipt_v1 \\\n");
+    printf("    --capsule-text 'category=APP rewards distribution; ref=batch-001; period=2026-05'\n");
 }
 
 int main(int argc, char** argv) {
@@ -475,6 +686,21 @@ int main(int argc, char** argv) {
         } else if (flag == "--skip-warning") {
             g_skip_warning = true;
             arg_start += 1;
+        } else if (flag == "--capsule-mode" && arg_start + 1 < argc) {
+            g_capsule_mode = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--capsule-text" && arg_start + 1 < argc) {
+            g_capsule_text = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--capsule-template" && arg_start + 1 < argc) {
+            g_capsule_template = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--capsule-locator" && arg_start + 1 < argc) {
+            g_capsule_locator = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--capsule-file" && arg_start + 1 < argc) {
+            g_capsule_file = argv[arg_start + 1];
+            arg_start += 2;
         } else if (flag == "--help" || flag == "-h") {
             print_usage();
             return 0;
@@ -909,6 +1135,28 @@ int main(int argc, char** argv) {
         }
         int64_t amount = parse_amount(amount_str.c_str());
 
+        // V13 capsule attach (B2): build the payload FIRST so bad
+        // --capsule-* arguments fail before any network I/O. The chain-
+        // height-based V12 activation check still runs below once we have
+        // the actual tip; what we do here is just argument validation +
+        // payload bytes assembly.
+        std::vector<sost::Byte> capsule_payload;
+        if (!build_capsule_for_mode(capsule_payload)) {
+            return 1;
+        }
+        if (!capsule_payload.empty()) {
+            auto v = sost::ValidateCapsulePolicy(capsule_payload);
+            if (!v.ok) {
+                fprintf(stderr,
+                    "ERROR: capsule failed local policy validation: %s\n"
+                    "  (this is what the node mempool would reject too)\n",
+                    v.message.c_str());
+                return 1;
+            }
+        }
+        const std::vector<sost::Byte>* cap_ptr =
+            capsule_payload.empty() ? nullptr : &capsule_payload;
+
         // v1.4: Sync UTXOs from node + query chain height
         int64_t chain_height = query_chain_height();
         if (chain_height < 0) {
@@ -931,6 +1179,22 @@ int main(int argc, char** argv) {
             return 1;
         }
 
+        // V13 capsule attach (B2): now that we know the chain tip, enforce the
+        // V12-activation-height guard. Capsules on OUT_TRANSFER outputs are
+        // rejected by the validator (R14_PAYLOAD_FORBIDDEN) before V12_HEIGHT.
+        if (cap_ptr) {
+            if (chain_height < (int64_t)sost::V12_HEIGHT) {
+                fprintf(stderr,
+                    "ERROR: capsule attach requires chain height >= V12_HEIGHT "
+                    "(%lld); current tip is %lld.\n"
+                    "  Wait until the chain crosses V12 or omit --capsule-mode.\n",
+                    (long long)sost::V12_HEIGHT, (long long)chain_height);
+                return 1;
+            }
+            printf("Capsule attached: mode=%s, payload=%zu bytes\n",
+                   g_capsule_mode.c_str(), capsule_payload.size());
+        }
+
         // Create transaction with dynamic fee
         sost::Hash256 genesis_hash = sost::from_hex(
             "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37");
@@ -940,7 +1204,7 @@ int main(int argc, char** argv) {
         sost::Transaction tx;
         std::string err;
         if (!w.create_transaction(to_addr, amount, est_fee, genesis_hash,
-                                  tx, chain_height, &err)) {
+                                  tx, chain_height, &err, cap_ptr)) {
             fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
@@ -957,7 +1221,7 @@ int main(int argc, char** argv) {
         if (real_fee != est_fee) {
             sost::Transaction tx2;
             if (!w.create_transaction(to_addr, amount, real_fee, genesis_hash,
-                                      tx2, chain_height, &err)) {
+                                      tx2, chain_height, &err, cap_ptr)) {
                 fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
                 return 1;
             }
@@ -973,7 +1237,7 @@ int main(int argc, char** argv) {
             if (final_fee > real_fee) {
                 sost::Transaction tx3;
                 if (!w.create_transaction(to_addr, amount, final_fee, genesis_hash,
-                                          tx3, chain_height, &err)) {
+                                          tx3, chain_height, &err, cap_ptr)) {
                     fprintf(stderr, "Error (final fee pass): %s\n", err.c_str());
                     return 1;
                 }

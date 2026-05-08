@@ -328,6 +328,15 @@ add_executable(test-capsule-build-public tests/test_capsule_build_public.cpp)
 target_link_libraries(test-capsule-build-public PRIVATE sost-core)
 add_test(NAME capsule-build-public COMMAND test-capsule-build-public)
 
+# Wallet → capsule attachment. End-to-end test that
+# Wallet::create_transaction(...) honours the new optional capsule_payload
+# parameter: payload reaches output[0], change is left clean, the attached
+# bytes still pass ValidateCapsulePolicy, and the no-payload code path is
+# bit-identical to pre-change behaviour.
+add_executable(test-wallet-capsule-attach tests/test_wallet_capsule_attach.cpp)
+target_link_libraries(test-wallet-capsule-attach PRIVATE sost-core)
+add_test(NAME wallet-capsule-attach COMMAND test-wallet-capsule-attach)
+
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)

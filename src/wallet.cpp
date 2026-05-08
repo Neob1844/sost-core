@@ -328,7 +328,8 @@ bool Wallet::create_transaction(
     const Hash256& genesis_hash,
     Transaction& out_tx,
     int64_t chain_height,
-    std::string* err)
+    std::string* err,
+    const std::vector<Byte>* capsule_payload)
 {
     if (amount <= 0) {
         if (err) *err = "amount must be positive";
@@ -465,12 +466,19 @@ bool Wallet::create_transaction(
         out_tx.inputs.push_back(inp);
     }
 
-    // Output 0: payment
+    // Output 0: payment (with optional capsule payload attached).
+    // The payload is signed in alongside the rest of the output bytes;
+    // mempool / standardness validation runs ValidateCapsulePolicy on it
+    // post-broadcast. Caller must build a valid SCPv1 capsule —
+    // see sost/capsule.h::BuildXxxPayload helpers.
     {
         TxOutput out{};
         out.amount = amount;
         out.type = 0x00;
         out.pubkey_hash = to_pkh;
+        if (capsule_payload && !capsule_payload->empty()) {
+            out.payload = *capsule_payload;
+        }
         out_tx.outputs.push_back(out);
     }
 

@@ -80,6 +80,15 @@ public:
     bool import_genesis(const std::string& genesis_json_path, std::string* err = nullptr);
 
     // --- Transaction creation ---
+    //
+    // capsule_payload: optional. When non-null and non-empty, attached to the
+    // payment output (output[0]) before signing. The caller is responsible
+    // for building a valid SCPv1 capsule (use the BuildXxxPayload helpers
+    // in sost/capsule.h). The wallet does NOT validate the bytes — that is
+    // the job of mempool / standardness post-broadcast. Capsule attachment
+    // is only meaningful at chain heights >= the activation height
+    // (V12_HEIGHT in mainnet); attaching at earlier heights yields a tx
+    // the validator rejects with R14_PAYLOAD_FORBIDDEN.
     bool create_transaction(
         const std::string& to_addr,
         int64_t amount,
@@ -87,7 +96,8 @@ public:
         const Hash256& genesis_hash,
         Transaction& out_tx,
         int64_t chain_height = -1,       // maturity filter
-        std::string* err = nullptr);
+        std::string* err = nullptr,
+        const std::vector<Byte>* capsule_payload = nullptr);
 
     // sendmany: single TRANSFER tx with N outputs (one per recipient).
     // Caller passes a vector of (address, amount) pairs. Change (if any)
