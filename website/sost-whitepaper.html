@@ -735,6 +735,125 @@
   </div>
 </section>
 
+<!-- ============== FOUR PILLARS — protocol summary before the document ============== -->
+<style>
+  .wp-pillars-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:18px;margin-top:24px
+  }
+  .wp-pillar{
+    background:var(--bg-card);
+    border:1px solid var(--border-dim);
+    border-left:4px solid var(--card-accent,#fb010d);
+    border-radius:4px;padding:20px
+  }
+  .wp-pillar-tag{font-size:11px;letter-spacing:2px;font-family:var(--font-mono);margin-bottom:8px}
+  .wp-pillar-headline{font-size:22px;font-weight:700;color:var(--text-primary);margin-bottom:10px;line-height:1.25}
+  .wp-pillar-body{font-size:12.5px;line-height:1.6;color:var(--text-secondary);margin:0}
+  .wp-pillar-body code{font-size:11.5px;background:rgba(255,255,255,.04);padding:1px 5px;border-radius:3px}
+</style>
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">FUNDAMENTALS</div>
+      <h2 class="section-title">The <span class="accent">Four Pillars</span></h2>
+    </div>
+
+    <p class="fade-in delay-1" style="font-size:13.5px;line-height:1.65;color:var(--text-secondary);max-width:840px;margin:8px 0 0">
+      SOST treats &laquo;sound money&raquo; as four orthogonal properties that must hold simultaneously and
+      forever. Two of them enforce <i>credibility of issuance</i>: the chain advances at a predictable rate
+      (Time) under a measurable, energy-bounded effort (Work). The other two enforce <i>credibility of
+      value</i>: total supply is finite (Scarcity) and an explicit fraction is converted, by consensus,
+      into gold-backed reserves (Store of Value). All four are hard-coded at genesis with no governance
+      override. Every section of this whitepaper either specifies one of these pillars or proves it.
+    </p>
+
+    <div class="wp-pillars-grid fade-in delay-2">
+
+      <!-- TIME -->
+      <div class="wp-pillar" style="--card-accent:#fb010d">
+        <div class="wp-pillar-tag" style="color:#fb010d">⏱ PILLAR 1 &mdash; TIME</div>
+        <div class="wp-pillar-headline">600-second target spacing</div>
+        <p class="wp-pillar-body">
+          Block production is paced at a 10-minute target via the <b>cASERT unified rate controller</b>.
+          Difficulty (<code>bits_q</code>) adjusts every block from a 288-block running average against
+          target, with bidirectional response: hardens when blocks come too fast, eases when too slow.
+          ConvergenceX equalizer profiles (E1&ndash;E7 relief, B0 baseline, H1&ndash;H20 hardening) are
+          mapped from chain lag and protect against runaway acceleration. The H20 ceiling and E7 floor
+          are immutable. From V11 onward a triangular cascade provides emergency relief on stuck blocks
+          without compromising the long-run schedule. See section 3 (cASERT) and section 12.
+        </p>
+      </div>
+
+      <!-- WORK -->
+      <div class="wp-pillar" style="--card-accent:#fb923c">
+        <div class="wp-pillar-tag" style="color:#fb923c">⚙ PILLAR 2 &mdash; WORK</div>
+        <div class="wp-pillar-headline">ConvergenceX &mdash; native, original</div>
+        <p class="wp-pillar-body">
+          ConvergenceX is a <b>native, original</b> Proof-of-Work design.
+          It is <b>NOT a fork</b> and <b>NOT a parameter-tweaked variant</b> of Bitcoin SHA-256,
+          Monero RandomX, Ethereum Ethash, Equihash, CryptoNight, Scrypt, X11, BLAKE-anything,
+          ProgPoW, RandomHash, or any other prior algorithm.
+          A mining attempt requires solving a 32&times;32 SPD linear system through 100,000 sequential
+          rounds of integer-only gradient descent and proving the solution sits in a stable basin of
+          attraction (<i>Proof of Irreversible Convergence</i>).
+          Memory-hard: <b>4 GB dataset</b> (SplitMix64-indexed, state-dependent access from V11 Phase 1)
+          plus <b>4 GB scratchpad</b> per mining thread &mdash; 8 GB total. Per-block 256-op program
+          changes every block. Verifiers reconstruct sampled rounds with ~500 MB of RAM in ~0.2 ms.
+          See section 3.
+        </p>
+      </div>
+
+      <!-- SCARCITY -->
+      <div class="wp-pillar" style="--card-accent:#fbbf24">
+        <div class="wp-pillar-tag" style="color:#fbbf24">◆ PILLAR 3 &mdash; SCARCITY</div>
+        <div class="wp-pillar-headline">4,669,201 SOST &mdash; ever</div>
+        <p class="wp-pillar-body">
+          The hard cap is <code>4,669,201 SOST</code> &mdash; the first seven significant digits of
+          <b>Feigenbaum's first constant &delta;</b> (≈&nbsp;4.6692016091&hellip;), the universal
+          ratio that governs the period-doubling route to chaos in nonlinear dynamical systems.
+          The choice is deliberate: ConvergenceX itself is built on the same family of dynamical systems.
+          Emission follows an exponential decay per 131,553-block epoch with quotient
+          <code>q = e<sup>-1/4</sup> ≈ 0.7788</code>; epoch 0 reward = 7.85100863 SOST.
+          No premine, no ICO, no dev tax, no minting function, no governance override.
+          See section 4 (Monetary Policy) and Appendix A (Canonical Constants).
+        </p>
+      </div>
+
+      <!-- STORE OF VALUE -->
+      <div class="wp-pillar" style="--card-accent:#d4af37">
+        <div class="wp-pillar-tag" style="color:#d4af37">◈ PILLAR 4 &mdash; STORE OF VALUE</div>
+        <div class="wp-pillar-headline">Up to 50% supply &rarr; gold-backed</div>
+        <p class="wp-pillar-body">
+          Every block coinbase is split <code>50&nbsp;/&nbsp;25&nbsp;/&nbsp;25</code> by consensus
+          (PoW miner / Gold Funding Vault / PoPC Pool). Over the full emission curve this directs <b>up
+          to 50% of total supply</b> into two gold-backed channels:
+          <br><br>
+          <b style="color:#d4af37">25% &mdash; Perpetual Gold Vault.</b> Protocol-funded, one-way TWAP
+          purchases of tokenised precious metals (XAUT / PAXG today, broader basket later) deposited
+          into a Heritage Reserve on Ethereum mainnet. Observable reserve ratio &mdash; <i>not a peg,
+          not a redemption right</i>. See section 5.
+          <br><br>
+          <b style="color:#d4af37">25% &mdash; Proof of Personal Custody (PoPC).</b> Rewards distributed
+          to holders who prove continued custody of gold-backed positions through cryptographic
+          attestation. Models A (self-custody bonds) and B (escrow timelock) collateralise with
+          tokenised gold today and with physically self-custodied gold in the future, preserving
+          operator privacy on-chain. See section 6.
+          <br><br>
+          The split is enforced at validation: a block with the wrong coinbase shape is invalid.
+          See sections 5, 6, and Constitution C1&ndash;C15 (section 10).
+        </p>
+      </div>
+
+    </div>
+
+    <p class="fade-in delay-3" style="margin-top:24px;font-size:11.5px;color:var(--text-dim);font-family:var(--font-mono);letter-spacing:1.5px;text-align:center">
+      Hardcoded at genesis &middot; immutable forever &middot; no governance override
+    </p>
+  </div>
+</section>
+
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
