@@ -438,4 +438,129 @@ bool BuildDocRefOpenPayload(
     return true;
 }
 
+// =============================================================================
+// BuildTemplateFieldsOpenPayload — Structured Data (public)
+// =============================================================================
+
+bool BuildTemplateFieldsOpenPayload(
+    const TemplateFieldsParams& p,
+    std::vector<Byte>& out_payload,
+    std::string* err)
+{
+    // template_id MUST be != NONE per ValidateTemplateBody (TEMPLATE_NO_ID).
+    if (p.template_id == (uint8_t)TemplateId::NONE) {
+        if (err) *err = "TEMPLATE_FIELDS_OPEN requires a non-zero template_id";
+        return false;
+    }
+
+    // fields_len bound enforced by ValidateTemplateBody.
+    if (p.fields.size() > CAPSULE_TEMPLATE_MAX_FIELDS) {
+        if (err) *err = "fields blob (" + std::to_string(p.fields.size()) +
+                        ") exceeds CAPSULE_TEMPLATE_MAX_FIELDS (" +
+                        std::to_string(CAPSULE_TEMPLATE_MAX_FIELDS) + ")";
+        return false;
+    }
+
+    // Body: capsule_id(8) + field_codec(1) + fields_len(1) + fields(N) = 10 + N
+    size_t body_size = 10 + p.fields.size();
+    if (body_size > CAPSULE_MAX_BODY) {
+        if (err) *err = "TEMPLATE_FIELDS_OPEN body (" + std::to_string(body_size) +
+                        ") exceeds CAPSULE_MAX_BODY (" +
+                        std::to_string(CAPSULE_MAX_BODY) + ")";
+        return false;
+    }
+
+    CapsuleHeader h{};
+    h.capsule_version = CAPSULE_VERSION_1;
+    h.capsule_type    = (uint8_t)CapsuleType::TEMPLATE_FIELDS_OPEN;
+    h.flags           = CapsuleFlags::HAS_TEMPLATE;   // required by validator
+    h.template_id     = p.template_id;
+    h.locator_type    = (uint8_t)LocatorType::NONE;
+    h.hash_alg        = (uint8_t)HashAlg::NONE;
+    h.enc_alg         = (uint8_t)EncAlg::NONE;        // OPEN variant
+    h.body_len        = (uint8_t)body_size;
+    h.reserved        = 0;
+
+    out_payload.clear();
+    out_payload.reserve(CAPSULE_HEADER_SIZE + body_size);
+    EncodeCapsuleHeader(h, out_payload);
+
+    // capsule_id (8 bytes LE)
+    for (int i = 0; i < 8; ++i)
+        out_payload.push_back((uint8_t)((p.capsule_id >> (i * 8)) & 0xFF));
+
+    // field_codec (1 byte) — caller chooses; 0x00 = ASCII text by convention
+    out_payload.push_back(p.field_codec);
+
+    // fields_len (1 byte) + fields blob (N bytes)
+    out_payload.push_back((uint8_t)p.fields.size());
+    out_payload.insert(out_payload.end(), p.fields.begin(), p.fields.end());
+
+    return true;
+}
+
+// =============================================================================
+// BuildCertInstructionPayload — Certification (public)
+// =============================================================================
+
+bool BuildCertInstructionPayload(
+    const CertInstructionParams& p,
+    std::vector<Byte>& out_payload,
+    std::string* err)
+{
+    // note_len bound enforced by ValidateCertInstructionBody.
+    if (p.short_note.size() > CAPSULE_CERT_MAX_NOTE) {
+        if (err) *err = "short_note (" + std::to_string(p.short_note.size()) +
+                        ") exceeds CAPSULE_CERT_MAX_NOTE (" +
+                        std::to_string(CAPSULE_CERT_MAX_NOTE) + ")";
+        return false;
+    }
+
+    // Body: cert_kind(1) + instr_kind(1) + cert_id(8) + ref_value(8)
+    //     + expires_at(4) + note_len(1) + short_note(N)  = 23 + N
+    size_t body_size = 23 + p.short_note.size();
+    if (body_size > CAPSULE_MAX_BODY) {
+        // Defensive: at note=64 body=87, well under 243; this branch is
+        // unreachable today but pinned in case the cert layout grows later.
+        if (err) *err = "CERT_INSTRUCTION body (" + std::to_string(body_size) +
+                        ") exceeds CAPSULE_MAX_BODY (" +
+                        std::to_string(CAPSULE_MAX_BODY) + ")";
+        return false;
+    }
+
+    CapsuleHeader h{};
+    h.capsule_version = CAPSULE_VERSION_1;
+    h.capsule_type    = (uint8_t)CapsuleType::CERT_INSTRUCTION;
+    h.flags           = 0;
+    h.template_id     = (uint8_t)TemplateId::NONE;
+    h.locator_type    = (uint8_t)LocatorType::NONE;
+    h.hash_alg        = (uint8_t)HashAlg::NONE;
+    h.enc_alg         = (uint8_t)EncAlg::NONE;
+    h.body_len        = (uint8_t)body_size;
+    h.reserved        = 0;
+
+    out_payload.clear();
+    out_payload.reserve(CAPSULE_HEADER_SIZE + body_size);
+    EncodeCapsuleHeader(h, out_payload);
+
+    // cert_kind  (1)
+    out_payload.push_back(p.cert_kind);
+    // instr_kind (1)
+    out_payload.push_back(p.instr_kind);
+    // cert_id    (8 bytes LE)
+    for (int i = 0; i < 8; ++i)
+        out_payload.push_back((uint8_t)((p.cert_id >> (i * 8)) & 0xFF));
+    // ref_value  (8 bytes LE)
+    for (int i = 0; i < 8; ++i)
+        out_payload.push_back((uint8_t)((p.ref_value >> (i * 8)) & 0xFF));
+    // expires_at (4 bytes LE)
+    for (int i = 0; i < 4; ++i)
+        out_payload.push_back((uint8_t)((p.expires_at >> (i * 8)) & 0xFF));
+    // note_len   (1) + short_note (N)
+    out_payload.push_back((uint8_t)p.short_note.size());
+    out_payload.insert(out_payload.end(), p.short_note.begin(), p.short_note.end());
+
+    return true;
+}
+
 } // namespace sost

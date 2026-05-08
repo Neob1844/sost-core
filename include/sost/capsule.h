@@ -266,4 +266,68 @@ bool BuildDocRefOpenPayload(
     std::vector<Byte>& out_payload,
     std::string* err = nullptr);
 
+// =============================================================================
+// Convenience: build TEMPLATE_FIELDS_OPEN payload
+// =============================================================================
+//
+// Body layout (matches ValidateTemplateBody in capsule.cpp):
+//   capsule_id   (8 bytes, little-endian)
+//   field_codec  (1 byte)   — 0x00 = ASCII text, 0x01 = utf-8 (v1: text only)
+//   fields_len   (1 byte)   — length of the fields blob, <= 128
+//   fields       (N bytes)  — caller-supplied free-form structured payload
+//
+// Header constraints set by this builder:
+//   capsule_type   = TEMPLATE_FIELDS_OPEN (0x05)
+//   template_id    = caller-supplied; MUST be != TemplateId::NONE
+//   flags          = HAS_TEMPLATE
+//   enc_alg        = NONE (this is the OPEN variant; sealed variant wraps later)
+//
+// Returns false (and sets *err) if:
+//   - template_id is NONE
+//   - fields.size() > CAPSULE_TEMPLATE_MAX_FIELDS (128)
+//   - total body would exceed CAPSULE_MAX_BODY (243)
+
+struct TemplateFieldsParams {
+    uint64_t           capsule_id{0};
+    uint8_t            template_id{0};      // MUST be != TemplateId::NONE
+    uint8_t            field_codec{0};      // 0x00 = ASCII; v1 standard
+    std::vector<Byte>  fields;              // <= CAPSULE_TEMPLATE_MAX_FIELDS bytes
+};
+
+bool BuildTemplateFieldsOpenPayload(
+    const TemplateFieldsParams& params,
+    std::vector<Byte>& out_payload,
+    std::string* err = nullptr);
+
+// =============================================================================
+// Convenience: build CERT_INSTRUCTION payload
+// =============================================================================
+//
+// Body layout (matches ValidateCertInstructionBody in capsule.cpp):
+//   cert_kind    (1 byte)   — caller-supplied (e.g. 0x01 gold cert)
+//   instr_kind   (1 byte)   — caller-supplied (e.g. 0x01 attestation)
+//   cert_id      (8 bytes, little-endian)
+//   ref_value    (8 bytes, little-endian) — opaque numeric reference
+//   expires_at   (4 bytes, little-endian) — unix seconds, 0 = no expiry
+//   note_len     (1 byte)
+//   short_note   (N bytes)  — N <= 64
+//
+// Returns false (and sets *err) if:
+//   - short_note.size() > CAPSULE_CERT_MAX_NOTE (64)
+//   - total body would exceed CAPSULE_MAX_BODY (243) — body is at most 23+64=87
+
+struct CertInstructionParams {
+    uint8_t      cert_kind{0};
+    uint8_t      instr_kind{0};
+    uint64_t     cert_id{0};
+    uint64_t     ref_value{0};
+    uint32_t     expires_at{0};   // unix seconds, 0 = no expiry
+    std::string  short_note;      // <= CAPSULE_CERT_MAX_NOTE bytes
+};
+
+bool BuildCertInstructionPayload(
+    const CertInstructionParams& params,
+    std::vector<Byte>& out_payload,
+    std::string* err = nullptr);
+
 } // namespace sost

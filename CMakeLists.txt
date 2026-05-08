@@ -320,6 +320,14 @@ add_executable(test-v13-beacon-p2p-scaffold tests/test_v13_beacon_p2p_scaffold.c
 target_link_libraries(test-v13-beacon-p2p-scaffold PRIVATE sost-core)
 add_test(NAME v13-beacon-p2p-scaffold COMMAND test-v13-beacon-p2p-scaffold)
 
+# Capsule build helpers — public modes.
+# Round-trip + reject coverage for the four public capsule builders
+# (Open Note, Doc Ref, Template Fields, Cert Instruction). Pins the
+# encode/decode contract before sost-cli starts producing capsules.
+add_executable(test-capsule-build-public tests/test_capsule_build_public.cpp)
+target_link_libraries(test-capsule-build-public PRIVATE sost-core)
+add_test(NAME capsule-build-public COMMAND test-capsule-build-public)
+
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)
