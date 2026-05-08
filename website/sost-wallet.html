@@ -759,8 +759,30 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
         <!-- Capsule Protocol Message -->
+        <style>
+          .cap-help-card{margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border-dim);border-radius:3px}
+          .cap-help-card:last-child{margin-bottom:0}
+          .cap-help-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+          .cap-help-num{color:var(--text-dim);font-family:var(--font-mono);font-size:10.5px}
+          .cap-help-name{font-weight:600;color:var(--text-primary);font-size:12px}
+          .cap-help-pub{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;padding:2px 7px;border-radius:2px;text-transform:uppercase}
+          .cap-help-pub.public{color:#22c55e;border:1px solid rgba(34,197,94,.45);background:rgba(34,197,94,.06)}
+          .cap-help-pub.priv{color:#a78bfa;border:1px solid rgba(167,139,250,.45);background:rgba(167,139,250,.06)}
+          .cap-help-pub.empty{color:var(--text-dim);border:1px solid var(--border-dim);background:transparent}
+          .cap-help-body{font-size:11.5px;color:var(--text-secondary);line-height:1.55}
+          .cap-help-body code{font-size:10.5px}
+          .cap-help-meta{margin-top:6px;font-size:10.5px;color:var(--text-dim);font-family:var(--font-mono)}
+          .cap-help-meta b{color:var(--text-secondary)}
+          .cap-help-warn{margin-top:6px;font-size:10.5px;color:#fbbf24}
+          .cap-help-warn::before{content:"⚠ ";opacity:.9}
+          .cap-help-toggle{margin-left:8px;font-size:10px;padding:2px 9px;background:transparent;border:1px solid var(--border-dim);border-radius:3px;color:var(--cyan-primary);cursor:pointer;font-family:var(--font-mono);letter-spacing:.5px;vertical-align:middle}
+          .cap-help-toggle:hover{background:rgba(34,211,238,.06);border-color:var(--cyan-primary)}
+          .cap-rec{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.55);border-radius:3px;padding:8px 11px;margin-bottom:14px;font-size:11px;color:#d1fae5;line-height:1.55}
+          .cap-rec b{color:#22c55e}
+          .cap-help-current{outline:1px solid var(--cyan-primary)}
+        </style>
         <div class="form-group" id="capsuleGroup">
-          <label class="form-label">Message Type <span style="font-size:10px;color:var(--text-dim)">(Capsule Protocol)</span></label>
+          <label class="form-label">Message Type <span style="font-size:10px;color:var(--text-dim)">(Capsule Protocol)</span><button type="button" id="capsuleHelpToggle" class="cap-help-toggle" onclick="toggleCapsuleHelp()">Mode guide &#9662;</button></label>
           <div id="capsuleBadge" style="font-size:10px;margin-bottom:6px;padding:3px 8px;border-radius:3px;display:inline-block"></div>
           <select id="capsuleType" class="form-input" onchange="updateCapsuleUI()" style="font-size:13px">
             <option value="none">None — No message</option>
@@ -777,10 +799,193 @@ document.addEventListener('DOMContentLoaded', () => {
             <textarea id="capsuleText" class="form-input" rows="2" maxlength="80" placeholder="" style="font-size:12px;resize:vertical"></textarea>
             <span id="capsuleCharCount" style="position:absolute;bottom:6px;right:8px;font-size:10px;color:var(--text-dim)">0 / 80</span>
           </div>
+
+          <!-- ============== Mode guide — collapsible help panel ============== -->
+          <div id="capsuleHelpPanel" style="display:none;margin-top:10px;padding:12px 12px 10px;background:rgba(0,0,0,.25);border:1px solid var(--border-dim);border-radius:4px">
+
+            <div class="cap-rec">
+              <b>Recommended for APP rewards distributions:</b>
+              use <code>Structured Data</code>.
+              Suggested category: <code>APP rewards distribution &mdash; verified settlement</code>.
+              Public, auditable, accounting-grade metadata on-chain.
+            </div>
+
+            <!-- 1. None -->
+            <div class="cap-help-card" data-mode="none">
+              <div class="cap-help-head">
+                <span class="cap-help-num">1.</span>
+                <span class="cap-help-name">None &mdash; No capsule attached</span>
+                <span class="cap-help-pub empty">No payload</span>
+              </div>
+              <div class="cap-help-body">
+                Use when the transaction does not need any note, document reference, receipt, or certification.
+                <div class="cap-help-meta"><b>Visibility:</b> no extra data is attached.</div>
+              </div>
+            </div>
+
+            <!-- 2. Open Note -->
+            <div class="cap-help-card" data-mode="open_note">
+              <div class="cap-help-head">
+                <span class="cap-help-num">2.</span>
+                <span class="cap-help-name">Open Note &mdash; Public short note</span>
+                <span class="cap-help-pub public">Public</span>
+              </div>
+              <div class="cap-help-body">
+                Adds a short public message to the transaction. Everyone can read it on-chain.
+                Use for simple labels such as <code>APP rewards payout</code>, <code>Invoice payment</code>, or <code>Donation</code>.
+                <div class="cap-help-meta"><b>Input:</b> plain text, <b>max 80 characters</b>.</div>
+                <div class="cap-help-meta"><b>Visibility:</b> public clear text.</div>
+                <div class="cap-help-warn">Do not include private information.</div>
+              </div>
+            </div>
+
+            <!-- 3. Sealed Note -->
+            <div class="cap-help-card" data-mode="sealed_note">
+              <div class="cap-help-head">
+                <span class="cap-help-num">3.</span>
+                <span class="cap-help-name">Sealed Note &mdash; Private encrypted note</span>
+                <span class="cap-help-pub priv">Private / encrypted</span>
+              </div>
+              <div class="cap-help-body">
+                Adds an encrypted message readable only by the recipient. Uses ECIES over secp256k1 with AES-256-GCM.
+                Use for private payment notes, internal references, or confidential descriptions.
+                <div class="cap-help-meta"><b>Input:</b> message text and the recipient address.</div>
+                <div class="cap-help-meta"><b>Visibility:</b> the chain stores encrypted bytes, not readable text.</div>
+                <div class="cap-help-meta"><b>Recipient:</b> must be able to decrypt with their wallet key.</div>
+                <div class="cap-help-warn">Only the recipient with the matching private key can decrypt it.</div>
+              </div>
+            </div>
+
+            <!-- 4. Document Reference -->
+            <div class="cap-help-card" data-mode="doc_ref">
+              <div class="cap-help-head">
+                <span class="cap-help-num">4.</span>
+                <span class="cap-help-name">Document Reference &mdash; Public document reference</span>
+                <span class="cap-help-pub public">Public</span>
+              </div>
+              <div class="cap-help-body">
+                Links the transaction to an external document by storing its hash and an optional URL or IPFS link.
+                Use for invoices, PDFs, agreements, delivery notes, reports, or public proofs.
+                <div class="cap-help-meta"><b>Input:</b> document hash + optional URL or IPFS CID.</div>
+                <div class="cap-help-meta"><b>Visibility:</b> the reference is public.</div>
+                <div class="cap-help-warn">Do not link private documents unless they are meant to be public.</div>
+              </div>
+            </div>
+
+            <!-- 5. Sealed Document Reference -->
+            <div class="cap-help-card" data-mode="doc_ref_sealed">
+              <div class="cap-help-head">
+                <span class="cap-help-num">5.</span>
+                <span class="cap-help-name">Sealed Document Reference &mdash; Private document reference</span>
+                <span class="cap-help-pub priv">Private / encrypted</span>
+              </div>
+              <div class="cap-help-body">
+                Stores an encrypted document reference. Only the recipient can read the URL/IPFS link or document metadata.
+                Use for private invoices, confidential files, private delivery notes, or internal documents.
+                <div class="cap-help-meta"><b>Input:</b> document hash + private reference/link.</div>
+                <div class="cap-help-meta"><b>Visibility:</b> encrypted on-chain reference.</div>
+                <div class="cap-help-meta"><b>Recipient:</b> must be able to decrypt with their wallet key.</div>
+                <div class="cap-help-warn">The document itself must still be stored securely outside the chain.</div>
+              </div>
+            </div>
+
+            <!-- 6. Structured Data -->
+            <div class="cap-help-card" data-mode="template">
+              <div class="cap-help-head">
+                <span class="cap-help-num">6.</span>
+                <span class="cap-help-name">Structured Data &mdash; Public receipt / invoice</span>
+                <span class="cap-help-pub public">Public</span>
+              </div>
+              <div class="cap-help-body">
+                Adds structured public fields to the transaction, such as invoice ID, order ID, period, service, amount note, or payout category.
+                Use for accounting, APP rewards, public receipts, business payments, and reward distributions.
+                <div class="cap-help-meta"><b>Example:</b> <code>type=APP rewards distribution; period=2026-05; ref=batch-001</code></div>
+                <div class="cap-help-meta"><b>Visibility:</b> public structured data.</div>
+                <div class="cap-help-warn">Do not include personal or confidential details.</div>
+              </div>
+            </div>
+
+            <!-- 7. Sealed Structured Data -->
+            <div class="cap-help-card" data-mode="template_sealed">
+              <div class="cap-help-head">
+                <span class="cap-help-num">7.</span>
+                <span class="cap-help-name">Sealed Structured Data &mdash; Private receipt / invoice</span>
+                <span class="cap-help-pub priv">Private / encrypted</span>
+              </div>
+              <div class="cap-help-body">
+                Adds structured invoice/receipt fields encrypted for the recipient only.
+                Use when the transaction needs accounting metadata but the details should remain private.
+                <div class="cap-help-meta"><b>Input:</b> invoice fields, order reference, period, service, or private payout details.</div>
+                <div class="cap-help-meta"><b>Visibility:</b> encrypted structured data.</div>
+                <div class="cap-help-meta"><b>Recipient:</b> must be able to decrypt with their wallet key.</div>
+                <div class="cap-help-warn">Keep your own backup if this data is needed for accounting.</div>
+              </div>
+            </div>
+
+            <!-- 8. Certification -->
+            <div class="cap-help-card" data-mode="cert">
+              <div class="cap-help-head">
+                <span class="cap-help-num">8.</span>
+                <span class="cap-help-name">Certification &mdash; Public proof / cert</span>
+                <span class="cap-help-pub public">Public</span>
+              </div>
+              <div class="cap-help-body">
+                Attaches a public certification-style capsule to the transaction.
+                Use for gold certificates, warranty proofs, authenticity proofs, custody proofs, audit references, or formal attestations.
+                <div class="cap-help-meta"><b>Input:</b> certificate ID, issuer, proof hash, optional public reference.</div>
+                <div class="cap-help-meta"><b>Visibility:</b> public proof data.</div>
+                <div class="cap-help-warn">This records a proof/reference. It does not automatically verify the real-world truth of the document unless the issuer and hash can be checked.</div>
+              </div>
+            </div>
+
+          </div>
+          <!-- ============== /Mode guide ============== -->
+
           <div style="font-size:10px;color:var(--yellow-primary,#fbbf24);margin-top:6px;line-height:1.5;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.04);padding:6px 8px;border-radius:3px">
             <b>⚠ Web wallet capsule attach is preview-only.</b> The form lets you draft content but the current build does NOT yet write the payload into the broadcast transaction. To prevent silently sending a plain transfer, the wallet will REFUSE to broadcast when Message Type is anything other than "None". Use <code>sost-cli</code> for capsule transactions until this is wired up.
           </div>
         </div>
+        <script>
+          // Toggle for Capsule Mode guide panel.
+          // Highlights the card matching the currently-selected mode so the
+          // user lands on the relevant block immediately.
+          window.toggleCapsuleHelp = function() {
+            var p = document.getElementById('capsuleHelpPanel');
+            var btn = document.getElementById('capsuleHelpToggle');
+            if (!p || !btn) return;
+            var open = (p.style.display === 'block');
+            if (open) {
+              p.style.display = 'none';
+              btn.innerHTML = 'Mode guide ▾';
+            } else {
+              // Highlight the card matching the selected mode
+              var sel = document.getElementById('capsuleType');
+              var mode = sel ? sel.value : 'none';
+              p.querySelectorAll('.cap-help-card').forEach(function(c){
+                c.classList.toggle('cap-help-current', c.getAttribute('data-mode') === mode);
+              });
+              p.style.display = 'block';
+              btn.innerHTML = 'Mode guide ▴';
+              // Scroll the matching card into view inside the panel
+              var match = p.querySelector('.cap-help-card.cap-help-current');
+              if (match && typeof match.scrollIntoView === 'function') {
+                setTimeout(function(){ match.scrollIntoView({block:'nearest', behavior:'smooth'}); }, 50);
+              }
+            }
+          };
+          // Re-highlight when user changes mode while panel is open
+          document.addEventListener('DOMContentLoaded', function(){
+            var sel = document.getElementById('capsuleType');
+            if (!sel) return;
+            sel.addEventListener('change', function(){
+              var p = document.getElementById('capsuleHelpPanel');
+              if (!p || p.style.display !== 'block') return;
+              p.querySelectorAll('.cap-help-card').forEach(function(c){
+                c.classList.toggle('cap-help-current', c.getAttribute('data-mode') === sel.value);
+              });
+            });
+          });
+        </script>
         <div id="sendTotpGroup" class="form-group hidden">
           <label class="form-label">2FA Code</label>
           <input type="text" id="sendTotp" class="form-input" placeholder="6-digit TOTP code" maxlength="6">
