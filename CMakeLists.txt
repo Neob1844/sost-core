@@ -346,6 +346,13 @@ add_executable(test-sealed-envelope tests/test_sealed_envelope.cpp)
 target_link_libraries(test-sealed-envelope PRIVATE sost-core OpenSSL::Crypto secp256k1)
 add_test(NAME sealed-envelope COMMAND test-sealed-envelope)
 
+# Fase Sealed-1.B — SCPv1 packaging around the ECIES envelope.
+# Builders for sealed-note / sealed-doc-ref / sealed-template plus
+# ValidateCapsulePolicy structural checks (no decryption, no ECDH).
+add_executable(test-sealed-capsule-packaging tests/test_sealed_capsule_packaging.cpp)
+target_link_libraries(test-sealed-capsule-packaging PRIVATE sost-core OpenSSL::Crypto secp256k1)
+add_test(NAME sealed-capsule-packaging COMMAND test-sealed-capsule-packaging)
+
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)

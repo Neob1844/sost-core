@@ -4,6 +4,7 @@
 // =============================================================================
 
 #include "sost/capsule.h"
+#include "sost/sealed_envelope.h"   // SEALED_FIXED_OVERHEAD, SEALED_BODY_MAX_BYTES, SEALED_ENVELOPE_VERSION
 #include <cstring>
 
 namespace sost {
@@ -291,6 +292,65 @@ static CapsuleValResult ValidateCertInstructionBody(
     return CapsuleValResult::Ok();
 }
 
+// =============================================================================
+// ValidateSealedEnvelopeBody — structural check, NO decryption.
+//
+// All three sealed types (0x02 SEALED_NOTE_INLINE, 0x04 DOC_REF_SEALED,
+// 0x06 TEMPLATE_FIELDS_SEALED) wrap an ECIES envelope produced by
+// SealSingleRecipient (see include/sost/sealed_envelope.h). The mempool
+// validator does NOT have the recipient privkey, so it cannot — and must
+// not — decrypt. It can however cheaply confirm the envelope is well
+// formed before relaying:
+//
+//   - body_len in [SEALED_FIXED_OVERHEAD, SEALED_BODY_MAX_BYTES]
+//   - body[0] == SEALED_ENVELOPE_VERSION
+//   - body[1] == 0x01            (single-recipient is the only fase wired)
+//   - SEALED_FIXED_OVERHEAD + ct_len == body_len
+//   - h.flags has ENCRYPTED set
+//   - h.enc_alg == ECIES_SECP256K1_AES256_GCM
+//
+// Type-specific extras (e.g. HAS_TEMPLATE for 0x06) are checked by the
+// per-type wrapper that calls this helper.
+// =============================================================================
+static CapsuleValResult ValidateSealedEnvelopeBody(
+    const CapsuleHeader& h, const Byte* body, size_t body_len)
+{
+    if (body_len < SEALED_FIXED_OVERHEAD) {
+        return CapsuleValResult::Fail(CapsuleValCode::SEALED_BODY_TOO_SHORT,
+            "sealed body " + std::to_string(body_len) +
+            " < minimum " + std::to_string(SEALED_FIXED_OVERHEAD));
+    }
+    if (body_len > SEALED_BODY_MAX_BYTES) {
+        return CapsuleValResult::Fail(CapsuleValCode::PAYLOAD_TOO_LONG,
+            "sealed body " + std::to_string(body_len) +
+            " > maximum " + std::to_string(SEALED_BODY_MAX_BYTES));
+    }
+    if (body[0] != SEALED_ENVELOPE_VERSION) {
+        return CapsuleValResult::Fail(CapsuleValCode::SEALED_BAD_VERSION,
+            "sealed envelope version != 0x01");
+    }
+    if (body[1] != 0x01) {
+        return CapsuleValResult::Fail(CapsuleValCode::SEALED_BAD_RECIPIENTS,
+            "sealed recipient_count != 1 (multi-recipient sealed not in this fase)");
+    }
+    // ct_len at offset 67 (LE u16)
+    uint16_t ct_len = (uint16_t)body[67] | ((uint16_t)body[68] << 8);
+    if ((size_t)SEALED_FIXED_OVERHEAD + (size_t)ct_len != body_len) {
+        return CapsuleValResult::Fail(CapsuleValCode::SEALED_LEN_MISMATCH,
+            "sealed ct_len=" + std::to_string(ct_len) +
+            " inconsistent with body_len=" + std::to_string(body_len));
+    }
+    if (!(h.flags & CapsuleFlags::ENCRYPTED)) {
+        return CapsuleValResult::Fail(CapsuleValCode::SEALED_NOT_ENCRYPTED,
+            "sealed type must have ENCRYPTED flag");
+    }
+    if (h.enc_alg != (uint8_t)EncAlg::ECIES_SECP256K1_AES256_GCM) {
+        return CapsuleValResult::Fail(CapsuleValCode::SEALED_BAD_ENC_ALG,
+            "sealed enc_alg must be ECIES_SECP256K1_AES256_GCM");
+    }
+    return CapsuleValResult::Ok();
+}
+
 CapsuleValResult ValidateCapsuleBody(
     const CapsuleHeader& h,
     const std::vector<Byte>& payload)
@@ -306,26 +366,34 @@ CapsuleValResult ValidateCapsuleBody(
         case CapsuleType::OPEN_NOTE_INLINE:
             return ValidateOpenNoteBody(h, body, body_len);
 
+        // Sealed types share the ECIES envelope body shape. The structural
+        // check is in ValidateSealedEnvelopeBody; per-type extras (e.g.
+        // HAS_TEMPLATE for sealed structured) are tacked on here.
         case CapsuleType::SEALED_NOTE_INLINE:
-            // Sealed note: must have ENCRYPTED flag
-            if (!(h.flags & CapsuleFlags::ENCRYPTED)) {
-                return CapsuleValResult::Fail(CapsuleValCode::SEALED_NOT_ENCRYPTED,
-                    "SEALED_NOTE must have ENCRYPTED flag");
-            }
-            // Body structure validated at wallet level (epk+nonce+ct+tag)
-            return CapsuleValResult::Ok();
+            return ValidateSealedEnvelopeBody(h, body, body_len);
 
         case CapsuleType::DOC_REF_OPEN:
             return ValidateDocRefBody(h, body, body_len, false);
 
         case CapsuleType::DOC_REF_SEALED:
-            return ValidateDocRefBody(h, body, body_len, true);
+            return ValidateSealedEnvelopeBody(h, body, body_len);
 
         case CapsuleType::TEMPLATE_FIELDS_OPEN:
             return ValidateTemplateBody(h, body, body_len, false);
 
-        case CapsuleType::TEMPLATE_FIELDS_SEALED:
-            return ValidateTemplateBody(h, body, body_len, true);
+        case CapsuleType::TEMPLATE_FIELDS_SEALED: {
+            // template_id + HAS_TEMPLATE flag still apply to sealed templates;
+            // the recipient needs to know which schema applies once decrypted.
+            if (h.template_id == (uint8_t)TemplateId::NONE) {
+                return CapsuleValResult::Fail(CapsuleValCode::TEMPLATE_NO_ID,
+                    "TEMPLATE_FIELDS_SEALED requires template_id != NONE");
+            }
+            if (!(h.flags & CapsuleFlags::HAS_TEMPLATE)) {
+                return CapsuleValResult::Fail(CapsuleValCode::TEMPLATE_NO_FLAG,
+                    "TEMPLATE_FIELDS_SEALED requires HAS_TEMPLATE flag");
+            }
+            return ValidateSealedEnvelopeBody(h, body, body_len);
+        }
 
         case CapsuleType::CERT_INSTRUCTION:
             return ValidateCertInstructionBody(h, body, body_len);
@@ -561,6 +629,104 @@ bool BuildCertInstructionPayload(
     out_payload.insert(out_payload.end(), p.short_note.begin(), p.short_note.end());
 
     return true;
+}
+
+// =============================================================================
+// Sealed payload builders (Fase Sealed-1.B)
+//
+// All three accept an envelope already produced by SealSingleRecipient and
+// emit the full SCPv1 payload (12-byte header + envelope). The builders are
+// pure plumbing: no encryption, no key handling. Any envelope they accept
+// will round-trip ValidateCapsulePolicy on the same machine.
+// =============================================================================
+
+static bool BuildSealedPayloadCommon(
+    uint8_t                  capsule_type,
+    uint8_t                  flags,
+    uint8_t                  template_id,
+    const std::vector<Byte>& envelope,
+    std::vector<Byte>&       out_payload,
+    std::string*             err)
+{
+    out_payload.clear();
+    if (envelope.size() < SEALED_FIXED_OVERHEAD) {
+        if (err) *err = "sealed payload: envelope " +
+            std::to_string(envelope.size()) + " < minimum " +
+            std::to_string(SEALED_FIXED_OVERHEAD);
+        return false;
+    }
+    if (envelope.size() > SEALED_BODY_MAX_BYTES) {
+        if (err) *err = "sealed payload: envelope " +
+            std::to_string(envelope.size()) + " > maximum " +
+            std::to_string(SEALED_BODY_MAX_BYTES);
+        return false;
+    }
+    // 12-byte header + body must fit the 255-byte sighash window. The
+    // envelope cap (243) already implies this, but check explicitly so a
+    // future cap change can't silently break sighashing.
+    const size_t total = (size_t)CAPSULE_HEADER_SIZE + envelope.size();
+    if (total > 255) {
+        if (err) *err = "sealed payload: total " + std::to_string(total) +
+                        " bytes exceeds sighash window 255";
+        return false;
+    }
+
+    CapsuleHeader h{};
+    h.capsule_version = 1;
+    h.capsule_type    = capsule_type;
+    h.flags           = flags;
+    h.template_id     = template_id;
+    h.locator_type    = (uint8_t)LocatorType::NONE;
+    h.hash_alg        = (uint8_t)HashAlg::NONE;
+    h.enc_alg         = (uint8_t)EncAlg::ECIES_SECP256K1_AES256_GCM;
+    h.body_len        = (uint8_t)envelope.size();
+    h.reserved        = 0;
+
+    out_payload.reserve(total);
+    EncodeCapsuleHeader(h, out_payload);
+    out_payload.insert(out_payload.end(), envelope.begin(), envelope.end());
+    return true;
+}
+
+bool BuildSealedNotePayload(
+    const std::vector<Byte>& envelope,
+    std::vector<Byte>&       out_payload,
+    std::string*             err)
+{
+    return BuildSealedPayloadCommon(
+        (uint8_t)CapsuleType::SEALED_NOTE_INLINE,
+        CapsuleFlags::ENCRYPTED,
+        /*template_id=*/0,
+        envelope, out_payload, err);
+}
+
+bool BuildSealedDocRefPayload(
+    const std::vector<Byte>& envelope,
+    std::vector<Byte>&       out_payload,
+    std::string*             err)
+{
+    return BuildSealedPayloadCommon(
+        (uint8_t)CapsuleType::DOC_REF_SEALED,
+        CapsuleFlags::ENCRYPTED,
+        /*template_id=*/0,
+        envelope, out_payload, err);
+}
+
+bool BuildSealedTemplatePayload(
+    uint8_t                   template_id,
+    const std::vector<Byte>&  envelope,
+    std::vector<Byte>&        out_payload,
+    std::string*              err)
+{
+    if (template_id == (uint8_t)TemplateId::NONE) {
+        if (err) *err = "sealed template: template_id must not be NONE";
+        return false;
+    }
+    return BuildSealedPayloadCommon(
+        (uint8_t)CapsuleType::TEMPLATE_FIELDS_SEALED,
+        (uint8_t)(CapsuleFlags::ENCRYPTED | CapsuleFlags::HAS_TEMPLATE),
+        template_id,
+        envelope, out_payload, err);
 }
 
 } // namespace sost

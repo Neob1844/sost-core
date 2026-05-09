@@ -178,6 +178,13 @@ enum class CapsuleValCode : int {
     CERT_BODY_SHORT     = 19,
     CERT_NOTE_TOO_LONG  = 20,
 
+    // Sealed envelope (Fase Sealed-1.B)
+    SEALED_BODY_TOO_SHORT  = 30,
+    SEALED_BAD_VERSION     = 31,
+    SEALED_BAD_RECIPIENTS  = 32,
+    SEALED_LEN_MISMATCH    = 33,
+    SEALED_BAD_ENC_ALG     = 34,
+
     // Generic
     UNSUPPORTED_TYPE    = 99,
 };
@@ -329,5 +336,47 @@ bool BuildCertInstructionPayload(
     const CertInstructionParams& params,
     std::vector<Byte>& out_payload,
     std::string* err = nullptr);
+
+// =============================================================================
+// Convenience: build SEALED capsule payloads (Fase Sealed-1.B)
+// =============================================================================
+//
+// All three builders take an `envelope` already produced by the ECIES motor
+// (see include/sost/sealed_envelope.h::SealSingleRecipient) and wrap it in
+// the standard 12-byte SCPv1 header. They do NOT do any encryption
+// themselves — that is the cryptographic motor's job.
+//
+// Common header settings populated by these builders:
+//   capsule_version = 1
+//   flags          = ENCRYPTED  (TEMPLATE adds HAS_TEMPLATE)
+//   template_id    = 0  (TEMPLATE: caller-supplied, must be != NONE)
+//   locator_type   = NONE
+//   hash_alg       = NONE  (sealed body is opaque to the chain)
+//   enc_alg        = ECIES_SECP256K1_AES256_GCM (= 0x01)
+//   body_len       = envelope.size()
+//
+// All three reject when:
+//   - envelope.size() <  SEALED_FIXED_OVERHEAD (85)
+//   - envelope.size() >  SEALED_BODY_MAX_BYTES (243)
+//   - resulting payload (header + envelope) > 255 bytes (sighash window)
+//
+// The wallet/CLI is still responsible for the height gate (V13 @ 12000)
+// and the recipient-pubkey lookup; these builders are pure plumbing.
+
+bool BuildSealedNotePayload(
+    const std::vector<Byte>& envelope,
+    std::vector<Byte>&       out_payload,
+    std::string*             err = nullptr);
+
+bool BuildSealedDocRefPayload(
+    const std::vector<Byte>& envelope,
+    std::vector<Byte>&       out_payload,
+    std::string*             err = nullptr);
+
+bool BuildSealedTemplatePayload(
+    uint8_t                   template_id,    // != TemplateId::NONE
+    const std::vector<Byte>&  envelope,
+    std::vector<Byte>&        out_payload,
+    std::string*              err = nullptr);
 
 } // namespace sost
