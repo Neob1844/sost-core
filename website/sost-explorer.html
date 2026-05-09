@@ -1091,6 +1091,12 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
     </div>
     <table class="tbl"><thead><tr><th>TXID</th><th>CAPSULE</th><th>BLOCK</th><th>TYPE</th><th title="Number of UTXOs the wallet spent (input count, not SOST)">IN<br><span style="font-size:9px;color:var(--text3);font-weight:normal">UTXOs</span></th><th title="Number of new outputs created (not SOST)">OUT<br><span style="font-size:9px;color:var(--text3);font-weight:normal">outputs</span></th><th title="External payment amount (excludes change)">AMOUNT<br><span style="font-size:9px;color:var(--text3);font-weight:normal">payment</span></th><th>FEE</th></tr></thead>
     <tbody id="txBody"><tr><td colspan="8" class="ld">loading transactions</td></tr></tbody></table>
+    <div class="pager">
+      <button onclick="txNewestPage()" id="txBtnFirst" style="display:none">⟪ NEWEST</button>
+      <button onclick="txPrevPage()"   id="txBtnP"     style="display:none">← NEWER</button>
+      <button onclick="txNextPage()"   id="txBtnN">OLDER →</button>
+      <button onclick="txOldestPage()" id="txBtnLast">OLDEST ⟫</button>
+    </div>
   </div>
   <div class="section" id="mpSection">
     <div class="sec-head"><div class="sec-title">// <b>MEMPOOL</b></div><div class="sec-meta" id="mpInfo"></div></div>
@@ -5447,10 +5453,25 @@ function showCXInfo(){
 
 var _allTxRows=[];
 var _txFilter='ALL';
+var _txPage=0;
+var TX_PAGE_SIZE=25;
 function setTxFilter(f){
   _txFilter=f;
+  _txPage=0;   // reset to NEWEST when the filter changes
   var btns=document.querySelectorAll('.tx-filter');
   for(var i=0;i<btns.length;i++)btns[i].classList.toggle('active',btns[i].getAttribute('data-filter')===f);
+  renderTxTable();
+}
+// Pager handlers — same shape as blocks (newestPage/prevPage/nextPage/oldestPage).
+// Pagination is local to the dataset already loaded (Phase 1: last 30
+// blocks; Phase 2: listtransfers up to 50). Older history beyond that
+// would require a backend offset; out of scope for now.
+function txNextPage(){_txPage++;renderTxTable();}
+function txPrevPage(){_txPage=Math.max(0,_txPage-1);renderTxTable();}
+function txNewestPage(){_txPage=0;renderTxTable();}
+function txOldestPage(){
+  var f=_txFilter==='ALL'?_allTxRows:_allTxRows.filter(function(r){return r.type===_txFilter;});
+  _txPage=Math.max(0,Math.ceil(f.length/TX_PAGE_SIZE)-1);
   renderTxTable();
 }
 function classifyTx(tx){
@@ -5515,11 +5536,32 @@ function formatCapsuleCell(cap){
 function renderTxTable(){
   var tb=document.getElementById('txBody');
   var filtered=_txFilter==='ALL'?_allTxRows:_allTxRows.filter(function(r){return r.type===_txFilter;});
-  document.getElementById('txInfo').textContent=filtered.length+' of '+_allTxRows.length+' transactions';
+  // Clamp page if the dataset shrank under the user (e.g. filter switch).
+  var maxPage=Math.max(0,Math.ceil(filtered.length/TX_PAGE_SIZE)-1);
+  if(_txPage>maxPage)_txPage=maxPage;
+  var off=_txPage*TX_PAGE_SIZE;
+  var page=filtered.slice(off,off+TX_PAGE_SIZE);
+  // Header text now includes the visible window so the user sees both
+  // "page" position and total count.
+  var hdr=filtered.length+' of '+_allTxRows.length+' transactions';
+  if(filtered.length>TX_PAGE_SIZE){
+    hdr+=' \u00b7 page '+(_txPage+1)+'/'+(maxPage+1)+' (showing '+(off+1)+'\u2013'+(off+page.length)+')';
+  }
+  document.getElementById('txInfo').textContent=hdr;
+  // Toggle pager buttons. Same convention as blocks (newer/older).
+  var pBtnFirst=document.getElementById('txBtnFirst');
+  var pBtnP=document.getElementById('txBtnP');
+  var pBtnN=document.getElementById('txBtnN');
+  var pBtnLast=document.getElementById('txBtnLast');
+  if(pBtnFirst)pBtnFirst.style.display=_txPage>0?'':'none';
+  if(pBtnP)    pBtnP.style.display    =_txPage>0?'':'none';
+  if(pBtnN)    pBtnN.style.display    =_txPage<maxPage?'':'none';
+  if(pBtnLast) pBtnLast.style.display =_txPage<maxPage?'':'none';
+
   if(filtered.length===0){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">no '+_txFilter.toLowerCase()+' transactions</td></tr>';return;}
   tb.innerHTML='';
-  for(var i=0;i<filtered.length;i++){
-    var r=filtered[i];
+  for(var i=0;i<page.length;i++){
+    var r=page[i];
     var typeColor=r.type==='COINBASE'?'var(--yellow)':r.type==='BOND'?'var(--purple)':'var(--green)';
     var capCell=formatCapsuleCell(r.capsule);
     var capClickable=(r.capsule&&r.capsule.type&&r.capsule.type!=='unknown')
@@ -6230,14 +6272,44 @@ window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawC
     console.warn('[chiptune] #nesMuteBtn not found in DOM');
     return;
   }
-  var muted = false;
+  // True toggle. Previous version kept calling playRandomMelody on every
+  // click and never silenced the audio — pressing again only queued a new
+  // melody. Now: if currently playing → mute + stop; if currently silent
+  // → unmute + play. Survives across page reloads via the engine's own
+  // localStorage flag (sost_music_muted).
+  var isPlaying = false;
+  function setVisualState(playing){
+    if (playing) {
+      btn.innerHTML = '\u{1F3AE}';                 // 🎮 active
+      btn.style.opacity = '1';
+      btn.style.borderColor = '#4ade80';
+      btn.title = 'NES chiptune playing — click to mute';
+    } else {
+      btn.innerHTML = '\u{1F507}';                 // 🔇 muted
+      btn.style.opacity = '0.55';
+      btn.style.borderColor = '#333';
+      btn.title = 'Muted — click to play a chiptune';
+    }
+  }
+  // Initial state mirrors whatever the engine remembered last session.
+  try {
+    if (window.nesIsMuted && window.nesIsMuted()) setVisualState(false);
+    else                                          setVisualState(false);  // start silent until first click
+  } catch(e) { setVisualState(false); }
+
   btn.onclick = function(){
     try {
+      if (isPlaying) {
+        // Stop + mute.
+        try { if (window.nesIsMuted && !window.nesIsMuted() && window.nesToggleMute) window.nesToggleMute(); } catch(e){}
+        try { if (window.stopMelody) window.stopMelody(); } catch(e){}
+        isPlaying = false;
+        setVisualState(false);
+        return;
+      }
+      // Unmute + play.
+      try { if (window.nesIsMuted && window.nesIsMuted() && window.nesToggleMute) window.nesToggleMute(); } catch(e){}
       if (typeof window.playRandomMelody === 'function') {
-        // Unmute first if a previous session left the music engine muted.
-        try {
-          if (window.nesIsMuted && window.nesIsMuted()) window.nesToggleMute();
-        } catch(e) {}
         window.playRandomMelody();
       } else if (typeof window._nesPlayRandom === 'function') {
         window._nesPlayRandom();
@@ -6247,11 +6319,10 @@ window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawC
         btn.style.borderColor = '#fb010d';
         return;
       }
-      btn.title = 'NES chiptune playing — click for next melody';
-      btn.style.opacity = '1';
-      btn.innerHTML = '\u{1F3AE}';
+      isPlaying = true;
+      setVisualState(true);
     } catch (e) {
-      console.error('[chiptune] play failed:', e);
+      console.error('[chiptune] toggle failed:', e);
       btn.title = 'Chiptune error — check browser console';
       btn.style.borderColor = '#fb010d';
     }

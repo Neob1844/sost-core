@@ -3905,15 +3905,60 @@ window.sendTransaction = async function() {
       throw new Error('No spendable UTXOs. Coinbase rewards require 1000 confirmations before spending.');
     }
 
-    // Estimate tx size: ~148 * inputs + 34 * outputs + 10
-    const inputCount = Math.min(utxos.length, 10);
-    const estSize = 148 * inputCount + 34 * 2 + 10;
-    const feeStocks = feePerByte * estSize;
-    const actualFeeRate = Math.ceil(feeStocks / estSize);
-    const totalIn = utxos.slice(0, inputCount).reduce((s, u) => s + u.amount, 0);
+    // Two-pass fee calculation, mirroring src/sost-cli.cpp send (commit
+    // 46d719d). The first estimate is a starting point; the authoritative
+    // size comes from the SIGNED + SERIALISED tx, which depends on:
+    //   * how many UTXOs were actually picked (not min(N, 10))
+    //   * the capsule payload bytes (a sealed/doc-ref capsule can add
+    //     20 KB+ that the old estimate ignored entirely)
+    // After pass 1 we recompute the fee from rawTx.length / 2 and rebuild
+    // if the fee would be short. Two passes converge — pass 2 might shift
+    // the size by a handful of bytes (one fewer/extra input chosen), and
+    // pass 3 closes that.
+    const capsuleSize = capsulePayload ? capsulePayload.length : 0;
+    // Generous starting guess so the FIRST pass usually selects enough
+    // UTXOs. 148 B per input + 34 B per output + 10 B header + 2 B
+    // payload_len + capsule body. min(utxos.length, 256) is the upper
+    // bound (consensus tx-input cap).
+    const seedInputCount = Math.min(utxos.length, 256);
+    let estSize = 148 * seedInputCount + 34 * 2 + 10 + 2 + capsuleSize;
+    let feeStocks = feePerByte * estSize;
+
+    let built = await buildAndSignTx(utxos, toAddr, amountStocks, feeStocks, wallet.address, capsulePayload);
+    let rawTx = built.rawTx;
+    let selectedUtxos = built.selected;
+    let txSize = rawTx.length / 2;
+
+    // Pass 2: real size from the signed tx. If the consensus minimum
+    // (size × feePerByte) exceeds what we paid, rebuild with the
+    // corrected fee. Cap at 3 passes so a pathological oscillation
+    // can't loop forever.
+    for (let pass = 0; pass < 3; pass++) {
+      const realFee = feePerByte * txSize;
+      if (realFee <= feeStocks) break;
+      feeStocks = realFee;
+      built = await buildAndSignTx(utxos, toAddr, amountStocks, feeStocks, wallet.address, capsulePayload);
+      rawTx = built.rawTx;
+      selectedUtxos = built.selected;
+      txSize = rawTx.length / 2;
+    }
+
+    // Final guard: if after 3 passes we still cannot cover, refuse
+    // before broadcasting (the node would reject with S8).
+    if (feePerByte * txSize > feeStocks) {
+      throw new Error(
+        'Could not converge on a sufficient fee after 3 passes. ' +
+        'Real size = ' + txSize + ' B, fee paid = ' + feeStocks +
+        ' stocks, fee rate = ' + feePerByte + ' st/B. ' +
+        'Try a larger --capsule trimmed or fewer recipients.');
+    }
+
+    const totalIn = selectedUtxos.reduce((s, u) => s + u.amount, 0);
     const changeAmt = totalIn - amountStocks - feeStocks;
 
-    // Show confirmation dialog BEFORE signing
+    // Show confirmation dialog AFTER converged. The values shown are
+    // exactly what gets broadcast; no surprise rebuilding behind the
+    // user's back.
     const feeMode = document.getElementById('feeMode').value;
     const feeModeLabel = feeMode === 'manual' ? 'MANUAL' : feeMode === 'auto' ? 'AUTO (min relay)' : 'RECOMMENDED';
     const confirmMsg = `TX CONFIRMATION\n\n` +
@@ -3921,21 +3966,17 @@ window.sendTransaction = async function() {
       `Amount: ${formatSost(amountStocks)} SOST\n` +
       `Fee mode: ${feeModeLabel}\n` +
       `Fee rate: ${feePerByte} st/B\n` +
-      `TX size: ~${estSize} bytes\n` +
+      `TX size: ${txSize} bytes (signed)\n` +
       `Total fee: ${formatSost(feeStocks)} SOST\n` +
-      `Inputs: ${inputCount} UTXOs\n` +
+      `Inputs: ${selectedUtxos.length} UTXOs\n` +
       `Outputs: 2 (payment + change)\n` +
+      (capsuleSize > 0 ? `Capsule: ${capsuleSize} bytes attached\n` : '') +
       `Change: ${formatSost(Math.max(0, changeAmt))} SOST\n\n` +
       `Confirm and broadcast?`;
     if (!confirm(confirmMsg)) {
       showError('sendResult', 'Transaction cancelled by user.');
       return;
     }
-
-    const built = await buildAndSignTx(utxos, toAddr, amountStocks, feeStocks, wallet.address, capsulePayload);
-    const rawTx = built.rawTx;
-    const selectedUtxos = built.selected;
-    const txSize = rawTx.length / 2;
 
     // Broadcast
     console.log('[TX] Broadcasting raw TX:', rawTx.substring(0, 40) + '... (' + txSize + ' bytes)');
