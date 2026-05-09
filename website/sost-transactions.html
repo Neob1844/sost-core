@@ -803,11 +803,223 @@
   </div>
 </section>
 
+<!-- SENDING CAPSULE TXs -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">03 &mdash; SENDING</div>
+      <h2 class="section-title">Sending <span class="accent">Capsule Transactions</span></h2>
+      <div style="margin-top:12px;"><span class="spec-tag overlay">OVERLAY &middot; PUBLIC MODES</span></div>
+    </div>
+
+    <p class="spec-desc fade-in delay-1" style="max-width:840px;margin-bottom:24px;">
+      Capsules are public-mode metadata attached to <code>OUT_TRANSFER</code> outputs and
+      validated by the mempool, not consensus. There are two ways to send a capsule
+      transaction today: the <code>sost-cli</code> binary and the web wallet
+      (<a href="sost-wallet.html" style="color:var(--red-primary)">sost-wallet.html</a>).
+      Both produce the same on-chain bytes; the cli is appropriate when you want
+      multi-key wallets, file-based document references, or shell automation.
+    </p>
+
+    <!-- CLI block -->
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">A. sost-cli send &mdash; with capsule</span>
+        </div>
+        <span class="spec-tag overlay">CLI</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Canonical APP-rewards send. Replace the recipient address, amount, and
+          capsule text with your own. Global flags can appear in any order
+          (parser fix landed in <code>6c1338e</code>).
+        </p>
+<pre style="background:#0a0a0a;border:1px solid #2a2a2a;border-left:3px solid var(--red-primary);border-radius:4px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#cbd5e1;line-height:1.65;overflow-x:auto;margin:12px 0">./sost-cli send sost1a8eae8f80fedd8d86187db628a0d81e0367f76de 0.01 \
+  --wallet phase2-miner-wallet.json \
+  --from-label phase2-miner \
+  --rpc 127.0.0.1:18232 \
+  --rpc-user &lt;your-rpc-user&gt; \
+  --rpc-pass &lt;your-rpc-pass&gt; \
+  --capsule-mode structured \
+  --capsule-template payment_receipt_v1 \
+  --capsule-text 'category=APP rewards distribution; ref=batch-001; period=2026-05; note=verified settlement'</pre>
+        <p class="spec-desc">
+          Before broadcast the cli prints
+          <code>Capsule attached: mode=structured, payload=N bytes</code>. If you
+          do not see that line, the mode flag did not reach the parser &mdash; pull
+          to <code>6c1338e</code> or later.
+        </p>
+      </div>
+    </div>
+
+    <!-- from-label vs sbpow -->
+    <div class="spec-block fade-in delay-2">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">--from-label is a wallet alias, not an SbPoW tag</span>
+        </div>
+        <span class="spec-tag">CLARIFICATION</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Two distinct concepts that share the word "label" in some contexts:
+        </p>
+        <table class="code-table">
+          <tr><td class="key" style="vertical-align:top">SbPoW</td><td class="val">Surface-bound proof-of-work &mdash; the algorithm a <b>miner</b> uses to commit a block. It has no per-transaction tag, no flag, and is not selected when sending a transfer. SbPoW only matters at <code>sost-miner</code> time.</td></tr>
+          <tr><td class="key" style="vertical-align:top">--from-label</td><td class="val">A human alias for a key inside your wallet json. The label is whatever you typed when the key was created (<code>phase2-miner</code>, <code>treasury</code>, <code>app-rewards</code>, etc.). The cli uses it to pick which key signs and which address change returns to.</td></tr>
+        </table>
+        <p class="spec-desc" style="margin-top:14px">
+          Sending a transfer never activates SbPoW. SbPoW activates when a miner
+          builds a candidate block.
+        </p>
+      </div>
+    </div>
+
+    <!-- listing labels -->
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Find or create a wallet label</span>
+        </div>
+        <span class="spec-tag">CLI</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">List every key+label pair in a wallet:</p>
+<pre style="background:#0a0a0a;border:1px solid #2a2a2a;border-left:3px solid var(--cyan-primary);border-radius:4px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#cbd5e1;line-height:1.65;overflow-x:auto;margin:12px 0">./sost-cli --wallet phase2-miner-wallet.json listaddresses</pre>
+        <p class="spec-desc">
+          The output prints one row per key with <code>label</code> +
+          <code>address</code> + <code>balance</code>. To filter just the
+          (label, address) pairs as JSON for scripting:
+        </p>
+<pre style="background:#0a0a0a;border:1px solid #2a2a2a;border-left:3px solid var(--cyan-primary);border-radius:4px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#cbd5e1;line-height:1.65;overflow-x:auto;margin:12px 0">jq -r '.keys[] | [.label, .address] | @tsv' phase2-miner-wallet.json</pre>
+        <p class="spec-desc">Create a new key under a chosen label:</p>
+<pre style="background:#0a0a0a;border:1px solid #2a2a2a;border-left:3px solid var(--cyan-primary);border-radius:4px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#cbd5e1;line-height:1.65;overflow-x:auto;margin:12px 0">./sost-cli --wallet wallet.json getnewaddress app-rewards</pre>
+      </div>
+    </div>
+
+    <!-- when to use which flag -->
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon"></div>
+          <span class="spec-name">Source-account selection &mdash; which flag to use</span>
+        </div>
+        <span class="spec-tag">CLI</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><td class="key">no flag</td><td class="val">Spends from <code>wallet.default_address()</code> (the first key in the file). On a single-key wallet this is what you want.</td></tr>
+          <tr><td class="key">--from-label &lt;name&gt;</td><td class="val">Resolves to whichever key carries that label. Best for multi-key wallets where keys have stable roles (<code>treasury</code>, <code>phase2-miner</code>, etc.).</td></tr>
+          <tr><td class="key">--from-address &lt;sost1...&gt;</td><td class="val">Spends from the exact bech32 address. Best for scripts that already know the address and do not care about labels.</td></tr>
+        </table>
+        <p class="spec-desc" style="margin-top:14px">
+          The two flags are mutually exclusive. On a multi-key wallet without
+          either flag the cli prints a one-line notice pointing at them so the
+          default-key fallback is never silent.
+        </p>
+      </div>
+    </div>
+
+    <!-- public capsule modes -->
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Public capsule modes wired today</span>
+        </div>
+        <span class="spec-tag overlay">OVERLAY</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><td class="key">open-note</td><td class="val">Plain text up to 80 bytes. <code>--capsule-text "&lt;message&gt;"</code></td></tr>
+          <tr><td class="key">structured</td><td class="val">Typed key=value fields under a template_id. <code>--capsule-template payment_receipt_v1 --capsule-text "k=v; k2=v2"</code></td></tr>
+          <tr><td class="key">cert</td><td class="val">Certification instruction with optional 64-byte note. <code>--capsule-mode cert --capsule-text "&lt;note&gt;"</code></td></tr>
+          <tr><td class="key">doc-ref</td><td class="val">SHA-256 of an off-chain file + locator (IPFS or HTTPS). <code>--capsule-file ./contract.pdf --capsule-locator ipfs://Qm...</code></td></tr>
+        </table>
+        <p class="spec-desc" style="margin-top:14px">
+          Sealed-* variants (encrypted notes, encrypted doc-ref, encrypted
+          structured) are gated behind ECIES which is not in this release; the
+          cli rejects them with an explicit error.
+        </p>
+      </div>
+    </div>
+
+    <!-- Web wallet block -->
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon"></div>
+          <span class="spec-name">B. Web wallet &mdash; same capsule, no shell</span>
+        </div>
+        <span class="spec-tag">UI</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Open <a href="sost-wallet.html" style="color:var(--red-primary)">sost-wallet.html</a>,
+          import or unlock the wallet that holds the funds, then:
+        </p>
+        <ol class="spec-desc" style="margin-left:18px;line-height:1.85">
+          <li>Recipient: paste the destination address.</li>
+          <li>Amount: <code>0.01</code> (or whatever you intend to send).</li>
+          <li>Message Type: pick <code>Structured Data</code>, <code>Open Note</code>, or <code>Certification</code>.</li>
+          <li>Template (Structured only): the default <code>payment_receipt_v1</code> covers most cases.</li>
+          <li>Text: the capsule body. For payment receipts:<br>
+            <code>category=APP rewards distribution; ref=batch-001; period=2026-05; note=...</code></li>
+          <li>Send. The wallet pre-validates the capsule before signing and
+              binds it into the sighash, so any tampering on the broadcast
+              path triggers a node-side signature failure (safe-by-rejection).</li>
+        </ol>
+        <p class="spec-desc" style="margin-top:14px">
+          Sealed-* and document-reference modes still bridge to the cli (the
+          web wallet does not have a file picker yet). For a single-key wallet
+          there is no per-key selector &mdash; the active session uses whichever
+          key is loaded.
+        </p>
+      </div>
+    </div>
+
+    <!-- where it shows up -->
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-name">Verifying the capsule landed</span>
+        </div>
+        <span class="spec-tag">EXPLORER</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Once the broadcast confirms, the
+          <a href="sost-explorer.html" style="color:var(--red-primary)">explorer</a>
+          surfaces the capsule in two places:
+        </p>
+        <ul class="spec-desc" style="margin-left:18px;line-height:1.85">
+          <li><b>Latest Transactions</b> table &mdash; the new <code>CAPSULE</code>
+              column reads e.g. <code>structured &middot; receipt</code>.</li>
+          <li><b>TX detail panel</b> &mdash; three rows (capsule type + body length,
+              template, decoded text) below inputs/outputs.</li>
+        </ul>
+        <p class="spec-desc" style="margin-top:14px">
+          The same data is available over RPC: <code>gettransaction</code>
+          returns a top-level <code>capsule</code> object plus per-output
+          <code>payload_hex</code>; <code>listtransfers</code> returns the
+          summary inline per row. No extra index, no extra daemon &mdash; the
+          payload bytes already live in the block.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- FUTURE RESEARCH -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">03 &mdash; FUTURE</div>
+      <div class="section-id">04 &mdash; FUTURE</div>
       <h2 class="section-title">Future <span class="accent">Research</span></h2>
     </div>
 
@@ -875,7 +1087,7 @@
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">04 &mdash; PHILOSOPHY</div>
+      <div class="section-id">05 &mdash; PHILOSOPHY</div>
       <h2 class="section-title">Design <span class="accent">Philosophy</span></h2>
     </div>
 
