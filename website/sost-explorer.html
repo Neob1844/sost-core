@@ -5455,6 +5455,16 @@ var _allTxRows=[];
 var _txFilter='ALL';
 var _txPage=0;
 var TX_PAGE_SIZE=25;
+
+// Lazy-load older history. After the initial Phase 1+2 fills the head of
+// _allTxRows (last 30 blocks + up to 200 transfers), _txHistoryCursor
+// points at the next height to fetch when the user pulls "OLDER →" past
+// the last local page. Exhausted = we have loaded blocks down to genesis.
+var _txHistoryCursor   = null;   // next-older block height to fetch
+var _txHistoryLoading  = false;
+var _txHistoryExhausted= false;
+var TX_HISTORY_BATCH_BLOCKS = 30;
+
 function setTxFilter(f){
   _txFilter=f;
   _txPage=0;   // reset to NEWEST when the filter changes
@@ -5462,17 +5472,114 @@ function setTxFilter(f){
   for(var i=0;i<btns.length;i++)btns[i].classList.toggle('active',btns[i].getAttribute('data-filter')===f);
   renderTxTable();
 }
+
 // Pager handlers — same shape as blocks (newestPage/prevPage/nextPage/oldestPage).
-// Pagination is local to the dataset already loaded (Phase 1: last 30
-// blocks; Phase 2: listtransfers up to 50). Older history beyond that
-// would require a backend offset; out of scope for now.
-function txNextPage(){_txPage++;renderTxTable();}
+// txNextPage now triggers a backend lazy-load when the user reaches the
+// last local page and history is not yet exhausted. The handler is async
+// (the inline onclick="txNextPage()" works either way; nothing awaits the
+// returned promise).
+async function txNextPage(){
+  var filtered=_txFilter==='ALL'?_allTxRows:_allTxRows.filter(function(r){return r.type===_txFilter;});
+  var maxPage=Math.max(0,Math.ceil(filtered.length/TX_PAGE_SIZE)-1);
+  if(_txPage<maxPage){_txPage++;renderTxTable();return;}
+  // At the last local page. Try to fetch one more batch unless we already
+  // know the cursor hit genesis.
+  if(_txHistoryExhausted||_txHistoryLoading)return;
+  await loadOlderTxHistoryBatch();
+  // After the load, recompute maxPage and advance if more rows came in.
+  var f2=_txFilter==='ALL'?_allTxRows:_allTxRows.filter(function(r){return r.type===_txFilter;});
+  var newMaxPage=Math.max(0,Math.ceil(f2.length/TX_PAGE_SIZE)-1);
+  if(newMaxPage>_txPage)_txPage++;
+  renderTxTable();
+}
 function txPrevPage(){_txPage=Math.max(0,_txPage-1);renderTxTable();}
 function txNewestPage(){_txPage=0;renderTxTable();}
 function txOldestPage(){
+  // Stops at the LAST already-loaded page on purpose. To pull older blocks
+  // the user clicks OLDER → again — that one RPC-loads. Auto-walking to
+  // genesis would burst hundreds of RPCs at once.
   var f=_txFilter==='ALL'?_allTxRows:_allTxRows.filter(function(r){return r.type===_txFilter;});
   _txPage=Math.max(0,Math.ceil(f.length/TX_PAGE_SIZE)-1);
   renderTxTable();
+}
+
+// Walk a contiguous height range [fromHeight..toHeight] (inclusive,
+// monotone-decreasing) and return rows in the same shape as Phase 1.
+// Used by both loadLatestTxs (head) and loadOlderTxHistoryBatch (tail).
+async function _scanBlocksToRows(fromHeight, toHeight){
+  var rows=[];
+  var heights=[];
+  for(var h=fromHeight;h>=toHeight;h--)heights.push(h);
+  if(heights.length===0)return rows;
+  var hashes=await Promise.all(heights.map(function(_hh){
+    return rpc('getblockhash',[String(_hh)]).catch(function(){return null;});
+  }));
+  var blocks=await Promise.all(hashes.map(function(_hh){
+    return _hh ? rpc('getblock',[_hh]).catch(function(){return null;}) : Promise.resolve(null);
+  }));
+  var nonCb=[];
+  for(var i=0;i<blocks.length;i++){
+    var _b=blocks[i];if(!_b)continue;
+    var _hh=heights[i];
+    rows.push({txid:_b.txids?_b.txids[0]:'cb_'+_hh,height:_hh,type:'COINBASE',inputs:0,outputs:3,amount:fS(_b.subsidy)+' SOST',fee:'—',capsule:null});
+    if(_b.txids&&_b.txids.length>1){
+      for(var _t=1;_t<_b.txids.length;_t++)nonCb.push({txid:_b.txids[_t],height:_hh});
+    }
+  }
+  if(nonCb.length>0){
+    var txs=await Promise.all(nonCb.map(function(_e){
+      return rpc('gettransaction',[_e.txid]).catch(function(){return null;});
+    }));
+    for(var j=0;j<nonCb.length;j++){
+      var _e=nonCb[j], _tx=txs[j];
+      if(_tx){
+        var _tot=0;for(var _v=0;_v<(_tx.vout||[]).length;_v++){var _a=_tx.vout[_v].amount;_tot+=(typeof _a==='number'?_a:parseFloat(_a));}
+        var _cap=_tx.capsule||null;
+        if(!_cap&&_tx.vout&&_tx.vout[0]&&_tx.vout[0].payload_hex){_cap=parseCapsuleHexJS(_tx.vout[0].payload_hex);}
+        var _hasPay=(typeof _tx.payment_amount==='number');
+        var _amtStr=_hasPay?(fS(_tx.payment_amount)+' SOST'):(_tot.toFixed(4)+' SOST');
+        var _amtTip=_hasPay
+          ? ('Payment: '+fS(_tx.payment_amount)+' SOST · Change: '+fS(_tx.change_amount||0)+' SOST · Total out: '+_tot.toFixed(4)+' SOST')
+          : ('Total output: '+_tot.toFixed(4)+' SOST');
+        rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:(_tx.vin||[]).length,outputs:(_tx.vout||[]).length,amount:_amtStr,amountTooltip:_amtTip,fee:_tx.fee?fS(_tx.fee)+' SOST':'—',capsule:_cap});
+      } else {
+        rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:'?',outputs:'?',amount:'?',fee:'—',capsule:null});
+      }
+    }
+  }
+  return rows;
+}
+
+// Fetch one more older window (TX_HISTORY_BATCH_BLOCKS = 30 by default),
+// dedup against _allTxRows by txid, append, and update the cursor /
+// exhausted flags. Single-flight via _txHistoryLoading; called only from
+// txNextPage when the local pager hits its last page.
+async function loadOlderTxHistoryBatch(){
+  if(_txHistoryLoading||_txHistoryExhausted)return;
+  if(_txHistoryCursor===null)return;
+  if(_txHistoryCursor<0){_txHistoryExhausted=true;return;}
+  _txHistoryLoading=true;
+  // Refresh the pager labels right away so the user sees "LOADING..."
+  renderTxTable();
+  try{
+    var fromH=_txHistoryCursor;
+    var toH=Math.max(0,fromH-(TX_HISTORY_BATCH_BLOCKS-1));
+    var newRows=await _scanBlocksToRows(fromH,toH);
+    if(newRows.length>0){
+      var seen={};
+      for(var i=0;i<_allTxRows.length;i++)seen[_allTxRows[i].txid]=true;
+      for(var j=0;j<newRows.length;j++){
+        if(!seen[newRows[j].txid])_allTxRows.push(newRows[j]);
+      }
+      _allTxRows.sort(function(a,b){return b.height-a.height;});
+    }
+    _txHistoryCursor=toH-1;
+    if(_txHistoryCursor<0)_txHistoryExhausted=true;
+  }catch(e){
+    console.warn('loadOlderTxHistoryBatch failed:',e&&e.message);
+  }finally{
+    _txHistoryLoading=false;
+  }
 }
 function classifyTx(tx){
   if(!tx.vin||tx.vin.length===0||tx.vin[0].coinbase)return'COINBASE';
@@ -5547,16 +5654,43 @@ function renderTxTable(){
   if(filtered.length>TX_PAGE_SIZE){
     hdr+=' \u00b7 page '+(_txPage+1)+'/'+(maxPage+1)+' (showing '+(off+1)+'\u2013'+(off+page.length)+')';
   }
+  if(_txHistoryLoading) hdr += ' · loading older blocks…';
   document.getElementById('txInfo').textContent=hdr;
   // Toggle pager buttons. Same convention as blocks (newer/older).
+  // OLDER stays visible past the last local page when history is not
+  // exhausted — clicking it triggers loadOlderTxHistoryBatch via
+  // txNextPage. When _txHistoryExhausted, OLDER reads "GENESIS REACHED"
+  // and the click is a no-op.
   var pBtnFirst=document.getElementById('txBtnFirst');
   var pBtnP=document.getElementById('txBtnP');
   var pBtnN=document.getElementById('txBtnN');
   var pBtnLast=document.getElementById('txBtnLast');
   if(pBtnFirst)pBtnFirst.style.display=_txPage>0?'':'none';
   if(pBtnP)    pBtnP.style.display    =_txPage>0?'':'none';
-  if(pBtnN)    pBtnN.style.display    =_txPage<maxPage?'':'none';
-  if(pBtnLast) pBtnLast.style.display =_txPage<maxPage?'':'none';
+  // OLDER button stays visible while we have more local pages OR while
+  // there is older history not yet fetched. Label tracks state.
+  var canLazyLoad = !_txHistoryExhausted;
+  var atLastLocal = _txPage>=maxPage;
+  if(pBtnN){
+    if(_txHistoryLoading){
+      pBtnN.style.display='';
+      pBtnN.textContent='LOADING…';
+      pBtnN.disabled=true;
+    } else if(atLastLocal && _txHistoryExhausted){
+      pBtnN.style.display=_txPage>0?'':'none';
+      pBtnN.textContent='GENESIS REACHED';
+      pBtnN.disabled=true;
+    } else if(atLastLocal && canLazyLoad){
+      pBtnN.style.display='';
+      pBtnN.textContent='LOAD OLDER →';
+      pBtnN.disabled=false;
+    } else {
+      pBtnN.style.display='';
+      pBtnN.textContent='OLDER →';
+      pBtnN.disabled=false;
+    }
+  }
+  if(pBtnLast) pBtnLast.style.display =(_txPage<maxPage)?'':'none';
 
   if(filtered.length===0){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">no '+_txFilter.toLowerCase()+' transactions</td></tr>';return;}
   tb.innerHTML='';
@@ -5575,100 +5709,56 @@ function renderTxTable(){
 }
 async function loadLatestTxs(){
   try{
-    _allTxRows=[];
-    // Phase 1: collect RECENT (last 30 blocks) — coinbase + any transfers.
-    // All RPC calls in this phase are issued in parallel batches with
-    // Promise.all so the page does not stall for 60+ sequential
-    // round-trips when the node is under contention. Failed requests
-    // are tolerated and skipped per-block.
-    var rows=[];
-    var _heights=[];for(var _h=H;_h>=Math.max(0,H-30);_h--)_heights.push(_h);
-    var _hashes=await Promise.all(_heights.map(function(_hh){
-      return rpc('getblockhash',[String(_hh)]).catch(function(){return null;});
-    }));
-    var _blocks=await Promise.all(_hashes.map(function(_hh){
-      return _hh ? rpc('getblock',[_hh]).catch(function(){return null;}) : Promise.resolve(null);
-    }));
-    var _nonCb=[];
-    for(var _i=0;_i<_blocks.length;_i++){
-      var _b=_blocks[_i];if(!_b)continue;
-      var _hh=_heights[_i];
-      rows.push({txid:_b.txids?_b.txids[0]:'cb_'+_hh,height:_hh,type:'COINBASE',inputs:0,outputs:3,amount:fS(_b.subsidy)+' SOST',fee:'\u2014',capsule:null});
-      if(_b.txids&&_b.txids.length>1){
-        for(var _t=1;_t<_b.txids.length;_t++)_nonCb.push({txid:_b.txids[_t],height:_hh});
-      }
-    }
-    if(_nonCb.length>0){
-      var _txs=await Promise.all(_nonCb.map(function(_e){
-        return rpc('gettransaction',[_e.txid]).catch(function(){return null;});
-      }));
-      for(var _j=0;_j<_nonCb.length;_j++){
-        var _e=_nonCb[_j], _tx=_txs[_j];
-        if(_tx){
-          var _tot=0;for(var _v=0;_v<(_tx.vout||[]).length;_v++){var _a=_tx.vout[_v].amount;_tot+=(typeof _a==='number'?_a:parseFloat(_a));}
-          // Capsule: prefer the node-supplied summary; fall back to parsing
-          // payload_hex (older nodes that have not been rebuilt yet).
-          var _cap=_tx.capsule||null;
-          if(!_cap&&_tx.vout&&_tx.vout[0]&&_tx.vout[0].payload_hex){_cap=parseCapsuleHexJS(_tx.vout[0].payload_hex);}
-          // Payment vs total: same logic as Phase 2. payment_amount comes
-          // back as integer stocks; convert via fS for display.
-          var _hasPay=(typeof _tx.payment_amount==='number');
-          var _amtStr=_hasPay?(fS(_tx.payment_amount)+' SOST'):(_tot.toFixed(4)+' SOST');
-          var _amtTip=_hasPay
-            ? ('Payment: '+fS(_tx.payment_amount)+' SOST \u00b7 Change: '+fS(_tx.change_amount||0)+' SOST \u00b7 Total out: '+_tot.toFixed(4)+' SOST')
-            : ('Total output: '+_tot.toFixed(4)+' SOST');
-          rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:(_tx.vin||[]).length,outputs:(_tx.vout||[]).length,amount:_amtStr,amountTooltip:_amtTip,fee:_tx.fee?fS(_tx.fee)+' SOST':'\u2014',capsule:_cap});
-        } else {
-          rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:'?',outputs:'?',amount:'?',fee:'\u2014',capsule:null});
-        }
-      }
-    }
-    // Phase 2: fetch transfers from the chain via dedicated RPC (server-side
-    // scan). Backend caps at 200 (sost-node.cpp:2410). With Phase 1 covering
-    // the last 30 blocks, 200 is enough to surface a TRANSFER from a few
-    // thousand blocks ago provided there are not 200 newer transfers in
-    // between. The Phase 1+Phase 2 dedup runs by txid below.
+    // Refresh strategy: rescan the head (last 30 blocks) but PRESERVE
+    // any older rows that lazy-load already pulled in. Without this,
+    // every 30-second auto-refresh would wipe pages 3+ that the user
+    // already walked back to. Phase 1 is now in _scanBlocksToRows so
+    // head and lazy-load tail share the exact same row shape.
+    var headFloor = Math.max(0, H-30);
+    var headRows = await _scanBlocksToRows(H, headFloor);
+    // Phase 2 (listtransfers cap 200) merged into headRows below.
+    var rows=headRows;
+    // Phase 2: server-side listtransfers (cap 200, sost-node.cpp:2410).
+    // Dedup against the head rows we already have.
     try{
       var transfers=await rpc('listtransfers',['200']);
       if(transfers&&transfers.length>0){
         for(var i=0;i<transfers.length;i++){
           var tr=transfers[i];
-          // Skip if already in Phase 1 results
           if(rows.some(function(r){return r.txid===tr.txid;}))continue;
-          // Prefer payment_amount (external send only) over total_output
-          // (which doubles up the change). The node returns it whenever
-          // it can resolve the source address; for transfers it does in
-          // the common case. Fall back to total_output only if missing.
           var hasPay=(typeof tr.payment_amount==='number');
           var amtStr=(hasPay?fS(tr.payment_amount):fS(tr.total_output))+' SOST';
           var amtTip=hasPay
             ? ('Payment: '+fS(tr.payment_amount)+' SOST \u00b7 Change: '+fS(tr.change_amount||0)+' SOST \u00b7 Total out: '+fS(tr.total_output)+' SOST')
             : ('Total output: '+fS(tr.total_output)+' SOST');
           rows.push({
-            txid:tr.txid,
-            height:tr.height,
-            type:'TRANSFER',
-            inputs:tr.inputs,
-            outputs:tr.outputs,
-            amount:amtStr,
-            amountTooltip:amtTip,
+            txid:tr.txid,height:tr.height,type:'TRANSFER',
+            inputs:tr.inputs,outputs:tr.outputs,
+            amount:amtStr,amountTooltip:amtTip,
             fee:tr.fee>0?fS(tr.fee)+' SOST':'\u2014',
             capsule:tr.capsule||null
           });
         }
       }
     }catch(e){
-      // listtransfers RPC failed — log and try fallback
-      console.warn('listtransfers RPC failed:', e.message, '— transfers from last 30 blocks only');
+      console.warn('listtransfers RPC failed:', e.message, '\u2014 transfers from last 30 blocks only');
     }
-    // If still no transfer rows after both phases, show clear message
-    var transferCount = rows.filter(function(r){return r.type==='TRANSFER';}).length;
-    if(transferCount === 0) {
-      console.log('No transfers found in Phase 1 (last 30 blocks) or Phase 2 (listtransfers RPC)');
-    }
-    // Merge: sorted by height desc
-    _allTxRows=rows;
+
+    // Merge with whatever older rows lazy-load already pulled in. Head
+    // rows win on duplicates so a re-orged or re-decoded TX always
+    // reflects the freshest gettransaction result.
+    var headTxids={}; for(var k=0;k<rows.length;k++)headTxids[rows[k].txid]=true;
+    var preserved=_allTxRows.filter(function(r){return !headTxids[r.txid];});
+    _allTxRows=preserved.concat(rows);
     _allTxRows.sort(function(a,b){return b.height-a.height;});
+
+    // First load: arm the lazy-load cursor at one block before the head
+    // floor. Subsequent refreshes leave the cursor alone.
+    if(_txHistoryCursor===null){
+      _txHistoryCursor = headFloor - 1;
+      if(_txHistoryCursor<0){_txHistoryExhausted=true;}
+    }
+
     renderTxTable();
   }catch(e){document.getElementById('txBody').innerHTML='<tr><td colspan="8" class="td-err">'+e.message+'</td></tr>';}
 }
