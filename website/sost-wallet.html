@@ -2232,11 +2232,114 @@ function buildCertInstructionPayloadJS({cert_kind, instr_kind, cert_id,
   return concatBytes(header, body);
 }
 
+// =============================================================================
+// Sealed Capsule helpers (Fase Sealed-1.C-2). Produce envelopes that match
+// the C++ sealed_envelope.cpp byte-for-byte. The cross-language proof lives
+// at tests/sealed_envelope_vectors.mjs (Node) against the C++ fixture
+// at tests/sealed_envelope_fixture.cpp; both vectors pass byte-equal.
+//
+// libsecp256k1-compatible ECDH:
+//   shared = SHA256(0x02 || x_shared)
+// noble.getSharedSecret(priv, pub, true) returns the compressed point WITH
+// the real parity byte (0x02 or 0x03). To match libsecp256k1 we extract
+// the 32-byte x and prepend 0x02 unconditionally, then SHA256.
+// =============================================================================
+
+const SEALED_DOMAIN_SEP_V1 = new TextEncoder().encode('SOST_CAPSULE_SEALED_V1');
+
+function _libsecpEcdh(privBytes32, pubBytes33) {
+  // noble v2 returns Uint8Array of length 33.
+  const sharedPoint = secp.getSharedSecret(privBytes32, pubBytes33, true);
+  const xCoord = sharedPoint.subarray(1, 33);   // drop the parity byte
+  const hashInput = new Uint8Array(33);
+  hashInput[0] = 0x02;
+  hashInput.set(xCoord, 1);
+  return sha256(hashInput);                     // 32 bytes
+}
+
+function _hkdfSha256(ikm, salt, info, length) {
+  // Single expand round suffices for L <= 32.
+  const prk = hmac(sha256, salt, ikm);
+  const t1Input = new Uint8Array(info.length + 1);
+  t1Input.set(info, 0);
+  t1Input[info.length] = 0x01;
+  const t1 = hmac(sha256, prk, t1Input);
+  return t1.slice(0, length);
+}
+
+async function _aesGcmSeal(key32, nonce12, aadBytes, plaintextBytes) {
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw', key32, { name: 'AES-GCM' }, false, ['encrypt']);
+  const out = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: nonce12, additionalData: aadBytes, tagLength: 128 },
+    cryptoKey, plaintextBytes);
+  return new Uint8Array(out);   // ciphertext concatenado con tag (16 B al final)
+}
+
+// Build the raw 85+N sealed envelope (NOT yet wrapped with the SCPv1
+// 12-byte capsule header). Caller must wrap via buildSealedCapsulePayload
+// below for the final on-chain payload.
+async function _sealEnvelopeJS({ plaintext, recipientPub33, recipientPkh20 }) {
+  // Generate ephemeral keypair (random retry until valid).
+  let ephPriv = null;
+  for (let i = 0; i < 16; i++) {
+    const candidate = crypto.getRandomValues(new Uint8Array(32));
+    try { secp.ProjectivePoint.BASE.multiply(secp.utils.normPrivateKeyToScalar(candidate)); ephPriv = candidate; break; } catch (e) {}
+  }
+  if (!ephPriv) throw new Error('sealed: could not generate ephemeral keypair');
+  const ephPub = secp.getPublicKey(ephPriv, true);   // 33 B compressed
+
+  const shared = _libsecpEcdh(ephPriv, recipientPub33);
+  const aesKey = _hkdfSha256(shared, ephPub, SEALED_DOMAIN_SEP_V1, 32);
+
+  const nonce = crypto.getRandomValues(new Uint8Array(12));
+  const ctLen = plaintext.length;
+  const aad = new Uint8Array(69);
+  aad[0] = 0x01;            // version
+  aad[1] = 0x01;            // recipient_count
+  aad.set(recipientPkh20, 2);
+  aad.set(ephPub,        22);
+  aad.set(nonce,         55);
+  aad[67] = ctLen & 0xff;
+  aad[68] = (ctLen >> 8) & 0xff;
+
+  const ctTag = await _aesGcmSeal(aesKey, nonce, aad, plaintext);
+  const env = new Uint8Array(aad.length + ctTag.length);
+  env.set(aad, 0);
+  env.set(ctTag, aad.length);
+  return env;
+}
+
+// Wrap the sealed envelope with the SCPv1 12-byte capsule header for the
+// requested type. Mirrors src/capsule.cpp BuildSealedXxxPayload.
+function _buildSealedCapsulePayload(capsuleType, envelope, templateId = 0) {
+  const total = 12 + envelope.length;
+  if (envelope.length < 85) throw new Error('sealed: envelope < 85 B');
+  if (envelope.length > 243) throw new Error('sealed: envelope > 243 B');
+  if (total > 255) throw new Error('sealed: total payload > 255 B');
+  const out = new Uint8Array(total);
+  out[0] = 0x53;            // 'S'
+  out[1] = 0x43;            // 'C'
+  out[2] = 0x01;            // capsule_version
+  out[3] = capsuleType;     // 0x02 / 0x04 / 0x06
+  // flags = ENCRYPTED (0x01) for sealed_note + sealed_doc_ref
+  //       = ENCRYPTED | HAS_TEMPLATE (0x11) for sealed_template
+  out[4] = (capsuleType === 0x06) ? 0x11 : 0x01;
+  out[5] = templateId;      // only meaningful for 0x06
+  out[6] = 0x00;            // locator_type = NONE
+  out[7] = 0x00;            // hash_alg = NONE
+  out[8] = 0x01;            // enc_alg = ECIES_SECP256K1_AES256_GCM
+  out[9] = envelope.length & 0xff;   // body_len
+  // out[10..11] = 0 (reserved)
+  out.set(envelope, 12);
+  return out;
+}
+
 // Build the capsule payload bytes for the value of the Message Type
 // dropdown. Returns Uint8Array (length 0 if mode = none) on success.
 // Throws Error with a human-readable message on bad input or on
 // modes that are not yet wired in the web wallet.
-function buildCapsulePayloadFromForm() {
+async function buildCapsulePayloadFromForm() {
   const mode = (document.getElementById('capsuleType') || {}).value || 'none';
   const text = (document.getElementById('capsuleText') || {}).value || '';
 
@@ -2312,13 +2415,37 @@ function buildCapsulePayloadFromForm() {
         'hash160(recipient pubkey) does NOT match the recipient address. ' +
         'Either the pubkey or the address is wrong.');
     }
-    // Every gate cleared — but we still refuse, because ECIES JS is not
-    // wired yet. Honest stop instead of a fake-private broadcast.
-    throw new Error(
-      'Sealed Capsule ECIES is pending cross-language test vectors. ' +
-      'It is prepared for V13 but not enabled for broadcast yet. ' +
-      'For now, send sealed via sost-cli (the C++ implementation already ' +
-      'has the verified ECIES envelope from Fase Sealed-1.A).');
+    // doc_ref_sealed in the wallet additionally needs a file picker UI to
+    // build the cleartext doc-ref body (file_size + file_hash + locator)
+    // BEFORE encryption. That UI is its own follow-up; until then, send
+    // sealed doc-refs via sost-cli.
+    if (mode === 'doc_ref_sealed') {
+      throw new Error(
+        'Sealed Document Reference still needs a file picker UI in the ' +
+        'web wallet (browser-side SHA-256 over the file). Use sost-cli ' +
+        '--capsule-mode doc-ref-sealed for now.');
+    }
+
+    // All sealed gates cleared and ECIES JS has been verified byte-for-byte
+    // against the C++ envelope (tests/sealed_envelope_vectors.mjs).
+    // Build the envelope and wrap it in the SCPv1 header.
+    const ptBytes = new TextEncoder().encode(text);
+    const envelope = await _sealEnvelopeJS({
+      plaintext:       ptBytes,
+      recipientPub33:  pk,
+      recipientPkh20:  recPkh,
+    });
+    if (mode === 'sealed_note') {
+      return _buildSealedCapsulePayload(0x02, envelope);
+    }
+    if (mode === 'template_sealed') {
+      // Same default template_id as the public structured path; advanced
+      // template selector lands when we expose it in the UI.
+      return _buildSealedCapsulePayload(0x06, envelope,
+        CAP_TEMPLATE_PAYMENT_RECEIPT_V1);
+    }
+    // Defensive: should not reach here given the early branches.
+    throw new Error('Sealed Capsule mode not recognised: ' + mode);
   }
   if (mode === 'doc_ref') {
     throw new Error(
@@ -3474,7 +3601,7 @@ window.sendTransaction = async function() {
   // Build the bytes BEFORE any tx work so a bad form input fails fast.
   let capsulePayload = new Uint8Array(0);
   try {
-    capsulePayload = buildCapsulePayloadFromForm();
+    capsulePayload = await buildCapsulePayloadFromForm();
   } catch (e) {
     return showError('sendResult', 'Capsule: ' + e.message);
   }

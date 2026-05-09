@@ -353,6 +353,12 @@ add_executable(test-sealed-capsule-packaging tests/test_sealed_capsule_packaging
 target_link_libraries(test-sealed-capsule-packaging PRIVATE sost-core OpenSSL::Crypto secp256k1)
 add_test(NAME sealed-capsule-packaging COMMAND test-sealed-capsule-packaging)
 
+# Fase Sealed-1.C-2 — deterministic vector dumper. Prints fixed-input/
+# fixed-output hex for the JS test harness to reproduce. Not a unit test
+# in CTest's sense; consumed by tests/sealed_envelope_vectors.mjs.
+add_executable(sealed-envelope-fixture tests/sealed_envelope_fixture.cpp)
+target_link_libraries(sealed-envelope-fixture PRIVATE sost-core OpenSSL::Crypto secp256k1)
+
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
 target_link_libraries(test-sbpow-header-v2 PRIVATE sost-core)

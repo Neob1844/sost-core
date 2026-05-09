@@ -107,6 +107,29 @@ bool SealSingleRecipient(const std::vector<Byte>&        plaintext,
                          std::string*                    err = nullptr);
 
 // =============================================================================
+// SealSingleRecipientWithSeeds — same as above, but the caller supplies the
+// ephemeral secret and the AES-GCM nonce. Used by:
+//
+//   1. Cross-language test vectors (Fase Sealed-1.C-2): a Node fixture
+//      passes the same eph_priv + nonce a C++ fixture passed and compares
+//      the resulting envelope hex byte-for-byte. Without deterministic
+//      seeds neither side can prove the other's output.
+//
+//   2. Wallets that already own a vetted RNG (e.g. hardware-backed) and
+//      do not want libcrypto's RAND_bytes mixed in.
+//
+// Failure modes are the public API's failures, plus:
+//   eph_priv32 not in [1, n-1]   err = "sealed: ephemeral priv invalid"
+// =============================================================================
+bool SealSingleRecipientWithSeeds(const std::vector<Byte>&  plaintext,
+                                  const Byte                eph_priv32[32],
+                                  const std::vector<Byte>&  recipient_pubkey,
+                                  const PubKeyHash&         recipient_pkh,
+                                  const Byte                nonce12[12],
+                                  std::vector<Byte>&        out_envelope,
+                                  std::string*              err = nullptr);
+
+// =============================================================================
 // OpenSingleRecipient — try to decrypt a sealed envelope with our private key.
 //
 // Inputs

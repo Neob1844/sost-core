@@ -143,13 +143,17 @@ static const char* DOMAIN_SEP_V1 = "SOST_CAPSULE_SEALED_V1";
 }  // anon
 
 // =============================================================================
-// SealSingleRecipient
+// SealSingleRecipientWithSeeds — deterministic core. SealSingleRecipient is a
+// thin wrapper that supplies random eph_priv + nonce; tests pass fixed seeds
+// to produce stable hex vectors comparable across implementations.
 // =============================================================================
-bool SealSingleRecipient(const std::vector<Byte>& plaintext,
-                         const std::vector<Byte>& recipient_pubkey,
-                         const PubKeyHash&        recipient_pkh,
-                         std::vector<Byte>&       out_envelope,
-                         std::string*             err) {
+bool SealSingleRecipientWithSeeds(const std::vector<Byte>& plaintext,
+                                  const Byte               eph_priv[32],
+                                  const std::vector<Byte>& recipient_pubkey,
+                                  const PubKeyHash&        recipient_pkh,
+                                  const Byte               nonce[SEALED_NONCE_BYTES],
+                                  std::vector<Byte>&       out_envelope,
+                                  std::string*             err) {
     out_envelope.clear();
     if (plaintext.size() > SEALED_PLAINTEXT_MAX) {
         if (err) *err = "sealed: plaintext exceeds " +
@@ -184,22 +188,15 @@ bool SealSingleRecipient(const std::vector<Byte>& plaintext,
         }
     }
 
-    // Generate ephemeral keypair (retry until libsecp256k1 accepts the seed).
-    Byte eph_priv[32];
+    // Validate the supplied ephemeral secret + derive its compressed pubkey.
     secp256k1_pubkey eph_pub_obj;
-    for (int i = 0; i < 16; ++i) {
-        if (RAND_bytes(eph_priv, 32) != 1) {
-            if (err) *err = "sealed: RAND_bytes failed";
-            return false;
-        }
-        if (secp256k1_ec_seckey_verify(ctx, eph_priv) == 1 &&
-            secp256k1_ec_pubkey_create(ctx, &eph_pub_obj, eph_priv) == 1) {
-            break;
-        }
-        if (i == 15) {
-            if (err) *err = "sealed: could not generate ephemeral keypair";
-            return false;
-        }
+    if (secp256k1_ec_seckey_verify(ctx, eph_priv) != 1) {
+        if (err) *err = "sealed: ephemeral priv invalid";
+        return false;
+    }
+    if (secp256k1_ec_pubkey_create(ctx, &eph_pub_obj, eph_priv) != 1) {
+        if (err) *err = "sealed: ephemeral priv invalid";
+        return false;
     }
     Byte   eph_pub[SEALED_EPUB_BYTES];
     size_t pub_len = SEALED_EPUB_BYTES;
@@ -223,13 +220,6 @@ bool SealSingleRecipient(const std::vector<Byte>& plaintext,
                      std::strlen(DOMAIN_SEP_V1),
                      aes_key, sizeof(aes_key))) {
         if (err) *err = "sealed: HKDF failed";
-        return false;
-    }
-
-    // Random nonce.
-    Byte nonce[SEALED_NONCE_BYTES];
-    if (RAND_bytes(nonce, SEALED_NONCE_BYTES) != 1) {
-        if (err) *err = "sealed: nonce RAND_bytes failed";
         return false;
     }
 
@@ -260,6 +250,39 @@ bool SealSingleRecipient(const std::vector<Byte>& plaintext,
         return false;
     }
     return true;
+}
+
+// =============================================================================
+// SealSingleRecipient — random-seeds wrapper around the deterministic core.
+// =============================================================================
+bool SealSingleRecipient(const std::vector<Byte>& plaintext,
+                         const std::vector<Byte>& recipient_pubkey,
+                         const PubKeyHash&        recipient_pkh,
+                         std::vector<Byte>&       out_envelope,
+                         std::string*             err) {
+    Byte eph_priv[32];
+    Byte nonce[SEALED_NONCE_BYTES];
+    secp256k1_context* ctx = GetCtx();
+    // Generate ephemeral keypair (retry until libsecp256k1 accepts the seed).
+    bool ok = false;
+    for (int i = 0; i < 16; ++i) {
+        if (RAND_bytes(eph_priv, 32) != 1) {
+            if (err) *err = "sealed: RAND_bytes failed";
+            return false;
+        }
+        if (secp256k1_ec_seckey_verify(ctx, eph_priv) == 1) { ok = true; break; }
+    }
+    if (!ok) {
+        if (err) *err = "sealed: could not generate ephemeral keypair";
+        return false;
+    }
+    if (RAND_bytes(nonce, SEALED_NONCE_BYTES) != 1) {
+        if (err) *err = "sealed: nonce RAND_bytes failed";
+        return false;
+    }
+    return SealSingleRecipientWithSeeds(plaintext, eph_priv,
+                                        recipient_pubkey, recipient_pkh,
+                                        nonce, out_envelope, err);
 }
 
 // =============================================================================
