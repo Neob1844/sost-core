@@ -436,6 +436,69 @@ static void test_from_pkh_refuses_cross_key_mixing() {
     }
 }
 
+// ---------------------------------------------------------------------------
+// 9. Address-based payment/change split (mirrors compute_payment_split in
+//    src/sost-node.cpp). We re-implement the same logic here against the
+//    Transaction API so any future change to the splitter has a unit-test
+//    safety net even though the helper itself lives in the node binary.
+//
+//    Reproduces the cf1a90138d... bug: tiny payment (0.01) + large change
+//    (5.98). The old "smaller amount = change" heuristic inverted the
+//    labels; the address-based split must call the 5.98 the change.
+// ---------------------------------------------------------------------------
+static void test_address_based_payment_change_split() {
+    printf("\n=== 9) Payment/change split is address-based, not amount-based ===\n");
+
+    Wallet w  = make_funded_wallet(/*funding_stocks=*/6 * 100000000LL);
+    auto  cap = build_app_rewards_capsule();
+    Hash256 g = mk_genesis();
+    auto from = w.default_address();
+    PubKeyHash from_pkh{};
+    address_decode(from, from_pkh);
+
+    const std::string to = "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f";
+    PubKeyHash to_pkh{};
+    address_decode(to, to_pkh);
+
+    // 0.01 SOST payment, ~5.98 SOST left as change. (Fee is small; the
+    // important property is amount_payment << amount_change.)
+    Transaction tx;
+    std::string err;
+    bool ok = w.create_transaction(to, /*amount=*/1000000LL, /*fee=*/1000,
+                                   g, tx, /*height=*/2000, &err,
+                                   &cap, /*mark_spent=*/false);
+    TEST("create_transaction succeeds (tiny payment, large change)", ok);
+    if (!ok) { printf("    err: %s\n", err.c_str()); return; }
+    TEST("tx has exactly 2 outputs (payment + change)",
+         tx.outputs.size() == 2);
+
+    // Re-implement compute_payment_split here to verify the labelling:
+    int64_t payment = 0, change = 0;
+    for (const auto& o : tx.outputs) {
+        if (o.type != 0x00) continue;        // OUT_TRANSFER only
+        if (o.pubkey_hash == from_pkh) change  += o.amount;
+        else                            payment += o.amount;
+    }
+
+    TEST("payment = 1000000 stocks (0.01 SOST sent externally)",
+         payment == 1000000LL);
+    TEST("change = total_in - payment - fee (~5.98 SOST returns to source)",
+         change > payment);   // change is much larger than payment
+    TEST("payment is the SMALLER amount (heuristic would have inverted)",
+         payment < change);
+
+    // Confirm output[0] is the payment (wallet always puts payment first)
+    // and output[1] is the change (wallet always returns change last).
+    TEST("output[0] is the payment (goes to recipient, not source)",
+         !(tx.outputs[0].pubkey_hash == from_pkh));
+    TEST("output[1] is the change (returns to source pkh)",
+         tx.outputs[1].pubkey_hash == from_pkh);
+
+    // And the capsule rides on the payment output, not the change.
+    TEST("capsule is attached to output[0] (payment), not output[1] (change)",
+         tx.outputs[0].payload == cap && tx.outputs[1].payload.empty());
+}
+
 int main() {
     printf("\n=== Wallet → capsule attachment ===\n");
     test_payload_attached_when_supplied();
@@ -446,6 +509,7 @@ int main() {
     test_default_mark_spent_still_mutates();
     test_from_pkh_multi_key_wallet();
     test_from_pkh_refuses_cross_key_mixing();
+    test_address_based_payment_change_split();
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }

@@ -566,6 +566,32 @@ static std::string format_sost(int64_t stocks) {
 }
 
 // =============================================================================
+// compute_payment_split — given a transfer tx whose first input we already
+// resolved to source_pkh (the address that signs this tx), classify each
+// output as either change-back (pkh == source_pkh) or external payment.
+// Returns the total external payment amount and the total change amount.
+//
+// This replaces the explorer's old "smaller output = change" heuristic,
+// which inverted the labels for tiny payments + large change (e.g. paying
+// 0.01 SOST out of a 6 SOST UTXO leaves 5.98 in change — the heuristic
+// would call the 0.01 the change). The address-based split is unambiguous:
+// any output that returns to the input's own pkh is change by definition.
+// =============================================================================
+static void compute_payment_split(const Transaction& tx,
+                                  const PubKeyHash& source_pkh,
+                                  int64_t& out_payment,
+                                  int64_t& out_change) {
+    out_payment = 0;
+    out_change  = 0;
+    for (const auto& o : tx.outputs) {
+        // Coinbase types skip the split — they're not transfers.
+        if (o.type != OUT_TRANSFER) continue;
+        if (o.pubkey_hash == source_pkh) out_change  += o.amount;
+        else                              out_payment += o.amount;
+    }
+}
+
+// =============================================================================
 // capsule_summary_json — JSON object describing a capsule attached to a tx
 // output, or "null" if the bytes do not parse as SCPv1.
 //
@@ -1931,6 +1957,19 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
             s<<"}";
         }
         s<<"],\"fee\":"<<mentry->fee;
+        // Address-based payment/change split for mempool standard txs.
+        if(mentry->tx.tx_type==TX_TYPE_STANDARD && !mentry->tx.inputs.empty()){
+            OutPoint sop{mentry->tx.inputs[0].prev_txid, mentry->tx.inputs[0].prev_index};
+            auto sutxo=g_utxo_set.GetUTXO(sop);
+            if(sutxo){
+                const auto& spkh=sutxo->pubkey_hash;
+                int64_t pay=0,chg=0;
+                compute_payment_split(mentry->tx,spkh,pay,chg);
+                s<<",\"source_address\":\""<<address_encode(spkh)<<"\""
+                 <<",\"payment_amount\":"<<pay
+                 <<",\"change_amount\":"<<chg;
+            }
+        }
         if(!mentry->tx.outputs.empty() && !mentry->tx.outputs[0].payload.empty()){
             s<<",\"capsule\":"<<capsule_summary_json(mentry->tx.outputs[0].payload);
         }
@@ -2026,6 +2065,32 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
         s<<"}";
     }
     s<<"],\"fee\":"<<fee;
+    // Address-based payment/change split for transfers. Coinbase txs and
+    // those whose first input we cannot resolve (very old TXs missing
+    // from tx_index) leave both fields out, and the explorer falls back
+    // to its own labelling.
+    if(tx.tx_type==TX_TYPE_STANDARD && !tx.inputs.empty()){
+        auto siit=g_tx_index.find(tx.inputs[0].prev_txid);
+        if(siit!=g_tx_index.end()){
+            int64_t sbh=siit->second.block_height;
+            uint32_t stp=siit->second.tx_pos;
+            if(sbh<(int64_t)g_blocks.size() && stp<g_blocks[sbh].tx_hexes.size()){
+                std::vector<Byte> sraw;
+                if(decode_tx_hex(g_blocks[sbh].tx_hexes[stp],sraw)){
+                    Transaction stx; std::string se;
+                    if(Transaction::Deserialize(sraw,stx,&se)
+                       && tx.inputs[0].prev_index<stx.outputs.size()){
+                        const auto& spkh=stx.outputs[tx.inputs[0].prev_index].pubkey_hash;
+                        int64_t pay=0,chg=0;
+                        compute_payment_split(tx,spkh,pay,chg);
+                        s<<",\"source_address\":\""<<address_encode(spkh)<<"\""
+                         <<",\"payment_amount\":"<<pay
+                         <<",\"change_amount\":"<<chg;
+                    }
+                }
+            }
+        }
+    }
     // Top-level capsule summary (output[0] only) — convenience for the
     // explorer so it does not have to parse payload_hex itself.
     if(!tx.outputs.empty() && !tx.outputs[0].payload.empty()){
@@ -2364,10 +2429,14 @@ static std::string handle_listtransfers(const std::string& id, const std::vector
             Hash256 txid;
             if (!tx.ComputeTxId(txid, &err)) continue;
 
-            // Compute fee via tx-index
+            // Compute fee via tx-index, AND remember the first input's pkh
+            // so we can split outputs into payment vs change below.
             int64_t sum_in = 0, sum_out = 0;
             for (const auto& o : tx.outputs) sum_out += o.amount;
-            for (const auto& in : tx.inputs) {
+            PubKeyHash source_pkh{};
+            bool       source_known = false;
+            for (size_t ii = 0; ii < tx.inputs.size(); ++ii) {
+                const auto& in = tx.inputs[ii];
                 auto iit = g_tx_index.find(in.prev_txid);
                 if (iit != g_tx_index.end()) {
                     int64_t ibh = iit->second.block_height;
@@ -2378,12 +2447,24 @@ static std::string handle_listtransfers(const std::string& id, const std::vector
                             Transaction itx; std::string ie;
                             if (Transaction::Deserialize(iraw, itx, &ie) && in.prev_index < itx.outputs.size()) {
                                 sum_in += itx.outputs[in.prev_index].amount;
+                                if (ii == 0) {
+                                    source_pkh   = itx.outputs[in.prev_index].pubkey_hash;
+                                    source_known = true;
+                                }
                             }
                         }
                     }
                 }
             }
             int64_t fee = sum_in > sum_out ? sum_in - sum_out : 0;
+
+            // Address-based payment/change split.
+            int64_t payment_amount = 0, change_amount = 0;
+            std::string source_addr;
+            if (source_known && tx.tx_type == TX_TYPE_STANDARD) {
+                source_addr = address_encode(source_pkh);
+                compute_payment_split(tx, source_pkh, payment_amount, change_amount);
+            }
 
             // Capsule summary on output[0]'s payload (NULL when absent).
             std::string cap = "null";
@@ -2399,7 +2480,13 @@ static std::string handle_listtransfers(const std::string& id, const std::vector
               << ",\"total_output\":" << sum_out
               << ",\"fee\":" << fee
               << ",\"size\":" << raw.size()
-              << ",\"capsule\":" << cap << "}";
+              << ",\"capsule\":" << cap;
+            if (source_known) {
+                s << ",\"source_address\":\"" << source_addr << "\""
+                  << ",\"payment_amount\":" << payment_amount
+                  << ",\"change_amount\":"  << change_amount;
+            }
+            s << "}";
             count++;
         }
     }

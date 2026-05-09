@@ -4414,10 +4414,24 @@ function renderIndexedTx(tx,c){
   var inputsHtml='';
   if(isCB){inputsHtml='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--yellow)">COINBASE</div><div style="font-size:11px;color:var(--yellow)">\u26CF Block reward #'+bh+'</div></div>';}
   else if(tx.vin){for(var i=0;i<tx.vin.length;i++){var inp=tx.vin[i];var iaddr=inp.address||'unknown';var iamt=inp.amount||0;inputsHtml+='<div class="tx-io-item"><div class="tx-io-label">INPUT #'+i+'</div><div class="tx-io-addr" onclick="showAddress(\''+iaddr+'\')">'+iaddr+addrTag(iaddr)+'</div><div class="tx-io-amt">'+parseFloat(iamt).toFixed(8)+' SOST</div><div class="tx-io-meta">from '+sH(inp.prev_txid||'')+':'+inp.index+'</div></div>';}}
-  var changeIdx=-1;
-  if(!isCB&&tx.vout&&tx.vout.length===2){var a0=parseFloat(tx.vout[0].amount||0),a1=parseFloat(tx.vout[1].amount||0);changeIdx=a0<a1?0:1;}
+  // Address-based change detection: any output whose address equals the
+  // first input's source address is CHANGE; everything else is PAYMENT.
+  // Replaces the old "smaller amount = change" heuristic, which inverted
+  // labels for tiny payments + large change (e.g. 0.01 paid out of 6 SOST).
+  // Source address comes from the node when available; otherwise we fall
+  // back to vin[0].address. If the source is still unknown (very old TX
+  // missing from tx_index), we leave both labels off rather than guess.
+  var sourceAddr=tx.source_address||(tx.vin&&tx.vin[0]&&tx.vin[0].address)||null;
   var outputsHtml='';
-  if(tx.vout)for(var i=0;i<tx.vout.length;i++){var o=tx.vout[i];var oamt=parseFloat(o.amount||0).toFixed(8);var isChange=i===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isCB&&!isChange&&tx.vout.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';var tl=['transfer','coinbase_miner','coinbase_gold','coinbase_popc','lottery'][o.type||0]||'output';var tc=['var(--green)','var(--orange)','var(--gold)','var(--cyan)','#ff00ff'][o.type||0]||'var(--green)';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+i+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+oamt+' SOST</div></div>';}
+  if(tx.vout)for(var i=0;i<tx.vout.length;i++){var o=tx.vout[i];var oamt=parseFloat(o.amount||0).toFixed(8);
+    var isChange=false, isPayment=false;
+    if(!isCB && sourceAddr){
+      isChange=(o.address===sourceAddr);
+      isPayment=!isChange && (o.type===0||o.type===undefined);
+    }
+    var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';
+    var payLabel=isPayment?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';
+    var tl=['transfer','coinbase_miner','coinbase_gold','coinbase_popc','lottery'][o.type||0]||'output';var tc=['var(--green)','var(--orange)','var(--gold)','var(--cyan)','#ff00ff'][o.type||0]||'var(--green)';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+i+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+oamt+' SOST</div></div>';}
   var feeHtml='';
   if(!isCB&&fee>0){feeHtml='<div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+feeSOST+' SOST</span> <span style="color:var(--text3)">(~'+feeRate+' st/B, ~'+estSize+' bytes)</span></div><div class="k">total input</div><div class="v">'+fS(Math.round(sumIn))+' SOST</div>';}
 
@@ -5397,7 +5411,8 @@ function renderTxTable(){
       ? '<span class="td-link" onclick="showTxDetail(\''+r.txid+'\')" title="'+(r.capsule.text?String(r.capsule.text).replace(/"/g,'&quot;').substring(0,120):'')+'">'+capCell+'</span>'
       : capCell;
     var tr=document.createElement('tr');
-    tr.innerHTML='<td><span class="td-link" onclick="showTxDetail(\''+r.txid+'\')">'+sH(r.txid)+'</span>'+cpBtn(r.txid)+'</td><td>'+capClickable+'</td><td><span class="td-height" onclick="showBlockByHeight('+r.height+')">#'+r.height+'</span></td><td><span style="color:'+typeColor+';font-weight:600;font-size:10px">'+r.type+'</span></td><td>'+r.inputs+'</td><td>'+r.outputs+'</td><td><span class="td-amt">'+r.amount+'</span></td><td>'+(r.fee||'\u2014')+'</td>';
+    var amtTipAttr=r.amountTooltip?(' title="'+String(r.amountTooltip).replace(/"/g,'&quot;')+'"'):'';
+    tr.innerHTML='<td><span class="td-link" onclick="showTxDetail(\''+r.txid+'\')">'+sH(r.txid)+'</span>'+cpBtn(r.txid)+'</td><td>'+capClickable+'</td><td><span class="td-height" onclick="showBlockByHeight('+r.height+')">#'+r.height+'</span></td><td><span style="color:'+typeColor+';font-weight:600;font-size:10px">'+r.type+'</span></td><td>'+r.inputs+'</td><td>'+r.outputs+'</td><td><span class="td-amt"'+amtTipAttr+'>'+r.amount+'</span></td><td>'+(r.fee||'\u2014')+'</td>';
     tb.appendChild(tr);
   }
 }
@@ -5438,7 +5453,14 @@ async function loadLatestTxs(){
           // payload_hex (older nodes that have not been rebuilt yet).
           var _cap=_tx.capsule||null;
           if(!_cap&&_tx.vout&&_tx.vout[0]&&_tx.vout[0].payload_hex){_cap=parseCapsuleHexJS(_tx.vout[0].payload_hex);}
-          rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:(_tx.vin||[]).length,outputs:(_tx.vout||[]).length,amount:_tot.toFixed(4)+' SOST',fee:_tx.fee?fS(_tx.fee)+' SOST':'\u2014',capsule:_cap});
+          // Payment vs total: same logic as Phase 2. payment_amount comes
+          // back as integer stocks; convert via fS for display.
+          var _hasPay=(typeof _tx.payment_amount==='number');
+          var _amtStr=_hasPay?(fS(_tx.payment_amount)+' SOST'):(_tot.toFixed(4)+' SOST');
+          var _amtTip=_hasPay
+            ? ('Payment: '+fS(_tx.payment_amount)+' SOST \u00b7 Change: '+fS(_tx.change_amount||0)+' SOST \u00b7 Total out: '+_tot.toFixed(4)+' SOST')
+            : ('Total output: '+_tot.toFixed(4)+' SOST');
+          rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:(_tx.vin||[]).length,outputs:(_tx.vout||[]).length,amount:_amtStr,amountTooltip:_amtTip,fee:_tx.fee?fS(_tx.fee)+' SOST':'\u2014',capsule:_cap});
         } else {
           rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:'?',outputs:'?',amount:'?',fee:'\u2014',capsule:null});
         }
@@ -5452,13 +5474,23 @@ async function loadLatestTxs(){
           var tr=transfers[i];
           // Skip if already in Phase 1 results
           if(rows.some(function(r){return r.txid===tr.txid;}))continue;
+          // Prefer payment_amount (external send only) over total_output
+          // (which doubles up the change). The node returns it whenever
+          // it can resolve the source address; for transfers it does in
+          // the common case. Fall back to total_output only if missing.
+          var hasPay=(typeof tr.payment_amount==='number');
+          var amtStr=(hasPay?fS(tr.payment_amount):fS(tr.total_output))+' SOST';
+          var amtTip=hasPay
+            ? ('Payment: '+fS(tr.payment_amount)+' SOST \u00b7 Change: '+fS(tr.change_amount||0)+' SOST \u00b7 Total out: '+fS(tr.total_output)+' SOST')
+            : ('Total output: '+fS(tr.total_output)+' SOST');
           rows.push({
             txid:tr.txid,
             height:tr.height,
             type:'TRANSFER',
             inputs:tr.inputs,
             outputs:tr.outputs,
-            amount:fS(tr.total_output)+' SOST',
+            amount:amtStr,
+            amountTooltip:amtTip,
             fee:tr.fee>0?fS(tr.fee)+' SOST':'\u2014',
             capsule:tr.capsule||null
           });
