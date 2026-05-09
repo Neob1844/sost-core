@@ -740,84 +740,95 @@ int main(int argc, char** argv) {
     init_sost_dir();
     std::string wallet_path = DEFAULT_WALLET;
 
-    // Parse global options
-    int arg_start = 1;
-    while (arg_start < argc && argv[arg_start][0] == '-') {
-        std::string flag = argv[arg_start];
-        if ((flag == "--wallet" || flag == "--from") && arg_start + 1 < argc) {
-            wallet_path = argv[arg_start + 1];
-            arg_start += 2;
-        } else if (flag == "--rpc-user" && arg_start + 1 < argc) {
-            g_rpc_user = argv[arg_start + 1];
-            arg_start += 2;
-        } else if (flag == "--rpc-pass" && arg_start + 1 < argc) {
-            g_rpc_pass = argv[arg_start + 1];
-            arg_start += 2;
-        } else if ((flag == "--node" || flag == "--rpc") && arg_start + 1 < argc) {
-            // v1.3: --node is now a global option (used by fee calc + send)
-            // --rpc is accepted as alias for --node
-            std::string na = argv[arg_start + 1];
-            auto colon = na.find(':');
-            if (colon != std::string::npos) {
-                g_node_host = na.substr(0, colon);
-                g_node_port = atoi(na.substr(colon + 1).c_str());
-            } else {
-                g_node_host = na;
-            }
-            arg_start += 2;
-        } else if (flag == "--fee-rate" && arg_start + 1 < argc) {
-            // v1.3: custom fee rate (stocks per byte)
-            try {
-                g_fee_rate = std::stoll(argv[arg_start + 1]);
-            } catch (const std::exception&) {
-                fprintf(stderr, "Error: --fee-rate must be a number, got: %s\n", argv[arg_start + 1]);
-                return 1;
-            }
-            if (g_fee_rate < 1) {
-                fprintf(stderr, "Error: --fee-rate must be >= 1 (consensus minimum)\n");
-                return 1;
-            }
-            arg_start += 2;
-        } else if (flag == "--to" && arg_start + 1 < argc) {
-            g_send_to = argv[arg_start + 1];
-            arg_start += 2;
-        } else if (flag == "--amount" && arg_start + 1 < argc) {
-            g_send_amount = argv[arg_start + 1];
-            arg_start += 2;
-        } else if (flag == "--from-label" && arg_start + 1 < argc) {
-            g_from_label = argv[arg_start + 1];
-            arg_start += 2;
-        } else if (flag == "--from-address" && arg_start + 1 < argc) {
-            g_from_address = argv[arg_start + 1];
-            arg_start += 2;
-        } else if (flag == "--yes" || flag == "-y") {
-            g_yes_flag = true;
-            arg_start += 1;
+    // Parse global options — order-agnostic.
+    //
+    // Earlier versions of this parser only accepted global flags before the
+    // subcommand and dropped silently anything that came after, e.g.
+    //
+    //   sost-cli send sost1... 0.01 --capsule-mode structured ...
+    //                                ^^^^^^^^^^^^^^ ignored
+    //
+    // The TX would then go out without the capsule, with no warning. We now
+    // walk the entire argv once: known global flags are consumed wherever
+    // they appear; everything else (subcommand + its positional args + any
+    // unknown flag the subcommand handles itself) is gathered into a
+    // compacted argv that the rest of main() reads as before.
+    std::vector<char*> positional;
+    positional.push_back(argv[0]);   // keep program name in slot 0
+    for (int i = 1; i < argc; /* manual */) {
+        std::string flag = argv[i];
+        bool needs_value = false;
+        // Single-arg switches first.
+        if (flag == "--yes" || flag == "-y") {
+            g_yes_flag = true; i += 1; continue;
         } else if (flag == "--skip-warning") {
-            g_skip_warning = true;
-            arg_start += 1;
-        } else if (flag == "--capsule-mode" && arg_start + 1 < argc) {
-            g_capsule_mode = argv[arg_start + 1];
-            arg_start += 2;
-        } else if (flag == "--capsule-text" && arg_start + 1 < argc) {
-            g_capsule_text = argv[arg_start + 1];
-            arg_start += 2;
-        } else if (flag == "--capsule-template" && arg_start + 1 < argc) {
-            g_capsule_template = argv[arg_start + 1];
-            arg_start += 2;
-        } else if (flag == "--capsule-locator" && arg_start + 1 < argc) {
-            g_capsule_locator = argv[arg_start + 1];
-            arg_start += 2;
-        } else if (flag == "--capsule-file" && arg_start + 1 < argc) {
-            g_capsule_file = argv[arg_start + 1];
-            arg_start += 2;
+            g_skip_warning = true; i += 1; continue;
         } else if (flag == "--help" || flag == "-h") {
-            print_usage();
-            return 0;
-        } else {
-            break;
+            print_usage(); return 0;
         }
+        // Two-arg flags: value follows on the next argv slot.
+        needs_value = (flag == "--wallet" || flag == "--from"
+                    || flag == "--rpc-user" || flag == "--rpc-pass"
+                    || flag == "--node" || flag == "--rpc"
+                    || flag == "--fee-rate"
+                    || flag == "--to" || flag == "--amount"
+                    || flag == "--from-label" || flag == "--from-address"
+                    || flag == "--capsule-mode" || flag == "--capsule-text"
+                    || flag == "--capsule-template" || flag == "--capsule-locator"
+                    || flag == "--capsule-file");
+        if (needs_value) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "Error: %s expects a value\n", flag.c_str());
+                return 1;
+            }
+            std::string val = argv[i + 1];
+            if (flag == "--wallet" || flag == "--from")          wallet_path = val;
+            else if (flag == "--rpc-user")                       g_rpc_user = val;
+            else if (flag == "--rpc-pass")                       g_rpc_pass = val;
+            else if (flag == "--node" || flag == "--rpc") {
+                auto colon = val.find(':');
+                if (colon != std::string::npos) {
+                    g_node_host = val.substr(0, colon);
+                    g_node_port = atoi(val.substr(colon + 1).c_str());
+                } else {
+                    g_node_host = val;
+                }
+            }
+            else if (flag == "--fee-rate") {
+                try { g_fee_rate = std::stoll(val); }
+                catch (const std::exception&) {
+                    fprintf(stderr, "Error: --fee-rate must be a number, got: %s\n",
+                            val.c_str());
+                    return 1;
+                }
+                if (g_fee_rate < 1) {
+                    fprintf(stderr, "Error: --fee-rate must be >= 1 (consensus minimum)\n");
+                    return 1;
+                }
+            }
+            else if (flag == "--to")                g_send_to = val;
+            else if (flag == "--amount")            g_send_amount = val;
+            else if (flag == "--from-label")        g_from_label = val;
+            else if (flag == "--from-address")      g_from_address = val;
+            else if (flag == "--capsule-mode")      g_capsule_mode = val;
+            else if (flag == "--capsule-text")      g_capsule_text = val;
+            else if (flag == "--capsule-template")  g_capsule_template = val;
+            else if (flag == "--capsule-locator")   g_capsule_locator = val;
+            else if (flag == "--capsule-file")      g_capsule_file = val;
+            i += 2;
+            continue;
+        }
+        // Unknown flag or positional — keep for subcommand dispatch.
+        positional.push_back(argv[i]);
+        i += 1;
     }
+
+    // Re-point argv/argc at the compacted positional view so the rest of
+    // main() — which indexes argv[arg_start + N] — reads only the
+    // subcommand and its remaining args.
+    argv = positional.data();
+    argc = (int)positional.size();
+    int arg_start = 1;
 
     if (argc < arg_start + 1) {
         print_usage();
