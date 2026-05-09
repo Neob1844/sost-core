@@ -3944,6 +3944,20 @@ window.estimateFee = async function() {
 window.sendTransaction = async function() {
   if (!wallet || wallet.watchOnly) return alert('Cannot send from a watch-only wallet');
 
+  // Re-entrancy guard. A user double-clicking Send (or pressing Enter
+  // twice fast) would otherwise spawn two parallel async tx builds.
+  // The in-flight UTXO Set still catches the second build correctly,
+  // but failing fast here is cheaper and the error message is clearer.
+  if (window._sendInProgress) {
+    return showError('sendResult', 'A transaction is already being broadcast. Wait for it to finish.');
+  }
+  window._sendInProgress = true;
+  // Outer try/finally so EVERY early-return path (RPC mode, capsule
+  // build, recipient parse, multi-recipient + capsule guard, sendmany
+  // delegation) still releases the flag. The inner try/catch/finally
+  // around the actual broadcast keeps the sendBtn re-enabling logic.
+  try {
+
   // RPC-mode guard. The wallet refuses to sign + broadcast against an
   // endpoint that cannot accept a sendrawtransaction. The most common
   // miss is /rpc/public (read-only proxy on sostcore.com); the user
@@ -4131,9 +4145,15 @@ window.sendTransaction = async function() {
       return;
     }
 
-    // Broadcast. Wrap so we can release in-flight reservations on
-    // network / node failure — we DON'T want to lock UTXOs that the
-    // node never accepted.
+    // RESERVE selectedUtxos BEFORE broadcasting. The previous version
+    // reserved AFTER sendrawtransaction returned OK, which left a window
+    // open for a second Send that constructed in parallel to pick the
+    // same inputs. By reserving first, any concurrent build sees the
+    // already-locked set and consume_filter excludes them.
+    _inflightAdd(selectedUtxos, null);
+
+    // Broadcast. On any failure (network, node-side reject), release
+    // the just-reserved UTXOs so the user can retry immediately.
     console.log('[TX] Broadcasting raw TX:', rawTx.substring(0, 40) + '... (' + txSize + ' bytes)');
     let result;
     try {
@@ -4143,14 +4163,17 @@ window.sendTransaction = async function() {
       throw e;
     }
     const txid = result.txid || result || 'unknown';
-    // Mark the spent UTXOs in-flight so a quick second click on Send
-    // does not re-pick them. Background refresh below will reconcile.
+    // Refresh the in-flight entries with the real txid so a future
+    // reconcile knows which broadcast they backed.
     _inflightAdd(selectedUtxos, txid);
     // Fire-and-forget refresh (non-blocking) so the UI catches up.
     setTimeout(() => { try { refreshBalance(); } catch(e) {} }, 0);
     const feeSOST = formatSost(feeStocks);
     const amtSOST = formatSost(amountStocks);
-    const changeStocks = utxos.reduce((s, u) => s + u.amount, 0) - amountStocks - feeStocks;
+    // Change comes from the inputs WE picked, not the full wallet UTXO
+    // pool. utxos.reduce inflated the displayed change figure (post-fix
+    // P1 review by user).
+    const changeStocks = selectedUtxos.reduce((s, u) => s + u.amount, 0) - amountStocks - feeStocks;
     const changeSOST = formatSost(Math.max(0, changeStocks));
     const abEntry = getAddressBookEntry(toAddr);
     const toLabel = abEntry ? ` (${abEntry.label})` : '';
@@ -4199,6 +4222,12 @@ window.sendTransaction = async function() {
     showError('sendResult', 'Send failed: ' + e.message);
   } finally {
     document.getElementById('sendBtn').disabled = false;
+  }
+
+  } finally {
+    // Outer finally — releases the re-entrancy flag for every exit path,
+    // including early returns before the inner try opened.
+    window._sendInProgress = false;
   }
 };
 
@@ -4312,6 +4341,10 @@ async function sendTransactionMany(recipients) {
       throw new Error('TX too large (' + txSize + ' bytes > 100 KB consensus). Split recipients into multiple sendmany calls.');
     }
 
+    // Reserve BEFORE broadcasting so a concurrent Send / sendmany build
+    // sees the locked set. Release on RPC failure.
+    _inflightAdd(built.selected || [], null);
+
     console.log('[TX-MANY] Broadcasting raw TX:', rawTx.substring(0, 40) + '... (' + txSize + ' bytes)');
     let result;
     try {
@@ -4321,8 +4354,7 @@ async function sendTransactionMany(recipients) {
       throw e;
     }
     const txid = result.txid || result || 'unknown';
-    // Reserve the UTXOs sendmany picked so a subsequent Send does not
-    // re-select them before the node refresh updates getaddressinfo.
+    // Refresh the in-flight entries with the real broadcast txid.
     _inflightAdd(built.selected || [], txid);
     setTimeout(() => { try { refreshBalance(); } catch(e) {} }, 0);
 
