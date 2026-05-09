@@ -374,15 +374,81 @@
 <!-- RPC Connection Bar -->
 <div id="rpcBar" style="background:#080808;border-bottom:1px solid #1a1a1a;padding:6px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:monospace;font-size:11px">
   <span style="color:#666">RPC&gt;</span>
-  <input id="qRpcUrl" value="/rpc/public" style="background:#0a0a0a;border:1px solid #222;color:#4ade80;padding:3px 8px;font-family:monospace;font-size:11px;width:140px" placeholder="/rpc">
+  <input id="qRpcUrl" value="/rpc/public" style="background:#0a0a0a;border:1px solid #222;color:#4ade80;padding:3px 8px;font-family:monospace;font-size:11px;width:160px" placeholder="/rpc">
   <span style="color:#666">USER&gt;</span>
   <input id="qRpcUser" value="" type="password" style="background:#0a0a0a;border:1px solid #222;color:#ccc;padding:3px 8px;font-family:monospace;font-size:11px;width:80px" placeholder="(optional)">
   <span style="color:#666">PASS&gt;</span>
   <input id="qRpcPass" value="" type="password" style="background:#0a0a0a;border:1px solid #222;color:#ccc;padding:3px 8px;font-family:monospace;font-size:11px;width:80px" placeholder="(optional)">
   <button onclick="quickConnect()" style="background:none;border:1px solid #4ade80;color:#4ade80;padding:3px 12px;font-family:monospace;font-size:11px;cursor:pointer">CONNECT</button>
   <span id="rpcStatus" style="color:#666">⬤ NOT CONNECTED</span>
+  <span id="rpcModeBadge" style="display:none;font-family:monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:2px;border:1px solid"></span>
+  <button onclick="toggleRpcHelp()" title="Endpoint reference" style="background:none;border:1px solid #444;color:#888;padding:2px 8px;font-family:monospace;font-size:10px;cursor:pointer;margin-left:auto">?</button>
+</div>
+<div id="rpcHelp" style="display:none;background:#080808;border-bottom:1px solid #1a1a1a;padding:10px 16px;font-family:monospace;font-size:11px;color:#94a3b8;line-height:1.7">
+  <div style="max-width:880px">
+    <div style="color:#cbd5e1;font-weight:700;letter-spacing:1px;font-size:10px;margin-bottom:6px">// RPC ENDPOINTS &mdash; pick the one that matches where your node lives</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <tr style="border-bottom:1px solid #1a1a1a">
+        <td style="padding:5px 8px;width:170px;vertical-align:top"><span style="color:#fbbf24;font-weight:700">http://127.0.0.1:18232</span></td>
+        <td style="padding:5px 8px;color:#cbd5e1">Your <b>own</b> sost-node running on this exact computer. <span style="color:#666">127.0.0.1 means "this machine" &mdash; not the SOST website server.</span> Read + broadcast both work; uses your <code>--rpc-user</code>/<code>--rpc-pass</code> from <code>sost-node.conf</code>.</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1a1a1a">
+        <td style="padding:5px 8px;vertical-align:top"><span style="color:#4ade80;font-weight:700">/rpc/public</span></td>
+        <td style="padding:5px 8px;color:#cbd5e1">The website's read-only proxy on sostcore.com. Anyone can read balances and TXs. <b>Cannot</b> broadcast a signed transaction &mdash; the wallet will refuse to send to it.</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 8px;vertical-align:top"><span style="color:#e63946;font-weight:700">/rpc</span></td>
+        <td style="padding:5px 8px;color:#cbd5e1">The website's authenticated endpoint. Requires the RPC user/pass that the operator gave you. Allows broadcast.</td>
+      </tr>
+    </table>
+    <div style="color:#666;margin-top:8px;font-size:10px">For a hands-on walkthrough see <a href="sost-transactions.html#sending" style="color:#fb010d">Sending Capsule Transactions</a>.</div>
+  </div>
 </div>
 <script>
+// classifyRpcEndpoint — categorise an endpoint URL so the wallet can show
+// the right badge and refuse to broadcast against a read-only proxy.
+//
+//   LOCAL      → 127.0.0.1 / localhost (and ::1) on any port — full access
+//   READ_ONLY  → /rpc/public — sostcore.com proxy, broadcast disabled
+//   AUTH       → /rpc — sostcore.com authenticated, broadcast allowed
+//   UNKNOWN    → custom URL we can't classify; treat as broadcast-capable
+//                (assume the user knows what they wired up)
+function classifyRpcEndpoint(url) {
+  if (!url) return { kind:'UNKNOWN', label:'?', color:'#888', allowBroadcast:false,
+                     hint:'Empty endpoint. Pick a node above.' };
+  const u = String(url).trim().toLowerCase();
+  if (u.includes('127.0.0.1') || u.includes('localhost') || u.includes('://[::1]')) {
+    return { kind:'LOCAL', label:'LOCAL NODE', color:'#fbbf24', allowBroadcast:true,
+             hint:'Your own sost-node on this computer. Read + broadcast both OK.' };
+  }
+  if (u === '/rpc/public' || u.endsWith('/rpc/public')) {
+    return { kind:'READ_ONLY', label:'READ ONLY', color:'#4ade80', allowBroadcast:false,
+             hint:'sostcore.com public proxy. Read-only — broadcast is blocked here.' };
+  }
+  if (u === '/rpc' || u.endsWith('/rpc')) {
+    return { kind:'AUTH', label:'AUTH REQUIRED', color:'#e63946', allowBroadcast:true,
+             hint:'Authenticated endpoint. Needs the RPC user/pass from the operator.' };
+  }
+  return { kind:'UNKNOWN', label:'CUSTOM', color:'#888', allowBroadcast:true,
+           hint:'Custom endpoint. The wallet assumes broadcast is allowed.' };
+}
+
+function applyRpcBadge(url) {
+  const badge = document.getElementById('rpcModeBadge');
+  if (!badge) return;
+  const c = classifyRpcEndpoint(url);
+  badge.textContent = c.label;
+  badge.style.color = c.color;
+  badge.style.borderColor = c.color;
+  badge.title = c.hint;
+  badge.style.display = 'inline-block';
+}
+
+function toggleRpcHelp() {
+  const h = document.getElementById('rpcHelp');
+  h.style.display = (h.style.display === 'none') ? 'block' : 'none';
+}
+
 function quickConnect() {
   const url = document.getElementById('qRpcUrl').value.trim() || '/rpc/public';
   const user = document.getElementById('qRpcUser').value.trim();
@@ -393,6 +459,7 @@ function quickConnect() {
   settings.rpcUser = user;
   settings.rpcPass = pass;
   localStorage.setItem('sost_wallet_settings', JSON.stringify(settings));
+  applyRpcBadge(url);
   // Test connection
   const status = document.getElementById('rpcStatus');
   status.style.color = '#fbbf24';
@@ -422,6 +489,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (s.rpcUrl) document.getElementById('qRpcUrl').value = s.rpcUrl;
   if (s.rpcUser) document.getElementById('qRpcUser').value = s.rpcUser;
   if (s.rpcPass) document.getElementById('qRpcPass').value = s.rpcPass;
+  // Show the badge immediately, even before CONNECT runs.
+  applyRpcBadge(document.getElementById('qRpcUrl').value || '/rpc/public');
+  // Keep the badge in sync as the user types/edits the URL.
+  document.getElementById('qRpcUrl').addEventListener('input', e => applyRpcBadge(e.target.value));
   setTimeout(quickConnect, 500);
 });
 </script>
@@ -3114,6 +3185,24 @@ window.estimateFee = async function() {
 window.sendTransaction = async function() {
   if (!wallet || wallet.watchOnly) return alert('Cannot send from a watch-only wallet');
 
+  // RPC-mode guard. The wallet refuses to sign + broadcast against an
+  // endpoint that cannot accept a sendrawtransaction. The most common
+  // miss is /rpc/public (read-only proxy on sostcore.com); the user
+  // sees CONNECTED, opens Send, and the broadcast would 404 / "method
+  // disabled" right after they signed. Better to fail before signing.
+  {
+    const settings = JSON.parse(localStorage.getItem('sost_wallet_settings') || '{}');
+    const url = settings.rpcUrl || document.getElementById('qRpcUrl')?.value || '/rpc/public';
+    const c = classifyRpcEndpoint(url);
+    if (!c.allowBroadcast) {
+      return showError('sendResult',
+        'RPC endpoint "' + url + '" is ' + c.label + '. ' +
+        'To broadcast a transaction, switch the RPC bar at the top of the page to ' +
+        'http://127.0.0.1:18232 (your own sost-node) or to /rpc with valid credentials. ' +
+        'Click the "?" next to CONNECT for a quick reference.');
+    }
+  }
+
   // Capsule attach (V13, web wallet, public modes only).
   // Public modes wired here: open_note, template (Structured Data),
   // cert (Certification). Sealed-* and doc_ref are gated by
@@ -3294,6 +3383,20 @@ window.sendTransaction = async function() {
 // distribution; capsules belong on a single-recipient tx.
 async function sendTransactionMany(recipients) {
   const feePerByte = parseInt(document.getElementById('sendFee').value) || 1000;
+
+  // Same RPC-mode guard as sendTransaction. sendmany would burn 2-3 RPCs
+  // before reaching the broadcast call, so fail before any RPC fires.
+  {
+    const settings = JSON.parse(localStorage.getItem('sost_wallet_settings') || '{}');
+    const url = settings.rpcUrl || document.getElementById('qRpcUrl')?.value || '/rpc/public';
+    const c = classifyRpcEndpoint(url);
+    if (!c.allowBroadcast) {
+      return showError('sendResult',
+        'RPC endpoint "' + url + '" is ' + c.label + '. ' +
+        'sendmany requires a broadcast-capable endpoint. Switch the RPC bar to ' +
+        'http://127.0.0.1:18232 or to /rpc with credentials.');
+    }
+  }
 
   if (isTotpEnabled()) {
     const code = document.getElementById('sendTotp').value.trim();
