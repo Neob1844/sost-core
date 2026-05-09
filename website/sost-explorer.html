@@ -4508,9 +4508,12 @@ function renderIndexedTx(tx,c){
     }
     if(capObj.text){
       var safeText=String(capObj.text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      // Bigger + tinted in the capsule type's own colour so the message
-      // body reads as the headline content of the TX, not a footnote.
-      capHtml+='<div class="k">capsule text</div><div class="v"><div style="background:var(--bg2);padding:12px 14px;border:1px solid '+col+'66;border-left:3px solid '+col+';border-radius:3px;font-size:14px;line-height:1.55;color:'+col+';font-family:monospace;white-space:pre-wrap;word-break:break-word;font-weight:500;letter-spacing:0.2px">'+safeText+'</div></div>';
+      // Headline rendering: gold with a soft glow so the capsule body
+      // reads as THE message of the TX. Fixed colour (not tinted per
+      // capsule type) so a Structured / Cert / Open Note all share the
+      // same "engraved" look — the type chip above already carries the
+      // colour code; the body itself is the artefact.
+      capHtml+='<div class="k">capsule text</div><div class="v"><div style="background:linear-gradient(180deg,#1a1505,#0f0c02);padding:14px 16px;border:1px solid #facc1555;border-left:3px solid #facc15;border-radius:3px;font-size:14px;line-height:1.55;color:#facc15;font-family:monospace;white-space:pre-wrap;word-break:break-word;font-weight:600;letter-spacing:0.3px;text-shadow:0 0 6px rgba(250,204,21,0.35),0 0 14px rgba(250,204,21,0.15);box-shadow:inset 0 0 18px rgba(250,204,21,0.06),0 0 12px rgba(250,204,21,0.10)">'+safeText+'</div></div>';
     }
   }
 
@@ -4561,9 +4564,12 @@ function renderMempoolTx(tx,c){
     }
     if(capObj.text){
       var safeText=String(capObj.text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      // Bigger + tinted in the capsule type's own colour so the message
-      // body reads as the headline content of the TX, not a footnote.
-      capHtml+='<div class="k">capsule text</div><div class="v"><div style="background:var(--bg2);padding:12px 14px;border:1px solid '+col+'66;border-left:3px solid '+col+';border-radius:3px;font-size:14px;line-height:1.55;color:'+col+';font-family:monospace;white-space:pre-wrap;word-break:break-word;font-weight:500;letter-spacing:0.2px">'+safeText+'</div></div>';
+      // Headline rendering: gold with a soft glow so the capsule body
+      // reads as THE message of the TX. Fixed colour (not tinted per
+      // capsule type) so a Structured / Cert / Open Note all share the
+      // same "engraved" look — the type chip above already carries the
+      // colour code; the body itself is the artefact.
+      capHtml+='<div class="k">capsule text</div><div class="v"><div style="background:linear-gradient(180deg,#1a1505,#0f0c02);padding:14px 16px;border:1px solid #facc1555;border-left:3px solid #facc15;border-radius:3px;font-size:14px;line-height:1.55;color:#facc15;font-family:monospace;white-space:pre-wrap;word-break:break-word;font-weight:600;letter-spacing:0.3px;text-shadow:0 0 6px rgba(250,204,21,0.35),0 0 14px rgba(250,204,21,0.15);box-shadow:inset 0 0 18px rgba(250,204,21,0.06),0 0 12px rgba(250,204,21,0.10)">'+safeText+'</div></div>';
     }
   }
 
