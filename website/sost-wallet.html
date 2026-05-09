@@ -885,7 +885,13 @@ document.addEventListener('DOMContentLoaded', () => {
           </select>
           <div id="capsuleDesc" style="font-size:11px;color:var(--text-dim);margin-top:4px;min-height:16px"></div>
           <div id="capsuleTextWrap" style="display:none;margin-top:8px;position:relative">
-            <textarea id="capsuleText" class="form-input" rows="2" maxlength="80" placeholder="" style="font-size:12px;resize:vertical"></textarea>
+            <!-- oninput / onpaste are inline on purpose — guarantees the
+                 counter wires up even if a later script swaps the form or
+                 the DOMContentLoaded listener hasn't run yet. -->
+            <textarea id="capsuleText" class="form-input" rows="2" maxlength="80"
+                      placeholder="" style="font-size:12px;resize:vertical"
+                      oninput="refreshCapsuleCounter()"
+                      onpaste="setTimeout(refreshCapsuleCounter,0)"></textarea>
             <span id="capsuleCharCount" style="position:absolute;bottom:6px;right:8px;font-size:10px;color:var(--text-dim)">0 / 80</span>
           </div>
 

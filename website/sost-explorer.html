@@ -1089,7 +1089,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
       <button class="tx-filter" data-filter="COINBASE" onclick="setTxFilter('COINBASE')">COINBASE</button>
       <button class="tx-filter" data-filter="BOND" onclick="setTxFilter('BOND')">BONDS</button>
     </div>
-    <table class="tbl"><thead><tr><th>TXID</th><th>CAPSULE</th><th>BLOCK</th><th>TYPE</th><th>IN</th><th>OUT</th><th>AMOUNT</th><th>FEE</th></tr></thead>
+    <table class="tbl"><thead><tr><th>TXID</th><th>CAPSULE</th><th>BLOCK</th><th>TYPE</th><th title="Number of UTXOs the wallet spent (input count, not SOST)">IN<br><span style="font-size:9px;color:var(--text3);font-weight:normal">UTXOs</span></th><th title="Number of new outputs created (not SOST)">OUT<br><span style="font-size:9px;color:var(--text3);font-weight:normal">outputs</span></th><th title="External payment amount (excludes change)">AMOUNT<br><span style="font-size:9px;color:var(--text3);font-weight:normal">payment</span></th><th>FEE</th></tr></thead>
     <tbody id="txBody"><tr><td colspan="8" class="ld">loading transactions</td></tr></tbody></table>
   </div>
   <div class="section" id="mpSection">
