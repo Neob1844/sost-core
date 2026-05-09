@@ -944,8 +944,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <!-- ============== /Mode guide ============== -->
 
-          <div style="font-size:10px;color:var(--yellow-primary,#fbbf24);margin-top:6px;line-height:1.5;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.04);padding:6px 8px;border-radius:3px">
-            <b>⚠ Web wallet capsule attach is preview-only.</b> The form lets you draft content but the current build does NOT yet write the payload into the broadcast transaction. To prevent silently sending a plain transfer, the wallet will REFUSE to broadcast when Message Type is anything other than "None". Use <code>sost-cli</code> for capsule transactions until this is wired up.
+          <div style="font-size:10px;color:#22c55e;margin-top:6px;line-height:1.5;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.05);padding:6px 8px;border-radius:3px">
+            <b>✓ Public capsule modes are wired:</b> Open Note, Structured Data, and Certification broadcast with the payload attached and signed. Sealed/encrypted modes (Sealed Note, Sealed Document Reference, Sealed Structured Data) and Document Reference are still bridged to <code>sost-cli</code> &mdash; pick a public mode here, or use <code>sost-cli send --capsule-mode &lt;mode&gt;</code> for the rest. Capsule attach requires chain height &ge; V12 (block 7,350); the wallet refuses to broadcast a capsule before that.
           </div>
         </div>
         <script>
@@ -1981,13 +1981,197 @@ function buildP2PKHSignScript(sigDER, pubkeyBytes) {
 // SOST genesis hash (for sighash computation)
 const GENESIS_HASH = '6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37';
 
+// =============================================================================
+// V13 capsule encoders — public modes, JS port of capsule.cpp
+// =============================================================================
+// Byte-for-byte identical to the C++ Build*Payload helpers in
+// src/capsule.cpp, so a tx built here passes ValidateCapsulePolicy on any
+// node that runs the same SCPv1 validator. Only public modes are wired
+// (open_note, template / TEMPLATE_FIELDS_OPEN, cert / CERT_INSTRUCTION).
+// Sealed modes return a clear error from sendTransaction; doc-ref needs
+// a file picker UI not yet shipped here — also returns a clear error.
+//
+// Constants mirror include/sost/capsule.h:
+const CAPSULE_MAGIC_0 = 0x53, CAPSULE_MAGIC_1 = 0x43;
+const CAPSULE_VERSION_1 = 0x01;
+const CAPSULE_HEADER_SIZE = 12;
+const CAPSULE_MAX_BODY    = 243;          // 255 - 12
+const CAPSULE_OPEN_NOTE_MAX_TEXT  = 80;
+const CAPSULE_TEMPLATE_MAX_FIELDS = 128;
+const CAPSULE_CERT_MAX_NOTE       = 64;
+
+const CAP_TYPE_NONE                 = 0x00;
+const CAP_TYPE_OPEN_NOTE_INLINE     = 0x01;
+const CAP_TYPE_DOC_REF_OPEN         = 0x03;
+const CAP_TYPE_TEMPLATE_FIELDS_OPEN = 0x05;
+const CAP_TYPE_CERT_INSTRUCTION     = 0x07;
+
+const CAP_FLAG_HAS_TEMPLATE = 0x10;
+
+// Default template_id used when the wallet UI does not yet expose a
+// picker. PAYMENT_RECEIPT_V1 (0x03) matches the recommended path for
+// APP rewards distributions documented in the Mode guide.
+const CAP_TEMPLATE_PAYMENT_RECEIPT_V1 = 0x03;
+const CAP_TEMPLATE_CUSTOM_KV_V1       = 0x0A;
+
+// Encode a 12-byte CapsuleHeader. All fields are uint8 except `reserved`
+// which is u16 LE; the header layout matches EncodeCapsuleHeader in
+// src/capsule.cpp.
+function encodeCapsuleHeader({type, flags, template_id, locator_type,
+                              hash_alg, enc_alg, body_len}) {
+  const h = new Uint8Array(CAPSULE_HEADER_SIZE);
+  h[0]  = CAPSULE_MAGIC_0;
+  h[1]  = CAPSULE_MAGIC_1;
+  h[2]  = CAPSULE_VERSION_1;
+  h[3]  = type & 0xFF;
+  h[4]  = flags & 0xFF;
+  h[5]  = template_id & 0xFF;
+  h[6]  = locator_type & 0xFF;
+  h[7]  = hash_alg & 0xFF;
+  h[8]  = enc_alg & 0xFF;
+  h[9]  = body_len & 0xFF;
+  h[10] = 0; h[11] = 0; // reserved = 0x0000
+  return h;
+}
+
+// Open Note (public) — body is text_len(1) + text(N), N <= 80.
+function buildOpenNotePayloadJS(text) {
+  const enc = new TextEncoder().encode(text || '');
+  if (enc.length > CAPSULE_OPEN_NOTE_MAX_TEXT) {
+    throw new Error('Open Note text too long (' + enc.length +
+      ' > ' + CAPSULE_OPEN_NOTE_MAX_TEXT + ' bytes)');
+  }
+  const body = new Uint8Array(1 + enc.length);
+  body[0] = enc.length;
+  body.set(enc, 1);
+  const header = encodeCapsuleHeader({
+    type: CAP_TYPE_OPEN_NOTE_INLINE,
+    flags: 0, template_id: 0, locator_type: 0,
+    hash_alg: 0, enc_alg: 0, body_len: body.length,
+  });
+  return concatBytes(header, body);
+}
+
+// Template Fields (Structured Data, public) — body is
+//   capsule_id(8 LE) + field_codec(1) + fields_len(1) + fields(N)
+// fields max 128 bytes. template_id MUST be != NONE; HAS_TEMPLATE flag set.
+function buildTemplateFieldsOpenPayloadJS({fields, template_id, capsule_id}) {
+  const enc = new TextEncoder().encode(fields || '');
+  if (enc.length > CAPSULE_TEMPLATE_MAX_FIELDS) {
+    throw new Error('Structured Data fields too long (' + enc.length +
+      ' > ' + CAPSULE_TEMPLATE_MAX_FIELDS + ' bytes)');
+  }
+  if (!template_id) {
+    throw new Error('Structured Data needs a non-zero template_id');
+  }
+  const body = new Uint8Array(10 + enc.length);
+  // capsule_id (8 bytes LE)
+  const cid = BigInt(capsule_id || 0);
+  for (let i = 0; i < 8; i++) {
+    body[i] = Number((cid >> BigInt(i * 8)) & 0xFFn);
+  }
+  body[8] = 0x00;            // field_codec = ASCII (v1 standard)
+  body[9] = enc.length;
+  body.set(enc, 10);
+  const header = encodeCapsuleHeader({
+    type: CAP_TYPE_TEMPLATE_FIELDS_OPEN,
+    flags: CAP_FLAG_HAS_TEMPLATE,
+    template_id: template_id,
+    locator_type: 0, hash_alg: 0, enc_alg: 0,
+    body_len: body.length,
+  });
+  return concatBytes(header, body);
+}
+
+// Cert Instruction (public) — body is
+//   cert_kind(1) + instr_kind(1) + cert_id(8 LE) + ref_value(8 LE)
+//   + expires_at(4 LE) + note_len(1) + note(N)
+// note max 64 bytes.
+function buildCertInstructionPayloadJS({cert_kind, instr_kind, cert_id,
+                                          ref_value, expires_at, note}) {
+  const enc = new TextEncoder().encode(note || '');
+  if (enc.length > CAPSULE_CERT_MAX_NOTE) {
+    throw new Error('Certification note too long (' + enc.length +
+      ' > ' + CAPSULE_CERT_MAX_NOTE + ' bytes)');
+  }
+  const body = new Uint8Array(23 + enc.length);
+  body[0] = (cert_kind  || 0) & 0xFF;
+  body[1] = (instr_kind || 0) & 0xFF;
+  const cid = BigInt(cert_id  || 0);
+  const rv  = BigInt(ref_value || 0);
+  for (let i = 0; i < 8; i++) body[2  + i] = Number((cid >> BigInt(i * 8)) & 0xFFn);
+  for (let i = 0; i < 8; i++) body[10 + i] = Number((rv  >> BigInt(i * 8)) & 0xFFn);
+  const exp = (expires_at >>> 0);
+  body[18] =  exp        & 0xFF;
+  body[19] = (exp >>> 8) & 0xFF;
+  body[20] = (exp >>>16) & 0xFF;
+  body[21] = (exp >>>24) & 0xFF;
+  body[22] = enc.length;
+  body.set(enc, 23);
+  const header = encodeCapsuleHeader({
+    type: CAP_TYPE_CERT_INSTRUCTION,
+    flags: 0, template_id: 0, locator_type: 0,
+    hash_alg: 0, enc_alg: 0, body_len: body.length,
+  });
+  return concatBytes(header, body);
+}
+
+// Build the capsule payload bytes for the value of the Message Type
+// dropdown. Returns Uint8Array (length 0 if mode = none) on success.
+// Throws Error with a human-readable message on bad input or on
+// modes that are not yet wired in the web wallet.
+function buildCapsulePayloadFromForm() {
+  const mode = (document.getElementById('capsuleType') || {}).value || 'none';
+  const text = (document.getElementById('capsuleText') || {}).value || '';
+
+  if (mode === 'none') return new Uint8Array(0);
+
+  if (mode === 'sealed_note' || mode === 'doc_ref_sealed' || mode === 'template_sealed') {
+    throw new Error(
+      'Sealed/encrypted modes are not yet wired in the web wallet ' +
+      '(ECIES envelope ships in a separate commit). Use a public mode for now ' +
+      '(Open Note, Structured Data, or Certification), or use sost-cli.');
+  }
+  if (mode === 'doc_ref') {
+    throw new Error(
+      'Document Reference from the web wallet needs a file picker UI ' +
+      'that has not landed yet. Use sost-cli with --capsule-mode doc-ref ' +
+      '--capsule-file <path> --capsule-locator <url> for now.');
+  }
+
+  if (mode === 'open_note') {
+    if (!text.trim()) throw new Error('Open Note needs --capsule-text content');
+    return buildOpenNotePayloadJS(text);
+  }
+  if (mode === 'template') {
+    if (!text.trim()) throw new Error('Structured Data needs fields content');
+    // No template-id picker in the web wallet today; default to
+    // PAYMENT_RECEIPT_V1, which is the recommended id for APP rewards
+    // and accounting payouts (see the Mode guide).
+    return buildTemplateFieldsOpenPayloadJS({
+      fields: text,
+      template_id: CAP_TEMPLATE_PAYMENT_RECEIPT_V1,
+      capsule_id: 0,
+    });
+  }
+  if (mode === 'cert') {
+    return buildCertInstructionPayloadJS({
+      cert_kind: 0x01, instr_kind: 0x01,
+      cert_id: 0, ref_value: 0, expires_at: 0,
+      note: text,
+    });
+  }
+
+  throw new Error('Unknown Message Type: ' + mode);
+}
+
 // Decode sost1 address to 20-byte pubkey hash
 function addressToPKH(addr) {
   if (!addr.startsWith('sost1') || addr.length !== 45) throw new Error('Invalid address: ' + addr);
   return hexToBytes(addr.slice(5)); // sost1 + 40 hex chars = 20 bytes
 }
 
-async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAddr) {
+async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAddr, capsulePayload) {
   // ============================================================
   // SOST TX format (NOT Bitcoin!):
   //   version(4) + tx_type(1) + input_count(varint)
@@ -1995,7 +2179,18 @@ async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAd
   //   + output_count(varint)
   //   + outputs[]: amount(8) + type(1) + pkh(20) + payload_len(2) + payload(N)
   //   NO locktime, NO sequence, NO scriptSig
+  //
+  // capsulePayload: optional Uint8Array. When non-empty, attached to
+  //                 output[0] (the payment) before signing. The sighash
+  //                 binds the payload bytes, so the broadcast is rejected
+  //                 if anything mutates the capsule mid-flight. Mempool
+  //                 runs ValidateCapsulePolicy on the bytes — caller must
+  //                 build a valid SCPv1 capsule via the buildXxxPayloadJS
+  //                 helpers above. Empty/undefined behaves bit-identically
+  //                 to the pre-V13 sender (no payload attached).
   // ============================================================
+
+  const cap = (capsulePayload instanceof Uint8Array) ? capsulePayload : new Uint8Array(0);
 
   // Coin selection: smallest-first
   const sorted = [...utxos].sort((a, b) => a.amount - b.amount);
@@ -2009,8 +2204,8 @@ async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAd
   if (total < amountStocks + feeStocks) throw new Error('Insufficient funds');
 
   const change = total - amountStocks - feeStocks;
-  const txOutputs = [{ address: destAddr, amount: amountStocks, type: 0x00 }];
-  if (change > 0) txOutputs.push({ address: changeAddr, amount: change, type: 0x00 });
+  const txOutputs = [{ address: destAddr, amount: amountStocks, type: 0x00, payload: cap }];
+  if (change > 0) txOutputs.push({ address: changeAddr, amount: change, type: 0x00, payload: new Uint8Array(0) });
 
   const privKeyBytes = hexToBytes(wallet.privKey);
   const pubKeyBytes = hexToBytes(wallet.pubKey);
@@ -2025,13 +2220,19 @@ async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAd
   }
   const hashPrevouts = doubleSha256(concatBytes(...hpParts));
 
-  // hashOutputs = SHA256d(all outputs in SOST format)
+  // hashOutputs = SHA256d(all outputs in SOST format).
+  // payload_len is u16 LE — MUST be the actual payload size; the
+  // signature binds these bytes. Pre-V13 the wallet always wrote
+  // payload_len=0; that is bit-identical to the path below when
+  // out.payload is empty.
   const hoParts = [];
   for (const out of txOutputs) {
-    hoParts.push(writeU64LE(out.amount));       // amount i64 LE
-    hoParts.push(new Uint8Array([out.type]));    // type byte
-    hoParts.push(addressToPKH(out.address));     // pkh 20 bytes
-    hoParts.push(new Uint8Array([0x00]));        // payload_len byte (0)
+    const pl = out.payload || new Uint8Array(0);
+    hoParts.push(writeU64LE(out.amount));               // amount i64 LE
+    hoParts.push(new Uint8Array([out.type]));            // type byte
+    hoParts.push(addressToPKH(out.address));             // pkh 20 bytes
+    hoParts.push(new Uint8Array([pl.length & 0xFF, (pl.length >>> 8) & 0xFF])); // payload_len u16 LE
+    if (pl.length > 0) hoParts.push(pl);                 // payload bytes
   }
   const hashOutputs = doubleSha256(concatBytes(...hoParts));
 
@@ -2078,10 +2279,12 @@ async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAd
   parts.push(encodeVarInt(txOutputs.length));    // output count
 
   for (const out of txOutputs) {
-    parts.push(writeU64LE(out.amount));           // amount (8 bytes i64 LE)
-    parts.push(new Uint8Array([out.type]));       // type (1 byte)
-    parts.push(addressToPKH(out.address));        // pubkey_hash (20 bytes)
-    parts.push(new Uint8Array([0x00, 0x00]));    // payload_len (2 bytes u16 LE = 0)
+    const pl = out.payload || new Uint8Array(0);
+    parts.push(writeU64LE(out.amount));            // amount (8 bytes i64 LE)
+    parts.push(new Uint8Array([out.type]));        // type (1 byte)
+    parts.push(addressToPKH(out.address));         // pubkey_hash (20 bytes)
+    parts.push(new Uint8Array([pl.length & 0xFF, (pl.length >>> 8) & 0xFF])); // payload_len u16 LE
+    if (pl.length > 0) parts.push(pl);             // payload bytes
   }
 
   // NO locktime in SOST
@@ -2900,17 +3103,30 @@ window.estimateFee = async function() {
 window.sendTransaction = async function() {
   if (!wallet || wallet.watchOnly) return alert('Cannot send from a watch-only wallet');
 
-  // Capsule guard. The web wallet's tx builder does NOT yet attach
-  // capsule payloads (every output is serialized with payload_len=0),
-  // so if a user selected a capsule type from the form, broadcasting
-  // would silently strip the content. Refuse with a loud error and
-  // tell them to use the CLI. Lifted automatically once the JS
-  // builder learns to write the payload.
-  const capsuleSel = document.getElementById('capsuleType');
-  if (capsuleSel && capsuleSel.value && capsuleSel.value !== 'none') {
-    return showError('sendResult',
-      'Capsule send from web wallet is not yet implemented. The form would silently broadcast a plain transfer with NO payload attached. ' +
-      'Set Message Type back to "None" to send a plain transfer, or use sost-cli for capsule transactions.');
+  // Capsule attach (V13, web wallet, public modes only).
+  // Public modes wired here: open_note, template (Structured Data),
+  // cert (Certification). Sealed-* and doc_ref are gated by
+  // buildCapsulePayloadFromForm() with clear error messages.
+  // Build the bytes BEFORE any tx work so a bad form input fails fast.
+  let capsulePayload = new Uint8Array(0);
+  try {
+    capsulePayload = buildCapsulePayloadFromForm();
+  } catch (e) {
+    return showError('sendResult', 'Capsule: ' + e.message);
+  }
+  if (capsulePayload.length > 0) {
+    if (capsuleBlockHeight && capsuleBlockHeight < CAPSULE_ACTIVATION_HEIGHT) {
+      return showError('sendResult',
+        'Capsule attach requires chain height >= ' +
+        CAPSULE_ACTIVATION_HEIGHT.toLocaleString() +
+        '. Current tip is #' + capsuleBlockHeight + '. ' +
+        'Wait until the chain crosses V12 or set Message Type back to "None".');
+    }
+    if (capsulePayload.length > 255) {
+      return showError('sendResult',
+        'Capsule payload is ' + capsulePayload.length +
+        ' bytes (max 255). Reduce the content and try again.');
+    }
   }
 
   // Multi-recipient (sendmany) path: if more than one recipient row is
@@ -2991,7 +3207,7 @@ window.sendTransaction = async function() {
       return;
     }
 
-    const built = await buildAndSignTx(utxos, toAddr, amountStocks, feeStocks, wallet.address);
+    const built = await buildAndSignTx(utxos, toAddr, amountStocks, feeStocks, wallet.address, capsulePayload);
     const rawTx = built.rawTx;
     const selectedUtxos = built.selected;
     const txSize = rawTx.length / 2;
