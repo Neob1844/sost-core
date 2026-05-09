@@ -271,8 +271,89 @@ static void test_public_capsules_still_pass() {
     }
 }
 
+// ---------------------------------------------------------------------------
+// 11-12. CLI-equivalent end-to-end round-trips (Fase Sealed-1.D).
+//
+// Mirror what `sost-cli send --capsule-mode sealed-note/sealed-structured`
+// does: build the cleartext body, ECIES-seal it with the recipient's
+// pubkey, wrap the envelope in the SCPv1 header, run ValidateCapsulePolicy
+// on the result, and finally decrypt with the recipient's privkey to
+// recover the original plaintext.
+// ---------------------------------------------------------------------------
+static void test_cli_sealed_note_endtoend() {
+    printf("\n=== 11) CLI-equivalent sealed-note round-trip ===\n");
+    KeyPair B = gen_keypair();
+
+    const std::string text = "private hello — only B should read this";
+    std::vector<Byte> plaintext(text.begin(), text.end());
+
+    // 1. Seal.
+    std::vector<Byte> envelope;
+    std::string err;
+    bool ok = SealSingleRecipient(plaintext,
+        std::vector<Byte>(B.pub.begin(), B.pub.end()), B.pkh, envelope, &err);
+    TEST("SealSingleRecipient succeeds", ok);
+
+    // 2. Wrap.
+    std::vector<Byte> payload;
+    TEST("BuildSealedNotePayload OK",
+         BuildSealedNotePayload(envelope, payload, &err));
+
+    // 3. Mempool-equivalent policy validation.
+    auto v = ValidateCapsulePolicy(payload);
+    TEST("ValidateCapsulePolicy accepts sealed-note payload", v.ok);
+
+    // 4. Recipient opens the body half (drop the 12-byte SCPv1 header
+    //    the way capsule-decrypt does).
+    std::vector<Byte> body(payload.begin() + 12, payload.end());
+    std::vector<Byte> recovered;
+    bool opened = OpenSingleRecipient(body, B.priv, recovered, &err);
+    TEST("Recipient privkey recovers plaintext", opened);
+    TEST("recovered bytes match plaintext", recovered == plaintext);
+}
+
+static void test_cli_sealed_structured_endtoend() {
+    printf("\n=== 12) CLI-equivalent sealed-structured round-trip ===\n");
+    KeyPair B = gen_keypair();
+
+    // CLI builds the same cleartext body the public TEMPLATE_FIELDS_OPEN
+    // uses (capsule_id LE 8 + field_codec 1 + fields_len 1 + fields N).
+    const std::string fields_text = "category=APP rewards; ref=test";
+    std::vector<Byte> cleartext;
+    cleartext.reserve(8 + 1 + 1 + fields_text.size());
+    for (int i = 0; i < 8; ++i) cleartext.push_back(0);  // capsule_id = 0
+    cleartext.push_back(0x00);                           // field_codec ASCII
+    cleartext.push_back((uint8_t)fields_text.size());
+    cleartext.insert(cleartext.end(), fields_text.begin(), fields_text.end());
+
+    std::vector<Byte> envelope;
+    std::string err;
+    TEST("Seal with structured cleartext OK",
+         SealSingleRecipient(cleartext,
+            std::vector<Byte>(B.pub.begin(), B.pub.end()), B.pkh, envelope, &err));
+
+    std::vector<Byte> payload;
+    TEST("BuildSealedTemplatePayload(payment_receipt_v1, env) OK",
+         BuildSealedTemplatePayload(
+            (uint8_t)TemplateId::PAYMENT_RECEIPT_V1, envelope, payload, &err));
+    TEST("template_id survives in the SCPv1 header (offset 5)",
+         payload[5] == (uint8_t)TemplateId::PAYMENT_RECEIPT_V1);
+    TEST("ValidateCapsulePolicy accepts sealed-structured payload",
+         ValidateCapsulePolicy(payload).ok);
+
+    std::vector<Byte> body(payload.begin() + 12, payload.end());
+    std::vector<Byte> recovered;
+    TEST("Recipient privkey recovers structured cleartext",
+         OpenSingleRecipient(body, B.priv, recovered, &err));
+    TEST("recovered cleartext matches sender cleartext",
+         recovered == cleartext);
+    // Decrypted body parses like a public TEMPLATE_FIELDS body.
+    TEST("decoded fields_len matches", recovered.size() >= 10 &&
+         recovered[9] == (uint8_t)fields_text.size());
+}
+
 int main() {
-    printf("\n=== Sealed capsule packaging (Fase Sealed-1.B) ===\n");
+    printf("\n=== Sealed capsule packaging (Fase Sealed-1.B/1.D) ===\n");
     test_sealed_note_roundtrip();
     test_sealed_doc_ref_roundtrip();
     test_sealed_template_roundtrip();
@@ -283,6 +364,8 @@ int main() {
     test_validator_rejects_bad_envelope_version();
     test_validator_rejects_bad_recipient_count();
     test_public_capsules_still_pass();
+    test_cli_sealed_note_endtoend();
+    test_cli_sealed_structured_endtoend();
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }

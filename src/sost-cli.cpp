@@ -44,6 +44,7 @@
 #include "sost/address.h"
 #include "sost/tx_signer.h"
 #include "sost/capsule.h"
+#include "sost/sealed_envelope.h" // Sealed Capsule (Fase Sealed-1.D)
 #include "sost/crypto.h"          // sha256(file bytes) for --capsule-file
 
 #include <cstdio>
@@ -99,6 +100,11 @@ static std::string g_capsule_file     = "";       // --capsule-file <path> (doc-
 // exclusive — both set is an error.
 static std::string g_from_label   = "";  // --from-label <label>
 static std::string g_from_address = "";  // --from-address <sost1...>
+
+// Sealed Capsule (Fase Sealed-1.D). Compressed-form recipient pubkey
+// (66 hex chars, prefix 02/03). Required for --capsule-mode sealed-*.
+// The address-side hash160(recipient_pubkey) check happens at build time.
+static std::string g_recipient_pubkey = "";  // --recipient-pubkey <hex>
 
 static void init_sost_dir() {
     const char* home = getenv("HOME");
@@ -562,17 +568,207 @@ static bool build_capsule_for_mode(std::vector<sost::Byte>& out_payload) {
         return true;  // no payload
     }
 
-    // Sealed modes: explicit not-wired error so the user does not waste
-    // a fee constructing a tx that the node would reject.
+    // -------------------------------------------------------------------
+    // Sealed modes (Fase Sealed-1.D). Single-recipient ECIES envelope from
+    // sealed_envelope.h, wrapped with the SCPv1 header by capsule.cpp's
+    // BuildSealed*Payload helpers. Every gate runs BEFORE any encryption
+    // so a missing/invalid input never wastes RAND_bytes or an ECDH.
+    // -------------------------------------------------------------------
     if (g_capsule_mode == "sealed-note"
      || g_capsule_mode == "sealed-doc-ref"
      || g_capsule_mode == "sealed-structured") {
-        fprintf(stderr,
-            "ERROR: --capsule-mode '%s' is not wired in this build yet "
-            "(ECIES envelope is shipped in a separate commit).\n"
-            "Use a public mode for now: open-note, doc-ref, structured, cert.\n",
-            g_capsule_mode.c_str());
-        return false;
+
+        // Recipient pubkey must be supplied (the address only carries
+        // hash160(pubkey); the ECIES envelope needs the full pubkey).
+        if (g_recipient_pubkey.empty()) {
+            fprintf(stderr,
+                "ERROR: --capsule-mode %s requires --recipient-pubkey "
+                "<66 hex chars>. The recipient address only contains "
+                "hash160(pubkey); the ECIES envelope needs the full "
+                "compressed pubkey.\n",
+                g_capsule_mode.c_str());
+            return false;
+        }
+        // Hex → 33 bytes (compressed). secp256k1 compressed pubkeys
+        // start with 0x02 (even y) or 0x03 (odd y).
+        sost::PubKey rp_arr;
+        std::string  pkhex = g_recipient_pubkey;
+        if (pkhex.size() == 33 * 2 + 2 && pkhex.substr(0, 2) == "0x") {
+            pkhex = pkhex.substr(2);
+        }
+        if (pkhex.size() != 33 * 2) {
+            fprintf(stderr,
+                "ERROR: --recipient-pubkey must be 66 hex chars (compressed). "
+                "Got %zu.\n", pkhex.size());
+            return false;
+        }
+        for (size_t i = 0; i < 33; ++i) {
+            unsigned v;
+            if (std::sscanf(pkhex.c_str() + i * 2, "%2x", &v) != 1) {
+                fprintf(stderr, "ERROR: --recipient-pubkey is not valid hex.\n");
+                return false;
+            }
+            rp_arr[i] = (sost::Byte)v;
+        }
+        if (rp_arr[0] != 0x02 && rp_arr[0] != 0x03) {
+            fprintf(stderr,
+                "ERROR: --recipient-pubkey first byte must be 0x02 or 0x03 "
+                "(compressed). Got 0x%02x.\n", (unsigned)rp_arr[0]);
+            return false;
+        }
+        // Cross-check pubkey hashes to the recipient address.
+        sost::PubKeyHash claimed_pkh{};
+        if (g_send_to.empty()) {
+            fprintf(stderr, "ERROR: sealed Capsule needs a recipient address.\n");
+            return false;
+        }
+        if (!sost::address_decode(g_send_to, claimed_pkh)) {
+            fprintf(stderr,
+                "ERROR: cannot decode recipient address '%s'.\n",
+                g_send_to.c_str());
+            return false;
+        }
+        sost::PubKeyHash derived_pkh = sost::ComputePubKeyHash(rp_arr);
+        if (!std::equal(derived_pkh.begin(), derived_pkh.end(),
+                        claimed_pkh.begin())) {
+            fprintf(stderr,
+                "ERROR: hash160(--recipient-pubkey) does NOT match the "
+                "recipient address. Either the pubkey or the address is wrong.\n");
+            return false;
+        }
+
+        // Build the cleartext body that goes inside the ECIES envelope.
+        // For sealed-note that is just the user text. For sealed-structured
+        // we reuse the same body layout the public structured builder uses
+        // (capsule_id + field_codec + fields_len + fields). For sealed-
+        // doc-ref we reuse the public doc-ref body (file_size + file_hash
+        // + manifest_hash + locator_len + locator).
+        std::vector<sost::Byte> plaintext;
+
+        std::string err;
+        uint8_t sealed_template_id = 0;   // only meaningful for sealed-structured
+
+        if (g_capsule_mode == "sealed-note") {
+            if (g_capsule_text.empty()) {
+                fprintf(stderr,
+                    "ERROR: --capsule-mode sealed-note requires --capsule-text\n");
+                return false;
+            }
+            if (g_capsule_text.size() > sost::CAPSULE_OPEN_NOTE_MAX_TEXT) {
+                fprintf(stderr,
+                    "ERROR: sealed-note text is %zu bytes (max %u).\n",
+                    g_capsule_text.size(),
+                    (unsigned)sost::CAPSULE_OPEN_NOTE_MAX_TEXT);
+                return false;
+            }
+            plaintext.assign(g_capsule_text.begin(), g_capsule_text.end());
+        }
+        else if (g_capsule_mode == "sealed-structured") {
+            if (g_capsule_text.empty()) {
+                fprintf(stderr,
+                    "ERROR: --capsule-mode sealed-structured requires --capsule-text\n");
+                return false;
+            }
+            sealed_template_id = parse_template_id_or_default(g_capsule_template);
+            if (sealed_template_id == 0) {
+                fprintf(stderr,
+                    "ERROR: unknown --capsule-template '%s' for sealed-structured.\n",
+                    g_capsule_template.c_str());
+                return false;
+            }
+            if (g_capsule_text.size() > sost::CAPSULE_TEMPLATE_MAX_FIELDS) {
+                fprintf(stderr,
+                    "ERROR: sealed-structured fields are %zu bytes (max %u).\n",
+                    g_capsule_text.size(),
+                    (unsigned)sost::CAPSULE_TEMPLATE_MAX_FIELDS);
+                return false;
+            }
+            // Same body layout the public TEMPLATE_FIELDS uses. After ECIES
+            // the recipient decrypts THIS exact byte sequence and parses
+            // it the way ValidateTemplateBody does for the open variant.
+            uint64_t capsule_id = 0;  // unset
+            plaintext.reserve(8 + 1 + 1 + g_capsule_text.size());
+            for (int i = 0; i < 8; ++i)
+                plaintext.push_back((uint8_t)((capsule_id >> (i * 8)) & 0xFF));
+            plaintext.push_back(0x00);  // field_codec = ASCII
+            plaintext.push_back((uint8_t)g_capsule_text.size());
+            plaintext.insert(plaintext.end(),
+                             g_capsule_text.begin(), g_capsule_text.end());
+        }
+        else {  // sealed-doc-ref
+            if (g_capsule_file.empty()) {
+                fprintf(stderr,
+                    "ERROR: --capsule-mode sealed-doc-ref requires --capsule-file <path>\n");
+                return false;
+            }
+            std::vector<sost::Byte> file_bytes;
+            if (!read_file_into_vec(g_capsule_file, file_bytes, &err)) {
+                fprintf(stderr, "ERROR: %s\n", err.c_str()); return false;
+            }
+            sost::Hash256 file_hash = sost::sha256(file_bytes);
+            std::vector<sost::Byte> locator_ref(g_capsule_locator.begin(),
+                                                g_capsule_locator.end());
+            if (locator_ref.size() > sost::CAPSULE_DOC_REF_MAX_LOCATOR) {
+                fprintf(stderr,
+                    "ERROR: sealed-doc-ref locator is %zu bytes (max %u).\n",
+                    locator_ref.size(),
+                    (unsigned)sost::CAPSULE_DOC_REF_MAX_LOCATOR);
+                return false;
+            }
+            // Body layout matches DOC_REF_OPEN: capsule_id(8) +
+            // file_size(4) + file_hash(32) + manifest_hash(32) +
+            // locator_len(1) + locator(N) = 77 + N.
+            const uint32_t file_size = (uint32_t)file_bytes.size();
+            const uint64_t capsule_id = 0;
+            const sost::Hash256 manifest_hash{};   // zero
+            plaintext.reserve(77 + locator_ref.size());
+            for (int i = 0; i < 8; ++i)
+                plaintext.push_back((uint8_t)((capsule_id >> (i * 8)) & 0xFF));
+            for (int i = 0; i < 4; ++i)
+                plaintext.push_back((uint8_t)((file_size >> (i * 8)) & 0xFF));
+            plaintext.insert(plaintext.end(), file_hash.begin(), file_hash.end());
+            plaintext.insert(plaintext.end(), manifest_hash.begin(), manifest_hash.end());
+            plaintext.push_back((uint8_t)locator_ref.size());
+            plaintext.insert(plaintext.end(), locator_ref.begin(), locator_ref.end());
+        }
+
+        // Plaintext must fit the 158-byte envelope cap (header + ct + tag
+        // ≤ sighash 255-byte window). The per-mode caps above usually
+        // bind first; this is the last-resort guard.
+        if (plaintext.size() > sost::SEALED_PLAINTEXT_MAX) {
+            fprintf(stderr,
+                "ERROR: sealed plaintext is %zu bytes (max %zu in this fase, "
+                "limited by the 255-byte sighash payload window).\n",
+                plaintext.size(), sost::SEALED_PLAINTEXT_MAX);
+            return false;
+        }
+
+        // Encrypt + wrap.
+        std::vector<sost::Byte> envelope;
+        std::vector<sost::Byte> rp_vec(rp_arr.begin(), rp_arr.end());
+        if (!sost::SealSingleRecipient(plaintext, rp_vec, claimed_pkh,
+                                       envelope, &err)) {
+            fprintf(stderr, "ERROR: seal: %s\n", err.c_str());
+            return false;
+        }
+        if (g_capsule_mode == "sealed-note") {
+            if (!sost::BuildSealedNotePayload(envelope, out_payload, &err)) {
+                fprintf(stderr, "ERROR: build sealed-note: %s\n", err.c_str());
+                return false;
+            }
+        } else if (g_capsule_mode == "sealed-structured") {
+            if (!sost::BuildSealedTemplatePayload(sealed_template_id, envelope,
+                                                  out_payload, &err)) {
+                fprintf(stderr, "ERROR: build sealed-structured: %s\n", err.c_str());
+                return false;
+            }
+        } else {
+            if (!sost::BuildSealedDocRefPayload(envelope, out_payload, &err)) {
+                fprintf(stderr, "ERROR: build sealed-doc-ref: %s\n", err.c_str());
+                return false;
+            }
+        }
+        return true;
     }
 
     std::string err;
@@ -709,19 +905,24 @@ static void print_usage() {
     printf("                          omit both to use the wallet's default key)\n");
     printf("  --yes, -y              Skip confirmation prompts\n");
     printf("  --skip-warning         Skip first-send warning for scripts\n");
-    printf("\nCapsule attach (V12+ chain only — public modes wired):\n");
+    printf("\nCapsule attach (V12+ chain; sealed-* gated to V13 / block %lld):\n",
+           (long long)sost::V13_HEIGHT);
     printf("  --capsule-mode <mode>  none | open-note | doc-ref | structured | cert\n");
-    printf("                         (sealed-note / sealed-doc-ref / sealed-structured\n");
-    printf("                          return a clear 'not yet wired' error)\n");
-    printf("  --capsule-text <text>  text body (open-note: <=80; structured: <=128;\n");
-    printf("                                    cert: <=64; ignored for doc-ref)\n");
-    printf("  --capsule-template <id>  structured: template name. Default custom_kv_v1.\n");
+    printf("                         | sealed-note | sealed-doc-ref | sealed-structured\n");
+    printf("  --capsule-text <text>  text body (open-note / sealed-note: <=80;\n");
+    printf("                          structured / sealed-structured: <=128;\n");
+    printf("                          cert: <=64; ignored for doc-ref / sealed-doc-ref)\n");
+    printf("  --capsule-template <id>  structured / sealed-structured: template name.\n");
+    printf("                           Default custom_kv_v1.\n");
     printf("                           Known: custom_kv_v1, invoice_v1, payment_receipt_v1,\n");
     printf("                           transfer_instruction_v1, compliance_record_v1,\n");
     printf("                           warranty_record_v1, shipment_record_v1,\n");
     printf("                           gold_cert_note_v1, contract_ref_v1, escrow_note_v1\n");
-    printf("  --capsule-locator <s>  doc-ref: optional URL or IPFS reference\n");
-    printf("  --capsule-file <path>  doc-ref: file whose SHA-256 becomes file_hash\n");
+    printf("  --capsule-locator <s>  doc-ref / sealed-doc-ref: optional URL or IPFS reference\n");
+    printf("  --capsule-file <path>  doc-ref / sealed-doc-ref: file whose SHA-256 = file_hash\n");
+    printf("  --recipient-pubkey <hex>  REQUIRED for sealed-*. 66 hex chars (compressed,\n");
+    printf("                          starts with 02 or 03). hash160(pubkey) must match\n");
+    printf("                          the recipient address. Single-recipient only.\n");
     printf("\nFee calculation (v1.3 — automatic):\n");
     printf("  Fee = tx_size_bytes x fee_rate stocks/byte\n");
     printf("  Minimum: %s SOST (%lld stocks)\n",
@@ -775,7 +976,8 @@ int main(int argc, char** argv) {
                     || flag == "--from-label" || flag == "--from-address"
                     || flag == "--capsule-mode" || flag == "--capsule-text"
                     || flag == "--capsule-template" || flag == "--capsule-locator"
-                    || flag == "--capsule-file");
+                    || flag == "--capsule-file"
+                    || flag == "--recipient-pubkey");
         if (needs_value) {
             if (i + 1 >= argc) {
                 fprintf(stderr, "Error: %s expects a value\n", flag.c_str());
@@ -815,6 +1017,7 @@ int main(int argc, char** argv) {
             else if (flag == "--capsule-template")  g_capsule_template = val;
             else if (flag == "--capsule-locator")   g_capsule_locator = val;
             else if (flag == "--capsule-file")      g_capsule_file = val;
+            else if (flag == "--recipient-pubkey")  g_recipient_pubkey = val;
             i += 2;
             continue;
         }
@@ -1269,6 +1472,9 @@ int main(int argc, char** argv) {
         if (argc >= arg_start + 3 && argv[arg_start + 2][0] != '-') {
             amount_str = argv[arg_start + 2];
         }
+        // Make the resolved recipient visible to build_capsule_for_mode
+        // (sealed-* needs it for the hash160(pubkey) == address check).
+        g_send_to = to_addr;
 
         if (to_addr.empty() || amount_str.empty()) {
             fprintf(stderr, "Usage: sost-cli send <to_address> <amount_sost>\n");
@@ -1346,6 +1552,22 @@ int main(int argc, char** argv) {
                     "(%lld); current tip is %lld.\n"
                     "  Wait until the chain crosses V12 or omit --capsule-mode.\n",
                     (long long)sost::V12_HEIGHT, (long long)chain_height);
+                return 1;
+            }
+            // Sealed Capsule (Fase Sealed-1.D): tooling gate at V13_HEIGHT.
+            // The chain accepts the bytes earlier (no consensus change),
+            // but the wallet/CLI release-coordinates sealed broadcast with
+            // V13. Refuses BEFORE the broadcast prompt.
+            const bool is_sealed_mode =
+                (g_capsule_mode == "sealed-note" ||
+                 g_capsule_mode == "sealed-doc-ref" ||
+                 g_capsule_mode == "sealed-structured");
+            if (is_sealed_mode && chain_height < (int64_t)sost::V13_HEIGHT) {
+                fprintf(stderr,
+                    "ERROR: Sealed Capsule is available from block %lld "
+                    "(V13). Current tip is %lld. Wait for V13 or use a "
+                    "public mode (open-note, doc-ref, structured, cert).\n",
+                    (long long)sost::V13_HEIGHT, (long long)chain_height);
                 return 1;
             }
             printf("Capsule attached: mode=%s, payload=%zu bytes\n",
@@ -2679,6 +2901,143 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Unknown popc subcommand: %s\n", sub.c_str());
         fprintf(stderr, "Valid: register, status, check\n");
         return 1;
+    }
+
+    // =====================================================================
+    // capsule-decrypt <txid>  (Fase Sealed-1.D)
+    //
+    // Fetches the TX over RPC, finds outputs with a sealed capsule
+    // (capsule_type 0x02 / 0x04 / 0x06), and tries to open each envelope
+    // with every privkey in the wallet. On success prints the recovered
+    // plaintext; on failure prints "not for this wallet". No signing,
+    // no broadcast, no chain mutation.
+    // =====================================================================
+    if (cmd == "capsule-decrypt") {
+        if (argc < arg_start + 2) {
+            fprintf(stderr, "Usage: sost-cli capsule-decrypt <txid> "
+                            "[--wallet wallet.json] [--rpc host:port] "
+                            "[--rpc-user u --rpc-pass p]\n");
+            return 1;
+        }
+        std::string txid_hex = argv[arg_start + 1];
+        if (txid_hex.size() != 64) {
+            fprintf(stderr, "ERROR: txid must be 64 hex chars (got %zu).\n",
+                    txid_hex.size());
+            return 1;
+        }
+        std::string resp = rpc_call("gettransaction", "[\"" + txid_hex + "\"]");
+        if (resp.empty()) {
+            fprintf(stderr, "ERROR: empty RPC response. Is the node running "
+                            "at %s:%d? Did --rpc-user / --rpc-pass match?\n",
+                    g_node_host.c_str(), g_node_port);
+            return 1;
+        }
+        // Find each "payload_hex":"..." occurrence in the JSON. The node
+        // (3241078) emits payload_hex per-vout when the output payload is
+        // non-empty. We collect them in order.
+        std::vector<std::pair<int, std::string>> payloads_hex;  // (vout_idx, hex)
+        size_t pos = 0; int vout_idx = 0;
+        while (true) {
+            auto p = resp.find("\"payload_hex\":\"", pos);
+            if (p == std::string::npos) break;
+            p += std::strlen("\"payload_hex\":\"");
+            auto e = resp.find('"', p);
+            if (e == std::string::npos) break;
+            payloads_hex.emplace_back(vout_idx++, resp.substr(p, e - p));
+            pos = e + 1;
+        }
+        if (payloads_hex.empty()) {
+            printf("No outputs in this TX carry a payload.\n");
+            return 0;
+        }
+
+        int sealed_seen = 0;
+        int sealed_opened = 0;
+        for (const auto& kv : payloads_hex) {
+            const std::string& h = kv.second;
+            if (h.size() < 24) continue;                       // need a header
+            std::vector<sost::Byte> payload;
+            payload.reserve(h.size() / 2);
+            for (size_t i = 0; i + 1 < h.size(); i += 2) {
+                unsigned v;
+                if (std::sscanf(h.c_str() + i, "%2x", &v) != 1) {
+                    payload.clear(); break;
+                }
+                payload.push_back((sost::Byte)v);
+            }
+            if (payload.size() < 12) continue;
+            if (payload[0] != 0x53 || payload[1] != 0x43) continue;  // not SCPv1
+            if (payload[2] != 0x01) continue;                        // wrong capsule version
+            uint8_t type = payload[3];
+            if (type != 0x02 && type != 0x04 && type != 0x06) continue;  // not sealed
+            sealed_seen++;
+            std::vector<sost::Byte> body(payload.begin() + 12, payload.end());
+
+            // Try every wallet key. (Wallet exposes keys() as a vector.)
+            bool opened = false;
+            for (const auto& k : w.keys()) {
+                std::vector<sost::Byte> plaintext;
+                std::string err;
+                if (sost::OpenSingleRecipient(body, k.privkey, plaintext, &err)) {
+                    sealed_opened++;
+                    opened = true;
+                    const char* type_name =
+                        (type == 0x02) ? "Sealed Note" :
+                        (type == 0x04) ? "Sealed Document Reference" :
+                                         "Sealed Structured Data";
+                    std::string label = k.label.empty() ? "(unlabelled)" : k.label;
+                    std::string addr = sost::address_encode(k.pkh);
+                    printf("\n--- vout %d ---\n", kv.first);
+                    printf("type:           %s (0x%02x)\n", type_name, type);
+                    printf("opened by key:  label=%s  address=%s\n",
+                           label.c_str(), addr.c_str());
+                    if (type == 0x06) {
+                        printf("template_id:    0x%02x\n", payload[5]);
+                    }
+                    if (type == 0x02) {
+                        // sealed-note plaintext is just the text bytes.
+                        std::string text(plaintext.begin(), plaintext.end());
+                        printf("plaintext:      %s\n", text.c_str());
+                    } else if (type == 0x06 && plaintext.size() >= 10) {
+                        // structured: capsule_id(8) + codec(1) + fl(1) + fields(N)
+                        uint8_t fl = plaintext[9];
+                        std::string fields((const char*)(plaintext.data() + 10),
+                                           std::min((size_t)fl, plaintext.size() - 10));
+                        printf("fields:         %s\n", fields.c_str());
+                    } else if (type == 0x04 && plaintext.size() >= 77) {
+                        // doc-ref: capsule_id(8)+file_size(4)+file_hash(32)+
+                        // manifest_hash(32)+locator_len(1)+locator(N)
+                        uint32_t file_size = 0;
+                        for (int i = 0; i < 4; ++i)
+                            file_size |= (uint32_t)plaintext[8 + i] << (i * 8);
+                        printf("file_size:      %u bytes\n", file_size);
+                        printf("file_hash:      ");
+                        for (int i = 0; i < 32; ++i)
+                            printf("%02x", plaintext[12 + i]);
+                        printf("\n");
+                        uint8_t loc_len = plaintext[76];
+                        if (77u + loc_len <= plaintext.size()) {
+                            std::string loc((const char*)(plaintext.data() + 77),
+                                            loc_len);
+                            printf("locator:        %s\n", loc.c_str());
+                        }
+                    }
+                    break;  // moved on to next vout
+                }
+            }
+            if (!opened) {
+                printf("\n--- vout %d ---\n", kv.first);
+                printf("type:           sealed (0x%02x)\n", type);
+                printf("plaintext:      Encrypted Capsule — not decryptable by this wallet.\n");
+            }
+        }
+        if (sealed_seen == 0) {
+            printf("No sealed capsules in this TX.\n");
+        } else {
+            printf("\nDecrypted %d / %d sealed capsules.\n",
+                   sealed_opened, sealed_seen);
+        }
+        return 0;
     }
 
     // Unknown command
