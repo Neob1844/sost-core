@@ -821,6 +821,86 @@
       multi-key wallets, file-based document references, or shell automation.
     </p>
 
+    <!-- RPC endpoint matrix -->
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Picking the right RPC endpoint</span>
+        </div>
+        <span class="spec-tag">CONNECTIVITY</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          Both the cli and the web wallet need an RPC endpoint to broadcast.
+          There are three correct ones depending on where the node lives.
+          The most common confusion is treating <code>127.0.0.1</code> as if it
+          pointed at sostcore.com &mdash; it does not. <code>127.0.0.1</code>
+          always means <b>this exact computer</b> (the one running the cli or
+          the browser), never the SOST website server.
+        </p>
+        <table class="code-table" style="margin-top:10px">
+          <tr>
+            <td class="key" style="vertical-align:top;width:200px"><span style="color:#fbbf24">http://127.0.0.1:18232</span><br><span style="color:#666;font-size:10px">LOCAL NODE</span></td>
+            <td class="val">
+              You ran <code>sost-node</code> on <b>this machine</b> and want full
+              access (read + broadcast). The full URL is exactly
+              <code>http://127.0.0.1:18232</code>; <code>18232</code> is the RPC
+              port and there is nothing else to append. Auth comes from your
+              own <code>sost-node.conf</code>.
+              <br><br>
+              <b>Do not use this</b> if you are only browsing the website &mdash;
+              on a normal user's computer it points at <i>their</i> machine,
+              which has no SOST node.
+            </td>
+          </tr>
+          <tr>
+            <td class="key" style="vertical-align:top"><span style="color:#4ade80">/rpc/public</span><br><span style="color:#666;font-size:10px">WEBSITE &middot; READ ONLY</span></td>
+            <td class="val">
+              The sostcore.com proxy. Reads balances, blocks, mempool, address
+              UTXOs &mdash; all the data the explorer needs. <b>Cannot</b>
+              broadcast; the web wallet refuses to sign + send when this is
+              the active endpoint and the cli will not accept it for sends
+              either.
+            </td>
+          </tr>
+          <tr>
+            <td class="key" style="vertical-align:top"><span style="color:#e63946">/rpc</span><br><span style="color:#666;font-size:10px">WEBSITE &middot; AUTH</span></td>
+            <td class="val">
+              The authenticated endpoint on sostcore.com. Requires the RPC
+              user + password the operator gave you. Allows broadcast.
+            </td>
+          </tr>
+        </table>
+        <p class="spec-desc" style="margin-top:14px">
+          The cli takes the endpoint via <code>--rpc &lt;host:port&gt;</code> +
+          <code>--rpc-user</code> + <code>--rpc-pass</code>. The web wallet
+          shows it in the top RPC bar (the <code>?</code> button next to
+          <code>CONNECT</code> opens the same matrix). A coloured badge under
+          <code>CONNECT</code> labels the active endpoint
+          (<code>LOCAL NODE</code> / <code>READ ONLY</code> /
+          <code>AUTH REQUIRED</code> / <code>CUSTOM</code>) so the mode is
+          never silent.
+        </p>
+        <p class="spec-desc" style="margin-top:8px;color:var(--text3);font-size:11px">
+          Operator self-test (run on the VPS):
+        </p>
+<pre style="background:#0a0a0a;border:1px solid #2a2a2a;border-left:3px solid var(--red-primary);border-radius:4px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#cbd5e1;line-height:1.65;overflow-x:auto;margin:6px 0 0 0">source /etc/sost/rpc.env
+
+# Direct to the node — must reject "00" with -22 (TX decode), not -401.
+curl -s -u "$RPC_USER:$RPC_PASS" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"sendrawtransaction","params":["00"]}' \
+  http://127.0.0.1:18232/ | jq .
+
+# Through nginx /rpc — same expected error code.
+curl -s -u "$RPC_USER:$RPC_PASS" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"sendrawtransaction","params":["00"]}' \
+  http://127.0.0.1/rpc | jq .</pre>
+      </div>
+    </div>
+
     <!-- CLI block -->
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
@@ -924,26 +1004,135 @@
       </div>
     </div>
 
-    <!-- public capsule modes -->
+    <!-- capsule types — the seven SCPv1 type codes -->
     <div class="spec-block fade-in delay-3">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
-          <span class="spec-name">Public capsule modes wired today</span>
+          <span class="spec-name">Capsule types (SCPv1) &mdash; what each one carries</span>
         </div>
         <span class="spec-tag overlay">OVERLAY</span>
       </div>
       <div class="spec-body">
-        <table class="code-table">
-          <tr><td class="key">open-note</td><td class="val">Plain text up to 80 bytes. <code>--capsule-text "&lt;message&gt;"</code></td></tr>
-          <tr><td class="key">structured</td><td class="val">Typed key=value fields under a template_id. <code>--capsule-template payment_receipt_v1 --capsule-text "k=v; k2=v2"</code></td></tr>
-          <tr><td class="key">cert</td><td class="val">Certification instruction with optional 64-byte note. <code>--capsule-mode cert --capsule-text "&lt;note&gt;"</code></td></tr>
-          <tr><td class="key">doc-ref</td><td class="val">SHA-256 of an off-chain file + locator (IPFS or HTTPS). <code>--capsule-file ./contract.pdf --capsule-locator ipfs://Qm...</code></td></tr>
-        </table>
-        <p class="spec-desc" style="margin-top:14px">
-          Sealed-* variants (encrypted notes, encrypted doc-ref, encrypted
-          structured) are gated behind ECIES which is not in this release; the
-          cli rejects them with an explicit error.
+        <p class="spec-desc">
+          Every capsule starts with the same 12-byte header
+          (magic <code>'SC'</code> + version 1 + type + flags + template_id +
+          locator_type + hash_alg + enc_alg + body_len(u8) + reserved(2)).
+          The <i>body</i> shape depends on the type. SCPv1 defines seven
+          standard types; sealed variants share the body of their open
+          counterpart but encrypt it under ECIES-secp256k1 + AES-256-GCM.
+          Total payload (header + body) caps at 255 bytes for the sighash
+          path, with consensus accepting up to 512.
+        </p>
+
+        <!-- 0x01 OPEN_NOTE_INLINE -->
+        <div class="spec-block" style="margin-top:14px;background:rgba(74,222,128,0.05)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:var(--green-primary)"></div><span class="spec-name">0x01 &mdash; OPEN_NOTE_INLINE</span></div><span class="spec-tag" style="border-color:var(--green-primary);color:var(--green-primary)">LIVE</span></div>
+          <div class="spec-body">
+            <p class="spec-desc">Plain ASCII/UTF-8 message visible to anyone reading the chain. The simplest capsule type. Common use: human-readable receipts, public memos, signed acknowledgements.</p>
+            <table class="code-table">
+              <tr><td class="key">body layout</td><td class="val"><code>text_len(1) + text(N)</code></td></tr>
+              <tr><td class="key">max body</td><td class="val">242 bytes (header + body fits in the 255-byte sighash window)</td></tr>
+              <tr><td class="key">policy cap</td><td class="val">80 bytes (mempool standardness)</td></tr>
+              <tr><td class="key">CLI</td><td class="val"><code>--capsule-mode open-note --capsule-text "Public memo"</code></td></tr>
+              <tr><td class="key">web wallet</td><td class="val">Message Type &rarr; <b>Open Note</b></td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- 0x02 SEALED_NOTE_INLINE -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(150,150,150,0.04)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#666"></div><span class="spec-name">0x02 &mdash; SEALED_NOTE_INLINE</span></div><span class="spec-tag" style="border-color:#666;color:#888">DEFERRED</span></div>
+          <div class="spec-body">
+            <p class="spec-desc">Same intent as open-note but the body is encrypted to one or more recipient pubkeys via ECIES-secp256k1 + AES-256-GCM. Body is opaque to anyone without a private key. Not in the current release; the cli rejects it with a clear error pointing at the future ECIES commit.</p>
+            <table class="code-table">
+              <tr><td class="key">body layout</td><td class="val"><code>recipient_count(1) + (recipient_pubkey(33) + ephemeral(33) + iv(12) + ciphertext_len(1) + ciphertext(N) + tag(16))</code> repeated</td></tr>
+              <tr><td class="key">status</td><td class="val">deferred &mdash; ECIES wiring not in this release</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- 0x03 DOC_REF_OPEN -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(251,191,36,0.05)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#fbbf24"></div><span class="spec-name">0x03 &mdash; DOC_REF_OPEN</span></div><span class="spec-tag" style="border-color:#fbbf24;color:#fbbf24">LIVE</span></div>
+          <div class="spec-body">
+            <p class="spec-desc">A pointer to an off-chain document. The body carries an unforgeable cryptographic anchor (file SHA-256) plus a free-text locator (IPFS CID, HTTPS URL, etc.) so anyone can fetch the file and verify the hash matches. Use for contracts, invoices, audit reports.</p>
+            <table class="code-table">
+              <tr><td class="key">body layout</td><td class="val"><code>capsule_id(8 LE) + file_size(4 LE) + file_hash(32) + manifest_hash(32) + locator_len(1) + locator_ref(N)</code></td></tr>
+              <tr><td class="key">min body</td><td class="val">77 bytes; max body 243 bytes</td></tr>
+              <tr><td class="key">CLI</td><td class="val"><code>--capsule-mode doc-ref --capsule-file ./contract.pdf --capsule-locator ipfs://Qm...</code></td></tr>
+              <tr><td class="key">locator</td><td class="val">cli auto-detects <code>ipfs://</code> vs <code>https://</code>; <code>manifest_hash</code> stays zero unless you supply a pinning manifest</td></tr>
+              <tr><td class="key">web wallet</td><td class="val">deferred &mdash; needs file picker UI; use cli for now</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- 0x04 DOC_REF_SEALED -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(150,150,150,0.04)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#666"></div><span class="spec-name">0x04 &mdash; DOC_REF_SEALED</span></div><span class="spec-tag" style="border-color:#666;color:#888">DEFERRED</span></div>
+          <div class="spec-body">
+            <p class="spec-desc">Encrypted variant of <code>DOC_REF_OPEN</code>. The hash + locator are sealed so only the recipient(s) can identify which document the TX refers to. Useful when the very fact that <i>a particular document is referenced</i> is sensitive. Same ECIES dependency as 0x02.</p>
+            <table class="code-table">
+              <tr><td class="key">status</td><td class="val">deferred &mdash; ECIES wiring not in this release</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- 0x05 TEMPLATE_FIELDS_OPEN -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(34,211,238,0.06)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon cyan"></div><span class="spec-name">0x05 &mdash; TEMPLATE_FIELDS_OPEN</span></div><span class="spec-tag" style="border-color:var(--cyan-primary);color:var(--cyan-primary)">LIVE</span></div>
+          <div class="spec-body">
+            <p class="spec-desc">Structured key=value record indexed by a TemplateId so explorers and downstream tools can decode it deterministically. The canonical APP-rewards send uses <code>payment_receipt_v1</code> with fields like <code>category=...; ref=...; period=...</code>.</p>
+            <table class="code-table">
+              <tr><td class="key">body layout</td><td class="val"><code>capsule_id(8 LE) + field_codec(1) + fields_len(1) + fields(N)</code></td></tr>
+              <tr><td class="key">codec</td><td class="val"><code>0x00</code> = ASCII (v1 standard); reserved values for future codings</td></tr>
+              <tr><td class="key">templates</td><td class="val">
+                <code>0x01 invoice_v1</code> &middot;
+                <code>0x02 contract_ref_v1</code> &middot;
+                <code>0x03 payment_receipt_v1</code> &middot;
+                <code>0x04 transfer_instruction_v1</code> &middot;
+                <code>0x05 escrow_note_v1</code> &middot;
+                <code>0x06 compliance_record_v1</code> &middot;
+                <code>0x07 warranty_record_v1</code> &middot;
+                <code>0x08 shipment_record_v1</code> &middot;
+                <code>0x09 gold_cert_note_v1</code> &middot;
+                <code>0x0A custom_kv_v1</code>
+              </td></tr>
+              <tr><td class="key">CLI</td><td class="val"><code>--capsule-mode structured --capsule-template payment_receipt_v1 --capsule-text "category=APP rewards; ref=batch-001; period=2026-05"</code></td></tr>
+              <tr><td class="key">web wallet</td><td class="val">Message Type &rarr; <b>Structured Data</b> &rarr; pick template &rarr; type fields</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- 0x06 TEMPLATE_FIELDS_SEALED -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(150,150,150,0.04)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#666"></div><span class="spec-name">0x06 &mdash; TEMPLATE_FIELDS_SEALED</span></div><span class="spec-tag" style="border-color:#666;color:#888">DEFERRED</span></div>
+          <div class="spec-body">
+            <p class="spec-desc">Structured fields encrypted to recipient(s). The <code>template_id</code> stays in the clear so the recipient knows which schema to apply after decryption; the field bytes themselves are sealed. Same ECIES dependency.</p>
+            <table class="code-table">
+              <tr><td class="key">status</td><td class="val">deferred &mdash; ECIES wiring not in this release</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- 0x07 CERT_INSTRUCTION -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(255,0,255,0.05)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#ff00ff"></div><span class="spec-name">0x07 &mdash; CERT_INSTRUCTION</span></div><span class="spec-tag" style="border-color:#ff00ff;color:#ff00ff">LIVE</span></div>
+          <div class="spec-body">
+            <p class="spec-desc">A certification or authority instruction: signed-on-chain attestation that some external object (a gold certificate, a compliance ruling, an authority decision) applies to the recipient. Carries a kind/instr pair, a numeric reference, optional expiry, and an optional human note.</p>
+            <table class="code-table">
+              <tr><td class="key">body layout</td><td class="val"><code>cert_kind(1) + instr_kind(1) + cert_id(8 LE) + ref_value(8 LE) + expires_at(4 LE) + note_len(1) + note(N)</code></td></tr>
+              <tr><td class="key">min body</td><td class="val">23 bytes (note empty); max note 64 bytes by policy</td></tr>
+              <tr><td class="key">CLI</td><td class="val"><code>--capsule-mode cert --capsule-text "&lt;note&gt;"</code> (cli currently sets <code>cert_kind=instr_kind=1</code>; future flags will expose more)</td></tr>
+              <tr><td class="key">web wallet</td><td class="val">Message Type &rarr; <b>Certification</b></td></tr>
+            </table>
+          </div>
+        </div>
+
+        <p class="spec-desc" style="margin-top:14px;font-size:11px;color:var(--text3)">
+          Type codes <code>0x08</code>&ndash;<code>0x7F</code> are reserved for
+          future SOST extensions; <code>0x80</code>&ndash;<code>0xFF</code>
+          are experimental/local and not relayed by default.
         </p>
       </div>
     </div>
