@@ -4432,8 +4432,65 @@ function renderIndexedTx(tx,c){
     var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';
     var payLabel=isPayment?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';
     var tl=['transfer','coinbase_miner','coinbase_gold','coinbase_popc','lottery'][o.type||0]||'output';var tc=['var(--green)','var(--orange)','var(--gold)','var(--cyan)','#ff00ff'][o.type||0]||'var(--green)';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+i+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+oamt+' SOST</div></div>';}
+  // ----- UTXO totals block --------------------------------------------------
+  // Replaces the old "fee / total input / total output / inputs / outputs"
+  // rows with labels that explain what the numbers actually mean. SOST is
+  // UTXO-based: the wallet may spend several previous outputs and return
+  // the remainder as change, so a 1-SOST send can show 4 SOST in inputs.
+  // The old labels made that look like a 4-SOST transfer.
+  //
+  // Layout for a standard transfer with a resolvable source:
+  //   payment sent      X.XX SOST
+  //   change returned   Y.YY SOST
+  //   network fee       Z.ZZ SOST  (~rate st/B, ~size bytes)
+  //   inputs consumed   N UTXOs · A.AA SOST
+  //   outputs created   M outputs · B.BB SOST
+  //   [microcopy line]
+  //
+  // Coinbase: a single "block reward" row + outputs created.
+  // Transfer without a resolvable source: split labels are dropped and
+  // we only show the safe rows (fee + inputs + outputs).
+  var totalsHtml='';
+  if(isCB){
+    totalsHtml=
+      '<div class="k">block reward</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(Math.round(sumOut))+' SOST</span></div>'+
+      '<div class="k">outputs created</div><div class="v">'+(tx.vout?tx.vout.length:0)+' outputs &middot; <span class="td-amt">'+fS(Math.round(sumOut))+' SOST</span></div>';
+  } else {
+    // Compute payment / change. Prefer the node-supplied integer-stocks
+    // fields (3241078); fall back to walking vout against sourceAddr.
+    var paymentStocks=null, changeStocks=null;
+    if (typeof tx.payment_amount === 'number') paymentStocks = tx.payment_amount;
+    if (typeof tx.change_amount  === 'number') changeStocks  = tx.change_amount;
+    if (paymentStocks === null && sourceAddr && tx.vout) {
+      paymentStocks = 0; changeStocks = 0;
+      for (var pi=0; pi<tx.vout.length; pi++) {
+        var po=tx.vout[pi];
+        if (po.type !== 0 && po.type !== undefined) continue;   // OUT_TRANSFER only
+        var ps = Math.round(parseFloat(po.amount||0)*1e8);
+        if (po.address === sourceAddr) changeStocks += ps;
+        else                            paymentStocks += ps;
+      }
+    }
+    var feeRow = (fee>0)
+      ? '<div class="k">network fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+feeSOST+' SOST</span> <span style="color:var(--text3)">(~'+feeRate+' st/B, ~'+estSize+' bytes)</span></div>'
+      : '<div class="k">network fee</div><div class="v"><span style="color:var(--text3)">0 SOST</span></div>';
+    var splitRows = '';
+    if (paymentStocks !== null) {
+      splitRows =
+        '<div class="k">payment sent</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(paymentStocks)+' SOST</span></div>'+
+        '<div class="k">change returned</div><div class="v">'+fS(changeStocks||0)+' SOST <span style="color:var(--text3);font-size:10px">(back to source)</span></div>';
+    } else {
+      splitRows =
+        '<div class="k">payment / change</div><div class="v"><span style="color:var(--text3)">split unavailable &mdash; source address could not be resolved for this TX</span></div>';
+    }
+    totalsHtml =
+      splitRows +
+      feeRow +
+      '<div class="k">inputs consumed</div><div class="v">'+(tx.vin?tx.vin.length:0)+' UTXOs &middot; <span class="td-amt">'+fS(Math.round(sumIn))+' SOST</span></div>'+
+      '<div class="k">outputs created</div><div class="v">'+(tx.vout?tx.vout.length:0)+' outputs &middot; <span class="td-amt">'+fS(Math.round(sumOut))+' SOST</span></div>';
+  }
+  // Old vars kept so the surrounding code paths stay valid.
   var feeHtml='';
-  if(!isCB&&fee>0){feeHtml='<div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+feeSOST+' SOST</span> <span style="color:var(--text3)">(~'+feeRate+' st/B, ~'+estSize+' bytes)</span></div><div class="k">total input</div><div class="v">'+fS(Math.round(sumIn))+' SOST</div>';}
 
   // Capsule block: prefer the node's top-level "capsule" field; fall back to
   // parsing tx.vout[0].payload_hex on older nodes. Always rendered as a 3-row
@@ -4455,7 +4512,12 @@ function renderIndexedTx(tx,c){
     }
   }
 
-  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div>'+feeHtml+'<div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(Math.round(sumOut))+' SOST</span></div><div class="k">inputs / outputs</div><div class="v">'+(tx.vin?tx.vin.length:0)+' / '+(tx.vout?tx.vout.length:0)+'</div>'+capHtml+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--green);font-size:9px">TX-INDEX \u00B7 FULL DETAIL</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
+  var utxoMicrocopy = isCB ? '' :
+    '<div style="grid-column:1 / -1;font-size:10px;color:var(--text3);padding:6px 0 0 0;border-top:1px dashed var(--border);margin-top:4px">'+
+    'SOST uses UTXO accounting: the wallet may spend several previous outputs and return the remainder as change. '+
+    '"Inputs consumed" is the gross amount the wallet had to gather; "payment sent" is what actually left this address.'+
+    '</div>';
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div>'+totalsHtml+capHtml+utxoMicrocopy+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--green);font-size:9px">TX-INDEX \u00B7 FULL DETAIL</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
 }
 // Render confirmed TX from gettxout fallback (partial data)
 function renderFallbackTx(txid,outputs,c){
@@ -4501,7 +4563,36 @@ function renderMempoolTx(tx,c){
     }
   }
 
-  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag red">mempool</span> <span class="dtl-tag purple">unconfirmed</span></div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">status</div><div class="v"><span style="color:var(--purple)">\u23F3 Pending \u2014 waiting for next block</span></div><div class="k">size</div><div class="v">'+tx.size+' bytes</div><div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+fS(fee)+' SOST</span> <span style="color:var(--text3)">('+feeRate+' stocks/byte)</span></div><div class="k">inputs</div><div class="v">'+tx.vin.length+'</div><div class="k">outputs</div><div class="v">'+tx.vout.length+'</div>'+capHtml+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--purple);font-size:9px">MEMPOOL \u00B7 UNCONFIRMED</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div><div class="fee-note"><b>\u2691 Fee breakdown:</b> Total inputs \u2212 total outputs = <span style="color:var(--red)">'+fS(fee)+' SOST</span> fee. This fee will be split 50/25/25 in the coinbase of the confirming block (miner/gold/popc). The <b>change</b> output returns unspent funds to the sender.</div>';
+  // UTXO totals \u2014 same shape as renderIndexedTx, sourced from the mempool
+  // payload (vout[].value in SOST, vin[].txid:vout pointers only). Mempool
+  // RPC also surfaces tx.payment_amount + tx.change_amount when the source
+  // can be resolved against the UTXO set.
+  var mpTotalsHtml = '';
+  {
+    var paymentSt=null, changeSt=null;
+    if (typeof tx.payment_amount==='number') paymentSt=tx.payment_amount;
+    if (typeof tx.change_amount ==='number') changeSt =tx.change_amount;
+    var mpSumOut = Math.round(totalOut * 1e8);
+    var splitRows = '';
+    if (paymentSt !== null) {
+      splitRows =
+        '<div class="k">payment sent</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(paymentSt)+' SOST</span></div>'+
+        '<div class="k">change returned</div><div class="v">'+fS(changeSt||0)+' SOST <span style="color:var(--text3);font-size:10px">(back to source)</span></div>';
+    } else {
+      splitRows =
+        '<div class="k">payment / change</div><div class="v"><span style="color:var(--text3)">split shows after the source UTXO is resolved</span></div>';
+    }
+    mpTotalsHtml =
+      splitRows +
+      '<div class="k">network fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+fS(fee)+' SOST</span> <span style="color:var(--text3)">('+feeRate+' stocks/byte)</span></div>'+
+      '<div class="k">inputs consumed</div><div class="v">'+tx.vin.length+' UTXOs <span style="color:var(--text3);font-size:10px">(amounts resolve once mined)</span></div>'+
+      '<div class="k">outputs created</div><div class="v">'+tx.vout.length+' outputs &middot; <span class="td-amt">'+fS(mpSumOut)+' SOST</span></div>';
+  }
+  var mpMicrocopy =
+    '<div style="grid-column:1 / -1;font-size:10px;color:var(--text3);padding:6px 0 0 0;border-top:1px dashed var(--border);margin-top:4px">'+
+    'SOST uses UTXO accounting: the wallet may spend several previous outputs and return the remainder as change.'+
+    '</div>';
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag red">mempool</span> <span class="dtl-tag purple">unconfirmed</span></div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">status</div><div class="v"><span style="color:var(--purple)">\u23F3 Pending \u2014 waiting for next block</span></div><div class="k">size</div><div class="v">'+tx.size+' bytes</div>'+mpTotalsHtml+capHtml+mpMicrocopy+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--purple);font-size:9px">MEMPOOL \u00B7 UNCONFIRMED</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div><div class="fee-note"><b>\u2691 Fee breakdown:</b> Total inputs \u2212 total outputs = <span style="color:var(--red)">'+fS(fee)+' SOST</span> fee. This fee will be split 50/25/25 in the coinbase of the confirming block (miner/gold/popc). The <b>change</b> output returns unspent funds to the sender.</div>';
 }
 // --- UTXO Pagination helpers ---
 var _addrUtxos=[],_addrTxidCounts={},_addrPage=0,_addrPageSize=10;
