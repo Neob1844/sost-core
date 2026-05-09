@@ -2212,6 +2212,19 @@ function buildCapsulePayloadFromForm() {
 
   if (mode === 'none') return new Uint8Array(0);
 
+  // Per-mode policy cap (matches CAPSULE_MAX above). Refuse before signing
+  // so the user gets a clear inline error instead of a confusing node
+  // rejection after a successful sign.
+  const maxBytes = CAPSULE_MAX[mode] || 80;
+  // We measure UTF-8 byte length, not character count — non-ASCII chars
+  // can take 2-4 bytes each and the policy limits are byte-based.
+  const textBytes = new TextEncoder().encode(text).length;
+  if (textBytes > maxBytes) {
+    throw new Error(
+      'Capsule text is ' + textBytes + ' bytes (max ' + maxBytes + ' for ' +
+      mode.replace(/_/g, ' ') + '). Trim the text and try again.');
+  }
+
   if (mode === 'sealed_note' || mode === 'doc_ref_sealed' || mode === 'template_sealed') {
     throw new Error(
       'Sealed/encrypted modes are not yet wired in the web wallet ' +
@@ -3080,19 +3093,49 @@ const CAPSULE_DESCS = {
   cert: 'Attach a gold certificate, warranty record, or authenticity proof to this transaction.',
 };
 
+// Per-mode policy caps (NOT the SCPv1 hard ceiling of 243). These match
+// the body-byte limits the mempool standardness validator enforces, so
+// what the user types is what the node will accept:
+//   open_note  → text_len ≤ 80
+//   structured → fields blob ≤ 128 (template_id is separate)
+//   cert       → note ≤ 64
+//   doc_ref    → locator string ≤ 128 (file hash + size are fixed)
 const CAPSULE_MAX = {
-  open_note: 80, sealed_note: 243, doc_ref: 243, doc_ref_sealed: 243,
-  template: 243, template_sealed: 243, cert: 243,
+  open_note: 80, sealed_note: 80,
+  doc_ref: 128, doc_ref_sealed: 128,
+  template: 128, template_sealed: 128,
+  cert: 64,
 };
 
 let capsuleBlockHeight = 0;
+
+// Refresh the char counter against the current mode's cap and tint it
+// red when the user overflows. Also kept in sync when the mode changes
+// (the previous behaviour reset the counter to "0 / max" even when the
+// textarea already held content from the previous mode — confusing).
+function refreshCapsuleCounter() {
+  const ta = document.getElementById('capsuleText');
+  const counter = document.getElementById('capsuleCharCount');
+  if (!ta || !counter) return;
+  const type = (document.getElementById('capsuleType') || {}).value || 'none';
+  if (type === 'none') {
+    counter.textContent = '';
+    counter.style.color = 'var(--text-dim)';
+    return;
+  }
+  const max = CAPSULE_MAX[type] || 80;
+  const len = ta.value.length;
+  counter.textContent = len + ' / ' + max;
+  counter.style.color = (len > max) ? '#fb010d'
+                       : (len > max * 0.9 ? '#fbbf24' : 'var(--text-dim)');
+  counter.style.fontWeight = (len > max) ? '700' : 'normal';
+}
 
 window.updateCapsuleUI = function() {
   const type = document.getElementById('capsuleType').value;
   const desc = document.getElementById('capsuleDesc');
   const textWrap = document.getElementById('capsuleTextWrap');
   const textArea = document.getElementById('capsuleText');
-  const counter = document.getElementById('capsuleCharCount');
 
   desc.textContent = CAPSULE_DESCS[type] || '';
 
@@ -3102,20 +3145,21 @@ window.updateCapsuleUI = function() {
     textWrap.style.display = 'block';
     const max = CAPSULE_MAX[type] || 80;
     textArea.maxLength = max;
-    counter.textContent = '0 / ' + max;
     textArea.placeholder = capsuleBlockHeight < CAPSULE_ACTIVATION_HEIGHT
       ? 'Capsule activates at block ' + CAPSULE_ACTIVATION_HEIGHT.toLocaleString() + '. Currently at #' + capsuleBlockHeight + '.'
       : 'Enter your ' + type.replace(/_/g, ' ') + ' content here...';
   }
+  refreshCapsuleCounter();
 };
 
-// Char counter
+// Char counter — recomputed on input, paste, and mode switch.
 document.addEventListener('DOMContentLoaded', () => {
   const ta = document.getElementById('capsuleText');
-  if (ta) ta.addEventListener('input', () => {
-    const max = parseInt(ta.maxLength) || 80;
-    document.getElementById('capsuleCharCount').textContent = ta.value.length + ' / ' + max;
-  });
+  if (ta) {
+    ta.addEventListener('input', refreshCapsuleCounter);
+    ta.addEventListener('paste', () => setTimeout(refreshCapsuleCounter, 0));
+  }
+  refreshCapsuleCounter();
 });
 
 // Activation state update (called after RPC connect)
@@ -3255,10 +3299,11 @@ window.sendTransaction = async function() {
   if (recipients.length > 1) {
     if (capsulePayload.length > 0) {
       return showError('sendResult',
-        'Capsule attach is single-recipient only for now. ' +
-        'Either remove the extra recipient rows, or set Message Type ' +
-        'back to "None" and resubmit. (Sendmany + capsule will land in a ' +
-        'follow-up — for now use sost-cli if you need both at once.)');
+        'Capsule currently works with one recipient only in this mode. ' +
+        'Remove extra recipients, or set Message Type to None for ' +
+        'multi-recipient sends. (Sendmany + public capsule is on the ' +
+        'roadmap — sost-cli already supports the single-recipient flow ' +
+        'for sealed and document-reference modes.)');
     }
     return sendTransactionMany(recipients);
   }

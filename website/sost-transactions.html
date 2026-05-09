@@ -602,7 +602,7 @@
       <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
       <a href="sost-help.html">Help</a>
       <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
-      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">WALLET + CLI</span></a>
       <a href="sost-infrastructure.html">Infrastructure</a>
       <a href="sost-otc.html" style="color:var(--green-primary)">OTC</a>
       <a href="sost-wallet.html">Wallet</a>
@@ -645,7 +645,7 @@
           <div class="spec-icon green"></div>
           <span class="spec-name">P2PKH Payments</span>
         </div>
-        <span class="spec-tag consensus">LIVE</span>
+        <span class="spec-tag consensus">WALLET + CLI</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
@@ -661,7 +661,7 @@
           <div class="spec-icon green"></div>
           <span class="spec-name">Fee Market</span>
         </div>
-        <span class="spec-tag consensus">LIVE</span>
+        <span class="spec-tag consensus">WALLET + CLI</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
@@ -677,7 +677,7 @@
           <div class="spec-icon green"></div>
           <span class="spec-name">UTXO Model</span>
         </div>
-        <span class="spec-tag consensus">LIVE</span>
+        <span class="spec-tag consensus">WALLET + CLI</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
@@ -693,7 +693,7 @@
           <div class="spec-icon green"></div>
           <span class="spec-name">Batch Transactions</span>
         </div>
-        <span class="spec-tag consensus">LIVE</span>
+        <span class="spec-tag consensus">WALLET + CLI</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
@@ -1027,7 +1027,7 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
 
         <!-- 0x01 OPEN_NOTE_INLINE -->
         <div class="spec-block" style="margin-top:14px;background:rgba(74,222,128,0.05)">
-          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:var(--green-primary)"></div><span class="spec-name">0x01 &mdash; OPEN_NOTE_INLINE</span></div><span class="spec-tag" style="border-color:var(--green-primary);color:var(--green-primary)">LIVE</span></div>
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:var(--green-primary)"></div><span class="spec-name">0x01 &mdash; OPEN_NOTE_INLINE</span></div><span class="spec-tag" style="border-color:var(--green-primary);color:var(--green-primary)">WALLET + CLI</span></div>
           <div class="spec-body">
             <p class="spec-desc">Plain ASCII/UTF-8 message visible to anyone reading the chain. The simplest capsule type. Common use: human-readable receipts, public memos, signed acknowledgements.</p>
             <table class="code-table">
@@ -1042,7 +1042,7 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
 
         <!-- 0x02 SEALED_NOTE_INLINE -->
         <div class="spec-block" style="margin-top:10px;background:rgba(150,150,150,0.04)">
-          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#666"></div><span class="spec-name">0x02 &mdash; SEALED_NOTE_INLINE</span></div><span class="spec-tag" style="border-color:#666;color:#888">DEFERRED</span></div>
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#666"></div><span class="spec-name">0x02 &mdash; SEALED_NOTE_INLINE</span></div><span class="spec-tag" style="border-color:#666;color:#888">PLANNED</span></div>
           <div class="spec-body">
             <p class="spec-desc">Same intent as open-note but the body is encrypted to one or more recipient pubkeys via ECIES-secp256k1 + AES-256-GCM. Body is opaque to anyone without a private key. Not in the current release; the cli rejects it with a clear error pointing at the future ECIES commit.</p>
             <table class="code-table">
@@ -1054,7 +1054,7 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
 
         <!-- 0x03 DOC_REF_OPEN -->
         <div class="spec-block" style="margin-top:10px;background:rgba(251,191,36,0.05)">
-          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#fbbf24"></div><span class="spec-name">0x03 &mdash; DOC_REF_OPEN</span></div><span class="spec-tag" style="border-color:#fbbf24;color:#fbbf24">LIVE</span></div>
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#fbbf24"></div><span class="spec-name">0x03 &mdash; DOC_REF_OPEN</span></div><span class="spec-tag" style="border-color:#fbbf24;color:#fbbf24">CLI ONLY</span></div>
           <div class="spec-body">
             <p class="spec-desc">A pointer to an off-chain document. The body carries an unforgeable cryptographic anchor (file SHA-256) plus a free-text locator (IPFS CID, HTTPS URL, etc.) so anyone can fetch the file and verify the hash matches. Use for contracts, invoices, audit reports.</p>
             <table class="code-table">
@@ -1069,7 +1069,7 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
 
         <!-- 0x04 DOC_REF_SEALED -->
         <div class="spec-block" style="margin-top:10px;background:rgba(150,150,150,0.04)">
-          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#666"></div><span class="spec-name">0x04 &mdash; DOC_REF_SEALED</span></div><span class="spec-tag" style="border-color:#666;color:#888">DEFERRED</span></div>
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#666"></div><span class="spec-name">0x04 &mdash; DOC_REF_SEALED</span></div><span class="spec-tag" style="border-color:#666;color:#888">PLANNED</span></div>
           <div class="spec-body">
             <p class="spec-desc">Encrypted variant of <code>DOC_REF_OPEN</code>. The hash + locator are sealed so only the recipient(s) can identify which document the TX refers to. Useful when the very fact that <i>a particular document is referenced</i> is sensitive. Same ECIES dependency as 0x02.</p>
             <table class="code-table">
@@ -1080,7 +1080,7 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
 
         <!-- 0x05 TEMPLATE_FIELDS_OPEN -->
         <div class="spec-block" style="margin-top:10px;background:rgba(34,211,238,0.06)">
-          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon cyan"></div><span class="spec-name">0x05 &mdash; TEMPLATE_FIELDS_OPEN</span></div><span class="spec-tag" style="border-color:var(--cyan-primary);color:var(--cyan-primary)">LIVE</span></div>
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon cyan"></div><span class="spec-name">0x05 &mdash; TEMPLATE_FIELDS_OPEN</span></div><span class="spec-tag" style="border-color:var(--cyan-primary);color:var(--cyan-primary)">WALLET + CLI</span></div>
           <div class="spec-body">
             <p class="spec-desc">Structured key=value record indexed by a TemplateId so explorers and downstream tools can decode it deterministically. The canonical APP-rewards send uses <code>payment_receipt_v1</code> with fields like <code>category=...; ref=...; period=...</code>.</p>
             <table class="code-table">
@@ -1106,7 +1106,7 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
 
         <!-- 0x06 TEMPLATE_FIELDS_SEALED -->
         <div class="spec-block" style="margin-top:10px;background:rgba(150,150,150,0.04)">
-          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#666"></div><span class="spec-name">0x06 &mdash; TEMPLATE_FIELDS_SEALED</span></div><span class="spec-tag" style="border-color:#666;color:#888">DEFERRED</span></div>
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#666"></div><span class="spec-name">0x06 &mdash; TEMPLATE_FIELDS_SEALED</span></div><span class="spec-tag" style="border-color:#666;color:#888">PLANNED</span></div>
           <div class="spec-body">
             <p class="spec-desc">Structured fields encrypted to recipient(s). The <code>template_id</code> stays in the clear so the recipient knows which schema to apply after decryption; the field bytes themselves are sealed. Same ECIES dependency.</p>
             <table class="code-table">
@@ -1117,7 +1117,7 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
 
         <!-- 0x07 CERT_INSTRUCTION -->
         <div class="spec-block" style="margin-top:10px;background:rgba(255,0,255,0.05)">
-          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#ff00ff"></div><span class="spec-name">0x07 &mdash; CERT_INSTRUCTION</span></div><span class="spec-tag" style="border-color:#ff00ff;color:#ff00ff">LIVE</span></div>
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#ff00ff"></div><span class="spec-name">0x07 &mdash; CERT_INSTRUCTION</span></div><span class="spec-tag" style="border-color:#ff00ff;color:#ff00ff">WALLET + CLI</span></div>
           <div class="spec-body">
             <p class="spec-desc">A certification or authority instruction: signed-on-chain attestation that some external object (a gold certificate, a compliance ruling, an authority decision) applies to the recipient. Carries a kind/instr pair, a numeric reference, optional expiry, and an optional human note.</p>
             <table class="code-table">
