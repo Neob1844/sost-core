@@ -565,6 +565,104 @@ static std::string format_sost(int64_t stocks) {
     return buf;
 }
 
+// =============================================================================
+// capsule_summary_json — JSON object describing a capsule attached to a tx
+// output, or "null" if the bytes do not parse as SCPv1.
+//
+// Returned shape (when valid):
+//   {"type":"open_note","template":"none","body_len":3,"text":"hi"}
+//   {"type":"structured","template":"payment_receipt_v1","body_len":13,
+//    "text":"k=v"}
+//   {"type":"cert","template":"none","body_len":23,"text":""}
+//
+// Used by listtransfers (per-tx summary) and gettransaction (top-level
+// capsule field) so the explorer can show the type + template inline
+// without having to deserialize the payload itself.
+// =============================================================================
+static std::string capsule_type_name(uint8_t t) {
+    switch (t) {
+        case 0x01: return "open_note";
+        case 0x02: return "sealed_note";
+        case 0x03: return "doc_ref";
+        case 0x04: return "doc_ref_sealed";
+        case 0x05: return "structured";
+        case 0x06: return "structured_sealed";
+        case 0x07: return "cert";
+        default:   return "unknown";
+    }
+}
+
+static std::string template_id_name(uint8_t id) {
+    switch (id) {
+        case 0x00: return "none";
+        case 0x01: return "invoice_v1";
+        case 0x02: return "contract_ref_v1";
+        case 0x03: return "payment_receipt_v1";
+        case 0x04: return "transfer_instruction_v1";
+        case 0x05: return "escrow_note_v1";
+        case 0x06: return "compliance_record_v1";
+        case 0x07: return "warranty_record_v1";
+        case 0x08: return "shipment_record_v1";
+        case 0x09: return "gold_cert_note_v1";
+        case 0x0A: return "custom_kv_v1";
+        default:   return "reserved";
+    }
+}
+
+static std::string json_escape(const std::string& s);
+
+static std::string capsule_summary_json(const std::vector<uint8_t>& payload) {
+    // Header (12 bytes): magic 'SC' + ver(1) + type(1) + flags(1) + tmpl(1)
+    //                  + locator_type(1) + hash_alg(1) + enc_alg(1)
+    //                  + body_len(1) + reserved(2)
+    if (payload.size() < 12) return "null";
+    if (payload[0] != 0x53 || payload[1] != 0x43) return "null";   // 'SC'
+    if (payload[2] != 0x01) return "null";                          // ver 1
+    uint8_t  type     = payload[3];
+    uint8_t  tmpl     = payload[5];
+    uint8_t  body_len = payload[9];
+    if (12u + body_len > payload.size()) return "null";
+
+    std::string text;
+    if (type == 0x01) {
+        // OPEN_NOTE_INLINE: body = text_len(1) + text(N)
+        if (body_len >= 1) {
+            uint8_t tl = payload[12];
+            if (tl <= body_len - 1 && 12u + 1u + tl <= payload.size()) {
+                text.assign(payload.begin()+13, payload.begin()+13+tl);
+            }
+        }
+    } else if (type == 0x05) {
+        // TEMPLATE_FIELDS_OPEN: body = capsule_id(8) + field_codec(1)
+        //                     + fields_len(1) + fields(N)
+        if (body_len >= 10) {
+            uint8_t fl = payload[12+9];
+            if (10u + fl <= body_len) {
+                text.assign(payload.begin()+12+10, payload.begin()+12+10+fl);
+            }
+        }
+    } else if (type == 0x07) {
+        // CERT_INSTRUCTION: body = cert_kind(1) + instr_kind(1) + cert_id(8)
+        //                 + ref_value(8) + expires_at(4) + note_len(1)
+        //                 + note(N)
+        if (body_len >= 23) {
+            uint8_t nl = payload[12+22];
+            if (23u + nl <= body_len) {
+                text.assign(payload.begin()+12+23, payload.begin()+12+23+nl);
+            }
+        }
+    }
+    // sealed-* types intentionally do not extract any text — body is opaque.
+
+    std::ostringstream o;
+    o << "{\"type\":\""     << capsule_type_name(type)
+      << "\",\"template\":\"" << template_id_name(tmpl)
+      << "\",\"body_len\":" << (int)body_len
+      << ",\"text\":\""     << json_escape(text)
+      << "\"}";
+    return o.str();
+}
+
 static std::string json_escape(const std::string& s) {
     std::string o;
     for(char c:s){
@@ -1826,9 +1924,17 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
             const auto&o=mentry->tx.outputs[i];
             s<<"{\"address\":\""<<address_encode(o.pubkey_hash)
              <<"\",\"amount\":"<<format_sost(o.amount)
-             <<",\"type\":"<<(int)o.type<<"}";
+             <<",\"type\":"<<(int)o.type;
+            if(!o.payload.empty()){
+                s<<",\"payload_hex\":\""<<to_hex(o.payload.data(),o.payload.size())<<"\"";
+            }
+            s<<"}";
         }
-        s<<"],\"fee\":"<<mentry->fee<<"}";
+        s<<"],\"fee\":"<<mentry->fee;
+        if(!mentry->tx.outputs.empty() && !mentry->tx.outputs[0].payload.empty()){
+            s<<",\"capsule\":"<<capsule_summary_json(mentry->tx.outputs[0].payload);
+        }
+        s<<"}";
         return rpc_result(id,s.str());
     }
 
@@ -1913,9 +2019,19 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
         const auto&o=tx.outputs[i];
         s<<"{\"address\":\""<<address_encode(o.pubkey_hash)
          <<"\",\"amount\":"<<format_sost(o.amount)
-         <<",\"type\":"<<(int)o.type<<"}";
+         <<",\"type\":"<<(int)o.type;
+        if(!o.payload.empty()){
+            s<<",\"payload_hex\":\""<<to_hex(o.payload.data(),o.payload.size())<<"\"";
+        }
+        s<<"}";
     }
-    s<<"],\"fee\":"<<fee<<"}";
+    s<<"],\"fee\":"<<fee;
+    // Top-level capsule summary (output[0] only) — convenience for the
+    // explorer so it does not have to parse payload_hex itself.
+    if(!tx.outputs.empty() && !tx.outputs[0].payload.empty()){
+        s<<",\"capsule\":"<<capsule_summary_json(tx.outputs[0].payload);
+    }
+    s<<"}";
     return rpc_result(id,s.str());
 }
 
@@ -2269,6 +2385,12 @@ static std::string handle_listtransfers(const std::string& id, const std::vector
             }
             int64_t fee = sum_in > sum_out ? sum_in - sum_out : 0;
 
+            // Capsule summary on output[0]'s payload (NULL when absent).
+            std::string cap = "null";
+            if (!tx.outputs.empty() && !tx.outputs[0].payload.empty()) {
+                cap = capsule_summary_json(tx.outputs[0].payload);
+            }
+
             if (count > 0) s << ",";
             s << "{\"txid\":\"" << to_hex(txid.data(), 32)
               << "\",\"height\":" << h
@@ -2276,7 +2398,8 @@ static std::string handle_listtransfers(const std::string& id, const std::vector
               << ",\"outputs\":" << tx.outputs.size()
               << ",\"total_output\":" << sum_out
               << ",\"fee\":" << fee
-              << ",\"size\":" << raw.size() << "}";
+              << ",\"size\":" << raw.size()
+              << ",\"capsule\":" << cap << "}";
             count++;
         }
     }

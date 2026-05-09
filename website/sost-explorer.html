@@ -1089,8 +1089,8 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
       <button class="tx-filter" data-filter="COINBASE" onclick="setTxFilter('COINBASE')">COINBASE</button>
       <button class="tx-filter" data-filter="BOND" onclick="setTxFilter('BOND')">BONDS</button>
     </div>
-    <table class="tbl"><thead><tr><th>TXID</th><th>BLOCK</th><th>TYPE</th><th>IN</th><th>OUT</th><th>AMOUNT</th><th>FEE</th></tr></thead>
-    <tbody id="txBody"><tr><td colspan="7" class="ld">loading transactions</td></tr></tbody></table>
+    <table class="tbl"><thead><tr><th>TXID</th><th>CAPSULE</th><th>BLOCK</th><th>TYPE</th><th>IN</th><th>OUT</th><th>AMOUNT</th><th>FEE</th></tr></thead>
+    <tbody id="txBody"><tr><td colspan="8" class="ld">loading transactions</td></tr></tbody></table>
   </div>
   <div class="section" id="mpSection">
     <div class="sec-head"><div class="sec-title">// <b>MEMPOOL</b></div><div class="sec-meta" id="mpInfo"></div></div>
@@ -4420,7 +4420,28 @@ function renderIndexedTx(tx,c){
   if(tx.vout)for(var i=0;i<tx.vout.length;i++){var o=tx.vout[i];var oamt=parseFloat(o.amount||0).toFixed(8);var isChange=i===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isCB&&!isChange&&tx.vout.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';var tl=['transfer','coinbase_miner','coinbase_gold','coinbase_popc','lottery'][o.type||0]||'output';var tc=['var(--green)','var(--orange)','var(--gold)','var(--cyan)','#ff00ff'][o.type||0]||'var(--green)';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+i+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+oamt+' SOST</div></div>';}
   var feeHtml='';
   if(!isCB&&fee>0){feeHtml='<div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+feeSOST+' SOST</span> <span style="color:var(--text3)">(~'+feeRate+' st/B, ~'+estSize+' bytes)</span></div><div class="k">total input</div><div class="v">'+fS(Math.round(sumIn))+' SOST</div>';}
-  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div>'+feeHtml+'<div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(Math.round(sumOut))+' SOST</span></div><div class="k">inputs / outputs</div><div class="v">'+(tx.vin?tx.vin.length:0)+' / '+(tx.vout?tx.vout.length:0)+'</div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--green);font-size:9px">TX-INDEX \u00B7 FULL DETAIL</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
+
+  // Capsule block: prefer the node's top-level "capsule" field; fall back to
+  // parsing tx.vout[0].payload_hex on older nodes. Always rendered as a 3-row
+  // grid (Capsule / Template / Text) so the layout stays predictable.
+  var capObj=tx.capsule||(tx.vout&&tx.vout[0]&&tx.vout[0].payload_hex?parseCapsuleHexJS(tx.vout[0].payload_hex):null);
+  var capHtml='';
+  if(capObj&&capObj.type&&capObj.type!=='unknown'){
+    var typeLabelMap={open_note:'Open Note',sealed_note:'Sealed Note',doc_ref:'Document Reference',doc_ref_sealed:'Sealed Document Reference',structured:'Structured Data',structured_sealed:'Sealed Structured',cert:'Certification'};
+    var typeColMap={open_note:'var(--green)',structured:'var(--cyan)',cert:'#ff00ff',doc_ref:'var(--yellow)'};
+    var col=typeColMap[capObj.type]||'var(--cyan)';
+    var pretty=typeLabelMap[capObj.type]||capObj.type;
+    capHtml+='<div class="k">capsule</div><div class="v"><span style="color:'+col+';font-weight:600">'+pretty+'</span> <span style="color:var(--text3);font-size:10px">('+capObj.body_len+' B body)</span></div>';
+    if(capObj.template&&capObj.template!=='none'){
+      capHtml+='<div class="k">template</div><div class="v"><code style="background:var(--bg2);padding:2px 6px;border:1px solid var(--border);font-size:11px">'+capObj.template+'</code></div>';
+    }
+    if(capObj.text){
+      var safeText=String(capObj.text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      capHtml+='<div class="k">text</div><div class="v"><div style="background:var(--bg2);padding:8px 10px;border:1px solid var(--border);font-size:11px;color:var(--text2);font-family:monospace;white-space:pre-wrap;word-break:break-word">'+safeText+'</div></div>';
+    }
+  }
+
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div>'+feeHtml+'<div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(Math.round(sumOut))+' SOST</span></div><div class="k">inputs / outputs</div><div class="v">'+(tx.vin?tx.vin.length:0)+' / '+(tx.vout?tx.vout.length:0)+'</div>'+capHtml+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--green);font-size:9px">TX-INDEX \u00B7 FULL DETAIL</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
 }
 // Render confirmed TX from gettxout fallback (partial data)
 function renderFallbackTx(txid,outputs,c){
@@ -4447,7 +4468,26 @@ function renderMempoolTx(tx,c){
   if(tx.vout.length===2){var a0=typeof tx.vout[0].value==='number'?tx.vout[0].value:parseFloat(tx.vout[0].value);var a1=typeof tx.vout[1].value==='number'?tx.vout[1].value:parseFloat(tx.vout[1].value);changeIdx=a0<a1?0:1;}
   var outputsHtml='';
   for(var oi=0;oi<tx.vout.length;oi++){var o=tx.vout[oi];var amt=typeof o.value==='number'?o.value.toFixed(8):o.value;var isChange=oi===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';var payLabel=(!isChange&&tx.vout.length>=2)?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--green)">OUTPUT \u00B7 vout:'+(o.n!==undefined?o.n:oi)+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+amt+' SOST</div></div>';}
-  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag red">mempool</span> <span class="dtl-tag purple">unconfirmed</span></div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">status</div><div class="v"><span style="color:var(--purple)">\u23F3 Pending \u2014 waiting for next block</span></div><div class="k">size</div><div class="v">'+tx.size+' bytes</div><div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+fS(fee)+' SOST</span> <span style="color:var(--text3)">('+feeRate+' stocks/byte)</span></div><div class="k">inputs</div><div class="v">'+tx.vin.length+'</div><div class="k">outputs</div><div class="v">'+tx.vout.length+'</div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--purple);font-size:9px">MEMPOOL \u00B7 UNCONFIRMED</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div><div class="fee-note"><b>\u2691 Fee breakdown:</b> Total inputs \u2212 total outputs = <span style="color:var(--red)">'+fS(fee)+' SOST</span> fee. This fee will be split 50/25/25 in the coinbase of the confirming block (miner/gold/popc). The <b>change</b> output returns unspent funds to the sender.</div>';
+  // Same capsule block as confirmed-tx detail (mempool tx may already
+  // carry payload bytes in vout[0]).
+  var capObj=tx.capsule||(tx.vout&&tx.vout[0]&&tx.vout[0].payload_hex?parseCapsuleHexJS(tx.vout[0].payload_hex):null);
+  var capHtml='';
+  if(capObj&&capObj.type&&capObj.type!=='unknown'){
+    var typeLabelMap={open_note:'Open Note',sealed_note:'Sealed Note',doc_ref:'Document Reference',doc_ref_sealed:'Sealed Document Reference',structured:'Structured Data',structured_sealed:'Sealed Structured',cert:'Certification'};
+    var typeColMap={open_note:'var(--green)',structured:'var(--cyan)',cert:'#ff00ff',doc_ref:'var(--yellow)'};
+    var col=typeColMap[capObj.type]||'var(--cyan)';
+    var pretty=typeLabelMap[capObj.type]||capObj.type;
+    capHtml+='<div class="k">capsule</div><div class="v"><span style="color:'+col+';font-weight:600">'+pretty+'</span> <span style="color:var(--text3);font-size:10px">('+capObj.body_len+' B body)</span></div>';
+    if(capObj.template&&capObj.template!=='none'){
+      capHtml+='<div class="k">template</div><div class="v"><code style="background:var(--bg2);padding:2px 6px;border:1px solid var(--border);font-size:11px">'+capObj.template+'</code></div>';
+    }
+    if(capObj.text){
+      var safeText=String(capObj.text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      capHtml+='<div class="k">text</div><div class="v"><div style="background:var(--bg2);padding:8px 10px;border:1px solid var(--border);font-size:11px;color:var(--text2);font-family:monospace;white-space:pre-wrap;word-break:break-word">'+safeText+'</div></div>';
+    }
+  }
+
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag red">mempool</span> <span class="dtl-tag purple">unconfirmed</span></div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">status</div><div class="v"><span style="color:var(--purple)">\u23F3 Pending \u2014 waiting for next block</span></div><div class="k">size</div><div class="v">'+tx.size+' bytes</div><div class="k">fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+fS(fee)+' SOST</span> <span style="color:var(--text3)">('+feeRate+' stocks/byte)</span></div><div class="k">inputs</div><div class="v">'+tx.vin.length+'</div><div class="k">outputs</div><div class="v">'+tx.vout.length+'</div>'+capHtml+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--purple);font-size:9px">MEMPOOL \u00B7 UNCONFIRMED</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div><div class="fee-note"><b>\u2691 Fee breakdown:</b> Total inputs \u2212 total outputs = <span style="color:var(--red)">'+fS(fee)+' SOST</span> fee. This fee will be split 50/25/25 in the coinbase of the confirming block (miner/gold/popc). The <b>change</b> output returns unspent funds to the sender.</div>';
 }
 // --- UTXO Pagination helpers ---
 var _addrUtxos=[],_addrTxidCounts={},_addrPage=0,_addrPageSize=10;
@@ -5289,17 +5329,75 @@ function classifyTx(tx){
   for(var i=0;i<(tx.vout||[]).length;i++){var t=tx.vout[i].type;if(t===16||t===17||t===0x10||t===0x11)return'BOND';}
   return'TRANSFER';
 }
+
+// SCPv1 capsule parsing helpers \u2014 mirror src/sost-node.cpp::capsule_summary_json
+// so the explorer can show the same labels the node returns.
+var CAPSULE_TYPES_JS = {
+  1:'open_note', 2:'sealed_note', 3:'doc_ref', 4:'doc_ref_sealed',
+  5:'structured', 6:'structured_sealed', 7:'cert'
+};
+var TEMPLATE_NAMES_JS = {
+  0:'none', 1:'invoice_v1', 2:'contract_ref_v1', 3:'payment_receipt_v1',
+  4:'transfer_instruction_v1', 5:'escrow_note_v1', 6:'compliance_record_v1',
+  7:'warranty_record_v1', 8:'shipment_record_v1', 9:'gold_cert_note_v1',
+  10:'custom_kv_v1'
+};
+function parseCapsuleHexJS(hex){
+  if(!hex||hex.length<24)return null;
+  // Match ComputeHashOutputs: hex of magic 'SC' + ver 1 + ...
+  if(hex.substring(0,4).toLowerCase()!=='5343')return null;
+  if(parseInt(hex.substring(4,6),16)!==0x01)return null;
+  var type=parseInt(hex.substring(6,8),16);
+  var tmpl=parseInt(hex.substring(10,12),16);
+  var body_len=parseInt(hex.substring(18,20),16);
+  // Decode body text best-effort for the public types only
+  var text='';
+  function hexToStr(h){var s='';for(var i=0;i<h.length;i+=2)s+=String.fromCharCode(parseInt(h.substring(i,i+2),16));return s;}
+  var bodyHex=hex.substring(24);
+  if(type===1){              // open_note: text_len(1) + text
+    if(bodyHex.length>=2){var tl=parseInt(bodyHex.substring(0,2),16);text=hexToStr(bodyHex.substring(2,2+tl*2));}
+  } else if(type===5){       // structured: capsule_id(8)+codec(1)+fl(1)+fields
+    if(bodyHex.length>=20){var fl=parseInt(bodyHex.substring(18,20),16);text=hexToStr(bodyHex.substring(20,20+fl*2));}
+  } else if(type===7){       // cert: 22 bytes header + note_len(1) + note
+    if(bodyHex.length>=46){var nl=parseInt(bodyHex.substring(44,46),16);text=hexToStr(bodyHex.substring(46,46+nl*2));}
+  }
+  return {type:CAPSULE_TYPES_JS[type]||'unknown',
+          template:TEMPLATE_NAMES_JS[tmpl]||'reserved',
+          body_len:body_len, text:text};
+}
+function shortTemplateLabel(name){
+  // payment_receipt_v1 \u2192 receipt; gold_cert_note_v1 \u2192 gold_cert; etc.
+  if(!name||name==='none')return '';
+  return name.replace(/_v\d+$/,'').replace(/^payment_/,'').replace(/^contract_/,'').replace(/_v\d+/,'');
+}
+function formatCapsuleCell(cap){
+  if(!cap||!cap.type||cap.type==='unknown')return '\u2014';
+  var col='var(--cyan)';
+  if(cap.type==='open_note')col='var(--green)';
+  else if(cap.type==='structured')col='var(--cyan)';
+  else if(cap.type==='cert')col='#ff00ff';
+  else if(cap.type==='doc_ref')col='var(--yellow)';
+  var lbl=cap.type;
+  var tmpl=shortTemplateLabel(cap.template);
+  if(tmpl)lbl+=' \u00b7 '+tmpl;
+  return '<span style="color:'+col+';font-size:10px;font-weight:600;letter-spacing:0.5px">'+lbl+'</span>';
+}
+
 function renderTxTable(){
   var tb=document.getElementById('txBody');
   var filtered=_txFilter==='ALL'?_allTxRows:_allTxRows.filter(function(r){return r.type===_txFilter;});
   document.getElementById('txInfo').textContent=filtered.length+' of '+_allTxRows.length+' transactions';
-  if(filtered.length===0){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">no '+_txFilter.toLowerCase()+' transactions</td></tr>';return;}
+  if(filtered.length===0){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">no '+_txFilter.toLowerCase()+' transactions</td></tr>';return;}
   tb.innerHTML='';
   for(var i=0;i<filtered.length;i++){
     var r=filtered[i];
     var typeColor=r.type==='COINBASE'?'var(--yellow)':r.type==='BOND'?'var(--purple)':'var(--green)';
+    var capCell=formatCapsuleCell(r.capsule);
+    var capClickable=(r.capsule&&r.capsule.type&&r.capsule.type!=='unknown')
+      ? '<span class="td-link" onclick="showTxDetail(\''+r.txid+'\')" title="'+(r.capsule.text?String(r.capsule.text).replace(/"/g,'&quot;').substring(0,120):'')+'">'+capCell+'</span>'
+      : capCell;
     var tr=document.createElement('tr');
-    tr.innerHTML='<td><span class="td-link" onclick="showTxDetail(\''+r.txid+'\')">'+sH(r.txid)+'</span>'+cpBtn(r.txid)+'</td><td><span class="td-height" onclick="showBlockByHeight('+r.height+')">#'+r.height+'</span></td><td><span style="color:'+typeColor+';font-weight:600;font-size:10px">'+r.type+'</span></td><td>'+r.inputs+'</td><td>'+r.outputs+'</td><td><span class="td-amt">'+r.amount+'</span></td><td>'+(r.fee||'\u2014')+'</td>';
+    tr.innerHTML='<td><span class="td-link" onclick="showTxDetail(\''+r.txid+'\')">'+sH(r.txid)+'</span>'+cpBtn(r.txid)+'</td><td>'+capClickable+'</td><td><span class="td-height" onclick="showBlockByHeight('+r.height+')">#'+r.height+'</span></td><td><span style="color:'+typeColor+';font-weight:600;font-size:10px">'+r.type+'</span></td><td>'+r.inputs+'</td><td>'+r.outputs+'</td><td><span class="td-amt">'+r.amount+'</span></td><td>'+(r.fee||'\u2014')+'</td>';
     tb.appendChild(tr);
   }
 }
@@ -5323,7 +5421,7 @@ async function loadLatestTxs(){
     for(var _i=0;_i<_blocks.length;_i++){
       var _b=_blocks[_i];if(!_b)continue;
       var _hh=_heights[_i];
-      rows.push({txid:_b.txids?_b.txids[0]:'cb_'+_hh,height:_hh,type:'COINBASE',inputs:0,outputs:3,amount:fS(_b.subsidy)+' SOST',fee:'\u2014'});
+      rows.push({txid:_b.txids?_b.txids[0]:'cb_'+_hh,height:_hh,type:'COINBASE',inputs:0,outputs:3,amount:fS(_b.subsidy)+' SOST',fee:'\u2014',capsule:null});
       if(_b.txids&&_b.txids.length>1){
         for(var _t=1;_t<_b.txids.length;_t++)_nonCb.push({txid:_b.txids[_t],height:_hh});
       }
@@ -5336,9 +5434,13 @@ async function loadLatestTxs(){
         var _e=_nonCb[_j], _tx=_txs[_j];
         if(_tx){
           var _tot=0;for(var _v=0;_v<(_tx.vout||[]).length;_v++){var _a=_tx.vout[_v].amount;_tot+=(typeof _a==='number'?_a:parseFloat(_a));}
-          rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:(_tx.vin||[]).length,outputs:(_tx.vout||[]).length,amount:_tot.toFixed(4)+' SOST',fee:_tx.fee?fS(_tx.fee)+' SOST':'\u2014'});
+          // Capsule: prefer the node-supplied summary; fall back to parsing
+          // payload_hex (older nodes that have not been rebuilt yet).
+          var _cap=_tx.capsule||null;
+          if(!_cap&&_tx.vout&&_tx.vout[0]&&_tx.vout[0].payload_hex){_cap=parseCapsuleHexJS(_tx.vout[0].payload_hex);}
+          rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:(_tx.vin||[]).length,outputs:(_tx.vout||[]).length,amount:_tot.toFixed(4)+' SOST',fee:_tx.fee?fS(_tx.fee)+' SOST':'\u2014',capsule:_cap});
         } else {
-          rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:'?',outputs:'?',amount:'?',fee:'\u2014'});
+          rows.push({txid:_e.txid,height:_e.height,type:'TRANSFER',inputs:'?',outputs:'?',amount:'?',fee:'\u2014',capsule:null});
         }
       }
     }
@@ -5357,7 +5459,8 @@ async function loadLatestTxs(){
             inputs:tr.inputs,
             outputs:tr.outputs,
             amount:fS(tr.total_output)+' SOST',
-            fee:tr.fee>0?fS(tr.fee)+' SOST':'\u2014'
+            fee:tr.fee>0?fS(tr.fee)+' SOST':'\u2014',
+            capsule:tr.capsule||null
           });
         }
       }
@@ -5374,7 +5477,7 @@ async function loadLatestTxs(){
     _allTxRows=rows;
     _allTxRows.sort(function(a,b){return b.height-a.height;});
     renderTxTable();
-  }catch(e){document.getElementById('txBody').innerHTML='<tr><td colspan="7" class="td-err">'+e.message+'</td></tr>';}
+  }catch(e){document.getElementById('txBody').innerHTML='<tr><td colspan="8" class="td-err">'+e.message+'</td></tr>';}
 }
 async function refresh(){if(_loading)return;_loading=true;try{var _ok=await loadStats();if(!_ok){_loading=false;return;}await Promise.all([loadBlocks(),loadLatestTxs(),loadMempool()]);}finally{_loading=false;}}
 refresh();setInterval(refresh,30000);
