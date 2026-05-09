@@ -422,6 +422,26 @@ function stopMelody() {
   }
 }
 
+// Hard, immediate silence — used by the mute button so the user does not
+// hear the 1.5 s linear-ramp tail of stopMelody. Cancels any AudioParam
+// schedules already in flight, snaps gain to 0, and disconnects every
+// active node synchronously. Safe to call repeatedly.
+function silenceNow() {
+  try {
+    if (_master && _ctx) {
+      _master.gain.cancelScheduledValues(_ctx.currentTime);
+      _master.gain.setValueAtTime(0, _ctx.currentTime);
+      _master.gain.value = 0;
+    }
+  } catch(e) {}
+  for (var i = 0; i < _activeNodes.length; i++) {
+    try { _activeNodes[i].disconnect(); } catch(e) {}
+    try { if (_activeNodes[i].stop) _activeNodes[i].stop(0); } catch(e) {}
+  }
+  _activeNodes = [];
+  _playing = false;
+}
+
 function playMelodyByIndex(idx) {
   if (isMuted() || _playing) return;
   if (document.hidden) return;
@@ -506,6 +526,8 @@ window.SOSTMusic = {
 window.playRandomMelody = playRandomMelody;
 window.playMelodyByIndex = playMelodyByIndex;
 window.stopMelody = stopMelody;
+window.nesSilenceNow = silenceNow;
+window.sostSilenceNow = silenceNow;
 // Backward-compat aliases (legacy NES chiptune engine API). Pages
 // across the site still call these legacy names from inline onclick
 // handlers; keeping the aliases avoids a 47-page sweep every rename.

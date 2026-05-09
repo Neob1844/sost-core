@@ -5623,9 +5623,13 @@ async function loadLatestTxs(){
         }
       }
     }
-    // Phase 2: fetch ALL transfers from the chain via dedicated RPC (fast, server-side scan)
+    // Phase 2: fetch transfers from the chain via dedicated RPC (server-side
+    // scan). Backend caps at 200 (sost-node.cpp:2410). With Phase 1 covering
+    // the last 30 blocks, 200 is enough to surface a TRANSFER from a few
+    // thousand blocks ago provided there are not 200 newer transfers in
+    // between. The Phase 1+Phase 2 dedup runs by txid below.
     try{
-      var transfers=await rpc('listtransfers',['50']);
+      var transfers=await rpc('listtransfers',['200']);
       if(transfers&&transfers.length>0){
         for(var i=0;i<transfers.length;i++){
           var tr=transfers[i];
@@ -6300,9 +6304,14 @@ window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawC
   btn.onclick = function(){
     try {
       if (isPlaying) {
-        // Stop + mute.
+        // Stop + mute. Order matters:
+        //   1. nesSilenceNow snaps the master gain to 0 and disconnects
+        //      every active oscillator synchronously — no 1.5 s
+        //      linear-ramp tail.
+        //   2. nesToggleMute() persists muted=true in localStorage so
+        //      a page reload starts silent until the next click.
+        try { if (window.nesSilenceNow) window.nesSilenceNow(); } catch(e){}
         try { if (window.nesIsMuted && !window.nesIsMuted() && window.nesToggleMute) window.nesToggleMute(); } catch(e){}
-        try { if (window.stopMelody) window.stopMelody(); } catch(e){}
         isPlaying = false;
         setVisualState(false);
         return;
