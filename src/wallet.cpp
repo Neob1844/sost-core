@@ -329,7 +329,8 @@ bool Wallet::create_transaction(
     Transaction& out_tx,
     int64_t chain_height,
     std::string* err,
-    const std::vector<Byte>* capsule_payload)
+    const std::vector<Byte>* capsule_payload,
+    bool mark_spent)
 {
     if (amount <= 0) {
         if (err) *err = "amount must be positive";
@@ -515,10 +516,14 @@ bool Wallet::create_transaction(
         }
     }
 
-    // Mark UTXOs as spent in the main utxos_ vector
-    for (size_t idx : selected) {
-        const auto& u = unspent[idx];
-        mark_spent(u.txid, u.vout);
+    // Mark UTXOs as spent in the main utxos_ vector. Skipped when
+    // mark_spent=false; the caller (typically a CLI fee-pass loop) is then
+    // responsible for calling mark_tx_inputs_spent(tx) after broadcast OK.
+    if (mark_spent) {
+        for (size_t idx : selected) {
+            const auto& u = unspent[idx];
+            this->mark_spent(u.txid, u.vout);
+        }
     }
 
     return true;

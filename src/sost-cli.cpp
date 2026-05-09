@@ -1029,11 +1029,18 @@ int main(int argc, char** argv) {
             "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37");
 
         // --- Pass 1: build with estimated fee to measure real size ---
+        // mark_spent=false on every fee pass: each call to create_transaction
+        // would otherwise mark its inputs spent before the next pass runs,
+        // which on a wallet with one large UTXO causes pass 2 to fail with
+        // "insufficient funds." We mark the final tx's inputs spent once,
+        // after the last pass settles below.
         int64_t est_fee = MIN_FEE_STOCKS;
         sost::Transaction tx;
         std::string err;
         if (!w.create_transaction(to_addr, amount, est_fee, genesis_hash,
-                                  tx, chain_height, &err)) {
+                                  tx, chain_height, &err,
+                                  /*capsule_payload=*/nullptr,
+                                  /*mark_spent=*/false)) {
             fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
@@ -1051,7 +1058,9 @@ int main(int argc, char** argv) {
         if (real_fee != est_fee) {
             sost::Transaction tx2;
             if (!w.create_transaction(to_addr, amount, real_fee, genesis_hash,
-                                      tx2, chain_height, &err)) {
+                                      tx2, chain_height, &err,
+                                      /*capsule_payload=*/nullptr,
+                                      /*mark_spent=*/false)) {
                 fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
                 return 1;
             }
@@ -1067,7 +1076,9 @@ int main(int argc, char** argv) {
             if (final_fee > real_fee) {
                 sost::Transaction tx3;
                 if (!w.create_transaction(to_addr, amount, final_fee, genesis_hash,
-                                          tx3, chain_height, &err)) {
+                                          tx3, chain_height, &err,
+                                          /*capsule_payload=*/nullptr,
+                                          /*mark_spent=*/false)) {
                     fprintf(stderr, "Error (final fee pass): %s\n", err.c_str());
                     return 1;
                 }
@@ -1080,6 +1091,10 @@ int main(int argc, char** argv) {
             }
         }
 
+        // Now that the final fee is settled, mark the chosen inputs spent
+        // (preserves the previous createtx behaviour: caller sees the raw
+        // hex and the wallet won't reuse those UTXOs in the next session).
+        w.mark_tx_inputs_spent(tx);
         if (!w.save(wallet_path, &err)) {
             fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
         }
@@ -1200,11 +1215,17 @@ int main(int argc, char** argv) {
             "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37");
 
         // --- Pass 1: build with estimated fee to measure real size ---
+        // mark_spent=false on every fee pass: each call would otherwise mark
+        // its selected UTXOs spent in the wallet before the next pass runs,
+        // and on a wallet with one large UTXO pass 2 would then fail with
+        // "insufficient funds." We mark the FINAL tx's inputs spent below,
+        // only after the node accepts the broadcast — mirroring sendmany.
         int64_t est_fee = MIN_FEE_STOCKS;
         sost::Transaction tx;
         std::string err;
         if (!w.create_transaction(to_addr, amount, est_fee, genesis_hash,
-                                  tx, chain_height, &err, cap_ptr)) {
+                                  tx, chain_height, &err, cap_ptr,
+                                  /*mark_spent=*/false)) {
             fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
@@ -1221,7 +1242,8 @@ int main(int argc, char** argv) {
         if (real_fee != est_fee) {
             sost::Transaction tx2;
             if (!w.create_transaction(to_addr, amount, real_fee, genesis_hash,
-                                      tx2, chain_height, &err, cap_ptr)) {
+                                      tx2, chain_height, &err, cap_ptr,
+                                      /*mark_spent=*/false)) {
                 fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
                 return 1;
             }
@@ -1237,7 +1259,8 @@ int main(int argc, char** argv) {
             if (final_fee > real_fee) {
                 sost::Transaction tx3;
                 if (!w.create_transaction(to_addr, amount, final_fee, genesis_hash,
-                                          tx3, chain_height, &err, cap_ptr)) {
+                                          tx3, chain_height, &err, cap_ptr,
+                                          /*mark_spent=*/false)) {
                     fprintf(stderr, "Error (final fee pass): %s\n", err.c_str());
                     return 1;
                 }
@@ -1250,9 +1273,10 @@ int main(int argc, char** argv) {
             }
         }
 
-        if (!w.save(wallet_path, &err)) {
-            fprintf(stderr, "Warning: failed to save wallet: %s\n", err.c_str());
-        }
+        // Wallet save + mark-inputs-spent are deferred to the post-broadcast
+        // block below. Marking now would leave the local UTXO list out of
+        // sync with the chain if the user aborts at the confirm prompt or
+        // the node rejects the tx.
 
         // Display tx info
         std::string raw_hex = to_hex(raw.data(), raw.size());
@@ -1369,6 +1393,15 @@ int main(int argc, char** argv) {
 
         std::string resp(rbuf);
         if (resp.find("\"result\":\"") != std::string::npos) {
+            // Node accepted: now safe to mark the tx's inputs spent locally
+            // and persist the wallet so the next CLI invocation does not
+            // try to reuse those UTXOs before mempool propagates back.
+            w.mark_tx_inputs_spent(tx);
+            std::string save_err;
+            if (!w.save(wallet_path, &save_err)) {
+                fprintf(stderr, "Warning: failed to save wallet: %s\n",
+                        save_err.c_str());
+            }
             printf("\nTX accepted by node! Txid: %s\n",
                    to_hex(txid.data(), 32).c_str());
             printf("  Waiting for next mined block to confirm...\n");

@@ -89,6 +89,15 @@ public:
     // is only meaningful at chain heights >= the activation height
     // (V12_HEIGHT in mainnet); attaching at earlier heights yields a tx
     // the validator rejects with R14_PAYLOAD_FORBIDDEN.
+    //
+    // mark_spent: when true (default), the selected UTXOs are marked spent
+    // in the wallet's in-memory UTXO list at the end of a successful build.
+    // This is fine for one-shot callers, but breaks any caller that builds
+    // the tx more than once (e.g. fee-estimation passes), because pass 1
+    // will silently consume UTXOs that pass 2 still needs. Such callers
+    // must pass mark_spent=false on every pass and call
+    // mark_tx_inputs_spent(tx) themselves after the broadcast succeeds —
+    // mirroring what create_transaction_many already does.
     bool create_transaction(
         const std::string& to_addr,
         int64_t amount,
@@ -97,7 +106,8 @@ public:
         Transaction& out_tx,
         int64_t chain_height = -1,       // maturity filter
         std::string* err = nullptr,
-        const std::vector<Byte>* capsule_payload = nullptr);
+        const std::vector<Byte>* capsule_payload = nullptr,
+        bool mark_spent = true);
 
     // sendmany: single TRANSFER tx with N outputs (one per recipient).
     // Caller passes a vector of (address, amount) pairs. Change (if any)

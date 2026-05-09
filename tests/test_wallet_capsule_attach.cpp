@@ -219,12 +219,102 @@ static void test_cert_payload_round_trip() {
          ValidateCapsulePolicy(tx.outputs[0].payload).ok);
 }
 
+// ---------------------------------------------------------------------------
+// 5. Fee-pass regression — multi-pass build on a single-UTXO wallet must
+//    not exhaust UTXOs before the final pass settles. Reproduces the
+//    sost-cli bug where Wallet::create_transaction marked inputs spent
+//    inline, so pass 1 consumed the only UTXO and pass 2 failed with
+//    "insufficient funds." The fix is mark_spent=false on every pass plus
+//    a single mark_tx_inputs_spent(tx) after broadcast.
+// ---------------------------------------------------------------------------
+static void test_fee_pass_no_mutation() {
+    printf("\n=== 5) Fee-pass regression — single UTXO, 3 passes ===\n");
+
+    // Wallet with EXACTLY one 10-SOST UTXO. Without the fix, pass 1
+    // marks it spent and pass 2 immediately fails.
+    Wallet w  = make_funded_wallet(/*funding_stocks=*/10 * 100000000LL);
+    auto cap  = build_app_rewards_capsule();
+    Hash256 g = mk_genesis();
+    const std::string to = "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f";
+
+    // Pass 1: mark_spent=false. Estimate fee from raw size.
+    Transaction tx;
+    std::string err;
+    bool ok = w.create_transaction(to, 5 * 100000000LL, /*est_fee=*/1000,
+                                   g, tx, /*height=*/2000, &err,
+                                   &cap, /*mark_spent=*/false);
+    TEST("pass 1 succeeds with mark_spent=false", ok);
+    if (!ok) { printf("    err: %s\n", err.c_str()); return; }
+
+    // Pass 2: simulate fee bump (real_fee != est_fee). Same wallet, same
+    // UTXO — must still be spendable.
+    Transaction tx2;
+    bool ok2 = w.create_transaction(to, 5 * 100000000LL, /*real_fee=*/2500,
+                                    g, tx2, /*height=*/2000, &err,
+                                    &cap, /*mark_spent=*/false);
+    TEST("pass 2 succeeds (UTXO still available)", ok2);
+    if (!ok2) { printf("    err: %s\n", err.c_str()); return; }
+
+    // Pass 3: simulate one more bump.
+    Transaction tx3;
+    bool ok3 = w.create_transaction(to, 5 * 100000000LL, /*final_fee=*/3000,
+                                    g, tx3, /*height=*/2000, &err,
+                                    &cap, /*mark_spent=*/false);
+    TEST("pass 3 succeeds (UTXO still available)", ok3);
+    if (!ok3) { printf("    err: %s\n", err.c_str()); return; }
+
+    // The final tx must still carry the capsule.
+    TEST("final tx output[0] payload matches capsule",
+         tx3.outputs[0].payload == cap);
+
+    // Same UTXO selected across all passes (fixed wallet, fixed selector).
+    TEST("all three passes selected the same prev_txid",
+         tx.inputs[0].prev_txid == tx3.inputs[0].prev_txid &&
+         tx.inputs[0].prev_index == tx3.inputs[0].prev_index);
+
+    // Now mark spent explicitly (post-broadcast simulation). After this,
+    // a fourth attempt MUST fail — the UTXO is committed.
+    w.mark_tx_inputs_spent(tx3);
+    Transaction tx4;
+    bool ok4 = w.create_transaction(to, 5 * 100000000LL, 1000,
+                                    g, tx4, 2000, &err,
+                                    &cap, /*mark_spent=*/false);
+    TEST("after mark_tx_inputs_spent, next build fails (no UTXOs left)",
+         !ok4);
+}
+
+// ---------------------------------------------------------------------------
+// 6. mark_spent default (true) preserves the old in-line behaviour for
+//    one-shot callers — the second build must fail because pass 1 already
+//    consumed the wallet's only UTXO.
+// ---------------------------------------------------------------------------
+static void test_default_mark_spent_still_mutates() {
+    printf("\n=== 6) Default mark_spent=true still mutates (back-compat) ===\n");
+
+    Wallet w  = make_funded_wallet(/*funding_stocks=*/10 * 100000000LL);
+    Hash256 g = mk_genesis();
+    Transaction tx;
+    std::string err;
+    bool ok = w.create_transaction(
+        "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f",
+        5 * 100000000LL, 1000, g, tx, 2000, &err);
+    TEST("first call (default mark_spent=true) succeeds", ok);
+
+    Transaction tx2;
+    bool ok2 = w.create_transaction(
+        "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f",
+        5 * 100000000LL, 1000, g, tx2, 2000, &err);
+    TEST("second call fails (UTXO already marked spent in-line)", !ok2);
+}
+
 int main() {
     printf("\n=== Wallet → capsule attachment ===\n");
     test_payload_attached_when_supplied();
     test_no_payload_still_works();
     test_empty_payload_treated_as_none();
     test_cert_payload_round_trip();
+    test_fee_pass_no_mutation();
+    test_default_mark_spent_still_mutates();
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }
