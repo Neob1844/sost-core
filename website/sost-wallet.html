@@ -387,18 +387,33 @@
 <div id="rpcHelp" style="display:none;background:#080808;border-bottom:1px solid #1a1a1a;padding:10px 16px;font-family:monospace;font-size:11px;color:#94a3b8;line-height:1.7">
   <div style="max-width:880px">
     <div style="color:#cbd5e1;font-weight:700;letter-spacing:1px;font-size:10px;margin-bottom:6px">// RPC ENDPOINTS &mdash; pick the one that matches where your node lives</div>
+    <div style="background:#fb010d11;border:1px solid #fb010d44;border-left:3px solid #fb010d;padding:8px 10px;margin-bottom:10px;color:#fde2e4;font-size:11px;line-height:1.6">
+      <b style="color:#fb010d">Read this first.</b> <code>127.0.0.1</code> is not the SOST server. It always means
+      <b>this exact computer</b> &mdash; the one running this browser. Use it <b>only</b>
+      if you installed and started <code>sost-node</code> on this same machine. If you are
+      just visiting the website from a normal computer, pick <code>/rpc/public</code> (read)
+      or <code>/rpc</code> (authenticated send) instead.
+    </div>
     <table style="width:100%;border-collapse:collapse;font-size:11px">
       <tr style="border-bottom:1px solid #1a1a1a">
-        <td style="padding:5px 8px;width:170px;vertical-align:top"><span style="color:#fbbf24;font-weight:700">http://127.0.0.1:18232</span></td>
-        <td style="padding:5px 8px;color:#cbd5e1">Your <b>own</b> sost-node running on this exact computer. <span style="color:#666">127.0.0.1 means "this machine" &mdash; not the SOST website server.</span> Read + broadcast both work; uses your <code>--rpc-user</code>/<code>--rpc-pass</code> from <code>sost-node.conf</code>.</td>
+        <td style="padding:5px 8px;width:200px;vertical-align:top"><span style="color:#fbbf24;font-weight:700">http://127.0.0.1:18232</span><br><span style="color:#666;font-size:10px">LOCAL NODE</span></td>
+        <td style="padding:5px 8px;color:#cbd5e1">
+          <b>Only use this if YOU run sost-node on this computer.</b><br>
+          The full URL is exactly <code>http://127.0.0.1:18232</code> &mdash; <code>18232</code> is
+          the RPC port and there is nothing else to add after it. Read + broadcast both work;
+          uses the <code>--rpc-user</code>/<code>--rpc-pass</code> from your own
+          <code>sost-node.conf</code>. <b>Do not use this if you are only browsing the
+          website</b> &mdash; on someone else's computer it points at <i>their</i> node, not
+          yours.
+        </td>
       </tr>
       <tr style="border-bottom:1px solid #1a1a1a">
-        <td style="padding:5px 8px;vertical-align:top"><span style="color:#4ade80;font-weight:700">/rpc/public</span></td>
-        <td style="padding:5px 8px;color:#cbd5e1">The website's read-only proxy on sostcore.com. Anyone can read balances and TXs. <b>Cannot</b> broadcast a signed transaction &mdash; the wallet will refuse to send to it.</td>
+        <td style="padding:5px 8px;vertical-align:top"><span style="color:#4ade80;font-weight:700">/rpc/public</span><br><span style="color:#666;font-size:10px">WEBSITE &middot; READ ONLY</span></td>
+        <td style="padding:5px 8px;color:#cbd5e1">The sostcore.com public proxy. Anyone can read balances, blocks, and TXs through it. <b>Cannot</b> broadcast a signed transaction &mdash; the wallet will refuse to sign and send when this is selected.</td>
       </tr>
       <tr>
-        <td style="padding:5px 8px;vertical-align:top"><span style="color:#e63946;font-weight:700">/rpc</span></td>
-        <td style="padding:5px 8px;color:#cbd5e1">The website's authenticated endpoint. Requires the RPC user/pass that the operator gave you. Allows broadcast.</td>
+        <td style="padding:5px 8px;vertical-align:top"><span style="color:#e63946;font-weight:700">/rpc</span><br><span style="color:#666;font-size:10px">WEBSITE &middot; AUTH</span></td>
+        <td style="padding:5px 8px;color:#cbd5e1">The sostcore.com authenticated endpoint. Requires an RPC user + password that the operator gave you. Allows broadcast.</td>
       </tr>
     </table>
     <div style="color:#666;margin-top:8px;font-size:10px">For a hands-on walkthrough see <a href="sost-transactions.html#sending" style="color:#fb010d">Sending Capsule Transactions</a>.</div>
