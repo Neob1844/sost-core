@@ -1655,6 +1655,107 @@ let walletPassword = null;
 let lockTimer = null;
 let lockMinutes = 5;
 
+// =============================================================================
+// In-flight UTXO tracking (Fase: send-collision avoidance)
+//
+// When the user sends a tx the wallet picks UTXOs by smallest-first greedy.
+// Without state, two clicks on Send within seconds — before the node
+// returns updated UTXOs from getaddressinfo — pick the SAME utxos and the
+// 2nd broadcast is rejected with double-spend.
+//
+// State here:
+//   inFlightUtxos = Map<"txid:vout", { ts, broadcast_txid, address }>
+// Persisted in localStorage so a Ctrl+R after a Send keeps the reservation.
+// Cleared on entries older than IN_FLIGHT_TTL_MS (5 min) at load and after
+// IN_FLIGHT_TIMEOUT_MS (60 s) when a refresh has not seen them disappear
+// from the node yet.
+//
+// Scope is per-wallet-address; switching wallets does NOT see each other's
+// in-flight set. The Map is in-process; if the user opens the same wallet
+// in two browsers, each tracks its own — collisions are still possible
+// across browsers (the node's "already spent" error is the backstop).
+// =============================================================================
+const INFLIGHT_KEY        = 'sost_wallet_inflight';
+const IN_FLIGHT_TTL_MS    = 5  * 60 * 1000;   // 5 min: wipe on (un)lock
+const IN_FLIGHT_TIMEOUT_MS= 60 * 1000;        // 60 s: drop entry on refresh
+let inFlightUtxos = new Map();   // key = "txid:vout"
+
+function _inflightKey(u){ return (u.txid || '') + ':' + (u.vout != null ? u.vout : 0); }
+
+function _inflightLoad(){
+  inFlightUtxos = new Map();
+  if (!wallet) return;
+  try {
+    const raw = localStorage.getItem(INFLIGHT_KEY);
+    if (!raw) return;
+    const all = JSON.parse(raw) || {};
+    const mine = all[wallet.address] || {};
+    const now = Date.now();
+    for (const k in mine) {
+      const e = mine[k];
+      if (!e || typeof e.ts !== 'number') continue;
+      if (now - e.ts > IN_FLIGHT_TTL_MS) continue;   // stale
+      inFlightUtxos.set(k, e);
+    }
+    _inflightSave();   // rewrite without the stale entries
+  } catch (e) {}
+}
+
+function _inflightSave(){
+  if (!wallet) return;
+  try {
+    const raw = localStorage.getItem(INFLIGHT_KEY);
+    const all = raw ? JSON.parse(raw) : {};
+    const mine = {};
+    for (const [k, v] of inFlightUtxos) mine[k] = v;
+    all[wallet.address] = mine;
+    localStorage.setItem(INFLIGHT_KEY, JSON.stringify(all));
+  } catch (e) {}
+}
+
+function _inflightAdd(utxos, broadcastTxid){
+  const now = Date.now();
+  for (const u of utxos) {
+    inFlightUtxos.set(_inflightKey(u), {
+      ts: now, broadcast_txid: broadcastTxid || null,
+      address: wallet ? wallet.address : null,
+    });
+  }
+  _inflightSave();
+  // Schedule a 60 s safety release in case the node never refreshes.
+  setTimeout(() => {
+    const cutoff = now;
+    for (const [k, v] of inFlightUtxos) {
+      if (v.ts === cutoff) inFlightUtxos.delete(k);
+    }
+    _inflightSave();
+  }, IN_FLIGHT_TIMEOUT_MS);
+}
+
+function _inflightRelease(utxos){
+  for (const u of utxos) inFlightUtxos.delete(_inflightKey(u));
+  _inflightSave();
+}
+
+// Drop in-flight entries whose UTXOs are no longer in the wallet's
+// fresh UTXO list (the node has confirmed the spend or rejected the tx).
+function _inflightReconcile(freshUtxos){
+  const present = new Set(freshUtxos.map(_inflightKey));
+  let changed = false;
+  for (const k of Array.from(inFlightUtxos.keys())) {
+    // If a tracked UTXO no longer appears in the fresh list, it was spent
+    // (or never existed). Either way, the reservation can be dropped.
+    if (!present.has(k)) { inFlightUtxos.delete(k); changed = true; }
+  }
+  if (changed) _inflightSave();
+}
+
+// Filter out in-flight UTXOs from a candidate list before tx building.
+function _filterInflight(utxos){
+  if (inFlightUtxos.size === 0) return utxos;
+  return utxos.filter(u => !inFlightUtxos.has(_inflightKey(u)));
+}
+
 // ==================== UTILITY ====================
 
 function hexToBytes(hex) {
@@ -3313,6 +3414,7 @@ window.importFromFile = async function() {
     const data = await decryptData(encrypted, pass);
     wallet = data;
     walletPassword = pass;
+    if (typeof _inflightLoad === 'function') _inflightLoad();
     await saveWallet(wallet, pass);
     showSuccess('importResult', 'Wallet restored! Address: <strong>' + wallet.address + '</strong>');
     setTimeout(() => showView('dashboard'), 1500);
@@ -3355,6 +3457,9 @@ window.refreshBalance = async function() {
     updatePopcActivation(chainHeight);
     const utxos = addrInfo.utxos || [];
     window._lastUtxos = utxos; // cache for TX history
+    // Drop in-flight reservations whose UTXOs the node already removed
+    // (mempool / mined / rejected). Idempotent if there are no reservations.
+    if (typeof _inflightReconcile === 'function') _inflightReconcile(utxos);
 
     // Classify UTXOs by maturity (coinbase needs 1000 confirmations)
     let totalStocks = 0, spendableStocks = 0, immatureStocks = 0;
@@ -3930,13 +4035,17 @@ window.sendTransaction = async function() {
     if (rawUtxos.length === 0) throw new Error('No UTXOs available');
 
     // Convert amount from SOST float to stocks and filter to spendable only
-    const utxos = rawUtxos
+    const utxosAll = rawUtxos
       .map(u => ({
         ...u,
         amount: Math.round((u.amount || 0) * SAT),
         confs: chainHeight - (u.height || 0)
       }))
       .filter(u => !u.coinbase || u.confs >= 1000);
+    // Drop reservations for UTXOs the node no longer reports (spent or
+    // rejected) before deciding what to filter.
+    _inflightReconcile(utxosAll);
+    const utxos = _filterInflight(utxosAll);
 
     if (utxos.length === 0) {
       throw new Error('No spendable UTXOs. Coinbase rewards require 1000 confirmations before spending.');
@@ -4022,10 +4131,23 @@ window.sendTransaction = async function() {
       return;
     }
 
-    // Broadcast
+    // Broadcast. Wrap so we can release in-flight reservations on
+    // network / node failure — we DON'T want to lock UTXOs that the
+    // node never accepted.
     console.log('[TX] Broadcasting raw TX:', rawTx.substring(0, 40) + '... (' + txSize + ' bytes)');
-    const result = await rpcCall('sendrawtransaction', [rawTx]);
+    let result;
+    try {
+      result = await rpcCall('sendrawtransaction', [rawTx]);
+    } catch (e) {
+      _inflightRelease(selectedUtxos);
+      throw e;
+    }
     const txid = result.txid || result || 'unknown';
+    // Mark the spent UTXOs in-flight so a quick second click on Send
+    // does not re-pick them. Background refresh below will reconcile.
+    _inflightAdd(selectedUtxos, txid);
+    // Fire-and-forget refresh (non-blocking) so the UI catches up.
+    setTimeout(() => { try { refreshBalance(); } catch(e) {} }, 0);
     const feeSOST = formatSost(feeStocks);
     const amtSOST = formatSost(amountStocks);
     const changeStocks = utxos.reduce((s, u) => s + u.amount, 0) - amountStocks - feeStocks;
@@ -4191,8 +4313,18 @@ async function sendTransactionMany(recipients) {
     }
 
     console.log('[TX-MANY] Broadcasting raw TX:', rawTx.substring(0, 40) + '... (' + txSize + ' bytes)');
-    const result = await rpcCall('sendrawtransaction', [rawTx]);
+    let result;
+    try {
+      result = await rpcCall('sendrawtransaction', [rawTx]);
+    } catch (e) {
+      _inflightRelease(built.selected || []);
+      throw e;
+    }
     const txid = result.txid || result || 'unknown';
+    // Reserve the UTXOs sendmany picked so a subsequent Send does not
+    // re-select them before the node refresh updates getaddressinfo.
+    _inflightAdd(built.selected || [], txid);
+    setTimeout(() => { try { refreshBalance(); } catch(e) {} }, 0);
 
     const explorerUrl = 'https://sostcore.com/sost-explorer.html';
     const recipList = recipients.map((r, i) =>
@@ -4395,6 +4527,10 @@ function lockWallet() {
   // The plaintext was never persisted; we only need to clear the
   // rendered fragment so it does not survive the lock screen.
   if (typeof _wipeSealedDecryptPanel === 'function') _wipeSealedDecryptPanel();
+  // Drop the in-process Map. Persisted entries in localStorage stay
+  // (capped at 5 min via IN_FLIGHT_TTL_MS) so a quick relock+unlock
+  // does not lose a reservation set seconds before.
+  if (typeof inFlightUtxos !== 'undefined') inFlightUtxos = new Map();
 
   if (wo) return; // Don't lock watch-only
 
@@ -4481,6 +4617,9 @@ window.unlockWallet = async function() {
     if (!data) throw new Error('No wallet found');
     wallet = data;
     walletPassword = pass;
+    // Hydrate in-flight UTXO reservations from localStorage (drops
+    // entries older than IN_FLIGHT_TTL_MS).
+    if (typeof _inflightLoad === 'function') _inflightLoad();
     document.getElementById('lockScreen').classList.add('hidden');
     document.getElementById('app').style.filter = '';
     document.getElementById('app').style.pointerEvents = '';
