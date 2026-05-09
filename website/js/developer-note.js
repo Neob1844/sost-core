@@ -136,9 +136,63 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', inject);
-  } else {
+  function activateWalletCapsuleHotfixOnSubdomainRoot() {
+    var isWalletHost = /(^|\.)wallet\.sostcore\.com$/i.test(window.location.hostname || '');
+    var isRootPath = window.location.pathname === '/' || window.location.pathname === '/index.html';
+    if (!isWalletHost || !isRootPath) return;
+
+    try {
+      window.history.replaceState(null, document.title || '', '/sost-wallet.html' + window.location.search + window.location.hash);
+    } catch (e) {}
+
+    if (window.__sostCapsuleHotfixInstalled || window.__sostCapsuleRootLoaderInjected) return;
+    window.__sostCapsuleRootLoaderInjected = true;
+    var script = document.createElement('script');
+    script.src = '/js/security.js?v=172-root';
+    script.async = false;
+    document.head.appendChild(script);
+  }
+
+  function patchTransactionsCapsuleDocs() {
+    if (!/sost-transactions\.html(?:$|[?#])/.test(window.location.pathname + window.location.search + window.location.hash)) return;
+
+    function walkText(node) {
+      if (!node) return;
+      if (node.nodeType === 3) {
+        node.nodeValue = node.nodeValue
+          .replace('deferred — needs file picker UI; use cli for now', 'web wallet + CLI — file picker computes SHA-256 locally; only hash, size, and locator go on-chain')
+          .replace('Sealed-* and document-reference modes still bridge to the cli (the web wallet does not have a file picker yet).', 'Document Reference is available in the web wallet and CLI. Sealed-* modes are still planned because they need recipient public keys and one ECIES envelope per recipient.')
+          .replace('Sealed-* and document-reference modes still bridge to the cli (the\n          web wallet does not have a file picker yet).', 'Document Reference is available in the web wallet and CLI. Sealed-* modes are still planned because they need recipient public keys and one ECIES envelope per recipient.');
+        return;
+      }
+      for (var i = 0; i < node.childNodes.length; i++) walkText(node.childNodes[i]);
+    }
+
+    walkText(document.body);
+
+    var blocks = document.querySelectorAll('.spec-block');
+    blocks.forEach(function (block) {
+      var txt = block.textContent || '';
+      if (txt.indexOf('0x03') !== -1 && txt.indexOf('DOC_REF_OPEN') !== -1) {
+        var tag = block.querySelector('.spec-tag');
+        if (tag) {
+          tag.textContent = 'WALLET + CLI';
+          tag.style.borderColor = 'var(--cyan-primary)';
+          tag.style.color = 'var(--cyan-primary)';
+        }
+      }
+    });
+  }
+
+  function boot() {
     inject();
+    activateWalletCapsuleHotfixOnSubdomainRoot();
+    setTimeout(patchTransactionsCapsuleDocs, 0);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
   }
 })();
