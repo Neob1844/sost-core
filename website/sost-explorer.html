@@ -4506,7 +4506,14 @@ function renderIndexedTx(tx,c){
     if(capObj.template&&capObj.template!=='none'){
       capHtml+='<div class="k">template</div><div class="v"><code style="background:var(--bg2);padding:2px 6px;border:1px solid var(--border);font-size:11px">'+capObj.template+'</code></div>';
     }
-    if(capObj.text){
+    var isSealed = (capObj.type==='sealed_note' || capObj.type==='doc_ref_sealed' || capObj.type==='structured_sealed');
+    if(isSealed){
+      // Sealed capsules: the explorer never has the recipient privkey —
+      // it cannot decrypt. Show a gold chip plus a one-line pointer to
+      // the wallet. Fase Sealed-1.E "decrypt path" lives in
+      // sost-wallet.html (Decrypt Sealed Capsule panel on the dashboard).
+      capHtml+='<div class="k">capsule text</div><div class="v"><div style="background:linear-gradient(180deg,#1a1505,#0f0c02);padding:14px 16px;border:1px solid #facc1555;border-left:3px solid #facc15;border-radius:3px;font-size:13px;line-height:1.55;color:#facc15;font-family:monospace;font-weight:600">🔒 Encrypted Capsule</div><div style="margin-top:6px;font-size:11px;color:var(--text3);line-height:1.5">Open this transaction in your wallet to attempt decryption. The recipient&apos;s private key never leaves the wallet; the explorer cannot decrypt sealed payloads. <a href="sost-wallet.html" style="color:var(--cyan)">→ Decrypt Sealed Capsule (wallet)</a></div></div>';
+    } else if(capObj.text){
       var safeText=String(capObj.text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       // Headline rendering: gold with a soft glow so the capsule body
       // reads as THE message of the TX. Fixed colour (not tinted per
@@ -4562,7 +4569,14 @@ function renderMempoolTx(tx,c){
     if(capObj.template&&capObj.template!=='none'){
       capHtml+='<div class="k">template</div><div class="v"><code style="background:var(--bg2);padding:2px 6px;border:1px solid var(--border);font-size:11px">'+capObj.template+'</code></div>';
     }
-    if(capObj.text){
+    var isSealed = (capObj.type==='sealed_note' || capObj.type==='doc_ref_sealed' || capObj.type==='structured_sealed');
+    if(isSealed){
+      // Sealed capsules: the explorer never has the recipient privkey —
+      // it cannot decrypt. Show a gold chip plus a one-line pointer to
+      // the wallet. Fase Sealed-1.E "decrypt path" lives in
+      // sost-wallet.html (Decrypt Sealed Capsule panel on the dashboard).
+      capHtml+='<div class="k">capsule text</div><div class="v"><div style="background:linear-gradient(180deg,#1a1505,#0f0c02);padding:14px 16px;border:1px solid #facc1555;border-left:3px solid #facc15;border-radius:3px;font-size:13px;line-height:1.55;color:#facc15;font-family:monospace;font-weight:600">🔒 Encrypted Capsule</div><div style="margin-top:6px;font-size:11px;color:var(--text3);line-height:1.5">Open this transaction in your wallet to attempt decryption. The recipient&apos;s private key never leaves the wallet; the explorer cannot decrypt sealed payloads. <a href="sost-wallet.html" style="color:var(--cyan)">→ Decrypt Sealed Capsule (wallet)</a></div></div>';
+    } else if(capObj.text){
       var safeText=String(capObj.text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       // Headline rendering: gold with a soft glow so the capsule body
       // reads as THE message of the TX. Fixed colour (not tinted per
