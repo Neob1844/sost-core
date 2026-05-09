@@ -2221,17 +2221,28 @@ async function buildAndSignTx(utxos, destAddr, amountStocks, feeStocks, changeAd
   const hashPrevouts = doubleSha256(concatBytes(...hpParts));
 
   // hashOutputs = SHA256d(all outputs in SOST format).
-  // payload_len is u16 LE — MUST be the actual payload size; the
-  // signature binds these bytes. Pre-V13 the wallet always wrote
-  // payload_len=0; that is bit-identical to the path below when
-  // out.payload is empty.
+  //
+  // !! CONSENSUS-CRITICAL ASYMMETRY !!
+  // The wire serialization in TxOutput::Serialize uses u16 LE (2 bytes)
+  // for payload_len, but ComputeHashOutputs in src/tx_signer.cpp encodes
+  // payload_len as a SINGLE BYTE (and poisons the hash if size > 255).
+  // The sighash MUST use 1 byte to match the C++ verifier, otherwise
+  // every TX from this wallet — even ones without a Capsule — would be
+  // rejected with an invalid-signature error. The wire serialization
+  // below (parts.push) keeps the 2-byte u16 LE because that's what the
+  // node deserializer expects on the network. Same protocol, two
+  // distinct paths; do not "fix" by unifying.
+  if (cap.length > 255) {
+    throw new Error('payload exceeds 255 bytes (sighash limit); refusing to sign');
+  }
   const hoParts = [];
   for (const out of txOutputs) {
     const pl = out.payload || new Uint8Array(0);
+    if (pl.length > 255) throw new Error('output payload exceeds 255 bytes (sighash limit)');
     hoParts.push(writeU64LE(out.amount));               // amount i64 LE
     hoParts.push(new Uint8Array([out.type]));            // type byte
     hoParts.push(addressToPKH(out.address));             // pkh 20 bytes
-    hoParts.push(new Uint8Array([pl.length & 0xFF, (pl.length >>> 8) & 0xFF])); // payload_len u16 LE
+    hoParts.push(new Uint8Array([pl.length & 0xFF]));    // payload_len u8 (sighash-only; wire uses u16 LE)
     if (pl.length > 0) hoParts.push(pl);                 // payload bytes
   }
   const hashOutputs = doubleSha256(concatBytes(...hoParts));
@@ -3138,6 +3149,13 @@ window.sendTransaction = async function() {
   catch (e) { return showError('sendResult', e.message); }
 
   if (recipients.length > 1) {
+    if (capsulePayload.length > 0) {
+      return showError('sendResult',
+        'Capsule attach is single-recipient only for now. ' +
+        'Either remove the extra recipient rows, or set Message Type ' +
+        'back to "None" and resubmit. (Sendmany + capsule will land in a ' +
+        'follow-up — for now use sost-cli if you need both at once.)');
+    }
     return sendTransactionMany(recipients);
   }
 
