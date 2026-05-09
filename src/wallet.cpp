@@ -330,7 +330,8 @@ bool Wallet::create_transaction(
     int64_t chain_height,
     std::string* err,
     const std::vector<Byte>* capsule_payload,
-    bool mark_spent)
+    bool mark_spent,
+    const PubKeyHash* from_pkh)
 {
     if (amount <= 0) {
         if (err) *err = "amount must be positive";
@@ -359,6 +360,8 @@ bool Wallet::create_transaction(
         const auto& u = unspent[i];
         // Only spend UTXOs we have keys for
         if (!find_key_by_pkh(u.pkh)) continue;
+        // --from-label / --from-address pin: restrict to one source pkh.
+        if (from_pkh && u.pkh != *from_pkh) continue;
         // Never spend constitutional UTXOs (gold vault, popc pool) in transfers
         std::string utxo_addr = address_encode(u.pkh);
         if (utxo_addr == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" ||  // GOLD VAULT
@@ -483,10 +486,14 @@ bool Wallet::create_transaction(
         out_tx.outputs.push_back(out);
     }
 
-    // Output 1: change (if any) — returns to first input's address
+    // Output 1: change (if any). Returns to the explicit source address
+    // when from_pkh is set (so spending from key A never silently moves
+    // change to key B); otherwise falls back to the first input's pkh.
     int64_t change = total_in - needed;
     if (change > 0) {
-        const WalletKey* change_key = find_key_by_pkh(unspent[selected[0]].pkh);
+        const PubKeyHash& change_pkh = from_pkh ? *from_pkh
+                                                : unspent[selected[0]].pkh;
+        const WalletKey* change_key = find_key_by_pkh(change_pkh);
         if (!change_key) {
             if (err) *err = "internal error: no key for change address";
             return false;

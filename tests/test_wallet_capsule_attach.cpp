@@ -307,6 +307,135 @@ static void test_default_mark_spent_still_mutates() {
     TEST("second call fails (UTXO already marked spent in-line)", !ok2);
 }
 
+// ---------------------------------------------------------------------------
+// 7. --from-pkh source pinning — multi-key wallet, default key empty,
+//    secondary key funded. Without from_pkh the build must fail (default
+//    has nothing); with from_pkh pointing at the secondary key it must
+//    succeed and the change output must return to that same pkh.
+// ---------------------------------------------------------------------------
+static void test_from_pkh_multi_key_wallet() {
+    printf("\n=== 7) --from-pkh: multi-key wallet, secondary key funded ===\n");
+
+    Wallet w;
+    auto k_default = w.generate_key("default");
+    auto k_phase2  = w.generate_key("phase2-miner");
+
+    // Fund only k_phase2. k_default has nothing.
+    WalletUTXO u{};
+    Hash256 fake_txid{};
+    for (size_t i = 0; i < 32; ++i) fake_txid[i] = (Byte)(0xB0 + (i & 0x0F));
+    u.txid        = fake_txid;
+    u.vout        = 0;
+    u.amount      = 10 * 100000000LL;
+    u.pkh         = k_phase2.pkh;
+    u.height      = 100;
+    u.output_type = 0x00;
+    u.spent       = false;
+    w.add_utxo(u);
+
+    Hash256 g = mk_genesis();
+    const std::string to = "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f";
+
+    // Without from_pkh, default behaviour walks unspent and picks any UTXO
+    // whose key the wallet holds — k_phase2's UTXO is selectable, so the
+    // build SUCCEEDS but the change goes to whichever key was selected
+    // first (k_phase2 in this case, since it's the only funded UTXO).
+    // This is the historical behaviour we want to keep when no flag is set.
+    Transaction tx_no_pin;
+    std::string err;
+    bool ok_no_pin = w.create_transaction(to, 5 * 100000000LL, 1000,
+                                          g, tx_no_pin, 2000, &err,
+                                          /*capsule=*/nullptr,
+                                          /*mark_spent=*/false,
+                                          /*from_pkh=*/nullptr);
+    TEST("no from_pkh: build succeeds (UTXO discovered via key holdings)",
+         ok_no_pin);
+
+    // Reset spent state and now pin from_pkh = k_phase2.pkh.
+    Transaction tx_pinned;
+    bool ok_pinned = w.create_transaction(to, 5 * 100000000LL, 1000,
+                                          g, tx_pinned, 2000, &err,
+                                          /*capsule=*/nullptr,
+                                          /*mark_spent=*/false,
+                                          /*from_pkh=*/&k_phase2.pkh);
+    TEST("from_pkh=k_phase2: build succeeds", ok_pinned);
+    if (!ok_pinned) { printf("    err: %s\n", err.c_str()); return; }
+
+    // Change output must return to k_phase2 (NOT k_default).
+    if (tx_pinned.outputs.size() >= 2) {
+        TEST("change output (output[1]) returns to from_pkh",
+             tx_pinned.outputs[1].pubkey_hash == k_phase2.pkh);
+        TEST("change output does NOT leak to k_default",
+             !(tx_pinned.outputs[1].pubkey_hash == k_default.pkh));
+    } else {
+        printf("  INFO: no change output (exact-fit selection)\n");
+    }
+
+    // Pin to k_default (no funds): build MUST fail.
+    Transaction tx_bad;
+    bool ok_bad = w.create_transaction(to, 5 * 100000000LL, 1000,
+                                       g, tx_bad, 2000, &err,
+                                       /*capsule=*/nullptr,
+                                       /*mark_spent=*/false,
+                                       /*from_pkh=*/&k_default.pkh);
+    TEST("from_pkh=k_default (unfunded): build fails", !ok_bad);
+}
+
+// ---------------------------------------------------------------------------
+// 8. --from-pkh refuses to spend other-key UTXOs even when the wallet
+//    holds keys for them. Funds are split: k_a has 4 SOST, k_b has 6 SOST.
+//    Asking for 5 SOST from k_a alone must fail (insufficient on that
+//    key), even though the wallet TOTAL is 10 SOST. This is the whole
+//    point of source pinning — no silent cross-key mixing.
+// ---------------------------------------------------------------------------
+static void test_from_pkh_refuses_cross_key_mixing() {
+    printf("\n=== 8) --from-pkh: refuses cross-key mixing ===\n");
+
+    Wallet w;
+    auto k_a = w.generate_key("acct-a");
+    auto k_b = w.generate_key("acct-b");
+
+    auto add_utxo = [&](const PubKeyHash& pkh, int64_t amount, Byte tag) {
+        WalletUTXO u{};
+        Hash256 t{};
+        for (size_t i = 0; i < 32; ++i) t[i] = (Byte)(tag + (i & 0x0F));
+        u.txid = t; u.vout = 0; u.amount = amount; u.pkh = pkh;
+        u.height = 100; u.output_type = 0x00; u.spent = false;
+        w.add_utxo(u);
+    };
+    add_utxo(k_a.pkh, 4 * 100000000LL, 0xC0);
+    add_utxo(k_b.pkh, 6 * 100000000LL, 0xD0);
+
+    Hash256 g = mk_genesis();
+    const std::string to = "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f";
+
+    // Need 5 SOST from k_a alone — only 4 available. Must fail even though
+    // wallet total is 10 SOST.
+    Transaction tx;
+    std::string err;
+    bool ok = w.create_transaction(to, 5 * 100000000LL, 1000,
+                                   g, tx, 2000, &err,
+                                   /*capsule=*/nullptr,
+                                   /*mark_spent=*/false,
+                                   /*from_pkh=*/&k_a.pkh);
+    TEST("from_pkh=k_a wanting 5 SOST: fails (k_a only has 4)", !ok);
+
+    // Same amount from k_b: succeeds, and the chosen input is k_b's UTXO.
+    Transaction tx2;
+    bool ok2 = w.create_transaction(to, 5 * 100000000LL, 1000,
+                                    g, tx2, 2000, &err,
+                                    /*capsule=*/nullptr,
+                                    /*mark_spent=*/false,
+                                    /*from_pkh=*/&k_b.pkh);
+    TEST("from_pkh=k_b wanting 5 SOST: succeeds", ok2);
+    if (ok2) {
+        // k_b's UTXO had tag 0xD0 in its txid first byte; verify the
+        // selected input matches.
+        TEST("input came from k_b's UTXO (not k_a's)",
+             tx2.inputs[0].prev_txid[0] == 0xD0);
+    }
+}
+
 int main() {
     printf("\n=== Wallet → capsule attachment ===\n");
     test_payload_attached_when_supplied();
@@ -315,6 +444,8 @@ int main() {
     test_cert_payload_round_trip();
     test_fee_pass_no_mutation();
     test_default_mark_spent_still_mutates();
+    test_from_pkh_multi_key_wallet();
+    test_from_pkh_refuses_cross_key_mixing();
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }

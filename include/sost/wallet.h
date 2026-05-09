@@ -98,6 +98,14 @@ public:
     // must pass mark_spent=false on every pass and call
     // mark_tx_inputs_spent(tx) themselves after the broadcast succeeds —
     // mirroring what create_transaction_many already does.
+    //
+    // from_pkh: when non-null, restricts UTXO selection to outputs that pay
+    // exactly this pubkey-hash. The change output is also returned to this
+    // same pkh (instead of the first input's pkh). Use this when the wallet
+    // file contains more than one key and the caller wants to spend from a
+    // specific source — sost-cli's --from-label / --from-address resolve to
+    // a pkh and pass it here. nullptr (default) preserves the original
+    // "spend any UTXO whose key we hold" behaviour.
     bool create_transaction(
         const std::string& to_addr,
         int64_t amount,
@@ -107,7 +115,8 @@ public:
         int64_t chain_height = -1,       // maturity filter
         std::string* err = nullptr,
         const std::vector<Byte>* capsule_payload = nullptr,
-        bool mark_spent = true);
+        bool mark_spent = true,
+        const PubKeyHash* from_pkh = nullptr);
 
     // sendmany: single TRANSFER tx with N outputs (one per recipient).
     // Caller passes a vector of (address, amount) pairs. Change (if any)

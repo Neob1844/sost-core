@@ -94,6 +94,12 @@ static std::string g_capsule_template = "";       // --capsule-template id name 
 static std::string g_capsule_locator  = "";       // --capsule-locator (doc-ref only)
 static std::string g_capsule_file     = "";       // --capsule-file <path> (doc-ref: hashed)
 
+// Multi-key wallets: explicit source-account selection. When unset, send /
+// createtx use Wallet::default_address() (pre-existing behaviour). Mutually
+// exclusive — both set is an error.
+static std::string g_from_label   = "";  // --from-label <label>
+static std::string g_from_address = "";  // --from-address <sost1...>
+
 static void init_sost_dir() {
     const char* home = getenv("HOME");
     if (!home) home = "/tmp";
@@ -253,12 +259,106 @@ static int64_t query_chain_height() {
 }
 
 // =============================================================================
+// resolve_source_address — pick the source key for spending
+//
+// Reads the global g_from_label / g_from_address flags and resolves them
+// against the loaded wallet. Returns true and fills (out_addr, out_pkh)
+// when a valid source can be determined; false (with an error printed
+// to stderr) when the flags conflict, point at an unknown label, or
+// reference an address the wallet does not control.
+//
+// When both flags are empty, falls back to wallet.default_address() —
+// preserves the pre-V13 behaviour for callers that have not opted in.
+//
+// Multi-key wallets (more than one key, no flag set) are accepted as
+// "use the default" because that is the historical contract; a one-line
+// notice points users at --from-label / --from-address.
+// =============================================================================
+static bool resolve_source_address(const sost::Wallet& w,
+                                   std::string& out_addr,
+                                   sost::PubKeyHash& out_pkh) {
+    if (!g_from_label.empty() && !g_from_address.empty()) {
+        fprintf(stderr,
+            "Error: --from-label and --from-address are mutually exclusive. "
+            "Pick one and retry.\n");
+        return false;
+    }
+
+    if (!g_from_label.empty()) {
+        const sost::WalletKey* k = w.find_key_by_label(g_from_label);
+        if (!k) {
+            fprintf(stderr,
+                "Error: --from-label %s not found in this wallet.\n",
+                g_from_label.c_str());
+            fprintf(stderr, "Available keys:\n");
+            for (const auto& kk : w.keys()) {
+                fprintf(stderr, "  label=%-16s  address=%s\n",
+                        kk.label.empty() ? "(none)" : kk.label.c_str(),
+                        sost::address_encode(kk.pkh).c_str());
+            }
+            return false;
+        }
+        out_addr = sost::address_encode(k->pkh);
+        out_pkh  = k->pkh;
+        return true;
+    }
+
+    if (!g_from_address.empty()) {
+        sost::PubKeyHash pkh{};
+        if (!sost::address_decode(g_from_address, pkh)) {
+            fprintf(stderr, "Error: --from-address %s is not a valid SOST address.\n",
+                    g_from_address.c_str());
+            return false;
+        }
+        if (!w.find_key_by_pkh(pkh)) {
+            fprintf(stderr,
+                "Error: --from-address %s is not in this wallet.\n",
+                g_from_address.c_str());
+            fprintf(stderr, "Available keys:\n");
+            for (const auto& kk : w.keys()) {
+                fprintf(stderr, "  label=%-16s  address=%s\n",
+                        kk.label.empty() ? "(none)" : kk.label.c_str(),
+                        sost::address_encode(kk.pkh).c_str());
+            }
+            return false;
+        }
+        out_addr = g_from_address;
+        out_pkh  = pkh;
+        return true;
+    }
+
+    // Neither flag set — historic default.
+    out_addr = w.default_address();
+    if (out_addr.empty()) {
+        fprintf(stderr, "Error: wallet has no addresses.\n");
+        return false;
+    }
+    if (!sost::address_decode(out_addr, out_pkh)) {
+        fprintf(stderr, "Error: failed to decode default address %s\n",
+                out_addr.c_str());
+        return false;
+    }
+    if (w.keys().size() > 1) {
+        fprintf(stderr,
+            "Notice: wallet has %zu keys; using default %s. "
+            "Use --from-label or --from-address to pick a different source.\n",
+            w.keys().size(), out_addr.c_str());
+    }
+    return true;
+}
+
+// =============================================================================
 // v1.4: Fetch UTXOs from node for any address the wallet controls
 //       Uses getaddressutxos RPC to get UTXOs directly from the chain
+//
+// When `addr_override` is non-empty, query that address instead of the
+// wallet's default. Used by --from-label / --from-address so multi-key
+// wallets can spend from a non-default account.
 // =============================================================================
-static int sync_wallet_utxos_from_node(sost::Wallet& w) {
-    std::string addr = w.default_address();
-    printf("[DEBUG] Wallet default address: %s\n", addr.empty() ? "(empty)" : addr.c_str());
+static int sync_wallet_utxos_from_node(sost::Wallet& w,
+                                       const std::string& addr_override = "") {
+    std::string addr = !addr_override.empty() ? addr_override : w.default_address();
+    printf("[DEBUG] Wallet source address: %s\n", addr.empty() ? "(empty)" : addr.c_str());
     if (addr.empty()) {
         fprintf(stderr, "Warning: wallet has no addresses\n");
         return 0;
@@ -603,6 +703,10 @@ static void print_usage() {
     printf("  --rpc-pass <pass>      RPC Basic Auth password\n");
     printf("  --node <host:port>     Node address (default: 127.0.0.1:18232)\n");
     printf("  --fee-rate <n>         Fee rate in stocks/byte (default: 1)\n");
+    printf("  --from-label <label>   Spend from the wallet key with this label\n");
+    printf("  --from-address <addr>  Spend from this exact address (must be in wallet)\n");
+    printf("                         (--from-label and --from-address are mutually exclusive;\n");
+    printf("                          omit both to use the wallet's default key)\n");
     printf("  --yes, -y              Skip confirmation prompts\n");
     printf("  --skip-warning         Skip first-send warning for scripts\n");
     printf("\nCapsule attach (V12+ chain only — public modes wired):\n");
@@ -679,6 +783,12 @@ int main(int argc, char** argv) {
             arg_start += 2;
         } else if (flag == "--amount" && arg_start + 1 < argc) {
             g_send_amount = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--from-label" && arg_start + 1 < argc) {
+            g_from_label = argv[arg_start + 1];
+            arg_start += 2;
+        } else if (flag == "--from-address" && arg_start + 1 < argc) {
+            g_from_address = argv[arg_start + 1];
             arg_start += 2;
         } else if (flag == "--yes" || flag == "-y") {
             g_yes_flag = true;
@@ -1013,14 +1123,23 @@ int main(int argc, char** argv) {
         }
         printf("Chain height: %lld\n", (long long)chain_height);
 
+        // Resolve source account: --from-label / --from-address override the
+        // wallet's default key. On multi-key wallets without either flag we
+        // emit a notice but keep the historical default behaviour.
+        std::string src_addr;
+        sost::PubKeyHash src_pkh{};
+        if (!resolve_source_address(w, src_addr, src_pkh)) return 1;
+        const sost::PubKeyHash* from_pkh =
+            (!g_from_label.empty() || !g_from_address.empty()) ? &src_pkh : nullptr;
+
         // Clear stale UTXOs (wallet file may have wrong output_type from old sessions)
         w.clear_utxos();
-        // Sync fresh UTXOs from chain for wallet address
-        int synced = sync_wallet_utxos_from_node(w);
+        // Sync fresh UTXOs from chain for the resolved source address.
+        int synced = sync_wallet_utxos_from_node(w, src_addr);
         if (synced > 0) {
-            printf("Synced %d UTXOs from node for %s\n", synced, w.default_address().c_str());
+            printf("Synced %d UTXOs from node for %s\n", synced, src_addr.c_str());
         } else if (w.num_utxos() == 0) {
-            fprintf(stderr, "Error: no spendable UTXOs found for %s\n", w.default_address().c_str());
+            fprintf(stderr, "Error: no spendable UTXOs found for %s\n", src_addr.c_str());
             fprintf(stderr, "  Check that the address has received funds and they are mature.\n");
             return 1;
         }
@@ -1040,7 +1159,8 @@ int main(int argc, char** argv) {
         if (!w.create_transaction(to_addr, amount, est_fee, genesis_hash,
                                   tx, chain_height, &err,
                                   /*capsule_payload=*/nullptr,
-                                  /*mark_spent=*/false)) {
+                                  /*mark_spent=*/false,
+                                  from_pkh)) {
             fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
@@ -1060,7 +1180,8 @@ int main(int argc, char** argv) {
             if (!w.create_transaction(to_addr, amount, real_fee, genesis_hash,
                                       tx2, chain_height, &err,
                                       /*capsule_payload=*/nullptr,
-                                      /*mark_spent=*/false)) {
+                                      /*mark_spent=*/false,
+                                      from_pkh)) {
                 fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
                 return 1;
             }
@@ -1078,7 +1199,8 @@ int main(int argc, char** argv) {
                 if (!w.create_transaction(to_addr, amount, final_fee, genesis_hash,
                                           tx3, chain_height, &err,
                                           /*capsule_payload=*/nullptr,
-                                          /*mark_spent=*/false)) {
+                                          /*mark_spent=*/false,
+                                          from_pkh)) {
                     fprintf(stderr, "Error (final fee pass): %s\n", err.c_str());
                     return 1;
                 }
@@ -1182,14 +1304,23 @@ int main(int argc, char** argv) {
         }
         printf("Chain height: %lld\n", (long long)chain_height);
 
+        // Resolve source account: --from-label / --from-address override the
+        // default key. Multi-key wallets without either flag get a notice
+        // but keep the historical default behaviour.
+        std::string src_addr;
+        sost::PubKeyHash src_pkh{};
+        if (!resolve_source_address(w, src_addr, src_pkh)) return 1;
+        const sost::PubKeyHash* from_pkh =
+            (!g_from_label.empty() || !g_from_address.empty()) ? &src_pkh : nullptr;
+
         // Clear stale UTXOs (wallet file may have wrong output_type from old sessions)
         w.clear_utxos();
-        // Sync fresh UTXOs from chain for wallet address
-        int synced = sync_wallet_utxos_from_node(w);
+        // Sync fresh UTXOs from chain for the resolved source address.
+        int synced = sync_wallet_utxos_from_node(w, src_addr);
         if (synced > 0) {
-            printf("Synced %d UTXOs from node for %s\n", synced, w.default_address().c_str());
+            printf("Synced %d UTXOs from node for %s\n", synced, src_addr.c_str());
         } else if (w.num_utxos() == 0) {
-            fprintf(stderr, "Error: no spendable UTXOs found for %s\n", w.default_address().c_str());
+            fprintf(stderr, "Error: no spendable UTXOs found for %s\n", src_addr.c_str());
             fprintf(stderr, "  Check that the address has received funds and they are mature.\n");
             return 1;
         }
@@ -1225,7 +1356,8 @@ int main(int argc, char** argv) {
         std::string err;
         if (!w.create_transaction(to_addr, amount, est_fee, genesis_hash,
                                   tx, chain_height, &err, cap_ptr,
-                                  /*mark_spent=*/false)) {
+                                  /*mark_spent=*/false,
+                                  from_pkh)) {
             fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
@@ -1243,7 +1375,8 @@ int main(int argc, char** argv) {
             sost::Transaction tx2;
             if (!w.create_transaction(to_addr, amount, real_fee, genesis_hash,
                                       tx2, chain_height, &err, cap_ptr,
-                                      /*mark_spent=*/false)) {
+                                      /*mark_spent=*/false,
+                                      from_pkh)) {
                 fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
                 return 1;
             }
@@ -1260,7 +1393,8 @@ int main(int argc, char** argv) {
                 sost::Transaction tx3;
                 if (!w.create_transaction(to_addr, amount, final_fee, genesis_hash,
                                           tx3, chain_height, &err, cap_ptr,
-                                          /*mark_spent=*/false)) {
+                                          /*mark_spent=*/false,
+                                          from_pkh)) {
                     fprintf(stderr, "Error (final fee pass): %s\n", err.c_str());
                     return 1;
                 }
