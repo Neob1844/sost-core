@@ -101,6 +101,8 @@ add_library(sost-core STATIC
     src/tx_validation.cpp
     # Phase 3.5: capsule
     src/capsule.cpp
+    # Phase 3.6: sealed envelope (Fase Sealed-1.A — single-recipient ECIES)
+    src/sealed_envelope.cpp
     # Phase 4: UTXO set
     src/utxo_set.cpp
     # Phase 5: block + merkle
@@ -336,6 +338,13 @@ add_test(NAME capsule-build-public COMMAND test-capsule-build-public)
 add_executable(test-wallet-capsule-attach tests/test_wallet_capsule_attach.cpp)
 target_link_libraries(test-wallet-capsule-attach PRIVATE sost-core)
 add_test(NAME wallet-capsule-attach COMMAND test-wallet-capsule-attach)
+
+# Fase Sealed-1.A — single-recipient ECIES envelope. Round-trip,
+# wrong-key, tamper-detection, and over-cap rejection on the bare
+# crypto motor (no capsule header, no wallet, no mempool).
+add_executable(test-sealed-envelope tests/test_sealed_envelope.cpp)
+target_link_libraries(test-sealed-envelope PRIVATE sost-core OpenSSL::Crypto secp256k1)
+add_test(NAME sealed-envelope COMMAND test-sealed-envelope)
 
 # V11 Phase 2 — component C (SbPoW): structural header v2 serialization
 add_executable(test-sbpow-header-v2 tests/test_sbpow_header_v2.cpp)
