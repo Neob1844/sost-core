@@ -168,6 +168,21 @@ bool SealSingleRecipient(const std::vector<Byte>& plaintext,
         if (err) *err = "sealed: invalid recipient pubkey";
         return false;
     }
+    // Coherence: hash160(recipient_pubkey) must equal the supplied
+    // recipient_pkh. If they disagree the caller has glued the wrong
+    // pubkey to the wrong address and the envelope would be sealed for a
+    // recipient that the real address-holder cannot open. Reject before
+    // doing any ECDH or key derivation. Belongs in the crypto motor
+    // (not the wallet) so every consumer benefits.
+    {
+        PubKey rp_arr;
+        std::memcpy(rp_arr.data(), recipient_pubkey.data(), SEALED_EPUB_BYTES);
+        PubKeyHash derived = ComputePubKeyHash(rp_arr);
+        if (!std::equal(derived.begin(), derived.end(), recipient_pkh.begin())) {
+            if (err) *err = "sealed: recipient pubkey does not match recipient pkh";
+            return false;
+        }
+    }
 
     // Generate ephemeral keypair (retry until libsecp256k1 accepts the seed).
     Byte eph_priv[32];

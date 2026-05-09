@@ -218,6 +218,38 @@ static void test_short_envelope_rejected() {
          err.find("truncated") != std::string::npos);
 }
 
+static void test_pubkey_pkh_mismatch_rejected() {
+    printf("\n=== 8) Pubkey/pkh mismatch is rejected before any crypto ===\n");
+    KeyPair B = gen_keypair();
+    KeyPair C = gen_keypair();
+
+    // Caller passes B's pubkey but C's pkh. The envelope would otherwise
+    // encrypt fine and end up addressed to a recipient who has neither
+    // the matching privkey for the AES key nor a hash160 the real B
+    // would recognise — silently lost message. Motor must refuse.
+    auto pt = str_bytes("must not seal");
+    std::vector<Byte> env;
+    std::string err;
+    bool ok = SealSingleRecipient(
+        pt,
+        std::vector<Byte>(B.pub.begin(), B.pub.end()),  // B's pubkey
+        C.pkh,                                          // C's pkh — mismatch
+        env, &err);
+    TEST("Seal with B's pubkey + C's pkh is rejected", !ok);
+    TEST("error mentions 'does not match'",
+         err.find("does not match") != std::string::npos);
+    TEST("envelope stays empty on mismatch", env.empty());
+
+    // Sanity: the matching call (B.pub + B.pkh) still succeeds.
+    err.clear();
+    bool ok_match = SealSingleRecipient(
+        pt,
+        std::vector<Byte>(B.pub.begin(), B.pub.end()),
+        B.pkh,
+        env, &err);
+    TEST("Seal with B's pubkey + B's pkh still works", ok_match);
+}
+
 static void test_multi_recipient_count_rejected() {
     printf("\n=== 7) recipient_count != 1 is rejected (single-recipient fase) ===\n");
     KeyPair B = gen_keypair();
@@ -245,6 +277,7 @@ int main() {
     test_peek_pkh_no_ecdh();
     test_tamper_each_region();
     test_short_envelope_rejected();
+    test_pubkey_pkh_mismatch_rejected();
     test_multi_recipient_count_rejected();
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
