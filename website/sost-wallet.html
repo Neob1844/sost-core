@@ -3970,23 +3970,31 @@ window.sendTransaction = async function() {
       feeStocks = realFee;
     }
 
-    // Final guard: never broadcast a tx whose size × rate exceeds the
-    // fee we set. The node would reject with S8.
-    if (feePerByte * txSize > feeStocks) {
-      throw new Error(
-        'Could not converge on a sufficient fee after 4 passes. ' +
-        'Real size = ' + txSize + ' B, fee paid = ' + feeStocks +
-        ' stocks, fee rate = ' + feePerByte + ' st/B. ' +
-        'Try a smaller capsule or send a smaller batch.');
-    }
     if (!converged) {
       // Force one more rebuild at the exact authoritative fee so the
       // confirm dialog and the broadcast see byte-equal numbers.
+      // Note: this rebuild can pick a different input set than the
+      // last pass (the wallet selector keeps adding UTXOs until
+      // total >= amount + fee), which can BUMP txSize again. The
+      // final guard below runs AFTER this rebuild for that reason.
       built = await buildAndSignTx(utxos, toAddr, amountStocks,
                                    feeStocks, wallet.address, capsulePayload);
       rawTx = built.rawTx;
       selectedUtxos = built.selected;
       txSize = rawTx.length / 2;
+    }
+
+    // Final guard: never broadcast a tx whose size × rate exceeds the
+    // fee we set. The node would reject with S8. This check has to run
+    // AFTER the (optional) extra rebuild above, since that rebuild can
+    // shift the input set when the fee bumped enough to require one
+    // more UTXO.
+    if (feePerByte * txSize > feeStocks) {
+      throw new Error(
+        'Could not converge on a sufficient fee after 4 passes + a ' +
+        'final rebuild. Real size = ' + txSize + ' B, fee paid = ' +
+        feeStocks + ' stocks, fee rate = ' + feePerByte + ' st/B. ' +
+        'Try a smaller capsule or send a smaller batch.');
     }
 
     const totalIn = selectedUtxos.reduce((s, u) => s + u.amount, 0);
