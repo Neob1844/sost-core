@@ -265,6 +265,91 @@ static int64_t query_chain_height() {
 }
 
 // =============================================================================
+// query_address_chain_balance — chain-truth balance for an address
+//
+// Calls getaddressutxos via RPC and aggregates the response. The wallet's
+// in-memory UTXO map (w.balance / w.balance(addr)) only covers UTXOs the
+// wallet has imported through its own send/createtx history; coinbase
+// rewards from the miner, lottery wins, and inbound transfers paid to a
+// wallet address are NOT reflected there until a `send` triggers
+// sync_wallet_utxos_from_node. So `info` and `listaddresses`, which used
+// w.balance, could read 11.99 SOST for an address that on-chain holds
+// ~800 SOST across 65 UTXOs (the full miner reward set). This helper
+// gives both commands the same view that the explorer and `getbalance
+// <addr>` already use.
+//
+// .ok=false means the node was not reachable; callers should fall back
+// to the wallet-local cache and surface a hint, not zero.
+// =============================================================================
+struct ChainAddressBalance {
+    bool ok = false;
+    int64_t total = 0;
+    int64_t spendable = 0;
+    int64_t mature = 0;
+    int64_t immature = 0;
+    int utxo_count = 0;
+    int mature_count = 0;
+    int immature_count = 0;
+};
+
+static ChainAddressBalance query_address_chain_balance(const std::string& addr) {
+    ChainAddressBalance r;
+    std::string resp = rpc_call("getaddressutxos", "[\"" + addr + "\"]");
+    if (resp.empty()) return r;  // ok=false
+
+    auto body_start = resp.find("\r\n\r\n");
+    std::string json_body = (body_start != std::string::npos)
+                              ? resp.substr(body_start + 4) : resp;
+    auto result_pos = json_body.find("\"result\":");
+    if (result_pos != std::string::npos) {
+        json_body = json_body.substr(result_pos + 9);
+    }
+    auto arr_start = json_body.find('[');
+    auto arr_end   = json_body.rfind(']');
+    if (arr_start == std::string::npos || arr_end == std::string::npos
+        || arr_end <= arr_start) {
+        r.ok = true;  // node answered with no UTXOs (empty/foreign address)
+        return r;
+    }
+
+    std::string arr = json_body.substr(arr_start, arr_end - arr_start + 1);
+    size_t pos = 0;
+    while (pos < arr.size()) {
+        auto obj_start = arr.find('{', pos);
+        if (obj_start == std::string::npos) break;
+        auto obj_end = arr.find('}', obj_start);
+        if (obj_end == std::string::npos) break;
+        std::string obj = arr.substr(obj_start, obj_end - obj_start + 1);
+        pos = obj_end + 1;
+
+        auto get_int = [&](const std::string& key) -> int64_t {
+            auto p = obj.find("\"" + key + "\":");
+            if (p == std::string::npos) return 0;
+            p += key.size() + 3;
+            try { return std::stoll(obj.substr(p)); } catch (...) { return 0; }
+        };
+        auto get_bool = [&](const std::string& key) -> bool {
+            auto p = obj.find("\"" + key + "\":");
+            if (p == std::string::npos) return false;
+            return obj.substr(p + key.size() + 3, 4) == "true";
+        };
+
+        int64_t amt    = get_int("amount_stocks");
+        bool spendable = get_bool("spendable");
+        bool mature    = get_bool("mature");
+        if (amt <= 0) continue;
+
+        r.total += amt;
+        r.utxo_count++;
+        if (spendable) r.spendable += amt;
+        if (mature)   { r.mature   += amt; r.mature_count++; }
+        else          { r.immature += amt; r.immature_count++; }
+    }
+    r.ok = true;
+    return r;
+}
+
+// =============================================================================
 // resolve_source_address — pick the source key for spending
 //
 // Reads the global g_from_label / g_from_address flags and resolves them
@@ -1094,11 +1179,39 @@ int main(int argc, char** argv) {
             printf("No addresses in wallet.\n");
             return 0;
         }
+        // Pre-flight one RPC to detect node reachability so we don't print
+        // a "node unreachable" hint after every address line. The actual
+        // per-address calls are done in the loop and may still succeed
+        // independently.
+        bool any_rpc_failed = false;
         for (const auto& k : keys) {
-            int64_t bal = w.balance(k.address);
-            printf("%-47s  %s SOST", k.address.c_str(), format_sost(bal).c_str());
+            ChainAddressBalance c = query_address_chain_balance(k.address);
+            int64_t total;
+            int utxo_count;
+            const char* tag;
+            if (c.ok) {
+                total = c.total;
+                utxo_count = c.utxo_count;
+                tag = (c.immature_count > 0) ? " (chain, some immature)" : "";
+            } else {
+                any_rpc_failed = true;
+                total = w.balance(k.address);
+                utxo_count = -1;
+                tag = " (local cache - node unreachable)";
+            }
+            printf("%-47s  %s SOST", k.address.c_str(), format_sost(total).c_str());
+            if (utxo_count >= 0) printf("  %d UTXO%s", utxo_count,
+                                        utxo_count == 1 ? "" : "s");
             if (!k.label.empty()) printf("  [%s]", k.label.c_str());
-            printf("\n");
+            printf("%s\n", tag);
+        }
+        if (any_rpc_failed) {
+            printf("\nHint: at least one address fell back to the wallet "
+                   "cache because the node at %s:%d did not answer. The "
+                   "cache only sees UTXOs the wallet has imported via its "
+                   "own send history; coinbase / lottery / inbound UTXOs "
+                   "appear once the node is reachable again.\n",
+                   g_node_host.c_str(), g_node_port);
         }
         return 0;
     }
@@ -2533,8 +2646,54 @@ int main(int argc, char** argv) {
         printf("SOST Wallet v1.3\n");
         printf("  File:      %s\n", wallet_path.c_str());
         printf("  Addresses: %zu\n", w.num_keys());
-        printf("  UTXOs:     %zu\n", w.num_utxos());
-        printf("  Balance:   %s SOST\n", format_sost(w.balance()).c_str());
+
+        // Sum chain-truth balance across every address in the wallet so
+        // the headline number matches the explorer for any address that
+        // received coinbase / lottery / inbound transfers without the
+        // wallet ever spending from it. Falls back to wallet-local
+        // values per address on RPC failure.
+        const auto& keys = w.keys();
+        int64_t total_stocks = 0;
+        int     total_utxos  = 0;
+        int64_t mature_stocks   = 0;
+        int64_t immature_stocks = 0;
+        int     immature_count  = 0;
+        bool any_rpc_failed = false;
+        for (const auto& k : keys) {
+            ChainAddressBalance c = query_address_chain_balance(k.address);
+            if (c.ok) {
+                total_stocks    += c.total;
+                total_utxos     += c.utxo_count;
+                mature_stocks   += c.mature;
+                immature_stocks += c.immature;
+                immature_count  += c.immature_count;
+            } else {
+                any_rpc_failed = true;
+                total_stocks += w.balance(k.address);
+            }
+        }
+
+        if (any_rpc_failed && keys.size() > 0) {
+            // No chain data — show local cache only and be explicit.
+            printf("  UTXOs:     %zu  (wallet cache - node unreachable)\n",
+                   w.num_utxos());
+            printf("  Balance:   %s SOST  (wallet cache - node unreachable)\n",
+                   format_sost(w.balance()).c_str());
+        } else if (keys.size() > 0) {
+            printf("  UTXOs:     %d  (chain truth)\n", total_utxos);
+            printf("  Balance:   %s SOST  (chain truth)\n",
+                   format_sost(total_stocks).c_str());
+            if (immature_stocks > 0) {
+                printf("  Mature:    %s SOST\n", format_sost(mature_stocks).c_str());
+                printf("  Immature:  %s SOST  (%d UTXO%s, need 1000 conf)\n",
+                       format_sost(immature_stocks).c_str(),
+                       immature_count, immature_count == 1 ? "" : "s");
+            }
+        } else {
+            // No keys → nothing to query.
+            printf("  UTXOs:     %zu\n", w.num_utxos());
+            printf("  Balance:   %s SOST\n", format_sost(w.balance()).c_str());
+        }
         if (w.num_keys() > 0) {
             printf("  Default:   %s\n", w.default_address().c_str());
         }
