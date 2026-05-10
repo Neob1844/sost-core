@@ -4025,17 +4025,91 @@ window.estimateFee = async function() {
 // =============================================================================
 
 function splitCapsulePaymentIntoBatches(totalStocks, maxChunkStocks) {
+  // CRITICAL invariant: sum(chunks) === totalStocks. The wallet must NEVER
+  // overpay or underpay the recipient because of a split. The previous
+  // version pushed maxChunkStocks even when the remainder was smaller,
+  // overpaying every short last chunk (e.g. 650/150 → 5×150 = 750).
+  // Defence in depth: a final reduce-and-compare throws before any tx
+  // is built so a regression here cannot reach a confirm dialog.
+  if (totalStocks <= 0) return [];
+  if (maxChunkStocks <= 0) {
+    throw new Error('auto-split: maxChunkStocks must be > 0');
+  }
   const chunks = [];
   let remaining = totalStocks;
-  // Floor at AUTO_SPLIT_MIN_CHUNK_STOCKS so a tiny remainder does not
-  // create a 0.00000001-SOST trailing chunk that the recipient ignores.
-  while (remaining > AUTO_SPLIT_MIN_CHUNK_STOCKS) {
+  // Walk full-size chunks while the remainder STRICTLY exceeds one chunk.
+  while (remaining > maxChunkStocks) {
     chunks.push(maxChunkStocks);
     remaining -= maxChunkStocks;
   }
-  if (remaining > 0) chunks.push(remaining);
+  // The leftover (0..maxChunkStocks). Two cases:
+  //   - first-and-only chunk → push as is (could be < min; user asked
+  //     for that small amount, we do not silently round it up)
+  //   - we already have full chunks AND leftover < AUTO_SPLIT_MIN_CHUNK_STOCKS
+  //     → fold dust into the last full chunk to avoid a 0.0000001-SOST
+  //     trailing tx the recipient would have to acknowledge for nothing.
+  //     This keeps the sum exact: chunks[-1] grows by `remaining`, no
+  //     bytes appear from nowhere.
+  if (remaining > 0) {
+    if (chunks.length > 0 && remaining < AUTO_SPLIT_MIN_CHUNK_STOCKS) {
+      chunks[chunks.length - 1] += remaining;
+    } else {
+      chunks.push(remaining);
+    }
+  }
+  // Hard guard: refuse to ship a misbehaving split. JS numbers are 64-bit
+  // floats but stocks fit in 53-bit integers comfortably (~90 trillion
+  // SOST), so reduce comparisons are exact for any realistic amount.
+  const sum = chunks.reduce(function(s, x){ return s + x; }, 0);
+  if (sum !== totalStocks) {
+    throw new Error(
+      'auto-split internal error: chunk sum ' + sum +
+      ' != totalStocks ' + totalStocks +
+      ' (chunks=[' + chunks.join(',') + '])');
+  }
   return chunks;
 }
+
+// Self-test — runs once at script load. If the hot path ever drifts
+// again, the wallet refuses to start the auto-split flow with a clear
+// console.error rather than overpaying silently.
+(function _selfTestSplit(){
+  try {
+    function eq(a, b){
+      if (a.length !== b.length) return false;
+      for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+      return true;
+    }
+    var SAT = 100000000;
+    var MIN = AUTO_SPLIT_MIN_CHUNK_STOCKS;  // 5 SOST in stocks
+    var cases = [
+      // [total_SOST, max_SOST, expected_SOST_array]
+      [650, 150, [150, 150, 150, 150, 50]],
+      [500, 150, [150, 150, 150, 50]],
+      [300, 150, [150, 150]],
+      [150, 150, [150]],
+      [149, 150, [149]],   // single chunk smaller than max — exact
+      [  5, 150, [5]],
+      [  1, 150, [1]],     // first-and-only chunk, even below MIN
+      [301, 150, [150, 151]],   // dust 1 folded into last full chunk
+    ];
+    for (var i = 0; i < cases.length; i++) {
+      var c = cases[i];
+      var got = splitCapsulePaymentIntoBatches(c[0]*SAT, c[1]*SAT);
+      var want = c[2].map(function(x){ return x*SAT; });
+      if (!eq(got, want)) {
+        console.error('[auto-split self-test] case', c, 'got', got, 'want', want);
+        throw new Error('self-test failed');
+      }
+    }
+  } catch (e) {
+    console.error('[auto-split self-test] FAILED:', e);
+    // Defang the entry point so the broken function cannot run silently.
+    window.splitCapsulePaymentIntoBatches = function(){
+      throw new Error('auto-split disabled because self-test failed; see console.');
+    };
+  }
+})();
 
 async function autoSplitCapsuleSend(opts) {
   const toAddr        = opts.toAddr;
