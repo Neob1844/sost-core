@@ -2,7 +2,8 @@
 
 - **Schema**: `trinity-dossier/v0`
 - **Generated (UTC)**: 2026-05-10T00:00:00+00:00
-- **Source scorecard**: `/home/sost/SOST/geaspirit-research/GeaSpirit_outputs/phase60/scorecard_kalgoorlie.json`
+- **Source scorecard**: `scorecard_kalgoorlie.json` (sha256 `836b677c14a73ee3…`)
+- **Source scorecard SHA-256 (full)**: `836b677c14a73ee3f44b3cf066c82bd5e933c692eaf359c468674d9b48ba8246`
 - **Features available / total**: 0 / 5
 - **Fallback mode**: `True`
 - **Publishability**: `needs_human_review`
@@ -75,7 +76,7 @@
 
 ## Integrity
 
-- **Canonical JSON SHA-256**: `eb7c8f33ba2dccd27faa65d52c24bd0198ccb68636f3137606d35530b22190ff`
+- **Canonical JSON SHA-256**: `d0bbc47e62f3d51baa5c535cbf4cf20e9e3d1395003588c9b8b53e43e3d22fdf`
 - The hash above is computed over the canonical (sorted, no-spaces, ASCII) JSON serialisation of the dossier object. Re-running the script with the same scorecard input will produce a different hash if the `generated_at_utc` field changes; pass `--pinned-time` to fix it.
 
 ## Capsule registration (manual, optional)
