@@ -1648,6 +1648,17 @@ const SETTINGS_KEY = 'sost_wallet_settings';
 const TOTP_KEY = 'sost_wallet_totp';
 const SAT = 100000000;
 
+// Auto-split capsule payment limits.
+//   MAX_POLICY_TX_BYTES — node mempool policy refuses anything larger.
+//                         Sized to 16 000 B (sost-node policy cap).
+//   AUTO_SPLIT_DEFAULT_CHUNK_STOCKS — default batch size when the wallet
+//     proposes a split. 150 SOST keeps a 4-input chunk well under 16 KB
+//     even with a maximal capsule attached, while still yielding a
+//     reasonable number of TXs for typical 500-1000 SOST sends.
+const MAX_POLICY_TX_BYTES               = 16000;
+const AUTO_SPLIT_DEFAULT_CHUNK_STOCKS   = 150 * 100000000;   // 150 SOST
+const AUTO_SPLIT_MIN_CHUNK_STOCKS       = 5   * 100000000;   //   5 SOST safety floor
+
 // --- State ---
 let wallet = null; // { privKey, pubKey, address, seedPhrase, watchOnly }
 let encryptedStore = null;
@@ -3941,6 +3952,165 @@ window.estimateFee = async function() {
   }
 };
 
+// =============================================================================
+// Auto-split helpers (Fase: capsule TX > 16 KB → many TXs of same recipient).
+//
+// splitCapsulePaymentIntoBatches divides totalStocks into chunks no larger
+// than maxChunkStocks. The last chunk picks up the remainder.
+//
+// autoSplitCapsuleSend takes a recipient + list of amounts and broadcasts
+// them sequentially, each carrying the SAME capsule payload. It uses the
+// existing in-flight UTXO Map so chunk N+1 never re-picks UTXOs that chunk
+// N already consumed. If any chunk fails, the loop stops and reports
+// which chunks went out, which broadcast txids, and what failed.
+// =============================================================================
+
+function splitCapsulePaymentIntoBatches(totalStocks, maxChunkStocks) {
+  const chunks = [];
+  let remaining = totalStocks;
+  // Floor at AUTO_SPLIT_MIN_CHUNK_STOCKS so a tiny remainder does not
+  // create a 0.00000001-SOST trailing chunk that the recipient ignores.
+  while (remaining > AUTO_SPLIT_MIN_CHUNK_STOCKS) {
+    chunks.push(maxChunkStocks);
+    remaining -= maxChunkStocks;
+  }
+  if (remaining > 0) chunks.push(remaining);
+  return chunks;
+}
+
+async function autoSplitCapsuleSend(opts) {
+  const toAddr        = opts.toAddr;
+  const chunks        = opts.chunks;
+  const feePerByte    = opts.feePerByte;
+  const capsulePayload= opts.capsulePayload;
+  const capsuleSize   = opts.capsuleSize || (capsulePayload ? capsulePayload.length : 0);
+
+  const broadcastTxids = [];
+  let failure = null;
+
+  for (let i = 0; i < chunks.length; i++) {
+    const idx = i + 1;
+    const total = chunks.length;
+    const chunkStocks = chunks[i];
+
+    showSuccess('sendResult',
+      '<div style="border:1px solid var(--cyan-primary,#67e8f9);border-radius:6px;padding:10px;margin-top:8px;background:rgba(103,232,249,0.04)">' +
+      '<div style="color:var(--cyan-primary);font-weight:600">Auto-split capsule send: ' + idx + ' / ' + total + '</div>' +
+      '<div style="font-size:11px;color:var(--text-dim);margin-top:4px">' +
+        'sending ' + formatSost(chunkStocks) + ' SOST to ' + toAddr + '…' +
+      '</div>' +
+      (broadcastTxids.length ?
+        '<div style="font-size:10px;color:var(--text-dim);margin-top:4px">already broadcast: ' +
+        broadcastTxids.length + '</div>' : '') +
+      '</div>');
+
+    try {
+      // Refresh UTXO state between chunks. The previous chunk's inputs
+      // are already in the in-flight set; refreshBalance + reconcile
+      // will keep things tidy.
+      await refreshBalance();
+      const rawUtxos = (window._lastUtxos || []);
+      const chainHeight = (function(){
+        try { return parseInt(document.getElementById('balanceBlock').textContent || '0', 10); }
+        catch (e) { return 0; }
+      })();
+      const utxosAll = rawUtxos
+        .map(u => ({...u, amount: Math.round((u.amount || 0) * SAT),
+                    confs: chainHeight - (u.height || 0)}))
+        .filter(u => !u.coinbase || u.confs >= 1000);
+      _inflightReconcile(utxosAll);
+      const utxos = _filterInflight(utxosAll);
+      if (utxos.length === 0) {
+        throw new Error('no spendable UTXOs left after batch ' + i + ' (in-flight set holds ' +
+                        inFlightUtxos.size + '; chain may need to mine before the next chunk)');
+      }
+
+      // Same fee loop as sendTransaction, condensed.
+      const seedSize = 148 + 34 * 2 + 10 + 2 + capsuleSize;
+      let feeStocks = feePerByte * seedSize;
+      let built, rawTx, selectedUtxos, txSize, converged = false;
+      for (let pass = 0; pass < 4; pass++) {
+        built = await buildAndSignTx(utxos, toAddr, chunkStocks,
+                                     feeStocks, wallet.address, capsulePayload);
+        rawTx = built.rawTx;
+        selectedUtxos = built.selected;
+        txSize = rawTx.length / 2;
+        const realFee = feePerByte * txSize;
+        if (realFee === feeStocks) { converged = true; break; }
+        feeStocks = realFee;
+      }
+      if (!converged) {
+        built = await buildAndSignTx(utxos, toAddr, chunkStocks,
+                                     feeStocks, wallet.address, capsulePayload);
+        rawTx = built.rawTx;
+        selectedUtxos = built.selected;
+        txSize = rawTx.length / 2;
+      }
+      if (feePerByte * txSize > feeStocks) {
+        throw new Error('fee did not converge for chunk ' + idx);
+      }
+      // Hard floor: refuse to broadcast a chunk that itself exceeds
+      // the 16-KB policy. If even AUTO_SPLIT_DEFAULT_CHUNK_STOCKS
+      // (~150 SOST) does not fit, the wallet has too many tiny
+      // UTXOs — the user must consolidate first.
+      if (txSize > MAX_POLICY_TX_BYTES) {
+        throw new Error('chunk ' + idx + ' is ' + txSize + ' B, still over the ' +
+                        MAX_POLICY_TX_BYTES + '-B policy. ' +
+                        'Consolidate UTXOs first or lower the chunk size.');
+      }
+
+      // Reserve UTXOs BEFORE the broadcast (matches sendTransaction
+      // semantics from v188). On failure, release.
+      _inflightAdd(selectedUtxos, null);
+      let result;
+      try {
+        result = await rpcCall('sendrawtransaction', [rawTx]);
+      } catch (e) {
+        _inflightRelease(selectedUtxos);
+        throw e;
+      }
+      const txid = (result && (result.txid || result)) || 'unknown';
+      _inflightAdd(selectedUtxos, txid);
+      broadcastTxids.push({idx, txid, amount: chunkStocks});
+    } catch (e) {
+      failure = { idx, message: String(e && e.message || e) };
+      break;
+    }
+  }
+
+  // Final report.
+  const explorerUrl = 'https://sostcore.com/sost-explorer.html';
+  let html = '<div style="border:1px solid ' +
+    (failure ? 'var(--red-primary,#e63946)' : 'var(--green-primary,#4ade80)') +
+    ';border-radius:6px;padding:12px;margin-top:8px;background:' +
+    (failure ? 'rgba(230,57,70,0.04)' : 'rgba(74,222,128,0.04)') + '">';
+  html += '<div style="color:' + (failure ? 'var(--red-primary)' : 'var(--green-primary)') +
+    ';font-weight:600;margin-bottom:8px">' +
+    'Auto-split: ' + broadcastTxids.length + ' / ' +
+    (broadcastTxids.length + (failure ? 1 : 0)) +
+    ' transactions broadcast' + (failure ? ' (then stopped)' : '') + '</div>';
+  html += '<div style="font-size:11px;line-height:1.7">';
+  for (const b of broadcastTxids) {
+    html += '<div>#' + b.idx + ' &middot; ' + formatSost(b.amount) + ' SOST &rarr; ' +
+      '<a href="' + explorerUrl + '?search=' + b.txid + '" target="_blank" ' +
+      'style="color:var(--cyan-primary,#67e8f9);text-decoration:none;font-family:monospace">' +
+      b.txid.substring(0, 16) + '…</a></div>';
+  }
+  if (failure) {
+    html += '<div style="margin-top:8px;color:var(--red-primary)">' +
+      'Stopped at chunk #' + failure.idx + ': ' + failure.message + '</div>';
+    html += '<div style="font-size:10px;color:var(--text-dim);margin-top:4px">' +
+      'The remaining chunks were NOT broadcast. Check your balance, fix the ' +
+      'underlying problem, and retry.</div>';
+  }
+  html += '</div></div>';
+  if (failure) showError('sendResult', html);
+  else         showSuccess('sendResult', html);
+
+  // Final reconcile pass so the dashboard catches up.
+  setTimeout(() => { try { refreshBalance(); } catch(e) {} }, 1500);
+}
+
 window.sendTransaction = async function() {
   if (!wallet || wallet.watchOnly) return alert('Cannot send from a watch-only wallet');
 
@@ -4118,6 +4288,60 @@ window.sendTransaction = async function() {
         'final rebuild. Real size = ' + txSize + ' B, fee paid = ' +
         feeStocks + ' stocks, fee rate = ' + feePerByte + ' st/B. ' +
         'Try a smaller capsule or send a smaller batch.');
+    }
+
+    // ================================================================
+    // Auto-split capsule payment (handles "tx > 16 KB" policy reject).
+    //
+    // The standardness limit is 16,000 bytes per tx. With many small
+    // UTXOs and a capsule attached, a 650-SOST one-shot would easily
+    // exceed it (148 B per input × 100 inputs + capsule = 22 KB+).
+    // The node would refuse it with rule R… so we never broadcast it.
+    //
+    // What we do here: if the converged tx size crosses the policy
+    // limit AND the user attached a capsule, propose splitting the
+    // amount into smaller single-recipient transactions, each carrying
+    // the SAME capsule. The user confirms once and the wallet sends
+    // them sequentially (using the in-flight UTXO set so each pass
+    // picks fresh inputs).
+    //
+    // For non-capsule sends >16 KB we fall through to the existing
+    // 100-KB consensus check; sendmany already covers that case.
+    // ================================================================
+    if (txSize > MAX_POLICY_TX_BYTES && capsuleSize > 0 && capsulePayload) {
+      const chunks = splitCapsulePaymentIntoBatches(
+        amountStocks, AUTO_SPLIT_DEFAULT_CHUNK_STOCKS);
+      const lines = chunks.map((c, i) =>
+        '  ' + (i + 1) + '. ' + formatSost(c) + ' SOST').join('\n');
+      const msg =
+        'This payment is too large for one standard transaction.\n' +
+        '  signed tx size: ' + txSize + ' B (max 16,000)\n' +
+        '  capsule size:   ' + capsuleSize + ' B\n' +
+        '  inputs needed:  ' + selectedUtxos.length + ' UTXOs\n\n' +
+        'Split into ' + chunks.length + ' separate ' + (capsuleSize ? 'capsule ' : '') +
+        'transactions to the same recipient?\n' +
+        'Each will carry the same capsule.\n\n' +
+        lines + '\n\n' +
+        'OK = Split & Send sequentially.\n' +
+        'Cancel = abort this send.';
+      const okSplit = confirm(msg);
+      if (!okSplit) {
+        showError('sendResult',
+          'Send cancelled. The transaction is ' + txSize +
+          ' B which exceeds the 16,000-byte policy limit.');
+        return;
+      }
+      // Hand off to the auto-split flow. Important: do NOT reserve
+      // pass-N UTXOs here — autoSplitCapsuleSend builds and reserves
+      // its own per-chunk inputs via the in-flight set.
+      await autoSplitCapsuleSend({
+        toAddr,
+        chunks,
+        feePerByte,
+        capsulePayload,
+        capsuleSize,
+      });
+      return;
     }
 
     const totalIn = selectedUtxos.reduce((s, u) => s + u.amount, 0);
