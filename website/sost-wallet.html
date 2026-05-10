@@ -4267,6 +4267,12 @@ async function autoSplitCapsuleSend(opts) {
 
   const broadcastTxids = [];
   let failure = null;
+  // Per-iteration funds snapshot. Captured BEFORE buildAndSignTx so any
+  // throw between here and broadcast can attach the breakdown to the
+  // failure record instead of leaving the user with a bare "Insufficient
+  // funds" message. Reset every loop iteration; the catch reads the
+  // last-set value, which corresponds to the failed chunk by construction.
+  let diag = null;
 
   for (let i = 0; i < chunks.length; i++) {
     const idx = i + 1;
@@ -4294,12 +4300,43 @@ async function autoSplitCapsuleSend(opts) {
         try { return parseInt(document.getElementById('balanceBlock').textContent || '0', 10); }
         catch (e) { return 0; }
       })();
-      const utxosAll = rawUtxos
-        .map(u => ({...u, amount: Math.round((u.amount || 0) * SAT),
-                    confs: chainHeight - (u.height || 0)}))
-        .filter(u => !u.coinbase || u.confs >= 1000);
+      // One-shot map: convert amount SOST → stocks once, attach confs.
+      // Splitting filter and immature into two passes over the SAME
+      // mapped array avoids the double-conversion bug class (multiplying
+      // by SAT twice) and gives us the immature count for diagnostics
+      // without re-reading rawUtxos.
+      const utxosMapped = rawUtxos.map(u => ({
+        ...u,
+        amount: Math.round((u.amount || 0) * SAT),
+        confs: chainHeight - (u.height || 0)
+      }));
+      const utxosAll      = utxosMapped.filter(u => !u.coinbase || u.confs >= 1000);
+      const immatureUtxos = utxosMapped.filter(u =>  u.coinbase && u.confs <  1000);
       _inflightReconcile(utxosAll);
       const utxos = _filterInflight(utxosAll);
+
+      // Funds breakdown for this chunk — attached to `failure` by the
+      // catch below if anything throws. Sums are in stocks; the report
+      // formats them via formatSost.
+      const sumStocks = arr => arr.reduce((s, u) => s + (u.amount || 0), 0);
+      const matureStocks    = sumStocks(utxosAll);
+      const availableStocks = sumStocks(utxos);
+      diag = {
+        totalUtxoCount:      utxosMapped.length,
+        matureUtxoCount:     utxosAll.length,
+        matureUtxoStocks:    matureStocks,
+        immatureUtxoCount:   immatureUtxos.length,
+        immatureUtxoStocks:  sumStocks(immatureUtxos),
+        inflightUtxoCount:   utxosAll.length - utxos.length,
+        inflightUtxoStocks:  matureStocks - availableStocks,
+        availableUtxoCount:  utxos.length,
+        availableUtxoStocks: availableStocks,
+        chunkStocks:         chunkStocks,
+        feeEstimateStocks:   null,
+        chainHeight:         chainHeight,
+        walletAddress:       (wallet && wallet.address) || ''
+      };
+
       if (utxos.length === 0) {
         throw new Error('no spendable UTXOs left after batch ' + i + ' (in-flight set holds ' +
                         inFlightUtxos.size + '; chain may need to mine before the next chunk)');
@@ -4308,6 +4345,7 @@ async function autoSplitCapsuleSend(opts) {
       // Same fee loop as sendTransaction, condensed.
       const seedSize = 148 + 34 * 2 + 10 + 2 + capsuleSize;
       let feeStocks = feePerByte * seedSize;
+      diag.feeEstimateStocks = feeStocks;
       let built, rawTx, selectedUtxos, txSize, converged = false;
       for (let pass = 0; pass < 4; pass++) {
         built = await buildAndSignTx(utxos, toAddr, chunkStocks,
@@ -4318,6 +4356,7 @@ async function autoSplitCapsuleSend(opts) {
         const realFee = feePerByte * txSize;
         if (realFee === feeStocks) { converged = true; break; }
         feeStocks = realFee;
+        diag.feeEstimateStocks = feeStocks;
       }
       if (!converged) {
         built = await buildAndSignTx(utxos, toAddr, chunkStocks,
@@ -4326,6 +4365,7 @@ async function autoSplitCapsuleSend(opts) {
         selectedUtxos = built.selected;
         txSize = rawTx.length / 2;
       }
+      diag.feeEstimateStocks = feePerByte * txSize;
       if (feePerByte * txSize > feeStocks) {
         throw new Error('fee did not converge for chunk ' + idx);
       }
@@ -4353,7 +4393,7 @@ async function autoSplitCapsuleSend(opts) {
       _inflightAdd(selectedUtxos, txid);
       broadcastTxids.push({idx, txid, amount: chunkStocks});
     } catch (e) {
-      failure = { idx, message: String(e && e.message || e) };
+      failure = { idx, message: String(e && e.message || e), diag: diag };
       break;
     }
   }
@@ -4367,7 +4407,7 @@ async function autoSplitCapsuleSend(opts) {
   html += '<div style="color:' + (failure ? 'var(--red-primary)' : 'var(--green-primary)') +
     ';font-weight:600;margin-bottom:8px">' +
     'Auto-split: ' + broadcastTxids.length + ' / ' +
-    (broadcastTxids.length + (failure ? 1 : 0)) +
+    chunks.length +
     ' transactions broadcast' + (failure ? ' (then stopped)' : '') + '</div>';
   html += '<div style="font-size:11px;line-height:1.7">';
   for (const b of broadcastTxids) {
@@ -4383,10 +4423,61 @@ async function autoSplitCapsuleSend(opts) {
     const escMsg = String(failure.message || '')
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     html += '<div style="margin-top:8px;color:var(--red-primary)">' +
-      'Stopped at chunk #' + failure.idx + ': ' + escMsg + '</div>';
+      'Stopped at chunk #' + failure.idx + ' of ' + chunks.length + ': ' + escMsg + '</div>';
+
+    // Funds breakdown — surfaced when the loop captured a per-chunk
+    // diagnostic snapshot (always true unless the throw came BEFORE the
+    // first iteration's map+filter, which is not possible in the current
+    // flow). The point is to replace the bare "Insufficient funds"
+    // string with concrete numbers so the user can see whether the
+    // problem is immature coinbase, in-flight reservations from a
+    // previous send, or a chunk size that genuinely exceeds spendable.
+    if (failure.diag) {
+      const d = failure.diag;
+      const need = d.chunkStocks + (d.feeEstimateStocks || 0);
+      const lacks = need - d.availableUtxoStocks;
+      html += '<div style="margin-top:8px;padding:8px;background:rgba(230,57,70,0.04);' +
+              'border-left:2px solid var(--red-primary,#e63946);font-size:11px;' +
+              'line-height:1.7;color:var(--text2,#cccccc)">';
+      html += '<div style="color:var(--red-primary);font-weight:600;margin-bottom:4px">' +
+              'Funds breakdown for this chunk</div>';
+      html += '<div>Spendable available: <b>' + formatSost(d.availableUtxoStocks) +
+              ' SOST</b> (' + d.availableUtxoCount + ' UTXO' +
+              (d.availableUtxoCount === 1 ? '' : 's') + ')</div>';
+      html += '<div>Needed for this chunk + fee: <b>' + formatSost(need) +
+              ' SOST</b> (chunk ' + formatSost(d.chunkStocks);
+      if (d.feeEstimateStocks != null) {
+        html += ' + fee ' + formatSost(d.feeEstimateStocks);
+      }
+      html += ')</div>';
+      if (lacks > 0) {
+        html += '<div style="color:var(--red-primary)">Short by: <b>' +
+                formatSost(lacks) + ' SOST</b></div>';
+      }
+      if (d.immatureUtxoStocks > 0) {
+        html += '<div>Immature: <b>' + formatSost(d.immatureUtxoStocks) +
+                ' SOST</b> (' + d.immatureUtxoCount + ' coinbase UTXO' +
+                (d.immatureUtxoCount === 1 ? '' : 's') +
+                ', need 1000 confirmations to spend)</div>';
+      }
+      if (d.inflightUtxoStocks > 0) {
+        html += '<div>In-flight reserved: <b>' + formatSost(d.inflightUtxoStocks) +
+                ' SOST</b> (' + d.inflightUtxoCount + ' UTXO' +
+                (d.inflightUtxoCount === 1 ? '' : 's') +
+                ' held by recent unconfirmed sends)</div>';
+      }
+      html += '<div style="font-size:10px;color:var(--text-dim);margin-top:6px">' +
+              'Mature on chain: ' + formatSost(d.matureUtxoStocks) +
+              ' SOST across ' + d.matureUtxoCount + ' UTXO' +
+              (d.matureUtxoCount === 1 ? '' : 's') +
+              '. Spendable = mature − in-flight.</div>';
+      html += '</div>';
+    }
+
     html += '<div style="font-size:10px;color:var(--text-dim);margin-top:4px">' +
-      'The remaining chunks were NOT broadcast. Check your balance, fix the ' +
-      'underlying problem, and retry.</div>';
+      'The remaining chunks were NOT broadcast. Fix the underlying ' +
+      'problem (wait for coinbase to mature, wait for in-flight sends to ' +
+      'confirm, or lower the requested amount) and retry.</div>';
   }
   html += '</div></div>';
   // The auto-split report is a fully-built, trusted HTML block (txids are
