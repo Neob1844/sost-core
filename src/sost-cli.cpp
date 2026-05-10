@@ -2703,9 +2703,15 @@ int main(int argc, char** argv) {
         }
         printf("Encrypted wallet backup saved to: %s\n", output_path.c_str());
         printf("  Keys:    %zu\n", w.num_keys());
-        printf("  UTXOs:   %zu\n", w.num_utxos());
+        printf("  UTXOs:   %zu  (offline cache snapshot)\n", w.num_utxos());
         printf("  KDF:     scrypt (N=32768, r=8, p=1)\n");
         printf("  Cipher:  AES-256-GCM\n");
+        printf("\n");
+        printf("Note: 'UTXOs' above is the local cache at export time, NOT the\n");
+        printf("live on-chain balance. The keys in this backup control every\n");
+        printf("on-chain UTXO at every address they own — the cache figure is\n");
+        printf("informational. For chain truth run\n");
+        printf("    sost-cli --wallet %s listaddresses\n", wallet_path.c_str());
         printf("\n*** REMEMBER YOUR PASSPHRASE — IT CANNOT BE RECOVERED ***\n");
 
         // Zero passphrase memory
@@ -2756,8 +2762,15 @@ int main(int argc, char** argv) {
         printf("Wallet imported from: %s\n", input_path.c_str());
         printf("  Saved to:  %s\n", wallet_path.c_str());
         printf("  Keys:      %zu\n", imported.num_keys());
-        printf("  UTXOs:     %zu\n", imported.num_utxos());
-        printf("  Balance:   %s SOST\n", format_sost(imported.balance()).c_str());
+        printf("  UTXOs:     %zu  (offline cache snapshot)\n", imported.num_utxos());
+        printf("  Balance:   %s SOST  (offline cache snapshot)\n",
+               format_sost(imported.balance()).c_str());
+        printf("\n");
+        printf("Note: 'Balance' above is the local cache from the moment the\n");
+        printf(".enc was exported, NOT the live on-chain balance. Run\n");
+        printf("    sost-cli --wallet %s listaddresses\n", wallet_path.c_str());
+        printf("for chain truth. The keys in this backup control every on-chain\n");
+        printf("UTXO at every address they own.\n");
         return 0;
     }
 
