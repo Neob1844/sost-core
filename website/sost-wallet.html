@@ -3670,6 +3670,13 @@ window.refreshBalance = async function() {
       rpcCall('getaddressinfo', [wallet.address])
     ]);
     const chainHeight = nodeInfo.blocks || 0;
+    // Cache the authoritative chain height so async flows (auto-split,
+    // history, multi-chunk send) do not have to re-derive it from the
+    // DOM. The wallet's status pill renders text like "Block 8023";
+    // parseInt of that returns NaN, which used to silently degrade
+    // the auto-split maturity classifier to "everything coinbase is
+    // immature" (NaN - height = NaN, NaN >= 1000 = false).
+    window._lastChainHeight = chainHeight;
     updateCapsuleActivation(chainHeight);
     updatePopcActivation(chainHeight);
     const utxos = addrInfo.utxos || [];
@@ -4293,13 +4300,33 @@ async function autoSplitCapsuleSend(opts) {
     try {
       // Refresh UTXO state between chunks. The previous chunk's inputs
       // are already in the in-flight set; refreshBalance + reconcile
-      // will keep things tidy.
+      // will keep things tidy. refreshBalance writes the authoritative
+      // chain height into window._lastChainHeight.
       await refreshBalance();
       const rawUtxos = (window._lastUtxos || []);
-      const chainHeight = (function(){
-        try { return parseInt(document.getElementById('balanceBlock').textContent || '0', 10); }
-        catch (e) { return 0; }
-      })();
+
+      // Source of truth for chain height, in priority order:
+      //   1) window._lastChainHeight (set by refreshBalance from
+      //      getinfo.blocks — the same number the dashboard uses)
+      //   2) a fresh getinfo RPC, in case the cache is missing
+      // We deliberately do NOT parse the wallet's "Block 8023" status
+      // pill — parseInt of that returns NaN, the maturity check
+      // becomes (NaN >= 1000) === false, and every coinbase UTXO is
+      // misclassified as immature. That bug locked a wallet with
+      // ~10 700 SOST mature out of auto-split because only the four
+      // non-coinbase UTXOs (~80 SOST) survived the filter.
+      let chainHeight = Number(window._lastChainHeight || 0);
+      if (!Number.isFinite(chainHeight) || chainHeight <= 0) {
+        try {
+          const info = await rpcCall('getinfo');
+          chainHeight = Number(info && info.blocks) || 0;
+          if (chainHeight > 0) window._lastChainHeight = chainHeight;
+        } catch (e) { /* fall through to the guard below */ }
+      }
+      if (!Number.isFinite(chainHeight) || chainHeight <= 0) {
+        throw new Error('auto-split cannot determine chain height; ' +
+          'refresh the wallet (it must reach the node at least once) and retry');
+      }
       // One-shot map: convert amount SOST → stocks once, attach confs.
       // Splitting filter and immature into two passes over the SAME
       // mapped array avoids the double-conversion bug class (multiplying
@@ -4470,7 +4497,10 @@ async function autoSplitCapsuleSend(opts) {
               'Mature on chain: ' + formatSost(d.matureUtxoStocks) +
               ' SOST across ' + d.matureUtxoCount + ' UTXO' +
               (d.matureUtxoCount === 1 ? '' : 's') +
-              '. Spendable = mature − in-flight.</div>';
+              '. Spendable = mature &minus; in-flight.</div>';
+      html += '<div style="font-size:10px;color:var(--text-dim);margin-top:2px">' +
+              'Chain height used: <b>#' + d.chainHeight + '</b>' +
+              ' &middot; coinbase needs height &minus; mined &ge; 1000 to be spendable.</div>';
       html += '</div>';
     }
 
