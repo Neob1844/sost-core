@@ -66,15 +66,43 @@ Ship a working v0 of the Trinity bridge: produce one real dossier on the Kalgoor
       always-present `unsafe_or_forbidden` anchor entries. Total
       tests: 109 (67 materials-engine + 42 sost-core).
 
-## Sprint 4 — proposed, not implemented
+## Sprint 4 — Proof Bundle v0
 
+- [x] **Trinity Proof Bundle v0.** Branch
+      `trinity/proof-bundle-v0` cut from
+      `trinity/campaign-engine-v0`. Builder
+      `scripts/trinity/trinity_proof_bundle.py`, verifier
+      `scripts/trinity/verify_trinity_bundle.py`, design doc
+      `TRINITY_PROOF_BUNDLE.md`. Demo
+      `TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.{md,json}` ties
+      the four base SHAs into a single root artefact:
+
+          scorecard:        836b677c14a73ee3f44b3cf066c82bd5e933c692eaf359c468674d9b48ba8246
+          dossier:          d0bbc47e62f3d51baa5c535cbf4cf20e9e3d1395003588c9b8b53e43e3d22fdf
+          plan:             1e7ab30aa1595c8f19114382710536ed8faf0b6122ae16f441a34b55a2647b49
+          campaign:         7253cf30cf2f45e6dc5979fd8c2ea058397fa7d35356b7a2a2f28bb7ca4d85df
+          merkle_root:      a818a1e4799ec34fd5a65b17d180a9534f791d4cd49f54c97b21c11d7b0e28b4
+          proof_bundle_sha: 3a28a4b112fe95df85ab2ab91deb7698ebeb1d9182297f06635fd12fd4053a02
+
+      Verifier runs 12 closed checks (schema, anchor shapes,
+      Merkle root, four safety flags, host-path leak, capsule
+      execution status, local file re-hashes). Tests: 20 new
+      (proof bundle + verifier), 62 total in this repo, 67 in
+      materials-engine-private. Cross-repo total: 129.
+
+## Sprint 5 — proposed, not implemented
+
+- [ ] `--register` flag on the proof-bundle builder that
+      *prepares* (but does not execute) the exact `sost-cli send`
+      command for OPEN_NOTE_INLINE or DOC_REF_OPEN.
+- [ ] Multi-bundle index: meta-bundle anchoring N proof bundles
+      via the same Merkle algorithm at the next layer up.
+- [ ] Optional ECDSA signature over `proof_bundle_sha256` using
+      the operator's mining key.
 - [ ] Live Materials Engine API integration for deposit-type
       context (replaces the hardcoded map in `geo_target_council`).
 - [ ] `canonical_memory` persistence of campaign manifests so
       multiple Trinity sessions share state.
-- [ ] `--register` flag preparing (but never broadcasting) the
-      `DOC_REF_OPEN` capsule body for the four-anchor proof
-      bundle.
 - [ ] Pilbara or Zambia campaign once feature processing lands.
 - [ ] Ollama-only Council run mode.
 
