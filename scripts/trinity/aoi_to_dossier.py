@@ -51,34 +51,125 @@ from typing import Any, Dict, List, Optional, Tuple
 _THIS_FILE = Path(__file__).resolve()
 _REPO_ROOT = _THIS_FILE.parents[2]            # sost-core/
 _REPO_PARENT = _REPO_ROOT.parent.parent        # the dir containing sost-core/
-                                               # in this layout it is /home/sost/SOST
+                                               # in a WSL layout this is
+                                               # /home/sost/SOST; in a VPS
+                                               # layout where sost-core lives
+                                               # under /opt it resolves to /
+                                               # and is therefore not safe to
+                                               # use as the only search root.
+                                               # See env-var overrides below.
+
+
+def _env_paths(name: str) -> List[Path]:
+    """Read a colon-separated path env var, returning existing dirs.
+
+    Used by `_candidate_scorecard_paths` (for `TRINITY_GEASPIRIT_OUTPUTS_PATH`)
+    and `_ensure_bridge_importable` (for `TRINITY_MATERIALS_ENGINE_PATH`).
+    Empty / unset / nonexistent entries are silently skipped — the
+    caller is expected to fall back to compiled-in defaults.
+    """
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return []
+    out: List[Path] = []
+    for chunk in raw.split(os.pathsep):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        p = Path(chunk).expanduser().resolve()
+        if p.exists():
+            out.append(p)
+    return out
 
 
 def _candidate_scorecard_paths(aoi: str) -> List[Path]:
-    """Where to look for a scorecard JSON for the given AOI."""
+    """Where to look for a scorecard JSON for the given AOI.
+
+    Search order (first match wins per the caller; this function
+    returns every match so the operator can see all candidates):
+
+      1. `TRINITY_GEASPIRIT_OUTPUTS_PATH` (env var, colon-separated).
+         Recommended for VPS / non-WSL environments.
+      2. `<repo_parent>/geaspirit-research/GeaSpirit_outputs/`
+         (the WSL-friendly default).
+      3. `<repo_root>/geaspirit/outputs/`
+         (local repo subdir, used when scorecards are committed in-tree).
+      4. `~/SOST/geaspirit-research/GeaSpirit_outputs/`
+         (last-chance fallback for the canonical WSL layout, robust to
+         the repo living somewhere unexpected on disk).
+    """
     name = aoi.strip().lower()
     candidates: List[Path] = []
-    # Sister-repo geaspirit-research/GeaSpirit_outputs (the real source
-    # of pre-computed scorecards on this machine).
+
+    # 1) Env-var override(s). Highest priority because the operator
+    #    set it intentionally for this machine.
+    for root in _env_paths("TRINITY_GEASPIRIT_OUTPUTS_PATH"):
+        for p in root.rglob(f"scorecard_{name}.json"):
+            candidates.append(p)
+        # Also accept the scorecard file directly under the root.
+        direct = root / f"scorecard_{name}.json"
+        if direct.is_file() and direct not in candidates:
+            candidates.append(direct)
+
+    # 2) WSL-friendly sister directory (the default we shipped in v0).
     sister = _REPO_PARENT / "geaspirit-research" / "GeaSpirit_outputs"
     if sister.exists():
         for p in sister.rglob(f"scorecard_{name}.json"):
-            candidates.append(p)
-    # Local geaspirit/outputs in this repo (current and future).
+            if p not in candidates:
+                candidates.append(p)
+
+    # 3) In-repo local outputs dir.
     local = _REPO_ROOT / "geaspirit" / "outputs"
     if local.exists():
         for p in local.rglob(f"scorecard_{name}.json"):
-            candidates.append(p)
+            if p not in candidates:
+                candidates.append(p)
+
+    # 4) Canonical WSL layout, last-chance fallback.
+    home = Path(os.path.expanduser("~"))
+    home_sister = home / "SOST" / "geaspirit-research" / "GeaSpirit_outputs"
+    if home_sister.exists() and home_sister != sister:
+        for p in home_sister.rglob(f"scorecard_{name}.json"):
+            if p not in candidates:
+                candidates.append(p)
+
     return candidates
+
+
+def _materials_engine_root() -> Optional[Path]:
+    """Resolve the materials-engine-private root directory.
+
+    Search order (first existing wins):
+
+      1. `TRINITY_MATERIALS_ENGINE_PATH` (env var).
+      2. `<repo_parent>/materials-engine-private/`
+         (WSL-friendly default shipped in v0).
+      3. `~/SOST/materials-engine-private/`
+         (canonical WSL layout, last-chance fallback).
+    """
+    env = _env_paths("TRINITY_MATERIALS_ENGINE_PATH")
+    if env:
+        return env[0]
+    candidate = _REPO_PARENT / "materials-engine-private"
+    if candidate.exists():
+        return candidate
+    home = Path(os.path.expanduser("~"))
+    home_candidate = home / "SOST" / "materials-engine-private"
+    if home_candidate.exists():
+        return home_candidate
+    return None
 
 
 def _ensure_bridge_importable() -> None:
     """Add `materials-engine-private` to sys.path so the bridge import
     works whether the caller installed the package or not.
     """
-    me = _REPO_PARENT / "materials-engine-private"
-    if me.exists():
-        sys.path.insert(0, str(me))
+    root = _materials_engine_root()
+    if root is None:
+        return
+    s = str(root)
+    if s not in sys.path:
+        sys.path.insert(0, s)
 
 
 _ensure_bridge_importable()
@@ -439,10 +530,21 @@ def main(argv: Optional[List[str]] = None) -> int:
     else:
         candidates = _candidate_scorecard_paths(args.aoi)
         if not candidates:
+            env_dirs = _env_paths("TRINITY_GEASPIRIT_OUTPUTS_PATH")
+            home = Path(os.path.expanduser("~"))
             print(
-                f"error: no scorecard found for AOI {args.aoi!r}. "
-                f"Searched under {_REPO_PARENT}/geaspirit-research/"
-                f"GeaSpirit_outputs/ and {_REPO_ROOT}/geaspirit/outputs/.",
+                f"error: no scorecard found for AOI {args.aoi!r}.\n"
+                f"Searched in this order:\n"
+                + "".join(f"  1. {p} (env TRINITY_GEASPIRIT_OUTPUTS_PATH)\n"
+                          for p in env_dirs)
+                + (""
+                   if env_dirs
+                   else "  1. (env TRINITY_GEASPIRIT_OUTPUTS_PATH unset)\n")
+                + f"  2. {_REPO_PARENT}/geaspirit-research/GeaSpirit_outputs/\n"
+                + f"  3. {_REPO_ROOT}/geaspirit/outputs/\n"
+                + f"  4. {home}/SOST/geaspirit-research/GeaSpirit_outputs/\n"
+                + "Fix: set TRINITY_GEASPIRIT_OUTPUTS_PATH=/path/to/outputs "
+                  "or pass --scorecard /full/path/scorecard_<aoi>.json.",
                 file=sys.stderr,
             )
             return 1

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -196,6 +197,134 @@ class TestMainEndToEnd:
 # ---------------------------------------------------------------------------
 # Markdown rendering smoke tests
 # ---------------------------------------------------------------------------
+
+class TestEnvVarOverrides:
+    """The two env-var overrides exist so a non-WSL host (e.g. the VPS)
+    can point Trinity at custom paths without needing the user to pass
+    `--scorecard` on every run.
+    """
+
+    def test_geaspirit_outputs_path_finds_scorecard(
+        self, mod, tmp_path, monkeypatch, capsys
+    ):
+        # Layout under the env-var root:
+        #   <root>/sub/scorecard_aoi_x.json
+        # — the function must rglob, not require it at root level.
+        outputs_root = tmp_path / "alt_geaspirit_outputs"
+        sub = outputs_root / "phase60"
+        sub.mkdir(parents=True)
+        sc = {
+            "zone": "aoi_x",
+            "features_available": 0,
+            "features_total": 5,
+            "honesty_matrix": {
+                "tier": "Tier 1 — Remote proxy evidence only",
+                "what_it_doesnt_see": ["test blind spot"],
+                "recommendation": "Test recommendation.",
+            },
+        }
+        (sub / "scorecard_aoi_x.json").write_text(
+            json.dumps(sc), encoding="utf-8"
+        )
+
+        monkeypatch.setenv("TRINITY_GEASPIRIT_OUTPUTS_PATH", str(outputs_root))
+
+        out_md = tmp_path / "out.md"
+        out_json = tmp_path / "out.json"
+        rc = mod.main([
+            "aoi_x",
+            "--out-md", str(out_md),
+            "--out-json", str(out_json),
+            "--pinned-time", "2026-01-01T00:00:00+00:00",
+        ])
+        assert rc == 0
+        data = json.loads(out_json.read_bytes())
+        assert data["aoi"] == "aoi_x"
+        # Source path in the dossier points at our synthetic file, not
+        # any host path.
+        assert str(outputs_root) in data["source"]["scorecard_path"]
+
+    def test_geaspirit_outputs_path_accepts_colon_separated(
+        self, mod, tmp_path, monkeypatch
+    ):
+        # First root is empty; second contains the scorecard.
+        empty_root = tmp_path / "empty"
+        good_root = tmp_path / "good"
+        empty_root.mkdir()
+        good_root.mkdir()
+        sc = {
+            "zone": "aoi_y",
+            "honesty_matrix": {"tier": "Tier 1", "what_it_doesnt_see": []},
+        }
+        (good_root / "scorecard_aoi_y.json").write_text(
+            json.dumps(sc), encoding="utf-8"
+        )
+
+        joined = os.pathsep.join([str(empty_root), str(good_root)])
+        monkeypatch.setenv("TRINITY_GEASPIRIT_OUTPUTS_PATH", joined)
+
+        out_md = tmp_path / "out.md"
+        out_json = tmp_path / "out.json"
+        rc = mod.main([
+            "aoi_y",
+            "--out-md", str(out_md),
+            "--out-json", str(out_json),
+            "--pinned-time", "2026-01-01T00:00:00+00:00",
+        ])
+        assert rc == 0
+        data = json.loads(out_json.read_bytes())
+        assert str(good_root) in data["source"]["scorecard_path"]
+
+    def test_geaspirit_outputs_path_unset_does_not_crash(
+        self, mod, monkeypatch
+    ):
+        # Unset / empty env var must not produce a traceback; the
+        # helper just returns no env-derived candidates and we fall
+        # through to the default search.
+        monkeypatch.delenv("TRINITY_GEASPIRIT_OUTPUTS_PATH", raising=False)
+        # Calling the helper directly is enough for this safety check.
+        paths = mod._candidate_scorecard_paths("never_exists_aoi_xyz")
+        # Either an empty list or a list of real Path objects.
+        assert isinstance(paths, list)
+        for p in paths:
+            assert hasattr(p, "exists")
+
+    def test_geaspirit_outputs_path_nonexistent_is_skipped(
+        self, mod, monkeypatch, tmp_path
+    ):
+        # If the env var points at a nonexistent dir, the helper must
+        # not raise; it just skips that entry.
+        monkeypatch.setenv(
+            "TRINITY_GEASPIRIT_OUTPUTS_PATH",
+            str(tmp_path / "does_not_exist"),
+        )
+        paths = mod._candidate_scorecard_paths("never_exists_aoi_xyz")
+        assert isinstance(paths, list)
+
+    def test_materials_engine_path_resolves(
+        self, mod, tmp_path, monkeypatch
+    ):
+        # The function must return the env-var path when it exists,
+        # in preference to the WSL/HOME fallbacks.
+        custom_root = tmp_path / "alt_materials_engine"
+        custom_root.mkdir()
+        monkeypatch.setenv("TRINITY_MATERIALS_ENGINE_PATH", str(custom_root))
+
+        resolved = mod._materials_engine_root()
+        assert resolved is not None
+        assert resolved == custom_root
+
+    def test_materials_engine_path_unset_falls_back(
+        self, mod, monkeypatch
+    ):
+        # Unsetting the env var must not raise; the function returns
+        # either a fallback path that exists or None.
+        monkeypatch.delenv("TRINITY_MATERIALS_ENGINE_PATH", raising=False)
+        resolved = mod._materials_engine_root()
+        # Resolved is either None (test host has neither WSL nor HOME
+        # candidate) or a real Path. Either way no crash.
+        assert resolved is None or resolved.exists()
+
 
 class TestMarkdownRender:
     def test_includes_honesty_matrix(self, mod, synth_scorecard, tmp_path):
