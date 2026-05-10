@@ -1682,8 +1682,32 @@ function _drawDtdCharts(ph2,rows,cooldownSet,height){
   })();
 }
 
+// Toggle for the inline "how the DTD lottery works" expander. Installed
+// on the DTD section title so the technical explanation only appears
+// after the user explicitly asks for it.
+window.toggleDtdHowItWorks = function() {
+  var p = document.getElementById('dtdHowItWorks');
+  var c = document.getElementById('dtdHowChev');
+  if (!p) return;
+  var open = (p.style.display !== 'none' && p.style.display !== '');
+  // Treat "not present" / "" as closed. First click opens.
+  if (p.style.display === '') open = false;
+  p.style.display = open ? 'none' : 'block';
+  if (c) c.textContent = open ? '▾' : '▴';
+};
+
 async function renderDTDPanel(body,title,silent){
-  title.textContent='// DTD · DETERMINISTIC TOKEN DISTRIBUTION';
+  // Make the title clickable. The expander only takes effect once the
+  // body has loaded (the panel below is part of `body.innerHTML` and
+  // does not exist before this function runs).
+  title.innerHTML =
+    '<span style="cursor:pointer;user-select:none" '
+    + 'onclick="window.toggleDtdHowItWorks()" '
+    + 'title="Click for the technical explanation of the lottery">'
+    + '// DTD &middot; DETERMINISTIC TOKEN DISTRIBUTION '
+    + '<span id="dtdHowChev" style="color:var(--text3);font-size:11px">'
+    + '▾</span>'
+    + '</span>';
   if(!silent)body.innerHTML='<div style="color:var(--text3)">Scanning public chain data... <span style="color:var(--cyan)">this may take a moment</span></div>';
   try{
     var height=H||await rpc('getblockcount');
@@ -1841,7 +1865,99 @@ async function renderDTDPanel(body,title,silent){
       +'<div style="font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:10px">Re-derives the lottery winner for every PAYOUT block by hashing the same 16-block window the consensus rule uses, then compares against the address that actually received the lottery payout. Any row where <b style="color:#fb010d">Audit winner</b> differs from <b style="color:#22c55e">On-chain winner</b> would be evidence of selection tampering. <b>Cooldown</b> column lists the distinct <i>miners</i> of the previous 5 blocks — those addresses are excluded from THIS lottery. Winning the lottery does NOT trigger cooldown; only mining a recent block does.</div>'
       +'<div id="lotteryAuditTable" style="font-size:10px;color:var(--text3)">click <b style="color:#a855f7">▶ RUN AUDIT</b> to scan all PAYOUT blocks</div>'
     +'</div>';
-    body.innerHTML=summary;
+    // Technical explainer panel — hidden by default, toggled by
+    // clicking the title. Self-contained HTML so a future refactor of
+    // `summary` does not require editing this block.
+    var howItWorks =
+      '<div id="dtdHowItWorks" style="display:none;background:rgba(0,0,0,.35);'
+      + 'border:1px solid var(--border);border-left:3px solid #a855f7;'
+      + 'padding:14px 16px;margin:0 0 14px 0;font-size:11px;line-height:1.7;'
+      + 'color:var(--text2)">'
+
+      + '<div style="font-size:10px;color:#a855f7;letter-spacing:2px;'
+      + 'margin-bottom:8px">// HOW THE DTD LOTTERY WORKS &middot; '
+      + 'TECHNICAL REFERENCE</div>'
+
+      + '<p style="margin:4px 0"><b style="color:var(--text)">1. Block shape '
+      + 'classification (Phase II, since #7,100).</b> Every block past the '
+      + 'V11 Phase 2 activation height carries a coinbase shape tag derived '
+      + 'from its lottery payout field:'
+      + '<br>&bull; <span style="color:#22c55e">PAYOUT</span> &mdash; '
+      + '<code>lottery_payout &gt; 0</code>: the block distributes a '
+      + 'lottery prize to a winner address selected by the protocol.'
+      + '<br>&bull; <span style="color:var(--cyan)">NORMAL</span> &mdash; '
+      + '<code>lottery_payout = 0</code> while the bootstrap escape valve '
+      + 'is still active (no eligible address yet).'
+      + '<br>&bull; <span style="color:var(--text3)">UPDATE_EMPTY</span> '
+      + '&mdash; <code>lottery_payout = 0</code> after bootstrap, when the '
+      + 'consensus rule found no eligible winner this block. The would-be '
+      + 'prize stays in the pending jackpot.</p>'
+
+      + '<p style="margin:4px 0"><b style="color:var(--text)">2. Winner '
+      + 'derivation (deterministic, public).</b> For every PAYOUT block at '
+      + 'height H the winner is computed by hashing a window of the 16 '
+      + 'preceding block headers. The same input always produces the same '
+      + 'winner; no randomness leaves the chain. Anyone can reproduce the '
+      + 'selection locally by reading those 16 blocks &mdash; that is what '
+      + 'the <b style="color:#a855f7">RUN AUDIT</b> button below does for '
+      + 'every historical PAYOUT block.</p>'
+
+      + '<p style="margin:4px 0"><b style="color:var(--text)">3. Eligibility '
+      + '&mdash; per-address, lifetime.</b> A SOST address only enters the '
+      + 'eligibility set after it has produced at least one valid block '
+      + 'since genesis. This is the "first you mine, then you can win" '
+      + 'rule. The flag is recorded on chain and never reset.</p>'
+
+      + '<p style="margin:4px 0"><b style="color:var(--text)">4. Cooldown '
+      + '&mdash; per-block, sliding window of 5.</b> The miner of any of '
+      + 'the last 5 blocks is temporarily excluded from THIS lottery. The '
+      + 'cooldown applies only to mining activity, not to past lottery '
+      + 'wins. Winning the lottery does NOT trigger cooldown; mining a '
+      + 'block does. The eligibility set for the draw at height H is '
+      + 'therefore <code>{lifetime-eligible} &minus; {miner of H-1, '
+      + 'H-2, &hellip;, H-5}</code>.</p>'
+
+      + '<p style="margin:4px 0"><b style="color:var(--text)">5. Prize '
+      + 'composition.</b> The lottery jackpot for a PAYOUT block is funded '
+      + 'from the per-block lottery pool that accumulates while no payout '
+      + 'is made (UPDATE_EMPTY blocks). Each PAYOUT block drains the pool '
+      + 'to the chosen winner. <i>Pending jackpot</i> above is the current '
+      + 'accumulated balance &mdash; zero in a healthy steady state where '
+      + 'almost every block pays out.</p>'
+
+      + '<p style="margin:4px 0"><b style="color:var(--text)">6. Coinbase '
+      + 'split (constant by consensus).</b> Every block (PAYOUT or not) '
+      + 'splits its base subsidy 50/25/25 between miner, Gold Funding '
+      + 'Vault and PoPC Pool. The lottery prize is an ADDITIONAL payout '
+      + 'on top of this split, sourced from the lottery pool, not from '
+      + 'the miner&apos;s 50%. The miner therefore always receives their '
+      + 'standard share regardless of whether the block is a PAYOUT.</p>'
+
+      + '<p style="margin:4px 0"><b style="color:var(--text)">7. Audit '
+      + 'guarantee.</b> Because step 2 is a pure function of public chain '
+      + 'data, a third party can recompute every historical winner from a '
+      + 'block range alone. The <b style="color:#a855f7">RUN AUDIT</b> '
+      + 'tool below reads the headers of every PAYOUT block, re-derives '
+      + 'the winner via the same hash, and reports any divergence between '
+      + '<span style="color:#fb010d">Audit winner</span> and the '
+      + '<span style="color:#22c55e">On-chain winner</span> recorded in '
+      + 'the coinbase. A divergence would be evidence of selection '
+      + 'tampering; in the current chain there should be zero such '
+      + 'rows.</p>'
+
+      + '<p style="margin:4px 0"><b style="color:var(--text)">8. Reward '
+      + 'block phases.</b> The "reward blocks &middot; N of 3" lines above '
+      + 'track activation of the three independent payout streams the '
+      + 'protocol schedules. Phase 2 is currently live; Phase 3 activates '
+      + 'at a fixed future height with no human intervention.</p>'
+
+      + '<p style="margin:8px 0 0 0;font-size:10px;color:var(--text3)">'
+      + 'Reference implementation: see <code>src/pow/casert.cpp</code> '
+      + 'and the V11 Phase 2 lottery selection module in the SOST core. '
+      + 'Click the title again to hide this panel.</p>'
+
+      + '</div>';
+    body.innerHTML = howItWorks + summary;
     // Stash payouts list so the audit knows which heights to scan.
     window._dtdPayouts = ph2.payouts.slice();
     // Draw all 4 charts after DOM is in place. Wrapped in try so a render error
