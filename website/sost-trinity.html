@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#05070a">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "SOST Protocol",
+  "alternateName": ["Sovereign Stock Token", "SOST"],
+  "url": "https://sostcore.com/",
+  "logo": "https://sostcore.com/sost-logo.png",
+  "sameAs": [
+    "https://sostprotocol.com/",
+    "https://github.com/Neob1844/sost-core"
+  ]
+}
+</script>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-trinity.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinity — SOST Proof-of-Discovery Engine | Reproducible Scientific Pipeline</title>
+<meta name="description" content="Trinity is the SOST discovery engine: GeaSpirit scans Earth, Materials Engine builds scientific context, Useful Compute plans heavy tasks, SOST anchors proof. First proof bundle live on chain at block #8085.">
+<meta name="keywords" content="Trinity, SOST proof of discovery, scientific proof bundle, GeaSpirit, Materials Engine, Useful Compute, capsule protocol, reproducible science">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Trinity — SOST Proof-of-Discovery Engine">
+<meta property="og:description" content="GeaSpirit + Materials Engine + Useful Compute + SOST. A reproducible pipeline that produces cryptographically verifiable scientific proof bundles. First bundle live on chain at block #8085.">
+<meta property="og:url" content="https://sostcore.com/sost-trinity.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Trinity — SOST Proof-of-Discovery Engine">
+<meta name="twitter:description" content="A reproducible pipeline that produces cryptographically verifiable scientific proof bundles, anchored on SOST.">
+<meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0a;--green:#00ff41;--green-dim:#004400;--amber:#ffb000;--red:#fb010d;--cyan:#22d3ee;--gold:#ffd700;--text:#00ff41;--text-dim:#006600;--border:#004400;--panel:#0d0d0d;--font:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--green);font-family:var(--font);font-size:14px;line-height:1.7}
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,65,.015) 2px,rgba(0,255,65,.015) 4px);pointer-events:none;z-index:99990}
+nav{background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);padding:12px 0;position:sticky;top:0;z-index:100;backdrop-filter:blur(16px)}
+nav .container{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nav-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:#e2e8f0;letter-spacing:2px;text-decoration:none;display:flex;align-items:center;gap:10px}
+.nav-logo img{height:48px;filter:drop-shadow(0 0 6px rgba(0,255,65,.5))}
+.nav-logo .brand-sost{color:#fb010d}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap}
+.nav-links a{color:#888;text-decoration:none;font-size:11px;padding:4px 10px;border-radius:4px;transition:all .2s;letter-spacing:.5px}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.nav-links a.active{color:var(--green);border-bottom:1px solid var(--green)}
+.nav-hamburger{display:none;background:none;border:1px solid var(--border);color:var(--green);font-size:20px;padding:4px 8px;cursor:pointer;border-radius:4px}
+@media(max-width:768px){.nav-hamburger{display:block}.nav-links{display:none;width:100%}.nav-links.open{display:flex}}
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+.hero{padding:60px 0 40px;text-align:center;border-bottom:1px solid var(--border)}
+.hero-label{font-size:11px;color:var(--amber);letter-spacing:4px;margin-bottom:16px}
+.hero h1{font-size:clamp(24px,5vw,42px);font-weight:700;line-height:1.2;margin-bottom:16px}
+.hero h1 span{color:var(--green)}
+.hero-sub{color:#888;font-size:13px;max-width:760px;margin:0 auto;line-height:1.8}
+.status-badge{display:inline-block;background:rgba(0,255,65,.1);border:1px solid var(--green);color:var(--green);padding:4px 14px;border-radius:4px;font-size:11px;letter-spacing:2px;margin-top:16px}
+.proof-badge{display:inline-block;background:rgba(0,255,65,.07);border:1px solid var(--green);color:var(--green);padding:6px 14px;border-radius:4px;font-size:10.5px;letter-spacing:1.5px;margin-top:8px;font-family:var(--font)}
+.proof-badge a{color:var(--cyan);text-decoration:none;border-bottom:1px dotted rgba(34,211,238,0.4)}
+.section{padding:40px 0;border-bottom:1px solid var(--border)}
+.section-id{font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px}
+.section-title{font-size:clamp(18px,3vw,28px);font-weight:700;margin-bottom:20px}
+.section-title span{color:var(--amber)}
+.panel{background:var(--panel);border:1px solid var(--border);padding:20px;margin-bottom:20px}
+.panel-head{font-size:10px;color:var(--amber);letter-spacing:2px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:6px 10px;color:var(--amber);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 10px;border-bottom:1px solid rgba(0,68,0,.3);vertical-align:top}
+.tbl td.k{color:var(--amber);width:160px}
+.tbl td.h{font-family:var(--font);color:var(--cyan);font-size:11px;word-break:break-all}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:14px 0}
+.flow-step{background:rgba(0,255,65,0.03);border:1px solid var(--border);border-left:3px solid var(--green);padding:12px;font-size:12px}
+.flow-step .num{color:var(--amber);font-weight:700;letter-spacing:1px;font-size:10px;margin-bottom:6px;display:block}
+.flow-step .name{color:var(--green);font-weight:600;margin-bottom:4px}
+.flow-step .desc{color:#aaa;font-size:11px;line-height:1.55}
+.flow-step .out{color:var(--cyan);font-size:10px;margin-top:6px;font-family:var(--font);word-break:break-all}
+pre.cmd{background:rgba(0,0,0,.6);border:1px solid var(--border);border-left:3px solid var(--green);padding:12px;margin:10px 0;font-size:11.5px;color:var(--cyan);overflow-x:auto;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.kvs{display:grid;grid-template-columns:200px minmax(0,1fr);gap:8px;font-size:12px;margin:8px 0}
+.kvs strong{color:var(--amber)}
+.kvs span{font-family:var(--font);color:#ccc;word-break:break-all}
+.kvs span.hash{color:var(--cyan)}
+.warn{background:rgba(251,1,13,0.05);border-left:3px solid var(--red);padding:12px 16px;margin:14px 0;color:#ffaaaa;font-size:12px;line-height:1.7}
+.warn b{color:var(--red)}
+.note{background:rgba(255,176,0,0.04);border-left:3px solid var(--amber);padding:12px 16px;margin:14px 0;color:#e8d09a;font-size:12px;line-height:1.7}
+.green-box{background:rgba(0,255,65,0.04);border-left:3px solid var(--green);padding:14px 18px;margin:14px 0;font-size:12.5px;line-height:1.75}
+.green-box b{color:var(--green)}
+ul.tight{margin:6px 0 6px 18px;font-size:12px;line-height:1.7}
+ul.tight li{margin-bottom:4px}
+a.inline{color:var(--cyan);text-decoration:none;border-bottom:1px dotted rgba(34,211,238,0.4)}
+a.inline:hover{color:#fff;text-shadow:0 0 6px rgba(34,211,238,0.5)}
+footer{border-top:1px solid var(--border);padding:30px 0;text-align:center;color:#666;font-size:11px}
+footer a{color:var(--text-dim);text-decoration:none;margin:0 8px}
+footer a:hover{color:var(--green)}
+@keyframes blink-green{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);margin-right:6px;animation:blink-green 1.8s ease infinite;vertical-align:middle}
+</style>
+<script src="js/security.js"></script>
+<script src="js/nav-toggle.js" defer></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo"><img src="sost-logo.png" alt="SOST"><span><span class="brand-sost">SOST</span> Protocol</span></a>
+    <button class="nav-hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-trinity.html" class="active">Trinity</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-mine.html" style="color:var(--red)">Mine</a>
+      <a href="sost-explorer.html">Explorer</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-label">TRINITY v0 — PROOF-OF-DISCOVERY ENGINE</div>
+    <h1>SOST <span>Trinity</span> — reproducible scientific proofs, anchored on chain</h1>
+    <p class="hero-sub">Trinity binds <b>GeaSpirit</b> (Earth-evidence scanning), <b>Materials Engine</b> (scientific context &amp; AI Council review), <b>Useful Compute</b> (dry-run heavy-task planner) and <b>SOST</b> (capsule rail for proof, reputation and future rewards) into one deterministic pipeline. The output is a single cryptographic root that any third party can verify with no network access.</p>
+    <div class="status-badge"><span class="live-dot"></span>LIVE ON CHAIN &middot; KALGOORLIE PHASE&nbsp;1 &middot; BLOCK&nbsp;#8085</div>
+    <div class="proof-badge">proof_bundle_sha256 = <a href="sost-explorer.html?search=d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db">3a28a4b112fe95df…</a></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 00 &mdash; WHAT IS TRINITY</div>
+    <div class="section-title">What <span>Trinity Does</span></div>
+
+    <div class="panel">
+      <div class="panel-head">// CANONICAL OBJECTIVE</div>
+      <p style="font-size:15px;color:var(--green);margin-bottom:14px">
+        "Take a geographic AOI. Produce a council-reviewed scientific dossier. Plan the future heavy compute it would require. Bind everything into one cryptographic proof bundle. Anchor that bundle on SOST as a public, immutable timestamp."
+      </p>
+      <p style="color:#ccc">Trinity is not "another AI tool" and not "another altcoin". It is a <b style="color:var(--green)">deterministic pipeline</b> whose every artefact is byte-reproducible between machines and whose final output is a single SHA-256 the operator can register on chain in one transaction.</p>
+      <p style="color:#ccc;margin-top:10px">Once registered, the proof bundle is a public claim of <b style="color:var(--green)">priority and authorship</b> for a specific scientific workflow at a specific block height &mdash; verifiable by anyone, with no permission required, with no trust in the author beyond the cryptography.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// WHAT TRINITY IS NOT</div>
+      <ul class="tight" style="color:#ccc">
+        <li><b style="color:var(--red)">Not a mineral reserve claim.</b> Trinity records cryptographic priority over a workflow output, not over a deposit.</li>
+        <li><b style="color:var(--red)">Not an announcement of active Useful Compute rewards.</b> The Useful Compute layer is dry-run by design; no rewards have been activated.</li>
+        <li><b style="color:var(--red)">Not a published task list.</b> The public Useful Compute API is unchanged.</li>
+        <li><b style="color:var(--red)">Not an automated broadcaster.</b> Every Trinity script prepares artefacts; the operator decides whether to broadcast.</li>
+        <li><b style="color:var(--red)">Not a guarantee of geological or scientific content.</b> Each dossier carries the source <i>honesty matrix</i> and the AI Council's explicit verdict, including holds and contradictions.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 01 &mdash; THE FOUR PILLARS</div>
+    <div class="section-title">Architecture: <span>Four Reproducible Subsystems</span></div>
+
+    <p style="color:#ccc;margin-bottom:18px">Each pillar is an existing SOST subsystem with its own validation, tests and public surface. Trinity adds the binding layer between them; it does not duplicate any of their internals.</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <span class="num">PILLAR 1</span>
+        <div class="name">GeaSpirit</div>
+        <div class="desc">Multi-source mineral prospectivity. Sentinel-1/2, Landsat, EMIT, DEM, geological maps, geophysics. Produces ranked AOI scorecards with explicit blind-spot disclosures (honesty matrix).</div>
+        <div class="out">→ <a href="sost-geaspirit.html" class="inline">sost-geaspirit.html</a></div>
+      </div>
+      <div class="flow-step">
+        <span class="num">PILLAR 2</span>
+        <div class="name">Materials Engine</div>
+        <div class="desc">FastAPI engine (212 routes) with 76k+ materials, DFT/MLIP workflow scaffolding, scoring, novelty and frontier modules. Contains the multi-AI Council (7 typed members, validator-veto, budget gating).</div>
+        <div class="out">→ <a href="sost-materials-engine.html" class="inline">sost-materials-engine.html</a></div>
+      </div>
+      <div class="flow-step">
+        <span class="num">PILLAR 3</span>
+        <div class="name">Useful Compute (dry-run)</div>
+        <div class="desc">Heavy-task planner: MLIP relaxations, DFT input preparation, AOI tile scoring, spectral template scoring, cross-worker validation. Classifies each family as candidate_reward_worthy / deferred / not. <b>No rewards active.</b></div>
+        <div class="out">→ Phase 2 reference: <a href="useful-compute-trial.html" class="inline">useful-compute-trial.html</a></div>
+      </div>
+      <div class="flow-step">
+        <span class="num">PILLAR 4</span>
+        <div class="name">SOST Capsule Rail</div>
+        <div class="desc">Native PoW chain with the Capsule Protocol v1: OPEN_NOTE_INLINE (80 B short label) and DOC_REF_OPEN (URL + hash) modes anchor any digital artefact with the same audit guarantees as a coin transaction.</div>
+        <div class="out">→ <a href="sost-protocol-spec.html" class="inline">sost-protocol-spec.html</a></div>
+      </div>
+    </div>
+
+    <div class="green-box">
+      <b>Why these four, and only these four?</b> Each pillar contributes evidence in a different domain — Earth, materials science, future compute capacity, public timestamp — and is independently verifiable. Trinity's job is to compose them into one document with one root SHA-256, not to invent new domains.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 02 &mdash; THE PROOF PIPELINE</div>
+    <div class="section-title">From AOI to <span>Proof Bundle</span></div>
+
+    <p style="color:#ccc;margin-bottom:14px">Five deterministic steps. Every step writes a JSON file. Every JSON file has a SHA-256. Every SHA-256 is reproducible byte-for-byte across machines given the same inputs and pinned timestamps.</p>
+
+    <table class="tbl">
+      <tr><th>Step</th><th>Artefact</th><th>Anchor SHA-256</th></tr>
+      <tr>
+        <td class="k">1. Scan</td>
+        <td>GeaSpirit produces <code>scorecard_&lt;aoi&gt;.json</code> with feature availability, honesty matrix and optional ranked targets.</td>
+        <td class="h">scorecard_sha256</td>
+      </tr>
+      <tr>
+        <td class="k">2. Review</td>
+        <td><code>aoi_to_dossier.py</code> emits per-target Hypotheses, runs each through the AI Council (validator + local-knowledge + mock), records decisions and council opinions in a <code>TRINITY_DEMO_DOSSIER_&lt;aoi&gt;.json</code>.</td>
+        <td class="h">dossier_sha256</td>
+      </tr>
+      <tr>
+        <td class="k">3. Plan</td>
+        <td><code>useful_compute_plan.py</code> proposes candidate Heavy Task families derived from the dossier reviews, classifies each as candidate_reward_worthy / deferred / not, and simulates a queue. <b>Dry-run, no rewards.</b></td>
+        <td class="h">useful_compute_plan_sha256</td>
+      </tr>
+      <tr>
+        <td class="k">4. Campaign</td>
+        <td><code>trinity_campaign.py</code> binds the dossier and plan into a Campaign Manifest with 11-entry evidence-gap inventory, 6-bucket next-actions taxonomy (immediate / UC candidate / external data / operator review / blocked / unsafe-or-forbidden), and ready-to-register flags.</td>
+        <td class="h">campaign_sha256</td>
+      </tr>
+      <tr>
+        <td class="k">5. Bundle</td>
+        <td><code>trinity_proof_bundle.py</code> emits the single root artefact: <code>TRINITY_PROOF_BUNDLE_&lt;name&gt;.json</code>. Combines the four anchor SHAs into a binary Merkle root and a top-level <code>proof_bundle_sha256</code>.</td>
+        <td class="h">proof_bundle_sha256</td>
+      </tr>
+    </table>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// MERKLE BINDING — FIXED ORDER, 4 LEAVES</div>
+      <pre class="cmd">leaf0 = bytes.fromhex(scorecard_sha256)
+leaf1 = bytes.fromhex(dossier_sha256)
+leaf2 = bytes.fromhex(useful_compute_plan_sha256)
+leaf3 = bytes.fromhex(campaign_sha256)
+
+node01 = SHA256(leaf0 || leaf1)
+node23 = SHA256(leaf2 || leaf3)
+
+merkle_root = SHA256(node01 || node23)</pre>
+      <p style="color:#ccc;margin-top:8px;font-size:12px">Algorithm is documented inside every Proof Bundle JSON as a free-text field, so a third party can reproduce the root without reading the script.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 03 &mdash; FIRST PROOF BUNDLE</div>
+    <div class="section-title">Kalgoorlie Phase&nbsp;1 &mdash; <span>Live On Chain</span></div>
+
+    <div class="warn">
+      <b>Important.</b> This bundle is a cryptographic timestamp, not a mineral reserve claim. The Kalgoorlie scorecard ran with <code>features_available = 0</code>, so the dossier explicitly operated in <i>fallback mode</i> and the AI Council returned a <code>hold</code> decision. The bundle records that honesty in full.
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// ON-CHAIN ANCHOR</div>
+      <div class="kvs">
+        <strong>AOI</strong><span>Kalgoorlie Phase&nbsp;1</span>
+        <strong>Block height</strong><span><a href="sost-explorer.html" class="inline">#8085</a></span>
+        <strong>TXID</strong><span class="hash"><a href="sost-explorer.html?search=d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db" class="inline">d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db</a></span>
+        <strong>Capsule mode</strong><span><code>OPEN_NOTE_INLINE</code> (Capsule Protocol v1)</span>
+        <strong>Capsule text</strong><span><code>trinity-proof kalgoorlie_phase1 3a28a4b112fe95df</code></span>
+        <strong>Self-send</strong><span><code>sost1ca9097d830b74495b95db9d779ad63c90579bc18</code> → itself (0.01 SOST)</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// THE FOUR ANCHORS BOUND BY THE BUNDLE</div>
+      <table class="tbl">
+        <tr><th>Anchor</th><th>SHA-256</th></tr>
+        <tr><td class="k">scorecard</td><td class="h">836b677c14a73ee3f44b3cf066c82bd5e933c692eaf359c468674d9b48ba8246</td></tr>
+        <tr><td class="k">dossier</td><td class="h">d0bbc47e62f3d51baa5c535cbf4cf20e9e3d1395003588c9b8b53e43e3d22fdf</td></tr>
+        <tr><td class="k">useful_compute_plan</td><td class="h">1e7ab30aa1595c8f19114382710536ed8faf0b6122ae16f441a34b55a2647b49</td></tr>
+        <tr><td class="k">campaign</td><td class="h">7253cf30cf2f45e6dc5979fd8c2ea058397fa7d35356b7a2a2f28bb7ca4d85df</td></tr>
+        <tr><td class="k" style="color:var(--green)"><b>merkle_root</b></td><td class="h" style="color:var(--green)">a818a1e4799ec34fd5a65b17d180a9534f791d4cd49f54c97b21c11d7b0e28b4</td></tr>
+        <tr><td class="k" style="color:var(--green)"><b>proof_bundle_sha256</b></td><td class="h" style="color:var(--green)">3a28a4b112fe95df85ab2ab91deb7698ebeb1d9182297f06635fd12fd4053a02</td></tr>
+      </table>
+    </div>
+
+    <div class="green-box">
+      <b>How to read the on-chain capsule.</b> The OPEN_NOTE_INLINE body is 47 ASCII bytes (under the 80-byte cap). It carries three space-separated fields: <code>trinity-proof</code> is the namespace, <code>kalgoorlie_phase1</code> is the bundle name, and <code>3a28a4b112fe95df</code> is the first 16 hex of the <code>proof_bundle_sha256</code>. The full 64 hex lives in the published JSON; anyone with that file can run <code>sha256sum</code> on it and confirm the on-chain prefix matches.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 04 &mdash; CRYPTOGRAPHIC GUARANTEES</div>
+    <div class="section-title">What the Bundle <span>Actually Proves</span></div>
+
+    <table class="tbl">
+      <tr><th>Property</th><th>Guarantee</th><th>Enforced by</th></tr>
+      <tr>
+        <td class="k">Reproducibility</td>
+        <td>Two machines with the same scorecard and same pinned timestamps produce byte-identical JSON for every step of the pipeline. The dossier records the scorecard by content (SHA-256) and basename, never by absolute path.</td>
+        <td>3 explicit reproducibility tests in <code>tests/trinity/</code></td>
+      </tr>
+      <tr>
+        <td class="k">Tamper detection</td>
+        <td>Changing any of the four anchors (or the Merkle root, or any safety flag) makes the local verifier exit non-zero. Six tampering classes covered.</td>
+        <td><code>scripts/trinity/verify_trinity_bundle.py</code></td>
+      </tr>
+      <tr>
+        <td class="k">No host-path leak</td>
+        <td>The bundle's canonical JSON contains no <code>/home/</code>, <code>/opt/</code>, <code>/Users/</code> prefix. Filenames are basename-only.</td>
+        <td>Verifier check <code>C8</code> + test <code>test_no_absolute_paths_in_json</code></td>
+      </tr>
+      <tr>
+        <td class="k">No automatic broadcast</td>
+        <td>The capsule_preview field carries <code>execution_status = "NOT_EXECUTED — …"</code>. The script never invokes <code>sost-cli</code>, never opens an RPC connection, never touches a wallet. Registration is a manual operator step.</td>
+        <td>Verifier check <code>C9</code> + static-surface test on both modules</td>
+      </tr>
+      <tr>
+        <td class="k">Dry-run watermark</td>
+        <td>Every public dataclass in the engine carries <code>dry_run = true</code>. Every output document re-states <code>no_rewards_active = true</code> and <code>registered = false</code> until the operator inscribes a confirming on-chain reference.</td>
+        <td>Verifier checks <code>C4 / C5 / C6 / C7</code></td>
+      </tr>
+      <tr>
+        <td class="k">Cross-repo test coverage</td>
+        <td>129 tests pass without any network access. 67 in <code>materials-engine-private</code> (council bridge + planner + campaign engine), 62 in <code>sost-core</code> (entrypoints, env-var resolvers, verifier, anti-leak).</td>
+        <td><code>pytest -q</code></td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 05 &mdash; VERIFY IT YOURSELF</div>
+    <div class="section-title">Local <span>Verification Recipe</span></div>
+
+    <p style="color:#ccc;margin-bottom:14px">Anyone with the proof bundle JSON can reproduce every check the published bundle claims. No SOST node required; no wallet; no network.</p>
+
+    <div class="panel">
+      <div class="panel-head">// 1. CLONE AND CHECKOUT</div>
+<pre class="cmd">git clone https://github.com/Neob1844/sost-core.git
+cd sost-core
+git checkout trinity/proof-bundle-v0</pre>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// 2. VERIFY THE BUNDLE</div>
+<pre class="cmd">python3 scripts/trinity/verify_trinity_bundle.py \
+    TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json</pre>
+      <p style="color:#ccc;font-size:12px;margin-top:8px">Twelve closed checks (C1&ndash;C10). Expected output: every line starts with <code>[PASS]</code>, ending with <code>[verify] OK</code> and exit code <code>0</code>.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// 3. INDEPENDENTLY CONFIRM EACH ANCHOR</div>
+<pre class="cmd">sha256sum TRINITY_DEMO_DOSSIER_kalgoorlie.json
+# expected: d0bbc47e62f3d51baa5c535cbf4cf20e9e3d1395003588c9b8b53e43e3d22fdf
+
+sha256sum TRINITY_USEFUL_COMPUTE_PLAN_kalgoorlie.json
+# expected: 1e7ab30aa1595c8f19114382710536ed8faf0b6122ae16f441a34b55a2647b49
+
+sha256sum TRINITY_CAMPAIGN_kalgoorlie_phase1.json
+# expected: 7253cf30cf2f45e6dc5979fd8c2ea058397fa7d35356b7a2a2f28bb7ca4d85df
+
+sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
+# expected: 3a28a4b112fe95df85ab2ab91deb7698ebeb1d9182297f06635fd12fd4053a02</pre>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// 4. CONFIRM THE ON-CHAIN CAPSULE</div>
+<pre class="cmd">curl -s -u USER:PASS \
+    -d '{"method":"gettransaction","params":["d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db"]}' \
+    http://127.0.0.1:18232/ | jq '.result.capsule'</pre>
+      <p style="color:#ccc;font-size:12px;margin-top:8px">The <code>capsule.text</code> field on a synced SOST node must equal <code>trinity-proof kalgoorlie_phase1 3a28a4b112fe95df</code>. The 16-hex tail is the prefix of the bundle SHA computed in step 3.</p>
+    </div>
+
+    <div class="note">
+      No step above requires a SOST account, an exchange, or any third-party service. The whole verification runs on public chain data plus public source code.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 06 &mdash; SAFETY MODEL</div>
+    <div class="section-title">What Trinity <span>Refuses to Do</span></div>
+
+    <p style="color:#ccc;margin-bottom:14px">The campaign engine's <code>unsafe_or_forbidden</code> bucket is a hard veto layer above every heuristic in the system. Any candidate action whose title or description matches a closed list of forbidden substrings is routed to that bucket with the matching substring recorded as the reason. The bucket is always present in the output, with five anchor entries that document what Trinity will never automate.</p>
+
+    <table class="tbl">
+      <tr><th>Class</th><th>Concrete example</th></tr>
+      <tr><td class="k">Activate rewards</td><td><code>act_no_activate_rewards</code> &mdash; Useful Compute rewards stay dry-run until a separate consensus / governance procedure ships. The engine never flips that switch.</td></tr>
+      <tr><td class="k">Publish reward-bearing tasks</td><td><code>act_no_publish_reward_tasks</code> &mdash; The public Useful Compute worker / API is unchanged. The engine never enqueues to it.</td></tr>
+      <tr><td class="k">Register hash on chain</td><td><code>act_no_register_on_chain</code> &mdash; Capsule registration is the operator's manual decision. The engine prepares a ready-to-register bundle and stops.</td></tr>
+      <tr><td class="k">Move funds</td><td><code>act_no_move_funds</code> &mdash; The engine touches no wallet, no key, no transaction broadcast path.</td></tr>
+      <tr><td class="k">Modify consensus</td><td><code>act_no_modify_consensus</code> &mdash; Consensus rules, miner code, node code and the RPC schema are strictly out of scope. No Trinity script can touch them.</td></tr>
+    </table>
+
+    <div class="warn" style="margin-top:18px">
+      <b>If the engine emits an action with <code>safety=safe</code>, by construction that action cannot be in the unsafe bucket.</b> This invariant is enforced by the test <code>test_no_executable_action_is_forbidden</code> in <code>materials-engine-private/tests/test_campaign_engine.py</code>.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 07 &mdash; ROADMAP</div>
+    <div class="section-title">What Comes <span>After v0</span></div>
+
+    <table class="tbl">
+      <tr><th>Sprint</th><th>Scope</th><th>State</th></tr>
+      <tr>
+        <td class="k">v0</td>
+        <td>Dossier bridge + entrypoint + Council integration. Per-AOI reviews with explicit honesty matrix.</td>
+        <td style="color:var(--green)">SHIPPED &middot; trinity/option-b-v0</td>
+      </tr>
+      <tr>
+        <td class="k">v0.1</td>
+        <td>Env-var portability so the entrypoint runs on the VPS without WSL-specific paths. <code>TRINITY_GEASPIRIT_OUTPUTS_PATH</code>, <code>TRINITY_MATERIALS_ENGINE_PATH</code>.</td>
+        <td style="color:var(--green)">SHIPPED</td>
+      </tr>
+      <tr>
+        <td class="k">hotfix</td>
+        <td>Dossier reproducibility: <code>source.scorecard_path</code> replaced by <code>source.scorecard_sha256</code> + basename. Byte-identical dossier JSON cross-machine.</td>
+        <td style="color:var(--green)">SHIPPED &middot; trinity/dossier-reproducibility-hotfix</td>
+      </tr>
+      <tr>
+        <td class="k">v0.2</td>
+        <td>Useful Compute Planner: candidate Heavy Task families, classifier wrapper, queue simulation. DRY-RUN only.</td>
+        <td style="color:var(--green)">SHIPPED &middot; trinity/useful-compute-planner-v0</td>
+      </tr>
+      <tr>
+        <td class="k">v0.3</td>
+        <td>Campaign Engine: evidence-gap detector, 6-bucket NextAction ranking, manifest with ready_to_register / registered / dry_run flags.</td>
+        <td style="color:var(--green)">SHIPPED &middot; trinity/campaign-engine-v0</td>
+      </tr>
+      <tr>
+        <td class="k">v0.4</td>
+        <td>Proof Bundle + local verifier. Single root SHA-256, Merkle binding, 12 closed verification checks. <b>First on-chain anchor at block #8085.</b></td>
+        <td style="color:var(--green)">SHIPPED &middot; trinity/proof-bundle-v0</td>
+      </tr>
+      <tr>
+        <td class="k">v0.5 (proposed)</td>
+        <td><code>--register-preview</code> flag: prepares (never executes) the exact <code>sost-cli send</code> command for OPEN_NOTE_INLINE or DOC_REF_OPEN.</td>
+        <td style="color:var(--amber)">PLANNED</td>
+      </tr>
+      <tr>
+        <td class="k">v0.6 (proposed)</td>
+        <td>Multi-bundle index: meta-bundle anchoring N proof bundles via the same Merkle algorithm at the next layer up. Lets the operator inscribe one root for an entire campaign batch.</td>
+        <td style="color:var(--amber)">PLANNED</td>
+      </tr>
+      <tr>
+        <td class="k">v0.7 (proposed)</td>
+        <td>Optional ECDSA signature over <code>proof_bundle_sha256</code> using the operator's mining key — authenticated authorship even before chain registration.</td>
+        <td style="color:var(--amber)">PLANNED</td>
+      </tr>
+      <tr>
+        <td class="k">v0.8 (proposed)</td>
+        <td>Live Materials Engine API call for deposit-type context (replaces the hardcoded map in <code>geo_target_council</code>). <code>canonical_memory</code> persistence of campaign manifests.</td>
+        <td style="color:var(--amber)">PLANNED</td>
+      </tr>
+      <tr>
+        <td class="k">v1.0 (proposed)</td>
+        <td>First non-fallback campaign: Pilbara or Zambia with real processed features. Real mineral_target reviews with coordinates, deposit types and council accepts &mdash; not just AOI-level priority.</td>
+        <td style="color:var(--amber)">DEPENDENT ON DATA</td>
+      </tr>
+    </table>
+
+    <div class="note" style="margin-top:18px">
+      None of the planned sprints involve activating rewards, opening a public API, modifying consensus, or auto-broadcasting. Trinity's core invariant &mdash; <b>design and prove, never act unilaterally on chain</b> &mdash; is preserved across the entire roadmap.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 08 &mdash; SOURCE &amp; CONTACT</div>
+    <div class="section-title">Read the <span>Code</span></div>
+
+    <div class="panel">
+      <div class="panel-head">// REPOSITORY ANCHORS</div>
+      <p style="color:#ccc;font-size:12px;line-height:1.8">
+        Engine + verifier source on the public mirror:
+      </p>
+      <ul class="tight" style="color:#ccc">
+        <li><a class="inline" href="https://github.com/Neob1844/sost-core/tree/trinity/proof-bundle-v0/scripts/trinity">scripts/trinity/</a> &mdash; aoi_to_dossier, useful_compute_plan, trinity_campaign, trinity_proof_bundle, verify_trinity_bundle</li>
+        <li><a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-bundle-v0/TRINITY_PROOF_BUNDLE.md">TRINITY_PROOF_BUNDLE.md</a> &mdash; design document for the bundle layer</li>
+        <li><a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-bundle-v0/TRINITY_CAMPAIGN_ENGINE.md">TRINITY_CAMPAIGN_ENGINE.md</a> &mdash; campaign engine spec</li>
+        <li><a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-bundle-v0/TRINITY_USEFUL_COMPUTE_EXTENSION.md">TRINITY_USEFUL_COMPUTE_EXTENSION.md</a> &mdash; Useful Compute Planner spec</li>
+        <li><a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-bundle-v0/TRINITY_OPTION_B_REVIEW.md">TRINITY_OPTION_B_REVIEW.md</a> &mdash; original architecture review (v0)</li>
+        <li><a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-bundle-v0/TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json">TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json</a> &mdash; the live bundle as inscribed on chain</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">// SCIENTIFIC INTAKE</div>
+      <p style="color:#ccc;font-size:12px;line-height:1.8">
+        Trinity's pipeline accepts external scientific input through the Materials Engine's scientific intake module (free-only sources: arxiv, OpenAlex, Crossref, PubChem, Materials Project, JARVIS). Custom AOIs and custom hypothesis types are added by extending the Geaspirit feature pipeline and the closed taxonomies in <code>hypothesis_schema.py</code> and <code>campaign_engine.py</code>. Both layers are designed to grow without touching consensus.
+      </p>
+    </div>
+
+    <div class="green-box">
+      <b>The pipeline is permissionless.</b> Anyone with a scorecard JSON, a SOST node and the Trinity scripts can produce a proof bundle for any AOI and register it on chain &mdash; with no approval, no listing, no foundation gating. The cryptography is the credential.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>SOST Protocol &middot; Trinity v0 &middot; First on-chain proof bundle at block #8085 &middot; <a href="sost-explorer.html">Explorer</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="sost-protocol-spec.html">Protocol Spec</a> &middot; <a href="https://github.com/Neob1844/sost-core">GitHub</a></p>
+    <p style="margin-top:10px;color:#444">Trinity does not claim mineral discoveries, does not list on any exchange, does not promise future value. It produces verifiable scientific proof bundles. That is all.</p>
+  </div>
+</footer>
+
+</body>
+</html>
