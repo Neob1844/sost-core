@@ -1137,6 +1137,193 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
       </div>
     </div>
 
+    <!-- Send mechanics — what the wallet/CLI do under the hood -->
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon red"></div>
+          <span class="spec-name">Send mechanics &mdash; what runs under the hood</span>
+        </div>
+        <span class="spec-tag">WALLET INTERNALS</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          The user-facing flow is a single click on Send. Underneath, both
+          the web wallet and <code>sost-cli</code> run a small pipeline that
+          handles fee convergence, double-spend avoidance, oversized-tx
+          splitting, and broadcast safety. These are not protocol changes
+          &mdash; nothing here touches consensus, the sighash, the RPC
+          schema or the transaction wire format. They are wallet ergonomics
+          built on top of the same primitives a hand-built tx would use.
+        </p>
+
+        <!-- 1. Fee-pass converging loop -->
+        <div class="spec-block" style="margin-top:14px;background:rgba(251,1,13,0.04)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon red"></div><span class="spec-name">1 &mdash; Fee-pass converging loop</span></div></div>
+          <div class="spec-body">
+            <p class="spec-desc">
+              Pre-estimating the byte size of a tx that has not been signed
+              yet is unreliable: the input set the wallet picks depends on
+              the fee, which depends on the size, which depends on the
+              input set. The wallet runs the loop instead. Pass 1 builds
+              with a small seed fee (1 input + 2 outputs + capsule body),
+              reads <code>rawTx.length / 2</code> from the signed result,
+              recomputes <code>fee = txSize × feePerByte</code> and rebuilds
+              if anything changed. Up to 4 passes plus a final exact-fee
+              rebuild so the confirm dialog and the broadcast see byte-
+              equal numbers. If the loop cannot converge, the wallet
+              <b>refuses to broadcast</b> (the node would reject with
+              consensus rule S8 anyway). Same logic in
+              <code>sost-cli send</code> and <code>sost-cli createtx</code>.
+            </p>
+          </div>
+        </div>
+
+        <!-- 2. In-flight UTXO tracking -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(74,222,128,0.04)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:var(--green-primary)"></div><span class="spec-name">2 &mdash; In-flight UTXO tracking (web)</span></div></div>
+          <div class="spec-body">
+            <p class="spec-desc">
+              The web wallet picks UTXOs smallest-first greedy. Without
+              state, two clicks on Send within seconds would pick the same
+              inputs and the second broadcast would fail with the node's
+              double-spend reject. State here:
+              <code>Map&lt;"txid:vout", {ts, broadcast_txid, address}&gt;</code>
+              persisted in localStorage with a 5-min TTL, scoped per wallet
+              address. Reservation timing is critical &mdash; UTXOs are
+              reserved <b>before</b> <code>sendrawtransaction</code> so a
+              concurrent build cannot re-pick them; on RPC failure the
+              reservation releases immediately and the user can retry. A
+              <code>refreshBalance</code> reconcile drops reservations
+              whose UTXOs the node no longer reports.
+            </p>
+          </div>
+        </div>
+
+        <!-- 3. Auto-split capsule payment -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(251,191,36,0.04)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#fbbf24"></div><span class="spec-name">3 &mdash; Auto-split capsule payment (&gt; 16 KB)</span></div></div>
+          <div class="spec-body">
+            <p class="spec-desc">
+              When a single-recipient capsule send converges to a signed
+              tx larger than the 16 000-byte mempool standardness cap
+              (typical case: hundreds of small UTXOs, ~22 KB once a
+              capsule is attached), the wallet offers to break the amount
+              into N smaller transactions to the same recipient, each
+              carrying the same capsule, broadcast sequentially. Default
+              chunk size 150 SOST; minimum 5 SOST as a "no-dust-tail"
+              floor. The chunk-sum invariant is enforced: a
+              <code>reduce()</code>-based check throws if chunks fail to
+              add up to the requested amount, and a self-test runs once
+              at script load against eight reference cases (650 / 500 /
+              300 / 150 / 149 / 5 / 1 / 301) to catch regressions before
+              the user can hit Send. Per-chunk: refresh + reconcile +
+              filter in-flight + fee converge + reserve + broadcast +
+              record txid; on failure the loop stops and the report shows
+              which chunks went out and which did not.
+            </p>
+          </div>
+        </div>
+
+        <!-- 4. Multi-recipient + capsule policy -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(34,211,238,0.04)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon cyan"></div><span class="spec-name">4 &mdash; Multi-recipient sends</span></div></div>
+          <div class="spec-body">
+            <p class="spec-desc">
+              Adding more than one recipient row routes the tx to
+              <code>sendmany</code>: one transaction with N payment outputs
+              + one change output, atomic broadcast, capped at 100 000
+              bytes consensus and 16 000 bytes policy. Multi-recipient +
+              capsule is rejected by design &mdash; the V13 contract is
+              "one capsule per single-recipient tx" so the auto-split
+              flow is the canonical answer to "send the same capsule to
+              the same address in many parts". For different capsules to
+              different addresses, send them as separate single-recipient
+              transactions. The sendmany path uses the same converging
+              fee loop and the same in-flight reservation as single-
+              recipient send.
+            </p>
+          </div>
+        </div>
+
+        <!-- 5. Sealed Capsule decrypt path -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(167,139,250,0.04)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#a78bfa"></div><span class="spec-name">5 &mdash; Sealed Capsule decrypt</span></div></div>
+          <div class="spec-body">
+            <p class="spec-desc">
+              The web wallet dashboard ships a <b>Decrypt Sealed Capsule</b>
+              card. Paste a txid; the wallet calls
+              <code>gettransaction</code>, walks every output's
+              <code>payload_hex</code>, filters those carrying a sealed
+              type (<code>0x02 / 0x04 / 0x06</code>) and tries to open
+              each envelope with the wallet's active privkey. On success a
+              gold callout shows the type, template (for sealed
+              structured), and the recovered plaintext (note text,
+              structured fields, or doc-ref body). On failure the chip
+              reads "not decryptable by this wallet". Plaintext lives in
+              DOM only &mdash; <code>lockWallet</code> wipes it and
+              nothing is ever persisted to localStorage / sessionStorage
+              / console. The CLI mirrors this with
+              <code>sost-cli capsule-decrypt &lt;txid&gt;</code>.
+            </p>
+          </div>
+        </div>
+
+        <!-- 6. RPC mode + safety -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(150,150,150,0.04)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon"></div><span class="spec-name">6 &mdash; Endpoint awareness + re-entrancy guard</span></div></div>
+          <div class="spec-body">
+            <p class="spec-desc">
+              The RPC bar at the top of the wallet labels the active
+              endpoint as <span style="color:#fbbf24">LOCAL NODE</span>,
+              <span style="color:#4ade80">READ ONLY</span> or
+              <span style="color:#e63946">AUTH REQUIRED</span>. A read-only
+              endpoint (<code>/rpc/public</code>) cannot accept a
+              broadcast, so the wallet refuses to sign + send before any
+              key material is exercised &mdash; failing fast instead of
+              after a confusing 5-minute timeout from nginx. A
+              <code>window._sendInProgress</code> flag, cleared in an
+              outer <code>finally</code>, blocks a double-click from
+              spawning a parallel async build; the second click reads
+              "A transaction is already being broadcast. Wait for it to
+              finish."
+            </p>
+          </div>
+        </div>
+
+        <!-- 7. Lazy-load history (explorer) -->
+        <div class="spec-block" style="margin-top:10px;background:rgba(255,0,255,0.03)">
+          <div class="spec-header"><div class="spec-header-left"><div class="spec-icon" style="background:#ff00ff"></div><span class="spec-name">7 &mdash; Explorer lazy-load history</span></div></div>
+          <div class="spec-body">
+            <p class="spec-desc">
+              The explorer's Latest Transactions table loads the last 30
+              blocks plus up to 200 transfers from the
+              <code>listtransfers</code> RPC. When the user clicks
+              <b>OLDER →</b> past the local last page the button changes
+              to <b>LOAD OLDER →</b> and a click pulls the next 30 blocks
+              from the chain in one batch (<code>getblockhash</code> +
+              <code>getblock</code> + <code>gettransaction</code> per
+              non-coinbase entry). The cursor walks backwards
+              indefinitely; once block 0 is included the button reads
+              <b>GENESIS REACHED</b>. The 30-second auto-refresh only
+              re-scans the head; older rows already pulled in stay in
+              the table.
+            </p>
+          </div>
+        </div>
+
+        <p class="spec-desc" style="margin-top:14px;font-size:11px;color:var(--text3)">
+          Wallet-side reference walk-through:
+          <a href="sost-wallet.html" style="color:var(--red-primary)">sost-wallet.html</a>
+          (open the Send card, expand the
+          <code>Mode guide ▾</code> button, then <code>Send mechanics ▾</code>).
+          Fee / TXfields / convergence loop and the auto-split self-test
+          live inline in <code>website/sost-wallet.html</code>; they have
+          no server-side dependency.
+        </p>
+      </div>
+    </div>
+
     <!-- Web wallet block -->
     <div class="spec-block fade-in delay-3">
       <div class="spec-header">

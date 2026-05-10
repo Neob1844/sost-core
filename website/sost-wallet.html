@@ -1084,8 +1084,146 @@ document.addEventListener('DOMContentLoaded', () => {
           <!-- ============== /Mode guide ============== -->
 
           <div style="font-size:10px;color:#22c55e;margin-top:6px;line-height:1.5;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.05);padding:6px 8px;border-radius:3px">
-            <b>✓ Public capsule modes are wired:</b> Open Note, Structured Data, and Certification broadcast with the payload attached and signed. Sealed/encrypted modes (Sealed Note, Sealed Document Reference, Sealed Structured Data) and Document Reference are still bridged to <code>sost-cli</code> &mdash; pick a public mode here, or use <code>sost-cli send --capsule-mode &lt;mode&gt;</code> for the rest. Capsule attach requires chain height &ge; V12 (block 7,350); the wallet refuses to broadcast a capsule before that.
+            <b>✓ Capsule modes wired in this wallet:</b> Open Note (≤80 B),
+            Structured Data (≤128 B fields under one of 10 templates,
+            default <code>payment_receipt_v1</code>) and Certification (≤64 B note)
+            broadcast with the payload signed into the sighash. <b>Sealed Note</b>
+            and <b>Sealed Structured Data</b> are wired from V13 (block 12,000)
+            with single-recipient ECIES (secp256k1 ECDH + HKDF-SHA256 + AES-256-GCM)
+            verified byte-for-byte against the C++ envelope. <b>Document Reference</b>
+            and <b>Sealed Document Reference</b> still bridge to <code>sost-cli</code>
+            &mdash; the file picker UI is on the roadmap.
+            Capsule attach requires chain height &ge; V12 (block 7,350); sealed
+            modes also require chain height &ge; V13 (block 12,000) and a
+            recipient compressed pubkey whose hash160 matches the recipient
+            address.
           </div>
+
+          <!-- =========================================================
+               Send mechanics — what the wallet does once you click Send
+               ========================================================= -->
+          <div style="margin-top:10px">
+            <button type="button" id="sendMechToggle" class="cap-help-toggle"
+                    onclick="toggleSendMechanics()" style="font-size:10.5px">Send mechanics ▾</button>
+          </div>
+          <div id="sendMechPanel" style="display:none;margin-top:8px;padding:12px 12px 10px;background:rgba(0,0,0,.25);border:1px solid var(--border-dim);border-radius:4px;font-size:11.5px;line-height:1.6;color:var(--text-secondary)">
+
+            <div class="cap-help-card">
+              <div class="cap-help-head"><span class="cap-help-name">1. Fee-pass converging loop</span></div>
+              <div class="cap-help-body">
+                The wallet does NOT pre-estimate the fee from a guess at the
+                input count. After you click Send it builds a tx with a seed
+                fee, reads the <b>signed raw size</b>, recomputes
+                <code>fee = txSize × feePerByte</code>, and rebuilds. Up to 4
+                passes plus a final exact-fee rebuild so the confirm dialog
+                shows the exact bytes that go on the wire. Refuses to broadcast
+                if it cannot converge (you would otherwise be rejected with
+                consensus rule S8).
+              </div>
+            </div>
+
+            <div class="cap-help-card">
+              <div class="cap-help-head"><span class="cap-help-name">2. In-flight UTXO tracking</span></div>
+              <div class="cap-help-body">
+                Once a tx is built and the user confirms, the wallet reserves
+                the selected UTXOs in a per-address Map persisted in
+                localStorage with a 5-min TTL. A second Send fired seconds
+                later cannot re-pick those inputs and double-spend. If the
+                broadcast fails, the reservation releases immediately so retry
+                works. <code>refreshBalance</code> reconciles: any reservation
+                whose UTXO the node no longer reports (mined or rejected) is
+                dropped automatically.
+              </div>
+            </div>
+
+            <div class="cap-help-card">
+              <div class="cap-help-head"><span class="cap-help-name">3. Auto-split when capsule payment is too large</span></div>
+              <div class="cap-help-body">
+                When a single-recipient send with a capsule converges to a
+                signed tx larger than the 16 KB policy cap (typical case:
+                hundreds of small UTXOs), the wallet offers to break the
+                amount into N smaller transactions to the same recipient,
+                each carrying the same capsule, broadcast sequentially.
+                Default chunk 150 SOST. The proposal lists the exact amounts;
+                the chunk-sum invariant is enforced (no overpay, no underpay)
+                and a self-test runs at script load to catch regressions.
+              </div>
+            </div>
+
+            <div class="cap-help-card">
+              <div class="cap-help-head"><span class="cap-help-name">4. Sealed Capsule decrypt panel</span></div>
+              <div class="cap-help-body">
+                The dashboard has a <b>Decrypt Sealed Capsule</b> card. Paste
+                a txid; the wallet calls <code>gettransaction</code>, walks
+                every output's payload_hex, filters those with sealed type
+                (0x02 / 0x04 / 0x06), and tries to open each envelope with the
+                wallet&apos;s active privkey. Gold callout for opened plaintext;
+                grey chip for &ldquo;not for this wallet&rdquo;. Plaintext lives in
+                DOM only &mdash; lockWallet wipes it; nothing is written to
+                localStorage / sessionStorage / console.
+              </div>
+            </div>
+
+            <div class="cap-help-card">
+              <div class="cap-help-head"><span class="cap-help-name">5. Multi-recipient sends</span></div>
+              <div class="cap-help-body">
+                Add more than one recipient row → the wallet routes to
+                <code>sendmany</code>: a single transaction with N payment
+                outputs and one change output, atomic broadcast, capped at
+                100 KB consensus. Multi-recipient + capsule is intentionally
+                rejected: the V13 contract is one capsule per single-recipient
+                tx (auto-split handles &ldquo;same recipient, multiple tx with the
+                same capsule&rdquo;). For different capsules to different
+                recipients, send them as separate single-recipient txs.
+              </div>
+            </div>
+
+            <div class="cap-help-card">
+              <div class="cap-help-head"><span class="cap-help-name">6. RPC mode awareness</span></div>
+              <div class="cap-help-body">
+                The RPC bar at the top tags the active endpoint:
+                <span style="color:#fbbf24">LOCAL NODE</span> (<code>http://127.0.0.1:18232</code>),
+                <span style="color:#4ade80">READ ONLY</span> (<code>/rpc/public</code>) or
+                <span style="color:#fb010d">AUTH REQUIRED</span> (<code>/rpc</code>).
+                A read-only endpoint cannot accept a broadcast, so the wallet
+                refuses to sign + send before any key material is exercised.
+                Click the <code>?</code> next to CONNECT for the full
+                clarification of what each endpoint does.
+              </div>
+            </div>
+
+            <div class="cap-help-card">
+              <div class="cap-help-head"><span class="cap-help-name">7. Re-entrancy guard</span></div>
+              <div class="cap-help-body">
+                A double-click on Send (or pressing Enter twice quickly) used
+                to spawn two parallel async builds; the in-flight set caught
+                them but the user got a confusing race. The wallet now sets
+                <code>window._sendInProgress = true</code> as the very first
+                thing in <code>sendTransaction</code> and clears it in an outer
+                <code>finally</code>. A second click while a send is mid-flight
+                shows
+                <i>&ldquo;A transaction is already being broadcast. Wait for it to
+                finish.&rdquo;</i> instead of starting a parallel attempt.
+              </div>
+            </div>
+
+            <div style="font-size:10px;color:var(--text-dim);margin-top:8px;border-top:1px dashed var(--border-dim);padding-top:6px">
+              Reference docs: <a href="sost-transactions.html#sending"
+              style="color:var(--cyan-primary)">sost-transactions.html — Sending Capsule Transactions</a>
+              &middot; <a href="sost-wallet-security.html"
+              style="color:var(--cyan-primary)">Wallet &amp; backup security</a>.
+            </div>
+          </div>
+          <script>
+            window.toggleSendMechanics = function() {
+              var p = document.getElementById('sendMechPanel');
+              var b = document.getElementById('sendMechToggle');
+              if (!p || !b) return;
+              var open = (p.style.display === 'block');
+              p.style.display = open ? 'none' : 'block';
+              b.innerHTML = open ? 'Send mechanics ▾' : 'Send mechanics ▴';
+            };
+          </script>
         </div>
         <script>
           // Toggle for Capsule Mode guide panel.
