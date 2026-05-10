@@ -1580,13 +1580,13 @@ function _drawDtdCharts(ph2,rows,cooldownSet,height){
       ly+=20;
     });
   })();
-  // ---- 2) Lottery winners — top 10 by SOST won ----
+  // ---- 2) Lottery winners — top 20 by SOST won ----
   (function(){
     var s=setupCanvas('dtdLotteryCanvas'); if(!s) return;
     var ctx=s.ctx,W=s.W,Hc=s.H;
     var winners=Object.keys(ph2.winners).map(function(a){return {addr:a,stocks:ph2.winners[a]};});
     winners.sort(function(a,b){return b.stocks-a.stocks;});
-    winners=winners.slice(0,10);
+    winners=winners.slice(0,20);
     if(winners.length===0){ ctx.fillStyle='var(--text3)';ctx.font='10px "Fira Code"';ctx.textAlign='center';ctx.fillText('no lottery wins yet',W/2,Hc/2);return; }
     var maxV=winners[0].stocks;
     var padL=140,padR=12,padT=6,padB=6;
@@ -1790,7 +1790,7 @@ async function renderDTDPanel(body,title,silent){
       // Charts row: schedule pie · lottery distribution bar · top miners bar
       summary+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-top:8px">'
         +'<div style="background:rgba(0,0,0,.3);border:1px solid var(--border);padding:10px"><div style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">// PHASE 2 SHAPE BREAKDOWN</div><canvas id="dtdShapeCanvas" style="width:100%;height:180px"></canvas></div>'
-        +'<div style="background:rgba(0,0,0,.3);border:1px solid var(--border);padding:10px"><div style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">// LOTTERY WINNERS · SOST WON</div><canvas id="dtdLotteryCanvas" style="width:100%;height:180px"></canvas></div>'
+        +'<div style="background:rgba(0,0,0,.3);border:1px solid var(--border);padding:10px"><div style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">// LOTTERY WINNERS · SOST WON (top 20)</div><canvas id="dtdLotteryCanvas" style="width:100%;height:340px"></canvas></div>'
         +'<div style="background:rgba(0,0,0,.3);border:1px solid var(--border);padding:10px"><div style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">// TOP MINERS · PHASE 2 BLOCKS</div><canvas id="dtdMinersCanvas" style="width:100%;height:180px"></canvas></div>'
         +'</div>';
       // Per-block timeline of phase 2: every block since 7100 colored by shape
