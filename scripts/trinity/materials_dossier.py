@@ -323,12 +323,37 @@ def render_markdown(dossier: Dict[str, Any]) -> str:
         f"`{dossier['campaign']}`"
     )
     lines.append("")
-    lines.append(
-        "> **DRY-RUN dossier.** Mock AI Council reviews of the candidate "
-        "set declared in the materials scorecard. Not a materials "
-        "discovery claim. Decisions follow strictest-member-wins with "
-        "validator-veto tracking."
-    )
+    # The honesty preamble depends on the upstream scorecard mode. v0
+    # (fixed 5-candidate demo) carries the original "mock-council" wording;
+    # v0.1 autonomous-discovery output carries the stricter operator-
+    # required disclaimers. The preamble is MD-only; the dossier JSON
+    # content is unchanged so the proof-bundle SHA stays stable.
+    src_mode = (dossier.get("source") or {}).get("mode")
+    if src_mode == "autonomous_v0.1":
+        lines.append(
+            "> **AUTONOMOUS CANDIDATE PROPOSAL.** The hypotheses in this "
+            "dossier are **autonomous candidate proposal** entries "
+            "produced by Trinity / Materials Discovery v0.1 from a "
+            "pinned seed and a closed chemistry filter. They are **not "
+            "experimentally validated**, **not DFT validated**, **not a "
+            "patent claim**, and **not a commercial performance claim**. "
+            "Each candidate **requires Useful Compute / DFT / synthesis "
+            "review** before any further claim can be made."
+        )
+        lines.append("")
+        lines.append(
+            "> **DRY-RUN dossier.** Mock AI Council reviews of the "
+            "filtered candidate set; decisions follow strictest-member-"
+            "wins with validator-veto tracking. No experimental, "
+            "synthesis or DFT result is asserted here."
+        )
+    else:
+        lines.append(
+            "> **DRY-RUN dossier.** Mock AI Council reviews of the candidate "
+            "set declared in the materials scorecard. Not a materials "
+            "discovery claim. Decisions follow strictest-member-wins with "
+            "validator-veto tracking."
+        )
     lines.append("")
     lines.append(f"- **Schema**: `{dossier['schema']}`")
     lines.append(f"- **Track**: `{dossier['track']}`")

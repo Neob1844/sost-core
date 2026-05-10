@@ -1,6 +1,8 @@
 # Trinity / Materials Track — Dossier `oxide_frontier_v01`
 
-> **DRY-RUN dossier.** Mock AI Council reviews of the candidate set declared in the materials scorecard. Not a materials discovery claim. Decisions follow strictest-member-wins with validator-veto tracking.
+> **AUTONOMOUS CANDIDATE PROPOSAL.** The hypotheses in this dossier are **autonomous candidate proposal** entries produced by Trinity / Materials Discovery v0.1 from a pinned seed and a closed chemistry filter. They are **not experimentally validated**, **not DFT validated**, **not a patent claim**, and **not a commercial performance claim**. Each candidate **requires Useful Compute / DFT / synthesis review** before any further claim can be made.
+
+> **DRY-RUN dossier.** Mock AI Council reviews of the filtered candidate set; decisions follow strictest-member-wins with validator-veto tracking. No experimental, synthesis or DFT result is asserted here.
 
 - **Schema**: `trinity-materials-dossier/v0`
 - **Track**: `materials`
