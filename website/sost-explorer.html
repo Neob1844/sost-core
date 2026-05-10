@@ -589,7 +589,9 @@ function toggleV12Banner(){
       </div>
 
       <div style="color:#22c55e;font-size:12px;font-weight:800;letter-spacing:0.8px;margin:10px 0 4px 0">OPTION A — create a NEW dedicated Phase 2 mining wallet</div>
-      <div style="font-size:11.5px;color:var(--text);margin-bottom:6px">Run on the miner machine, inside the build directory. The label can be anything memorable; <code>phase2-miner</code> below is just an example.</div>
+      <div style="font-size:11.5px;color:var(--text);margin-bottom:6px"><b>The label is yours to choose freely.</b> Anything you can type works — pick whatever helps you remember which machine or address it points to. The wallet does not validate the string; the only rule is that the label you pass to <code>getnewaddress &lt;label&gt;</code> must match the one you pass to <code>--mining-key-label &lt;label&gt;</code> later. Two example shapes follow; copy either one and edit it:</div>
+
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1px;margin:8px 0 4px 0">// EXAMPLE 1 — label "phase2-miner"</div>
 <pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 8px 0">cd ~/SOST/sostcore/sost-core/build
 
 ./sost-cli --wallet phase2-miner-wallet.json newwallet
@@ -601,14 +603,34 @@ function toggleV12Banner(){
 # back up the wallet file (it holds your private key)
 cp -a phase2-miner-wallet.json phase2-miner-wallet.json.bak
 chmod 600 phase2-miner-wallet.json phase2-miner-wallet.json.bak</pre>
-      <div style="font-size:11.5px;color:var(--text);margin-bottom:6px">Then launch the miner with that wallet + label. Do NOT add <code>--address</code>; the miner derives the address from the wallet key automatically.</div>
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 8px 0">./sost-miner \
+
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1px;margin:8px 0 4px 0">// EXAMPLE 2 — label "home-rig" (any string works the same way)</div>
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 8px 0">cd ~/SOST/sostcore/sost-core/build
+
+./sost-cli --wallet home-rig-wallet.json newwallet
+./sost-cli --wallet home-rig-wallet.json getnewaddress home-rig
+
+./sost-cli --wallet home-rig-wallet.json listaddresses
+
+cp -a home-rig-wallet.json home-rig-wallet.json.bak
+chmod 600 home-rig-wallet.json home-rig-wallet.json.bak</pre>
+
+      <div style="font-size:11.5px;color:var(--text);margin-bottom:6px">Then launch the miner with that wallet + label. The label after <code>--mining-key-label</code> must be identical to the one you used in <code>getnewaddress</code> in the same wallet. Do NOT add <code>--address</code>; the miner derives the address from the wallet key automatically.</div>
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:10px;margin:0 0 8px 0"># using EXAMPLE 1
+./sost-miner \
   --wallet phase2-miner-wallet.json \
   --mining-key-label phase2-miner \
   --rpc 127.0.0.1:18232 --rpc-user USER --rpc-pass PASS \
+  --blocks 999999 --profile mainnet --threads N
+
+# using EXAMPLE 2
+./sost-miner \
+  --wallet home-rig-wallet.json \
+  --mining-key-label home-rig \
+  --rpc 127.0.0.1:18232 --rpc-user USER --rpc-pass PASS \
   --blocks 999999 --profile mainnet --threads N</pre>
-      <div style="font-size:11.5px;color:var(--text);margin-bottom:8px">Expected startup lines:
-<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:8px;margin:6px 0 0 0">SbPoW signing key: label='phase2-miner'
+      <div style="font-size:11.5px;color:var(--text);margin-bottom:8px">Expected startup lines (the label echoed back is whichever one you chose):
+<pre style="white-space:pre-wrap;color:var(--cyan);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);padding:8px;margin:6px 0 0 0">SbPoW signing key: label='&lt;your-label&gt;'
 Miner address: sost1...   (derived from wallet key)</pre>
       </div>
       <div style="font-size:11.5px;color:#fbbf24;margin-bottom:10px"><b>Note:</b> a brand-new address is <b>not lottery-eligible</b> until it mines its first valid block. Eligibility is per-address and unlocks automatically once the address mines once.</div>
