@@ -413,6 +413,28 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 </table>
 </div></section>
 
+<!-- 8b. CODEBASE FOOTPRINT -->
+<section id="codebase"><div class="c">
+<h2>8b. Codebase <span>Footprint</span></h2>
+<p>Lines-of-code totals for the SOST stack as of <b>2026-05-10</b>, side by side with the Bitcoin Core reference implementation. LOC is a rough engineering metric &mdash; <b>not</b> a quality, security or decentralisation metric &mdash; but it gives a sense of how much surface area the project covers.</p>
+<table>
+<tr><th>Component</th><th>SOST</th><th>Bitcoin Core</th></tr>
+<tr><td>Blockchain core (C++ / protocol)</td><td>36,442</td><td>~280&ndash;310k</td></tr>
+<tr><td>Front-end &amp; explorer (HTML + JS + CSS)</td><td>69,975</td><td>&mdash;</td></tr>
+<tr><td>Materials Engine (Python)</td><td>161,282</td><td>&mdash;</td></tr>
+<tr><td>Geaspirit &mdash; geo-mineral ML (Python)</td><td>9,386</td><td>&mdash;</td></tr>
+<tr><td>Auth gateway (Python)</td><td>704</td><td>&mdash;</td></tr>
+<tr><td>Documentation (markdown)</td><td>23,975</td><td>(separate)</td></tr>
+<tr style="border-top:2px solid #fb010d"><td><strong>Total code (excl. docs)</strong></td><td><strong>~278,000</strong></td><td><strong>~280&ndash;310k</strong></td></tr>
+<tr><td><strong>Total code + docs</strong></td><td><strong>~302,000</strong></td><td>&mdash;</td></tr>
+</table>
+<p style="margin-top:14px"><strong>1. The blockchain core alone is 5&ndash;7&times; smaller than Bitcoin Core.</strong> Bitcoin Core has 15+ years of P2P hardening, scripting (Script + Taproot), thousands of tests, and dozens of network conditions handled in production. SOST does not, and pretending otherwise would be dishonest.</p>
+<p><strong>2. The full SOST stack matches Bitcoin Core in order of magnitude only because SOST is a vertical.</strong> The total includes a Materials Discovery Engine (161k LOC) and a geological prospectivity ML stack (Geaspirit) that Bitcoin Core does not contain. Comparing totals across different problem domains is not apples-to-apples.</p>
+<p><strong>3. What the numbers do show.</strong> SOST is a serious open-source project (~300k LOC total) with depth beyond a typical altcoin fork &mdash; the consensus is custom (ConvergenceX + cASERT), the wallet model is in-house, the front-end is hand-rolled, and the protocol is integrated with two external scientific systems.</p>
+<p><strong>4. What the numbers do NOT show.</strong> Network effect, peer count, security audits, deployed value, decentralisation. Those are independent of LOC and Bitcoin leads on every one of them.</p>
+<p style="font-size:11px;opacity:0.7;margin-top:12px">Counts measured 2026-05-10 with <code>find ... | xargs wc -l</code> over each component's own source tree, excluding build artefacts and vendored code. Bitcoin Core figure is the upstream <code>bitcoin/bitcoin</code> master snapshot, code + tests, no docs.</p>
+</div></section>
+
 <!-- 9. REQUIREMENTS -->
 <section id="req"><div class="c">
 <h2>9. System <span>Requirements</span></h2>
