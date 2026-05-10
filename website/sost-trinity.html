@@ -172,7 +172,7 @@ footer a:hover{color:var(--green)}
   <div class="container">
     <div class="hero-label">TRINITY v0 — DISCOVERY ENGINE</div>
     <h1>SOST <span>Trinity</span> — reproducible scientific proofs, anchored on chain</h1>
-    <p class="hero-sub">Trinity binds <b>GeaSpirit</b> (Earth-evidence scanning), <b>Materials Engine</b> (scientific context &amp; AI Council review), <b>Useful Compute</b> (dry-run heavy-task planner) and <b>SOST</b> (capsule rail for proof, reputation and future rewards) into one deterministic pipeline. The output is a single cryptographic root that any third party can verify with no network access.</p>
+    <p class="hero-sub">Trinity is an integrated <b>scientific discovery system</b>. Its primary purpose is to turn data &mdash; Earth evidence today, materials intelligence next &mdash; into increasingly useful scientific outputs. <b>GeaSpirit</b>, <b>Materials Engine</b> and <b>Useful Compute</b> do the science; <b>SOST</b> adds the proof, reputation and future-reward rail around that work, so every campaign is dated, reviewable and demonstrably yours.</p>
     <div class="status-badge"><span class="live-dot"></span>LIVE ON CHAIN &middot; KALGOORLIE PHASE&nbsp;1 &middot; BLOCK&nbsp;#8085</div>
     <div class="proof-badge">proof_bundle_sha256 = <a href="sost-explorer.html?search=d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db">3a28a4b112fe95df…</a></div>
   </div>
@@ -407,8 +407,8 @@ merkle_root = SHA256(node01 || node23)</pre>
         <strong>Capsule text</strong><span><code>trinity-proof kalgoorlie_phase1 3a28a4b112fe95df</code></span>
         <strong>proof_bundle_sha256</strong><span class="hash">3a28a4b112fe95df85ab2ab91deb7698ebeb1d9182297f06635fd12fd4053a02</span>
         <strong>Merkle root</strong><span class="hash">a818a1e4799ec34fd5a65b17d180a9534f791d4cd49f54c97b21c11d7b0e28b4</span>
-        <strong>Registry JSON</strong><span><a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-registry-public-v0/TRINITY_PROOF_REGISTRY.json">TRINITY_PROOF_REGISTRY.json</a> &middot; <a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-registry-public-v0/TRINITY_PROOF_REGISTRY.md">TRINITY_PROOF_REGISTRY.md</a></span>
-        <strong>Registry verifier</strong><span><a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-registry-public-v0/scripts/trinity/verify_trinity_registry.py"><code>verify_trinity_registry.py</code></a></span>
+        <strong>Registry JSON</strong><span><a class="inline" href="https://github.com/Neob1844/sost-core/blob/main/TRINITY_PROOF_REGISTRY.json">TRINITY_PROOF_REGISTRY.json</a> &middot; <a class="inline" href="https://github.com/Neob1844/sost-core/blob/main/TRINITY_PROOF_REGISTRY.md">TRINITY_PROOF_REGISTRY.md</a></span>
+        <strong>Registry verifier</strong><span><a class="inline" href="https://github.com/Neob1844/sost-core/blob/main/scripts/trinity/verify_trinity_registry.py"><code>verify_trinity_registry.py</code></a></span>
       </div>
       <p style="color:#ccc;font-size:12px;line-height:1.8;margin-top:12px"><b style="color:#d946ef">What the registry entry proves.</b> The entry records the timestamped existence of one specific Trinity proof bundle on chain at block #8085. It does <b style="color:var(--red)">not</b> prove mineral reserves, geological conclusions, or the activation of Useful Compute rewards. The registry is dry-run by design: the verifier never opens a network connection, never calls SOST RPC, never touches a wallet.</p>
     </div>
@@ -417,7 +417,6 @@ merkle_root = SHA256(node01 || node23)</pre>
       <div class="panel-head">// VERIFY THE REGISTRY ENTRY LOCALLY</div>
 <pre class="cmd">git clone https://github.com/Neob1844/sost-core.git
 cd sost-core
-git checkout trinity/proof-registry-public-v0
 python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</pre>
       <p style="color:#ccc;font-size:12px;margin-top:8px">Closed list of 13 checks (R1&ndash;R13). Expected output: every check ends in <code>[PASS]</code>, with <code>[verify] OK</code> and exit code <code>0</code>. The verifier additionally re-hashes the proof bundle and reuses <code>verify_trinity_bundle.py</code> for an offline cross-check.</p>
     </div>
