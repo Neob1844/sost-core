@@ -429,25 +429,142 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- DEVELOPER DISCLAIMER — permanent, always visible, never collapsed -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:linear-gradient(135deg,rgba(251,1,13,0.08),rgba(251,1,13,0.03));border:2px solid var(--red);border-radius:4px;padding:14px 18px;font-size:10.5px;line-height:1.85;color:var(--text);">
+  <div style="background:linear-gradient(135deg,rgba(251,1,13,0.08),rgba(251,1,13,0.03));border:2px solid var(--red);border-radius:4px;padding:14px 18px;font-size:11.5px;line-height:1.75;color:var(--text);">
     <div style="display:flex;align-items:flex-start;gap:10px;">
       <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 8px rgba(251,1,13,.7);margin-top:6px;flex-shrink:0;animation:pulse 1.8s ease infinite"></span>
-      <div>
-        <span style="color:var(--red);font-weight:800;letter-spacing:1.5px;font-size:11px;text-transform:uppercase">Developer Note:</span>
-        <span style="color:var(--text);text-transform:uppercase;letter-spacing:0.4px">
-          ALL NODES AND MINERS MUST UNDERSTAND THAT THIS PROJECT IS BEING BUILT WITH A LOT OF WORK, BUT THAT DOES NOT GUARANTEE THAT IT WILL SUCCEED OR HAVE FUTURE VALUE. RIGHT NOW, YOU ARE MINING WITH VERY LOW ENERGY COST, USING ONLY CPU AND 8&nbsp;GB&nbsp;RAM, BUT THE SUCCESS OF THE PROJECT DEPENDS ON THREE CRUCIAL FACTORS, NONE OF WHICH IS GUARANTEED:
-          <b style="color:var(--gold)">FIRST,</b> THAT IT COMPLIES WITH ALL APPLICABLE CRYPTO AND POSSIBLY FINANCIAL REGULATIONS IN THE COUNTRIES WHERE IT MAY OPERATE, WHICH IS COMPLEX;
-          <b style="color:var(--gold)">SECOND,</b> THAT THE CRYPTO COMMUNITY ACCEPTS AND SUPPORTS THE PROJECT;
-          AND <b style="color:var(--gold)">THIRD,</b> THAT ONE OR MORE CEXs DECIDE TO LIST THE PROJECT ON THEIR EXCHANGES.
-          IN ADDITION, WE ARE OPERATING <b style="color:var(--gold);text-transform:none">ConvergenceX</b>, A NATIVE AND EXPERIMENTAL PROOF-OF-WORK SYSTEM, DISTINCT FROM OTHER POW DESIGNS, WHICH HAS BEEN DEPLOYED DIRECTLY ON MAINNET.
-          ALTHOUGH IT HAS HUNDREDS OF TESTS BEHIND IT, IT HAS NOT BEEN AUDITED BY ANY INDEPENDENT OR REPUTABLE FIRM IN THE SECTOR; THEREFORE, WE ARE WALKING AN UNKNOWN PATH TOGETHER.
-          WITHOUT THESE FACTORS, THE TOKEN MAY HAVE NO VALUE.
-          <b style="color:var(--red);text-shadow:0 0 4px rgba(251,1,13,0.5)">THIS MUST BE CLEAR TO EVERYONE, SO THAT NO FALSE EXPECTATIONS ARE CREATED.</b>
-        </span>
+      <div style="color:var(--text)">
+        <div style="color:var(--red);font-weight:800;letter-spacing:1.5px;font-size:11px;text-transform:uppercase;margin-bottom:8px">Developer Note</div>
+
+        <p style="margin:0 0 10px 0">SOST is being developed with engineering rigor, but that does not guarantee success, future value, liquidity, exchange listings, or community adoption.</p>
+
+        <p style="margin:0 0 10px 0">Right now, SOST is still an experimental native Proof-of-Work network in pre-market testing. Miners can participate with the current reference miner using CPU-oriented mining and approximately <b>8&nbsp;GB&nbsp;of&nbsp;RAM</b>, but this does not mean that SOST will necessarily become valuable.</p>
+
+        <p style="margin:0 0 6px 0">The future of the project depends on several important factors, none of which is guaranteed:</p>
+        <ul style="margin:0 0 10px 18px;padding:0">
+          <li>That the project can comply with applicable crypto, tax, and possibly financial regulations in the places where it may operate.</li>
+          <li>That miners, node operators, developers, and the wider crypto community decide to support it.</li>
+          <li>That one or more exchanges may decide, at their own discretion, to list SOST in the future.</li>
+        </ul>
+
+        <p style="margin:0 0 10px 0"><b style="color:var(--gold)">ConvergenceX</b> is a native and experimental Proof-of-Work system. It is different from traditional PoW designs and has been deployed directly on mainnet. Although the code has many internal tests and is being tested publicly, it has <b>not yet been audited by an independent security firm</b>.</p>
+
+        <p style="margin:0 0 10px 0">For that reason, we are walking an unknown path together.</p>
+
+        <p style="margin:0 0 10px 0"><b style="color:var(--red);text-shadow:0 0 4px rgba(251,1,13,0.5)">SOST may never obtain market value. It may never be listed. It may fail.</b> This must be clear to everyone so that no false expectations are created.</p>
+
+        <p style="margin:0 0 0 0">Mine, run a node, test, and participate only if you understand that this is an experimental project.</p>
       </div>
     </div>
   </div>
 </div>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- TRINITY PROOF BANNER — first on-chain proof bundle             -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<style>
+  .trinity-proof-banner{
+    border:1px solid rgba(46,139,87,0.45);
+    border-left:5px solid #2E8B57;
+    border-radius:6px;
+    background:linear-gradient(135deg,rgba(46,139,87,0.10),rgba(0,0,0,0.18));
+    color:#edf7f1;
+    padding:16px 20px;
+    margin:14px 0 0 0;
+    font-family:var(--code),system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    box-shadow:0 0 18px rgba(46,139,87,0.10);
+  }
+  .trinity-proof-banner__head{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;flex-wrap:wrap;margin-bottom:6px;cursor:pointer;user-select:none;
+  }
+  .trinity-proof-banner__label{
+    color:#8de3ad;font-size:11px;font-weight:800;letter-spacing:0.18em;
+    text-transform:uppercase;
+  }
+  .trinity-proof-banner h2{
+    margin:6px 0 8px;font-size:20px;color:#edf7f1;letter-spacing:0.5px;
+  }
+  .trinity-proof-banner p{margin:0 0 12px;color:#c8d8cf;font-size:12.5px;line-height:1.7;}
+  .trinity-proof-banner__toggle{
+    background:rgba(46,139,87,0.18);
+    border:1px solid rgba(46,139,87,0.55);
+    color:#8de3ad;cursor:pointer;font-family:var(--code);
+    font-size:10px;font-weight:800;letter-spacing:1.2px;
+    padding:5px 12px;border-radius:3px;text-transform:uppercase;
+  }
+  .trinity-proof-banner__toggle:hover{background:rgba(46,139,87,0.32);}
+  .trinity-proof-banner__grid{
+    display:grid;gap:6px;margin-top:6px;
+    border-top:1px dashed rgba(141,227,173,0.25);padding-top:10px;
+  }
+  .trinity-proof-banner__grid div{
+    display:grid;grid-template-columns:140px minmax(0,1fr);
+    gap:10px;padding:6px 0;
+    border-bottom:1px dashed rgba(255,255,255,0.06);
+  }
+  .trinity-proof-banner__grid strong{
+    color:#8de3ad;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;
+    align-self:center;
+  }
+  .trinity-proof-banner__grid span{
+    overflow-wrap:anywhere;font-family:var(--code),ui-monospace,monospace;
+    font-size:12px;color:#edf7f1;
+  }
+  .trinity-proof-banner__grid a{
+    color:#67e8f9;text-decoration:none;border-bottom:1px dotted rgba(103,232,249,0.4);
+  }
+  .trinity-proof-banner__grid a:hover{
+    text-shadow:0 0 8px rgba(103,232,249,0.5);
+  }
+  .trinity-proof-banner__note{
+    margin-top:14px;font-size:11px;color:var(--text3);line-height:1.7;
+    border-left:2px solid rgba(141,227,173,0.4);padding:6px 12px;
+  }
+</style>
+<section class="trinity-proof-banner" style="max-width:1400px;margin:14px auto 0;padding-left:20px;padding-right:20px">
+  <div class="trinity-proof-banner__head" onclick="window.toggleTrinityProof()">
+    <div>
+      <div class="trinity-proof-banner__label">// TRINITY IS LIVE</div>
+      <h2>SOST Proof-of-Discovery Engine</h2>
+    </div>
+    <button id="trinityProofToggle" class="trinity-proof-banner__toggle"
+            onclick="event.stopPropagation();window.toggleTrinityProof()">
+      Details &#9662;
+    </button>
+  </div>
+
+  <p>
+    Trinity connects <b style="color:#8de3ad">GeaSpirit</b> (Earth-evidence scanning), <b style="color:#8de3ad">Materials Engine</b> (scientific context &amp; AI Council review), <b style="color:#8de3ad">Useful Compute</b> (dry-run heavy-task planner), and <b style="color:#8de3ad">SOST</b> (proof, reputation and future reward rail) into a reproducible proof pipeline for scientific discovery workflows.
+  </p>
+
+  <div id="trinityProofBody" style="display:none">
+    <div class="trinity-proof-banner__grid">
+      <div><strong>AOI</strong><span>Kalgoorlie Phase&nbsp;1</span></div>
+      <div><strong>Block</strong><span><a href="#" onclick="event.preventDefault();showBlockByHeight(8085)">#8085</a></span></div>
+      <div><strong>Capsule</strong><span>trinity-proof kalgoorlie_phase1 3a28a4b112fe95df</span></div>
+      <div><strong>TXID</strong><span><a href="#" onclick="event.preventDefault();showTxDetail('d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db')">d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db</a></span></div>
+      <div><strong>Proof SHA-256</strong><span>3a28a4b112fe95df85ab2ab91deb7698ebeb1d9182297f06635fd12fd4053a02</span></div>
+      <div><strong>Merkle Root</strong><span>a818a1e4799ec34fd5a65b17d180a9534f791d4cd49f54c97b21c11d7b0e28b4</span></div>
+      <div><strong>Pipeline</strong><span>GeaSpirit scorecard &rarr; AI Council dossier &rarr; Useful Compute plan (dry-run) &rarr; Campaign manifest &rarr; Proof bundle</span></div>
+      <div><strong>Status</strong><span><code>registered=true</code> &middot; <code>no_rewards_active=true</code> &middot; <code>capsule_mode=open-note</code></span></div>
+    </div>
+
+    <p class="trinity-proof-banner__note">
+      This capsule is a <b>public cryptographic timestamp</b> proving that Trinity existed and produced its first verifiable proof bundle on SOST at block&nbsp;#8085. <b>It is not a mineral reserve claim, not a geological conclusion, and not an announcement of active Useful Compute rewards.</b> The bundle binds four SHA-256 anchors (scorecard + dossier + Useful Compute plan + campaign manifest) into one document with a Merkle root; the on-chain capsule carries the first&nbsp;16&nbsp;hex of the bundle SHA-256, and the full 64-hex hash lives in the published JSON for independent verification by any third party.
+    </p>
+  </div>
+</section>
+
+<script>
+  window.toggleTrinityProof = function() {
+    var body = document.getElementById('trinityProofBody');
+    var btn = document.getElementById('trinityProofToggle');
+    if (!body) return;
+    var open = (body.style.display !== 'none' && body.style.display !== '');
+    body.style.display = open ? 'none' : 'block';
+    if (btn) btn.innerHTML = open ? 'Details &#9662;' : 'Collapse &#9652;';
+  };
+</script>
 
 <!-- V11 hotfix banner removed in v133: superseded by the Phase 2 resumed
      banner below, which carries the same 'how to upgrade' instructions
