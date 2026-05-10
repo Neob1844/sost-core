@@ -1,0 +1,14 @@
+[Unit]
+Description=Run sost-health.service every 5 minutes
+Requires=sost-health.service
+
+[Timer]
+# First run 1 min after boot so a freshly-booted node is not declared
+# unhealthy before it has finished loading the chain.
+OnBootSec=60s
+OnUnitActiveSec=5min
+AccuracySec=10s
+Unit=sost-health.service
+
+[Install]
+WantedBy=timers.target

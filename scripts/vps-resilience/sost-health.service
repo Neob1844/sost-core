@@ -1,0 +1,10 @@
+[Unit]
+Description=SOST node RPC health probe (one-shot)
+After=sost-node.service
+Wants=sost-node.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/sost/scripts/health-check.sh
+# Don't fail the timer when health-check decides to restart sost-node.
+SuccessExitStatus=0 1

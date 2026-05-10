@@ -1,0 +1,6 @@
+[Unit]
+Description=SOST RPC port connection-count snapshot
+
+[Service]
+Type=oneshot
+ExecStart=/opt/sost/scripts/monitor-connections.sh
