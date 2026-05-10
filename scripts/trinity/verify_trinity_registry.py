@@ -62,6 +62,8 @@ _SCHEMA = "trinity-proof-registry/v0"
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
 _ALLOWED_STATUS = ("registered", "ready_to_register", "draft")
 _ALLOWED_CAPSULE_MODES = ("open-note", "doc-ref")
+_ALLOWED_TRACKS = ("earth", "materials")
+_DEFAULT_TRACK = "earth"
 _REQUIRED_SAFETY_FIELDS = (
     "not_a_mineral_reserve_claim",
     "not_a_geological_conclusion",
@@ -257,10 +259,11 @@ def verify_registry(
                 f"contain proof_bundle_sha16 {sha16!r}"
             )
 
-        # R9: status / capsule_mode / block_height.
+        # R9: status / capsule_mode / block_height / track.
         status = e.get("status")
         capsule_mode = e.get("capsule_mode")
         block_height = e.get("block_height")
+        track = e.get("track", _DEFAULT_TRACK)
         r9_errors: List[str] = []
         if status not in _ALLOWED_STATUS:
             r9_errors.append(
@@ -280,12 +283,17 @@ def verify_registry(
                 f"block_height must be a positive int (got "
                 f"{block_height!r})"
             )
+        if track not in _ALLOWED_TRACKS:
+            r9_errors.append(
+                f"track {track!r} not in {_ALLOWED_TRACKS}"
+            )
         if r9_errors:
             record_fail(f"R9 {prefix}: {'; '.join(r9_errors)}")
         else:
             record_pass(
                 f"R9 {prefix}: status={status!r}, "
                 f"capsule_mode={capsule_mode!r}, "
+                f"track={track!r}, "
                 f"block_height={block_height}"
             )
 

@@ -9,6 +9,7 @@
 ## Kalgoorlie Phase 1
 
 - **id**: `kalgoorlie_phase1`
+- **Track**: `earth`
 - **AOI**: `kalgoorlie`
 - **Status**: `registered`
 - **Registration method**: `manual-cli`

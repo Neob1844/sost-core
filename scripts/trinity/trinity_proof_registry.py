@@ -58,6 +58,11 @@ _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
 _ALLOWED_STATUS = ("registered", "ready_to_register", "draft")
 _ALLOWED_CAPSULE_MODES = ("open-note", "doc-ref")
+# track ∈ {earth, materials}. Optional on legacy entries (defaults to
+# "earth" for backward compat with the original Kalgoorlie record);
+# new entries set the field explicitly.
+_ALLOWED_TRACKS = ("earth", "materials")
+_DEFAULT_TRACK = "earth"
 _REQUIRED_SAFETY_FIELDS = (
     "not_a_mineral_reserve_claim",
     "not_a_geological_conclusion",
@@ -122,6 +127,13 @@ def validate_entry(
         )
 
     _check_hex64("entry.merkle_root", entry.get("merkle_root"))
+
+    track = entry.get("track", _DEFAULT_TRACK)
+    if track not in _ALLOWED_TRACKS:
+        raise RegistryError(
+            f"entry.track must be one of {_ALLOWED_TRACKS} "
+            f"(got {track!r})"
+        )
 
     status = entry.get("status")
     if status not in _ALLOWED_STATUS:
@@ -261,6 +273,7 @@ def render_markdown(registry: Mapping[str, Any]) -> str:
         lines.append(f"## {e.get('title') or e.get('id')}")
         lines.append("")
         lines.append(f"- **id**: `{e.get('id')}`")
+        lines.append(f"- **Track**: `{e.get('track', _DEFAULT_TRACK)}`")
         lines.append(f"- **AOI**: `{e.get('aoi')}`")
         lines.append(f"- **Status**: `{e.get('status')}`")
         lines.append(
@@ -316,6 +329,7 @@ def render_markdown(registry: Mapping[str, Any]) -> str:
 # first Trinity bundle anchored on chain.
 KALGOORLIE_PHASE1_ENTRY: Dict[str, Any] = {
     "id": "kalgoorlie_phase1",
+    "track": "earth",
     "aoi": "kalgoorlie",
     "title": "Kalgoorlie Phase 1",
     "status": "registered",
