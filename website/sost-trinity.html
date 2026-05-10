@@ -149,6 +149,19 @@ footer a:hover{color:var(--green)}
 </section>
 
 <!-- ════════════════════════════════════════════════════════════ -->
+<section class="section" style="background:linear-gradient(180deg,rgba(0,255,65,0.04),transparent)">
+  <div class="container">
+    <div class="section-id">// IN PLAIN ENGLISH</div>
+    <div class="section-title">A <span>One-Paragraph Read</span> for Non-Engineers</div>
+
+    <div class="green-box" style="font-size:14px;line-height:1.85">
+      <p>Trinity takes a geographic area, turns the available evidence into a <b>reviewed scientific dossier</b>, identifies what deeper computation would be needed next, and seals the complete workflow into a <b>cryptographic proof</b> that can be timestamped on SOST.</p>
+      <p style="margin-top:12px">Trinity does <b style="color:var(--red)">not</b> claim that a mine has been discovered. It proves that a specific <b>scientific workflow</b> existed, with specific inputs, outputs and limitations, at a specific point in time.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
     <div class="section-id">// 00 &mdash; WHAT IS TRINITY</div>
@@ -179,7 +192,23 @@ footer a:hover{color:var(--green)}
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 01 &mdash; THE FOUR PILLARS</div>
+    <div class="section-id">// 01 &mdash; TERMINOLOGY NOTE</div>
+    <div class="section-title">What "<span>Discovery Engine</span>" Actually Means</div>
+
+    <div class="warn">
+      <b>Important.</b> "Discovery Engine" does <b>not</b> mean Trinity claims to have discovered a mineral deposit, a reserve, a grade or any commercial mining target.
+    </div>
+
+    <p style="color:#ccc;line-height:1.85">In Trinity, <b style="color:var(--green)">"discovery"</b> refers to the <b>reproducible discovery workflow itself</b>: the evidence gathered, the hypotheses reviewed, the compute plan proposed, the limitations recorded and the final cryptographic bundle produced from them.</p>
+
+    <p style="color:#ccc;margin-top:10px;line-height:1.85">The proof Trinity produces is about the <b style="color:var(--green)">existence and integrity of the scientific process</b> &mdash; not about ownership of land, reserves, grades or commercial viability. Anyone reading a Trinity bundle is reading a sealed scientific workflow, not an exploration claim.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 02 &mdash; THE FOUR PILLARS</div>
     <div class="section-title">Architecture: <span>Four Reproducible Subsystems</span></div>
 
     <p style="color:#ccc;margin-bottom:18px">Each pillar is an existing SOST subsystem with its own validation, tests and public surface. Trinity adds the binding layer between them; it does not duplicate any of their internals.</p>
@@ -220,7 +249,34 @@ footer a:hover{color:var(--green)}
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 02 &mdash; THE PROOF PIPELINE</div>
+    <div class="section-id">// 03 &mdash; WHY SOST</div>
+    <div class="section-title">Why Anchor Trinity <span>on SOST?</span></div>
+
+    <p style="color:#ccc;line-height:1.85">A normal database can store a dossier. A website can publish it. A Git repository can version it. All three still depend on the operator who controls the server, the account or the repository.</p>
+
+    <p style="color:#ccc;margin-top:10px;line-height:1.85">SOST adds a property none of those have: a <b style="color:var(--green)">public, permissionless, Proof-of-Work timestamp</b> that is independent from the Trinity operator once written on chain.</p>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// WHAT THE CAPSULE ANCHOR GIVES TRINITY</div>
+      <ul class="tight" style="color:#ccc;line-height:1.85">
+        <li>The existence of the workflow can be verified <b>without trusting the project website</b> &mdash; anyone with a SOST node sees the capsule.</li>
+        <li>The timestamp <b>cannot be silently rewritten</b> by the author; the block height is fixed by Proof of Work.</li>
+        <li>The proof <b>survives</b> even if the original mirror server, repository or domain disappears.</li>
+        <li>Future reputation, ranking or reward systems can refer to the <b>same immutable root</b> across all bundles.</li>
+        <li>A third party can fork the public chain data and reproduce every Trinity claim from first principles.</li>
+      </ul>
+    </div>
+
+    <div class="green-box">
+      Trinity gives SOST a concrete role beyond moving value: <b>proving the existence of reproducible scientific work</b>. The chain is no longer just a ledger of coins &mdash; it is also a ledger of <i>verifiable workflows</i>.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 04 &mdash; THE PROOF PIPELINE</div>
     <div class="section-title">From AOI to <span>Proof Bundle</span></div>
 
     <p style="color:#ccc;margin-bottom:14px">Five deterministic steps. Every step writes a JSON file. Every JSON file has a SHA-256. Every SHA-256 is reproducible byte-for-byte across machines given the same inputs and pinned timestamps.</p>
@@ -273,7 +329,7 @@ merkle_root = SHA256(node01 || node23)</pre>
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 03 &mdash; FIRST PROOF BUNDLE</div>
+    <div class="section-id">// 05 &mdash; FIRST PROOF BUNDLE</div>
     <div class="section-title">Kalgoorlie Phase&nbsp;1 &mdash; <span>Live On Chain</span></div>
 
     <div class="warn">
@@ -314,7 +370,33 @@ merkle_root = SHA256(node01 || node23)</pre>
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 04 &mdash; CRYPTOGRAPHIC GUARANTEES</div>
+    <div class="section-id">// 06 &mdash; WHEN REAL FEATURES ARE PRESENT</div>
+    <div class="section-title">What a <span>Mature Trinity Campaign</span> Will Produce</div>
+
+    <p style="color:#ccc;line-height:1.85">Kalgoorlie Phase&nbsp;1 proves the pipeline works end to end with <code>features_available = 0</code>. A fully populated campaign &mdash; one with real processed Earth-evidence features &mdash; goes further.</p>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// EXPECTED OUTPUTS, NON-FALLBACK MODE</div>
+      <ul class="tight" style="color:#ccc;line-height:1.85">
+        <li><b style="color:var(--green)">Ranked mineral targets</b> with explicit coordinates and confidence intervals.</li>
+        <li><b style="color:var(--green)">Deposit-type hypotheses</b> tied to the local geological context (orogenic Au, VMS, IOCG, porphyry, etc.).</li>
+        <li><b style="color:var(--green)">Council-reviewed accept / hold / reject</b> decisions per target, with the validator's veto power preserved.</li>
+        <li><b style="color:var(--green)">Explicit evidence gaps</b> attached to each hypothesis &mdash; what data, scan or experiment would shrink the uncertainty.</li>
+        <li><b style="color:var(--green)">Candidate heavy-compute tasks</b> mapped directly to the gaps, classified as candidate_reward_worthy / deferred / not.</li>
+        <li><b style="color:var(--green)">A proof bundle</b> anchoring the complete chain of reasoning on SOST as one root SHA-256.</li>
+      </ul>
+    </div>
+
+    <div class="green-box" style="font-size:14px">
+      <b>v0 proves the machine. Future non-fallback campaigns are designed to prove useful scientific output.</b>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 07 &mdash; CRYPTOGRAPHIC GUARANTEES</div>
     <div class="section-title">What the Bundle <span>Actually Proves</span></div>
 
     <table class="tbl">
@@ -356,7 +438,7 @@ merkle_root = SHA256(node01 || node23)</pre>
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 05 &mdash; VERIFY IT YOURSELF</div>
+    <div class="section-id">// 08 &mdash; VERIFY IT YOURSELF</div>
     <div class="section-title">Local <span>Verification Recipe</span></div>
 
     <p style="color:#ccc;margin-bottom:14px">Anyone with the proof bundle JSON can reproduce every check the published bundle claims. No SOST node required; no wallet; no network.</p>
@@ -407,7 +489,7 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 06 &mdash; SAFETY MODEL</div>
+    <div class="section-id">// 09 &mdash; SAFETY MODEL</div>
     <div class="section-title">What Trinity <span>Refuses to Do</span></div>
 
     <p style="color:#ccc;margin-bottom:14px">The campaign engine's <code>unsafe_or_forbidden</code> bucket is a hard veto layer above every heuristic in the system. Any candidate action whose title or description matches a closed list of forbidden substrings is routed to that bucket with the matching substring recorded as the reason. The bucket is always present in the output, with five anchor entries that document what Trinity will never automate.</p>
@@ -430,7 +512,34 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 07 &mdash; ROADMAP</div>
+    <div class="section-id">// 10 &mdash; WHY THIS MATTERS</div>
+    <div class="section-title">Why <span>Trinity Matters</span></div>
+
+    <p style="color:#ccc;line-height:1.85">Most blockchains can timestamp a file. Trinity is different because the <b style="color:var(--green)">file is not the product</b> &mdash; the reproducible scientific workflow is.</p>
+
+    <p style="color:#ccc;margin-top:10px;line-height:1.85">Trinity turns SOST from a chain that <b>records data</b> into a chain that can <b style="color:var(--green)">prove the existence of useful, structured and reviewable work</b>:</p>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="panel-head">// FOUR DOMAINS UNDER ONE AUDITABLE SYSTEM</div>
+      <table class="tbl">
+        <tr><th>Domain</th><th>Contribution</th></tr>
+        <tr><td class="k">Earth evidence</td><td>GeaSpirit honesty matrix, ranked AOI scorecards, blind-spot disclosures.</td></tr>
+        <tr><td class="k">Scientific interpretation</td><td>Materials Engine + multi-AI Council review with validator-veto and budget gating.</td></tr>
+        <tr><td class="k">Future compute demand</td><td>Useful Compute heavy-task planner, classifier and queue simulation (dry-run, no rewards).</td></tr>
+        <tr><td class="k">Public priority &amp; integrity</td><td>SOST Capsule Protocol v1: open-note or doc-ref anchoring on a permissionless PoW chain.</td></tr>
+      </table>
+    </div>
+
+    <div class="green-box">
+      Trinity is the <b>bridge</b> between mining, materials science, useful computation and blockchain verification under one audit trail. Each domain remains independently verifiable; Trinity composes them into a single root.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 11 &mdash; ROADMAP</div>
     <div class="section-title">What Comes <span>After v0</span></div>
 
     <table class="tbl">
@@ -501,7 +610,7 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 08 &mdash; SOURCE &amp; CONTACT</div>
+    <div class="section-id">// 12 &mdash; SOURCE &amp; CONTACT</div>
     <div class="section-title">Read the <span>Code</span></div>
 
     <div class="panel">
