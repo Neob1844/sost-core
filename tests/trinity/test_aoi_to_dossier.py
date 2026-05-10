@@ -198,6 +198,118 @@ class TestMainEndToEnd:
 # Markdown rendering smoke tests
 # ---------------------------------------------------------------------------
 
+class TestReproducibility:
+    """The dossier MUST be byte-identical across machines when the
+    scorecard content and pinned time are the same. The original v0
+    leaked the absolute scorecard path into the canonical JSON, which
+    differs between WSL (/home/sost/SOST/...) and the VPS
+    (/opt/sost-trinity-option-b-v0/...), and that broke the on-chain
+    proof story. The hotfix replaces source.scorecard_path with
+    source.scorecard_sha256 + source.scorecard_basename so the
+    dossier records the *content* of the scorecard, not where the
+    operator happened to store the file. These tests pin the
+    invariant in place.
+    """
+
+    def test_dossier_sha_independent_of_scorecard_path(self, mod,
+                                                         tmp_path: Path):
+        """Two scorecards with byte-identical content at different
+        absolute paths must produce the same dossier JSON bytes."""
+        # Construct one scorecard payload; write it verbatim to two
+        # different directories with two different filenames-of-the-
+        # parent-directory.
+        sc = {
+            "zone": "repro_aoi",
+            "features_available": 0,
+            "features_total": 5,
+            "honesty_matrix": {
+                "tier": "Tier 1 — Remote proxy evidence only",
+                "environment": "test",
+                "adjusted_confidence": 0.0,
+                "what_it_doesnt_see": ["test blind spot"],
+                "recommendation": "Field validation required.",
+            },
+        }
+        sc_bytes = json.dumps(sc).encode("utf-8")
+
+        path_a = tmp_path / "dir_a" / "scorecard_repro_aoi.json"
+        path_b = tmp_path / "dir_b" / "deep" / "scorecard_repro_aoi.json"
+        path_a.parent.mkdir(parents=True, exist_ok=True)
+        path_b.parent.mkdir(parents=True, exist_ok=True)
+        path_a.write_bytes(sc_bytes)
+        path_b.write_bytes(sc_bytes)
+
+        out_json_a = tmp_path / "out_a.json"
+        out_json_b = tmp_path / "out_b.json"
+
+        for sc_path, out in ((path_a, out_json_a), (path_b, out_json_b)):
+            rc = mod.main([
+                "repro_aoi",
+                "--scorecard", str(sc_path),
+                "--out-md", str(out.with_suffix(".md")),
+                "--out-json", str(out),
+                "--pinned-time", "2026-01-01T00:00:00+00:00",
+            ])
+            assert rc == 0, f"main failed on {sc_path}"
+
+        # The invariant we care about: identical bytes.
+        assert out_json_a.read_bytes() == out_json_b.read_bytes(), (
+            "Dossier JSON bytes differ across paths for identical content. "
+            "The scorecard_path leak is back."
+        )
+
+    def test_dossier_records_scorecard_sha256(self, mod, tmp_path: Path):
+        """The recorded SHA-256 must match `sha256sum scorecard.json`
+        on the original bytes."""
+        import hashlib
+        sc = {"zone": "hashcheck", "honesty_matrix": {"tier": "T"}}
+        sc_bytes = json.dumps(sc).encode("utf-8")
+        expected_sha = hashlib.sha256(sc_bytes).hexdigest()
+
+        sc_path = tmp_path / "scorecard_hashcheck.json"
+        sc_path.write_bytes(sc_bytes)
+        out_json = tmp_path / "out.json"
+
+        rc = mod.main([
+            "hashcheck",
+            "--scorecard", str(sc_path),
+            "--out-md", str(tmp_path / "out.md"),
+            "--out-json", str(out_json),
+            "--pinned-time", "2026-01-01T00:00:00+00:00",
+        ])
+        assert rc == 0
+        data = json.loads(out_json.read_bytes())
+        assert data["source"]["scorecard_sha256"] == expected_sha
+        assert data["source"]["scorecard_basename"] == "scorecard_hashcheck.json"
+
+    def test_dossier_does_not_leak_absolute_path(self, mod, tmp_path: Path):
+        """No source.* field may contain the absolute scorecard path."""
+        sc = {"zone": "leakcheck", "honesty_matrix": {"tier": "T"}}
+        sc_path = tmp_path / "very_distinctive_directory_name" \
+                            / "scorecard_leakcheck.json"
+        sc_path.parent.mkdir(parents=True)
+        sc_path.write_bytes(json.dumps(sc).encode("utf-8"))
+        out_json = tmp_path / "out.json"
+
+        rc = mod.main([
+            "leakcheck",
+            "--scorecard", str(sc_path),
+            "--out-md", str(tmp_path / "out.md"),
+            "--out-json", str(out_json),
+            "--pinned-time", "2026-01-01T00:00:00+00:00",
+        ])
+        assert rc == 0
+        data = json.loads(out_json.read_bytes())
+        # No field in source.* may contain the directory name we used.
+        canon = json.dumps(data["source"], sort_keys=True)
+        assert "very_distinctive_directory_name" not in canon, (
+            "Absolute path appears to be leaking into the dossier "
+            "source provenance block."
+        )
+        # Specifically the legacy scorecard_path key must be gone.
+        assert "scorecard_path" not in data["source"]
+
+
 class TestEnvVarOverrides:
     """The two env-var overrides exist so a non-WSL host (e.g. the VPS)
     can point Trinity at custom paths without needing the user to pass
@@ -240,9 +352,12 @@ class TestEnvVarOverrides:
         assert rc == 0
         data = json.loads(out_json.read_bytes())
         assert data["aoi"] == "aoi_x"
-        # Source path in the dossier points at our synthetic file, not
-        # any host path.
-        assert str(outputs_root) in data["source"]["scorecard_path"]
+        # The dossier records the scorecard by content (sha256) and
+        # by filename only — no absolute path. The basename must
+        # match the file we wrote under the env-var root.
+        assert data["source"]["scorecard_basename"] == "scorecard_aoi_x.json"
+        assert len(data["source"]["scorecard_sha256"]) == 64
+        assert "scorecard_path" not in data["source"]
 
     def test_geaspirit_outputs_path_accepts_colon_separated(
         self, mod, tmp_path, monkeypatch
@@ -273,7 +388,11 @@ class TestEnvVarOverrides:
         ])
         assert rc == 0
         data = json.loads(out_json.read_bytes())
-        assert str(good_root) in data["source"]["scorecard_path"]
+        # Same content-only check: the basename and SHA are present;
+        # the absolute path is not leaked.
+        assert data["source"]["scorecard_basename"] == "scorecard_aoi_y.json"
+        assert len(data["source"]["scorecard_sha256"]) == 64
+        assert "scorecard_path" not in data["source"]
 
     def test_geaspirit_outputs_path_unset_does_not_crash(
         self, mod, monkeypatch

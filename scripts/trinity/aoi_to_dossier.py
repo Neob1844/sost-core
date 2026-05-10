@@ -208,40 +208,82 @@ def _sha256_hex(data: bytes) -> str:
 _DOSSIER_VERSION = "trinity-dossier/v0"
 
 
+def _scorecard_provenance(
+    scorecard: Dict[str, Any],
+    scorecard_bytes: Optional[bytes],
+    scorecard_path: Optional[Path],
+) -> Dict[str, Any]:
+    """Build the source.scorecard_* provenance block.
+
+    Path-independent by design. Records what *content* the dossier was
+    built from, not where that content lived on disk:
+
+      - `scorecard_sha256`: SHA-256 of the scorecard's canonical bytes.
+        When the caller has the original file bytes, those are hashed
+        verbatim (so the value matches `sha256sum scorecard.json`).
+        When the caller only has a dict (e.g. a test fixture loaded
+        elsewhere), the dict is serialised through the same canonical
+        encoder used for the dossier itself and the hash is taken of
+        those bytes.
+      - `scorecard_basename`: just the filename, never the full path.
+        "<inline>" when no file was involved.
+
+    The previous shape — `scorecard_path` carrying an absolute file
+    path — leaked the host filesystem into the canonical JSON and
+    broke cross-machine reproducibility (WSL and VPS produced
+    different SHAs for the same scorecard content because the path
+    differed).
+    """
+    if scorecard_bytes is None:
+        # Fall back to canonical serialisation of the dict — gives a
+        # stable hash for inline / test inputs.
+        canonical_sc = _canonical_json(scorecard)
+        sc_sha = _sha256_hex(canonical_sc)
+    else:
+        sc_sha = _sha256_hex(scorecard_bytes)
+    basename = scorecard_path.name if scorecard_path else "<inline>"
+    return {
+        "scorecard_sha256": sc_sha,
+        "scorecard_basename": basename,
+        "scorecard_zone": scorecard.get("zone"),
+        "scorecard_features_available": scorecard.get("features_available"),
+        "scorecard_features_total": scorecard.get("features_total"),
+        "honesty_matrix": scorecard.get("honesty_matrix") or {},
+    }
+
+
 def _build_dossier(
     aoi_name: str,
     scorecard: Dict[str, Any],
     reviews: List[GeoTargetReview],
     *,
     scorecard_path: Optional[Path] = None,
+    scorecard_bytes: Optional[bytes] = None,
     generated_at: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Compose the JSON-serialisable dossier dict.
 
     `generated_at` is an injectable ISO-8601 timestamp so tests can pin
     deterministic output. In normal use the caller leaves it as None.
+
+    `scorecard_bytes` is the raw bytes the caller read from disk
+    (before `json.load`); when supplied, those bytes are hashed
+    directly so the recorded SHA-256 matches `sha256sum` on the file.
+    When None (inline / test path), the scorecard dict is re-serialised
+    canonically and the hash is taken of that.
     """
     if generated_at is None:
         generated_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
-    honesty = scorecard.get("honesty_matrix") or {}
     fallback = any(r.fallback_mode for r in reviews)
 
     return {
         "schema": _DOSSIER_VERSION,
         "generated_at_utc": generated_at,
         "aoi": aoi_name,
-        "source": {
-            "scorecard_path": (
-                str(scorecard_path) if scorecard_path else "<inline>"
-            ),
-            "scorecard_zone": scorecard.get("zone"),
-            "scorecard_features_available": scorecard.get(
-                "features_available"
-            ),
-            "scorecard_features_total": scorecard.get("features_total"),
-            "honesty_matrix": honesty,
-        },
+        "source": _scorecard_provenance(
+            scorecard, scorecard_bytes, scorecard_path,
+        ),
         "fallback_mode": fallback,
         "reviews": [r.to_dict() for r in reviews],
         "summary": {
@@ -292,7 +334,14 @@ def _render_markdown(dossier: Dict[str, Any], dossier_sha256: str) -> str:
     lines.append("")
     lines.append(f"- **Schema**: `{dossier['schema']}`")
     lines.append(f"- **Generated (UTC)**: {dossier['generated_at_utc']}")
-    lines.append(f"- **Source scorecard**: `{src['scorecard_path']}`")
+    lines.append(
+        f"- **Source scorecard**: `{src.get('scorecard_basename', '<inline>')}` "
+        f"(sha256 `{src.get('scorecard_sha256', '')[:16]}…`)"
+    )
+    lines.append(
+        f"- **Source scorecard SHA-256 (full)**: "
+        f"`{src.get('scorecard_sha256', '')}`"
+    )
     lines.append(
         f"- **Features available / total**: "
         f"{src.get('scorecard_features_available')} / "
@@ -553,7 +602,16 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     aoi_name = (args.aoi or scorecard_path.stem.replace("scorecard_", "")).lower()
 
-    # Run bridge.
+    # Read the scorecard bytes ourselves so we can hash exactly what
+    # was on disk. The bridge's load_scorecard() returns a parsed dict
+    # but does not surface the original bytes; here we re-read so the
+    # recorded SHA-256 matches `sha256sum` on the same file.
+    try:
+        scorecard_bytes = scorecard_path.read_bytes()
+    except OSError as e:
+        print(f"error: cannot read scorecard at {scorecard_path}: {e}",
+              file=sys.stderr)
+        return 1
     scorecard = load_scorecard(scorecard_path)
     reviews = review_aoi(scorecard, aoi_name=aoi_name,
                          max_targets=args.max_targets)
@@ -564,6 +622,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         scorecard=scorecard,
         reviews=reviews,
         scorecard_path=scorecard_path,
+        scorecard_bytes=scorecard_bytes,
         generated_at=args.pinned_time,
     )
     canonical = _canonical_json(dossier)
