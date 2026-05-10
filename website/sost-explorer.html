@@ -5238,14 +5238,25 @@ async function showAddress(addr){
     // Balance section — clean vertical rows
     var balHtml='<div class="k">TOTAL BALANCE</div><div class="v"><span style="color:#00ff88;font-size:16px;font-weight:700">'+totalBalance.toFixed(8)+' SOST</span></div>';
     balHtml+='<div class="k" style="color:#ffd700" title="Coinbase miner outputs (type=1) currently unspent at this address. The address has '+minedCount+' such UTXOs whose miner-share output has not yet been spent. Lottery payouts (type=4) are split into the row below so totals don\'t double-count.">\u26CF MINED</div><div class="v"><span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span></div>';
-    balHtml+='<div class="k" style="color:#00ff88" title="Non-coinbase UTXOs currently held at this address (includes change outputs from own transactions). This is current balance, not historical flow.">\u2193 RECEIVED (non-mining)</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' UTXOs)</span></div>';
-    // \u2191 SENT (non-mining) \u2014 lifetime outflow. Sourced from the node's
-    // getaddressflows RPC, which walks every block once and returns
-    // received_non_mining + sent_non_mining for the address. The result
-    // is cached by chain tip on the node, so subsequent address views
-    // hit the cache instead of re-scanning. Hydrated async; the row
-    // shows "\u2014" while the RPC is in flight, then updates in place.
-    balHtml+='<div class="k" id="addrSentLbl" style="color:#fb010d" title="Lifetime sum of non-coinbase outputs spent FROM this address. Computed by the node by walking the chain once and tracking input amounts via prev-tx lookup. Updates after the RPC returns.">\u2191 SENT (non-mining)</div><div class="v" id="addrSentVal"><span style="color:var(--text3)">loading...</span></div>';
+    balHtml+='<div class="k" style="color:#00ff88" title="Non-coinbase UTXOs currently held at this address (includes change outputs from own transactions). This is a CURRENT snapshot of unspent UTXOs \u2014 not historical flow. The two GROSS LIFETIME rows below come from a different RPC and cover the entire chain history.">\u2193 RECEIVED \u00b7 currently held (non-mining)</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' UTXOs)</span></div>';
+    // GROSS LIFETIME FLOW rows. Both come from the node's
+    // getaddressflows RPC, which walks every block once and caches the
+    // result by chain tip. The pair is shown together so readers can
+    // see the symmetric structure: every self-send TX (capsule anchor,
+    // consolidation to the same address) inflates received AND sent
+    // by the SAME amount, without changing the balance above. A
+    // capsule self-send of 450 SOST therefore lifts both numbers by
+    // 450 SOST even though the net flow out of the address is the fee
+    // only.
+    balHtml+='<div class="k" id="addrRecvGrossLbl" style="color:#00ff88" title="LIFETIME GROSS: sum of every non-coinbase output ever paid TO this address. Includes change outputs that came back from self-sends. Inflated by capsule anchors, consolidations and any other TX where this address was both source and destination. To get the actual net inflow from external counterparties you would need to subtract the self-send change volume, which requires walking the per-TX inputs.">\u2193 GROSS received (lifetime)</div><div class="v" id="addrRecvGrossVal"><span style="color:var(--text3)">loading...</span></div>';
+    balHtml+='<div class="k" id="addrSentLbl" style="color:#fb010d" title="LIFETIME GROSS: sum of every non-coinbase output of this address ever consumed as an input in some TX. Includes the input side of self-sends (capsule anchors, consolidations) whose change came back as part of the GROSS received row above \u2014 those round-trips inflate both numbers equally and do not represent value leaving the address externally. Net external outflow is NOT computed in v0; use the per-TX flow view to inspect specific outgoing TXs.">\u2191 GROSS sent (lifetime)</div><div class="v" id="addrSentVal"><span style="color:var(--text3)">loading...</span></div>';
+    balHtml+='<div class="k" id="addrNetExtLbl" style="color:var(--text3)" title="NET EXTERNAL OUTFLOW is not computed in v0. Computing it accurately requires walking every outgoing TX of this address and classifying each output as either (a) change back to source, (b) capsule self-anchor, (c) payment to an external address. The per-TX detail view already shows this breakdown for individual TXs; an aggregate computation across history is left for a later sprint. The two GROSS rows above are reported as-is from getaddressflows so the reader can see the raw lifetime totals.">\u2295 NET external outflow</div><div class="v" id="addrNetExtVal"><span style="color:var(--text3)">not computed in v0 &middot; see per-TX flow for breakdown</span></div>';
+    balHtml+='<div style="grid-column:1 / -1;font-size:10px;color:var(--text3);padding:6px 10px;border-left:2px solid var(--border);margin-top:4px;line-height:1.55">'+
+      '<b style="color:var(--cyan)">\u2139 Gross flow note.</b> The two GROSS rows above include <b>self-send transactions</b> '+
+      '(capsule anchors, consolidations to the same address, change outputs returning to source). '+
+      'A capsule self-send of N SOST shows as +N on BOTH rows even though the net amount leaving the address is the network fee only. '+
+      'Use the per-TX flow view to inspect any specific outgoing TX and see exactly which outputs went external vs. came back as change.'+
+      '</div>';
     // Lottery rows. CURRENT UNSPENT comes directly from u.type==4 (always
     // accurate). LIFETIME WON uses the DTD cache when available; if not, we
     // tell the user to open DTD to populate it. TOTAL BALANCE always equals
@@ -5338,31 +5349,40 @@ async function showAddress(addr){
     // effort: failures fall back to the legacy heuristic that ships
     // with _buildUtxoRow.
     _enrichUtxosWithChangeSelf(a.address).catch(function(){});
-    // Async hydrate ↑ SENT (non-mining). The first call after a new block
-    // triggers a chain rebuild on the node (cached afterwards by tip
-    // height), so it can take a few hundred ms — keep this off the
+    // Async hydrate the GROSS-LIFETIME rows. One getaddressflows call
+    // populates both the gross-received and gross-sent figures so the
+    // reader can see them side by side. The first call after a new
+    // block triggers a chain rebuild on the node (cached afterwards by
+    // tip height), so it can take a few hundred ms — keep this off the
     // critical render path. If the RPC is missing (older node binary),
-    // gracefully fall back to "n/a".
+    // gracefully fall back to "n/a" on both rows.
     (function(addr){
-      var lbl=document.getElementById('addrSentLbl');
-      var val=document.getElementById('addrSentVal');
-      if(!val)return;
+      var recvVal=document.getElementById('addrRecvGrossVal');
+      var sentVal=document.getElementById('addrSentVal');
+      if(!sentVal&&!recvVal)return;
       rpc('getaddressflows',[addr]).then(function(f){
-        if(!f||typeof f.sent_non_mining!=='number'){
-          val.innerHTML='<span style="color:var(--text3)">n/a</span>';return;
+        if(!f||typeof f.sent_non_mining!=='number'||typeof f.received_non_mining!=='number'){
+          if(recvVal)recvVal.innerHTML='<span style="color:var(--text3)">n/a</span>';
+          if(sentVal)sentVal.innerHTML='<span style="color:var(--text3)">n/a</span>';
+          return;
         }
         var sent=f.sent_non_mining/100000000;
         var recv=f.received_non_mining/100000000;
-        val.innerHTML='<span style="color:#fb010d;font-weight:600">'+sent.toFixed(8)+' SOST</span> <span style="color:var(--text3)">(lifetime · scanned through #'+f.scanned_height+')</span>';
-        // Also retro-fit the RECEIVED tooltip with the lifetime number
-        // so the tooltip matches what the node actually computed.
+        var scanned='(lifetime · scanned through #'+f.scanned_height+')';
+        if(recvVal)recvVal.innerHTML='<span style="color:#00ff88;font-weight:600">'+recv.toFixed(8)+' SOST</span> <span style="color:var(--text3)">'+scanned+'</span>';
+        if(sentVal)sentVal.innerHTML='<span style="color:#fb010d;font-weight:600">'+sent.toFixed(8)+' SOST</span> <span style="color:var(--text3)">'+scanned+'</span>';
+        // Also retro-fit the legacy "currently held" tooltip with the
+        // lifetime number so a reader hovering the old row sees the
+        // bigger context.
         var rcvLbl=null;
-        document.querySelectorAll('.k').forEach(function(k){if(k.textContent.indexOf('RECEIVED (non-mining)')>=0)rcvLbl=k;});
+        document.querySelectorAll('.k').forEach(function(k){if(k.textContent.indexOf('currently held')>=0&&k.textContent.indexOf('non-mining')>=0)rcvLbl=k;});
         if(rcvLbl){
-          rcvLbl.title='Currently-held non-coinbase UTXOs (snapshot, shown to the right). Lifetime received non-mining (across all txs ever) is '+recv.toFixed(8)+' SOST per the node.';
+          rcvLbl.title='Currently-held non-coinbase UTXOs (snapshot, shown to the right). Lifetime gross received non-mining is '+recv.toFixed(8)+' SOST and lifetime gross sent non-mining is '+sent.toFixed(8)+' SOST per the node. The asymmetry between this snapshot value and the lifetime gross figures comes from self-send round-trips (capsule anchors, consolidations) that inflate the lifetime numbers without affecting the snapshot.';
         }
       }).catch(function(){
-        val.innerHTML='<span style="color:var(--text3)">n/a (older node — getaddressflows missing)</span>';
+        var msg='<span style="color:var(--text3)">n/a (older node — getaddressflows missing)</span>';
+        if(recvVal)recvVal.innerHTML=msg;
+        if(sentVal)sentVal.innerHTML=msg;
       });
     })(a.address);
   }catch(e){c.innerHTML='<div class="td-err">'+e.message+'</div>';}
