@@ -40,6 +40,15 @@ from typing import Any, Dict, List, Optional
 
 
 _SCHEMA = "trinity-materials-dossier/v0"
+# Accept both the original v0 scorecard (fixed 5 demo candidates) and
+# the v0.1 superset scorecard (autonomous N-candidate discovery output).
+# The v0.1 scorecard carries the same v0-compatible fields
+# (seed_novelty, seed_frontier_proximity, open_questions) so the
+# council mock reads it without further changes.
+_SCORECARD_SCHEMAS_ACCEPTED = (
+    "trinity-materials-scorecard/v0",
+    "trinity-materials-scorecard/v0.1",
+)
 _SCORECARD_SCHEMA = "trinity-materials-scorecard/v0"
 _TRACK = "materials"
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
@@ -225,10 +234,12 @@ def build_dossier(
         )
 
     scorecard = json.loads(scorecard_path.read_text(encoding="utf-8"))
-    if scorecard.get("schema") != _SCORECARD_SCHEMA:
+    if scorecard.get("schema") not in _SCORECARD_SCHEMAS_ACCEPTED:
         raise ValueError(
-            f"scorecard at {scorecard_path.name} does not declare schema "
-            f"{_SCORECARD_SCHEMA!r}"
+            f"scorecard at {scorecard_path.name} does not declare a "
+            f"supported schema; expected one of "
+            f"{_SCORECARD_SCHEMAS_ACCEPTED!r}, got "
+            f"{scorecard.get('schema')!r}"
         )
     if scorecard.get("track") != _TRACK:
         raise ValueError(
@@ -266,15 +277,27 @@ def build_dossier(
             "evidence_gaps": _evidence_gaps(c),
         })
 
+    # Mode discriminator: v0 scorecards came from the fixed 5-candidate
+    # mock; v0.1 scorecards came from the autonomous generator + filter
+    # + industrial scorer chain. Carry the distinction into the dossier
+    # so a downstream reader knows the council reviewed real autonomous
+    # candidates, not pinned demo formulas.
+    scorecard_schema = scorecard.get("schema", "")
+    source_mode = (
+        "autonomous_v0.1"
+        if scorecard_schema == "trinity-materials-scorecard/v0.1"
+        else "mock"
+    )
     dossier = {
         "schema": _SCHEMA,
         "campaign": campaign,
         "track": _TRACK,
         "generated_at_utc": generated_at_utc,
         "source": {
-            "mode": "mock",
+            "mode": source_mode,
             "scorecard_basename": scorecard_path.name,
             "scorecard_sha256": scorecard_sha,
+            "scorecard_schema": scorecard_schema,
             "features_available": scorecard.get("features_available", 0),
         },
         "council_members": ["validator", "materials_expert", "novelty_judge"],
