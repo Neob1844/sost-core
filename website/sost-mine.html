@@ -256,11 +256,18 @@ cmake --build . -j$(nproc)</div>
       <div class="step-num">1</div>
       <div class="step-body">
         <h3>Create a wallet and a mining address</h3>
-        <p>Pick a passphrase you will remember. The wallet file is stored locally; it never leaves your machine.</p>
+        <p>From block <b>7,100</b> every block must carry a Schnorr signature from the miner (Phase 2 SbPoW). The miner key lives inside a wallet file and is referenced by a <b>label</b>. The miner is launched with <code>--wallet</code> + <code>--mining-key-label</code>; <code>--address</code> alone is rejected by the network. Pick a wallet filename and a label you will remember &mdash; both are freeform strings, the only rule is that the label you pass to <code>getnewaddress</code> must be character-for-character identical to the one you pass to <code>--mining-key-label</code> later.</p>
         <div class="code">cd ~/sost-core/build
-./sost-cli newwallet
-./sost-cli getnewaddress "mining"
-<span class="c"># &rarr; sost1...   (copy this, you will paste it into the miner)</span></div>
+./sost-cli --wallet phase2-miner-wallet.json newwallet
+./sost-cli --wallet phase2-miner-wallet.json getnewaddress phase2-miner
+
+<span class="c"># confirm the label exists and note the derived address</span>
+./sost-cli --wallet phase2-miner-wallet.json listaddresses
+
+<span class="c"># back up the wallet file (it holds your private key)</span>
+cp -a phase2-miner-wallet.json phase2-miner-wallet.json.bak
+chmod 600 phase2-miner-wallet.json phase2-miner-wallet.json.bak</div>
+        <div class="note"><b>Pick any label.</b> <code>phase2-miner</code> is the example; <code>home-rig</code>, <code>node-3</code> or whatever you remember works the same way. The miner derives its address from the wallet key automatically &mdash; you do not need to copy the address anywhere.</div>
       </div>
     </div>
 
@@ -291,17 +298,22 @@ export SOST_RPC_PASS="changemenow"</div>
       <div class="step-num">4</div>
       <div class="step-body">
         <h3>Start the miner (terminal B)</h3>
-        <p>Replace <code>sost1YOURADDRESS</code> with the address you copied in step&nbsp;1.</p>
+        <p>Use the same wallet and label you created in step&nbsp;1. Do <b>not</b> pass <code>--address</code>; the miner derives the address from the wallet key automatically.</p>
         <div class="code">cd ~/sost-core/build
 ./sost-miner \
-  --address sost1YOURADDRESS \
+  --wallet phase2-miner-wallet.json \
+  --mining-key-label phase2-miner \
   --rpc 127.0.0.1:18232 \
   --rpc-user "$SOST_RPC_USER" \
   --rpc-pass "$SOST_RPC_PASS" \
   --blocks 999999 \
   --profile mainnet \
   --threads 16</div>
+        <p>Expected startup lines (the label echoed back is whichever one you chose):</p>
+        <div class="code">SbPoW signing key: label='phase2-miner'
+Miner address: sost1...   (derived from wallet key)</div>
         <div class="note"><b>Threads:</b> try <code>--threads 16</code> first. ConvergenceX is memory-bandwidth bound &mdash; throwing 64 threads at it on most boxes <i>does not</i> mine faster, and on some hardware actually slows down. If 16 looks unstable on your machine, drop to 8 and try again.</div>
+        <div class="note"><b>Lottery eligibility:</b> a brand-new address is not eligible for the DTD lottery until it mines its first valid block. Eligibility is per-address and unlocks automatically once the address mines once.</div>
       </div>
     </div>
 

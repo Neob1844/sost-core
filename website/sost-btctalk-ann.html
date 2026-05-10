@@ -298,13 +298,22 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 <pre>./sost-node --genesis genesis_block.json --chain chain.json \
     --rpc-user YOUR_USER --rpc-pass YOUR_PASS --profile mainnet</pre>
 
-<p><b>Run miner (terminal 2):</b></p>
-<pre>./sost-miner --address sost1YOUR_ADDRESS_HERE \
-    --genesis genesis_block.json --chain chain.json \
-    --rpc 127.0.0.1:18232 \
-    --rpc-user YOUR_USER --rpc-pass YOUR_PASS</pre>
+<p><b>Create a Phase 2 mining wallet + label</b> (required from block 7,100 onward; SbPoW Schnorr signing):</p>
+<pre>./sost-cli --wallet phase2-miner-wallet.json newwallet
+./sost-cli --wallet phase2-miner-wallet.json getnewaddress phase2-miner
+./sost-cli --wallet phase2-miner-wallet.json listaddresses</pre>
 
-<p>The miner connects to your local node via RPC, fetches mempool transactions via getblocktemplate, and submits solved blocks via submitblock. First solo miner to solve a valid ConvergenceX proof gets the block reward.</p>
+<p>The label (<code>phase2-miner</code> in the example) is freeform &mdash; pick any string you remember. The only rule is that the label you pass to <code>getnewaddress</code> must be identical to the one you pass to <code>--mining-key-label</code> later.</p>
+
+<p><b>Run miner (terminal 2):</b></p>
+<pre>./sost-miner \
+    --wallet phase2-miner-wallet.json \
+    --mining-key-label phase2-miner \
+    --rpc 127.0.0.1:18232 \
+    --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
+    --blocks 999999 --profile mainnet --threads N</pre>
+
+<p>The miner connects to your local node via RPC, fetches mempool transactions via getblocktemplate, signs the v2 header with the wallet key tagged by the label, and submits solved blocks via submitblock. First solo miner to solve a valid ConvergenceX proof and provide a valid SbPoW signature gets the block reward. <code>--address</code>-only mining is rejected post-#7,100.</p>
 
 <hr>
 
