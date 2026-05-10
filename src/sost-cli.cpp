@@ -114,6 +114,59 @@ static void init_sost_dir() {
     g_policy_path = g_sost_dir + "/wallet_policy.json";
 }
 
+// =============================================================================
+// load_rpc_credentials_if_needed — auto-pick RPC user/pass when not on argv
+//
+// Without this, every read-side command (info, listaddresses, getbalance,
+// etc.) had to be invoked with --rpc-user / --rpc-pass on every call, or
+// the node's 401 came back as "0 SOST (chain truth)". Sources, in order
+// (first non-empty wins):
+//   1. --rpc-user / --rpc-pass on the command line  (already parsed)
+//   2. SOST_RPC_USER / SOST_RPC_PASS environment variables
+//   3. ~/.sost/rpc.conf — simple `key=value` lines (ignores blanks and #)
+//      keys recognised: rpcuser, rpcpassword, rpchost, rpcport
+// =============================================================================
+static void load_rpc_credentials_if_needed() {
+    if (g_rpc_user.empty()) {
+        const char* e = getenv("SOST_RPC_USER");
+        if (e && *e) g_rpc_user = e;
+    }
+    if (g_rpc_pass.empty()) {
+        const char* e = getenv("SOST_RPC_PASS");
+        if (e && *e) g_rpc_pass = e;
+    }
+    if (!g_rpc_user.empty() && !g_rpc_pass.empty()) return;
+
+    std::string path = g_sost_dir + "/rpc.conf";
+    FILE* fp = fopen(path.c_str(), "r");
+    if (!fp) return;
+    char line[512];
+    while (fgets(line, sizeof(line), fp)) {
+        std::string s(line);
+        // Strip leading whitespace.
+        size_t i = 0;
+        while (i < s.size() && (s[i] == ' ' || s[i] == '\t')) ++i;
+        if (i >= s.size() || s[i] == '#' || s[i] == '\n' || s[i] == '\r') continue;
+        // Trim trailing newline / CR.
+        while (!s.empty() && (s.back() == '\n' || s.back() == '\r')) s.pop_back();
+        auto eq = s.find('=', i);
+        if (eq == std::string::npos) continue;
+        std::string key = s.substr(i, eq - i);
+        std::string val = s.substr(eq + 1);
+        // Trim whitespace around key/val.
+        while (!key.empty() && (key.back() == ' ' || key.back() == '\t')) key.pop_back();
+        while (!val.empty() && (val.front() == ' ' || val.front() == '\t')) val.erase(0, 1);
+        if (key == "rpcuser" && g_rpc_user.empty()) g_rpc_user = val;
+        else if (key == "rpcpassword" && g_rpc_pass.empty()) g_rpc_pass = val;
+        else if (key == "rpchost" && g_node_host == "127.0.0.1") g_node_host = val;
+        else if (key == "rpcport") {
+            int p = atoi(val.c_str());
+            if (p > 0 && g_node_port == 18232) g_node_port = p;
+        }
+    }
+    fclose(fp);
+}
+
 // Format stocks as SOST with 8 decimal places
 static std::string format_sost(int64_t stocks) {
     char buf[64];
@@ -283,6 +336,8 @@ static int64_t query_chain_height() {
 // =============================================================================
 struct ChainAddressBalance {
     bool ok = false;
+    std::string error;          // populated when ok=false: "no_node",
+                                // "auth_required", "rpc_error: ...", etc.
     int64_t total = 0;
     int64_t spendable = 0;
     int64_t mature = 0;
@@ -295,11 +350,60 @@ struct ChainAddressBalance {
 static ChainAddressBalance query_address_chain_balance(const std::string& addr) {
     ChainAddressBalance r;
     std::string resp = rpc_call("getaddressutxos", "[\"" + addr + "\"]");
-    if (resp.empty()) return r;  // ok=false
+    if (resp.empty()) {
+        r.error = "no_node";
+        return r;
+    }
+
+    // A 401/403 from the RPC server, or any JSON-RPC "error" object in the
+    // body, used to be silently parsed as "no UTXOs" (because the body
+    // contains no '[' and rfind(']') returns npos). That made an
+    // auth-rejected query indistinguishable from "address has nothing on
+    // chain", and the CLI printed 0 SOST (chain truth) for a wallet whose
+    // miner address holds 65 UTXOs / ~798 SOST. Surface those failures so
+    // info / listaddresses can fall back to the wallet cache and tell the
+    // user what to fix (--rpc-user / --rpc-pass).
+    if (resp.compare(0, 9, "HTTP/1.1 ") == 0 && resp.size() >= 12) {
+        char c0 = resp[9], c1 = resp[10], c2 = resp[11];
+        if (c0 == '4' || c0 == '5') {
+            std::string code = resp.substr(9, 3);
+            if (code == "401" || code == "403") {
+                r.error = "auth_required";
+            } else {
+                r.error = "http_" + code;
+            }
+            return r;
+        }
+    }
 
     auto body_start = resp.find("\r\n\r\n");
     std::string json_body = (body_start != std::string::npos)
                               ? resp.substr(body_start + 4) : resp;
+
+    // JSON-RPC error object → distinguish from a successful empty result.
+    auto err_pos = json_body.find("\"error\":");
+    if (err_pos != std::string::npos) {
+        // Make sure it is not "error":null (some servers always include the
+        // field for protocol compliance).
+        size_t p = err_pos + 8;
+        while (p < json_body.size() && (json_body[p] == ' ' || json_body[p] == '\t')) ++p;
+        if (p < json_body.size() && json_body[p] != 'n') {  // not "null"
+            // Pull out the message field if there is one — useful for the
+            // surfaced error.
+            auto m = json_body.find("\"message\":\"", err_pos);
+            if (m != std::string::npos) {
+                m += 11;
+                auto e = json_body.find('"', m);
+                std::string msg = (e != std::string::npos)
+                                    ? json_body.substr(m, e - m) : "rpc_error";
+                r.error = "rpc_error: " + msg;
+            } else {
+                r.error = "rpc_error";
+            }
+            return r;
+        }
+    }
+
     auto result_pos = json_body.find("\"result\":");
     if (result_pos != std::string::npos) {
         json_body = json_body.substr(result_pos + 9);
@@ -1118,6 +1222,11 @@ int main(int argc, char** argv) {
     argc = (int)positional.size();
     int arg_start = 1;
 
+    // After explicit flags, fill in any missing RPC creds from env or
+    // ~/.sost/rpc.conf so reads work without --rpc-user/--rpc-pass on
+    // every command.
+    load_rpc_credentials_if_needed();
+
     if (argc < arg_start + 1) {
         print_usage();
         return 1;
@@ -1179,11 +1288,7 @@ int main(int argc, char** argv) {
             printf("No addresses in wallet.\n");
             return 0;
         }
-        // Pre-flight one RPC to detect node reachability so we don't print
-        // a "node unreachable" hint after every address line. The actual
-        // per-address calls are done in the loop and may still succeed
-        // independently.
-        bool any_rpc_failed = false;
+        std::string fallback_reason;  // populated by the first RPC failure
         for (const auto& k : keys) {
             ChainAddressBalance c = query_address_chain_balance(k.address);
             int64_t total;
@@ -1194,10 +1299,10 @@ int main(int argc, char** argv) {
                 utxo_count = c.utxo_count;
                 tag = (c.immature_count > 0) ? " (chain, some immature)" : "";
             } else {
-                any_rpc_failed = true;
+                if (fallback_reason.empty()) fallback_reason = c.error;
                 total = w.balance(k.address);
                 utxo_count = -1;
-                tag = " (local cache - node unreachable)";
+                tag = " (wallet cache - chain query failed)";
             }
             printf("%-47s  %s SOST", k.address.c_str(), format_sost(total).c_str());
             if (utxo_count >= 0) printf("  %d UTXO%s", utxo_count,
@@ -1205,13 +1310,30 @@ int main(int argc, char** argv) {
             if (!k.label.empty()) printf("  [%s]", k.label.c_str());
             printf("%s\n", tag);
         }
-        if (any_rpc_failed) {
-            printf("\nHint: at least one address fell back to the wallet "
-                   "cache because the node at %s:%d did not answer. The "
-                   "cache only sees UTXOs the wallet has imported via its "
-                   "own send history; coinbase / lottery / inbound UTXOs "
-                   "appear once the node is reachable again.\n",
-                   g_node_host.c_str(), g_node_port);
+        if (!fallback_reason.empty()) {
+            printf("\n");
+            if (fallback_reason == "auth_required") {
+                printf("Chain query failed: the node at %s:%d requires "
+                       "authentication.\n",
+                       g_node_host.c_str(), g_node_port);
+                printf("Numbers above are the wallet-local cache (only sees "
+                       "UTXOs from this wallet's own send history); they "
+                       "will not include coinbase / lottery / inbound "
+                       "UTXOs.\n");
+                printf("Fix: pass --rpc-user / --rpc-pass, set SOST_RPC_USER "
+                       "and SOST_RPC_PASS env vars, or write %s/rpc.conf "
+                       "with rpcuser=... and rpcpassword=...\n",
+                       g_sost_dir.c_str());
+            } else if (fallback_reason == "no_node") {
+                printf("Chain query failed: node at %s:%d not reachable.\n",
+                       g_node_host.c_str(), g_node_port);
+                printf("Numbers above are the wallet-local cache; start the "
+                       "node or fix --rpc / --node and re-run.\n");
+            } else {
+                printf("Chain query failed (%s); numbers above are the "
+                       "wallet cache and may be stale.\n",
+                       fallback_reason.c_str());
+            }
         }
         return 0;
     }
@@ -2658,7 +2780,7 @@ int main(int argc, char** argv) {
         int64_t mature_stocks   = 0;
         int64_t immature_stocks = 0;
         int     immature_count  = 0;
-        bool any_rpc_failed = false;
+        std::string fallback_reason;
         for (const auto& k : keys) {
             ChainAddressBalance c = query_address_chain_balance(k.address);
             if (c.ok) {
@@ -2668,17 +2790,19 @@ int main(int argc, char** argv) {
                 immature_stocks += c.immature;
                 immature_count  += c.immature_count;
             } else {
-                any_rpc_failed = true;
+                if (fallback_reason.empty()) fallback_reason = c.error;
                 total_stocks += w.balance(k.address);
             }
         }
 
-        if (any_rpc_failed && keys.size() > 0) {
+        if (!fallback_reason.empty() && keys.size() > 0) {
             // No chain data — show local cache only and be explicit.
-            printf("  UTXOs:     %zu  (wallet cache - node unreachable)\n",
-                   w.num_utxos());
-            printf("  Balance:   %s SOST  (wallet cache - node unreachable)\n",
-                   format_sost(w.balance()).c_str());
+            const char* tag = (fallback_reason == "auth_required")
+                ? " (wallet cache - node requires auth)"
+                : " (wallet cache - chain query failed)";
+            printf("  UTXOs:     %zu%s\n", w.num_utxos(), tag);
+            printf("  Balance:   %s SOST%s\n",
+                   format_sost(w.balance()).c_str(), tag);
         } else if (keys.size() > 0) {
             printf("  UTXOs:     %d  (chain truth)\n", total_utxos);
             printf("  Balance:   %s SOST  (chain truth)\n",
@@ -2696,6 +2820,21 @@ int main(int argc, char** argv) {
         }
         if (w.num_keys() > 0) {
             printf("  Default:   %s\n", w.default_address().c_str());
+        }
+        if (!fallback_reason.empty() && fallback_reason == "auth_required") {
+            printf("\n");
+            printf("Chain query failed: the node at %s:%d requires "
+                   "authentication.\n",
+                   g_node_host.c_str(), g_node_port);
+            printf("Fix once: write %s/rpc.conf with the two lines\n",
+                   g_sost_dir.c_str());
+            printf("    rpcuser=<your_rpc_user>\n");
+            printf("    rpcpassword=<your_rpc_password>\n");
+            printf("or pass --rpc-user / --rpc-pass on the command line.\n");
+        } else if (!fallback_reason.empty() && fallback_reason == "no_node") {
+            printf("\n");
+            printf("Chain query failed: node at %s:%d not reachable.\n",
+                   g_node_host.c_str(), g_node_port);
         }
         return 0;
     }
