@@ -1181,20 +1181,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <div id="genStep2" class="card hidden">
         <h3>Your Seed Phrase</h3>
-        <div class="notice" style="margin-bottom:16px">
-          <strong>Write these words down and store them safely.</strong> This is the only way to recover your wallet. Never share your seed phrase with anyone.
+
+        <!-- Pre-reveal warning. The 12 words sit blurred behind this
+             panel until the user explicitly clicks "Reveal". The
+             post-reveal section then requires a checkbox before the
+             user can leave this screen. Without these two gates many
+             users move on without copying the words and lose access
+             to their funds the day their device fails. -->
+        <div id="seedRevealGate" style="background:#fb010d11;border:1px solid #fb010d44;border-left:3px solid #fb010d;padding:14px 16px;border-radius:4px;margin-bottom:14px;color:#fde2e4;font-size:12px;line-height:1.7">
+          <div style="color:#fb010d;font-weight:700;letter-spacing:1px;font-size:11px;margin-bottom:8px">⚠ READ BEFORE REVEALING THE SEED PHRASE</div>
+          <ul style="margin:0 0 10px 18px;padding:0">
+            <li>The 12 words are the <b>only</b> way to recover your funds if you lose this device.</li>
+            <li>Write them on physical paper, in order. Verify each word twice.</li>
+            <li>NEVER take a photo. NEVER paste them in chat / email. NEVER store them in cloud notes.</li>
+            <li>Anyone who reads these 12 words can move every SOST you own.</li>
+          </ul>
+          <button class="btn btn-small" onclick="revealSeed()" style="margin-top:4px">I understand &mdash; reveal seed phrase</button>
         </div>
-        <div class="seed-grid" id="seedGrid"></div>
-        <div style="margin-top:16px">
-          <div class="card-label">Address</div>
-          <div class="address-display">
-            <span class="addr-text" id="genAddress"></span>
-            <button class="copy-btn" onclick="copyText(document.getElementById('genAddress').textContent)">COPY</button>
+
+        <div id="seedRevealBody" style="display:none">
+          <div class="notice" style="margin-bottom:16px">
+            <strong>Write these words down and store them safely.</strong> This is the only way to recover your wallet. Never share your seed phrase with anyone.
           </div>
-        </div>
-        <div class="btn-group" style="margin-top:16px">
-          <button class="btn btn-primary" onclick="downloadWalletBackup()">Download Encrypted Backup</button>
-          <button class="btn" onclick="confirmSeedSaved()">I've Saved My Seed</button>
+          <div class="seed-grid" id="seedGrid"></div>
+          <div style="margin-top:16px">
+            <div class="card-label">Address</div>
+            <div class="address-display">
+              <span class="addr-text" id="genAddress"></span>
+              <button class="copy-btn" onclick="copyText(document.getElementById('genAddress').textContent)">COPY</button>
+            </div>
+          </div>
+          <!-- Explicit confirmation gate. The button stays disabled
+               until the user checks the box. The checkbox text mirrors
+               the wording recommended in
+               docs/wallet-and-backup-security.md. -->
+          <div style="margin-top:18px;padding:10px 12px;border:1px solid var(--border-dim);border-radius:4px;background:rgba(0,0,0,0.2)">
+            <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12px;line-height:1.5">
+              <input type="checkbox" id="seedWrittenAck" onchange="document.getElementById('seedConfirmBtn').disabled=!this.checked" style="margin-top:2px" />
+              <span>I have written all <b>12 words on physical paper</b>, in order, and verified them. I accept that losing both this seed and the wallet backup means losing my SOST permanently.</span>
+            </label>
+          </div>
+          <div class="btn-group" style="margin-top:16px">
+            <button class="btn btn-primary" onclick="downloadWalletBackup()">Download Encrypted Backup</button>
+            <button class="btn" id="seedConfirmBtn" onclick="confirmSeedSaved()" disabled>I&apos;ve Saved My Seed &rarr; Continue</button>
+          </div>
         </div>
       </div>
     </div>
@@ -3364,6 +3394,17 @@ window.generateWallet = async function() {
     grid.innerHTML = words.map((w, i) => `<div class="seed-word"><span class="num">${i+1}</span>${w}</div>`).join('');
     document.getElementById('genAddress').textContent = wallet.address;
 
+    // Reset the seed-reveal gate every time so a returning user is not
+    // shown a previously-revealed seed without confirming again.
+    const gate = document.getElementById('seedRevealGate');
+    const body = document.getElementById('seedRevealBody');
+    const ack  = document.getElementById('seedWrittenAck');
+    const btn  = document.getElementById('seedConfirmBtn');
+    if (gate) gate.style.display = '';
+    if (body) body.style.display = 'none';
+    if (ack)  ack.checked = false;
+    if (btn)  btn.disabled = true;
+
     document.getElementById('genStep1').classList.add('hidden');
     document.getElementById('genStep2').classList.remove('hidden');
   } catch (e) {
@@ -3371,7 +3412,25 @@ window.generateWallet = async function() {
   }
 };
 
+// Reveal the seed only after the user clicks through the warning panel.
+// The seed grid stays in the DOM but inside a hidden block so the words
+// never paint to screen until this fires. Idempotent on re-click.
+window.revealSeed = function() {
+  const gate = document.getElementById('seedRevealGate');
+  const body = document.getElementById('seedRevealBody');
+  if (gate) gate.style.display = 'none';
+  if (body) body.style.display = 'block';
+};
+
 window.confirmSeedSaved = function() {
+  // Defence-in-depth: even though the button is disabled until the
+  // checkbox is ticked, also verify here so a programmatic click cannot
+  // skip the gate.
+  const ack = document.getElementById('seedWrittenAck');
+  if (!ack || !ack.checked) {
+    alert('Please confirm that you have written down the 12 words on paper before continuing.');
+    return;
+  }
   showView('dashboard');
 };
 

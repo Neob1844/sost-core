@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Wallet &amp; Backup Security</title>
+<meta name="description" content="What lives on-chain vs locally, how to back up a SOST wallet, how to recover from the 12-word seed, the 1000-block coinbase maturity rule, and why running the same address on two miners does not double the hashrate.">
+<meta name="robots" content="index, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;
+    --border-dim:#1a1a1a;--border-med:#2a2a2a;
+    --red-primary:#fb010d;--red-subtle:#fb010d18;
+    --green-primary:#4ade80;
+    --cyan-primary:#22d3ee;--yellow-primary:#eab308;
+    --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;
+    --font-mono:'JetBrains Mono',monospace;--font-display:'Space Grotesk',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px);opacity:.12;pointer-events:none;z-index:0}
+  body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000}
+  .container{max-width:980px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:12px 0}
+  nav .nav-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+  nav a.brand{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:1.5px;color:var(--text-primary);text-decoration:none}
+  nav a.back{color:var(--text-dim);text-decoration:none;font-size:12px}
+  nav a.back:hover{color:var(--text-primary)}
+  h1{font-family:var(--font-display);font-size:34px;margin:48px 0 6px;letter-spacing:-0.5px}
+  h2{font-family:var(--font-display);font-size:22px;margin:36px 0 10px;color:var(--text-primary)}
+  h3{font-size:14px;margin:18px 0 8px;color:var(--text-secondary);letter-spacing:1px;text-transform:uppercase}
+  p,ul,ol{margin:8px 0 14px}
+  ul,ol{padding-left:22px}
+  li{margin:4px 0}
+  code{background:var(--bg-card);padding:1px 6px;border:1px solid var(--border-dim);border-radius:3px;font-size:12px;color:#cbd5e1}
+  pre{background:#0a0a0a;border:1px solid var(--border-med);border-left:3px solid var(--red-primary);border-radius:4px;padding:14px 16px;font-size:11px;color:#cbd5e1;line-height:1.65;overflow-x:auto;margin:10px 0}
+  pre code{background:transparent;border:none;padding:0;color:inherit}
+  .callout{padding:12px 14px;border-radius:4px;border:1px solid var(--red-primary);background:var(--red-subtle);color:#fde2e4;margin:18px 0;font-size:13px;line-height:1.55}
+  .callout b{color:#fff}
+  .table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+  .table th{text-align:left;color:var(--text-dim);font-weight:600;padding:6px 10px;border-bottom:1px solid var(--border-med);font-size:11px;letter-spacing:1px}
+  .table td{padding:7px 10px;border-bottom:1px solid var(--border-dim);vertical-align:top}
+  .table td.k{color:var(--cyan-primary);width:30%}
+  .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 6px}
+  .pill{font-size:11px;border:1px solid var(--border-med);border-radius:3px;padding:4px 10px;color:var(--text-secondary);background:var(--bg-card)}
+  .pill.live{border-color:var(--green-primary);color:var(--green-primary)}
+  .pill.warn{border-color:var(--yellow-primary);color:var(--yellow-primary)}
+  .pill.fail{border-color:var(--red-primary);color:var(--red-primary)}
+  footer{margin:60px 0 40px;padding-top:18px;border-top:1px solid var(--border-dim);color:var(--text-dim);font-size:11px}
+  footer a{color:var(--cyan-primary);text-decoration:none}
+  .lang{margin-top:50px;padding-top:18px;border-top:1px dashed var(--border-med)}
+  .lang h2{color:var(--cyan-primary)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container nav-inner">
+    <a class="brand" href="index.html">// SOST</a>
+    <a class="back" href="sost-help.html">← Help center</a>
+  </div>
+</nav>
+
+<div class="container">
+
+<h1>Wallet &amp; Backup Security</h1>
+<p style="color:var(--text-dim);font-size:13px">Last updated: 2026-05-10. Single source of truth: <a href="https://github.com/Neob1844/sost-core/blob/main/docs/wallet-and-backup-security.md" style="color:var(--cyan-primary)">docs/wallet-and-backup-security.md</a> in the repo. This page mirrors the same content; if the two diverge the markdown wins.</p>
+
+<div class="callout">
+  <b>Your keys, your coins. Your loss if you lose them.</b><br>
+  If you lose both the 12-word seed phrase AND the wallet file, your SOST stay
+  on the chain forever but no one can move them. Back up both.
+</div>
+
+<h2>TL;DR</h2>
+<table class="table">
+  <thead><tr><th>Concept</th><th>Spanish</th><th>English</th></tr></thead>
+  <tbody>
+    <tr><td class="k">SOST coins</td><td>Viven SIEMPRE en la cadena, públicas y permanentes</td><td>Live on-chain forever, public and permanent</td></tr>
+    <tr><td class="k">Private keys</td><td>Viven SOLO en tu wallet local cifrado</td><td>Live ONLY in your local encrypted wallet file</td></tr>
+    <tr><td class="k">Recovery</td><td>Las 12 palabras BIP39 regeneran las claves</td><td>The 12-word BIP39 phrase regenerates the keys</td></tr>
+    <tr><td class="k">Responsibility</td><td>Tú custodias las claves</td><td>You custody the keys yourself</td></tr>
+  </tbody>
+</table>
+
+<h2>1. On-chain vs local</h2>
+<h3>On-chain (the SOST blockchain)</h3>
+<p>Stored permanently on every node and indestructible while the network exists:</p>
+<ul>
+  <li><b>Blocks</b>: hash, parent hash, timestamp, miner address, merkle root</li>
+  <li><b>Transactions</b>: sender, receiver, amount, fees, signatures</li>
+  <li><b>UTXOs</b>: every unspent output and the address that owns it</li>
+  <li><b>Coinbase rewards</b>, <b>lottery payouts</b>, <b>PoPC bonds</b>, <b>Gold Vault state</b></li>
+</ul>
+<p>Anyone running a SOST node can read all of this. It is public.</p>
+
+<h3>Local only (your wallet file)</h3>
+<p>Stored exclusively on your machine, encrypted with AES-256-GCM in the web wallet, or in the JSON file the CLI manages (<code>wallet.json</code>, <code>phase2-miner-wallet.json</code>, …):</p>
+<ul>
+  <li><b>Private keys</b> — sign transactions and blocks. Critical.</li>
+  <li><b>The 12-word BIP39 seed</b></li>
+  <li><b>Address labels</b> — <code>default</code>, <code>phase2-miner</code>, … cosmetic</li>
+  <li>Local UTXO index cache</li>
+</ul>
+<p>If you lose the file AND the 12 words, you cannot move your SOST anymore. The SOST themselves remain in the chain forever, just unreachable.</p>
+
+<h2>2. Why aren't private keys stored automatically?</h2>
+<ol>
+  <li><b>The chain is public.</b> Putting keys on-chain would publish them to every node — anyone could move your SOST instantly.</li>
+  <li><b>Chain bloat.</b> Storing wallet state for every user would balloon the chain. Lightweight nodes and bootstraps would become impractical.</li>
+  <li><b>Trustless decentralisation.</b> A core PoW principle is no third-party trust. If a foundation could "recover" your wallet, it could also seize it or be coerced. SOST avoids this by design.</li>
+</ol>
+
+<h2>3. Backup strategy — two layers</h2>
+<h3>Layer 1 — The 12 BIP39 words on paper</h3>
+<p>Your master backup. Generated when you ran <code>sost-cli hd create</code>. Keep them written on paper, in order, in a secure physical location. Not digital, not photographed, not typed into a website you don't fully control.</p>
+
+<h3>Layer 2 — Backup of the wallet JSON</h3>
+<p>A convenience layer on top of the 12 words. Faster recovery (~1 minute vs 30–60 minutes from seed), preserves labels and local indexing state. Encrypted backups are safe to upload to cloud storage.</p>
+<pre><code># Quick backup to a USB or another machine
+cp wallet.json /path/to/usb/wallet-backup-$(date +%Y%m%d).json
+chmod 600 /path/to/usb/wallet-backup-*.json
+
+# Or to a remote machine
+scp wallet.json user@backup-server:/secure/path/wallet-backup-$(date +%Y%m%d).json</code></pre>
+<p>Web wallet equivalent: use <b>Download Encrypted Backup</b> on the seed screen and again from Settings.</p>
+
+<h2>4. How to recover a wallet</h2>
+<h3>Fast path (you have a wallet JSON backup)</h3>
+<pre><code># 1. Copy the backup to the new machine
+cp wallet-backup-20260509.json ~/SOST/sostcore/sost-core/build/wallet.json
+chmod 600 wallet.json
+
+# 2. Verify the address list is what you expect
+./sost-cli --wallet wallet.json listaddresses
+
+# 3. Relaunch the miner with the same flags as before
+./sost-miner --wallet wallet.json --mining-key-label phase2-miner ...</code></pre>
+<p>Web wallet equivalent: <b>Import</b> → upload encrypted backup → enter password.</p>
+<p>Total time: about 1 minute.</p>
+
+<h3>Deep path (you only have the 12 words)</h3>
+<pre><code># 1. Get the sost-cli binary on the new machine.
+
+# 2. Create an empty wallet shell.
+./sost-cli --wallet wallet.json newwallet
+
+# 3. Restore from seed phrase. The CLI prompts for the 12 words.
+./sost-cli --wallet wallet.json hd restore
+
+# 4. Recreate any labels you used.
+./sost-cli --wallet wallet.json getnewaddress phase2-miner
+
+# 5. Confirm the address shows the same as before.
+./sost-cli --wallet wallet.json listaddresses
+
+# 6. Sync UTXOs from the node.
+./sost-cli --wallet wallet.json info</code></pre>
+<p>Web wallet equivalent: <b>Import</b> → "From 12-word seed phrase" → paste the words → set a new password.</p>
+<p>Total time: 30–60 minutes including any chain rescan. The result is identical — the same address, the same balance — because BIP44 derivation is deterministic.</p>
+
+<h2>5. The 1000-block coinbase maturity rule</h2>
+<p>When you mine a block the reward is <b>immature</b> for 1000 confirmations (~7 days at the 600-second target). Standard PoW protection: if a deep reorg invalidates a recent block, its reward becomes invalid too. Symptom you will see:</p>
+<pre><code>SPENDABLE:  0 SOST
+IMMATURE:  31.40400000 SOST  (4 coinbase UTXOs)</code></pre>
+<p>Cure: time. Each new block adds 1 confirmation. After 1000 blocks on top of yours, the SOST become spendable.</p>
+
+<h2>6. Mining with the same address on multiple machines</h2>
+<p>Common assumption: "if I run two miners on the same wallet label, my hashrate adds up."</p>
+<p>Actual behaviour: it does not add up cleanly. Both miners build very similar block templates (same coinbase address, same prev hash, same timestamp window) and explore overlapping nonce space. Whichever miner finds a valid nonce first wins; the other's recent work for that template is discarded once the next block lands. <b>Two solo miners on the same label are not equivalent to one miner with double the hashrate.</b></p>
+
+<h3>Recommended approach: one address per machine, consolidate later</h3>
+<pre><code># On machine 1
+./sost-cli --wallet wallet.json getnewaddress miner-rig-1
+./sost-miner --wallet wallet.json --mining-key-label miner-rig-1 ...
+
+# On machine 2
+./sost-cli --wallet wallet.json getnewaddress miner-rig-2
+./sost-miner --wallet wallet.json --mining-key-label miner-rig-2 ...
+
+# Periodically consolidate
+./sost-cli --wallet wallet.json --from-label miner-rig-2 \
+    send sost1&lt;consolidation-address&gt; &lt;amount&gt;</code></pre>
+<p>This way each machine owns its own address and explores nonce space without colliding. When a stratum-style pool ships in the future, it will distribute disjoint nonce ranges to many workers signing under one shared payout address; that is the only architecture in which "same address, many machines" cleanly adds hashrate.</p>
+
+<h2>7. Common questions</h2>
+
+<h3>I lost my computer. Are my SOST gone?</h3>
+<p>No. Your SOST are in the chain. If you have either the 12-word seed phrase OR a wallet JSON backup, you can recover them on any machine.</p>
+
+<h3>I lost both the 12 words and the wallet file.</h3>
+<p>Your SOST are unreachable. They remain in the chain forever, visible to everyone, but no one can spend them. Permanent.</p>
+
+<h3>Someone saw my 12 words.</h3>
+<p>They can move your SOST. Immediately: generate a new wallet, send your entire balance to the new address before the attacker does, then discard the compromised wallet forever.</p>
+
+<h3>My encrypted wallet JSON is on Google Drive. Is that safe?</h3>
+<p>The file is AES-256-GCM encrypted with your wallet password. With a strong password (20+ random chars) it is computationally infeasible to crack. With a weak password ("password123") it can be brute-forced. Use a password manager and a long random password.</p>
+
+<h3>Can the SOST developers recover my wallet?</h3>
+<p>No. They have no privileged access. If they could, the system would not be trustless.</p>
+
+<h2>8. Best-practices checklist</h2>
+<ul>
+  <li>Generated a wallet with <code>sost-cli hd create</code></li>
+  <li>Wrote the 12 words on physical paper, in order, double-checked</li>
+  <li>Stored the paper somewhere physically secure (locked drawer, safe)</li>
+  <li>Made a backup copy of the wallet JSON onto a USB or another machine</li>
+  <li>Set the wallet password to 20+ random characters</li>
+  <li>Confirmed the address on the explorer (<a href="sost-explorer.html" style="color:var(--cyan-primary)">sost-explorer.html</a>)</li>
+  <li>Configured NTP (<code>chronyc</code>) so block timestamps are valid</li>
+  <li>Read the 1000-block coinbase maturity rule</li>
+</ul>
+
+<div class="lang">
+<h2>Resumen rápido (Español)</h2>
+
+<p><b>En la cadena (público y permanente):</b> bloques, transacciones, UTXOs, recompensas de minado, loterías, gold vault. Cualquier nodo lo lee. Tus SOST están aquí.</p>
+<p><b>Solo en tu wallet local:</b> claves privadas, frase semilla cifrada, labels, derivación HD. Si pierdes el archivo Y las 12 palabras no podrás mover tus SOST nunca más.</p>
+<p><b>Por qué no se guardan claves en la cadena:</b> serían públicas y cualquiera podría mover tus SOST. La cadena guarda lo público; las claves son responsabilidad del usuario.</p>
+<p><b>Recuperación rápida</b> (con backup del wallet JSON): copiar el archivo a otro equipo y lanzar el CLI. ~1 min.</p>
+<p><b>Recuperación profunda</b> (solo con las 12 palabras):</p>
+<pre><code>./sost-cli --wallet wallet.json newwallet
+./sost-cli --wallet wallet.json hd restore
+./sost-cli --wallet wallet.json getnewaddress phase2-miner
+./sost-cli --wallet wallet.json info</code></pre>
+<p>~30-60 min. La dirección regenerada es idéntica a la original (BIP44 determinístico).</p>
+<p><b>Madurez de coinbase:</b> 1000 bloques (~7 días). Tu saldo aparece como <code>IMMATURE</code> y <code>SPENDABLE: 0</code> durante ese tiempo. Solo hay que esperar.</p>
+<p><b>Minar misma address en varias máquinas:</b> no suma hashrate de forma limpia — los miners exploran nonce space solapado. Recomendado: una label/address por máquina, consolidar después con <code>sost-cli send</code>.</p>
+</div>
+
+<footer>
+  <div class="container">
+    Canonical source: <a href="https://github.com/Neob1844/sost-core/blob/main/docs/wallet-and-backup-security.md">docs/wallet-and-backup-security.md</a> &middot;
+    <a href="sost-help.html">Help center</a> &middot;
+    <a href="sost-explorer.html">Explorer</a> &middot;
+    <a href="sost-wallet.html">Web wallet</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
