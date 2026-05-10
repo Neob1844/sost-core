@@ -4386,6 +4386,79 @@ async function showBlock(hash){
   }catch(e){c.innerHTML='<div class="td-err">'+e.message+'</div>';}
 }
 async function showBlockByHeight(h){try{var hash=await rpc('getblockhash',[String(h)]);showBlock(hash);}catch(e){}}
+
+// Resolve the chain-position neighbours of a tx so the detail view can
+// link "next tx" (the next position in the same block, or the first tx
+// of block h+1) and "previous tx" (the previous position, or the last
+// tx of block h-1). Useful for walking through an auto-split batch:
+// the 5 sibling tx end up at consecutive positions in one block, so a
+// click on next/previous walks them one by one. Worst case 3 RPCs
+// (getblockhash + getblock for current, plus one getblockhash +
+// getblock pair for either boundary). Failures are swallowed and the
+// caller renders a "—" placeholder; the rest of the detail view never
+// blocks on this lookup.
+async function _getTxNeighbors(txid, blockHeight){
+  var out={prev:null, next:null, prevBlock:null, nextBlock:null};
+  if(typeof blockHeight!=='number' || !isFinite(blockHeight) || blockHeight<0) return out;
+  try{
+    var hash=await rpc('getblockhash',[String(blockHeight)]);
+    var blk =await rpc('getblock',[hash]);
+    if(!blk||!blk.txids) return out;
+    var idx=blk.txids.indexOf(txid);
+    if(idx<0) return out;
+    if(idx>0){
+      out.prev=blk.txids[idx-1]; out.prevBlock=blockHeight;
+    } else if(blockHeight>0){
+      try{
+        var ph=await rpc('getblockhash',[String(blockHeight-1)]);
+        var pb=await rpc('getblock',[ph]);
+        if(pb&&pb.txids&&pb.txids.length>0){
+          out.prev=pb.txids[pb.txids.length-1]; out.prevBlock=blockHeight-1;
+        }
+      }catch(e){}
+    }
+    if(idx<blk.txids.length-1){
+      out.next=blk.txids[idx+1]; out.nextBlock=blockHeight;
+    } else {
+      try{
+        var nh=await rpc('getblockhash',[String(blockHeight+1)]);
+        var nb=await rpc('getblock',[nh]);
+        if(nb&&nb.txids&&nb.txids.length>0){
+          out.next=nb.txids[0]; out.nextBlock=blockHeight+1;
+        }
+      }catch(e){ /* tip of chain — no next */ }
+    }
+  }catch(e){}
+  return out;
+}
+
+// Patch the placeholder rows inserted by renderIndexedTx / renderFallbackTx
+// once _getTxNeighbors resolves. Called fire-and-forget; takes the txid
+// and block height, finds the two cells by id, and writes either a
+// link or a "—" tag explaining why there is none.
+function _paintTxNeighbors(txid, blockHeight){
+  _getTxNeighbors(txid, blockHeight).then(function(nb){
+    var ne=document.getElementById('tx-nav-next');
+    var pe=document.getElementById('tx-nav-prev');
+    if(ne){
+      if(nb.next){
+        ne.innerHTML='<span class="td-link" onclick="showTxDetail(\''+nb.next+'\')">'+sH(nb.next)+'</span>'+cpBtn(nb.next)+
+                     ' <span style="color:var(--text3);font-size:10px">block #'+nb.nextBlock+'</span>';
+      } else {
+        ne.innerHTML='<span style="color:var(--text3);font-size:11px">— (chain tip; no later tx yet)</span>';
+      }
+    }
+    if(pe){
+      if(nb.prev){
+        pe.innerHTML='<span class="td-link" onclick="showTxDetail(\''+nb.prev+'\')">'+sH(nb.prev)+'</span>'+cpBtn(nb.prev)+
+                     ' <span style="color:var(--text3);font-size:10px">block #'+nb.prevBlock+'</span>';
+      } else {
+        pe.innerHTML='<span style="color:var(--text3);font-size:11px">— (genesis side; no earlier tx)</span>';
+      }
+    }
+  });
+}
+
 async function showTxDetail(txid){
   openDetail();var c=document.getElementById('detailContent');
   pushNav('tx','TX '+sH(txid),txid);
@@ -4535,7 +4608,16 @@ function renderIndexedTx(tx,c){
     'SOST uses UTXO accounting: the wallet may spend several previous outputs and return the remainder as change. '+
     '"Inputs consumed" is the gross amount the wallet had to gather; "payment sent" is what actually left this address.'+
     '</div>';
-  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div>'+totalsHtml+capHtml+utxoMicrocopy+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--green);font-size:9px">TX-INDEX \u00B7 FULL DETAIL</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
+  // Chain-position navigation rows. Inserted at the top (next tx, the
+  // chronologically later neighbour) and the bottom (previous tx, the
+  // earlier one). Filled async by _paintTxNeighbors so the detail view
+  // does not block on the extra getblock call. Useful for walking
+  // through an auto-split batch (5 sibling transfers in the same
+  // block) one txid at a time.
+  var navTopHtml='<div class="k">next tx</div><div class="v" id="tx-nav-next"><span style="color:var(--text3);font-size:11px">looking up neighbours\u2026</span></div>';
+  var navBotHtml='<div class="k">previous tx</div><div class="v" id="tx-nav-prev"><span style="color:var(--text3);font-size:11px">looking up neighbours\u2026</span></div>';
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid">'+navTopHtml+'<div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div>'+totalsHtml+capHtml+navBotHtml+utxoMicrocopy+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--green);font-size:9px">TX-INDEX \u00B7 FULL DETAIL</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
+  _paintTxNeighbors(tx.txid, bh);
 }
 // Render confirmed TX from gettxout fallback (partial data)
 function renderFallbackTx(txid,outputs,c){
@@ -4550,7 +4632,10 @@ function renderFallbackTx(txid,outputs,c){
   if(!isCB&&outputs.length===2){var a0=typeof outputs[0].amount==='number'?outputs[0].amount:parseFloat(outputs[0].amount);var a1=typeof outputs[1].amount==='number'?outputs[1].amount:parseFloat(outputs[1].amount);changeIdx=a0<a1?0:1;}
   var outputsHtml='';
   for(var oi=0;oi<outputs.length;oi++){var o2=outputs[oi];var tl=typeLabels[o2.type]||'output';var tc=typeColors2[o2.type]||'var(--green)';var amt=typeof o2.amount==='number'?o2.amount.toFixed(8):o2.amount;var isChange=oi===changeIdx;var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+o2.vout+' '+changeBadge+'</div><div class="tx-io-addr" onclick="showAddress(\''+o2.address+'\')">'+o2.address+addrTag(o2.address)+'</div><div class="tx-io-amt">'+amt+' SOST</div><div class="tx-io-meta">block #'+o2.height+' \u00B7 '+o2.confirmations+' confirmations</div></div>';}
-  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid"><div class="k">txid</div><div class="v" style="color:var(--cyan)">'+txid+cpBtn(txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+totalOut.toFixed(8)+' SOST</span></div></div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--text3);font-size:9px">PARTIAL \u00B7 gettxout fallback</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
+  var navTopHtml='<div class="k">next tx</div><div class="v" id="tx-nav-next"><span style="color:var(--text3);font-size:11px">looking up neighbours\u2026</span></div>';
+  var navBotHtml='<div class="k">previous tx</div><div class="v" id="tx-nav-prev"><span style="color:var(--text3);font-size:11px">looking up neighbours\u2026</span></div>';
+  c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid">'+navTopHtml+'<div class="k">txid</div><div class="v" style="color:var(--cyan)">'+txid+cpBtn(txid)+'</div><div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">total output</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+totalOut.toFixed(8)+' SOST</span></div>'+navBotHtml+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--text3);font-size:9px">PARTIAL \u00B7 gettxout fallback</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
+  _paintTxNeighbors(txid, bh);
 }
 function renderMempoolTx(tx,c){
   var totalOut=tx.vout.reduce(function(s,v){var a=typeof v.value==='number'?v.value:parseFloat(v.value);return s+a;},0);
