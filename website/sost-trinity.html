@@ -595,7 +595,115 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 11 &mdash; ROADMAP</div>
+    <div class="section-id">// 11 &mdash; AUTONOMOUS DISCOVERY FLOW</div>
+    <div class="section-title">Six Stages, One <span>Verifiable Bundle</span></div>
+
+    <p style="color:#ccc;line-height:1.85">Trinity is not a chain feature. It is a six-stage pipeline that turns a pinned seed into a public, reviewable scientific dossier. Every stage is deterministic; every output is auditable; the final SHA is what gets timestamped on SOST.</p>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// THE SIX STAGES</div>
+      <table class="tbl">
+        <tr><th>#</th><th>Stage</th><th>What it does</th></tr>
+        <tr><td class="k">1</td><td><b style="color:var(--green)">Generate hypotheses</b></td><td>Earth: candidate AOIs across mineral belts. Materials: candidate compositions across spinel / perovskite / layered-oxide / oxide-interface families.</td></tr>
+        <tr><td class="k">2</td><td><b style="color:var(--green)">Filter</b></td><td>Drop obvious noise. Penalise toxicity, criticality, low evidence, charge-balance violations, known-demo formulas, and protected geographies.</td></tr>
+        <tr><td class="k">3</td><td><b style="color:var(--green)">Review</b></td><td>Build a dossier per candidate. Run it through an AI Council (validator + domain expert + novelty judge). Decide hold / accept / reject with strictest-member-wins veto.</td></tr>
+        <tr><td class="k">4</td><td><b style="color:var(--green)">Plan heavy work</b></td><td>Propose the compute or fieldwork that would actually reduce the remaining uncertainty: DFT, MLIP, phonon screening, satellite reprocessing, geophysics fusion. Dry-run only.</td></tr>
+        <tr><td class="k">5</td><td><b style="color:var(--green)">Package</b></td><td>Bind scorecard + dossier + plan + campaign manifest into a single proof bundle. Merkle root over four SHA-256 anchors. Canonical JSON. Byte-identical cross-machine.</td></tr>
+        <tr><td class="k">6</td><td><b style="color:var(--green)">Seal on SOST</b></td><td>Operator-driven manual capsule registration. One TXID, one block height, one immutable timestamp. <i>Not</i> automated; <i>not</i> consensus-affecting.</td></tr>
+      </table>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// MATERIALS TRACK — CONCRETE NUMBERS (oxide_frontier_v01)</div>
+      <pre class="cmd">seed: trinity-v0.1
+  → generate 50 oxide candidates (spinel / perovskite / layered / interface mix)
+  → chemistry filter: 42 rejected (charge balance, toxicity, known-demo)
+  → 8 candidates survive
+  → score on 7 industrial axes (abundance, criticality, structure, hypotheses,
+                                  feasibility, novelty uncertainty, toxicity/cost)
+  → AI Council reviews each: 0 accept / 8 hold / 0 reject  (honesty: thin evidence)
+  → propose 16 heavy tasks: 8 candidate_reward_worthy (MLIP relax) + 8 deferred
+                            (DFT input prep)
+  → seal:
+       proof_bundle_sha256 = 3d2c8dc3c8f280e93ae3fec59a2538a39de7d1d36352f3dfd51c618595a69cd1
+       status              = ready_to_register · registered=false
+       rewards             = NOT active</pre>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// EARTH TRACK — SAME PATTERN (preview of v0.1)</div>
+      <pre class="cmd">seed: trinity-geo-v0.1               (planned)
+  → scan global commodity belts (offline curated regions in v0.1)
+  → filter zones too close to known demo AOIs and obviously unsuitable coords
+  → score on proxy axes (tectonic belt, aridity, ruggedness, data availability)
+  → AI Council reviews each AOI: accept / hold / reject
+  → propose satellite tile preprocessing, spectral anomaly scoring, geophysics fusion
+  → seal: TRINITY_GEO_PROOF_BUNDLE_global_phase1.json
+       status              = ready_to_register · registered=false
+       claim               = "candidate AOI proposal" — NOT a deposit confirmation</pre>
+    </div>
+
+    <div class="warn" style="margin-top:14px">
+      <b>Trinity never registers automatically.</b> Stage 6 is the operator's manual decision. Useful Compute rewards stay inactive in every track; the planner emits proposals only.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 12 &mdash; TRINITY WITHIN SOST</div>
+    <div class="section-title">A <span>Vertical Inside</span> the Stack, Not a Replacement for It</div>
+
+    <p style="color:#ccc;line-height:1.85">Trinity is not a fork, not a sidechain and not an alternative consensus. It sits <i>on top of</i> SOST as one official scientific vertical. The blockchain core stays exactly what Bitcoin-class PoW chains do: blocks, transactions, wallets, RPC, consensus. Trinity adds the <b style="color:var(--green)">discovery + proof + reputation</b> layer above that.</p>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// STACK LAYERING</div>
+<pre class="cmd">SOST
+├── Core blockchain          consensus, PoW, blocks, mempool, wallet
+├── Explorer / wallet        public read surface
+├── Trinity Discovery Engine the scientific vertical
+│   ├── Earth Track          GeaSpirit-driven AOI proposals
+│   ├── Materials Track      autonomous candidate materials
+│   ├── Proof Registry       canonical index of anchored bundles
+│   └── Useful Compute       dry-run heavy-task planner
+└── Rewards / reputation     future layer; off by default</pre>
+    </div>
+
+    <div class="green-box">
+      <b>Separation rules.</b> Trinity scripts cannot touch consensus, miner code, node code, RPC schema or wallet logic. The four bundle anchors are JSON files; the on-chain artefact is one capsule per registered bundle. If you remove Trinity from this repo, SOST as a chain still works. If you remove the chain, Trinity is just a set of reproducible dossiers — which is, on its own, still useful.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 13 &mdash; TRINITY RULES</div>
+    <div class="section-title">Six <span>Hard Constraints</span></div>
+
+    <p style="color:#ccc;line-height:1.85">Operator-enforced rules. Every sprint and every artefact respects these; the test suite checks several of them statically and the verifier checks the rest at runtime.</p>
+
+    <table class="tbl" style="margin-top:14px">
+      <tr><th>#</th><th>Rule</th></tr>
+      <tr><td class="k">1</td><td><b style="color:var(--red)">Trinity never touches consensus.</b> No script in the Trinity tree can modify miner code, node code, RPC schema or the wire format. Pure userspace artefact production.</td></tr>
+      <tr><td class="k">2</td><td><b style="color:var(--red)">Trinity never promises validated discoveries.</b> Every candidate is labeled <code>novelty_status=unknown_not_validated</code> and every dossier carries explicit <i>not experimentally validated · not DFT validated · not a patent claim · not a commercial performance claim</i> wording.</td></tr>
+      <tr><td class="k">3</td><td><b style="color:var(--green)">Trinity always produces verifiable bundles.</b> Every output is canonical JSON. Every bundle is hash-bound. The verifier runs offline in seconds and refuses any deviation.</td></tr>
+      <tr><td class="k">4</td><td><b style="color:var(--green)">Trinity registers only milestones.</b> Not every demo; not every iteration. On-chain anchors are operator-driven manual events reserved for genuine milestones (e.g. Kalgoorlie Phase 1 was the pipeline's birth certificate; the next anchor target is a combined materials + geo Genesis Discovery Batch).</td></tr>
+      <tr><td class="k">5</td><td><b style="color:var(--red)">Useful Compute rewards stay off until validation.</b> The planner emits <code>candidate_reward_worthy</code> proposals but no reward path is wired to consensus. Rewards activation is a future, separate governance event.</td></tr>
+      <tr><td class="k">6</td><td><b style="color:var(--green)">Public framing is utility-first.</b> The web copy leads with what the engines produce (scientific intelligence), not with the proof rail. SOST is the trust layer around the work, not the product itself.</td></tr>
+    </table>
+
+    <div class="green-box" style="margin-top:18px;font-size:14px">
+      <b>One-line summary.</b> Trinity is SOST's first strong use case: <i>turning autonomous digital research into publicly verifiable proof.</i>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// 14 &mdash; ROADMAP</div>
     <div class="section-title">What Comes <span>After v0</span></div>
 
     <table class="tbl">
@@ -666,7 +774,7 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 12 &mdash; SOURCE &amp; CONTACT</div>
+    <div class="section-id">// 15 &mdash; SOURCE &amp; CONTACT</div>
     <div class="section-title">Read the <span>Code</span></div>
 
     <div class="panel">
