@@ -394,6 +394,33 @@ merkle_root = SHA256(node01 || node23)</pre>
     <div class="green-box">
       <b>How to read the on-chain capsule.</b> The OPEN_NOTE_INLINE body is 47 ASCII bytes (under the 80-byte cap). It carries three space-separated fields: <code>trinity-proof</code> is the namespace, <code>kalgoorlie_phase1</code> is the bundle name, and <code>3a28a4b112fe95df</code> is the first 16 hex of the <code>proof_bundle_sha256</code>. The full 64 hex lives in the published JSON; anyone with that file can run <code>sha256sum</code> on it and confirm the on-chain prefix matches.
     </div>
+
+    <div class="panel" style="margin-top:18px;border-left:3px solid #d946ef">
+      <div class="panel-head" style="color:#d946ef">// PUBLIC REGISTRY ENTRY</div>
+      <p style="color:#ccc;font-size:12.5px;line-height:1.8">This proof bundle has a corresponding entry in the canonical Trinity Proof Registry. The registry is a single JSON file that lists every Trinity bundle anchored on the SOST chain, alongside its txid, block height, capsule text and recomputable hashes.</p>
+      <div class="kvs" style="margin-top:14px">
+        <strong>Registry status</strong><span style="color:#d946ef">registered</span>
+        <strong>Registration method</strong><span><code>manual-cli</code></span>
+        <strong>Registry id</strong><span><code>kalgoorlie_phase1</code></span>
+        <strong>Block height</strong><span><a href="sost-explorer.html" class="inline">#8085</a></span>
+        <strong>TXID</strong><span class="hash"><a href="sost-explorer.html?search=d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db" class="inline">d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db</a></span>
+        <strong>Capsule text</strong><span><code>trinity-proof kalgoorlie_phase1 3a28a4b112fe95df</code></span>
+        <strong>proof_bundle_sha256</strong><span class="hash">3a28a4b112fe95df85ab2ab91deb7698ebeb1d9182297f06635fd12fd4053a02</span>
+        <strong>Merkle root</strong><span class="hash">a818a1e4799ec34fd5a65b17d180a9534f791d4cd49f54c97b21c11d7b0e28b4</span>
+        <strong>Registry JSON</strong><span><a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-registry-public-v0/TRINITY_PROOF_REGISTRY.json">TRINITY_PROOF_REGISTRY.json</a> &middot; <a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-registry-public-v0/TRINITY_PROOF_REGISTRY.md">TRINITY_PROOF_REGISTRY.md</a></span>
+        <strong>Registry verifier</strong><span><a class="inline" href="https://github.com/Neob1844/sost-core/blob/trinity/proof-registry-public-v0/scripts/trinity/verify_trinity_registry.py"><code>verify_trinity_registry.py</code></a></span>
+      </div>
+      <p style="color:#ccc;font-size:12px;line-height:1.8;margin-top:12px"><b style="color:#d946ef">What the registry entry proves.</b> The entry records the timestamped existence of one specific Trinity proof bundle on chain at block #8085. It does <b style="color:var(--red)">not</b> prove mineral reserves, geological conclusions, or the activation of Useful Compute rewards. The registry is dry-run by design: the verifier never opens a network connection, never calls SOST RPC, never touches a wallet.</p>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// VERIFY THE REGISTRY ENTRY LOCALLY</div>
+<pre class="cmd">git clone https://github.com/Neob1844/sost-core.git
+cd sost-core
+git checkout trinity/proof-registry-public-v0
+python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</pre>
+      <p style="color:#ccc;font-size:12px;margin-top:8px">Closed list of 13 checks (R1&ndash;R13). Expected output: every check ends in <code>[PASS]</code>, with <code>[verify] OK</code> and exit code <code>0</code>. The verifier additionally re-hashes the proof bundle and reuses <code>verify_trinity_bundle.py</code> for an offline cross-check.</p>
+    </div>
   </div>
 </section>
 
