@@ -3488,6 +3488,15 @@ function showError(elId, msg) {
   if (el) { el.textContent = msg; el.classList.remove('hidden'); el.style.borderLeftColor = 'var(--red-primary)'; }
 }
 
+// showErrorHtml: same red banner as showError, but renders HTML (innerHTML)
+// instead of escaping. Use ONLY when the caller has already built trusted
+// markup (e.g. autoSplitCapsuleSend's per-chunk failure report). Plain-text
+// errors must keep using showError so user / network strings stay escaped.
+function showErrorHtml(elId, html) {
+  const el = document.getElementById(elId);
+  if (el) { el.innerHTML = html; el.classList.remove('hidden'); el.style.borderLeftColor = 'var(--red-primary)'; }
+}
+
 function showSuccess(elId, msg) {
   const el = document.getElementById(elId);
   if (el) { el.innerHTML = msg; el.classList.remove('hidden'); el.style.borderLeftColor = 'var(--green-primary)'; }
@@ -4368,14 +4377,24 @@ async function autoSplitCapsuleSend(opts) {
       b.txid.substring(0, 16) + '…</a></div>';
   }
   if (failure) {
+    // failure.message may originate from a node RPC error string, which is
+    // not under our control. Escape it before splicing into the trusted
+    // HTML block so a "<" or "&" in the message cannot break the report.
+    const escMsg = String(failure.message || '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     html += '<div style="margin-top:8px;color:var(--red-primary)">' +
-      'Stopped at chunk #' + failure.idx + ': ' + failure.message + '</div>';
+      'Stopped at chunk #' + failure.idx + ': ' + escMsg + '</div>';
     html += '<div style="font-size:10px;color:var(--text-dim);margin-top:4px">' +
       'The remaining chunks were NOT broadcast. Check your balance, fix the ' +
       'underlying problem, and retry.</div>';
   }
   html += '</div></div>';
-  if (failure) showError('sendResult', html);
+  // The auto-split report is a fully-built, trusted HTML block (txids are
+  // hex from the node, amounts from formatSost, the only user-influenced
+  // field is failure.message which we surface inside an existing <div>).
+  // Both branches need innerHTML rendering — showError used to call
+  // textContent and surfaced literal "<div style=...>" to the user.
+  if (failure) showErrorHtml('sendResult', html);
   else         showSuccess('sendResult', html);
 
   // Final reconcile pass so the dashboard catches up.
