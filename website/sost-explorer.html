@@ -554,6 +554,34 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <p class="trinity-proof-banner__note">
       This capsule is a <b>public cryptographic timestamp</b> proving that Trinity existed and produced its first verifiable proof bundle on SOST at block&nbsp;#8085. <b>It is not a mineral reserve claim, not a geological conclusion, and not an announcement of active Useful Compute rewards.</b> The bundle binds four SHA-256 anchors (scorecard + dossier + Useful Compute plan + campaign manifest) into one document with a Merkle root; the on-chain capsule carries the first&nbsp;16&nbsp;hex of the bundle SHA-256, and the full 64-hex hash lives in the published JSON for independent verification by any third party.
     </p>
+
+    <div style="margin-top:18px;padding:14px 16px;border:1px solid rgba(46,139,87,0.35);border-left:3px solid #2e8b57;background:rgba(46,139,87,0.06);border-radius:3px">
+      <div style="font-size:10px;letter-spacing:2px;color:#2e8b57;margin-bottom:10px;font-family:var(--font-mono,monospace)">// SIX-STAGE PIPELINE</div>
+      <ol style="margin:0 0 0 22px;padding:0;font-size:12.5px;line-height:1.7;color:#c8d8cf">
+        <li><b style="color:#8de3ad">Generate hypotheses.</b> Earth: candidate AOIs across mineral belts. Materials: candidate compositions across spinel / perovskite / layered-oxide / oxide-interface families.</li>
+        <li><b style="color:#8de3ad">Filter.</b> Drop obvious noise. Penalise toxicity, criticality, low evidence, charge-balance violations, known-demo formulas, and protected geographies.</li>
+        <li><b style="color:#8de3ad">Review.</b> Build a dossier per candidate. AI Council (validator + domain expert + novelty judge). Decide hold / accept / reject with strictest-member-wins veto.</li>
+        <li><b style="color:#8de3ad">Plan heavy work.</b> Propose DFT, MLIP, phonon screening, satellite reprocessing or geophysics fusion. Dry-run only; rewards stay off.</li>
+        <li><b style="color:#8de3ad">Package.</b> Bind scorecard + dossier + plan + campaign manifest into one canonical proof bundle JSON with a Merkle root over four SHA-256 anchors.</li>
+        <li><b style="color:#8de3ad">Seal on SOST.</b> Operator-driven manual capsule registration. One TXID, one block height, one immutable timestamp. Not automated; not consensus-affecting.</li>
+      </ol>
+    </div>
+
+    <div style="margin-top:14px;padding:14px 16px;border:1px solid rgba(217,70,239,0.35);border-left:3px solid #d946ef;background:rgba(217,70,239,0.05);border-radius:3px">
+      <div style="font-size:10px;letter-spacing:2px;color:#d946ef;margin-bottom:10px;font-family:var(--font-mono,monospace)">// SIX OPERATOR-ENFORCED RULES</div>
+      <ol style="margin:0 0 0 22px;padding:0;font-size:12.5px;line-height:1.7;color:#e5d4ee">
+        <li><b style="color:#f0abfc">Trinity never touches consensus.</b> No miner / node / RPC / wire-format change. Pure userspace artefact production.</li>
+        <li><b style="color:#f0abfc">Trinity never promises validated discoveries.</b> Every candidate is <code>novelty_status=unknown_not_validated</code>; every dossier carries explicit non-validation wording.</li>
+        <li><b style="color:#f0abfc">Trinity always produces verifiable bundles.</b> Canonical JSON, hash-bound, offline-verifiable in seconds.</li>
+        <li><b style="color:#f0abfc">Trinity registers only milestones.</b> On-chain anchors are operator-driven manual events, not every iteration.</li>
+        <li><b style="color:#f0abfc">Useful Compute rewards stay off until separate validation governance.</b></li>
+        <li><b style="color:#f0abfc">Public framing is utility-first.</b> The engines produce scientific intelligence; SOST is the trust layer around that work.</li>
+      </ol>
+    </div>
+
+    <p style="margin-top:14px;padding:12px 16px;border-left:3px solid #2e8b57;background:rgba(46,139,87,0.04);font-size:13px;line-height:1.6;color:#c8d8cf;border-radius:3px">
+      <b style="color:#8de3ad">One-line summary.</b> Trinity is SOST&rsquo;s first strong use case: <i>turning autonomous digital research into publicly verifiable proof.</i> &mdash; full reference at <a href="sost-trinity.html" style="color:#8de3ad;text-decoration:none;border-bottom:1px dotted rgba(141,227,173,0.4)">sost-trinity.html</a>.
+    </p>
   </div>
 </section>
 
