@@ -1511,6 +1511,18 @@ function fT(ts){var d=Date.now()/1000-ts;if(d<60)return Math.floor(d)+'s ago';if
 function fTFull(ts){return new Date(ts*1000).toISOString().replace('T',' ').slice(0,19)+' UTC';}
 function sH(h){return h&&h.length>=16?h.slice(0,10)+'\u00B7\u00B7\u00B7'+h.slice(-6):h||'';}
 function fS(s){if(typeof s==='string')s=parseFloat(s);return(s/1e8).toFixed(4);}
+/* Adaptive-precision SOST formatter for transaction summaries. Returns 4
+ * decimals when the value is exactly representable at that precision; falls
+ * back to 8 decimals when toFixed(4) would silently lose information (e.g.
+ * 449.99999737 → "450.0000" or 0.00000263 → "0.0000"). The display layer
+ * stays compact for round numbers but never lies about precision. */
+function fSx(s){
+  if(typeof s==='string')s=parseFloat(s);
+  if(!isFinite(s))return'0.0000';
+  var sost=s/1e8;var s4=sost.toFixed(4);
+  if(parseFloat(s4)!==sost)return sost.toFixed(8);
+  return s4;
+}
 function fS8(s){if(typeof s==='string')s=parseFloat(s);return(s/1e8).toFixed(8);}
 function fComma(n){return n.toLocaleString();}
 function playBlockBeep(){try{var ac=new(window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator();var g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;o.type='sine';g.gain.setValueAtTime(0.15,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);o.start(ac.currentTime);o.stop(ac.currentTime+0.3);}catch(e){}}
@@ -4740,7 +4752,7 @@ async function showTxDetail(txid){
 function renderIndexedTx(tx,c){
   var bh=tx.block_height||0;var confs=tx.confirmations||0;
   var isCB=(tx.vin&&tx.vin.length===1&&tx.vin[0].prev_txid==='0000000000000000000000000000000000000000000000000000000000000000');
-  var fee=tx.fee||0;var feeSOST=fS(fee);
+  var fee=tx.fee||0;var feeSOST=fSx(fee);
   var sumIn=0,sumOut=0;
   if(tx.vin)for(var i=0;i<tx.vin.length;i++){var a=tx.vin[i].amount;sumIn+=(typeof a==='number'?a:parseFloat(a||0))*1e8;}
   if(tx.vout)for(var i=0;i<tx.vout.length;i++){var a=tx.vout[i].amount;sumOut+=(typeof a==='number'?a:parseFloat(a||0))*1e8;}
@@ -4789,8 +4801,8 @@ function renderIndexedTx(tx,c){
   var totalsHtml='';
   if(isCB){
     totalsHtml=
-      '<div class="k">block reward</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(Math.round(sumOut))+' SOST</span></div>'+
-      '<div class="k">outputs created</div><div class="v">'+(tx.vout?tx.vout.length:0)+' outputs &middot; <span class="td-amt">'+fS(Math.round(sumOut))+' SOST</span></div>';
+      '<div class="k">block reward</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fSx(sumOut)+' SOST</span></div>'+
+      '<div class="k">outputs created</div><div class="v">'+(tx.vout?tx.vout.length:0)+' outputs &middot; <span class="td-amt">'+fSx(sumOut)+' SOST</span></div>';
   } else {
     // Compute payment / change. Prefer the node-supplied integer-stocks
     // fields (3241078); fall back to walking vout against sourceAddr.
@@ -4807,14 +4819,44 @@ function renderIndexedTx(tx,c){
         else                            paymentStocks += ps;
       }
     }
+    // SELF-SEND CAPSULE detection. When every OUT_TRANSFER routes back to
+    // the source address AND a capsule is present on the TX, the smallest
+    // of those self-outputs is the capsule body (e.g. 0.01 SOST anchor
+    // payload); the remainder is genuine change. Without this rule the
+    // capsule output is lumped into "change returned" and "payment sent"
+    // reads 0.0000 — which is technically the net flow out of the address
+    // but masks the semantic 0.01 SOST capsule transfer the operator
+    // actually composed. We label that case explicitly.
+    var preCapObj=tx.capsule||(tx.vout&&tx.vout[0]&&tx.vout[0].payload_hex?parseCapsuleHexJS(tx.vout[0].payload_hex):null);
+    var isSelfSendCapsule=false, capsuleSelfStocks=0;
+    if(sourceAddr && preCapObj && preCapObj.type && preCapObj.type!=='unknown'
+       && (paymentStocks===0) && (changeStocks||0)>0 && tx.vout){
+      var allSelf=true, selfStocks=[];
+      for(var so=0;so<tx.vout.length;so++){
+        var ovo=tx.vout[so];
+        if((ovo.type||0)!==0)continue;
+        if(ovo.address!==sourceAddr){allSelf=false;break;}
+        selfStocks.push(Math.round(parseFloat(ovo.amount||0)*1e8));
+      }
+      if(allSelf && selfStocks.length>=1){
+        isSelfSendCapsule=true;
+        capsuleSelfStocks=Math.min.apply(Math, selfStocks);
+        paymentStocks = capsuleSelfStocks;
+        changeStocks  = changeStocks - capsuleSelfStocks;
+      }
+    }
     var feeRow = (fee>0)
       ? '<div class="k">network fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+feeSOST+' SOST</span> <span style="color:var(--text3)">(~'+feeRate+' st/B, ~'+estSize+' bytes)</span></div>'
       : '<div class="k">network fee</div><div class="v"><span style="color:var(--text3)">0 SOST</span></div>';
     var splitRows = '';
     if (paymentStocks !== null) {
+      var paymentLabel = isSelfSendCapsule ? 'capsule self-send' : 'payment sent';
+      var paymentTail  = isSelfSendCapsule
+        ? ' <span style="color:var(--text3);font-size:10px">(to source &mdash; carries the capsule)</span>'
+        : '';
       splitRows =
-        '<div class="k">payment sent</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(paymentStocks)+' SOST</span></div>'+
-        '<div class="k">change returned</div><div class="v">'+fS(changeStocks||0)+' SOST <span style="color:var(--text3);font-size:10px">(back to source)</span></div>';
+        '<div class="k">'+paymentLabel+'</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fSx(paymentStocks)+' SOST</span>'+paymentTail+'</div>'+
+        '<div class="k">change returned</div><div class="v">'+fSx(changeStocks||0)+' SOST <span style="color:var(--text3);font-size:10px">(back to source)</span></div>';
     } else {
       splitRows =
         '<div class="k">payment / change</div><div class="v"><span style="color:var(--text3)">split unavailable &mdash; source address could not be resolved for this TX</span></div>';
@@ -4822,8 +4864,8 @@ function renderIndexedTx(tx,c){
     totalsHtml =
       splitRows +
       feeRow +
-      '<div class="k">inputs consumed</div><div class="v">'+(tx.vin?tx.vin.length:0)+' UTXOs &middot; <span class="td-amt">'+fS(Math.round(sumIn))+' SOST</span></div>'+
-      '<div class="k">outputs created</div><div class="v">'+(tx.vout?tx.vout.length:0)+' outputs &middot; <span class="td-amt">'+fS(Math.round(sumOut))+' SOST</span></div>';
+      '<div class="k">inputs consumed</div><div class="v">'+(tx.vin?tx.vin.length:0)+' UTXOs &middot; <span class="td-amt">'+fSx(sumIn)+' SOST</span></div>'+
+      '<div class="k">outputs created</div><div class="v">'+(tx.vout?tx.vout.length:0)+' outputs &middot; <span class="td-amt">'+fSx(sumOut)+' SOST</span></div>';
   }
   // Old vars kept so the surrounding code paths stay valid.
   var feeHtml='';
@@ -4945,20 +4987,47 @@ function renderMempoolTx(tx,c){
     if (typeof tx.payment_amount==='number') paymentSt=tx.payment_amount;
     if (typeof tx.change_amount ==='number') changeSt =tx.change_amount;
     var mpSumOut = Math.round(totalOut * 1e8);
+    // Mempool self-send capsule detection: same rule as the confirmed
+    // path. If every OUT_TRANSFER routes back to the first input's address
+    // and a capsule is present, the smallest such output is the capsule
+    // body and gets labelled explicitly instead of being lumped into
+    // "change returned".
+    var mpFirstInputAddr = (tx.vin && tx.vin[0] && tx.vin[0].address) || null;
+    var mpIsSelfSendCapsule=false, mpCapsuleStocks=0;
+    if (mpFirstInputAddr && capObj && capObj.type && capObj.type!=='unknown'
+        && (paymentSt===0) && (changeSt||0)>0 && tx.vout) {
+      var mpAllSelf=true, mpSelfStocks=[];
+      for (var mso=0; mso<tx.vout.length; mso++) {
+        var mvo = tx.vout[mso];
+        var mvoVal = (typeof mvo.value==='number'?mvo.value:parseFloat(mvo.value||0));
+        if (mvo.address !== mpFirstInputAddr) { mpAllSelf=false; break; }
+        mpSelfStocks.push(Math.round(mvoVal*1e8));
+      }
+      if (mpAllSelf && mpSelfStocks.length>=1) {
+        mpIsSelfSendCapsule=true;
+        mpCapsuleStocks=Math.min.apply(Math, mpSelfStocks);
+        paymentSt = mpCapsuleStocks;
+        changeSt  = changeSt - mpCapsuleStocks;
+      }
+    }
     var splitRows = '';
     if (paymentSt !== null) {
+      var mpPaymentLabel = mpIsSelfSendCapsule ? 'capsule self-send' : 'payment sent';
+      var mpPaymentTail  = mpIsSelfSendCapsule
+        ? ' <span style="color:var(--text3);font-size:10px">(to source &mdash; carries the capsule)</span>'
+        : '';
       splitRows =
-        '<div class="k">payment sent</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fS(paymentSt)+' SOST</span></div>'+
-        '<div class="k">change returned</div><div class="v">'+fS(changeSt||0)+' SOST <span style="color:var(--text3);font-size:10px">(back to source)</span></div>';
+        '<div class="k">'+mpPaymentLabel+'</div><div class="v"><span style="color:var(--green);font-size:14px;font-weight:600">'+fSx(paymentSt)+' SOST</span>'+mpPaymentTail+'</div>'+
+        '<div class="k">change returned</div><div class="v">'+fSx(changeSt||0)+' SOST <span style="color:var(--text3);font-size:10px">(back to source)</span></div>';
     } else {
       splitRows =
         '<div class="k">payment / change</div><div class="v"><span style="color:var(--text3)">split shows after the source UTXO is resolved</span></div>';
     }
     mpTotalsHtml =
       splitRows +
-      '<div class="k">network fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+fS(fee)+' SOST</span> <span style="color:var(--text3)">('+feeRate+' stocks/byte)</span></div>'+
+      '<div class="k">network fee</div><div class="v"><span style="color:var(--red);font-weight:600">'+fSx(fee)+' SOST</span> <span style="color:var(--text3)">('+feeRate+' stocks/byte)</span></div>'+
       '<div class="k">inputs consumed</div><div class="v">'+tx.vin.length+' UTXOs <span style="color:var(--text3);font-size:10px">(amounts resolve once mined)</span></div>'+
-      '<div class="k">outputs created</div><div class="v">'+tx.vout.length+' outputs &middot; <span class="td-amt">'+fS(mpSumOut)+' SOST</span></div>';
+      '<div class="k">outputs created</div><div class="v">'+tx.vout.length+' outputs &middot; <span class="td-amt">'+fSx(mpSumOut)+' SOST</span></div>';
   }
   var mpMicrocopy =
     '<div style="grid-column:1 / -1;font-size:10px;color:var(--text3);padding:6px 0 0 0;border-top:1px dashed var(--border);margin-top:4px">'+
