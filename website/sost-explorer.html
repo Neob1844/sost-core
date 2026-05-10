@@ -5047,10 +5047,87 @@ function _buildUtxoRow(u,txidCounts){
   var matLabel=isMature?'<span style="color:var(--green);font-size:9px;font-weight:600">MATURE</span>':'<span style="color:var(--yellow);font-size:9px;font-weight:600">IMMATURE ('+maturityPct+'%)</span>';
   var matBar='';
   if(isCoinbase&&!isMature){var remaining=COINBASE_MATURITY-confs;matBar='<div style="margin-top:3px;width:80px;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="width:'+maturityPct+'%;height:100%;background:var(--yellow);border-radius:2px"></div></div><div style="font-size:8px;color:var(--text3);margin-top:1px">'+remaining+' blocks remaining</div>';}
-  var isLikelyChange=txidCounts[txid]>1&&u.vout>0;
-  var changeBadge=isLikelyChange?'<span class="change-badge">CHANGE</span>':'';
+  // CHANGE-self detection. u.change_self is set by showAddress after
+  // it fetches each unique source TX via gettransaction and checks
+  // whether any input belongs to the same address. Falls back to the
+  // legacy txidCounts>1 && vout>0 heuristic for UTXOs whose source TX
+  // we could not fetch (e.g. an RPC error during enrichment).
+  var isChangeSelf=(u.change_self===true)||(u.change_self===undefined&&txidCounts[txid]>1&&u.vout>0);
+  var changeBadge=isChangeSelf?'<span class="change-badge">CHANGE</span>':'';
+  // TYPE column. For coinbase / lottery / popc we keep the canonical
+  // label and colour. For a regular transfer that is actually a
+  // change-self output, we display CHANGE in a muted colour so the
+  // reader does not confuse it with an incoming payment.
   var tl=typeLabels[u.type]||'output';var tc=typeColors[u.type]||'var(--green)';
-  return '<tr><td><span class="td-link" onclick="showTxDetail(\''+txid+'\')">'+sH(txid)+':'+u.vout+'</span>'+cpBtn(txid)+'</td><td><span class="td-amt">'+(typeof u.amount==='number'?u.amount.toFixed(8):u.amount)+' SOST</span> '+changeBadge+'</td><td><span style="color:'+tc+';font-size:9px;font-weight:600">'+tl.toUpperCase()+'</span></td><td><span class="td-height" onclick="showBlockByHeight('+u.height+')">#'+u.height+'</span></td><td><span style="color:'+matColor+'">'+matIcon+' '+confs+'</span> '+matLabel+matBar+'</td></tr>';
+  var typeHtml;
+  if(isChangeSelf&&(u.type|0)===0){
+    typeHtml='<span style="color:var(--text3);font-size:9px;font-weight:600" title="output of an outgoing TX that routes the unspent remainder back to this address; not a payment received">CHANGE</span>';
+  }else{
+    typeHtml='<span style="color:'+tc+';font-size:9px;font-weight:600">'+tl.toUpperCase()+'</span>';
+  }
+  return '<tr><td><span class="td-link" onclick="showTxDetail(\''+txid+'\')">'+sH(txid)+':'+u.vout+'</span>'+cpBtn(txid)+'</td><td><span class="td-amt">'+(typeof u.amount==='number'?u.amount.toFixed(8):u.amount)+' SOST</span> '+changeBadge+'</td><td>'+typeHtml+'</td><td><span class="td-height" onclick="showBlockByHeight('+u.height+')">#'+u.height+'</span></td><td><span style="color:'+matColor+'">'+matIcon+' '+confs+'</span> '+matLabel+matBar+'</td></tr>';
+}
+/* Lazy CHANGE-self enrichment. For every unique non-coinbase txid in
+ * the UTXO list, fetch the source TX once via gettransaction and check
+ * whether any of its inputs belongs to addr. UTXOs whose source TX
+ * confirms a same-address input get u.change_self=true; the rest get
+ * u.change_self=false. Re-renders the current page after enrichment so
+ * the TYPE column updates without a hard reload. Best-effort: any RPC
+ * failure leaves change_self undefined so the legacy heuristic stays
+ * the fallback. */
+async function _enrichUtxosWithChangeSelf(addr){
+  if(!Array.isArray(window._addrUtxos)||!window._addrUtxos.length)return;
+  var uniqTxids=Object.create(null);
+  for(var i=0;i<window._addrUtxos.length;i++){
+    var u=window._addrUtxos[i];
+    if(!u||u.coinbase)continue;
+    if(u.txid)uniqTxids[u.txid]=true;
+  }
+  var txidList=Object.keys(uniqTxids);
+  if(!txidList.length)return;
+  var results=await Promise.all(txidList.map(function(tid){
+    return rpc('gettransaction',[tid]).then(function(tx){return {tid:tid,tx:tx};}).catch(function(){return {tid:tid,tx:null};});
+  }));
+  var byTxid={};
+  for(var r=0;r<results.length;r++)byTxid[results[r].tid]=results[r].tx;
+  for(var j=0;j<window._addrUtxos.length;j++){
+    var u2=window._addrUtxos[j];
+    if(!u2||u2.coinbase){if(u2)u2.change_self=false;continue;}
+    var tx=byTxid[u2.txid||''];
+    if(!tx||!Array.isArray(tx.vin)){continue;}
+    var hit=false;
+    for(var k=0;k<tx.vin.length;k++){
+      if(tx.vin[k]&&tx.vin[k].address===addr){hit=true;break;}
+    }
+    u2.change_self=hit;
+  }
+  var tbody=document.getElementById('utxoPagTbody');
+  if(tbody)tbody.innerHTML=_buildUtxoPage(window._addrPage)||'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">no UTXOs</td></tr>';
+  var footer=document.getElementById('utxoFooterTotals');
+  if(footer)footer.innerHTML=_buildUtxoFooterHtml();
+}
+/* Footer totals \u2014 matured-spendable transfer outputs vs immature
+ * (lottery + other coinbase) outputs. Reads directly from
+ * window._addrUtxos so it stays in sync with whatever the address
+ * view computed at page-build time. */
+function _buildUtxoFooterHtml(){
+  if(!Array.isArray(window._addrUtxos)||!window._addrUtxos.length)return '';
+  var matured=0,maturedCount=0,immatLot=0,immatLotCount=0,immatOther=0,immatOtherCount=0;
+  for(var i=0;i<window._addrUtxos.length;i++){
+    var u=window._addrUtxos[i];if(!u)continue;
+    var confs=H-u.height+1;
+    var amt=typeof u.amount==='number'?u.amount:parseFloat(u.amount||0);
+    var isCoinbase=!!u.coinbase;
+    var isMature=!isCoinbase||(confs>=COINBASE_MATURITY);
+    if(isMature){matured+=amt;maturedCount++;}
+    else if((u.type|0)===4){immatLot+=amt;immatLotCount++;}
+    else{immatOther+=amt;immatOtherCount++;}
+  }
+  var pieces=[];
+  pieces.push('<span style="color:var(--green)">\u2588 matured spendable: <b>'+matured.toFixed(8)+' SOST</b> ('+maturedCount+' UTXO'+(maturedCount===1?'':'s')+')</span>');
+  if(immatLotCount>0)pieces.push('<span style="color:#ff00ff">\u2588 immature lottery pending: <b>'+immatLot.toFixed(8)+' SOST</b> ('+immatLotCount+' UTXO'+(immatLotCount===1?'':'s')+')</span>');
+  if(immatOtherCount>0)pieces.push('<span style="color:var(--yellow)">\u2588 immature coinbase pending: <b>'+immatOther.toFixed(8)+' SOST</b> ('+immatOtherCount+' UTXO'+(immatOtherCount===1?'':'s')+')</span>');
+  return '<div style="display:flex;gap:18px;flex-wrap:wrap;padding:8px 4px;font-size:10px;border-top:1px dashed var(--border);margin-top:6px">'+pieces.join('')+'</div>';
 }
 function _buildUtxoPage(page){
   var ps=_addrPageSize,total=_addrUtxos.length;
@@ -5242,6 +5319,7 @@ async function showAddress(addr){
         '<div class="sec-title" style="margin-bottom:6px">// <b>UTXOs</b> <span style="color:var(--text3);font-weight:400;font-size:10px">click outpoint \u2192 tx detail \u00B7 click height \u2192 block</span></div>'+
         '<table class="tbl"><thead><tr><th>OUTPOINT</th><th>AMOUNT</th><th>TYPE</th><th>HEIGHT</th><th>MATURITY</th></tr></thead>'+
         '<tbody id="utxoPagTbody">'+(utxoRows||'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">no UTXOs</td></tr>')+'</tbody></table>'+
+        '<div id="utxoFooterTotals">'+_buildUtxoFooterHtml()+'</div>'+
         '<div id="utxoPagControls">'+_utxoPaginationHtml()+'</div>'+
       '</div>'+
       '<div class="fee-note" style="margin-top:16px;border-left-color:var(--cyan)">'+
@@ -5254,6 +5332,12 @@ async function showAddress(addr){
     window.scrollTo({top:0,behavior:'smooth'});
     // Render address charts
     setTimeout(function(){renderAddrCharts(sorted);renderMainWalletChart(sorted,totalBalance,matureBalance,immatureBalance,minedAmt,minedCount,inAmt);},100);
+    // Async CHANGE-self enrichment. Each unique non-coinbase source
+    // TXID gets a gettransaction call so we can mark u.change_self
+    // when one of the TX's inputs belongs to this same address. Best
+    // effort: failures fall back to the legacy heuristic that ships
+    // with _buildUtxoRow.
+    _enrichUtxosWithChangeSelf(a.address).catch(function(){});
     // Async hydrate ↑ SENT (non-mining). The first call after a new block
     // triggers a chain rebuild on the node (cached afterwards by tip
     // height), so it can take a few hundred ms — keep this off the
