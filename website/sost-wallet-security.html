@@ -78,12 +78,12 @@
 
 <h2>TL;DR</h2>
 <table class="table">
-  <thead><tr><th>Concept</th><th>Spanish</th><th>English</th></tr></thead>
+  <thead><tr><th>Concept</th><th>What it means</th></tr></thead>
   <tbody>
-    <tr><td class="k">SOST coins</td><td>Viven SIEMPRE en la cadena, públicas y permanentes</td><td>Live on-chain forever, public and permanent</td></tr>
-    <tr><td class="k">Private keys</td><td>Viven SOLO en tu wallet local cifrado</td><td>Live ONLY in your local encrypted wallet file</td></tr>
-    <tr><td class="k">Recovery</td><td>Las 12 palabras BIP39 regeneran las claves</td><td>The 12-word BIP39 phrase regenerates the keys</td></tr>
-    <tr><td class="k">Responsibility</td><td>Tú custodias las claves</td><td>You custody the keys yourself</td></tr>
+    <tr><td class="k">SOST coins</td><td>Live on-chain forever, public and permanent</td></tr>
+    <tr><td class="k">Private keys</td><td>Live ONLY in your local encrypted wallet file</td></tr>
+    <tr><td class="k">Recovery</td><td>The 12-word BIP39 phrase regenerates the keys</td></tr>
+    <tr><td class="k">Responsibility</td><td>You custody the keys yourself. Your keys, your coins. Your loss if you lose them.</td></tr>
   </tbody>
 </table>
 
@@ -215,23 +215,6 @@ IMMATURE:  31.40400000 SOST  (4 coinbase UTXOs)</code></pre>
   <li>Configured NTP (<code>chronyc</code>) so block timestamps are valid</li>
   <li>Read the 1000-block coinbase maturity rule</li>
 </ul>
-
-<div class="lang">
-<h2>Resumen rápido (Español)</h2>
-
-<p><b>En la cadena (público y permanente):</b> bloques, transacciones, UTXOs, recompensas de minado, loterías, gold vault. Cualquier nodo lo lee. Tus SOST están aquí.</p>
-<p><b>Solo en tu wallet local:</b> claves privadas, frase semilla cifrada, labels, derivación HD. Si pierdes el archivo Y las 12 palabras no podrás mover tus SOST nunca más.</p>
-<p><b>Por qué no se guardan claves en la cadena:</b> serían públicas y cualquiera podría mover tus SOST. La cadena guarda lo público; las claves son responsabilidad del usuario.</p>
-<p><b>Recuperación rápida</b> (con backup del wallet JSON): copiar el archivo a otro equipo y lanzar el CLI. ~1 min.</p>
-<p><b>Recuperación profunda</b> (solo con las 12 palabras):</p>
-<pre><code>./sost-cli --wallet wallet.json newwallet
-./sost-cli --wallet wallet.json hd restore
-./sost-cli --wallet wallet.json getnewaddress phase2-miner
-./sost-cli --wallet wallet.json info</code></pre>
-<p>~30-60 min. La dirección regenerada es idéntica a la original (BIP44 determinístico).</p>
-<p><b>Madurez de coinbase:</b> 1000 bloques (~7 días). Tu saldo aparece como <code>IMMATURE</code> y <code>SPENDABLE: 0</code> durante ese tiempo. Solo hay que esperar.</p>
-<p><b>Minar misma address en varias máquinas:</b> no suma hashrate de forma limpia — los miners exploran nonce space solapado. Recomendado: una label/address por máquina, consolidar después con <code>sost-cli send</code>.</p>
-</div>
 
 <footer>
   <div class="container">

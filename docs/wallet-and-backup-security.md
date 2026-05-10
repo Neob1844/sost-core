@@ -1,4 +1,4 @@
-# SOST Wallet & Backup Security / Seguridad de Wallet y Backups
+# SOST Wallet & Backup Security
 
 Single source of truth for "why does my balance look like 0 spendable?",
 "can I recover my wallet?", "should I run two miners with the same address?",
@@ -12,12 +12,12 @@ than duplicate the answer.
 
 ## TL;DR
 
-| Concept           | Spanish                                                   | English                                                       |
-|-------------------|-----------------------------------------------------------|---------------------------------------------------------------|
-| SOST coins        | Viven SIEMPRE en la cadena, públicas y permanentes        | Live on-chain forever, public and permanent                   |
-| Private keys      | Viven SOLO en tu wallet local cifrado                     | Live ONLY in your local encrypted wallet file                 |
-| Recovery          | Las 12 palabras BIP39 regeneran las claves                | The 12-word BIP39 phrase regenerates the keys                 |
-| Responsibility    | Tú custodias las claves. Tú pierdes si las pierdes        | Your keys, your coins. Your loss if you lose them             |
+| Concept           | What it means                                                       |
+|-------------------|---------------------------------------------------------------------|
+| SOST coins        | Live on-chain forever, public and permanent                         |
+| Private keys      | Live ONLY in your local encrypted wallet file                       |
+| Recovery          | The 12-word BIP39 phrase regenerates the keys                       |
+| Responsibility    | Your keys, your coins. Your loss if you lose them                   |
 
 > **Your keys, your coins. Your loss if you lose them.**
 
@@ -296,66 +296,6 @@ Before starting to mine seriously:
       spendable balance immediately)
 
 If all eight are checked, you are ready to mine safely.
-
----
-
-## Sección en español (resumen rápido)
-
-### Qué hay en la cadena vs en tu equipo
-
-**En la cadena (público y permanente)**: bloques, transacciones, UTXOs,
-recompensas de minado, lotterías, gold vault. Cualquier nodo lo puede
-leer. Tus SOST están aquí.
-
-**Solo en tu wallet local**: claves privadas, frase semilla cifrada,
-labels, derivación HD. Si pierdes el archivo Y las 12 palabras no podrás
-mover tus SOST nunca más.
-
-### Por qué no se guardan claves en la cadena
-
-Si las claves estuvieran en la cadena, todos las verían y cualquiera
-podría mover tus SOST. Sería un sistema sin sentido. La cadena guarda lo
-público. Las claves son responsabilidad del usuario.
-
-### Cómo recuperar la wallet
-
-**Vía rápida (con backup del wallet JSON)**: copiar el archivo a otro
-equipo y lanzar el CLI. ~1 min.
-
-**Vía profunda (solo con las 12 palabras)**:
-
-```bash
-./sost-cli --wallet wallet.json newwallet
-./sost-cli --wallet wallet.json hd restore   # te pide las 12 palabras
-./sost-cli --wallet wallet.json getnewaddress phase2-miner
-./sost-cli --wallet wallet.json info
-```
-
-~30-60 min. La dirección regenerada es idéntica a la original (BIP44
-determinístico).
-
-### Madurez de coinbase: 1000 bloques
-
-Cuando mineas un bloque, los SOST son **inmaduros** durante 1000
-confirmaciones (~7 días). Tu saldo aparece como `IMMATURE` y
-`SPENDABLE: 0` durante ese tiempo. Es protección anti-reorg estándar
-PoW. Solo hay que esperar.
-
-### Minar con la misma address en varias máquinas
-
-Dos miners con la misma label construyen templates muy similares y
-exploran rangos de nonce solapados. **No suma hashrate de forma limpia**:
-parte del trabajo de la segunda máquina se descarta cuando llega el
-siguiente bloque. Lo recomendado es **una label/address por máquina** y
-consolidar después con `sost-cli send`. Cuando exista un stratum/pool
-oficial de SOST, una única dirección compartida sí podrá sumar hashrate
-porque el pool reparte rangos de nonce disjuntos.
-
-### Tus claves, tus monedas
-
-Si pierdes las 12 palabras Y el wallet JSON, tus SOST quedan
-inalcanzables para siempre. Apunta las palabras en papel, guárdalas
-físicamente seguras, y haz copias del wallet cifrado en otro disco/USB.
 
 ---
 
