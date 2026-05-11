@@ -5388,8 +5388,15 @@ async function showAddress(addr){
     // MINED + RECEIVED + LOTTERY UNSPENT — the lifetime row is informational
     // and does not affect the sum.
     if(lottUnspentCount>0){
-      balHtml+='<div class="k" style="color:#ff00ff" title="Lottery payouts (OUT_COINBASE_LOTTERY, type=4) currently unspent at this address. PoP-Lottery wins from Phase 2 PAYOUT blocks whose lottery output has not yet been spent. Already excluded from MINED above so rows sum to TOTAL BALANCE without double-counting.">\u{1F3B0} DTD LOTTERY (current unspent)</div>';
-      balHtml+='<div class="v"><span style="color:#ff00ff;font-weight:600">'+lottUnspentAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottUnspentCount+' UTXO'+(lottUnspentCount===1?'':'s')+')</span></div>';
+      balHtml += _addrBalRow(
+        'lot-cur',
+        '🎰 DTD LOTTERY (current unspent)',
+        '<span style="color:#ff00ff;font-weight:600">'+lottUnspentAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottUnspentCount+' UTXO'+(lottUnspentCount===1?'':'s')+')</span>',
+        '<p><b>Currently unspent lottery payout outputs</b> (<code>OUT_COINBASE_LOTTERY</code>, <code>type=4</code>). Each entry is one PoP-Lottery win on a Phase 2 PAYOUT block whose payout output has not yet been moved &mdash; when an entry is spent it disappears from this row immediately.</p>'+
+        '<p>Already excluded from the MINED row above so the three sub-balances (MINED + RECEIVED currently held + LOTTERY current unspent) sum to TOTAL BALANCE without double-counting.</p>'+
+        '<p>Lottery outputs are coinbase, so they share the <code>'+COINBASE_MATURITY+' confirmations</code> maturity rule with regular MINED outputs. While immature, a lottery UTXO still appears here but cannot be spent yet &mdash; the maturity column in the UTXO list further down shows how many confirmations remain.</p>',
+        'color:#ff00ff'
+      );
     }
     if(lottLifetimeCount>0){
       var lottDeltaTxt='';
@@ -5397,14 +5404,35 @@ async function showAddress(addr){
         var spentN=lottLifetimeCount-lottUnspentCount;
         lottDeltaTxt=' · <span style="color:var(--text3)">'+spentN+' already spent</span>';
       }
-      balHtml+='<div class="k" style="color:#ff00ff" title="Lifetime PoP-Lottery wins for this address (from the DTD chain scan). Includes payouts that have already been spent — those are still reflected in TOTAL BALANCE through the change outputs of the spending transactions.">\u{1F3B0} DTD LOTTERY WON (lifetime)</div>';
-      balHtml+='<div class="v"><span style="color:#ff00ff;font-weight:600">'+lottLifetimeSost.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottLifetimeCount+(lottLifetimeCount===1?' win':' wins')+lottDeltaTxt+')</span></div>';
+      balHtml += _addrBalRow(
+        'lot-life',
+        '🎰 DTD LOTTERY WON (lifetime)',
+        '<span style="color:#ff00ff;font-weight:600">'+lottLifetimeSost.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottLifetimeCount+(lottLifetimeCount===1?' win':' wins')+lottDeltaTxt+')</span>',
+        '<p><b>Lifetime sum of PoP-Lottery wins for this address</b>, including payouts that have already been spent. Sourced from the DTD chain scan when it has been run in this session; otherwise the row prompts you to open the DTD section to populate it.</p>'+
+        '<p><b>If this lifetime number matches the current-unspent row above, none of your lottery wins have been moved yet.</b> If it is larger, the difference equals the count of wins you have already spent or consolidated &mdash; shown inline as <em>"N already spent"</em>.</p>'+
+        '<p>Unlike the current-unspent row, this one DOES persist across sessions (in <code>localStorage</code> under <code>sost_dtd_lottery_v1</code>). Run the DTD scan again after new lottery payouts land to refresh it.</p>',
+        'color:#ff00ff'
+      );
     }else if(lottUnspentCount===0){
-      balHtml+='<div class="k" style="color:#ff00ff" title="No Phase 2 lottery payouts currently held at this address. The DTD scan can confirm whether any have been won and already spent.">\u{1F3B0} DTD LOTTERY</div>';
-      balHtml+='<div class="v"><span style="color:var(--text3)">no lottery UTXOs · open DTD section to confirm lifetime</span></div>';
+      balHtml += _addrBalRow(
+        'lot-life',
+        '🎰 DTD LOTTERY',
+        '<span style="color:var(--text3)">no lottery UTXOs · open DTD section to confirm lifetime</span>',
+        '<p><b>No PoP-Lottery payouts are currently held at this address.</b> That is the snapshot answer.</p>'+
+        '<p>For a definitive lifetime answer (whether any lottery has ever been won and already spent), open the DTD section of the explorer. It walks Phase 2 PAYOUT blocks looking for <code>OUT_COINBASE_LOTTERY</code> outputs paid to this address and caches the result for the rest of the session in <code>localStorage</code>.</p>'+
+        '<p>If the DTD scan also reports zero, this address has never won a PoP-Lottery payout.</p>',
+        'color:#ff00ff'
+      );
     }else{
-      balHtml+='<div class="k" style="color:#ff00ff" title="DTD scan has not run yet in this session. The CURRENT UNSPENT row above is exact; open the DTD section to populate the lifetime total (which also includes lottery UTXOs already spent).">\u{1F3B0} DTD LOTTERY WON (lifetime)</div>';
-      balHtml+='<div class="v"><span style="color:var(--text3)">open DTD section to scan lifetime</span></div>';
+      balHtml += _addrBalRow(
+        'lot-life',
+        '🎰 DTD LOTTERY WON (lifetime)',
+        '<span style="color:var(--text3)">open DTD section to scan lifetime</span>',
+        '<p><b>The DTD chain scan has not run yet in this session</b>, so the lifetime lottery total has not been computed for this address.</p>'+
+        '<p>The CURRENT UNSPENT row above is exact regardless &mdash; that one comes straight from the live UTXO set. Lifetime requires walking historical PAYOUT blocks, which is what the DTD scan does.</p>'+
+        '<p>Open the DTD section of the explorer to populate this row. Results cache in <code>localStorage</code> for the rest of the session, so subsequent address views show the lifetime number immediately.</p>',
+        'color:#ff00ff'
+      );
     }
     if(immatureCount>0){
       balHtml += _addrBalRow(
