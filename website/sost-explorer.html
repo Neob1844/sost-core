@@ -220,6 +220,21 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .dtl-grid .v{padding:8px 0;font-size:12px;color:var(--text);border-bottom:1px solid var(--border);word-break:break-all}
 .dtl-grid .v-hash{color:var(--cyan);cursor:pointer}
 .dtl-grid .v-hash:hover{text-shadow:0 0 8px rgba(103,232,249,.3)}
+/* Expandable per-row help. Click on .k.k-help to toggle a .k-help-body
+ * row that spans both columns and reveals a plain-English explanation
+ * of what the metric means, what zero means, snapshot vs lifetime, etc.
+ * Multiple rows can be open at once; state is purely DOM-local. */
+.dtl-grid .k.k-help{cursor:help;user-select:none;transition:color .12s ease}
+.dtl-grid .k.k-help:hover{color:var(--text)}
+.dtl-grid .k.k-help .k-chev{display:inline-block;font-size:8px;opacity:.4;margin-left:5px;transition:transform .18s ease,opacity .18s ease;color:inherit}
+.dtl-grid .k.k-help.open .k-chev{transform:rotate(180deg);opacity:.95}
+.dtl-grid .k-help-body{grid-column:1 / -1;max-height:0;overflow:hidden;transition:max-height .28s ease,padding .28s ease,margin .28s ease,border-color .28s ease;background:rgba(255,255,255,.014);border-left:2px solid transparent;border-bottom:0 solid var(--border);padding:0 14px;font-size:11px;line-height:1.7;color:var(--text2);box-sizing:border-box}
+.dtl-grid .k-help-body.open{max-height:900px;padding:12px 14px;margin:0 0 4px 0;border-left-color:var(--border);border-bottom:1px solid var(--border)}
+.dtl-grid .k-help-body p{margin:0 0 8px 0}
+.dtl-grid .k-help-body p:last-child{margin-bottom:0}
+.dtl-grid .k-help-body code{font-family:var(--font-mono,'JetBrains Mono',monospace);background:rgba(0,0,0,.35);padding:1px 5px;border-radius:2px;font-size:10.5px;color:var(--cyan)}
+.dtl-grid .k-help-body b{color:var(--text)}
+.dtl-grid .k-help-body em{color:var(--text2);font-style:italic}
 .casert-panel{margin-top:20px;background:var(--bg3);border:1px solid var(--border);padding:20px}
 .casert-title{font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:14px}
 .casert-title b{color:var(--purple)}
@@ -5189,6 +5204,34 @@ function _goUtxoPage(p){
   var pag=document.getElementById('utxoPagControls');
   if(pag)pag.innerHTML=_utxoPaginationHtml();
 }
+/* Toggle the per-row expandable help body. Each balance row has a
+ * matching pair (lbl-<id>, help-<id>); this flips both ".open" classes
+ * so the chevron rotates and the body expands. Idempotent: clicking
+ * twice closes again. */
+function _toggleAddrHelp(id){
+  var body=document.getElementById('help-'+id);
+  var lbl=document.getElementById('lbl-'+id);
+  if(!body||!lbl)return;
+  body.classList.toggle('open');
+  lbl.classList.toggle('open');
+}
+/* Helper builder for one expandable balance row. Returns three grid
+ * children: clickable label (k.k-help), value cell (v), hidden help
+ * body that spans both columns. `id` must be unique per address render
+ * (the same balance section can have at most one of each). `labelHtml`
+ * and `valueHtml` are passed through. `helpHtml` is the inner HTML of
+ * the expanded body; embed <p> for spacing, <code> for monospace,
+ * <b>/<em> for emphasis. `labelStyle` is an optional inline color/etc
+ * applied to the label. `extraLblAttrs` lets callers add legacy ids
+ * (e.g. id="addrSentLbl") so async hydration still finds the cell. */
+function _addrBalRow(id, labelHtml, valueHtml, helpHtml, labelStyle, extraLblAttrs){
+  var ls = labelStyle ? (' style="'+labelStyle+'"') : '';
+  var ex = extraLblAttrs ? (' '+extraLblAttrs) : '';
+  return ''
+    + '<div class="k k-help" id="lbl-'+id+'"'+ex+' onclick="_toggleAddrHelp(\''+id+'\')"'+ls+'>'+labelHtml+' <span class="k-chev">▾</span></div>'
+    + '<div class="v">'+valueHtml+'</div>'
+    + '<div class="k-help-body" id="help-'+id+'">'+helpHtml+'</div>';
+}
 async function showAddress(addr){
   openDetail();var c=document.getElementById('detailContent');
   pushNav('addr',sH(addr),addr);
@@ -5264,9 +5307,33 @@ async function showAddress(addr){
       lottLifetimeCount=dtdLottery.count||0;
     }
     // Balance section — clean vertical rows
-    var balHtml='<div class="k">TOTAL BALANCE</div><div class="v"><span style="color:#00ff88;font-size:16px;font-weight:700">'+totalBalance.toFixed(8)+' SOST</span></div>';
-    balHtml+='<div class="k" style="color:#ffd700" title="Coinbase miner outputs (type=1) currently unspent at this address. The address has '+minedCount+' such UTXOs whose miner-share output has not yet been spent. Lottery payouts (type=4) are split into the row below so totals don\'t double-count.">\u26CF MINED</div><div class="v"><span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span></div>';
-    balHtml+='<div class="k" style="color:#00ff88" title="Non-coinbase UTXOs currently held at this address (includes change outputs from own transactions). This is a CURRENT snapshot of unspent UTXOs \u2014 not historical flow. The two GROSS LIFETIME rows below come from a different RPC and cover the entire chain history.">\u2193 RECEIVED \u00b7 currently held (non-mining)</div><div class="v"><span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' UTXOs)</span></div>';
+    var balHtml='';
+    balHtml += _addrBalRow(
+      'total',
+      'TOTAL BALANCE',
+      '<span style="color:#00ff88;font-size:16px;font-weight:700">'+totalBalance.toFixed(8)+' SOST</span>',
+      '<p><b>Sum of every unspent UTXO at this address regardless of type.</b> Always equals <code>MINED + RECEIVED currently held + LOTTERY currently unspent</code>.</p>'+
+      '<p>Falls when an output is spent (it disappears from the UTXO set) and rises when a new output arrives or matures. Pure <em>snapshot</em> &mdash; there is no lifetime aggregation here.</p>'+
+      '<p>The GROSS LIFETIME rows further down do <em>not</em> add to this number. They describe historical flow, not current balance.</p>'
+    );
+    balHtml += _addrBalRow(
+      'mined',
+      '⛏ MINED',
+      '<span style="color:#ffd700;font-weight:600">'+minedAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+minedCount+' blocks)</span>',
+      '<p><b>Currently unspent coinbase miner outputs</b> &mdash; the 50% miner-share output the protocol pays to the block winner (UTXO <code>type=1</code>). Each entry corresponds to a block this address mined whose miner output has not yet been moved.</p>'+
+      '<p><b>Not a lifetime total.</b> If some mined coinbase has already been consolidated or spent elsewhere, it disappears from this row. Its value still shows up in <code>GROSS sent (lifetime)</code> below, so the accounting stays whole.</p>'+
+      '<p>Lottery payouts (<code>type=4</code>) live in their own DTD LOTTERY row below so MINED + LOTTERY never double-count. Coinbase outputs are also subject to the <code>'+COINBASE_MATURITY+' confirmations</code> maturity rule; see SPENDABLE / IMMATURE further down.</p>',
+      'color:#ffd700'
+    );
+    balHtml += _addrBalRow(
+      'recv-cur',
+      '↓ RECEIVED · currently held (non-mining)',
+      '<span style="color:#00ff88;font-weight:600">'+inAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+inCount+' UTXOs)</span>',
+      '<p><b>Non-coinbase UTXOs currently sitting at this address.</b> Snapshot of the present state: when one of these UTXOs is consumed as an input in any TX, it disappears from this row immediately.</p>'+
+      '<p>Includes change outputs that came back from your own outgoing TXs (capsule self-sends, consolidations). Those entries are labeled <code>CHANGE</code> in the UTXO list below &mdash; they are not new money arriving, they are the unspent remainder of value that briefly left and came back.</p>'+
+      '<p><b>Zero means one of two things:</b> either the address has never received any non-coinbase transfer, or it received some and already spent every one. Check the <code>GROSS received (lifetime)</code> row directly below to disambiguate &mdash; if that one is also zero, the address has truly never received non-coinbase value in its life.</p>',
+      'color:#00ff88'
+    );
     // GROSS LIFETIME FLOW rows. Both come from the node's
     // getaddressflows RPC, which walks every block once and caches the
     // result by chain tip. The pair is shown together so readers can
@@ -5276,9 +5343,39 @@ async function showAddress(addr){
     // capsule self-send of 450 SOST therefore lifts both numbers by
     // 450 SOST even though the net flow out of the address is the fee
     // only.
-    balHtml+='<div class="k" id="addrRecvGrossLbl" style="color:#00ff88" title="LIFETIME GROSS: sum of every non-coinbase output ever paid TO this address. Includes change outputs that came back from self-sends. Inflated by capsule anchors, consolidations and any other TX where this address was both source and destination. To get the actual net inflow from external counterparties you would need to subtract the self-send change volume, which requires walking the per-TX inputs.">\u2193 GROSS received (lifetime)</div><div class="v" id="addrRecvGrossVal"><span style="color:var(--text3)">loading...</span></div>';
-    balHtml+='<div class="k" id="addrSentLbl" style="color:#fb010d" title="LIFETIME GROSS: sum of every non-coinbase output of this address ever consumed as an input in some TX. Includes the input side of self-sends (capsule anchors, consolidations) whose change came back as part of the GROSS received row above \u2014 those round-trips inflate both numbers equally and do not represent value leaving the address externally. Net external outflow is NOT computed in v0; use the per-TX flow view to inspect specific outgoing TXs.">\u2191 GROSS sent (lifetime)</div><div class="v" id="addrSentVal"><span style="color:var(--text3)">loading...</span></div>';
-    balHtml+='<div class="k" id="addrNetExtLbl" style="color:var(--text3)" title="NET EXTERNAL OUTFLOW is not computed in v0. Computing it accurately requires walking every outgoing TX of this address and classifying each output as either (a) change back to source, (b) capsule self-anchor, (c) payment to an external address. The per-TX detail view already shows this breakdown for individual TXs; an aggregate computation across history is left for a later sprint. The two GROSS rows above are reported as-is from getaddressflows so the reader can see the raw lifetime totals.">\u2295 NET external outflow</div><div class="v" id="addrNetExtVal"><span style="color:var(--text3)">not computed in v0 &middot; see per-TX flow for breakdown</span></div>';
+    balHtml += _addrBalRow(
+      'recv-gross',
+      '↓ GROSS received (lifetime)',
+      '<span id="addrRecvGrossVal" style="color:var(--text3)">loading...</span>',
+      '<p><b>Sum of every non-coinbase output ever paid TO this address since block 0</b>, up to the height shown next to the value (<code>scanned through #N</code>). Sourced from the node\'s <code>getaddressflows</code> RPC, which walks the chain once and caches per chain-tip.</p>'+
+      '<p><b>Lifetime &mdash; never decreases.</b> Spending a UTXO does not subtract from this row; the value already <em>arrived</em> at the address, that fact is permanent.</p>'+
+      '<p><b>Gross.</b> Includes change outputs returning from your own self-sends, capsule anchors, consolidations &mdash; every time this address appears as the destination of a non-coinbase output, it adds here. A capsule self-send of 450 SOST adds +450 to this row even though those 450 came right back from the same address.</p>'+
+      '<p>To see the inflow excluding self-send round-trips, you would need NET external outflow &mdash; which is <em>not computed in v0</em> (see the row two below).</p>',
+      'color:#00ff88',
+      'id="addrRecvGrossLbl"'
+    );
+    balHtml += _addrBalRow(
+      'sent-gross',
+      '↑ GROSS sent (lifetime)',
+      '<span id="addrSentVal" style="color:var(--text3)">loading...</span>',
+      '<p><b>Sum of every output of this address ever consumed as an input in some TX</b>, lifetime, up to <code>scanned through #N</code>. Sourced from <code>getaddressflows</code>.</p>'+
+      '<p><b>Gross &mdash; includes self-sends.</b> A capsule self-send of 450 SOST adds +450 here even though most of that value came right back as change (which simultaneously added +450 to <code>GROSS received</code> above). A simple consolidation of 39 lottery payouts to pay 150 SOST somewhere also adds the full ~153 SOST that the wallet had to gather as inputs, not just the 150 that actually left.</p>'+
+      '<p><b>Gross sent != real loss.</b> This is the bookkeeping number for inputs consumed across history. To know how much actually left the address externally, see NET external outflow below &mdash; and in the meantime, walk individual outgoing TXs in the per-TX detail view.</p>'+
+      '<p><b>Zero means the address has never signed any outgoing TX in its life</b>, not even to consolidate its own mined coinbase. Every UTXO it ever received is still sitting here untouched.</p>',
+      'color:#fb010d',
+      'id="addrSentLbl"'
+    );
+    balHtml += _addrBalRow(
+      'net-ext',
+      '⊕ NET external outflow',
+      '<span id="addrNetExtVal" style="color:var(--text3)">not computed in v0 &middot; see per-TX flow for breakdown</span>',
+      '<p><b>The number you probably want when you ask <em>"how much SOST has actually left this address?"</em></b> It would equal <code>GROSS sent &minus; change-self-volume that came back</code>.</p>'+
+      '<p>Computing it accurately requires walking every outgoing TX of this address and classifying each output as one of three things: <b>(a)</b> change back to source, <b>(b)</b> capsule self-anchor, or <b>(c)</b> payment to an external address. The per-TX detail view already does this on individual TXs (look at the <code>capsule self-send</code> vs <code>change returned</code> rows of any TX); aggregating across full history is left for a later sprint.</p>'+
+      '<p><b>In v0 we deliberately show <em>not computed</em></b> rather than estimate a number that looks exact but is approximate. A future sprint will add the per-TX walk and surface the real value here.</p>'+
+      '<p>Until then: if <code>GROSS sent (lifetime)</code> is zero, NET external is also zero. If it is non-zero, walk specific outgoing TXs in the per-TX flow view to see how much was self-send and how much actually left.</p>',
+      'color:var(--text3)',
+      'id="addrNetExtLbl"'
+    );
     balHtml+='<div style="grid-column:1 / -1;font-size:10px;color:var(--text3);padding:6px 10px;border-left:2px solid var(--border);margin-top:4px;line-height:1.55">'+
       '<b style="color:var(--cyan)">\u2139 Gross flow note.</b> The two GROSS rows above include <b>self-send transactions</b> '+
       '(capsule anchors, consolidations to the same address, change outputs returning to source). '+
@@ -5310,8 +5407,23 @@ async function showAddress(addr){
       balHtml+='<div class="v"><span style="color:var(--text3)">open DTD section to scan lifetime</span></div>';
     }
     if(immatureCount>0){
-      balHtml+='<div class="k" style="color:#00ff88">\u25A0 SPENDABLE</div><div class="v"><span style="color:#00ff88;font-weight:600">'+matureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+matureCount+' mature UTXOs)</span></div>';
-      balHtml+='<div class="k" style="color:#fbbf24">\u25A1 IMMATURE</div><div class="v"><span style="color:#fbbf24;font-weight:600">'+immatureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+immatureCount+' UTXOs \u00B7 need '+COINBASE_MATURITY+' confirmations)</span></div>';
+      balHtml += _addrBalRow(
+        'spendable',
+        '■ SPENDABLE',
+        '<span style="color:#00ff88;font-weight:600">'+matureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+matureCount+' mature UTXOs)</span>',
+        '<p><b>Sum of UTXOs that are currently mature and can be moved right now.</b> Non-coinbase outputs (regular transfers + change) are always mature the moment their TX confirms. Coinbase outputs (MINED + LOTTERY) need <code>'+COINBASE_MATURITY+' confirmations</code> from the block they were mined in before they can be spent.</p>'+
+        '<p><b>SPENDABLE &le; TOTAL BALANCE</b>: the difference is locked in immature coinbase outputs waiting for confirmations. If SPENDABLE equals TOTAL BALANCE the address has no immature outputs right now.</p>',
+        'color:#00ff88'
+      );
+      balHtml += _addrBalRow(
+        'immature',
+        '□ IMMATURE',
+        '<span style="color:#fbbf24;font-weight:600">'+immatureBalance.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+immatureCount+' UTXOs · need '+COINBASE_MATURITY+' confirmations)</span>',
+        '<p><b>Sum of coinbase outputs (miner + lottery) currently still in the maturity window.</b> Each one needs <code>'+COINBASE_MATURITY+' confirmations</code> from its mining block before it can be spent.</p>'+
+        '<p>Once each immature UTXO accumulates its '+COINBASE_MATURITY+'th confirmation, it shifts from this row into SPENDABLE on the next address-view refresh. The maturity column in the UTXO list below shows the current confirmation count and an estimated time-to-mature for each entry.</p>'+
+        '<p>This row only renders when there is at least one immature coinbase output. Pure non-coinbase addresses or fully-mature miners never see this row.</p>',
+        'color:#fbbf24'
+      );
     }
     // UTXO pagination — store data globally for page rendering
     var txidCounts={};for(var ui=0;ui<sorted.length;ui++){var tid=sorted[ui].txid||'';txidCounts[tid]=(txidCounts[tid]||0)+1;}
