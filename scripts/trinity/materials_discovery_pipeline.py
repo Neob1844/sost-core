@@ -25,11 +25,11 @@ Output (basenames anchored on ``--family``)
 -------------------------------------------
 - ``TRINITY_MATERIALS_CANDIDATES_<family>.json`` + ``.md``
 - ``TRINITY_MATERIALS_FILTER_<family>.json`` + ``.md``
-- ``TRINITY_MATERIALS_SCORECARD_<family>_v01.json`` + ``.md``
-- ``TRINITY_MATERIALS_DOSSIER_<family>_v01.json`` + ``.md``
-- ``TRINITY_MATERIALS_USEFUL_COMPUTE_PLAN_<family>_v01.json`` + ``.md``
-- ``TRINITY_MATERIALS_CAMPAIGN_<family>_v01.json`` + ``.md``
-- ``TRINITY_MATERIALS_PROOF_BUNDLE_<family>_v01.json`` + ``.md``
+- ``TRINITY_MATERIALS_SCORECARD_<family>_v02.json`` + ``.md``
+- ``TRINITY_MATERIALS_DOSSIER_<family>_v02.json`` + ``.md``
+- ``TRINITY_MATERIALS_USEFUL_COMPUTE_PLAN_<family>_v02.json`` + ``.md``
+- ``TRINITY_MATERIALS_CAMPAIGN_<family>_v02.json`` + ``.md``
+- ``TRINITY_MATERIALS_PROOF_BUNDLE_<family>_v02.json`` + ``.md``
 """
 
 from __future__ import annotations
@@ -96,16 +96,16 @@ def run_pipeline(
         "candidates_md":   out_dir / f"TRINITY_MATERIALS_CANDIDATES_{fam}.md",
         "filter_json":     out_dir / f"TRINITY_MATERIALS_FILTER_{fam}.json",
         "filter_md":       out_dir / f"TRINITY_MATERIALS_FILTER_{fam}.md",
-        "scorecard_json":  out_dir / f"TRINITY_MATERIALS_SCORECARD_{fam}_v01.json",
-        "scorecard_md":    out_dir / f"TRINITY_MATERIALS_SCORECARD_{fam}_v01.md",
-        "dossier_json":    out_dir / f"TRINITY_MATERIALS_DOSSIER_{fam}_v01.json",
-        "dossier_md":      out_dir / f"TRINITY_MATERIALS_DOSSIER_{fam}_v01.md",
-        "plan_json":       out_dir / f"TRINITY_MATERIALS_USEFUL_COMPUTE_PLAN_{fam}_v01.json",
-        "plan_md":         out_dir / f"TRINITY_MATERIALS_USEFUL_COMPUTE_PLAN_{fam}_v01.md",
-        "campaign_json":   out_dir / f"TRINITY_MATERIALS_CAMPAIGN_{fam}_v01.json",
-        "campaign_md":     out_dir / f"TRINITY_MATERIALS_CAMPAIGN_{fam}_v01.md",
-        "bundle_json":     out_dir / f"TRINITY_MATERIALS_PROOF_BUNDLE_{fam}_v01.json",
-        "bundle_md":       out_dir / f"TRINITY_MATERIALS_PROOF_BUNDLE_{fam}_v01.md",
+        "scorecard_json":  out_dir / f"TRINITY_MATERIALS_SCORECARD_{fam}_v02.json",
+        "scorecard_md":    out_dir / f"TRINITY_MATERIALS_SCORECARD_{fam}_v02.md",
+        "dossier_json":    out_dir / f"TRINITY_MATERIALS_DOSSIER_{fam}_v02.json",
+        "dossier_md":      out_dir / f"TRINITY_MATERIALS_DOSSIER_{fam}_v02.md",
+        "plan_json":       out_dir / f"TRINITY_MATERIALS_USEFUL_COMPUTE_PLAN_{fam}_v02.json",
+        "plan_md":         out_dir / f"TRINITY_MATERIALS_USEFUL_COMPUTE_PLAN_{fam}_v02.md",
+        "campaign_json":   out_dir / f"TRINITY_MATERIALS_CAMPAIGN_{fam}_v02.json",
+        "campaign_md":     out_dir / f"TRINITY_MATERIALS_CAMPAIGN_{fam}_v02.md",
+        "bundle_json":     out_dir / f"TRINITY_MATERIALS_PROOF_BUNDLE_{fam}_v02.json",
+        "bundle_md":       out_dir / f"TRINITY_MATERIALS_PROOF_BUNDLE_{fam}_v02.md",
     }
 
     # Stage 1: generator
@@ -153,7 +153,7 @@ def run_pipeline(
         )
 
     # Stage 4: dossier
-    campaign_name = f"{fam}_v01"
+    campaign_name = f"{fam}_v02"
     d = dossier.build_dossier(
         campaign=campaign_name,
         generated_at_utc=pinned_time,

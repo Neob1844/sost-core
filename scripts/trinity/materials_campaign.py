@@ -45,6 +45,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 _SCHEMA = "trinity-materials-campaign/v0"
 _DOSSIER_SCHEMA = "trinity-materials-dossier/v0"
+# v0.2 bumped the dossier schema; both are accepted by this stage.
+_DOSSIER_SCHEMAS_ACCEPTED = (
+    "trinity-materials-dossier/v0",
+    "trinity-materials-dossier/v0.2",
+)
 _PLAN_SCHEMA = "trinity-materials-uc-plan/v0"
 _TRACK = "materials"
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
@@ -402,10 +407,11 @@ def build_campaign(
     dossier = json.loads(dossier_path.read_text(encoding="utf-8"))
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
 
-    if dossier.get("schema") != _DOSSIER_SCHEMA:
+    if dossier.get("schema") not in _DOSSIER_SCHEMAS_ACCEPTED:
         raise ValueError(
-            f"dossier {dossier_path.name} schema must be "
-            f"{_DOSSIER_SCHEMA!r}"
+            f"dossier {dossier_path.name} schema must be one of "
+            f"{_DOSSIER_SCHEMAS_ACCEPTED!r}; got "
+            f"{dossier.get('schema')!r}"
         )
     if plan.get("schema") != _PLAN_SCHEMA:
         raise ValueError(

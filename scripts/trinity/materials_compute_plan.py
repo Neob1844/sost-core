@@ -31,6 +31,13 @@ from typing import Any, Dict, List, Optional
 
 _SCHEMA = "trinity-materials-uc-plan/v0"
 _DOSSIER_SCHEMA = "trinity-materials-dossier/v0"
+# v0.2 bumped the dossier schema when the inline mock was replaced by
+# the real SOST AI Council. Both shapes carry the fields this stage
+# needs (hypotheses with id/formula/family/decision), so accept either.
+_DOSSIER_SCHEMAS_ACCEPTED = (
+    "trinity-materials-dossier/v0",
+    "trinity-materials-dossier/v0.2",
+)
 _TRACK = "materials"
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
 
@@ -285,10 +292,12 @@ def build_plan(
         )
 
     dossier = json.loads(dossier_path.read_text(encoding="utf-8"))
-    if dossier.get("schema") != _DOSSIER_SCHEMA:
+    if dossier.get("schema") not in _DOSSIER_SCHEMAS_ACCEPTED:
         raise ValueError(
-            f"dossier at {dossier_path.name} does not declare schema "
-            f"{_DOSSIER_SCHEMA!r}"
+            f"dossier at {dossier_path.name} does not declare a "
+            f"supported schema; expected one of "
+            f"{_DOSSIER_SCHEMAS_ACCEPTED!r}, got "
+            f"{dossier.get('schema')!r}"
         )
     if dossier.get("track") != _TRACK:
         raise ValueError(
