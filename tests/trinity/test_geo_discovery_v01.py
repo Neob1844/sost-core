@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from conftest import requires_real_council
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = REPO_ROOT / "scripts" / "trinity"
@@ -340,6 +342,7 @@ def _write_scorecard(tmp_path, gen_mod, filter_mod, scorer_mod):
     return sc_path
 
 
+@requires_real_council
 def test_dossier_disclaimers_present_in_markdown(
     tmp_path, gen_mod, filter_mod, scorer_mod, dossier_mod,
 ):
@@ -356,6 +359,7 @@ def test_dossier_disclaimers_present_in_markdown(
         )
 
 
+@requires_real_council
 def test_dossier_default_uses_real_council(
     tmp_path, gen_mod, filter_mod, scorer_mod, dossier_mod,
 ):
@@ -369,6 +373,7 @@ def test_dossier_default_uses_real_council(
     assert d["source"]["used_real_council"] is True
 
 
+@requires_real_council
 def test_dossier_real_council_byte_identical_cross_call(
     tmp_path, gen_mod, filter_mod, scorer_mod, dossier_mod,
 ):
@@ -400,6 +405,7 @@ def test_dossier_allow_local_mock_uses_inline_mock(
 # ---------------------------------------------------------------------------
 
 
+@requires_real_council
 def test_pipeline_e2e_offline_verify(tmp_path, pipeline_mod):
     r = pipeline_mod.run_pipeline(
         mode="offline-belts",
@@ -423,6 +429,7 @@ def test_pipeline_e2e_offline_verify(tmp_path, pipeline_mod):
     assert "[verify] OK" in proc.stdout
 
 
+@requires_real_council
 def test_pipeline_byte_identical_across_runs(tmp_path, pipeline_mod):
     a = tmp_path / "a"
     b = tmp_path / "b"
@@ -443,6 +450,7 @@ def test_pipeline_byte_identical_across_runs(tmp_path, pipeline_mod):
         assert ra["shas"][k] == rb["shas"][k], k
 
 
+@requires_real_council
 def test_pipeline_seed_change_changes_bundle(tmp_path, pipeline_mod):
     a = tmp_path / "a"
     b = tmp_path / "b"
