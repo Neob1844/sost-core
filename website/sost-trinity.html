@@ -238,10 +238,10 @@ footer a:hover{color:var(--green)}
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 02 &mdash; THE FOUR PILLARS</div>
-    <div class="section-title">Architecture: <span>Four Reproducible Subsystems</span></div>
+    <div class="section-id">// 02 &mdash; THE FIVE PILLARS</div>
+    <div class="section-title">Architecture: <span>Five Reproducible Subsystems</span></div>
 
-    <p style="color:#ccc;margin-bottom:18px">Each pillar is an existing SOST subsystem with its own validation, tests and public surface. Trinity adds the binding layer between them; it does not duplicate any of their internals.</p>
+    <p style="color:#ccc;margin-bottom:18px">Each pillar is an existing SOST subsystem with its own validation, tests and public surface. Trinity adds the binding layer between them; it does not duplicate any of their internals. From v0.2 onwards <b style="color:var(--green)">SOST AI</b> is invoked directly by both Earth Track and Materials Track &mdash; the reviews you see in any dossier come from the canonical <code>multi_ai_review.AICouncil</code>, not from a per-track mock.</p>
 
     <div class="flow">
       <div class="flow-step">
@@ -253,17 +253,23 @@ footer a:hover{color:var(--green)}
       <div class="flow-step">
         <span class="num">PILLAR 2</span>
         <div class="name">Materials Engine</div>
-        <div class="desc">FastAPI engine (212 routes) with 76k+ materials, DFT/MLIP workflow scaffolding, scoring, novelty and frontier modules. Contains the multi-AI Council (7 typed members, validator-veto, budget gating).</div>
+        <div class="desc">FastAPI engine (212 routes) with 76k+ materials, DFT/MLIP workflow scaffolding, scoring, novelty and frontier modules. Hosts the SOST AI Council code, the Hypothesis schema and the public-claim guard.</div>
         <div class="out">→ <a href="sost-materials-engine.html" class="inline">sost-materials-engine.html</a></div>
       </div>
       <div class="flow-step">
         <span class="num">PILLAR 3</span>
+        <div class="name">SOST AI (council)</div>
+        <div class="desc">Evidence-first autonomous research engine. Trinity tracks invoke the free-tier <code>AICouncil</code> (validator + local_knowledge + mock_ai) per hypothesis. Deterministic, offline, no paid calls. Provides accept / hold / reject / contradicted with confidence and per-member rationale embedded in the dossier.</div>
+        <div class="out">→ <a href="sost-ai-engine.html" class="inline">sost-ai-engine.html</a></div>
+      </div>
+      <div class="flow-step">
+        <span class="num">PILLAR 4</span>
         <div class="name">Useful Compute (dry-run)</div>
         <div class="desc">Heavy-task planner: MLIP relaxations, DFT input preparation, AOI tile scoring, spectral template scoring, cross-worker validation. Classifies each family as candidate_reward_worthy / deferred / not. <b>No rewards active.</b></div>
         <div class="out">→ Phase 2 reference: <a href="useful-compute-trial.html" class="inline">useful-compute-trial.html</a></div>
       </div>
       <div class="flow-step">
-        <span class="num">PILLAR 4</span>
+        <span class="num">PILLAR 5</span>
         <div class="name">SOST Capsule Rail</div>
         <div class="desc">Native PoW chain with the Capsule Protocol v1: OPEN_NOTE_INLINE (80 B short label) and DOC_REF_OPEN (URL + hash) modes anchor any digital artefact with the same audit guarantees as a coin transaction.</div>
         <div class="out">→ <a href="sost-protocol-spec.html" class="inline">sost-protocol-spec.html</a></div>
@@ -271,7 +277,7 @@ footer a:hover{color:var(--green)}
     </div>
 
     <div class="green-box">
-      <b>Why these four, and only these four?</b> Each pillar contributes evidence in a different domain — Earth, materials science, future compute capacity, public timestamp — and is independently verifiable. Trinity's job is to compose them into one document with one root SHA-256, not to invent new domains.
+      <b>Why these five.</b> Each pillar contributes evidence in a different domain &mdash; Earth (GeaSpirit), materials science (Materials Engine), council reasoning (SOST AI), future compute capacity (Useful Compute), and public timestamp (SOST Capsule Rail). Each one is independently verifiable. Trinity's job is to compose them into one document with one root SHA-256, not to invent new domains. The SOST AI council is the one that signs each per-hypothesis decision on every track from v0.2 onward.
     </div>
   </div>
 </section>

@@ -1317,7 +1317,7 @@
     <ol style="font-size:13.5px;line-height:1.7;color:var(--text-secondary);margin:0 0 6px 24px">
       <li><b>Generate hypotheses.</b> Deterministic seed &rarr; candidate AOIs or candidate compositions.</li>
       <li><b>Filter.</b> Charge balance, toxicity gate, criticality flag, known-demo exclusion, protected-area gate.</li>
-      <li><b>Review.</b> AI Council (validator + domain expert + novelty judge) decides hold / accept / reject with strictest-member-wins veto.</li>
+      <li><b>Review.</b> SOST AI Council (free-tier: validator + local_knowledge + mock_ai) decides hold / accept / reject / contradicted with validator-veto, agreement / disagreement summary and confidence. Deterministic, offline, no paid calls. From v0.2 onward, the same canonical <code>multi_ai_review.AICouncil</code> reviews both Earth Track and Materials Track hypotheses; no per-track mock remains.</li>
       <li><b>Plan heavy work.</b> Propose DFT, MLIP, phonon screening, satellite reprocessing or geophysics fusion. Dry-run; no rewards.</li>
       <li><b>Package.</b> Scorecard + dossier + plan + campaign manifest &rarr; one canonical proof bundle JSON + Markdown sidecar with Merkle root over four SHA-256 anchors.</li>
       <li><b>Seal on SOST.</b> Operator-driven manual capsule registration. One TXID, one block height, one immutable timestamp. Not automated; not consensus-affecting.</li>
