@@ -1,0 +1,43 @@
+{
+  "schema": "trinity-objective/v0.1",
+  "vertical": "geaspirit",
+  "title": "Geaspirit / Geo Discovery",
+  "summary": "Autonomous proposal of underexplored AOIs for further geological review.",
+  "goals": [
+    "discover unknown or underexplored areas of interest using free/open data only",
+    "rank candidate AOIs by remote proxy evidence (tectonic prior, commodity-belt compatibility, aridity, terrain ruggedness, data availability)",
+    "preserve novelty: penalise candidates that overlap known producing demos",
+    "emit a uc_request (useful compute request) ONLY when the dossier verdict is accept and the evidence gap can be reduced by spectral / DEM / geophysics fusion"
+  ],
+  "hard_rules": [
+    "NEVER assert a confirmed mineral deposit, mineral reserve, or drilling evidence",
+    "NEVER omit the seven mandatory disclaimers required by the v0.1 geo dossier",
+    "NEVER use paid data providers or live satellite APIs in dry-run mode",
+    "ALWAYS treat AOIs near known SOST demo sites (Kalgoorlie, Pilbara, Zambia) as duplicates",
+    "ALWAYS require geological review before any public claim"
+  ],
+  "required_disclaimers": [
+    "autonomous AOI proposal",
+    "remote proxy evidence only",
+    "no field validation",
+    "no drilling evidence",
+    "no confirmed mineralization",
+    "not a mineral reserve claim",
+    "requires geological review before any public claim"
+  ],
+  "thresholds": {
+    "min_score_for_uc_request": 80.0,
+    "max_uc_requests_per_run": 5,
+    "min_candidates_per_run": 1,
+    "max_candidates_per_run": 100
+  },
+  "default_seed": "trinity-geo-v0.1",
+  "tools": {
+    "candidate_generator": "scripts/trinity/geo_candidate_generator.py",
+    "candidate_filter":    "scripts/trinity/geo_candidate_filter.py",
+    "anomaly_scorer":      "scripts/trinity/geo_anomaly_scorer.py",
+    "dossier":             "scripts/trinity/geo_dossier.py",
+    "compute_plan":        "scripts/trinity/geo_compute_plan.py",
+    "campaign":            "scripts/trinity/geo_campaign.py"
+  }
+}

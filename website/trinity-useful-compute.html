@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trinity / Useful Compute — Contribute (v0.1 dry-run mockup)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root {
+    --bg: #0d1117; --fg: #e6edf3; --muted: #8b949e;
+    --accent: #58a6ff; --warn: #f0883e; --danger: #f85149;
+    --ok: #3fb950; --card: #161b22; --border: #30363d;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas,
+            "Liberation Mono", Menlo, monospace;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg);
+               color: var(--fg); font-family: ui-sans-serif, system-ui,
+               -apple-system, "Segoe UI", Roboto, sans-serif;
+               line-height: 1.55; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin-bottom: 24px; }
+  .badge { display: inline-block; padding: 2px 8px;
+           border: 1px solid var(--warn); color: var(--warn);
+           border-radius: 4px; font-family: var(--mono);
+           font-size: 11px; letter-spacing: 0.5px; margin-left: 8px; }
+  .card { background: var(--card); border: 1px solid var(--border);
+          border-radius: 8px; padding: 20px; margin: 16px 0; }
+  .row { display: flex; gap: 16px; align-items: center;
+         flex-wrap: wrap; }
+  .k { color: var(--muted); font-family: var(--mono); font-size: 12px;
+       text-transform: uppercase; letter-spacing: 0.5px; }
+  .v { font-family: var(--mono); font-size: 14px; }
+  button { background: var(--accent); border: 0; color: #0d1117;
+           padding: 10px 18px; border-radius: 6px;
+           font-family: inherit; font-weight: 600; cursor: pointer;
+           font-size: 14px; }
+  button:disabled { background: var(--border); color: var(--muted);
+                    cursor: not-allowed; }
+  .state { font-family: var(--mono); padding: 6px 10px;
+           background: #0d1117; border: 1px solid var(--border);
+           border-radius: 4px; display: inline-block; }
+  .state.idle      { color: var(--muted); }
+  .state.download  { color: var(--accent); }
+  .state.compute   { color: var(--warn); }
+  .state.submit    { color: var(--accent); }
+  .state.pending   { color: var(--warn); }
+  .state.verified  { color: var(--ok); }
+  .reward { font-family: var(--mono); font-size: 22px;
+            color: var(--ok); }
+  .reward small { color: var(--muted); font-size: 12px;
+                  font-weight: 400; }
+  .disclaimer { background: #1c1408; border-left: 3px solid var(--warn);
+                padding: 12px 16px; border-radius: 4px;
+                color: #f0d9b5; font-size: 13px; margin: 16px 0; }
+  ul { padding-left: 18px; }
+  li { margin: 4px 0; }
+  code { font-family: var(--mono); background: #0d1117;
+         padding: 1px 6px; border-radius: 3px; font-size: 13px; }
+  .danger-strip { background: #2d1517; border-left: 3px solid var(--danger);
+                  padding: 12px 16px; border-radius: 4px;
+                  color: #ffd2cc; font-size: 13px; margin: 16px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Trinity / Useful Compute<span class="badge">v0.1 dry-run mockup</span></h1>
+<div class="sub">Contribute compute to verified Trinity tasks. Pending reward in stocks.</div>
+
+<div class="danger-strip">
+  <strong>Mockup notice.</strong>
+  This page is a non-functional v0.1 mockup of the intended Useful
+  Compute contributor flow. It does not download tasks, does not run
+  compute, does not submit results, does not contact any miner,
+  does not request keys, and does not pay. All values are local
+  illustrative numbers.
+</div>
+
+<div class="card">
+  <div class="row" style="justify-content:space-between;">
+    <div>
+      <div class="k">Status</div>
+      <div id="state" class="state idle">idle</div>
+    </div>
+    <div>
+      <div class="k">Pending reward</div>
+      <div class="reward">
+        <span id="pendingStocks">0</span>
+        <small>stocks</small>
+      </div>
+    </div>
+    <div>
+      <button id="contributeBtn" type="button">Contribute Compute</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="k">Lifecycle</div>
+  <ul>
+    <li><code>idle</code> — no task selected</li>
+    <li><code>downloading task</code> — input bundle being fetched (hash-verified)</li>
+    <li><code>computing</code> — local worker is running the task</li>
+    <li><code>submitting result</code> — output is being sent for validation</li>
+    <li><code>pending verification</code> — result accepted, awaiting council and cross-worker checks</li>
+  </ul>
+</div>
+
+<div class="card">
+  <div class="k">Stocks &amp; units</div>
+  <div class="v">1 SOST = 100,000,000 stocks</div>
+  <div class="v">Pending reward shown above is the local forecast emitted by the
+    deterministic reward model. It is not a promise of payment.</div>
+</div>
+
+<div class="disclaimer">
+  Rewards are <strong>pending</strong> until the result has been
+  validated by redundant replay or cross-worker consensus. This is
+  <strong>not</strong> an automatic payout. v0.1 of Trinity does not
+  enable on-chain rewards; a separate governance step is required
+  before any actual stocks are issued.
+</div>
+
+<div class="card">
+  <div class="k">What this page does NOT do (v0.1)</div>
+  <ul>
+    <li>does not connect to any wallet or request private keys</li>
+    <li>does not download miner binaries from third parties</li>
+    <li>does not start mining without explicit consent</li>
+    <li>does not transmit usage data, telemetry, or identifiers</li>
+    <li>does not modify consensus, RPC, node, miner or wallet behaviour</li>
+  </ul>
+</div>
+
+<script>
+  // Pure local UI simulation. No network calls. No keys.
+  const btn   = document.getElementById('contributeBtn');
+  const state = document.getElementById('state');
+  const reward = document.getElementById('pendingStocks');
+
+  const steps = [
+    { label: 'downloading task',       cls: 'download', ms: 900,  stocks: 0   },
+    { label: 'computing',              cls: 'compute',  ms: 1500, stocks: 0   },
+    { label: 'submitting result',      cls: 'submit',   ms: 900,  stocks: 0   },
+    { label: 'pending verification',   cls: 'pending',  ms: 1200, stocks: 250 },
+  ];
+
+  let running = false;
+  btn.addEventListener('click', () => {
+    if (running) return;
+    running = true;
+    btn.disabled = true;
+    let i = 0;
+    function tick() {
+      if (i >= steps.length) {
+        running = false;
+        btn.disabled = false;
+        return;
+      }
+      const s = steps[i];
+      state.className = 'state ' + s.cls;
+      state.textContent = s.label;
+      if (s.stocks) reward.textContent = s.stocks.toLocaleString('en-US');
+      i++;
+      setTimeout(tick, s.ms);
+    }
+    tick();
+  });
+</script>
+
+</div>
+</body>
+</html>

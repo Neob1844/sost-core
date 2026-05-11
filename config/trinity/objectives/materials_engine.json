@@ -1,0 +1,41 @@
+{
+  "schema": "trinity-objective/v0.1",
+  "vertical": "materials_engine",
+  "title": "Materials Engine / Atomic Discovery",
+  "summary": "Autonomous proposal of candidate materials with structural / atomic plausibility, scored without paid simulation.",
+  "goals": [
+    "generate candidate material families via the v0.1 candidate generator",
+    "filter out chemically implausible candidates (charge balance, banned elements, known toxic combinations)",
+    "score candidates with the v0.2 industrial scorer (free real council)",
+    "when a candidate exceeds the threshold for high-cost validation, emit a uc_request for DFT / structure relaxation / quantum simulation"
+  ],
+  "hard_rules": [
+    "NEVER claim experimental validation, DFT validation, patent rights, or commercial performance",
+    "NEVER omit the six mandatory disclaimers required by the v0.2 materials dossier",
+    "NEVER trigger a real paid simulation; uc_requests are dry-run manifests only",
+    "ALWAYS keep candidate naming derived from canonical SHA-based ids (no marketing names)"
+  ],
+  "required_disclaimers": [
+    "autonomous candidate proposal",
+    "not experimentally validated",
+    "not DFT validated",
+    "not a patent claim",
+    "not a commercial performance claim",
+    "requires Useful Compute / DFT / synthesis review"
+  ],
+  "thresholds": {
+    "min_score_for_uc_request": 0.70,
+    "max_uc_requests_per_run": 5,
+    "min_candidates_per_run": 1,
+    "max_candidates_per_run": 100
+  },
+  "default_seed": "trinity-v0.1",
+  "tools": {
+    "candidate_generator":   "scripts/trinity/materials_candidate_generator.py",
+    "chemistry_filter":      "scripts/trinity/materials_chemistry_filter.py",
+    "industrial_scorer":     "scripts/trinity/materials_industrial_scorer.py",
+    "dossier":               "scripts/trinity/materials_dossier.py",
+    "compute_plan":          "scripts/trinity/materials_compute_plan.py",
+    "campaign":              "scripts/trinity/materials_campaign.py"
+  }
+}
