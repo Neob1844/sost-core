@@ -27,6 +27,8 @@ from pathlib import Path
 
 import pytest
 
+from conftest import requires_real_council
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = REPO_ROOT / "scripts" / "trinity"
@@ -104,6 +106,7 @@ def test_campaign_accepts_v02_dossier_schema():
 # ---------------------------------------------------------------------------
 
 
+@requires_real_council
 def test_real_council_import_succeeds(dossier_mod):
     """The default path must locate materials-engine-private and import
     AICouncil + HypothesisScore + the three free-tier member classes."""
@@ -117,6 +120,7 @@ def test_real_council_import_succeeds(dossier_mod):
     assert class_names == ["LocalKnowledgeMember", "MockAIMember", "ValidatorMember"]
 
 
+@requires_real_council
 def test_real_council_members_are_free_tier_only(dossier_mod):
     """No network member, no paid member."""
     mod = dossier_mod._import_real_council()
@@ -177,6 +181,7 @@ def _build_pipeline_inputs_through_scorer(tmp_path, gen_mod, filter_mod, scorer_
     return sc_path
 
 
+@requires_real_council
 def test_dossier_default_uses_real_council(
     tmp_path, gen_mod, filter_mod, scorer_mod, dossier_mod,
 ):
@@ -219,6 +224,7 @@ def test_dossier_allow_local_mock_uses_inline_mock(
     assert "novelty_judge" in members
 
 
+@requires_real_council
 def test_dossier_real_and_mock_produce_different_summaries(
     tmp_path, gen_mod, filter_mod, scorer_mod, dossier_mod,
 ):
@@ -242,6 +248,7 @@ def test_dossier_real_and_mock_produce_different_summaries(
     assert real_blob != mock_blob
 
 
+@requires_real_council
 def test_dossier_real_council_byte_identical_cross_call(
     tmp_path, gen_mod, filter_mod, scorer_mod, dossier_mod,
 ):
@@ -298,6 +305,7 @@ _REQUIRED_DISCLAIMERS = (
 )
 
 
+@requires_real_council
 def test_disclaimers_present_in_v02_markdown(
     tmp_path, gen_mod, filter_mod, scorer_mod, dossier_mod,
 ):
@@ -321,6 +329,7 @@ def test_disclaimers_present_in_v02_markdown(
 # ---------------------------------------------------------------------------
 
 
+@requires_real_council
 def test_pipeline_v02_e2e_byte_identical_cross_run(tmp_path, pipeline_mod):
     a = tmp_path / "a"
     b = tmp_path / "b"
@@ -336,6 +345,7 @@ def test_pipeline_v02_e2e_byte_identical_cross_run(tmp_path, pipeline_mod):
     assert ra["shas"]["dossier"] == rb["shas"]["dossier"]
 
 
+@requires_real_council
 def test_pipeline_v02_outputs_v02_files(tmp_path, pipeline_mod):
     r = pipeline_mod.run_pipeline(
         family="oxide_frontier", count=50, seed="trinity-v0.1",
@@ -348,6 +358,7 @@ def test_pipeline_v02_outputs_v02_files(tmp_path, pipeline_mod):
             assert "_v01" not in path, f"path for {key} still has v01: {path}"
 
 
+@requires_real_council
 def test_pipeline_v02_offline_verify_passes(tmp_path, pipeline_mod):
     r = pipeline_mod.run_pipeline(
         family="oxide_frontier", count=50, seed="trinity-v0.1",

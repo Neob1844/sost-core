@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+from conftest import requires_real_council
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = REPO_ROOT / "scripts" / "trinity"
@@ -342,6 +344,7 @@ def test_scorer_critical_element_penalised(tmp_path, gen_mod, filter_mod, scorer
 # ---------------------------------------------------------------------------
 
 
+@requires_real_council
 def test_pipeline_e2e_offline_verify(tmp_path, pipeline_mod):
     result = pipeline_mod.run_pipeline(
         family="oxide_frontier", count=50, seed="trinity-v0.1",
@@ -365,6 +368,7 @@ def test_pipeline_e2e_offline_verify(tmp_path, pipeline_mod):
     assert "[verify] OK" in proc.stdout
 
 
+@requires_real_council
 def test_pipeline_byte_identical_across_runs(tmp_path, pipeline_mod):
     a = tmp_path / "a"
     b = tmp_path / "b"
@@ -381,6 +385,7 @@ def test_pipeline_byte_identical_across_runs(tmp_path, pipeline_mod):
         assert ra["shas"][k] == rb["shas"][k], k
 
 
+@requires_real_council
 def test_pipeline_seed_change_changes_bundle(tmp_path, pipeline_mod):
     a = tmp_path / "a"
     b = tmp_path / "b"

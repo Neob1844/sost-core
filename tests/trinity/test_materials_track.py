@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+from conftest import requires_real_council
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = REPO_ROOT / "scripts" / "trinity"
@@ -135,6 +137,7 @@ def _write_scorecard(tmp_path: Path, scorecard_mod) -> Path:
     return p
 
 
+@requires_real_council
 def test_dossier_v0_demo_produces_no_accepts(
     tmp_path, scorecard_mod, dossier_mod,
 ):
@@ -158,6 +161,7 @@ def test_dossier_v0_demo_produces_no_accepts(
     assert summary["validator_vetoes_applied"] == 0
 
 
+@requires_real_council
 def test_dossier_review_combine_is_strictest_wins(
     tmp_path, scorecard_mod, dossier_mod,
 ):
@@ -177,6 +181,7 @@ def test_dossier_review_combine_is_strictest_wins(
             assert h["decision"] == "accept"
 
 
+@requires_real_council
 def test_dossier_records_scorecard_sha_not_path(
     tmp_path, scorecard_mod, dossier_mod,
 ):
@@ -231,6 +236,7 @@ def _write_dossier(tmp_path, scorecard_mod, dossier_mod) -> Path:
     return p
 
 
+@requires_real_council
 def test_plan_classifications_match_dossier(
     tmp_path, scorecard_mod, dossier_mod, plan_mod,
 ):
@@ -271,6 +277,7 @@ def test_plan_hard_signal_veto_downgrades(plan_mod):
     assert cls["classification"] == "not_reward_worthy"
 
 
+@requires_real_council
 def test_plan_safety_status_invariants(
     tmp_path, scorecard_mod, dossier_mod, plan_mod,
 ):
@@ -308,6 +315,7 @@ def _write_plan(tmp_path, scorecard_mod, dossier_mod, plan_mod) -> Path:
     return p
 
 
+@requires_real_council
 def test_campaign_unsafe_actions_are_at_the_end(
     tmp_path, scorecard_mod, dossier_mod, plan_mod, campaign_mod,
 ):
@@ -332,6 +340,7 @@ def test_campaign_unsafe_actions_are_at_the_end(
             assert a["bucket"] == "unsafe_or_forbidden"
 
 
+@requires_real_council
 def test_campaign_no_safe_action_in_unsafe_bucket(
     tmp_path, scorecard_mod, dossier_mod, plan_mod, campaign_mod,
 ):
@@ -351,6 +360,7 @@ def test_campaign_no_safe_action_in_unsafe_bucket(
             assert a["safety"] == "unsafe", a
 
 
+@requires_real_council
 def test_campaign_safety_status_invariants(
     tmp_path, scorecard_mod, dossier_mod, plan_mod, campaign_mod,
 ):
@@ -535,6 +545,7 @@ def test_materials_script_safe_static_surface(script):
 # ---------------------------------------------------------------------------
 
 
+@requires_real_council
 def test_end_to_end_pipeline_via_cli(tmp_path):
     """Run all four scripts back-to-back from the CLI and confirm the
     final proof bundle verifies cleanly with the existing
@@ -621,6 +632,7 @@ def test_end_to_end_pipeline_via_cli(tmp_path):
     assert "[verify] OK" in r6.stdout
 
 
+@requires_real_council
 def test_pipeline_outputs_byte_identical_cross_run(tmp_path):
     """Same inputs, same pinned time → byte-identical bundle SHA across
     two independent end-to-end runs."""
