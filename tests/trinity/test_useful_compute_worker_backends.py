@@ -170,7 +170,7 @@ def test_pending_reward_v02_carries_backend(
         pinned_time="2026-05-12T00:00:00+00:00",
     )
     assert pending["schema"] == \
-        "trinity-useful-compute-pending-reward/v0.2"
+        "trinity-useful-compute-pending-reward/v0.3"
     assert "backend_name" in pending
     assert "backend_version" in pending
     assert "backend_kind" in pending

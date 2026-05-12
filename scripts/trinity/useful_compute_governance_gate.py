@@ -48,7 +48,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 SCHEMA_BATCH = "trinity-useful-compute-governance-batch/v0.1"
 SCHEMA_VALIDATION = "trinity-useful-compute-validation/v0.2"
-SCHEMA_REWARD = "trinity-useful-compute-pending-reward/v0.2"
+SCHEMA_REWARD = "trinity-useful-compute-pending-reward/v0.3"
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 
@@ -69,6 +69,7 @@ _REWARD_REQUIRED = {
     "reason", "requires_manual_review", "reward_model_schema",
     "reward_model_deterministic_id",
     "backend_name", "backend_version", "backend_kind",
+    "benchmark_id", "normalized_work_score", "benchmark_source",
     "safety_status",
 }
 

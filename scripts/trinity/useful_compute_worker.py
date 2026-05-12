@@ -50,9 +50,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
-SCHEMA_RESULT = "trinity-useful-compute-result/v0.3"
-SCHEMA_PENDING_REWARD = "trinity-useful-compute-pending-reward/v0.2"
+SCHEMA_RESULT = "trinity-useful-compute-result/v0.4"
+SCHEMA_PENDING_REWARD = "trinity-useful-compute-pending-reward/v0.3"
 SCHEMA_REQUEST = "trinity-useful-compute-request/v0.1"
+SCHEMA_BENCHMARK = "trinity-useful-compute-benchmark/v0.1"
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _SCRIPTS_DIR.parent.parent
@@ -198,6 +199,69 @@ def validate_request(request: Dict[str, Any]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Benchmark report validation (Sprint 5.13)
+# ---------------------------------------------------------------------------
+
+
+_BENCHMARK_REQUIRED = {
+    "schema", "benchmark_id", "mode", "backend_name",
+    "backend_version", "backend_kind", "task_type",
+    "iterations", "wall_time_seconds", "operations_count",
+    "deterministic_work_units", "normalized_work_score",
+    "machine_fingerprint_hash", "worker_id_hash",
+    "safety_status",
+}
+
+
+def _validate_benchmark_report(report: Any) -> None:
+    """Hand-rolled validator for the v0.1 benchmark report. Raises
+    ValueError on the first violation. Matches the strict schema in
+    schemas/trinity/useful_compute_benchmark.schema.json."""
+    if not isinstance(report, dict):
+        raise ValueError("benchmark report must be a JSON object")
+    missing = _BENCHMARK_REQUIRED - set(report.keys())
+    if missing:
+        raise ValueError(
+            f"benchmark report missing fields: {sorted(missing)}"
+        )
+    if report.get("schema") != SCHEMA_BENCHMARK:
+        raise ValueError(
+            f"benchmark report wrong schema: "
+            f"{report.get('schema')!r}"
+        )
+    bid = report.get("benchmark_id", "")
+    if not (isinstance(bid, str)
+            and re.match(r"^bench-[0-9a-f]{16}$", bid)):
+        raise ValueError(f"benchmark_id wrong format: {bid!r}")
+    if report.get("mode") != "local-dry-run":
+        raise ValueError(
+            f"benchmark mode must be local-dry-run: "
+            f"{report.get('mode')!r}"
+        )
+    score = report.get("normalized_work_score")
+    if not (isinstance(score, (int, float))
+            and 0 <= float(score) <= 100):
+        raise ValueError(
+            f"normalized_work_score out of range: {score!r}"
+        )
+    bk = report.get("backend_kind")
+    if bk not in ("placeholder", "sandbox_toy", "real_backend"):
+        raise ValueError(f"benchmark backend_kind invalid: {bk!r}")
+    ss = report.get("safety_status")
+    if not isinstance(ss, dict):
+        raise ValueError("benchmark safety_status not an object")
+    for flag in (
+        "no_wallet_access", "no_private_keys",
+        "no_network_required", "no_automatic_payout",
+        "benchmark_only",
+    ):
+        if ss.get(flag) is not True:
+            raise ValueError(
+                f"benchmark safety_status.{flag} is not True"
+            )
+
+
+# ---------------------------------------------------------------------------
 # Placeholder task handlers — deterministic, honest, not real science
 # ---------------------------------------------------------------------------
 
@@ -269,11 +333,14 @@ def run_worker(
     input_bundle_path: Optional[Path] = None,
     backend_name: str = "placeholder",
     allow_experimental_backends: bool = False,
+    benchmark_report: Optional[Dict[str, Any]] = None,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Execute one request in local-dry-run mode. Returns (result,
     pending_reward_report) and writes both to disk."""
 
     validate_request(request)
+    if benchmark_report is not None:
+        _validate_benchmark_report(benchmark_report)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     rid = request["request_id"]
@@ -341,6 +408,19 @@ def run_worker(
         "elapsed": elapsed,
     }))
 
+    # Benchmark linkage. v0.4 surfaces three fields whether or not a
+    # benchmark report was supplied — that way downstream consumers
+    # (web console, future audit tools) always know which mode the
+    # worker ran in.
+    if benchmark_report is not None:
+        bench_id = benchmark_report["benchmark_id"]
+        bench_score = float(benchmark_report["normalized_work_score"])
+        benchmark_source = "report"
+    else:
+        bench_id = None
+        bench_score = None
+        benchmark_source = "none"
+
     result = {
         "schema": SCHEMA_RESULT,
         "request_id": rid,
@@ -364,6 +444,9 @@ def run_worker(
         "backend_kind":            spec.kind,
         "backend_disclaimer":      spec.disclaimer,
         "backend_runtime_seconds": float(backend_result.runtime_seconds),
+        "benchmark_id":            bench_id,
+        "normalized_work_score":   bench_score,
+        "benchmark_source":        benchmark_source,
         "safety_status": {
             "no_wallet_access":       True,
             "no_private_keys":        True,
@@ -373,12 +456,15 @@ def run_worker(
         },
     }
 
-    # Reward model report.
+    # Reward model report. v0.13 lets the worker hand the reward model
+    # extra context: when a benchmark report is supplied, the model
+    # may apply a backend-kind-aware policy (placeholder = zero,
+    # sandbox_toy = experimental, real_backend = future).
     reward_mod = _load(
         "uc_worker_reward",
         _SCRIPTS_DIR / "useful_compute_reward_model.py",
     )
-    pending = reward_mod.compute_pending_reward(
+    reward_kwargs = dict(
         task_id=rid,
         worker_id=worker_id,
         benchmark_score=1.0,
@@ -388,10 +474,21 @@ def run_worker(
         duplicate_result=bool(duplicate),
         max_reward_stocks=max_reward,
     )
+    if benchmark_report is not None:
+        reward_kwargs.update(
+            benchmark_report=benchmark_report,
+            normalized_work_score=bench_score,
+            backend_kind=spec.kind,
+            backend_runtime_seconds=float(
+                backend_result.runtime_seconds
+            ),
+        )
+    pending = reward_mod.compute_pending_reward(**reward_kwargs)
 
-    # Pending reward v0.2 carries backend identity so downstream
-    # consumers (governance gate, web console) can group rewards by
-    # backend without needing to load the full result file.
+    # Pending reward v0.3 carries backend identity AND benchmark
+    # linkage so downstream consumers (governance gate, web console)
+    # can group rewards by backend / benchmark without loading the
+    # full result file.
     pending_report = {
         "schema": SCHEMA_PENDING_REWARD,
         "request_id": rid,
@@ -405,6 +502,9 @@ def run_worker(
         "backend_name":    spec.name,
         "backend_version": spec.version,
         "backend_kind":    spec.kind,
+        "benchmark_id":          bench_id,
+        "normalized_work_score": bench_score,
+        "benchmark_source":      benchmark_source,
         "safety_status": {
             "no_wallet_access":       True,
             "no_private_keys":        True,
@@ -496,6 +596,16 @@ def main(argv: Optional[List[str]] = None) -> int:
             "is rejected with a clear error."
         ),
     )
+    p.add_argument(
+        "--benchmark-report", default=None,
+        help=(
+            "Optional path to a trinity-useful-compute-benchmark/v0.1 "
+            "JSON report. When supplied, the worker validates its "
+            "schema and forwards normalized_work_score + backend_kind "
+            "to the reward model so reward is benchmarked, not "
+            "blindly trusted."
+        ),
+    )
 
     # Hard-rejection guards for flags the user might add.
     p.add_argument("--broadcast", action="store_true",
@@ -559,6 +669,19 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
 
     request = json.loads(request_path.read_text(encoding="utf-8"))
+    benchmark_report_obj: Optional[Dict[str, Any]] = None
+    if args.benchmark_report:
+        bench_path = Path(args.benchmark_report)
+        if not bench_path.exists():
+            print(
+                f"[useful_compute_worker] benchmark report not found: "
+                f"{bench_path}",
+                file=sys.stderr,
+            )
+            return 2
+        benchmark_report_obj = json.loads(
+            bench_path.read_text(encoding="utf-8")
+        )
     try:
         result, pending = run_worker(
             request=request,
@@ -575,6 +698,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             allow_experimental_backends=bool(
                 args.allow_experimental_backends
             ),
+            benchmark_report=benchmark_report_obj,
         )
     except ValueError as exc:
         print(

@@ -74,6 +74,13 @@ def compute_pending_reward(
     duplicate_reward_factor: float = _DEFAULT_DUPLICATE_REWARD_FACTOR,
     manual_review_score_floor: float = _DEFAULT_MANUAL_REVIEW_SCORE_FLOOR,
     max_compute_seconds: int = _DEFAULT_MAX_COMPUTE_SECONDS,
+    # Sprint 5.13 — optional benchmark inputs. When supplied, the
+    # model applies a backend-kind-aware policy on top of the
+    # benchmark_score band. None preserves Sprint 5.7 behaviour.
+    benchmark_report: Optional[Dict[str, Any]] = None,
+    normalized_work_score: Optional[float] = None,
+    backend_kind: Optional[str] = None,
+    backend_runtime_seconds: Optional[float] = None,
 ) -> Dict[str, Any]:
     """Compute the pending reward for ONE worker on ONE task.
 
@@ -86,6 +93,15 @@ def compute_pending_reward(
     """
     reasons: List[str] = []
     manual = False
+    benchmarked = (
+        benchmark_report is not None
+        or normalized_work_score is not None
+    )
+    # When the worker supplies a benchmark, the normalized_work_score
+    # replaces benchmark_score so downstream caps + bands operate on
+    # the real measurement instead of the trusted-by-caller value.
+    if normalized_work_score is not None:
+        benchmark_score = float(normalized_work_score)
 
     if not isinstance(task_id, str) or not task_id:
         raise ValueError("task_id must be a non-empty string")
@@ -172,6 +188,38 @@ def compute_pending_reward(
     capped = min(int(raw_reward), int(max_reward_stocks))
     if capped < int(raw_reward):
         reasons.append("reward hit max_reward_stocks cap")
+
+    # Sprint 5.13 — backend-kind policy applied AFTER the cap so
+    # max_reward_stocks remains a hard ceiling regardless of kind:
+    #   placeholder   -> 0 (no payment for synthetic surrogate work)
+    #   sandbox_toy   -> kept but flagged experimental
+    #                    (requires_manual_review=True)
+    #   real_backend  -> reserved; treated as manual review until a
+    #                    later sprint enables it explicitly
+    if benchmarked:
+        if backend_kind == "placeholder":
+            capped = 0
+            reasons.append(
+                "placeholder backend benchmark; reward zeroed by policy"
+            )
+        elif backend_kind == "sandbox_toy":
+            manual = True
+            reasons.append(
+                "sandbox_toy backend benchmark; flagged experimental "
+                "for manual review"
+            )
+        elif backend_kind == "real_backend":
+            manual = True
+            reasons.append(
+                "real_backend benchmark; reserved kind, manual review "
+                "required until enabled"
+            )
+        else:
+            manual = True
+            reasons.append(
+                f"unknown benchmark backend_kind={backend_kind!r}; "
+                "manual review required"
+            )
 
     if not reasons:
         reasons.append("standard reward")

@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-useful-compute-benchmark/v0.1",
+  "title": "Trinity Useful Compute Benchmark Report",
+  "description": "Deterministic local micro-benchmark for one (backend, task_type) pair. Emitted by useful_compute_benchmark.py. v0.1 is dry-run only: the report never reaches the network, never touches a wallet, never authorises a payment. The reward model may consume the normalized_work_score field via the worker's --benchmark-report flag.",
+  "type": "object",
+  "required": [
+    "schema",
+    "benchmark_id",
+    "mode",
+    "backend_name",
+    "backend_version",
+    "backend_kind",
+    "task_type",
+    "iterations",
+    "wall_time_seconds",
+    "operations_count",
+    "deterministic_work_units",
+    "normalized_work_score",
+    "machine_fingerprint_hash",
+    "worker_id_hash",
+    "safety_status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-useful-compute-benchmark/v0.1"
+    },
+    "benchmark_id": {
+      "type": "string",
+      "pattern": "^bench-[0-9a-f]{16}$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["local-dry-run"]
+    },
+    "backend_name": {
+      "type": "string", "minLength": 1, "maxLength": 128
+    },
+    "backend_version": {
+      "type": "string", "minLength": 1, "maxLength": 32
+    },
+    "backend_kind": {
+      "type": "string",
+      "enum": ["placeholder", "sandbox_toy", "real_backend"]
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "dft", "quantum", "structure_relaxation",
+        "scoring", "simulation", "other"
+      ]
+    },
+    "iterations": {
+      "type": "integer", "minimum": 1, "maximum": 1000000
+    },
+    "wall_time_seconds": {
+      "type": "number", "minimum": 0
+    },
+    "operations_count": {
+      "type": "integer", "minimum": 0
+    },
+    "deterministic_work_units": {
+      "type": "integer", "minimum": 0
+    },
+    "normalized_work_score": {
+      "type": "number", "minimum": 0, "maximum": 100
+    },
+    "machine_fingerprint_hash": {
+      "type": "string", "pattern": "^[0-9a-f]{16}$"
+    },
+    "worker_id_hash": {
+      "type": "string", "pattern": "^[0-9a-f]{16}$"
+    },
+    "safety_status": {
+      "type": "object",
+      "required": [
+        "no_wallet_access",
+        "no_private_keys",
+        "no_network_required",
+        "no_automatic_payout",
+        "benchmark_only"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "no_wallet_access":     { "type": "boolean", "const": true },
+        "no_private_keys":      { "type": "boolean", "const": true },
+        "no_network_required":  { "type": "boolean", "const": true },
+        "no_automatic_payout":  { "type": "boolean", "const": true },
+        "benchmark_only":       { "type": "boolean", "const": true }
+      }
+    }
+  }
+}

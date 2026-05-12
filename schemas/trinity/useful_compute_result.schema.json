@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "trinity-useful-compute-result/v0.3",
+  "$id": "trinity-useful-compute-result/v0.4",
   "title": "Trinity Useful Compute Result",
-  "description": "Output emitted by a local-dry-run Useful Compute worker. v0.3 adds backend metadata (backend_name, backend_version, backend_kind, backend_disclaimer, backend_runtime_seconds) so the replay validator and governance gate can enforce cross-worker backend consistency. The compute_output_sha256 MUST remain independent of worker_id; backend identity is carried alongside but does NOT influence the technical output bytes for the same backend+request.",
+  "description": "Output emitted by a local-dry-run Useful Compute worker. v0.4 adds benchmark linkage (benchmark_id, normalized_work_score, benchmark_source) so the reward model can be driven by a deterministic benchmark report instead of trusting elapsed_seconds alone. Backend metadata from v0.3 is unchanged. The compute_output_sha256 MUST remain independent of worker_id; benchmark and backend identifiers are carried alongside but do NOT influence the technical output bytes.",
   "type": "object",
   "required": [
     "schema",
@@ -23,13 +23,16 @@
     "backend_kind",
     "backend_disclaimer",
     "backend_runtime_seconds",
+    "benchmark_id",
+    "normalized_work_score",
+    "benchmark_source",
     "safety_status"
   ],
   "additionalProperties": false,
   "properties": {
     "schema": {
       "type": "string",
-      "const": "trinity-useful-compute-result/v0.3"
+      "const": "trinity-useful-compute-result/v0.4"
     },
     "request_id": {
       "type": "string",
@@ -65,30 +68,42 @@
     "result_validated": { "type": "boolean" },
     "duplicate_result": { "type": "boolean" },
     "public_summary": {
-      "type": "string",
-      "minLength": 1, "maxLength": 1024
+      "type": "string", "minLength": 1, "maxLength": 1024
     },
     "private_notes": {
       "type": "string", "maxLength": 2048
     },
     "backend_name": {
-      "type": "string",
-      "minLength": 1, "maxLength": 128
+      "type": "string", "minLength": 1, "maxLength": 128
     },
     "backend_version": {
-      "type": "string",
-      "minLength": 1, "maxLength": 32
+      "type": "string", "minLength": 1, "maxLength": 32
     },
     "backend_kind": {
       "type": "string",
       "enum": ["placeholder", "sandbox_toy", "real_backend"]
     },
     "backend_disclaimer": {
-      "type": "string",
-      "minLength": 1, "maxLength": 512
+      "type": "string", "minLength": 1, "maxLength": 512
     },
     "backend_runtime_seconds": {
       "type": "number", "minimum": 0
+    },
+    "benchmark_id": {
+      "oneOf": [
+        { "type": "string", "pattern": "^bench-[0-9a-f]{16}$" },
+        { "type": "null" }
+      ]
+    },
+    "normalized_work_score": {
+      "oneOf": [
+        { "type": "number", "minimum": 0, "maximum": 100 },
+        { "type": "null" }
+      ]
+    },
+    "benchmark_source": {
+      "type": "string",
+      "enum": ["none", "report"]
     },
     "safety_status": {
       "type": "object",
