@@ -815,6 +815,265 @@ def test_real_sign_warns_on_wallet_mutation(
     )
 
 
+# ---------------------------------------------------------------------------
+# --only-worker-id-hash selector
+# ---------------------------------------------------------------------------
+
+
+_WORKER_A = "aaaaaaaaaaaaaaaa"
+_WORKER_B = "bbbbbbbbbbbbbbbb"
+_WORKER_C = "cccccccccccccccc"
+
+
+def _multi_worker_proposal():
+    """A proposal with two payable_items targeting different
+    payout_addresses and carrying different worker_result_ids."""
+    return _proposal(
+        proposal_id="prop-" + "a" * 16,
+        payable_items=[
+            _payable_item(
+                request_id="uc-" + "1" * 16,
+                payout_address=_ADDR_A,
+                allocated_stocks=5_000,
+                worker_id=_WORKER_A,
+            ),
+            _payable_item(
+                request_id="uc-" + "2" * 16,
+                payout_address=_ADDR_B,
+                allocated_stocks=7_000,
+                worker_id=_WORKER_C,
+            ),
+        ],
+    )
+
+
+def test_selector_picks_single_item_from_multi_output(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    """With --only-worker-id-hash, a multi-output proposal becomes
+    signable for exactly the picked worker."""
+    prop = _multi_worker_proposal()
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    captured = _install_fake_subprocess_run(
+        monkeypatch, signer_mod,
+        [(0, _fake_createtx_stdout(
+            raw_hex="aa" * 32, txid="a" * 64,
+        ), "")],
+    )
+    drafts = draft_mod.run_real_sign_drafts(
+        proposal_path=pp,
+        out_dir=tmp_path / "out",
+        pinned_time="2026-05-12T00:00:00+00:00",
+        wallet_path=wallet,
+        from_label="test-payer",
+        max_total_stocks=1_000_000,
+        require_confirmation_token=REAL_TOKEN,
+        sost_cli_bin="sost-cli-fake",
+        only_worker_id_hash=_WORKER_A,
+    )
+    assert len(drafts) == 1
+    d = drafts[0]
+    assert d["signing_scope"] == "single_payable_item_subset"
+    assert d["selected_worker_id_hash"] == _WORKER_A
+    assert d["source_proposal_payable_items_count"] == 2
+    assert d["outputs"][0]["payout_address"] == _ADDR_A
+    assert d["signed_tx_hex"] == "aa" * 32
+    assert len(captured) == 1
+
+
+def test_selector_no_match_refused_with_no_subprocess(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    prop = _multi_worker_proposal()
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    captured = _install_fake_subprocess_run(
+        monkeypatch, signer_mod, [],
+    )
+    with pytest.raises(
+        ValueError,
+        match="does not match any payable_item",
+    ):
+        draft_mod.run_real_sign_drafts(
+            proposal_path=pp,
+            out_dir=tmp_path / "out",
+            pinned_time="2026-05-12T00:00:00+00:00",
+            wallet_path=wallet,
+            from_label="test-payer",
+            max_total_stocks=1_000_000,
+            require_confirmation_token=REAL_TOKEN,
+            sost_cli_bin="sost-cli-fake",
+            only_worker_id_hash="0" * 16,
+        )
+    assert captured == []
+
+
+def test_selector_duplicate_match_refused_with_no_subprocess(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    """Two payable_items can share a worker_result_id (e.g. when
+    the same worker contributed to multiple requests). In that
+    case the selector matches >1 item and must be refined."""
+    prop = _proposal(
+        proposal_id="prop-" + "a" * 16,
+        payable_items=[
+            _payable_item(
+                request_id="uc-" + "1" * 16,
+                payout_address=_ADDR_A,
+                allocated_stocks=5_000,
+                worker_id=_WORKER_A,
+            ),
+            _payable_item(
+                request_id="uc-" + "2" * 16,
+                payout_address=_ADDR_B,
+                allocated_stocks=7_000,
+                worker_id=_WORKER_A,
+            ),
+        ],
+    )
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    captured = _install_fake_subprocess_run(
+        monkeypatch, signer_mod, [],
+    )
+    with pytest.raises(
+        ValueError,
+        match=r"matches 2 payable_items",
+    ):
+        draft_mod.run_real_sign_drafts(
+            proposal_path=pp,
+            out_dir=tmp_path / "out",
+            pinned_time="2026-05-12T00:00:00+00:00",
+            wallet_path=wallet,
+            from_label="test-payer",
+            max_total_stocks=1_000_000,
+            require_confirmation_token=REAL_TOKEN,
+            sost_cli_bin="sost-cli-fake",
+            only_worker_id_hash=_WORKER_A,
+        )
+    assert captured == []
+
+
+def test_selector_invalid_format_refused(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    prop = _multi_worker_proposal()
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    captured = _install_fake_subprocess_run(
+        monkeypatch, signer_mod, [],
+    )
+    with pytest.raises(ValueError, match="16 lowercase hex"):
+        draft_mod.run_real_sign_drafts(
+            proposal_path=pp,
+            out_dir=tmp_path / "out",
+            pinned_time="2026-05-12T00:00:00+00:00",
+            wallet_path=wallet,
+            from_label="test-payer",
+            max_total_stocks=1_000_000,
+            require_confirmation_token=REAL_TOKEN,
+            sost_cli_bin="sost-cli-fake",
+            only_worker_id_hash="NOT-HEX",
+        )
+    assert captured == []
+
+
+def test_unresolved_items_still_reject_with_selector(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    """A proposal with non-empty unresolved_items must be refused
+    even when a selector would otherwise pick a single match."""
+    prop = _multi_worker_proposal()
+    prop["unresolved_items"] = [{
+        "request_id": "uc-" + "9" * 16,
+        "worker_result_id": "9" * 16,
+        "allocated_stocks": 100,
+        "missing_lookup": "address map missing for this worker",
+        "reason": "no_payout_address_for_worker_id_hash",
+    }]
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    captured = _install_fake_subprocess_run(
+        monkeypatch, signer_mod, [],
+    )
+    with pytest.raises(ValueError, match="unresolved_items"):
+        draft_mod.run_real_sign_drafts(
+            proposal_path=pp,
+            out_dir=tmp_path / "out",
+            pinned_time="2026-05-12T00:00:00+00:00",
+            wallet_path=wallet,
+            from_label="test-payer",
+            max_total_stocks=1_000_000,
+            require_confirmation_token=REAL_TOKEN,
+            sost_cli_bin="sost-cli-fake",
+            only_worker_id_hash=_WORKER_A,
+        )
+    assert captured == []
+
+
+def test_deferred_items_still_reject_with_selector(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    prop = _multi_worker_proposal()
+    prop["deferred_items"] = [{
+        "request_id": "uc-" + "9" * 16,
+        "worker_result_id": "9" * 16,
+        "allocated_stocks": 100,
+        "missing_lookup": "deferred for future epoch",
+        "reason": "deferred",
+    }]
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    captured = _install_fake_subprocess_run(
+        monkeypatch, signer_mod, [],
+    )
+    with pytest.raises(ValueError, match="deferred_items"):
+        draft_mod.run_real_sign_drafts(
+            proposal_path=pp,
+            out_dir=tmp_path / "out",
+            pinned_time="2026-05-12T00:00:00+00:00",
+            wallet_path=wallet,
+            from_label="test-payer",
+            max_total_stocks=1_000_000,
+            require_confirmation_token=REAL_TOKEN,
+            sost_cli_bin="sost-cli-fake",
+            only_worker_id_hash=_WORKER_A,
+        )
+    assert captured == []
+
+
+def test_rejected_items_still_reject_with_selector(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    prop = _multi_worker_proposal()
+    prop["rejected_items"] = [{
+        "request_id": "uc-" + "9" * 16,
+        "worker_result_id": "9" * 16,
+        "allocated_stocks": 100,
+        "missing_lookup": "rejected by governance",
+        "reason": "rejected",
+    }]
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    captured = _install_fake_subprocess_run(
+        monkeypatch, signer_mod, [],
+    )
+    with pytest.raises(ValueError, match="rejected_items"):
+        draft_mod.run_real_sign_drafts(
+            proposal_path=pp,
+            out_dir=tmp_path / "out",
+            pinned_time="2026-05-12T00:00:00+00:00",
+            wallet_path=wallet,
+            from_label="test-payer",
+            max_total_stocks=1_000_000,
+            require_confirmation_token=REAL_TOKEN,
+            sost_cli_bin="sost-cli-fake",
+            only_worker_id_hash=_WORKER_A,
+        )
+    assert captured == []
+
+
 def test_real_signed_draft_validates_against_v02_schema(
     tmp_path, draft_mod, signer_mod, monkeypatch,
 ):

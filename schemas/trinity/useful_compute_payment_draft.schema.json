@@ -10,6 +10,9 @@
     "source_proposal_id",
     "mode",
     "signing_mode",
+    "signing_scope",
+    "selected_worker_id_hash",
+    "source_proposal_payable_items_count",
     "unsigned_only",
     "dry_signed",
     "real_signed",
@@ -48,6 +51,22 @@
         "dry_sign_placeholder",
         "real_sign_local"
       ]
+    },
+    "signing_scope": {
+      "type": "string",
+      "enum": [
+        "full_proposal",
+        "single_payable_item_subset"
+      ]
+    },
+    "selected_worker_id_hash": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        { "type": "null" }
+      ]
+    },
+    "source_proposal_payable_items_count": {
+      "type": "integer", "minimum": 0
     },
     "unsigned_only": { "type": "boolean" },
     "dry_signed":    { "type": "boolean" },

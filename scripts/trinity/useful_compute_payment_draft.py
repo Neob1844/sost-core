@@ -371,6 +371,9 @@ def run_payment_draft(
         "source_proposal_id": proposal_id,
         "mode": "local-dry-run",
         "signing_mode": signing_mode,
+        "signing_scope": "full_proposal",
+        "selected_worker_id_hash": None,
+        "source_proposal_payable_items_count": len(outputs),
         "unsigned_only": bool(unsigned_only),
         "dry_signed": bool(dry_sign),
         "real_signed": False,
@@ -412,6 +415,9 @@ def run_payment_draft(
     return draft
 
 
+_WORKER_HASH_RE = re.compile(r"^[0-9a-f]{16}$")
+
+
 def run_real_sign_drafts(
     *,
     proposal_path: Path,
@@ -425,20 +431,26 @@ def run_real_sign_drafts(
     dust_stocks: int = DEFAULT_DUST_STOCKS,
     sost_cli_bin: str = "sost-cli",
     timeout_seconds: float = 60.0,
+    only_worker_id_hash: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
-    """Build ONE real-signed draft for a single-output proposal via
-    ``sost-cli createtx``. Raises ValueError on any gate violation.
-    Writes one draft JSON file + a Markdown summary.
+    """Build ONE real-signed draft via ``sost-cli createtx``. Raises
+    ValueError on any gate violation. Writes one draft JSON file +
+    a Markdown summary.
 
     HARD LIMIT: v0.1 of --real-sign refuses any proposal that, after
     dust / validation filtering, contains more than ONE eligible
-    output. The reason is a correctness bug, not policy:
-    ``sost-cli createtx`` calls ``clear_utxos()`` then
-    ``sync_wallet_utxos_from_node()`` on every invocation, so two
-    sequential calls in the same script would see the SAME UTXO as
-    spendable and select it twice — producing two signed
-    transactions that conflict at broadcast. There is no safe
-    multi-output sendmany API exposed from sost-cli today.
+    output, UNLESS ``only_worker_id_hash`` selects exactly one item.
+    The underlying reason is a correctness bug: ``sost-cli createtx``
+    calls ``clear_utxos()`` then ``sync_wallet_utxos_from_node()`` on
+    every invocation, so two sequential calls in the same script
+    would see the SAME UTXO as spendable and select it twice — two
+    conflicting signed transactions. There is no safe multi-output
+    sendmany API exposed from sost-cli today.
+
+    ``only_worker_id_hash``: if supplied, must be a 16-hex string.
+    A payable_item matches when the hash appears in its
+    ``worker_result_ids`` array. The selector must yield exactly
+    one match; 0 or 2+ matches abort BEFORE any subprocess call.
     """
     if require_confirmation_token != REAL_SIGN_TOKEN:
         raise ValueError(
@@ -459,6 +471,12 @@ def run_real_sign_drafts(
         raise ValueError(
             "--real-sign requires --max-total-stocks >= 0"
         )
+    if only_worker_id_hash is not None:
+        if not _WORKER_HASH_RE.match(only_worker_id_hash):
+            raise ValueError(
+                "--only-worker-id-hash must be 16 lowercase hex "
+                "characters; got " + repr(only_worker_id_hash)
+            )
 
     out_dir.mkdir(parents=True, exist_ok=True)
     proposal = _load_proposal(proposal_path)
@@ -466,9 +484,64 @@ def run_real_sign_drafts(
     proposal_id = proposal["proposal_id"]
     payable = proposal.get("payable_items", [])
 
+    # Hard refuse if the proposal has any unresolved / deferred /
+    # rejected items, even when a selector is in play. A proposal
+    # in a non-clean state must be re-run through Sprint 5.15
+    # before any wallet is touched.
+    for bucket in ("unresolved_items", "deferred_items",
+                   "rejected_items"):
+        if proposal.get(bucket):
+            raise ValueError(
+                "proposal has non-empty "
+                + bucket
+                + "; --real-sign refuses to invoke wallet until "
+                "the proposal is clean. Re-run "
+                "useful_compute_payment_proposal with corrected "
+                "inputs."
+            )
+
     outputs, base_warnings = _filter_eligible_outputs(
         payable, dust_stocks,
     )
+    source_count = len(outputs)
+
+    # Optional selector: filter payable_items by a 16-hex worker
+    # identifier that must appear in worker_result_ids. Applied
+    # BEFORE the multi-output guard, BEFORE the max-total-stocks
+    # check, and BEFORE any subprocess invocation.
+    signing_scope = "full_proposal"
+    selected_worker = None
+    if only_worker_id_hash is not None:
+        matches = [
+            o for o in outputs
+            if only_worker_id_hash in o.get("worker_result_ids", [])
+        ]
+        if len(matches) == 0:
+            raise ValueError(
+                "--only-worker-id-hash "
+                + only_worker_id_hash
+                + " does not match any payable_item in the "
+                "proposal; refusing to invoke wallet"
+            )
+        if len(matches) > 1:
+            raise ValueError(
+                "--only-worker-id-hash "
+                + only_worker_id_hash
+                + " matches " + str(len(matches))
+                + " payable_items; selector must yield exactly 1. "
+                "Refine the selector or split the proposal."
+            )
+        outputs = matches
+        signing_scope = "single_payable_item_subset"
+        selected_worker = only_worker_id_hash
+        base_warnings.append(
+            "selector --only-worker-id-hash="
+            + only_worker_id_hash
+            + " picked 1 of " + str(source_count)
+            + " eligible payable_items; the remaining items are "
+            "NOT signed by this draft."
+        )
+
     total_payment = sum(o["amount_stocks"] for o in outputs)
 
     if total_payment > max_total_stocks:
@@ -496,8 +569,9 @@ def run_real_sign_drafts(
             "single-recipient and sequential calls would re-use "
             "UTXOs, producing conflicting signed transactions. "
             f"Proposal has {len(outputs)} eligible outputs; split "
-            "the proposal so each --real-sign run targets exactly "
-            "one output, or wait for a future sendmany-aware sprint."
+            "the proposal, pass --only-worker-id-hash to select "
+            "exactly one item, or wait for a future "
+            "sendmany-aware sprint."
         )
 
     capsule = _resolve_capsule(proposal)
@@ -593,6 +667,9 @@ def run_real_sign_drafts(
         "source_proposal_id": proposal_id,
         "mode": "local-dry-run",
         "signing_mode": "real_sign_local",
+        "signing_scope": signing_scope,
+        "selected_worker_id_hash": selected_worker,
+        "source_proposal_payable_items_count": int(source_count),
         "unsigned_only": False,
         "dry_signed": False,
         "real_signed": True,
@@ -815,6 +892,19 @@ def main(argv: Optional[List[str]] = None) -> int:
         help="Timeout (seconds) per sost-cli createtx invocation.",
     )
     p.add_argument(
+        "--only-worker-id-hash", default=None,
+        help=(
+            "16-hex worker identifier. When supplied with "
+            "--real-sign, the proposal's payable_items are "
+            "filtered to those whose worker_result_ids contain "
+            "this hash. The selector MUST yield exactly one "
+            "payable_item; 0 matches or 2+ matches abort before "
+            "any wallet call. This is the only safe way to do a "
+            "single-output real sign on a multi-worker proposal "
+            "until a sendmany-aware sprint lands."
+        ),
+    )
+    p.add_argument(
         "--require-confirmation-token", required=True,
         help=(
             "Mode-specific token. unsigned-only: "
@@ -890,6 +980,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                     args.require_confirmation_token,
                 sost_cli_bin=args.sost_cli_bin,
                 timeout_seconds=args.sost_cli_timeout,
+                only_worker_id_hash=args.only_worker_id_hash,
             )
             for d in drafts:
                 print(

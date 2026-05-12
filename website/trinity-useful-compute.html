@@ -869,6 +869,12 @@
            <div class="v" id="draftProposalId">-</div></div>
       <div><div class="k">signing_mode</div>
            <div class="v" id="draftSigningMode">-</div></div>
+      <div><div class="k">signing_scope</div>
+           <div class="v" id="draftSigningScope">-</div></div>
+      <div><div class="k">selected_worker_id_hash</div>
+           <div class="v" id="draftSelectedWorker">-</div></div>
+      <div><div class="k">source proposal items</div>
+           <div class="v" id="draftSourceCount">0</div></div>
       <div><div class="k">real_signed</div>
            <div class="v" id="draftRealSigned">false</div></div>
       <div><div class="k">total_outputs</div>
@@ -2393,6 +2399,14 @@
     _consoleSetText("draftProposalId", draft.source_proposal_id);
     _consoleSetText("draftSigningMode",
       String(draft.signing_mode || "(v0.1 — no signing_mode)"));
+    _consoleSetText("draftSigningScope",
+      String(draft.signing_scope || "-"));
+    _consoleSetText("draftSelectedWorker",
+      String(draft.selected_worker_id_hash || "-"));
+    _consoleSetText("draftSourceCount",
+      String(draft.source_proposal_payable_items_count == null
+        ? "-"
+        : draft.source_proposal_payable_items_count));
     _consoleSetText("draftRealSigned",
       String(Boolean(draft.real_signed)));
     _consoleSetText("draftOutputs",    String(draft.total_outputs));

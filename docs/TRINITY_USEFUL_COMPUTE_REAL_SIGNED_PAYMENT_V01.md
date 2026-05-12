@@ -122,19 +122,53 @@ nothing has been broadcast yet between them) and pick it twice —
 producing two signed transactions that conflict at broadcast.
 
 v0.1 of `--real-sign` therefore **refuses** any proposal that has
-more than one eligible payable item after dust/validation filtering:
+more than one eligible payable item after dust/validation filtering,
+UNLESS the operator pins exactly one item via
+`--only-worker-id-hash`.
 
 ```
-ValueError: multi-output real signing not supported safely in v0.1 of
---real-sign: sost-cli createtx is single-recipient and sequential
+ValueError: multi-output real signing not supported safely in v0.1
+of --real-sign: sost-cli createtx is single-recipient and sequential
 calls would re-use UTXOs, producing conflicting signed transactions.
-Proposal has N eligible outputs; split the proposal so each
---real-sign run targets exactly one output, or wait for a future
-sendmany-aware sprint.
+Proposal has N eligible outputs; split the proposal, pass
+--only-worker-id-hash to select exactly one item, or wait for a
+future sendmany-aware sprint.
 ```
 
 No subprocess is invoked before this check; the wallet binary is
 NOT touched.
+
+## --only-worker-id-hash selector
+
+For real-world multi-worker proposals the operator can pin exactly
+one payable item:
+
+```
+--only-worker-id-hash <16hex>
+```
+
+The selector matches a payable item if the supplied hash appears in
+that item's `worker_result_ids` array. The matching rules:
+
+| Matches | Behaviour |
+| --- | --- |
+| 0 | `ValueError: does not match any payable_item; refusing to invoke wallet`. No subprocess. |
+| 1 | Sign exactly that item. Draft records `signing_scope = "single_payable_item_subset"` and `selected_worker_id_hash = <hash>`. |
+| 2+ | `ValueError: matches N payable_items; selector must yield exactly 1. Refine the selector or split the proposal`. No subprocess. |
+
+A proposal with any non-empty `unresolved_items` / `deferred_items`
+/ `rejected_items` list is still **refused** even when a selector
+would otherwise pick a single match. Clean the proposal in Sprint
+5.15 before any wallet call.
+
+Each draft records:
+
+- `signing_scope`: `"full_proposal"` (default) or
+  `"single_payable_item_subset"` (selector used).
+- `selected_worker_id_hash`: the hash that was pinned (or `null`).
+- `source_proposal_payable_items_count`: how many eligible items
+  the proposal had before the selector ran (so a reviewer can spot
+  "we picked 1 of 3" at a glance).
 
 ## Capsule attachment
 

@@ -52,7 +52,9 @@ def test_schema_is_strict(schema):
     assert schema["additionalProperties"] is False
     expected = {
         "schema", "draft_id", "source_proposal_id", "mode",
-        "signing_mode",
+        "signing_mode", "signing_scope",
+        "selected_worker_id_hash",
+        "source_proposal_payable_items_count",
         "unsigned_only", "dry_signed", "real_signed",
         "total_outputs", "total_payment_stocks",
         "total_fee_stocks_estimated", "change_stocks_estimated",
@@ -60,6 +62,28 @@ def test_schema_is_strict(schema):
         "warnings", "safety_status",
     }
     assert set(schema["required"]) == expected
+
+
+def test_signing_scope_enum(schema):
+    enum = schema["properties"]["signing_scope"]["enum"]
+    assert set(enum) == {
+        "full_proposal", "single_payable_item_subset",
+    }
+
+
+def test_selected_worker_id_hash_optional_string_or_null(schema):
+    sw = schema["properties"]["selected_worker_id_hash"]
+    one_of = sw["oneOf"]
+    assert any(
+        s.get("pattern") == "^[0-9a-f]{16}$" for s in one_of
+    )
+    assert any(s.get("type") == "null" for s in one_of)
+
+
+def test_source_proposal_payable_items_count_is_integer(schema):
+    sc = schema["properties"]["source_proposal_payable_items_count"]
+    assert sc["type"] == "integer"
+    assert sc["minimum"] == 0
 
 
 def test_capsule_attached_locked_false(schema):

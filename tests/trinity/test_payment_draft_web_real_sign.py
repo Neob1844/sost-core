@@ -34,6 +34,8 @@ def test_v02_panel_ids_present():
         "draftTxid", "draftWalletFp", "draftSignerHash",
         "draftRealSignBanner",
         "draftCliBinHash", "draftCapsuleAttached",
+        "draftSigningScope", "draftSelectedWorker",
+        "draftSourceCount",
     ):
         assert f'id="{cid}"' in src, (
             f"v0.2 panel missing id {cid!r}"
