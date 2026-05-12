@@ -90,7 +90,7 @@
 <body>
 <div class="wrap">
 
-<h1>Trinity / Useful Compute<span class="badge">v0.3 worker + replay + governance</span></h1>
+<h1>Trinity / Useful Compute<span class="badge">v0.4 worker + replay + governance + daemon</span></h1>
 <div class="sub">
   Guided panel: load a request, run the local worker, load the result,
   see your pending reward in stocks. No payments. No keys.
@@ -356,6 +356,78 @@
     governance, is required before any stocks actually move. An
     "approved" item is an input to that future sprint, not an
     authorisation to issue stocks today.
+  </div>
+</div>
+
+<!-- Step 7: Background Autonomy Loop -->
+<div class="card">
+  <h2>Step 7 — Background Autonomy Loop</h2>
+  <p class="small">
+    Trinity can run as a controlled local-dry-run daemon: every
+    cycle invokes the orchestrator, runs the local worker, runs the
+    replay validator on requests with two or more workers, and
+    builds a governance batch over the validations that pass. The
+    daemon does NOT pay, does NOT touch a wallet, does NOT open a
+    network port, and does NOT modify consensus.
+  </p>
+  <p class="small">
+    Run this on your machine. The page below is read-only: you load
+    the state file that the daemon produced and the panel shows
+    the latest counts.
+  </p>
+  <pre class="cmd" id="daemonCmd">python3 scripts/trinity/trinity_background_daemon.py \
+  --mode local-dry-run \
+  --watch \
+  --interval-seconds 300 \
+  --max-cycles 12 \
+  --workspace /tmp/trinity-daemon \
+  --objectives config/trinity/objectives \
+  --worker-id miner-local-001 \
+  --reviewer-id reviewer-local-001</pre>
+  <button class="secondary" type="button" id="copyDaemonCmdBtn">Copy command</button>
+  <span id="copyDaemonState" class="state idle" style="margin-left:8px;">idle</span>
+  <div class="row" style="margin-top:16px;">
+    <div>
+      <div class="k">daemon state JSON</div>
+      <label class="file-btn" for="daemonStateFile">Choose state file...</label>
+      <input id="daemonStateFile" type="file" accept="application/json,.json">
+    </div>
+    <span id="daemonState" class="state idle">no state loaded</span>
+  </div>
+  <div id="daemonDetails" style="margin-top:16px; display:none;">
+    <div class="grid">
+      <div><div class="k">workspace</div><div class="v" id="dWorkspace"></div></div>
+      <div><div class="k">cycle_index</div><div class="v" id="dCycle"></div></div>
+      <div><div class="k">last_cycle_at</div><div class="v" id="dLast"></div></div>
+      <div><div class="k">requests_seen</div><div class="v" id="dReq"></div></div>
+      <div><div class="k">results_seen</div><div class="v" id="dRes"></div></div>
+      <div><div class="k">validations_seen</div><div class="v" id="dVal"></div></div>
+      <div><div class="k">governance_batches_seen</div><div class="v" id="dGov"></div></div>
+      <div><div class="k">errors_count</div><div class="v" id="dErr"></div></div>
+      <div><div class="k">lessons_count</div><div class="v" id="dLes"></div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">pending_requests</div>
+      <ul id="dPendingList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 13px;"></ul>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">accepted_validations</div>
+      <ul id="dAcceptedList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 13px;"></ul>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">approved_batches</div>
+      <ul id="dBatchesList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 13px;"></ul>
+    </div>
+  </div>
+  <div class="danger-strip">
+    <strong>The daemon NEVER pays.</strong>
+    It only orchestrates dry-run cycles, queues requests, runs the
+    local worker, validates replay, and prepares review-only
+    governance batches. A separate, governance-signed payment
+    sprint is required before any stocks move.
   </div>
 </div>
 
@@ -832,6 +904,67 @@
     } catch {
       setState($("copyGovState"), "copy failed", "fail");
     }
+  });
+
+  // Step 7: read-only daemon state viewer.
+  const SCHEMA_DAEMON_STATE = "trinity-background-daemon-state/v0.1";
+  $("copyDaemonCmdBtn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(
+        $("daemonCmd").textContent
+      );
+      setState($("copyDaemonState"), "copied", "ok");
+    } catch {
+      setState($("copyDaemonState"), "copy failed", "fail");
+    }
+  });
+
+  $("daemonStateFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (obj.schema !== SCHEMA_DAEMON_STATE) {
+          setState($("daemonState"),
+            "loaded (UNEXPECTED schema)", "warn");
+        } else {
+          setState($("daemonState"), "loaded (schema OK)", "ok");
+        }
+        $("dWorkspace").textContent = obj.workspace || "";
+        $("dCycle").textContent = String(obj.cycle_index || 0);
+        $("dLast").textContent = obj.last_cycle_at || "";
+        $("dReq").textContent = String(obj.requests_seen || 0);
+        $("dRes").textContent = String(obj.results_seen || 0);
+        $("dVal").textContent = String(obj.validations_seen || 0);
+        $("dGov").textContent =
+          String(obj.governance_batches_seen || 0);
+        $("dErr").textContent = String(obj.errors_count || 0);
+        $("dLes").textContent = String(obj.lessons_count || 0);
+        const renderList = (id, items) => {
+          const ul = $(id);
+          ul.innerHTML = "";
+          (items || []).forEach((it) => {
+            const li = document.createElement("li");
+            li.textContent = it;
+            ul.appendChild(li);
+          });
+          if ((items || []).length === 0) {
+            const li = document.createElement("li");
+            li.textContent = "(none)";
+            ul.appendChild(li);
+          }
+        };
+        renderList("dPendingList", obj.pending_requests);
+        renderList("dAcceptedList", obj.accepted_validations);
+        renderList("dBatchesList", obj.approved_batches);
+        $("daemonDetails").style.display = "";
+      } catch {
+        setState($("daemonState"), "invalid JSON", "fail");
+      }
+    };
+    r.readAsText(f);
   });
 </script>
 

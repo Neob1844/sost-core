@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-background-daemon-state/v0.1",
+  "title": "Trinity Background Autonomy Daemon State",
+  "description": "Persisted state of the Trinity background autonomy daemon v0.1. Emitted after every full cycle. v0.1 is dry-run only: the daemon NEVER pays, NEVER touches a wallet, NEVER broadcasts, NEVER registers on-chain. The state file records what the daemon has seen and produced so that future cycles, the explorer, and human reviewers can audit autonomous runs.",
+  "type": "object",
+  "required": [
+    "schema",
+    "mode",
+    "workspace",
+    "cycle_index",
+    "started_at",
+    "last_cycle_at",
+    "requests_seen",
+    "results_seen",
+    "validations_seen",
+    "governance_batches_seen",
+    "pending_requests",
+    "accepted_validations",
+    "approved_batches",
+    "errors_count",
+    "lessons_count",
+    "safety_status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-background-daemon-state/v0.1"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["local-dry-run"]
+    },
+    "workspace": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "description": "Basename of the workspace directory, NOT an absolute path. Stripping the absolute path keeps the state byte-identical across machines."
+    },
+    "cycle_index": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_cycle_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "requests_seen": {
+      "type": "integer", "minimum": 0
+    },
+    "results_seen": {
+      "type": "integer", "minimum": 0
+    },
+    "validations_seen": {
+      "type": "integer", "minimum": 0
+    },
+    "governance_batches_seen": {
+      "type": "integer", "minimum": 0
+    },
+    "pending_requests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^uc-[0-9a-f]{16,64}$"
+      }
+    },
+    "accepted_validations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^val-[0-9a-f]{16}$"
+      }
+    },
+    "approved_batches": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^gov-[0-9a-f]{16}$"
+      }
+    },
+    "errors_count": {
+      "type": "integer", "minimum": 0
+    },
+    "lessons_count": {
+      "type": "integer", "minimum": 0
+    },
+    "safety_status": {
+      "type": "object",
+      "required": [
+        "local_dry_run_only",
+        "no_wallet_access",
+        "no_private_keys",
+        "no_automatic_payout",
+        "no_broadcast",
+        "no_network_required",
+        "no_consensus_changes",
+        "human_review_required_before_payment"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "local_dry_run_only":                    { "type": "boolean", "const": true },
+        "no_wallet_access":                      { "type": "boolean", "const": true },
+        "no_private_keys":                       { "type": "boolean", "const": true },
+        "no_automatic_payout":                   { "type": "boolean", "const": true },
+        "no_broadcast":                          { "type": "boolean", "const": true },
+        "no_network_required":                   { "type": "boolean", "const": true },
+        "no_consensus_changes":                  { "type": "boolean", "const": true },
+        "human_review_required_before_payment":  { "type": "boolean", "const": true }
+      }
+    }
+  }
+}

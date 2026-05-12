@@ -97,7 +97,8 @@ def test_governance_section_carries_cli_command():
     assert "--policy conservative" in src
 
 
-def test_v03_badge_present():
+def test_governance_present_in_badge():
+    # The badge version is bumped sprint-over-sprint; what matters is
+    # that "governance" is named in it once Sprint 5.9 has shipped.
     src = _read()
-    assert "v0.3" in src
     assert "governance" in src.lower()
