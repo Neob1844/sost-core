@@ -90,7 +90,7 @@
 <body>
 <div class="wrap">
 
-<h1>Trinity / Useful Compute<span class="badge">v0.5 worker + replay + governance + daemon + console</span></h1>
+<h1>Trinity / Useful Compute<span class="badge">v0.6 worker + replay + governance + daemon + console + backend adapters</span></h1>
 <div class="sub">
   Guided panel: load a request, run the local worker, load the result,
   see your pending reward in stocks. No payments. No keys.
@@ -146,6 +146,24 @@
     </div>
     <div class="v" id="stocksApprovedSost" style="margin-top:4px;
          color: var(--muted); font-size:12px;">≈ 0 SOST</div>
+  </div>
+
+  <!-- Backend counters (Sprint 5.12) -->
+  <div style="margin-top:16px;">
+    <div class="k">rewards by backend kind</div>
+    <div class="grid">
+      <div><div class="k">placeholder_rewards</div>
+           <div class="v" id="backendCountPlaceholder">0</div></div>
+      <div><div class="k">sandbox_toy_rewards</div>
+           <div class="v" id="backendCountSandboxToy">0</div></div>
+      <div><div class="k">real_backend_rewards (v0.1: always 0)</div>
+           <div class="v" id="backendCountRealBackend">0</div></div>
+    </div>
+    <div class="small" style="color: var(--warn); margin-top:8px;">
+      Sandbox toy backends are not scientific validation. Real DFT /
+      quantum backends are NOT enabled in v0.1; the counter is for
+      future sprints and must remain 0 here.
+    </div>
   </div>
 
   <!-- Loaders -->
@@ -235,6 +253,8 @@
           <th style="padding:4px 8px;">worker_result_id</th>
           <th style="padding:4px 8px;">worker_id</th>
           <th style="padding:4px 8px;">compute_sha (short)</th>
+          <th style="padding:4px 8px;">backend</th>
+          <th style="padding:4px 8px;">kind</th>
           <th style="padding:4px 8px; text-align:right;">stocks</th>
           <th style="padding:4px 8px;">validation</th>
           <th style="padding:4px 8px;">governance</th>
@@ -1171,8 +1191,8 @@
   // ==================================================================
 
   const SCHEMA_DAEMON_STATE_V01 = "trinity-background-daemon-state/v0.1";
-  const SCHEMA_REWARD_V01 = "trinity-useful-compute-pending-reward/v0.1";
-  const SCHEMA_VALIDATION_V01 = "trinity-useful-compute-validation/v0.1";
+  const SCHEMA_REWARD_V01 = "trinity-useful-compute-pending-reward/v0.2";
+  const SCHEMA_VALIDATION_V01 = "trinity-useful-compute-validation/v0.2";
   const SCHEMA_GOV_V01 =
     "trinity-useful-compute-governance-batch/v0.1";
 
@@ -1345,12 +1365,20 @@
         }
       }
 
+      // Backend label (e.g. "placeholder_dft v0.1") + kind cell.
+      const backendCombined = (rew.backend_name && rew.backend_version)
+        ? (rew.backend_name + " " + rew.backend_version)
+        : (rew.backend_name || "-");
+      const backendKind = rew.backend_kind || "-";
+
       const tr = document.createElement("tr");
       tr.style.borderTop = "1px solid #21262d";
       tr.appendChild(_consoleRowCell(rew.request_id));
       tr.appendChild(_consoleRowCell(rew.worker_result_id));
       tr.appendChild(_consoleRowCell(rew.worker_id));
       tr.appendChild(_consoleRowCell(cosShort));
+      tr.appendChild(_consoleRowCell(backendCombined));
+      tr.appendChild(_consoleRowCell(backendKind));
       tr.appendChild(_consoleRowCell(
         Number(rew.stocks || 0).toLocaleString("en-US"),
         { right: true },
@@ -1367,6 +1395,9 @@
         request_id: rew.request_id,
         worker_result_id: rew.worker_result_id,
         worker_id: rew.worker_id,
+        backend_name: rew.backend_name,
+        backend_version: rew.backend_version,
+        backend_kind: rew.backend_kind,
         stocks: Number(rew.stocks || 0),
         validation: st.validation,
         governance: st.governance,
@@ -1374,6 +1405,17 @@
         badge: st.badge,
         manual_review_required: rew.requires_manual_review === true,
       });
+    }
+
+    // Backend kind counters.
+    const byKind = {
+      placeholder: 0,
+      sandbox_toy: 0,
+      real_backend: 0,
+    };
+    for (const rew of sorted) {
+      const k = rew.backend_kind || "";
+      if (byKind[k] !== undefined) byKind[k]++;
     }
 
     _consoleSetText("stocksPendingUnvalidated",
@@ -1390,7 +1432,12 @@
     _consoleSetText("stocksApprovedSost",
       "≈ " + sost.toFixed(8) + " SOST");
 
-    return { buckets, approvedHeadline, taskStatuses };
+    _consoleSetText("backendCountPlaceholder",  byKind.placeholder);
+    _consoleSetText("backendCountSandboxToy",   byKind.sandbox_toy);
+    _consoleSetText("backendCountRealBackend",  byKind.real_backend);
+
+    return { buckets, approvedHeadline, taskStatuses,
+             backend_kind_counts: byKind };
   }
 
   function _consoleRenderState() {
@@ -1510,6 +1557,9 @@
       stocks: Number(obj.pending_reward_stocks || 0),
       requires_manual_review:
         obj.requires_manual_review === true,
+      backend_name:    obj.backend_name    || "",
+      backend_version: obj.backend_version || "",
+      backend_kind:    obj.backend_kind    || "",
       source_filename: name,
     };
   }
@@ -1749,6 +1799,9 @@
           recomputed.approvedHeadline,
       },
       task_statuses: recomputed.taskStatuses,
+      backend_kind_counts: recomputed.backend_kind_counts || {
+        placeholder: 0, sandbox_toy: 0, real_backend: 0,
+      },
       malformed_events_count: consoleStore.eventsMalformed,
       safety_status: {
         local_dry_run_only: true,

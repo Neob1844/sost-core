@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "trinity-useful-compute-result/v0.2",
+  "$id": "trinity-useful-compute-result/v0.3",
   "title": "Trinity Useful Compute Result",
-  "description": "Output emitted by a local-dry-run Useful Compute worker after it has executed a deterministic placeholder task derived from a v0.1 request manifest. v0.2 separates the worker-independent compute_output_sha256 (hash of the pure technical output, used for cross-worker replay) from the worker_result_id (hash that binds the result to one specific worker submission). v0.2 does NOT run real DFT / quantum simulation; it produces a verifiable, deterministic placeholder that the network can replay.",
+  "description": "Output emitted by a local-dry-run Useful Compute worker. v0.3 adds backend metadata (backend_name, backend_version, backend_kind, backend_disclaimer, backend_runtime_seconds) so the replay validator and governance gate can enforce cross-worker backend consistency. The compute_output_sha256 MUST remain independent of worker_id; backend identity is carried alongside but does NOT influence the technical output bytes for the same backend+request.",
   "type": "object",
   "required": [
     "schema",
@@ -18,13 +18,18 @@
     "result_validated",
     "duplicate_result",
     "public_summary",
+    "backend_name",
+    "backend_version",
+    "backend_kind",
+    "backend_disclaimer",
+    "backend_runtime_seconds",
     "safety_status"
   ],
   "additionalProperties": false,
   "properties": {
     "schema": {
       "type": "string",
-      "const": "trinity-useful-compute-result/v0.2"
+      "const": "trinity-useful-compute-result/v0.3"
     },
     "request_id": {
       "type": "string",
@@ -48,40 +53,42 @@
     },
     "compute_output_sha256": {
       "type": "string",
-      "pattern": "^[0-9a-f]{64}$",
-      "description": "SHA-256 of the canonical-JSON of the pure technical task output. MUST be independent of worker_id. Two honest workers running the same task on the same input MUST produce the same compute_output_sha256."
+      "pattern": "^[0-9a-f]{64}$"
     },
     "worker_result_id": {
       "type": "string",
-      "pattern": "^[0-9a-f]{16}$",
-      "description": "16-hex id binding (request_id, worker_id, compute_output_sha256, elapsed_seconds). Unique per worker submission. Different workers on the same task MUST get different worker_result_id."
+      "pattern": "^[0-9a-f]{16}$"
     },
-    "started_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "finished_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "elapsed_seconds": {
-      "type": "number",
-      "minimum": 0
-    },
-    "result_validated": {
-      "type": "boolean"
-    },
-    "duplicate_result": {
-      "type": "boolean"
-    },
+    "started_at":  { "type": "string", "format": "date-time" },
+    "finished_at": { "type": "string", "format": "date-time" },
+    "elapsed_seconds": { "type": "number", "minimum": 0 },
+    "result_validated": { "type": "boolean" },
+    "duplicate_result": { "type": "boolean" },
     "public_summary": {
       "type": "string",
-      "minLength": 1,
-      "maxLength": 1024
+      "minLength": 1, "maxLength": 1024
     },
     "private_notes": {
+      "type": "string", "maxLength": 2048
+    },
+    "backend_name": {
       "type": "string",
-      "maxLength": 2048
+      "minLength": 1, "maxLength": 128
+    },
+    "backend_version": {
+      "type": "string",
+      "minLength": 1, "maxLength": 32
+    },
+    "backend_kind": {
+      "type": "string",
+      "enum": ["placeholder", "sandbox_toy", "real_backend"]
+    },
+    "backend_disclaimer": {
+      "type": "string",
+      "minLength": 1, "maxLength": 512
+    },
+    "backend_runtime_seconds": {
+      "type": "number", "minimum": 0
     },
     "safety_status": {
       "type": "object",

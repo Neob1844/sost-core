@@ -39,8 +39,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
-SCHEMA_VALIDATION = "trinity-useful-compute-validation/v0.1"
-SCHEMA_RESULT = "trinity-useful-compute-result/v0.2"
+SCHEMA_VALIDATION = "trinity-useful-compute-validation/v0.2"
+SCHEMA_RESULT = "trinity-useful-compute-result/v0.3"
 SCHEMA_REQUEST = "trinity-useful-compute-request/v0.1"
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -51,8 +51,13 @@ _RESULT_REQUIRED = {
     "input_bundle_sha256", "compute_output_sha256",
     "worker_result_id", "started_at", "finished_at",
     "elapsed_seconds", "result_validated", "duplicate_result",
-    "public_summary", "safety_status",
+    "public_summary",
+    "backend_name", "backend_version", "backend_kind",
+    "backend_disclaimer", "backend_runtime_seconds",
+    "safety_status",
 }
+
+_BACKEND_KINDS = ("placeholder", "sandbox_toy", "real_backend")
 
 
 def canonical_dumps(obj: Any) -> str:
@@ -97,6 +102,15 @@ def _structural_problem(result: Dict[str, Any]) -> Optional[str]:
     cos = result.get("compute_output_sha256", "")
     if not re.match(r"^[0-9a-f]{64}$", cos):
         return f"bad compute_output_sha256: {cos!r}"
+    bname = result.get("backend_name", "")
+    if not (isinstance(bname, str) and 1 <= len(bname) <= 128):
+        return f"bad backend_name: {bname!r}"
+    bver = result.get("backend_version", "")
+    if not (isinstance(bver, str) and 1 <= len(bver) <= 32):
+        return f"bad backend_version: {bver!r}"
+    bkind = result.get("backend_kind", "")
+    if bkind not in _BACKEND_KINDS:
+        return f"bad backend_kind: {bkind!r}"
     return None
 
 
@@ -230,12 +244,47 @@ def run_validation(
         )
         biggest_cos, biggest_group = ordered[0]
         if len(biggest_group) >= min_workers and len(groups) == 1:
-            status = "accepted"
-            accepted_cos = biggest_cos
-            matching_result_ids = sorted(
-                r["worker_result_id"] for r in biggest_group
-            )
-            manual_review = False
+            # All agreeing results share compute_output_sha256, but
+            # they MUST also share (backend_name, backend_version) for
+            # the validation to be accepted. Different backends that
+            # coincidentally produce the same compute hash become a
+            # backend_mismatch — recorded as status=mismatch with a
+            # reason string so the governance gate can branch on it.
+            backend_pairs = {
+                (r.get("backend_name", ""),
+                 r.get("backend_version", ""))
+                for r in biggest_group
+            }
+            if len(backend_pairs) == 1:
+                status = "accepted"
+                accepted_cos = biggest_cos
+                matching_result_ids = sorted(
+                    r["worker_result_id"] for r in biggest_group
+                )
+                manual_review = False
+            else:
+                status = "mismatch"
+                accepted_cos = None
+                manual_review = True
+                # Group rejection rows by backend so the gate (and
+                # human reviewer) can see the divergence.
+                for bn, bv in sorted(backend_pairs):
+                    group_wrids = sorted(
+                        r["worker_result_id"]
+                        for r in biggest_group
+                        if r.get("backend_name") == bn
+                        and r.get("backend_version") == bv
+                    )
+                    rejections.append({
+                        "worker_result_id":
+                            group_wrids[0] if group_wrids else "0" * 16,
+                        "reason": (
+                            f"backend_mismatch: backend "
+                            f"{bn}@{bv} agreed on the same "
+                            f"compute_output_sha256 as a different "
+                            f"backend; needs human review"
+                        ),
+                    })
         elif len(biggest_group) >= min_workers and len(groups) > 1:
             status = "mismatch"
             accepted_cos = None
@@ -264,9 +313,24 @@ def run_validation(
         if r.get("result_validated") is False:
             manual_review = True
 
+    # Accepted-only backend identifiers carried in the report so the
+    # governance gate can enforce per-batch backend consistency
+    # without having to re-read every result file.
+    accepted_backend_name: Optional[str] = None
+    accepted_backend_version: Optional[str] = None
+    if status == "accepted" and matching_result_ids:
+        first = next(
+            r for r in deduped
+            if r["worker_result_id"] == matching_result_ids[0]
+        )
+        accepted_backend_name = first.get("backend_name") or None
+        accepted_backend_version = first.get("backend_version") or None
+
     validation_id = "val-" + _sha16(canonical_dumps({
         "rid": rid, "status": status,
         "accepted_cos": accepted_cos,
+        "accepted_backend_name": accepted_backend_name,
+        "accepted_backend_version": accepted_backend_version,
         "matching": matching_result_ids,
         "rejected": sorted(
             r["worker_result_id"] for r in rejections
@@ -290,6 +354,8 @@ def run_validation(
         "workers_seen": workers_seen,
         "unique_workers": unique_workers,
         "accepted_compute_output_sha256": accepted_cos,
+        "accepted_backend_name":    accepted_backend_name,
+        "accepted_backend_version": accepted_backend_version,
         "validation_status": status,
         "matching_result_ids": matching_result_ids,
         "rejected_result_ids": sorted(

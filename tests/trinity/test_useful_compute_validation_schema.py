@@ -55,8 +55,8 @@ def validator_mod():
     )
 
 
-def test_schema_id_is_v01(schema):
-    assert schema["$id"] == "trinity-useful-compute-validation/v0.1"
+def test_schema_id_is_v02(schema):
+    assert schema["$id"] == "trinity-useful-compute-validation/v0.2"
 
 
 def test_schema_is_strict(schema):
@@ -64,7 +64,9 @@ def test_schema_is_strict(schema):
     expected = {
         "schema", "validation_id", "request_id", "mode",
         "min_workers", "workers_seen", "unique_workers",
-        "accepted_compute_output_sha256", "validation_status",
+        "accepted_compute_output_sha256",
+        "accepted_backend_name", "accepted_backend_version",
+        "validation_status",
         "matching_result_ids", "rejected_result_ids",
         "mismatch_groups", "manual_review_required",
         "safety_status",

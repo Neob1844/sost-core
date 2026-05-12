@@ -31,6 +31,7 @@ _SPRINT_56_SCRIPTS = [
     "useful_compute_replay_validator.py",
     "useful_compute_governance_gate.py",
     "trinity_background_daemon.py",
+    "useful_compute_backends.py",
 ]
 
 

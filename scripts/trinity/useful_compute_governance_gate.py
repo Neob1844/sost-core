@@ -47,24 +47,29 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 SCHEMA_BATCH = "trinity-useful-compute-governance-batch/v0.1"
-SCHEMA_VALIDATION = "trinity-useful-compute-validation/v0.1"
-SCHEMA_REWARD = "trinity-useful-compute-pending-reward/v0.1"
+SCHEMA_VALIDATION = "trinity-useful-compute-validation/v0.2"
+SCHEMA_REWARD = "trinity-useful-compute-pending-reward/v0.2"
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 
 _VALIDATION_REQUIRED = {
     "schema", "validation_id", "request_id", "mode",
     "min_workers", "workers_seen", "unique_workers",
-    "accepted_compute_output_sha256", "validation_status",
+    "accepted_compute_output_sha256",
+    "accepted_backend_name", "accepted_backend_version",
+    "validation_status",
     "matching_result_ids", "rejected_result_ids",
     "mismatch_groups", "manual_review_required",
     "safety_status",
 }
 
 _REWARD_REQUIRED = {
-    "schema", "request_id", "worker_id", "pending_reward_stocks",
+    "schema", "request_id", "worker_id", "worker_result_id",
+    "pending_reward_stocks",
     "reason", "requires_manual_review", "reward_model_schema",
-    "reward_model_deterministic_id", "safety_status",
+    "reward_model_deterministic_id",
+    "backend_name", "backend_version", "backend_kind",
+    "safety_status",
 }
 
 _REWARD_SAFETY_FLAGS = (
@@ -284,12 +289,31 @@ def _evaluate_validation(
     if rid_dup_keys:
         return None, "governance_rejected_duplicate_reward"
 
-    # Pending rewards must exist for every matching_result_id.
+    # Backend identity must accompany every accepted validation.
+    val_backend_name = val.get("accepted_backend_name")
+    val_backend_version = val.get("accepted_backend_version")
+    if not (
+        isinstance(val_backend_name, str) and val_backend_name
+        and isinstance(val_backend_version, str) and val_backend_version
+    ):
+        return None, "governance_rejected_missing_backend"
+
+    # Pending rewards must exist for every matching_result_id AND
+    # each must agree with the validation's accepted backend.
     collected: List[Dict[str, Any]] = []
     for wrid in matching:
         rew = rewards_index.get((rid, wrid))
         if rew is None:
             return None, "governance_rejected_missing_reward"
+        rew_backend_name = rew.get("backend_name")
+        rew_backend_version = rew.get("backend_version")
+        if (rew_backend_name != val_backend_name
+                or rew_backend_version != val_backend_version):
+            return None, (
+                "governance_rejected_backend_mismatch: validation "
+                f"says {val_backend_name}@{val_backend_version} but "
+                f"reward says {rew_backend_name}@{rew_backend_version}"
+            )
         collected.append(rew)
 
     approved = _conservative_approved_reward(collected)
@@ -303,7 +327,8 @@ def _evaluate_validation(
         "approved_pending_reward_stocks": approved,
         "reason": (
             f"conservative=min({len(collected)} pending rewards); "
-            f"unique_workers={uw}>=min_workers={mw}"
+            f"unique_workers={uw}>=min_workers={mw}; backend "
+            f"{val_backend_name}@{val_backend_version}"
         ),
     }
     return item, None
@@ -481,7 +506,13 @@ def run_governance_gate(
             reason = item["reason"]
             short = reason.split(":")[0] if ":" in reason else reason
             cause = "overclaim_risk"
-            if "mismatch" in short:
+            # Order: more specific tokens first. "backend_mismatch"
+            # must match BEFORE the generic "mismatch" branch.
+            if "missing_backend" in short:
+                cause = "bad_input"
+            elif "backend_mismatch" in short:
+                cause = "overclaim_risk"
+            elif "mismatch" in short:
                 cause = "overclaim_risk"
             elif "insufficient" in short:
                 cause = "insufficient_evidence"
