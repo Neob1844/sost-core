@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "trinity-useful-compute-result/v0.1",
+  "$id": "trinity-useful-compute-result/v0.2",
   "title": "Trinity Useful Compute Result",
-  "description": "Output emitted by a local-dry-run Useful Compute worker after it has executed a deterministic placeholder task derived from a v0.1 request manifest. v0.1 does NOT run real DFT / quantum simulation; it produces a verifiable, deterministic placeholder that the network can replay.",
+  "description": "Output emitted by a local-dry-run Useful Compute worker after it has executed a deterministic placeholder task derived from a v0.1 request manifest. v0.2 separates the worker-independent compute_output_sha256 (hash of the pure technical output, used for cross-worker replay) from the worker_result_id (hash that binds the result to one specific worker submission). v0.2 does NOT run real DFT / quantum simulation; it produces a verifiable, deterministic placeholder that the network can replay.",
   "type": "object",
   "required": [
     "schema",
@@ -10,13 +10,13 @@
     "worker_id",
     "task_type",
     "input_bundle_sha256",
-    "output_sha256",
+    "compute_output_sha256",
+    "worker_result_id",
     "started_at",
     "finished_at",
     "elapsed_seconds",
     "result_validated",
     "duplicate_result",
-    "deterministic_result_id",
     "public_summary",
     "safety_status"
   ],
@@ -24,7 +24,7 @@
   "properties": {
     "schema": {
       "type": "string",
-      "const": "trinity-useful-compute-result/v0.1"
+      "const": "trinity-useful-compute-result/v0.2"
     },
     "request_id": {
       "type": "string",
@@ -46,9 +46,15 @@
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
     },
-    "output_sha256": {
+    "compute_output_sha256": {
       "type": "string",
-      "pattern": "^[0-9a-f]{64}$"
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the canonical-JSON of the pure technical task output. MUST be independent of worker_id. Two honest workers running the same task on the same input MUST produce the same compute_output_sha256."
+    },
+    "worker_result_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$",
+      "description": "16-hex id binding (request_id, worker_id, compute_output_sha256, elapsed_seconds). Unique per worker submission. Different workers on the same task MUST get different worker_result_id."
     },
     "started_at": {
       "type": "string",
@@ -67,10 +73,6 @@
     },
     "duplicate_result": {
       "type": "boolean"
-    },
-    "deterministic_result_id": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{16}$"
     },
     "public_summary": {
       "type": "string",

@@ -1,32 +1,41 @@
 #!/usr/bin/env python3
-"""Trinity / Useful Compute — Local Dry-Run Worker v0.1.
+"""Trinity / Useful Compute — Local Dry-Run Worker v0.2.
 
 Reads a ``trinity-useful-compute-request/v0.1`` manifest, validates
 it against the request schema, executes a deterministic placeholder
 task (NOT a real DFT / quantum simulation), and emits two files:
 
-- ``TRINITY_USEFUL_COMPUTE_RESULT_<request_id>.json``
-- ``TRINITY_USEFUL_COMPUTE_PENDING_REWARD_<request_id>.json``
+- ``TRINITY_USEFUL_COMPUTE_RESULT_<request_id>_<worker_result_id>.json``
+- ``TRINITY_USEFUL_COMPUTE_PENDING_REWARD_<request_id>_<worker_result_id>.json``
+
+v0.2 introduces a clean split between worker-independent and
+worker-dependent identifiers:
+
+- ``compute_output_sha256``: SHA-256 of the pure technical output.
+  Depends ONLY on (request_id, input_bundle_sha256) so that two
+  honest workers running the same task on the same input reach the
+  same hash. This is the field the cross-worker replay validator
+  groups by.
+- ``worker_result_id``: 16-hex id binding (request_id, worker_id,
+  compute_output_sha256, elapsed_seconds). Unique per submission.
 
 Hard invariants
 ---------------
-- Only ``--mode local-dry-run`` is accepted in v0.1.
+- Only ``--mode local-dry-run`` is accepted.
 - The worker never broadcasts, signs, sends, or pays.
 - No network calls. No subprocess invocations. No wallet/private-key
   imports.
 - The placeholder task output is byte-identical across runs for the
-  same (request_id, worker_id, input_bundle_sha256).
+  same (request_id, input_bundle_sha256). Worker identity does NOT
+  perturb the technical output.
 - The pending reward is computed via
   ``useful_compute_reward_model.compute_pending_reward``; it is a
   *report*, never an on-chain payout.
-- ``result_validated=true`` only when the placeholder handler returns
-  a non-empty, well-formed deterministic blob; ``duplicate_result`` is
-  decided by an optional, on-disk seen-set passed via
-  ``--seen-results``.
+- ``duplicate_result`` is decided by an optional, on-disk seen-set
+  of ``compute_output_sha256`` values passed via ``--seen-results``.
 
-The v0.1 worker is intentionally simple. Real DFT / quantum
-back-ends will plug in later sprints behind explicit feature flags;
-the schemas are forward-compatible.
+Real DFT / quantum back-ends will plug in later sprints behind
+explicit feature flags; the schemas are forward-compatible.
 """
 
 from __future__ import annotations
@@ -41,7 +50,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
-SCHEMA_RESULT = "trinity-useful-compute-result/v0.1"
+SCHEMA_RESULT = "trinity-useful-compute-result/v0.2"
 SCHEMA_PENDING_REWARD = "trinity-useful-compute-pending-reward/v0.1"
 SCHEMA_REQUEST = "trinity-useful-compute-request/v0.1"
 
@@ -193,13 +202,19 @@ def validate_request(request: Dict[str, Any]) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _deterministic_seed(
-    request_id: str, worker_id: str, input_bundle_sha256: str,
+def _compute_seed(
+    request_id: str, input_bundle_sha256: str,
 ) -> int:
-    """Return a stable 64-bit int seed derived from the canonical
-    tuple. Used to make placeholder outputs reproducible."""
+    """Return a stable 64-bit int seed derived ONLY from the
+    request_id and the input_bundle_sha256.
+
+    Critically, the seed does NOT include worker_id. Two honest
+    workers running the same task on the same input must reach the
+    same placeholder output bytes so the replay validator can match
+    them. Worker identity is bound later via worker_result_id.
+    """
     blob = canonical_dumps({
-        "rid": request_id, "wid": worker_id, "sha": input_bundle_sha256,
+        "rid": request_id, "sha": input_bundle_sha256,
     }).encode("utf-8")
     return int.from_bytes(hashlib.sha256(blob).digest()[:8], "big")
 
@@ -354,25 +369,37 @@ def run_worker(
                 f"declared={input_sha} actual={actual_sha}"
             )
 
-    seed64 = _deterministic_seed(rid, worker_id, input_sha)
+    # 1) Pure technical output — depends ONLY on the task contract
+    #    (request_id + input bundle sha). Worker identity does NOT
+    #    influence these bytes.
+    seed64 = _compute_seed(rid, input_sha)
     handler = _TASK_HANDLERS[task_type]
     output_obj = handler(seed64)
     output_blob = canonical_dumps(output_obj).encode("utf-8")
-    output_sha = _sha256_hex(output_blob)
+    compute_output_sha = _sha256_hex(output_blob)
 
-    duplicate = _is_duplicate(seen_results, output_sha)
-    # Result is validated iff the output blob is non-empty and well
-    # formed. v0.1 considers all placeholder outputs validated.
+    # 2) Duplicate detection lives at the compute layer (same
+    #    technical output across submissions). Worker identity is
+    #    irrelevant to "did we already see this result?".
+    duplicate = _is_duplicate(seen_results, compute_output_sha)
     result_validated = len(output_blob) > 0
 
-    deterministic_result_id = _sha16(canonical_dumps({
-        "rid": rid, "wid": worker_id, "out_sha": output_sha,
-    }))
-
-    # Elapsed seconds: use the request's estimated cost as a pinned,
-    # deterministic value in v0.1. Real timers come in a later sprint
-    # once outputs are anchored against wall-clock checkpoints.
+    # 3) Elapsed seconds — pinned to the request's estimated cost in
+    #    v0.x. Real timers come later when outputs are anchored to
+    #    wall-clock checkpoints.
     elapsed = float(request["estimated_compute_cost"]["seconds"])
+
+    # 4) worker_result_id binds (request, worker, compute output,
+    #    elapsed) into one 16-hex submission id. This IS worker-
+    #    dependent by design: two workers on the same task must get
+    #    different worker_result_id values while still sharing
+    #    compute_output_sha256.
+    worker_result_id = _sha16(canonical_dumps({
+        "rid": rid,
+        "wid": worker_id,
+        "compute_sha": compute_output_sha,
+        "elapsed": elapsed,
+    }))
 
     result = {
         "schema": SCHEMA_RESULT,
@@ -380,13 +407,13 @@ def run_worker(
         "worker_id": worker_id,
         "task_type": task_type,
         "input_bundle_sha256": input_sha,
-        "output_sha256": output_sha,
+        "compute_output_sha256": compute_output_sha,
+        "worker_result_id": worker_result_id,
         "started_at": pinned_time,
         "finished_at": pinned_time,
         "elapsed_seconds": elapsed,
         "result_validated": bool(result_validated),
         "duplicate_result": bool(duplicate),
-        "deterministic_result_id": deterministic_result_id,
         "public_summary": (
             f"placeholder {task_type} result for {rid} by {worker_id}; "
             "deterministic, not real science; pending verification."
@@ -436,17 +463,23 @@ def run_worker(
         },
     }
 
+    # File names embed worker_result_id so that multiple workers
+    # can drop their submissions into the same directory without
+    # clobbering each other. The replay validator scans for the
+    # request_id prefix and groups all matches.
     result_path = (
-        out_dir / f"TRINITY_USEFUL_COMPUTE_RESULT_{rid}.json"
+        out_dir
+        / f"TRINITY_USEFUL_COMPUTE_RESULT_{rid}_{worker_result_id}.json"
     )
     reward_path = (
-        out_dir / f"TRINITY_USEFUL_COMPUTE_PENDING_REWARD_{rid}.json"
+        out_dir
+        / f"TRINITY_USEFUL_COMPUTE_PENDING_REWARD_{rid}_{worker_result_id}.json"
     )
     result_path.write_text(canonical_dumps(result), encoding="utf-8")
     reward_path.write_text(canonical_dumps(pending_report), encoding="utf-8")
 
     # Record output in the seen-set AFTER writing.
-    _record_seen(seen_results, output_sha)
+    _record_seen(seen_results, compute_output_sha)
 
     return result, pending_report
 
@@ -578,7 +611,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     print(
         f"[useful_compute_worker] task_type={result['task_type']} "
-        f"output_sha256={result['output_sha256']}"
+        f"compute_output_sha256={result['compute_output_sha256']}"
+    )
+    print(
+        f"[useful_compute_worker] worker_result_id={result['worker_result_id']}"
     )
     print(
         f"[useful_compute_worker] elapsed_seconds={result['elapsed_seconds']} "
