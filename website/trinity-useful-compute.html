@@ -90,7 +90,7 @@
 <body>
 <div class="wrap">
 
-<h1>Trinity / Useful Compute<span class="badge">v0.7 worker + replay + governance + daemon + console + backend adapters + benchmark ledger</span></h1>
+<h1>Trinity / Useful Compute<span class="badge">v0.8 worker + replay + governance + daemon + console + backend adapters + benchmark ledger + reward budget policy</span></h1>
 <div class="sub">
   Guided panel: load a request, run the local worker, load the result,
   see your pending reward in stocks. No payments. No keys.
@@ -181,6 +181,24 @@
       Benchmark score is not proof of useful scientific output.
       Experimental rewards (sandbox_toy backends with a benchmark
       attached) require manual review before any payment.
+    </div>
+  </div>
+
+  <!-- Budget allocation counters (Sprint 5.14) -->
+  <div style="margin-top:16px;">
+    <div class="k">stocks vs budget plan</div>
+    <div class="grid">
+      <div><div class="k">governance_approved_stocks</div>
+           <div class="v" id="budgetCountGovApproved">0</div></div>
+      <div><div class="k">budget_allocated_stocks</div>
+           <div class="v" id="budgetCountAllocated">0</div></div>
+      <div><div class="k">budget_deferred_stocks</div>
+           <div class="v" id="budgetCountDeferred">0</div></div>
+    </div>
+    <div class="small" style="color: var(--warn); margin-top:8px;">
+      Budget allocation is NOT payment. Deferred stocks are NOT
+      lost; the next budget cycle re-evaluates them. A separate,
+      signed/on-chain payment sprint is required.
     </div>
   </div>
 
@@ -662,6 +680,78 @@
     local worker, validates replay, and prepares review-only
     governance batches. A separate, governance-signed payment
     sprint is required before any stocks move.
+  </div>
+</div>
+
+<!-- Reward Budget Policy (Sprint 5.14) -->
+<div class="card" id="budgetPolicyCard">
+  <h2>Reward Budget Policy</h2>
+  <p class="small">
+    Read a budget plan emitted by
+    <code>useful_compute_reward_budget_policy.py</code>. The plan
+    caps governance-approved totals by pool / daily / epoch / job /
+    worker before any payment sprint touches a wallet.
+  </p>
+  <div class="row">
+    <div>
+      <div class="k">budget plan JSON</div>
+      <label class="file-btn" for="budgetFile">Choose plan...</label>
+      <input id="budgetFile" type="file" accept="application/json,.json">
+      <span id="budgetBadge" class="state idle">none</span>
+    </div>
+  </div>
+  <div id="budgetDetails" style="margin-top:16px; display:none;">
+    <div class="grid">
+      <div><div class="k">budget_id</div>
+           <div class="v" id="budBudgetId">-</div></div>
+      <div><div class="k">policy</div>
+           <div class="v" id="budPolicy">-</div></div>
+      <div><div class="k">epoch_id</div>
+           <div class="v" id="budEpoch">-</div></div>
+      <div><div class="k">pool_balance_stocks</div>
+           <div class="v" id="budPool">0</div></div>
+      <div><div class="k">effective_daily_budget_stocks</div>
+           <div class="v" id="budDaily">0</div></div>
+      <div><div class="k">effective_epoch_budget_stocks</div>
+           <div class="v" id="budEpochBudget">0</div></div>
+      <div><div class="k">total_requested_stocks</div>
+           <div class="v" id="budRequested">0</div></div>
+      <div><div class="k">total_allocated_stocks</div>
+           <div class="v" id="budAllocated">0</div></div>
+      <div><div class="k">total_deferred_stocks</div>
+           <div class="v" id="budDeferred">0</div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">caps hit (counts)</div>
+      <ul id="budCapsList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 12px;"></ul>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">allocations</div>
+      <table style="width:100%;
+             font-family: var(--mono); font-size: 11px;
+             border-collapse: collapse;">
+        <thead>
+          <tr style="text-align:left; color: var(--muted);">
+            <th style="padding:4px 8px;">request_id</th>
+            <th style="padding:4px 8px;">batch_id</th>
+            <th style="padding:4px 8px;">workers</th>
+            <th style="padding:4px 8px; text-align:right;">requested</th>
+            <th style="padding:4px 8px; text-align:right;">allocated</th>
+            <th style="padding:4px 8px; text-align:right;">deferred</th>
+            <th style="padding:4px 8px;">status</th>
+            <th style="padding:4px 8px;">cap_reason</th>
+          </tr>
+        </thead>
+        <tbody id="budAllocTbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="danger-strip" style="margin-top:16px;">
+    <strong>Budget allocation is not payment.</strong>
+    Payment requires a separate signed/on-chain sprint. Deferred
+    stocks are NOT lost — the next budget cycle (different epoch or
+    higher pool balance) re-evaluates them.
   </div>
 </div>
 
@@ -1888,8 +1978,121 @@
   $("consoleExportBtn").addEventListener("click",
     _consoleExportSummary);
 
+  // ==================================================================
+  //  Reward Budget Policy (Sprint 5.14)
+  //
+  //  Read-only loader for trinity-useful-compute-reward-budget/v0.1
+  //  plans. Updates the budget counters and renders an allocations
+  //  table. Pure textContent; no innerHTML with external content.
+  // ==================================================================
+
+  const SCHEMA_BUDGET_V01 =
+    "trinity-useful-compute-reward-budget/v0.1";
+
+  function _budgetSetCounters(govApproved, allocated, deferred) {
+    _consoleSetText("budgetCountGovApproved",
+      Number(govApproved || 0).toLocaleString("en-US"));
+    _consoleSetText("budgetCountAllocated",
+      Number(allocated || 0).toLocaleString("en-US"));
+    _consoleSetText("budgetCountDeferred",
+      Number(deferred || 0).toLocaleString("en-US"));
+  }
+
+  function _budgetRenderAllocations(plan) {
+    _consoleSetText("budBudgetId",     plan.budget_id);
+    _consoleSetText("budPolicy",       plan.policy);
+    _consoleSetText("budEpoch",        plan.epoch_id);
+    _consoleSetText("budPool",
+      Number(plan.pool_balance_stocks || 0).toLocaleString("en-US"));
+    _consoleSetText("budDaily",
+      Number(plan.effective_daily_budget_stocks || 0)
+        .toLocaleString("en-US"));
+    _consoleSetText("budEpochBudget",
+      Number(plan.effective_epoch_budget_stocks || 0)
+        .toLocaleString("en-US"));
+    _consoleSetText("budRequested",
+      Number(plan.total_requested_stocks || 0)
+        .toLocaleString("en-US"));
+    _consoleSetText("budAllocated",
+      Number(plan.total_allocated_stocks || 0)
+        .toLocaleString("en-US"));
+    _consoleSetText("budDeferred",
+      Number(plan.total_deferred_stocks || 0)
+        .toLocaleString("en-US"));
+
+    // Cap counts.
+    const capCounts = {};
+    for (const a of (plan.allocation_items || [])) {
+      const r = a.cap_reason || "none";
+      capCounts[r] = (capCounts[r] || 0) + 1;
+    }
+    const ul = $("budCapsList");
+    while (ul.firstChild) ul.removeChild(ul.firstChild);
+    Object.keys(capCounts).sort().forEach((r) => {
+      const li = document.createElement("li");
+      li.textContent = r + " x" + capCounts[r];
+      ul.appendChild(li);
+    });
+
+    // Allocations table.
+    const tbody = $("budAllocTbody");
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    for (const a of (plan.allocation_items || [])) {
+      const tr = document.createElement("tr");
+      tr.style.borderTop = "1px solid #21262d";
+      tr.appendChild(_consoleRowCell(a.request_id));
+      tr.appendChild(_consoleRowCell(a.governance_batch_id));
+      tr.appendChild(_consoleRowCell(
+        String((a.worker_result_ids || []).length)
+      ));
+      tr.appendChild(_consoleRowCell(
+        Number(a.requested_stocks || 0).toLocaleString("en-US"),
+        { right: true },
+      ));
+      tr.appendChild(_consoleRowCell(
+        Number(a.allocated_stocks || 0).toLocaleString("en-US"),
+        { right: true },
+      ));
+      tr.appendChild(_consoleRowCell(
+        Number(a.deferred_stocks || 0).toLocaleString("en-US"),
+        { right: true },
+      ));
+      tr.appendChild(_consoleRowCell(a.allocation_status));
+      tr.appendChild(_consoleRowCell(a.cap_reason || "none"));
+      tbody.appendChild(tr);
+    }
+  }
+
+  $("budgetFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (obj.schema !== SCHEMA_BUDGET_V01) {
+          setState($("budgetBadge"),
+            "loaded (UNEXPECTED schema)", "warn");
+        } else {
+          setState($("budgetBadge"), "loaded", "ok");
+        }
+        _budgetRenderAllocations(obj);
+        _budgetSetCounters(
+          obj.total_requested_stocks,   // governance_approved_stocks
+          obj.total_allocated_stocks,
+          obj.total_deferred_stocks,
+        );
+        $("budgetDetails").style.display = "";
+      } catch {
+        setState($("budgetBadge"), "invalid JSON", "fail");
+      }
+    };
+    r.readAsText(f);
+  });
+
   // Initial render so the empty state is consistent.
   _consoleRefreshAll();
+  _budgetSetCounters(0, 0, 0);
 </script>
 
 </div>
