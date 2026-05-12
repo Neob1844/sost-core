@@ -18,6 +18,7 @@ _SPRINT_56_SCRIPTS = [
     "trinity_error_memory.py",
     "useful_compute_reward_model.py",
     "useful_compute_task_builder.py",
+    "useful_compute_worker.py",
 ]
 
 

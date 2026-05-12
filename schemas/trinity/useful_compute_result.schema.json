@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-useful-compute-result/v0.1",
+  "title": "Trinity Useful Compute Result",
+  "description": "Output emitted by a local-dry-run Useful Compute worker after it has executed a deterministic placeholder task derived from a v0.1 request manifest. v0.1 does NOT run real DFT / quantum simulation; it produces a verifiable, deterministic placeholder that the network can replay.",
+  "type": "object",
+  "required": [
+    "schema",
+    "request_id",
+    "worker_id",
+    "task_type",
+    "input_bundle_sha256",
+    "output_sha256",
+    "started_at",
+    "finished_at",
+    "elapsed_seconds",
+    "result_validated",
+    "duplicate_result",
+    "deterministic_result_id",
+    "public_summary",
+    "safety_status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-useful-compute-result/v0.1"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^uc-[0-9a-f]{16,64}$"
+    },
+    "worker_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "dft", "quantum", "structure_relaxation",
+        "scoring", "simulation", "other"
+      ]
+    },
+    "input_bundle_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "output_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "elapsed_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "result_validated": {
+      "type": "boolean"
+    },
+    "duplicate_result": {
+      "type": "boolean"
+    },
+    "deterministic_result_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    },
+    "public_summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "private_notes": {
+      "type": "string",
+      "maxLength": 2048
+    },
+    "safety_status": {
+      "type": "object",
+      "required": [
+        "no_wallet_access",
+        "no_private_keys",
+        "no_automatic_payout",
+        "no_network_required",
+        "manual_review_required"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "no_wallet_access":        { "type": "boolean", "const": true },
+        "no_private_keys":         { "type": "boolean", "const": true },
+        "no_automatic_payout":     { "type": "boolean", "const": true },
+        "no_network_required":     { "type": "boolean", "const": true },
+        "manual_review_required":  { "type": "boolean", "const": true }
+      }
+    }
+  }
+}
