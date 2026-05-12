@@ -90,7 +90,7 @@
 <body>
 <div class="wrap">
 
-<h1>Trinity / Useful Compute<span class="badge">v0.9 worker + replay + governance + daemon + console + backend adapters + benchmark ledger + reward budget policy + payment proposal</span></h1>
+<h1>Trinity / Useful Compute<span class="badge">v1.0 worker + replay + governance + daemon + console + backends + benchmark + budget + proposal + signed payment draft</span></h1>
 <div class="sub">
   Guided panel: load a request, run the local worker, load the result,
   see your pending reward in stocks. No payments. No keys.
@@ -825,6 +825,90 @@
     No payment has been signed or broadcast. No wallet was touched.
     No private key was touched. Manual signing is required in a
     later sprint.
+  </div>
+</div>
+
+<!-- Signed Payment Draft (Sprint 5.16) -->
+<div class="card" id="draftPreviewCard">
+  <h2>Signed Payment Draft</h2>
+  <p class="small">
+    Read a payment draft emitted by
+    <code>useful_compute_payment_draft.py</code>. The draft turns a
+    Sprint 5.15 payment proposal into a reviewable transaction
+    candidate. <strong>This page does not sign or broadcast
+    payments.</strong> No wallet, no seed, no private key, no RPC
+    password is accepted here.
+  </p>
+  <div class="row">
+    <div>
+      <div class="k">payment draft JSON</div>
+      <label class="file-btn" for="draftFile">Choose draft...</label>
+      <input id="draftFile" type="file" accept="application/json,.json">
+      <span id="draftBadge" class="state idle">none</span>
+    </div>
+  </div>
+  <div id="draftDetails" style="margin-top:16px; display:none;">
+    <div class="grid">
+      <div><div class="k">draft_id</div>
+           <div class="v" id="draftId">-</div></div>
+      <div><div class="k">source_proposal_id</div>
+           <div class="v" id="draftProposalId">-</div></div>
+      <div><div class="k">total_outputs</div>
+           <div class="v" id="draftOutputs">0</div></div>
+      <div><div class="k">total_payment_stocks</div>
+           <div class="v" id="draftPaymentStocks">0</div></div>
+      <div><div class="k">total in SOST</div>
+           <div class="v" id="draftPaymentSost">≈ 0 SOST</div></div>
+      <div><div class="k">total_fee_stocks_estimated</div>
+           <div class="v" id="draftFeeStocks">0</div></div>
+      <div><div class="k">change_stocks_estimated</div>
+           <div class="v" id="draftChangeStocks">0</div></div>
+      <div><div class="k">signed status</div>
+           <div class="v" id="draftSignedStatus">-</div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">safety badges</div>
+      <ul id="draftSafetyList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 12px;
+           color: var(--ok);"></ul>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">outputs</div>
+      <table style="width:100%;
+             font-family: var(--mono); font-size: 11px;
+             border-collapse: collapse;">
+        <thead>
+          <tr style="text-align:left; color: var(--muted);">
+            <th style="padding:4px 8px;">request_id</th>
+            <th style="padding:4px 8px;">payout_address</th>
+            <th style="padding:4px 8px;">workers</th>
+            <th style="padding:4px 8px; text-align:right;">stocks</th>
+            <th style="padding:4px 8px; text-align:right;">SOST</th>
+          </tr>
+        </thead>
+        <tbody id="draftOutputsTbody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">warnings</div>
+      <ul id="draftWarningsList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 11px;
+           color: var(--warn);"></ul>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">tx hex blocks (informational; v0.1 placeholders)</div>
+      <pre id="draftTxHexBlock" style="background:#0d1117;
+           border: 1px solid var(--border); padding: 10px;
+           border-radius: 6px; font-family: var(--mono);
+           font-size: 11px; white-space: pre-wrap;
+           word-break: break-all;"></pre>
+    </div>
+  </div>
+  <div class="danger-strip" style="margin-top:16px;">
+    <strong>This page does not sign or broadcast payments.</strong>
+    The draft is a review artefact. Real signing happens locally
+    via a separate wallet sprint. Broadcast happens in yet another
+    explicit human-driven sprint after that.
   </div>
 </div>
 
@@ -2250,6 +2334,113 @@
         _proposalRender(obj);
       } catch {
         setState($("proposalBadge"), "invalid JSON", "fail");
+      }
+    };
+    r.readAsText(f);
+  });
+
+  // ==================================================================
+  //  Signed Payment Draft (Sprint 5.16)
+  //
+  //  Read-only loader for
+  //  trinity-useful-compute-payment-draft/v0.1 plans. No fetch /
+  //  XHR / WebSocket / wallet / RPC. Pure textContent rendering.
+  // ==================================================================
+
+  const SCHEMA_DRAFT_V01 =
+    "trinity-useful-compute-payment-draft/v0.1";
+
+  function _draftRender(draft) {
+    _consoleSetText("draftId",         draft.draft_id);
+    _consoleSetText("draftProposalId", draft.source_proposal_id);
+    _consoleSetText("draftOutputs",    String(draft.total_outputs));
+    _consoleSetText("draftPaymentStocks",
+      Number(draft.total_payment_stocks || 0).toLocaleString("en-US"));
+    const sost = Number(draft.total_payment_stocks || 0) / 100000000;
+    _consoleSetText("draftPaymentSost",
+      "≈ " + sost.toFixed(8) + " SOST");
+    _consoleSetText("draftFeeStocks",
+      Number(draft.total_fee_stocks_estimated || 0).toLocaleString("en-US"));
+    _consoleSetText("draftChangeStocks",
+      Number(draft.change_stocks_estimated || 0).toLocaleString("en-US"));
+
+    const status = draft.dry_signed
+      ? "dry-signed (placeholder)"
+      : (draft.unsigned_only ? "unsigned-only" : "(unknown)");
+    _consoleSetText("draftSignedStatus", status);
+
+    // Safety badges.
+    const ul = $("draftSafetyList");
+    while (ul.firstChild) ul.removeChild(ul.firstChild);
+    const ss = draft.safety_status || {};
+    Object.keys(ss).sort().forEach((k) => {
+      const li = document.createElement("li");
+      li.textContent = k + " = " + String(ss[k]);
+      ul.appendChild(li);
+    });
+
+    // Outputs table.
+    const tbody = $("draftOutputsTbody");
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    for (const o of (draft.outputs || [])) {
+      const tr = document.createElement("tr");
+      tr.style.borderTop = "1px solid #21262d";
+      tr.appendChild(_consoleRowCell(o.request_id));
+      tr.appendChild(_consoleRowCell(o.payout_address));
+      tr.appendChild(_consoleRowCell(
+        String((o.worker_result_ids || []).length)
+      ));
+      tr.appendChild(_consoleRowCell(
+        Number(o.amount_stocks || 0).toLocaleString("en-US"),
+        { right: true },
+      ));
+      tr.appendChild(_consoleRowCell(
+        Number(o.amount_sost || 0).toFixed(8),
+        { right: true },
+      ));
+      tbody.appendChild(tr);
+    }
+
+    // Warnings.
+    const wul = $("draftWarningsList");
+    while (wul.firstChild) wul.removeChild(wul.firstChild);
+    for (const w of (draft.warnings || [])) {
+      const li = document.createElement("li");
+      li.textContent = w;
+      wul.appendChild(li);
+    }
+    if (!(draft.warnings || []).length) {
+      const li = document.createElement("li");
+      li.textContent = "(none)";
+      li.style.color = "var(--muted)";
+      wul.appendChild(li);
+    }
+
+    // Tx hex placeholders.
+    $("draftTxHexBlock").textContent =
+      "unsigned_tx_hex: " + (draft.unsigned_tx_hex || "(null)")
+      + "\nsigned_tx_hex:   " + (draft.signed_tx_hex || "(null)")
+      + "\ntxid_if_signed:  " + (draft.txid_if_signed || "(null)");
+
+    $("draftDetails").style.display = "";
+  }
+
+  $("draftFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (obj.schema !== SCHEMA_DRAFT_V01) {
+          setState($("draftBadge"),
+            "loaded (UNEXPECTED schema)", "warn");
+        } else {
+          setState($("draftBadge"), "loaded", "ok");
+        }
+        _draftRender(obj);
+      } catch {
+        setState($("draftBadge"), "invalid JSON", "fail");
       }
     };
     r.readAsText(f);
