@@ -594,6 +594,144 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       </ol>
     </div>
 
+    <!-- ================================================================ -->
+    <!-- USEFUL COMPUTE STACK (Sprints 5.6 - 5.15)                        -->
+    <!-- Post-Kalgoorlie expansion. Adds autonomy + worker pipeline +     -->
+    <!-- replay + governance + budget + payment proposal. All dry-run.    -->
+    <!-- ================================================================ -->
+    <div style="margin-top:14px;padding:14px 16px;border:1px solid rgba(245,158,11,0.35);border-left:3px solid #f59e0b;background:rgba(245,158,11,0.05);border-radius:3px">
+      <div style="font-size:10px;letter-spacing:2px;color:#f59e0b;margin-bottom:10px;font-family:var(--font-mono,monospace)">// USEFUL COMPUTE STACK &middot; Sprints 5.6 - 5.15 (post-Kalgoorlie)</div>
+      <p style="margin:0 0 12px;font-size:12.5px;line-height:1.7;color:#e9d5b3">
+        After the Kalgoorlie capsule, Trinity grew a full <b style="color:#fbbf24">Useful Compute layer</b>: SOST AI now coordinates candidates, workers execute deterministic compute, replay agreement is enforced cross-worker, governance reviews batches, budgets cap spending and payment proposals are built. <b style="color:#fbbf24">10 sprints &middot; 13 scripts &middot; 8 strict schemas &middot; 606/606 trinity tests PASS</b>. Every layer is <b>dry-run, offline by default, no wallet, no signing, no consensus change</b>.
+      </p>
+
+      <table style="width:100%;font-family:var(--font-mono,monospace);font-size:11px;line-height:1.55;border-collapse:collapse;color:#e9d5b3">
+        <thead>
+          <tr style="text-align:left;color:#f59e0b">
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(245,158,11,0.3)">Sprint</th>
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(245,158,11,0.3)">Layer</th>
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(245,158,11,0.3)">What it ships</th>
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(245,158,11,0.3)">Artefact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.6</td>
+            <td style="padding:5px 8px">SOST AI Orchestrator</td>
+            <td style="padding:5px 8px">Reads canonical objectives, picks vertical, decides next task, logs every decision.</td>
+            <td style="padding:5px 8px"><code>TRINITY_AUTONOMY_PROOF_BUNDLE_v01.json</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.7</td>
+            <td style="padding:5px 8px">Useful Compute Worker</td>
+            <td style="padding:5px 8px">Local-dry-run worker; deterministic placeholders per task_type; pending reward in stocks; rejects every payment flag.</td>
+            <td style="padding:5px 8px"><code>useful-compute-result/v0.4</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.8</td>
+            <td style="padding:5px 8px">Cross-Worker Replay Validator</td>
+            <td style="padding:5px 8px">Splits <code>compute_output_sha256</code> (worker-independent) from <code>worker_result_id</code>; declares accepted/mismatch.</td>
+            <td style="padding:5px 8px"><code>useful-compute-validation/v0.2</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.9</td>
+            <td style="padding:5px 8px">Governance Gate</td>
+            <td style="padding:5px 8px">Converts accepted validations + pending rewards into a review-only batch. Conservative policy: min(rewards).</td>
+            <td style="padding:5px 8px"><code>useful-compute-governance-batch/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.10</td>
+            <td style="padding:5px 8px">Background Autonomy Daemon</td>
+            <td style="padding:5px 8px">Loops orchestrator -&gt; worker -&gt; validator -&gt; gate; deterministic with pinned-time; records lessons.</td>
+            <td style="padding:5px 8px"><code>trinity-background-daemon-state/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.11</td>
+            <td style="padding:5px 8px">Web Miner Compute Console</td>
+            <td style="padding:5px 8px">Local-file dashboard for daemon state, rewards, validations, governance, lessons. No fetch, no XHR, no wallet.</td>
+            <td style="padding:5px 8px"><code>website/trinity-useful-compute.html</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.12</td>
+            <td style="padding:5px 8px">Sandboxed Backend Adapters</td>
+            <td style="padding:5px 8px">Registry for placeholder + sandbox_toy backends (DFT / quantum / scoring / simulation / structure_relaxation). Real DFT NOT enabled.</td>
+            <td style="padding:5px 8px"><code>backend_kind</code> enum + replay enforcement</td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.13</td>
+            <td style="padding:5px 8px">Benchmark Ledger</td>
+            <td style="padding:5px 8px">Deterministic local micro-benchmark; <code>normalized_work_score</code> drives reward; worker_id stored only as sha16 hash.</td>
+            <td style="padding:5px 8px"><code>useful-compute-benchmark/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.14</td>
+            <td style="padding:5px 8px">Reward Budget Policy</td>
+            <td style="padding:5px 8px">Caps governance totals by pool / daily / epoch / job / worker; conservative defaults; 70/20/10 split primary/replay/governance.</td>
+            <td style="padding:5px 8px"><code>useful-compute-reward-budget/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.15</td>
+            <td style="padding:5px 8px">Payment Proposal</td>
+            <td style="padding:5px 8px">Maps allocated stocks to payout addresses (via worker address map). Capsule summary prepared; <b>NOT signed, NOT broadcast</b>.</td>
+            <td style="padding:5px 8px"><code>useful-compute-payment-proposal/v0.1</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px">
+        <div style="padding:8px 10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// Useful Compute pipeline</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            request -&gt; worker -&gt; replay -&gt;<br>
+            governance -&gt; budget -&gt;<br>
+            <b style="color:#fbbf24">payment proposal</b><br>
+            (next: signed payment + capsule)
+          </div>
+        </div>
+        <div style="padding:8px 10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// Safety invariants</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            no_automatic_payout<br>
+            no_wallet_access<br>
+            no_private_keys<br>
+            no_broadcast<br>
+            no_network_required
+          </div>
+        </div>
+        <div style="padding:8px 10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// Conservative defaults</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            daily cap   = 1 SOST<br>
+            epoch cap   = 10 SOST<br>
+            job cap     = 0.05 SOST<br>
+            worker cap  = 0.02 SOST<br>
+            min_workers = 2
+          </div>
+        </div>
+        <div style="padding:8px 10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// Backend kinds</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            placeholder<br>
+            <span style="color:#fbbf24">sandbox_toy</span> (experimental)<br>
+            <span style="color:#8b8b8b">real_backend</span> (reserved, 0 in v0.1)
+          </div>
+        </div>
+      </div>
+
+      <p style="margin-top:14px;padding:10px 14px;border-left:3px solid #f59e0b;background:rgba(245,158,11,0.04);font-size:12px;line-height:1.6;color:#e9d5b3;border-radius:3px">
+        <b style="color:#fbbf24">Where the stack stops.</b>
+        Payment Proposal v0.1 is the last layer that produces a JSON
+        artefact. <b>No SOST has been paid; no transaction has been
+        signed.</b> The next sprints introduce: governance-signed
+        payment flow (touches wallet for the first time, behind manual
+        signing), Proof Registry / Capsule publishing (anchors the
+        proposal&rsquo;s <code>capsule_summary</code> on-chain), then
+        distributed job sharding and real DFT / quantum backends
+        behind feature flags. Every step keeps the rule:
+        <b style="color:#fbbf24">on-chain artefacts are operator-driven manual events, never automatic.</b>
+      </p>
+    </div>
+
     <p style="margin-top:14px;padding:12px 16px;border-left:3px solid #2e8b57;background:rgba(46,139,87,0.04);font-size:13px;line-height:1.6;color:#c8d8cf;border-radius:3px">
       <b style="color:#8de3ad">One-line summary.</b> Trinity is SOST&rsquo;s first strong use case: <i>turning autonomous digital research into publicly verifiable proof.</i> &mdash; full reference at <a href="sost-trinity.html" style="color:#8de3ad;text-decoration:none;border-bottom:1px dotted rgba(141,227,173,0.4)">sost-trinity.html</a>.
     </p>
@@ -2207,7 +2345,7 @@ window.loadLotteryAudit = async function(){
   var statusHtml='<div id="lotteryAuditStatus" style="margin-bottom:6px;font-size:10px;color:var(--cyan)">scanning 0 / '+total+' PAYOUT blocks...</div>';
   var TT_BLOCK='Height of the PAYOUT block being audited. Phase 2 schedules a lottery payout on every 3rd reward block; only those blocks appear here.';
   var TT_MINER='Address that mined this PAYOUT block. The miner is excluded from winning the lottery on the same block (the cooldown rule covers this and the previous 4 blocks).';
-  var TT_ON='Lottery winner address as recorded on-chain — the address that actually received the PoP Lottery payout output in this block.';
+  var TT_ON='Lottery winner address as recorded on-chain — the address that actually received the DTD Lottery payout output in this block.';
   var TT_AUDIT='Lottery winner address re-derived in real time from the same 16-block window the consensus rule uses (sha256(SOST_LOTTERY_V11 || prev16_hashes || height_le)). Same input → same winner. Any divergence from ON-CHAIN WINNER is evidence of selection tampering.';
   var TT_WIDX='Index of the winner inside the eligible-set list at this block. Deterministic: idx = first 8 bytes of seed mod eligible_count.';
   var TT_ELIG='Number of eligible addresses considered for this block — coinbase-bearing addresses minus the cooldown set (last 5 distinct miners).';
@@ -5392,7 +5530,7 @@ async function showAddress(addr){
         'lot-cur',
         '🎰 DTD LOTTERY (current unspent)',
         '<span style="color:#ff00ff;font-weight:600">'+lottUnspentAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottUnspentCount+' UTXO'+(lottUnspentCount===1?'':'s')+')</span>',
-        '<p><b>Currently unspent lottery payout outputs</b> (<code>OUT_COINBASE_LOTTERY</code>, <code>type=4</code>). Each entry is one PoP-Lottery win on a Phase 2 PAYOUT block whose payout output has not yet been moved &mdash; when an entry is spent it disappears from this row immediately.</p>'+
+        '<p><b>Currently unspent lottery payout outputs</b> (<code>OUT_COINBASE_LOTTERY</code>, <code>type=4</code>). Each entry is one DTD Lottery win on a Phase 2 PAYOUT block whose payout output has not yet been moved &mdash; when an entry is spent it disappears from this row immediately.</p>'+
         '<p>Already excluded from the MINED row above so the three sub-balances (MINED + RECEIVED currently held + LOTTERY current unspent) sum to TOTAL BALANCE without double-counting.</p>'+
         '<p>Lottery outputs are coinbase, so they share the <code>'+COINBASE_MATURITY+' confirmations</code> maturity rule with regular MINED outputs. While immature, a lottery UTXO still appears here but cannot be spent yet &mdash; the maturity column in the UTXO list further down shows how many confirmations remain.</p>',
         'color:#ff00ff'
@@ -5408,7 +5546,7 @@ async function showAddress(addr){
         'lot-life',
         '🎰 DTD LOTTERY WON (lifetime)',
         '<span style="color:#ff00ff;font-weight:600">'+lottLifetimeSost.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottLifetimeCount+(lottLifetimeCount===1?' win':' wins')+lottDeltaTxt+')</span>',
-        '<p><b>Lifetime sum of PoP-Lottery wins for this address</b>, including payouts that have already been spent. Sourced from the DTD chain scan when it has been run in this session; otherwise the row prompts you to open the DTD section to populate it.</p>'+
+        '<p><b>Lifetime sum of DTD Lottery wins for this address</b>, including payouts that have already been spent. Sourced from the DTD chain scan when it has been run in this session; otherwise the row prompts you to open the DTD section to populate it.</p>'+
         '<p><b>If this lifetime number matches the current-unspent row above, none of your lottery wins have been moved yet.</b> If it is larger, the difference equals the count of wins you have already spent or consolidated &mdash; shown inline as <em>"N already spent"</em>.</p>'+
         '<p>Unlike the current-unspent row, this one DOES persist across sessions (in <code>localStorage</code> under <code>sost_dtd_lottery_v1</code>). Run the DTD scan again after new lottery payouts land to refresh it.</p>',
         'color:#ff00ff'
@@ -5418,9 +5556,9 @@ async function showAddress(addr){
         'lot-life',
         '🎰 DTD LOTTERY',
         '<span style="color:var(--text3)">no lottery UTXOs · open DTD section to confirm lifetime</span>',
-        '<p><b>No PoP-Lottery payouts are currently held at this address.</b> That is the snapshot answer.</p>'+
+        '<p><b>No DTD Lottery payouts are currently held at this address.</b> That is the snapshot answer.</p>'+
         '<p>For a definitive lifetime answer (whether any lottery has ever been won and already spent), open the DTD section of the explorer. It walks Phase 2 PAYOUT blocks looking for <code>OUT_COINBASE_LOTTERY</code> outputs paid to this address and caches the result for the rest of the session in <code>localStorage</code>.</p>'+
-        '<p>If the DTD scan also reports zero, this address has never won a PoP-Lottery payout.</p>',
+        '<p>If the DTD scan also reports zero, this address has never won a DTD Lottery payout.</p>',
         'color:#ff00ff'
       );
     }else{
@@ -5812,7 +5950,7 @@ function renderAddrCharts(utxos){
       (mature?'<div style="width:'+mPct+'%;background:#3a3a3a;height:100%;border-radius:3px 0 0 3px;" title="Mature: '+mature+' UTXOs ('+mPct+'%) \u2014 Spendable"></div>':'')+
       (almost?'<div style="width:'+aPct+'%;background:#555;height:100%;" title="Almost mature: '+almost+' UTXOs ('+aPct+'%) \u2014 500-999 confirmations"></div>':'')+
       (immature?'<div style="width:'+iPct+'%;background:#666;height:100%;border-radius:0 3px 3px 0;" title="Immature: '+immature+' UTXOs ('+iPct+'%) \u2014 Less than 500 confirmations"></div>':'');
-    var lottLegend=lottUtxos?(' &nbsp; <span style="color:#ff00ff;" title="PoP-Lottery payouts (OUT_COINBASE_LOTTERY, type=4) currently unspent at this address. Spent lottery wins are not in this count \u2014 they are reflected in TOTAL BALANCE via change outputs.">\u{1F3B0}</span> Lottery: '+lottUtxos+' ('+lottAmt.toFixed(8)+' SOST)'):'';
+    var lottLegend=lottUtxos?(' &nbsp; <span style="color:#ff00ff;" title="DTD Lottery payouts (OUT_COINBASE_LOTTERY, type=4) currently unspent at this address. Spent lottery wins are not in this count \u2014 they are reflected in TOTAL BALANCE via change outputs.">\u{1F3B0}</span> Lottery: '+lottUtxos+' ('+lottAmt.toFixed(8)+' SOST)'):'';
     matLeg.innerHTML='<span style="color:#3a3a3a;">\u25A0</span> Mature: '+mature+' ('+mPct+'%) &nbsp; '+
       (almost?'<span style="color:#555;">\u25A0</span> Almost: '+almost+' ('+aPct+'%) &nbsp; ':'')+
       (immature?'<span style="color:#666;">\u25A0</span> Immature: '+immature+' ('+iPct+'%)':'')+lottLegend;
