@@ -33,6 +33,7 @@ _SPRINT_56_SCRIPTS = [
     "trinity_background_daemon.py",
     "useful_compute_backends.py",
     "useful_compute_benchmark.py",
+    "useful_compute_reward_budget_policy.py",
 ]
 
 

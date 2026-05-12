@@ -1,0 +1,171 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-useful-compute-reward-budget/v0.1",
+  "title": "Trinity Useful Compute Reward Budget Plan",
+  "description": "Output of the Trinity reward budget policy v0.1. Takes a directory of governance-approved batches and caps the total they may pay out before any payment sprint touches a wallet. v0.1 is dry-run only: NEVER pays, NEVER touches a wallet, NEVER broadcasts. Deferred stocks are NOT lost; the next budget cycle (different epoch_id or higher pool balance) re-evaluates them.",
+  "type": "object",
+  "required": [
+    "schema",
+    "budget_id",
+    "mode",
+    "policy",
+    "pinned_time",
+    "epoch_id",
+    "pool_balance_stocks",
+    "effective_daily_budget_stocks",
+    "effective_epoch_budget_stocks",
+    "policy_caps",
+    "total_requested_stocks",
+    "total_allocated_stocks",
+    "total_deferred_stocks",
+    "allocation_items",
+    "safety_status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-useful-compute-reward-budget/v0.1"
+    },
+    "budget_id": {
+      "type": "string",
+      "pattern": "^bud-[0-9a-f]{16}$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["local-dry-run"]
+    },
+    "policy": {
+      "type": "string",
+      "enum": ["conservative"]
+    },
+    "pinned_time": {
+      "type": "string", "format": "date-time"
+    },
+    "epoch_id": {
+      "type": "string",
+      "minLength": 1, "maxLength": 64
+    },
+    "pool_balance_stocks": {
+      "type": "integer", "minimum": 1
+    },
+    "effective_daily_budget_stocks": {
+      "type": "integer", "minimum": 0
+    },
+    "effective_epoch_budget_stocks": {
+      "type": "integer", "minimum": 0
+    },
+    "policy_caps": {
+      "type": "object",
+      "required": [
+        "max_daily_fraction_of_pool",
+        "fixed_daily_cap_stocks",
+        "max_epoch_fraction_of_pool",
+        "fixed_epoch_cap_stocks",
+        "max_job_reward_stocks",
+        "max_worker_reward_stocks",
+        "primary_worker_share",
+        "replay_validator_share",
+        "governance_review_reserve"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "max_daily_fraction_of_pool":  { "type": "number", "minimum": 0, "maximum": 1 },
+        "fixed_daily_cap_stocks":      { "type": "integer", "minimum": 0 },
+        "max_epoch_fraction_of_pool":  { "type": "number", "minimum": 0, "maximum": 1 },
+        "fixed_epoch_cap_stocks":      { "type": "integer", "minimum": 0 },
+        "max_job_reward_stocks":       { "type": "integer", "minimum": 0 },
+        "max_worker_reward_stocks":    { "type": "integer", "minimum": 0 },
+        "primary_worker_share":        { "type": "number", "minimum": 0, "maximum": 1 },
+        "replay_validator_share":      { "type": "number", "minimum": 0, "maximum": 1 },
+        "governance_review_reserve":   { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "total_requested_stocks": {
+      "type": "integer", "minimum": 0
+    },
+    "total_allocated_stocks": {
+      "type": "integer", "minimum": 0
+    },
+    "total_deferred_stocks": {
+      "type": "integer", "minimum": 0
+    },
+    "allocation_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "request_id",
+          "governance_batch_id",
+          "worker_result_ids",
+          "requested_stocks",
+          "allocated_stocks",
+          "deferred_stocks",
+          "primary_workers_share_stocks",
+          "replay_validator_reserve_stocks",
+          "governance_review_reserve_stocks",
+          "cap_reason",
+          "allocation_status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "pattern": "^uc-[0-9a-f]{16,64}$"
+          },
+          "governance_batch_id": {
+            "type": "string",
+            "pattern": "^gov-[0-9a-f]{16}$"
+          },
+          "worker_result_ids": {
+            "type": "array",
+            "items": {
+              "type": "string", "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "requested_stocks":                { "type": "integer", "minimum": 0 },
+          "allocated_stocks":                { "type": "integer", "minimum": 0 },
+          "deferred_stocks":                 { "type": "integer", "minimum": 0 },
+          "primary_workers_share_stocks":    { "type": "integer", "minimum": 0 },
+          "replay_validator_reserve_stocks": { "type": "integer", "minimum": 0 },
+          "governance_review_reserve_stocks":{ "type": "integer", "minimum": 0 },
+          "cap_reason": {
+            "type": "string", "minLength": 1, "maxLength": 256
+          },
+          "allocation_status": {
+            "type": "string",
+            "enum": [
+              "approved_as_requested",
+              "capped_by_job",
+              "capped_by_worker",
+              "capped_by_daily",
+              "capped_by_epoch",
+              "deferred",
+              "rejected"
+            ]
+          }
+        }
+      }
+    },
+    "safety_status": {
+      "type": "object",
+      "required": [
+        "no_wallet_access",
+        "no_private_keys",
+        "no_automatic_payout",
+        "no_broadcast",
+        "budget_only",
+        "requires_separate_payment_sprint"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "no_wallet_access":                 { "type": "boolean", "const": true },
+        "no_private_keys":                  { "type": "boolean", "const": true },
+        "no_automatic_payout":              { "type": "boolean", "const": true },
+        "no_broadcast":                     { "type": "boolean", "const": true },
+        "budget_only":                      { "type": "boolean", "const": true },
+        "requires_separate_payment_sprint": { "type": "boolean", "const": true }
+      }
+    }
+  }
+}
