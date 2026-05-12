@@ -432,6 +432,131 @@ python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
+    <div class="section-id">// 05B &mdash; USEFUL COMPUTE STACK (SPRINTS 5.6 &ndash; 5.16)</div>
+    <div class="section-title">Post-Kalgoorlie <span>Discovery &rarr; Reward Pipeline</span></div>
+
+    <p style="color:#ccc;line-height:1.85">
+      Block&nbsp;#8085 anchored the first proof bundle. Everything in this section is what was built <b>after</b> that anchor &mdash; a deterministic, offline,
+      consensus-isolated pipeline that turns the Heavy Tasks proposed by Trinity into <b>reviewable</b>, <b>signable-later</b> payment drafts.
+      <span style="color:var(--amber)">v0.1 of this stack never signs and never broadcasts.</span>
+      Every artefact is a JSON file you can diff, replay and discard before any chain operation happens.
+    </p>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// THE ELEVEN SPRINTS</div>
+      <table class="tbl">
+        <tr><th>Sprint</th><th>Layer</th><th>What it ships</th><th>Schema / Artefact</th></tr>
+        <tr>
+          <td class="k">5.6</td>
+          <td>Foundations</td>
+          <td>Task builder, reward model, orchestrator, error memory. The deterministic seed of the entire pipeline + the Sprint&nbsp;5.6 strict static safety harness used by every later sprint.</td>
+          <td><code>useful_compute_request</code> v0.1, <code>useful_compute_result</code> v0.1</td>
+        </tr>
+        <tr>
+          <td class="k">5.7</td>
+          <td>Workers</td>
+          <td>Worker executor with placeholder backend. Pure-Python, deterministic, no network, no GPU &mdash; just enough to prove the schema and the replay path.</td>
+          <td><code>useful_compute_result</code> v0.2</td>
+        </tr>
+        <tr>
+          <td class="k">5.8</td>
+          <td>Validation</td>
+          <td>Replay validator. Re-executes worker results independently and flags any divergence as <code>mismatch</code>; tampered or non-determinstic results never reach reward eligibility.</td>
+          <td><code>useful_compute_validation</code> v0.1</td>
+        </tr>
+        <tr>
+          <td class="k">5.9</td>
+          <td>Governance</td>
+          <td>Governance gate. Per-request decision of <code>accepted</code> / <code>rejected</code> across a batch of validations, with explicit reason codes (no quorum &rarr; rejected, replay mismatch &rarr; rejected, etc.).</td>
+          <td><code>useful_compute_governance_batch</code> v0.1</td>
+        </tr>
+        <tr>
+          <td class="k">5.10</td>
+          <td>Daemon</td>
+          <td>Background daemon. Loops the pipeline locally on the miner. No network, no privileged file access, writes a tick state file so the operator can audit every iteration.</td>
+          <td><code>trinity_background_state</code> v0.1</td>
+        </tr>
+        <tr>
+          <td class="k">5.11</td>
+          <td>UI</td>
+          <td>Web Miner Compute Console (<code>website/trinity-useful-compute.html</code>). Read-only viewer for every artefact in this section. Loads files from disk; no <code>fetch()</code>, no inputs, no signing button.</td>
+          <td>HTML page, schema-tagged renderers</td>
+        </tr>
+        <tr>
+          <td class="k">5.12</td>
+          <td>Backends</td>
+          <td>Real backend adapter contract &mdash; three kinds: <code>placeholder</code>, <code>sandbox_toy</code>, <code>real_backend</code>&nbsp;<i style="color:var(--amber)">(reserved, not wired)</i>. Hard sandbox: no network, no shell, no FS escape.</td>
+          <td><code>useful_compute_result</code> v0.4 with <code>backend_kind</code></td>
+        </tr>
+        <tr>
+          <td class="k">5.13</td>
+          <td>Benchmark</td>
+          <td>Deterministic micro-benchmarks (<code>worker_id_hash</code>, <code>machine_fingerprint_hash</code> via <code>sha16</code>). Lets the network compare claimed capacity to actual capacity without leaking machine identity.</td>
+          <td><code>useful_compute_benchmark</code> v0.1</td>
+        </tr>
+        <tr>
+          <td class="k">5.14</td>
+          <td>Policy</td>
+          <td>Reward budget policy with conservative caps. Defaults: <b>1&nbsp;SOST/day</b>, <b>10&nbsp;SOST/epoch</b>, <b>0.05&nbsp;SOST/job</b>, <b>0.02&nbsp;SOST/worker</b>. Reward split <b>70/20/10</b> (workers / replay / governance reserve).</td>
+          <td><code>useful_compute_reward_budget</code> v0.1</td>
+        </tr>
+        <tr>
+          <td class="k">5.15</td>
+          <td>Proposal</td>
+          <td>Payment proposal. Consolidates accepted governance batches under the active budget into a single capsule summary (<code>useful_compute_reward_batch_v1</code>) ready for review. Worker-address map is local-only.</td>
+          <td><code>useful_compute_payment_proposal</code> v0.1</td>
+        </tr>
+        <tr>
+          <td class="k">5.16</td>
+          <td>Draft</td>
+          <td>Signed payment draft. Two modes: <code>unsigned-only</code> (default, no wallet touched) and <code>dry-sign</code> (wallet path verified, signed tx is a placeholder &mdash; real bytes deferred). Pre-argparse scan rejects any <code>--broadcast</code> / <code>--send</code> / <code>--payout-now</code> / <code>--auto-pay</code> / <code>--sendrawtransaction</code> / <code>--export-private-key</code> argv with exit code 2.</td>
+          <td><code>useful_compute_payment_draft</code> v0.1</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// THE PIPELINE END-TO-END</div>
+      <div class="flow-step"><b>1. Task Builder</b> &mdash; deterministic <code>useful_compute_request</code> seeded from Trinity's NextAction queue.</div>
+      <div class="flow-step"><b>2. Worker</b> &mdash; executes the request in the requested backend, emits <code>useful_compute_result</code> with <code>backend_kind</code> stamped.</div>
+      <div class="flow-step"><b>3. Replay Validator</b> &mdash; re-runs the same input independently; produces <code>useful_compute_validation</code> with <code>match</code> / <code>mismatch</code>.</div>
+      <div class="flow-step"><b>4. Governance Gate</b> &mdash; turns the validation set into <code>useful_compute_governance_batch</code> with per-request <code>accepted</code> / <code>rejected</code>.</div>
+      <div class="flow-step"><b>5. Benchmark Ledger</b> &mdash; correlates result claims with deterministic micro-benchmarks per worker / machine fingerprint.</div>
+      <div class="flow-step"><b>6. Budget Policy</b> &mdash; enforces the daily / epoch / job / worker caps and produces <code>useful_compute_reward_budget</code>.</div>
+      <div class="flow-step"><b>7. Payment Proposal</b> &mdash; consolidates accepted batches under the budget into a reviewable proposal capsule.</div>
+      <div class="flow-step"><b>8. Signed Payment Draft</b> &mdash; emits a draft transaction the operator can review and (in a future, separate, human-driven wallet sprint) actually sign and broadcast.</div>
+    </div>
+
+    <div class="green-box" style="font-size:14px;margin-top:18px">
+      <b>Same invariant as Trinity v0:</b> the pipeline <i>designs and proves</i>, it never <i>acts</i>. The path from a Heavy-Task hypothesis to a reward payment is fully reviewable, and the chain stays untouched until a human signs and broadcasts in a separate sprint that does not exist yet.
+    </div>
+
+    <div class="warn" style="margin-top:18px">
+      <b>// Hard safety invariants enforced by schema and static checks</b><br>
+      Every artefact's <code>safety_status</code> locks <code>no_broadcast = const true</code>, <code>human_review_required = const true</code>, <code>private_keys_exported = const false</code>, <code>requires_separate_broadcast = const true</code>. The 5.16 script bans <code>subprocess</code>, <code>os.system</code>, every common HTTP / socket import, and every private-key token (<code>private_key</code>, <code>privkey</code>, <code>seed_phrase</code>, <code>mnemonic</code>, <code>passphrase</code>) at the static-source level. The console page bans <code>fetch()</code>, <code>XMLHttpRequest</code>, <code>WebSocket</code>, <code>EventSource</code> and <code>navigator.sendBeacon</code>, and refuses any <code>&lt;input&gt;</code> field whose attributes look like a wallet prompt.
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// STILL DEFERRED (NOT IN THIS STACK)</div>
+      <ul class="tight" style="color:#ccc;line-height:1.85">
+        <li>Real signing: <code>signed_tx_hex</code> is a placeholder in v0.1; a future human-driven wallet sprint replaces it with real bytes.</li>
+        <li>Real broadcast: no script in this stack ever calls <code>sendrawtransaction</code> or anything equivalent. Broadcast is a separate, manual step.</li>
+        <li>Real backend adapters: <code>real_backend</code> is reserved in the schema but no real backend is wired. Today the network only runs <code>placeholder</code> and <code>sandbox_toy</code>.</li>
+        <li>On-chain Proof Registry: the Sprint&nbsp;5.x stack produces drafts but does not yet write its capsules into a dedicated on-chain Useful Compute Proof Registry.</li>
+        <li>Sharding / mass parallelism: the daemon runs one pipeline per miner; cross-miner aggregation, sharding and cluster-level scheduling are out of scope here.</li>
+        <li><b>Useful Compute rewards remain POSTPONED.</b> The infrastructure above is live for dry-run testing only; block&nbsp;#7100 does <b>not</b> activate rewards. A future B+D redesign is required before any rewarded phase.</li>
+      </ul>
+    </div>
+
+    <div class="green-box" style="font-size:14px;margin-top:18px">
+      <b>Status as of Sprint 5.16:</b> the eleven sprints land as <b>663/663 trinity tests PASS</b>. Every script and schema is reproducible, reviewable, and cannot reach the chain without an explicit, future human step.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
     <div class="section-id">// 06 &mdash; WHEN REAL FEATURES ARE PRESENT</div>
     <div class="section-title">What a <span>Mature Trinity Campaign</span> Will Produce</div>
 
@@ -743,6 +868,41 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
         <td class="k">v0.4</td>
         <td>Proof Bundle + local verifier. Single root SHA-256, Merkle binding, 12 closed verification checks. <b>First on-chain anchor at block #8085.</b></td>
         <td style="color:var(--green)">SHIPPED &middot; trinity/proof-bundle-v0</td>
+      </tr>
+      <tr>
+        <td class="k">5.6 &ndash; 5.10</td>
+        <td>Useful Compute pipeline foundations: task builder, reward model, orchestrator, error memory, worker (placeholder), replay validator, governance gate, background daemon. See section&nbsp;05B.</td>
+        <td style="color:var(--green)">SHIPPED</td>
+      </tr>
+      <tr>
+        <td class="k">5.11</td>
+        <td>Web Miner Compute Console (<code>website/trinity-useful-compute.html</code>) &mdash; read-only viewer for every Useful Compute artefact, no network primitives.</td>
+        <td style="color:var(--green)">SHIPPED</td>
+      </tr>
+      <tr>
+        <td class="k">5.12</td>
+        <td>Real backend adapter contract with sandboxed kinds (<code>placeholder</code>, <code>sandbox_toy</code>, <code>real_backend</code> reserved). <code>useful_compute_result</code> bumped to v0.4 with <code>backend_kind</code>.</td>
+        <td style="color:var(--green)">SHIPPED</td>
+      </tr>
+      <tr>
+        <td class="k">5.13</td>
+        <td>Benchmark ledger &mdash; deterministic micro-benchmarks (<code>sha16</code> worker / machine fingerprints) for capacity claims without identity leakage.</td>
+        <td style="color:var(--green)">SHIPPED</td>
+      </tr>
+      <tr>
+        <td class="k">5.14</td>
+        <td>Reward budget policy: 1&nbsp;SOST/day, 10&nbsp;SOST/epoch, 0.05&nbsp;SOST/job, 0.02&nbsp;SOST/worker. Reward split 70/20/10 (workers / replay / governance reserve).</td>
+        <td style="color:var(--green)">SHIPPED</td>
+      </tr>
+      <tr>
+        <td class="k">5.15</td>
+        <td>Payment proposal: consolidates accepted governance batches into a single capsule (<code>useful_compute_reward_batch_v1</code>). Worker-address map is local-only.</td>
+        <td style="color:var(--green)">SHIPPED</td>
+      </tr>
+      <tr>
+        <td class="k">5.16</td>
+        <td>Signed payment draft v0.1: unsigned-only / dry-sign modes, no real signing, no broadcast. Pre-argparse argv scan rejects every broadcast-style flag with exit code 2.</td>
+        <td style="color:var(--green)">SHIPPED &middot; 663/663 trinity tests PASS</td>
       </tr>
       <tr>
         <td class="k">v0.5 (proposed)</td>
