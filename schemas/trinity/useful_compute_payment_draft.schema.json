@@ -1,0 +1,161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-useful-compute-payment-draft/v0.1",
+  "title": "Trinity Useful Compute Signed Payment Draft",
+  "description": "Output of the Trinity payment draft layer v0.1. Converts a Sprint 5.15 payment proposal into a reviewable, signable-later draft of a SOST transaction. v0.1 has two modes: unsigned-only (default, no wallet touched) and dry-sign (wallet path verified but real signing is NOT implemented in v0.1; signed_tx_hex is a placeholder string that future sprints will replace with actual bytes). v0.1 NEVER broadcasts and NEVER calls sendrawtransaction. The schema locks no_broadcast, human_review_required, private_keys_exported=false and requires_separate_broadcast as const-true (or const-false where appropriate); dry_sign_only and wallet_access_used are typed boolean because they vary with mode.",
+  "type": "object",
+  "required": [
+    "schema",
+    "draft_id",
+    "source_proposal_id",
+    "mode",
+    "unsigned_only",
+    "dry_signed",
+    "total_outputs",
+    "total_payment_stocks",
+    "total_fee_stocks_estimated",
+    "change_stocks_estimated",
+    "outputs",
+    "capsule_summary",
+    "warnings",
+    "safety_status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-useful-compute-payment-draft/v0.1"
+    },
+    "draft_id": {
+      "type": "string",
+      "pattern": "^draft-[0-9a-f]{16}$"
+    },
+    "source_proposal_id": {
+      "type": "string",
+      "pattern": "^prop-[0-9a-f]{16}$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["local-dry-run"]
+    },
+    "unsigned_only": { "type": "boolean" },
+    "dry_signed":    { "type": "boolean" },
+    "total_outputs":  { "type": "integer", "minimum": 0 },
+    "total_payment_stocks":          { "type": "integer", "minimum": 0 },
+    "total_fee_stocks_estimated":    { "type": "integer", "minimum": 0 },
+    "change_stocks_estimated":       { "type": "integer", "minimum": 0 },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "payout_address",
+          "amount_stocks",
+          "amount_sost",
+          "request_id",
+          "worker_result_ids",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "payout_address": {
+            "type": "string",
+            "pattern": "^sost1[023456789acdefghjklmnpqrstuvwxyz]{20,80}$"
+          },
+          "amount_stocks": { "type": "integer", "minimum": 0 },
+          "amount_sost":   { "type": "number",  "minimum": 0 },
+          "request_id": {
+            "type": "string", "pattern": "^uc-[0-9a-f]{16,64}$"
+          },
+          "worker_result_ids": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[0-9a-f]{16}$" }
+          },
+          "reason": {
+            "type": "string", "minLength": 1, "maxLength": 256
+          }
+        }
+      }
+    },
+    "capsule_summary": {
+      "type": "object",
+      "required": ["template", "text", "referenced_files"],
+      "additionalProperties": false,
+      "properties": {
+        "template": {
+          "type": "string",
+          "enum": ["useful_compute_reward_batch_v1"]
+        },
+        "text": {
+          "type": "string", "minLength": 1, "maxLength": 512
+        },
+        "referenced_files": {
+          "type": "object",
+          "required": [
+            "budget_id", "governance_batch_ids", "validation_ids"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "budget_id": {
+              "type": "string", "pattern": "^bud-[0-9a-f]{16}$"
+            },
+            "governance_batch_ids": {
+              "type": "array",
+              "items": {
+                "type": "string", "pattern": "^gov-[0-9a-f]{16}$"
+              }
+            },
+            "validation_ids": {
+              "type": "array",
+              "items": {
+                "type": "string", "pattern": "^val-[0-9a-f]{16}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "unsigned_tx_hex": {
+      "oneOf": [
+        { "type": "string", "minLength": 0, "maxLength": 1048576 },
+        { "type": "null" }
+      ]
+    },
+    "signed_tx_hex": {
+      "oneOf": [
+        { "type": "string", "minLength": 0, "maxLength": 1048576 },
+        { "type": "null" }
+      ]
+    },
+    "txid_if_signed": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    },
+    "safety_status": {
+      "type": "object",
+      "required": [
+        "no_broadcast",
+        "human_review_required",
+        "dry_sign_only",
+        "wallet_access_used",
+        "private_keys_exported",
+        "requires_separate_broadcast"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "no_broadcast":               { "type": "boolean", "const": true },
+        "human_review_required":      { "type": "boolean", "const": true },
+        "dry_sign_only":              { "type": "boolean" },
+        "wallet_access_used":         { "type": "boolean" },
+        "private_keys_exported":      { "type": "boolean", "const": false },
+        "requires_separate_broadcast":{ "type": "boolean", "const": true }
+      }
+    }
+  }
+}

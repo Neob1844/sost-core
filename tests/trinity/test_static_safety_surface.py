@@ -36,6 +36,7 @@ _SPRINT_56_SCRIPTS = [
     "useful_compute_reward_budget_policy.py",
     "useful_compute_payment_proposal.py",
     "useful_compute_worker_address_map.py",
+    "useful_compute_payment_draft.py",
 ]
 
 
