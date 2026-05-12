@@ -90,7 +90,7 @@
 <body>
 <div class="wrap">
 
-<h1>Trinity / Useful Compute<span class="badge">v0.8 worker + replay + governance + daemon + console + backend adapters + benchmark ledger + reward budget policy</span></h1>
+<h1>Trinity / Useful Compute<span class="badge">v0.9 worker + replay + governance + daemon + console + backend adapters + benchmark ledger + reward budget policy + payment proposal</span></h1>
 <div class="sub">
   Guided panel: load a request, run the local worker, load the result,
   see your pending reward in stocks. No payments. No keys.
@@ -752,6 +752,79 @@
     Payment requires a separate signed/on-chain sprint. Deferred
     stocks are NOT lost — the next budget cycle (different epoch or
     higher pool balance) re-evaluates them.
+  </div>
+</div>
+
+<!-- Payment Proposal Preview (Sprint 5.15) -->
+<div class="card" id="proposalPreviewCard">
+  <h2>Payment Proposal Preview</h2>
+  <p class="small">
+    Read a payment proposal emitted by
+    <code>useful_compute_payment_proposal.py</code>. The proposal
+    lists which payout_address would receive how many stocks under
+    the current budget plan plus the worker address map. It is NOT
+    a transaction.
+  </p>
+  <div class="row">
+    <div>
+      <div class="k">payment proposal JSON</div>
+      <label class="file-btn" for="proposalFile">Choose proposal...</label>
+      <input id="proposalFile" type="file" accept="application/json,.json">
+      <span id="proposalBadge" class="state idle">none</span>
+    </div>
+  </div>
+  <div id="proposalDetails" style="margin-top:16px; display:none;">
+    <div class="grid">
+      <div><div class="k">proposal_id</div>
+           <div class="v" id="propId">-</div></div>
+      <div><div class="k">source_budget_id</div>
+           <div class="v" id="propBudgetId">-</div></div>
+      <div><div class="k">total_payable_stocks</div>
+           <div class="v" id="propPayable">0</div></div>
+      <div><div class="k">total_deferred_stocks</div>
+           <div class="v" id="propDeferred">0</div></div>
+      <div><div class="k">total_unresolved_stocks</div>
+           <div class="v" id="propUnresolved">0</div></div>
+      <div><div class="k">payable in SOST</div>
+           <div class="v" id="propPayableSost">≈ 0 SOST</div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">payable rows</div>
+      <table style="width:100%;
+             font-family: var(--mono); font-size: 11px;
+             border-collapse: collapse;">
+        <thead>
+          <tr style="text-align:left; color: var(--muted);">
+            <th style="padding:4px 8px;">request_id</th>
+            <th style="padding:4px 8px;">payout_address</th>
+            <th style="padding:4px 8px;">workers</th>
+            <th style="padding:4px 8px; text-align:right;">stocks</th>
+            <th style="padding:4px 8px; text-align:right;">SOST</th>
+            <th style="padding:4px 8px;">governance_batch</th>
+          </tr>
+        </thead>
+        <tbody id="propPayableTbody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">unresolved rows</div>
+      <ul id="propUnresolvedList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 11px;"></ul>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">capsule summary (NOT published)</div>
+      <pre id="propCapsule" style="background:#0d1117;
+           border: 1px solid var(--border); padding: 10px;
+           border-radius: 6px; font-family: var(--mono);
+           font-size: 11px; white-space: pre-wrap;
+           word-break: break-all;"></pre>
+    </div>
+  </div>
+  <div class="danger-strip" style="margin-top:16px;">
+    <strong>This is not a transaction.</strong>
+    No payment has been signed or broadcast. No wallet was touched.
+    No private key was touched. Manual signing is required in a
+    later sprint.
   </div>
 </div>
 
@@ -2085,6 +2158,98 @@
         $("budgetDetails").style.display = "";
       } catch {
         setState($("budgetBadge"), "invalid JSON", "fail");
+      }
+    };
+    r.readAsText(f);
+  });
+
+  // ==================================================================
+  //  Payment Proposal Preview (Sprint 5.15)
+  //
+  //  Read-only loader for trinity-useful-compute-payment-proposal/v0.1
+  //  plans. Renders the payable_items table + unresolved + capsule
+  //  summary. Pure textContent; no innerHTML with external content.
+  // ==================================================================
+
+  const SCHEMA_PROPOSAL_V01 =
+    "trinity-useful-compute-payment-proposal/v0.1";
+
+  function _proposalRender(plan) {
+    _consoleSetText("propId",       plan.proposal_id);
+    _consoleSetText("propBudgetId", plan.source_budget_id);
+    _consoleSetText("propPayable",
+      Number(plan.total_payable_stocks || 0).toLocaleString("en-US"));
+    _consoleSetText("propDeferred",
+      Number(plan.total_deferred_stocks || 0).toLocaleString("en-US"));
+    _consoleSetText("propUnresolved",
+      Number(plan.total_unresolved_stocks || 0)
+        .toLocaleString("en-US"));
+    const sost = Number(plan.total_payable_stocks || 0) / 100000000;
+    _consoleSetText("propPayableSost",
+      "≈ " + sost.toFixed(8) + " SOST");
+
+    const tbody = $("propPayableTbody");
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    for (const p of (plan.payable_items || [])) {
+      const tr = document.createElement("tr");
+      tr.style.borderTop = "1px solid #21262d";
+      tr.appendChild(_consoleRowCell(p.request_id));
+      tr.appendChild(_consoleRowCell(p.payout_address));
+      tr.appendChild(_consoleRowCell(
+        String((p.worker_result_ids || []).length)
+      ));
+      tr.appendChild(_consoleRowCell(
+        Number(p.allocated_stocks || 0).toLocaleString("en-US"),
+        { right: true },
+      ));
+      tr.appendChild(_consoleRowCell(
+        Number(p.allocated_sost || 0).toFixed(8),
+        { right: true },
+      ));
+      tr.appendChild(_consoleRowCell(
+        p.source_governance_batch_id || ""
+      ));
+      tbody.appendChild(tr);
+    }
+
+    const ul = $("propUnresolvedList");
+    while (ul.firstChild) ul.removeChild(ul.firstChild);
+    for (const u of (plan.unresolved_items || [])) {
+      const li = document.createElement("li");
+      li.textContent =
+        u.request_id + " wrid=" + u.worker_result_id
+        + " (" + Number(u.allocated_stocks || 0)
+            .toLocaleString("en-US") + " stocks) — "
+        + u.missing_lookup;
+      ul.appendChild(li);
+    }
+
+    const cap = $("propCapsule");
+    if (plan.capsule_summary) {
+      cap.textContent = JSON.stringify(plan.capsule_summary, null, 2);
+    } else {
+      cap.textContent = "";
+    }
+
+    $("proposalDetails").style.display = "";
+  }
+
+  $("proposalFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (obj.schema !== SCHEMA_PROPOSAL_V01) {
+          setState($("proposalBadge"),
+            "loaded (UNEXPECTED schema)", "warn");
+        } else {
+          setState($("proposalBadge"), "loaded", "ok");
+        }
+        _proposalRender(obj);
+      } catch {
+        setState($("proposalBadge"), "invalid JSON", "fail");
       }
     };
     r.readAsText(f);
