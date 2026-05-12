@@ -40,7 +40,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 SCHEMA_VALIDATION = "trinity-useful-compute-validation/v0.2"
-SCHEMA_RESULT = "trinity-useful-compute-result/v0.3"
+SCHEMA_RESULT = "trinity-useful-compute-result/v0.4"
 SCHEMA_REQUEST = "trinity-useful-compute-request/v0.1"
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -54,6 +54,7 @@ _RESULT_REQUIRED = {
     "public_summary",
     "backend_name", "backend_version", "backend_kind",
     "backend_disclaimer", "backend_runtime_seconds",
+    "benchmark_id", "normalized_work_score", "benchmark_source",
     "safety_status",
 }
 

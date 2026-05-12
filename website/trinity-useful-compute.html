@@ -90,7 +90,7 @@
 <body>
 <div class="wrap">
 
-<h1>Trinity / Useful Compute<span class="badge">v0.6 worker + replay + governance + daemon + console + backend adapters</span></h1>
+<h1>Trinity / Useful Compute<span class="badge">v0.7 worker + replay + governance + daemon + console + backend adapters + benchmark ledger</span></h1>
 <div class="sub">
   Guided panel: load a request, run the local worker, load the result,
   see your pending reward in stocks. No payments. No keys.
@@ -163,6 +163,24 @@
       Sandbox toy backends are not scientific validation. Real DFT /
       quantum backends are NOT enabled in v0.1; the counter is for
       future sprints and must remain 0 here.
+    </div>
+  </div>
+
+  <!-- Benchmark counters (Sprint 5.13) -->
+  <div style="margin-top:16px;">
+    <div class="k">rewards by benchmark source</div>
+    <div class="grid">
+      <div><div class="k">unbenchmarked_rewards</div>
+           <div class="v" id="benchSourceCountNone">0</div></div>
+      <div><div class="k">benchmarked_rewards</div>
+           <div class="v" id="benchSourceCountReport">0</div></div>
+      <div><div class="k">experimental_rewards (sandbox_toy + benchmarked)</div>
+           <div class="v" id="benchSourceCountExperimental">0</div></div>
+    </div>
+    <div class="small" style="color: var(--warn); margin-top:8px;">
+      Benchmark score is not proof of useful scientific output.
+      Experimental rewards (sandbox_toy backends with a benchmark
+      attached) require manual review before any payment.
     </div>
   </div>
 
@@ -255,6 +273,8 @@
           <th style="padding:4px 8px;">compute_sha (short)</th>
           <th style="padding:4px 8px;">backend</th>
           <th style="padding:4px 8px;">kind</th>
+          <th style="padding:4px 8px;">benchmark</th>
+          <th style="padding:4px 8px;">work_score</th>
           <th style="padding:4px 8px; text-align:right;">stocks</th>
           <th style="padding:4px 8px;">validation</th>
           <th style="padding:4px 8px;">governance</th>
@@ -1191,7 +1211,7 @@
   // ==================================================================
 
   const SCHEMA_DAEMON_STATE_V01 = "trinity-background-daemon-state/v0.1";
-  const SCHEMA_REWARD_V01 = "trinity-useful-compute-pending-reward/v0.2";
+  const SCHEMA_REWARD_V01 = "trinity-useful-compute-pending-reward/v0.3";
   const SCHEMA_VALIDATION_V01 = "trinity-useful-compute-validation/v0.2";
   const SCHEMA_GOV_V01 =
     "trinity-useful-compute-governance-batch/v0.1";
@@ -1371,6 +1391,16 @@
         : (rew.backend_name || "-");
       const backendKind = rew.backend_kind || "-";
 
+      // Benchmark cells.
+      const benchSrc = rew.benchmark_source || "none";
+      const benchIdShort = rew.benchmark_id
+        ? rew.benchmark_id.slice(0, 22) + "..."
+        : "-";
+      const workScore = (rew.normalized_work_score === null
+                          || rew.normalized_work_score === undefined)
+        ? "-"
+        : Number(rew.normalized_work_score).toFixed(4);
+
       const tr = document.createElement("tr");
       tr.style.borderTop = "1px solid #21262d";
       tr.appendChild(_consoleRowCell(rew.request_id));
@@ -1379,6 +1409,8 @@
       tr.appendChild(_consoleRowCell(cosShort));
       tr.appendChild(_consoleRowCell(backendCombined));
       tr.appendChild(_consoleRowCell(backendKind));
+      tr.appendChild(_consoleRowCell(benchIdShort));
+      tr.appendChild(_consoleRowCell(workScore));
       tr.appendChild(_consoleRowCell(
         Number(rew.stocks || 0).toLocaleString("en-US"),
         { right: true },
@@ -1398,6 +1430,9 @@
         backend_name: rew.backend_name,
         backend_version: rew.backend_version,
         backend_kind: rew.backend_kind,
+        benchmark_id: rew.benchmark_id,
+        normalized_work_score: rew.normalized_work_score,
+        benchmark_source: rew.benchmark_source,
         stocks: Number(rew.stocks || 0),
         validation: st.validation,
         governance: st.governance,
@@ -1413,9 +1448,18 @@
       sandbox_toy: 0,
       real_backend: 0,
     };
+    // Benchmark source counters.
+    const bySource = {
+      none: 0,
+      report: 0,
+      experimental: 0,  // sandbox_toy AND benchmark_source=report
+    };
     for (const rew of sorted) {
       const k = rew.backend_kind || "";
       if (byKind[k] !== undefined) byKind[k]++;
+      const s = rew.benchmark_source || "none";
+      if (bySource[s] !== undefined) bySource[s]++;
+      if (s === "report" && k === "sandbox_toy") bySource.experimental++;
     }
 
     _consoleSetText("stocksPendingUnvalidated",
@@ -1436,8 +1480,13 @@
     _consoleSetText("backendCountSandboxToy",   byKind.sandbox_toy);
     _consoleSetText("backendCountRealBackend",  byKind.real_backend);
 
+    _consoleSetText("benchSourceCountNone",         bySource.none);
+    _consoleSetText("benchSourceCountReport",       bySource.report);
+    _consoleSetText("benchSourceCountExperimental", bySource.experimental);
+
     return { buckets, approvedHeadline, taskStatuses,
-             backend_kind_counts: byKind };
+             backend_kind_counts: byKind,
+             benchmark_source_counts: bySource };
   }
 
   function _consoleRenderState() {
@@ -1560,6 +1609,12 @@
       backend_name:    obj.backend_name    || "",
       backend_version: obj.backend_version || "",
       backend_kind:    obj.backend_kind    || "",
+      benchmark_id:          obj.benchmark_id || null,
+      normalized_work_score:
+        (obj.normalized_work_score === null
+          || obj.normalized_work_score === undefined)
+        ? null : Number(obj.normalized_work_score),
+      benchmark_source:      obj.benchmark_source || "none",
       source_filename: name,
     };
   }
@@ -1801,6 +1856,9 @@
       task_statuses: recomputed.taskStatuses,
       backend_kind_counts: recomputed.backend_kind_counts || {
         placeholder: 0, sandbox_toy: 0, real_backend: 0,
+      },
+      benchmark_source_counts: recomputed.benchmark_source_counts || {
+        none: 0, report: 0, experimental: 0,
       },
       malformed_events_count: consoleStore.eventsMalformed,
       safety_status: {

@@ -277,7 +277,7 @@ def test_governance_rejects_backend_mismatch_between_val_and_reward(
     for wrid, bn in ((wrid1, "placeholder_dft"),
                      (wrid2, "local_dft_toy_v01")):
         rew = {
-            "schema": "trinity-useful-compute-pending-reward/v0.2",
+            "schema": "trinity-useful-compute-pending-reward/v0.3",
             "request_id": rid,
             "worker_id": "miner-" + wrid[:1],
             "worker_result_id": wrid,
@@ -290,6 +290,9 @@ def test_governance_rejects_backend_mismatch_between_val_and_reward(
             "backend_version": "v0.1",
             "backend_kind": "placeholder" if bn.startswith("placeholder")
                             else "sandbox_toy",
+            "benchmark_id":          None,
+            "normalized_work_score": None,
+            "benchmark_source":      "none",
             "safety_status": {
                 "no_wallet_access": True, "no_private_keys": True,
                 "no_automatic_payout": True,

@@ -295,7 +295,7 @@ def test_extra_reward_not_in_matching_rejected(
     rid = req["request_id"]
     fake_wrid = "f" * 16
     extra = {
-        "schema": "trinity-useful-compute-pending-reward/v0.2",
+        "schema": "trinity-useful-compute-pending-reward/v0.3",
         "request_id": rid,
         "worker_id": "miner-Z",
         "worker_result_id": "f" * 16,
@@ -307,6 +307,9 @@ def test_extra_reward_not_in_matching_rejected(
         "backend_name":    "placeholder_structure_relaxation",
         "backend_version": "v0.1",
         "backend_kind":    "placeholder",
+        "benchmark_id":          None,
+        "normalized_work_score": None,
+        "benchmark_source":      "none",
         "safety_status": {
             "no_wallet_access": True, "no_private_keys": True,
             "no_automatic_payout": True, "no_network_required": True,

@@ -63,20 +63,20 @@ def test_backend_disclaimer_present_on_console():
 # ---------------------------------------------------------------------------
 
 
-def test_console_uses_v02_reward_and_validation_schemas():
+def test_console_uses_v03_reward_and_v02_validation_schemas():
     """The console does NOT load result files; it inspects pending
-    rewards (v0.2) and validations (v0.2). The v0.3 result schema
-    string is intentionally absent from the HTML because no parser
-    here consumes that file kind."""
+    rewards (v0.3 in 5.13) and validations (v0.2). The v0.4 result
+    schema string is intentionally absent from the HTML because no
+    parser here consumes that file kind."""
     src = _read()
-    assert "trinity-useful-compute-pending-reward/v0.2" in src
+    assert "trinity-useful-compute-pending-reward/v0.3" in src
     assert "trinity-useful-compute-validation/v0.2" in src
-    assert "trinity-useful-compute-result/v0.3" not in src
+    assert "trinity-useful-compute-result/v0.4" not in src
 
 
-def test_console_references_pending_reward_v02_schema_string():
+def test_console_references_pending_reward_v03_schema_string():
     src = _read()
-    assert "trinity-useful-compute-pending-reward/v0.2" in src
+    assert "trinity-useful-compute-pending-reward/v0.3" in src
 
 
 def test_console_references_validation_v02_schema_string():

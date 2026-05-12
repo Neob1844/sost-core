@@ -231,7 +231,7 @@ def test_events_parser_increments_malformed_counter():
 def test_reward_parser_validates_schema_string():
     src = _read()
     assert "SCHEMA_REWARD_V01" in src
-    assert "trinity-useful-compute-pending-reward/v0.2" in src
+    assert "trinity-useful-compute-pending-reward/v0.3" in src
 
 
 def test_validation_parser_validates_schema_string():
