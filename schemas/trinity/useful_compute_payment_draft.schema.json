@@ -1,16 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "trinity-useful-compute-payment-draft/v0.1",
+  "$id": "trinity-useful-compute-payment-draft/v0.2",
   "title": "Trinity Useful Compute Signed Payment Draft",
-  "description": "Output of the Trinity payment draft layer v0.1. Converts a Sprint 5.15 payment proposal into a reviewable, signable-later draft of a SOST transaction. v0.1 has two modes: unsigned-only (default, no wallet touched) and dry-sign (wallet path verified but real signing is NOT implemented in v0.1; signed_tx_hex is a placeholder string that future sprints will replace with actual bytes). v0.1 NEVER broadcasts and NEVER calls sendrawtransaction. The schema locks no_broadcast, human_review_required, private_keys_exported=false and requires_separate_broadcast as const-true (or const-false where appropriate); dry_sign_only and wallet_access_used are typed boolean because they vary with mode.",
+  "description": "Output of the Trinity payment draft layer v0.2. v0.2 introduces real local signing via the operator's wallet through the existing sost-cli createtx command (single-recipient). One real-sign invocation produces ONE draft per eligible payable item: each draft has exactly one output, one signed_tx_hex and one txid_if_signed. The unsigned-only and dry-sign modes inherited from v0.1 still produce a single multi-output draft with placeholder hex. v0.2 NEVER broadcasts, NEVER calls sendrawtransaction, NEVER exports a private key, and NEVER auto-pays. The schema locks no_broadcast, human_review_required, private_keys_exported=false, requires_separate_broadcast and automatic_payout=false as const; dry_sign_only, wallet_access_used and real_signed are typed boolean because they vary with mode.",
   "type": "object",
   "required": [
     "schema",
     "draft_id",
     "source_proposal_id",
     "mode",
+    "signing_mode",
     "unsigned_only",
     "dry_signed",
+    "real_signed",
     "total_outputs",
     "total_payment_stocks",
     "total_fee_stocks_estimated",
@@ -24,7 +26,7 @@
   "properties": {
     "schema": {
       "type": "string",
-      "const": "trinity-useful-compute-payment-draft/v0.1"
+      "const": "trinity-useful-compute-payment-draft/v0.2"
     },
     "draft_id": {
       "type": "string",
@@ -38,12 +40,54 @@
       "type": "string",
       "enum": ["local-dry-run"]
     },
+    "signing_mode": {
+      "type": "string",
+      "enum": [
+        "unsigned_only",
+        "dry_sign_placeholder",
+        "real_sign_local"
+      ]
+    },
     "unsigned_only": { "type": "boolean" },
     "dry_signed":    { "type": "boolean" },
+    "real_signed":   { "type": "boolean" },
+    "wallet_fingerprint_hash": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        { "type": "null" }
+      ]
+    },
+    "signer_label_or_address_hash": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        { "type": "null" }
+      ]
+    },
     "total_outputs":  { "type": "integer", "minimum": 0 },
     "total_payment_stocks":          { "type": "integer", "minimum": 0 },
     "total_fee_stocks_estimated":    { "type": "integer", "minimum": 0 },
     "change_stocks_estimated":       { "type": "integer", "minimum": 0 },
+    "total_input_stocks":  { "type": "integer", "minimum": 0 },
+    "total_output_stocks": { "type": "integer", "minimum": 0 },
+    "fee_rate_stocks_per_byte": {
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "null" }
+      ]
+    },
+    "selected_utxos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["txid", "vout", "amount_stocks"],
+        "additionalProperties": false,
+        "properties": {
+          "txid":          { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "vout":          { "type": "integer", "minimum": 0 },
+          "amount_stocks": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
     "outputs": {
       "type": "array",
       "items": {
@@ -145,7 +189,8 @@
         "dry_sign_only",
         "wallet_access_used",
         "private_keys_exported",
-        "requires_separate_broadcast"
+        "requires_separate_broadcast",
+        "automatic_payout"
       ],
       "additionalProperties": false,
       "properties": {
@@ -154,7 +199,8 @@
         "dry_sign_only":              { "type": "boolean" },
         "wallet_access_used":         { "type": "boolean" },
         "private_keys_exported":      { "type": "boolean", "const": false },
-        "requires_separate_broadcast":{ "type": "boolean", "const": true }
+        "requires_separate_broadcast":{ "type": "boolean", "const": true },
+        "automatic_payout":           { "type": "boolean", "const": false }
       }
     }
   }

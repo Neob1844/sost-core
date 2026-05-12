@@ -828,16 +828,19 @@
   </div>
 </div>
 
-<!-- Signed Payment Draft (Sprint 5.16) -->
+<!-- Signed Payment Draft (Sprint 5.16 / 5.17) -->
 <div class="card" id="draftPreviewCard">
   <h2>Signed Payment Draft</h2>
   <p class="small">
     Read a payment draft emitted by
     <code>useful_compute_payment_draft.py</code>. The draft turns a
     Sprint 5.15 payment proposal into a reviewable transaction
-    candidate. <strong>This page does not sign or broadcast
-    payments.</strong> No wallet, no seed, no private key, no RPC
-    password is accepted here.
+    candidate. Sprint 5.17 introduces <code>signing_mode =
+    real_sign_local</code> drafts that carry a real
+    <code>signed_tx_hex</code> and <code>txid_if_signed</code>.
+    <strong>This page does not sign or broadcast payments.</strong>
+    No wallet, no seed, no private key, no RPC password is accepted
+    here.
   </p>
   <div class="row">
     <div>
@@ -847,12 +850,27 @@
       <span id="draftBadge" class="state idle">none</span>
     </div>
   </div>
+  <div id="draftRealSignBanner"
+       style="display:none; margin-top:14px; padding:10px;
+              border:1px solid #ff5555; border-radius:6px;
+              background:#2a0d0d; color:#ff5555;
+              font-family: var(--mono); font-size: 12px;">
+    <strong>SIGNED BUT NOT BROADCAST.</strong>
+    This draft was produced with <code>--real-sign</code>. A real
+    secp256k1 signature has been computed against the operator's
+    local wallet. No broadcast RPC has been called. Broadcasting
+    is a separate, human-driven sprint.
+  </div>
   <div id="draftDetails" style="margin-top:16px; display:none;">
     <div class="grid">
       <div><div class="k">draft_id</div>
            <div class="v" id="draftId">-</div></div>
       <div><div class="k">source_proposal_id</div>
            <div class="v" id="draftProposalId">-</div></div>
+      <div><div class="k">signing_mode</div>
+           <div class="v" id="draftSigningMode">-</div></div>
+      <div><div class="k">real_signed</div>
+           <div class="v" id="draftRealSigned">false</div></div>
       <div><div class="k">total_outputs</div>
            <div class="v" id="draftOutputs">0</div></div>
       <div><div class="k">total_payment_stocks</div>
@@ -861,8 +879,18 @@
            <div class="v" id="draftPaymentSost">≈ 0 SOST</div></div>
       <div><div class="k">total_fee_stocks_estimated</div>
            <div class="v" id="draftFeeStocks">0</div></div>
+      <div><div class="k">fee_rate_stocks_per_byte</div>
+           <div class="v" id="draftFeeRate">-</div></div>
       <div><div class="k">change_stocks_estimated</div>
            <div class="v" id="draftChangeStocks">0</div></div>
+      <div><div class="k">selected_utxos count</div>
+           <div class="v" id="draftSelectedUtxosCount">0</div></div>
+      <div><div class="k">txid_if_signed</div>
+           <div class="v" id="draftTxid">-</div></div>
+      <div><div class="k">wallet_fingerprint_hash</div>
+           <div class="v" id="draftWalletFp">-</div></div>
+      <div><div class="k">signer_label_or_address_hash</div>
+           <div class="v" id="draftSignerHash">-</div></div>
       <div><div class="k">signed status</div>
            <div class="v" id="draftSignedStatus">-</div></div>
     </div>
@@ -896,7 +924,7 @@
            color: var(--warn);"></ul>
     </div>
     <div style="margin-top:12px;">
-      <div class="k">tx hex blocks (informational; v0.1 placeholders)</div>
+      <div class="k">tx hex blocks (informational)</div>
       <pre id="draftTxHexBlock" style="background:#0d1117;
            border: 1px solid var(--border); padding: 10px;
            border-radius: 6px; font-family: var(--mono);
@@ -906,9 +934,10 @@
   </div>
   <div class="danger-strip" style="margin-top:16px;">
     <strong>This page does not sign or broadcast payments.</strong>
-    The draft is a review artefact. Real signing happens locally
-    via a separate wallet sprint. Broadcast happens in yet another
-    explicit human-driven sprint after that.
+    The draft is a review artefact loaded from disk. Real signing
+    happens locally via <code>sost-cli createtx</code> in a
+    separate wallet sprint. Broadcast is a separate human-driven
+    sprint after that.
   </div>
 </div>
 
@@ -2340,19 +2369,28 @@
   });
 
   // ==================================================================
-  //  Signed Payment Draft (Sprint 5.16)
+  //  Signed Payment Draft (Sprint 5.16 / 5.17)
   //
   //  Read-only loader for
-  //  trinity-useful-compute-payment-draft/v0.1 plans. No fetch /
-  //  XHR / WebSocket / wallet / RPC. Pure textContent rendering.
+  //  trinity-useful-compute-payment-draft/v0.2 (and v0.1) plans.
+  //  No fetch / XHR / WebSocket / wallet / RPC. Pure textContent
+  //  rendering. Sprint 5.17 added real_signed drafts with a real
+  //  signed_tx_hex + txid_if_signed; the loader still does not
+  //  sign, broadcast or interpret keys.
   // ==================================================================
 
   const SCHEMA_DRAFT_V01 =
     "trinity-useful-compute-payment-draft/v0.1";
+  const SCHEMA_DRAFT_V02 =
+    "trinity-useful-compute-payment-draft/v0.2";
 
   function _draftRender(draft) {
     _consoleSetText("draftId",         draft.draft_id);
     _consoleSetText("draftProposalId", draft.source_proposal_id);
+    _consoleSetText("draftSigningMode",
+      String(draft.signing_mode || "(v0.1 — no signing_mode)"));
+    _consoleSetText("draftRealSigned",
+      String(Boolean(draft.real_signed)));
     _consoleSetText("draftOutputs",    String(draft.total_outputs));
     _consoleSetText("draftPaymentStocks",
       Number(draft.total_payment_stocks || 0).toLocaleString("en-US"));
@@ -2361,13 +2399,39 @@
       "≈ " + sost.toFixed(8) + " SOST");
     _consoleSetText("draftFeeStocks",
       Number(draft.total_fee_stocks_estimated || 0).toLocaleString("en-US"));
+    _consoleSetText("draftFeeRate",
+      draft.fee_rate_stocks_per_byte == null
+        ? "-"
+        : (Number(draft.fee_rate_stocks_per_byte).toLocaleString("en-US")
+           + " stocks/byte"));
     _consoleSetText("draftChangeStocks",
       Number(draft.change_stocks_estimated || 0).toLocaleString("en-US"));
+    _consoleSetText("draftSelectedUtxosCount",
+      String(Array.isArray(draft.selected_utxos)
+        ? draft.selected_utxos.length
+        : 0));
+    _consoleSetText("draftTxid",
+      String(draft.txid_if_signed || "-"));
+    _consoleSetText("draftWalletFp",
+      String(draft.wallet_fingerprint_hash || "-"));
+    _consoleSetText("draftSignerHash",
+      String(draft.signer_label_or_address_hash || "-"));
 
-    const status = draft.dry_signed
-      ? "dry-signed (placeholder)"
-      : (draft.unsigned_only ? "unsigned-only" : "(unknown)");
+    let status;
+    if (draft.real_signed) {
+      status = "real-signed (LOCAL, NOT BROADCAST)";
+    } else if (draft.dry_signed) {
+      status = "dry-signed (placeholder)";
+    } else if (draft.unsigned_only) {
+      status = "unsigned-only";
+    } else {
+      status = "(unknown)";
+    }
     _consoleSetText("draftSignedStatus", status);
+
+    // SIGNED BUT NOT BROADCAST banner — only when real_signed=true.
+    const banner = $("draftRealSignBanner");
+    banner.style.display = draft.real_signed ? "" : "none";
 
     // Safety badges.
     const ul = $("draftSafetyList");
@@ -2416,7 +2480,7 @@
       wul.appendChild(li);
     }
 
-    // Tx hex placeholders.
+    // Tx hex blocks.
     $("draftTxHexBlock").textContent =
       "unsigned_tx_hex: " + (draft.unsigned_tx_hex || "(null)")
       + "\nsigned_tx_hex:   " + (draft.signed_tx_hex || "(null)")
@@ -2432,11 +2496,13 @@
     r.onload = (e) => {
       try {
         const obj = JSON.parse(e.target.result);
-        if (obj.schema !== SCHEMA_DRAFT_V01) {
+        if (obj.schema === SCHEMA_DRAFT_V02) {
+          setState($("draftBadge"), "loaded v0.2", "ok");
+        } else if (obj.schema === SCHEMA_DRAFT_V01) {
+          setState($("draftBadge"), "loaded v0.1", "ok");
+        } else {
           setState($("draftBadge"),
             "loaded (UNEXPECTED schema)", "warn");
-        } else {
-          setState($("draftBadge"), "loaded", "ok");
         }
         _draftRender(obj);
       } catch {

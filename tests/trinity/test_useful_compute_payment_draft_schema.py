@@ -1,4 +1,4 @@
-"""Trinity / Useful Compute payment draft schema — strict v0.1."""
+"""Trinity / Useful Compute payment draft schema — strict v0.2."""
 
 from __future__ import annotations
 
@@ -43,22 +43,30 @@ def draft_mod():
 UNSIGNED_TOKEN = "I_UNDERSTAND_THIS_IS_ONLY_A_DRAFT_AND_WILL_NOT_BROADCAST"
 
 
-def test_schema_id_is_v01(schema):
+def test_schema_id_is_v02(schema):
     assert schema["$id"] == \
-        "trinity-useful-compute-payment-draft/v0.1"
+        "trinity-useful-compute-payment-draft/v0.2"
 
 
 def test_schema_is_strict(schema):
     assert schema["additionalProperties"] is False
     expected = {
         "schema", "draft_id", "source_proposal_id", "mode",
-        "unsigned_only", "dry_signed",
+        "signing_mode",
+        "unsigned_only", "dry_signed", "real_signed",
         "total_outputs", "total_payment_stocks",
         "total_fee_stocks_estimated", "change_stocks_estimated",
         "outputs", "capsule_summary",
         "warnings", "safety_status",
     }
     assert set(schema["required"]) == expected
+
+
+def test_signing_mode_enum_locked(schema):
+    enum = schema["properties"]["signing_mode"]["enum"]
+    assert set(enum) == {
+        "unsigned_only", "dry_sign_placeholder", "real_sign_local",
+    }
 
 
 def test_safety_status_const_flags_locked(schema):
@@ -68,6 +76,7 @@ def test_safety_status_const_flags_locked(schema):
     assert ss["properties"]["human_review_required"]["const"] is True
     assert ss["properties"]["private_keys_exported"]["const"] is False
     assert ss["properties"]["requires_separate_broadcast"]["const"] is True
+    assert ss["properties"]["automatic_payout"]["const"] is False
 
 
 def test_safety_status_dry_sign_and_wallet_flags_are_typed(schema):
