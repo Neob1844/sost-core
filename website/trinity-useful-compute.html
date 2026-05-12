@@ -90,7 +90,7 @@
 <body>
 <div class="wrap">
 
-<h1>Trinity / Useful Compute<span class="badge">v0.2 local-dry-run + replay</span></h1>
+<h1>Trinity / Useful Compute<span class="badge">v0.3 worker + replay + governance</span></h1>
 <div class="sub">
   Guided panel: load a request, run the local worker, load the result,
   see your pending reward in stocks. No payments. No keys.
@@ -285,6 +285,77 @@
     Even an <strong>accepted</strong> outcome does NOT pay. It only
     means two or more independent workers agreed on the same
     technical output. Governance still owns the payment gate.
+  </div>
+</div>
+
+<!-- Step 6: Governance Review Batch -->
+<div class="card">
+  <h2>Step 6 — Governance Review Batch</h2>
+  <p class="small">
+    Load one or more validation reports plus their matching pending
+    reward files. The page will preview which items would be
+    approved or rejected under the conservative policy
+    (<code>approved = min(pending rewards)</code>). For an
+    auditable governance batch JSON, run the CLI gate locally — the
+    command surface is shown below.
+  </p>
+  <div class="row">
+    <div>
+      <div class="k">validation reports</div>
+      <label class="file-btn" for="govValFiles">Choose validation JSONs...</label>
+      <input id="govValFiles" type="file" accept="application/json,.json" multiple>
+    </div>
+    <div>
+      <div class="k">pending reward reports</div>
+      <label class="file-btn" for="govRewFiles">Choose pending reward JSONs...</label>
+      <input id="govRewFiles" type="file" accept="application/json,.json" multiple>
+    </div>
+    <button class="secondary" type="button" id="runGovBtn" disabled>Preview Batch</button>
+    <span id="govState" class="state idle">no files loaded</span>
+  </div>
+  <div id="govDetails" style="margin-top:16px; display:none;">
+    <div class="grid">
+      <div><div class="k">approved_count</div>
+           <div class="v" id="govApproved"></div></div>
+      <div><div class="k">rejected_count</div>
+           <div class="v" id="govRejected"></div></div>
+      <div><div class="k">total_approved_reward_stocks</div>
+           <div class="v" id="govTotal"></div></div>
+      <div><div class="k">policy</div>
+           <div class="v">conservative (min of pending rewards)</div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">approved items</div>
+      <ul id="govApprovedList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 13px;"></ul>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">rejected items</div>
+      <ul id="govRejectedList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 13px;"></ul>
+    </div>
+  </div>
+  <p class="small" style="margin-top:16px;">
+    Auditable governance batch (recommended): run the CLI gate on
+    your machine. It writes a deterministic JSON + Markdown summary
+    that humans review and sign off before any payment sprint is
+    executed.
+  </p>
+  <pre class="cmd" id="govCmd">python3 scripts/trinity/useful_compute_governance_gate.py \
+  --mode local-dry-run \
+  --validations-dir &lt;dir-with-validation-files&gt; \
+  --rewards-dir &lt;dir-with-pending-reward-files&gt; \
+  --out-dir /tmp/trinity-uc-gov \
+  --reviewer-id reviewer-local-001 \
+  --policy conservative</pre>
+  <button class="secondary" type="button" id="copyGovCmdBtn">Copy command</button>
+  <span id="copyGovState" class="state idle" style="margin-left:8px;">idle</span>
+  <div class="danger-strip">
+    <strong>This does not pay automatically.</strong>
+    A separate on-chain/payment sprint, signed off by humans through
+    governance, is required before any stocks actually move. An
+    "approved" item is an input to that future sprint, not an
+    authorisation to issue stocks today.
   </div>
 </div>
 
@@ -594,6 +665,173 @@
       }
     };
     r.readAsText(f);
+  });
+
+  // Step 6: governance gate preview (local-only). Mirrors the
+  // conservative policy of the CLI gate: approved = min(pending
+  // rewards across matching workers).
+  const SCHEMA_VAL = "trinity-useful-compute-validation/v0.1";
+  const SCHEMA_REW_GATE = SCHEMA_REW;
+  const govValLoaded = [];
+  const govRewLoaded = [];
+  const govBtn = $("runGovBtn");
+
+  function _govRefreshState() {
+    const hasVal = govValLoaded.length > 0;
+    const hasRew = govRewLoaded.length > 0;
+    if (hasVal && hasRew) {
+      setState($("govState"),
+        govValLoaded.length + " validations / "
+          + govRewLoaded.length + " rewards", "ok");
+      govBtn.disabled = false;
+    } else if (hasVal || hasRew) {
+      setState($("govState"),
+        govValLoaded.length + " validations / "
+          + govRewLoaded.length + " rewards", "warn");
+      govBtn.disabled = true;
+    } else {
+      setState($("govState"), "no files loaded", "idle");
+      govBtn.disabled = true;
+    }
+  }
+
+  $("govValFiles").addEventListener("change", (ev) => {
+    govValLoaded.length = 0;
+    const files = Array.from(ev.target.files || []);
+    if (files.length === 0) { _govRefreshState(); return; }
+    let pending = files.length;
+    files.forEach((f) => {
+      const r = new FileReader();
+      r.onload = (e) => {
+        try {
+          const obj = JSON.parse(e.target.result);
+          if (obj.schema === SCHEMA_VAL
+              && obj.request_id && obj.validation_id) {
+            govValLoaded.push(obj);
+          }
+        } catch {}
+        pending--;
+        if (pending === 0) _govRefreshState();
+      };
+      r.readAsText(f);
+    });
+  });
+
+  $("govRewFiles").addEventListener("change", (ev) => {
+    govRewLoaded.length = 0;
+    const files = Array.from(ev.target.files || []);
+    if (files.length === 0) { _govRefreshState(); return; }
+    let pending = files.length;
+    files.forEach((f) => {
+      const r = new FileReader();
+      r.onload = (e) => {
+        try {
+          const obj = JSON.parse(e.target.result);
+          // Extract worker_result_id from the file name.
+          const m = f.name.match(
+            /^TRINITY_USEFUL_COMPUTE_PENDING_REWARD_(uc-[0-9a-f]+)_([0-9a-f]{16})\.json$/
+          );
+          if (obj.schema === SCHEMA_REW_GATE
+              && obj.request_id && m
+              && obj.request_id === m[1]) {
+            obj.__worker_result_id = m[2];
+            govRewLoaded.push(obj);
+          }
+        } catch {}
+        pending--;
+        if (pending === 0) _govRefreshState();
+      };
+      r.readAsText(f);
+    });
+  });
+
+  govBtn.addEventListener("click", () => {
+    if (govValLoaded.length === 0 || govRewLoaded.length === 0) return;
+    const rewIndex = {};  // {rid: {wrid: stocks}}
+    for (const r of govRewLoaded) {
+      const rid = r.request_id;
+      const wrid = r.__worker_result_id;
+      rewIndex[rid] = rewIndex[rid] || {};
+      // duplicate detection
+      if (rewIndex[rid][wrid] !== undefined) {
+        rewIndex[rid][wrid] = "DUP";
+      } else {
+        rewIndex[rid][wrid] = Number(r.pending_reward_stocks || 0);
+      }
+    }
+    const approved = [];
+    const rejected = [];
+    for (const v of govValLoaded) {
+      const rid = v.request_id;
+      const vid = v.validation_id;
+      if (v.validation_status === "mismatch") {
+        rejected.push({rid, vid, reason: "governance_rejected_mismatch"});
+        continue;
+      }
+      if (v.validation_status === "insufficient_workers") {
+        rejected.push({rid, vid, reason: "governance_rejected_insufficient_workers"});
+        continue;
+      }
+      if (v.validation_status !== "accepted") {
+        rejected.push({rid, vid, reason: "governance_rejected_invalid_structure"});
+        continue;
+      }
+      if (v.manual_review_required === true) {
+        rejected.push({rid, vid, reason: "governance_rejected_manual_review"});
+        continue;
+      }
+      const matching = v.matching_result_ids || [];
+      const collected = [];
+      let bad = null;
+      for (const wrid of matching) {
+        const idx = rewIndex[rid] || {};
+        const s = idx[wrid];
+        if (s === undefined) { bad = "governance_rejected_missing_reward"; break; }
+        if (s === "DUP")     { bad = "governance_rejected_duplicate_reward"; break; }
+        collected.push(s);
+      }
+      if (bad) { rejected.push({rid, vid, reason: bad}); continue; }
+      const approvedStocks = collected.length
+        ? Math.min.apply(null, collected) : 0;
+      approved.push({
+        rid, vid,
+        stocks: approvedStocks,
+        workers: matching.length,
+        cos: v.accepted_compute_output_sha256,
+      });
+    }
+    const total = approved.reduce((a, b) => a + b.stocks, 0);
+    $("govApproved").textContent = String(approved.length);
+    $("govRejected").textContent = String(rejected.length);
+    $("govTotal").textContent =
+      total.toLocaleString("en-US") + " stocks";
+    const ulA = $("govApprovedList");
+    const ulR = $("govRejectedList");
+    ulA.innerHTML = ""; ulR.innerHTML = "";
+    approved.forEach((it) => {
+      const li = document.createElement("li");
+      li.textContent = it.rid + " / " + it.vid + " — "
+        + it.stocks.toLocaleString("en-US") + " stocks ("
+        + it.workers + " workers)";
+      ulA.appendChild(li);
+    });
+    rejected.forEach((it) => {
+      const li = document.createElement("li");
+      li.textContent = it.rid + " / " + it.vid + " — " + it.reason;
+      ulR.appendChild(li);
+    });
+    $("govDetails").style.display = "";
+  });
+
+  $("copyGovCmdBtn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(
+        $("govCmd").textContent
+      );
+      setState($("copyGovState"), "copied", "ok");
+    } catch {
+      setState($("copyGovState"), "copy failed", "fail");
+    }
   });
 </script>
 

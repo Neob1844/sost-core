@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-useful-compute-governance-batch/v0.1",
+  "title": "Trinity Useful Compute Governance Review Batch",
+  "description": "Output of the Trinity governance gate v0.1. Converts a directory of accepted replay validations + their pending reward reports into a deterministic, review-only batch of approved reward items. v0.1 NEVER pays, NEVER touches a wallet, NEVER broadcasts. Approved items are inputs to a future, separate payment sprint that requires human governance sign-off.",
+  "type": "object",
+  "required": [
+    "schema",
+    "batch_id",
+    "mode",
+    "reviewer_id",
+    "policy",
+    "created_at",
+    "approved_count",
+    "rejected_count",
+    "total_approved_reward_stocks",
+    "approved_items",
+    "rejected_items",
+    "safety_status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-useful-compute-governance-batch/v0.1"
+    },
+    "batch_id": {
+      "type": "string",
+      "pattern": "^gov-[0-9a-f]{16}$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["local-dry-run"]
+    },
+    "reviewer_id": {
+      "type": "string",
+      "minLength": 1, "maxLength": 128
+    },
+    "policy": {
+      "type": "string",
+      "enum": ["conservative"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_count": {
+      "type": "integer", "minimum": 0
+    },
+    "rejected_count": {
+      "type": "integer", "minimum": 0
+    },
+    "total_approved_reward_stocks": {
+      "type": "integer", "minimum": 0
+    },
+    "approved_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "request_id",
+          "validation_id",
+          "accepted_compute_output_sha256",
+          "matching_result_ids",
+          "unique_workers",
+          "approved_pending_reward_stocks",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "pattern": "^uc-[0-9a-f]{16,64}$"
+          },
+          "validation_id": {
+            "type": "string",
+            "pattern": "^val-[0-9a-f]{16}$"
+          },
+          "accepted_compute_output_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "matching_result_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          },
+          "unique_workers": {
+            "type": "integer", "minimum": 2
+          },
+          "approved_pending_reward_stocks": {
+            "type": "integer", "minimum": 0
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1, "maxLength": 256
+          }
+        }
+      }
+    },
+    "rejected_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["request_id", "validation_id", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "type": "string", "minLength": 1, "maxLength": 128
+          },
+          "validation_id": {
+            "type": "string", "minLength": 1, "maxLength": 64
+          },
+          "reason": {
+            "type": "string", "minLength": 1, "maxLength": 256
+          }
+        }
+      }
+    },
+    "safety_status": {
+      "type": "object",
+      "required": [
+        "no_wallet_access",
+        "no_private_keys",
+        "no_automatic_payout",
+        "no_broadcast",
+        "no_onchain_registration",
+        "governance_review_only",
+        "requires_separate_payment_sprint"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "no_wallet_access":                 { "type": "boolean", "const": true },
+        "no_private_keys":                  { "type": "boolean", "const": true },
+        "no_automatic_payout":              { "type": "boolean", "const": true },
+        "no_broadcast":                     { "type": "boolean", "const": true },
+        "no_onchain_registration":          { "type": "boolean", "const": true },
+        "governance_review_only":           { "type": "boolean", "const": true },
+        "requires_separate_payment_sprint": { "type": "boolean", "const": true }
+      }
+    }
+  }
+}
