@@ -28,6 +28,7 @@ _SPRINT_56_SCRIPTS = [
     "useful_compute_reward_model.py",
     "useful_compute_task_builder.py",
     "useful_compute_worker.py",
+    "useful_compute_replay_validator.py",
 ]
 
 

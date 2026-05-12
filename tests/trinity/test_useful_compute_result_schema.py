@@ -45,19 +45,19 @@ def builder_mod():
     )
 
 
-def test_schema_id_is_v01(schema):
-    assert schema["$id"] == "trinity-useful-compute-result/v0.1"
+def test_schema_id_is_v02(schema):
+    assert schema["$id"] == "trinity-useful-compute-result/v0.2"
 
 
 def test_schema_is_strict(schema):
     assert schema["additionalProperties"] is False
     expected = {
         "schema", "request_id", "worker_id", "task_type",
-        "input_bundle_sha256", "output_sha256",
+        "input_bundle_sha256",
+        "compute_output_sha256", "worker_result_id",
         "started_at", "finished_at", "elapsed_seconds",
         "result_validated", "duplicate_result",
-        "deterministic_result_id", "public_summary",
-        "safety_status",
+        "public_summary", "safety_status",
     }
     assert set(schema["required"]) == expected
 

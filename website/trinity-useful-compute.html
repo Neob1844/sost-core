@@ -90,7 +90,7 @@
 <body>
 <div class="wrap">
 
-<h1>Trinity / Useful Compute<span class="badge">v0.1 local-dry-run</span></h1>
+<h1>Trinity / Useful Compute<span class="badge">v0.2 local-dry-run + replay</span></h1>
 <div class="sub">
   Guided panel: load a request, run the local worker, load the result,
   see your pending reward in stocks. No payments. No keys.
@@ -185,11 +185,11 @@
       <div><div class="k">request_id</div><div class="v" id="resRid"></div></div>
       <div><div class="k">worker_id</div><div class="v" id="resWid"></div></div>
       <div><div class="k">task_type</div><div class="v" id="resTask"></div></div>
-      <div><div class="k">output_sha256</div><div class="v" id="resOut"></div></div>
+      <div><div class="k">compute_output_sha256</div><div class="v" id="resOut"></div></div>
       <div><div class="k">result_validated</div><div class="v" id="resVal"></div></div>
       <div><div class="k">duplicate_result</div><div class="v" id="resDup"></div></div>
       <div><div class="k">elapsed_seconds</div><div class="v" id="resEl"></div></div>
-      <div><div class="k">deterministic_result_id</div><div class="v" id="resDet"></div></div>
+      <div><div class="k">worker_result_id</div><div class="v" id="resDet"></div></div>
     </div>
   </div>
 </div>
@@ -228,6 +228,66 @@
   </div>
 </div>
 
+<!-- Step 5: Validate Replay Results -->
+<div class="card">
+  <h2>Step 5 — Validate Replay Results (cross-worker)</h2>
+  <p class="small">
+    Load two or more result files from independent workers. The page
+    will group them by <code>compute_output_sha256</code> and report
+    whether they agree. This is a quick local sanity check — for an
+    auditable validation report, run the CLI validator on your
+    machine.
+  </p>
+  <div class="row">
+    <label class="file-btn" for="replayFiles">Choose result files...</label>
+    <input id="replayFiles" type="file" accept="application/json,.json"
+           multiple>
+    <button class="secondary" type="button" id="runReplayBtn"
+            disabled>Run Local Replay Check</button>
+    <span id="replayState" class="state idle">no results loaded</span>
+  </div>
+  <div id="replayDetails" style="margin-top:16px; display:none;">
+    <div class="grid">
+      <div><div class="k">workers_seen</div>
+           <div class="v" id="repSeen"></div></div>
+      <div><div class="k">unique_workers</div>
+           <div class="v" id="repUnique"></div></div>
+      <div><div class="k">validation_status</div>
+           <div class="v" id="repStatus"></div></div>
+      <div><div class="k">manual_review_required</div>
+           <div class="v" id="repManual"></div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">accepted compute_output_sha256</div>
+      <div class="v" id="repAccepted"></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">groups</div>
+      <ul id="repGroups" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 13px;"></ul>
+    </div>
+  </div>
+  <p class="small" style="margin-top:16px;">
+    Auditable report (recommended): run the CLI validator on your
+    machine. The command below mirrors what this page does, but
+    writes a signed-able JSON / Markdown report to disk.
+  </p>
+  <pre class="cmd" id="replayCmd">python3 scripts/trinity/useful_compute_replay_validator.py \
+  --mode local-dry-run \
+  --request &lt;path-to-request.json&gt; \
+  --results-dir &lt;dir-with-result-files&gt; \
+  --out-dir /tmp/trinity-uc-validation \
+  --min-workers 2</pre>
+  <button class="secondary" type="button" id="copyReplayCmdBtn">Copy command</button>
+  <span id="copyReplayState" class="state idle"
+        style="margin-left:8px;">idle</span>
+  <div class="disclaimer">
+    Even an <strong>accepted</strong> outcome does NOT pay. It only
+    means two or more independent workers agreed on the same
+    technical output. Governance still owns the payment gate.
+  </div>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>
@@ -262,7 +322,7 @@
   // Strict local-only JS. No fetch, no WebSocket, no postMessage.
   const $ = (id) => document.getElementById(id);
   const SCHEMA_REQ = "trinity-useful-compute-request/v0.1";
-  const SCHEMA_RES = "trinity-useful-compute-result/v0.1";
+  const SCHEMA_RES = "trinity-useful-compute-result/v0.2";
   const SCHEMA_REW = "trinity-useful-compute-pending-reward/v0.1";
 
   let loadedRequest = null;
@@ -377,17 +437,136 @@
         $("resRid").textContent  = obj.request_id || "";
         $("resWid").textContent  = obj.worker_id || "";
         $("resTask").textContent = obj.task_type || "";
-        $("resOut").textContent  = obj.output_sha256 || "";
+        $("resOut").textContent  = obj.compute_output_sha256 || "";
         $("resVal").textContent  = String(obj.result_validated);
         $("resDup").textContent  = String(obj.duplicate_result);
         $("resEl").textContent   = obj.elapsed_seconds + " s";
-        $("resDet").textContent  = obj.deterministic_result_id || "";
+        $("resDet").textContent  = obj.worker_result_id || "";
         $("resDetails").style.display = "";
       } catch {
         setState($("resState"), "invalid JSON", "fail");
       }
     };
     r.readAsText(f);
+  });
+
+  // Step 5: cross-worker replay sanity check (local-only).
+  const replayBtn  = $("runReplayBtn");
+  const replayInp  = $("replayFiles");
+  const replayLoaded = [];
+  const SCHEMA_VAL_RESULT = SCHEMA_RES;
+
+  function updateReplayCommand() {
+    const od = ($("outDir").value
+                  || "/tmp/trinity-uc-validation").trim();
+    const rp = loadedRequestPath
+      ? loadedRequestPath
+      : "<path-to-request.json>";
+    $("replayCmd").textContent =
+      "python3 scripts/trinity/useful_compute_replay_validator.py \\\n" +
+      "  --mode local-dry-run \\\n" +
+      "  --request " + rp + " \\\n" +
+      "  --results-dir <dir-with-result-files> \\\n" +
+      "  --out-dir " + od + " \\\n" +
+      "  --min-workers 2";
+  }
+  $("workerId").addEventListener("input", updateReplayCommand);
+  $("outDir").addEventListener("input",   updateReplayCommand);
+
+  replayInp.addEventListener("change", (ev) => {
+    replayLoaded.length = 0;
+    const files = Array.from(ev.target.files || []);
+    if (files.length === 0) return;
+    let pending = files.length;
+    let bad = 0;
+    files.forEach((f) => {
+      const r = new FileReader();
+      r.onload = (e) => {
+        try {
+          const obj = JSON.parse(e.target.result);
+          if (obj.schema === SCHEMA_VAL_RESULT
+              && obj.compute_output_sha256
+              && obj.worker_id
+              && obj.worker_result_id) {
+            replayLoaded.push(obj);
+          } else {
+            bad++;
+          }
+        } catch {
+          bad++;
+        }
+        pending--;
+        if (pending === 0) {
+          if (replayLoaded.length === 0) {
+            setState($("replayState"),
+              "no valid result files", "fail");
+            replayBtn.disabled = true;
+          } else {
+            setState($("replayState"),
+              replayLoaded.length + " loaded"
+                + (bad ? (", " + bad + " skipped") : ""),
+              "ok");
+            replayBtn.disabled = false;
+          }
+        }
+      };
+      r.readAsText(f);
+    });
+  });
+
+  replayBtn.addEventListener("click", () => {
+    if (replayLoaded.length === 0) return;
+    // Group by compute_output_sha256, dedupe worker_id.
+    const seenWorker = new Set();
+    const dedup = [];
+    for (const r of replayLoaded) {
+      if (seenWorker.has(r.worker_id)) continue;
+      seenWorker.add(r.worker_id);
+      dedup.push(r);
+    }
+    const groups = {};
+    dedup.forEach((r) => {
+      const cos = r.compute_output_sha256;
+      if (!groups[cos]) groups[cos] = [];
+      groups[cos].push(r.worker_result_id);
+    });
+    const cosKeys = Object.keys(groups).sort((a, b) =>
+      groups[b].length - groups[a].length || a.localeCompare(b)
+    );
+    let status, accepted = null, manual = false;
+    if (dedup.length < 2) {
+      status = "insufficient_workers";
+    } else if (cosKeys.length === 1) {
+      status = "accepted";
+      accepted = cosKeys[0];
+    } else {
+      status = "mismatch";
+      manual = true;
+    }
+    $("repSeen").textContent   = String(replayLoaded.length);
+    $("repUnique").textContent = String(dedup.length);
+    $("repStatus").textContent = status;
+    $("repManual").textContent = String(manual);
+    $("repAccepted").textContent = accepted || "(none)";
+    const ul = $("repGroups");
+    ul.innerHTML = "";
+    cosKeys.forEach((c) => {
+      const li = document.createElement("li");
+      li.textContent = c + "  x" + groups[c].length;
+      ul.appendChild(li);
+    });
+    $("replayDetails").style.display = "";
+  });
+
+  $("copyReplayCmdBtn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(
+        $("replayCmd").textContent
+      );
+      setState($("copyReplayState"), "copied", "ok");
+    } catch {
+      setState($("copyReplayState"), "copy failed", "fail");
+    }
   });
 
   $("rewFile").addEventListener("change", (ev) => {

@@ -64,11 +64,17 @@ def test_worker_runs_end_to_end_and_writes_two_files(
         pinned_time="2026-05-12T00:00:00+00:00",
     )
     rid = req["request_id"]
-    res_path = tmp_path / f"TRINITY_USEFUL_COMPUTE_RESULT_{rid}.json"
-    rew_path = tmp_path / f"TRINITY_USEFUL_COMPUTE_PENDING_REWARD_{rid}.json"
+    wrid = result["worker_result_id"]
+    res_path = (
+        tmp_path / f"TRINITY_USEFUL_COMPUTE_RESULT_{rid}_{wrid}.json"
+    )
+    rew_path = (
+        tmp_path
+        / f"TRINITY_USEFUL_COMPUTE_PENDING_REWARD_{rid}_{wrid}.json"
+    )
     assert res_path.exists()
     assert rew_path.exists()
-    assert result["schema"] == "trinity-useful-compute-result/v0.1"
+    assert result["schema"] == "trinity-useful-compute-result/v0.2"
     assert pending["schema"] == \
         "trinity-useful-compute-pending-reward/v0.1"
 
@@ -79,24 +85,30 @@ def test_worker_output_byte_identical_across_runs(
     req = _make_request(builder_mod)
     a = tmp_path / "a"
     b = tmp_path / "b"
-    worker_mod.run_worker(
+    ra, _ = worker_mod.run_worker(
         request=copy.deepcopy(req), worker_id="miner-x",
         out_dir=a, pinned_time="2026-05-12T00:00:00+00:00",
     )
-    worker_mod.run_worker(
+    rb, _ = worker_mod.run_worker(
         request=copy.deepcopy(req), worker_id="miner-x",
         out_dir=b, pinned_time="2026-05-12T00:00:00+00:00",
     )
     rid = req["request_id"]
-    assert (a / f"TRINITY_USEFUL_COMPUTE_RESULT_{rid}.json").read_bytes() == \
-           (b / f"TRINITY_USEFUL_COMPUTE_RESULT_{rid}.json").read_bytes()
-    assert (a / f"TRINITY_USEFUL_COMPUTE_PENDING_REWARD_{rid}.json").read_bytes() == \
-           (b / f"TRINITY_USEFUL_COMPUTE_PENDING_REWARD_{rid}.json").read_bytes()
+    wrid_a = ra["worker_result_id"]
+    wrid_b = rb["worker_result_id"]
+    assert wrid_a == wrid_b
+    assert (a / f"TRINITY_USEFUL_COMPUTE_RESULT_{rid}_{wrid_a}.json").read_bytes() == \
+           (b / f"TRINITY_USEFUL_COMPUTE_RESULT_{rid}_{wrid_b}.json").read_bytes()
+    assert (a / f"TRINITY_USEFUL_COMPUTE_PENDING_REWARD_{rid}_{wrid_a}.json").read_bytes() == \
+           (b / f"TRINITY_USEFUL_COMPUTE_PENDING_REWARD_{rid}_{wrid_b}.json").read_bytes()
 
 
-def test_worker_different_worker_id_changes_output(
+def test_worker_compute_output_sha_is_worker_independent(
     tmp_path, worker_mod, builder_mod,
 ):
+    """Two honest workers running the same task on the same input
+    MUST produce the same compute_output_sha256. This is the v0.2
+    invariant that makes cross-worker replay possible."""
     req = _make_request(builder_mod)
     ra, _ = worker_mod.run_worker(
         request=copy.deepcopy(req), worker_id="miner-A",
@@ -108,7 +120,27 @@ def test_worker_different_worker_id_changes_output(
         out_dir=tmp_path / "b",
         pinned_time="2026-05-12T00:00:00+00:00",
     )
-    assert ra["output_sha256"] != rb["output_sha256"]
+    assert ra["compute_output_sha256"] == rb["compute_output_sha256"]
+
+
+def test_worker_result_id_does_depend_on_worker_id(
+    tmp_path, worker_mod, builder_mod,
+):
+    """worker_result_id is the per-submission id and MUST differ
+    between two workers on the same task — that is how the network
+    distinguishes their submissions."""
+    req = _make_request(builder_mod)
+    ra, _ = worker_mod.run_worker(
+        request=copy.deepcopy(req), worker_id="miner-A",
+        out_dir=tmp_path / "a",
+        pinned_time="2026-05-12T00:00:00+00:00",
+    )
+    rb, _ = worker_mod.run_worker(
+        request=copy.deepcopy(req), worker_id="miner-B",
+        out_dir=tmp_path / "b",
+        pinned_time="2026-05-12T00:00:00+00:00",
+    )
+    assert ra["worker_result_id"] != rb["worker_result_id"]
 
 
 def test_worker_rejects_unknown_mode_via_cli(tmp_path, worker_mod):
@@ -271,7 +303,8 @@ def test_worker_handles_every_task_type(
         )
         assert res["task_type"] == tt
         assert res["result_validated"] is True
-        assert len(res["output_sha256"]) == 64
+        assert len(res["compute_output_sha256"]) == 64
+        assert len(res["worker_result_id"]) == 16
 
 
 def test_worker_cli_writes_files(tmp_path, worker_mod, builder_mod):
@@ -287,8 +320,14 @@ def test_worker_cli_writes_files(tmp_path, worker_mod, builder_mod):
     ])
     assert rc == 0
     rid = req["request_id"]
-    assert (tmp_path / f"TRINITY_USEFUL_COMPUTE_RESULT_{rid}.json").exists()
-    assert (tmp_path / f"TRINITY_USEFUL_COMPUTE_PENDING_REWARD_{rid}.json").exists()
+    res_files = list(
+        tmp_path.glob(f"TRINITY_USEFUL_COMPUTE_RESULT_{rid}_*.json")
+    )
+    rew_files = list(
+        tmp_path.glob(f"TRINITY_USEFUL_COMPUTE_PENDING_REWARD_{rid}_*.json")
+    )
+    assert len(res_files) == 1
+    assert len(rew_files) == 1
 
 
 def test_worker_result_carries_all_safety_flags(

@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-useful-compute-validation/v0.1",
+  "title": "Trinity Useful Compute Cross-Worker Replay Validation",
+  "description": "Report emitted by the Trinity replay validator after comparing the results of two or more independent workers on the same Useful Compute request. v0.1 is dry-run and never pays; it only declares whether the technical outputs agreed.",
+  "type": "object",
+  "required": [
+    "schema",
+    "validation_id",
+    "request_id",
+    "mode",
+    "min_workers",
+    "workers_seen",
+    "unique_workers",
+    "accepted_compute_output_sha256",
+    "validation_status",
+    "matching_result_ids",
+    "rejected_result_ids",
+    "mismatch_groups",
+    "manual_review_required",
+    "safety_status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-useful-compute-validation/v0.1"
+    },
+    "validation_id": {
+      "type": "string",
+      "pattern": "^val-[0-9a-f]{16}$"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^uc-[0-9a-f]{16,64}$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["local-dry-run"]
+    },
+    "min_workers": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 16
+    },
+    "workers_seen": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unique_workers": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "accepted_compute_output_sha256": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "rejected",
+        "insufficient_workers",
+        "mismatch",
+        "manual_review"
+      ]
+    },
+    "matching_result_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+      }
+    },
+    "rejected_result_ids": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["worker_result_id", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "worker_result_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1, "maxLength": 256
+          }
+        }
+      }
+    },
+    "mismatch_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["compute_output_sha256", "worker_result_ids"],
+        "additionalProperties": false,
+        "properties": {
+          "compute_output_sha256": {
+            "type": "string", "pattern": "^[0-9a-f]{64}$"
+          },
+          "worker_result_ids": {
+            "type": "array",
+            "items": {
+              "type": "string", "pattern": "^[0-9a-f]{16}$"
+            }
+          }
+        }
+      }
+    },
+    "manual_review_required": { "type": "boolean" },
+    "safety_status": {
+      "type": "object",
+      "required": [
+        "no_wallet_access",
+        "no_private_keys",
+        "no_automatic_payout",
+        "no_network_required",
+        "no_onchain_registration",
+        "governance_required_before_payment"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "no_wallet_access":                    { "type": "boolean", "const": true },
+        "no_private_keys":                     { "type": "boolean", "const": true },
+        "no_automatic_payout":                 { "type": "boolean", "const": true },
+        "no_network_required":                 { "type": "boolean", "const": true },
+        "no_onchain_registration":             { "type": "boolean", "const": true },
+        "governance_required_before_payment":  { "type": "boolean", "const": true }
+      }
+    }
+  }
+}
