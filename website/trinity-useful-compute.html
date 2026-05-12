@@ -90,7 +90,7 @@
 <body>
 <div class="wrap">
 
-<h1>Trinity / Useful Compute<span class="badge">v0.4 worker + replay + governance + daemon</span></h1>
+<h1>Trinity / Useful Compute<span class="badge">v0.5 worker + replay + governance + daemon + console</span></h1>
 <div class="sub">
   Guided panel: load a request, run the local worker, load the result,
   see your pending reward in stocks. No payments. No keys.
@@ -102,6 +102,200 @@
   they can become actual stocks. This page never asks for a wallet,
   a seed, an RPC user/password, a recovery phrase, or a signature.
   No automatic payout. No network calls from this page.
+</div>
+
+<!-- ============================================================== -->
+<!-- Miner Compute Console (Sprint 5.11)                            -->
+<!-- Read-only dashboard for files produced by the background       -->
+<!-- daemon. No network. No wallet. No payments.                    -->
+<!-- ============================================================== -->
+<div class="card" id="minerConsoleCard">
+  <h2>Miner Compute Console</h2>
+  <p class="small">
+    Read-only view of files produced by the Trinity Background
+    Autonomy Daemon. Load JSON/JSONL/MD files from your workspace;
+    this page never reaches the network, never asks for a wallet,
+    never executes a payment.
+  </p>
+
+  <!-- Counters -->
+  <div class="grid" style="margin-top:16px;">
+    <div>
+      <div class="k">pending_unvalidated_stocks</div>
+      <div class="v" id="stocksPendingUnvalidated">0</div>
+    </div>
+    <div>
+      <div class="k">replay_accepted_stocks</div>
+      <div class="v" id="stocksReplayAccepted">0</div>
+    </div>
+    <div>
+      <div class="k">governance_approved_stocks</div>
+      <div class="v" id="stocksGovApproved">0</div>
+    </div>
+    <div>
+      <div class="k">rejected_or_manual_review_stocks</div>
+      <div class="v" id="stocksRejected">0</div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;">
+    <div class="k">approved_pending_reward_stocks (governance batches headline)</div>
+    <div class="reward">
+      <span id="stocksApprovedHeadline">0</span>
+      <small>stocks · 1 SOST = 100,000,000 stocks</small>
+    </div>
+    <div class="v" id="stocksApprovedSost" style="margin-top:4px;
+         color: var(--muted); font-size:12px;">≈ 0 SOST</div>
+  </div>
+
+  <!-- Loaders -->
+  <div style="margin-top:24px;">
+    <h2 style="font-size:14px;">Loaders</h2>
+    <div class="row">
+      <div>
+        <div class="k">daemon state JSON</div>
+        <label class="file-btn" for="consoleStateFile">Choose state...</label>
+        <input id="consoleStateFile" type="file" accept="application/json,.json">
+        <span id="consoleStateBadge" class="state idle">none</span>
+      </div>
+      <div>
+        <div class="k">events JSONL</div>
+        <label class="file-btn" for="consoleEventsFile">Choose events...</label>
+        <input id="consoleEventsFile" type="file" accept=".jsonl,application/jsonlines,text/plain">
+        <span id="consoleEventsBadge" class="state idle">none</span>
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <div>
+        <div class="k">pending reward JSONs</div>
+        <label class="file-btn" for="consoleRewardsFiles">Choose rewards...</label>
+        <input id="consoleRewardsFiles" type="file" accept="application/json,.json" multiple>
+        <span id="consoleRewardsBadge" class="state idle">none</span>
+      </div>
+      <div>
+        <div class="k">validation JSONs</div>
+        <label class="file-btn" for="consoleValidationsFiles">Choose validations...</label>
+        <input id="consoleValidationsFiles" type="file" accept="application/json,.json" multiple>
+        <span id="consoleValidationsBadge" class="state idle">none</span>
+      </div>
+      <div>
+        <div class="k">governance batch JSONs</div>
+        <label class="file-btn" for="consoleGovFiles">Choose batches...</label>
+        <input id="consoleGovFiles" type="file" accept="application/json,.json" multiple>
+        <span id="consoleGovBadge" class="state idle">none</span>
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <div>
+        <div class="k">lessons / summary MD</div>
+        <label class="file-btn" for="consoleLessonsFile">Choose lessons/summary...</label>
+        <input id="consoleLessonsFile" type="file"
+               accept=".md,.jsonl,text/markdown,text/plain,application/jsonlines">
+        <span id="consoleLessonsBadge" class="state idle">none</span>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="secondary" type="button" id="consoleResetBtn">Reset Console</button>
+        <button class="secondary" type="button" id="consoleExportBtn">Export Summary JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daemon state panel -->
+  <div style="margin-top:24px;" id="consoleStateDetails">
+    <h2 style="font-size:14px;">Daemon state</h2>
+    <div class="grid">
+      <div><div class="k">mode</div><div class="v" id="consoleMode">-</div></div>
+      <div><div class="k">workspace</div><div class="v" id="consoleWorkspace">-</div></div>
+      <div><div class="k">cycle_index</div><div class="v" id="consoleCycle">-</div></div>
+      <div><div class="k">last_cycle_at</div><div class="v" id="consoleLastCycle">-</div></div>
+      <div><div class="k">requests_seen</div><div class="v" id="consoleRequestsSeen">0</div></div>
+      <div><div class="k">results_seen</div><div class="v" id="consoleResultsSeen">0</div></div>
+      <div><div class="k">validations_seen</div><div class="v" id="consoleValidationsSeen">0</div></div>
+      <div><div class="k">governance_batches_seen</div><div class="v" id="consoleGovSeen">0</div></div>
+      <div><div class="k">errors_count</div><div class="v" id="consoleErrors">0</div></div>
+      <div><div class="k">lessons_count</div><div class="v" id="consoleLessons">0</div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">safety_status flags</div>
+      <ul id="consoleSafetyList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 12px;
+           color: var(--ok);"></ul>
+    </div>
+  </div>
+
+  <!-- Per-task table -->
+  <div style="margin-top:24px;">
+    <h2 style="font-size:14px;">Task status</h2>
+    <table id="consoleTaskTable" style="width:100%;
+           font-family: var(--mono); font-size: 12px;
+           border-collapse: collapse;">
+      <thead>
+        <tr style="text-align:left; color: var(--muted);">
+          <th style="padding:4px 8px;">request_id</th>
+          <th style="padding:4px 8px;">worker_result_id</th>
+          <th style="padding:4px 8px;">worker_id</th>
+          <th style="padding:4px 8px;">compute_sha (short)</th>
+          <th style="padding:4px 8px; text-align:right;">stocks</th>
+          <th style="padding:4px 8px;">validation</th>
+          <th style="padding:4px 8px;">governance</th>
+          <th style="padding:4px 8px;">manual_review</th>
+          <th style="padding:4px 8px;">status</th>
+        </tr>
+      </thead>
+      <tbody id="consoleTaskTbody"></tbody>
+    </table>
+    <div id="consoleTaskEmpty" class="small"
+         style="margin-top:8px; color: var(--muted);">
+      No reward files loaded.
+    </div>
+  </div>
+
+  <!-- Events timeline -->
+  <div style="margin-top:24px;">
+    <h2 style="font-size:14px;">Event timeline</h2>
+    <div id="consoleEventsWarning" class="small"
+         style="color: var(--warn);"></div>
+    <ul id="consoleEventsList" style="margin:6px 0 0 0;
+         padding-left: 18px; font-family: var(--mono);
+         font-size: 12px; max-height: 240px; overflow-y: auto;"></ul>
+    <div id="consoleEventsEmpty" class="small"
+         style="margin-top:8px; color: var(--muted);">
+      No events loaded.
+    </div>
+  </div>
+
+  <!-- Lessons -->
+  <div style="margin-top:24px;">
+    <h2 style="font-size:14px;">Lessons learned</h2>
+    <ul id="consoleLessonsList" style="margin:6px 0 0 0;
+         padding-left: 18px; font-family: var(--mono);
+         font-size: 12px;"></ul>
+    <pre id="consoleLessonsRaw" style="display:none; background:#0d1117;
+         border: 1px solid var(--border); padding: 12px 14px;
+         border-radius: 6px; overflow-x: auto; font-family: var(--mono);
+         font-size: 12px; max-height: 280px; overflow-y: auto;"></pre>
+    <div id="consoleLessonsEmpty" class="small"
+         style="margin-top:8px; color: var(--muted);">
+      No lessons loaded.
+    </div>
+  </div>
+
+  <div class="danger-strip" style="margin-top:24px;">
+    <strong>This console does NOT pay.</strong>
+    It is a read-only viewer of files you load from disk. Approved
+    pending stocks are NOT actual stocks — they are governance review
+    inputs. A separate, human-signed payment sprint is required
+    before any stocks actually move.
+  </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- Per-step guided workflows (Sprints 5.7-5.10)                   -->
+<!-- ============================================================== -->
+<div style="margin: 32px 0 8px; color: var(--muted);
+     font-family: var(--mono); font-size: 12px;
+     text-transform: uppercase; letter-spacing: 0.5px;">
+  Detailed per-step workflows
 </div>
 
 <!-- Step 1: Load Request -->
@@ -966,6 +1160,625 @@
     };
     r.readAsText(f);
   });
+
+  // ==================================================================
+  //  Miner Compute Console (Sprint 5.11)
+  //
+  //  Read-only loader for daemon files. All file content is rendered
+  //  via textContent (no innerHTML), so user-supplied bytes cannot
+  //  inject scripts or DOM. No fetch, no XHR, no WebSocket, no
+  //  EventSource, no sendBeacon, no wallet, no keys.
+  // ==================================================================
+
+  const SCHEMA_DAEMON_STATE_V01 = "trinity-background-daemon-state/v0.1";
+  const SCHEMA_REWARD_V01 = "trinity-useful-compute-pending-reward/v0.1";
+  const SCHEMA_VALIDATION_V01 = "trinity-useful-compute-validation/v0.1";
+  const SCHEMA_GOV_V01 =
+    "trinity-useful-compute-governance-batch/v0.1";
+
+  const consoleStore = {
+    daemonState: null,
+    events: [],
+    eventsMalformed: 0,
+    rewards: [],        // each: {request_id, worker_id, worker_result_id, stocks, requires_manual_review, source_filename}
+    validations: [],    // raw validation objects
+    governance: [],     // raw gov batch objects
+    lessonsText: "",
+    lessonsAggregated: [],
+  };
+
+  function _consoleSetText(id, text) {
+    const el = $(id);
+    if (el) el.textContent = String(text == null ? "" : text);
+  }
+
+  function _consoleAppendListItems(ulId, items) {
+    const ul = $(ulId);
+    if (!ul) return;
+    while (ul.firstChild) ul.removeChild(ul.firstChild);
+    items.forEach((t) => {
+      const li = document.createElement("li");
+      li.textContent = t;
+      ul.appendChild(li);
+    });
+  }
+
+  function _consoleRowCell(text, opts) {
+    opts = opts || {};
+    const td = document.createElement("td");
+    td.style.padding = "4px 8px";
+    if (opts.right) td.style.textAlign = "right";
+    if (opts.color) td.style.color = opts.color;
+    td.textContent = String(text == null ? "" : text);
+    return td;
+  }
+
+  function _consoleStatusForReward(rew) {
+    // Bucket by highest reached tier:
+    //   governance_approved > replay_accepted > rejected/manual > pending
+    const key = rew.request_id + "|" + rew.worker_result_id;
+    for (const b of consoleStore.governance) {
+      for (const it of (b.approved_items || [])) {
+        if (it.request_id !== rew.request_id) continue;
+        const m = it.matching_result_ids || [];
+        if (m.indexOf(rew.worker_result_id) >= 0) {
+          return {
+            bucket: "governance_approved",
+            badge: "governance approved",
+            color: "var(--ok)",
+            validation: "accepted",
+            governance: "approved",
+          };
+        }
+      }
+    }
+    let validationStatus = "(none)";
+    let inAccepted = false;
+    let inMismatch = false;
+    let inInsufficient = false;
+    for (const v of consoleStore.validations) {
+      if (v.request_id !== rew.request_id) continue;
+      validationStatus = v.validation_status || "(unknown)";
+      if (v.validation_status === "accepted") {
+        const m = v.matching_result_ids || [];
+        if (m.indexOf(rew.worker_result_id) >= 0) inAccepted = true;
+      } else if (v.validation_status === "mismatch") {
+        inMismatch = true;
+      } else if (v.validation_status === "insufficient_workers") {
+        inInsufficient = true;
+      }
+    }
+    let govStatus = "(none)";
+    for (const b of consoleStore.governance) {
+      for (const it of (b.rejected_items || [])) {
+        if (it.request_id === rew.request_id) {
+          govStatus = "rejected";
+          break;
+        }
+      }
+    }
+    if (inAccepted) {
+      return {
+        bucket: "replay_accepted",
+        badge: "replay accepted",
+        color: "var(--accent)",
+        validation: validationStatus,
+        governance: govStatus,
+      };
+    }
+    if (inMismatch) {
+      return {
+        bucket: "rejected_or_manual_review",
+        badge: "mismatch",
+        color: "var(--danger)",
+        validation: "mismatch",
+        governance: govStatus,
+      };
+    }
+    if (inInsufficient) {
+      return {
+        bucket: "pending_unvalidated",
+        badge: "insufficient workers",
+        color: "var(--warn)",
+        validation: "insufficient_workers",
+        governance: govStatus,
+      };
+    }
+    if (rew.requires_manual_review === true) {
+      return {
+        bucket: "rejected_or_manual_review",
+        badge: "manual review",
+        color: "var(--warn)",
+        validation: validationStatus,
+        governance: govStatus,
+      };
+    }
+    return {
+      bucket: "pending_unvalidated",
+      badge: "pending",
+      color: "var(--muted)",
+      validation: validationStatus,
+      governance: govStatus,
+    };
+  }
+
+  function _consoleRecompute() {
+    // Stock counters
+    const buckets = {
+      pending_unvalidated: 0,
+      replay_accepted: 0,
+      governance_approved: 0,
+      rejected_or_manual_review: 0,
+    };
+    let approvedHeadline = 0;
+    for (const b of consoleStore.governance) {
+      const t = Number(b.total_approved_reward_stocks || 0);
+      if (!isNaN(t)) approvedHeadline += t;
+    }
+    // Per-task table
+    const tbody = $("consoleTaskTbody");
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    if (consoleStore.rewards.length === 0) {
+      $("consoleTaskEmpty").style.display = "";
+    } else {
+      $("consoleTaskEmpty").style.display = "none";
+    }
+    // Sort rewards deterministically for stable display.
+    const sorted = consoleStore.rewards.slice().sort((a, b) => {
+      if (a.request_id !== b.request_id)
+        return a.request_id < b.request_id ? -1 : 1;
+      return a.worker_result_id < b.worker_result_id ? -1 : 1;
+    });
+    const taskStatuses = [];
+    for (const rew of sorted) {
+      const st = _consoleStatusForReward(rew);
+      buckets[st.bucket] += Number(rew.stocks || 0);
+
+      // compute_output_sha256 (short) from matching validation
+      let cosShort = "-";
+      for (const v of consoleStore.validations) {
+        if (v.request_id === rew.request_id &&
+            typeof v.accepted_compute_output_sha256 === "string" &&
+            (v.matching_result_ids || []).indexOf(rew.worker_result_id) >= 0) {
+          cosShort = v.accepted_compute_output_sha256.slice(0, 16) + "...";
+          break;
+        }
+      }
+
+      const tr = document.createElement("tr");
+      tr.style.borderTop = "1px solid #21262d";
+      tr.appendChild(_consoleRowCell(rew.request_id));
+      tr.appendChild(_consoleRowCell(rew.worker_result_id));
+      tr.appendChild(_consoleRowCell(rew.worker_id));
+      tr.appendChild(_consoleRowCell(cosShort));
+      tr.appendChild(_consoleRowCell(
+        Number(rew.stocks || 0).toLocaleString("en-US"),
+        { right: true },
+      ));
+      tr.appendChild(_consoleRowCell(st.validation));
+      tr.appendChild(_consoleRowCell(st.governance));
+      tr.appendChild(_consoleRowCell(
+        rew.requires_manual_review === true ? "true" : "false",
+      ));
+      tr.appendChild(_consoleRowCell(st.badge, { color: st.color }));
+      tbody.appendChild(tr);
+
+      taskStatuses.push({
+        request_id: rew.request_id,
+        worker_result_id: rew.worker_result_id,
+        worker_id: rew.worker_id,
+        stocks: Number(rew.stocks || 0),
+        validation: st.validation,
+        governance: st.governance,
+        bucket: st.bucket,
+        badge: st.badge,
+        manual_review_required: rew.requires_manual_review === true,
+      });
+    }
+
+    _consoleSetText("stocksPendingUnvalidated",
+      buckets.pending_unvalidated.toLocaleString("en-US"));
+    _consoleSetText("stocksReplayAccepted",
+      buckets.replay_accepted.toLocaleString("en-US"));
+    _consoleSetText("stocksGovApproved",
+      buckets.governance_approved.toLocaleString("en-US"));
+    _consoleSetText("stocksRejected",
+      buckets.rejected_or_manual_review.toLocaleString("en-US"));
+    _consoleSetText("stocksApprovedHeadline",
+      approvedHeadline.toLocaleString("en-US"));
+    const sost = approvedHeadline / 100000000;
+    _consoleSetText("stocksApprovedSost",
+      "≈ " + sost.toFixed(8) + " SOST");
+
+    return { buckets, approvedHeadline, taskStatuses };
+  }
+
+  function _consoleRenderState() {
+    const s = consoleStore.daemonState;
+    if (!s) {
+      _consoleSetText("consoleMode", "-");
+      _consoleSetText("consoleWorkspace", "-");
+      _consoleSetText("consoleCycle", "-");
+      _consoleSetText("consoleLastCycle", "-");
+      _consoleSetText("consoleRequestsSeen", 0);
+      _consoleSetText("consoleResultsSeen", 0);
+      _consoleSetText("consoleValidationsSeen", 0);
+      _consoleSetText("consoleGovSeen", 0);
+      _consoleSetText("consoleErrors", 0);
+      _consoleSetText("consoleLessons", 0);
+      _consoleAppendListItems("consoleSafetyList", []);
+      return;
+    }
+    _consoleSetText("consoleMode", s.mode);
+    _consoleSetText("consoleWorkspace", s.workspace);
+    _consoleSetText("consoleCycle", s.cycle_index);
+    _consoleSetText("consoleLastCycle", s.last_cycle_at);
+    _consoleSetText("consoleRequestsSeen", s.requests_seen);
+    _consoleSetText("consoleResultsSeen", s.results_seen);
+    _consoleSetText("consoleValidationsSeen", s.validations_seen);
+    _consoleSetText("consoleGovSeen", s.governance_batches_seen);
+    _consoleSetText("consoleErrors", s.errors_count);
+    _consoleSetText("consoleLessons", s.lessons_count);
+    const flags = [];
+    const ss = s.safety_status || {};
+    Object.keys(ss).sort().forEach((k) => {
+      flags.push(k + " = " + String(ss[k]));
+    });
+    _consoleAppendListItems("consoleSafetyList", flags);
+  }
+
+  function _consoleRenderEvents() {
+    const ul = $("consoleEventsList");
+    while (ul.firstChild) ul.removeChild(ul.firstChild);
+    if (consoleStore.events.length === 0) {
+      $("consoleEventsEmpty").style.display = "";
+    } else {
+      $("consoleEventsEmpty").style.display = "none";
+    }
+    const limit = Math.min(consoleStore.events.length, 200);
+    for (let i = 0; i < limit; i++) {
+      const e = consoleStore.events[i];
+      const ts = e.ts || "?";
+      const stage = e.stage || "?";
+      const kind = e.kind || "?";
+      const rid = e.request_id ? (" rid=" + e.request_id) : "";
+      const wrid = e.worker_result_id
+        ? (" wrid=" + e.worker_result_id) : "";
+      const vid = e.validation_id
+        ? (" vid=" + e.validation_id) : "";
+      const bid = e.batch_id ? (" batch=" + e.batch_id) : "";
+      const detail = e.detail ? (" — " + e.detail) : "";
+      const li = document.createElement("li");
+      li.textContent =
+        "[" + ts + "] " + stage + "/" + kind + rid + wrid + vid + bid + detail;
+      ul.appendChild(li);
+    }
+    const warn = $("consoleEventsWarning");
+    if (consoleStore.eventsMalformed > 0) {
+      warn.textContent = consoleStore.eventsMalformed
+        + " malformed event lines ignored";
+    } else {
+      warn.textContent = "";
+    }
+  }
+
+  function _consoleRenderLessons() {
+    const ul = $("consoleLessonsList");
+    const raw = $("consoleLessonsRaw");
+    const empty = $("consoleLessonsEmpty");
+    while (ul.firstChild) ul.removeChild(ul.firstChild);
+    raw.textContent = "";
+    raw.style.display = "none";
+    if (consoleStore.lessonsAggregated.length > 0) {
+      consoleStore.lessonsAggregated.forEach((row) => {
+        const li = document.createElement("li");
+        li.textContent = row.cause + " — count " + row.count
+          + (row.latest_detail
+              ? " (" + row.latest_detail.slice(0, 96) + ")"
+              : "");
+        ul.appendChild(li);
+      });
+      empty.style.display = "none";
+    } else if (consoleStore.lessonsText) {
+      raw.textContent = consoleStore.lessonsText;
+      raw.style.display = "";
+      empty.style.display = "none";
+    } else {
+      empty.style.display = "";
+    }
+  }
+
+  function _consoleRefreshAll() {
+    _consoleRenderState();
+    _consoleRecompute();
+    _consoleRenderEvents();
+    _consoleRenderLessons();
+  }
+
+  function _consoleParseRewardFile(name, text) {
+    const m = name.match(
+      /^TRINITY_USEFUL_COMPUTE_PENDING_REWARD_(uc-[0-9a-f]+)_([0-9a-f]{16})\.json$/
+    );
+    let obj;
+    try { obj = JSON.parse(text); } catch { return null; }
+    if (!obj || obj.schema !== SCHEMA_REWARD_V01) return null;
+    if (!m || obj.request_id !== m[1]) return null;
+    return {
+      request_id: obj.request_id,
+      worker_id: obj.worker_id || "",
+      worker_result_id: m[2],
+      stocks: Number(obj.pending_reward_stocks || 0),
+      requires_manual_review:
+        obj.requires_manual_review === true,
+      source_filename: name,
+    };
+  }
+
+  // ---------- Loaders ----------
+
+  $("consoleStateFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (obj.schema !== SCHEMA_DAEMON_STATE_V01) {
+          setState($("consoleStateBadge"),
+            "loaded (UNEXPECTED schema)", "warn");
+        } else {
+          setState($("consoleStateBadge"), "loaded", "ok");
+        }
+        consoleStore.daemonState = obj;
+      } catch {
+        setState($("consoleStateBadge"), "invalid JSON", "fail");
+        consoleStore.daemonState = null;
+      }
+      _consoleRefreshAll();
+    };
+    r.readAsText(f);
+  });
+
+  $("consoleEventsFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+      const lines = String(e.target.result || "").split("\n");
+      consoleStore.events = [];
+      consoleStore.eventsMalformed = 0;
+      for (const raw of lines) {
+        const line = raw.trim();
+        if (!line) continue;
+        try {
+          const obj = JSON.parse(line);
+          if (obj && typeof obj === "object") {
+            consoleStore.events.push(obj);
+          } else {
+            consoleStore.eventsMalformed++;
+          }
+        } catch {
+          consoleStore.eventsMalformed++;
+        }
+      }
+      setState($("consoleEventsBadge"),
+        consoleStore.events.length + " ok / "
+        + consoleStore.eventsMalformed + " bad",
+        consoleStore.eventsMalformed > 0 ? "warn" : "ok");
+      _consoleRefreshAll();
+    };
+    r.readAsText(f);
+  });
+
+  $("consoleRewardsFiles").addEventListener("change", (ev) => {
+    const files = Array.from(ev.target.files || []);
+    if (files.length === 0) return;
+    consoleStore.rewards = [];
+    let pending = files.length;
+    let ok = 0, bad = 0;
+    files.forEach((f) => {
+      const r = new FileReader();
+      r.onload = (e) => {
+        const parsed = _consoleParseRewardFile(f.name, e.target.result);
+        if (parsed) {
+          consoleStore.rewards.push(parsed);
+          ok++;
+        } else {
+          bad++;
+        }
+        pending--;
+        if (pending === 0) {
+          setState($("consoleRewardsBadge"),
+            ok + " ok / " + bad + " bad",
+            bad > 0 ? "warn" : "ok");
+          _consoleRefreshAll();
+        }
+      };
+      r.readAsText(f);
+    });
+  });
+
+  $("consoleValidationsFiles").addEventListener("change", (ev) => {
+    const files = Array.from(ev.target.files || []);
+    if (files.length === 0) return;
+    consoleStore.validations = [];
+    let pending = files.length;
+    let ok = 0, bad = 0;
+    files.forEach((f) => {
+      const r = new FileReader();
+      r.onload = (e) => {
+        try {
+          const obj = JSON.parse(e.target.result);
+          if (obj && obj.schema === SCHEMA_VALIDATION_V01
+              && obj.request_id && obj.validation_id) {
+            consoleStore.validations.push(obj);
+            ok++;
+          } else {
+            bad++;
+          }
+        } catch { bad++; }
+        pending--;
+        if (pending === 0) {
+          setState($("consoleValidationsBadge"),
+            ok + " ok / " + bad + " bad",
+            bad > 0 ? "warn" : "ok");
+          _consoleRefreshAll();
+        }
+      };
+      r.readAsText(f);
+    });
+  });
+
+  $("consoleGovFiles").addEventListener("change", (ev) => {
+    const files = Array.from(ev.target.files || []);
+    if (files.length === 0) return;
+    consoleStore.governance = [];
+    let pending = files.length;
+    let ok = 0, bad = 0;
+    files.forEach((f) => {
+      const r = new FileReader();
+      r.onload = (e) => {
+        try {
+          const obj = JSON.parse(e.target.result);
+          if (obj && obj.schema === SCHEMA_GOV_V01
+              && obj.batch_id) {
+            consoleStore.governance.push(obj);
+            ok++;
+          } else {
+            bad++;
+          }
+        } catch { bad++; }
+        pending--;
+        if (pending === 0) {
+          setState($("consoleGovBadge"),
+            ok + " ok / " + bad + " bad",
+            bad > 0 ? "warn" : "ok");
+          _consoleRefreshAll();
+        }
+      };
+      r.readAsText(f);
+    });
+  });
+
+  $("consoleLessonsFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+      const txt = String(e.target.result || "");
+      consoleStore.lessonsText = "";
+      consoleStore.lessonsAggregated = [];
+      // Try JSONL first.
+      const lines = txt.split("\n");
+      const agg = {};
+      let parsedAny = false;
+      for (const raw of lines) {
+        const line = raw.trim();
+        if (!line) continue;
+        try {
+          const obj = JSON.parse(line);
+          if (obj && obj.cause) {
+            parsedAny = true;
+            const key = (obj.vertical || "?") + "::" + obj.cause;
+            if (!agg[key]) {
+              agg[key] = { cause: key, count: 0, latest_detail: "" };
+            }
+            agg[key].count++;
+            if (obj.detail) agg[key].latest_detail = obj.detail;
+          }
+        } catch {}
+      }
+      if (parsedAny) {
+        consoleStore.lessonsAggregated = Object.keys(agg)
+          .sort()
+          .map((k) => agg[k]);
+        setState($("consoleLessonsBadge"),
+          consoleStore.lessonsAggregated.length + " causes", "ok");
+      } else {
+        // Treat as MD.
+        consoleStore.lessonsText = txt;
+        setState($("consoleLessonsBadge"), "loaded as MD", "ok");
+      }
+      _consoleRefreshAll();
+    };
+    r.readAsText(f);
+  });
+
+  // ---------- Reset / Export ----------
+
+  function _consoleReset() {
+    consoleStore.daemonState = null;
+    consoleStore.events = [];
+    consoleStore.eventsMalformed = 0;
+    consoleStore.rewards = [];
+    consoleStore.validations = [];
+    consoleStore.governance = [];
+    consoleStore.lessonsText = "";
+    consoleStore.lessonsAggregated = [];
+    setState($("consoleStateBadge"),       "none", "idle");
+    setState($("consoleEventsBadge"),      "none", "idle");
+    setState($("consoleRewardsBadge"),     "none", "idle");
+    setState($("consoleValidationsBadge"), "none", "idle");
+    setState($("consoleGovBadge"),         "none", "idle");
+    setState($("consoleLessonsBadge"),     "none", "idle");
+    _consoleRefreshAll();
+  }
+  $("consoleResetBtn").addEventListener("click", _consoleReset);
+
+  function _consoleExportSummary() {
+    const recomputed = _consoleRecompute();
+    const summary = {
+      schema: "trinity-web-miner-console-summary/v0.1",
+      generated_at: new Date().toISOString(),
+      loaded_counts: {
+        daemon_state:   consoleStore.daemonState ? 1 : 0,
+        events:         consoleStore.events.length,
+        events_malformed_ignored: consoleStore.eventsMalformed,
+        rewards:        consoleStore.rewards.length,
+        validations:    consoleStore.validations.length,
+        governance_batches: consoleStore.governance.length,
+        lessons_aggregated: consoleStore.lessonsAggregated.length,
+      },
+      stock_totals: {
+        pending_unvalidated_stocks: recomputed.buckets.pending_unvalidated,
+        replay_accepted_stocks:     recomputed.buckets.replay_accepted,
+        governance_approved_stocks: recomputed.buckets.governance_approved,
+        rejected_or_manual_review_stocks:
+          recomputed.buckets.rejected_or_manual_review,
+        approved_pending_reward_stocks_headline:
+          recomputed.approvedHeadline,
+      },
+      task_statuses: recomputed.taskStatuses,
+      malformed_events_count: consoleStore.eventsMalformed,
+      safety_status: {
+        local_dry_run_only: true,
+        no_wallet_access: true,
+        no_private_keys: true,
+        no_automatic_payout: true,
+        no_broadcast: true,
+        no_network_required: true,
+        no_consensus_changes: true,
+        human_review_required_before_payment: true,
+      },
+    };
+    const blob = new Blob(
+      [JSON.stringify(summary, null, 2)],
+      { type: "application/json" },
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "TRINITY_MINER_CONSOLE_SUMMARY.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  $("consoleExportBtn").addEventListener("click",
+    _consoleExportSummary);
+
+  // Initial render so the empty state is consistent.
+  _consoleRefreshAll();
 </script>
 
 </div>
