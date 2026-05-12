@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Trinity / Useful Compute — Contribute (v0.1 dry-run mockup)</title>
+<title>Trinity / Useful Compute — Local Worker Panel (v0.1)</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <style>
@@ -17,8 +17,10 @@
                color: var(--fg); font-family: ui-sans-serif, system-ui,
                -apple-system, "Segoe UI", Roboto, sans-serif;
                line-height: 1.55; }
-  .wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px 80px; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 24px 80px; }
   h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 0 0 12px; color: var(--accent);
+       text-transform: uppercase; letter-spacing: 0.5px; }
   .sub { color: var(--muted); margin-bottom: 24px; }
   .badge { display: inline-block; padding: 2px 8px;
            border: 1px solid var(--warn); color: var(--warn);
@@ -29,143 +31,390 @@
   .row { display: flex; gap: 16px; align-items: center;
          flex-wrap: wrap; }
   .k { color: var(--muted); font-family: var(--mono); font-size: 12px;
-       text-transform: uppercase; letter-spacing: 0.5px; }
-  .v { font-family: var(--mono); font-size: 14px; }
+       text-transform: uppercase; letter-spacing: 0.5px;
+       margin-bottom: 4px; }
+  .v { font-family: var(--mono); font-size: 14px;
+       word-break: break-all; }
   button { background: var(--accent); border: 0; color: #0d1117;
            padding: 10px 18px; border-radius: 6px;
            font-family: inherit; font-weight: 600; cursor: pointer;
            font-size: 14px; }
+  button.secondary { background: var(--border); color: var(--fg); }
   button:disabled { background: var(--border); color: var(--muted);
                     cursor: not-allowed; }
   .state { font-family: var(--mono); padding: 6px 10px;
            background: #0d1117; border: 1px solid var(--border);
            border-radius: 4px; display: inline-block; }
-  .state.idle      { color: var(--muted); }
-  .state.download  { color: var(--accent); }
-  .state.compute   { color: var(--warn); }
-  .state.submit    { color: var(--accent); }
-  .state.pending   { color: var(--warn); }
-  .state.verified  { color: var(--ok); }
-  .reward { font-family: var(--mono); font-size: 22px;
+  .state.ok      { color: var(--ok); border-color: var(--ok); }
+  .state.warn    { color: var(--warn); border-color: var(--warn); }
+  .state.fail    { color: var(--danger); border-color: var(--danger); }
+  .state.idle    { color: var(--muted); }
+  .reward { font-family: var(--mono); font-size: 28px;
             color: var(--ok); }
   .reward small { color: var(--muted); font-size: 12px;
                   font-weight: 400; }
   .disclaimer { background: #1c1408; border-left: 3px solid var(--warn);
                 padding: 12px 16px; border-radius: 4px;
                 color: #f0d9b5; font-size: 13px; margin: 16px 0; }
+  .danger-strip { background: #2d1517; border-left: 3px solid var(--danger);
+                  padding: 12px 16px; border-radius: 4px;
+                  color: #ffd2cc; font-size: 13px; margin: 16px 0; }
+  pre.cmd { background: #0d1117; border: 1px solid var(--border);
+            padding: 12px 14px; border-radius: 6px;
+            overflow-x: auto; font-family: var(--mono); font-size: 13px;
+            white-space: pre; }
   ul { padding-left: 18px; }
   li { margin: 4px 0; }
   code { font-family: var(--mono); background: #0d1117;
          padding: 1px 6px; border-radius: 3px; font-size: 13px; }
-  .danger-strip { background: #2d1517; border-left: 3px solid var(--danger);
-                  padding: 12px 16px; border-radius: 4px;
-                  color: #ffd2cc; font-size: 13px; margin: 16px 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr;
+          gap: 12px 24px; }
+  input[type="file"] { display: none; }
+  label.file-btn { display: inline-block;
+                   background: var(--accent); color: #0d1117;
+                   padding: 10px 18px; border-radius: 6px;
+                   font-weight: 600; cursor: pointer; font-size: 14px; }
+  .steps { counter-reset: step; padding-left: 0; list-style: none; }
+  .steps > li { counter-increment: step; margin: 12px 0; padding-left: 36px;
+                position: relative; }
+  .steps > li::before { content: counter(step); position: absolute;
+                        left: 0; top: 0; width: 26px; height: 26px;
+                        background: var(--accent); color: #0d1117;
+                        border-radius: 50%; font-family: var(--mono);
+                        font-weight: 700; display: flex;
+                        align-items: center; justify-content: center;
+                        font-size: 13px; }
+  .small { font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<h1>Trinity / Useful Compute<span class="badge">v0.1 dry-run mockup</span></h1>
-<div class="sub">Contribute compute to verified Trinity tasks. Pending reward in stocks.</div>
-
-<div class="danger-strip">
-  <strong>Mockup notice.</strong>
-  This page is a non-functional v0.1 mockup of the intended Useful
-  Compute contributor flow. It does not download tasks, does not run
-  compute, does not submit results, does not contact any miner,
-  does not request keys, and does not pay. All values are local
-  illustrative numbers.
+<h1>Trinity / Useful Compute<span class="badge">v0.1 local-dry-run</span></h1>
+<div class="sub">
+  Guided panel: load a request, run the local worker, load the result,
+  see your pending reward in stocks. No payments. No keys.
 </div>
 
+<div class="danger-strip">
+  <strong>v0.1 does NOT pay automatically.</strong>
+  Pending rewards require verification and a governance step before
+  they can become actual stocks. This page never asks for a wallet,
+  a seed, an RPC user/password, a recovery phrase, or a signature.
+  No automatic payout. No network calls from this page.
+</div>
+
+<!-- Step 1: Load Request -->
 <div class="card">
-  <div class="row" style="justify-content:space-between;">
-    <div>
-      <div class="k">Status</div>
-      <div id="state" class="state idle">idle</div>
-    </div>
-    <div>
-      <div class="k">Pending reward</div>
-      <div class="reward">
-        <span id="pendingStocks">0</span>
-        <small>stocks</small>
-      </div>
-    </div>
-    <div>
-      <button id="contributeBtn" type="button">Contribute Compute</button>
+  <h2>Step 1 — Load Request JSON</h2>
+  <div class="row">
+    <label class="file-btn" for="reqFile">Choose request file...</label>
+    <input id="reqFile" type="file" accept="application/json,.json">
+    <button class="secondary" type="button" id="validateBtn"
+            disabled>Validate Request</button>
+    <span id="reqState" class="state idle">no request loaded</span>
+  </div>
+  <div id="reqDetails" style="margin-top:16px; display:none;">
+    <div class="grid">
+      <div><div class="k">request_id</div>
+           <div class="v" id="reqId"></div></div>
+      <div><div class="k">source_tool</div>
+           <div class="v" id="reqSource"></div></div>
+      <div><div class="k">task_type</div>
+           <div class="v" id="reqTask"></div></div>
+      <div><div class="k">candidate_id</div>
+           <div class="v" id="reqCand"></div></div>
+      <div><div class="k">input_bundle_sha256</div>
+           <div class="v" id="reqSha"></div></div>
+      <div><div class="k">validation_method</div>
+           <div class="v" id="reqVm"></div></div>
+      <div><div class="k">estimated cost</div>
+           <div class="v" id="reqCost"></div></div>
+      <div><div class="k">max_reward_stocks</div>
+           <div class="v" id="reqMax"></div></div>
     </div>
   </div>
 </div>
 
+<!-- Step 2: Run worker -->
 <div class="card">
-  <div class="k">Lifecycle</div>
-  <ul>
-    <li><code>idle</code> — no task selected</li>
-    <li><code>downloading task</code> — input bundle being fetched (hash-verified)</li>
-    <li><code>computing</code> — local worker is running the task</li>
-    <li><code>submitting result</code> — output is being sent for validation</li>
-    <li><code>pending verification</code> — result accepted, awaiting council and cross-worker checks</li>
-  </ul>
+  <h2>Step 2 — Run Local Dry-Run Worker</h2>
+  <p class="small">
+    For your safety, this page does NOT run a worker inside the
+    browser. It shows you the exact CLI command to run on your own
+    machine. The worker is local, deterministic, and never touches
+    your wallet or any network.
+  </p>
+  <div class="row" style="margin-bottom:12px;">
+    <div>
+      <div class="k">worker_id (free-form, ≤128 chars)</div>
+      <input id="workerId" type="text" value="miner-local-001"
+        style="background:#0d1117; color: var(--fg);
+               border:1px solid var(--border); padding: 8px 12px;
+               border-radius: 4px; font-family: var(--mono);
+               font-size: 13px; width: 280px;">
+    </div>
+    <div>
+      <div class="k">out_dir (local)</div>
+      <input id="outDir" type="text" value="/tmp/trinity-uc-worker-test"
+        style="background:#0d1117; color: var(--fg);
+               border:1px solid var(--border); padding: 8px 12px;
+               border-radius: 4px; font-family: var(--mono);
+               font-size: 13px; width: 280px;">
+    </div>
+  </div>
+  <pre class="cmd" id="cliCmd">python3 scripts/trinity/useful_compute_worker.py \
+  --mode local-dry-run \
+  --request &lt;path-to-request.json&gt; \
+  --worker-id miner-local-001 \
+  --out-dir /tmp/trinity-uc-worker-test</pre>
+  <button class="secondary" type="button" id="copyCmdBtn">Copy command</button>
+  <span id="copyState" class="state idle" style="margin-left:8px;">idle</span>
 </div>
 
+<!-- Step 3: Load result -->
 <div class="card">
-  <div class="k">Stocks &amp; units</div>
-  <div class="v">1 SOST = 100,000,000 stocks</div>
-  <div class="v">Pending reward shown above is the local forecast emitted by the
-    deterministic reward model. It is not a promise of payment.</div>
+  <h2>Step 3 — Load Result JSON</h2>
+  <div class="row">
+    <label class="file-btn" for="resFile">Choose result file...</label>
+    <input id="resFile" type="file" accept="application/json,.json">
+    <span id="resState" class="state idle">no result loaded</span>
+  </div>
+  <div id="resDetails" style="margin-top:16px; display:none;">
+    <div class="grid">
+      <div><div class="k">request_id</div><div class="v" id="resRid"></div></div>
+      <div><div class="k">worker_id</div><div class="v" id="resWid"></div></div>
+      <div><div class="k">task_type</div><div class="v" id="resTask"></div></div>
+      <div><div class="k">output_sha256</div><div class="v" id="resOut"></div></div>
+      <div><div class="k">result_validated</div><div class="v" id="resVal"></div></div>
+      <div><div class="k">duplicate_result</div><div class="v" id="resDup"></div></div>
+      <div><div class="k">elapsed_seconds</div><div class="v" id="resEl"></div></div>
+      <div><div class="k">deterministic_result_id</div><div class="v" id="resDet"></div></div>
+    </div>
+  </div>
 </div>
 
-<div class="disclaimer">
-  Rewards are <strong>pending</strong> until the result has been
-  validated by redundant replay or cross-worker consensus. This is
-  <strong>not</strong> an automatic payout. v0.1 of Trinity does not
-  enable on-chain rewards; a separate governance step is required
-  before any actual stocks are issued.
+<!-- Step 4: Pending Reward -->
+<div class="card">
+  <h2>Step 4 — View Pending Reward</h2>
+  <div class="row">
+    <label class="file-btn" for="rewFile">Choose pending reward file...</label>
+    <input id="rewFile" type="file" accept="application/json,.json">
+    <span id="rewState" class="state idle">no reward loaded</span>
+  </div>
+  <div id="rewDetails" style="margin-top:16px; display:none;">
+    <div class="row" style="justify-content:space-between; align-items:flex-end;">
+      <div>
+        <div class="k">Pending reward</div>
+        <div class="reward">
+          <span id="pendingStocks">0</span>
+          <small>stocks</small>
+        </div>
+      </div>
+      <div>
+        <div class="k">reason</div>
+        <div class="v" id="rewReason"></div>
+        <div class="k" style="margin-top:8px;">requires_manual_review</div>
+        <div class="v" id="rewManual"></div>
+      </div>
+    </div>
+  </div>
+  <div class="disclaimer">
+    1 SOST = 100,000,000 stocks. The number shown above is a
+    <strong>pending</strong> forecast from the deterministic reward
+    model — not a promise of payment. v0.1 of Trinity does not enable
+    on-chain rewards; a separate governance step is required before
+    any stocks are actually issued.
+  </div>
 </div>
 
+<!-- Safety summary -->
 <div class="card">
-  <div class="k">What this page does NOT do (v0.1)</div>
+  <h2>Safety summary</h2>
   <ul>
     <li>does not connect to any wallet or request private keys</li>
+    <li>does not ask for any recovery phrase</li>
     <li>does not download miner binaries from third parties</li>
-    <li>does not start mining without explicit consent</li>
     <li>does not transmit usage data, telemetry, or identifiers</li>
     <li>does not modify consensus, RPC, node, miner or wallet behaviour</li>
+    <li>does not perform automatic payouts</li>
   </ul>
+</div>
+
+<!-- Lifecycle reference -->
+<div class="card">
+  <h2>Miner lifecycle (manual)</h2>
+  <ol class="steps">
+    <li>Pick a request from
+        <code>TRINITY_USEFUL_COMPUTE_REQUESTS.json</code> or grab any
+        <code>TRINITY_USEFUL_COMPUTE_REQUEST_&lt;id&gt;.json</code>.</li>
+    <li>Load it here (Step 1) to inspect what the task is asking.</li>
+    <li>Run the CLI worker (Step 2) on your machine. The worker is
+        offline and deterministic.</li>
+    <li>Load the produced result file (Step 3) and the pending
+        reward file (Step 4) to see your forecast.</li>
+    <li>Wait for governance verification before any actual stocks
+        are issued. v0.1 explicitly does not pay.</li>
+  </ol>
 </div>
 
 <script>
-  // Pure local UI simulation. No network calls. No keys.
-  const btn   = document.getElementById('contributeBtn');
-  const state = document.getElementById('state');
-  const reward = document.getElementById('pendingStocks');
+  // Strict local-only JS. No fetch, no WebSocket, no postMessage.
+  const $ = (id) => document.getElementById(id);
+  const SCHEMA_REQ = "trinity-useful-compute-request/v0.1";
+  const SCHEMA_RES = "trinity-useful-compute-result/v0.1";
+  const SCHEMA_REW = "trinity-useful-compute-pending-reward/v0.1";
 
-  const steps = [
-    { label: 'downloading task',       cls: 'download', ms: 900,  stocks: 0   },
-    { label: 'computing',              cls: 'compute',  ms: 1500, stocks: 0   },
-    { label: 'submitting result',      cls: 'submit',   ms: 900,  stocks: 0   },
-    { label: 'pending verification',   cls: 'pending',  ms: 1200, stocks: 250 },
-  ];
+  let loadedRequest = null;
+  let loadedRequestPath = null;
 
-  let running = false;
-  btn.addEventListener('click', () => {
-    if (running) return;
-    running = true;
-    btn.disabled = true;
-    let i = 0;
-    function tick() {
-      if (i >= steps.length) {
-        running = false;
-        btn.disabled = false;
-        return;
+  function setState(el, text, cls) {
+    el.textContent = text;
+    el.className = "state " + cls;
+  }
+
+  function updateCommand() {
+    const wid = ($("workerId").value || "miner-local-001").trim();
+    const od  = ($("outDir").value || "/tmp/trinity-uc-worker-test").trim();
+    const rp  = loadedRequestPath
+      ? loadedRequestPath
+      : "<path-to-request.json>";
+    $("cliCmd").textContent =
+      "python3 scripts/trinity/useful_compute_worker.py \\\n" +
+      "  --mode local-dry-run \\\n" +
+      "  --request " + rp + " \\\n" +
+      "  --worker-id " + wid + " \\\n" +
+      "  --out-dir " + od;
+  }
+
+  $("workerId").addEventListener("input", updateCommand);
+  $("outDir").addEventListener("input",   updateCommand);
+
+  $("reqFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    loadedRequestPath = "TRINITY_USEFUL_COMPUTE_REQUEST_<id>.json";
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        loadedRequest = obj;
+        if (obj.schema === SCHEMA_REQ) {
+          setState($("reqState"), "loaded (schema OK)", "ok");
+        } else {
+          setState($("reqState"), "loaded (UNKNOWN schema)", "warn");
+        }
+        $("reqId").textContent     = obj.request_id || "";
+        $("reqSource").textContent = obj.source_tool || "";
+        $("reqTask").textContent   = obj.task_type || "";
+        $("reqCand").textContent   = obj.candidate_id || "";
+        $("reqSha").textContent    = obj.input_bundle_sha256 || "";
+        $("reqVm").textContent     = obj.validation_method || "";
+        $("reqCost").textContent   =
+          (obj.estimated_compute_cost &&
+            (obj.estimated_compute_cost.seconds + "s, " +
+             obj.estimated_compute_cost.tier)) || "";
+        $("reqMax").textContent    =
+          obj.max_reward_stocks != null
+            ? Number(obj.max_reward_stocks).toLocaleString("en-US")
+            : "";
+        $("reqDetails").style.display = "";
+        $("validateBtn").disabled = false;
+        updateCommand();
+      } catch (err) {
+        setState($("reqState"), "invalid JSON", "fail");
       }
-      const s = steps[i];
-      state.className = 'state ' + s.cls;
-      state.textContent = s.label;
-      if (s.stocks) reward.textContent = s.stocks.toLocaleString('en-US');
-      i++;
-      setTimeout(tick, s.ms);
+    };
+    r.readAsText(f);
+  });
+
+  $("validateBtn").addEventListener("click", () => {
+    if (!loadedRequest) return;
+    const required = [
+      "schema", "request_id", "source_tool", "candidate_id",
+      "task_type", "input_bundle_sha256", "expected_output_schema",
+      "validation_method", "estimated_compute_cost",
+      "max_reward_stocks", "deadline", "manual_review_required",
+      "public_description",
+    ];
+    const missing = required.filter(
+      (k) => loadedRequest[k] === undefined
+    );
+    if (missing.length) {
+      setState($("reqState"),
+        "INVALID — missing: " + missing.join(","), "fail");
+      return;
     }
-    tick();
+    if (loadedRequest.schema !== SCHEMA_REQ) {
+      setState($("reqState"), "INVALID — wrong schema", "fail");
+      return;
+    }
+    setState($("reqState"), "validated locally", "ok");
+  });
+
+  $("copyCmdBtn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText($("cliCmd").textContent);
+      setState($("copyState"), "copied", "ok");
+    } catch {
+      setState($("copyState"), "copy failed", "fail");
+    }
+  });
+
+  $("resFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (obj.schema !== SCHEMA_RES) {
+          setState($("resState"),
+            "loaded (UNEXPECTED schema)", "warn");
+        } else {
+          setState($("resState"), "loaded (schema OK)", "ok");
+        }
+        $("resRid").textContent  = obj.request_id || "";
+        $("resWid").textContent  = obj.worker_id || "";
+        $("resTask").textContent = obj.task_type || "";
+        $("resOut").textContent  = obj.output_sha256 || "";
+        $("resVal").textContent  = String(obj.result_validated);
+        $("resDup").textContent  = String(obj.duplicate_result);
+        $("resEl").textContent   = obj.elapsed_seconds + " s";
+        $("resDet").textContent  = obj.deterministic_result_id || "";
+        $("resDetails").style.display = "";
+      } catch {
+        setState($("resState"), "invalid JSON", "fail");
+      }
+    };
+    r.readAsText(f);
+  });
+
+  $("rewFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (obj.schema !== SCHEMA_REW) {
+          setState($("rewState"),
+            "loaded (UNEXPECTED schema)", "warn");
+        } else {
+          setState($("rewState"), "loaded (schema OK)", "ok");
+        }
+        const stocks = Number(obj.pending_reward_stocks || 0);
+        $("pendingStocks").textContent =
+          stocks.toLocaleString("en-US");
+        $("rewReason").textContent = obj.reason || "";
+        $("rewManual").textContent =
+          String(obj.requires_manual_review);
+        $("rewDetails").style.display = "";
+      } catch {
+        setState($("rewState"), "invalid JSON", "fail");
+      }
+    };
+    r.readAsText(f);
   });
 </script>
 
