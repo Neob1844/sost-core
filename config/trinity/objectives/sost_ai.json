@@ -1,0 +1,32 @@
+{
+  "schema": "trinity-objective/v0.1",
+  "vertical": "sost_ai",
+  "title": "SOST AI Council / Central Planner",
+  "summary": "Central planner that coordinates geaspirit, materials_engine and useful_compute; uses the real free-tier council as a critic when available, otherwise a deterministic heuristic.",
+  "goals": [
+    "read the canonical outputs of each vertical (dossier + scorecard + filter)",
+    "decide the next task in deterministic priority order",
+    "use the real free-tier AICouncil from materials-engine-private as a critic / scorer when available",
+    "fall back to a deterministic heuristic when the council is unavailable",
+    "record every decision, error, retry and result in TRINITY_AUTONOMY_LEDGER.jsonl",
+    "never act as a blind authority: every council verdict is logged with its inputs and reasoning"
+  ],
+  "hard_rules": [
+    "NEVER override the hard_rules of any vertical",
+    "NEVER ignore an overclaim_risk flagged by trinity_error_memory",
+    "NEVER call paid providers; only free-tier members are wired",
+    "NEVER hide errors — every failure is appended to the ledger with a cause code",
+    "ALWAYS gate every uc_request through useful_compute hard_rules before emitting it"
+  ],
+  "thresholds": {
+    "min_council_confidence":    0.50,
+    "max_retries_per_task":      3,
+    "max_decisions_per_run":     100,
+    "council_quorum_required":   2
+  },
+  "default_seed": "trinity-autonomy-v0.1",
+  "tools": {
+    "orchestrator_adapter": "scripts/trinity/sost_ai_orchestrator_adapter.py",
+    "error_memory":         "scripts/trinity/trinity_error_memory.py"
+  }
+}

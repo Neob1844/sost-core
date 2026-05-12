@@ -1,0 +1,33 @@
+{
+  "schema": "trinity-objective/v0.1",
+  "vertical": "useful_compute",
+  "title": "Useful Compute / Reward-Pending Layer",
+  "summary": "Accept only well-formed compute manifests and produce a pending reward report; never auto-pay.",
+  "goals": [
+    "accept only manifests that conform to schemas/trinity/useful_compute_request.schema.json",
+    "require deterministic input bundles identified by sha256",
+    "require verifiable outputs (replayable on a second worker)",
+    "measure compute contribution against a normalised benchmark",
+    "emit pending_reward_stocks reports — NEVER on-chain payouts in v0.1"
+  ],
+  "hard_rules": [
+    "NEVER trigger a transaction, send, broadcast or wallet operation",
+    "NEVER pay automatically; rewards live in TRINITY_USEFUL_COMPUTE_PENDING_REWARDS.json",
+    "NEVER accept a manifest whose input_bundle_sha256 fails local verification",
+    "ALWAYS mark suspicious / duplicate / unverified work for manual_review",
+    "ALWAYS deny tasks that exceed max_reward_stocks or extend past deadline"
+  ],
+  "thresholds": {
+    "max_reward_stocks_per_task":   1000000,
+    "max_compute_seconds_per_task": 3600,
+    "min_compute_seconds_per_task": 1,
+    "duplicate_reward_factor":      0.0,
+    "manual_review_score_floor":    0.40,
+    "stocks_per_normalised_second": 100
+  },
+  "default_seed": "trinity-uc-v0.1",
+  "tools": {
+    "task_builder":     "scripts/trinity/useful_compute_task_builder.py",
+    "reward_model":     "scripts/trinity/useful_compute_reward_model.py"
+  }
+}

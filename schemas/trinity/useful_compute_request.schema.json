@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-useful-compute-request/v0.1",
+  "title": "Trinity Useful Compute Request",
+  "description": "Manifest describing a deterministic, verifiable compute task that a SOST miner / worker MAY choose to execute. v0.1 is dry-run only — no automatic broadcast, no automatic payout.",
+  "type": "object",
+  "required": [
+    "schema",
+    "request_id",
+    "source_tool",
+    "candidate_id",
+    "task_type",
+    "input_bundle_sha256",
+    "expected_output_schema",
+    "validation_method",
+    "estimated_compute_cost",
+    "max_reward_stocks",
+    "deadline",
+    "manual_review_required",
+    "public_description"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-useful-compute-request/v0.1"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^uc-[0-9a-f]{16,64}$",
+      "description": "Deterministic id derived from sha256(canonical(manifest_without_request_id))."
+    },
+    "source_tool": {
+      "type": "string",
+      "enum": ["materials_engine", "geaspirit", "trinity_orchestrator"]
+    },
+    "candidate_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "task_type": {
+      "type": "string",
+      "enum": ["dft", "quantum", "structure_relaxation", "scoring", "simulation", "other"]
+    },
+    "input_bundle_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "expected_output_schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "validation_method": {
+      "type": "string",
+      "enum": [
+        "redundant_replay",
+        "cross_worker_consensus",
+        "deterministic_hash_check",
+        "manual_review"
+      ]
+    },
+    "estimated_compute_cost": {
+      "type": "object",
+      "required": ["seconds", "tier"],
+      "additionalProperties": false,
+      "properties": {
+        "seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "tier": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "extreme"]
+        }
+      }
+    },
+    "max_reward_stocks": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "manual_review_required": {
+      "type": "boolean"
+    },
+    "public_description": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 512
+    },
+    "private_notes": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}
