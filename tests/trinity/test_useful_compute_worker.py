@@ -74,9 +74,9 @@ def test_worker_runs_end_to_end_and_writes_two_files(
     )
     assert res_path.exists()
     assert rew_path.exists()
-    assert result["schema"] == "trinity-useful-compute-result/v0.2"
+    assert result["schema"] == "trinity-useful-compute-result/v0.3"
     assert pending["schema"] == \
-        "trinity-useful-compute-pending-reward/v0.1"
+        "trinity-useful-compute-pending-reward/v0.2"
 
 
 def test_worker_output_byte_identical_across_runs(

@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "trinity-useful-compute-validation/v0.1",
+  "$id": "trinity-useful-compute-validation/v0.2",
   "title": "Trinity Useful Compute Cross-Worker Replay Validation",
-  "description": "Report emitted by the Trinity replay validator after comparing the results of two or more independent workers on the same Useful Compute request. v0.1 is dry-run and never pays; it only declares whether the technical outputs agreed.",
+  "description": "Report emitted by the Trinity replay validator after comparing the results of two or more independent workers on the same Useful Compute request. v0.2 adds accepted_backend_name and accepted_backend_version so the governance gate can enforce cross-worker backend consistency. v0.2 is dry-run and never pays; it only declares whether the technical outputs (and the backends that produced them) agreed.",
   "type": "object",
   "required": [
     "schema",
@@ -13,6 +13,8 @@
     "workers_seen",
     "unique_workers",
     "accepted_compute_output_sha256",
+    "accepted_backend_name",
+    "accepted_backend_version",
     "validation_status",
     "matching_result_ids",
     "rejected_result_ids",
@@ -24,7 +26,7 @@
   "properties": {
     "schema": {
       "type": "string",
-      "const": "trinity-useful-compute-validation/v0.1"
+      "const": "trinity-useful-compute-validation/v0.2"
     },
     "validation_id": {
       "type": "string",
@@ -38,22 +40,24 @@
       "type": "string",
       "enum": ["local-dry-run"]
     },
-    "min_workers": {
-      "type": "integer",
-      "minimum": 2,
-      "maximum": 16
-    },
-    "workers_seen": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "unique_workers": {
-      "type": "integer",
-      "minimum": 0
-    },
+    "min_workers": { "type": "integer", "minimum": 2, "maximum": 16 },
+    "workers_seen": { "type": "integer", "minimum": 0 },
+    "unique_workers": { "type": "integer", "minimum": 0 },
     "accepted_compute_output_sha256": {
       "oneOf": [
         { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "accepted_backend_name": {
+      "oneOf": [
+        { "type": "string", "minLength": 1, "maxLength": 128 },
+        { "type": "null" }
+      ]
+    },
+    "accepted_backend_version": {
+      "oneOf": [
+        { "type": "string", "minLength": 1, "maxLength": 32 },
         { "type": "null" }
       ]
     },
@@ -82,12 +86,10 @@
         "additionalProperties": false,
         "properties": {
           "worker_result_id": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{16}$"
+            "type": "string", "pattern": "^[0-9a-f]{16}$"
           },
           "reason": {
-            "type": "string",
-            "minLength": 1, "maxLength": 256
+            "type": "string", "minLength": 1, "maxLength": 256
           }
         }
       }

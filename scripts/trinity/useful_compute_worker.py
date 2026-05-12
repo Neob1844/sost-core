@@ -50,8 +50,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
-SCHEMA_RESULT = "trinity-useful-compute-result/v0.2"
-SCHEMA_PENDING_REWARD = "trinity-useful-compute-pending-reward/v0.1"
+SCHEMA_RESULT = "trinity-useful-compute-result/v0.3"
+SCHEMA_PENDING_REWARD = "trinity-useful-compute-pending-reward/v0.2"
 SCHEMA_REQUEST = "trinity-useful-compute-request/v0.1"
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -219,95 +219,15 @@ def _compute_seed(
     return int.from_bytes(hashlib.sha256(blob).digest()[:8], "big")
 
 
-def _placeholder_dft(seed64: int) -> Dict[str, Any]:
-    """Toy 'DFT' output. Returns a small deterministic spectrum,
-    explicitly labelled placeholder. Real DFT comes in a later sprint."""
-    energies = []
-    s = seed64
-    for i in range(16):
-        s = (s * 6364136223846793005 + 1442695040888963407) & ((1 << 64) - 1)
-        # Map to roughly -10..+10 eV; deterministic, not physical.
-        energies.append(round(((s >> 32) / (1 << 32)) * 20.0 - 10.0, 6))
-    return {
-        "kind": "placeholder_dft_spectrum_v0",
-        "note": "deterministic placeholder; not real DFT",
-        "n_levels": 16,
-        "energies_ev": energies,
-    }
-
-
-def _placeholder_quantum(seed64: int) -> Dict[str, Any]:
-    s = seed64
-    bits = []
-    for _ in range(32):
-        s = (s * 2862933555777941757 + 3037000493) & ((1 << 64) - 1)
-        bits.append(int(s & 1))
-    return {
-        "kind": "placeholder_quantum_register_v0",
-        "note": "deterministic placeholder; not a quantum simulator",
-        "n_qubits": 32,
-        "measurement_bits": bits,
-    }
-
-
-def _placeholder_structure_relaxation(seed64: int) -> Dict[str, Any]:
-    s = seed64
-    coords = []
-    for _ in range(8):
-        triple = []
-        for _ in range(3):
-            s = (s * 1103515245 + 12345) & ((1 << 64) - 1)
-            triple.append(round((s & 0xFFFF) / 65535.0 * 8.0 - 4.0, 4))
-        coords.append(triple)
-    return {
-        "kind": "placeholder_relaxed_coords_v0",
-        "note": "deterministic placeholder; not a real relaxation",
-        "atoms": 8,
-        "coords_angstrom": coords,
-    }
-
-
-def _placeholder_scoring(seed64: int) -> Dict[str, Any]:
-    s = seed64
-    score = ((s >> 16) & 0xFFFF) / 65535.0
-    return {
-        "kind": "placeholder_scoring_v0",
-        "note": "deterministic placeholder; not a real scoring run",
-        "score_0_1": round(score, 6),
-    }
-
-
-def _placeholder_simulation(seed64: int) -> Dict[str, Any]:
-    s = seed64
-    steps = []
-    val = (s & 0xFFFF) / 65535.0
-    for _ in range(10):
-        s = (s * 48271) & 0x7FFFFFFF
-        val = round((val * 0.7 + (s & 0xFFFF) / 65535.0 * 0.3), 6)
-        steps.append(val)
-    return {
-        "kind": "placeholder_simulation_v0",
-        "note": "deterministic placeholder; not a real simulation",
-        "steps": steps,
-    }
-
-
-def _placeholder_other(seed64: int) -> Dict[str, Any]:
-    return {
-        "kind": "placeholder_generic_v0",
-        "note": "deterministic placeholder for task_type=other",
-        "marker_hex": f"{seed64:016x}",
-    }
-
-
-_TASK_HANDLERS = {
-    "dft":                   _placeholder_dft,
-    "quantum":               _placeholder_quantum,
-    "structure_relaxation":  _placeholder_structure_relaxation,
-    "scoring":               _placeholder_scoring,
-    "simulation":            _placeholder_simulation,
-    "other":                 _placeholder_other,
-}
+# The actual task handlers live in
+# scripts/trinity/useful_compute_backends.py. The worker imports that
+# module lazily (so unit tests that patch the registry can do so before
+# run_worker is called).
+def _backends_mod():
+    return _load(
+        "ucw_backends",
+        _SCRIPTS_DIR / "useful_compute_backends.py",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -347,6 +267,8 @@ def run_worker(
     pinned_time: str,
     seen_results: Optional[Path] = None,
     input_bundle_path: Optional[Path] = None,
+    backend_name: str = "placeholder",
+    allow_experimental_backends: bool = False,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Execute one request in local-dry-run mode. Returns (result,
     pending_reward_report) and writes both to disk."""
@@ -369,27 +291,45 @@ def run_worker(
                 f"declared={input_sha} actual={actual_sha}"
             )
 
-    # 1) Pure technical output — depends ONLY on the task contract
+    # 1) Resolve backend. Placeholder is the default; experimental
+    #    backends require an explicit opt-in flag.
+    backends = _backends_mod()
+    spec = backends.select_backend(
+        task_type=task_type,
+        backend_name=backend_name,
+        allow_experimental=bool(allow_experimental_backends),
+    )
+
+    # 2) Pure technical output — depends ONLY on the task contract
     #    (request_id + input bundle sha). Worker identity does NOT
-    #    influence these bytes.
+    #    influence these bytes. Two workers using the SAME backend on
+    #    the SAME request MUST reach the same compute_output_sha256.
     seed64 = _compute_seed(rid, input_sha)
-    handler = _TASK_HANDLERS[task_type]
-    output_obj = handler(seed64)
-    output_blob = canonical_dumps(output_obj).encode("utf-8")
+    backend_result = backends.run_backend(
+        spec,
+        request=request,
+        deterministic_seed=seed64,
+        input_bundle_bytes=None,
+    )
+    output_blob = canonical_dumps(
+        backend_result.output_obj
+    ).encode("utf-8")
     compute_output_sha = _sha256_hex(output_blob)
 
-    # 2) Duplicate detection lives at the compute layer (same
+    # 3) Duplicate detection lives at the compute layer (same
     #    technical output across submissions). Worker identity is
     #    irrelevant to "did we already see this result?".
     duplicate = _is_duplicate(seen_results, compute_output_sha)
     result_validated = len(output_blob) > 0
 
-    # 3) Elapsed seconds — pinned to the request's estimated cost in
+    # 4) Elapsed seconds — pinned to the request's estimated cost in
     #    v0.x. Real timers come later when outputs are anchored to
-    #    wall-clock checkpoints.
+    #    wall-clock checkpoints. backend_runtime_seconds carries the
+    #    actual measured runtime (pinned to 0.0 for placeholder so
+    #    byte-identical tests on placeholder stay stable).
     elapsed = float(request["estimated_compute_cost"]["seconds"])
 
-    # 4) worker_result_id binds (request, worker, compute output,
+    # 5) worker_result_id binds (request, worker, compute output,
     #    elapsed) into one 16-hex submission id. This IS worker-
     #    dependent by design: two workers on the same task must get
     #    different worker_result_id values while still sharing
@@ -415,9 +355,15 @@ def run_worker(
         "result_validated": bool(result_validated),
         "duplicate_result": bool(duplicate),
         "public_summary": (
-            f"placeholder {task_type} result for {rid} by {worker_id}; "
-            "deterministic, not real science; pending verification."
+            f"{spec.kind} {spec.name} {task_type} result for {rid} "
+            f"by {worker_id}; deterministic, not real scientific "
+            "validation; pending verification."
         ),
+        "backend_name":            spec.name,
+        "backend_version":         spec.version,
+        "backend_kind":            spec.kind,
+        "backend_disclaimer":      spec.disclaimer,
+        "backend_runtime_seconds": float(backend_result.runtime_seconds),
         "safety_status": {
             "no_wallet_access":       True,
             "no_private_keys":        True,
@@ -443,17 +389,22 @@ def run_worker(
         max_reward_stocks=max_reward,
     )
 
-    # Wrap the reward report with safety status so the JSON we write
-    # is self-describing for any downstream consumer.
+    # Pending reward v0.2 carries backend identity so downstream
+    # consumers (governance gate, web console) can group rewards by
+    # backend without needing to load the full result file.
     pending_report = {
         "schema": SCHEMA_PENDING_REWARD,
         "request_id": rid,
         "worker_id": worker_id,
+        "worker_result_id": worker_result_id,
         "pending_reward_stocks": pending["pending_reward_stocks"],
         "reason": pending["reason"],
         "requires_manual_review": pending["requires_manual_review"],
         "reward_model_schema": pending["schema"],
         "reward_model_deterministic_id": pending["deterministic_id"],
+        "backend_name":    spec.name,
+        "backend_version": spec.version,
+        "backend_kind":    spec.kind,
         "safety_status": {
             "no_wallet_access":       True,
             "no_private_keys":        True,
@@ -529,6 +480,22 @@ def main(argv: Optional[List[str]] = None) -> int:
             "request manifest before running the task."
         ),
     )
+    p.add_argument(
+        "--backend", default="placeholder",
+        help=(
+            "Backend name to use. Default 'placeholder' resolves to "
+            "placeholder_<task_type>. Sandbox toy backends require "
+            "--allow-experimental-backends."
+        ),
+    )
+    p.add_argument(
+        "--allow-experimental-backends", action="store_true",
+        help=(
+            "Opt-in flag required to use experimental sandbox_toy "
+            "backends. Without this flag any non-placeholder backend "
+            "is rejected with a clear error."
+        ),
+    )
 
     # Hard-rejection guards for flags the user might add.
     p.add_argument("--broadcast", action="store_true",
@@ -592,18 +559,29 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
 
     request = json.loads(request_path.read_text(encoding="utf-8"))
-    result, pending = run_worker(
-        request=request,
-        worker_id=args.worker_id,
-        out_dir=Path(args.out_dir),
-        pinned_time=args.pinned_time,
-        seen_results=(
-            Path(args.seen_results) if args.seen_results else None
-        ),
-        input_bundle_path=(
-            Path(args.input_bundle) if args.input_bundle else None
-        ),
-    )
+    try:
+        result, pending = run_worker(
+            request=request,
+            worker_id=args.worker_id,
+            out_dir=Path(args.out_dir),
+            pinned_time=args.pinned_time,
+            seen_results=(
+                Path(args.seen_results) if args.seen_results else None
+            ),
+            input_bundle_path=(
+                Path(args.input_bundle) if args.input_bundle else None
+            ),
+            backend_name=args.backend,
+            allow_experimental_backends=bool(
+                args.allow_experimental_backends
+            ),
+        )
+    except ValueError as exc:
+        print(
+            f"[useful_compute_worker] backend error: {exc}",
+            file=sys.stderr,
+        )
+        return 2
 
     print(
         f"[useful_compute_worker] mode=local-dry-run "

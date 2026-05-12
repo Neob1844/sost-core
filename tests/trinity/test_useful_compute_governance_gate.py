@@ -228,12 +228,14 @@ def test_manual_review_required_rejected(
     rid = "uc-" + "a" * 16
     vid = "val-" + "b" * 16
     val = {
-        "schema": "trinity-useful-compute-validation/v0.1",
+        "schema": "trinity-useful-compute-validation/v0.2",
         "validation_id": vid,
         "request_id": rid,
         "mode": "local-dry-run",
         "min_workers": 2, "workers_seen": 2, "unique_workers": 2,
         "accepted_compute_output_sha256": "a" * 64,
+        "accepted_backend_name":    "placeholder_other",
+        "accepted_backend_version": "v0.1",
         "validation_status": "accepted",
         "matching_result_ids": ["c" * 16, "d" * 16],
         "rejected_result_ids": [],
@@ -293,14 +295,18 @@ def test_extra_reward_not_in_matching_rejected(
     rid = req["request_id"]
     fake_wrid = "f" * 16
     extra = {
-        "schema": "trinity-useful-compute-pending-reward/v0.1",
+        "schema": "trinity-useful-compute-pending-reward/v0.2",
         "request_id": rid,
         "worker_id": "miner-Z",
+        "worker_result_id": "f" * 16,
         "pending_reward_stocks": 999999,
         "reason": "standard reward",
         "requires_manual_review": False,
         "reward_model_schema": "trinity-useful-compute-reward/v0.1",
         "reward_model_deterministic_id": "deadbeefcafebabe",
+        "backend_name":    "placeholder_structure_relaxation",
+        "backend_version": "v0.1",
+        "backend_kind":    "placeholder",
         "safety_status": {
             "no_wallet_access": True, "no_private_keys": True,
             "no_automatic_payout": True, "no_network_required": True,
