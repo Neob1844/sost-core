@@ -891,6 +891,10 @@
            <div class="v" id="draftWalletFp">-</div></div>
       <div><div class="k">signer_label_or_address_hash</div>
            <div class="v" id="draftSignerHash">-</div></div>
+      <div><div class="k">sost_cli_bin_hash</div>
+           <div class="v" id="draftCliBinHash">-</div></div>
+      <div><div class="k">capsule_attached</div>
+           <div class="v" id="draftCapsuleAttached">false</div></div>
       <div><div class="k">signed status</div>
            <div class="v" id="draftSignedStatus">-</div></div>
     </div>
@@ -2416,6 +2420,10 @@
       String(draft.wallet_fingerprint_hash || "-"));
     _consoleSetText("draftSignerHash",
       String(draft.signer_label_or_address_hash || "-"));
+    _consoleSetText("draftCliBinHash",
+      String(draft.sost_cli_bin_hash || "-"));
+    _consoleSetText("draftCapsuleAttached",
+      String(Boolean(draft.capsule_attached)));
 
     let status;
     if (draft.real_signed) {

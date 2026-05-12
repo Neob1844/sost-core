@@ -19,6 +19,7 @@
     "change_stocks_estimated",
     "outputs",
     "capsule_summary",
+    "capsule_attached",
     "warnings",
     "safety_status"
   ],
@@ -63,6 +64,13 @@
         { "type": "null" }
       ]
     },
+    "sost_cli_bin_hash": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        { "type": "null" }
+      ]
+    },
+    "capsule_attached": { "type": "boolean", "const": false },
     "total_outputs":  { "type": "integer", "minimum": 0 },
     "total_payment_stocks":          { "type": "integer", "minimum": 0 },
     "total_fee_stocks_estimated":    { "type": "integer", "minimum": 0 },

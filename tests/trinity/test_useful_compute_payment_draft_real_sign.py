@@ -426,9 +426,14 @@ def test_real_sign_single_output_produces_one_draft(
         assert forbidden not in argv
 
 
-def test_real_sign_multi_output_produces_n_drafts(
+def test_real_sign_multi_output_refused_with_no_subprocess(
     tmp_path, draft_mod, signer_mod, monkeypatch,
 ):
+    """P0 guard: v0.1 of --real-sign must REFUSE a multi-output
+    proposal before invoking any subprocess. sost-cli createtx is
+    single-recipient and sequential calls re-sync UTXOs from the
+    chain → same UTXO selected twice → conflicting transactions
+    that double-spend at broadcast."""
     prop = _proposal(
         proposal_id="prop-" + "a" * 16,
         payable_items=[
@@ -449,35 +454,24 @@ def test_real_sign_multi_output_produces_n_drafts(
     pp = _write_proposal(tmp_path, prop)
     wallet = _write_wallet(tmp_path)
     captured = _install_fake_subprocess_run(
-        monkeypatch, signer_mod,
-        [
-            (0, _fake_createtx_stdout(
-                raw_hex="aa" * 32, txid="a" * 64,
-            ), ""),
-            (0, _fake_createtx_stdout(
-                raw_hex="bb" * 32, txid="b" * 64,
-            ), ""),
-        ],
+        monkeypatch, signer_mod, [],
     )
-
-    drafts = draft_mod.run_real_sign_drafts(
-        proposal_path=pp,
-        out_dir=tmp_path / "out",
-        pinned_time="2026-05-12T00:00:00+00:00",
-        wallet_path=wallet,
-        from_label="test-payer",
-        max_total_stocks=1_000_000,
-        require_confirmation_token=REAL_TOKEN,
-        sost_cli_bin="sost-cli-fake",
-    )
-    assert len(drafts) == 2
-    # Order is sorted by (request_id, payout_address).
-    assert drafts[0]["outputs"][0]["request_id"] == "uc-" + "1" * 16
-    assert drafts[1]["outputs"][0]["request_id"] == "uc-" + "2" * 16
-    assert drafts[0]["signed_tx_hex"] == "aa" * 32
-    assert drafts[1]["signed_tx_hex"] == "bb" * 32
-    assert drafts[0]["draft_id"] != drafts[1]["draft_id"]
-    assert len(captured) == 2
+    with pytest.raises(
+        ValueError,
+        match="multi-output real signing not supported safely",
+    ):
+        draft_mod.run_real_sign_drafts(
+            proposal_path=pp,
+            out_dir=tmp_path / "out",
+            pinned_time="2026-05-12T00:00:00+00:00",
+            wallet_path=wallet,
+            from_label="test-payer",
+            max_total_stocks=1_000_000,
+            require_confirmation_token=REAL_TOKEN,
+            sost_cli_bin="sost-cli-fake",
+        )
+    # The wallet must NOT have been invoked at all.
+    assert captured == []
 
 
 def test_real_sign_subprocess_failure_propagates(
@@ -653,6 +647,172 @@ def test_signer_parses_stdout_correctly(
 # ---------------------------------------------------------------------------
 # Schema validation of v0.2 drafts
 # ---------------------------------------------------------------------------
+
+
+def test_real_sign_capsule_attached_is_false(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    """v0.1 of --real-sign does NOT attach capsule_summary to the
+    signed transaction; the JSON field stays in the sidecar only,
+    and capsule_attached MUST be false."""
+    prop = _proposal(
+        proposal_id="prop-" + "a" * 16,
+        payable_items=[
+            _payable_item(
+                request_id="uc-" + "1" * 16,
+                payout_address=_ADDR_A,
+                allocated_stocks=10_000,
+            ),
+        ],
+    )
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    _install_fake_subprocess_run(
+        monkeypatch, signer_mod,
+        [(0, _fake_createtx_stdout(
+            raw_hex="cc" * 32, txid="c" * 64,
+        ), "")],
+    )
+    drafts = draft_mod.run_real_sign_drafts(
+        proposal_path=pp,
+        out_dir=tmp_path / "out",
+        pinned_time="2026-05-12T00:00:00+00:00",
+        wallet_path=wallet,
+        from_label="test-payer",
+        max_total_stocks=1_000_000,
+        require_confirmation_token=REAL_TOKEN,
+        sost_cli_bin="sost-cli-fake",
+    )
+    d = drafts[0]
+    assert d["capsule_attached"] is False
+    assert any(
+        "capsule_attached" in w.lower()
+        or "does not attach the capsule" in w.lower()
+        for w in d["warnings"]
+    )
+
+
+def test_real_sign_records_sost_cli_bin_hash(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    """sost_cli_bin_hash records a sha16 of the binary file bytes
+    when the path exists, so reviewers can pin which binary
+    produced the signed_tx_hex."""
+    prop = _proposal(
+        proposal_id="prop-" + "a" * 16,
+        payable_items=[
+            _payable_item(
+                request_id="uc-" + "1" * 16,
+                payout_address=_ADDR_A,
+                allocated_stocks=10_000,
+            ),
+        ],
+    )
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    # A fake "binary" file that exists, so we exercise the hash path.
+    fake_bin = tmp_path / "sost-cli-fake-bin"
+    fake_bin.write_bytes(b"#!/bin/sh\necho stubbed sost-cli\n")
+    _install_fake_subprocess_run(
+        monkeypatch, signer_mod,
+        [(0, _fake_createtx_stdout(
+            raw_hex="dd" * 32, txid="d" * 64,
+        ), "")],
+    )
+    drafts = draft_mod.run_real_sign_drafts(
+        proposal_path=pp,
+        out_dir=tmp_path / "out",
+        pinned_time="2026-05-12T00:00:00+00:00",
+        wallet_path=wallet,
+        from_label="test-payer",
+        max_total_stocks=1_000_000,
+        require_confirmation_token=REAL_TOKEN,
+        sost_cli_bin=str(fake_bin),
+    )
+    d = drafts[0]
+    assert d["sost_cli_bin_hash"] is not None
+    assert len(d["sost_cli_bin_hash"]) == 16
+    assert all(c in "0123456789abcdef" for c in d["sost_cli_bin_hash"])
+
+
+def test_real_sign_warns_on_relative_bin_path(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    prop = _proposal(
+        proposal_id="prop-" + "a" * 16,
+        payable_items=[
+            _payable_item(
+                request_id="uc-" + "1" * 16,
+                payout_address=_ADDR_A,
+                allocated_stocks=10_000,
+            ),
+        ],
+    )
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    _install_fake_subprocess_run(
+        monkeypatch, signer_mod,
+        [(0, _fake_createtx_stdout(
+            raw_hex="ee" * 32, txid="e" * 64,
+        ), "")],
+    )
+    drafts = draft_mod.run_real_sign_drafts(
+        proposal_path=pp,
+        out_dir=tmp_path / "out",
+        pinned_time="2026-05-12T00:00:00+00:00",
+        wallet_path=wallet,
+        from_label="test-payer",
+        max_total_stocks=1_000_000,
+        require_confirmation_token=REAL_TOKEN,
+        sost_cli_bin="sost-cli-fake",  # NOT absolute
+    )
+    d = drafts[0]
+    assert any(
+        "absolute path" in w.lower() or "path lookup" in w.lower()
+        for w in d["warnings"]
+    )
+
+
+def test_real_sign_warns_on_wallet_mutation(
+    tmp_path, draft_mod, signer_mod, monkeypatch,
+):
+    """Even without broadcast, sost-cli createtx marks the selected
+    UTXOs as spent in the local wallet file. The draft must warn
+    about this explicitly."""
+    prop = _proposal(
+        proposal_id="prop-" + "a" * 16,
+        payable_items=[
+            _payable_item(
+                request_id="uc-" + "1" * 16,
+                payout_address=_ADDR_A,
+                allocated_stocks=10_000,
+            ),
+        ],
+    )
+    pp = _write_proposal(tmp_path, prop)
+    wallet = _write_wallet(tmp_path)
+    _install_fake_subprocess_run(
+        monkeypatch, signer_mod,
+        [(0, _fake_createtx_stdout(
+            raw_hex="ff" * 32, txid="f" * 64,
+        ), "")],
+    )
+    drafts = draft_mod.run_real_sign_drafts(
+        proposal_path=pp,
+        out_dir=tmp_path / "out",
+        pinned_time="2026-05-12T00:00:00+00:00",
+        wallet_path=wallet,
+        from_label="test-payer",
+        max_total_stocks=1_000_000,
+        require_confirmation_token=REAL_TOKEN,
+        sost_cli_bin="sost-cli-fake",
+    )
+    d = drafts[0]
+    assert any(
+        "marks the selected utxos as spent" in w.lower()
+        or "local wallet file" in w.lower()
+        for w in d["warnings"]
+    )
 
 
 def test_real_signed_draft_validates_against_v02_schema(

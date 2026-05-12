@@ -56,10 +56,30 @@ def test_schema_is_strict(schema):
         "unsigned_only", "dry_signed", "real_signed",
         "total_outputs", "total_payment_stocks",
         "total_fee_stocks_estimated", "change_stocks_estimated",
-        "outputs", "capsule_summary",
+        "outputs", "capsule_summary", "capsule_attached",
         "warnings", "safety_status",
     }
     assert set(schema["required"]) == expected
+
+
+def test_capsule_attached_locked_false(schema):
+    """v0.1 of --real-sign never attaches the capsule to the
+    signed tx; capsule_attached MUST be locked const-false in the
+    schema."""
+    ca = schema["properties"]["capsule_attached"]
+    assert ca["type"] == "boolean"
+    assert ca["const"] is False
+
+
+def test_sost_cli_bin_hash_typed_optional(schema):
+    """sost_cli_bin_hash is optional (string-16-hex or null)."""
+    sb = schema["properties"]["sost_cli_bin_hash"]
+    one_of = sb["oneOf"]
+    assert any(
+        s.get("type") == "string" and s.get("pattern") == "^[0-9a-f]{16}$"
+        for s in one_of
+    )
+    assert any(s.get("type") == "null" for s in one_of)
 
 
 def test_signing_mode_enum_locked(schema):

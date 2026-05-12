@@ -232,6 +232,19 @@ def _build_safety_status(
     }
 
 
+def _hash_binary_file(path: Path) -> Optional[str]:
+    """sha16 fingerprint of a binary file. Returns None if the file
+    does not exist or cannot be read. Used to record which sost-cli
+    binary produced the signed_tx_hex without disclosing its full
+    contents."""
+    try:
+        return hashlib.sha256(
+            Path(path).read_bytes(),
+        ).hexdigest()[:16]
+    except (OSError, FileNotFoundError):
+        return None
+
+
 def run_payment_draft(
     *,
     proposal_path: Path,
@@ -363,6 +376,7 @@ def run_payment_draft(
         "real_signed": False,
         "wallet_fingerprint_hash": None,
         "signer_label_or_address_hash": None,
+        "sost_cli_bin_hash": None,
         "total_outputs": len(outputs),
         "total_payment_stocks": int(total_payment),
         "total_fee_stocks_estimated": 0,
@@ -373,6 +387,7 @@ def run_payment_draft(
         "selected_utxos": [],
         "outputs": outputs,
         "capsule_summary": capsule,
+        "capsule_attached": False,
         "unsigned_tx_hex": unsigned_tx_hex,
         "signed_tx_hex": signed_tx_hex,
         "txid_if_signed": None,
@@ -411,10 +426,19 @@ def run_real_sign_drafts(
     sost_cli_bin: str = "sost-cli",
     timeout_seconds: float = 60.0,
 ) -> List[Dict[str, Any]]:
-    """Build N real-signed drafts (one per eligible payable item)
-    via ``sost-cli createtx``. Raises ValueError on any gate
-    violation. Writes ``N`` draft JSON files + a single Markdown
-    summary aggregating them.
+    """Build ONE real-signed draft for a single-output proposal via
+    ``sost-cli createtx``. Raises ValueError on any gate violation.
+    Writes one draft JSON file + a Markdown summary.
+
+    HARD LIMIT: v0.1 of --real-sign refuses any proposal that, after
+    dust / validation filtering, contains more than ONE eligible
+    output. The reason is a correctness bug, not policy:
+    ``sost-cli createtx`` calls ``clear_utxos()`` then
+    ``sync_wallet_utxos_from_node()`` on every invocation, so two
+    sequential calls in the same script would see the SAME UTXO as
+    spendable and select it twice — producing two signed
+    transactions that conflict at broadcast. There is no safe
+    multi-output sendmany API exposed from sost-cli today.
     """
     if require_confirmation_token != REAL_SIGN_TOKEN:
         raise ValueError(
@@ -460,113 +484,151 @@ def run_real_sign_drafts(
             "filtering; refusing to invoke wallet"
         )
 
+    # P0 GUARD: multi-output real signing is unsafe today because
+    # sequential createtx calls re-sync UTXOs from the chain and
+    # would select the same UTXO twice → conflicting transactions
+    # at broadcast time. Refuse until a real sendmany-style API is
+    # exposed.
+    if len(outputs) > 1:
+        raise ValueError(
+            "multi-output real signing not supported safely in "
+            "v0.1 of --real-sign: sost-cli createtx is "
+            "single-recipient and sequential calls would re-use "
+            "UTXOs, producing conflicting signed transactions. "
+            f"Proposal has {len(outputs)} eligible outputs; split "
+            "the proposal so each --real-sign run targets exactly "
+            "one output, or wait for a future sendmany-aware sprint."
+        )
+
     capsule = _resolve_capsule(proposal)
 
     rs = _load_real_signer()
+
+    if not Path(sost_cli_bin).is_absolute():
+        base_warnings.append(
+            "--sost-cli-bin is not an absolute path; PATH lookup is "
+            "trusted. For production use an absolute path."
+        )
+    bin_hash = _hash_binary_file(Path(sost_cli_bin))
 
     wallet_fp = rs.hash_wallet_file(Path(wallet_path))
     signer_id = rs.hash_signer_identity(
         label=from_label, address=from_address,
     )
 
-    drafts: List[Dict[str, Any]] = []
-
-    for output in outputs:
-        # Format amount as plain SOST decimal string to feed the CLI
-        # verbatim (the CLI's parse_amount expects "SOST" notation).
-        amount_sost_str = "{:.8f}".format(
-            output["amount_stocks"] / STOCKS_PER_SOST,
+    output = outputs[0]
+    # Format amount as plain SOST decimal string to feed the CLI
+    # verbatim (the CLI's parse_amount expects "SOST" notation).
+    amount_sost_str = "{:.8f}".format(
+        output["amount_stocks"] / STOCKS_PER_SOST,
+    )
+    try:
+        res = rs.call_sost_cli_createtx(
+            wallet_path=Path(wallet_path),
+            to_address=output["payout_address"],
+            amount_sost=amount_sost_str,
+            from_label=from_label,
+            from_address=from_address,
+            sost_cli_bin=sost_cli_bin,
+            timeout_seconds=timeout_seconds,
         )
-        try:
-            res = rs.call_sost_cli_createtx(
-                wallet_path=Path(wallet_path),
-                to_address=output["payout_address"],
-                amount_sost=amount_sost_str,
-                from_label=from_label,
-                from_address=from_address,
-                sost_cli_bin=sost_cli_bin,
-                timeout_seconds=timeout_seconds,
-            )
-        except rs.RealSignerError as exc:
-            raise ValueError(
-                "real signing failed for "
-                + output["payout_address"]
-                + " (request_id=" + output["request_id"] + "): "
-                + str(exc)
-            ) from exc
+    except rs.RealSignerError as exc:
+        raise ValueError(
+            "real signing failed for "
+            + output["payout_address"]
+            + " (request_id=" + output["request_id"] + "): "
+            + str(exc)
+        ) from exc
 
-        per_output_warnings: List[str] = list(base_warnings)
-        if res.inputs_count == 0:
-            per_output_warnings.append(
-                "sost-cli reported 0 inputs; signed_tx_hex may be "
-                "malformed. Investigate before broadcasting."
-            )
-        if res.outputs_count > 2:
-            per_output_warnings.append(
-                "sost-cli reported "
-                + str(res.outputs_count)
-                + " outputs (>2); unexpected for single-recipient "
-                "createtx. Investigate before broadcasting."
-            )
-        per_output_warnings.append(
-            "v0.2 does not parse selected_utxos[] from sost-cli "
-            "stdout; the count is exposed via inputs_count only. "
-            "Decode signed_tx_hex to enumerate UTXOs if needed."
+    warnings: List[str] = list(base_warnings)
+    if res.inputs_count == 0:
+        warnings.append(
+            "sost-cli reported 0 inputs; signed_tx_hex may be "
+            "malformed. Investigate before broadcasting."
         )
-        per_output_warnings.append(
-            "SIGNED BUT NOT BROADCAST — broadcasting is a separate, "
-            "human-driven sprint."
+    if res.outputs_count > 2:
+        warnings.append(
+            "sost-cli reported "
+            + str(res.outputs_count)
+            + " outputs (>2); unexpected for single-recipient "
+            "createtx. Investigate before broadcasting."
         )
+    warnings.append(
+        "v0.1 of --real-sign does NOT attach the capsule_summary to "
+        "the signed transaction. capsule_summary is recorded in the "
+        "draft JSON for audit only. capsule_attached is locked to "
+        "false in this sprint."
+    )
+    warnings.append(
+        "sost-cli createtx marks the selected UTXOs as spent in the "
+        "local wallet file even though nothing has been broadcast. "
+        "If the operator discards this draft, the local wallet "
+        "state will be re-synced from the chain on the next "
+        "invocation (createtx calls clear_utxos before each run), "
+        "so this is self-healing — but be aware of the temporary "
+        "local-only mutation."
+    )
+    warnings.append(
+        "v0.1 does not parse selected_utxos[] from sost-cli stdout; "
+        "the count is exposed via inputs_count only. Decode "
+        "signed_tx_hex to enumerate UTXOs if needed."
+    )
+    warnings.append(
+        "SIGNED BUT NOT BROADCAST — broadcasting is a separate, "
+        "human-driven sprint."
+    )
 
-        draft_id = "draft-" + _sha16(canonical_dumps({
-            "mode": "real_sign_local",
-            "source_proposal_id": proposal_id,
-            "pinned_time": pinned_time,
-            "output": output,
-            "txid": res.txid_if_signed,
-            "max_total_stocks": max_total_stocks,
-        }))
+    draft_id = "draft-" + _sha16(canonical_dumps({
+        "mode": "real_sign_local",
+        "source_proposal_id": proposal_id,
+        "pinned_time": pinned_time,
+        "output": output,
+        "txid": res.txid_if_signed,
+        "max_total_stocks": max_total_stocks,
+    }))
 
-        draft = {
-            "schema": SCHEMA_DRAFT,
-            "draft_id": draft_id,
-            "source_proposal_id": proposal_id,
-            "mode": "local-dry-run",
-            "signing_mode": "real_sign_local",
-            "unsigned_only": False,
-            "dry_signed": False,
-            "real_signed": True,
-            "wallet_fingerprint_hash": wallet_fp,
-            "signer_label_or_address_hash": signer_id,
-            "total_outputs": 1,
-            "total_payment_stocks": int(output["amount_stocks"]),
-            "total_fee_stocks_estimated": int(res.fee_stocks),
-            "change_stocks_estimated": 0,
-            "total_input_stocks": 0,
-            "total_output_stocks": int(output["amount_stocks"]),
-            "fee_rate_stocks_per_byte":
-                int(res.fee_rate_stocks_per_byte),
-            "selected_utxos": [],
-            "outputs": [output],
-            "capsule_summary": capsule,
-            "unsigned_tx_hex": None,
-            "signed_tx_hex": res.signed_tx_hex,
-            "txid_if_signed": res.txid_if_signed,
-            "warnings": per_output_warnings,
-            "safety_status": _build_safety_status(
-                dry_sign=False,
-                wallet_access_used=True,
-            ),
-        }
+    draft = {
+        "schema": SCHEMA_DRAFT,
+        "draft_id": draft_id,
+        "source_proposal_id": proposal_id,
+        "mode": "local-dry-run",
+        "signing_mode": "real_sign_local",
+        "unsigned_only": False,
+        "dry_signed": False,
+        "real_signed": True,
+        "wallet_fingerprint_hash": wallet_fp,
+        "signer_label_or_address_hash": signer_id,
+        "sost_cli_bin_hash": bin_hash,
+        "total_outputs": 1,
+        "total_payment_stocks": int(output["amount_stocks"]),
+        "total_fee_stocks_estimated": int(res.fee_stocks),
+        "change_stocks_estimated": 0,
+        "total_input_stocks": 0,
+        "total_output_stocks": int(output["amount_stocks"]),
+        "fee_rate_stocks_per_byte":
+            int(res.fee_rate_stocks_per_byte),
+        "selected_utxos": [],
+        "outputs": [output],
+        "capsule_summary": capsule,
+        "capsule_attached": False,
+        "unsigned_tx_hex": None,
+        "signed_tx_hex": res.signed_tx_hex,
+        "txid_if_signed": res.txid_if_signed,
+        "warnings": warnings,
+        "safety_status": _build_safety_status(
+            dry_sign=False,
+            wallet_access_used=True,
+        ),
+    }
 
-        draft_path = (
-            out_dir
-            / f"TRINITY_USEFUL_COMPUTE_PAYMENT_DRAFT_{draft_id}.json"
-        )
-        draft_path.write_text(
-            canonical_dumps(draft), encoding="utf-8",
-        )
-        drafts.append(draft)
+    draft_path = (
+        out_dir
+        / f"TRINITY_USEFUL_COMPUTE_PAYMENT_DRAFT_{draft_id}.json"
+    )
+    draft_path.write_text(
+        canonical_dumps(draft), encoding="utf-8",
+    )
+    drafts = [draft]
 
     summary_path = (
         out_dir / "TRINITY_USEFUL_COMPUTE_PAYMENT_DRAFT_SUMMARY.md"

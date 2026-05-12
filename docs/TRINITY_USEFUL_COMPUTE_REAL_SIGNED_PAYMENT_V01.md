@@ -33,9 +33,10 @@ discard. **No artefact in this list touches the chain.**
    wallet file exists, records `dry_signed=true`, writes a
    placeholder `signed_tx_hex` string. No keys loaded.
 4. **Real-signed draft (NEW)** — Sprint 5.17 `--real-sign`. Calls
-   `sost-cli createtx` once per eligible payable item and records
-   the real signed hex + txid. One draft file per output.
-   **Still NOT broadcast.**
+   `sost-cli createtx` for exactly **one** eligible payable item
+   and records the real signed hex + txid in a single v0.2 draft.
+   Multi-output proposals are refused with a clear error (see "P0
+   guard" below). **Still NOT broadcast.**
 
 The next, *separate*, human-driven sprint takes a real-signed draft
 and broadcasts it via `sendrawtransaction`. That sprint does not
@@ -110,6 +111,52 @@ Any of these flags will refuse the run with exit code 2:
 
 `--real-sign` is mutually exclusive with `--unsigned-only` and
 `--dry-sign`.
+
+## P0 guard — multi-output proposals refused
+
+`sost-cli createtx` is single-recipient. Each invocation calls
+`clear_utxos()` and then `sync_wallet_utxos_from_node()` before
+selecting inputs. That means two sequential `createtx` calls in the
+same Python script would see the SAME UTXO as spendable (because
+nothing has been broadcast yet between them) and pick it twice —
+producing two signed transactions that conflict at broadcast.
+
+v0.1 of `--real-sign` therefore **refuses** any proposal that has
+more than one eligible payable item after dust/validation filtering:
+
+```
+ValueError: multi-output real signing not supported safely in v0.1 of
+--real-sign: sost-cli createtx is single-recipient and sequential
+calls would re-use UTXOs, producing conflicting signed transactions.
+Proposal has N eligible outputs; split the proposal so each
+--real-sign run targets exactly one output, or wait for a future
+sendmany-aware sprint.
+```
+
+No subprocess is invoked before this check; the wallet binary is
+NOT touched.
+
+## Capsule attachment
+
+`capsule_summary` is stored in the draft JSON for audit trail. It is
+**not** anchored into the signed transaction in v0.1 — `sost-cli
+createtx` is invoked without any `--capsule-mode` flag. The schema
+locks `capsule_attached` to `const: false` so reviewers cannot be
+misled. A future sprint may pass `--capsule-mode` through.
+
+## Wallet mutation (local-only, self-healing)
+
+`sost-cli createtx` calls `mark_tx_inputs_spent` on the selected
+UTXOs and saves the wallet, even when nothing has been broadcast.
+The local wallet file thus has temporary state ("these UTXOs are
+spent") that does not match the chain. The next invocation of
+`createtx` (or `send`) calls `clear_utxos()` before re-syncing from
+the node, so the local state self-heals on the next interaction.
+
+Every real-signed draft includes an explicit warning describing
+this behaviour. The operator should not be surprised if a discarded
+draft leaves the wallet temporarily out-of-sync until the next
+sync-from-node.
 
 ## Safety boundaries
 
