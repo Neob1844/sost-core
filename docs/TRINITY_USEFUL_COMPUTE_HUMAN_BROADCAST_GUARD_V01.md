@@ -11,6 +11,16 @@ shell, and the Python guard always writes an audit receipt for
 broadcast attempts — including failed ones. See *"Audit trail"* and
 *"C++ self-validation"* below.
 
+**5.18d wallet-free hotfix**: the first VPS broadcast attempt
+revealed that `sost-cli sendrawtransaction` was running AFTER the
+global wallet load, so it died with `Error loading wallet
+'wallet.json': cannot open wallet.json` before contacting the
+node. The subcommand handler is now positioned BEFORE the wallet
+load in `main()`, making it truly wallet-free. The Python guard
+gains a new receipt status `cli_rejected` to distinguish CLI-side
+failures (wallet load, hex validation, RPC auth) from node-side
+failures (insufficient fee, double spend, mempool full).
+
 ## Position in the pipeline
 
 ```

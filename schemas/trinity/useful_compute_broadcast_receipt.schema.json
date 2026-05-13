@@ -64,6 +64,7 @@
       "enum": [
         "dry_run",
         "broadcasted",
+        "cli_rejected",
         "node_rejected",
         "txid_mismatch",
         "parse_error"
