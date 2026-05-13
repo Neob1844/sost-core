@@ -1119,6 +1119,12 @@ static void print_usage() {
     printf("  Minimum: %s SOST (%lld stocks)\n",
            format_sost(MIN_FEE_STOCKS).c_str(), (long long)MIN_FEE_STOCKS);
     printf("  Consensus rule S8: fee >= tx_size x 1 stock/byte\n");
+    printf("  tx_size_bytes is the raw serialized binary length\n");
+    printf("    (== Transaction::Serialize().size() ==\n");
+    printf("     consensus EstimateTxSerializedSize() in tx_validation.cpp).\n");
+    printf("    Block explorers may display a larger number for the\n");
+    printf("    same tx; that is a display artefact, not the\n");
+    printf("    consensus metric.\n");
     printf("\nExamples:\n");
     printf("  sost-cli send sost1abc... 10              (auto fee, 1 stock/byte)\n");
     printf("  sost-cli --fee-rate 2 send sost1abc... 10 (priority: 2 stocks/byte)\n");
