@@ -47,6 +47,7 @@
 #include <memory>
 #include <algorithm>
 #include <cctype>          // V13 Beacon Phase II-A — toupper for severity tag
+#include <cerrno>          // EINTR / EAGAIN for rpc_write_all retry loop
 #include <set>             // V13 Beacon Phase II-A — dedup notice IDs
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -401,6 +402,33 @@ static bool save_chain(const std::string& path) {
 }
 
 // =============================================================================
+// rpc_write_all
+//
+// Looping write() that retries on partial writes / EINTR / EAGAIN.
+// The previous rpc_call() / submit code called write() once and
+// ignored the return value. Over a local loopback connection that
+// is fine — the send buffer is always large enough to hold the
+// whole HTTP POST in one syscall. Over an SSH-tunnelled connection
+// the kernel's send buffer can fill up under load and write() will
+// return fewer bytes than requested, silently truncating the
+// request. The remote sost-node then waits for the rest of the
+// HTTP headers, hits its 5 s SO_RCVTIMEO, and closes the socket
+// with no response — the miner sees "empty response".
+// =============================================================================
+static bool rpc_write_all(int fd, const char* data, size_t len) {
+    size_t off = 0;
+    while (off < len) {
+        ssize_t n = ::write(fd, data + off, len - off);
+        if (n > 0) { off += (size_t)n; continue; }
+        if (n < 0 && (errno == EINTR
+                   || errno == EAGAIN
+                   || errno == EWOULDBLOCK)) continue;
+        return false;
+    }
+    return true;
+}
+
+// =============================================================================
 // RPC: generic call to node — returns HTTP response body
 // =============================================================================
 static std::string rpc_call(const std::string& method, const std::string& params = "[]") {
@@ -427,7 +455,13 @@ static std::string rpc_call(const std::string& method, const std::string& params
         + rpc_auth_header()
         + "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
 
-    write(fd, req.c_str(), req.size());
+    // Set send timeout BEFORE writing so a stalled tunnel cannot
+    // block here forever. 5 s matches the node's SO_RCVTIMEO; if
+    // the request cannot be drained in that window we surface
+    // "empty response" rather than hang the miner thread.
+    struct timeval stv; stv.tv_sec = 5; stv.tv_usec = 0;
+    setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &stv, sizeof(stv));
+    if (!rpc_write_all(fd, req.c_str(), req.size())) { close(fd); return ""; }
 
     std::string response;
     char rbuf[8192];
@@ -805,7 +839,19 @@ static int rpc_submit_block_full(
         + rpc_auth_header()
         + "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
 
-    write(fd, req.c_str(), req.size());
+    // submitblock bodies are MUCH larger than getinfo (the whole
+    // serialised block as a JSON-escaped string), so partial writes
+    // are essentially guaranteed over a tunnelled link. Use the
+    // looping writer; 10 s timeout because the payload can be tens
+    // of KB on a busy chain and write_all may block on the kernel
+    // send buffer.
+    struct timeval stv; stv.tv_sec = 10; stv.tv_usec = 0;
+    setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &stv, sizeof(stv));
+    if (!rpc_write_all(fd, req.c_str(), req.size())) { close(fd); return -1; }
+
+    // Read timeout — match the node's response window.
+    struct timeval rtv; rtv.tv_sec = 10; rtv.tv_usec = 0;
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &rtv, sizeof(rtv));
 
     char rbuf[4096]{};
     ssize_t nr = read(fd, rbuf, sizeof(rbuf) - 1);
