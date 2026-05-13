@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-useful-compute-operator-run/v0.1",
+  "title": "Trinity Useful Compute Operator Run",
+  "description": "State file produced by scripts/trinity/useful_compute_operator_loop.py. The operator loop orchestrates the full Trinity Useful Compute pipeline end-to-end (task_builder -> worker -> replay_validator -> governance_gate -> reward_budget_policy -> payment_proposal -> payment_draft) with deterministic checkpoints and a SHA256SUMS manifest so the run is resumable. v0.1 is local-dry-run only: allow_wallet_access and allow_broadcast are locked const-false; the loop never invokes --real-sign, --mode human-broadcast, sost-cli send or sost-cli sendrawtransaction.",
+  "type": "object",
+  "required": [
+    "schema",
+    "operator_run_id",
+    "mode",
+    "pinned_time",
+    "git_head",
+    "max_total_stocks",
+    "pool_balance_stocks",
+    "allow_wallet_access",
+    "allow_broadcast",
+    "human_review_required",
+    "steps_completed",
+    "artifacts",
+    "warnings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-useful-compute-operator-run/v0.1"
+    },
+    "operator_run_id": {
+      "type": "string",
+      "pattern": "^oprun-[0-9a-f]{16}$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["local-dry-run"]
+    },
+    "pinned_time": {
+      "type": "string", "minLength": 1, "maxLength": 64
+    },
+    "git_head": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        { "type": "string", "const": "unknown" }
+      ]
+    },
+    "max_total_stocks":      { "type": "integer", "minimum": 0 },
+    "pool_balance_stocks":   { "type": "integer", "minimum": 0 },
+    "allow_wallet_access":   { "type": "boolean", "const": false },
+    "allow_broadcast":       { "type": "boolean", "const": false },
+    "human_review_required": { "type": "boolean", "const": true },
+    "steps_completed": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "task_builder",
+          "worker",
+          "replay_validator",
+          "governance_gate",
+          "reward_budget_policy",
+          "payment_proposal",
+          "payment_draft"
+        ]
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_builder":         { "$ref": "#/$defs/artifact_entry" },
+        "worker":               { "$ref": "#/$defs/artifact_entry_list" },
+        "replay_validator":     { "$ref": "#/$defs/artifact_entry" },
+        "governance_gate":      { "$ref": "#/$defs/artifact_entry" },
+        "reward_budget_policy": { "$ref": "#/$defs/artifact_entry" },
+        "payment_proposal":     { "$ref": "#/$defs/artifact_entry" },
+        "payment_draft":        { "$ref": "#/$defs/artifact_entry" }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    }
+  },
+  "$defs": {
+    "artifact_entry": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "path":   { "type": "string", "minLength": 1, "maxLength": 512 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "artifact_entry_list": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifact_entry" }
+    }
+  }
+}
