@@ -184,7 +184,7 @@ def _make_proposal_input(tmp_path):
         "workers": [{
             "worker_id_hash": sha16(worker_id),
             "payout_address":
-                "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         }],
     }
     apath = tmp_path / "a.json"

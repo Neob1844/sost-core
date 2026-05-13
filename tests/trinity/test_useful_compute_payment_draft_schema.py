@@ -204,7 +204,7 @@ def _proposal_at(tmp_path):
             "request_id": "uc-" + "1" * 16,
             "worker_result_ids": ["c" * 16],
             "payout_address":
-                "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "allocated_stocks": 1000,
             "allocated_sost": 0.00001,
             "source_budget_id": "bud-" + "1" * 16,

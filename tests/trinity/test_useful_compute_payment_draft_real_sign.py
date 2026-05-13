@@ -42,10 +42,10 @@ def signer_mod():
 
 REAL_TOKEN = "I_UNDERSTAND_THIS_WILL_SIGN_BUT_NOT_BROADCAST"
 
-_ADDR_A = "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+_ADDR_A = "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 # Note: bech32 charset excludes 1/b/i/o; we use 'c' for the second
 # address.
-_ADDR_B = "sost1qcccccccccccccccccccccccccccccccccccccc"
+_ADDR_B = "sost1cccccccccccccccccccccccccccccccccccccccc"
 
 
 def _proposal(
@@ -630,7 +630,7 @@ def test_signer_parses_stdout_correctly(
     monkeypatch.setattr(signer_mod.subprocess, "run", fake_run)
     res = signer_mod.call_sost_cli_createtx(
         wallet_path=w,
-        to_address="sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        to_address="sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         amount_sost="0.0001",
         from_label="payer",
         sost_cli_bin="sost-cli-fake",

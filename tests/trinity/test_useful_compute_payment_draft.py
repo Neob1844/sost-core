@@ -35,9 +35,9 @@ UNSIGNED_TOKEN = "I_UNDERSTAND_THIS_IS_ONLY_A_DRAFT_AND_WILL_NOT_BROADCAST"
 DRY_SIGN_TOKEN = "I_UNDERSTAND_THIS_USES_WALLET_KEYS_BUT_DOES_NOT_BROADCAST"
 
 
-_ADDR_A = "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-_ADDR_C = "sost1qcccccccccccccccccccccccccccccccccccccc"
-_ADDR_D = "sost1qdddddddddddddddddddddddddddddddddddddd"
+_ADDR_A = "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+_ADDR_C = "sost1cccccccccccccccccccccccccccccccccccccccc"
+_ADDR_D = "sost1dddddddddddddddddddddddddddddddddddddddd"
 
 
 def _proposal(*, proposal_id, payable_items, capsule=None):
