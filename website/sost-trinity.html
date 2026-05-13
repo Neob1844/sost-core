@@ -432,7 +432,7 @@ python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 05B &mdash; USEFUL COMPUTE STACK (SPRINTS 5.6 &ndash; 5.16)</div>
+    <div class="section-id">// 05B &mdash; USEFUL COMPUTE STACK (SPRINTS 5.6 &ndash; 5.18d)</div>
     <div class="section-title">Post-Kalgoorlie <span>Discovery &rarr; Reward Pipeline</span></div>
 
     <p style="color:#ccc;line-height:1.85">
@@ -512,6 +512,36 @@ python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</
           <td>Signed payment draft. Two modes: <code>unsigned-only</code> (default, no wallet touched) and <code>dry-sign</code> (wallet path verified, signed tx is a placeholder &mdash; real bytes deferred). Pre-argparse scan rejects any <code>--broadcast</code> / <code>--send</code> / <code>--payout-now</code> / <code>--auto-pay</code> / <code>--sendrawtransaction</code> / <code>--export-private-key</code> argv with exit code 2.</td>
           <td><code>useful_compute_payment_draft</code> v0.1</td>
         </tr>
+        <tr>
+          <td class="k">5.17</td>
+          <td>Real Signing</td>
+          <td>New <code>--real-sign</code> mode delegates to <code>sost-cli createtx</code> via a strict <code>subprocess.run</code> allowlist (<code>shell=False</code>, only the <code>createtx</code> subcommand). Multi-output guard refuses to produce conflicting txs; <code>--only-worker-id-hash</code> selector picks exactly one payable item from multi-worker proposals.</td>
+          <td><code>useful_compute_payment_draft</code> v0.2 + <code>useful_compute_real_signer</code></td>
+        </tr>
+        <tr>
+          <td class="k">5.18</td>
+          <td>Human Broadcast</td>
+          <td>New <code>sost-cli sendrawtransaction</code> subcommand + Python <code>useful_compute_broadcast_guard</code>. Two modes: <code>local-dry-run</code> (default, no subprocess) and <code>human-broadcast</code> (requires the exact token <code>I_UNDERSTAND_THIS_WILL_BROADCAST_A_SIGNED_TRANSACTION</code>). Receipt always written; status enum <code>dry_run</code> / <code>broadcasted</code> / <code>cli_rejected</code> / <code>node_rejected</code> / <code>txid_mismatch</code> / <code>parse_error</code>.</td>
+          <td><code>useful_compute_broadcast_receipt</code> v0.2</td>
+        </tr>
+        <tr>
+          <td class="k">5.18b</td>
+          <td>Hardening</td>
+          <td>C++ subcommand validates its own input (empty / odd / non-hex / extra args). <code>--help</code> path fixed so subcommand prints specific usage. Receipt always written on failure (<code>broadcast_attempted</code>, <code>node_txid_observed</code>, stdout/stderr sha256).</td>
+          <td>same schema, hardened</td>
+        </tr>
+        <tr>
+          <td class="k">5.18c</td>
+          <td>Address Format</td>
+          <td>Trinity address validator aligned with canonical encoding <code>sost1 + 40 lowercase hex</code> defined in <code>include/sost/address.h</code>. The earlier bech32-shaped regex rejected real <code>sost-cli getnewaddress</code> output; now accepted.</td>
+          <td><code>SOST_ADDRESS_PATTERN</code> centralised</td>
+        </tr>
+        <tr>
+          <td class="k">5.18d</td>
+          <td>Wallet-free Broadcast</td>
+          <td>The <code>sendrawtransaction</code> CLI handler now runs <i>before</i> the global wallet load, so broadcasting a pre-signed hex no longer requires a wallet file. New <code>cli_rejected</code> receipt status distinguishes CLI-side failures (wallet, hex, RPC auth) from node-side failures (fee, double spend).</td>
+          <td><code>broadcast_result_status</code> enum + receipt v0.2</td>
+        </tr>
       </table>
     </div>
 
@@ -524,7 +554,9 @@ python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</
       <div class="flow-step"><b>5. Benchmark Ledger</b> &mdash; correlates result claims with deterministic micro-benchmarks per worker / machine fingerprint.</div>
       <div class="flow-step"><b>6. Budget Policy</b> &mdash; enforces the daily / epoch / job / worker caps and produces <code>useful_compute_reward_budget</code>.</div>
       <div class="flow-step"><b>7. Payment Proposal</b> &mdash; consolidates accepted batches under the budget into a reviewable proposal capsule.</div>
-      <div class="flow-step"><b>8. Signed Payment Draft</b> &mdash; emits a draft transaction the operator can review and (in a future, separate, human-driven wallet sprint) actually sign and broadcast.</div>
+      <div class="flow-step"><b>8. Signed Payment Draft</b> &mdash; produces a real <code>signed_tx_hex</code> + <code>txid_if_signed</code> via <code>sost-cli createtx</code> for exactly one selected payable item. Operator reviews; NO broadcast yet.</div>
+      <div class="flow-step"><b>9. Human Broadcast Guard</b> &mdash; on operator command, invokes <code>sost-cli sendrawtransaction</code> with the signed hex. Audit receipt records every attempt (<code>dry_run</code> / <code>broadcasted</code> / <code>cli_rejected</code> / <code>node_rejected</code> / <code>txid_mismatch</code> / <code>parse_error</code>).</div>
+      <div class="flow-step"><b>10. On-chain confirmed</b> &mdash; the broadcast txid is mined into a block. <b>First Trinity Useful Compute payment confirmed in block&nbsp;<a href="sost-explorer.html" style="color:var(--gold)">#8512</a></b> on 2026-05-13.</div>
     </div>
 
     <div class="green-box" style="font-size:14px;margin-top:18px">
@@ -549,7 +581,51 @@ python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</
     </div>
 
     <div class="green-box" style="font-size:14px;margin-top:18px">
-      <b>Status as of Sprint 5.16:</b> the eleven sprints land as <b>663/663 trinity tests PASS</b>. Every script and schema is reproducible, reviewable, and cannot reach the chain without an explicit, future human step.
+      <b>Status as of Sprint 5.18d:</b> the sixteen sprints (5.6 &rarr; 5.18d) land as <b>808+ trinity tests PASS</b> plus a C++ <code>T_FEE_SIZE_*</code> suite that pins the consensus fee/size invariant. The first end-to-end on-chain payment was confirmed in block&nbsp;#8512 (2026-05-13). Every on-chain event still requires an explicit operator token and never auto-loops.
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="panel" style="margin-top:24px;border:1px solid var(--gold);background:rgba(255,215,0,0.04)">
+      <div class="panel-head" style="color:var(--gold)">// FIRST PAYMENT MILESTONE &middot; 2026-05-13 &middot; BLOCK&nbsp;#8512</div>
+      <p style="color:#ccc;line-height:1.85;margin:6px 0 12px">
+        Sprint 5.18d closed the chain. A Trinity Useful Compute reward
+        for one accepted worker result was real-signed locally via
+        <code>sost-cli createtx</code>, broadcast through the human
+        broadcast guard, accepted by the local node and mined into
+        block&nbsp;<a href="sost-explorer.html" style="color:var(--gold)">#8512</a>.
+      </p>
+      <table class="kvs">
+        <tr><td>txid</td><td><code style="color:var(--gold);word-break:break-all">787cda89dec3d31f40b6281e10ba1b711685e4a713d4117a4e44dccd616f2d82</code></td></tr>
+        <tr><td>block</td><td>#8512 mainnet, 2026-05-13</td></tr>
+        <tr><td>payment</td><td>31,500 stocks = <b style="color:var(--gold)">0.000315 SOST</b></td></tr>
+        <tr><td>fee</td><td>202 stocks (1 stock/byte at S8 floor)</td></tr>
+        <tr><td>shape</td><td>1 input, 2 outputs, no payload &mdash; 202 bytes serialised</td></tr>
+        <tr><td>source / destination</td><td>both <code style="color:var(--gold)">sost10a262c66d8fdcb45bd21b073b7d8674dac542542</code> (self-send test)</td></tr>
+        <tr><td>signing</td><td>Sprint 5.17 real-signed draft (<code>signing_mode = real_sign_local</code>)</td></tr>
+        <tr><td>broadcast</td><td>Sprint 5.18 human broadcast guard (<code>broadcast_result_status = broadcasted</code>)</td></tr>
+        <tr><td>proof bundle</td><td><code>TRINITY_FIRST_USEFUL_COMPUTE_PAYMENT_PROOF_20260513T190442Z/</code></td></tr>
+      </table>
+      <p style="color:#ccc;line-height:1.85;margin:12px 0 0;font-size:13px">
+        <b style="color:var(--gold)">Self-send note.</b> Source and
+        destination addresses resolved to the same wallet for this
+        test. Block explorers may label the outputs as
+        &ldquo;change&rdquo; / &ldquo;payment sent 0.0000 SOST&rdquo;
+        because of that. The reward output exists in
+        <code>vout[0]</code> for 31,500 stocks and is recorded across
+        the entire proof trail (Sprint&nbsp;5.15 proposal &middot;
+        Sprint&nbsp;5.17 real-signed draft &middot; Sprint&nbsp;5.18
+        broadcast receipt &middot; on-chain RPC
+        <code>getrawtransaction</code>).
+      </p>
+      <p style="color:#ccc;line-height:1.85;margin:8px 0 0;font-size:13px">
+        <b style="color:var(--gold)">Fee/size note.</b> The explorer
+        displays roughly 226 bytes for this tx while consensus
+        measured 202 bytes; both numbers are correct in their layer
+        and consensus rule S8 was satisfied exactly at the floor.
+        See <code>docs/SOST_TX_FEE_SIZE_METRIC.md</code> for the math
+        and the new <code>T_FEE_SIZE_*</code> tests that pin
+        <code>Transaction::Serialize().size() == EstimateTxSerializedSize()</code>.
+      </p>
     </div>
   </div>
 </section>
@@ -903,6 +979,31 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
         <td class="k">5.16</td>
         <td>Signed payment draft v0.1: unsigned-only / dry-sign modes, no real signing, no broadcast. Pre-argparse argv scan rejects every broadcast-style flag with exit code 2.</td>
         <td style="color:var(--green)">SHIPPED &middot; 663/663 trinity tests PASS</td>
+      </tr>
+      <tr>
+        <td class="k">5.17</td>
+        <td>Real Local Signing: new <code>--real-sign</code> mode delegates to <code>sost-cli createtx</code> via a strict subprocess allowlist (<code>shell=False</code>, only the <code>createtx</code> subcommand). Multi-output guard + <code>--only-worker-id-hash</code> selector. Schema bumped to <code>useful_compute_payment_draft</code> v0.2.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.17</td>
+      </tr>
+      <tr>
+        <td class="k">5.18</td>
+        <td>Human Broadcast Guard v0.1: new <code>sost-cli sendrawtransaction</code> subcommand + Python guard. Two modes (<code>local-dry-run</code> / <code>human-broadcast</code>), exact token required, one tx per invocation, audit receipt always written.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.18</td>
+      </tr>
+      <tr>
+        <td class="k">5.18b</td>
+        <td>Hardening: C++ subcommand validates its own input; <code>--help</code> path fixed; audit-trail receipt v0.2 with <code>broadcast_attempted</code>, <code>broadcast_result_status</code>, <code>node_txid_observed</code>, stdout/stderr sha256.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.18b</td>
+      </tr>
+      <tr>
+        <td class="k">5.18c</td>
+        <td>Address format hotfix: Trinity payment path aligned with canonical <code>sost1 + 40 lowercase hex</code> as defined in <code>include/sost/address.h</code>. The old bech32-shaped regex rejected real <code>sost-cli getnewaddress</code> output; now accepted across schemas, scripts and tests.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.18c</td>
+      </tr>
+      <tr>
+        <td class="k">5.18d</td>
+        <td>Wallet-free <code>sendrawtransaction</code>: CLI handler now runs before the global wallet load. Broadcast a pre-signed hex no longer requires a wallet file. Receipt status enum gains <code>cli_rejected</code>. <b>First end-to-end Trinity Useful Compute payment confirmed in block&nbsp;#8512 on 2026-05-13.</b></td>
+        <td style="color:var(--gold)">SHIPPED &middot; sprint-5.18d &middot; first on-chain payment</td>
       </tr>
       <tr>
         <td class="k">v0.5 (proposed)</td>
