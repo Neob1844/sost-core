@@ -844,6 +844,177 @@ TEST(T42_R5_negative_amount) {
 }
 
 // =============================================================================
+// T_FEE_SIZE — fee/size metric consistency (S8 invariant)
+//
+// Sprint hotfix: the wallet side (sost-cli createtx) computes the
+// transaction fee from `tx.Serialize(raw).size()`, while the
+// consensus side (S8) computes the minimum fee from
+// `EstimateTxSerializedSize(tx)`. If these two metrics ever
+// diverge, a wallet can produce a tx that the wallet thinks is
+// valid but the node rejects (or vice-versa), permanently breaking
+// the payment path. The first Trinity Useful Compute on-chain
+// payment (txid 787cda89... in block 8512) had exactly:
+//
+//   1 input, 2 outputs, no payload
+//   EstimateTxSerializedSize = 4 + 1 + 1 + 133 + 1 + 31 + 31 = 202
+//   fee paid                 = 202 stocks
+//   fee / size               = 1.0 stock/byte  (exactly S8 floor)
+//
+// The block explorer reports ~226 bytes, which is a DISPLAY-only
+// artefact (likely the JSON-wrapped or hex-prefixed length, not the
+// raw binary) and is NOT what consensus measures. These tests pin
+// the invariant `Serialize().size() == EstimateTxSerializedSize()`
+// so the canonical metric cannot drift.
+// =============================================================================
+
+TEST(T_FEE_SIZE_estimate_matches_serialize_1in_1out) {
+    auto b = MakeValidStdTx();
+    std::vector<Byte> raw;
+    std::string err;
+    EXPECT(b.tx.Serialize(raw, &err), "Serialize 1-in 1-out: " + err);
+    size_t est = EstimateTxSerializedSize(b.tx);
+    EXPECT(raw.size() == est,
+           "1-in 1-out: Serialize().size()=" + std::to_string(raw.size())
+           + " vs EstimateTxSerializedSize()=" + std::to_string(est));
+    // Sanity: 4 + 1 + 1 + 133 + 1 + 31 = 171 bytes for the canonical
+    // 1-in 1-out tx with no payload.
+    EXPECT(raw.size() == 171,
+           "1-in 1-out canonical size must be 171; got "
+           + std::to_string(raw.size()));
+    g_pass++;
+}
+
+TEST(T_FEE_SIZE_estimate_matches_serialize_1in_2out) {
+    // Reproduces the shape of the first Trinity Useful Compute
+    // on-chain payment (block 8512).
+    auto b = MakeValidStdTx(/*utxo_amount=*/100000, /*output_amount=*/31500);
+    // Add a second output (change-back to self) so we are at 1-in 2-out.
+    TxOutput change;
+    change.amount = 100000 - 31500 - 202;  // explicit fee = 202 stocks
+    change.type = OUT_TRANSFER;
+    change.pubkey_hash = g_pkh;
+    b.tx.outputs.push_back(change);
+
+    // Re-sign because we changed the output set.
+    SpentOutput spent{b.utxo_amount, OUT_TRANSFER};
+    std::string err;
+    EXPECT(SignTransactionInput(b.tx, 0, spent, g_genesis_hash,
+                                g_privkey, &err),
+           "re-sign failed: " + err);
+
+    std::vector<Byte> raw;
+    EXPECT(b.tx.Serialize(raw, &err), "Serialize 1-in 2-out: " + err);
+    size_t est = EstimateTxSerializedSize(b.tx);
+    EXPECT(raw.size() == est,
+           "1-in 2-out: Serialize().size()=" + std::to_string(raw.size())
+           + " vs EstimateTxSerializedSize()=" + std::to_string(est));
+    // Sanity: 4 + 1 + 1 + 133 + 1 + 31 + 31 = 202 bytes.
+    EXPECT(raw.size() == 202,
+           "1-in 2-out canonical size must be 202; got "
+           + std::to_string(raw.size()));
+    // S8 fee floor must equal this size (1 stock/byte).
+    int64_t input_sum = b.utxo_amount;
+    int64_t output_sum = 31500 + (100000 - 31500 - 202);
+    int64_t fee = input_sum - output_sum;
+    EXPECT(fee == (int64_t)raw.size(),
+           "fee " + std::to_string(fee) + " must equal size "
+           + std::to_string(raw.size()) + " at S8 floor (1 stock/byte)");
+    EXPECT_OK(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx));
+    g_pass++;
+}
+
+TEST(T_FEE_SIZE_estimate_matches_serialize_2in_3out) {
+    auto b = MakeValidStdTx(/*utxo_amount=*/500000);
+
+    // Add a second input. We need a second UTXO and a second TxInput
+    // signed against it.
+    Hash256 prev2 = MakeFakeTxid(0x22);
+    UTXOEntry u2;
+    u2.amount = 500000;
+    u2.type = OUT_TRANSFER;
+    u2.pubkey_hash = g_pkh;
+    u2.height = 100;
+    u2.is_coinbase = false;
+    b.utxos.Add(prev2, 0, u2);
+
+    TxInput in2;
+    in2.prev_txid = prev2;
+    in2.prev_index = 0;
+    b.tx.inputs.push_back(in2);
+
+    // Rebalance outputs: existing big output + 2 more, leaving fee
+    // == size for S8 floor.
+    b.tx.outputs.clear();
+    int64_t total_in = 500000 + 500000;
+    // 2-in 3-out canonical no-payload size:
+    //   4 + 1 + 1 + 2*133 + 1 + 3*31 = 366 bytes
+    int64_t expected_size = 4 + 1 + 1 + 2 * 133 + 1 + 3 * 31;
+    int64_t fee = expected_size;
+    int64_t per_out = (total_in - fee) / 3;
+    for (int i = 0; i < 3; ++i) {
+        TxOutput o;
+        o.amount = (i == 2) ? (total_in - fee - 2 * per_out) : per_out;
+        o.type = OUT_TRANSFER;
+        o.pubkey_hash = g_pkh;
+        b.tx.outputs.push_back(o);
+    }
+
+    // Re-sign both inputs.
+    std::string err;
+    SpentOutput sp1{500000, OUT_TRANSFER};
+    SpentOutput sp2{500000, OUT_TRANSFER};
+    EXPECT(SignTransactionInput(b.tx, 0, sp1, g_genesis_hash,
+                                g_privkey, &err), "sign in0: " + err);
+    EXPECT(SignTransactionInput(b.tx, 1, sp2, g_genesis_hash,
+                                g_privkey, &err), "sign in1: " + err);
+
+    std::vector<Byte> raw;
+    EXPECT(b.tx.Serialize(raw, &err), "Serialize 2-in 3-out: " + err);
+    size_t est = EstimateTxSerializedSize(b.tx);
+    EXPECT(raw.size() == est,
+           "2-in 3-out: Serialize().size()=" + std::to_string(raw.size())
+           + " vs EstimateTxSerializedSize()=" + std::to_string(est));
+    EXPECT((int64_t)raw.size() == expected_size,
+           "2-in 3-out canonical size must be "
+           + std::to_string(expected_size) + "; got "
+           + std::to_string(raw.size()));
+    EXPECT_OK(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx));
+    g_pass++;
+}
+
+TEST(T_FEE_SIZE_S8_at_exact_floor_accepts) {
+    // fee == size, exactly at the S8 floor. Must pass.
+    auto b = MakeValidStdTx(/*utxo_amount=*/100000, /*output_amount=*/1);
+    // Compute the actual size and set output so that fee == size.
+    std::vector<Byte> raw;
+    std::string err;
+    EXPECT(b.tx.Serialize(raw, &err), err);
+    int64_t size = (int64_t)raw.size();
+    b.tx.outputs[0].amount = 100000 - size;  // fee = size exactly
+    EXPECT(SignTransactionInput(b.tx, 0,
+            SpentOutput{b.utxo_amount, OUT_TRANSFER},
+            g_genesis_hash, g_privkey, &err), err);
+    EXPECT_OK(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx));
+    g_pass++;
+}
+
+TEST(T_FEE_SIZE_S8_one_below_floor_rejects) {
+    // fee == size - 1, just below the S8 floor. Must fail S8.
+    auto b = MakeValidStdTx(/*utxo_amount=*/100000, /*output_amount=*/1);
+    std::vector<Byte> raw;
+    std::string err;
+    EXPECT(b.tx.Serialize(raw, &err), err);
+    int64_t size = (int64_t)raw.size();
+    b.tx.outputs[0].amount = 100000 - (size - 1);  // fee = size - 1
+    EXPECT(SignTransactionInput(b.tx, 0,
+            SpentOutput{b.utxo_amount, OUT_TRANSFER},
+            g_genesis_hash, g_privkey, &err), err);
+    EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx),
+                TxValCode::S8_FEE_TOO_LOW);
+    g_pass++;
+}
+
+// =============================================================================
 // main
 // =============================================================================
 
