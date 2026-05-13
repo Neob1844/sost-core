@@ -951,6 +951,68 @@
   </div>
 </div>
 
+<!-- Human Broadcast Guard (Sprint 5.18) -->
+<div class="card" id="broadcastReceiptCard">
+  <h2>Human Broadcast Guard</h2>
+  <p class="small">
+    Read a broadcast receipt emitted by
+    <code>useful_compute_broadcast_guard.py</code>. The guard takes
+    a Sprint 5.17 real-signed draft and either dry-runs the
+    validation or invokes the local node's broadcast RPC via a
+    thin <code>sost-cli</code> subcommand to push the signed hex
+    to the mempool. <strong>Broadcast is human-triggered and never
+    automatic.</strong> No wallet, no seed, no private key, no RPC
+    password is accepted here — this page only reads receipts from
+    disk.
+  </p>
+  <div class="row">
+    <div>
+      <div class="k">broadcast receipt JSON</div>
+      <label class="file-btn" for="receiptFile">Choose receipt...</label>
+      <input id="receiptFile" type="file" accept="application/json,.json">
+      <span id="receiptBadge" class="state idle">none</span>
+    </div>
+  </div>
+  <div id="receiptDetails" style="margin-top:16px; display:none;">
+    <div class="grid">
+      <div><div class="k">receipt_id</div>
+           <div class="v" id="receiptId">-</div></div>
+      <div><div class="k">source_draft_id</div>
+           <div class="v" id="receiptDraftId">-</div></div>
+      <div><div class="k">broadcast_mode</div>
+           <div class="v" id="receiptMode">-</div></div>
+      <div><div class="k">broadcast_performed</div>
+           <div class="v" id="receiptPerformed">false</div></div>
+      <div><div class="k">txid_if_signed</div>
+           <div class="v" id="receiptTxidSigned">-</div></div>
+      <div><div class="k">txid_broadcast</div>
+           <div class="v" id="receiptTxidBroadcast">-</div></div>
+      <div><div class="k">signed_tx_hex_sha256</div>
+           <div class="v" id="receiptHexSha">-</div></div>
+      <div><div class="k">total_payment_stocks</div>
+           <div class="v" id="receiptPaymentStocks">0</div></div>
+      <div><div class="k">max_total_stocks</div>
+           <div class="v" id="receiptMaxTotal">0</div></div>
+      <div><div class="k">sost_cli_bin_hash</div>
+           <div class="v" id="receiptCliBinHash">-</div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="k">safety badges</div>
+      <ul id="receiptSafetyList" style="margin: 6px 0 0 0;
+           font-family: var(--mono); font-size: 12px;
+           color: var(--ok);"></ul>
+    </div>
+  </div>
+  <div class="danger-strip" style="margin-top:16px;">
+    <strong>Broadcast is human-triggered and never automatic.</strong>
+    The guard refuses to invoke the node unless the operator passes
+    an exact verbatim confirmation token AND the source draft
+    satisfies every safety check. No wallet is touched. No private
+    key, seed phrase or passphrase is read by the guard. Signing
+    belongs to a previous, separate sprint.
+  </div>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>
@@ -2529,6 +2591,69 @@
         _draftRender(obj);
       } catch {
         setState($("draftBadge"), "invalid JSON", "fail");
+      }
+    };
+    r.readAsText(f);
+  });
+
+  // ==================================================================
+  //  Human Broadcast Receipt (Sprint 5.18)
+  //
+  //  Read-only loader for
+  //  trinity-useful-compute-broadcast-receipt/v0.1 receipts. No
+  //  fetch / XHR / WebSocket / wallet / RPC. Pure textContent
+  //  rendering. The page itself never broadcasts anything.
+  // ==================================================================
+
+  const SCHEMA_RECEIPT_V01 =
+    "trinity-useful-compute-broadcast-receipt/v0.1";
+
+  function _receiptRender(r) {
+    _consoleSetText("receiptId",            r.receipt_id || "-");
+    _consoleSetText("receiptDraftId",       r.source_draft_id || "-");
+    _consoleSetText("receiptMode",          r.broadcast_mode || "-");
+    _consoleSetText("receiptPerformed",
+      String(Boolean(r.broadcast_performed)));
+    _consoleSetText("receiptTxidSigned",    r.txid_if_signed || "-");
+    _consoleSetText("receiptTxidBroadcast", r.txid_broadcast || "-");
+    _consoleSetText("receiptHexSha",        r.signed_tx_hex_sha256 || "-");
+    _consoleSetText("receiptPaymentStocks",
+      Number(r.total_payment_stocks || 0).toLocaleString("en-US"));
+    _consoleSetText("receiptMaxTotal",
+      Number(r.max_total_stocks || 0).toLocaleString("en-US"));
+    _consoleSetText("receiptCliBinHash",    r.sost_cli_bin_hash || "-");
+
+    const ul = $("receiptSafetyList");
+    while (ul.firstChild) ul.removeChild(ul.firstChild);
+    const ss = r.safety_status || {};
+    Object.keys(ss).sort().forEach((k) => {
+      const li = document.createElement("li");
+      li.textContent = k + " = " + String(ss[k]);
+      ul.appendChild(li);
+    });
+
+    $("receiptDetails").style.display = "";
+  }
+
+  $("receiptFile").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const obj = JSON.parse(e.target.result);
+        if (obj.schema === SCHEMA_RECEIPT_V01) {
+          const label = obj.broadcast_performed
+            ? "loaded — broadcasted"
+            : "loaded — dry-run";
+          setState($("receiptBadge"), label, "ok");
+        } else {
+          setState($("receiptBadge"),
+            "loaded (UNEXPECTED schema)", "warn");
+        }
+        _receiptRender(obj);
+      } catch {
+        setState($("receiptBadge"), "invalid JSON", "fail");
       }
     };
     r.readAsText(f);
