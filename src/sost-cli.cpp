@@ -29,6 +29,7 @@
 //   sost-cli listunspent [address]      Show unspent outputs
 //   sost-cli createtx <to> <amount>     Create and sign transaction (auto fee)
 //   sost-cli send <to> <amount>         Create, sign and broadcast (auto fee)
+//   sost-cli sendrawtransaction <hex>   Broadcast an already-signed tx hex
 //   sost-cli create-bond <amt> <blocks> Create BOND_LOCK transaction
 //   sost-cli create-escrow <amt> <blocks> <beneficiary>  Create ESCROW_LOCK tx
 //   sost-cli list-bonds                 List bond/escrow UTXOs
@@ -2203,6 +2204,64 @@ int main(int argc, char** argv) {
         } else {
             fprintf(stderr, "\nTX rejected (unknown error)\n");
             fprintf(stderr, "  Raw response: %s\n", resp.c_str());
+        }
+        return 1;
+    }
+
+    // =====================================================================
+    // sendrawtransaction <hex>
+    //
+    // Thin wrapper around the node's sendrawtransaction RPC. Takes a
+    // hex-encoded already-signed transaction and asks the node to
+    // accept it into its mempool. Does NOT touch the wallet, does NOT
+    // mark UTXOs spent, does NOT sign. Trinity's Sprint 5.18 human
+    // broadcast guard uses this from Python via subprocess; keeping
+    // the wrapper here means the only network-facing primitive
+    // remains inside sost-cli.
+    //
+    // Stdout on success:
+    //   Txid: <64-hex>
+    // Stdout on rejection (returncode 1):
+    //   Error: <message from node>
+    // =====================================================================
+    if (cmd == "sendrawtransaction") {
+        if (argc < arg_start + 2) {
+            fprintf(stderr,
+                "Usage: sost-cli sendrawtransaction <hex>\n");
+            return 1;
+        }
+        std::string raw_hex = argv[arg_start + 1];
+        if (raw_hex.empty()) {
+            fprintf(stderr, "Error: empty hex\n");
+            return 1;
+        }
+        std::string resp = rpc_call("sendrawtransaction",
+                                    "[\"" + raw_hex + "\"]");
+        // Successful node response shape:
+        //   {"result":"<txid_hex>","error":null,"id":...}
+        auto rpos = resp.find("\"result\":\"");
+        if (rpos != std::string::npos) {
+            auto txstart = rpos + 10;
+            auto txend = resp.find('"', txstart);
+            std::string txid = resp.substr(txstart, txend - txstart);
+            printf("Txid: %s\n", txid.c_str());
+            return 0;
+        }
+        if (resp.find("401") != std::string::npos) {
+            fprintf(stderr, "Error: 401 Unauthorized\n");
+            fprintf(stderr,
+                "  Use: --rpc-user <user> --rpc-pass <pass>\n");
+            return 1;
+        }
+        auto epos = resp.find("\"message\":\"");
+        if (epos != std::string::npos) {
+            auto eend = resp.find('"', epos + 11);
+            std::string emsg = resp.substr(
+                epos + 11, eend - epos - 11);
+            fprintf(stderr, "Error: %s\n", emsg.c_str());
+        } else {
+            fprintf(stderr, "Error: unknown node response\n");
+            fprintf(stderr, "  Raw: %s\n", resp.c_str());
         }
         return 1;
     }
