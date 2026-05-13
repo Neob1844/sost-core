@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
-"""Trinity / Useful Compute — Human Broadcast Guard v0.1.
+"""Trinity / Useful Compute — Human Broadcast Guard v0.2.
 
-Sprint 5.18: the first Trinity layer that is *allowed* to broadcast a
-SOST transaction, but only after a human operator passes every gate
-explicitly. This script takes a Sprint 5.17 real-signed payment
-draft (``trinity-useful-compute-payment-draft/v0.2`` with
-``real_signed = true``), validates every safety flag on it, optionally
-checks a maximum-payment cap, and either:
+Sprint 5.18 (hardened): the first Trinity layer allowed to broadcast
+a SOST transaction, but only after a human operator passes every
+gate explicitly.
 
-1. ``--mode local-dry-run`` (default): emits a receipt with
-   ``broadcast_performed = false`` and ``txid_broadcast = null``,
-   without invoking any subprocess; or
-2. ``--mode human-broadcast``: requires the exact confirmation
-   token ``I_UNDERSTAND_THIS_WILL_BROADCAST_A_SIGNED_TRANSACTION``,
-   invokes ``sost-cli sendrawtransaction <signed_tx_hex>`` via
-   ``subprocess.run(..., shell=False, timeout=...)`` and records
-   the result in the receipt.
+v0.2 adds an audit trail for FAILED broadcast attempts: every
+invocation of ``--mode human-broadcast`` leaves a receipt on disk,
+including when the subprocess returns non-zero, when the stdout
+cannot be parsed, or when the node-returned txid does not match the
+draft's ``txid_if_signed``. No silent failures.
+
+Three states the receipt can land in for ``--mode human-broadcast``:
+
+- ``broadcasted``    — node accepted, txid matched.
+- ``node_rejected``  — sost-cli exited non-zero.
+- ``parse_error``    — stdout had no Txid line.
+- ``txid_mismatch``  — node returned a different txid than the draft.
+
+For ``--mode local-dry-run`` the receipt status is ``dry_run`` and
+no subprocess is invoked.
 
 Hard invariants (enforced both at CLI and in the schema):
 
@@ -31,6 +35,8 @@ Hard invariants (enforced both at CLI and in the schema):
   ``--export-private-key``, ``--sign-now``.
 - The receipt schema locks every safety_status flag to a const
   value so an offline reviewer can spot tampering trivially.
+- ``broadcast_performed`` is true ONLY when ``broadcast_result_status``
+  is ``broadcasted``. Any other state implies ``False``.
 """
 
 from __future__ import annotations
@@ -46,14 +52,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
-SCHEMA_RECEIPT = "trinity-useful-compute-broadcast-receipt/v0.1"
+SCHEMA_RECEIPT = "trinity-useful-compute-broadcast-receipt/v0.2"
 SCHEMA_DRAFT_V02 = "trinity-useful-compute-payment-draft/v0.2"
 
 HUMAN_BROADCAST_TOKEN = "I_UNDERSTAND_THIS_WILL_BROADCAST_A_SIGNED_TRANSACTION"
 
-# Tokens that must never appear in argv when we spawn sost-cli. The
-# allowlist subcommand is "sendrawtransaction" only; everything else
-# below is denied at runtime.
+# Allowed subcommand and forbidden tokens. _FLAGS_WITH_VALUE lets
+# the argv-safety scan step over value-bearing flags so the FIRST
+# positional argument is correctly identified as the subcommand.
 _ALLOWED_SUBCOMMANDS = ("sendrawtransaction",)
 _FORBIDDEN_ARGV_TOKENS = (
     "--auto-pay",
@@ -73,19 +79,32 @@ _FLAGS_WITH_VALUE = (
 _TXID_RE = re.compile(r"^\s*Txid:\s*([0-9a-fA-F]{64})\s*$", re.MULTILINE)
 _HEX_RE = re.compile(r"^[0-9a-fA-F]+$")
 _TXID64_RE = re.compile(r"^[0-9a-f]{64}$")
-_RECEIPT_ID_RE = re.compile(r"^rcpt-[0-9a-f]{16}$")
 _DRAFT_ID_RE = re.compile(r"^draft-[0-9a-f]{16}$")
 
 
 class BroadcastGuardError(RuntimeError):
-    """Raised by this module when any safety / parse precondition
-    fails. main() turns it into a non-zero exit code with a user-
-    facing message."""
+    """Raised by this module when a precondition fails BEFORE any
+    subprocess is spawned. main() turns it into a non-zero exit code
+    with a user-facing message. NO receipt is written for these
+    pre-subprocess refusals — the draft never reached the wallet."""
+
+
+class BroadcastAttemptFailure(RuntimeError):
+    """Raised AFTER a subprocess attempt has been made and a receipt
+    has been written. main() turns it into a non-zero exit code so
+    the operator notices, while the receipt on disk preserves the
+    audit trail."""
+
+    def __init__(self, message: str, receipt_path: Path) -> None:
+        super().__init__(message)
+        self.receipt_path = receipt_path
 
 
 @dataclass(frozen=True)
 class _CliResult:
     txid: str
+    stdout: str
+    stderr: str
 
 
 def canonical_dumps(obj: Any) -> str:
@@ -123,9 +142,8 @@ def _scan_argv_safety(argv: List[str]) -> None:
                 "forbidden token " + repr(tok)
                 + " in argv (allowlist breach)"
             )
-    # Find first non-flag positional (subcommand). Step over known
-    # flag-with-value pairs so their VALUE is not mistaken for a
-    # subcommand.
+    # First positional argv (after argv[0] = binary path) is the
+    # subcommand. Step over flags-with-value pairs.
     subcmd = None
     i = 1
     while i < len(argv):
@@ -164,10 +182,6 @@ def _load_draft(path: Path) -> Dict[str, Any]:
 
 
 def _validate_draft_for_broadcast(draft: Dict[str, Any]) -> None:
-    """Refuse the draft if any safety precondition is missing or
-    wrong. The checks are deliberately conservative — every test
-    that the draft must pass is listed here, so a reviewer can read
-    them top-to-bottom."""
     sch = draft.get("schema")
     if sch != SCHEMA_DRAFT_V02:
         raise BroadcastGuardError(
@@ -221,8 +235,7 @@ def _validate_draft_for_broadcast(draft: Dict[str, Any]) -> None:
     if ss.get("no_broadcast") is not True:
         raise BroadcastGuardError(
             "draft.safety_status.no_broadcast must be true on the "
-            "source draft (the draft itself never broadcasts; the "
-            "guard does)"
+            "source draft"
         )
     if ss.get("automatic_payout") is not False:
         raise BroadcastGuardError(
@@ -248,7 +261,10 @@ def _call_sost_cli_sendraw(
     signed_tx_hex: str,
     sost_cli_bin: str,
     timeout_seconds: float,
-) -> _CliResult:
+):
+    """Returns a tuple ``(returncode, stdout, stderr)``. Does NOT
+    raise on non-zero exit. The caller decides what to do with the
+    result so that an audit receipt is always written first."""
     argv: List[str] = [
         str(sost_cli_bin),
         "sendrawtransaction",
@@ -264,35 +280,31 @@ def _call_sost_cli_sendraw(
             timeout=timeout_seconds,
         )
     except subprocess.TimeoutExpired as exc:
-        raise BroadcastGuardError(
-            "sost-cli sendrawtransaction timed out after "
-            + str(timeout_seconds) + "s"
-        ) from exc
-    except FileNotFoundError as exc:
-        raise BroadcastGuardError(
-            "sost-cli binary not found at " + repr(sost_cli_bin)
-        ) from exc
-    if cp.returncode != 0:
-        raise BroadcastGuardError(
-            "sost-cli sendrawtransaction exited "
-            + str(cp.returncode)
-            + "; stderr: " + repr(cp.stderr.strip()[:512])
+        return (
+            -1,
+            "",
+            "TIMEOUT after " + str(timeout_seconds) + "s",
         )
-    m = _TXID_RE.search(cp.stdout)
-    if not m:
-        raise BroadcastGuardError(
-            "sost-cli sendrawtransaction stdout did not contain "
-            "a Txid line"
+    except FileNotFoundError:
+        return (
+            -1,
+            "",
+            "sost-cli binary not found at " + repr(sost_cli_bin),
         )
-    return _CliResult(txid=m.group(1).lower())
+    return (cp.returncode, cp.stdout, cp.stderr)
 
 
 def _build_receipt(
     *,
     draft: Dict[str, Any],
     mode: str,
+    broadcast_attempted: bool,
     broadcast_performed: bool,
+    broadcast_result_status: str,
     txid_broadcast: Optional[str],
+    node_txid_observed: Optional[str],
+    node_stdout: Optional[str],
+    node_stderr: Optional[str],
     confirmation_token: Optional[str],
     max_total_stocks: int,
     pinned_time: str,
@@ -305,7 +317,10 @@ def _build_receipt(
         "source_draft_id": draft["draft_id"],
         "txid_if_signed": draft["txid_if_signed"],
         "txid_broadcast": txid_broadcast,
+        "broadcast_attempted": broadcast_attempted,
         "broadcast_performed": broadcast_performed,
+        "broadcast_result_status": broadcast_result_status,
+        "node_txid_observed": node_txid_observed,
         "pinned_time": pinned_time,
         "max_total_stocks": max_total_stocks,
     }))
@@ -318,8 +333,17 @@ def _build_receipt(
         "signed_tx_hex_sha256": hashlib.sha256(
             signed_hex.encode("utf-8"),
         ).hexdigest(),
+        "broadcast_attempted": bool(broadcast_attempted),
         "broadcast_performed": bool(broadcast_performed),
         "broadcast_mode": mode,
+        "broadcast_result_status": broadcast_result_status,
+        "node_txid_observed": node_txid_observed,
+        "node_stdout_sha256": (
+            _sha256_hex(node_stdout) if node_stdout else None
+        ),
+        "node_stderr_sha256": (
+            _sha256_hex(node_stderr) if node_stderr else None
+        ),
         "confirmation_token_hash": (
             _sha256_hex(confirmation_token)
             if confirmation_token else None
@@ -340,6 +364,25 @@ def _build_receipt(
     }
 
 
+def _write_receipt(out_dir: Path, receipt: Dict[str, Any]) -> Path:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rid = receipt["receipt_id"]
+    receipt_path = (
+        out_dir
+        / f"TRINITY_USEFUL_COMPUTE_BROADCAST_RECEIPT_{rid}.json"
+    )
+    summary_path = (
+        out_dir / "TRINITY_USEFUL_COMPUTE_BROADCAST_SUMMARY.md"
+    )
+    receipt_path.write_text(
+        canonical_dumps(receipt), encoding="utf-8",
+    )
+    summary_path.write_text(
+        _render_summary_md(receipt), encoding="utf-8",
+    )
+    return receipt_path
+
+
 def run_broadcast_guard(
     *,
     draft_path: Path,
@@ -353,7 +396,13 @@ def run_broadcast_guard(
 ) -> Dict[str, Any]:
     """Validate a Sprint 5.17 real-signed draft and (optionally)
     broadcast its signed_tx_hex. Returns the receipt dict. Writes
-    the receipt JSON + a Markdown summary into ``out_dir``."""
+    the receipt JSON + a Markdown summary into ``out_dir`` for
+    EVERY outcome that reaches subprocess: even non-zero exit,
+    stdout parse failure or txid mismatch leaves a receipt on disk
+    for audit. Refusals that happen BEFORE subprocess (token
+    missing, schema wrong, cap exceeded, …) raise
+    BroadcastGuardError and do NOT write a receipt.
+    """
 
     if mode not in ("local-dry-run", "human-broadcast"):
         raise BroadcastGuardError(
@@ -377,63 +426,126 @@ def run_broadcast_guard(
             + "; refusing to broadcast anything"
         )
 
-    if mode == "human-broadcast":
-        if require_confirmation_token != HUMAN_BROADCAST_TOKEN:
-            raise BroadcastGuardError(
-                "--mode human-broadcast requires the exact "
-                "confirmation token: " + HUMAN_BROADCAST_TOKEN
-            )
-        # All gates passed — invoke sost-cli sendrawtransaction.
-        bin_hash = _hash_binary_file(Path(sost_cli_bin))
-        if not Path(sost_cli_bin).is_absolute():
-            # Recorded in the receipt's safety surface via the
-            # bin_hash being None when sost-cli is only on PATH;
-            # the operator can verify it ahead of time.
-            pass
-        res = _call_sost_cli_sendraw(
-            signed_tx_hex=draft["signed_tx_hex"],
-            sost_cli_bin=sost_cli_bin,
-            timeout_seconds=timeout_seconds,
-        )
-        if res.txid != draft["txid_if_signed"]:
-            raise BroadcastGuardError(
-                "txid mismatch between draft ("
-                + draft["txid_if_signed"]
-                + ") and node response (" + res.txid + ")"
-            )
+    bin_hash = _hash_binary_file(Path(sost_cli_bin))
+
+    if mode == "local-dry-run":
         receipt = _build_receipt(
             draft=draft, mode=mode,
-            broadcast_performed=True,
-            txid_broadcast=res.txid,
-            confirmation_token=require_confirmation_token,
-            max_total_stocks=int(max_total_stocks),
-            pinned_time=pinned_time,
-            sost_cli_bin_hash=bin_hash,
-        )
-    else:
-        # local-dry-run: no subprocess.
-        bin_hash = _hash_binary_file(Path(sost_cli_bin))
-        receipt = _build_receipt(
-            draft=draft, mode=mode,
+            broadcast_attempted=False,
             broadcast_performed=False,
+            broadcast_result_status="dry_run",
             txid_broadcast=None,
+            node_txid_observed=None,
+            node_stdout=None, node_stderr=None,
             confirmation_token=None,
             max_total_stocks=int(max_total_stocks),
             pinned_time=pinned_time,
             sost_cli_bin_hash=bin_hash,
         )
+        _write_receipt(out_dir, receipt)
+        return receipt
 
-    out_dir.mkdir(parents=True, exist_ok=True)
-    rid = receipt["receipt_id"]
-    receipt_path = (
-        out_dir
-        / f"TRINITY_USEFUL_COMPUTE_BROADCAST_RECEIPT_{rid}.json"
+    # mode == "human-broadcast"
+    if require_confirmation_token != HUMAN_BROADCAST_TOKEN:
+        raise BroadcastGuardError(
+            "--mode human-broadcast requires the exact "
+            "confirmation token: " + HUMAN_BROADCAST_TOKEN
+        )
+
+    rc, stdout, stderr = _call_sost_cli_sendraw(
+        signed_tx_hex=draft["signed_tx_hex"],
+        sost_cli_bin=sost_cli_bin,
+        timeout_seconds=timeout_seconds,
     )
-    summary_path = (
-        out_dir / "TRINITY_USEFUL_COMPUTE_BROADCAST_SUMMARY.md"
+
+    # subprocess returned non-zero (-1 also covers timeout and
+    # FileNotFoundError surfaced as a synthetic stderr in
+    # _call_sost_cli_sendraw).
+    if rc != 0:
+        receipt = _build_receipt(
+            draft=draft, mode=mode,
+            broadcast_attempted=True,
+            broadcast_performed=False,
+            broadcast_result_status="node_rejected",
+            txid_broadcast=None,
+            node_txid_observed=None,
+            node_stdout=stdout, node_stderr=stderr,
+            confirmation_token=require_confirmation_token,
+            max_total_stocks=int(max_total_stocks),
+            pinned_time=pinned_time,
+            sost_cli_bin_hash=bin_hash,
+        )
+        receipt_path = _write_receipt(out_dir, receipt)
+        raise BroadcastAttemptFailure(
+            "sost-cli sendrawtransaction exited " + str(rc)
+            + "; receipt written to " + str(receipt_path)
+            + "; stderr (first 256 chars): "
+            + repr(stderr.strip()[:256]),
+            receipt_path=receipt_path,
+        )
+
+    m = _TXID_RE.search(stdout)
+    if not m:
+        receipt = _build_receipt(
+            draft=draft, mode=mode,
+            broadcast_attempted=True,
+            broadcast_performed=False,
+            broadcast_result_status="parse_error",
+            txid_broadcast=None,
+            node_txid_observed=None,
+            node_stdout=stdout, node_stderr=stderr,
+            confirmation_token=require_confirmation_token,
+            max_total_stocks=int(max_total_stocks),
+            pinned_time=pinned_time,
+            sost_cli_bin_hash=bin_hash,
+        )
+        receipt_path = _write_receipt(out_dir, receipt)
+        raise BroadcastAttemptFailure(
+            "sost-cli sendrawtransaction stdout did not contain a "
+            "Txid line; the broadcast MAY have succeeded on the "
+            "node — check mempool with sost-cli getrawmempool. "
+            "Receipt written to " + str(receipt_path),
+            receipt_path=receipt_path,
+        )
+
+    node_txid = m.group(1).lower()
+    if node_txid != draft["txid_if_signed"]:
+        receipt = _build_receipt(
+            draft=draft, mode=mode,
+            broadcast_attempted=True,
+            broadcast_performed=False,
+            broadcast_result_status="txid_mismatch",
+            txid_broadcast=None,
+            node_txid_observed=node_txid,
+            node_stdout=stdout, node_stderr=stderr,
+            confirmation_token=require_confirmation_token,
+            max_total_stocks=int(max_total_stocks),
+            pinned_time=pinned_time,
+            sost_cli_bin_hash=bin_hash,
+        )
+        receipt_path = _write_receipt(out_dir, receipt)
+        raise BroadcastAttemptFailure(
+            "txid mismatch between draft ("
+            + draft["txid_if_signed"]
+            + ") and node response (" + node_txid
+            + "); receipt written to " + str(receipt_path),
+            receipt_path=receipt_path,
+        )
+
+    receipt = _build_receipt(
+        draft=draft, mode=mode,
+        broadcast_attempted=True,
+        broadcast_performed=True,
+        broadcast_result_status="broadcasted",
+        txid_broadcast=node_txid,
+        node_txid_observed=node_txid,
+        node_stdout=stdout, node_stderr=stderr,
+        confirmation_token=require_confirmation_token,
+        max_total_stocks=int(max_total_stocks),
+        pinned_time=pinned_time,
+        sost_cli_bin_hash=bin_hash,
     )
-    receipt_path.write_text(canonical_dumps(receipt), encoding="utf-8")
-    summary_path.write_text(_render_summary_md(receipt), encoding="utf-8")
+    _write_receipt(out_dir, receipt)
     return receipt
 
 
@@ -445,14 +557,22 @@ def _render_summary_md(receipt: Dict[str, Any]) -> str:
         f"- receipt_id: `{receipt['receipt_id']}`",
         f"- source_draft_id: `{receipt['source_draft_id']}`",
         f"- broadcast_mode: **{receipt['broadcast_mode']}**",
+        f"- broadcast_attempted: **{receipt['broadcast_attempted']}**",
         f"- broadcast_performed: **{receipt['broadcast_performed']}**",
+        f"- broadcast_result_status: "
+        f"**{receipt['broadcast_result_status']}**",
         "",
         "## Transaction",
         "",
         f"- txid_if_signed (from draft): `{receipt['txid_if_signed']}`",
-        f"- txid_broadcast (from node): "
-        f"`{receipt['txid_broadcast'] or '-'}`",
+        f"- txid_broadcast: `{receipt['txid_broadcast'] or '-'}`",
+        f"- node_txid_observed: "
+        f"`{receipt['node_txid_observed'] or '-'}`",
         f"- signed_tx_hex_sha256: `{receipt['signed_tx_hex_sha256']}`",
+        f"- node_stdout_sha256: "
+        f"`{receipt['node_stdout_sha256'] or '-'}`",
+        f"- node_stderr_sha256: "
+        f"`{receipt['node_stderr_sha256'] or '-'}`",
         "",
         "## Totals",
         "",
@@ -474,6 +594,9 @@ def _render_summary_md(receipt: Dict[str, Any]) -> str:
         "- No private key, seed phrase or passphrase was read by",
         "  this script. No signing happened. Signing belongs to",
         "  Sprint 5.17.",
+        "- Even FAILED broadcast attempts leave a receipt on disk.",
+        "  Compare broadcast_result_status across receipts to find",
+        "  the audit story.",
     ])
     return "\n".join(lines)
 
@@ -482,7 +605,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p = argparse.ArgumentParser(
         prog="useful_compute_broadcast_guard",
         description=(
-            "Trinity Useful Compute Human Broadcast Guard v0.1. "
+            "Trinity Useful Compute Human Broadcast Guard v0.2. "
             "Validates a Sprint 5.17 real-signed payment draft and "
             "either emits a dry-run receipt OR invokes "
             "sost-cli sendrawtransaction to broadcast it. NEVER "
@@ -532,7 +655,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         if f in raw_argv:
             print(
                 "[useful_compute_broadcast_guard] flag "
-                + f + " is rejected in v0.1",
+                + f + " is rejected in v0.2",
                 file=sys.stderr,
             )
             return 2
@@ -557,18 +680,28 @@ def main(argv: Optional[List[str]] = None) -> int:
             file=sys.stderr,
         )
         return 2
+    except BroadcastAttemptFailure as exc:
+        # A receipt has been written; surface the failure to the
+        # operator but point them at the audit file.
+        print(
+            "[useful_compute_broadcast_guard] attempt failed: "
+            + str(exc),
+            file=sys.stderr,
+        )
+        return 3
 
     print(
         "[useful_compute_broadcast_guard] receipt_id="
         + receipt["receipt_id"]
         + " mode=" + receipt["broadcast_mode"]
-        + " broadcast_performed="
-        + str(receipt["broadcast_performed"])
+        + " status=" + receipt["broadcast_result_status"]
+        + " attempted=" + str(receipt["broadcast_attempted"])
+        + " performed=" + str(receipt["broadcast_performed"])
     )
     if receipt["broadcast_performed"]:
         print(
             "[useful_compute_broadcast_guard] "
-            "txid_broadcast=" + receipt["txid_broadcast"]
+            "txid_broadcast=" + (receipt["txid_broadcast"] or "")
             + " payment_stocks="
             + str(receipt["total_payment_stocks"])
         )

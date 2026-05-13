@@ -1065,6 +1065,7 @@ static void print_usage() {
     printf("  listunspent [addr]     List unspent transaction outputs\n");
     printf("  createtx <to> <amt>    Create and sign a transaction (auto fee)\n");
     printf("  send <to> <amt>        Create, sign and broadcast to node (auto fee)\n");
+    printf("  sendrawtransaction <hex>  Broadcast an already-signed tx hex (no wallet/sign)\n");
     printf("  create-bond <amt> <blocks>  Create BOND_LOCK (timelocked to self)\n");
     printf("  create-escrow <amt> <blocks> <beneficiary>  Create ESCROW_LOCK\n");
     printf("  list-bonds             List active bond/escrow UTXOs\n");
@@ -1155,6 +1156,15 @@ int main(int argc, char** argv) {
         } else if (flag == "--skip-warning") {
             g_skip_warning = true; i += 1; continue;
         } else if (flag == "--help" || flag == "-h") {
+            // If a subcommand has already been collected as a
+            // positional, defer --help/-h to the subcommand handler
+            // so it can print a specific usage line. Otherwise show
+            // the master usage.
+            if (positional.size() > 1) {
+                positional.push_back(argv[i]);
+                i += 1;
+                continue;
+            }
             print_usage(); return 0;
         }
         // Two-arg flags: value follows on the next argv slot.
@@ -2219,21 +2229,75 @@ int main(int argc, char** argv) {
     // the wrapper here means the only network-facing primitive
     // remains inside sost-cli.
     //
+    // Sprint 5.18 hardening: the subcommand validates its own input
+    // even though the Python guard already does. Anyone who calls
+    // `sost-cli sendrawtransaction` directly from a shell must hit
+    // the same gates.
+    //
+    // Accepts exactly one positional argument (the hex). Rejects:
+    //   - missing argument
+    //   - empty hex
+    //   - odd-length hex
+    //   - non-[0-9a-fA-F] characters
+    //   - extra positional arguments
+    //   - --help (prints specific usage, exit 0)
+    //
     // Stdout on success:
     //   Txid: <64-hex>
-    // Stdout on rejection (returncode 1):
-    //   Error: <message from node>
+    // Stderr on rejection (returncode 1):
+    //   Error: <message>
     // =====================================================================
     if (cmd == "sendrawtransaction") {
+        // --help / -h shortcut.
+        if (argc >= arg_start + 2) {
+            std::string a1 = argv[arg_start + 1];
+            if (a1 == "--help" || a1 == "-h") {
+                fprintf(stdout,
+                    "Usage: sost-cli sendrawtransaction <hex>\n"
+                    "  Broadcast an already-signed transaction hex "
+                    "to the local node.\n"
+                    "  The hex must be lowercase/uppercase, "
+                    "non-empty, even-length [0-9a-fA-F]+.\n"
+                    "  Exactly one positional argument; extra args "
+                    "are rejected.\n"
+                    "  Returns Txid:<hex> on success, Error:<msg> "
+                    "and rc=1 on rejection.\n");
+                return 0;
+            }
+        }
         if (argc < arg_start + 2) {
             fprintf(stderr,
                 "Usage: sost-cli sendrawtransaction <hex>\n");
+            return 1;
+        }
+        if (argc > arg_start + 2) {
+            fprintf(stderr,
+                "Error: sendrawtransaction accepts exactly one "
+                "argument; got %d extra\n",
+                argc - (arg_start + 2));
             return 1;
         }
         std::string raw_hex = argv[arg_start + 1];
         if (raw_hex.empty()) {
             fprintf(stderr, "Error: empty hex\n");
             return 1;
+        }
+        if (raw_hex.size() % 2 != 0) {
+            fprintf(stderr,
+                "Error: hex length %zu is odd; raw transaction "
+                "bytes must serialize to an even-length hex "
+                "string\n", raw_hex.size());
+            return 1;
+        }
+        for (char c : raw_hex) {
+            bool ok = (c >= '0' && c <= '9')
+                   || (c >= 'a' && c <= 'f')
+                   || (c >= 'A' && c <= 'F');
+            if (!ok) {
+                fprintf(stderr,
+                    "Error: non-hex character in hex argument\n");
+                return 1;
+            }
         }
         std::string resp = rpc_call("sendrawtransaction",
                                     "[\"" + raw_hex + "\"]");

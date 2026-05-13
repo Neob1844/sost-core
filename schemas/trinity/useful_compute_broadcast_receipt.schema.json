@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "trinity-useful-compute-broadcast-receipt/v0.1",
+  "$id": "trinity-useful-compute-broadcast-receipt/v0.2",
   "title": "Trinity Useful Compute Human Broadcast Receipt",
-  "description": "Output of the Trinity Sprint 5.18 human broadcast guard. Records the result of validating a Sprint 5.17 real-signed payment draft and either dry-running or actually invoking sost-cli sendrawtransaction. NEVER auto-pays. NEVER signs. NEVER touches a wallet. safety_status flags are const-locked so an offline reviewer can detect tampering trivially.",
+  "description": "Output of the Trinity Sprint 5.18 human broadcast guard. Records the result of validating a Sprint 5.17 real-signed payment draft and either dry-running or actually invoking sost-cli sendrawtransaction. NEVER auto-pays. NEVER signs. NEVER touches a wallet. v0.2 adds an audit trail for FAILED broadcast attempts: every invocation of --mode human-broadcast leaves a receipt on disk, including when the subprocess returns non-zero, when the stdout cannot be parsed, or when the node-returned txid does not match the draft's txid_if_signed. safety_status flags are const-locked so an offline reviewer can detect tampering trivially.",
   "type": "object",
   "required": [
     "schema",
@@ -11,8 +11,13 @@
     "txid_if_signed",
     "txid_broadcast",
     "signed_tx_hex_sha256",
+    "broadcast_attempted",
     "broadcast_performed",
     "broadcast_mode",
+    "broadcast_result_status",
+    "node_txid_observed",
+    "node_stdout_sha256",
+    "node_stderr_sha256",
     "confirmation_token_hash",
     "total_payment_stocks",
     "max_total_stocks",
@@ -24,7 +29,7 @@
   "properties": {
     "schema": {
       "type": "string",
-      "const": "trinity-useful-compute-broadcast-receipt/v0.1"
+      "const": "trinity-useful-compute-broadcast-receipt/v0.2"
     },
     "receipt_id": {
       "type": "string",
@@ -48,10 +53,39 @@
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
     },
+    "broadcast_attempted": { "type": "boolean" },
     "broadcast_performed": { "type": "boolean" },
     "broadcast_mode": {
       "type": "string",
       "enum": ["local-dry-run", "human-broadcast"]
+    },
+    "broadcast_result_status": {
+      "type": "string",
+      "enum": [
+        "dry_run",
+        "broadcasted",
+        "node_rejected",
+        "txid_mismatch",
+        "parse_error"
+      ]
+    },
+    "node_txid_observed": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "node_stdout_sha256": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "node_stderr_sha256": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
     },
     "confirmation_token_hash": {
       "oneOf": [

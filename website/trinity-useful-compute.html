@@ -981,8 +981,14 @@
            <div class="v" id="receiptDraftId">-</div></div>
       <div><div class="k">broadcast_mode</div>
            <div class="v" id="receiptMode">-</div></div>
+      <div><div class="k">broadcast_attempted</div>
+           <div class="v" id="receiptAttempted">false</div></div>
       <div><div class="k">broadcast_performed</div>
            <div class="v" id="receiptPerformed">false</div></div>
+      <div><div class="k">broadcast_result_status</div>
+           <div class="v" id="receiptStatus">-</div></div>
+      <div><div class="k">node_txid_observed</div>
+           <div class="v" id="receiptNodeTxid">-</div></div>
       <div><div class="k">txid_if_signed</div>
            <div class="v" id="receiptTxidSigned">-</div></div>
       <div><div class="k">txid_broadcast</div>
@@ -2607,13 +2613,21 @@
 
   const SCHEMA_RECEIPT_V01 =
     "trinity-useful-compute-broadcast-receipt/v0.1";
+  const SCHEMA_RECEIPT_V02 =
+    "trinity-useful-compute-broadcast-receipt/v0.2";
 
   function _receiptRender(r) {
     _consoleSetText("receiptId",            r.receipt_id || "-");
     _consoleSetText("receiptDraftId",       r.source_draft_id || "-");
     _consoleSetText("receiptMode",          r.broadcast_mode || "-");
+    _consoleSetText("receiptAttempted",
+      String(Boolean(r.broadcast_attempted)));
     _consoleSetText("receiptPerformed",
       String(Boolean(r.broadcast_performed)));
+    _consoleSetText("receiptStatus",
+      String(r.broadcast_result_status || "-"));
+    _consoleSetText("receiptNodeTxid",
+      String(r.node_txid_observed || "-"));
     _consoleSetText("receiptTxidSigned",    r.txid_if_signed || "-");
     _consoleSetText("receiptTxidBroadcast", r.txid_broadcast || "-");
     _consoleSetText("receiptHexSha",        r.signed_tx_hex_sha256 || "-");
@@ -2642,11 +2656,20 @@
     r.onload = (e) => {
       try {
         const obj = JSON.parse(e.target.result);
-        if (obj.schema === SCHEMA_RECEIPT_V01) {
-          const label = obj.broadcast_performed
-            ? "loaded — broadcasted"
-            : "loaded — dry-run";
-          setState($("receiptBadge"), label, "ok");
+        if (obj.schema === SCHEMA_RECEIPT_V02
+         || obj.schema === SCHEMA_RECEIPT_V01) {
+          let label;
+          if (obj.broadcast_performed) {
+            label = "loaded — broadcasted";
+          } else if (obj.broadcast_attempted) {
+            label = "loaded — attempt failed ("
+              + (obj.broadcast_result_status || "unknown") + ")";
+          } else {
+            label = "loaded — dry-run";
+          }
+          const tone = obj.broadcast_performed ? "ok"
+            : (obj.broadcast_attempted ? "warn" : "ok");
+          setState($("receiptBadge"), label, tone);
         } else {
           setState($("receiptBadge"),
             "loaded (UNEXPECTED schema)", "warn");
