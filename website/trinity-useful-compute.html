@@ -1019,6 +1019,39 @@
   </div>
 </div>
 
+<!-- Operator Loop (Sprint 5.19) -->
+<div class="card" id="operatorLoopCard">
+  <h2>Operator Loop v0.1</h2>
+  <p class="small">
+    <code>scripts/trinity/useful_compute_operator_loop.py</code> is
+    a repeatable orchestrator for the full Useful Compute pipeline
+    (task builder &rarr; worker &rarr; replay &rarr; governance
+    &rarr; budget &rarr; proposal &rarr; payment draft). It loads
+    each sibling script via <code>importlib</code> and writes a
+    deterministic <code>operator_run.json</code> + a
+    <code>SHA256SUMS.txt</code> manifest under the chosen
+    <code>--out-dir</code>. Pass <code>--resume</code> at the same
+    out-dir to skip already-completed steps; tampered artefacts
+    abort the resume with rc=2.
+  </p>
+  <ul class="small" style="margin-top:6px">
+    <li><b>repeatable</b>, deterministic with <code>--pinned-time</code></li>
+    <li><b>resumable</b> via <code>--resume operator_run.json</code> + sha256 verification</li>
+    <li><b>no wallet access</b>: schema locks <code>allow_wallet_access = const false</code></li>
+    <li><b>no broadcast authority</b>: schema locks <code>allow_broadcast = const false</code></li>
+    <li><b>no real signing</b>: payment_draft always runs in <code>unsigned-only</code> or <code>dry-sign</code> mode</li>
+    <li><b>no subprocess</b>: no <code>sost-cli</code> invocations from the loop</li>
+  </ul>
+  <div class="danger-strip" style="margin-top:14px;">
+    <strong>Trinity can re-run the pipeline; it cannot pay.</strong>
+    The two human inflection points are unchanged from Sprint 5.17 /
+    5.18: real signing requires a separate, manual call with its own
+    token, and broadcasting requires another manual call with yet
+    another token. The operator loop just removes the
+    copy-paste-and-re-run friction between them.
+  </div>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>
