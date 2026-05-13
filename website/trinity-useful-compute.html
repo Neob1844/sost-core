@@ -1052,6 +1052,41 @@
   </div>
 </div>
 
+<!-- Scientific Prompt Intake (Sprint 5.20) -->
+<div class="card" id="scientificIntakeCard">
+  <h2>Scientific Prompt Intake v0.1</h2>
+  <p class="small">
+    <code>scripts/trinity/scientific_prompt_intake.py</code> is
+    Trinity's local-only science inbox. It accepts a prompt plus
+    any number of reference documents (<code>.txt</code> /
+    <code>.md</code> / <code>.json</code>), hashes everything and
+    writes one deterministic audit artifact
+    <code>TRINITY_SCIENTIFIC_PROMPT_INTAKE_&lt;id&gt;.json</code>.
+    Documents are recorded by <em>basename</em> + sha256 + size +
+    a bounded preview; absolute paths and full content are
+    deliberately NOT stored.
+  </p>
+  <ul class="small" style="margin-top:6px">
+    <li><b>local documents only</b> — never reads from the network</li>
+    <li><b>hashes + previews</b> — every input has a 64-hex sha256 + a 256-char (default) preview</li>
+    <li><b>no network</b> — no HTTP / socket / WebSocket / FTP imports allowed at static-check time</li>
+    <li><b>no LLM call</b> — no <code>openai</code> / <code>anthropic</code> / <code>completion</code> tokens; offline by design</li>
+    <li><b>deterministic</b> — same prompt + documents + <code>--pinned-time</code> produce byte-identical artifacts</li>
+    <li><b>bounded</b> — prompt &le; 32 KiB, doc &le; 1 MiB, &le; 16 docs (all overridable downward)</li>
+  </ul>
+  <div class="danger-strip" style="margin-top:14px;">
+    <strong>Future bridge to task generation.</strong> A later
+    sprint will let <code>useful_compute_task_builder</code> consume
+    a Scientific Prompt Intake artifact (<code>--from-intake
+    TRINITY_SCIENTIFIC_PROMPT_INTAKE_&lt;id&gt;.json</code>) so the
+    audit chain from a scientific prompt all the way to a
+    real-signed payment carries a single
+    <code>combined_context_sha256</code>. v0.1 stops at the intake
+    artifact: no task is decided, no LLM is invoked, no payment is
+    initiated.
+  </div>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>
