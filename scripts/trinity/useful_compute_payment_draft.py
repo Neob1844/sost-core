@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
-"""Trinity / Useful Compute — Signed Payment Draft v0.1.
+"""Trinity / Useful Compute — Signed Payment Draft v0.2.
 
 Converts a Sprint 5.15 payment proposal into a reviewable transaction
-draft. v0.1 is the first Trinity layer that *can* touch a wallet
-path, but only behind two explicit gates:
+draft. v0.2 adds a third mode — ``--real-sign`` — that delegates to
+the existing ``sost-cli createtx`` binary through the sibling module
+``useful_compute_real_signer``. Real signing produces a real
+``signed_tx_hex`` and ``txid_if_signed`` per payable item, but the
+script NEVER broadcasts and NEVER calls sendrawtransaction.
 
-1. Default mode is ``--unsigned-only``. Wallet is NEVER referenced.
-2. Optional ``--dry-sign`` requires both ``--wallet`` AND a verbatim
-   confirmation token. Even with both, v0.1 does NOT actually sign
-   anything — it verifies that the wallet file exists and writes a
-   placeholder ``signed_tx_hex`` string so the audit chain is honest.
-   Real signing lands in a separate, governance-controlled sprint.
+Three modes, mutually exclusive:
+
+1. ``--unsigned-only`` (default). No wallet referenced. One draft
+   per proposal (multi-output if the proposal has many).
+2. ``--dry-sign``. Records ``dry_signed=true`` and writes a
+   placeholder ``signed_tx_hex`` string after verifying the wallet
+   path exists. v0.2 inherits this v0.1 behaviour unchanged.
+3. ``--real-sign`` (NEW in v0.2). Invokes ``sost-cli createtx`` once
+   per eligible payable item, producing ONE draft file per item
+   with a real signed hex and txid. Each draft has exactly one
+   output. ``--max-total-stocks`` caps the sum across all items.
 
 Hard invariants (enforced both at CLI and in the schema):
 
@@ -21,10 +29,13 @@ Hard invariants (enforced both at CLI and in the schema):
   ``const: false``.
 - ``requires_separate_broadcast`` is locked ``const: true``.
 - ``human_review_required`` is locked ``const: true``.
+- ``automatic_payout`` is locked ``const: false`` (NEW in v0.2).
 - Rejects the CLI flags ``--broadcast``, ``--send``,
-  ``--payout-now``, ``--auto-pay``, ``--sendrawtransaction`` with
-  rc=2.
-- Tokens are mode-specific so they cannot be reused across modes.
+  ``--payout-now``, ``--auto-pay``, ``--sendrawtransaction``,
+  ``--export-private-key`` with rc=2.
+- All subprocess interaction lives in ``useful_compute_real_signer``
+  (loaded via ``importlib`` so this file remains free of subprocess
+  tokens and the Sprint 5.6 static safety surface is preserved).
 
 Mode tokens (exact match required, no substring matching):
 
@@ -32,18 +43,15 @@ Mode tokens (exact match required, no substring matching):
     I_UNDERSTAND_THIS_IS_ONLY_A_DRAFT_AND_WILL_NOT_BROADCAST
 - dry-sign mode:
     I_UNDERSTAND_THIS_USES_WALLET_KEYS_BUT_DOES_NOT_BROADCAST
-
-Determinism
------------
-``draft_id`` is the sha16 of canonical(mode + source_proposal_id +
-pinned_time + outputs + warnings + max_total_stocks). Two runs with
-the same inputs produce byte-identical drafts.
+- real-sign mode (NEW):
+    I_UNDERSTAND_THIS_WILL_SIGN_BUT_NOT_BROADCAST
 """
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import re
 import sys
@@ -51,13 +59,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
-SCHEMA_DRAFT = "trinity-useful-compute-payment-draft/v0.1"
+SCHEMA_DRAFT = "trinity-useful-compute-payment-draft/v0.2"
 SCHEMA_PROPOSAL = "trinity-useful-compute-payment-proposal/v0.1"
 
 UNSIGNED_TOKEN = "I_UNDERSTAND_THIS_IS_ONLY_A_DRAFT_AND_WILL_NOT_BROADCAST"
 DRY_SIGN_TOKEN = "I_UNDERSTAND_THIS_USES_WALLET_KEYS_BUT_DOES_NOT_BROADCAST"
+REAL_SIGN_TOKEN = "I_UNDERSTAND_THIS_WILL_SIGN_BUT_NOT_BROADCAST"
 
-# Conservative v0.1 dust threshold (stocks). Outputs below this are
+# Conservative v0.2 dust threshold (stocks). Outputs below this are
 # moved into warnings[] and NOT included in the draft outputs.
 DEFAULT_DUST_STOCKS = 546
 
@@ -76,6 +85,27 @@ def canonical_dumps(obj: Any) -> str:
 
 def _sha16(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()[:16]
+
+
+def _load_module_from_file(modname: str, path: Path):
+    """Trinity convention: dynamically load a sibling module by file
+    path. Avoids sys.path manipulation and keeps each Trinity script
+    independent."""
+    spec = importlib.util.spec_from_file_location(modname, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {path}")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[modname] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _load_real_signer():
+    here = Path(__file__).resolve().parent
+    return _load_module_from_file(
+        "_trinity_real_signer",
+        here / "useful_compute_real_signer.py",
+    )
 
 
 def _load_proposal(path: Path) -> Dict[str, Any]:
@@ -117,81 +147,21 @@ def _validate_payable_item(item: Any) -> Optional[str]:
                 isinstance(w, str) and _WRID_RE.match(w) for w in wrids
             )):
         return "bad worker_result_ids"
+    if item.get("status") in ("unresolved", "deferred", "rejected"):
+        return (
+            "payable_item status is "
+            + repr(item["status"])
+            + " — must be 'pending' or 'approved' for real signing"
+        )
     return None
 
 
-def run_payment_draft(
-    *,
-    proposal_path: Path,
-    out_dir: Path,
-    pinned_time: str,
-    unsigned_only: bool = True,
-    dry_sign: bool = False,
-    wallet_path: Optional[Path] = None,
-    from_label: Optional[str] = None,
-    from_address: Optional[str] = None,
-    max_total_stocks: Optional[int] = None,
-    require_confirmation_token: Optional[str] = None,
-    dust_stocks: int = DEFAULT_DUST_STOCKS,
-) -> Dict[str, Any]:
-    """Build the payment draft. Raises ValueError on any gate
-    violation. Writes the draft JSON + a Markdown summary to
-    ``out_dir`` and returns the draft dict."""
-
-    # --- Mode gating ------------------------------------------------
-    if unsigned_only and dry_sign:
-        raise ValueError(
-            "--unsigned-only and --dry-sign are mutually exclusive"
-        )
-    if not unsigned_only and not dry_sign:
-        # Default to the safest mode.
-        unsigned_only = True
-
-    if dry_sign:
-        if require_confirmation_token != DRY_SIGN_TOKEN:
-            raise ValueError(
-                "--dry-sign requires the exact confirmation token: "
-                + DRY_SIGN_TOKEN
-            )
-        if wallet_path is None:
-            raise ValueError("--dry-sign requires --wallet")
-        if not Path(wallet_path).exists():
-            raise ValueError(
-                f"--wallet file not found: {wallet_path}"
-            )
-        if from_label is None and from_address is None:
-            raise ValueError(
-                "--dry-sign requires --from-label or --from-address"
-            )
-    else:
-        # unsigned-only mode. The token is still required so a bare
-        # invocation cannot accidentally produce a draft.
-        if require_confirmation_token != UNSIGNED_TOKEN:
-            raise ValueError(
-                "--unsigned-only requires the exact confirmation "
-                "token: " + UNSIGNED_TOKEN
-            )
-        if wallet_path is not None or from_label is not None \
-                or from_address is not None:
-            raise ValueError(
-                "unsigned-only mode must not be combined with "
-                "--wallet / --from-label / --from-address"
-            )
-
-    if max_total_stocks is not None and max_total_stocks < 0:
-        raise ValueError(
-            "max_total_stocks must be >= 0 if supplied"
-        )
-
-    out_dir.mkdir(parents=True, exist_ok=True)
-    proposal = _load_proposal(proposal_path)
-
-    proposal_id = proposal["proposal_id"]
-    payable = proposal.get("payable_items", [])
-
+def _filter_eligible_outputs(
+    payable: List[Any],
+    dust_stocks: int,
+) -> tuple[List[Dict[str, Any]], List[str]]:
     outputs: List[Dict[str, Any]] = []
     warnings: List[str] = []
-
     for i, item in enumerate(payable):
         prob = _validate_payable_item(item)
         if prob is not None:
@@ -226,23 +196,13 @@ def run_payment_draft(
                 or "primary_workers_share payment from proposal"
             ),
         })
-
     outputs.sort(
         key=lambda o: (o["request_id"], o["payout_address"]),
     )
+    return outputs, warnings
 
-    total_payment = sum(o["amount_stocks"] for o in outputs)
 
-    if max_total_stocks is not None and total_payment > max_total_stocks:
-        raise ValueError(
-            f"total_payment_stocks {total_payment} exceeds "
-            f"--max-total-stocks {max_total_stocks}; refusing to "
-            "build draft. Reduce the proposal's payable_items or "
-            "raise the cap."
-        )
-
-    # Capsule summary copies the proposal's capsule_summary block
-    # verbatim. The draft does NOT publish it on-chain.
+def _resolve_capsule(proposal: Dict[str, Any]) -> Dict[str, Any]:
     capsule = proposal.get("capsule_summary") or {
         "template": "useful_compute_reward_batch_v1",
         "text": "Trinity Useful Compute draft (no capsule_summary "
@@ -253,29 +213,140 @@ def run_payment_draft(
             "validation_ids": [],
         },
     }
+    return capsule
 
-    # Wallet access (dry-sign only). v0.1 does NOT actually sign.
+
+def _build_safety_status(
+    *,
+    dry_sign: bool,
+    wallet_access_used: bool,
+) -> Dict[str, Any]:
+    return {
+        "no_broadcast":                True,
+        "human_review_required":       True,
+        "dry_sign_only":               bool(dry_sign),
+        "wallet_access_used":          bool(wallet_access_used),
+        "private_keys_exported":       False,
+        "requires_separate_broadcast": True,
+        "automatic_payout":            False,
+    }
+
+
+def _hash_binary_file(path: Path) -> Optional[str]:
+    """sha16 fingerprint of a binary file. Returns None if the file
+    does not exist or cannot be read. Used to record which sost-cli
+    binary produced the signed_tx_hex without disclosing its full
+    contents."""
+    try:
+        return hashlib.sha256(
+            Path(path).read_bytes(),
+        ).hexdigest()[:16]
+    except (OSError, FileNotFoundError):
+        return None
+
+
+def run_payment_draft(
+    *,
+    proposal_path: Path,
+    out_dir: Path,
+    pinned_time: str,
+    unsigned_only: bool = True,
+    dry_sign: bool = False,
+    wallet_path: Optional[Path] = None,
+    from_label: Optional[str] = None,
+    from_address: Optional[str] = None,
+    max_total_stocks: Optional[int] = None,
+    require_confirmation_token: Optional[str] = None,
+    dust_stocks: int = DEFAULT_DUST_STOCKS,
+) -> Dict[str, Any]:
+    """Build the v0.2 unsigned-only / dry-sign draft (legacy v0.1
+    semantics, schema bumped). Raises ValueError on any gate
+    violation. Writes the draft JSON + a Markdown summary to
+    ``out_dir`` and returns the draft dict.
+
+    For ``--real-sign`` use ``run_real_sign_drafts`` instead.
+    """
+    if unsigned_only and dry_sign:
+        raise ValueError(
+            "--unsigned-only and --dry-sign are mutually exclusive"
+        )
+    if not unsigned_only and not dry_sign:
+        unsigned_only = True
+
+    if dry_sign:
+        if require_confirmation_token != DRY_SIGN_TOKEN:
+            raise ValueError(
+                "--dry-sign requires the exact confirmation token: "
+                + DRY_SIGN_TOKEN
+            )
+        if wallet_path is None:
+            raise ValueError("--dry-sign requires --wallet")
+        if not Path(wallet_path).exists():
+            raise ValueError(
+                f"--wallet file not found: {wallet_path}"
+            )
+        if from_label is None and from_address is None:
+            raise ValueError(
+                "--dry-sign requires --from-label or --from-address"
+            )
+    else:
+        if require_confirmation_token != UNSIGNED_TOKEN:
+            raise ValueError(
+                "--unsigned-only requires the exact confirmation "
+                "token: " + UNSIGNED_TOKEN
+            )
+        if wallet_path is not None or from_label is not None \
+                or from_address is not None:
+            raise ValueError(
+                "unsigned-only mode must not be combined with "
+                "--wallet / --from-label / --from-address"
+            )
+
+    if max_total_stocks is not None and max_total_stocks < 0:
+        raise ValueError("max_total_stocks must be >= 0 if supplied")
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    proposal = _load_proposal(proposal_path)
+
+    proposal_id = proposal["proposal_id"]
+    payable = proposal.get("payable_items", [])
+
+    outputs, warnings = _filter_eligible_outputs(payable, dust_stocks)
+    total_payment = sum(o["amount_stocks"] for o in outputs)
+
+    if max_total_stocks is not None and total_payment > max_total_stocks:
+        raise ValueError(
+            f"total_payment_stocks {total_payment} exceeds "
+            f"--max-total-stocks {max_total_stocks}; refusing to "
+            "build draft. Reduce the proposal's payable_items or "
+            "raise the cap."
+        )
+
+    capsule = _resolve_capsule(proposal)
+
     wallet_access_used = False
     signed_tx_hex: Optional[str] = None
     unsigned_tx_hex: Optional[str] = None
+    signing_mode = "unsigned_only"
     if dry_sign:
+        signing_mode = "dry_sign_placeholder"
         wallet_access_used = True
         signed_tx_hex = "DRYSIGN_PLACEHOLDER_NO_REAL_SIGNING_IN_V01"
         warnings.append(
             "dry-sign mode: signed_tx_hex is a placeholder string. "
-            "v0.1 verifies the --wallet path exists but does NOT "
-            "load keys and does NOT sign. Real wallet integration "
-            "lands in a separate sprint."
+            "Dry-sign verifies the --wallet path exists but does "
+            "NOT load keys and does NOT sign. Use --real-sign for "
+            "real local signing."
         )
         if from_label is not None:
             warnings.append(
                 f"dry-sign --from-label={from_label!r} recorded for "
-                "audit; not used by v0.1."
+                "audit; not used by dry-sign mode."
             )
         if from_address is not None:
             warnings.append(
                 f"dry-sign --from-address={from_address!r} recorded "
-                "for audit; not used by v0.1."
+                "for audit; not used by dry-sign mode."
             )
 
     if not outputs:
@@ -285,9 +356,8 @@ def run_payment_draft(
             "outputs and zero payment stocks."
         )
 
-    # Deterministic draft_id.
     draft_id = "draft-" + _sha16(canonical_dumps({
-        "mode": "unsigned_only" if unsigned_only else "dry_sign",
+        "mode": signing_mode,
         "source_proposal_id": proposal_id,
         "pinned_time": pinned_time,
         "outputs": outputs,
@@ -300,29 +370,35 @@ def run_payment_draft(
         "draft_id": draft_id,
         "source_proposal_id": proposal_id,
         "mode": "local-dry-run",
+        "signing_mode": signing_mode,
+        "signing_scope": "full_proposal",
+        "selected_worker_id_hash": None,
+        "source_proposal_payable_items_count": len(outputs),
         "unsigned_only": bool(unsigned_only),
         "dry_signed": bool(dry_sign),
+        "real_signed": False,
+        "wallet_fingerprint_hash": None,
+        "signer_label_or_address_hash": None,
+        "sost_cli_bin_hash": None,
         "total_outputs": len(outputs),
         "total_payment_stocks": int(total_payment),
-        # v0.1 does not estimate fees or change. The fields exist
-        # so a future sprint can fill them without bumping the
-        # schema for additive metadata.
         "total_fee_stocks_estimated": 0,
         "change_stocks_estimated": 0,
+        "total_input_stocks": 0,
+        "total_output_stocks": int(total_payment),
+        "fee_rate_stocks_per_byte": None,
+        "selected_utxos": [],
         "outputs": outputs,
         "capsule_summary": capsule,
+        "capsule_attached": False,
         "unsigned_tx_hex": unsigned_tx_hex,
         "signed_tx_hex": signed_tx_hex,
         "txid_if_signed": None,
         "warnings": warnings,
-        "safety_status": {
-            "no_broadcast":                True,
-            "human_review_required":       True,
-            "dry_sign_only":               bool(dry_sign),
-            "wallet_access_used":          bool(wallet_access_used),
-            "private_keys_exported":       False,
-            "requires_separate_broadcast": True,
-        },
+        "safety_status": _build_safety_status(
+            dry_sign=dry_sign,
+            wallet_access_used=wallet_access_used,
+        ),
     }
 
     draft_path = (
@@ -334,84 +410,402 @@ def run_payment_draft(
     )
     draft_path.write_text(canonical_dumps(draft), encoding="utf-8")
     summary_path.write_text(
-        _render_summary_md(draft), encoding="utf-8",
+        _render_summary_md([draft]), encoding="utf-8",
     )
     return draft
 
 
-def _render_summary_md(draft: Dict[str, Any]) -> str:
+_WORKER_HASH_RE = re.compile(r"^[0-9a-f]{16}$")
+
+
+def run_real_sign_drafts(
+    *,
+    proposal_path: Path,
+    out_dir: Path,
+    pinned_time: str,
+    wallet_path: Path,
+    from_label: Optional[str] = None,
+    from_address: Optional[str] = None,
+    max_total_stocks: int,
+    require_confirmation_token: str,
+    dust_stocks: int = DEFAULT_DUST_STOCKS,
+    sost_cli_bin: str = "sost-cli",
+    timeout_seconds: float = 60.0,
+    only_worker_id_hash: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Build ONE real-signed draft via ``sost-cli createtx``. Raises
+    ValueError on any gate violation. Writes one draft JSON file +
+    a Markdown summary.
+
+    HARD LIMIT: v0.1 of --real-sign refuses any proposal that, after
+    dust / validation filtering, contains more than ONE eligible
+    output, UNLESS ``only_worker_id_hash`` selects exactly one item.
+    The underlying reason is a correctness bug: ``sost-cli createtx``
+    calls ``clear_utxos()`` then ``sync_wallet_utxos_from_node()`` on
+    every invocation, so two sequential calls in the same script
+    would see the SAME UTXO as spendable and select it twice — two
+    conflicting signed transactions. There is no safe multi-output
+    sendmany API exposed from sost-cli today.
+
+    ``only_worker_id_hash``: if supplied, must be a 16-hex string.
+    A payable_item matches when the hash appears in its
+    ``worker_result_ids`` array. The selector must yield exactly
+    one match; 0 or 2+ matches abort BEFORE any subprocess call.
+    """
+    if require_confirmation_token != REAL_SIGN_TOKEN:
+        raise ValueError(
+            "--real-sign requires the exact confirmation token: "
+            + REAL_SIGN_TOKEN
+        )
+    if wallet_path is None:
+        raise ValueError("--real-sign requires --wallet")
+    if not Path(wallet_path).exists():
+        raise ValueError(
+            f"--wallet file not found: {wallet_path}"
+        )
+    if from_label is None and from_address is None:
+        raise ValueError(
+            "--real-sign requires --from-label or --from-address"
+        )
+    if max_total_stocks is None or max_total_stocks < 0:
+        raise ValueError(
+            "--real-sign requires --max-total-stocks >= 0"
+        )
+    if only_worker_id_hash is not None:
+        if not _WORKER_HASH_RE.match(only_worker_id_hash):
+            raise ValueError(
+                "--only-worker-id-hash must be 16 lowercase hex "
+                "characters; got " + repr(only_worker_id_hash)
+            )
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    proposal = _load_proposal(proposal_path)
+
+    proposal_id = proposal["proposal_id"]
+    payable = proposal.get("payable_items", [])
+
+    # Hard refuse if the proposal has any unresolved / deferred /
+    # rejected items, even when a selector is in play. A proposal
+    # in a non-clean state must be re-run through Sprint 5.15
+    # before any wallet is touched.
+    for bucket in ("unresolved_items", "deferred_items",
+                   "rejected_items"):
+        if proposal.get(bucket):
+            raise ValueError(
+                "proposal has non-empty "
+                + bucket
+                + "; --real-sign refuses to invoke wallet until "
+                "the proposal is clean. Re-run "
+                "useful_compute_payment_proposal with corrected "
+                "inputs."
+            )
+
+    outputs, base_warnings = _filter_eligible_outputs(
+        payable, dust_stocks,
+    )
+    source_count = len(outputs)
+
+    # Optional selector: filter payable_items by a 16-hex worker
+    # identifier that must appear in worker_result_ids. Applied
+    # BEFORE the multi-output guard, BEFORE the max-total-stocks
+    # check, and BEFORE any subprocess invocation.
+    signing_scope = "full_proposal"
+    selected_worker = None
+    if only_worker_id_hash is not None:
+        matches = [
+            o for o in outputs
+            if only_worker_id_hash in o.get("worker_result_ids", [])
+        ]
+        if len(matches) == 0:
+            raise ValueError(
+                "--only-worker-id-hash "
+                + only_worker_id_hash
+                + " does not match any payable_item in the "
+                "proposal; refusing to invoke wallet"
+            )
+        if len(matches) > 1:
+            raise ValueError(
+                "--only-worker-id-hash "
+                + only_worker_id_hash
+                + " matches " + str(len(matches))
+                + " payable_items; selector must yield exactly 1. "
+                "Refine the selector or split the proposal."
+            )
+        outputs = matches
+        signing_scope = "single_payable_item_subset"
+        selected_worker = only_worker_id_hash
+        base_warnings.append(
+            "selector --only-worker-id-hash="
+            + only_worker_id_hash
+            + " picked 1 of " + str(source_count)
+            + " eligible payable_items; the remaining items are "
+            "NOT signed by this draft."
+        )
+
+    total_payment = sum(o["amount_stocks"] for o in outputs)
+
+    if total_payment > max_total_stocks:
+        raise ValueError(
+            f"total_payment_stocks {total_payment} exceeds "
+            f"--max-total-stocks {max_total_stocks}; refusing to "
+            "sign anything. Reduce the proposal or raise the cap."
+        )
+
+    if not outputs:
+        raise ValueError(
+            "no eligible outputs to sign after dust/validation "
+            "filtering; refusing to invoke wallet"
+        )
+
+    # P0 GUARD: multi-output real signing is unsafe today because
+    # sequential createtx calls re-sync UTXOs from the chain and
+    # would select the same UTXO twice → conflicting transactions
+    # at broadcast time. Refuse until a real sendmany-style API is
+    # exposed.
+    if len(outputs) > 1:
+        raise ValueError(
+            "multi-output real signing not supported safely in "
+            "v0.1 of --real-sign: sost-cli createtx is "
+            "single-recipient and sequential calls would re-use "
+            "UTXOs, producing conflicting signed transactions. "
+            f"Proposal has {len(outputs)} eligible outputs; split "
+            "the proposal, pass --only-worker-id-hash to select "
+            "exactly one item, or wait for a future "
+            "sendmany-aware sprint."
+        )
+
+    capsule = _resolve_capsule(proposal)
+
+    rs = _load_real_signer()
+
+    if not Path(sost_cli_bin).is_absolute():
+        base_warnings.append(
+            "--sost-cli-bin is not an absolute path; PATH lookup is "
+            "trusted. For production use an absolute path."
+        )
+    bin_hash = _hash_binary_file(Path(sost_cli_bin))
+
+    wallet_fp = rs.hash_wallet_file(Path(wallet_path))
+    signer_id = rs.hash_signer_identity(
+        label=from_label, address=from_address,
+    )
+
+    output = outputs[0]
+    # Format amount as plain SOST decimal string to feed the CLI
+    # verbatim (the CLI's parse_amount expects "SOST" notation).
+    amount_sost_str = "{:.8f}".format(
+        output["amount_stocks"] / STOCKS_PER_SOST,
+    )
+    try:
+        res = rs.call_sost_cli_createtx(
+            wallet_path=Path(wallet_path),
+            to_address=output["payout_address"],
+            amount_sost=amount_sost_str,
+            from_label=from_label,
+            from_address=from_address,
+            sost_cli_bin=sost_cli_bin,
+            timeout_seconds=timeout_seconds,
+        )
+    except rs.RealSignerError as exc:
+        raise ValueError(
+            "real signing failed for "
+            + output["payout_address"]
+            + " (request_id=" + output["request_id"] + "): "
+            + str(exc)
+        ) from exc
+
+    warnings: List[str] = list(base_warnings)
+    if res.inputs_count == 0:
+        warnings.append(
+            "sost-cli reported 0 inputs; signed_tx_hex may be "
+            "malformed. Investigate before broadcasting."
+        )
+    if res.outputs_count > 2:
+        warnings.append(
+            "sost-cli reported "
+            + str(res.outputs_count)
+            + " outputs (>2); unexpected for single-recipient "
+            "createtx. Investigate before broadcasting."
+        )
+    warnings.append(
+        "v0.1 of --real-sign does NOT attach the capsule_summary to "
+        "the signed transaction. capsule_summary is recorded in the "
+        "draft JSON for audit only. capsule_attached is locked to "
+        "false in this sprint."
+    )
+    warnings.append(
+        "sost-cli createtx marks the selected UTXOs as spent in the "
+        "local wallet file even though nothing has been broadcast. "
+        "If the operator discards this draft, the local wallet "
+        "state will be re-synced from the chain on the next "
+        "invocation (createtx calls clear_utxos before each run), "
+        "so this is self-healing — but be aware of the temporary "
+        "local-only mutation."
+    )
+    warnings.append(
+        "v0.1 does not parse selected_utxos[] from sost-cli stdout; "
+        "the count is exposed via inputs_count only. Decode "
+        "signed_tx_hex to enumerate UTXOs if needed."
+    )
+    warnings.append(
+        "SIGNED BUT NOT BROADCAST — broadcasting is a separate, "
+        "human-driven sprint."
+    )
+
+    draft_id = "draft-" + _sha16(canonical_dumps({
+        "mode": "real_sign_local",
+        "source_proposal_id": proposal_id,
+        "pinned_time": pinned_time,
+        "output": output,
+        "txid": res.txid_if_signed,
+        "max_total_stocks": max_total_stocks,
+    }))
+
+    draft = {
+        "schema": SCHEMA_DRAFT,
+        "draft_id": draft_id,
+        "source_proposal_id": proposal_id,
+        "mode": "local-dry-run",
+        "signing_mode": "real_sign_local",
+        "signing_scope": signing_scope,
+        "selected_worker_id_hash": selected_worker,
+        "source_proposal_payable_items_count": int(source_count),
+        "unsigned_only": False,
+        "dry_signed": False,
+        "real_signed": True,
+        "wallet_fingerprint_hash": wallet_fp,
+        "signer_label_or_address_hash": signer_id,
+        "sost_cli_bin_hash": bin_hash,
+        "total_outputs": 1,
+        "total_payment_stocks": int(output["amount_stocks"]),
+        "total_fee_stocks_estimated": int(res.fee_stocks),
+        "change_stocks_estimated": 0,
+        "total_input_stocks": 0,
+        "total_output_stocks": int(output["amount_stocks"]),
+        "fee_rate_stocks_per_byte":
+            int(res.fee_rate_stocks_per_byte),
+        "selected_utxos": [],
+        "outputs": [output],
+        "capsule_summary": capsule,
+        "capsule_attached": False,
+        "unsigned_tx_hex": None,
+        "signed_tx_hex": res.signed_tx_hex,
+        "txid_if_signed": res.txid_if_signed,
+        "warnings": warnings,
+        "safety_status": _build_safety_status(
+            dry_sign=False,
+            wallet_access_used=True,
+        ),
+    }
+
+    draft_path = (
+        out_dir
+        / f"TRINITY_USEFUL_COMPUTE_PAYMENT_DRAFT_{draft_id}.json"
+    )
+    draft_path.write_text(
+        canonical_dumps(draft), encoding="utf-8",
+    )
+    drafts = [draft]
+
+    summary_path = (
+        out_dir / "TRINITY_USEFUL_COMPUTE_PAYMENT_DRAFT_SUMMARY.md"
+    )
+    summary_path.write_text(
+        _render_summary_md(drafts), encoding="utf-8",
+    )
+    return drafts
+
+
+def _render_summary_md(drafts: List[Dict[str, Any]]) -> str:
+    """Render a Markdown summary for one or more drafts. v0.1
+    behaviour preserved when a single draft is passed."""
+    if not drafts:
+        return "# TRINITY USEFUL COMPUTE — PAYMENT DRAFT (empty)\n"
+
+    head = drafts[0]
     lines = [
         "# TRINITY USEFUL COMPUTE — PAYMENT DRAFT (review-only)",
         "",
-        f"- schema: `{draft['schema']}`",
-        f"- draft_id: `{draft['draft_id']}`",
-        f"- source_proposal_id: `{draft['source_proposal_id']}`",
-        f"- mode: `{draft['mode']}`",
-        f"- unsigned_only: **{draft['unsigned_only']}**",
-        f"- dry_signed: **{draft['dry_signed']}**",
+        f"- schema: `{head['schema']}`",
+        f"- source_proposal_id: `{head['source_proposal_id']}`",
+        f"- mode: `{head['mode']}`",
+        f"- signing_mode: **{head['signing_mode']}**",
+        f"- drafts in this run: **{len(drafts)}**",
         "",
-        "## Totals",
-        "",
-        f"- total_outputs: {draft['total_outputs']}",
-        f"- total_payment_stocks: "
-        f"**{draft['total_payment_stocks']:,}**",
-        f"- total_fee_stocks_estimated: "
-        f"{draft['total_fee_stocks_estimated']}",
-        f"- change_stocks_estimated: "
-        f"{draft['change_stocks_estimated']}",
-        "",
-        "## Outputs",
+        "## Totals (aggregated across all drafts)",
         "",
     ]
-    if draft["outputs"]:
-        lines.append(
-            "| request_id | payout_address | workers | stocks | SOST |"
-        )
-        lines.append("|---|---|---|---|---|")
-        for o in draft["outputs"]:
+    total_outputs = sum(d["total_outputs"] for d in drafts)
+    total_payment = sum(d["total_payment_stocks"] for d in drafts)
+    total_fee = sum(d["total_fee_stocks_estimated"] for d in drafts)
+    lines.extend([
+        f"- total_outputs: {total_outputs}",
+        f"- total_payment_stocks: **{total_payment:,}**",
+        f"- total_fee_stocks_estimated: {total_fee}",
+        "",
+    ])
+
+    for idx, d in enumerate(drafts):
+        lines.extend([
+            f"## Draft {idx+1} of {len(drafts)} — `{d['draft_id']}`",
+            "",
+            f"- signing_mode: `{d['signing_mode']}`",
+            f"- real_signed: **{d['real_signed']}**",
+            f"- dry_signed: **{d['dry_signed']}**",
+            f"- total_payment_stocks: {d['total_payment_stocks']:,}",
+            f"- total_fee_stocks_estimated: "
+            f"{d['total_fee_stocks_estimated']}",
+            f"- fee_rate_stocks_per_byte: "
+            f"{d['fee_rate_stocks_per_byte']}",
+            f"- wallet_fingerprint_hash: "
+            f"`{d['wallet_fingerprint_hash']}`",
+            f"- signer_label_or_address_hash: "
+            f"`{d['signer_label_or_address_hash']}`",
+            "",
+            "### Outputs",
+            "",
+        ])
+        if d["outputs"]:
             lines.append(
-                f"| {o['request_id']} | {o['payout_address']} | "
-                f"{len(o['worker_result_ids'])} | "
-                f"{o['amount_stocks']:,} | {o['amount_sost']} |"
+                "| request_id | payout_address | workers | stocks | SOST |"
             )
-    else:
-        lines.append("_none_")
+            lines.append("|---|---|---|---|---|")
+            for o in d["outputs"]:
+                lines.append(
+                    f"| {o['request_id']} | {o['payout_address']} | "
+                    f"{len(o['worker_result_ids'])} | "
+                    f"{o['amount_stocks']:,} | {o['amount_sost']} |"
+                )
+        else:
+            lines.append("_none_")
 
-    lines.extend(["", "## Warnings", ""])
-    if draft["warnings"]:
-        for w in draft["warnings"]:
-            lines.append(f"- {w}")
-    else:
-        lines.append("_none_")
+        lines.extend([
+            "",
+            "### Tx hex",
+            "",
+            f"- signed_tx_hex: `{d['signed_tx_hex']}`",
+            f"- txid_if_signed: `{d['txid_if_signed']}`",
+            "",
+            "### Warnings",
+            "",
+        ])
+        if d["warnings"]:
+            for w in d["warnings"]:
+                lines.append(f"- {w}")
+        else:
+            lines.append("_none_")
+        lines.append("")
 
     lines.extend([
-        "",
-        "## Capsule summary (NOT published)",
-        "",
-        f"- template: `{draft['capsule_summary']['template']}`",
-        f"- text: {draft['capsule_summary']['text']}",
-    ])
-
-    lines.extend([
-        "",
-        "## Tx hex blocks (informational, v0.1 placeholders)",
-        "",
-        f"- unsigned_tx_hex: `{draft['unsigned_tx_hex']}`",
-        f"- signed_tx_hex:   `{draft['signed_tx_hex']}`",
-        f"- txid_if_signed:  `{draft['txid_if_signed']}`",
-    ])
-
-    lines.extend([
-        "",
         "## Safety",
         "",
-        "- **THIS DRAFT IS NOT A BROADCAST.**",
-        "- No transaction has been signed for production use.",
-        "- No SOST has been moved.",
-        "- v0.1 does not actually sign in dry-sign mode; it only",
-        "  verifies the wallet path exists and writes a placeholder.",
-        "- Real signing and a separate manual broadcast happen in",
-        "  a future sprint.",
+        "- **NONE OF THE DRAFTS IN THIS RUN HAVE BEEN BROADCAST.**",
+        "- Real-signed drafts contain a real `signed_tx_hex` and a",
+        "  real `txid_if_signed`. They MUST still be reviewed by a",
+        "  human, then broadcast in a separate, human-driven sprint.",
+        "- No SOST has moved.",
+        "- No automatic payout. No `sendrawtransaction` was called.",
+        "- Private keys never left the wallet binary's process.",
     ])
     return "\n".join(lines)
 
@@ -420,11 +814,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     p = argparse.ArgumentParser(
         prog="useful_compute_payment_draft",
         description=(
-            "Trinity Useful Compute signed payment draft v0.1. "
+            "Trinity Useful Compute signed payment draft v0.2. "
             "Converts a payment proposal into a reviewable draft "
             "transaction. NEVER broadcasts, NEVER calls "
-            "sendrawtransaction, NEVER exports a private key. "
-            "Default mode is unsigned-only with no wallet access."
+            "sendrawtransaction, NEVER exports a private key, "
+            "NEVER auto-pays. Three modes: --unsigned-only "
+            "(default), --dry-sign (placeholder), --real-sign "
+            "(real local signing via sost-cli createtx)."
         ),
     )
     p.add_argument("--mode", required=True, choices=["local-dry-run"])
@@ -441,38 +837,72 @@ def main(argv: Optional[List[str]] = None) -> int:
         "--dry-sign", action="store_true",
         help=(
             "Verify the --wallet file exists and record dry_signed=true. "
-            "v0.1 does NOT load keys and does NOT actually sign; it "
-            "writes a placeholder signed_tx_hex string. Real wallet "
-            "integration lands in a future sprint."
+            "v0.2 dry-sign does NOT load keys and does NOT actually "
+            "sign; it writes a placeholder signed_tx_hex string. Use "
+            "--real-sign for real local signing."
+        ),
+    )
+    p.add_argument(
+        "--real-sign", action="store_true",
+        help=(
+            "Invoke `sost-cli createtx` once per eligible payable "
+            "item to produce a real signed_tx_hex and txid per draft. "
+            "Requires --wallet, --from-label or --from-address, "
+            "--max-total-stocks, and the exact confirmation token "
+            "I_UNDERSTAND_THIS_WILL_SIGN_BUT_NOT_BROADCAST. NEVER "
+            "broadcasts."
         ),
     )
     p.add_argument(
         "--wallet", default=None,
-        help="Required only when --dry-sign is set.",
+        help="Required for --dry-sign and --real-sign.",
     )
     p.add_argument("--from-label", default=None)
     p.add_argument("--from-address", default=None)
-    # RPC flags are accepted for forward compatibility. v0.1 does
-    # NOT call any RPC. The values are not stored in the draft.
     p.add_argument(
         "--rpc", default=None,
         help=(
-            "Accepted for forward compatibility. v0.1 makes NO RPC "
-            "call. The value is not stored in the draft."
+            "Accepted for forward compatibility. v0.2 makes NO RPC "
+            "call from this script. The value is not stored in the "
+            "draft. sost-cli itself does read-only RPC."
         ),
     )
     p.add_argument(
         "--rpc-user", default=None,
-        help="Accepted for forward compatibility (unused in v0.1).",
+        help="Accepted for forward compatibility (unused).",
     )
     p.add_argument(
         "--rpc-pass", default=None,
-        help="Accepted for forward compatibility (unused in v0.1).",
+        help="Accepted for forward compatibility (unused).",
     )
     p.add_argument(
         "--max-total-stocks", type=int, default=None,
-        help="Refuse to build a draft whose total_payment_stocks "
-             "exceeds this cap.",
+        help="Refuse to build / sign drafts whose total "
+             "payment exceeds this cap.",
+    )
+    p.add_argument(
+        "--sost-cli-bin", default="sost-cli",
+        help=(
+            "Path to the sost-cli binary used by --real-sign. "
+            "Defaults to 'sost-cli' (operator's PATH)."
+        ),
+    )
+    p.add_argument(
+        "--sost-cli-timeout", type=float, default=60.0,
+        help="Timeout (seconds) per sost-cli createtx invocation.",
+    )
+    p.add_argument(
+        "--only-worker-id-hash", default=None,
+        help=(
+            "16-hex worker identifier. When supplied with "
+            "--real-sign, the proposal's payable_items are "
+            "filtered to those whose worker_result_ids contain "
+            "this hash. The selector MUST yield exactly one "
+            "payable_item; 0 matches or 2+ matches abort before "
+            "any wallet call. This is the only safe way to do a "
+            "single-output real sign on a multi-worker proposal "
+            "until a sendmany-aware sprint lands."
+        ),
     )
     p.add_argument(
         "--require-confirmation-token", required=True,
@@ -480,7 +910,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             "Mode-specific token. unsigned-only: "
             "I_UNDERSTAND_THIS_IS_ONLY_A_DRAFT_AND_WILL_NOT_BROADCAST. "
             "dry-sign: "
-            "I_UNDERSTAND_THIS_USES_WALLET_KEYS_BUT_DOES_NOT_BROADCAST."
+            "I_UNDERSTAND_THIS_USES_WALLET_KEYS_BUT_DOES_NOT_BROADCAST. "
+            "real-sign: "
+            "I_UNDERSTAND_THIS_WILL_SIGN_BUT_NOT_BROADCAST."
         ),
     )
 
@@ -489,8 +921,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     # export. The rejection list is a tuple of string literals so
     # the Sprint 5.6 static safety check (which strips string
     # literals before scanning for forbidden identifiers) does NOT
-    # surface false positives on attribute names like
-    # args.export_private_key. argparse never sees these flags.
+    # surface false positives on attribute names. argparse never
+    # sees these flags.
     raw_argv = list(argv) if argv is not None else sys.argv[1:]
     rejected_flags = (
         "--broadcast",
@@ -504,7 +936,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         if f in raw_argv:
             print(
                 "[useful_compute_payment_draft] flag "
-                + f + " is rejected in v0.1",
+                + f + " is rejected in v0.2",
                 file=sys.stderr,
             )
             return 2
@@ -514,12 +946,59 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.mode != "local-dry-run":
         print(
             "[useful_compute_payment_draft] only local-dry-run is "
-            "supported in v0.1",
+            "supported in v0.2",
+            file=sys.stderr,
+        )
+        return 2
+
+    n_modes = (
+        int(bool(args.unsigned_only))
+        + int(bool(args.dry_sign))
+        + int(bool(args.real_sign))
+    )
+    if n_modes > 1:
+        print(
+            "[useful_compute_payment_draft] --unsigned-only, "
+            "--dry-sign and --real-sign are mutually exclusive",
             file=sys.stderr,
         )
         return 2
 
     try:
+        if args.real_sign:
+            drafts = run_real_sign_drafts(
+                proposal_path=Path(args.proposal),
+                out_dir=Path(args.out_dir),
+                pinned_time=args.pinned_time,
+                wallet_path=(
+                    Path(args.wallet) if args.wallet else None
+                ),
+                from_label=args.from_label,
+                from_address=args.from_address,
+                max_total_stocks=args.max_total_stocks,
+                require_confirmation_token=
+                    args.require_confirmation_token,
+                sost_cli_bin=args.sost_cli_bin,
+                timeout_seconds=args.sost_cli_timeout,
+                only_worker_id_hash=args.only_worker_id_hash,
+            )
+            for d in drafts:
+                print(
+                    "[useful_compute_payment_draft] "
+                    f"draft_id={d['draft_id']} "
+                    f"signing_mode={d['signing_mode']} "
+                    f"txid={d['txid_if_signed']} "
+                    f"fee_stocks={d['total_fee_stocks_estimated']} "
+                    f"payment_stocks={d['total_payment_stocks']}"
+                )
+            print(
+                "[useful_compute_payment_draft] "
+                f"drafts={len(drafts)} "
+                "SIGNED_BUT_NOT_BROADCAST=true"
+            )
+            return 0
+
+        # Legacy v0.1-compatible single-draft path.
         draft = run_payment_draft(
             proposal_path=Path(args.proposal),
             out_dir=Path(args.out_dir),
@@ -547,16 +1026,15 @@ def main(argv: Optional[List[str]] = None) -> int:
         f"[useful_compute_payment_draft] outputs="
         f"{draft['total_outputs']} "
         f"total_payment_stocks={draft['total_payment_stocks']:,} "
-        f"unsigned_only={draft['unsigned_only']} "
-        f"dry_signed={draft['dry_signed']}"
+        f"signing_mode={draft['signing_mode']}"
     )
     print(
         f"[useful_compute_payment_draft] warnings="
         f"{len(draft['warnings'])} "
         f"wallet_access_used="
         f"{draft['safety_status']['wallet_access_used']} "
-        f"private_keys_exported="
-        f"{draft['safety_status']['private_keys_exported']}"
+        f"automatic_payout="
+        f"{draft['safety_status']['automatic_payout']}"
     )
     return 0
 

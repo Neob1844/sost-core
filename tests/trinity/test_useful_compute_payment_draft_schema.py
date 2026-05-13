@@ -1,4 +1,4 @@
-"""Trinity / Useful Compute payment draft schema — strict v0.1."""
+"""Trinity / Useful Compute payment draft schema — strict v0.2."""
 
 from __future__ import annotations
 
@@ -43,22 +43,74 @@ def draft_mod():
 UNSIGNED_TOKEN = "I_UNDERSTAND_THIS_IS_ONLY_A_DRAFT_AND_WILL_NOT_BROADCAST"
 
 
-def test_schema_id_is_v01(schema):
+def test_schema_id_is_v02(schema):
     assert schema["$id"] == \
-        "trinity-useful-compute-payment-draft/v0.1"
+        "trinity-useful-compute-payment-draft/v0.2"
 
 
 def test_schema_is_strict(schema):
     assert schema["additionalProperties"] is False
     expected = {
         "schema", "draft_id", "source_proposal_id", "mode",
-        "unsigned_only", "dry_signed",
+        "signing_mode", "signing_scope",
+        "selected_worker_id_hash",
+        "source_proposal_payable_items_count",
+        "unsigned_only", "dry_signed", "real_signed",
         "total_outputs", "total_payment_stocks",
         "total_fee_stocks_estimated", "change_stocks_estimated",
-        "outputs", "capsule_summary",
+        "outputs", "capsule_summary", "capsule_attached",
         "warnings", "safety_status",
     }
     assert set(schema["required"]) == expected
+
+
+def test_signing_scope_enum(schema):
+    enum = schema["properties"]["signing_scope"]["enum"]
+    assert set(enum) == {
+        "full_proposal", "single_payable_item_subset",
+    }
+
+
+def test_selected_worker_id_hash_optional_string_or_null(schema):
+    sw = schema["properties"]["selected_worker_id_hash"]
+    one_of = sw["oneOf"]
+    assert any(
+        s.get("pattern") == "^[0-9a-f]{16}$" for s in one_of
+    )
+    assert any(s.get("type") == "null" for s in one_of)
+
+
+def test_source_proposal_payable_items_count_is_integer(schema):
+    sc = schema["properties"]["source_proposal_payable_items_count"]
+    assert sc["type"] == "integer"
+    assert sc["minimum"] == 0
+
+
+def test_capsule_attached_locked_false(schema):
+    """v0.1 of --real-sign never attaches the capsule to the
+    signed tx; capsule_attached MUST be locked const-false in the
+    schema."""
+    ca = schema["properties"]["capsule_attached"]
+    assert ca["type"] == "boolean"
+    assert ca["const"] is False
+
+
+def test_sost_cli_bin_hash_typed_optional(schema):
+    """sost_cli_bin_hash is optional (string-16-hex or null)."""
+    sb = schema["properties"]["sost_cli_bin_hash"]
+    one_of = sb["oneOf"]
+    assert any(
+        s.get("type") == "string" and s.get("pattern") == "^[0-9a-f]{16}$"
+        for s in one_of
+    )
+    assert any(s.get("type") == "null" for s in one_of)
+
+
+def test_signing_mode_enum_locked(schema):
+    enum = schema["properties"]["signing_mode"]["enum"]
+    assert set(enum) == {
+        "unsigned_only", "dry_sign_placeholder", "real_sign_local",
+    }
 
 
 def test_safety_status_const_flags_locked(schema):
@@ -68,6 +120,7 @@ def test_safety_status_const_flags_locked(schema):
     assert ss["properties"]["human_review_required"]["const"] is True
     assert ss["properties"]["private_keys_exported"]["const"] is False
     assert ss["properties"]["requires_separate_broadcast"]["const"] is True
+    assert ss["properties"]["automatic_payout"]["const"] is False
 
 
 def test_safety_status_dry_sign_and_wallet_flags_are_typed(schema):
