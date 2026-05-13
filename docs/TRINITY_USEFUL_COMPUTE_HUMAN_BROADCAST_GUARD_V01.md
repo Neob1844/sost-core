@@ -1,9 +1,15 @@
-# Trinity Useful Compute — Human Broadcast Guard v0.1
+# Trinity Useful Compute — Human Broadcast Guard v0.1 / v0.2
 
 Sprint **5.18** of the Trinity Useful Compute stack. This is the
 **first** sprint that is allowed to broadcast a SOST transaction.
 Every prior Trinity sprint refuses broadcast outright; this one only
 broadcasts after a human operator has cleared every gate by hand.
+
+**v0.2 hardening (Sprint 5.18b — pre-install)**: the new CLI
+subcommand validates its own input even when called directly from a
+shell, and the Python guard always writes an audit receipt for
+broadcast attempts — including failed ones. See *"Audit trail"* and
+*"C++ self-validation"* below.
 
 ## Position in the pipeline
 
@@ -152,6 +158,58 @@ to tamper with the receipt.
 txid_if_signed + txid_broadcast + broadcast_performed +
 pinned_time + max_total_stocks))`. Two runs that produce the same
 broadcast outcome produce byte-identical receipts.
+
+## C++ self-validation (v0.2 hardening)
+
+The new `sost-cli sendrawtransaction` subcommand validates its own
+input. Even when called directly from a shell (bypassing the Python
+guard), the wrapper refuses:
+
+| Input | Result |
+| --- | --- |
+| Missing argument | rc=1, stderr `Usage: sost-cli sendrawtransaction <hex>` |
+| Empty hex | rc=1, stderr `Error: empty hex` |
+| Odd-length hex | rc=1, stderr `Error: hex length N is odd; ...` |
+| Non-`[0-9a-fA-F]` character | rc=1, stderr `Error: non-hex character in hex argument` |
+| Extra positional argument | rc=1, stderr `Error: sendrawtransaction accepts exactly one argument; got N extra` |
+| `--help` / `-h` | rc=0, stdout `Usage: sost-cli sendrawtransaction <hex>` and details |
+
+`--help` works because the global flag parser now defers `--help`
+/ `-h` to the subcommand handler when a subcommand positional has
+already been collected. `sost-cli --help` (no subcommand) still
+prints the master usage, which now lists `sendrawtransaction` in
+its commands table.
+
+## Audit trail (v0.2 hardening)
+
+Every `--mode human-broadcast` invocation leaves a receipt on disk,
+even when the broadcast attempt fails. The new receipt fields:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `broadcast_attempted` | boolean | True if `sost-cli sendrawtransaction` was actually invoked. False for dry-run and for refusals that happen before subprocess. |
+| `broadcast_performed` | boolean | True ONLY when the attempt succeeded AND the node's txid matched the draft's. |
+| `broadcast_result_status` | enum | `dry_run` / `broadcasted` / `node_rejected` / `txid_mismatch` / `parse_error` |
+| `node_txid_observed` | string \| null | The txid the node returned, even when it did NOT match the draft. Useful for forensic investigation. |
+| `node_stdout_sha256` | string \| null | Hash of the captured stdout. Operator can re-hash the log file to confirm. |
+| `node_stderr_sha256` | string \| null | Same for stderr (node rejection messages, RPC auth errors, …). |
+
+State matrix:
+
+| Situation | attempted | performed | result_status | exit code |
+| --- | --- | --- | --- | --- |
+| Pre-subprocess refusal (token wrong, schema wrong, cap exceeded, …) | n/a | n/a | n/a — receipt NOT written | 2 |
+| `--mode local-dry-run` | false | false | `dry_run` | 0 |
+| Successful broadcast | true | true | `broadcasted` | 0 |
+| Node rejected (rc != 0, timeout, file-not-found) | true | false | `node_rejected` | 3 |
+| Stdout had no Txid line | true | false | `parse_error` | 3 |
+| Node returned a different txid than the draft | true | false | `txid_mismatch` | 3 |
+
+**Exit codes**:
+- 0 — success (dry-run receipt or `broadcasted` receipt written)
+- 2 — pre-subprocess refusal (no receipt)
+- 3 — subprocess attempted but failed (receipt written, operator
+  must investigate)
 
 ## Hard safety boundaries
 

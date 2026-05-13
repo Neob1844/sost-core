@@ -30,10 +30,12 @@ def test_receipt_panel_ids_present():
     for cid in (
         "receiptFile", "receiptBadge", "receiptDetails",
         "receiptId", "receiptDraftId", "receiptMode",
-        "receiptPerformed", "receiptTxidSigned",
-        "receiptTxidBroadcast", "receiptHexSha",
-        "receiptPaymentStocks", "receiptMaxTotal",
-        "receiptCliBinHash", "receiptSafetyList",
+        "receiptAttempted", "receiptPerformed",
+        "receiptStatus", "receiptNodeTxid",
+        "receiptTxidSigned", "receiptTxidBroadcast",
+        "receiptHexSha", "receiptPaymentStocks",
+        "receiptMaxTotal", "receiptCliBinHash",
+        "receiptSafetyList",
     ):
         assert f'id="{cid}"' in src, (
             f"broadcast receipt panel missing id {cid!r}"
@@ -43,8 +45,18 @@ def test_receipt_panel_ids_present():
 def test_receipt_js_render_function_present():
     src = _read()
     assert "function _receiptRender" in src
-    assert "SCHEMA_RECEIPT_V01" in src
-    assert "trinity-useful-compute-broadcast-receipt/v0.1" in src
+    assert "SCHEMA_RECEIPT_V02" in src
+    assert "trinity-useful-compute-broadcast-receipt/v0.2" in src
+
+
+def test_receipt_handles_attempt_failure_in_badge():
+    """The receipt loader must distinguish three states:
+    broadcasted, attempt failed (broadcast_attempted=true,
+    broadcast_performed=false), and dry-run."""
+    src = _read().lower()
+    assert "attempt failed" in src
+    assert "broadcast_result_status" in src
+    assert "broadcast_attempted" in src
 
 
 # ---------------------------------------------------------------------------
