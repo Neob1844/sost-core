@@ -74,7 +74,7 @@ STOCKS_PER_SOST = 100_000_000
 
 _RID_RE  = re.compile(r"^uc-[0-9a-f]{16,64}$")
 _WRID_RE = re.compile(r"^[0-9a-f]{16}$")
-_ADDR_RE = re.compile(r"^sost1[023456789acdefghjklmnpqrstuvwxyz]{20,80}$")
+_ADDR_RE = re.compile(r"^sost1[0-9a-f]{40}$")
 
 
 def canonical_dumps(obj: Any) -> str:

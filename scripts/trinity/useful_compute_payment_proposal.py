@@ -60,7 +60,7 @@ SCHEMA_ADDRESS_MAP = "trinity-worker-address-map/v0.1"
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 
-_ADDRESS_RE = re.compile(r"^sost1[023456789acdefghjklmnpqrstuvwxyz]{20,80}$")
+_ADDRESS_RE = re.compile(r"^sost1[0-9a-f]{40}$")
 _WORKER_HASH_RE = re.compile(r"^[0-9a-f]{16}$")
 _WRID_RE = re.compile(r"^[0-9a-f]{16}$")
 _RID_RE  = re.compile(r"^uc-[0-9a-f]{16,64}$")

@@ -87,7 +87,7 @@ def test_validate_accepts_well_formed_map(tmp_path, map_mod):
         "workers": [
             {"worker_id_hash": "f" * 16,
              "payout_address":
-                 "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                 "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
              "label": "Alice"},
         ],
     })
@@ -122,10 +122,10 @@ def test_validate_rejects_duplicate_worker_id_hash(tmp_path, map_mod):
         "workers": [
             {"worker_id_hash": "a" * 16,
              "payout_address":
-                 "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+                 "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
             {"worker_id_hash": "a" * 16,
              "payout_address":
-                 "sost1qcccccccccccccccccccccccccccccccccccccc"},
+                 "sost1cccccccccccccccccccccccccccccccccccccccc"},
         ],
     })
     rc = map_mod.main(["validate", "--path", str(p)])
@@ -138,10 +138,10 @@ def test_validate_rejects_duplicate_payout_address(tmp_path, map_mod):
         "workers": [
             {"worker_id_hash": "a" * 16,
              "payout_address":
-                 "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+                 "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
             {"worker_id_hash": "c" * 16,
              "payout_address":
-                 "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+                 "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
         ],
     })
     rc = map_mod.main(["validate", "--path", str(p)])
@@ -164,7 +164,7 @@ def test_validate_rejects_extra_worker_field(tmp_path, map_mod):
         "workers": [
             {"worker_id_hash": "f" * 16,
              "payout_address":
-                 "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                 "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
              "private_key": "deadbeef"},
         ],
     })
@@ -186,21 +186,23 @@ def test_validate_missing_file_returns_2(tmp_path, map_mod):
 
 def test_validate_address_helper_accepts_valid(map_mod):
     assert map_mod.validate_address(
-        "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     ) is None
 
 
-def test_validate_address_helper_rejects_non_bech32_chars(map_mod):
-    # bech32 excludes '1' (after the separator), 'b', 'i', 'o'.
+def test_validate_address_helper_rejects_non_hex_chars(map_mod):
+    # Canonical SOST address = "sost1" + 40 lowercase hex chars.
+    # Anything outside [0-9a-f] in the body is rejected, as is any
+    # length other than 40 body chars.
     assert map_mod.validate_address(
         "sost1aliceXXXXXXXXXXXXXXXXXXXXXXXX",
-    ) is not None  # capital chars not allowed
+    ) is not None  # uppercase + non-hex letters
     assert map_mod.validate_address(
         "sost1abi" + "a" * 32,
-    ) is not None  # 'b' and 'i' excluded
+    ) is not None  # 'i' is not in [0-9a-f]
     assert map_mod.validate_address(
         "sost1o" + "a" * 32,
-    ) is not None  # 'o' excluded
+    ) is not None  # 'o' is not in [0-9a-f]
 
 
 def test_validate_address_helper_rejects_wrong_prefix(map_mod):

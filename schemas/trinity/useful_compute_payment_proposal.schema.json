@@ -70,7 +70,7 @@
             }
           },
           "payout_address": {
-            "type": "string", "pattern": "^sost1[0-9a-z]{20,80}$"
+            "type": "string", "pattern": "^sost1[0-9a-f]{40}$"
           },
           "allocated_stocks": { "type": "integer", "minimum": 0 },
           "allocated_sost":   { "type": "number",  "minimum": 0 },

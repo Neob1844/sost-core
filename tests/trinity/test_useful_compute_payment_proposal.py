@@ -161,9 +161,9 @@ def _setup(tmp_path, *, workers, allocated, primary_share):
 # ---------------------------------------------------------------------------
 
 
-_ADDR_A = "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-_ADDR_C = "sost1qcccccccccccccccccccccccccccccccccccccc"
-_ADDR_D = "sost1qdddddddddddddddddddddddddddddddddddddd"
+_ADDR_A = "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+_ADDR_C = "sost1cccccccccccccccccccccccccccccccccccccccc"
+_ADDR_D = "sost1dddddddddddddddddddddddddddddddddddddddd"
 
 
 def test_budget_plus_address_map_yields_payable_items(

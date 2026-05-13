@@ -131,7 +131,7 @@
         "properties": {
           "payout_address": {
             "type": "string",
-            "pattern": "^sost1[023456789acdefghjklmnpqrstuvwxyz]{20,80}$"
+            "pattern": "^sost1[0-9a-f]{40}$"
           },
           "amount_stocks": { "type": "integer", "minimum": 0 },
           "amount_sost":   { "type": "number",  "minimum": 0 },

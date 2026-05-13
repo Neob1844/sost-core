@@ -81,7 +81,7 @@ def _good_draft(
         "selected_utxos": [],
         "outputs": [{
             "payout_address":
-                "sost1qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "sost1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "amount_stocks": total_payment_stocks,
             "amount_sost": total_payment_stocks / 100_000_000,
             "request_id": "uc-" + "3" * 16,
