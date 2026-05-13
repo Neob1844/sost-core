@@ -412,12 +412,9 @@ def test_human_broadcast_happy_path_status_broadcasted(
 def test_node_rejected_writes_audit_receipt(
     tmp_path, guard_mod, monkeypatch,
 ):
-    """sost-cli exited non-zero. The guard must:
-    - raise BroadcastAttemptFailure (not BroadcastGuardError)
-    - write a receipt with broadcast_attempted=true,
-      broadcast_performed=false, status="node_rejected"
-    - include node_stderr_sha256 so the operator can correlate
-    """
+    """Node-side rejection (insufficient fee, double spend, …):
+    rc != 0 but the stderr does NOT match any CLI-side pattern,
+    so the status is node_rejected."""
     draft = _good_draft()
     dp = _write_draft(tmp_path, draft)
     captured = _install_fake_subprocess(
@@ -426,7 +423,7 @@ def test_node_rejected_writes_audit_receipt(
     )
     with pytest.raises(
         guard_mod.BroadcastAttemptFailure,
-        match="exited 1",
+        match="node_rejected",
     ):
         guard_mod.run_broadcast_guard(
             draft_path=dp,
@@ -448,6 +445,65 @@ def test_node_rejected_writes_audit_receipt(
     assert r["node_txid_observed"] is None
     assert r["node_stderr_sha256"] is not None
     assert len(r["node_stderr_sha256"]) == 64
+
+
+def test_cli_rejected_wallet_load_failure(
+    tmp_path, guard_mod, monkeypatch,
+):
+    """Sprint 5.18d hotfix regression test: in the VPS broadcast
+    attempt the failure stderr was 'Error loading wallet
+    ...wallet.json: cannot open wallet.json'. That's a CLI-side
+    rejection and must classify as cli_rejected, not
+    node_rejected. The audit receipt is still written."""
+    draft = _good_draft()
+    dp = _write_draft(tmp_path, draft)
+    _install_fake_subprocess(
+        monkeypatch, guard_mod,
+        [(1, "",
+          "Error loading wallet 'wallet.json': cannot open "
+          "wallet.json\nUse 'sost-cli newwallet' to create a new "
+          "wallet.\n")],
+    )
+    with pytest.raises(
+        guard_mod.BroadcastAttemptFailure,
+        match="cli_rejected",
+    ):
+        guard_mod.run_broadcast_guard(
+            draft_path=dp,
+            out_dir=tmp_path / "out",
+            mode="human-broadcast",
+            max_total_stocks=1_000_000,
+            pinned_time="2026-05-13T00:00:00+00:00",
+            require_confirmation_token=HUMAN_TOKEN,
+            sost_cli_bin="sost-cli-fake",
+        )
+    receipts = _read_receipts(tmp_path / "out")
+    assert len(receipts) == 1
+    r = receipts[0]
+    assert r["broadcast_attempted"] is True
+    assert r["broadcast_performed"] is False
+    assert r["broadcast_result_status"] == "cli_rejected"
+    assert r["node_stderr_sha256"] is not None
+
+
+@pytest.mark.parametrize("stderr,expected_status", [
+    ("Error loading wallet 'x': cannot open\n", "cli_rejected"),
+    ("Error: empty hex\n", "cli_rejected"),
+    ("Error: hex length 17 is odd\n", "cli_rejected"),
+    ("Error: non-hex character in hex argument\n", "cli_rejected"),
+    ("Error: sendrawtransaction accepts exactly one argument; "
+     "got 1 extra\n", "cli_rejected"),
+    ("Usage: sost-cli sendrawtransaction <hex>\n", "cli_rejected"),
+    ("Error: 401 Unauthorized\n", "cli_rejected"),
+    ("Error: insufficient fee\n", "node_rejected"),
+    ("Error: double-spend detected\n", "node_rejected"),
+    ("Error: bad-txns-inputs-missingorspent\n", "node_rejected"),
+])
+def test_classify_subprocess_failure(
+    guard_mod, stderr, expected_status,
+):
+    assert guard_mod._classify_subprocess_failure(stderr) \
+        == expected_status
 
 
 def test_parse_error_writes_audit_receipt(

@@ -52,6 +52,7 @@ def test_broadcast_result_status_enum(schema):
     enum = schema["properties"]["broadcast_result_status"]["enum"]
     assert set(enum) == {
         "dry_run", "broadcasted",
+        "cli_rejected",
         "node_rejected", "txid_mismatch", "parse_error",
     }
 

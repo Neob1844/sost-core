@@ -1262,7 +1262,115 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    // All other commands need an existing wallet (except newwallet)
+    // =====================================================================
+    // sendrawtransaction <hex>
+    //
+    // Sprint 5.18d hotfix: this subcommand runs BEFORE the global
+    // wallet load so it does NOT require --wallet to point at an
+    // existing file. The earlier 5.18/5.18b implementation lived
+    // after the wallet load, which made `sost-cli sendrawtransaction`
+    // fail with "Error loading wallet ..." before even reaching the
+    // node. Broadcast is a pure RPC operation: no wallet, no keys,
+    // no UTXO mutation. Global RPC flags (--rpc-user, --rpc-pass,
+    // --node) are parsed earlier in main() so they are honoured.
+    //
+    // Accepts exactly one positional argument (the hex). Rejects:
+    //   - missing argument
+    //   - empty hex
+    //   - odd-length hex
+    //   - non-[0-9a-fA-F] characters
+    //   - extra positional arguments
+    //   - --help / -h (prints specific usage, exit 0)
+    //
+    // Stdout on success:
+    //   Txid: <64-hex>
+    // Stderr on rejection (returncode 1):
+    //   Error: <message>
+    // =====================================================================
+    if (cmd == "sendrawtransaction") {
+        if (argc >= arg_start + 2) {
+            std::string a1 = argv[arg_start + 1];
+            if (a1 == "--help" || a1 == "-h") {
+                fprintf(stdout,
+                    "Usage: sost-cli sendrawtransaction <hex>\n"
+                    "  Broadcast an already-signed transaction hex "
+                    "to the local node.\n"
+                    "  The hex must be lowercase/uppercase, "
+                    "non-empty, even-length [0-9a-fA-F]+.\n"
+                    "  Exactly one positional argument; extra args "
+                    "are rejected.\n"
+                    "  Wallet-free: does NOT load --wallet, does "
+                    "NOT touch keys, does NOT mutate UTXOs.\n"
+                    "  Returns Txid:<hex> on success, Error:<msg> "
+                    "and rc=1 on rejection.\n");
+                return 0;
+            }
+        }
+        if (argc < arg_start + 2) {
+            fprintf(stderr,
+                "Usage: sost-cli sendrawtransaction <hex>\n");
+            return 1;
+        }
+        if (argc > arg_start + 2) {
+            fprintf(stderr,
+                "Error: sendrawtransaction accepts exactly one "
+                "argument; got %d extra\n",
+                argc - (arg_start + 2));
+            return 1;
+        }
+        std::string raw_hex = argv[arg_start + 1];
+        if (raw_hex.empty()) {
+            fprintf(stderr, "Error: empty hex\n");
+            return 1;
+        }
+        if (raw_hex.size() % 2 != 0) {
+            fprintf(stderr,
+                "Error: hex length %zu is odd; raw transaction "
+                "bytes must serialize to an even-length hex "
+                "string\n", raw_hex.size());
+            return 1;
+        }
+        for (char c : raw_hex) {
+            bool ok = (c >= '0' && c <= '9')
+                   || (c >= 'a' && c <= 'f')
+                   || (c >= 'A' && c <= 'F');
+            if (!ok) {
+                fprintf(stderr,
+                    "Error: non-hex character in hex argument\n");
+                return 1;
+            }
+        }
+        std::string resp = rpc_call("sendrawtransaction",
+                                    "[\"" + raw_hex + "\"]");
+        auto rpos = resp.find("\"result\":\"");
+        if (rpos != std::string::npos) {
+            auto txstart = rpos + 10;
+            auto txend = resp.find('"', txstart);
+            std::string txid = resp.substr(txstart, txend - txstart);
+            printf("Txid: %s\n", txid.c_str());
+            return 0;
+        }
+        if (resp.find("401") != std::string::npos) {
+            fprintf(stderr, "Error: 401 Unauthorized\n");
+            fprintf(stderr,
+                "  Use: --rpc-user <user> --rpc-pass <pass>\n");
+            return 1;
+        }
+        auto epos = resp.find("\"message\":\"");
+        if (epos != std::string::npos) {
+            auto eend = resp.find('"', epos + 11);
+            std::string emsg = resp.substr(
+                epos + 11, eend - epos - 11);
+            fprintf(stderr, "Error: %s\n", emsg.c_str());
+        } else {
+            fprintf(stderr, "Error: unknown node response\n");
+            fprintf(stderr, "  Raw: %s\n", resp.c_str());
+        }
+        return 1;
+    }
+
+    // All other commands need an existing wallet (except newwallet
+    // and the wallet-free sendrawtransaction handled above).
     sost::Wallet w;
     {
         std::string err;
@@ -2218,117 +2326,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // =====================================================================
-    // sendrawtransaction <hex>
-    //
-    // Thin wrapper around the node's sendrawtransaction RPC. Takes a
-    // hex-encoded already-signed transaction and asks the node to
-    // accept it into its mempool. Does NOT touch the wallet, does NOT
-    // mark UTXOs spent, does NOT sign. Trinity's Sprint 5.18 human
-    // broadcast guard uses this from Python via subprocess; keeping
-    // the wrapper here means the only network-facing primitive
-    // remains inside sost-cli.
-    //
-    // Sprint 5.18 hardening: the subcommand validates its own input
-    // even though the Python guard already does. Anyone who calls
-    // `sost-cli sendrawtransaction` directly from a shell must hit
-    // the same gates.
-    //
-    // Accepts exactly one positional argument (the hex). Rejects:
-    //   - missing argument
-    //   - empty hex
-    //   - odd-length hex
-    //   - non-[0-9a-fA-F] characters
-    //   - extra positional arguments
-    //   - --help (prints specific usage, exit 0)
-    //
-    // Stdout on success:
-    //   Txid: <64-hex>
-    // Stderr on rejection (returncode 1):
-    //   Error: <message>
-    // =====================================================================
-    if (cmd == "sendrawtransaction") {
-        // --help / -h shortcut.
-        if (argc >= arg_start + 2) {
-            std::string a1 = argv[arg_start + 1];
-            if (a1 == "--help" || a1 == "-h") {
-                fprintf(stdout,
-                    "Usage: sost-cli sendrawtransaction <hex>\n"
-                    "  Broadcast an already-signed transaction hex "
-                    "to the local node.\n"
-                    "  The hex must be lowercase/uppercase, "
-                    "non-empty, even-length [0-9a-fA-F]+.\n"
-                    "  Exactly one positional argument; extra args "
-                    "are rejected.\n"
-                    "  Returns Txid:<hex> on success, Error:<msg> "
-                    "and rc=1 on rejection.\n");
-                return 0;
-            }
-        }
-        if (argc < arg_start + 2) {
-            fprintf(stderr,
-                "Usage: sost-cli sendrawtransaction <hex>\n");
-            return 1;
-        }
-        if (argc > arg_start + 2) {
-            fprintf(stderr,
-                "Error: sendrawtransaction accepts exactly one "
-                "argument; got %d extra\n",
-                argc - (arg_start + 2));
-            return 1;
-        }
-        std::string raw_hex = argv[arg_start + 1];
-        if (raw_hex.empty()) {
-            fprintf(stderr, "Error: empty hex\n");
-            return 1;
-        }
-        if (raw_hex.size() % 2 != 0) {
-            fprintf(stderr,
-                "Error: hex length %zu is odd; raw transaction "
-                "bytes must serialize to an even-length hex "
-                "string\n", raw_hex.size());
-            return 1;
-        }
-        for (char c : raw_hex) {
-            bool ok = (c >= '0' && c <= '9')
-                   || (c >= 'a' && c <= 'f')
-                   || (c >= 'A' && c <= 'F');
-            if (!ok) {
-                fprintf(stderr,
-                    "Error: non-hex character in hex argument\n");
-                return 1;
-            }
-        }
-        std::string resp = rpc_call("sendrawtransaction",
-                                    "[\"" + raw_hex + "\"]");
-        // Successful node response shape:
-        //   {"result":"<txid_hex>","error":null,"id":...}
-        auto rpos = resp.find("\"result\":\"");
-        if (rpos != std::string::npos) {
-            auto txstart = rpos + 10;
-            auto txend = resp.find('"', txstart);
-            std::string txid = resp.substr(txstart, txend - txstart);
-            printf("Txid: %s\n", txid.c_str());
-            return 0;
-        }
-        if (resp.find("401") != std::string::npos) {
-            fprintf(stderr, "Error: 401 Unauthorized\n");
-            fprintf(stderr,
-                "  Use: --rpc-user <user> --rpc-pass <pass>\n");
-            return 1;
-        }
-        auto epos = resp.find("\"message\":\"");
-        if (epos != std::string::npos) {
-            auto eend = resp.find('"', epos + 11);
-            std::string emsg = resp.substr(
-                epos + 11, eend - epos - 11);
-            fprintf(stderr, "Error: %s\n", emsg.c_str());
-        } else {
-            fprintf(stderr, "Error: unknown node response\n");
-            fprintf(stderr, "  Raw: %s\n", resp.c_str());
-        }
-        return 1;
-    }
+    // (sendrawtransaction handled earlier — Sprint 5.18d moved it
+    // before the wallet load so it can run wallet-free.)
 
     // =====================================================================
     // cancel-tx <txid> [--fee-bump N]

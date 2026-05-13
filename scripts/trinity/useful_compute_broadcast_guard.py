@@ -81,6 +81,35 @@ _HEX_RE = re.compile(r"^[0-9a-fA-F]+$")
 _TXID64_RE = re.compile(r"^[0-9a-f]{64}$")
 _DRAFT_ID_RE = re.compile(r"^draft-[0-9a-f]{16}$")
 
+# Stderr signatures that mean the CLI itself rejected the call
+# BEFORE contacting the node. Distinguishing CLI-side rejections
+# from node-side rejections lets the operator triage faster:
+# "fix your CLI invocation" vs "investigate the node".
+_CLI_REJECTION_PATTERNS = (
+    "error loading wallet",
+    "empty hex",
+    "hex length",
+    "non-hex character",
+    "accepts exactly one",
+    "usage: sost-cli sendrawtransaction",
+    "no such file",
+    "permission denied",
+    "401 unauthorized",
+)
+
+
+def _classify_subprocess_failure(stderr: str) -> str:
+    """Inspect captured stderr from a non-zero sost-cli exit and
+    decide whether the failure happened in the CLI wrapper itself
+    (e.g. wallet load failure, hex validation, RPC auth) or after
+    the wrapper handed the tx to the node. Returns either
+    ``"cli_rejected"`` or ``"node_rejected"``."""
+    low = (stderr or "").lower()
+    for pat in _CLI_REJECTION_PATTERNS:
+        if pat in low:
+            return "cli_rejected"
+    return "node_rejected"
+
 
 class BroadcastGuardError(RuntimeError):
     """Raised by this module when a precondition fails BEFORE any
@@ -460,13 +489,17 @@ def run_broadcast_guard(
 
     # subprocess returned non-zero (-1 also covers timeout and
     # FileNotFoundError surfaced as a synthetic stderr in
-    # _call_sost_cli_sendraw).
+    # _call_sost_cli_sendraw). Classify so the receipt distinguishes
+    # CLI-side rejection (wallet load failure, hex validation, RPC
+    # auth) from node-side rejection (insufficient fee, double
+    # spend, mempool full, …).
     if rc != 0:
+        status = _classify_subprocess_failure(stderr)
         receipt = _build_receipt(
             draft=draft, mode=mode,
             broadcast_attempted=True,
             broadcast_performed=False,
-            broadcast_result_status="node_rejected",
+            broadcast_result_status=status,
             txid_broadcast=None,
             node_txid_observed=None,
             node_stdout=stdout, node_stderr=stderr,
@@ -478,7 +511,8 @@ def run_broadcast_guard(
         receipt_path = _write_receipt(out_dir, receipt)
         raise BroadcastAttemptFailure(
             "sost-cli sendrawtransaction exited " + str(rc)
-            + "; receipt written to " + str(receipt_path)
+            + " (" + status + "); receipt written to "
+            + str(receipt_path)
             + "; stderr (first 256 chars): "
             + repr(stderr.strip()[:256]),
             receipt_path=receipt_path,

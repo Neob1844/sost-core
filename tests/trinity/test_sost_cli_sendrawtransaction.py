@@ -166,3 +166,50 @@ def test_general_help_lists_sendrawtransaction():
     )
     out = cp.stdout + cp.stderr
     assert "sendrawtransaction" in out
+
+
+def test_sendrawtransaction_does_not_load_wallet(tmp_path):
+    """Sprint 5.18d regression: sost-cli sendrawtransaction <hex>
+    must not require --wallet to point at an existing file. The
+    earlier build failed with 'Error loading wallet ...' before
+    the hex was even validated. After 5.18d the subcommand runs
+    BEFORE the wallet load and rejects on hex grounds first.
+
+    We point --wallet at a non-existent path and pass a deliberately
+    invalid (odd-length) hex. The expected stderr line is the
+    Trinity hex-validation message, NOT the wallet load error.
+    """
+    missing_wallet = tmp_path / "definitely-does-not-exist.json"
+    assert not missing_wallet.exists()
+    cp = subprocess.run(
+        [str(SOST_CLI),
+         "--wallet", str(missing_wallet),
+         "sendrawtransaction", "abc"],   # odd-length
+        capture_output=True, text=True, timeout=15,
+    )
+    assert cp.returncode != 0
+    out = (cp.stdout + cp.stderr).lower()
+    # MUST hit the hex validator…
+    assert ("odd" in out or "even-length" in out), (
+        "expected hex-length error; got:\n" + out[:1000]
+    )
+    # …and MUST NOT hit the wallet loader.
+    assert "loading wallet" not in out, (
+        "sendrawtransaction tried to load wallet; got:\n" + out[:1000]
+    )
+
+
+def test_sendrawtransaction_help_does_not_load_wallet(tmp_path):
+    """`sost-cli sendrawtransaction --help` must work even when
+    no wallet.json exists in the cwd."""
+    missing_wallet = tmp_path / "definitely-does-not-exist.json"
+    cp = subprocess.run(
+        [str(SOST_CLI),
+         "--wallet", str(missing_wallet),
+         "sendrawtransaction", "--help"],
+        capture_output=True, text=True, timeout=15,
+    )
+    assert cp.returncode == 0
+    out = cp.stdout + cp.stderr
+    assert "Usage: sost-cli sendrawtransaction <hex>" in out
+    assert "loading wallet" not in out.lower()
