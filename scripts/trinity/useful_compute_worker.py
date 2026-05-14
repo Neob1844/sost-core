@@ -69,6 +69,19 @@ _RESULT_SCHEMA_PATH = (
 _TASK_TYPES = (
     "dft", "quantum", "structure_relaxation",
     "scoring", "simulation", "other",
+    # Sprint 5.22b — accepts requests built by
+    # useful_compute_task_builder --from-scientific-intake.
+    "scientific_intake",
+)
+
+# Sprint 5.22b — request.source_tool enum. Kept here so the
+# worker can extend its accepted set without touching the schema
+# (the schema already accepts the union).
+_SOURCE_TOOLS = (
+    "materials_engine",
+    "geaspirit",
+    "trinity_orchestrator",
+    "trinity_scientific_prompt_intake",
 )
 
 _DIFFICULTY_TIERS = ("low", "medium", "high", "extreme")
@@ -136,9 +149,7 @@ def validate_request(request: Dict[str, Any]) -> None:
         raise ValueError(f"request_id has wrong format: {rid!r}")
 
     src = request.get("source_tool")
-    if src not in (
-        "materials_engine", "geaspirit", "trinity_orchestrator",
-    ):
+    if src not in _SOURCE_TOOLS:
         raise ValueError(f"unknown source_tool: {src!r}")
 
     tt = request.get("task_type")
@@ -190,7 +201,64 @@ def validate_request(request: Dict[str, Any]) -> None:
     if pn is not None and not (isinstance(pn, str) and len(pn) <= 2048):
         raise ValueError("private_notes too long or wrong type")
 
-    allowed = _REQ_REQUIRED | {"private_notes"}
+    # Sprint 5.22b — `metadata` is an additive, schema-allowed
+    # optional field. When source_tool is the scientific-intake
+    # bridge, the worker REQUIRES metadata.scientific_intake with
+    # the six identifier / hash / count fields so the backend can
+    # produce a deterministic hash manifest.
+    md = request.get("metadata")
+    if md is not None:
+        if not isinstance(md, dict):
+            raise ValueError("metadata must be an object")
+    if (request.get("task_type") == "scientific_intake"
+            or src == "trinity_scientific_prompt_intake"):
+        if not isinstance(md, dict):
+            raise ValueError(
+                "scientific_intake task requires "
+                "metadata.scientific_intake"
+            )
+        si = md.get("scientific_intake")
+        if not isinstance(si, dict):
+            raise ValueError(
+                "metadata.scientific_intake must be an object"
+            )
+        _SI_REQUIRED = {
+            "intake_id", "combined_context_sha256",
+            "prompt_sha256", "documents_count",
+            "intake_task_kind", "intake_artifact_sha256",
+        }
+        missing_si = _SI_REQUIRED - set(si.keys())
+        if missing_si:
+            raise ValueError(
+                "metadata.scientific_intake missing fields: "
+                + repr(sorted(missing_si))
+            )
+        if not re.match(r"^spi-[0-9a-f]{16}$", si["intake_id"]):
+            raise ValueError(
+                "scientific_intake.intake_id wrong format"
+            )
+        for k in ("combined_context_sha256", "prompt_sha256",
+                  "intake_artifact_sha256"):
+            if not re.match(r"^[0-9a-f]{64}$", si[k]):
+                raise ValueError(
+                    f"scientific_intake.{k} must be 64-hex"
+                )
+        if not (isinstance(si["documents_count"], int)
+                and si["documents_count"] >= 0
+                and not isinstance(si["documents_count"], bool)):
+            raise ValueError(
+                "scientific_intake.documents_count must be "
+                "non-negative int"
+            )
+        if si["intake_task_kind"] not in (
+            "benchmark", "comparison",
+            "extraction", "validation",
+        ):
+            raise ValueError(
+                "scientific_intake.intake_task_kind invalid"
+            )
+
+    allowed = _REQ_REQUIRED | {"private_notes", "metadata"}
     unknown = set(request.keys()) - allowed
     if unknown:
         raise ValueError(
