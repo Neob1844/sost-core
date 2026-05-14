@@ -220,6 +220,166 @@ footer a:hover{color:var(--green)}
 </section>
 
 <!-- ════════════════════════════════════════════════════════════ -->
+<section class="section" style="background:linear-gradient(180deg,rgba(255,215,0,0.04),transparent)">
+  <div class="container">
+    <div class="section-id">// 00B &mdash; TRINITY 2026: THE WHOLE PICTURE</div>
+    <div class="section-title">A <span>Plain-English Read</span> of Everything Trinity Does Today</div>
+
+    <div class="panel" style="border:1px solid var(--gold);background:rgba(255,215,0,0.03)">
+      <div class="panel-head" style="color:var(--gold)">// ONE-LINE SUMMARY</div>
+      <p style="font-size:15px;color:#e9d5b3;line-height:1.85;margin:6px 0 0">
+        Trinity is the operating brain that turns <b style="color:var(--gold)">human and scientific knowledge</b> into <b style="color:var(--gold)">verifiable computational work</b>, and that work into <b style="color:var(--gold)">auditable SOST rewards</b> &mdash; without ever losing human control over the money.
+      </p>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// WHAT TRINITY ACTUALLY DOES (FOR DUMMIES)</div>
+      <p style="color:#ccc;line-height:1.8">Imagine a safe assembly line where ideas go in and verifiable proofs (and eventually real payments) come out. Every station leaves a JSON receipt; no station can move the money on its own.</p>
+      <ol style="color:#ccc;line-height:1.85;padding-left:24px;margin-top:10px">
+        <li><b style="color:var(--gold)">An idea or document goes in.</b> Sprint&nbsp;5.20 lets Trinity read a scientific prompt + local <code>.txt</code> / <code>.md</code> / <code>.json</code> documents. Trinity sha256-hashes everything and writes a <code>combined_context_sha256</code>. No internet, no LLM, no full content stored.</li>
+        <li><b style="color:var(--gold)">It becomes a task.</b> Sprint&nbsp;5.21's <code>task_builder --from-scientific-intake</code> turns that intake into a <code>useful-compute-request</code> manifest. The request carries identifiers and hashes only &mdash; never the document body, never an absolute path.</li>
+        <li><b style="color:var(--gold)">The operator drives the pipeline.</b> Sprints 5.19 and 5.22 wire <code>useful_compute_operator_loop</code>. It can build the request internally <i>or</i> import one from disk (<code>--request-json</code>), and can resume from any step using sha256 checkpoints.</li>
+        <li><b style="color:var(--gold)">Workers process the task.</b> They produce <i>byte-identical</i> outputs given the same input. For scientific intake, v0.1 doesn't reason semantically &mdash; it builds a deterministic <i>hash manifest</i> that proves every worker saw the same context.</li>
+        <li><b style="color:var(--gold)">Replay enforces consensus.</b> Two workers must agree on <code>compute_output_sha256</code>. If they disagree, the result is blocked or escalated.</li>
+        <li><b style="color:var(--gold)">Governance decides what's accepted.</b> A separate step writes an <code>accepted</code> / <code>rejected</code> verdict per request, with reason codes.</li>
+        <li><b style="color:var(--gold)">Budget enforces limits.</b> A pool cap, a daily cap, an epoch cap, per-job and per-worker caps. Conservative defaults: 1 SOST/day, 10 SOST/epoch.</li>
+        <li><b style="color:var(--gold)">A payment proposal is prepared.</b> Outputs are reviewable; no wallet is touched yet.</li>
+        <li><b style="color:var(--gold)">A payment draft is signed locally &mdash; optionally.</b> Three modes: <code>unsigned-only</code> (default), <code>dry-sign</code> (placeholder), <code>real-sign</code> (Sprint 5.17 &mdash; requires exact human token, single-output guard, optional <code>--only-worker-id-hash</code> selector).</li>
+        <li><b style="color:var(--gold)">A human broadcasts.</b> Sprint 5.18's broadcast guard only publishes if a human passes a different exact token. Audit receipt records every attempt (<code>dry_run</code> / <code>broadcasted</code> / <code>cli_rejected</code> / <code>node_rejected</code> / <code>txid_mismatch</code> / <code>parse_error</code>).</li>
+        <li><b style="color:var(--gold)">The proof bundle lives on chain.</b> First Trinity Useful Compute payment confirmed at <a href="sost-explorer.html" style="color:var(--gold)">block&nbsp;#8512</a>: <code style="color:var(--gold)">787cda89&hellip;f2d82</code>, 0.000315 SOST, fee 202 stocks (exactly at the S8 floor).</li>
+      </ol>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// THE CANONICAL OBJECTIVES (1&ndash;10)</div>
+      <p style="color:#ccc;line-height:1.8;margin-bottom:10px">The ten things Trinity is built to be, in order. Each line names the property + the sprint(s) that establish it.</p>
+      <table class="tbl">
+        <tr><th>#</th><th>Objective</th><th>Where it lives today</th></tr>
+        <tr>
+          <td class="k">1</td>
+          <td><b style="color:var(--green)">Verifiable Useful Compute.</b> Tasks, workers and replay validation; every output reproducible from a hash.</td>
+          <td>Sprints 5.6 &ndash; 5.8 &middot; <code>useful_compute_task_builder</code> / <code>worker</code> / <code>replay_validator</code></td>
+        </tr>
+        <tr>
+          <td class="k">2</td>
+          <td><b style="color:var(--green)">Governance of acceptance.</b> No payment for unreviewed or inconsistent outputs; explicit accept / reject.</td>
+          <td>Sprint 5.9 &middot; <code>useful_compute_governance_gate</code></td>
+        </tr>
+        <tr>
+          <td class="k">3</td>
+          <td><b style="color:var(--green)">Budget &amp; reward policy.</b> Convert approved work into payable allocations under hard caps.</td>
+          <td>Sprint 5.14 &middot; <code>useful_compute_reward_budget_policy</code></td>
+        </tr>
+        <tr>
+          <td class="k">4</td>
+          <td><b style="color:var(--green)">Auditable payment proposal.</b> One JSON capsule with outputs, addresses, reason &mdash; wallet untouched.</td>
+          <td>Sprint 5.15 &middot; <code>useful_compute_payment_proposal</code></td>
+        </tr>
+        <tr>
+          <td class="k">5</td>
+          <td><b style="color:var(--green)">Real local signing.</b> Sign locally with an exact human token; <i>never</i> broadcast inside the signer.</td>
+          <td>Sprint 5.17 &middot; <code>useful_compute_payment_draft --real-sign</code></td>
+        </tr>
+        <tr>
+          <td class="k">6</td>
+          <td><b style="color:var(--green)">Human broadcast guard.</b> A separate exact human token for the broadcast step; every attempt produces a receipt.</td>
+          <td>Sprint 5.18 / 5.18b / 5.18c / 5.18d &middot; <code>useful_compute_broadcast_guard</code></td>
+        </tr>
+        <tr>
+          <td class="k">7</td>
+          <td><b style="color:var(--green)">Complete proof bundle.</b> Artefacts, receipts, RPC observation and hashes for every step.</td>
+          <td>Block&nbsp;#8512 &middot; <code>TRINITY_FIRST_USEFUL_COMPUTE_PAYMENT_PROOF_20260513T190442Z/</code></td>
+        </tr>
+        <tr>
+          <td class="k">8</td>
+          <td><b style="color:var(--green)">Repeatable operation.</b> The pipeline runs end-to-end without hand-pasted commands; checkpoints + resume + tamper detection.</td>
+          <td>Sprint 5.19 + 5.22 &middot; <code>useful_compute_operator_loop</code></td>
+        </tr>
+        <tr>
+          <td class="k">9</td>
+          <td><b style="color:var(--green)">Limited, safe autonomy.</b> Caps, pause switches and schema-locked safety flags. Trinity can re-run the pipeline; it cannot pay.</td>
+          <td>Every artefact's <code>safety_status</code> (<code>const false</code> on broadcast / wallet / autopay)</td>
+        </tr>
+        <tr>
+          <td class="k">10</td>
+          <td><b style="color:var(--amber)">Scientific / documentary intelligence.</b> Accept prompts + documents, hash them, propose useful tasks. Semantic reading (LLM) is reserved for a future, gated sprint.</td>
+          <td>Sprints 5.20 + 5.21 + 5.22b &middot; <code>scientific_prompt_intake</code> &rarr; <code>task_builder --from-scientific-intake</code> &rarr; worker <code>scientific_intake</code> backend</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// THE ARCHITECTURE: HIGHWAY + VEHICLES</div>
+      <p style="color:#ccc;line-height:1.8">
+        Trinity is split into layers. The <b style="color:var(--green)">Useful Compute</b> pipeline is the highway. <b style="color:var(--green)">Materials Engine</b>, <b style="color:var(--green)">GeoSpirit</b>, <b style="color:var(--green)">Trinity Orchestrator</b> and <b style="color:var(--green)">Scientific Prompt Intake</b> are the vehicles that put work onto the highway.
+      </p>
+      <table class="tbl">
+        <tr><th>Layer</th><th>Where it lives</th><th>What it does</th></tr>
+        <tr>
+          <td class="k">Materials Engine</td>
+          <td>7 scripts: <code>materials_*.py</code></td>
+          <td>Science / materials backend. Candidate generation, chemistry filters, scorecards, dossiers, discovery pipeline. Source tool <code>materials_engine</code> in a request.</td>
+        </tr>
+        <tr>
+          <td class="k">GeoSpirit</td>
+          <td>7 scripts: <code>geo_*.py</code></td>
+          <td>Geospatial backend. Anomaly scorer, candidate filter, compute plan, geo dossier, discovery pipeline. Source tool <code>geaspirit</code> in a request.</td>
+        </tr>
+        <tr>
+          <td class="k">Trinity Orchestrator</td>
+          <td><code>trinity_orchestrator.py</code></td>
+          <td>Coordinator. Reads canonical objectives, picks the vertical, decides next action, logs every decision. Source tool <code>trinity_orchestrator</code> in a request.</td>
+        </tr>
+        <tr>
+          <td class="k">Scientific Prompt Intake</td>
+          <td><code>scientific_prompt_intake.py</code> (Sprint 5.20)</td>
+          <td>The new science inbox. Hashes a prompt + local documents into a <code>combined_context_sha256</code>. Source tool <code>trinity_scientific_prompt_intake</code> in a request.</td>
+        </tr>
+        <tr>
+          <td class="k" style="color:var(--gold)">Useful Compute pipeline</td>
+          <td><code>useful_compute_*.py</code> (Sprints 5.6 &rarr; 5.22)</td>
+          <td><b>The highway.</b> request &rarr; worker &rarr; replay &rarr; governance &rarr; budget &rarr; proposal &rarr; draft &rarr; broadcast guard.</td>
+        </tr>
+      </table>
+      <div class="green-box" style="font-size:13px;margin-top:14px">
+        <b>One sentence.</b> Materials Engine and GeoSpirit are specialised engines. Scientific Prompt Intake is the new science inbox. Useful Compute is the verification and reward layer. Trinity is the system that connects prompts + documents + scientific work to workers, governance and payments &mdash; auditably.
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// WHAT TRINITY IS <span style="color:var(--red)">NOT</span> (YET)</div>
+      <ul class="tight" style="color:#ccc;line-height:1.85">
+        <li><b style="color:var(--red)">Not an autonomous AI that decides on its own.</b> v0.1 of scientific intake does not interpret prompts semantically &mdash; it only produces a deterministic hash manifest. LLM-style reading is a future, gated sprint with its own token.</li>
+        <li><b style="color:var(--red)">Not an automatic payer.</b> Real signing requires an exact human token. Broadcast requires a different exact human token. Two distinct human inflection points; both produce audit receipts.</li>
+        <li><b style="color:var(--red)">Not a complex PDF reader.</b> Accepted document types in 5.20 are <code>.txt</code>, <code>.md</code>, <code>.json</code> only; documents are size-capped (default 1 MiB) and count-capped (default 16).</li>
+        <li><b style="color:var(--red)">Not a network service.</b> The intake, the task builder, the operator loop, the worker, the replay validator, the governance gate, the budget policy, the proposal and the dry-sign draft all run <i>locally</i> with no HTTP / socket / WebSocket / urllib imports allowed at static-check time.</li>
+        <li><b style="color:var(--red)">Not a Useful Compute reward distribution today.</b> The infrastructure is live for dry-run testing; block&nbsp;#7100 does not activate rewards. A future B+D redesign is required before any rewarded phase.</li>
+      </ul>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head">// THE PROGRESSION OF AUTONOMY</div>
+      <p style="color:#ccc;line-height:1.8">
+        The path is deliberately gradual. Trinity earns more autonomy by passing more reviewable checkpoints, never by skipping them.
+      </p>
+      <table class="tbl">
+        <tr><th>Stage</th><th>Where it is</th><th>Today?</th></tr>
+        <tr><td class="k">A</td><td>Dry-run pipeline end-to-end</td><td style="color:var(--green)">SHIPPED (5.6 &rarr; 5.16)</td></tr>
+        <tr><td class="k">B</td><td>Real signing (operator token)</td><td style="color:var(--green)">SHIPPED (5.17)</td></tr>
+        <tr><td class="k">C</td><td>Human broadcast (operator token)</td><td style="color:var(--green)">SHIPPED (5.18)</td></tr>
+        <tr><td class="k">D</td><td>First on-chain Useful Compute payment</td><td style="color:var(--gold)">DONE &middot; block&nbsp;#8512</td></tr>
+        <tr><td class="k">E</td><td>Repeatable operator loop with checkpoints</td><td style="color:var(--green)">SHIPPED (5.19 + 5.22)</td></tr>
+        <tr><td class="k">F</td><td>Scientific intake &rarr; request bridge</td><td style="color:var(--green)">SHIPPED (5.20 + 5.21 + 5.22b)</td></tr>
+        <tr><td class="k">G</td><td>Semantic intake (offline summariser)</td><td style="color:var(--amber)">PLANNED</td></tr>
+        <tr><td class="k">H</td><td>Gated LLM advisor (off by default, separate token)</td><td style="color:var(--amber)">PLANNED</td></tr>
+        <tr><td class="k">I</td><td>Limited scheduler with per-day caps + kill switch</td><td style="color:var(--amber)">PLANNED</td></tr>
+        <tr><td class="k">J</td><td>Mass parallelism + real DFT / quantum backends</td><td style="color:var(--amber)">PLANNED</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
     <div class="section-id">// 01 &mdash; TERMINOLOGY NOTE</div>
@@ -432,7 +592,7 @@ python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</
 <!-- ════════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// 05B &mdash; USEFUL COMPUTE STACK (SPRINTS 5.6 &ndash; 5.18d)</div>
+    <div class="section-id">// 05B &mdash; USEFUL COMPUTE STACK (SPRINTS 5.6 &ndash; 5.22)</div>
     <div class="section-title">Post-Kalgoorlie <span>Discovery &rarr; Reward Pipeline</span></div>
 
     <p style="color:#ccc;line-height:1.85">
@@ -542,6 +702,30 @@ python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</
           <td>The <code>sendrawtransaction</code> CLI handler now runs <i>before</i> the global wallet load, so broadcasting a pre-signed hex no longer requires a wallet file. New <code>cli_rejected</code> receipt status distinguishes CLI-side failures (wallet, hex, RPC auth) from node-side failures (fee, double spend).</td>
           <td><code>broadcast_result_status</code> enum + receipt v0.2</td>
         </tr>
+        <tr>
+          <td class="k">5.19</td>
+          <td>Operator Loop</td>
+          <td>New <code>scripts/trinity/useful_compute_operator_loop.py</code>. Repeatable, resumable orchestration of the full pipeline via <code>importlib</code>. Per-step sha256 + <code>SHA256SUMS.txt</code> + <code>operator_run.json</code>. Schema locks <code>allow_wallet_access</code>, <code>allow_broadcast</code> as <code>const&nbsp;false</code> and <code>human_review_required</code> as <code>const&nbsp;true</code>. No subprocess, no <code>sost-cli</code> reference.</td>
+          <td><code>useful_compute_operator_run</code> v0.1</td>
+        </tr>
+        <tr>
+          <td class="k">5.20</td>
+          <td>Scientific Prompt Intake</td>
+          <td>Trinity's <i>science inbox</i>. Local-only ingest of a prompt + N reference documents (<code>.txt</code> / <code>.md</code> / <code>.json</code>). Sha256 each input, bounded text preview, no absolute paths. Schema locks 7 <code>const-true</code> safety flags including <code>no_network</code>, <code>no_llm_call</code>, <code>deterministic_output</code>. No LLM. No network. No wallet.</td>
+          <td><code>trinity-scientific-prompt-intake</code> v0.1</td>
+        </tr>
+        <tr>
+          <td class="k">5.21</td>
+          <td>Intake &rarr; Request Bridge</td>
+          <td><code>useful_compute_task_builder.py</code> gains <code>--from-scientific-intake&nbsp;&lt;path&gt;</code>. Consumes a Sprint 5.20 intake and builds a request with <code>source_tool=trinity_scientific_prompt_intake</code>, <code>task_type=scientific_intake</code>, <code>input_bundle_sha256 = intake.combined_context_sha256</code> and <code>metadata.scientific_intake</code> carrying only ids + hashes. <b>No document content is copied; no absolute paths are stored.</b></td>
+          <td><code>useful_compute_request</code> v0.1 + new enum values + optional <code>metadata</code></td>
+        </tr>
+        <tr>
+          <td class="k">5.22</td>
+          <td>Loop From Existing Request</td>
+          <td>Operator loop gains <code>--request-json &lt;path&gt;</code> (mutually exclusive with <code>--input-bundle</code>). Validates the request, canonically re-emits it to <code>run/request.json</code>, marks <code>task_builder</code> step completed, and continues from worker. State file records <code>request_source = "existing_request"</code>, <code>source_request_sha256</code> + <code>source_request_path_basename</code>. Resume re-verifies the import; tampering aborts with rc=2. <b>5.22b worker backend hotfix:</b> <code>useful_compute_worker.py</code> + <code>useful_compute_backends.py</code> accept the new <code>source_tool</code> / <code>task_type</code> and require <code>metadata.scientific_intake</code>, producing a deterministic hash-manifest output.</td>
+          <td><code>placeholder_scientific_intake</code> backend &middot; <code>validation_status = "hash_manifest_only"</code></td>
+        </tr>
       </table>
     </div>
 
@@ -581,7 +765,7 @@ python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</
     </div>
 
     <div class="green-box" style="font-size:14px;margin-top:18px">
-      <b>Status as of Sprint 5.18d:</b> the sixteen sprints (5.6 &rarr; 5.18d) land as <b>808+ trinity tests PASS</b> plus a C++ <code>T_FEE_SIZE_*</code> suite that pins the consensus fee/size invariant. The first end-to-end on-chain payment was confirmed in block&nbsp;#8512 (2026-05-13). Every on-chain event still requires an explicit operator token and never auto-loops.
+      <b>Status as of Sprint 5.22:</b> the twenty sprints (5.6 &rarr; 5.22) land as <b>940+ trinity tests PASS</b> plus a C++ <code>T_FEE_SIZE_*</code> suite that pins the consensus fee/size invariant. The first end-to-end on-chain payment was confirmed in block&nbsp;#8512 (2026-05-13). The full <i>scientific</i> chain (<code>prompt&nbsp;+&nbsp;docs &rarr; intake &rarr; request &rarr; loop &rarr; worker &rarr; replay &rarr; governance &rarr; budget &rarr; proposal &rarr; draft</code>) now runs end-to-end in local-dry-run, deterministic and resumable. Every on-chain event still requires an explicit operator token and never auto-loops.
     </div>
 
     <!-- ════════════════════════════════════════════════════════════ -->
@@ -1004,6 +1188,26 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
         <td class="k">5.18d</td>
         <td>Wallet-free <code>sendrawtransaction</code>: CLI handler now runs before the global wallet load. Broadcast a pre-signed hex no longer requires a wallet file. Receipt status enum gains <code>cli_rejected</code>. <b>First end-to-end Trinity Useful Compute payment confirmed in block&nbsp;#8512 on 2026-05-13.</b></td>
         <td style="color:var(--gold)">SHIPPED &middot; sprint-5.18d &middot; first on-chain payment</td>
+      </tr>
+      <tr>
+        <td class="k">5.19</td>
+        <td>Operator Loop v0.1: repeatable, resumable orchestration of the full Useful Compute pipeline via <code>importlib</code>. Per-step sha256 manifest. State schema locks <code>allow_wallet_access</code> / <code>allow_broadcast</code> as <code>const&nbsp;false</code>. The loop drives the dry-run pipeline; broadcast inflection points stay manual.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.19</td>
+      </tr>
+      <tr>
+        <td class="k">5.20</td>
+        <td>Scientific Prompt Intake v0.1: local-only ingest of a scientific prompt + <code>.txt</code>/<code>.md</code>/<code>.json</code> documents. 7 const-true safety flags (<code>local_only</code> / <code>no_network</code> / <code>no_llm_call</code> / <code>no_wallet_access</code> / <code>no_broadcast</code> / <code>no_private_keys</code> / <code>deterministic_output</code>). No LLM. No network.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.20</td>
+      </tr>
+      <tr>
+        <td class="k">5.21</td>
+        <td>Task Builder From Scientific Intake v0.1: <code>useful_compute_task_builder --from-scientific-intake</code>. Consumes the 5.20 intake artifact and produces a request whose <code>input_bundle_sha256</code> is the intake's <code>combined_context_sha256</code>. Schema-additive; <code>metadata.scientific_intake</code> carries identifiers + hashes only. No document content copied.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.21</td>
+      </tr>
+      <tr>
+        <td class="k">5.22</td>
+        <td>Operator Loop From Existing Request v0.1 + Scientific Worker Backend (5.22b hotfix): operator loop accepts <code>--request-json</code> to skip its own task_builder; state file records <code>request_source</code> / <code>source_request_sha256</code> / <code>source_request_path_basename</code>. Worker accepts the new <code>source_tool</code> and validates <code>metadata.scientific_intake</code>. New <code>placeholder_scientific_intake</code> backend produces a deterministic hash manifest. End-to-end scientific chain confirmed in dry-run with 940 trinity tests PASS.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.22</td>
       </tr>
       <tr>
         <td class="k">v0.5 (proposed)</td>

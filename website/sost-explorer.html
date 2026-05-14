@@ -595,13 +595,14 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     </div>
 
     <!-- ================================================================ -->
-    <!-- USEFUL COMPUTE STACK (Sprints 5.6 - 5.18d)                       -->
-    <!-- Post-Kalgoorlie expansion + real signing + human broadcast.      -->
+    <!-- USEFUL COMPUTE STACK (Sprints 5.6 - 5.22)                        -->
+    <!-- Post-Kalgoorlie expansion + real signing + human broadcast       -->
+    <!-- + operator loop + scientific prompt intake + intake bridge.      -->
     <!-- ================================================================ -->
     <div style="margin-top:14px;padding:14px 16px;border:1px solid rgba(245,158,11,0.35);border-left:3px solid #f59e0b;background:rgba(245,158,11,0.05);border-radius:3px">
-      <div style="font-size:10px;letter-spacing:2px;color:#f59e0b;margin-bottom:10px;font-family:var(--font-mono,monospace)">// USEFUL COMPUTE STACK &middot; Sprints 5.6 - 5.18d (post-Kalgoorlie)</div>
+      <div style="font-size:10px;letter-spacing:2px;color:#f59e0b;margin-bottom:10px;font-family:var(--font-mono,monospace)">// USEFUL COMPUTE STACK &middot; Sprints 5.6 - 5.22 (post-Kalgoorlie)</div>
       <p style="margin:0 0 12px;font-size:12.5px;line-height:1.7;color:#e9d5b3">
-        After the Kalgoorlie capsule, Trinity grew a full <b style="color:#fbbf24">Useful Compute layer</b>: SOST AI now coordinates candidates, workers execute deterministic compute, replay agreement is enforced cross-worker, governance reviews batches, budgets cap spending, payment proposals are built, drafts are signed locally and a human broadcast guard pushes the signed hex to the node. <b style="color:#fbbf24">15 sprints &middot; 14 scripts &middot; 9 strict schemas &middot; 808+ trinity tests PASS</b>. Every layer is <b>dry-run by default, no auto-payout, no consensus change</b>; the last two layers (5.17 real signing, 5.18 human broadcast) require an exact verbatim operator token for each invocation.
+        After the Kalgoorlie capsule, Trinity grew a full <b style="color:#fbbf24">Useful Compute layer</b>: SOST AI now coordinates candidates, workers execute deterministic compute, replay agreement is enforced cross-worker, governance reviews batches, budgets cap spending, payment proposals are built, drafts are signed locally, a human broadcast guard pushes the signed hex to the node, an operator loop drives the whole pipeline repeatably and resumably, and a scientific prompt intake feeds prompts + documents into the same audit chain. <b style="color:#fbbf24">19 sprints &middot; 18 scripts &middot; 11 strict schemas &middot; 940+ trinity tests PASS</b>. Every layer is <b>dry-run by default, no auto-payout, no consensus change</b>; real signing (5.17), human broadcast (5.18) and the operator loop (5.19 / 5.22) all require an exact verbatim operator token for each invocation.
       </p>
 
       <table style="width:100%;font-family:var(--font-mono,monospace);font-size:11px;line-height:1.55;border-collapse:collapse;color:#e9d5b3">
@@ -692,6 +693,30 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
             <td style="padding:5px 8px">New <code>sost-cli sendrawtransaction</code> subcommand + Python broadcast guard with audit-trail receipt. Token gated; one tx per invocation. Hardened in 5.18b/c/d.</td>
             <td style="padding:5px 8px"><code>useful-compute-broadcast-receipt/v0.2</code></td>
           </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.19</td>
+            <td style="padding:5px 8px">Operator Loop</td>
+            <td style="padding:5px 8px">Repeatable, resumable orchestration of the full pipeline via <code>importlib</code>. Per-step sha256 manifest. <code>allow_wallet_access</code> + <code>allow_broadcast</code> locked <code>const&nbsp;false</code> in the state schema.</td>
+            <td style="padding:5px 8px"><code>useful-compute-operator-run/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.20</td>
+            <td style="padding:5px 8px">Scientific Prompt Intake</td>
+            <td style="padding:5px 8px">Local-only ingest of a scientific prompt + N reference documents (<code>.txt</code> / <code>.md</code> / <code>.json</code>). 7 const-true safety flags; no LLM, no network, no wallet, no broadcast.</td>
+            <td style="padding:5px 8px"><code>trinity-scientific-prompt-intake/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.21</td>
+            <td style="padding:5px 8px">Intake &rarr; Request Bridge</td>
+            <td style="padding:5px 8px">Task builder <code>--from-scientific-intake</code>. Request carries the intake's hashes (<code>combined_context_sha256</code> as <code>input_bundle_sha256</code>, plus <code>metadata.scientific_intake</code>). No document content copied.</td>
+            <td style="padding:5px 8px">request schema additive only</td>
+          </tr>
+          <tr style="border-top:1px solid rgba(245,158,11,0.18)">
+            <td style="padding:5px 8px;color:#fbbf24">5.22</td>
+            <td style="padding:5px 8px">Loop From Existing Request</td>
+            <td style="padding:5px 8px">Operator loop <code>--request-json</code> imports a prebuilt request, marks <code>task_builder</code> completed and runs the rest. State records <code>request_source = "existing_request"</code> + <code>source_request_sha256</code>. <b>5.22b</b> teaches the worker the <code>scientific_intake</code> task type with a deterministic hash-manifest backend.</td>
+            <td style="padding:5px 8px"><code>placeholder_scientific_intake</code> backend</td>
+          </tr>
         </tbody>
       </table>
 
@@ -699,9 +724,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <div style="padding:8px 10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:3px">
           <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// Useful Compute pipeline</div>
           <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
-            request -&gt; worker -&gt; replay -&gt;<br>
-            governance -&gt; budget -&gt;<br>
-            proposal -&gt; real-signed draft -&gt;<br>
+            prompt + docs -&gt; intake -&gt;<br>
+            request -&gt; (operator loop) -&gt;<br>
+            worker -&gt; replay -&gt; governance -&gt;<br>
+            budget -&gt; proposal -&gt; real-signed draft -&gt;<br>
             <b style="color:#fbbf24">human broadcast -&gt; on-chain</b><br>
             (confirmed in block 8512)
           </div>
