@@ -1075,15 +1075,43 @@
     <li><b>bounded</b> — prompt &le; 32 KiB, doc &le; 1 MiB, &le; 16 docs (all overridable downward)</li>
   </ul>
   <div class="danger-strip" style="margin-top:14px;">
-    <strong>Future bridge to task generation.</strong> A later
-    sprint will let <code>useful_compute_task_builder</code> consume
-    a Scientific Prompt Intake artifact (<code>--from-intake
-    TRINITY_SCIENTIFIC_PROMPT_INTAKE_&lt;id&gt;.json</code>) so the
-    audit chain from a scientific prompt all the way to a
-    real-signed payment carries a single
-    <code>combined_context_sha256</code>. v0.1 stops at the intake
-    artifact: no task is decided, no LLM is invoked, no payment is
-    initiated.
+    <strong>Bridge to task generation lands in Sprint 5.21.</strong>
+    The intake artifact becomes the input to
+    <code>useful_compute_task_builder --from-scientific-intake</code>.
+    v0.1 of the intake stops at the artifact: no task is decided,
+    no LLM is invoked, no payment is initiated.
+  </div>
+</div>
+
+<!-- Task Builder From Scientific Intake (Sprint 5.21) -->
+<div class="card" id="taskBuilderFromIntakeCard">
+  <h2>Task Builder From Scientific Intake v0.1</h2>
+  <p class="small">
+    <code>scripts/trinity/useful_compute_task_builder.py</code>
+    gains <code>--from-scientific-intake &lt;path&gt;</code>. The
+    builder consumes a Sprint 5.20 intake artifact and produces a
+    <code>trinity-useful-compute-request/v0.1</code> manifest
+    whose <code>input_bundle_sha256</code> is the intake's
+    <code>combined_context_sha256</code>. The intake's identifiers
+    and hashes are carried under
+    <code>metadata.scientific_intake</code>. No document content
+    is copied; no absolute paths are stored.
+  </p>
+  <ul class="small" style="margin-top:6px">
+    <li><b>consumes intake artifact</b> — by file, validated against the v0.1 schema</li>
+    <li><b>carries combined_context_sha256</b> — same hash flows into the request as <code>input_bundle_sha256</code></li>
+    <li><b>no document content copied</b> — only ids + sha256s + counts + task kind</li>
+    <li><b>safety gate</b> — refuses an intake unless <code>local_only</code> / <code>no_network</code> / <code>no_llm_call</code> / <code>deterministic_output</code> are all <code>true</code></li>
+    <li><b>deterministic</b> — same intake + same operator flags → byte-identical request.json</li>
+    <li><b>schema-additive</b> — request <code>$id</code> stays at v0.1; new enum values + optional <code>metadata</code> field</li>
+  </ul>
+  <div class="danger-strip" style="margin-top:14px;">
+    <strong>Bridge to the operator loop.</strong> The resulting
+    request feeds the existing Sprint 5.6&ndash;5.16 pipeline
+    (worker / replay / governance / budget / proposal / payment
+    draft) and the Sprint 5.19 operator loop can drive that
+    pipeline end-to-end. Real signing and broadcast remain
+    manual operator events as always.
   </div>
 </div>
 

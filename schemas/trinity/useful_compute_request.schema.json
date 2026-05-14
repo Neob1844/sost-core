@@ -32,7 +32,12 @@
     },
     "source_tool": {
       "type": "string",
-      "enum": ["materials_engine", "geaspirit", "trinity_orchestrator"]
+      "enum": [
+        "materials_engine",
+        "geaspirit",
+        "trinity_orchestrator",
+        "trinity_scientific_prompt_intake"
+      ]
     },
     "candidate_id": {
       "type": "string",
@@ -41,7 +46,11 @@
     },
     "task_type": {
       "type": "string",
-      "enum": ["dft", "quantum", "structure_relaxation", "scoring", "simulation", "other"]
+      "enum": [
+        "dft", "quantum", "structure_relaxation", "scoring",
+        "simulation", "other",
+        "scientific_intake"
+      ]
     },
     "input_bundle_sha256": {
       "type": "string",
@@ -96,6 +105,54 @@
     "private_notes": {
       "type": "string",
       "maxLength": 2048
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scientific_intake": {
+          "type": "object",
+          "required": [
+            "intake_id",
+            "combined_context_sha256",
+            "prompt_sha256",
+            "documents_count",
+            "intake_task_kind",
+            "intake_artifact_sha256"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "intake_id": {
+              "type": "string",
+              "pattern": "^spi-[0-9a-f]{16}$"
+            },
+            "combined_context_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "prompt_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "documents_count": {
+              "type": "integer", "minimum": 0
+            },
+            "intake_task_kind": {
+              "type": "string",
+              "enum": [
+                "benchmark",
+                "comparison",
+                "extraction",
+                "validation"
+              ]
+            },
+            "intake_artifact_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
     }
   }
 }
