@@ -123,6 +123,84 @@ artifact, and either:
 `max_total_stocks`). Same inputs → same id → reproducible state
 file (modulo `git_head`).
 
+## Starting from an existing request (Sprint 5.22)
+
+The loop can skip its own task_builder step and start from a
+pre-built `trinity-useful-compute-request/v0.1` manifest — for
+example one produced by
+`useful_compute_task_builder --from-scientific-intake`
+(Sprint 5.21). Pass `--request-json <path>` instead of
+`--input-bundle <path>`.
+
+What happens:
+
+- The loop validates the file is JSON, the schema id matches
+  `trinity-useful-compute-request/v0.1`, the `request_id` matches
+  `^uc-[0-9a-f]{16,64}$`, and `input_bundle_sha256` is 64 lowercase
+  hex.
+- It writes a canonical re-emission of the request to
+  `<out-dir>/request.json` so every downstream step finds it at
+  the same path it would have in built mode.
+- It marks the `task_builder` step as completed up-front and
+  records the source file's sha256 + basename in
+  `operator_run.json`.
+- Downstream steps (worker → replay → governance → budget →
+  proposal → draft) run unchanged.
+
+State file fields (always present, schema-required):
+
+| Field | Built mode | Existing-request mode |
+| --- | --- | --- |
+| `request_source` | `"built"` | `"existing_request"` |
+| `source_request_sha256` | `null` | sha256 of the source file bytes |
+| `source_request_path_basename` | `null` | basename only (no path leakage) |
+
+The `operator_run_id` hash now includes `request_source` and
+`source_request_sha256`, so a built run and an existing-request run
+with otherwise identical operator inputs produce **different**
+operator_run_ids — they are distinct lineages.
+
+### End-to-end example (intake → request → loop)
+
+```
+# Step 1 — Sprint 5.20: produce the intake artifact.
+python3 scripts/trinity/scientific_prompt_intake.py \
+    --mode local-dry-run \
+    --prompt "Compare ceria and praseodymia oxygen storage." \
+    --document ./notes/ceria.md \
+    --document ./notes/praseodymia.md \
+    --out-dir ./out/intake \
+    --pinned-time 2026-05-13T00:00:00+00:00
+
+# Step 2 — Sprint 5.21: turn the intake into a useful-compute request.
+INTAKE=$(ls ./out/intake/TRINITY_SCIENTIFIC_PROMPT_INTAKE_*.json | head -1)
+python3 scripts/trinity/useful_compute_task_builder.py \
+    --from-scientific-intake "$INTAKE" \
+    --intake-task-kind comparison \
+    --intake-output-schema trinity-useful-compute-result/v0.4 \
+    --difficulty-class low \
+    --deadline 2026-06-30T00:00:00+00:00 \
+    --max-reward-stocks 100000 \
+    --out-json ./out/request.json
+
+# Step 3 — Sprint 5.22: drive the rest of the pipeline from that
+# request, without rebuilding it inside the loop.
+python3 scripts/trinity/useful_compute_operator_loop.py \
+    --mode local-dry-run \
+    --out-dir ./out/oprun-from-intake \
+    --require-confirmation-token I_UNDERSTAND_THIS_IS_ONLY_A_DRY_RUN_LOOP \
+    --request-json ./out/request.json \
+    --worker-address-map ./out/address_map.json \
+    --max-total-stocks 1000000 \
+    --pool-balance-stocks 10000000 \
+    --pinned-time 2026-05-13T00:00:00+00:00
+```
+
+`--request-json` is mutually exclusive with `--input-bundle`; the
+loop refuses both at once with exit code 2. Resume works in both
+modes: the recorded sha256 of the imported request is re-verified
+in the run directory, and any tampering aborts the resume.
+
 ## Dry-run usage
 
 ```

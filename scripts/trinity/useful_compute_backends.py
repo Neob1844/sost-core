@@ -50,6 +50,14 @@ _BACKEND_KINDS = (PLACEHOLDER_KIND, SANDBOX_TOY_KIND, REAL_BACKEND_KIND)
 _TASK_TYPES = (
     "dft", "quantum", "structure_relaxation",
     "scoring", "simulation", "other",
+    # Sprint 5.22b — scientific prompt intake bridge (5.20 → 5.21).
+    # The backend for this task_type does NOT interpret the prompt
+    # semantically and does NOT call any LLM or remote API. It
+    # produces a deterministic hash manifest derived from
+    # metadata.scientific_intake so the rest of the pipeline
+    # (worker → replay → governance → budget → proposal → draft)
+    # can carry the scientific context end-to-end in dry-run.
+    "scientific_intake",
 )
 
 
@@ -191,6 +199,54 @@ def _placeholder_other(seed64: int) -> Dict[str, Any]:
     return {
         "kind": "placeholder_generic_v0",
         "note": "deterministic placeholder for task_type=other",
+        "marker_hex": f"{seed64:016x}",
+    }
+
+
+def _placeholder_scientific_intake(
+    seed64: int, request: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Deterministic backend for task_type=scientific_intake.
+
+    Does NOT interpret the prompt. Does NOT call any LLM. Does NOT
+    open a network connection. The output is a stable byte-string
+    that carries the request identifiers + the intake's hash
+    manifest forward so replay / governance / budget / proposal /
+    draft can pass the scientific context through the pipeline in
+    dry-run.
+
+    Two workers given the same request MUST produce the same
+    output bytes — that is the cross-worker replay contract.
+    """
+    md = (request.get("metadata") or {}).get(
+        "scientific_intake", {}
+    )
+    return {
+        "kind": "placeholder_scientific_intake_v0",
+        "note": (
+            "deterministic hash manifest only; v0.1 does NOT "
+            "interpret the prompt semantically and does NOT call "
+            "any LLM, network or remote API. Output is a stable "
+            "byte-string derived from the request's identifiers "
+            "and the intake's hashes."
+        ),
+        "source_tool": request.get("source_tool"),
+        "task_type":   request.get("task_type"),
+        "request_id":  request.get("request_id"),
+        "input_bundle_sha256":     request.get(
+            "input_bundle_sha256"
+        ),
+        "intake_id":               md.get("intake_id"),
+        "combined_context_sha256": md.get(
+            "combined_context_sha256"
+        ),
+        "prompt_sha256":           md.get("prompt_sha256"),
+        "documents_count":         md.get("documents_count"),
+        "intake_task_kind":        md.get("intake_task_kind"),
+        "intake_artifact_sha256":  md.get(
+            "intake_artifact_sha256"
+        ),
+        "validation_status": "hash_manifest_only",
         "marker_hex": f"{seed64:016x}",
     }
 
@@ -394,6 +450,11 @@ _BACKENDS: List[BackendSpec] = [
         kind=PLACEHOLDER_KIND, task_types=["other"],
         disclaimer=_PLACEHOLDER_DISCLAIMER, experimental=False,
     ),
+    BackendSpec(
+        name="placeholder_scientific_intake", version="v0.1",
+        kind=PLACEHOLDER_KIND, task_types=["scientific_intake"],
+        disclaimer=_PLACEHOLDER_DISCLAIMER, experimental=False,
+    ),
 
     BackendSpec(
         name="local_python_numeric_v01", version="v0.1",
@@ -489,8 +550,16 @@ def run_backend(
         )
 
     if spec.kind == PLACEHOLDER_KIND:
-        handler = _PLACEHOLDER_HANDLERS[task_type]
-        output_obj = handler(deterministic_seed)
+        if task_type == "scientific_intake":
+            # The scientific-intake handler reads identifiers and
+            # hashes from the request, so it takes a different
+            # signature than the other placeholders.
+            output_obj = _placeholder_scientific_intake(
+                deterministic_seed, request,
+            )
+        else:
+            handler = _PLACEHOLDER_HANDLERS[task_type]
+            output_obj = handler(deterministic_seed)
         return BackendResult(
             output_obj=output_obj,
             runtime_seconds=0.0,
