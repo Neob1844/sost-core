@@ -431,8 +431,355 @@ def test_operator_run_validates_against_schema(tmp_path, loop_mod):
     state = json.loads(
         (out_dir / "operator_run.json").read_text(encoding="utf-8")
     )
-    # Note: $defs structure is non-strict above; the artifact entries
-    # use the entry shape via the artifacts.{step}: dict or list.
-    # The strict object check above hits required/extra fields and
-    # const flags, which is what we need.
     _validate(state, schema)
+
+
+# ===========================================================================
+# Sprint 5.22 — --request-json mode (existing request import)
+# ===========================================================================
+
+
+def _builtin_request_argv(
+    *, out_dir: Path, request_json: Path, address_map: Path,
+    resume: Path = None,
+) -> List[str]:
+    """argv for the operator loop in --request-json mode. Note we
+    deliberately do NOT pass --input-bundle (it would conflict)."""
+    argv = [
+        "--mode", "local-dry-run",
+        "--out-dir", str(out_dir),
+        "--require-confirmation-token", OPERATOR_TOKEN,
+        "--candidate-id", "imported-candidate-001",
+        "--worker-address-map", str(address_map),
+        "--max-total-stocks", "10000000",
+        "--pool-balance-stocks", "100000000",
+        "--pinned-time", "2026-05-13T00:00:00+00:00",
+        "--worker-id", "worker-A",
+        "--worker-id", "worker-B",
+        "--request-json", str(request_json),
+    ]
+    if resume is not None:
+        argv += ["--resume", str(resume)]
+    return argv
+
+
+def _produce_request_via_first_run(tmp_path, loop_mod) -> Path:
+    """Run the operator loop once in built mode and lift its
+    request.json so we can feed it into a fresh run in
+    --request-json mode."""
+    inputs = _make_inputs(tmp_path)
+    bootstrap = tmp_path / "bootstrap_run"
+    loop_mod.main(_argv(
+        out_dir=bootstrap,
+        bundle=inputs["bundle"],
+        address_map=inputs["address_map"],
+    ))
+    src = bootstrap / "request.json"
+    assert src.exists()
+    # Copy the request to a path OUTSIDE the run directory so the
+    # second run imports it from a real "external" location.
+    external = tmp_path / "external_request.json"
+    external.write_bytes(src.read_bytes())
+    return external
+
+
+def test_request_json_skips_task_builder_and_runs_pipeline(
+    tmp_path, loop_mod,
+):
+    external = _produce_request_via_first_run(tmp_path, loop_mod)
+    inputs = _make_inputs(tmp_path)
+    run_dir = tmp_path / "run"
+    rc = loop_mod.main(_builtin_request_argv(
+        out_dir=run_dir,
+        request_json=external,
+        address_map=inputs["address_map"],
+    ))
+    assert rc == 0
+    state = json.loads(
+        (run_dir / "operator_run.json").read_text(encoding="utf-8")
+    )
+    assert state["request_source"] == "existing_request"
+    assert state["source_request_path_basename"] == \
+        "external_request.json"
+    # source_request_sha256 must match the actual file sha256.
+    expected_sha = hashlib.sha256(
+        external.read_bytes(),
+    ).hexdigest()
+    assert state["source_request_sha256"] == expected_sha
+    # task_builder is marked completed, plus every downstream step.
+    assert state["steps_completed"] == [
+        "task_builder", "worker", "replay_validator",
+        "governance_gate", "reward_budget_policy",
+        "payment_proposal", "payment_draft",
+    ]
+
+
+def test_request_json_writes_run_request_json(
+    tmp_path, loop_mod,
+):
+    external = _produce_request_via_first_run(tmp_path, loop_mod)
+    inputs = _make_inputs(tmp_path)
+    run_dir = tmp_path / "run"
+    loop_mod.main(_builtin_request_argv(
+        out_dir=run_dir,
+        request_json=external,
+        address_map=inputs["address_map"],
+    ))
+    # The imported request lives at run/request.json.
+    assert (run_dir / "request.json").exists()
+    # And its content matches the canonical re-emission of the
+    # source.
+    src_obj = json.loads(external.read_text(encoding="utf-8"))
+    run_obj = json.loads(
+        (run_dir / "request.json").read_text(encoding="utf-8")
+    )
+    assert src_obj == run_obj
+
+
+def test_request_json_does_not_leak_absolute_path(
+    tmp_path, loop_mod,
+):
+    nested = tmp_path / "deeply" / "private"
+    nested.mkdir(parents=True)
+    external_outside = _produce_request_via_first_run(tmp_path, loop_mod)
+    inside = nested / "secret-request.json"
+    inside.write_bytes(external_outside.read_bytes())
+    inputs = _make_inputs(tmp_path)
+    run_dir = tmp_path / "run"
+    loop_mod.main(_builtin_request_argv(
+        out_dir=run_dir,
+        request_json=inside,
+        address_map=inputs["address_map"],
+    ))
+    state_raw = (run_dir / "operator_run.json").read_text(encoding="utf-8")
+    assert str(nested) not in state_raw
+    state = json.loads(state_raw)
+    assert state["source_request_path_basename"] == \
+        "secret-request.json"
+
+
+def test_request_json_with_input_bundle_rejected(
+    tmp_path, loop_mod,
+):
+    external = _produce_request_via_first_run(tmp_path, loop_mod)
+    inputs = _make_inputs(tmp_path)
+    run_dir = tmp_path / "run2"
+    argv = _builtin_request_argv(
+        out_dir=run_dir,
+        request_json=external,
+        address_map=inputs["address_map"],
+    )
+    # Slot --input-bundle in to make them mutually exclusive.
+    argv += ["--input-bundle", str(inputs["bundle"])]
+    rc = loop_mod.main(argv)
+    assert rc == 2
+
+
+def test_request_json_without_input_bundle_accepted(
+    tmp_path, loop_mod,
+):
+    """Neither --input-bundle nor --candidate-id should be a hard
+    requirement when --request-json is supplied (candidate-id has a
+    default, input-bundle must be omitted)."""
+    external = _produce_request_via_first_run(tmp_path, loop_mod)
+    inputs = _make_inputs(tmp_path)
+    run_dir = tmp_path / "run"
+    rc = loop_mod.main([
+        "--mode", "local-dry-run",
+        "--out-dir", str(run_dir),
+        "--require-confirmation-token", OPERATOR_TOKEN,
+        # No --candidate-id, no --input-bundle.
+        "--worker-address-map", str(inputs["address_map"]),
+        "--max-total-stocks", "10000000",
+        "--pool-balance-stocks", "100000000",
+        "--pinned-time", "2026-05-13T00:00:00+00:00",
+        "--request-json", str(external),
+    ])
+    assert rc == 0
+
+
+def test_request_json_invalid_json_rejected(tmp_path, loop_mod):
+    bad = tmp_path / "bad.json"
+    bad.write_text("not-json", encoding="utf-8")
+    inputs = _make_inputs(tmp_path)
+    rc = loop_mod.main(_builtin_request_argv(
+        out_dir=tmp_path / "run",
+        request_json=bad,
+        address_map=inputs["address_map"],
+    ))
+    assert rc == 2
+
+
+def test_request_json_wrong_schema_rejected(tmp_path, loop_mod):
+    bad = tmp_path / "wrong.json"
+    bad.write_text(
+        json.dumps({
+            "schema": "not-the-real-schema/v0",
+            "request_id": "uc-" + "a" * 16,
+        }, sort_keys=True, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    inputs = _make_inputs(tmp_path)
+    rc = loop_mod.main(_builtin_request_argv(
+        out_dir=tmp_path / "run",
+        request_json=bad,
+        address_map=inputs["address_map"],
+    ))
+    assert rc == 2
+
+
+def test_request_json_bad_request_id_rejected(
+    tmp_path, loop_mod,
+):
+    external = _produce_request_via_first_run(tmp_path, loop_mod)
+    obj = json.loads(external.read_text(encoding="utf-8"))
+    obj["request_id"] = "not-uc-style"
+    bad = tmp_path / "tampered.json"
+    bad.write_text(
+        json.dumps(obj, sort_keys=True, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    inputs = _make_inputs(tmp_path)
+    rc = loop_mod.main(_builtin_request_argv(
+        out_dir=tmp_path / "run",
+        request_json=bad,
+        address_map=inputs["address_map"],
+    ))
+    assert rc == 2
+
+
+def test_request_json_missing_file_rejected(tmp_path, loop_mod):
+    inputs = _make_inputs(tmp_path)
+    rc = loop_mod.main(_builtin_request_argv(
+        out_dir=tmp_path / "run",
+        request_json=tmp_path / "does-not-exist.json",
+        address_map=inputs["address_map"],
+    ))
+    assert rc == 2
+
+
+def test_request_json_resume_idempotent(tmp_path, loop_mod):
+    external = _produce_request_via_first_run(tmp_path, loop_mod)
+    inputs = _make_inputs(tmp_path)
+    run_dir = tmp_path / "run"
+    loop_mod.main(_builtin_request_argv(
+        out_dir=run_dir,
+        request_json=external,
+        address_map=inputs["address_map"],
+    ))
+    state_before = (run_dir / "operator_run.json").read_text(
+        encoding="utf-8",
+    )
+    rc = loop_mod.main(_builtin_request_argv(
+        out_dir=run_dir,
+        request_json=external,
+        address_map=inputs["address_map"],
+        resume=run_dir / "operator_run.json",
+    ))
+    assert rc == 0
+    state_after = (run_dir / "operator_run.json").read_text(
+        encoding="utf-8",
+    )
+    assert state_before == state_after
+
+
+def test_request_json_resume_detects_tampered_request(
+    tmp_path, loop_mod,
+):
+    external = _produce_request_via_first_run(tmp_path, loop_mod)
+    inputs = _make_inputs(tmp_path)
+    run_dir = tmp_path / "run"
+    loop_mod.main(_builtin_request_argv(
+        out_dir=run_dir,
+        request_json=external,
+        address_map=inputs["address_map"],
+    ))
+    # Tamper with the imported request inside the run directory.
+    imported = run_dir / "request.json"
+    obj = json.loads(imported.read_text(encoding="utf-8"))
+    obj["public_description"] = "tampered after import"
+    imported.write_text(
+        json.dumps(obj, sort_keys=True, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    rc = loop_mod.main(_builtin_request_argv(
+        out_dir=run_dir,
+        request_json=external,
+        address_map=inputs["address_map"],
+        resume=run_dir / "operator_run.json",
+    ))
+    assert rc == 2
+
+
+def test_built_mode_records_request_source_built(
+    tmp_path, loop_mod,
+):
+    """Regression: the existing built mode must keep working AND
+    record the new request_source / source_request_* fields with
+    safe defaults (built / null / null)."""
+    inputs = _make_inputs(tmp_path)
+    run_dir = tmp_path / "run"
+    rc = loop_mod.main(_argv(
+        out_dir=run_dir,
+        bundle=inputs["bundle"],
+        address_map=inputs["address_map"],
+    ))
+    assert rc == 0
+    state = json.loads(
+        (run_dir / "operator_run.json").read_text(encoding="utf-8")
+    )
+    assert state["request_source"] == "built"
+    assert state["source_request_sha256"] is None
+    assert state["source_request_path_basename"] is None
+
+
+def test_request_json_state_validates_against_schema(
+    tmp_path, loop_mod,
+):
+    schema = json.loads((
+        REPO_ROOT / "schemas" / "trinity"
+        / "useful_compute_operator_run.schema.json"
+    ).read_text(encoding="utf-8"))
+    external = _produce_request_via_first_run(tmp_path, loop_mod)
+    inputs = _make_inputs(tmp_path)
+    run_dir = tmp_path / "run"
+    loop_mod.main(_builtin_request_argv(
+        out_dir=run_dir,
+        request_json=external,
+        address_map=inputs["address_map"],
+    ))
+    state = json.loads(
+        (run_dir / "operator_run.json").read_text(encoding="utf-8")
+    )
+    _validate(state, schema)
+
+
+def test_operator_run_id_differs_between_modes(
+    tmp_path, loop_mod,
+):
+    """A built run and an existing-request run with otherwise
+    identical operator inputs MUST produce different
+    operator_run_ids, because the request_source enters the id
+    hash."""
+    external = _produce_request_via_first_run(tmp_path, loop_mod)
+    inputs = _make_inputs(tmp_path)
+    built_dir = tmp_path / "run_built"
+    existing_dir = tmp_path / "run_existing"
+
+    loop_mod.main(_argv(
+        out_dir=built_dir,
+        bundle=inputs["bundle"],
+        address_map=inputs["address_map"],
+    ))
+    loop_mod.main(_builtin_request_argv(
+        out_dir=existing_dir,
+        request_json=external,
+        address_map=inputs["address_map"],
+    ))
+    s_built = json.loads(
+        (built_dir / "operator_run.json").read_text(encoding="utf-8")
+    )
+    s_existing = json.loads(
+        (existing_dir / "operator_run.json").read_text(encoding="utf-8")
+    )
+    assert s_built["operator_run_id"] != s_existing["operator_run_id"]

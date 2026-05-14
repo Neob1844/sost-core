@@ -15,6 +15,9 @@
     "allow_wallet_access",
     "allow_broadcast",
     "human_review_required",
+    "request_source",
+    "source_request_sha256",
+    "source_request_path_basename",
     "steps_completed",
     "artifacts",
     "warnings"
@@ -47,6 +50,22 @@
     "allow_wallet_access":   { "type": "boolean", "const": false },
     "allow_broadcast":       { "type": "boolean", "const": false },
     "human_review_required": { "type": "boolean", "const": true },
+    "request_source": {
+      "type": "string",
+      "enum": ["built", "existing_request"]
+    },
+    "source_request_sha256": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "source_request_path_basename": {
+      "oneOf": [
+        { "type": "string", "minLength": 1, "maxLength": 256 },
+        { "type": "null" }
+      ]
+    },
     "steps_completed": {
       "type": "array",
       "items": {

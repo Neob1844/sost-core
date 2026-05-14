@@ -1041,6 +1041,7 @@
     <li><b>no broadcast authority</b>: schema locks <code>allow_broadcast = const false</code></li>
     <li><b>no real signing</b>: payment_draft always runs in <code>unsigned-only</code> or <code>dry-sign</code> mode</li>
     <li><b>no subprocess</b>: no <code>sost-cli</code> invocations from the loop</li>
+    <li><b>can start from an existing <code>request.json</code></b> (Sprint 5.22): pass <code>--request-json &lt;path&gt;</code> to skip the loop's task builder and import a manifest produced elsewhere &mdash; including a Sprint 5.21 <code>--from-scientific-intake</code> request</li>
   </ul>
   <div class="danger-strip" style="margin-top:14px;">
     <strong>Trinity can re-run the pipeline; it cannot pay.</strong>

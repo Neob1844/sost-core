@@ -41,12 +41,18 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import re
+import shutil
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
+_REQUEST_ID_RE = re.compile(r"^uc-[0-9a-f]{16,64}$")
+
+
 SCHEMA_OPERATOR_RUN = "trinity-useful-compute-operator-run/v0.1"
+SCHEMA_REQUEST = "trinity-useful-compute-request/v0.1"
 OPERATOR_TOKEN = "I_UNDERSTAND_THIS_IS_ONLY_A_DRY_RUN_LOOP"
 
 # Mode-specific tokens for the downstream payment_draft step. The
@@ -212,6 +218,76 @@ def _verify_artifact(rel_path: str, sha: str, base: Path) -> None:
             "operator_run artifact hash mismatch for " + rel_path
             + " (expected " + sha + ", got " + actual + ")"
         )
+
+
+# =============================================================================
+# External request import (Sprint 5.22)
+# =============================================================================
+
+def _validate_external_request(obj: Any) -> None:
+    """Refuse the import if the JSON does not match the v0.1
+    useful-compute request shape. The loop only needs the basics
+    (schema id + request_id); downstream steps perform their own
+    strict checks. Catching obvious mis-shapes here gives the
+    operator a clean error before the run directory is mutated."""
+    if not isinstance(obj, dict):
+        raise ValueError(
+            "imported request must be a JSON object"
+        )
+    if obj.get("schema") != SCHEMA_REQUEST:
+        raise ValueError(
+            "imported request wrong schema: "
+            + repr(obj.get("schema"))
+            + " (expected " + SCHEMA_REQUEST + ")"
+        )
+    rid = obj.get("request_id", "")
+    if not (isinstance(rid, str) and _REQUEST_ID_RE.match(rid)):
+        raise ValueError(
+            "imported request_id wrong format: " + repr(rid)
+        )
+    # input_bundle_sha256 must be present and 64-hex; downstream
+    # steps rely on it.
+    ibs = obj.get("input_bundle_sha256", "")
+    if not (isinstance(ibs, str)
+            and re.match(r"^[0-9a-f]{64}$", ibs)):
+        raise ValueError(
+            "imported request input_bundle_sha256 must be 64 "
+            "lowercase hex; got " + repr(ibs)
+        )
+
+
+def _import_existing_request(
+    *, src: Path, run_request_path: Path,
+) -> Tuple[str, str]:
+    """Copy ``src`` to ``run_request_path`` and return
+    (source_sha256, source_basename). Validates the JSON before
+    writing so the run directory is never left with a half-imported
+    request."""
+    if not src.exists() or not src.is_file():
+        raise ValueError(
+            "--request-json file not found: " + str(src)
+        )
+    try:
+        obj = json.loads(src.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            "--request-json is not valid UTF-8 JSON: " + str(exc)
+        )
+    _validate_external_request(obj)
+    # Source sha256 computed from the bytes on disk so the
+    # state-file fingerprint matches the file the operator pointed
+    # at, even if json.dumps would re-emit the keys in a different
+    # order.
+    source_sha = _sha256_file(src)
+    run_request_path.parent.mkdir(parents=True, exist_ok=True)
+    # Re-emit canonically so resume tamper detection always
+    # compares against a deterministic file. The run-dir copy may
+    # therefore differ byte-for-byte from the source (e.g. key
+    # ordering) but always has the same content.
+    run_request_path.write_text(
+        _canonical_dumps(obj), encoding="utf-8",
+    )
+    return source_sha, src.name
 
 
 # =============================================================================
@@ -460,6 +536,26 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
             else:
                 _verify_artifact(entry["path"], entry["sha256"], out_dir)
     else:
+        # request_source toggles between two initial-step modes:
+        #   "built"            -> the loop runs task_builder
+        #   "existing_request" -> the loop imports an external
+        #                         request.json via --request-json
+        request_source = (
+            "existing_request"
+            if args.request_json is not None
+            else "built"
+        )
+        source_request_sha: Optional[str] = None
+        source_request_basename: Optional[str] = None
+        if request_source == "existing_request":
+            run_request_path = out_dir / "request.json"
+            source_request_sha, source_request_basename = (
+                _import_existing_request(
+                    src=Path(args.request_json),
+                    run_request_path=run_request_path,
+                )
+            )
+
         operator_run_id = "oprun-" + _sha16_str(_canonical_dumps({
             "mode": args.mode,
             "pinned_time": args.pinned_time,
@@ -467,6 +563,8 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
             "worker_id": list(args.worker_id),
             "pool_balance_stocks": int(args.pool_balance_stocks),
             "max_total_stocks": int(args.max_total_stocks),
+            "request_source": request_source,
+            "source_request_sha256": source_request_sha,
         }))
         state = {
             "schema": SCHEMA_OPERATOR_RUN,
@@ -479,15 +577,33 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
             "allow_wallet_access": False,
             "allow_broadcast": False,
             "human_review_required": True,
+            "request_source": request_source,
+            "source_request_sha256": source_request_sha,
+            "source_request_path_basename": source_request_basename,
             "steps_completed": [],
             "artifacts": {},
             "warnings": [],
         }
+
+        # When importing an existing request, mark task_builder as
+        # completed up-front with the copy in run/request.json.
+        # Downstream steps (worker / replay / etc.) see the same
+        # file layout as in the "built" path.
+        if request_source == "existing_request":
+            imported = out_dir / "request.json"
+            _record_step(
+                state=state, step="task_builder",
+                files=[imported],
+                base=out_dir, manifest=manifest, single=True,
+            )
+
         _write_state(state_path, state)
 
     completed = set(state.get("steps_completed", []))
 
-    # Step 1 — task_builder.
+    # Step 1 — task_builder. Skipped automatically when an external
+    # request was imported in the init block above (it was already
+    # recorded as completed).
     if "task_builder" in completed:
         request_path = out_dir / state["artifacts"]["task_builder"]["path"]
     else:
@@ -657,6 +773,16 @@ def main(argv: Optional[List[str]] = None) -> int:
         choices=["unsigned-only", "dry-sign"],
     )
     p.add_argument(
+        "--request-json", default=None,
+        help="Path to an EXISTING trinity-useful-compute-request/"
+             "v0.1 JSON manifest (typically produced by "
+             "useful_compute_task_builder --from-scientific-intake "
+             "in Sprint 5.21). When supplied, the operator loop "
+             "skips its internal task_builder step and imports this "
+             "request as the canonical run/request.json. Mutually "
+             "exclusive with --input-bundle.",
+    )
+    p.add_argument(
         "--resume", default=None,
         help="Resume a prior run by passing its operator_run.json.",
     )
@@ -686,10 +812,18 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if args.worker_id is None:
         args.worker_id = ["worker-A", "worker-B"]
-    if args.input_bundle is None:
+    if args.request_json is not None and args.input_bundle is not None:
         print(
-            "[useful_compute_operator_loop] --input-bundle is "
-            "required",
+            "[useful_compute_operator_loop] --request-json and "
+            "--input-bundle are mutually exclusive (the request "
+            "is either imported OR built from a bundle, not both)",
+            file=sys.stderr,
+        )
+        return 2
+    if args.request_json is None and args.input_bundle is None:
+        print(
+            "[useful_compute_operator_loop] either --request-json "
+            "or --input-bundle is required",
             file=sys.stderr,
         )
         return 2
