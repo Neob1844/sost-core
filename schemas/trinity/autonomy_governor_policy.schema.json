@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-autonomy-governor-policy/v0.1",
+  "title": "Trinity Autonomy Governor Policy (v0.1)",
+  "description": "Constitutional policy consumed by scripts/trinity/autonomy_governor.py. The Governor evaluates proposed autonomous actions against this policy and emits a decision JSON. v0.1 is OBSERVE ONLY: the Governor never executes the action. See docs/TRINITY_AUTONOMY_GOVERNOR_V01.md and SECURITY.md (T01-T20) for context.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "mode",
+    "caps_per_day",
+    "caps_per_hour",
+    "allowlists",
+    "require_human_approval",
+    "kill_switch",
+    "audit"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-autonomy-governor-policy/v0.1"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["observe", "propose", "execute_bounded"],
+      "description": "v0.1 only SHIPS 'observe'. 'propose' and 'execute_bounded' are documented in the schema for future sprints; the v0.1 code rejects them at load time."
+    },
+    "caps_per_day": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "llm_tokens",
+        "llm_calls",
+        "requests_created",
+        "workers_launched",
+        "worker_minutes",
+        "autonomous_sost_stocks"
+      ],
+      "properties": {
+        "llm_tokens":             {"type": "integer", "minimum": 0},
+        "llm_calls":              {"type": "integer", "minimum": 0},
+        "requests_created":       {"type": "integer", "minimum": 0},
+        "workers_launched":       {"type": "integer", "minimum": 0},
+        "worker_minutes":         {"type": "integer", "minimum": 0},
+        "autonomous_sost_stocks": {
+          "type": "integer",
+          "const": 0,
+          "description": "MUST be 0 in v0.1. The Governor rejects any other value (SECURITY.md T08). Enabling autonomous spending is a sprint upgrade, not a config edit."
+        }
+      }
+    },
+    "caps_per_hour": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["llm_calls", "rpc_calls"],
+      "properties": {
+        "llm_calls": {"type": "integer", "minimum": 0},
+        "rpc_calls": {"type": "integer", "minimum": 0}
+      }
+    },
+    "allowlists": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_tools",
+        "rpc_methods",
+        "filesystem_read",
+        "filesystem_write",
+        "filesystem_forbidden"
+      ],
+      "properties": {
+        "source_tools":         {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "rpc_methods":          {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "filesystem_read":      {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "filesystem_write":     {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "filesystem_forbidden": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "require_human_approval": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true,
+      "description": "Action names that always require a human, never autonomous."
+    },
+    "kill_switch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["halt_file"],
+      "properties": {
+        "halt_file": {
+          "type": "string",
+          "description": "Absolute filesystem path. Presence of this file blocks every action. In production this file should be owned by root; Trinity must not have write permission."
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["log_path", "format"],
+      "properties": {
+        "log_path": {"type": "string"},
+        "format":   {"type": "string", "enum": ["jsonl"]}
+      }
+    }
+  }
+}
