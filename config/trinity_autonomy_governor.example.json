@@ -1,0 +1,59 @@
+{
+  "schema": "trinity-autonomy-governor-policy/v0.1",
+  "version": 1,
+  "mode": "observe",
+  "caps_per_day": {
+    "llm_tokens": 50000,
+    "llm_calls": 100,
+    "requests_created": 5,
+    "workers_launched": 10,
+    "worker_minutes": 60,
+    "autonomous_sost_stocks": 0
+  },
+  "caps_per_hour": {
+    "llm_calls": 10,
+    "rpc_calls": 30
+  },
+  "allowlists": {
+    "source_tools": [
+      "trinity_scientific_prompt_intake",
+      "trinity_orchestrator",
+      "materials_engine",
+      "geaspirit"
+    ],
+    "rpc_methods": [
+      "getinfo",
+      "getrawmempool"
+    ],
+    "filesystem_read": [
+      "data/intake/",
+      "requests/",
+      "reports/"
+    ],
+    "filesystem_write": [
+      "drafts/",
+      "logs/governor/",
+      "reports/"
+    ],
+    "filesystem_forbidden": [
+      "secrets/",
+      "wallets/",
+      ".git/",
+      "config/trinity_autonomy_governor.example.json"
+    ]
+  },
+  "require_human_approval": [
+    "real_sign",
+    "broadcast_signed_transaction",
+    "wallet_access",
+    "constitution_change",
+    "register_new_source_tool"
+  ],
+  "kill_switch": {
+    "halt_file": "/etc/trinity/HALT"
+  },
+  "audit": {
+    "log_path": "logs/governor/audit.log",
+    "format": "jsonl"
+  }
+}

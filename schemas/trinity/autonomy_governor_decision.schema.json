@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-autonomy-governor-decision/v0.1",
+  "title": "Trinity Autonomy Governor Decision (v0.1)",
+  "description": "Single decision emitted by scripts/trinity/autonomy_governor.py per CLI invocation. One JSON file per decision, named TRINITY_AUTONOMY_GOVERNOR_DECISION_<decision_id>.json. v0.1 is OBSERVE ONLY: a decision is a verdict, not an execution. Every decision cites the threats from SECURITY.md (T01-T20) that the evaluated action is relevant to.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "decision_id",
+    "policy_sha256",
+    "policy_runtime_sha256",
+    "policy_hashes_match",
+    "policy_path_basename",
+    "action",
+    "action_params",
+    "mode",
+    "allowed",
+    "blocked_reason",
+    "requires_human_approval",
+    "caps_checked",
+    "allowlists_checked",
+    "kill_switch_checked",
+    "safety_status",
+    "threat_refs",
+    "pinned_time"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-autonomy-governor-decision/v0.1"
+    },
+    "decision_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "policy_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Pinned at boot."
+    },
+    "policy_runtime_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Recomputed at decision time. Must match policy_sha256."
+    },
+    "policy_hashes_match": {
+      "type": "boolean"
+    },
+    "policy_path_basename": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string"
+    },
+    "action_params": {
+      "type": "object"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["observe", "propose", "execute_bounded"]
+    },
+    "allowed": {
+      "type": "boolean"
+    },
+    "blocked_reason": {
+      "type": ["string", "null"]
+    },
+    "requires_human_approval": {
+      "type": "boolean"
+    },
+    "caps_checked": {
+      "type": "object"
+    },
+    "allowlists_checked": {
+      "type": "object"
+    },
+    "kill_switch_checked": {
+      "type": "object",
+      "required": ["halt_file"],
+      "properties": {
+        "halt_file": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "safety_status": {
+      "type": "string",
+      "enum": ["ok", "warn", "fail"]
+    },
+    "threat_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^T[0-9]{2}$"
+      },
+      "uniqueItems": true,
+      "description": "References into SECURITY.md (Trinity threat model v0.1). Each item like 'T01', 'T07', 'T20'."
+    },
+    "pinned_time": {
+      "type": "string",
+      "description": "ISO-8601 timestamp pinned by the caller; makes the decision deterministic across replays."
+    }
+  }
+}

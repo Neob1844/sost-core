@@ -1116,6 +1116,48 @@
   </div>
 </div>
 
+<!-- Autonomy Governor v0.1 (Sprint 5.23) -->
+<div class="card">
+  <h2>Autonomy Governor v0.1</h2>
+  <p>
+    Constitutional layer that evaluates whether a proposed autonomous
+    Trinity action would be permitted by the active policy. Ships in
+    <code>scripts/trinity/autonomy_governor.py</code> with policy
+    <code>config/trinity_autonomy_governor.example.json</code>.
+  </p>
+  <ul>
+    <li><strong>Observe only</strong> — v0.1 emits decision JSONs;
+        it never executes the action it evaluates.</li>
+    <li><strong>No network, no shell, no wallet, no broadcast.</strong>
+        Static safety test fails CI if the governor source ever imports
+        <code>requests</code>, <code>subprocess</code>, sign / broadcast
+        primitives, or <code>eval</code>/<code>exec</code>.</li>
+    <li><strong>Policy hash pinned at boot.</strong> Mutation of the
+        policy file between load and decision blocks with
+        <code>policy_mutated_at_runtime</code>.</li>
+    <li><strong>Halt file is sacred.</strong> Presence of
+        <code>/etc/trinity/HALT</code> blocks every action; Trinity must
+        not have write permission on that path.</li>
+    <li><strong><code>autonomous_sost_stocks</code> hardcoded to 0.</strong>
+        A non-zero value in the policy is rejected at load time. Enabling
+        autonomous spending is a sprint upgrade, not a config edit.</li>
+    <li>Each decision cites the relevant threats from
+        <code>SECURITY.md</code> in <code>threat_refs</code> (T01-T20).
+        <code>real_sign</code>, <code>broadcast_signed_transaction</code>,
+        <code>wallet_access</code>, <code>constitution_change</code> and
+        <code>register_new_source_tool</code> always require a human.</li>
+    <li>External heartbeating lives in a future separate process,
+        <code>governor_watchdog.py</code>, NOT in the governor itself —
+        keeping the governor network-free is the whole point.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Not yet integrated into the operator loop. v0.1 ships as a
+    standalone evaluator with 44 tests
+    (24 functional + 14 schema + 6 safety) on branch
+    <code>trinity/autonomy-governor-v01</code>.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>
