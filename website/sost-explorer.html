@@ -601,7 +601,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div style="margin-top:14px;padding:14px 16px;border:1px solid rgba(245,158,11,0.35);border-left:3px solid #f59e0b;background:rgba(245,158,11,0.05);border-radius:3px">
       <div style="font-size:10px;letter-spacing:2px;color:#f59e0b;margin-bottom:10px;font-family:var(--font-mono,monospace)">// USEFUL COMPUTE STACK &middot; Sprints 5.6 - 5.18d (post-Kalgoorlie)</div>
       <p style="margin:0 0 12px;font-size:12.5px;line-height:1.7;color:#e9d5b3">
-        After the Kalgoorlie capsule, Trinity grew a full <b style="color:#fbbf24">Useful Compute layer</b>: SOST AI now coordinates candidates, workers execute deterministic compute, replay agreement is enforced cross-worker, governance reviews batches, budgets cap spending, payment proposals are built, drafts are signed locally and a human broadcast guard pushes the signed hex to the node. <b style="color:#fbbf24">15 sprints &middot; 14 scripts &middot; 9 strict schemas &middot; 808+ trinity tests PASS</b>. Every layer is <b>dry-run by default, no auto-payout, no consensus change</b>; the last two layers (5.17 real signing, 5.18 human broadcast) require an exact verbatim operator token for each invocation.
+        After the Kalgoorlie capsule, Trinity grew a full <b style="color:#fbbf24">Useful Compute layer</b>: SOST AI now coordinates candidates, workers execute deterministic compute, replay agreement is enforced cross-worker, governance reviews batches, budgets cap spending, payment proposals are built, drafts are signed locally and a human broadcast guard pushes the signed hex to the node. <b style="color:#fbbf24">Sprints 5.6 - 5.32 &middot; 43 trinity scripts &middot; 20 strict schemas &middot; 1288 tests PASS</b>. Every layer is <b>dry-run by default, no auto-payout, no consensus change</b>; the last two on-chain layers (5.17 real signing, 5.18 human broadcast) require an exact verbatim operator token for each invocation. The post-5.18d stack (5.19 - 5.32) is the <span style="color:#fbbf24">autonomy + scientific intake</span> work — see the new banner below.
       </p>
 
       <table style="width:100%;font-family:var(--font-mono,monospace);font-size:11px;line-height:1.55;border-collapse:collapse;color:#e9d5b3">
@@ -729,23 +729,171 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <div style="padding:8px 10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:3px">
           <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// Backend kinds</div>
           <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
-            placeholder<br>
-            <span style="color:#fbbf24">sandbox_toy</span> (experimental)<br>
-            <span style="color:#8b8b8b">real_backend</span> (reserved, 0 in v0.1)
+            placeholder (default)<br>
+            <span style="color:#fbbf24">sandbox_toy</span> (experimental, 3 backends)<br>
+            <span style="color:#fbbf24">real_backend</span> (1 live: <code>local_materials_engine_v01</code> &middot; sprint 5.32)
           </div>
         </div>
       </div>
 
       <p style="margin-top:14px;padding:10px 14px;border-left:3px solid #f59e0b;background:rgba(245,158,11,0.04);font-size:12px;line-height:1.6;color:#e9d5b3;border-radius:3px">
-        <b style="color:#fbbf24">Where the stack stops.</b>
-        Sprint 5.18d closed the chain: a Trinity Useful Compute reward
+        <b style="color:#fbbf24">Where the on-chain stack stops.</b>
+        Sprint 5.18d closed the on-chain chain: a Trinity Useful Compute reward
         flowed from request &rarr; worker &rarr; replay &rarr; governance &rarr;
         budget &rarr; proposal &rarr; real-signed draft &rarr; human broadcast
         and into a mined block. <b>Every on-chain event remains operator-driven and human-triggered &mdash; never automatic.</b>
-        Future sprints introduce: Proof Registry / Capsule publishing
-        (anchors the proposal&rsquo;s <code>capsule_summary</code>
-        on-chain), distributed job sharding, real DFT / quantum
-        backends behind feature flags.
+        Sprints 5.19 - 5.32 stay off-chain and extend Trinity in two parallel directions: <b style="color:#fbbf24">operational autonomy</b> (operator loop + governor + watchdog + task queue + runner + dashboard) and <b style="color:#fbbf24">scientific input + first real backend</b> (intake + readers + reader-metadata bridge + classifier + materials_engine). See the next banner.
+      </p>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- AUTONOMY + SCIENTIFIC INPUT STACK (Sprints 5.19 - 5.32)          -->
+    <!-- Off-chain. Operator-driven. Operational autonomy with kill       -->
+    <!-- switches + the first real_backend kind backend.                  -->
+    <!-- ================================================================ -->
+    <div style="margin-top:14px;padding:14px 16px;border:1px solid rgba(139,92,246,0.35);border-left:3px solid #8b5cf6;background:rgba(139,92,246,0.05);border-radius:3px">
+      <div style="font-size:10px;letter-spacing:2px;color:#a78bfa;margin-bottom:10px;font-family:var(--font-mono,monospace)">// AUTONOMY + SCIENTIFIC INPUT STACK &middot; Sprints 5.19 - 5.32 (off-chain, dry-run)</div>
+      <p style="margin:0 0 12px;font-size:12.5px;line-height:1.7;color:#e9d5b3">
+        The next 14 sprints split into two tracks. <b style="color:#a78bfa">Operational autonomy</b> wraps the on-chain stack in a kill-switch-controlled loop: a constitutional <b>governor</b> evaluates every pipeline step against a sha256-pinned policy, an external <b>watchdog</b> summarises the audit trail, a deterministic <b>task queue</b> + bounded <b>runner</b> + read-only <b>dashboard</b> make batch operation reviewable. <b style="color:#a78bfa">Scientific input</b> teaches Trinity to ingest real paper formats (.tex / .csv / .pdf with graceful missing-deps), classify the request into a structured task plan (deterministic substring + regex, no LLM), and dispatch to the first non-placeholder <b>real_backend</b>: a curated <b>materials_engine</b> that ranks oxides on oxygen storage. <b style="color:#a78bfa">Still dry-run by default, still no automatic payout, still no consensus change</b>; the on-chain layers from 5.6 - 5.18d are not touched.
+      </p>
+
+      <table style="width:100%;font-family:var(--font-mono,monospace);font-size:11px;line-height:1.55;border-collapse:collapse;color:#e9d5b3">
+        <thead>
+          <tr style="text-align:left;color:#a78bfa">
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(139,92,246,0.3)">Sprint</th>
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(139,92,246,0.3)">Layer</th>
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(139,92,246,0.3)">What it ships</th>
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(139,92,246,0.3)">Artefact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.19</td>
+            <td style="padding:5px 8px">Operator Loop</td>
+            <td style="padding:5px 8px">Single-binary orchestrator: task_builder &rarr; worker &rarr; replay &rarr; gate &rarr; budget &rarr; proposal &rarr; payment_draft with checkpoints, resume, SHA256SUMS manifest. Local-dry-run only; never signs, never broadcasts.</td>
+            <td style="padding:5px 8px"><code>trinity-useful-compute-operator-run/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.20</td>
+            <td style="padding:5px 8px">Scientific Prompt Intake</td>
+            <td style="padding:5px 8px">Local ingest of a scientific prompt + reference documents (.txt / .md / .json). Hashes every input, bounded previews, no LLM, no network.</td>
+            <td style="padding:5px 8px"><code>trinity-scientific-prompt-intake/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.21 / 5.22</td>
+            <td style="padding:5px 8px">Intake &rarr; Task Builder bridge</td>
+            <td style="padding:5px 8px"><code>--from-scientific-intake</code> consumes an intake artifact and writes a Useful Compute request with <code>metadata.scientific_intake</code>. Hotfixes 5.22a-d hardened sendrawtransaction wallet-free path.</td>
+            <td style="padding:5px 8px"><code>trinity-useful-compute-request/v0.1</code> (extended)</td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.23</td>
+            <td style="padding:5px 8px">Autonomy Governor</td>
+            <td style="padding:5px 8px">Constitutional layer: evaluates every proposed autonomous action against a sha256-pinned policy. Locked to <code>mode=observe</code> and <code>autonomous_sost_stocks=0</code> in v0.1. Halt-file kill switch. Threat refs map to SECURITY.md T01-T20.</td>
+            <td style="padding:5px 8px"><code>trinity-autonomy-governor-decision/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.24</td>
+            <td style="padding:5px 8px">Operator Loop &times; Governor</td>
+            <td style="padding:5px 8px">Operator loop fires the Governor before each pipeline step. Hard-block on halt or policy mutation; observe-only otherwise. Audit-only audit trail: 7 decisions per run.</td>
+            <td style="padding:5px 8px"><code>metadata.governor_decisions</code> per run</td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.25</td>
+            <td style="padding:5px 8px">Governor Watchdog</td>
+            <td style="padding:5px 8px">External read-only scanner of the audit trail. <code>safety_status</code> rollup: <code>critical</code> &gt; <code>warning</code> &gt; <code>stale</code> &gt; <code>ok</code>. Webhook double-gated and not yet wired.</td>
+            <td style="padding:5px 8px"><code>trinity-governor-watchdog-report/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.26</td>
+            <td style="padding:5px 8px">Task Queue</td>
+            <td style="padding:5px 8px">Deterministic local queue with <code>init / enqueue / list / run-once / inspect / validate</code> commands. Fail-closed on governor hard-block + watchdog critical.</td>
+            <td style="padding:5px 8px"><code>trinity-task-queue/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.27</td>
+            <td style="padding:5px 8px">Task Queue Runner</td>
+            <td style="padding:5px 8px">Bounded <code>run-batch</code> wrapper. Max 50 items per invocation. <code>--stop-on-failure</code> for fail-fast. Explicitly NOT a daemon.</td>
+            <td style="padding:5px 8px"><code>trinity-task-queue-runner-report/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.28</td>
+            <td style="padding:5px 8px">Queue Dashboard</td>
+            <td style="padding:5px 8px">Read-only JSON + static HTML pane of glass over the queue + batches. XSS-escaped, no JS, no external assets, noindex meta.</td>
+            <td style="padding:5px 8px"><code>trinity-task-queue-dashboard/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.29</td>
+            <td style="padding:5px 8px">Scientific Intake Readers</td>
+            <td style="padding:5px 8px">Pluggable readers for .tex / .csv / .pdf alongside .txt / .md / .json. Graceful PDF missing-dep (pypdf / PyPDF2 dynamic import). Per-doc <code>reader_kind / reader_status / extracted_text_sha256 / structured_summary</code>.</td>
+            <td style="padding:5px 8px"><code>trinity-scientific-prompt-intake/v0.1</code> (+6 optional fields)</td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.30</td>
+            <td style="padding:5px 8px">Reader Metadata in Request</td>
+            <td style="padding:5px 8px">Task builder carries the reader manifest (counts + per-doc subset) into <code>metadata.scientific_reader_manifest</code> in the request. No raw text leak. <code>input_bundle_sha256</code> already reader-sensitive via Sprint 5.29 mix-in.</td>
+            <td style="padding:5px 8px"><code>metadata.scientific_reader_manifest</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.31</td>
+            <td style="padding:5px 8px">Scientific Task Classifier</td>
+            <td style="padding:5px 8px">Deterministic no-LLM classifier: substring + regex heuristics over bounded previews. Emits <code>task_kind / candidate_materials / candidate_metrics / proposed_source_tool / proposed_difficulty</code>. Sentinel-poison privacy test enforced.</td>
+            <td style="padding:5px 8px"><code>trinity-scientific-task-classification/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(139,92,246,0.18)">
+            <td style="padding:5px 8px;color:#a78bfa">5.32</td>
+            <td style="padding:5px 8px">Materials Engine Backend</td>
+            <td style="padding:5px 8px"><b style="color:#a78bfa">First real_backend</b> kind in v0.1. Auto-routes when source_tool=materials_engine + classifier metadata. Curated 6&times;6 properties table (CeO2 / PrOx / Sm2O3 / Y2O3 / ZrO2 / TiO2). Deterministic ranking. NOT DFT. NOT measured data.</td>
+            <td style="padding:5px 8px"><code>trinity-materials-engine-result/v0.1</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px">
+        <div style="padding:8px 10px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#a78bfa;margin-bottom:4px">// Autonomy pipeline</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            enqueue -&gt; run-batch (1..50) -&gt;<br>
+            operator_loop + governor -&gt;<br>
+            watchdog scan -&gt;<br>
+            <b style="color:#a78bfa">completed | failed</b><br>
+            (dashboard renders the trail)
+          </div>
+        </div>
+        <div style="padding:8px 10px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#a78bfa;margin-bottom:4px">// Scientific pipeline</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            intake (.tex/.csv/.pdf) -&gt;<br>
+            classifier (no LLM) -&gt;<br>
+            task_builder (reader metadata) -&gt;<br>
+            materials_engine backend -&gt;<br>
+            <b style="color:#a78bfa">ranked compute_output</b>
+          </div>
+        </div>
+        <div style="padding:8px 10px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#a78bfa;margin-bottom:4px">// Fail-closed conditions</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            halt_file_present<br>
+            policy_mutated_at_runtime<br>
+            watchdog safety_status=critical<br>
+            operator_loop rc != 0<br>
+            (no retry inside run-once)
+          </div>
+        </div>
+        <div style="padding:8px 10px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#a78bfa;margin-bottom:4px">// Hard caps (autonomy)</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            governor mode = observe (locked)<br>
+            autonomous_sost_stocks = 0<br>
+            run-batch max-items = 50<br>
+            run-batch sleep_seconds = 3600<br>
+            pdf max pages = 200
+          </div>
+        </div>
+      </div>
+
+      <p style="margin-top:14px;padding:10px 14px;border-left:3px solid #8b5cf6;background:rgba(139,92,246,0.04);font-size:12px;line-height:1.6;color:#e9d5b3;border-radius:3px">
+        <b style="color:#a78bfa">What this is NOT.</b>
+        These 14 sprints add ZERO new on-chain capability. The governor cannot pay. The watchdog cannot dispatch externally (v0.1). The queue cannot retry. The runner is bounded, not a daemon. The classifier has no model — substring + regex only. The materials_engine reads a hand-curated table pinned in source. <b style="color:#a78bfa">No wallet access, no signing, no broadcast, no LLM, no network from any of these 14 sprints.</b> Everything routes through the dry-run pipeline established in 5.6 - 5.18d; the on-chain edge stays human-triggered, per-invocation token-gated.
       </p>
     </div>
 
