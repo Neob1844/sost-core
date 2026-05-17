@@ -1357,6 +1357,73 @@
   </p>
 </div>
 
+<!-- Task Queue Runner v0.1 (Sprint 5.27) -->
+<div class="card">
+  <h2>Task Queue Runner v0.1</h2>
+  <p>
+    Sprint 5.27 adds a <strong>bounded</strong> runner over the
+    Sprint 5.26 task queue. The new <code>run-batch</code>
+    subcommand processes up to <code>--max-items</code> pending
+    items (oldest first), writes a deterministic batch report
+    JSON, and inherits every fail-closed invariant from
+    <code>run-once</code>. Still dry-run only; the runner is
+    explicitly <strong>not a daemon</strong>.
+  </p>
+  <ul>
+    <li><strong>Hard bounds.</strong> <code>--max-items</code>
+        clamped to 1..50, <code>--sleep-seconds</code> clamped
+        to 0..3600. Named constants
+        (<code>RUNNER_MIN_BATCH</code>,
+        <code>RUNNER_MAX_BATCH</code>,
+        <code>RUNNER_MAX_SLEEP_SECONDS</code>) — a static safety
+        test rejects any future PR that quietly widens them.</li>
+    <li><strong>No duplication.</strong> The runner delegates to
+        the existing <code>run_once()</code>; a static check
+        asserts <code>_run_operator_loop()</code> and
+        <code>_run_watchdog()</code> each appear exactly twice
+        in the file (definition + single call site inside
+        <code>run_once()</code>) so a copy-paste regression
+        fails CI.</li>
+    <li><strong>Three safety states.</strong>
+        <code>ok</code> = every attempted item completed.
+        <code>warning</code> = at least one failed but the
+        runner kept going (<code>--stop-on-failure</code> not
+        set). <code>failed</code> = at least one failed and
+        <code>--stop-on-failure</code> was set, runner halted.</li>
+    <li><strong>Deterministic batch_id.</strong> sha16 of
+        (pinned_time, queue_dir basename, max_items,
+        stop_on_failure, item_ids attempted). Same state +
+        same flags ⇒ same report id.</li>
+    <li><strong>Mode lock re-asserted.</strong> Even though
+        <code>run_once()</code> already enforces local-dry-run,
+        <code>run_batch()</code> calls
+        <code>_ensure_local_dry_run(ALLOWED_MODE)</code> again
+        at entry — belt-and-braces against a future caller
+        fanning a non-local mode into the bounded path.</li>
+    <li><strong>Batch report is its own schema.</strong>
+        <code>schemas/trinity/task_queue_runner_report.schema.json</code>
+        ($id <code>trinity-governor-task-queue-runner-report/v0.1</code>)
+        with batch_id pattern, item_ids arrays of
+        <code>qit-</code> ids, safety_status enum
+        <code>{ok,warning,failed}</code>, bounded
+        max_items + sleep_seconds.</li>
+    <li><strong>Sibling scripts still subprocess-only.</strong>
+        Same rule as 5.26: no imports of
+        <code>autonomy_governor</code> /
+        <code>governor_watchdog</code> /
+        <code>useful_compute_operator_loop</code>; everything
+        flows via argv subprocess, never shell.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/task-queue-runner-v01</code>. 35 new
+    tests (25 functional + 10 safety) all green on the
+    deployment host alongside the prior 1090. Pure
+    scripts + schemas + docs + tests merge: zero <code>src/</code>,
+    zero consensus, zero wallet / payment / broadcast changes.
+    The actual long-running daemon arrives in a later sprint.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>

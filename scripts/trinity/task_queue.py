@@ -53,10 +53,16 @@ from typing import Any, Dict, List, Optional, Tuple
 
 SCHEMA_QUEUE = "trinity-task-queue/v0.1"
 SCHEMA_ITEM = "trinity-task-queue-item/v0.1"
+SCHEMA_RUNNER_REPORT = "trinity-task-queue-runner-report/v0.1"
 ALLOWED_MODE = "local-dry-run"
 CONFIRMATION_TOKEN = "I_UNDERSTAND_THIS_IS_ONLY_A_DRY_RUN_LOOP"
 DEFAULT_MAX_ATTEMPTS = 3
 GOVERNOR_HARD_BLOCK_RC = 3
+
+# Sprint 5.27 — Task Queue Runner v0.1
+RUNNER_MIN_BATCH = 1
+RUNNER_MAX_BATCH = 50
+RUNNER_MAX_SLEEP_SECONDS = 3600
 
 STATUS_PENDING = "pending"
 STATUS_RUNNING = "running"
@@ -580,6 +586,168 @@ def validate_queue_tree(queue_dir: Path) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Sprint 5.27 — Task Queue Runner v0.1 (bounded wrapper over run_once)
+# ---------------------------------------------------------------------------
+
+
+def _runner_report_default_path(queue_dir: Path, batch_id: str) -> Path:
+    return (
+        queue_paths(queue_dir)["reports"] / "_batches"
+        / ("TRINITY_TASK_QUEUE_RUNNER_REPORT_" + batch_id + ".json")
+    )
+
+
+def run_batch(
+    queue_dir: Path,
+    max_items: int,
+    pinned_time: str,
+    stop_on_failure: bool = False,
+    sleep_seconds: int = 0,
+    report_path: Optional[Path] = None,
+    _sleep_hook=None,
+) -> Dict[str, Any]:
+    """Bounded wrapper over run_once(). Processes up to ``max_items``
+    pending items (oldest first via the existing run_once selection),
+    records each outcome, and writes a deterministic batch report
+    JSON. Never duplicates the operator_loop / watchdog logic — it
+    just calls run_once() in a bounded loop.
+
+    Args:
+        queue_dir: queue directory created by init_queue.
+        max_items: 1 .. 50.  Hard-bounded.
+        pinned_time: ISO string. Goes into batch_id and the report.
+        stop_on_failure: when True, halt at the first failed item.
+            safety_status becomes "failed" if any item failed under
+            this flag.
+        sleep_seconds: 0 .. 3600. Optional inter-item delay. 0 by
+            default; the runner is not a daemon.
+        report_path: optional explicit output path for the JSON
+            report. Default: queue_dir/reports/_batches/
+            TRINITY_TASK_QUEUE_RUNNER_REPORT_<batch_id>.json.
+        _sleep_hook: test-only hook that replaces time.sleep with
+            a callable so tests can assert sleep was called without
+            actually sleeping. Internal; not exposed via CLI.
+
+    Returns:
+        the batch report dict (also written to disk).
+    """
+    queue_dir = Path(queue_dir)
+    if not isinstance(max_items, int) or not (
+        RUNNER_MIN_BATCH <= max_items <= RUNNER_MAX_BATCH
+    ):
+        raise QueueError(
+            "max-items must be an integer in ["
+            + str(RUNNER_MIN_BATCH) + ", " + str(RUNNER_MAX_BATCH)
+            + "]; got " + repr(max_items)
+        )
+    if not isinstance(sleep_seconds, int) or not (
+        0 <= sleep_seconds <= RUNNER_MAX_SLEEP_SECONDS
+    ):
+        raise QueueError(
+            "sleep-seconds must be an integer in [0, "
+            + str(RUNNER_MAX_SLEEP_SECONDS) + "]; got "
+            + repr(sleep_seconds)
+        )
+    # Mode lock — same check that fires inside run_once. We re-assert
+    # here so the runner refuses to even start if a future caller
+    # tries to fan in a non-local-dry-run mode override.
+    _ensure_local_dry_run(ALLOWED_MODE)
+
+    # Ensure the queue exists and is readable before we record the
+    # batch (a missing queue should not produce a half-written
+    # report under the default path).
+    _read_queue(queue_dir)
+
+    item_ids: List[str] = []
+    completed_item_ids: List[str] = []
+    failed_item_ids: List[str] = []
+    warnings: List[str] = []
+    attempted = 0
+    stopped_early = False
+
+    for i in range(int(max_items)):
+        result = run_once(queue_dir)
+        if result is None:
+            # No more pending items. attempted_count tracks what we
+            # actually tried; skipped_count below is computed from
+            # the difference.
+            break
+        attempted += 1
+        item_ids.append(result["queue_item_id"])
+        if result["status"] == STATUS_COMPLETED:
+            completed_item_ids.append(result["queue_item_id"])
+        elif result["status"] == STATUS_FAILED:
+            failed_item_ids.append(result["queue_item_id"])
+            err = result.get("last_error") or "(no last_error)"
+            warnings.append(
+                "item " + result["queue_item_id"]
+                + " failed: " + err[:300]
+            )
+            if stop_on_failure:
+                stopped_early = True
+                break
+        else:
+            warnings.append(
+                "item " + result["queue_item_id"]
+                + " ended in unexpected status: "
+                + str(result.get("status"))
+            )
+
+        if sleep_seconds > 0 and (i + 1) < int(max_items):
+            if _sleep_hook is not None:
+                _sleep_hook(sleep_seconds)
+            else:
+                import time as _time
+                _time.sleep(sleep_seconds)
+
+    skipped_count = int(max_items) - attempted
+    if skipped_count < 0:
+        skipped_count = 0
+
+    if stopped_early:
+        safety_status = "failed"
+    elif failed_item_ids:
+        safety_status = "warning"
+    else:
+        safety_status = "ok"
+
+    batch_id = "tqr-" + _sha16(_canonical_dumps({
+        "pinned_time": pinned_time,
+        "queue_dir_basename": queue_dir.name,
+        "max_items": int(max_items),
+        "stop_on_failure": bool(stop_on_failure),
+        "item_ids": item_ids,
+    }))
+
+    report: Dict[str, Any] = {
+        "schema": SCHEMA_RUNNER_REPORT,
+        "batch_id": batch_id,
+        "pinned_time": pinned_time,
+        "queue_dir_basename": queue_dir.name,
+        "max_items": int(max_items),
+        "attempted_count": attempted,
+        "completed_count": len(completed_item_ids),
+        "failed_count": len(failed_item_ids),
+        "skipped_count": skipped_count,
+        "stop_on_failure": bool(stop_on_failure),
+        "sleep_seconds": int(sleep_seconds),
+        "item_ids": item_ids,
+        "completed_item_ids": completed_item_ids,
+        "failed_item_ids": failed_item_ids,
+        "safety_status": safety_status,
+        "warnings": warnings,
+    }
+
+    if report_path is None:
+        report_path = _runner_report_default_path(queue_dir, batch_id)
+    report_path = Path(report_path)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    _atomic_write_json(report_path, report)
+    report["_report_path"] = str(report_path)
+    return report
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -623,6 +791,39 @@ def _build_parser() -> argparse.ArgumentParser:
         "validate", help="Validate queue.json + items against the schema.",
     )
     p_val.add_argument("--queue-dir", required=True)
+
+    p_batch = sub.add_parser(
+        "run-batch",
+        help=(
+            "Run up to --max-items pending items through "
+            "operator_loop + watchdog and write a batch report."
+        ),
+    )
+    p_batch.add_argument("--queue-dir", required=True)
+    p_batch.add_argument(
+        "--max-items", type=int, required=True,
+        help="1..50. Hard bound; the runner is not a daemon.",
+    )
+    p_batch.add_argument("--pinned-time", required=True)
+    p_batch.add_argument(
+        "--stop-on-failure", action="store_true",
+        help=(
+            "Halt at the first failed item. safety_status becomes "
+            "'failed' when any item failed under this flag."
+        ),
+    )
+    p_batch.add_argument(
+        "--sleep-seconds", type=int, default=0,
+        help="0..3600. Inter-item delay. Default 0 (no sleep).",
+    )
+    p_batch.add_argument(
+        "--report-path", default=None,
+        help=(
+            "Optional explicit output path for the batch report "
+            "JSON. Default: <queue-dir>/reports/_batches/"
+            "TRINITY_TASK_QUEUE_RUNNER_REPORT_<batch_id>.json."
+        ),
+    )
 
     return p
 
@@ -744,6 +945,38 @@ def _cmd_validate(args) -> int:
     return 0
 
 
+def _cmd_run_batch(args) -> int:
+    try:
+        report = run_batch(
+            queue_dir=Path(args.queue_dir),
+            max_items=int(args.max_items),
+            pinned_time=args.pinned_time,
+            stop_on_failure=bool(args.stop_on_failure),
+            sleep_seconds=int(args.sleep_seconds),
+            report_path=(
+                Path(args.report_path) if args.report_path else None
+            ),
+        )
+    except QueueError as exc:
+        print("[task_queue] error: " + str(exc), file=sys.stderr)
+        return 2
+    print(
+        "[task_queue] run-batch batch_id=" + report["batch_id"]
+        + " attempted=" + str(report["attempted_count"])
+        + " completed=" + str(report["completed_count"])
+        + " failed=" + str(report["failed_count"])
+        + " skipped=" + str(report["skipped_count"])
+        + " safety_status=" + report["safety_status"]
+        + " report=" + str(report.get("_report_path") or "")
+    )
+    if report["safety_status"] == "failed":
+        # Stop-on-failure path: surface the warnings so the operator
+        # sees them without having to grep the report.
+        for w in report["warnings"]:
+            print("[task_queue]   warn: " + w, file=sys.stderr)
+    return 0
+
+
 COMMANDS = {
     "init": _cmd_init,
     "enqueue": _cmd_enqueue,
@@ -751,6 +984,7 @@ COMMANDS = {
     "run-once": _cmd_run_once,
     "inspect": _cmd_inspect,
     "validate": _cmd_validate,
+    "run-batch": _cmd_run_batch,
 }
 
 
