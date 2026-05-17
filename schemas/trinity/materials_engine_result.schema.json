@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-materials-engine-result/v0.1",
+  "title": "Trinity Materials Engine Result",
+  "description": "Deterministic local materials_engine backend output (Sprint 5.32). Produced by scripts/trinity/useful_compute_backends.py::_materials_engine_v01 when a Sprint 5.31 classifier-derived request reaches the worker with source_tool=materials_engine. NOT DFT, NOT a real simulation. Property values come from a curated local table pinned in source. The result is a ranked materials comparison + per-metric breakdown + warnings, deterministic for a fixed request so two workers always agree on compute_output_sha256.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "backend",
+    "backend_version",
+    "mode",
+    "task_kind",
+    "materials_compared",
+    "metrics_requested",
+    "known_materials",
+    "unknown_materials",
+    "resolved_metrics",
+    "property_table",
+    "ranking",
+    "score_explanation",
+    "limitations",
+    "warnings",
+    "source_request_sha256",
+    "classification_id",
+    "marker_hex"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-materials-engine-result/v0.1"
+    },
+    "backend": {
+      "type": "string",
+      "const": "materials_engine"
+    },
+    "backend_version": {
+      "type": "string",
+      "const": "v0.1"
+    },
+    "mode": {
+      "type": "string",
+      "const": "local-dry-run"
+    },
+    "task_kind": {
+      "type": "string",
+      "enum": [
+        "comparison", "extraction", "validation", "benchmark"
+      ]
+    },
+    "materials_compared": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
+    "metrics_requested": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
+    "known_materials": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
+    "unknown_materials": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
+    "resolved_metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["metric", "property", "direction"],
+        "properties": {
+          "metric":    { "type": "string", "minLength": 1, "maxLength": 64 },
+          "property":  { "type": "string", "minLength": 1, "maxLength": 64 },
+          "direction": {
+            "type": "string",
+            "enum": ["higher_is_better", "lower_is_better"]
+          }
+        }
+      }
+    },
+    "property_table": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "type": "number" },
+        "properties": {}
+      },
+      "properties": {}
+    },
+    "ranking": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["material", "score", "metric_breakdown"],
+        "properties": {
+          "material": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "score":    { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+          "metric_breakdown": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "metric", "property", "value",
+                "normalised_score", "direction"
+              ],
+              "properties": {
+                "metric":    { "type": "string", "minLength": 1, "maxLength": 64 },
+                "property":  { "type": "string", "minLength": 1, "maxLength": 64 },
+                "value": {
+                  "oneOf": [
+                    { "type": "number" },
+                    { "type": "null" }
+                  ]
+                },
+                "normalised_score": {
+                  "type": "number", "minimum": 0.0, "maximum": 1.0
+                },
+                "direction": {
+                  "type": "string",
+                  "enum": ["higher_is_better", "lower_is_better"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "score_explanation": {
+      "type": "string", "minLength": 1, "maxLength": 1024
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    },
+    "source_request_sha256": {
+      "type": "string", "pattern": "^[0-9a-f]{64}$"
+    },
+    "classification_id": {
+      "oneOf": [
+        { "type": "string", "pattern": "^scl-[0-9a-f]{16}$" },
+        { "type": "string", "maxLength": 0 }
+      ]
+    },
+    "marker_hex": {
+      "type": "string", "pattern": "^[0-9a-f]{16}$"
+    }
+  }
+}

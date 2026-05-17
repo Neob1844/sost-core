@@ -428,10 +428,30 @@ def run_worker(
 
     # 1) Resolve backend. Placeholder is the default; experimental
     #    backends require an explicit opt-in flag.
+    #
+    # Sprint 5.32 — auto-route: when the operator did not override
+    # the backend (still 'placeholder') AND the request is a Sprint
+    # 5.31 classifier-derived materials_engine task (source_tool +
+    # scientific_task_classification metadata present), transparently
+    # upgrade to local_materials_engine_v01. This keeps the operator
+    # CLI clean (no --backend flag needed for the common path) while
+    # still letting an operator explicitly pin --backend placeholder
+    # when they want the hash-only stub for those requests.
     backends = _backends_mod()
+    effective_backend_name = backend_name
+    if (
+        backend_name == "placeholder"
+        and request.get("source_tool") == "materials_engine"
+        and isinstance(request.get("metadata"), dict)
+        and isinstance(
+            request["metadata"].get("scientific_task_classification"),
+            dict,
+        )
+    ):
+        effective_backend_name = "local_materials_engine_v01"
     spec = backends.select_backend(
         task_type=task_type,
-        backend_name=backend_name,
+        backend_name=effective_backend_name,
         allow_experimental=bool(allow_experimental_backends),
     )
 

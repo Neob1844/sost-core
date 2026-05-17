@@ -1704,6 +1704,92 @@
   </p>
 </div>
 
+<!-- Materials Engine Deterministic Backend v0.1 (Sprint 5.32) -->
+<div class="card">
+  <h2>Materials Engine Deterministic Backend v0.1</h2>
+  <p>
+    Sprint 5.32 lands the <strong>first non-placeholder,
+    non-toy backend</strong> in the Useful Compute worker:
+    <code>local_materials_engine_v01</code>, the first ever
+    <code>real_backend</code> kind. It reads the Sprint 5.31
+    classifier metadata in the request, looks each candidate
+    material up in a curated local properties table, scores
+    each requested metric, and emits a ranked materials
+    comparison. <strong>NOT DFT.</strong> <strong>NOT
+    quantum.</strong> <strong>NOT a real simulation.</strong>
+    Property values are illustrative, pinned in source for
+    reviewability + cross-worker replay.
+  </p>
+  <ul>
+    <li><strong>Auto-router in the worker.</strong> When the
+        operator runs the queue / operator_loop with the
+        default <code>--backend placeholder</code> AND the
+        request carries
+        <code>source_tool=materials_engine</code> +
+        <code>scientific_task_classification</code> metadata,
+        the worker transparently upgrades to
+        <code>local_materials_engine_v01</code>. Operator can
+        opt out by passing
+        <code>--backend placeholder_scientific_intake</code>.</li>
+    <li><strong>Curated properties table.</strong> Six oxide
+        materials (CeO2, PrOx, Sm2O3, Y2O3, ZrO2, TiO2) with
+        six properties each
+        (<code>oxygen_storage_mmol_g</code>,
+        <code>optimal_temperature_c</code>,
+        <code>redox_support</code>, <code>stability</code>,
+        <code>conductivity</code>,
+        <code>surface_area_m2_g</code>). A static safety test
+        asserts every used property has a bounds entry so the
+        scorer never silently scores zero.</li>
+    <li><strong>Scoring is explicit + documented.</strong>
+        Normalised-score per property is in
+        <code>[0, 1]</code>, inverted when direction is
+        <code>lower_is_better</code>; material score is the
+        arithmetic mean of metric scores; ranking is
+        descending by score with material name as tiebreak.
+        Every result carries a
+        <code>score_explanation</code> + <code>limitations</code>
+        + <code>warnings</code> trail.</li>
+    <li><strong>Cross-worker replay contract preserved.</strong>
+        Two workers over the same classifier-derived request
+        produce the same
+        <code>compute_output_sha256</code>. The replay
+        validator, governance gate, reward budget, payment
+        proposal and payment draft all flow through unchanged
+        — they were already hash-based.</li>
+    <li><strong>Result schema</strong>
+        <code>trinity-materials-engine-result/v0.1</code>
+        const-locks <code>backend</code>,
+        <code>backend_version</code>, <code>mode</code> and
+        <code>schema</code>; locks the direction +
+        <code>task_kind</code> enums; locks
+        <code>source_request_sha256</code> + <code>marker_hex</code>
+        patterns; allows <code>classification_id</code> as
+        either <code>scl-<i>16hex</i></code> or empty.</li>
+    <li><strong>Unknown materials are warned, not crashed.</strong>
+        A request asking for <code>UnobtainiumX</code> gets
+        recorded in <code>unknown_materials</code> + warnings;
+        the ranking still emits for the known set.</li>
+    <li><strong>Reservation guard updated.</strong> The
+        Sprint 5.12-era <em>no_backend_uses_real_backend_kind_in_v01</em>
+        guard was renamed and switched to an allowlist of one
+        (<code>local_materials_engine_v01</code>) so future
+        real backends still need a sprint that audits the
+        contract.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/materials-engine-backend-v01</code>.
+    38 new tests + 1 narrowed existing test (14 functional +
+    13 schema + 11 safety), all green on the deployment host
+    alongside the prior 1250. Pure
+    scripts + schemas + docs + tests merge: zero
+    <code>src/</code>, zero consensus, zero
+    wallet / payment / broadcast changes. Measured-data claims
+    are an explicit non-goal for v0.1; the curated table is
+    illustrative.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>

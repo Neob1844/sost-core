@@ -47,11 +47,19 @@ def test_list_includes_three_toy_backends(backends_mod):
     assert "local_dft_toy_v01" in names
 
 
-def test_no_backend_uses_real_backend_kind_in_v01(backends_mod):
+def test_only_materials_engine_uses_real_backend_kind_in_v01(backends_mod):
+    """Sprint 5.32 introduces the FIRST real_backend kind backend:
+    local_materials_engine_v01. No other backend may claim that
+    kind in v0.1 — any other addition needs a sprint that
+    audits the contract."""
+    allowed_real = {"local_materials_engine_v01"}
     for b in backends_mod.list_available_backends():
-        assert b["kind"] != backends_mod.REAL_BACKEND_KIND, (
-            f"backend {b['name']!r} claims real_backend kind in v0.1"
-        )
+        if b["kind"] == backends_mod.REAL_BACKEND_KIND:
+            assert b["name"] in allowed_real, (
+                "backend " + repr(b["name"])
+                + " claims real_backend kind but is not on the "
+                + "Sprint 5.32 allowlist"
+            )
 
 
 def test_kinds_enum_complete(backends_mod):
