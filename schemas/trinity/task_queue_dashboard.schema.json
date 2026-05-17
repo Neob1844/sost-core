@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-task-queue-dashboard/v0.1",
+  "title": "Trinity Task Queue Dashboard",
+  "description": "Deterministic read-only summary of a Trinity Task Queue (Sprint 5.26) plus its runner batches (Sprint 5.27). Produced by scripts/trinity/task_queue_dashboard.py. v0.1 reads the queue.json, per-status item files, per-item operator_run.json + watchdog reports, and per-batch runner reports, and emits both this JSON and a static HTML view. The Dashboard never modifies the queue, never invokes the operator loop, never opens the network. It is the human-readable counterpart to the audit trail and is safe to publish or pipe into a static-file viewer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "dashboard_id",
+    "pinned_time",
+    "queue_dir_basename",
+    "queue_id",
+    "counts",
+    "latest_items",
+    "latest_batches",
+    "warnings",
+    "safety_status"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-task-queue-dashboard/v0.1"
+    },
+    "dashboard_id": {
+      "type": "string",
+      "pattern": "^dsh-[0-9a-f]{16}$"
+    },
+    "pinned_time": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "queue_dir_basename": {
+      "type": "string", "minLength": 1, "maxLength": 256
+    },
+    "queue_id": {
+      "type": "string",
+      "pattern": "^tq-[0-9a-f]{16}$"
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pending", "running", "completed", "failed", "batches"
+      ],
+      "properties": {
+        "pending":   { "type": "integer", "minimum": 0 },
+        "running":   { "type": "integer", "minimum": 0 },
+        "completed": { "type": "integer", "minimum": 0 },
+        "failed":    { "type": "integer", "minimum": 0 },
+        "batches":   { "type": "integer", "minimum": 0 }
+      }
+    },
+    "latest_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "queue_item_id",
+          "status",
+          "updated_at",
+          "attempt_count",
+          "operator_run_path_basename",
+          "watchdog_report_path_basename",
+          "governor_decisions_count",
+          "watchdog_safety_status"
+        ],
+        "properties": {
+          "queue_item_id": {
+            "type": "string",
+            "pattern": "^qit-[0-9a-f]{16}$"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "running", "completed", "failed"]
+          },
+          "updated_at": {
+            "type": "string", "minLength": 1, "maxLength": 64
+          },
+          "attempt_count": { "type": "integer", "minimum": 0 },
+          "operator_run_path_basename": {
+            "oneOf": [
+              { "type": "string", "minLength": 1, "maxLength": 256 },
+              { "type": "null" }
+            ]
+          },
+          "watchdog_report_path_basename": {
+            "oneOf": [
+              { "type": "string", "minLength": 1, "maxLength": 256 },
+              { "type": "null" }
+            ]
+          },
+          "governor_decisions_count": {
+            "type": "integer", "minimum": 0
+          },
+          "watchdog_safety_status": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": ["ok", "warning", "stale", "critical"]
+              },
+              { "type": "null" }
+            ]
+          }
+        }
+      }
+    },
+    "latest_batches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "batch_id",
+          "attempted_count",
+          "completed_count",
+          "failed_count",
+          "safety_status"
+        ],
+        "properties": {
+          "batch_id": {
+            "type": "string",
+            "pattern": "^tqr-[0-9a-f]{16}$"
+          },
+          "attempted_count": { "type": "integer", "minimum": 0 },
+          "completed_count": { "type": "integer", "minimum": 0 },
+          "failed_count":    { "type": "integer", "minimum": 0 },
+          "safety_status": {
+            "type": "string",
+            "enum": ["ok", "warning", "failed"]
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    },
+    "safety_status": {
+      "type": "string",
+      "enum": ["ok", "warning", "failed"],
+      "description": "Dashboard-wide rollup. failed = at least one watchdog critical or batch failed. warning = at least one queue item failed, at least one batch warning, or any malformed input. ok otherwise."
+    }
+  }
+}

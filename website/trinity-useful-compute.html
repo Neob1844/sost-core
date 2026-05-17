@@ -1424,6 +1424,68 @@
   </p>
 </div>
 
+<!-- Task Queue Dashboard v0.1 (Sprint 5.28) -->
+<div class="card">
+  <h2>Task Queue Dashboard v0.1</h2>
+  <p>
+    Sprint 5.28 adds the missing <strong>pane of glass</strong>
+    over the autonomy loop. The Dashboard is a read-only scanner
+    that walks <code>queue.json</code>, every per-status item
+    file, every per-item <code>operator_run.json</code> and
+    watchdog report, and every per-batch runner report, then
+    emits a deterministic dashboard JSON plus a static HTML view.
+    No new autonomy — only visibility into the existing one.
+  </p>
+  <ul>
+    <li><strong>Read-only on the queue dir.</strong> No
+        subprocess. No operator_loop call. No watchdog call. No
+        queue mutation. Static safety test rejects
+        <code>.unlink</code>, <code>.chmod</code>,
+        <code>os.remove</code>, <code>shutil.rmtree</code>,
+        <code>os.rename</code> in the source.</li>
+    <li><strong>Three safety states</strong> rolled up across
+        the queue: <code>failed</code> (any watchdog critical
+        or batch failed) &gt; <code>warning</code> (any item
+        failed, batch warning, watchdog warning/stale, or
+        malformed input) &gt; <code>ok</code>.</li>
+    <li><strong>Static HTML, no JavaScript, no external
+        assets.</strong> Zero <code>&lt;script&gt;</code>, zero
+        <code>https://</code>, zero CDN. Tiny inline
+        <code>&lt;style&gt;</code> only. Carries
+        <code>&lt;meta name="robots" content="noindex,nofollow"&gt;</code>
+        — operator-private content, not for search engines.</li>
+    <li><strong>Every text insertion escaped.</strong> A test
+        poisons <code>queue_id</code> from queue.json and
+        <code>pinned_time</code> from the CLI with
+        <code>&lt;script&gt;alert(…)&lt;/script&gt;</code> and
+        <code>&lt;img onerror=…&gt;</code> payloads and asserts
+        the rendered HTML contains the escaped form
+        (<code>&amp;lt;script&amp;gt;…</code>) but never a raw
+        tag.</li>
+    <li><strong>No absolute paths in JSON or HTML.</strong>
+        Persisted fields are <code>queue_dir_basename</code>,
+        <code>operator_run_path_basename</code>,
+        <code>watchdog_report_path_basename</code>. A test
+        creates a queue at a recognisable absolute path and
+        asserts that path never appears in the rendered HTML.</li>
+    <li><strong>Deterministic <code>dashboard_id</code>.</strong>
+        sha16 of (pinned_time, queue_dir basename, queue_id,
+        item_ids, batch_ids). Same queue snapshot ⇒ same id.</li>
+    <li><strong>No imports of sibling Trinity modules.</strong>
+        The Dashboard reads JSON files only; it does not depend
+        on <code>task_queue.py</code>,
+        <code>autonomy_governor.py</code>,
+        <code>governor_watchdog.py</code> or the operator loop.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/queue-dashboard-v01</code>. 44 new
+    tests (19 functional + 15 schema + 10 safety) all green on
+    the deployment host alongside the prior 1125. Pure
+    scripts + schemas + docs + tests merge: zero <code>src/</code>,
+    zero consensus, zero wallet / payment / broadcast changes.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>
