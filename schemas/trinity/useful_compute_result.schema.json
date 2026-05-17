@@ -47,7 +47,8 @@
       "type": "string",
       "enum": [
         "dft", "quantum", "structure_relaxation",
-        "scoring", "simulation", "other"
+        "scoring", "simulation", "other",
+        "scientific_intake"
       ]
     },
     "input_bundle_sha256": {
@@ -121,6 +122,93 @@
         "no_automatic_payout":     { "type": "boolean", "const": true },
         "no_network_required":     { "type": "boolean", "const": true },
         "manual_review_required":  { "type": "boolean", "const": true }
+      }
+    },
+    "materials_engine_summary": {
+      "type": "object",
+      "description": "Sprint 5.33 - compact projection of the Sprint 5.32 materials_engine backend output. Optional: only present when backend_name == 'local_materials_engine_v01'. Lives OUTSIDE the hashed output_obj so adding/removing it does NOT change compute_output_sha256. Full schema at schemas/trinity/materials_engine_summary.schema.json.",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "backend_name",
+        "backend_kind",
+        "classification_id",
+        "known_materials",
+        "unknown_materials",
+        "resolved_metrics",
+        "top_ranked_material",
+        "top_ranked_score",
+        "ranking",
+        "warnings",
+        "limitations"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "trinity-materials-engine-summary/v0.1"
+        },
+        "backend_name": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "backend_kind": { "type": "string", "enum": ["placeholder", "sandbox_toy", "real_backend"] },
+        "classification_id": {
+          "oneOf": [
+            { "type": "string", "pattern": "^scl-[0-9a-f]{16}$" },
+            { "type": "string", "maxLength": 0 }
+          ]
+        },
+        "known_materials": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+        },
+        "unknown_materials": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+        },
+        "resolved_metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["metric", "property", "direction"],
+            "properties": {
+              "metric":    { "type": "string", "minLength": 1, "maxLength": 64 },
+              "property":  { "type": "string", "minLength": 1, "maxLength": 64 },
+              "direction": { "type": "string", "enum": ["higher_is_better", "lower_is_better"] }
+            }
+          }
+        },
+        "top_ranked_material": {
+          "oneOf": [
+            { "type": "string", "minLength": 1, "maxLength": 64 },
+            { "type": "null" }
+          ]
+        },
+        "top_ranked_score": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            { "type": "null" }
+          ]
+        },
+        "ranking": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["material", "score"],
+            "properties": {
+              "material": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "score":    { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+            }
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+        },
+        "limitations": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+        }
       }
     }
   }

@@ -99,7 +99,19 @@
               },
               { "type": "null" }
             ]
-          }
+          },
+          "materials_engine_summary_count": {
+            "type": "integer", "minimum": 0
+          },
+          "materials_engine_top_material": {
+            "oneOf": [
+              { "type": "string", "minLength": 1, "maxLength": 64 },
+              { "type": "null" }
+            ]
+          },
+          "materials_engine_known_count":    { "type": "integer", "minimum": 0 },
+          "materials_engine_unknown_count":  { "type": "integer", "minimum": 0 },
+          "materials_engine_warnings_count": { "type": "integer", "minimum": 0 }
         }
       }
     },

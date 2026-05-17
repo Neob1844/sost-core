@@ -233,6 +233,80 @@ def _per_item_audit(
         )
         watchdog_safety_status = None
 
+    # Sprint 5.33 — materials_engine surfacing per item. Reads the
+    # operator_run.json roll-up (added by the Sprint 5.33 operator
+    # loop change) when present; otherwise falls back to walking
+    # worker result files directly. Either path produces:
+    #   materials_engine_summary_count    int   (0 when absent)
+    #   materials_engine_top_material     str|None (highest-ranked
+    #                                              material across
+    #                                              this item's
+    #                                              materials_engine
+    #                                              worker results)
+    #   materials_engine_known_count      int
+    #   materials_engine_unknown_count    int
+    #   materials_engine_warnings_count   int
+    materials_engine_summary_count = 0
+    materials_engine_top_material = None
+    materials_engine_known_count = 0
+    materials_engine_unknown_count = 0
+    materials_engine_warnings_count = 0
+    if op_state_path.exists():
+        op_state = _read_json(op_state_path)
+        if op_state is not None:
+            mec = op_state.get("materials_engine_summary_count")
+            if isinstance(mec, int):
+                materials_engine_summary_count = mec
+            mtop = op_state.get("materials_engine_top_materials")
+            if isinstance(mtop, list) and mtop:
+                # The op_state stores the de-dup sorted list; we pick
+                # the first one as the displayed top. When the run
+                # had multiple materials_engine workers all agreeing
+                # on PrOx > CeO2, the list is just ["PrOx"]; when it
+                # had two workers disagreeing it's ["CeO2", "PrOx"]
+                # and we surface the alphabetically-first one (which
+                # also happens to be deterministic).
+                materials_engine_top_material = str(mtop[0])[:64]
+
+    # Cross-check + fall-back: walk per-worker result files to
+    # populate the per-item known / unknown / warnings counts
+    # which are NOT in the operator_run roll-up.
+    worker_out_dir = (
+        queue_dir / "reports" / item_id / "operator_run" / "worker_out"
+    )
+    if worker_out_dir.exists():
+        for wp in sorted(worker_out_dir.glob(
+            "TRINITY_USEFUL_COMPUTE_RESULT_*.json",
+        )):
+            w_obj = _read_json(wp)
+            if w_obj is None:
+                continue
+            s = w_obj.get("materials_engine_summary")
+            if not isinstance(s, dict):
+                continue
+            # Fallback for ops with no op_state roll-up.
+            if materials_engine_top_material is None:
+                tm = s.get("top_ranked_material")
+                if isinstance(tm, str) and tm:
+                    materials_engine_top_material = tm[:64]
+            kn = s.get("known_materials")
+            un = s.get("unknown_materials")
+            wn = s.get("warnings")
+            if isinstance(kn, list):
+                materials_engine_known_count = max(
+                    materials_engine_known_count, len(kn),
+                )
+            if isinstance(un, list):
+                materials_engine_unknown_count = max(
+                    materials_engine_unknown_count, len(un),
+                )
+            if isinstance(wn, list):
+                materials_engine_warnings_count = max(
+                    materials_engine_warnings_count, len(wn),
+                )
+            if materials_engine_summary_count == 0:
+                materials_engine_summary_count += 1
+
     return {
         "queue_item_id": item_id,
         "status": item.get("status", ""),
@@ -242,6 +316,11 @@ def _per_item_audit(
         "watchdog_report_path_basename": watchdog_report_basename,
         "governor_decisions_count": governor_decisions_count,
         "watchdog_safety_status": watchdog_safety_status,
+        "materials_engine_summary_count": materials_engine_summary_count,
+        "materials_engine_top_material": materials_engine_top_material,
+        "materials_engine_known_count": materials_engine_known_count,
+        "materials_engine_unknown_count": materials_engine_unknown_count,
+        "materials_engine_warnings_count": materials_engine_warnings_count,
     }
 
 
@@ -488,6 +567,7 @@ def render_html(dashboard: Dict[str, Any]) -> str:
             "<th>updated_at</th><th>attempts</th>"
             "<th>governor_decisions</th>"
             "<th>watchdog</th>"
+            "<th>materials_engine</th>"
             "<th>operator_run</th>"
             "<th>watchdog_report</th>"
             "</tr></thead>"
@@ -499,6 +579,26 @@ def render_html(dashboard: Dict[str, Any]) -> str:
                 "<span class='" + _safety_class(wd_status) + "'>"
                 + _e(wd_status) + "</span>"
             ) if wd_status else _e("-")
+            # Sprint 5.33 — materials_engine cell. When the item ran
+            # the materials_engine backend, show the top-ranked
+            # material + known/unknown counts. When not, render "-".
+            me_count = it.get("materials_engine_summary_count", 0) or 0
+            me_top   = it.get("materials_engine_top_material")
+            me_known = it.get("materials_engine_known_count", 0) or 0
+            me_unk   = it.get("materials_engine_unknown_count", 0) or 0
+            me_warns = it.get("materials_engine_warnings_count", 0) or 0
+            if me_count > 0 and me_top:
+                me_inner = (
+                    "<span style='color:#a78bfa;font-weight:600'>"
+                    + _e(me_top) + "</span>"
+                    + " <span class='meta'>"
+                    + "(known " + _e(me_known)
+                    + ", unknown " + _e(me_unk)
+                    + (", warn " + _e(me_warns) if me_warns > 0 else "")
+                    + ")</span>"
+                )
+            else:
+                me_inner = _e("-")
             lines.append("<tr>")
             lines.append(
                 "<td class='id'>" + _e(it["queue_item_id"]) + "</td>"
@@ -510,6 +610,7 @@ def render_html(dashboard: Dict[str, Any]) -> str:
                 "<td>" + _e(it["governor_decisions_count"]) + "</td>"
             )
             lines.append("<td>" + wd_cell + "</td>")
+            lines.append("<td>" + me_inner + "</td>")
             lines.append(
                 "<td class='id'>"
                 + _e(it["operator_run_path_basename"] or "-")

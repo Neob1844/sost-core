@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-materials-engine-summary/v0.1",
+  "title": "Trinity Materials Engine Summary",
+  "description": "Sprint 5.33 — compact projection of a Sprint 5.32 materials_engine result (trinity-materials-engine-result/v0.1) suitable for embedding in worker_result.json, operator_run.json roll-ups, and the queue dashboard. Carries the ranking decision shape + warnings/limitations text but NOT the bulky property_table or per-metric breakdowns (those stay in the full backend output that compute_output_sha256 hashes). The summary lives OUTSIDE the hashed output_obj so adding it to worker_result.json does not change compute_output_sha256.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "backend_name",
+    "backend_kind",
+    "classification_id",
+    "known_materials",
+    "unknown_materials",
+    "resolved_metrics",
+    "top_ranked_material",
+    "top_ranked_score",
+    "ranking",
+    "warnings",
+    "limitations"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-materials-engine-summary/v0.1"
+    },
+    "backend_name": {
+      "type": "string", "minLength": 1, "maxLength": 64
+    },
+    "backend_kind": {
+      "type": "string",
+      "enum": ["placeholder", "sandbox_toy", "real_backend"]
+    },
+    "classification_id": {
+      "oneOf": [
+        { "type": "string", "pattern": "^scl-[0-9a-f]{16}$" },
+        { "type": "string", "maxLength": 0 }
+      ]
+    },
+    "known_materials": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
+    "unknown_materials": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
+    "resolved_metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["metric", "property", "direction"],
+        "properties": {
+          "metric":    { "type": "string", "minLength": 1, "maxLength": 64 },
+          "property":  { "type": "string", "minLength": 1, "maxLength": 64 },
+          "direction": {
+            "type": "string",
+            "enum": ["higher_is_better", "lower_is_better"]
+          }
+        }
+      }
+    },
+    "top_ranked_material": {
+      "oneOf": [
+        { "type": "string", "minLength": 1, "maxLength": 64 },
+        { "type": "null" }
+      ]
+    },
+    "top_ranked_score": {
+      "oneOf": [
+        { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        { "type": "null" }
+      ]
+    },
+    "ranking": {
+      "type": "array",
+      "description": "Compact ranking: at most 5 entries, each carrying material name + score only (NOT the full metric breakdown — that stays in the worker_result's hashed compute_output). Sorted by score desc with material name as tiebreak.",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["material", "score"],
+        "properties": {
+          "material": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "score":    { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    }
+  }
+}

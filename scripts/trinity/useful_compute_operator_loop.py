@@ -739,6 +739,12 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
                 governor_hook.policy_basename if governor_hook else None
             ),
             "governor_decisions_count": 0,
+            # Sprint 5.33 — materials_engine roll-up bookkeeping.
+            # Always present (default 0 / []) so downstream consumers
+            # see a uniform schema even when the run had no
+            # materials_engine workers.
+            "materials_engine_summary_count": 0,
+            "materials_engine_top_materials": [],
             "request_source": request_source,
             "source_request_sha256": source_request_sha,
             "source_request_path_basename": source_request_basename,
@@ -805,6 +811,44 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
                      base=out_dir, manifest=manifest, single=False)
         _write_state(state_path, state)
     worker_out = (out_dir / "worker_out").resolve()
+
+    # Sprint 5.33 — materials_engine roll-up. Walk every worker
+    # result that the worker step produced, lift its compact
+    # materials_engine_summary (added by the worker in 5.33 only
+    # when backend_name=='local_materials_engine_v01') and roll up
+    # two top-level fields into operator_run.json:
+    #   materials_engine_summary_count  - how many of this run's
+    #     worker results were materials_engine
+    #   materials_engine_top_materials  - deduplicated, sorted
+    #     list of top_ranked_material values across those results
+    # Both fields are always present (default 0 / []) so downstream
+    # consumers see a uniform schema. Roll-up is read-only on the
+    # worker result files; it never modifies them, never reads any
+    # bulky property_table or per-metric breakdown, never invokes
+    # the network. Best-effort: malformed worker results are
+    # silently skipped (the per-item invariant tests on the worker
+    # already enforce the shape).
+    me_count = 0
+    me_top: List[str] = []
+    try:
+        for wp in sorted(worker_out.glob("TRINITY_USEFUL_COMPUTE_RESULT_*.json")):
+            try:
+                w_obj = json.loads(wp.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+            s = w_obj.get("materials_engine_summary")
+            if not isinstance(s, dict):
+                continue
+            me_count += 1
+            top = s.get("top_ranked_material")
+            if isinstance(top, str) and top and top not in me_top:
+                me_top.append(top)
+    except Exception:
+        pass
+    me_top.sort()
+    state["materials_engine_summary_count"] = me_count
+    state["materials_engine_top_materials"] = me_top
+    _write_state(state_path, state)
 
     # Step 3 — replay_validator.
     if "replay_validator" in completed:
