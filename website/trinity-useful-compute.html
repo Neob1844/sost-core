@@ -1294,6 +1294,69 @@
   </p>
 </div>
 
+<!-- Task Queue v0.1 (Sprint 5.26) -->
+<div class="card">
+  <h2>Task Queue v0.1</h2>
+  <p>
+    Sprint 5.26 lands the first step from manual one-shot operator
+    runs toward autonomous operation: a deterministic local task
+    queue for Useful Compute requests. The runner picks the oldest
+    pending item, feeds it through the operator loop
+    <strong>with the Governor hook always on</strong>, runs the
+    Watchdog over the resulting decisions, and marks the item
+    <code>completed</code> / <code>failed</code> based on the audit
+    verdict. Stays fully dry-run, no wallet, no broadcast.
+  </p>
+  <ul>
+    <li><strong>One mode only.</strong> The runner accepts
+        <code>--mode local-dry-run</code> and refuses everything
+        else at startup. Every operator-loop invocation passes the
+        explicit confirmation token
+        <code>I_UNDERSTAND_THIS_IS_ONLY_A_DRY_RUN_LOOP</code>.</li>
+    <li><strong>Fail closed.</strong> If the operator loop exits
+        rc=3 (Governor hard-block: <code>halt_file_present</code>
+        or <code>policy_mutated_at_runtime</code>), the item is
+        marked failed with <code>last_error=governor_hard_block</code>
+        and no retry happens inside the same <code>run-once</code>.
+        If the Watchdog returns <code>safety_status=critical</code>,
+        the item is marked failed even when the operator loop
+        returned rc=0.</li>
+    <li><strong>Sibling scripts via argv only.</strong> The queue
+        invokes <code>useful_compute_operator_loop.py</code> and
+        <code>governor_watchdog.py</code> as subprocesses with an
+        explicit argv list. The static safety test rejects
+        <code>shell=True</code>, all wallet / signing / broadcast
+        tokens, and every stdlib network primitive.</li>
+    <li><strong>Schema-validated queue.</strong> Top-level
+        <code>queue.json</code> plus per-status item JSONs
+        (<code>pending/</code>, <code>running/</code>,
+        <code>completed/</code>, <code>failed/</code>) all
+        validate against
+        <code>trinity-task-queue/v0.1</code>. The queue item shape
+        is exposed under <code>$defs/queue_item</code> with locked
+        const, sha256 patterns and threat-ref patterns.</li>
+    <li><strong>Audit trail per item.</strong> Each completed item
+        carries <code>operator_run_path</code>,
+        <code>watchdog_report_path</code>,
+        <code>policy_sha256</code>, <code>request_sha256</code>,
+        <code>governor_decisions_count</code> (locked to 7 by the
+        Sprint 5.24 contract), <code>watchdog_safety_status</code>
+        and the threat refs seen.</li>
+    <li><strong>No daemon, no concurrency, no remote queue, no
+        autonomous re-enqueue.</strong> v0.1 is a deliberate
+        single-shot runner suitable for cron / systemd timer
+        / shell loop. Daemon + locking + retry policy arrive in
+        a later sprint.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/task-queue-v01</code>. 44 new tests
+    (19 functional + 14 schema + 11 safety) all green on the
+    deployment host alongside the prior 1046. Pure
+    scripts + schemas + docs + tests merge: zero <code>src/</code>,
+    zero consensus, zero wallet / payment / broadcast changes.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>
