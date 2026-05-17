@@ -494,6 +494,118 @@ def _step_payment_draft(
 # Top-level driver
 # =============================================================================
 
+# =============================================================================
+# Sprint 5.24 — Autonomy Governor observe hook
+# =============================================================================
+#
+# The hook is intentionally narrow. It loads autonomy_governor by the
+# same _load_sibling helper every other Trinity script uses (importlib,
+# no subprocess), pins the policy sha at boot, and asks for a verdict
+# per step. The Governor's evaluate_decision() is a pure function — it
+# only reads the policy file and writes the decision JSON. It does not
+# open the network, run shell, or touch any wallet/sign/broadcast code.
+#
+# v0.1 enforcement rule: the operator_loop HARD-BLOCKS only on
+#   - blocked_reason == "halt_file_present"            (kill switch)
+#   - blocked_reason == "policy_mutated_at_runtime"    (T15/T13)
+# Anything else is recorded as an audit artifact + appended to
+# state["warnings"]. This keeps the pipeline observe-only and ensures
+# 5.24 is a measurement layer, not an enforcement layer.
+
+class _GovernorHook:
+    """Per-run Governor wrapper. Lives only while run_operator_loop runs."""
+
+    HARD_BLOCK_REASONS = ("halt_file_present", "policy_mutated_at_runtime")
+
+    def __init__(self, policy_path, decisions_dir, pinned_time):
+        self.policy_path = Path(policy_path).resolve()
+        self.decisions_dir = Path(decisions_dir).resolve()
+        self.decisions_dir.mkdir(parents=True, exist_ok=True)
+        self.pinned_time = pinned_time
+        self._mod = _load_sibling(
+            "autonomy_governor", "autonomy_governor.py",
+        )
+        self.boot_policy_sha256, self._policy = self._mod.pin_policy(
+            self.policy_path,
+        )
+        self.policy_basename = self.policy_path.name
+
+    def evaluate(self, step_name):
+        return self._mod.evaluate_decision(
+            policy_path=self.policy_path,
+            action="pipeline_step",
+            action_params={"step_name": step_name},
+            pinned_time=self.pinned_time,
+            boot_policy_sha256=self.boot_policy_sha256,
+            out_dir=self.decisions_dir,
+        )
+
+
+class GovernorHardBlock(Exception):
+    """Raised by the operator_loop hook when the Governor returns one of
+    the hard-block reasons (halt_file_present, policy_mutated_at_runtime).
+    Caught by main() and turned into a non-zero exit."""
+
+    def __init__(self, step_name, blocked_reason, decision_path):
+        super().__init__(
+            "Governor hard-blocked step '" + step_name
+            + "' with reason '" + str(blocked_reason)
+            + "' (decision at " + str(decision_path) + ")"
+        )
+        self.step_name = step_name
+        self.blocked_reason = blocked_reason
+        self.decision_path = decision_path
+
+
+def _governor_call(hook, step_name, state, out_dir, manifest):
+    """Invoke the Governor for one step and update state accordingly.
+
+    No-op when hook is None (governor disabled).
+
+    Returns nothing. Mutates state:
+      - appends a {path, sha256} entry to state["artifacts"]
+        ["governor_decisions"]
+      - increments state["governor_decisions_count"]
+      - appends a warning when the decision is allowed=false but the
+        reason is not a hard-block (observe-only audit trail)
+
+    Raises GovernorHardBlock when the reason is in HARD_BLOCK_REASONS.
+    """
+    if hook is None:
+        return
+    decision = hook.evaluate(step_name)
+    decision_path = Path(decision.pop("_decision_path"))
+    rel = _rel_to(decision_path, out_dir)
+    sha = _sha256_file(decision_path)
+    _append_manifest(manifest, sha, rel)
+    artifacts = state.setdefault("artifacts", {})
+    bucket = artifacts.setdefault("governor_decisions", [])
+    bucket.append({"path": rel, "sha256": sha})
+    state["governor_decisions_count"] = int(
+        state.get("governor_decisions_count", 0)
+    ) + 1
+
+    if (not decision["allowed"]) and decision["blocked_reason"] in _GovernorHook.HARD_BLOCK_REASONS:
+        raise GovernorHardBlock(
+            step_name=step_name,
+            blocked_reason=decision["blocked_reason"],
+            decision_path=decision_path,
+        )
+
+    # Observe-only path: record a warning so it surfaces in operator_run.json
+    # but do NOT stop the pipeline. Truncate at 512 chars to match the
+    # schema's warnings.items.maxLength.
+    if not decision["allowed"]:
+        msg = (
+            "[governor:observe] step=" + step_name
+            + " blocked_reason=" + str(decision["blocked_reason"])
+            + " requires_human_approval="
+            + str(decision["requires_human_approval"])
+            + " (audit-only in v0.1)"
+        )
+        state.setdefault("warnings", []).append(msg[:512])
+
+
 def _record_step(
     *, state: Dict[str, Any], step: str, files: List[Path],
     base: Path, manifest: Path, single: bool,
@@ -518,6 +630,25 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
     manifest = out_dir / "SHA256SUMS.txt"
     state_path = out_dir / "operator_run.json"
 
+    # Sprint 5.24 — Autonomy Governor observe hook bootstrap. When
+    # --governor-policy is supplied the hook is built and the boot
+    # policy sha256 is pinned for the lifetime of this run. When NOT
+    # supplied, hook stays None and no Governor call ever happens —
+    # behaviour identical to pre-5.24.
+    governor_hook = None
+    governor_enabled = bool(getattr(args, "governor_policy", None))
+    if governor_enabled:
+        decisions_dir = (
+            Path(args.governor_decisions_dir).resolve()
+            if getattr(args, "governor_decisions_dir", None)
+            else (out_dir / "governor_decisions")
+        )
+        governor_hook = _GovernorHook(
+            policy_path=args.governor_policy,
+            decisions_dir=decisions_dir,
+            pinned_time=args.pinned_time,
+        )
+
     state: Dict[str, Any]
     if args.resume:
         rp = Path(args.resume).resolve()
@@ -535,6 +666,26 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
                     _verify_artifact(e["path"], e["sha256"], out_dir)
             else:
                 _verify_artifact(entry["path"], entry["sha256"], out_dir)
+
+        # Sprint 5.24 — when resuming a governor-enabled run, the
+        # active policy file's sha256 must still match what was pinned
+        # at the original boot. If it doesn't, refuse the resume.
+        # When governor was DISABLED on the original run, just keep
+        # the existing fields untouched.
+        if governor_hook is not None:
+            saved_sha = state.get("governor_policy_sha256")
+            if saved_sha and saved_sha != governor_hook.boot_policy_sha256:
+                raise ValueError(
+                    "governor policy file sha256 changed since the "
+                    "original run was started; refusing to resume. "
+                    "Saved: " + saved_sha
+                    + " · current: " + governor_hook.boot_policy_sha256
+                )
+            # Carry forward the original boot pin so all subsequent
+            # decision JSONs cite the same boot policy sha256 that the
+            # first decisions did.
+            if saved_sha:
+                governor_hook.boot_policy_sha256 = saved_sha
     else:
         # request_source toggles between two initial-step modes:
         #   "built"            -> the loop runs task_builder
@@ -577,6 +728,17 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
             "allow_wallet_access": False,
             "allow_broadcast": False,
             "human_review_required": True,
+            # Sprint 5.24 — governor bookkeeping. These fields are
+            # always present so the schema is uniform whether the
+            # governor was enabled or not.
+            "governor_enabled": bool(governor_enabled),
+            "governor_policy_sha256": (
+                governor_hook.boot_policy_sha256 if governor_hook else None
+            ),
+            "governor_policy_path_basename": (
+                governor_hook.policy_basename if governor_hook else None
+            ),
+            "governor_decisions_count": 0,
             "request_source": request_source,
             "source_request_sha256": source_request_sha,
             "source_request_path_basename": source_request_basename,
@@ -607,6 +769,7 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
     if "task_builder" in completed:
         request_path = out_dir / state["artifacts"]["task_builder"]["path"]
     else:
+        _governor_call(governor_hook, "task_builder", state, out_dir, manifest)
         files = _step_task_builder(
             out_dir=out_dir, args=args, state=state,
         )
@@ -622,6 +785,7 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
             for e in state["artifacts"]["worker"]
         ]
     else:
+        _governor_call(governor_hook, "worker", state, out_dir, manifest)
         worker_files = _step_worker(
             out_dir=out_dir, args=args, state=state,
             request_path=request_path,
@@ -637,6 +801,7 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
             out_dir / state["artifacts"]["replay_validator"]["path"]
         ]
     else:
+        _governor_call(governor_hook, "replay_validator", state, out_dir, manifest)
         validation_files = _step_replay_validator(
             out_dir=out_dir, args=args, state=state,
             request_path=request_path, worker_out=worker_out,
@@ -653,6 +818,7 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
             out_dir / state["artifacts"]["governance_gate"]["path"]
         ]
     else:
+        _governor_call(governor_hook, "governance_gate", state, out_dir, manifest)
         gov_files = _step_governance_gate(
             out_dir=out_dir, args=args, state=state,
             validations_dir=validations_dir, rewards_dir=worker_out,
@@ -669,6 +835,7 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
             out_dir / state["artifacts"]["reward_budget_policy"]["path"]
         ]
     else:
+        _governor_call(governor_hook, "reward_budget_policy", state, out_dir, manifest)
         budget_files = _step_reward_budget_policy(
             out_dir=out_dir, args=args, state=state,
             governance_dir=governance_dir,
@@ -684,6 +851,7 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
             out_dir / state["artifacts"]["payment_proposal"]["path"]
         ]
     else:
+        _governor_call(governor_hook, "payment_proposal", state, out_dir, manifest)
         proposal_files = _step_payment_proposal(
             out_dir=out_dir, args=args, state=state,
             budget_plan=budget_files[0], rewards_dir=worker_out,
@@ -695,6 +863,7 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
 
     # Step 7 — payment_draft.
     if "payment_draft" not in completed:
+        _governor_call(governor_hook, "payment_draft", state, out_dir, manifest)
         draft_files = _step_payment_draft(
             out_dir=out_dir, args=args, state=state,
             proposal_path=proposal_files[0],
@@ -787,6 +956,26 @@ def main(argv: Optional[List[str]] = None) -> int:
         help="Resume a prior run by passing its operator_run.json.",
     )
 
+    # Sprint 5.24 — Autonomy Governor observe hook. When --governor-policy
+    # is supplied, the loop loads scripts/trinity/autonomy_governor.py via
+    # importlib (NO subprocess), pins the policy sha256 at boot, and asks
+    # the Governor for a decision before each step. v0.1 is observe-only:
+    # the loop only HARD-BLOCKS on halt_file_present or
+    # policy_mutated_at_runtime; every other blocked_reason is recorded
+    # as an audit artifact + a warning but does not stop the pipeline.
+    p.add_argument(
+        "--governor-policy", default=None,
+        help="Path to a trinity-autonomy-governor-policy/v0.1 JSON. "
+             "Enables the Governor observe hook. Without this flag the "
+             "loop behaves exactly as before (no governor calls).",
+    )
+    p.add_argument(
+        "--governor-decisions-dir", default=None,
+        help="Directory where per-step Governor decision JSONs are "
+             "written. Defaults to <out-dir>/governor_decisions/. Only "
+             "consulted when --governor-policy is supplied.",
+    )
+
     # Pre-argparse rejection scan. Rejecting before argparse keeps
     # the wallet / broadcast / signing flags off the argv even if
     # someone tried to smuggle them in.
@@ -838,6 +1027,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     repo_root = Path(__file__).resolve().parents[2]
     try:
         state = run_operator_loop(args, repo_root)
+    except GovernorHardBlock as exc:
+        # Sprint 5.24 hard-block path: halt_file_present or
+        # policy_mutated_at_runtime. The decision JSON is already on
+        # disk and recorded in state["artifacts"]["governor_decisions"]
+        # via _governor_call before the exception propagated.
+        print(
+            "[useful_compute_operator_loop] governor hard-block: "
+            + str(exc),
+            file=sys.stderr,
+        )
+        return 3
     except ValueError as exc:
         print(
             "[useful_compute_operator_loop] error: " + str(exc),

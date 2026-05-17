@@ -359,3 +359,151 @@ def test_threat_refs_set_for_every_known_action(
         for ref in d["threat_refs"]:
             assert ref.startswith("T")
             assert ref[1:].isdigit()
+
+
+# ---------------------------------------------------------------------------
+# Sprint 5.24 — pipeline_step action + public helpers
+# ---------------------------------------------------------------------------
+
+def test_pipeline_step_action_is_known(gov):
+    """pipeline_step was added in Sprint 5.24 for the operator_loop
+    observe hook. It must be in KNOWN_ACTIONS and have threat_refs."""
+    assert "pipeline_step" in gov.KNOWN_ACTIONS
+    assert gov.THREAT_REFS["pipeline_step"] == ["T15", "T16", "T17"]
+
+
+def test_pipeline_step_allowed_under_observe(
+    gov, example_policy_dict, write_policy,
+):
+    p = write_policy(example_policy_dict)
+    d = _boot_and_decide(gov, p, "pipeline_step",
+                         {"step_name": "task_builder"})
+    assert d["allowed"] is True
+    assert d["blocked_reason"] is None
+    assert d["requires_human_approval"] is False
+    assert d["threat_refs"] == ["T15", "T16", "T17"]
+    assert d["action_params"]["step_name"] == "task_builder"
+
+
+def test_pipeline_step_blocked_when_halt_file_present(
+    gov, example_policy_dict, write_policy, tmp_path,
+):
+    halt = tmp_path / "HALT"
+    halt.write_text("stop")
+    pol = copy.deepcopy(example_policy_dict)
+    pol["kill_switch"]["halt_file"] = str(halt)
+    p = write_policy(pol)
+    d = _boot_and_decide(gov, p, "pipeline_step", {"step_name": "worker"})
+    assert d["allowed"] is False
+    assert d["blocked_reason"] == "halt_file_present"
+
+
+def test_pin_policy_returns_sha256_and_validated_policy(
+    gov, example_policy_dict, write_policy,
+):
+    p = write_policy(example_policy_dict)
+    boot_sha, policy = gov.pin_policy(p)
+    assert len(boot_sha) == 64
+    assert all(c in "0123456789abcdef" for c in boot_sha)
+    assert policy["schema"] == "trinity-autonomy-governor-policy/v0.1"
+    assert policy["mode"] == "observe"
+
+
+def test_pin_policy_rejects_invalid_mode(
+    gov, example_policy_dict, write_policy,
+):
+    bad = copy.deepcopy(example_policy_dict)
+    bad["mode"] = "execute_bounded"
+    p = write_policy(bad)
+    with pytest.raises(gov.GovernorError):
+        gov.pin_policy(p)
+
+
+def test_evaluate_decision_in_memory(
+    gov, example_policy_dict, write_policy,
+):
+    p = write_policy(example_policy_dict)
+    # No out_dir → returns dict, no file written, no _decision_path.
+    d = gov.evaluate_decision(
+        policy_path=p,
+        action="pipeline_step",
+        action_params={"step_name": "replay_validator"},
+        pinned_time="2026-05-16T00:00:00+00:00",
+    )
+    assert d["allowed"] is True
+    assert "_decision_path" not in d
+
+
+def test_evaluate_decision_writes_to_out_dir(
+    gov, example_policy_dict, write_policy, tmp_path,
+):
+    p = write_policy(example_policy_dict)
+    out = tmp_path / "decisions"
+    d = gov.evaluate_decision(
+        policy_path=p,
+        action="pipeline_step",
+        action_params={"step_name": "payment_draft"},
+        pinned_time="2026-05-16T00:00:00+00:00",
+        out_dir=out,
+    )
+    assert "_decision_path" in d
+    decision_path = Path(d["_decision_path"])
+    assert decision_path.exists()
+    assert decision_path.parent == out
+    assert decision_path.name.startswith("TRINITY_AUTONOMY_GOVERNOR_DECISION_")
+    # The written JSON must match the returned dict (minus the
+    # transient _decision_path key).
+    with open(decision_path, "r", encoding="utf-8") as f:
+        on_disk = json.load(f)
+    expected = dict(d)
+    expected.pop("_decision_path")
+    assert on_disk == expected
+
+
+def test_evaluate_decision_respects_caller_pinned_boot_sha(
+    gov, example_policy_dict, write_policy,
+):
+    """When the caller pins boot_policy_sha256 once and the file
+    later mutates, evaluate_decision detects the mismatch and
+    returns allowed=false with policy_mutated_at_runtime."""
+    p = write_policy(example_policy_dict)
+    boot_sha, _ = gov.pin_policy(p)
+    # Mutate the file
+    mutated = copy.deepcopy(example_policy_dict)
+    mutated["allowlists"]["rpc_methods"].append("dumpprivkey")
+    p.write_text(json.dumps(mutated, indent=2), encoding="utf-8")
+    d = gov.evaluate_decision(
+        policy_path=p,
+        action="pipeline_step",
+        action_params={"step_name": "worker"},
+        pinned_time="2026-05-16T00:00:00+00:00",
+        boot_policy_sha256=boot_sha,
+    )
+    assert d["allowed"] is False
+    assert d["blocked_reason"] == "policy_mutated_at_runtime"
+    assert d["policy_hashes_match"] is False
+
+
+def test_evaluate_decision_determinism(
+    gov, example_policy_dict, write_policy, tmp_path,
+):
+    p = write_policy(example_policy_dict)
+    out = tmp_path / "decisions"
+    d1 = gov.evaluate_decision(
+        policy_path=p, action="pipeline_step",
+        action_params={"step_name": "governance_gate"},
+        pinned_time="2026-05-16T00:00:00+00:00",
+        out_dir=out,
+    )
+    # Re-run with identical inputs — decision_id stable, file overwrites
+    # itself in place.
+    d2 = gov.evaluate_decision(
+        policy_path=p, action="pipeline_step",
+        action_params={"step_name": "governance_gate"},
+        pinned_time="2026-05-16T00:00:00+00:00",
+        out_dir=out,
+    )
+    assert d1["decision_id"] == d2["decision_id"]
+    d1c = dict(d1); d1c.pop("_decision_path")
+    d2c = dict(d2); d2c.pop("_decision_path")
+    assert d1c == d2c

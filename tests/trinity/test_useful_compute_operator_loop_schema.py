@@ -97,6 +97,8 @@ def test_artifacts_object_only_allows_known_steps(schema):
         "task_builder", "worker", "replay_validator",
         "governance_gate", "reward_budget_policy",
         "payment_proposal", "payment_draft",
+        # Sprint 5.24 — Autonomy Governor observe hook audit trail.
+        "governor_decisions",
     }
 
 

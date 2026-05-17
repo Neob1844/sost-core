@@ -50,6 +50,28 @@
     "allow_wallet_access":   { "type": "boolean", "const": false },
     "allow_broadcast":       { "type": "boolean", "const": false },
     "human_review_required": { "type": "boolean", "const": true },
+    "governor_enabled": {
+      "type": "boolean",
+      "description": "Sprint 5.24 — true when --governor-policy was supplied. Observe-only: a true value here does NOT change pipeline behaviour, it only adds per-step decision JSON artifacts."
+    },
+    "governor_policy_sha256": {
+      "description": "sha256 of the policy file pinned at boot. Used to detect mid-run policy mutation. null when governor_enabled=false.",
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "governor_policy_path_basename": {
+      "description": "Basename of the policy file. The full path is never persisted because it can carry user-identifying information.",
+      "oneOf": [
+        { "type": "string", "minLength": 1, "maxLength": 256 },
+        { "type": "null" }
+      ]
+    },
+    "governor_decisions_count": {
+      "type": "integer", "minimum": 0,
+      "description": "Number of Governor decision JSONs emitted across the lifetime of this operator run."
+    },
     "request_source": {
       "type": "string",
       "enum": ["built", "existing_request"]
@@ -91,7 +113,8 @@
         "governance_gate":      { "$ref": "#/$defs/artifact_entry" },
         "reward_budget_policy": { "$ref": "#/$defs/artifact_entry" },
         "payment_proposal":     { "$ref": "#/$defs/artifact_entry" },
-        "payment_draft":        { "$ref": "#/$defs/artifact_entry" }
+        "payment_draft":        { "$ref": "#/$defs/artifact_entry" },
+        "governor_decisions":   { "$ref": "#/$defs/artifact_entry_list" }
       }
     },
     "warnings": {
