@@ -553,6 +553,84 @@ def test_governor_enabled_operator_run_validates_against_schema(
 # ---------------------------------------------------------------------------
 
 
+def _request_json_argv(
+    *, out_dir: Path, request_json: Path, address_map: Path,
+    governor_policy: Path,
+) -> List[str]:
+    return [
+        "--mode", "local-dry-run",
+        "--out-dir", str(out_dir),
+        "--require-confirmation-token", OPERATOR_TOKEN,
+        "--worker-address-map", str(address_map),
+        "--max-total-stocks", "10000000",
+        "--pool-balance-stocks", "100000000",
+        "--pinned-time", PINNED,
+        "--worker-id", "worker-A",
+        "--worker-id", "worker-B",
+        "--request-json", str(request_json),
+        "--governor-policy", str(governor_policy),
+    ]
+
+
+def _produce_request_json(tmp_path: Path, loop_mod) -> Path:
+    """Bootstrap helper: run the loop once in built mode, lift its
+    request.json, and return the path. Cheaper than wiring the
+    scientific intake fixture through the test fixture path."""
+    inputs = _make_inputs(tmp_path)
+    bootstrap = tmp_path / "bootstrap_run"
+    rc = loop_mod.main(_argv(
+        out_dir=bootstrap,
+        bundle=inputs["bundle"],
+        address_map=inputs["address_map"],
+    ))
+    assert rc == 0
+    src = bootstrap / "request.json"
+    assert src.exists()
+    return src
+
+
+def test_request_json_mode_emits_seven_governor_decisions(
+    tmp_path, loop_mod,
+):
+    """Regression for Sprint 5.24: in --request-json mode the
+    task_builder step is recorded up-front from the imported file.
+    The governor hook MUST still fire for that step so the audit
+    trail records all seven pipeline steps, not six. Without the
+    fix the count was 6."""
+    inputs = _make_inputs(tmp_path)
+    req_json = _produce_request_json(tmp_path, loop_mod)
+    out_dir = tmp_path / "run_with_request_json"
+    pol = _copy_policy(tmp_path)
+    rc = loop_mod.main(_request_json_argv(
+        out_dir=out_dir,
+        request_json=req_json,
+        address_map=inputs["address_map"],
+        governor_policy=pol,
+    ))
+    assert rc == 0
+    state = json.loads(
+        (out_dir / "operator_run.json").read_text(encoding="utf-8"),
+    )
+    assert state["governor_enabled"] is True
+    assert state["request_source"] == "existing_request"
+    assert state["steps_completed"] == EXPECTED_STEPS
+    # The key invariant — 7 decisions, one per pipeline step.
+    assert state["governor_decisions_count"] == len(EXPECTED_STEPS)
+    decisions = state["artifacts"]["governor_decisions"]
+    assert len(decisions) == len(EXPECTED_STEPS)
+    seen_steps = []
+    for entry in decisions:
+        d = json.loads(
+            (out_dir / entry["path"]).read_text(encoding="utf-8"),
+        )
+        assert d["action"] == "pipeline_step"
+        assert d["allowed"] is True
+        assert d["mode"] == "observe"
+        assert d["policy_hashes_match"] is True
+        seen_steps.append(d["action_params"]["step_name"])
+    assert seen_steps == EXPECTED_STEPS
+
+
 def test_no_subprocess_invocation_during_governor_hook(
     tmp_path, loop_mod, monkeypatch,
 ):

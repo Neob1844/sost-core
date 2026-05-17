@@ -752,6 +752,17 @@ def run_operator_loop(args, repo_root: Path) -> Dict[str, Any]:
         # Downstream steps (worker / replay / etc.) see the same
         # file layout as in the "built" path.
         if request_source == "existing_request":
+            # Sprint 5.24 — fire the governor hook BEFORE recording
+            # the imported task_builder step so the audit trail
+            # records all 7 steps regardless of request_source.
+            # Without this call, --request-json runs emit only 6
+            # governor decisions instead of 7 because the
+            # task_builder step does not flow through the main
+            # pipeline loop below.
+            _governor_call(
+                governor_hook, "task_builder",
+                state, out_dir, manifest,
+            )
             imported = out_dir / "request.json"
             _record_step(
                 state=state, step="task_builder",
