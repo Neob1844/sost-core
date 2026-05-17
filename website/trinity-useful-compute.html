@@ -1627,6 +1627,83 @@
   </p>
 </div>
 
+<!-- Scientific Task Classifier v0.1 (Sprint 5.31) -->
+<div class="card">
+  <h2>Scientific Task Classifier v0.1</h2>
+  <p>
+    Sprint 5.31 inserts a deterministic, local, <strong>no-LLM</strong>
+    classifier layer between intake and task builder. It reads the
+    intake's bounded previews (Sprint 5.20 cap, 1024 chars per
+    field), runs substring + regex heuristics, and proposes a
+    structured task plan: <code>task_kind</code>,
+    <code>confidence</code>, <code>candidate_materials</code>,
+    <code>candidate_metrics</code>, <code>proposed_source_tool</code>,
+    <code>proposed_difficulty_class</code>,
+    <code>public_description</code> and short
+    <code>evidence</code> snippets. No network, no subprocess, no
+    LLM client libraries.
+  </p>
+  <ul>
+    <li><strong>Three orthogonal signals.</strong>
+        Task-kind keywords (precedence
+        <code>benchmark</code> &gt; <code>validation</code> &gt;
+        <code>comparison</code> &gt; <code>extraction</code>),
+        material formulas (hand-curated regex table over CeO2 /
+        PrOx / Sm2O3 / Y2O3 / ZrO2 / TiO2 / MgO / Al2O3 / Fe2O3
+        / SiO2 / La2O3), and metrics (named + CSV headers lifted
+        from the Sprint 5.29 csv reader's structured_summary).
+        Confidence = number of signals fired.</li>
+    <li><strong>Conservative routing.</strong>
+        <code>materials_engine</code> is proposed only when the
+        task is comparative / benchmarking AND at least one
+        known material formula was detected; everything else
+        stays on
+        <code>trinity_scientific_prompt_intake</code>. The builder
+        locks <code>task_type=scientific_intake</code> so the
+        worker contract stays identical to the 5.29 / 5.30 flow.</li>
+    <li><strong>Deterministic <code>classification_id</code>.</strong>
+        sha16 of (intake_id, pinned_time, task_kind, materials,
+        metrics). Same intake + same pinned_time ⇒ same
+        classification_id.</li>
+    <li><strong>No document I/O.</strong> The classifier reads
+        ONE JSON file (the intake artifact) and writes ONE JSON
+        file. It never opens a .tex / .csv / .pdf file. All its
+        evidence comes from the intake's bounded previews.</li>
+    <li><strong>Privacy via length caps.</strong> Each evidence
+        snippet is capped at 200 chars; the evidence array at 16
+        items. A sentinel-poison test asserts the classifier
+        output contains no more than two copies of a 100-fold
+        repeated sentinel string — full-text leakage would push
+        the count far higher.</li>
+    <li><strong>Cross-checked task_builder bridge.</strong>
+        <code>--from-scientific-classification</code> requires
+        <code>--intake-json</code>; the builder verifies
+        <code>classification.source_intake_id == intake.intake_id</code>
+        and <code>source_intake_sha256 == sha256(intake_file)</code>,
+        refusing rc=2 on mismatch. The resulting request carries
+        THREE metadata blocks:
+        <code>scientific_intake</code> (5.21),
+        <code>scientific_reader_manifest</code> (5.30),
+        <code>scientific_task_classification</code> (5.31, this
+        sprint).</li>
+    <li><strong>Threat refs <code>T01 / T04 / T09</code></strong>
+        carried on every classification, mapping to the three
+        SECURITY.md threats an automated task-planner is
+        positioned to surface (bogus / poisoned input,
+        over-broad scope, silent semantic mismatch).</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/scientific-task-classifier-v01</code>.
+    43 new tests (22 functional + 12 schema + 9 safety), all
+    green on the deployment host alongside the prior 1204. Pure
+    scripts + schemas + docs + tests merge: zero <code>src/</code>,
+    zero consensus, zero wallet / payment / broadcast changes.
+    LLM-backed classification, document I/O, and new
+    source_tool / task_type enum values are explicit non-goals
+    for v0.1.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>

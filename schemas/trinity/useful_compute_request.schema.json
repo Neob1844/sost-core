@@ -152,6 +152,65 @@
             }
           }
         },
+        "scientific_task_classification": {
+          "type": "object",
+          "description": "Sprint 5.31 — projection of the scientific task classification that produced this request. Bulky fields (evidence, public_description, raw counts) live in the classification artifact on disk; only the decision-shape is mirrored here. Optional: legacy task builders pre-Sprint-5.31 omit this field, and the request still validates.",
+          "required": [
+            "classification_id",
+            "source_intake_id",
+            "source_intake_sha256",
+            "task_kind",
+            "confidence",
+            "candidate_materials",
+            "candidate_metrics",
+            "proposed_source_tool",
+            "proposed_difficulty_class",
+            "threat_refs"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "classification_id": {
+              "type": "string", "pattern": "^scl-[0-9a-f]{16}$"
+            },
+            "source_intake_id": {
+              "type": "string", "pattern": "^spi-[0-9a-f]{16}$"
+            },
+            "source_intake_sha256": {
+              "type": "string", "pattern": "^[0-9a-f]{64}$"
+            },
+            "task_kind": {
+              "type": "string",
+              "enum": ["comparison", "extraction", "validation", "benchmark"]
+            },
+            "confidence": {
+              "type": "string",
+              "enum": ["low", "medium", "high"]
+            },
+            "candidate_materials": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+            },
+            "candidate_metrics": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+            },
+            "proposed_source_tool": {
+              "type": "string",
+              "enum": [
+                "materials_engine",
+                "trinity_scientific_prompt_intake"
+              ]
+            },
+            "proposed_difficulty_class": {
+              "type": "string",
+              "enum": ["low", "medium", "high", "extreme"]
+            },
+            "threat_refs": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^T[0-9]{2}$" }
+            }
+          }
+        },
         "scientific_reader_manifest": {
           "type": "object",
           "description": "Sprint 5.30 — mirror of the Sprint 5.29 intake reader metadata, projected down to the subset downstream consumers (workers, operators, dashboards) need. Never includes raw extracted text; never includes absolute paths. Optional: legacy task builders that pre-date Sprint 5.30 omit this field, and the request still validates.",
