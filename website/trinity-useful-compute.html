@@ -1225,6 +1225,75 @@
   </p>
 </div>
 
+<!-- Governor Watchdog v0.1 (Sprint 5.25) -->
+<div class="card">
+  <h2>Governor Watchdog v0.1</h2>
+  <p>
+    Sprint 5.25 adds the missing external eye on the Trinity
+    Autonomy Governor audit trail. The Watchdog is a separate
+    process: it reads the
+    <code>TRINITY_AUTONOMY_GOVERNOR_DECISION_*.json</code> files
+    the Governor produces, summarises them into a deterministic
+    report, and prints one-line status to stdout. The Governor
+    itself stays network-free (this is the whole point of the
+    layered design).
+  </p>
+  <ul>
+    <li><strong>Read-only on the decisions dir.</strong> The
+        scan function never opens any input file for write. A
+        static safety test rejects <code>.unlink</code>,
+        <code>.chmod</code>, <code>os.remove</code>,
+        <code>shutil.rmtree</code> and friends in the source.</li>
+    <li><strong>Four <code>safety_status</code> values</strong>
+        with strict precedence:
+        <code>critical</code> (halt or policy mutation detected)
+        beats <code>warning</code> (malformed decision or
+        <code>policy_hashes_match=false</code>) beats
+        <code>stale</code> (newest decision older than
+        <code>max_age_seconds</code>, default 1h) beats
+        <code>ok</code>.</li>
+    <li><strong>Webhook double-gated and not yet wired.</strong>
+        v0.1 accepts <code>--webhook-url</code> and
+        <code>--send</code> for forward compatibility but the
+        scan source contains zero network primitives
+        (<code>urlopen</code>, <code>urllib.request</code>,
+        <code>requests.post</code>, <code>http.client</code>,
+        <code>socket.socket</code>) — verified by a static grep
+        test that fails CI if any of them lands.</li>
+    <li><strong>URL redaction.</strong> When a webhook URL is
+        configured, the report records only
+        <code>scheme://host</code>; the path / query string is
+        stripped so a token in the URL never leaks into the audit
+        trail.</li>
+    <li><strong>Path denylist refused at startup.</strong> The
+        Watchdog refuses to look at any directory whose basename
+        or any segment matches <code>wallets</code>,
+        <code>secrets</code>, <code>keys</code>,
+        <code>private</code>, <code>.git</code>,
+        <code>.ssh</code> — belt-and-braces guard against
+        operator typos.</li>
+    <li><strong>No imports of sibling Trinity modules.</strong>
+        The Watchdog reads JSON files only; it does not depend
+        on <code>autonomy_governor.py</code>,
+        <code>useful_compute_operator_loop.py</code>, or any
+        worker / payment script.</li>
+    <li><strong>Schema lock on <code>webhook_sent</code>.</strong>
+        The report schema declares
+        <code>"webhook_sent": { "const": false }</code> so any
+        future code change that flips it without bumping the
+        schema version fails CI.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/governor-watchdog-v01</code>. 34 new
+    tests (15 functional + 12 schema + 7 safety), all green on
+    the deployment host alongside the prior 1008. Pure
+    scripts + schemas + docs + tests merge: zero <code>src/</code>,
+    zero consensus, zero wallet / payment / broadcast changes.
+    The actual external dispatch arrives in a later sprint as
+    <code>governor_watchdog_daemon.py</code>.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>

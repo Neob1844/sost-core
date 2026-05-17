@@ -1,0 +1,24 @@
+{
+  "schema": "trinity-governor-watchdog-config/v0.1",
+  "decisions_dir": "/var/lib/trinity/governor_decisions",
+  "out_dir": "/var/lib/trinity/watchdog",
+  "max_age_seconds": 3600,
+  "webhook_url": null,
+  "send": false,
+  "notes": [
+    "Trinity Governor Watchdog v0.1 example config. Operators may",
+    "load this with --config and override individual fields with the",
+    "matching CLI flag. CLI flags always win over the file.",
+    "",
+    "v0.1 invariants the config CANNOT override:",
+    "  - The watchdog is read-only on decisions_dir. No mode in the",
+    "    config can turn it into a writer.",
+    "  - --send + a webhook_url do not actually fetch anything in",
+    "    v0.1. The flag plus URL are recorded in the report for the",
+    "    future watchdog daemon sprint, but the URL is host-redacted",
+    "    and never reached over the network.",
+    "  - decisions_dir whose basename or any path segment matches a",
+    "    denylist (wallets, secrets, .git, .ssh, private, keys) is",
+    "    refused at startup."
+  ]
+}

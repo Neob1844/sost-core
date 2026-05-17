@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-governor-watchdog-report/v0.1",
+  "title": "Trinity Governor Watchdog Report",
+  "description": "Deterministic summary of a scan over a directory of Trinity Autonomy Governor decision JSON files (schema trinity-autonomy-governor-decision/v0.1). Produced by scripts/trinity/governor_watchdog.py. v0.1 is read-only: the watchdog never writes into the decisions directory and v0.1 also never fetches the optional webhook URL — it only records it (host-redacted) for the future watchdog daemon sprint.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "report_id",
+    "pinned_time",
+    "decisions_dir_basename",
+    "max_age_seconds",
+    "decisions_seen",
+    "malformed_count",
+    "allowed_count",
+    "blocked_count",
+    "human_approval_required_count",
+    "policy_mutation_detected_count",
+    "halt_detected_count",
+    "newest_decision_time",
+    "newest_decision_age_seconds",
+    "stale",
+    "decision_ids",
+    "threat_refs_seen",
+    "actions_seen",
+    "warnings",
+    "safety_status",
+    "webhook_configured",
+    "webhook_url_redacted",
+    "webhook_sent",
+    "webhook_status"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-governor-watchdog-report/v0.1"
+    },
+    "report_id": {
+      "type": "string",
+      "pattern": "^wd-[0-9a-f]{16}$"
+    },
+    "pinned_time": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "decisions_dir_basename": {
+      "type": "string", "minLength": 1, "maxLength": 256,
+      "description": "Basename of the scanned decisions dir. The full path is never persisted because it can carry operator-identifying information."
+    },
+    "max_age_seconds": { "type": "integer", "minimum": 0 },
+    "decisions_seen": { "type": "integer", "minimum": 0 },
+    "malformed_count": { "type": "integer", "minimum": 0 },
+    "allowed_count": { "type": "integer", "minimum": 0 },
+    "blocked_count": { "type": "integer", "minimum": 0 },
+    "human_approval_required_count": { "type": "integer", "minimum": 0 },
+    "policy_mutation_detected_count": { "type": "integer", "minimum": 0 },
+    "halt_detected_count": { "type": "integer", "minimum": 0 },
+    "newest_decision_time": {
+      "oneOf": [
+        { "type": "string", "minLength": 1, "maxLength": 64 },
+        { "type": "null" }
+      ]
+    },
+    "newest_decision_age_seconds": {
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "null" }
+      ]
+    },
+    "stale": { "type": "boolean" },
+    "decision_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-f0-9]{32}$" }
+    },
+    "threat_refs_seen": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^T[0-9]{2}$" }
+    },
+    "actions_seen": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    },
+    "safety_status": {
+      "type": "string",
+      "enum": ["ok", "warning", "stale", "critical"]
+    },
+    "webhook_configured": { "type": "boolean" },
+    "webhook_url_redacted": {
+      "oneOf": [
+        { "type": "string", "minLength": 1, "maxLength": 256 },
+        { "type": "null" }
+      ],
+      "description": "scheme://host only. The watchdog refuses to record the full URL because path/query can carry secrets."
+    },
+    "webhook_sent": {
+      "type": "boolean",
+      "const": false,
+      "description": "v0.1 NEVER sends. Locked to false at the schema level so any future code change that flips this without bumping the schema fails CI."
+    },
+    "webhook_status": {
+      "type": "string",
+      "enum": ["not_configured", "skipped_no_send", "sent_skipped_v01"]
+    }
+  }
+}
