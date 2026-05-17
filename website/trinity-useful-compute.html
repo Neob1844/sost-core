@@ -1486,6 +1486,77 @@
   </p>
 </div>
 
+<!-- Scientific Intake Readers v0.1 (Sprint 5.29) -->
+<div class="card">
+  <h2>Scientific Intake Readers v0.1</h2>
+  <p>
+    Sprint 5.29 extends the Sprint 5.20 scientific prompt intake
+    with a <strong>pluggable reader registry</strong>. Trinity can
+    now ingest <code>.tex</code>, <code>.csv</code> and
+    <code>.pdf</code> alongside the original
+    <code>.txt</code> / <code>.md</code> / <code>.json</code>.
+    Every per-document record now carries a deterministic
+    extracted-text hash plus a small reader-specific structured
+    summary. No LLM, no network, no subprocess, no wallet.
+  </p>
+  <ul>
+    <li><strong>Six new per-document fields</strong>:
+        <code>reader_kind</code>,
+        <code>reader_status</code>,
+        <code>extracted_text_sha256</code>,
+        <code>extracted_text_preview</code>,
+        <code>structured_summary</code>, and per-document
+        <code>warnings</code>. All additive and optional in the
+        v0.1 schema; old artifacts still validate; the
+        strict-required-set tests still pass.</li>
+    <li><strong>Graceful PDF.</strong>
+        <code>_pdf_reader_module()</code> tries <code>pypdf</code>
+        then <code>PyPDF2</code> via dynamic import. When neither
+        is importable, the document is recorded with
+        <code>reader_status=unsupported_missing_dependency</code>
+        and an empty extracted text — no crash, no
+        <code>pip install</code>, no shell-out to
+        <code>pdftotext</code>. A static safety test enforces
+        that pypdf / PyPDF2 are never top-level imports.</li>
+    <li><strong>Minimal LaTeX.</strong> Strips comments,
+        display and inline math, and most commands; rewrites
+        <code>\section{X}</code> / <code>\textbf{X}</code> /
+        <code>\cite{X}</code> to keep the brace argument. Regex
+        only, deterministic, no pandoc, no LaTeX runtime.</li>
+    <li><strong>CSV with structure.</strong> stdlib
+        <code>csv</code> only. Records <code>row_count</code>,
+        <code>column_count</code>, optional <code>header</code>
+        (with a non-numeric-first-row heuristic),
+        <code>preview_rows</code> capped at 5, each cell capped
+        at 256 chars.</li>
+    <li><strong>Unsupported is recorded, not refused.</strong>
+        Operators adding a new extension via
+        <code>--allowed-ext</code> (e.g.
+        <code>.yaml</code>) get a record with
+        <code>reader_kind=unsupported,
+        reader_status=unsupported_extension</code> — the intake
+        does not crash. Extensions OUTSIDE
+        <code>--allowed-ext</code> are still rejected outright
+        with rc=2 (preserves the Sprint 5.20 gatekeeper).</li>
+    <li><strong>combined_context_sha256 honest.</strong>
+        Now mixes in <code>extracted_text_sha256</code> and
+        <code>reader_status</code> per document. If a PDF goes
+        from no-backend to ok because the host got pypdf
+        installed, the combined hash flips even though the bytes
+        did not change.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/scientific-intake-readers-v01</code>. 22
+    new tests (16 functional + 6 safety; one extra functional test
+    is auto-skipped when pypdf / PyPDF2 are not on the host) all
+    green on the deployment host alongside the prior 1169. Pure
+    scripts + schemas + docs + tests merge: zero <code>src/</code>,
+    zero consensus, zero wallet / payment / broadcast changes.
+    OCR, pandoc, XML / DOCX / EPUB readers are explicit non-goals
+    for v0.1.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>
