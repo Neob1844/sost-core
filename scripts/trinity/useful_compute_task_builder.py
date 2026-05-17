@@ -210,6 +210,109 @@ def _per_doc_reader_record(doc: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------------------
+# Sprint 5.31 — scientific classification loader
+# ---------------------------------------------------------------------------
+
+SCHEMA_CLASSIFICATION = "trinity-scientific-task-classification/v0.1"
+_CLASSIFICATION_ID_RE = re.compile(r"^scl-[0-9a-f]{16}$")
+_CLF_DIFFICULTIES = ("low", "medium", "high", "extreme")
+_CLF_SOURCE_TOOLS = (
+    "materials_engine", "trinity_scientific_prompt_intake",
+)
+# Map classifier task_kind → builder intake_task_kind. v0.1 keeps
+# this 1:1; both vocabularies happen to share the same labels.
+_CLF_KIND_TO_INTAKE_KIND = {
+    "comparison":  "comparison",
+    "extraction":  "extraction",
+    "validation":  "validation",
+    "benchmark":   "benchmark",
+}
+
+
+def _load_classification(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        raise ValueError(
+            "--from-scientific-classification file not found: "
+            + str(path)
+        )
+    raw = path.read_bytes()
+    try:
+        obj = json.loads(raw.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise ValueError(
+            "--from-scientific-classification is not valid UTF-8 "
+            "JSON: " + str(exc)
+        )
+    if not isinstance(obj, dict):
+        raise ValueError(
+            "scientific classification must be a JSON object"
+        )
+    if obj.get("schema") != SCHEMA_CLASSIFICATION:
+        raise ValueError(
+            "scientific classification wrong schema: "
+            + repr(obj.get("schema"))
+        )
+    cid = obj.get("classification_id", "")
+    if not _CLASSIFICATION_ID_RE.match(cid):
+        raise ValueError(
+            "classification_id wrong format: " + repr(cid)
+        )
+    sid = obj.get("source_intake_id", "")
+    if not _INTAKE_ID_RE.match(sid):
+        raise ValueError(
+            "classification source_intake_id wrong format: "
+            + repr(sid)
+        )
+    s_sha = obj.get("source_intake_sha256", "")
+    if not _SHA256_RE.match(s_sha):
+        raise ValueError(
+            "classification source_intake_sha256 wrong format"
+        )
+    if obj.get("task_kind") not in _CLF_KIND_TO_INTAKE_KIND:
+        raise ValueError(
+            "classification task_kind invalid: "
+            + repr(obj.get("task_kind"))
+        )
+    if obj.get("proposed_source_tool") not in _CLF_SOURCE_TOOLS:
+        raise ValueError(
+            "classification proposed_source_tool invalid: "
+            + repr(obj.get("proposed_source_tool"))
+        )
+    if obj.get("proposed_difficulty_class") not in _CLF_DIFFICULTIES:
+        raise ValueError(
+            "classification proposed_difficulty_class invalid"
+        )
+    return obj
+
+
+def _classification_audit_subset(
+    classification: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Project the classification down to the subset that lands in
+    metadata.scientific_task_classification. We deliberately drop
+    the bulky evidence array (it stays in the classification file
+    on disk; the request stays small)."""
+    return {
+        "classification_id": classification["classification_id"],
+        "source_intake_id": classification["source_intake_id"],
+        "source_intake_sha256": classification["source_intake_sha256"],
+        "task_kind": classification["task_kind"],
+        "confidence": classification["confidence"],
+        "candidate_materials": list(
+            classification.get("candidate_materials", [])
+        ),
+        "candidate_metrics": list(
+            classification.get("candidate_metrics", [])
+        ),
+        "proposed_source_tool":
+            classification["proposed_source_tool"],
+        "proposed_difficulty_class":
+            classification["proposed_difficulty_class"],
+        "threat_refs": list(classification.get("threat_refs", [])),
+    }
+
+
 def _build_reader_manifest(intake: Dict[str, Any]) -> Dict[str, Any]:
     """Build the Sprint 5.30 scientific_reader_manifest block from a
     Sprint 5.29 (or pre-5.29) intake artifact. Records:
@@ -368,8 +471,14 @@ def main(argv: Optional[List[str]] = None) -> int:
              "--intake-output-schema).",
     )
     p.add_argument(
-        "--difficulty-class", required=True,
+        "--difficulty-class", required=False, default=None,
         choices=sorted(_DIFFICULTY_TO_SECONDS),
+        help=(
+            "Required UNLESS --from-scientific-classification is "
+            "given (the classification supplies "
+            "proposed_difficulty_class). The legacy + scientific-"
+            "intake paths validate that this is set post-parse."
+        ),
     )
     p.add_argument(
         "--max-reward-stocks", type=int, default=100000,
@@ -414,12 +523,49 @@ def main(argv: Optional[List[str]] = None) -> int:
              "--from-scientific-intake is given.",
     )
 
+    # Sprint 5.31 — scientific task classification bridge.
+    p.add_argument(
+        "--from-scientific-classification", default=None,
+        help=(
+            "Path to a TRINITY_SCIENTIFIC_TASK_CLASSIFICATION JSON "
+            "(Sprint 5.31). When supplied, the request's "
+            "source_tool / difficulty / expected_output_schema / "
+            "public_description / metadata.scientific_intake / "
+            "metadata.scientific_reader_manifest are derived from "
+            "the classification and the cross-referenced intake "
+            "artifact. Requires --intake-json so the per-document "
+            "reader manifest can be carried into the request."
+        ),
+    )
+    p.add_argument(
+        "--intake-json", default=None,
+        help=(
+            "Path to the intake JSON the classification was built "
+            "from. Required when --from-scientific-classification "
+            "is given; the task builder cross-checks that the "
+            "intake_id and sha256 match the classification."
+        ),
+    )
+
     args = p.parse_args(argv)
 
     if args.emit:
         print(
             "[useful_compute_task_builder] --emit is not supported in "
             "v0.1; manifests are dry-run only.",
+            file=sys.stderr,
+        )
+        return 2
+
+    # Sprint 5.31 — --difficulty-class is optional ONLY when
+    # --from-scientific-classification is used. All other branches
+    # still require it.
+    if (args.from_scientific_classification is None
+            and not args.difficulty_class):
+        print(
+            "[useful_compute_task_builder] --difficulty-class is "
+            "required unless --from-scientific-classification is "
+            "given",
             file=sys.stderr,
         )
         return 2
@@ -517,6 +663,140 @@ def main(argv: Optional[List[str]] = None) -> int:
             + " request_id=" + req["request_id"]
             + " intake_id=" + intake["intake_id"]
             + " intake_task_kind=" + args.intake_task_kind
+        )
+        return 0
+
+    # Sprint 5.31 — scientific classification bridge.
+    if args.from_scientific_classification is not None:
+        for forbidden_flag, value in (
+            ("--source-tool", args.source_tool),
+            ("--input-bundle", args.input_bundle),
+            ("--expected-output-schema", args.expected_output_schema),
+            ("--public-description", args.public_description),
+            ("--difficulty-class", args.difficulty_class),
+            ("--from-scientific-intake",
+             args.from_scientific_intake),
+        ):
+            if value not in (None, ""):
+                print(
+                    "[useful_compute_task_builder] " + forbidden_flag
+                    + " must NOT be combined with "
+                    "--from-scientific-classification (the "
+                    "classification supplies that value)",
+                    file=sys.stderr,
+                )
+                return 2
+        if not args.intake_json:
+            print(
+                "[useful_compute_task_builder] "
+                "--intake-json is required with "
+                "--from-scientific-classification (so the per-"
+                "document reader manifest can be carried into "
+                "the request)",
+                file=sys.stderr,
+            )
+            return 2
+        try:
+            classification = _load_classification(
+                Path(args.from_scientific_classification),
+            )
+            intake = _load_scientific_intake(Path(args.intake_json))
+        except ValueError as exc:
+            print(
+                "[useful_compute_task_builder] error: " + str(exc),
+                file=sys.stderr,
+            )
+            return 2
+
+        # Cross-check the classification was built from THIS intake.
+        if classification["source_intake_id"] != intake["intake_id"]:
+            print(
+                "[useful_compute_task_builder] error: "
+                "classification source_intake_id "
+                + classification["source_intake_id"]
+                + " != intake intake_id " + intake["intake_id"],
+                file=sys.stderr,
+            )
+            return 2
+        intake_artifact_sha = _sha256_hex(
+            Path(args.intake_json).read_bytes(),
+        )
+        if classification["source_intake_sha256"] != intake_artifact_sha:
+            print(
+                "[useful_compute_task_builder] error: "
+                "classification source_intake_sha256 does not "
+                "match the supplied --intake-json file's sha256 "
+                "(classification was built from a different "
+                "intake artifact)",
+                file=sys.stderr,
+            )
+            return 2
+
+        intake_task_kind = _CLF_KIND_TO_INTAKE_KIND[
+            classification["task_kind"]
+        ]
+        candidate_id = args.candidate_id or (
+            "candidate-" + classification["classification_id"]
+        )
+        metadata = {
+            "scientific_intake": {
+                "intake_id":              intake["intake_id"],
+                "combined_context_sha256": intake["combined_context_sha256"],
+                "prompt_sha256":          intake["prompt_sha256"],
+                "documents_count":        int(intake["documents_count"]),
+                "intake_task_kind":       intake_task_kind,
+                "intake_artifact_sha256": intake_artifact_sha,
+            },
+            "scientific_reader_manifest": _build_reader_manifest(intake),
+            # Sprint 5.31 — classification audit subset. Bulky
+            # fields like `evidence` stay in the classification
+            # file on disk; only the decision-shape lands in the
+            # request to keep it small.
+            "scientific_task_classification":
+                _classification_audit_subset(classification),
+        }
+        try:
+            req = build_request(
+                source_tool=classification["proposed_source_tool"],
+                candidate_id=candidate_id,
+                input_bundle_sha256=intake["combined_context_sha256"],
+                expected_output_schema=
+                    classification["expected_output_schema"],
+                difficulty_class=
+                    classification["proposed_difficulty_class"],
+                max_reward_stocks=int(args.max_reward_stocks)
+                    if args.max_reward_stocks else 100000,
+                deadline=args.deadline,
+                public_description=classification["public_description"],
+                manual_review_required=bool(args.manual_review_required),
+                metadata=metadata,
+                # Force task_type to scientific_intake regardless
+                # of proposed_source_tool. v0.1 keeps the worker
+                # contract stable: the classifier-derived request
+                # is still validated as a scientific_intake task,
+                # only the source_tool tag changes for routing.
+                task_type_override="scientific_intake",
+                validation_method_override="deterministic_hash_check",
+            )
+        except ValueError as exc:
+            print(
+                "[useful_compute_task_builder] error: " + str(exc),
+                file=sys.stderr,
+            )
+            return 2
+        Path(args.out_json).write_text(
+            canonical_dumps(req), encoding="utf-8",
+        )
+        print(
+            "[useful_compute_task_builder] wrote " + args.out_json
+            + " request_id=" + req["request_id"]
+            + " classification_id="
+            + classification["classification_id"]
+            + " task_kind=" + classification["task_kind"]
+            + " proposed_source_tool="
+            + classification["proposed_source_tool"]
+            + " proposed_difficulty_class="
+            + classification["proposed_difficulty_class"]
         )
         return 0
 
