@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-task-queue-runner-report/v0.1",
+  "title": "Trinity Task Queue Runner Report",
+  "description": "Deterministic per-batch summary written by scripts/trinity/task_queue.py run-batch. The runner is a bounded wrapper around the existing run-once logic: it processes up to --max-items pending queue items (oldest first), records each outcome in this report, and stops early on the first failure when --stop-on-failure is set. v0.1 is local-dry-run only and inherits every fail-closed invariant from task_queue v0.1 (Sprint 5.26): operator_loop hard-block, watchdog safety_status=critical, and any other non-zero operator rc all mark the affected item failed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "batch_id",
+    "pinned_time",
+    "queue_dir_basename",
+    "max_items",
+    "attempted_count",
+    "completed_count",
+    "failed_count",
+    "skipped_count",
+    "stop_on_failure",
+    "sleep_seconds",
+    "item_ids",
+    "completed_item_ids",
+    "failed_item_ids",
+    "safety_status",
+    "warnings"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-task-queue-runner-report/v0.1"
+    },
+    "batch_id": {
+      "type": "string",
+      "pattern": "^tqr-[0-9a-f]{16}$"
+    },
+    "pinned_time": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "queue_dir_basename": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "max_items": { "type": "integer", "minimum": 1, "maximum": 50 },
+    "attempted_count": { "type": "integer", "minimum": 0 },
+    "completed_count": { "type": "integer", "minimum": 0 },
+    "failed_count": { "type": "integer", "minimum": 0 },
+    "skipped_count": { "type": "integer", "minimum": 0 },
+    "stop_on_failure": { "type": "boolean" },
+    "sleep_seconds": { "type": "integer", "minimum": 0, "maximum": 3600 },
+    "item_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^qit-[0-9a-f]{16}$" }
+    },
+    "completed_item_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^qit-[0-9a-f]{16}$" }
+    },
+    "failed_item_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^qit-[0-9a-f]{16}$" }
+    },
+    "safety_status": {
+      "type": "string",
+      "enum": ["ok", "warning", "failed"],
+      "description": "ok = every attempted item ended in completed; warning = at least one failed but the runner continued; failed = the runner stopped early because --stop-on-failure was set."
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    }
+  }
+}
