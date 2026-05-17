@@ -172,3 +172,43 @@ def test_blocked_decision_also_validates(gov, tmp_path):
     )
     assert d["allowed"] is False
     jsonschema.validate(d, schema)
+
+
+# ---------------------------------------------------------------------------
+# Sprint 5.24 — pipeline_step action coverage in the schema layer
+# ---------------------------------------------------------------------------
+
+def test_pipeline_step_decision_validates(gov, tmp_path):
+    """The decision schema accepts the action='pipeline_step' decision
+    emitted by the operator_loop observe hook."""
+    schema = _load(DECISION_SCHEMA)
+    p = tmp_path / "policy.json"
+    p.write_text(EXAMPLE_POLICY.read_text(encoding="utf-8"), encoding="utf-8")
+    boot = gov._sha256_file(p)
+    with open(p, "r", encoding="utf-8") as f:
+        policy = json.load(f)
+    d = gov.decide(
+        policy=policy,
+        policy_path=p,
+        boot_policy_sha256=boot,
+        action="pipeline_step",
+        action_params={"step_name": "task_builder"},
+        pinned_time="2026-05-16T00:00:00+00:00",
+    )
+    assert d["action"] == "pipeline_step"
+    assert d["threat_refs"] == ["T15", "T16", "T17"]
+    jsonschema.validate(d, schema)
+
+
+def test_pipeline_step_present_in_known_actions(gov):
+    """Belt-and-braces: the in-code KNOWN_ACTIONS tuple includes
+    pipeline_step. If a refactor drops it, this test catches it."""
+    assert "pipeline_step" in gov.KNOWN_ACTIONS
+
+
+def test_pipeline_step_threats_align_with_security_md(gov):
+    """T15/T16/T17 are the SECURITY.md entries that cover log/proof
+    tampering, governance bypass and budget cap bypass — the three
+    things a per-step audit hook is designed to surface."""
+    refs = gov.THREAT_REFS["pipeline_step"]
+    assert set(refs) == {"T15", "T16", "T17"}

@@ -1,0 +1,1 @@
+{"schema":"trinity-worker-address-map/v0.1","workers":[{"label":"worker-A","payout_address":"sost1b14bd81d744fd82e26503237e0c3ae6896f0e1f6","worker_id_hash":"bd4a5b49cfc018f2"},{"label":"worker-B","payout_address":"sost1a5af3882b3ddb40f4738f862cc537011d7fe775d","worker_id_hash":"080f752fc9c576af"}]}

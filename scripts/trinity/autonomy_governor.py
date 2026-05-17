@@ -82,6 +82,13 @@ KNOWN_ACTIONS = (
     "filesystem_write",
     "constitution_change",
     "register_new_source_tool",
+    # Sprint 5.24 — generic pipeline step evaluation used by the
+    # operator_loop observe hook. The hook fires one of these per
+    # Useful Compute step (task_builder, worker, replay, governance,
+    # budget, proposal, draft). The Governor evaluates the policy
+    # (caps, halt_file, policy mutation) but does not have per-step
+    # business logic — that lives in the step's own module.
+    "pipeline_step",
 )
 
 # Actions that ALWAYS require a human, never autonomous, regardless of
@@ -109,6 +116,12 @@ THREAT_REFS = {
     "filesystem_write":             ["T09", "T15"],
     "constitution_change":          ["T13", "T15"],
     "register_new_source_tool":     ["T01", "T13", "T14"],
+    # pipeline_step is the umbrella action the operator_loop emits per
+    # step in observe mode. The relevant threats are tampering of the
+    # audit log (T15), governance bypass (T16) and budget cap bypass
+    # (T17) — three things that, if compromised, would let bad work
+    # slip through the pipeline without surfacing.
+    "pipeline_step":                ["T15", "T16", "T17"],
 }
 
 
@@ -396,6 +409,101 @@ def decide(
         "threat_refs":             list(THREAT_REFS.get(action, [])),
         "pinned_time":             pinned_time,
     }
+    return decision
+
+
+# ---------------------------------------------------------------------------
+# Public API for in-process callers (Sprint 5.24 operator_loop hook).
+#
+# The CLI below is unchanged. Other Trinity scripts that want to ask the
+# Governor for a verdict load this module via importlib.spec and call
+# pin_policy() once at boot, then evaluate_decision() per action. There
+# is intentionally NO threading / async / persistence; the Governor is a
+# pure function over (policy file, action, params, pinned_time).
+# ---------------------------------------------------------------------------
+
+def pin_policy(policy_path):
+    """Compute and return the boot policy sha256. The caller is
+    expected to hold this value for the lifetime of the run and pass
+    it back into evaluate_decision() so the runtime-mutation check
+    actually catches a mid-run policy swap.
+
+    Also returns the parsed policy dict (after _validate_policy_v01).
+    Raises GovernorError on invalid policy or unsupported v0.1 mode.
+    """
+    policy_path = Path(policy_path)
+    boot_sha = _sha256_file(policy_path)
+    policy = _read_policy(policy_path)
+    _validate_policy_v01(policy)
+    return boot_sha, policy
+
+
+def evaluate_decision(
+    policy_path,
+    action,
+    action_params=None,
+    pinned_time=None,
+    boot_policy_sha256=None,
+    out_dir=None,
+):
+    """High-level helper used by importing scripts (operator_loop).
+
+    Parameters:
+        policy_path: Path or str to the policy JSON file.
+        action: action name (must be in KNOWN_ACTIONS — see source).
+        action_params: dict, optional. Defaults to {}.
+        pinned_time: ISO-8601 string. Defaults to now-UTC.
+        boot_policy_sha256: optional. If provided, used as the boot
+            pin (so mid-run mutation is detected against the value the
+            caller cached at the beginning of the run). If None, the
+            current file hash is taken — useful for one-shot evals.
+        out_dir: optional. If provided, the decision JSON is also
+            written to <out_dir>/TRINITY_AUTONOMY_GOVERNOR_DECISION_
+            <id>.json and the returned dict includes a transient
+            ``_decision_path`` key pointing at it.
+
+    Returns:
+        The decision dict (same shape as decide()), optionally with
+        ``_decision_path`` set when ``out_dir`` was provided.
+
+    Never executes the action. Never opens the network. Never spawns
+    a child process. Never touches a wallet.
+    """
+    policy_path = Path(policy_path)
+    if action_params is None:
+        action_params = {}
+    if pinned_time is None:
+        pinned_time = _default_pinned_time()
+
+    if boot_policy_sha256 is None:
+        boot_policy_sha256, policy = pin_policy(policy_path)
+    else:
+        policy = _read_policy(policy_path)
+        _validate_policy_v01(policy)
+
+    decision = decide(
+        policy=policy,
+        policy_path=policy_path,
+        boot_policy_sha256=boot_policy_sha256,
+        action=action,
+        action_params=action_params,
+        pinned_time=pinned_time,
+    )
+
+    if out_dir is not None:
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / (
+            "TRINITY_AUTONOMY_GOVERNOR_DECISION_"
+            + decision["decision_id"] + ".json"
+        )
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(decision, f, indent=2, sort_keys=True)
+            f.write("\n")
+        # Transient field for the caller; not part of the schema. The
+        # caller drops it before persisting the decision elsewhere.
+        decision["_decision_path"] = str(out_path)
+
     return decision
 
 

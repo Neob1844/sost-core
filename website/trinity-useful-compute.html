@@ -1151,10 +1151,77 @@
         keeping the governor network-free is the whole point.</li>
   </ul>
   <p style="opacity:.7;font-size:13px;">
-    Not yet integrated into the operator loop. v0.1 ships as a
-    standalone evaluator with 44 tests
+    First integration into the operator loop landed in Sprint 5.24
+    as an observe-only audit hook (see card below). v0.1 of the
+    Governor itself remains a standalone evaluator with 44 tests
     (24 functional + 14 schema + 6 safety) on branch
     <code>trinity/autonomy-governor-v01</code>.
+  </p>
+</div>
+
+<!-- Operator Loop ↔ Governor Observe Hook v0.1 (Sprint 5.24) -->
+<div class="card">
+  <h2>Operator Loop ↔ Governor Observe Hook v0.1</h2>
+  <p>
+    Sprint 5.24 wires the Autonomy Governor into the Useful Compute
+    operator loop as an <strong>audit-only</strong> hook. The hook
+    fires before each of the seven pipeline steps
+    (<code>task_builder → worker → replay_validator →
+    governance_gate → reward_budget_policy → payment_proposal →
+    payment_draft</code>) and writes a deterministic
+    <code>TRINITY_AUTONOMY_GOVERNOR_DECISION_*.json</code> for every
+    consultation.
+  </p>
+  <ul>
+    <li><strong>Opt-in.</strong> No <code>--governor-policy</code>
+        flag = the loop runs byte-for-byte identical to Sprint 5.22d.
+        Adding the flag enables the hook; an optional
+        <code>--governor-decisions-dir</code> redirects the JSONs
+        within <code>--out-dir</code>.</li>
+    <li><strong>Policy sha pinned at boot.</strong>
+        <code>operator_run.json</code> persists
+        <code>governor_policy_sha256</code> +
+        <code>governor_policy_path_basename</code>. The absolute
+        path is never written (same privacy rule as the
+        <code>request_json</code> import in Sprint 5.22).</li>
+    <li><strong>Two hard-block reasons exit rc=3:</strong>
+        <code>halt_file_present</code> and
+        <code>policy_mutated_at_runtime</code>. Every other
+        allowed=false is recorded plus warned, but the loop
+        proceeds — v0.1 is an audit trail, not a veto layer.</li>
+    <li><strong>Resume safety.</strong> Re-running with
+        <code>--resume</code> when the policy file's sha256 has
+        changed since the original boot is refused with
+        <code>ValueError</code> (rc=2). The recorded
+        <code>governor_policy_sha256</code> on disk is left intact.</li>
+    <li><strong>No subprocess.</strong> The hook loads the Governor
+        through the loop's existing <code>_load_sibling()</code>
+        helper. A pytest with patched <code>subprocess.run</code> /
+        <code>Popen</code> fails loudly on regression.</li>
+    <li><strong>New action <code>pipeline_step</code>.</strong>
+        Added to the Governor's <code>KNOWN_ACTIONS</code> with
+        threat refs <code>T15 · T16 · T17</code> (audit-log
+        tampering · governance bypass · budget cap bypass — the
+        three SECURITY.md entries an audit hook is positioned to
+        surface).</li>
+    <li><strong>Schema extension is backwards-compatible.</strong>
+        Four new optional fields on the operator-run schema
+        (<code>governor_enabled</code>,
+        <code>governor_policy_sha256</code>,
+        <code>governor_policy_path_basename</code>,
+        <code>governor_decisions_count</code>) plus
+        <code>artifacts.governor_decisions</code>. The
+        <code>schema</code> string is unchanged
+        (<code>trinity-useful-compute-operator-run/v0.1</code>).</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch
+    <code>trinity/operator-loop-governor-observe-hook-v01</code>;
+    96 / 96 tests green on the deployment host (33 governor + 16
+    governor-schema + 11 operator-loop hook + 13 operator-loop
+    safety + 23 operator-loop functional). Pure scripts + schemas +
+    docs + tests merge: zero <code>src/</code>, zero consensus,
+    zero wallet / payment / broadcast changes.
   </p>
 </div>
 
