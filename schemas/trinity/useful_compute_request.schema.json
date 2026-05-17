@@ -151,6 +151,90 @@
               "pattern": "^[0-9a-f]{64}$"
             }
           }
+        },
+        "scientific_reader_manifest": {
+          "type": "object",
+          "description": "Sprint 5.30 — mirror of the Sprint 5.29 intake reader metadata, projected down to the subset downstream consumers (workers, operators, dashboards) need. Never includes raw extracted text; never includes absolute paths. Optional: legacy task builders that pre-date Sprint 5.30 omit this field, and the request still validates.",
+          "required": [
+            "documents_count",
+            "combined_context_sha256",
+            "reader_kind_counts",
+            "reader_status_counts",
+            "documents",
+            "intake_warnings"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "documents_count": { "type": "integer", "minimum": 0 },
+            "combined_context_sha256": {
+              "type": "string", "pattern": "^[0-9a-f]{64}$"
+            },
+            "reader_kind_counts": {
+              "type": "object",
+              "additionalProperties": { "type": "integer", "minimum": 0 },
+              "properties": {}
+            },
+            "reader_status_counts": {
+              "type": "object",
+              "additionalProperties": { "type": "integer", "minimum": 0 },
+              "properties": {}
+            },
+            "documents": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "path_basename",
+                  "sha256",
+                  "reader_kind",
+                  "reader_status",
+                  "extracted_text_sha256",
+                  "structured_summary",
+                  "warnings"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "path_basename": {
+                    "type": "string", "minLength": 1, "maxLength": 256
+                  },
+                  "sha256": {
+                    "type": "string", "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "reader_kind": {
+                    "type": "string",
+                    "enum": [
+                      "text", "json", "pdf", "latex", "csv", "unsupported"
+                    ]
+                  },
+                  "reader_status": {
+                    "type": "string",
+                    "enum": [
+                      "ok",
+                      "unsupported_extension",
+                      "unsupported_missing_dependency",
+                      "parse_error"
+                    ]
+                  },
+                  "extracted_text_sha256": {
+                    "type": "string", "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "structured_summary": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "properties": {}
+                  },
+                  "warnings": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+                  }
+                }
+              }
+            },
+            "intake_warnings": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+            }
+          }
         }
       }
     }

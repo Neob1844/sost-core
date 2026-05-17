@@ -406,6 +406,12 @@ def test_intake_path_rejects_legacy_flags(
 def test_request_does_not_copy_document_content(
     tmp_path, builder_mod, intake_mod,
 ):
+    """Document BODY must never leak into the request. The basename
+    IS deliberately carried into the Sprint 5.30 reader manifest
+    (it's a public identifier, not a secret), so this test only
+    bans the body and the body-preview. See
+    test_request_reader_manifest_only_contains_safe_fields below
+    for the positive contract."""
     doc = _write_doc(
         tmp_path / "secret.md",
         "SECRET-MAGIC-STRING-DO-NOT-LEAK abc def 123",
@@ -420,9 +426,12 @@ def test_request_does_not_copy_document_content(
     raw = out.read_text(encoding="utf-8")
     # Document body must not leak into the request.
     assert "SECRET-MAGIC-STRING-DO-NOT-LEAK" not in raw
-    # path_basename / text_preview must not leak either.
+    # text_preview is the body-preview from the intake; that
+    # must not leak either.
     assert "text_preview" not in raw
-    assert "path_basename" not in raw
+    # extracted_text_preview is the Sprint 5.29 reader preview;
+    # also must not leak.
+    assert "extracted_text_preview" not in raw
 
 
 def test_request_does_not_leak_absolute_path(

@@ -1557,6 +1557,76 @@
   </p>
 </div>
 
+<!-- Task Builder Reader Metadata v0.1 (Sprint 5.30) -->
+<div class="card">
+  <h2>Task Builder Reader Metadata v0.1</h2>
+  <p>
+    Sprint 5.30 carries the Sprint 5.29 reader metadata across
+    the Useful Compute boundary. The
+    <code>useful_compute_task_builder.py</code> --from-scientific-intake
+    bridge now writes a new
+    <code>metadata.scientific_reader_manifest</code> block into
+    the request, with per-document
+    <code>reader_kind</code> / <code>reader_status</code> /
+    <code>extracted_text_sha256</code> /
+    <code>structured_summary</code>, plus
+    <code>reader_kind_counts</code> and
+    <code>reader_status_counts</code> roll-ups. Workers, queue
+    runner, dashboard and operator can now SEE the reader
+    breakdown without re-opening the intake artifact.
+  </p>
+  <ul>
+    <li><strong>No raw extracted text in the request.</strong>
+        Only its sha256, the basename, and bounded structured
+        summary fields. A regression test poisons a document
+        body with a sentinel and asserts neither the body nor
+        any preview reaches the request JSON.</li>
+    <li><strong>No absolute paths.</strong> Only basenames.
+        Tested by creating a queue at a recognisable absolute
+        path and asserting the full prefix never appears in
+        the request.</li>
+    <li><strong>Reader-sensitivity already in
+        <code>compute_output_sha256</code>.</strong> Sprint 5.29
+        made <code>combined_context_sha256</code> sensitive to
+        <code>extracted_text_sha256</code> + <code>reader_status</code>.
+        Sprint 5.21's bridge uses that as
+        <code>input_bundle_sha256</code>. The worker derives
+        <code>compute_output_sha256</code> from
+        <code>input_bundle_sha256</code>. So changing a document
+        body now changes the worker's output hash end-to-end —
+        verified by a regression test that mutates a .md file
+        between two intake → builder → worker runs.</li>
+    <li><strong>Schema additive only.</strong> The new
+        <code>scientific_reader_manifest</code> property lives
+        under <code>metadata</code> alongside the Sprint 5.21
+        <code>scientific_intake</code> block. The request
+        schema <code>$id</code> is unchanged
+        (<code>trinity-useful-compute-request/v0.1</code>) — a
+        pre-Sprint-5.30 request without the field still
+        validates.</li>
+    <li><strong>Carries intake warnings forward.</strong>
+        The intake's top-level <code>warnings</code> list
+        (Sprint 5.29 includes PDF missing-dependency warnings
+        there) is mirrored into
+        <code>scientific_reader_manifest.intake_warnings</code>,
+        so a dashboard reading only the request still sees
+        them.</li>
+    <li><strong>Worker silent on the manifest.</strong> The
+        worker's pre-Sprint-5.30 validation of
+        <code>metadata.scientific_intake</code> is unchanged;
+        the new sibling field is allowed but not required by
+        worker logic. The request schema does the structural
+        checking.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/task-builder-reader-metadata-v01</code>.
+    13 new tests + 1 narrowed existing test, all green on the
+    deployment host alongside the prior 1191. Pure
+    scripts + schemas + docs + tests merge: zero <code>src/</code>,
+    zero consensus, zero wallet / payment / broadcast changes.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>

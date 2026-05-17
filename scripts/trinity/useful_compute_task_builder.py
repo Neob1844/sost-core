@@ -173,6 +173,84 @@ def _make_intake_public_description(intake: Dict[str, Any]) -> str:
     return desc[:512]
 
 
+# ---------------------------------------------------------------------------
+# Sprint 5.30 — reader manifest bridge
+# ---------------------------------------------------------------------------
+
+_EMPTY_SHA256 = (
+    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+)
+
+
+def _per_doc_reader_record(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Project a Sprint 5.29 intake document down to the subset of
+    fields downstream consumers (workers, operators, dashboards)
+    actually need. Tolerates pre-5.29 intakes by defaulting the
+    reader fields to "text" / "ok" / empty hash so the request
+    schema still validates."""
+    summary = doc.get("structured_summary")
+    if not isinstance(summary, dict):
+        summary = {}
+    warnings = doc.get("warnings")
+    if not isinstance(warnings, list):
+        warnings = []
+    extracted = doc.get("extracted_text_sha256")
+    if not (isinstance(extracted, str) and len(extracted) == 64):
+        extracted = _EMPTY_SHA256
+    return {
+        "path_basename": doc.get("path_basename", ""),
+        "sha256":        doc.get("sha256", ""),
+        "reader_kind":   doc.get("reader_kind", "text"),
+        "reader_status": doc.get("reader_status", "ok"),
+        "extracted_text_sha256": extracted,
+        "structured_summary": summary,
+        "warnings": [
+            str(w)[:512] for w in warnings if isinstance(w, str)
+        ],
+    }
+
+
+def _build_reader_manifest(intake: Dict[str, Any]) -> Dict[str, Any]:
+    """Build the Sprint 5.30 scientific_reader_manifest block from a
+    Sprint 5.29 (or pre-5.29) intake artifact. Records:
+      - documents_count + combined_context_sha256 (mirrored from
+        the intake so consumers can cross-check without loading
+        the intake JSON);
+      - per-document basename + raw sha + reader_kind +
+        reader_status + extracted_text_sha256 +
+        structured_summary + per-document warnings;
+      - reader_kind_counts and reader_status_counts roll-ups.
+    Never includes the raw extracted text. Never includes any
+    absolute path. Deterministic: documents preserve the intake's
+    order (the intake itself sorts them by sha256)."""
+    raw_docs = intake.get("documents") or []
+    docs = [_per_doc_reader_record(d) for d in raw_docs]
+    kind_counts: Dict[str, int] = {}
+    status_counts: Dict[str, int] = {}
+    for d in docs:
+        kind_counts[d["reader_kind"]] = (
+            kind_counts.get(d["reader_kind"], 0) + 1
+        )
+        status_counts[d["reader_status"]] = (
+            status_counts.get(d["reader_status"], 0) + 1
+        )
+    intake_warnings = intake.get("warnings")
+    if not isinstance(intake_warnings, list):
+        intake_warnings = []
+    return {
+        "documents_count": int(intake.get("documents_count", len(docs))),
+        "combined_context_sha256": intake.get(
+            "combined_context_sha256", _EMPTY_SHA256,
+        ),
+        "reader_kind_counts": dict(sorted(kind_counts.items())),
+        "reader_status_counts": dict(sorted(status_counts.items())),
+        "documents": docs,
+        "intake_warnings": [
+            str(w)[:512] for w in intake_warnings if isinstance(w, str)
+        ],
+    }
+
+
 def build_request(
     *,
     source_tool: str,
@@ -401,7 +479,16 @@ def main(argv: Optional[List[str]] = None) -> int:
                 "documents_count":        int(intake["documents_count"]),
                 "intake_task_kind":       args.intake_task_kind,
                 "intake_artifact_sha256": intake_artifact_sha,
-            }
+            },
+            # Sprint 5.30 — reader metadata bridge. The intake script
+            # (Sprint 5.29) records reader_kind / reader_status /
+            # extracted_text_sha256 / structured_summary per document.
+            # We mirror that here, augmented with two roll-up
+            # counters, so workers and operators can audit reader
+            # coverage without re-reading the intake artifact.
+            # NO full extracted text is copied; only basenames,
+            # hashes, summaries and per-doc warnings.
+            "scientific_reader_manifest": _build_reader_manifest(intake),
         }
         try:
             req = build_request(
