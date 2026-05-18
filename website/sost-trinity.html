@@ -581,7 +581,7 @@ python3 scripts/trinity/verify_trinity_registry.py TRINITY_PROOF_REGISTRY.json</
     </div>
 
     <div class="green-box" style="font-size:14px;margin-top:18px">
-      <b>Status as of Sprint 5.18d:</b> the sixteen sprints (5.6 &rarr; 5.18d) land as <b>808+ trinity tests PASS</b> plus a C++ <code>T_FEE_SIZE_*</code> suite that pins the consensus fee/size invariant. The first end-to-end on-chain payment was confirmed in block&nbsp;#8512 (2026-05-13). Every on-chain event still requires an explicit operator token and never auto-loops.
+      <b>Status as of Sprint 5.40:</b> the on-chain narrative was closed at Sprint 5.18d (16 sprints, first end-to-end on-chain payment confirmed in block&nbsp;#8512, 2026-05-13). Twenty-two further sprints (5.19 &rarr; 5.40) extended Trinity off-chain in three tracks: <b>operational autonomy + scientific intake + first real_backend (5.19&nbsp;&rarr;&nbsp;5.32)</b>, <b>result surfacing + materials cache + worker onboarding + dashboard surfacing (5.33&nbsp;&rarr;&nbsp;5.36)</b>, and <b>external worker trial pack + queue autopilot + daily report + sprint release runner (5.37&nbsp;&rarr;&nbsp;5.40)</b>. Combined footprint as of Sprint 5.40: <b>48 trinity scripts &middot; 27 strict schemas &middot; 32 docs &middot; 1518 trinity tests PASS</b>, plus the C++ <code>T_FEE_SIZE_*</code> suite that pins the consensus fee/size invariant. Every on-chain event still requires an explicit operator token and never auto-loops; zero new on-chain capability has been added since 5.18d.
     </div>
 
     <!-- ════════════════════════════════════════════════════════════ -->
@@ -978,7 +978,7 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
       <tr>
         <td class="k">5.16</td>
         <td>Signed payment draft v0.1: unsigned-only / dry-sign modes, no real signing, no broadcast. Pre-argparse argv scan rejects every broadcast-style flag with exit code 2.</td>
-        <td style="color:var(--green)">SHIPPED &middot; 663/663 trinity tests PASS</td>
+        <td style="color:var(--green)">SHIPPED &middot; 1518 trinity tests PASS (as of Sprint 5.40)</td>
       </tr>
       <tr>
         <td class="k">5.17</td>
