@@ -1,0 +1,220 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-v13-binary-preflight-report/v0.1",
+  "title": "Trinity V13 Binary Preflight Report v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "report_id",
+    "pinned_time",
+    "preflight_id",
+    "rc_id",
+    "repo_root_basename",
+    "build_dir_basename",
+    "git",
+    "configs",
+    "binaries",
+    "tests",
+    "options",
+    "sha256sums_written",
+    "ready_to_build",
+    "ready_to_release",
+    "warnings",
+    "safety_status",
+    "safety_flags"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-v13-binary-preflight-report/v0.1"
+    },
+    "report_id": {
+      "type": "string",
+      "pattern": "^v13bpf-[0-9a-f]{16}$"
+    },
+    "pinned_time":          {"type": "string", "minLength": 10, "maxLength": 64},
+    "preflight_id": {
+      "type": "string",
+      "pattern": "^v13-rc[0-9]+-preflight-v[0-9]+$"
+    },
+    "rc_id": {
+      "type": "string",
+      "pattern": "^v13-rc[0-9]+$"
+    },
+    "repo_root_basename":   {"type": "string", "minLength": 1, "maxLength": 128},
+    "build_dir_basename":   {"type": "string", "maxLength": 128},
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "head_commit", "head_commit_short",
+        "min_commit", "min_commit_short",
+        "head_matches_min_commit",
+        "current_branch", "tracked_dirty"
+      ],
+      "properties": {
+        "head_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "head_commit_short": {"type": "string", "maxLength": 16},
+        "min_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "min_commit_short": {"type": "string", "maxLength": 16},
+        "head_matches_min_commit": {"type": "boolean"},
+        "current_branch":   {"type": "string", "minLength": 1, "maxLength": 200},
+        "tracked_dirty":    {"type": "boolean"}
+      }
+    },
+    "configs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "v13_binary_preflight_loaded",
+        "v13_activation_loaded",
+        "v13_release_candidate_loaded"
+      ],
+      "properties": {
+        "v13_binary_preflight_loaded":   {"type": "boolean"},
+        "v13_activation_loaded":         {"type": "boolean"},
+        "v13_release_candidate_loaded":  {"type": "boolean"}
+      }
+    },
+    "binaries": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "present", "size_bytes", "sha256"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["sost-node", "sost-miner", "sost-cli"]
+          },
+          "present": {"type": "boolean"},
+          "size_bytes": {
+            "type": ["integer", "null"],
+            "minimum": 0
+          },
+          "sha256": {
+            "type": ["string", "null"],
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pytest", "ctest"],
+      "properties": {
+        "pytest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ran", "target", "returncode", "passed", "failed", "skipped", "errors", "summary"],
+          "properties": {
+            "ran":        {"type": "boolean"},
+            "target":     {"type": "string", "maxLength": 200},
+            "returncode": {"type": "integer", "minimum": -1, "maximum": 255},
+            "passed":     {"type": "integer", "minimum": 0},
+            "failed":     {"type": "integer", "minimum": 0},
+            "skipped":    {"type": "integer", "minimum": 0},
+            "errors":     {"type": "integer", "minimum": 0},
+            "summary":    {"type": "string", "maxLength": 300}
+          }
+        },
+        "ctest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ran", "tests"],
+          "properties": {
+            "ran":   {"type": "boolean"},
+            "tests": {
+              "type": "array",
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "name", "ran", "returncode", "status"],
+                "properties": {
+                  "id":         {"type": "string", "minLength": 1, "maxLength": 64},
+                  "name":       {"type": "string", "minLength": 1, "maxLength": 64},
+                  "ran":        {"type": "boolean"},
+                  "returncode": {"type": "integer", "minimum": -1, "maximum": 255},
+                  "status": {
+                    "type": "string",
+                    "enum": ["pass", "fail", "missing", "skipped"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "require_binaries",
+        "run_tests",
+        "run_ctest",
+        "write_sha256sums"
+      ],
+      "properties": {
+        "require_binaries":  {"type": "boolean"},
+        "run_tests":         {"type": "boolean"},
+        "run_ctest":         {"type": "boolean"},
+        "write_sha256sums":  {"type": "boolean"}
+      }
+    },
+    "sha256sums_written":  {"type": "boolean"},
+    "ready_to_build":      {"type": "boolean"},
+    "ready_to_release":    {"type": "boolean"},
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1, "maxLength": 500}
+    },
+    "safety_status": {
+      "type": "string",
+      "enum": ["ok", "warning", "failed"]
+    },
+    "safety_flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "no_wallet_access",
+        "no_private_key_access",
+        "no_signing",
+        "no_broadcast",
+        "no_release_upload",
+        "no_network_required",
+        "no_auto_restart",
+        "no_ethereum_deploy",
+        "no_destructive_git",
+        "no_shell_true",
+        "no_make_invocation",
+        "no_cmake_invocation"
+      ],
+      "properties": {
+        "no_wallet_access":       {"type": "boolean", "const": true},
+        "no_private_key_access":  {"type": "boolean", "const": true},
+        "no_signing":             {"type": "boolean", "const": true},
+        "no_broadcast":           {"type": "boolean", "const": true},
+        "no_release_upload":      {"type": "boolean", "const": true},
+        "no_network_required":    {"type": "boolean", "const": true},
+        "no_auto_restart":        {"type": "boolean", "const": true},
+        "no_ethereum_deploy":     {"type": "boolean", "const": true},
+        "no_destructive_git":     {"type": "boolean", "const": true},
+        "no_shell_true":          {"type": "boolean", "const": true},
+        "no_make_invocation":     {"type": "boolean", "const": true},
+        "no_cmake_invocation":    {"type": "boolean", "const": true}
+      }
+    }
+  }
+}

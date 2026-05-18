@@ -1,0 +1,93 @@
+{
+  "schema": "sost-v13-binary-preflight/v0.1",
+  "preflight_id": "v13-rc1-preflight-v01",
+  "pinned_time": "2026-05-18T14:00:00+00:00",
+
+  "rc_id":                 "v13-rc1",
+  "activation_height":     12000,
+  "min_commit":             "d604aafafd65dcb90c34fa5845bedee8038daffc",
+  "expected_tag":          "v13-rc1-preflight-v01",
+
+  "required_binaries": [
+    {
+      "name":   "sost-node",
+      "relative_path": "sost-node",
+      "purpose": "validator + RPC + chain state"
+    },
+    {
+      "name":   "sost-miner",
+      "relative_path": "sost-miner",
+      "purpose": "wallet-bound SbPoW miner"
+    },
+    {
+      "name":   "sost-cli",
+      "relative_path": "sost-cli",
+      "purpose": "operator-side CLI (createtx, sendrawtransaction, ...)"
+    }
+  ],
+
+  "required_tests": [
+    {
+      "id":   "trinity_pytest",
+      "kind": "pytest",
+      "target": "tests/trinity/",
+      "purpose": "every off-chain Trinity test (~1642) must pass before V13 RC1 binary cut"
+    },
+    {
+      "id":   "casert_v13_ceiling",
+      "kind": "ctest",
+      "name": "casert-v13-ceiling",
+      "purpose": "validator + controller H35 ceiling correctly gated at V13_HEIGHT (boundary 11999 / 12000 / 12001)"
+    },
+    {
+      "id":   "casert_v12_ceiling",
+      "kind": "ctest",
+      "name": "casert-v12-ceiling",
+      "purpose": "regression: pre-V13 H20 ceiling unchanged"
+    },
+    {
+      "id":   "casert",
+      "kind": "ctest",
+      "name": "casert",
+      "purpose": "regression: 229 baseline cASERT controller tests"
+    },
+    {
+      "id":   "casert_v11",
+      "kind": "ctest",
+      "name": "casert-v11",
+      "purpose": "regression: V11 triangular cascade, anti-stall, SbPoW seed"
+    }
+  ],
+
+  "git_read_only_verbs": [
+    "rev-parse",
+    "status",
+    "diff",
+    "log",
+    "branch",
+    "ls-files",
+    "rev-list"
+  ],
+
+  "build_dir_hint":           "build-v13-rc1",
+  "operator_must_build_manually":  true,
+  "preflight_does_NOT_run_cmake":  true,
+  "preflight_does_NOT_run_make":   true,
+  "preflight_does_NOT_sign":       true,
+  "preflight_does_NOT_publish":    true,
+
+  "safety": {
+    "no_wallet_access":         true,
+    "no_private_key_access":    true,
+    "no_signing":               true,
+    "no_broadcast":             true,
+    "no_release_upload":        true,
+    "no_network_required":      true,
+    "no_auto_restart":          true,
+    "no_ethereum_deploy":       true,
+    "no_destructive_git":       true,
+    "no_shell_true":            true,
+    "no_make_invocation":       true,
+    "no_cmake_invocation":      true
+  }
+}
