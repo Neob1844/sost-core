@@ -102,5 +102,11 @@ def test_schema_required_set(schema):
         "property_table", "ranking", "score_explanation",
         "limitations", "warnings", "source_request_sha256",
         "classification_id", "marker_hex",
+        # Sprint 5.34 - Materials Project cache fields.
+        "materials_project_cache_used",
+        "materials_project_cache_version",
+        "materials_project_cache_sha256",
+        "materials_project_cache_hits",
+        "materials_project_cache_misses",
     }
     assert set(schema["required"]) == expected

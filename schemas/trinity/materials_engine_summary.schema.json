@@ -94,6 +94,11 @@
     "limitations": {
       "type": "array",
       "items": { "type": "string", "minLength": 1, "maxLength": 512 }
-    }
+    },
+    "materials_project_cache_used":     { "type": "boolean" },
+    "materials_project_cache_version":  { "type": "string", "minLength": 1, "maxLength": 32 },
+    "materials_project_cache_sha256":   { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "materials_project_cache_hit_count":  { "type": "integer", "minimum": 0 },
+    "materials_project_cache_miss_count": { "type": "integer", "minimum": 0 }
   }
 }

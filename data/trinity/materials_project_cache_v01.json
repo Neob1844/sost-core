@@ -1,0 +1,59 @@
+{
+  "cache_generated_at": "2026-05-18T00:00:00+00:00",
+  "cache_sha256": "25b9209b4d872083f35916389548b8f293dc7532ccbe896a75d2b8fd6301ab01",
+  "cache_source_notice": "Local cached reference dataset, NOT a live Materials Project fetch. Values are hand-curated; the cache exists so Trinity Materials Engine can quote provenance hashes without opening a network connection. v0.2 may replace the curated values with a sha-bound export from a real source.",
+  "cache_version": "v0.1",
+  "record_count": 2,
+  "records": [
+    {
+      "aliases": [
+        "CeO2",
+        "ceria",
+        "cerium oxide",
+        "cerium dioxide",
+        "cericoxide"
+      ],
+      "formula_pretty": "CeO2",
+      "material_id": "trinity-mpc-ceria-v01",
+      "properties": {
+        "band_gap": 2.3,
+        "density": 7.22,
+        "energy_above_hull": 0.0,
+        "formation_energy_per_atom": -3.812,
+        "notes": "illustrative; oxygen storage capacity reference from curated literature review, not measurement",
+        "oxygen_storage_capacity_reference": 1.7
+      },
+      "property_hash_sha256": "0e142f5045fe27b87ab89e89616b8cbc08d999f64f5d27c5ef4b5ba91013e07b",
+      "record_sha256": "8f55baab5329ef8279821de09f0d8c294a62073645b48a16ccc3655953eb0126",
+      "source": "cached_materials_project_style_reference",
+      "source_retrieved_at": "manual_curated_v0.1",
+      "source_url_text": "https://next-gen.materialsproject.org/materials/mp-20194"
+    },
+    {
+      "aliases": [
+        "PrOx",
+        "praseodymia",
+        "praseodymium oxide",
+        "Pr6O11",
+        "Pr2O3",
+        "PrO2"
+      ],
+      "formula_pretty": "PrOx",
+      "material_id": "trinity-mpc-prox-v01",
+      "properties": {
+        "band_gap": 1.95,
+        "density": 7.07,
+        "energy_above_hull": 0.012,
+        "formation_energy_per_atom": -3.654,
+        "notes": "illustrative; PrOx is a family of non-stoichiometric praseodymium oxides; properties are an indicative summary for Pr6O11",
+        "oxygen_storage_capacity_reference": 2.3
+      },
+      "property_hash_sha256": "e21288dfee505ca39bc6d6754a4cb967a2a127127669c9e01e8ecabf9794839d",
+      "record_sha256": "9f38d6c049254aa6ccf7a38e7edddad290868da824d523f1ea9b4503822fe5f9",
+      "source": "cached_materials_project_style_reference",
+      "source_retrieved_at": "manual_curated_v0.1",
+      "source_url_text": "https://next-gen.materialsproject.org/materials/mp-1620"
+    }
+  ],
+  "schema": "trinity-materials-project-cache/v0.1"
+}

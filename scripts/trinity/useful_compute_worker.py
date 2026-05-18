@@ -450,6 +450,22 @@ def _build_materials_engine_summary(
         "ranking":             compact_ranking,
         "warnings":            list(output_obj.get("warnings", [])),
         "limitations":         list(output_obj.get("limitations", [])),
+        # Sprint 5.34 - Materials Project cache surfacing in the
+        # summary. The full hits/misses arrays stay in the hashed
+        # output_obj; here we surface just the counters + version
+        # + file sha256 so downstream consumers (operator_run
+        # roll-up, queue dashboard) can show 'N cache hits' at
+        # a glance without loading the full result.
+        "materials_project_cache_used":
+            bool(output_obj.get("materials_project_cache_used", False)),
+        "materials_project_cache_version":
+            str(output_obj.get("materials_project_cache_version", "missing")),
+        "materials_project_cache_sha256":
+            str(output_obj.get("materials_project_cache_sha256", "0" * 64)),
+        "materials_project_cache_hit_count":
+            len(output_obj.get("materials_project_cache_hits", []) or []),
+        "materials_project_cache_miss_count":
+            len(output_obj.get("materials_project_cache_misses", []) or []),
     }
 
 

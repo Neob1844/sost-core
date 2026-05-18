@@ -38,6 +38,7 @@ import hashlib
 import json
 import math
 import time
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
@@ -531,6 +532,180 @@ def _canonical_request_sha256(request: Dict[str, Any]) -> str:
     return hashlib.sha256(blob).hexdigest()
 
 
+# ---------------------------------------------------------------------------
+# Sprint 5.34 - Materials Project cached reference dataset
+# ---------------------------------------------------------------------------
+#
+# LOCAL cache only. The resolver loads the file once at first use,
+# verifies every hash (cache_sha256 over the file, record_sha256
+# per record, property_hash_sha256 per property block) and refuses
+# to serve any record if any hash mismatches. There is NO network
+# fetch, NO live API call, NO child process. The cache exists so the
+# materials_engine result can carry provenance hashes alongside
+# its ranking; v0.1 hand-curated values are clearly labelled in
+# the cache file's cache_source_notice.
+
+_MATERIALS_PROJECT_CACHE_SCHEMA = "trinity-materials-project-cache/v0.1"
+_MATERIALS_PROJECT_CACHE_FILE = (
+    "materials_project_cache_v01.json"
+)
+_materials_project_cache_state: Dict[str, Any] = {
+    "loaded": False,
+    "cache":   None,
+    "alias_index": None,
+    "load_error": None,
+}
+
+
+def _canon_inner(o: Any) -> str:
+    return json.dumps(
+        o, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+    )
+
+
+def _verify_cache_hashes(cache_obj: Dict[str, Any]) -> None:
+    """Raise ValueError if any cache_sha256 / record_sha256 /
+    property_hash_sha256 does not match the canonical content."""
+    # File-level sha256: recompute over the file without the
+    # cache_sha256 field, which is the same way the writer did it.
+    declared_file_sha = cache_obj.get("cache_sha256")
+    body = {k: v for k, v in cache_obj.items() if k != "cache_sha256"}
+    computed_file_sha = hashlib.sha256(
+        _canon_inner(body).encode("utf-8"),
+    ).hexdigest()
+    if declared_file_sha != computed_file_sha:
+        raise ValueError(
+            "materials_project_cache cache_sha256 mismatch: "
+            "declared=" + str(declared_file_sha)
+            + " computed=" + str(computed_file_sha)
+        )
+    for rec in cache_obj.get("records", []):
+        # property_hash_sha256
+        decl_prop = rec.get("property_hash_sha256")
+        comp_prop = hashlib.sha256(
+            _canon_inner(rec["properties"]).encode("utf-8"),
+        ).hexdigest()
+        if decl_prop != comp_prop:
+            raise ValueError(
+                "materials_project_cache property_hash_sha256 "
+                "mismatch for material_id="
+                + str(rec.get("material_id"))
+            )
+        # record_sha256 (excludes itself)
+        decl_rec = rec.get("record_sha256")
+        rec_body = {k: v for k, v in rec.items() if k != "record_sha256"}
+        comp_rec = hashlib.sha256(
+            _canon_inner(rec_body).encode("utf-8"),
+        ).hexdigest()
+        if decl_rec != comp_rec:
+            raise ValueError(
+                "materials_project_cache record_sha256 mismatch "
+                "for material_id=" + str(rec.get("material_id"))
+            )
+
+
+def _load_materials_project_cache() -> Dict[str, Any]:
+    """Lazily load + verify the cache. Cached in
+    _materials_project_cache_state. Returns the cache dict.
+
+    On load failure (file missing, JSON invalid, hash mismatch),
+    returns a sentinel cache with records=[] and load_error set so
+    the resolver can still report cache_miss for everything without
+    crashing the worker."""
+    st = _materials_project_cache_state
+    if st["loaded"]:
+        return st["cache"]
+    # Look in two places: data/trinity/ (repo root) and
+    # config/trinity/ as a future operator-override location.
+    repo_root = Path(__file__).resolve().parents[2]
+    candidates = [
+        repo_root / "data" / "trinity" / _MATERIALS_PROJECT_CACHE_FILE,
+        repo_root / "config" / "trinity" / _MATERIALS_PROJECT_CACHE_FILE,
+    ]
+    cache_path: Optional[Path] = None
+    for c in candidates:
+        if c.exists():
+            cache_path = c
+            break
+
+    if cache_path is None:
+        st["cache"] = {
+            "schema":               _MATERIALS_PROJECT_CACHE_SCHEMA,
+            "cache_version":        "missing",
+            "cache_generated_at":   "missing",
+            "cache_source_notice":  "cache file not found on disk",
+            "record_count":         0,
+            "records":              [],
+            "cache_sha256":         "0" * 64,
+        }
+        st["alias_index"] = {}
+        st["load_error"]  = "cache file not found"
+        st["loaded"]      = True
+        return st["cache"]
+
+    try:
+        with open(cache_path, "r", encoding="utf-8") as f:
+            obj = json.load(f)
+        if not isinstance(obj, dict):
+            raise ValueError("cache top-level is not a JSON object")
+        if obj.get("schema") != _MATERIALS_PROJECT_CACHE_SCHEMA:
+            raise ValueError(
+                "cache schema mismatch: " + repr(obj.get("schema"))
+            )
+        _verify_cache_hashes(obj)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        st["cache"] = {
+            "schema":               _MATERIALS_PROJECT_CACHE_SCHEMA,
+            "cache_version":        "load_error",
+            "cache_generated_at":   "load_error",
+            "cache_source_notice":  "cache load failed: " + str(exc)[:200],
+            "record_count":         0,
+            "records":              [],
+            "cache_sha256":         "0" * 64,
+        }
+        st["alias_index"] = {}
+        st["load_error"]  = str(exc)[:200]
+        st["loaded"]      = True
+        return st["cache"]
+
+    alias_index: Dict[str, Dict[str, Any]] = {}
+    for rec in obj.get("records", []):
+        for a in [rec.get("formula_pretty", "")] + list(
+            rec.get("aliases", []) or [],
+        ):
+            if isinstance(a, str) and a:
+                alias_index[a.lower()] = rec
+
+    st["cache"]       = obj
+    st["alias_index"] = alias_index
+    st["load_error"]  = None
+    st["loaded"]      = True
+    return st["cache"]
+
+
+def _resolve_material_in_cache(label: str) -> Optional[Dict[str, Any]]:
+    """Return the cache record matching `label` (case-insensitive
+    alias lookup) or None on miss."""
+    if not isinstance(label, str) or not label:
+        return None
+    _load_materials_project_cache()
+    return _materials_project_cache_state["alias_index"].get(label.lower())
+
+
+def materials_project_cache_info() -> Dict[str, Any]:
+    """Read-only introspection: load + return small descriptor of
+    the loaded cache. Useful for tests + the dashboard."""
+    c = _load_materials_project_cache()
+    st = _materials_project_cache_state
+    return {
+        "cache_version":  c.get("cache_version", "missing"),
+        "cache_sha256":   c.get("cache_sha256", "0" * 64),
+        "record_count":   int(c.get("record_count", 0)),
+        "alias_count":    len(st["alias_index"] or {}),
+        "load_error":     st.get("load_error"),
+    }
+
+
 def _materials_engine_v01(
     seed64: int, request: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -675,6 +850,45 @@ def _materials_engine_v01(
         + _MATERIALS_ENGINE_BACKEND_NAME + "."
     )
 
+    # Sprint 5.34 - Materials Project cache resolution. For every
+    # material the classifier asked about (known + unknown to the
+    # curated table), try to find a cached reference record. Cache
+    # hits attach provenance fields (material_id + record_sha256 +
+    # property_hash_sha256) to the result; cache misses are
+    # recorded but never block. The cache is loaded + hash-verified
+    # at module import time; here we just consult the in-memory
+    # alias index. Both workers see the same cache file on disk
+    # (same bytes, same sha256, same alias resolution), so adding
+    # these fields keeps compute_output_sha256 cross-worker stable.
+    cache_info = materials_project_cache_info()
+    cache_hits: List[Dict[str, Any]] = []
+    cache_misses: List[str] = []
+    for m in candidate_materials:
+        rec = _resolve_material_in_cache(m)
+        if rec is None:
+            if m not in cache_misses:
+                cache_misses.append(m)
+            continue
+        cache_hits.append({
+            "query":                m,
+            "material_id":          rec.get("material_id", ""),
+            "formula_pretty":       rec.get("formula_pretty", ""),
+            "source":               rec.get("source", ""),
+            "source_url_text":      rec.get("source_url_text", ""),
+            "source_retrieved_at":  rec.get("source_retrieved_at", ""),
+            "record_sha256":        rec.get("record_sha256", ""),
+            "property_hash_sha256": rec.get("property_hash_sha256", ""),
+        })
+    if cache_info.get("load_error"):
+        warnings.append(
+            "materials_project_cache load_error: "
+            + str(cache_info["load_error"])
+        )
+        limitations.append(
+            "materials_project_cache_used=false; no provenance "
+            "anchors attached this run."
+        )
+
     return {
         "schema": _MATERIALS_ENGINE_SCHEMA,
         "backend": "materials_engine",
@@ -694,6 +908,15 @@ def _materials_engine_v01(
         "source_request_sha256": _canonical_request_sha256(request),
         "classification_id": classification_id,
         "marker_hex": "%016x" % (seed64 & ((1 << 64) - 1)),
+        # Sprint 5.34 cache surfacing.
+        "materials_project_cache_used":
+            cache_info.get("load_error") is None,
+        "materials_project_cache_version":
+            cache_info.get("cache_version", "missing"),
+        "materials_project_cache_sha256":
+            cache_info.get("cache_sha256", "0" * 64),
+        "materials_project_cache_hits":   cache_hits,
+        "materials_project_cache_misses": cache_misses,
     }
 
 

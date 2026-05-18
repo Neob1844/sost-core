@@ -268,6 +268,15 @@ def _per_item_audit(
                 # also happens to be deterministic).
                 materials_engine_top_material = str(mtop[0])[:64]
 
+    # Sprint 5.34 - additional per-item surfacing:
+    # materials_project_cache_hits / misses (Sprint 5.34 backend)
+    # plus workers_seen + worker_ids_truncated (always available
+    # from the worker_out walk).
+    materials_project_cache_hits  = 0
+    materials_project_cache_misses = 0
+    workers_seen = 0
+    worker_ids_truncated: List[str] = []
+
     # Cross-check + fall-back: walk per-worker result files to
     # populate the per-item known / unknown / warnings counts
     # which are NOT in the operator_run roll-up.
@@ -281,6 +290,12 @@ def _per_item_audit(
             w_obj = _read_json(wp)
             if w_obj is None:
                 continue
+            workers_seen += 1
+            wid = w_obj.get("worker_id")
+            if isinstance(wid, str) and wid:
+                truncated = wid[:32]
+                if truncated not in worker_ids_truncated:
+                    worker_ids_truncated.append(truncated)
             s = w_obj.get("materials_engine_summary")
             if not isinstance(s, dict):
                 continue
@@ -306,6 +321,17 @@ def _per_item_audit(
                 )
             if materials_engine_summary_count == 0:
                 materials_engine_summary_count += 1
+            # Sprint 5.34 - cache hit/miss counts. Use max() so two
+            # workers reporting identical hit counts converge to
+            # the same number; if they ever disagreed (shouldn't,
+            # cache is deterministic) we surface the larger
+            # because that's the floor of work that was done.
+            mphc = s.get("materials_project_cache_hit_count")
+            mpmc = s.get("materials_project_cache_miss_count")
+            if isinstance(mphc, int) and mphc > materials_project_cache_hits:
+                materials_project_cache_hits = mphc
+            if isinstance(mpmc, int) and mpmc > materials_project_cache_misses:
+                materials_project_cache_misses = mpmc
 
     return {
         "queue_item_id": item_id,
@@ -321,6 +347,11 @@ def _per_item_audit(
         "materials_engine_known_count": materials_engine_known_count,
         "materials_engine_unknown_count": materials_engine_unknown_count,
         "materials_engine_warnings_count": materials_engine_warnings_count,
+        # Sprint 5.34 fields
+        "materials_project_cache_hits":   materials_project_cache_hits,
+        "materials_project_cache_misses": materials_project_cache_misses,
+        "workers_seen":                   workers_seen,
+        "worker_ids_truncated":           worker_ids_truncated,
     }
 
 
@@ -568,6 +599,8 @@ def render_html(dashboard: Dict[str, Any]) -> str:
             "<th>governor_decisions</th>"
             "<th>watchdog</th>"
             "<th>materials_engine</th>"
+            "<th>materials_cache</th>"
+            "<th>workers</th>"
             "<th>operator_run</th>"
             "<th>watchdog_report</th>"
             "</tr></thead>"
@@ -599,6 +632,34 @@ def render_html(dashboard: Dict[str, Any]) -> str:
                 )
             else:
                 me_inner = _e("-")
+            # Sprint 5.34 cells.
+            mp_hits   = it.get("materials_project_cache_hits", 0) or 0
+            mp_misses = it.get("materials_project_cache_misses", 0) or 0
+            if mp_hits > 0 or mp_misses > 0:
+                mp_inner = (
+                    "<span style='color:#7dd3fc;font-weight:600'>"
+                    + _e(mp_hits) + " hit"
+                    + ("s" if mp_hits != 1 else "")
+                    + "</span>"
+                    + " <span class='meta'>"
+                    + "(" + _e(mp_misses) + " miss"
+                    + ("es" if mp_misses != 1 else "")
+                    + ")</span>"
+                )
+            else:
+                mp_inner = _e("-")
+            wkn = it.get("workers_seen", 0) or 0
+            wks = it.get("worker_ids_truncated") or []
+            if wkn > 0:
+                wkr_inner = (
+                    "<span style='font-weight:600'>"
+                    + _e(wkn) + "</span>"
+                    + " <span class='meta'>("
+                    + _e(", ".join(wks))
+                    + ")</span>"
+                )
+            else:
+                wkr_inner = _e("-")
             lines.append("<tr>")
             lines.append(
                 "<td class='id'>" + _e(it["queue_item_id"]) + "</td>"
@@ -611,6 +672,8 @@ def render_html(dashboard: Dict[str, Any]) -> str:
             )
             lines.append("<td>" + wd_cell + "</td>")
             lines.append("<td>" + me_inner + "</td>")
+            lines.append("<td>" + mp_inner + "</td>")
+            lines.append("<td>" + wkr_inner + "</td>")
             lines.append(
                 "<td class='id'>"
                 + _e(it["operator_run_path_basename"] or "-")
