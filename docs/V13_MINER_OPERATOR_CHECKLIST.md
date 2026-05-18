@@ -8,6 +8,40 @@ If you only read one thing, read this checklist. Run through every box before bl
 
 ---
 
+## 0. Upgrade window — blocks 11,900 → 11,999
+
+```
+[ ] I will swap to the V13 binary AND activate NTP within the
+    100-block window 11,900 -> 11,999, NOT after.
+
+    Block 11,900 is the START of the recommended upgrade window
+    (~18 hours before activation; room for a full sleep cycle).
+
+    Block 11,999 is the LAST safe block. Activation lands at
+    12,000; from that block on, any candidate I mine on the
+    pre-V13 binary is on a stale rule set, and any candidate I
+    mine on a clock more than 10 s ahead of true time is
+    rejected by every validator.
+
+[ ] Recommended sequence inside the window:
+        1) stop my miner
+        2) verify the downloaded binaries against the signed
+           SHA256SUMS (see section A) and against the SOST
+           release key fingerprint
+           41B1A46E626064AB524CB99EB6B9E2852AE41A04
+        3) swap the binary
+        4) confirm NTP (section C)
+        5) restart miner with my existing
+           --wallet + --mining-key-label
+
+[ ] I am NOT waiting until block 12,000 to start the upgrade.
+    "Just in time" at 12,000 means my first few candidate
+    blocks after activation may be rejected while I'm still
+    swapping.
+```
+
+---
+
 ## A. Binary
 
 ```

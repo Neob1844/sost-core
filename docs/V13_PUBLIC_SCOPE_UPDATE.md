@@ -132,13 +132,20 @@ A clock that is **behind** true time is **fine**. The drift cap only rejects blo
 
 ## 7. Miner operator checklist (short form)
 
-Before block 12,000:
+**Upgrade window: blocks 11,900 → 11,999** (the 100 blocks immediately before activation, ~18 hours at the target block time). Do the work inside this window, NOT at block 12,000 — by then any candidate you mine on the pre-V13 binary or on a clock more than 10 s ahead of true time is already rejected.
 
-1. **Upgrade your binary to a V13-aware build** — once the release operator publishes the signed binaries (`release_status` moves from `signed_metadata_only` to `signed_and_published`), download from the announced URL, run `sha256sum -c SHA256SUMS` and `gpg --verify SHA256SUMS.asc SHA256SUMS` against the SOST release public key (primary fingerprint `41B1A46E626064AB524CB99EB6B9E2852AE41A04`).
-2. **Configure NTP** (see §6).
-3. **Keep your SbPoW wallet + mining-key-label** — V13 introduces no wallet migration. Pool topologies that delegate work without sharing the mining key remain unworkable, exactly as they were since SbPoW activated at block 7,100.
-4. **(Optional) Drop a signed `notices.json` under `<datadir>/`** if you want to surface operator-signed Beacon advisory notices at startup.
-5. **Do NOT expect** PoPC, the SOSTEscrow auto-bridge, or Gold Vault governance at block 12,000 — those are V14 scope.
+Recommended sequence inside the window:
+
+1. **Stop your miner.**
+2. **Upgrade your binary to a V13-aware build** — once the release operator publishes the signed binaries (`release_status` moves from `signed_metadata_only` to `signed_and_published`), download from the announced URL, run `sha256sum -c SHA256SUMS` and `gpg --verify SHA256SUMS.asc SHA256SUMS` against the SOST release public key (primary fingerprint `41B1A46E626064AB524CB99EB6B9E2852AE41A04`).
+3. **Configure NTP** (see §6). Both `timedatectl` output lines must be green.
+4. **Restart miner with your existing `--wallet` + `--mining-key-label`** — V13 introduces no wallet migration. Pool topologies that delegate work without sharing the mining key remain unworkable, exactly as they were since SbPoW activated at block 7,100.
+5. **(Optional) Drop a signed `notices.json` under `<datadir>/`** if you want to surface operator-signed Beacon advisory notices at startup.
+
+After the swap:
+
+6. **Do NOT expect** PoPC, the SOSTEscrow auto-bridge, or Gold Vault governance at block 12,000 — those are V14 scope.
+7. **Watch block 12,000 land.** Your first post-activation candidates confirm everything is in order. If any get rejected, the most likely cause is NTP drift — re-run `timedatectl` and fix the clock; the next candidate will succeed.
 
 After block 12,000:
 
