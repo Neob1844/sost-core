@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-v13-release-candidate-report/v0.1",
+  "title": "Trinity V13 Release Candidate Report v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "report_id",
+    "pinned_time",
+    "repo_root_basename",
+    "config_loaded",
+    "public_mirror_loaded",
+    "rc_id",
+    "activation_heights",
+    "min_commit",
+    "required_binary_label",
+    "ntp_required",
+    "future_timestamp_drift_seconds_post_v13",
+    "dtd_lottery_cooldown_post_v13",
+    "confirmed_items_ready",
+    "fallback_v15_items",
+    "docs_present",
+    "docs_mention_block_12000",
+    "docs_mention_ntp_10s",
+    "docs_mention_dtd_decision_12100",
+    "docs_mention_fallback_v15",
+    "public_mirror_matches_safe_fields",
+    "rc_ready",
+    "warnings",
+    "safety_status",
+    "safety_flags"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-v13-release-candidate-report/v0.1"
+    },
+    "report_id": {
+      "type": "string",
+      "pattern": "^v13rc-[0-9a-f]{16}$"
+    },
+    "pinned_time": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 64
+    },
+    "repo_root_basename": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "config_loaded":                              {"type": "boolean"},
+    "public_mirror_loaded":                       {"type": "boolean"},
+    "rc_id": {
+      "type": "string",
+      "pattern": "^v13-rc[0-9]+$",
+      "maxLength": 32
+    },
+    "activation_heights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "v13_activation_height",
+        "v15_fallback_height",
+        "dtd_lottery_decision_height"
+      ],
+      "properties": {
+        "v13_activation_height":       {"type": "integer", "const": 12000},
+        "v15_fallback_height":         {"type": "integer", "const": 15000},
+        "dtd_lottery_decision_height": {"type": "integer", "const": 12100}
+      }
+    },
+    "min_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "required_binary_label": {
+      "type": "string",
+      "pattern": "^v13-rc[0-9]+$",
+      "maxLength": 32
+    },
+    "ntp_required":                              {"type": "boolean", "const": true},
+    "future_timestamp_drift_seconds_post_v13":   {"type": "integer", "const": 10},
+    "dtd_lottery_cooldown_post_v13":             {"type": "integer", "const": 6},
+    "confirmed_items_ready": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "casert_all_profiles_e7_h35",
+        "dtd_cooldown_6",
+        "timestamp_drift_10s",
+        "beacon_phase_ii_a",
+        "all_ready"
+      ],
+      "properties": {
+        "casert_all_profiles_e7_h35": {"type": "boolean"},
+        "dtd_cooldown_6":             {"type": "boolean"},
+        "timestamp_drift_10s":        {"type": "boolean"},
+        "beacon_phase_ii_a":          {"type": "boolean"},
+        "all_ready":                  {"type": "boolean"}
+      }
+    },
+    "fallback_v15_items": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 8,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      }
+    },
+    "docs_present": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_candidate_md",
+        "miner_operator_checklist_md",
+        "activation_plan_md",
+        "readiness_gates_md"
+      ],
+      "properties": {
+        "release_candidate_md":          {"type": "boolean"},
+        "miner_operator_checklist_md":   {"type": "boolean"},
+        "activation_plan_md":            {"type": "boolean"},
+        "readiness_gates_md":            {"type": "boolean"}
+      }
+    },
+    "docs_mention_block_12000":                 {"type": "boolean"},
+    "docs_mention_ntp_10s":                     {"type": "boolean"},
+    "docs_mention_dtd_decision_12100":          {"type": "boolean"},
+    "docs_mention_fallback_v15":                {"type": "boolean"},
+    "public_mirror_matches_safe_fields":        {"type": "boolean"},
+    "rc_ready":                                 {"type": "boolean"},
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1, "maxLength": 500}
+    },
+    "safety_status": {
+      "type": "string",
+      "enum": ["ok", "warning", "failed"]
+    },
+    "safety_flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "no_wallet_access",
+        "no_private_key_access",
+        "no_signing",
+        "no_broadcast",
+        "no_network_required",
+        "no_github_api",
+        "no_shell_true",
+        "no_destructive_git",
+        "no_auto_push_merge_tag",
+        "no_subprocess",
+        "no_ethereum_deploy"
+      ],
+      "properties": {
+        "no_wallet_access":          {"type": "boolean", "const": true},
+        "no_private_key_access":     {"type": "boolean", "const": true},
+        "no_signing":                {"type": "boolean", "const": true},
+        "no_broadcast":              {"type": "boolean", "const": true},
+        "no_network_required":       {"type": "boolean", "const": true},
+        "no_github_api":             {"type": "boolean", "const": true},
+        "no_shell_true":             {"type": "boolean", "const": true},
+        "no_destructive_git":        {"type": "boolean", "const": true},
+        "no_auto_push_merge_tag":    {"type": "boolean", "const": true},
+        "no_subprocess":             {"type": "boolean", "const": true},
+        "no_ethereum_deploy":        {"type": "boolean", "const": true}
+      }
+    }
+  }
+}

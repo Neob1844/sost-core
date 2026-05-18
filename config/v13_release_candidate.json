@@ -1,0 +1,104 @@
+{
+  "schema": "sost-v13-release-candidate/v0.1",
+  "rc_id": "v13-rc1",
+  "pinned_time": "2026-05-18T13:00:00+00:00",
+
+  "v13_activation_height":               12000,
+  "v15_fallback_height":                 15000,
+  "dtd_lottery_decision_height":         12100,
+
+  "min_commit":                          "e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a",
+  "required_binary_label":               "v13-rc1",
+  "ntp_required":                        true,
+  "future_timestamp_drift_seconds_post_v13": 10,
+  "dtd_lottery_cooldown_post_v13":       6,
+
+  "confirmed_items": [
+    {
+      "id":    "casert_all_profiles_e7_h35",
+      "label": "All cASERT equalizer profiles E7-H35 active",
+      "evidence_keyword": "CASERT_MAX_ACTIVE_PROFILE_V13"
+    },
+    {
+      "id":    "dtd_cooldown_6",
+      "label": "DTD lottery cooldown 5 -> 6 blocks",
+      "evidence_keyword": "lottery_exclusion_window_at"
+    },
+    {
+      "id":    "timestamp_drift_10s",
+      "label": "Future-drift cap 60s -> 10s",
+      "evidence_keyword": "max_future_drift_at"
+    },
+    {
+      "id":    "beacon_phase_ii_a",
+      "label": "Beacon Phase II-A (local notices, file-only, signed)",
+      "evidence_keyword": "BEACON_PHASE2A_ACTIVATION_HEIGHT"
+    }
+  ],
+
+  "fallback_v15_items": [
+    {
+      "id":    "popc_model_a_b",
+      "label": "PoPC Model A + B (full automated lifecycle)",
+      "reason": "Operational orchestration layer not yet 100% production-ready: audit daemon, auto-slash trigger, auto-settlement cron, Ethereum event listener, consensus POPC_ACTIVATION_HEIGHT, and end-to-end lifecycle test still pending. Activated at V15 if it is not ready by V13 binary cut."
+    },
+    {
+      "id":    "beacon_phase_ii_b",
+      "label": "Beacon Phase II-B (expiration/threshold-sig/mirror/revocation/severity)",
+      "reason": "Design + implementation + tests not closed at V13 binary cut. Slides to V15 if not green."
+    },
+    {
+      "id":    "beacon_phase_iii",
+      "label": "Beacon Phase III (P2P gossip of verified notices)",
+      "reason": "P2P scaffold exists but activation height is INT64_MAX. Safety + anti-DoS tests not yet present. Slides to V15."
+    },
+    {
+      "id":    "memory_lock_per_instance",
+      "label": "Memory-Lock per-instance (anti-pool, per-thread dataset)",
+      "reason": "Design doc + independent simulation + implementation + 8 GB-floor small-miner safety test not yet in repo. Slides to V15 or stays inactive."
+    }
+  ],
+
+  "operator_actions": [
+    {
+      "step": 1,
+      "title": "Upgrade binary before block 12000",
+      "detail": "Rebuild from the V13 release tag (v13-rc1 then the released v13). Verify the commit you compile matches the min_commit field and the published min_commit advertised on this thread."
+    },
+    {
+      "step": 2,
+      "title": "Sync NTP; clock must not be >10 s ahead of true time",
+      "detail": "Post-V13 the future-timestamp-drift cap drops from 60 s to 10 s. A host whose clock is more than 10 s ahead of wall time will produce candidate blocks that validators reject. Run timedatectl, chrony, or ntpd; verify clock skew before mining."
+    },
+    {
+      "step": 3,
+      "title": "Keep wallet / mining-key custody local",
+      "detail": "SbPoW (active since block 7100) already requires --wallet + --mining-key-label. V13 changes nothing on that front. No new wallet migration is needed. Do NOT export private keys; do NOT share key material with any pool operator."
+    },
+    {
+      "step": 4,
+      "title": "Watch operator notices via Beacon Phase II-A",
+      "detail": "If you have a notices.json file (signed by the operator pubkey hardcoded in the binary) placed under <datadir>/notices.json, the node + miner will surface a coloured banner at startup. The file is read locally only; the node never opens the network for notices."
+    },
+    {
+      "step": 5,
+      "title": "Do NOT expect PoPC, Beacon II-B, Beacon III, or Memory-Lock at block 12000",
+      "detail": "These four items are gated and currently fall back to V15. If their readiness gates close in time for the V13 cut, the release notes will say so explicitly. Otherwise they stay inactive and will ship at the V15 fork (block 15000) at the earliest."
+    },
+    {
+      "step": 6,
+      "title": "If your blocks are rejected after block 12000, check the troubleshooting list",
+      "detail": "See docs/V13_MINER_OPERATOR_CHECKLIST.md for the four most likely causes: clock skew > 10 s, old binary, outdated cASERT profile assumption, outdated DTD cooldown assumption."
+    }
+  ],
+
+  "safety": {
+    "no_wallet_access":                  true,
+    "no_private_key_access":             true,
+    "no_signing":                        true,
+    "no_broadcast":                      true,
+    "no_network_required":               true,
+    "no_auto_restart":                   true,
+    "no_consensus_auto_toggle":          true
+  }
+}
