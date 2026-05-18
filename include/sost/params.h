@@ -345,9 +345,14 @@ inline constexpr int32_t  SLINGSHOT_DROP_BPS            = 1250;   // 12.5%
 inline constexpr int64_t  V12_HEIGHT                       = 7350;
 
 // cASERT profile ceiling — raised from H13 to H20 at V12.
-// H21-H35 stay reserved (not used by the lag-based controller).
+// At V13 (block V13_HEIGHT = 12000) the ceiling rises again to H35,
+// activating the full 43-profile range E7..H35. This closes the
+// equalizer calibration started in V6 and removes the need for any
+// further calibration forks: the controller can self-adjust to any
+// future network size within the existing profile table.
 inline constexpr int32_t  CASERT_MAX_ACTIVE_PROFILE_PRE_V12 = 13;
 inline constexpr int32_t  CASERT_MAX_ACTIVE_PROFILE_V12     = 20;
+inline constexpr int32_t  CASERT_MAX_ACTIVE_PROFILE_V13     = 35;   // H35 (V13)
 
 // Triangular cascade max steps — extended 6 → 7 so the cascade still
 // reaches E7 floor from the new H20 ceiling within 900 s.
@@ -852,6 +857,34 @@ inline constexpr int64_t max_future_drift_at(int64_t height) {
     if (height >= V13_HEIGHT)                  return 10;
     if (height >= CASERT_STAGED_RELIEF_HEIGHT) return MAX_FUTURE_DRIFT_STAGED;  // = 60
     return MAX_FUTURE_DRIFT;                                                    // = 600
+}
+
+// cASERT profile ceiling — validator side. Returns the structural
+// upper bound the node accepts at each fork height. The validator
+// does NOT subdivide pre-V12 history (H10/H11/H12/H13) — it only
+// enforces the boundary between PRE_V12 (= H13), V12 (= H20), and
+// V13 (= H35). The tighter controller-side ceiling lives in
+// effective_profile_ceiling_at() below.
+inline constexpr int32_t validator_profile_ceiling_at(int64_t height) {
+    if (height >= V13_HEIGHT) return CASERT_MAX_ACTIVE_PROFILE_V13;     // H35
+    if (height >= V12_HEIGHT) return CASERT_MAX_ACTIVE_PROFILE_V12;     // H20
+    return CASERT_MAX_ACTIVE_PROFILE_PRE_V12;                            // H13
+}
+
+// cASERT profile ceiling — controller side. Returns the lag-based
+// controller's maximum profile_index at each height. Cascades the
+// full historical progression (H10/H11/H12/H13/V12/V13) so the
+// controller never declares a profile above the active gate for
+// that height. Callers MUST already be in the "ceiling enforcement
+// is active" range (height >= CASERT_CEILING_HEIGHT); pre-CEILING
+// blocks fall back to the H10 floor.
+inline constexpr int32_t effective_profile_ceiling_at(int64_t height) {
+    if (height >= V13_HEIGHT)                  return CASERT_MAX_ACTIVE_PROFILE_V13;       // H35 (V13)
+    if (height >= V12_HEIGHT)                  return CASERT_MAX_ACTIVE_PROFILE_V12;       // H20 (V12)
+    if (height >= CASERT_CEILING_H13_HEIGHT)   return CASERT_HARD_PROFILE_CEILING_H13;     // H13
+    if (height >= CASERT_CEILING_H12_HEIGHT)   return CASERT_HARD_PROFILE_CEILING_H12;     // H12
+    if (height >= CASERT_CEILING_H11_HEIGHT)   return CASERT_HARD_PROFILE_CEILING_H11;     // H11
+    return CASERT_HARD_PROFILE_CEILING;                                                     // H10
 }
 
 } // namespace sost

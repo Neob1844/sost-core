@@ -386,18 +386,13 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
     //   - downward: max 1 level per block (smooth descent, no bounce)
     // =========================================================================
     if (next_height >= CASERT_DIRECT_LAG_HEIGHT) {
-        // Compute current ceiling based on height
-        int32_t current_ceiling;
-        if (next_height >= V12_HEIGHT)
-            current_ceiling = CASERT_MAX_ACTIVE_PROFILE_V12;       // H20 (V12)
-        else if (next_height >= CASERT_CEILING_H13_HEIGHT)
-            current_ceiling = CASERT_HARD_PROFILE_CEILING_H13;     // H13
-        else if (next_height >= CASERT_CEILING_H12_HEIGHT)
-            current_ceiling = CASERT_HARD_PROFILE_CEILING_H12;
-        else if (next_height >= CASERT_CEILING_H11_HEIGHT)
-            current_ceiling = CASERT_HARD_PROFILE_CEILING_H11;
-        else
-            current_ceiling = CASERT_HARD_PROFILE_CEILING;
+        // Compute current ceiling based on height. The
+        // effective_profile_ceiling_at() helper in params.h is the
+        // single source of truth and cascades the full historical
+        // progression (H10/H11/H12/H13/V12/V13). V13_HEIGHT (12000)
+        // raises the ceiling to H35, activating the full 43-profile
+        // range E7..H35.
+        int32_t current_ceiling = effective_profile_ceiling_at(next_height);
 
         int32_t target_profile;
         if (lag <= 0) {
@@ -871,19 +866,11 @@ CasertDecision casert_compute(const std::vector<BlockMeta>& chain,
 
     // ---- Hard profile ceiling (progressive activation) ----
     // Block 5075: H10. Block 5480: H11. Block 5635: H12. Block 5750: H13.
-    // Block V12_HEIGHT (7350): H20. H21-H35 stay reserved.
+    // Block V12_HEIGHT (7350): H20. Block V13_HEIGHT (12000): H35
+    // (full 43-profile range E7..H35 active). The cascade is computed
+    // by effective_profile_ceiling_at() in params.h.
     if (next_height >= CASERT_CEILING_HEIGHT) {
-        int32_t ceiling;
-        if (next_height >= V12_HEIGHT)
-            ceiling = CASERT_MAX_ACTIVE_PROFILE_V12;       // H20 (V12)
-        else if (next_height >= CASERT_CEILING_H13_HEIGHT)
-            ceiling = CASERT_HARD_PROFILE_CEILING_H13;
-        else if (next_height >= CASERT_CEILING_H12_HEIGHT)
-            ceiling = CASERT_HARD_PROFILE_CEILING_H12;
-        else if (next_height >= CASERT_CEILING_H11_HEIGHT)
-            ceiling = CASERT_HARD_PROFILE_CEILING_H11;
-        else
-            ceiling = CASERT_HARD_PROFILE_CEILING;
+        int32_t ceiling = effective_profile_ceiling_at(next_height);
         if (H > ceiling) H = ceiling;
     }
 

@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-v13-readiness-report/v0.1",
+  "title": "Trinity V13 Activation Readiness Report v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "report_id",
+    "pinned_time",
+    "repo_root_basename",
+    "config_loaded",
+    "activation_heights",
+    "confirmed_items",
+    "gated_items",
+    "decision_at_12100",
+    "v13_ready_for_confirmed_items",
+    "popc_v13_ready",
+    "beacon_iib_v13_ready",
+    "beacon_iii_v13_ready",
+    "memory_lock_v13_ready",
+    "fallback_to_v15_items",
+    "warnings",
+    "overall_decision",
+    "safety_status",
+    "safety_flags"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-v13-readiness-report/v0.1"
+    },
+    "report_id": {
+      "type": "string",
+      "pattern": "^v13rr-[0-9a-f]{16}$"
+    },
+    "pinned_time": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 64
+    },
+    "repo_root_basename": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "config_loaded": {"type": "boolean"},
+    "activation_heights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "v13_activation_height",
+        "v15_fallback_height",
+        "dtd_lottery_decision_height"
+      ],
+      "properties": {
+        "v13_activation_height":       {"type": "integer", "const": 12000},
+        "v15_fallback_height":         {"type": "integer", "const": 15000},
+        "dtd_lottery_decision_height": {"type": "integer", "const": 12100},
+        "current_height_estimate":     {"type": "integer", "minimum": 0}
+      }
+    },
+    "confirmed_items": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "wired_in_code", "evidence", "ready"],
+        "properties": {
+          "id":            {"type": "string", "minLength": 1, "maxLength": 64},
+          "label":         {"type": "string", "minLength": 1, "maxLength": 200},
+          "wired_in_code": {"type": "boolean"},
+          "evidence":      {"type": "string", "maxLength": 500},
+          "ready":         {"type": "boolean"},
+          "blocker_note":  {"type": "string", "maxLength": 500}
+        }
+      }
+    },
+    "gated_items": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id", "label", "target_height", "fallback_height",
+          "gates", "v13_ready", "resolved_activation_height"
+        ],
+        "properties": {
+          "id":              {"type": "string", "minLength": 1, "maxLength": 64},
+          "label":           {"type": "string", "minLength": 1, "maxLength": 200},
+          "target_height":   {"type": "integer", "const": 12000},
+          "fallback_height": {"type": "integer", "const": 15000},
+          "gates": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "rule", "status", "evidence"],
+              "properties": {
+                "id":       {"type": "string", "minLength": 1, "maxLength": 64},
+                "rule":     {"type": "string", "minLength": 1, "maxLength": 500},
+                "status": {
+                  "type": "string",
+                  "enum": ["pass", "fail", "unknown"]
+                },
+                "evidence": {"type": "string", "maxLength": 500},
+                "blocker_note": {"type": "string", "maxLength": 500}
+              }
+            }
+          },
+          "v13_ready":                  {"type": "boolean"},
+          "resolved_activation_height": {
+            "type": "integer",
+            "enum": [12000, 15000]
+          }
+        }
+      }
+    },
+    "decision_at_12100": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject", "decision_window_opens_at_height"],
+      "properties": {
+        "subject": {"type": "string", "minLength": 1, "maxLength": 200},
+        "decision_window_opens_at_height": {
+          "type": "integer", "const": 12100
+        }
+      }
+    },
+    "v13_ready_for_confirmed_items": {"type": "boolean"},
+    "popc_v13_ready":                {"type": "boolean"},
+    "beacon_iib_v13_ready":          {"type": "boolean"},
+    "beacon_iii_v13_ready":          {"type": "boolean"},
+    "memory_lock_v13_ready":         {"type": "boolean"},
+    "fallback_to_v15_items": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {"type": "string", "minLength": 1, "maxLength": 64}
+    },
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1, "maxLength": 500}
+    },
+    "overall_decision": {
+      "type": "string",
+      "enum": [
+        "v13_confirmed_items_ready_gated_items_fallback_to_v15",
+        "v13_all_ready",
+        "v13_confirmed_items_not_ready_block_fork",
+        "indeterminate"
+      ]
+    },
+    "safety_status": {
+      "type": "string",
+      "enum": ["ok", "warning", "failed"]
+    },
+    "safety_flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "no_wallet_access",
+        "no_private_key_access",
+        "no_signing",
+        "no_broadcast",
+        "no_network_calls",
+        "no_github_api",
+        "no_shell_true",
+        "no_destructive_git",
+        "no_auto_push_merge_tag",
+        "ntp_mandatory_post_v13",
+        "half_enabled_items_forbidden"
+      ],
+      "properties": {
+        "no_wallet_access":            {"type": "boolean", "const": true},
+        "no_private_key_access":       {"type": "boolean", "const": true},
+        "no_signing":                  {"type": "boolean", "const": true},
+        "no_broadcast":                {"type": "boolean", "const": true},
+        "no_network_calls":            {"type": "boolean", "const": true},
+        "no_github_api":               {"type": "boolean", "const": true},
+        "no_shell_true":               {"type": "boolean", "const": true},
+        "no_destructive_git":          {"type": "boolean", "const": true},
+        "no_auto_push_merge_tag":      {"type": "boolean", "const": true},
+        "ntp_mandatory_post_v13":      {"type": "boolean", "const": true},
+        "half_enabled_items_forbidden": {"type": "boolean", "const": true}
+      }
+    }
+  }
+}
