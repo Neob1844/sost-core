@@ -1,0 +1,194 @@
+{
+  "schema": "trinity-v13-activation-config/v0.1",
+  "config_id": "v13-activation-2026-05-18",
+  "pinned_time": "2026-05-18T00:30:00+00:00",
+
+  "activation_heights": {
+    "v13_activation_height":       12000,
+    "v15_fallback_height":         15000,
+    "dtd_lottery_decision_height": 12100,
+    "current_height_estimate":     7700
+  },
+
+  "v15_final_hardfork_intent": {
+    "is_proposed_final": true,
+    "is_guaranteed": false,
+    "rationale": "After V15, no further consensus changes planned. Critical-security overrides excepted. If every V13 candidate ships cleanly at 12000, V15 may not be needed at all."
+  },
+
+  "confirmed_items": [
+    {
+      "id": "casert_all_profiles_e7_h35",
+      "label": "All cASERT equalizer profiles E7-H35 active",
+      "activation_height_target": 12000,
+      "wired_in_code": false,
+      "blocker_note": "No V13-gated profile ceiling expansion found in include/sost/params.h (current ceiling tracked as CASERT_HARD_PROFILE_CEILING = 10 and CASERT_CEILING_H13_HEIGHT historical step). Add an effective_profile_ceiling_at(height) helper that returns 35 for height >= V13_HEIGHT before V13 cut, OR fallback this item to V15."
+    },
+    {
+      "id": "dtd_cooldown_6",
+      "label": "DTD lottery cooldown 5 -> 6 blocks",
+      "activation_height_target": 12000,
+      "wired_in_code": true,
+      "evidence": "include/sost/params.h:835 lottery_exclusion_window_at(height) returns 6 for height >= V13_HEIGHT, else LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW (= 5)."
+    },
+    {
+      "id": "timestamp_drift_10s",
+      "label": "Future-drift cap 60s -> 10s",
+      "activation_height_target": 12000,
+      "wired_in_code": true,
+      "evidence": "include/sost/params.h:852 max_future_drift_at(height) returns 10 for height >= V13_HEIGHT.",
+      "operator_warning": "NTP synchronisation MANDATORY for mining post-V13. Clock skew > 10 s ahead -> blocks rejected."
+    },
+    {
+      "id": "beacon_phase_ii_a",
+      "label": "Beacon Phase II-A — local notices, file-only, no P2P, no HTTP from node, signed",
+      "activation_height_target": 12000,
+      "wired_in_code": true,
+      "evidence": "include/sost/params.h:828 BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT. include/sost/beacon.h declares the hardcoded BEACON_PUBKEY_HEX."
+    }
+  ],
+
+  "gated_items": [
+    {
+      "id": "popc_model_a_b",
+      "label": "PoPC Model A + B — full automated lifecycle",
+      "target_height": 12000,
+      "fallback_height": 15000,
+      "gates": [
+        {
+          "id": "popc_a_audit_daemon",
+          "rule": "Audit daemon exists and is production-wired (a systemd unit / cron / native thread invoking compute_audit_seed + is_audit_triggered on a schedule)."
+        },
+        {
+          "id": "popc_b_auto_slash",
+          "rule": "Auto-slash on audit failure is wired and tested (popc_slash invoked automatically when an audit fails)."
+        },
+        {
+          "id": "popc_c_auto_settlement",
+          "rule": "Auto-settlement of reward + bond release is wired and tested (popc_release invoked automatically on commitment maturity)."
+        },
+        {
+          "id": "popc_d_escrow_deployment",
+          "rule": "Model B Ethereum SOSTEscrow deployment checklist complete for intended network (deployment record file + verified address + production deploy log)."
+        },
+        {
+          "id": "popc_e_event_listener",
+          "rule": "Ethereum event listener exists and is tested for GoldDeposited -> escrow_register on the SOST side."
+        },
+        {
+          "id": "popc_f_consensus_gate",
+          "rule": "Consensus-level POPC_ACTIVATION_HEIGHT (or equivalent named constant) exists in include/sost/ and is referenced by the lifecycle code."
+        },
+        {
+          "id": "popc_g_e2e_test",
+          "rule": "Full automated lifecycle integration test exists: register -> mature -> audit -> slash-or-settle -> close, with NO manual RPC call from the test."
+        }
+      ],
+      "fallback_rule": "If ANY of a-g is missing at the V13 binary cut, popc_model_a_b activation height is set to v15_fallback_height. Do NOT half-enable."
+    },
+    {
+      "id": "beacon_phase_ii_b",
+      "label": "Beacon Phase II-B — extends II-A with expiration/threshold-sig/mirror/revocation/severity",
+      "target_height": 12000,
+      "fallback_height": 15000,
+      "gates": [
+        {
+          "id": "beacon_iib_design_closed",
+          "rule": "Design closed and documented (docs/BEACON_PHASE_IIB_SPEC.md or equivalent)."
+        },
+        {
+          "id": "beacon_iib_implementation",
+          "rule": "Implementation present in src/beacon* and gated at a height constant."
+        },
+        {
+          "id": "beacon_iib_tests_green",
+          "rule": "Test surface green: expiration-by-height test, threshold-N-of-M test, mirror-fallback test, revocation test, severity test."
+        }
+      ],
+      "fallback_rule": "If any gate fails, slides to v15_fallback_height; does NOT block the rest of V13."
+    },
+    {
+      "id": "beacon_phase_iii",
+      "label": "Beacon Phase III — P2P gossip of verified notices",
+      "target_height": 12000,
+      "fallback_height": 15000,
+      "gates": [
+        {
+          "id": "beacon_iii_p2p_implementation",
+          "rule": "include/sost/beacon_p2p.h + src/beacon_p2p.cpp implement the P2P NOTICE message and the dedup ring."
+        },
+        {
+          "id": "beacon_iii_activation_constant",
+          "rule": "BEACON_P2P_ACTIVATION_HEIGHT is set to V13_HEIGHT (not INT64_MAX) in include/sost/params.h."
+        },
+        {
+          "id": "beacon_iii_safety_invariants",
+          "rule": "Static tests assert: no consensus change on receipt, no node restart, no command execution, no block of any tx, anti-spam reject without peer-ban."
+        },
+        {
+          "id": "beacon_iii_anti_dos_tests",
+          "rule": "Tests prove per-peer rate limit (BEACON_P2P_PEER_RATE_PER_MIN) holds under stress + the dedup ring bound (BEACON_P2P_CACHE_MAX_NOTICES) holds."
+        }
+      ],
+      "fallback_rule": "If any gate fails, slides to v15_fallback_height; the existing INT64_MAX dormancy stays."
+    },
+    {
+      "id": "memory_lock_per_instance",
+      "label": "Memory-Lock per-instance — per-thread ConvergenceX dataset (anti-pool)",
+      "target_height": 12000,
+      "fallback_height": 15000,
+      "gates": [
+        {
+          "id": "memlock_design_doc",
+          "rule": "Design doc exists separate from V11_SPEC.md (e.g. docs/MEMORY_LOCK_PER_INSTANCE_SPEC.md) with the activation height and threading model."
+        },
+        {
+          "id": "memlock_simulation_artifact",
+          "rule": "Independent simulation artifact in the repo (simulation script + result file) proving the per-thread split does not raise the declared 8 GB RAM floor."
+        },
+        {
+          "id": "memlock_implementation",
+          "rule": "Implementation present in src/ at a height-gated path."
+        },
+        {
+          "id": "memlock_small_miner_safety",
+          "rule": "Test proves a legitimate 8 GB single-CPU miner is not broken by the activation."
+        }
+      ],
+      "fallback_rule": "If any gate fails, slides to v15_fallback_height or stays inactive."
+    }
+  ],
+
+  "decision_at_12100": {
+    "subject": "DTD lottery: keep at 1-of-3 permanent OR disable",
+    "option_a": "Keep — cooldown stays at 6 (V13), supplementary redistribution in parallel with PoPC.",
+    "option_b": "Disable — return to clean 50/25/25 split on every block; PoPC + Useful Compute carry the extra-coinbase rewards alone.",
+    "decision_window_opens_at_height": 12100,
+    "decision_taker": "thread-driven consultation; not unilateral"
+  },
+
+  "safety_invariants": {
+    "beacon": {
+      "may_inform":                  true,
+      "may_restart":                 false,
+      "may_block":                   false,
+      "may_change_consensus":        false,
+      "may_execute_commands":        false
+    },
+    "readiness_check_script": {
+      "no_wallet_access":            true,
+      "no_private_key_access":       true,
+      "no_signing":                  true,
+      "no_broadcast":                true,
+      "no_network_calls":            true,
+      "no_github_api":               true,
+      "no_shell_true":               true,
+      "no_destructive_git":          true,
+      "no_auto_push_merge_tag":      true
+    },
+    "v13_activation": {
+      "ntp_synchronisation_mandatory": true,
+      "half_enabled_items_forbidden":  true
+    }
+  }
+}
