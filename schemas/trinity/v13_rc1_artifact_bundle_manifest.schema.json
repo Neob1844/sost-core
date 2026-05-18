@@ -1,0 +1,197 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-v13-rc1-artifact-bundle-manifest/v0.1",
+  "title": "Trinity V13 RC1 Artifact Bundle Manifest v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "bundle_id",
+    "pinned_time",
+    "rc_id",
+    "activation_height",
+    "min_commit",
+    "min_commit_short",
+    "repo_root_basename",
+    "preflight_was_ready",
+    "binaries",
+    "sha256sums_basename",
+    "reports",
+    "configs",
+    "has_tarball",
+    "tarball",
+    "no_copy_binaries_mode",
+    "safety_flags"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-v13-rc1-artifact-bundle-manifest/v0.1"
+    },
+    "bundle_id": {
+      "type": "string",
+      "pattern": "^v13rc1bundle-[0-9a-f]{16}$"
+    },
+    "pinned_time": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 64
+    },
+    "rc_id": {
+      "type": "string",
+      "pattern": "^v13-rc[0-9]+$"
+    },
+    "activation_height": {
+      "type": "integer",
+      "const": 12000
+    },
+    "min_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "min_commit_short": {
+      "type": "string",
+      "maxLength": 16
+    },
+    "repo_root_basename": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "preflight_was_ready": {"type": "boolean"},
+    "binaries": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "basename_under_bin", "size_bytes", "sha256"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["sost-node", "sost-miner", "sost-cli"]
+          },
+          "basename_under_bin": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "maxLength": 64
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "sha256sums_basename": {
+      "type": "string",
+      "const": "SHA256SUMS"
+    },
+    "reports": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "basename_under_reports", "sha256"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "basename_under_reports": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "maxLength": 64
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "configs": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "basename_under_config", "sha256"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "basename_under_config": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "maxLength": 64
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "has_tarball": {"type": "boolean"},
+    "tarball": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["basename", "size_bytes", "sha256"],
+          "properties": {
+            "basename": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]+\\.tar\\.gz$",
+              "maxLength": 128
+            },
+            "size_bytes": {"type": "integer", "minimum": 0},
+            "sha256":     {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          }
+        }
+      ]
+    },
+    "no_copy_binaries_mode": {"type": "boolean"},
+    "safety_flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "no_wallet_access",
+        "no_private_key_access",
+        "no_signing",
+        "no_broadcast",
+        "no_release_upload",
+        "no_network_required",
+        "no_auto_restart",
+        "no_subprocess",
+        "no_shell_true",
+        "no_github_api",
+        "no_ethereum_deploy"
+      ],
+      "properties": {
+        "no_wallet_access":      {"type": "boolean", "const": true},
+        "no_private_key_access": {"type": "boolean", "const": true},
+        "no_signing":            {"type": "boolean", "const": true},
+        "no_broadcast":          {"type": "boolean", "const": true},
+        "no_release_upload":     {"type": "boolean", "const": true},
+        "no_network_required":   {"type": "boolean", "const": true},
+        "no_auto_restart":       {"type": "boolean", "const": true},
+        "no_subprocess":         {"type": "boolean", "const": true},
+        "no_shell_true":         {"type": "boolean", "const": true},
+        "no_github_api":         {"type": "boolean", "const": true},
+        "no_ethereum_deploy":    {"type": "boolean", "const": true}
+      }
+    }
+  }
+}
