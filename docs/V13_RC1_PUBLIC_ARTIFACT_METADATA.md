@@ -2,8 +2,21 @@
 
 **Public manifest:** `website/api/v13_rc1_artifact_manifest.json`
 **Public SHA256SUMS:** `website/api/v13_rc1_SHA256SUMS.txt`
+**Public SHA256SUMS signature (NEW, v269):** `website/api/v13_rc1_SHA256SUMS.asc` — OpenPGP ASCII-armored detached signature, sha256 `5e83889bb95d21404c3ae4faedfeb8c04729343fc88b03f5a9e608dd7c228779`
+**Release status (NEW, v269):** `signed_metadata_only` — the SHA256SUMS file is now SIGNED, but binaries are NOT yet uploaded
 **Source bundle:** `v13-rc1-artifact-bundle-v01` (operator-local; binaries are NOT committed to this repository)
-**Companion docs:** `V13_RC1_ARTIFACT_BUNDLE.md`, `V13_BINARY_PREFLIGHT.md`, `V13_RELEASE_CANDIDATE.md`, `V13_MINER_OPERATOR_CHECKLIST.md`
+**Companion docs:** `V13_RC1_SIGNING_AND_PUBLICATION_CHECKLIST.md`, `V13_RC1_ARTIFACT_BUNDLE.md`, `V13_BINARY_PREFLIGHT.md`, `V13_RELEASE_CANDIDATE.md`, `V13_MINER_OPERATOR_CHECKLIST.md`
+
+**SOST release key (V13 RC1):**
+
+| Field | Value |
+|---|---|
+| `uid` | `SOST Release (V13 RC1 release signing key) <sost@sostcore.com>` |
+| `primary_fingerprint`        | `41B1A46E626064AB524CB99EB6B9E2852AE41A04` |
+| `signing_subkey_fingerprint` | `E2FCC898520842F0192EF7A46422CC120F51DCEA` |
+| `key_id`                     | `B6B9E2852AE41A04` |
+
+The release key is **dedicated to release signing**. It is NOT a wallet key, NOT a mining key, NOT an SbPoW key. Anyone announcing a different fingerprint as "SOST release key" is impersonating the operator — verify against the BitcoinTalk announcement thread.
 
 ---
 
@@ -50,19 +63,31 @@ sha256sum -c SHA256SUMS
 # expected: every line ends with '  OK'
 ```
 
-If the operator later publishes a signature, the same flow adds:
+The SHA256SUMS file is now **signed**. The full offline verification flow is:
 
 ```bash
-# 4. Download the operator-signed signature.
-curl -fSsL -o SHA256SUMS.sig <wherever-the-operator-publishes-the-signature>
+# 4. Download the operator-signed detached signature.
+curl -fSsL -o SHA256SUMS.asc https://sostcore.com/api/v13_rc1_SHA256SUMS.asc
 
-# 5. Verify the signature against the operator's release public key
-#    (the operator publishes the release pubkey separately, e.g. on
-#    BitcoinTalk + sostcore.com — it is NOT the same as any wallet
-#    or mining key).
-# (Operator chooses the signing scheme; see the release announcement
-#  for the exact verify command.)
+# 5. Import the SOST release public key (announced on the BitcoinTalk
+#    thread and published on sostcore.com — it is NOT the same as any
+#    wallet, mining or SbPoW key).
+gpg --recv-keys 41B1A46E626064AB524CB99EB6B9E2852AE41A04
+# (or import from a file published next to the announcement)
+
+# 6. Verify the signature.
+gpg --verify SHA256SUMS.asc SHA256SUMS
+# expected:
+#   gpg: Good signature from "SOST Release (V13 RC1 release signing key) <sost@sostcore.com>"
+#   Primary key fingerprint: 41B1 A46E 6260 64AB 524C  B99E B6B9 E285 2AE4 1A04
+
+# 7. Independently hash the signature file itself and compare to
+#    the value in the public manifest (signature.sha256):
+sha256sum SHA256SUMS.asc
+# expected: 5e83889bb95d21404c3ae4faedfeb8c04729343fc88b03f5a9e608dd7c228779
 ```
+
+A `gpg: WARNING: This key is not certified with a trusted signature!` line is expected on a fresh keyring — it means you have imported the key but have not personally signed it as trusted in your local web-of-trust. The `Good signature` line is what matters; the `WARNING` only says you have not yet locally trusted the key.
 
 The public manifest file additionally exposes the SHA-256 of the deterministic tarball (`v13-rc1-artifact-bundle-v13rc1bundle-<id>.tar.gz`). If the operator publishes that tarball, reviewers can verify the whole bundle in one step:
 
@@ -84,11 +109,11 @@ The `release_status` field on the public manifest is the load-bearing signal:
 
 | `release_status` value | What it means |
 |---|---|
-| `metadata_only_not_signed_not_uploaded` | Current state. Metadata is published; the operator has NOT yet signed `SHA256SUMS` and has NOT yet uploaded binaries to any public distribution surface. Anyone reading the manifest knows they should NOT install a binary from a third party claiming to be V13 RC1 — wait for the operator's signed release. |
-| `signed_metadata_only` | (Future) A `*.sig` file is published alongside `SHA256SUMS` but binaries are still not on a public distribution surface from the operator. |
-| `signed_and_published` | (Future) Operator has signed `SHA256SUMS`, uploaded binaries to a publication channel, and posted the release announcement linking the two. |
+| `metadata_only_not_signed_not_uploaded` | (Historical, website-v268.) Metadata was published; the operator had NOT yet signed `SHA256SUMS` and had NOT yet uploaded binaries to any public distribution surface. |
+| `signed_metadata_only` | **Current state (website-v269).** The `SHA256SUMS.asc` detached OpenPGP signature is published alongside `SHA256SUMS`, signed with the SOST release key (primary fingerprint `41B1A46E626064AB524CB99EB6B9E2852AE41A04`, signing subkey `E2FCC898520842F0192EF7A46422CC120F51DCEA`). Binaries are still NOT on a public distribution surface from the operator. Anyone now downloading future V13 RC1 binaries from the operator's eventual release surface can already verify them locally with `sha256sum -c SHA256SUMS && gpg --verify SHA256SUMS.asc SHA256SUMS`. |
+| `signed_and_published` | (Future.) Operator has signed `SHA256SUMS` (already true) AND uploaded binaries to a publication channel AND posted the release announcement linking the two. |
 
-The transition from `metadata_only_not_signed_not_uploaded` to anything else is **always** a manual operator action, never an automated agent action.
+The transition from `metadata_only_not_signed_not_uploaded` to `signed_metadata_only` (which landed in website-v269) was an explicit manual operator action: the operator ran `gpg --detach-sign --armor SHA256SUMS` on the secure host that holds the SOST release key. No automated agent ever touched the release key. The next transition (`signed_metadata_only` → `signed_and_published`) is similarly a manual operator action — it requires the operator to upload the binaries to a public distribution channel and announce the release.
 
 ---
 

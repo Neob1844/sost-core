@@ -41,6 +41,25 @@ def schema():
         return json.load(f)
 
 
+def _make_fake_repo_root(tmp_path: Path, release_status: str) -> Path:
+    """Build a minimal repo_root that contains a single public
+    manifest at the requested release_status. Used by the CLI
+    happy-path test so it does NOT depend on the live state of
+    the actual repository (which moves forward as the V13 RC1
+    release machine advances)."""
+    import json as _json
+    rr = tmp_path / "fake-repo"
+    (rr / "website" / "api").mkdir(parents=True)
+    (rr / "website" / "api" / "v13_rc1_artifact_manifest.json").write_text(
+        _json.dumps({
+            "schema": "sost-v13-rc1-artifact-manifest-public/v0.1",
+            "release_status": release_status,
+        }),
+        encoding="utf-8",
+    )
+    return rr
+
+
 def _make_fake_bundle(tmp_path: Path) -> Path:
     bd = tmp_path / "bundle-fake"
     bd.mkdir()
@@ -247,9 +266,18 @@ def test_checklist_deterministic(srr, tmp_path):
 
 
 def test_cli_returns_0_on_happy_path(srr, tmp_path):
+    """Happy path = bundle intact + public metadata at the expected
+    pre-signing state. Use a self-contained fake repo so the test
+    does not depend on the live repository's release_status, which
+    legitimately advances as the V13 RC1 release machine moves
+    forward (metadata_only_not_signed_not_uploaded ->
+    signed_metadata_only -> signed_and_published)."""
     bd = _make_fake_bundle(tmp_path)
+    rr = _make_fake_repo_root(
+        tmp_path, "metadata_only_not_signed_not_uploaded",
+    )
     rc = srr.main([
-        "--repo-root",   str(REPO_ROOT),
+        "--repo-root",   str(rr),
         "--bundle-dir",  str(bd),
         "--out-json",    str(tmp_path / "out.json"),
         "--out-md",      str(tmp_path / "out.md"),
@@ -261,8 +289,28 @@ def test_cli_returns_0_on_happy_path(srr, tmp_path):
 def test_cli_returns_1_on_missing_binary(srr, tmp_path):
     bd = _make_fake_bundle(tmp_path)
     (bd / "bin" / "sost-cli").unlink()
+    rr = _make_fake_repo_root(
+        tmp_path, "metadata_only_not_signed_not_uploaded",
+    )
     rc = srr.main([
-        "--repo-root",   str(REPO_ROOT),
+        "--repo-root",   str(rr),
+        "--bundle-dir",  str(bd),
+        "--out-json",    str(tmp_path / "out.json"),
+        "--out-md",      str(tmp_path / "out.md"),
+        "--pinned-time", "2026-05-18T16:30:00+00:00",
+    ])
+    assert rc == 1
+
+
+def test_cli_returns_1_when_metadata_already_signed(srr, tmp_path):
+    """Once the operator has signed (release_status =
+    signed_metadata_only) the pre-signing checklist no longer
+    matches; the CLI must report that the metadata has moved
+    past the pre-signing state by returning 1."""
+    bd = _make_fake_bundle(tmp_path)
+    rr = _make_fake_repo_root(tmp_path, "signed_metadata_only")
+    rc = srr.main([
+        "--repo-root",   str(rr),
         "--bundle-dir",  str(bd),
         "--out-json",    str(tmp_path / "out.json"),
         "--out-md",      str(tmp_path / "out.md"),
