@@ -1,0 +1,90 @@
+{
+  "schema": "sost-v13-rc1-artifact-manifest-public/v0.1",
+  "bundle_id": "v13rc1bundle-fe3b041de40a3f62",
+  "pinned_time": "2026-05-18T15:45:00+00:00",
+
+  "rc_id": "v13-rc1",
+  "activation_height": 12000,
+  "min_commit": "d604aafafd65dcb90c34fa5845bedee8038daffc",
+  "min_commit_short": "d604aafafd65dcb9",
+
+  "binaries": [
+    {
+      "name": "sost-node",
+      "basename_under_bin": "sost-node",
+      "size_bytes": 18309648,
+      "sha256": "c5441d7d6697853d959e1a787fb9e2528738ea8ea87a2107ba30f9e87a6c1f0d"
+    },
+    {
+      "name": "sost-miner",
+      "basename_under_bin": "sost-miner",
+      "size_bytes": 6663296,
+      "sha256": "5b65cfb2d1fd2cd204df1c65265c1d4c5f126a58612d9ee1bf5642e242a56457"
+    },
+    {
+      "name": "sost-cli",
+      "basename_under_bin": "sost-cli",
+      "size_bytes": 5801032,
+      "sha256": "b18f5ec0fb48acb43fa5d7f2ce1e1bf29e7297e2a46630ee9e95f8c01570009e"
+    }
+  ],
+
+  "sha256sums_basename": "SHA256SUMS",
+  "sha256sums_public_path": "/api/v13_rc1_SHA256SUMS.txt",
+
+  "reports": [
+    {
+      "name": "report.json",
+      "basename_under_reports": "preflight_report.json",
+      "sha256": "73d306391e7574575672fc1b201860a846966e09c55d01bf5f1e27c619caa922"
+    },
+    {
+      "name": "report.md",
+      "basename_under_reports": "preflight_report.md",
+      "sha256": "c3498418f8c712c462d7a332cb46374908721f19b4533cdcf6ce8d37e135e241"
+    }
+  ],
+
+  "configs": [
+    {
+      "name": "config/v13_release_candidate.json",
+      "basename_under_config": "v13_release_candidate.json",
+      "sha256": "489970761a0a5f9b02150ad89065864ec93ad5aff6ff78c32cffbddb7202fea0"
+    },
+    {
+      "name": "config/v13_activation.json",
+      "basename_under_config": "v13_activation.json",
+      "sha256": "37e4defbad6e4de969edeeebcaffd49284d01a4b8f237a8e45fe58a972dbae4c"
+    },
+    {
+      "name": "config/v13_binary_preflight.json",
+      "basename_under_config": "v13_binary_preflight.json",
+      "sha256": "5973382ecc11e1458bc25c9328e10d7e7e8a67b90d869ce322a442207cb85c13"
+    }
+  ],
+
+  "has_tarball": true,
+  "tarball": {
+    "basename": "v13-rc1-artifact-bundle-v13rc1bundle-fe3b041de40a3f62.tar.gz",
+    "size_bytes": 10814635,
+    "sha256": "c0345dce383c9456d19d45a6d33efc29ae2777720bc6de94725d5efca4c4eac0"
+  },
+
+  "release_status": "metadata_only_not_signed_not_uploaded",
+
+  "safety_flags": {
+    "no_wallet_access":      true,
+    "no_private_key_access": true,
+    "no_signing":            true,
+    "no_broadcast":          true,
+    "no_release_upload":     true,
+    "no_network_required":   true,
+    "no_auto_restart":       true,
+    "no_subprocess":         true,
+    "no_shell_true":         true,
+    "no_github_api":         true,
+    "no_ethereum_deploy":    true
+  },
+
+  "_note": "PUBLIC SAFE MIRROR of the operator-local v13-rc1 artifact bundle MANIFEST.json. The repo_root_basename, no_copy_binaries_mode and preflight_was_ready fields from the internal manifest are intentionally OMITTED here (they were either operator-host details or internal flags). The binaries themselves are NOT committed to this repository. The SHA256SUMS file is published at /api/v13_rc1_SHA256SUMS.txt for offline verification of binaries the operator distributes through a separate, manual release-publication step. The SHA256SUMS file has NOT yet been signed; signing remains an explicit manual operator action and a corresponding *.sig file will appear next to SHA256SUMS only after that step lands."
+}
