@@ -391,6 +391,68 @@ def _record_seen(seen_path: Optional[Path], output_sha256: str) -> None:
 # ---------------------------------------------------------------------------
 
 
+SCHEMA_MATERIALS_ENGINE_SUMMARY = "trinity-materials-engine-summary/v0.1"
+_MATERIALS_ENGINE_SUMMARY_TOP_N = 5
+
+
+def _build_materials_engine_summary(
+    output_obj: Dict[str, Any],
+    spec,
+) -> Optional[Dict[str, Any]]:
+    """Sprint 5.33 — project a Sprint 5.32 materials_engine
+    ``output_obj`` down to the compact summary shape downstream
+    consumers (operator_run roll-up, queue dashboard) need.
+
+    Returns None when the output_obj does not look like a
+    materials_engine result (defensive: a future regression that
+    swaps the backend handler should produce 'no summary' rather
+    than a malformed summary).
+    """
+    if not isinstance(output_obj, dict):
+        return None
+    if output_obj.get("schema") != "trinity-materials-engine-result/v0.1":
+        return None
+
+    full_ranking = output_obj.get("ranking") or []
+    compact_ranking: List[Dict[str, Any]] = []
+    for r in full_ranking[:_MATERIALS_ENGINE_SUMMARY_TOP_N]:
+        if not isinstance(r, dict):
+            continue
+        compact_ranking.append({
+            "material": str(r.get("material", ""))[:64],
+            "score":    float(r.get("score", 0.0)),
+        })
+
+    top_mat = compact_ranking[0]["material"] if compact_ranking else None
+    top_score = compact_ranking[0]["score"] if compact_ranking else None
+
+    resolved = output_obj.get("resolved_metrics") or []
+    compact_resolved: List[Dict[str, str]] = []
+    for rm in resolved:
+        if not isinstance(rm, dict):
+            continue
+        compact_resolved.append({
+            "metric":    str(rm.get("metric", ""))[:64],
+            "property":  str(rm.get("property", ""))[:64],
+            "direction": str(rm.get("direction", "higher_is_better")),
+        })
+
+    return {
+        "schema":              SCHEMA_MATERIALS_ENGINE_SUMMARY,
+        "backend_name":        spec.name,
+        "backend_kind":        spec.kind,
+        "classification_id":   str(output_obj.get("classification_id", "")),
+        "known_materials":     list(output_obj.get("known_materials", [])),
+        "unknown_materials":   list(output_obj.get("unknown_materials", [])),
+        "resolved_metrics":    compact_resolved,
+        "top_ranked_material": top_mat,
+        "top_ranked_score":    top_score,
+        "ranking":             compact_ranking,
+        "warnings":            list(output_obj.get("warnings", [])),
+        "limitations":         list(output_obj.get("limitations", [])),
+    }
+
+
 def run_worker(
     *,
     request: Dict[str, Any],
@@ -543,6 +605,23 @@ def run_worker(
             "manual_review_required": True,
         },
     }
+
+    # Sprint 5.33 — materials_engine_summary surfacing. When the
+    # backend is local_materials_engine_v01 (Sprint 5.32 real_backend),
+    # project the full backend output_obj down to a compact summary
+    # that downstream consumers (operator_run roll-up, queue
+    # dashboard, future notifications) can read without loading the
+    # entire result file. The summary lives at the top level of the
+    # worker_result OUTSIDE the hashed output_blob, so it does NOT
+    # change compute_output_sha256 - that hash still covers only
+    # backend_result.output_obj as before. A cross-worker replay
+    # test enforces this invariant.
+    if spec.name == "local_materials_engine_v01":
+        summary = _build_materials_engine_summary(
+            backend_result.output_obj, spec,
+        )
+        if summary is not None:
+            result["materials_engine_summary"] = summary
 
     # Reward model report. v0.13 lets the worker hand the reward model
     # extra context: when a benchmark report is supplied, the model

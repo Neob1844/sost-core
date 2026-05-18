@@ -72,6 +72,15 @@
       "type": "integer", "minimum": 0,
       "description": "Number of Governor decision JSONs emitted across the lifetime of this operator run."
     },
+    "materials_engine_summary_count": {
+      "type": "integer", "minimum": 0,
+      "description": "Sprint 5.33 - number of worker results in this operator run that carry a materials_engine_summary (i.e. backend_name==local_materials_engine_v01). Always present; 0 when the run had no materials_engine workers."
+    },
+    "materials_engine_top_materials": {
+      "type": "array",
+      "description": "Sprint 5.33 - deduplicated + sorted list of top_ranked_material values across this run's materials_engine worker results. Empty list when materials_engine_summary_count == 0.",
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
     "request_source": {
       "type": "string",
       "enum": ["built", "existing_request"]

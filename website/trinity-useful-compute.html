@@ -1795,6 +1795,75 @@
   </p>
 </div>
 
+<!-- Materials Engine Result Surfacing v0.1 (Sprint 5.33) -->
+<div class="card">
+  <h2>Materials Engine Result Surfacing v0.1</h2>
+  <p>
+    Sprint 5.32 added the deterministic
+    <code>local_materials_engine_v01</code> backend, but the
+    actual ranking was buried inside the hashed
+    <code>compute_output</code> bytes. Sprint 5.33 surfaces a
+    compact projection at three audit-friendly layers — worker
+    result, operator_run roll-up, queue dashboard — without
+    touching <code>compute_output_sha256</code>, the reward
+    model, or any payment behaviour.
+  </p>
+  <ul>
+    <li><strong>Worker result gains
+        <code>materials_engine_summary</code></strong> at the
+        top level (only when backend is
+        <code>local_materials_engine_v01</code>). Carries
+        <code>top_ranked_material</code> + score, full
+        <code>known_materials</code> / <code>unknown_materials</code>
+        lists, capped <code>ranking</code> (5 items),
+        <code>resolved_metrics</code>, warnings, limitations.
+        Schema <code>trinity-materials-engine-summary/v0.1</code>.</li>
+    <li><strong>Hash invariant preserved.</strong> The summary
+        lives OUTSIDE the hashed <code>output_blob</code>. A
+        dedicated regression test runs two workers and asserts
+        their <code>compute_output_sha256</code> values still
+        match exactly — the cross-worker replay contract from
+        Sprint 5.12 holds.</li>
+    <li><strong>Operator run rolls up.</strong> Two new top-level
+        fields on <code>operator_run.json</code>:
+        <code>materials_engine_summary_count</code> (int) and
+        <code>materials_engine_top_materials</code> (deduplicated
+        sorted array). Always present with defaults
+        <code>0</code> / <code>[]</code> so downstream consumers
+        see a uniform schema even when the run had no
+        materials_engine workers.</li>
+    <li><strong>Dashboard surfaces per item.</strong> JSON gains
+        five new optional fields on each
+        <code>latest_items[*]</code>; HTML gains a new
+        <code>materials_engine</code> column showing e.g.
+        <code style="color:#a78bfa">PrOx (known 2, unknown 0)</code>.
+        Sprint 5.28 privacy contracts preserved: no JS, no
+        external assets, no absolute paths,
+        <code>html.escape</code> on every text insertion.</li>
+    <li><strong>Manual review still required.</strong> Adding the
+        summary surface did NOT flip
+        <code>manual_review_required</code> off for
+        real_backend results. A regression test enforces this
+        with the Sprint 5.32 safety contract intact.</li>
+    <li><strong>Pre-Sprint-5.33 artifacts still validate.</strong>
+        Every new field is additive + optional. The result,
+        operator-run and dashboard schema <code>$id</code>s
+        are all unchanged. As a side-effect of writing the
+        schema test, the latent pre-Sprint-5.20 gap in the
+        result schema's <code>task_type</code> enum (missing
+        <code>scientific_intake</code>) was also patched.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/materials-result-surfacing-v01</code>.
+    13 new tests + 4 schema extensions (1 new summary schema +
+    3 additive extensions to existing schemas), all green on the
+    deployment host alongside the prior 1288. Pure
+    scripts + schemas + docs + tests merge: zero
+    <code>src/</code>, zero consensus, zero wallet / payment /
+    broadcast changes.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>
