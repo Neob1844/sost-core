@@ -174,20 +174,21 @@ footer a{color:var(--t3);text-decoration:none}
     <b>DTD lottery cooldown 5 &rarr; 6 blocks</b>,
     <b>future-timestamp drift cap 60 s &rarr; 10 s</b> (<b style="color:#f59e0b">NTP synchronisation MANDATORY post-V13</b>),
     and <b>Beacon Phase II-A</b> (local <code>notices.json</code>, file-only, signed, no P2P, no HTTP).
-    Four further items remain <b>gated</b> and fall back to <b>V15 at block 15,000</b> (proposed final hardfork, not guaranteed) if their readiness gates do not close by the V13 binary cut:
-    <b>PoPC Model A + B</b> (no half-shipping),
-    <b>Beacon Phase II-B</b>,
-    <b>Beacon Phase III (P2P gossip)</b>,
-    <b>Memory-Lock per-instance</b> (the second anti-pool mechanism besides SbPoW).
+    Per the <b>V13 Public Scope Update (2026-05-18)</b> in <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code>:
+    <b>PoPC Model A + B</b>, <b>SOSTEscrow Ethereum bridge</b> and <b>Gold Vault governance</b> are <b>DEFERRED to V14 / block 15,000</b> — five of nine PoPC gates and five of six Vault gates are RED today, and shipping half-implemented consensus at block 12,000 is worse than waiting.
+    <b>Beacon Phase II-B</b> and <b>Phase III (P2P gossip)</b> remain target-for-V13-if-ready, otherwise V14.
+    <b>Memory-Lock per-instance</b> is <b>REJECTED</b> — numerical analysis shows it would penalise small miners more than rigs, the opposite of the declared anti-pool goal; SbPoW remains the protocol's only anti-pool defense.
     The DTD lottery decision opens to the community at block 12,100.
     Beacon is a loudspeaker, not a remote control: it MAY inform, it MAY NOT restart, MAY NOT block, MAY NOT change consensus, MAY NOT execute commands.
   </div>
   <div style="margin-top:10px;font-size:11px;color:var(--t2)">
+    <b>Public scope update (2026-05-18):</b> <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code> &middot;
     Public RC manifest: <code>/api/v13_release_candidate.json</code> &middot;
     Full operator note: <code>docs/V13_RELEASE_CANDIDATE.md</code> &middot;
     Miner / operator checklist: <code>docs/V13_MINER_OPERATOR_CHECKLIST.md</code> &middot;
     Activation plan: <code>docs/V13_ACTIVATION_PLAN.md</code> &middot;
-    Readiness gates: <code>docs/V13_READINESS_GATES.md</code>
+    Readiness gates: <code>docs/V13_READINESS_GATES.md</code> &middot;
+    DTD flip 12,100 verified: <code>docs/V13_DTD_FLIP_12100_AUTOMATIC.md</code>
   </div>
   <div style="margin-top:6px;font-size:11px;color:var(--t2)">
     <b>Public V13 RC1 artifact metadata (SHA256SUMS SIGNED, binaries NOT yet uploaded — <code>release_status = signed_metadata_only</code>):</b>

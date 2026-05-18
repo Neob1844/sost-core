@@ -4,7 +4,21 @@
 **Pinned time:** 2026-05-18T13:00:00+00:00
 **Source of truth:** `config/v13_release_candidate.json`
 **Public mirror:** `website/api/v13_release_candidate.json`
-**Companion docs:** `docs/V13_ACTIVATION_PLAN.md`, `docs/V13_READINESS_GATES.md`, `docs/V13_MINER_OPERATOR_CHECKLIST.md`
+**Companion docs:** `docs/V13_PUBLIC_SCOPE_UPDATE.md` (NEW — operator + community scope update), `docs/V13_ACTIVATION_PLAN.md`, `docs/V13_READINESS_GATES.md`, `docs/V13_MINER_OPERATOR_CHECKLIST.md`, `docs/V13_DTD_FLIP_12100_AUTOMATIC.md`, `docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md`, `docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md`, `docs/V13_BEACON_II_B_III_GAPS.md`
+
+---
+
+## 0. Public scope update (2026-05-18)
+
+The operator-and-community version of V13 scope is in **`docs/V13_PUBLIC_SCOPE_UPDATE.md`**. That document supersedes any earlier statement that implied a wider V13 scope. Highlights:
+
+- V13 confirmed at block 12,000: cASERT E7-H35, DTD cooldown 5 → 6, drift cap 60s → 10s (NTP mandatory), Beacon Phase II-A.
+- V13 target-if-ready: Beacon Phase II-B, Beacon Phase III.
+- **Deferred to V14 / block 15,000**: PoPC + Escrow automatic lifecycle, Gold Vault governance (90% block-based signaling, 67-block window, Transitional Guardian, auto-disconnect at block 25,000), Memory-Lock per-instance (no longer planned at all — see §2).
+- DTD flip at block 12,100: verified automatic (`docs/V13_DTD_FLIP_12100_AUTOMATIC.md`).
+- RC1 metadata: `release_status = signed_metadata_only`. Binaries not yet uploaded.
+
+Read `docs/V13_PUBLIC_SCOPE_UPDATE.md` end-to-end before mining V13.
 
 ---
 
@@ -39,23 +53,43 @@ V13 readiness check.
 
 ---
 
-## 2. What falls back to V15 (block 15,000)
+## 2. What falls back to V14 (block 15,000)
 
-Four GATED items remain behind readiness gates. If their gates do not
-all close by the V13 binary cut, they ship at V15 (block 15,000,
-proposed final hardfork, not guaranteed):
+Gated items behind readiness gates. After the 2026-05-18 gap analysis
+(see `docs/V13_PUBLIC_SCOPE_UPDATE.md`), the realistic split is:
 
 ```
+DEFERRED TO V14 (high confidence — gates not close to closing):
 - popc_model_a_b              PoPC Model A + B (full automated lifecycle)
+- sostescrow_eth_bridge       SOSTEscrow + Ethereum event listener
+- gold_vault_governance       Spend-side governance (90% / 67-block /
+                              Transitional Guardian / auto-disconnect)
+
+TARGET FOR V13 IF READY, OTHERWISE V14:
 - beacon_phase_ii_b           Beacon Phase II-B
 - beacon_phase_iii            Beacon Phase III (P2P gossip)
-- memory_lock_per_instance    Memory-Lock per-instance (anti-pool)
+
+NOT SCHEDULED FOR ANY FORK (rejected):
+- memory_lock_per_instance    Memory-Lock per-instance (anti-pool) —
+                              numerical analysis shows it penalises
+                              small miners proportionally more than
+                              large rigs (the opposite of intent).
+                              SbPoW remains the protocol's only
+                              anti-pool defense.
 ```
 
 **PoPC is not half-shipped.** Either every PoPC readiness gate (a–g in
 `V13_READINESS_GATES.md`) passes and PoPC activates at block 12,000, or
-PoPC stays inactive in V13 and slides to V15. There is no middle
-position: a half-validated PoPC will not enter consensus.
+PoPC stays inactive in V13 and slides to V14. There is no middle
+position: a half-validated PoPC will not enter consensus. Today, five
+of nine PoPC consensus-readiness gates are RED (see
+`docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md`); V14 is the realistic
+target.
+
+**Gold Vault governance is not half-shipped.** Five of six gates are
+RED today (see `docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md`); V14 is the
+realistic target. The accumulation side (25 % per block) is unaffected
+and continues unchanged at consensus level since genesis.
 
 ---
 
