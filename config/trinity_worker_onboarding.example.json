@@ -1,0 +1,11 @@
+{
+  "schema": "trinity-worker-onboarding-config/v0.1",
+  "worker_id": "worker-C",
+  "repo_root_basename": "sost-core",
+  "notes": [
+    "Trinity worker onboarding example. Run:",
+    "  python3 scripts/trinity/worker_onboarding.py --worker-id worker-C --out-json /tmp/worker-C.json",
+    "Bundle is read-only + deterministic. NO secrets ever land in the bundle.",
+    "Operator supplies the real payout_address out-of-band; the bundle ships <PAYOUT_ADDRESS_FOR_*> placeholders."
+  ]
+}

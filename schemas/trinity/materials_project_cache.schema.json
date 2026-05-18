@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-materials-project-cache/v0.1",
+  "title": "Trinity Materials Project Cache",
+  "description": "Sprint 5.34 - LOCAL CACHED reference dataset for Trinity Materials Engine. Values are hand-curated, NOT a live Materials Project fetch. The cache exists so Trinity can quote provenance hashes (record_sha256 per material, property_hash_sha256 per property block, cache_sha256 for the whole file) without ever opening a network connection. v0.1 is read-only at runtime; the resolver in scripts/trinity/useful_compute_backends.py loads the file once at import time and verifies every hash before any reader is allowed to consume it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cache_version",
+    "cache_generated_at",
+    "cache_source_notice",
+    "record_count",
+    "records",
+    "cache_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-materials-project-cache/v0.1"
+    },
+    "cache_version":      { "type": "string", "minLength": 1, "maxLength": 32 },
+    "cache_generated_at": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "cache_source_notice": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "record_count":       { "type": "integer", "minimum": 0 },
+    "cache_sha256":       { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "material_id",
+          "formula_pretty",
+          "aliases",
+          "source",
+          "source_url_text",
+          "source_retrieved_at",
+          "properties",
+          "property_hash_sha256",
+          "record_sha256"
+        ],
+        "properties": {
+          "material_id": {
+            "type": "string",
+            "pattern": "^trinity-mpc-[a-z0-9-]{2,64}-v[0-9]+$"
+          },
+          "formula_pretty": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "aliases": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+          },
+          "source": {
+            "type": "string",
+            "enum": ["cached_materials_project_style_reference"]
+          },
+          "source_url_text": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "source_retrieved_at": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "formation_energy_per_atom":         { "type": "number" },
+              "band_gap":                          { "type": "number", "minimum": 0 },
+              "density":                           { "type": "number", "minimum": 0 },
+              "energy_above_hull":                 { "type": "number", "minimum": 0 },
+              "oxygen_storage_capacity_reference": { "type": "number", "minimum": 0 },
+              "notes":                             { "type": "string", "maxLength": 1024 }
+            }
+          },
+          "property_hash_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "record_sha256":        { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    }
+  }
+}

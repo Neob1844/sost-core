@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-worker-onboarding-bundle/v0.1",
+  "title": "Trinity Worker Onboarding Bundle",
+  "description": "Sprint 5.35 - read-only, deterministic onboarding bundle for a Trinity Useful Compute worker. NO keys, NO wallets, NO secrets. Address-map entries inside this bundle are template placeholders only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "bundle_id",
+    "worker_id",
+    "worker_id_hash",
+    "pinned_time",
+    "repo_root_basename",
+    "supported_backends",
+    "required_commands",
+    "sample_paths",
+    "address_map_template",
+    "safety_checklist",
+    "safety_status",
+    "notes"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-worker-onboarding-bundle/v0.1"
+    },
+    "bundle_id": {
+      "type": "string",
+      "pattern": "^twob-[0-9a-f]{16}$"
+    },
+    "worker_id":      { "type": "string", "minLength": 1, "maxLength": 64 },
+    "worker_id_hash": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "pinned_time":    { "type": "string", "minLength": 1, "maxLength": 64 },
+    "repo_root_basename": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "supported_backends": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "kind", "experimental", "note"],
+        "properties": {
+          "name":         { "type": "string", "minLength": 1, "maxLength": 64 },
+          "kind":         { "type": "string", "enum": ["placeholder", "sandbox_toy", "real_backend"] },
+          "experimental": { "type": "boolean" },
+          "note":         { "type": "string", "minLength": 1, "maxLength": 256 }
+        }
+      }
+    },
+    "required_commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name", "script", "purpose", "example_argv",
+          "requires_wallet", "requires_private_key", "requires_network"
+        ],
+        "properties": {
+          "name":    { "type": "string", "minLength": 1, "maxLength": 64 },
+          "script":  { "type": "string", "minLength": 1, "maxLength": 256 },
+          "purpose": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "example_argv": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 0, "maxLength": 256 }
+          },
+          "requires_wallet":      { "type": "boolean", "const": false },
+          "requires_private_key": { "type": "boolean", "const": false },
+          "requires_network":     { "type": "boolean", "const": false }
+        }
+      }
+    },
+    "sample_paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_json_example",
+        "worker_address_map_example",
+        "governor_policy_example",
+        "queue_dir_example"
+      ],
+      "properties": {
+        "request_json_example":       { "type": "string", "minLength": 1, "maxLength": 256 },
+        "worker_address_map_example": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "governor_policy_example":    { "type": "string", "minLength": 1, "maxLength": 256 },
+        "queue_dir_example":          { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "address_map_template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "workers", "_template_notice"],
+      "properties": {
+        "schema":  { "type": "string", "const": "trinity-worker-address-map/v0.1" },
+        "workers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["worker_id_hash", "payout_address", "label"],
+            "properties": {
+              "worker_id_hash": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+              "payout_address": {
+                "type": "string",
+                "description": "MUST be a <PAYOUT_ADDRESS_FOR_*> placeholder in v0.1.",
+                "pattern": "^<PAYOUT_ADDRESS_FOR_[A-Za-z0-9._-]+>$"
+              },
+              "label": { "type": "string", "minLength": 1, "maxLength": 64 }
+            }
+          }
+        },
+        "_template_notice": { "type": "string", "minLength": 1, "maxLength": 512 }
+      }
+    },
+    "safety_checklist": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    },
+    "safety_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "no_wallet_required",
+        "no_private_key_required",
+        "no_seed_phrase_required",
+        "no_broadcast_capability",
+        "no_network_in_worker_process",
+        "bundle_carries_no_secrets"
+      ],
+      "properties": {
+        "no_wallet_required":           { "type": "boolean", "const": true },
+        "no_private_key_required":      { "type": "boolean", "const": true },
+        "no_seed_phrase_required":      { "type": "boolean", "const": true },
+        "no_broadcast_capability":      { "type": "boolean", "const": true },
+        "no_network_in_worker_process": { "type": "boolean", "const": true },
+        "bundle_carries_no_secrets":    { "type": "boolean", "const": true }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+    }
+  }
+}

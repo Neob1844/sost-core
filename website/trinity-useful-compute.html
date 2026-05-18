@@ -1864,6 +1864,85 @@
   </p>
 </div>
 
+<!-- Materials Cache + Worker Onboarding + Dashboard Surfacing (combined 5.34-5.36) -->
+<div class="card">
+  <h2>Materials Cache + Worker Onboarding + Dashboard Surfacing</h2>
+  <p>
+    Combined sprint 5.34-5.36 on a single branch. Three small
+    compatible improvements that all touch the materials_engine
+    / dashboard surface, shipped together to keep the schema-
+    extension surface coherent.
+  </p>
+  <ul>
+    <li><strong>Part A &mdash; Materials Project-style cache
+        (5.34).</strong> Local hand-curated reference dataset at
+        <code>data/trinity/materials_project_cache_v01.json</code>
+        with CeO2 and PrOx records. Per-record
+        <code>record_sha256</code>, per-property-block
+        <code>property_hash_sha256</code>, file-level
+        <code>cache_sha256</code>. Loader (in
+        <code>useful_compute_backends.py</code>) verifies every
+        hash at first use; any tamper falls back to a sentinel
+        cache and the engine warns but never crashes. The
+        backend now attaches <code>materials_project_cache_*</code>
+        fields inside the hashed <code>output_obj</code> so the
+        cache provenance is anchored in
+        <code>compute_output_sha256</code> &mdash; cross-worker
+        equality still holds because the cache file is byte-
+        identical across hosts.</li>
+    <li><strong>Part B &mdash; Friendly worker onboarding
+        (5.35).</strong> New
+        <code>scripts/trinity/worker_onboarding.py</code>
+        produces a read-only deterministic
+        <code>trinity-worker-onboarding-bundle/v0.1</code> JSON
+        for any operator-supplied worker_id. Bundle ships
+        supported_backends, required_commands, sample paths,
+        address-map template with
+        <code>&lt;PAYOUT_ADDRESS_FOR_*&gt;</code> placeholders
+        (schema rejects real <code>sost1+40hex</code>), and a
+        safety_status block whose six flags are const-locked
+        true. NO keys, NO mnemonics, NO wallets, NO real
+        addresses. Tests assert no 64-hex blob and no SOST
+        address ever land in the bundle.</li>
+    <li><strong>Part C &mdash; Dashboard surfacing
+        (5.36).</strong> Queue dashboard gains two new columns
+        per item: <code style="color:#7dd3fc">materials_cache</code>
+        ("2 hits (0 misses)") and <code>workers</code>
+        ("2 (worker-A, worker-B)"). JSON gains four new optional
+        fields per <code>latest_items[*]</code>:
+        <code>materials_project_cache_hits</code>,
+        <code>materials_project_cache_misses</code>,
+        <code>workers_seen</code>,
+        <code>worker_ids_truncated</code>. Sprint 5.28 privacy
+        contracts preserved (no JS, no external assets, no
+        absolute paths,
+        <code>html.escape</code> on every text insertion).</li>
+    <li><strong>compute_output_sha256 cross-worker contract
+        preserved.</strong> The cache reads are deterministic
+        (alias index, hashes) and the cache file is identical
+        across worker hosts, so two workers on the same request
+        still produce identical
+        <code>compute_output_sha256</code>. The Sprint 5.12
+        replay contract holds; the Sprint 5.33 invariant test
+        is re-asserted against the new shape.</li>
+    <li><strong>Non-goals (documented).</strong> No live
+        Materials Project API call (cache-only), no new wallet
+        material, no new RPC, no new daemon, no new task_type
+        / source_tool enums, no DFT. Real fetch + real
+        external worker live trial are explicit later sprints.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/materials-cache-worker-onboarding-v01</code>.
+    62 new tests + 3 additive schema extensions + 2 new schemas
+    (<code>materials_project_cache</code> +
+    <code>worker_onboarding_bundle</code>), all green on the
+    deployment host alongside the prior 1301. Pure
+    scripts + schemas + data + docs + tests merge: zero
+    <code>src/</code>, zero consensus, zero wallet / payment
+    / broadcast changes.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>

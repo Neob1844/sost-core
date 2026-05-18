@@ -23,7 +23,12 @@
     "warnings",
     "source_request_sha256",
     "classification_id",
-    "marker_hex"
+    "marker_hex",
+    "materials_project_cache_used",
+    "materials_project_cache_version",
+    "materials_project_cache_sha256",
+    "materials_project_cache_hits",
+    "materials_project_cache_misses"
   ],
   "properties": {
     "schema": {
@@ -151,6 +156,39 @@
     },
     "marker_hex": {
       "type": "string", "pattern": "^[0-9a-f]{16}$"
+    },
+    "materials_project_cache_used": { "type": "boolean" },
+    "materials_project_cache_version": {
+      "type": "string", "minLength": 1, "maxLength": 32
+    },
+    "materials_project_cache_sha256": {
+      "type": "string", "pattern": "^[0-9a-f]{64}$"
+    },
+    "materials_project_cache_hits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "query", "material_id", "formula_pretty", "source",
+          "source_url_text", "source_retrieved_at",
+          "record_sha256", "property_hash_sha256"
+        ],
+        "properties": {
+          "query":               { "type": "string", "minLength": 1, "maxLength": 64 },
+          "material_id":         { "type": "string", "pattern": "^trinity-mpc-[a-z0-9-]{2,64}-v[0-9]+$" },
+          "formula_pretty":      { "type": "string", "minLength": 1, "maxLength": 64 },
+          "source":              { "type": "string", "minLength": 1, "maxLength": 64 },
+          "source_url_text":     { "type": "string", "minLength": 1, "maxLength": 256 },
+          "source_retrieved_at": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "record_sha256":        { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "property_hash_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "materials_project_cache_misses": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
     }
   }
 }
