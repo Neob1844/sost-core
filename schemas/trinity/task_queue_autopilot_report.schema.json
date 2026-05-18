@@ -1,0 +1,172 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-task-queue-autopilot-report/v0.1",
+  "title": "Trinity Task Queue Autopilot Report v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "autopilot_id",
+    "pinned_time",
+    "queue_dir_basename",
+    "max_batches",
+    "max_items_per_batch",
+    "stop_on_failure",
+    "batches_attempted",
+    "batches_succeeded",
+    "batches_failed",
+    "items_completed",
+    "items_failed",
+    "final_queue_counts",
+    "per_batch",
+    "dashboard_paths",
+    "latest_dashboard_basename",
+    "stopped_reason",
+    "safety_status",
+    "warnings",
+    "safety_flags"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-task-queue-autopilot-report/v0.1"
+    },
+    "autopilot_id": {
+      "type": "string",
+      "pattern": "^tap-[0-9a-f]{16}$"
+    },
+    "pinned_time": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 64
+    },
+    "queue_dir_basename": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "max_batches": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 24
+    },
+    "max_items_per_batch": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    },
+    "stop_on_failure": {"type": "boolean"},
+    "batches_attempted": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 24
+    },
+    "batches_succeeded": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 24
+    },
+    "batches_failed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 24
+    },
+    "items_completed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "items_failed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "final_queue_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pending", "running", "completed", "failed", "total"],
+      "properties": {
+        "pending":   {"type": "integer", "minimum": 0},
+        "running":   {"type": "integer", "minimum": 0},
+        "completed": {"type": "integer", "minimum": 0},
+        "failed":    {"type": "integer", "minimum": 0},
+        "total":     {"type": "integer", "minimum": 0}
+      }
+    },
+    "per_batch": {
+      "type": "array",
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "batch_index",
+          "batch_id",
+          "attempted_count",
+          "completed_count",
+          "failed_count",
+          "safety_status"
+        ],
+        "properties": {
+          "batch_index": {"type": "integer", "minimum": 0, "maximum": 23},
+          "batch_id":    {"type": "string", "minLength": 1, "maxLength": 64},
+          "attempted_count": {"type": "integer", "minimum": 0},
+          "completed_count": {"type": "integer", "minimum": 0},
+          "failed_count":    {"type": "integer", "minimum": 0},
+          "safety_status": {
+            "type": "string",
+            "enum": ["ok", "warning", "failed"]
+          }
+        }
+      }
+    },
+    "dashboard_paths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^TRINITY_TASK_QUEUE_DASHBOARD_dsh-[0-9a-f]{16}\\.json$"
+      },
+      "maxItems": 24
+    },
+    "latest_dashboard_basename": {
+      "type": "string"
+    },
+    "stopped_reason": {
+      "type": "string",
+      "enum": [
+        "max_batches_reached",
+        "queue_empty",
+        "stop_on_failure",
+        "task_queue_error"
+      ]
+    },
+    "safety_status": {
+      "type": "string",
+      "enum": ["ok", "warning", "failed"]
+    },
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1, "maxLength": 500}
+    },
+    "safety_flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "no_wallet",
+        "no_private_key",
+        "no_signing",
+        "no_broadcast",
+        "no_autonomous_payment",
+        "no_network",
+        "local_dry_run_only"
+      ],
+      "properties": {
+        "no_wallet":             {"type": "boolean", "const": true},
+        "no_private_key":        {"type": "boolean", "const": true},
+        "no_signing":            {"type": "boolean", "const": true},
+        "no_broadcast":          {"type": "boolean", "const": true},
+        "no_autonomous_payment": {"type": "boolean", "const": true},
+        "no_network":            {"type": "boolean", "const": true},
+        "local_dry_run_only":    {"type": "boolean", "const": true}
+      }
+    }
+  }
+}
