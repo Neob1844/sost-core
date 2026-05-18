@@ -601,7 +601,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div style="margin-top:14px;padding:14px 16px;border:1px solid rgba(245,158,11,0.35);border-left:3px solid #f59e0b;background:rgba(245,158,11,0.05);border-radius:3px">
       <div style="font-size:10px;letter-spacing:2px;color:#f59e0b;margin-bottom:10px;font-family:var(--font-mono,monospace)">// USEFUL COMPUTE STACK &middot; Sprints 5.6 - 5.18d (post-Kalgoorlie)</div>
       <p style="margin:0 0 12px;font-size:12.5px;line-height:1.7;color:#e9d5b3">
-        After the Kalgoorlie capsule, Trinity grew a full <b style="color:#fbbf24">Useful Compute layer</b>: SOST AI now coordinates candidates, workers execute deterministic compute, replay agreement is enforced cross-worker, governance reviews batches, budgets cap spending, payment proposals are built, drafts are signed locally and a human broadcast guard pushes the signed hex to the node. <b style="color:#fbbf24">Sprints 5.6 - 5.32 &middot; 43 trinity scripts &middot; 20 strict schemas &middot; 1288 tests PASS</b>. Every layer is <b>dry-run by default, no auto-payout, no consensus change</b>; the last two on-chain layers (5.17 real signing, 5.18 human broadcast) require an exact verbatim operator token for each invocation. The post-5.18d stack (5.19 - 5.32) is the <span style="color:#fbbf24">autonomy + scientific intake</span> work — see the new banner below.
+        After the Kalgoorlie capsule, Trinity grew a full <b style="color:#fbbf24">Useful Compute layer</b>: SOST AI now coordinates candidates, workers execute deterministic compute, replay agreement is enforced cross-worker, governance reviews batches, budgets cap spending, payment proposals are built, drafts are signed locally and a human broadcast guard pushes the signed hex to the node. <b style="color:#fbbf24">Sprints 5.6 - 5.40 &middot; 48 trinity scripts &middot; 27 strict schemas &middot; 32 docs &middot; 1518 tests PASS</b>. Every layer is <b>dry-run by default, no auto-payout, no consensus change</b>; the last two on-chain layers (5.17 real signing, 5.18 human broadcast) require an exact verbatim operator token for each invocation. The post-5.18d stack (5.19 - 5.40) covers <span style="color:#fbbf24">autonomy + scientific intake + materials cache + worker onboarding + autopilot + daily report + release runner</span> — see the next banners below.
       </p>
 
       <table style="width:100%;font-family:var(--font-mono,monospace);font-size:11px;line-height:1.55;border-collapse:collapse;color:#e9d5b3">
@@ -964,8 +964,136 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       </div>
     </div>
 
+    <!-- ================================================================ -->
+    <!-- NEXT-LAYER OFF-CHAIN TOOLING (Sprints 5.33 - 5.40)                -->
+    <!-- Result surfacing + cache + onboarding + dashboard surfacing +     -->
+    <!-- trial pack + autopilot + daily report + release runner.           -->
+    <!-- All off-chain, dry-run, operator-side. No consensus surface.      -->
+    <!-- ================================================================ -->
+    <div style="margin-top:14px;padding:14px 16px;border:1px solid rgba(125,211,252,0.35);border-left:3px solid #7dd3fc;background:rgba(125,211,252,0.05);border-radius:3px">
+      <div style="font-size:10px;letter-spacing:2px;color:#7dd3fc;margin-bottom:10px;font-family:var(--font-mono,monospace)">// NEXT-LAYER OFF-CHAIN TOOLING &middot; Sprints 5.33 - 5.40 (off-chain, dry-run)</div>
+      <p style="margin:0 0 12px;font-size:12.5px;line-height:1.7;color:#e9d5b3">
+        After the first on-chain payment (block&nbsp;#8512) and the autonomy + scientific-intake stack (5.19 - 5.32), eight further sprints landed on main as <b style="color:#bae6fd">off-chain operator-side tooling</b> that surfaces the materials_engine output, adds a pinned reference cache, ships a friendly worker on-ramp and trial pack, drives the queue semi-autonomously and produces release-readiness reports. <b style="color:#bae6fd">All eight stay off-chain, dry-run by default, with no consensus surface and no automatic payout.</b> The cross-worker <code>compute_output_sha256</code> contract from sprint 5.12 is preserved and re-asserted by regression tests.
+      </p>
+
+      <table style="width:100%;font-family:var(--font-mono,monospace);font-size:11px;line-height:1.55;border-collapse:collapse;color:#e9d5b3">
+        <thead>
+          <tr style="text-align:left;color:#7dd3fc">
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(125,211,252,0.3)">Sprint</th>
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(125,211,252,0.3)">Layer</th>
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(125,211,252,0.3)">What it ships</th>
+            <th style="padding:5px 8px;border-bottom:1px solid rgba(125,211,252,0.3)">Artefact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid rgba(125,211,252,0.18)">
+            <td style="padding:5px 8px;color:#bae6fd">5.33</td>
+            <td style="padding:5px 8px">Materials Engine Result Surfacing</td>
+            <td style="padding:5px 8px">Compact <code>materials_engine_summary</code> projected at three audit-friendly layers (worker result · operator_run roll-up · queue dashboard). Lives OUTSIDE the hashed bytes &mdash; cross-worker <code>compute_output_sha256</code> byte-identical with or without the summary.</td>
+            <td style="padding:5px 8px"><code>trinity-materials-engine-summary/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(125,211,252,0.18)">
+            <td style="padding:5px 8px;color:#bae6fd">5.34</td>
+            <td style="padding:5px 8px">Materials Project-style Cache</td>
+            <td style="padding:5px 8px">Local hand-curated reference dataset (CeO2 + PrOx records) with per-record <code>record_sha256</code>, per-property-block <code>property_hash_sha256</code> and file-level <code>cache_sha256</code>. NO live fetch, NO network. Cache fields ride INSIDE the hashed <code>output_obj</code>; cross-worker equality still holds because the file is byte-identical on every host.</td>
+            <td style="padding:5px 8px"><code>trinity-materials-project-cache/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(125,211,252,0.18)">
+            <td style="padding:5px 8px;color:#bae6fd">5.35</td>
+            <td style="padding:5px 8px">Friendly Worker Onboarding</td>
+            <td style="padding:5px 8px">Read-only deterministic JSON bundle for any operator-supplied worker_id. Payout-address pattern <code>&lt;PAYOUT_ADDRESS_FOR_*&gt;</code> &mdash; schema REJECTS real <code>sost1+40hex</code>. Six const-true safety flags. No keys, no mnemonics, no real addresses, no broadcast surface.</td>
+            <td style="padding:5px 8px"><code>trinity-worker-onboarding-bundle/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(125,211,252,0.18)">
+            <td style="padding:5px 8px;color:#bae6fd">5.36</td>
+            <td style="padding:5px 8px">Dashboard Surfacing</td>
+            <td style="padding:5px 8px">Queue dashboard gains two columns per item: <code style="color:#7dd3fc">materials_cache</code> ("N hits (M misses)") and <code>workers</code> ("N (worker-A, worker-B)"). Sprint 5.28 privacy contracts preserved (no JS, no external assets, no absolute paths, <code>html.escape</code> on every text insertion).</td>
+            <td style="padding:5px 8px"><code>trinity-task-queue-dashboard/v0.1</code> (extended)</td>
+          </tr>
+          <tr style="border-top:1px solid rgba(125,211,252,0.18)">
+            <td style="padding:5px 8px;color:#bae6fd">5.37</td>
+            <td style="padding:5px 8px">External Worker Trial Pack</td>
+            <td style="padding:5px 8px">Portable read-only deterministic directory a friendly second worker host can run to prove cross-host replay equality. Ships <code>PACK_MANIFEST.json</code>, <code>README_WORKER_TRIAL.md</code>, <code>worker_config.json</code>, <code>sample_request.json</code>, <code>expected_result_hashes.json</code>. Six const-true safety flags. Pack carries NO secrets &mdash; no 64-hex blob unbound to a hash field, no real SOST address, no <code>/tmp/</code> leak.</td>
+            <td style="padding:5px 8px"><code>trinity-worker-trial-pack-manifest/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(125,211,252,0.18)">
+            <td style="padding:5px 8px;color:#bae6fd">5.38</td>
+            <td style="padding:5px 8px">Queue Autopilot</td>
+            <td style="padding:5px 8px">Single-shot bounded driver over Sprint&nbsp;5.27 <code>run_batch</code> + Sprint&nbsp;5.28 dashboard. HARD CAP <b style="color:#bae6fd">--max-batches &le; 24</b>; <code>--max-batches 25</code> refused at argv parse. Stops early when queue drained or, with <code>--stop-on-failure</code>, at the first failed batch. Calls run_batch + build_dashboard IN-PROCESS &mdash; no subprocess, no shell, no network, no <code>while True</code>. Seven const-true safety flags.</td>
+            <td style="padding:5px 8px"><code>trinity-task-queue-autopilot-report/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(125,211,252,0.18)">
+            <td style="padding:5px 8px;color:#bae6fd">5.39</td>
+            <td style="padding:5px 8px">Daily Report</td>
+            <td style="padding:5px 8px">Reads existing Sprint&nbsp;5.28 dashboard JSON (+ optional queue-dir) and emits a JSON + Markdown daily summary. Pure consumer of on-disk JSON: imports NO sibling Trinity module. Emits NO HTML, NO JS, NO inline CSS &mdash; Markdown only. Six const-true safety flags. No <code>/tmp/</code> leak, no <code>&lt;script&gt;</code>.</td>
+            <td style="padding:5px 8px"><code>trinity-daily-report/v0.1</code></td>
+          </tr>
+          <tr style="border-top:1px solid rgba(125,211,252,0.18)">
+            <td style="padding:5px 8px;color:#bae6fd">5.40</td>
+            <td style="padding:5px 8px">Sprint Release Runner</td>
+            <td style="padding:5px 8px">Local preflight verifier. Inspects branch / HEAD / base-ref / tracked-dirty / untracked / diff vs base / pytest, walks an optional demo dir for Trinity artifacts identified by <b>schema content, not filename</b>. READ-ONLY observer: NEVER pushes, NEVER merges, NEVER tags, NEVER touches a wallet, NEVER signs, NEVER broadcasts, NEVER uses GitHub API. Only seven read-only git verbs allowed; destructive git argv literals forbidden at lint time. Seven const-true safety flags.</td>
+            <td style="padding:5px 8px"><code>trinity-sprint-release-report/v0.1</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px">
+        <div style="padding:8px 10px;background:rgba(125,211,252,0.08);border:1px solid rgba(125,211,252,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#7dd3fc;margin-bottom:4px">// Autopilot pipeline</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            run-autopilot --max-batches N -&gt;<br>
+            run_batch (in-process) -&gt;<br>
+            build_dashboard -&gt;<br>
+            stop on: queue_empty |<br>
+            &nbsp;&nbsp;stop_on_failure |<br>
+            &nbsp;&nbsp;max_batches_reached |<br>
+            &nbsp;&nbsp;task_queue_error
+          </div>
+        </div>
+        <div style="padding:8px 10px;background:rgba(125,211,252,0.08);border:1px solid rgba(125,211,252,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#7dd3fc;margin-bottom:4px">// Release-runner gates</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            current branch != --branch<br>
+            dirty tracked + --require-clean<br>
+            untracked + no --allow-untracked<br>
+            pytest rc != 0 / failed / errors<br>
+            =&gt; ready_to_release = false<br>
+            =&gt; exit rc = 1
+          </div>
+        </div>
+        <div style="padding:8px 10px;background:rgba(125,211,252,0.08);border:1px solid rgba(125,211,252,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#7dd3fc;margin-bottom:4px">// Const-true safety flags</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            no_wallet / no_private_key<br>
+            no_signing / no_broadcast<br>
+            no_autonomous_payment<br>
+            no_network / local_dry_run_only<br>
+            no_git_push / no_git_merge / no_git_tag<br>
+            pack_carries_no_secrets
+          </div>
+        </div>
+        <div style="padding:8px 10px;background:rgba(125,211,252,0.08);border:1px solid rgba(125,211,252,0.25);border-radius:3px">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#7dd3fc;margin-bottom:4px">// Hard caps</div>
+          <div style="font-family:var(--font-mono,monospace);font-size:11px;color:#e9d5b3;line-height:1.55">
+            autopilot max-batches   = 24<br>
+            autopilot max-items     = 50<br>
+            trial pack files        = 4<br>
+            daily-report top-mats   = 50<br>
+            release-report changed  = 200
+          </div>
+        </div>
+      </div>
+
+      <p style="margin-top:14px;padding:10px 14px;border-left:3px solid #7dd3fc;background:rgba(125,211,252,0.04);font-size:12px;line-height:1.6;color:#e9d5b3;border-radius:3px">
+        <b style="color:#bae6fd">What this stack is NOT.</b>
+        These eight sprints add ZERO new on-chain capability. The autopilot is bounded, not a daemon. The trial pack is a read-only artefact, not a real payment path. The daily report is a derived summary, not a new safety judgment. The release runner is a preflight observer, not a release tool &mdash; it cannot push, merge or tag.
+        <b style="color:#bae6fd">No wallet access, no signing, no broadcast, no LLM, no network from any of these eight sprints.</b>
+        The on-chain edge stays exactly where Sprint 5.18d left it: human-triggered, per-invocation token-gated.
+      </p>
+    </div>
+
     <p style="margin-top:14px;padding:12px 16px;border-left:3px solid #2e8b57;background:rgba(46,139,87,0.04);font-size:13px;line-height:1.6;color:#c8d8cf;border-radius:3px">
-      <b style="color:#8de3ad">One-line summary.</b> Trinity is SOST&rsquo;s first strong use case: <i>turning autonomous digital research into publicly verifiable proof &mdash; now also into real, human-authorised payments on chain.</i> &mdash; full reference at <a href="sost-trinity.html" style="color:#8de3ad;text-decoration:none;border-bottom:1px dotted rgba(141,227,173,0.4)">sost-trinity.html</a>.
+      <b style="color:#8de3ad">One-line summary.</b> Trinity is SOST&rsquo;s first strong use case: <i>turning autonomous digital research into publicly verifiable proof &mdash; now also into real, human-authorised payments on chain, with a full off-chain operator-side toolchain around it.</i> &mdash; full reference at <a href="sost-trinity.html" style="color:#8de3ad;text-decoration:none;border-bottom:1px dotted rgba(141,227,173,0.4)">sost-trinity.html</a>.
     </p>
   </div>
 </section>
