@@ -114,6 +114,13 @@ add_library(sost-core STATIC
     src/wallet.cpp
     # Phase 5.5: block validation
     src/block_validation.cpp
+    # V13 Gold Vault Slice 1 — G1+G2+G3a wiring (sentinel-disabled by default
+    # via GV_SLICE1_ACTIVATION_HEIGHT = INT64_MAX in
+    # include/sost/gold_vault_slice1.h). See
+    # docs/V13_POPC_GOLDVAULT_IMPLEMENTATION_PLAN.md for the operator-decision
+    # blockers (whitelist values, cap basis points, rate-limit blocks) that
+    # must be filled BEFORE activation makes any consensus difference.
+    src/gold_vault_slice1.cpp
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -536,6 +543,14 @@ add_test(NAME dynamic-rewards COMMAND test-dynamic-rewards)
 add_executable(test-gold-vault tests/test_gold_vault.cpp)
 target_link_libraries(test-gold-vault PRIVATE sost-core)
 add_test(NAME gold-vault COMMAND test-gold-vault)
+
+# V13 Gold Vault Slice 1 — pure-function tests for helpers
+# (gv_slice1_active_at / agree / destination_allowed / amount_within_cap /
+#  rate_limit_ok) AND a fail-closed-design regression that asserts the
+# default sentinel state leaves consensus behaviour bit-identical.
+add_executable(test-v13-gold-vault-slice1 tests/test_v13_gold_vault_slice1.cpp)
+target_link_libraries(test-v13-gold-vault-slice1 PRIVATE sost-core)
+add_test(NAME v13-gold-vault-slice1 COMMAND test-v13-gold-vault-slice1)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
