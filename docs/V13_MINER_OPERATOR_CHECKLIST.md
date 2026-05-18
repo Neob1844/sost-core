@@ -1,10 +1,10 @@
 # V13 Miner + Operator Checklist
 
 **Target:** miners and node operators running SOST mainnet through block 12,000.
-**RC:** `v13-rc1`
-**Companion docs:** `V13_RELEASE_CANDIDATE.md`, `V13_ACTIVATION_PLAN.md`, `V13_READINESS_GATES.md`
+**RC:** `v13-rc1` (`release_status = signed_metadata_only` — binaries not yet uploaded)
+**Companion docs:** `V13_PUBLIC_SCOPE_UPDATE.md` (READ THIS FIRST), `V13_RELEASE_CANDIDATE.md`, `V13_ACTIVATION_PLAN.md`, `V13_READINESS_GATES.md`, `V13_DTD_FLIP_12100_AUTOMATIC.md`
 
-If you only read one thing, read this checklist. Run through every box before block 12,000 lands.
+If you only read one thing, read this checklist. Run through every box before block 12,000 lands. If you only read TWO things, read `docs/V13_PUBLIC_SCOPE_UPDATE.md` first — it tells you what V13 will and will NOT do (PoPC, Escrow, Gold Vault governance are V14, not V13).
 
 ---
 
@@ -48,18 +48,44 @@ If you only read one thing, read this checklist. Run through every box before bl
 
 ## C. NTP (MANDATORY post-V13)
 
+This is the single most operationally important V13 change. Get this
+wrong and your candidate blocks will be silently rejected by every
+validator starting at block 12,000.
+
 ```
 [ ] My system clock is within 10 s of true time. After block 12,000,
     a clock more than 10 s ahead of real time makes my candidate
     blocks rejected (future-drift cap drops from 60 s to 10 s).
 
-[ ] Verify with:
-        timedatectl                   # is NTP active?
-        chronyc tracking | head -5    # how far am I from true time?
+[ ] Verify NTP service is active:
 
-[ ] If my clock is behind, that's fine — only ahead-of-true-time is
-    rejected by the future-drift gate. Behind-time may slow my mining
-    until the cASERT cascade catches up but it will not be rejected.
+        timedatectl
+
+    Expected output MUST include:
+        System clock synchronized: yes
+                      NTP service: active
+
+    If "NTP service: inactive", enable it once:
+
+        sudo timedatectl set-ntp true
+
+    Then re-run timedatectl and confirm both lines are green.
+
+[ ] Optional but recommended — use chrony for tighter sync:
+
+        sudo apt install chrony
+        chronyc tracking | head -5
+
+    The "System time" line should be within a few milliseconds of
+    true time, never seconds ahead.
+
+[ ] If my clock is BEHIND true time, that's fine — only ahead-of-true-time
+    is rejected by the future-drift gate. Behind-time may slow my mining
+    until the cASERT cascade catches up but it will NOT be rejected.
+
+[ ] I have tested NTP at least once before the V13 deadline. I have
+    NOT discovered the 10-second rule the hard way at block 12,001
+    after losing my first three candidates.
 ```
 
 ---
@@ -99,22 +125,22 @@ If you only read one thing, read this checklist. Run through every box before bl
 
 ---
 
-## F. Fallback V15 items — do NOT expect at block 12,000
+## F. Fallback V14 items — do NOT expect at block 12,000
 
 ```
 [ ] I understand that PoPC Model A + B is GATED. It activates at
     block 12,000 only if all seven readiness gates close in time.
-    Otherwise it slides to V15 (block 15,000) — or stays inactive.
+    Otherwise it slides to V14 (block 15,000) — or stays inactive.
 
 [ ] I understand that Beacon Phase II-B (expiration / threshold sig /
-    mirror / revocation / severity) is gated. Slides to V15 if not
+    mirror / revocation / severity) is gated. Slides to V14 if not
     ready.
 
 [ ] I understand that Beacon Phase III (P2P gossip of notices) is
-    gated. Slides to V15 if not ready.
+    gated. Slides to V14 if not ready.
 
 [ ] I understand that Memory-Lock per-instance (the second anti-pool
-    mechanism besides SbPoW) is gated. Slides to V15 if not ready.
+    mechanism besides SbPoW) is gated. Slides to V14 if not ready.
 
 [ ] I am NOT building any tooling on top of those four items assuming
     they ship at block 12,000.
