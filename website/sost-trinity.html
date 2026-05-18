@@ -1005,6 +1005,123 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
         <td>Wallet-free <code>sendrawtransaction</code>: CLI handler now runs before the global wallet load. Broadcast a pre-signed hex no longer requires a wallet file. Receipt status enum gains <code>cli_rejected</code>. <b>First end-to-end Trinity Useful Compute payment confirmed in block&nbsp;#8512 on 2026-05-13.</b></td>
         <td style="color:var(--gold)">SHIPPED &middot; sprint-5.18d &middot; first on-chain payment</td>
       </tr>
+
+      <!-- POST-5.18d AUTONOMY + SCIENTIFIC INTAKE TRACK (5.19 → 5.32) -->
+      <tr><td colspan="3" class="k" style="background:rgba(167,139,250,0.08);color:#a78bfa;font-size:11px;letter-spacing:2px">// AUTONOMY + SCIENTIFIC INTAKE + FIRST REAL_BACKEND &middot; SPRINTS 5.19 - 5.32</td></tr>
+      <tr>
+        <td class="k">5.19</td>
+        <td>Operator Loop: single-binary orchestrator <code>task_builder → worker → replay → gate → budget → proposal → payment_draft</code> with checkpoints, resume, SHA256SUMS manifest. Local-dry-run only; never signs, never broadcasts.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.19</td>
+      </tr>
+      <tr>
+        <td class="k">5.20</td>
+        <td>Scientific Prompt Intake: local ingest of a scientific prompt + reference documents (<code>.txt</code> / <code>.md</code> / <code>.json</code>). Hashes every input, bounded previews, no LLM, no network.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.20</td>
+      </tr>
+      <tr>
+        <td class="k">5.21 - 5.22</td>
+        <td>Intake → Task Builder bridge: <code>--from-scientific-intake</code> consumes an intake artifact and writes a Useful Compute request with <code>metadata.scientific_intake</code>. Hotfixes 5.22a-d hardened the wallet-free <code>sendrawtransaction</code> path.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.22d</td>
+      </tr>
+      <tr>
+        <td class="k">5.23</td>
+        <td>Autonomy Governor: constitutional layer evaluating every proposed autonomous action against a SHA256-pinned policy. Locked to <code>mode=observe</code> and <code>autonomous_sost_stocks=0</code> in v0.1. Halt-file kill switch. Threat refs map to <code>SECURITY.md</code> T01-T20.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.23</td>
+      </tr>
+      <tr>
+        <td class="k">5.24</td>
+        <td>Operator Loop × Governor: operator loop fires the Governor before each pipeline step. Hard-block on halt or policy mutation; observe-only otherwise. Audit-only trail: 7 decisions per run.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.24</td>
+      </tr>
+      <tr>
+        <td class="k">5.25</td>
+        <td>Governor Watchdog: external read-only scanner of the audit trail. <code>safety_status</code> rollup <code>critical &gt; warning &gt; stale &gt; ok</code>. Webhook double-gated and not yet wired.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.25</td>
+      </tr>
+      <tr>
+        <td class="k">5.26</td>
+        <td>Task Queue: deterministic local queue with <code>init</code> / <code>enqueue</code> / <code>list</code> / <code>run-once</code> / <code>inspect</code> / <code>validate</code> commands. Fail-closed on governor hard-block + watchdog critical.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.26</td>
+      </tr>
+      <tr>
+        <td class="k">5.27</td>
+        <td>Task Queue Runner: bounded <code>run-batch</code> wrapper. Max 50 items per invocation. <code>--stop-on-failure</code> for fail-fast. Explicitly NOT a daemon.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.27</td>
+      </tr>
+      <tr>
+        <td class="k">5.28</td>
+        <td>Queue Dashboard: read-only JSON + static HTML pane over the queue + batches. XSS-escaped, no JS, no external assets, <code>noindex</code> meta.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.28</td>
+      </tr>
+      <tr>
+        <td class="k">5.29</td>
+        <td>Scientific Intake Readers: pluggable readers for <code>.tex</code> / <code>.csv</code> / <code>.pdf</code> alongside <code>.txt</code> / <code>.md</code> / <code>.json</code>. Graceful PDF missing-dep (<code>pypdf</code> / <code>PyPDF2</code> dynamic import). Per-doc <code>reader_kind</code> / <code>reader_status</code> / <code>extracted_text_sha256</code> / <code>structured_summary</code>.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.29</td>
+      </tr>
+      <tr>
+        <td class="k">5.30</td>
+        <td>Reader Metadata in Request: task builder carries the reader manifest (counts + per-doc subset) into <code>metadata.scientific_reader_manifest</code> in the request. No raw text leak. <code>input_bundle_sha256</code> already reader-sensitive via 5.29 mix-in.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.30</td>
+      </tr>
+      <tr>
+        <td class="k">5.31</td>
+        <td>Scientific Task Classifier: deterministic no-LLM classifier (substring + regex heuristics over bounded previews). Emits <code>task_kind</code> / <code>candidate_materials</code> / <code>candidate_metrics</code> / <code>proposed_source_tool</code> / <code>proposed_difficulty</code>. Sentinel-poison privacy test enforced.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.31</td>
+      </tr>
+      <tr>
+        <td class="k">5.32</td>
+        <td>Materials Engine Backend: first <code>real_backend</code> kind. Auto-routes when <code>source_tool=materials_engine</code> + classifier metadata. Curated 6×6 properties table (CeO2 / PrOx / Sm2O3 / Y2O3 / ZrO2 / TiO2). Deterministic ranking. NOT DFT. NOT measured data.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.32</td>
+      </tr>
+
+      <!-- RESULT SURFACING + MATERIALS CACHE + WORKER ONBOARDING + DASHBOARD SURFACING (5.33 → 5.36) -->
+      <tr><td colspan="3" class="k" style="background:rgba(125,211,252,0.08);color:#7dd3fc;font-size:11px;letter-spacing:2px">// RESULT SURFACING + MATERIALS CACHE + WORKER ONBOARDING &middot; SPRINTS 5.33 - 5.36</td></tr>
+      <tr>
+        <td class="k">5.33</td>
+        <td>Materials Engine Result Surfacing: compact <code>materials_engine_summary</code> projected at three audit-friendly layers (worker result · operator_run roll-up · queue dashboard). Lives OUTSIDE the hashed bytes &mdash; cross-worker <code>compute_output_sha256</code> byte-identical with or without the summary.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.33</td>
+      </tr>
+      <tr>
+        <td class="k">5.34</td>
+        <td>Materials Project-style Cache: local hand-curated reference dataset (CeO2 + PrOx records) with per-record <code>record_sha256</code>, per-property-block <code>property_hash_sha256</code> and file-level <code>cache_sha256</code>. NO live fetch. Cache fields ride INSIDE the hashed <code>output_obj</code>; cross-worker equality holds because the file is byte-identical on every host.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.34</td>
+      </tr>
+      <tr>
+        <td class="k">5.35</td>
+        <td>Friendly Worker Onboarding: read-only deterministic JSON bundle for any operator-supplied <code>worker_id</code>. Payout-address pattern <code>&lt;PAYOUT_ADDRESS_FOR_*&gt;</code> &mdash; schema REJECTS real <code>sost1+40hex</code>. Six const-true safety flags. No keys, no mnemonics, no real addresses, no broadcast surface.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.35</td>
+      </tr>
+      <tr>
+        <td class="k">5.36</td>
+        <td>Dashboard Surfacing: queue dashboard gains two columns per item: <code>materials_cache</code> ("N hits (M misses)") and <code>workers</code> ("N (worker-A, worker-B)"). Sprint 5.28 privacy contracts preserved (no JS, no external assets, no absolute paths, <code>html.escape</code> on every text insertion).</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.36</td>
+      </tr>
+
+      <!-- EXTERNAL WORKER TRIAL + QUEUE AUTOPILOT + DAILY REPORT + RELEASE RUNNER (5.37 → 5.40) -->
+      <tr><td colspan="3" class="k" style="background:rgba(125,211,252,0.08);color:#7dd3fc;font-size:11px;letter-spacing:2px">// EXTERNAL WORKER TRIAL + AUTOPILOT + DAILY REPORT + RELEASE RUNNER &middot; SPRINTS 5.37 - 5.40</td></tr>
+      <tr>
+        <td class="k">5.37</td>
+        <td>External Worker Trial Pack: portable read-only deterministic directory a friendly second worker can run to prove cross-host replay equality. Ships <code>PACK_MANIFEST.json</code>, <code>README_WORKER_TRIAL.md</code>, <code>worker_config.json</code>, <code>sample_request.json</code>, <code>expected_result_hashes.json</code>. Six const-true safety flags. Pack carries NO secrets.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.37</td>
+      </tr>
+      <tr>
+        <td class="k">5.38</td>
+        <td>Queue Autopilot: single-shot bounded driver over 5.27 <code>run_batch</code> + 5.28 dashboard. HARD CAP <code>--max-batches &le; 24</code>; <code>--max-batches 25</code> refused at argv parse. Calls in-process &mdash; no subprocess, no shell, no network, no <code>while True</code>. Seven const-true safety flags.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.38</td>
+      </tr>
+      <tr>
+        <td class="k">5.39</td>
+        <td>Daily Report: reads an existing Sprint 5.28 dashboard JSON (+ optional queue-dir) and emits a JSON + Markdown daily summary. Pure consumer of on-disk JSON: imports NO sibling Trinity module. Emits NO HTML, NO JS, NO inline CSS &mdash; Markdown only. Six const-true safety flags.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.39</td>
+      </tr>
+      <tr>
+        <td class="k">5.40</td>
+        <td>Sprint Release Runner: local preflight verifier. Inspects branch / HEAD / base-ref / tracked-dirty / untracked / diff vs base / pytest, walks an optional demo dir for Trinity artifacts identified by <b>schema content, not filename</b>. READ-ONLY observer: NEVER pushes, NEVER merges, NEVER tags, NEVER touches a wallet, NEVER signs, NEVER broadcasts, NEVER uses GitHub API. Only seven read-only git verbs allowed; destructive git argv literals forbidden at lint time. Seven const-true safety flags.</td>
+        <td style="color:var(--green)">SHIPPED &middot; sprint-5.40 &middot; closing the off-chain v1.0 stack</td>
+      </tr>
+
+      <!-- FUTURE PROOF-BUNDLE LAYER IMPROVEMENTS (separate track from 5.19-5.40) -->
+      <tr><td colspan="3" class="k" style="background:rgba(245,158,11,0.08);color:#f59e0b;font-size:11px;letter-spacing:2px">// FUTURE PROOF-BUNDLE LAYER IMPROVEMENTS (separate track, not in the 5.19-5.40 off-chain scope)</td></tr>
       <tr>
         <td class="k">v0.5 (proposed)</td>
         <td><code>--register-preview</code> flag: prepares (never executes) the exact <code>sost-cli send</code> command for OPEN_NOTE_INLINE or DOC_REF_OPEN.</td>
@@ -1033,7 +1150,7 @@ sha256sum TRINITY_PROOF_BUNDLE_kalgoorlie_phase1.json
     </table>
 
     <div class="note" style="margin-top:18px">
-      None of the planned sprints involve activating rewards, opening a public API, modifying consensus, or auto-broadcasting. Trinity's core invariant &mdash; <b>design and prove, never act unilaterally on chain</b> &mdash; is preserved across the entire roadmap.
+      None of the planned sprints involve activating rewards, opening a public API, modifying consensus, or auto-broadcasting. Trinity's core invariant &mdash; <b>design and prove, never act unilaterally on chain</b> &mdash; is preserved across the entire roadmap. The 5.19 - 5.40 stack is OFF-CHAIN tooling that wraps the on-chain 5.6 - 5.18d core; it adds zero new on-chain capability beyond what Sprint 5.18d already shipped.
     </div>
   </div>
 </section>
