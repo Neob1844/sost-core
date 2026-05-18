@@ -246,6 +246,85 @@ static void test_production_schedule() {
 }
 
 // ---------------------------------------------------------------------------
+// 8 — DTD flip contiguity 12095..12110 (single contiguous sweep across
+//     the V11 Phase 2 cadence boundary at block 12,100).
+//
+//     This section visualises the 2-of-3 -> 1-of-3 transition in a
+//     16-block window straddling the boundary. The pattern is
+//     deterministic from V11_PHASE2_HEIGHT = 7100 +
+//     LOTTERY_HIGH_FREQ_WINDOW = 5000 = 12100. Bootstrap branch:
+//     triggered iff (h % 3) != 0. Permanent branch: triggered iff
+//     (h % 3) == 0. The boundary at h=12100 silently switches the
+//     branch without any restart, RPC call, or operator action.
+// ---------------------------------------------------------------------------
+static void test_dtd_flip_contiguity_12095_12110() {
+    printf("\n=== 8) DTD flip contiguity 12095..12110 (single sweep) ===\n");
+
+    struct Row {
+        int64_t     h;
+        bool        expected;
+        const char* phase;
+    };
+    const Row rows[] = {
+        // Bootstrap final stretch (offset < 5000, triggered iff h%3 != 0).
+        { 12095, /*12095%3=2*/ true,  "bootstrap" },
+        { 12096, /*12096%3=0*/ false, "bootstrap" },
+        { 12097, /*12097%3=1*/ true,  "bootstrap" },
+        { 12098, /*12098%3=2*/ true,  "bootstrap" },
+        { 12099, /*12099%3=0*/ false, "bootstrap (LAST)" },
+        // Permanent stretch (offset >= 5000, triggered iff h%3 == 0).
+        { 12100, /*12100%3=1*/ false, "permanent (FIRST)" },
+        { 12101, /*12101%3=2*/ false, "permanent" },
+        { 12102, /*12102%3=0*/ true,  "permanent (first 1-of-3)" },
+        { 12103, /*12103%3=1*/ false, "permanent" },
+        { 12104, /*12104%3=2*/ false, "permanent" },
+        { 12105, /*12105%3=0*/ true,  "permanent" },
+        { 12106, /*12106%3=1*/ false, "permanent" },
+        { 12107, /*12107%3=2*/ false, "permanent" },
+        { 12108, /*12108%3=0*/ true,  "permanent" },
+        { 12109, /*12109%3=1*/ false, "permanent" },
+        { 12110, /*12110%3=2*/ false, "permanent" },
+    };
+
+    int bootstrap_fires = 0, bootstrap_total = 0;
+    int permanent_fires = 0, permanent_total = 0;
+
+    for (const Row& r : rows) {
+        const bool got = is_lottery_block(r.h, V11_PHASE2_HEIGHT);
+        char buf[128];
+        std::snprintf(buf, sizeof(buf),
+                      "h=%lld %-26s expected=%s got=%s",
+                      (long long)r.h, r.phase,
+                      r.expected ? "FIRES" : "----",
+                      got        ? "FIRES" : "----");
+        TEST(buf, got == r.expected);
+
+        if (r.h < 12100) {
+            ++bootstrap_total;
+            if (got) ++bootstrap_fires;
+        } else {
+            ++permanent_total;
+            if (got) ++permanent_fires;
+        }
+    }
+
+    // Window-density assertions for this specific 16-block range.
+    // (Long-run density 2/3 and 1/3 is already covered by sections
+    //  3 and 5; this section pins the exact pattern at the flip.)
+    TEST("bootstrap window 12095..12099 has 3 fires / 5 blocks",
+         bootstrap_fires == 3 && bootstrap_total == 5);
+    TEST("permanent window 12100..12110 has 3 fires / 11 blocks",
+         permanent_fires == 3 && permanent_total == 11);
+
+    // Boundary invariant: at no point in the contiguous sweep does
+    // the function require any input other than (h, V11_PHASE2_HEIGHT).
+    // The flip is purely a consequence of the height crossing
+    // V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW (= 12100).
+    TEST("V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW == 12100",
+         (V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW) == 12100);
+}
+
+// ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 int main() {
@@ -257,6 +336,7 @@ int main() {
     test_permanent_window();
     test_constants_pinned();
     test_production_schedule();
+    test_dtd_flip_contiguity_12095_12110();
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
