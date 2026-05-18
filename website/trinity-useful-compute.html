@@ -1943,6 +1943,79 @@
   </p>
 </div>
 
+<!-- External Worker Trial Pack + Queue Autopilot + Daily Report (combined 5.37-5.39) -->
+<div class="card">
+  <h2>External Worker Trial Pack + Queue Autopilot + Daily Report</h2>
+  <p>
+    Combined sprint 5.37-5.39 on a single branch. Three bounded
+    helpers that move Trinity closer to semi-autonomous operation
+    without touching the wallet/signing/broadcast surface.
+  </p>
+  <ul>
+    <li><strong>Part A &mdash; External Worker Trial Pack
+        (5.37).</strong> New
+        <code>scripts/trinity/worker_trial_pack.py</code> emits a
+        portable directory a second machine or person can run as a
+        Trinity worker. The pack contains a
+        <code>PACK_MANIFEST.json</code>
+        (<code>trinity-worker-trial-pack-manifest/v0.1</code>),
+        a deterministic sample request, an
+        <code>expected_result_hashes.json</code> with the
+        canonical <code>compute_output_sha256</code> the recipient
+        must reach, a pinned <code>worker_config.json</code> with
+        a <code>&lt;PAYOUT_ADDRESS_FOR_*&gt;</code> placeholder,
+        and a <code>README_WORKER_TRIAL.md</code>. Six const-true
+        safety flags. Tests assert no 64-hex blob, no real
+        <code>sost1+40hex</code> address, no <code>/tmp/</code>
+        leak, and byte-deterministic pack across reruns.</li>
+    <li><strong>Part B &mdash; Queue Autopilot
+        (5.38).</strong> New
+        <code>scripts/trinity/task_queue_autopilot.py</code>
+        ("<code>run-autopilot</code>") drives the existing
+        Sprint 5.27 <code>run_batch</code> + Sprint 5.28
+        dashboard up to <code>--max-batches</code> times
+        (<strong>hard cap 24</strong>; <code>--max-batches 25</code>
+        is refused at argv parse). Stops early when the queue is
+        drained or, with <code>--stop-on-failure</code>, at the
+        first failed batch. Emits a schema-validated
+        <code>trinity-task-queue-autopilot-report/v0.1</code>
+        report with per-batch breakdown, final queue counts,
+        every dashboard basename written, a <code>stopped_reason</code>
+        enum, and seven const-true safety flags. No subprocess,
+        no <code>while True</code>, no network.</li>
+    <li><strong>Part C &mdash; Daily Report
+        (5.39).</strong> New
+        <code>scripts/trinity/trinity_daily_report.py</code>
+        reads an existing Sprint 5.28 dashboard JSON and emits a
+        JSON + Markdown daily summary
+        (<code>trinity-daily-report/v0.1</code>) with completed /
+        failed counts, top materials,
+        <code>cache_hits_total</code> / <code>cache_misses_total</code>,
+        <code>workers_seen_total</code>, worker_ids, drafts and
+        proposals found under the queue dir, dashboard warnings,
+        and six const-true safety flags. Pure consumer of on-disk
+        JSON: imports no sibling Trinity module, emits no HTML or
+        JS, leaks no absolute paths.</li>
+    <li><strong>Same hard line as previous sprints.</strong> No
+        wallet. No signing. No broadcast. No autonomous payment.
+        No LLM. No network in any worker process. All three
+        scripts pass the same forbidden-token static lint that
+        guards every Trinity Useful Compute module.</li>
+    <li><strong>Non-goals (documented).</strong> The autopilot
+        is NOT a daemon. The trial pack is NOT a real payment
+        path. The daily report is NOT a new safety judgment.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/external-worker-autopilot-report-v01</code>.
+    New tests + 3 new schemas
+    (<code>worker_trial_pack_manifest</code>,
+    <code>task_queue_autopilot_report</code>,
+    <code>daily_report</code>); zero <code>src/</code>, zero
+    consensus, zero wallet / payment / broadcast changes. Full
+    Trinity suite still green on the deployment host.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>

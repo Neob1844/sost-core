@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-worker-trial-pack-manifest/v0.1",
+  "title": "Trinity Worker Trial Pack Manifest v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "pack_id",
+    "worker_id",
+    "worker_id_hash",
+    "pinned_time",
+    "repo_commit",
+    "repo_tag",
+    "request_basename",
+    "request_sha256",
+    "expected_compute_output_sha256",
+    "files",
+    "safety_status",
+    "notes"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-worker-trial-pack-manifest/v0.1"
+    },
+    "pack_id": {
+      "type": "string",
+      "pattern": "^twtp-[0-9a-f]{16}$"
+    },
+    "worker_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "worker_id_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    },
+    "pinned_time": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 64
+    },
+    "repo_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,64}$"
+    },
+    "repo_tag": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._/-]+$",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "request_basename": {
+      "type": "string",
+      "const": "sample_request.json"
+    },
+    "request_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "expected_compute_output_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "files": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "size_bytes", "sha256"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "README_WORKER_TRIAL.md",
+              "worker_config.json",
+              "sample_request.json",
+              "expected_result_hashes.json"
+            ]
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1048576
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "safety_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "no_wallet_required",
+        "no_private_key_required",
+        "no_seed_phrase_required",
+        "no_broadcast_capability",
+        "no_network_in_worker_process",
+        "pack_carries_no_secrets"
+      ],
+      "properties": {
+        "no_wallet_required":           {"type": "boolean", "const": true},
+        "no_private_key_required":      {"type": "boolean", "const": true},
+        "no_seed_phrase_required":      {"type": "boolean", "const": true},
+        "no_broadcast_capability":      {"type": "boolean", "const": true},
+        "no_network_in_worker_process": {"type": "boolean", "const": true},
+        "pack_carries_no_secrets":      {"type": "boolean", "const": true}
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1, "maxLength": 500},
+      "minItems": 1,
+      "maxItems": 20
+    }
+  }
+}
