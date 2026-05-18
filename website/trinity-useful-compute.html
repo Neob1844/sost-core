@@ -2016,6 +2016,92 @@
   </p>
 </div>
 
+<!-- Sprint Release Runner (5.40) -->
+<div class="card">
+  <h2>Sprint Release Runner</h2>
+  <p>
+    Sprint 5.40 ships a single-shot
+    <strong>preflight verifier</strong> that turns the release
+    cut from a hand-typed sequence of git verbs into a
+    reproducible report. It does <strong>NOT</strong> perform
+    the release. The destructive verbs &mdash; push, merge, tag
+    &mdash; remain in the operator's hands.
+  </p>
+  <ul>
+    <li><strong>What it does.</strong>
+        <code>scripts/trinity/sprint_release_runner.py verify
+        &hellip;</code> inspects the current branch, the HEAD
+        commit, the base-ref commit, the tracked-dirty bit, the
+        untracked-file count, the diff and commits-ahead vs the
+        base, optionally runs <code>pytest</code>, and optionally
+        walks a demo dir to surface Trinity artifacts identified
+        by <strong>schema content, not filename</strong>. Output
+        is a single
+        <code>trinity-sprint-release-report/v0.1</code> JSON plus
+        a Markdown rendering with eight sections.</li>
+    <li><strong>Read-only by construction.</strong> All
+        <code>subprocess</code> calls use argv lists; the only
+        git verbs allowed are seven read-only ones
+        (<code>rev-parse</code>, <code>status</code>,
+        <code>diff</code>, <code>log</code>, <code>branch</code>,
+        <code>ls-files</code>, <code>rev-list</code>). The static
+        safety test rejects the destructive argv literals
+        <code>"push"</code>, <code>"merge"</code>,
+        <code>"tag"</code>, <code>"reset"</code>,
+        <code>"checkout"</code>, <code>"rm"</code>,
+        <code>"clean"</code>, <code>"commit"</code>,
+        <code>"add"</code>, <code>"stash"</code>
+        &mdash; the runner <em>cannot</em> mutate git state.</li>
+    <li><strong>Artifact discovery by schema.</strong> The
+        recursive demo-dir walk identifies each JSON by its
+        <code>schema</code> field, so renamed files
+        (<code>daily-report.json</code>,
+        <code>weird-name.json</code>, &hellip;) are still
+        recognised as
+        <code>autopilot_report</code> / <code>dashboard</code> /
+        <code>daily_report</code> /
+        <code>trial_pack_manifest</code> and summarised
+        (autopilot batches + safety_status, dashboard counts,
+        daily report top_materials + cache_hits_total +
+        workers_seen_total, trial_pack worker_id +
+        expected_compute_output_sha256). Symlink-safe; capped at
+        100 entries.</li>
+    <li><strong>Hard gates.</strong>
+        <code>ready_to_release</code> flips to <code>false</code>
+        on branch mismatch, dirty tracked tree with
+        <code>--require-clean-tracked-tree</code>, untracked
+        files present without <code>--allow-untracked</code>,
+        or any pytest failure / error / non-zero return code.
+        Exit codes are <code>0</code> (ready),
+        <code>1</code> (not ready), <code>2</code> (setup error).</li>
+    <li><strong>Seven const-true safety flags</strong>
+        enforced at both script and schema level:
+        <code>no_git_push</code>, <code>no_git_merge</code>,
+        <code>no_git_tag</code>, <code>no_wallet_access</code>,
+        <code>no_signing</code>, <code>no_broadcast</code>,
+        <code>no_network_required</code>. The static lint also
+        forbids <code>requests</code> / <code>urllib</code> /
+        <code>httpx</code> / <code>aiohttp</code> /
+        <code>socket</code>, the GitHub API surface
+        (<code>api.github.com</code>, <code>GITHUB_TOKEN</code>,
+        <code>PyGithub</code>), wallet / sign / broadcast tokens,
+        and any LLM client.</li>
+    <li><strong>Non-goals (documented).</strong> NOT a release
+        tool. NOT a CI surrogate. NOT a daemon. NOT
+        GitHub-aware (no API). NOT a wallet, signer, or
+        broadcaster.</li>
+  </ul>
+  <p style="opacity:.7;font-size:13px;">
+    Branch <code>trinity/sprint-release-runner-v01</code>.
+    44 new tests (14 functional + 19 schema + 11 safety) + 1
+    new schema (<code>sprint_release_report</code>), all green
+    alongside the prior 1474 (total <strong>1518 passed,
+    38 skipped</strong>). Pure scripts + schemas + docs + tests
+    merge: zero <code>src/</code>, zero consensus, zero wallet
+    / payment / broadcast changes.
+  </p>
+</div>
+
 <!-- Safety summary -->
 <div class="card">
   <h2>Safety summary</h2>
