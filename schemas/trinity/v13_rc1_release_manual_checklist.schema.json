@@ -1,0 +1,207 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "trinity-v13-rc1-release-manual-checklist/v0.1",
+  "title": "Trinity V13 RC1 Release Manual Checklist v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "checklist_id",
+    "pinned_time",
+    "rc_id",
+    "activation_height",
+    "bundle_dir_basename",
+    "repo_root_basename",
+    "bundle_checks",
+    "public_metadata_state",
+    "manual_steps",
+    "safety_status",
+    "safety_flags"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trinity-v13-rc1-release-manual-checklist/v0.1"
+    },
+    "checklist_id": {
+      "type": "string",
+      "pattern": "^v13rc1cl-[0-9a-f]{16}$"
+    },
+    "pinned_time": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 64
+    },
+    "rc_id": {
+      "type": "string",
+      "pattern": "^v13-rc[0-9]+$"
+    },
+    "activation_height": {
+      "type": "integer",
+      "const": 12000
+    },
+    "bundle_dir_basename": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "repo_root_basename": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "bundle_checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest_json_present",
+        "manifest_md_present",
+        "sha256sums_present",
+        "verify_commands_present",
+        "binaries_present",
+        "tarball_present",
+        "sha256sums_lines",
+        "all_ok"
+      ],
+      "properties": {
+        "manifest_json_present":   {"type": "boolean"},
+        "manifest_md_present":     {"type": "boolean"},
+        "sha256sums_present":      {"type": "boolean"},
+        "verify_commands_present": {"type": "boolean"},
+        "binaries_present": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "present"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": ["sost-node", "sost-miner", "sost-cli"]
+              },
+              "present": {"type": "boolean"}
+            }
+          }
+        },
+        "tarball_present":         {"type": "boolean"},
+        "sha256sums_lines": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "sha256"],
+            "properties": {
+              "name":   {"type": "string", "minLength": 1, "maxLength": 64},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            }
+          }
+        },
+        "all_ok": {"type": "boolean"}
+      }
+    },
+    "public_metadata_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_status_current",
+        "release_status_expected",
+        "matches"
+      ],
+      "properties": {
+        "release_status_current": {
+          "type": "string",
+          "enum": [
+            "metadata_only_not_signed_not_uploaded",
+            "signed_metadata_only",
+            "signed_and_published",
+            "unknown"
+          ]
+        },
+        "release_status_expected": {
+          "type": "string",
+          "const": "metadata_only_not_signed_not_uploaded"
+        },
+        "matches": {"type": "boolean"}
+      }
+    },
+    "manual_steps": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "stage",
+          "title",
+          "description",
+          "command_template",
+          "uses_release_key",
+          "uses_network",
+          "must_be_done_by_operator"
+        ],
+        "properties": {
+          "id":          {"type": "string", "pattern": "^[A-Z][0-9]+$"},
+          "stage": {
+            "type": "string",
+            "enum": [
+              "A_preverify",
+              "B_sign",
+              "C_upload",
+              "D_update_metadata",
+              "E_announce"
+            ]
+          },
+          "title":       {"type": "string", "minLength": 1, "maxLength": 200},
+          "description": {"type": "string", "minLength": 1, "maxLength": 600},
+          "command_template": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 1000
+          },
+          "uses_release_key":         {"type": "boolean"},
+          "uses_network":             {"type": "boolean"},
+          "must_be_done_by_operator": {"type": "boolean", "const": true}
+        }
+      }
+    },
+    "safety_status": {
+      "type": "string",
+      "enum": ["ok", "warning", "failed"]
+    },
+    "safety_flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "no_private_key_access",
+        "no_signing_executed",
+        "no_release_upload",
+        "no_github_api",
+        "no_wallet_access",
+        "no_broadcast",
+        "no_network_required",
+        "no_subprocess",
+        "no_shell_true",
+        "no_ethereum_deploy",
+        "no_gpg_invocation"
+      ],
+      "properties": {
+        "no_private_key_access": {"type": "boolean", "const": true},
+        "no_signing_executed":   {"type": "boolean", "const": true},
+        "no_release_upload":     {"type": "boolean", "const": true},
+        "no_github_api":         {"type": "boolean", "const": true},
+        "no_wallet_access":      {"type": "boolean", "const": true},
+        "no_broadcast":          {"type": "boolean", "const": true},
+        "no_network_required":   {"type": "boolean", "const": true},
+        "no_subprocess":         {"type": "boolean", "const": true},
+        "no_shell_true":         {"type": "boolean", "const": true},
+        "no_ethereum_deploy":    {"type": "boolean", "const": true},
+        "no_gpg_invocation":     {"type": "boolean", "const": true}
+      }
+    }
+  }
+}
