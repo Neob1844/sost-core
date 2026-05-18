@@ -1229,6 +1229,107 @@ function toggleV12Banner(){
 })();
 </script>
 
+<!-- ============== V13 RC1 OPERATOR NOTICE — activates at block 12,000 ============== -->
+<!-- Static HTML / no JS / no fetch / no wallet UI / no signing UI / no broadcast UI. -->
+<!-- Single source of truth: website/api/v13_release_candidate.json + docs/V13_RELEASE_CANDIDATE.md -->
+<div id="v13Rc1OperatorBanner" class="v13-rc1-banner" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
+<div style="background:linear-gradient(180deg,rgba(245,158,11,.10),rgba(0,0,0,.18));border:2px solid #f59e0b;border-left:6px solid #f59e0b;border-radius:4px;padding:14px 18px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="color:#f59e0b;font-size:15px;font-weight:900;letter-spacing:1.2px">⚡ SOST V13 RELEASE CANDIDATE (v13-rc1) — ACTIVATION AT BLOCK 12,000</span>
+      <span style="background:rgba(245,158,11,.15);color:#f59e0b;font-size:10px;font-weight:900;letter-spacing:1.8px;padding:5px 10px;border-radius:3px;text-transform:uppercase;white-space:nowrap">⚠ ALL OPERATORS: UPDATE + NTP BEFORE 12,000</span>
+    </div>
+  </div>
+
+  <div style="color:var(--text);font-size:12px;line-height:1.65">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;font-size:11px;margin-bottom:12px">
+      <div style="background:rgba(0,0,0,.3);border:1px solid rgba(245,158,11,.4);padding:8px"><div style="color:var(--text3);letter-spacing:1px">RC ID</div><div style="color:#f59e0b;font-weight:700;font-size:14px">v13-rc1</div></div>
+      <div style="background:rgba(0,0,0,.3);border:1px solid rgba(245,158,11,.4);padding:8px"><div style="color:var(--text3);letter-spacing:1px">ACTIVATION HEIGHT</div><div style="color:#f59e0b;font-weight:700;font-size:14px">#12,000</div></div>
+      <div style="background:rgba(0,0,0,.3);border:1px solid rgba(245,158,11,.4);padding:8px"><div style="color:var(--text3);letter-spacing:1px">FALLBACK HEIGHT</div><div style="color:#f59e0b;font-weight:700;font-size:14px">#15,000 (V15)</div></div>
+      <div style="background:rgba(0,0,0,.3);border:1px solid rgba(245,158,11,.4);padding:8px"><div style="color:var(--text3);letter-spacing:1px">DTD DECISION</div><div style="color:#f59e0b;font-weight:700;font-size:14px">#12,100</div></div>
+    </div>
+
+    <div style="color:#f59e0b;font-size:13px;font-weight:900;letter-spacing:1.5px;margin-bottom:6px">⚠ WHAT V13 CHANGES AT BLOCK 12,000 (CONFIRMED, WIRED IN CODE)</div>
+    <ul style="margin:6px 0 10px 18px;padding:0">
+      <li><b>All cASERT equalizer profiles E7-H35 active</b> — ceiling rises from H20 to H35 via <code>effective_profile_ceiling_at(height)</code> + <code>validator_profile_ceiling_at(height)</code> in <code>include/sost/params.h</code>. Closes the equalizer calibration started in V6.</li>
+      <li><b>DTD lottery cooldown 5 → 6 blocks</b> — <code>lottery_exclusion_window_at(height)</code> returns 6 for <code>height &ge; V13_HEIGHT</code>. Deterministic 2-firing exclusion under permanent 1-of-3 cadence.</li>
+      <li><b>Future-timestamp drift cap 60 s → 10 s</b> — <code>max_future_drift_at(height)</code> returns 10 for <code>height &ge; V13_HEIGHT</code>. <b style="color:#fb010d">NTP synchronisation is MANDATORY post-V13</b>; a host whose clock is more than 10 s ahead of true time will produce blocks validators reject.</li>
+      <li><b>Beacon Phase II-A</b> — <code>BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT</code>. Local <code>notices.json</code> only; file-only, no P2P, no HTTP from the node. Operator-signed advisory banner on miner / node startup.</li>
+    </ul>
+
+    <div style="color:#f59e0b;font-size:13px;font-weight:900;letter-spacing:1.5px;margin-bottom:6px">⚠ FALLBACK TO V15 (BLOCK 15,000) — DO NOT EXPECT THESE AT 12,000</div>
+    <ul style="margin:6px 0 10px 18px;padding:0">
+      <li><b>PoPC Model A + B</b> — full automated lifecycle. Activates at V13 only if all seven PoPC readiness gates (audit daemon, auto-slash, auto-settlement cron, SOSTEscrow deployment, Ethereum event listener, consensus POPC_ACTIVATION_HEIGHT, end-to-end lifecycle test) close in time. Otherwise slides to V15. <b>PoPC is NOT half-shipped.</b></li>
+      <li><b>Beacon Phase II-B</b> — expiration-by-height, threshold-N-of-M signature on critical notices, mirror channel, optional revocation, severity levels. Slides to V15 if design + tests are not closed by the V13 cut.</li>
+      <li><b>Beacon Phase III</b> — P2P gossip of verified notices. Currently dormant at <code>BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX</code>. Slides to V15 if P2P scaffold + activation constant + safety / anti-DoS tests are not green by the V13 cut.</li>
+      <li><b>Memory-Lock per-instance</b> — second anti-pool mechanism besides SbPoW; forces the 4 GB ConvergenceX dataset to be per-thread. Slides to V15 (or stays inactive) until independent simulation + 8 GB-floor small-miner safety test land in the repo.</li>
+    </ul>
+
+    <div style="background:rgba(0,0,0,.25);border-left:3px solid #f59e0b;padding:10px 12px;margin:10px 0;font-size:11.5px;line-height:1.7;color:var(--text)">
+      <b style="color:#f59e0b">Operator decision at block 12,100.</b>
+      ~100 blocks after V13 stabilises, the operator will open the DTD lottery decision in this thread:
+      <span style="color:var(--text)"><b>Option A</b> keep the DTD lottery at 1-of-3 permanent (cooldown stays at 6) as supplementary redistribution alongside PoPC when PoPC is live</span> ·
+      <span style="color:var(--text)"><b>Option B</b> disable the lottery; extra-coinbase rewards stay on the original PoPC + Useful Compute path only</span>.
+      The decision is community-driven, not unilateral.
+    </div>
+
+    <div style="background:rgba(0,0,0,.25);border-left:3px solid #f59e0b;padding:10px 12px;margin:10px 0;font-size:11.5px;line-height:1.7;color:var(--text)">
+      <b style="color:#f59e0b">Beacon is a loudspeaker, not a remote control.</b>
+      Beacon Phase II-A (V13 confirmed) MAY inform; it MAY NOT restart, MAY NOT block any block or transaction, MAY NOT change consensus rules, MAY NOT execute commands on the host. The validator and the static safety lint enforce these guarantees together. Beacon Phase II-B and Phase III preserve the same privilege model bit for bit.
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;font-size:11px;margin-top:10px">
+      <div style="padding:8px 10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:3px">
+        <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// MINER UPGRADE SEQUENCE</div>
+        <div style="font-family:var(--code);font-size:11px;color:var(--text);line-height:1.55">
+          1. Pull V13 release tag<br>
+          2. Verify min_commit matches<br>
+          3. <code>cmake / make</code><br>
+          4. Sync NTP (clock not &gt;10 s ahead)<br>
+          5. Restart sost-node + sost-miner<br>
+          &nbsp;&nbsp;&nbsp;BEFORE block 12,000
+        </div>
+      </div>
+      <div style="padding:8px 10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:3px">
+        <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// SbPoW UNCHANGED</div>
+        <div style="font-family:var(--code);font-size:11px;color:var(--text);line-height:1.55">
+          --wallet + --mining-key-label<br>
+          (mandatory since block 7,100)<br>
+          NO new wallet migration<br>
+          NO key export<br>
+          NO pool key sharing
+        </div>
+      </div>
+      <div style="padding:8px 10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:3px">
+        <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// IF BLOCKS REJECTED POST-V13</div>
+        <div style="font-family:var(--code);font-size:11px;color:var(--text);line-height:1.55">
+          1. Clock &gt; 10 s ahead of true?<br>
+          2. Old binary?<br>
+          3. Old cASERT ceiling assumption?<br>
+          4. Old DTD cooldown assumption?<br>
+          See docs/V13_MINER_OPERATOR_CHECKLIST.md
+        </div>
+      </div>
+      <div style="padding:8px 10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:3px">
+        <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// PUBLIC RC MANIFEST</div>
+        <div style="font-family:var(--code);font-size:11px;color:var(--text);line-height:1.55">
+          /api/v13_release_candidate.json<br>
+          docs/V13_RELEASE_CANDIDATE.md<br>
+          docs/V13_MINER_OPERATOR_CHECKLIST.md<br>
+          docs/V13_ACTIVATION_PLAN.md<br>
+          docs/V13_READINESS_GATES.md
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;padding:10px 12px;background:rgba(0,0,0,.25);border-left:3px solid #f59e0b;font-size:11.5px;line-height:1.6;color:var(--text)">
+      <b style="color:#f59e0b">What V13 does NOT change.</b>
+      No change to the SbPoW signing contract (active since block 7,100). No change to the coinbase split (50% miner / 25% Gold Vault / 25% PoPC Pool). No change to the emission schedule or the 4,669,201 SOST hard cap. No new wallet format. No new network endpoint. <b style="color:#f59e0b">Useful Compute rewards remain POSTPONED</b> — block 12,000 will NOT activate Useful Compute rewards (post #133 invariant unchanged).
+    </div>
+  </div>
+</div>
+</div>
+
 <!-- ============== SbPoW MINING — wallet + mining-key-label setup ============== -->
 <div class="phase2-resolved-banner" style="max-width:1400px;margin:12px auto 0;padding:0 24px">
 <div style="background:linear-gradient(180deg,rgba(34,197,94,.08),rgba(0,0,0,.18));border:2px solid #22c55e;border-left:6px solid #22c55e;border-radius:4px;padding:14px 18px">

@@ -159,6 +159,39 @@ footer a{color:var(--t3);text-decoration:none}
   </div>
 </section>
 
+<!-- =================== V13 RC1 STATUS BLOCK (static, no JS) =================== -->
+<!-- Source of truth: website/api/v13_release_candidate.json -->
+<!--                  + docs/V13_RELEASE_CANDIDATE.md -->
+<!--                  + docs/V13_MINER_OPERATOR_CHECKLIST.md -->
+<section><div class="c">
+<div style="background:linear-gradient(180deg,rgba(245,158,11,.08),rgba(0,0,0,.18));border:2px solid #f59e0b;border-left:6px solid #f59e0b;border-radius:4px;padding:14px 18px;margin:14px 0">
+  <div style="color:#f59e0b;font-size:14px;font-weight:900;letter-spacing:1.2px;margin-bottom:8px">
+    ⚡ V13 RELEASE CANDIDATE (v13-rc1) &mdash; ACTIVATION AT BLOCK 12,000
+  </div>
+  <div style="font-size:12px;line-height:1.7;color:var(--t1)">
+    V13 ships four <b>confirmed</b> items at block 12,000:
+    <b>all cASERT equalizer profiles E7-H35 active</b>,
+    <b>DTD lottery cooldown 5 &rarr; 6 blocks</b>,
+    <b>future-timestamp drift cap 60 s &rarr; 10 s</b> (<b style="color:#f59e0b">NTP synchronisation MANDATORY post-V13</b>),
+    and <b>Beacon Phase II-A</b> (local <code>notices.json</code>, file-only, signed, no P2P, no HTTP).
+    Four further items remain <b>gated</b> and fall back to <b>V15 at block 15,000</b> (proposed final hardfork, not guaranteed) if their readiness gates do not close by the V13 binary cut:
+    <b>PoPC Model A + B</b> (no half-shipping),
+    <b>Beacon Phase II-B</b>,
+    <b>Beacon Phase III (P2P gossip)</b>,
+    <b>Memory-Lock per-instance</b> (the second anti-pool mechanism besides SbPoW).
+    The DTD lottery decision opens to the community at block 12,100.
+    Beacon is a loudspeaker, not a remote control: it MAY inform, it MAY NOT restart, MAY NOT block, MAY NOT change consensus, MAY NOT execute commands.
+  </div>
+  <div style="margin-top:10px;font-size:11px;color:var(--t2)">
+    Public RC manifest: <code>/api/v13_release_candidate.json</code> &middot;
+    Full operator note: <code>docs/V13_RELEASE_CANDIDATE.md</code> &middot;
+    Miner / operator checklist: <code>docs/V13_MINER_OPERATOR_CHECKLIST.md</code> &middot;
+    Activation plan: <code>docs/V13_ACTIVATION_PLAN.md</code> &middot;
+    Readiness gates: <code>docs/V13_READINESS_GATES.md</code>
+  </div>
+</div>
+</div></section>
+
 <section><div class="c">
 <div class="toc">
 <strong style="color:var(--t1);display:block;margin-bottom:8px">TABLE OF CONTENTS</strong>
