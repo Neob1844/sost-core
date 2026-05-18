@@ -78,6 +78,7 @@ ALLOWED_GIT_VERBS = (
     "branch",
     "ls-files",
     "rev-list",
+    "merge-base",
 )
 
 
@@ -290,6 +291,99 @@ def _git_tracked_dirty(repo_root: Path) -> bool:
     return False
 
 
+# Hex-only check for the configured min_commit. We never pass the
+# config value directly to a subprocess until it has cleared this
+# regex — guards against accidental option-injection if the config
+# is ever sourced from an untrusted file.
+_MIN_COMMIT_RE = re.compile(r"^[0-9a-f]{7,40}$")
+
+
+def _git_resolve_commit(
+    repo_root: Path, commit_ish: str,
+) -> Optional[str]:
+    """Return the full 40-hex SHA for a short / long commit, or
+    None if git cannot resolve it. Uses `git rev-parse --verify
+    <commit>^{commit}` so we only accept things that already
+    exist in this repo's history."""
+    if not _MIN_COMMIT_RE.match(commit_ish or ""):
+        return None
+    proc = _run_git(
+        ["rev-parse", "--verify", "--quiet",
+         commit_ish + "^{commit}"],
+        repo_root,
+        allow_fail=True,
+    )
+    sha = proc.stdout.strip()
+    if proc.returncode != 0 or len(sha) != 40:
+        return None
+    return sha.lower()
+
+
+def _git_is_ancestor(
+    repo_root: Path, ancestor_sha: str, head_sha: str,
+) -> bool:
+    """Returns True iff `ancestor_sha` is reachable from
+    `head_sha` (i.e. `git merge-base --is-ancestor` returns rc=0).
+    Both arguments MUST be full 40-hex SHAs that already pass
+    _git_resolve_commit; we re-validate to be paranoid."""
+    if not (
+        re.fullmatch(r"[0-9a-f]{40}", ancestor_sha or "")
+        and re.fullmatch(r"[0-9a-f]{40}", head_sha or "")
+    ):
+        return False
+    proc = _run_git(
+        ["merge-base", "--is-ancestor", ancestor_sha, head_sha],
+        repo_root,
+        allow_fail=True,
+    )
+    # rc 0 = is ancestor; rc 1 = not ancestor; anything else = error.
+    return proc.returncode == 0
+
+
+def _head_matches_min_commit(
+    repo_root: Path, head_commit: str, min_commit: str,
+) -> Tuple[bool, str]:
+    """Return (matches, reason). Semantics:
+        1. min_commit empty               -> (False, "no min_commit configured")
+        2. HEAD equals min_commit         -> (True, "head == min_commit")
+        3. HEAD starts with min_commit    -> (True, "head matches min_commit prefix")
+        4. min_commit resolves and is an
+           ancestor of HEAD               -> (True, "min_commit is ancestor of HEAD")
+        5. otherwise                       -> (False, ...)
+    Cases 1 and 5 cause the script to record a warning.
+    """
+    mc = (min_commit or "").lower()
+    hc = (head_commit or "").lower()
+    if not mc:
+        return False, "no min_commit configured"
+    # Exact and prefix matches: we are exactly on the recorded
+    # base commit (this is the common case for the released main
+    # after merge + push).
+    if hc == mc:
+        return True, "HEAD == min_commit (exact match)"
+    if mc and hc.startswith(mc):
+        return True, "HEAD matches min_commit prefix"
+    # Ancestry: feature branches built on top of the release base
+    # are also valid runs of the preflight — they include all the
+    # commits min_commit is supposed to pin.
+    resolved = _git_resolve_commit(repo_root, mc)
+    if resolved is None:
+        return False, (
+            "min_commit " + (mc[:16] or "(empty)")
+            + " is not a known commit in this repo"
+        )
+    if _git_is_ancestor(repo_root, resolved, hc):
+        return True, (
+            "min_commit " + resolved[:16]
+            + " is an ancestor of HEAD " + hc[:16]
+        )
+    return False, (
+        "git HEAD " + hc[:16] + " is not at or after min_commit "
+        + (mc[:16] or "(missing)")
+        + " (min_commit is not reachable from HEAD ancestry)"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Sibling checker invocation (in-process, NOT via subprocess)
 # ---------------------------------------------------------------------------
@@ -365,15 +459,11 @@ def build_report(
     current_branch = _git_current_branch(repo_root)
     tracked_dirty  = _git_tracked_dirty(repo_root)
     min_commit     = str(cfg.get("min_commit", ""))
-    head_matches_min_commit = (
-        head_commit.lower().startswith(min_commit.lower())
-        if min_commit else False
+    head_matches_min_commit, head_match_reason = _head_matches_min_commit(
+        repo_root, head_commit, min_commit,
     )
     if not head_matches_min_commit:
-        warnings.append(
-            "git HEAD " + head_commit[:16] + " does not start with "
-            + "min_commit " + (min_commit[:16] or "(missing)")
-        )
+        warnings.append("min_commit check failed: " + head_match_reason)
     if tracked_dirty:
         warnings.append(
             "tracked tree is dirty; binaries built from a dirty tree "

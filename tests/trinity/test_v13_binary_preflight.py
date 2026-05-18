@@ -340,6 +340,110 @@ def test_disallowed_git_verb_rejected(srr):
         srr._run_git(["commit", "-m", "x"], REPO_ROOT)
 
 
+def test_merge_base_verb_allowed(srr):
+    """merge-base must now pass the read-only allow-list."""
+    head = srr._git_head_commit(REPO_ROOT)
+    # merge-base --is-ancestor of head against itself returns rc=0.
+    proc = srr._run_git(
+        ["merge-base", "--is-ancestor", head, head],
+        REPO_ROOT,
+        allow_fail=True,
+    )
+    assert proc.returncode == 0
+
+
+def test_head_matches_min_commit_exact(srr):
+    """Case 1: HEAD exactly equals min_commit."""
+    head = srr._git_head_commit(REPO_ROOT)
+    ok, reason = srr._head_matches_min_commit(REPO_ROOT, head, head)
+    assert ok is True
+    assert "exact" in reason or "prefix" in reason
+
+
+def test_head_matches_min_commit_descendant(srr):
+    """Case 2: HEAD is a descendant of min_commit. The HEAD~1
+    commit IS an ancestor of HEAD by construction, so it must
+    return True via the ancestry path."""
+    head     = srr._git_head_commit(REPO_ROOT)
+    ancestor = srr._run_git(
+        ["rev-parse", "HEAD~1"], REPO_ROOT,
+    ).stdout.strip()
+    ok, reason = srr._head_matches_min_commit(REPO_ROOT, head, ancestor)
+    assert ok is True
+    assert "ancestor" in reason
+
+
+def test_head_matches_min_commit_not_in_ancestry(srr):
+    """Case 3: min_commit not in ancestry. Construct a synthetic
+    SHA that doesn't exist in the repo."""
+    head = srr._git_head_commit(REPO_ROOT)
+    fake = "0" * 40
+    ok, reason = srr._head_matches_min_commit(REPO_ROOT, head, fake)
+    assert ok is False
+    assert "min_commit" in reason
+
+
+def test_head_matches_min_commit_short_prefix(srr):
+    """Case 4: short HEAD prefix supplied as min_commit. The
+    prefix path inside _head_matches_min_commit short-circuits
+    before the ancestry probe runs."""
+    head = srr._git_head_commit(REPO_ROOT)
+    short = head[:7]
+    ok, reason = srr._head_matches_min_commit(REPO_ROOT, head, short)
+    assert ok is True
+    # Either prefix or ancestry path may report — both are valid.
+    assert "prefix" in reason or "ancestor" in reason or "exact" in reason
+
+
+def test_head_matches_min_commit_empty_returns_false(srr):
+    head = srr._git_head_commit(REPO_ROOT)
+    ok, reason = srr._head_matches_min_commit(REPO_ROOT, head, "")
+    assert ok is False
+    assert "min_commit" in reason
+
+
+def test_head_matches_min_commit_non_hex_safe(srr):
+    """Defensive: non-hex min_commit must not blow up and must
+    NOT be passed to subprocess (the helper validates with regex
+    before any git call)."""
+    head = srr._git_head_commit(REPO_ROOT)
+    ok, reason = srr._head_matches_min_commit(
+        REPO_ROOT, head, "--option-injection-attempt",
+    )
+    assert ok is False
+    assert "known commit" in reason or "min_commit" in reason
+
+
+def test_head_matches_min_commit_true_on_feature_branch(srr, tmp_path):
+    """The critical regression: on a feature branch whose HEAD is
+    a descendant of the config's min_commit, head_matches_min_commit
+    must be true. Before this fix it was false because the script
+    required HEAD.startswith(min_commit).
+
+    We only assert the ancestry semantic here. `ready_to_build`
+    additionally depends on tracked-tree cleanliness which is out
+    of scope for this test (the developer running pytest may have
+    uncommitted changes on the working tree)."""
+    report = srr.build_report(
+        repo_root=REPO_ROOT,
+        build_dir=tmp_path / "no-build",
+        out_dir=tmp_path / "out",
+        pinned_time="2026-05-18T14:45:00+00:00",
+    )
+    g = report["git"]
+    assert g["head_matches_min_commit"] is True, (
+        "head_matches_min_commit must be true when running on a "
+        "feature branch whose base is min_commit; warnings: "
+        + repr(report.get("warnings"))
+    )
+    # And — crucially — the warning list must NOT carry the old
+    # "does not start with min_commit" string.
+    for w in report["warnings"]:
+        assert "does not start with min_commit" not in w, (
+            "old strict-prefix warning leaked back: " + w
+        )
+
+
 def test_render_markdown_has_all_sections(srr, tmp_path):
     report = srr.build_report(
         repo_root=REPO_ROOT,

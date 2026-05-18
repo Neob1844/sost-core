@@ -1,7 +1,7 @@
 """Static safety surface for v13_binary_preflight.py.
 
 This script IS allowed to use subprocess (argv-list only) for:
-  - git rev-parse / status / diff / log / branch / ls-files / rev-list
+  - git rev-parse / status / diff / log / branch / ls-files / rev-list / merge-base
   - python -m pytest (when --run-tests is passed)
   - ctest -R <name>  (when --run-ctest is passed)
 
@@ -124,7 +124,7 @@ def test_allowed_git_verbs_constant_present():
     assert "ALLOWED_GIT_VERBS" in src
     for verb in (
         '"rev-parse"', '"status"', '"diff"', '"log"',
-        '"branch"', '"ls-files"', '"rev-list"',
+        '"branch"', '"ls-files"', '"rev-list"', '"merge-base"',
     ):
         assert verb in src, "missing allow-list verb: " + verb
 
