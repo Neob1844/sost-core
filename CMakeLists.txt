@@ -256,6 +256,11 @@ add_executable(test-casert-v12-ceiling tests/test_casert_v12_ceiling.cpp)
 target_link_libraries(test-casert-v12-ceiling PRIVATE sost-core)
 add_test(NAME casert-v12-ceiling COMMAND test-casert-v12-ceiling)
 
+# V13 hard fork — cASERT profile ceiling H20→H35 (full 43-profile range)
+add_executable(test-casert-v13-ceiling tests/test_casert_v13_ceiling.cpp)
+target_link_libraries(test-casert-v13-ceiling PRIVATE sost-core)
+add_test(NAME casert-v13-ceiling COMMAND test-casert-v13-ceiling)
+
 # V12 hard fork — same-block 4-tier Slingshot ladder (current_elapsed only)
 add_executable(test-slingshot-v12-tier tests/test_slingshot_v12_tier.cpp)
 target_link_libraries(test-slingshot-v12-tier PRIVATE sost-core)

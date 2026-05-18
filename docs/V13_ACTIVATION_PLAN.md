@@ -23,7 +23,7 @@ This plan prepares the repository so the V13 activation set is **explicit, testa
 
 | id | label | gating evidence (existing) |
 |---|---|---|
-| `casert_all_profiles_e7_h35` | All cASERT equalizer profiles E7–H35 active | **NOT yet wired**: no `effective_profile_ceiling_at(height)` helper opening H35 at `V13_HEIGHT`. See gates doc. |
+| `casert_all_profiles_e7_h35` | All cASERT equalizer profiles E7–H35 active | **WIRED**: `include/sost/params.h` declares `CASERT_MAX_ACTIVE_PROFILE_V13 = 35` plus `validator_profile_ceiling_at(height)` (validator side) and `effective_profile_ceiling_at(height)` (controller side). Both return H35 for `height >= V13_HEIGHT`. The validator gate in `src/sost-node.cpp` and the two controller gates in `src/pow/casert.cpp` route through the helpers. Boundary tests live in `tests/test_casert_v13_ceiling.cpp`. |
 | `dtd_cooldown_6` | DTD lottery cooldown 5 → 6 blocks | `include/sost/params.h:835` `lottery_exclusion_window_at(height)` returns 6 for `height >= V13_HEIGHT`. |
 | `timestamp_drift_10s` | Future-drift cap 60 s → 10 s | `include/sost/params.h:852` `max_future_drift_at(height)` returns 10 for `height >= V13_HEIGHT`. |
 | `beacon_phase_ii_a` | Beacon Phase II-A — local notices, file-only, signed | `include/sost/params.h:828` `BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT`; `include/sost/beacon.h:43` `BEACON_PUBKEY_HEX` declared. |

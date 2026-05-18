@@ -4777,14 +4777,13 @@ static bool process_block(const std::string& block_json) {
                            declared_pi, CASERT_H_MIN, CASERT_H_MAX);
                     return false;
                 }
-                // V12 hard profile ceiling — H20 from V12_HEIGHT, H13 before.
-                // Hardens the broader [E7, H35] structural bound above to the
-                // active operational range so blocks declaring a reserved
-                // profile (H21-H35) are rejected outright.
+                // Hard profile ceiling: pre-V12 = H13, V12 = H20, V13 = H35.
+                // The validator_profile_ceiling_at() helper in params.h is
+                // the single source of truth. At V13_HEIGHT (12000) the
+                // full 43-profile range E7..H35 becomes active and the
+                // previously reserved H21..H35 stop being rejected.
                 {
-                    int32_t max_profile = (height >= V12_HEIGHT)
-                        ? CASERT_MAX_ACTIVE_PROFILE_V12
-                        : CASERT_MAX_ACTIVE_PROFILE_PRE_V12;
+                    int32_t max_profile = validator_profile_ceiling_at(height);
                     if (declared_pi > max_profile) {
                         printf("[BLOCK] REJECTED: profile_index %d exceeds active ceiling %d at height %lld\n",
                                declared_pi, max_profile, (long long)height);

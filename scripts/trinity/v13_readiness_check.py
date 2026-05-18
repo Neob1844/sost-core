@@ -158,6 +158,8 @@ def _check_casert_all_profiles(repo_root: Path) -> Dict[str, Any]:
             "CASERT_V13_PROFILE_CEILING",
             "CASERT_ALL_PROFILES_HEIGHT",
             "casert_v13_profile_ceiling",
+            "CASERT_MAX_ACTIVE_PROFILE_V13",
+            "validator_profile_ceiling_at",
         ),
     )
     wired = bool(hits)

@@ -186,6 +186,29 @@ def test_confirmed_items_inspected(srr):
     ])
 
 
+def test_casert_all_profiles_is_wired(srr):
+    """After the V13 cASERT wire commit, the checker must detect
+    the validator_profile_ceiling_at / effective_profile_ceiling_at
+    helpers or the CASERT_MAX_ACTIVE_PROFILE_V13 constant."""
+    report = srr.build_report(
+        repo_root=REPO_ROOT,
+        pinned_time="2026-05-18T00:30:00+00:00",
+    )
+    by_id = {c["id"]: c for c in report["confirmed_items"]}
+    assert by_id["casert_all_profiles_e7_h35"]["wired_in_code"] is True
+
+
+def test_v13_ready_for_confirmed_items_is_true(srr):
+    """All four confirmed items must be wired in code after the
+    V13 cASERT commit. This is the gating boolean for cutting the
+    V13 binary."""
+    report = srr.build_report(
+        repo_root=REPO_ROOT,
+        pinned_time="2026-05-18T00:30:00+00:00",
+    )
+    assert report["v13_ready_for_confirmed_items"] is True
+
+
 def test_dtd_cooldown_is_wired(srr):
     """The DTD cooldown 5->6 helper is already in params.h on the
     current commit. The checker must detect it."""
