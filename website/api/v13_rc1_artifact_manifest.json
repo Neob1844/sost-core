@@ -32,6 +32,24 @@
   "sha256sums_basename": "SHA256SUMS",
   "sha256sums_public_path": "/api/v13_rc1_SHA256SUMS.txt",
 
+  "sha256sums_signature_basename": "SHA256SUMS.asc",
+  "signature_public_path": "/api/v13_rc1_SHA256SUMS.asc",
+
+  "release_key": {
+    "uid": "SOST Release (V13 RC1 release signing key) <sost@sostcore.com>",
+    "primary_fingerprint":        "41B1A46E626064AB524CB99EB6B9E2852AE41A04",
+    "signing_subkey_fingerprint": "E2FCC898520842F0192EF7A46422CC120F51DCEA",
+    "key_id":                     "B6B9E2852AE41A04"
+  },
+
+  "signature": {
+    "basename":    "SHA256SUMS.asc",
+    "sha256":      "5e83889bb95d21404c3ae4faedfeb8c04729343fc88b03f5a9e608dd7c228779",
+    "public_path": "/api/v13_rc1_SHA256SUMS.asc",
+    "covers":      "SHA256SUMS",
+    "format":      "OpenPGP ASCII-armored detached signature"
+  },
+
   "reports": [
     {
       "name": "report.json",
@@ -70,7 +88,8 @@
     "sha256": "c0345dce383c9456d19d45a6d33efc29ae2777720bc6de94725d5efca4c4eac0"
   },
 
-  "release_status": "metadata_only_not_signed_not_uploaded",
+  "release_status": "signed_metadata_only",
+  "binaries_uploaded": false,
 
   "safety_flags": {
     "no_wallet_access":      true,
@@ -86,5 +105,5 @@
     "no_ethereum_deploy":    true
   },
 
-  "_note": "PUBLIC SAFE MIRROR of the operator-local v13-rc1 artifact bundle MANIFEST.json. The repo_root_basename, no_copy_binaries_mode and preflight_was_ready fields from the internal manifest are intentionally OMITTED here (they were either operator-host details or internal flags). The binaries themselves are NOT committed to this repository. The SHA256SUMS file is published at /api/v13_rc1_SHA256SUMS.txt for offline verification of binaries the operator distributes through a separate, manual release-publication step. The SHA256SUMS file has NOT yet been signed; signing remains an explicit manual operator action and a corresponding *.sig file will appear next to SHA256SUMS only after that step lands."
+  "_note": "PUBLIC SAFE MIRROR of the operator-local v13-rc1 artifact bundle MANIFEST.json. The repo_root_basename, no_copy_binaries_mode and preflight_was_ready fields from the internal manifest are intentionally OMITTED here (they were either operator-host details or internal flags). The binaries themselves are NOT committed to this repository and have NOT yet been uploaded to any public distribution surface (binaries_uploaded=false). The SHA256SUMS file is published at /api/v13_rc1_SHA256SUMS.txt and has now been SIGNED with the SOST release key (primary fingerprint 41B1A46E626064AB524CB99EB6B9E2852AE41A04, signing subkey E2FCC898520842F0192EF7A46422CC120F51DCEA); the ASCII-armored detached signature is published at /api/v13_rc1_SHA256SUMS.asc. release_status is therefore signed_metadata_only — anyone downloading future V13 RC1 binaries from the operator's eventual release surface can verify them locally with sha256sum -c SHA256SUMS && gpg --verify SHA256SUMS.asc SHA256SUMS against the SOST release public key. Binary upload itself remains an explicit manual operator action and release_status will move to signed_and_published only once the operator has uploaded the binaries to a public distribution channel. NOTHING in this website edit signs anything, uploads any binary, opens the network, calls the GitHub API, touches a wallet or private key, or broadcasts a transaction."
 }

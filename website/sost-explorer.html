@@ -1320,21 +1320,23 @@ function toggleV12Banner(){
           docs/V13_READINESS_GATES.md
         </div>
       </div>
-      <div style="padding:8px 10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:3px">
-        <div style="font-size:9px;letter-spacing:1.5px;color:#f59e0b;margin-bottom:4px">// PUBLIC ARTIFACT METADATA (binaries NOT here)</div>
+      <div style="padding:8px 10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.35);border-radius:3px">
+        <div style="font-size:9px;letter-spacing:1.5px;color:#22c55e;margin-bottom:4px">// PUBLIC ARTIFACT METADATA (SHA256SUMS SIGNED, binaries NOT uploaded)</div>
         <div style="font-family:var(--code);font-size:11px;color:var(--text);line-height:1.55">
           /api/v13_rc1_artifact_manifest.json<br>
           /api/v13_rc1_SHA256SUMS.txt<br>
+          /api/v13_rc1_SHA256SUMS.asc<br>
           docs/V13_RC1_PUBLIC_ARTIFACT_METADATA.md<br>
+          docs/V13_RC1_SIGNING_AND_PUBLICATION_CHECKLIST.md<br>
           docs/V13_RC1_ARTIFACT_BUNDLE.md<br>
           docs/V13_BINARY_PREFLIGHT.md
         </div>
       </div>
     </div>
 
-    <div style="margin-top:12px;padding:10px 12px;background:rgba(0,0,0,.25);border-left:3px solid #f59e0b;font-size:11.5px;line-height:1.6;color:var(--text)">
-      <b style="color:#f59e0b">Public V13 RC1 artifact metadata is live.</b>
-      <code>/api/v13_rc1_artifact_manifest.json</code> and <code>/api/v13_rc1_SHA256SUMS.txt</code> publish the SHA-256 of every V13 RC1 binary (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>) so any reviewer can verify locally. <b>The binaries themselves are NOT committed to this repo and the SHA256SUMS file is NOT yet signed.</b> <code>release_status = metadata_only_not_signed_not_uploaded</code>. Signing and binary publication remain explicit manual operator steps and will be announced from the BitcoinTalk thread when they happen.
+    <div style="margin-top:12px;padding:10px 12px;background:rgba(0,0,0,.25);border-left:3px solid #22c55e;font-size:11.5px;line-height:1.6;color:var(--text)">
+      <b style="color:#22c55e">V13 RC1 SHA256SUMS is now SIGNED.</b>
+      <code>/api/v13_rc1_SHA256SUMS.txt</code> is signed with the SOST release key (primary fingerprint <code>41B1A46E626064AB524CB99EB6B9E2852AE41A04</code>, signing subkey <code>E2FCC898520842F0192EF7A46422CC120F51DCEA</code>); the ASCII-armored detached signature is published at <code>/api/v13_rc1_SHA256SUMS.asc</code> (sha256 <code>5e83889bb95d21404c3ae4faedfeb8c04729343fc88b03f5a9e608dd7c228779</code>). <code>release_status = signed_metadata_only</code>. <b>The binaries themselves are still NOT committed to this repo and have NOT yet been uploaded to a public distribution surface</b> (<code>binaries_uploaded = false</code>). Anyone who later downloads V13 RC1 binaries from the operator's eventual release surface can already verify them offline with <code>sha256sum -c SHA256SUMS &amp;&amp; gpg --verify SHA256SUMS.asc SHA256SUMS</code> against the release public key. Binary upload remains an explicit manual operator step and will be announced from the BitcoinTalk thread when it happens. See <code>docs/V13_RC1_PUBLIC_ARTIFACT_METADATA.md</code> and <code>docs/V13_RC1_SIGNING_AND_PUBLICATION_CHECKLIST.md</code>.
     </div>
 
     <div style="margin-top:12px;padding:10px 12px;background:rgba(0,0,0,.25);border-left:3px solid #f59e0b;font-size:11.5px;line-height:1.6;color:var(--text)">
