@@ -6079,31 +6079,37 @@ async function showAddress(addr){
     if(lottLifetimeCount>0){
       var lottDeltaTxt='';
       if(lottLifetimeIncomplete){
-        // The scan returned fewer wins than the live UTXO set proves
-        // exist. We lifted the displayed lifetime to the unspent floor
-        // above; here we mark the row so the user does not mistake the
-        // floor for a complete lifetime scan.
-        lottDeltaTxt=' · <span style="color:#fbbf24">incomplete &middot; '
-          +lottLifetimeMissedCount+' win'
-          +(lottLifetimeMissedCount===1?'':'s')
-          +' un-credited by DTD scan &middot; open DTD section to refresh</span>';
+        // The chain scan covered fewer blocks than the full history, so
+        // some older wins are not directly attested by the scan. The live
+        // UTXO set still proves they exist (an unspent lottery UTXO is a
+        // past win, by construction), so the displayed lifetime is raised
+        // to the unspent floor and we annotate the breakdown.
+        var scanPart=lottLifetimeCount-lottLifetimeMissedCount;
+        lottDeltaTxt=' &middot; <span style="color:#fbbf24">'
+          +scanPart+' from scan + '
+          +lottLifetimeMissedCount
+          +' from UTXO floor &middot; open DTD section for full chain walk</span>';
       }else if(lottLifetimeCount>lottUnspentCount){
         var spentN=lottLifetimeCount-lottUnspentCount;
-        lottDeltaTxt=' · <span style="color:var(--text3)">'+spentN+' already spent</span>';
+        lottDeltaTxt=' &middot; <span style="color:var(--text3)">'+spentN+' already spent</span>';
       }
       balHtml += _addrBalRow(
         'lot-life',
         '🎰 DTD LOTTERY WON (lifetime)'
-          +(lottLifetimeIncomplete?' <span style="color:#fbbf24;font-size:9px;letter-spacing:1.5px">// FLOOR &middot; SCAN INCOMPLETE</span>':''),
+          +(lottLifetimeIncomplete?' <span style="color:#fbbf24;font-size:9px;letter-spacing:1.5px" title="Auto-scan reached part of the chain; the rest of the lifetime total is inferred from the live UTXO floor (which is mathematically exact). Open the DTD section to run the full chain walk and replace the inferred portion with directly-attested wins.">// PARTIAL AUTO-SCAN &middot; UTXO FLOOR APPLIED</span>':''),
         '<span style="color:'
           +(lottLifetimeIncomplete?'#fbbf24':'#ff00ff')
           +';font-weight:600">'+lottLifetimeSost.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('
           +lottLifetimeCount+(lottLifetimeCount===1?' win':' wins')
           +lottDeltaTxt+')</span>',
-        '<p><b>Lifetime sum of DTD Lottery wins for this address</b>, including payouts that have already been spent. Sourced from the DTD chain scan when it has been run in this session; otherwise the row prompts you to open the DTD section to populate it.</p>'+
-        '<p><b>Invariant: lifetime &ge; current unspent.</b> You cannot have an unspent lottery UTXO you never won. When the DTD scan reports fewer wins than the live UTXO set above proves exist, the displayed lifetime is <em>raised to the unspent floor</em> and the row is marked <code style="color:#fbbf24">FLOOR &middot; SCAN INCOMPLETE</code> with the un-credited count shown inline. This happens when (a) the auto-scan window (last 1000 blocks) does not reach back to an old win, (b) a historical PAYOUT block returned <code>null</code> during the chunk fetch, or (c) the historical block JSON lacks <code>lottery_winner_address</code> / <code>lottery_payout</code> fields. Re-opening the DTD section runs the full chain walk and usually heals the count.</p>'+
-        '<p><b>If this lifetime number matches the current-unspent row above</b> and the row is NOT marked incomplete, none of your lottery wins have been moved yet. If it is larger, the difference equals the count of wins you have already spent or consolidated &mdash; shown inline as <em>"N already spent"</em>.</p>'+
-        '<p>Unlike the current-unspent row, this one DOES persist across sessions (in <code>localStorage</code> under <code>sost_dtd_lottery_v1</code>). Run the DTD scan again after new lottery payouts land to refresh it.</p>',
+        '<p><b>Lifetime sum of DTD Lottery wins for this address</b>, including payouts that have already been spent. The displayed number is the higher of two independent inputs:</p>'+
+        '<ol>'+
+        '<li><b>DTD chain scan.</b> Walks Phase 2 PAYOUT blocks and counts those crediting this address. The auto-scan loaded at page open covers the last 1000 blocks; the full chain walk runs when you open the DTD section of the explorer (results cache for the rest of the session in <code>localStorage</code>).</li>'+
+        '<li><b>UTXO floor.</b> Every unspent lottery UTXO at this address is the proof of a past win. The displayed lifetime is never below this floor &mdash; you cannot hold an unspent lottery UTXO you never won.</li>'+
+        '</ol>'+
+        '<p><b>Partial auto-scan annotation.</b> When the chain scan has not yet covered the full history (typical at page open, since the auto-scan reaches only the last 1000 blocks), the row is annotated with the breakdown <em>"X from scan + Y from UTXO floor"</em>. The displayed total is mathematically correct in both cases &mdash; only the breakdown is partial. Open the DTD section to run the full chain walk and replace the inferred portion with directly-attested wins.</p>'+
+        '<p><b>Relation to the current-unspent row above.</b> If lifetime equals current unspent, no lottery wins have been moved yet. If lifetime is larger, the difference is the count of wins already spent or consolidated, shown inline as <em>"N already spent"</em>.</p>'+
+        '<p><b>Persistence.</b> Unlike the current-unspent row, this one persists across sessions (<code>localStorage</code> key <code>sost_dtd_lottery_v1</code>). Re-run the DTD scan after new lottery payouts land to refresh it.</p>',
         (lottLifetimeIncomplete?'color:#fbbf24':'color:#ff00ff')
       );
     }else if(lottUnspentCount===0){
