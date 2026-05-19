@@ -11,6 +11,7 @@
 #include <sost/merkle.h>
 
 #include <sost/subsidy.h>
+#include <sost/gold_vault_slice1.h>   // V13 Gold Vault Slice 1 (sentinel-disabled by default)
 #include <unordered_set>
 #include <string>
 
@@ -336,6 +337,77 @@ BlockConsensusResult ValidateBlockTransactionsConsensus(
         auto vr = ValidateTransactionConsensus(tx, scratch, tx_ctx);
         if (!vr.ok) {
             return BlockConsensusResult::Fail("tx[" + std::to_string(i) + "] consensus: " + vr.message);
+        }
+
+        // V13 Gold Vault Slice 1 governance check (G1 + G2 + G3a).
+        //
+        // Sentinel-disabled by default: gv_slice1_active_at(height) returns
+        // false at every height until a future commit flips
+        // GV_SLICE1_ACTIVATION_HEIGHT from INT64_MAX to V13_HEIGHT. While
+        // sentinel-disabled, this block is a no-op for every tx and adds
+        // no measurable cost (one int64 compare). When activated, applies:
+        //   G1  — every non-change output destination MUST be in the
+        //         Slice 1 whitelist.
+        //   G2  — the primary and mirror whitelists MUST agree; if not,
+        //         fail-closed-reject (catches operator misconfiguration).
+        //   G3a — the sum of external outputs from a vault-input tx MUST
+        //         be within GV_SLICE1_PER_SPEND_CAP_BPS of the current
+        //         vault balance.
+        // G3b (rate limit) is unit-tested in test_v13_gold_vault_slice1
+        // but NOT wired here — it needs a new StoredBlock field
+        // gold_vault_last_spend_height that lands in a separate commit.
+        //
+        // See docs/V13_POPC_GOLDVAULT_IMPLEMENTATION_PLAN.md and
+        // include/sost/gold_vault_slice1.h for the operator-decision
+        // blockers (whitelist values, cap basis points, rate-limit blocks)
+        // that must be filled BEFORE activation makes any consensus
+        // difference.
+        if (gv_slice1_active_at(height)) {
+            auto lookup_pkh = [&scratch](const Hash256& prev_txid,
+                                         uint32_t prev_index,
+                                         PubKeyHash& out) -> bool {
+                OutPoint op{prev_txid, prev_index};
+                auto e = scratch.GetUTXO(op);
+                if (!e.has_value()) return false;
+                out = e->pubkey_hash;
+                return true;
+            };
+            if (gv_slice1_tx_spends_from_vault(tx, gold_vault_pkh, lookup_pkh)) {
+                // G2: dual-whitelist agreement (operator-misconfig catch)
+                if (!gv_slice1_whitelists_agree()) {
+                    return BlockConsensusResult::Fail(
+                        "tx[" + std::to_string(i) +
+                        "] gv_slice1: dual whitelist disagreement");
+                }
+                // G1: every non-change output destination must be in the
+                //     whitelist. Outputs back to the vault itself are
+                //     treated as change and accepted.
+                int64_t total_external_out = 0;
+                for (const auto& out : tx.outputs) {
+                    if (out.pubkey_hash == gold_vault_pkh) {
+                        continue; // change back to the vault
+                    }
+                    if (!gv_slice1_destination_allowed(out.pubkey_hash)) {
+                        return BlockConsensusResult::Fail(
+                            "tx[" + std::to_string(i) +
+                            "] gv_slice1: destination not in whitelist");
+                    }
+                    total_external_out += out.amount;
+                }
+                // G3a: per-spend cap against current vault balance in scratch.
+                int64_t vault_balance = 0;
+                for (const auto& kv : scratch.GetMap()) {
+                    if (kv.second.pubkey_hash == gold_vault_pkh) {
+                        vault_balance += kv.second.amount;
+                    }
+                }
+                if (!gv_slice1_amount_within_cap(total_external_out,
+                                                 vault_balance)) {
+                    return BlockConsensusResult::Fail(
+                        "tx[" + std::to_string(i) +
+                        "] gv_slice1: spend exceeds per-spend cap");
+                }
+            }
         }
 
         // fee calc using current scratch view BEFORE connect

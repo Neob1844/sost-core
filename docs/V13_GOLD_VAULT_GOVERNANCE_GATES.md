@@ -35,14 +35,22 @@ These parameters are referenced in the gate descriptions below.
 
 | Gate | Description | Status | V13 Risk |
 |---|---|---|---|
-| G1 | Validator enforcement of purpose restriction | **RED — DEAD CODE** | Blocks V13 |
-| G2 | Dual destination whitelists, both committed + cross-checked | **RED — DESIGN ONLY** | Blocks V13 |
-| G3 | Per-spend cap + rate limit constants | **RED — DESIGN ONLY** | Blocks V13 |
+| G1 | Validator enforcement of purpose restriction | **AMBER — WIRED, SENTINEL-DISABLED** | Operator must decide whitelist (A) + activation (C) to enable |
+| G2 | Dual destination whitelists, both committed + cross-checked | **AMBER — WIRED, SENTINEL-DISABLED** | Operator must populate both whitelists (A) to enable |
+| G3 | Per-spend cap + rate limit constants | **AMBER (G3a wired, G3b helper-only)** | Cap (B) needed to enable G3a; rate-limit needs new StoredBlock field (separate commit) |
 | G4 | Miner signaling tx-type (67-block window, 90% threshold = 61 blocks, ceil) | **AMBER — INFRASTRUCTURE EXISTS, RPC BROKEN, NO 90 % WIRE-UP** | Blocks V13 |
 | G5 | Transitional Guardian (authorise/veto, 10-block grace, auto-disconnect at block 25,000) | **RED — NOT STARTED** | Blocks V13 |
 | G6 | Heritage Reserve on Ethereum (Zodiac + Reality.eth, open relayer set, Sepolia E2E green) | **RED — NO SOLIDITY IN REPO** | Off-chain, NOT agent work |
 
-**Verdict.** All 6 gates are RED or AMBER. Activating Gold Vault governance at block **12,000** is **not realistic**. The honest call is: **defer Gold Vault governance to V14 / block 15,000**. The accumulation side is unaffected and continues to operate as it has since genesis.
+**Slice 1 status update (2026-05-18).** G1, G2, and G3a have moved from RED to AMBER via the Slice 1 fail-closed-design commit. The helper functions in `include/sost/gold_vault_slice1.h` + `src/gold_vault_slice1.cpp` are implemented, the validator wiring in `src/block_validation.cpp:340` is in place, and the new test suite `tests/test_v13_gold_vault_slice1.cpp` passes 45/45. The wiring is sentinel-disabled by default (`GV_SLICE1_ACTIVATION_HEIGHT = INT64_MAX`, both whitelists empty, cap = 0, rate-limit = 0) so consensus behaviour is bit-identical to pre-Slice-1 at every height. To turn the rule on, a follow-up commit must:
+
+1. Set `GV_SLICE1_ACTIVATION_HEIGHT = V13_HEIGHT` in `include/sost/gold_vault_slice1.h`.
+2. Populate `GV_SLICE1_WHITELIST_PRIMARY[]` in `include/sost/gold_vault_slice1.h` with the operator-decided PubKeyHashes (Decision A in `docs/V13_POPC_GOLDVAULT_IMPLEMENTATION_PLAN.md` §3.1).
+3. Populate `GV_SLICE1_WHITELIST_MIRROR_DATA[][20]` in `include/sost/consensus_constants.h` with the **same** set in the **same** order; the validator calls `gv_slice1_whitelists_agree()` and fails-closed-rejects on any mismatch.
+4. Set `GV_SLICE1_PER_SPEND_CAP_BPS` to the operator-decided basis points (Decision B in the plan §3.1).
+5. (Optional, separate commit) Add `gold_vault_last_spend_height` to `StoredBlock`, wire it through `block_validation.cpp`, and set `GV_SLICE1_RATE_LIMIT_BLOCKS` to a non-zero value. This wires G3b at consensus; the helper is already unit-tested.
+
+**Verdict.** 3 gates AMBER (G1/G2/G3a wired, sentinel-disabled awaiting operator decisions A/B/C), 1 AMBER (G4 infrastructure exists), 2 RED (G5 Guardian, G6 Heritage Reserve). Activating Gold Vault governance at block **12,000** is **still not realistic** unless the operator commits to filling Decisions A/B/C + completes Slices 2-3-5. The honest call remains: **defer full Gold Vault governance to V14 / block 15,000**. The accumulation side is unaffected and continues to operate as it has since genesis. The Slice 1 fail-closed-design commit narrows the V14 work meaningfully without changing the V13 public commitment.
 
 ---
 
