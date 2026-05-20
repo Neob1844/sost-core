@@ -705,10 +705,23 @@
   </div>
 </nav>
 
-<!-- POST-V6 REVISION BANNER — inserted during V6 hardening sprint -->
+<!-- POST-V13 REVISION BANNER — replaces the earlier POST-V6 banner.
+     The whitepaper v4.5 below describes the protocol's BASE architecture
+     (consensus, monetary policy, four pillars). V13/V14 scope decisions
+     made after v4.5 are documented in the V13 scope update doc and are
+     summarised in the banner. Whitepaper v4.6 will fold these into the
+     main body; until then the banner is the canonical pointer. -->
 <div id="wpRevisionBanner" style="max-width:1400px;margin:16px auto 0;padding:0 24px;">
-  <div style="background:rgba(251,191,36,0.06);border-left:3px solid #fbbf24;padding:12px 18px;font-family:var(--code,monospace);font-size:11px;color:#fbbf24;line-height:1.7;">
-    <b>⚠ POST-V6 REVISION IN PROGRESS.</b> This whitepaper is being revised to reflect the V6 coordinated hard fork (block 10,000), which introduces signature-bound Proof of Work, the 5-defense Gold Vault model (purpose restriction + dual destination whitelists + per-spend cap + rate limiting + 95% supermajority), and replaces the original "Foundation Execution Order" framing with a direct developer→protocol custody transition at block 10,000. Activation height was moved from 5,000 to 10,000 to allow proper testnet burn-in. <b>For the canonical current architecture</b>, see <a href="https://bitcointalk.org/index.php?topic=5579432.msg66619611#msg66619611" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">BitcoinTalk ANN post #89</a> and the <a href="https://github.com/Neob1844/sost-core" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">project repository</a>. Sections of this document referring to "Foundation Execution Order", "75% threshold", "block 5,000 activation", or "multisig/timelock custody" describe the pre-V6 design and are being rewritten. The next whitepaper revision is scheduled before the V6 release candidate.
+  <div style="background:rgba(103,232,249,0.06);border-left:3px solid #67e8f9;padding:12px 18px;font-family:var(--code,monospace);font-size:11.5px;color:#67e8f9;line-height:1.7;">
+    <b>⚠ V13 / V14 SCOPE UPDATE — REVISION TO v4.6 IN PROGRESS.</b>
+    Whitepaper <b>v4.5</b> below describes the protocol's <b>base</b> architecture as of March 2026 (consensus, monetary policy, four pillars). It predates the 2026-05-18 V13 scope decisions and predates the V13 RC1 release. <b>For the canonical current scope</b>, read <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_PUBLIC_SCOPE_UPDATE.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_PUBLIC_SCOPE_UPDATE.md</a>, <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md</a>, <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</a> and <a href="https://github.com/Neob1844/sost-core/blob/main/docs/V13_DTD_FLIP_12100_AUTOMATIC.md" style="color:#67e8f9;text-decoration:underline;" target="_blank" rel="noopener">docs/V13_DTD_FLIP_12100_AUTOMATIC.md</a>. The four critical updates relative to v4.5 are:
+    <ol style="margin:8px 0 0 18px;padding:0;color:var(--text-primary,#e7e7ea);font-family:var(--code,monospace);font-size:11.5px;line-height:1.7;">
+      <li><b style="color:#22c55e">V13 confirmed at block 12,000</b> — full cASERT equalizer range <b>E7-H35</b> (not the H20 ceiling described in §PILLAR 1 below), DTD lottery cooldown 5 → 6, future-timestamp drift cap 60 s → 10 s (<b>NTP synchronisation mandatory post-V13</b>), Beacon Phase II-A. RC1 metadata is signed (release_status = <code>signed_metadata_only</code>); binaries upload is the next manual operator step.</li>
+      <li><b style="color:#22c55e">V13 verified automatic flip at block 12,100</b> — the V11 Phase 2 lottery cadence transitions from 2-of-3 bootstrap to 1-of-3 permanent without any operator action, restart, RPC, Beacon notice or config flag. Six audit gates GREEN on main.</li>
+      <li><b style="color:#fbbf24">V14 fallback at block 15,000</b> — Gold Vault spend-side governance and PoPC + Escrow automatic lifecycle are <b>deferred from V13 to V14</b> (block 15,000, proposed final hardfork in this cycle, not guaranteed). 5 of 9 PoPC consensus gates and 5 of 6 Vault gates are RED today. The accumulation side (25 % per block to both reserves) is unaffected and continues unchanged at consensus since genesis.</li>
+      <li><b style="color:#fbbf24">Threshold revised: 75 % → 95 % → 90 %</b> — the Gold Vault miner-signaling supermajority finalised at <b>≥90 %</b> over a 67-block window (~12 h, ceil = 61 blocks). The "≥95 %" figure that appears below in §Protocol Summary and §Decentralization reflects the V6-era V14-deferred design and is being rewritten to 90 % in v4.6.</li>
+    </ol>
+    Memory-Lock per-instance, mentioned in earlier drafts as a second anti-pool defense, was <b>rejected outright</b> after numerical analysis (penalises small miners proportionally more than large rigs). SbPoW (active since block 7,100) remains the protocol's only anti-pool defense.
   </div>
 </div>
 
@@ -780,9 +793,11 @@
           Block production is paced at a 10-minute target via the <b>cASERT unified rate controller</b>.
           Difficulty (<code>bits_q</code>) adjusts every block from a 288-block running average against
           target, with bidirectional response: hardens when blocks come too fast, eases when too slow.
-          ConvergenceX equalizer profiles (E1&ndash;E7 relief, B0 baseline, H1&ndash;H20 hardening) are
-          mapped from chain lag and protect against runaway acceleration. The H20 ceiling and E7 floor
-          are immutable. From V11 onward a triangular cascade provides emergency relief on stuck blocks
+          ConvergenceX equalizer profiles (E1&ndash;E7 relief, B0 baseline, H1&ndash;H20 hardening pre-V13;
+          <b style="color:#22c55e">full range H1&ndash;H35 at V13, block 12,000</b>) are
+          mapped from chain lag and protect against runaway acceleration. The E7 floor is immutable;
+          the hardening ceiling rises from H13 (pre-V12) to H20 (V12 from block 7,350) to H35 at V13
+          activation. From V11 onward a triangular cascade provides emergency relief on stuck blocks
           without compromising the long-run schedule. See section 3 (cASERT) and section 12.
         </p>
       </div>
@@ -973,7 +988,7 @@
           <tr><td class="key">Annual decay</td><td class="val">~9.03% (smooth, no halvings)</td></tr>
           <tr><td class="key">Difficulty</td><td class="val">cASERT bitsQ Q16.16, per-block; V5 (block 5,175+): avg288-based, dynamic cap (0%&ndash;3.0%); relief valve V8 single E7 cliff at 605&nbsp;s (block 5,750+) &rarr; V9 staged drop 3/60&nbsp;s from 540&nbsp;s (block 6,550+) &rarr; V10 granular drop 1/60&nbsp;s from 600&nbsp;s (block 6,700+); historical: 24h half-life</td></tr>
           <tr><td class="key">Reserve</td><td class="val">Heritage (sealed by default), Ethereum mainnet</td></tr>
-          <tr><td class="key">Emergency</td><td class="val">&ge;95% miner signaling + 5-defense Gold Vault model (V6, block 10,000)</td></tr>
+          <tr><td class="key">Emergency</td><td class="val">&ge;90% block-based miner signaling over 67-block window (ceil = 61 blocks) + 5-defense Gold Vault model + Transitional Guardian with 10-block pronouncement window and auto-disconnect at block 25,000. <b style="color:#fbbf24">Target V14 / block 15,000</b> (deferred from the original V6 / block 10,000 / ≥95 % design); see V13 scope update.</td></tr>
           <tr><td class="key">Premine / ICO</td><td class="val"><code>0</code> &mdash; none</td></tr>
           <tr><td class="key">Consensus governance</td><td class="val">None &mdash; immutable at genesis</td></tr>
         </table>
@@ -1033,15 +1048,15 @@
     </div>
     <div style="max-width:800px;margin:0 auto;font-size:14px;line-height:1.8;color:var(--text-secondary);">
       <p>The network and mining layers are already partially decentralized: multiple independent nodes, multiple active miners, open-source code, and no admin keys for block production.</p>
-      <p style="margin-top:16px;">However, two economic custody components are still temporarily centralized during Phase I (before V6 activates at block 10,000):</p>
+      <p style="margin-top:16px;">However, two economic custody components are still temporarily centralized during Phase I (until governance activates — originally targeted for V6 / block 10,000, deferred to <b style="color:#fbbf24">V14 / block 15,000</b> after the 2026-05-18 scope review; see banner above and <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code>):</p>
       <ul style="margin:12px 0 12px 24px;color:var(--text-primary);">
-        <li><strong style="color:var(--gold);">Gold Vault</strong> (25% of every block reward): developer-held custody until V6 activates the 5-defense governance model at block 10,000</li>
-        <li><strong style="color:var(--cyan);">PoPC Pool</strong> (25% of every block reward): developer-held custody until PoPC operational launch at block 10,000</li>
+        <li><strong style="color:var(--gold);">Gold Vault</strong> (25% of every block reward): developer-held custody until the 5-defense governance model activates — <b style="color:#fbbf24">V14 / block 15,000</b> target (deferred from V6 / block 10,000 after the V13 review; 5 of 6 governance gates are RED today, full audit at <code>docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md</code>)</li>
+        <li><strong style="color:var(--cyan);">PoPC Pool</strong> (25% of every block reward): developer-held custody until PoPC + Escrow operational launch — <b style="color:#fbbf24">V14 / block 15,000</b> target (5 of 9 PoPC consensus gates are RED today, full audit at <code>docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</code>)</li>
       </ul>
       <p>The protocol developer cannot change the constitutional 50/25/25 split, because it is hardcoded at genesis. What remains centralized during Phase I is <em>custody</em>, not the emission rule itself.</p>
       <p style="margin-top:16px;"><strong>Custody transition roadmap:</strong></p>
       <ul style="margin:12px 0 12px 24px;">
-        <li><strong>Block 10,000 (V6 hard fork):</strong> Gold Vault governance enforced at consensus level &mdash; 5-defense model (purpose restriction, dual destination whitelists, per-spend cap, rate limiting, &ge;95% miner supermajority). The protocol developer loses executive vault control. PoPC operational launch.</li>
+        <li><strong>Block 15,000 (V14 fallback hard fork):</strong> Gold Vault governance enforced at consensus level &mdash; 5-defense model (purpose restriction, dual destination whitelists, per-spend cap, rate limiting, <b style="color:#fbbf24">&ge;90 % block-based miner signaling over a 67-block window</b>) plus the Transitional Guardian role (authorise / veto with 10-block pronouncement window; silence ⇒ miner result prevails; auto-disconnect at block 25,000, implemented in V13 source from day one, no future fork required). The protocol developer loses executive vault control. PoPC + Escrow operational launch under the same fork. Updated threshold history: 75 % (original whitepaper) → 95 % (V6 internal review) → 90 % (V13 review, finalised after observing real network behaviour).</li>
         <li>Gold reserve purchases become externally verifiable on Ethereum (already started: 1.2 oz committed)</li>
         <li><strong>Phase III (12&ndash;24 months):</strong> Migration from tokenized gold (XAUT/PAXG) to physical gold custody in a regulated vault. No bridges, no wSOST, no cross-chain attack surface.</li>
       </ul>
@@ -1081,10 +1096,7 @@
     </p>
 
     <p class="pos-snapshot">
-      Snapshot date: 2026-05-08 UTC &middot; Block heights and schedule drift change every
-      minute and are intentionally rounded. Sources: Blockchain.info (BTC), BlockCypher
-      (LTC, DOGE), localmonero.co (XMR), Blockchair (BCH, ZEC). SOST height read from the
-      production explorer at the same time.
+      Snapshot below is <b>historical</b> (frozen 2026-05-08 UTC) and is not refreshed on every page load. Block heights and schedule drift change every minute; <b>see the live explorer at <a href="sost-explorer.html" style="color:#67e8f9;text-decoration:underline;">sost-explorer.html</a></b> for the current SOST height. Sources for the comparison columns: Blockchain.info (BTC), BlockCypher (LTC, DOGE), localmonero.co (XMR), Blockchair (BCH, ZEC).
     </p>
 
     <!-- TABLE 1 — Schedule -->
