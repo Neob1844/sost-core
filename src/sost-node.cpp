@@ -46,6 +46,7 @@
 #include "sost/proposals.h"
 #include "sost/lottery.h"
 #include "sost/beacon.h"
+#include "sost/beacon_p2p.h"
 
 #include <fstream>
 #include <sys/socket.h>
@@ -449,6 +450,40 @@ struct TxIndexEntry {
     uint32_t tx_pos;
 };
 static std::map<Hash256, TxIndexEntry> g_tx_index;
+
+// -----------------------------------------------------------------------
+// Beacon Phase III P2P gossip state (Commit A: dormant).
+//
+// BEACON_P2P_ACTIVATION_HEIGHT remains INT64_MAX, so every BCNN message
+// is silently dropped by g_beacon_p2p_state.process_incoming() before
+// any allocation. A future enabling commit lowers the gate; nothing
+// else needs to change on the dispatcher side.
+// -----------------------------------------------------------------------
+static sost::beacon::p2p::BeaconP2PState g_beacon_p2p_state;
+
+// Plaintext broadcast of an accepted Beacon notice to all version-acked
+// peers except the origin. Mirrors p2p_broadcast_tx's pattern.
+// Forward declaration: p2p_send is defined further down in this file.
+// The Beacon broadcast helper sits alongside the global declarations
+// region so the order requires a forward decl here.
+static bool p2p_send(int fd, const char* cmd, const uint8_t* payload, size_t len);
+
+static void p2p_broadcast_beacon_notice(const std::string& payload, int exclude_fd) {
+    std::lock_guard<std::mutex> lk(g_peers_mu);
+    int sent = 0;
+    for (auto& p : g_peers) {
+        if (p.fd == exclude_fd) continue;
+        if (!p.version_acked) continue;
+        {
+            std::lock_guard<std::mutex> wlk(*p.write_mu);
+            p2p_send(p.fd, "BCNN",
+                     reinterpret_cast<const uint8_t*>(payload.data()),
+                     payload.size());
+        }
+        ++sent;
+    }
+    if (sent > 0) printf("[BEACON] gossip relayed to %d peers\n", sent);
+}
 
 // Rate limiting per peer (blocks per minute)
 struct PeerRateLimit {
@@ -5976,6 +6011,52 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             } else if (sync.mode == SyncState::HISTORICAL) {
                 printf("[SYNC] Sync complete: height %lld\n", (long long)g_chain_height);
                 sync.mode = SyncState::LIVE;
+            }
+        }
+        else if (!strcmp(msg.cmd, "BCNN")) {
+            // Beacon Phase III P2P notice. ADVISORY ONLY: this code path
+            // MUST NEVER touch consensus, mining, block validation, or
+            // chain decisions. In Commit A the gate
+            // (BEACON_P2P_ACTIVATION_HEIGHT) is INT64_MAX, so the
+            // state machine returns DiscardDormant before any allocation
+            // — V13 nodes consume zero CPU on these messages until a
+            // future commit explicitly lowers the gate.
+            const sost::beacon::Network local_net =
+                (ACTIVE_PROFILE == Profile::TESTNET)
+                ? sost::beacon::Network::TESTNET
+                : sost::beacon::Network::MAINNET;
+            std::string payload(reinterpret_cast<const char*>(msg.payload.data()),
+                                msg.payload.size());
+            auto dec = g_beacon_p2p_state.process_incoming(
+                /*peer_id=*/peer_ip(addr),
+                payload,
+                /*current_height=*/g_chain_height,
+                local_net,
+                /*out_notice=*/nullptr,
+                /*now_sec=*/0,
+                /*gate_override=*/INT64_MIN);   // honour BEACON_P2P_ACTIVATION_HEIGHT
+            switch (dec) {
+                case sost::beacon::p2p::IncomingDecision::DiscardOversized:
+                    if (add_misbehavior(fd, addr, 10, "beacon: oversized notice")) return false;
+                    break;
+                case sost::beacon::p2p::IncomingDecision::DiscardMalformed:
+                    if (add_misbehavior(fd, addr, 10, "beacon: malformed notice")) return false;
+                    break;
+                case sost::beacon::p2p::IncomingDecision::DiscardRateLimited:
+                    if (add_misbehavior(fd, addr, 5, "beacon: notice rate limit")) return false;
+                    break;
+                case sost::beacon::p2p::IncomingDecision::AcceptAndRelay:
+                    // Cache + rate-bookkeeping already updated by process_incoming.
+                    // Relay plaintext to all other version-acked peers.
+                    p2p_broadcast_beacon_notice(payload, fd);
+                    break;
+                case sost::beacon::p2p::IncomingDecision::DiscardDormant:
+                case sost::beacon::p2p::IncomingDecision::DiscardBadSignature:
+                case sost::beacon::p2p::IncomingDecision::DiscardExpired:
+                case sost::beacon::p2p::IncomingDecision::DiscardWrongNetwork:
+                case sost::beacon::p2p::IncomingDecision::DiscardDuplicate:
+                    // Silent drop — see beacon_p2p.h for rationale per case.
+                    break;
             }
         }
         else if (!strcmp(msg.cmd, "EKEY")) {

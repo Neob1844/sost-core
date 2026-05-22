@@ -42,9 +42,15 @@
 #pragma once
 
 #include "sost/types.h"
+#include "sost/beacon.h"          // Notice, Network
 
+#include <climits>
 #include <cstdint>
+#include <deque>
+#include <mutex>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace sost::beacon::p2p {
 
@@ -166,5 +172,82 @@ const char* decision_name(IncomingDecision d);
 IncomingDecision handle_incoming_notice_message(
     const std::string& bytes,
     int64_t            current_height);
+
+// ---------------------------------------------------------------------------
+// BeaconP2PState — production state container (Commit A: ready, dormant).
+//
+// Wraps the LRU dedup cache, the per-peer sliding-window rate-limit map,
+// and the mutex that serialises access to them. A single instance lives
+// in src/sost-node.cpp; tests create their own to exercise the active
+// path under an injected gate height.
+//
+// Thread-safe: every public method takes the internal mutex. The mutex
+// is fine-grained (does not cover sig verification CPU work) and NEVER
+// calls back into the dispatcher, so it cannot deadlock with g_peers_mu
+// or g_chain_mu.
+//
+// Hard invariants:
+//   - process_incoming is the SOLE entry point. Tests cannot poke the
+//     cache directly except via cache_size() (read-only).
+//   - The cache is bounded at BEACON_P2P_CACHE_MAX_NOTICES (= 32);
+//     oldest entries are evicted FIFO at the cap.
+//   - The rate-limit map ages out entries older than 60 seconds per
+//     check, so it does not grow unboundedly with churn.
+//   - The dormant gate is checked FIRST. Tests inject gate_height_override
+//     to exercise the active path without changing the global sentinel.
+// ---------------------------------------------------------------------------
+
+class BeaconP2PState {
+public:
+    // Inspect an incoming notice payload from a specific peer. Returns
+    // a single IncomingDecision describing what the caller should do.
+    //
+    // Inputs:
+    //   peer_id              Stable identifier for the sending peer
+    //                        (the node uses the address string).
+    //   bytes                On-wire payload as received.
+    //   current_height       Local chain tip height for the gate check.
+    //   local_network        Network this node is on; cross-network
+    //                        notices are silently discarded.
+    //   out_notice           Optional output: populated with the parsed
+    //                        Notice when the decision is AcceptAndRelay.
+    //   now_sec              Optional Unix-seconds override. 0 (default)
+    //                        means std::time(nullptr). Tests pass a
+    //                        deterministic value.
+    //   gate_height_override Optional alternate activation gate. The
+    //                        sentinel INT64_MIN (default) means use the
+    //                        production BEACON_P2P_ACTIVATION_HEIGHT
+    //                        constant. Tests pass a finite value to
+    //                        exercise the active path while the global
+    //                        gate stays at INT64_MAX.
+    //
+    // Never throws, never blocks on I/O, never opens a socket, never
+    // touches consensus state. Does NOT relay anything itself; relay is
+    // the caller's job (the only entity that knows peer sockets).
+    IncomingDecision process_incoming(
+        const std::string& peer_id,
+        const std::string& bytes,
+        int64_t            current_height,
+        ::sost::beacon::Network local_network,
+        Notice*            out_notice = nullptr,
+        int64_t            now_sec = 0,
+        int64_t            gate_height_override = INT64_MIN);
+
+    // Test-only inspectors. Cheap snapshot under the internal mutex.
+    size_t cache_size() const;
+    size_t rate_map_size() const;
+
+private:
+    struct PeerRate {
+        // Per-peer sliding-window timestamps of ACCEPTED notice ids.
+        // Entries older than 60 s are pruned on every check.
+        std::deque<int64_t> arrivals;
+    };
+
+    mutable std::mutex                          mu_;
+    std::deque<std::string>                     lru_ids_;   // FIFO order
+    std::unordered_set<std::string>             lru_set_;   // membership index
+    std::unordered_map<std::string, PeerRate>   rate_map_;
+};
 
 } // namespace sost::beacon::p2p

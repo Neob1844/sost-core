@@ -331,6 +331,15 @@ add_executable(test-v13-beacon-phase2b tests/test_v13_beacon_phase2b.cpp)
 target_link_libraries(test-v13-beacon-phase2b PRIVATE sost-core secp256k1)
 add_test(NAME v13-beacon-phase2b COMMAND test-v13-beacon-phase2b)
 
+# V13 Beacon Phase III P2P gossip — Commit A tests. Pipeline (size cap,
+# parse, sig verify, network, expiry, dedup LRU 32, per-peer rate-limit
+# 8/min) is exercised via gate_height_override; production gate stays at
+# BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX so V13 nodes remain dormant.
+# See docs/V13_BEACON_PHASE_III.md.
+add_executable(test-v13-beacon-phase3-p2p tests/test_v13_beacon_phase3_p2p.cpp)
+target_link_libraries(test-v13-beacon-phase3-p2p PRIVATE sost-core secp256k1)
+add_test(NAME v13-beacon-phase3-p2p COMMAND test-v13-beacon-phase3-p2p)
+
 # V13 Beacon Phase III P2P scaffold — DISABLED-by-default tests.
 # Pins the gate sentinel (INT64_MAX), the four hard limits, and the
 # always-DiscardDormant behaviour for every input. A future commit that
