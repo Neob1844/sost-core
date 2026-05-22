@@ -824,7 +824,7 @@ inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 60;
 //   3. Beacon Phase II-A activation
 //      Node + miner local notice display path goes live. No P2P, no HTTP
 //      from C++, no consensus impact. Phase III (P2P gossip) remains
-//      DISABLED-by-default (BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX).
+//      active at V13 (BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT).
 //
 // The helpers below are the SINGLE source of truth for the height-gated
 // values. After the wire-up commits land, all consensus / RPC call sites
@@ -839,7 +839,7 @@ inline constexpr int64_t V13_HEIGHT                       = 12000;
 // is intentionally sentinel-disabled (INT64_MAX) until a future fork commit
 // lowers the gate; the explorer-only Phase 1 already shipped.
 inline constexpr int64_t BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT;
-inline constexpr int64_t BEACON_P2P_ACTIVATION_HEIGHT     = INT64_MAX;
+inline constexpr int64_t BEACON_P2P_ACTIVATION_HEIGHT     = V13_HEIGHT;  // active at V13
 
 // Lottery exclusion window — height-gated. Returns 5 for pre-V13 heights,
 // 6 from V13_HEIGHT onwards. Type matches LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW

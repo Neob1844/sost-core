@@ -4,10 +4,12 @@
 **Fallback:** V14 at block **15,000** if any of II-B or III is not ready by the V13 RC freeze.
 **Scope:** what is the current state of Beacon Phase II-A (already targeted for V13), and what is required to also ship Phase II-B and Phase III in the V13 fork?
 
-**Bottom line:**
-- **Phase II-A**: **complete and gated at V13_HEIGHT (12,000)**. Notice loader, ECDSA-SHA256 signature verification, miner banner, RPC handler, and 11 tests are in place. One operator action is required before V13 RC: replace the placeholder pubkey constant with the real release pubkey.
-- **Phase II-B**: partially supported. `expires_height` and `severity` already work in II-A. **N-of-M threshold signatures, mirror channel, and revocation** are missing — these are the load-bearing II-B features and they do not exist.
-- **Phase III**: a **dormant scaffold** exists (`include/sost/beacon_p2p.h`, `src/beacon_p2p.cpp`), gated by `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX`. The handler always returns `DiscardDormant`. Hard limits (4 KB notice, 32-notice cache, 8 notices/peer/min rate) are pinned, but no message-type registration, no signature-verify path in the gossip layer, no dedup, and no peer-rate enforcement are implemented yet.
+**Bottom line (updated 2026-05-23 — Beacon stack is now fully implemented for V13):**
+- **Phase II-A**: **complete and gated at V13_HEIGHT (12,000)**. Notice loader, ECDSA-SHA256 signature verification, miner banner, RPC handler, and the original 11-test suite remain in place. Operator action before V13 RC: replace the placeholder pubkey constant with the real release pubkey.
+- **Phase II-B**: **implemented and gated at V13_HEIGHT (12,000)**. The `Notice` schema gained `threshold`, `signatures[]`, `revokes`, and `mirror_url` (metadata only). Verification is N-of-M (default 3-of-5 against `BEACON_THRESHOLD_PUBKEYS[5]`) with signer-index dedup; revocation requires a threshold-signed notice; `mirror_url` is never fetched. 33 II-B regression assertions pass. Operator action before V13 RC: replace the five placeholder threshold pubkeys with the real release set generated offline.
+- **Phase III**: **active at V13_HEIGHT (12,000)** as of the Commit B activation. `BEACON_P2P_ACTIVATION_HEIGHT` was `INT64_MAX` (DiscardDormant sentinel) and is now `V13_HEIGHT`. The full pipeline runs at and above the gate: size cap 4 KB → parse → sig verify (threshold-aware) → network match → expiry → dedup LRU 32 → per-peer rate limit 8/min → accept + plaintext relay to all version-acked peers except origin. 42 Phase III regression assertions pass. Hard limits and link-time advisory-only invariant preserved. Pre-V13 height: dormant.
+
+Sections below retain the original audit text for historical context. Where they reference dormancy / `INT64_MAX` / "missing implementation", read those as the situation BEFORE the Commit A + Commit B work; the bottom-line above is the live status.
 
 This doc maps each phase with `file:line` evidence and confirms what is missing for V13 activation.
 

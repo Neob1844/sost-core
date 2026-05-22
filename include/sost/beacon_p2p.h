@@ -1,43 +1,49 @@
-// SOST Beacon Phase III — P2P notice gossip scaffold (DORMANT).
+// SOST Beacon Phase III — P2P notice gossip (ACTIVE at V13).
 //
 // =====================================================================
-// THIS PHASE IS DISABLED BY DEFAULT.  IT DOES NOT SHIP A WORKING GOSSIP
-// PATH.  THE TYPES AND HANDLERS BELOW ARE INTENTIONALLY INERT.
+// ACTIVE FROM BLOCK V13_HEIGHT (= 12000). BELOW THAT HEIGHT EVERY
+// INCOMING BCNN MESSAGE IS SILENTLY DROPPED VIA DiscardDormant.
 // =====================================================================
 //
 // The activation gate is `BEACON_P2P_ACTIVATION_HEIGHT` (declared in
-// `include/sost/params.h`). It is pinned at `INT64_MAX` (sentinel =
-// "never, until a future fork commit lowers the gate"). The node code
-// MUST NOT register a P2P message type for Beacon notices, MUST NOT
-// gossip anything, and MUST drop any incoming candidate notice silently
-// while `is_p2p_enabled(...)` returns false.
+// `include/sost/params.h`). As of the V13 release it is set to
+// `V13_HEIGHT`. For heights strictly below the gate the dispatcher
+// drops candidate notices silently; for heights at or above the gate
+// the full pipeline (size cap, parse, sig verify, network match,
+// expiry, dedup LRU, per-peer rate limit) runs.
+//
+// ADVISORY ONLY: nothing in this header changes consensus, block
+// validation, mining validity, or rewards. The decision returned by
+// the handler is never consulted by chain code.
 //
 // Rationale:
-//   - Phase II-A (local-file path) is sufficient for V13 operations.
-//     Adding P2P gossip introduces a new attack surface (DoS, oversized
-//     payloads, replay, spam) that has not been audited.
-//   - Shipping the scaffold now lets a future operator enable Phase III
-//     by:
-//       1. lowering BEACON_P2P_ACTIVATION_HEIGHT in params.h,
-//       2. registering the network message type in the P2P layer,
-//       3. wiring the existing `handle_incoming_notice_message` into
-//          the dispatch table.
-//     Until step (1) lowers the gate, nothing here can fire.
-//   - The hard limits below (max size, max cache size, dedup, rate
-//     limits) are documented now so a future enabling commit cannot
-//     ship without them by accident.
+//   - V13 enables Beacon Phase III as a hardened advisory channel
+//     ON TOP OF Phase II-A (local file) and Phase II-B (3-of-5
+//     threshold). All three layers coexist; no layer overrides
+//     another. P2P gossip lets a freshly-published signed notice
+//     reach miners and full nodes without requiring each operator
+//     to manually drop notices.json on disk.
+//   - The DoS / oversized / replay / spam concerns that originally
+//     justified deferring Phase III are mitigated by the hard limits
+//     enforced below and audited in tests/test_v13_beacon_phase3_p2p.cpp.
+//   - Bad signatures are silently discarded (no banscore tick) so an
+//     honest relay carrying a stale or corrupted notice cannot be
+//     punished. Oversized / malformed / rate-limit hits ARE loud
+//     (the dispatcher adds misbehavior points).
 //
-// Hard invariants the scaffold satisfies even while disabled:
-//   - `is_p2p_enabled(height)` returns false for every height that does
-//     not strictly exceed `BEACON_P2P_ACTIVATION_HEIGHT - 1`. Today
-//     that is "every height ever".
-//   - `handle_incoming_notice_message(...)` always returns
-//     `IncomingDecision::DiscardDormant` until the gate is lowered;
-//     once lowered, every further check (size, schema, dedup, rate
-//     limit) must pass before a notice is cached or relayed.
-//   - The scaffold has no internal cache, no peer-state, no timers, no
-//     threads. It is pure functions only. A future enabling commit
-//     adds those resources; this one does not.
+// Hard invariants:
+//   - `is_p2p_enabled(height)` returns false for heights strictly less
+//     than `BEACON_P2P_ACTIVATION_HEIGHT` (= V13_HEIGHT). Pre-V13
+//     remains dormant.
+//   - `BeaconP2PState::process_incoming(...)` runs the full pipeline
+//     for heights at or above the gate, returning AcceptAndRelay only
+//     after size + parse + sig + network + expiry + dedup +
+//     per-peer rate-limit all pass.
+//   - The cache is bounded at BEACON_P2P_CACHE_MAX_NOTICES (= 32);
+//     the per-peer sliding-window ages out entries older than 60 s.
+//   - No Beacon code path links into block_validation, mining, or
+//     chain commit. The advisory-only invariant is pinned by a
+//     link-time test (tests/test_v13_beacon_phase3_p2p.cpp:t15).
 
 #pragma once
 

@@ -180,7 +180,7 @@ static void t01_dormant_by_default() {
     TestKey k = make_test_key(0x1234);
     std::string payload = make_signed_iia_payload(k, "v13-p2p-001");
     auto d = st.process_incoming("peer-a", payload,
-                                  /*current_height=*/12000,
+                                  /*current_height=*/11999,
                                   Network::MAINNET,
                                   /*out=*/nullptr, /*now=*/1700000000,
                                   /*gate_override=*/INT64_MIN);
@@ -333,7 +333,7 @@ static void t10_cache_unchanged_by_bad_inputs() {
         TestKey k = make_test_key((uint32_t)(0xBEEF0000 + i));
         std::string payload = make_signed_iia_payload(k, "v13-p2p-cap-" + std::to_string(i));
         st.process_incoming("peer-" + std::to_string(i % 5), payload,
-                            12000, Network::MAINNET,
+                            11999, Network::MAINNET,
                             nullptr, 1700000000, /*gate=*/0);
     }
     // All sigs fail against placeholder BEACON_PUBKEY_HEX -> nothing cached.
@@ -351,7 +351,7 @@ static void t11_rate_map_empty_under_rejections() {
         TestKey k = make_test_key((uint32_t)(0xCAFE0000 + i));
         std::string payload = make_signed_iia_payload(k, "v13-rl-" + std::to_string(i));
         st.process_incoming("peer-X", payload,
-                            12000, Network::MAINNET,
+                            11999, Network::MAINNET,
                             nullptr, 1700000000, /*gate=*/0);
     }
     TEST("rate map size == 0 under all-bad-sig load",
@@ -371,7 +371,7 @@ static void t12_production_gate_universally_dormant() {
     };
     for (size_t i = 0; i < inputs.size(); ++i) {
         auto d = st.process_incoming("peer-Z", inputs[i],
-                                      12000, Network::MAINNET,
+                                      11999, Network::MAINNET,
                                       nullptr, 1700000000, /*gate=*/INT64_MIN);
         TEST(("input " + std::to_string(i) + " -> DiscardDormant").c_str(),
              d == IncomingDecision::DiscardDormant);
@@ -384,7 +384,7 @@ static void t12_production_gate_universally_dormant() {
 //     handle_incoming_notice_message also stays dormant.
 static void t13_legacy_handle_still_dormant() {
     printf("\n=== 13) Legacy handle_incoming_notice_message stays dormant ===\n");
-    auto d = handle_incoming_notice_message(std::string("anything"), 999999999);
+    auto d = handle_incoming_notice_message(std::string("anything"), 0);
     TEST("DiscardDormant", d == IncomingDecision::DiscardDormant);
 }
 

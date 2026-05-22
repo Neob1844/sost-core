@@ -1,15 +1,16 @@
-// SOST Beacon Phase III — P2P notice gossip scaffold (DORMANT).
-// See include/sost/beacon_p2p.h for the contract.
+// SOST Beacon Phase III — P2P notice gossip (ACTIVE at V13).
+// See include/sost/beacon_p2p.h for the public contract.
 //
-// The implementation is intentionally minimal: while
-// BEACON_P2P_ACTIVATION_HEIGHT remains at its sentinel (INT64_MAX), the
-// only paths that fire are:
-//   - is_p2p_enabled(): always returns false
-//   - handle_incoming_notice_message(): always returns DiscardDormant
+// As of V13, BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT (= 12000). For
+// heights strictly below the gate the pipeline returns DiscardDormant
+// before any allocation; at or above the gate the full 7-check
+// pipeline (size cap, parse, sig verify, network, expiry, dedup LRU,
+// per-peer rate-limit) runs and the dispatcher relays accepted
+// notices to other peers.
 //
-// The activation gate is the single switch a future enabling commit
-// has to lower. Until then, NOTHING in this file allocates resources,
-// touches peers, or relays bytes.
+// ADVISORY ONLY: this file does not link consensus, block validation,
+// or mining symbols. Bad signatures are silent; oversized / malformed
+// / rate-limit are loud (caller adds misbehavior).
 
 #include "sost/beacon_p2p.h"
 #include "sost/beacon.h"
@@ -21,13 +22,17 @@
 namespace sost::beacon::p2p {
 
 bool is_p2p_enabled(int64_t current_height) {
-    // Sentinel-disabled gate: BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX
-    // means "Phase III P2P never active under any height". The explicit
-    // sentinel check below preserves that semantic even at the
-    // degenerate edge `current_height == INT64_MAX`, where a plain
-    // greater-than-or-equal comparison would otherwise return true.
-    // The chain never reaches h = INT64_MAX, but a defensive
-    // contract is cheaper than a future debate over the edge case.
+    // Two-step gate:
+    //   1. If BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX, the operator
+    //      has explicitly disabled Phase III (sentinel mode). Return
+    //      false for every height, even INT64_MAX itself.
+    //   2. Otherwise return (current_height >= BEACON_P2P_ACTIVATION_HEIGHT).
+    //
+    // Production (V13): the gate is V13_HEIGHT (= 12000), so the
+    // sentinel branch is inactive and the comparison branch decides.
+    // The sentinel preserved in code lets a future operator disable
+    // Phase III again by re-setting the constant to INT64_MAX without
+    // touching call sites.
     if (BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX) return false;
     return current_height >= BEACON_P2P_ACTIVATION_HEIGHT;
 }
@@ -49,16 +54,15 @@ const char* decision_name(IncomingDecision d) {
 
 IncomingDecision handle_incoming_notice_message(const std::string& bytes,
                                                 int64_t            current_height) {
-    // Legacy / scaffold entry point — preserved for pre-existing tests
-    // that pin the dormancy invariant against the original signature.
-    // The production dispatcher in src/sost-node.cpp uses
+    // Legacy / scaffold entry point — preserved for tests that pin the
+    // gate-respecting contract against the original (peer-less)
+    // signature. The production dispatcher in src/sost-node.cpp uses
     // BeaconP2PState::process_incoming(...) instead, which carries the
-    // peer identity, network, and the optional gate override needed for
+    // peer identity, network, and optional gate override needed for
     // testing the active path.
     //
-    // While the global gate sentinel BEACON_P2P_ACTIVATION_HEIGHT is
-    // INT64_MAX, this function always returns DiscardDormant — the
-    // existing scaffold contract is preserved exactly.
+    // For heights strictly below BEACON_P2P_ACTIVATION_HEIGHT this
+    // function returns DiscardDormant before any allocation.
     if (!is_p2p_enabled(current_height)) {
         (void)bytes;
         return IncomingDecision::DiscardDormant;

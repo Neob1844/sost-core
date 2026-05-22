@@ -48,10 +48,11 @@ static_assert(V13_HEIGHT == 12000,
 static_assert(BEACON_PHASE2A_ACTIVATION_HEIGHT == V13_HEIGHT,
               "Beacon Phase II-A must activate at exactly V13_HEIGHT.");
 
-static_assert(BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX,
-              "Beacon Phase III P2P must remain DISABLED-by-default "
-              "(INT64_MAX sentinel). Any non-sentinel value enables P2P "
-              "and requires its own fork plan.");
+static_assert(BEACON_P2P_ACTIVATION_HEIGHT == V13_HEIGHT,
+              "Beacon Phase III P2P activates at V13_HEIGHT. "
+              "Pre-V13 the dispatcher returns DiscardDormant; at/after "
+              "V13_HEIGHT the full advisory pipeline (size/parse/sig/network/"
+              "expiry/dedup/rate-limit) runs. Change requires a fork plan.");
 
 // Boundary at the activation height.
 static_assert(lottery_exclusion_window_at(11999) == 5,
@@ -108,8 +109,8 @@ static void test_v13_height_anchor() {
     TEST("V13_HEIGHT == 12000", V13_HEIGHT == 12000);
     TEST("BEACON_PHASE2A_ACTIVATION_HEIGHT == V13_HEIGHT",
          BEACON_PHASE2A_ACTIVATION_HEIGHT == V13_HEIGHT);
-    TEST("BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX (DISABLED sentinel)",
-         BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX);
+    TEST("BEACON_P2P_ACTIVATION_HEIGHT == V13_HEIGHT (active at V13)",
+         BEACON_P2P_ACTIVATION_HEIGHT == V13_HEIGHT);
 }
 
 static void test_lottery_window_boundary() {
