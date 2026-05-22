@@ -68,7 +68,8 @@ PUBLIC_MIRROR_REQUIRED_FIELDS = (
     "min_commit",
     "required_binary_label",
     "ntp_required",
-    "future_timestamp_drift_seconds_post_v13",
+    "ntp_recommended",
+    "future_timestamp_drift_cap_seconds",
     "dtd_lottery_cooldown_post_v13",
 )
 
@@ -401,8 +402,9 @@ def build_report(
         },
         "min_commit":                               str(config.get("min_commit", "")),
         "required_binary_label":                    str(config.get("required_binary_label", "v13-rc1")),
-        "ntp_required":                             True,
-        "future_timestamp_drift_seconds_post_v13":  30,
+        "ntp_required":                             False,
+        "ntp_recommended":                          True,
+        "future_timestamp_drift_cap_seconds":  30,
         "dtd_lottery_cooldown_post_v13":            6,
         "confirmed_items_ready":                    confirmed_view,
         "fallback_v15_items":                       fallback_ids,
@@ -460,10 +462,12 @@ def render_markdown(report: Dict[str, Any]) -> str:
     a("")
     a("- min_commit: `" + report["min_commit"] + "`")
     a("- required_binary_label: `" + report["required_binary_label"] + "`")
-    a("- NTP required: `"
+    a("- NTP required (consensus): `"
       + ("true" if report["ntp_required"] else "false") + "`")
+    a("- NTP recommended (operational): `"
+      + ("true" if report.get("ntp_recommended", False) else "false") + "`")
     a("- future-drift cap post-V13: **"
-      + str(report["future_timestamp_drift_seconds_post_v13"]) + " s**")
+      + str(report["future_timestamp_drift_cap_seconds"]) + " s**")
     a("- DTD cooldown post-V13: **"
       + str(report["dtd_lottery_cooldown_post_v13"]) + " blocks**")
     a("")

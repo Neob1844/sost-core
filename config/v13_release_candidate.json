@@ -2,63 +2,59 @@
   "schema": "sost-v13-release-candidate/v0.1",
   "rc_id": "v13-rc1",
   "pinned_time": "2026-05-18T13:00:00+00:00",
-
-  "v13_activation_height":               12000,
-  "v15_fallback_height":                 15000,
-  "dtd_lottery_decision_height":         12100,
-
-  "min_commit":                          "e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a",
-  "required_binary_label":               "v13-rc1",
-  "ntp_required":                        true,
-  "future_timestamp_drift_seconds_post_v13": 30,
-  "dtd_lottery_cooldown_post_v13":       6,
-
+  "v13_activation_height": 12000,
+  "v15_fallback_height": 15000,
+  "dtd_lottery_decision_height": 12100,
+  "min_commit": "e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a",
+  "required_binary_label": "v13-rc1",
+  "ntp_required": false,
+  "ntp_recommended": true,
+  "future_timestamp_drift_cap_seconds": 30,
+  "dtd_lottery_cooldown_post_v13": 6,
   "confirmed_items": [
     {
-      "id":    "casert_all_profiles_e7_h35",
+      "id": "casert_all_profiles_e7_h35",
       "label": "All cASERT equalizer profiles E7-H35 active",
       "evidence_keyword": "CASERT_MAX_ACTIVE_PROFILE_V13"
     },
     {
-      "id":    "dtd_cooldown_6",
+      "id": "dtd_cooldown_6",
       "label": "DTD lottery cooldown 5 -> 6 blocks",
       "evidence_keyword": "lottery_exclusion_window_at"
     },
     {
-      "id":    "timestamp_drift_30s",
+      "id": "timestamp_drift_30s",
       "label": "Future-drift cap 60s -> 30s",
       "evidence_keyword": "max_future_drift_at"
     },
     {
-      "id":    "beacon_phase_ii_a",
+      "id": "beacon_phase_ii_a",
       "label": "Beacon Phase II-A (local notices, file-only, signed)",
       "evidence_keyword": "BEACON_PHASE2A_ACTIVATION_HEIGHT"
     }
   ],
-
   "fallback_v15_items": [
     {
-      "id":    "popc_model_a_b",
+      "id": "popc_model_a_b",
       "label": "PoPC Model A + B (full automated lifecycle)",
       "reason": "Operational orchestration layer not yet 100% production-ready: audit daemon, auto-slash trigger, auto-settlement cron, Ethereum event listener, consensus POPC_ACTIVATION_HEIGHT, and end-to-end lifecycle test still pending. Activated at V15 if it is not ready by V13 binary cut."
     },
     {
-      "id":    "beacon_phase_ii_b",
+      "id": "beacon_phase_ii_b",
       "label": "Beacon Phase II-B (expiration/threshold-sig/mirror/revocation/severity)",
       "reason": "Design + implementation + tests not closed at V13 binary cut. Slides to V15 if not green."
     },
     {
-      "id":    "beacon_phase_iii",
+      "id": "beacon_phase_iii",
       "label": "Beacon Phase III (P2P gossip of verified notices)",
       "reason": "P2P scaffold exists but activation height is INT64_MAX. Safety + anti-DoS tests not yet present. Slides to V15."
     },
     {
-      "id":    "memory_lock_per_instance",
+      "id": "memory_lock_per_instance",
       "label": "Memory-Lock per-instance (anti-pool, per-thread dataset)",
       "reason": "Design doc + independent simulation + implementation + 8 GB-floor small-miner safety test not yet in repo. Slides to V15 or stays inactive."
     }
   ],
-
   "operator_actions": [
     {
       "step": 1,
@@ -91,14 +87,13 @@
       "detail": "See docs/V13_MINER_OPERATOR_CHECKLIST.md for the four most likely causes: clock skew > 10 s, old binary, outdated cASERT profile assumption, outdated DTD cooldown assumption."
     }
   ],
-
   "safety": {
-    "no_wallet_access":                  true,
-    "no_private_key_access":             true,
-    "no_signing":                        true,
-    "no_broadcast":                      true,
-    "no_network_required":               true,
-    "no_auto_restart":                   true,
-    "no_consensus_auto_toggle":          true
+    "no_wallet_access": true,
+    "no_private_key_access": true,
+    "no_signing": true,
+    "no_broadcast": true,
+    "no_network_required": true,
+    "no_auto_restart": true,
+    "no_consensus_auto_toggle": true
   }
 }

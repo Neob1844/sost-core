@@ -16,7 +16,8 @@
     "min_commit",
     "required_binary_label",
     "ntp_required",
-    "future_timestamp_drift_seconds_post_v13",
+    "ntp_recommended",
+    "future_timestamp_drift_cap_seconds",
     "dtd_lottery_cooldown_post_v13",
     "confirmed_items_ready",
     "fallback_v15_items",
@@ -50,8 +51,12 @@
       "minLength": 1,
       "maxLength": 128
     },
-    "config_loaded":                              {"type": "boolean"},
-    "public_mirror_loaded":                       {"type": "boolean"},
+    "config_loaded": {
+      "type": "boolean"
+    },
+    "public_mirror_loaded": {
+      "type": "boolean"
+    },
     "rc_id": {
       "type": "string",
       "pattern": "^v13-rc[0-9]+$",
@@ -66,9 +71,18 @@
         "dtd_lottery_decision_height"
       ],
       "properties": {
-        "v13_activation_height":       {"type": "integer", "const": 12000},
-        "v15_fallback_height":         {"type": "integer", "const": 15000},
-        "dtd_lottery_decision_height": {"type": "integer", "const": 12100}
+        "v13_activation_height": {
+          "type": "integer",
+          "const": 12000
+        },
+        "v15_fallback_height": {
+          "type": "integer",
+          "const": 15000
+        },
+        "dtd_lottery_decision_height": {
+          "type": "integer",
+          "const": 12100
+        }
       }
     },
     "min_commit": {
@@ -80,9 +94,22 @@
       "pattern": "^v13-rc[0-9]+$",
       "maxLength": 32
     },
-    "ntp_required":                              {"type": "boolean", "const": true},
-    "future_timestamp_drift_seconds_post_v13":   {"type": "integer", "const": 30},
-    "dtd_lottery_cooldown_post_v13":             {"type": "integer", "const": 6},
+    "ntp_required": {
+      "type": "boolean",
+      "const": false
+    },
+    "ntp_recommended": {
+      "type": "boolean",
+      "const": true
+    },
+    "future_timestamp_drift_cap_seconds": {
+      "type": "integer",
+      "const": 30
+    },
+    "dtd_lottery_cooldown_post_v13": {
+      "type": "integer",
+      "const": 6
+    },
     "confirmed_items_ready": {
       "type": "object",
       "additionalProperties": false,
@@ -94,11 +121,21 @@
         "all_ready"
       ],
       "properties": {
-        "casert_all_profiles_e7_h35": {"type": "boolean"},
-        "dtd_cooldown_6":             {"type": "boolean"},
-        "timestamp_drift_30s":        {"type": "boolean"},
-        "beacon_phase_ii_a":          {"type": "boolean"},
-        "all_ready":                  {"type": "boolean"}
+        "casert_all_profiles_e7_h35": {
+          "type": "boolean"
+        },
+        "dtd_cooldown_6": {
+          "type": "boolean"
+        },
+        "timestamp_drift_30s": {
+          "type": "boolean"
+        },
+        "beacon_phase_ii_a": {
+          "type": "boolean"
+        },
+        "all_ready": {
+          "type": "boolean"
+        }
       }
     },
     "fallback_v15_items": {
@@ -121,25 +158,53 @@
         "readiness_gates_md"
       ],
       "properties": {
-        "release_candidate_md":          {"type": "boolean"},
-        "miner_operator_checklist_md":   {"type": "boolean"},
-        "activation_plan_md":            {"type": "boolean"},
-        "readiness_gates_md":            {"type": "boolean"}
+        "release_candidate_md": {
+          "type": "boolean"
+        },
+        "miner_operator_checklist_md": {
+          "type": "boolean"
+        },
+        "activation_plan_md": {
+          "type": "boolean"
+        },
+        "readiness_gates_md": {
+          "type": "boolean"
+        }
       }
     },
-    "docs_mention_block_12000":                 {"type": "boolean"},
-    "docs_mention_ntp_10s":                     {"type": "boolean"},
-    "docs_mention_dtd_decision_12100":          {"type": "boolean"},
-    "docs_mention_fallback_v15":                {"type": "boolean"},
-    "public_mirror_matches_safe_fields":        {"type": "boolean"},
-    "rc_ready":                                 {"type": "boolean"},
+    "docs_mention_block_12000": {
+      "type": "boolean"
+    },
+    "docs_mention_ntp_10s": {
+      "type": "boolean"
+    },
+    "docs_mention_dtd_decision_12100": {
+      "type": "boolean"
+    },
+    "docs_mention_fallback_v15": {
+      "type": "boolean"
+    },
+    "public_mirror_matches_safe_fields": {
+      "type": "boolean"
+    },
+    "rc_ready": {
+      "type": "boolean"
+    },
     "warnings": {
       "type": "array",
-      "items": {"type": "string", "minLength": 1, "maxLength": 500}
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      }
     },
     "safety_status": {
       "type": "string",
-      "enum": ["ok", "warning", "failed"]
+      "enum": [
+        "ok",
+        "warning",
+        "failed"
+      ]
     },
     "safety_flags": {
       "type": "object",
@@ -158,17 +223,50 @@
         "no_ethereum_deploy"
       ],
       "properties": {
-        "no_wallet_access":          {"type": "boolean", "const": true},
-        "no_private_key_access":     {"type": "boolean", "const": true},
-        "no_signing":                {"type": "boolean", "const": true},
-        "no_broadcast":              {"type": "boolean", "const": true},
-        "no_network_required":       {"type": "boolean", "const": true},
-        "no_github_api":             {"type": "boolean", "const": true},
-        "no_shell_true":             {"type": "boolean", "const": true},
-        "no_destructive_git":        {"type": "boolean", "const": true},
-        "no_auto_push_merge_tag":    {"type": "boolean", "const": true},
-        "no_subprocess":             {"type": "boolean", "const": true},
-        "no_ethereum_deploy":        {"type": "boolean", "const": true}
+        "no_wallet_access": {
+          "type": "boolean",
+          "const": true
+        },
+        "no_private_key_access": {
+          "type": "boolean",
+          "const": true
+        },
+        "no_signing": {
+          "type": "boolean",
+          "const": true
+        },
+        "no_broadcast": {
+          "type": "boolean",
+          "const": true
+        },
+        "no_network_required": {
+          "type": "boolean",
+          "const": true
+        },
+        "no_github_api": {
+          "type": "boolean",
+          "const": true
+        },
+        "no_shell_true": {
+          "type": "boolean",
+          "const": true
+        },
+        "no_destructive_git": {
+          "type": "boolean",
+          "const": true
+        },
+        "no_auto_push_merge_tag": {
+          "type": "boolean",
+          "const": true
+        },
+        "no_subprocess": {
+          "type": "boolean",
+          "const": true
+        },
+        "no_ethereum_deploy": {
+          "type": "boolean",
+          "const": true
+        }
       }
     }
   }

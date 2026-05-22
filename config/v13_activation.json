@@ -37,7 +37,7 @@
       "activation_height_target": 12000,
       "wired_in_code": true,
       "evidence": "include/sost/params.h:852 max_future_drift_at(height) returns 30 for height >= V13_HEIGHT.",
-      "operator_warning": "NTP synchronisation MANDATORY for mining post-V13. Clock skew > 10 s ahead -> blocks rejected."
+      "operator_warning": "NTP synchronisation strongly recommended for mining post-V13. Clock skew > 30 s ahead -> blocks rejected (not consensus-mandatory)."
     },
     {
       "id": "beacon_phase_ii_a",
