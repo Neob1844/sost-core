@@ -9,7 +9,7 @@ audited in isolation.
 |----------|------------------------------------|-------------------------|------------------------|
 | 1        | Browser explorer banner            | LIVE                    | (always-on, browser)   |
 | **II-A** | C++ node RPC + miner advisory      | **LIVE from V13_HEIGHT**| `BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT = 12 000` |
-| III      | P2P gossip across nodes            | DISABLED scaffold       | `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX` (sentinel)    |
+| III      | P2P gossip across nodes            | ACTIVE at V13_HEIGHT    | `BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT` (= 12000)    |
 
 The Phase II-A operator runbook lives in `docs/V13_SPEC.md`. Phase III
 remains gated until a separate, explicit fork plan lowers
@@ -207,6 +207,8 @@ explorer refresh; this is acceptable for an informational banner.
 - Mandatory client-side action on a notice (`commands`) — must stay `[]`
   in every phase shipped so far.
 - Multi-signer (k-of-n) — current phases are single-signer.
-- P2P gossip — Phase III scaffold ships in V13 but is **DISABLED** by
-  the `INT64_MAX` activation gate. Enabling requires a separate fork.
+- P2P gossip — Phase III is **active at V13_HEIGHT** (=12000). Pre-V13
+  the dispatcher returns DiscardDormant; from V13_HEIGHT onwards the
+  full advisory pipeline (size/parse/sig/network/expiry/dedup/rate-limit)
+  runs and accepted notices gossip across peers. Advisory only.
 - i18n beyond `_en` fields — banners are English-only.

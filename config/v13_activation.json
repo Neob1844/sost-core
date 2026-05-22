@@ -109,7 +109,7 @@
     },
     {
       "id": "beacon_phase_iii",
-      "label": "Beacon Phase III — P2P gossip of verified notices",
+      "label": "Beacon Phase III — P2P gossip of verified notices (ACTIVE at V13_HEIGHT)",
       "target_height": 12000,
       "fallback_height": 15000,
       "gates": [
@@ -130,7 +130,7 @@
           "rule": "Tests prove per-peer rate limit (BEACON_P2P_PEER_RATE_PER_MIN) holds under stress + the dedup ring bound (BEACON_P2P_CACHE_MAX_NOTICES) holds."
         }
       ],
-      "fallback_rule": "If any gate fails, slides to v15_fallback_height; the existing INT64_MAX dormancy stays."
+      "fallback_rule": "If any gate fails, slides to v15_fallback_height. To roll back in the field, revert BEACON_P2P_ACTIVATION_HEIGHT to INT64_MAX (single-line constant change)."
     },
     {
       "id": "memory_lock_per_instance",

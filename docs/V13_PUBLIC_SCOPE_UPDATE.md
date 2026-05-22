@@ -52,7 +52,7 @@ Plus the supporting infrastructure that landed in the RC1 chain: readiness gates
 These two items are realistic for V13 if the operator can close the remaining gaps before the RC freeze; otherwise they defer cleanly to V14 / block 15,000:
 
 - **Beacon Phase II-B.** Adds expiration-by-height (already present), severity levels (already present), plus N-of-M threshold signatures on critical notices, optional revocation, and a secondary publication channel (mirror). The five hard Beacon invariants do not change. Realistic close: 1–2 sprints if the operator can produce the M threshold keys offline.
-- **Beacon Phase III.** Adds peer-to-peer gossip of verified notices, with size cap (4 KB), 32-notice dedup ring buffer, and per-peer rate limit (8 notices/peer/min). Scaffold dormant today at `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX`. The five hard Beacon invariants do not change. Realistic close: 2–3 sprints, and depends on the underlying P2P gossip primitive being available.
+- **Beacon Phase III.** Adds peer-to-peer gossip of verified notices, with size cap (4 KB), 32-notice dedup ring buffer, and per-peer rate limit (8 notices/peer/min). **Active at V13_HEIGHT (12,000)** via `BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT`. Pre-V13 the dispatcher returns DiscardDormant; from V13_HEIGHT the full advisory pipeline runs. The five hard Beacon invariants do not change. Rollback is a single-line constant revert.
 
 If either Phase is not ready by the V13 RC freeze, it defers to V14 without any consensus impact — Phase II-A continues to operate alone, exactly as it does in the V13-confirmed scope above. No regression, no rework.
 

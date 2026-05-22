@@ -1,25 +1,26 @@
-# V13 Beacon Phase III — P2P notice gossip (Commit A: implemented, dormant)
+# V13 Beacon Phase III — P2P notice gossip (ACTIVE at V13_HEIGHT)
 
 ## TL;DR
 
-V13 ships the Beacon Phase III P2P gossip implementation in **dormant
-mode**. The full pipeline (size cap, parse, signature verification,
-network filter, expiry, dedup LRU, per-peer rate-limit, accept+relay)
-is wired into the node's existing P2P dispatcher behind a single
-sentinel:
+V13 ships the Beacon Phase III P2P gossip channel **active**. The full
+pipeline (size cap, parse, signature verification, network filter,
+expiry, dedup LRU, per-peer rate-limit, accept+relay) runs for every
+`BCNN` message received at height >= V13_HEIGHT.
 
 ```
-BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX
+BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT   (= 12000)
 ```
 
-While the sentinel holds, every `BCNN` message a peer sends is silently
-discarded BEFORE any allocation, parse, or signature work. V13 nodes
-consume **zero CPU** on Beacon gossip traffic.
+For heights strictly below V13_HEIGHT the dispatcher returns
+DiscardDormant before any allocation — pre-V13 nodes consume **zero CPU**
+on Beacon gossip traffic. Once the chain crosses block 12,000 the same
+nodes start participating in the gossip network without any operator
+intervention.
 
-A future commit (Commit B) lowers the sentinel to a finite activation
-height to enable Phase III on the live network. **Commit B has not been
-created.** It requires explicit authorization after a final audit pass
-on the handler.
+**Beacon Phase III remains advisory only.** Nothing in this commit
+changes consensus, block validation, mining validity, rewards, SbPoW,
+cASERT, DTD, PoPC, or Gold Vault behaviour. The link-time invariant is
+pinned by `tests/test_v13_beacon_phase3_p2p.cpp:t15`.
 
 ## Hard invariants
 
@@ -30,10 +31,10 @@ on the handler.
    into `process_block`, `ValidateSbPoW`, or anything in
    `block_validation.cpp`. Pinned by `test_v13_beacon_phase3_p2p.cpp:t15`
    (link-time invariant).
-2. **Dormant by default.** The production gate
-   `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX` means no real-network
-   message ever reaches the validation pipeline. Tests inject a finite
-   `gate_height_override` to exercise the active branches.
+2. **Active at V13_HEIGHT (12000).** Pre-V13 heights return
+   `DiscardDormant` before any allocation. Tests inject a finite
+   `gate_height_override` to exercise the active branches against a
+   synthetic height regardless of the production gate.
 3. **One notice per `BCNN` message.** Gossip is granular: a multi-notice
    batch is rejected as `DiscardMalformed` so one bad notice cannot
    taint a batch.
