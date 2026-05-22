@@ -32,6 +32,42 @@ const std::string BEACON_PUBKEY_HEX =
     "b7c52588d95c3b9aa25b0403f1eef75702e84bb7597aabe663b82f6f04ef2777";
 
 // ---------------------------------------------------------------------------
+// Phase II-B threshold keys — 5 placeholders, fail-closed by construction.
+//
+// Each entry is a 65-byte uncompressed secp256k1 point in hex (130 chars).
+// The five placeholders are syntactically valid curve points owned by no
+// one — every real signature fails to verify against them. The operator
+// replaces this constant with five real keys at V13 release ceremony
+// (see scripts/beacon-keygen.sh and docs/V13_BEACON_PHASE_II_B.md).
+//
+// All five keys MUST be distinct points; the threshold verifier dedups
+// by signer index AND by raw 65-byte key bytes to guard against a
+// misconfigured deployment that pasted the same key twice.
+// ---------------------------------------------------------------------------
+const std::string BEACON_THRESHOLD_PUBKEYS[BEACON_THRESHOLD_KEY_COUNT] = {
+    // key 0 — generator point (x=1, y per BEACON_PUBKEY_HEX placeholder)
+    "04"
+    "0000000000000000000000000000000000000000000000000000000000000001"
+    "b7c52588d95c3b9aa25b0403f1eef75702e84bb7597aabe663b82f6f04ef2777",
+    // key 1 — placeholder (x=2)
+    "04"
+    "0000000000000000000000000000000000000000000000000000000000000002"
+    "66fbe727b2ba09e09f5a98d70a5efce8424c5fa425bbda1c511f860657b8535e",
+    // key 2 — placeholder (x=3)
+    "04"
+    "0000000000000000000000000000000000000000000000000000000000000003"
+    "f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9",
+    // key 3 — placeholder (x=4)
+    "04"
+    "0000000000000000000000000000000000000000000000000000000000000004"
+    "e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13",
+    // key 4 — placeholder (x=5)
+    "04"
+    "0000000000000000000000000000000000000000000000000000000000000005"
+    "2168f3acefa1334e07bf68e1de26517f2ed28d4d8d54bf42b212e2c1c6906893",
+};
+
+// ---------------------------------------------------------------------------
 // File-size cap: defensive against an oversized notices.json (e.g. a
 // rogue or buggy operator dropping a multi-MB file). 256 KB is well
 // above any realistic Phase II-A workload — a single notice is ~1 KB.
@@ -229,6 +265,22 @@ bool parse_notice_object(Cursor& c, Notice& n) {
         else if (key == "created_at")        { if (!parse_string(c, n.created_at)) return false; got_ca  = true; }
         else if (key == "commands")          { if (!parse_string_array(c, n.commands)) return false; got_cmd = true; }
         else if (key == "signature")         { if (!parse_string(c, n.signature_b64)) return false; got_sig = true; }
+        // ----- Phase II-B optional fields (no got_* gate; absent = default) -----
+        else if (key == "threshold") {
+            int64_t v = 0;
+            if (!parse_int64(c, v)) return false;
+            if (v < 0 || v > (int64_t)BEACON_THRESHOLD_KEY_COUNT) return false;
+            n.threshold = (uint32_t)v;
+        }
+        else if (key == "signatures") {
+            if (!parse_string_array(c, n.signatures_b64)) return false;
+        }
+        else if (key == "revokes") {
+            if (!parse_string(c, n.revokes)) return false;
+        }
+        else if (key == "mirror_url") {
+            if (!parse_string(c, n.mirror_url)) return false;
+        }
         else {
             // Unknown key: skip the value defensively. Beacon only
             // verifies the canonical form built from KNOWN fields, so
@@ -349,9 +401,23 @@ std::string render_string_array(const std::vector<std::string>& v) {
 } // namespace (anonymous)
 
 std::string canonical_payload(const Notice& n) {
-    // Keys in lexicographic order, signature dropped:
+    // Keys in lexicographic order, with signature/signatures DROPPED.
+    //
+    // Phase II-A layout (legacy):
     //   activation_height, commands, created_at, expires_height,
     //   message_en, network, notice_id, severity, title_en
+    //
+    // Phase II-B layout adds (in lex order):
+    //   mirror_url    (after message_en, before network)
+    //   revokes       (after notice_id, before severity)
+    //   threshold     (after severity, before title_en)
+    //
+    // To preserve byte-stable backwards-compat with II-A shell signers,
+    // the II-B fields are EMITTED ONLY IF the notice carries at least one
+    // II-B field (threshold > 0 || !revokes.empty() || !mirror_url.empty()).
+    // A pure II-A notice produces the exact same canonical bytes as before.
+    const bool has_iib = (n.threshold > 0) || !n.revokes.empty() || !n.mirror_url.empty();
+
     std::ostringstream o;
     o << "{";
     o << "\"activation_height\":" << n.activation_height;
@@ -359,9 +425,18 @@ std::string canonical_payload(const Notice& n) {
     o << ",\"created_at\":" << json_escape(n.created_at);
     o << ",\"expires_height\":" << n.expires_height;
     o << ",\"message_en\":" << json_escape(n.message_en);
+    if (has_iib) {
+        o << ",\"mirror_url\":" << json_escape(n.mirror_url);
+    }
     o << ",\"network\":" << json_escape(n.network_str);
     o << ",\"notice_id\":" << json_escape(n.notice_id);
+    if (has_iib) {
+        o << ",\"revokes\":" << json_escape(n.revokes);
+    }
     o << ",\"severity\":" << json_escape(n.severity);
+    if (has_iib) {
+        o << ",\"threshold\":" << n.threshold;
+    }
     o << ",\"title_en\":" << json_escape(n.title_en);
     o << "}";
     return o.str();
@@ -405,15 +480,81 @@ bool verify_signature(const Notice& n,
     return secp256k1_ecdsa_verify(ctx, &sig, digest.data(), &pk) == 1;
 }
 
+ThresholdVerifyResult verify_threshold_signatures(
+    const Notice& n,
+    const std::string* pubkeys,
+    uint32_t           pubkey_count)
+{
+    ThresholdVerifyResult r;
+    r.required = n.threshold;
+
+    // Sanity: threshold must be in (0, key_count].
+    if (n.threshold == 0) return r;                       // not a II-B notice
+    if (n.signatures_b64.empty()) return r;               // no sigs presented
+
+    // Choose key set. Default = hardcoded BEACON_THRESHOLD_PUBKEYS.
+    const std::string* keys = pubkeys ? pubkeys : BEACON_THRESHOLD_PUBKEYS;
+    const uint32_t     M    = pubkeys ? pubkey_count : BEACON_THRESHOLD_KEY_COUNT;
+    if (M == 0) return r;
+    if (n.threshold > M) return r;                        // can never reach
+
+    // Verify each signature against each pubkey. Dedup by signer index:
+    // even if the same valid signature appears multiple times, or two
+    // different signatures both verify under the same key, that key
+    // counts AT MOST once toward the threshold.
+    std::vector<bool> signer_seen(M, false);
+    for (const std::string& sig_b64 : n.signatures_b64) {
+        // Build a scratch Notice carrying just this single signature so
+        // verify_signature() can hash + verify against one pubkey at a time.
+        Notice probe = n;
+        probe.signature_b64 = sig_b64;
+        // The verifier reads ONLY signature_b64 + canonical_payload(n);
+        // canonical_payload depends on the II-B fields, which are
+        // already copied via the assignment above. Empty signatures_b64
+        // is fine — only signature_b64 is consumed for ECDSA verify.
+        probe.signatures_b64.clear();
+
+        for (uint32_t i = 0; i < M; ++i) {
+            if (signer_seen[i]) continue;                 // already counted
+            if (verify_signature(probe, keys[i])) {
+                signer_seen[i] = true;
+                ++r.distinct_signers;
+                break;                                    // this sig matched one key
+            }
+        }
+        if (r.distinct_signers >= n.threshold) {
+            r.ok = true;
+            return r;                                     // short-circuit win
+        }
+    }
+    r.ok = (r.distinct_signers >= n.threshold);
+    return r;
+}
+
 bool is_active(const Notice& n,
                int64_t current_height,
                Network current_network,
                const std::string& pubkey_hex_uncompressed) {
-    if (!n.commands.empty()) return false;                        // Phase II-A invariant
+    if (!n.commands.empty()) return false;                        // advisory-only invariant
     if (n.network != current_network) return false;
     if (n.activation_height > current_height) return false;       // not yet active
     if (n.expires_height   <= current_height) return false;       // expired
-    if (!verify_signature(n, pubkey_hex_uncompressed)) return false;
+
+    // Signature path:
+    //   threshold == 0  -> legacy II-A single-sig (existing pubkey).
+    //   threshold  > 0  -> II-B N-of-M threshold against BEACON_THRESHOLD_PUBKEYS.
+    //
+    // Backwards-compatibility: pre-II-B notices (threshold absent => 0)
+    // continue to verify as before. A notice that sets threshold MUST
+    // pass the threshold check; its legacy signature_b64 (if any) is
+    // ignored — single-sig fallback under a notice that claims a
+    // threshold would be an obvious downgrade attack.
+    if (n.threshold > 0) {
+        ThresholdVerifyResult tr = verify_threshold_signatures(n, nullptr, 0);
+        if (!tr.ok) return false;
+    } else {
+        if (!verify_signature(n, pubkey_hex_uncompressed)) return false;
+    }
     return true;
 }
 
@@ -458,13 +599,42 @@ std::vector<Notice> load_active_notices(const std::string& datadir,
     std::vector<Notice> all;
     if (!parse_notices_array(body, all)) return {};
 
-    std::vector<Notice> out;
-    out.reserve(all.size());
+    // First pass: keep only notices that pass schema + signature.
+    // We must run is_active() to know which notices are valid before we
+    // can trust their `revokes` field — an invalid notice cannot revoke
+    // anything (otherwise a malformed notice could silence a real one).
+    std::vector<Notice> survived;
+    survived.reserve(all.size());
     for (auto& n : all) {
         if (is_active(n, current_height, current_network,
                       pubkey_hex_uncompressed)) {
-            out.push_back(std::move(n));
+            survived.push_back(std::move(n));
         }
+    }
+
+    // Second pass: build the set of revoked notice_ids. ONLY threshold-
+    // signed notices (II-B) may revoke. Single-sig (II-A) notices have
+    // no revocation power — that policy guards against a stolen single
+    // key being used to silence legitimate threshold-signed advisories.
+    std::vector<std::string> revoked_ids;
+    revoked_ids.reserve(survived.size());
+    for (const auto& n : survived) {
+        if (n.threshold > 0 && !n.revokes.empty()) {
+            revoked_ids.push_back(n.revokes);
+        }
+    }
+
+    // Third pass: drop any notice whose id appears in revoked_ids. The
+    // revoking notice itself is kept (so the audit log shows the
+    // revocation event).
+    std::vector<Notice> out;
+    out.reserve(survived.size());
+    for (auto& n : survived) {
+        bool is_revoked = false;
+        for (const auto& rid : revoked_ids) {
+            if (rid == n.notice_id) { is_revoked = true; break; }
+        }
+        if (!is_revoked) out.push_back(std::move(n));
     }
     return out;
 }
@@ -485,6 +655,11 @@ std::string serialize_notices_for_rpc(const std::vector<Notice>& notices) {
         out.append(",\"expires_height\":");
         out.append(std::to_string(n.expires_height));
         out.append(",\"created_at\":");       out.append(json_escape(n.created_at));
+        // Phase II-B metadata — surfaced to RPC consumers as read-only.
+        // mirror_url is informational; the node never fetches it.
+        out.append(",\"threshold\":");        out.append(std::to_string(n.threshold));
+        out.append(",\"revokes\":");          out.append(json_escape(n.revokes));
+        out.append(",\"mirror_url\":");       out.append(json_escape(n.mirror_url));
         out.append("}");
     }
     out.push_back(']');

@@ -325,6 +325,12 @@ add_executable(test-v13-beacon-phase2a tests/test_v13_beacon_phase2a.cpp)
 target_link_libraries(test-v13-beacon-phase2a PRIVATE sost-core secp256k1)
 add_test(NAME v13-beacon-phase2a COMMAND test-v13-beacon-phase2a)
 
+# V13 Beacon Phase II-B regression tests — threshold (3-of-5) + revocation
+# + mirror metadata. See docs/V13_BEACON_PHASE_II_B.md.
+add_executable(test-v13-beacon-phase2b tests/test_v13_beacon_phase2b.cpp)
+target_link_libraries(test-v13-beacon-phase2b PRIVATE sost-core secp256k1)
+add_test(NAME v13-beacon-phase2b COMMAND test-v13-beacon-phase2b)
+
 # V13 Beacon Phase III P2P scaffold — DISABLED-by-default tests.
 # Pins the gate sentinel (INT64_MAX), the four hard limits, and the
 # always-DiscardDormant behaviour for every input. A future commit that
