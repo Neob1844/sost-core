@@ -456,6 +456,13 @@ if(SOST_ENABLE_PHASE2_SBPOW)
     add_executable(test-sbpow-submit-integration tests/test_sbpow_submit_integration.cpp)
     target_link_libraries(test-sbpow-submit-integration PRIVATE sost-core)
     add_test(NAME phase2-sbpow-submit COMMAND test-sbpow-submit-integration)
+
+    # V13 SbPoW hardening regression tests (see docs/V13_SBPOW_HARDENING.md).
+    # Covers timestamp / bits_q / merkle_root / genesis_hash binding under
+    # the height-gated v13 preimage, plus boundary and backwards-compat.
+    add_executable(test-sbpow-v13-hardening tests/test_sbpow_v13_hardening.cpp)
+    target_link_libraries(test-sbpow-v13-hardening PRIVATE sost-core)
+    add_test(NAME sbpow-v13-hardening COMMAND test-sbpow-v13-hardening)
 endif()
 
 # V11 Phase 1 — component B (state-dependent dataset access)

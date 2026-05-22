@@ -1156,6 +1156,7 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
      <<",\"testnet\":"<<(ACTIVE_PROFILE==Profile::TESTNET?"true":"false")
      <<",\"balance\":\""<<format_sost(g_wallet.balance(g_chain_height))
      <<"\",\"keypoolsize\":"<<g_wallet.num_keys()
+     <<",\"genesis_hash\":\""<<to_hex(g_genesis_hash.data(),32)<<"\""
      <<",\"mempool_size\":"<<g_mempool.Size()
      <<",\"utxo_count\":"<<g_utxo_set.Size()<<"}";
     return rpc_result(id,s.str());
@@ -4961,11 +4962,15 @@ static bool process_block(const std::string& block_json) {
         std::string sb_err;
         if (!sost::ValidateSbPoW(
                 hdr_version,
-                prev32, height, commit32,
+                prev32, height,
+                ts64, bits_q,
+                commit32, mrkl32,
                 nonce, extra,
                 sbpow_pubkey, sbpow_signature,
                 cb_miner_pkh,
+                g_genesis_hash,
                 V11_PHASE2_HEIGHT,
+                V13_HEIGHT,
                 &sb_err)) {
             printf("[BLOCK] REJECTED: %s\n", sb_err.c_str());
             return false;

@@ -514,13 +514,18 @@ bool ValidateSbPoW(
     uint32_t                              header_version,
     const Bytes32&                        prev_hash,
     int64_t                               height,
+    int64_t                               timestamp,
+    uint32_t                              bits_q,
     const Bytes32&                        commit,
+    const Bytes32&                        merkle_root,
     uint32_t                              nonce,
     uint32_t                              extra_nonce,
     const sost::sbpow::MinerPubkey&       miner_pubkey,
     const sost::sbpow::MinerSignature&    miner_signature,
     const PubKeyHash&                     coinbase_miner_pkh,
+    const Bytes32&                        genesis_hash,
     int64_t                               phase2_height,
+    int64_t                               v13_height,
     std::string*                          err)
 {
     sost::sbpow::ValidationInputs in;
@@ -534,6 +539,12 @@ bool ValidateSbPoW(
     in.miner_signature      = miner_signature;
     in.coinbase_miner_pkh   = coinbase_miner_pkh;
     in.phase2_height        = phase2_height;
+    // V13 hardening fields — bound to the signed preimage at height >= v13_height.
+    in.v13_height           = v13_height;
+    in.timestamp            = timestamp;
+    in.bits_q               = bits_q;
+    in.merkle_root          = merkle_root;
+    in.genesis_hash         = genesis_hash;
 
     auto r = sost::sbpow::validate_sbpow_for_block(in, err);
     return r == sost::sbpow::ValidationResult::OK ||
