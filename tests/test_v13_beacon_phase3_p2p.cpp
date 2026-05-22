@@ -1,11 +1,12 @@
 // V13 Beacon Phase III — P2P gossip pipeline regression tests (Commit A).
 //
-// Commit A invariants under test:
-//   - The global BEACON_P2P_ACTIVATION_HEIGHT sentinel is INT64_MAX —
-//     production code paths return DiscardDormant for every input.
+// V13 invariants under test:
+//   - The global BEACON_P2P_ACTIVATION_HEIGHT is V13_HEIGHT (= 12000).
+//     Pre-V13 heights are dormant; from V13_HEIGHT the production
+//     pipeline is active.
 //   - With a finite gate_height_override (test-only), the 7-check
-//     pipeline runs: size cap, parse, signature, network, expiry,
-//     dedup LRU, per-peer rate-limit, accept+relay.
+//     pipeline runs at any synthetic height: size cap, parse, signature,
+//     network, expiry, dedup LRU, per-peer rate-limit, accept+relay.
 //   - The cache is bounded at BEACON_P2P_CACHE_MAX_NOTICES (32) and
 //     evicts FIFO at the cap (memory cap).
 //   - Bad signatures are SILENT discards (no misbehavior); oversized /
@@ -173,7 +174,8 @@ static std::string make_signed_iia_payload(const TestKey& key,
 // Tests
 // ---------------------------------------------------------------------------
 
-// 1) Dormant by default (production): no gate_height_override -> drop.
+// 1) Pre-V13 height under the production gate (V13_HEIGHT) -> drop.
+//    Asserts the dormant branch below the activation gate.
 static void t01_dormant_by_default() {
     printf("\n=== 1) Dormant by default: no override -> DiscardDormant ===\n");
     BeaconP2PState st;
@@ -358,10 +360,10 @@ static void t11_rate_map_empty_under_rejections() {
          st.rate_map_size() == 0);
 }
 
-// 12) Dormancy stability: every input under default (production) gate
-//     returns DiscardDormant regardless of shape.
+// 12) Pre-V13 dormancy stability under the production V13 gate:
+//     every input shape returns DiscardDormant at h < V13_HEIGHT.
 static void t12_production_gate_universally_dormant() {
-    printf("\n=== 12) Production gate (INT64_MAX) is universally dormant ===\n");
+    printf("\n=== 12) Production gate (V13_HEIGHT) drops every shape pre-V13 ===\n");
     BeaconP2PState st;
     std::vector<std::string> inputs = {
         "",

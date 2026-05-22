@@ -14,7 +14,7 @@
 //      and at sentinel heights well outside the fork window.
 //   3. The Beacon activation gate constants:
 //        BEACON_PHASE2A_ACTIVATION_HEIGHT == V13_HEIGHT
-//        BEACON_P2P_ACTIVATION_HEIGHT     == INT64_MAX  (DISABLED sentinel)
+//        BEACON_P2P_ACTIVATION_HEIGHT     == V13_HEIGHT  (active at V13)
 //
 // The asserts are pure compile-time `static_assert` where possible so any
 // drift on these constants surfaces at build time, and runtime TEST() entries
@@ -176,7 +176,7 @@ int main() {
     printf("V13_HEIGHT                         = %lld\n", (long long)V13_HEIGHT);
     printf("BEACON_PHASE2A_ACTIVATION_HEIGHT   = %lld\n",
            (long long)BEACON_PHASE2A_ACTIVATION_HEIGHT);
-    printf("BEACON_P2P_ACTIVATION_HEIGHT       = %lld  (INT64_MAX = DISABLED)\n",
+    printf("BEACON_P2P_ACTIVATION_HEIGHT       = %lld  (V13_HEIGHT = active at V13)\n",
            (long long)BEACON_P2P_ACTIVATION_HEIGHT);
     printf("LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW = %d\n",
            (int)LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);

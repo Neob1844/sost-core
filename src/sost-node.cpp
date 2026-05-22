@@ -452,12 +452,15 @@ struct TxIndexEntry {
 static std::map<Hash256, TxIndexEntry> g_tx_index;
 
 // -----------------------------------------------------------------------
-// Beacon Phase III P2P gossip state (Commit A: dormant).
+// Beacon Phase III P2P gossip state (active at V13_HEIGHT = 12000).
 //
-// BEACON_P2P_ACTIVATION_HEIGHT remains INT64_MAX, so every BCNN message
-// is silently dropped by g_beacon_p2p_state.process_incoming() before
-// any allocation. A future enabling commit lowers the gate; nothing
-// else needs to change on the dispatcher side.
+// For blocks below V13_HEIGHT, process_incoming() returns DiscardDormant
+// before any allocation. From V13_HEIGHT onwards the dispatcher runs the
+// full pipeline (size cap, parse, sig verify, network match, expiry,
+// dedup LRU, per-peer rate-limit) and relays accepted notices.
+//
+// ADVISORY ONLY: this path never touches consensus, block validation,
+// mining, or canonical-chain decisions. See docs/V13_BEACON_PHASE_III.md.
 // -----------------------------------------------------------------------
 static sost::beacon::p2p::BeaconP2PState g_beacon_p2p_state;
 
@@ -6016,11 +6019,11 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         else if (!strcmp(msg.cmd, "BCNN")) {
             // Beacon Phase III P2P notice. ADVISORY ONLY: this code path
             // MUST NEVER touch consensus, mining, block validation, or
-            // chain decisions. In Commit A the gate
-            // (BEACON_P2P_ACTIVATION_HEIGHT) is INT64_MAX, so the
-            // state machine returns DiscardDormant before any allocation
-            // — V13 nodes consume zero CPU on these messages until a
-            // future commit explicitly lowers the gate.
+            // chain decisions. The gate (BEACON_P2P_ACTIVATION_HEIGHT)
+            // is V13_HEIGHT (= 12000). Below the gate the state machine
+            // returns DiscardDormant before any allocation; from the
+            // gate onwards the full 7-check pipeline runs and accepted
+            // notices are relayed.
             const sost::beacon::Network local_net =
                 (ACTIVE_PROFILE == Profile::TESTNET)
                 ? sost::beacon::Network::TESTNET

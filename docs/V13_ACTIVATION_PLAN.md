@@ -41,7 +41,7 @@ The readiness-check script (`scripts/trinity/v13_readiness_check.py`) inspects e
 
 ### 2.3 NOT in V13
 
-- Beacon Phase III with `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX` (current state). Brought forward as a V13 candidate gated by readiness checks.
+- Beacon Phase III with `BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT` (active at V13). Pre-V13 heights drop incoming BCNN notices via DiscardDormant; from V13_HEIGHT the full advisory pipeline runs and accepted notices gossip over P2P.
 - Any item not listed in §2.1 or §2.2.
 
 ---

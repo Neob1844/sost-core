@@ -459,7 +459,7 @@ int main() {
     printf("\n=== V13 Beacon Phase II-A — local notice tests ===\n");
     printf("BEACON_PHASE2A_ACTIVATION_HEIGHT = %lld\n",
            (long long)BEACON_PHASE2A_ACTIVATION_HEIGHT);
-    printf("BEACON_P2P_ACTIVATION_HEIGHT     = %lld (DISABLED if INT64_MAX)\n",
+    printf("BEACON_P2P_ACTIVATION_HEIGHT     = %lld (V13_HEIGHT = active at V13; INT64_MAX would disable)\n",
            (long long)BEACON_P2P_ACTIVATION_HEIGHT);
 
     test_dormancy_pre_v13();

@@ -160,9 +160,11 @@ load_active_notices(datadir, h, network, single_pubkey):
   II-A; it is purely an extension of the schema.
 - **No header_version bump** (Beacon has no header; this is the V13
   block-validation path's job, which is unrelated).
-- **Phase III (P2P) remains DORMANT**. `BEACON_P2P_ACTIVATION_HEIGHT =
-  INT64_MAX` per `include/sost/params.h`. Shipping II-B does NOT
-  enable P2P.
+- **Phase III (P2P) is active at V13_HEIGHT**.
+  `BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT` per
+  `include/sost/params.h`. II-B notices that pass threshold verification
+  are eligible for gossip via the BCNN dispatcher; the same advisory-only
+  invariants apply.
 
 ## Operator key requirements
 
@@ -209,16 +211,17 @@ assertions, all passing**:
 Existing II-A tests continue to pass unmodified (29 assertions).
 Trinity: 1861/1861 PASS, 38 skipped (no Python changes in this task).
 
-## Out of scope (deferred to V14)
+## Out of scope for V14
 
-- **Phase III P2P gossip** — scaffold is in tree and dormant
-  (`BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX`). Implementation work
-  estimated 2-3 sprints + a P2P gossip primitive precondition.
 - **Beacon-driven consensus actions** — explicitly never. Beacon will
   remain advisory in every future phase.
 - **Memory-Lock per-instance** — rejected by numerical analysis.
 - **PoPC + Gold Vault governance** — see
   `docs/V13_POPC_GOLDVAULT_IMPLEMENTATION_PLAN.md`.
+
+*(Phase III P2P gossip was originally deferred to V14 in early V13
+scoping; it was promoted into V13 and activated in Commit B — see
+`docs/V13_BEACON_PHASE_III.md`.)*
 
 ## Risk register
 

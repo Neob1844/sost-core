@@ -120,7 +120,7 @@ Confirmed **zero HTTP / curl / urlopen** in C++ Beacon code. Phase II-A is stric
 
 ### Activation gate
 
-- `include/sost/params.h:829` — `inline constexpr int64_t BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX;` — currently sentinel-disabled.
+- `include/sost/params.h:842` — `inline constexpr int64_t BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT;` — **active at V13 as of Commit B** (was `INT64_MAX` sentinel before that commit).
 
 ### Scaffold structure (in tree, dormant)
 
@@ -135,7 +135,7 @@ Confirmed **zero HTTP / curl / urlopen** in C++ Beacon code. Phase II-A is stric
 
 - `include/sost/beacon_p2p.h:132-142` — `Decision` enum: `DiscardDormant`, `DiscardOversized`, `DiscardMalformed`, `DiscardBadSignature`, `DiscardExpired`, `DiscardWrongNetwork`, `DiscardDuplicate`, `DiscardRateLimited`, `AcceptAndRelay`.
 - `include/sost/beacon_p2p.h:166-168` — handler signature: `IncomingDecision handle_incoming_notice_message(const std::string& bytes, int64_t current_height);`
-- `src/beacon_p2p.cpp:51-54` — handler always returns `DiscardDormant` today (sentinel-gated).
+- `src/beacon_p2p.cpp` — handler returns `DiscardDormant` for heights strictly below `V13_HEIGHT`; from `V13_HEIGHT` onwards the production pipeline runs. (Pre-Commit-B: handler always returned `DiscardDormant`.)
 - `src/beacon_p2p.cpp:56-76` — comment block documents the expected Phase III order: size cap → parse → signature → network match → expiration → dedup → rate-limit → accept.
 
 ### What is missing for Phase III
@@ -151,15 +151,15 @@ Confirmed **zero HTTP / curl / urlopen** in C++ Beacon code. Phase II-A is stric
 
 ### Tests
 
-- `tests/test_v13_beacon_p2p_scaffold.cpp:29-40` — `static_assert`s pin the dormancy invariants (BEACON_P2P_ACTIVATION_HEIGHT must equal INT64_MAX, decision must default to DiscardDormant).
+- `tests/test_v13_beacon_p2p_scaffold.cpp:29-40` — `static_assert`s pin the gate at `V13_HEIGHT` and the four hard limits (4 KB notice, 32 LRU cache, 8/min rate). (Pre-Commit-B: the gate assertion required `INT64_MAX`.)
 - `tests/test_v13_beacon_p2p_scaffold.cpp:45-62` — confirms the gate always returns `false`.
-- `tests/test_v13_beacon_p2p_scaffold.cpp:69-92` — confirms the handler always returns `DiscardDormant`.
+- `tests/test_v13_beacon_p2p_scaffold.cpp:67-84` — confirms the handler returns `DiscardDormant` for heights below `V13_HEIGHT`. The active-path regression suite lives in `tests/test_v13_beacon_phase3_p2p.cpp` (15 functions / 42 assertions).
 
-When Phase III lights up, the tests in `test_v13_beacon_p2p_scaffold.cpp` will need to flip from "must be dormant" to "must enforce each check in the comment block". That is a binary cutover at the activation height.
+Phase III is now active. The scaffold tests in `test_v13_beacon_p2p_scaffold.cpp` were flipped from "must be dormant" to "dormant below V13_HEIGHT, active at and above" in Commit B; the per-check active-path regressions live in `test_v13_beacon_phase3_p2p.cpp`.
 
 ### What V13 needs for Phase III
 
-- Lower `BEACON_P2P_ACTIVATION_HEIGHT` from `INT64_MAX` to `12,000` (or another V13 height).
+- ~~Lower `BEACON_P2P_ACTIVATION_HEIGHT` from `INT64_MAX` to `12,000` (or another V13 height).~~ **DONE in Commit B**: `BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT = 12000`.
 - Implement all 7 steps in the comment block at `src/beacon_p2p.cpp:56-76`.
 - Register the Beacon notice message type in the underlying P2P transport (PRECONDITION: confirm a general gossip primitive exists or build a minimal one for this single message type).
 - Cross-implementation interop test: at least two independently-built binaries gossip a verified notice, both deduplicate correctly, neither relays a bad-signature notice.
@@ -188,7 +188,7 @@ The hardcoded Beacon pubkey is NOT yet published. Today `website/js/beacon.js:27
 |---|---|---|
 | Phase II-A | **GREEN** | None — already gated at V13_HEIGHT; one operator-manual key step pending |
 | Phase II-B | **AMBER** | Two features done (expires, severity), three missing (threshold, mirror, revocation) — 1-2 sprints to close |
-| Phase III  | **AMBER** | Scaffold dormant, 7 steps to implement, requires a P2P gossip primitive — 2-3 sprints to close |
+| Phase III  | **GREEN — active at V13_HEIGHT** | Production pipeline implemented and wired into the P2P dispatcher; 42-assertion active-path regression suite; rollback is a single-line constant revert |
 
 **Recommendation:**
 

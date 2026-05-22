@@ -86,10 +86,11 @@ IncomingDecision handle_incoming_notice_message(const std::string& bytes,
 // BeaconP2PState — full pipeline (size cap, parse, sig verify, network,
 // expiry, dedup LRU, per-peer rate limit, accept+relay).
 //
-// The implementation is dormant by default: when no gate override is
-// supplied AND BEACON_P2P_ACTIVATION_HEIGHT == INT64_MAX, the FIRST
-// check returns DiscardDormant before any allocation. Tests pass a
-// finite gate_height_override to exercise the active branches.
+// Production gate: BEACON_P2P_ACTIVATION_HEIGHT == V13_HEIGHT. For
+// heights below the gate the first check returns DiscardDormant before
+// any allocation; from the gate onwards the pipeline runs. Tests pass
+// a finite gate_height_override to exercise the active branches against
+// a synthetic height regardless of the production gate.
 // ---------------------------------------------------------------------------
 
 size_t BeaconP2PState::cache_size() const {
@@ -118,6 +119,11 @@ IncomingDecision BeaconP2PState::process_incoming(
     //    which honours the global BEACON_P2P_ACTIVATION_HEIGHT (= INT64_MAX
     //    in this commit).
     // -----------------------------------------------------------------
+    // Activation gate. Tests pass gate_height_override = 0 (or any
+    // finite value) to enable the path under a synthetic height.
+    // Production callers leave it at the INT64_MIN sentinel and fall
+    // through to is_p2p_enabled() which honours the global
+    // BEACON_P2P_ACTIVATION_HEIGHT (= V13_HEIGHT in this build).
     if (gate_height_override == INT64_MIN) {
         if (!is_p2p_enabled(current_height)) return IncomingDecision::DiscardDormant;
     } else {
