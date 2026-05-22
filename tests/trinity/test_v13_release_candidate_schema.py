@@ -40,12 +40,12 @@ def good_report():
         "min_commit": "e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a",
         "required_binary_label": "v13-rc1",
         "ntp_required": True,
-        "future_timestamp_drift_seconds_post_v13": 10,
+        "future_timestamp_drift_seconds_post_v13": 30,
         "dtd_lottery_cooldown_post_v13": 6,
         "confirmed_items_ready": {
             "casert_all_profiles_e7_h35": True,
             "dtd_cooldown_6": True,
-            "timestamp_drift_10s": True,
+            "timestamp_drift_30s": True,
             "beacon_phase_ii_a": True,
             "all_ready": True,
         },
@@ -119,7 +119,7 @@ def test_ntp_drift_cooldown_const_locked(schema):
     assert schema["properties"]["ntp_required"]["const"] is True
     assert (
         schema["properties"]["future_timestamp_drift_seconds_post_v13"]["const"]
-        == 10
+        == 30
     )
     assert (
         schema["properties"]["dtd_lottery_cooldown_post_v13"]["const"]

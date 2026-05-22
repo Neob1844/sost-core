@@ -10,13 +10,13 @@
   "min_commit":                          "e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a",
   "required_binary_label":               "v13-rc1",
   "ntp_required":                        true,
-  "future_timestamp_drift_seconds_post_v13": 10,
+  "future_timestamp_drift_seconds_post_v13": 30,
   "dtd_lottery_cooldown_post_v13":       6,
 
   "confirmed_items_ids": [
     "casert_all_profiles_e7_h35",
     "dtd_cooldown_6",
-    "timestamp_drift_10s",
+    "timestamp_drift_30s",
     "beacon_phase_ii_a"
   ],
 
@@ -29,7 +29,7 @@
 
   "operator_action_titles": [
     "Upgrade binary before block 12000",
-    "Sync NTP; clock must not be >10 s ahead of true time",
+    "Sync NTP; clock must not be >30 s ahead of true time",
     "Keep wallet / mining-key custody local",
     "Watch operator notices via Beacon Phase II-A",
     "Do NOT expect PoPC, Beacon II-B, Beacon III, or Memory-Lock at block 12000",

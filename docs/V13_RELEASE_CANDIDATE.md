@@ -12,7 +12,7 @@
 
 The operator-and-community version of V13 scope is in **`docs/V13_PUBLIC_SCOPE_UPDATE.md`**. That document supersedes any earlier statement that implied a wider V13 scope. Highlights:
 
-- V13 confirmed at block 12,000: cASERT E7-H35, DTD cooldown 5 → 6, drift cap 60s → 10s (NTP mandatory), Beacon Phase II-A.
+- V13 confirmed at block 12,000: cASERT E7-H35, DTD cooldown 5 → 6, drift cap 60s → 30s (NTP strongly recommended), Beacon Phase II-A.
 - V13 target-if-ready: Beacon Phase II-B, Beacon Phase III.
 - **Deferred to V14 / block 15,000**: PoPC + Escrow automatic lifecycle, Gold Vault governance (90% block-based signaling, 67-block window, Transitional Guardian, auto-disconnect at block 25,000), Memory-Lock per-instance (no longer planned at all — see §2).
 - DTD flip at block 12,100: verified automatic (`docs/V13_DTD_FLIP_12100_AUTOMATIC.md`).
@@ -37,9 +37,14 @@ The V13 hardfork ships four CONFIRMED items at block 12000 (heights expressed in
    - Reason:   deterministic 2-firing exclusion under permanent 1-of-3
                cadence regardless of (height mod 3).
 
-3. Future-timestamp drift cap 60 s -> 10 s
+3. Future-timestamp drift cap 60 s -> 30 s
    - Helper:   max_future_drift_at(height) in include/sost/params.h
-   - Reason:   removes 50 s of timestamp-gaming margin on staged-relief
+   - Reason:   removes 30 s of timestamp-gaming margin on staged-relief
+               (60 → 30, not 60 → 10: the tighter 10 s cap was rejected
+               because real-world clock skew + network latency between
+               honest miner and validator can plausibly reach 5–10 s,
+               making 10 s an operational footgun for no meaningful
+               attack-defense gain — see params.h V13 fork notes)
                and same-block Slingshot tiers.
 
 4. Beacon Phase II-A (local notices, file-only, signed)
@@ -93,10 +98,10 @@ and continues unchanged at consensus level since genesis.
 
 ---
 
-## 3. NTP synchronisation is MANDATORY post-V13
+## 3. NTP synchronisation is strongly recommended post-V13
 
-The future-timestamp drift cap drops from 60 s to 10 s at block 12,000.
-A host whose clock is more than 10 s ahead of true time will produce
+The future-timestamp drift cap drops from 60 s to 30 s at block 12,000.
+A host whose clock is more than 30 s ahead of true time will produce
 candidate blocks that validators reject.
 
 **Action:** before block 12,000, every miner host must run NTP (chrony,
@@ -155,7 +160,7 @@ Step 1. Pull the V13 release tag (this is rc1; the released tag will
         be vN, with the same min_commit advertised below).
 Step 2. Verify your build commit equals the published min_commit:
             e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a
-Step 3. Run NTP and verify your clock is not >10 s ahead of true time.
+Step 3. Run NTP and verify your clock is not >30 s ahead of true time.
 Step 4. Restart sost-node and sost-miner on the new binary BEFORE
         block 12,000.
 Step 5. If you mine, keep using --wallet + --mining-key-label exactly

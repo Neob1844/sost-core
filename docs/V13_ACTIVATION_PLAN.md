@@ -25,7 +25,7 @@ This plan prepares the repository so the V13 activation set is **explicit, testa
 |---|---|---|
 | `casert_all_profiles_e7_h35` | All cASERT equalizer profiles E7–H35 active | **WIRED**: `include/sost/params.h` declares `CASERT_MAX_ACTIVE_PROFILE_V13 = 35` plus `validator_profile_ceiling_at(height)` (validator side) and `effective_profile_ceiling_at(height)` (controller side). Both return H35 for `height >= V13_HEIGHT`. The validator gate in `src/sost-node.cpp` and the two controller gates in `src/pow/casert.cpp` route through the helpers. Boundary tests live in `tests/test_casert_v13_ceiling.cpp`. |
 | `dtd_cooldown_6` | DTD lottery cooldown 5 → 6 blocks | `include/sost/params.h:835` `lottery_exclusion_window_at(height)` returns 6 for `height >= V13_HEIGHT`. |
-| `timestamp_drift_10s` | Future-drift cap 60 s → 10 s | `include/sost/params.h:852` `max_future_drift_at(height)` returns 10 for `height >= V13_HEIGHT`. |
+| `timestamp_drift_30s` | Future-drift cap 60 s → 30 s | `include/sost/params.h:852` `max_future_drift_at(height)` returns 30 for `height >= V13_HEIGHT`. |
 | `beacon_phase_ii_a` | Beacon Phase II-A — local notices, file-only, signed | `include/sost/params.h:828` `BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT`; `include/sost/beacon.h:43` `BEACON_PUBKEY_HEX` declared. |
 
 The readiness-check script (`scripts/trinity/v13_readiness_check.py`) inspects each of these against the live tree on every run. The script is the authority — this table is documentation. **If the script reports `casert_all_profiles_e7_h35` as `wired_in_code: false`, that item is NOT ready and must be wired or the V13 cut delays.**
@@ -104,7 +104,7 @@ If any of these is missing, fallback to V15 (or stays inactive).
 
 ## 6. Operator warnings
 
-- **NTP synchronisation is MANDATORY post-V13.** Future-drift cap drops from 60 s to 10 s at `V13_HEIGHT`. A host whose clock is more than 10 s ahead of true time will produce candidate blocks that validators reject. Operators must verify NTP before V13 lands.
+- **NTP synchronisation is strongly recommended post-V13.** Future-drift cap drops from 60 s to 30 s at `V13_HEIGHT`. A host whose clock is more than 30 s ahead of true time will produce candidate blocks that validators reject. Operators must verify NTP before V13 lands.
 - **No half-enabled gated items.** If a gated item's checks do not all pass, it does NOT ship at V13. It either slides to V15 or stays inactive. There is no middle position.
 - **The reservation may fire late in the V13 window.** The honest stance is: design and per-component code for PoPC are tested, but the operational orchestration layer is the gating work. If the gates do not all close in time, the slip is announced from the BitcoinTalk thread the moment the decision is made, with the same ≥30-day rule applied to V15.
 

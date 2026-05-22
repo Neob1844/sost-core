@@ -148,13 +148,13 @@ def _check_dtd_cooldown_6(repo_root: Path) -> bool:
     )
 
 
-def _check_timestamp_drift_10s(repo_root: Path) -> bool:
+def _check_timestamp_drift_30s(repo_root: Path) -> bool:
     params = repo_root / "include" / "sost" / "params.h"
     text = _read_text(params) or ""
     return (
         "max_future_drift_at" in text
         and "if (height >= V13_HEIGHT)" in text
-        and "return 10" in text
+        and "return 30" in text
     )
 
 
@@ -173,7 +173,7 @@ def _check_beacon_phase_ii_a(repo_root: Path) -> bool:
 CONFIRMED_CHECKERS = {
     "casert_all_profiles_e7_h35": _check_casert_all_profiles,
     "dtd_cooldown_6":             _check_dtd_cooldown_6,
-    "timestamp_drift_10s":        _check_timestamp_drift_10s,
+    "timestamp_drift_30s":        _check_timestamp_drift_30s,
     "beacon_phase_ii_a":          _check_beacon_phase_ii_a,
 }
 
@@ -293,7 +293,7 @@ def build_report(
         for item_id in (
             "casert_all_profiles_e7_h35",
             "dtd_cooldown_6",
-            "timestamp_drift_10s",
+            "timestamp_drift_30s",
             "beacon_phase_ii_a",
         )
     )
@@ -340,7 +340,7 @@ def build_report(
     if not docs_mention_block_12000:
         warnings.append("docs do not mention block 12,000")
     if not docs_mention_ntp_10s:
-        warnings.append("docs do not mention NTP / 10 s drift cap")
+        warnings.append("docs do not mention NTP / 30 s drift cap")
     if not docs_mention_dtd_decision_12100:
         warnings.append("docs do not mention DTD decision at 12,100")
     if not docs_mention_fallback_v15:
@@ -402,7 +402,7 @@ def build_report(
         "min_commit":                               str(config.get("min_commit", "")),
         "required_binary_label":                    str(config.get("required_binary_label", "v13-rc1")),
         "ntp_required":                             True,
-        "future_timestamp_drift_seconds_post_v13":  10,
+        "future_timestamp_drift_seconds_post_v13":  30,
         "dtd_lottery_cooldown_post_v13":            6,
         "confirmed_items_ready":                    confirmed_view,
         "fallback_v15_items":                       fallback_ids,
@@ -475,7 +475,7 @@ def render_markdown(report: Dict[str, Any]) -> str:
     for k in (
         "casert_all_profiles_e7_h35",
         "dtd_cooldown_6",
-        "timestamp_drift_10s",
+        "timestamp_drift_30s",
         "beacon_phase_ii_a",
     ):
         wired = "yes" if cir.get(k, False) else "**NO**"
@@ -502,7 +502,7 @@ def render_markdown(report: Dict[str, Any]) -> str:
     a("")
     a("- mentions block 12,000:        `"
       + ("yes" if report["docs_mention_block_12000"] else "**NO**") + "`")
-    a("- mentions NTP / 10 s drift cap: `"
+    a("- mentions NTP / 30 s drift cap: `"
       + ("yes" if report["docs_mention_ntp_10s"] else "**NO**") + "`")
     a("- mentions DTD decision 12,100: `"
       + ("yes" if report["docs_mention_dtd_decision_12100"] else "**NO**") + "`")

@@ -56,8 +56,8 @@ def good_report():
                 "ready": True,
             },
             {
-                "id": "timestamp_drift_10s",
-                "label": "Future-drift cap 60s -> 10s",
+                "id": "timestamp_drift_30s",
+                "label": "Future-drift cap 60s -> 30s",
                 "wired_in_code": True,
                 "evidence": "include/sost/params.h: max_future_drift_at",
                 "ready": True,

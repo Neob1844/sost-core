@@ -16,7 +16,7 @@ ships at V13 with an `unknown` gate.
 |---|---|---|
 | `casert_all_profiles_e7_h35` | `effective_profile_ceiling_at(height)` returns 35 for `height >= V13_HEIGHT`, OR a `CASERT_MAX_ACTIVE_PROFILE_V13` / `CASERT_V13_PROFILE_CEILING` constant lifts the ceiling. | WIRED at `include/sost/params.h` via the new `CASERT_MAX_ACTIVE_PROFILE_V13 = 35` constant plus `validator_profile_ceiling_at(height)` and `effective_profile_ceiling_at(height)` helpers. Both controller call sites in `src/pow/casert.cpp` and the validator gate in `src/sost-node.cpp` route through the helpers. Tests: `tests/test_casert_v13_ceiling.cpp` (heights 11999 / 12000 / 12001). |
 | `dtd_cooldown_6` | `lottery_exclusion_window_at(height)` returns 6 for `height >= V13_HEIGHT`. | WIRED at `include/sost/params.h:835`. |
-| `timestamp_drift_10s` | `max_future_drift_at(height)` returns 10 for `height >= V13_HEIGHT`. | WIRED at `include/sost/params.h:852`. |
+| `timestamp_drift_30s` | `max_future_drift_at(height)` returns 30 for `height >= V13_HEIGHT`. | WIRED at `include/sost/params.h:852`. |
 | `beacon_phase_ii_a` | `BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT` AND `BEACON_PUBKEY_HEX` declared. | WIRED at `include/sost/params.h:828` and `include/sost/beacon.h:43`. |
 
 ---

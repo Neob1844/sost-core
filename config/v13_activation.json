@@ -32,11 +32,11 @@
       "evidence": "include/sost/params.h:835 lottery_exclusion_window_at(height) returns 6 for height >= V13_HEIGHT, else LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW (= 5)."
     },
     {
-      "id": "timestamp_drift_10s",
-      "label": "Future-drift cap 60s -> 10s",
+      "id": "timestamp_drift_30s",
+      "label": "Future-drift cap 60s -> 30s",
       "activation_height_target": 12000,
       "wired_in_code": true,
-      "evidence": "include/sost/params.h:852 max_future_drift_at(height) returns 10 for height >= V13_HEIGHT.",
+      "evidence": "include/sost/params.h:852 max_future_drift_at(height) returns 30 for height >= V13_HEIGHT.",
       "operator_warning": "NTP synchronisation MANDATORY for mining post-V13. Clock skew > 10 s ahead -> blocks rejected."
     },
     {

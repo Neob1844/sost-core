@@ -265,7 +265,7 @@ inline constexpr int32_t  CASERT_STAGED_DROP_PER_STEP     = 3;
 // exactly, no hidden lag-time arithmetic.
 //
 // Future-drift cap stays at MAX_FUTURE_DRIFT_STAGED = 60 s up to V13_HEIGHT;
-// V13 (block 12 000) further tightens it to 10 s — see max_future_drift_at()
+// V13 (block 12 000) further tightens it to 30 s — see max_future_drift_at()
 // at the bottom of this file. For pre-V13 heights this comment block is
 // authoritative; for V13+ heights see docs/V13_COOLDOWN_AUDIT.md and the
 // V13 fork notes near max_future_drift_at(). The cap is
@@ -808,10 +808,18 @@ inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 60;
 //      slightly under window=6 — the bump is a deliberate trade documented
 //      in docs/V13_COOLDOWN_AUDIT.md.
 //
-//   2. MAX_FUTURE_DRIFT_STAGED  60 s → 10 s
-//      Tightens the timestamp-gaming margin: a miner can move at most 10
-//      seconds of future drift, instead of 60. Reduces same-block Slingshot
-//      and cascade gaming by 6×.
+//   2. MAX_FUTURE_DRIFT_STAGED  60 s → 30 s
+//      Tightens the timestamp-gaming margin: a miner can move at most 30
+//      seconds of future drift, instead of 60. The choice of 30 s
+//      materially limits future-timestamp manipulation while preserving
+//      operational tolerance for honest miners — a 10 s cap was evaluated
+//      and rejected because real-world clock skew between NTP cycles plus
+//      network latency between miner and validator can plausibly reach
+//      5-10 s in honest setups, which would have produced rejection of
+//      legitimate blocks for no meaningful attack-defense gain (the cASERT
+//      avg288 controller absorbs any sub-block drift regardless of whether
+//      the cap is 10 or 30). NTP is therefore strongly recommended for
+//      miner / node operators but not strictly mandatory at 30 s.
 //
 //   3. Beacon Phase II-A activation
 //      Node + miner local notice display path goes live. No P2P, no HTTP
@@ -854,7 +862,7 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
 // behaviour (the legacy 600-second cap predates the staged-relief tightening).
 // Type matches MAX_FUTURE_DRIFT_STAGED / MAX_FUTURE_DRIFT (both int64_t).
 inline constexpr int64_t max_future_drift_at(int64_t height) {
-    if (height >= V13_HEIGHT)                  return 10;
+    if (height >= V13_HEIGHT)                  return 30;
     if (height >= CASERT_STAGED_RELIEF_HEIGHT) return MAX_FUTURE_DRIFT_STAGED;  // = 60
     return MAX_FUTURE_DRIFT;                                                    // = 600
 }

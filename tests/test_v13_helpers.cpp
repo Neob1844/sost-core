@@ -2,7 +2,7 @@
 //
 // V13 hard fork lives at block V13_HEIGHT = 12 000 and gates three changes:
 //   - LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW  5 → 6
-//   - MAX_FUTURE_DRIFT_STAGED                 60 s → 10 s
+//   - MAX_FUTURE_DRIFT_STAGED                 60 s → 30 s
 //   - Beacon Phase II-A activation
 //
 // This test pins:
@@ -22,7 +22,7 @@
 //
 // IMPORTANT: this test does NOT exercise consensus call sites. It only
 // pins the helpers themselves. Wire-up commits (lottery cooldown 6,
-// drift 10s) ship their own end-to-end boundary tests over the actual
+// drift 30s) ship their own end-to-end boundary tests over the actual
 // validator paths.
 
 #include "sost/params.h"
@@ -67,10 +67,10 @@ static_assert(lottery_exclusion_window_at(INT64_MAX) == 6,
 
 static_assert(max_future_drift_at(11999) == 60,
               "Pre-V13 staged-relief drift cap must remain 60 seconds.");
-static_assert(max_future_drift_at(12000) == 10,
-              "From V13_HEIGHT, future-drift cap must be 10 seconds.");
-static_assert(max_future_drift_at(12001) == 10,
-              "Post-V13 future-drift cap must stay 10 seconds.");
+static_assert(max_future_drift_at(12000) == 30,
+              "From V13_HEIGHT, future-drift cap must be 30 seconds.");
+static_assert(max_future_drift_at(12001) == 30,
+              "Post-V13 future-drift cap must stay 30 seconds.");
 static_assert(max_future_drift_at(0) == 600,
               "Genesis-region heights must use the legacy 600 s drift cap "
               "(pre-staged-relief regime).");
@@ -78,7 +78,7 @@ static_assert(max_future_drift_at(CASERT_STAGED_RELIEF_HEIGHT - 1) == 600,
               "Just-pre-staged heights must still use the 600 s legacy cap.");
 static_assert(max_future_drift_at(CASERT_STAGED_RELIEF_HEIGHT) == 60,
               "Staged-relief activation must drop the cap to 60 s.");
-static_assert(max_future_drift_at(INT64_MAX) == 10,
+static_assert(max_future_drift_at(INT64_MAX) == 30,
               "Far-future heights must use the post-V13 drift cap.");
 
 // Pre-V13 must remain bit-identical to the pre-fork constants. If a
@@ -129,10 +129,10 @@ static void test_future_drift_boundary() {
     // V13 boundary
     TEST("h=11999 → 60 (pre-V13, staged regime)",
          max_future_drift_at(11999) == 60);
-    TEST("h=12000 → 10 (post-V13)",
-         max_future_drift_at(12000) == 10);
-    TEST("h=12001 → 10 (post-V13 stays)",
-         max_future_drift_at(12001) == 10);
+    TEST("h=12000 → 30 (post-V13)",
+         max_future_drift_at(12000) == 30);
+    TEST("h=12001 → 30 (post-V13 stays)",
+         max_future_drift_at(12001) == 30);
     // Staged-relief boundary (preserved unchanged across V13 commit)
     TEST("h=0 → 600 (genesis, pre-staged-relief, legacy cap)",
          max_future_drift_at(0) == 600);
@@ -141,8 +141,8 @@ static void test_future_drift_boundary() {
     TEST("h=CASERT_STAGED_RELIEF_HEIGHT → 60 (staged tightening kicks in)",
          max_future_drift_at(CASERT_STAGED_RELIEF_HEIGHT) == 60);
     // Sentinel
-    TEST("h=INT64_MAX → 10 (far future)",
-         max_future_drift_at(INT64_MAX) == 10);
+    TEST("h=INT64_MAX → 30 (far future)",
+         max_future_drift_at(INT64_MAX) == 30);
     // Pre-V13 helper output equals the underlying constant for the
     // height region the production validator actually uses.
     TEST("h=V13_HEIGHT-1 returns MAX_FUTURE_DRIFT_STAGED",

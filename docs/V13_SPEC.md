@@ -16,7 +16,7 @@ together at this height:
 | # | Change                                           | Mechanism                          |
 |---|--------------------------------------------------|------------------------------------|
 | 1 | Lottery recent-winner exclusion window 5 → 6     | `lottery_exclusion_window_at(h)`   |
-| 2 | Future-timestamp drift cap 60 s → 10 s           | `max_future_drift_at(h)`           |
+| 2 | Future-timestamp drift cap 60 s → 30 s           | `max_future_drift_at(h)`           |
 | 3 | Beacon Phase II-A — local signed-notice display  | `BEACON_PHASE2A_ACTIVATION_HEIGHT` |
 
 A fourth scaffold ships in the same release but is **DISABLED**:
@@ -27,7 +27,7 @@ Beacon Phase III P2P (gate `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX`).
 | Behaviour                                | h < 12 000          | h ≥ 12 000          |
 |------------------------------------------|---------------------|---------------------|
 | Lottery cooldown (block-miner exclusion) | last 5 blocks       | last 6 blocks       |
-| Future-timestamp drift cap               | 60 s                | 10 s                |
+| Future-timestamp drift cap               | 60 s                | 30 s                |
 | Beacon notices on RPC `getbeaconnotices` | empty `notices`     | active notices      |
 | Beacon advisory banner on miner stderr   | silent              | per-notice banner   |
 | Phase III P2P gossip                     | inactive            | inactive (DISABLED) |
@@ -70,7 +70,7 @@ Summary of the trade:
 This is documented in the audit as a deliberate trade, not an outcome
 optimisation.
 
-## Drift 60 s → 10 s — rationale
+## Drift 60 s → 30 s — rationale
 
 Future-timestamp drift is the gap a miner can place its candidate
 block's timestamp ahead of true time. The pre-V13 cap (60 s) lets a
@@ -84,7 +84,7 @@ claimed up to 10 s early".
 
 Critical operator consequence: **NTP synchronisation is now a hard
 requirement for any node that mines after V13_HEIGHT.** A miner whose
-clock is more than 10 s ahead of true time will produce candidate
+clock is more than 30 s ahead of true time will produce candidate
 blocks that the validator rejects at the future-drift check. The
 pre-V13 60-second margin tolerated coarse clocks; the V13 10-second
 margin does not.
@@ -162,10 +162,10 @@ to the actual current height when reading.
 
 ### 0. Telemetry (do this WEEK 1)
 
-- [ ] Survey miner NTP status. A miner whose clock is > 10 s ahead at
+- [ ] Survey miner NTP status. A miner whose clock is > 30 s ahead at
       V13_HEIGHT will start producing rejected candidates. Capture the
       worst-case drift across the active miner set.
-- [ ] Decide if the 10 s drift cap is acceptable for the observed
+- [ ] Decide if the 30 s drift cap is acceptable for the observed
       population. If not, **escalate to the CTO before V13_HEIGHT** —
       the cap can be revisited via a separate fork before activation.
 
@@ -195,8 +195,8 @@ to the actual current height when reading.
 - [ ] Broadcast a network notice (signed!) reminding operators of the
       V13 NTP requirement. Suggested body:
       > "V13 activates at block 12 000. Future-timestamp drift cap
-      > drops from 60 s to 10 s. Confirm NTP is running and your clock
-      > is within ±5 s of UTC. Otherwise your blocks will be rejected
+      > drops from 60 s to 30 s. Confirm NTP is running and your clock
+      > is within ±15 s of UTC. Otherwise your blocks will be rejected
       > from V13_HEIGHT onward."
 
 ### 3. Build + deploy (WEEK 4 — ahead of activation)
@@ -224,8 +224,8 @@ to the actual current height when reading.
 - [ ] Confirm cooldown observed at h = 12 000 spans 6 blocks (look at
       `getlotteryaudit` output: `cooldown_addresses` should reflect
       the previous 6 miners, not 5).
-- [ ] Confirm drift rejections only fire for clocks > 10 s ahead.
-      Coarse clocks > 10 s but < 60 s ahead should now appear in the
+- [ ] Confirm drift rejections only fire for clocks > 30 s ahead.
+      Coarse clocks > 30 s but < 60 s ahead should now appear in the
       reject log (whereas pre-V13 they were accepted).
 - [ ] If a miner shows up with chronic rejected blocks: contact, fix
       NTP, redeploy.
@@ -328,7 +328,7 @@ its predecessor for every pre-V13 height.
 | 2 | (TBD)     | docs(audit): justify cooldown 6 by structural alignment for V13     |
 | 3 | (TBD)     | v13: add height-gated fork parameter helpers for block 12000        |
 | 4 | (TBD)     | v13: set lottery cooldown to 6 from block 12000                     |
-| 5 | (TBD)     | v13: reduce future timestamp drift to 10s from block 12000          |
+| 5 | (TBD)     | v13: reduce future timestamp drift to 30s from block 12000          |
 | 6 | (TBD)     | beacon: phase 2a local signed notices for node and miner warnings   |
 | 7 | (TBD)     | beacon: add dormant p2p notice scaffold disabled by default         |
 | 8 | (TBD)     | docs: V13 block 12000 specification and operator checklist         |

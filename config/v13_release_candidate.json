@@ -10,7 +10,7 @@
   "min_commit":                          "e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a",
   "required_binary_label":               "v13-rc1",
   "ntp_required":                        true,
-  "future_timestamp_drift_seconds_post_v13": 10,
+  "future_timestamp_drift_seconds_post_v13": 30,
   "dtd_lottery_cooldown_post_v13":       6,
 
   "confirmed_items": [
@@ -25,8 +25,8 @@
       "evidence_keyword": "lottery_exclusion_window_at"
     },
     {
-      "id":    "timestamp_drift_10s",
-      "label": "Future-drift cap 60s -> 10s",
+      "id":    "timestamp_drift_30s",
+      "label": "Future-drift cap 60s -> 30s",
       "evidence_keyword": "max_future_drift_at"
     },
     {
@@ -67,8 +67,8 @@
     },
     {
       "step": 2,
-      "title": "Sync NTP; clock must not be >10 s ahead of true time",
-      "detail": "Post-V13 the future-timestamp-drift cap drops from 60 s to 10 s. A host whose clock is more than 10 s ahead of wall time will produce candidate blocks that validators reject. Run timedatectl, chrony, or ntpd; verify clock skew before mining."
+      "title": "Sync NTP; clock must not be >30 s ahead of true time",
+      "detail": "Post-V13 the future-timestamp-drift cap drops from 60 s to 30 s. A host whose clock is more than 30 s ahead of wall time will produce candidate blocks that validators reject. Run timedatectl, chrony, or ntpd; verify clock skew before mining."
     },
     {
       "step": 3,

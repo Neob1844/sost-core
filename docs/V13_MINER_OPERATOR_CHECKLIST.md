@@ -20,7 +20,7 @@ If you only read one thing, read this checklist. Run through every box before bl
     Block 11,999 is the LAST safe block. Activation lands at
     12,000; from that block on, any candidate I mine on the
     pre-V13 binary is on a stale rule set, and any candidate I
-    mine on a clock more than 10 s ahead of true time is
+    mine on a clock more than 30 s ahead of true time is
     rejected by every validator.
 
 [ ] Recommended sequence inside the window:
@@ -80,16 +80,19 @@ If you only read one thing, read this checklist. Run through every box before bl
 
 ---
 
-## C. NTP (MANDATORY post-V13)
+## C. NTP (strongly recommended post-V13)
 
-This is the single most operationally important V13 change. Get this
-wrong and your candidate blocks will be silently rejected by every
-validator starting at block 12,000.
+The V13 future-timestamp drift cap is 30 s (down from 60 s). Real-world
+clock skew + network jitter between honest miner and validator is
+typically well under 30 s, so NTP is not strictly mandatory — but
+without it, an unattended clock that drifts more than 30 s ahead will
+silently lose candidates. NTP is therefore strongly recommended for
+every mining host.
 
 ```
-[ ] My system clock is within 10 s of true time. After block 12,000,
-    a clock more than 10 s ahead of real time makes my candidate
-    blocks rejected (future-drift cap drops from 60 s to 10 s).
+[ ] My system clock is within 30 s of true time. After block 12,000,
+    a clock more than 30 s ahead of real time makes my candidate
+    blocks rejected (future-drift cap drops from 60 s to 30 s).
 
 [ ] Verify NTP service is active:
 

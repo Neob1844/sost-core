@@ -39,7 +39,7 @@ These four items are in the V13 binary today and have validator-level test cover
 
 2. **DTD lottery cooldown 5 → 6 blocks.** `lottery_exclusion_window_at(height)` returns `6` for `height >= V13_HEIGHT` and `5` below it. Tightens the exclusion under the permanent 1-of-3 cadence.
 
-3. **Future-timestamp drift cap 60 s → 10 s.** `max_future_drift_at(height)` returns `10` for `height >= V13_HEIGHT`. **NTP synchronisation is mandatory in practice from block 12,000.** A host whose system clock is more than 10 s ahead of true time will produce candidate blocks that every validator rejects.
+3. **Future-timestamp drift cap 60 s → 30 s.** `max_future_drift_at(height)` returns `30` for `height >= V13_HEIGHT`. **NTP synchronisation is strongly recommended from block 12,000.** A host whose system clock is more than 30 s ahead of true time will produce candidate blocks that every validator rejects.
 
 4. **Beacon Phase II-A.** `BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT`. The node loads operator-signed advisory notices from `<datadir>/notices.json` only. No P2P, no HTTP from C++ code, no command execution. The miner prints a banner. The five hard Beacon invariants apply (MAY inform, MAY NOT restart, MAY NOT block, MAY NOT change consensus, MAY NOT execute commands).
 
@@ -132,7 +132,7 @@ A clock that is **behind** true time is **fine**. The drift cap only rejects blo
 
 ## 7. Miner operator checklist (short form)
 
-**Upgrade window: blocks 11,900 → 11,999** (the 100 blocks immediately before activation, ~18 hours at the target block time). Do the work inside this window, NOT at block 12,000 — by then any candidate you mine on the pre-V13 binary or on a clock more than 10 s ahead of true time is already rejected.
+**Upgrade window: blocks 11,900 → 11,999** (the 100 blocks immediately before activation, ~18 hours at the target block time). Do the work inside this window, NOT at block 12,000 — by then any candidate you mine on the pre-V13 binary or on a clock more than 30 s ahead of true time is already rejected.
 
 Recommended sequence inside the window:
 

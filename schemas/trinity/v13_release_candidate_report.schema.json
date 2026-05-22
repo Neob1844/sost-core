@@ -81,7 +81,7 @@
       "maxLength": 32
     },
     "ntp_required":                              {"type": "boolean", "const": true},
-    "future_timestamp_drift_seconds_post_v13":   {"type": "integer", "const": 10},
+    "future_timestamp_drift_seconds_post_v13":   {"type": "integer", "const": 30},
     "dtd_lottery_cooldown_post_v13":             {"type": "integer", "const": 6},
     "confirmed_items_ready": {
       "type": "object",
@@ -89,14 +89,14 @@
       "required": [
         "casert_all_profiles_e7_h35",
         "dtd_cooldown_6",
-        "timestamp_drift_10s",
+        "timestamp_drift_30s",
         "beacon_phase_ii_a",
         "all_ready"
       ],
       "properties": {
         "casert_all_profiles_e7_h35": {"type": "boolean"},
         "dtd_cooldown_6":             {"type": "boolean"},
-        "timestamp_drift_10s":        {"type": "boolean"},
+        "timestamp_drift_30s":        {"type": "boolean"},
         "beacon_phase_ii_a":          {"type": "boolean"},
         "all_ready":                  {"type": "boolean"}
       }
