@@ -266,6 +266,27 @@
         </div>
 
 
+  <!-- PRE-TRADE SAFETY CHECKLIST MODAL (P1.5) — shown the first time the
+       user opens the OTC room. Acknowledgement persisted in localStorage. -->
+  <div id="otcChecklistOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9000;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto">
+    <div style="background:var(--bg-card,#0a0a0a);border:2px solid #f59e0b;border-radius:6px;max-width:640px;width:100%;padding:24px 28px;font-size:13px;line-height:1.65;color:var(--text-primary,#e2e8f0)">
+      <div style="color:#f59e0b;font-weight:900;letter-spacing:1.2px;font-size:13px;margin-bottom:12px">&#9888; PRE-TRADE SAFETY CHECKLIST</div>
+      <p style="margin:0 0 14px">Before posting or replying in the OTC / P2P Board, please confirm you understand each of the following. SOST Protocol does not intermediate, custody, or escrow trades &mdash; the discipline below is what protects you.</p>
+      <ul style="list-style:none;padding:0;margin:0 0 16px">
+        <li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06)"><b>1.</b> SOST Protocol does NOT intermediate, custody, or escrow any trade I make here. The board only hosts messages.</li>
+        <li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06)"><b>2.</b> I will verify any payment DIRECTLY in my bank or wallet. Screenshots, SMS notifications, and email alerts are NOT proof of payment.</li>
+        <li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06)"><b>3.</b> Payment methods like PayPal Friends &amp; Family (180 days), SEPA / instant bank transfer (8 weeks), and Wise instant can be REVERSED. I will wait the full clearing window or use irreversible methods (cash in person, on-chain USDC/USDT).</li>
+        <li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06)"><b>4.</b> I will not move the conversation to private DMs or off-platform apps with someone I do not already trust.</li>
+        <li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06)"><b>5.</b> I will use small test transactions for any new counterparty.</li>
+        <li style="padding:6px 0"><b>6.</b> Admins NEVER DM first. Anyone claiming &quot;official escrow&quot;, &quot;verified buyer/seller&quot;, &quot;guaranteed liquidity&quot;, or pressuring me to act fast is a scam.</li>
+      </ul>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <button id="otcChecklistAck" type="button" style="background:#f59e0b;color:#000;border:none;padding:10px 18px;border-radius:4px;font-weight:700;font-size:13px;letter-spacing:0.5px;cursor:pointer">I understand &mdash; open the board</button>
+        <a href="sost-otc.html" style="color:var(--text-secondary,#94a3b8);font-size:12px;text-decoration:underline">Full safety guide</a>
+      </div>
+    </div>
+  </div>
+
   <!-- OTC / P2P Board safety notice (visible only when 'otc' room selected) -->
   <div id="otcSafetyNotice" style="display:none;margin:12px 0 16px;padding:14px 18px;border:2px solid #f59e0b;border-left:6px solid #f59e0b;background:rgba(245,158,11,.08);border-radius:4px;color:var(--text-primary);font-size:13px;line-height:1.65">
     <div style="color:#f59e0b;font-weight:900;letter-spacing:1.2px;font-size:13px;margin-bottom:6px">
@@ -275,6 +296,8 @@
       <b>SOST Protocol does not intermediate trades.</b><br>
       <b>SOST Protocol does not custody funds.</b><br>
       <b>SOST Protocol does not provide escrow.</b><br>
+      &bull; <b>Screenshots are NOT proof of payment.</b> Verify funds DIRECTLY in your bank or wallet &mdash; never trust SMS, email alerts, or screenshots alone.<br>
+      &bull; <b>Beware chargebacks.</b> PayPal F&amp;F (180&nbsp;days), SEPA / instant bank transfer (8&nbsp;weeks) and Wise instant can all be reversed. Cash in person and on-chain USDC/USDT are irreversible.<br>
       &bull; Admins never DM first.<br>
       &bull; Users trade at their own risk.<br>
       &bull; Use small test transactions first.<br>
@@ -391,7 +414,38 @@
 <script src="js/sost-talk.js"></script>
 <script src="js/auth-passkey.js"></script>
 <script>
-function renderRoomTabs(){var t=document.getElementById('roomTabs');var c=SOSTTalk.getCounts();var h='';SOSTTalk.getRooms().forEach(function(r){var a=r===SOSTTalk.getCurrentRoom()?' active':'';h+='<div class="room-tab'+a+'" onclick="SOSTTalk.setRoom(\''+r+'\')">'+SOSTTalk.getRoomLabel(r)+'<span class="room-count">('+( c[r]||0)+')</span></div>';});t.innerHTML=h; var banner=document.getElementById('otcSafetyNotice'); if(banner) banner.style.display=(SOSTTalk.getCurrentRoom()==='otc')?'block':'none';}
+function renderRoomTabs(){var t=document.getElementById('roomTabs');var c=SOSTTalk.getCounts();var h='';SOSTTalk.getRooms().forEach(function(r){var a=r===SOSTTalk.getCurrentRoom()?' active':'';h+='<div class="room-tab'+a+'" onclick="SOSTTalk.setRoom(\''+r+'\')">'+SOSTTalk.getRoomLabel(r)+'<span class="room-count">('+( c[r]||0)+')</span></div>';});t.innerHTML=h; var banner=document.getElementById('otcSafetyNotice'); if(banner) banner.style.display=(SOSTTalk.getCurrentRoom()==='otc')?'block':'none'; maybeShowOtcChecklist();}
+// P1.5 — Pre-Trade Safety Checklist modal. Shown the first time the user
+// lands on the OTC room. Acknowledgement persisted in localStorage. No
+// cookies, no third-party storage. Re-shows if the user clears localStorage.
+var OTC_CHECKLIST_LS_KEY='sost_otc_safety_acknowledged_v1';
+function otcChecklistAcknowledged(){try{return localStorage.getItem(OTC_CHECKLIST_LS_KEY)==='1';}catch(e){return false;}}
+function maybeShowOtcChecklist(){
+  var overlay=document.getElementById('otcChecklistOverlay');
+  if(!overlay) return;
+  var inOtc=(typeof SOSTTalk!=='undefined') && SOSTTalk.getCurrentRoom && SOSTTalk.getCurrentRoom()==='otc';
+  if(inOtc && !otcChecklistAcknowledged()){
+    overlay.style.display='flex';
+    document.body.style.overflow='hidden';
+  } else {
+    overlay.style.display='none';
+    document.body.style.overflow='';
+  }
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var btn=document.getElementById('otcChecklistAck');
+  if(btn){
+    btn.addEventListener('click',function(){
+      try{localStorage.setItem(OTC_CHECKLIST_LS_KEY,'1');}catch(e){}
+      var overlay=document.getElementById('otcChecklistOverlay');
+      if(overlay) overlay.style.display='none';
+      document.body.style.overflow='';
+    });
+  }
+  // Also check on initial load (URL might have a room hint or
+  // SOSTTalk may default to otc in the future).
+  setTimeout(maybeShowOtcChecklist,0);
+});
 function renderFilters(){var b=document.getElementById('filterBar');b.innerHTML='<button class="filter-btn" onclick="SOSTTalk.setFilter(\'all\')">All</button><button class="filter-btn" onclick="SOSTTalk.setFilter(\'mine\')">Mine</button><button class="filter-btn" onclick="SOSTTalk.setFilter(\'official\')">Official</button><button class="filter-btn" onclick="SOSTTalk.setFilter(\'flagged\')">Flagged</button>';}
 function renderMessages(){var l=document.getElementById('msgList');var m=SOSTTalk.getMessages();if(!m.length){l.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-dim);font-size:12px">No messages in this room yet. Be the first to post!</div>';return;}var h='';m.forEach(function(m){var c=m.isBot?' msg-bot':'';if(m.flags&&m.flags.length&&!m.isBot)c+=' msg-flagged';var bc=m.isBot?'badge-bot':m.badge==='founder'?'badge-founder':m.badge==='official'?'badge-official':m.badge==='verified'?'badge-verified':m.badge==='miner'?'badge-miner':'badge-community';var t=new Date(m.timestamp).toLocaleString();h+='<div class="msg'+c+'"><div class="msg-header"><span class="msg-user">'+m.userName+'</span><span class="badge '+bc+'">'+(m.badge||'community').toUpperCase()+'</span><span class="msg-time">'+t+'</span></div><div class="msg-text">'+m.text+'</div>'+(m.isBot?'':'<div style="margin-top:4px"><button class="msg-action" onclick="SOSTTalk.report(\''+m.id+'\')">report</button></div>')+'</div>';});l.innerHTML=h;}
 function renderInputArea(){var a=document.getElementById('msgInputArea');if(SOSTTalk.isAuthenticated()){var i=SOSTTalk.getIdentity();a.innerHTML='<div class="msg-input-area"><div style="font-size:10px;color:var(--text-dim);margin-bottom:6px">Posting as: <b style="color:var(--text-primary)">'+(i.label||i.id)+'</b></div><textarea class="msg-input" id="msgInput" placeholder="Share your thoughts, report a bug, ask a question..." maxlength="1000"></textarea><div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:8px"><span style="font-size:9px;color:var(--text-dim)">Max 1000 chars · Rate limited · Moderated by Sentinel</span><button class="msg-send" onclick="sendMessage()">SEND</button></div><div id="msgError" style="display:none;margin-top:6px;font-size:11px;color:var(--red-primary)"></div></div>';}else{var pk='';if(typeof SOSTPasskey!=='undefined'&&SOSTPasskey.isAvailable())pk='<button class="auth-btn" onclick="passkeyAuth()" style="border-color:rgba(34,211,238,0.4);color:var(--cyan-primary);background:rgba(34,211,238,0.08)">&#128274; Passkey</button>';a.innerHTML='<div class="auth-required"><p>Unlock your identity to post messages.</p><p style="font-size:10px;color:var(--text-dim);margin-bottom:12px">Use passkey (fingerprint/Face ID), DEX identity, or enter a name.</p><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center">'+pk+'<input type="text" id="talkName" placeholder="Your name" style="padding:8px 12px;background:var(--bg-deep);border:1px solid var(--border-med);border-radius:4px;color:var(--text-primary);font-family:var(--font-mono);font-size:12px;width:160px"><button class="auth-btn" onclick="quickAuth()">Join</button></div></div>';}}

@@ -264,9 +264,66 @@
         <li>Admins never DM first. Anyone claiming &quot;official escrow&quot; or &quot;guaranteed buyer/seller&quot; is a scam.</li>
         <li>Report suspicious messages; use small test transactions first.</li>
       </ul>
+
+      <!-- ============ TACTICAL DEFENCE LAYER ============ -->
+      <div style="background:rgba(251,1,13,0.06);border:1px solid rgba(251,1,13,0.35);border-left:4px solid #fb010d;border-radius:4px;padding:14px 16px;margin:0 0 18px">
+        <div style="color:#fb010d;font-weight:900;letter-spacing:1px;font-size:12px;margin-bottom:8px">// THREE RULES THAT STOP MOST OTC SCAMS</div>
+        <ol style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:22px">
+          <li><b>Screenshots are NOT proof of payment.</b> A screenshot the counterparty sends you can be edited, faked, or come from a different account. Until the money is in your bank or wallet, you have not been paid.</li>
+          <li><b>Verify funds DIRECTLY in your bank or wallet</b> &mdash; log in and check the balance/transaction yourself. Do NOT trust SMS notifications, email alerts, or push notifications alone (they can be spoofed and they lag the actual settlement).</li>
+          <li><b>Beware payment methods with chargeback risk.</b> Wait the FULL clearing window before releasing SOST:
+            <ul style="margin:6px 0 0;padding-left:22px;color:var(--text-secondary)">
+              <li><b>PayPal Friends &amp; Family</b> &mdash; reversible up to 180 days. Treat as unsafe for OTC.</li>
+              <li><b>SEPA / instant bank transfer</b> &mdash; can be reversed up to 8 weeks (recall, fraud dispute). Wait the period or take the risk.</li>
+              <li><b>Wise / Revolut instant transfer</b> &mdash; can be reversed if the sender claims fraud.</li>
+              <li><b>Cash in person</b> &mdash; irreversible. Safest fiat method for OTC.</li>
+              <li><b>USDC / USDT settled on-chain</b> &mdash; irreversible after confirmations. Safest crypto-vs-crypto method.</li>
+            </ul>
+          </li>
+        </ol>
+      </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="sost-talk.html" style="display:inline-block;background:var(--cyan-primary);color:#000;padding:10px 18px;border-radius:4px;font-weight:700;text-decoration:none;font-size:13px;letter-spacing:0.5px">Open SOST Talk &rarr; OTC / P2P Board</a>
         <a href="docs/SOST_TALK_COMMUNITY_RULES.md" style="display:inline-block;background:transparent;color:var(--text-primary);padding:10px 18px;border:1px solid var(--border-bright);border-radius:4px;font-weight:600;text-decoration:none;font-size:13px;letter-spacing:0.5px">Community Rules</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCAMMER vs HONEST COUNTERPARTY (P0.4) ============ -->
+<section style="border-bottom:1px solid var(--border-dim)">
+  <div class="container" style="padding:32px 0">
+    <div style="margin-bottom:14px">
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// PATTERN RECOGNITION</div>
+      <h2 style="font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--text-primary)">Scammer vs Honest <span style="color:var(--cyan-primary)">Counterparty</span></h2>
+      <p style="color:var(--text-secondary);font-size:13px;margin-top:6px">Quick visual reference. If your counterparty is doing things in the left column, stop the trade.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:0;border:1px solid var(--border-bright);border-radius:4px;overflow:hidden">
+      <div style="background:rgba(251,1,13,0.06);padding:14px 16px;border-right:1px solid var(--border-bright)">
+        <div style="color:#fb010d;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#9888; SCAMMER BEHAVIOUR</div>
+        <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:20px">
+          <li>Sends a screenshot of payment and pressures you to release SOST immediately.</li>
+          <li>Wants to move chat to Telegram / Signal / WhatsApp / DM right away.</li>
+          <li>Claims &quot;I&apos;m verified&quot;, &quot;I&apos;m an admin&quot;, &quot;I work with SOST&quot;.</li>
+          <li>Asks YOU to send SOST first &mdash; &quot;I&apos;ll send the payment after&quot;.</li>
+          <li>Uses urgency: &quot;release fast&quot;, &quot;order is about to expire&quot;, &quot;hurry up please&quot;.</li>
+          <li>Offers a price MUCH better than market (red flag by itself).</li>
+          <li>Pays via PayPal F&amp;F or instant SEPA and tells you &quot;you can release now, it&apos;s settled&quot;.</li>
+          <li>Claims an &quot;official SOST escrow&quot; exists. (There is none.)</li>
+        </ul>
+      </div>
+      <div style="background:rgba(34,197,94,0.06);padding:14px 16px">
+        <div style="color:#22c55e;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#10003; HONEST COUNTERPARTY</div>
+        <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:20px">
+          <li>Tells you they paid and lets you verify in your bank/wallet at your pace.</li>
+          <li>Continues talking in the public OTC / P2P Board chat (no rush to leave).</li>
+          <li>Makes no &quot;official&quot; claims; presents the trade on equal footing.</li>
+          <li>Agrees to a small test transaction first OR a mutually-trusted third-party escrow.</li>
+          <li>Respects the chargeback clearing window for the chosen payment method.</li>
+          <li>Offers a price close to the prevailing market.</li>
+          <li>Uses irreversible settlement (cash in person, on-chain USDC/USDT with confirmations).</li>
+          <li>Acknowledges that SOST Protocol does not intermediate or escrow.</li>
+        </ul>
       </div>
     </div>
   </div>

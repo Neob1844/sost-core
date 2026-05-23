@@ -45,7 +45,18 @@ const SOSTSentinel = (function () {
     /private\s*admin\s*deal/i,
     /risk[\-\s]*free\s*(profit|trade|deal|swap)/i,
     /(verify|validate)\s*your\s*wallet\s*to\s*(trade|swap|claim)/i,
-    /fake\s*airdrop|airdrop.*claim.*wallet/i
+    /fake\s*airdrop|airdrop.*claim.*wallet/i,
+    // ---- OTC / P2P pressure & impersonation patterns ----
+    // 1. Asking the other party to release/send first (classic 419 pattern).
+    /release\s*(it|the\s*coins?|the\s*sost)?\s*first|send\s*(yours?|the\s*sost|the\s*coins?)?\s*first|i'?ll\s*send\s*(it|mine|after)/i,
+    // 2. Urgency / order-expiry pressure.
+    /order\s*(is\s*)?(about\s*to\s*)?expir(e|ing)|hurry\s*(up\s*)?(please)?|quickly\s*please|release\s*(it\s*)?(fast|now)/i,
+    // 3. Move-to-DM / off-platform redirection.
+    /(let'?s\s*(go|move|continue|talk)|move|continue)\s*(this\s*)?(to|on|via)\s*(telegram|signal|whatsapp|wechat|dm|private\s*(chat|message))|DM\s*me\s*on\s*(telegram|signal|whatsapp|wechat)/i,
+    // 4. "I sent the screenshot" — screenshot-as-proof scam.
+    /i\s*(have|just)?\s*sent\s*(you\s*)?(the\s*)?(payment\s*)?screenshot|here'?s\s*(the|a)\s*screenshot|check\s*(the|my)\s*screenshot|look\s*at\s*(the|my)\s*screenshot/i,
+    // 5. Impersonation / unwarranted-trust patterns.
+    /trust\s*me\s*(bro|man|please)?|i'?m\s*verified|i'?m\s*an?\s*(official\s*)?(admin|mod|moderator)|i\s*work\s*(with|for)\s*sost/i
   ];
 
   var IMPERSONATION_NAMES = [
