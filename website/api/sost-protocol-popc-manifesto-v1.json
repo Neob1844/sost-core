@@ -1,0 +1,25 @@
+{
+  "acronym": "PoPC",
+  "disclaimer": "This manifesto is an evidentiary on-chain timestamp and provenance record. It is not a patent, trademark, copyright, or legal-ownership claim. Legal rights, if any, depend on applicable law and formal filings where required.",
+  "evidence_links": [
+    "https://sostcore.com/sost-popc-quickstart.html",
+    "https://sostcore.com/sost-popc-contracts.html",
+    "https://sostcore.com/protocol-registry.html",
+    "https://sostcore.com/sost-explorer.html",
+    "https://github.com/Neob1844/sost-core"
+  ],
+  "issued_at_utc": "2026-05-23",
+  "license": "Public record. Reproducible verification by anyone running a SOST node.",
+  "name": "Proof of Personal Custody",
+  "project": "SOST Protocol",
+  "project_url": "https://sostcore.com",
+  "publisher": {
+    "contact_public": "sost@sostcore.com",
+    "project": "SOST Protocol",
+    "telegram_public": "https://t.me/SOSTProtocolOfficial"
+  },
+  "registry_type": "protocol_term",
+  "schema": "sost-protocol-registry/v1",
+  "statement": "PoPC (Proof of Personal Custody) is the SOST Protocol mechanism by which a SOST holder voluntarily commits a quantity of gold-backed tokens (XAUT and/or PAXG) on Ethereum into a smart-contract escrow (SOSTEscrow) as cryptographic evidence that the SOST they hold is collateralized by an off-chain gold position. The mechanism is non-custodial, bilateral, and user-initiated: SOST Protocol does not custody the gold, does not custody the SOST, and does not arbitrate releases. The PoPC smart contract on Ethereum is the authoritative escrow; the SOST chain records the commitment via signed capsules. This term and its mechanism are part of the SOST Protocol stack as of the date of this manifesto.",
+  "version": "1.0.0"
+}
