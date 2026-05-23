@@ -159,6 +159,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .gold-sub{font-size:11px;color:var(--text3);margin-bottom:12px}
 .price-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
 .price-card{background:var(--bg2);border:1px solid var(--border);padding:16px 20px}
+.price-col{display:flex;flex-direction:column;gap:12px}
 .price-card:hover{border-color:var(--border2)}
 .price-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .price-card-title{font-size:10px;letter-spacing:2px;color:var(--text3)}
@@ -1626,6 +1627,7 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
     <div id="detailContent"></div>
   </div>
   <div class="price-cards" id="priceChartsRow">
+    <div class="price-col">
     <div class="price-card">
       <div class="price-card-head">
         <div class="price-card-title">// <b style="color:var(--gold)">XAUT PRICE</b> — Tether Gold</div>
@@ -1655,6 +1657,35 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
     </div>
     <div class="price-card">
       <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:var(--gold)">XAUT / BTC</b> &mdash; Tether Gold vs Bitcoin</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="xautbtcPrice" style="color:var(--gold)">&mdash;</div>
+      <div class="price-change" id="xautbtcChange">&mdash;</div>
+      <div class="tf-btns" id="xautbtcTfBtns">
+        <button class="tf-btn" data-tf="1H">1H</button>
+        <button class="tf-btn" data-tf="4H">4H</button>
+        <button class="tf-btn" data-tf="8H">8H</button>
+        <button class="tf-btn active" data-tf="24H">24H</button>
+        <button class="tf-btn" data-tf="3D">3D</button>
+        <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
+        <button class="tf-btn" data-tf="3Y">3Y</button>
+        <button class="tf-btn" data-tf="5Y">5Y</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="xautbtcChart" style="width:100%;height:150px"></canvas>
+        <canvas id="xautbtcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="xautbtcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="xautbtcRange"></div>
+    </div>
+    </div>
+    <div class="price-col">
+    <div class="price-card">
+      <div class="price-card-head">
         <div class="price-card-title">// <b style="color:var(--green)">PAXG PRICE</b> — Pax Gold</div>
         <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
       </div>
@@ -1680,6 +1711,35 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
       </div>
       <div class="price-card-range" id="paxgRange"></div>
     </div>
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:var(--green)">PAXG / BTC</b> &mdash; Pax Gold vs Bitcoin</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="paxgbtcPrice" style="color:var(--green)">&mdash;</div>
+      <div class="price-change" id="paxgbtcChange">&mdash;</div>
+      <div class="tf-btns" id="paxgbtcTfBtns">
+        <button class="tf-btn" data-tf="1H">1H</button>
+        <button class="tf-btn" data-tf="4H">4H</button>
+        <button class="tf-btn" data-tf="8H">8H</button>
+        <button class="tf-btn active" data-tf="24H">24H</button>
+        <button class="tf-btn" data-tf="3D">3D</button>
+        <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
+        <button class="tf-btn" data-tf="3Y">3Y</button>
+        <button class="tf-btn" data-tf="5Y">5Y</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="paxgbtcChart" style="width:100%;height:150px"></canvas>
+        <canvas id="paxgbtcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="paxgbtcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="paxgbtcRange"></div>
+    </div>
+    </div>
+    <div class="price-col">
     <div class="price-card">
       <div class="price-card-head">
         <div class="price-card-title">// <b style="color:var(--red)">SOST PRICE</b></div>
@@ -1709,63 +1769,6 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
       <div id="sostDisclaimer" style="margin-top:10px;padding:10px 14px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:var(--code,monospace);display:none">
         <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// REFERENCE PRICE — NOT MARKET PRICE</div>
         <div>SOST is not yet listed on any exchange. This price is calculated in real time as:</div>
-  <div class="price-cards" id="priceChartsRowBtc">
-    <div class="price-card">
-      <div class="price-card-head">
-        <div class="price-card-title">// <b style="color:var(--gold)">XAUT / BTC</b> &mdash; Tether Gold vs Bitcoin</div>
-        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
-      </div>
-      <div class="price-card-val" id="xautbtcPrice" style="color:var(--gold)">&mdash;</div>
-      <div class="price-change" id="xautbtcChange">&mdash;</div>
-      <div class="tf-btns" id="xautbtcTfBtns">
-        <button class="tf-btn" data-tf="1H">1H</button>
-        <button class="tf-btn" data-tf="4H">4H</button>
-        <button class="tf-btn" data-tf="8H">8H</button>
-        <button class="tf-btn active" data-tf="24H">24H</button>
-        <button class="tf-btn" data-tf="3D">3D</button>
-        <button class="tf-btn" data-tf="7D">7D</button>
-        <button class="tf-btn" data-tf="30D">30D</button>
-        <button class="tf-btn" data-tf="6M">6M</button>
-        <button class="tf-btn" data-tf="1Y">1Y</button>
-        <button class="tf-btn" data-tf="3Y">3Y</button>
-        <button class="tf-btn" data-tf="5Y">5Y</button>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="xautbtcChart" style="width:100%;height:150px"></canvas>
-        <canvas id="xautbtcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
-        <div class="price-tooltip" id="xautbtcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
-      </div>
-      <div class="price-card-range" id="xautbtcRange"></div>
-    </div>
-    <div class="price-card">
-      <div class="price-card-head">
-        <div class="price-card-title">// <b style="color:var(--green)">PAXG / BTC</b> &mdash; Pax Gold vs Bitcoin</div>
-        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
-      </div>
-      <div class="price-card-val" id="paxgbtcPrice" style="color:var(--green)">&mdash;</div>
-      <div class="price-change" id="paxgbtcChange">&mdash;</div>
-      <div class="tf-btns" id="paxgbtcTfBtns">
-        <button class="tf-btn" data-tf="1H">1H</button>
-        <button class="tf-btn" data-tf="4H">4H</button>
-        <button class="tf-btn" data-tf="8H">8H</button>
-        <button class="tf-btn active" data-tf="24H">24H</button>
-        <button class="tf-btn" data-tf="3D">3D</button>
-        <button class="tf-btn" data-tf="7D">7D</button>
-        <button class="tf-btn" data-tf="30D">30D</button>
-        <button class="tf-btn" data-tf="6M">6M</button>
-        <button class="tf-btn" data-tf="1Y">1Y</button>
-        <button class="tf-btn" data-tf="3Y">3Y</button>
-        <button class="tf-btn" data-tf="5Y">5Y</button>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="paxgbtcChart" style="width:100%;height:150px"></canvas>
-        <canvas id="paxgbtcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
-        <div class="price-tooltip" id="paxgbtcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
-      </div>
-      <div class="price-card-range" id="paxgbtcRange"></div>
-    </div>
-    <div></div>
-  </div>
         <div style="color:#4ade80;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
           Price = (Gold committed in PoPC × Gold spot price) ÷ Total SOST supply<br>
           Price = (<span id="sostDiscGoldOz">1.2</span> oz × $<span id="sostDiscGoldP">0</span>) ÷ <span id="sostDiscSupply">0</span> SOST = <span style="color:#ffd700;font-weight:600" id="sostDiscPrice">$0</span>
@@ -1774,6 +1777,7 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
         <div style="margin-top:4px">Current backing: 0.6 XAUT + 0.6 PAXG (Protocol PoPC commitment)</div>
         <div style="margin-top:4px">Verify gold holdings: <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan,#22d3ee);text-decoration:none">Etherscan ↗</a></div>
       </div>
+    </div>
     </div>
   </div>
   <div style="margin-bottom:24px">
