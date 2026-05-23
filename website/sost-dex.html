@@ -19,19 +19,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST DEX — Buy, Sell, Split & Settle Gold-Linked Positions</title>
-<meta name="description" content="SOST DEX: the central trading hub for gold-linked positions. Buy, sell, split reward rights, and settle deals with ED25519-signed offers and bilateral escrow.">
+<meta name="description" content="SOST DEX: non-custodial bilateral signed-offer interface for PoPC gold-backed positions. Client-side ED25519 signing + X25519 encryption. Encrypted relay (server cannot read). On-chain smart-contract escrow on Ethereum (SOSTEscrow), not SOST-operated escrow. SOST Protocol does not custody funds, gold, or positions, and does not intermediate, settle, or arbitrate trades.">
 <meta name="keywords" content="SOST DEX, gold positions, position trading, reward rights, signed offers, settlement, tokenized gold, XAUT, PAXG">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SOST DEX — Buy, Sell, Split & Settle Gold-Linked Positions">
-<meta property="og:description" content="SOST DEX: the central trading hub for gold-linked positions. Buy, sell, split reward rights, and settle deals with ED25519-signed offers.">
+<meta property="og:description" content="SOST DEX: non-custodial bilateral signed-offer interface. Client-side ED25519 signing, encrypted relay, on-chain smart-contract escrow. SOST does not custody, intermediate, or arbitrate trades.">
 <meta property="og:url" content="https://sostcore.com/sost-dex.html">
 <meta property="og:site_name" content="SOST Protocol">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST DEX — Buy, Sell, Split & Settle Gold-Linked Positions">
-<meta name="twitter:description" content="SOST DEX: the central trading hub for gold-linked positions. Buy, sell, split reward rights, and settle deals with ED25519-signed offers.">
+<meta name="twitter:description" content="SOST DEX: non-custodial bilateral signed-offer interface. Client-side ED25519 signing, encrypted relay, on-chain smart-contract escrow. SOST does not custody, intermediate, or arbitrate trades.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -282,6 +282,7 @@
 <script src="js/browser-crypto.js"></script>
 <script src="js/keystore.js"></script>
 <script src="js/relay-client.js"></script>
+<script src="js/dex-anti-scam-warning.js"></script>
 <script src="js/prekey-store-browser.js"></script>
 <script src="js/recipient-directory.js"></script>
 <script src="js/private-inbox.js"></script>
@@ -361,7 +362,7 @@
   <div class="container">
     <div class="hero-title fade-in"><span class="dex-text">SOST DEX</span></div>
     <p class="hero-subtitle fade-in delay-1" style="color:var(--gold-primary);font-weight:600;margin-bottom:10px;letter-spacing:0.3px">Decentralized exchange of PoPC (Proof of Personal Custody) contracts for tokenized and/or physical gold.</p>
-    <p class="hero-subtitle fade-in delay-2">Buy, sell, split and track gold-backed positions through signed, encrypted, and verifiable settlement. AI-assisted trade composition. Passkey &amp; biometric device authentication.</p>
+    <p class="hero-subtitle fade-in delay-2">Buy, sell, split and track gold-backed positions through client-side signed offers + end-to-end encrypted relay messages + on-chain Ethereum smart-contract escrow. The AI assistant only helps you fill the form; you sign every action yourself. Passkey &amp; biometric authentication stay on your device.</p>
     <div class="hero-actions fade-in delay-2">
       <a href="javascript:void(0)" class="hero-btn hero-btn-green" onclick="var el=document.getElementById('trade-composer');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){var c=document.querySelector('[data-action=buy_full]');if(c)c.click();},500)"><span>&#9650;</span> BUY POSITION</a>
       <a href="javascript:void(0)" class="hero-btn hero-btn-gold" onclick="var el=document.getElementById('trade-composer');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){var c=document.querySelector('[data-action=sell_full]');if(c)c.click();},500)"><span>&#9660;</span> SELL POSITION</a>
@@ -388,6 +389,208 @@
     </div>
   </div>
 </section>
+<!-- ============ NON-CUSTODIAL DEX SAFETY NOTICE ============ -->
+<section style="border-bottom:1px solid var(--border-dim);background:rgba(245,158,11,0.04)">
+  <div class="container" style="padding:32px 0">
+    <div style="background:var(--bg-card);border:2px solid var(--amber-primary);border-left:6px solid var(--amber-primary);border-radius:8px;padding:24px 28px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+        <span style="color:var(--amber-primary);font-size:13px;font-weight:900;letter-spacing:1.5px">// NON-CUSTODIAL DEX SAFETY NOTICE</span>
+        <span style="background:rgba(245,158,11,0.15);color:var(--amber-primary);font-size:10px;font-weight:900;letter-spacing:1.5px;padding:4px 10px;border-radius:3px">READ FIRST</span>
+      </div>
+      <ul style="color:var(--text-primary);font-size:14px;line-height:1.75;margin:0 0 14px;padding-left:22px">
+        <li><b>SOST DEX does not custody user funds or gold.</b> Your SOST balance stays in your own wallet. Your gold (XAUT / PAXG) stays in your own Ethereum wallet or in the on-chain SOSTEscrow smart contract you yourself interact with.</li>
+        <li><b>SOST DEX is not a centralized escrow or broker.</b> Any escrow mentioned on this page refers to the on-chain Ethereum smart contract (SOSTEscrow). SOST Protocol does not operate, hold keys to, or manually release any escrow.</li>
+        <li><b>SOST DEX does not guarantee counterparties, prices, delivery, or outcomes.</b> Every offer is between two users, signed and encrypted client-side. SOST cannot reverse, force, or verify off-chain promises.</li>
+      </ul>
+      <p style="color:var(--text-secondary);font-size:12.5px;line-height:1.7;margin:0">
+        The relay can transport encrypted envelopes between users but <b>cannot read or alter the content</b>. SOST never sees your private keys, your private trade content, or your biometrics. The full rationale and safety guide is below.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHY SOST DEX DOES NOT INTERVENE ============ -->
+<section style="border-bottom:1px solid var(--border-dim);background:rgba(0,0,0,0.25)">
+  <div class="container" style="padding:40px 0">
+    <div style="margin-bottom:20px">
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// WHY NON-CUSTODIAL</div>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">Why SOST DEX <span style="color:var(--amber-primary)">does not intervene</span></h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-top:10px;line-height:1.7">SOST DEX is a non-custodial software interface. Trades are between users. The protocol&apos;s role is to host the interface and transport encrypted messages, not to broker or settle deals.</p>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-left:4px solid var(--amber-primary);border-radius:4px;padding:18px 22px;margin:0 0 18px">
+      <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:22px">
+        <li><b>Users create and sign offers client-side.</b> The ED25519 signing key + X25519 encryption key live in your browser, encrypted with Argon2id from your passphrase. The DEX UI composes the offer; <b>you</b> sign it.</li>
+        <li><b>The relay transports encrypted envelopes but cannot read them.</b> Server-side SOST infrastructure never sees the cleartext of any offer, message, address negotiation, or settlement instruction.</li>
+        <li><b>On-chain escrow is a smart contract (SOSTEscrow on Ethereum), not a SOST-operated escrow.</b> SOST Protocol does not hold keys to the smart contract&apos;s funds. Releases happen by on-chain logic the counterparties trigger themselves.</li>
+        <li><b>SOST cannot recover funds.</b> If a user sends SOST or gold to the wrong address, signs the wrong offer, or trusts a fake counterparty, SOST has no key, no privilege, and no legal authority to reverse it.</li>
+        <li><b>SOST cannot force delivery.</b> If a counterparty agrees to send something and then disappears, SOST cannot compel them. The remedy is a separate matter between the users (civil dispute, police report, on-chain forensic tracing).</li>
+        <li><b>SOST cannot verify off-chain promises.</b> A counterparty claiming &quot;I sent the wire&quot; or &quot;the metals are warehoused&quot; is making an off-chain statement SOST has no way to validate. The user must verify independently.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHAT SOST DEX CAN AND CANNOT VERIFY ============ -->
+<section style="border-bottom:1px solid var(--border-dim)">
+  <div class="container" style="padding:40px 0">
+    <div style="margin-bottom:20px">
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// VERIFICATION LIMITS</div>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">What SOST DEX <span style="color:#22c55e">can</span> &nbsp;and&nbsp; <span style="color:#fb010d">cannot</span> verify</h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:0;border:1px solid var(--border-bright);border-radius:4px;overflow:hidden">
+      <div style="background:rgba(34,197,94,0.06);padding:16px 18px;border-right:1px solid var(--border-bright)">
+        <div style="color:#22c55e;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#10003; THE DEX CAN VERIFY</div>
+        <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:20px">
+          <li>Structural integrity of a signed offer payload (fields present, signature shape valid).</li>
+          <li>Local key ownership: the browser-side wallet holds the private key that signed an offer.</li>
+          <li>Transaction and capsule hashes if a record has been published on-chain.</li>
+          <li>Public explorer data (block heights, confirmations, txid existence) for any SOST or Ethereum transaction you point to.</li>
+          <li>That a relayed envelope has not been tampered with in transit (MAC verification client-side).</li>
+        </ul>
+      </div>
+      <div style="background:rgba(251,1,13,0.06);padding:16px 18px">
+        <div style="color:#fb010d;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#9888; THE DEX CANNOT VERIFY</div>
+        <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:20px">
+          <li><b>Off-chain identity.</b> The counterparty&apos;s real name, KYC, age, jurisdiction, etc. SOST has no identity database.</li>
+          <li><b>Future delivery promises.</b> Whether the other side will actually do what they signed an offer to do.</li>
+          <li><b>Private agreements outside signed payloads.</b> Anything agreed in DMs, voice calls, or external chats is unverifiable by SOST.</li>
+          <li><b>Screenshots.</b> A screenshot of a payment, balance, or transfer is not cryptographic proof. Always verify directly in your bank / wallet / explorer.</li>
+          <li><b>Third-party Telegram, X, Discord accounts.</b> SOST cannot validate any external social media identity claiming to represent SOST or any counterparty.</li>
+          <li><b>External payment rails.</b> Whether a fiat transfer, credit-card payment, or third-party stablecoin transfer has actually settled. You verify in the rail itself.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HONEST DEX COUNTERPARTY VS SCAMMER ============ -->
+<section style="border-bottom:1px solid var(--border-dim)">
+  <div class="container" style="padding:40px 0">
+    <div style="margin-bottom:20px">
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// PATTERN RECOGNITION</div>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">Honest DEX counterparty <span style="color:var(--text-muted)">vs</span> <span style="color:#fb010d">scammer</span></h2>
+      <p style="color:var(--text-secondary);font-size:13px;margin-top:6px">Specific to the DEX context (positions, reward rights, OTC requests, smart-contract escrow). If your counterparty matches the right column, stop the trade.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:0;border:1px solid var(--border-bright);border-radius:4px;overflow:hidden">
+      <div style="background:rgba(34,197,94,0.06);padding:14px 16px;border-right:1px solid var(--border-bright)">
+        <div style="color:#22c55e;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#10003; HONEST DEX COUNTERPARTY</div>
+        <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:20px">
+          <li>Insists on using the official DEX URL (<code>sostcore.com/sost-dex.html</code>) only.</li>
+          <li>Accepts the signed offer terms BEFORE any action — reads the fields, asks questions, then signs.</li>
+          <li>Never asks for your seed phrase, private key, or wallet passphrase.</li>
+          <li>Agrees to a small test transaction first.</li>
+          <li>Verifies on-chain txids in <a href="sost-explorer.html" style="color:#22c55e;text-decoration:underline">sost-explorer.html</a> or Etherscan.</li>
+          <li>Keeps communication in signed and relayed payloads where possible.</li>
+          <li>Respects your verification timeline, no urgency.</li>
+          <li>Does not change addresses or amounts after the offer is signed.</li>
+        </ul>
+      </div>
+      <div style="background:rgba(251,1,13,0.06);padding:14px 16px">
+        <div style="color:#fb010d;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#9888; SCAMMER PATTERN</div>
+        <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:20px">
+          <li>Asks you to move to a private DM on Telegram / Signal / WhatsApp / Discord.</li>
+          <li>Sends a lookalike DEX URL (e.g. <code>sost-dex[.]net</code>, <code>sost-dex[.]app</code>, <code>sostdex.io</code>).</li>
+          <li>Requests your seed phrase / private key / passphrase &quot;to validate the trade&quot;.</li>
+          <li>Asks for a screen share / TeamViewer / AnyDesk to &quot;help&quot;.</li>
+          <li>Demands an advance &quot;activation fee&quot;, &quot;escrow fee&quot;, or &quot;unlock fee&quot;.</li>
+          <li>Sends a screenshot of payment and pressures you to release.</li>
+          <li>Rushes with urgency: &quot;release fast&quot;, &quot;listing closes in 5 min&quot;, &quot;limited time&quot;.</li>
+          <li>Changes the receiving address or amount after the offer is signed.</li>
+          <li>Promises guaranteed profit, exchange listing access, treasury access, or insider info.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REALISTIC DEX SCAM EXAMPLES ============ -->
+<section style="border-bottom:1px solid var(--border-dim)">
+  <div class="container" style="padding:40px 0">
+    <div style="margin-bottom:20px">
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// LEARN BY EXAMPLE</div>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">Realistic DEX <span style="color:#fb010d">scam examples</span></h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-top:10px;line-height:1.7">Five common attack patterns adapted to the DEX context, with warning signs and the safe response for each.</p>
+    </div>
+
+    <!-- Scam 1: fake PoPC contract -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">SCAM 1 &mdash; Fake PoPC contract</div>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Pattern:</b> a counterparty sends you a link to a &quot;PoPC contract&quot; on Ethereum that looks legitimate (same ABI, similar address). Their version of the contract has a hidden backdoor that lets them drain after deposit.</p>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Warning signs:</b> the contract address differs from the official SOSTEscrow address published in the SOST docs. The counterparty insists on &quot;my version&quot; or &quot;the new test contract&quot;. The bytecode has not been verified on Etherscan, or shows unfamiliar admin/owner functions.</p>
+      <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0"><b>Safe response:</b> only use the SOSTEscrow contract address documented in <a href="sost-popc-contracts.html" style="color:var(--cyan-primary)">sost-popc-contracts.html</a>. Verify the contract is open-source-verified on Etherscan. Refuse any &quot;alternative&quot; contract.</p>
+    </div>
+
+    <!-- Scam 2: fake DEX mirror URL -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">SCAM 2 &mdash; Fake SOST DEX mirror URL</div>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Pattern:</b> a counterparty in a chat or social media post sends you a URL that looks like the DEX but is hosted elsewhere: <code>sost-dex[.]net</code>, <code>sostdex[.]app</code>, <code>sostcore[.]io/dex</code>. The clone page steals your passphrase / seed when you &quot;Create Identity&quot; or &quot;Import Backup&quot;.</p>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Warning signs:</b> URL is not exactly <code>sostcore.com/sost-dex.html</code> or <code>sostprotocol.com/sost-dex.html</code>. Page asks for your seed phrase. Page looks identical but is on a different domain.</p>
+      <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0"><b>Safe response:</b> only ever load the DEX from <code>sostcore.com</code> or <code>sostprotocol.com</code>. Type the URL yourself; do not click links from DMs / Telegram / X. If in doubt, navigate from the nav of <code>sostcore.com</code> itself. No legitimate process EVER asks for your seed phrase or passphrase.</p>
+    </div>
+
+    <!-- Scam 3: advance-fee escrow release -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">SCAM 3 &mdash; Advance-fee escrow release</div>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Pattern:</b> a seller claims their position is &quot;locked in escrow&quot; and to release it you must first pay an &quot;activation fee&quot; / &quot;gas top-up&quot; / &quot;unlock fee&quot; of N SOST or N USDT to a third address. The escrow does not exist; the &quot;fee&quot; is the scam.</p>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Warning signs:</b> any request to pay something small first to unlock something bigger. References to a &quot;SOST escrow procedure&quot; or &quot;admin verification fee&quot; that does not appear in any official SOST documentation. Pressure to pay before reading.</p>
+      <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0"><b>Safe response:</b> SOST has no fees beyond normal network transaction fees and protocol-defined PoPC settlement fees. Anyone asking for an out-of-process &quot;activation fee&quot;, &quot;release fee&quot;, or &quot;tax fee&quot; is running an advance-fee scam.</p>
+    </div>
+
+    <!-- Scam 4: screenshot-as-payment-proof -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">SCAM 4 &mdash; Screenshot-as-payment-proof</div>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Pattern:</b> a buyer claims to have paid (in SOST, ETH, USDT or fiat) and sends a screenshot. Pressures the seller to release the position or reward right immediately. The transaction either does not exist or went to a different address.</p>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Warning signs:</b> screenshot instead of a verifiable txid. Refusal or delay when asked for the txid. Urgency: &quot;release now, I have another deal waiting&quot;. The screenshot&apos;s address differs from your receiving address.</p>
+      <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0"><b>Safe response:</b> never release based on a screenshot. Always require the txid, verify it on <a href="sost-explorer.html" style="color:var(--cyan-primary)">sost-explorer.html</a> (for SOST) or Etherscan (for ETH/ERC-20), confirm the destination is YOUR address, and wait for the configured number of confirmations.</p>
+    </div>
+
+    <!-- Scam 5: address substitution after agreement -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">SCAM 5 &mdash; Address substitution after agreement</div>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Pattern:</b> after the offer is signed and you are about to send funds, the counterparty asks you to send to a different address than the one in the signed offer (&quot;my main wallet was compromised&quot;, &quot;use this temporary address instead&quot;, &quot;send to my friend who is closer&quot;). The new address is the attacker&apos;s.</p>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Warning signs:</b> a request to deviate from the signed offer payload. Last-minute address change. Excuse story attached.</p>
+      <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0"><b>Safe response:</b> send ONLY to the address in the signed offer. If the counterparty needs to change anything, cancel the offer and sign a new one with the new terms. Never trust a verbal / chat amendment to a signed payload.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ IF YOU HAVE BEEN SCAMMED ============ -->
+<section style="border-bottom:1px solid var(--border-dim)">
+  <div class="container" style="padding:32px 0">
+    <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.4);border-left:4px solid var(--amber-primary);border-radius:4px;padding:18px 22px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#9888; IF YOU HAVE BEEN SCAMMED ON THE DEX</div>
+      <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0 0 10px">SOST cannot reverse on-chain transactions, force counterparties, or recover funds. What you can still do, in order:</p>
+      <ol style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:22px">
+        <li><b>Stop sending funds.</b> Do not send more in the hope of recovering what you already sent.</li>
+        <li><b>Save the evidence.</b> Txids, signed payload JSON, URLs, screenshots of the chat, the counterparty&apos;s handle, the addresses involved. Keep a local copy.</li>
+        <li><b>Revoke / rotate any compromised keys.</b> If you entered a seed phrase or passphrase into a phishing site, assume the wallet is fully compromised. Move any remaining funds to a brand-new wallet (new seed) immediately. The old wallet is permanently unsafe.</li>
+        <li><b>Report fake domains / accounts.</b> Submit the lookalike URL to your browser&apos;s phishing report, the registrar abuse contact, and the social platform where the impersonator operates.</li>
+        <li><b>Warn the community without doxxing.</b> Post the pattern (the scam method) in the OTC Reputation room in SOST Talk. Do not post the counterparty&apos;s personal data; share their on-chain address and their chat handle only.</li>
+        <li><b>File a police report</b> in your jurisdiction. Crypto fraud is increasingly investigated, and your report adds to the pattern.</li>
+        <li><b>Do NOT pay any &quot;recovery agent&quot;</b> that contacts you afterwards offering to recover funds for a fee. That is a follow-up scam.</li>
+        <li><b>Understand:</b> SOST cannot reverse the transaction, force the counterparty to deliver, or arbitrate the dispute. The protocol is non-custodial and software-only.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LEGAL-SAFE DEX FOOTER ============ -->
+<section style="border-bottom:1px solid var(--border-dim);background:rgba(0,0,0,0.25)">
+  <div class="container" style="padding:24px 0">
+    <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:0">
+      <b style="color:var(--amber-primary)">SOST DEX disclaimer.</b>
+      SOST DEX is non-custodial software. It does not provide financial, legal, custody, brokerage, escrow, investment, or dispute-resolution services. Users are responsible for their own trades, keys, counterparties, taxes, compliance, and local-law obligations. Any reference to &quot;escrow&quot; on this page denotes the on-chain Ethereum smart contract (SOSTEscrow); SOST Protocol does not operate, hold keys to, or manually release any escrow. The relay transports encrypted envelopes between users and cannot read their content. SOST cannot reverse transactions, recover funds, force delivery, or arbitrate disputes.
+    </p>
+  </div>
+</section>
+
+<!-- (continued: existing trade composer + the rest of the page remain unchanged below) -->
+
+<section class="section" style="display:none" id="dex-safety-anchor-end"></section>
+
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- BLOCK A2 — WALLET + AI ASSISTANT + INBOX (Phase D integration)        -->
