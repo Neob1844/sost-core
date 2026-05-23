@@ -468,13 +468,89 @@ static TxValidationResult ValidateInputs(
                 continue;  // CLAIM path complete; skip the standard verify-input call.
             }
 
-            // tx.tx_type == TX_TYPE_HTLC_REFUND falls through to Phase 3B-2.
-            // For 3B-1b we explicitly reject REFUND attempts as
-            // not-yet-implemented (R20 placeholder); 3B-2 will replace this
-            // branch with proper REFUND validation rules R24-R26.
-            return TxValidationResult::Fail(TxValCode::R20_HTLC_CLAIM_INPUT_INVALID,
-                "R20: HTLC_REFUND spending of HTLC_LOCK is not implemented yet "
-                "(Phase 3B-2 placeholder)", (int32_t)i);
+            // -----------------------------------------------------------
+            // Phase 3B-2: HTLC_REFUND validation rules R23-R24.
+            //
+            // REFUND is the timeout-recovery path. It reclaims the LOCK
+            // funds back to refund_pkh after refund_height has been
+            // reached, WITHOUT revealing any preimage. The structural
+            // rules are simpler than CLAIM:
+            //
+            //   - R23a: exactly 1 input (the LOCK reference; same
+            //           atomicity argument as CLAIM).
+            //   - R23b: must NOT contain an OUT_HTLC_CLAIM_WITNESS
+            //           marker (defense in depth; R18 already enforces
+            //           this during ValidateStructure, but we re-check
+            //           here for clarity and to make a misbehaving R18
+            //           a hard fail rather than a silent allow).
+            //   - R24:  spend_height must be >= refund_height; before
+            //           that the LOCK is still claimable by the CLAIM
+            //           path and REFUND must not race ahead.
+            //   - S2/S4/S5/S6 via VerifyTransactionInput with the
+            //           refund_pkh extracted from the LOCK payload —
+            //           parallel to the CLAIM path's claim_pkh override.
+            //
+            // No preimage is read for REFUND. No witness marker is
+            // expected. The signature alone proves the refund_pkh
+            // holder requested the recovery.
+            // -----------------------------------------------------------
+            if (tx.tx_type == TX_TYPE_HTLC_REFUND) {
+                // R23a: exactly 1 input.
+                if (tx.inputs.size() != 1) {
+                    return TxValidationResult::Fail(TxValCode::R23_HTLC_REFUND_STRUCTURE_INVALID,
+                        "R23: HTLC_REFUND tx must have exactly 1 input, got " +
+                        std::to_string(tx.inputs.size()), (int32_t)i);
+                }
+                // R23b: no OUT_HTLC_CLAIM_WITNESS marker in any output.
+                for (const auto& o : tx.outputs) {
+                    if (o.type == OUT_HTLC_CLAIM_WITNESS) {
+                        return TxValidationResult::Fail(TxValCode::R23_HTLC_REFUND_STRUCTURE_INVALID,
+                            "R23: HTLC_REFUND must not contain OUT_HTLC_CLAIM_WITNESS marker outputs",
+                            (int32_t)i);
+                    }
+                }
+                // R24: spend_height must be >= refund_height.
+                uint64_t refund_height = ReadHtlcRefundHeight(utxo.payload);
+                if ((uint64_t)ctx.spend_height < refund_height) {
+                    return TxValidationResult::Fail(TxValCode::R24_HTLC_REFUND_BEFORE_TIMEOUT,
+                        "R24: HTLC_REFUND at spend_height " + std::to_string(ctx.spend_height) +
+                        " < refund_height " + std::to_string(refund_height) +
+                        " (refund window not yet open)", (int32_t)i);
+                }
+
+                // Signature + pubkey-hash check: override expected pkh with
+                // refund_pkh from the LOCK payload.
+                auto refund_pkh_arr = ReadHtlcRefundPkh(utxo.payload);
+                PubKeyHash refund_pkh{};
+                std::copy(refund_pkh_arr.begin(), refund_pkh_arr.end(), refund_pkh.begin());
+
+                std::string verify_err;
+                SpentOutput spent_for_refund;
+                spent_for_refund.amount = utxo.amount;
+                spent_for_refund.type   = utxo.type;
+                if (!VerifyTransactionInput(tx, i, spent_for_refund, ctx.genesis_hash,
+                                            refund_pkh, &verify_err)) {
+                    TxValCode code = TxValCode::S6_VERIFY_FAIL;
+                    if (verify_err.find("hash mismatch") != std::string::npos)
+                        code = TxValCode::S2_PKH_MISMATCH;
+                    else if (verify_err.find("all zeros") != std::string::npos)
+                        code = TxValCode::S4_ZERO_SIGNATURE;
+                    else if (verify_err.find("LOW-S") != std::string::npos ||
+                             verify_err.find("low-S") != std::string::npos ||
+                             verify_err.find("High-S") != std::string::npos)
+                        code = TxValCode::S5_HIGH_S;
+                    return TxValidationResult::Fail(code,
+                        "HTLC_REFUND input[" + std::to_string(i) + "]: " + verify_err, (int32_t)i);
+                }
+
+                out_input_sum += utxo.amount;
+                if (out_input_sum > SUPPLY_MAX_STOCKS || out_input_sum < 0) {
+                    return TxValidationResult::Fail(TxValCode::R7_SUM_OVERFLOW,
+                        "input sum overflow at input[" + std::to_string(i) + "]",
+                        (int32_t)i);
+                }
+                continue;  // REFUND path complete; skip the standard verify-input call.
+            }
         }
 
         // -------------------------------------------------------------------
@@ -485,6 +561,12 @@ static TxValidationResult ValidateInputs(
         if (tx.tx_type == TX_TYPE_HTLC_CLAIM) {
             return TxValidationResult::Fail(TxValCode::R20_HTLC_CLAIM_INPUT_INVALID,
                 "R20: HTLC_CLAIM input[" + std::to_string(i) + "] must reference an "
+                "OUT_HTLC_LOCK utxo; got type 0x" + HexStr(&utxo.type, 1),
+                (int32_t)i);
+        }
+        if (tx.tx_type == TX_TYPE_HTLC_REFUND) {
+            return TxValidationResult::Fail(TxValCode::R20_HTLC_CLAIM_INPUT_INVALID,
+                "R20: HTLC_REFUND input[" + std::to_string(i) + "] must reference an "
                 "OUT_HTLC_LOCK utxo; got type 0x" + HexStr(&utxo.type, 1),
                 (int32_t)i);
         }

@@ -647,6 +647,204 @@ int main() {
              !r.ok && r.code == TxValCode::S1_UTXO_NOT_FOUND);
     }
 
+    // =========================================================================
+    // Phase 3B-2 — HTLC_REFUND consensus rules R23-R24.
+    //
+    // REFUND is the timeout path. No marker, no preimage. spend_height must
+    // be >= refund_height. Refund_pkh from LOCK payload [60..79] is the
+    // expected pubkey hash for the input signature (overrides utxo.pubkey_hash
+    // in the VerifyTransactionInput call).
+    // =========================================================================
+
+    auto MakeRefundTx = [&](const Hash256& lock_txid,
+                            uint32_t lock_vout,
+                            int64_t out_amount = 90000) -> Transaction {
+        Transaction tx;
+        tx.version = 1;
+        tx.tx_type = TX_TYPE_HTLC_REFUND;
+        TxInput in;
+        in.prev_txid = lock_txid;
+        in.prev_index = lock_vout;
+        in.signature.fill(0x01);  // bogus; signature path may fail S2/S6
+        in.pubkey.fill(0x02);     // bogus
+        tx.inputs.push_back(in);
+        TxOutput o;
+        o.amount = out_amount;
+        o.type = OUT_TRANSFER;
+        o.pubkey_hash.fill(0x77);  // refund destination (matches refund_pkh of htlc_view)
+        tx.outputs.push_back(o);
+        return tx;
+    };
+
+    // ------------------------------------------------------------------
+    // T26: REFUND before timeout rejected by R24
+    //      (closed: R2; open: R24 because spend_height < refund_height 30000)
+    // ------------------------------------------------------------------
+    {
+        Transaction tx = MakeRefundTx(htlc_view.lock_txid, 0);
+        auto early_ctx = MakeCtx(20000);  // < refund_height 30000
+        auto r = ValidateTransactionConsensus(tx, htlc_view, early_ctx);
+        if (!gate_open) {
+            TEST("T26 (closed) REFUND before timeout rejected by R2_BAD_TX_TYPE",
+                 !r.ok && r.code == TxValCode::R2_BAD_TX_TYPE);
+        } else {
+            TEST("T26 (open) REFUND before timeout rejected by R24_HTLC_REFUND_BEFORE_TIMEOUT",
+                 !r.ok && r.code == TxValCode::R24_HTLC_REFUND_BEFORE_TIMEOUT);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // T27: REFUND at exactly refund_height should be accepted by R24
+    //      (boundary check; the rule is spend_height >= refund_height).
+    //      Pre-activation: R2 fires. Post-activation: R24 passes, the tx
+    //      then fails the signature check (S2) because our test uses bogus
+    //      pubkey — but at least R24 must NOT be the failing code.
+    // ------------------------------------------------------------------
+    {
+        Transaction tx = MakeRefundTx(htlc_view.lock_txid, 0);
+        auto at_boundary_ctx = MakeCtx(30000);  // == refund_height
+        auto r = ValidateTransactionConsensus(tx, htlc_view, at_boundary_ctx);
+        if (!gate_open) {
+            TEST("T27 (closed) REFUND at boundary rejected by R2_BAD_TX_TYPE",
+                 !r.ok && r.code == TxValCode::R2_BAD_TX_TYPE);
+        } else {
+            TEST("T27 (open) REFUND at refund_height boundary does NOT trigger R24",
+                 r.code != TxValCode::R24_HTLC_REFUND_BEFORE_TIMEOUT);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // T28: REFUND with OUT_HTLC_CLAIM_WITNESS marker rejected
+    //      (R18 fires during ValidateStructure; pre-activation R2 first).
+    // ------------------------------------------------------------------
+    {
+        Transaction tx = MakeRefundTx(htlc_view.lock_txid, 0);
+        TxOutput marker;
+        marker.amount = 5000;
+        marker.type = OUT_HTLC_CLAIM_WITNESS;
+        marker.pubkey_hash.fill(0);
+        WriteHtlcClaimWitnessPayload(marker.payload, the_preimage);
+        tx.outputs.push_back(marker);
+        auto late_ctx = MakeCtx(35000);  // > refund_height
+        auto r = ValidateTransactionConsensus(tx, htlc_view, late_ctx);
+        if (!gate_open) {
+            TEST("T28 (closed) REFUND with witness marker rejected by R2_BAD_TX_TYPE",
+                 !r.ok && r.code == TxValCode::R2_BAD_TX_TYPE);
+        } else {
+            // With gate open R18 fires during ValidateStructure because the
+            // marker is not allowed outside a TX_TYPE_HTLC_CLAIM tx.
+            TEST("T28 (open) REFUND with witness marker rejected by R18_HTLC_CLAIM_WITNESS_INVALID",
+                 !r.ok && r.code == TxValCode::R18_HTLC_CLAIM_WITNESS_INVALID);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // T29: REFUND referencing non-HTLC utxo (OUT_TRANSFER) rejected by R20
+    // ------------------------------------------------------------------
+    {
+        HtlcLockUtxoView transfer_view = htlc_view;
+        transfer_view.lock_type = OUT_TRANSFER;
+        Transaction tx = MakeRefundTx(htlc_view.lock_txid, 0);
+        auto late_ctx = MakeCtx(35000);
+        auto r = ValidateTransactionConsensus(tx, transfer_view, late_ctx);
+        if (!gate_open) {
+            TEST("T29 (closed) REFUND non-LOCK ref rejected by R2_BAD_TX_TYPE",
+                 !r.ok && r.code == TxValCode::R2_BAD_TX_TYPE);
+        } else {
+            TEST("T29 (open) REFUND non-LOCK ref rejected by R20_HTLC_CLAIM_INPUT_INVALID",
+                 !r.ok && r.code == TxValCode::R20_HTLC_CLAIM_INPUT_INVALID);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // T30: REFUND with extra inputs rejected by R23
+    // ------------------------------------------------------------------
+    {
+        Transaction tx = MakeRefundTx(htlc_view.lock_txid, 0);
+        TxInput extra;
+        extra.prev_txid.fill(0xDD);
+        extra.prev_index = 7;
+        extra.signature.fill(0x03);
+        extra.pubkey.fill(0x04);
+        tx.inputs.push_back(extra);
+        auto late_ctx = MakeCtx(35000);
+        auto r = ValidateTransactionConsensus(tx, htlc_view, late_ctx);
+        if (!gate_open) {
+            TEST("T30 (closed) REFUND with extra inputs rejected by R2_BAD_TX_TYPE",
+                 !r.ok && r.code == TxValCode::R2_BAD_TX_TYPE);
+        } else {
+            TEST("T30 (open) REFUND with extra inputs rejected by R23_HTLC_REFUND_STRUCTURE_INVALID",
+                 !r.ok && r.code == TxValCode::R23_HTLC_REFUND_STRUCTURE_INVALID);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // T31: REFUND with bogus refund_pkh (signature check fails)
+    //      Pre-activation: R2. Post-activation: S2 (PKH mismatch) since
+    //      our test uses bogus signature/pubkey that won't match.
+    // ------------------------------------------------------------------
+    {
+        Transaction tx = MakeRefundTx(htlc_view.lock_txid, 0);
+        auto late_ctx = MakeCtx(35000);
+        auto r = ValidateTransactionConsensus(tx, htlc_view, late_ctx);
+        if (!gate_open) {
+            TEST("T31 (closed) REFUND bogus pubkey rejected by R2_BAD_TX_TYPE",
+                 !r.ok && r.code == TxValCode::R2_BAD_TX_TYPE);
+        } else {
+            // Post-activation: R23/R24 pass; signature path fails.
+            // The exact code (S2/S4/S5/S6) depends on the bogus
+            // signature/pubkey shape. Assert it is one of the S-codes.
+            bool is_s_code = (r.code == TxValCode::S2_PKH_MISMATCH ||
+                              r.code == TxValCode::S4_ZERO_SIGNATURE ||
+                              r.code == TxValCode::S5_HIGH_S ||
+                              r.code == TxValCode::S6_VERIFY_FAIL);
+            TEST("T31 (open) REFUND bogus pubkey rejected by S-rule", !r.ok && is_s_code);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // T32: CLAIM regression — wrong preimage still rejected post-REFUND
+    //      (assertion mirror of T14; serves as defense against REFUND patch
+    //      accidentally affecting CLAIM rule dispatch)
+    // ------------------------------------------------------------------
+    {
+        std::array<uint8_t, 32> bad{};
+        bad[0] = 0xBA;
+        Transaction tx = MakeClaimTx(htlc_view.lock_txid, 0, bad);
+        auto r = ValidateTransactionConsensus(tx, htlc_view, ctx_v14);
+        if (!gate_open) {
+            TEST("T32 (closed) CLAIM wrong preimage still rejected by R2",
+                 !r.ok && r.code == TxValCode::R2_BAD_TX_TYPE);
+        } else {
+            TEST("T32 (open) CLAIM wrong preimage still rejected by R21 (no drift)",
+                 !r.ok && r.code == TxValCode::R21_HTLC_CLAIM_PREIMAGE_MISMATCH);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // T33: Normal STANDARD tx regression guard — must still fail S1
+    //      identically post-REFUND patch.
+    // ------------------------------------------------------------------
+    {
+        Transaction tx;
+        tx.version = 1;
+        tx.tx_type = TX_TYPE_STANDARD;
+        TxInput in;
+        in.prev_txid.fill(0xEE);
+        in.prev_index = 0;
+        in.signature.fill(0x01);
+        in.pubkey.fill(0x02);
+        tx.inputs.push_back(in);
+        TxOutput o;
+        o.amount = 50000;
+        o.type = OUT_TRANSFER;
+        o.pubkey_hash.fill(0xAB);
+        tx.outputs.push_back(o);
+        auto r = ValidateTransactionConsensus(tx, htlc_view, ctx_v14);
+        TEST("T33 (regression guard) normal STANDARD tx still fails S1",
+             !r.ok && r.code == TxValCode::S1_UTXO_NOT_FOUND);
+    }
+
     printf("\n== Summary: %d passed, %d failed ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }

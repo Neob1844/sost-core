@@ -102,6 +102,8 @@ enum class TxValCode : int {
     R20_HTLC_CLAIM_INPUT_INVALID    = 118,   // Atomic Swap HTLC_CLAIM input must reference HTLC_LOCK; or LOCK spent by non-HTLC tx (Phase 3B-1b)
     R21_HTLC_CLAIM_PREIMAGE_MISMATCH = 119,  // Atomic Swap HTLC_CLAIM preimage hash mismatch (Phase 3B-1b)
     R22_HTLC_CLAIM_TIMEOUT          = 120,   // Atomic Swap HTLC_CLAIM after refund_height (Phase 3B-1b)
+    R23_HTLC_REFUND_STRUCTURE_INVALID = 121, // Atomic Swap HTLC_REFUND tx structure (Phase 3B-2)
+    R24_HTLC_REFUND_BEFORE_TIMEOUT  = 122,   // Atomic Swap HTLC_REFUND before refund_height (Phase 3B-2)
 
     // Spend / signature (S1-S12)
     S1_UTXO_NOT_FOUND      = 201,
