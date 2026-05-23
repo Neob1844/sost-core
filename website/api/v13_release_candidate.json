@@ -2,49 +2,43 @@
   "schema": "sost-v13-release-candidate-public/v0.1",
   "rc_id": "v13-rc1",
   "pinned_time": "2026-05-18T13:00:00+00:00",
-
-  "v13_activation_height":               12000,
-  "v15_fallback_height":                 15000,
-  "dtd_lottery_decision_height":         12100,
-
-  "min_commit":                          "e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a",
-  "required_binary_label":               "v13-rc1",
-  "ntp_required":                        true,
-  "future_timestamp_drift_seconds_post_v13": 10,
-  "dtd_lottery_cooldown_post_v13":       6,
-
+  "v13_activation_height": 12000,
+  "v15_fallback_height": 15000,
+  "dtd_lottery_decision_height": 12100,
+  "min_commit": "e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a",
+  "required_binary_label": "v13-rc1",
+  "ntp_required": false,
+  "ntp_recommended": true,
+  "future_timestamp_drift_cap_seconds": 30,
+  "dtd_lottery_cooldown_post_v13": 6,
   "confirmed_items_ids": [
     "casert_all_profiles_e7_h35",
     "dtd_cooldown_6",
-    "timestamp_drift_10s",
+    "timestamp_drift_30s",
     "beacon_phase_ii_a"
   ],
-
   "fallback_v15_items_ids": [
     "popc_model_a_b",
     "beacon_phase_ii_b",
     "beacon_phase_iii",
     "memory_lock_per_instance"
   ],
-
   "operator_action_titles": [
     "Upgrade binary before block 12000",
-    "Sync NTP; clock must not be >10 s ahead of true time",
+    "Sync NTP; clock must not be >30 s ahead of true time",
     "Keep wallet / mining-key custody local",
     "Watch operator notices via Beacon Phase II-A",
     "Do NOT expect PoPC, Beacon II-B, Beacon III, or Memory-Lock at block 12000",
     "If your blocks are rejected after block 12000, check the troubleshooting list"
   ],
-
   "safety": {
-    "no_wallet_access":                  true,
-    "no_private_key_access":             true,
-    "no_signing":                        true,
-    "no_broadcast":                      true,
-    "no_network_required":               true,
-    "no_auto_restart":                   true,
-    "no_consensus_auto_toggle":          true
+    "no_wallet_access": true,
+    "no_private_key_access": true,
+    "no_signing": true,
+    "no_broadcast": true,
+    "no_network_required": true,
+    "no_auto_restart": true,
+    "no_consensus_auto_toggle": true
   },
-
   "_note": "This is the PUBLIC mirror of config/v13_release_candidate.json. Detailed reasons, evidence keywords, and step-level details live in the in-repo config and in docs/V13_RELEASE_CANDIDATE.md + docs/V13_MINER_OPERATOR_CHECKLIST.md. The on-chain V13 hardfork itself does not depend on this JSON; this file is published purely for human / operator convenience."
 }

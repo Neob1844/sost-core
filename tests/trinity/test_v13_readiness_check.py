@@ -71,7 +71,7 @@ def test_config_confirmed_items_present():
     assert ids == sorted([
         "casert_all_profiles_e7_h35",
         "dtd_cooldown_6",
-        "timestamp_drift_10s",
+        "timestamp_drift_30s",
         "beacon_phase_ii_a",
     ])
 
@@ -181,7 +181,7 @@ def test_confirmed_items_inspected(srr):
     assert ids == sorted([
         "casert_all_profiles_e7_h35",
         "dtd_cooldown_6",
-        "timestamp_drift_10s",
+        "timestamp_drift_30s",
         "beacon_phase_ii_a",
     ])
 
@@ -226,7 +226,7 @@ def test_timestamp_drift_is_wired(srr):
         pinned_time="2026-05-18T00:30:00+00:00",
     )
     by_id = {c["id"]: c for c in report["confirmed_items"]}
-    assert by_id["timestamp_drift_10s"]["wired_in_code"] is True
+    assert by_id["timestamp_drift_30s"]["wired_in_code"] is True
 
 
 def test_beacon_phase_ii_a_is_wired(srr):

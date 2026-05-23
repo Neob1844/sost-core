@@ -106,6 +106,11 @@ static PubKeyHash  g_miner_pkh{};
 // its in-memory copy via secure_memzero on shutdown.
 static std::string g_wallet_path = "";
 static std::string g_mining_key_label = "";
+// V13 SbPoW hardening: chain-specific salt for the v13 signing preimage.
+// Queried lazily from the node (RPC getinfo "genesis_hash") the first
+// time we sign a block at height >= V13_HEIGHT. See docs/V13_SBPOW_HARDENING.md.
+static Hash256     g_genesis_hash_for_sig{};
+static bool        g_genesis_hash_loaded = false;
 static Wallet      g_wallet;
 static bool        g_signing_key_loaded = false;
 static PubKey      g_signing_pubkey{};
@@ -488,6 +493,30 @@ static std::string rpc_call(const std::string& method, const std::string& params
     return response.substr(bp + 4);
 }
 
+
+// V13 SbPoW hardening: lazy-load the chain genesis_hash for the
+// v13 signing preimage. Returns true iff g_genesis_hash_for_sig has
+// a non-zero value after the call. Cached after first success.
+//
+// The node exposes its g_genesis_hash via the "genesis_hash" field of
+// getinfo. A miner-side cache is safe because the genesis hash is a
+// fork-invariant constant of the live chain.
+static bool ensure_genesis_hash_for_sig_loaded() {
+    if (g_genesis_hash_loaded) return true;
+    if (g_rpc_url.empty()) return false;
+    std::string info = rpc_call("getinfo");
+    if (info.empty()) return false;
+    std::string gh = jstr(info, "genesis_hash");
+    if (gh.size() != 64) return false;
+    Hash256 parsed = from_hex(gh);
+    // Reject obviously-bogus all-zero responses.
+    bool any_nonzero = false;
+    for (uint8_t b : parsed) { if (b) { any_nonzero = true; break; } }
+    if (!any_nonzero) return false;
+    g_genesis_hash_for_sig = parsed;
+    g_genesis_hash_loaded = true;
+    return true;
+}
 
 // Resync local miner chain state from the RPC node when the node is ahead.
 // This is a miner-side recovery path only; it does not change consensus.
@@ -1577,8 +1606,32 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                             std::memcpy(sig_pubkey.data(), g_signing_pubkey.data(), 33);
                             sost::sbpow::MinerPrivkey priv{};
                             std::memcpy(priv.data(), wk->privkey.data(), 32);
-                            Bytes32 sbpow_msg = sost::sbpow::build_sbpow_message(
-                                g_tip_hash, h, res.commit, n, my_extra, sig_pubkey);
+                            // V13 SbPoW hardening — at heights >= V13_HEIGHT use the
+                            // hardened preimage that binds timestamp / bits_q /
+                            // merkle_root / genesis_hash. Pre-V13 uses the legacy
+                            // V11 preimage so old blocks remain reproducible.
+                            Bytes32 sbpow_msg;
+                            if (h >= sost::V13_HEIGHT) {
+                                if (!ensure_genesis_hash_for_sig_loaded()) {
+                                    printf(
+                                        "[MINER] FATAL: V13 SbPoW active at height %lld but "
+                                        "the node did not return a usable genesis_hash via getinfo.\n"
+                                        "        Upgrade your node to a build that exposes genesis_hash, "
+                                        "then restart the miner.\n",
+                                        (long long)h);
+                                    fflush(stdout);
+                                    sost::sbpow::secure_memzero(priv.data(), priv.size());
+                                    g_chain_advanced = true;
+                                    return;
+                                }
+                                sbpow_msg = sost::sbpow::build_sbpow_message_v13(
+                                    g_genesis_hash_for_sig, g_tip_hash, h,
+                                    my_ts, bits_q, res.commit, mrkl,
+                                    n, my_extra, sig_pubkey);
+                            } else {
+                                sbpow_msg = sost::sbpow::build_sbpow_message(
+                                    g_tip_hash, h, res.commit, n, my_extra, sig_pubkey);
+                            }
                             bool signed_ok = sost::sbpow::sign_sbpow_commitment(
                                 priv, sbpow_msg, sig_signature);
                             sost::sbpow::secure_memzero(priv.data(), priv.size());
@@ -1964,8 +2017,26 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                     std::memcpy(sig_pubkey.data(), g_signing_pubkey.data(), 33);
                     sost::sbpow::MinerPrivkey priv{};
                     std::memcpy(priv.data(), wk->privkey.data(), 32);
-                    Bytes32 sbpow_msg = sost::sbpow::build_sbpow_message(
-                        g_tip_hash, h, res.commit, nonce, extra_nonce, sig_pubkey);
+                    // V13 SbPoW hardening (height-gated mirror of the threaded path).
+                    Bytes32 sbpow_msg;
+                    if (h >= sost::V13_HEIGHT) {
+                        if (!ensure_genesis_hash_for_sig_loaded()) {
+                            printf(
+                                "[MINER] FATAL: V13 SbPoW active at height %lld but the node did "
+                                "not return a usable genesis_hash via getinfo. Upgrade your node.\n",
+                                (long long)h);
+                            fflush(stdout);
+                            sost::sbpow::secure_memzero(priv.data(), priv.size());
+                            return false;
+                        }
+                        sbpow_msg = sost::sbpow::build_sbpow_message_v13(
+                            g_genesis_hash_for_sig, g_tip_hash, h,
+                            ts, bits_q, res.commit, mrkl,
+                            nonce, extra_nonce, sig_pubkey);
+                    } else {
+                        sbpow_msg = sost::sbpow::build_sbpow_message(
+                            g_tip_hash, h, res.commit, nonce, extra_nonce, sig_pubkey);
+                    }
                     bool signed_ok = sost::sbpow::sign_sbpow_commitment(
                         priv, sbpow_msg, sig_signature);
                     sost::sbpow::secure_memzero(priv.data(), priv.size());

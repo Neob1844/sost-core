@@ -1556,4 +1556,37 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
 <script src="js/crt-effects.js"></script>
 <script src="js/developer-note.js" defer></script>
 <script src="js/sost-music.js"></script>
+
+<!-- ============== BEACON — ADVISORY NOTICE CHANNEL (V13) ============== -->
+<section class="section" style="border-top:1px solid var(--border-dim)">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// BEACON</div>
+      <h2 class="section-title">Beacon &mdash; <span class="accent">Advisory Channel</span></h2>
+      <p class="section-sub">Signed operator notices, propagated between nodes. <b>Advisory only.</b> Does not affect mining rewards, block validity, chain selection, transaction validation, wallet balances, PoPC, Gold Vault, or consensus.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
+      <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:20px">
+        <h3 style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:10px">Phase II-A &mdash; local notices</h3>
+        <p style="color:var(--text-secondary);font-size:13px;line-height:1.65">Each node reads <code>notices.json</code> on startup. ECDSA-SHA256 signature verification against a hardcoded operator pubkey. Failure modes (bad signature, wrong network, expired, malformed) are silent drops. Active at <b>V13_HEIGHT (12,000)</b>.</p>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:20px">
+        <h3 style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:10px">Phase II-B &mdash; threshold + revocation</h3>
+        <p style="color:var(--text-secondary);font-size:13px;line-height:1.65">Adds N-of-M threshold signatures (default <b>3-of-5</b>), revocation by notice ID (only threshold-signed notices can revoke), and an optional <code>mirror_url</code> metadata field (never fetched by the node). Active at <b>V13_HEIGHT</b>.</p>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:20px">
+        <h3 style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:10px">Phase III &mdash; P2P gossip</h3>
+        <p style="color:var(--text-secondary);font-size:13px;line-height:1.65">Nodes gossip verified notices via a <code>BCNN</code> dispatcher with hard limits: <b>4&nbsp;KB</b> max notice, <b>32-notice LRU</b> dedup cache, <b>8 notices/peer/min</b> rate limit. Bad-signature notices are silently dropped; oversized/malformed/rate-limit hits earn peer misbehavior. Active at <b>V13_HEIGHT</b>.</p>
+      </div>
+    </div>
+
+    <p style="color:var(--text-dim);font-size:12px;line-height:1.7;margin-top:24px">
+      <b>Hard invariant.</b> No Beacon code path links into block validation, mining validity, or chain commit. Beacon
+      cannot reject, invalidate, or affect the canonical chain. Rollback is a single-line constant revert
+      (<code>BEACON_P2P_ACTIVATION_HEIGHT</code> to <code>INT64_MAX</code> in <code>include/sost/params.h</code>).
+    </p>
+  </div>
+</section>
+
 </body></html>

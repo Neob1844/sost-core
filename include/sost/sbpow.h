@@ -50,6 +50,14 @@ struct HeaderV2Ext {
 inline constexpr char    SBPOW_DOMAIN_TAG[]   = "SOST/POW-SIG/v11";
 inline constexpr size_t  SBPOW_DOMAIN_TAG_LEN = sizeof(SBPOW_DOMAIN_TAG) - 1;
 
+// V13 hardened domain tag. The V13 preimage commits additional fields
+// (timestamp, bits_q, merkle_root) and a chain-specific genesis_hash
+// salt to close cross-chain replay and same-PoW-different-context
+// mutation attacks. Active for blocks at height >= V13_HEIGHT.
+// See docs/V13_SBPOW_HARDENING.md for the full rationale.
+inline constexpr char    SBPOW_DOMAIN_TAG_V13[]   = "SOST/POW-SIG/v13";
+inline constexpr size_t  SBPOW_DOMAIN_TAG_V13_LEN = sizeof(SBPOW_DOMAIN_TAG_V13) - 1;
+
 // ===========================================================================
 // Message construction
 // ===========================================================================
@@ -80,6 +88,41 @@ Bytes32 build_sbpow_message(
     const Bytes32&      prev_hash,
     int64_t             height,
     const Bytes32&      commit,
+    uint32_t            nonce,
+    uint32_t            extra_nonce,
+    const MinerPubkey&  miner_pubkey);
+
+// V13 hardened message construction. Adds four new committed fields to
+// close the V11 preimage gaps documented in docs/V13_SBPOW_HARDENING.md:
+//
+//   sbpow_message_v13 = SHA256(
+//       SBPOW_DOMAIN_TAG_V13 (16 B) ||
+//       genesis_hash         (32 B) ||   // chain-id salt — closes cross-chain replay
+//       prev_hash            (32 B) ||
+//       height               ( 8 B, LE) ||
+//       timestamp            ( 8 B, LE) ||   // NEW v13 — closes timestamp re-stamp attack
+//       bits_q               ( 4 B, LE) ||   // NEW v13 — closes difficulty-fork attack
+//       commit               (32 B) ||
+//       merkle_root          (32 B) ||       // NEW v13 — closes tx-set mutation attack
+//       nonce                ( 4 B, LE) ||
+//       extra_nonce          ( 4 B, LE) ||
+//       miner_pubkey         (33 B)
+//   )
+//
+// Total: 16 + 32 + 32 + 8 + 8 + 4 + 32 + 32 + 4 + 4 + 33 = 205 B.
+//
+// Active for blocks at height >= V13_HEIGHT. Below that height, the
+// legacy build_sbpow_message() is used (V11 preimage, 129 B). Tests
+// inject a synthetic v13_height boundary to exercise the active path
+// before the chain reaches block 12 000.
+Bytes32 build_sbpow_message_v13(
+    const Bytes32&      genesis_hash,
+    const Bytes32&      prev_hash,
+    int64_t             height,
+    int64_t             timestamp,
+    uint32_t            bits_q,
+    const Bytes32&      commit,
+    const Bytes32&      merkle_root,
     uint32_t            nonce,
     uint32_t            extra_nonce,
     const MinerPubkey&  miner_pubkey);
@@ -277,6 +320,27 @@ struct ValidationInputs {
     // C13 in params.h). Tests may inject an alternate value (including
     // the INT64_MAX sentinel) to exercise dormancy or boundary cases.
     int64_t            phase2_height{INT64_MAX};
+
+    // V13 SbPoW hardening: additional fields committed to the signed
+    // message at height >= v13_height. Production = V13_HEIGHT (= 12000,
+    // set in params.h). Tests inject a synthetic value to exercise the
+    // active v13 path without reaching mainnet block 12 000.
+    //
+    // When height < v13_height the v13 fields below are NOT read by
+    // validate_sbpow_for_block() — the legacy V11 preimage applies.
+    int64_t            v13_height{INT64_MAX};
+
+    // Block header fields newly bound by the V13 preimage. Read only
+    // when (header_version == 2 AND height >= v13_height).
+    int64_t            timestamp{0};       // header timestamp (i64 LE)
+    uint32_t           bits_q{0};          // header difficulty bits (u32 LE)
+    Bytes32            merkle_root{};      // header merkle root (32 B)
+
+    // Chain-specific salt. Production callers pass g_genesis_hash
+    // (computed at node startup from the local genesis block). The same
+    // (height, prev, commit, nonce, pubkey, ...) on mainnet vs testnet
+    // therefore signs a different message, closing cross-chain replay.
+    Bytes32            genesis_hash{};
 };
 
 // Run the height-gated SbPoW validation. Optionally fills `error_msg`

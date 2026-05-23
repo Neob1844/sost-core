@@ -32,7 +32,20 @@ const SOSTSentinel = (function () {
     /connect\s*your\s*wallet\s*to/i,
     /claim\s*your\s*(reward|airdrop|bonus)/i,
     /t\.me\/|telegram\.me\//i,
-    /whatsapp\.com\/|wa\.me\//i
+    /whatsapp\.com\/|wa\.me\//i,
+    // ---- OTC / P2P board scam patterns ---------------------------
+    // Anyone claiming to be an "official" buyer/seller/escrow is a scam.
+    // SOST Protocol does NOT intermediate, escrow, guarantee, or vouch
+    // for any OTC/P2P trade. These patterns are blocking; well-behaved
+    // OTC posts use neutral wording ("WTB X SOST at Y", "WTS X SOST").
+    /guaranteed\s*(buyer|seller|trade|deal|escrow|liquidity)/i,
+    /(official|admin|sost)\s*(escrow|escrow service|trade desk)/i,
+    /send\s*(coins?|funds?|sost)\s*first/i,
+    /DM\s*me\s*to\s*(trade|swap|buy|sell)/i,
+    /private\s*admin\s*deal/i,
+    /risk[\-\s]*free\s*(profit|trade|deal|swap)/i,
+    /(verify|validate)\s*your\s*wallet\s*to\s*(trade|swap|claim)/i,
+    /fake\s*airdrop|airdrop.*claim.*wallet/i
   ];
 
   var IMPERSONATION_NAMES = [
@@ -139,6 +152,13 @@ const SOSTSentinel = (function () {
 
     // Mining/sync
     if (/mine|miner|mining|sync|node|hash|block|peer|seed|wallet|bootstrap/i.test(lower)) return 'miners';
+
+    // OTC / P2P board — peer-to-peer offers between users. Strictly
+    // community discussion: SOST Protocol does not intermediate.
+    // Match conservative OTC vocabulary; "trade"/"offer"/"deal" by
+    // themselves can also belong to DEX context, so we require an
+    // additional OTC-flavoured token to redirect here.
+    if (/(otc|p2p|buyer|seller|counterparty|quote|asking|wtb|wts|want\s*to\s*buy|want\s*to\s*sell|sell\s*sost|buy\s*sost|swap\s*sost|amount\s*offered|price\s*per\s*sost)/i.test(lower)) return 'otc';
 
     // DEX/PoPC
     if (/dex|position|trade|offer|deal|popc|escrow|model\s*[ab]|reward|custody|bond/i.test(lower)) return 'dex';

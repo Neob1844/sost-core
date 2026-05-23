@@ -12,8 +12,17 @@ const SOSTTalk = (function () {
 
   var STORAGE_KEY = 'sost_talk_messages';
   var MAX_MESSAGES = 500;
-  var ROOMS = ['general', 'miners', 'dex', 'bugs'];
-  var ROOM_LABELS = { general: 'General', miners: 'Miners', dex: 'DEX / PoPC', bugs: 'Bugs / Feedback' };
+  // OTC / P2P Board is a community discussion room. It is NOT an
+  // exchange, NOT an escrow, NOT a trading desk. SOST Protocol never
+  // custodies funds and never intermediates trades posted here.
+  var ROOMS = ['general', 'miners', 'dex', 'otc', 'bugs'];
+  var ROOM_LABELS = {
+    general: 'General',
+    miners:  'Miners',
+    dex:     'DEX / PoPC',
+    otc:     'OTC / P2P Board',
+    bugs:    'Bugs / Feedback'
+  };
 
   var _messages = [];
   var _currentRoom = 'general';

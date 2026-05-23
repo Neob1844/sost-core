@@ -191,7 +191,7 @@ direct comparability.
 V13 fork scope (all changes gated at `V13_HEIGHT = 12000`):
 
 - `LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW`  5 → 6
-- `MAX_FUTURE_DRIFT_STAGED`                 60 s → 10 s
+- `MAX_FUTURE_DRIFT_STAGED`                 60 s → 30 s
 - Beacon Phase II-A activation
 - Phase III P2P scaffold remains DISABLED-by-default (`INT64_MAX` gate)
 

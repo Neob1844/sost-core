@@ -325,6 +325,21 @@ add_executable(test-v13-beacon-phase2a tests/test_v13_beacon_phase2a.cpp)
 target_link_libraries(test-v13-beacon-phase2a PRIVATE sost-core secp256k1)
 add_test(NAME v13-beacon-phase2a COMMAND test-v13-beacon-phase2a)
 
+# V13 Beacon Phase II-B regression tests — threshold (3-of-5) + revocation
+# + mirror metadata. See docs/V13_BEACON_PHASE_II_B.md.
+add_executable(test-v13-beacon-phase2b tests/test_v13_beacon_phase2b.cpp)
+target_link_libraries(test-v13-beacon-phase2b PRIVATE sost-core secp256k1)
+add_test(NAME v13-beacon-phase2b COMMAND test-v13-beacon-phase2b)
+
+# V13 Beacon Phase III P2P gossip — Commit A tests. Pipeline (size cap,
+# parse, sig verify, network, expiry, dedup LRU 32, per-peer rate-limit
+# 8/min) is exercised via gate_height_override; production gate stays at
+# BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX so V13 nodes remain dormant.
+# See docs/V13_BEACON_PHASE_III.md.
+add_executable(test-v13-beacon-phase3-p2p tests/test_v13_beacon_phase3_p2p.cpp)
+target_link_libraries(test-v13-beacon-phase3-p2p PRIVATE sost-core secp256k1)
+add_test(NAME v13-beacon-phase3-p2p COMMAND test-v13-beacon-phase3-p2p)
+
 # V13 Beacon Phase III P2P scaffold — DISABLED-by-default tests.
 # Pins the gate sentinel (INT64_MAX), the four hard limits, and the
 # always-DiscardDormant behaviour for every input. A future commit that
@@ -456,6 +471,13 @@ if(SOST_ENABLE_PHASE2_SBPOW)
     add_executable(test-sbpow-submit-integration tests/test_sbpow_submit_integration.cpp)
     target_link_libraries(test-sbpow-submit-integration PRIVATE sost-core)
     add_test(NAME phase2-sbpow-submit COMMAND test-sbpow-submit-integration)
+
+    # V13 SbPoW hardening regression tests (see docs/V13_SBPOW_HARDENING.md).
+    # Covers timestamp / bits_q / merkle_root / genesis_hash binding under
+    # the height-gated v13 preimage, plus boundary and backwards-compat.
+    add_executable(test-sbpow-v13-hardening tests/test_sbpow_v13_hardening.cpp)
+    target_link_libraries(test-sbpow-v13-hardening PRIVATE sost-core)
+    add_test(NAME sbpow-v13-hardening COMMAND test-sbpow-v13-hardening)
 endif()
 
 # V11 Phase 1 — component B (state-dependent dataset access)

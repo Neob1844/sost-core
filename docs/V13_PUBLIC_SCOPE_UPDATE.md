@@ -1,5 +1,13 @@
 # V13 Public Scope Update
 
+> **Updated 2026-05-23 — V13 public scope is now CLOSED.** Beacon Phase II-A, II-B, and III
+> all activate at V13_HEIGHT (= 12,000). Beacon is advisory-only and does not affect mining,
+> rewards, block validity, chain selection, transaction validation, wallet balances, PoPC, or
+> Gold Vault behaviour. PoPC automated lifecycle and Gold Vault spend-side governance remain
+> out of V13 (deferred). The Community OTC / P2P Board (a SOST Talk room) is a user-to-user
+> discussion board, not an exchange, escrow, or custody service. See
+> `docs/V13_BEACON_PHASE_III.md` and `docs/SOST_TALK_COMMUNITY_RULES.md`.
+
 **Date:** 2026-05-18.
 **Activation block:** 12,000 (~3,000 blocks remaining from this writing).
 **Fallback hardfork:** V14 at block 15,000 (proposed final hardfork in this cycle, not guaranteed; replaces the earlier "V15" label).
@@ -39,7 +47,7 @@ These four items are in the V13 binary today and have validator-level test cover
 
 2. **DTD lottery cooldown 5 → 6 blocks.** `lottery_exclusion_window_at(height)` returns `6` for `height >= V13_HEIGHT` and `5` below it. Tightens the exclusion under the permanent 1-of-3 cadence.
 
-3. **Future-timestamp drift cap 60 s → 10 s.** `max_future_drift_at(height)` returns `10` for `height >= V13_HEIGHT`. **NTP synchronisation is mandatory in practice from block 12,000.** A host whose system clock is more than 10 s ahead of true time will produce candidate blocks that every validator rejects.
+3. **Future-timestamp drift cap 60 s → 30 s.** `max_future_drift_at(height)` returns `30` for `height >= V13_HEIGHT`. **NTP synchronisation is strongly recommended from block 12,000.** A host whose system clock is more than 30 s ahead of true time will produce candidate blocks that every validator rejects.
 
 4. **Beacon Phase II-A.** `BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT`. The node loads operator-signed advisory notices from `<datadir>/notices.json` only. No P2P, no HTTP from C++ code, no command execution. The miner prints a banner. The five hard Beacon invariants apply (MAY inform, MAY NOT restart, MAY NOT block, MAY NOT change consensus, MAY NOT execute commands).
 
@@ -52,7 +60,7 @@ Plus the supporting infrastructure that landed in the RC1 chain: readiness gates
 These two items are realistic for V13 if the operator can close the remaining gaps before the RC freeze; otherwise they defer cleanly to V14 / block 15,000:
 
 - **Beacon Phase II-B.** Adds expiration-by-height (already present), severity levels (already present), plus N-of-M threshold signatures on critical notices, optional revocation, and a secondary publication channel (mirror). The five hard Beacon invariants do not change. Realistic close: 1–2 sprints if the operator can produce the M threshold keys offline.
-- **Beacon Phase III.** Adds peer-to-peer gossip of verified notices, with size cap (4 KB), 32-notice dedup ring buffer, and per-peer rate limit (8 notices/peer/min). Scaffold dormant today at `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX`. The five hard Beacon invariants do not change. Realistic close: 2–3 sprints, and depends on the underlying P2P gossip primitive being available.
+- **Beacon Phase III.** Adds peer-to-peer gossip of verified notices, with size cap (4 KB), 32-notice dedup ring buffer, and per-peer rate limit (8 notices/peer/min). **Active at V13_HEIGHT (12,000)** via `BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT`. Pre-V13 the dispatcher returns DiscardDormant; from V13_HEIGHT the full advisory pipeline runs. The five hard Beacon invariants do not change. Rollback is a single-line constant revert.
 
 If either Phase is not ready by the V13 RC freeze, it defers to V14 without any consensus impact — Phase II-A continues to operate alone, exactly as it does in the V13-confirmed scope above. No regression, no rework.
 
@@ -132,7 +140,7 @@ A clock that is **behind** true time is **fine**. The drift cap only rejects blo
 
 ## 7. Miner operator checklist (short form)
 
-**Upgrade window: blocks 11,900 → 11,999** (the 100 blocks immediately before activation, ~18 hours at the target block time). Do the work inside this window, NOT at block 12,000 — by then any candidate you mine on the pre-V13 binary or on a clock more than 10 s ahead of true time is already rejected.
+**Upgrade window: blocks 11,900 → 11,999** (the 100 blocks immediately before activation, ~18 hours at the target block time). Do the work inside this window, NOT at block 12,000 — by then any candidate you mine on the pre-V13 binary or on a clock more than 30 s ahead of true time is already rejected.
 
 Recommended sequence inside the window:
 

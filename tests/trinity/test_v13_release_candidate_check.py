@@ -78,8 +78,9 @@ def test_config_activation_heights():
 
 def test_config_ntp_and_drift_and_cooldown():
     cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
-    assert cfg["ntp_required"]                              is True
-    assert cfg["future_timestamp_drift_seconds_post_v13"]   == 10
+    assert cfg["ntp_required"]                              is False
+    assert cfg["ntp_recommended"]                           is True
+    assert cfg["future_timestamp_drift_cap_seconds"]   == 30
     assert cfg["dtd_lottery_cooldown_post_v13"]             == 6
 
 
@@ -89,7 +90,7 @@ def test_config_confirmed_items_present():
     assert ids == sorted([
         "casert_all_profiles_e7_h35",
         "dtd_cooldown_6",
-        "timestamp_drift_10s",
+        "timestamp_drift_30s",
         "beacon_phase_ii_a",
     ])
 
@@ -150,7 +151,8 @@ def test_public_mirror_matches_required_fields():
         "min_commit",
         "required_binary_label",
         "ntp_required",
-        "future_timestamp_drift_seconds_post_v13",
+        "ntp_recommended",
+        "future_timestamp_drift_cap_seconds",
         "dtd_lottery_cooldown_post_v13",
     ):
         assert cfg[field] == pub[field], (
@@ -197,8 +199,9 @@ def test_report_top_level_shape(srr):
         report["activation_heights"]["dtd_lottery_decision_height"]
         == 12100
     )
-    assert report["ntp_required"]                            is True
-    assert report["future_timestamp_drift_seconds_post_v13"] == 10
+    assert report["ntp_required"]                            is False
+    assert report["ntp_recommended"]                         is True
+    assert report["future_timestamp_drift_cap_seconds"] == 30
     assert report["dtd_lottery_cooldown_post_v13"]           == 6
 
 
@@ -212,7 +215,7 @@ def test_all_confirmed_items_ready(srr):
     cir = report["confirmed_items_ready"]
     assert cir["casert_all_profiles_e7_h35"] is True
     assert cir["dtd_cooldown_6"]             is True
-    assert cir["timestamp_drift_10s"]        is True
+    assert cir["timestamp_drift_30s"]        is True
     assert cir["beacon_phase_ii_a"]          is True
     assert cir["all_ready"]                  is True
 

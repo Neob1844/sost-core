@@ -205,7 +205,7 @@ def _check_source_facts(repo_root: Path) -> Dict[str, Any]:
     # --- Beacon Phase III gate sentinel-disabled --------------------------
     facts["beacon_p2p_gate_sentinel"] = {
         "as_documented": bool(re.search(
-            r"BEACON_P2P_ACTIVATION_HEIGHT\s*=\s*INT64_MAX",
+            r"BEACON_P2P_ACTIVATION_HEIGHT\s*=\s*V13_HEIGHT",
             params_h,
         )),
         "evidence":      "include/sost/params.h",

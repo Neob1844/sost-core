@@ -140,6 +140,66 @@ Bytes32 build_sbpow_message(
 }
 
 // ============================================================================
+// V13 SbPoW hardened message construction
+// ============================================================================
+//
+// Layout (binary concatenation, little-endian for integer fields):
+//
+//   "SOST/POW-SIG/v13"         16 B   (no NUL)
+//   genesis_hash               32 B   chain-id salt (cross-chain replay defence)
+//   prev_hash                  32 B
+//   height (i64 LE)             8 B
+//   timestamp (i64 LE)          8 B   NEW v13
+//   bits_q (u32 LE)             4 B   NEW v13
+//   commit                     32 B
+//   merkle_root                32 B   NEW v13
+//   nonce (u32 LE)              4 B
+//   extra_nonce (u32 LE)        4 B
+//   miner_pubkey               33 B
+//                          ─────
+//                            205 B → SHA-256 → 32 B output
+//
+// Rationale: see docs/V13_SBPOW_HARDENING.md.
+//
+// ============================================================================
+
+Bytes32 build_sbpow_message_v13(
+    const Bytes32&      genesis_hash,
+    const Bytes32&      prev_hash,
+    int64_t             height,
+    int64_t             timestamp,
+    uint32_t            bits_q,
+    const Bytes32&      commit,
+    const Bytes32&      merkle_root,
+    uint32_t            nonce,
+    uint32_t            extra_nonce,
+    const MinerPubkey&  miner_pubkey)
+{
+    std::vector<uint8_t> buf;
+    buf.reserve(SBPOW_DOMAIN_TAG_V13_LEN + 32 + 32 + 8 + 8 + 4 + 32 + 32 + 4 + 4 + 33);
+
+    // Domain tag — written verbatim, no trailing NUL.
+    buf.insert(buf.end(),
+               reinterpret_cast<const uint8_t*>(SBPOW_DOMAIN_TAG_V13),
+               reinterpret_cast<const uint8_t*>(SBPOW_DOMAIN_TAG_V13) + SBPOW_DOMAIN_TAG_V13_LEN);
+
+    // genesis_hash, prev_hash, height, timestamp, bits_q, commit,
+    // merkle_root, nonce, extra_nonce, miner_pubkey.
+    append(buf, genesis_hash);
+    append(buf, prev_hash);
+    append_u64_le(buf, (uint64_t)height);
+    append_u64_le(buf, (uint64_t)timestamp);
+    append_u32_le(buf, bits_q);
+    append(buf, commit);
+    append(buf, merkle_root);
+    append_u32_le(buf, nonce);
+    append_u32_le(buf, extra_nonce);
+    buf.insert(buf.end(), miner_pubkey.begin(), miner_pubkey.end());
+
+    return sha256(buf);
+}
+
+// ============================================================================
 // Key derivation
 // ============================================================================
 
@@ -429,11 +489,21 @@ ValidationResult validate_sbpow_for_block(
 
     // ---- Step 3 — signature ----------------------------------------------
     // Recompute the message ourselves; never trust a caller-supplied
-    // message field. Binds prev_hash, height, commit, nonce, extra_nonce
-    // and pubkey (see build_sbpow_message comment block above).
-    const Bytes32 expected_msg = build_sbpow_message(
-        in.prev_hash, in.height, in.commit,
-        in.nonce, in.extra_nonce, in.miner_pubkey);
+    // message field. Branches on v13_height:
+    //   height <  v13_height : V11 preimage (build_sbpow_message)
+    //   height >= v13_height : V13 hardened preimage (build_sbpow_message_v13)
+    //                          binds timestamp, bits_q, merkle_root,
+    //                          genesis_hash in addition to the V11 fields.
+    // See docs/V13_SBPOW_HARDENING.md for the rationale.
+    const bool v13_active = (in.height >= in.v13_height);
+    const Bytes32 expected_msg = v13_active
+        ? build_sbpow_message_v13(
+              in.genesis_hash, in.prev_hash, in.height,
+              in.timestamp, in.bits_q, in.commit, in.merkle_root,
+              in.nonce, in.extra_nonce, in.miner_pubkey)
+        : build_sbpow_message(
+              in.prev_hash, in.height, in.commit,
+              in.nonce, in.extra_nonce, in.miner_pubkey);
 
     if (!verify_sbpow_signature(in.miner_pubkey, expected_msg, in.miner_signature)) {
         set_err("SbPoW: BIP-340 Schnorr signature verification failed for "

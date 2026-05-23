@@ -1,13 +1,16 @@
 // V13 future-drift cap fork — boundary tests against the validator path.
 //
 // V13 hard fork @ block 12 000 tightens MAX_FUTURE_DRIFT_STAGED from 60 s
-// to 10 s via the helper sost::max_future_drift_at(height) (params.h).
+// to 30 s via the helper sost::max_future_drift_at(height) (params.h).
 // Pre-V13 behaviour is byte-identical:
 //
 //     [0, CASERT_STAGED_RELIEF_HEIGHT) → 600 s (legacy MAX_FUTURE_DRIFT)
 //     [CASERT_STAGED_RELIEF_HEIGHT,
 //      V13_HEIGHT)                     →  60 s (staged-relief regime)
-//     [V13_HEIGHT, ∞)                  →  10 s (V13 timestamp-gaming defence)
+//     [V13_HEIGHT, ∞)                  →  30 s (V13 timestamp-gaming defence —
+//                                              10 s was evaluated and rejected
+//                                              as too tight for honest clock
+//                                              skew + NTP cycle jitter)
 //
 // This file exercises the validator-side reject rule:
 //
@@ -49,7 +52,7 @@ static bool validator_accepts(int64_t height, int64_t now_ts, int64_t block_ts) 
 }
 
 // ---------------------------------------------------------------------------
-// V13 boundary — at h=11999 cap=60s; at h=12000 cap=10s. ±1s strict.
+// V13 boundary — at h=11999 cap=60s; at h=12000 cap=30s. ±1s strict.
 // ---------------------------------------------------------------------------
 static void test_v13_boundary() {
     printf("\n=== V13 boundary @ h=11999 / h=12000 ===\n");
@@ -65,21 +68,25 @@ static void test_v13_boundary() {
     TEST("h=11999 accepts ts = now + 0    (clock-aligned candidate)",
          validator_accepts(11999, now, now + 0));
 
-    // Post-V13 (h=12000, cap=10s)
-    TEST("h=12000 accepts ts = now + 10   (boundary)",
-         validator_accepts(12000, now, now + 10));
-    TEST("h=12000 rejects ts = now + 11   (off-by-one above cap)",
-         !validator_accepts(12000, now, now + 11));
-    TEST("h=12000 rejects ts = now + 60   (pre-V13 cap NOT in effect anymore)",
+    // Post-V13 (h=12000, cap=30s)
+    TEST("h=12000 accepts ts = now + 30   (boundary)",
+         validator_accepts(12000, now, now + 30));
+    TEST("h=12000 rejects ts = now + 31   (off-by-one above cap)",
+         !validator_accepts(12000, now, now + 31));
+    TEST("h=12000 rejects ts = now + 60   (pre-V13 cap NOT in effect anymore; 60 > 30)",
          !validator_accepts(12000, now, now + 60));
     TEST("h=12000 accepts ts = now + 0    (clock-aligned candidate)",
          validator_accepts(12000, now, now + 0));
+    // Honest-miner tolerance check: a candidate up to 20 s ahead (within typical
+    // NTP cycle skew + network latency) must be accepted at V13.
+    TEST("h=12000 accepts ts = now + 20   (honest-miner tolerance within 30s cap)",
+         validator_accepts(12000, now, now + 20));
 
     // h=12001 confirms post-V13 cap doesn't drift after activation
-    TEST("h=12001 accepts ts = now + 10",
-         validator_accepts(12001, now, now + 10));
-    TEST("h=12001 rejects ts = now + 11",
-         !validator_accepts(12001, now, now + 11));
+    TEST("h=12001 accepts ts = now + 30",
+         validator_accepts(12001, now, now + 30));
+    TEST("h=12001 rejects ts = now + 31",
+         !validator_accepts(12001, now, now + 31));
 }
 
 // ---------------------------------------------------------------------------
@@ -138,8 +145,8 @@ static void test_cross_regime_monotonicity() {
     TEST("cap(pre-staged)     == 600", cap_pre_staged == 600);
     TEST("cap(staged)         ==  60", cap_post_staged == 60);
     TEST("cap(pre-V13)        ==  60", cap_pre_v13 == 60);
-    TEST("cap(V13)            ==  10", cap_at_v13 == 10);
-    TEST("cap(far-future)     ==  10", cap_far_future == 10);
+    TEST("cap(V13)            ==  30", cap_at_v13 == 30);
+    TEST("cap(far-future)     ==  30", cap_far_future == 30);
 
     TEST("cap monotone non-increasing across regime boundaries",
          cap_genesis     >= cap_pre_staged
@@ -159,7 +166,7 @@ int main() {
            (long long)MAX_FUTURE_DRIFT);
     printf("MAX_FUTURE_DRIFT_STAGED          = %lld s\n",
            (long long)MAX_FUTURE_DRIFT_STAGED);
-    printf("V13 cap                          = 10 s\n");
+    printf("V13 cap                          = 30 s\n");
 
     test_v13_boundary();
     test_staged_boundary();

@@ -39,13 +39,14 @@ def good_report():
         },
         "min_commit": "e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a",
         "required_binary_label": "v13-rc1",
-        "ntp_required": True,
-        "future_timestamp_drift_seconds_post_v13": 10,
+        "ntp_required": False,
+        "ntp_recommended": True,
+        "future_timestamp_drift_cap_seconds": 30,
         "dtd_lottery_cooldown_post_v13": 6,
         "confirmed_items_ready": {
             "casert_all_profiles_e7_h35": True,
             "dtd_cooldown_6": True,
-            "timestamp_drift_10s": True,
+            "timestamp_drift_30s": True,
             "beacon_phase_ii_a": True,
             "all_ready": True,
         },
@@ -116,10 +117,11 @@ def test_activation_heights_const_locked(schema):
 
 
 def test_ntp_drift_cooldown_const_locked(schema):
-    assert schema["properties"]["ntp_required"]["const"] is True
+    assert schema["properties"]["ntp_required"]["const"] is False
+    assert schema["properties"]["ntp_recommended"]["const"] is True
     assert (
-        schema["properties"]["future_timestamp_drift_seconds_post_v13"]["const"]
-        == 10
+        schema["properties"]["future_timestamp_drift_cap_seconds"]["const"]
+        == 30
     )
     assert (
         schema["properties"]["dtd_lottery_cooldown_post_v13"]["const"]
@@ -216,15 +218,26 @@ def test_bad_fallback_height_rejected(schema, good_report):
 
 
 def test_bad_ntp_required_rejected(schema, good_report):
+    """Schema locks ntp_required const to False post-V13 (NTP is strongly
+    recommended, not consensus-mandatory). Any True must be rejected."""
     bad = copy.deepcopy(good_report)
-    bad["ntp_required"] = False
+    bad["ntp_required"] = True
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(bad, schema)
+
+
+def test_bad_ntp_recommended_rejected(schema, good_report):
+    """ntp_recommended const True locks the operational recommendation.
+    A False must be rejected — that would silently flip the operator advice."""
+    bad = copy.deepcopy(good_report)
+    bad["ntp_recommended"] = False
     with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(bad, schema)
 
 
 def test_bad_drift_seconds_rejected(schema, good_report):
     bad = copy.deepcopy(good_report)
-    bad["future_timestamp_drift_seconds_post_v13"] = 60
+    bad["future_timestamp_drift_cap_seconds"] = 60
     with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(bad, schema)
 

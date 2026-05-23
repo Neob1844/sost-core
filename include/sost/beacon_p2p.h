@@ -1,50 +1,62 @@
-// SOST Beacon Phase III — P2P notice gossip scaffold (DORMANT).
+// SOST Beacon Phase III — P2P notice gossip (ACTIVE at V13).
 //
 // =====================================================================
-// THIS PHASE IS DISABLED BY DEFAULT.  IT DOES NOT SHIP A WORKING GOSSIP
-// PATH.  THE TYPES AND HANDLERS BELOW ARE INTENTIONALLY INERT.
+// ACTIVE FROM BLOCK V13_HEIGHT (= 12000). BELOW THAT HEIGHT EVERY
+// INCOMING BCNN MESSAGE IS SILENTLY DROPPED VIA DiscardDormant.
 // =====================================================================
 //
 // The activation gate is `BEACON_P2P_ACTIVATION_HEIGHT` (declared in
-// `include/sost/params.h`). It is pinned at `INT64_MAX` (sentinel =
-// "never, until a future fork commit lowers the gate"). The node code
-// MUST NOT register a P2P message type for Beacon notices, MUST NOT
-// gossip anything, and MUST drop any incoming candidate notice silently
-// while `is_p2p_enabled(...)` returns false.
+// `include/sost/params.h`). As of the V13 release it is set to
+// `V13_HEIGHT`. For heights strictly below the gate the dispatcher
+// drops candidate notices silently; for heights at or above the gate
+// the full pipeline (size cap, parse, sig verify, network match,
+// expiry, dedup LRU, per-peer rate limit) runs.
+//
+// ADVISORY ONLY: nothing in this header changes consensus, block
+// validation, mining validity, or rewards. The decision returned by
+// the handler is never consulted by chain code.
 //
 // Rationale:
-//   - Phase II-A (local-file path) is sufficient for V13 operations.
-//     Adding P2P gossip introduces a new attack surface (DoS, oversized
-//     payloads, replay, spam) that has not been audited.
-//   - Shipping the scaffold now lets a future operator enable Phase III
-//     by:
-//       1. lowering BEACON_P2P_ACTIVATION_HEIGHT in params.h,
-//       2. registering the network message type in the P2P layer,
-//       3. wiring the existing `handle_incoming_notice_message` into
-//          the dispatch table.
-//     Until step (1) lowers the gate, nothing here can fire.
-//   - The hard limits below (max size, max cache size, dedup, rate
-//     limits) are documented now so a future enabling commit cannot
-//     ship without them by accident.
+//   - V13 enables Beacon Phase III as a hardened advisory channel
+//     ON TOP OF Phase II-A (local file) and Phase II-B (3-of-5
+//     threshold). All three layers coexist; no layer overrides
+//     another. P2P gossip lets a freshly-published signed notice
+//     reach miners and full nodes without requiring each operator
+//     to manually drop notices.json on disk.
+//   - The DoS / oversized / replay / spam concerns that originally
+//     justified deferring Phase III are mitigated by the hard limits
+//     enforced below and audited in tests/test_v13_beacon_phase3_p2p.cpp.
+//   - Bad signatures are silently discarded (no banscore tick) so an
+//     honest relay carrying a stale or corrupted notice cannot be
+//     punished. Oversized / malformed / rate-limit hits ARE loud
+//     (the dispatcher adds misbehavior points).
 //
-// Hard invariants the scaffold satisfies even while disabled:
-//   - `is_p2p_enabled(height)` returns false for every height that does
-//     not strictly exceed `BEACON_P2P_ACTIVATION_HEIGHT - 1`. Today
-//     that is "every height ever".
-//   - `handle_incoming_notice_message(...)` always returns
-//     `IncomingDecision::DiscardDormant` until the gate is lowered;
-//     once lowered, every further check (size, schema, dedup, rate
-//     limit) must pass before a notice is cached or relayed.
-//   - The scaffold has no internal cache, no peer-state, no timers, no
-//     threads. It is pure functions only. A future enabling commit
-//     adds those resources; this one does not.
+// Hard invariants:
+//   - `is_p2p_enabled(height)` returns false for heights strictly less
+//     than `BEACON_P2P_ACTIVATION_HEIGHT` (= V13_HEIGHT). Pre-V13
+//     remains dormant.
+//   - `BeaconP2PState::process_incoming(...)` runs the full pipeline
+//     for heights at or above the gate, returning AcceptAndRelay only
+//     after size + parse + sig + network + expiry + dedup +
+//     per-peer rate-limit all pass.
+//   - The cache is bounded at BEACON_P2P_CACHE_MAX_NOTICES (= 32);
+//     the per-peer sliding-window ages out entries older than 60 s.
+//   - No Beacon code path links into block_validation, mining, or
+//     chain commit. The advisory-only invariant is pinned by a
+//     link-time test (tests/test_v13_beacon_phase3_p2p.cpp:t15).
 
 #pragma once
 
 #include "sost/types.h"
+#include "sost/beacon.h"          // Notice, Network
 
+#include <climits>
 #include <cstdint>
+#include <deque>
+#include <mutex>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace sost::beacon::p2p {
 
@@ -166,5 +178,82 @@ const char* decision_name(IncomingDecision d);
 IncomingDecision handle_incoming_notice_message(
     const std::string& bytes,
     int64_t            current_height);
+
+// ---------------------------------------------------------------------------
+// BeaconP2PState — production state container (Commit A: ready, dormant).
+//
+// Wraps the LRU dedup cache, the per-peer sliding-window rate-limit map,
+// and the mutex that serialises access to them. A single instance lives
+// in src/sost-node.cpp; tests create their own to exercise the active
+// path under an injected gate height.
+//
+// Thread-safe: every public method takes the internal mutex. The mutex
+// is fine-grained (does not cover sig verification CPU work) and NEVER
+// calls back into the dispatcher, so it cannot deadlock with g_peers_mu
+// or g_chain_mu.
+//
+// Hard invariants:
+//   - process_incoming is the SOLE entry point. Tests cannot poke the
+//     cache directly except via cache_size() (read-only).
+//   - The cache is bounded at BEACON_P2P_CACHE_MAX_NOTICES (= 32);
+//     oldest entries are evicted FIFO at the cap.
+//   - The rate-limit map ages out entries older than 60 seconds per
+//     check, so it does not grow unboundedly with churn.
+//   - The dormant gate is checked FIRST. Tests inject gate_height_override
+//     to exercise the active path without changing the global sentinel.
+// ---------------------------------------------------------------------------
+
+class BeaconP2PState {
+public:
+    // Inspect an incoming notice payload from a specific peer. Returns
+    // a single IncomingDecision describing what the caller should do.
+    //
+    // Inputs:
+    //   peer_id              Stable identifier for the sending peer
+    //                        (the node uses the address string).
+    //   bytes                On-wire payload as received.
+    //   current_height       Local chain tip height for the gate check.
+    //   local_network        Network this node is on; cross-network
+    //                        notices are silently discarded.
+    //   out_notice           Optional output: populated with the parsed
+    //                        Notice when the decision is AcceptAndRelay.
+    //   now_sec              Optional Unix-seconds override. 0 (default)
+    //                        means std::time(nullptr). Tests pass a
+    //                        deterministic value.
+    //   gate_height_override Optional alternate activation gate. The
+    //                        sentinel INT64_MIN (default) means use the
+    //                        production BEACON_P2P_ACTIVATION_HEIGHT
+    //                        constant. Tests pass a finite value to
+    //                        exercise the active path while the global
+    //                        gate stays at INT64_MAX.
+    //
+    // Never throws, never blocks on I/O, never opens a socket, never
+    // touches consensus state. Does NOT relay anything itself; relay is
+    // the caller's job (the only entity that knows peer sockets).
+    IncomingDecision process_incoming(
+        const std::string& peer_id,
+        const std::string& bytes,
+        int64_t            current_height,
+        ::sost::beacon::Network local_network,
+        Notice*            out_notice = nullptr,
+        int64_t            now_sec = 0,
+        int64_t            gate_height_override = INT64_MIN);
+
+    // Test-only inspectors. Cheap snapshot under the internal mutex.
+    size_t cache_size() const;
+    size_t rate_map_size() const;
+
+private:
+    struct PeerRate {
+        // Per-peer sliding-window timestamps of ACCEPTED notice ids.
+        // Entries older than 60 s are pruned on every check.
+        std::deque<int64_t> arrivals;
+    };
+
+    mutable std::mutex                          mu_;
+    std::deque<std::string>                     lru_ids_;   // FIFO order
+    std::unordered_set<std::string>             lru_set_;   // membership index
+    std::unordered_map<std::string, PeerRate>   rate_map_;
+};
 
 } // namespace sost::beacon::p2p

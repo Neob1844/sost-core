@@ -257,10 +257,15 @@ static void t1_pre_phase2_v1_accepted() {
     PubKeyHash dummy_pkh{}; std::memset(dummy_pkh.data(), 0, 20);
     std::string err;
     bool ok = ValidateSbPoW(parsed.header_version,
-                            p.prev_hash, p.height, p.commit,
+                            p.prev_hash, p.height,
+                            /*timestamp=*/0, /*bits_q=*/0,
+                            p.commit, /*merkle_root=*/Bytes32{},
                             p.nonce, p.extra_nonce,
                             parsed.miner_pubkey, parsed.miner_signature,
-                            dummy_pkh, /*phase2_height=*/100, &err);
+                            dummy_pkh,
+                            /*genesis_hash=*/Bytes32{},
+                            /*phase2_height=*/100,
+                            /*v13_height=*/INT64_MAX, &err);
     TEST("ValidateSbPoW accepts v1 pre-Phase2", ok);
 }
 
@@ -289,10 +294,15 @@ static void t2_phase2_v2_valid_accepted() {
 
     std::string err;
     bool ok = ValidateSbPoW(parsed.header_version,
-                            p.prev_hash, p.height, p.commit,
+                            p.prev_hash, p.height,
+                            /*timestamp=*/0, /*bits_q=*/0,
+                            p.commit, /*merkle_root=*/Bytes32{},
                             p.nonce, p.extra_nonce,
                             parsed.miner_pubkey, parsed.miner_signature,
-                            f.coinbase_pkh, f.phase2_h, &err);
+                            f.coinbase_pkh,
+                            /*genesis_hash=*/Bytes32{},
+                            /*phase2_height=*/f.phase2_h,
+                            /*v13_height=*/INT64_MAX, &err);
     TEST("ValidateSbPoW accepts v2 + valid sig + matching pkh", ok);
     if (!ok) printf("    err: %s\n", err.c_str());
 }
@@ -308,10 +318,15 @@ static void t3_phase2_v2_roundtrip() {
 
     std::string err;
     bool ok = ValidateSbPoW(parsed.header_version,
-                            p.prev_hash, p.height, p.commit,
+                            p.prev_hash, p.height,
+                            /*timestamp=*/0, /*bits_q=*/0,
+                            p.commit, /*merkle_root=*/Bytes32{},
                             p.nonce, p.extra_nonce,
                             parsed.miner_pubkey, parsed.miner_signature,
-                            f.coinbase_pkh, f.phase2_h, &err);
+                            f.coinbase_pkh,
+                            /*genesis_hash=*/Bytes32{},
+                            /*phase2_height=*/f.phase2_h,
+                            /*v13_height=*/INT64_MAX, &err);
     TEST("v2 end-to-end round-trip → ValidateSbPoW OK", ok);
     if (!ok) printf("    err: %s\n", err.c_str());
 }
@@ -332,10 +347,15 @@ static void t4_v1_at_phase2_rejected() {
     PubKeyHash dummy{}; std::memset(dummy.data(), 0, 20);
     std::string err;
     bool ok = ValidateSbPoW(parsed.header_version,
-                            p.prev_hash, p.height, p.commit,
+                            p.prev_hash, p.height,
+                            /*timestamp=*/0, /*bits_q=*/0,
+                            p.commit, /*merkle_root=*/Bytes32{},
                             p.nonce, p.extra_nonce,
                             parsed.miner_pubkey, parsed.miner_signature,
-                            dummy, /*phase2_height=*/200, &err);
+                            dummy,
+                            /*genesis_hash=*/Bytes32{},
+                            /*phase2_height=*/200,
+                            /*v13_height=*/INT64_MAX, &err);
     TEST("ValidateSbPoW rejects v1 at Phase 2 height", !ok);
 }
 
@@ -417,10 +437,15 @@ static void t10_v2_coinbase_pkh_mismatch() {
 
     std::string err;
     bool ok = ValidateSbPoW(parsed.header_version,
-                            p.prev_hash, p.height, p.commit,
+                            p.prev_hash, p.height,
+                            /*timestamp=*/0, /*bits_q=*/0,
+                            p.commit, /*merkle_root=*/Bytes32{},
                             p.nonce, p.extra_nonce,
                             parsed.miner_pubkey, parsed.miner_signature,
-                            wrong_pkh, f.phase2_h, &err);
+                            wrong_pkh,
+                            /*genesis_hash=*/Bytes32{},
+                            /*phase2_height=*/f.phase2_h,
+                            /*v13_height=*/INT64_MAX, &err);
     TEST("ValidateSbPoW rejects coinbase pkh mismatch", !ok);
 }
 
@@ -435,10 +460,15 @@ static void t11_v2_nonce_tampered() {
 
     std::string err;
     bool ok = ValidateSbPoW(parsed.header_version,
-                            p.prev_hash, p.height, p.commit,
+                            p.prev_hash, p.height,
+                            /*timestamp=*/0, /*bits_q=*/0,
+                            p.commit, /*merkle_root=*/Bytes32{},
                             p.nonce, p.extra_nonce,
                             parsed.miner_pubkey, parsed.miner_signature,
-                            f.coinbase_pkh, f.phase2_h, &err);
+                            f.coinbase_pkh,
+                            /*genesis_hash=*/Bytes32{},
+                            /*phase2_height=*/f.phase2_h,
+                            /*v13_height=*/INT64_MAX, &err);
     TEST("nonce tamper → reject", !ok);
 }
 
@@ -453,10 +483,15 @@ static void t12_v2_commit_tampered() {
 
     std::string err;
     bool ok = ValidateSbPoW(parsed.header_version,
-                            p.prev_hash, p.height, p.commit,
+                            p.prev_hash, p.height,
+                            /*timestamp=*/0, /*bits_q=*/0,
+                            p.commit, /*merkle_root=*/Bytes32{},
                             p.nonce, p.extra_nonce,
                             parsed.miner_pubkey, parsed.miner_signature,
-                            f.coinbase_pkh, f.phase2_h, &err);
+                            f.coinbase_pkh,
+                            /*genesis_hash=*/Bytes32{},
+                            /*phase2_height=*/f.phase2_h,
+                            /*v13_height=*/INT64_MAX, &err);
     TEST("commit tamper → reject", !ok);
 }
 
@@ -471,10 +506,15 @@ static void t13_v2_height_tampered() {
 
     std::string err;
     bool ok = ValidateSbPoW(parsed.header_version,
-                            p.prev_hash, p.height, p.commit,
+                            p.prev_hash, p.height,
+                            /*timestamp=*/0, /*bits_q=*/0,
+                            p.commit, /*merkle_root=*/Bytes32{},
                             p.nonce, p.extra_nonce,
                             parsed.miner_pubkey, parsed.miner_signature,
-                            f.coinbase_pkh, f.phase2_h, &err);
+                            f.coinbase_pkh,
+                            /*genesis_hash=*/Bytes32{},
+                            /*phase2_height=*/f.phase2_h,
+                            /*v13_height=*/INT64_MAX, &err);
     TEST("height tamper → reject", !ok);
 }
 
@@ -489,10 +529,15 @@ static void t14_v2_premature() {
 
     std::string err;
     bool ok = ValidateSbPoW(parsed.header_version,
-                            p.prev_hash, p.height, p.commit,
+                            p.prev_hash, p.height,
+                            /*timestamp=*/0, /*bits_q=*/0,
+                            p.commit, /*merkle_root=*/Bytes32{},
                             p.nonce, p.extra_nonce,
                             parsed.miner_pubkey, parsed.miner_signature,
-                            f.coinbase_pkh, f.phase2_h, &err);
+                            f.coinbase_pkh,
+                            /*genesis_hash=*/Bytes32{},
+                            /*phase2_height=*/f.phase2_h,
+                            /*v13_height=*/INT64_MAX, &err);
     TEST("premature v2 → reject (VERSION_MISMATCH)", !ok);
 }
 

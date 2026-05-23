@@ -4,10 +4,12 @@
 **Fallback:** V14 at block **15,000** if any of II-B or III is not ready by the V13 RC freeze.
 **Scope:** what is the current state of Beacon Phase II-A (already targeted for V13), and what is required to also ship Phase II-B and Phase III in the V13 fork?
 
-**Bottom line:**
-- **Phase II-A**: **complete and gated at V13_HEIGHT (12,000)**. Notice loader, ECDSA-SHA256 signature verification, miner banner, RPC handler, and 11 tests are in place. One operator action is required before V13 RC: replace the placeholder pubkey constant with the real release pubkey.
-- **Phase II-B**: partially supported. `expires_height` and `severity` already work in II-A. **N-of-M threshold signatures, mirror channel, and revocation** are missing — these are the load-bearing II-B features and they do not exist.
-- **Phase III**: a **dormant scaffold** exists (`include/sost/beacon_p2p.h`, `src/beacon_p2p.cpp`), gated by `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX`. The handler always returns `DiscardDormant`. Hard limits (4 KB notice, 32-notice cache, 8 notices/peer/min rate) are pinned, but no message-type registration, no signature-verify path in the gossip layer, no dedup, and no peer-rate enforcement are implemented yet.
+**Bottom line (updated 2026-05-23 — Beacon stack is now fully implemented for V13):**
+- **Phase II-A**: **complete and gated at V13_HEIGHT (12,000)**. Notice loader, ECDSA-SHA256 signature verification, miner banner, RPC handler, and the original 11-test suite remain in place. Operator action before V13 RC: replace the placeholder pubkey constant with the real release pubkey.
+- **Phase II-B**: **implemented and gated at V13_HEIGHT (12,000)**. The `Notice` schema gained `threshold`, `signatures[]`, `revokes`, and `mirror_url` (metadata only). Verification is N-of-M (default 3-of-5 against `BEACON_THRESHOLD_PUBKEYS[5]`) with signer-index dedup; revocation requires a threshold-signed notice; `mirror_url` is never fetched. 33 II-B regression assertions pass. Operator action before V13 RC: replace the five placeholder threshold pubkeys with the real release set generated offline.
+- **Phase III**: **active at V13_HEIGHT (12,000)** as of the Commit B activation. `BEACON_P2P_ACTIVATION_HEIGHT` was `INT64_MAX` (DiscardDormant sentinel) and is now `V13_HEIGHT`. The full pipeline runs at and above the gate: size cap 4 KB → parse → sig verify (threshold-aware) → network match → expiry → dedup LRU 32 → per-peer rate limit 8/min → accept + plaintext relay to all version-acked peers except origin. 42 Phase III regression assertions pass. Hard limits and link-time advisory-only invariant preserved. Pre-V13 height: dormant.
+
+Sections below retain the original audit text for historical context. Where they reference dormancy / `INT64_MAX` / "missing implementation", read those as the situation BEFORE the Commit A + Commit B work; the bottom-line above is the live status.
 
 This doc maps each phase with `file:line` evidence and confirms what is missing for V13 activation.
 
@@ -118,7 +120,7 @@ Confirmed **zero HTTP / curl / urlopen** in C++ Beacon code. Phase II-A is stric
 
 ### Activation gate
 
-- `include/sost/params.h:829` — `inline constexpr int64_t BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX;` — currently sentinel-disabled.
+- `include/sost/params.h:842` — `inline constexpr int64_t BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT;` — **active at V13 as of Commit B** (was `INT64_MAX` sentinel before that commit).
 
 ### Scaffold structure (in tree, dormant)
 
@@ -133,7 +135,7 @@ Confirmed **zero HTTP / curl / urlopen** in C++ Beacon code. Phase II-A is stric
 
 - `include/sost/beacon_p2p.h:132-142` — `Decision` enum: `DiscardDormant`, `DiscardOversized`, `DiscardMalformed`, `DiscardBadSignature`, `DiscardExpired`, `DiscardWrongNetwork`, `DiscardDuplicate`, `DiscardRateLimited`, `AcceptAndRelay`.
 - `include/sost/beacon_p2p.h:166-168` — handler signature: `IncomingDecision handle_incoming_notice_message(const std::string& bytes, int64_t current_height);`
-- `src/beacon_p2p.cpp:51-54` — handler always returns `DiscardDormant` today (sentinel-gated).
+- `src/beacon_p2p.cpp` — handler returns `DiscardDormant` for heights strictly below `V13_HEIGHT`; from `V13_HEIGHT` onwards the production pipeline runs. (Pre-Commit-B: handler always returned `DiscardDormant`.)
 - `src/beacon_p2p.cpp:56-76` — comment block documents the expected Phase III order: size cap → parse → signature → network match → expiration → dedup → rate-limit → accept.
 
 ### What is missing for Phase III
@@ -149,15 +151,15 @@ Confirmed **zero HTTP / curl / urlopen** in C++ Beacon code. Phase II-A is stric
 
 ### Tests
 
-- `tests/test_v13_beacon_p2p_scaffold.cpp:29-40` — `static_assert`s pin the dormancy invariants (BEACON_P2P_ACTIVATION_HEIGHT must equal INT64_MAX, decision must default to DiscardDormant).
+- `tests/test_v13_beacon_p2p_scaffold.cpp:29-40` — `static_assert`s pin the gate at `V13_HEIGHT` and the four hard limits (4 KB notice, 32 LRU cache, 8/min rate). (Pre-Commit-B: the gate assertion required `INT64_MAX`.)
 - `tests/test_v13_beacon_p2p_scaffold.cpp:45-62` — confirms the gate always returns `false`.
-- `tests/test_v13_beacon_p2p_scaffold.cpp:69-92` — confirms the handler always returns `DiscardDormant`.
+- `tests/test_v13_beacon_p2p_scaffold.cpp:67-84` — confirms the handler returns `DiscardDormant` for heights below `V13_HEIGHT`. The active-path regression suite lives in `tests/test_v13_beacon_phase3_p2p.cpp` (15 functions / 42 assertions).
 
-When Phase III lights up, the tests in `test_v13_beacon_p2p_scaffold.cpp` will need to flip from "must be dormant" to "must enforce each check in the comment block". That is a binary cutover at the activation height.
+Phase III is now active. The scaffold tests in `test_v13_beacon_p2p_scaffold.cpp` were flipped from "must be dormant" to "dormant below V13_HEIGHT, active at and above" in Commit B; the per-check active-path regressions live in `test_v13_beacon_phase3_p2p.cpp`.
 
 ### What V13 needs for Phase III
 
-- Lower `BEACON_P2P_ACTIVATION_HEIGHT` from `INT64_MAX` to `12,000` (or another V13 height).
+- ~~Lower `BEACON_P2P_ACTIVATION_HEIGHT` from `INT64_MAX` to `12,000` (or another V13 height).~~ **DONE in Commit B**: `BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT = 12000`.
 - Implement all 7 steps in the comment block at `src/beacon_p2p.cpp:56-76`.
 - Register the Beacon notice message type in the underlying P2P transport (PRECONDITION: confirm a general gossip primitive exists or build a minimal one for this single message type).
 - Cross-implementation interop test: at least two independently-built binaries gossip a verified notice, both deduplicate correctly, neither relays a bad-signature notice.
@@ -186,13 +188,13 @@ The hardcoded Beacon pubkey is NOT yet published. Today `website/js/beacon.js:27
 |---|---|---|
 | Phase II-A | **GREEN** | None — already gated at V13_HEIGHT; one operator-manual key step pending |
 | Phase II-B | **AMBER** | Two features done (expires, severity), three missing (threshold, mirror, revocation) — 1-2 sprints to close |
-| Phase III  | **AMBER** | Scaffold dormant, 7 steps to implement, requires a P2P gossip primitive — 2-3 sprints to close |
+| Phase III  | **GREEN — active at V13_HEIGHT** | Production pipeline implemented and wired into the P2P dispatcher; 42-assertion active-path regression suite; rollback is a single-line constant revert |
 
 **Recommendation:**
 
 - **Phase II-A** ships in V13 unconditionally. The placeholder pubkey replacement is a release-day operator step (same release-key ceremony used to sign `SHA256SUMS`).
 - **Phase II-B** is realistic for V13 if the operator can produce the M threshold keys offline before the V13 RC freeze. If keys cannot be produced in time, defer to V14 / block 15,000 cleanly.
-- **Phase III** is more aggressive. Defer to V14 / block 15,000 by default unless the underlying P2P gossip primitive is already present and Phase III becomes a thin layer on top of it. The auto-disconnect-equivalent for Phase III is just leaving `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX` — no risk to V13 if Phase III is not ready.
+- **Phase III** ~~is more aggressive. Defer to V14 / block 15,000 by default unless the underlying P2P gossip primitive is already present and Phase III becomes a thin layer on top of it. The auto-disconnect-equivalent for Phase III is just leaving `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX` — no risk to V13 if Phase III is not ready.~~ **UPDATE (Commit B):** the P2P gossip primitive was already present in the node dispatcher; Phase III ships in V13 with `BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT`. Rollback (if ever needed) is the same single-line constant revert.
 
 Memory-Lock per-instance anti-pool is **DEFERRED** from V13 — not in scope here.
 

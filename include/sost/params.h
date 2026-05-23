@@ -265,7 +265,7 @@ inline constexpr int32_t  CASERT_STAGED_DROP_PER_STEP     = 3;
 // exactly, no hidden lag-time arithmetic.
 //
 // Future-drift cap stays at MAX_FUTURE_DRIFT_STAGED = 60 s up to V13_HEIGHT;
-// V13 (block 12 000) further tightens it to 10 s — see max_future_drift_at()
+// V13 (block 12 000) further tightens it to 30 s — see max_future_drift_at()
 // at the bottom of this file. For pre-V13 heights this comment block is
 // authoritative; for V13+ heights see docs/V13_COOLDOWN_AUDIT.md and the
 // V13 fork notes near max_future_drift_at(). The cap is
@@ -808,15 +808,23 @@ inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 60;
 //      slightly under window=6 — the bump is a deliberate trade documented
 //      in docs/V13_COOLDOWN_AUDIT.md.
 //
-//   2. MAX_FUTURE_DRIFT_STAGED  60 s → 10 s
-//      Tightens the timestamp-gaming margin: a miner can move at most 10
-//      seconds of future drift, instead of 60. Reduces same-block Slingshot
-//      and cascade gaming by 6×.
+//   2. MAX_FUTURE_DRIFT_STAGED  60 s → 30 s
+//      Tightens the timestamp-gaming margin: a miner can move at most 30
+//      seconds of future drift, instead of 60. The choice of 30 s
+//      materially limits future-timestamp manipulation while preserving
+//      operational tolerance for honest miners — a 10 s cap was evaluated
+//      and rejected because real-world clock skew between NTP cycles plus
+//      network latency between miner and validator can plausibly reach
+//      5-10 s in honest setups, which would have produced rejection of
+//      legitimate blocks for no meaningful attack-defense gain (the cASERT
+//      avg288 controller absorbs any sub-block drift regardless of whether
+//      the cap is 10 or 30). NTP is therefore strongly recommended for
+//      miner / node operators but not strictly mandatory at 30 s.
 //
 //   3. Beacon Phase II-A activation
 //      Node + miner local notice display path goes live. No P2P, no HTTP
 //      from C++, no consensus impact. Phase III (P2P gossip) remains
-//      DISABLED-by-default (BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX).
+//      active at V13 (BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT).
 //
 // The helpers below are the SINGLE source of truth for the height-gated
 // values. After the wire-up commits land, all consensus / RPC call sites
@@ -827,11 +835,32 @@ inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 60;
 
 inline constexpr int64_t V13_HEIGHT                       = 12000;
 
+// Beacon Phase II-B threshold (3-of-5) activation gate.
+//
+// INT64_MAX = OFF (sentinel). While this constant equals INT64_MAX the
+// is_active() validator REJECTS every notice that claims a threshold
+// signature (threshold > 0), even if the threshold sigs verify
+// correctly. This lets the production BEACON_THRESHOLD_PUBKEYS[5] live
+// in the binary while the operator is still in bootstrap custody of
+// all 5 keys — the code path is present but no II-B notice can
+// surface until the operator distributes keys to independent
+// custodians and decides to flip the gate.
+//
+// Activating later: replace INT64_MAX with a finite block height in
+// a small commit + rebuild + redeploy. NO fork — Beacon is
+// advisory-only and never affects consensus, mining, block validity,
+// or canonical-chain decisions.
+//
+// Rollback: revert to INT64_MAX. Same single-line change.
+//
+// See docs/BEACON_CUSTODY_STATUS.md for the current bootstrap state.
+inline constexpr int64_t BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT = INT64_MAX;
+
 // Beacon activation gates. Phase II-A is gated to V13_HEIGHT. Phase III P2P
 // is intentionally sentinel-disabled (INT64_MAX) until a future fork commit
 // lowers the gate; the explorer-only Phase 1 already shipped.
 inline constexpr int64_t BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT;
-inline constexpr int64_t BEACON_P2P_ACTIVATION_HEIGHT     = INT64_MAX;
+inline constexpr int64_t BEACON_P2P_ACTIVATION_HEIGHT     = V13_HEIGHT;  // active at V13
 
 // Lottery exclusion window — height-gated. Returns 5 for pre-V13 heights,
 // 6 from V13_HEIGHT onwards. Type matches LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW
@@ -854,7 +883,7 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
 // behaviour (the legacy 600-second cap predates the staged-relief tightening).
 // Type matches MAX_FUTURE_DRIFT_STAGED / MAX_FUTURE_DRIFT (both int64_t).
 inline constexpr int64_t max_future_drift_at(int64_t height) {
-    if (height >= V13_HEIGHT)                  return 10;
+    if (height >= V13_HEIGHT)                  return 30;
     if (height >= CASERT_STAGED_RELIEF_HEIGHT) return MAX_FUTURE_DRIFT_STAGED;  // = 60
     return MAX_FUTURE_DRIFT;                                                    // = 600
 }

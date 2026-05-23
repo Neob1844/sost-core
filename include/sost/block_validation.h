@@ -163,17 +163,26 @@ int64_t GetBlockSubsidy(int64_t height);
 // Returns true iff the block is acceptable from the SbPoW point of
 // view. On rejection, optionally fills `err` with a human-readable
 // reason.
+// V13 SbPoW hardening (height-gated at v13_height, production = V13_HEIGHT
+// = 12000): the wrapper now also accepts timestamp / bits_q / merkle_root /
+// genesis_hash. Pre-V13 these fields are unused; from height >= v13_height
+// they are committed to the signed preimage. See docs/V13_SBPOW_HARDENING.md.
 bool ValidateSbPoW(
     uint32_t                              header_version,
     const Bytes32&                        prev_hash,
     int64_t                               height,
+    int64_t                               timestamp,
+    uint32_t                              bits_q,
     const Bytes32&                        commit,
+    const Bytes32&                        merkle_root,
     uint32_t                              nonce,
     uint32_t                              extra_nonce,
     const sost::sbpow::MinerPubkey&       miner_pubkey,
     const sost::sbpow::MinerSignature&    miner_signature,
     const PubKeyHash&                     coinbase_miner_pkh,
+    const Bytes32&                        genesis_hash,
     int64_t                               phase2_height,
+    int64_t                               v13_height,
     std::string*                          err = nullptr);
 
 } // namespace sost

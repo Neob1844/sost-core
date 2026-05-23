@@ -218,25 +218,25 @@ def _check_dtd_cooldown_6(repo_root: Path) -> Dict[str, Any]:
     }
 
 
-def _check_timestamp_drift_10s(repo_root: Path) -> Dict[str, Any]:
+def _check_timestamp_drift_30s(repo_root: Path) -> Dict[str, Any]:
     params = repo_root / "include" / "sost" / "params.h"
     text = _read_text(params) or ""
     wired = (
         "max_future_drift_at" in text
         and "if (height >= V13_HEIGHT)" in text
-        and "return 10" in text
+        and "return 30" in text
     )
     if wired:
         return {
             "wired_in_code": True,
             "evidence": (
                 "include/sost/params.h: max_future_drift_at(height) "
-                "returns 10 for height >= V13_HEIGHT"
+                "returns 30 for height >= V13_HEIGHT"
             ),
         }
     return {
         "wired_in_code": False,
-        "evidence": "max_future_drift_at(height) not wired for 10 s at V13",
+        "evidence": "max_future_drift_at(height) not wired for 30 s at V13",
         "blocker_note": "Wire the 10 s cap at V13_HEIGHT in params.h",
     }
 
@@ -270,7 +270,7 @@ def _check_beacon_phase_ii_a(repo_root: Path) -> Dict[str, Any]:
 CONFIRMED_CHECKERS = {
     "casert_all_profiles_e7_h35": _check_casert_all_profiles,
     "dtd_cooldown_6":             _check_dtd_cooldown_6,
-    "timestamp_drift_10s":        _check_timestamp_drift_10s,
+    "timestamp_drift_30s":        _check_timestamp_drift_30s,
     "beacon_phase_ii_a":          _check_beacon_phase_ii_a,
 }
 

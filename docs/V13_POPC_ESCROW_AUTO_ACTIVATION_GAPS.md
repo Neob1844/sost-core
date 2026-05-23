@@ -196,7 +196,7 @@ Rationale:
 4. The accumulation side (25% per block to the Gold Vault and PoPC Pool addresses) is already live at consensus level since genesis — deferring the SPEND side does not regress any existing rule.
 5. V14 (block 15,000) gives ~6 months of post-V13 runway at the current ~10-minute block time to close G-POPC-1 through G-POPC-8 with proper consensus tests and a Sepolia end-to-end before mainnet activation.
 
-V13 can ship the rest of its scope (cASERT, DTD cooldown 6, drift 10s, Beacon II-A, II-B, III if ready, Gold Vault governance if ready) without PoPC consensus changes. PoPC continues to operate application-layer, as today, until V14.
+V13 can ship the rest of its scope (cASERT, DTD cooldown 6, drift 30s, Beacon II-A, II-B, III if ready, Gold Vault governance if ready) without PoPC consensus changes. PoPC continues to operate application-layer, as today, until V14.
 
 Memory-Lock per-instance anti-pool is **explicitly DEFERRED** from V13 and is not in scope for this gap analysis. See `docs/V13_SPEC.md` for the deferred-items list (to be added by the operator).
 

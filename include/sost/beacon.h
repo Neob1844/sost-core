@@ -55,9 +55,75 @@ struct Notice {
     int64_t                  activation_height;
     int64_t                  expires_height;
     std::string              created_at;
-    std::vector<std::string> commands;             // MUST be empty in Phase II-A
-    std::string              signature_b64;
+    std::vector<std::string> commands;             // MUST be empty (advisory-only)
+    std::string              signature_b64;        // Phase II-A single-sig (legacy)
+
+    // ----- Phase II-B (additive, backwards-compatible) ----------------
+    // All four fields below default to "absent" so a pre-II-B notice
+    // (legacy single-sig) parses unchanged.
+    //
+    // threshold == 0  =>  legacy single-signature path (Phase II-A).
+    // threshold >= 1  =>  N-of-M threshold path (Phase II-B). The notice
+    //                     must carry at least `threshold` valid
+    //                     signatures from DISTINCT keys in
+    //                     BEACON_THRESHOLD_PUBKEYS. The default
+    //                     deployment uses 3-of-5 (BEACON_THRESHOLD_REQUIRED).
+    //                     OFF by default in V13 — gated by
+    //                     BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT
+    //                     (= INT64_MAX). See docs/BEACON_CUSTODY_STATUS.md.
+    uint32_t                 threshold{0};
+    std::vector<std::string> signatures_b64;       // base64 DER, one per signer
+    std::string              revokes;              // notice_id this notice retires ("" = none)
+    std::string              mirror_url;           // metadata ONLY — never fetched
 };
+
+// ===========================================================================
+// Phase II-B — threshold-signed notice support (advisory only)
+// ===========================================================================
+//
+// Hard invariants (do NOT relax without re-review):
+//   - threshold sigs do NOT touch consensus, mining, or block validity.
+//   - A notice that fails the threshold check is silently dropped (same
+//     fail-closed default as single-sig). The chain never branches on it.
+//   - mirror_url is metadata ONLY. The node never opens an HTTP socket
+//     because of it. No DNS lookups. No file downloads. The field is
+//     surfaced via RPC for off-chain UI consumption only.
+//   - Revocation is itself a threshold operation: a notice may revoke
+//     another notice ONLY if the revoking notice itself passes the
+//     threshold check. Single-sig notices cannot revoke anything.
+//
+// BEACON_THRESHOLD_PUBKEYS is an immutable 5-element array of hardcoded
+// operator pubkeys. The placeholder values below are syntactically
+// valid curve points owned by no one, so every signature fails closed
+// at runtime until the operator replaces them as part of the V13
+// release ceremony. See docs/V13_BEACON_PHASE_II_B.md for the rotation
+// procedure.
+
+inline constexpr uint32_t BEACON_THRESHOLD_REQUIRED = 3;  // 3-of-5
+inline constexpr uint32_t BEACON_THRESHOLD_KEY_COUNT = 5;
+
+extern const std::string BEACON_THRESHOLD_PUBKEYS[BEACON_THRESHOLD_KEY_COUNT];
+
+// Result of attempting a threshold verification on a single notice.
+struct ThresholdVerifyResult {
+    bool     ok{false};            // true iff distinct_signers >= threshold
+    uint32_t distinct_signers{0};  // unique keys that produced a valid sig
+    uint32_t required{0};          // copy of n.threshold for diagnostics
+};
+
+// Verify a Phase II-B notice against the BEACON_THRESHOLD_PUBKEYS set.
+// Counts each pubkey at most once even if it appears in multiple
+// signatures (dedup by signer-index). Rejects signatures that fail to
+// verify under ANY threshold pubkey. Returns ok=true iff the count of
+// distinct valid signers is >= n.threshold AND n.threshold > 0.
+//
+// Caller can pass an alternate `pubkeys`/`count` pair for tests; the
+// default reads the hardcoded BEACON_THRESHOLD_PUBKEYS.
+ThresholdVerifyResult verify_threshold_signatures(
+    const Notice& n,
+    const std::string* pubkeys = nullptr,
+    uint32_t           pubkey_count = 0);
+
 
 // Parse a top-level JSON array of notices. Returns true on success and
 // populates `out` with every parsed element. Malformed input ⇒ false
