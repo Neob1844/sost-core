@@ -397,6 +397,139 @@
   </div>
 </section>
 
+<!-- HOW TO REGISTER A SOST PROTOCOL CAPSULE -->
+<section class="section" id="how-to-register">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// REGISTRATION GUIDE</div>
+      <h2 class="section-title">How to register a <span style="color:#d946ef">SOST Protocol capsule</span></h2>
+      <p class="section-sub">Step-by-step guide for the SOST Protocol operator to publish a public, signed, block-anchored capsule binding an off-chain manifesto JSON to the SOST chain. This uses the existing <code>sost-cli</code> open-note capsule flow &mdash; the same flow already used for the Trinity Kalgoorlie Phase 1 proof bundle. No new capsule type or consensus change required.</p>
+    </div>
+
+    <div class="info-card">
+      <p><b>Worked example below:</b> registering the canonical SOST Protocol PoPC manifesto so the term &quot;Proof of Personal Custody&quot; is timestamped on-chain by the SOST Protocol operator before anyone else attempts to claim it.</p>
+
+      <ol style="color:var(--text-primary);font-size:13.5px;line-height:1.85;margin:14px 0 0;padding-left:22px">
+        <li style="margin-bottom:14px">
+          <b>Locate the canonical manifesto file.</b><br>
+          The manifesto is committed at:
+          <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">website/api/sost-protocol-popc-manifesto-v1.json</pre>
+          Also reachable publicly at <code>https://sostcore.com/api/sost-protocol-popc-manifesto-v1.json</code>.
+        </li>
+
+        <li style="margin-bottom:14px">
+          <b>Compute its SHA-256 locally.</b><br>
+          <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">sha256sum website/api/sost-protocol-popc-manifesto-v1.json</pre>
+          The full 64-hex SHA-256 of the manifesto committed at the time this guide was generated is:
+          <div style="background:rgba(217,70,239,0.06);border:1px solid rgba(217,70,239,0.35);border-radius:4px;padding:10px 14px;margin:8px 0;font-family:monospace;font-size:12px;color:#d946ef;word-break:break-all;line-height:1.5">3bed02e2f5c589e494b8e4db99200dc0ae7aa96fe5b8d87167799c51726870f4</div>
+          The first 16 hex chars (used as the on-chain prefix) are: <code style="color:#d946ef">3bed02e2f5c589e4</code>.
+        </li>
+
+        <li style="margin-bottom:14px">
+          <b>Compose the on-chain capsule text.</b><br>
+          The capsule body is plain ASCII (max 80 bytes in open-note mode), three space-separated fields: namespace + record name + first-16-hex of the manifesto SHA-256:
+          <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">sost-protocol popc-manifesto 3bed02e2f5c589e4</pre>
+          Length check: this string is well under the 80-byte cap.
+        </li>
+
+        <li style="margin-bottom:14px">
+          <b>Send the on-chain transaction with the attached capsule.</b><br>
+          Use the existing <code>sost-cli</code> binary on the operator machine. Replace
+          <code>&lt;SOURCE_WALLET&gt;</code>, <code>&lt;DEST_ADDRESS&gt;</code> and
+          <code>&lt;AMOUNT&gt;</code> with operator values; the destination can be a dust output to the source itself, and the amount can be the protocol minimum:
+          <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">sost-cli --rpc-host 127.0.0.1 --rpc-port 28443 \
+  --rpc-user &lt;USER&gt; --rpc-password &lt;PASS&gt; \
+  --from &lt;SOURCE_WALLET&gt; \
+  --to &lt;DEST_ADDRESS&gt; \
+  --amount &lt;AMOUNT&gt; \
+  --capsule-mode open-note \
+  --capsule-text 'sost-protocol popc-manifesto 3bed02e2f5c589e4' \
+  --send</pre>
+          The exact flags follow <code>src/sost-cli.cpp</code> (see <code>--capsule-mode open-note</code> documented at line 686 of that file).
+        </li>
+
+        <li style="margin-bottom:14px">
+          <b>Capture txid and block height.</b><br>
+          The CLI returns the txid on success. Wait for confirmation, then look up the txid in the
+          <a href="sost-explorer.html" style="color:#d946ef">SOST Explorer</a> and capture the confirming block height.
+        </li>
+
+        <li style="margin-bottom:14px">
+          <b>Add the entry to the registered-capsules list below.</b><br>
+          A new row appended to this page binding: <code>txid</code> &middot; <code>block_height</code> &middot; <code>capsule_text</code> &middot; <code>manifesto sha-256</code> &middot; <code>publisher</code>.
+        </li>
+
+        <li>
+          <b>Independent verification.</b><br>
+          Anyone can later run <code>sha256sum</code> on the public manifesto JSON, compare the first 16 hex with the on-chain capsule text, and verify the signature against the publishing pubkey via standard SOST node tooling. The record is reproducible end-to-end without trusting this page.
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- REGISTERED CAPSULES (PUBLIC LIST) -->
+<section class="section" id="registered-capsules">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// PUBLIC LIST</div>
+      <h2 class="section-title">Registered <span style="color:#d946ef">capsules</span></h2>
+      <p class="section-sub">Public on-chain capsule records published by SOST-Protocol-associated infrastructure. Each row is independently verifiable from the SOST Explorer and from the linked off-chain document. SOST Protocol does not endorse the truth of off-chain content beyond what the manifest itself says; the protocol&apos;s role is to anchor the timestamp and the signature on-chain.</p>
+    </div>
+
+    <!-- Trinity Kalgoorlie Phase 1 -->
+    <div class="info-card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">ON-CHAIN</span>
+        <span style="background:rgba(217,70,239,0.15);color:#d946ef;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">SCIENTIFIC PROOF BUNDLE</span>
+        <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">block #8085</span>
+      </div>
+      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">Trinity Kalgoorlie Phase 1 &mdash; proof bundle</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary)">
+        <tbody>
+          <tr><td style="padding:5px 0;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:30%">AOI</td><td style="padding:5px 0">Kalgoorlie Phase 1</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Block</td><td style="padding:5px 0"><a href="sost-explorer.html?search=8085" style="color:#d946ef">#8085</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule text</td><td style="padding:5px 0"><code style="word-break:break-all">trinity-proof kalgoorlie_phase1 3a28a4b112fe95df</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Txid</td><td style="padding:5px 0"><a href="sost-explorer.html?search=d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db" style="color:#d946ef;word-break:break-all">d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Proof SHA-256</td><td style="padding:5px 0;word-break:break-all"><code>3a28a4b112fe95df85ab2ab91deb7698ebeb1d9182297f06635fd12fd4053a02</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Merkle root</td><td style="padding:5px 0;word-break:break-all"><code>a818a1e4799ec34fd5a65b17d180a9534f791d4cd49f54c97b21c11d7b0e28b4</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Pipeline</td><td style="padding:5px 0">GeaSpirit scorecard &rarr; AI Council dossier &rarr; Useful Compute plan (dry-run) &rarr; Campaign manifest &rarr; Proof bundle</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Status</td><td style="padding:5px 0"><code>registered=true</code> &middot; <code>no_rewards_active=true</code> &middot; <code>capsule_mode=open-note</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">More info</td><td style="padding:5px 0"><a href="sost-trinity.html#kalgoorlie" style="color:#d946ef">sost-trinity.html</a></td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:12px 0 0">
+        This capsule is a public cryptographic timestamp proving that Trinity existed and produced its first verifiable proof bundle on SOST at block #8085. It is not a mineral reserve claim, not a geological conclusion, and not an announcement of active Useful Compute rewards. The bundle binds four SHA-256 anchors (scorecard + dossier + Useful Compute plan + campaign manifest) into one document with a Merkle root; the on-chain capsule carries the first 16 hex of the bundle SHA-256, and the full 64-hex hash lives in the published JSON for independent verification by any third party.
+      </p>
+    </div>
+
+    <!-- SOST Protocol PoPC manifesto (PENDING REGISTRATION) -->
+    <div class="info-card" style="margin-bottom:18px;border:1px dashed var(--border-bright)">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="background:rgba(245,158,11,0.15);color:var(--amber-primary);font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">PENDING ON-CHAIN REGISTRATION</span>
+        <span style="background:rgba(217,70,239,0.15);color:#d946ef;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">PROTOCOL TERM</span>
+      </div>
+      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">SOST Protocol &mdash; PoPC (Proof of Personal Custody) manifesto v1</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary)">
+        <tbody>
+          <tr><td style="padding:5px 0;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:30%">Registry type</td><td style="padding:5px 0">protocol_term</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Term</td><td style="padding:5px 0"><b>Proof of Personal Custody (PoPC)</b></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Project</td><td style="padding:5px 0">SOST Protocol</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Manifesto file</td><td style="padding:5px 0"><a href="api/sost-protocol-popc-manifesto-v1.json" style="color:#d946ef">api/sost-protocol-popc-manifesto-v1.json</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Manifesto SHA-256</td><td style="padding:5px 0;word-break:break-all"><code style="color:#d946ef">3bed02e2f5c589e494b8e4db99200dc0ae7aa96fe5b8d87167799c51726870f4</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule text (planned)</td><td style="padding:5px 0"><code style="word-break:break-all">sost-protocol popc-manifesto 3bed02e2f5c589e4</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule mode</td><td style="padding:5px 0"><code>open-note</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Block</td><td style="padding:5px 0;color:var(--text-muted);font-style:italic">pending &mdash; populated after operator runs the registration command above</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Txid</td><td style="padding:5px 0;color:var(--text-muted);font-style:italic">pending</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:12px 0 0">
+        This row will be promoted to full ON-CHAIN status once the SOST Protocol operator publishes the capsule on mainnet following the registration guide above. The manifesto SHA-256 above is the canonical hash of the committed JSON file; if the JSON is ever changed, the hash changes and a new manifesto version must be issued (v2, v3, etc.) and re-anchored on chain.
+      </p>
+    </div>
+  </div>
+</section>
+
 <!-- FUTURE ANTI-SPAM MODEL -->
 <section class="section">
   <div class="container">
