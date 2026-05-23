@@ -7,6 +7,7 @@
 // =============================================================================
 
 #include "sost/tx_validation.h"
+#include "sost/atomic_swap.h"  // ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT gate
 #include "sost/capsule.h"
 #include "sost/lottery.h"   // V11 Phase 2 (C8) — phase2_coinbase_split
 
@@ -33,6 +34,9 @@ static bool IsActiveOutputType(uint8_t type, int64_t height, int64_t bond_activa
         return true;
     if ((type == OUT_BOND_LOCK || type == OUT_ESCROW_LOCK) &&
         height >= bond_activation_height)
+        return true;
+    if (type == OUT_HTLC_LOCK &&
+        atomic_swap_htlc_active_at(height))
         return true;
     return false;
 }
@@ -186,6 +190,34 @@ static TxValidationResult ValidateStructure(
             }
         }
 
+        // R17: HTLC_LOCK payload must be exactly HTLC_LOCK_PAYLOAD_LEN (80) bytes,
+        //      refund_height must be strictly > current spend_height, and amount
+        //      must be >= DUST_THRESHOLD. Activation gated by atomic_swap_htlc_active_at().
+        if (out.type == OUT_HTLC_LOCK) {
+            if (out.payload.size() != HTLC_LOCK_PAYLOAD_LEN) {
+                return TxValidationResult::Fail(TxValCode::R17_HTLC_PAYLOAD_INVALID,
+                    "R17: HTLC_LOCK output[" + std::to_string(i) +
+                    "] payload must be " + std::to_string(HTLC_LOCK_PAYLOAD_LEN) +
+                    " bytes, got " + std::to_string(out.payload.size()),
+                    -1, (int32_t)i);
+            }
+            uint64_t refund_height = ReadHtlcRefundHeight(out.payload);
+            if (refund_height <= (uint64_t)ctx.spend_height) {
+                return TxValidationResult::Fail(TxValCode::R17_HTLC_PAYLOAD_INVALID,
+                    "R17: HTLC_LOCK output[" + std::to_string(i) +
+                    "] refund_height " + std::to_string(refund_height) +
+                    " must be > current height " + std::to_string(ctx.spend_height),
+                    -1, (int32_t)i);
+            }
+            if (out.amount < DUST_THRESHOLD) {
+                return TxValidationResult::Fail(TxValCode::R17_HTLC_PAYLOAD_INVALID,
+                    "R17: HTLC_LOCK output[" + std::to_string(i) +
+                    "] amount " + std::to_string(out.amount) +
+                    " < DUST_THRESHOLD " + std::to_string(DUST_THRESHOLD),
+                    -1, (int32_t)i);
+            }
+        }
+
         // R13: payload_len <= 512 (consensus limit)
         if (out.payload.size() > 512) {
             return TxValidationResult::Fail(TxValCode::R13_PAYLOAD_TOO_LONG,
@@ -201,6 +233,8 @@ static TxValidationResult ValidateStructure(
             bool payload_allowed = false;
             if (out.type == OUT_BOND_LOCK || out.type == OUT_ESCROW_LOCK) {
                 payload_allowed = true; // validated in R15/R16 above
+            } else if (out.type == OUT_HTLC_LOCK && atomic_swap_htlc_active_at(ctx.spend_height)) {
+                payload_allowed = true; // validated in R17 above
             } else if (ctx.spend_height >= ctx.capsule_activation_height) {
                 if (out.type == OUT_TRANSFER) payload_allowed = true;
             }
@@ -393,6 +427,9 @@ TxValidationResult ValidateTransactionConsensus(
         bool allowed = (t == OUT_TRANSFER);
         if (!allowed && ctx.spend_height >= ctx.bond_activation_height) {
             allowed = (t == OUT_BOND_LOCK || t == OUT_ESCROW_LOCK);
+        }
+        if (!allowed && atomic_swap_htlc_active_at(ctx.spend_height)) {
+            allowed = (t == OUT_HTLC_LOCK);
         }
         if (!allowed) {
             return TxValidationResult::Fail(TxValCode::S9_BAD_STD_OUTPUT_TYPE,

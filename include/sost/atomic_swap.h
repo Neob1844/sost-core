@@ -72,7 +72,15 @@ namespace sost {
 // is feasible only if Phase 3 can be completed, tested, and externally
 // reviewed before the V13 freeze — which the implementation map flags as
 // extremely unlikely given the remaining V13 cycle length.
-inline constexpr int64_t ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX;
+// Phase 3A activation flip: gate moved from INT64_MAX (sentinel OFF) to
+// V14_HEIGHT (= 15000). HTLC_LOCK validation rules in src/tx_validation.cpp
+// fire only for blocks at height >= 15000. Pre-activation chain replay
+// (heights 0..14999) is bit-identical because HTLC_LOCK output type was
+// reserved-but-rejected by R11 for those heights. The V14 hard fork
+// activates these rules at block 15000. Rollback to INT64_MAX is a single
+// one-line revert if any safety issue surfaces before the V14 freeze.
+inline constexpr int64_t V14_HEIGHT = 15000;
+inline constexpr int64_t ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = V14_HEIGHT;
 
 // -----------------------------------------------------------------------------
 // is_height_active helper

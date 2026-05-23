@@ -23,6 +23,16 @@ using Hash256 = std::array<Byte, 32>;
 
 constexpr uint8_t TX_TYPE_STANDARD = 0x00;
 constexpr uint8_t TX_TYPE_COINBASE = 0x01;
+// Atomic Swap HTLC tx types — reserved for Phase 3A spending paths
+// (CLAIM consumes an OUT_HTLC_LOCK by revealing the preimage;
+// REFUND consumes the same output after the timeout). The validation
+// rules for these tx types are gated by atomic_swap_htlc_active_at()
+// in include/sost/atomic_swap.h. With the gate at INT64_MAX (sentinel
+// OFF) the validator never accepts these tx types. Phase 3A scope-B
+// reserves the values but does NOT yet implement the spending-path
+// validation — that is a follow-up sprint.
+constexpr uint8_t TX_TYPE_HTLC_CLAIM  = 0x10;
+constexpr uint8_t TX_TYPE_HTLC_REFUND = 0x11;
 
 constexpr uint8_t OUT_TRANSFER      = 0x00;
 constexpr uint8_t OUT_COINBASE_MINER= 0x01;
@@ -38,6 +48,14 @@ constexpr uint8_t OUT_COINBASE_LOTTERY = 0x04;
 // Reserved (inactive in v1, activation by height in consensus validation)
 constexpr uint8_t OUT_BOND_LOCK     = 0x10;
 constexpr uint8_t OUT_ESCROW_LOCK   = 0x11;
+// Atomic Swap HTLC LOCK output. Payload layout is
+// [hashlock(32) | refund_height(8 LE) | claim_pkh(20) | refund_pkh(20)]
+// = HTLC_LOCK_PAYLOAD_LEN = 80 bytes. Activation is gated by
+// atomic_swap_htlc_active_at() in include/sost/atomic_swap.h. With the
+// gate at INT64_MAX the validator rejects this output type as inactive
+// (R11). Pre-activation chain replay is bit-identical because this type
+// has never been mined.
+constexpr uint8_t OUT_HTLC_LOCK     = 0x12;
 // Reserved. NOT activated. SOST supply is immutable — no token destruction
 // mechanism exists or is planned. All slashing redistributes funds (50% PoPC
 // Pool, 50% Gold Funding Vault); nothing is ever burned.
@@ -144,6 +162,66 @@ inline std::array<Byte, 20> ReadBeneficiaryPkh(const std::vector<Byte>& payload)
     if (payload.size() >= 28)
         std::copy(payload.begin() + 8, payload.begin() + 28, pkh.begin());
     return pkh;
+}
+
+// -----------------------------------------------------------------------------
+// HTLC_LOCK payload helpers (OUT_HTLC_LOCK = 0x12)
+//
+// Payload layout (HTLC_LOCK_PAYLOAD_LEN = 80 bytes, fixed):
+//   [ 0..31]  hashlock       (32 bytes, sha256(preimage))
+//   [32..39]  refund_height  (uint64 LE, absolute block height)
+//   [40..59]  claim_pkh      (20 bytes, RIPEMD160(SHA256(claim_pubkey)))
+//   [60..79]  refund_pkh     (20 bytes, RIPEMD160(SHA256(refund_pubkey)))
+//
+// All readers tolerate short payloads by returning a zero-filled value so
+// the structural rule R17 in src/tx_validation.cpp can produce the right
+// error code without segfaulting on malformed inputs.
+// -----------------------------------------------------------------------------
+
+inline constexpr size_t HTLC_LOCK_PAYLOAD_LEN = 80;
+
+inline std::array<Byte, 32> ReadHtlcHashlock(const std::vector<Byte>& payload) {
+    std::array<Byte, 32> h{};
+    if (payload.size() >= 32)
+        std::copy(payload.begin(), payload.begin() + 32, h.begin());
+    return h;
+}
+
+inline uint64_t ReadHtlcRefundHeight(const std::vector<Byte>& payload) {
+    if (payload.size() < 40) return 0;
+    uint64_t v = 0;
+    for (int i = 0; i < 8; ++i)
+        v |= (static_cast<uint64_t>(payload[32 + i]) << (8 * i));
+    return v;
+}
+
+inline std::array<Byte, 20> ReadHtlcClaimPkh(const std::vector<Byte>& payload) {
+    std::array<Byte, 20> pkh{};
+    if (payload.size() >= 60)
+        std::copy(payload.begin() + 40, payload.begin() + 60, pkh.begin());
+    return pkh;
+}
+
+inline std::array<Byte, 20> ReadHtlcRefundPkh(const std::vector<Byte>& payload) {
+    std::array<Byte, 20> pkh{};
+    if (payload.size() >= 80)
+        std::copy(payload.begin() + 60, payload.begin() + 80, pkh.begin());
+    return pkh;
+}
+
+inline void WriteHtlcLockPayload(
+    std::vector<Byte>& payload,
+    const std::array<Byte, 32>& hashlock,
+    uint64_t refund_height,
+    const std::array<Byte, 20>& claim_pkh,
+    const std::array<Byte, 20>& refund_pkh)
+{
+    payload.assign(HTLC_LOCK_PAYLOAD_LEN, 0);
+    std::copy(hashlock.begin(), hashlock.end(), payload.begin());
+    for (int i = 0; i < 8; ++i)
+        payload[32 + i] = static_cast<Byte>((refund_height >> (8 * i)) & 0xFF);
+    std::copy(claim_pkh.begin(), claim_pkh.end(), payload.begin() + 40);
+    std::copy(refund_pkh.begin(), refund_pkh.end(), payload.begin() + 60);
 }
 
 // CompactSize (Bitcoin varint) encode/decode (canonical)

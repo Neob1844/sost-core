@@ -598,6 +598,10 @@ add_executable(test-v13-gold-vault-slice1 tests/test_v13_gold_vault_slice1.cpp)
 target_link_libraries(test-v13-gold-vault-slice1 PRIVATE sost-core)
 add_test(NAME v13-gold-vault-slice1 COMMAND test-v13-gold-vault-slice1)
 
+add_executable(test-atomic-swap-htlc-lock tests/test_atomic_swap_htlc_lock.cpp)
+target_link_libraries(test-atomic-swap-htlc-lock PRIVATE sost-core)
+add_test(NAME atomic-swap-htlc-lock COMMAND test-atomic-swap-htlc-lock)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 
