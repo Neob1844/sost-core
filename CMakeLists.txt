@@ -125,6 +125,7 @@ add_library(sost-core STATIC
     src/tx_validation.cpp
     # Phase 3.5: capsule
     src/capsule.cpp
+    src/atomic_swap_helpers.cpp
     # Phase 3.6: sealed envelope (Fase Sealed-1.A — single-recipient ECIES)
     src/sealed_envelope.cpp
     # Phase 4: UTXO set
@@ -601,6 +602,10 @@ add_test(NAME v13-gold-vault-slice1 COMMAND test-v13-gold-vault-slice1)
 add_executable(test-atomic-swap-htlc-lock tests/test_atomic_swap_htlc_lock.cpp)
 target_link_libraries(test-atomic-swap-htlc-lock PRIVATE sost-core)
 add_test(NAME atomic-swap-htlc-lock COMMAND test-atomic-swap-htlc-lock)
+
+add_executable(test-atomic-swap-htlc-helpers tests/test_atomic_swap_htlc_helpers.cpp)
+target_link_libraries(test-atomic-swap-htlc-helpers PRIVATE sost-core)
+add_test(NAME atomic-swap-htlc-helpers COMMAND test-atomic-swap-htlc-helpers)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)

@@ -21,6 +21,7 @@
 #include "sost/address.h"
 #include "sost/params.h"
 #include "sost/transaction.h"
+#include "sost/atomic_swap_helpers.h"  // Phase 3C HTLC RPC helpers
 #include "sost/types.h"
 #include "sost/utxo_set.h"
 #include "sost/mempool.h"
@@ -244,6 +245,58 @@ static std::string handle_estimatefee(const std::string& id, const std::vector<s
     return rpc_result(id,s.str());
 }
 
+// === Phase 3C — Atomic Swap HTLC RPC handlers ===
+//
+// All five handlers refuse with -32603 "HTLC disabled" while the activation
+// gate is INT64_MAX. NO broadcast, NO counterparty signing, NO HTTP, NO
+// private key material in any response. Each handler is a thin gate-check
+// wrapper around the C++ helpers in src/atomic_swap_helpers.cpp; the helper
+// layer enforces the gate again as defense in depth.
+
+static std::string handle_createhtlclock(const std::string& id, const std::vector<std::string>&) {
+    if (!atomic_swap::IsAtomicSwapHtlcEnabled()) {
+        return rpc_error(id, -32603, atomic_swap::DisabledErrorMessage());
+    }
+    // Phase 3C-1: parameter parsing + tx construction is the next sub-sprint.
+    // For now we explicitly report the helper is gated-but-not-yet-wired so
+    // any caller knows the difference between "feature disabled" and
+    // "feature not yet implemented".
+    return rpc_error(id, -32603,
+        "createhtlclock: gate is open but parameter parsing not yet wired in this commit (Phase 3C-1).");
+}
+
+static std::string handle_claimhtlc(const std::string& id, const std::vector<std::string>&) {
+    if (!atomic_swap::IsAtomicSwapHtlcEnabled()) {
+        return rpc_error(id, -32603, atomic_swap::DisabledErrorMessage());
+    }
+    return rpc_error(id, -32603,
+        "claimhtlc: gate is open but parameter parsing not yet wired in this commit (Phase 3C-1).");
+}
+
+static std::string handle_refundhtlc(const std::string& id, const std::vector<std::string>&) {
+    if (!atomic_swap::IsAtomicSwapHtlcEnabled()) {
+        return rpc_error(id, -32603, atomic_swap::DisabledErrorMessage());
+    }
+    return rpc_error(id, -32603,
+        "refundhtlc: gate is open but parameter parsing not yet wired in this commit (Phase 3C-1).");
+}
+
+static std::string handle_decodehtlc(const std::string& id, const std::vector<std::string>&) {
+    if (!atomic_swap::IsAtomicSwapHtlcEnabled()) {
+        return rpc_error(id, -32603, atomic_swap::DisabledErrorMessage());
+    }
+    return rpc_error(id, -32603,
+        "decodehtlc: gate is open but parameter parsing not yet wired in this commit (Phase 3C-1).");
+}
+
+static std::string handle_gethtlcstatus(const std::string& id, const std::vector<std::string>&) {
+    if (!atomic_swap::IsAtomicSwapHtlcEnabled()) {
+        return rpc_error(id, -32603, atomic_swap::DisabledErrorMessage());
+    }
+    return rpc_error(id, -32603,
+        "gethtlcstatus: gate is open but parameter parsing not yet wired in this commit (Phase 3C-1).");
+}
+
 // === Dispatch ===
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
 static std::map<std::string,RpcHandler> g_handlers={
@@ -253,6 +306,12 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"sendrawtransaction",handle_sendrawtransaction},{"getmempoolinfo",handle_getmempoolinfo},
     {"getrawmempool",handle_getrawmempool},{"getrawtransaction",handle_getrawtransaction},
     {"estimatefee",handle_estimatefee},
+    // Phase 3C atomic-swap HTLC RPC handlers (all gated; refuse while gate INT64_MAX)
+    {"createhtlclock",handle_createhtlclock},
+    {"claimhtlc",handle_claimhtlc},
+    {"refundhtlc",handle_refundhtlc},
+    {"decodehtlc",handle_decodehtlc},
+    {"gethtlcstatus",handle_gethtlcstatus},
 };
 static std::string dispatch_rpc(const std::string& req) {
     std::string method=json_get_string(req,"method"),id_raw=json_get_string(req,"id");
