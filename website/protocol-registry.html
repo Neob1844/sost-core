@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- M26 favicon + icon pack -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#05070a">
+<!-- M26 OG / Twitter fallback -->
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/protocol-registry.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Protocol Registry — Capsule Provenance Records</title>
+<meta name="description" content="SOST Protocol Registry — public on-chain timestamp and provenance records via signed capsules. Demonstrates that a concept, document hash, protocol term, or specification existed at a specific block height and was published by a specific address. Not a patent or trademark registry — evidentiary record only.">
+<meta name="keywords" content="SOST OTC, buy SOST, SOST pre-market, SOST sale, gold backed crypto, PoPC, SOST Protocol">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST Protocol Registry — Capsule Provenance Records">
+<meta property="og:description" content="Public on-chain timestamp and provenance records via signed SOST capsules. Evidentiary record only — not a patent or trademark registry.">
+<meta property="og:url" content="https://sostcore.com/protocol-registry.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SOST Protocol Registry — Capsule Provenance Records">
+<meta name="twitter:description" content="Public on-chain timestamp and provenance records via signed SOST capsules. Evidentiary record only.">
+<meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111111;
+    --border-dim: #1a1a1a;
+    --border-med: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --gold-primary: #b8860b;
+    --gold-dim: #b8860b33;
+    --amber-primary: #f59e0b;
+    --amber-dim: #f59e0b22;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* HERO */
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(251,1,13,0.06) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--red-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--red-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 680px; line-height: 1.8; font-weight: 300; }
+
+  /* SECTION */
+  .section { padding: 64px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 40px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; font-weight: 400; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--red-primary); }
+  .section-title .gold { color: var(--gold-primary); }
+  .section-sub { font-size: 13px; color: var(--text-dim); margin-top: 8px; }
+
+  /* OFFER BOX */
+  .offer-box { background: var(--bg-card); border: 2px solid var(--green-primary); border-radius: 12px; padding: 40px; position: relative; overflow: hidden; }
+  .offer-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--green-primary), var(--gold-primary)); }
+  .offer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; margin-top: 24px; }
+  .offer-stat { }
+  .offer-stat-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .offer-stat-value { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--text-primary); }
+  .offer-stat-value.price { color: var(--green-primary); }
+  .offer-stat-value.gold { color: var(--gold-primary); }
+  .offer-stat-note { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .status-open { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 6px; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); font-size: 14px; color: var(--green-primary); font-weight: 600; letter-spacing: 1.5px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-primary); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* INFO CARD */
+  .info-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 32px; margin-bottom: 24px; }
+  .info-card h3 { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; }
+  .info-card p, .info-card li { font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
+  .info-card ul { list-style: none; padding: 0; }
+  .info-card li { padding: 6px 0; padding-left: 20px; position: relative; }
+  .info-card li::before { content: '>'; position: absolute; left: 0; color: var(--red-primary); font-weight: 700; }
+
+  /* STEP */
+  .step { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 28px 32px; margin-bottom: 16px; display: flex; gap: 24px; align-items: flex-start; }
+  .step-num { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--red-primary); min-width: 48px; line-height: 1; }
+  .step-content h4 { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+  .step-content p { font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
+  .step-content a { color: var(--cyan-primary); text-decoration: none; border-bottom: 1px solid var(--cyan-dim); }
+  .step-content a:hover { color: var(--text-primary); }
+  .step-content code { background: var(--bg-panel); padding: 2px 8px; border-radius: 4px; font-size: 12px; color: var(--green-primary); border: 1px solid var(--border-dim); }
+
+  /* FAQ */
+  .faq-item { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 24px 28px; margin-bottom: 12px; }
+  .faq-q { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+  .faq-q::before { content: 'Q: '; color: var(--red-primary); }
+  .faq-a { font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
+  .faq-a a { color: var(--cyan-primary); text-decoration: none; }
+
+  /* VAULT BOX */
+  .vault-box { background: var(--bg-card); border: 1px solid var(--gold-primary); border-radius: 8px; padding: 32px; position: relative; }
+  .vault-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--gold-primary); border-radius: 8px 8px 0 0; }
+  .vault-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-dim); font-size: 13px; }
+  .vault-row:last-child { border-bottom: none; }
+  .vault-label { color: var(--text-dim); }
+  .vault-value { color: var(--text-primary); font-weight: 500; }
+  .vault-value a { color: var(--cyan-primary); text-decoration: none; font-size: 12px; word-break: break-all; }
+  .vault-value a:hover { color: var(--text-primary); }
+  .vault-total { font-size: 16px; color: var(--gold-primary); font-weight: 700; }
+
+  /* DISCLAIMER */
+  .disclaimer { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 24px 28px; margin-top: 40px; }
+  .disclaimer h4 { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--amber-primary); margin-bottom: 10px; letter-spacing: 1px; }
+  .disclaimer p { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+
+  /* FOOTER */
+  .footer { padding: 40px 0; text-align: center; }
+  .footer p { font-size: 11px; color: var(--text-muted); }
+  .footer a { color: var(--text-dim); text-decoration: none; }
+  .footer a:hover { color: var(--text-primary); }
+
+  @media (max-width: 768px) {
+    .hero { padding: 48px 0 40px; }
+    .section { padding: 40px 0; }
+    .offer-grid { grid-template-columns: 1fr 1fr; }
+    .offer-box { padding: 24px; }
+    .step { flex-direction: column; gap: 12px; padding: 20px; }
+    .step-num { font-size: 24px; }
+  }
+
+  /* === CANONICAL NAV CSS === */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
+  /* === END NAV CSS === */
+@keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
+</style>
+<script src="js/security.js"></script>
+<script src="js/nav-toggle.js" defer></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:110px;width:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
+      <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 10px rgba(34,211,238,.45));image-rendering:-webkit-optimize-contrast">
+    </a>
+    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC DEX"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:32px;font-weight:900;letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">DEX</span></a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+            <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <!-- DEX link replaced by rainbow button next to logo -->
+      <a href="sost-gold-dex.html">DEX Spec</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="protocol-registry.html" style="color:#d946ef" class="active">Protocol Registry</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
+      <a href="sost-help.html">Help</a>
+      <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-label">PROTOCOL REGISTRY</div>
+    <h1>Protocol <span style="color:#d946ef">Registry</span></h1>
+    <p class="hero-sub">On-chain capsule records for public timestamping, provenance and protocol-use evidence. Signed, block-anchored, verifiable by anyone &mdash; an evidentiary record, <b>not</b> a patent, trademark, copyright or legal-ownership registry.</p>
+  </div>
+</section>
+
+<!-- THE LINE -->
+<section style="border-bottom:1px solid var(--border-dim);background:rgba(217,70,239,0.05)">
+  <div class="container" style="padding:32px 0">
+    <div style="background:var(--bg-card);border:2px solid #d946ef;border-left:6px solid #d946ef;border-radius:6px;padding:20px 24px">
+      <div style="color:#d946ef;font-weight:900;letter-spacing:1.2px;font-size:13px;margin-bottom:10px">// WHAT IT IS, IN ONE SENTENCE</div>
+      <p style="color:var(--text-primary);font-size:14px;line-height:1.75;margin:0">
+        SOST capsules attached to on-chain transactions create a <b>signed, timestamped, block-anchored public record</b> demonstrating that a specific text, name, hash, specification or release statement <b>existed at a specific block height and was published by a specific address</b>. The record can be independently verified by anyone running a SOST node.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IT PROVES vs WHAT IT DOES NOT PROVE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// EVIDENTIARY SCOPE</div>
+      <h2 class="section-title">What it <span style="color:#22c55e">proves</span> &nbsp;/&nbsp; What it <span style="color:#fb010d">does not</span></h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:0;border:1px solid var(--border-bright);border-radius:4px;overflow:hidden">
+      <div style="background:rgba(34,197,94,0.06);padding:16px 18px;border-right:1px solid var(--border-bright)">
+        <div style="color:#22c55e;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#10003; WHAT A CAPSULE RECORD PROVES</div>
+        <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:20px">
+          <li><b>Existence at a moment.</b> The content was published on or before the block height it was anchored in. No backdating possible &mdash; the block timestamp is what it is.</li>
+          <li><b>Authorship by a key.</b> The transaction was signed by a specific SOST address. If that address is publicly attributed (e.g. the constitutional genesis address), the publication is attributable.</li>
+          <li><b>Immutability of the content hash.</b> The capsule payload hash is part of the transaction. Any later modification produces a different hash &mdash; the original record cannot be silently altered.</li>
+          <li><b>Public verifiability.</b> Anyone can replay the chain and check the capsule, the signature, the block height and the timestamp. No trust in any central authority required.</li>
+          <li><b>Protocol-use claim.</b> For protocol terms like &quot;PoPC&quot;, a capsule demonstrates that the term was used by the publishing address as part of the SOST Protocol stack at that block height.</li>
+        </ul>
+      </div>
+      <div style="background:rgba(251,1,13,0.06);padding:16px 18px">
+        <div style="color:#fb010d;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#9888; WHAT IT DOES NOT PROVE</div>
+        <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:20px">
+          <li><b>It is NOT a patent.</b> Patent rights are granted by patent offices (USPTO, EPO, OEPM, JPO) after formal application + examination. Publishing on-chain does not file a patent and may, in some jurisdictions, constitute prior disclosure affecting subsequent patentability.</li>
+          <li><b>It is NOT a trademark.</b> Trademark rights depend on commercial use and/or formal registration. A capsule does not register a mark and does not create exclusive trademark rights.</li>
+          <li><b>It is NOT a copyright registration.</b> Copyright arises by creation in most jurisdictions; formal registration (where available) provides additional remedies. A capsule does not perform formal copyright registration.</li>
+          <li><b>It is NOT legal ownership.</b> No exclusive legal right, license, or transferable title is created by publishing a capsule.</li>
+          <li><b>It is NOT a substitute for legal counsel.</b> If you need legal protection of intellectual property, consult a qualified attorney in your jurisdiction and file appropriate applications.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px dashed var(--border-bright);border-radius:4px;padding:14px 18px;margin-top:18px">
+      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:0">
+        <b>Use the registry as evidentiary record</b> &mdash; alongside, not instead of, formal IP filings, GitHub commits, whitepaper publication, and any other public record you maintain. The blockchain timestamp adds <b>immutability + public verifiability</b> to your existing paper trail. It does not replace the legal pathway.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW A REGISTRY CAPSULE WORKS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// HOW IT WORKS</div>
+      <h2 class="section-title">How a registry <span style="color:#d946ef">capsule</span> works</h2>
+    </div>
+
+    <div class="info-card">
+      <ol>
+        <li><b>Compose the claim.</b> A structured JSON object describing what is being recorded (a protocol term, a document hash, a release statement, etc.). The schema is open &mdash; the example below uses keys like <code>registry_type</code>, <code>name</code>, <code>acronym</code>, <code>project</code>, <code>statement</code>, <code>evidence_links</code>.</li>
+        <li><b>Wrap it in a capsule.</b> The JSON is encoded into a SOST capsule using <code>CapsuleType::TEMPLATE_FIELDS_OPEN</code> (0x05) &mdash; an existing, audited capsule type in <code>include/sost/capsule.h</code>. No new capsule type needed for the first iteration. A future protocol-level <code>PROTOCOL_CLAIM_V1</code> template id is documented below as a proposed extension.</li>
+        <li><b>Attach to a transaction.</b> The capsule is attached to a normal SOST transaction. The transaction can have minimal value (dust output to self) and pays a normal network fee.</li>
+        <li><b>Sign with the publishing address.</b> The transaction is signed by the address claiming the publication. For protocol-level claims, the SOST constitutional genesis address (or a controlled SOST Protocol address) is the most authoritative signer.</li>
+        <li><b>Broadcast and confirm.</b> Once the transaction is included in a block, the record is permanent. Block height + block timestamp = the public proof of when the content existed.</li>
+        <li><b>Verify by anyone.</b> Anyone can later query the transaction, extract the capsule, verify the signature against the publishing pubkey, and confirm the block height + content hash.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- EXAMPLE: PoPC RECORD -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// EXAMPLE</div>
+      <h2 class="section-title">Example record: <span style="color:var(--gold-primary)">PoPC</span> &mdash; Proof of Personal Custody</h2>
+      <p class="section-sub">This is the schema of an example registry capsule documenting that SOST Protocol publicly records &quot;PoPC&quot; as the protocol term used for its custody-verification mechanism. <b>Marked as example schema</b> &mdash; not yet broadcast on-chain. A symbolic transaction from the SOST constitutional address may be published later after UI review.</p>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px">
+      <div style="color:var(--gold-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:12px">EXAMPLE SCHEMA &mdash; capsule payload (JSON)</div>
+<pre style="background:rgba(0,0,0,0.4);padding:16px 18px;border-radius:4px;color:var(--text-primary);font-size:12.5px;line-height:1.7;overflow-x:auto;margin:0">{
+  "registry_type":  "protocol_term",
+  "name":           "Proof of Personal Custody",
+  "acronym":        "PoPC",
+  "project":        "SOST Protocol",
+  "scope":          "protocol mechanism + custody-verification roadmap",
+  "statement":      "SOST Protocol publicly records PoPC as the protocol term used for its Proof of Personal Custody mechanism and the related reserve / custody-verification pathway.",
+  "evidence_links": [
+    "https://sostcore.com/sost-whitepaper.html",
+    "https://sostcore.com/sost-protocol-spec.html",
+    "https://sostcore.com/sost-popc.html",
+    "https://github.com/Neob1844/sost-core/blob/main/docs/POPC_MODEL_A_SPECIFICATION.md"
+  ],
+  "legal_notice":   "This is a public timestamp and provenance record. It is not a patent, trademark, or legal ownership registration. Legal rights, if any, depend on applicable law and formal filings where required."
+}</pre>
+    </div>
+
+    <div style="margin-top:16px;background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px">
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:1.5px;margin-bottom:10px">// WHEN PUBLISHED, THE EXPECTED RESOLVED RECORD WILL CONTAIN</div>
+<pre style="background:rgba(0,0,0,0.4);padding:16px 18px;border-radius:4px;color:var(--text-secondary);font-size:12px;line-height:1.7;overflow-x:auto;margin:0">{
+  "txid":              "&lt;to be filled in when broadcast&gt;",
+  "block_height":      "&lt;block height at confirmation&gt;",
+  "block_timestamp":   "&lt;UTC, from the block header&gt;",
+  "signer_address":    "sost1...&lt;SOST constitutional genesis address&gt;",
+  "capsule_type":      "0x05 (TEMPLATE_FIELDS_OPEN)",
+  "capsule_hash":      "&lt;sha256 of the canonicalized JSON above&gt;",
+  "verification_status": "anyone can verify by querying the txid and replaying the capsule decode + signature check"
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- VERIFICATION STEPS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// VERIFICATION</div>
+      <h2 class="section-title">How to <span style="color:#22c55e">verify</span> a registry record</h2>
+    </div>
+    <div class="info-card">
+      <ol>
+        <li>Take the <code>txid</code> from the registry record.</li>
+        <li>Query the transaction via <a href="sost-explorer.html" style="color:var(--cyan-primary)">sost-explorer.html</a> or any SOST node RPC.</li>
+        <li>Verify the transaction signature against the signer pubkey. For SOST-constitutional records, the signer is the genesis-controlled address documented in the whitepaper.</li>
+        <li>Decode the capsule payload. Confirm <code>capsule_type == 0x05</code> (or the template id documented for the record) and that the SHA-256 of the decoded payload matches the published capsule hash.</li>
+        <li>Confirm the <code>block_height</code> and <code>block_timestamp</code> from the block header. These are the immutable evidentiary anchors.</li>
+        <li>Compare the decoded JSON to any public mirror you have (whitepaper, GitHub commit, archive.org snapshot). Multiple independent records strengthen the evidentiary chain.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- PROPOSED FUTURE EXTENSION -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// PROPOSED FUTURE EXTENSION</div>
+      <h2 class="section-title">Proposed: <span style="color:#d946ef">PROTOCOL_CLAIM_V1</span> template id</h2>
+      <p class="section-sub">A dedicated template id would let nodes and indexers surface registry records as a first-class type without parsing the open template fields. <b>Not implemented in this commit.</b> Documented here as a proposal for a future protocol extension &mdash; no consensus change is being made now.</p>
+    </div>
+
+    <div class="info-card">
+      <p>Proposed addition to <code>enum class TemplateId : uint8_t</code> in <code>include/sost/capsule.h</code>:</p>
+<pre style="background:rgba(0,0,0,0.4);padding:14px 16px;border-radius:4px;color:var(--text-primary);font-size:12.5px;line-height:1.7;overflow-x:auto">PROTOCOL_CLAIM_V1   = 0x0B,   // public timestamp / provenance record
+                              // for protocol terms, document hashes,
+                              // release statements; payload schema
+                              // defined in this page.</pre>
+      <p style="margin-top:10px">Until that template id is added at consensus level, the same record is published using the existing <code>TEMPLATE_FIELDS_OPEN</code> (0x05) capsule type with the schema fields above. Existing capsule-aware tooling already decodes 0x05, so no new tooling is required to read these records today.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FUTURE ANTI-SPAM MODEL -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// FUTURE ANTI-SPAM</div>
+      <h2 class="section-title">Future anti-spam <span style="color:#d946ef">model</span></h2>
+      <p class="section-sub">Not active. Documented so future iterations have a clear, non-monetized starting point.</p>
+    </div>
+
+    <div class="info-card">
+      <p>A public registry that anyone can append to without cost is exposed to spam &mdash; thousands of trivial records flooding the chain. SOST already requires a normal network transaction fee for every transaction (paid in SOST), which is the primary anti-spam mechanism on the base layer.</p>
+      <p>For a future iteration, a small application-level fee (also paid in SOST) could be required for registry records, in addition to the normal network fee. This would be enforced at the indexer / surface layer (not at consensus), so a misconfigured indexer cannot censor records. <b>No such fee is active</b>, and no current iteration of this page enforces or collects any payment.</p>
+      <p style="color:var(--text-secondary);font-size:12px;font-style:italic;margin-top:10px">The registry is read-only documentation in this iteration. Records are published manually by the operator via a normal SOST transaction with an attached capsule. Third parties are not invited to submit registry records yet &mdash; that pathway is reserved for a future design after the anti-spam, identity-attribution and dispute-handling models are settled.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LEGAL-SAFE FOOTER -->
+<section style="border-top:1px solid var(--border-dim);background:rgba(217,70,239,0.04)">
+  <div class="container" style="padding:24px 0">
+    <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:0">
+      <b style="color:#d946ef">SOST Protocol Registry disclaimer.</b>
+      The SOST Protocol Registry is an evidentiary on-chain timestamp and provenance system. It is <b>not</b> a patent office, trademark registry, copyright registry, or legal-ownership registry. A capsule record establishes that a specific content existed at a specific block height under a specific signing key &mdash; nothing more, nothing less. Legal rights, if any, depend on applicable law and formal filings where required. This page is informational and not legal advice. If you require legal protection of intellectual property, consult a qualified attorney in your jurisdiction.
+    </p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="container">
+    <p>&copy; SOST Protocol &mdash; <a href="index.html">sostcore.com</a></p>
+  </div>
+</div>
+
+<link rel="stylesheet" href="css/crt-effects.css">
+<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
+<script src="js/retro-sounds.js"></script>
+<script src="js/sost-pwa-install.js"></script>
+<script src="js/crt-effects.js"></script>
+<script src="js/developer-note.js" defer></script>
+<script src="js/sost-music.js"></script>
+
+<!-- NON-CUSTODIAL DISCLAIMER (footer) -->
+<section style="border-top:1px solid var(--border-dim);background:rgba(245,158,11,0.04)">
+  <div class="container" style="padding:24px 0">
+    <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:0">
+      <b style="color:var(--amber-primary)">SOST OTC / P2P disclaimer.</b>
+      SOST Community OTC / P2P Board is a user-to-user discussion area for voluntary SOST offers. SOST Protocol
+      does not intermediate trades, custody funds, provide escrow, guarantee counterparties, or guarantee
+      liquidity. Admins never DM first. Use small test transactions and verify all addresses independently.
+      No direct founder sale is currently active. SOST Protocol is not a broker, exchange, trading desk, escrow service, market maker, or official
+      liquidity program.
+    </p>
+  </div>
+</section>
+
+</body>
+</html>
