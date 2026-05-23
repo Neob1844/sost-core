@@ -79,7 +79,7 @@ incoming BCNN frame (from existing p2p_recv on the peer thread)
 
 | Layer | File | Symbol / line |
 |---|---|---|
-| Gate constant | `include/sost/params.h:842` | `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX` |
+| Gate constant | `include/sost/params.h:842` | `BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT` |
 | Limits | `include/sost/beacon_p2p.h:87-89` | `NOTICE_MAX_BYTES = 4 KB`, `CACHE_MAX = 32`, `PEER_RATE = 8/min` |
 | Decision enum | `include/sost/beacon_p2p.h:132` | `IncomingDecision` (9 cases) |
 | State container | `include/sost/beacon_p2p.h:200` | `BeaconP2PState` (LRU cache + rate map + mutex) |

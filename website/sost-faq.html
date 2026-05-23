@@ -388,6 +388,77 @@
       <div class="faq-a"><div class="faq-a-inner"><strong>MIT License — fully open source</strong> Open source. Free to read, study, audit, and contribute. Free to use, modify, and deploy without any restriction. Source code is public at <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener" style="color:var(--cyan-primary)">github.com/Neob1844/sost-core</a>.</div></div>
     </div>
   </div>
+
+    <!-- V13 + Beacon + OTC FAQ -->
+    <div class="section-header" style="margin-top:48px;">
+      <h2 class="section-title">V13 &amp; <span class="accent">Beacon</span></h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q"><h3>What activates at block 12,000 (V13)?</h3><span class="toggle">+</span></div>
+        <div class="faq-a">
+          <p>V13 is a coordinated hard fork that activates several non-controversial improvements at block <b>12,000</b>:</p>
+          <ul>
+            <li><b>Future-timestamp drift cap 60 s &rarr; 30 s.</b> Blocks more than 30 s ahead of validator time are rejected. NTP is strongly recommended (not consensus-mandatory).</li>
+            <li><b>SbPoW hardening.</b> The non-outsourceable signature now also binds timestamp, difficulty, merkle root, and a chain-specific genesis hash &mdash; closes timestamp-restamp, difficulty-fork, tx-set mutation, and cross-chain replay seams. See <code>docs/V13_SBPOW_HARDENING.md</code>.</li>
+            <li><b>cASERT E7-H35</b> active (all 43 profiles) and <b>DTD lottery cooldown 5 &rarr; 6</b>.</li>
+            <li><b>Beacon Phase II-A, II-B, and III</b> all activate at V13_HEIGHT (advisory only &mdash; see Beacon questions below).</li>
+          </ul>
+          <p><b>NOT activated in V13:</b> PoPC automated lifecycle and Gold Vault spend-side governance &mdash; deferred to V14 / block 15,000.</p>
+        </div>
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q"><h3>What is Beacon? Does it affect mining or block validity?</h3><span class="toggle">+</span></div>
+        <div class="faq-a">
+          <p><b>Beacon is an advisory notice system.</b> It does <b>not</b> affect mining rewards, block validity, chain selection, transaction validation, wallet balances, PoPC, Gold Vault, or consensus.</p>
+          <p>Beacon lets the operator publish signed advisory notices (upgrade reminders, operational warnings, etc.) that nodes and miners display in their banners. Invalid, expired, malformed, or unsigned Beacon notices are simply ignored by the node.</p>
+          <ul>
+            <li><b>Phase II-A.</b> Local <code>notices.json</code> read on startup, single-signature ECDSA verification.</li>
+            <li><b>Phase II-B.</b> Adds N-of-M threshold signatures (default 3-of-5), revocation, and an optional <code>mirror_url</code> metadata pointer (the node never fetches it).</li>
+            <li><b>Phase III.</b> P2P gossip of valid signed notices. Active at V13_HEIGHT.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q"><h3>How does Beacon P2P actually work?</h3><span class="toggle">+</span></div>
+        <div class="faq-a">
+          <p>Beacon P2P (Phase III) is gossip between SOST nodes &mdash; <b>not</b> users on Telegram. Each node receives <code>BCNN</code> messages and runs an ordered pipeline:</p>
+          <ul>
+            <li>Reject if the notice exceeds 4 KB (size cap).</li>
+            <li>Reject if it fails to parse, or carries more than one notice per message.</li>
+            <li>Reject if the signature is invalid (or fails the 3-of-5 threshold check for II-B notices).</li>
+            <li>Reject if the network does not match (mainnet vs testnet).</li>
+            <li>Reject if the notice is expired or not yet activated.</li>
+            <li>Reject if the notice ID is already in the 32-entry LRU dedup cache.</li>
+            <li>Reject if the sending peer exceeds 8 new notices per minute.</li>
+            <li>Otherwise: cache the notice ID and relay it to all other version-acked peers.</li>
+          </ul>
+          <p><b>Beacon P2P does not move coins, does not execute commands, does not fetch HTTP, does not restart software, and does not validate or invalidate blocks.</b> Full design: <code>docs/V13_BEACON_PHASE_III.md</code>.</p>
+        </div>
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q"><h3>What is the difference between Beacon P2P and the OTC / P2P Board?</h3><span class="toggle">+</span></div>
+        <div class="faq-a">
+          <p>They share the letters &quot;P2P&quot; but are different things.</p>
+          <ul>
+            <li><b>Beacon P2P</b> &mdash; node-to-node gossip of signed advisory notices. Lives inside the SOST node software. Advisory only, no money movement.</li>
+            <li><b>Community OTC / P2P Board</b> &mdash; user-to-user discussion room inside <a href="sost-talk.html">SOST Talk</a>. Users post voluntary buy/sell talk among themselves. <b>SOST Protocol does not intermediate, custody, escrow, or guarantee any trade posted there.</b> Users trade at their own risk.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q"><h3>Does SOST run an exchange, broker, or escrow service?</h3><span class="toggle">+</span></div>
+        <div class="faq-a">
+          <p><b>No.</b> SOST Protocol does not operate an exchange, broker, trading desk, market maker, escrow service, custody program, or official liquidity program. The OTC / P2P Board inside <a href="sost-talk.html">SOST Talk</a> is a community discussion board only &mdash; SOST never holds buyer or seller funds.</p>
+          <p>Admins never DM first. Anyone claiming &quot;official escrow&quot;, &quot;guaranteed buyer/seller&quot;, &quot;risk-free profit&quot;, or asking you to verify your wallet to trade is a scammer. Report and block. SOST Sentinel (the chat moderation bot) auto-flags these patterns.</p>
+        </div>
+      </div>
+    </div>
 </section>
 
 <footer>

@@ -1,5 +1,13 @@
 # V13 Public Scope Update
 
+> **Updated 2026-05-23 — V13 public scope is now CLOSED.** Beacon Phase II-A, II-B, and III
+> all activate at V13_HEIGHT (= 12,000). Beacon is advisory-only and does not affect mining,
+> rewards, block validity, chain selection, transaction validation, wallet balances, PoPC, or
+> Gold Vault behaviour. PoPC automated lifecycle and Gold Vault spend-side governance remain
+> out of V13 (deferred). The Community OTC / P2P Board (a SOST Talk room) is a user-to-user
+> discussion board, not an exchange, escrow, or custody service. See
+> `docs/V13_BEACON_PHASE_III.md` and `docs/SOST_TALK_COMMUNITY_RULES.md`.
+
 **Date:** 2026-05-18.
 **Activation block:** 12,000 (~3,000 blocks remaining from this writing).
 **Fallback hardfork:** V14 at block 15,000 (proposed final hardfork in this cycle, not guaranteed; replaces the earlier "V15" label).

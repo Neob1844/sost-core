@@ -194,7 +194,7 @@ The hardcoded Beacon pubkey is NOT yet published. Today `website/js/beacon.js:27
 
 - **Phase II-A** ships in V13 unconditionally. The placeholder pubkey replacement is a release-day operator step (same release-key ceremony used to sign `SHA256SUMS`).
 - **Phase II-B** is realistic for V13 if the operator can produce the M threshold keys offline before the V13 RC freeze. If keys cannot be produced in time, defer to V14 / block 15,000 cleanly.
-- **Phase III** is more aggressive. Defer to V14 / block 15,000 by default unless the underlying P2P gossip primitive is already present and Phase III becomes a thin layer on top of it. The auto-disconnect-equivalent for Phase III is just leaving `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX` — no risk to V13 if Phase III is not ready.
+- **Phase III** ~~is more aggressive. Defer to V14 / block 15,000 by default unless the underlying P2P gossip primitive is already present and Phase III becomes a thin layer on top of it. The auto-disconnect-equivalent for Phase III is just leaving `BEACON_P2P_ACTIVATION_HEIGHT = INT64_MAX` — no risk to V13 if Phase III is not ready.~~ **UPDATE (Commit B):** the P2P gossip primitive was already present in the node dispatcher; Phase III ships in V13 with `BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT`. Rollback (if ever needed) is the same single-line constant revert.
 
 Memory-Lock per-instance anti-pool is **DEFERRED** from V13 — not in scope here.
 
