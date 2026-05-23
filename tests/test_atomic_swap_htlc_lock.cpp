@@ -192,6 +192,120 @@ int main() {
         }
     }
 
+    // -----------------------------------------------------------------------
+    // T10. Phase 3B-1a — HTLC_CLAIM_WITNESS payload helpers roundtrip
+    // -----------------------------------------------------------------------
+    {
+        std::array<uint8_t, 32> preimage{};
+        for (size_t k = 0; k < preimage.size(); ++k)
+            preimage[k] = static_cast<uint8_t>(0xA0 + k);
+        std::vector<uint8_t> wpayload;
+        WriteHtlcClaimWitnessPayload(wpayload, preimage);
+        TEST("T10a witness payload size == 32",
+             wpayload.size() == HTLC_CLAIM_WITNESS_PAYLOAD_LEN);
+        TEST("T10b preimage roundtrip",
+             ReadHtlcPreimage(wpayload) == preimage);
+    }
+
+    // -----------------------------------------------------------------------
+    // T11. Phase 3B-1a — pre-activation HTLC_CLAIM_WITNESS output rejected
+    //      Constructs a STANDARD tx carrying an OUT_HTLC_CLAIM_WITNESS output.
+    //      With the gate closed (INT64_MAX), R11 rejects the output type as
+    //      inactive at any spend_height.
+    // -----------------------------------------------------------------------
+    {
+        std::array<uint8_t, 32> preimage{};
+        preimage[0] = 0xDE; preimage[1] = 0xAD; preimage[2] = 0xBE; preimage[3] = 0xEF;
+        Transaction tx;
+        tx.version = 1;
+        tx.tx_type = TX_TYPE_STANDARD;
+        // Dummy input so R3 passes
+        TxInput in;
+        in.prev_txid.fill(0xAA);
+        in.prev_index = 0;
+        in.signature.fill(0x01);
+        in.pubkey.fill(0x02);
+        tx.inputs.push_back(in);
+        TxOutput out;
+        out.amount = 10000;
+        out.type = OUT_HTLC_CLAIM_WITNESS;
+        out.pubkey_hash.fill(0);
+        WriteHtlcClaimWitnessPayload(out.payload, preimage);
+        tx.outputs.push_back(out);
+        auto ctx = MakeCtx(15000);
+        auto r = ValidateTransactionConsensus(tx, utxos, ctx);
+        TEST("T11 pre-activation HTLC_CLAIM_WITNESS rejected at all", !r.ok);
+        if (!gate_open) {
+            TEST("T11 pre-activation HTLC_CLAIM_WITNESS rejected with R11_INACTIVE_TYPE",
+                 r.code == TxValCode::R11_INACTIVE_TYPE);
+        } else {
+            // When gate is open (future state), the marker output would survive
+            // R11 but R18 rejects it because tx_type is STANDARD, not CLAIM.
+            TEST("T11 (gate open) HTLC_CLAIM_WITNESS in STANDARD tx rejected with R18",
+                 r.code == TxValCode::R18_HTLC_CLAIM_WITNESS_INVALID);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // T12. Phase 3B-1a — pre-activation TX_TYPE_HTLC_CLAIM rejected by R2
+    // -----------------------------------------------------------------------
+    {
+        Transaction tx;
+        tx.version = 1;
+        tx.tx_type = TX_TYPE_HTLC_CLAIM;  // 0x10
+        TxInput in;
+        in.prev_txid.fill(0xAA);
+        in.prev_index = 0;
+        in.signature.fill(0x01);
+        in.pubkey.fill(0x02);
+        tx.inputs.push_back(in);
+        TxOutput out;
+        out.amount = 10000;
+        out.type = OUT_TRANSFER;
+        out.pubkey_hash.fill(0);
+        tx.outputs.push_back(out);
+        auto ctx = MakeCtx(15000);
+        auto r = ValidateTransactionConsensus(tx, utxos, ctx);
+        if (!gate_open) {
+            TEST("T12 pre-activation TX_TYPE_HTLC_CLAIM rejected with R2_BAD_TX_TYPE",
+                 !r.ok && r.code == TxValCode::R2_BAD_TX_TYPE);
+        } else {
+            // With the gate open, R2 lets TX_TYPE_HTLC_CLAIM through. The tx will
+            // then fail later rules (no LOCK reference, missing witness, etc.) —
+            // 3B-1b adds the CLAIM-specific validation. For now we just assert
+            // R2 is NOT the rule that fires.
+            TEST("T12 (gate open) TX_TYPE_HTLC_CLAIM passes R2", r.code != TxValCode::R2_BAD_TX_TYPE);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // T13. Phase 3B-1a — pre-activation TX_TYPE_HTLC_REFUND rejected by R2
+    // -----------------------------------------------------------------------
+    {
+        Transaction tx;
+        tx.version = 1;
+        tx.tx_type = TX_TYPE_HTLC_REFUND;  // 0x11
+        TxInput in;
+        in.prev_txid.fill(0xAA);
+        in.prev_index = 0;
+        in.signature.fill(0x01);
+        in.pubkey.fill(0x02);
+        tx.inputs.push_back(in);
+        TxOutput out;
+        out.amount = 10000;
+        out.type = OUT_TRANSFER;
+        out.pubkey_hash.fill(0);
+        tx.outputs.push_back(out);
+        auto ctx = MakeCtx(15000);
+        auto r = ValidateTransactionConsensus(tx, utxos, ctx);
+        if (!gate_open) {
+            TEST("T13 pre-activation TX_TYPE_HTLC_REFUND rejected with R2_BAD_TX_TYPE",
+                 !r.ok && r.code == TxValCode::R2_BAD_TX_TYPE);
+        } else {
+            TEST("T13 (gate open) TX_TYPE_HTLC_REFUND passes R2", r.code != TxValCode::R2_BAD_TX_TYPE);
+        }
+    }
+
     printf("\n== Summary: %d passed, %d failed ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }

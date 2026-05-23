@@ -97,6 +97,7 @@ enum class TxValCode : int {
     R13_PAYLOAD_TOO_LONG   = 113,
     R14_PAYLOAD_FORBIDDEN  = 114,
     R17_HTLC_PAYLOAD_INVALID = 115,  // Atomic Swap HTLC_LOCK payload validation (Phase 3A scope-B)
+    R18_HTLC_CLAIM_WITNESS_INVALID = 116,  // Atomic Swap HTLC_CLAIM_WITNESS payload / structure (Phase 3B-1a)
 
     // Spend / signature (S1-S12)
     S1_UTXO_NOT_FOUND      = 201,

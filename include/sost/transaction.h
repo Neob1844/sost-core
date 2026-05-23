@@ -56,6 +56,14 @@ constexpr uint8_t OUT_ESCROW_LOCK   = 0x11;
 // (R11). Pre-activation chain replay is bit-identical because this type
 // has never been mined.
 constexpr uint8_t OUT_HTLC_LOCK     = 0x12;
+// Atomic Swap HTLC CLAIM marker output. Carries the 32-byte preimage as
+// payload. Used inside a TX_TYPE_HTLC_CLAIM transaction to reveal the
+// preimage that unlocks the corresponding HTLC_LOCK utxo. The marker
+// output's amount is a small dust value paid back to the claim
+// pubkey-hash; the preimage lives in payload[0..31]. Validation is gated
+// by atomic_swap_htlc_active_at() AND only valid when the parent tx has
+// tx_type == TX_TYPE_HTLC_CLAIM.
+constexpr uint8_t OUT_HTLC_CLAIM_WITNESS = 0x13;
 // Reserved. NOT activated. SOST supply is immutable — no token destruction
 // mechanism exists or is planned. All slashing redistributes funds (50% PoPC
 // Pool, 50% Gold Funding Vault); nothing is ever burned.
@@ -222,6 +230,30 @@ inline void WriteHtlcLockPayload(
         payload[32 + i] = static_cast<Byte>((refund_height >> (8 * i)) & 0xFF);
     std::copy(claim_pkh.begin(), claim_pkh.end(), payload.begin() + 40);
     std::copy(refund_pkh.begin(), refund_pkh.end(), payload.begin() + 60);
+}
+
+// -----------------------------------------------------------------------------
+// HTLC_CLAIM_WITNESS payload helpers (OUT_HTLC_CLAIM_WITNESS = 0x13)
+//
+// Payload layout (HTLC_CLAIM_WITNESS_PAYLOAD_LEN = 32 bytes, fixed):
+//   [0..31]  preimage  (32 bytes; sha256(preimage) must equal LOCK.hashlock)
+// -----------------------------------------------------------------------------
+
+inline constexpr size_t HTLC_CLAIM_WITNESS_PAYLOAD_LEN = 32;
+
+inline std::array<Byte, 32> ReadHtlcPreimage(const std::vector<Byte>& payload) {
+    std::array<Byte, 32> p{};
+    if (payload.size() >= 32)
+        std::copy(payload.begin(), payload.begin() + 32, p.begin());
+    return p;
+}
+
+inline void WriteHtlcClaimWitnessPayload(
+    std::vector<Byte>& payload,
+    const std::array<Byte, 32>& preimage)
+{
+    payload.assign(HTLC_CLAIM_WITNESS_PAYLOAD_LEN, 0);
+    std::copy(preimage.begin(), preimage.end(), payload.begin());
 }
 
 // CompactSize (Bitcoin varint) encode/decode (canonical)

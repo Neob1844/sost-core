@@ -38,6 +38,9 @@ static bool IsActiveOutputType(uint8_t type, int64_t height, int64_t bond_activa
     if (type == OUT_HTLC_LOCK &&
         atomic_swap_htlc_active_at(height))
         return true;
+    if (type == OUT_HTLC_CLAIM_WITNESS &&
+        atomic_swap_htlc_active_at(height))
+        return true;
     return false;
 }
 
@@ -100,10 +103,17 @@ static TxValidationResult ValidateStructure(
             "R1: version must be 1, got " + std::to_string(tx.version));
     }
 
-    // R2: tx_type in {0x00, 0x01}
+    // R2: tx_type in {0x00, 0x01} pre-activation; HTLC_CLAIM (0x10) /
+    // HTLC_REFUND (0x11) allowed only when atomic_swap_htlc_active_at(spend_height).
     if (tx.tx_type != TX_TYPE_STANDARD && tx.tx_type != TX_TYPE_COINBASE) {
-        return TxValidationResult::Fail(TxValCode::R2_BAD_TX_TYPE,
-            "R2: invalid tx_type 0x" + HexStr(&tx.tx_type, 1));
+        bool htlc_tx_type_allowed =
+            atomic_swap_htlc_active_at(ctx.spend_height) &&
+            (tx.tx_type == TX_TYPE_HTLC_CLAIM ||
+             tx.tx_type == TX_TYPE_HTLC_REFUND);
+        if (!htlc_tx_type_allowed) {
+            return TxValidationResult::Fail(TxValCode::R2_BAD_TX_TYPE,
+                "R2: invalid tx_type 0x" + HexStr(&tx.tx_type, 1));
+        }
     }
 
     // R3: 1 <= num_inputs <= 256
@@ -190,6 +200,28 @@ static TxValidationResult ValidateStructure(
             }
         }
 
+        // R18: HTLC_CLAIM_WITNESS payload must be exactly
+        //      HTLC_CLAIM_WITNESS_PAYLOAD_LEN (32) bytes (the preimage).
+        //      The witness output is only valid inside a TX_TYPE_HTLC_CLAIM
+        //      transaction; outside that context R18 fails the tx. Gated by
+        //      atomic_swap_htlc_active_at() through the R11 path already.
+        if (out.type == OUT_HTLC_CLAIM_WITNESS) {
+            if (out.payload.size() != HTLC_CLAIM_WITNESS_PAYLOAD_LEN) {
+                return TxValidationResult::Fail(TxValCode::R18_HTLC_CLAIM_WITNESS_INVALID,
+                    "R18: HTLC_CLAIM_WITNESS output[" + std::to_string(i) +
+                    "] payload must be " + std::to_string(HTLC_CLAIM_WITNESS_PAYLOAD_LEN) +
+                    " bytes (preimage), got " + std::to_string(out.payload.size()),
+                    -1, (int32_t)i);
+            }
+            if (tx.tx_type != TX_TYPE_HTLC_CLAIM) {
+                return TxValidationResult::Fail(TxValCode::R18_HTLC_CLAIM_WITNESS_INVALID,
+                    "R18: HTLC_CLAIM_WITNESS output[" + std::to_string(i) +
+                    "] only allowed inside TX_TYPE_HTLC_CLAIM (0x10); got tx_type 0x" +
+                    HexStr(&tx.tx_type, 1),
+                    -1, (int32_t)i);
+            }
+        }
+
         // R17: HTLC_LOCK payload must be exactly HTLC_LOCK_PAYLOAD_LEN (80) bytes,
         //      refund_height must be strictly > current spend_height, and amount
         //      must be >= DUST_THRESHOLD. Activation gated by atomic_swap_htlc_active_at().
@@ -235,6 +267,8 @@ static TxValidationResult ValidateStructure(
                 payload_allowed = true; // validated in R15/R16 above
             } else if (out.type == OUT_HTLC_LOCK && atomic_swap_htlc_active_at(ctx.spend_height)) {
                 payload_allowed = true; // validated in R17 above
+            } else if (out.type == OUT_HTLC_CLAIM_WITNESS && atomic_swap_htlc_active_at(ctx.spend_height)) {
+                payload_allowed = true; // validated in R18 below
             } else if (ctx.spend_height >= ctx.capsule_activation_height) {
                 if (out.type == OUT_TRANSFER) payload_allowed = true;
             }
