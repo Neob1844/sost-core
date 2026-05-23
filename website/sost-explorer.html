@@ -1260,15 +1260,16 @@ function toggleV12Banner(){
       <li><b>All cASERT equalizer profiles E7-H35 active</b> — ceiling rises from H20 to H35 via <code>effective_profile_ceiling_at(height)</code> + <code>validator_profile_ceiling_at(height)</code> in <code>include/sost/params.h</code>. Closes the equalizer calibration started in V6.</li>
       <li><b>DTD lottery cooldown 5 → 6 blocks</b> — <code>lottery_exclusion_window_at(height)</code> returns 6 for <code>height &ge; V13_HEIGHT</code>. Deterministic 2-firing exclusion under permanent 1-of-3 cadence.</li>
       <li><b>Future-timestamp drift cap 60 s → 30 s</b> — <code>max_future_drift_at(height)</code> returns 30 for <code>height &ge; V13_HEIGHT</code>. <b style="color:#fb010d">NTP synchronisation is strongly recommended post-V13</b>; a host whose clock is more than 30 s ahead of true time will produce blocks validators reject.</li>
-      <li><b>Beacon Phase II-A</b> — <code>BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT</code>. Local <code>notices.json</code> only; file-only, no P2P, no HTTP from the node. Operator-signed advisory banner on miner / node startup.</li>
+      <li><b>Beacon Phase II-A</b> — <code>BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT</code>. Local <code>notices.json</code>, ECDSA-SHA256 single-sig, file-only, no HTTP from the node. Operator-signed advisory banner on miner / node startup.</li>
+      <li><b>Beacon Phase II-B</b> — adds N-of-M threshold signatures (default <b>3-of-5</b>) for critical notices, revocation by notice ID (only threshold-signed notices can revoke), and an optional <code>mirror_url</code> metadata field that the node <b>never</b> fetches. Active at <code>V13_HEIGHT</code>.</li>
+      <li><b>Beacon Phase III (P2P gossip)</b> — <code>BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT</code>. The BCNN dispatcher relays valid signed notices between nodes with hard limits (4&nbsp;KB max notice, 32-notice LRU dedup cache, 8 notices/peer/min rate limit, signature verify, network match, expiry). Pre-V13: DiscardDormant. <b>Advisory only — never affects consensus, mining, or block validation.</b></li>
+      <li><b>SbPoW hardening</b> — at <code>V13_HEIGHT</code> the signed PoW preimage grows from V11 layout (7 fields, 129&nbsp;B) to V13 layout (11 fields, 205&nbsp;B). New committed fields: <code>timestamp</code>, <code>bits_q</code>, <code>merkle_root</code>, and a chain-specific <code>genesis_hash</code> salt — closes timestamp-restamp, difficulty-fork, tx-set mutation, and cross-chain replay seams. Domain tag bumped to <code>SOST/POW-SIG/v13</code>. See <code>docs/V13_SBPOW_HARDENING.md</code>.</li>
     </ul>
 
     <div style="color:#f59e0b;font-size:13px;font-weight:900;letter-spacing:1.5px;margin-bottom:6px">⚠ FALLBACK TO V14 (BLOCK 15,000) — DO NOT EXPECT THESE AT 12,000</div>
     <ul style="margin:6px 0 10px 18px;padding:0">
       <li><b>PoPC Model A + B</b> — full automated lifecycle. <b>Deferred to V14 / block 15,000</b> (high confidence). Five of nine PoPC consensus-readiness gates are RED today: <code>POPC_ACTIVATION_HEIGHT</code> missing, no audit daemon, no auto-slash, no auto-settlement, no Ethereum bridge, no end-to-end lifecycle test. SOSTEscrow.sol exists in source (<code>contracts/SOSTEscrow.sol</code>) but is not deployed. PoPC accumulation (25% per block to the PoPC Pool address) continues unchanged at consensus since genesis. <b>PoPC is NOT half-shipped.</b> Full audit: <code>docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</code>.</li>
       <li><b>Gold Vault governance</b> — spend-side governance (purpose restriction, dual whitelists, per-spend cap, rate limit, 90% block-based miner signaling over a 67-block window ~12 h, Transitional Guardian with 10-block pronouncement window, auto-disconnect at block 25,000). <b>Deferred to V14 / block 15,000</b>. Five of six gates RED today; <code>classify_gv_spend()</code> exists and is unit-tested but is dead code (not called by the validator). Accumulation (25% per block to <code>ADDR_GOLD_VAULT</code>) continues unchanged at consensus since genesis. Full audit: <code>docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md</code>.</li>
-      <li><b>Beacon Phase II-B</b> — expiration-by-height, threshold-N-of-M signature on critical notices, mirror channel, optional revocation, severity levels. <b>Target V13 if ready; otherwise V14</b>. Two features already in II-A (expires_height, severity); three missing (threshold, mirror, revocation). Realistic close: 1-2 sprints. Audit: <code>docs/V13_BEACON_II_B_III_GAPS.md</code>.</li>
-      <li><b>Beacon Phase III</b> — P2P gossip of verified notices. <b>Active at V13_HEIGHT (12,000)</b> via <code>BEACON_P2P_ACTIVATION_HEIGHT = V13_HEIGHT</code>. Pre-V13 the BCNN dispatcher returns DiscardDormant; from V13_HEIGHT the full advisory pipeline runs (4 KB notice cap, 32-notice LRU dedup, 8 notices/peer/min rate limit, sig verify, network match, expiry). Accepted notices relay to version-acked peers. Advisory only — never affects consensus, mining, or block validation.</li>
       <li><b>Memory-Lock per-instance</b> — second anti-pool mechanism originally proposed alongside SbPoW. <b>REJECTED — not scheduled for V13 or V14</b>. Numerical analysis of realistic hardware budgets shows the mechanism penalises small miners proportionally MORE than large rigs (small miners lose ~75% of their threads at the 8 GB RAM floor; rigs lose ~50%), achieving the opposite of the declared anti-pool goal. SbPoW (active since block 7,100) remains the protocol's only anti-pool defense.</li>
     </ul>
 
@@ -1280,9 +1281,22 @@ function toggleV12Banner(){
       The decision is community-driven, not unilateral.
     </div>
 
+    <div style="background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.45);border-left:4px solid #22d3ee;padding:10px 12px;margin:10px 0;font-size:11.5px;line-height:1.7;color:var(--text)">
+      <b style="color:#22d3ee">Community OTC / P2P Board.</b>
+      Separate from Beacon (which is node-to-node gossip of signed advisory notices), the <b>OTC / P2P Board</b> is a community discussion room inside <a href="sost-talk.html" style="color:#22d3ee;text-decoration:underline">SOST Talk</a> where users post voluntary buy/sell talk between each other
+      (e.g. <code>WTB 100 SOST</code> / <code>WTS 50 SOST</code>).
+      <b>SOST Protocol does NOT intermediate trades. SOST Protocol does NOT custody funds. SOST Protocol does NOT provide escrow.</b>
+      No guarantee of buyer, seller, price, liquidity, settlement, or safety. Admins never DM first.
+      Use small test transactions and verify all addresses independently.
+      Anyone claiming &quot;official escrow&quot; or &quot;guaranteed buyer/seller&quot; is a scammer — Sentinel (the chat moderation bot) auto-flags these patterns and the chat rules block them.
+      See <a href="sost-otc.html" style="color:#22d3ee;text-decoration:underline">sost-otc.html</a>,
+      <a href="sost-community.html" style="color:#22d3ee;text-decoration:underline">sost-community.html</a>, and
+      <code>docs/SOST_TALK_COMMUNITY_RULES.md</code>.
+    </div>
+
     <div style="background:rgba(0,0,0,.25);border-left:3px solid #f59e0b;padding:10px 12px;margin:10px 0;font-size:11.5px;line-height:1.7;color:var(--text)">
       <b style="color:#f59e0b">Beacon is a loudspeaker, not a remote control.</b>
-      Beacon Phase II-A (V13 confirmed) MAY inform; it MAY NOT restart, MAY NOT block any block or transaction, MAY NOT change consensus rules, MAY NOT execute commands on the host. The validator and the static safety lint enforce these guarantees together. Beacon Phase II-B and Phase III preserve the same privilege model bit for bit.
+      Beacon Phase II-A, II-B, and Phase III (all V13 confirmed) MAY inform; they MAY NOT restart, MAY NOT block any block or transaction, MAY NOT change consensus rules, MAY NOT execute commands on the host, MAY NOT move coins. The validator and the static safety lint enforce these guarantees together (link-time invariant pinned by <code>tests/test_v13_beacon_phase3_p2p.cpp:t15</code>: Beacon code never depends on block_validation symbols).
     </div>
 
     <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.45);border-left:4px solid #22c55e;padding:10px 12px;margin:10px 0;font-size:11.5px;line-height:1.7;color:var(--text)">
@@ -1292,7 +1306,7 @@ function toggleV12Banner(){
 
     <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.45);border-left:4px solid #22c55e;padding:10px 12px;margin:10px 0;font-size:11.5px;line-height:1.7;color:var(--text)">
       <b style="color:#22c55e">V13 Public Scope Update (2026-05-18).</b>
-      The operator-and-community version of V13 scope is at <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code> — read it before mining V13. Honest summary: V13 ships <b>cASERT E7-H35, DTD cooldown 5→6, drift cap 60s→30s (NTP strongly recommended), Beacon Phase II-A</b>. <b>PoPC + Escrow + Gold Vault governance are DEFERRED to V14 / block 15,000</b> — five of nine PoPC gates and five of six Vault gates are RED today; shipping half-implemented consensus at block 12,000 is worse than waiting. Memory-Lock per-instance is REJECTED (numerical analysis shows it would penalise small miners more than rigs). The earlier "V15" label has been replaced by "V14" everywhere; the block height (15,000) is unchanged.
+      The operator-and-community version of V13 scope is at <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code> — read it before mining V13. Honest summary: V13 ships <b>cASERT E7-H35, DTD cooldown 5→6, drift cap 60s→30s (NTP strongly recommended), SbPoW hardening, Beacon Phase II-A + II-B (3-of-5 threshold) + III (P2P gossip, advisory only)</b>. <b>PoPC + Escrow + Gold Vault governance are DEFERRED to V14 / block 15,000</b> — five of nine PoPC gates and five of six Vault gates are RED today; shipping half-implemented consensus at block 12,000 is worse than waiting. Memory-Lock per-instance is REJECTED (numerical analysis shows it would penalise small miners more than rigs). The earlier "V15" label has been replaced by "V14" everywhere; the block height (15,000) is unchanged.
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;font-size:11px;margin-top:10px">
