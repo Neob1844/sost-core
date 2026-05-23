@@ -68,6 +68,9 @@ struct Notice {
     //                     signatures from DISTINCT keys in
     //                     BEACON_THRESHOLD_PUBKEYS. The default
     //                     deployment uses 3-of-5 (BEACON_THRESHOLD_REQUIRED).
+    //                     OFF by default in V13 — gated by
+    //                     BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT
+    //                     (= INT64_MAX). See docs/BEACON_CUSTODY_STATUS.md.
     uint32_t                 threshold{0};
     std::vector<std::string> signatures_b64;       // base64 DER, one per signer
     std::string              revokes;              // notice_id this notice retires ("" = none)

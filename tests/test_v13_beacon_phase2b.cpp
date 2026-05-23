@@ -511,6 +511,29 @@ static void t14_no_consensus_side_effects() {
     TEST("Beacon translation unit compiles standalone", true);
 }
 
+
+// 15) II-B threshold sentinel OFF by default (V13 bootstrap).
+//     While BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT == INT64_MAX, every
+//     notice that claims threshold > 0 must be rejected by is_active()
+//     regardless of signature validity. The sentinel check fires
+//     BEFORE the signature verifier runs, so this test does NOT need
+//     valid threshold signatures.
+static void t15_iib_sentinel_off_by_default() {
+    printf("\n=== 15) II-B threshold sentinel OFF by default (V13 bootstrap) ===\n");
+    Notice n = mk_iib_notice(3);
+    // Intentionally garbage sigs. The sentinel must reject before this matters.
+    n.signatures_b64.push_back("AA==");
+    n.signatures_b64.push_back("AB==");
+    n.signatures_b64.push_back("AC==");
+    bool ok = is_active(n, /*h=*/12000, Network::MAINNET, "");
+    TEST("is_active rejects any threshold>0 notice while sentinel == INT64_MAX", !ok);
+
+    // Belt-and-suspenders: even at very large heights the sentinel
+    // (still INT64_MAX in this build) keeps rejecting.
+    bool ok_far = is_active(n, /*h=*/INT64_MAX - 1, Network::MAINNET, "");
+    TEST("rejection holds at INT64_MAX - 1 (sentinel still active)", !ok_far);
+}
+
 // ---------------------------------------------------------------------------
 
 int main() {
@@ -532,6 +555,7 @@ int main() {
     t12_canonical_iia_vs_iib_differ();
     t13_tampered_threshold_rejected();
     t14_no_consensus_side_effects();
+    t15_iib_sentinel_off_by_default();
 
     printf("\n================================================\n");
     printf("Results: %d passed, %d failed\n", g_pass, g_fail);

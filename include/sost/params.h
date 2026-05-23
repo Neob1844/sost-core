@@ -835,6 +835,27 @@ inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 60;
 
 inline constexpr int64_t V13_HEIGHT                       = 12000;
 
+// Beacon Phase II-B threshold (3-of-5) activation gate.
+//
+// INT64_MAX = OFF (sentinel). While this constant equals INT64_MAX the
+// is_active() validator REJECTS every notice that claims a threshold
+// signature (threshold > 0), even if the threshold sigs verify
+// correctly. This lets the production BEACON_THRESHOLD_PUBKEYS[5] live
+// in the binary while the operator is still in bootstrap custody of
+// all 5 keys — the code path is present but no II-B notice can
+// surface until the operator distributes keys to independent
+// custodians and decides to flip the gate.
+//
+// Activating later: replace INT64_MAX with a finite block height in
+// a small commit + rebuild + redeploy. NO fork — Beacon is
+// advisory-only and never affects consensus, mining, block validity,
+// or canonical-chain decisions.
+//
+// Rollback: revert to INT64_MAX. Same single-line change.
+//
+// See docs/BEACON_CUSTODY_STATUS.md for the current bootstrap state.
+inline constexpr int64_t BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT = INT64_MAX;
+
 // Beacon activation gates. Phase II-A is gated to V13_HEIGHT. Phase III P2P
 // is intentionally sentinel-disabled (INT64_MAX) until a future fork commit
 // lowers the gate; the explorer-only Phase 1 already shipped.

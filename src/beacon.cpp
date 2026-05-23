@@ -549,7 +549,18 @@ bool is_active(const Notice& n,
     // pass the threshold check; its legacy signature_b64 (if any) is
     // ignored — single-sig fallback under a notice that claims a
     // threshold would be an obvious downgrade attack.
+    //
+    // Sentinel gate (V13 bootstrap): while
+    // BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT == INT64_MAX, the II-B
+    // threshold path is OFF by default — every threshold-claimed
+    // notice is REJECTED before the signature verifier runs, even if
+    // 3-of-5 sigs would otherwise be valid. This pre-implements the
+    // 5-key threshold while the operator is still in bootstrap
+    // custody of all 5 keys. See docs/BEACON_CUSTODY_STATUS.md.
     if (n.threshold > 0) {
+        if (current_height < BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT) {
+            return false;
+        }
         ThresholdVerifyResult tr = verify_threshold_signatures(n, nullptr, 0);
         if (!tr.ok) return false;
     } else {

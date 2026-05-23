@@ -24,6 +24,29 @@ Phase II-A single-signature notices (`threshold == 0`) continue to
 work bit-identically. Canonical bytes for a pre-II-B notice are
 unchanged.
 
+## Sentinel: II-B threshold path is OFF by default
+
+`BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT = INT64_MAX` (see
+`include/sost/params.h`). While the sentinel holds, `is_active()`
+REJECTS every notice with `threshold > 0` BEFORE the threshold
+signature verifier runs — even if 3-of-5 signatures would otherwise be
+valid.
+
+This pre-implements the 5-key threshold while the operator is still in
+bootstrap custody of all 5 II-B private keys. The threshold pubkeys
+are committed in the binary and the verification path is wired, but
+no II-B notice can surface until the sentinel is lowered.
+
+**Activation later**: change `BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT`
+from `INT64_MAX` to a finite block height in a small commit, rebuild,
+and redeploy. **No fork** — Beacon is advisory-only and never affects
+consensus, mining, block validity, or canonical-chain decisions.
+
+**Rollback**: revert to `INT64_MAX`. Same single-line change.
+
+See `docs/BEACON_CUSTODY_STATUS.md` for the current bootstrap state
+and the operator-decision conditions that would lower the sentinel.
+
 ## Hard invariants
 
 1. **Advisory only.** No Beacon code references `block_validation.cpp`,
