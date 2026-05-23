@@ -94,3 +94,74 @@ and the moderation bot are **not** parties to any trade arranged here
 and are **not** liable for losses arising from such trades. Trade at
 your own risk and use independent escrow when the counterparty is
 unknown to you.
+
+## OTC / P2P Tactical Safety Rules
+
+The three NOT invariants (non-custodial, no escrow, no intermediation)
+are necessary but not sufficient. The board hosts the conversation;
+the user runs the trade. Most OTC scams collapse if the user follows
+the rules below.
+
+### Three rules that stop most scams
+
+1. **Screenshots are NOT proof of payment.** A screenshot the
+   counterparty sends you can be edited, faked, or come from a
+   different account. Until the money is in your bank or wallet,
+   you have not been paid.
+2. **Verify funds DIRECTLY in your bank or wallet** — log in and
+   check the balance/transaction yourself. Do NOT trust SMS
+   notifications, email alerts, or push notifications alone (they
+   can be spoofed and they lag the actual settlement).
+3. **Beware payment methods with chargeback risk.** Wait the FULL
+   clearing window before releasing SOST:
+   - PayPal Friends & Family — reversible up to 180 days.
+   - SEPA / instant bank transfer — reversible up to 8 weeks.
+   - Wise / Revolut instant — reversible on fraud claim.
+   - Cash in person — irreversible. Safest fiat method.
+   - USDC / USDT settled on-chain — irreversible after confirmations.
+     Safest crypto-vs-crypto method.
+
+### Scammer vs honest counterparty
+
+| Scammer | Honest counterparty |
+|---|---|
+| Sends a screenshot and pressures you to release fast. | Tells you they paid; lets you verify at your pace. |
+| Wants to move chat to Telegram / Signal / WhatsApp / DM. | Continues on the public OTC / P2P Board chat. |
+| Claims "I'm verified", "I'm an admin", "I work with SOST". | Makes no special claims. |
+| Asks YOU to send SOST first ("I'll send mine after"). | Agrees to a small test tx OR mutually-trusted 3rd-party escrow. |
+| Urgency: "release fast", "order expiring", "hurry up". | Respects your verification timeline. |
+| Price MUCH better than market. | Price close to market. |
+| Pays via reversible methods + "you can release now". | Uses irreversible settlement (cash in person, on-chain stablecoin). |
+| Claims an "official SOST escrow" exists. | Knows SOST does not provide escrow. |
+
+### Pre-trade checklist (the modal in SOST Talk shows this)
+
+Before posting or replying in the OTC / P2P Board, confirm:
+
+1. SOST Protocol does NOT intermediate, custody, or escrow my trade.
+2. I will verify any payment DIRECTLY in my bank/wallet.
+3. I know payment methods with chargeback risk and will wait their
+   clearing window.
+4. I will not move chat to private DMs with someone I do not already
+   trust.
+5. I will use small test transactions for any new counterparty.
+6. Admins NEVER DM first. Claims of "official escrow" / "verified
+   buyer" / "guaranteed liquidity" are scams.
+
+The checklist appears once per browser (localStorage) the first
+time the user opens the OTC room. Clearing localStorage re-shows it.
+
+### What SOST Sentinel auto-flags
+
+In addition to the existing scam patterns (`guaranteed return`,
+`official escrow`, `send funds first`, etc.), Sentinel also flags
+the common OTC pressure patterns:
+
+- "release first / send first / I'll send after" patterns.
+- "order is about to expire / hurry up / release fast".
+- "let's move to telegram / DM me on signal" patterns.
+- "I sent the screenshot, look at the screenshot" patterns.
+- "trust me / I'm verified / I'm an admin / I work with SOST".
+
+Sentinel cannot stop all scams. The first line of defence is the
+user reading and following the rules above.
