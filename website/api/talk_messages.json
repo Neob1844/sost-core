@@ -24,5 +24,18 @@
     "reported": false,
     "hidden": false,
     "isBot": true
+  },
+  {
+    "id": "otc-rep-intro-001",
+    "text": "OTC Reputation room is now open. Hard rules: SOST Protocol does NOT verify or endorse any reputation claim posted here. This is community-curated, unverified. Fake reputation is itself a scam pattern (Sybil attack \u2014 one scammer posting fake positive reviews about themselves under multiple identities). Cross-check every thread. Suggested format: [REP+ or REP-] counterparty handle, trade size, payment method, date, outcome, evidence (txid / explorer link). No doxxing. Sentinel scam patterns apply here identically. See OTC Reputation Room Rules in the community rules doc.",
+    "room": "otc-rep",
+    "userId": "sentinel",
+    "userName": "SOST Sentinel",
+    "badge": "official",
+    "timestamp": 1779010000000,
+    "flags": [],
+    "reported": false,
+    "hidden": false,
+    "isBot": true
   }
 ]

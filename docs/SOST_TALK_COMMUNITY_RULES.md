@@ -165,3 +165,61 @@ the common OTC pressure patterns:
 
 Sentinel cannot stop all scams. The first line of defence is the
 user reading and following the rules above.
+
+
+## OTC Reputation Room Rules (community-curated, unverified)
+
+The `otc-rep` room is an opt-in space where users may share their
+experiences with past OTC / P2P counterparties.
+
+### Hard invariants
+
+- **SOST Protocol does NOT verify, attest, or endorse any reputation
+  claim posted in this room.** A positive review is not a SOST
+  guarantee. A negative review is not a SOST accusation.
+- **Reputation in a non-custodial board is community-curated, not
+  platform-attested.** SOST has no identity system to anchor these
+  claims against.
+- **Fake reputation is itself a scam pattern.** Scammers can create
+  multiple identities and post fake positive reviews about themselves
+  (Sybil attack). Cross-check before trusting any single thread.
+- **No doxxing.** Do not post the counterparty's real name, address,
+  phone, ID, employer, or any other personal data. Counterparty
+  handles only.
+- The OTC / P2P Tactical Safety Rules apply identically here.
+
+### Suggested posting format (voluntary)
+
+A useful reputation post is one another user can cross-check:
+
+```
+[REP+] or [REP-] — counterparty handle: @handle
+Trade size: X SOST  /  Y fiat
+Payment method: <method>
+Date: YYYY-MM-DD
+Outcome: delivered / partial / undelivered / scam
+Evidence (if available): txid, block explorer link, screenshot of
+  on-chain payment (NOT a private chat screenshot)
+Lesson: (one sentence)
+```
+
+The more verifiable detail, the more useful. Vague "this user is a
+scammer" with no evidence carries little weight and may itself be a
+smear-campaign tactic.
+
+### Sentinel applies
+
+Sentinel's scam-pattern flags apply in this room too. A post that
+itself uses scam vocabulary ("release first", "guaranteed buyer",
+"DM me on Telegram") will be flagged regardless of whether it
+claims to be a "reputation" post.
+
+### What this room is NOT
+
+- Not a SOST-curated trader directory.
+- Not a SOST-issued reputation score.
+- Not a SOST-arbitrated dispute log.
+- Not enforceable evidence against anyone.
+
+It is a community noticeboard. Read it. Cross-check it. Decide for
+yourself.

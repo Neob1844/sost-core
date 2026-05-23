@@ -329,6 +329,207 @@
   </div>
 </section>
 
+
+<!-- ============ WHY SOST DOES NOT INTERVENE (LEGAL / DESIGN RATIONALE) ============ -->
+<section style="border-bottom:1px solid var(--border-dim);background:rgba(0,0,0,0.25)">
+  <div class="container" style="padding:40px 0">
+    <div style="margin-bottom:20px">
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// WHY NON-CUSTODIAL</div>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">Why SOST <span style="color:var(--amber-primary)">does not intervene</span> in OTC trades</h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-top:10px;line-height:1.7">The non-custodial model is not a limitation we plan to &quot;fix&quot; with automation. It is a deliberate design choice that protects both the user and the protocol. Here is the full reasoning, in plain language.</p>
+    </div>
+
+    <!-- The line that defines what we are -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-left:4px solid var(--amber-primary);border-radius:4px;padding:18px 22px;margin:0 0 24px">
+      <p style="color:var(--text-primary);font-size:14px;line-height:1.75;margin:0">
+        <b style="color:var(--amber-primary)">The line, in one sentence:</b><br>
+        The moment SOST holds funds, verifies payments, decides disputes, or matches counterparties, SOST stops being a community board and becomes a regulated financial intermediary &mdash; with licensing obligations, custodial liability, and personal exposure for the operator.
+      </p>
+    </div>
+
+    <!-- The two columns: what we are vs what we would become -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:0;border:1px solid var(--border-bright);border-radius:4px;overflow:hidden;margin:0 0 24px">
+      <div style="background:rgba(34,197,94,0.06);padding:16px 18px;border-right:1px solid var(--border-bright)">
+        <div style="color:#22c55e;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#10003; WHAT SOST IS TODAY (non-custodial board)</div>
+        <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:20px">
+          <li>A discussion room where users post voluntary offers (WTB / WTS).</li>
+          <li>SOST never holds, transfers, escrows, or matches funds.</li>
+          <li>Trades happen entirely between users, off-platform.</li>
+          <li>Legally analogous to a classified-ads board (Wallapop / Craigslist / Milanuncios).</li>
+          <li>No money-transmitter license required because no money is transmitted by SOST.</li>
+          <li>No KYC required because SOST does not custody user identity or funds.</li>
+          <li>If two users defraud each other, it is between them. SOST has no legal liability.</li>
+        </ul>
+      </div>
+      <div style="background:rgba(251,1,13,0.06);padding:16px 18px">
+        <div style="color:#fb010d;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#9888; WHAT SOST WOULD BECOME (regulated intermediary)</div>
+        <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:20px">
+          <li>If SOST <b>holds SOST until payment confirmed</b> = escrow service = custodian.</li>
+          <li>If SOST <b>verifies payment landed</b> = payment processor / money transmitter.</li>
+          <li>If SOST <b>decides disputes</b> = quasi-judicial / arbitration body.</li>
+          <li>If SOST <b>matches buyers/sellers automatically</b> = exchange.</li>
+          <li>Each of these triggers different licensing regimes (EU MiCA, US MSB + state-by-state MTL, FinCEN registration, FATF travel rule, AML compliance officer).</li>
+          <li>Mandatory KYC of every user. Personal data custody. Sanctions screening.</li>
+          <li>Compliance cost: typically $200k-$500k/year minimum, plus legal counsel.</li>
+          <li>Operator (the human running the protocol) is <b>personally liable</b> for lost funds, hacked balances, sanctioned transactions, missed reports.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Why this protects YOU the user -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:4px;padding:18px 22px;margin:0 0 18px">
+      <div style="color:var(--cyan-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">// WHY NON-CUSTODIAL PROTECTS YOU (the user)</div>
+      <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:22px">
+        <li><b>No honeypot.</b> SOST holds zero user funds. A hack of sostcore.com cannot drain anyone&apos;s balance because the site has nothing to drain. Custodial exchanges (Mt.&nbsp;Gox, FTX, QuadrigaCX, hundreds of others) lost user funds because they HAD funds to lose.</li>
+        <li><b>No frozen accounts.</b> SOST cannot freeze your funds because SOST never had them. Your SOST balance lives in your own wallet, controlled by your own private key.</li>
+        <li><b>No mandatory KYC.</b> You can use the OTC board with a pseudonym. SOST has no identity database to leak.</li>
+        <li><b>No third-party risk you didn&apos;t choose.</b> You pick your counterparty, your payment method, your verification process. You are not depending on SOST&apos;s solvency, security practices, or legal status.</li>
+      </ul>
+    </div>
+
+    <!-- Why this protects the protocol -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:4px;padding:18px 22px;margin:0 0 18px">
+      <div style="color:var(--cyan-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">// WHY NON-CUSTODIAL PROTECTS THE PROTOCOL</div>
+      <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:22px">
+        <li><b>Regulatory survival.</b> The protocol cannot be shut down for unlicensed money transmission because it transmits no money. The compliance regime that closes most crypto P2P services simply does not apply.</li>
+        <li><b>No single point of legal failure.</b> Regulators cannot serve a takedown order for funds that SOST never holds. The operator cannot be jailed for &quot;facilitating&quot; a transaction they had no part in.</li>
+        <li><b>Bankruptcy-remote by design.</b> If sostcore.com goes offline, the chain keeps running and user funds keep working because they were never in sostcore.com&apos;s custody.</li>
+        <li><b>Forkability.</b> Anyone can run an independent SOST node + their own community board. The protocol does not depend on the operator&apos;s legal continuity.</li>
+      </ul>
+    </div>
+
+    <!-- What we CAN do (and have done) -->
+    <div style="background:rgba(34,197,94,0.04);border:1px solid rgba(34,197,94,0.3);border-radius:4px;padding:18px 22px;margin:0 0 18px">
+      <div style="color:#22c55e;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#10003; WHAT SOST CAN DO (and does) against fraud</div>
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px">The non-custodial model does not mean &quot;do nothing&quot;. It means &quot;arm the user, do not intervene&quot;. SOST does:</p>
+      <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:22px">
+        <li><b>SOST Sentinel</b> &mdash; an automated chat moderation bot that flags messages matching known scam patterns (release-first, hurry-up, move-to-DM, screenshot-as-proof, fake admin claims, advance-fee fraud, screen-share scams, multi-buyer pressure, fake-merchant claims). Sentinel <b>warns</b>; Sentinel does <b>not</b> seize funds, decide disputes, or block trades.</li>
+        <li><b>Pre-trade safety checklist</b> &mdash; shown once per browser when the user first opens the OTC room. Six items the user must acknowledge before posting.</li>
+        <li><b>Three tactical rules</b> &mdash; screenshots are not proof, verify funds directly in your bank/wallet, beware chargeback methods. Repeated in the safety banner every time the OTC room is open.</li>
+        <li><b>Scammer-vs-honest counterparty table</b> &mdash; pattern recognition reference. If your counterparty matches the left column, stop the trade.</li>
+        <li><b>Annotated real-scam examples</b> (below) &mdash; concrete conversation transcripts with red-flag annotations so users can see what an attack looks like in practice.</li>
+        <li><b>Community OTC Reputation room</b> &mdash; opt-in space where users share experiences with past counterparties. SOST does NOT verify these claims. Reputation in a non-custodial board is community-curated, not platform-attested.</li>
+      </ul>
+    </div>
+
+    <!-- What we CANNOT do, even if we wanted -->
+    <div style="background:rgba(251,1,13,0.04);border:1px solid rgba(251,1,13,0.3);border-radius:4px;padding:18px 22px;margin:0 0 18px">
+      <div style="color:#fb010d;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#9888; WHAT SOST CANNOT DO (and will not add, ever)</div>
+      <ul style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:22px">
+        <li>Escrow of SOST on-platform &mdash; would make SOST a custodian.</li>
+        <li>Automated payment verification &mdash; would make SOST a payment processor.</li>
+        <li>Dispute resolution / arbitration &mdash; would make SOST a quasi-judicial body.</li>
+        <li>Auto-matching of buyers and sellers + execution &mdash; would make SOST an exchange.</li>
+        <li>&quot;Verified Merchant&quot; / &quot;Trusted Trader&quot; badges issued by SOST &mdash; would make SOST liable for the verification.</li>
+        <li>Insurance fund / chargeback guarantee &mdash; implies custody and reserve management.</li>
+      </ul>
+      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:14px 0 0">Every item above looks user-friendly. Every item above is the trip-wire that has shut down or sanctioned P2P platforms in the past. The non-custodial line is the protection.</p>
+    </div>
+
+    <!-- Precedents -->
+    <div style="background:var(--bg-card);border:1px dashed var(--border-bright);border-radius:4px;padding:14px 18px;margin:0">
+      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:0">
+        <b>Precedents &mdash; the largest P2P boards run on the same model.</b>
+        Bisq (decentralized, non-custodial escrow via 2-of-2 multisig, no central operator),
+        Hodl Hodl (non-custodial, multisig escrow, no platform custody),
+        AgoraDesk (non-custodial, P2P only, no platform funds),
+        LocalCoinSwap (non-custodial wallet model),
+        and the historic LocalBitcoins model (operator-managed escrow + KYC) which ultimately
+        closed in 2023 after the regulatory weight became unmanageable. The pattern is clear:
+        non-custodial survives, custodial-without-licenses gets shut down.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REAL SCAM EXAMPLES (annotated conversations) ============ -->
+<section style="border-bottom:1px solid var(--border-dim)">
+  <div class="container" style="padding:40px 0">
+    <div style="margin-bottom:20px">
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// LEARN BY EXAMPLE</div>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">Real scam <span style="color:#fb010d">examples</span></h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-top:10px;line-height:1.7">Anonymized transcripts of actual scam attempts seen on similar P2P boards. Red annotations point at the moment the user should have stopped the trade. Read these before your first OTC trade.</p>
+    </div>
+
+    <!-- Example 1: Screenshot scam -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 20px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:12px">EXAMPLE 1 &mdash; The screenshot scam</div>
+      <div style="font-family:var(--font-mono);font-size:12.5px;line-height:1.7;color:var(--text-primary);background:rgba(0,0,0,0.35);padding:14px 16px;border-radius:4px">
+        <div><b style="color:#22c55e">SELLER (you):</b> Hi, I have 500 SOST listed at 0.0001 BTC each.</div>
+        <div><b style="color:#22d3ee">BUYER:</b> Great, I&apos;ll take all 500. Send BTC to <code>bc1q...</code>?</div>
+        <div><b style="color:#22c55e">SELLER:</b> Yes, my BTC address is <code>bc1q...</code>. Please confirm when sent.</div>
+        <div style="margin-top:8px"><b style="color:#22d3ee">BUYER:</b> Sent! Here&apos;s the screenshot. <span style="color:var(--text-muted)">[image: blockchain explorer showing 0.05 BTC]</span> Please release my SOST now, I have another trade waiting. <span style="color:#fb010d;font-weight:700"><- RED FLAG #1: pressure + screenshot</span></div>
+        <div><b style="color:#22c55e">SELLER:</b> Let me check.</div>
+        <div><b style="color:#22d3ee">BUYER:</b> Hurry please, my other trade expires in 5 min. <span style="color:#fb010d;font-weight:700"><- RED FLAG #2: urgency</span></div>
+      </div>
+      <div style="background:rgba(251,1,13,0.08);border-left:4px solid #fb010d;padding:12px 14px;margin-top:12px;border-radius:0 4px 4px 0">
+        <div style="color:#fb010d;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:6px">&#9888; WHAT WENT WRONG</div>
+        <p style="color:var(--text-primary);font-size:12.5px;line-height:1.7;margin:0">The screenshot was either edited or showed a transaction to a different address. The seller logged into their wallet directly and saw <b>no incoming transaction</b>. The buyer kept pressuring until the seller realized the scam and stopped.<br>
+        <b>The rule that would have stopped this:</b> never release SOST based on a screenshot. Verify the transaction directly in your wallet / blockchain explorer using the txid you control.</p>
+      </div>
+    </div>
+
+    <!-- Example 2: Move-to-Telegram + fake admin -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 20px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:12px">EXAMPLE 2 &mdash; The move-to-DM + fake admin</div>
+      <div style="font-family:var(--font-mono);font-size:12.5px;line-height:1.7;color:var(--text-primary);background:rgba(0,0,0,0.35);padding:14px 16px;border-radius:4px">
+        <div><b style="color:#22c55e">BUYER (you):</b> WTB 200 SOST at 0.0001 BTC each, paying USDT TRC20.</div>
+        <div><b style="color:#22d3ee">SELLER:</b> Hi, I have 200 SOST. Let&apos;s move to Telegram to coordinate faster. @sost_admin_official <span style="color:#fb010d;font-weight:700"><- RED FLAG #1: move-to-DM + impersonates official handle</span></div>
+        <div><b style="color:#22c55e">BUYER:</b> OK <em>(messages on Telegram)</em></div>
+        <div><b style="color:#22d3ee">SELLER (Telegram):</b> I&apos;m a SOST official seller, I have inventory at warehouse. Send USDT to <code>TXkS...</code>, I release SOST through the official SOST escrow. <span style="color:#fb010d;font-weight:700"><- RED FLAG #2: claims &quot;official SOST escrow&quot; (there is none)</span></div>
+      </div>
+      <div style="background:rgba(251,1,13,0.08);border-left:4px solid #fb010d;padding:12px 14px;margin-top:12px;border-radius:0 4px 4px 0">
+        <div style="color:#fb010d;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:6px">&#9888; WHAT WENT WRONG</div>
+        <p style="color:var(--text-primary);font-size:12.5px;line-height:1.7;margin:0">Two compounding lies. First, the seller moved the chat off-platform to escape Sentinel (which would have flagged the false-admin claim). Second, the seller invented an &quot;official SOST escrow&quot; that does not exist. The buyer sent USDT to the seller&apos;s address and never received SOST.<br>
+        <b>The rule that would have stopped this:</b> SOST admins never DM first. There is no &quot;official SOST escrow&quot;. The only official SOST channels are the public website, the public BitcoinTalk thread, and the public SOST Talk rooms. Anyone who initiates contact via DM claiming to be official is a scammer.</p>
+      </div>
+    </div>
+
+    <!-- Example 3: Advance-fee fraud -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 20px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:12px">EXAMPLE 3 &mdash; The advance-fee / &quot;activation fee&quot; scam</div>
+      <div style="font-family:var(--font-mono);font-size:12.5px;line-height:1.7;color:var(--text-primary);background:rgba(0,0,0,0.35);padding:14px 16px;border-radius:4px">
+        <div><b style="color:#22c55e">BUYER (you):</b> Interested in your offer for 1000 SOST.</div>
+        <div><b style="color:#22d3ee">SELLER:</b> I have 1000 SOST locked in the SOST official escrow. To release them, you need to pay a 0.005 BTC activation fee first. Once paid, the escrow releases automatically. <span style="color:#fb010d;font-weight:700"><- RED FLAG: pay something small first to unlock something bigger = advance-fee fraud</span></div>
+        <div><b style="color:#22c55e">BUYER:</b> That doesn&apos;t sound right.</div>
+        <div><b style="color:#22d3ee">SELLER:</b> It&apos;s the standard SOST procedure, you can verify with the admin. <span style="color:#fb010d;font-weight:700"><- compounds with fake-admin reference</span></div>
+      </div>
+      <div style="background:rgba(251,1,13,0.08);border-left:4px solid #fb010d;padding:12px 14px;margin-top:12px;border-radius:0 4px 4px 0">
+        <div style="color:#fb010d;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:6px">&#9888; WHAT WENT WRONG</div>
+        <p style="color:var(--text-primary);font-size:12.5px;line-height:1.7;margin:0">Classic 419-style advance-fee fraud, adapted to crypto. The &quot;activation fee&quot;, &quot;escrow unlock fee&quot;, &quot;tax fee&quot;, &quot;processing fee&quot; do not exist. There is no SOST escrow. The buyer would have lost the 0.005 BTC and received nothing.<br>
+        <b>The rule that would have stopped this:</b> SOST has no fees, no escrow, no &quot;procedure&quot; that requires you to pay first to unlock anything. Anyone asking for an up-front fee to release a trade is running an advance-fee scam.</p>
+      </div>
+    </div>
+
+    <!-- Example 4: Reverse social engineering (wallet verification) -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 20px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:12px">EXAMPLE 4 &mdash; Wallet-verification phishing</div>
+      <div style="font-family:var(--font-mono);font-size:12.5px;line-height:1.7;color:var(--text-primary);background:rgba(0,0,0,0.35);padding:14px 16px;border-radius:4px">
+        <div><b style="color:#22d3ee">SCAMMER (DM to you):</b> Hi, I&apos;m from SOST support. To trade on the OTC board you need to verify your wallet first. Please visit <code>sost-verify[.]net/wallet</code> and connect your wallet. <span style="color:#fb010d;font-weight:700"><- RED FLAG #1: SOST admins never DM first, lookalike domain</span></div>
+        <div><b style="color:#22d3ee">SCAMMER:</b> If you don&apos;t verify, your wallet will be flagged and you won&apos;t be able to receive SOST. <span style="color:#fb010d;font-weight:700"><- RED FLAG #2: fake threat, no such system exists</span></div>
+      </div>
+      <div style="background:rgba(251,1,13,0.08);border-left:4px solid #fb010d;padding:12px 14px;margin-top:12px;border-radius:0 4px 4px 0">
+        <div style="color:#fb010d;font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:6px">&#9888; WHAT WENT WRONG</div>
+        <p style="color:var(--text-primary);font-size:12.5px;line-height:1.7;margin:0">The lookalike site (<code>sost-verify[.]net</code> instead of <code>sostcore.com</code>) is a phishing page that asks for the wallet seed phrase or private key under the guise of &quot;verification&quot;. The user&apos;s wallet gets drained the moment the seed is entered.<br>
+        <b>The rule that would have stopped this:</b> the ONLY official SOST domain is <code>sostcore.com</code>. Any other domain that looks SOST-related is a scam. NO legitimate process EVER asks for your seed phrase or private key. There is no &quot;wallet verification&quot; system on SOST.</p>
+      </div>
+    </div>
+
+    <!-- Recovery guide -->
+    <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.4);border-left:4px solid var(--amber-primary);border-radius:4px;padding:18px 22px;margin:0">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">&#9888; IF YOU HAVE BEEN SCAMMED</div>
+      <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0 0 10px">SOST cannot recover funds because SOST never held them. What you can still do, in order:</p>
+      <ol style="color:var(--text-primary);font-size:13px;line-height:1.75;margin:0;padding-left:22px">
+        <li><b>If you sent fiat by reversible method</b> (PayPal F&amp;F, SEPA, Wise, Revolut, credit card): contact your bank / payment provider IMMEDIATELY and file a fraud reversal. The clearing windows (PayPal F&amp;F up to 180 days, SEPA up to 8 weeks) work in your favour here.</li>
+        <li><b>If you sent crypto on-chain</b>: the transaction is irreversible. Document the scammer&apos;s address, the txid, the conversation logs, and report to chain-analytics providers (Chainalysis, Elliptic) who may flag the address for exchanges.</li>
+        <li><b>If you entered a seed phrase or private key</b> into a phishing site: assume the wallet is fully compromised. Move any remaining funds to a brand-new wallet (new seed) immediately. The old wallet is permanently unsafe.</li>
+        <li><b>Report the scammer</b> in the OTC / P2P Board chat using the report button. The Sentinel bot logs the offender. Share the lesson in the <code>OTC Reputation</code> room (community-curated, unverified) so others know.</li>
+        <li><b>File a police report</b> in your jurisdiction. Crypto fraud is increasingly investigated. Your report adds to the pattern.</li>
+        <li>Do NOT pay any &quot;recovery agent&quot; / &quot;fund-recovery service&quot; that contacts you afterwards. That is a follow-up scam &mdash; they take a fee and recover nothing.</li>
+      </ol>
+    </div>
+  </div>
+</section>
 <!-- Note: legacy founder-sale sections have been removed. Gold Vault verification lives at sost-gold-reserve.html. -->
 
 <!-- FOOTER -->
