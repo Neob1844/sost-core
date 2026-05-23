@@ -287,6 +287,23 @@
     </div>
   </div>
 
+  <!-- OTC Reputation room safety notice (visible only when 'otc-rep' room selected) -->
+  <div id="otcRepSafetyNotice" style="display:none;margin:12px 0 16px;padding:14px 18px;border:2px solid #22d3ee;border-left:6px solid #22d3ee;background:rgba(34,211,238,.08);border-radius:4px;color:var(--text-primary);font-size:13px;line-height:1.65">
+    <div style="color:#22d3ee;font-weight:900;letter-spacing:1.2px;font-size:13px;margin-bottom:6px">
+      &#9432; OTC REPUTATION &mdash; COMMUNITY-CURATED, UNVERIFIED
+    </div>
+    <div>
+      This room is for users to <b>share experiences</b> with past OTC / P2P counterparties.<br>
+      &bull; <b>SOST Protocol does NOT verify, attest, or endorse any reputation claim posted here.</b><br>
+      &bull; A positive review is not a SOST guarantee. A negative review is not a SOST accusation.<br>
+      &bull; Reputation in a non-custodial board is community-curated, not platform-attested.<br>
+      &bull; <b>Fake reputation is itself a scam pattern.</b> Scammers can create multiple identities and post fake positive reviews about themselves (Sybil attack). Cross-check before trusting any single thread.<br>
+      &bull; <b>Posting format suggestion</b> (entirely voluntary): trade size, payment method, counterparty handle, outcome (delivered / partial / undelivered), evidence link (block explorer / txid). The more verifiable detail, the more useful.<br>
+      &bull; Do NOT post the counterparty&apos;s real name, address, phone, ID, or any other personal data &mdash; that crosses into doxxing.<br>
+      &bull; Sentinel scam patterns and rate limits apply identically to this room.
+    </div>
+  </div>
+
   <!-- OTC / P2P Board safety notice (visible only when 'otc' room selected) -->
   <div id="otcSafetyNotice" style="display:none;margin:12px 0 16px;padding:14px 18px;border:2px solid #f59e0b;border-left:6px solid #f59e0b;background:rgba(245,158,11,.08);border-radius:4px;color:var(--text-primary);font-size:13px;line-height:1.65">
     <div style="color:#f59e0b;font-weight:900;letter-spacing:1.2px;font-size:13px;margin-bottom:6px">
@@ -414,7 +431,7 @@
 <script src="js/sost-talk.js"></script>
 <script src="js/auth-passkey.js"></script>
 <script>
-function renderRoomTabs(){var t=document.getElementById('roomTabs');var c=SOSTTalk.getCounts();var h='';SOSTTalk.getRooms().forEach(function(r){var a=r===SOSTTalk.getCurrentRoom()?' active':'';h+='<div class="room-tab'+a+'" onclick="SOSTTalk.setRoom(\''+r+'\')">'+SOSTTalk.getRoomLabel(r)+'<span class="room-count">('+( c[r]||0)+')</span></div>';});t.innerHTML=h; var banner=document.getElementById('otcSafetyNotice'); if(banner) banner.style.display=(SOSTTalk.getCurrentRoom()==='otc')?'block':'none'; maybeShowOtcChecklist();}
+function renderRoomTabs(){var t=document.getElementById('roomTabs');var c=SOSTTalk.getCounts();var h='';SOSTTalk.getRooms().forEach(function(r){var a=r===SOSTTalk.getCurrentRoom()?' active':'';h+='<div class="room-tab'+a+'" onclick="SOSTTalk.setRoom(\''+r+'\')">'+SOSTTalk.getRoomLabel(r)+'<span class="room-count">('+( c[r]||0)+')</span></div>';});t.innerHTML=h; var cur=SOSTTalk.getCurrentRoom(); var banner=document.getElementById('otcSafetyNotice'); if(banner) banner.style.display=(cur==='otc')?'block':'none'; var repBanner=document.getElementById('otcRepSafetyNotice'); if(repBanner) repBanner.style.display=(cur==='otc-rep')?'block':'none'; maybeShowOtcChecklist();}
 // P1.5 — Pre-Trade Safety Checklist modal. Shown the first time the user
 // lands on the OTC room. Acknowledgement persisted in localStorage. No
 // cookies, no third-party storage. Re-shows if the user clears localStorage.
@@ -423,7 +440,8 @@ function otcChecklistAcknowledged(){try{return localStorage.getItem(OTC_CHECKLIS
 function maybeShowOtcChecklist(){
   var overlay=document.getElementById('otcChecklistOverlay');
   if(!overlay) return;
-  var inOtc=(typeof SOSTTalk!=='undefined') && SOSTTalk.getCurrentRoom && SOSTTalk.getCurrentRoom()==='otc';
+  var cur=(typeof SOSTTalk!=='undefined') && SOSTTalk.getCurrentRoom && SOSTTalk.getCurrentRoom();
+  var inOtc=(cur==='otc' || cur==='otc-rep');
   if(inOtc && !otcChecklistAcknowledged()){
     overlay.style.display='flex';
     document.body.style.overflow='hidden';

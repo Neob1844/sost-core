@@ -15,13 +15,18 @@ const SOSTTalk = (function () {
   // OTC / P2P Board is a community discussion room. It is NOT an
   // exchange, NOT an escrow, NOT a trading desk. SOST Protocol never
   // custodies funds and never intermediates trades posted here.
-  var ROOMS = ['general', 'miners', 'dex', 'otc', 'bugs'];
+  // OTC / P2P Board is a community discussion room. OTC Reputation is
+  // an opt-in space where users share experiences with past
+  // counterparties. SOST does NOT verify any reputation claim. Neither
+  // room implies custody, escrow, or intermediation by SOST Protocol.
+  var ROOMS = ['general', 'miners', 'dex', 'otc', 'otc-rep', 'bugs'];
   var ROOM_LABELS = {
-    general: 'General',
-    miners:  'Miners',
-    dex:     'DEX / PoPC',
-    otc:     'OTC / P2P Board',
-    bugs:    'Bugs / Feedback'
+    general:    'General',
+    miners:     'Miners',
+    dex:        'DEX / PoPC',
+    otc:        'OTC / P2P Board',
+    'otc-rep':  'OTC Reputation (unverified)',
+    bugs:       'Bugs / Feedback'
   };
 
   var _messages = [];

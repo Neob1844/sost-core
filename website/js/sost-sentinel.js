@@ -56,7 +56,28 @@ const SOSTSentinel = (function () {
     // 4. "I sent the screenshot" — screenshot-as-proof scam.
     /i\s*(have|just)?\s*sent\s*(you\s*)?(the\s*)?(payment\s*)?screenshot|here'?s\s*(the|a)\s*screenshot|check\s*(the|my)\s*screenshot|look\s*at\s*(the|my)\s*screenshot/i,
     // 5. Impersonation / unwarranted-trust patterns.
-    /trust\s*me\s*(bro|man|please)?|i'?m\s*verified|i'?m\s*an?\s*(official\s*)?(admin|mod|moderator)|i\s*work\s*(with|for)\s*sost/i
+    /trust\s*me\s*(bro|man|please)?|i'?m\s*verified|i'?m\s*an?\s*(official\s*)?(admin|mod|moderator)|i\s*work\s*(with|for)\s*sost/i,
+    // ---- Advanced OTC scam patterns (round 2 — sophisticated scripts) ----
+    // 6. Advance-fee / activation-fee / unlock-fee fraud.
+    /(activation|unlock|release|escrow|processing|gas|network|withdrawal|tax)\s*fee\s*(first|required|to\s*(release|unlock|proceed))|pay\s*(a\s*)?(small\s*)?fee\s*first|small\s*fee\s*to\s*(release|unlock)/i,
+    // 7. Multiple-buyer / scarcity pressure.
+    /i\s*have\s*(many|multiple|several|other)\s*(buyers?|sellers?)\s*(waiting|in\s*line|interested)|other\s*(trades?|offers?)\s*(waiting|in\s*queue)|fastest\s*(buyer|payer)\s*gets/i,
+    // 8. Last-warning / one-time / final variations of urgency.
+    /(this\s*is\s*)?(my|the)?\s*last\s*(warning|chance|offer)|one[\-\s]*time\s*offer|final\s*(notice|warning|chance)|you'?ll\s*lose\s*your\s*chance/i,
+    // 9. Friend's account / temporary address redirection.
+    /send\s*(to|via)\s*(my\s*)?(friend'?s|partner'?s|colleague'?s|wife'?s|husband'?s|brother'?s|sister'?s|business)\s*(account|wallet|address)|use\s*this\s*(temporary|alternative|backup)\s*(account|wallet|address)/i,
+    // 10. Wallet-verification phishing (the "you must verify your wallet" scam).
+    /verify\s*your\s*wallet|wallet\s*verification|connect\s*your\s*wallet\s*to\s*(verify|validate|sync)|(unfreeze|unflag|unlock)\s*your\s*wallet|wallet\s*will\s*be\s*(flagged|frozen|blocked|suspended)/i,
+    // 11. Seed-phrase request — the cardinal sin.
+    /(send|share|enter|type|paste|give|tell)\s*me\s*your\s*(seed|seed\s*phrase|mnemonic|recovery\s*phrase|private\s*key|24\s*words?|12\s*words?|backup\s*phrase)|need\s*your\s*(seed|mnemonic|recovery|private\s*key)/i,
+    // 12. Screen-share / TeamViewer / AnyDesk pressure.
+    /(screen\s*share|share\s*screen|teamviewer|anydesk|remote\s*desktop|remote\s*access)\s*(so\s*i\s*can|to\s*help|please|now)|let\s*me\s*(remote|connect|see)\s*(your\s*)?screen/i,
+    // 13. Fake transaction confirmation / "I'll show you the explorer".
+    /i'?ll\s*(show|prove|send)\s*you\s*(the\s*)?(explorer|tx|transaction|hash|proof)\s*(link|url|on\s*(another|different)\s*site)|check\s*(my\s*)?proof\s*(here|on\s*this\s*site)/i,
+    // 14. Lookalike domain / typosquat patterns ("verify on sost-verify.net").
+    /(go\s*to|visit|check)\s*(https?:\/\/)?(sost[-_.\s]?(verify|support|admin|official|wallet|portal|gateway|exchange|trade|recover|claim)|sostcore[-_.]?(net|org|io|app)|sost[-_.]?(net|org|io|app))/i,
+    // 15. "We can split the difference" / fake compromise.
+    /(let'?s|we\s*can)\s*(split|share|meet)\s*(the\s*)?(difference|halfway|half)|send\s*half\s*(first|now)|i'?ll\s*pay\s*half\s*(first|upfront)/i
   ];
 
   var IMPERSONATION_NAMES = [
