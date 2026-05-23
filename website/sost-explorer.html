@@ -1709,6 +1709,63 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
       <div id="sostDisclaimer" style="margin-top:10px;padding:10px 14px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:var(--code,monospace);display:none">
         <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// REFERENCE PRICE — NOT MARKET PRICE</div>
         <div>SOST is not yet listed on any exchange. This price is calculated in real time as:</div>
+  <div class="price-cards" id="priceChartsRowBtc">
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:var(--gold)">XAUT / BTC</b> &mdash; Tether Gold vs Bitcoin</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="xautbtcPrice" style="color:var(--gold)">&mdash;</div>
+      <div class="price-change" id="xautbtcChange">&mdash;</div>
+      <div class="tf-btns" id="xautbtcTfBtns">
+        <button class="tf-btn" data-tf="1H">1H</button>
+        <button class="tf-btn" data-tf="4H">4H</button>
+        <button class="tf-btn" data-tf="8H">8H</button>
+        <button class="tf-btn active" data-tf="24H">24H</button>
+        <button class="tf-btn" data-tf="3D">3D</button>
+        <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
+        <button class="tf-btn" data-tf="3Y">3Y</button>
+        <button class="tf-btn" data-tf="5Y">5Y</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="xautbtcChart" style="width:100%;height:150px"></canvas>
+        <canvas id="xautbtcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="xautbtcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="xautbtcRange"></div>
+    </div>
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:var(--green)">PAXG / BTC</b> &mdash; Pax Gold vs Bitcoin</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="paxgbtcPrice" style="color:var(--green)">&mdash;</div>
+      <div class="price-change" id="paxgbtcChange">&mdash;</div>
+      <div class="tf-btns" id="paxgbtcTfBtns">
+        <button class="tf-btn" data-tf="1H">1H</button>
+        <button class="tf-btn" data-tf="4H">4H</button>
+        <button class="tf-btn" data-tf="8H">8H</button>
+        <button class="tf-btn active" data-tf="24H">24H</button>
+        <button class="tf-btn" data-tf="3D">3D</button>
+        <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
+        <button class="tf-btn" data-tf="3Y">3Y</button>
+        <button class="tf-btn" data-tf="5Y">5Y</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="paxgbtcChart" style="width:100%;height:150px"></canvas>
+        <canvas id="paxgbtcOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="paxgbtcTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="paxgbtcRange"></div>
+    </div>
+    <div></div>
+  </div>
         <div style="color:#4ade80;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
           Price = (Gold committed in PoPC × Gold spot price) ÷ Total SOST supply<br>
           Price = (<span id="sostDiscGoldOz">1.2</span> oz × $<span id="sostDiscGoldP">0</span>) ÷ <span id="sostDiscSupply">0</span> SOST = <span style="color:#ffd700;font-weight:600" id="sostDiscPrice">$0</span>
@@ -7387,46 +7444,57 @@ window.addEventListener('resize',function(){if(H>0){drawEmissionChart(H);drawSpa
 /* ---- PRICE CHARTS (historical + tooltips) ---- */
 (function(){
 var COINS=[
-  {id:'tether-gold',key:'xaut',color:'#b8860b'},
-  {id:'pax-gold',key:'paxg',color:'#4ade80'},
-  {id:null,key:'sost',color:'#fb010d'}
+  {id:'tether-gold',key:'xaut',color:'#b8860b',vs:'usd'},
+  {id:'pax-gold',key:'paxg',color:'#4ade80',vs:'usd'},
+  {id:'tether-gold',key:'xautbtc',color:'#b8860b',vs:'btc'},
+  {id:'pax-gold',key:'paxgbtc',color:'#4ade80',vs:'btc'},
+  {id:null,key:'sost',color:'#fb010d',vs:'usd'}
 ];
 var TF_MAP={
   '1H':{days:1,ms:3600000},'4H':{days:1,ms:14400000},'8H':{days:1,ms:28800000},
   '24H':{days:1,ms:null},'3D':{days:3,ms:null},'7D':{days:7,ms:null},
   '30D':{days:30,ms:null},'6M':{days:180,ms:null},'1Y':{days:365,ms:null},'3Y':{days:1095,ms:null},'5Y':{days:1825,ms:null}
 };
-var cache={},cacheTimes={},CACHE_TTL=300000,activeTf={xaut:'24H',paxg:'24H',sost:'24H'},sostId=null,sostChecked=false;
+var cache={},cacheTimes={},CACHE_TTL=300000,activeTf={xaut:'24H',paxg:'24H',xautbtc:'24H',paxgbtc:'24H',sost:'24H'},sostId=null,sostChecked=false;
 var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var codeFont;try{codeFont=getComputedStyle(document.documentElement).getPropertyValue('--code');}catch(e){}
 if(!codeFont)codeFont="'Fira Code',monospace";
 
 function fmtUsd(n){return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtBtc(n){if(n>=1)return'\u20BF'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:6});return'\u20BF'+n.toLocaleString('en-US',{minimumFractionDigits:6,maximumFractionDigits:8});}
+function vsOf(key){var co=COINS.find(function(c){return c.key===key;});return co&&co.vs?co.vs:'usd';}
+function fmtFor(key,n){return vsOf(key)==='btc'?fmtBtc(n):fmtUsd(n);}
 function fmtTip(ts){var d=new Date(ts);return MO[d.getUTCMonth()]+' '+d.getUTCDate()+', '+('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2)+' UTC';}
 function shortTf(tf){return tf==='1H'||tf==='4H'||tf==='8H'||tf==='24H';}
 function fmtAx(ts,period){var d=new Date(ts);if(period==='1H'||period==='4H'||period==='8H')return('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);if(period==='24H')return('0'+d.getUTCHours()).slice(-2)+':00';if(period==='3D'||period==='7D'||period==='30D')return MO[d.getUTCMonth()]+' '+d.getUTCDate();if(period==='6M'||period==='1Y')return MO[d.getUTCMonth()]+' '+d.getUTCFullYear().toString().slice(-2);if(period==='3Y'||period==='5Y')return d.getUTCFullYear().toString();return MO[d.getUTCMonth()]+' '+d.getUTCDate();}
-function cid(key){if(key==='xaut')return'tether-gold';if(key==='paxg')return'pax-gold';return sostId;}
+function cid(key){if(key==='xaut'||key==='xautbtc')return'tether-gold';if(key==='paxg'||key==='paxgbtc')return'pax-gold';return sostId;}
+function cKey(idOrKey,vs){var id=(idOrKey&&typeof idOrKey==='string'&&idOrKey.indexOf(':')===-1)?idOrKey:idOrKey;return vs==='btc'?id+':btc':id;}
 
 function getData(key){
   var id=cid(key);if(!id)return[];
+  var ck=cKey(id,vsOf(key));
   var tf=activeTf[key],def=TF_MAP[tf];
-  var raw=(cache[id]&&cache[id][def.days])||[];
+  var raw=(cache[ck]&&cache[ck][def.days])||[];
   if(!raw.length)return[];
   if(def.ms){var cut=Date.now()-def.ms;return raw.filter(function(p){return p[0]>=cut;});}
   return raw;
 }
 
-function fetchHist(id,days,cb){
-  // Check cache TTL (5 min for price-current, full TTL for historical)
-  var ck=id+'_'+days;
-  if(cache[id]&&cache[id][days]&&cacheTimes[ck]&&(Date.now()-cacheTimes[ck]<CACHE_TTL)){
+function fetchHist(id,days,vsOrCb,cb){
+  // Backwards-compatible: fetchHist(id,days,cb) defaults vs=usd.
+  var vs='usd';
+  if(typeof vsOrCb==='function'){cb=vsOrCb;}
+  else if(typeof vsOrCb==='string'){vs=vsOrCb;}
+  var nsKey=cKey(id,vs);
+  var ck=nsKey+'_'+days;
+  if(cache[nsKey]&&cache[nsKey][days]&&cacheTimes[ck]&&(Date.now()-cacheTimes[ck]<CACHE_TTL)){
     if(cb)cb();return;
   }
-  fetch('https://api.coingecko.com/api/v3/coins/'+id+'/market_chart?vs_currency=usd&days='+days)
+  fetch('https://api.coingecko.com/api/v3/coins/'+id+'/market_chart?vs_currency='+vs+'&days='+days)
   .then(function(r){return r.json();}).then(function(d){
     if(d&&d.prices&&d.prices.length>0){
-      if(!cache[id])cache[id]={};
-      cache[id][days]=d.prices;
+      if(!cache[nsKey])cache[nsKey]={};
+      cache[nsKey][days]=d.prices;
       cacheTimes[ck]=Date.now();
     }
     if(cb)cb();
@@ -7457,7 +7525,7 @@ function drawChart(key){
   mn-=rng*0.03;mx+=rng*0.03;rng=mx-mn;
   // Y labels right
   ctx.fillStyle='#444';ctx.font='9px '+codeFont;ctx.textAlign='left';
-  for(var yi=0;yi<4;yi++){var yv=mx-rng*yi/3;var yp=pT+ch*yi/3;ctx.fillText(fmtUsd(yv),pL+cw+4,yp+3);}
+  for(var yi=0;yi<4;yi++){var yv=mx-rng*yi/3;var yp=pT+ch*yi/3;ctx.fillText(fmtFor(key,yv),pL+cw+4,yp+3);}
   // X labels
   var nL=6;if(nL>data.length)nL=data.length;
   ctx.fillStyle='#333';ctx.textAlign='center';
@@ -7470,20 +7538,21 @@ function drawChart(key){
   var grd=ctx.createLinearGradient(0,pT,0,pT+ch);grd.addColorStop(0,color+'1a');grd.addColorStop(1,color+'00');
   ctx.lineTo(pL+cw,pT+ch);ctx.lineTo(pL,pT+ch);ctx.closePath();ctx.fillStyle=grd;ctx.fill();
   updChange(key,data);updRange(key,prices);
+  if(vsOf(key)==='btc')updateBtcSpot(key);
 }
 
 function updChange(key,data){
   var el=document.getElementById(key+'Change');if(!el)return;
   if(!data||data.length<2){el.textContent='\u2014';el.style.color='var(--text3)';return;}
   var f=data[0][1],l=data[data.length-1][1],d=l-f,a=Math.abs(d),ap=Math.abs(d/f*100);
-  if(d>=0){el.style.color='var(--green)';el.textContent='+'+fmtUsd(a)+' (+'+ap.toFixed(2)+'%)';}
-  else{el.style.color='var(--red)';el.textContent='\u2212'+fmtUsd(a)+' (\u2212'+ap.toFixed(2)+'%)';}
+  if(d>=0){el.style.color='var(--green)';el.textContent='+'+fmtFor(key,a)+' (+'+ap.toFixed(2)+'%)';}
+  else{el.style.color='var(--red)';el.textContent='\u2212'+fmtFor(key,a)+' (\u2212'+ap.toFixed(2)+'%)';}
 }
 
 function updRange(key,prices){
   var el=document.getElementById(key+'Range');if(!el)return;
   if(!prices||!prices.length){el.textContent='';return;}
-  el.textContent='High: '+fmtUsd(Math.max.apply(null,prices))+' | Low: '+fmtUsd(Math.min.apply(null,prices))+' | Points: '+prices.length;
+  el.textContent='High: '+fmtFor(key,Math.max.apply(null,prices))+' | Low: '+fmtFor(key,Math.min.apply(null,prices))+' | Points: '+prices.length;
 }
 
 function clearOv(key){
@@ -7526,7 +7595,7 @@ function setupTooltip(key){
     octx.strokeStyle='#000';octx.lineWidth=1;octx.stroke();
     // Tooltip position
     tip.querySelector('.price-tooltip-date').textContent=fmtTip(pt[0]);
-    tip.querySelector('.price-tooltip-val').textContent=fmtUsd(pt[1]);
+    tip.querySelector('.price-tooltip-val').textContent=fmtFor(key,pt[1]);
     tip.style.display='block';
     var tx=px+12,ty=py-30;
     if(tx+130>w)tx=px-140;if(ty<0)ty=py+10;
@@ -7546,8 +7615,9 @@ function setupTfBtns(key){
       activeTf[key]=btn.getAttribute('data-tf');
       var id=cid(key);if(!id){drawChart(key);return;}
       var days=TF_MAP[activeTf[key]].days;
-      if(cache[id]&&cache[id][days]){drawChart(key);checkTfAvail(key);}
-      else{fetchHist(id,days,function(){drawChart(key);checkTfAvail(key);});}
+      var vs=vsOf(key);var nsKey=cKey(id,vs);
+      if(cache[nsKey]&&cache[nsKey][days]){drawChart(key);checkTfAvail(key);}
+      else{fetchHist(id,days,vs,function(){drawChart(key);checkTfAvail(key);});}
     });
   });
 }
@@ -7556,12 +7626,13 @@ function checkTfAvail(key){
   var id=cid(key);if(!id)return;
   var cont=document.getElementById(key+'TfBtns');if(!cont)return;
   var btns=cont.querySelectorAll('.tf-btn');
+  var nsKey=cKey(id,vsOf(key));
   btns.forEach(function(btn){
     if(btn.classList.contains('disabled'))return; // skip permanently disabled (e.g. SOST)
     var tf=btn.getAttribute('data-tf');
     var days=TF_MAP[tf]&&TF_MAP[tf].days;
     if(!days)return;
-    var d=cache[id]&&cache[id][days];
+    var d=cache[nsKey]&&cache[nsKey][days];
     if(d&&d.length<10){
       btn.style.opacity='0.3';btn.title='Not enough history for this period';
     } else {
@@ -7570,6 +7641,16 @@ function checkTfAvail(key){
   });
 }
 
+// Update the spot price <div> for a BTC chart from its latest cache point.
+function updateBtcSpot(key){
+  var id=cid(key);if(!id)return;
+  var ck=cKey(id,'btc');
+  var arr=cache[ck]&&cache[ck][1];
+  if(!arr||!arr.length)return;
+  var last=arr[arr.length-1][1];
+  var el=document.getElementById(key+'Price');
+  if(el)el.textContent=fmtBtc(last);
+}
 // Calculate SOST reference price from gold backing
 var sostRefPrice=null,sostRefXaut=null,sostRefPaxg=null,sostRefGoldOz=1.2,sostRefSupply=null;
 function calcSostRefPrice(){
@@ -7709,8 +7790,12 @@ function refresh(){
 }
 
 // Init
-['xaut','paxg','sost'].forEach(function(k){setupTfBtns(k);setupTooltip(k);});
-var goldFetchDone={xaut:false,paxg:false};
+['xaut','paxg','xautbtc','paxgbtc','sost'].forEach(function(k){setupTfBtns(k);setupTooltip(k);});
+var goldFetchDone={xaut:false,paxg:false,xautbtc:false,paxgbtc:false};
+// Fan-out BTC fetches for the two gold coins so the new charts populate alongside USD.
+['tether-gold','pax-gold'].forEach(function(gid){
+  fetchHist(gid,1,'btc',function(){var k=(gid==='tether-gold')?'xautbtc':'paxgbtc';drawChart(k);checkTfAvail(k);updateBtcSpot(k);});
+});
 ['tether-gold','pax-gold'].forEach(function(id){
   fetchHist(id,1,function(){
     var key=id==='tether-gold'?'xaut':'paxg';
@@ -7724,7 +7809,7 @@ var goldFetchDone={xaut:false,paxg:false};
 });
 initSost();
 setInterval(refresh,60000);
-window.addEventListener('resize',function(){['xaut','paxg','sost'].forEach(drawChart);});
+window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','sost'].forEach(drawChart);});
 })();
 </script>
 <script>
