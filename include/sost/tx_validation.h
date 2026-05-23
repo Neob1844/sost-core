@@ -98,6 +98,10 @@ enum class TxValCode : int {
     R14_PAYLOAD_FORBIDDEN  = 114,
     R17_HTLC_PAYLOAD_INVALID = 115,  // Atomic Swap HTLC_LOCK payload validation (Phase 3A scope-B)
     R18_HTLC_CLAIM_WITNESS_INVALID = 116,  // Atomic Swap HTLC_CLAIM_WITNESS payload / structure (Phase 3B-1a)
+    R19_HTLC_CLAIM_STRUCTURE_INVALID = 117,  // Atomic Swap HTLC_CLAIM tx structure (Phase 3B-1b)
+    R20_HTLC_CLAIM_INPUT_INVALID    = 118,   // Atomic Swap HTLC_CLAIM input must reference HTLC_LOCK; or LOCK spent by non-HTLC tx (Phase 3B-1b)
+    R21_HTLC_CLAIM_PREIMAGE_MISMATCH = 119,  // Atomic Swap HTLC_CLAIM preimage hash mismatch (Phase 3B-1b)
+    R22_HTLC_CLAIM_TIMEOUT          = 120,   // Atomic Swap HTLC_CLAIM after refund_height (Phase 3B-1b)
 
     // Spend / signature (S1-S12)
     S1_UTXO_NOT_FOUND      = 201,
