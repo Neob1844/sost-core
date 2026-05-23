@@ -287,11 +287,30 @@ table. Replicating here so this doc stands alone:
 
 ## 15. What is V13-safe and what must fallback to V14
 
-**V13-safe (this commit):**
-- Activation constant `INT64_MAX` in a new header.
-- Helper function (never called).
+**V13-safe (current state after the safety-close patch):**
+- Activation constant `INT64_MAX` (sentinel OFF) in `include/sost/atomic_swap.h`.
+- HTLC_LOCK output type, payload helpers, and R17 structural validation
+  EXIST in the codebase but are REJECTED by R11 at every height while
+  the gate is at INT64_MAX. This protects against the "permanent lock
+  with no spend path" risk: even if a future deploy accidentally
+  enables block production at heights >= 15000 with this binary, no
+  user can place LOCK funds because the validator rejects the type.
 - Three design docs.
 - Web cache-buster bump.
+
+**Conditions to re-open the gate to V14_HEIGHT (= 15000):**
+- HTLC_CLAIM validation rules implemented and adversarial tests
+  passing (wrong preimage rejected, claim after timeout rejected,
+  double-claim impossible).
+- HTLC_REFUND validation rules implemented and adversarial tests
+  passing (refund before timeout rejected, refund after claim
+  impossible).
+- External cryptographic and economic review completed.
+- Full ctest --output-on-failure shows no new regression vs the
+  pre-flip state.
+
+Only when all conditions are met does the gate flip back to
+V14_HEIGHT in a single one-line commit.
 
 **V13 candidate but unlikely (would need a dedicated multi-week sprint
 before V13 freeze):**

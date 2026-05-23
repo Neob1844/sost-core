@@ -71,8 +71,12 @@ static TxValidationContext MakeCtx(int64_t spend_height) {
 
 int main() {
     printf("\n== Atomic Swap HTLC Phase 3A — OUT_HTLC_LOCK structural tests ==\n\n");
-    printf("  Gate state: ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = %lld\n\n",
+    printf("  Gate state: ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = %lld\n",
            (long long)ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT);
+    const bool gate_open = atomic_swap_htlc_active_at(15000);
+    printf("  Gate is %s at height 15000 (post-activation tests %s)\n\n",
+           gate_open ? "OPEN" : "CLOSED",
+           gate_open ? "WILL RUN" : "WILL BE SKIPPED");
 
     StubUtxoView utxos;
 
@@ -105,7 +109,9 @@ int main() {
     }
 
     // T3: post-activation valid HTLC_LOCK passes R-side rules (R11, R17)
-    {
+    if (!gate_open) {
+        printf("  SKIP: T3 (gate closed; post-activation acceptance not testable)\n");
+    } else {
         Transaction tx = MakeStdTxWithHtlcLock(hashlock, 20000, claim_pkh, refund_pkh, 100000);
         auto ctx = MakeCtx(15000);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
@@ -116,7 +122,9 @@ int main() {
     }
 
     // T4: wrong payload length rejected with R17
-    {
+    if (!gate_open) {
+        printf("  SKIP: T4 (gate closed; R17 unreachable while LOCK is inactive)\n");
+    } else {
         Transaction tx = MakeStdTxWithHtlcLock(hashlock, 20000, claim_pkh, refund_pkh, 100000);
         tx.outputs[0].payload.resize(79);
         auto ctx = MakeCtx(15000);
@@ -126,7 +134,9 @@ int main() {
     }
 
     // T5: amount < DUST rejected with R17
-    {
+    if (!gate_open) {
+        printf("  SKIP: T5 (gate closed; R17 unreachable while LOCK is inactive)\n");
+    } else {
         Transaction tx = MakeStdTxWithHtlcLock(hashlock, 20000, claim_pkh, refund_pkh,
                                                 DUST_THRESHOLD - 1);
         auto ctx = MakeCtx(15000);
@@ -136,7 +146,9 @@ int main() {
     }
 
     // T6: refund_height == spend_height rejected with R17
-    {
+    if (!gate_open) {
+        printf("  SKIP: T6 (gate closed; R17 unreachable while LOCK is inactive)\n");
+    } else {
         Transaction tx = MakeStdTxWithHtlcLock(hashlock, 15000, claim_pkh, refund_pkh, 100000);
         auto ctx = MakeCtx(15000);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
@@ -145,7 +157,9 @@ int main() {
     }
 
     // T7: refund_height in past rejected with R17
-    {
+    if (!gate_open) {
+        printf("  SKIP: T7 (gate closed; R17 unreachable while LOCK is inactive)\n");
+    } else {
         Transaction tx = MakeStdTxWithHtlcLock(hashlock, 14000, claim_pkh, refund_pkh, 100000);
         auto ctx = MakeCtx(15000);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);

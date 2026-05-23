@@ -72,15 +72,39 @@ namespace sost {
 // is feasible only if Phase 3 can be completed, tested, and externally
 // reviewed before the V13 freeze — which the implementation map flags as
 // extremely unlikely given the remaining V13 cycle length.
-// Phase 3A activation flip: gate moved from INT64_MAX (sentinel OFF) to
-// V14_HEIGHT (= 15000). HTLC_LOCK validation rules in src/tx_validation.cpp
-// fire only for blocks at height >= 15000. Pre-activation chain replay
-// (heights 0..14999) is bit-identical because HTLC_LOCK output type was
-// reserved-but-rejected by R11 for those heights. The V14 hard fork
-// activates these rules at block 15000. Rollback to INT64_MAX is a single
-// one-line revert if any safety issue surfaces before the V14 freeze.
+// SAFETY-CLOSED. Gate moved BACK to INT64_MAX after Phase 3A scope-B
+// (commit c8a315a5) shipped HTLC_LOCK structural validation only.
+// HTLC_CLAIM and HTLC_REFUND spending paths are NOT yet implemented,
+// so activating LOCK at any finite height would allow users to create
+// a LOCK output that has no spend path — locking SOST permanently.
+// To prevent any accidental loss-of-funds even in dev / test mode, the
+// gate stays at INT64_MAX until ALL THREE of the following are true:
+//
+//   1. HTLC_CLAIM validation rules are implemented and tested
+//      (preimage check, signature, timeout check, all adversarial
+//      tests passing: wrong preimage, claim after timeout, etc.).
+//   2. HTLC_REFUND validation rules are implemented and tested
+//      (signature, timeout check, all adversarial tests passing:
+//      refund before timeout, refund after claim, etc.).
+//   3. External cryptographic and economic review of the full
+//      LOCK + CLAIM + REFUND set has been completed.
+//
+// V14_HEIGHT is the INTENDED activation height when those gates are
+// met; the constant is kept here so the single-line flip back to
+// V14_HEIGHT is trivial when conditions are satisfied. Until then:
+//   - LOCK outputs cannot appear in any valid block (R11 rejects).
+//   - CLAIM / REFUND tx_types cannot appear (no validation yet
+//     anyway, but R2_BAD_TX_TYPE would also reject).
+//   - Pre-activation chain replay is bit-identical to the pre-patch
+//     state for all historical and future blocks while the gate
+//     stays at INT64_MAX.
+//
+// Rollback discipline: never flip this gate to a finite value
+// without verifying the 3-condition checklist above. The flip is a
+// single-line change and must be paired with a unit-test run + a
+// full ctest --output-on-failure run before the commit lands.
 inline constexpr int64_t V14_HEIGHT = 15000;
-inline constexpr int64_t ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = V14_HEIGHT;
+inline constexpr int64_t ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX;
 
 // -----------------------------------------------------------------------------
 // is_height_active helper
