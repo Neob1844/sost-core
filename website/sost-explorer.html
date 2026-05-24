@@ -1548,11 +1548,11 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
   <div class="dash-card" id="avgTime1000Card" onclick="toggleDashPanel('avgtime')" style="color:#fb010d" title="Maturity-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fb010d">LONG AVG &middot; 1000</div><div class="dash-val" id="dAvgTime1000" style="color:#fb010d">&mdash;</div><div class="dash-sub" id="dAvgTime1000Sub" style="color:#fb010d">last 1000 blocks &middot; visual</div><div class="dash-lag" id="dAvgTime1000Lag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" id="avgTimeGenesisCard" onclick="toggleDashPanel('avgtime')" style="color:#ec4899" title="All-time average since genesis. O(1) computed as (tip_time - GENESIS_TIME) / tip_height. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#ec4899">AVG &middot; GENESIS</div><div class="dash-val" id="dAvgTimeGenesis" style="color:#ec4899">&mdash;</div><div class="dash-sub" id="dAvgTimeGenesisSub" style="color:#ec4899">since block 0 &middot; visual</div><div class="dash-lag" id="dAvgTimeGenesisLag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
-  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Active circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD LOTTERY BALANCE. The vault and pool balances are still on-chain but not yet redistributed; the lottery balance is already in winners' wallets but tracked here for transparency."><div class="dash-label">CIRCULATING SUPPLY</div><div class="dash-val green" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − lottery</div></div>
+  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Miner-side circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD LOTTERY BALANCE. Computed deterministically from consensus constants (V11 Phase 2 activation #7100, bootstrap cadence 2-of-3 until #12100, then 1-of-3 permanent; 50% of subsidy per triggered block). No background scan required."><div class="dash-label">CIRCULATING SUPPLY</div><div class="dash-val red" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − lottery</div></div>
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')"><div class="dash-label">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')"><div class="dash-label">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Total SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Populated from a background scan of triggered PAYOUT coinbase blocks; updates live as new payouts confirm. Click for the full DTD panel."><div class="dash-label">⚡ DTD LOTTERY BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts distributed (live)</div></div>
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Computed deterministically: 50% of subsidy × number of triggered blocks (bootstrap 2-of-3 in [7100,12100), then permanent 1-of-3 from #12100). Click for the full DTD panel detail."><div class="dash-label">⚡ DTD LOTTERY BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts distributed</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -3559,33 +3559,91 @@ async function updateDashboard(info){
     var bp=ap.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
     document.getElementById('dGoldBal').textContent=bg.toFixed(4)+' SOST';
     document.getElementById('dPopcBal').textContent=bp.toFixed(4)+' SOST';
-    // ---- Phase X+1: CIRCULATING SUPPLY + DTD LOTTERY BALANCE ----
-    // CIRCULATING SUPPLY = TOTAL − GOLD VAULT − POPC POOL − DTD LOTTERY.
-    // DTD LOTTERY BALANCE = total lottery payouts (from cached DTD scan).
-    // If _dtdCache is not yet populated, both cards show partial/"loading"
-    // and are refreshed when the background DTD scan completes.
+    // ---- Phase X+2: CIRCULATING SUPPLY + DTD LOTTERY BALANCE (formula) ----
+    // Both cards are computed deterministically from consensus constants
+    // and the current tip height — NO background scan needed.
+    //
+    // Consensus inputs (must stay in sync with include/sost/params.h):
+    //   V11_PHASE2_HEIGHT          = 7100
+    //   LOTTERY_HIGH_FREQ_WINDOW   = 5000  -> flip at 12100
+    //   R0_STOCKS                  = 785100863 (= 7.85100863 SOST / block, epoch 0)
+    //   BLOCKS_PER_EPOCH           = 131553
+    //   50% of subsidy goes to either miner OR lottery winner per block.
+    //
+    // Lottery cadence (sost::lottery::is_lottery_block):
+    //   bootstrap window [7100, 12100): triggered iff (h % 3) != 0  -> 2-of-3
+    //   permanent       [12100, ...) : triggered iff (h % 3) == 0  -> 1-of-3
+    //
+    // Subsidy decays per epoch by factor e^(-1/4) ≈ 0.778800783...
+    //   subsidy(h) = R0 × q^floor(h / BLOCKS_PER_EPOCH)
+    //   For h < 131553 (current 10K territory) we stay in epoch 0.
     try{
-      var lottery=0,lotteryKnown=false;
-      if(typeof _dtdCache!=='undefined'&&_dtdCache&&typeof _dtdCache.totalLottery==='number'){
-        // _dtdCache.totalLottery is in stocks (1 SOST = 1e8 stocks).
-        lottery=_dtdCache.totalLottery/1e8;
-        lotteryKnown=true;
+      var V11_PHASE2_HEIGHT      = 7100;
+      var LOTTERY_HF_WINDOW      = 5000;
+      var DTD_FLIP_HEIGHT        = V11_PHASE2_HEIGHT + LOTTERY_HF_WINDOW;  // 12100
+      var R0_SOST                = 7.85100863;
+      var BLOCKS_PER_EPOCH       = 131553;
+      var EPOCH_DECAY_Q          = Math.exp(-0.25);                       // ≈ 0.77880078
+      var LOTTERY_SHARE_OF_SUB   = 0.5;                                   // 50% miner/lottery slice
+
+      // Count triggered blocks in [a,b] (inclusive) given a remainder rule:
+      //   want_not_div_by_3 = true  -> count of h with (h % 3) != 0
+      //   want_not_div_by_3 = false -> count of h with (h % 3) == 0
+      function countInRange(a,b,want_not_div_by_3){
+        if(b<a)return 0;
+        var total = b - a + 1;
+        // count of multiples of 3 in [a,b] = floor(b/3) - floor((a-1)/3)
+        var div3 = Math.floor(b/3) - Math.floor((a-1)/3);
+        return want_not_div_by_3 ? (total - div3) : div3;
       }
-      var circ=tSOST-bg-bp-(lotteryKnown?lottery:0);
-      var circEl=document.getElementById('dCirc');
-      var dtdEl=document.getElementById('dDtdBal');
-      var circSub=document.getElementById('dCircSub');
-      var dtdSub=document.getElementById('dDtdBalSub');
-      if(circEl)circEl.textContent=fComma(circ.toFixed(4))+' SOST';
-      if(circSub)circSub.textContent=lotteryKnown
-        ? 'total − vault − pool − lottery'
-        : 'total − vault − pool − lottery (scanning…)';
-      if(dtdEl)dtdEl.textContent=lotteryKnown?lottery.toFixed(4)+' SOST':'scanning…';
-      if(dtdSub)dtdSub.textContent=lotteryKnown
-        ? 'payouts distributed (live)'
-        : 'background scan in progress…';
-    }catch(e){console.warn('circ/dtd card update:',e);}
-    // ---- end Phase X+1 ----
+
+      // Sum of lottery payouts across all triggered blocks up to currentHeight,
+      // assuming each triggered block pays out 50% × subsidy(h).
+      // Subsidy is constant per epoch -> we batch by epoch.
+      function dtdLotteryDistributed(currentHeight){
+        if(currentHeight < V11_PHASE2_HEIGHT) return 0;
+        var sum = 0;
+        var startE = Math.floor(V11_PHASE2_HEIGHT / BLOCKS_PER_EPOCH);
+        var endE   = Math.floor(currentHeight    / BLOCKS_PER_EPOCH);
+        for(var e = startE; e <= endE; e++){
+          var epochStart = e * BLOCKS_PER_EPOCH;
+          var epochEnd   = epochStart + BLOCKS_PER_EPOCH - 1;
+          var a = Math.max(epochStart, V11_PHASE2_HEIGHT);
+          var b = Math.min(epochEnd,   currentHeight);
+          if(b < a) continue;
+          // Split this epoch's [a,b] across bootstrap / permanent cadence.
+          var bootA = a;
+          var bootB = Math.min(b, DTD_FLIP_HEIGHT - 1);
+          var permA = Math.max(a, DTD_FLIP_HEIGHT);
+          var permB = b;
+          var triggeredBoot = (bootB >= bootA) ? countInRange(bootA, bootB, true ) : 0;
+          var triggeredPerm = (permB >= permA) ? countInRange(permA, permB, false) : 0;
+          var triggered = triggeredBoot + triggeredPerm;
+          var subsidy_e = R0_SOST * Math.pow(EPOCH_DECAY_Q, e);
+          sum += triggered * subsidy_e * LOTTERY_SHARE_OF_SUB;
+        }
+        return sum;
+      }
+
+      var h    = (info && typeof info.blocks === 'number') ? info.blocks : 0;
+      var dtd  = dtdLotteryDistributed(h);
+      var circ = tSOST - bg - bp - dtd;
+
+      var circEl  = document.getElementById('dCirc');
+      var dtdEl   = document.getElementById('dDtdBal');
+      var circSub = document.getElementById('dCircSub');
+      var dtdSub  = document.getElementById('dDtdBalSub');
+      if(circEl)  circEl.textContent  = fComma(circ.toFixed(4)) + ' SOST';
+      if(circSub) circSub.textContent = 'total − vault − pool − lottery';
+      if(dtdEl)   dtdEl.textContent   = fComma(dtd.toFixed(4)) + ' SOST';
+      if(dtdSub){
+        var phase = (h < DTD_FLIP_HEIGHT)
+          ? ('bootstrap 2-of-3 · until #' + fComma(DTD_FLIP_HEIGHT))
+          : 'permanent 1-of-3';
+        dtdSub.textContent = phase;
+      }
+    }catch(e){console.warn('circ/dtd formula update:',e);}
+    // ---- end Phase X+2 ----
   }catch(e){console.error('gold/popc balance error:',e);}
   // Miner balance (requires auth)
   // Fetch tip block profile (public RPC, no auth needed)
