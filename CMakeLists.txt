@@ -128,6 +128,7 @@ add_library(sost-core STATIC
     src/atomic_swap_helpers.cpp
     src/atomic_swap_btc.cpp
     src/atomic_swap_btc_signing.cpp
+    src/atomic_swap_coordinator.cpp
     # Phase 3.6: sealed envelope (Fase Sealed-1.A — single-recipient ECIES)
     src/sealed_envelope.cpp
     # Phase 4: UTXO set
@@ -635,6 +636,11 @@ endif()
 add_executable(test-atomic-swap-btc-signing tests/test_atomic_swap_btc_signing.cpp)
 target_link_libraries(test-atomic-swap-btc-signing PRIVATE sost-core)
 add_test(NAME atomic-swap-btc-signing COMMAND test-atomic-swap-btc-signing)
+
+# Phase 4C-1 — Cross-chain coordinator state machine (local logic only)
+add_executable(test-atomic-swap-coordinator tests/test_atomic_swap_coordinator.cpp)
+target_link_libraries(test-atomic-swap-coordinator PRIVATE sost-core)
+add_test(NAME atomic-swap-coordinator COMMAND test-atomic-swap-coordinator)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
