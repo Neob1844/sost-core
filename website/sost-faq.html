@@ -209,6 +209,11 @@
     </div>
 
     <div class="faq-item fade-in delay-1">
+      <div class="faq-q"><h3>Which assets will atomic swaps support (when activated)?</h3><span class="toggle">+</span></div>
+      <div class="faq-a"><div class="faq-a-inner"><strong>Seven asset pairs across two trust categories</strong>, but ONLY after Phase 4 (counterparty integration) and Phase 5 (external review) are complete and the activation gate flips from <code>INT64_MAX</code> to <code>V14_HEIGHT</code>. <br><br><b style="color:#22c55e">Category A &mdash; trust-minimized:</b> SOST&harr;BTC, SOST&harr;ETH, SOST&harr;BNB. No token-issuer freeze risk. <br><br><b style="color:#f59e0b">Category B &mdash; issuer-risk:</b> SOST&harr;USDT (Tether can freeze), SOST&harr;USDC (Circle blacklist), SOST&harr;PAXG (Paxos can freeze + physical-gold custody risk), SOST&harr;XAUT (TG Commodities can freeze + physical-gold custody risk). For these four, the cryptographic atomicity holds on the SOST side, but the issuer can render the counterparty side uncollectible mid-swap. Use small amounts; prefer Category A for larger amounts. See <code>docs/design/ATOMIC_SWAP_ASSETS_BTC_ETH_USDT_USDC_BNB_PAXG_XAUT.md</code>.</div></div>
+    </div>
+
+    <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is SOST?</h3><span class="toggle">+</span></div>
       <div class="faq-a"><div class="faq-a-inner">SOST is a CPU-friendly proof-of-work cryptocurrency built on ConvergenceX, a mining algorithm that requires 8 GB RAM per mining thread (4 GB dataset + 4 GB scratchpad) and 100,000 sequential rounds per attempt. Running a node requires only ~500 MB RAM. Every block automatically allocates <strong>25% to a Gold Funding Vault</strong> (for purchasing XAUT/PAXG) and <strong>25% to a PoPC Pool</strong> (for Proof of Personal Custody rewards). These splits are hardcoded at genesis and immutable.</div></div>
     </div>

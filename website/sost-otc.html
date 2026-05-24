@@ -443,6 +443,96 @@
   </div>
 </section>
 
+<!-- ============ ATOMIC SWAP V14 — SUPPORTED ASSETS (CODE UNDER REVIEW) ============ -->
+<section style="border-bottom:1px solid var(--border-dim);background:rgba(34,211,238,0.04)" id="atomic-swap-v14-assets">
+  <div class="container" style="padding:40px 0">
+    <div style="margin-bottom:18px">
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// V14 ROADMAP &middot; SUPPORTED ASSETS</div>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary);margin:0 0 8px">Atomic Swap V14 &mdash; <span style="color:#22d3ee">7 supported asset pairs</span></h2>
+      <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(251,1,13,0.15);border:1px solid #fb010d;border-radius:4px;padding:6px 12px;margin-top:6px">
+        <span style="color:#fb010d;font-weight:900;letter-spacing:1.5px;font-size:11px">&#9888; DISABLED &mdash; CODE UNDER REVIEW</span>
+      </div>
+      <p style="color:var(--text-secondary);font-size:13.5px;line-height:1.75;margin-top:14px">
+        The SOST-side HTLC consensus, wallet helpers, RPC, and CLI for atomic swaps are <b>code-complete and tested</b> on a candidate branch, but <b>NOT active</b>. The activation height constant <code>ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT</code> stays at <code>INT64_MAX</code> (sentinel OFF) until counterparty integrations (Phase 4) ship and external cryptographic review (Phase 5) signs off. Target activation: <b>V14 / block 15,000</b>.
+      </p>
+    </div>
+
+    <!-- Asset list split by trust category -->
+    <div style="margin:0 0 18px">
+      <div style="color:#22c55e;font-weight:900;font-size:11px;letter-spacing:1.5px;margin-bottom:10px">&#10003; CATEGORY A &mdash; TRUST-MINIMIZED</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+        <div style="background:var(--bg-card);border:1px solid rgba(34,197,94,0.4);border-left:4px solid #22c55e;border-radius:4px;padding:14px 18px">
+          <div style="color:var(--text-primary);font-weight:700;font-size:14px;margin-bottom:4px">SOST &harr; BTC</div>
+          <div style="color:var(--text-secondary);font-size:12px;line-height:1.6">Bitcoin Script HTLC (P2WSH or Taproot). SHA-256 hashlock. CLTV timeout. No issuer.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid rgba(34,197,94,0.4);border-left:4px solid #22c55e;border-radius:4px;padding:14px 18px">
+          <div style="color:var(--text-primary);font-weight:700;font-size:14px;margin-bottom:4px">SOST &harr; ETH</div>
+          <div style="color:var(--text-secondary);font-size:12px;line-height:1.6">EVM HTLC contract on Ethereum mainnet. SHA-256 precompile. Block-number timeout. No issuer.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid rgba(34,197,94,0.4);border-left:4px solid #22c55e;border-radius:4px;padding:14px 18px">
+          <div style="color:var(--text-primary);font-weight:700;font-size:14px;margin-bottom:4px">SOST &harr; BNB</div>
+          <div style="color:var(--text-secondary);font-size:12px;line-height:1.6">Same EVM contract redeployed on BNB Chain. BNB itself is not issuer-freezable. Chain-governance caveat: BNB Chain is operated by Binance.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:0 0 18px">
+      <div style="color:var(--amber-primary);font-weight:900;font-size:11px;letter-spacing:1.5px;margin-bottom:10px">&#9888; CATEGORY B &mdash; ISSUER-RISK (NOT FULLY ATOMIC)</div>
+      <div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.4);border-radius:4px;padding:14px 18px;margin-bottom:12px">
+        <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0 0 10px">
+          These four assets use the SAME cryptographic HTLC mechanism as Category A, but the underlying token can be <b>frozen by its issuer</b> at any time. If the issuer freezes the counterparty side mid-swap, the SOST side can still refund (cryptographic atomicity holds) but the counterparty side becomes <b>uncollectible</b> until (or unless) the issuer manually unfreezes.
+        </p>
+        <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0">
+          <b>Use small amounts.</b> For larger amounts prefer Category A (SOST &harr; BTC / ETH / BNB).
+        </p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+        <div style="background:var(--bg-card);border:1px solid rgba(245,158,11,0.4);border-left:4px solid var(--amber-primary);border-radius:4px;padding:14px 18px">
+          <div style="color:var(--text-primary);font-weight:700;font-size:14px;margin-bottom:4px">SOST &harr; USDT</div>
+          <div style="color:var(--text-secondary);font-size:12px;line-height:1.6">ERC-20 (Ethereum/Tron). <b style="color:var(--amber-primary)">Tether Limited can freeze any USDT address.</b></div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid rgba(245,158,11,0.4);border-left:4px solid var(--amber-primary);border-radius:4px;padding:14px 18px">
+          <div style="color:var(--text-primary);font-weight:700;font-size:14px;margin-bottom:4px">SOST &harr; USDC</div>
+          <div style="color:var(--text-secondary);font-size:12px;line-height:1.6">ERC-20 (Ethereum). <b style="color:var(--amber-primary)">Circle operates an active blacklist</b> and has frozen funds under sanction/court orders.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid rgba(245,158,11,0.4);border-left:4px solid var(--amber-primary);border-radius:4px;padding:14px 18px">
+          <div style="color:var(--text-primary);font-weight:700;font-size:14px;margin-bottom:4px">SOST &harr; PAXG</div>
+          <div style="color:var(--text-secondary);font-size:12px;line-height:1.6">Paxos Gold ERC-20. <b style="color:var(--amber-primary)">Paxos can freeze any PAXG address.</b> Underlying physical gold custodied by Paxos.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid rgba(245,158,11,0.4);border-left:4px solid var(--amber-primary);border-radius:4px;padding:14px 18px">
+          <div style="color:var(--text-primary);font-weight:700;font-size:14px;margin-bottom:4px">SOST &harr; XAUT</div>
+          <div style="color:var(--text-secondary);font-size:12px;line-height:1.6">Tether Gold ERC-20. <b style="color:var(--amber-primary)">TG Commodities can freeze any XAUT address.</b> Physical gold custody risk.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disabled Start Swap button -->
+    <div style="text-align:center;margin:0 0 18px">
+      <button type="button" disabled aria-disabled="true" title="Atomic Swap HTLC gate is INT64_MAX. Activation requires Phase 4 + Phase 5 sign-off." style="background:rgba(100,116,139,0.15);color:var(--text-muted);border:1px solid var(--border-bright);border-radius:4px;padding:12px 22px;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.2px;cursor:not-allowed;opacity:0.65">
+        START SWAP &mdash; coming after Phase 4 + protocol activation
+      </button>
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:1px;margin-top:6px">Button intentionally disabled. Gate is <code>INT64_MAX</code> (sentinel OFF). See <code>docs/reviews/ATOMIC_SWAP_PRE_ACTIVATION_REVIEW.md</code>.</div>
+    </div>
+
+    <!-- Pre-activation review status -->
+    <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border-bright);border-radius:4px;padding:14px 18px;font-size:13px;line-height:1.65">
+      <div style="color:var(--text-muted);font-weight:900;font-size:11px;letter-spacing:1.2px;margin-bottom:8px">// PRE-ACTIVATION CHECKLIST</div>
+      <ul style="color:var(--text-primary);font-size:13px;line-height:1.8;margin:0;padding-left:20px">
+        <li>&#10003; HTLC_LOCK structural validation (R17) &mdash; DONE</li>
+        <li>&#10003; HTLC_CLAIM_WITNESS marker (R18) &mdash; DONE</li>
+        <li>&#10003; HTLC_CLAIM validation rules (R19-R22) &mdash; DONE</li>
+        <li>&#10003; HTLC_REFUND validation rules (R23-R24) &mdash; DONE</li>
+        <li>&#10003; Wallet/RPC/CLI scaffolding (gated) &mdash; DONE</li>
+        <li>&#9633; Phase 4A: Bitcoin Script HTLC builder &mdash; PENDING</li>
+        <li>&#9633; Phase 4B: EVM Solidity HTLC contract &mdash; PENDING</li>
+        <li>&#9633; Phase 4C: cross-chain coordinator state machine &mdash; PENDING</li>
+        <li>&#9633; Phase 5: external cryptographic + economic review &mdash; PENDING</li>
+        <li>&#9633; Re-flip gate <code>INT64_MAX</code> &rarr; <code>V14_HEIGHT</code> &mdash; PENDING (only after all of the above are GREEN)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <!-- ============ REAL SCAM EXAMPLES (annotated conversations) ============ -->
 <section style="border-bottom:1px solid var(--border-dim)">
   <div class="container" style="padding:40px 0">

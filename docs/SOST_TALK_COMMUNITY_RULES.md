@@ -223,3 +223,45 @@ claims to be a "reputation" post.
 
 It is a community noticeboard. Read it. Cross-check it. Decide for
 yourself.
+
+
+---
+
+## Atomic Swap V14 — Supported Asset Categories
+
+When atomic swap HTLC activation lands (target: V14 / block 15,000), the
+supported asset pairs split into two trust categories. **This split is
+load-bearing**: the cryptographic mechanism is identical, but the
+operational risk differs.
+
+**Category A &mdash; trust-minimized** (no token-issuer freeze risk):
+
+- `SOST` &harr; `BTC`  (Bitcoin Script HTLC: P2WSH or Taproot, SHA-256 + CLTV)
+- `SOST` &harr; `ETH`  (EVM HTLC contract on Ethereum mainnet)
+- `SOST` &harr; `BNB`  (same EVM contract redeployed on BNB Chain)
+
+**Category B &mdash; issuer-risk** (the underlying token can be frozen by its
+issuer at any time; cryptographic atomicity holds on the SOST side but
+the counterparty side may become uncollectible mid-swap):
+
+- `SOST` &harr; `USDT`  (Tether Limited can freeze any USDT address)
+- `SOST` &harr; `USDC`  (Circle operates an active blacklist)
+- `SOST` &harr; `PAXG`  (Paxos can freeze; physical-gold custody risk)
+- `SOST` &harr; `XAUT`  (TG Commodities can freeze; physical-gold custody risk)
+
+**Operational rule:** for Category B, use small amounts (amounts you are
+willing to lose entirely if the issuer freezes mid-swap). For larger
+amounts, prefer Category A.
+
+**Activation status:** NOT LIVE. The activation gate
+`ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT` is currently `INT64_MAX` (sentinel
+OFF). It will be flipped to `V14_HEIGHT` (15,000) only after:
+
+1. Phase 4A &mdash; BTC HTLC builder
+2. Phase 4B &mdash; Solidity HTLC contract
+3. Phase 4C &mdash; cross-chain coordinator
+4. Phase 4D &mdash; OTC UI integration (this doc + asset list)
+5. End-to-end testnet validation
+6. External cryptographic + economic review
+
+are all GREEN. See `docs/reviews/ATOMIC_SWAP_PRE_ACTIVATION_REVIEW.md`.
