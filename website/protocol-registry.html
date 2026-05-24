@@ -402,41 +402,62 @@
   <div class="container">
     <div class="section-header">
       <div class="section-id">// REGISTRATION GUIDE</div>
-      <h2 class="section-title">How to register a <span style="color:#d946ef">SOST Protocol capsule</span></h2>
-      <p class="section-sub">Step-by-step guide for the SOST Protocol operator to publish a public, signed, block-anchored capsule binding an off-chain manifesto JSON to the SOST chain. This uses the existing <code>sost-cli</code> open-note capsule flow &mdash; the same flow already used for the Trinity Kalgoorlie Phase 1 proof bundle. No new capsule type or consensus change required.</p>
+      <h2 class="section-title">How to register a <span style="color:#d946ef">SOST capsule</span> &mdash; two methods</h2>
+      <p class="section-sub">Two equally-valid ways to publish a public, signed, block-anchored capsule on the SOST chain. <b>Method A (Wallet UI)</b> is the easiest path and recommended for almost everyone. <b>Method B (sost-cli)</b> is for operators, scripts, and CI/CD. Both produce the SAME on-chain record &mdash; same capsule type, same byte-for-byte payload, same verifiability.</p>
     </div>
 
-    <div class="info-card">
-      <p><b>Worked example below:</b> registering the canonical SOST Protocol PoPC manifesto so the term &quot;Proof of Personal Custody&quot; is timestamped on-chain by the SOST Protocol operator before anyone else attempts to claim it.</p>
+    <!-- ===================== STEP 1 (shared) ===================== -->
+    <div class="info-card" style="margin-bottom:18px;border-left:4px solid var(--text-muted)">
+      <div style="color:var(--text-muted);font-weight:900;font-size:11px;letter-spacing:1.5px;margin-bottom:10px">STEP 1 &middot; SHARED BY BOTH METHODS</div>
+      <h3 style="font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--text-primary);margin:0 0 10px">Compute the SHA-256 of your manifesto file</h3>
+      <p>Whatever content you want to anchor on-chain (a JSON manifesto, a PDF, a release note) needs a stable SHA-256 hash. This hash is what goes inside the capsule.</p>
+      <p>For the worked example below we use the canonical SOST Protocol PoPC manifesto already committed in the repo at <code>website/api/sost-protocol-popc-manifesto-v1.json</code> (publicly reachable at <a href="api/sost-protocol-popc-manifesto-v1.json" style="color:#d946ef">api/sost-protocol-popc-manifesto-v1.json</a>).</p>
+      <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">sha256sum website/api/sost-protocol-popc-manifesto-v1.json</pre>
+      <p>Full 64-hex SHA-256 of the manifesto at the time this guide was generated:</p>
+      <div style="background:rgba(217,70,239,0.06);border:1px solid rgba(217,70,239,0.35);border-radius:4px;padding:10px 14px;margin:8px 0;font-family:monospace;font-size:12px;color:#d946ef;word-break:break-all;line-height:1.5">3bed02e2f5c589e494b8e4db99200dc0ae7aa96fe5b8d87167799c51726870f4</div>
+      <p>First 16 hex chars (used as the on-chain prefix, fits comfortably under the 80-byte open-note cap):</p>
+      <div style="font-family:monospace;color:#d946ef;font-weight:700;font-size:13px;margin:4px 0 12px">3bed02e2f5c589e4</div>
+      <p>The capsule body string (max 80 bytes, three space-separated fields = namespace + record name + first 16 hex):</p>
+      <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">sost-protocol popc-manifesto 3bed02e2f5c589e4</pre>
+      <p style="color:var(--text-secondary);font-size:12.5px;margin:10px 0 0">Now pick Method A (Wallet UI &mdash; easiest) or Method B (sost-cli) below. Either produces the exact same on-chain record.</p>
+    </div>
+
+    <!-- ===================== METHOD A (Wallet UI) ===================== -->
+    <div class="info-card" style="margin-bottom:18px;border-left:4px solid #22c55e">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">METHOD A &middot; RECOMMENDED</span>
+        <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">Wallet UI &middot; no terminal needed</span>
+      </div>
+      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">Register via the SOST Wallet (easy path)</h3>
+      <p>The wallet page lets you compose a capsule transaction without touching a terminal. The same Open Note capsule mode that <code>sost-cli</code> uses is exposed as a dropdown in the wallet&apos;s Compose form.</p>
 
       <ol style="color:var(--text-primary);font-size:13.5px;line-height:1.85;margin:14px 0 0;padding-left:22px">
-        <li style="margin-bottom:14px">
-          <b>Locate the canonical manifesto file.</b><br>
-          The manifesto is committed at:
-          <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">website/api/sost-protocol-popc-manifesto-v1.json</pre>
-          Also reachable publicly at <code>https://sostcore.com/api/sost-protocol-popc-manifesto-v1.json</code>.
-        </li>
+        <li><b>Open the SOST Wallet.</b> Go to <a href="sost-wallet.html" style="color:#22c55e">sost-wallet.html</a> and unlock (or import) the identity you want to sign with. For protocol-level claims this should be your SOST Protocol operator address; for personal records it can be any wallet you control.</li>
+        <li><b>Open the Compose / Send form.</b> Click <b>Send</b> in the wallet. You can use any small dust amount (a few stocks is enough; the capsule is what matters, not the value transfer). The recipient can be your own address.</li>
+        <li><b>Pick the capsule mode.</b> In the <b>Message Type</b> dropdown, select <code>Open Note &mdash; Public text (max 80 chars)</code>. The on-chain text field appears below the dropdown.</li>
+        <li><b>Paste the capsule text.</b> Copy the line from Step 1 above (<code>sost-protocol popc-manifesto 3bed02e2f5c589e4</code> for the worked example) into the capsule text box. The wallet shows a live character counter; you should see <code>49 / 80</code>.</li>
+        <li><b>Review and sign.</b> The wallet shows the recipient address, the amount, the fee, and the capsule body. Confirm everything is correct, then click <b>Sign &amp; Broadcast</b>. The wallet signs locally with your key &mdash; the key never leaves your browser.</li>
+        <li><b>Capture txid + block height.</b> When the transaction confirms, the wallet shows the txid. Look it up in the <a href="sost-explorer.html" style="color:#22c55e">SOST Explorer</a> and note the confirming block height.</li>
+        <li><b>Add the entry to the registered-capsules list below.</b> Same as Method B &mdash; the publisher (you or an indexer) appends a new row binding <code>txid · block_height · capsule_text · manifesto sha-256</code>.</li>
+      </ol>
 
-        <li style="margin-bottom:14px">
-          <b>Compute its SHA-256 locally.</b><br>
-          <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">sha256sum website/api/sost-protocol-popc-manifesto-v1.json</pre>
-          The full 64-hex SHA-256 of the manifesto committed at the time this guide was generated is:
-          <div style="background:rgba(217,70,239,0.06);border:1px solid rgba(217,70,239,0.35);border-radius:4px;padding:10px 14px;margin:8px 0;font-family:monospace;font-size:12px;color:#d946ef;word-break:break-all;line-height:1.5">3bed02e2f5c589e494b8e4db99200dc0ae7aa96fe5b8d87167799c51726870f4</div>
-          The first 16 hex chars (used as the on-chain prefix) are: <code style="color:#d946ef">3bed02e2f5c589e4</code>.
-        </li>
+      <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border-bright);border-radius:4px;padding:12px 16px;margin-top:14px;font-size:12.5px;line-height:1.7">
+        <b style="color:#22c55e">Why this method is recommended:</b> no terminal, no RPC credentials, no operator-machine setup. Anyone with a SOST Wallet identity can publish a capsule in under a minute. The on-chain result is bit-identical to Method B.
+      </div>
+    </div>
 
-        <li style="margin-bottom:14px">
-          <b>Compose the on-chain capsule text.</b><br>
-          The capsule body is plain ASCII (max 80 bytes in open-note mode), three space-separated fields: namespace + record name + first-16-hex of the manifesto SHA-256:
-          <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">sost-protocol popc-manifesto 3bed02e2f5c589e4</pre>
-          Length check: this string is well under the 80-byte cap.
-        </li>
+    <!-- ===================== METHOD B (sost-cli) ===================== -->
+    <div class="info-card" style="margin-bottom:18px;border-left:4px solid var(--text-muted)">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="background:rgba(100,116,139,0.15);color:var(--text-secondary);font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">METHOD B &middot; OPERATOR / SCRIPT</span>
+        <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">sost-cli &middot; terminal + RPC credentials needed</span>
+      </div>
+      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">Register via sost-cli (for operators, scripts, CI/CD)</h3>
+      <p>Use this method when you are publishing capsules from a script, a CI/CD pipeline, or a headless operator machine. It uses the same Open Note capsule mode as Method A and produces the exact same on-chain record. The flow is the one already used for the Trinity Kalgoorlie Phase 1 proof bundle.</p>
 
-        <li style="margin-bottom:14px">
-          <b>Send the on-chain transaction with the attached capsule.</b><br>
-          Use the existing <code>sost-cli</code> binary on the operator machine. Replace
-          <code>&lt;SOURCE_WALLET&gt;</code>, <code>&lt;DEST_ADDRESS&gt;</code> and
-          <code>&lt;AMOUNT&gt;</code> with operator values; the destination can be a dust output to the source itself, and the amount can be the protocol minimum:
+      <ol style="color:var(--text-primary);font-size:13.5px;line-height:1.85;margin:14px 0 0;padding-left:22px">
+        <li><b>SSH (or open a shell) on the operator machine.</b> The machine must have <code>sost-cli</code> on PATH and a running SOST node reachable via RPC. The operator wallet must be unlocked.</li>
+        <li><b>Send the on-chain transaction with the attached capsule.</b> Replace <code>&lt;SOURCE_WALLET&gt;</code>, <code>&lt;DEST_ADDRESS&gt;</code> and <code>&lt;AMOUNT&gt;</code> with operator values; the destination can be a dust output to the source itself, and the amount can be the protocol minimum:
           <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">sost-cli --rpc-host 127.0.0.1 --rpc-port 28443 \
   --rpc-user &lt;USER&gt; --rpc-password &lt;PASS&gt; \
   --from &lt;SOURCE_WALLET&gt; \
@@ -447,23 +468,41 @@
   --send</pre>
           The exact flags follow <code>src/sost-cli.cpp</code> (see <code>--capsule-mode open-note</code> documented at line 686 of that file).
         </li>
-
-        <li style="margin-bottom:14px">
-          <b>Capture txid and block height.</b><br>
-          The CLI returns the txid on success. Wait for confirmation, then look up the txid in the
-          <a href="sost-explorer.html" style="color:#d946ef">SOST Explorer</a> and capture the confirming block height.
-        </li>
-
-        <li style="margin-bottom:14px">
-          <b>Add the entry to the registered-capsules list below.</b><br>
-          A new row appended to this page binding: <code>txid</code> &middot; <code>block_height</code> &middot; <code>capsule_text</code> &middot; <code>manifesto sha-256</code> &middot; <code>publisher</code>.
-        </li>
-
-        <li>
-          <b>Independent verification.</b><br>
-          Anyone can later run <code>sha256sum</code> on the public manifesto JSON, compare the first 16 hex with the on-chain capsule text, and verify the signature against the publishing pubkey via standard SOST node tooling. The record is reproducible end-to-end without trusting this page.
-        </li>
+        <li><b>Capture txid and block height.</b> The CLI returns the txid on success. Wait for confirmation, then look up the txid in <a href="sost-explorer.html" style="color:#d946ef">sost-explorer.html</a> and capture the confirming block height.</li>
+        <li><b>Add the entry to the registered-capsules list below.</b> Same row binding as Method A.</li>
       </ol>
+
+      <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border-bright);border-radius:4px;padding:12px 16px;margin-top:14px;font-size:12.5px;line-height:1.7">
+        <b style="color:var(--text-secondary)">When to prefer this method:</b> automation (CI/CD), batch registrations, headless operator infrastructure, or any scenario where a browser-based wallet is impractical.
+      </div>
+    </div>
+
+    <!-- ===================== AFTER PUBLISHING (shared) ===================== -->
+    <div class="info-card" style="margin-bottom:18px;border-left:4px solid #d946ef">
+      <div style="color:#d946ef;font-weight:900;font-size:11px;letter-spacing:1.5px;margin-bottom:10px">AFTER PUBLISHING &middot; SHARED BY BOTH METHODS</div>
+      <h3 style="font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--text-primary);margin:0 0 10px">Independent verification</h3>
+      <p>Whichever method you used, the verification path is identical and reproducible by any third party without trusting this page:</p>
+      <ol style="color:var(--text-primary);font-size:13.5px;line-height:1.85;margin:8px 0 0;padding-left:22px">
+        <li>Take the manifesto JSON file (or whatever content was anchored).</li>
+        <li>Run <code>sha256sum</code> on it locally.</li>
+        <li>Compare the first 16 hex of that SHA-256 against the on-chain capsule text in the txid&apos;s output payload (via <a href="sost-explorer.html" style="color:#d946ef">sost-explorer.html</a> or any SOST node RPC).</li>
+        <li>Verify the transaction signature against the publishing pubkey using standard SOST node tooling.</li>
+      </ol>
+      <p style="color:var(--text-secondary);font-size:12.5px;margin-top:12px">Match means the capsule, the file, and the signing key all line up &mdash; the timestamp + author + content tuple is cryptographically proven. No trust in this page required.</p>
+    </div>
+
+    <div class="info-card">
+      <p><b>Worked example used in both methods above:</b> registering the canonical SOST Protocol PoPC manifesto so the term &quot;Proof of Personal Custody&quot; is timestamped on-chain by the SOST Protocol operator before anyone else attempts to claim it. The fields below were computed in Step 1 and used identically by both methods.</p>
+
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary);margin:6px 0">
+        <tbody>
+          <tr><td style="padding:5px 0;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:30%">Manifesto file</td><td style="padding:5px 0"><a href="api/sost-protocol-popc-manifesto-v1.json" style="color:#d946ef">api/sost-protocol-popc-manifesto-v1.json</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Manifesto SHA-256</td><td style="padding:5px 0;word-break:break-all"><code>3bed02e2f5c589e494b8e4db99200dc0ae7aa96fe5b8d87167799c51726870f4</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule text</td><td style="padding:5px 0"><code style="color:#d946ef">sost-protocol popc-manifesto 3bed02e2f5c589e4</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule mode</td><td style="padding:5px 0"><code>open-note</code> (CapsuleType <code>TEMPLATE_FIELDS_OPEN</code> 0x05 in <code>include/sost/capsule.h</code>)</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Length check</td><td style="padding:5px 0">49 / 80 bytes &mdash; comfortably under the open-note cap</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </section>

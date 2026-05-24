@@ -1548,9 +1548,11 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
   <div class="dash-card" id="avgTime1000Card" onclick="toggleDashPanel('avgtime')" style="color:#fb010d" title="Maturity-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fb010d">LONG AVG &middot; 1000</div><div class="dash-val" id="dAvgTime1000" style="color:#fb010d">&mdash;</div><div class="dash-sub" id="dAvgTime1000Sub" style="color:#fb010d">last 1000 blocks &middot; visual</div><div class="dash-lag" id="dAvgTime1000Lag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" id="avgTimeGenesisCard" onclick="toggleDashPanel('avgtime')" style="color:#ec4899" title="All-time average since genesis. O(1) computed as (tip_time - GENESIS_TIME) / tip_height. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#ec4899">AVG &middot; GENESIS</div><div class="dash-val" id="dAvgTimeGenesis" style="color:#ec4899">&mdash;</div><div class="dash-sub" id="dAvgTimeGenesisSub" style="color:#ec4899">since block 0 &middot; visual</div><div class="dash-lag" id="dAvgTimeGenesisLag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
+  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Active circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD LOTTERY BALANCE. The vault and pool balances are still on-chain but not yet redistributed; the lottery balance is already in winners' wallets but tracked here for transparency."><div class="dash-label">CIRCULATING SUPPLY</div><div class="dash-val green" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − lottery</div></div>
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')"><div class="dash-label">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')"><div class="dash-label">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Total SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Populated from a background scan of triggered PAYOUT coinbase blocks; updates live as new payouts confirm. Click for the full DTD panel."><div class="dash-label">⚡ DTD LOTTERY BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts distributed (live)</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -2360,6 +2362,22 @@ function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+a
 function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+sH(addr)+'</span>'+addrTag(addr);}
 
 try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;});}catch(e){}
+// Phase X+1 — kick off a silent DTD scan ~3 s after page load so the
+// dashboard CIRCULATING SUPPLY + DTD LOTTERY BALANCE cards populate
+// with real values without the user having to open the DTD panel.
+// The scan caches into _dtdCache; subsequent updateInfo() ticks re-read
+// the cache and refresh the cards. Wrapped in try/catch so a failure
+// here can never break the explorer.
+try{document.addEventListener('DOMContentLoaded',function(){
+  setTimeout(function(){
+    try{
+      if(typeof renderDTDPanel==='function'){
+        // Silent mode: don't render any panel; just populate _dtdCache.
+        renderDTDPanel(null,null,true);
+      }
+    }catch(e){console.warn('silent DTD scan:',e);}
+  },3000);
+});}catch(e){}
 var _dtdCache=null;
 var _dtdFilter='all';
 function dtdStocks(v){v=Number(v||0);return isFinite(v)?v:0;}
@@ -3541,6 +3559,33 @@ async function updateDashboard(info){
     var bp=ap.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
     document.getElementById('dGoldBal').textContent=bg.toFixed(4)+' SOST';
     document.getElementById('dPopcBal').textContent=bp.toFixed(4)+' SOST';
+    // ---- Phase X+1: CIRCULATING SUPPLY + DTD LOTTERY BALANCE ----
+    // CIRCULATING SUPPLY = TOTAL − GOLD VAULT − POPC POOL − DTD LOTTERY.
+    // DTD LOTTERY BALANCE = total lottery payouts (from cached DTD scan).
+    // If _dtdCache is not yet populated, both cards show partial/"loading"
+    // and are refreshed when the background DTD scan completes.
+    try{
+      var lottery=0,lotteryKnown=false;
+      if(typeof _dtdCache!=='undefined'&&_dtdCache&&typeof _dtdCache.totalLottery==='number'){
+        // _dtdCache.totalLottery is in stocks (1 SOST = 1e8 stocks).
+        lottery=_dtdCache.totalLottery/1e8;
+        lotteryKnown=true;
+      }
+      var circ=tSOST-bg-bp-(lotteryKnown?lottery:0);
+      var circEl=document.getElementById('dCirc');
+      var dtdEl=document.getElementById('dDtdBal');
+      var circSub=document.getElementById('dCircSub');
+      var dtdSub=document.getElementById('dDtdBalSub');
+      if(circEl)circEl.textContent=fComma(circ.toFixed(4))+' SOST';
+      if(circSub)circSub.textContent=lotteryKnown
+        ? 'total − vault − pool − lottery'
+        : 'total − vault − pool − lottery (scanning…)';
+      if(dtdEl)dtdEl.textContent=lotteryKnown?lottery.toFixed(4)+' SOST':'scanning…';
+      if(dtdSub)dtdSub.textContent=lotteryKnown
+        ? 'payouts distributed (live)'
+        : 'background scan in progress…';
+    }catch(e){console.warn('circ/dtd card update:',e);}
+    // ---- end Phase X+1 ----
   }catch(e){console.error('gold/popc balance error:',e);}
   // Miner balance (requires auth)
   // Fetch tip block profile (public RPC, no auth needed)
