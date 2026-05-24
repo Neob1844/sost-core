@@ -127,6 +127,7 @@ add_library(sost-core STATIC
     src/capsule.cpp
     src/atomic_swap_helpers.cpp
     src/atomic_swap_btc.cpp
+    src/atomic_swap_btc_signing.cpp
     # Phase 3.6: sealed envelope (Fase Sealed-1.A — single-recipient ECIES)
     src/sealed_envelope.cpp
     # Phase 4: UTXO set
@@ -615,6 +616,25 @@ add_test(NAME atomic-swap-htlc-rpc COMMAND test-atomic-swap-htlc-rpc)
 add_executable(test-atomic-swap-btc-script tests/test_atomic_swap_btc_script.cpp)
 target_link_libraries(test-atomic-swap-btc-script PRIVATE sost-core)
 add_test(NAME atomic-swap-btc-script COMMAND test-atomic-swap-btc-script)
+
+# Phase 4A-1 — BTC signing backend (disabled stub by default).
+# Flag SOST_BTC_HTLC_SIGNING controls whether the future real backend
+# is enabled. Default OFF: every function in src/atomic_swap_btc_signing.cpp
+# returns the "disabled" result. Flipping to ON requires vendoring an
+# audited Bitcoin signing library (see
+# docs/design/ATOMIC_SWAP_BTC_SIGNING_STOP_REPORT.md). The flag does
+# NOT affect the SOST consensus activation gate
+# (ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT stays INT64_MAX independently).
+option(SOST_BTC_HTLC_SIGNING
+    "Enable BTC HTLC signing backend (requires vendored audited Bitcoin library; default OFF)"
+    OFF)
+if (SOST_BTC_HTLC_SIGNING)
+    target_compile_definitions(sost-core PRIVATE SOST_BTC_HTLC_SIGNING_ENABLED=1)
+    message(STATUS "SOST_BTC_HTLC_SIGNING=ON — backend wiring still requires the real library; see STOP report")
+endif()
+add_executable(test-atomic-swap-btc-signing tests/test_atomic_swap_btc_signing.cpp)
+target_link_libraries(test-atomic-swap-btc-signing PRIVATE sost-core)
+add_test(NAME atomic-swap-btc-signing COMMAND test-atomic-swap-btc-signing)
 
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
