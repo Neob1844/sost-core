@@ -1548,7 +1548,8 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
   <div class="dash-card" id="avgTime1000Card" onclick="toggleDashPanel('avgtime')" style="color:#fb010d" title="Maturity-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fb010d">LONG AVG &middot; 1000</div><div class="dash-val" id="dAvgTime1000" style="color:#fb010d">&mdash;</div><div class="dash-sub" id="dAvgTime1000Sub" style="color:#fb010d">last 1000 blocks &middot; visual</div><div class="dash-lag" id="dAvgTime1000Lag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" id="avgTimeGenesisCard" onclick="toggleDashPanel('avgtime')" style="color:#ec4899" title="All-time average since genesis. O(1) computed as (tip_time - GENESIS_TIME) / tip_height. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#ec4899">AVG &middot; GENESIS</div><div class="dash-val" id="dAvgTimeGenesis" style="color:#ec4899">&mdash;</div><div class="dash-sub" id="dAvgTimeGenesisSub" style="color:#ec4899">since block 0 &middot; visual</div><div class="dash-lag" id="dAvgTimeGenesisLag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
-  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Miner-side circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD LOTTERY BALANCE. Computed deterministically from consensus constants (V11 Phase 2 activation #7100, bootstrap cadence 2-of-3 until #12100, then 1-of-3 permanent; 50% of subsidy per triggered block). No background scan required."><div class="dash-label">CIRCULATING SUPPLY</div><div class="dash-val red" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − lottery</div></div>
+  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="True circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE. Counts all SOST currently in user wallets (miners + lottery winners). The DTD lottery payouts ARE circulating — they sit in winners' wallets. The CIRCULATING MINING card next to this one shows only the miner-side share (excluding lottery)."><div class="dash-label">CIRCULATING SUPPLY</div><div class="dash-val" id="dCircReal" style="color:#6B3F6B">—</div><div class="dash-sub" id="dCircRealSub" style="color:#6B3F6B">total − vault − pool</div></div>
+  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Miner-side circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD LOTTERY BALANCE. Excludes DTD lottery payouts (those are shown as part of TRUE CIRCULATING SUPPLY to the left). Computed deterministically from consensus constants (V11 Phase 2 activation #7100, bootstrap cadence 2-of-3 until #12100, then 1-of-3 permanent; 50% of subsidy per triggered block). No background scan required."><div class="dash-label">CIRCULATING MINING</div><div class="dash-val red" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − lottery</div></div>
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')"><div class="dash-label">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')"><div class="dash-label">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub">25% · click for UTXOs</div></div>
@@ -3625,17 +3626,23 @@ async function updateDashboard(info){
         return sum;
       }
 
-      var h    = (info && typeof info.blocks === 'number') ? info.blocks : 0;
-      var dtd  = dtdLotteryDistributed(h);
-      var circ = tSOST - bg - bp - dtd;
+      var h        = (info && typeof info.blocks === 'number') ? info.blocks : 0;
+      var dtd      = dtdLotteryDistributed(h);
+      var circReal = tSOST - bg - bp;             // ← true circulating (includes lottery)
+      var circMine = tSOST - bg - bp - dtd;       // ← miner-side only (excludes lottery)
 
-      var circEl  = document.getElementById('dCirc');
-      var dtdEl   = document.getElementById('dDtdBal');
-      var circSub = document.getElementById('dCircSub');
-      var dtdSub  = document.getElementById('dDtdBalSub');
-      if(circEl)  circEl.textContent  = fComma(circ.toFixed(4)) + ' SOST';
-      if(circSub) circSub.textContent = 'total − vault − pool − lottery';
-      if(dtdEl)   dtdEl.textContent   = fComma(dtd.toFixed(4)) + ' SOST';
+      var circRealEl  = document.getElementById('dCircReal');
+      var circRealSub = document.getElementById('dCircRealSub');
+      var circEl      = document.getElementById('dCirc');
+      var circSub     = document.getElementById('dCircSub');
+      var dtdEl       = document.getElementById('dDtdBal');
+      var dtdSub      = document.getElementById('dDtdBalSub');
+
+      if(circRealEl)  circRealEl.textContent  = fComma(circReal.toFixed(4)) + ' SOST';
+      if(circRealSub) circRealSub.textContent = 'total − vault − pool';
+      if(circEl)      circEl.textContent      = fComma(circMine.toFixed(4)) + ' SOST';
+      if(circSub)     circSub.textContent     = 'total − vault − pool − lottery';
+      if(dtdEl)       dtdEl.textContent       = fComma(dtd.toFixed(4)) + ' SOST';
       if(dtdSub){
         var phase = (h < DTD_FLIP_HEIGHT)
           ? ('bootstrap 2-of-3 · until #' + fComma(DTD_FLIP_HEIGHT))
