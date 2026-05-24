@@ -1041,6 +1041,53 @@
 
 
 <!-- DECENTRALIZATION ASSESSMENT -->
+<!-- ============== TRADING — DEX + OTC P2P ============== -->
+<section class="section" id="sec-trading">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// TRADING</div>
+      <h2 class="section-title">DEX <span class="accent">and OTC P2P</span> &mdash; simple &amp; secure</h2>
+      <p class="section-sub">SOST ships two trading surfaces. Both are <b>non-custodial</b>, both are <b>simple by design</b>, and both have an explicit security model. Fiat trades are <b>not offered as a protocol feature</b> &mdash; the SOST chain cannot verify a bank, so the protocol refuses to pretend it can.</p>
+    </div>
+
+    <h3 style="font-size:15px;color:var(--text-primary);margin:28px 0 10px">SOST DEX (PoPC) &mdash; already secure today</h3>
+    <p>The SOST DEX trades PoPC contracts (Proof of Personal Custody positions backed by tokenised or physical gold). Every trade combines three independent security layers:</p>
+    <ul style="margin:0 0 12px 20px;padding:0;line-height:1.7">
+      <li><b>Client-side ED25519-signed offers.</b> The offer payload (action, position-id, maker SOST address, maker ETH address, SOST amount, gold amount, price, expiry) is signed in the user's browser. The signing key is encrypted with Argon2id from the user's passphrase and never leaves the device.</li>
+      <li><b>End-to-end encrypted relay.</b> X25519 envelopes carry the signed offers between users. The relay server transports bytes but cannot read the cleartext, cannot alter the payload (MAC verified client-side), and cannot impersonate either party.</li>
+      <li><b>On-chain Ethereum escrow.</b> Where gold tokens move (XAUT, PAXG), they sit in the audited <code>SOSTEscrow.sol</code> smart contract. <b>SOST Protocol holds no keys to that contract.</b> Releases happen by on-chain logic the two parties trigger themselves &mdash; no admin, no operator, no oracle.</li>
+    </ul>
+    <p>The protocol cannot reverse trades, cannot recover funds sent to a wrong address, cannot compel delivery, and cannot verify off-chain promises. <b>That is the design.</b> What it does instead: enforces structural integrity of every signed payload, anchors every trade in cryptographic primitives, and surfaces 26 known scam patterns via the client-side Sentinel chat layer. The user's responsibility is to (a) load only the official URL, (b) read the signed fields before signing, (c) verify counterparty addresses against the payload, (d) check txids on-chain, and (e) use small test transactions before larger amounts.</p>
+
+    <h3 style="font-size:15px;color:var(--text-primary);margin:30px 0 10px">SOST OTC / P2P Board &mdash; crypto-to-crypto via atomic swap</h3>
+    <p>The community OTC / P2P Board hosts user-to-user trades against seven counterparty assets: <b>BTC, ETH, USDT, USDC, BNB, PAXG, XAUT</b>. The intended settlement mechanism is the <b>atomic swap HTLC</b> (Hashed Time-Locked Contract): cryptography enforces that <b>either both parties receive their funds, or both refund</b> &mdash; no intermediate state exists in which one side walks away with everything. No SOST escrow, no admin custody, no first-mover risk, no protocol authority.</p>
+    <p>The implementation status (as of this revision) is:</p>
+    <ul style="margin:0 0 12px 20px;padding:0;line-height:1.7">
+      <li><b>SOST-side consensus</b> &mdash; <b style="color:#22c55e">code-complete and unit-tested</b>. HTLC_LOCK (R17), HTLC_CLAIM (R19-R22), HTLC_REFUND (R23-R24) validation rules are in <code>src/tx_validation.cpp</code>, gated by <code>ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT</code>.</li>
+      <li><b>Wallet, RPC, and CLI</b> &mdash; <b style="color:#22c55e">scaffolding complete</b>. <code>createhtlclock</code>, <code>claimhtlc</code>, <code>refundhtlc</code>, <code>decodehtlc</code>, <code>gethtlcstatus</code> exist as gated helpers.</li>
+      <li><b>Counterparty legs (BTC Script, EVM contract)</b> &mdash; <b style="color:#f59e0b">pending Phase 4</b>. Required before any swap can settle.</li>
+      <li><b>External cryptographic + economic review</b> &mdash; <b style="color:#f59e0b">pending Phase 5</b>. Required before the gate flips.</li>
+      <li><b>Activation</b> &mdash; the gate stays at <code>INT64_MAX</code> (sentinel OFF). Target flip: <b>V14 / block 15,000</b>, conditional on Phase 4 + 5 sign-off.</li>
+    </ul>
+    <p>The trust profile of the seven assets splits into two categories. <b>Trust-minimized (BTC, ETH, BNB)</b>: no token-issuer freeze risk; cryptographic atomicity holds on both sides. <b>Issuer-risk (USDT, USDC, PAXG, XAUT)</b>: the underlying token can be frozen by its issuer (Tether, Circle, Paxos, TG Commodities); if that happens mid-swap, the SOST side still refunds correctly but the counterparty side may become uncollectible. The DEX UI labels these four explicitly and recommends small amounts for them; larger amounts should stick to Category A.</p>
+
+    <h3 style="font-size:15px;color:var(--text-primary);margin:30px 0 10px">OTC against fiat &mdash; deliberately not offered as a protocol feature</h3>
+    <p>A trade where one leg is a SEPA transfer, wire, or cash payment <b>cannot be made cryptographically atomic</b>. The SOST chain has no view into a bank. Any mechanism that would "penalise the unpaid fiat side automatically" requires either (a) an oracle that reads the bank &mdash; which is arbitration and turns SOST into a regulated intermediary &mdash; or (b) one party self-declaring incumplimiento, which is a trivially-exploitable robbery primitive; both also enable Sybil collusion farms. There is no third path.</p>
+    <p>Therefore <b>SOST Protocol does not offer fiat OTC as a protocol service</b>. The community discussion board still permits conversations about fiat trades (people are free to do whatever they want with each other), but the protocol provides no escrow, no penalty, no dispute resolution, and no implied safety. <b>The protocol's strong recommendation is to keep all trades in the crypto-to-crypto path</b> (atomic swap) where the cryptography itself can enforce safety. Any fiat trade is off-protocol, at user risk, with no protocol safety net.</p>
+
+    <h3 style="font-size:15px;color:var(--text-primary);margin:30px 0 10px">The simplicity rule</h3>
+    <p>Both surfaces follow the same five-step UI discipline so the user can be safe without becoming a cryptographer:</p>
+    <ol style="margin:0 0 12px 20px;padding:0;line-height:1.85">
+      <li>Load only the official URL: <code>sostcore.com</code> or <code>sostprotocol.com</code>. Never click a link from a DM.</li>
+      <li>Read the signed offer fields before signing. Counterparty address, amount, expiry &mdash; all visible, all binding.</li>
+      <li>Verify counterparty addresses against the LOCK / escrow payload. The signed payload is authoritative; chat messages are not.</li>
+      <li>Confirm txids on-chain (SOST explorer or Etherscan) before releasing anything. Screenshots are not proof.</li>
+      <li>Do a small test transaction before any larger amount. Always. Without exception.</li>
+    </ol>
+    <p>Anything sold outside this flow &mdash; Telegram DMs, "official escrow admin", address changes by chat, advance fees, screenshot proofs &mdash; is a scam pattern. The client-side Sentinel flags 26 known variants at the chat layer. The OTC and DEX pages document each pattern with worked examples. <b>If a counterparty pushes you off the official flow, stop the trade.</b></p>
+  </div>
+</section>
+
 <section class="section" id="sec-decentralization">
   <div class="container">
     <div class="section-header">
