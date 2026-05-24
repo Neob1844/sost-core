@@ -47,6 +47,7 @@
 #include "sost/capsule.h"
 #include "sost/sealed_envelope.h" // Sealed Capsule (Fase Sealed-1.D)
 #include "sost/crypto.h"          // sha256(file bytes) for --capsule-file
+#include "sost/atomic_swap_helpers.h"  // Phase 3C-2 HTLC CLI commands
 
 #include <cstdio>
 #include <cstdlib>
@@ -1069,6 +1070,23 @@ static void print_usage() {
     printf("  create-bond <amt> <blocks>  Create BOND_LOCK (timelocked to self)\n");
     printf("  create-escrow <amt> <blocks> <beneficiary>  Create ESCROW_LOCK\n");
     printf("  list-bonds             List active bond/escrow UTXOs\n");
+    printf("\nAtomic Swap HTLC (V14+ — currently DISABLED, gate INT64_MAX):\n");
+    printf("  htlc-lock <prev_txid> <prev_vout> <prev_amount> <prev_pkh>\n");
+    printf("            <hashlock> <refund_height> <claim_pkh> <refund_pkh>\n");
+    printf("            <lock_amount> <fee>\n");
+    printf("                         Build UNSIGNED HTLC_LOCK tx hex\n");
+    printf("  htlc-claim <lock_txid> <lock_vout> <lock_amount> <preimage>\n");
+    printf("             <claim_pkh> <marker_dust> <fee>\n");
+    printf("                         Build UNSIGNED HTLC_CLAIM tx hex\n");
+    printf("  htlc-refund <lock_txid> <lock_vout> <lock_amount> <refund_pkh> <fee>\n");
+    printf("                         Build UNSIGNED HTLC_REFUND tx hex\n");
+    printf("  htlc-decode <raw_tx_hex>\n");
+    printf("                         Decode an HTLC tx (LOCK/CLAIM/REFUND)\n");
+    printf("  htlc-status <lock_txid> <lock_vout>\n");
+    printf("                         Query HTLC_LOCK status from local chain view\n");
+    printf("  Flags: --json (machine-readable output)  --dry-run (default; never broadcasts)\n");
+    printf("         --sign (requires gate active; rejected while INT64_MAX)\n");
+    printf("         --broadcast (requires gate active; rejected while INT64_MAX)\n");
     printf("  dumpprivkey <addr>     Reveal private key (DANGER)\n");
     printf("  wallet-export          Export encrypted wallet backup (AES-256-GCM)\n");
     printf("  wallet-import          Import encrypted wallet backup\n");
@@ -3477,6 +3495,134 @@ int main(int argc, char** argv) {
                    sealed_opened, sealed_seen);
         }
         return 0;
+    }
+
+    // =====================================================================
+    // Atomic Swap HTLC commands (Phase 3C-2)
+    //
+    // All five commands delegate to sost::atomic_swap::HandleXxxRpc which
+    // performs the gate check (IsAtomicSwapHtlcEnabled) FIRST and returns
+    // the disabled-message while the gate is INT64_MAX. The CLI is a thin
+    // wrapper: parse argv into a positional std::vector<std::string>, call
+    // the helper, print the result body (JSON) or the error message.
+    //
+    // --sign and --broadcast flags are accepted but produce an explicit
+    // "feature requires protocol activation" message until Phase 4 ships
+    // the counterparty integrations. Default mode is dry-run (build only,
+    // print unsigned hex, never sign, never broadcast).
+    // =====================================================================
+    auto htlc_extract_flags = [&](int start, int& end_pos_out,
+                                   bool& json_out, bool& sign_out, bool& broadcast_out,
+                                   bool& dry_run_out) {
+        json_out = false; sign_out = false; broadcast_out = false; dry_run_out = false;
+        end_pos_out = argc;
+        // Find first flag position (after start) — flags are recognised at the end.
+        for (int i = start; i < argc; ++i) {
+            std::string a = argv[i];
+            if (a == "--json")      { json_out = true;     if (end_pos_out > i) end_pos_out = i; }
+            else if (a == "--sign") { sign_out = true;     if (end_pos_out > i) end_pos_out = i; }
+            else if (a == "--broadcast") { broadcast_out = true; if (end_pos_out > i) end_pos_out = i; }
+            else if (a == "--dry-run") { dry_run_out = true; if (end_pos_out > i) end_pos_out = i; }
+        }
+    };
+
+    auto htlc_print_result = [&](const sost::atomic_swap::HtlcRpcResult& r,
+                                  bool json_mode) -> int {
+        if (json_mode) {
+            // JSON output: ok envelope + body.
+            if (r.ok) {
+                printf("{\"ok\":true,\"result\":%s}\n", r.body.c_str());
+                return 0;
+            } else {
+                printf("{\"ok\":false,\"error_code\":%d,\"error\":\"%s\"}\n",
+                       r.error_code, r.body.c_str());
+                return 1;
+            }
+        }
+        // Plain text output.
+        if (r.ok) {
+            printf("%s\n", r.body.c_str());
+            return 0;
+        } else {
+            fprintf(stderr, "Error (%d): %s\n", r.error_code, r.body.c_str());
+            return 1;
+        }
+    };
+
+    auto htlc_reject_sign_broadcast = [&](bool sign, bool broadcast, bool json) -> int {
+        if (!sign && !broadcast) return 0;  // no rejection needed
+        sost::atomic_swap::HtlcRpcResult r;
+        r.ok = false;
+        r.error_code = -32603;
+        r.body = "--sign/--broadcast flags require protocol activation. "
+                 "Atomic Swap HTLC is currently disabled (gate INT64_MAX). "
+                 "Build the unsigned tx and sign/broadcast through the standard "
+                 "wallet path once the activation height ships (Phase 4 / V14+).";
+        return htlc_print_result(r, json);
+    };
+
+    if (cmd == "htlc-lock") {
+        bool json_mode = false, sign_flag = false, broadcast_flag = false, dry_run_flag = false;
+        int last_positional = argc;
+        htlc_extract_flags(arg_start + 1, last_positional, json_mode, sign_flag, broadcast_flag, dry_run_flag);
+        if (htlc_reject_sign_broadcast(sign_flag, broadcast_flag, json_mode) != 0) return 1;
+        std::vector<std::string> params;
+        for (int i = arg_start + 1; i < last_positional; ++i) params.push_back(argv[i]);
+        auto r = sost::atomic_swap::HandleCreateHtlcLockRpc(params);
+        return htlc_print_result(r, json_mode);
+    }
+
+    if (cmd == "htlc-claim") {
+        bool json_mode = false, sign_flag = false, broadcast_flag = false, dry_run_flag = false;
+        int last_positional = argc;
+        htlc_extract_flags(arg_start + 1, last_positional, json_mode, sign_flag, broadcast_flag, dry_run_flag);
+        if (htlc_reject_sign_broadcast(sign_flag, broadcast_flag, json_mode) != 0) return 1;
+        std::vector<std::string> params;
+        for (int i = arg_start + 1; i < last_positional; ++i) params.push_back(argv[i]);
+        auto r = sost::atomic_swap::HandleClaimHtlcRpc(params);
+        return htlc_print_result(r, json_mode);
+    }
+
+    if (cmd == "htlc-refund") {
+        bool json_mode = false, sign_flag = false, broadcast_flag = false, dry_run_flag = false;
+        int last_positional = argc;
+        htlc_extract_flags(arg_start + 1, last_positional, json_mode, sign_flag, broadcast_flag, dry_run_flag);
+        if (htlc_reject_sign_broadcast(sign_flag, broadcast_flag, json_mode) != 0) return 1;
+        std::vector<std::string> params;
+        for (int i = arg_start + 1; i < last_positional; ++i) params.push_back(argv[i]);
+        auto r = sost::atomic_swap::HandleRefundHtlcRpc(params);
+        return htlc_print_result(r, json_mode);
+    }
+
+    if (cmd == "htlc-decode") {
+        bool json_mode = false, sign_flag = false, broadcast_flag = false, dry_run_flag = false;
+        int last_positional = argc;
+        htlc_extract_flags(arg_start + 1, last_positional, json_mode, sign_flag, broadcast_flag, dry_run_flag);
+        std::vector<std::string> params;
+        for (int i = arg_start + 1; i < last_positional; ++i) params.push_back(argv[i]);
+        auto r = sost::atomic_swap::HandleDecodeHtlcRpc(params);
+        return htlc_print_result(r, json_mode);
+    }
+
+    if (cmd == "htlc-status") {
+        bool json_mode = false, sign_flag = false, broadcast_flag = false, dry_run_flag = false;
+        int last_positional = argc;
+        htlc_extract_flags(arg_start + 1, last_positional, json_mode, sign_flag, broadcast_flag, dry_run_flag);
+        std::vector<std::string> params;
+        for (int i = arg_start + 1; i < last_positional; ++i) params.push_back(argv[i]);
+        // htlc-status requires chain state. While gate is INT64_MAX the
+        // helper refuses uniformly regardless of inputs, so a stub
+        // utxo view + height 0 is sufficient. When Phase 4 ships and
+        // gate flips, this command should be wired to RPC gethtlcstatus
+        // for live chain queries (deferred to that sprint).
+        struct StubUtxoView : sost::IUtxoView {
+            std::optional<sost::UTXOEntry> GetUTXO(const sost::OutPoint&) const override {
+                return std::nullopt;
+            }
+        };
+        StubUtxoView stub;
+        auto r = sost::atomic_swap::HandleGetHtlcStatusRpc(params, /*current_height=*/0, stub);
+        return htlc_print_result(r, json_mode);
     }
 
     // Unknown command
