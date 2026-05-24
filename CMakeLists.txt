@@ -607,6 +607,10 @@ add_executable(test-atomic-swap-htlc-helpers tests/test_atomic_swap_htlc_helpers
 target_link_libraries(test-atomic-swap-htlc-helpers PRIVATE sost-core)
 add_test(NAME atomic-swap-htlc-helpers COMMAND test-atomic-swap-htlc-helpers)
 
+add_executable(test-atomic-swap-htlc-rpc tests/test_atomic_swap_htlc_rpc.cpp)
+target_link_libraries(test-atomic-swap-htlc-rpc PRIVATE sost-core)
+add_test(NAME atomic-swap-htlc-rpc COMMAND test-atomic-swap-htlc-rpc)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 

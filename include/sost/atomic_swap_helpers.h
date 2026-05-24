@@ -207,5 +207,77 @@ Transaction BuildHtlcRefundTx_Unchecked(
     const std::array<uint8_t, 20>& refund_destination_pkh,
     int64_t fee);
 
+// ---------------------------------------------------------------------------
+// RPC layer (Phase 3C-1) — testable handlers consumed by src/sost-rpc.cpp
+// ---------------------------------------------------------------------------
+//
+// Each RPC helper takes a positional-string params vector (same shape as
+// the existing src/sost-rpc.cpp dispatch), validates each parameter, and
+// returns an HtlcRpcResult. On success body is a JSON object string (no
+// outer JSON-RPC envelope; the RPC layer wraps it via rpc_result). On
+// failure body is a human-readable error message and error_code is set
+// to the JSON-RPC error code the wrapper should emit.
+//
+// HARD INVARIANTS:
+//   - All 5 helpers refuse with the disabled message while
+//     IsAtomicSwapHtlcEnabled() is false (gate at INT64_MAX).
+//   - No helper signs, broadcasts, or contacts any external chain.
+//   - No helper logs or returns private key material.
+//   - Hex inputs are validated for length and character set before use.
+//   - Numeric inputs are validated for range and non-negativity.
+
+struct HtlcRpcResult {
+    bool ok = false;
+    int error_code = -32603;  // JSON-RPC internal error code (used on !ok)
+    std::string body;         // JSON object on ok; error message on !ok
+};
+
+// createhtlclock — positional params (10):
+//   p[0]  prev_txid (64 hex)
+//   p[1]  prev_vout (uint32 decimal)
+//   p[2]  prev_amount (int64 decimal, stocks)
+//   p[3]  prev_pkh (40 hex)
+//   p[4]  hashlock (64 hex)
+//   p[5]  refund_height (int64 decimal)
+//   p[6]  claim_pkh (40 hex)
+//   p[7]  refund_pkh (40 hex)
+//   p[8]  lock_amount (int64 decimal, stocks)
+//   p[9]  fee (int64 decimal, stocks)
+// On success body: {"raw_tx_hex":"<hex>","unsigned":true}
+HtlcRpcResult HandleCreateHtlcLockRpc(const std::vector<std::string>& params);
+
+// claimhtlc — positional params (7):
+//   p[0]  lock_txid (64 hex)
+//   p[1]  lock_vout (uint32 decimal)
+//   p[2]  lock_amount (int64 decimal, stocks)
+//   p[3]  preimage (64 hex)
+//   p[4]  claim_destination_pkh (40 hex)
+//   p[5]  marker_dust_amount (int64 decimal, stocks)
+//   p[6]  fee (int64 decimal, stocks)
+HtlcRpcResult HandleClaimHtlcRpc(const std::vector<std::string>& params);
+
+// refundhtlc — positional params (5):
+//   p[0]  lock_txid (64 hex)
+//   p[1]  lock_vout (uint32 decimal)
+//   p[2]  lock_amount (int64 decimal, stocks)
+//   p[3]  refund_destination_pkh (40 hex)
+//   p[4]  fee (int64 decimal, stocks)
+HtlcRpcResult HandleRefundHtlcRpc(const std::vector<std::string>& params);
+
+// decodehtlc — positional params (1):
+//   p[0]  raw_tx_hex
+// On success body: {"kind":"LOCK|CLAIM|REFUND", ...fields...}
+HtlcRpcResult HandleDecodeHtlcRpc(const std::vector<std::string>& params);
+
+// gethtlcstatus — positional params (2):
+//   p[0]  lock_txid (64 hex)
+//   p[1]  lock_vout (uint32 decimal)
+// Uses the supplied chain context (current height + utxo view).
+// On success body: {"status":"<Unknown|LockedClaimable|LockedRefundable|Spent>"}
+HtlcRpcResult HandleGetHtlcStatusRpc(
+    const std::vector<std::string>& params,
+    int64_t current_height,
+    const IUtxoView& utxos);
+
 } // namespace atomic_swap
 } // namespace sost

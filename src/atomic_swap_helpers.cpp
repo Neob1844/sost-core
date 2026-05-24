@@ -343,5 +343,331 @@ HtlcStatus GetHtlcStatus(
     return HtlcStatus::LockedRefundable;
 }
 
+// ---------------------------------------------------------------------------
+// Phase 3C-1: RPC layer helpers
+// ---------------------------------------------------------------------------
+
+namespace {
+
+// Pure ASCII hex -> bytes. Returns false on any invalid char or odd length.
+bool decode_hex_n(const std::string& hex, size_t expected_bytes,
+                  std::vector<uint8_t>& out)
+{
+    if (hex.size() != expected_bytes * 2) return false;
+    out.assign(expected_bytes, 0);
+    auto nib = [](char c) -> int {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+        if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+        return -1;
+    };
+    for (size_t i = 0; i < expected_bytes; ++i) {
+        int hi = nib(hex[2 * i]);
+        int lo = nib(hex[2 * i + 1]);
+        if (hi < 0 || lo < 0) return false;
+        out[i] = static_cast<uint8_t>((hi << 4) | lo);
+    }
+    return true;
+}
+
+bool decode_hex_any(const std::string& hex, std::vector<uint8_t>& out) {
+    if (hex.size() % 2 != 0) return false;
+    out.assign(hex.size() / 2, 0);
+    auto nib = [](char c) -> int {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+        if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+        return -1;
+    };
+    for (size_t i = 0; i < out.size(); ++i) {
+        int hi = nib(hex[2 * i]);
+        int lo = nib(hex[2 * i + 1]);
+        if (hi < 0 || lo < 0) return false;
+        out[i] = static_cast<uint8_t>((hi << 4) | lo);
+    }
+    return true;
+}
+
+bool parse_int64(const std::string& s, int64_t& out) {
+    if (s.empty()) return false;
+    size_t i = 0;
+    bool neg = false;
+    if (s[0] == '-') { neg = true; i = 1; if (i == s.size()) return false; }
+    int64_t v = 0;
+    for (; i < s.size(); ++i) {
+        if (s[i] < '0' || s[i] > '9') return false;
+        int64_t d = s[i] - '0';
+        if (v > (INT64_MAX - d) / 10) return false;  // overflow guard
+        v = v * 10 + d;
+    }
+    out = neg ? -v : v;
+    return true;
+}
+
+bool parse_uint32(const std::string& s, uint32_t& out) {
+    int64_t v = 0;
+    if (!parse_int64(s, v)) return false;
+    if (v < 0 || v > (int64_t)UINT32_MAX) return false;
+    out = static_cast<uint32_t>(v);
+    return true;
+}
+
+std::string to_hex_lower(const uint8_t* data, size_t n) {
+    std::string s; s.reserve(n * 2);
+    static const char* HEX = "0123456789abcdef";
+    for (size_t i = 0; i < n; ++i) {
+        s.push_back(HEX[(data[i] >> 4) & 0xF]);
+        s.push_back(HEX[data[i] & 0xF]);
+    }
+    return s;
+}
+
+template <size_t N>
+std::array<uint8_t, N> to_arr(const std::vector<uint8_t>& v) {
+    std::array<uint8_t, N> a{};
+    for (size_t i = 0; i < N && i < v.size(); ++i) a[i] = v[i];
+    return a;
+}
+
+HtlcRpcResult disabled_result() {
+    HtlcRpcResult r;
+    r.ok = false;
+    r.error_code = -32603;
+    r.body = DisabledErrorMessage();
+    return r;
+}
+
+HtlcRpcResult invalid_params(const std::string& msg) {
+    HtlcRpcResult r;
+    r.ok = false;
+    r.error_code = -32602;  // JSON-RPC invalid params
+    r.body = msg;
+    return r;
+}
+
+HtlcRpcResult internal_error(const std::string& msg) {
+    HtlcRpcResult r;
+    r.ok = false;
+    r.error_code = -32603;
+    r.body = msg;
+    return r;
+}
+
+} // namespace
+
+HtlcRpcResult HandleCreateHtlcLockRpc(const std::vector<std::string>& params) {
+    if (!IsAtomicSwapHtlcEnabled()) return disabled_result();
+    if (params.size() < 10) return invalid_params("createhtlclock: expected 10 positional params");
+
+    std::vector<uint8_t> prev_txid_bytes, prev_pkh_bytes, hashlock_bytes,
+                         claim_pkh_bytes, refund_pkh_bytes;
+    if (!decode_hex_n(params[0], 32, prev_txid_bytes))
+        return invalid_params("createhtlclock: prev_txid must be 64 hex chars");
+    uint32_t prev_vout = 0;
+    if (!parse_uint32(params[1], prev_vout))
+        return invalid_params("createhtlclock: prev_vout must be uint32");
+    int64_t prev_amount = 0;
+    if (!parse_int64(params[2], prev_amount) || prev_amount < 0)
+        return invalid_params("createhtlclock: prev_amount must be non-negative int64");
+    if (!decode_hex_n(params[3], 20, prev_pkh_bytes))
+        return invalid_params("createhtlclock: prev_pkh must be 40 hex chars");
+    if (!decode_hex_n(params[4], 32, hashlock_bytes))
+        return invalid_params("createhtlclock: hashlock must be 64 hex chars");
+    int64_t refund_height_i = 0;
+    if (!parse_int64(params[5], refund_height_i) || refund_height_i < 0)
+        return invalid_params("createhtlclock: refund_height must be non-negative int64");
+    if (!decode_hex_n(params[6], 20, claim_pkh_bytes))
+        return invalid_params("createhtlclock: claim_pkh must be 40 hex chars");
+    if (!decode_hex_n(params[7], 20, refund_pkh_bytes))
+        return invalid_params("createhtlclock: refund_pkh must be 40 hex chars");
+    int64_t lock_amount = 0;
+    if (!parse_int64(params[8], lock_amount) || lock_amount < 0)
+        return invalid_params("createhtlclock: lock_amount must be non-negative int64");
+    int64_t fee = 0;
+    if (!parse_int64(params[9], fee) || fee < 0)
+        return invalid_params("createhtlclock: fee must be non-negative int64");
+
+    Hash256 prev_txid{};
+    for (size_t i = 0; i < 32; ++i) prev_txid[i] = prev_txid_bytes[i];
+
+    HtlcResult br = BuildHtlcLockTx(prev_txid, prev_vout, prev_amount,
+                                     to_arr<20>(prev_pkh_bytes),
+                                     to_arr<32>(hashlock_bytes),
+                                     (uint64_t)refund_height_i,
+                                     to_arr<20>(claim_pkh_bytes),
+                                     to_arr<20>(refund_pkh_bytes),
+                                     lock_amount, fee);
+    if (!br.ok) return internal_error("createhtlclock: " + br.error);
+
+    std::vector<uint8_t> raw;
+    std::string err;
+    if (!br.tx.Serialize(raw, &err))
+        return internal_error("createhtlclock serialize: " + err);
+
+    HtlcRpcResult ok;
+    ok.ok = true;
+    ok.body = "{\"raw_tx_hex\":\"" + to_hex_lower(raw.data(), raw.size()) +
+              "\",\"unsigned\":true}";
+    return ok;
+}
+
+HtlcRpcResult HandleClaimHtlcRpc(const std::vector<std::string>& params) {
+    if (!IsAtomicSwapHtlcEnabled()) return disabled_result();
+    if (params.size() < 7) return invalid_params("claimhtlc: expected 7 positional params");
+
+    std::vector<uint8_t> lock_txid_bytes, preimage_bytes, dest_pkh_bytes;
+    if (!decode_hex_n(params[0], 32, lock_txid_bytes))
+        return invalid_params("claimhtlc: lock_txid must be 64 hex chars");
+    uint32_t lock_vout = 0;
+    if (!parse_uint32(params[1], lock_vout))
+        return invalid_params("claimhtlc: lock_vout must be uint32");
+    int64_t lock_amount = 0;
+    if (!parse_int64(params[2], lock_amount) || lock_amount < 0)
+        return invalid_params("claimhtlc: lock_amount must be non-negative int64");
+    if (!decode_hex_n(params[3], 32, preimage_bytes))
+        return invalid_params("claimhtlc: preimage must be 64 hex chars (32 bytes)");
+    if (!decode_hex_n(params[4], 20, dest_pkh_bytes))
+        return invalid_params("claimhtlc: claim_destination_pkh must be 40 hex chars");
+    int64_t marker = 0;
+    if (!parse_int64(params[5], marker) || marker < 0)
+        return invalid_params("claimhtlc: marker_dust_amount must be non-negative int64");
+    int64_t fee = 0;
+    if (!parse_int64(params[6], fee) || fee < 0)
+        return invalid_params("claimhtlc: fee must be non-negative int64");
+
+    Hash256 lock_txid{};
+    for (size_t i = 0; i < 32; ++i) lock_txid[i] = lock_txid_bytes[i];
+
+    HtlcResult br = BuildHtlcClaimTx(lock_txid, lock_vout, lock_amount,
+                                      to_arr<32>(preimage_bytes),
+                                      to_arr<20>(dest_pkh_bytes), marker, fee);
+    if (!br.ok) return internal_error("claimhtlc: " + br.error);
+
+    std::vector<uint8_t> raw;
+    std::string err;
+    if (!br.tx.Serialize(raw, &err))
+        return internal_error("claimhtlc serialize: " + err);
+
+    HtlcRpcResult ok;
+    ok.ok = true;
+    ok.body = "{\"raw_tx_hex\":\"" + to_hex_lower(raw.data(), raw.size()) +
+              "\",\"unsigned\":true}";
+    return ok;
+}
+
+HtlcRpcResult HandleRefundHtlcRpc(const std::vector<std::string>& params) {
+    if (!IsAtomicSwapHtlcEnabled()) return disabled_result();
+    if (params.size() < 5) return invalid_params("refundhtlc: expected 5 positional params");
+
+    std::vector<uint8_t> lock_txid_bytes, dest_pkh_bytes;
+    if (!decode_hex_n(params[0], 32, lock_txid_bytes))
+        return invalid_params("refundhtlc: lock_txid must be 64 hex chars");
+    uint32_t lock_vout = 0;
+    if (!parse_uint32(params[1], lock_vout))
+        return invalid_params("refundhtlc: lock_vout must be uint32");
+    int64_t lock_amount = 0;
+    if (!parse_int64(params[2], lock_amount) || lock_amount < 0)
+        return invalid_params("refundhtlc: lock_amount must be non-negative int64");
+    if (!decode_hex_n(params[3], 20, dest_pkh_bytes))
+        return invalid_params("refundhtlc: refund_destination_pkh must be 40 hex chars");
+    int64_t fee = 0;
+    if (!parse_int64(params[4], fee) || fee < 0)
+        return invalid_params("refundhtlc: fee must be non-negative int64");
+
+    Hash256 lock_txid{};
+    for (size_t i = 0; i < 32; ++i) lock_txid[i] = lock_txid_bytes[i];
+
+    HtlcResult br = BuildHtlcRefundTx(lock_txid, lock_vout, lock_amount,
+                                       to_arr<20>(dest_pkh_bytes), fee);
+    if (!br.ok) return internal_error("refundhtlc: " + br.error);
+
+    std::vector<uint8_t> raw;
+    std::string err;
+    if (!br.tx.Serialize(raw, &err))
+        return internal_error("refundhtlc serialize: " + err);
+
+    HtlcRpcResult ok;
+    ok.ok = true;
+    ok.body = "{\"raw_tx_hex\":\"" + to_hex_lower(raw.data(), raw.size()) +
+              "\",\"unsigned\":true}";
+    return ok;
+}
+
+HtlcRpcResult HandleDecodeHtlcRpc(const std::vector<std::string>& params) {
+    if (!IsAtomicSwapHtlcEnabled()) return disabled_result();
+    if (params.empty()) return invalid_params("decodehtlc: expected 1 param (raw_tx_hex)");
+
+    std::vector<uint8_t> raw;
+    if (!decode_hex_any(params[0], raw))
+        return invalid_params("decodehtlc: raw_tx_hex is not valid hex");
+
+    Transaction tx;
+    std::string err;
+    if (!Transaction::Deserialize(raw, tx, &err))
+        return invalid_params("decodehtlc: tx deserialize failed: " + err);
+
+    DecodedHtlc out;
+    HtlcResult dr = DecodeHtlc(tx, out);
+    if (!dr.ok) return internal_error("decodehtlc: " + dr.error);
+
+    std::string body;
+    if (out.kind == DecodedHtlc::LOCK) {
+        body = "{\"kind\":\"LOCK\",\"amount\":" + std::to_string(out.lock.amount) +
+               ",\"hashlock\":\"" + to_hex_lower(out.lock.hashlock.data(), 32) + "\"" +
+               ",\"refund_height\":" + std::to_string(out.lock.refund_height) +
+               ",\"claim_pkh\":\"" + to_hex_lower(out.lock.claim_pkh.data(), 20) + "\"" +
+               ",\"refund_pkh\":\"" + to_hex_lower(out.lock.refund_pkh.data(), 20) + "\"}";
+    } else if (out.kind == DecodedHtlc::CLAIM) {
+        body = "{\"kind\":\"CLAIM\",\"lock_txid\":\"" +
+               to_hex_lower(out.claim.lock_txid.data(), 32) + "\"" +
+               ",\"lock_vout\":" + std::to_string(out.claim.lock_vout) +
+               ",\"preimage\":\"" + to_hex_lower(out.claim.preimage.data(), 32) + "\"}";
+    } else if (out.kind == DecodedHtlc::REFUND) {
+        body = "{\"kind\":\"REFUND\",\"lock_txid\":\"" +
+               to_hex_lower(out.refund.lock_txid.data(), 32) + "\"" +
+               ",\"lock_vout\":" + std::to_string(out.refund.lock_vout) + "}";
+    } else {
+        return internal_error("decodehtlc: unrecognised HTLC kind");
+    }
+
+    HtlcRpcResult ok;
+    ok.ok = true;
+    ok.body = body;
+    return ok;
+}
+
+HtlcRpcResult HandleGetHtlcStatusRpc(
+    const std::vector<std::string>& params,
+    int64_t current_height,
+    const IUtxoView& utxos)
+{
+    if (!IsAtomicSwapHtlcEnabled()) return disabled_result();
+    if (params.size() < 2) return invalid_params("gethtlcstatus: expected 2 params (lock_txid, lock_vout)");
+
+    std::vector<uint8_t> lock_txid_bytes;
+    if (!decode_hex_n(params[0], 32, lock_txid_bytes))
+        return invalid_params("gethtlcstatus: lock_txid must be 64 hex chars");
+    uint32_t lock_vout = 0;
+    if (!parse_uint32(params[1], lock_vout))
+        return invalid_params("gethtlcstatus: lock_vout must be uint32");
+
+    Hash256 lock_txid{};
+    for (size_t i = 0; i < 32; ++i) lock_txid[i] = lock_txid_bytes[i];
+
+    HtlcStatus s = GetHtlcStatus(lock_txid, lock_vout, current_height, utxos);
+    const char* status_str = "Unknown";
+    switch (s) {
+        case HtlcStatus::Unknown:          status_str = "Unknown"; break;
+        case HtlcStatus::LockedClaimable:  status_str = "LockedClaimable"; break;
+        case HtlcStatus::LockedRefundable: status_str = "LockedRefundable"; break;
+        case HtlcStatus::Spent:            status_str = "Spent"; break;
+    }
+
+    HtlcRpcResult ok;
+    ok.ok = true;
+    ok.body = std::string("{\"status\":\"") + status_str + "\"}";
+    return ok;
+}
+
 } // namespace atomic_swap
 } // namespace sost
