@@ -1187,7 +1187,12 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             if (dp != std::string::npos) {
                 uint32_t node_diff = (uint32_t)atoll(info.c_str() + dp + 18);
                 if (node_diff > 0 && node_diff != bits_q) {
-                    printf("[MINING] Local bitsQ=%u, node says %u — using node difficulty\n",
+                    // The node's next_difficulty is canonical (computed from
+                    // committed chain state); our local bits_q may drift
+                    // during fast block production. Override is correct
+                    // consensus behaviour, not a discrepancy.
+                    printf("[MINING] bitsQ sync: local=%u, node canonical=%u "
+                           "-- using node value\n",
                            bits_q, node_diff);
                     bits_q = node_diff;
                 }
@@ -1196,7 +1201,13 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
             if (pp != std::string::npos) {
                 int32_t node_pi = (int32_t)atoll(info.c_str() + pp + 23);
                 if (node_pi != cdec.profile_index) {
-                    printf("[MINING] Local profile=%s, node says %s — using node profile\n",
+                    // The node's casert_profile_index is canonical for the
+                    // next block (chain state + lag cap + slew rate applied);
+                    // our local cdec.profile_index can drift by 1 step
+                    // during fast block production. Override is correct
+                    // consensus behaviour, not a discrepancy.
+                    printf("[MINING] cASERT sync: local=%s, node canonical=%s "
+                           "-- using node value\n",
                            profile_label(cdec.profile_index), profile_label(node_pi));
                     cdec.profile_index = node_pi;
                 }
