@@ -5505,7 +5505,12 @@ async function showBlock(hash){
     }
     // Target profile = natural profile from lag, capped at block-height-specific ceiling.
     // This is what cASERT WOULD have selected without relief valve / anti-stall intervention.
-    var ceilingH=(b.height>=5750)?13:(b.height>=5635?12:(b.height>=5480?11:(b.height>=5075?10:35)));
+    // V13 (block 12,000) raises the ceiling to H35 (all 43 profiles active).
+    // V12 (block 7,350) raised the ceiling to H20 from H13.
+    // Pre-V12 ceiling history kept for historical blocks.
+    // Mirrors the canonical CASERT_MAX_ACTIVE_PROFILE_* constants in
+    // include/sost/params.h:353-355.
+    var ceilingH=(b.height>=12000)?35:(b.height>=7350?20:(b.height>=5750?13:(b.height>=5635?12:(b.height>=5480?11:(b.height>=5075?10:35)))));
     var lagBased=getProfileFromLag(rpcSignal);
     var targetProf=(lagBased.H>ceilingH)?CASERT_PROFILES.find(function(p){return p.H===ceilingH;}):lagBased;
     // Relief / intervention note for the mined profile vs target.
