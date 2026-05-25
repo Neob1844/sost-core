@@ -746,6 +746,15 @@ add_executable(test-atomic-swap-coordinator tests/test_atomic_swap_coordinator.c
 target_link_libraries(test-atomic-swap-coordinator PRIVATE sost-core)
 add_test(NAME atomic-swap-coordinator COMMAND test-atomic-swap-coordinator)
 
+# Phase 4B — BTC test vector harness (OFF mode, no libwally).
+# Captures BIP-173 / BIP-350 / BIP-143 / P2WSH vectors that the future
+# Phase C signing backend MUST pass. Executable subset (P2WSH witness
+# program + HTLC redeem script determinism) runs today; rest are
+# PENDING per docs/design/ATOMIC_SWAP_BTC_TEST_VECTOR_GAP.md.
+add_executable(test-atomic-swap-btc-test-vectors tests/test_atomic_swap_btc_test_vectors.cpp)
+target_link_libraries(test-atomic-swap-btc-test-vectors PRIVATE sost-core)
+add_test(NAME atomic-swap-btc-test-vectors COMMAND test-atomic-swap-btc-test-vectors)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 
