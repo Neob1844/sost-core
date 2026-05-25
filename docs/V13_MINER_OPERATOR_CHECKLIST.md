@@ -52,10 +52,36 @@ If you only read one thing, read this checklist. Run through every box before bl
         e87fb78b3c7a1609ee6cdb4dc237feacf9ff4e2a
     (run `git rev-parse HEAD` inside the cloned repo before building).
 
-[ ] I rebuilt cleanly:
+[ ] I rebuilt cleanly with the Phase 2 SbPoW Schnorr code path
+    explicitly enabled:
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
         make -j$(nproc) sost-node sost-miner sost-cli
+
+    The -DSOST_ENABLE_PHASE2_SBPOW=ON flag became the CMake default
+    in the patch that landed after the 2026-05-24 seed-node stall.
+    If your CMakeLists.txt still has the old default (OFF), passing
+    the flag explicitly is REQUIRED -- without it, the resulting
+    binary cannot verify Phase 2 SbPoW signatures and rejects every
+    accepted block since #7,100. Passing the flag when the default
+    is already ON is a harmless no-op, so include it unconditionally.
+
+[ ] I verified the resulting binary has the Phase 2 SbPoW code path
+    AND the V13 hardened preimage code path compiled in:
+        strings build/sost-node  | grep -c 'POW-SIG/v11'   # must be > 0
+        strings build/sost-miner | grep -c 'POW-SIG/v11'   # must be > 0
+        strings build/sost-node  | grep -c 'POW-SIG/v13'   # must be > 0
+        strings build/sost-miner | grep -c 'POW-SIG/v13'   # must be > 0
+
+    All four lines must print a number greater than 0. If any line
+    prints 0, the binary is NOT consensus-capable and MUST be
+    rebuilt before deploying:
+      - v11 = 0  -> compiled without -DSOST_ENABLE_PHASE2_SBPOW=ON;
+                    binary cannot verify any block since #7,100.
+      - v13 = 0  -> repo is older than the V13 SbPoW hardening
+                    commit (eb4e91e3, 2026-05-22); binary cannot
+                    verify any block from V13_HEIGHT=12000 onwards.
+                    Pull main and rebuild.
 
 [ ] Both node and miner restart on the new binary. The node prints
     its version and the miner prints its mining identity.
