@@ -58,6 +58,7 @@ extern "C" {
 #include <wally_core.h>
 #include <wally_address.h>
 #include <wally_transaction.h>
+#include <wally_crypto.h>
 }
 #endif
 
@@ -713,6 +714,244 @@ static void section_bip143_sighash() {
 }
 
 // ===========================================================================
+// SECTION 6 — BTC ECDSA signing path with libwally test vectors (Phase C.4)
+// ===========================================================================
+//
+// First real BTC signature surface, exercised against a published
+// BIP-143 reference key pair (the P2PK input from the §"Native P2WSH"
+// example, which is the only piece of the BIP-143 worked example that
+// publishes BOTH the private key AND the derived public key, so it can
+// be used as an end-to-end determinism anchor):
+//
+//   private key  : b8f28a772fccbf9b4f58a4f027e07dc2e35e7cd80529975e292ea34f84c4580c
+//   public key   : 036d5c20fa14fb2f635474c1dc4ef5909d4568e5569b79fc94d3448486e14685f8
+//
+// We test:
+//   (1) The key derivation: libwally derives the expected published
+//       public key from the published private key, byte-for-byte.
+//   (2) Sign-then-verify happy path on a sighash from SECTION 5.
+//   (3) DER encoding of the compact signature succeeds and produces
+//       a non-trivial output.
+//   (4) Determinism (Low-R via EC_FLAG_GRIND_R): signing the same
+//       sighash twice produces the same 64-byte compact signature.
+//   (5) Adversarial: flip one bit of the sighash → verification
+//       fails on the original signature.
+//   (6) Adversarial: invalid private key (all-zeros, which is outside
+//       the secp256k1 scalar range) is rejected by libwally's own
+//       wally_ec_private_key_verify before any signing is attempted.
+//   (7) Adversarial: passing a sighash of the wrong length (31 bytes
+//       instead of 32) is rejected by wally_ec_sig_from_bytes.
+//
+// What this section deliberately does NOT do:
+//   - Wire signing into src/atomic_swap_btc_signing.cpp. The four
+//     SignBtcHtlc{Claim,Refund,LockFunding} + EncodeP2WSHAddress
+//     stubs there STILL return disabled_result() byte-for-byte. The
+//     test calls libwally DIRECTLY, behind the same
+//     SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY macro that gates the rest
+//     of the test-vector wiring.
+//   - Build a real claim / refund / funding transaction. That is
+//     scope for a later phase (C.5+).
+//   - Read any wallet file, touch any RPC, broadcast anything to
+//     Bitcoin or any other network.
+//   - Move the SOST consensus gate or the CMake default for the
+//     signing backend. ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT stays
+//     INT64_MAX; SOST_BTC_HTLC_SIGNING stays OFF by default.
+//
+// This section is the load-bearing proof that the message we know
+// how to compute correctly (Section 5, BIP-143 sighash) can be
+// signed and verified end-to-end via the audited library, in our
+// build, with no SOST-written cryptography in the hot path.
+
+namespace bip143_test_key {
+    // From BIP-143 §"Native P2WSH" — the P2PK input's key pair.
+    // Published with both privkey AND derived pubkey, so anyone
+    // can reproduce the derivation independently.
+    static const char* priv_key_hex =
+        "b8f28a772fccbf9b4f58a4f027e07dc2e35e7cd80529975e292ea34f84c4580c";
+    static const char* expected_pub_key_hex =
+        "036d5c20fa14fb2f635474c1dc4ef5909d4568e5569b79fc94d3448486e14685f8";
+}
+
+static void section_btc_ecdsa_signing() {
+    printf("\n-- SECTION 6: BTC ECDSA signing (Phase C.4, libwally test "
+           "vectors) --\n");
+
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    namespace K = bip143_test_key;
+
+    auto priv_v       = local_hex_to_bytes(K::priv_key_hex);
+    auto expected_pub = local_hex_to_bytes(K::expected_pub_key_hex);
+    TEST("Sec6: test private key parses as 32 bytes",
+         priv_v.size() == EC_PRIVATE_KEY_LEN);
+    TEST("Sec6: expected public key parses as 33 bytes",
+         expected_pub.size() == EC_PUBLIC_KEY_LEN);
+
+    // (1) Key derivation: libwally must produce the published pubkey.
+    unsigned char derived_pub[EC_PUBLIC_KEY_LEN];
+    int rc = wally_ec_public_key_from_private_key(
+        priv_v.data(), priv_v.size(),
+        derived_pub, sizeof(derived_pub));
+    TEST("Sec6: wally_ec_public_key_from_private_key returns OK",
+         rc == 0);
+    bool pub_match = (rc == 0) &&
+        std::memcmp(derived_pub, expected_pub.data(),
+                    EC_PUBLIC_KEY_LEN) == 0;
+    TEST("Sec6: derived pubkey matches BIP-143 published value",
+         pub_match);
+
+    // (2) Sign-then-verify happy path using a real sighash.
+    // We use the BIP-143 sighash from SECTION 5 as the message to
+    // sign, which is the actual end-to-end pipeline a future
+    // SignBtcHtlcClaim implementation will follow.
+    namespace V = bip143_native_p2wsh_vector;
+    struct wally_tx* tx = nullptr;
+    rc = wally_tx_from_hex(V::raw_tx_unsigned_hex, 0, &tx);
+    if (rc != 0 || tx == nullptr) {
+        TEST("Sec6: cannot proceed — section 5 tx parse failed", false);
+        return;
+    }
+    auto sc = local_hex_to_bytes(V::script_code_hex);
+    unsigned char sighash[32] = {0};
+    rc = wally_tx_get_btc_signature_hash(
+        tx, V::input_index, sc.data(), sc.size(),
+        V::input_amount_satoshis, V::sighash_type,
+        /* flags = */ 0x01, sighash, sizeof(sighash));
+    TEST("Sec6: regenerate SECTION 5 sighash for signing",
+         rc == 0);
+    wally_tx_free(tx);
+
+    unsigned char compact_sig[EC_SIGNATURE_LEN] = {0};
+    rc = wally_ec_sig_from_bytes(
+        priv_v.data(), priv_v.size(),
+        sighash, sizeof(sighash),
+        EC_FLAG_ECDSA | EC_FLAG_GRIND_R,
+        compact_sig, sizeof(compact_sig));
+    bool sign_ok = (rc == 0);
+    TEST("Sec6: wally_ec_sig_from_bytes signs the BIP-143 sighash",
+         sign_ok);
+
+    if (sign_ok) {
+        rc = wally_ec_sig_verify(
+            derived_pub, sizeof(derived_pub),
+            sighash, sizeof(sighash),
+            EC_FLAG_ECDSA,
+            compact_sig, sizeof(compact_sig));
+        TEST("Sec6: signature verifies against the derived pubkey",
+             rc == 0);
+    }
+
+    // (3) DER encoding.
+    if (sign_ok) {
+        unsigned char der[EC_SIGNATURE_DER_MAX_LEN] = {0};
+        size_t der_len = 0;
+        rc = wally_ec_sig_to_der(
+            compact_sig, sizeof(compact_sig),
+            der, sizeof(der), &der_len);
+        TEST("Sec6: wally_ec_sig_to_der encodes the compact signature",
+             rc == 0 && der_len > 0 && der_len <= EC_SIGNATURE_DER_MAX_LEN);
+        if (rc == 0) {
+            // DER ECDSA signatures must start with 0x30 (SEQUENCE).
+            TEST("Sec6: DER signature starts with 0x30 (SEQUENCE tag)",
+                 der_len > 0 && der[0] == 0x30);
+            printf("    DER signature (%zu bytes): ", der_len);
+            for (size_t i = 0; i < der_len; ++i) printf("%02x", der[i]);
+            printf("\n");
+        }
+    }
+
+    // (4) Determinism: Low-R signing should be deterministic on the
+    //     same key + message + flags. Two consecutive calls must
+    //     produce the same 64-byte compact signature.
+    if (sign_ok) {
+        unsigned char compact_sig2[EC_SIGNATURE_LEN] = {0};
+        int rc2 = wally_ec_sig_from_bytes(
+            priv_v.data(), priv_v.size(),
+            sighash, sizeof(sighash),
+            EC_FLAG_ECDSA | EC_FLAG_GRIND_R,
+            compact_sig2, sizeof(compact_sig2));
+        bool deterministic = (rc2 == 0) &&
+            std::memcmp(compact_sig, compact_sig2, EC_SIGNATURE_LEN) == 0;
+        TEST("Sec6: signing same inputs twice produces same 64-byte sig "
+             "(EC_FLAG_GRIND_R determinism)",
+             deterministic);
+    }
+
+    // (5) Adversarial: mutate one bit of the sighash; the signature
+    //     produced for the unmutated sighash MUST fail verification
+    //     against the mutated message.
+    if (sign_ok) {
+        unsigned char mutated[32];
+        std::memcpy(mutated, sighash, 32);
+        mutated[0] ^= 0x01;
+        int rc_bad = wally_ec_sig_verify(
+            derived_pub, sizeof(derived_pub),
+            mutated, sizeof(mutated),
+            EC_FLAG_ECDSA,
+            compact_sig, sizeof(compact_sig));
+        TEST("Sec6: verification fails when sighash is mutated by 1 bit",
+             rc_bad != 0);
+    }
+
+    // (6) Adversarial: an all-zero private key is rejected by
+    //     wally_ec_private_key_verify (the secp256k1 scalar range
+    //     forbids zero).
+    {
+        unsigned char zero_priv[EC_PRIVATE_KEY_LEN] = {0};
+        int rc_z = wally_ec_private_key_verify(
+            zero_priv, sizeof(zero_priv));
+        TEST("Sec6: all-zero private key is rejected by libwally",
+             rc_z != 0);
+
+        // And the signing call itself must fail rather than producing
+        // a "signature" for an invalid key.
+        unsigned char dummy_sig[EC_SIGNATURE_LEN] = {0};
+        int rc_s = wally_ec_sig_from_bytes(
+            zero_priv, sizeof(zero_priv),
+            sighash, sizeof(sighash),
+            EC_FLAG_ECDSA | EC_FLAG_GRIND_R,
+            dummy_sig, sizeof(dummy_sig));
+        TEST("Sec6: signing with all-zero private key is rejected",
+             rc_s != 0);
+    }
+
+    // (7) Adversarial: a sighash of the wrong length (31 bytes
+    //     instead of 32) is rejected by wally_ec_sig_from_bytes.
+    {
+        unsigned char short_msg[31] = {0};
+        std::memcpy(short_msg, sighash, sizeof(short_msg));
+        unsigned char dummy_sig[EC_SIGNATURE_LEN] = {0};
+        int rc_l = wally_ec_sig_from_bytes(
+            priv_v.data(), priv_v.size(),
+            short_msg, sizeof(short_msg),
+            EC_FLAG_ECDSA | EC_FLAG_GRIND_R,
+            dummy_sig, sizeof(dummy_sig));
+        TEST("Sec6: signing with wrong-length message hash is rejected",
+             rc_l != 0);
+    }
+
+    printf("    Phase C.4 surface exercised end-to-end via libwally.\n");
+    printf("    NOT YET DONE: SignBtcHtlc{Claim,Refund,LockFunding}\n");
+    printf("    stubs still return disabled_result(). No claim/refund\n");
+    printf("    transaction is built. No wallet, no broadcast, no\n");
+    printf("    network. The consensus gate stays INT64_MAX.\n");
+#else
+    printf("   (libwally DISABLED — Phase C.4 signing path not active)\n");
+    PENDING_PHASE_C(
+        "Sec6: derived pubkey matches BIP-143 published value");
+    PENDING_PHASE_C(
+        "Sec6: signature verifies against the derived pubkey");
+    PENDING_PHASE_C(
+        "Sec6: signing same inputs twice produces same 64-byte sig");
+    PENDING_PHASE_C(
+        "Sec6: verification fails when sighash is mutated by 1 bit");
+    PENDING_PHASE_C(
+        "Sec6: all-zero private key is rejected by libwally");
+    PENDING_PHASE_C(
+        "Sec6: signing with wrong-length message hash is rejected");
+#endif
+}
+
+// ===========================================================================
 // Main
 // ===========================================================================
 
@@ -734,6 +973,7 @@ int main() {
     section_p2wsh_witness_program();
     section_redeem_script_determinism();
     section_bip143_sighash();
+    section_btc_ecdsa_signing();
 
 #if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
     wally_cleanup(0);
