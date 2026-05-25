@@ -1510,13 +1510,14 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
                         // not raw compute.
                         double effective_rate = hashrate * (stab_pct / 100.0);
                         // Profile name for readability in the diagnostic line.
-                        static const char* PROF_NAMES[] = {
-                            "E7","E6","E5","E4","E3","E2","E1","B0","H1","H2","H3","H4",
-                            "H5","H6","H7","H8","H9","H10","H11","H12","H13"
-                        };
-                        int32_t pi = params.stab_profile_index;
-                        int pn_idx = (pi < -7) ? 0 : (pi > 13) ? 20 : (pi + 7);
-                        const char* prof_name = PROF_NAMES[pn_idx];
+                        // Uses the canonical profile_label() that covers the
+                        // full 43-entry range E7..H35 (fixed alongside the
+                        // earlier cASERT-sync print bug). Previously this
+                        // block had its own truncated 21-entry inline array
+                        // that clamped H14..H35 to "H13" — operator-visible
+                        // symptom: the [MINING] %s bitsQ=... status line
+                        // showed H13 even while the chain was at H20.
+                        const char* prof_name = profile_label(params.stab_profile_index);
                         printf("\n[MINING] %s bitsQ=%.3f | %.1f att/s | stable=%.1f%% | target_hits=%u | "
                                "eff=%.1f stable/s | threads=%d | elapsed=%.0fs\n",
                                prof_name, (double)bits_q / 65536.0,
