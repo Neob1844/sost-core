@@ -6883,6 +6883,39 @@ int main(int argc, char** argv) {
     // FIX #1: Apply profile AFTER parsing all args, BEFORE any crypto/chain ops
     ACTIVE_PROFILE = selected_profile;
 
+    // P1.5 — runtime startup safety check (NOT a consensus rule).
+    // Refuse to launch a mainnet binary that lacks the Phase 2 SbPoW
+    // Schnorr verification code path. Phase 2 has been active on mainnet
+    // since block 7100; a binary compiled with SOST_ENABLE_PHASE2_SBPOW=OFF
+    // cannot validate any Phase 2 block and would silently reject every
+    // candidate, contributing nothing to consensus. Fail loudly here
+    // instead of going through the motions.
+    // See post-mortem: BitcoinTalk "SOST Protocol -- Post-Mortem: Block 10109 Stall".
+    if (ACTIVE_PROFILE == Profile::MAINNET) {
+        if (!sost::sbpow::phase2_verification_compiled_in()) {
+            fprintf(stderr,
+                "\n=== FATAL: binary is not consensus-capable on mainnet ===\n"
+                "This sost-node was compiled with SOST_ENABLE_PHASE2_SBPOW=OFF.\n"
+                "The Phase 2 SbPoW BIP-340 Schnorr verification code is NOT\n"
+                "in this binary. Phase 2 has been active on mainnet since\n"
+                "block 7100; without verification this node would silently\n"
+                "reject every candidate block and stall the chain.\n"
+                "\n"
+                "Rebuild with the flag enabled:\n"
+                "    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \\\n"
+                "        -DSOST_ENABLE_PHASE2_SBPOW=ON\n"
+                "    cmake --build build -j$(nproc) sost-node sost-miner sost-cli\n"
+                "\n"
+                "Verify the rebuilt binary has the code path:\n"
+                "    strings build/sost-node | grep -c 'POW-SIG/v11'  # must be > 0\n"
+                "\n"
+                "(--profile testnet and --profile dev skip this check but\n"
+                "cannot mine or validate mainnet.) See\n"
+                "docs/V13_MINER_OPERATOR_CHECKLIST.md section A for details.\n\n");
+            return 2;
+        }
+    }
+
     // v0.3.2: Set global chain path for auto-save in process_block
     g_chain_path = chain_path;
 
