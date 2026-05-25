@@ -370,4 +370,17 @@ Bytes32 derive_seed_v11(
     uint32_t nonce, uint32_t extra_nonce,
     const MinerPubkey& miner_pubkey);
 
+// ===========================================================================
+// Build-config introspection — runtime safety
+// ===========================================================================
+// Returns true if this binary was compiled with SOST_ENABLE_PHASE2_SBPOW=ON
+// (equivalently, with the SOST_HAVE_SCHNORRSIG preprocessor macro defined),
+// i.e. with the BIP-340 Schnorr verification code path linked in.
+//
+// Used by sost-node at startup to refuse launching a mainnet binary
+// that cannot validate Phase 2 SbPoW blocks. NOT a consensus rule.
+// Implementation lives in src/sbpow.cpp where the macro is correctly
+// applied per the target_compile_definitions in CMakeLists.txt.
+bool phase2_verification_compiled_in();
+
 } // namespace sost::sbpow

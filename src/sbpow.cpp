@@ -544,4 +544,19 @@ Bytes32 derive_seed_v11(
     std::abort();
 }
 
+
+// ---------------------------------------------------------------------------
+// Build-config introspection — runtime safety
+// ---------------------------------------------------------------------------
+// True iff this translation unit was compiled with SOST_HAVE_SCHNORRSIG
+// defined (which CMakeLists.txt does PUBLIC-ly when the user passes
+// -DSOST_ENABLE_PHASE2_SBPOW=ON). Tested at sost-node startup.
+bool phase2_verification_compiled_in() {
+#ifdef SOST_HAVE_SCHNORRSIG
+    return true;
+#else
+    return false;
+#endif
+}
+
 } // namespace sost::sbpow
