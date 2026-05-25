@@ -755,6 +755,14 @@ add_executable(test-atomic-swap-btc-test-vectors tests/test_atomic_swap_btc_test
 target_link_libraries(test-atomic-swap-btc-test-vectors PRIVATE sost-core)
 add_test(NAME atomic-swap-btc-test-vectors COMMAND test-atomic-swap-btc-test-vectors)
 
+# Phase 4E — local end-to-end simulation. Ten cross-component
+# scenarios orchestrating coordinator + BTC redeem-script builder +
+# disabled BTC signing stub. NO network, NO chain, NO keys, NO HTTP.
+# Catches integration regressions that unit tests would miss.
+add_executable(test-atomic-swap-e2e-sim tests/test_atomic_swap_e2e_sim.cpp)
+target_link_libraries(test-atomic-swap-e2e-sim PRIVATE sost-core)
+add_test(NAME atomic-swap-e2e-sim COMMAND test-atomic-swap-e2e-sim)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 
