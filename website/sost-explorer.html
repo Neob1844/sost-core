@@ -17,7 +17,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-05-25-v313">
+<meta name="explorer-html-version" content="2026-05-25-v314">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -554,6 +554,116 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     margin-top:14px;font-size:11px;color:var(--text3);line-height:1.7;
     border-left:2px solid rgba(141,227,173,0.4);padding:6px 12px;
   }
+
+  /* -- OTC/P2P Atomic Swap V14 preview banner ------------------------ */
+  /* Same layout as the trinity banner but with cyan / magenta accents */
+  /* to keep the two visually distinct at a glance.                    */
+  .otc-swap-banner{
+    border:1px solid rgba(34,211,238,0.45);
+    border-left:5px solid #22d3ee;
+    border-radius:6px;
+    background:linear-gradient(135deg,rgba(34,211,238,0.10),rgba(0,0,0,0.18));
+    color:#e7faff;
+    padding:16px 20px;
+    margin:14px 0 0 0;
+    font-family:var(--code),system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    box-shadow:0 0 18px rgba(34,211,238,0.10);
+  }
+  .otc-swap-banner__head{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;flex-wrap:wrap;margin-bottom:6px;cursor:pointer;user-select:none;
+  }
+  .otc-swap-banner__label{
+    color:#67e8f9;font-size:11px;font-weight:800;letter-spacing:0.18em;
+    text-transform:uppercase;
+  }
+  .otc-swap-banner h2{
+    margin:6px 0 8px;font-size:20px;color:#e7faff;letter-spacing:0.5px;
+  }
+  .otc-swap-banner p{margin:0 0 12px;color:#bfe9f3;font-size:12.5px;line-height:1.7;}
+  .otc-swap-banner__status{
+    display:inline-block;background:rgba(251,1,13,0.15);border:1px solid #fb010d;
+    color:#fb010d;font-size:9.5px;font-weight:900;letter-spacing:1.3px;
+    padding:3px 9px;border-radius:3px;margin-right:6px;text-transform:uppercase;
+  }
+  .otc-swap-banner__chip{
+    display:inline-block;background:rgba(217,70,239,0.14);border:1px solid #d946ef;
+    color:#f0abfc;font-size:9.5px;font-weight:900;letter-spacing:1.3px;
+    padding:3px 9px;border-radius:3px;margin-right:6px;text-transform:uppercase;
+  }
+  .otc-swap-banner__toggle{
+    background:rgba(34,211,238,0.18);
+    border:1px solid rgba(34,211,238,0.55);
+    color:#67e8f9;cursor:pointer;font-family:var(--code);
+    font-size:10px;font-weight:800;letter-spacing:1.2px;
+    padding:5px 12px;border-radius:3px;text-transform:uppercase;
+  }
+  .otc-swap-banner__toggle:hover{background:rgba(34,211,238,0.32);}
+  .otc-swap-banner__pillars{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:8px;margin:6px 0 14px;
+  }
+  .otc-swap-banner__pillar{
+    background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.28);
+    border-radius:3px;padding:8px 10px;
+  }
+  .otc-swap-banner__pillar-h{
+    color:#67e8f9;font-size:10px;font-weight:900;letter-spacing:1.2px;
+    margin-bottom:4px;text-transform:uppercase;
+  }
+  .otc-swap-banner__pillar-b{
+    font-size:11.5px;line-height:1.55;color:#e7faff;
+  }
+  .otc-swap-banner__assets{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:6px;margin:4px 0 14px;
+  }
+  .otc-swap-banner__asset{
+    background:rgba(0,0,0,0.25);border:1px dashed rgba(34,211,238,0.35);
+    border-radius:3px;padding:6px 8px;text-align:center;
+    font-family:var(--code),monospace;font-size:11.5px;
+  }
+  .otc-swap-banner__asset b{color:#67e8f9;letter-spacing:0.4px}
+  .otc-swap-banner__asset .tag{
+    display:inline-block;margin-left:6px;font-size:8.5px;letter-spacing:0.8px;
+    color:#9ca3af;border:1px solid rgba(156,163,175,0.4);padding:1px 5px;
+    border-radius:2px;font-weight:700
+  }
+  .otc-swap-banner__asset .tag.risk{color:#fbbf24;border-color:rgba(251,191,36,0.55)}
+  .otc-swap-banner__flow{
+    margin:8px 0;padding:12px 14px;background:rgba(0,0,0,0.28);
+    border-left:3px solid #67e8f9;border-radius:3px;font-size:12px;
+    line-height:1.7;color:#e7faff;
+  }
+  .otc-swap-banner__flow ol{margin:6px 0 0;padding-left:20px}
+  .otc-swap-banner__flow b{color:#67e8f9}
+  .otc-swap-banner__warn{
+    margin-top:14px;padding:10px 14px;
+    border:1px solid rgba(251,191,36,0.45);
+    border-left:3px solid #fbbf24;border-radius:3px;
+    background:rgba(251,191,36,0.05);
+    font-size:11.5px;line-height:1.65;color:#fbeec2;
+  }
+  .otc-swap-banner__warn b{color:#fbbf24}
+  .otc-swap-banner__split{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:10px;margin-top:14px;
+  }
+  .otc-swap-banner__split > div{
+    padding:10px 12px;border:1px solid rgba(34,211,238,0.28);
+    border-left:3px solid #22d3ee;background:rgba(34,211,238,0.04);
+    border-radius:3px;font-size:11.5px;line-height:1.6;color:#e7faff;
+  }
+  .otc-swap-banner__split h4{
+    margin:0 0 6px;color:#67e8f9;font-size:11px;letter-spacing:1.2px;
+    font-weight:800;text-transform:uppercase
+  }
+  .otc-swap-banner__gates{
+    margin-top:14px;font-size:11px;line-height:1.7;color:var(--text3);
+    border:1px dashed rgba(255,255,255,0.12);border-radius:3px;
+    padding:8px 12px;font-family:var(--code),monospace
+  }
+  .otc-swap-banner__gates code{color:#67e8f9}
 </style>
 <section class="trinity-proof-banner" style="max-width:1400px;margin:14px auto 0;padding-left:20px;padding-right:20px">
   <div class="trinity-proof-banner__head" onclick="window.toggleTrinityProof()">
@@ -1116,10 +1226,138 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </section>
 
+<!-- ============== OTC / P2P Atomic Swap V14 preview banner ============== -->
+<!-- Collapsible explainer: 7 supported pairs, the atomic-swap flow with a
+     plain-language Alice/Bob example, the four security pillars
+     (decentralisation, atomicity, non-custodial, verifiable), the two
+     technical paths (BTC via libwally, EVM via audited contract), and an
+     explicit ISSUER-RISK warning for stablecoins/wrapped gold. Status is
+     deliberately rendered "NOT ACTIVE — V14 PREVIEW" so a casual reader
+     cannot miss that nothing is live yet. Target activation: V14 /
+     block 15,000. All gates in the SOST source stay closed
+     (ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX, SOST_BTC_HTLC_SIGNING
+     OFF) regardless of what this banner displays. -->
+<section class="otc-swap-banner" style="max-width:1400px;margin:14px auto 0;padding-left:20px;padding-right:20px">
+  <div class="otc-swap-banner__head" onclick="window.toggleOtcSwap()">
+    <div>
+      <div class="otc-swap-banner__label">// OTC / P2P &middot; ATOMIC SWAP V14 PREVIEW</div>
+      <h2>SOST &harr; BTC / ETH / BNB / USDT / USDC / PAXG / XAUT</h2>
+      <div style="margin-top:6px">
+        <span class="otc-swap-banner__status">&#9888; NOT ACTIVE</span>
+        <span class="otc-swap-banner__chip">V14 TARGET: BLOCK 15,000</span>
+        <span style="color:#9ca3af;font-size:11px;letter-spacing:0.5px">Trustless cross-chain swaps. No custody. No escrow. No intermediary.</span>
+      </div>
+    </div>
+    <button id="otcSwapToggle" class="otc-swap-banner__toggle"
+            onclick="event.stopPropagation();window.toggleOtcSwap()">
+      Details &#9662;
+    </button>
+  </div>
+
+  <p>
+    SOST OTC / P2P will let two strangers swap SOST for another cryptoasset <b style="color:#67e8f9">without trusting each other and without SOST holding either side&apos;s funds</b>. Either both legs settle, or both legs refund. There is no intermediary, no escrow operator, no admin key, and no upgrade path. The mechanism is a Hashed Time-Locked Contract (HTLC) on both chains — the same primitive that powers Lightning channels.
+  </p>
+
+  <div id="otcSwapBody" style="display:none">
+
+    <!-- 1. SUPPORTED ASSETS GRID -->
+    <div style="margin-top:6px;padding-top:10px;border-top:1px dashed rgba(103,232,249,0.25)">
+      <div style="font-size:10px;letter-spacing:2px;color:#67e8f9;margin-bottom:8px">// SEVEN SUPPORTED ASSET PAIRS</div>
+      <div class="otc-swap-banner__assets">
+        <div class="otc-swap-banner__asset"><b>SOST &harr; BTC</b><span class="tag">L1</span></div>
+        <div class="otc-swap-banner__asset"><b>SOST &harr; ETH</b><span class="tag">L1</span></div>
+        <div class="otc-swap-banner__asset"><b>SOST &harr; BNB</b><span class="tag">L1</span></div>
+        <div class="otc-swap-banner__asset"><b>SOST &harr; USDT</b><span class="tag risk">ISSUER</span></div>
+        <div class="otc-swap-banner__asset"><b>SOST &harr; USDC</b><span class="tag risk">ISSUER</span></div>
+        <div class="otc-swap-banner__asset"><b>SOST &harr; PAXG</b><span class="tag risk">ISSUER</span></div>
+        <div class="otc-swap-banner__asset"><b>SOST &harr; XAUT</b><span class="tag risk">ISSUER</span></div>
+      </div>
+      <div style="font-size:10.5px;color:#9ca3af;margin-top:-4px">
+        Pairs flagged <span style="color:#fbbf24">ISSUER</span> add freeze-risk on the counterparty side (Tether / Circle / Paxos / TG Commodities can freeze any address). Atomic-swap atomicity holds on the SOST side regardless; the issuer-risk warning is for the counterparty leg only. Fully disclosed pre-swap in the wallet UI.
+      </div>
+    </div>
+
+    <!-- 2. HOW IT WORKS — plain-language flow -->
+    <div class="otc-swap-banner__flow">
+      <div style="font-size:10px;letter-spacing:2px;color:#67e8f9;margin-bottom:6px">// HOW IT WORKS &mdash; PLAIN LANGUAGE</div>
+      Alice has SOST, wants BTC. Bob has BTC, wants SOST. They use the OTC/P2P board to agree price and amounts; what happens next is purely cryptographic, with no intermediary touching either coin:
+      <ol>
+        <li><b>Alice locks</b> her SOST in a SOST-side HTLC, redeemable by Bob with a secret only Alice knows (she just generated it). Refundable to Alice after timeout T1.</li>
+        <li><b>Bob locks</b> his BTC in a Bitcoin-side HTLC, redeemable by Alice using <i>the same secret</i>. Refundable to Bob after timeout T2 (T2 &lt; T1 by a safety margin enforced by the wallet).</li>
+        <li><b>Alice claims</b> the BTC by revealing the secret on the Bitcoin chain.</li>
+        <li><b>Bob reads the secret</b> from the Bitcoin chain and uses it to claim the SOST.</li>
+      </ol>
+      Either both legs succeed (Alice gets BTC, Bob gets SOST) or both refund (each gets their own coin back when the timeouts fire). No half-states. No counterparty risk. No third party can move the funds.
+    </div>
+
+    <!-- 3. SECURITY PILLARS -->
+    <div style="font-size:10px;letter-spacing:2px;color:#67e8f9;margin-bottom:6px">// SECURITY PILLARS</div>
+    <div class="otc-swap-banner__pillars">
+      <div class="otc-swap-banner__pillar">
+        <div class="otc-swap-banner__pillar-h">&#9881; Decentralised</div>
+        <div class="otc-swap-banner__pillar-b">No SOST Foundation custody, no broker, no centralised matching engine. The OTC / P2P board lets two parties find each other; the swap itself is bilateral and cryptographic.</div>
+      </div>
+      <div class="otc-swap-banner__pillar">
+        <div class="otc-swap-banner__pillar-h">&#10003; Atomic</div>
+        <div class="otc-swap-banner__pillar-b">Either both legs complete or both refund. No partial settlement is reachable. The state machine on each chain enforces this without any external coordinator.</div>
+      </div>
+      <div class="otc-swap-banner__pillar">
+        <div class="otc-swap-banner__pillar-h">&#128274; Non-custodial</div>
+        <div class="otc-swap-banner__pillar-b">Neither SOST nor any third party ever holds the funds. The HTLC IS the escrow. There is no owner, admin, pause switch, upgrade path or emergency drain in either chain&apos;s contract.</div>
+      </div>
+      <div class="otc-swap-banner__pillar">
+        <div class="otc-swap-banner__pillar-h">&#128269; Verifiable</div>
+        <div class="otc-swap-banner__pillar-b">Every step is a public on-chain transaction. Anyone running a SOST node + a Bitcoin / EVM node can replay the swap and verify that the cryptographic conditions held. No off-chain trust required.</div>
+      </div>
+    </div>
+
+    <!-- 4. TWO TECHNICAL PATHS -->
+    <div style="font-size:10px;letter-spacing:2px;color:#67e8f9;margin:14px 0 6px">// TWO TECHNICAL PATHS</div>
+    <div class="otc-swap-banner__split">
+      <div>
+        <h4>BTC path</h4>
+        Native Bitcoin HTLC using a BIP-199-style P2WSH redeem script (SegWit v0). Signing via the audited <b>libwally-core</b> library (Blockstream, used in Liquid &amp; Green). No Bitcoin script written from scratch by SOST. BIP-143 sighash, BIP-173 Bech32, low-S signatures all delegated to the upstream-audited code path.
+      </div>
+      <div>
+        <h4>EVM path (ETH / BNB / ERC-20)</h4>
+        Single 273-line Solidity contract <code>AtomicSwapHTLC.sol</code>. No owner, no upgrade, no pause, no drain. 52 Foundry tests covering balance conservation, reentrancy (receiver + token), weird-ERC-20 behaviour, EIP-6780 forced-ETH, claim/refund ordering, fuzz preimage, fuzz timeout boundary.
+      </div>
+    </div>
+
+    <!-- 5. ISSUER-RISK WARNING (loud, separate) -->
+    <div class="otc-swap-banner__warn">
+      <b>&#9888; ISSUER-RISK NOTICE for USDT / USDC / PAXG / XAUT.</b><br>
+      Atomic swap protects against <i>counterparty theft</i> in the swap itself. It cannot stop a token issuer from freezing addresses. The four issuers above (Tether, Circle, Paxos, TG Commodities) retain the legal ability to freeze any holder, including a HTLC contract&apos;s balance. If a freeze fires mid-swap, the SOST side still refunds correctly (cryptographic atomicity on the SOST chain is unaffected) but the counterparty-chain side may become uncollectible until the issuer unfreezes. The wallet UI surfaces this risk explicitly before each swap.<br>
+      BTC, ETH and BNB pairs do not carry this issuer risk &mdash; they are native chain currencies with no freeze authority.
+    </div>
+
+    <!-- 6. CURRENT STATUS -->
+    <div class="otc-swap-banner__gates">
+      <b style="color:#67e8f9">Current state of the gates (verifiable in repo):</b><br>
+      <code>ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX</code> &mdash; SOST consensus gate, sentinel OFF.<br>
+      <code>SOST_BTC_HTLC_SIGNING = OFF</code> &mdash; CMake flag, no real BTC signing compiled in.<br>
+      <code>V14_HEIGHT = 15,000</code> &mdash; intended activation height (NOT yet active).<br>
+      All atomic-swap wallet / RPC / CLI commands refuse <code>--sign --broadcast</code> while the gate stays at <code>INT64_MAX</code>. Mainnet remains UNCHANGED by anything in this banner.
+    </div>
+
+    <p style="margin-top:14px;padding:12px 16px;border-left:3px solid #22d3ee;background:rgba(34,211,238,0.04);font-size:13px;line-height:1.6;color:#bfe9f3;border-radius:3px">
+      <b style="color:#67e8f9">One-line summary.</b> Two people, two chains, one shared secret, two timeouts &mdash; or both walk away with their own coins. Full reference at <a href="sost-otc.html" style="color:#67e8f9;text-decoration:none;border-bottom:1px dotted rgba(103,232,249,0.5)">sost-otc.html</a>.
+    </p>
+  </div>
+</section>
+
 <script>
   window.toggleTrinityProof = function() {
     var body = document.getElementById('trinityProofBody');
     var btn = document.getElementById('trinityProofToggle');
+    if (!body) return;
+    var open = (body.style.display !== 'none' && body.style.display !== '');
+    body.style.display = open ? 'none' : 'block';
+    if (btn) btn.innerHTML = open ? 'Details &#9662;' : 'Collapse &#9652;';
+  };
+  window.toggleOtcSwap = function() {
+    var body = document.getElementById('otcSwapBody');
+    var btn = document.getElementById('otcSwapToggle');
     if (!body) return;
     var open = (body.style.display !== 'none' && body.style.display !== '');
     body.style.display = open ? 'none' : 'block';
