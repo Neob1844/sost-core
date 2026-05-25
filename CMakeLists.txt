@@ -755,6 +755,59 @@ add_executable(test-atomic-swap-btc-test-vectors tests/test_atomic_swap_btc_test
 target_link_libraries(test-atomic-swap-btc-test-vectors PRIVATE sost-core)
 add_test(NAME atomic-swap-btc-test-vectors COMMAND test-atomic-swap-btc-test-vectors)
 
+# Phase C.2: when SOST_BTC_HTLC_SIGNING=ON AND libwally is on disk,
+# give the test vector binary direct visibility into wally_*.h headers
+# and libwallycore.a so it can verify BIP-173 / BIP-350 / P2WSH
+# encode + decode end-to-end against libwally as the reference
+# implementation. The link is test-target-local; libwally remains a
+# PRIVATE dep of sost-core for production code paths.
+#
+# Symbol resolution: libwally references the secp256k1-zkp variant
+# (its bundled submodule under vendor/libwally-core/src/secp256k1)
+# for ECDSA-S2C extensions. We link the zkp .a files first so the
+# linker resolves those extension symbols before falling back to
+# whatever libsecp256k1 the rest of sost-core uses. The zkp library
+# is a SUPERSET of the official libsecp256k1 API, so the symbols
+# sost-core needs (schnorrsig, context, …) are still available.
+if (SOST_BTC_HTLC_SIGNING)
+    set(_sost_wally_inc "")
+    set(_sost_wally_lib "")
+    if (WALLY_INCLUDE_DIR AND WALLY_LIBRARY)
+        set(_sost_wally_inc ${WALLY_INCLUDE_DIR})
+        set(_sost_wally_lib ${WALLY_LIBRARY})
+    elseif (WALLY_INCLUDE_DIRS AND WALLY_LIBRARIES)
+        set(_sost_wally_inc ${WALLY_INCLUDE_DIRS})
+        set(_sost_wally_lib ${WALLY_LIBRARIES})
+    endif()
+    if (_sost_wally_lib)
+        target_include_directories(test-atomic-swap-btc-test-vectors
+            PRIVATE ${_sost_wally_inc})
+        # Order matters: libwallycore.a first (generates unresolved
+        # symbols), then secp256k1-zkp + precomputed tables (resolves
+        # them), THEN sost-core (which brings standard libsecp256k1
+        # references that the zkp superset has already satisfied).
+        set(_wally_secp256k1_dir
+            ${CMAKE_SOURCE_DIR}/vendor/libwally-core/src/secp256k1/.libs)
+        set(_wally_secp256k1_a  ${_wally_secp256k1_dir}/libsecp256k1.a)
+        set(_wally_secp256k1_pa ${_wally_secp256k1_dir}/libsecp256k1_precomputed.a)
+        if (EXISTS ${_wally_secp256k1_a} AND EXISTS ${_wally_secp256k1_pa})
+            target_link_libraries(test-atomic-swap-btc-test-vectors PRIVATE
+                ${_sost_wally_lib}
+                ${_wally_secp256k1_a}
+                ${_wally_secp256k1_pa})
+        else()
+            # Fallback: link libwally alone and hope the operator's
+            # libsecp256k1 has the right symbols. Likely will fail at
+            # link; explicit message helps the operator debug.
+            message(WARNING
+                "Phase C.2: vendored secp256k1-zkp .a files not found at "
+                "${_wally_secp256k1_dir}. Run tools/build_libwally.sh first.")
+            target_link_libraries(test-atomic-swap-btc-test-vectors PRIVATE
+                ${_sost_wally_lib})
+        endif()
+    endif()
+endif()
+
 # Phase 4E — local end-to-end simulation. Ten cross-component
 # scenarios orchestrating coordinator + BTC redeem-script builder +
 # disabled BTC signing stub. NO network, NO chain, NO keys, NO HTTP.

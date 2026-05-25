@@ -64,6 +64,16 @@ fi
 
 cd "${VENDOR_DIR}"
 
+# libwally's configure (via AM_PATH_PYTHON) hard-requires a `python`
+# binary on PATH, even when --disable-swig-python is set, because it
+# is used by auxiliary generators. Modern Debian/Ubuntu ships
+# python3 only. Provide `python` via a per-submodule shim directory
+# instead of installing python-is-python3 system-wide.
+SHIM_DIR="${VENDOR_DIR}/.tmp-python-shim"
+mkdir -p "${SHIM_DIR}"
+ln -sfn "$(command -v python3)" "${SHIM_DIR}/python"
+export PATH="${SHIM_DIR}:${PATH}"
+
 # Bootstrap via libwally's documented autogen script.
 if [[ ! -f configure ]]; then
     echo "running autogen.sh ..."
