@@ -2882,6 +2882,45 @@ async function renderDTDPanel(body,title,silent){
   if(!silent)body.innerHTML='<div style="color:var(--text3)">Scanning public chain data... <span style="color:var(--cyan)">this may take a moment</span></div>';
   try{
     var height=H||await rpc('getblockcount');
+
+    // ----------------------------------------------------------------
+    // v317: sessionStorage cache by tip-height.
+    // The DTD scan walks the WHOLE chain (every block from genesis)
+    // because Phase 2 stats, lottery wins, miner totals, etc. all
+    // accumulate. At ~10,200 blocks that is 10,200 / CHUNK(40) = 255
+    // batches of 2 RPC calls each, even with Promise.all = ~minutes.
+    // Once we have the result we cache the WHOLE rendering payload
+    // keyed by current tip-height. Re-opening the panel without the
+    // chain advancing is then a <100 ms render straight from the
+    // cache, no RPC at all.
+    // ----------------------------------------------------------------
+    var _dtdCacheKey='sost_dtd_v317_'+height;
+    if(!silent){
+      try{
+        var _dtdCacheRaw=sessionStorage.getItem(_dtdCacheKey);
+        if(_dtdCacheRaw){
+          var _dtdCached=JSON.parse(_dtdCacheRaw);
+          if(_dtdCached&&_dtdCached.height===height&&_dtdCached.bodyHtml){
+            _dtdCache=_dtdCached.dtdCache;
+            if(_dtdCached.lotteryByAddr)
+              window._dtdLotteryByAddr=_dtdCached.lotteryByAddr;
+            if(_dtdCached.payouts)
+              window._dtdPayouts=_dtdCached.payouts;
+            body.innerHTML=_dtdCached.bodyHtml;
+            try{ _drawDtdCharts(
+              _dtdCached.ph2, _dtdCache.rows,
+              _dtdCached.cooldownSet, height); }
+            catch(eC){console.warn('[dtd cache] chart re-render failed',eC);}
+            renderDTDTable(_dtdCache);
+            var _ddc=document.getElementById('dDTD');
+            if(_ddc&&typeof _dtdCached.eligibleCount==='number')
+              _ddc.textContent=_dtdCached.eligibleCount+' eligible';
+            return;  // <-- skip the entire scan loop on cache hit
+          }
+        }
+      }catch(eRead){/* cache read failed; recompute */}
+    }
+
     var totalSubsidy=0,totalMiner=0,totalGold=0,totalPopc=0,totalLottery=0;
     var rowsByAddr={};
     var latestWinners=[];
@@ -3169,6 +3208,33 @@ async function renderDTDPanel(body,title,silent){
     }).length;
     var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
     renderDTDTable(_dtdCache);
+
+    // v317: store the FULL rendering payload in sessionStorage so a
+    // re-open at the same tip-height is instant. The cache key
+    // includes the tip-height, so the moment a new block lands the
+    // key changes and the next open does a fresh scan automatically.
+    // Cap at 5 MB to avoid blowing tiny browser quotas; if the
+    // payload is bigger we silently skip caching (next open will
+    // still rescan but at least nothing breaks).
+    if(!silent){
+      try{
+        var _dtdStoredBody=body.innerHTML;
+        var _dtdPayload=JSON.stringify({
+          height:height,
+          dtdCache:_dtdCache,
+          ph2:ph2,
+          cooldownSet:cooldownSet,
+          lotteryByAddr:lotteryByAddr,
+          payouts:ph2.payouts,
+          eligibleCount:eligibleRows,
+          bodyHtml:_dtdStoredBody,
+          ts:Date.now()
+        });
+        if(_dtdPayload.length<5*1024*1024){
+          sessionStorage.setItem('sost_dtd_v317_'+height,_dtdPayload);
+        }
+      }catch(eStore){/* quota exceeded — ok, just skip */}
+    }
   }catch(e){body.innerHTML='<div class="td-err">DTD could not load: '+((e&&e.message)||e)+'</div>';}
 }
 
