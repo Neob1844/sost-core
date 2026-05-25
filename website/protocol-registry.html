@@ -403,7 +403,56 @@
     <div class="section-header">
       <div class="section-id">// REGISTRATION GUIDE</div>
       <h2 class="section-title">How to register a <span style="color:#d946ef">SOST capsule</span> &mdash; two methods</h2>
-      <p class="section-sub">Two equally-valid ways to publish a public, signed, block-anchored capsule on the SOST chain. <b>Method A (Wallet UI)</b> is the easiest path and recommended for almost everyone. <b>Method B (sost-cli)</b> is for operators, scripts, and CI/CD. Both produce the SAME on-chain record &mdash; same capsule type, same byte-for-byte payload, same verifiability.</p>
+      <p class="section-sub">Two equally-valid ways to publish a public, signed, block-anchored capsule on the SOST chain. <b>Method A (Wallet UI)</b> is the easiest path and recommended for almost everyone. <b>Method B (sost-cli)</b> is for operators, scripts and CI/CD. Both produce the SAME on-chain record &mdash; same capsule type, same byte-for-byte payload, same verifiability.</p>
+    </div>
+
+    <!-- ===================== DECISION CARD ===================== -->
+    <div class="info-card" style="margin-bottom:18px;border-left:4px solid #d946ef">
+      <div style="color:#d946ef;font-weight:900;font-size:11px;letter-spacing:1.5px;margin-bottom:10px">// WHICH METHOD IS RIGHT FOR ME?</div>
+      <h3 style="font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--text-primary);margin:0 0 14px">Pick in 5 seconds</h3>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+
+        <!-- LEFT: WALLET -->
+        <div style="background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.35);border-left:3px solid #22c55e;border-radius:4px;padding:12px 14px">
+          <div style="color:#22c55e;font-size:10px;font-weight:900;letter-spacing:1.2px;margin-bottom:8px">USE METHOD A &mdash; WALLET</div>
+          <ul style="color:var(--text-primary);font-size:12.5px;line-height:1.7;margin:0;padding-left:18px">
+            <li>You have (or can create) a <b>SOST Wallet</b> in your browser.</li>
+            <li>You want a <b>point-and-click</b> flow with a visible dropdown.</li>
+            <li>You are publishing <b>one or a few</b> capsules manually.</li>
+            <li>You do <b>not</b> have <code>sost-cli</code> set up on a machine.</li>
+          </ul>
+        </div>
+
+        <!-- RIGHT: CLI -->
+        <div style="background:rgba(100,116,139,0.05);border:1px solid var(--border-bright);border-left:3px solid var(--text-secondary);border-radius:4px;padding:12px 14px">
+          <div style="color:var(--text-secondary);font-size:10px;font-weight:900;letter-spacing:1.2px;margin-bottom:8px">USE METHOD B &mdash; SOST-CLI</div>
+          <ul style="color:var(--text-primary);font-size:12.5px;line-height:1.7;margin:0;padding-left:18px">
+            <li>You run a <b>SOST node</b> and have <code>sost-cli</code> on PATH.</li>
+            <li>You are publishing capsules from a <b>script / CI / CD</b>.</li>
+            <li>You want to <b>batch</b> many capsules in one run.</li>
+            <li>You are on a <b>headless</b> machine with no browser.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary);margin:0">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border-bright)">
+            <th style="padding:6px 8px;text-align:left;color:var(--text-muted);font-weight:700;letter-spacing:1px;font-size:10px">CRITERION</th>
+            <th style="padding:6px 8px;text-align:left;color:#22c55e;font-weight:700;letter-spacing:1px;font-size:10px">METHOD A &middot; WALLET</th>
+            <th style="padding:6px 8px;text-align:left;color:var(--text-secondary);font-weight:700;letter-spacing:1px;font-size:10px">METHOD B &middot; SOST-CLI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:6px 8px;color:var(--text-muted)">Setup needed</td><td style="padding:6px 8px">Open a webpage</td><td style="padding:6px 8px">SOST node + <code>sost-cli</code> + RPC credentials</td></tr>
+          <tr style="background:rgba(0,0,0,0.15)"><td style="padding:6px 8px;color:var(--text-muted)">Where the key lives</td><td style="padding:6px 8px">Your browser, locked behind your password</td><td style="padding:6px 8px">Operator machine, unlocked at command time</td></tr>
+          <tr><td style="padding:6px 8px;color:var(--text-muted)">Time per capsule</td><td style="padding:6px 8px">~1 minute</td><td style="padding:6px 8px">A single shell command (scriptable)</td></tr>
+          <tr style="background:rgba(0,0,0,0.15)"><td style="padding:6px 8px;color:var(--text-muted)">Batch / CI friendly</td><td style="padding:6px 8px">No (manual)</td><td style="padding:6px 8px">Yes</td></tr>
+          <tr><td style="padding:6px 8px;color:var(--text-muted)">On-chain result</td><td style="padding:6px 8px" colspan="2"><b style="color:#d946ef">Identical &mdash; same capsule type, same bytes, same signature verification.</b></td></tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- ===================== STEP 1 (shared) ===================== -->
@@ -429,17 +478,56 @@
         <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">Wallet UI &middot; no terminal needed</span>
       </div>
       <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">Register via the SOST Wallet (easy path)</h3>
-      <p>The wallet page lets you compose a capsule transaction without touching a terminal. The same Open Note capsule mode that <code>sost-cli</code> uses is exposed as a dropdown in the wallet&apos;s Compose form.</p>
+      <p>The wallet page lets you compose a capsule transaction without touching a terminal. The same <b>Open Note</b> capsule mode that <code>sost-cli</code> uses is exposed as a dropdown in the wallet&apos;s Compose form.</p>
+
+      <!-- Before you start -->
+      <div style="background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.35);border-radius:4px;padding:10px 14px;margin:12px 0;font-size:12.5px;line-height:1.7">
+        <b style="color:#22c55e">Before you start &mdash; you need:</b>
+        <ul style="margin:6px 0 0;padding-left:22px">
+          <li>A working <b>SOST Wallet</b> in this browser (create or import one at <a href="sost-wallet.html" style="color:#22c55e">sost-wallet.html</a>).</li>
+          <li>A <b>small SOST balance</b> in that wallet &mdash; just enough to pay the network fee plus a dust output to yourself. A few SOST is plenty.</li>
+          <li>Your wallet password handy so you can unlock and sign.</li>
+        </ul>
+      </div>
 
       <ol style="color:var(--text-primary);font-size:13.5px;line-height:1.85;margin:14px 0 0;padding-left:22px">
-        <li><b>Open the SOST Wallet.</b> Go to <a href="sost-wallet.html" style="color:#22c55e">sost-wallet.html</a> and unlock (or import) the identity you want to sign with. For protocol-level claims this should be your SOST Protocol operator address; for personal records it can be any wallet you control.</li>
-        <li><b>Open the Compose / Send form.</b> Click <b>Send</b> in the wallet. You can use any small dust amount (a few stocks is enough; the capsule is what matters, not the value transfer). The recipient can be your own address.</li>
-        <li><b>Pick the capsule mode.</b> In the <b>Message Type</b> dropdown, select <code>Open Note &mdash; Public text (max 80 chars)</code>. The on-chain text field appears below the dropdown.</li>
-        <li><b>Paste the capsule text.</b> Copy the line from Step 1 above (<code>sost-protocol popc-manifesto 3bed02e2f5c589e4</code> for the worked example) into the capsule text box. The wallet shows a live character counter; you should see <code>49 / 80</code>.</li>
-        <li><b>Review and sign.</b> The wallet shows the recipient address, the amount, the fee, and the capsule body. Confirm everything is correct, then click <b>Sign &amp; Broadcast</b>. The wallet signs locally with your key &mdash; the key never leaves your browser.</li>
-        <li><b>Capture txid + block height.</b> When the transaction confirms, the wallet shows the txid. Look it up in the <a href="sost-explorer.html" style="color:#22c55e">SOST Explorer</a> and note the confirming block height.</li>
-        <li><b>Add the entry to the registered-capsules list below.</b> Same as Method B &mdash; the publisher (you or an indexer) appends a new row binding <code>txid · block_height · capsule_text · manifesto sha-256</code>.</li>
+        <li><b>Open the SOST Wallet.</b> Go to <a href="sost-wallet.html" style="color:#22c55e">sost-wallet.html</a> and unlock (or import) the identity you want to sign with. For protocol-level claims this should be your SOST Protocol operator address; for personal records it can be any wallet you control.
+          <div style="background:rgba(0,0,0,0.25);border:1px dashed var(--border-bright);border-radius:3px;padding:6px 10px;margin-top:6px;font-size:11.5px;color:var(--text-secondary)">What you should see: the wallet sidebar shows your active address and balance. If you see a lock icon, click it and enter your password.</div>
+        </li>
+
+        <li><b>Open the Compose / Send form.</b> Click <b>Send</b> in the wallet sidebar. The recipient can be your own address &mdash; a capsule does not need a real economic transfer, just the smallest valid output.
+          <div style="background:rgba(0,0,0,0.25);border:1px dashed var(--border-bright);border-radius:3px;padding:6px 10px;margin-top:6px;font-size:11.5px;color:var(--text-secondary)">What you should see: form fields for Recipient, Amount, Fee and a <b>Message Type (Capsule Protocol)</b> dropdown.</div>
+        </li>
+
+        <li><b>Pick the capsule mode.</b> In the <b>Message Type</b> dropdown choose <code>Open Note &mdash; Public text (max 80 chars)</code>. A text box appears under the dropdown.
+          <div style="background:rgba(0,0,0,0.25);border:1px dashed var(--border-bright);border-radius:3px;padding:6px 10px;margin-top:6px;font-size:11.5px;color:var(--text-secondary)">What you should see: a multi-line text input with a small live counter in its bottom-right corner (<code>0 / 80</code>).</div>
+        </li>
+
+        <li><b>Paste the capsule text.</b> Copy the line from Step 1 above (<code>sost-protocol popc-manifesto 3bed02e2f5c589e4</code> for the worked example) into the capsule text box.
+          <div style="background:rgba(0,0,0,0.25);border:1px dashed var(--border-bright);border-radius:3px;padding:6px 10px;margin-top:6px;font-size:11.5px;color:var(--text-secondary)">What you should see: the live counter updates to <code>49 / 80</code>. If you see a red error, your line is over 80 bytes &mdash; shorten the namespace or the record name.</div>
+        </li>
+
+        <li><b>Review and sign.</b> The wallet shows recipient, amount, fee and the capsule body. Confirm everything is correct, then click <b>Sign &amp; Broadcast</b>. The wallet signs locally with your key &mdash; the key never leaves your browser.
+          <div style="background:rgba(0,0,0,0.25);border:1px dashed var(--border-bright);border-radius:3px;padding:6px 10px;margin-top:6px;font-size:11.5px;color:var(--text-secondary)">What you should see: a confirmation banner with a <b>txid</b> (a 64-hex hash). Save it.</div>
+        </li>
+
+        <li><b>Capture txid + block height.</b> Open the <a href="sost-explorer.html" style="color:#22c55e">SOST Explorer</a>, paste the txid in the search box, and wait for the transaction to be included in a block. Note the confirming block height.
+          <div style="background:rgba(0,0,0,0.25);border:1px dashed var(--border-bright);border-radius:3px;padding:6px 10px;margin-top:6px;font-size:11.5px;color:var(--text-secondary)">What you should see: a transaction page showing the capsule body in plain text, the block height and the block timestamp.</div>
+        </li>
+
+        <li><b>Add the entry to the Registered capsules list below.</b> Same as Method B &mdash; the publisher (you or an indexer) appends a new row binding <code>txid &middot; block_height &middot; capsule_text &middot; manifesto sha-256</code>.</li>
       </ol>
+
+      <!-- Common gotchas -->
+      <div style="background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.35);border-radius:4px;padding:10px 14px;margin-top:14px;font-size:12.5px;line-height:1.7">
+        <b style="color:#fbbf24">Common gotchas:</b>
+        <ul style="margin:6px 0 0;padding-left:22px">
+          <li><b>Dropdown shows no "Open Note" option:</b> your wallet is loaded from a stale cache. Hard-refresh (<code>Ctrl+Shift+R</code>) and reopen. Capsule attach also requires chain height &ge; V12 (block 7,350), which mainnet has been past since 2026-03.</li>
+          <li><b>Counter goes over 80:</b> a capsule body is bytes, not characters. Accents and emoji count as 2&ndash;4 bytes each. Stick to ASCII for safety.</li>
+          <li><b>"Insufficient funds" on broadcast:</b> the wallet needs enough SOST to cover the dust output PLUS the network fee. Add a few SOST and retry.</li>
+          <li><b>Transaction not in a block after 10 minutes:</b> check the SOST Explorer; mempool may be busy. The capsule is broadcast as a normal transaction and competes for block space at the normal fee market.</li>
+        </ul>
+      </div>
 
       <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border-bright);border-radius:4px;padding:12px 16px;margin-top:14px;font-size:12.5px;line-height:1.7">
         <b style="color:#22c55e">Why this method is recommended:</b> no terminal, no RPC credentials, no operator-machine setup. Anyone with a SOST Wallet identity can publish a capsule in under a minute. The on-chain result is bit-identical to Method B.
@@ -453,10 +541,21 @@
         <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">sost-cli &middot; terminal + RPC credentials needed</span>
       </div>
       <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">Register via sost-cli (for operators, scripts, CI/CD)</h3>
-      <p>Use this method when you are publishing capsules from a script, a CI/CD pipeline, or a headless operator machine. It uses the same Open Note capsule mode as Method A and produces the exact same on-chain record. The flow is the one already used for the Trinity Kalgoorlie Phase 1 proof bundle.</p>
+      <p>Use this method when you are publishing capsules from a script, a CI/CD pipeline or a headless operator machine. It uses the same Open Note capsule mode as Method A and produces the exact same on-chain record. The flow is the one already used for the Trinity Kalgoorlie Phase 1 proof bundle.</p>
+
+      <!-- Before you start -->
+      <div style="background:rgba(100,116,139,0.05);border:1px solid var(--border-bright);border-radius:4px;padding:10px 14px;margin:12px 0;font-size:12.5px;line-height:1.7">
+        <b style="color:var(--text-secondary)">Before you start &mdash; you need:</b>
+        <ul style="margin:6px 0 0;padding-left:22px">
+          <li>A working SOST node reachable on the same machine (RPC port, default <code>28443</code>).</li>
+          <li><code>sost-cli</code> built and on PATH (build target: <code>cmake --build build --target sost-cli</code>).</li>
+          <li>The RPC user and password from <code>~/.sost/sost.conf</code>.</li>
+          <li>An operator wallet file (unlocked at command time) with a small SOST balance for the dust output + fee.</li>
+        </ul>
+      </div>
 
       <ol style="color:var(--text-primary);font-size:13.5px;line-height:1.85;margin:14px 0 0;padding-left:22px">
-        <li><b>SSH (or open a shell) on the operator machine.</b> The machine must have <code>sost-cli</code> on PATH and a running SOST node reachable via RPC. The operator wallet must be unlocked.</li>
+        <li><b>SSH (or open a shell) on the operator machine.</b> Verify the node is up: <code>sost-cli getblockcount</code> should return the current chain tip.</li>
         <li><b>Send the on-chain transaction with the attached capsule.</b> Replace <code>&lt;SOURCE_WALLET&gt;</code>, <code>&lt;DEST_ADDRESS&gt;</code> and <code>&lt;AMOUNT&gt;</code> with operator values; the destination can be a dust output to the source itself, and the amount can be the protocol minimum:
           <pre style="background:rgba(0,0,0,0.4);padding:10px 14px;border-radius:4px;color:var(--text-primary);font-size:12px;line-height:1.6;margin:8px 0;overflow-x:auto">sost-cli --rpc-host 127.0.0.1 --rpc-port 28443 \
   --rpc-user &lt;USER&gt; --rpc-password &lt;PASS&gt; \
@@ -491,7 +590,8 @@
       <p style="color:var(--text-secondary);font-size:12.5px;margin-top:12px">Match means the capsule, the file, and the signing key all line up &mdash; the timestamp + author + content tuple is cryptographically proven. No trust in this page required.</p>
     </div>
 
-    <div class="info-card">
+    <!-- ===================== WORKED EXAMPLE SUMMARY ===================== -->
+    <div class="info-card" style="margin-bottom:18px">
       <p><b>Worked example used in both methods above:</b> registering the canonical SOST Protocol PoPC manifesto so the term &quot;Proof of Personal Custody&quot; is timestamped on-chain by the SOST Protocol operator before anyone else attempts to claim it. The fields below were computed in Step 1 and used identically by both methods.</p>
 
       <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary);margin:6px 0">
@@ -504,6 +604,57 @@
         </tbody>
       </table>
     </div>
+
+    <!-- ===================== FAQ ===================== -->
+    <div class="info-card" style="border-left:4px solid #d946ef">
+      <div style="color:#d946ef;font-weight:900;font-size:11px;letter-spacing:1.5px;margin-bottom:10px">// FAQ</div>
+      <h3 style="font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--text-primary);margin:0 0 14px">Frequently asked questions</h3>
+
+      <div style="display:grid;grid-template-columns:1fr;gap:12px">
+
+        <div>
+          <div style="color:var(--text-primary);font-weight:700;font-size:13px;margin-bottom:4px">What is a capsule, in one sentence?</div>
+          <div style="color:var(--text-secondary);font-size:12.5px;line-height:1.7">A capsule is a small typed payload attached to a normal SOST transaction. The chain treats it as opaque metadata, but anyone can decode it after the transaction is in a block.</div>
+        </div>
+
+        <div>
+          <div style="color:var(--text-primary);font-weight:700;font-size:13px;margin-bottom:4px">Do I pay extra for the capsule?</div>
+          <div style="color:var(--text-secondary);font-size:12.5px;line-height:1.7">No extra application-level fee in this iteration. You pay the normal SOST network fee for the underlying transaction; the capsule rides for free inside it. A future iteration may add a small registry fee &mdash; documented in &quot;Future anti-spam&quot; below &mdash; but nothing is collected today.</div>
+        </div>
+
+        <div>
+          <div style="color:var(--text-primary);font-weight:700;font-size:13px;margin-bottom:4px">Can I edit or delete a capsule after publishing?</div>
+          <div style="color:var(--text-secondary);font-size:12.5px;line-height:1.7">No. The transaction (and its capsule payload) is part of the chain&apos;s block history and cannot be altered or removed. If you want to update the manifesto, publish a NEW capsule with the updated SHA-256 and treat it as a new version (v2, v3, ...). Both records remain on-chain; the latest is whichever block is highest.</div>
+        </div>
+
+        <div>
+          <div style="color:var(--text-primary);font-weight:700;font-size:13px;margin-bottom:4px">Can someone fake or forge my capsule?</div>
+          <div style="color:var(--text-secondary);font-size:12.5px;line-height:1.7">Anyone can publish a capsule with any text, but only the holder of the private key for a given address can sign a transaction from that address. The registry binds <i>capsule text + signing address + block height</i> together; the value of a record depends on which address signed it. For protocol-level claims, the SOST constitutional / operator address is the authoritative signer.</div>
+        </div>
+
+        <div>
+          <div style="color:var(--text-primary);font-weight:700;font-size:13px;margin-bottom:4px">My wallet has no &quot;Open Note&quot; in the dropdown &mdash; why?</div>
+          <div style="color:var(--text-secondary);font-size:12.5px;line-height:1.7">Capsule attach requires chain height &ge; V12 (block 7,350). Mainnet has been past this since 2026-03. If you still do not see the dropdown, you are on an older cached version of the wallet &mdash; hard-refresh (<code>Ctrl+Shift+R</code>) on <a href="sost-wallet.html" style="color:#d946ef">sost-wallet.html</a>.</div>
+        </div>
+
+        <div>
+          <div style="color:var(--text-primary);font-weight:700;font-size:13px;margin-bottom:4px">Does this give me a patent / trademark / copyright?</div>
+          <div style="color:var(--text-secondary);font-size:12.5px;line-height:1.7">No. A capsule is an <b>evidentiary timestamp</b> &mdash; it proves that specific content existed at a specific block height, signed by a specific address. It is not a substitute for any formal IP filing. See &quot;Evidentiary scope&quot; near the top of this page for the full list of what a capsule does and does not prove.</div>
+        </div>
+
+        <div>
+          <div style="color:var(--text-primary);font-weight:700;font-size:13px;margin-bottom:4px">Do I need to run a SOST node?</div>
+          <div style="color:var(--text-secondary);font-size:12.5px;line-height:1.7">Only for Method B (sost-cli needs a local node). Method A talks to public infrastructure through the wallet page &mdash; no node required.</div>
+        </div>
+
+        <div>
+          <div style="color:var(--text-primary);font-weight:700;font-size:13px;margin-bottom:4px">What if I lose the private key for the publishing address?</div>
+          <div style="color:var(--text-secondary);font-size:12.5px;line-height:1.7">The record itself stays on-chain forever &mdash; signature, block height and content hash are immutable. What you lose is the ability to publish NEW capsules from the same address. For protocol-level continuity, treat the publishing key as a long-lived operator credential and back it up like any other.</div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 </section>
 

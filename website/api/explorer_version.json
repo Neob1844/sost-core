@@ -1,4 +1,4 @@
 {
-  "v": "2026-05-25-v312",
-  "note": "CIRCULATING SUPPLY card colour changed from berenjena (#6B3F6B) to canary yellow (#FFFF00). Both the value text (#dCircReal) and the subtitle (#dCircRealSub) updated in lockstep so the formula label 'total - vault - pool' stays the same yellow as the number. Meta tag bumped in lockstep with the JSON v key to avoid the auto-reload mismatch that caused the v308/v311 infinite-loop bug."
+  "v": "2026-05-25-v313",
+  "note": "protocol-registry.html: 'How to register a SOST capsule' section rewritten with a 'Which method is right for me?' decision card (side-by-side Wallet vs CLI comparison + criterion table), 'Before you start' prerequisite callouts for both methods, 'What you should see at each step' visual cues inside Method A so first-time users can self-verify, a 'Common gotchas' callout under Method A (no Open Note dropdown, counter over 80, insufficient funds, tx stuck in mempool), and an 8-item FAQ at the end (what is a capsule, do I pay extra, can I edit, can someone forge it, dropdown missing, is this a patent, do I need a node, lost key). Worked example, Step 1 SHA-256 path, Method B sost-cli command, After-publishing verification block and the worked-example summary table are preserved verbatim. Meta tag bumped in lockstep (v312 -> v313) per the procedure that fixed the auto-reload infinite loop."
 }
