@@ -1,4 +1,4 @@
 {
-  "v": "2026-05-25-v311",
-  "note": "Block-detail page (showBlock function) ceiling computation fix. The local 'ceilingH' ternary on line 5508 was hardcoded at H13 from the pre-V12 era; never updated when V12 raised the ceiling to H20 at block 7,350 (and V13 raises it to H35 at block 12,000). Symptom: any block with lag-based natural profile > H13 displayed cASERT_target = H13 even when the dashboard mining card and the in-page text description correctly showed 'ceiling H20 (V12)'. The fix mirrors the canonical CASERT_MAX_ACTIVE_PROFILE_* constants in include/sost/params.h:353-355. Display-only; no consensus rules, no C++ source code, no tests touched. Now the block-detail cASERT_target matches both the in-page description and the actual consensus mapping."
+  "v": "2026-05-25-v312",
+  "note": "CIRCULATING SUPPLY card colour changed from berenjena (#6B3F6B) to canary yellow (#FFFF00). Both the value text (#dCircReal) and the subtitle (#dCircRealSub) updated in lockstep so the formula label 'total - vault - pool' stays the same yellow as the number. Meta tag bumped in lockstep with the JSON v key to avoid the auto-reload mismatch that caused the v308/v311 infinite-loop bug."
 }
