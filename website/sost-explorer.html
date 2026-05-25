@@ -17,7 +17,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-05-25-v315">
+<meta name="explorer-html-version" content="2026-05-25-v316">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -4529,39 +4529,82 @@ function renderDashPanel(key,body,title,silent){
     if(!_diffHistory||_diffHistory.length<2){body.innerHTML='<div style="color:var(--text3)">Loading miner data...</div>';return;}
     if(_minersScanInProgress&&!silent){return;}
     _minersScanInProgress=true;
-    // Fetch miner addresses from recent blocks
+    // Phase v316 — single-pass parallel scan with sessionStorage cache.
+    // Previous code did TWO sequential awaits over 288 blocks (~1,152
+    // RPC roundtrips, ~5 min total). New code: ONE pass, fetches in
+    // parallel batches, and caches the scan keyed by tip-height so a
+    // re-open of the panel is instant if the chain has not advanced.
     (async function(){
-      var miners={};
       var lookback=Math.min(288,H);
+      var miners={};
+      var blockList=[];   // [{h, m, t}] ascending by height; ALSO used for "miners"
       var totalBlocksCounted=0;
-      for(var bh=H;bh>Math.max(0,H-lookback);bh--){
-        try{
-          var hash=await rpc('getblockhash',[String(bh)]);
-          var blk=await rpc('getblock',[hash]);
-          if(blk&&blk.miner_address){
-            var addr=blk.miner_address;
-            if(!miners[addr])miners[addr]={count:0,first:bh,last:bh};
-            miners[addr].count++;
-            totalBlocksCounted++;
-            if(bh<miners[addr].first)miners[addr].first=bh;
-            if(bh>miners[addr].last)miners[addr].last=bh;
+
+      // --- (A) sessionStorage cache: keyed by tip-height + lookback.
+      //         When the user re-opens the panel and the chain has
+      //         not advanced, render is instant.
+      var cacheKey='sost_explorer_miners_v316_'+H+'_'+lookback;
+      try{
+        var cached=sessionStorage.getItem(cacheKey);
+        if(cached){
+          var parsed=JSON.parse(cached);
+          if(parsed&&parsed.blockList&&parsed.miners){
+            blockList=parsed.blockList;
+            miners=parsed.miners;
+            totalBlocksCounted=blockList.length;
           }
-        }catch(e){break;} // RPC may fail for old blocks
+        }
+      }catch(eC){/* cache read failed; recompute */}
+
+      // --- (B) Parallel single-pass scan if cache miss.
+      if(blockList.length===0){
+        var startBh=Math.max(1,H-lookback+1);
+        var endBh=H;
+        var heights=[];
+        for(var bh=startBh;bh<=endBh;bh++) heights.push(bh);
+        var BATCH=30;   // 30 simultaneous in-flight RPC calls
+        for(var batchStart=0;batchStart<heights.length;batchStart+=BATCH){
+          var batch=heights.slice(batchStart,batchStart+BATCH);
+          var results;
+          try{
+            results=await Promise.all(batch.map(async function(bhi){
+              try{
+                var hash=await rpc('getblockhash',[String(bhi)]);
+                var blk=await rpc('getblock',[hash]);
+                if(blk&&blk.miner_address){
+                  return {h:bhi,m:blk.miner_address,
+                          t:blk.timestamp||blk.time||0};
+                }
+              }catch(eb){/* skip bad block */}
+              return null;
+            }));
+          }catch(eBatch){break;}
+          for(var ri=0;ri<results.length;ri++){
+            var rr=results[ri];
+            if(!rr) continue;
+            blockList.push(rr);
+            totalBlocksCounted++;
+            if(!miners[rr.m])miners[rr.m]={count:0,first:rr.h,last:rr.h};
+            miners[rr.m].count++;
+            if(rr.h<miners[rr.m].first)miners[rr.m].first=rr.h;
+            if(rr.h>miners[rr.m].last)miners[rr.m].last=rr.h;
+          }
+        }
+        // Store the scan result in sessionStorage for instant re-open.
+        // Cap the cache to 5 MB to be safe in tiny browser storage quotas.
+        try{
+          var payload=JSON.stringify({blockList:blockList,miners:miners});
+          if(payload.length<5*1024*1024) sessionStorage.setItem(cacheKey,payload);
+        }catch(eS){/* quota exceeded — ok, just skip */}
       }
+
+      // blockList is built in ASCENDING order of height because the
+      // heights[] array we batched over is ascending. No second
+      // pass needed.
+
       var addrs=Object.keys(miners);
       document.getElementById('dMiners').textContent=addrs.length;
       document.getElementById('dMinersSub').textContent='last '+lookback+' blocks';
-
-      // --- Simultaneous mining share calculation ---
-      // Build ordered block list: [{height, miner}]
-      var blockList=[];
-      for(var bh2=Math.max(1,H-lookback+1);bh2<=H;bh2++){
-        try{
-          var hash2=await rpc('getblockhash',[String(bh2)]);
-          var blk2=await rpc('getblock',[hash2]);
-          if(blk2&&blk2.miner_address) blockList.push({h:bh2,m:blk2.miner_address});
-        }catch(e2){break;}
-      }
       // For each block, determine active miners (mined >=1 in previous 12 blocks)
       var WINDOW=12;
       var simultaneousTotal=0;
@@ -4588,9 +4631,14 @@ function renderDashPanel(key,body,title,silent){
       html+='<span style="color:var(--text3)">Unique addresses:</span> <span style="color:var(--purple);font-weight:600">'+addrs.length+'</span><br>';
       html+='<span style="color:var(--text3)">Window:</span> <span style="color:var(--text)">blocks '+(H-lookback)+' \u2014 '+H+'</span><br>';
       html+='<span style="color:var(--text3)">Simultaneous blocks:</span> <span style="color:var(--cyan);font-weight:600">'+simultaneousTotal+'</span> / '+blockList.length+' <span style="color:var(--text3)">('+(blockList.length?((simultaneousTotal/blockList.length)*100).toFixed(1):'0')+'%)</span><br>';
-      // Compute average block time and network hashrate estimate
+      // Compute average block time and network hashrate estimate.
+      // v316: blockList entries now carry .t (block timestamp) so this
+      // computation is no longer pinned to the 600s default.
       var avgBtMiner=600;
-      if(blockList.length>=2){var tSpan=blockList[blockList.length-1].t-blockList[0].t;if(tSpan>0)avgBtMiner=tSpan/(blockList.length-1);}
+      if(blockList.length>=2){
+        var t0=blockList[0].t,tN=blockList[blockList.length-1].t;
+        if(t0>0&&tN>t0) avgBtMiner=(tN-t0)/(blockList.length-1);
+      }
       // Network hashrate — dual display (see header card comment).
       //   Primary: 2^bits_real / avg_block_time  (Bitcoin-style, stable)
       //   Secondary: 2^bits_real / (filter/100) / avg_block_time  (eff att/s)
@@ -4600,7 +4648,17 @@ function renderDashPanel(key,body,title,silent){
       var netHashrate=avgBtMiner>0?_netExpHashes/avgBtMiner:0;
       var _netFilterPct=(typeof _rpcStabilityPct==='number'&&_rpcStabilityPct>0)?_rpcStabilityPct:0;
       var _netEffectiveAtt=(_netFilterPct>0&&avgBtMiner>0)?(_netExpHashes/(_netFilterPct/100))/avgBtMiner:0;
-      function _fmtNetRate(v){return v>=1000?(v/1000).toFixed(1)+'K':Math.round(v);}
+      // v316: when the per-miner share would round to 0 under integer
+      // arithmetic (typical for CPU-only PoW with a small farm where
+      // each miner produces << 1 hash/s), show two decimals so
+      // operators can tell apart "miner contributing ~0.2 h/s" from
+      // "miner contributing 0".
+      function _fmtNetRate(v){
+        if(v>=1000) return (v/1000).toFixed(1)+'K';
+        if(v>=10)   return String(Math.round(v));
+        if(v>=1)    return v.toFixed(1);
+        return v.toFixed(2);
+      }
       html+='<span style="color:var(--text3)">Est. network hashrate:</span> <span style="color:var(--orange);font-weight:600">'+_fmtNetRate(netHashrate)+'</span> <span style="color:var(--text3)">h/s (Bitcoin-style, avg block '+Math.round(avgBtMiner)+'s)</span>';
       if(_netEffectiveAtt>0){
         html+=' &middot; <span style="color:var(--text3)">eff:</span> <span style="color:var(--orange);font-weight:600">'+_fmtNetRate(_netEffectiveAtt)+'</span> <span style="color:var(--text3)">att/s (profile-adjusted, filter '+_netFilterPct+'%)</span>';
@@ -4618,7 +4676,9 @@ function renderDashPanel(key,body,title,silent){
         var simPct=simultaneousTotal?(simBlocks/simultaneousTotal*100).toFixed(1):'0.0';
         var solo=soloPerMiner[a]||0;
         var minerHr=netHashrate*(m.count/denom);
-        var minerHrStr=minerHr>=1000?(minerHr/1000).toFixed(1)+'K':Math.round(minerHr);
+        // v316: same fractional-aware formatter as the network rate
+        // so per-miner values below 1 h/s no longer collapse to "~0".
+        var minerHrStr=_fmtNetRate(minerHr);
         html+='<tr style="border-bottom:1px solid #111"><td style="padding:4px"><span class="td-link" onclick="showAddress(\''+a+'\')">'+a.substring(0,12)+'\u2026'+a.substring(a.length-6)+'</span></td>';
         html+='<td style="text-align:right;padding:4px;color:var(--orange);font-weight:600">'+m.count+'</td>';
         html+='<td style="text-align:right;padding:4px"><div style="display:inline-block;width:'+barW+'px;height:8px;background:var(--purple);margin-right:4px;vertical-align:middle"></div>'+pct+'%</td>';
