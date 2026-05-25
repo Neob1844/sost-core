@@ -30,26 +30,50 @@ find_package(Threads REQUIRED)
 #
 #     cmake .. -DSOST_ENABLE_PHASE2_SBPOW=ON
 #
-# Default is OFF: a normal pre-Phase-2 build does NOT need the
-# schnorrsig module. With SOST_ENABLE_PHASE2_SBPOW=OFF:
-#   - configure does NOT probe for secp256k1_schnorrsig.h.
-#   - sost-core compiles sbpow.cpp with Schnorr-dependent code stubbed
-#     out via the SOST_HAVE_SCHNORRSIG macro (signing/verification
-#     return false; non-Schnorr helpers like build_sbpow_message,
-#     derive_pkh_from_pubkey, secure_memzero stay live).
+# DEFAULT IS ON. The Phase 2 SbPoW Schnorr verification code path is
+# REQUIRED for any binary that participates in SOST mainnet consensus.
+# Phase 2 has been active since block 7100 and every accepted block
+# since then carries a Schnorr signature that the validator MUST be
+# able to verify. A binary compiled with SOST_ENABLE_PHASE2_SBPOW=OFF
+# is NOT consensus-capable on mainnet: it will reject every Phase 2
+# block with the validator-side error
+#     "SbPoW: BIP-340 Schnorr signature verification failed for the
+#      recomputed message"
+# and silently fork itself off the network. The default was flipped
+# from OFF to ON in response to the 2026-05-24 seed-node stall
+# (post-mortem: BitcoinTalk "SOST Protocol -- Post-Mortem: Block 10109
+# Stall"). Verify any locally compiled binary has the code path via:
+#
+#     strings build/sost-node  | grep -c 'POW-SIG/v11'   # must be > 0
+#     strings build/sost-miner | grep -c 'POW-SIG/v11'   # must be > 0
+#
+# With SOST_ENABLE_PHASE2_SBPOW=ON (default -- REQUIRED for mainnet):
+#   - configure asserts the schnorrsig header AND the verify symbol;
+#     missing either fails configure with a clear FATAL_ERROR. No
+#     silent ECDSA fallback under any circumstances.
+#   - sost-core compiles sbpow.cpp with the full Schnorr code path.
 #   - The three Schnorr-only test binaries (test-sbpow-signing,
-#     test-sbpow-validation, test-sbpow-adversarial) are NOT built or
+#     test-sbpow-validation, test-sbpow-adversarial) ARE built and
 #     registered with CTest.
+#
+# With SOST_ENABLE_PHASE2_SBPOW=OFF (opt-out, for niche tooling
+# builds that do NOT need to validate or produce mainnet blocks):
+#   - configure does NOT probe for secp256k1_schnorrsig.h.
+#   - sost-core compiles sbpow.cpp with Schnorr-dependent code
+#     stubbed out via the SOST_HAVE_SCHNORRSIG macro (signing /
+#     verification return false; non-Schnorr helpers like
+#     build_sbpow_message, derive_pkh_from_pubkey, secure_memzero
+#     stay live).
+#   - The three Schnorr-only test binaries (test-sbpow-signing,
+#     test-sbpow-validation, test-sbpow-adversarial) are NOT built
+#     or registered with CTest.
 #   - The remaining V11-Phase-2 tests that don't need Schnorr
 #     (test-sbpow-header-v2, test-miner-key-selection) are built
 #     unconditionally.
-#
-# With SOST_ENABLE_PHASE2_SBPOW=ON the configure asserts the schnorrsig
-# header AND the verify symbol; missing either fails configure with a
-# clear FATAL_ERROR. No silent ECDSA fallback under any circumstances.
+#   - THE RESULTING BINARY IS NOT CONSENSUS-CAPABLE ON MAINNET.
 option(SOST_ENABLE_PHASE2_SBPOW
-    "Build Phase 2 SbPoW Schnorr tests/tools (requires libsecp256k1 with schnorrsig module)"
-    OFF)
+    "Phase 2 SbPoW Schnorr code path -- REQUIRED for mainnet consensus (default ON; OFF only for niche tooling)"
+    ON)
 
 if(SOST_ENABLE_PHASE2_SBPOW)
     include(CheckIncludeFiles)
