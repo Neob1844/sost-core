@@ -618,20 +618,124 @@ add_executable(test-atomic-swap-btc-script tests/test_atomic_swap_btc_script.cpp
 target_link_libraries(test-atomic-swap-btc-script PRIVATE sost-core)
 add_test(NAME atomic-swap-btc-script COMMAND test-atomic-swap-btc-script)
 
-# Phase 4A-1 — BTC signing backend (disabled stub by default).
-# Flag SOST_BTC_HTLC_SIGNING controls whether the future real backend
-# is enabled. Default OFF: every function in src/atomic_swap_btc_signing.cpp
-# returns the "disabled" result. Flipping to ON requires vendoring an
-# audited Bitcoin signing library (see
-# docs/design/ATOMIC_SWAP_BTC_SIGNING_STOP_REPORT.md). The flag does
-# NOT affect the SOST consensus activation gate
-# (ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT stays INT64_MAX independently).
+# Phase 4A — BTC signing backend (disabled stub by default).
+#
+# The flag SOST_BTC_HTLC_SIGNING controls whether the future real
+# backend is enabled. Default OFF: every function in
+# src/atomic_swap_btc_signing.cpp returns disabled_result() and
+# the build does NOT look for libwally-core at all.
+#
+# Flipping to ON requires the vendored libwally-core submodule to
+# be present and discoverable. The integration plan is documented in
+# docs/design/ATOMIC_SWAP_LIBWALLY_INTEGRATION_REVIEW.md (this file
+# is the CMake half of that contract).
+#
+# When SOST_BTC_HTLC_SIGNING=ON:
+#   - Configure tries pkg-config first (looks for "wallycore").
+#   - If pkg-config fails, falls back to a manual probe for the
+#     wally.h / wally_bip32.h headers and the wally_core library.
+#   - If BOTH probes fail, configure aborts with a clear FATAL_ERROR
+#     pointing the operator to the integration review doc.
+#   - If either probe succeeds, the macro
+#     SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY=1 is defined on sost-core
+#     (PUBLIC) and the library is linked. Phase C will then switch
+#     the disabled stubs to real wally_* calls behind that macro.
+#
+# The flag DOES NOT affect the SOST consensus activation gate.
+# ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT stays INT64_MAX independently;
+# both must be flipped in coordinated commits with external audit
+# evidence before any mainnet activation.
 option(SOST_BTC_HTLC_SIGNING
-    "Enable BTC HTLC signing backend (requires vendored audited Bitcoin library; default OFF)"
+    "Enable BTC HTLC signing backend (requires vendored libwally-core; default OFF)"
     OFF)
+
 if (SOST_BTC_HTLC_SIGNING)
     target_compile_definitions(sost-core PRIVATE SOST_BTC_HTLC_SIGNING_ENABLED=1)
-    message(STATUS "SOST_BTC_HTLC_SIGNING=ON — backend wiring still requires the real library; see STOP report")
+
+    # Phase A: probe for libwally and fail loudly if absent.
+    # Phase C will replace the disabled_result() stubs with real
+    # wally_* calls; until then this only validates the integration
+    # path so an operator turning the flag on gets a clean error
+    # instead of a silently-broken binary.
+    set(_sost_wally_found FALSE)
+
+    # First-choice probe: pkg-config wallycore. libwally-core ships
+    # a wallycore.pc when installed system-wide or via
+    # vendor/libwally-core/ after `make install`.
+    find_package(PkgConfig QUIET)
+    if (PkgConfig_FOUND)
+        pkg_check_modules(WALLY QUIET wallycore)
+        if (WALLY_FOUND)
+            set(_sost_wally_found TRUE)
+            target_include_directories(sost-core PRIVATE ${WALLY_INCLUDE_DIRS})
+            target_link_libraries(sost-core PRIVATE ${WALLY_LIBRARIES})
+            target_compile_definitions(sost-core PUBLIC
+                SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY=1)
+            message(STATUS
+                "SOST_BTC_HTLC_SIGNING=ON — libwally-core found via pkg-config "
+                "(version=${WALLY_VERSION}). Phase C wiring still required.")
+        endif()
+    endif()
+
+    # Fallback probe: explicit cache vars for non-pkg-config builds
+    # (e.g. vendored submodule before `make install`, or operators
+    # who pass -DWALLY_INCLUDE_DIR + -DWALLY_LIBRARY by hand).
+    if (NOT _sost_wally_found)
+        find_path(WALLY_INCLUDE_DIR wally_core.h
+            HINTS ${CMAKE_SOURCE_DIR}/vendor/libwally-core/include)
+        find_library(WALLY_LIBRARY NAMES wallycore wally
+            HINTS ${CMAKE_SOURCE_DIR}/vendor/libwally-core/src/.libs)
+        if (WALLY_INCLUDE_DIR AND WALLY_LIBRARY)
+            set(_sost_wally_found TRUE)
+            target_include_directories(sost-core PRIVATE ${WALLY_INCLUDE_DIR})
+            target_link_libraries(sost-core PRIVATE ${WALLY_LIBRARY})
+            target_compile_definitions(sost-core PUBLIC
+                SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY=1)
+            message(STATUS
+                "SOST_BTC_HTLC_SIGNING=ON — libwally-core found via manual probe "
+                "(${WALLY_INCLUDE_DIR}, ${WALLY_LIBRARY}). Phase C wiring still required.")
+        endif()
+    endif()
+
+    if (NOT _sost_wally_found)
+        message(FATAL_ERROR
+            "\n"
+            "SOST_BTC_HTLC_SIGNING=ON was requested but libwally-core was not found.\n"
+            "\n"
+            "libwally-core is the audited Bitcoin signing library this project\n"
+            "uses for BTC HTLC claim / refund / funding. The integration plan,\n"
+            "the recommended vendored commit, and the verification checklist\n"
+            "are documented in:\n"
+            "\n"
+            "    docs/design/ATOMIC_SWAP_LIBWALLY_INTEGRATION_REVIEW.md\n"
+            "\n"
+            "Quick paths to satisfy this probe:\n"
+            "\n"
+            "  (a) Vendored submodule (recommended for reproducibility):\n"
+            "        git submodule update --init vendor/libwally-core/\n"
+            "        cd vendor/libwally-core && ./tools/autogen.sh \\\n"
+            "          && ./configure --enable-static --disable-shared \\\n"
+            "          && make -j\n"
+            "        cd ../.. && cmake -S . -B build -DSOST_BTC_HTLC_SIGNING=ON\n"
+            "\n"
+            "  (b) System package (less reproducible):\n"
+            "        sudo apt install libwally-dev   # or distro equivalent\n"
+            "        cmake -S . -B build -DSOST_BTC_HTLC_SIGNING=ON\n"
+            "\n"
+            "  (c) Explicit paths (advanced):\n"
+            "        cmake -S . -B build -DSOST_BTC_HTLC_SIGNING=ON \\\n"
+            "          -DWALLY_INCLUDE_DIR=/path/to/wally/include \\\n"
+            "          -DWALLY_LIBRARY=/path/to/libwallycore.a\n"
+            "\n"
+            "To return to the safe default (no signing, disabled stub):\n"
+            "        cmake -S . -B build -DSOST_BTC_HTLC_SIGNING=OFF   # default\n"
+            "\n"
+            "This FATAL_ERROR is intentional — it prevents shipping a binary\n"
+            "that claims SOST_BTC_HTLC_SIGNING=ON but is actually a disabled\n"
+            "stub. Until Phase C wires the real wally_* calls, even a\n"
+            "successful probe only gates the macro; the backend still\n"
+            "returns disabled_result() at runtime by design.\n")
+    endif()
 endif()
 add_executable(test-atomic-swap-btc-signing tests/test_atomic_swap_btc_signing.cpp)
 target_link_libraries(test-atomic-swap-btc-signing PRIVATE sost-core)
