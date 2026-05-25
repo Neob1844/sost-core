@@ -1,6 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Cache-Control: tell every browser to NEVER cache this HTML.
+     Cards added to the dashboard (CIRCULATING SUPPLY berenjena,
+     CIRCULATING MINING red, DTD LOTTERY BALANCE magenta) and other
+     post-v302 changes were invisible to operators who had v302
+     cached, because no Cache-Control headers were set. With these
+     tags, every reload pulls fresh HTML and the dashboard always
+     reflects the current server-side build. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- explorer-html-version is read by the auto-reload script (search
+     for checkVersion() near the end of this file). On the first
+     version-poll tick, if d.v from api/explorer_version.json does
+     NOT match this value, the browser holds stale cached HTML and
+     is force-reloaded immediately. Bump this value alongside
+     api/explorer_version.json on every visible-change deploy. -->
+<meta name="explorer-html-version" content="2026-05-25-v308">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -7369,9 +7386,31 @@ window.addEventListener('focus',function(){refresh();});
 // Only reloads if user is on main overview (not viewing detail panel).
 (function(){
   var _currentVersion=null;
+  // Read the version embedded in THIS html (set in the <head> meta
+  // tag explorer-html-version). On the first poll, compare d.v from
+  // the server against this. If they differ, the HTML is stale
+  // (cached from an earlier deploy) and must be force-reloaded NOW —
+  // not on the next 60s tick.
+  var _htmlMeta=document.querySelector('meta[name="explorer-html-version"]');
+  var _htmlVersion=_htmlMeta?_htmlMeta.getAttribute('content'):null;
   function checkVersion(){
     fetch('api/explorer_version.json?t='+Date.now()).then(function(r){return r.json()}).then(function(d){
-      if(!_currentVersion){_currentVersion=d.v;return;}
+      if(!_currentVersion){
+        // First poll: compare against the HTML-embedded version.
+        // Stale HTML => force-reload immediately so the operator sees
+        // the current cards / labels / layout from the very first
+        // page render (rather than 60 s later via the next tick).
+        if(_htmlVersion && d.v && d.v!==_htmlVersion){
+          var detail=document.getElementById('detailPanel');
+          if(!detail||!detail.classList.contains('show')){
+            try{console.log('[explorer] stale HTML cached: '+_htmlVersion+
+                            ' vs server '+d.v+' — reloading');}catch(e){}
+            location.reload();
+            return;
+          }
+        }
+        _currentVersion=d.v;return;
+      }
       if(d.v!==_currentVersion){
         var detail=document.getElementById('detailPanel');
         if(!detail||!detail.classList.contains('show')){
