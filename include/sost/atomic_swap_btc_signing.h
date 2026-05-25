@@ -169,6 +169,82 @@ BtcAddressResult EncodeP2WSHAddress(
     const std::array<uint8_t, 32>& witness_program,
     const std::string& bitcoin_network);
 
+// =============================================================================
+// Phase C.5 — minimal libwally-backed helpers (TEST VECTOR ONLY)
+// =============================================================================
+//
+// The three helpers below are the first piece of the BTC signing backend
+// that actually does cryptographic work in production source (vs the
+// disabled stubs of the four functions above). They are deliberately
+// named "TestVector" and exposed as small leaf operations rather than
+// "Sign a real swap" so a caller cannot mistake them for a mainnet path.
+//
+// Behaviour:
+//   - SOST_BTC_HTLC_SIGNING=OFF (default build): every helper returns
+//     ok=false with the same disabled-error string as the four legacy
+//     stubs. The functions exist in the binary but are inert.
+//   - SOST_BTC_HTLC_SIGNING=ON AND libwally present (the macro
+//     SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY is defined on sost-core):
+//     real libwally calls are made; pubkey is derived, sighash is
+//     signed with ECDSA Low-R (EC_FLAG_GRIND_R), signature is verified
+//     against the pubkey.
+//
+// What these helpers do NOT do:
+//   - Read any wallet file, touch any RPC, broadcast anything.
+//   - Build a Bitcoin transaction (no raw tx assembly, no PSBT, no
+//     witness stack construction).
+//   - Move the SOST consensus gate. ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT
+//     stays INT64_MAX regardless.
+//   - Touch the four legacy stubs SignBtcHtlcClaim / Refund /
+//     LockFunding / EncodeP2WSHAddress. Those stay disabled until a
+//     later phase wires them on top of these helpers.
+//
+// Test-vector reference key pair (used by tests; published in BIP-143
+// §"Native P2WSH" P2PK input):
+//   priv: b8f28a772fccbf9b4f58a4f027e07dc2e35e7cd80529975e292ea34f84c4580c
+//   pub:  036d5c20fa14fb2f635474c1dc4ef5909d4568e5569b79fc94d3448486e14685f8
+// Anyone reproducing the build can derive the published pubkey from
+// the published privkey via DeriveBtcCompressedPubkey and verify the
+// match end-to-end without any external dependency beyond the
+// vendored libwally.
+
+// Raw-bytes result for helpers that produce keys or signatures.
+struct BtcBytesResult {
+    bool                 ok = false;
+    std::string          error;
+    std::vector<uint8_t> bytes;  // 33-byte pubkey, or DER signature, etc.
+};
+
+// Yes/no result for verify-style helpers. ok=true means the signature
+// verified; ok=false with error populated means it did not.
+struct BtcVerifyResult {
+    bool        ok = false;
+    std::string error;
+};
+
+// Derive the 33-byte compressed secp256k1 public key from a 32-byte
+// private key. Inert when SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY is not
+// defined.
+BtcBytesResult DeriveBtcCompressedPubkey(
+    const std::array<uint8_t, 32>& private_key);
+
+// Sign a 32-byte message hash with ECDSA over secp256k1, returning the
+// DER-encoded signature. Uses EC_FLAG_GRIND_R so the output is
+// deterministic Low-R / Low-S. Inert when libwally is not present.
+// sighash32_len MUST be 32; any other value is rejected with ok=false.
+BtcBytesResult SignBtcEcdsaTestVector(
+    const std::array<uint8_t, 32>& private_key,
+    const uint8_t* sighash32,
+    std::size_t    sighash32_len);
+
+// Verify a DER-encoded ECDSA signature against a public key and a
+// message hash. ok=true iff the signature matches. Inert when
+// libwally is not present.
+BtcVerifyResult VerifyBtcEcdsaTestVector(
+    const uint8_t* pub,         std::size_t pub_len,
+    const uint8_t* msg,         std::size_t msg_len,
+    const uint8_t* der_sig,     std::size_t der_sig_len);
+
 } // namespace btc
 } // namespace atomic_swap
 } // namespace sost

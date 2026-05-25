@@ -688,7 +688,32 @@ if (SOST_BTC_HTLC_SIGNING)
         if (WALLY_INCLUDE_DIR AND WALLY_LIBRARY)
             set(_sost_wally_found TRUE)
             target_include_directories(sost-core PRIVATE ${WALLY_INCLUDE_DIR})
-            target_link_libraries(sost-core PRIVATE ${WALLY_LIBRARY})
+            # Phase C.5: sost-core now makes real wally_* calls (see
+            # src/atomic_swap_btc_signing.cpp helpers). libwallycore.a
+            # depends on the vendored secp256k1-zkp .a files (the
+            # ECDSA-S2C extension symbols), so we add them to sost-core's
+            # link list here. Every binary that links sost-core
+            # (sost-node, sost-miner, all test executables) resolves
+            # cleanly with no further per-target wiring.
+            set(_wally_zkp_dir
+                ${CMAKE_SOURCE_DIR}/vendor/libwally-core/src/secp256k1/.libs)
+            set(_wally_zkp_a  ${_wally_zkp_dir}/libsecp256k1.a)
+            set(_wally_zkp_pa ${_wally_zkp_dir}/libsecp256k1_precomputed.a)
+            if (EXISTS ${_wally_zkp_a} AND EXISTS ${_wally_zkp_pa})
+                target_link_libraries(sost-core PRIVATE
+                    ${WALLY_LIBRARY}
+                    ${_wally_zkp_a}
+                    ${_wally_zkp_pa})
+            else()
+                message(WARNING
+                    "SOST_BTC_HTLC_SIGNING=ON: libwallycore.a is present "
+                    "but the vendored secp256k1-zkp .a files are not at "
+                    "${_wally_zkp_dir}. Run tools/build_libwally.sh to "
+                    "produce them. Falling back to single-library link, "
+                    "which will likely fail with undefined references "
+                    "to secp256k1_ecdsa_s2c_*.")
+                target_link_libraries(sost-core PRIVATE ${WALLY_LIBRARY})
+            endif()
             target_compile_definitions(sost-core PUBLIC
                 SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY=1)
             message(STATUS

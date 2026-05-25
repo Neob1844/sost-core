@@ -115,6 +115,239 @@ int main() {
              r.error.find("ATOMIC_SWAP_BTC_SIGNING_STOP_REPORT.md") != std::string::npos);
     }
 
+    // =================================================================
+    // Phase C.5 — libwally-backed leaf helpers (test-vector only)
+    // =================================================================
+    // The three helpers below were added in Phase C.5. They wrap libwally
+    // ECDSA primitives. With SOST_BTC_HTLC_SIGNING=OFF (this build
+    // path) they are inert and return the same disabled-error envelope
+    // as the four legacy stubs above. With SOST_BTC_HTLC_SIGNING=ON
+    // (a separate build documented in CMakeLists.txt) the helpers do
+    // real work; the ON-mode behaviour is covered separately by Section
+    // 6 of tests/test_atomic_swap_btc_test_vectors.cpp.
+    //
+    // The four legacy stubs (T3-T6 above) STAY disabled regardless of
+    // the build flag — Phase C.5 deliberately does not wire them. So
+    // the OFF-mode invariants below are the same shape as T3-T6: the
+    // helpers exist, are callable, but produce no signature, no key,
+    // and no verification result.
+
+    {
+        std::array<uint8_t, 32> priv_zero{};            // ignored content
+        std::array<uint8_t, 32> sighash_zero{};         // ignored content
+
+        // T8. DeriveBtcCompressedPubkey — OFF path returns disabled.
+        {
+            auto r = DeriveBtcCompressedPubkey(priv_zero);
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            // In ON builds, an all-zero key is rejected by libwally
+            // (outside the secp256k1 scalar range). Either way, ok=false.
+            TEST("T8 DeriveBtcCompressedPubkey rejects all-zero key (ON)",
+                 r.ok == false);
+            TEST("T8 DeriveBtcCompressedPubkey error is non-empty (ON)",
+                 !r.error.empty());
+            TEST("T8 DeriveBtcCompressedPubkey bytes empty on failure (ON)",
+                 r.bytes.empty());
+#else
+            TEST("T8 DeriveBtcCompressedPubkey returns ok=false (OFF)",
+                 r.ok == false);
+            TEST("T8 DeriveBtcCompressedPubkey error mentions 'disabled' (OFF)",
+                 r.error.find("disabled") != std::string::npos);
+            TEST("T8 DeriveBtcCompressedPubkey bytes empty (OFF)",
+                 r.bytes.empty());
+#endif
+        }
+
+        // T9. SignBtcEcdsaTestVector — OFF path returns disabled.
+        {
+            auto r = SignBtcEcdsaTestVector(
+                priv_zero, sighash_zero.data(), sighash_zero.size());
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            // ON: still ok=false because the key is invalid; covers the
+            // pre-flight rejection path before any signing is attempted.
+            TEST("T9 SignBtcEcdsaTestVector rejects all-zero key (ON)",
+                 r.ok == false);
+            TEST("T9 SignBtcEcdsaTestVector error is non-empty (ON)",
+                 !r.error.empty());
+            TEST("T9 SignBtcEcdsaTestVector bytes empty on failure (ON)",
+                 r.bytes.empty());
+#else
+            TEST("T9 SignBtcEcdsaTestVector returns ok=false (OFF)",
+                 r.ok == false);
+            TEST("T9 SignBtcEcdsaTestVector error mentions 'disabled' (OFF)",
+                 r.error.find("disabled") != std::string::npos);
+            TEST("T9 SignBtcEcdsaTestVector bytes empty (OFF)",
+                 r.bytes.empty());
+#endif
+        }
+
+        // T10. SignBtcEcdsaTestVector with WRONG sighash length is
+        //      rejected even in ON mode (the length check fires before
+        //      libwally is called).
+        {
+            std::array<uint8_t, 31> short_msg{};
+            auto r = SignBtcEcdsaTestVector(
+                priv_zero, short_msg.data(), short_msg.size());
+            TEST("T10 SignBtcEcdsaTestVector rejects 31-byte sighash",
+                 r.ok == false);
+            TEST("T10 SignBtcEcdsaTestVector bytes empty on length error",
+                 r.bytes.empty());
+        }
+
+        // T11. SignBtcEcdsaTestVector with NULL sighash pointer is
+        //      rejected.
+        {
+            auto r = SignBtcEcdsaTestVector(priv_zero, nullptr, 32);
+            TEST("T11 SignBtcEcdsaTestVector rejects null sighash pointer",
+                 r.ok == false);
+            TEST("T11 SignBtcEcdsaTestVector bytes empty on null pointer",
+                 r.bytes.empty());
+        }
+
+        // T12. VerifyBtcEcdsaTestVector — OFF path returns disabled.
+        //      ON path with garbage inputs returns ok=false (the DER
+        //      parse fails on all-zero bytes).
+        {
+            std::array<uint8_t, 33> fake_pub{};
+            std::array<uint8_t, 32> fake_msg{};
+            std::array<uint8_t, 8>  fake_sig{};
+            auto r = VerifyBtcEcdsaTestVector(
+                fake_pub.data(), fake_pub.size(),
+                fake_msg.data(), fake_msg.size(),
+                fake_sig.data(), fake_sig.size());
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            TEST("T12 VerifyBtcEcdsaTestVector rejects bogus inputs (ON)",
+                 r.ok == false);
+            TEST("T12 VerifyBtcEcdsaTestVector error is non-empty (ON)",
+                 !r.error.empty());
+#else
+            TEST("T12 VerifyBtcEcdsaTestVector returns ok=false (OFF)",
+                 r.ok == false);
+            TEST("T12 VerifyBtcEcdsaTestVector error mentions 'disabled' (OFF)",
+                 r.error.find("disabled") != std::string::npos);
+#endif
+        }
+
+        // T13. VerifyBtcEcdsaTestVector rejects wrong-length message
+        //      (32 is the only valid length for an ECDSA pre-image).
+        {
+            std::array<uint8_t, 33> fake_pub{};
+            std::array<uint8_t, 31> short_msg{};
+            std::array<uint8_t, 8>  fake_sig{};
+            auto r = VerifyBtcEcdsaTestVector(
+                fake_pub.data(), fake_pub.size(),
+                short_msg.data(), short_msg.size(),
+                fake_sig.data(), fake_sig.size());
+            TEST("T13 VerifyBtcEcdsaTestVector rejects 31-byte message",
+                 r.ok == false);
+        }
+
+        // T14. VerifyBtcEcdsaTestVector rejects null pointers.
+        {
+            std::array<uint8_t, 32> fake_msg{};
+            std::array<uint8_t, 8>  fake_sig{};
+            auto r = VerifyBtcEcdsaTestVector(
+                nullptr, 0,
+                fake_msg.data(), fake_msg.size(),
+                fake_sig.data(), fake_sig.size());
+            TEST("T14 VerifyBtcEcdsaTestVector rejects null pubkey pointer",
+                 r.ok == false);
+        }
+    }
+
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    // =================================================================
+    // T15-T18 — ON-mode happy path with the BIP-143 published key pair.
+    // =================================================================
+    // This is the load-bearing assertion that Phase C.5 actually does
+    // cryptographic work in production source: the same published
+    // BIP-143 private key produces the same published BIP-143 public
+    // key, sign-then-verify is a round trip, and the DER output is
+    // shaped like a real ECDSA signature.
+    {
+        // Hex parser inline so this test file does not depend on any
+        // helper from test_atomic_swap_btc_test_vectors.cpp.
+        auto from_hex = [](const std::string& s) {
+            std::vector<uint8_t> out; out.reserve(s.size()/2);
+            auto nib = [](char c) -> int {
+                if (c >= '0' && c <= '9') return c - '0';
+                if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+                if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+                return -1;
+            };
+            for (size_t i = 0; i + 1 < s.size(); i += 2) {
+                int hi = nib(s[i]); int lo = nib(s[i+1]);
+                if (hi < 0 || lo < 0) return std::vector<uint8_t>{};
+                out.push_back((uint8_t)((hi << 4) | lo));
+            }
+            return out;
+        };
+
+        // BIP-143 §"Native P2WSH" P2PK input — both halves published.
+        const std::string priv_hex =
+            "b8f28a772fccbf9b4f58a4f027e07dc2e35e7cd80529975e292ea34f84c4580c";
+        const std::string pub_hex =
+            "036d5c20fa14fb2f635474c1dc4ef5909d4568e5569b79fc94d3448486e14685f8";
+
+        auto priv_v = from_hex(priv_hex);
+        auto pub_v  = from_hex(pub_hex);
+        std::array<uint8_t, 32> priv{};
+        std::copy(priv_v.begin(), priv_v.end(), priv.begin());
+
+        // T15. Derive pubkey from privkey matches BIP-143 published value.
+        auto pub_r = DeriveBtcCompressedPubkey(priv);
+        TEST("T15 DeriveBtcCompressedPubkey succeeds on valid key",
+             pub_r.ok && pub_r.bytes.size() == 33);
+        bool pub_match = pub_r.ok && (pub_r.bytes == pub_v);
+        TEST("T15 derived pubkey matches BIP-143 published value",
+             pub_match);
+
+        // T16. Sign a 32-byte sighash with the published privkey.
+        //      We use an arbitrary deterministic sighash (sha-shaped
+        //      bytes 0x01..0x20) — Phase C.5 scope is the signing
+        //      primitive, not BIP-143 sighash reproduction (that is
+        //      Section 5 of the vector test).
+        std::array<uint8_t, 32> msg{};
+        for (size_t i = 0; i < 32; ++i) msg[i] = static_cast<uint8_t>(i + 1);
+        auto sign_r = SignBtcEcdsaTestVector(priv, msg.data(), msg.size());
+        TEST("T16 SignBtcEcdsaTestVector signs cleanly with valid key",
+             sign_r.ok);
+        TEST("T16 DER signature is between 8 and 72 bytes",
+             sign_r.ok && sign_r.bytes.size() >= 8 && sign_r.bytes.size() <= 72);
+        TEST("T16 DER signature starts with 0x30 (SEQUENCE tag)",
+             sign_r.ok && !sign_r.bytes.empty() && sign_r.bytes[0] == 0x30);
+
+        // T17. Verify the signature against the derived pubkey.
+        if (sign_r.ok && pub_r.ok) {
+            auto v = VerifyBtcEcdsaTestVector(
+                pub_r.bytes.data(), pub_r.bytes.size(),
+                msg.data(), msg.size(),
+                sign_r.bytes.data(), sign_r.bytes.size());
+            TEST("T17 signature verifies against derived pubkey", v.ok);
+        }
+
+        // T18. Mutate one bit of the message; verification must fail.
+        if (sign_r.ok && pub_r.ok) {
+            std::array<uint8_t, 32> bad_msg = msg;
+            bad_msg[0] ^= 0x01;
+            auto v = VerifyBtcEcdsaTestVector(
+                pub_r.bytes.data(), pub_r.bytes.size(),
+                bad_msg.data(), bad_msg.size(),
+                sign_r.bytes.data(), sign_r.bytes.size());
+            TEST("T18 verification fails when message is mutated 1 bit",
+                 !v.ok && !v.error.empty());
+        }
+
+        // T19. Determinism — Low-R signing should produce the same DER
+        //      bytes when re-signing the same key+message.
+        if (sign_r.ok) {
+            auto sign_r2 = SignBtcEcdsaTestVector(priv, msg.data(), msg.size());
+            TEST("T19 signing same inputs twice produces same DER bytes",
+                 sign_r2.ok && sign_r2.bytes == sign_r.bytes);
+        }
+    }
+#endif
+
     printf("\n== Summary: %d passed, %d failed ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }
