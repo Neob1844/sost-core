@@ -322,13 +322,26 @@ static void scenario_10_stablecoin_freeze_and_btc_signing_disabled() {
     TEST("SignBtcHtlcClaim returns ok=false",  !r1.ok);
     TEST("SignBtcHtlcRefund returns ok=false", !r2.ok);
     TEST("SignBtcHtlcLockFunding returns ok=false", !r3.ok);
-    TEST("Claim error message includes \"disabled\"",
-         r1.error.find("disabled") != std::string::npos);
-    TEST("Refund error message includes \"disabled\"",
-         r2.error.find("disabled") != std::string::npos);
-    TEST("Funding error message includes \"disabled\"",
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    // Phase C.7 wired SignBtcHtlcClaim and SignBtcHtlcRefund. In an
+    // ON build with all-zero privkey + fake txid, they return ok=false
+    // with a real input-validation message (not the "disabled" string).
+    // SignBtcHtlcLockFunding is NOT wired by C.7 — it stays disabled.
+    TEST("Claim error message is non-empty (ON, real validation)",
+         !r1.error.empty());
+    TEST("Refund error message is non-empty (ON, real validation)",
+         !r2.error.empty());
+    TEST("Funding error message includes \"disabled\" (stub still)",
          r3.error.find("disabled") != std::string::npos);
-    TEST("Claim raw_tx_hex empty (no signing happened)",
+#else
+    TEST("Claim error message includes \"disabled\" (OFF)",
+         r1.error.find("disabled") != std::string::npos);
+    TEST("Refund error message includes \"disabled\" (OFF)",
+         r2.error.find("disabled") != std::string::npos);
+    TEST("Funding error message includes \"disabled\" (OFF)",
+         r3.error.find("disabled") != std::string::npos);
+#endif
+    TEST("Claim raw_tx_hex empty (failed validation -> no signing)",
          r1.raw_tx_hex.empty());
     TEST("Refund raw_tx_hex empty",
          r2.raw_tx_hex.empty());

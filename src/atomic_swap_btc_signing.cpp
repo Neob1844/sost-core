@@ -85,32 +85,256 @@ BtcAddressResult disabled_address_result() {
 // them are used. The fail-fast check returns immediately. Privkey
 // parameters in particular are NOT read, NOT copied, NOT logged.
 
-BtcSigningResult SignBtcHtlcClaim(
-    const Bytes32& /*lock_txid*/,
-    uint32_t /*lock_vout*/,
-    int64_t /*lock_amount_sats*/,
-    const std::vector<uint8_t>& /*redeem_script*/,
-    const std::array<uint8_t, 32>& /*preimage*/,
-    const std::array<uint8_t, 32>& /*claim_privkey*/,
-    const std::string& /*claim_destination_addr*/,
-    int64_t /*fee_sats*/,
-    const std::string& /*bitcoin_network*/)
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+// Phase C.7 internal — convert "mainnet"/"testnet"/"regtest" to the
+// Bech32 HRP libwally expects. Returns nullptr on unknown.
+namespace {
+// Forward-declared: defined later in the Phase C.5 anonymous namespace.
+// Needed here so the sign_p2wsh_spend template body can reference it.
+void ensure_wally_init();
+
+static const char* hrp_for_network(const std::string& n) {
+    if (n == "mainnet") return "bc";
+    if (n == "testnet") return "tb";
+    if (n == "regtest") return "bcrt";
+    return nullptr;
+}
+
+// Phase C.7 internal — compose C.5+C.6 primitives into a signed
+// P2WSH-spending tx. Used by both SignBtcHtlcClaim (witness builder =
+// claim, locktime = 0, sequence = 0xFFFFFFFE) and SignBtcHtlcRefund
+// (witness builder = refund, locktime = refund_height, sequence =
+// 0xFFFFFFFE so CLTV enforcement engages). The witness builder
+// callback is passed in so this helper does not have to know about
+// the preimage vs. no-preimage distinction.
+//
+// All inputs are validated; on any failure the partially-allocated
+// libwally state is cleaned up before returning.
+template <typename WitnessBuilder>
+BtcSigningResult sign_p2wsh_spend(
+    const Bytes32& lock_txid,
+    uint32_t       lock_vout,
+    int64_t        lock_amount_sats,
+    const std::vector<uint8_t>&    redeem_script,
+    const std::array<uint8_t, 32>& signer_privkey,
+    const std::string& destination_addr,
+    int64_t        fee_sats,
+    const std::string& bitcoin_network,
+    uint32_t       sequence,
+    uint32_t       locktime,
+    WitnessBuilder build_witness)
 {
+    ensure_wally_init();
+    BtcSigningResult r;
+
+    if (lock_amount_sats <= 0) {
+        r.error = "lock_amount_sats must be > 0";
+        return r;
+    }
+    if (fee_sats < 0) {
+        r.error = "fee_sats must be >= 0";
+        return r;
+    }
+    if (fee_sats >= lock_amount_sats) {
+        r.error = "fee_sats must be < lock_amount_sats";
+        return r;
+    }
+    if (redeem_script.empty()) {
+        r.error = "redeem_script is empty";
+        return r;
+    }
+    if (wally_ec_private_key_verify(signer_privkey.data(), 32) != 0) {
+        r.error = "invalid secp256k1 private key";
+        return r;
+    }
+    const char* hrp = hrp_for_network(bitcoin_network);
+    if (!hrp) {
+        r.error = "unsupported bitcoin_network '" + bitcoin_network +
+                  "' (expect mainnet|testnet|regtest)";
+        return r;
+    }
+
+    // Address -> scriptPubKey (segwit script: OP_0 + push + program).
+    unsigned char dest_spk[WALLY_SEGWIT_ADDRESS_PUBKEY_MAX_LEN];
+    std::size_t   dest_spk_len = 0;
+    int rc = wally_addr_segwit_to_bytes(
+        destination_addr.c_str(), hrp, 0,
+        dest_spk, sizeof(dest_spk), &dest_spk_len);
+    if (rc != 0) {
+        r.error = "destination_addr does not decode as a segwit address "
+                  "for network '" + bitcoin_network + "' (rc=" +
+                  std::to_string(rc) + ")";
+        return r;
+    }
+
+    struct wally_tx* tx = nullptr;
+    rc = wally_tx_init_alloc(2, locktime, 1, 1, &tx);
+    if (rc != 0 || tx == nullptr) {
+        r.error = "wally_tx_init_alloc failed";
+        return r;
+    }
+    rc = wally_tx_add_raw_input(
+        tx, lock_txid.data(), lock_txid.size(),
+        lock_vout, sequence,
+        nullptr, 0,    // empty scriptSig (segwit)
+        nullptr, 0);   // witness attached later
+    if (rc != 0) {
+        wally_tx_free(tx);
+        r.error = "wally_tx_add_raw_input failed";
+        return r;
+    }
+    int64_t output_amount = lock_amount_sats - fee_sats;
+    rc = wally_tx_add_raw_output(
+        tx, (uint64_t)output_amount,
+        dest_spk, dest_spk_len, 0);
+    if (rc != 0) {
+        wally_tx_free(tx);
+        r.error = "wally_tx_add_raw_output failed";
+        return r;
+    }
+
+    // BIP-143 sighash on input 0; scriptCode = the full redeem script.
+    unsigned char sighash[32];
+    rc = wally_tx_get_btc_signature_hash(
+        tx, 0,
+        redeem_script.data(), redeem_script.size(),
+        (uint64_t)lock_amount_sats,
+        WALLY_SIGHASH_ALL,
+        WALLY_TX_FLAG_USE_WITNESS,
+        sighash, sizeof(sighash));
+    if (rc != 0) {
+        wally_tx_free(tx);
+        r.error = "wally_tx_get_btc_signature_hash failed";
+        return r;
+    }
+
+    auto sig_r = SignBtcEcdsaTestVector(signer_privkey, sighash, sizeof(sighash));
+    if (!sig_r.ok) {
+        wally_tx_free(tx);
+        r.error = "sign_p2wsh_spend: " + sig_r.error;
+        return r;
+    }
+    // Append sighash type byte (SIGHASH_ALL = 0x01) to the DER sig.
+    std::vector<uint8_t> sig_with_type = sig_r.bytes;
+    sig_with_type.push_back(0x01);
+
+    auto wit_r = build_witness(sig_with_type, redeem_script);
+    if (!wit_r.ok) {
+        wally_tx_free(tx);
+        r.error = "sign_p2wsh_spend: " + wit_r.error;
+        return r;
+    }
+
+    struct wally_tx_witness_stack* witness = nullptr;
+    rc = wally_tx_witness_stack_init_alloc(wit_r.stack.size(), &witness);
+    if (rc != 0 || witness == nullptr) {
+        wally_tx_free(tx);
+        r.error = "wally_tx_witness_stack_init_alloc failed";
+        return r;
+    }
+    for (const auto& item : wit_r.stack) {
+        rc = wally_tx_witness_stack_add(
+            witness,
+            item.empty() ? nullptr : item.data(), item.size());
+        if (rc != 0) {
+            wally_tx_witness_stack_free(witness);
+            wally_tx_free(tx);
+            r.error = "wally_tx_witness_stack_add failed";
+            return r;
+        }
+    }
+    rc = wally_tx_set_input_witness(tx, 0, witness);
+    if (rc != 0) {
+        wally_tx_witness_stack_free(witness);
+        wally_tx_free(tx);
+        r.error = "wally_tx_set_input_witness failed";
+        return r;
+    }
+
+    char* tx_hex = nullptr;
+    rc = wally_tx_to_hex(tx, WALLY_TX_FLAG_USE_WITNESS, &tx_hex);
+    if (rc != 0 || tx_hex == nullptr) {
+        wally_tx_witness_stack_free(witness);
+        wally_tx_free(tx);
+        r.error = "wally_tx_to_hex failed";
+        return r;
+    }
+    r.raw_tx_hex = tx_hex;
+    r.ok = true;
+
+    wally_free_string(tx_hex);
+    wally_tx_witness_stack_free(witness);
+    wally_tx_free(tx);
+    return r;
+}
+}  // namespace
+#endif
+
+BtcSigningResult SignBtcHtlcClaim(
+    const Bytes32& lock_txid,
+    uint32_t lock_vout,
+    int64_t lock_amount_sats,
+    const std::vector<uint8_t>& redeem_script,
+    const std::array<uint8_t, 32>& preimage,
+    const std::array<uint8_t, 32>& claim_privkey,
+    const std::string& claim_destination_addr,
+    int64_t fee_sats,
+    const std::string& bitcoin_network)
+{
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    // Capture preimage by copy so the lambda closure outlives the call.
+    auto preimage_copy = preimage;
+    return sign_p2wsh_spend(
+        lock_txid, lock_vout, lock_amount_sats,
+        redeem_script, claim_privkey,
+        claim_destination_addr, fee_sats, bitcoin_network,
+        /* sequence = */ 0xFFFFFFFE,
+        /* locktime = */ 0,
+        [&preimage_copy](const std::vector<uint8_t>& sig_with_type,
+                         const std::vector<uint8_t>& script) {
+            return BuildBtcHtlcClaimWitness(sig_with_type, preimage_copy, script);
+        });
+#else
+    (void)lock_txid; (void)lock_vout; (void)lock_amount_sats;
+    (void)redeem_script; (void)preimage; (void)claim_privkey;
+    (void)claim_destination_addr; (void)fee_sats; (void)bitcoin_network;
     return disabled_result();
+#endif
 }
 
 BtcSigningResult SignBtcHtlcRefund(
-    const Bytes32& /*lock_txid*/,
-    uint32_t /*lock_vout*/,
-    int64_t /*lock_amount_sats*/,
-    const std::vector<uint8_t>& /*redeem_script*/,
-    int64_t /*refund_height*/,
-    const std::array<uint8_t, 32>& /*refund_privkey*/,
-    const std::string& /*refund_destination_addr*/,
-    int64_t /*fee_sats*/,
-    const std::string& /*bitcoin_network*/)
+    const Bytes32& lock_txid,
+    uint32_t lock_vout,
+    int64_t lock_amount_sats,
+    const std::vector<uint8_t>& redeem_script,
+    int64_t refund_height,
+    const std::array<uint8_t, 32>& refund_privkey,
+    const std::string& refund_destination_addr,
+    int64_t fee_sats,
+    const std::string& bitcoin_network)
 {
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    if (refund_height < 0 || refund_height > (int64_t)UINT32_MAX) {
+        BtcSigningResult r;
+        r.error = "refund_height out of range for uint32 locktime";
+        return r;
+    }
+    return sign_p2wsh_spend(
+        lock_txid, lock_vout, lock_amount_sats,
+        redeem_script, refund_privkey,
+        refund_destination_addr, fee_sats, bitcoin_network,
+        /* sequence = */ 0xFFFFFFFE,            // < 0xFFFFFFFF -> CLTV active
+        /* locktime = */ (uint32_t)refund_height,
+        [](const std::vector<uint8_t>& sig_with_type,
+           const std::vector<uint8_t>& script) {
+            return BuildBtcHtlcRefundWitness(sig_with_type, script);
+        });
+#else
+    (void)lock_txid; (void)lock_vout; (void)lock_amount_sats;
+    (void)redeem_script; (void)refund_height; (void)refund_privkey;
+    (void)refund_destination_addr; (void)fee_sats; (void)bitcoin_network;
     return disabled_result();
+#endif
 }
 
 BtcSigningResult SignBtcHtlcLockFunding(

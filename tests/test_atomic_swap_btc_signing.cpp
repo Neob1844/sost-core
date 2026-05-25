@@ -9,12 +9,16 @@
 
 #include "sost/atomic_swap_btc_signing.h"
 #include "sost/atomic_swap.h"
+#include "sost/atomic_swap_btc.h"   // Phase C.7: BuildBtcHtlcRedeemScript
+#include "sost/crypto.h"            // Phase C.7: sost::sha256
 
+#include <algorithm>
 #include <array>
 #include <cstdio>
 #include <cstdint>
 #include <climits>
 #include <string>
+#include <vector>
 
 using namespace sost;
 using namespace sost::atomic_swap::btc;
@@ -56,27 +60,48 @@ int main() {
     std::string network = "testnet";
 
     // T3. SignBtcHtlcClaim
+    // Phase C.7 wired this stub. With INVALID inputs (fake_privkey is
+    // all-zeros, which is outside the secp256k1 scalar range), it still
+    // returns ok=false even in ON mode — but the error string is the
+    // input-validation message, not "disabled". The happy-path
+    // (T29-T35 below) covers the ON success branch.
     {
         auto r = SignBtcHtlcClaim(
             fake_txid, 0, 100000,
             fake_redeem_script, fake_preimage, fake_privkey,
             addr, 1000, network);
-        TEST("T3 SignBtcHtlcClaim returns ok=false",  r.ok == false);
-        TEST("T3 SignBtcHtlcClaim error mentions 'disabled'",
+        TEST("T3 SignBtcHtlcClaim with invalid privkey returns ok=false",
+             r.ok == false);
+        TEST("T3 SignBtcHtlcClaim raw_tx_hex empty on failure",
+             r.raw_tx_hex.empty());
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+        TEST("T3 SignBtcHtlcClaim error is a real validation message (ON)",
+             !r.error.empty() &&
+             r.error.find("disabled") == std::string::npos);
+#else
+        TEST("T3 SignBtcHtlcClaim error mentions 'disabled' (OFF)",
              r.error.find("disabled") != std::string::npos);
-        TEST("T3 SignBtcHtlcClaim raw_tx_hex empty",  r.raw_tx_hex.empty());
+#endif
     }
 
-    // T4. SignBtcHtlcRefund
+    // T4. SignBtcHtlcRefund — same shape as T3.
     {
         auto r = SignBtcHtlcRefund(
             fake_txid, 0, 100000,
             fake_redeem_script, 15000, fake_privkey,
             addr, 1000, network);
-        TEST("T4 SignBtcHtlcRefund returns ok=false", r.ok == false);
-        TEST("T4 SignBtcHtlcRefund error mentions 'disabled'",
+        TEST("T4 SignBtcHtlcRefund with invalid privkey returns ok=false",
+             r.ok == false);
+        TEST("T4 SignBtcHtlcRefund raw_tx_hex empty on failure",
+             r.raw_tx_hex.empty());
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+        TEST("T4 SignBtcHtlcRefund error is a real validation message (ON)",
+             !r.error.empty() &&
+             r.error.find("disabled") == std::string::npos);
+#else
+        TEST("T4 SignBtcHtlcRefund error mentions 'disabled' (OFF)",
              r.error.find("disabled") != std::string::npos);
-        TEST("T4 SignBtcHtlcRefund raw_tx_hex empty", r.raw_tx_hex.empty());
+#endif
     }
 
     // T5. SignBtcHtlcLockFunding
@@ -119,17 +144,25 @@ int main() {
     }
 
     // -----------------------------------------------------------------
-    // T7. Error message references the STOP REPORT doc — so a caller
-    //     who hits the disabled error knows exactly where to read for
-    //     the integration plan.
+    // T7. Error message references the STOP REPORT doc — only in OFF
+    //     mode, where the disabled-result helper carries the doc path
+    //     so a caller hitting the inert backend knows where to read
+    //     for the integration plan. In ON mode the error is the
+    //     specific input-validation message from sign_p2wsh_spend, so
+    //     the STOP REPORT reference is irrelevant.
     // -----------------------------------------------------------------
     {
         auto r = SignBtcHtlcClaim(
             fake_txid, 0, 100000,
             fake_redeem_script, fake_preimage, fake_privkey,
             addr, 1000, network);
-        TEST("T7 error references STOP REPORT doc path",
+#if !defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+        TEST("T7 error references STOP REPORT doc path (OFF)",
              r.error.find("ATOMIC_SWAP_BTC_SIGNING_STOP_REPORT.md") != std::string::npos);
+#else
+        TEST("T7 error is non-empty (ON, real validation)",
+             !r.error.empty());
+#endif
     }
 
     // =================================================================
@@ -532,6 +565,164 @@ int main() {
 #endif
         }
     }
+
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    // =================================================================
+    // Phase C.7 — SignBtcHtlcClaim / SignBtcHtlcRefund end-to-end
+    // =================================================================
+    // Build a real HTLC redeem script, derive a valid destination
+    // address, sign CLAIM and REFUND with the BIP-143 P2PK test key,
+    // and assert observable properties of the resulting raw_tx_hex.
+    // No broadcast, no wallet — the private key is a function arg.
+    {
+        auto from_hex = [](const std::string& s) {
+            std::vector<uint8_t> out; out.reserve(s.size()/2);
+            auto nib = [](char c) -> int {
+                if (c >= '0' && c <= '9') return c - '0';
+                if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+                if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+                return -1;
+            };
+            for (size_t i = 0; i + 1 < s.size(); i += 2) {
+                int hi = nib(s[i]); int lo = nib(s[i+1]);
+                if (hi < 0 || lo < 0) return std::vector<uint8_t>{};
+                out.push_back((uint8_t)((hi << 4) | lo));
+            }
+            return out;
+        };
+
+        // BIP-143 P2PK test key — both halves published.
+        const std::string priv_hex =
+            "b8f28a772fccbf9b4f58a4f027e07dc2e35e7cd80529975e292ea34f84c4580c";
+        const std::string pub_hex =
+            "036d5c20fa14fb2f635474c1dc4ef5909d4568e5569b79fc94d3448486e14685f8";
+        auto priv_v = from_hex(priv_hex);
+        auto pub_v  = from_hex(pub_hex);
+
+        std::array<uint8_t, 32> claim_priv{};
+        std::copy(priv_v.begin(), priv_v.end(), claim_priv.begin());
+        std::array<uint8_t, 33> claim_pub{};
+        std::copy(pub_v.begin(), pub_v.end(), claim_pub.begin());
+
+        std::array<uint8_t, 32> refund_priv{};
+        refund_priv[31] = 0x42;  // small valid scalar
+        auto refund_pub_r = DeriveBtcCompressedPubkey(refund_priv);
+        TEST("T29 refund pubkey derivation succeeded", refund_pub_r.ok);
+        std::array<uint8_t, 33> refund_pub{};
+        if (refund_pub_r.ok) {
+            std::copy(refund_pub_r.bytes.begin(),
+                      refund_pub_r.bytes.end(),
+                      refund_pub.begin());
+        }
+
+        // Hashlock = sha256(preimage).
+        std::array<uint8_t, 32> preimage{};
+        for (size_t i = 0; i < 32; ++i) preimage[i] = (uint8_t)(0xAA ^ i);
+        sost::Bytes32 hashlock_b = sost::sha256(preimage.data(), preimage.size());
+        std::array<uint8_t, 32> hashlock_arr{};
+        std::copy(hashlock_b.begin(), hashlock_b.end(), hashlock_arr.begin());
+
+        int64_t refund_height = 700000;
+        auto script = BuildBtcHtlcRedeemScript(
+            hashlock_arr, refund_height, claim_pub, refund_pub);
+
+        // Destination = regtest P2WSH of an arbitrary witness program.
+        std::array<uint8_t, 32> dest_program{};
+        for (size_t i = 0; i < 32; ++i) dest_program[i] = (uint8_t)(0x55 ^ i);
+        auto dest_addr_r = EncodeP2WSHAddress(dest_program, "regtest");
+        TEST("T29 destination address encode succeeded", dest_addr_r.ok);
+
+        sost::Bytes32 lock_txid{};
+        for (size_t i = 0; i < 32; ++i) lock_txid[i] = (uint8_t)(0xBC ^ i);
+        int64_t lock_amount = 1000000;  // 0.01 BTC
+
+        // T29. SignBtcHtlcClaim happy path.
+        auto claim_r = SignBtcHtlcClaim(
+            lock_txid, 0, lock_amount,
+            script, preimage, claim_priv,
+            dest_addr_r.address, 1000, "regtest");
+        TEST("T29 SignBtcHtlcClaim happy path ok=true", claim_r.ok);
+        TEST("T29 SignBtcHtlcClaim raw_tx_hex non-empty",
+             claim_r.ok && !claim_r.raw_tx_hex.empty());
+        TEST("T29 raw_tx_hex starts with '02000000' (version=2)",
+             claim_r.ok && claim_r.raw_tx_hex.substr(0, 8) == "02000000");
+        // BIP-144 witness marker+flag = "0001" after the 4-byte version.
+        TEST("T29 raw_tx_hex contains '0001' marker+flag (witness format)",
+             claim_r.ok && claim_r.raw_tx_hex.substr(8, 4) == "0001");
+
+        // T30. Determinism — re-sign identical inputs.
+        {
+            auto claim_r2 = SignBtcHtlcClaim(
+                lock_txid, 0, lock_amount,
+                script, preimage, claim_priv,
+                dest_addr_r.address, 1000, "regtest");
+            TEST("T30 SignBtcHtlcClaim deterministic on identical inputs",
+                 claim_r2.ok && claim_r2.raw_tx_hex == claim_r.raw_tx_hex);
+        }
+
+        // T31. Mutate preimage → hex must differ.
+        {
+            auto bad_pre = preimage;
+            bad_pre[0] ^= 0x01;
+            auto claim_r3 = SignBtcHtlcClaim(
+                lock_txid, 0, lock_amount,
+                script, bad_pre, claim_priv,
+                dest_addr_r.address, 1000, "regtest");
+            TEST("T31 mutated preimage produces different raw_tx_hex",
+                 claim_r3.ok && claim_r3.raw_tx_hex != claim_r.raw_tx_hex);
+        }
+
+        // T32. SignBtcHtlcRefund happy path.
+        auto refund_r = SignBtcHtlcRefund(
+            lock_txid, 0, lock_amount,
+            script, refund_height, refund_priv,
+            dest_addr_r.address, 1000, "regtest");
+        TEST("T32 SignBtcHtlcRefund happy path ok=true", refund_r.ok);
+        TEST("T32 SignBtcHtlcRefund raw_tx_hex non-empty",
+             refund_r.ok && !refund_r.raw_tx_hex.empty());
+        TEST("T32 raw_tx_hex starts with '02000000' (version=2)",
+             refund_r.ok && refund_r.raw_tx_hex.substr(0, 8) == "02000000");
+
+        // T33. Claim and refund produce DIFFERENT signed tx (locktime
+        //      + witness shape both differ).
+        TEST("T33 claim and refund produce different signed tx",
+             claim_r.ok && refund_r.ok &&
+             claim_r.raw_tx_hex != refund_r.raw_tx_hex);
+
+        // T34. Refund tx ends with nLockTime=refund_height LE-encoded.
+        //      700000 = 0xAAE60 → LE bytes "60ae0a00".
+        {
+            std::string lockhex = "60ae0a00";
+            bool present = refund_r.ok &&
+                refund_r.raw_tx_hex.size() >= lockhex.size() &&
+                refund_r.raw_tx_hex.substr(
+                    refund_r.raw_tx_hex.size() - lockhex.size()) == lockhex;
+            TEST("T34 refund tx ends with nLockTime=700000 LE-encoded",
+                 present);
+        }
+
+        // T35. Reject malformed inputs in the wired functions.
+        {
+            auto bad = SignBtcHtlcClaim(
+                lock_txid, 0, lock_amount,
+                script, preimage, claim_priv,
+                dest_addr_r.address, lock_amount, "regtest");
+            TEST("T35 SignBtcHtlcClaim rejects fee == amount", !bad.ok);
+            auto bad2 = SignBtcHtlcClaim(
+                lock_txid, 0, lock_amount,
+                script, preimage, claim_priv,
+                "not-an-address", 1000, "regtest");
+            TEST("T35 SignBtcHtlcClaim rejects malformed destination address",
+                 !bad2.ok);
+            auto bad3 = SignBtcHtlcClaim(
+                lock_txid, 0, lock_amount,
+                script, preimage, claim_priv,
+                dest_addr_r.address, 1000, "fakenet");
+            TEST("T35 SignBtcHtlcClaim rejects unknown bitcoin_network",
+                 !bad3.ok);
+        }
+    }
+#endif
 
     printf("\n== Summary: %d passed, %d failed ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
