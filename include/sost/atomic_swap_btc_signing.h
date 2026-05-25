@@ -245,6 +245,77 @@ BtcVerifyResult VerifyBtcEcdsaTestVector(
     const uint8_t* msg,         std::size_t msg_len,
     const uint8_t* der_sig,     std::size_t der_sig_len);
 
+// =============================================================================
+// Phase C.6 — witness assembly + spending-tx builders (LAB ONLY)
+// =============================================================================
+//
+// These helpers compose the C.5 ECDSA primitives into the actual
+// transaction-level building blocks needed to spend a P2WSH HTLC.
+// They are pure functions over caller-supplied inputs: no wallet
+// access, no network IO, no broadcast. SOST_BTC_HTLC_SIGNING=OFF
+// keeps them inert (fail-closed).
+
+// A SegWit witness stack — an ordered list of byte strings that the
+// witness program executes against. Element 0 is pushed first.
+struct BtcWitnessResult {
+    bool                              ok = false;
+    std::string                       error;
+    std::vector<std::vector<uint8_t>> stack;
+};
+
+// Assemble the witness stack for spending a SOST-shaped HTLC P2WSH
+// via the CLAIM branch (OP_IF). The redeem script matches
+// BuildBtcHtlcRedeemScript:
+//
+//   OP_IF OP_SHA256 <hashlock> OP_EQUALVERIFY <claim_pub> OP_CHECKSIG
+//   OP_ELSE <refund_height> OP_CHECKLOCKTIMEVERIFY OP_DROP
+//           <refund_pub> OP_CHECKSIG OP_ENDIF
+//
+// Witness stack for CLAIM (4 items):
+//   [0] DER signature || sighash_type_byte
+//   [1] preimage (32 bytes — sha256(preimage) must equal <hashlock>)
+//   [2] non-empty truthy byte (0x01) selecting the OP_IF branch
+//   [3] redeem_script (caller's BuildBtcHtlcRedeemScript output)
+//
+// The helper validates lengths but does NOT verify the signature or
+// the preimage's match against the script's hashlock — those are the
+// caller's responsibility.
+BtcWitnessResult BuildBtcHtlcClaimWitness(
+    const std::vector<uint8_t>&    der_sig_with_sighash,
+    const std::array<uint8_t, 32>& preimage,
+    const std::vector<uint8_t>&    redeem_script);
+
+// Witness stack for REFUND (3 items):
+//   [0] DER signature || sighash_type_byte
+//   [1] empty byte string (selects the OP_ELSE branch)
+//   [2] redeem_script
+//
+// The caller is responsible for setting the spending tx nLockTime to
+// >= the refund_height encoded in the redeem script; otherwise
+// OP_CHECKLOCKTIMEVERIFY will fail at script execution time on a
+// full Bitcoin node.
+BtcWitnessResult BuildBtcHtlcRefundWitness(
+    const std::vector<uint8_t>& der_sig_with_sighash,
+    const std::vector<uint8_t>& redeem_script);
+
+// Build a one-input / one-output unsigned segwit spending tx using
+// libwally. The input has empty scriptSig and is left witness-empty
+// (witness is attached later via the BuildBtcHtlc{Claim,Refund}Witness
+// helpers above). Inputs are sanity-checked: amount must be positive,
+// fee must be strictly less than amount, prev_txid must be 32 bytes,
+// output scriptPubKey must be non-empty.
+//
+// Returned bytes = raw hex of the unsigned tx (lowercase, NUL-trimmed).
+// Inert when SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY is not defined.
+BtcBytesResult BuildBtcSpendingTxUnsignedHex(
+    const std::array<uint8_t, 32>& prev_txid,
+    uint32_t                       prev_vout,
+    int64_t                        prev_amount_sats,
+    const std::vector<uint8_t>&    output_script_pubkey,
+    int64_t                        fee_sats,
+    uint32_t                       input_sequence,
+    uint32_t                       lock_time);
+
 } // namespace btc
 } // namespace atomic_swap
 } // namespace sost

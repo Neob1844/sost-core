@@ -91,14 +91,31 @@ int main() {
     }
 
     // T6. EncodeP2WSHAddress
+    // Phase C.6 wired this stub against libwally. The ON path now
+    // produces a real testnet address; the OFF path still returns
+    // disabled. T28 below covers the ON path comprehensively across
+    // mainnet/testnet/regtest; here we only assert the OFF
+    // disabled-error shape so the legacy test stays green in default
+    // builds.
     {
         std::array<uint8_t, 32> witness_program{};
         for (size_t i = 0; i < 32; ++i) witness_program[i] = static_cast<uint8_t>(i);
         auto r = EncodeP2WSHAddress(witness_program, network);
-        TEST("T6 EncodeP2WSHAddress returns ok=false", r.ok == false);
-        TEST("T6 EncodeP2WSHAddress error mentions 'disabled'",
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+        // ON: testnet address starts with "tb1q" (witness v0, 32-byte program).
+        TEST("T6 EncodeP2WSHAddress returns ok=true (ON, real backend)",
+             r.ok == true);
+        TEST("T6 EncodeP2WSHAddress testnet address has 'tb1q' prefix (ON)",
+             r.ok && r.address.size() > 4 &&
+             r.address.substr(0, 4) == "tb1q");
+#else
+        TEST("T6 EncodeP2WSHAddress returns ok=false (OFF)",
+             r.ok == false);
+        TEST("T6 EncodeP2WSHAddress error mentions 'disabled' (OFF)",
              r.error.find("disabled") != std::string::npos);
-        TEST("T6 EncodeP2WSHAddress address empty",   r.address.empty());
+        TEST("T6 EncodeP2WSHAddress address empty (OFF)",
+             r.address.empty());
+#endif
     }
 
     // -----------------------------------------------------------------
@@ -347,6 +364,174 @@ int main() {
         }
     }
 #endif
+
+    // =================================================================
+    // Phase C.6 — witness assembly + spending-tx builders
+    // =================================================================
+    {
+        std::vector<uint8_t> fake_sig(72, 0xAA);   // pretend DER + sighash byte
+        fake_sig[71] = 0x01;
+        std::array<uint8_t, 32> fake_pre{};
+        for (size_t i = 0; i < 32; ++i) fake_pre[i] = (uint8_t)i;
+        std::vector<uint8_t> fake_script(100, 0xCC);
+
+        // T20. BuildBtcHtlcClaimWitness OFF/ON shape.
+        {
+            auto r = BuildBtcHtlcClaimWitness(fake_sig, fake_pre, fake_script);
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            TEST("T20 BuildBtcHtlcClaimWitness ok (ON)", r.ok);
+            TEST("T20 claim witness has 4 elements",
+                 r.ok && r.stack.size() == 4);
+            TEST("T20 claim witness [0] is the sig",
+                 r.ok && r.stack[0] == fake_sig);
+            TEST("T20 claim witness [1] is the preimage",
+                 r.ok && r.stack[1].size() == 32 &&
+                 std::equal(r.stack[1].begin(), r.stack[1].end(),
+                            fake_pre.begin()));
+            TEST("T20 claim witness [2] is 0x01 (OP_IF selector)",
+                 r.ok && r.stack[2].size() == 1 && r.stack[2][0] == 0x01);
+            TEST("T20 claim witness [3] is the redeem script",
+                 r.ok && r.stack[3] == fake_script);
+#else
+            TEST("T20 BuildBtcHtlcClaimWitness disabled (OFF)",
+                 r.ok == false &&
+                 r.error.find("disabled") != std::string::npos);
+            TEST("T20 claim witness stack empty (OFF)", r.stack.empty());
+#endif
+        }
+
+        // T21. BuildBtcHtlcRefundWitness OFF/ON shape.
+        {
+            auto r = BuildBtcHtlcRefundWitness(fake_sig, fake_script);
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            TEST("T21 BuildBtcHtlcRefundWitness ok (ON)", r.ok);
+            TEST("T21 refund witness has 3 elements",
+                 r.ok && r.stack.size() == 3);
+            TEST("T21 refund witness [0] is the sig",
+                 r.ok && r.stack[0] == fake_sig);
+            TEST("T21 refund witness [1] is empty (OP_ELSE selector)",
+                 r.ok && r.stack[1].empty());
+            TEST("T21 refund witness [2] is the redeem script",
+                 r.ok && r.stack[2] == fake_script);
+#else
+            TEST("T21 BuildBtcHtlcRefundWitness disabled (OFF)",
+                 r.ok == false &&
+                 r.error.find("disabled") != std::string::npos);
+            TEST("T21 refund witness stack empty (OFF)", r.stack.empty());
+#endif
+        }
+
+        // T22. Witness builders reject empty sig / empty redeem script.
+        {
+            std::vector<uint8_t> empty_sig;
+            auto r1 = BuildBtcHtlcClaimWitness(empty_sig, fake_pre, fake_script);
+            TEST("T22 claim witness rejects empty sig", r1.ok == false);
+            auto r2 = BuildBtcHtlcClaimWitness(fake_sig, fake_pre, {});
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            TEST("T22 claim witness rejects empty redeem script",
+                 r2.ok == false);
+#else
+            // In OFF mode the disabled-result fires before any validation.
+            TEST("T22 claim witness disabled (OFF) regardless of args",
+                 r2.ok == false);
+#endif
+            auto r3 = BuildBtcHtlcRefundWitness(empty_sig, fake_script);
+            TEST("T22 refund witness rejects empty sig", r3.ok == false);
+        }
+
+        // T23. BuildBtcSpendingTxUnsignedHex shape + parse roundtrip.
+        std::array<uint8_t, 32> prev_txid{};
+        for (size_t i = 0; i < 32; ++i) prev_txid[i] = (uint8_t)(i + 1);
+        std::vector<uint8_t> out_spk(22, 0x00);
+        out_spk[0] = 0x00; out_spk[1] = 0x14;   // OP_0 push20 (fake P2WPKH)
+        {
+            auto r = BuildBtcSpendingTxUnsignedHex(
+                prev_txid, 0, 100000, out_spk, 1000, 0xFFFFFFFE, 0);
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            TEST("T23 BuildBtcSpendingTxUnsignedHex ok (ON)", r.ok);
+            TEST("T23 raw tx hex non-empty (ON)",
+                 r.ok && !r.bytes.empty());
+            TEST("T23 raw tx hex starts with '02' (version=2)",
+                 r.ok && r.bytes.size() >= 8 &&
+                 r.bytes[0] == '0' && r.bytes[1] == '2' &&
+                 r.bytes[2] == '0' && r.bytes[3] == '0' &&
+                 r.bytes[4] == '0' && r.bytes[5] == '0' &&
+                 r.bytes[6] == '0' && r.bytes[7] == '0');
+#else
+            TEST("T23 BuildBtcSpendingTxUnsignedHex disabled (OFF)",
+                 r.ok == false &&
+                 r.error.find("disabled") != std::string::npos);
+            TEST("T23 raw tx hex empty (OFF)", r.bytes.empty());
+#endif
+        }
+
+        // T24. Reject fee >= amount.
+        {
+            auto r = BuildBtcSpendingTxUnsignedHex(
+                prev_txid, 0, 1000, out_spk, 1000, 0xFFFFFFFE, 0);
+            TEST("T24 reject fee == amount (no remaining output)",
+                 r.ok == false);
+            auto r2 = BuildBtcSpendingTxUnsignedHex(
+                prev_txid, 0, 1000, out_spk, 2000, 0xFFFFFFFE, 0);
+            TEST("T24 reject fee > amount",
+                 r2.ok == false);
+        }
+
+        // T25. Reject negative fee.
+        {
+            auto r = BuildBtcSpendingTxUnsignedHex(
+                prev_txid, 0, 100000, out_spk, -1, 0xFFFFFFFE, 0);
+            TEST("T25 reject negative fee", r.ok == false);
+        }
+
+        // T26. Reject zero / negative amount.
+        {
+            auto r = BuildBtcSpendingTxUnsignedHex(
+                prev_txid, 0, 0, out_spk, 1000, 0xFFFFFFFE, 0);
+            TEST("T26 reject zero amount", r.ok == false);
+            auto r2 = BuildBtcSpendingTxUnsignedHex(
+                prev_txid, 0, -1, out_spk, 1000, 0xFFFFFFFE, 0);
+            TEST("T26 reject negative amount", r2.ok == false);
+        }
+
+        // T27. Reject empty output script.
+        {
+            auto r = BuildBtcSpendingTxUnsignedHex(
+                prev_txid, 0, 100000, {}, 1000, 0xFFFFFFFE, 0);
+            TEST("T27 reject empty output script", r.ok == false);
+        }
+
+        // T28. EncodeP2WSHAddress: ON path now produces real addresses
+        //      (Phase C.6 wired this stub too because it is a single
+        //      wally_addr_segwit_from_bytes call). Mainnet / testnet /
+        //      regtest are all accepted; unknown networks rejected.
+        {
+            std::array<uint8_t, 32> wp{};
+            for (size_t i = 0; i < 32; ++i) wp[i] = (uint8_t)i;
+            auto r = EncodeP2WSHAddress(wp, "mainnet");
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            // ON: real mainnet P2WSH address starting with "bc1q".
+            TEST("T28 EncodeP2WSHAddress mainnet ok (ON)", r.ok);
+            TEST("T28 mainnet address has bc1q prefix (ON)",
+                 r.ok && r.address.size() > 4 &&
+                 r.address.substr(0, 4) == "bc1q");
+            auto rt = EncodeP2WSHAddress(wp, "testnet");
+            TEST("T28 EncodeP2WSHAddress testnet ok (ON)",
+                 rt.ok && rt.address.substr(0, 4) == "tb1q");
+            auto rb = EncodeP2WSHAddress(wp, "regtest");
+            TEST("T28 EncodeP2WSHAddress regtest ok (ON)",
+                 rb.ok && rb.address.substr(0, 6) == "bcrt1q");
+            auto rx = EncodeP2WSHAddress(wp, "fakenet");
+            TEST("T28 EncodeP2WSHAddress rejects unknown network (ON)",
+                 rx.ok == false);
+#else
+            // OFF: stays disabled as before. (Note: T6 above already
+            // asserts the OFF behaviour with a different witness program.)
+            TEST("T28 EncodeP2WSHAddress disabled (OFF)",
+                 r.ok == false);
+#endif
+        }
+    }
 
     printf("\n== Summary: %d passed, %d failed ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

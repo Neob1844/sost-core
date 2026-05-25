@@ -31,7 +31,11 @@
 extern "C" {
 #include <wally_core.h>
 #include <wally_crypto.h>
+#include <wally_address.h>
+#include <wally_transaction.h>
 }
+#include <cstring>
+#include <vector>
 #endif
 
 namespace sost {
@@ -124,10 +128,44 @@ BtcSigningResult SignBtcHtlcLockFunding(
 }
 
 BtcAddressResult EncodeP2WSHAddress(
-    const std::array<uint8_t, 32>& /*witness_program*/,
-    const std::string& /*bitcoin_network*/)
+    const std::array<uint8_t, 32>& witness_program,
+    const std::string& bitcoin_network)
 {
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    BtcAddressResult r;
+    const char* hrp = nullptr;
+    if (bitcoin_network == "mainnet")      hrp = "bc";
+    else if (bitcoin_network == "testnet") hrp = "tb";
+    else if (bitcoin_network == "regtest") hrp = "bcrt";
+    else {
+        r.ok = false;
+        r.error = "EncodeP2WSHAddress: unsupported bitcoin_network '"
+                  + bitcoin_network + "' (expect mainnet|testnet|regtest)";
+        return r;
+    }
+    // libwally takes the full segwit SCRIPT: OP_0 + push(32) + program.
+    unsigned char segwit_script[34];
+    segwit_script[0] = 0x00;  // OP_0 (witness version 0)
+    segwit_script[1] = 0x20;  // push 32 bytes
+    std::memcpy(segwit_script + 2, witness_program.data(), 32);
+    char* addr = nullptr;
+    int rc = wally_addr_segwit_from_bytes(
+        segwit_script, sizeof(segwit_script), hrp, 0, &addr);
+    if (rc != 0 || addr == nullptr) {
+        r.ok = false;
+        r.error = "EncodeP2WSHAddress: wally_addr_segwit_from_bytes failed (rc="
+                  + std::to_string(rc) + ")";
+        return r;
+    }
+    r.address = addr;
+    wally_free_string(addr);
+    r.ok = true;
+    return r;
+#else
+    (void)witness_program;
+    (void)bitcoin_network;
     return disabled_address_result();
+#endif
 }
 
 // =============================================================================
@@ -328,6 +366,211 @@ BtcVerifyResult VerifyBtcEcdsaTestVector(
     (void)der_sig;
     (void)der_sig_len;
     return disabled_verify_result();
+#endif
+}
+
+// =============================================================================
+// Phase C.6 — witness assembly + spending-tx builders (LAB ONLY)
+// =============================================================================
+//
+// Compose the C.5 leaf primitives into transaction-level building
+// blocks. Pure functions over caller inputs: no wallet, no network,
+// no broadcast. Fail-closed when libwally is not present.
+
+namespace {
+
+BtcWitnessResult disabled_witness_result() {
+    BtcWitnessResult r;
+    r.ok = false;
+    r.error = BtcSigningDisabledErrorMessage();
+    r.stack.clear();
+    return r;
+}
+
+}  // namespace
+
+BtcWitnessResult BuildBtcHtlcClaimWitness(
+    const std::vector<uint8_t>&    der_sig_with_sighash,
+    const std::array<uint8_t, 32>& preimage,
+    const std::vector<uint8_t>&    redeem_script)
+{
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    BtcWitnessResult r;
+    // The signature must already carry the sighash type byte appended
+    // (e.g. SIGHASH_ALL = 0x01) per BIP-66 + BIP-143 conventions. We
+    // do not strip or append it here; the caller controls the byte.
+    if (der_sig_with_sighash.empty() || der_sig_with_sighash.size() > 73) {
+        r.ok = false;
+        r.error = "BuildBtcHtlcClaimWitness: DER signature length out of "
+                  "range (got " + std::to_string(der_sig_with_sighash.size())
+                  + ", expected 1..73 incl. sighash byte)";
+        return r;
+    }
+    if (redeem_script.empty()) {
+        r.ok = false;
+        r.error = "BuildBtcHtlcClaimWitness: empty redeem script";
+        return r;
+    }
+    // Stack ordering for the SOST HTLC redeem script:
+    //   [0] sig+sighash    -> consumed by OP_CHECKSIG inside OP_IF
+    //   [1] preimage       -> hashed by OP_SHA256 + OP_EQUALVERIFY
+    //   [2] 0x01           -> truthy value taken by OP_IF
+    //   [3] redeem_script  -> the witness program preimage
+    r.stack.reserve(4);
+    r.stack.push_back(der_sig_with_sighash);
+    r.stack.push_back(std::vector<uint8_t>(preimage.begin(), preimage.end()));
+    r.stack.push_back(std::vector<uint8_t>{0x01});
+    r.stack.push_back(redeem_script);
+    r.ok = true;
+    return r;
+#else
+    (void)der_sig_with_sighash;
+    (void)preimage;
+    (void)redeem_script;
+    return disabled_witness_result();
+#endif
+}
+
+BtcWitnessResult BuildBtcHtlcRefundWitness(
+    const std::vector<uint8_t>& der_sig_with_sighash,
+    const std::vector<uint8_t>& redeem_script)
+{
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    BtcWitnessResult r;
+    if (der_sig_with_sighash.empty() || der_sig_with_sighash.size() > 73) {
+        r.ok = false;
+        r.error = "BuildBtcHtlcRefundWitness: DER signature length out of "
+                  "range (got " + std::to_string(der_sig_with_sighash.size())
+                  + ", expected 1..73 incl. sighash byte)";
+        return r;
+    }
+    if (redeem_script.empty()) {
+        r.ok = false;
+        r.error = "BuildBtcHtlcRefundWitness: empty redeem script";
+        return r;
+    }
+    // Stack ordering for the SOST HTLC redeem script:
+    //   [0] sig+sighash    -> consumed by OP_CHECKSIG inside OP_ELSE
+    //   [1] empty          -> falsy value selects OP_ELSE
+    //   [2] redeem_script
+    r.stack.reserve(3);
+    r.stack.push_back(der_sig_with_sighash);
+    r.stack.push_back(std::vector<uint8_t>{});  // empty -> false
+    r.stack.push_back(redeem_script);
+    r.ok = true;
+    return r;
+#else
+    (void)der_sig_with_sighash;
+    (void)redeem_script;
+    return disabled_witness_result();
+#endif
+}
+
+BtcBytesResult BuildBtcSpendingTxUnsignedHex(
+    const std::array<uint8_t, 32>& prev_txid,
+    uint32_t                       prev_vout,
+    int64_t                        prev_amount_sats,
+    const std::vector<uint8_t>&    output_script_pubkey,
+    int64_t                        fee_sats,
+    uint32_t                       input_sequence,
+    uint32_t                       lock_time)
+{
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    ensure_wally_init();
+    BtcBytesResult r;
+    // Sanity-check inputs before allocating any libwally state.
+    if (prev_amount_sats <= 0) {
+        r.ok = false;
+        r.error = "BuildBtcSpendingTxUnsignedHex: prev_amount_sats must be > 0 "
+                  "(got " + std::to_string(prev_amount_sats) + ")";
+        return r;
+    }
+    if (fee_sats < 0) {
+        r.ok = false;
+        r.error = "BuildBtcSpendingTxUnsignedHex: fee_sats must be >= 0 "
+                  "(got " + std::to_string(fee_sats) + ")";
+        return r;
+    }
+    if (fee_sats >= prev_amount_sats) {
+        r.ok = false;
+        r.error = "BuildBtcSpendingTxUnsignedHex: fee_sats ("
+                  + std::to_string(fee_sats) + ") must be strictly less than "
+                  "prev_amount_sats (" + std::to_string(prev_amount_sats) + ")";
+        return r;
+    }
+    if (output_script_pubkey.empty()) {
+        r.ok = false;
+        r.error = "BuildBtcSpendingTxUnsignedHex: output_script_pubkey is empty";
+        return r;
+    }
+
+    struct wally_tx* tx = nullptr;
+    // version 2 (BIP-68 required for CHECKSEQUENCEVERIFY; harmless
+    // for CHECKLOCKTIMEVERIFY); input/output counts grow with add().
+    int rc = wally_tx_init_alloc(2 /* version */, lock_time, 1, 1, &tx);
+    if (rc != 0 || tx == nullptr) {
+        r.ok = false;
+        r.error = "BuildBtcSpendingTxUnsignedHex: wally_tx_init_alloc failed "
+                  "(rc=" + std::to_string(rc) + ")";
+        return r;
+    }
+    // BIP-143 segwit input: empty scriptSig, witness attached separately.
+    rc = wally_tx_add_raw_input(
+        tx,
+        prev_txid.data(), prev_txid.size(),
+        prev_vout,
+        input_sequence,
+        nullptr, 0,   // scriptSig (empty)
+        nullptr,      // witness (NULL -> tx remains witness-marked but stack empty)
+        0);
+    if (rc != 0) {
+        wally_tx_free(tx);
+        r.ok = false;
+        r.error = "BuildBtcSpendingTxUnsignedHex: wally_tx_add_raw_input failed "
+                  "(rc=" + std::to_string(rc) + ")";
+        return r;
+    }
+    int64_t output_amount = prev_amount_sats - fee_sats;
+    rc = wally_tx_add_raw_output(
+        tx,
+        (uint64_t)output_amount,
+        output_script_pubkey.data(), output_script_pubkey.size(),
+        0);
+    if (rc != 0) {
+        wally_tx_free(tx);
+        r.ok = false;
+        r.error = "BuildBtcSpendingTxUnsignedHex: wally_tx_add_raw_output failed "
+                  "(rc=" + std::to_string(rc) + ")";
+        return r;
+    }
+    char* tx_hex = nullptr;
+    // Serialise without the witness section (the tx has empty witness
+    // anyway; emit the legacy form so the bytes are exactly the
+    // "to-be-signed" template that BIP-143 hashes over).
+    rc = wally_tx_to_hex(tx, 0 /* flags */, &tx_hex);
+    if (rc != 0 || tx_hex == nullptr) {
+        wally_tx_free(tx);
+        r.ok = false;
+        r.error = "BuildBtcSpendingTxUnsignedHex: wally_tx_to_hex failed "
+                  "(rc=" + std::to_string(rc) + ")";
+        return r;
+    }
+    // Pack the hex into r.bytes (it is ascii, but the API surface uses
+    // bytes; tests can decode if needed).
+    r.bytes.assign(tx_hex, tx_hex + std::strlen(tx_hex));
+    wally_free_string(tx_hex);
+    wally_tx_free(tx);
+    r.ok = true;
+    return r;
+#else
+    (void)prev_txid;
+    (void)prev_vout;
+    (void)prev_amount_sats;
+    (void)output_script_pubkey;
+    (void)fee_sats;
+    (void)input_sequence;
+    (void)lock_time;
+    return disabled_bytes_result();
 #endif
 }
 
