@@ -533,6 +533,169 @@
   </div>
 </section>
 
+<!-- ============ ATOMIC SWAP WIZARD PREVIEW (Phase F — TESTNET / PRIVATE BETA) ============ -->
+<section style="border-bottom:1px solid var(--border-dim);background:rgba(107,63,107,0.05)" id="atomic-swap-wizard">
+  <div class="container" style="padding:40px 0">
+    <div style="margin-bottom:18px">
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// V14 ROADMAP &middot; INTERACTIVE WIZARD &middot; PREVIEW ONLY</div>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary);margin:0 0 8px">Atomic Swap wizard &mdash; <span style="color:#6B3F6B">6-step flow preview</span></h2>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+        <span style="display:inline-flex;align-items:center;background:rgba(251,1,13,0.15);border:1px solid #fb010d;border-radius:4px;padding:6px 12px;color:#fb010d;font-weight:900;letter-spacing:1.5px;font-size:11px">&#9888; MAINNET NOT ACTIVE</span>
+        <span style="display:inline-flex;align-items:center;background:rgba(34,211,238,0.12);border:1px solid #22d3ee;border-radius:4px;padding:6px 12px;color:#22d3ee;font-weight:900;letter-spacing:1.5px;font-size:11px">PRIVATE BETA &middot; TESTNET ONLY</span>
+        <span style="display:inline-flex;align-items:center;background:rgba(107,63,107,0.18);border:1px solid #6B3F6B;border-radius:4px;padding:6px 12px;color:#6B3F6B;font-weight:900;letter-spacing:1.5px;font-size:11px">PREVIEW MODE &middot; ALL ACTIONS DISABLED</span>
+      </div>
+      <p style="color:var(--text-secondary);font-size:13.5px;line-height:1.75;margin-top:14px">
+        The wizard below shows what a SOST &harr; counterparty atomic swap will look like once the BTC signing backend (Phase 4A-2 / libwally vendoring), the EVM contract hardening (Phase 4D), and the external cryptographic + economic review (Phase 5) are all green. Until then, every action button is intentionally disabled. The wizard exists so operators can see the full flow, the asset-specific warnings, and the recovery options BEFORE the system goes live, not after.
+      </p>
+    </div>
+
+    <!-- ============ STEP 0 — asset pair + per-asset warning ============ -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
+        <div style="background:#6B3F6B;color:#fff;font-family:var(--font-mono);font-weight:900;border-radius:50%;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">0</div>
+        <div style="color:var(--text-primary);font-weight:700;font-size:16px">Choose the asset pair</div>
+      </div>
+      <div style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:12px">Select the counterparty asset. SOST is always one leg. The other leg determines the cryptographic guarantees and the residual risks.</div>
+      <select disabled aria-disabled="true" style="background:rgba(100,116,139,0.12);color:var(--text-muted);border:1px solid var(--border-bright);border-radius:4px;padding:8px 12px;font-family:var(--font-mono);font-size:13px;width:100%;max-width:420px;cursor:not-allowed;opacity:0.7">
+        <option>SOST &harr; ... &nbsp;(disabled — preview only)</option>
+        <option>SOST &harr; BTC &nbsp;(Category A — trust-minimized)</option>
+        <option>SOST &harr; ETH &nbsp;(Category A — trust-minimized, smart-contract risk)</option>
+        <option>SOST &harr; BNB &nbsp;(Category A — trust-minimized, chain-governance caveat)</option>
+        <option>SOST &harr; USDT &nbsp;(Category B — ISSUER-RISK, freeze-capable)</option>
+        <option>SOST &harr; USDC &nbsp;(Category B — ISSUER-RISK, freeze-capable + blacklist)</option>
+        <option>SOST &harr; PAXG &nbsp;(Category B — ISSUER-RISK + physical gold custody)</option>
+        <option>SOST &harr; XAUT &nbsp;(Category B — ISSUER-RISK + physical gold custody)</option>
+      </select>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-top:14px">
+        <div style="background:rgba(34,197,94,0.06);border-left:4px solid #22c55e;padding:10px 14px;border-radius:0 4px 4px 0">
+          <div style="color:#22c55e;font-weight:900;font-size:11px;letter-spacing:1.2px;margin-bottom:4px">BTC</div>
+          <div style="color:var(--text-primary);font-size:12.5px;line-height:1.65">Cryptographically trust-minimized. Wait for 6+ confirmations on Bitcoin. No issuer can freeze BTC.</div>
+        </div>
+        <div style="background:rgba(34,197,94,0.06);border-left:4px solid #22c55e;padding:10px 14px;border-radius:0 4px 4px 0">
+          <div style="color:#22c55e;font-weight:900;font-size:11px;letter-spacing:1.2px;margin-bottom:4px">ETH / BNB</div>
+          <div style="color:var(--text-primary);font-size:12.5px;line-height:1.65">Trust-minimized for native coin. The HTLC contract is verifiable on-chain; review its source before depositing.</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.06);border-left:4px solid var(--amber-primary);padding:10px 14px;border-radius:0 4px 4px 0">
+          <div style="color:var(--amber-primary);font-weight:900;font-size:11px;letter-spacing:1.2px;margin-bottom:4px">USDT / USDC</div>
+          <div style="color:var(--text-primary);font-size:12.5px;line-height:1.65">The issuer (Tether / Circle) can freeze ANY address at any time. If your counterparty&apos;s address is frozen mid-swap, the SOST side can still refund but the stablecoin side becomes uncollectible.</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.06);border-left:4px solid var(--amber-primary);padding:10px 14px;border-radius:0 4px 4px 0">
+          <div style="color:var(--amber-primary);font-weight:900;font-size:11px;letter-spacing:1.2px;margin-bottom:4px">PAXG / XAUT</div>
+          <div style="color:var(--text-primary);font-size:12.5px;line-height:1.65">Same freeze risk as USDT/USDC PLUS physical gold custody risk at the issuer. Use small amounts.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STEP 1 — generate secret ============ -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
+        <div style="background:#6B3F6B;color:#fff;font-family:var(--font-mono);font-weight:900;border-radius:50%;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">1</div>
+        <div style="color:var(--text-primary);font-weight:700;font-size:16px">Generate the swap secret</div>
+      </div>
+      <div style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:12px">
+        Your wallet generates a 32-byte random secret (the <i>preimage</i>) and computes its SHA-256 hash (the <i>hashlock</i>). The hashlock is shared with the counterparty; the preimage is kept private and revealed only at claim time. Anyone who learns the preimage can claim the SOST side &mdash; treat it like a private key.
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <button type="button" disabled aria-disabled="true" title="Preview mode — wallet integration ships with Phase 4D when SOST_BTC_HTLC_SIGNING is also enabled." style="background:rgba(100,116,139,0.15);color:var(--text-muted);border:1px solid var(--border-bright);border-radius:4px;padding:10px 18px;font-family:var(--font-mono);font-size:12.5px;font-weight:700;letter-spacing:1px;cursor:not-allowed;opacity:0.7">
+          GENERATE SECRET &mdash; disabled (preview)
+        </button>
+        <div style="color:var(--text-muted);font-size:11px;letter-spacing:0.5px">No keys are generated in preview mode.</div>
+      </div>
+    </div>
+
+    <!-- ============ STEP 2 — create SOST lock ============ -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
+        <div style="background:#6B3F6B;color:#fff;font-family:var(--font-mono);font-weight:900;border-radius:50%;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">2</div>
+        <div style="color:var(--text-primary);font-weight:700;font-size:16px">Create the SOST lock (HTLC)</div>
+      </div>
+      <div style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:12px">
+        Your wallet builds and broadcasts a SOST <code>OUT_HTLC_LOCK</code> output committing your SOST to the hashlock, with a refund window that opens at the height specified by your timeout-discipline rule (Initiator: refund opens LAST; Responder: refund opens FIRST). The lock is on-chain and visible to anyone; the counterparty verifies it before locking their side.
+      </div>
+      <div style="background:rgba(0,0,0,0.25);border:1px solid var(--border-bright);border-radius:4px;padding:10px 14px;margin-bottom:12px;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);overflow-x:auto;white-space:nowrap">
+        $ sost-cli htlc-lock --amount 100 --hashlock 0x&lt;hex&gt; --refund-height &lt;N&gt; --claim-address &lt;cp_addr&gt;
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <button type="button" disabled aria-disabled="true" title="Activation gate is INT64_MAX. The CLI command exists today behind the gate and refuses to build a lock that the network would not accept." style="background:rgba(100,116,139,0.15);color:var(--text-muted);border:1px solid var(--border-bright);border-radius:4px;padding:10px 18px;font-family:var(--font-mono);font-size:12.5px;font-weight:700;letter-spacing:1px;cursor:not-allowed;opacity:0.7">
+          CREATE SOST LOCK &mdash; disabled (preview)
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ STEP 3 — verify counterparty lock ============ -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
+        <div style="background:#6B3F6B;color:#fff;font-family:var(--font-mono);font-weight:900;border-radius:50%;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">3</div>
+        <div style="color:var(--text-primary);font-weight:700;font-size:16px">Verify the counterparty lock</div>
+      </div>
+      <div style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:12px">
+        The counterparty locks their side (BTC P2WSH, EVM HTLC contract, or stablecoin lock inside the EVM contract). Your wallet observes the counterparty chain, confirms the lock uses the same hashlock you generated, verifies the lock amount matches, and waits for the configured number of confirmations on that chain (e.g. 6 for BTC). The wizard surfaces a yellow status until your wallet has BOTH locks confirmed.
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <div style="background:rgba(245,158,11,0.07);border-left:4px solid var(--amber-primary);padding:8px 12px;border-radius:0 4px 4px 0;font-size:12px;color:var(--text-primary);max-width:340px">
+          <b style="color:var(--amber-primary);letter-spacing:1px">SOST LOCK</b>: status &mdash; waiting for confirmations (preview)
+        </div>
+        <div style="background:rgba(245,158,11,0.07);border-left:4px solid var(--amber-primary);padding:8px 12px;border-radius:0 4px 4px 0;font-size:12px;color:var(--text-primary);max-width:340px">
+          <b style="color:var(--amber-primary);letter-spacing:1px">COUNTERPARTY LOCK</b>: status &mdash; waiting for confirmations (preview)
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STEP 4 — reveal preimage / claim ============ -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
+        <div style="background:#6B3F6B;color:#fff;font-family:var(--font-mono);font-weight:900;border-radius:50%;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">4</div>
+        <div style="color:var(--text-primary);font-weight:700;font-size:16px">Reveal the preimage and claim</div>
+      </div>
+      <div style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:12px">
+        Once both locks are confirmed, you claim the COUNTERPARTY side first (revealing the preimage on their chain). The counterparty then uses that revealed preimage to claim the SOST side. Order matters: as the initiator you claim FIRST so the counterparty sees the preimage in time; as the responder you claim SECOND so you do not give away the preimage before getting your funds.
+      </div>
+      <div style="background:rgba(0,0,0,0.25);border:1px solid var(--border-bright);border-radius:4px;padding:10px 14px;margin-bottom:12px;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);overflow-x:auto;white-space:nowrap">
+        $ sost-cli htlc-claim --lock-txid &lt;txid&gt; --preimage 0x&lt;hex&gt; --destination &lt;your_addr&gt;
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <button type="button" disabled aria-disabled="true" title="Activation gate is INT64_MAX. Real claim builds and broadcasts behind the gate are rejected by the network until V14." style="background:rgba(100,116,139,0.15);color:var(--text-muted);border:1px solid var(--border-bright);border-radius:4px;padding:10px 18px;font-family:var(--font-mono);font-size:12.5px;font-weight:700;letter-spacing:1px;cursor:not-allowed;opacity:0.7">
+          REVEAL PREIMAGE &amp; CLAIM &mdash; disabled (preview)
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ STEP 5 — refund path if timeout ============ -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-left:4px solid #fb010d;border-radius:6px;padding:18px 22px;margin:0 0 16px">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
+        <div style="background:#fb010d;color:#fff;font-family:var(--font-mono);font-weight:900;border-radius:50%;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">5</div>
+        <div style="color:var(--text-primary);font-weight:700;font-size:16px">Refund if anything goes wrong</div>
+      </div>
+      <div style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:12px">
+        If the counterparty disappears, refuses to claim, or their side gets frozen by an issuer (USDT/USDC/PAXG/XAUT), you wait for your refund window to open and then broadcast a refund transaction. The cryptographic guarantee is: <b>you cannot lose your SOST</b> &mdash; either the swap completes (you claim the counterparty side) or you refund (you get your SOST back unchanged). The counterparty has the same property for their side. The wizard surfaces a countdown to your refund window opening so you know when refund becomes available.
+      </div>
+      <div style="background:rgba(0,0,0,0.25);border:1px solid var(--border-bright);border-radius:4px;padding:10px 14px;margin-bottom:12px;font-family:var(--font-mono);font-size:12px;color:var(--text-primary);overflow-x:auto;white-space:nowrap">
+        $ sost-cli htlc-refund --lock-txid &lt;txid&gt; --destination &lt;your_addr&gt;
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <button type="button" disabled aria-disabled="true" title="Refund is available only AFTER the refund window opens. The CLI command exists today behind the gate and refuses to build a refund tx before the timeout." style="background:rgba(100,116,139,0.15);color:var(--text-muted);border:1px solid var(--border-bright);border-radius:4px;padding:10px 18px;font-family:var(--font-mono);font-size:12.5px;font-weight:700;letter-spacing:1px;cursor:not-allowed;opacity:0.7">
+          BROADCAST REFUND &mdash; disabled (preview)
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ Pre-deploy gating reminder ============ -->
+    <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border-bright);border-radius:4px;padding:14px 18px;font-size:13px;line-height:1.65;margin-top:8px">
+      <div style="color:var(--text-muted);font-weight:900;font-size:11px;letter-spacing:1.2px;margin-bottom:8px">// WHEN DO THE BUTTONS UNLOCK?</div>
+      <ul style="color:var(--text-primary);font-size:13px;line-height:1.8;margin:0;padding-left:20px">
+        <li>Phase 4A-2 &mdash; libwally-core vendored, BIP-143 / BIP-173 / BIP-350 / P2WSH test vectors all green (currently 7 / 27 green; the rest are PENDING per <code>docs/design/ATOMIC_SWAP_BTC_TEST_VECTOR_GAP.md</code>).</li>
+        <li>Phase 4D &mdash; EVM HTLC contract hardened with the full Phase D test set (currently 29 baseline Foundry tests passing; +10 hardening tests pending per <code>docs/design/ATOMIC_SWAP_EVM_HARDENING_STOP_REPORT.md</code>).</li>
+        <li>Phase 4E &mdash; end-to-end testnet swaps SOST &harr; BTC testnet AND SOST &harr; Sepolia ETH AND SOST &harr; Sepolia ERC-20 (PENDING).</li>
+        <li>Phase 5 &mdash; external cryptographic + economic + smart-contract audit. The activation height stays at <code>INT64_MAX</code> until the auditor signs off in writing.</li>
+        <li>Activation PR &mdash; flips <code>ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT</code> from <code>INT64_MAX</code> to <code>V14_HEIGHT</code> AND <code>SOST_BTC_HTLC_SIGNING</code> from <code>OFF</code> to <code>ON</code> in coordinated commits. Both flips need audit evidence.</li>
+      </ul>
+      <p style="color:var(--text-primary);font-size:12.5px;line-height:1.7;margin:10px 0 0">
+        Until every item above is GREEN, this section stays a preview. There is no admin override, no manual unlock, no escrow operator. The buttons above unlock only when the protocol does &mdash; not when a UI flag is flipped.
+      </p>
+    </div>
+  </div>
+</section>
+
 <!-- ============ REAL SCAM EXAMPLES (annotated conversations) ============ -->
 <section style="border-bottom:1px solid var(--border-dim)">
   <div class="container" style="padding:40px 0">
