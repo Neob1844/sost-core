@@ -116,16 +116,35 @@ prefer not to use submodules.
 
 ## 3. Pin target — recommended libwally tag
 
-* Repository:        `https://github.com/ElementsProject/libwally-core`
-* Recommended tag:   **`release_1.4.0`** (latest stable as of analysis date)
-* Commit hash:       *(to be pinned at vendoring time; verify maintainer signature first)*
-* Maintainer key:    `0xCB37F8B0` (Lawrence Nahum, current libwally maintainer)
-* Submodule path:    `vendor/libwally-core/`
+**Updated 2026-05-25 during the actual vendoring ceremony. The original
+values in this section (release_1.4.0 / Lawrence Nahum / key
+`0xCB37F8B0`) were the upstream state at the time this plan was
+written. Upstream has rotated both maintainer and signing key since
+then. The companion document
+[`ATOMIC_SWAP_LIBWALLY_VENDOR_CEREMONY.md`](ATOMIC_SWAP_LIBWALLY_VENDOR_CEREMONY.md)
+records the verbatim ceremony output for the actual pin.**
 
-The maintainer signs each release tag. The vendoring commit message
-MUST quote the verified `git verify-tag release_1.4.0` output as
-provenance evidence. This is the same standard the project applies
-to its own release tagging.
+* Repository:                `https://github.com/ElementsProject/libwally-core`
+* Pinned tag:                **`release_1.5.3`** (latest stable, released 2026-04-15)
+* Pinned commit:             **`000137393a436d55a18971ca93a2d20a54d55437`**
+* Submodule path:            `vendor/libwally-core/`
+* Maintainer (current):      **Jon Griffiths** `<jon_p_griffiths@yahoo.com>`
+* Primary key fingerprint:   **`129EE55E90E6E7BB5ED3530DFD9FCBA3C53CED20`**
+* Signing subkey fingerprint:**`E6CC917F43F36FC09BBCC604F71C22C3DB1F7227`**
+* Authoritative source:      upstream [`SECURITY.md`](https://github.com/ElementsProject/libwally-core/blob/master/SECURITY.md)
+
+The previously-named maintainer (Lawrence Nahum, key `0xCB37F8B0`) is
+legacy. The maintainer rotated to Jon Griffiths and the project signs
+all release tags with the fingerprint above, including both
+`release_1.4.0` and the chosen `release_1.5.3`. Either tag verifies
+successfully against the current maintainer key; we pin `release_1.5.3`
+because it is the latest stable and includes fixes to `tx`/`psbt`
+code paths that are directly relevant to our future HTLC signing
+work.
+
+The vendoring commit message quotes the `git verify-tag release_1.5.3`
+output verbatim. The full ceremony reproduction commands and their
+expected outputs live in `ATOMIC_SWAP_LIBWALLY_VENDOR_CEREMONY.md`.
 
 ---
 
