@@ -999,13 +999,27 @@ static inline bool should_rebuild_for_slingshot(
 static std::atomic<uint64_t> g_total_attempts{0};  // global attempt counter for hashrate
 static std::mutex g_submit_mu;  // protects block submission
 
-// Profile label: E7..E1, B0, H1..H13 (E-profiles are stored as negative indices)
+// Profile label: full 43-entry table E7..B0..H35 matching the canonical
+// casert_profile_name() in include/sost/types.h. The earlier 21-entry
+// version was a stale snapshot from before V12 raised the ceiling to
+// H20 (and V13 raises it to H35), so indices 14..35 were silently
+// clamped to "H13" — making LAG-CHECK and LAG-ADJUST prints look like
+// "H13 -> H13" even when the underlying integer profile was changing
+// 17 -> 20, etc. Mining was unaffected (the integer drives consensus);
+// only the print was wrong.
+//
+// Display-only function. NOT used by the SbPoW dataset, signing, or
+// any consensus path.
 static const char* profile_label(int32_t pi) {
     static const char* PROF_NAMES[] = {
-        "E7","E6","E5","E4","E3","E2","E1","B0","H1","H2","H3","H4",
-        "H5","H6","H7","H8","H9","H10","H11","H12","H13"
+        "E7","E6","E5","E4","E3","E2","E1","B0",
+        "H1","H2","H3","H4","H5","H6","H7","H8","H9",
+        "H10","H11","H12","H13","H14","H15","H16","H17","H18","H19",
+        "H20","H21","H22","H23","H24","H25","H26","H27","H28","H29",
+        "H30","H31","H32","H33","H34","H35"
     };
-    int idx = (pi < -7) ? 0 : (pi > 13) ? 20 : (pi + 7);
+    int idx = pi + 7;  // E7 = -7 -> array slot 0
+    if (idx < 0 || idx >= 43) return "?";
     return PROF_NAMES[idx];
 }
 
