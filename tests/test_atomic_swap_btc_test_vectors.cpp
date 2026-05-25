@@ -549,16 +549,32 @@ namespace bip143_native_p2wsh_vector {
         "0100f2052a010000001976a914a30741f8145e5acadf23f751864167f3"
         "2e0963f788ac00000000";
 
-    // Corrected from the original draft: the previous hex had a
-    // 9-character transcription error (...453880ae... in place of
-    // ...e3a98337e...), which would have made any computed sighash
-    // diverge from the published BIP-143 expected value. The corrected
-    // hex is taken verbatim from BIP-143 §"Native P2WSH". Length is
-    // 71 bytes (libwally adds the varint length prefix internally).
+    // Authoritative witnessScript from BIP-143 §"Native P2WSH"
+    // (verified against
+    // https://raw.githubusercontent.com/bitcoin/bips/master/bip-0143.mediawiki):
+    //
+    //   <026dccc749adc2a9d0d89497ac511f760f45c47dc5ed9cf352a58ac706453880ae>
+    //   CHECKSIGVERIFY CODESEPARATOR
+    //   <0255a9626aebf5e29c0e6538428ba0d1dcf6ca98ffdf086aa8ced5e0d0215ea465>
+    //   CHECKSIG
+    //
+    // Length: 71 bytes (1 + 33 + 2 + 1 + 33 + 1). Per BIP-143, the
+    // not-yet-executed OP_CODESEPARATOR is NOT removed when this
+    // scriptCode is used as the BIP-143 "scriptCode" input.
+    // libwally consumes the script without a varint prefix (the
+    // library adds the prefix internally when assembling the
+    // preimage).
+    //
+    // History: an earlier rev of this constant carried a 9-char
+    // transcription mistake (...e3a98337e... + ...8d27d72...) which
+    // was actually IN-CORRECT. The matrix probe in Phase C.3b
+    // diagnosed the mismatch by fetching the raw mediawiki of
+    // BIP-143 and comparing the witnessScript byte-for-byte; the
+    // value below is the authoritative one.
     static const char* script_code_hex =
         "21026dccc749adc2a9d0d89497ac511f760f45c47dc5ed9cf352a58ac706"
-        "e3a98337eaadab21038d27d72ba1dc81c5fa0aac0aada3a1c5d3eb6f8e2b3"
-        "3a55fcc637c69e5d4e4ac5fac";
+        "453880aeadab210255a9626aebf5e29c0e6538428ba0d1dcf6ca98ffdf086"
+        "aa8ced5e0d0215ea465ac";
 
     static const uint64_t input_amount_satoshis = 4900000000ULL;
 
@@ -600,8 +616,11 @@ static void section_bip143_sighash() {
         return;
     }
 
-    // (2) Compute the canonical BIP-143 sighash with libwally.
+    // (2) Compute the canonical BIP-143 sighash with libwally and
+    //     compare against the authoritative published value
+    //     byte-for-byte.
     auto script_bytes = local_hex_to_bytes(V::script_code_hex);
+    auto expected     = local_hex_to_bytes(V::expected_sighash_hex);
 
     unsigned char sighash[32] = {0};
     rc = wally_tx_get_btc_signature_hash(
@@ -616,11 +635,22 @@ static void section_bip143_sighash() {
     TEST("BIP-143: wally_tx_get_btc_signature_hash returns OK",
          computed_ok);
 
-    // (2b) Determinism: compute the same sighash a second time on a
-    //      clean stack buffer; it MUST match the first computation
-    //      bit-for-bit. This is the load-bearing property — if it
-    //      ever drifts between two consecutive calls on identical
-    //      inputs, the entire signing surface is broken.
+    bool match = computed_ok &&
+                 (expected.size() == 32) &&
+                 (std::memcmp(sighash, expected.data(), 32) == 0);
+    TEST("BIP-143 Native P2WSH sighash matches expected double-SHA256",
+         match);
+
+    if (!match && computed_ok) {
+        printf("    expected: %s\n", V::expected_sighash_hex);
+        printf("    computed: ");
+        for (int i = 0; i < 32; ++i) printf("%02x", sighash[i]);
+        printf("\n");
+    } else if (match) {
+        printf("    sighash matches BIP-143 published value byte-for-byte ✓\n");
+    }
+
+    // (2b) Determinism: same inputs -> same sighash bit-for-bit.
     unsigned char sighash2[32] = {0};
     int rc2 = wally_tx_get_btc_signature_hash(
         tx, V::input_index,
@@ -633,28 +663,6 @@ static void section_bip143_sighash() {
                          (std::memcmp(sighash, sighash2, 32) == 0);
     TEST("BIP-143: same inputs -> same 32-byte sighash (determinism)",
          deterministic);
-
-    // (2c) Print the computed sighash for the operator's reference.
-    //      Note on the published BIP-143 value: the spec at
-    //      bip-0143.mediawiki §"Native P2WSH" lists several sighashes
-    //      depending on sighash type and OP_CODESEPARATOR position;
-    //      we have not yet identified the exact (index, sighash type,
-    //      scriptCode-after-codesep) tuple that reproduces the
-    //      82dde6... published value byte-for-byte. The avalanche
-    //      tests below + the determinism check above are sufficient
-    //      to prove libwally's BIP-143 path is correctly wired into
-    //      our build; a future iteration can fold in the
-    //      OP_CODESEPARATOR-aware scriptCode reduction to land the
-    //      verbatim BIP-143 vector. libwally itself is continuously
-    //      OSS-Fuzz tested upstream, so the underlying computation
-    //      is trusted.
-    if (computed_ok) {
-        printf("    computed sighash (SIGHASH_SINGLE | WITNESS) = ");
-        for (int i = 0; i < 32; ++i) printf("%02x", sighash[i]);
-        printf("\n");
-        printf("    published 82dde6... requires OP_CODESEPARATOR-aware\n");
-        printf("    scriptCode reduction; deferred to a follow-up.\n");
-    }
 
     // (3) Adversarial: mutate one byte of the scriptCode; sighash MUST
     //     change. The function still returns OK because the scriptCode
