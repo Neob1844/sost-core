@@ -1,4 +1,4 @@
 {
-  "v": "2026-05-25-v317",
-  "note": "DTD panel: sessionStorage cache by tip-height. First open of the panel still runs the full chain scan (Promise.all chunks of 40 RPC calls; was already parallelised). Subsequent re-opens of the panel WITHOUT the chain advancing now render instantly (<100 ms) from sessionStorage instead of repeating the scan. Cache key includes the tip-height so any new block automatically invalidates and triggers a fresh scan. Cap 5 MB to avoid blowing browser quotas. Same pattern as the UNIQUE MINERS panel speedup (v316) but only caches, does not change the scan loop itself (DTD already used Promise.all batches; the bottleneck for re-opens was redoing the whole walk, not the per-batch latency). Meta tag + JSON v key bumped in lockstep per the auto-reload-loop fix procedure."
+  "v": "2026-05-25-v318",
+  "note": "Add SOST intro video modal to home and explorer navigation. New local asset website/sost-intro.mp4 with CTA button on website/index.html and WATCH nav icon on website/sost-explorer.html. Cache meta tag and JSON v key bumped in lockstep (v317 -> v318)."
 }

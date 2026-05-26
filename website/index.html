@@ -954,6 +954,11 @@
     </div>
 
     <div class="hero-actions fade-in delay-4">
+      <a href="javascript:void(0)" onclick="openSv()" class="dl-btn"
+         style="border-color:#22d3ee;background:linear-gradient(135deg,rgba(34,211,238,.14),rgba(34,211,238,.04));color:#22d3ee;box-shadow:0 0 12px rgba(34,211,238,.12)"
+         title="Watch the SOST intro video (1:58)">
+        &#9654; Watch &middot; SOST in 2 minutes
+      </a>
       <a href="sost-explorer.html" class="dl-btn">Open Explorer</a>
       <a href="sost-mine.html" class="dl-btn">Mine SOST in 10 min</a>
       <a href="sost-quickstart.html" class="dl-btn secondary">Quick Start</a>
@@ -2067,5 +2072,61 @@ function fetchSostChart(){
 <script src="js/crt-effects.js"></script>
 <script src="js/sost-music.js"></script>
 <script src="js/developer-note.js" defer></script>
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
+  <div class="sv-content" onclick="event.stopPropagation()">
+    <button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>
+    <video id="sv-video" class="sv-video" controls preload="metadata" playsinline>
+      <source src="sost-intro.mp4" type="video/mp4">
+      Your browser does not support HTML5 video.
+    </video>
+    <div class="sv-caption">SOST in 2 Minutes &middot; Sovereign by Design</div>
+  </div>
+</div>
+<style>
+  .sv-modal{
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,.92); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    align-items:center; justify-content:center;
+  }
+  .sv-modal.open{ display:flex; }
+  .sv-content{ position:relative; max-width:92vw; max-height:88vh;
+    display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .sv-video{ max-width:92vw; max-height:80vh; background:#000;
+    border-radius:10px; box-shadow:0 0 60px rgba(251,1,13,.18); outline:none; }
+  .sv-close{
+    position:absolute; top:-46px; right:-2px;
+    background:rgba(0,0,0,.8); border:1px solid rgba(255,255,255,.22);
+    color:#fff; width:38px; height:38px; border-radius:50%;
+    font-size:22px; line-height:1; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sv-close:hover{ background:rgba(251,1,13,.4); border-color:#fb010d; }
+  .sv-caption{ text-align:center; font-size:11px; letter-spacing:3px;
+    color:#94a3b8; font-family:'JetBrains Mono','IBM Plex Mono',monospace;
+    text-transform:uppercase; }
+</style>
+<script>
+  function openSv(){
+    var m=document.getElementById('sv-modal');
+    m.classList.add('open'); m.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    var v=document.getElementById('sv-video');
+    try{ v.currentTime=0; v.play().catch(function(){}); }catch(e){}
+  }
+  function closeSv(evt, force){
+    if(evt && !force && evt.target.id!=='sv-modal') return;
+    var m=document.getElementById('sv-modal');
+    m.classList.remove('open'); m.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    var v=document.getElementById('sv-video');
+    try{ v.pause(); }catch(e){}
+  }
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') closeSv(null,true);
+  });
+</script>
 </body>
 </html>
