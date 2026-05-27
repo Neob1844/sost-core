@@ -1660,6 +1660,69 @@ SectionRenderers.dashboard = function(el) {
     </div>
   `;
 
+  // ────────────────────────────────────────────────────────────────
+  // DTD eligible scan — same logic as the explorer's DTD panel: count
+  // distinct miner addresses since V11_PHASE2_HEIGHT (#7100) minus
+  // those in the last 6-block cooldown window. Runs in background
+  // after the chain status renders; updates #dtdEligibleCell when
+  // done. Result cached in localStorage for ~6 h so subsequent loads
+  // of the same session paint instantly.
+  // ────────────────────────────────────────────────────────────────
+  async function runDtdEligibleScanApp(tipHeight) {
+    const V11_PHASE2_HEIGHT = 7100;
+    const COOLDOWN          = 6;
+    const cell = document.getElementById('dtdEligibleCell');
+    if (!cell) { window._dtdScanInFlight = false; return; }
+    if (typeof tipHeight !== 'number' || tipHeight < V11_PHASE2_HEIGHT) {
+      cell.innerHTML = '<span style="color:var(--pip-dim)">— (pre-V11)</span>';
+      window._dtdScanInFlight = false;
+      return;
+    }
+    const startH = V11_PHASE2_HEIGHT;
+    const heights = [];
+    for (let h = startH; h <= tipHeight; h++) heights.push(h);
+    const minerSet      = new Set();
+    const cooldownStart = tipHeight - COOLDOWN + 1;
+    const cooldownMiners= new Set();
+    const CHUNK = 30;
+    let fetched = 0;
+    try {
+      for (let ci = 0; ci < heights.length; ci += CHUNK) {
+        const chunk = heights.slice(ci, ci + CHUNK);
+        const blocks = await Promise.all(chunk.map(async hh => {
+          try {
+            const hash = await rpcCall('getblockhash', [String(hh)]);
+            return await rpcCall('getblock', [hash]);
+          } catch (e) { return null; }
+        }));
+        for (let bi = 0; bi < chunk.length; bi++) {
+          const b = blocks[bi];
+          if (!b || !b.miner_address) continue;
+          minerSet.add(b.miner_address);
+          if (b.height >= cooldownStart) cooldownMiners.add(b.miner_address);
+        }
+        fetched += chunk.length;
+        // Progress feedback every ~3 waves.
+        if (ci % (CHUNK * 3) === 0 && cell) {
+          cell.innerHTML = '<span style="color:var(--pip-dim)">scanning ' +
+            Math.min(fetched, heights.length) + '/' + heights.length + '…</span>';
+        }
+      }
+      const eligible = new Set();
+      minerSet.forEach(m => { if (!cooldownMiners.has(m)) eligible.add(m); });
+      const count = eligible.size;
+      try {
+        localStorage.setItem('sost_app_dtd_eligible_v1',
+          JSON.stringify({ tip: tipHeight, count: count, ts: Date.now() }));
+      } catch (e) {}
+      if (cell) cell.textContent = count + ' (since #7100)';
+    } catch (e) {
+      if (cell) cell.innerHTML = '<span style="color:#fb010d">scan failed</span>';
+    } finally {
+      window._dtdScanInFlight = false;
+    }
+  }
+
   // Named loaders so we can call them on an interval. Each loader is
   // resilient to the section being swapped out: it bails if the target
   // DOM node is gone, which happens when the user navigates away.
@@ -1815,20 +1878,27 @@ SectionRenderers.dashboard = function(el) {
         } else {
           dtdDistributed = '0 SOST (pre-V11)';
         }
-        // Lower-bound estimate of currently-eligible addresses: distinct miners
-        // in the last 288 blocks. True eligibility (any miner since #7100 minus
-        // 6-block cooldown) requires a full chain scan — the explorer's DTD
-        // panel does this and caches the precise count in localStorage; we
-        // surface that here if available, otherwise fall back to last-288.
-        let elPrecise = null;
+        // DTD eligible count: distinct miner addresses since #7100 minus
+        // the last 6-block cooldown. The full scan happens AFTER the
+        // chain status renders (kicked from runDtdEligibleScanApp below);
+        // here we just surface the cached value if it's reasonably fresh,
+        // otherwise we render a "scanning…" placeholder.
         try {
-          const v = localStorage.getItem('sost_dtd_eligible_count');
-          if (v && !isNaN(parseInt(v))) elPrecise = parseInt(v);
+          const cached = localStorage.getItem('sost_app_dtd_eligible_v1');
+          if (cached) {
+            const obj = JSON.parse(cached);
+            if (obj && typeof obj.count === 'number' &&
+                typeof obj.tip === 'number' &&
+                Math.abs(parseInt(height) - obj.tip) <= 100 &&
+                (Date.now() - (obj.ts || 0)) < 6 * 3600 * 1000) {
+              dtdEligible = obj.count + ' (since #7100)';
+            }
+          }
         } catch(e) {}
-        if (elPrecise !== null && elPrecise >= uniqueMiners) {
-          dtdEligible = elPrecise + ' (full scan)';
-        } else if (typeof uniqueMiners === 'number') {
-          dtdEligible = '≈ ' + uniqueMiners + ' (last 288)';
+        if (dtdEligible === 'N/A') {
+          // Rendered with a stable id so runDtdEligibleScanApp can swap
+          // the cell in place once the background scan completes.
+          dtdEligible = '<span style="color:var(--pip-dim)">scanning… (~30 s)</span>';
         }
       } catch(e) { /* keep N/A */ }
 
@@ -1881,7 +1951,7 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">CHAIN LAG/LEAD</span><span class="stat-value" style="color:${lagLeadColor};font-weight:700">${lagLeadText}</span></div>
         <div class="stat-row"><span class="stat-label">UNIQUE MINERS</span><span class="stat-value">${uniqueMiners} <span style="font-size:9px;color:var(--pip-dim)">(last 288 blocks)</span></span></div>
         <div class="stat-row"><span class="stat-label">DTD DISTRIBUTED</span><span class="stat-value" style="color:#ff00ff;font-weight:700">${dtdDistributed} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(lottery payouts since #7100)</span></span></div>
-        <div class="stat-row"><span class="stat-label">DTD ELIGIBLE</span><span class="stat-value" style="color:#ff00ff;font-weight:700">${dtdEligible} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">addresses</span></span></div>
+        <div class="stat-row"><span class="stat-label">DTD ELIGIBLE</span><span class="stat-value" style="color:#ff00ff;font-weight:700"><span id="dtdEligibleCell">${dtdEligible}</span> <span style="font-size:9px;color:var(--pip-dim);font-weight:400">addresses</span></span></div>
         <div class="stat-row"><span class="stat-label">CONNECTED NODES</span><span class="stat-value">${connectedNodes} <span style="font-size:9px;color:var(--pip-dim)">(seed-visible)</span></span></div>
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
@@ -1894,6 +1964,17 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">BEST HASH</span><span class="stat-value" style="font-size:11px;word-break:break-all">${bestHash}</span></div>
       `;
       setTimeout(addTooltips, 500);
+      // Kick the DTD eligible scan ONCE per Chain Status load. Only runs
+      // if the cell still shows the "scanning…" placeholder (i.e. no
+      // fresh cache was hit above).
+      try {
+        const cell = document.getElementById('dtdEligibleCell');
+        if (cell && cell.textContent.indexOf('scanning') !== -1 &&
+            !window._dtdScanInFlight) {
+          window._dtdScanInFlight = true;
+          setTimeout(function(){ runDtdEligibleScanApp(parseInt(height)); }, 1500);
+        }
+      } catch(e) {}
     } else {
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value"><span class="stat-badge err">OFFLINE</span></span></div>
@@ -2516,42 +2597,95 @@ SectionRenderers.e2e = function(el) {
   AudioEngine.ambient_scan();
 };
 
-// ── OTC ────────────────────────────────────────────────────────
-// Over-the-counter pre-market info. SOST is not yet listed on any exchange;
-// the protocol developer sells reserved stock against gold-backed commitments.
+// ── OTC / P2P ──────────────────────────────────────────────────
+// Community Board for voluntary SOST offers — NOT custodial, NOT escrow,
+// NOT intermediated. Mirrors the structure of website/sost-otc.html:
+// (1) Community Board disclaimer, (2) Three rules to stop OTC scams,
+// (3) Scammer vs Honest counterparty patterns, (4) V14 Atomic Swap
+// 7-pair roadmap with the consensus gate explicitly OFF, (5) buttons
+// to open the full board on the website.
 SectionRenderers.otc = function(el) {
   el.style.padding = '16px';
   el.style.overflow = 'auto';
   el.innerHTML = `
-    <div class="pip-panel">
-      <h2>// OTC PRE-MARKET</h2>
-      <p>SOST is in pre-market phase. No exchange listing yet. The protocol developer offers a limited OTC window backed by the PoPC Gold Reserve.</p>
-      <div class="stat-row"><span class="stat-label">PHASE</span><span class="stat-value stat-warn">PRE-MARKET</span></div>
-      <div class="stat-row"><span class="stat-label">BACKING</span><span class="stat-value">1.2 oz gold (XAUT+PAXG on Ethereum)</span></div>
-      <div class="stat-row"><span class="stat-label">REFERENCE PRICE</span><span class="stat-value">PoPC: (gold_oz × gold_price) ÷ supply</span></div>
-      <div class="stat-row"><span class="stat-label">REFUND POLICY</span><span class="stat-value">Full refund in gold if project fails</span></div>
+    <div class="pip-panel" style="border-left:4px solid #22d3ee">
+      <h2>// OTC / P2P COMMUNITY BOARD</h2>
+      <p style="margin-top:4px;color:var(--pip);font-size:13px;font-weight:600">User-to-user voluntary offers. NOT an exchange. NOT escrow. NOT custody.</p>
+      <div class="stat-row"><span class="stat-label">PROTOCOL ROLE</span><span class="stat-value stat-warn">DISCUSSION BOARD ONLY</span></div>
+      <div class="stat-row"><span class="stat-label">CUSTODY</span><span class="stat-value">✕ NONE — users hold their own keys</span></div>
+      <div class="stat-row"><span class="stat-label">ESCROW</span><span class="stat-value">✕ NONE — no official escrow exists</span></div>
+      <div class="stat-row"><span class="stat-label">MATCHING</span><span class="stat-value">✕ NONE — peer-to-peer only</span></div>
+      <div class="stat-row"><span class="stat-label">GUARANTEES</span><span class="stat-value">✕ NONE on price, liquidity or settlement</span></div>
+      <div class="stat-row"><span class="stat-label">ADMINS</span><span class="stat-value stat-warn">NEVER DM FIRST — assume scam if they do</span></div>
     </div>
-    <div class="pip-panel">
-      <h2>// HOW TO BUY</h2>
-      <p style="margin-bottom:10px;color:var(--pip-dim);font-size:13px">Contact the developer directly through the official channels on the SOST website. OTC orders are processed manually with gold-backed escrow guarantees.</p>
-      <div class="stat-row"><span class="stat-label">1. CONTACT</span><span class="stat-value">Developer via website</span></div>
-      <div class="stat-row"><span class="stat-label">2. QUOTE</span><span class="stat-value">Receive PoPC reference + OTC terms</span></div>
-      <div class="stat-row"><span class="stat-label">3. SETTLEMENT</span><span class="stat-value">Gold-backed escrow</span></div>
-      <div class="stat-row"><span class="stat-label">4. DELIVERY</span><span class="stat-value">SOST sent to your address</span></div>
+
+    <div class="pip-panel" style="border-left:4px solid #fb010d">
+      <h2 style="color:#fb010d">// THREE RULES THAT STOP MOST SCAMS</h2>
+      <div class="stat-row"><span class="stat-label">1. SCREENSHOTS</span><span class="stat-value">NOT proof of payment — never release on a screenshot</span></div>
+      <div class="stat-row"><span class="stat-label">2. VERIFY DIRECT</span><span class="stat-value">Log into YOUR bank / wallet and check yourself</span></div>
+      <div class="stat-row"><span class="stat-label">3. CLEARING WINDOW</span><span class="stat-value">Wait the FULL chargeback window before releasing SOST</span></div>
+      <p style="margin-top:10px;color:var(--pip-dim);font-size:12px;line-height:1.6">Chargeback risk by payment method:</p>
+      <div class="stat-row"><span class="stat-label">PAYPAL F&F</span><span class="stat-value" style="color:#fb010d">reversible up to 180 days — UNSAFE</span></div>
+      <div class="stat-row"><span class="stat-label">SEPA / INSTANT</span><span class="stat-value" style="color:#fb010d">reversible up to 8 weeks</span></div>
+      <div class="stat-row"><span class="stat-label">WISE / REVOLUT</span><span class="stat-value" style="color:#fb010d">reversible on fraud claim</span></div>
+      <div class="stat-row"><span class="stat-label">CASH IN PERSON</span><span class="stat-value" style="color:#4ade80">irreversible — safest fiat</span></div>
+      <div class="stat-row"><span class="stat-label">USDC/USDT ON-CHAIN</span><span class="stat-value" style="color:#4ade80">irreversible after confirms — safest crypto</span></div>
     </div>
+
     <div class="pip-panel">
-      <h2>// RESERVE TRANSPARENCY</h2>
-      <p style="color:var(--pip-dim);font-size:12px">Every OTC sale is backed by verifiable gold held in the developer's public Ethereum wallet. Balances are readable by anyone.</p>
-      <div class="stat-row"><span class="stat-label">GOLD VAULT ADDR</span><span class="stat-value" style="font-size:10px;word-break:break-all">sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</span></div>
-      <div class="stat-row"><span class="stat-label">VAULT BALANCE</span><span class="stat-value">~8,675 SOST (growing)</span></div>
-      <div class="stat-row"><span class="stat-label">GOLD BACKING</span><span class="stat-value">Verifiable on Etherscan</span></div>
+      <h2>// SCAMMER vs HONEST COUNTERPARTY</h2>
+      <p style="color:#fb010d;font-size:11px;font-weight:700;letter-spacing:1px;margin:8px 0 4px">⚠ STOP THE TRADE IF THEY:</p>
+      <div style="color:var(--pip-dim);font-size:12px;line-height:1.85;padding-left:14px">
+        • Pressure you to release SOST after just a screenshot<br>
+        • Push you to move chat to private DM (Telegram/Signal/WhatsApp)<br>
+        • Claim "I'm verified", "I'm an admin", "I work with SOST"<br>
+        • Ask YOU to send SOST first ("I'll pay after")<br>
+        • Use urgency: "release fast", "order expires"<br>
+        • Offer a price MUCH better than market<br>
+        • Claim an "official SOST escrow" exists (there is none)
+      </div>
+      <p style="color:#4ade80;font-size:11px;font-weight:700;letter-spacing:1px;margin:14px 0 4px">✓ HONEST COUNTERPARTIES:</p>
+      <div style="color:var(--pip-dim);font-size:12px;line-height:1.85;padding-left:14px">
+        • Let you verify in your bank/wallet at your pace<br>
+        • Stay in the public board chat (no rush to leave)<br>
+        • Agree to small test transactions first<br>
+        • Respect the chargeback clearing window<br>
+        • Use irreversible settlement (cash in person, on-chain USDC/USDT)<br>
+        • Acknowledge SOST does NOT intermediate or escrow
+      </div>
     </div>
+
+    <div class="pip-panel" style="border-left:4px solid #22d3ee">
+      <h2 style="color:#22d3ee">// V14 ATOMIC SWAPS — 7 PAIRS</h2>
+      <div class="stat-row"><span class="stat-label">GATE</span><span class="stat-value" style="color:#fb010d;font-weight:700">INT64_MAX — DISABLED, CODE UNDER REVIEW</span></div>
+      <div class="stat-row"><span class="stat-label">TARGET</span><span class="stat-value">V14 / block 15,000 (after Phase 4 + Phase 5)</span></div>
+      <p style="color:#4ade80;font-size:11px;font-weight:700;letter-spacing:1px;margin:14px 0 6px">✓ CATEGORY A — TRUST-MINIMIZED</p>
+      <div class="stat-row"><span class="stat-label">SOST ↔ BTC</span><span class="stat-value" style="font-size:11px">P2WSH/Taproot · SHA-256 · CLTV · no issuer</span></div>
+      <div class="stat-row"><span class="stat-label">SOST ↔ ETH</span><span class="stat-value" style="font-size:11px">EVM HTLC · SHA-256 precompile · block timeout</span></div>
+      <div class="stat-row"><span class="stat-label">SOST ↔ BNB</span><span class="stat-value" style="font-size:11px">Same EVM on BNB Chain (gov caveat: Binance)</span></div>
+      <p style="color:#f59e0b;font-size:11px;font-weight:700;letter-spacing:1px;margin:14px 0 6px">⚠ CATEGORY B — ISSUER-RISK (NOT FULLY ATOMIC)</p>
+      <div class="stat-row"><span class="stat-label">SOST ↔ USDT</span><span class="stat-value" style="font-size:11px;color:#f59e0b">Tether can freeze any USDT addr</span></div>
+      <div class="stat-row"><span class="stat-label">SOST ↔ USDC</span><span class="stat-value" style="font-size:11px;color:#f59e0b">Circle blacklist + court orders</span></div>
+      <div class="stat-row"><span class="stat-label">SOST ↔ PAXG</span><span class="stat-value" style="font-size:11px;color:#f59e0b">Paxos can freeze · gold custody risk</span></div>
+      <div class="stat-row"><span class="stat-label">SOST ↔ XAUT</span><span class="stat-value" style="font-size:11px;color:#f59e0b">Tether Gold can freeze · gold custody risk</span></div>
+      <p style="margin-top:10px;color:var(--pip-dim);font-size:11px;line-height:1.6">Category B uses the SAME HTLC mechanism as A, but the token can be frozen by its issuer mid-swap. SOST side still refunds (atomicity holds) — the counterparty side becomes uncollectible until the issuer unfreezes. <b>Use small amounts.</b></p>
+    </div>
+
+    <div class="pip-panel">
+      <h2>// WHY SOST DOES NOT INTERVENE</h2>
+      <p style="color:var(--pip);font-size:13px;line-height:1.7">The moment SOST holds funds, verifies payments, decides disputes, or matches counterparties, it stops being a community board and becomes a <b>regulated financial intermediary</b> — with licensing obligations, custodial liability and personal exposure for the operator.</p>
+      <p style="color:var(--pip-dim);font-size:12px;line-height:1.7;margin-top:8px">The non-custodial model is a deliberate design choice, not a missing feature. It protects both you and the protocol.</p>
+    </div>
+
     <div class="pip-panel" style="text-align:center;padding:20px">
-      <button onclick="window.open('https://sostcore.com/sost-otc.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► OPEN OTC PAGE</button>
+      <button onclick="window.open('https://sostcore.com/sost-otc.html','_blank')" style="background:none;border:2px solid var(--pip);color:var(--pip);font-size:14px;padding:10px 24px;cursor:pointer;letter-spacing:2px;font-family:inherit;margin:4px">► OPEN FULL OTC / P2P PAGE</button>
       <br>
-      <button onclick="window.open('https://sostcore.com/sost-foundation-balances.html','_blank')" style="background:none;border:1px solid var(--pip-dim);color:var(--pip-dim);font-size:12px;padding:8px 20px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">FOUNDATION BALANCES ↗</button>
+      <button onclick="window.open('https://sostcore.com/sost-talk.html','_blank')" style="background:none;border:1px solid #22d3ee;color:#22d3ee;font-size:12px;padding:8px 20px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">SOST TALK · OTC BOARD ↗</button>
+      <button onclick="window.open('https://sostcore.com/sost-community-rules.html','_blank')" style="background:none;border:1px solid var(--pip-dim);color:var(--pip-dim);font-size:12px;padding:8px 20px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">COMMUNITY RULES ↗</button>
       <br>
-      <span style="color:var(--pip-dim);font-size:10px">OTC transactions are processed on the website<br>This section shows terms and transparency data.</span>
+      <button onclick="window.open('https://sostcore.com/sost-foundation-balances.html','_blank')" style="background:none;border:1px solid var(--pip-dim);color:var(--pip-dim);font-size:11px;padding:6px 16px;cursor:pointer;letter-spacing:1px;font-family:inherit;margin:4px">FOUNDATION BALANCES ↗</button>
+      <br>
+      <span style="color:var(--pip-dim);font-size:10px;letter-spacing:1px">OTC / P2P is a community board.<br>SOST Protocol does NOT custody, escrow or intermediate.</span>
     </div>
   `;
   AudioEngine.ambient_pulse();
