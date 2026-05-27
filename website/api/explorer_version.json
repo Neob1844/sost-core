@@ -1,4 +1,4 @@
 {
-  "v": "2026-05-25-v318",
-  "note": "Add SOST intro video modal to home and explorer navigation. New local asset website/sost-intro.mp4 with CTA button on website/index.html and WATCH nav icon on website/sost-explorer.html. Cache meta tag and JSON v key bumped in lockstep (v317 -> v318)."
+  "v": "2026-05-27-v319",
+  "note": "Add red DIFF HISTORY chart for the last 5000 blocks below the 288-block chart in sost-explorer.html. Uses lazy/session-cached RPC fetch and keeps explorer HTML meta tag and JSON version in lockstep."
 }

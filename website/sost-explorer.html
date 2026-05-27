@@ -17,7 +17,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-05-25-v318">
+<meta name="explorer-html-version" content="2026-05-27-v319">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -1888,6 +1888,20 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
   <span class="sparkline-info" id="sparkInfo">&mdash;</span>
 </div><div id="chartExplain_diffhist" class="chart-explain" style="display:none;"></div></div>
 
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- DIFF HISTORY · last 5000 blocks (red variant, lazy-loaded)   -->
+<!-- Same drawing logic as the 288-block sparkline above; data    -->
+<!-- fetched in chunks after the main load completes (~4 s), then -->
+<!-- cached in sessionStorage by tip/100 bucket so subsequent     -->
+<!-- page loads in the same session are instant.                  -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div class="sparkline-wrap"><div class="sparkline-box" style="border-color:rgba(251,1,13,.55);box-shadow:0 0 12px rgba(251,1,13,.10),inset 0 0 8px rgba(251,1,13,.04)">
+  <span class="sparkline-label pi" onclick="toggleChartInfo('diffhist')" style="color:#fb010d">DIFF HISTORY · last 5000 blocks <span id="diff5kSubLabel" style="color:var(--text3);font-size:8px;">· loading…</span> <span class="pi-i">ⓘ</span></span>
+  <canvas class="sparkline-canvas" id="sparkCanvas5k" style="cursor:crosshair"></canvas>
+  <div id="sparkTooltip5k" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:8px 12px;font-family:var(--code);font-size:10px;line-height:1.7;color:#e2e8f0;pointer-events:none;z-index:200;display:none;white-space:nowrap;border-radius:4px;"></div>
+  <span class="sparkline-info" id="sparkInfo5k">&mdash;</span>
+</div></div>
+
 <div class="stats"><div class="stats-code" id="statsCode"><span class="s-comment">// connecting to node...</span></div></div>
 <div class="main">
   <div class="detail" id="detailPanel">
@@ -3587,6 +3601,11 @@ async function updateDashboard(info){
     // blocks rather than relying on push order.
     diffs.sort(function(a,b){return b.h-a.h;});
     _diffHistory=diffs.slice(0,AVG_WINDOW).reverse();drawSparkline();
+    // Lazy-kick the 5000-block red variant once per page load. Runs ~4s after
+    // the main 288 paint so it doesn't compete for RPC bandwidth at boot.
+    if(!window._diff5kKicked){window._diff5kKicked=true;setTimeout(function(){
+      try{loadDiffHistory5k(info&&info.blocks);}catch(e){}
+    },4000);}
     // Update unique miners card from freshly fetched data (288-window only)
     document.getElementById('dMiners').textContent=minerSet.size;
     document.getElementById('dMinersSub').textContent='last '+Math.min(AVG_WINDOW,info.blocks)+' blocks';
@@ -4367,6 +4386,166 @@ function drawSparkline(){
     if(idx>=0&&idx<data.length) showBlockByHeight(data[idx].h);
   });
 })();
+
+// ════════════════════════════════════════════════════════════════
+// DIFF HISTORY · last 5000 blocks (red variant).
+// Same drawing code as drawSparkline() but in SOST red. Data fetched
+// lazily ~4 s after main load via loadDiffHistory5k(); cached in
+// sessionStorage keyed by floor(tip/100) so the chart appears
+// instantly on subsequent loads within the same session.
+// ════════════════════════════════════════════════════════════════
+var _diffHistory5k=[];
+function drawSparkline5k(){
+  if(!_diffHistory5k.length)return;
+  var cv=document.getElementById('sparkCanvas5k'),ctx=cv&&cv.getContext('2d');
+  if(!cv||!ctx)return;
+  var dpr=window.devicePixelRatio||1,rect=cv.getBoundingClientRect();
+  cv.width=rect.width*dpr;cv.height=rect.height*dpr;ctx.scale(dpr,dpr);
+  var W=rect.width,Hc=rect.height,pad=4;
+  var data=_diffHistory5k,len=data.length;
+  if(len<2)return;
+  var minD=Infinity,maxD=0;
+  for(var i=0;i<len;i++){if(data[i].d<minD)minD=data[i].d;if(data[i].d>maxD)maxD=data[i].d;}
+  var range=maxD-minD||1;
+  var vizMin=minD-range*0.05, vizMax=maxD+range*0.05, vizRange=vizMax-vizMin;
+  function yPos(d){return Hc-pad-((d-vizMin)/vizRange)*(Hc-pad*2);}
+  ctx.clearRect(0,0,W,Hc);
+  var genesisD=765730;
+  if(genesisD>=vizMin&&genesisD<=vizMax){
+    var gy=yPos(genesisD);
+    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();ctx.setLineDash([]);
+  }
+  // Fill area — red gradient
+  var grd=ctx.createLinearGradient(0,0,0,Hc);
+  grd.addColorStop(0,'rgba(251,1,13,.18)');grd.addColorStop(1,'rgba(251,1,13,.02)');
+  ctx.beginPath();ctx.moveTo(0,Hc);
+  for(var i=0;i<len;i++){var x=(i/(len-1))*W;ctx.lineTo(x,yPos(data[i].d));}
+  ctx.lineTo(W,Hc);ctx.closePath();ctx.fillStyle=grd;ctx.fill();
+  // Line — red stroke
+  ctx.beginPath();
+  for(var i=0;i<len;i++){var x=(i/(len-1))*W,y=yPos(data[i].d);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+  ctx.strokeStyle='rgba(251,1,13,.85)';ctx.lineWidth=1.4;ctx.stroke();
+  // Skip per-point dots at 5k density — would be a noise wall. Only mark first/last.
+  function mark(x,y){ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fillStyle='rgba(251,1,13,.9)';ctx.fill();}
+  mark(0,yPos(data[0].d));
+  mark(W,yPos(data[len-1].d));
+  var last=data[len-1],first=data[0];
+  var change=(first.d>0)?((last.d-first.d)/first.d*100).toFixed(1):'0.0';
+  var arrow=last.d>=first.d?'▲':'▼';
+  var clr=last.d>=first.d?'var(--red)':'var(--green)';
+  document.getElementById('sparkInfo5k').innerHTML='<span style="color:'+clr+'">'+arrow+' '+change+'%</span> <span style="color:var(--text3)">'+len+' blks · #'+first.h+' → #'+last.h+'</span>';
+}
+
+(function(){
+  var cv=document.getElementById('sparkCanvas5k');
+  var tip=document.getElementById('sparkTooltip5k');
+  if(!cv||!tip)return;
+  cv.addEventListener('mousemove',function(e){
+    var data=_diffHistory5k;if(!data||data.length<2){tip.style.display='none';return;}
+    var rect=cv.getBoundingClientRect();
+    var mx=e.clientX-rect.left,W=rect.width,Hc=rect.height,pad=4;
+    var len=data.length;
+    var rel=mx/W;if(rel<0||rel>1){tip.style.display='none';return;}
+    var idx=Math.round(rel*(len-1));
+    var pt=data[idx];
+    var minD=Infinity,maxD=0;
+    for(var i=0;i<len;i++){if(data[i].d<minD)minD=data[i].d;if(data[i].d>maxD)maxD=data[i].d;}
+    var range=maxD-minD||1;
+    var px=(idx/(len-1))*W;
+    var py=Hc-pad-((pt.d-minD)/range)*(Hc-pad*2);
+    drawSparkline5k();
+    var ctx=cv.getContext('2d');
+    var dpr=window.devicePixelRatio||1;
+    ctx.save();ctx.scale(dpr,dpr);
+    ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.setLineDash([2,2]);
+    ctx.beginPath();ctx.moveTo(px,0);ctx.lineTo(px,Hc);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);ctx.fillStyle='rgba(251,1,13,1)';ctx.fill();
+    ctx.strokeStyle='#000';ctx.lineWidth=1;ctx.stroke();
+    ctx.restore();
+    var iv='—';
+    if(idx>0){var dt=pt.t-data[idx-1].t;iv=dt<60?dt+'s':Math.floor(dt/60)+'m '+(dt%60)+'s';}
+    var elapsed=pt.t-1773597600;var expected=Math.floor(elapsed/600);
+    var lag=pt.h-expected;
+    var prof=(typeof getProfile==='function')?getProfile(lag):{name:'—',H:0};
+    var ts=new Date(pt.t*1000);
+    var tsStr=ts.getUTCFullYear()+'-'+('0'+(ts.getUTCMonth()+1)).slice(-2)+'-'+('0'+ts.getUTCDate()).slice(-2)+' '+('0'+ts.getUTCHours()).slice(-2)+':'+('0'+ts.getUTCMinutes()).slice(-2)+':'+('0'+ts.getUTCSeconds()).slice(-2)+' UTC';
+    tip.innerHTML='<span style="color:#fb010d;font-weight:600">Block #'+pt.h+'</span><br>'+
+      '<span style="color:var(--text3)">Difficulty:</span> <span style="color:var(--orange);font-weight:600">'+(pt.d/65536).toFixed(3)+'</span> <span style="color:var(--text3)">(bits_q: '+pt.d.toLocaleString()+')</span><br>'+
+      '<span style="color:var(--text3)">cASERT:</span> <span style="color:'+((typeof getLevelColor==='function')?getLevelColor(prof.H):'#fff')+';font-weight:600">'+prof.name+'</span>'+(lag>0?' <span style="color:var(--text3)">· '+lag+' ahead</span>':(lag<0?' <span style="color:var(--text3)">· '+(-lag)+' behind</span>':''))+
+      '<br><span style="color:var(--text3)">Time:</span> '+tsStr+
+      '<br><span style="color:var(--text3)">Interval:</span> <span style="color:var(--cyan)">⏱ '+iv+'</span>';
+    tip.style.display='block';
+    var tx=e.clientX-rect.left+12;var ty=-60;
+    if(tx+200>W)tx=mx-210;
+    tip.style.left=tx+'px';tip.style.top=ty+'px';
+  });
+  cv.addEventListener('mouseleave',function(){tip.style.display='none';drawSparkline5k();});
+  cv.addEventListener('click',function(e){
+    var data=_diffHistory5k;if(!data||data.length<2)return;
+    var rect=cv.getBoundingClientRect();
+    var mx=e.clientX-rect.left,W=rect.width;
+    var idx=Math.round((mx/W)*(data.length-1));
+    if(idx>=0&&idx<data.length&&typeof showBlockByHeight==='function') showBlockByHeight(data[idx].h);
+  });
+})();
+
+async function loadDiffHistory5k(tipHeight){
+  var WINDOW=5000;
+  var sub=document.getElementById('diff5kSubLabel');
+  try{
+    if(!tipHeight){
+      var info=await rpc('getblockchaininfo');
+      tipHeight=info&&info.blocks;
+    }
+    if(!tipHeight){ if(sub)sub.textContent='· no chain'; return; }
+    // sessionStorage cache: same bucket while tip stays within 100 blocks.
+    var bucket=Math.floor(tipHeight/100);
+    var key='sost_diff5k_'+bucket;
+    try{
+      var cached=sessionStorage.getItem(key);
+      if(cached){
+        var arr=JSON.parse(cached);
+        if(arr&&arr.length){
+          _diffHistory5k=arr;
+          if(sub)sub.textContent='· '+arr.length+' blocks (cached)';
+          drawSparkline5k();
+          return;
+        }
+      }
+    }catch(e){}
+    var start=Math.max(0,tipHeight-WINDOW+1);
+    var heights=[];
+    for(var h=start;h<=tipHeight;h++)heights.push(h);
+    if(sub)sub.textContent='· fetching '+heights.length+' blocks…';
+    var CHUNK=30;
+    var results=[];
+    var fetched=0;
+    for(var ci=0;ci<heights.length;ci+=CHUNK){
+      var chunk=heights.slice(ci,ci+CHUNK);
+      var blocks=await Promise.all(chunk.map(function(hh){
+        return rpc('getblockhash',[String(hh)])
+          .then(function(hash){return rpc('getblock',[hash]);})
+          .catch(function(){return null;});
+      }));
+      for(var bi=0;bi<chunk.length;bi++){
+        var b=blocks[bi];
+        if(!b)continue;
+        results.push({h:b.height,d:b.bits_q,t:b.time});
+      }
+      fetched+=chunk.length;
+      if(sub&&ci%(CHUNK*5)===0)sub.textContent='· fetched '+fetched+'/'+heights.length;
+    }
+    results.sort(function(a,b){return a.h-b.h;});
+    _diffHistory5k=results;
+    try{sessionStorage.setItem(key,JSON.stringify(results));}catch(e){/* quota OK */}
+    if(sub)sub.textContent='· '+results.length+' blocks';
+    drawSparkline5k();
+  }catch(e){
+    if(sub)sub.textContent='· load failed';
+  }
+}
+
 var _activeDashPanel=null;
 var _minersScanInProgress=false;
 var _minersCountdownInterval=null;
