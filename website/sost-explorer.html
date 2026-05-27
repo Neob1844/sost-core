@@ -17,7 +17,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-05-27-v319">
+<meta name="explorer-html-version" content="2026-05-27-v320">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -1899,8 +1899,16 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
   <span class="sparkline-label pi" onclick="toggleChartInfo('diffhist')" style="color:#fb010d">DIFF HISTORY · last 5000 blocks <span id="diff5kSubLabel" style="color:var(--text3);font-size:8px;">· loading…</span> <span class="pi-i">ⓘ</span></span>
   <canvas class="sparkline-canvas" id="sparkCanvas5k" style="cursor:crosshair"></canvas>
   <div id="sparkTooltip5k" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:8px 12px;font-family:var(--code);font-size:10px;line-height:1.7;color:#e2e8f0;pointer-events:none;z-index:200;display:none;white-space:nowrap;border-radius:4px;"></div>
+  <!-- Pulsing red overlay shown while loadDiffHistory5k() is fetching; hidden once data is ready. -->
+  <div id="diff5kScanning" style="position:absolute;top:34px;left:0;right:0;bottom:30px;display:flex;align-items:center;justify-content:center;background:rgba(6,6,6,.35);color:#fb010d;font-family:var(--code);font-size:15px;font-weight:800;letter-spacing:4px;text-transform:uppercase;text-shadow:0 0 12px rgba(251,1,13,.8),0 0 24px rgba(251,1,13,.4);pointer-events:none;z-index:5;animation:diff5kScanPulse 1.4s ease-in-out infinite;">SCANNING DATA…</div>
   <span class="sparkline-info" id="sparkInfo5k">&mdash;</span>
 </div></div>
+<style>
+  @keyframes diff5kScanPulse{
+    0%,100%{opacity:.55;text-shadow:0 0 10px rgba(251,1,13,.55),0 0 22px rgba(251,1,13,.30)}
+    50%{opacity:1;text-shadow:0 0 18px rgba(251,1,13,.95),0 0 34px rgba(251,1,13,.55)}
+  }
+</style>
 
 <div class="stats"><div class="stats-code" id="statsCode"><span class="s-comment">// connecting to node...</span></div></div>
 <div class="main">
@@ -4490,15 +4498,29 @@ function drawSparkline5k(){
   });
 })();
 
+function _diff5kHideOverlay(){
+  var ov=document.getElementById('diff5kScanning');
+  if(ov)ov.style.display='none';
+}
+function _diff5kShowOverlay(){
+  var ov=document.getElementById('diff5kScanning');
+  if(ov){ov.style.display='flex';ov.textContent='SCANNING DATA…';}
+}
 async function loadDiffHistory5k(tipHeight){
   var WINDOW=5000;
   var sub=document.getElementById('diff5kSubLabel');
+  _diff5kShowOverlay();
   try{
     if(!tipHeight){
       var info=await rpc('getblockchaininfo');
       tipHeight=info&&info.blocks;
     }
-    if(!tipHeight){ if(sub)sub.textContent='· no chain'; return; }
+    if(!tipHeight){
+      if(sub)sub.textContent='· no chain';
+      var ov=document.getElementById('diff5kScanning');
+      if(ov)ov.textContent='NO CHAIN DATA';
+      return;
+    }
     // sessionStorage cache: same bucket while tip stays within 100 blocks.
     var bucket=Math.floor(tipHeight/100);
     var key='sost_diff5k_'+bucket;
@@ -4510,6 +4532,7 @@ async function loadDiffHistory5k(tipHeight){
           _diffHistory5k=arr;
           if(sub)sub.textContent='· '+arr.length+' blocks (cached)';
           drawSparkline5k();
+          _diff5kHideOverlay();
           return;
         }
       }
@@ -4535,14 +4558,20 @@ async function loadDiffHistory5k(tipHeight){
       }
       fetched+=chunk.length;
       if(sub&&ci%(CHUNK*5)===0)sub.textContent='· fetched '+fetched+'/'+heights.length;
+      // Reflect progress on the overlay so the user knows it's working.
+      var ov2=document.getElementById('diff5kScanning');
+      if(ov2)ov2.textContent='SCANNING DATA · '+Math.min(fetched,heights.length)+' / '+heights.length;
     }
     results.sort(function(a,b){return a.h-b.h;});
     _diffHistory5k=results;
     try{sessionStorage.setItem(key,JSON.stringify(results));}catch(e){/* quota OK */}
     if(sub)sub.textContent='· '+results.length+' blocks';
     drawSparkline5k();
+    _diff5kHideOverlay();
   }catch(e){
     if(sub)sub.textContent='· load failed';
+    var ov3=document.getElementById('diff5kScanning');
+    if(ov3)ov3.textContent='LOAD FAILED';
   }
 }
 

@@ -1,4 +1,4 @@
 {
-  "v": "2026-05-27-v319",
-  "note": "Add red DIFF HISTORY chart for the last 5000 blocks below the 288-block chart in sost-explorer.html. Uses lazy/session-cached RPC fetch and keeps explorer HTML meta tag and JSON version in lockstep."
+  "v": "2026-05-27-v320",
+  "note": "Add SCANNING DATA overlay with progress feedback to the 5000-block DIFF HISTORY chart in sost-explorer.html. Keeps explorer HTML meta tag and JSON version in lockstep."
 }
