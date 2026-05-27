@@ -1767,6 +1767,71 @@ SectionRenderers.dashboard = function(el) {
         uniqueMiners = minerAddrs.size;
       } catch(e) { uniqueMiners = 'N/A'; }
 
+      // DTD lottery distribution — deterministic from consensus constants.
+      // Same formula as sost-explorer.html line 3954 (dtdLotteryDistributed):
+      // sum over epochs of (triggered blocks × subsidy_epoch × 0.5).
+      let dtdDistributed = 'N/A';
+      let dtdEligible    = 'N/A';
+      try {
+        const V11_PHASE2_HEIGHT    = 7100;
+        const LOTTERY_HF_WINDOW    = 5000;
+        const DTD_FLIP_HEIGHT      = V11_PHASE2_HEIGHT + LOTTERY_HF_WINDOW; // 12100
+        const R0_SOST              = 7.85100863;
+        const BLOCKS_PER_EPOCH     = 131553;
+        const EPOCH_DECAY_Q        = Math.exp(-0.25);                       // ~0.7788
+        const LOTTERY_SHARE_OF_SUB = 0.5;
+        function _countInRange(a, b, want_not_div_by_3) {
+          if (b < a) return 0;
+          const total = b - a + 1;
+          const div3  = Math.floor(b / 3) - Math.floor((a - 1) / 3);
+          return want_not_div_by_3 ? (total - div3) : div3;
+        }
+        function _dtdLotteryDistributed(currentHeight) {
+          if (currentHeight < V11_PHASE2_HEIGHT) return 0;
+          let sum   = 0;
+          const sE  = Math.floor(V11_PHASE2_HEIGHT / BLOCKS_PER_EPOCH);
+          const eE  = Math.floor(currentHeight     / BLOCKS_PER_EPOCH);
+          for (let e = sE; e <= eE; e++) {
+            const epochStart = e * BLOCKS_PER_EPOCH;
+            const epochEnd   = epochStart + BLOCKS_PER_EPOCH - 1;
+            const a          = Math.max(epochStart, V11_PHASE2_HEIGHT);
+            const b          = Math.min(epochEnd,   currentHeight);
+            if (b < a) continue;
+            const bootA = a;
+            const bootB = Math.min(b, DTD_FLIP_HEIGHT - 1);
+            const permA = Math.max(a, DTD_FLIP_HEIGHT);
+            const permB = b;
+            const tBoot = (bootB >= bootA) ? _countInRange(bootA, bootB, true ) : 0;
+            const tPerm = (permB >= permA) ? _countInRange(permA, permB, false) : 0;
+            const sub_e = R0_SOST * Math.pow(EPOCH_DECAY_Q, e);
+            sum += (tBoot + tPerm) * sub_e * LOTTERY_SHARE_OF_SUB;
+          }
+          return sum;
+        }
+        const hNum = (height !== 'N/A' && height !== undefined) ? parseInt(height) : 0;
+        if (hNum >= V11_PHASE2_HEIGHT) {
+          dtdDistributed = _dtdLotteryDistributed(hNum).toLocaleString('en-US',
+              {minimumFractionDigits: 4, maximumFractionDigits: 4}) + ' SOST';
+        } else {
+          dtdDistributed = '0 SOST (pre-V11)';
+        }
+        // Lower-bound estimate of currently-eligible addresses: distinct miners
+        // in the last 288 blocks. True eligibility (any miner since #7100 minus
+        // 6-block cooldown) requires a full chain scan — the explorer's DTD
+        // panel does this and caches the precise count in localStorage; we
+        // surface that here if available, otherwise fall back to last-288.
+        let elPrecise = null;
+        try {
+          const v = localStorage.getItem('sost_dtd_eligible_count');
+          if (v && !isNaN(parseInt(v))) elPrecise = parseInt(v);
+        } catch(e) {}
+        if (elPrecise !== null && elPrecise >= uniqueMiners) {
+          dtdEligible = elPrecise + ' (full scan)';
+        } else if (typeof uniqueMiners === 'number') {
+          dtdEligible = '≈ ' + uniqueMiners + ' (last 288)';
+        }
+      } catch(e) { /* keep N/A */ }
+
       // Interval color
       let ivColor = 'var(--pip)';
       if (interval !== 'N/A') {
@@ -1814,7 +1879,9 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">BLOCK HEIGHT</span><span class="stat-value">${height}</span></div>
         <div class="stat-row"><span class="stat-label">EXPECTED BLOCKS</span><span class="stat-value" style="color:var(--pip-dim)">${expectedBlocks} <span style="font-size:9px">(@10min/block)</span></span></div>
         <div class="stat-row"><span class="stat-label">CHAIN LAG/LEAD</span><span class="stat-value" style="color:${lagLeadColor};font-weight:700">${lagLeadText}</span></div>
-        <div class="stat-row"><span class="stat-label">ACTIVE MINERS</span><span class="stat-value">${uniqueMiners} <span style="font-size:9px;color:var(--pip-dim)">(last 288 blocks)</span></span></div>
+        <div class="stat-row"><span class="stat-label">UNIQUE MINERS</span><span class="stat-value">${uniqueMiners} <span style="font-size:9px;color:var(--pip-dim)">(last 288 blocks)</span></span></div>
+        <div class="stat-row"><span class="stat-label">DTD DISTRIBUTED</span><span class="stat-value" style="color:#ff00ff;font-weight:700">${dtdDistributed} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(lottery payouts since #7100)</span></span></div>
+        <div class="stat-row"><span class="stat-label">DTD ELIGIBLE</span><span class="stat-value" style="color:#ff00ff;font-weight:700">${dtdEligible} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">addresses</span></span></div>
         <div class="stat-row"><span class="stat-label">CONNECTED NODES</span><span class="stat-value">${connectedNodes} <span style="font-size:9px;color:var(--pip-dim)">(seed-visible)</span></span></div>
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
