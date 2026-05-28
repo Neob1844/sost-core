@@ -1,0 +1,38 @@
+{
+  "version": "miteco_record.v0",
+  "aoi_hint": "Galicia W-Sn — Forcarei district (Sprint 2.1 demo)",
+  "default_confidence": 0.7,
+  "disclaimer": "DEMO data. Centroids are approximate, statuses are illustrative for Sprint 2.1 testing of the MITECO connector. NOT a substitute for the official MITECO Catastro Minero query. Re-verify on https://geoportal.minetur.gob.es/CatastroMinero/ before any commercial action.",
+  "records": [
+    {
+      "right_id": "DEMO-PCS-PO-3265",
+      "name": "Demo concesion de explotacion W-Sn (Forcarei area)",
+      "kind": "concesion_explotacion",
+      "section": "C",
+      "status": "expired",
+      "holder": "redacted",
+      "centroid": {"lat": 42.6400, "lon": -8.3500},
+      "valid_from": "1985-04-12",
+      "expires_at": "2015-04-12",
+      "source_url": "https://geoportal.minetur.gob.es/CatastroMinero/",
+      "imported_at": "2026-05-28T00:00:00Z",
+      "confidence": 0.7,
+      "operator_note": "Demo record only. Replace with verified MITECO export before commercial use."
+    },
+    {
+      "right_id": "DEMO-PI-PO-1142",
+      "name": "Demo permiso de investigacion Sn-Ta (Forcarei area)",
+      "kind": "permiso_investigacion",
+      "section": "C",
+      "status": "cancelled",
+      "holder": "redacted",
+      "centroid": {"lat": 42.6450, "lon": -8.3450},
+      "valid_from": "2008-09-01",
+      "expires_at": "2018-09-01",
+      "source_url": "https://geoportal.minetur.gob.es/CatastroMinero/",
+      "imported_at": "2026-05-28T00:00:00Z",
+      "confidence": 0.68,
+      "operator_note": "Demo record only. Replace with verified MITECO export before commercial use."
+    }
+  ]
+}
