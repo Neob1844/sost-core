@@ -1814,12 +1814,12 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
-  <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
+  <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')" title="Unique addresses that have mined at least one block in the last 288 blocks (~48h). 'Top 3' shows what percentage of those 288 blocks were produced by the three most active miners. Click for the per-address breakdown."><div class="dash-label" style="white-space:nowrap">&#9874; UNIQUE MINERS &middot; DISTRIBUTION</div><div class="dash-val purple" id="dMiners">&mdash;</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div><div class="dash-sub" id="dDistributionSub" style="color:var(--green);margin-top:2px">top 3: &mdash;</div><span id="dDistribution" style="display:none">&mdash;</span></div>
   <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Counts distinct addresses that have produced an accepted Phase II block in the last 1000 blocks (since #7100 activation). Lower bound on adoption — miners that fail to produce valid blocks are not counted. Card pulses red permanently as a standing centralisation reminder; count itself is unbounded." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; UPDATED MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #7100</div></div>
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Peak active miners on the network — same count as DTD lottery eligibility (any address that has produced at least one accepted block since V11 Phase 2 activation, block #7100). Click to open the DTD panel."><div class="dash-label">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div><div class="dash-sub">DTD eligible</div></div>
-  <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
+  <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
+  <div class="dash-card" data-panel="peakminer" onclick="toggleDashPanel('peakminer')" title="Peak active miners — same count as DTD lottery eligibility (any address that has produced at least one accepted block since V11 Phase 2 activation, block #7100). Click to see how this peak evolved across the last 288 blocks."><div class="dash-label">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
     <div class="dash-label" style="white-space:nowrap;color:var(--orange)">Token Distribution</div>
     <div class="dash-val" style="color:var(--orange)">DTD Lottery</div>
@@ -5231,6 +5231,65 @@ function renderDashPanel(key,body,title,silent){
         else{el.textContent='(still loading...)';clearInterval(_dsci);}
       },1000);
     }
+  } else if(key==='peakminer'){
+    title.textContent='// PEAK ACTIVE MINERS · last 288 blocks';
+    if(!silent){
+      body.innerHTML='<div style="color:var(--text3)">Scanning last 288 blocks for miner diversity... <span id="pmScanCountdown" style="color:var(--cyan)"></span></div>';
+      var _pmsc=120;var _pmsci=setInterval(function(){
+        var el=document.getElementById('pmScanCountdown');
+        if(!el){clearInterval(_pmsci);return;}
+        _pmsc--;
+        if(_pmsc>0){var mm=Math.floor(_pmsc/60),ss=_pmsc%60;el.textContent='(~'+mm+'m '+('0'+ss).slice(-2)+'s)';}
+        else{el.textContent='(still loading...)';clearInterval(_pmsci);}
+      },1000);
+    }
+    (async function(){
+      var lookback=Math.min(288,H);
+      var seen={},series=[];
+      for(var bh=Math.max(0,H-lookback+1);bh<=H;bh++){
+        try{
+          var hash=await rpc('getblockhash',[String(bh)]);
+          var blk=await rpc('getblock',[hash]);
+          var addr=blk&&blk.miner_address;
+          if(addr&&!seen[addr])seen[addr]=true;
+          series.push({h:bh,c:Object.keys(seen).length});
+        }catch(e){break;}
+      }
+      if(series.length<2){body.innerHTML='<div style="color:var(--text3)">Not enough data to plot.</div>';return;}
+      var finalCount=series[series.length-1].c;
+      var html='<div style="line-height:1.8;font-size:12px">';
+      html+='<span style="color:var(--text3)">Window:</span> <span style="color:var(--text)">last '+series.length+' blocks (#'+series[0].h+' → #'+series[series.length-1].h+')</span><br>';
+      html+='<span style="color:var(--text3)">Cumulative unique miners in window:</span> <span style="color:var(--cyan);font-weight:600">'+finalCount+'</span><br>';
+      html+='<div style="position:relative;margin-top:10px"><canvas id="dpPeakCanvas" style="width:100%;height:180px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code)"></div></div>';
+      html+='<div style="font-size:9px;color:#aaa;margin-top:10px;line-height:1.6">Cumulative count of distinct miner addresses encountered as the window walks block-by-block from oldest to newest. Monotonically non-decreasing — each newly-discovered address bumps the curve by one. The right-edge value equals the unique miner count for the 288-block window. Note: this differs from the card value above (DTD eligible since #7100), which tracks lifetime eligibility with cooldown across the whole chain since V11 Phase 2 activation.</div>';
+      html+='</div>';
+      body.innerHTML=html;
+      setTimeout(function(){
+        var cv=document.getElementById('dpPeakCanvas');if(!cv)return;
+        var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.offsetWidth,Hc=cv.offsetHeight;
+        cv.width=W*dpr;cv.height=Hc*dpr;ctx.scale(dpr,dpr);
+        var pad=28,mx=Math.max(finalCount,1);
+        ctx.strokeStyle='#1a1a1a';ctx.lineWidth=1;
+        for(var gy=0;gy<=4;gy++){var y=pad+(Hc-pad*2)*gy/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();}
+        ctx.fillStyle='#666';ctx.font='9px monospace';ctx.textAlign='right';
+        for(var gy=0;gy<=4;gy++){var y=pad+(Hc-pad*2)*gy/4;var v=Math.round(mx*(1-gy/4));ctx.fillText(v,pad-4,y+3);}
+        ctx.textAlign='center';
+        ctx.fillText('#'+series[0].h,pad+20,Hc-6);
+        ctx.fillText('#'+series[series.length-1].h,W-pad-20,Hc-6);
+        ctx.strokeStyle='#22d3ee';ctx.lineWidth=2;ctx.beginPath();
+        for(var i=0;i<series.length;i++){
+          var x=pad+(W-pad*2)*i/(series.length-1);
+          var y=pad+(Hc-pad*2)*(1-series[i].c/mx);
+          if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        ctx.lineTo(W-pad,Hc-pad);ctx.lineTo(pad,Hc-pad);ctx.closePath();
+        ctx.fillStyle='rgba(34,211,238,0.10)';ctx.fill();
+        var tipData=series.map(function(p){return {hr:'#'+p.h,count:p.c};});
+        if(typeof setupDpTooltip==='function')setupDpTooltip('dpPeakCanvas',tipData,function(d){return '<span style="color:var(--cyan);font-weight:600">'+d.hr+'</span><br>Unique miners (cumulative): <span style="color:var(--text)">'+d.count+'</span>';});
+      },80);
+      try{clearInterval(_pmsci);}catch(e){}
+    })();
   }
 }
 function setupDpTooltip(canvasId,dataArr,fmtFn){
