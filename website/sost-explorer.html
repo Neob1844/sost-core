@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style id="sost-global-zoom">html{zoom:0.80}</style>
 <!-- Cache-Control: tell every browser to NEVER cache this HTML.
      Cards added to the dashboard (CIRCULATING SUPPLY canary-yellow,
      CIRCULATING MINING red, DTD LOTTERY BALANCE magenta) and other
@@ -362,9 +361,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <body>
 <!-- LOADING OVERLAY — spinning logo countdown -->
 <div id="exLoadOv" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease;font-family:'JetBrains Mono',monospace;margin:0;padding:0">
-  <img id="exLoadLogo" src="sost-logo.png" alt="SOST" style="width:120px;height:120px;border-radius:20%;filter:drop-shadow(0 0 12px rgba(251,1,13,.5));transition:transform .15s ease-out;zoom:1.20">
-  <div id="exLoadNum" style="font-size:28px;color:#fff;font-weight:700;margin-top:16px;zoom:1.20">60</div>
-  <div id="exLoadLbl" style="margin-top:10px;font-size:14px;letter-spacing:2px;font-weight:600;color:#00ff88;animation:exPulse 1.5s ease infinite;zoom:1.20">LOADING DATA...</div>
+  <img id="exLoadLogo" src="sost-logo.png" alt="SOST" style="width:120px;height:120px;border-radius:20%;filter:drop-shadow(0 0 12px rgba(251,1,13,.5));transition:transform .15s ease-out">
+  <div id="exLoadNum" style="font-size:28px;color:#fff;font-weight:700;margin-top:16px">60</div>
+  <div id="exLoadLbl" style="margin-top:10px;font-size:14px;letter-spacing:2px;font-weight:600;color:#00ff88;animation:exPulse 1.5s ease infinite">LOADING DATA...</div>
 </div>
 <style>
 @keyframes exPulse{0%,100%{opacity:.4}50%{opacity:1}}
@@ -1815,12 +1814,12 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
-  <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')" title="Unique addresses that have mined at least one block in the last 288 blocks (~48h). 'Top 3' shows what percentage of those 288 blocks were produced by the three most active miners. Click for the per-address breakdown."><div class="dash-label" style="white-space:nowrap">&#9874; UNIQUE MINERS &middot; DISTRIBUTION</div><div class="dash-val purple" id="dMiners">&mdash;</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div><div class="dash-sub" id="dDistributionSub" style="color:var(--green);margin-top:2px">top 3: &mdash;</div><span id="dDistribution" style="display:none">&mdash;</span></div>
+  <div class="dash-card" data-panel="miners" onclick="toggleDashPanel('miners')"><div class="dash-label">&#9874; UNIQUE MINERS</div><div class="dash-val purple" id="dMiners">—</div><div class="dash-sub" id="dMinersSub">last 288 blocks</div></div>
   <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Counts distinct addresses that have produced an accepted Phase II block in the last 1000 blocks (since #7100 activation). Lower bound on adoption — miners that fail to produce valid blocks are not counted. Card pulses red permanently as a standing centralisation reminder; count itself is unbounded." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; UPDATED MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #7100</div></div>
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Peak active miners on the network — same count as DTD lottery eligibility (any address that has produced at least one accepted block since V11 Phase 2 activation, block #7100). Click for the DTD panel."><div class="dash-label">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div></div>
+  <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
     <div class="dash-label" style="white-space:nowrap;color:var(--orange)">Token Distribution</div>
     <div class="dash-val" style="color:var(--orange)">DTD Lottery</div>
@@ -2642,7 +2641,7 @@ function addrTag(addr){var r=ROLES[addr];if(!r)return'';var c=r==='GOLD VAULT'?'
 function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+addr+'</span>'+addrTag(addr)+cpBtn(addr);}
 function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+sH(addr)+'</span>'+addrTag(addr);}
 
-try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;var pm=document.getElementById('dPeakMiner');if(v&&pm){var m=v.match(/(\d+)/);if(m)pm.textContent=m[1];}});}catch(e){}
+try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;});}catch(e){}
 // Phase X+1 — kick off a silent DTD scan ~3 s after page load so the
 // dashboard CIRCULATING SUPPLY + DTD LOTTERY BALANCE cards populate
 // with real values without the user having to open the DTD panel.
@@ -2940,9 +2939,6 @@ async function renderDTDPanel(body,title,silent){
             var _ddc=document.getElementById('dDTD');
             if(_ddc&&typeof _dtdCached.eligibleCount==='number')
               _ddc.textContent=_dtdCached.eligibleCount+' eligible';
-            var _ddp=document.getElementById('dPeakMiner');
-            if(_ddp&&typeof _dtdCached.eligibleCount==='number')
-              _ddp.textContent=_dtdCached.eligibleCount;
             return;  // <-- skip the entire scan loop on cache hit
           }
         }
@@ -3235,7 +3231,6 @@ async function renderDTDPanel(body,title,silent){
       return false;
     }).length;
     var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
-    var dpm=document.getElementById('dPeakMiner');if(dpm){dpm.textContent=eligibleRows;}
     renderDTDTable(_dtdCache);
 
     // v317: store the FULL rendering payload in sessionStorage so a
