@@ -25,8 +25,24 @@ from .contracts import (
     FORBIDDEN_PHRASES,
     OPPORTUNITY_CLASSES,
 )
-from .canonical import canonical_json, sha256_of_canonical
-from .orchestrator import score_opportunity
+from .canonical import canonical_json, sha256_of_canonical, pretty_json
+from .orchestrator import score_opportunity, DefaultConnectors
+from .campaign import (
+    parse_campaign_file,
+    run_campaign,
+    run_and_export,
+    export_campaign,
+    ranking_rows,
+    CAMPAIGN_SCHEMA_VERSION,
+)
+from .registry import (
+    build_scorecard_capsule,
+    build_campaign_capsule,
+    build_capsule,
+    suggested_sost_cli_command,
+    SCORECARD_CAPSULE_PREFIX,
+    CAMPAIGN_CAPSULE_PREFIX,
+)
 
 __all__ = [
     "AOI",
@@ -38,7 +54,21 @@ __all__ = [
     "OPPORTUNITY_CLASSES",
     "canonical_json",
     "sha256_of_canonical",
+    "pretty_json",
     "score_opportunity",
+    "DefaultConnectors",
+    "parse_campaign_file",
+    "run_campaign",
+    "run_and_export",
+    "export_campaign",
+    "ranking_rows",
+    "CAMPAIGN_SCHEMA_VERSION",
+    "build_scorecard_capsule",
+    "build_campaign_capsule",
+    "build_capsule",
+    "suggested_sost_cli_command",
+    "SCORECARD_CAPSULE_PREFIX",
+    "CAMPAIGN_CAPSULE_PREFIX",
 ]
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"

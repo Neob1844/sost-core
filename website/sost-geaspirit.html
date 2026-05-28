@@ -1832,6 +1832,61 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       with the same SHA-256 values shown above.
     </div>
 
+    <!-- Sprint 2.3 + 2.4 progress block -->
+    <div class="panel" style="margin-top:18px;border-left:3px solid var(--green)">
+      <div class="panel-head">// SPRINT 2.3 &middot; CAMPAIGN ENGINE + PROSPECTIVITY BRIDGE</div>
+      <div style="font-size:12px;line-height:1.8;color:#ddd">
+        Sprint 2.3 (operator-side, not yet on this page) ships three things on top
+        of the Sprint 2.1 backend:
+        <ul style="margin:8px 0 0 22px;color:#bbb;font-size:11.5px;line-height:1.7">
+          <li>A <b style="color:var(--green)">campaign engine</b> &mdash;
+            <code>scripts/opportunity_campaign.py</code> &mdash; that scores
+            any list of AOIs in one batch and writes a ranked
+            <code>campaign_summary.canonical.json</code> plus a per-AOI
+            canonical / pretty JSON pair plus a <code>ranking.csv</code>.
+            First demo: a six-AOI Iberia campaign (Galicia W-Sn, Faja
+            Pir&iacute;tica Ib&eacute;rica, Cartagena-La Uni&oacute;n, Linares-La Carolina,
+            Salamanca W-Sn / Barruecopardo, Norte Portugal W-Sn-Li / Mondim
+            de Basto).</li>
+          <li>A <b style="color:var(--green)">prospectivity bridge</b> &mdash;
+            <code>connectors/geaspirit_prospectivity.py</code> &mdash;
+            a disk-only adapter that consumes normalised outputs of the
+            classical GeaSpirit satellite/ML pipeline (drop
+            <code>*.json</code> / <code>*.csv</code> in
+            <code>data/opportunity/prospectivity_manual/</code>). It lifts the
+            <b>geological</b> sub-score by up to <b>+25</b> (high band) plus
+            <b>+3</b> per recognised signal family (spectral / geophysics /
+            thermal / terrain), capped at <b>+12</b>.</li>
+          <li>A <b style="color:var(--green)">Protocol Registry capsule helper</b>
+            &mdash; <code>registry.py</code> + <code>scripts/opportunity_registry_note.py</code>
+            &mdash; that produces a single-line, registry-ready capsule body
+            for any scorecard or campaign canonical JSON
+            (<code>GEASPIRIT_OPPORTUNITY_SCORECARD_V1 sha256=&hellip; class=&hellip;
+            commercial=&hellip; not_resource_estimate=true</code>). The helper
+            never touches the chain on its own.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px;border-left:3px solid var(--green)">
+      <div class="panel-head">// SPRINT 2.4 &middot; PRINTABLE DOSSIER (HTML, NO PDF DEPS)</div>
+      <div style="font-size:12px;line-height:1.8;color:#ddd">
+        Sprint 2.4 adds a <b style="color:var(--green)">dossier renderer</b>
+        (<code>geaspirit/opportunity/dossier.py</code> +
+        <code>scripts/opportunity_dossier.py</code>). It turns the campaign
+        summary into a single self-contained HTML file &mdash; no external CSS,
+        no JavaScript, no remote fonts &mdash; printable from any browser. Each
+        per-AOI card carries its own SHA-256 capsule note; the campaign capsule
+        is rendered verbatim at the top so a recipient can re-verify both the
+        per-AOI and the campaign-level hashes byte-for-byte. The renderer
+        refuses to publish a scorecard whose <code>thesis</code> or
+        <code>next_step</code> contains any forbidden promotional phrase, and
+        the disclaimer (<i>NOT a resource estimate &middot; NOT a financial
+        promise &middot; desk-validation candidate only</i>) is baked into
+        the page. The Iberia six-AOI demo renders to ~22&nbsp;KB.
+      </div>
+    </div>
+
   </div>
 </section>
 

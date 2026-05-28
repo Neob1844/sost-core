@@ -91,6 +91,7 @@ from .contracts import (
 )
 from .connectors import (
     osm_logistics, env_constraints, tailings_portal, miteco_catastro,
+    geaspirit_prospectivity,
 )
 
 
@@ -112,7 +113,29 @@ DefaultConnectors: Tuple[Callable[[AOI], ConnectorResult], ...] = (
     env_constraints.query,
     tailings_portal.query,
     miteco_catastro.query,
+    geaspirit_prospectivity.query,
 )
+
+
+# Sprint 2.3: GeaSpirit prospectivity bridge — band-tag → geological bonus.
+_PROSPECTIVITY_BAND_BONUS: dict = {
+    "geaspirit_prospectivity_high":   25,
+    "geaspirit_prospectivity_medium": 15,
+    "geaspirit_prospectivity_low":     5,
+}
+_PROSPECTIVITY_BAND_PRIORITY: Tuple[str, ...] = (
+    "geaspirit_prospectivity_high",
+    "geaspirit_prospectivity_medium",
+    "geaspirit_prospectivity_low",
+)
+_PROSPECTIVITY_SIGNAL_TAGS: Tuple[str, ...] = (
+    "geaspirit_signal_spectral",
+    "geaspirit_signal_geophysics",
+    "geaspirit_signal_thermal",
+    "geaspirit_signal_terrain",
+)
+_PROSPECTIVITY_SIGNAL_BONUS_PER_FAMILY = 3
+_PROSPECTIVITY_SIGNAL_BONUS_MAX = 12
 
 
 # Title-status Evidence tags → legal subscore band.
@@ -186,6 +209,21 @@ def _geological_subscore(aoi: AOI, evidence: List[Evidence]) -> int:
                 break
         if   biggest >= 1e7: s += 20
         elif biggest >= 1e6: s += 10
+    # Sprint 2.3: GeaSpirit prospectivity bridge.
+    # Only ONE band tag may contribute (highest-priority present).
+    for band_tag in _PROSPECTIVITY_BAND_PRIORITY:
+        if _has_tag(evidence, band_tag):
+            s += _PROSPECTIVITY_BAND_BONUS[band_tag]
+            break
+    # Signal families: +3 each, capped at +12. No bonus if a band tag
+    # is absent — signal tags alone are not strong enough to lift a
+    # geology score on their own.
+    if any(_has_tag(evidence, band) for band in _PROSPECTIVITY_BAND_PRIORITY):
+        sig_bonus = 0
+        for sig_tag in _PROSPECTIVITY_SIGNAL_TAGS:
+            if _has_tag(evidence, sig_tag):
+                sig_bonus += _PROSPECTIVITY_SIGNAL_BONUS_PER_FAMILY
+        s += min(sig_bonus, _PROSPECTIVITY_SIGNAL_BONUS_MAX)
     return max(0, min(100, s))
 
 

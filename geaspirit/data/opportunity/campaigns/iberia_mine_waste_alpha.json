@@ -1,0 +1,57 @@
+{
+  "schema_version": "opportunity_campaign_input.v1",
+  "name": "Iberia Mine-Waste Alpha",
+  "description": "First batch ranking of six Iberian AOIs spanning W-Sn districts, the Iberian Pyrite Belt, exhausted Pb-Zn-Ag districts and Portuguese W-Sn-Li belt. Sprint 2.3 demo: produced by geaspirit.opportunity backend with the prospectivity bridge enabled (drop GeaSpirit normalised outputs under data/opportunity/prospectivity_manual/ to lift the geological sub-score).",
+  "version": "1",
+  "disclaimer": "Each ranked AOI is a desk-validation candidate. NOT a resource declaration. NOT a financial forecast. Legal title check and accredited sampling required before any commercial action. The default connector set hits OSM Overpass at run time; offline runs require a populated Overpass cache.",
+  "aois": [
+    {
+      "name": "Galicia W-Sn / Forcarei",
+      "lat": 42.6364,
+      "lon": -8.3486,
+      "radius_km": 30.0,
+      "country": "ES",
+      "metals_of_interest": ["W", "Sn"]
+    },
+    {
+      "name": "Faja Pirítica Ibérica",
+      "lat": 37.65,
+      "lon": -6.95,
+      "radius_km": 40.0,
+      "country": "ES",
+      "metals_of_interest": ["Cu", "Zn", "Pb", "Ag", "Au"]
+    },
+    {
+      "name": "Cartagena-La Unión",
+      "lat": 37.62,
+      "lon": -0.86,
+      "radius_km": 25.0,
+      "country": "ES",
+      "metals_of_interest": ["Pb", "Zn", "Ag"]
+    },
+    {
+      "name": "Linares-La Carolina",
+      "lat": 38.10,
+      "lon": -3.63,
+      "radius_km": 30.0,
+      "country": "ES",
+      "metals_of_interest": ["Pb", "Ag", "Cu"]
+    },
+    {
+      "name": "Salamanca W-Sn (Barruecopardo)",
+      "lat": 41.0727,
+      "lon": -6.6510,
+      "radius_km": 25.0,
+      "country": "ES",
+      "metals_of_interest": ["W", "Sn"]
+    },
+    {
+      "name": "Norte Portugal W-Sn-Li (Mondim de Basto)",
+      "lat": 41.4090,
+      "lon": -7.9550,
+      "radius_km": 35.0,
+      "country": "PT",
+      "metals_of_interest": ["W", "Sn", "Li"]
+    }
+  ]
+}

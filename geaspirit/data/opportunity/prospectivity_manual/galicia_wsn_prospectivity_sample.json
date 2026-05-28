@@ -1,0 +1,34 @@
+{
+  "version": "geaspirit_prospectivity.v1",
+  "default_confidence": 0.55,
+  "license_notes": "Internal GeaSpirit demo output (Sprint 2.3 sample). Do not redistribute without operator sign-off.",
+  "disclaimer": "DEMO data. Synthetic but plausible prospectivity score for the Forcarei W-Sn district; intended to exercise the geaspirit_prospectivity connector and the geological sub-score bridge. Not a resource declaration and not a financial forecast. Desk-validation candidate only.",
+  "records": [
+    {
+      "aoi_name": "Galicia W-Sn — Forcarei district (heuristic centroid)",
+      "lat": 42.5901,
+      "lon": -8.3470,
+      "radius_km": 8.0,
+      "score": 0.64,
+      "score_type": "heuristic",
+      "confidence": 0.6,
+      "model": "GeaSpirit Phase 27 Subsurface-Aware (demo)",
+      "source": "analyze_custom_aois.py (demo replay)",
+      "signals": ["spectral", "terrain"],
+      "notes": "Centroid placed near historic W-Sn workings; medium-band score reflecting partial signal coverage in the demo only."
+    },
+    {
+      "aoi_name": "Forcarei terrain proxy",
+      "lat": 42.6601,
+      "lon": -8.3690,
+      "radius_km": 4.0,
+      "score": 56,
+      "score_type": "model_auc",
+      "confidence": 0.5,
+      "model": "GeaSpirit heuristic stack (demo)",
+      "source": "rank_targets.py (demo replay)",
+      "signals": "terrain",
+      "notes": "Lower-confidence proxy used to test the union-of-signal-families logic in the connector."
+    }
+  ]
+}
