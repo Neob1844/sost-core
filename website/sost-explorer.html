@@ -361,10 +361,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </head>
 <body>
 <!-- LOADING OVERLAY — spinning logo countdown -->
-<div id="exLoadOv" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease;font-family:'JetBrains Mono',monospace;margin:0;padding:0">
-  <img id="exLoadLogo" src="sost-logo.png" alt="SOST" style="width:120px;height:120px;border-radius:20%;filter:drop-shadow(0 0 12px rgba(251,1,13,.5));transition:transform .15s ease-out;zoom:1.25">
-  <div id="exLoadNum" style="font-size:28px;color:#fff;font-weight:700;margin-top:16px;zoom:1.25">60</div>
-  <div id="exLoadLbl" style="margin-top:10px;font-size:14px;letter-spacing:2px;font-weight:600;color:#00ff88;animation:exPulse 1.5s ease infinite;zoom:1.25">LOADING DATA...</div>
+<div id="exLoadOv" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease;font-family:'JetBrains Mono',monospace;margin:0;padding:0;zoom:1.25">
+  <img id="exLoadLogo" src="sost-logo.png" alt="SOST" style="width:120px;height:120px;border-radius:20%;filter:drop-shadow(0 0 12px rgba(251,1,13,.5));transition:transform .15s ease-out">
+  <div id="exLoadNum" style="font-size:28px;color:#fff;font-weight:700;margin-top:16px">60</div>
+  <div id="exLoadLbl" style="margin-top:10px;font-size:14px;letter-spacing:2px;font-weight:600;color:#00ff88;animation:exPulse 1.5s ease infinite">LOADING DATA...</div>
 </div>
 <style>
 @keyframes exPulse{0%,100%{opacity:.4}50%{opacity:1}}
