@@ -167,3 +167,49 @@ There is intentionally **no live API**: the web surface is read-only
 documentation of what the backend produces. Live scans are operator-
 driven via `scripts/opportunity_scan.py` and remain off the public
 web.
+
+
+## Sprint 2.3 — Campaign engine, prospectivity bridge, registry helper
+
+Added (all add-only, no existing module modified beyond the
+orchestrator and `__init__.py`):
+
+* `connectors/geaspirit_prospectivity.py` — disk-only bridge that
+  consumes normalised GeaSpirit prospectivity outputs (JSON or CSV)
+  dropped under `data/opportunity/prospectivity_manual/`. Emits
+  band tags (`geaspirit_prospectivity_{high,medium,low}`) and signal
+  family tags (`geaspirit_signal_{spectral,geophysics,thermal,terrain}`).
+  Module-level docstring carries the full schema.
+
+* `orchestrator._geological_subscore()` — extended with the
+  prospectivity bridge: `high → +25`, `medium → +15`, `low → +5`;
+  each recognised signal family contributes `+3`, capped at `+12`.
+  The classical sub-score paths are unchanged; absence of bridge data
+  preserves previous behaviour.
+
+* `campaign.py` + `scripts/opportunity_campaign.py` — batch ranking
+  engine. Reads a `*.json` campaign file describing many AOIs, runs
+  `score_opportunity()` against each, sorts by
+  `subscores.commercial`, writes per-AOI canonical + pretty JSON,
+  campaign summary canonical + pretty, and `ranking.csv`. Supports
+  `--limit` for smoke runs and `--redact-coordinates` for public
+  teasers (per-AOI canonical files are NEVER redacted — they are the
+  on-chain artefact).
+
+* `data/opportunity/campaigns/iberia_mine_waste_alpha.json` — first
+  six-AOI Iberian campaign template: Galicia W-Sn / Forcarei, Faja
+  Pirítica Ibérica, Cartagena-La Unión, Linares-La Carolina,
+  Salamanca W-Sn (Barruecopardo), Norte Portugal W-Sn-Li (Mondim de
+  Basto).
+
+* `registry.py` + `scripts/opportunity_registry_note.py` — capsule
+  helper. Takes a scorecard or campaign canonical JSON, computes its
+  byte-level SHA-256, emits a single-line capsule body
+  (`GEASPIRIT_OPPORTUNITY_SCORECARD_V1 sha256=… aoi=… class=…
+  commercial=… schema=… not_resource_estimate=true`) and prints a
+  *suggested* `sost-cli registry-note` invocation. **This module
+  never touches the chain.** The operator decides when to submit.
+
+The web surface (`website/sost-geaspirit.html`) still consumes the
+static Sprint 2.2 demo snapshot. Updating it to show the campaign
+ranking is a Sprint 2.4 candidate.
