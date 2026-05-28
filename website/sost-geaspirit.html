@@ -1628,6 +1628,213 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
   </div>
 </section>
 
+<!-- OPPORTUNITY INTELLIGENCE / MINE-WASTE ALPHA -->
+<section class="section" id="opportunity-intelligence">
+  <div class="container">
+    <div class="section-id">// OPPORTUNITY INTELLIGENCE / MINE-WASTE ALPHA</div>
+    <div class="section-title"><span>Opportunity Intelligence</span> &mdash; Beyond Prospectivity</div>
+    <div style="font-size:11px;color:var(--amber);letter-spacing:2px;margin-top:-12px;margin-bottom:18px">Mine-Waste Alpha &middot; Sprint 2.1 backend</div>
+
+    <div class="human-box" style="border-left-color:var(--amber);background:rgba(255,176,0,.04)">
+      <b style="color:var(--amber)">A second layer on top of the satellite/ML stack.</b>
+      The classical GeaSpirit pipeline answers <i>"is there a mineral signal here?"</i>.
+      The new <code>geaspirit.opportunity</code> backend asks a different question:
+      <i>"is this AOI a defensible commercial opportunity?"</i>. It takes an Area of Interest
+      (lat / lon / radius / country / metals of interest) and emits an
+      <b>OpportunityScorecard</b> &mdash; a flat, deterministic JSON object that can be
+      hashed (SHA-256) and anchored on chain through the Protocol Registry.
+    </div>
+
+    <!-- Editorial guardrail -->
+    <div class="panel" style="border-color:var(--red);background:rgba(251,1,13,.03)">
+      <div class="panel-head" style="color:var(--red)">// EDITORIAL GUARDRAIL</div>
+      <div style="font-size:12px;line-height:1.9;color:#ddd">
+        Every OpportunityScorecard produced by this layer ships with the following
+        baked into its contract:
+        <ul style="margin:10px 0 0 22px;color:#aaa;font-size:11.5px;line-height:1.8">
+          <li><b style="color:var(--amber)">NOT a resource estimate.</b></li>
+          <li><b style="color:var(--amber)">NOT a financial promise.</b></li>
+          <li><b style="color:var(--amber)">Desk-validation candidate only.</b></li>
+          <li><b style="color:var(--amber)">Legal title check and accredited sampling required</b> before any commercial action.</li>
+        </ul>
+        <div style="margin-top:10px;font-size:11px;color:#888">
+          The backend dataclass refuses to construct a scorecard whose
+          <code>thesis</code> or <code>next_step</code> contains promotional
+          language defined in
+          <code>geaspirit/opportunity/contracts.py::_FORBIDDEN_PHRASES</code>.
+          The guardrail raises at construction time; it is not a post-hoc filter.
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 sub-scores explainer -->
+    <div class="panel">
+      <div class="panel-head">// FIVE HONEST SUB-SCORES &middot; ONE COMMERCIAL ANGLE</div>
+      <table class="tbl">
+        <tr><th>Sub-score</th><th>What it measures</th><th>Default when no data</th></tr>
+        <tr><td class="val">geological</td><td>Declared metals + strategic exposure + tailings/legacy presence</td><td>40 (neutral)</td></tr>
+        <tr><td class="val">logistics</td><td>Distance to road / rail / port / airport (Overpass / OSM)</td><td>50</td></tr>
+        <tr><td class="val">environmental</td><td>Overlap with Natura&nbsp;2000, LIC, ZEPA polygons (GeoJSON, ray-cast)</td><td>50 &mdash; <i>unknown &ne; good</i></td></tr>
+        <tr><td class="val">legal</td><td>Title status from MITECO Catastro Minero (3 import modes)</td><td>50 &mdash; <i>unknown &ne; good</i></td></tr>
+        <tr><td class="val">commercial</td><td>0.40&middot;geo + 0.25&middot;log + 0.25&middot;env + 0.10&middot;legal &mdash; with hard penalties when env &le; 30 or legal &le; 35</td><td>&mdash;</td></tr>
+      </table>
+      <div style="font-size:11px;color:#888;margin-top:12px">
+        Missing data never scores as positive. The commercial blend gives the customer
+        one number; the five sub-scores let them see <i>why</i>.
+      </div>
+    </div>
+
+    <!-- Opportunity class -->
+    <div class="panel">
+      <div class="panel-head">// SIX OPPORTUNITY CLASSES &middot; SIX COMMERCIAL ANGLES</div>
+      <table class="tbl">
+        <tr><th>Class</th><th>Trigger</th><th>Commercial angle</th></tr>
+        <tr><td class="val">extraction_led</td><td>env clear, geology + logistics OK, no legal block</td><td>Classic mining venture, subject to title check</td></tr>
+        <tr><td class="val">remediation_led</td><td>env &le; 30 <i>and</i> legacy mineralisation documented</td><td>Clean-up contract + secondary recovery, <b>not</b> fresh extraction</td></tr>
+        <tr><td class="val">reactivation_led</td><td>title expired / cancelled <i>and</i> env workable <i>and</i> geo &ge; 40</td><td>Re-permit + due diligence on the lapsed title chain</td></tr>
+        <tr><td class="val">partnership_led</td><td>active third-party title covers the AOI</td><td>Deal with the existing holder (option, JV, sub-licence)</td></tr>
+        <tr><td class="val">mixed</td><td>moderate constraint, multiple angles possible</td><td>Case-by-case</td></tr>
+        <tr><td class="val">blocked</td><td>env high without geological case, <i>or</i> title in litigation</td><td>Park the AOI; do not proceed</td></tr>
+      </table>
+    </div>
+
+    <!-- 3 demo cards from the real backend -->
+    <div class="section-title" style="margin-top:30px;font-size:18px">Three Spanish <span>demos</span> &mdash; produced by the real backend</div>
+    <div style="font-size:11px;color:#888;margin-bottom:16px">
+      Numbers below are real outputs of <code>geaspirit.opportunity.score_opportunity()</code>
+      against three live Areas of Interest, with OSM Overpass + Natura&nbsp;2000 OSM mirror +
+      a Galicia demo MITECO record loaded. Reproducible: same inputs &rArr; same canonical JSON
+      &rArr; same SHA-256.
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
+
+      <!-- Card 1 — Galicia W-Sn -->
+      <div class="panel" style="border-left:3px solid var(--amber)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <div style="color:var(--amber);font-weight:600;font-size:13px">Galicia W-Sn &mdash; Forcarei</div>
+          <div style="color:#888;font-size:10px">42.6364&deg;N, -8.3486&deg;E &middot; r=30km</div>
+        </div>
+        <div style="font-size:10px;color:#666;margin-bottom:12px">metals: W, Sn &middot; country: ES</div>
+        <div style="background:rgba(255,176,0,.08);padding:10px;margin-bottom:10px;font-size:11px;color:var(--amber)">
+          <b style="font-size:14px">reactivation_led</b> &middot; grade B+
+          <div style="font-size:20px;color:var(--green);font-weight:700">commercial 70</div>
+        </div>
+        <table class="tbl" style="font-size:11px">
+          <tr><td>geological</td>     <td class="val" style="text-align:right">45</td></tr>
+          <tr><td>logistics</td>      <td class="val" style="text-align:right">79</td></tr>
+          <tr><td>environmental</td>  <td class="val" style="text-align:right">100</td></tr>
+          <tr><td>legal</td>          <td class="val" style="text-align:right">72</td></tr>
+        </table>
+        <div style="font-size:10px;color:#888;margin-top:10px;line-height:1.6">
+          <b style="color:var(--green)">tags:</b> nearby_road_access &middot;
+          nearby_railway &middot; environmental_clear &middot; <b style="color:var(--amber)">title_expired</b>
+        </div>
+        <div style="font-size:10px;color:#aaa;margin-top:10px;font-style:italic">
+          "Lapsed (expired) mining right covers the AOI; the angle is re-permit +
+          due diligence on the lapsed title chain, NOT a fresh greenfield application."
+        </div>
+        <div style="font-size:9px;color:#555;margin-top:10px;word-break:break-all;font-family:monospace">
+          SHA-256: 05149b9d5fd938e48fe61c10dc0897ae67c2585761f1570de8276a1420caf26e
+        </div>
+      </div>
+
+      <!-- Card 2 — Faja Pirítica -->
+      <div class="panel" style="border-left:3px solid var(--green)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <div style="color:var(--green);font-weight:600;font-size:13px">Faja Pir&iacute;tica Ib&eacute;rica</div>
+          <div style="color:#888;font-size:10px">37.65&deg;N, -6.95&deg;E &middot; r=40km</div>
+        </div>
+        <div style="font-size:10px;color:#666;margin-bottom:12px">metals: Cu, Zn, Pb, Ag, Au &middot; country: ES</div>
+        <div style="background:rgba(0,255,65,.06);padding:10px;margin-bottom:10px;font-size:11px;color:var(--green)">
+          <b style="font-size:14px">extraction_led</b> &middot; grade B+
+          <div style="font-size:20px;color:var(--green);font-weight:700">commercial 70</div>
+        </div>
+        <table class="tbl" style="font-size:11px">
+          <tr><td>geological</td>     <td class="val" style="text-align:right">45</td></tr>
+          <tr><td>logistics</td>      <td class="val" style="text-align:right">90</td></tr>
+          <tr><td>environmental</td>  <td class="val" style="text-align:right">100</td></tr>
+          <tr><td>legal</td>          <td class="val" style="text-align:right">50</td></tr>
+        </table>
+        <div style="font-size:10px;color:#888;margin-top:10px;line-height:1.6">
+          <b style="color:var(--green)">tags:</b> nearby_road_access &middot;
+          nearby_railway &middot; nearby_airport &middot; environmental_clear &middot;
+          no_known_titles_in_radius
+        </div>
+        <div style="font-size:10px;color:#aaa;margin-top:10px;font-style:italic">
+          "Strong logistics, no protected-area overlap. Legal stays at 50 (neutral)
+          until MITECO Catastro Minero is consulted for this radius."
+        </div>
+        <div style="font-size:9px;color:#555;margin-top:10px;word-break:break-all;font-family:monospace">
+          SHA-256: f7b2f3f95c2c747bd7110479a267789e08deb473290bba2a320a830f5367d764
+        </div>
+      </div>
+
+      <!-- Card 3 — Cartagena-La Unión -->
+      <div class="panel" style="border-left:3px solid var(--green)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <div style="color:var(--green);font-weight:600;font-size:13px">Cartagena &mdash; La Uni&oacute;n</div>
+          <div style="color:#888;font-size:10px">37.62&deg;N, -0.86&deg;E &middot; r=25km</div>
+        </div>
+        <div style="font-size:10px;color:#666;margin-bottom:12px">metals: Pb, Zn, Ag &middot; country: ES</div>
+        <div style="background:rgba(0,255,65,.06);padding:10px;margin-bottom:10px;font-size:11px;color:var(--green)">
+          <b style="font-size:14px">extraction_led</b> &middot; grade B+
+          <div style="font-size:20px;color:var(--green);font-weight:700">commercial 66</div>
+        </div>
+        <table class="tbl" style="font-size:11px">
+          <tr><td>geological</td>     <td class="val" style="text-align:right">30</td></tr>
+          <tr><td>logistics</td>      <td class="val" style="text-align:right">95</td></tr>
+          <tr><td>environmental</td>  <td class="val" style="text-align:right">100</td></tr>
+          <tr><td>legal</td>          <td class="val" style="text-align:right">50</td></tr>
+        </table>
+        <div style="font-size:10px;color:#888;margin-top:10px;line-height:1.6">
+          <b style="color:var(--green)">tags:</b> nearby_road_access &middot;
+          nearby_railway &middot; <b style="color:var(--amber)">nearby_port</b> &middot;
+          environmental_clear &middot; no_known_titles_in_radius
+        </div>
+        <div style="font-size:10px;color:#aaa;margin-top:10px;font-style:italic">
+          "Exhausted Pb-Zn-Ag district with excellent port logistics. Drop GRID-Arendal
+          Global Tailings Portal CSV into <code>data/opportunity/tailings_manual/</code>
+          to surface legacy TSFs &mdash; the AOI will then reclassify as remediation_led."
+        </div>
+        <div style="font-size:9px;color:#555;margin-top:10px;word-break:break-all;font-family:monospace">
+          SHA-256: 0e2f6dd2ba5e7b0c37a22fe60bf73af587ef1a350ac84198de794a6373e45499
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Backend mechanics -->
+    <div class="panel" style="margin-top:24px">
+      <div class="panel-head">// MITECO CATASTRO MINERO &middot; THREE IMPORT MODES</div>
+      <table class="tbl">
+        <tr><th>Mode</th><th>Source</th><th>When used</th></tr>
+        <tr><td class="val">official_wfs</td><td>WFS at MITECO/<code>datos.gob.es</code> catalogue</td><td>When the endpoint is live; fetched by a separate one-shot script</td></tr>
+        <tr><td class="val">visor_export</td><td>GeoJSON / Shapefile / KMZ exported from the public Catastro Minero visor</td><td>When WFS is down but the operator has manual exports</td></tr>
+        <tr><td class="val">operator_pasted_json</td><td>Normalised JSON pasted into <code>data/opportunity/miteco_manual/</code></td><td>Fallback when both above are unavailable</td></tr>
+      </table>
+      <div style="font-size:11px;color:#888;margin-top:12px">
+        The connector itself <b>never</b> calls the network at scan time &mdash; it only
+        reads disk. All network calls live in one-shot fetchers under
+        <code>geaspirit/scripts/</code>. Every record carries
+        <code>source_url</code>, <code>imported_at</code>, <code>import_mode</code>,
+        <code>license_notes</code> and <code>confidence</code>.
+      </div>
+    </div>
+
+    <div class="human-box" style="border-left-color:var(--amber);background:rgba(255,176,0,.03);margin-top:16px">
+      <b style="color:var(--amber)">What is currently visible on this page</b> is a
+      <i>static</i> view of three OpportunityScorecards produced by the backend on
+      a single run. It is not a live scan, not a public API and not a substitute for
+      the official MITECO Catastro Minero query.
+      The JSON used to render the cards is published at
+      <code>website/data/opportunity/demo_scorecards.json</code> for transparency,
+      with the same SHA-256 values shown above.
+    </div>
+
+  </div>
+</section>
+
 <!-- DATA SOURCES -->
 <section class="section">
   <div class="container">

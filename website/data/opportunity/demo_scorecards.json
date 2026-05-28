@@ -1,0 +1,98 @@
+{
+  "schema": "opportunity_demo.v1",
+  "generated_by": "geaspirit.opportunity (Sprint 2.1 backend)",
+  "disclaimer": "DEMO DATA. Sample OpportunityScorecards produced by the geaspirit.opportunity Python backend against three Spanish AOIs. NOT a resource estimate. NOT a financial promise. Desk-validation candidates only. Legal title check and accredited sampling required before any commercial action.",
+  "guardrails_enforced_by_backend": [
+    "language guardrail rejects phrases like 'confirmed reserves', 'JORC-compliant', 'NI 43-101', 'guaranteed return', 'guaranteed recovery' at dataclass construction time",
+    "score must equal subscores.commercial — anti-confusion invariant",
+    "missing data is scored as 50 (neutral), never 100 (unknown != good)"
+  ],
+  "cards": [
+    {
+      "aoi_name": "Galicia W-Sn — Forcarei district",
+      "lat": 42.6364,
+      "lon": -8.3486,
+      "radius_km": 30.0,
+      "country": "ES",
+      "metals_of_interest": ["W", "Sn"],
+      "opportunity_class": "reactivation_led",
+      "class_grade": "B+",
+      "score": 70,
+      "subscores": {
+        "geological": 45,
+        "logistics": 79,
+        "environmental": 100,
+        "legal": 72,
+        "commercial": 70
+      },
+      "evidence_tags": [
+        "nearby_road_access",
+        "nearby_railway",
+        "environmental_clear",
+        "title_expired"
+      ],
+      "thesis_summary": "Lapsed (expired) mining right covers the AOI; environment is workable. The commercial angle is re-permit + due diligence on the lapsed title chain, not a fresh greenfield application.",
+      "next_step_summary": "Build a re-permit file: pull lapsed-title history from MITECO Catastro Minero, confirm no successor claim, scope environmental clearances anew.",
+      "canonical_sha256": "05149b9d5fd938e48fe61c10dc0897ae67c2585761f1570de8276a1420caf26e",
+      "miteco_import_mode_used": "operator_pasted_json (demo sample)"
+    },
+    {
+      "aoi_name": "Faja Pirítica Ibérica",
+      "lat": 37.65,
+      "lon": -6.95,
+      "radius_km": 40.0,
+      "country": "ES",
+      "metals_of_interest": ["Cu", "Zn", "Pb", "Ag", "Au"],
+      "opportunity_class": "extraction_led",
+      "class_grade": "B+",
+      "score": 70,
+      "subscores": {
+        "geological": 45,
+        "logistics": 90,
+        "environmental": 100,
+        "legal": 50,
+        "commercial": 70
+      },
+      "evidence_tags": [
+        "nearby_road_access",
+        "nearby_railway",
+        "nearby_airport",
+        "environmental_clear",
+        "no_known_titles_in_radius"
+      ],
+      "thesis_summary": "Strong logistics (road + rail + airport) and no protected-area overlap in the search radius. Legal subscore stays at 50 (neutral) until MITECO Catastro Minero is consulted for this radius. Historic Iberian Pyrite Belt mineralisation context.",
+      "next_step_summary": "Desk validation: cross-check published historical occurrence with MITECO Catastro Minero and national geological survey. Identify any current concession holder before any approach.",
+      "canonical_sha256": "f7b2f3f95c2c747bd7110479a267789e08deb473290bba2a320a830f5367d764",
+      "miteco_import_mode_used": "none (no MITECO records loaded for this radius in the demo)"
+    },
+    {
+      "aoi_name": "Cartagena-La Unión",
+      "lat": 37.62,
+      "lon": -0.86,
+      "radius_km": 25.0,
+      "country": "ES",
+      "metals_of_interest": ["Pb", "Zn", "Ag"],
+      "opportunity_class": "extraction_led",
+      "class_grade": "B+",
+      "score": 66,
+      "subscores": {
+        "geological": 30,
+        "logistics": 95,
+        "environmental": 100,
+        "legal": 50,
+        "commercial": 66
+      },
+      "evidence_tags": [
+        "nearby_road_access",
+        "nearby_railway",
+        "nearby_port",
+        "environmental_clear",
+        "no_known_titles_in_radius"
+      ],
+      "thesis_summary": "Excellent logistics (road + rail + port) for an exhausted Pb-Zn-Ag district. Geological subscore is lower because no fresh occurrence is declared in the AOI metadata — the angle is secondary recovery on historical tailings, which would shift the classification to remediation-led once GRID-Arendal Global Tailings Portal data is loaded.",
+      "next_step_summary": "Drop GRID-Arendal Global Tailings Portal CSV into data/opportunity/tailings_manual/ to surface the legacy TSFs; the AOI will then re-classify as remediation_led. Identify any current concession holder before any approach.",
+      "canonical_sha256": "0e2f6dd2ba5e7b0c37a22fe60bf73af587ef1a350ac84198de794a6373e45499",
+      "miteco_import_mode_used": "none (no MITECO records loaded for this radius in the demo)"
+    }
+  ]
+}
