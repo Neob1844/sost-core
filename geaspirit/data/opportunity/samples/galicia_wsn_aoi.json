@@ -1,0 +1,9 @@
+{
+  "name":               "Galicia W-Sn — Forcarei district",
+  "lat":                42.6364,
+  "lon":                -8.3486,
+  "radius_km":          30,
+  "country":            "ES",
+  "metals_of_interest": ["W", "Sn"],
+  "notes":              "Historical pegmatite W-Sn district (Pontevedra). Sprint 1 demo AOI — public coordinates only; no titular contact made. Pure candidate, subject to verification."
+}
