@@ -1819,6 +1819,7 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
+  <div class="dash-card" data-panel="peakminer" onclick="toggleDashPanel('peakminer')" title="Peak active miners on the network — same count as DTD lottery eligibility. Click to see a per-block bar chart of how the count evolves. The chart records one bar per block as new blocks land while the explorer is open, up to the last 288."><div class="dash-label">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div></div>
   <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')"><div class="dash-label" style="white-space:nowrap">&#9878; MINING DISTRIBUTION</div><div class="dash-val green" id="dDistribution">&mdash;</div><div class="dash-sub" id="dDistributionSub">top 10 addresses</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
     <div class="dash-label" style="white-space:nowrap;color:var(--orange)">Token Distribution</div>
@@ -2641,7 +2642,20 @@ function addrTag(addr){var r=ROLES[addr];if(!r)return'';var c=r==='GOLD VAULT'?'
 function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+addr+'</span>'+addrTag(addr)+cpBtn(addr);}
 function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+sH(addr)+'</span>'+addrTag(addr);}
 
-try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;});}catch(e){}
+try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;var pm=document.getElementById('dPeakMiner');if(v&&pm){var m=v.match(/(\d+)/);if(m)pm.textContent=m[1];}});}catch(e){}
+function _pmSnapshot(count,height){
+  if(typeof count!=='number'||typeof height!=='number'||count<=0||height<=0)return;
+  try{
+    var k='sost_peak_history_v1';
+    var arr=JSON.parse(localStorage.getItem(k)||'[]');
+    var last=arr.length?arr[arr.length-1]:null;
+    if(last&&last.h===height&&last.c===count)return;
+    if(last&&last.h===height){last.c=count;last.ts=Date.now();}
+    else arr.push({h:height,c:count,ts:Date.now()});
+    if(arr.length>600)arr=arr.slice(-600);
+    localStorage.setItem(k,JSON.stringify(arr));
+  }catch(e){}
+}
 // Phase X+1 — kick off a silent DTD scan ~3 s after page load so the
 // dashboard CIRCULATING SUPPLY + DTD LOTTERY BALANCE cards populate
 // with real values without the user having to open the DTD panel.
@@ -2939,6 +2953,11 @@ async function renderDTDPanel(body,title,silent){
             var _ddc=document.getElementById('dDTD');
             if(_ddc&&typeof _dtdCached.eligibleCount==='number')
               _ddc.textContent=_dtdCached.eligibleCount+' eligible';
+            var _ddp=document.getElementById('dPeakMiner');
+            if(_ddp&&typeof _dtdCached.eligibleCount==='number'){
+              _ddp.textContent=_dtdCached.eligibleCount;
+              _pmSnapshot(_dtdCached.eligibleCount,_dtdCached.height||height);
+            }
             return;  // <-- skip the entire scan loop on cache hit
           }
         }
@@ -3231,6 +3250,8 @@ async function renderDTDPanel(body,title,silent){
       return false;
     }).length;
     var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
+    var dpm=document.getElementById('dPeakMiner');if(dpm){dpm.textContent=eligibleRows;}
+    _pmSnapshot(eligibleRows,height);
     renderDTDTable(_dtdCache);
 
     // v317: store the FULL rendering payload in sessionStorage so a
@@ -5227,6 +5248,53 @@ function renderDashPanel(key,body,title,silent){
         else{el.textContent='(still loading...)';clearInterval(_dsci);}
       },1000);
     }
+  } else if(key==='peakminer'){
+    title.textContent='// PEAK ACTIVE MINERS · per-block history';
+    var hist=[];
+    try{hist=JSON.parse(localStorage.getItem('sost_peak_history_v1')||'[]');}catch(e){hist=[];}
+    if(!hist.length){
+      body.innerHTML='<div style="color:var(--text3);line-height:1.8;font-size:12px">No snapshots recorded yet. The chart will fill up as new blocks land and the dashboard refreshes.<br><br><span style="font-size:10px">Tip: open the DTD Lottery panel once to record the first snapshot immediately. After that, each new block adds one bar.</span></div>';
+      return;
+    }
+    var bars=hist.slice(-288);
+    var firstH=bars[0].h,lastH=bars[bars.length-1].h,firstC=bars[0].c,lastC=bars[bars.length-1].c;
+    var mx=bars[0].c,mn=bars[0].c;
+    for(var i=0;i<bars.length;i++){if(bars[i].c>mx)mx=bars[i].c;if(bars[i].c<mn)mn=bars[i].c;}
+    var html='<div style="line-height:1.8;font-size:12px">';
+    html+='<span style="color:var(--text3)">Recorded bars:</span> <span style="color:var(--text)">'+bars.length+' / 288</span> &nbsp; ';
+    html+='<span style="color:var(--text3)">Range:</span> <span style="color:var(--text)">#'+firstH+' &rarr; #'+lastH+'</span><br>';
+    html+='<span style="color:var(--text3)">Min:</span> <span style="color:var(--cyan);font-weight:600">'+mn+'</span> &nbsp; ';
+    html+='<span style="color:var(--text3)">Max:</span> <span style="color:var(--cyan);font-weight:600">'+mx+'</span> &nbsp; ';
+    html+='<span style="color:var(--text3)">At first bar:</span> <span style="color:var(--cyan);font-weight:600">'+firstC+'</span> &nbsp; ';
+    html+='<span style="color:var(--text3)">At last bar:</span> <span style="color:var(--cyan);font-weight:600">'+lastC+'</span><br>';
+    html+='<div style="position:relative;margin-top:10px"><canvas id="dpPeakCanvas" style="width:100%;height:200px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code)"></div></div>';
+    html+='<div style="font-size:9px;color:#aaa;margin-top:10px;line-height:1.6">One bar per block: bar height = active miner count (DTD eligible) recorded when that block landed. The chart goes up when a new miner joins, down when a recent lottery winner enters cooldown. Bars are appended as new blocks arrive and the dashboard refreshes; the chart caps at the last 288 bars (~48h).</div>';
+    html+='</div>';
+    body.innerHTML=html;
+    setTimeout(function(){
+      var cv=document.getElementById('dpPeakCanvas');if(!cv)return;
+      var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.offsetWidth,Hc=cv.offsetHeight;
+      cv.width=W*dpr;cv.height=Hc*dpr;ctx.scale(dpr,dpr);
+      var pad=32;
+      var yMin=Math.max(0,mn-1),yMax=mx+1,yRange=Math.max(yMax-yMin,1);
+      ctx.strokeStyle='#1a1a1a';ctx.lineWidth=1;
+      for(var gy=0;gy<=4;gy++){var y=pad+(Hc-pad*2)*gy/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();}
+      ctx.fillStyle='#666';ctx.font='9px monospace';ctx.textAlign='right';
+      for(var gy=0;gy<=4;gy++){var y=pad+(Hc-pad*2)*gy/4;var v=Math.round(yMax-(yRange*gy/4));ctx.fillText(v,pad-4,y+3);}
+      ctx.textAlign='center';
+      ctx.fillText('#'+firstH,pad+24,Hc-6);
+      ctx.fillText('#'+lastH,W-pad-24,Hc-6);
+      var n=bars.length,bw=(W-pad*2)/n;
+      for(var i=0;i<n;i++){
+        var x=pad+i*bw;
+        var bh=((bars[i].c-yMin)/yRange)*(Hc-pad*2);
+        if(bh<1)bh=1;
+        ctx.fillStyle='rgba(34,211,238,0.75)';
+        ctx.fillRect(x+0.5,Hc-pad-bh,Math.max(bw-1,1),bh);
+      }
+      var tipData=bars.map(function(p){return {hr:'#'+p.h,count:p.c};});
+      if(typeof setupDpTooltip==='function')setupDpTooltip('dpPeakCanvas',tipData,function(d){return '<span style="color:var(--cyan);font-weight:600">'+d.hr+'</span><br>Active miners: <span style="color:var(--text)">'+d.count+'</span>';});
+    },80);
   }
 }
 function setupDpTooltip(canvasId,dataArr,fmtFn){
