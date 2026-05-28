@@ -2963,7 +2963,7 @@ async function renderDTDPanel(body,title,silent){
     var PHASE2_START=7100;
     function ensure(addr){
       if(!addr)return null;
-      if(!rowsByAddr[addr])rowsByAddr[addr]={addr:addr,minedBlocks:0,minedStocks:0,dtdWonStocks:0,dtdWonCount:0,receivedStocks:null,sentStocks:null,balanceStocks:null,lastMined:0,status:'pre-Phase 2'};
+      if(!rowsByAddr[addr])rowsByAddr[addr]={addr:addr,minedBlocks:0,minedStocks:0,dtdWonStocks:0,dtdWonCount:0,receivedStocks:null,sentStocks:null,balanceStocks:null,firstMined:0,lastMined:0,status:'pre-Phase 2'};
       return rowsByAddr[addr];
     }
     ensure('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d');
@@ -2983,7 +2983,9 @@ async function renderDTDPanel(body,title,silent){
         totalSubsidy+=subsidy;totalMiner+=minerReward;totalGold+=goldReward;totalPopc+=popcReward;totalLottery+=lotteryReward;
         if(lotteryReward>0&&b.lottery_winner_address){var wr=ensure(b.lottery_winner_address);if(wr){wr.dtdWonStocks+=lotteryReward;wr.dtdWonCount=(wr.dtdWonCount||0)+1;}}
         if(b.miner_address){
-          var r=ensure(b.miner_address);r.minedBlocks++;r.minedStocks+=minerReward;r.lastMined=Math.max(r.lastMined,b.height||0);
+          var r=ensure(b.miner_address);
+          if(!r.firstMined)r.firstMined=(b.height||0);
+          r.minedBlocks++;r.minedStocks+=minerReward;r.lastMined=Math.max(r.lastMined,b.height||0);
           if((b.height||0)>height-5)latestWinners.push(b.miner_address);
         }
         // Phase 2 classification: PAYOUT (lottery > 0), NORMAL (gold/popc > 0,
@@ -5233,63 +5235,108 @@ function renderDashPanel(key,body,title,silent){
     }
   } else if(key==='peakminer'){
     title.textContent='// PEAK ACTIVE MINERS · last 288 blocks';
-    if(!silent){
-      body.innerHTML='<div style="color:var(--text3)">Scanning last 288 blocks for miner diversity... <span id="pmScanCountdown" style="color:var(--cyan)"></span></div>';
-      var _pmsc=120;var _pmsci=setInterval(function(){
-        var el=document.getElementById('pmScanCountdown');
-        if(!el){clearInterval(_pmsci);return;}
-        _pmsc--;
-        if(_pmsc>0){var mm=Math.floor(_pmsc/60),ss=_pmsc%60;el.textContent='(~'+mm+'m '+('0'+ss).slice(-2)+'s)';}
-        else{el.textContent='(still loading...)';clearInterval(_pmsci);}
-      },1000);
-    }
-    (async function(){
+    var renderPeakChart=function(firstMinedList){
       var lookback=Math.min(288,H);
-      var seen={},series=[];
-      for(var bh=Math.max(0,H-lookback+1);bh<=H;bh++){
-        try{
-          var hash=await rpc('getblockhash',[String(bh)]);
-          var blk=await rpc('getblock',[hash]);
-          var addr=blk&&blk.miner_address;
-          if(addr&&!seen[addr])seen[addr]=true;
-          series.push({h:bh,c:Object.keys(seen).length});
-        }catch(e){break;}
+      var startH=Math.max(0,H-lookback+1);
+      var sorted=firstMinedList.slice().sort(function(a,b){return a-b;});
+      var series=[],idx=0;
+      for(var bh=startH;bh<=H;bh++){
+        while(idx<sorted.length&&sorted[idx]<=bh)idx++;
+        series.push({h:bh,c:idx});
       }
       if(series.length<2){body.innerHTML='<div style="color:var(--text3)">Not enough data to plot.</div>';return;}
-      var finalCount=series[series.length-1].c;
+      var firstCount=series[0].c,finalCount=series[series.length-1].c,delta=finalCount-firstCount;
       var html='<div style="line-height:1.8;font-size:12px">';
-      html+='<span style="color:var(--text3)">Window:</span> <span style="color:var(--text)">last '+series.length+' blocks (#'+series[0].h+' → #'+series[series.length-1].h+')</span><br>';
-      html+='<span style="color:var(--text3)">Cumulative unique miners in window:</span> <span style="color:var(--cyan);font-weight:600">'+finalCount+'</span><br>';
+      html+='<span style="color:var(--text3)">Window:</span> <span style="color:var(--text)">last '+series.length+' blocks (#'+series[0].h+' &rarr; #'+series[series.length-1].h+')</span><br>';
+      html+='<span style="color:var(--text3)">Peak active miners at window start:</span> <span style="color:var(--cyan);font-weight:600">'+firstCount+'</span> &nbsp; ';
+      html+='<span style="color:var(--text3)">at window end:</span> <span style="color:var(--cyan);font-weight:600">'+finalCount+'</span>';
+      if(delta>0)html+=' &nbsp; <span style="color:var(--green)">(+'+delta+' new miners in this window)</span>';
+      else if(delta===0)html+=' &nbsp; <span style="color:var(--text3)">(no new miners in this window)</span>';
+      html+='<br>';
       html+='<div style="position:relative;margin-top:10px"><canvas id="dpPeakCanvas" style="width:100%;height:180px;cursor:crosshair"></canvas><div id="dpTip" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:6px 10px;font-size:10px;line-height:1.6;color:#e2e8f0;pointer-events:none;z-index:10;display:none;white-space:nowrap;border-radius:4px;font-family:var(--code)"></div></div>';
-      html+='<div style="font-size:9px;color:#aaa;margin-top:10px;line-height:1.6">Cumulative count of distinct miner addresses encountered as the window walks block-by-block from oldest to newest. Monotonically non-decreasing — each newly-discovered address bumps the curve by one. The right-edge value equals the unique miner count for the 288-block window. Note: this differs from the card value above (DTD eligible since #7100), which tracks lifetime eligibility with cooldown across the whole chain since V11 Phase 2 activation.</div>';
+      html+='<div style="font-size:9px;color:#aaa;margin-top:10px;line-height:1.6">Number of addresses that have ever mined a block by height H, plotted across the last 288 blocks. This is the lifetime unique miner count — the same metric the PEAK ACTIVE MINERS card shows at the current tip — visualised as it evolved over the recent window. Each step up marks a new miner joining the network. Cooldown of the most recent ~5 lottery winners is not subtracted here, so the right-edge value may exceed the card value by up to that constant.</div>';
       html+='</div>';
       body.innerHTML=html;
       setTimeout(function(){
         var cv=document.getElementById('dpPeakCanvas');if(!cv)return;
         var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.offsetWidth,Hc=cv.offsetHeight;
         cv.width=W*dpr;cv.height=Hc*dpr;ctx.scale(dpr,dpr);
-        var pad=28,mx=Math.max(finalCount,1);
+        var pad=32;
+        var yMin=Math.max(0,firstCount-2),yMax=finalCount+2;
+        var yRange=Math.max(yMax-yMin,1);
         ctx.strokeStyle='#1a1a1a';ctx.lineWidth=1;
         for(var gy=0;gy<=4;gy++){var y=pad+(Hc-pad*2)*gy/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();}
         ctx.fillStyle='#666';ctx.font='9px monospace';ctx.textAlign='right';
-        for(var gy=0;gy<=4;gy++){var y=pad+(Hc-pad*2)*gy/4;var v=Math.round(mx*(1-gy/4));ctx.fillText(v,pad-4,y+3);}
+        for(var gy=0;gy<=4;gy++){var y=pad+(Hc-pad*2)*gy/4;var v=Math.round(yMax-(yRange*gy/4));ctx.fillText(v,pad-4,y+3);}
         ctx.textAlign='center';
-        ctx.fillText('#'+series[0].h,pad+20,Hc-6);
-        ctx.fillText('#'+series[series.length-1].h,W-pad-20,Hc-6);
+        ctx.fillText('#'+series[0].h,pad+24,Hc-6);
+        ctx.fillText('#'+series[series.length-1].h,W-pad-24,Hc-6);
         ctx.strokeStyle='#22d3ee';ctx.lineWidth=2;ctx.beginPath();
         for(var i=0;i<series.length;i++){
           var x=pad+(W-pad*2)*i/(series.length-1);
-          var y=pad+(Hc-pad*2)*(1-series[i].c/mx);
+          var y=pad+(Hc-pad*2)*(1-(series[i].c-yMin)/yRange);
           if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
         }
         ctx.stroke();
         ctx.lineTo(W-pad,Hc-pad);ctx.lineTo(pad,Hc-pad);ctx.closePath();
         ctx.fillStyle='rgba(34,211,238,0.10)';ctx.fill();
         var tipData=series.map(function(p){return {hr:'#'+p.h,count:p.c};});
-        if(typeof setupDpTooltip==='function')setupDpTooltip('dpPeakCanvas',tipData,function(d){return '<span style="color:var(--cyan);font-weight:600">'+d.hr+'</span><br>Unique miners (cumulative): <span style="color:var(--text)">'+d.count+'</span>';});
+        if(typeof setupDpTooltip==='function')setupDpTooltip('dpPeakCanvas',tipData,function(d){return '<span style="color:var(--cyan);font-weight:600">'+d.hr+'</span><br>Peak active miners: <span style="color:var(--text)">'+d.count+'</span>';});
       },80);
-      try{clearInterval(_pmsci);}catch(e){}
-    })();
+    };
+    var extractFirstMined=function(rows){
+      if(!rows||!rows.length)return null;
+      var arr=[];
+      for(var i=0;i<rows.length;i++){
+        var r=rows[i];
+        if(r&&typeof r.firstMined==='number'&&r.firstMined>0)arr.push(r.firstMined);
+      }
+      return arr.length?arr:null;
+    };
+    var fm=null;
+    try{
+      if(typeof _dtdCache!=='undefined'&&_dtdCache&&_dtdCache.height===H&&_dtdCache.rows){
+        fm=extractFirstMined(_dtdCache.rows);
+      }
+    }catch(e){}
+    if(!fm){
+      try{
+        var raw=sessionStorage.getItem('sost_dtd_v317_'+H);
+        if(raw){
+          var parsed=JSON.parse(raw);
+          if(parsed&&parsed.dtdCache&&parsed.dtdCache.rows)fm=extractFirstMined(parsed.dtdCache.rows);
+        }
+      }catch(e){}
+    }
+    if(fm){
+      renderPeakChart(fm);
+    }else{
+      if(!silent){
+        body.innerHTML='<div style="color:var(--text3)">Scanning chain history for each miner\'s first-mined block... <span id="pmScanProg" style="color:var(--cyan)">starting</span><br><div style="font-size:10px;color:var(--text3);margin-top:8px">Tip: opening the DTD Lottery panel once also caches this data and makes the chart instant.</div></div>';
+      }
+      (async function(){
+        var firstByAddr={};
+        var CHUNK=40;
+        for(var start=0;start<=H;start+=CHUNK){
+          var hs=[];for(var hh=start;hh<=Math.min(H,start+CHUNK-1);hh++)hs.push(hh);
+          try{
+            var hashes=await Promise.all(hs.map(function(bh){return rpc('getblockhash',[String(bh)]).catch(function(){return null;});}));
+            var blocks=await Promise.all(hashes.map(function(hash){return hash?rpc('getblock',[hash]).catch(function(){return null;}):null;}));
+            for(var bi=0;bi<blocks.length;bi++){
+              var b=blocks[bi];if(!b)continue;
+              var addr=b.miner_address;
+              if(addr&&!(addr in firstByAddr))firstByAddr[addr]=b.height||0;
+            }
+          }catch(e){break;}
+          var pe=document.getElementById('pmScanProg');
+          if(pe)pe.textContent='#'+Math.min(H,start+CHUNK-1)+' / #'+H;
+        }
+        var arr=[];
+        for(var a in firstByAddr)arr.push(firstByAddr[a]);
+        if(!arr.length){body.innerHTML='<div style="color:var(--text3)">No miner data found.</div>';return;}
+        renderPeakChart(arr);
+      })();
+    }
   }
 }
 function setupDpTooltip(canvasId,dataArr,fmtFn){
