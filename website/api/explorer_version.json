@@ -1,4 +1,4 @@
 {
   "v": "2026-05-29-v321",
-  "note": "Rename PEAK ACTIVE MINERS card to PEAK ACTIVE MINERS SINCE GENESIS with explicit sub-text (only miners who found >=1 block; excludes non-producing nodes). Version bump triggers automatic reload in all open explorer tabs after deploy."
+  "note": "PEAK ACTIVE MINERS card keeps its original label and gains an explicit sub-text (only miners who found >=1 block; excludes non-producing nodes). Version bump triggers automatic reload in all open explorer tabs after deploy."
 }
