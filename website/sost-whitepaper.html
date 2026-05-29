@@ -1483,6 +1483,81 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
     text-transform:uppercase; }
   /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
   body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
+
+  /* ============================================================
+     PRINT STYLES — keeps the PDF download clean for evaluators.
+     Strips the site chrome (nav, footer, video modal, hamburger,
+     hero CTA buttons) so the PDF starts with the whitepaper title
+     page itself rather than the website navigation. Also resets
+     the html{zoom:0.80} that compresses on-screen reading but
+     mangles print layout, and tightens letter-spacing so the
+     retro headings don't extract as "T e c h n o l o g y" in a
+     PDF reader's text layer.
+     ============================================================ */
+  @media print {
+    html { zoom: 1 !important; }
+    body { background: #fff !important; color: #000 !important; }
+
+    /* Strip site chrome */
+    nav,
+    footer,
+    .sv-modal,
+    .nav-toggle,
+    .nav-hamburger,
+    .nav-links,
+    #nesMuteBtn,
+    #sost-search-launcher,
+    #sost-search-modal,
+    #sost-pwa-install,
+    #developer-note,
+    .pwa-install-banner,
+    [id*="music"],
+    body::before,
+    body::after,
+    [onclick*="openSv"],
+    [onclick*="toggleNav"],
+    [onclick*="nesToggle"] {
+      display: none !important;
+    }
+
+    /* Kill the global zoom + matrix scanlines that the body has */
+    body { animation: none !important; }
+
+    /* Force standard fonts in print so the PDF text layer is
+       searchable / grep-able / copy-pasteable. The screen version
+       uses retro monospace fonts (JetBrains Mono, IBM Plex Mono)
+       which WeasyPrint subsets without a complete ToUnicode CMap,
+       leaving evaluators with a PDF that LOOKS fine but where
+       Ctrl+F returns nothing useful. */
+    *, *::before, *::after {
+      font-family: "DejaVu Sans", Arial, Helvetica, sans-serif !important;
+      letter-spacing: normal !important;
+      word-spacing: normal !important;
+      text-transform: none !important;
+    }
+    code, pre, kbd, samp, .mono, .code {
+      font-family: "DejaVu Sans Mono", "Liberation Mono", Courier, monospace !important;
+    }
+
+    /* Page sizing + sane margins */
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+
+    /* Avoid orphaned headings / table rows / stranded panel headers */
+    h1, h2, h3 { page-break-after: avoid; break-after: avoid; }
+    table, .panel, .stat-row, .spec-block, .spec-header { page-break-inside: avoid; break-inside: avoid; }
+    .spec-header { page-break-after: avoid; break-after: avoid; }
+    img { max-width: 100%; height: auto; }
+
+    /* Hide any "fade-in" animation overrides so content paints solid */
+    .fade-in, .delay-1, .delay-2, .delay-3 {
+      opacity: 1 !important;
+      animation: none !important;
+      transition: none !important;
+    }
+  }
 </style>
 <script>
   function openSv(){
