@@ -1,4 +1,4 @@
 {
-  "v": "2026-05-27-v320",
-  "note": "Add SCANNING DATA overlay with progress feedback to the 5000-block DIFF HISTORY chart in sost-explorer.html. Keeps explorer HTML meta tag and JSON version in lockstep."
+  "v": "2026-05-29-v321",
+  "note": "Rename PEAK ACTIVE MINERS card to PEAK ACTIVE MINERS SINCE GENESIS with explicit sub-text (only miners who found >=1 block; excludes non-producing nodes). Version bump triggers automatic reload in all open explorer tabs after deploy."
 }
