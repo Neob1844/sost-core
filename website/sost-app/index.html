@@ -1715,7 +1715,7 @@ SectionRenderers.dashboard = function(el) {
         localStorage.setItem('sost_app_dtd_eligible_v1',
           JSON.stringify({ tip: tipHeight, count: count, ts: Date.now() }));
       } catch (e) {}
-      if (cell) cell.textContent = count + ' (since #7100)';
+      if (cell) cell.textContent = count + ' (since genesis)';
     } catch (e) {
       if (cell) cell.innerHTML = '<span style="color:#fb010d">scan failed</span>';
     } finally {
@@ -1816,19 +1816,11 @@ SectionRenderers.dashboard = function(el) {
         }
       } catch(e) { connectedNodes = 'N/A'; }
 
-      // Count unique miners from last 288 blocks (~48h) — matches explorer
-      let uniqueMiners = 'N/A';
-      try {
-        let minerAddrs = new Set();
-        const tipHash = await rpcCall('getblockhash', [parseInt(height)]);
-        let bHash = tipHash;
-        for (let i = 0; i < 288 && bHash; i++) {
-          const blk = await rpcCall('getblock', [bHash]);
-          if (blk && blk.miner_address) minerAddrs.add(blk.miner_address);
-          bHash = blk ? blk.previousblockhash : null;
-        }
-        uniqueMiners = minerAddrs.size;
-      } catch(e) { uniqueMiners = 'N/A'; }
+      // Phase-4 fix: the 288-block UNIQUE MINERS row was confusing users
+      // who expected the DTD-eligible lifetime count (matches the explorer's
+      // ⚒ PEAK ACTIVE MINERS card). Dropped the 288-window scan; chain
+      // status now surfaces only the lifetime count via runDtdEligibleScanApp
+      // below.
 
       // DTD lottery distribution — deterministic from consensus constants.
       // Same formula as sost-explorer.html line 3954 (dtdLotteryDistributed):
@@ -1891,7 +1883,7 @@ SectionRenderers.dashboard = function(el) {
                 typeof obj.tip === 'number' &&
                 Math.abs(parseInt(height) - obj.tip) <= 100 &&
                 (Date.now() - (obj.ts || 0)) < 6 * 3600 * 1000) {
-              dtdEligible = obj.count + ' (since #7100)';
+              dtdEligible = obj.count + ' (since genesis)';
             }
           }
         } catch(e) {}
@@ -1949,9 +1941,8 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">BLOCK HEIGHT</span><span class="stat-value">${height}</span></div>
         <div class="stat-row"><span class="stat-label">EXPECTED BLOCKS</span><span class="stat-value" style="color:var(--pip-dim)">${expectedBlocks} <span style="font-size:9px">(@10min/block)</span></span></div>
         <div class="stat-row"><span class="stat-label">CHAIN LAG/LEAD</span><span class="stat-value" style="color:${lagLeadColor};font-weight:700">${lagLeadText}</span></div>
-        <div class="stat-row"><span class="stat-label">UNIQUE MINERS</span><span class="stat-value">${uniqueMiners} <span style="font-size:9px;color:var(--pip-dim)">(last 288 blocks)</span></span></div>
         <div class="stat-row"><span class="stat-label">DTD DISTRIBUTED</span><span class="stat-value" style="color:#ff00ff;font-weight:700">${dtdDistributed} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(lottery payouts since #7100)</span></span></div>
-        <div class="stat-row"><span class="stat-label">DTD ELIGIBLE</span><span class="stat-value" style="color:#ff00ff;font-weight:700"><span id="dtdEligibleCell">${dtdEligible}</span> <span style="font-size:9px;color:var(--pip-dim);font-weight:400">addresses</span></span></div>
+        <div class="stat-row"><span class="stat-label">PEAK ACTIVE MINERS</span><span class="stat-value" style="color:#22d3ee;font-weight:700"><span id="dtdEligibleCell">${dtdEligible}</span> <span style="font-size:9px;color:var(--pip-dim);font-weight:400">since genesis · only miners who found &ge;1 block · excludes non-producing nodes</span></span></div>
         <div class="stat-row"><span class="stat-label">CONNECTED NODES</span><span class="stat-value">${connectedNodes} <span style="font-size:9px;color:var(--pip-dim)">(seed-visible)</span></span></div>
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
