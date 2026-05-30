@@ -13,13 +13,14 @@ A short housekeeping update ahead of the V14 hard fork.
 [list]
 [li]The Gold Vault GV3 supermajority threshold is being [b]unified at 90%[/b] of the signaling window, in both Epoch 0-1 and Epoch 2+. Previously the constants carried a 95% figure (and, further back, a 75%/95% Epoch split).[/li]
 [li]The +10% Foundation quality boost is unchanged: still available in Epoch 0-1, still expires at Epoch 2. Only the base threshold moves.[/li]
-[li]The signaling window math is unchanged: 90% over the 67-block window = ceil(0.90 × 67) = 61 blocks with the bit set.[/li]
+[li]Voting mechanics are otherwise unchanged in V14-1: only the threshold number moves. The signaling window itself is NOT touched by V14-1.[/li]
+[li][b]Note:[/b] the shorter ~12 h (67-block) signaling window is a SEPARATE change — part of Gold Vault Phase I, landing in V14-2 at block 15,000. It is NOT part of V14-1 and is not active yet.[/li]
 [/list]
 
 [b]Why[/b]
 [list]
 [li][b]Doc ↔ code consistency.[/b] The canonical V13 governance gate document already specifies 90% as the finalised calibration. V14-1 brings the consensus constants in the binary into line with that document so there is a single source of truth.[/li]
-[li][b]More realistic operational governance.[/b] 90% over a 67-block (~12h) window keeps the vault hard to abuse while remaining achievable for a legitimate proposal under real network conditions. It is still a strong supermajority — the vault is deliberately hard to spend from.[/li]
+[li][b]More realistic operational governance.[/b] A 90% supermajority keeps the vault hard to abuse while remaining achievable for a legitimate proposal under real network conditions. It is still a strong supermajority — the vault is deliberately hard to spend from.[/li]
 [/list]
 
 [b]What does NOT change[/b]
