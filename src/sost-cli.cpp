@@ -1628,14 +1628,90 @@ int main(int argc, char** argv) {
             }
             return 0;
         } else {
-            int64_t total = w.balance(chain_height);
-            int64_t locked = w.locked_balance(chain_height);
-            int64_t avail = total - locked;
-            printf("Total:     %s SOST\n", format_sost(total).c_str());
-            if (locked > 0) {
-                printf("Available: %s SOST\n", format_sost(avail).c_str());
-                printf("Locked:    %s SOST (bonds/escrows)\n", format_sost(locked).c_str());
+            // V13 reporting fix.
+            //
+            // getbalance with no address used to print w.balance(), which sums
+            // the wallet file's LOCAL utxos_ cache. For a miner wallet that
+            // mined across restarts, that cache can lag the chain (coinbase
+            // rewards are not all imported until a `send` triggers
+            // sync_wallet_utxos_from_node). Result: getbalance (no arg) showed
+            // a stale, lower number than getbalance <addr> / the explorer
+            // (e.g. 1489.62 cached vs the real on-chain total). NOT a fee/dust
+            // policy — purely a stale local cache.
+            //
+            // Fix: read CHAIN TRUTH for EVERY address in the wallet (a wallet
+            // can hold several keys; the mining rewards may sit on a non-default
+            // address) via the same helper that getbalance <addr> / info /
+            // listaddresses use, and sum them. This is the whole-wallet balance,
+            // matching the explorer. The getbalance <addr> path and `send` are
+            // untouched.
+            const auto& keys = w.keys();
+            if (keys.empty()) {
+                fprintf(stderr, "Error: wallet has no addresses. Use: getbalance <address>\n");
+                return 1;
             }
+            int64_t total = 0, mature = 0, immature = 0;
+            int utxo_count = 0, mature_count = 0, immature_count = 0;
+            int chain_addrs = 0, cache_addrs = 0;
+            std::string fallback_reason;
+            for (const auto& k : keys) {
+                ChainAddressBalance c = query_address_chain_balance(k.address);
+                if (c.ok) {
+                    chain_addrs++;
+                    total          += c.total;
+                    mature         += c.mature;
+                    immature       += c.immature;
+                    utxo_count     += c.utxo_count;
+                    mature_count   += c.mature_count;
+                    immature_count += c.immature_count;
+                } else {
+                    // Node not reachable for this address — fall back to the
+                    // local cache for it so the sum is not silently understated.
+                    cache_addrs++;
+                    if (fallback_reason.empty()) fallback_reason = c.error;
+                    int64_t lc = w.balance(k.address, chain_height);
+                    total  += lc;
+                    mature += lc;
+                }
+            }
+            if (chain_addrs == 0) {
+                // Could not reach the node for any address — print the local
+                // cache total and say so, rather than a confusing zero.
+                int64_t local = w.balance(chain_height);
+                printf("%s SOST\n", format_sost(local).c_str());
+                fprintf(stderr,
+                        "Note: node not reachable for chain truth (%s) — showing "
+                        "wallet-local cached balance, which may be stale. `send` "
+                        "always re-syncs from the node before spending.\n",
+                        fallback_reason.empty() ? "no_node" : fallback_reason.c_str());
+                return 0;
+            }
+            // Chain-truth breakdown. Headline (first line, back-compat for
+            // scripts) = mature spendable: what you can actually spend now.
+            printf("%s SOST\n", format_sost(mature).c_str());
+            printf("Total:     %s SOST  (%d UTXO%s across %zu address%s)\n",
+                   format_sost(total).c_str(),
+                   utxo_count, utxo_count == 1 ? "" : "s",
+                   keys.size(), keys.size() == 1 ? "" : "es");
+            printf("Spendable: %s SOST  (%d mature)\n",
+                   format_sost(mature).c_str(), mature_count);
+            if (immature > 0) {
+                printf("Immature:  %s SOST  (%d UTXO%s, need 1000 confirmations)\n",
+                       format_sost(immature).c_str(),
+                       immature_count, immature_count == 1 ? "" : "s");
+            }
+            int64_t locked = w.locked_balance(chain_height);
+            if (locked > 0) {
+                printf("Locked:    %s SOST  (bonds/escrows)\n", format_sost(locked).c_str());
+            }
+            if (cache_addrs > 0) {
+                fprintf(stderr,
+                        "Note: %d of %zu addresses fell back to wallet cache (%s); "
+                        "their figures may be stale.\n",
+                        cache_addrs, keys.size(),
+                        fallback_reason.empty() ? "node error" : fallback_reason.c_str());
+            }
+            printf("(synced with chain tip #%lld)\n", (long long)chain_height);
         }
         return 0;
     }
