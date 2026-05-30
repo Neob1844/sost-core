@@ -1,4 +1,4 @@
 {
-  "v": "2026-05-29-v321",
-  "note": "PEAK ACTIVE MINERS card keeps its original label and gains an explicit sub-text (only miners who found >=1 block; excludes non-producing nodes). Version bump triggers automatic reload in all open explorer tabs after deploy."
+  "v": "2026-05-30-v322",
+  "note": "Update V13/V14 public scope messaging: V13 DTD anti-dominance gate, V14 scope block, dormant items, Gold Vault Phase I, PoPC migration, atomic swap conditional path, and Model B supervised mode. Explorer HTML meta tag and JSON version remain in lockstep."
 }
