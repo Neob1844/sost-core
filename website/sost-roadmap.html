@@ -789,14 +789,14 @@
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
-          <div class="spec-icon amber"></div>
-          <span class="spec-name">Block 15,000</span>
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Block 15,000 &middot; ~2026-06-27</span>
         </div>
-        <span class="spec-tag overlay">V14 FALLBACK</span>
+        <span class="spec-tag consensus">V14 FORK</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          <strong>V14 fallback.</strong> Gold Vault spend-side governance (&ge; 90 % miner-signaling supermajority over a 67-block window) and PoPC + Escrow automatic lifecycle. The <strong>V14 PoPC eligibility gate</strong> for the DTD lottery is wired in the V13 binary but ships consensus-deferred &mdash; activation requires PoPC state to first migrate from <code>popc_registry.json</code> (per-node local file) to deterministic chain-derived state. See <code>docs/V14_DTD_POPC_ELIGIBILITY.md</code>.
+          <strong>V14 hard fork.</strong> Phase I governance + automation block. Activates: <strong>Gold Vault Phase I</strong> (90 % miner threshold, +10 % quality boost or single-signer veto from developer/genesis, silence = accept, 67 + 10 block sequential window, 1,000 SOST per spend, 5,000 SOST per rolling week, single destination = genesis miner); <strong>PoPC Model A chain-state migration</strong> (out of <code>popc_registry.json</code>, into deterministic UTXO/chain-state); <strong>PoPC Model A auto-audit + auto-slash + auto-settlement</strong> (initial grace period 1,000 blocks); <strong>DTD-PoPC eligibility gate flips to true</strong> (from V14_HEIGHT, DTD lottery requires holding at least one ACTIVE canonical PoPC contract); <strong>Beacon II-A real operator pubkey</strong> (replaces fail-closed placeholder); <strong>threshold sync 95 % → 90 %</strong>. <strong>Conditional in V14:</strong> atomic swap HTLC activates only if the libwally-core sprint and testnet pass before block 15,000; <strong>PoPC Model B "supervised mode"</strong> (manual operator verification of user-declared Ethereum contracts until V15 brings the Ethereum event-listener automation). Atomic swap full audit deferred to V15. Block 15,000 is an internal target — retractable without public drama if testnet fails.
         </p>
       </div>
     </div>
