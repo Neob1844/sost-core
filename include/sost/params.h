@@ -872,6 +872,55 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
         : LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW;  // = 5
 }
 
+// V13 anti-dominance DTD gate.
+//
+// Activation height: DTD_DOMINANCE_GATE_HEIGHT (= 12100, the same height
+// where DTD frequency flips from 2-of-3 bootstrap to 1-of-3 permanent
+// via is_lottery_block; see include/sost/lottery.h).
+//
+// Rule: from height >= DTD_DOMINANCE_GATE_HEIGHT, any miner_pkh whose
+// share of the previous DTD_DOMINANCE_WINDOW blocks is >= 30 % is
+// excluded from DTD lottery eligibility for the current block. The
+// gate is INDEPENDENT of the recent-winner cooldown — both filters
+// apply, and a pkh excluded by either is not eligible.
+//
+// Window convention: [height - DTD_DOMINANCE_WINDOW, height - 1]
+// inclusive on both ends, exactly DTD_DOMINANCE_WINDOW heights when
+// the chain is far enough past genesis. Near the gate height, the
+// observed window may contain fewer than DTD_DOMINANCE_WINDOW blocks;
+// the helper accepts the observed count to keep the ratio meaningful.
+//
+// Threshold math: integer-only, no floats. A pkh is dominant iff
+//   mined_in_window * 10000 >= DTD_DOMINANCE_MAX_BPS * observed
+// which is equivalent to mined / observed >= 30 % at basis-point
+// precision. Examples for observed=288:
+//   86/288 = 29.86 %  → eligible
+//   87/288 = 30.21 %  → excluded
+//
+// Effect: a dominant miner is NOT prevented from producing normal
+// blocks. The gate only removes them from DTD lottery eligibility
+// until their rolling share drops below 30 %. As soon as the rolling
+// window no longer holds 30 % of their blocks, they become eligible
+// again automatically — no operator action.
+inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 12100;
+inline constexpr int32_t  DTD_DOMINANCE_WINDOW      = 288;
+inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 3000;  // 30.00 %
+
+inline constexpr bool is_dtd_dominant(
+    int32_t mined_count_in_window,
+    int32_t observed_window_blocks,
+    int64_t height)
+{
+    if (height < DTD_DOMINANCE_GATE_HEIGHT) return false;
+    if (observed_window_blocks <= 0) return false;
+    // Integer comparison: mined * 10000 >= 3000 * observed.
+    // Cast to int64_t before the multiplication to avoid any overflow
+    // at the rim of the int32_t range; observed <= 288 in practice but
+    // the helper is defensive.
+    return (int64_t)mined_count_in_window * 10000 >=
+           (int64_t)DTD_DOMINANCE_MAX_BPS * (int64_t)observed_window_blocks;
+}
+
 // Future-drift cap — height-gated. Three regimes, matching the production
 // validator history byte-for-byte:
 //   - height >= V13_HEIGHT                    → 10 s  (V13 tightening)

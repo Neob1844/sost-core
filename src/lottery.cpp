@@ -78,12 +78,11 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     // the recent-winner cooldown applied over the PREVIOUS `exclusion_window`
     // blocks (heights [height - exclusion_window, height - 1]).
     //
-    // Rationale: the C6 rule penalised a miner for finding the current
-    // block — even if they had been silent for a long time. Under the
-    // C7.1 rule, "if you didn't win any of the previous N blocks, you
-    // participate" is simpler, less punitive, and equivalent in the
-    // common case where a winning miner who keeps winning is naturally
-    // excluded by the previous-N-blocks cooldown.
+    // V13 extension (from height >= DTD_DOMINANCE_GATE_HEIGHT, params.h):
+    // additionally exclude any pkh whose share of the previous
+    // DTD_DOMINANCE_WINDOW blocks (default 288) is >= 30 %. The
+    // dominance gate is INDEPENDENT of the recent-winner cooldown — a
+    // pkh excluded by either filter is not in the eligibility set.
     //
     // The `current_miner_pkh` parameter is retained for source-level
     // compatibility with C6/C7 callers and tests; it is no longer
@@ -99,7 +98,19 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     // operator<. We could equivalently aggregate into unordered_map
     // and sort at the end; the std::map path is simpler and the
     // benchmark is well below the C9 50 ms target on the test sizes.
+    //
+    // V13: in the same pass also accumulate per-pkh counts of blocks
+    // that fall inside the dominance window [height - DTD_DOMINANCE_WINDOW,
+    // height - 1], and count the total distinct heights observed in
+    // that window. Two separate maps keep the dominance bookkeeping
+    // cleanly separated from the genesis-to-now aggregation.
     std::map<PubKeyHash, LotteryEligibilityEntry> agg;
+    std::map<PubKeyHash, int32_t> dominance_count;
+    int32_t observed_window_blocks = 0;
+
+    const int64_t dom_window_lo = height - DTD_DOMINANCE_WINDOW;
+    const int64_t dom_window_hi = height - 1;
+
     for (const auto& b : blocks) {
         if (b.height >= height) continue;  // future / current — ignore
         auto& e = agg[b.miner_pkh];
@@ -113,6 +124,17 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
             if (b.height > e.last_mined_height)  e.last_mined_height  = b.height;
         }
         ++e.blocks_mined;
+
+        // V13 dominance bookkeeping. We only need to do this when the
+        // gate is at-or-past activation; the conditional is constant-
+        // foldable per call and keeps pre-V13 cost flat. The block
+        // counter is incremented once per block in the window
+        // regardless of pkh (heights are unique in the chain view).
+        if (height >= DTD_DOMINANCE_GATE_HEIGHT &&
+            b.height >= dom_window_lo && b.height <= dom_window_hi) {
+            ++dominance_count[b.miner_pkh];
+            ++observed_window_blocks;
+        }
     }
 
     // Step 2: build the recent-winner exclusion set in O(window) by
@@ -132,14 +154,32 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     // Step 3: filter and project. std::map iteration is in lex order
     // of the key, which is exactly the sort order we want.
     //
-    // C7.1: current_miner_pkh is NOT auto-excluded here. They are
-    // excluded iff they appear in `recent_winners` (i.e. won a block
-    // in the previous `exclusion_window` heights).
+    // Filters applied in order (any one excludes the pkh):
+    //   (a) recent-winner cooldown (always, when exclusion_window > 0)
+    //   (b) V13 anti-dominance (height >= DTD_DOMINANCE_GATE_HEIGHT)
     std::vector<LotteryEligibilityEntry> out;
     out.reserve(agg.size());
     for (const auto& kv : agg) {
         const auto& pkh = kv.first;
+
+        // (a) recent-winner cooldown.
         if (exclusion_window > 0 && recent_winners.count(pkh)) continue;
+
+        // (b) V13 anti-dominance gate. The helper short-circuits to
+        // false for height < DTD_DOMINANCE_GATE_HEIGHT so pre-V13.5
+        // behaviour is preserved bit-for-bit.
+        if (height >= DTD_DOMINANCE_GATE_HEIGHT) {
+            auto it = dominance_count.find(pkh);
+            const int32_t mined_in_window = (it == dominance_count.end())
+                ? 0
+                : it->second;
+            if (is_dtd_dominant(mined_in_window,
+                                observed_window_blocks,
+                                height)) {
+                continue;
+            }
+        }
+
         out.push_back(kv.second);
     }
     return out;
