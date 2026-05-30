@@ -1,16 +1,19 @@
 // gold_vault_governance.h — Consensus-level Gold Vault spending rules
 //
-// Activates at block 10000 (same as Bond/Escrow/Capsule).
-// Before block 10000: no spending restrictions on Gold Vault.
+// Activates at V14_HEIGHT (15000) via the Gold Vault Phase I governance
+// wiring (GV_SLICE1_ACTIVATION_HEIGHT). Before that, no spending
+// restrictions on Gold Vault.
 //
 // 4 rules:
 //   GV1: Gold purchase (marked payload) → no vote needed
 //   GV2: ≤10% monthly operational → no vote needed
-//   GV3: >10% or non-standard → requires 75%/95% miner vote
+//   GV3: >10% or non-standard → requires 90% miner vote
 //   GV4: No rule matched → REJECTED
 //
-// Foundation quality vote (+10%) expires at Epoch 2 (block 263106).
-// After Epoch 2: threshold rises to 95%, no foundation vote.
+// Foundation quality vote (+10%) is available in Epoch 0-1 and expires
+// at Epoch 2 (block 263106). The Epoch 0-1 and Epoch 2+ thresholds are
+// both 90% as of V14-1; the Epoch boundary affects only the foundation
+// quality boost, not the threshold itself.
 #pragma once
 
 #include "sost/consensus_constants.h"
@@ -39,7 +42,7 @@ struct GVApprovalToken {
     Hash256  proposal_id;       // SHA256 of proposal
     int64_t  approved_height;   // block where threshold was met
     int32_t  signal_pct;        // percentage achieved
-    int32_t  threshold_required; // 75 or 95
+    int32_t  threshold_required; // 90 from V14-1 onwards (was 95 pre-V14-1)
     bool     foundation_supported;
 };
 

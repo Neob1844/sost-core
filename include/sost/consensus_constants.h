@@ -35,9 +35,24 @@ inline constexpr uint16_t ESCROW_LOCK_PAYLOAD_LEN = 28;  // lock_until (8) + ben
 // Activation (same height as Bond/Escrow/Capsule)
 inline constexpr int64_t  GV_GOVERNANCE_ACTIVATION = 10000;
 
-// Signaling thresholds for large Gold Vault spends
-inline constexpr int32_t  GV_THRESHOLD_EPOCH01  = 95;   // 95% in Epoch 0-1 (V6: raised from 75% — see BTCTalk ANN post #89)
-inline constexpr int32_t  GV_THRESHOLD_EPOCH2   = 95;   // 95% in Epoch 2+ (blocks 263106+)
+// Signaling thresholds for large Gold Vault spends.
+//
+// V14-1 (2026-05-30): threshold synced from 95 % to 90 % to match the
+// canonical V13 calibration documented in
+// docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md. Trajectory of the threshold:
+//   75 % (genesis aim)
+// → 95 % (V6 internal review, BTCTalk ANN post #89)
+// → 90 % (V13 calibration, finalised pre-V14 by operator)
+//
+// Pre-V14 history replays unchanged: classify_gv_spend() is dead code
+// before V14 (the wiring lives behind GV_SLICE1_ACTIVATION_HEIGHT,
+// which is INT64_MAX in the V13 binary), so consensus behaviour up to
+// and including V13 is bit-identical between the old 95 % and the new
+// 90 % constant. Spend-side enforcement of these thresholds activates
+// for the first time at V14_HEIGHT (15000) via the Gold Vault Phase I
+// governance commit (V14-2).
+inline constexpr int32_t  GV_THRESHOLD_EPOCH01  = 90;   // 90% in Epoch 0-1
+inline constexpr int32_t  GV_THRESHOLD_EPOCH2   = 90;   // 90% in Epoch 2+ (blocks 263106+)
 inline constexpr int32_t  GV_APPROVAL_WINDOW    = 288;  // ~48h voting window
 
 // Foundation quality vote (expires at Epoch 2)
