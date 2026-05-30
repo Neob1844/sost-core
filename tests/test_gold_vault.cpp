@@ -86,98 +86,104 @@ TEST(GV05_large_spend_no_approval) {
 }
 
 // =============================================================================
-// GV3: Large spend with 75% approval → approved (Epoch 0-1)
+// V14-1: threshold sync 95 → 90. All large-spend boundary cases are
+// re-anchored at the new 90 % threshold. Foundation quality vote
+// remains +10 % in Epoch 0-1, expires at Epoch 2.
 // =============================================================================
-TEST(GV06_large_spend_75_approved) {
+
+// =============================================================================
+// GV3: Large spend at 91 % signaling → approved (Epoch 0-1, threshold 90)
+// =============================================================================
+TEST(GV06_large_spend_above_threshold_approved) {
     GVMonthlyTracker tracker;
     tracker.reset(10000);
     GVApprovalToken token{};
-    token.signal_pct = 96;
-    token.threshold_required = 95;
+    token.signal_pct = 91;
+    token.threshold_required = 90;
     token.foundation_supported = false;
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
-    EXPECT(result == GVSpendType::REQUIRES_APPROVAL, "76% signaling should approve at 75% threshold");
+    EXPECT(result == GVSpendType::REQUIRES_APPROVAL, "91% signaling should approve at 90% threshold");
 }
 
 // =============================================================================
-// GV3: Large spend with 74% → rejected (Epoch 0-1)
+// GV3: Large spend at 89 % signaling → rejected (Epoch 0-1, threshold 90)
 // =============================================================================
-TEST(GV07_large_spend_74_rejected) {
+TEST(GV07_large_spend_below_threshold_rejected) {
     GVMonthlyTracker tracker;
     tracker.reset(10000);
     GVApprovalToken token{};
-    token.signal_pct = 94;
-    token.threshold_required = 95;
+    token.signal_pct = 89;
+    token.threshold_required = 90;
     token.foundation_supported = false;
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
-    EXPECT(result == GVSpendType::REJECTED, "74% signaling should be rejected at 75% threshold");
+    EXPECT(result == GVSpendType::REJECTED, "89% signaling should be rejected at 90% threshold");
 }
 
 // =============================================================================
-// GV3: Foundation support 65% + 10% = 75% → approved (Epoch 0-1)
+// GV3: Foundation boost lifts 81 % + 10 % = 91 % → approved (Epoch 0-1)
 // =============================================================================
-TEST(GV08_foundation_support_65_plus_10) {
+TEST(GV08_foundation_boost_lifts_to_pass) {
     GVMonthlyTracker tracker;
     tracker.reset(10000);
     GVApprovalToken token{};
-    token.signal_pct = 86;
-    token.threshold_required = 95;
+    token.signal_pct = 81;
+    token.threshold_required = 90;
     token.foundation_supported = true;
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
-    EXPECT(result == GVSpendType::REQUIRES_APPROVAL, "65% + 10% foundation = 75% should approve");
+    EXPECT(result == GVSpendType::REQUIRES_APPROVAL, "81% + 10% foundation = 91% should approve at 90% threshold");
 }
 
 // =============================================================================
-// GV3: Foundation support 64% + 10% = 74% → rejected
+// GV3: Foundation boost insufficient — 79 % + 10 % = 89 % → rejected
 // =============================================================================
-TEST(GV09_foundation_support_64_plus_10) {
+TEST(GV09_foundation_boost_insufficient) {
     GVMonthlyTracker tracker;
     tracker.reset(10000);
     GVApprovalToken token{};
-    token.signal_pct = 84;
-    token.threshold_required = 95;
+    token.signal_pct = 79;
+    token.threshold_required = 90;
     token.foundation_supported = true;
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 11000);
-    EXPECT(result == GVSpendType::REJECTED, "64% + 10% = 74% should be rejected");
+    EXPECT(result == GVSpendType::REJECTED, "79% + 10% = 89% should be rejected at 90% threshold");
 }
 
 // =============================================================================
-// Epoch 2: needs 95%, no foundation bonus
+// Epoch 2: still 90 %, no foundation bonus
 // =============================================================================
-TEST(GV10_epoch2_needs_95) {
+TEST(GV10_epoch2_below_threshold_rejected) {
     GVMonthlyTracker tracker;
     tracker.reset(263000);
     GVApprovalToken token{};
-    token.signal_pct = 94;
-    token.threshold_required = 95;
+    token.signal_pct = 89;
+    token.threshold_required = 90;
     token.foundation_supported = false;
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 263200);
-    EXPECT(result == GVSpendType::REJECTED, "94% should be rejected at 95% threshold (Epoch 2)");
+    EXPECT(result == GVSpendType::REJECTED, "89% should be rejected at 90% threshold (Epoch 2)");
 }
 
-TEST(GV11_epoch2_95_approved) {
+TEST(GV11_epoch2_above_threshold_approved) {
     GVMonthlyTracker tracker;
     tracker.reset(263000);
     GVApprovalToken token{};
-    token.signal_pct = 96;
-    token.threshold_required = 95;
+    token.signal_pct = 91;
+    token.threshold_required = 90;
     token.foundation_supported = false;
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 263200);
-    EXPECT(result == GVSpendType::REQUIRES_APPROVAL, "96% should approve at 95% threshold (Epoch 2)");
+    EXPECT(result == GVSpendType::REQUIRES_APPROVAL, "91% should approve at 90% threshold (Epoch 2)");
 }
 
 // =============================================================================
-// Epoch 2: foundation support has NO effect
+// Epoch 2: foundation support has NO effect — boost expired
 // =============================================================================
 TEST(GV12_epoch2_no_foundation_bonus) {
     GVMonthlyTracker tracker;
     tracker.reset(263000);
     GVApprovalToken token{};
-    token.signal_pct = 86;
-    token.threshold_required = 95;
+    token.signal_pct = 81;
+    token.threshold_required = 90;
     token.foundation_supported = true; // should be IGNORED in Epoch 2
     auto result = classify_gv_spend(VAULT_BAL, LARGE_SPEND, false, &token, tracker, 263200);
-    EXPECT(result == GVSpendType::REJECTED, "Foundation bonus should not apply in Epoch 2 (86% < 95%)");
+    EXPECT(result == GVSpendType::REJECTED, "Foundation bonus should not apply in Epoch 2 (81% < 90%)");
 }
 
 // =============================================================================
@@ -206,25 +212,52 @@ TEST(GV14_monthly_counter_reset) {
 // =============================================================================
 // Proposal passing check
 // =============================================================================
-TEST(GV15_proposal_passes_75) {
-    EXPECT(gv_proposal_passes(274, 288, false, 11000) == true, "274/288 = 95.1% should pass");
-    EXPECT(gv_proposal_passes(273, 288, false, 11000) == false, "273/288 = 94.8% should fail");
+// =============================================================================
+// Proposal passing check — V14-1 boundary at 90 % threshold.
+// Integer math: pct = (signal_count * 100) / window_size, then >= threshold.
+// 260/288 = 90.27 % → integer 90 → PASS at threshold 90
+// 259/288 = 89.93 % → integer 89 → FAIL at threshold 90
+// =============================================================================
+TEST(GV15_proposal_passes_90pct_boundary) {
+    EXPECT(gv_proposal_passes(260, 288, false, 11000) == true, "260/288 = 90.27% should pass");
+    EXPECT(gv_proposal_passes(259, 288, false, 11000) == false, "259/288 = 89.93% should fail");
 }
 
-TEST(GV16_proposal_foundation_support) {
-    // 188/288 = 65.3% + 10% = 75.3% → pass
-    EXPECT(gv_proposal_passes(246, 288, true, 11000) == true, "85.4% + 10% foundation should pass");
-    // 187/288 = 64.9% + 10% = 74.9% → fail
-    EXPECT(gv_proposal_passes(244, 288, true, 11000) == false, "84.7% + 10% = 94.7% should fail at 95% threshold");
+TEST(GV16_proposal_foundation_boost_lifts_to_pass) {
+    // 231/288 = 80.20 % + 10 % foundation = 90 → PASS at threshold 90
+    EXPECT(gv_proposal_passes(231, 288, true, 11000) == true, "80.20% + 10% foundation should pass");
+    // 230/288 = 79.86 % + 10 % = 89 → FAIL at threshold 90
+    EXPECT(gv_proposal_passes(230, 288, true, 11000) == false, "79.86% + 10% = 89% should fail at 90% threshold");
 }
 
 TEST(GV17_proposal_epoch2_no_bonus) {
-    // 274/288 = 95.1% → pass even without bonus
-    EXPECT(gv_proposal_passes(274, 288, false, 263200) == true, "95.1% should pass at Epoch 2");
-    // 273/288 = 94.8% → fail
-    EXPECT(gv_proposal_passes(273, 288, false, 263200) == false, "94.8% should fail at Epoch 2");
-    // With foundation support: 273/288 = 94.8% + 10% = 104.8%... but in Epoch 2 bonus doesn't apply
-    EXPECT(gv_proposal_passes(273, 288, true, 263200) == false, "Foundation bonus should not apply in Epoch 2");
+    // 260/288 = 90.27 % → PASS even without bonus
+    EXPECT(gv_proposal_passes(260, 288, false, 263200) == true, "90.27% should pass at Epoch 2");
+    // 259/288 = 89.93 % → FAIL
+    EXPECT(gv_proposal_passes(259, 288, false, 263200) == false, "89.93% should fail at Epoch 2");
+    // Foundation bonus does not apply in Epoch 2 — 259/288 + foundation flag is still 89 % effective
+    EXPECT(gv_proposal_passes(259, 288, true, 263200) == false, "Foundation bonus should not apply in Epoch 2");
+}
+
+// =============================================================================
+// V14-1 compile-time lock-in: the canonical Gold Vault thresholds are
+// 90 in both epochs. If a future change touches these constants without
+// the corresponding ANN + governance review, this static_assert fires
+// at build time and the V14-1 sweep stays in sync with the doc.
+// =============================================================================
+TEST(GV18_v14_threshold_lockin) {
+    static_assert(GV_THRESHOLD_EPOCH01 == 90,
+                  "GV_THRESHOLD_EPOCH01 must be 90 (V14-1 canonical). "
+                  "If you are intentionally changing this, update "
+                  "docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md and the BTCTalk ANN first.");
+    static_assert(GV_THRESHOLD_EPOCH2 == 90,
+                  "GV_THRESHOLD_EPOCH2 must be 90 (V14-1 canonical). "
+                  "If you are intentionally changing this, update "
+                  "docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md and the BTCTalk ANN first.");
+    EXPECT(GV_THRESHOLD_EPOCH01 == 90, "Epoch 0-1 threshold runtime check");
+    EXPECT(GV_THRESHOLD_EPOCH2  == 90, "Epoch 2 threshold runtime check");
+    // Foundation boost stays at 10 %.
+    EXPECT(GV_FOUNDATION_VOTE_PCT == 10, "Foundation quality vote stays at +10 %");
 }
 
 // =============================================================================

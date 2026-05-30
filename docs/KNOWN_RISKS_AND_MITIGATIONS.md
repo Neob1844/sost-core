@@ -50,7 +50,7 @@
 - **Protection (4 rules, activated at block 5000):**
   - **GV1:** Gold purchases (marked payload) → allowed without vote
   - **GV2:** ≤10% monthly operational → allowed without vote
-  - **GV3:** >10% or non-standard → requires 75% miner signaling (Epoch 0-1) or 95% (Epoch 2+)
+  - **GV3:** >10% or non-standard → requires 90% miner signaling (both epochs; V14-1 sync, was 75%/95%)
   - **GV4:** No rule matched → REJECTED by ALL nodes
 - **Foundation quality vote:** +10% equivalent until Epoch 2 (block 263,106). Expires automatically.
 - **Key theft scenario:** Attacker steals key → tries to send to random address → GV4 rejects → funds safe

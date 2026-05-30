@@ -1,0 +1,38 @@
+SUBJECT: [UPDATE] SOST V14-1 — Gold Vault governance threshold sync 95% → 90%
+
+STATUS: DRAFT — for operator to post on BitcoinTalk when the V14-1 PR is merged / release-ready.
+        Does NOT replace or edit the original block-10,000 ANN; that post stays as historical record.
+
+------------------------------------------------------------------------------
+
+[b]SOST V14-1 — Gold Vault governance threshold sync (95% → 90%)[/b]
+
+A short housekeeping update ahead of the V14 hard fork.
+
+[b]What changes[/b]
+[list]
+[li]The Gold Vault GV3 supermajority threshold is being [b]unified at 90%[/b] of the signaling window, in both Epoch 0-1 and Epoch 2+. Previously the constants carried a 95% figure (and, further back, a 75%/95% Epoch split).[/li]
+[li]The +10% Foundation quality boost is unchanged: still available in Epoch 0-1, still expires at Epoch 2. Only the base threshold moves.[/li]
+[li]The signaling window math is unchanged: 90% over the 67-block window = ceil(0.90 × 67) = 61 blocks with the bit set.[/li]
+[/list]
+
+[b]Why[/b]
+[list]
+[li][b]Doc ↔ code consistency.[/b] The canonical V13 governance gate document already specifies 90% as the finalised calibration. V14-1 brings the consensus constants in the binary into line with that document so there is a single source of truth.[/li]
+[li][b]More realistic operational governance.[/b] 90% over a 67-block (~12h) window keeps the vault hard to abuse while remaining achievable for a legitimate proposal under real network conditions. It is still a strong supermajority — the vault is deliberately hard to spend from.[/li]
+[/list]
+
+[b]What does NOT change[/b]
+[list]
+[li]V13 behaviour is [b]bit-identical[/b]. The spend-side enforcement of this threshold does not activate until V14 (block 15,000); it is dead code in the V13 binary, so historical block replay is unaffected by the constant change.[/li]
+[li]No change to [tt]V11_PHASE2_HEIGHT[/tt], [tt]V12_HEIGHT[/tt], [tt]V13_HEIGHT[/tt], or [tt]SOST_ENABLE_PHASE2_SBPOW[/tt].[/li]
+[li]No change to the monetary policy. The "~95% of supply mined in ~12 epochs" figure is a separate, unrelated number and is untouched.[/li]
+[/list]
+
+[b]Activation[/b]
+The threshold takes effect at [b]V14_HEIGHT = block 15,000[/b] (target ~2026-06-27), together with the rest of the Gold Vault Phase I governance wiring. As with the whole V14 scope, activation is retractable without drama if the pre-fork checks do not pass.
+
+[b]Binaries / tests[/b]
+The V14-1 change is covered by the Gold Vault governance test suite (boundary cases re-anchored at 90%, plus a compile-time lock-in assert that pins the constant to 90). Binaries and the full test report will be announced here once the V14-1 PR is merged and release-ready.
+
+— SOST
