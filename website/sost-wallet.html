@@ -912,6 +912,40 @@ document.addEventListener('DOMContentLoaded', () => {
             <option value="cert">Certification — Gold cert, warranty, proof</option>
           </select>
           <div id="capsuleDesc" style="font-size:11px;color:var(--text-dim);margin-top:4px;min-height:16px"></div>
+
+          <!-- ============== Protocol Registry mode (frontend convenience over Open Note) ============== -->
+          <div id="regModeWrap" style="margin-top:10px;padding:10px 12px;background:rgba(217,70,239,0.05);border:1px solid rgba(217,70,239,0.3);border-left:3px solid #d946ef;border-radius:3px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12.5px;color:var(--text-primary);margin:0">
+              <input type="checkbox" id="regModeToggle" onchange="toggleRegistryMode()" style="width:16px;height:16px;cursor:pointer" />
+              <b>Mark as Protocol Registry entry</b>
+            </label>
+            <div style="font-size:10.5px;color:var(--text-dim);margin-top:5px;line-height:1.55">
+              Builds a <code>sost-protocol</code> capsule using <b>Open Note</b>. Entries signed by whitelisted SOST&nbsp;Protocol addresses appear under &ldquo;Official Protocol Registry&rdquo;; entries from other wallets appear under &ldquo;Community Capsules&rdquo;. The wallet imposes no whitelist &mdash; anyone with SOST can publish. <a href="protocol-registry.html" target="_blank" style="color:#d946ef">View the Registry &rarr;</a>
+            </div>
+            <div id="regModeFields" style="display:none;margin-top:10px">
+              <div style="margin-bottom:8px">
+                <label style="display:block;font-size:10.5px;color:var(--text-muted);margin-bottom:3px">Record name <span style="color:var(--text-dim)">(a&ndash;z, 0&ndash;9, hyphen &middot; max 30)</span></label>
+                <input id="regRecordName" type="text" maxlength="30" autocomplete="off" spellcheck="false"
+                       placeholder="beacon-iia-v13-fingerprint" oninput="onRegistryInput()"
+                       style="width:100%;background:rgba(0,0,0,.4);border:1px solid var(--border-dim);border-radius:4px;color:var(--text-primary);font-size:12px;padding:6px 8px" />
+              </div>
+              <div>
+                <label style="display:block;font-size:10.5px;color:var(--text-muted);margin-bottom:3px">Anchor hash <span style="color:var(--text-dim)">(first 16 hex of a SHA-256)</span></label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input id="regAnchorHash" type="text" maxlength="16" autocomplete="off" spellcheck="false"
+                         placeholder="3bed02e2f5c589e4" oninput="onRegistryInput()"
+                         style="flex:1;min-width:160px;background:rgba(0,0,0,.4);border:1px solid var(--border-dim);border-radius:4px;color:var(--text-primary);font-size:12px;font-family:monospace;padding:6px 8px" />
+                  <button type="button" onclick="document.getElementById('regAnchorFile').click()"
+                          style="background:rgba(217,70,239,0.12);color:#d946ef;border:1px solid rgba(217,70,239,0.4);border-radius:4px;font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer;white-space:nowrap">Calculate from file</button>
+                  <input id="regAnchorFile" type="file" style="display:none" onchange="calcAnchorFromFile(this)" />
+                </div>
+                <div style="font-size:10px;color:var(--text-dim);margin-top:4px">The file is hashed locally in your browser (SubtleCrypto). It is never uploaded.</div>
+              </div>
+              <div id="regPreview" style="margin-top:9px;font-size:11px;color:var(--text-secondary);word-break:break-all"></div>
+              <div id="regValid" style="margin-top:4px;font-size:10.5px;min-height:14px"></div>
+            </div>
+          </div>
+
           <div id="capsuleTextWrap" style="display:none;margin-top:8px;position:relative">
             <!-- oninput / onpaste are inline on purpose — guarantees the
                  counter wires up even if a later script swaps the form or
@@ -6310,6 +6344,96 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape') closeSv(null,true);
   });
+</script>
+
+<!-- ============== Protocol Registry mode — frontend convenience over Open Note ==============
+     Builds a "sost-protocol <record> <16-hex>" Open Note capsule and writes it into the
+     existing #capsuleText field, so the normal sign/broadcast path is reused unchanged.
+     No consensus, no tx-format change, no new capsule type. -->
+<script>
+(function(){
+  "use strict";
+  function $(id){ return document.getElementById(id); }
+
+  window.toggleRegistryMode = function(){
+    var on = $('regModeToggle') && $('regModeToggle').checked;
+    var fields = $('regModeFields'), sel = $('capsuleType'), ta = $('capsuleText');
+    if(fields) fields.style.display = on ? 'block' : 'none';
+    if(on){
+      if(sel){ sel.value = 'open_note'; if(typeof updateCapsuleUI === 'function') updateCapsuleUI(); sel.disabled = true; }
+      if(ta){ ta.readOnly = true; }
+      window.onRegistryInput();
+    } else {
+      if(sel){ sel.disabled = false; }
+      if(ta){ ta.readOnly = false; }
+    }
+  };
+
+  window.onRegistryInput = function(){
+    var nameRaw = ($('regRecordName') && $('regRecordName').value || '');
+    var anchorRaw = ($('regAnchorHash') && $('regAnchorHash').value || '');
+    var name = nameRaw.trim().toLowerCase();
+    var anchor = anchorRaw.trim().toLowerCase();
+    var nameOk = /^[a-z0-9-]{1,30}$/.test(name);
+    var anchorOk = /^[0-9a-f]{16}$/.test(anchor);
+    var capsule = 'sost-protocol ' + name + ' ' + anchor;
+    var bytes = new TextEncoder().encode(capsule).length;
+    var ta = $('capsuleText');
+    if(ta){ ta.value = capsule; if(typeof refreshCapsuleCounter === 'function') refreshCapsuleCounter(); }
+    var preview = $('regPreview');
+    if(preview){
+      preview.innerHTML = 'Capsule text: <code style="color:var(--text-primary)">' +
+        capsule.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+        '</code> <span style="color:var(--text-dim)">(' + bytes + '/80 bytes)</span>';
+    }
+    var valid = $('regValid'); if(!valid) return;
+    var msgs = [];
+    if(!nameOk) msgs.push('record name: 1–30 chars of a–z, 0–9, hyphen');
+    if(!anchorOk) msgs.push('anchor: exactly 16 hex chars');
+    if(bytes > 80) msgs.push('capsule exceeds 80 bytes');
+    if(msgs.length){ valid.style.color = '#fb010d'; valid.textContent = '✗ ' + msgs.join(' · '); }
+    else { valid.style.color = '#22c55e'; valid.textContent = '✓ valid registry capsule — ready to send'; }
+  };
+
+  window.calcAnchorFromFile = async function(input){
+    var f = input && input.files && input.files[0];
+    var valid = $('regValid');
+    if(!f){ return; }
+    try{
+      var buf = await f.arrayBuffer();
+      var digest = await crypto.subtle.digest('SHA-256', buf);
+      var hex = Array.prototype.map.call(new Uint8Array(digest), function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+      if($('regAnchorHash')){ $('regAnchorHash').value = hex.slice(0,16); }
+      window.onRegistryInput();
+      if(valid){ valid.style.color = '#22c55e'; valid.textContent = '✓ SHA-256 computed locally — anchor = first 16 hex (' + f.name + ')'; }
+    }catch(e){
+      if(valid){ valid.style.color = '#fb010d'; valid.textContent = '✗ could not hash file: ' + (e && e.message || e); }
+    }
+    input.value = '';
+  };
+
+  // Post-broadcast banner — non-invasive: watch #sendResult for a success render
+  // while registry mode is on, then append a one-time confirmation with a link.
+  function wireBanner(){
+    var target = $('sendResult'); if(!target) return;
+    var obs = new MutationObserver(function(){
+      if(!($('regModeToggle') && $('regModeToggle').checked)) return;
+      if(target.classList.contains('hidden')) return;
+      var txt = target.textContent || '';
+      var looksSuccess = /txid|broadcast|sent|success/i.test(txt);
+      if(!looksSuccess) return;
+      if(target.querySelector('#regSentBanner')) return; // already added
+      var div = document.createElement('div');
+      div.id = 'regSentBanner';
+      div.style.cssText = 'margin-top:12px;padding:10px 12px;background:rgba(217,70,239,0.08);border:1px solid rgba(217,70,239,0.4);border-left:3px solid #d946ef;border-radius:3px;font-size:11.5px;line-height:1.55;color:var(--text-secondary)';
+      div.innerHTML = 'Registered as a <b>Protocol Registry</b> entry. It will appear in the public Registry list within ~10 minutes (after block confirmation). <a href="protocol-registry.html#live-registered-capsules" target="_blank" style="color:#d946ef">Open the Registry &rarr;</a>';
+      target.appendChild(div);
+    });
+    obs.observe(target, { attributes:true, childList:true, subtree:true, characterData:true });
+  }
+  if(document.readyState !== 'loading') wireBanner();
+  else document.addEventListener('DOMContentLoaded', wireBanner);
+})();
 </script>
 </body>
 </html>
