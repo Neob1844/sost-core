@@ -1,0 +1,60 @@
+SUBJECT: [UPDATE] SOST Beacon — V13 operator II-A public key installed (with verifiable fingerprint)
+
+STATUS: DRAFT — for operator (NeoB) to post on BitcoinTalk from the official account.
+        Publishing here creates a third-party, timestamped record of the canonical
+        fingerprint so a substituted key in the source tree is publicly detectable.
+
+------------------------------------------------------------------------------
+
+[b]SOST Beacon — operator II-A public key installed[/b]
+
+The SOST Beacon notice channel (Phase II-A, single-sig advisory path) now ships
+with the real operator public key hardcoded in the node. The key was generated
+[b]offline[/b]; the private key never touched a networked host and lives on
+encrypted USB only.
+
+[b]Canonical fingerprint[/b]
+[tt]bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b[/tt]
+
+[b]How to verify (anyone can do this)[/b]
+The fingerprint is the SHA-256 of the ASCII lowercase hex of the uncompressed
+public key (the exact 130-character string embedded in the source). To check that
+the key in your copy of the source has not been substituted:
+
+[code]
+# 1. Take the BEACON_PUBKEY_HEX value from src/beacon.cpp (04 + 128 hex chars),
+#    as one lowercase line with no spaces, into $PUB. Then:
+echo -n "$PUB" | sha256sum
+# Expected:
+#   bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b
+[/code]
+
+If the recomputed fingerprint does not match the value published here, in the
+README, and in the whitepaper, [b]do not trust that build's Beacon notices[/b] —
+the key has been altered.
+
+The public key is also a valid secp256k1 point (verified on-curve,
+y^2 == x^3 + 7 mod p) and is exactly 130 hex characters with the uncompressed
+`04` prefix.
+
+[b]Where the fingerprint is cross-published[/b]
+[list]
+[li][tt]src/beacon.cpp[/tt] — the pinned key + fingerprint comment[/li]
+[li][tt]docs/BEACON_CUSTODY_STATUS.md[/tt] — custody status (source of truth)[/li]
+[li]GitHub [tt]README.md[/tt] — Security section[/li]
+[li]Public whitepaper — V14 roadmap entry[/li]
+[li]This BitcoinTalk post — third-party timestamped record[/li]
+[/list]
+
+[b]Scope / what this is NOT[/b]
+[list]
+[li]This is the [b]single-sig II-A advisory path[/b] only. It lets the operator
+publish signed notices (e.g. upgrade advisories). It does NOT move funds and is
+NOT a consensus key.[/li]
+[li]Phase II-B (3-of-5 threshold) stays [b]OFF[/b]: the activation sentinel
+remains [tt]INT64_MAX[/tt] and the 5 threshold slots are fail-closed placeholders
+labelled TO_BE_REPLACED_BEFORE_V15. II-B is activated only once 5 independent
+custodians exist — see [tt]docs/BEACON_CUSTODY_STATUS.md[/tt].[/li]
+[/list]
+
+— SOST

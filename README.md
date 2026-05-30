@@ -353,6 +353,7 @@ Autonomous computational materials discovery platform. Predicts formation energy
 - Transaction Safety Layer: trusted destinations, cooldown, anti-phishing (no consensus change)
 - Fee system: 1 stock/byte minimum, rational fee-rate ordering, estimatefee advisory
 - cASERT profile exposed via RPC getinfo (real-time from node)
+- Beacon II-A notice channel: the operator public key is pinned in `src/beacon.cpp`. Canonical fingerprint `bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b` = `sha256(lowercase uncompressed pubkey hex)`. Recompute it against the in-tree key to detect a substituted pubkey; the same fingerprint is cross-published in the whitepaper and the BitcoinTalk ANN. Phase II-B threshold keys remain disabled (sentinel `INT64_MAX`).
 
 ## Reporting Issues
 
