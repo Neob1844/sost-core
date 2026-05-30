@@ -1,13 +1,13 @@
 # Beacon Custody Status
 
-**Last updated:** 2026-05-23 (V13 RC preparatorio commit)
+**Last updated:** 2026-05-30 (V14-6 — real II-A operator pubkey installed)
 
 ## TL;DR — current state
 
 | Component | Current state |
 |---|---|
-| Phase II-A single-sig key (`BEACON_PUBKEY_HEX`) | Under operator custody (single key, single holder). |
-| Phase II-B threshold keys (`BEACON_THRESHOLD_PUBKEYS[5]`) | **V13 bootstrap: all 5 keys under single-operator custody.** |
+| Phase II-A single-sig key (`BEACON_PUBKEY_HEX`) | **Installed (V14-6).** Real offline-generated secp256k1 key under operator custody (single key, single holder). Private key on encrypted USB only; never touched a networked host. Fingerprint `bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b` (sha256 of the lowercase uncompressed pubkey hex). |
+| Phase II-B threshold keys (`BEACON_THRESHOLD_PUBKEYS[5]`) | **Not yet generated — 5 fail-closed placeholders, labelled `TO_BE_REPLACED_BEFORE_V15`.** No 5 independent custodians identified yet. |
 | Phase II-B threshold path (`BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT`) | **`INT64_MAX` (OFF by default).** No II-B notice can surface until the sentinel is lowered. |
 | Phase III P2P gossip (`BEACON_P2P_ACTIVATION_HEIGHT`) | Active at `V13_HEIGHT` (= 12 000). Carries II-A single-sig notices today. |
 

@@ -17,35 +17,41 @@
 namespace sost::beacon {
 
 // ---------------------------------------------------------------------------
-// Hardcoded Beacon public key — placeholder, fail-closed.
+// Hardcoded Beacon public key — V13 operator II-A key (single-sig advisory
+// path). Installed in V14-6 from an offline-generated secp256k1 keypair; the
+// private key never touched a networked host and lives on encrypted USB only
+// (see docs/BEACON_KEYGEN_RUNBOOK.md and docs/BEACON_CUSTODY_STATUS.md).
 //
-// Format: 65-byte uncompressed point in hex. Starts with `04` followed by
-// two 32-byte coordinates. The placeholder below is the generator-x-axis
-// point variant `(1, sqrt(8))` which is a syntactically valid curve
-// point owned by no one — verification against any real signature will
-// fail, which is the safe default for a freshly cloned tree. The
-// operator replaces this constant after running `beacon-keygen.sh`.
+// Format: 65-byte uncompressed point in hex — `04` + 32-byte X + 32-byte Y.
+// Verified on-curve (y^2 == x^3 + 7 mod p) before install.
+//
+// Fingerprint (sha256 of the lowercase uncompressed pubkey hex):
+//   bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b
 // ---------------------------------------------------------------------------
 const std::string BEACON_PUBKEY_HEX =
     "04"
-    "0000000000000000000000000000000000000000000000000000000000000001"
-    "b7c52588d95c3b9aa25b0403f1eef75702e84bb7597aabe663b82f6f04ef2777";
+    "7ef6e1495c4834fcf753aba1b5bf60aee300a318cc70e79c6b56a8e5fc543073"
+    "11c53d6464a1a1d052f452374e92610a051cb1f4543349b8b6c54485991866e4";
 
 // ---------------------------------------------------------------------------
 // Phase II-B threshold keys — 5 placeholders, fail-closed by construction.
+// LABEL: TO_BE_REPLACED_BEFORE_V15.
 //
 // Each entry is a 65-byte uncompressed secp256k1 point in hex (130 chars).
 // The five placeholders are syntactically valid curve points owned by no
-// one — every real signature fails to verify against them. The operator
-// replaces this constant with five real keys at V13 release ceremony
-// (see scripts/beacon-keygen.sh and docs/V13_BEACON_PHASE_II_B.md).
+// one — every real signature fails to verify against them. II-B is deferred
+// to V15: the operator does not yet have 5 independent custodians, so the
+// threshold path stays OFF via BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT =
+// INT64_MAX. These 5 entries are replaced with real keys before V15, only
+// once 5 distinct custodians exist (see docs/BEACON_CUSTODY_STATUS.md and
+// docs/V13_BEACON_PHASE_II_B.md).
 //
 // All five keys MUST be distinct points; the threshold verifier dedups
 // by signer index AND by raw 65-byte key bytes to guard against a
 // misconfigured deployment that pasted the same key twice.
 // ---------------------------------------------------------------------------
 const std::string BEACON_THRESHOLD_PUBKEYS[BEACON_THRESHOLD_KEY_COUNT] = {
-    // key 0 — generator point (x=1, y per BEACON_PUBKEY_HEX placeholder)
+    // key 0 — TO_BE_REPLACED_BEFORE_V15 placeholder (x=1 generator point)
     "04"
     "0000000000000000000000000000000000000000000000000000000000000001"
     "b7c52588d95c3b9aa25b0403f1eef75702e84bb7597aabe663b82f6f04ef2777",
