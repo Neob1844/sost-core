@@ -1224,8 +1224,10 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
 //                              output[0/1/...] amounts the miner must build.
 //   - lottery_winner_pkh     : 40-char hex pkh on PAYOUT, "" otherwise.
 //   - eligible_count, winner_index : eligibility set diagnostics.
-//   - previous_5_block_winners : up to 5 hex pkh entries from H-1 to H-5
-//                              (cooldown diagnostic).
+//   - cooldown_window          : recent-winner exclusion window applied at
+//                              this height (5 pre-V13, 6 from V13).
+//   - previous_cooldown_block_winners : up to cooldown_window hex pkh
+//                              entries from H-1 back (cooldown diagnostic).
 //   - expected_pending_after : pending_after invariant value the validator
 //                              will check against the next block.
 //
@@ -1358,11 +1360,16 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
         expected_pending_after = 0;
     }
 
-    // ---- Previous 5 winners list (cooldown diagnostic) ---------------
+    // ---- Previous cooldown-window winners list (diagnostic) ----------
+    // The recent-winner cooldown window is height-gated: 5 pre-V13, 6 from
+    // V13 onwards (lottery_exclusion_window_at). List exactly that many so
+    // the diagnostic matches the consensus exclusion the node applies — the
+    // loop bound was hard-coded to 5 and under-reported by one from V13.
+    const int64_t cooldown_window = sost::lottery_exclusion_window_at(height_next);
     std::ostringstream prev_arr;
     prev_arr << "[";
     bool first = true;
-    for (int back = 1; back <= 5; ++back) {
+    for (int64_t back = 1; back <= cooldown_window; ++back) {
         const int64_t h = height_next - back;
         if (h < 0) break;
         // find StoredBlock with this height (active chain only)
@@ -1431,7 +1438,8 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
       << ",\"lottery_winner_pkh\":\"" << winner_hex << "\""
       << ",\"eligible_count\":" << eligible_count
       << ",\"winner_index\":" << winner_index
-      << ",\"previous_5_block_winners\":" << prev_arr.str()
+      << ",\"cooldown_window\":" << cooldown_window
+      << ",\"previous_cooldown_block_winners\":" << prev_arr.str()
       << ",\"expected_pending_after\":" << expected_pending_after
       << ",\"subsidy\":" << subsidy
       << "}";
@@ -1634,8 +1642,10 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
 // Datadir lookup: derived from g_chain_path's parent directory; falls
 // back to "." if g_chain_path is unset (e.g., not yet bootstrapped).
 //
-// Phase III P2P remains DISABLED (BEACON_P2P_ACTIVATION_HEIGHT =
-// INT64_MAX); the gate is reported here for operator visibility.
+// Phase III P2P activates at BEACON_P2P_ACTIVATION_HEIGHT (= V13_HEIGHT).
+// The "p2p_enabled" flag below reflects is_p2p_enabled(height_now) so the
+// RPC matches the actual gossip-processing gate instead of a hard-coded
+// constant (it was previously pinned to false, which became wrong at V13).
 static std::string handle_getbeaconnotices(const std::string& id,
                                             const std::vector<std::string>&) {
     int64_t                height_now;
@@ -1674,8 +1684,74 @@ static std::string handle_getbeaconnotices(const std::string& id,
       << ",\"current_height\":"    << height_now
       << ",\"dormant\":"           << (dormant ? "true" : "false")
       << ",\"p2p_activation_height\":" << sost::BEACON_P2P_ACTIVATION_HEIGHT
-      << ",\"p2p_enabled\":false"
+      << ",\"p2p_enabled\":" << (sost::beacon::p2p::is_p2p_enabled(height_now) ? "true" : "false")
       << ",\"notices\":" << sost::beacon::serialize_notices_for_rpc(notices)
+      << "}";
+    return rpc_result(id, s.str());
+}
+
+// =============================================================================
+// handle_getv13readiness — V13 DTD preflight (read-only diagnostic).
+//
+// The V13 anti-dominance gate (block DTD_DOMINANCE_GATE_HEIGHT = 12,100) and
+// the DTD lottery build their dominance / eligibility set from the last
+// DTD_DOMINANCE_WINDOW (288) coinbase transactions. The history builder skips
+// any block whose coinbase tx_hexes is empty or undecodable. A node whose
+// recent chain data is incomplete (e.g. bootstrapped from an old/partial
+// chain.json) would therefore observe a DIFFERENT window than fully-synced
+// peers and could compute a different eligible set — risking a SILENT split
+// at the gate.
+//
+// This handler lets an operator confirm, BEFORE the fork, that THIS node can
+// observe the full 288-coinbase window and decode every coinbase. It changes
+// NO consensus logic and touches no validation path — purely observability.
+// Run it on every node before block 12,000/12,100; if ready=false, re-sync
+// that node's chain data before the fork.
+// =============================================================================
+static std::string handle_getv13readiness(const std::string& id,
+                                          const std::vector<std::string>&) {
+    const int64_t W = sost::DTD_DOMINANCE_WINDOW; // 288
+    int64_t tip = 0;
+    int     checked = 0, decodable = 0;
+    std::ostringstream missing;
+    missing << "[";
+    bool mfirst = true;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        tip = g_chain_height;
+        const int64_t lo = (tip >= W) ? (tip - W + 1) : 0;
+        for (auto it = g_blocks.rbegin(); it != g_blocks.rend(); ++it) {
+            if (it->height > tip) continue;
+            if (it->height < lo) break;
+            ++checked;
+            bool ok = false;
+            if (!it->tx_hexes.empty()) {
+                std::vector<Byte> raw;
+                if (decode_tx_hex(it->tx_hexes[0], raw)) {
+                    Transaction cb;
+                    std::string derr;
+                    ok = Transaction::Deserialize(raw, cb, &derr) && !cb.outputs.empty();
+                }
+            }
+            if (ok) { ++decodable; }
+            else    { if (!mfirst) missing << ","; missing << it->height; mfirst = false; }
+        }
+    }
+    missing << "]";
+    // A full window is W blocks once the chain is past genesis+W; nearer the
+    // start the observable window is naturally shorter (tip+1).
+    const int64_t expected = (tip >= W) ? W : (tip + 1);
+    const bool ready = (checked >= (int)expected) && (decodable == checked);
+
+    std::ostringstream s;
+    s << "{\"window\":" << W
+      << ",\"chain_tip\":" << tip
+      << ",\"v13_height\":" << sost::V13_HEIGHT
+      << ",\"dtd_gate_height\":" << sost::DTD_DOMINANCE_GATE_HEIGHT
+      << ",\"blocks_observed\":" << checked
+      << ",\"coinbases_decodable\":" << decodable
+      << ",\"missing_or_undecodable_heights\":" << missing.str()
+      << ",\"ready\":" << (ready ? "true" : "false")
       << "}";
     return rpc_result(id, s.str());
 }
@@ -3603,6 +3679,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getlotterystate",handle_getlotterystate},
     {"getlotteryaudit",handle_getlotteryaudit},
     {"getbeaconnotices",handle_getbeaconnotices},
+    {"getv13readiness",handle_getv13readiness},
     {"getbalance",handle_getbalance},
     {"getnewaddress",handle_getnewaddress},
     {"validateaddress",handle_validateaddress},
@@ -4154,16 +4231,17 @@ static bool process_block(const std::string& block_json) {
     // Future-drift cap, height-gated through V13:
     //   - h < CASERT_STAGED_RELIEF_HEIGHT   → 600 s (legacy)
     //   - h >= CASERT_STAGED_RELIEF_HEIGHT  → 60 s  (staged-relief tightening)
-    //   - h >= V13_HEIGHT                   → 10 s  (V13 timestamp-gaming defence)
+    //   - h >= V13_HEIGHT                   → 30 s  (V13 timestamp-gaming defence)
     //
     // The staged 60 s value matches CASERT_STAGED_STEP_SECONDS so no more
     // than one cascade step could be anticipated by a future timestamp.
-    // V13 reduces the gap by 6×, narrowing same-block Slingshot / cascade
-    // gaming margins. Pre-V13 behaviour is byte-identical to the prior
+    // V13 halves the gap (60 s → 30 s), narrowing same-block Slingshot /
+    // cascade gaming margins while preserving honest-miner tolerance for
+    // NTP/network skew. Pre-V13 behaviour is byte-identical to the prior
     // branch — see include/sost/params.h::max_future_drift_at().
     //
     // OPERATOR REQUIREMENT (V13): every miner MUST run NTP, since a clock
-    // ahead of true time by more than 10 s will produce blocks rejected
+    // ahead of true time by more than 30 s will produce blocks rejected
     // here. See docs/V13_SPEC.md and the operator checklist.
     int64_t future_drift = sost::max_future_drift_at(height);
     if(ts64 > now_ts + future_drift){

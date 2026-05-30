@@ -960,7 +960,7 @@ inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;
 
 // Future-drift cap — height-gated. Three regimes, matching the production
 // validator history byte-for-byte:
-//   - height >= V13_HEIGHT                    → 10 s  (V13 tightening)
+//   - height >= V13_HEIGHT                    → 30 s  (V13 tightening)
 //   - height >= CASERT_STAGED_RELIEF_HEIGHT   → 60 s  (staged-relief regime)
 //   - height < CASERT_STAGED_RELIEF_HEIGHT    → 600 s (legacy MAX_FUTURE_DRIFT)
 //
