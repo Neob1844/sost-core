@@ -771,6 +771,36 @@
       </div>
     </div>
 
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Block 12,000 &middot; 12,100</span>
+        </div>
+        <span class="spec-tag consensus">V13 FORK</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          <strong>V13 hard fork.</strong> Block 12,000: cASERT equalizer E7-H35 active, DTD lottery cooldown 5 &rarr; 6, future-timestamp drift cap 60 s &rarr; 30 s, Beacon Phase II-A / II-B / III (advisory-only). Block 12,100: DTD cadence flips from 2-of-3 bootstrap to 1-of-3 permanent (automatic) <em>and</em> the <strong>anti-dominance gate</strong> activates &mdash; any address with &ge; 30 % share of the previous 288 blocks is excluded from the DTD lottery until its rolling share drops below 30 %. Dominant miners keep their 50 % miner share. See <code>docs/V13_DTD_DOMINANCE_GATE.md</code>.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon amber"></div>
+          <span class="spec-name">Block 15,000</span>
+        </div>
+        <span class="spec-tag overlay">V14 FALLBACK</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          <strong>V14 fallback.</strong> Gold Vault spend-side governance (&ge; 90 % miner-signaling supermajority over a 67-block window) and PoPC + Escrow automatic lifecycle. The <strong>V14 PoPC eligibility gate</strong> for the DTD lottery is wired in the V13 binary but ships consensus-deferred &mdash; activation requires PoPC state to first migrate from <code>popc_registry.json</code> (per-node local file) to deterministic chain-derived state. See <code>docs/V14_DTD_POPC_ELIGIBILITY.md</code>.
+        </p>
+      </div>
+    </div>
+
     <div class="spec-block fade-in delay-2">
       <div class="spec-header">
         <div class="spec-header-left">

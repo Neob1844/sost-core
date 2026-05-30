@@ -492,8 +492,259 @@ static void test_benchmark_10k_blocks() {
     }
 }
 
+// ---------------------------------------------------------------------------
+// V13 anti-dominance gate (DTD_DOMINANCE_GATE_HEIGHT = 12100)
+// ---------------------------------------------------------------------------
+//
+// Synthetic history helper: build a `blocks` vector ending at height
+// `tip_height_exclusive - 1`, where the dominant pkh `dom` is assigned
+// `dom_count` of the heights inside the window [tip - 288, tip - 1].
+// The remaining window slots are filled with a round-robin of `fillers`.
+// `prefill_heights` heights immediately before the window are also
+// filled with fillers (and one early-history block for `dom`) so every
+// test pkh qualifies as "ever mined" without touching the window count.
+//
+// Heights are unique by construction: pre-window uses [tip - 288 - 1 -
+// prefill_heights, tip - 288 - 1], and the window uses [tip - 288, tip
+// - 1]. The dom early-history block lives strictly before pre-window
+// and pre-window strictly before window. No height is written twice.
+static std::vector<LotteryMinedBlockView> build_window_history(
+    int64_t tip_height_exclusive,
+    const PubKeyHash& dom,
+    int32_t dom_count,
+    const std::vector<PubKeyHash>& fillers,
+    int32_t prefill_heights = 100)
+{
+    std::vector<LotteryMinedBlockView> blocks;
+    const int64_t window_lo  = tip_height_exclusive - DTD_DOMINANCE_WINDOW;
+    const int64_t window_hi  = tip_height_exclusive - 1;
+    const int64_t prefill_hi = window_lo - 1;
+    const int64_t prefill_lo = prefill_hi - prefill_heights + 1;
+    const int64_t dom_seed_h = prefill_lo - 1;  // strictly before pre-window
+
+    // Early-history seed for the dominant pkh so it qualifies as
+    // "ever mined" even when dom_count == 0 inside the window. This
+    // block is OUTSIDE the dominance window, so it does not affect
+    // the 30 % calculation.
+    blocks.push_back(mk_block(dom_seed_h, dom));
+
+    // Pre-window: round-robin fillers across heights [prefill_lo,
+    // prefill_hi] inclusive. Strictly before the window.
+    for (int64_t h = prefill_lo, i = 0; h <= prefill_hi; ++h, ++i) {
+        const auto& m = fillers[(size_t)(i % (int64_t)fillers.size())];
+        blocks.push_back(mk_block(h, m));
+    }
+
+    // Window: place `dom_count` blocks for the dominant pkh at the
+    // bottom of the window, then fill the rest with fillers.
+    int32_t dom_placed = 0;
+    int32_t filler_idx = 0;
+    for (int64_t cur = window_lo; cur <= window_hi; ++cur) {
+        if (dom_placed < dom_count) {
+            blocks.push_back(mk_block(cur, dom));
+            ++dom_placed;
+        } else {
+            blocks.push_back(mk_block(
+                cur, fillers[(size_t)(filler_idx++ % (int64_t)fillers.size())]));
+        }
+    }
+    return blocks;
+}
+
+static bool contains_pkh(const std::vector<LotteryEligibilityEntry>& v,
+                         const PubKeyHash& p) {
+    for (const auto& e : v) if (e.pkh == p) return true;
+    return false;
+}
+
+static void test_v13_dominance_gate_inactive_below_12100() {
+    printf("\n=== V13.1) Dominance gate INACTIVE for height < 12100 ===\n");
+    auto DOM = mk_pkh(0x10);
+    std::vector<PubKeyHash> fillers = {mk_pkh(0x21), mk_pkh(0x22),
+                                       mk_pkh(0x23), mk_pkh(0x24)};
+    // 100/288 = 34.7 % dominance, just below the gate.
+    auto blocks = build_window_history(12099, DOM, 100, fillers);
+    auto eligible = compute_lottery_eligibility_set(blocks, 12099, DOM, 0);
+    TEST("DOM still eligible at height 12099 (pre-gate) despite 100/288",
+         contains_pkh(eligible, DOM));
+}
+
+static void test_v13_dominance_gate_active_at_12100() {
+    printf("\n=== V13.2) Dominance gate ACTIVE at height 12100 ===\n");
+    auto DOM = mk_pkh(0x10);
+    std::vector<PubKeyHash> fillers = {mk_pkh(0x21), mk_pkh(0x22),
+                                       mk_pkh(0x23), mk_pkh(0x24)};
+    auto blocks = build_window_history(12100, DOM, 100, fillers);
+    auto eligible = compute_lottery_eligibility_set(blocks, 12100, DOM, 0);
+    TEST("DOM excluded at height 12100 (gate active, 100/288 ≈ 34.7 %)",
+         !contains_pkh(eligible, DOM));
+    TEST("at least one filler is eligible (gate did not nuke set)",
+         !eligible.empty());
+}
+
+static void test_v13_dominance_boundary_86_eligible() {
+    printf("\n=== V13.3) 86/288 (29.86 %%) is BELOW threshold → eligible ===\n");
+    auto DOM = mk_pkh(0x10);
+    std::vector<PubKeyHash> fillers = {mk_pkh(0x21), mk_pkh(0x22),
+                                       mk_pkh(0x23), mk_pkh(0x24)};
+    auto blocks = build_window_history(12500, DOM, 86, fillers);
+    auto eligible = compute_lottery_eligibility_set(blocks, 12500, DOM, 0);
+    TEST("DOM eligible at 86/288 = 29.86 %", contains_pkh(eligible, DOM));
+}
+
+static void test_v13_dominance_boundary_87_excluded() {
+    printf("\n=== V13.4) 87/288 (30.21 %%) AT/ABOVE threshold → excluded ===\n");
+    auto DOM = mk_pkh(0x10);
+    std::vector<PubKeyHash> fillers = {mk_pkh(0x21), mk_pkh(0x22),
+                                       mk_pkh(0x23), mk_pkh(0x24)};
+    auto blocks = build_window_history(12500, DOM, 87, fillers);
+    auto eligible = compute_lottery_eligibility_set(blocks, 12500, DOM, 0);
+    TEST("DOM excluded at 87/288 = 30.21 %", !contains_pkh(eligible, DOM));
+}
+
+static void test_v13_dominance_dynamic_recovery() {
+    printf("\n=== V13.5) Dominant becomes eligible again when share drops < 30 %% ===\n");
+    auto DOM = mk_pkh(0x10);
+    std::vector<PubKeyHash> fillers = {mk_pkh(0x21), mk_pkh(0x22),
+                                       mk_pkh(0x23), mk_pkh(0x24)};
+
+    // Excluded: 90/288 (31.25 %).
+    auto blocks_excl = build_window_history(12500, DOM, 90, fillers);
+    auto elig_excl = compute_lottery_eligibility_set(blocks_excl, 12500, DOM, 0);
+    TEST("90/288 → excluded", !contains_pkh(elig_excl, DOM));
+
+    // Eligible again: same DOM but new window with only 80/288 (27.78 %).
+    auto blocks_recovered = build_window_history(12500, DOM, 80, fillers);
+    auto elig_rec = compute_lottery_eligibility_set(blocks_recovered, 12500, DOM, 0);
+    TEST("80/288 → eligible again (rolling recovery)",
+         contains_pkh(elig_rec, DOM));
+}
+
+static void test_v13_dominance_combines_with_recent_winner_cooldown() {
+    printf("\n=== V13.6) Recent-winner cooldown + dominance gate apply independently ===\n");
+    auto DOM   = mk_pkh(0x10);   // dominant
+    auto SMALL = mk_pkh(0x21);   // small, but won 1 of last 6 blocks
+    std::vector<PubKeyHash> fillers = {SMALL, mk_pkh(0x22),
+                                       mk_pkh(0x23), mk_pkh(0x24)};
+
+    // DOM has 100/288 (34.7 %); SMALL appears multiple times in the
+    // window via the round-robin. Critically, SMALL is one of the last
+    // 6 heights (12094–12099) so it should be excluded by the cooldown
+    // even though it is not dominant.
+    auto blocks = build_window_history(12100, DOM, 100, fillers);
+    // exclusion_window=6 to mimic the V13 cooldown.
+    auto eligible = compute_lottery_eligibility_set(blocks, 12100, DOM, 6);
+    TEST("DOM excluded by dominance gate", !contains_pkh(eligible, DOM));
+    // SMALL may or may not be in the cooldown window depending on the
+    // fill rotation. The robust assertion is that the gate did not
+    // accidentally make SMALL eligible while it sits in the cooldown
+    // window — we re-check by directly probing the cooldown predicate.
+    const int64_t window_lo = 12100 - 6;
+    const int64_t window_hi = 12100 - 1;
+    bool small_recently = false;
+    for (const auto& b : blocks) {
+        if (b.height < window_lo || b.height > window_hi) continue;
+        if (b.miner_pkh == SMALL) { small_recently = true; break; }
+    }
+    if (small_recently) {
+        TEST("SMALL in recent-winner window → cooldown excludes it",
+             !contains_pkh(eligible, SMALL));
+    } else {
+        TEST("SMALL NOT in recent-winner window → eligible",
+             contains_pkh(eligible, SMALL));
+    }
+}
+
+static void test_v13_dominance_partial_window_near_activation() {
+    printf("\n=== V13.7) Observed window < 288 still applies the 30 %% rule ===\n");
+    auto DOM = mk_pkh(0x10);
+    std::vector<PubKeyHash> fillers = {mk_pkh(0x21), mk_pkh(0x22),
+                                       mk_pkh(0x23), mk_pkh(0x24)};
+    // Build only 200 window blocks (genesis-near scenario). DOM gets
+    // 70 of them (35 %). The is_dtd_dominant helper should use
+    // observed_window_blocks rather than the static DTD_DOMINANCE_WINDOW.
+    std::vector<LotteryMinedBlockView> blocks;
+    // Pre-window early history (so all pkhs qualify as "ever mined").
+    for (int64_t h = 100; h < 200; ++h) {
+        const auto& m = fillers[(size_t)((h - 100) % (int32_t)fillers.size())];
+        blocks.push_back(mk_block(h, m));
+    }
+    blocks.push_back(mk_block(200, DOM));
+
+    const int64_t tip      = 12300;
+    const int64_t win_lo   = tip - 200;
+    const int64_t win_hi   = tip - 1;
+    int32_t dom_placed = 0;
+    int32_t filler_idx = 0;
+    for (int64_t h = win_lo; h <= win_hi; ++h) {
+        if (dom_placed < 70) {
+            blocks.push_back(mk_block(h, DOM));
+            ++dom_placed;
+        } else {
+            blocks.push_back(mk_block(
+                h, fillers[(size_t)(filler_idx++ % (int32_t)fillers.size())]));
+        }
+    }
+    auto eligible = compute_lottery_eligibility_set(blocks, tip, DOM, 0);
+    TEST("DOM excluded at 70/200 = 35 % (partial window)",
+         !contains_pkh(eligible, DOM));
+}
+
+// ---------------------------------------------------------------------------
+// V14 PoPC eligibility gate (preparatory)
+// ---------------------------------------------------------------------------
+//
+// While DTD_POPC_GATE_CONSENSUS_ACTIVE is false in params.h (the
+// shipped state) the V14 wiring must be a no-op on eligibility for
+// every pkh, regardless of whether they hold a PoPC contract. The
+// gate becomes meaningful only when a future point release flips the
+// flag — at that point the test below will need to be revised to
+// exercise the real consensus-deterministic lookup.
+
+static void test_v14_popc_gate_consensus_deferred() {
+    printf("\n=== V14.1) PoPC gate is consensus-deferred (flag false) → all eligible ===\n");
+    // Compile-time guard: this test only makes sense while the flag
+    // is false. If a future commit flips it, this static_assert will
+    // remind us to rewrite the test instead of silently passing on a
+    // changed semantic.
+    static_assert(!sost::DTD_POPC_GATE_CONSENSUS_ACTIVE,
+                  "V14 PoPC consensus gate has been activated; "
+                  "test_v14_popc_gate_consensus_deferred needs a real "
+                  "chain-derived PoPC lookup harness, not the short-"
+                  "circuit assertion below.");
+
+    auto A = mk_pkh(0xA1);
+    auto B = mk_pkh(0xA2);
+    // Use the standard helper so the dominance window is filled with
+    // enough fillers that A (the "dominant" of this test) only takes
+    // 50 blocks of 288 (17.36 %) — well below the V13 dominance gate.
+    // This isolates the V14 short-circuit assertion from the V13
+    // anti-dominance filter that also runs at height >= 12100.
+    std::vector<PubKeyHash> fillers = {B, mk_pkh(0xA3), mk_pkh(0xA4),
+                                       mk_pkh(0xA5)};
+    auto blocks = build_window_history(15000, A, 50, fillers);
+
+    // height = V14_HEIGHT = 15000. Both A and B should be eligible
+    // because the V14 PoPC gate is a no-op while the flag is false
+    // and neither pkh is dominant (>= 30 %).
+    auto eligible = compute_lottery_eligibility_set(blocks, 15000, A, 0);
+    TEST("A eligible at V14_HEIGHT (PoPC gate short-circuits)",
+         contains_pkh(eligible, A));
+    TEST("B eligible at V14_HEIGHT (PoPC gate short-circuits)",
+         contains_pkh(eligible, B));
+}
+
+static void test_v14_helper_returns_true_under_flag_false() {
+    printf("\n=== V14.2) has_active_canonical_popc returns true (flag false) ===\n");
+    auto A = mk_pkh(0xA1);
+    TEST("helper short-circuits to true at height 15000",
+         has_active_canonical_popc(A, 15000));
+    TEST("helper short-circuits to true at height 99999",
+         has_active_canonical_popc(A, 99999));
+}
+
 int main() {
-    printf("=== test_lottery_eligibility (V11 Phase 2 C7.1) ===\n");
+    printf("=== test_lottery_eligibility (V11 Phase 2 C7.1 + V13 + V14 prep) ===\n");
     test_empty_history();
     test_one_miner_is_current();
     test_two_miners_one_current();
@@ -509,6 +760,19 @@ int main() {
     test_phase2_activation_height();
     test_current_miner_NOT_excluded_outside_window();
     test_benchmark_10k_blocks();
+
+    // V13 anti-dominance gate
+    test_v13_dominance_gate_inactive_below_12100();
+    test_v13_dominance_gate_active_at_12100();
+    test_v13_dominance_boundary_86_eligible();
+    test_v13_dominance_boundary_87_excluded();
+    test_v13_dominance_dynamic_recovery();
+    test_v13_dominance_combines_with_recent_winner_cooldown();
+    test_v13_dominance_partial_window_near_activation();
+
+    // V14 PoPC eligibility (preparatory)
+    test_v14_popc_gate_consensus_deferred();
+    test_v14_helper_returns_true_under_flag_false();
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

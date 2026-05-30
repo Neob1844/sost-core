@@ -245,6 +245,22 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     int64_t                                   exclusion_window =
         LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
 
+// V14 PoPC eligibility helper.
+//
+// Returns true iff `pkh` holds at least one ACTIVE, non-expired,
+// canonical-type PoPC contract at `height`, as seen by a CONSENSUS-
+// DETERMINISTIC source.
+//
+// While DTD_POPC_GATE_CONSENSUS_ACTIVE (params.h) is false — the
+// state shipped in this build — this function returns true
+// unconditionally so the V14 wiring is a no-op on eligibility. This
+// is intentional: PoPC currently lives in popc_registry.json (a
+// per-node local file, not chain-derived), so reading it from a
+// consensus path would risk a chain split. The flip to true is a
+// separate, future, coordinated event documented in
+// docs/V14_DTD_POPC_ELIGIBILITY.md.
+bool has_active_canonical_popc(const PubKeyHash& pkh, int64_t height);
+
 // Select the winning index into a lex-sorted eligibility vector from a
 // recent block-history seed. Production Phase 2 uses this path so a
 // single previous block hash does not dominate the lottery roll.

@@ -872,6 +872,92 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
         : LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW;  // = 5
 }
 
+// V13 anti-dominance DTD gate.
+//
+// Activation height: DTD_DOMINANCE_GATE_HEIGHT (= 12100, the same height
+// where DTD frequency flips from 2-of-3 bootstrap to 1-of-3 permanent
+// via is_lottery_block; see include/sost/lottery.h).
+//
+// Rule: from height >= DTD_DOMINANCE_GATE_HEIGHT, any miner_pkh whose
+// share of the previous DTD_DOMINANCE_WINDOW blocks is >= 30 % is
+// excluded from DTD lottery eligibility for the current block. The
+// gate is INDEPENDENT of the recent-winner cooldown — both filters
+// apply, and a pkh excluded by either is not eligible.
+//
+// Window convention: [height - DTD_DOMINANCE_WINDOW, height - 1]
+// inclusive on both ends, exactly DTD_DOMINANCE_WINDOW heights when
+// the chain is far enough past genesis. Near the gate height, the
+// observed window may contain fewer than DTD_DOMINANCE_WINDOW blocks;
+// the helper accepts the observed count to keep the ratio meaningful.
+//
+// Threshold math: integer-only, no floats. A pkh is dominant iff
+//   mined_in_window * 10000 >= DTD_DOMINANCE_MAX_BPS * observed
+// which is equivalent to mined / observed >= 30 % at basis-point
+// precision. Examples for observed=288:
+//   86/288 = 29.86 %  → eligible
+//   87/288 = 30.21 %  → excluded
+//
+// Effect: a dominant miner is NOT prevented from producing normal
+// blocks. The gate only removes them from DTD lottery eligibility
+// until their rolling share drops below 30 %. As soon as the rolling
+// window no longer holds 30 % of their blocks, they become eligible
+// again automatically — no operator action.
+inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 12100;
+inline constexpr int32_t  DTD_DOMINANCE_WINDOW      = 288;
+inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 3000;  // 30.00 %
+
+inline constexpr bool is_dtd_dominant(
+    int32_t mined_count_in_window,
+    int32_t observed_window_blocks,
+    int64_t height)
+{
+    if (height < DTD_DOMINANCE_GATE_HEIGHT) return false;
+    if (observed_window_blocks <= 0) return false;
+    // Integer comparison: mined * 10000 >= 3000 * observed.
+    // Cast to int64_t before the multiplication to avoid any overflow
+    // at the rim of the int32_t range; observed <= 288 in practice but
+    // the helper is defensive.
+    return (int64_t)mined_count_in_window * 10000 >=
+           (int64_t)DTD_DOMINANCE_MAX_BPS * (int64_t)observed_window_blocks;
+}
+
+// V14 PoPC eligibility gate — preparatory only.
+//
+// Activation height: DTD_POPC_ELIGIBILITY_HEIGHT (= V14_HEIGHT = 15000).
+//
+// From V14_HEIGHT, DTD lottery eligibility additionally requires that
+// the candidate pkh holds at least one ACTIVE, non-expired, canonical
+// PoPC contract at the lottery block's height. Canonical types are the
+// Model A durations {1, 3, 6, 9, 12} months (rates 1/4/9/14/20 %) and
+// Model B equivalents, as defined in include/sost/popc.h.
+//
+// CRITICAL CONSENSUS NOTE — gate is shipped DEFERRED.
+//
+// PoPC state currently lives in popc_registry.json (a per-node local
+// file: src/sost-node.cpp:101). It is NOT derivable from chain state
+// alone. If the V14 gate read that file from the consensus path, two
+// nodes with different files would compute different eligibility sets
+// and the chain would split at every DTD block.
+//
+// Therefore DTD_POPC_GATE_CONSENSUS_ACTIVE ships as false. The gate
+// wiring is present (constants, helper, call site in
+// compute_lottery_eligibility_set) so the cut-over to true is a
+// single-line constant flip once PoPC migrates to deterministic
+// chain-state. Until then, has_active_canonical_popc returns true
+// unconditionally and the V14 gate is a no-op on eligibility.
+//
+// Required prerequisites before flipping to true (NOT in this PR):
+//   1) PoPC commitments expressible as chain transactions with a
+//      well-defined output / state class.
+//   2) Block validation recomputes the active-PoPC set from chain
+//      state at every block (deterministic on every node).
+//   3) popc_registry.json becomes a cache/view, not source of truth.
+//   4) Coordinated point release flips DTD_POPC_GATE_CONSENSUS_ACTIVE
+//      under a fresh fork height and a documented announcement window.
+inline constexpr int64_t V14_HEIGHT                       = 15000;
+inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT      = V14_HEIGHT;
+inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;
+
 // Future-drift cap — height-gated. Three regimes, matching the production
 // validator history byte-for-byte:
 //   - height >= V13_HEIGHT                    → 10 s  (V13 tightening)
