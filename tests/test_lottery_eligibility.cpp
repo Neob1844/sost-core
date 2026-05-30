@@ -690,8 +690,61 @@ static void test_v13_dominance_partial_window_near_activation() {
          !contains_pkh(eligible, DOM));
 }
 
+// ---------------------------------------------------------------------------
+// V14 PoPC eligibility gate (preparatory)
+// ---------------------------------------------------------------------------
+//
+// While DTD_POPC_GATE_CONSENSUS_ACTIVE is false in params.h (the
+// shipped state) the V14 wiring must be a no-op on eligibility for
+// every pkh, regardless of whether they hold a PoPC contract. The
+// gate becomes meaningful only when a future point release flips the
+// flag — at that point the test below will need to be revised to
+// exercise the real consensus-deterministic lookup.
+
+static void test_v14_popc_gate_consensus_deferred() {
+    printf("\n=== V14.1) PoPC gate is consensus-deferred (flag false) → all eligible ===\n");
+    // Compile-time guard: this test only makes sense while the flag
+    // is false. If a future commit flips it, this static_assert will
+    // remind us to rewrite the test instead of silently passing on a
+    // changed semantic.
+    static_assert(!sost::DTD_POPC_GATE_CONSENSUS_ACTIVE,
+                  "V14 PoPC consensus gate has been activated; "
+                  "test_v14_popc_gate_consensus_deferred needs a real "
+                  "chain-derived PoPC lookup harness, not the short-"
+                  "circuit assertion below.");
+
+    auto A = mk_pkh(0xA1);
+    auto B = mk_pkh(0xA2);
+    // Use the standard helper so the dominance window is filled with
+    // enough fillers that A (the "dominant" of this test) only takes
+    // 50 blocks of 288 (17.36 %) — well below the V13 dominance gate.
+    // This isolates the V14 short-circuit assertion from the V13
+    // anti-dominance filter that also runs at height >= 12100.
+    std::vector<PubKeyHash> fillers = {B, mk_pkh(0xA3), mk_pkh(0xA4),
+                                       mk_pkh(0xA5)};
+    auto blocks = build_window_history(15000, A, 50, fillers);
+
+    // height = V14_HEIGHT = 15000. Both A and B should be eligible
+    // because the V14 PoPC gate is a no-op while the flag is false
+    // and neither pkh is dominant (>= 30 %).
+    auto eligible = compute_lottery_eligibility_set(blocks, 15000, A, 0);
+    TEST("A eligible at V14_HEIGHT (PoPC gate short-circuits)",
+         contains_pkh(eligible, A));
+    TEST("B eligible at V14_HEIGHT (PoPC gate short-circuits)",
+         contains_pkh(eligible, B));
+}
+
+static void test_v14_helper_returns_true_under_flag_false() {
+    printf("\n=== V14.2) has_active_canonical_popc returns true (flag false) ===\n");
+    auto A = mk_pkh(0xA1);
+    TEST("helper short-circuits to true at height 15000",
+         has_active_canonical_popc(A, 15000));
+    TEST("helper short-circuits to true at height 99999",
+         has_active_canonical_popc(A, 99999));
+}
+
 int main() {
-    printf("=== test_lottery_eligibility (V11 Phase 2 C7.1 + V13 anti-dominance) ===\n");
+    printf("=== test_lottery_eligibility (V11 Phase 2 C7.1 + V13 + V14 prep) ===\n");
     test_empty_history();
     test_one_miner_is_current();
     test_two_miners_one_current();
@@ -716,6 +769,10 @@ int main() {
     test_v13_dominance_dynamic_recovery();
     test_v13_dominance_combines_with_recent_winner_cooldown();
     test_v13_dominance_partial_window_near_activation();
+
+    // V14 PoPC eligibility (preparatory)
+    test_v14_popc_gate_consensus_deferred();
+    test_v14_helper_returns_true_under_flag_false();
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

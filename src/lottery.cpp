@@ -84,6 +84,13 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     // dominance gate is INDEPENDENT of the recent-winner cooldown — a
     // pkh excluded by either filter is not in the eligibility set.
     //
+    // V14 extension (from height >= DTD_POPC_ELIGIBILITY_HEIGHT, params.h):
+    // additionally require has_active_canonical_popc(pkh, height) to
+    // return true. The gate is wired but consensus-deferred: see
+    // DTD_POPC_GATE_CONSENSUS_ACTIVE in params.h and the helper docs
+    // in include/sost/lottery.h. While the flag is false (current build)
+    // the helper returns true unconditionally and the gate is a no-op.
+    //
     // The `current_miner_pkh` parameter is retained for source-level
     // compatibility with C6/C7 callers and tests; it is no longer
     // consumed by this function. A future API revision may drop it.
@@ -157,6 +164,9 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     // Filters applied in order (any one excludes the pkh):
     //   (a) recent-winner cooldown (always, when exclusion_window > 0)
     //   (b) V13 anti-dominance (height >= DTD_DOMINANCE_GATE_HEIGHT)
+    //   (c) V14 PoPC eligibility (height >= DTD_POPC_ELIGIBILITY_HEIGHT
+    //       AND DTD_POPC_GATE_CONSENSUS_ACTIVE — the helper short-circuits
+    //       to "eligible" until the flag flips)
     std::vector<LotteryEligibilityEntry> out;
     out.reserve(agg.size());
     for (const auto& kv : agg) {
@@ -180,9 +190,39 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
             }
         }
 
+        // (c) V14 PoPC eligibility. The helper short-circuits to true
+        // until DTD_POPC_GATE_CONSENSUS_ACTIVE flips, so this branch
+        // is a no-op on eligibility in the current shipped build.
+        if (height >= DTD_POPC_ELIGIBILITY_HEIGHT &&
+            DTD_POPC_GATE_CONSENSUS_ACTIVE &&
+            !has_active_canonical_popc(pkh, height)) {
+            continue;
+        }
+
         out.push_back(kv.second);
     }
     return out;
+}
+
+// V14 PoPC eligibility helper — preparatory implementation.
+//
+// While DTD_POPC_GATE_CONSENSUS_ACTIVE is false in params.h, this
+// function returns true unconditionally so the V14 gate wired into
+// compute_lottery_eligibility_set is a no-op on eligibility.
+//
+// When the flag flips to true (a future coordinated point release
+// gated behind its own height + announcement), this body will be
+// replaced with a deterministic check against chain-derived PoPC
+// state. That migration is NOT part of this PR — see
+// docs/V14_DTD_POPC_ELIGIBILITY.md for the migration prerequisites.
+bool has_active_canonical_popc(const PubKeyHash& pkh, int64_t height) {
+    (void)pkh;
+    (void)height;
+    if (!sost::DTD_POPC_GATE_CONSENSUS_ACTIVE) return true;
+    // Unreachable in this build (the flag is constexpr false). When the
+    // flag flips, the real implementation must inspect chain-derived
+    // PoPC state and never touch popc_registry.json from this path.
+    return false;
 }
 
 int64_t select_lottery_winner_index(
