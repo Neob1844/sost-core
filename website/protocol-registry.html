@@ -683,6 +683,31 @@
       <p class="section-sub">Public on-chain capsule records published by SOST-Protocol-associated infrastructure. Each row is independently verifiable from the SOST Explorer and from the linked off-chain document. SOST Protocol does not endorse the truth of off-chain content beyond what the manifest itself says; the protocol&apos;s role is to anchor the timestamp and the signature on-chain.</p>
     </div>
 
+    <!-- Beacon II-A operator key anchor (ON-CHAIN, OFFICIAL) -->
+    <div class="info-card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">ON-CHAIN</span>
+        <span style="background:rgba(217,70,239,0.15);color:#d946ef;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">OFFICIAL &mdash; V13 BEACON II-A OPERATOR KEY ANCHOR</span>
+        <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">block #11,034</span>
+      </div>
+      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">SOST Protocol &mdash; Beacon Phase II-A Operator Key (anchored on-chain)</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary)">
+        <tbody>
+          <tr><td style="padding:5px 0;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:30%">Block</td><td style="padding:5px 0"><a href="sost-explorer.html?search=11034" style="color:#d946ef">#11,034</a> &middot; 2026-05-31 06:17:21 UTC</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Txid</td><td style="padding:5px 0"><a href="sost-explorer.html?search=c6ade3c635d0e5f8814e3512db7974d70908d6bf5000ddc7aafa708452f810a1" style="color:#d946ef;word-break:break-all">c6ade3c635d0e5f8814e3512db7974d70908d6bf5000ddc7aafa708452f810a1</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Signer</td><td style="padding:5px 0"><b>OFFICIAL</b> &mdash; developer <code style="word-break:break-all">sost1a8eae8f80fedd8d86187db628a0d81e0367f76de</code> (whitelisted)</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule text</td><td style="padding:5px 0"><code style="word-break:break-all">sost-protocol beacon-iia-v13 ceb19dd6b5fd676f</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Manifesto file</td><td style="padding:5px 0"><a href="api/sost-protocol-beacon-iia-v13-fingerprint-v1.json" style="color:#d946ef">api/sost-protocol-beacon-iia-v13-fingerprint-v1.json</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Manifesto SHA-256</td><td style="padding:5px 0;word-break:break-all"><code>ceb19dd6b5fd676f0ec8aa97d1514f09b01a8b000f183afa9a8a0aaf9c135c48</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Key fingerprint</td><td style="padding:5px 0;word-break:break-all"><code style="color:#d946ef">bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Status</td><td style="padding:5px 0"><code>registered=true</code> &middot; <code>capsule_mode=open-note</code> &middot; <code>advisory_only=true</code></td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:12px 0 0">
+        <b>First OFFICIAL Protocol Registry entry.</b> This anchors the canonical Beacon Phase II-A operator-key fingerprint on the SOST chain itself. The on-chain capsule carries the first 16 hex (<code>ceb19dd6b5fd676f</code>) of the manifesto&apos;s SHA-256; the manifesto publishes the full key fingerprint <code>bbb560e3&hellip;</code>. Anyone can verify independently: (1) download the manifesto JSON and confirm its SHA-256 starts with <code>ceb19dd6b5fd676f</code>; (2) recompute the key fingerprint from <code>BEACON_PUBKEY_HEX</code> in <code>src/beacon.cpp</code> and confirm it equals <code>bbb560e3&hellip;</code>. Advisory only &mdash; the Beacon key never affects consensus, mining, or block validity.
+      </p>
+    </div>
+
     <!-- Trinity Kalgoorlie Phase 1 -->
     <div class="info-card" style="margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
@@ -731,33 +756,6 @@
       </table>
       <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:12px 0 0">
         This row will be promoted to full ON-CHAIN status once the SOST Protocol operator publishes the capsule on mainnet following the registration guide above. The manifesto SHA-256 above is the canonical hash of the committed JSON file; if the JSON is ever changed, the hash changes and a new manifesto version must be issued (v2, v3, etc.) and re-anchored on chain.
-      </p>
-    </div>
-
-    <!-- Beacon II-A operator key fingerprint (PENDING REGISTRATION) -->
-    <div class="info-card" style="margin-bottom:18px;border:1px dashed var(--border-bright)">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-        <span style="background:rgba(245,158,11,0.15);color:var(--amber-primary);font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">PENDING ON-CHAIN REGISTRATION</span>
-        <span style="background:rgba(217,70,239,0.15);color:#d946ef;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">OPERATOR KEY FINGERPRINT</span>
-      </div>
-      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">SOST Protocol &mdash; Beacon Phase II-A Operator Key</h3>
-      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary)">
-        <tbody>
-          <tr><td style="padding:5px 0;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:30%">Registry type</td><td style="padding:5px 0">operator_key_fingerprint</td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Term</td><td style="padding:5px 0"><b>Beacon Phase II-A Operator Key</b></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Project</td><td style="padding:5px 0">SOST Protocol</td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Key fingerprint</td><td style="padding:5px 0;word-break:break-all"><code>bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b</code> <span style="color:var(--text-muted)">(sha256 of the uncompressed pubkey hex; see <code>src/beacon.cpp</code>)</span></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Manifesto file</td><td style="padding:5px 0"><a href="api/sost-protocol-beacon-iia-v13-fingerprint-v1.json" style="color:#d946ef">api/sost-protocol-beacon-iia-v13-fingerprint-v1.json</a></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Manifesto SHA-256</td><td style="padding:5px 0;word-break:break-all"><code style="color:#d946ef">ceb19dd6b5fd676f0ec8aa97d1514f09b01a8b000f183afa9a8a0aaf9c135c48</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule text (planned)</td><td style="padding:5px 0"><code style="word-break:break-all">sost-protocol beacon-iia-v13 ceb19dd6b5fd676f</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule mode</td><td style="padding:5px 0"><code>open-note</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Signer</td><td style="padding:5px 0"><b>OFFICIAL</b> &mdash; will be signed by developer <code style="word-break:break-all">sost1a8eae8f80fedd8d86187db628a0d81e0367f76de</code> (whitelisted) &rarr; surfaces under <b>Official Protocol Registry</b></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Block</td><td style="padding:5px 0;color:var(--text-muted);font-style:italic">pending &mdash; populated after the operator broadcasts the capsule from the wallet</td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Txid</td><td style="padding:5px 0;color:var(--text-muted);font-style:italic">pending</td></tr>
-        </tbody>
-      </table>
-      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:12px 0 0">
-        This anchors the canonical Beacon Phase II-A operator-key fingerprint in the chain itself. The on-chain capsule carries the first 16 hex of this manifesto&apos;s SHA-256; the manifesto in turn publishes the full key fingerprint <code>bbb560e3&hellip;</code>, which anyone can recompute from <code>BEACON_PUBKEY_HEX</code> in <code>src/beacon.cpp</code> to detect a substituted key. Advisory only &mdash; the Beacon key never affects consensus, mining, or block validity.
       </p>
     </div>
   </div>

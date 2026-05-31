@@ -1,0 +1,53 @@
+SUBJECT: SOST Protocol Registry — First Official Entry: V13 Beacon II-A Operator Key Anchored On-Chain
+
+STATUS: DRAFT — for operator (NeoB) to post on BitcoinTalk from the official account.
+
+------------------------------------------------------------------------------
+
+[b]SOST Protocol Registry — First Official Entry: V13 Beacon II-A Operator Key Anchored On-Chain[/b]
+
+The canonical SOST Beacon Phase II-A operator-key fingerprint is now anchored on the SOST chain itself, as the first OFFICIAL entry in the Protocol Registry. The fingerprint was already cross-published (source code, README, whitepaper, this forum); this commits it to the ledger, so the operator advisory key has a permanent, independently-verifiable on-chain timestamp.
+
+[b]On-chain record[/b]
+[list]
+[li][b]Block:[/b] 11,034 — 2026-05-31 06:17:21 UTC[/li]
+[li][b]Txid:[/b] [tt]c6ade3c635d0e5f8814e3512db7974d70908d6bf5000ddc7aafa708452f810a1[/tt][/li]
+[li][b]Signer:[/b] [tt]sost1a8eae8f80fedd8d86187db628a0d81e0367f76de[/tt] (SOST Protocol developer address, on the OFFICIAL whitelist)[/li]
+[li][b]Capsule (Open Note):[/b] [tt]sost-protocol beacon-iia-v13 ceb19dd6b5fd676f[/tt][/li]
+[li][b]Manifesto:[/b] [url=https://sostcore.com/api/sost-protocol-beacon-iia-v13-fingerprint-v1.json]sostcore.com/api/sost-protocol-beacon-iia-v13-fingerprint-v1.json[/url][/li]
+[li][b]Manifesto SHA-256:[/b] [tt]ceb19dd6b5fd676f0ec8aa97d1514f09b01a8b000f183afa9a8a0aaf9c135c48[/tt][/li]
+[li][b]Beacon II-A key fingerprint:[/b] [tt]bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b[/tt][/li]
+[/list]
+
+[b]How the anchor works[/b]
+The on-chain capsule carries the first 16 hex of the manifesto's SHA-256 ([tt]ceb19dd6b5fd676f[/tt]). The manifesto JSON in turn publishes the full Beacon II-A key fingerprint. The fingerprint is the SHA-256 of the lowercase uncompressed public-key hex ([tt]BEACON_PUBKEY_HEX[/tt] in [tt]src/beacon.cpp[/tt]). Two independent links, both verifiable by anyone.
+
+[b]Independent verification (anyone can run this)[/b]
+
+[b]1) The on-chain capsule matches the manifesto:[/b]
+[code]
+curl -s https://sostcore.com/api/sost-protocol-beacon-iia-v13-fingerprint-v1.json | sha256sum
+# expected: ceb19dd6b5fd676f0ec8aa97d1514f09b01a8b000f183afa9a8a0aaf9c135c48
+# the first 16 hex (ceb19dd6b5fd676f) are exactly the anchor in the on-chain capsule.
+[/code]
+
+[b]2) The published key fingerprint matches the source code:[/b]
+[code]
+# from a checkout of github.com/Neob1844/sost-core (branch main):
+grep -A3 'BEACON_PUBKEY_HEX =' src/beacon.cpp | grep -oE '"[0-9a-f]+"' | tr -d '"\n' | sha256sum
+# expected: bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b
+[/code]
+
+If either value does not match, do not trust that copy.
+
+[b]Scope[/b]
+Beacon is advisory-only. The operator key can sign notices that nodes display, but it can NEVER restart a node, block anything, reject blocks, or change any consensus rule. Phase II-B (3-of-5 threshold) remains default-off (sentinel) until five independent custodians exist.
+
+[b]Links[/b]
+[list]
+[li]Protocol Registry: [url=https://sostcore.com/protocol-registry.html]sostcore.com/protocol-registry.html[/url][/li]
+[li]Transaction in the explorer: [url=https://sostcore.com/sost-explorer.html?search=c6ade3c635d0e5f8814e3512db7974d70908d6bf5000ddc7aafa708452f810a1]sost-explorer.html?search=c6ade3c…810a1[/url][/li]
+[li]Source: [url=https://github.com/Neob1844/sost-core]github.com/Neob1844/sost-core[/url] (branch main)[/li]
+[/list]
+
+— SOST Protocol
