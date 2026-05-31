@@ -155,3 +155,73 @@
     init();
   }
 })();
+
+/* ============================================================================
+   SOST canonical shared nav-links — single source of truth.
+   Replaces each page's <nav><div class="nav-links"> content with the canonical
+   link list (incl. Beacon) so navs never drift and every section is reachable
+   from every page. Active link is set from the current filename. Explorer uses
+   a bespoke nav (no .nav-links) and is skipped. Edit THIS list to change the
+   nav everywhere — no per-page HTML edits.
+   ========================================================================== */
+(function(){
+  "use strict";
+  var SOST_NAV_LINKS = `
+            <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <!-- DEX link replaced by rainbow button next to logo -->
+      <a href="sost-gold-dex.html">DEX Spec</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="beacon.html" style="color:#22d3ee">Beacon</a>
+      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
+      <a href="sost-help.html">Help</a>
+      <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
+      <a href="sost-contact.html">Contact</a>
+`;
+  function injectNav(){
+    var nl = document.querySelector("nav .nav-links");
+    if(!nl) return;
+    nl.innerHTML = SOST_NAV_LINKS;
+    var page = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+    if(!page) page = "index.html";
+    var as = nl.querySelectorAll("a[href]");
+    for(var i=0;i<as.length;i++){
+      if((as[i].getAttribute("href")||"").toLowerCase() === page){ as[i].classList.add("active"); }
+    }
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", injectNav, {once:true});
+  else injectNav();
+})();
