@@ -6249,6 +6249,27 @@ function _paintTxNeighbors(txid, blockHeight){
   });
 }
 
+// Fill the NETWORK FEE row's "block miner" beneficiary, async, after render.
+// Reads the coinbase miner of the tx's block via getblock (read-only RPC).
+function _paintTxFeeMiner(blockHeight){
+  var el=document.getElementById('tx-fee-miner');
+  if(!el)return;
+  (async function(){
+    try{
+      var hash=await rpc('getblockhash',[String(blockHeight)]);
+      var blk=await rpc('getblock',[hash]);
+      var m=blk&&blk.miner_address;
+      if(m){
+        el.innerHTML='<span class="tx-io-addr" style="display:inline" onclick="showAddress(\''+m+'\')">'+m+addrTag(m)+'</span> <span style="color:var(--text3);font-size:10px">(miner of block #'+blockHeight+')</span>';
+      } else {
+        el.innerHTML='<span style="color:var(--text3)">miner: unknown</span>';
+      }
+    }catch(e){
+      el.innerHTML='<span style="color:var(--text3)">miner: unknown</span>';
+    }
+  })();
+}
+
 async function showTxDetail(txid){
   openDetail();var c=document.getElementById('detailContent');
   pushNav('tx','TX '+sH(txid),txid);
@@ -6301,6 +6322,18 @@ function renderIndexedTx(tx,c){
     var changeBadge=isChange?'<span class="change-badge">CHANGE</span>':'';
     var payLabel=isPayment?'<span style="color:var(--green);font-size:8px;border:1px solid var(--green);padding:1px 5px;letter-spacing:1px;margin-left:6px">PAYMENT</span>':'';
     var tl=['transfer','coinbase_miner','coinbase_gold','coinbase_popc','lottery'][o.type||0]||'output';var tc=['var(--green)','var(--orange)','var(--gold)','var(--cyan)','#ff00ff'][o.type||0]||'var(--green)';outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:'+tc+'">'+tl.toUpperCase()+' \u00B7 vout:'+i+' '+changeBadge+payLabel+'</div><div class="tx-io-addr" onclick="showAddress(\''+o.address+'\')">'+o.address+addrTag(o.address)+'</div><div class="tx-io-amt">'+oamt+' SOST</div></div>';}
+  // NETWORK FEE flow item — the network fee is the implicit "output" paid to
+  // the miner that included this tx. Non-coinbase only; the block miner address
+  // is filled in async by _paintTxFeeMiner (same pattern as the neighbour
+  // lookup). Pure UI — no backend/RPC/consensus change.
+  if(!isCB){
+    var _feeStocks=(fee>0)?fee:Math.max(0,Math.round(sumIn-sumOut));
+    if(_feeStocks>0){
+      outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--red)" title="Fee earned by the miner who included this transaction in their block">NETWORK FEE → BLOCK MINER</div><div class="tx-io-addr" id="tx-fee-miner">looking up block miner…</div><div class="tx-io-amt" style="color:var(--red)">'+fSx(_feeStocks)+' SOST</div><div class="tx-io-meta">'+_feeStocks+' stocks · <span class="td-height" onclick="showBlockByHeight('+bh+')">block #'+bh+'</span></div></div>';
+    } else {
+      outputsHtml+='<div class="tx-io-item"><div class="tx-io-label" style="color:var(--text3)">NETWORK FEE</div><div class="tx-io-addr" style="color:var(--text3);cursor:default">0.00000000 SOST — no fee paid</div></div>';
+    }
+  }
   // ----- UTXO totals block --------------------------------------------------
   // Replaces the old "fee / total input / total output / inputs / outputs"
   // rows with labels that explain what the numbers actually mean. SOST is
@@ -6438,6 +6471,7 @@ function renderIndexedTx(tx,c){
   var navBotHtml='<div class="k">previous tx</div><div class="v" id="tx-nav-prev"><span style="color:var(--text3);font-size:11px">looking up neighbours\u2026</span></div>';
   c.innerHTML='<div class="dtl-head"><b>Transaction</b> <span class="dtl-tag">'+confs+' conf</span> '+(isCB?'<span class="dtl-tag yellow">coinbase</span>':'<span class="dtl-tag cyan">transfer</span>')+'</div><div class="dtl-grid">'+navTopHtml+'<div class="k">txid</div><div class="v" style="color:var(--cyan)">'+tx.txid+cpBtn(tx.txid)+'</div>'+navBotHtml+'<div class="k">block</div><div class="v"><span class="td-height" onclick="showBlockByHeight('+bh+')">#'+bh+'</span> \u00B7 '+confs+' confirmations</div><div class="k">type</div><div class="v">'+(isCB?'<span style="color:var(--yellow)">Coinbase</span>':'<span style="color:var(--cyan)">Standard transfer</span>')+'</div>'+totalsHtml+capHtml+utxoMicrocopy+'</div><div class="tx-flow"><div class="tx-flow-title">// <b>TRANSACTION FLOW</b> <span style="color:var(--green);font-size:9px">TX-INDEX \u00B7 FULL DETAIL</span></div><div class="tx-flow-row"><div class="tx-flow-inputs">'+inputsHtml+'</div><div class="tx-flow-arrow">\u2192</div><div class="tx-flow-outputs">'+outputsHtml+'</div></div></div>';
   _paintTxNeighbors(tx.txid, bh);
+  _paintTxFeeMiner(bh);
 }
 // Render confirmed TX from gettxout fallback (partial data)
 function renderFallbackTx(txid,outputs,c){
