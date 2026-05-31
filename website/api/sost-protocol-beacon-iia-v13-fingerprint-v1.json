@@ -1,0 +1,18 @@
+{
+  "registry_type": "operator_key_fingerprint",
+  "name": "Beacon Phase II-A Operator Key",
+  "version": "V13",
+  "project": "SOST Protocol",
+  "key_type": "secp256k1 uncompressed",
+  "pubkey_fingerprint_full": "bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b",
+  "fingerprint_method": "sha256 over ASCII hex string of uncompressed pubkey",
+  "activation_height": 12000,
+  "scope": "advisory only — MAY inform, MAY NOT restart, MAY NOT block, MAY NOT change consensus",
+  "code_reference": "src/beacon.cpp:29 (BEACON_PUBKEY_HEX)",
+  "cross_references": [
+    "https://sostcore.com/sost-whitepaper.html",
+    "https://github.com/Neob1844/sost-core/blob/main/README.md",
+    "https://github.com/Neob1844/sost-core/blob/main/docs/BEACON_CUSTODY_STATUS.md"
+  ],
+  "legal_notice": "This is a public on-chain timestamp of the SOST Protocol operator Beacon II-A public key fingerprint, anchoring the canonical fingerprint in the chain itself for independent verification. It is not a patent, trademark, copyright, or legal ownership registration."
+}
