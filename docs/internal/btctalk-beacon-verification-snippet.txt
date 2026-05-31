@@ -1,0 +1,15 @@
+Verify the SOST Beacon operator key yourself (anyone can run this):
+
+[code]
+# 1) the key fingerprint matches the source code on GitHub:
+curl -s https://raw.githubusercontent.com/Neob1844/sost-core/main/src/beacon.cpp \
+  | grep -A3 'BEACON_PUBKEY_HEX =' | grep -oE '"[0-9a-f]+"' | tr -d '"\n' | openssl dgst -sha256
+# expected: bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b
+
+# 2) the on-chain anchor matches the published manifesto:
+curl -s https://sostcore.com/api/sost-protocol-beacon-iia-v13-fingerprint-v1.json | openssl dgst -sha256
+# expected: ceb19dd6b5fd676f0ec8aa97d1514f09b01a8b000f183afa9a8a0aaf9c135c48
+# (first 16 hex = the anchor in the on-chain capsule, block #11,034)
+[/code]
+
+Full guide: https://sostcore.com/beacon.html

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style id="sost-global-zoom">html{zoom:0.80}</style>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="theme-color" content="#05070a">
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/beacon.html">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST Beacon — Operator Advisory Channel &amp; Verification Guide</title>
+<meta name="description" content="How the SOST Beacon advisory channel works: how the operator signs notices, how every SOST node verifies signatures automatically against a hardcoded public key, what a Beacon notice can and cannot do (advisory only — no slash, no fork), and how anyone can verify the operator key independently.">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST Beacon — Operator Advisory Channel &amp; Verification Guide">
+<meta property="og:description" content="How SOST Beacon signed advisory notices work, and how anyone can verify the operator key independently. Advisory only — never affects consensus, mining, or block validity.">
+<meta property="og:url" content="https://sostcore.com/beacon.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SOST Beacon — Operator Advisory Channel &amp; Verification Guide">
+<meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000; --bg-panel: #050505; --bg-card: #0a0a0a; --bg-hover: #111111;
+    --border-dim: #1a1a1a; --border-med: #2a2a2a; --border-bright: #3a3a3a;
+    --red-primary: #fb010d; --red-bright: #ff2d3b; --red-dim: #8b1a22;
+    --green-primary: #4ade80; --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee; --cyan-dim: #22d3ee33;
+    --gold-primary: #b8860b; --gold-dim: #b8860b33;
+    --amber-primary: #f59e0b; --amber-dim: #f59e0b22;
+    --text-primary: #e2e8f0; --text-secondary: #94a3b8; --text-dim: #64748b; --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(34,211,238,0.07) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--cyan-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .badge-official { display:inline-block; background:rgba(34,211,238,0.12); color:var(--cyan-primary); border:1px solid rgba(34,211,238,0.4); border-radius:4px; font-size:10px; font-weight:900; letter-spacing:1.5px; padding:4px 10px; margin-bottom:16px; }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--cyan-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 720px; line-height: 1.8; font-weight: 300; }
+  .section { padding: 56px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 32px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--cyan-primary); }
+  .section-sub { font-size: 13px; color: var(--text-dim); margin-top: 8px; }
+  .info-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 28px 32px; margin-bottom: 20px; }
+  .info-card h3 { font-family: var(--font-display); font-size: 17px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; }
+  .info-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 10px; }
+  .info-card ul { list-style: none; padding: 0; margin: 8px 0; }
+  .info-card li { font-size: 13px; color: var(--text-secondary); line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+  .info-card li::before { content: '>'; position: absolute; left: 0; color: var(--cyan-primary); font-weight: 700; }
+  .info-card li.no::before { content: '\2717'; color: var(--red-primary); }
+  .info-card li.yes::before { content: '\2713'; color: var(--green-primary); }
+  code { background: var(--bg-panel); padding: 2px 7px; border-radius: 4px; font-size: 12px; color: var(--green-primary); border: 1px solid var(--border-dim); word-break: break-all; }
+  pre { background: rgba(0,0,0,0.45); border: 1px solid var(--border-dim); border-radius: 6px; padding: 14px 16px; margin: 12px 0; overflow-x: auto; font-size: 12px; line-height: 1.65; color: var(--text-primary); }
+  pre code { background: none; border: none; padding: 0; color: inherit; word-break: normal; }
+  .cmt { color: var(--text-muted); }
+  .ok { color: var(--green-primary); }
+  .flow { background: rgba(0,0,0,0.45); border: 1px solid var(--border-dim); border-radius: 6px; padding: 18px 16px; margin: 16px 0; overflow-x: auto; font-size: 12px; line-height: 1.5; color: var(--cyan-primary); white-space: pre; }
+  .pill { display:inline-block; font-size:10px; font-weight:700; letter-spacing:1px; padding:2px 8px; border-radius:3px; }
+  .pill.adv { background:rgba(34,211,238,0.12); color:var(--cyan-primary); border:1px solid rgba(34,211,238,0.35); }
+  .disclaimer { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 22px 28px; margin-top: 24px; }
+  .disclaimer h4 { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--amber-primary); margin-bottom: 10px; letter-spacing: 1px; }
+  .disclaimer p { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+  .linkrow { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
+  .linkrow a { color: var(--cyan-primary); text-decoration:none; font-size:12.5px; border:1px solid var(--border-dim); border-radius:6px; padding:8px 12px; background:var(--bg-card); }
+  .linkrow a:hover { color: var(--text-primary); border-color: var(--cyan-dim); }
+  .footer { padding: 40px 0; text-align: center; }
+  .footer p { font-size: 11px; color: var(--text-muted); }
+  .footer a { color: var(--text-dim); text-decoration: none; }
+  .footer a:hover { color: var(--text-primary); }
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: var(--cyan-primary); border-bottom: 1px solid var(--cyan-primary); }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } .hero { padding: 48px 0 40px; } .section { padding: 36px 0; } }
+</style>
+<script src="js/security.js"></script>
+<script src="js/nav-toggle.js" defer></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:110px;width:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="beacon.html" style="color:#22d3ee" class="active">Beacon</a>
+      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
+      <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="badge-official">OFFICIAL DOCUMENTATION</div>
+    <div class="hero-label">SOST Beacon</div>
+    <h1>The operator's <span>signed advisory</span> channel</h1>
+    <p class="hero-sub">Beacon lets the SOST Protocol operator publish <b>signed</b> notices with a verifiable timestamp and identity. Every SOST node checks the signature automatically against a public key baked into the binary. It is <b>advisory only</b> — a signed megaphone, never a remote control: a Beacon notice can never restart a node, reject a block, slash a miner, or change any consensus rule. This page explains how it works and how <b>anyone</b> can verify it independently.</p>
+  </div>
+</section>
+
+<!-- 1 — WHAT IS BEACON -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// 01 — OVERVIEW</div>
+      <h2 class="section-title">What is <span class="accent">Beacon</span>?</h2>
+    </div>
+    <div class="info-card">
+      <p>Beacon is an <b>authenticated channel for the protocol operator</b>. It carries short, signed messages — upgrade advisories, technical notices, V14/V15 announcements — each one cryptographically tied to the operator's key and to a point in time.</p>
+      <h3>What Beacon is</h3>
+      <ul>
+        <li>A way for the operator to say something and have every node <b>prove it really came from the operator</b>, without trusting any website or middleman.</li>
+        <li><b>Phase II-A</b> (single-signature advisory notices) is <b>active from V13</b> (block 12,000). <b>Phase III</b> (peer-to-peer gossip that relays notices between nodes) is active at V13 too.</li>
+      </ul>
+      <h3>What Beacon is NOT</h3>
+      <ul>
+        <li class="no">It is <b>not</b> consensus. It does not affect block validity.</li>
+        <li class="no">It <b>cannot</b> stop the chain, reorg it, or fork it.</li>
+        <li class="no">It <b>cannot</b> slash a miner, freeze funds, or move coins.</li>
+        <li class="no">It <b>cannot</b> force any node to do anything.</li>
+        <li class="yes">It can only <b>display a signed message</b>. What you do about it is your choice.</li>
+      </ul>
+      <p style="margin-top:6px"><span class="pill adv">ADVISORY ONLY</span> &nbsp;Phase II-B (3-of-5 threshold signatures) is implemented and tested but ships <b>default-off</b> (<code>BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT = INT64_MAX</code>) until five independent custodians exist.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2 — HOW A NOTICE IS SIGNED -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// 02 — OPERATOR SIDE</div>
+      <h2 class="section-title">How a notice is <span class="accent">signed</span></h2>
+    </div>
+    <div class="info-card">
+      <ul>
+        <li>The operator writes a notice and <b>signs it with the Beacon private key</b>. That key lives <b>offline</b>, AES-256-encrypted with a passphrase, on an encrypted USB — it never touches a networked machine.</li>
+        <li>The operator's node broadcasts the <b>signed</b> notice over the SOST peer-to-peer network (Phase III gossip).</li>
+        <li>Peer nodes receive it, <b>verify the signature</b>, and keep it if it checks out.</li>
+      </ul>
+      <p>The signature is ECDSA over SHA-256 of the notice's canonical payload — the same primitive used for SOST transactions. Because only the private key can produce a signature that the public key accepts, a valid signature is proof of authorship.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3 — HOW A NODE VERIFIES AUTOMATICALLY -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// 03 — VALIDATOR SIDE</div>
+      <h2 class="section-title">How a <span class="accent">node</span> verifies it automatically</h2>
+      <div class="section-sub">Every SOST node does this — miners and full nodes alike. The miner does not do anything special; the <b>node software</b> performs the check.</div>
+    </div>
+    <div class="info-card">
+      <p>Each node ships with the Beacon <b>public key hardcoded in the binary</b> (<code>BEACON_PUBKEY_HEX</code> in <code>src/beacon.cpp</code>). When a signed notice arrives, the node, on its own, with no configuration:</p>
+      <ul>
+        <li>computes <code>sha256</code> of the notice's canonical payload,</li>
+        <li>verifies the signature against the hardcoded public key,</li>
+        <li>if the signature is <b>valid</b> &rarr; accepts the notice (advisory) and shows it as a banner on node / miner startup (also available via the <code>getbeaconnotices</code> RPC),</li>
+        <li>if the signature is <b>invalid</b> &rarr; <b>silently drops it</b> and logs a warning.</li>
+      </ul>
+      <div class="flow">  signed notice  ─►  [ your SOST node ]
+                          │
+                          ├─ sha256(canonical payload)
+                          ├─ verify signature vs BEACON_PUBKEY_HEX (hardcoded)
+                          │
+                  ┌───────┴───────┐
+              valid?              invalid?
+                  │                   │
+                  ▼                   ▼
+        show advisory banner     drop + log warning
+        (you decide what to do)  (nothing shown)</div>
+      <p><b>It never forks, never slashes, never restarts anything.</b> A verified notice only <b>informs the operator of that node</b>. If you want to act on it (pause mining, double-check an upgrade, etc.), that is entirely your decision — Beacon does not act for you and cannot compel you.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 — HOW A THIRD PARTY VERIFIES MANUALLY -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// 04 — INDEPENDENT VERIFICATION</div>
+      <h2 class="section-title">How <span class="accent">anyone</span> can verify the operator key</h2>
+      <div class="section-sub">You don't have to trust this page. Two short commands prove the key is genuine and matches the on-chain anchor.</div>
+    </div>
+    <div class="info-card">
+      <h3>A. The published key fingerprint matches the source code</h3>
+      <p>Pull the public key straight from the source on GitHub and hash it — it must equal the canonical fingerprint:</p>
+      <pre><code>curl -s https://raw.githubusercontent.com/Neob1844/sost-core/main/src/beacon.cpp \
+  | grep -A3 'BEACON_PUBKEY_HEX =' | grep -oE '"[0-9a-f]+"' | tr -d '"\n' | openssl dgst -sha256
+<span class="cmt"># expected:</span>
+<span class="ok"># bbb560e3ec86114a59762d467d645c88cfe0497a8f7ca542c973e2e0def8186b</span></code></pre>
+      <p style="font-size:12px;color:var(--text-dim)">(<code>sha256sum</code> works too — <code>openssl dgst -sha256</code> is just the portable equivalent on macOS / Windows. Only the 64-hex value matters, not the label.)</p>
+
+      <h3 style="margin-top:18px">B. The on-chain anchor matches the published manifesto</h3>
+      <p>The fingerprint is also anchored on the SOST chain. Download the manifest and hash it — its first 16 hex are the value carried in the on-chain capsule:</p>
+      <pre><code>curl -s https://sostcore.com/api/sost-protocol-beacon-iia-v13-fingerprint-v1.json | openssl dgst -sha256
+<span class="cmt"># expected:</span>
+<span class="ok"># ceb19dd6b5fd676f0ec8aa97d1514f09b01a8b000f183afa9a8a0aaf9c135c48</span>
+<span class="cmt"># the first 16 hex (ceb19dd6b5fd676f) are the anchor inside the on-chain capsule:</span>
+<span class="cmt">#   sost-protocol beacon-iia-v13 ceb19dd6b5fd676f   (block #11,034)</span></code></pre>
+      <p>If both values match, the Beacon key in your binary is the genuine operator key — and it is timestamped on the chain itself. If either does not match, do not trust that copy.</p>
+      <div class="disclaimer">
+        <h4>REMEMBER</h4>
+        <p>These checks prove <b>authenticity</b> (who holds the key) — not authority. Even a perfectly valid, operator-signed Beacon notice is advisory only: it can inform you, but it can never restart your node, block anything, slash anyone, or change a single consensus rule.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LINKS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// REFERENCES</div>
+      <h2 class="section-title">Verify &amp; <span class="accent">explore</span></h2>
+    </div>
+    <div class="linkrow">
+      <a href="api/sost-protocol-beacon-iia-v13-fingerprint-v1.json">Fingerprint manifesto (JSON)</a>
+      <a href="https://github.com/Neob1844/sost-core/blob/main/src/beacon.cpp" target="_blank" rel="noopener">BEACON_PUBKEY_HEX in src/beacon.cpp</a>
+      <a href="sost-explorer.html?search=c6ade3c635d0e5f8814e3512db7974d70908d6bf5000ddc7aafa708452f810a1">On-chain anchor tx (block #11,034)</a>
+      <a href="protocol-registry.html">Protocol Registry</a>
+      <a href="sost-whitepaper.html">Whitepaper — Beacon section</a>
+      <a href="https://github.com/Neob1844/sost-core/blob/main/docs/BEACON_CUSTODY_STATUS.md" target="_blank" rel="noopener">Beacon custody status</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="container">
+    <p>&copy; SOST Protocol &mdash; <a href="index.html">sostcore.com</a> &middot; Beacon is advisory-only and never affects consensus.</p>
+  </div>
+</div>
+
+</body>
+</html>
