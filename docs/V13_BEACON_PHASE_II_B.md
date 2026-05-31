@@ -2,7 +2,10 @@
 
 ## TL;DR
 
-V13 ships Beacon Phase II-B alongside Phase II-A. It is **advisory-only**:
+V13 ships the Beacon Phase II-B **code** alongside Phase II-A, but it is
+**gated OFF by default** (`BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT =
+INT64_MAX`) until five independent custodians are ready — II-B does NOT
+activate at V13. It is **advisory-only** regardless:
 no Beacon code path touches block validation, mining, rewards, cASERT,
 DTD, PoPC, Gold Vault, or the canonical chain. Adding II-B does not
 change any consensus rule.
