@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+@keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
 <style id="sost-global-zoom">html{zoom:0.80}</style>
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -105,17 +106,56 @@
     <a href="index.html" class="nav-logo">
       <img src="sost-logo.png" alt="SOST" style="height:110px;width:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
     </a>
+    <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
+      <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 10px rgba(34,211,238,.45));image-rendering:-webkit-optimize-contrast">
+    </a>
+    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC DEX"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:32px;font-weight:900;letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">DEX</span></a>
+      <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
+      <a href="javascript:void(0)" onclick="openSv()" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#0a1a22,#0e2530);border:1px solid rgba(34,211,238,.55);box-shadow:0 0 18px rgba(34,211,238,.42),0 0 32px rgba(34,211,238,.18);text-decoration:none;line-height:1;flex:0 0 auto;" title="Watch · SOST in 2 minutes"><span style="color:#22d3ee;font-size:40px;font-weight:900;text-shadow:0 0 12px rgba(34,211,238,.6);margin-bottom:4px">&#9654;</span><span style="color:#22d3ee;font-size:14px;font-weight:700;letter-spacing:1.5px">WATCH</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
-      <a href="index.html">Home</a>
+            <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
+      <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
       <a href="sost-protocol-spec.html">Protocol Spec</a>
       <a href="sost-whitepaper.html">Whitepaper</a>
-      <a href="beacon.html" style="color:#22d3ee" class="active">Beacon</a>
-      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
-      <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
+      <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <!-- DEX link replaced by rainbow button next to logo -->
+      <a href="sost-gold-dex.html">DEX Spec</a>
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
+      <a href="beacon.html" style="color:#22d3ee" class="active">Beacon</a>
+      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
+      <a href="sost-help.html">Help</a>
+      <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
     </div>
   </div>
@@ -261,9 +301,89 @@
 <!-- FOOTER -->
 <div class="footer">
   <div class="container">
-    <p>&copy; SOST Protocol &mdash; <a href="index.html">sostcore.com</a> &middot; Beacon is advisory-only and never affects consensus.</p>
+    <p>&copy; SOST Protocol &mdash; <a href="index.html">sostcore.com</a></p>
   </div>
 </div>
 
+<link rel="stylesheet" href="css/crt-effects.css">
+<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
+<script src="js/retro-sounds.js"></script>
+<script src="js/sost-pwa-install.js"></script>
+<script src="js/crt-effects.js"></script>
+<script src="js/developer-note.js" defer></script>
+<script src="js/sost-music.js"></script>
+
+<!-- NON-CUSTODIAL DISCLAIMER (footer) -->
+<section style="border-top:1px solid var(--border-dim);background:rgba(245,158,11,0.04)">
+  <div class="container" style="padding:24px 0">
+    <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:0">
+      <b style="color:var(--amber-primary)">SOST OTC / P2P disclaimer.</b>
+      SOST Community OTC / P2P Board is a user-to-user discussion area for voluntary SOST offers. SOST Protocol
+      does not intermediate trades, custody funds, provide escrow, guarantee counterparties, or guarantee
+      liquidity. Admins never DM first. Use small test transactions and verify all addresses independently.
+      No direct founder sale is currently active. SOST Protocol is not a broker, exchange, trading desk, escrow service, market maker, or official
+      liquidity program.
+    </p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
+  <div class="sv-content" onclick="event.stopPropagation()">
+    <button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>
+    <video id="sv-video" class="sv-video" controls preload="metadata" playsinline>
+      <source src="sost-intro.mp4" type="video/mp4">
+      Your browser does not support HTML5 video.
+    </video>
+    <div class="sv-caption">SOST in 2 Minutes &middot; Sovereign by Design</div>
+  </div>
+</div>
+<style>
+  .sv-modal{
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,.92); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    align-items:center; justify-content:center;
+  }
+  .sv-modal.open{ display:flex; }
+  .sv-content{ position:relative; max-width:92vw; max-height:88vh;
+    display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .sv-video{ max-width:92vw; max-height:80vh; background:#000;
+    border-radius:10px; box-shadow:0 0 60px rgba(251,1,13,.18); outline:none; }
+  .sv-close{
+    position:absolute; top:-46px; right:-2px;
+    background:rgba(0,0,0,.8); border:1px solid rgba(255,255,255,.22);
+    color:#fff; width:38px; height:38px; border-radius:50%;
+    font-size:22px; line-height:1; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sv-close:hover{ background:rgba(251,1,13,.4); border-color:#fb010d; }
+  .sv-caption{ text-align:center; font-size:11px; letter-spacing:3px;
+    color:#94a3b8; font-family:'JetBrains Mono','IBM Plex Mono',monospace;
+    text-transform:uppercase; }
+  /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
+  body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
+</style>
+<script>
+  function openSv(){
+    var m=document.getElementById('sv-modal');
+    m.classList.add('open'); m.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    var v=document.getElementById('sv-video');
+    try{ v.currentTime=0; v.play().catch(function(){}); }catch(e){}
+  }
+  function closeSv(evt, force){
+    if(evt && !force && evt.target.id!=='sv-modal') return;
+    var m=document.getElementById('sv-modal');
+    m.classList.remove('open'); m.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    var v=document.getElementById('sv-video');
+    try{ v.pause(); }catch(e){}
+  }
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') closeSv(null,true);
+  });
+</script>
 </body>
 </html>
