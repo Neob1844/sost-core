@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-01-v325">
+<meta name="explorer-html-version" content="2026-06-01-v326">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -3934,10 +3934,30 @@ async function updateDashboard(info){
   // Constitutional balances (public, no auth needed)
   var ADDR_GOLD='sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d';
   var ADDR_POPC='sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f';
+  // OPTION B — canonical V13 source of truth. From block 12,000 the node serves
+  // getsupplyinfo (vault, pool, dtd, circulating already computed) so app AND
+  // explorer read ONE authoritative object and can never drift. Before V13 the
+  // RPC reports v13_active=false and we fall back to the getaddressinfo path.
+  var nodeSupply=null;
   try{
-    var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
-    var bg=ag.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
-    var bp=ap.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
+    var _si=await rpc('getsupplyinfo');
+    if(_si&&_si.v13_active===true){ nodeSupply={
+      gold:Number(_si.gold_vault_balance), popc:Number(_si.popc_pool_balance),
+      dtd:Number(_si.dtd_lottery_distributed), circReal:Number(_si.circulating_supply),
+      circMine:Number(_si.circulating_mining), total:Number(_si.total_supply)}; }
+  }catch(e){}
+  if(nodeSupply&&isFinite(nodeSupply.total)&&nodeSupply.total>0){
+    tSOST=nodeSupply.total;
+    document.getElementById('dSupply').textContent=fComma(tSOST.toFixed(4))+' SOST';
+  }
+  try{
+    var bg, bp;
+    if(nodeSupply){ bg=nodeSupply.gold; bp=nodeSupply.popc; }
+    else {
+      var ag=await rpc('getaddressinfo',[ADDR_GOLD]);var ap=await rpc('getaddressinfo',[ADDR_POPC]);
+      bg=ag.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
+      bp=ap.utxos.reduce(function(s,u){return s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount));},0);
+    }
     document.getElementById('dGoldBal').textContent=bg.toFixed(4)+' SOST';
     document.getElementById('dPopcBal').textContent=bp.toFixed(4)+' SOST';
     // ---- Phase X+2: CIRCULATING SUPPLY + DTD LOTTERY BALANCE (formula) ----
@@ -4007,9 +4027,9 @@ async function updateDashboard(info){
       }
 
       var h        = (info && typeof info.blocks === 'number') ? info.blocks : 0;
-      var dtd      = dtdLotteryDistributed(h);
-      var circReal = tSOST - bg - bp;             // ← true circulating (includes lottery)
-      var circMine = tSOST - bg - bp - dtd;       // ← miner-side only (excludes lottery)
+      var dtd      = nodeSupply ? nodeSupply.dtd      : dtdLotteryDistributed(h);
+      var circReal = nodeSupply ? nodeSupply.circReal : (tSOST - bg - bp);       // ← true circulating (includes lottery)
+      var circMine = nodeSupply ? nodeSupply.circMine : (tSOST - bg - bp - dtd); // ← miner-side only (excludes lottery)
 
       var circRealEl  = document.getElementById('dCircReal');
       var circRealSub = document.getElementById('dCircRealSub');

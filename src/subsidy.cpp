@@ -66,6 +66,11 @@ static int64_t cumulative_emission(int64_t height) {
     return total;
 }
 
+// Public read-only accessor (the getsupplyinfo RPC consumes this).
+int64_t sost_cumulative_emission_stocks(int64_t height) {
+    return cumulative_emission(height);
+}
+
 int64_t sost_subsidy_stocks(int64_t height) {
     if (height < 0) return 0;
 

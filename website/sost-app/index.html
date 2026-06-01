@@ -1767,19 +1767,40 @@ SectionRenderers.dashboard = function(el) {
       let goldBalNum = null, popcBalNum = null;
       let goldVault, popcPool;
       let circRealNum = null, circRealDisplay = 'N/A', circMineDisplay = 'N/A';
+      // OPTION B — canonical V13 source of truth. From block 12,000 the node
+      // exposes getsupplyinfo (vault, pool, dtd, circulating already computed),
+      // so app and explorer read ONE authoritative object and can never drift
+      // again. Before V13 the RPC reports v13_active=false and we fall back to
+      // the per-address path below (Option A).
+      let usedSupplyInfo = false, nodeDtdDisplay = null;
       try {
-        const ag = await rpcCall('getaddressinfo', [ADDR_GOLD]);
-        const ap = await rpcCall('getaddressinfo', [ADDR_POPC]);
-        goldBalNum = sumUtxos(ag);
-        popcBalNum = sumUtxos(ap);
-      } catch(e) { goldBalNum = null; popcBalNum = null; }
-      goldVault = (goldBalNum !== null) ? f4(goldBalNum)
-        : '~' + (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST (est.)';
-      popcPool = (popcBalNum !== null) ? f4(popcBalNum)
-        : '~' + (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST (est.)';
-      if (goldBalNum !== null && popcBalNum !== null) {
-        circRealNum = totalSupply - goldBalNum - popcBalNum;   // includes DTD lottery payouts
-        circRealDisplay = f4(circRealNum);
+        const si = await rpcCall('getsupplyinfo');
+        if (si && si.v13_active === true) {
+          usedSupplyInfo  = true;
+          goldVault       = f4(Number(si.gold_vault_balance));
+          popcPool        = f4(Number(si.popc_pool_balance));
+          circRealDisplay = f4(Number(si.circulating_supply));
+          circMineDisplay = f4(Number(si.circulating_mining));
+          nodeDtdDisplay  = f4(Number(si.dtd_lottery_distributed));
+        }
+      } catch(e) { usedSupplyInfo = false; }
+      if (!usedSupplyInfo) {
+        // Fallback (pre-V13 or RPC unavailable): read Vault/Pool balances
+        // directly — same source the explorer uses (getaddressinfo).
+        try {
+          const ag = await rpcCall('getaddressinfo', [ADDR_GOLD]);
+          const ap = await rpcCall('getaddressinfo', [ADDR_POPC]);
+          goldBalNum = sumUtxos(ag);
+          popcBalNum = sumUtxos(ap);
+        } catch(e) { goldBalNum = null; popcBalNum = null; }
+        goldVault = (goldBalNum !== null) ? f4(goldBalNum)
+          : '~' + (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST (est.)';
+        popcPool = (popcBalNum !== null) ? f4(popcBalNum)
+          : '~' + (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST (est.)';
+        if (goldBalNum !== null && popcBalNum !== null) {
+          circRealNum = totalSupply - goldBalNum - popcBalNum;   // includes DTD lottery payouts
+          circRealDisplay = f4(circRealNum);
+        }
       }
 
       // Calculate SOST PoPC reference price
@@ -1899,7 +1920,11 @@ SectionRenderers.dashboard = function(el) {
           return sum;
         }
         const hNum = (height !== 'N/A' && height !== undefined) ? parseInt(height) : 0;
-        if (hNum >= V11_PHASE2_HEIGHT) {
+        if (nodeDtdDisplay !== null) {
+          // Canonical figure from getsupplyinfo (V13+); circMineDisplay was
+          // already set from the same RPC above.
+          dtdDistributed = nodeDtdDisplay;
+        } else if (hNum >= V11_PHASE2_HEIGHT) {
           const dtdNum = _dtdLotteryDistributed(hNum);
           dtdDistributed = dtdNum.toLocaleString('en-US',
               {minimumFractionDigits: 4, maximumFractionDigits: 4}) + ' SOST';
