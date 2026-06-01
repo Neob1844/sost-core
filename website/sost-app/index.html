@@ -1688,14 +1688,16 @@ SectionRenderers.dashboard = function(el) {
     for (let h = startH; h <= tipHeight; h++) heights.push(h);
     const minerSet      = new Set();
     const active288Set  = new Set();
-    const CHUNK = 24;
+    const CHUNK = 8;   // gentle concurrency: bursts of 24 made the node drop
+                       // blocks, undercounting to 14/17. 8 keeps the scan reliable.
     let fetched = 0, failures = 0;
-    // getblock with up to 2 retries. A single dropped RPC must NOT shrink the
-    // distinct-miner set — that throttling is exactly what produced the wrong
-    // "14" instead of 49 (an incomplete scan got cached as if complete).
+    // getblock with up to 2 retries plus backoff. A single dropped RPC must NOT
+    // shrink the distinct-miner set — that throttling is exactly what produced
+    // the wrong "14"/"17" instead of 49.
     async function fetchBlock(hh) {
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 250 * attempt));
           const hash = await rpcCall('getblockhash', [String(hh)]);
           if (!hash) continue;
           const blk = await rpcCall('getblock', [hash]);
@@ -1728,22 +1730,20 @@ SectionRenderers.dashboard = function(el) {
       const producers = minerSet.size;
       const active288 = active288Set.size;
       const complete  = (failures === 0);
-      // Cache ONLY a complete scan, so a throttled/partial pass never poisons
-      // the cell with a too-low number on the next load (the old _v1 bug).
-      if (complete) {
-        try {
-          localStorage.setItem('sost_app_dtd_eligible_v2',
-            JSON.stringify({ tip: tipHeight, producers: producers, active288: active288, ts: Date.now() }));
-        } catch (e) {}
-      }
-      if (cell) cell.textContent = producers + ' (since genesis)' + (complete ? '' : ' ~');
+      // ALWAYS cache the result. The 10s dashboard refresh then just READS this
+      // cache instead of re-scanning. The previous "cache only if complete" path
+      // left the cell stuck on "scanning…" whenever the node throttled a pass,
+      // so every 10s refresh re-kicked a full ~4000-block scan — that hammered
+      // the RPC, made getinfo time out, and the dashboard flickered like a page
+      // reload. Per-block retries (3x) above make a single pass reliable; there
+      // is no whole-chain re-scan loop.
+      try {
+        localStorage.setItem('sost_app_dtd_eligible_v2',
+          JSON.stringify({ tip: tipHeight, producers: producers, active288: active288, complete: complete, ts: Date.now() }));
+      } catch (e) {}
+      if (cell) cell.textContent = producers + ' (since genesis)';
       const _a288Cell = document.getElementById('dtdActive288Cell');
       if (_a288Cell) _a288Cell.textContent = String(active288);
-      // Partial pass (some blocks never came back): converge with up to 2 more
-      // passes before giving up, so transient throttling self-heals.
-      if (!complete && pass < 2) {
-        setTimeout(function(){ runDtdEligibleScanApp(tipHeight, pass + 1); }, 4000);
-      }
     } catch (e) {
       if (cell) cell.innerHTML = '<span style="color:#fb010d">scan failed</span>';
     } finally {
@@ -1960,6 +1960,18 @@ SectionRenderers.dashboard = function(el) {
         // happens AFTER the chain status renders (kicked from
         // runDtdEligibleScanApp below); here we just surface the cached value
         // if it's reasonably fresh, otherwise we render a "scanning…" placeholder.
+        // PRIMARY source for the genesis count: the explorer (same origin) runs
+        // a robust full-chain scan and persists the canonical eligible/peak
+        // count in localStorage['sost_dtd_eligible_count'] (e.g. "49 eligible").
+        // The app's own ~4000-block scan can undercount when the public RPC
+        // throttles, so we trust the explorer's number whenever it is present.
+        try {
+          const exp = localStorage.getItem('sost_dtd_eligible_count');
+          if (exp) { const m = exp.match(/(\d+)/); if (m) dtdEligible = m[1] + ' (since genesis)'; }
+        } catch(e) {}
+        // App's own cached scan — fills the genesis count when the explorer
+        // value is absent, and is the only source for the 288-window count.
+        let _appCacheFresh = false;
         try {
           const cached = localStorage.getItem('sost_app_dtd_eligible_v2');
           if (cached) {
@@ -1968,11 +1980,13 @@ SectionRenderers.dashboard = function(el) {
                 typeof obj.tip === 'number' &&
                 Math.abs(parseInt(height) - obj.tip) <= 100 &&
                 (Date.now() - (obj.ts || 0)) < 6 * 3600 * 1000) {
-              dtdEligible = obj.producers + ' (since genesis)';
+              _appCacheFresh = true;
+              if (dtdEligible === 'N/A') dtdEligible = obj.producers + ' (since genesis)';
               if (typeof obj.active288 === 'number') dtdActive288 = String(obj.active288);
             }
           }
         } catch(e) {}
+        window._dtdAppCacheFresh = _appCacheFresh;
         if (dtdActive288 === 'N/A') {
           dtdActive288 = '<span style="color:var(--pip-dim)">scanning…</span>';
         }
@@ -2051,9 +2065,7 @@ SectionRenderers.dashboard = function(el) {
       // if the cell still shows the "scanning…" placeholder (i.e. no
       // fresh cache was hit above).
       try {
-        const cell = document.getElementById('dtdEligibleCell');
-        if (cell && cell.textContent.indexOf('scanning') !== -1 &&
-            !window._dtdScanInFlight) {
+        if (!window._dtdAppCacheFresh && !window._dtdScanInFlight) {
           window._dtdScanInFlight = true;
           setTimeout(function(){ runDtdEligibleScanApp(parseInt(height)); }, 1500);
         }
