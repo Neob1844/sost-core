@@ -33,21 +33,21 @@
 <link rel="canonical" href="https://sostcore.com/sost-geaspirit.html">
 <link rel="icon" type="image/png" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GeaSpirit — Mineral Intelligence Platform | Satellite Exploration Technology</title>
-<meta name="description" content="AI-powered mineral exploration using satellite data, geophysics, and machine learning. 6 validated zones across 4 continents. Kalgoorlie 0.879 AUC, Chuquicamata 0.882 AUC.">
-<meta name="keywords" content="GeaSpirit, mineral exploration, satellite mining, mineral intelligence, machine learning geology, Kalgoorlie, Chuquicamata, prospectivity mapping, SOST">
+<title>GeaSpirit — Second-Chance Mining Intelligence | SOST Ecosystem</title>
+<meta name="description" content="GeaSpirit is Second-Chance Mining Intelligence: open-data scoring and prioritization of overlooked, abandoned, historic, tailings and care-and-maintenance mining assets. Explainable GeaSpirit Score, no discovery guarantee. Part of the SOST ecosystem. Open the full platform at geaspirit.com.">
+<meta name="keywords" content="GeaSpirit, second-chance mining intelligence, abandoned mines, tailings, care-and-maintenance, mining asset intelligence, open data, GeaSpirit Score, SOST ecosystem, geaspirit.com">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="GeaSpirit — Mineral Intelligence Platform">
-<meta property="og:description" content="AI-powered mineral exploration using satellite data, geophysics, and machine learning. 6 validated zones across 4 continents. Kalgoorlie 0.879 AUC, Chuquicamata 0.882 AUC.">
+<meta property="og:title" content="GeaSpirit — Second-Chance Mining Intelligence">
+<meta property="og:description" content="Open-data intelligence for overlooked, abandoned and underused mining assets. Explainable scoring, no discovery guarantee. Part of the SOST ecosystem — open the full platform at geaspirit.com.">
 <meta property="og:url" content="https://sostcore.com/sost-geaspirit.html">
 <meta property="og:site_name" content="SOST Protocol">
-<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<meta property="og:image" content="https://sostcore.com/geaspirit-logo.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="GeaSpirit — Mineral Intelligence Platform">
-<meta name="twitter:description" content="AI-powered mineral exploration using satellite data, geophysics, and machine learning. 6 validated zones across 4 continents. Kalgoorlie 0.879 AUC, Chuquicamata 0.882 AUC.">
-<meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
+<meta name="twitter:title" content="GeaSpirit — Second-Chance Mining Intelligence">
+<meta name="twitter:description" content="Open-data intelligence for overlooked, abandoned and underused mining assets. Explainable scoring, no discovery guarantee. Part of the SOST ecosystem — open the full platform at geaspirit.com.">
+<meta name="twitter:image" content="https://sostcore.com/geaspirit-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -128,7 +128,7 @@ nav .container{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-
 <!-- SPLASH — Green Matrix Rain (GeaSpirit) -->
 <div id="gea-splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:#000;display:none;transition:opacity .5s ease;zoom:1.25">
   <canvas id="gea-matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas>
-  <img id="gea-splash-logo" src="sost-logo.png" alt="SOST" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);width:225px;height:225px;border-radius:20%;opacity:0;transition:opacity 1.5s ease-in;filter:hue-rotate(100deg) saturate(3) brightness(1.5) drop-shadow(0 0 0px rgba(0,255,65,0));z-index:10;pointer-events:none">
+  <img id="gea-splash-logo" src="geaspirit-logo.png" alt="GeaSpirit logo" style="position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);width:240px;height:240px;opacity:0;transition:opacity 1.5s ease-in;filter:drop-shadow(0 0 0px rgba(0,255,65,0));z-index:10;pointer-events:none">
   <div id="gea-splash-title" style="position:absolute;top:53%;left:50%;transform:translateX(-50%);font-size:28px;font-weight:700;letter-spacing:5px;font-family:'JetBrains Mono',monospace;opacity:0;white-space:nowrap;z-index:10;pointer-events:none;text-align:center"></div>
   <div id="gea-spl-lines" style="position:absolute;top:64%;left:50%;transform:translateX(-50%);font-size:16px;min-height:100px;text-align:left;width:400px;font-family:'JetBrains Mono',monospace;z-index:10;pointer-events:none"></div>
   <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:20"></div>
@@ -226,7 +226,7 @@ nav .container{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-
 
   // === LOGO EMERGE (3s) with GREEN glow ===
   var logo=document.getElementById('gea-splash-logo');
-  var GF='hue-rotate(100deg) saturate(3) brightness(1.5) ';
+  var GF='';
   var geaSigmaRunning=true;
   setTimeout(function(){logo.style.opacity='0.15';},2200);
   setTimeout(function(){logo.style.opacity='0.4';logo.style.filter=GF+'drop-shadow(0 0 13px rgba(0,255,65,0.3))';},2800);
@@ -345,10 +345,102 @@ nav .container{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label">GEASPIRIT PLATFORM v0.8</div>
-    <h1><span>Mineral Intelligence</span> System</h1>
-    <p class="hero-sub">Computational mineral prospectivity mapping using satellite data. Predict where to dig before anyone else.</p>
-    <div class="status-badge">&#9632; OPERATIONAL — AUC 0.891 · 8 COMMODITY TYPES · 11+ ZONES · GRAVITY + LITHIUM</div>
+    <img src="geaspirit-logo.png" alt="GeaSpirit logo" style="width:min(40vw,150px);height:auto;display:block;margin:0 auto 18px auto;filter:drop-shadow(0 0 18px rgba(0,255,65,.35))">
+    <div class="hero-label">PART OF THE SOST ECOSYSTEM</div>
+    <h1><span>GeaSpirit</span> — Second-Chance Mining Intelligence</h1>
+    <p class="hero-sub">Open-data intelligence for overlooked, abandoned, historic, tailings and care-and-maintenance mining assets. Explainable scoring and on-demand reports — <b style="color:var(--green)">prioritization, not a guaranteed discovery</b>.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:22px">
+      <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="background:var(--green);color:#000;font-weight:700;text-decoration:none;padding:12px 26px;border-radius:6px;letter-spacing:1px;font-size:13px;box-shadow:0 0 18px rgba(0,255,65,.4)">▸ OPEN GEASPIRIT PLATFORM</a>
+      <a href="https://geaspirit.com/reports/demo-geaspirit-asset-intelligence-report.html" target="_blank" rel="noopener noreferrer" style="background:transparent;color:var(--green);font-weight:700;text-decoration:none;padding:12px 26px;border:1px solid var(--green);border-radius:6px;letter-spacing:1px;font-size:13px">READ DEMO REPORT</a>
+    </div>
+    <div class="status-badge">&#9632; LIVE AT GEASPIRIT.COM — ASSET ATLAS · GEASPIRIT SCORE 0–100 · 16 LANGUAGES · OPEN DATA</div>
+  </div>
+</section>
+
+<!-- SECOND-CHANCE BRIDGE — what GeaSpirit is (mirrors geaspirit.com) -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// WHAT GEASPIRIT DOES</div>
+    <div class="section-title">Second-Chance <span>Mining Intelligence</span></div>
+    <div class="human-box">
+      Many mines were abandoned for <b>economic</b> reasons — low prices, dated technology, shallow historical drilling — <b>not because the geology ran out</b>. That information is scattered across hundreds of pages and nobody scores it. GeaSpirit maps and scores these <b>second-chance</b> assets on open satellite and geoscience data, so you can see <b>which deserve a second look before the next 10,000</b>.
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:8px">
+      <div class="panel"><div class="panel-head">// ABANDONED &amp; HISTORIC MINES</div><p>Closed on price or technology, not on depletion.</p></div>
+      <div class="panel"><div class="panel-head">// TAILINGS &amp; RESIDUAL VALUE</div><p>Waste and tailings screened for residual-value signal.</p></div>
+      <div class="panel"><div class="panel-head">// CARE &amp; MAINTENANCE</div><p>Dormant projects on standby, ready for re-evaluation.</p></div>
+      <div class="panel"><div class="panel-head">// UNDERUSED CONCESSIONS</div><p>Held but inactive ground, ranked by open-data signal.</p></div>
+      <div class="panel"><div class="panel-head">// OPEN GEOSCIENCE INTELLIGENCE</div><p>Satellite spectral + geological favourability, no site access required.</p></div>
+      <div class="panel"><div class="panel-head">// EXPLAINABLE PRIORITIZATION</div><p>A transparent score with a named reason — never a black box.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- GEASPIRIT SCORE -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// METHODOLOGY</div>
+    <div class="section-title">The <span>GeaSpirit Score</span></div>
+    <div class="panel">
+      <p style="font-size:15px;color:var(--green);margin-bottom:14px">"Why should this asset earn your attention before 10,000 others?"</p>
+      <p>A transparent <b>0–100 triage / prioritization score</b> — <b>not</b> a probability of ore and <b>not</b> a discovery guarantee — broken into four named dimensions, each with an honest confidence band.</p>
+      <table class="tbl" style="margin-top:14px">
+        <tr><td style="color:var(--amber);width:160px">SIGNAL</td><td>Satellite spectral signal blended with geological favourability.</td></tr>
+        <tr><td style="color:var(--amber)">ACCESS / DEPTH</td><td>Surface reachability and depth, weighted by infrastructure proximity.</td></tr>
+        <tr><td style="color:var(--amber)">PRECISION</td><td>How tightly the target is bounded in space.</td></tr>
+        <tr><td style="color:var(--amber)">CERTAINTY</td><td>Validation strength, reduced by a missing-data penalty.</td></tr>
+      </table>
+      <p style="margin-top:12px">Each asset carries a <b style="color:var(--green)">HIGH / MEDIUM / LOW</b> confidence band so the score is never read as more than it is.</p>
+    </div>
+  </div>
+</section>
+
+<!-- REPORTS -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// ON-DEMAND INTELLIGENCE</div>
+    <div class="section-title">Intelligence <span>Reports</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+      <div class="panel"><div class="panel-head">// ASSET SCAN</div><p>Single-asset score with the full four-dimension breakdown.</p></div>
+      <div class="panel"><div class="panel-head">// COMPARATIVE RANKING</div><p>Portfolio prioritization and risk assessment across assets.</p></div>
+      <div class="panel"><div class="panel-head">// MINING OPPORTUNITY BRIEF</div><p>Region-level overview of overlooked targets.</p></div>
+      <div class="panel"><div class="panel-head">// TAILINGS / ABANDONED REVIEW</div><p>Residual-value signal screening for waste and dormant mines.</p></div>
+    </div>
+    <p style="margin-top:14px;color:#888;font-size:12px">Reports are scoped and quoted on request via the platform. The full Asset Atlas, all reports and 16 languages live at <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="color:var(--green)">geaspirit.com</a>.</p>
+  </div>
+</section>
+
+<!-- RELATIONSHIP WITH SOST -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// ECOSYSTEM</div>
+    <div class="section-title">GeaSpirit &amp; <span>SOST</span></div>
+    <div class="panel">
+      <p>GeaSpirit is powered by the <b>GeaSpirit Engine</b> and connected to the <b>SOST ecosystem</b>. SOST may support future payment and verification infrastructure for GeaSpirit, but <b>GeaSpirit remains fully usable without any blockchain</b>. Holding SOST is <b>not</b> required to use GeaSpirit, and nothing here implies an investment return.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LIMITATIONS -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// HONEST LIMITATIONS</div>
+    <div class="section-title">What GeaSpirit <span>Is Not</span></div>
+    <div class="panel">
+      <ul style="list-style:none;padding:0;line-height:2;font-size:13px;color:#bbb">
+        <li><span style="color:var(--amber)">—</span> Open-data screening only; <b>only drilling confirms a deposit</b>.</li>
+        <li><span style="color:var(--amber)">—</span> Scores are prioritization indicators, <b>not a probability of ore</b>.</li>
+        <li><span style="color:var(--amber)">—</span> <b>No guaranteed mineral discovery.</b></li>
+        <li><span style="color:var(--amber)">—</span> Not investment advice. Not legal advice. No ownership verification.</li>
+        <li><span style="color:var(--amber)">—</span> Not a marketplace; no asset shown is offered for sale unless independently verified elsewhere.</li>
+      </ul>
+    </div>
+    <!-- Persistent redirect card -->
+    <div style="text-align:center;border:1px solid var(--green);background:rgba(0,255,65,.04);padding:28px;margin-top:24px">
+      <div style="color:var(--green);letter-spacing:2px;font-size:13px;margin-bottom:6px">LAUNCH THE FULL PLATFORM</div>
+      <p style="color:#888;font-size:12px;margin-bottom:16px">Live Asset Atlas, explainable scores and on-demand reports in 16 languages.</p>
+      <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="background:var(--green);color:#000;font-weight:700;text-decoration:none;padding:12px 30px;border-radius:6px;letter-spacing:1px;font-size:13px;box-shadow:0 0 18px rgba(0,255,65,.4)">▸ OPEN GEASPIRIT.COM</a>
+    </div>
   </div>
 </section>
 

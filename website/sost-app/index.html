@@ -2375,66 +2375,51 @@ SectionRenderers.geaspirit = function(el) {
   el.style.padding = '16px';
   el.style.overflow = 'auto';
   el.innerHTML = `
-    <div class="pip-panel">
-      <h2>// GEASPIRIT PLATFORM</h2>
-      <p>Multi-commodity mineral intelligence platform. Satellite + geophysics + ML.</p>
-      <p style="margin-top:8px">Canonical Score: <span style="color:var(--pip)">25.1 / 40 (63%)</span></p>
-      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok">PHASE 53+ COMPLETE</span></div>
-      <div class="stat-row"><span class="stat-label">VALIDATED ZONES</span><span class="stat-value">6 zones on 4 continents</span></div>
-      <div class="stat-row"><span class="stat-label">COMMODITIES</span><span class="stat-value">7 (Cu, Au, IOCG, Pb-Zn, Li, graphite+)</span></div>
-      <div class="stat-row"><span class="stat-label">BEST AUC</span><span class="stat-value">0.922 (Kalgoorlie S2+gravity)</span></div>
-      <div class="stat-row"><span class="stat-label">COST</span><span class="stat-value">$0 (free satellite data, CPU)</span></div>
+    <div class="pip-panel" style="text-align:center">
+      <img src="https://sostcore.com/geaspirit-logo.png" alt="GeaSpirit logo" style="width:88px;height:88px;margin:4px auto 8px auto;display:block;filter:drop-shadow(0 0 12px rgba(0,255,65,.35))">
+      <h2 style="border:0;justify-content:center">// GEASPIRIT</h2>
+      <p style="color:var(--pip)">Second-Chance Mining Intelligence</p>
+      <p style="margin-top:8px;font-size:12px;color:var(--pip-dim)">Open-data intelligence for overlooked, abandoned, historic, tailings and care-and-maintenance mining assets. Explainable scoring, on-demand reports — prioritization, <b>not</b> a guaranteed discovery.</p>
+      <a href="https://geaspirit.com/?from=sost-app" target="_blank" rel="noopener noreferrer" class="pip-btn" style="display:block;margin-top:14px;text-align:center;padding:11px;font-weight:700;letter-spacing:1px;text-decoration:none">OPEN GEASPIRIT PLATFORM ↗</a>
+      <a href="https://geaspirit.com/reports/demo-geaspirit-asset-intelligence-report.html" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:10px;text-align:center;padding:10px;border:1px solid var(--pip-dim);border-radius:4px;color:var(--pip);text-decoration:none;font-weight:700;letter-spacing:1px;font-size:13px">READ DEMO REPORT ↗</a>
     </div>
     <div class="pip-panel">
-      <h2>// CAPABILITIES</h2>
-      <ul style="padding-left:20px;margin-bottom:12px">
-        <li>Generate prospectivity maps from satellite data</li>
-        <li>Score areas by mineral potential (0-1 probability)</li>
-        <li>Multi-source information fusion (satellite + thermal + geophysics + context)</li>
-        <li>Zone-specific, type-aware model selection</li>
-        <li>Custom AOI targeting</li>
-      </ul>
-      <h3>CANNOT DO:</h3>
+      <h2>// WHAT IT COVERS</h2>
+      <div class="stat-row"><span class="stat-label">ABANDONED / HISTORIC</span><span class="stat-value stat-ok">closed on price, not geology</span></div>
+      <div class="stat-row"><span class="stat-label">TAILINGS / WASTE</span><span class="stat-value">residual-value signal</span></div>
+      <div class="stat-row"><span class="stat-label">CARE &amp; MAINTENANCE</span><span class="stat-value">dormant projects</span></div>
+      <div class="stat-row"><span class="stat-label">UNDERUSED CONCESSIONS</span><span class="stat-value">held but inactive</span></div>
+      <div class="stat-row"><span class="stat-label">DATA</span><span class="stat-value stat-ok">open satellite + geoscience</span></div>
+      <div class="stat-row"><span class="stat-label">LANGUAGES</span><span class="stat-value">16</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// GEASPIRIT SCORE</h2>
+      <p style="font-size:12px;color:var(--pip-dim);margin-bottom:8px">A transparent 0–100 triage score — not a probability of ore, not a discovery guarantee.</p>
+      <div class="stat-row"><span class="stat-label">SIGNAL</span><span class="stat-value">spectral + geological favourability</span></div>
+      <div class="stat-row"><span class="stat-label">ACCESS / DEPTH</span><span class="stat-value">reachability + infrastructure</span></div>
+      <div class="stat-row"><span class="stat-label">PRECISION</span><span class="stat-value">spatial tightness of target</span></div>
+      <div class="stat-row"><span class="stat-label">CERTAINTY</span><span class="stat-value">validation, missing-data penalty</span></div>
+      <div class="stat-row"><span class="stat-label">CONFIDENCE</span><span class="stat-value stat-ok">HIGH / MEDIUM / LOW band</span></div>
+    </div>
+    <div class="pip-panel">
+      <h2>// REPORTS</h2>
       <ul style="padding-left:20px">
-        <li>Direct subsurface mineral detection</li>
-        <li>Cross-zone transfer of satellite models</li>
-        <li>Replace ground-truth geological surveys</li>
-        <li>Guarantee deposit existence at targets</li>
+        <li>Asset Scan — single-asset four-dimension breakdown</li>
+        <li>Comparative Asset Ranking — portfolio prioritization</li>
+        <li>Mining Opportunity Brief — region-level overview</li>
+        <li>Tailings / Abandoned Mine Review</li>
       </ul>
     </div>
-    <div id="gea-tech-locked" class="pip-panel" style="position:relative;min-height:250px;overflow:hidden;">
-      <h2>// TECHNICAL DETAILS <span style="color:var(--pip-red);font-size:14px">[RESTRICTED]</span></h2>
-      <div id="gea-tech-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:8px;min-height:280px;">
-        <p style="color:var(--pip-amber);margin-bottom:12px;font-size:16px;letter-spacing:2px">&#128274; RESTRICTED ACCESS</p>
-        <p style="color:var(--pip-dim);margin-bottom:12px;font-size:12px">Enter credentials to view GeaSpirit technical data</p>
-        <div id="gea-app-login-step">
-          <input type="text" id="gea-app-user" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none;margin-bottom:8px" placeholder="admin" autocomplete="username">
-          <input type="password" id="gea-app-pwd" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none" placeholder="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')document.getElementById('gea-app-login-btn').click()">
-          <p id="gea-app-msg" style="color:var(--pip-dim);font-size:11px;margin-top:6px;min-height:16px"></p>
-          <button id="gea-app-login-btn" class="pip-btn" style="margin-top:8px;font-size:14px;padding:8px 32px">LOGIN</button>
-        </div>
-        <div id="gea-app-totp-step" style="display:none">
-          <p style="color:var(--pip-amber);font-size:12px;margin-bottom:8px">Two-Factor Authentication</p>
-          <input type="text" id="gea-app-totp" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:18px;padding:8px 16px;width:160px;text-align:center;letter-spacing:6px;border-radius:4px;outline:none" placeholder="000000" maxlength="6" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')document.getElementById('gea-app-totp-btn').click()">
-          <p id="gea-app-totp-msg" style="color:var(--pip-dim);font-size:11px;margin-top:6px;min-height:16px"></p>
-          <button id="gea-app-totp-btn" class="pip-btn" style="margin-top:8px;font-size:14px;padding:8px 32px">VERIFY</button>
-        </div>
-        <p id="gea-app-session-info" style="color:var(--pip-dim);margin-top:8px;font-size:9px;display:none">Session: <span id="gea-app-timer">10:00</span> — <span onclick="geaAppRefresh()" style="cursor:pointer;color:var(--pip-amber)">REFRESH</span></p>
-        <p style="color:var(--pip-dim);margin-top:8px;font-size:9px">Server-side authentication required</p>
-      </div>
-      <div class="stat-row"><span class="stat-label">CHUQUICAMATA</span><span class="stat-value stat-ok">AUC 0.882 (Porphyry Cu)</span></div>
-      <div class="stat-row"><span class="stat-label">KALGOORLIE</span><span class="stat-value stat-ok">AUC 0.879 (Orogenic Au)</span></div>
-      <div class="stat-row"><span class="stat-label">TENNANT CREEK</span><span class="stat-value stat-ok">AUC 0.841 (IOCG)</span></div>
-      <div class="stat-row"><span class="stat-label">MT ISA</span><span class="stat-value stat-warn">AUC 0.781 (SEDEX Cu-Pb-Zn)</span></div>
-      <div class="stat-row"><span class="stat-label">ZAMBIA</span><span class="stat-value stat-warn">AUC 0.760 (Sediment Cu)</span></div>
-      <div class="stat-row"><span class="stat-label">MAGNETICS</span><span class="stat-value stat-ok">CONSOLIDATED 3 ZONES (+0.048-0.153)</span></div>
-      <div class="stat-row"><span class="stat-label">GRAVITY</span><span class="stat-value stat-ok">INTEGRATED (outperforms S2 at Mt Isa)</span></div>
-      <div class="stat-row"><span class="stat-label">EMIT</span><span class="stat-value">PORPHYRY-SPECIFIC (+0.052)</span></div>
-      <div class="stat-row"><span class="stat-label">THERMAL INERTIA</span><span class="stat-value stat-warn">+0.054 (Tennant Creek, zone-specific)</span></div>
-      <div class="stat-row"><span class="stat-label">NEIGHBORHOOD</span><span class="stat-value stat-ok">MULTI-ZONE VALIDATED</span></div>
-      <div class="stat-row"><span class="stat-label">GEOLOGY</span><span class="stat-value stat-ok">VALIDATED_SELECTIVE (3 zones)</span></div>
-      <div class="stat-row"><span class="stat-label">CANONICAL</span><span class="stat-value stat-ok">23.9/40 (59.75%)</span></div>
-      <p style="margin-top:8px;font-size:12px;color:var(--pip-dim)">Satellite ceiling ~0.89 AUC. Next breakthrough requires AEM (depth geophysics).</p>
+    <div class="pip-panel">
+      <h2>// SOST ECOSYSTEM &amp; LIMITS</h2>
+      <p style="font-size:12px;color:var(--pip-dim)">Powered by the GeaSpirit Engine and connected to the SOST ecosystem. SOST may support future payment / verification — but GeaSpirit is fully usable <b>without</b> any blockchain, and holding SOST is <b>not</b> required.</p>
+      <h3 style="margin-top:10px">NOT:</h3>
+      <ul style="padding-left:20px">
+        <li>Not a guaranteed discovery — only drilling confirms a deposit</li>
+        <li>Not investment or legal advice</li>
+        <li>Not a marketplace; no ownership verification</li>
+      </ul>
+      <a href="https://geaspirit.com/?from=sost-app" target="_blank" rel="noopener noreferrer" class="pip-btn" style="display:block;margin-top:12px;text-align:center;padding:11px;font-weight:700;letter-spacing:1px;text-decoration:none">LAUNCH GEASPIRIT.COM ↗</a>
     </div>
   `;
   AudioEngine.ambient_scan();
@@ -3745,13 +3730,8 @@ if (document.readyState === 'loading') {
     }
   }
 
-  // Wait for section renderers to create the DOM elements, then attach auth
-  var _authInterval = setInterval(function() {
-    if (document.getElementById('gea-app-login-btn')) {
-      appAuth('gea-app', 'gea-tech-overlay');
-      clearInterval(_authInterval);
-    }
-  }, 500);
+  // Wait for section renderers to create the DOM elements, then attach auth.
+  // (GeaSpirit section is now an open ecosystem gateway — no restricted login.)
   var _authInterval2 = setInterval(function() {
     if (document.getElementById('mat-app-login-btn')) {
       appAuth('mat-app', 'mat-tech-overlay');
