@@ -225,3 +225,41 @@
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", injectNav, {once:true});
   else injectNav();
 })();
+
+/* ============================================================================
+   SOST "News & Updates" button — injected into the logo-button row (next to
+   the WATCH button) of every page that has it, sized to match its sibling so
+   it lines up on both the 110px standard nav and the 72px explorer nav. Edit
+   here to change the button everywhere — no per-page HTML edits.
+   ========================================================================== */
+(function(){
+  "use strict";
+  if(!document.getElementById('sost-news-btn-style')){
+    var st=document.createElement('style');
+    st.id='sost-news-btn-style';
+    st.textContent=[
+      '@keyframes newsBtnGlow{0%,100%{box-shadow:0 0 12px rgba(245,158,11,.42),0 0 22px rgba(251,1,13,.14)}50%{box-shadow:0 0 20px rgba(245,158,11,.82),0 0 36px rgba(251,1,13,.32),0 0 52px rgba(245,158,11,.20)}}',
+      '.sost-news-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20%;background:linear-gradient(135deg,#1b1206,#2c1d08,#3a2a0a);border:1px solid rgba(245,158,11,.6);text-decoration:none;line-height:1;flex:0 0 auto;animation:newsBtnGlow 2.6s ease-in-out infinite;overflow:hidden;-webkit-tap-highlight-color:transparent}',
+      '.sost-news-btn:hover{border-color:rgba(255,200,87,.95);transform:translateY(-1px);transition:transform .15s ease,border-color .2s ease}',
+      'body.nav-collapsed nav .sost-news-btn{display:none !important}'
+    ].join('\n');
+    (document.head||document.documentElement).appendChild(st);
+  }
+  function injectNewsBtn(){
+    var nav=document.querySelector('nav');
+    if(!nav) return;
+    if(nav.querySelector('a[href="news.html"]')) return;          // already present
+    var watch=nav.querySelector('a[onclick="openSv()"]');
+    if(!watch) return;                                            // need the logo-button row
+    var sz=watch.offsetWidth||110;                               // match the sibling box
+    var a=document.createElement('a');
+    a.href='news.html'; a.title='News & Updates'; a.className='sost-news-btn';
+    a.style.width=sz+'px'; a.style.height=sz+'px'; a.style.minWidth=sz+'px';
+    var ic=Math.round(sz*0.30), tx=Math.max(9,Math.round(sz*0.115));
+    a.innerHTML='<span style="font-size:'+ic+'px;line-height:1;margin-bottom:2px">📰</span>'
+      +'<span style="color:#f59e0b;font-size:'+tx+'px;font-weight:900;letter-spacing:1px;text-shadow:0 0 8px rgba(245,158,11,.6)">NEWS</span>';
+    watch.parentNode.insertBefore(a, watch.nextSibling);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',injectNewsBtn,{once:true});
+  else injectNewsBtn();
+})();

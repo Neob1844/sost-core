@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style id="sost-global-zoom">html{zoom:0.80}</style>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<link rel="apple-touch-icon" href="sost-logo.png">
+<meta name="theme-color" content="#05070a">
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/news.html">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOST News &amp; Updates — Forks, Upgrades &amp; Announcements</title>
+<meta name="description" content="The canonical SOST Protocol changelog: every hard fork, network upgrade and milestone — V14, V13, V12, V11 and the difficulty series — ordered newest-first and explained in detail, plus public announcements.">
+<meta name="author" content="SOST Protocol">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOST News &amp; Updates — Forks, Upgrades &amp; Announcements">
+<meta property="og:description" content="Every SOST Protocol hard fork, upgrade and milestone, explained in detail. Newest-first changelog.">
+<meta property="og:url" content="https://sostcore.com/news.html">
+<meta property="og:site_name" content="SOST Protocol">
+<meta property="og:image" content="https://sostcore.com/sost-logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SOST News &amp; Updates — Forks, Upgrades &amp; Announcements">
+<meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000; --bg-panel: #050505; --bg-card: #0a0a0a; --bg-hover: #111111;
+    --border-dim: #1a1a1a; --border-med: #2a2a2a; --border-bright: #3a3a3a;
+    --red-primary: #fb010d; --red-bright: #ff2d3b; --red-dim: #8b1a22;
+    --green-primary: #4ade80; --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee; --cyan-dim: #22d3ee33;
+    --gold-primary: #b8860b; --gold-dim: #b8860b33;
+    --amber-primary: #f59e0b; --amber-dim: #f59e0b22;
+    --text-primary: #e2e8f0; --text-secondary: #94a3b8; --text-dim: #64748b; --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--border-med) var(--bg-deep); }
+  body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-mono); font-size: 14px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px); opacity: 0.12; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 1000; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+  .hero { padding: 80px 0 60px; border-bottom: 1px solid var(--border-dim); position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px; background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(34,211,238,0.07) 0%, transparent 70%); pointer-events: none; }
+  .hero-label { font-size: 11px; color: var(--cyan-primary); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-label::before { content: '//'; color: var(--text-muted); }
+  .badge-official { display:inline-block; background:rgba(34,211,238,0.12); color:var(--cyan-primary); border:1px solid rgba(34,211,238,0.4); border-radius:4px; font-size:10px; font-weight:900; letter-spacing:1.5px; padding:4px 10px; margin-bottom:16px; }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; line-height: 1.1; color: var(--text-primary); margin-bottom: 20px; letter-spacing: -1px; }
+  .hero h1 span { color: var(--cyan-primary); }
+  .hero-sub { font-size: 15px; color: var(--text-secondary); max-width: 720px; line-height: 1.8; font-weight: 300; }
+  .section { padding: 56px 0; border-bottom: 1px solid var(--border-dim); }
+  .section-header { margin-bottom: 32px; }
+  .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; }
+  .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
+  .section-title .accent { color: var(--cyan-primary); }
+  .section-sub { font-size: 13px; color: var(--text-dim); margin-top: 8px; }
+  .info-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 8px; padding: 28px 32px; margin-bottom: 20px; }
+  .info-card h3 { font-family: var(--font-display); font-size: 17px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; }
+  .info-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 10px; }
+  .info-card ul { list-style: none; padding: 0; margin: 8px 0; }
+  .info-card li { font-size: 13px; color: var(--text-secondary); line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+  .info-card li::before { content: '>'; position: absolute; left: 0; color: var(--cyan-primary); font-weight: 700; }
+  .info-card li.no::before { content: '\2717'; color: var(--red-primary); }
+  .info-card li.yes::before { content: '\2713'; color: var(--green-primary); }
+  code { background: var(--bg-panel); padding: 2px 7px; border-radius: 4px; font-size: 12px; color: var(--green-primary); border: 1px solid var(--border-dim); word-break: break-all; }
+  pre { background: rgba(0,0,0,0.45); border: 1px solid var(--border-dim); border-radius: 6px; padding: 14px 16px; margin: 12px 0; overflow-x: auto; font-size: 12px; line-height: 1.65; color: var(--text-primary); }
+  pre code { background: none; border: none; padding: 0; color: inherit; word-break: normal; }
+  .cmt { color: var(--text-muted); }
+  .ok { color: var(--green-primary); }
+  .flow { background: rgba(0,0,0,0.45); border: 1px solid var(--border-dim); border-radius: 6px; padding: 18px 16px; margin: 16px 0; overflow-x: auto; font-size: 12px; line-height: 1.5; color: var(--cyan-primary); white-space: pre; }
+  .pill { display:inline-block; font-size:10px; font-weight:700; letter-spacing:1px; padding:2px 8px; border-radius:3px; }
+  .pill.adv { background:rgba(34,211,238,0.12); color:var(--cyan-primary); border:1px solid rgba(34,211,238,0.35); }
+  .disclaimer { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 22px 28px; margin-top: 24px; }
+  .disclaimer h4 { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--amber-primary); margin-bottom: 10px; letter-spacing: 1px; }
+  .disclaimer p { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+  .linkrow { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
+  .linkrow a { color: var(--cyan-primary); text-decoration:none; font-size:12.5px; border:1px solid var(--border-dim); border-radius:6px; padding:8px 12px; background:var(--bg-card); }
+  .linkrow a:hover { color: var(--text-primary); border-color: var(--cyan-dim); }
+  .footer { padding: 40px 0; text-align: center; }
+  .footer p { font-size: 11px; color: var(--text-muted); }
+  .footer a { color: var(--text-dim); text-decoration: none; }
+  .footer a:hover { color: var(--text-primary); }
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
+  .nav-logo .brand-sost { color: var(--red-primary); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 11px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: var(--cyan-primary); border-bottom: 1px solid var(--cyan-primary); }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } .hero { padding: 48px 0 40px; } .section { padding: 36px 0; } }
+  @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}
+  @keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
+</style>
+<script src="js/security.js"></script>
+<script src="js/nav-toggle.js" defer></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:110px;width:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 8px rgba(251,1,13,.5))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
+      <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 10px rgba(34,211,238,.45));image-rendering:-webkit-optimize-contrast">
+    </a>
+    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC DEX"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:32px;font-weight:900;letter-spacing:-1px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">DEX</span></a>
+      <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
+      <a href="javascript:void(0)" onclick="openSv()" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#0a1a22,#0e2530);border:1px solid rgba(34,211,238,.55);box-shadow:0 0 18px rgba(34,211,238,.42),0 0 32px rgba(34,211,238,.18);text-decoration:none;line-height:1;flex:0 0 auto;" title="Watch · SOST in 2 minutes"><span style="color:#22d3ee;font-size:40px;font-weight:900;text-shadow:0 0 12px rgba(34,211,238,.6);margin-bottom:4px">&#9654;</span><span style="color:#22d3ee;font-size:14px;font-weight:700;letter-spacing:1.5px">WATCH</span></a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+            <a href="index.html">Home</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <!-- DEX link replaced by rainbow button next to logo -->
+      <a href="sost-gold-dex.html">DEX Spec</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="beacon.html" style="color:#22d3ee" class="active">Beacon</a>
+      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
+      <a href="sost-help.html">Help</a>
+      <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
+      <a href="sost-wallet.html">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="badge-official">OFFICIAL DOCUMENTATION</div>
+    <div class="hero-label">SOST News &amp; Updates</div>
+    <h1>Updates, <span>forks</span> &amp; announcements</h1>
+    <p class="hero-sub">Every SOST Protocol hard fork, network upgrade and milestone — ordered newest-first and explained in detail. This is the canonical changelog: what changed, at which block, and why. Public announcements are cross-posted on <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk</a>.</p>
+  </div>
+</section>
+
+<!-- V14 -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// PLANNED &middot; BLOCK 15,000 &middot; target ~2026-06-27</div>
+      <h2 class="section-title">V14 &mdash; <span class="accent">Phase I governance + PoPC automation</span></h2>
+      <div class="section-sub">Retractable without drama if the pre-fork testnet checks fail.</div>
+    </div>
+    <div class="info-card">
+      <h3>Activates at block 15,000</h3>
+      <ul>
+        <li><b>Gold Vault Phase I governance</b> &mdash; consensus-enforced spend rules: 90&nbsp;% miner approval over a 67-block window (~12&nbsp;h, ceil&nbsp;=&nbsp;61 blocks) + a 10&nbsp;% quality boost or single-signer veto from developer&nbsp;/&nbsp;genesis; silence = accept; single destination = genesis miner; cap 1,000&nbsp;SOST per spend / 5,000&nbsp;SOST per rolling 1,008-block week.</li>
+        <li><b>PoPC Model A chain-state migration</b> &mdash; moves the PoPC active set out of <code>popc_registry.json</code> into deterministic UTXO/chain-state.</li>
+        <li><b>PoPC Model A auto-audit / auto-slash / auto-settlement</b> &mdash; consensus-side scheduling (1,000-block grace period the first month).</li>
+        <li>The V13-wired <b>DTD-PoPC eligibility gate</b> flips to <code>true</code>.</li>
+        <li><b>Threshold sync 95&nbsp;% &rarr; 90&nbsp;%</b> (already in the binary; enforced from V14).</li>
+        <li><b>Beacon II-A real operator pubkey</b> replaces the placeholder (already installed &mdash; see milestones below).</li>
+      </ul>
+      <h3 style="margin-top:16px">Conditional in V14</h3>
+      <ul>
+        <li><b>Atomic swap HTLC</b> &mdash; activates only if the libwally-core sprint + end-to-end testnet pass before block 15,000 (otherwise the gate stays at <code>INT64_MAX</code> and defers to V15).</li>
+        <li><b>PoPC Model B "supervised mode"</b> &mdash; operator manually verifies user-declared Ethereum contracts; full event-listener automation is a V15 target.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- V13 -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// RELEASE CANDIDATE &middot; BLOCK 12,000</div>
+      <h2 class="section-title">V13 &mdash; <span class="accent">cASERT H35, drift tightening &amp; Beacon</span></h2>
+    </div>
+    <div class="info-card">
+      <h3>At block 12,000</h3>
+      <ul>
+        <li><b>cASERT equalizer ceiling H20 &rarr; H35</b> &mdash; full E7&ndash;H35 range active.</li>
+        <li><b>DTD lottery recent-winner cooldown 5 &rarr; 6 blocks.</b></li>
+        <li><b>Future-timestamp drift cap 60&nbsp;s &rarr; 30&nbsp;s</b> &mdash; a clock more than 30&nbsp;s ahead produces blocks validators reject. <b>NTP is strongly recommended post-V13.</b></li>
+        <li><b>Beacon Phase II-A</b> (operator-signed advisory notices) + <b>Phase III</b> (P2P gossip). Advisory-only &mdash; never affects consensus, mining or block validity. Phase II-B (3-of-5 threshold) ships <b>default-off</b> (<code>INT64_MAX</code>) until five independent custodians exist. <a href="beacon.html" style="color:#22d3ee">&rarr; Beacon guide</a></li>
+      </ul>
+      <h3 style="margin-top:16px">At block 12,100 &mdash; automatic, no action needed</h3>
+      <ul>
+        <li><b>DTD lottery cadence 2-of-3 &rarr; 1-of-3 permanent.</b></li>
+        <li><b>Anti-dominance gate</b> &mdash; any miner address holding &ge;&nbsp;30&nbsp;% of the previous 288 blocks is excluded from DTD lottery eligibility until its rolling share drops below 30&nbsp;%. Dominant miners keep their full 50&nbsp;% miner reward; they only miss the redistributed protocol-side share on DTD-triggered blocks. Reversible per-block, no slash, no admin authority.</li>
+      </ul>
+      <h3 style="margin-top:16px">SbPoW hardening</h3>
+      <ul>
+        <li>The signed PoW preimage grows from V11 (7 fields) to V13 (11 fields): adds <code>timestamp</code>, <code>bits_q</code>, <code>merkle_root</code> and a chain-specific <code>genesis_hash</code> salt &mdash; closes timestamp-restamp, difficulty-fork, tx-set-mutation and cross-chain replay seams. Domain tag &rarr; <code>SOST/POW-SIG/v13</code>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- MILESTONES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// RECENT MILESTONES &middot; May&ndash;Jun 2026</div>
+      <h2 class="section-title">Recent <span class="accent">milestones</span></h2>
+    </div>
+    <div class="info-card">
+      <ul>
+        <li><b>Beacon II-A operator key anchored on-chain</b> &mdash; the canonical fingerprint <code>bbb560e3&hellip;def8186b</code> was committed to the chain at block <b>#11,034</b> (txid <code>c6ade3c6&hellip;810a1</code>), the <b>first OFFICIAL entry</b> in the Protocol Registry. <a href="protocol-registry.html" style="color:#d946ef">&rarr; Registry</a></li>
+        <li><b>Beacon II-A real operator key installed</b> in the node (offline-generated secp256k1; private key never on a networked host).</li>
+        <li><b>Gold Vault governance threshold synced 95&nbsp;% &rarr; 90&nbsp;%</b> (doc&harr;code consistency; enforced at V14).</li>
+        <li><b>V13 preflight</b> &mdash; new read-only RPC <code>getv13readiness</code> lets operators confirm a node sees the full 288-coinbase window before the fork.</li>
+        <li><b>Protocol Registry UI</b> &mdash; publish capsules from the wallet; live Official / Community tables auto-scanned from the chain.</li>
+        <li><b>Explorer improvements</b> &mdash; per-tx NETWORK FEE row with the block-miner beneficiary; UPDATED MINERS is now a cumulative, monotonic metric.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- EARLIER FORKS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// EARLIER FORKS</div>
+      <h2 class="section-title">V11&ndash;V12 &amp; the <span class="accent">difficulty series</span></h2>
+    </div>
+    <div class="info-card">
+      <ul>
+        <li><b>V12 &mdash; block 7,350:</b> cASERT profile ceiling raised H13 &rarr; H20 (single-purpose hard fork).</li>
+        <li><b>V11 Phase 2 &mdash; block 7,100:</b> Signed Proof-of-Work (SbPoW) + the Proof-of-Participation DTD lottery. Every mined block carries a Schnorr signature over the PoW preimage; the lottery redistributes the protocol-side share on triggered blocks.</li>
+        <li><b>V4&ndash;V10 &mdash; difficulty &amp; liveness series:</b> the cASERT bitsQ controller was unified and hardened across a sequence of hard forks (liveness + determinism fixes, staged relief valves and the slingshot anti-stall), stabilising block time around the 600&nbsp;s target. See the per-block cASERT profile in the <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a> and the <a href="sost-whitepaper.html" style="color:#22d3ee">Whitepaper</a> for the full derivation.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- LINKS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// FOLLOW</div>
+      <h2 class="section-title">Announcements &amp; <span class="accent">sources</span></h2>
+    </div>
+    <div class="linkrow">
+      <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener">BitcoinTalk announcement thread</a>
+      <a href="sost-explorer.html">Live explorer (status banner)</a>
+      <a href="protocol-registry.html">Protocol Registry</a>
+      <a href="beacon.html">Beacon (operator advisories)</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">Source (GitHub)</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="container">
+    <p>&copy; SOST Protocol &mdash; <a href="index.html">sostcore.com</a></p>
+  </div>
+</div>
+
+<link rel="stylesheet" href="css/crt-effects.css">
+<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
+<script src="js/retro-sounds.js"></script>
+<script src="js/sost-pwa-install.js"></script>
+<script src="js/crt-effects.js"></script>
+<script src="js/developer-note.js" defer></script>
+<script src="js/sost-music.js"></script>
+
+<!-- NON-CUSTODIAL DISCLAIMER (footer) -->
+<section style="border-top:1px solid var(--border-dim);background:rgba(245,158,11,0.04)">
+  <div class="container" style="padding:24px 0">
+    <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:0">
+      <b style="color:var(--amber-primary)">SOST OTC / P2P disclaimer.</b>
+      SOST Community OTC / P2P Board is a user-to-user discussion area for voluntary SOST offers. SOST Protocol
+      does not intermediate trades, custody funds, provide escrow, guarantee counterparties, or guarantee
+      liquidity. Admins never DM first. Use small test transactions and verify all addresses independently.
+      No direct founder sale is currently active. SOST Protocol is not a broker, exchange, trading desk, escrow service, market maker, or official
+      liquidity program.
+    </p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
+  <div class="sv-content" onclick="event.stopPropagation()">
+    <button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>
+    <video id="sv-video" class="sv-video" controls preload="metadata" playsinline>
+      <source src="sost-intro.mp4" type="video/mp4">
+      Your browser does not support HTML5 video.
+    </video>
+    <div class="sv-caption">SOST in 2 Minutes &middot; Sovereign by Design</div>
+  </div>
+</div>
+<style>
+  .sv-modal{
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,.92); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    align-items:center; justify-content:center;
+  }
+  .sv-modal.open{ display:flex; }
+  .sv-content{ position:relative; max-width:92vw; max-height:88vh;
+    display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .sv-video{ max-width:92vw; max-height:80vh; background:#000;
+    border-radius:10px; box-shadow:0 0 60px rgba(251,1,13,.18); outline:none; }
+  .sv-close{
+    position:absolute; top:-46px; right:-2px;
+    background:rgba(0,0,0,.8); border:1px solid rgba(255,255,255,.22);
+    color:#fff; width:38px; height:38px; border-radius:50%;
+    font-size:22px; line-height:1; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sv-close:hover{ background:rgba(251,1,13,.4); border-color:#fb010d; }
+  .sv-caption{ text-align:center; font-size:11px; letter-spacing:3px;
+    color:#94a3b8; font-family:'JetBrains Mono','IBM Plex Mono',monospace;
+    text-transform:uppercase; }
+  /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
+  body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
+</style>
+<script>
+  function openSv(){
+    var m=document.getElementById('sv-modal');
+    m.classList.add('open'); m.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    var v=document.getElementById('sv-video');
+    try{ v.currentTime=0; v.play().catch(function(){}); }catch(e){}
+  }
+  function closeSv(evt, force){
+    if(evt && !force && evt.target.id!=='sv-modal') return;
+    var m=document.getElementById('sv-modal');
+    m.classList.remove('open'); m.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    var v=document.getElementById('sv-video');
+    try{ v.pause(); }catch(e){}
+  }
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') closeSv(null,true);
+  });
+</script>
+</body>
+</html>
