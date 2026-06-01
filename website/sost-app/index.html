@@ -1673,9 +1673,9 @@ SectionRenderers.dashboard = function(el) {
   // done. Result cached in localStorage for ~6 h so subsequent loads
   // of the same session paint instantly.
   // ────────────────────────────────────────────────────────────────
-  async function runDtdEligibleScanApp(tipHeight) {
+  async function runDtdEligibleScanApp(tipHeight, pass) {
+    pass = pass || 0;
     const V11_PHASE2_HEIGHT = 7100;
-    const COOLDOWN          = 6;
     const cell = document.getElementById('dtdEligibleCell');
     if (!cell) { window._dtdScanInFlight = false; return; }
     if (typeof tipHeight !== 'number' || tipHeight < V11_PHASE2_HEIGHT) {
@@ -1688,24 +1688,30 @@ SectionRenderers.dashboard = function(el) {
     for (let h = startH; h <= tipHeight; h++) heights.push(h);
     const minerSet      = new Set();
     const active288Set  = new Set();
-    const cooldownStart = tipHeight - COOLDOWN + 1;
-    const cooldownMiners= new Set();
-    const CHUNK = 30;
-    let fetched = 0;
+    const CHUNK = 24;
+    let fetched = 0, failures = 0;
+    // getblock with up to 2 retries. A single dropped RPC must NOT shrink the
+    // distinct-miner set — that throttling is exactly what produced the wrong
+    // "14" instead of 49 (an incomplete scan got cached as if complete).
+    async function fetchBlock(hh) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const hash = await rpcCall('getblockhash', [String(hh)]);
+          if (!hash) continue;
+          const blk = await rpcCall('getblock', [hash]);
+          if (blk && blk.miner_address) return blk;
+        } catch (e) {}
+      }
+      return null;
+    }
     try {
       for (let ci = 0; ci < heights.length; ci += CHUNK) {
         const chunk = heights.slice(ci, ci + CHUNK);
-        const blocks = await Promise.all(chunk.map(async hh => {
-          try {
-            const hash = await rpcCall('getblockhash', [String(hh)]);
-            return await rpcCall('getblock', [hash]);
-          } catch (e) { return null; }
-        }));
+        const blocks = await Promise.all(chunk.map(fetchBlock));
         for (let bi = 0; bi < chunk.length; bi++) {
           const b = blocks[bi];
-          if (!b || !b.miner_address) continue;
+          if (!b || !b.miner_address) { failures++; continue; }
           minerSet.add(b.miner_address);
-          if (b.height >= cooldownStart) cooldownMiners.add(b.miner_address);
           if (b.height >= tipHeight - 287) active288Set.add(b.miner_address);
         }
         fetched += chunk.length;
@@ -1715,17 +1721,29 @@ SectionRenderers.dashboard = function(el) {
             Math.min(fetched, heights.length) + '/' + heights.length + '…</span>';
         }
       }
-      const eligible = new Set();
-      minerSet.forEach(m => { if (!cooldownMiners.has(m)) eligible.add(m); });
-      const count = eligible.size;
+      // "DTD ELIGIBLE · genesis" = every distinct address that has produced
+      // >=1 accepted block since #7100. This is a LIFETIME producer count
+      // (matches the explorer's PEAK ACTIVE MINERS / "49 eligible") — it is
+      // NOT reduced by the recent-block cooldown.
+      const producers = minerSet.size;
       const active288 = active288Set.size;
-      try {
-        localStorage.setItem('sost_app_dtd_eligible_v1',
-          JSON.stringify({ tip: tipHeight, count: count, active288: active288, ts: Date.now() }));
-      } catch (e) {}
-      if (cell) cell.textContent = count + ' (since genesis)';
+      const complete  = (failures === 0);
+      // Cache ONLY a complete scan, so a throttled/partial pass never poisons
+      // the cell with a too-low number on the next load (the old _v1 bug).
+      if (complete) {
+        try {
+          localStorage.setItem('sost_app_dtd_eligible_v2',
+            JSON.stringify({ tip: tipHeight, producers: producers, active288: active288, ts: Date.now() }));
+        } catch (e) {}
+      }
+      if (cell) cell.textContent = producers + ' (since genesis)' + (complete ? '' : ' ~');
       const _a288Cell = document.getElementById('dtdActive288Cell');
       if (_a288Cell) _a288Cell.textContent = String(active288);
+      // Partial pass (some blocks never came back): converge with up to 2 more
+      // passes before giving up, so transient throttling self-heals.
+      if (!complete && pass < 2) {
+        setTimeout(function(){ runDtdEligibleScanApp(tipHeight, pass + 1); }, 4000);
+      }
     } catch (e) {
       if (cell) cell.innerHTML = '<span style="color:#fb010d">scan failed</span>';
     } finally {
@@ -1936,20 +1954,21 @@ SectionRenderers.dashboard = function(el) {
           dtdDistributed = '0 SOST (pre-V11)';
           if (circRealNum !== null) circMineDisplay = circRealDisplay;
         }
-        // DTD eligible count: distinct miner addresses since #7100 minus
-        // the last 6-block cooldown. The full scan happens AFTER the
-        // chain status renders (kicked from runDtdEligibleScanApp below);
-        // here we just surface the cached value if it's reasonably fresh,
-        // otherwise we render a "scanning…" placeholder.
+        // DTD eligible (since genesis) = distinct miner addresses that have
+        // produced >=1 accepted block since #7100 (lifetime producer count,
+        // matches the explorer's PEAK ACTIVE MINERS / 49). The full scan
+        // happens AFTER the chain status renders (kicked from
+        // runDtdEligibleScanApp below); here we just surface the cached value
+        // if it's reasonably fresh, otherwise we render a "scanning…" placeholder.
         try {
-          const cached = localStorage.getItem('sost_app_dtd_eligible_v1');
+          const cached = localStorage.getItem('sost_app_dtd_eligible_v2');
           if (cached) {
             const obj = JSON.parse(cached);
-            if (obj && typeof obj.count === 'number' &&
+            if (obj && typeof obj.producers === 'number' &&
                 typeof obj.tip === 'number' &&
                 Math.abs(parseInt(height) - obj.tip) <= 100 &&
                 (Date.now() - (obj.ts || 0)) < 6 * 3600 * 1000) {
-              dtdEligible = obj.count + ' (since genesis)';
+              dtdEligible = obj.producers + ' (since genesis)';
               if (typeof obj.active288 === 'number') dtdActive288 = String(obj.active288);
             }
           }
