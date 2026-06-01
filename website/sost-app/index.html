@@ -1717,8 +1717,9 @@ SectionRenderers.dashboard = function(el) {
           if (b.height >= tipHeight - 287) active288Set.add(b.miner_address);
         }
         fetched += chunk.length;
-        // Progress feedback every ~3 waves.
-        if (ci % (CHUNK * 3) === 0 && cell) {
+        // Progress feedback every ~3 waves — but never over a genesis value that
+        // already came from the explorer (PEAK ACTIVE MINERS) shared source.
+        if (ci % (CHUNK * 3) === 0 && cell && !window._dtdGenesisFromShared) {
           cell.innerHTML = '<span style="color:var(--pip-dim)">scanning ' +
             Math.min(fetched, heights.length) + '/' + heights.length + '…</span>';
         }
@@ -1741,11 +1742,14 @@ SectionRenderers.dashboard = function(el) {
         localStorage.setItem('sost_app_dtd_eligible_v2',
           JSON.stringify({ tip: tipHeight, producers: producers, active288: active288, complete: complete, ts: Date.now() }));
       } catch (e) {}
-      if (cell) cell.textContent = producers + ' (since genesis)';
+      // Update the genesis cell ONLY if it was not already populated from the
+      // explorer (PEAK ACTIVE MINERS) — the app mirrors that value, so the scan's
+      // (possibly lower) count must not override it. The 288 cell always updates.
+      if (cell && !window._dtdGenesisFromShared) cell.textContent = producers + ' (since genesis)';
       const _a288Cell = document.getElementById('dtdActive288Cell');
       if (_a288Cell) _a288Cell.textContent = String(active288);
     } catch (e) {
-      if (cell) cell.innerHTML = '<span style="color:#fb010d">scan failed</span>';
+      if (cell && !window._dtdGenesisFromShared) cell.innerHTML = '<span style="color:#fb010d">scan failed</span>';
     } finally {
       window._dtdScanInFlight = false;
     }
@@ -1955,35 +1959,27 @@ SectionRenderers.dashboard = function(el) {
           dtdDistributed = '0 SOST (pre-V11)';
           if (circRealNum !== null) circMineDisplay = circRealDisplay;
         }
-        // DTD eligible (since genesis) = distinct miner addresses that have
-        // produced >=1 accepted block since #7100 (lifetime producer count,
-        // matches the explorer's PEAK ACTIVE MINERS / 49). The full scan
-        // happens AFTER the chain status renders (kicked from
-        // runDtdEligibleScanApp below); here we just surface the cached value
-        // if it's reasonably fresh, otherwise we render a "scanning…" placeholder.
-        // PRIMARY: the node's canonical geteligibleminers RPC — instant, exact,
-        // and the SAME number for app and explorer. Available once the V13
-        // binary is deployed; on older binaries the call errors and we fall
-        // through to the fallbacks below. No client-side scan needed when it
-        // answers.
-        let _nodeAnswered = false;
+        // DTD ELIGIBLE · genesis — MIRROR the explorer's "⚒ PEAK ACTIVE MINERS"
+        // card. The app must show the SAME visual number the user sees in the
+        // explorer (currently 49). geteligibleminers reflects the node's CURRENT
+        // chain.json producer count (distinct SbPoW miner_pubkeys since #7100),
+        // which can be lower (e.g. 17) than the explorer's metric after a
+        // re-bootstrap — so it must NOT override the explorer value.
+        //   genesis priority: 1) explorer shared value, 2) app cache,
+        //                     3) geteligibleminers, 4) own scan.
+        //   288 (active now): the node's live count is reliable (recent blocks).
+        let _em = null;
         try {
-          const em = await rpcCall('geteligibleminers');
-          if (em && typeof em.producers_total === 'number') {
-            _nodeAnswered = true;
-            dtdEligible = em.producers_total + ' (since genesis)';
-            if (typeof em.active_288 === 'number') dtdActive288 = String(em.active_288);
-          }
+          const r = await rpcCall('geteligibleminers');
+          if (r && typeof r.producers_total === 'number') _em = r;
         } catch(e) {}
-        // FALLBACK 1: the explorer (same origin) persists its robust full-chain
-        // count in localStorage['sost_dtd_eligible_count'] (e.g. "49 eligible").
-        if (dtdEligible === 'N/A') {
-          try {
-            const exp = localStorage.getItem('sost_dtd_eligible_count');
-            if (exp) { const m = exp.match(/(\d+)/); if (m) dtdEligible = m[1] + ' (since genesis)'; }
-          } catch(e) {}
-        }
-        // FALLBACK 2: the app's own cached scan (also a source for the 288 count).
+        if (_em && typeof _em.active_288 === 'number') dtdActive288 = String(_em.active_288);
+        // genesis #1 — the explorer's PEAK ACTIVE MINERS (same-origin shared value).
+        try {
+          const exp = localStorage.getItem('sost_dtd_eligible_count');
+          if (exp) { const m = exp.match(/(\d+)/); if (m) dtdEligible = m[1] + ' (since genesis)'; }
+        } catch(e) {}
+        // genesis #2 / 288 #2 — the app's own cached scan.
         let _appCacheFresh = false;
         try {
           const cached = localStorage.getItem('sost_app_dtd_eligible_v2');
@@ -1999,8 +1995,16 @@ SectionRenderers.dashboard = function(el) {
             }
           }
         } catch(e) {}
-        // No client-side scan needed if the node answered or the cache is fresh.
-        window._dtdAppCacheFresh = _appCacheFresh || _nodeAnswered;
+        // genesis #3 — geteligibleminers ONLY as a last resort; never overrides
+        // the explorer value or the app cache above.
+        if (dtdEligible === 'N/A' && _em && typeof _em.producers_total === 'number') {
+          dtdEligible = _em.producers_total + ' (since genesis)';
+        }
+        // If genesis came from a non-scan source, the background scan must NOT
+        // overwrite the genesis cell with its (possibly lower) count.
+        window._dtdGenesisFromShared = (dtdEligible !== 'N/A');
+        // Kick the client-side scan only if a cell is still empty.
+        window._dtdAppCacheFresh = _appCacheFresh || (dtdEligible !== 'N/A' && dtdActive288 !== 'N/A');
         if (dtdActive288 === 'N/A') {
           dtdActive288 = '<span style="color:var(--pip-dim)">scanning…</span>';
         }
@@ -3104,7 +3108,7 @@ SectionRenderers.settings = function(el) {
 
     <div class="pip-panel">
       <h2>// SYSTEM INFO</h2>
-      <div class="stat-row"><span class="stat-label">APP VERSION</span><span class="stat-value">v4.1.1-PIPBOY</span></div>
+      <div class="stat-row"><span class="stat-label">APP VERSION</span><span class="stat-value">v4.1.2-PIPBOY</span></div>
       <div class="stat-row"><span class="stat-label">RENDERER</span><span class="stat-value">NATIVE HTML/JS</span></div>
       <div class="stat-row"><span class="stat-label">PWA</span><span class="stat-value stat-ok">ENABLED</span></div>
       <div class="stat-row"><span class="stat-label">AUDIO ENGINE</span><span class="stat-value">WEB AUDIO API (60 SFX)</span></div>
