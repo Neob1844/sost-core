@@ -1835,6 +1835,58 @@ static std::string handle_getsupplyinfo(const std::string& id, const std::vector
     return rpc_result(id, s.str());
 }
 
+// ---------------------------------------------------------------------------
+// handle_geteligibleminers — canonical distinct-producer count (read-only).
+//
+// producers_total = distinct addresses that have produced >=1 accepted block
+// since V11_PHASE2_HEIGHT (= the explorer's PEAK ACTIVE MINERS / the app's
+// "DTD ELIGIBLE · genesis"). active_288 = distinct producers in the last 288
+// blocks. Computed once from the in-memory chain and cached by tip height, so
+// app and explorer get the EXACT same number instantly instead of each running
+// a fragile ~4000-block client scan (which undercounted under RPC throttling).
+// Read-only and additive: touches no consensus, subsidy or reward path.
+// ---------------------------------------------------------------------------
+static std::string handle_geteligibleminers(const std::string& id, const std::vector<std::string>&) {
+    static std::mutex elig_cache_mu;
+    static int64_t elig_cached_tip = -1;
+    static int     elig_cached_total = 0, elig_cached_288 = 0;
+    int64_t tip = 0;
+    int producers = 0, active288 = 0;
+    {
+        std::lock_guard<std::mutex> cl(elig_cache_mu);
+        { std::lock_guard<std::recursive_mutex> lk(g_chain_mu); tip = g_chain_height; }
+        if (elig_cached_tip == tip) {
+            producers = elig_cached_total;
+            active288 = elig_cached_288;
+        } else {
+            std::set<PubKeyHash> all, recent;
+            const int64_t lo   = sost::V11_PHASE2_HEIGHT;
+            const int64_t a288 = (tip >= 287) ? (tip - 287) : 0;
+            std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+            for (const auto& b : g_blocks) {
+                if (b.height < lo || b.height > tip) continue;
+                if (b.tx_hexes.empty()) continue;
+                std::vector<Byte> raw;
+                if (!decode_tx_hex(b.tx_hexes[0], raw)) continue;
+                Transaction cb; std::string derr;
+                if (!Transaction::Deserialize(raw, cb, &derr) || cb.outputs.empty()) continue;
+                const PubKeyHash& pkh = cb.outputs[0].pubkey_hash;
+                all.insert(pkh);
+                if (b.height >= a288) recent.insert(pkh);
+            }
+            producers = (int)all.size();
+            active288 = (int)recent.size();
+            elig_cached_tip = tip; elig_cached_total = producers; elig_cached_288 = active288;
+        }
+    }
+    std::ostringstream s;
+    s << "{\"producers_total\":" << producers
+      << ",\"active_288\":" << active288
+      << ",\"window_start\":" << sost::V11_PHASE2_HEIGHT
+      << ",\"chain_tip\":" << tip << "}";
+    return rpc_result(id, s.str());
+}
+
 static std::string handle_getbalance(const std::string& id, const std::vector<std::string>&) {
     int64_t total=g_wallet.balance(g_chain_height);
     int64_t locked=g_wallet.locked_balance(g_chain_height);
@@ -3760,6 +3812,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getbeaconnotices",handle_getbeaconnotices},
     {"getv13readiness",handle_getv13readiness},
     {"getsupplyinfo",handle_getsupplyinfo},
+    {"geteligibleminers",handle_geteligibleminers},
     {"getbalance",handle_getbalance},
     {"getnewaddress",handle_getnewaddress},
     {"validateaddress",handle_validateaddress},
@@ -6606,6 +6659,7 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "estimatefee",
         "getaddressbalance",
         "getsupplyinfo",
+        "geteligibleminers",
         "listbonds",
         "getminerstats",
         // Telemetry / audit RPCs — pure reads, exposed publicly so the

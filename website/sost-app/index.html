@@ -1960,17 +1960,29 @@ SectionRenderers.dashboard = function(el) {
         // happens AFTER the chain status renders (kicked from
         // runDtdEligibleScanApp below); here we just surface the cached value
         // if it's reasonably fresh, otherwise we render a "scanning…" placeholder.
-        // PRIMARY source for the genesis count: the explorer (same origin) runs
-        // a robust full-chain scan and persists the canonical eligible/peak
-        // count in localStorage['sost_dtd_eligible_count'] (e.g. "49 eligible").
-        // The app's own ~4000-block scan can undercount when the public RPC
-        // throttles, so we trust the explorer's number whenever it is present.
+        // PRIMARY: the node's canonical geteligibleminers RPC — instant, exact,
+        // and the SAME number for app and explorer. Available once the V13
+        // binary is deployed; on older binaries the call errors and we fall
+        // through to the fallbacks below. No client-side scan needed when it
+        // answers.
+        let _nodeAnswered = false;
         try {
-          const exp = localStorage.getItem('sost_dtd_eligible_count');
-          if (exp) { const m = exp.match(/(\d+)/); if (m) dtdEligible = m[1] + ' (since genesis)'; }
+          const em = await rpcCall('geteligibleminers');
+          if (em && typeof em.producers_total === 'number') {
+            _nodeAnswered = true;
+            dtdEligible = em.producers_total + ' (since genesis)';
+            if (typeof em.active_288 === 'number') dtdActive288 = String(em.active_288);
+          }
         } catch(e) {}
-        // App's own cached scan — fills the genesis count when the explorer
-        // value is absent, and is the only source for the 288-window count.
+        // FALLBACK 1: the explorer (same origin) persists its robust full-chain
+        // count in localStorage['sost_dtd_eligible_count'] (e.g. "49 eligible").
+        if (dtdEligible === 'N/A') {
+          try {
+            const exp = localStorage.getItem('sost_dtd_eligible_count');
+            if (exp) { const m = exp.match(/(\d+)/); if (m) dtdEligible = m[1] + ' (since genesis)'; }
+          } catch(e) {}
+        }
+        // FALLBACK 2: the app's own cached scan (also a source for the 288 count).
         let _appCacheFresh = false;
         try {
           const cached = localStorage.getItem('sost_app_dtd_eligible_v2');
@@ -1982,11 +1994,12 @@ SectionRenderers.dashboard = function(el) {
                 (Date.now() - (obj.ts || 0)) < 6 * 3600 * 1000) {
               _appCacheFresh = true;
               if (dtdEligible === 'N/A') dtdEligible = obj.producers + ' (since genesis)';
-              if (typeof obj.active288 === 'number') dtdActive288 = String(obj.active288);
+              if (dtdActive288 === 'N/A' && typeof obj.active288 === 'number') dtdActive288 = String(obj.active288);
             }
           }
         } catch(e) {}
-        window._dtdAppCacheFresh = _appCacheFresh;
+        // No client-side scan needed if the node answered or the cache is fresh.
+        window._dtdAppCacheFresh = _appCacheFresh || _nodeAnswered;
         if (dtdActive288 === 'N/A') {
           dtdActive288 = '<span style="color:var(--pip-dim)">scanning…</span>';
         }
