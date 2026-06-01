@@ -644,6 +644,8 @@ const SECTIONS = [
   { id: 'dashboard',  label: 'DASHBOARD',        icon: '[1]' },
   { id: 'wallet',     label: 'WALLET',            icon: '[2]' },
   { id: 'explorer',   label: 'EXPLORER',          icon: '[3]' },
+  { id: 'beacon',     label: 'BEACON',            icon: '[I]' },
+  { id: 'registry',   label: 'PROTOCOL REGISTRY', icon: '[J]' },
   { id: 'dex',        label: 'SOST DEX',           icon: '[4]' },
   { id: 'popc',       label: 'POPC',              icon: '[5]' },
   { id: 'e2e',        label: 'E2E PROTOCOL',      icon: '[6]' },
@@ -1570,6 +1572,8 @@ function renderSection(id) {
     documents: '/sost-whitepaper.html',
     markets: '/sost-markets.html',
     dex: '/sost-dex.html',
+    beacon: '/beacon.html',
+    registry: '/protocol-registry.html',
     popc: '/sost-popc.html',
     e2e: '/sost-e2e.html',
     otc: '/sost-otc.html',
@@ -2109,6 +2113,33 @@ SectionRenderers.explorer = function(el) {
 };
 
 // ── SECURITY ───────────────────────────────────────────────────
+SectionRenderers.beacon = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML =
+    '<div class="pip-panel"><h2>// BEACON — OPERATOR ADVISORY</h2>' +
+    '<p style="margin-bottom:10px">Beacon is the SOST&nbsp;Protocol operator\'s <b>authenticated channel</b>. The operator signs short notices (upgrade advisories, technical announcements) with an offline key; every SOST node verifies the signature automatically against a public key hardcoded in the binary and silently drops anything that fails the check.</p>' +
+    '<p style="margin-bottom:10px"><b>Advisory only</b> — a Beacon notice can never restart a node, reject a block, slash a miner, or change any consensus rule. Phase&nbsp;II-A (single-sig) is active from V13 (block 12,000); Phase&nbsp;II-B (3-of-5 threshold) ships default-off until five independent custodians exist.</p>' +
+    '<div class="stat-row"><span class="stat-label">Key fingerprint</span><span class="stat-value" style="font-size:11px;word-break:break-all">bbb560e3…def8186b</span></div>' +
+    '<div class="stat-row"><span class="stat-label">On-chain anchor</span><span class="stat-value">block #11,034</span></div>' +
+    '<a href="https://sostcore.com/beacon.html?from=app" target="_blank" style="display:block;margin-top:14px;text-align:center;padding:11px;border:1px solid var(--pip);border-radius:4px;color:var(--pip);text-decoration:none;font-weight:700;letter-spacing:1px">OPEN BEACON GUIDE ↗</a>' +
+    '</div>';
+  AudioEngine.ambient_scan();
+};
+
+SectionRenderers.registry = function(el) {
+  el.style.padding = '16px';
+  el.style.overflow = 'auto';
+  el.innerHTML =
+    '<div class="pip-panel"><h2>// PROTOCOL REGISTRY</h2>' +
+    '<p style="margin-bottom:10px">The Protocol Registry is a <b>public on-chain timestamp / provenance</b> record built from signed SOST capsules: it proves that a name, document hash, protocol term or release statement existed at a specific block height and was published by a specific address. An evidentiary record &mdash; <b>not</b> a patent or trademark registry.</p>' +
+    '<p style="margin-bottom:10px">Entries are classified by signer: addresses on the SOST&nbsp;Protocol whitelist appear as <b>Official</b>; everyone else as <b>Community</b>. <b>Anyone with SOST</b> can publish a capsule from the wallet &mdash; using the Registry is free (you only pay the normal network fee).</p>' +
+    '<div class="stat-row"><span class="stat-label">First official entry</span><span class="stat-value">Beacon II-A key &middot; #11,034</span></div>' +
+    '<a href="https://sostcore.com/protocol-registry.html?from=app" target="_blank" style="display:block;margin-top:14px;text-align:center;padding:11px;border:1px solid var(--pip);border-radius:4px;color:var(--pip);text-decoration:none;font-weight:700;letter-spacing:1px">OPEN PROTOCOL REGISTRY ↗</a>' +
+    '</div>';
+  AudioEngine.ambient_scan();
+};
+
 SectionRenderers.security = function(el) {
   el.style.padding = '16px';
   el.style.overflow = 'auto';
