@@ -2090,6 +2090,29 @@ SectionRenderers.dashboard = function(el) {
         }
       } catch(e) {}
 
+      // ── AVG BLOCK · 288 — the CONSENSUS difficulty window. cASERT's bitsQ
+      //    controller retargets off the average interval of the last 288 blocks
+      //    vs the 600 s target. The mean telescopes to (tipTime − time(tip−288))
+      //    / 288, so we fetch the ONE anchor block, not a 288-block scan. Cached
+      //    by tip height so the 10s refresh reuses it until a new block arrives.
+      let avg288 = 'N/A';
+      const _fmtAvg = (sec) => (!isFinite(sec) || sec <= 0) ? 'N/A'
+        : (Math.floor(sec / 60) + 'm ' + Math.round(sec % 60) + 's');
+      try {
+        const tipH = parseInt(height);
+        if (lastBlockEpoch && isFinite(tipH) && tipH > 288) {
+          const _ac = window._avgBlockCache;
+          if (_ac && _ac.tip === tipH) {
+            avg288 = _ac.a288;
+          } else {
+            const ah = await rpcCall('getblockhash', [String(tipH - 288)]);
+            const ab = ah ? await rpcCall('getblock', [ah]) : null;
+            if (ab && ab.time) avg288 = _fmtAvg((lastBlockEpoch - ab.time) / 288);
+            window._avgBlockCache = { tip: tipH, a288: avg288 };
+          }
+        }
+      } catch(e) {}
+
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>
         <div class="stat-row"><span class="stat-label">SOST PRICE</span><span class="stat-value" style="color:#ffd700;font-weight:700">${sostPrice} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(PoPC ref.)</span></span></div>
@@ -2109,6 +2132,7 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
         <div class="stat-row"><span class="stat-label">LAST BLOCK</span><span class="stat-value">${lastBlockTime}</span></div>
+        <div class="stat-row"><span class="stat-label">AVG BLOCK · 288</span><span class="stat-value" style="color:#22d3ee">${avg288} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">consensus window · last 288 vs 600 s (cASERT bitsQ)</span></span></div>
         <div class="stat-row"><span class="stat-label">NEXT BLOCK IN</span><span class="stat-value" style="color:var(--pip-dim)">${nextBlockIn} <span style="font-size:9px">(est. @10min)</span></span></div>
         <div class="stat-row"><span class="stat-label">EST. HASHRATE</span><span class="stat-value" style="color:#f59e0b">${estHashrate} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(Bitcoin-style)</span></span></div>
         <div class="stat-row"><span class="stat-label">MINING ATTEMPTS</span><span class="stat-value" style="font-size:11px">${miningAttempts}</span></div>
@@ -3080,7 +3104,7 @@ SectionRenderers.settings = function(el) {
 
     <div class="pip-panel">
       <h2>// SYSTEM INFO</h2>
-      <div class="stat-row"><span class="stat-label">APP VERSION</span><span class="stat-value">v4.1.0-PIPBOY</span></div>
+      <div class="stat-row"><span class="stat-label">APP VERSION</span><span class="stat-value">v4.1.1-PIPBOY</span></div>
       <div class="stat-row"><span class="stat-label">RENDERER</span><span class="stat-value">NATIVE HTML/JS</span></div>
       <div class="stat-row"><span class="stat-label">PWA</span><span class="stat-value stat-ok">ENABLED</span></div>
       <div class="stat-row"><span class="stat-label">AUDIO ENGINE</span><span class="stat-value">WEB AUDIO API (60 SFX)</span></div>
