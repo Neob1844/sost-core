@@ -1071,11 +1071,29 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
                 }
                 s<<"]";
             } else {
-                // Genesis block has no tx_hexes — look up miner from UTXO set
-                OutPoint op; op.txid=b.block_id; op.index=0;
-                auto entry=g_utxo_set.GetUTXO(op);
-                if(entry){
-                    s<<",\"miner_address\":\""<<address_encode(entry->pubkey_hash)<<"\"";
+                // No coinbase tx retained (genesis, or a bootstrap / header-only
+                // load). PREFER the consensus-mandatory SbPoW miner_pubkey from
+                // raw_block_json — present for every block >= V11_PHASE2_HEIGHT
+                // even when tx data was dropped, so the explorer's per-height
+                // scan no longer undercounts producers. Fall back to the UTXO
+                // set (covers genesis / still-unspent coinbases).
+                bool emitted=false;
+                if(!b.raw_block_json.empty()){
+                    std::string mpk = jstr(b.raw_block_json, "miner_pubkey");
+                    if(mpk.size()==66){
+                        PubKey pub{};
+                        if(hex_to_bytes(mpk, pub.data(), pub.size())){
+                            s<<",\"miner_address\":\""<<address_encode(ComputePubKeyHash(pub))<<"\"";
+                            emitted=true;
+                        }
+                    }
+                }
+                if(!emitted){
+                    OutPoint op; op.txid=b.block_id; op.index=0;
+                    auto entry=g_utxo_set.GetUTXO(op);
+                    if(entry){
+                        s<<",\"miner_address\":\""<<address_encode(entry->pubkey_hash)<<"\"";
+                    }
                 }
                 s<<",\"txids\":[\""<<to_hex(b.block_id.data(),32)<<"\"]";
             }
@@ -1865,12 +1883,38 @@ static std::string handle_geteligibleminers(const std::string& id, const std::ve
             std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
             for (const auto& b : g_blocks) {
                 if (b.height < lo || b.height > tip) continue;
-                if (b.tx_hexes.empty()) continue;
-                std::vector<Byte> raw;
-                if (!decode_tx_hex(b.tx_hexes[0], raw)) continue;
-                Transaction cb; std::string derr;
-                if (!Transaction::Deserialize(raw, cb, &derr) || cb.outputs.empty()) continue;
-                const PubKeyHash& pkh = cb.outputs[0].pubkey_hash;
+                // Resolve the block producer's address-hash robustly. PREFER the
+                // SbPoW miner_pubkey carried in raw_block_json: from
+                // V11_PHASE2_HEIGHT it is consensus-mandatory and present even
+                // when the full coinbase tx was not retained (bootstrap /
+                // header-only / legacy chain.json loads). By consensus the
+                // coinbase miner output pays the address derived from that same
+                // key, so this yields the identical producer set as decoding the
+                // coinbase — but it never silently undercounts when tx_hexes is
+                // empty (that was the geteligibleminers=17 vs 49 bug). Fall back
+                // to the coinbase tx only if no miner_pubkey is present.
+                PubKeyHash pkh{};
+                bool got = false;
+                if (!b.raw_block_json.empty()) {
+                    std::string mpk = jstr(b.raw_block_json, "miner_pubkey");
+                    if (mpk.size() == 66) {            // 33-byte compressed pubkey hex
+                        PubKey pub{};
+                        if (hex_to_bytes(mpk, pub.data(), pub.size())) {
+                            pkh = ComputePubKeyHash(pub);
+                            got = true;
+                        }
+                    }
+                }
+                if (!got && !b.tx_hexes.empty()) {
+                    std::vector<Byte> raw;
+                    Transaction cb; std::string derr;
+                    if (decode_tx_hex(b.tx_hexes[0], raw)
+                        && Transaction::Deserialize(raw, cb, &derr) && !cb.outputs.empty()) {
+                        pkh = cb.outputs[0].pubkey_hash;
+                        got = true;
+                    }
+                }
+                if (!got) continue;
                 all.insert(pkh);
                 if (b.height >= a288) recent.insert(pkh);
             }
