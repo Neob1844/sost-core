@@ -170,6 +170,14 @@ add_library(sost-core STATIC
     # is reached on real chain heights yet.
     src/lottery.cpp
 
+    # DTD lottery emergency pause/resume — signed control state machine.
+    # Pure reference functions (parse / nonce supersede / reorg undo / the
+    # is_dtd_lottery_active_at chokepoint). Consensus-DEFERRED: the gate
+    # DTD_EMERGENCY_CONTROL_CONSENSUS_ACTIVE (params.h) ships false, so this
+    # changes nothing on real chain heights. See
+    # docs/DTD_EMERGENCY_PAUSE_RESUME_DESIGN.md.
+    src/dtd_control.cpp
+
     # V13 — Beacon Phase II-A. Local signed-notice display path. Pure
     # informational; no consensus, no P2P, no HTTP. See
     # include/sost/beacon.h for the hard invariants and
@@ -435,6 +443,10 @@ add_test(NAME lottery-frequency COMMAND test-lottery-frequency)
 add_executable(test-lottery-eligibility tests/test_lottery_eligibility.cpp)
 target_link_libraries(test-lottery-eligibility PRIVATE sost-core)
 add_test(NAME lottery-eligibility COMMAND test-lottery-eligibility)
+
+add_executable(test-dtd-control tests/test_dtd_control.cpp)
+target_link_libraries(test-dtd-control PRIVATE sost-core)
+add_test(NAME dtd-control COMMAND test-dtd-control)
 
 # V11 Phase 2 — component D (Lottery): rollover state machinery.
 # Always built — pure functions, no Schnorr, no chain state writes

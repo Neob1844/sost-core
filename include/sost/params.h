@@ -990,6 +990,51 @@ inline constexpr int64_t V14_HEIGHT                       = 15000;
 inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT      = V14_HEIGHT;
 inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;
 
+// =============================================================================
+// DTD Lottery Emergency Pause / Resume — signed control signal (DESIGNED,
+// consensus-DEFERRED).
+// =============================================================================
+//
+// Purpose: an emergency safety brake that lets the protocol operator PAUSE
+// (and later RESUME) the DTD lottery redistribution via a signed control
+// message that EVERY node verifies and applies identically — never a local
+// VPS/password/admin/RPC toggle that could split consensus.
+//
+// Strict scope. The brake may ONLY disable/re-enable DTD lottery
+// redistribution. While paused, a would-be DTD block behaves like a normal
+// block: the standard 50 % miner / 25 % Gold Vault / 25 % PoPC split. It
+// CANNOT touch the miner's 50 %, PoW validation, total emission, ordinary
+// transaction validation, balances, or Gold Vault / PoPC accounting outside
+// the DTD redistribution rules.
+//
+// Signing layer (reused, not reinvented): the message is verified against the
+// SAME hardcoded operator custody already shipped for Beacon — the 3-of-5
+// threshold set in include/sost/beacon.h (BEACON_THRESHOLD_PUBKEYS), which
+// ships as fail-closed placeholders. The control message format, replay
+// rule, height gating, reorg handling and the single lottery chokepoint are
+// specified in docs/DTD_EMERGENCY_PAUSE_RESUME_DESIGN.md and implemented as
+// pure, unit-tested reference functions in include/sost/dtd_control.h.
+//
+// CRITICAL CONSENSUS NOTE — gate is shipped DEFERRED (same discipline as the
+// V14 PoPC gate above). DTD_EMERGENCY_CONTROL_CONSENSUS_ACTIVE ships as
+// false: while false, is_dtd_emergency_paused_at() returns false for every
+// height regardless of any control state, so is_dtd_lottery_active_at()
+// reduces EXACTLY to sost::lottery::is_lottery_block() and historical replay
+// stays bit-identical. The pure state machine (parse / verify-flag / nonce
+// supersede / undo) is fully testable today; the cut-over to true is a
+// single-line constant flip under a fresh, announced fork height once the DTD
+// lottery coinbase itself is consensus-wired (currently the C8 coinbase shape
+// is still deferred — see include/sost/lottery.h).
+//
+// Required prerequisites before flipping to true (NOT in this PR):
+//   1) DTD lottery coinbase shape (C8) wired into block validation.
+//   2) DTDControlState persisted in chain state with reorg undo data.
+//   3) Beacon custody pubkeys replaced with the real operator 3-of-5 set.
+//   4) Coordinated point release flips DTD_EMERGENCY_CONTROL_CONSENSUS_ACTIVE
+//      under a fresh fork height >= DTD_EMERGENCY_CONTROL_MIN_HEIGHT.
+inline constexpr int64_t DTD_EMERGENCY_CONTROL_MIN_HEIGHT       = V14_HEIGHT;
+inline constexpr bool    DTD_EMERGENCY_CONTROL_CONSENSUS_ACTIVE = false;
+
 // Future-drift cap — height-gated. Three regimes, matching the production
 // validator history byte-for-byte:
 //   - height >= V13_HEIGHT                    → 30 s  (V13 tightening)
