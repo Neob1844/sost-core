@@ -1836,7 +1836,7 @@ SectionRenderers.dashboard = function(el) {
       } catch(e) { sostPrice = 'N/A'; }
 
       // Fetch best block hash and detail
-      let bestHash = 'N/A', interval = 'N/A', lastBlockTime = 'N/A', subsidy = 'N/A';
+      let bestHash = 'N/A', interval = 'N/A', lastBlockTime = 'N/A', subsidy = 'N/A', lastBlockEpoch = null;
       try {
         const bh = await rpcCall('getblockhash', [height]);
         if (bh) bestHash = bh;
@@ -1847,6 +1847,7 @@ SectionRenderers.dashboard = function(el) {
           else if (block.miner_reward) subsidy = (parseFloat(block.miner_reward) / 1e8).toFixed(4) + ' SOST (miner)';
           // Last block time
           if (block.time) {
+            lastBlockEpoch = block.time;
             const ago = Math.floor(Date.now()/1000 - block.time);
             if (ago < 60) lastBlockTime = ago + 's ago';
             else if (ago < 3600) lastBlockTime = Math.floor(ago/60) + 'm ago';
@@ -2047,6 +2048,48 @@ SectionRenderers.dashboard = function(el) {
       // cASERT profile: use RPC casert_profile (authoritative from C++ PID controller)
       const casertProfile = info.casert_profile || 'B0';
 
+      // ── Extra node telemetry (cheap, single-RPC) so the app dashboard matches
+      //    the explorer: EST. HASHRATE, NEXT BLOCK IN, MINING ATTEMPTS, RPC ACTIVITY.
+      // EST. HASHRATE — Bitcoin-style estimate: 2^(bits_real) / target_spacing.
+      let estHashrate = 'N/A';
+      if (rawBitsQ > 0) {
+        const hps = Math.pow(2, rawBitsQ / 65536) / 600;
+        estHashrate = (hps >= 1000) ? (hps / 1000).toFixed(2) + ' kH/s' : hps.toFixed(1) + ' H/s';
+      }
+      // NEXT BLOCK IN — estimate from the 600 s target and time since last block.
+      let nextBlockIn = 'N/A';
+      if (lastBlockEpoch) {
+        const rem = 600 - (nowSec - lastBlockEpoch);
+        if (rem <= 0) nextBlockIn = 'due now';
+        else if (rem < 60) nextBlockIn = rem + 's';
+        else nextBlockIn = Math.floor(rem / 60) + 'm ' + (rem % 60) + 's';
+      }
+      // MINING ATTEMPTS — submitblock telemetry counters from the node.
+      let miningAttempts = 'N/A';
+      try {
+        const ms = await rpcCall('getminerstats');
+        const lt = (ms && ms.lifetime) ? ms.lifetime : ms;
+        if (lt && lt.submitblock_received !== undefined) {
+          const acc = lt.submitblock_accepted ?? 0, rcv = lt.submitblock_received ?? 0, rej = lt.submitblock_rejected ?? 0;
+          miningAttempts = acc + ' accepted / ' + rcv + ' submitted' + (rej > 0 ? ' · ' + rej + ' rejected' : '');
+        }
+      } catch(e) {}
+      // RPC ACTIVITY — node-wide JSON-RPC counters.
+      let rpcActivity = 'N/A';
+      try {
+        const rs = await rpcCall('getrpcstats');
+        if (rs) {
+          const calls = rs.calls ?? rs.total ?? null;
+          const methods = Array.isArray(rs.methods) ? rs.methods.length : (typeof rs.methods === 'number' ? rs.methods : null);
+          const errs = rs.errors ?? 0;
+          if (calls !== null) {
+            rpcActivity = Number(calls).toLocaleString() + ' calls'
+              + (methods !== null ? ' · ' + methods + ' methods' : '')
+              + (errs > 0 ? ' · ' + errs + ' errors' : '');
+          }
+        }
+      } catch(e) {}
+
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>
         <div class="stat-row"><span class="stat-label">SOST PRICE</span><span class="stat-value" style="color:#ffd700;font-weight:700">${sostPrice} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(PoPC ref.)</span></span></div>
@@ -2066,6 +2109,10 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
         <div class="stat-row"><span class="stat-label">LAST BLOCK</span><span class="stat-value">${lastBlockTime}</span></div>
+        <div class="stat-row"><span class="stat-label">NEXT BLOCK IN</span><span class="stat-value" style="color:var(--pip-dim)">${nextBlockIn} <span style="font-size:9px">(est. @10min)</span></span></div>
+        <div class="stat-row"><span class="stat-label">EST. HASHRATE</span><span class="stat-value" style="color:#f59e0b">${estHashrate} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(Bitcoin-style)</span></span></div>
+        <div class="stat-row"><span class="stat-label">MINING ATTEMPTS</span><span class="stat-value" style="font-size:11px">${miningAttempts}</span></div>
+        <div class="stat-row"><span class="stat-label">RPC ACTIVITY</span><span class="stat-value" style="font-size:11px">${rpcActivity}</span></div>
         <div class="stat-row"><span class="stat-label">CASERT PROFILE</span><span class="stat-value">${casertProfile}</span></div>
         <div class="stat-row"><span class="stat-label">SUBSIDY</span><span class="stat-value">${subsidy}</span></div>
         <div class="stat-row"><span class="stat-label">MEMPOOL</span><span class="stat-value">${mempoolDisplay}</span></div>
@@ -3033,7 +3080,7 @@ SectionRenderers.settings = function(el) {
 
     <div class="pip-panel">
       <h2>// SYSTEM INFO</h2>
-      <div class="stat-row"><span class="stat-label">APP VERSION</span><span class="stat-value">v4.0.0-PIPBOY</span></div>
+      <div class="stat-row"><span class="stat-label">APP VERSION</span><span class="stat-value">v4.1.0-PIPBOY</span></div>
       <div class="stat-row"><span class="stat-label">RENDERER</span><span class="stat-value">NATIVE HTML/JS</span></div>
       <div class="stat-row"><span class="stat-label">PWA</span><span class="stat-value stat-ok">ENABLED</span></div>
       <div class="stat-row"><span class="stat-label">AUDIO ENGINE</span><span class="stat-value">WEB AUDIO API (60 SFX)</span></div>
