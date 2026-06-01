@@ -1755,8 +1755,32 @@ SectionRenderers.dashboard = function(el) {
       let totalSupply = 0, bh2 = 0, h2 = height || 2254;
       while (bh2 <= h2) { let ep = Math.floor(bh2/EP); let r = R0*Math.pow(Q,ep); let ee = Math.min((ep+1)*EP-1,h2); totalSupply += r*(ee-bh2+1); bh2 = ee+1; }
       const supplyDisplay = totalSupply.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST';
-      const goldVault = '~' + (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST (25% of emission)';
-      const popcPool = '~' + (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST (25% of emission)';
+      // Gold Vault / PoPC Pool: REAL on-chain balances — same source of truth as
+      // sost-explorer.html (getaddressinfo over the hardcoded addresses). The old
+      // code estimated these as totalSupply*0.25, which diverged from the actual
+      // chain balance (showed ~21,921 vs the real ~16,599). Now both read the chain.
+      const ADDR_GOLD = 'sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d';
+      const ADDR_POPC = 'sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f';
+      const f4 = (x) => x.toLocaleString('en-US', {minimumFractionDigits:4, maximumFractionDigits:4}) + ' SOST';
+      const sumUtxos = (r) => (r && Array.isArray(r.utxos))
+        ? r.utxos.reduce((s,u)=>s+(typeof u.amount==='number'?u.amount:parseFloat(u.amount||0)),0) : null;
+      let goldBalNum = null, popcBalNum = null;
+      let goldVault, popcPool;
+      let circRealNum = null, circRealDisplay = 'N/A', circMineDisplay = 'N/A';
+      try {
+        const ag = await rpcCall('getaddressinfo', [ADDR_GOLD]);
+        const ap = await rpcCall('getaddressinfo', [ADDR_POPC]);
+        goldBalNum = sumUtxos(ag);
+        popcBalNum = sumUtxos(ap);
+      } catch(e) { goldBalNum = null; popcBalNum = null; }
+      goldVault = (goldBalNum !== null) ? f4(goldBalNum)
+        : '~' + (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST (est.)';
+      popcPool = (popcBalNum !== null) ? f4(popcBalNum)
+        : '~' + (totalSupply * 0.25).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + ' SOST (est.)';
+      if (goldBalNum !== null && popcBalNum !== null) {
+        circRealNum = totalSupply - goldBalNum - popcBalNum;   // includes DTD lottery payouts
+        circRealDisplay = f4(circRealNum);
+      }
 
       // Calculate SOST PoPC reference price
       let sostPrice = 'N/A';
@@ -1876,10 +1900,16 @@ SectionRenderers.dashboard = function(el) {
         }
         const hNum = (height !== 'N/A' && height !== undefined) ? parseInt(height) : 0;
         if (hNum >= V11_PHASE2_HEIGHT) {
-          dtdDistributed = _dtdLotteryDistributed(hNum).toLocaleString('en-US',
+          const dtdNum = _dtdLotteryDistributed(hNum);
+          dtdDistributed = dtdNum.toLocaleString('en-US',
               {minimumFractionDigits: 4, maximumFractionDigits: 4}) + ' SOST';
+          // CIRCULATING MINING = supply − vault − pool − dtd (miner-side only),
+          // matching sost-explorer.html (circMine). circRealNum came from the
+          // real on-chain Vault/Pool balances fetched above.
+          if (circRealNum !== null) circMineDisplay = f4(circRealNum - dtdNum);
         } else {
           dtdDistributed = '0 SOST (pre-V11)';
+          if (circRealNum !== null) circMineDisplay = circRealDisplay;
         }
         // DTD eligible count: distinct miner addresses since #7100 minus
         // the last 6-block cooldown. The full scan happens AFTER the
@@ -1953,6 +1983,8 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">TOTAL SUPPLY</span><span class="stat-value">${supplyDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">GOLD VAULT</span><span class="stat-value" style="color:#b8860b">${goldVault}</span></div>
         <div class="stat-row"><span class="stat-label">POPC POOL</span><span class="stat-value" style="color:#22d3ee">${popcPool}</span></div>
+        <div class="stat-row"><span class="stat-label">CIRCULATING SUPPLY</span><span class="stat-value" style="color:#4ade80">${circRealDisplay} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(supply − vault − pool)</span></span></div>
+        <div class="stat-row"><span class="stat-label">CIRCULATING MINING</span><span class="stat-value" style="color:#86efac">${circMineDisplay} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(− DTD lottery)</span></span></div>
         <div class="stat-row"><span class="stat-label">BLOCK HEIGHT</span><span class="stat-value">${height}</span></div>
         <div class="stat-row"><span class="stat-label">EXPECTED BLOCKS</span><span class="stat-value" style="color:var(--pip-dim)">${expectedBlocks} <span style="font-size:9px">(@10min/block)</span></span></div>
         <div class="stat-row"><span class="stat-label">CHAIN LAG/LEAD</span><span class="stat-value" style="color:${lagLeadColor};font-weight:700">${lagLeadText}</span></div>
