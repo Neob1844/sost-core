@@ -458,6 +458,83 @@
   </div>
 </section>
 
+<!-- OPERATIONAL STALLS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// EVERY PAUSE ON THE RECORD &middot; TRAZABILIDAD</div>
+      <h2 class="section-title">Operational stalls &amp; <span class="accent">live incidents</span></h2>
+      <div class="section-sub">Each chain pause is timestamped and explained. None was a consensus failure or a loss of funds; the chain refused bad blocks rather than accept what it could not verify.</div>
+    </div>
+
+    <div class="info-card">
+      <h3>The SbPoW build-flag stall &mdash; 2&nbsp;h&nbsp;36&nbsp;min at block 10,109 (2026-05-24)</h3>
+      <p>The seed node was recompiled from <code>main</code> <b>without</b> the <code>-DSOST_ENABLE_PHASE2_SBPOW=ON</code> CMake flag (whose default was OFF). The resulting binary loaded the chain, spoke P2P and passed every other rule &mdash; but could not verify the V11 Phase&nbsp;2 <b>BIP-340 Schnorr signatures</b> that the network had used for ~3,000 blocks, so it rejected every candidate (<code>SbPoW: signature verification failed at height 10110</code>). It was a verifier compiled with the wrong code path, not a fork.</p>
+      <ul>
+        <li class="yes">Last good #10,109 at 20:42:55&nbsp;UTC, resumed #10,110 at 23:19:45&nbsp;UTC (9,410&nbsp;s). No reorg, UTXO set preserved (28,005 entries), funds safe, 10 distinct miners during recovery.</li>
+        <li class="yes">Defense-in-depth: CMake default flipped OFF&nbsp;&rarr;&nbsp;ON; a start-up <b>FATAL guard</b> now refuses to run a mainnet binary without SbPoW compiled in; checklist + a <code>strings sost-node | grep -c 'POW-SIG/v11'</code> verification step added.</li>
+      </ul>
+      <p style="color:var(--text-dim)"><b>Accountability, verbatim:</b> &ldquo;operator error compounded by a documentation gap&rdquo; &mdash; the fix lives at build time so a misconfigured &ldquo;mainnet&rdquo; binary now fails loudly instead of silently.</p>
+    </div>
+
+    <div class="info-card">
+      <h3>Seed thread-exhaustion stall &mdash; ~139&nbsp;min at block 6,017</h3>
+      <p>RPC connection-handler threads were not recycled when HTTP clients (browsers, explorers, miner <code>getinfo</code> polls) dropped mid-response. The node accumulated ~1,600 idle threads and RPC responsiveness degraded until miners could not reliably reach it. <b>Not an attack, not a consensus issue</b> &mdash; a connection-handling bug, the kind Bitcoin also hit in its early years.</p>
+      <ul>
+        <li class="yes">Fixes: write timeout 30&nbsp;s&nbsp;&rarr;&nbsp;5&nbsp;s (threads recycle 6&times; faster); two <code>getinfo</code> round-trips collapsed into one; an automatic watchdog that restarts the node if its thread count exceeds 500.</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>Long-tail block during the V11 update window &mdash; 129&nbsp;min at block 6,989</h3>
+      <p>While the V11 Phase&nbsp;1+2 code was pushed, many operators rebuilt and restarted at once (each first start rebuilds the 60-second ConvergenceX dataset), so effective network hashrate dropped. Combined with normal Poisson variance at the cASERT relief floor, block 6,989 stretched to 129&nbsp;min&nbsp;35&nbsp;s. A documented rollback to a backup binary was <b>prepared with a 150-minute threshold</b> &mdash; the block landed first, so the rollback was <b>cancelled, not executed</b>. Verified: no chain split, no premature Phase&nbsp;2 activation.</p>
+    </div>
+
+    <div class="info-card">
+      <h3>Miner race condition &mdash; and a bug bounty paid on-chain</h3>
+      <p>On a 192-core host running 64 threads, the miner segfaulted repeatedly. Root cause: a TOCTOU race in the block-monitor start path spawned <b>two</b> monitor threads; a detached monitor then read the chain vector while the main loop reallocated it on a new block &mdash; undefined behaviour surfacing as a libc segfault. Fixed in miner <b>v0.8</b> (atomic <code>compare_exchange_strong</code> so only one monitor launches; the thread is joined, not detached, before the chain mutates; a lifecycle mutex).</p>
+      <ul>
+        <li class="yes"><b>Bug bounty paid on-chain</b> to the reporter &mdash; txid <code>bf8c1709&hellip;a364019</code>, on-chain note <i>&ldquo;Bug bounty &mdash; sost-miner v0.8 race condition fix 6680319&rdquo;</i>. Publicly verifiable on the explorer.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FAIRNESS & HONESTY -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// HARD TRUTHS, STATED &middot; TRAZABILIDAD</div>
+      <h2 class="section-title">Mining fairness &amp; <span class="accent">honest reporting</span></h2>
+    </div>
+
+    <div class="info-card">
+      <h3>&ldquo;CPU-only&rdquo; &rarr; &ldquo;CPU-friendly, memory-hard&rdquo; &mdash; a corrected claim</h3>
+      <p>An end-to-end consensus audit confirmed ConvergenceX is intact, but also that the protocol <b>does not enforce CPU-only mining</b> &mdash; the algorithm structure (parallel k-loop, 32&times;32 matvec, branch-free perturbations) is amenable to optimised/GPU implementations, which is legitimate competition under the current rules. Rather than keep an overstated claim, the framing was corrected to <b>&ldquo;CPU-friendly, memory-hard PoW&rdquo;</b> across the site and header, and real GPU-resistance was deferred to a properly designed future fork. A separate display bug was fixed: the explorer&apos;s <code>EST. HASHRATE</code> was dimensionally wrong (<code>bitsQ/blocktime</code>); it now shows a Bitcoin-style hashrate and the effective ConvergenceX attempts/sec side by side.</p>
+    </div>
+
+    <div class="info-card">
+      <h3>Concentration, reported &mdash; not hidden</h3>
+      <p>When one address grew dominant, the distribution was published openly: over 288 blocks (25 unique miners), top-1&nbsp;&asymp;&nbsp;41.8&nbsp;%, top-3&nbsp;&asymp;&nbsp;61&nbsp;%, top-10&nbsp;&asymp;&nbsp;80&nbsp;%, with the structural risks named (no unilateral reorg below 51&nbsp;%, selfish-mining profitability from ~33&nbsp;%, a top-3 coalition crossing 51&nbsp;%). The active-miner peak (~39) fell to ~7 after the SbPoW + V12 upgrades &mdash; an honestly-stated cost of closing the consensus pieces before the commercial side. <b>No official pool</b> is offered (SbPoW makes classic pools unfeasible, and a central pool would be a 51&nbsp;% target); the <b>DTD lottery</b> and <b>PoPC</b> are the cooperative answer so a small miner earns recurring upside after a single block, and a holder can earn via custody without out-hashing anyone.</p>
+    </div>
+
+    <div class="info-card">
+      <h3>A 30-day fork moratorium &amp; auto-warnings</h3>
+      <p>After the rapid V3&ndash;V12 calibration series, the operator committed (post-V12, block 7,350) to <b>zero consensus changes for at least 30 days</b> unless chain integrity is threatened, and that every future hard fork is announced <b>&ge;&nbsp;30 days in advance</b> from the public thread, with banners in the node and explorer plus a <code>min_commit</code> field so a miner on an outdated binary is warned automatically &mdash; no more black-box updates.</p>
+    </div>
+
+    <div class="info-card">
+      <h3>Listing applications &amp; registrations &mdash; submitted, not confirmed</h3>
+      <p>For traceability, the public market-data review requests are on the record and <b>pending</b>: CoinMarketCap (ticket&nbsp;<code>#1366213</code>), CoinGecko (<code>#129449</code>), CoinPaprika (<code>#2415351</code>), CoinCodex. The <b>SLIP-0044</b> BIP-44 coin-type registration was filed as a PR to <code>satoshilabs/slips</code>. None of these is a listing, a market or a price &mdash; SOST has no contract address (it is a native L1) and any &ldquo;SOST contract&rdquo; is fake.</p>
+    </div>
+
+    <div class="info-card">
+      <h3>DTD lottery audit &amp; V11 staged rollout</h3>
+      <p>After a display concern, the DTD lottery was cross-checked three ways &mdash; consensus re-derivation from the deterministic seed, the node UTXO set, and the explorer address balance &mdash; and all three matched; only the wording was off (lottery UTXOs are now labelled <code>LOTTERY</code> not generic <code>OUTPUT</code>, and lifetime wins are separated from current unspent balance). For the record, V11 shipped in two stages: <b>Phase&nbsp;1 (block 7,000)</b> &mdash; extended cASERT cascade + <b>state-dependent dataset access</b> (the index derives from the previous round&apos;s SHA-256 state, closing predictable-prefetch optimisations); <b>Phase&nbsp;2 (block 7,100)</b> &mdash; SbPoW + DTD lottery + jackpot rollover, with a triangular emergency-relief cascade.</p>
+    </div>
+  </div>
+</section>
+
 <!-- ECOSYSTEM -->
 <section class="section">
   <div class="container">
