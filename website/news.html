@@ -167,7 +167,7 @@
     <div class="badge-official">OFFICIAL DOCUMENTATION</div>
     <div class="hero-label">SOST News &amp; Updates</div>
     <h1>Updates, <span>forks</span> &amp; announcements</h1>
-    <p class="hero-sub">Every SOST Protocol hard fork, network upgrade and milestone — ordered newest-first and explained in detail. This is the canonical changelog: what changed, at which block, and why. Public announcements are cross-posted on <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk</a>.</p>
+    <p class="hero-sub">Every SOST&nbsp;Protocol hard fork, network upgrade and milestone since genesis (2026-03-15) — ordered newest-first and explained in detail. This is the canonical changelog. Public announcements are cross-posted on the <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk ANN thread</a>. Public launch target: <b>2026-06-16</b>.</p>
   </div>
 </section>
 
@@ -182,16 +182,15 @@
     <div class="info-card">
       <h3>Activates at block 15,000</h3>
       <ul>
-        <li><b>Gold Vault Phase I governance</b> &mdash; consensus-enforced spend rules: 90&nbsp;% miner approval over a 67-block window (~12&nbsp;h, ceil&nbsp;=&nbsp;61 blocks) + a 10&nbsp;% quality boost or single-signer veto from developer&nbsp;/&nbsp;genesis; silence = accept; single destination = genesis miner; cap 1,000&nbsp;SOST per spend / 5,000&nbsp;SOST per rolling 1,008-block week.</li>
-        <li><b>PoPC Model A chain-state migration</b> &mdash; moves the PoPC active set out of <code>popc_registry.json</code> into deterministic UTXO/chain-state.</li>
+        <li><b>Gold Vault Phase I governance</b> &mdash; consensus-enforced spend rules: <b>90&nbsp;% miner approval over a 67-block window</b> (~12&nbsp;h, ceil&nbsp;=&nbsp;61 blocks) + a 10&nbsp;% quality boost or single-signer veto (developer&nbsp;/&nbsp;genesis); silence = accept; single destination = genesis miner; cap 1,000&nbsp;SOST per spend / 5,000&nbsp;SOST per rolling 1,008-block week.</li>
+        <li><b>PoPC Model A chain-state migration</b> &mdash; the active set moves out of <code>popc_registry.json</code> into deterministic UTXO/chain-state.</li>
         <li><b>PoPC Model A auto-audit / auto-slash / auto-settlement</b> &mdash; consensus-side scheduling (1,000-block grace period the first month).</li>
         <li>The V13-wired <b>DTD-PoPC eligibility gate</b> flips to <code>true</code>.</li>
         <li><b>Threshold sync 95&nbsp;% &rarr; 90&nbsp;%</b> (already in the binary; enforced from V14).</li>
-        <li><b>Beacon II-A real operator pubkey</b> replaces the placeholder (already installed &mdash; see milestones below).</li>
       </ul>
-      <h3 style="margin-top:16px">Conditional in V14</h3>
+      <h3 style="margin-top:14px">Conditional in V14</h3>
       <ul>
-        <li><b>Atomic swap HTLC</b> &mdash; activates only if the libwally-core sprint + end-to-end testnet pass before block 15,000 (otherwise the gate stays at <code>INT64_MAX</code> and defers to V15).</li>
+        <li><b>Atomic swap HTLC</b> &mdash; activates only if the libwally-core sprint + end-to-end testnet pass before block 15,000 (otherwise stays gated at <code>INT64_MAX</code>, defers to V15).</li>
         <li><b>PoPC Model B "supervised mode"</b> &mdash; operator manually verifies user-declared Ethereum contracts; full event-listener automation is a V15 target.</li>
       </ul>
     </div>
@@ -202,26 +201,24 @@
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">// RELEASE CANDIDATE &middot; BLOCK 12,000</div>
+      <div class="section-id">// RELEASE CANDIDATE (RC1) &middot; BLOCK 12,000</div>
       <h2 class="section-title">V13 &mdash; <span class="accent">cASERT H35, drift tightening &amp; Beacon</span></h2>
     </div>
     <div class="info-card">
       <h3>At block 12,000</h3>
       <ul>
-        <li><b>cASERT equalizer ceiling H20 &rarr; H35</b> &mdash; full E7&ndash;H35 range active.</li>
+        <li><b>Full cASERT equalizer range E7&ndash;H35 active</b> (ceiling H20 &rarr; H35).</li>
         <li><b>DTD lottery recent-winner cooldown 5 &rarr; 6 blocks.</b></li>
-        <li><b>Future-timestamp drift cap 60&nbsp;s &rarr; 30&nbsp;s</b> &mdash; a clock more than 30&nbsp;s ahead produces blocks validators reject. <b>NTP is strongly recommended post-V13.</b></li>
-        <li><b>Beacon Phase II-A</b> (operator-signed advisory notices) + <b>Phase III</b> (P2P gossip). Advisory-only &mdash; never affects consensus, mining or block validity. Phase II-B (3-of-5 threshold) ships <b>default-off</b> (<code>INT64_MAX</code>) until five independent custodians exist. <a href="beacon.html" style="color:#22d3ee">&rarr; Beacon guide</a></li>
+        <li><b>Future-timestamp drift cap 60&nbsp;s &rarr; 30&nbsp;s</b> &mdash; a clock more than 30&nbsp;s ahead produces blocks validators reject. <b>NTP strongly recommended.</b></li>
+        <li><b>Beacon Phase II-A</b> (operator-signed advisory notices) + <b>II-B</b> (3-of-5 threshold, default-off until 5 custodians) + <b>III</b> (P2P gossip). Advisory-only &mdash; never affects mining rewards or block validity. <a href="beacon.html" style="color:#22d3ee">&rarr; Beacon guide</a></li>
+        <li><b>SbPoW hardening</b> &mdash; the signed PoW preimage grows from 7 to 11 fields (adds <code>timestamp</code>, <code>bits_q</code>, <code>merkle_root</code>, a chain-specific <code>genesis_hash</code> salt); domain tag &rarr; <code>SOST/POW-SIG/v13</code>.</li>
       </ul>
-      <h3 style="margin-top:16px">At block 12,100 &mdash; automatic, no action needed</h3>
+      <h3 style="margin-top:14px">At block 12,100 &mdash; automatic, no action needed</h3>
       <ul>
-        <li><b>DTD lottery cadence 2-of-3 &rarr; 1-of-3 permanent.</b></li>
-        <li><b>Anti-dominance gate</b> &mdash; any miner address holding &ge;&nbsp;30&nbsp;% of the previous 288 blocks is excluded from DTD lottery eligibility until its rolling share drops below 30&nbsp;%. Dominant miners keep their full 50&nbsp;% miner reward; they only miss the redistributed protocol-side share on DTD-triggered blocks. Reversible per-block, no slash, no admin authority.</li>
+        <li><b>DTD lottery cadence 2-of-3 (bootstrap) &rarr; 1-of-3 (permanent).</b></li>
+        <li><b>Anti-dominance gate</b> &mdash; any miner address holding &ge;&nbsp;30&nbsp;% of the previous 288 blocks is excluded from DTD lottery eligibility until its rolling share drops below 30&nbsp;%. Dominant miners keep their full 50&nbsp;% miner reward; reversible per-block, no slash, no admin authority.</li>
       </ul>
-      <h3 style="margin-top:16px">SbPoW hardening</h3>
-      <ul>
-        <li>The signed PoW preimage grows from V11 (7 fields) to V13 (11 fields): adds <code>timestamp</code>, <code>bits_q</code>, <code>merkle_root</code> and a chain-specific <code>genesis_hash</code> salt &mdash; closes timestamp-restamp, difficulty-fork, tx-set-mutation and cross-chain replay seams. Domain tag &rarr; <code>SOST/POW-SIG/v13</code>.</li>
-      </ul>
+      <p style="font-size:11.5px;color:var(--text-dim);margin-top:6px">V13 RC1 published with signed <code>SHA256SUMS</code> (release key fingerprint <code>41B1A46E…2AE41A04</code>); binary upload remains a manual operator step.</p>
     </div>
   </div>
 </section>
@@ -235,29 +232,103 @@
     </div>
     <div class="info-card">
       <ul>
-        <li><b>Beacon II-A operator key anchored on-chain</b> &mdash; the canonical fingerprint <code>bbb560e3&hellip;def8186b</code> was committed to the chain at block <b>#11,034</b> (txid <code>c6ade3c6&hellip;810a1</code>), the <b>first OFFICIAL entry</b> in the Protocol Registry. <a href="protocol-registry.html" style="color:#d946ef">&rarr; Registry</a></li>
+        <li><b>Beacon II-A operator key anchored on-chain</b> &mdash; canonical fingerprint <code>bbb560e3&hellip;def8186b</code> committed at block <b>#11,034</b> (txid <code>c6ade3c6&hellip;810a1</code>), the <b>first OFFICIAL entry</b> in the Protocol Registry. <a href="protocol-registry.html" style="color:#d946ef">&rarr; Registry</a></li>
         <li><b>Beacon II-A real operator key installed</b> in the node (offline-generated secp256k1; private key never on a networked host).</li>
         <li><b>Gold Vault governance threshold synced 95&nbsp;% &rarr; 90&nbsp;%</b> (doc&harr;code consistency; enforced at V14).</li>
-        <li><b>V13 preflight</b> &mdash; new read-only RPC <code>getv13readiness</code> lets operators confirm a node sees the full 288-coinbase window before the fork.</li>
+        <li><b>V13 preflight RPC</b> <code>getv13readiness</code> &mdash; operators confirm a node sees the full 288-coinbase window before the fork.</li>
         <li><b>Protocol Registry UI</b> &mdash; publish capsules from the wallet; live Official / Community tables auto-scanned from the chain.</li>
-        <li><b>Explorer improvements</b> &mdash; per-tx NETWORK FEE row with the block-miner beneficiary; UPDATED MINERS is now a cumulative, monotonic metric.</li>
+        <li><b>Explorer</b> &mdash; per-tx NETWORK FEE row with the block-miner beneficiary; BLOCK PRODUCERS &middot; 48H card; cumulative UPDATED MINERS.</li>
+        <li><b>Whitepaper v4.5</b> regenerated with the V13/V14 scope banner.</li>
       </ul>
     </div>
   </div>
 </section>
 
-<!-- EARLIER FORKS -->
+<!-- V11 / V12 -->
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">// EARLIER FORKS</div>
-      <h2 class="section-title">V11&ndash;V12 &amp; the <span class="accent">difficulty series</span></h2>
+      <div class="section-id">// V11 &amp; V12 &middot; SbPoW, LOTTERY &amp; CAPSULES</div>
+      <h2 class="section-title">SbPoW, the <span class="accent">DTD lottery</span> &amp; capsules</h2>
     </div>
     <div class="info-card">
       <ul>
-        <li><b>V12 &mdash; block 7,350:</b> cASERT profile ceiling raised H13 &rarr; H20 (single-purpose hard fork).</li>
-        <li><b>V11 Phase 2 &mdash; block 7,100:</b> Signed Proof-of-Work (SbPoW) + the Proof-of-Participation DTD lottery. Every mined block carries a Schnorr signature over the PoW preimage; the lottery redistributes the protocol-side share on triggered blocks.</li>
-        <li><b>V4&ndash;V10 &mdash; difficulty &amp; liveness series:</b> the cASERT bitsQ controller was unified and hardened across a sequence of hard forks (liveness + determinism fixes, staged relief valves and the slingshot anti-stall), stabilising block time around the 600&nbsp;s target. See the per-block cASERT profile in the <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a> and the <a href="sost-whitepaper.html" style="color:#22d3ee">Whitepaper</a> for the full derivation.</li>
+        <li><b>V12 &mdash; block 7,350:</b> cASERT ceiling H13 &rarr; H20; same-block 4-tier <b>Slingshot</b> anti-stall; Capsule Protocol v1 (binary metadata).</li>
+        <li><b>V11 Phase 2 &mdash; block 7,100 (LIVE):</b> <b>Signed PoW (SbPoW)</b> &mdash; every mined block carries a Schnorr signature over the PoW preimage &mdash; plus the <b>fair-share DTD lottery</b> with jackpot rollover (redistributes the protocol-side share on triggered blocks).</li>
+        <li><b>V11 Phase 1 &mdash; block 7,000:</b> extended linear difficulty cascade + state-dependent dataset access. <span style="color:var(--text-dim)">(Useful-Compute infrastructure is dry-run / testing only &mdash; rewards remain POSTPONED.)</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- DIFFICULTY SERIES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// V2&ndash;V10 &middot; cASERT DIFFICULTY SERIES</div>
+      <h2 class="section-title">The <span class="accent">difficulty &amp; liveness</span> hard-fork series</h2>
+      <div class="section-sub">A sequence of forks that unified and hardened the cASERT bitsQ controller and stabilised block time around the 600&nbsp;s target.</div>
+    </div>
+    <div class="info-card">
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary)">
+        <thead><tr style="color:var(--text-muted);text-align:left;border-bottom:1px solid var(--border-dim)"><th style="padding:6px 10px 6px 0">Fork</th><th style="padding:6px 10px">Block</th><th style="padding:6px 0">Change</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:5px 10px 5px 0"><b>V10</b></td><td style="padding:5px 10px">6,700</td><td style="padding:5px 0">Granular relief calibration (1&nbsp;s/60&nbsp;s steps from 600&nbsp;s)</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">Final calibration</td><td style="padding:5px 10px">5,750</td><td style="padding:5px 0">H13 ceiling, E7 relief@605&nbsp;s, full 43-profile range (E7&ndash;H35 defined)</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">H12 + relief</td><td style="padding:5px 10px">5,635</td><td style="padding:5px 0">17 active profiles; relief valve H1@630&nbsp;s</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">Profile floor</td><td style="padding:5px 10px">5,560</td><td style="padding:5px 0">Miners cannot declare a profile below the deterministic floor</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">H11 ceiling</td><td style="padding:5px 10px">5,480</td><td style="padding:5px 0">16 of 43 profiles active</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">Direct lag mapping</td><td style="padding:5px 10px">5,323</td><td style="padding:5px 0">profile = clamp(lag, 0, ceiling); asymmetric descent</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">Dynamic cap + median</td><td style="padding:5px 10px">5,260</td><td style="padding:5px 0">Per-block cap scaling with deviation; median288 override</td></tr>
+          <tr><td style="padding:5px 10px 5px 0"><b>V6++</b></td><td style="padding:5px 10px">5,175</td><td style="padding:5px 0">avg288 bitsQ replaces the anchor-based exponential formula</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">H10 ceiling</td><td style="padding:5px 10px">5,075</td><td style="padding:5px 0">15 active profiles (E4&ndash;H10), 25 reserved</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">V6 calibration</td><td style="padding:5px 10px">5,050</td><td style="padding:5px 0">Dynamic lag cap, live lag from wall clock, 40 profiles active</td></tr>
+          <tr><td style="padding:5px 10px 5px 0"><b>V6</b></td><td style="padding:5px 10px">5,000</td><td style="padding:5px 0">Slew ±1, scale=2, immediate first drop, Ahead Guard removed</td></tr>
+          <tr><td style="padding:5px 10px 5px 0"><b>V5</b></td><td style="padding:5px 10px">4,300</td><td style="padding:5px 0">Stateless Ahead Guard, EBR cliffs, anti-stall 1&nbsp;h floor</td></tr>
+          <tr><td style="padding:5px 10px 5px 0"><b>V4</b></td><td style="padding:5px 10px">4,170</td><td style="padding:5px 0">Sentinel profile-index fix, Ahead Guard logic</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">V3.1</td><td style="padding:5px 10px">4,110</td><td style="padding:5px 0">Slew-rate enforcement fix, anti-stall threshold fixed at 2&nbsp;h</td></tr>
+          <tr><td style="padding:5px 10px 5px 0"><b>V3</b></td><td style="padding:5px 10px">4,100</td><td style="padding:5px 0">Slew rate ±3, lag floor mechanism</td></tr>
+          <tr><td style="padding:5px 10px 5px 0"><b>V2</b></td><td style="padding:5px 10px">1,450</td><td style="padding:5px 0">24&nbsp;h half-life, 12.5&nbsp;% cap difficulty adjustment</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ANNOUNCEMENTS & FIXES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// ANNOUNCEMENTS &amp; FIXES</div>
+      <h2 class="section-title">Genesis, launch &amp; <span class="accent">operational fixes</span></h2>
+    </div>
+    <div class="info-card">
+      <ul>
+        <li><b>Genesis block</b> &mdash; 2026-03-15 18:00:00 UTC.</li>
+        <li><b>Public ANN + accelerated launch</b> &mdash; 2026-04-05 (the originally planned launch was brought forward; public launch target 2026-06-16).</li>
+        <li><b>Mainnet live</b> &mdash; explorer operational at sostcore.com.</li>
+        <li><b>Sync / bootstrap fixes</b> (early Apr 2026) &mdash; assumevalid checkpoint at block 3,000; ConvergenceX Transcript&nbsp;V2 verification resolved.</li>
+        <li><b>P2P rate-limiter fix</b> (2026-04-06) &mdash; the seed node correctly recognises sync requests.</li>
+        <li><b>SLIP-0044 / BIP-44 registration</b> &mdash; PR submitted to satoshilabs/slips (2026-04-15).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ECOSYSTEM -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// ECOSYSTEM &amp; TOOLS</div>
+      <h2 class="section-title">Wallet, DEX, escrow &amp; <span class="accent">research stack</span></h2>
+    </div>
+    <div class="info-card">
+      <ul>
+        <li><b>SOST DEX Alpha</b> &mdash; browser wallet with native encryption (ED25519, X25519, ChaCha20-Poly1305) and encrypted deal flow.</li>
+        <li><b>SOSTEscrow V2</b> (Sepolia testnet) &mdash; <code>currentBeneficiary</code> + <code>settlementOperator</code>, 47 Solidity tests.</li>
+        <li><b>SOST AI Engine</b> &mdash; private autonomous research lab (materials discovery).</li>
+        <li><b>Useful Compute infrastructure</b> &mdash; task server, worker, ranking, audit export. <b style="color:var(--amber-primary)">Dry-run / testing only &mdash; rewards remain POSTPONED</b> (block 12,000 does NOT activate Useful-Compute rewards).</li>
+        <li>No change to the coinbase split (50&nbsp;% miner / 25&nbsp;% Gold&nbsp;Vault / 25&nbsp;% PoPC&nbsp;Pool), the emission schedule, or the 4,669,201&nbsp;SOST hard cap.</li>
       </ul>
     </div>
   </div>
@@ -271,11 +342,12 @@
       <h2 class="section-title">Announcements &amp; <span class="accent">sources</span></h2>
     </div>
     <div class="linkrow">
-      <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener">BitcoinTalk announcement thread</a>
+      <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener">BitcoinTalk ANN thread</a>
       <a href="sost-explorer.html">Live explorer (status banner)</a>
       <a href="protocol-registry.html">Protocol Registry</a>
       <a href="beacon.html">Beacon (operator advisories)</a>
       <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-roadmap.html">Roadmap</a>
       <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">Source (GitHub)</a>
     </div>
   </div>
