@@ -1,5 +1,5 @@
-// SOST — Sovereign Stock Token — Service Worker v79
-const CACHE_NAME = 'sost-app-v79';
+// SOST — Sovereign Stock Token — Service Worker v80
+const CACHE_NAME = 'sost-app-v80';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -40,7 +40,29 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Cache-first for app shell (static assets)
+  // NETWORK-FIRST for the app shell HTML. The old cache-first rule served a
+  // stale index.html to installed PWAs forever, so a deploy never reached them
+  // (different data vs the browser tab, DTD stuck at an old value). Now the app
+  // always loads the latest HTML when online and falls back to cache offline.
+  if (e.request.mode === 'navigate' ||
+      url.pathname.endsWith('/') ||
+      url.pathname.endsWith('/index.html')) {
+    e.respondWith(
+      fetch(e.request).then(resp => {
+        if (resp && resp.ok) {
+          const cl = resp.clone();
+          caches.open(CACHE_NAME).then(c => c.put(e.request, cl));
+        }
+        return resp;
+      }).catch(() =>
+        caches.match(e.request).then(r => r || caches.match('./index.html'))
+          .then(r => r || new Response('Offline', {status: 503}))
+      )
+    );
+    return;
+  }
+
+  // Cache-first for truly static assets (icons, manifest).
   e.respondWith(
     caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
       if (resp.ok) {

@@ -3379,9 +3379,15 @@ function registerSW() {
         }
       });
     }).catch(() => {});
-    // Detect SW controller change (new SW took over)
+    // Detect SW controller change (new SW took over) → reload once so the
+    // installed PWA immediately shows the freshly-deployed shell instead of the
+    // old cached one. Guarded so it never loops.
+    let _swReloaded = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('[SW] Controller changed — new SW active');
+      if (_swReloaded) return;
+      _swReloaded = true;
+      console.log('[SW] Controller changed — reloading for fresh shell');
+      window.location.reload();
     });
   }
 }
