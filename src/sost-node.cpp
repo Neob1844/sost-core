@@ -1756,6 +1756,85 @@ static std::string handle_getv13readiness(const std::string& id,
     return rpc_result(id, s.str());
 }
 
+// ---------------------------------------------------------------------------
+// handle_getsupplyinfo — V13 canonical supply source-of-truth (Option B).
+//
+// One authoritative endpoint that app AND explorer read, so the two can never
+// drift again. Returns real on-chain Vault/Pool balances (summed from the UTXO
+// set), cumulative emission, the analytic DTD-lottery distributed total, and
+// the derived circulating figures.
+//
+//   circulating_supply = total_supply - gold_vault - popc_pool   (incl. lottery)
+//   circulating_mining = circulating_supply - dtd_lottery        (miner-side)
+//
+// GATING: the canonical endpoint ACTIVATES at V13 (block 12,000). Before the
+// tip reaches V13_HEIGHT it reports v13_active=false and withholds the figures
+// (frontends fall back to their per-address path until then); at/after 12,000
+// it serves the full object. Read-only — never touches consensus or rewards.
+// ---------------------------------------------------------------------------
+static int64_t supply_balance_of_address(const std::string& addr) {
+    PubKeyHash pkh{};
+    if (!address_decode(addr, pkh)) return 0;
+    int64_t total = 0;
+    for (const auto& kv : g_utxo_set.GetMap())
+        if (kv.second.pubkey_hash == pkh) total += kv.second.amount;
+    return total;
+}
+
+// Cumulative DTD lottery distributed (stocks), analytic from consensus
+// primitives: for every lottery-triggered block since V11_PHASE2_HEIGHT add its
+// lottery_share (= subsidy/2). Reuses is_lottery_block + phase2_coinbase_split
+// so the cadence (2-of-3 bootstrap, 1-of-3 steady) stays bit-identical to
+// validation. O(tip) integer loop — trivial at current heights.
+static int64_t supply_dtd_lottery_distributed(int64_t tip) {
+    int64_t sum = 0;
+    for (int64_t h = sost::V11_PHASE2_HEIGHT; h <= tip; ++h)
+        if (sost::lottery::is_lottery_block(h, sost::V11_PHASE2_HEIGHT))
+            sum += sost::lottery::phase2_coinbase_split(sost_subsidy_stocks(h)).lottery_share;
+    return sum;
+}
+
+static std::string handle_getsupplyinfo(const std::string& id, const std::vector<std::string>&) {
+    int64_t h = 0, vault = 0, pool = 0;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        h = g_chain_height;
+        // Pre-V13: endpoint inert, frontends use their per-address fallback.
+        if (h < sost::V13_HEIGHT) {
+            std::ostringstream s;
+            s << "{\"v13_active\":false"
+              << ",\"activation_height\":" << sost::V13_HEIGHT
+              << ",\"block_height\":" << h
+              << ",\"note\":\"canonical supply endpoint activates at V13 (block 12,000)\"}";
+            return rpc_result(id, s.str());
+        }
+        vault = supply_balance_of_address(sost::ADDR_GOLD_VAULT);
+        pool  = supply_balance_of_address(sost::ADDR_POPC_POOL);
+    }
+    const int64_t total       = sost::sost_cumulative_emission_stocks(h);
+    const int64_t dtd         = supply_dtd_lottery_distributed(h);
+    const int64_t circ        = total - vault - pool;
+    const int64_t circ_mining = circ - dtd;
+
+    std::ostringstream s;
+    s << "{\"v13_active\":true"
+      << ",\"block_height\":" << h
+      << ",\"total_supply\":"            << format_sost(total)
+      << ",\"gold_vault_balance\":"      << format_sost(vault)
+      << ",\"popc_pool_balance\":"       << format_sost(pool)
+      << ",\"dtd_lottery_distributed\":" << format_sost(dtd)
+      << ",\"circulating_supply\":"      << format_sost(circ)
+      << ",\"circulating_mining\":"      << format_sost(circ_mining)
+      << ",\"total_supply_stocks\":"            << total
+      << ",\"gold_vault_balance_stocks\":"      << vault
+      << ",\"popc_pool_balance_stocks\":"       << pool
+      << ",\"dtd_lottery_distributed_stocks\":" << dtd
+      << ",\"circulating_supply_stocks\":"      << circ
+      << ",\"circulating_mining_stocks\":"      << circ_mining
+      << "}";
+    return rpc_result(id, s.str());
+}
+
 static std::string handle_getbalance(const std::string& id, const std::vector<std::string>&) {
     int64_t total=g_wallet.balance(g_chain_height);
     int64_t locked=g_wallet.locked_balance(g_chain_height);
@@ -3680,6 +3759,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getlotteryaudit",handle_getlotteryaudit},
     {"getbeaconnotices",handle_getbeaconnotices},
     {"getv13readiness",handle_getv13readiness},
+    {"getsupplyinfo",handle_getsupplyinfo},
     {"getbalance",handle_getbalance},
     {"getnewaddress",handle_getnewaddress},
     {"validateaddress",handle_validateaddress},
@@ -6525,6 +6605,7 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "gettransaction",
         "estimatefee",
         "getaddressbalance",
+        "getsupplyinfo",
         "listbonds",
         "getminerstats",
         // Telemetry / audit RPCs — pure reads, exposed publicly so the

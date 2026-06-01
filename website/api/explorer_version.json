@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-01-v325",
-  "note": "Remove the TRINITY link from the explorer header link group. Force-reload open explorers. Meta tag and JSON stay in lockstep."
+  "v": "2026-06-01-v327",
+  "note": "All explorer banners are now collapsible and collapsed by default (Developer Note, Trinity, OTC/P2P swap, V13 RC1 operator notice, Phase 2/V12). Each remembers the reader's choice in localStorage. Force-reload open explorers. Meta tag and JSON stay in lockstep."
 }
