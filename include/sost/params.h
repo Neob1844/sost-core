@@ -879,7 +879,7 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
 // via is_lottery_block; see include/sost/lottery.h).
 //
 // Rule: from height >= DTD_DOMINANCE_GATE_HEIGHT, any miner_pkh whose
-// share of the previous DTD_DOMINANCE_WINDOW blocks is >= 30 % is
+// share of the previous DTD_DOMINANCE_WINDOW blocks is >= 5 % is
 // excluded from DTD lottery eligibility for the current block. The
 // gate is INDEPENDENT of the recent-winner cooldown — both filters
 // apply, and a pkh excluded by either is not eligible.
@@ -892,19 +892,19 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
 //
 // Threshold math: integer-only, no floats. A pkh is dominant iff
 //   mined_in_window * 10000 >= DTD_DOMINANCE_MAX_BPS * observed
-// which is equivalent to mined / observed >= 30 % at basis-point
+// which is equivalent to mined / observed >= 5 % at basis-point
 // precision. Examples for observed=288:
-//   86/288 = 29.86 %  → eligible
-//   87/288 = 30.21 %  → excluded
+//   14/288 = 4.86 %  → eligible
+//   15/288 = 5.21 %  → excluded
 //
 // Effect: a dominant miner is NOT prevented from producing normal
 // blocks. The gate only removes them from DTD lottery eligibility
-// until their rolling share drops below 30 %. As soon as the rolling
-// window no longer holds 30 % of their blocks, they become eligible
+// until their rolling share drops below 5 %. As soon as the rolling
+// window no longer holds 5 % of their blocks, they become eligible
 // again automatically — no operator action.
 inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 12100;
 inline constexpr int32_t  DTD_DOMINANCE_WINDOW      = 288;
-inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 3000;  // 30.00 %
+inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 500;   // 5.00 %
 
 inline constexpr bool is_dtd_dominant(
     int32_t mined_count_in_window,

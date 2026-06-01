@@ -2,7 +2,7 @@
 
 **Activation height:** `DTD_DOMINANCE_GATE_HEIGHT = 12100`
 **Window:** `DTD_DOMINANCE_WINDOW = 288` blocks (≈ 48 h at 10 min/block)
-**Threshold:** `DTD_DOMINANCE_MAX_BPS = 3000` (30.00 %)
+**Threshold:** `DTD_DOMINANCE_MAX_BPS = 500` (5.00 %)
 **Status:** SHIPPED in this build. Activates automatically at the gate height.
 
 This document describes the V13 anti-dominance filter that further
@@ -19,7 +19,7 @@ From height `h >= DTD_DOMINANCE_GATE_HEIGHT`:
 
 > A miner_pkh is excluded from the DTD lottery eligibility set at
 > height `h` iff the pkh's share of the previous
-> `DTD_DOMINANCE_WINDOW` blocks is greater than or equal to 30 %.
+> `DTD_DOMINANCE_WINDOW` blocks is greater than or equal to 5 %.
 
 The window is `[h - 288, h - 1]` inclusive on both ends. The current
 block itself is NOT in the window. The threshold check is in
@@ -32,9 +32,18 @@ produce; they only miss the redistributed 25 % + 25 % protocol-side
 share that the DTD lottery would otherwise pay them when triggered.
 
 The exclusion is **dynamic**. As soon as the rolling 288-block window
-no longer contains ≥ 30 % of that pkh's blocks, eligibility is
+no longer contains ≥ 5 % of that pkh's blocks, eligibility is
 restored automatically. No operator action, no retroactive penalty,
 no permanent ban.
+
+> **Note on the 5 % calibration.** At 5 % the gate is deliberately
+> aggressive — it favours small miners by excluding from the DTD
+> lottery any pkh producing 15 or more of the last 288 blocks
+> (15/288 = 5.21 %). On a chain with few active miners this can shrink
+> the eligibility set substantially; if every recent producer is above
+> 5 %, the set is empty and the DTD pool simply accumulates (UPDATE,
+> not PAYOUT) until a sub-5 % producer appears. Block production and
+> the 50 % miner share are never affected.
 
 ---
 
@@ -55,19 +64,19 @@ inline constexpr bool is_dtd_dominant(
 }
 ```
 
-Equivalent to `mined / observed >= 30 %` evaluated at basis-point
+Equivalent to `mined / observed >= 5 %` evaluated at basis-point
 precision. Examples for `observed_window_blocks = 288`:
 
 | `mined` | ratio | excluded? |
 |---|---|---|
-| 86 | 29.86 % | NO (eligible) |
-| 87 | 30.21 % | YES |
+| 14 | 4.86 % | NO (eligible) |
+| 15 | 5.21 % | YES |
 | 100 | 34.72 % | YES |
 
 The `observed_window_blocks` argument is the count of blocks the
 caller actually saw in the window — typically 288 in steady state,
 but possibly less very near the gate activation height. The helper
-uses `observed`, not the static constant, so the 30 % rule still
+uses `observed`, not the static constant, so the 5 % rule still
 applies at partial windows.
 
 ---
@@ -100,27 +109,29 @@ eligibility sets to the prior implementation.
 Live mining distribution from the explorer at block ~10,940 (window
 of the last 288 blocks):
 
-| Wallet | Blocks | Share | Eligible after V13.5 (block ≥ 12100) |
+| Wallet | Blocks | Share | Eligible under 5 % gate (block ≥ 12100) |
 |---|---|---|---|
-| `sost10fa49a0…c624a8` | 110 | 38.2 % | **NO** — dominant, in cooldown |
-| `sost1993a8eb…d13d8f` | 97 | 33.7 % | **NO** — dominant, in cooldown |
-| `sost1ad42b84…9bed53` | 31 | 10.8 % | YES |
-| `sost1146b626…525f99` | 24 | 8.3 % | YES |
-| `sost1269ecd7…407159` | 23 | 8.0 % | YES |
+| `sost10fa49a0…c624a8` | 110 | 38.2 % | **NO** — ≥ 5 % |
+| `sost1993a8eb…d13d8f` | 97 | 33.7 % | **NO** — ≥ 5 % |
+| `sost1ad42b84…9bed53` | 31 | 10.8 % | **NO** — ≥ 5 % |
+| `sost1146b626…525f99` | 24 | 8.3 % | **NO** — ≥ 5 % |
+| `sost1269ecd7…407159` | 23 | 8.0 % | **NO** — ≥ 5 % |
 | `sost1c1c6d7e…5d66da` | 3 | 1.0 % | YES |
 
-If the V13 gate were live today, the two top wallets would each fall
-out of the DTD eligibility set until their rolling 288-block share
-drops below 30 %. The four smaller wallets would continue to receive
-DTD lottery payouts under the 1-of-3 cadence that activates at the
-same block (12,100). Both top wallets continue to receive the
-standard 50 % miner share on every block they produce.
+Under the 5 % calibration, every wallet at or above 15/288 (5.21 %)
+falls out of the DTD eligibility set until its rolling 288-block share
+drops below 5 %. In this snapshot only the 1.0 % wallet remains
+eligible, so the entire redistributed 25 % + 25 % DTD share on a
+triggered block flows to small miners. All six wallets continue to
+receive the standard 50 % miner share on every block they produce.
 
-The rebalancing is purely economic: dominant miners can choose to
-either reduce their hashrate to regain DTD eligibility, or accept the
-loss of the 25 % + 25 % lottery share while keeping their 50 % miner
-share. The protocol exercises no admin authority — the rule simply
-applies.
+The rebalancing is purely economic: a miner above 5 % can either
+reduce its hashrate to regain DTD eligibility, or accept the loss of
+the lottery share while keeping its 50 % miner share. The protocol
+exercises no admin authority — the rule simply applies. (Note that at
+this aggressive threshold, if *no* recent producer is under 5 %, the
+eligibility set is empty and the DTD pool accumulates rather than
+paying out — see the calibration note in §1.)
 
 ---
 
@@ -132,17 +143,17 @@ New cases in `tests/test_lottery_eligibility.cpp`:
   a pkh with 100/288 (34.7 %) is still eligible.
 - `test_v13_dominance_gate_active_at_12100` — same pkh at height
   12100 is excluded.
-- `test_v13_dominance_boundary_86_eligible` — 86/288 = 29.86 % is
+- `test_v13_dominance_boundary_14_eligible` — 14/288 = 4.86 % is
   eligible.
-- `test_v13_dominance_boundary_87_excluded` — 87/288 = 30.21 % is
+- `test_v13_dominance_boundary_15_excluded` — 15/288 = 5.21 % is
   excluded.
-- `test_v13_dominance_dynamic_recovery` — pkh excluded at 90/288
-  becomes eligible again at 80/288 (rolling recovery).
+- `test_v13_dominance_dynamic_recovery` — pkh excluded at 20/288
+  becomes eligible again at 10/288 (rolling recovery).
 - `test_v13_dominance_combines_with_recent_winner_cooldown` —
   recent-winner cooldown and anti-dominance gate apply
   independently.
 - `test_v13_dominance_partial_window_near_activation` — a pkh with
-  70/200 (35 %) on a partial window is excluded.
+  20/200 (10 %) on a partial window is excluded.
 
 Helper-level checks live in the same suite via `is_dtd_dominant`
 directly through `compute_lottery_eligibility_set`.

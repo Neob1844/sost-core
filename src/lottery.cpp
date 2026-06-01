@@ -80,7 +80,7 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     //
     // V13 extension (from height >= DTD_DOMINANCE_GATE_HEIGHT, params.h):
     // additionally exclude any pkh whose share of the previous
-    // DTD_DOMINANCE_WINDOW blocks (default 288) is >= 30 %. The
+    // DTD_DOMINANCE_WINDOW blocks (default 288) is >= 5 %. The
     // dominance gate is INDEPENDENT of the recent-winner cooldown — a
     // pkh excluded by either filter is not in the eligibility set.
     //
