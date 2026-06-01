@@ -171,6 +171,30 @@
   </div>
 </section>
 
+<!-- TRACEABILITY — featured principle -->
+<section class="section" style="padding:40px 0">
+  <div class="container">
+    <div style="background:linear-gradient(135deg,rgba(34,211,238,0.10),rgba(34,211,238,0.02));border:1px solid rgba(34,211,238,0.4);border-left:5px solid var(--cyan-primary);border-radius:10px;padding:32px 34px">
+      <div style="font-size:12px;letter-spacing:4px;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px">// the SOST principle</div>
+      <div style="font-family:var(--font-display);font-weight:700;font-size:clamp(34px,6vw,64px);line-height:1;letter-spacing:2px;color:var(--cyan-primary);text-shadow:0 0 24px rgba(34,211,238,0.35);margin-bottom:6px">TRAZABILIDAD</div>
+      <div style="font-family:var(--font-display);font-weight:600;font-size:clamp(15px,2.4vw,22px);color:var(--text-primary);letter-spacing:6px;margin-bottom:18px">T R A C E A B I L I T Y</div>
+      <p style="font-size:14px;color:var(--text-secondary);line-height:1.85;max-width:840px;margin:0">
+        <b style="color:var(--text-primary)">Every fork, every incident, every fix &mdash; on the public record.</b>
+        SOST does not quietly patch and move on. Each upgrade names its activation block; each incident below names the
+        root cause, the fix, and &mdash; where it applies &mdash; the community tester who caught it. Nothing is buried,
+        because a chain that asks you to verify everything must first be willing to be verified itself.
+      </p>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:14px;border-top:1px dashed var(--border-med);padding-top:12px">
+        <b style="color:var(--cyan-primary)">Code first. Proof first.</b> The genesis hash, every fork height, every
+        post-mortem and every credited reporter are cross-checkable on the public
+        <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk thread</a>,
+        the <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener" style="color:#22d3ee">GitHub history</a>,
+        and the <a href="sost-explorer.html" style="color:#22d3ee">live explorer</a>.
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- V14 -->
 <section class="section">
   <div class="container">
@@ -257,6 +281,55 @@
         <li><b>V11 Phase 2 &mdash; block 7,100 (LIVE):</b> <b>Signed PoW (SbPoW)</b> &mdash; every mined block carries a Schnorr signature over the PoW preimage &mdash; plus the <b>fair-share DTD lottery</b> with jackpot rollover (redistributes the protocol-side share on triggered blocks).</li>
         <li><b>V11 Phase 1 &mdash; block 7,000:</b> extended linear difficulty cascade + state-dependent dataset access. <span style="color:var(--text-dim)">(Useful-Compute infrastructure is dry-run / testing only &mdash; rewards remain POSTPONED.)</span></li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<!-- INCIDENT REPORTS & POST-MORTEMS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// PUBLIC POST-MORTEMS &middot; TRAZABILIDAD</div>
+      <h2 class="section-title">Incident reports &amp; <span class="accent">post-mortems</span></h2>
+      <div class="section-sub">Real failures during live pre-market testing, documented in full. Holder funds were never lost; pre-incident chain history was never altered.</div>
+    </div>
+
+    <div class="info-card">
+      <h3>V11 Phase 2 activation &mdash; chain paused at 7,099, then resumed (2026-05-04)</h3>
+      <p>Phase 2 (SbPoW + DTD lottery) activated at block <b>7,100</b>. The chain paused at height <b>7,099</b> for ~90&nbsp;minutes: miners were producing v2 headers that validators correctly rejected with <code>v2 header missing miner_pubkey</code>. This was a <b>miner-side serialization bug, not a consensus failure</b> &mdash; the validator was doing exactly its job.</p>
+      <ul>
+        <li class="yes">Pre-7,100 chain intact, holder funds safe, chain paused (not corrupted).</li>
+        <li class="yes">Resolved by a correctly rebuilt miner from <code>main</code>; first valid Phase 2 block <b>#7,100</b>, verified through #7,104.</li>
+        <li class="yes">DTD lottery live immediately: first payouts at #7100 / #7102 / #7103 of <code>3.92550431 SOST</code> each (<code>11.77651293 SOST</code> total), 36 eligible addresses, pending jackpot 0.</li>
+        <li><b>Cooldown clarified:</b> the recent-miner cooldown excludes addresses that <i>mined</i> recently, not addresses that <i>won</i> the lottery. Winning the lottery never triggers cooldown.</li>
+      </ul>
+      <p style="color:var(--text-dim)"><b>Lesson, on the record:</b> the v1&rarr;v2 header path was not exercised end-to-end against a running validator under production load. Every future hard fork now requires an end-to-end production rehearsal before a finite mainnet activation height is set.</p>
+      <p style="color:var(--text-dim)"><b>Trace &rarr; V13:</b> immediately after activation a single upgraded miner produced every post-7,100 block. That observed centralisation is exactly what the V13 <b>anti-dominance gate</b> (block 12,100) is designed to counter.</p>
+    </div>
+
+    <div class="info-card">
+      <h3>Public stress-test: the bootstrap &amp; P2P sync saga (2026-04-06 &rarr; 04-10)</h3>
+      <p>New nodes could not sync from genesis. Over four days, external testers reproduced and the operator fixed a chain of transport-layer bugs &mdash; <b>none of them consensus bugs</b>. Each is credited to the reporter who found it:</p>
+      <ul>
+        <li><b>Transcript&nbsp;V2 historical proofs</b> &mdash; historical blocks were served without the ConvergenceX proof data, so a fresh node failed verification at block&nbsp;#1. Fixed with an <b>assumevalid checkpoint</b> (block 3,000, then dynamically advanced). <span style="color:var(--text-dim)">(found by visibleplayer)</span></li>
+        <li><b>P2P rate-limiter</b> &mdash; sync-mode peers at height&nbsp;0 were mistaken for relay traffic and banned mid-sync. Fixed with a sync-mode exemption. <span style="color:var(--text-dim)">(found by 3Q)</span></li>
+        <li><b>The &ldquo;2501 stall&rdquo;</b> &mdash; the seed sent <b>plaintext-framed blocks into encrypted connections</b>; combined with TCP flow-control deadlocks, blocking I/O and missing <code>EAGAIN</code> handling, every block after the first trusted batch was silently dropped. Surfaced by a 4-server clean-room reproduction. <span style="color:var(--text-dim)">(found by Rizki Maryanto)</span></li>
+        <li><b>Encrypted/plaintext interop</b> &mdash; an encrypted client discarded the peer's <code>VERSION</code> while waiting for <code>EKEY</code>, so handshakes never completed. Fixed.</li>
+        <li><b>H10 stability cliff</b> &mdash; the profile <code>scale</code> jumped 2&rarr;3 at H10, making H10+ unreachable on modest hardware. <span style="color:var(--text-dim)">(from vostokzyf / oswaldzc reports)</span></li>
+        <li><b>Fresh-clone build break</b> &mdash; a stale <code>test_checkpoints.cpp</code> referenced removed constants. <span style="color:var(--text-dim)">(found by colerus)</span></li>
+        <li><b>Competitive-mining loop</b> &mdash; after losing a block to another miner, the miner retried the same height forever (invisible while solo-mining). Fixed with auto-advance to the current tip.</li>
+      </ul>
+      <p class="ok"><b>Resolved 2026-04-10:</b> direct P2P sync, HTTPS bootstrap import and end-to-end encrypted P2P all validated from zero to tip. Explicitly: <b>no consensus rule, block-validation rule or emission rule was changed; no hard fork; no regenesis.</b> Transport / networking only.</p>
+    </div>
+
+    <div class="info-card">
+      <h3>Bootstrap snapshot served HTML instead of chain data (2026-05-25)</h3>
+      <p><code>bootstrap-chain.json</code> was accidentally serving the website's HTML page (~110&nbsp;KB, starting <code>&lt;!DOCTYPE html&gt;</code>) instead of the real ~124&nbsp;MB snapshot, so a node bootstrapping from it started from an empty chain (<code>[FORK] Block h=4 &hellip; does not extend tip (our height=0)</code>).</p>
+      <ul>
+        <li class="yes">Restored the real snapshot (<code>129,031,101</code> bytes, <code>chain_height=10231</code>) and verified it is JSON, not HTML.</li>
+        <li class="yes">Added an <b>hourly refresh cron with JSON validation before publish</b>, writing via tmp&nbsp;+&nbsp;atomic <code>mv</code> so a half-written file is never served. <span style="color:var(--text-dim)">(found by vostokzyf)</span></li>
+      </ul>
+      <p style="color:var(--text-dim)"><b>Security culture, on the record:</b> across every one of these reports the operator diagnosed from logs only and repeatedly told testers to <b>never</b> send private keys, seed phrases, passwords or wallet files. No SOST support flow ever asks for them.</p>
     </div>
   </div>
 </section>
