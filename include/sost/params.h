@@ -879,10 +879,11 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
 // via is_lottery_block; see include/sost/lottery.h).
 //
 // Rule: from height >= DTD_DOMINANCE_GATE_HEIGHT, any miner_pkh whose
-// share of the previous DTD_DOMINANCE_WINDOW blocks is >= 5 % is
+// share of the previous DTD_DOMINANCE_WINDOW blocks is >= 10 % is
 // excluded from DTD lottery eligibility for the current block. The
-// gate is INDEPENDENT of the recent-winner cooldown — both filters
-// apply, and a pkh excluded by either is not eligible.
+// gate is INDEPENDENT of the recent-winner cooldown and of the
+// SbPoW-activity gate (is_sbpow_eligible below) — all filters
+// apply, and a pkh excluded by any one is not eligible.
 //
 // Window convention: [height - DTD_DOMINANCE_WINDOW, height - 1]
 // inclusive on both ends, exactly DTD_DOMINANCE_WINDOW heights when
@@ -892,19 +893,19 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
 //
 // Threshold math: integer-only, no floats. A pkh is dominant iff
 //   mined_in_window * 10000 >= DTD_DOMINANCE_MAX_BPS * observed
-// which is equivalent to mined / observed >= 5 % at basis-point
+// which is equivalent to mined / observed >= 10 % at basis-point
 // precision. Examples for observed=288:
-//   14/288 = 4.86 %  → eligible
-//   15/288 = 5.21 %  → excluded
+//   28/288 = 9.72 %   → eligible
+//   29/288 = 10.07 %  → excluded
 //
 // Effect: a dominant miner is NOT prevented from producing normal
 // blocks. The gate only removes them from DTD lottery eligibility
-// until their rolling share drops below 5 %. As soon as the rolling
-// window no longer holds 5 % of their blocks, they become eligible
+// until their rolling share drops below 10 %. As soon as the rolling
+// window no longer holds 10 % of their blocks, they become eligible
 // again automatically — no operator action.
 inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 12100;
 inline constexpr int32_t  DTD_DOMINANCE_WINDOW      = 288;
-inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 500;   // 5.00 %
+inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 1000;  // 10.00 %
 
 inline constexpr bool is_dtd_dominant(
     int32_t mined_count_in_window,
@@ -913,12 +914,41 @@ inline constexpr bool is_dtd_dominant(
 {
     if (height < DTD_DOMINANCE_GATE_HEIGHT) return false;
     if (observed_window_blocks <= 0) return false;
-    // Integer comparison: mined * 10000 >= 3000 * observed.
+    // Integer comparison: mined * 10000 >= DTD_DOMINANCE_MAX_BPS * observed.
     // Cast to int64_t before the multiplication to avoid any overflow
     // at the rim of the int32_t range; observed <= 288 in practice but
     // the helper is defensive.
     return (int64_t)mined_count_in_window * 10000 >=
            (int64_t)DTD_DOMINANCE_MAX_BPS * (int64_t)observed_window_blocks;
+}
+
+// V13.5 SbPoW-activity eligibility gate.
+//
+// From DTD_DOMINANCE_GATE_HEIGHT, a candidate pkh is eligible for the DTD
+// lottery only if it has produced at least one SbPoW-signed block — proven
+// on-chain by its most recent block being at height >= V11_PHASE2_HEIGHT.
+// SbPoW (a mandatory miner_pubkey + Schnorr signature on the block) is
+// enforced for every block at height >= V11_PHASE2_HEIGHT (= 7100); blocks
+// below 7100 carry no signed miner identity. Because last_mined_height is
+// the MAX height the pkh ever mined, `last_mined_height >= V11_PHASE2_HEIGHT`
+// is exactly equivalent to "this pkh has at least one SbPoW block".
+//
+// Intent: the DTD lottery only admits miners that have proven activity
+// under SbPoW — i.e. a real signed identity ("label"). It deliberately does
+// NOT require post-V13 activity (that would be height >= V13_HEIGHT); the
+// looser SbPoW threshold (7100) is the goal here. The only candidates this
+// removes are addresses that mined exclusively before SbPoW activation and
+// then went dormant. Block production and the 50 % miner share are never
+// affected — only DTD lottery eligibility is filtered.
+//
+// Below DTD_DOMINANCE_GATE_HEIGHT the gate is OFF (returns true) so replay
+// of historical lottery blocks stays bit-identical.
+inline constexpr bool is_sbpow_eligible(
+    int64_t last_mined_height,
+    int64_t height)
+{
+    if (height < DTD_DOMINANCE_GATE_HEIGHT) return true;  // gate off pre-V13.5
+    return last_mined_height >= V11_PHASE2_HEIGHT;
 }
 
 // V14 PoPC eligibility gate — preparatory only.

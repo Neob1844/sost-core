@@ -239,7 +239,7 @@
       <h3 style="margin-top:14px">At block 12,100 &mdash; automatic, no action needed</h3>
       <ul>
         <li><b>DTD lottery cadence 2-of-3 (bootstrap) &rarr; 1-of-3 (permanent).</b></li>
-        <li><b>Anti-dominance gate</b> &mdash; any miner address holding &ge;&nbsp;5&nbsp;% of the previous 288 blocks is excluded from DTD lottery eligibility until its rolling share drops below 5&nbsp;%. Dominant miners keep their full 50&nbsp;% miner reward; reversible per-block, no slash, no admin authority.</li>
+        <li><b>Anti-dominance gate</b> &mdash; any miner address holding &ge;&nbsp;10&nbsp;% of the previous 288 blocks is excluded from DTD lottery eligibility until its rolling share drops below 10&nbsp;%. Only miners with at least one SbPoW-signed block (most recent block at height &ge;&nbsp;7,100) are eligible. Dominant miners keep their full 50&nbsp;% miner reward; reversible per-block, no slash, no admin authority.</li>
       </ul>
       <p style="font-size:11.5px;color:var(--text-dim);margin-top:6px">V13 RC1 published with signed <code>SHA256SUMS</code> (release key fingerprint <code>41B1A46E…2AE41A04</code>); binary upload remains a manual operator step.</p>
     </div>

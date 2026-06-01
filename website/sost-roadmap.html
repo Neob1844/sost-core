@@ -781,7 +781,7 @@
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          <strong>V13 hard fork.</strong> Block 12,000: cASERT equalizer E7-H35 active, DTD lottery cooldown 5 &rarr; 6, future-timestamp drift cap 60 s &rarr; 30 s, Beacon Phase II-A / II-B / III (advisory-only). Block 12,100: DTD cadence flips from 2-of-3 bootstrap to 1-of-3 permanent (automatic) <em>and</em> the <strong>anti-dominance gate</strong> activates &mdash; any address with &ge; 5 % share of the previous 288 blocks is excluded from the DTD lottery until its rolling share drops below 5 %. Dominant miners keep their 50 % miner share. See <code>docs/V13_DTD_DOMINANCE_GATE.md</code>.
+          <strong>V13 hard fork.</strong> Block 12,000: cASERT equalizer E7-H35 active, DTD lottery cooldown 5 &rarr; 6, future-timestamp drift cap 60 s &rarr; 30 s, Beacon Phase II-A / II-B / III (advisory-only). Block 12,100: DTD cadence flips from 2-of-3 bootstrap to 1-of-3 permanent (automatic) <em>and</em> the <strong>anti-dominance gate</strong> activates &mdash; any address with &ge; 10 % share of the previous 288 blocks is excluded from the DTD lottery until its rolling share drops below 10 % (eligibility also requires an SbPoW-signed block, most recent block at height &ge; 7,100). Dominant miners keep their 50 % miner share. See <code>docs/V13_DTD_DOMINANCE_GATE.md</code>.
         </p>
       </div>
     </div>

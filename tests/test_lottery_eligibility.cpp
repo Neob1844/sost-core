@@ -557,8 +557,8 @@ static bool contains_pkh(const std::vector<LotteryEligibilityEntry>& v,
     return false;
 }
 
-// With the dominance threshold at 5 %, fillers must each stay below 5 %
-// of the 288-block window (<= 14 blocks). A small round-robin of 4 fillers
+// With the dominance threshold at 10 %, fillers must each stay below 10 %
+// of the 288-block window (<= 28 blocks). A small round-robin of 4 fillers
 // would put each filler near 25 % and trip the gate, so the dominance tests
 // use a wide filler set (default 36 → each filler <~3 % in a full window).
 static std::vector<PubKeyHash> make_fillers(int n) {
@@ -587,42 +587,42 @@ static void test_v13_dominance_gate_active_at_12100() {
     auto eligible = compute_lottery_eligibility_set(blocks, 12100, DOM, 0);
     TEST("DOM excluded at height 12100 (gate active, 100/288 ≈ 34.7 %)",
          !contains_pkh(eligible, DOM));
-    TEST("at least one small filler (<5 %) is eligible (gate did not nuke set)",
+    TEST("at least one small filler (<10 %) is eligible (gate did not nuke set)",
          !eligible.empty());
 }
 
-static void test_v13_dominance_boundary_14_eligible() {
-    printf("\n=== V13.3) 14/288 (4.86 %%) is BELOW threshold → eligible ===\n");
+static void test_v13_dominance_boundary_28_eligible() {
+    printf("\n=== V13.3) 28/288 (9.72 %%) is BELOW threshold → eligible ===\n");
     auto DOM = mk_pkh(0x10);
     auto fillers = make_fillers(36);
-    auto blocks = build_window_history(12500, DOM, 14, fillers);
+    auto blocks = build_window_history(12500, DOM, 28, fillers);
     auto eligible = compute_lottery_eligibility_set(blocks, 12500, DOM, 0);
-    TEST("DOM eligible at 14/288 = 4.86 %", contains_pkh(eligible, DOM));
+    TEST("DOM eligible at 28/288 = 9.72 %", contains_pkh(eligible, DOM));
 }
 
-static void test_v13_dominance_boundary_15_excluded() {
-    printf("\n=== V13.4) 15/288 (5.21 %%) AT/ABOVE threshold → excluded ===\n");
+static void test_v13_dominance_boundary_29_excluded() {
+    printf("\n=== V13.4) 29/288 (10.07 %%) AT/ABOVE threshold → excluded ===\n");
     auto DOM = mk_pkh(0x10);
     auto fillers = make_fillers(36);
-    auto blocks = build_window_history(12500, DOM, 15, fillers);
+    auto blocks = build_window_history(12500, DOM, 29, fillers);
     auto eligible = compute_lottery_eligibility_set(blocks, 12500, DOM, 0);
-    TEST("DOM excluded at 15/288 = 5.21 %", !contains_pkh(eligible, DOM));
+    TEST("DOM excluded at 29/288 = 10.07 %", !contains_pkh(eligible, DOM));
 }
 
 static void test_v13_dominance_dynamic_recovery() {
-    printf("\n=== V13.5) Dominant becomes eligible again when share drops < 5 %% ===\n");
+    printf("\n=== V13.5) Dominant becomes eligible again when share drops < 10 %% ===\n");
     auto DOM = mk_pkh(0x10);
     auto fillers = make_fillers(36);
 
-    // Excluded: 20/288 (6.94 %).
-    auto blocks_excl = build_window_history(12500, DOM, 20, fillers);
+    // Excluded: 40/288 (13.89 %).
+    auto blocks_excl = build_window_history(12500, DOM, 40, fillers);
     auto elig_excl = compute_lottery_eligibility_set(blocks_excl, 12500, DOM, 0);
-    TEST("20/288 → excluded", !contains_pkh(elig_excl, DOM));
+    TEST("40/288 → excluded", !contains_pkh(elig_excl, DOM));
 
-    // Eligible again: same DOM but new window with only 10/288 (3.47 %).
-    auto blocks_recovered = build_window_history(12500, DOM, 10, fillers);
+    // Eligible again: same DOM but new window with only 20/288 (6.94 %).
+    auto blocks_recovered = build_window_history(12500, DOM, 20, fillers);
     auto elig_rec = compute_lottery_eligibility_set(blocks_recovered, 12500, DOM, 0);
-    TEST("10/288 → eligible again (rolling recovery)",
+    TEST("20/288 → eligible again (rolling recovery)",
          contains_pkh(elig_rec, DOM));
 }
 
@@ -632,13 +632,15 @@ static void test_v13_dominance_combines_with_recent_winner_cooldown() {
     auto SMALL = mk_pkh(0x11);   // NOT dominant (6/288 = 2.08 %) but a recent winner
     auto fillers = make_fillers(36);
 
-    // Build an explicit window so SMALL occupies exactly the last 6 heights
-    // (12094–12099) — enough to trip the recent-winner cooldown — while
-    // staying at 6/288 = 2.08 %, well under the 5 % dominance threshold.
-    // This isolates the cooldown filter from the dominance gate.
-    const int64_t tip       = 12100;
-    const int64_t window_lo = tip - DTD_DOMINANCE_WINDOW;  // 11812
-    const int64_t window_hi = tip - 1;                     // 12099
+    // Explicit window (tip 12500, fully past the SbPoW + V13 boundaries so
+    // every block is >= V11_PHASE2_HEIGHT and the SbPoW gate is a no-op
+    // here). SMALL occupies exactly the last 6 heights (12494–12499) —
+    // enough to trip the recent-winner cooldown — while staying at
+    // 6/288 = 2.08 %, well under the 10 % dominance threshold. This isolates
+    // the cooldown filter from the dominance gate.
+    const int64_t tip       = 12500;
+    const int64_t window_lo = tip - DTD_DOMINANCE_WINDOW;  // 12212
+    const int64_t window_hi = tip - 1;                     // 12499
     std::vector<LotteryMinedBlockView> blocks;
     for (int i = 0; i < (int)fillers.size(); ++i)          // pre-window "ever mined" seeds
         blocks.push_back(mk_block(window_lo - 1 - i, fillers[(size_t)i]));
@@ -649,7 +651,7 @@ static void test_v13_dominance_combines_with_recent_winner_cooldown() {
         } else if (dom_placed < 100) {                     // 100 blocks for DOM
             blocks.push_back(mk_block(h, DOM));
             ++dom_placed;
-        } else {                                            // many small fillers (<5 %)
+        } else {                                            // many small fillers (<10 %)
             blocks.push_back(mk_block(
                 h, fillers[(size_t)(filler_idx++ % (int)fillers.size())]));
         }
@@ -657,7 +659,7 @@ static void test_v13_dominance_combines_with_recent_winner_cooldown() {
     // No cooldown: DOM excluded (dominant), SMALL eligible (not dominant).
     auto elig0 = compute_lottery_eligibility_set(blocks, tip, DOM, 0);
     TEST("DOM excluded by dominance gate (cooldown off)", !contains_pkh(elig0, DOM));
-    TEST("SMALL eligible without cooldown (6/288 < 5 % → not dominant)",
+    TEST("SMALL eligible without cooldown (6/288 < 10 % → not dominant)",
          contains_pkh(elig0, SMALL));
     // Cooldown window 6: SMALL now excluded by the cooldown ALONE; DOM still
     // excluded by the dominance gate. The two filters are independent.
@@ -668,13 +670,13 @@ static void test_v13_dominance_combines_with_recent_winner_cooldown() {
 }
 
 static void test_v13_dominance_partial_window_near_activation() {
-    printf("\n=== V13.7) Observed window < 288 still applies the 5 %% rule ===\n");
+    printf("\n=== V13.7) Observed window < 288 still applies the 10 %% rule ===\n");
     auto DOM = mk_pkh(0x10);
     auto fillers = make_fillers(36);
-    // Build only 200 window blocks (genesis-near scenario). DOM gets
-    // 20 of them (10 %). The is_dtd_dominant helper should use
-    // observed_window_blocks rather than the static DTD_DOMINANCE_WINDOW
-    // (5 % of 200 = 10 blocks, so 20/200 = 10 % is over the threshold).
+    // Build only 200 window blocks (genesis-near scenario). DOM gets 20 of
+    // them. The is_dtd_dominant helper must use observed_window_blocks (= 200)
+    // rather than the static DTD_DOMINANCE_WINDOW: 10 % of 200 = 20, so
+    // 20/200 == 10 % meets the >= threshold and is excluded.
     std::vector<LotteryMinedBlockView> blocks;
     // Pre-window early history (so all pkhs qualify as "ever mined").
     for (int64_t h = 100; h < 200; ++h) {
@@ -698,8 +700,53 @@ static void test_v13_dominance_partial_window_near_activation() {
         }
     }
     auto eligible = compute_lottery_eligibility_set(blocks, tip, DOM, 0);
-    TEST("DOM excluded at 20/200 = 10 % (partial window, > 5 %)",
+    TEST("DOM excluded at 20/200 == 10 % (partial window meets threshold)",
          !contains_pkh(eligible, DOM));
+}
+
+// ---------------------------------------------------------------------------
+// V13.5 SbPoW-activity gate (eligible only if last block >= V11_PHASE2_HEIGHT)
+// ---------------------------------------------------------------------------
+
+static void test_v135_sbpow_gate_excludes_presbpow_miner() {
+    printf("\n=== V13.8) SbPoW gate excludes a pre-SbPoW (pre-7100) dormant miner ===\n");
+    auto STALE  = mk_pkh(0x05);   // last block BEFORE SbPoW activation (< 7100)
+    auto ACTIVE = mk_pkh(0x10);   // recent SbPoW block
+    auto fillers = make_fillers(36);
+    const int64_t tip       = 12500;                       // gate active
+    const int64_t window_lo = tip - DTD_DOMINANCE_WINDOW;  // 12212
+    const int64_t window_hi = tip - 1;                     // 12499
+    std::vector<LotteryMinedBlockView> blocks;
+    // STALE mined only before SbPoW (heights 6000..6010), far outside the
+    // window → not dominant, not a recent winner; its ONLY disqualifier is
+    // the SbPoW-activity gate (last_mined_height 6010 < 7100).
+    for (int64_t h = 6000; h <= 6010; ++h) blocks.push_back(mk_block(h, STALE));
+    // pre-window filler seeds (ever mined, all >= 7100)
+    for (int i = 0; i < (int)fillers.size(); ++i)
+        blocks.push_back(mk_block(window_lo - 1 - i, fillers[(size_t)i]));
+    // window: ACTIVE 10 blocks + small fillers (so ACTIVE is < 10 %)
+    int32_t ai = 0, fi = 0;
+    for (int64_t h = window_lo; h <= window_hi; ++h) {
+        if (ai < 10) { blocks.push_back(mk_block(h, ACTIVE)); ++ai; }
+        else blocks.push_back(mk_block(
+                 h, fillers[(size_t)(fi++ % (int)fillers.size())]));
+    }
+    auto eligible = compute_lottery_eligibility_set(blocks, tip, ACTIVE, 0);
+    TEST("STALE excluded (last block 6010 < V11_PHASE2_HEIGHT = 7100)",
+         !contains_pkh(eligible, STALE));
+    TEST("ACTIVE eligible (has SbPoW blocks, last >= 7100, 10/288 < 10 %)",
+         contains_pkh(eligible, ACTIVE));
+}
+
+static void test_v135_sbpow_gate_off_below_gate_height() {
+    printf("\n=== V13.9) SbPoW gate OFF below 12100 (pre-SbPoW miner still eligible) ===\n");
+    auto STALE = mk_pkh(0x05);
+    std::vector<LotteryMinedBlockView> blocks;
+    for (int64_t h = 6000; h <= 6010; ++h) blocks.push_back(mk_block(h, STALE));
+    const int64_t tip = 12099;  // gate OFF (height < DTD_DOMINANCE_GATE_HEIGHT)
+    auto eligible = compute_lottery_eligibility_set(blocks, tip, STALE, 0);
+    TEST("STALE eligible at 12099 (SbPoW gate off; pre-SbPoW history ignored)",
+         contains_pkh(eligible, STALE));
 }
 
 // ---------------------------------------------------------------------------
@@ -737,7 +784,7 @@ static void test_v14_popc_gate_consensus_deferred() {
 
     // height = V14_HEIGHT = 15000. Both A and B should be eligible
     // because the V14 PoPC gate is a no-op while the flag is false
-    // and neither pkh is dominant (>= 5 %).
+    // and neither pkh is dominant (>= 10 %).
     auto eligible = compute_lottery_eligibility_set(blocks, 15000, A, 0);
     TEST("A eligible at V14_HEIGHT (PoPC gate short-circuits)",
          contains_pkh(eligible, A));
@@ -775,11 +822,13 @@ int main() {
     // V13 anti-dominance gate
     test_v13_dominance_gate_inactive_below_12100();
     test_v13_dominance_gate_active_at_12100();
-    test_v13_dominance_boundary_14_eligible();
-    test_v13_dominance_boundary_15_excluded();
+    test_v13_dominance_boundary_28_eligible();
+    test_v13_dominance_boundary_29_excluded();
     test_v13_dominance_dynamic_recovery();
     test_v13_dominance_combines_with_recent_winner_cooldown();
     test_v13_dominance_partial_window_near_activation();
+    test_v135_sbpow_gate_excludes_presbpow_miner();
+    test_v135_sbpow_gate_off_below_gate_height();
 
     // V14 PoPC eligibility (preparatory)
     test_v14_popc_gate_consensus_deferred();

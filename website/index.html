@@ -1324,7 +1324,7 @@
             <li>Constitutional immutability &mdash; <code>50/25/25</code> split and hard cap live in <code>include/sost/params.h</code></li>
             <li>Observable gold reserve &mdash; <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan-primary)">Etherscan</a></li>
             <li>SbPoW miner-identity binding &mdash; every block from <code>#7,100</code> carries a Schnorr signature over its PoW commitment</li>
-            <li>V13 anti-dominance DTD gate at <code>#12,100</code> &mdash; addresses with &ge; 5 % share of the previous 288 blocks are excluded from the DTD lottery until their rolling share drops below 5 %; logic lives in <code>src/lottery.cpp::compute_lottery_eligibility_set</code> and <code>include/sost/params.h::is_dtd_dominant</code></li>
+            <li>V13 anti-dominance DTD gate at <code>#12,100</code> &mdash; addresses with &ge; 10 % share of the previous 288 blocks are excluded from the DTD lottery until their rolling share drops below 10 %, and only miners with an SbPoW-signed block (most recent block at height &ge; 7,100) are eligible; logic lives in <code>src/lottery.cpp::compute_lottery_eligibility_set</code> and <code>include/sost/params.h::is_dtd_dominant</code> / <code>is_sbpow_eligible</code></li>
             <li>Deterministic build &mdash; rebuild from <code>main</code> and the output hash matches the running binary</li>
             <li>Mainnet operation publicly logged &mdash; every incident in the BCT announcement thread</li>
           </ul>

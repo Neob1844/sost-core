@@ -80,7 +80,7 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     //
     // V13 extension (from height >= DTD_DOMINANCE_GATE_HEIGHT, params.h):
     // additionally exclude any pkh whose share of the previous
-    // DTD_DOMINANCE_WINDOW blocks (default 288) is >= 5 %. The
+    // DTD_DOMINANCE_WINDOW blocks (default 288) is >= 10 %. The
     // dominance gate is INDEPENDENT of the recent-winner cooldown — a
     // pkh excluded by either filter is not in the eligibility set.
     //
@@ -163,6 +163,10 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     //
     // Filters applied in order (any one excludes the pkh):
     //   (a) recent-winner cooldown (always, when exclusion_window > 0)
+    //   (a2) V13.5 SbPoW-activity gate (height >= DTD_DOMINANCE_GATE_HEIGHT):
+    //        the pkh's most recent block must be at height >= V11_PHASE2_HEIGHT
+    //        (= 7100), i.e. it has at least one SbPoW-signed block (a real
+    //        signed miner identity).
     //   (b) V13 anti-dominance (height >= DTD_DOMINANCE_GATE_HEIGHT)
     //   (c) V14 PoPC eligibility (height >= DTD_POPC_ELIGIBILITY_HEIGHT
     //       AND DTD_POPC_GATE_CONSENSUS_ACTIVE — the helper short-circuits
@@ -174,6 +178,12 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
 
         // (a) recent-winner cooldown.
         if (exclusion_window > 0 && recent_winners.count(pkh)) continue;
+
+        // (a2) V13.5 SbPoW-activity gate. A candidate must have at least one
+        // SbPoW-signed block, proven by its most recent block being at height
+        // >= V11_PHASE2_HEIGHT (= 7100). The helper short-circuits to true for
+        // height < DTD_DOMINANCE_GATE_HEIGHT so pre-V13.5 replay is bit-identical.
+        if (!is_sbpow_eligible(kv.second.last_mined_height, height)) continue;
 
         // (b) V13 anti-dominance gate. The helper short-circuits to
         // false for height < DTD_DOMINANCE_GATE_HEIGHT so pre-V13.5
