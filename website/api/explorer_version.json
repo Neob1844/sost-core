@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-01-v326",
-  "note": "V13 Option B: explorer + app read the node's canonical getsupplyinfo RPC (vault, pool, dtd, circulating) as a single source of truth, active from block 12,000. Pre-V13 falls back to getaddressinfo. Force-reload open explorers. Meta tag and JSON stay in lockstep."
+  "v": "2026-06-01-v327",
+  "note": "All explorer banners are now collapsible and collapsed by default (Developer Note, Trinity, OTC/P2P swap, V13 RC1 operator notice, Phase 2/V12). Each remembers the reader's choice in localStorage. Force-reload open explorers. Meta tag and JSON stay in lockstep."
 }

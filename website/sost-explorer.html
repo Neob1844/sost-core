@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-01-v326">
+<meta name="explorer-html-version" content="2026-06-01-v327">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -470,7 +470,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div style="display:flex;align-items:flex-start;gap:10px;">
       <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 8px rgba(251,1,13,.7);margin-top:6px;flex-shrink:0;animation:pulse 1.8s ease infinite"></span>
       <div style="color:var(--text)">
-        <div style="color:var(--red);font-weight:800;letter-spacing:1.5px;font-size:11px;text-transform:uppercase;margin-bottom:8px">Developer Note</div>
+        <div onclick="window.toggleDevNote()" style="display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer">
+          <div style="color:var(--red);font-weight:800;letter-spacing:1.5px;font-size:11px;text-transform:uppercase">Developer Note</div>
+          <button id="devNoteToggle" onclick="event.stopPropagation();window.toggleDevNote()" style="background:rgba(251,1,13,.12);border:1px solid rgba(251,1,13,.65);color:#fecaca;cursor:pointer;font-family:var(--code,monospace);font-size:10px;font-weight:800;letter-spacing:1px;padding:6px 10px;white-space:nowrap">READ &#9662;</button>
+        </div>
+        <div id="devNoteBody" style="display:none;margin-top:10px">
 
         <p style="margin:0 0 10px 0">SOST is being developed with engineering rigor, but that does not guarantee success, future value, liquidity, exchange listings, or community adoption.</p>
 
@@ -490,6 +494,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <p style="margin:0 0 10px 0"><b style="color:var(--red);text-shadow:0 0 4px rgba(251,1,13,0.5)">SOST may never obtain market value. It may never be listed. It may fail.</b> This must be clear to everyone so that no false expectations are created.</p>
 
         <p style="margin:0 0 0 0">Mine, run a node, test, and participate only if you understand that this is an experimental project.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -681,11 +686,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     </button>
   </div>
 
+  <div id="trinityProofBody" style="display:none">
   <p>
     Trinity is an integrated <b style="color:#8de3ad">scientific discovery system</b>. Its primary purpose is to turn data &mdash; Earth evidence today, materials intelligence next &mdash; into increasingly useful scientific outputs. <b style="color:#8de3ad">GeaSpirit</b>, <b style="color:#8de3ad">Materials Engine</b> and <b style="color:#8de3ad">Useful Compute</b> do the science; <b style="color:#8de3ad">SOST</b> adds the proof, reputation and future-reward rail around that work.
   </p>
-
-  <div id="trinityProofBody" style="display:none">
     <div class="trinity-proof-banner__grid">
       <div><strong>AOI</strong><span>Kalgoorlie Phase&nbsp;1</span></div>
       <div><strong>Block</strong><span><a href="#" onclick="event.preventDefault();showBlockByHeight(8085)">#8085</a></span></div>
@@ -1257,11 +1261,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     </button>
   </div>
 
+  <div id="otcSwapBody" style="display:none">
   <p>
     SOST OTC / P2P will let two strangers swap SOST for another cryptoasset <b style="color:#67e8f9">without trusting each other and without SOST holding either side&apos;s funds</b>. Either both legs settle, or both legs refund. There is no intermediary, no escrow operator, no admin key, and no upgrade path. The mechanism is a Hashed Time-Locked Contract (HTLC) on both chains — the same primitive that powers Lightning channels.
   </p>
-
-  <div id="otcSwapBody" style="display:none">
 
     <!-- 1. SUPPORTED ASSETS GRID -->
     <div style="margin-top:6px;padding-top:10px;border-top:1px dashed rgba(103,232,249,0.25)">
@@ -1481,8 +1484,8 @@ function toggleV12Banner(){
   var body = document.getElementById('v12BannerBody');
   var btn  = document.getElementById('v12BannerToggle');
   if(!body) return;
-  var collapsed = false;
-  try{ collapsed = localStorage.getItem('sost_v12_banner_collapsed') === '1'; }catch(e){}
+  var collapsed = true; // collapsed by default; only expanded if the user chose to
+  try{ collapsed = localStorage.getItem('sost_v12_banner_collapsed') !== '0'; }catch(e){}
   body.style.display = collapsed ? 'none' : '';
   if(btn) btn.textContent = collapsed ? 'EXPAND' : 'COLLAPSE';
 })();
@@ -1499,9 +1502,10 @@ function toggleV12Banner(){
       <span style="background:rgba(251,1,13,.18);color:#fb010d;font-size:10px;font-weight:900;letter-spacing:1.8px;padding:5px 10px;border-radius:3px;text-transform:uppercase;white-space:nowrap">⚠ UPGRADE WINDOW: BLOCKS 11,900 – 11,999</span>
       <span style="background:rgba(245,158,11,.15);color:#f59e0b;font-size:10px;font-weight:900;letter-spacing:1.8px;padding:5px 10px;border-radius:3px;text-transform:uppercase;white-space:nowrap">⚠ ALL OPERATORS: UPDATE V13 BINARY + NTP RECOMMENDED BY 12,000</span>
     </div>
+    <button id="v13Rc1Toggle" onclick="toggleV13Rc1()" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.65);color:#fde68a;cursor:pointer;font-family:var(--code,monospace);font-size:10px;font-weight:800;letter-spacing:1px;padding:6px 10px;white-space:nowrap">EXPAND &#9662;</button>
   </div>
 
-  <div style="color:var(--text);font-size:12px;line-height:1.65">
+  <div id="v13Rc1Body" style="display:none;color:var(--text);font-size:12px;line-height:1.65">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;font-size:11px;margin-bottom:12px">
       <div style="background:rgba(0,0,0,.3);border:1px solid rgba(245,158,11,.4);padding:8px"><div style="color:var(--text3);letter-spacing:1px">RC ID</div><div style="color:#f59e0b;font-weight:700;font-size:14px">v13-rc1</div></div>
       <div style="background:rgba(0,0,0,.3);border:1px solid rgba(245,158,11,.4);padding:8px"><div style="color:var(--text3);letter-spacing:1px">ACTIVATION HEIGHT</div><div style="color:#f59e0b;font-weight:700;font-size:14px">#12,000</div></div>
@@ -2645,12 +2649,54 @@ function initPhase2Resolved(){
   var body=document.getElementById('phase2ResolvedBody');
   var btn=document.getElementById('phase2ResolvedToggle');
   if(!body)return;
-  var collapsed=false;
-  try{collapsed=localStorage.getItem('sost_phase2_resolved_collapsed')==='1';}catch(e){}
+  var collapsed=true; // collapsed by default; only expanded if the user chose to
+  try{collapsed=localStorage.getItem('sost_phase2_resolved_collapsed')!=='0';}catch(e){}
   body.style.display=collapsed?'none':'';
   if(btn)btn.textContent=collapsed?'EXPAND':'COLLAPSE';
 }
 setTimeout(initPhase2Resolved,0);
+// Developer Note — collapsible, collapsed by default
+function toggleDevNote(){
+  var body=document.getElementById('devNoteBody');
+  var btn=document.getElementById('devNoteToggle');
+  if(!body)return;
+  var opening=body.style.display==='none';
+  body.style.display=opening?'block':'none';
+  if(btn)btn.innerHTML=opening?'COLLAPSE &#9652;':'READ &#9662;';
+  try{localStorage.setItem('sost_devnote_collapsed',opening?'0':'1');}catch(e){}
+}
+window.toggleDevNote=toggleDevNote;
+function initDevNote(){
+  var body=document.getElementById('devNoteBody');
+  var btn=document.getElementById('devNoteToggle');
+  if(!body)return;
+  var collapsed=true;
+  try{collapsed=localStorage.getItem('sost_devnote_collapsed')!=='0';}catch(e){}
+  body.style.display=collapsed?'none':'block';
+  if(btn)btn.innerHTML=collapsed?'READ &#9662;':'COLLAPSE &#9652;';
+}
+setTimeout(initDevNote,0);
+// V13 RC1 operator notice — collapsible, collapsed by default
+function toggleV13Rc1(){
+  var body=document.getElementById('v13Rc1Body');
+  var btn=document.getElementById('v13Rc1Toggle');
+  if(!body)return;
+  var opening=body.style.display==='none';
+  body.style.display=opening?'block':'none';
+  if(btn)btn.innerHTML=opening?'COLLAPSE &#9652;':'EXPAND &#9662;';
+  try{localStorage.setItem('sost_v13rc1_collapsed',opening?'0':'1');}catch(e){}
+}
+window.toggleV13Rc1=toggleV13Rc1;
+function initV13Rc1(){
+  var body=document.getElementById('v13Rc1Body');
+  var btn=document.getElementById('v13Rc1Toggle');
+  if(!body)return;
+  var collapsed=true;
+  try{collapsed=localStorage.getItem('sost_v13rc1_collapsed')!=='0';}catch(e){}
+  body.style.display=collapsed?'none':'block';
+  if(btn)btn.innerHTML=collapsed?'EXPAND &#9662;':'COLLAPSE &#9652;';
+}
+setTimeout(initV13Rc1,0);
 
 function addrTag(addr){var r=ROLES[addr];if(!r)return'';var c=r==='GOLD VAULT'?'gold':r==='POPC POOL'?'cyan':'yellow';return ' <span style="color:var(--'+c+');font-size:9px;font-weight:600">['+r+']</span>';}
 function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+addr+'</span>'+addrTag(addr)+cpBtn(addr);}
