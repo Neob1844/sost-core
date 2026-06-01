@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-01-v324",
-  "note": "Rename the UNIQUE MINERS card to BLOCK PRODUCERS · 48H (clearer: distinct miners that produced >=1 block in the last 288 blocks ~48h). Force-reload open explorers. Meta tag and JSON stay in lockstep."
+  "v": "2026-06-01-v325",
+  "note": "Remove the TRINITY link from the explorer header link group. Force-reload open explorers. Meta tag and JSON stay in lockstep."
 }
