@@ -1687,6 +1687,7 @@ SectionRenderers.dashboard = function(el) {
     const heights = [];
     for (let h = startH; h <= tipHeight; h++) heights.push(h);
     const minerSet      = new Set();
+    const active288Set  = new Set();
     const cooldownStart = tipHeight - COOLDOWN + 1;
     const cooldownMiners= new Set();
     const CHUNK = 30;
@@ -1705,6 +1706,7 @@ SectionRenderers.dashboard = function(el) {
           if (!b || !b.miner_address) continue;
           minerSet.add(b.miner_address);
           if (b.height >= cooldownStart) cooldownMiners.add(b.miner_address);
+          if (b.height >= tipHeight - 287) active288Set.add(b.miner_address);
         }
         fetched += chunk.length;
         // Progress feedback every ~3 waves.
@@ -1716,11 +1718,14 @@ SectionRenderers.dashboard = function(el) {
       const eligible = new Set();
       minerSet.forEach(m => { if (!cooldownMiners.has(m)) eligible.add(m); });
       const count = eligible.size;
+      const active288 = active288Set.size;
       try {
         localStorage.setItem('sost_app_dtd_eligible_v1',
-          JSON.stringify({ tip: tipHeight, count: count, ts: Date.now() }));
+          JSON.stringify({ tip: tipHeight, count: count, active288: active288, ts: Date.now() }));
       } catch (e) {}
       if (cell) cell.textContent = count + ' (since genesis)';
+      const _a288Cell = document.getElementById('dtdActive288Cell');
+      if (_a288Cell) _a288Cell.textContent = String(active288);
     } catch (e) {
       if (cell) cell.innerHTML = '<span style="color:#fb010d">scan failed</span>';
     } finally {
@@ -1832,6 +1837,7 @@ SectionRenderers.dashboard = function(el) {
       // sum over epochs of (triggered blocks × subsidy_epoch × 0.5).
       let dtdDistributed = 'N/A';
       let dtdEligible    = 'N/A';
+      let dtdActive288   = 'N/A';
       try {
         const V11_PHASE2_HEIGHT    = 7100;
         const LOTTERY_HF_WINDOW    = 5000;
@@ -1889,9 +1895,13 @@ SectionRenderers.dashboard = function(el) {
                 Math.abs(parseInt(height) - obj.tip) <= 100 &&
                 (Date.now() - (obj.ts || 0)) < 6 * 3600 * 1000) {
               dtdEligible = obj.count + ' (since genesis)';
+              if (typeof obj.active288 === 'number') dtdActive288 = String(obj.active288);
             }
           }
         } catch(e) {}
+        if (dtdActive288 === 'N/A') {
+          dtdActive288 = '<span style="color:var(--pip-dim)">scanning…</span>';
+        }
         if (dtdEligible === 'N/A') {
           // Rendered with a stable id so runDtdEligibleScanApp can swap
           // the cell in place once the background scan completes.
@@ -1947,7 +1957,8 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">EXPECTED BLOCKS</span><span class="stat-value" style="color:var(--pip-dim)">${expectedBlocks} <span style="font-size:9px">(@10min/block)</span></span></div>
         <div class="stat-row"><span class="stat-label">CHAIN LAG/LEAD</span><span class="stat-value" style="color:${lagLeadColor};font-weight:700">${lagLeadText}</span></div>
         <div class="stat-row"><span class="stat-label">DTD DISTRIBUTED</span><span class="stat-value" style="color:#ff00ff;font-weight:700">${dtdDistributed} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(lottery payouts since #7100)</span></span></div>
-        <div class="stat-row"><span class="stat-label">PEAK ACTIVE MINERS</span><span class="stat-value" style="color:#22d3ee;font-weight:700"><span id="dtdEligibleCell">${dtdEligible}</span> <span style="font-size:9px;color:var(--pip-dim);font-weight:400">since genesis · only miners who found &ge;1 block · excludes non-producing nodes</span></span></div>
+        <div class="stat-row"><span class="stat-label">DTD ELIGIBLE · 288</span><span class="stat-value" style="color:#a78bfa;font-weight:700"><span id="dtdActive288Cell">${dtdActive288}</span> <span style="font-size:9px;color:var(--pip-dim);font-weight:400">last 288 blocks (~48 h) · active now</span></span></div>
+        <div class="stat-row"><span class="stat-label">DTD ELIGIBLE · genesis</span><span class="stat-value" style="color:#22d3ee;font-weight:700"><span id="dtdEligibleCell">${dtdEligible}</span> <span style="font-size:9px;color:var(--pip-dim);font-weight:400">since genesis · all miners who found &ge;1 block (= PEAK ACTIVE MINERS)</span></span></div>
         <div class="stat-row"><span class="stat-label">CONNECTED NODES</span><span class="stat-value">${connectedNodes} <span style="font-size:9px;color:var(--pip-dim)">(seed-visible)</span></span></div>
         <div class="stat-row"><span class="stat-label">DIFFICULTY</span><span class="stat-value">${diffDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">INTERVAL</span><span class="stat-value" style="color:${ivColor}">${interval}</span></div>
