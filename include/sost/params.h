@@ -856,9 +856,11 @@ inline constexpr int64_t V13_HEIGHT                       = 12000;
 // See docs/BEACON_CUSTODY_STATUS.md for the current bootstrap state.
 inline constexpr int64_t BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT = INT64_MAX;
 
-// Beacon activation gates. Phase II-A is gated to V13_HEIGHT. Phase III P2P
-// is intentionally sentinel-disabled (INT64_MAX) until a future fork commit
-// lowers the gate; the explorer-only Phase 1 already shipped.
+// Beacon activation gates. Phase II-A (local notice display) and Phase III
+// (P2P gossip) BOTH activate at V13_HEIGHT; the explorer-only Phase 1 already
+// shipped. Beacon is advisory-only and never affects consensus, mining or
+// block validity. (Phase II-B threshold remains sentinel-disabled — see
+// BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT above.)
 inline constexpr int64_t BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT;
 inline constexpr int64_t BEACON_P2P_ACTIVATION_HEIGHT     = V13_HEIGHT;  // active at V13
 

@@ -525,7 +525,7 @@ static std::vector<LotteryMinedBlockView> build_window_history(
     // Early-history seed for the dominant pkh so it qualifies as
     // "ever mined" even when dom_count == 0 inside the window. This
     // block is OUTSIDE the dominance window, so it does not affect
-    // the 5 % calculation.
+    // the 10 % calculation.
     blocks.push_back(mk_block(dom_seed_h, dom));
 
     // Pre-window: round-robin fillers across heights [prefill_lo,
@@ -774,10 +774,10 @@ static void test_v14_popc_gate_consensus_deferred() {
 
     auto A = mk_pkh(0xA1);
     auto B = mk_pkh(0xA2);
-    // Keep BOTH A and B below the 5 % V13 dominance threshold so this test
+    // Keep BOTH A and B below the 10 % V13 dominance threshold so this test
     // isolates the V14 PoPC short-circuit from the V13 anti-dominance filter
     // that also runs at height >= 12100. A takes 10/288 (3.47 %); with 36
-    // fillers, B (one of them) takes ~8/288 (~2.8 %) — both under 5 %.
+    // fillers, B (one of them) takes ~8/288 (~2.8 %) — both under 10 %.
     std::vector<PubKeyHash> fillers = {B};
     for (int i = 0; i < 35; ++i) fillers.push_back(mk_pkh((uint8_t)(0x20 + i)));
     auto blocks = build_window_history(15000, A, 10, fillers);
