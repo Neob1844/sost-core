@@ -101,7 +101,7 @@
       "nav .nav-logo img { animation: sostLogoPulse 2.6s ease-in-out infinite; }",
       "@keyframes sostLogoPulse {",
       "  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,1,13,.45)) drop-shadow(0 0 10px rgba(251,1,13,.25)); }",
-      "  50% { filter: drop-shadow(0 0 14px rgba(251,1,13,1)) drop-shadow(0 0 34px rgba(251,1,13,.7)); }",
+      "  50% { filter: drop-shadow(0 0 22px rgba(251,1,13,1)) drop-shadow(0 0 52px rgba(251,1,13,.92)) drop-shadow(0 0 88px rgba(251,1,13,.6)); }",
       "}",
       /* Watch: fixed glow at maximum, no pulse (matches the other logos). */
       "nav a[onclick=\"openSv()\"] {",
@@ -284,4 +284,34 @@
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',injectNewsBtn,{once:true});
   else injectNewsBtn();
+})();
+
+/* ============================================================================
+   Every GeaSpirit logo on the site links out to geaspirit.com. Logos already
+   wrapped in a single-purpose <a> get their href pointed there; bare logos are
+   wrapped. Logos inside a larger composite link are left untouched.
+   ========================================================================== */
+(function(){
+  "use strict";
+  var GEA = "https://geaspirit.com/";
+  function linkGeaLogos(){
+    var imgs = document.querySelectorAll('img[src*="geaspirit-logo.png"], img[src*="geaspirit-logo.svg"]');
+    for(var i=0;i<imgs.length;i++){
+      var img = imgs[i];
+      if(img.id === 'gea-splash-logo') continue;            // splash artwork, not a link
+      var a = img.parentNode && img.parentNode.tagName === 'A' ? img.parentNode : null;
+      if(a){
+        if(a.children.length === 1){                        // link wraps only the logo
+          a.setAttribute('href', GEA); a.setAttribute('target','_blank'); a.setAttribute('rel','noopener noreferrer');
+        }
+        continue;
+      }
+      var w = document.createElement('a');
+      w.href = GEA; w.target = '_blank'; w.rel = 'noopener noreferrer';
+      w.style.display = 'inline-flex'; w.style.cursor = 'pointer'; w.title = 'GeaSpirit — geaspirit.com';
+      img.parentNode.insertBefore(w, img); w.appendChild(img);
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', linkGeaLogos, {once:true});
+  else linkGeaLogos();
 })();
