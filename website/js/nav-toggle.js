@@ -86,6 +86,28 @@
       "  display: none !important;",
       "}",
       "html.pre-nav-collapsed body.nav-collapsed nav { padding: 4px 0 !important; }",
+      /* ---- Unified logo bar across all sections ----
+         SOST logo + text stays left; ConvergenceX, GeaSpirit, PoPC DEX, Watch
+         and News group together on the right (drop ConvergenceX's flex:1 grow
+         and push the whole right group with margin-left:auto). */
+      "nav .container > a[href=\"casert-spec.html\"] {",
+      "  flex: 0 0 auto !important;",
+      "  margin-left: auto !important;",
+      "}",
+      /* SOST PROTOCOL nav text identical on every page (the GeaSpirit page used",
+      "   a smaller 18px override — force the standard size everywhere). */
+      "nav .nav-logo { font-size: 26px !important; letter-spacing: 3px !important; gap: 14px !important; }",
+      /* The ONLY pulsing logo on the whole site: the SOST mark — min->max glow. */
+      "nav .nav-logo img { animation: sostLogoPulse 2.6s ease-in-out infinite; }",
+      "@keyframes sostLogoPulse {",
+      "  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,1,13,.45)) drop-shadow(0 0 10px rgba(251,1,13,.25)); }",
+      "  50% { filter: drop-shadow(0 0 14px rgba(251,1,13,1)) drop-shadow(0 0 34px rgba(251,1,13,.7)); }",
+      "}",
+      /* Watch: fixed glow at maximum, no pulse (matches the other logos). */
+      "nav a[onclick=\"openSv()\"] {",
+      "  box-shadow: 0 0 18px rgba(34,211,238,.95), 0 0 36px rgba(34,211,238,.6) !important;",
+      "  animation: none !important;",
+      "}",
     ].join("\n");
     (document.head || document.documentElement).appendChild(style);
   }
@@ -239,7 +261,7 @@
     st.id='sost-news-btn-style';
     st.textContent=[
       '@keyframes newsBtnGlow{0%,100%{box-shadow:0 0 12px rgba(245,158,11,.42),0 0 22px rgba(251,1,13,.14)}50%{box-shadow:0 0 20px rgba(245,158,11,.82),0 0 36px rgba(251,1,13,.32),0 0 52px rgba(245,158,11,.20)}}',
-      '.sost-news-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20%;background:linear-gradient(135deg,#1b1206,#2c1d08,#3a2a0a);border:1px solid rgba(245,158,11,.6);text-decoration:none;line-height:1;flex:0 0 auto;animation:newsBtnGlow 2.6s ease-in-out infinite;overflow:hidden;-webkit-tap-highlight-color:transparent}',
+      '.sost-news-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20%;background:linear-gradient(135deg,#1b1206,#2c1d08,#3a2a0a);border:1px solid rgba(245,158,11,.6);text-decoration:none;line-height:1;flex:0 0 auto;box-shadow:0 0 20px rgba(245,158,11,.95),0 0 40px rgba(245,158,11,.55);overflow:hidden;-webkit-tap-highlight-color:transparent}',
       '.sost-news-btn:hover{border-color:rgba(255,200,87,.95);transform:translateY(-1px);transition:transform .15s ease,border-color .2s ease}',
       'body.nav-collapsed nav .sost-news-btn{display:none !important}'
     ].join('\n');
