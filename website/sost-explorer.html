@@ -2712,13 +2712,14 @@ function toggleV13Rc1(){
 }
 window.toggleV13Rc1=toggleV13Rc1;
 function initV13Rc1(){
+  // Always collapsed on load (the banner is long); the user expands it per
+  // visit if they want. The expanded state is intentionally NOT persisted.
   var body=document.getElementById('v13Rc1Body');
   var btn=document.getElementById('v13Rc1Toggle');
   if(!body)return;
-  var collapsed=true;
-  try{collapsed=localStorage.getItem('sost_v13rc1_collapsed')!=='0';}catch(e){}
-  body.style.display=collapsed?'none':'block';
-  if(btn)btn.innerHTML=collapsed?'EXPAND &#9662;':'COLLAPSE &#9652;';
+  body.style.display='none';
+  if(btn)btn.innerHTML='EXPAND &#9662;';
+  try{localStorage.removeItem('sost_v13rc1_collapsed');}catch(e){}
 }
 setTimeout(initV13Rc1,0);
 
