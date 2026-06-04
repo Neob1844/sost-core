@@ -98,7 +98,7 @@
       "   a smaller 18px override — force the standard size everywhere). */
       "nav .nav-logo { font-size: 26px !important; letter-spacing: 3px !important; gap: 14px !important; }",
       /* The ONLY pulsing logo on the whole site: the SOST mark — min->max glow. */
-      "nav .nav-logo img { animation: sostLogoPulse 2.6s ease-in-out infinite; }",
+      "nav .nav-logo img { animation: sostLogoPulse 3.6s ease-in-out infinite; }",
       "@keyframes sostLogoPulse {",
       "  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,1,13,.45)) drop-shadow(0 0 10px rgba(251,1,13,.25)); }",
       "  50% { filter: drop-shadow(0 0 22px rgba(251,1,13,1)) drop-shadow(0 0 52px rgba(251,1,13,.92)) drop-shadow(0 0 88px rgba(251,1,13,.6)); }",
