@@ -103,6 +103,13 @@
       "  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,1,13,.45)) drop-shadow(0 0 10px rgba(251,1,13,.25)); }",
       "  50% { filter: drop-shadow(0 0 22px rgba(251,1,13,1)) drop-shadow(0 0 52px rgba(251,1,13,.92)) drop-shadow(0 0 88px rgba(251,1,13,.6)); }",
       "}",
+      /* GeaSpirit nav logo pulses with the SAME rhythm + intensity as the SOST",
+      "   mark (3.6s ease-in-out), in its own green colour. */
+      "nav img[src$=\"geaspirit-logo.png\"] { animation: geaLogoPulse 3.6s ease-in-out infinite; }",
+      "@keyframes geaLogoPulse {",
+      "  0%, 100% { filter: drop-shadow(0 0 4px rgba(0,255,65,.45)) drop-shadow(0 0 10px rgba(0,255,65,.25)); }",
+      "  50% { filter: drop-shadow(0 0 22px rgba(0,255,65,1)) drop-shadow(0 0 52px rgba(0,255,65,.92)) drop-shadow(0 0 88px rgba(0,255,65,.6)); }",
+      "}",
       /* Watch: fixed glow at maximum, no pulse (matches the other logos). */
       "nav a[onclick=\"openSv()\"] {",
       "  box-shadow: 0 0 18px rgba(34,211,238,.95), 0 0 36px rgba(34,211,238,.6) !important;",
