@@ -135,6 +135,12 @@ nav .container{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-
 .gea-spl-line{opacity:0;overflow:hidden;white-space:nowrap;border-right:2px solid #008800;width:0;line-height:2;font-family:'JetBrains Mono',monospace}
 .gea-spl-line.go{animation:geaSplType 2.5s steps(35) forwards;opacity:1}
 @keyframes geaSplType{from{width:0}to{width:100%}}
+/* GeaSpirit splash-logo pulse — SAME rhythm (3.6s) + intensity as the SOST
+   PROTOCOL splash (sostLogoPulse), in GeaSpirit green. */
+@keyframes geaSplLogoPulse{
+  0%,100%{filter:drop-shadow(0 0 4px rgba(0,255,65,.45)) drop-shadow(0 0 10px rgba(0,255,65,.25))}
+  50%{filter:drop-shadow(0 0 22px rgba(0,255,65,1)) drop-shadow(0 0 52px rgba(0,255,65,.92)) drop-shadow(0 0 88px rgba(0,255,65,.6))}
+}
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
 </style>
 <script>
@@ -229,7 +235,7 @@ nav .container{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-
   setTimeout(function(){logo.style.opacity='0.15';},2200);
   setTimeout(function(){logo.style.opacity='0.4';logo.style.filter=GF+'drop-shadow(0 0 18px rgba(0,255,65,0.6))';},2800);
   setTimeout(function(){logo.style.opacity='0.7';logo.style.filter=GF+'drop-shadow(0 0 32px rgba(0,255,65,0.85))';},3400);
-  setTimeout(function(){logo.style.opacity='1';logo.style.filter=GF+'drop-shadow(0 0 46px rgba(0,255,65,0.95)) drop-shadow(0 0 90px rgba(0,255,65,0.55))';},4000);
+  setTimeout(function(){logo.style.opacity='1';logo.style.filter=GF+'drop-shadow(0 0 38px rgba(0,255,65,0.6)) drop-shadow(0 0 75px rgba(0,255,65,0.3))';logo.style.animation='geaSplLogoPulse 3.6s ease-in-out infinite';},4000);
 
   // === TITLE TYPING (5s): "GEASPIRIT" green + " PLATFORM" white ===
   var titleEl=document.getElementById('gea-splash-title');
