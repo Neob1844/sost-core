@@ -1024,7 +1024,7 @@ new_powDiffQ = <span class="fn">clamp</span>( adjusted, MIN_BITSQ, MAX_BITSQ )
           cASERT (Contextual Adaptive Stability &amp; Emission Rate Targeting) is the unified
           consensus-rate control system. It integrates three components:
           (1) bitsQ Q16.16 primary hardness regulator, (2) equalizer (emergency-only) with 43 profiles
-          (pre-V12 #5,750..#7,349: 21 active E7&ndash;H13, 22 reserved H14&ndash;H35; V12 #7,350+: 28 active E7&ndash;H20, 15 reserved H21&ndash;H35) that adjust
+          (pre-V12 #5,750..#7,349: 21 active E7&ndash;H13, 22 reserved H14&ndash;H35; V12 #7,350..#11,999: 28 active E7&ndash;H20, 15 reserved H21&ndash;H35; V13 #12,000+: 43 active E7&ndash;H35, 0 reserved) that adjust
           ConvergenceX stability parameters, and (3) anti-stall recovery. The equalizer uses
           5 EWMA signals to compute a weighted control signal U, which selects a profile from
           deep easing (E7) through baseline (B0) to ceiling. Ceiling: H13 pre-V12 / H20 V12 (#7,350+).
@@ -1124,7 +1124,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
         <div class="spec-block fade-in" style="margin-top:16px;border-left:3px solid var(--green-primary);padding-left:16px;">
           <p class="spec-desc" style="font-size:11px;color:var(--text-secondary);line-height:2;margin:0;">
             <strong style="color:var(--green-primary);">Key design properties:</strong><br>
-            &bull; 43 profiles. <b>Pre-V12 (#5,750..#7,349):</b> 21 active A: E7&ndash;H13, 22 reserved R: H14&ndash;H35. <b>V12 (#7,350+):</b> 28 active E7&ndash;H20 (new ceiling), 15 reserved H21&ndash;H35. H35 max reserved, H10&ndash;H35 margin=115. Equalizer is emergency-only.<br>
+            &bull; 43 profiles. <b>Pre-V12 (#5,750..#7,349):</b> 21 active A: E7&ndash;H13, 22 reserved R: H14&ndash;H35. <b>V12 (#7,350..#11,999):</b> 28 active E7&ndash;H20, 15 reserved H21&ndash;H35. <b style="color:#22c55e">V13 (#12,000+):</b> 43 active E7&ndash;H35, 0 reserved (full range live). H35 max profile, H10&ndash;H35 margin=115. Equalizer is emergency-only.<br>
             &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E4 and H9.<br>
             &bull; Slew rate &plusmn;1/block (V6, block 5,000+) ensures smooth profile transitions.<br>
             &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>
@@ -1526,7 +1526,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
           <tr><td class="key">Halflife</td><td class="val">~2 weeks (fixed)</td><td class="val">~720 blocks (~24h)</td><td class="val" style="color:var(--text-primary);">V5: avg288-based (historical: 24h half-life)</td></tr>
           <tr><td class="key">Max change/block</td><td class="val">N/A (bulk adjust)</td><td class="val">EWMA smoothed</td><td class="val" style="color:var(--green-primary);">V5: dynamic cap (0%&ndash;3.0% tiered by deviation)</td></tr>
           <tr><td class="key">Control signals</td><td class="val">1 (time delta)</td><td class="val">1 (timestamp EWMA)</td><td class="val" style="color:var(--green-primary);">5 (rate, lag, integrator, burst, volatility)</td></tr>
-          <tr><td class="key">Dynamic profiles</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--green-primary);">43 profiles (V12 #7,350+: 28 active E7&ndash;H20, 15 reserved H21&ndash;H35)</td></tr>
+          <tr><td class="key">Dynamic profiles</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--green-primary);">43 profiles (V13 #12,000+: all 43 active E7&ndash;H35, 0 reserved)</td></tr>
           <tr><td class="key">Math type</td><td class="val">Floating-point</td><td class="val">128-bit integer</td><td class="val" style="color:var(--green-primary);">Q16.16 fixed-point (zero float)</td></tr>
           <tr><td class="key">Block time</td><td class="val">600s</td><td class="val">120s</td><td class="val" style="color:var(--text-primary);">600s</td></tr>
           <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">Zone-based decay (H10&rarr;B0, always 3600s activation, then E1-E7 after 6h)</td></tr>
