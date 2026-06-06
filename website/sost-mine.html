@@ -202,7 +202,7 @@
   </div>
 </header>
 
-<section>
+<section id="requirements">
   <div class="container">
     <div class="section-id">REQUIREMENTS</div>
     <h2 class="section-title">What you need</h2>
@@ -358,7 +358,7 @@ Miner address: sost1...   (derived from wallet key)</div>
       <li><b>Block reward today: ~7.85 SOST.</b> 50% to miner, 25% to Gold Vault, 25% to PoPC Pool. Hardcoded, immutable.</li>
       <li><b>The reference miner is CPU-oriented.</b> The protocol does not enforce CPU-only at consensus level &mdash; ConvergenceX is memory-hard and CPU-friendly by design, but no public claim is made that GPU/ASIC ports are impossible.</li>
     </ul>
-    <p>For more context on the lack of pools, read <a href="sost-why-no-pools.html">Why no pools</a>.</p>
+    <p>For more context on the lack of pools, read <a href="sost-why-no-pools.html">Why no pools</a> &mdash; or see the live <a href="#founding-miners">Founding Miners</a> hall of fame below, read straight from the chain.</p>
   </div>
 </section>
 
@@ -434,6 +434,150 @@ cmake --build . -j$(nproc)
     </ul>
   </div>
 </section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- FOUNDING MINERS — on-chain hall of fame (live from node RPC)   -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<section id="founding-miners">
+  <div class="container">
+    <div class="section-id">ON-CHAIN · LIVE</div>
+    <h2 class="section-title">Founding <span class="accent">Miners</span></h2>
+    <p>Since V11 Phase 2 (#7,100) every SOST block is <b>signed</b> — SbPoW binds the proof-of-work to one key, so each block was found and signed by an individual solo miner. <b>There are no pools.</b> This hall of fame is read <b>live from the chain</b>; nothing here is curated or invented.</p>
+
+    <div class="fm-stats">
+      <div class="fm-stat"><div class="fm-k">FOUNDING MINERS</div><div class="fm-v" id="fm-total">&mdash;</div><div class="fm-s">distinct producers · ≥1 block</div></div>
+      <div class="fm-stat"><div class="fm-k">ACTIVE · LAST 288</div><div class="fm-v" id="fm-active">&mdash;</div><div class="fm-s">~last 48h</div></div>
+      <div class="fm-stat"><div class="fm-k">CHAIN TIP</div><div class="fm-v" id="fm-tip">&mdash;</div><div class="fm-s">current height</div></div>
+      <div class="fm-stat"><div class="fm-k">POOLS</div><div class="fm-v" style="color:var(--green-primary)">0</div><div class="fm-s">by design · SbPoW</div></div>
+    </div>
+
+    <div id="fm-note" class="fm-note">Connecting to the node&hellip;</div>
+
+    <div class="fm-actions">
+      <button id="fm-reveal" class="fm-btn" type="button">&#9656; Reveal the Founding Miners (scan chain)</button>
+      <span id="fm-progress" class="fm-prog"></span>
+    </div>
+
+    <div id="fm-grid" class="fm-grid"></div>
+    <p class="fm-prog" style="margin-top:14px">Source: live node RPC (<code>geteligibleminers</code> + per-block scan). Want to be on this list? <a href="sost-mine.html#requirements" style="color:var(--red-primary)">Start mining</a> and check your odds in the <a href="sost-mining-calculator.html">calculator</a>. Solo mining is high variance; SOST is in pre-market testing.</p>
+  </div>
+</section>
+<style>
+#founding-miners .fm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+#founding-miners .fm-stat{background:var(--bg-card);border:1px solid var(--border-med);border-radius:10px;padding:14px 16px}
+#founding-miners .fm-k{font-size:10px;letter-spacing:2px;color:var(--text-dim)}
+#founding-miners .fm-v{font-size:26px;font-weight:700;color:var(--red-primary);margin:4px 0 2px;font-family:var(--font-mono)}
+#founding-miners .fm-s{font-size:10px;color:var(--text-muted)}
+#founding-miners .fm-note{font-size:12px;color:var(--text-secondary);border-left:2px solid var(--red-dim);padding:9px 13px;background:rgba(251,1,13,.04);border-radius:0 6px 6px 0;margin:6px 0 14px}
+#founding-miners .fm-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:10px 0}
+#founding-miners .fm-btn{cursor:pointer;background:linear-gradient(180deg,#fb010d,#8b1a22);color:#fff;border:none;border-radius:8px;padding:11px 20px;font:700 13px/1 var(--font-mono);letter-spacing:1px}
+#founding-miners .fm-btn:hover{box-shadow:0 0 18px rgba(251,1,13,.5)}
+#founding-miners .fm-btn[disabled]{opacity:.5;cursor:default;box-shadow:none}
+#founding-miners .fm-prog{font-size:11px;color:var(--text-secondary)}
+#founding-miners .fm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px;margin-top:16px}
+#founding-miners .fm-card{background:var(--bg-card);border:1px solid var(--border-med);border-radius:10px;padding:14px;position:relative;transition:border-color .15s}
+#founding-miners .fm-card:hover{border-color:var(--red-dim)}
+#founding-miners .fm-rank{position:absolute;top:11px;right:13px;font:700 11px/1 var(--font-mono);color:var(--text-dim)}
+#founding-miners .fm-tier{display:inline-block;font:700 9px/1 var(--font-mono);letter-spacing:1.5px;padding:3px 7px;border-radius:4px;margin-bottom:9px}
+#founding-miners .fm-addr{font:600 12px/1.35 var(--font-mono);color:var(--text-primary);word-break:break-all;cursor:pointer}
+#founding-miners .fm-row{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-secondary);margin-top:5px}
+#founding-miners .fm-row b{color:var(--text-primary);font-weight:600}
+#founding-miners .fm-pill{font:700 9px/1 var(--font-mono);letter-spacing:1px;padding:4px 8px;border-radius:4px;margin-top:9px;display:inline-block}
+@media(max-width:760px){#founding-miners .fm-stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+<script>
+(function(){
+  var RPC='/rpc';
+  function rpc(m,p){return fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p||[]})})
+    .then(function(r){return r.json();})
+    .then(function(j){if(j&&j.error)throw new Error((j.error&&j.error.message)||'rpc error');return j.result;});}
+  var $=function(id){return document.getElementById(id);};
+  var totalEl=$('fm-total'),activeEl=$('fm-active'),tipEl=$('fm-tip'),noteEl=$('fm-note'),
+      btn=$('fm-reveal'),prog=$('fm-progress'),grid=$('fm-grid');
+  if(!btn)return;
+  var TIP=0,scanned=false;
+  function fmt(n){return (n==null||isNaN(n))?'—':Number(n).toLocaleString();}
+  function shortAddr(a){return (a&&a.length>18)?(a.slice(0,9)+'…'+a.slice(-6)):a;}
+  function sost8(s){return (Number(s||0)/1e8).toLocaleString(undefined,{maximumFractionDigits:2});}
+  // Headline — instant, authoritative (node-cached).
+  rpc('geteligibleminers').then(function(r){
+    r=r||{};
+    if(totalEl)totalEl.textContent=fmt(r.producers_total);
+    if(activeEl)activeEl.textContent=fmt(r.active_288);
+    TIP=r.chain_tip||0; if(tipEl)tipEl.textContent=TIP?('#'+fmt(TIP)):'—';
+    if(noteEl)noteEl.innerHTML='Read live from the node: <b>'+fmt(r.producers_total)+'</b> distinct addresses have produced at least one block since #'+fmt(r.window_start)+' — and not one of them is a pool. Press reveal to see each founding miner.';
+  }).catch(function(){
+    if(noteEl)noteEl.innerHTML='&#9888; Live node data is unavailable right now. What stays true regardless: SbPoW binds every block to one signing key, so <b>there are no pools</b> — every SOST block is an individual signed solo miner. Try again later, or open the <a href="sost-explorer.html">explorer</a>.';
+    if(btn){btn.disabled=true;btn.textContent='Node offline — reveal unavailable';}
+  });
+  btn.addEventListener('click',function(){
+    if(scanned)return; scanned=true; btn.disabled=true; btn.textContent='Scanning the chain…';
+    scan().then(render).catch(function(e){
+      if(prog)prog.textContent='Scan failed: '+((e&&e.message)||e);
+      btn.disabled=false; btn.textContent='&#9656; Retry'; scanned=false;
+    });
+  });
+  async function scan(){
+    var tip=TIP;
+    if(!tip){var bc=await rpc('getblockcount'); tip=(typeof bc==='number')?bc:((bc&&bc.blocks)||0); TIP=tip;}
+    var by={},last288={},lastN=[],CH=40,win=Math.min(288,tip+1),cdN=(tip>=12000)?6:5;
+    function ent(a,h){var e=by[a];if(!e){e=by[a]={addr:a,blocks:0,first:h,last:h,won:0,wonStocks:0,minerStocks:0};}return e;}
+    for(var s=0;s<=tip;s+=CH){
+      var hs=[];for(var h=s;h<=Math.min(tip,s+CH-1);h++)hs.push(h);
+      var hashes=await Promise.all(hs.map(function(hh){return rpc('getblockhash',[String(hh)]).catch(function(){return null;});}));
+      var blocks=await Promise.all(hashes.map(function(hx){return hx?rpc('getblock',[hx]).catch(function(){return null;}):null;}));
+      for(var i=0;i<blocks.length;i++){var b=blocks[i];if(!b)continue;
+        var a=b.miner_address;
+        if(a){var e=ent(a,b.height||0);e.blocks++;
+          if((b.height||0)<e.first)e.first=b.height||0; if((b.height||0)>e.last)e.last=b.height||0;
+          if(typeof b.miner_reward==='number')e.minerStocks+=b.miner_reward;
+          if((b.height||0)>tip-288)last288[a]=(last288[a]||0)+1;
+          if((b.height||0)>tip-cdN)lastN.push(a);
+        }
+        var w=b.lottery_winner_address, amt=(b.lottery_payout||b.lottery_reward||0);
+        if(w&&amt>0){var we=ent(w,b.height||0);we.won++;we.wonStocks+=amt;}
+      }
+      if(prog)prog.textContent='Scanning… '+Math.min(tip,s+CH-1)+' / '+tip;
+    }
+    return {by:by,last288:last288,lastN:lastN,win:win,tip:tip};
+  }
+  function render(d){
+    var arr=Object.keys(d.by).map(function(k){return d.by[k];}).filter(function(e){return e.blocks>0;});
+    arr.sort(function(x,y){return x.first-y.first;});               // earliest = most OG
+    var cdSet={}; d.lastN.forEach(function(a){cdSet[a]=true;});
+    var domActive=d.tip>=12100;
+    var html='';
+    arr.forEach(function(e,idx){
+      var rank=idx+1;
+      var tier=rank<=3?{t:'GENESIS',c:'#fb010d'}:(rank<=15?{t:'FOUNDER',c:'#fbbf24'}:{t:'PIONEER',c:'#4ade80'});
+      var bps=(d.last288[e.addr]||0)*10000/d.win;
+      var st = (domActive&&Math.floor(bps)>=1000)?{t:'DOMINANCE-GATED',c:'#fb010d'}
+             : (cdSet[e.addr]?{t:'COOLDOWN',c:'#fbbf24'}:{t:'ELIGIBLE',c:'#4ade80'});
+      html+='<div class="fm-card">'
+        +'<span class="fm-rank">#'+rank+'</span>'
+        +'<span class="fm-tier" style="color:'+tier.c+';border:1px solid '+tier.c+'">'+tier.t+'</span>'
+        +'<div class="fm-addr" data-a="'+e.addr+'" title="click to copy">'+shortAddr(e.addr)+'</div>'
+        +'<div class="fm-row"><span>Blocks mined</span><b>'+e.blocks+'</b></div>'
+        +'<div class="fm-row"><span>Share · 288</span><b>'+(bps/100).toFixed(1)+'%</b></div>'
+        +'<div class="fm-row"><span>First block</span><b>#'+e.first+'</b></div>'
+        +'<div class="fm-row"><span>Last block</span><b>#'+e.last+'</b></div>'
+        +'<div class="fm-row"><span>DTD wins</span><b>'+e.won+(e.wonStocks?(' · '+sost8(e.wonStocks)+' SOST'):'')+'</b></div>'
+        +'<div class="fm-row"><span>Miner earned</span><b>'+sost8(e.minerStocks)+' SOST</b></div>'
+        +'<span class="fm-pill" style="color:'+st.c+';border:1px solid '+st.c+'">'+st.t+'</span>'
+        +'</div>';
+    });
+    grid.innerHTML=html||'<p class="fm-prog">No producers found.</p>';
+    if(prog)prog.textContent='Done — '+arr.length+' founding miners, live from the chain.';
+    btn.textContent='✓ Revealed '+arr.length+' miners';
+    Array.prototype.forEach.call(grid.querySelectorAll('.fm-addr'),function(el){
+      el.addEventListener('click',function(){var a=el.getAttribute('data-a');
+        try{navigator.clipboard.writeText(a);el.textContent='copied ✓';
+          setTimeout(function(){el.textContent=shortAddr(a);},900);}catch(e){}});
+    });
+  }
+})();
+</script>
 
 <footer>
   <div class="container">
