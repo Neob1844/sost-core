@@ -99,6 +99,10 @@
   .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
   .nav-links a.active { color: var(--red-primary); background: var(--red-subtle, rgba(251,1,13,.08)); }
   .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim, #64748b); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+.nav-links { display: none; width:100%; }
+.nav-links.open { display:flex; }
+.nav-hamburger { display:block; }
+
   @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
   @keyframes dexBtnRainbow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
   @keyframes dexBtnGlow { 0%,100% { box-shadow: 0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2); } 50% { box-shadow: 0 0 22px rgba(245,158,11,0.7),0 0 44px rgba(74,222,128,0.35); } }
