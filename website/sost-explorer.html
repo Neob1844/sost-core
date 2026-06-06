@@ -1870,7 +1870,7 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Peak active miners — same count as DTD lottery eligibility. Counts only addresses that have produced at least one accepted block since V11 Phase 2 activation (block #7100). Non-producing nodes (peer-only, validators, observers) are NOT counted. Click for the DTD panel."><div class="dash-label">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div><div class="dash-sub" style="font-size:8.5px;color:var(--text3);line-height:1.4;margin-top:2px">only miners who found &ge;1 block<br>excludes non-producing nodes</div></div>
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Distinct addresses that have produced at least one accepted block since genesis — MONOTONIC (it never decreases; floored across visits). This is NOT the same as 'eligible now': the live DTD-lottery eligibility count (shown in the DTD panel) rises and falls as miners enter/leave the recent-miner cooldown and the V13 dominance gate. Non-producing nodes (peer-only, validators, observers) are NOT counted. Click for the DTD panel."><div class="dash-label">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div><div class="dash-sub" style="font-size:8.5px;color:var(--text3);line-height:1.4;margin-top:2px">only miners who found &ge;1 block<br>excludes non-producing nodes</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
     <div class="dash-label" style="white-space:nowrap;color:var(--orange)">Token Distribution</div>
     <div class="dash-val" style="color:var(--orange)">DTD Lottery</div>
@@ -2735,7 +2735,7 @@ function addrTag(addr){var r=ROLES[addr];if(!r)return'';var c=r==='GOLD VAULT'?'
 function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+addr+'</span>'+addrTag(addr)+cpBtn(addr);}
 function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+sH(addr)+'</span>'+addrTag(addr);}
 
-try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;var pm=document.getElementById('dPeakMiner');if(v&&pm){var m=v.match(/(\d+)/);if(m)pm.textContent=m[1];}});}catch(e){}
+try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;var pe=localStorage.getItem('sost_peak_miners_ever');var pm=document.getElementById('dPeakMiner');if(pe&&pm)pm.textContent=pe;});}catch(e){}
 // Phase X+1 — kick off a silent DTD scan ~3 s after page load so the
 // dashboard CIRCULATING SUPPLY + DTD LOTTERY BALANCE cards populate
 // with real values without the user having to open the DTD panel.
@@ -3039,8 +3039,8 @@ async function renderDTDPanel(body,title,silent){
             if(_ddc&&typeof _dtdCached.eligibleCount==='number')
               _ddc.textContent=_dtdCached.eligibleCount+' eligible';
             var _ddp=document.getElementById('dPeakMiner');
-            if(_ddp&&typeof _dtdCached.eligibleCount==='number')
-              _ddp.textContent=_dtdCached.eligibleCount;
+            if(_ddp&&typeof _dtdCached.peakMinersEver==='number')
+              _ddp.textContent=_dtdCached.peakMinersEver;
             return;  // <-- skip the entire scan loop on cache hit
           }
         }
@@ -3354,6 +3354,9 @@ async function renderDTDPanel(body,title,silent){
       window._dtdLotteryByAddr=lotteryByAddr;
       localStorage.setItem('sost_dtd_lottery_v1',JSON.stringify({h:height,by:lotteryByAddr}));
     }catch(e){}
+    // ELIGIBLE NOW (dynamic): miners that could win the DTD lottery right now,
+    // i.e. excluding the recent-miner cooldown, the V13 dominance gate and
+    // SbPoW-inactive addresses. This number legitimately rises and falls.
     var eligibleRows=rows.filter(function(r){
       if(cooldownSet[r.addr])return false;
       if(r.status==='Eligible')return true;
@@ -3361,8 +3364,14 @@ async function renderDTDPanel(body,title,silent){
       if(height<7100&&r.minedBlocks>0)return true;
       return false;
     }).length;
+    // PEAK MINERS EVER (monotonic): distinct addresses that have produced >=1
+    // block since genesis. Never decreases — floored across visits so a partial
+    // scan can't make it appear to drop.
+    var peakMinersEver=rows.filter(function(r){return (r.minedBlocks||0)>0;}).length;
+    try{var _pe=parseInt(localStorage.getItem('sost_peak_miners_ever')||'0',10)||0;
+      if(peakMinersEver<_pe)peakMinersEver=_pe;else localStorage.setItem('sost_peak_miners_ever',String(peakMinersEver));}catch(e){}
     var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
-    var dpm=document.getElementById('dPeakMiner');if(dpm){dpm.textContent=eligibleRows;}
+    var dpm=document.getElementById('dPeakMiner');if(dpm){dpm.textContent=peakMinersEver;}
     renderDTDTable(_dtdCache);
 
     // v317: store the FULL rendering payload in sessionStorage so a
@@ -3383,6 +3392,7 @@ async function renderDTDPanel(body,title,silent){
           lotteryByAddr:lotteryByAddr,
           payouts:ph2.payouts,
           eligibleCount:eligibleRows,
+          peakMinersEver:peakMinersEver,
           bodyHtml:_dtdStoredBody,
           ts:Date.now()
         });
