@@ -65,7 +65,6 @@
       "body.nav-collapsed nav { padding: 4px 0 !important; }",
       "body.nav-collapsed nav .nav-logo,",
       "body.nav-collapsed nav .nav-links,",
-      "body.nav-collapsed nav .nav-hamburger,",
       "body.nav-collapsed nav a[href=\"casert-spec.html\"],",
       "body.nav-collapsed nav a[href=\"sost-dex.html\"],",
       "body.nav-collapsed nav a[onclick=\"openSv()\"] {",
@@ -73,6 +72,17 @@
       "}",
       "body.nav-collapsed nav .container {",
       "  justify-content: flex-end !important;",
+      "}",
+      /* Keep the hamburger ALWAYS visible while collapsed so the user ALWAYS has
+         a visible control to reopen the menu (in addition to the SHOW NAV button),
+         and let clicking it actually reveal the links despite the collapse rule
+         above (otherwise the !important display:none would keep them hidden). */
+      "body.nav-collapsed nav .nav-hamburger {",
+      "  display: block !important;",
+      "}",
+      "body.nav-collapsed nav .nav-links.open {",
+      "  display: flex !important;",
+      "  width: 100% !important;",
       "}",
       /* Explorer-style nav: <nav><div style=...> with no .container class.
          Hide the entire flex layout so HIDE NAV reclaims the SOST logo,
