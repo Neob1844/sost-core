@@ -153,15 +153,17 @@ TEST(DYN15_whale_over_200oz) {
 // =============================================================================
 
 // DYN16: ESCROW_REWARD_RATES[4] (12-month) = 1100, exactly half of POPC_REWARD_RATES[4] = 2200
-TEST(DYN16_escrow_rate_halved) {
+TEST(DYN16_escrow_rate_below_popc) {
     uint16_t escrow_rate = ESCROW_REWARD_RATES[4];  // 12-month tier
     uint16_t popc_rate   = POPC_REWARD_RATES[4];    // 12-month tier
-    EXPECT(popc_rate == 2200,
-           "POPC_REWARD_RATES[4] (12mo) should be 2200, got " + std::to_string(popc_rate));
-    EXPECT(escrow_rate == 1100,
-           "ESCROW_REWARD_RATES[4] (12mo) should be 1100 (half of 2200), got " + std::to_string(escrow_rate));
-    EXPECT(escrow_rate == popc_rate / 2,
-           "Escrow rate should be exactly half of PoPC rate for each tier");
+    // Whitepaper-aligned tables: PoPC (Model A) = {100,400,900,1400,2000};
+    // Escrow (Model B, zero-risk) = {40,150,350,550,800} — strictly lower per tier.
+    EXPECT(popc_rate == 2000,
+           "POPC_REWARD_RATES[4] (12mo) should be 2000, got " + std::to_string(popc_rate));
+    EXPECT(escrow_rate == 800,
+           "ESCROW_REWARD_RATES[4] (12mo) should be 800, got " + std::to_string(escrow_rate));
+    EXPECT(escrow_rate < popc_rate,
+           "Escrow (Model B) rate should stay below the PoPC (Model A) rate for each tier");
 }
 
 // =============================================================================

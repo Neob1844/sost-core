@@ -225,7 +225,7 @@ static BondTxBundle MakeBondSpendTx(
 // BL01: Create BOND_LOCK output — valid (post-activation)
 // =============================================================================
 TEST(BL01_create_bond_valid) {
-    auto b = MakeBondCreateTx(10000);  // lock until height 10000, created at 6000
+    auto b = MakeBondCreateTx(15000, 500000, 1000000, 11000);  // lock until 15000, created at 11000 (post-activation 10000)
     EXPECT_OK(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx));
 }
 
@@ -267,7 +267,7 @@ TEST(BL05_spend_bond_after_unlock) {
 // BL06: Create BOND_LOCK with wrong payload size → R12 FAIL
 // =============================================================================
 TEST(BL06_bond_bad_payload_size) {
-    auto b = MakeBondCreateTx(10000);
+    auto b = MakeBondCreateTx(15000, 500000, 1000000, 11000);  // post-activation 10000
     b.tx.outputs[0].payload.resize(4);  // wrong: should be 8
     // Re-sign
     SpentOutput spent{1000000, OUT_TRANSFER};
@@ -281,7 +281,7 @@ TEST(BL06_bond_bad_payload_size) {
 // BL07: Create BOND_LOCK with lock_until <= current height → R12 FAIL
 // =============================================================================
 TEST(BL07_bond_lock_in_past) {
-    auto b = MakeBondCreateTx(5000, 500000, 1000000, 6000);  // lock=5000, height=6000
+    auto b = MakeBondCreateTx(5000, 500000, 1000000, 11000);  // lock=5000 (past) at height 11000 (post-activation)
     EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx),
                 TxValCode::R12_PAYLOAD_MISMATCH);
 }
@@ -290,11 +290,11 @@ TEST(BL07_bond_lock_in_past) {
 // BL08: Create ESCROW_LOCK output — valid
 // =============================================================================
 TEST(BL08_create_escrow_valid) {
-    auto b = MakeBondCreateTx(10000);
+    auto b = MakeBondCreateTx(15000, 500000, 1000000, 11000);  // post-activation 10000
     // Convert output to ESCROW_LOCK with 28-byte payload
     b.tx.outputs[0].type = OUT_ESCROW_LOCK;
     b.tx.outputs[0].payload.resize(28);
-    WriteLockUntil(b.tx.outputs[0].payload, 10000);
+    WriteLockUntil(b.tx.outputs[0].payload, 15000);  // lock_until must be > current height (11000)
     // Beneficiary PKH (bytes 8-27)
     std::memset(b.tx.outputs[0].payload.data() + 8, 0xDD, 20);
     // Re-sign
@@ -308,10 +308,10 @@ TEST(BL08_create_escrow_valid) {
 // BL09: ESCROW_LOCK with wrong payload size → R12 FAIL
 // =============================================================================
 TEST(BL09_escrow_bad_payload_size) {
-    auto b = MakeBondCreateTx(10000);
+    auto b = MakeBondCreateTx(15000, 500000, 1000000, 11000);  // post-activation 10000
     b.tx.outputs[0].type = OUT_ESCROW_LOCK;
     b.tx.outputs[0].payload.resize(8);  // wrong: should be 28
-    WriteLockUntil(b.tx.outputs[0].payload, 10000);
+    WriteLockUntil(b.tx.outputs[0].payload, 15000);
     SpentOutput spent{1000000, OUT_TRANSFER};
     std::string err;
     SignTransactionInput(b.tx, 0, spent, g_genesis_hash, g_privkey, &err);

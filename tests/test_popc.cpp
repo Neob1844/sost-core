@@ -117,16 +117,16 @@ TEST(POPC06_reward_6_months) {
     EXPECT(bps == 900, "expected 900 bps for 6 months, got " + std::to_string(bps));
 }
 
-// POPC07: 9-month commitment → 15% reward (1500 bps)
+// POPC07: 9-month commitment → 14% reward (1400 bps)
 TEST(POPC07_reward_9_months) {
     uint16_t bps = compute_reward_pct(9);
-    EXPECT(bps == 1500, "expected 1500 bps for 9 months, got " + std::to_string(bps));
+    EXPECT(bps == 1400, "expected 1400 bps for 9 months, got " + std::to_string(bps));
 }
 
-// POPC08: 12-month commitment → 22% reward (2200 bps)
+// POPC08: 12-month commitment → 20% reward (2000 bps)
 TEST(POPC08_reward_12_months) {
     uint16_t bps = compute_reward_pct(12);
-    EXPECT(bps == 2200, "expected 2200 bps for 12 months, got " + std::to_string(bps));
+    EXPECT(bps == 2000, "expected 2000 bps for 12 months, got " + std::to_string(bps));
 }
 
 // POPC09: invalid duration (7 months) → 0 (not a valid commitment tier)
@@ -469,45 +469,45 @@ TEST(POPC29_save_load) {
 // POPC30: bond=1 SOST, duration=12 → reward = 22% of bond = 0.22 SOST = 22000000 stocks
 TEST(POPC30_reward_amount) {
     const int64_t bond_stocks = 100000000;  // 1 SOST
-    const uint16_t reward_bps = compute_reward_pct(12);  // should be 2200 bps = 22%
+    const uint16_t reward_bps = compute_reward_pct(12);  // should be 2000 bps = 20%
 
-    EXPECT(reward_bps == 2200,
-           "reward_pct for 12 months should be 2200 bps, got " + std::to_string(reward_bps));
+    EXPECT(reward_bps == 2000,
+           "reward_pct for 12 months should be 2000 bps, got " + std::to_string(reward_bps));
 
     // Compute reward amount using integer arithmetic: bond * bps / 10000
     int64_t reward_stocks = (bond_stocks * (int64_t)reward_bps) / 10000;
-    const int64_t expected_reward = 22000000;  // 0.22 SOST
+    const int64_t expected_reward = 20000000;  // 0.20 SOST
     EXPECT(reward_stocks == expected_reward,
            "expected reward " + std::to_string(expected_reward) +
            " stocks, got " + std::to_string(reward_stocks));
 }
 
-// POPC31: reward after 5% protocol fee deduction
+// POPC31: reward after 3% protocol fee deduction (Model A rate)
 TEST(POPC31_reward_with_fee) {
     const int64_t bond_stocks = 100000000;  // 1 SOST
-    const uint16_t reward_bps = compute_reward_pct(12);  // 2200 bps
-    EXPECT(reward_bps == 2200, "reward_pct for 12 months should be 2200 bps");
+    const uint16_t reward_bps = compute_reward_pct(12);  // 2000 bps
+    EXPECT(reward_bps == 2000, "reward_pct for 12 months should be 2000 bps");
 
     // Gross reward = bond * reward_bps / 10000
     int64_t gross_reward = (bond_stocks * (int64_t)reward_bps) / 10000;
     // Net reward = gross_reward * (10000 - fee_bps) / 10000
     int64_t net_reward = (gross_reward * (int64_t)(10000 - POPC_PROTOCOL_FEE_BPS)) / 10000;
-    // Expected: 22000000 * (10000 - 500) / 10000 = 22000000 * 9500 / 10000 = 20900000
-    const int64_t expected_net = 20900000;
+    // Expected: 20000000 * (10000 - 300) / 10000 = 20000000 * 9700 / 10000 = 19400000
+    const int64_t expected_net = 19400000;
     EXPECT(net_reward == expected_net,
            "expected net reward " + std::to_string(expected_net) +
-           " stocks after 5% fee, got " + std::to_string(net_reward));
+           " stocks after 3% fee, got " + std::to_string(net_reward));
 
-    // Protocol fee itself should be 5% of gross
+    // Protocol fee itself should be 3% of gross
     int64_t fee_amount = gross_reward - net_reward;
-    const int64_t expected_fee = 1100000;  // 5% of 22000000
+    const int64_t expected_fee = 600000;  // 3% of 20000000
     EXPECT(fee_amount == expected_fee,
            "expected fee " + std::to_string(expected_fee) +
            " stocks, got " + std::to_string(fee_amount));
 
-    // Verify POPC_PROTOCOL_FEE_BPS constant matches specification (500 = 5%)
-    EXPECT(POPC_PROTOCOL_FEE_BPS == 500,
-           "POPC_PROTOCOL_FEE_BPS should be 500, got " + std::to_string(POPC_PROTOCOL_FEE_BPS));
+    // Verify POPC_PROTOCOL_FEE_BPS constant matches specification (300 = 3%)
+    EXPECT(POPC_PROTOCOL_FEE_BPS == 300,
+           "POPC_PROTOCOL_FEE_BPS should be 300, got " + std::to_string(POPC_PROTOCOL_FEE_BPS));
 }
 
 // =============================================================================
