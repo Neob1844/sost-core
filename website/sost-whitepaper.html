@@ -798,15 +798,26 @@
         <div class="wp-pillar-tag" style="color:#fb010d">⏱ PILLAR 1 &mdash; TIME</div>
         <div class="wp-pillar-headline">600-second target spacing</div>
         <p class="wp-pillar-body">
-          Block production is paced at a 10-minute target via the <b>cASERT unified rate controller</b>.
-          Difficulty (<code>bits_q</code>) adjusts every block from a 288-block running average against
-          target, with bidirectional response: hardens when blocks come too fast, eases when too slow.
-          ConvergenceX equalizer profiles (E1&ndash;E7 relief, B0 baseline, H1&ndash;H20 hardening pre-V13;
-          <b style="color:#22c55e">full range H1&ndash;H35 at V13, block 12,000</b>) are
-          mapped from chain lag and protect against runaway acceleration. The E7 floor is immutable;
-          the hardening ceiling rises from H13 (pre-V12) to H20 (V12 from block 7,350) to H35 at V13
-          activation. From V11 onward a triangular cascade provides emergency relief on stuck blocks
-          without compromising the long-run schedule. See section 3 (cASERT) and section 12.
+          Block production is paced at a <b>10-minute target</b> (600 s) via the <b>cASERT unified rate
+          controller</b>. Difficulty (<code>bits_q</code>, Q16.16 fixed-point) adjusts every block from a
+          288-block running average against target &mdash; bidirectional and integer-only: it hardens when
+          blocks arrive too fast and eases when too slow. Layered above it, the ConvergenceX <b>equalizer</b>
+          maps chain lag onto a stability profile across the range
+          <b>E7 (easing floor) &rarr; B0 (baseline) &rarr; H35 (hardening ceiling)</b>. The E7 floor is
+          immutable; the hardening ceiling was raised across forks (H13 pre-V12 &rarr; H20 from block 7,350
+          &rarr; <b style="color:#22c55e">H35 at V13, block 12,000</b>). From V11 onward a triangular cascade
+          provides emergency relief on stuck blocks without compromising the long-run schedule.
+          <i>(The earlier L-series profile labels are retired; the live controller uses a direct
+          lag&rarr;profile mapping over E7&ndash;H35.)</i>
+        </p>
+        <p class="wp-pillar-body">
+          The cadence is chosen, not arbitrary. 600 s yields <b>144 blocks/day = F&#8321;&#8322;</b>, the 12th
+          Fibonacci number and 12&sup2;. The monetary schedule extends the same sovereign-constant aesthetic:
+          per-block emission decays geometrically by <b>e<sup>&minus;1/4</sup> &asymp; 0.7788</b> each
+          <b>131,553-block epoch</b> &mdash; epoch length = round(52,560 &times; &alpha;) where the Feigenbaum
+          constant <b>&alpha; &asymp; 2.5029</b> &mdash; converging on a hard supply cap of
+          <b>&asymp; 4,669,201 SOST</b> (<code>SUPPLY_CAP</code>), echoing Feigenbaum
+          <b>&delta; &asymp; 4.6692</b>. See section 3 (cASERT) and section 12.
         </p>
       </div>
 

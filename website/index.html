@@ -1233,9 +1233,13 @@
         <div class="four-pillar-tag" style="color:#fb010d">⏱ PILLAR 1 &mdash; TIME</div>
         <div class="four-pillar-headline">10 min / block</div>
         <p class="four-pillar-body">
-          Target spacing of <b>600 seconds</b> between blocks. Difficulty self-corrects every block via the
-          <b>cASERT</b> controller &mdash; bidirectional, integer-only, with a 288-block average and
-          equalizer profiles for emergency relief and hardening. Predictable cadence. No bulk retargets.
+          Target spacing of <b>600 seconds</b> &rarr; <b>144 blocks/day = F&#8321;&#8322;</b>, the 12th Fibonacci
+          number (12&sup2;). Difficulty self-corrects every block via the <b>cASERT</b> controller &mdash;
+          <code>bits_q</code> (Q16.16) as primary regulator plus the ConvergenceX <b>equalizer</b> overlay
+          (profiles <b>E7&ndash;H35</b>), driven by a 288-block average, bidirectional and integer-only.
+          The schedule is sovereign by design: emission decays by <b>e<sup>&minus;1/4</sup></b> each
+          <b>131,553-block epoch</b> (&asymp; Feigenbaum &alpha;) toward a hard cap of
+          <b>&asymp;4,669,201 SOST</b> (&asymp; Feigenbaum &delta;). No bulk retargets.
         </p>
       </div>
 
