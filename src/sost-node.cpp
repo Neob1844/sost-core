@@ -4552,30 +4552,92 @@ static bool process_block(const std::string& block_json) {
     vctx.genesis_hash = g_genesis_hash;
     vctx.spend_height = height; // coinbase maturity uses spend_height - utxo.height
 
+    // ---- H3/H4 block-validation hardening, height-gated at V14_HEIGHT (block 15000) ----
+    // Pre-V14 (height < V14_HEIGHT): HISTORICAL path, byte-identical to prior
+    //   releases — every standard tx is validated against the pre-block
+    //   g_utxo_set, mempool policy is (incorrectly) part of acceptance, and the
+    //   fee is computed against g_utxo_set. This branch MUST NOT change so the
+    //   replay of the current chain stays bit-for-bit identical.
+    // From V14_HEIGHT onwards:
+    //   H4 — validate against a per-block SCRATCH UTXO view (each accepted tx is
+    //        connected into it) so tx[j] can spend an output created by an earlier
+    //        tx[i] in the SAME block (intra-block chained spends), and reject
+    //        DUPLICATE txids within the block.
+    //   H3 — DROP ValidateTransactionPolicy from block acceptance: relay/mining
+    //        policy (non-standardness) must never decide block validity.
+    //   Coinbase / subsidy / V11 Phase 2 / DTD lottery validation below is left
+    //   completely UNCHANGED — the lottery rules are preserved exactly.
+    const bool v14_txrules = (sost::V14_HEIGHT != INT64_MAX && height >= sost::V14_HEIGHT);
+    UtxoSet v14_scratch;
+    std::unordered_set<std::string> v14_seen_txids;
+    if(v14_txrules){ v14_scratch = g_utxo_set; v14_seen_txids.reserve(txs.size()*2); }
+
     for(size_t i=1;i<txs.size();++i){
         if(txs[i].tx_type != TX_TYPE_STANDARD){
             printf("[BLOCK] REJECTED: non-standard tx at index %zu\n", i);
             return false;
         }
-        auto cres = ValidateTransactionConsensus(txs[i], g_utxo_set, vctx);
-        if(!cres.ok){
-            printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
-            return false;
-        }
-        auto pres = ValidateTransactionPolicy(txs[i], g_utxo_set, vctx);
-        if(!pres.ok){
-            printf("[BLOCK] REJECTED: tx policy fail: %s\n", pres.message.c_str());
-            return false;
-        }
-        int64_t fee_i=0; std::string ferr;
-        if(!compute_fee_for_tx(txs[i], g_utxo_set, fee_i, &ferr)){
-            printf("[BLOCK] REJECTED: cannot compute fee: %s\n", ferr.c_str());
-            return false;
-        }
-        total_fees += fee_i;
-        if(total_fees < 0 || total_fees > SUPPLY_MAX_STOCKS){
-            printf("[BLOCK] REJECTED: fee overflow\n");
-            return false;
+        if(v14_txrules){
+            // H4: reject duplicate txid within the same block (R10).
+            Hash256 v14_txid{}; std::string id_err;
+            if(!txs[i].ComputeTxId(v14_txid, &id_err)){
+                printf("[BLOCK] REJECTED: txid compute failed at index %zu: %s\n", i, id_err.c_str());
+                return false;
+            }
+            std::string v14_hx = to_hex(v14_txid.data(),32);
+            if(v14_seen_txids.count(v14_hx)){
+                printf("[BLOCK] REJECTED: duplicate txid within block: %s\n", v14_hx.c_str());
+                record_block_reject("duplicate txid in block");
+                return false;
+            }
+            v14_seen_txids.insert(v14_hx);
+
+            // H4: consensus check against the scratch view (sees earlier same-block outputs).
+            auto cres = ValidateTransactionConsensus(txs[i], v14_scratch, vctx);
+            if(!cres.ok){
+                printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
+                return false;
+            }
+            // H3: ValidateTransactionPolicy intentionally NOT run on the block path.
+
+            int64_t fee_i=0; std::string ferr;
+            if(!compute_fee_for_tx(txs[i], v14_scratch, fee_i, &ferr)){
+                printf("[BLOCK] REJECTED: cannot compute fee: %s\n", ferr.c_str());
+                return false;
+            }
+            total_fees += fee_i;
+            if(total_fees < 0 || total_fees > SUPPLY_MAX_STOCKS){
+                printf("[BLOCK] REJECTED: fee overflow\n");
+                return false;
+            }
+            // H4: connect into scratch so later txs in THIS block can spend its outputs.
+            std::vector<UndoEntry> v14_undo;
+            std::string c_err;
+            if(!v14_scratch.ConnectTransaction(txs[i], v14_txid, height, v14_undo, &c_err)){
+                printf("[BLOCK] REJECTED: intra-block connect failed: %s\n", c_err.c_str());
+                return false;
+            }
+        } else {
+            auto cres = ValidateTransactionConsensus(txs[i], g_utxo_set, vctx);
+            if(!cres.ok){
+                printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
+                return false;
+            }
+            auto pres = ValidateTransactionPolicy(txs[i], g_utxo_set, vctx);
+            if(!pres.ok){
+                printf("[BLOCK] REJECTED: tx policy fail: %s\n", pres.message.c_str());
+                return false;
+            }
+            int64_t fee_i=0; std::string ferr;
+            if(!compute_fee_for_tx(txs[i], g_utxo_set, fee_i, &ferr)){
+                printf("[BLOCK] REJECTED: cannot compute fee: %s\n", ferr.c_str());
+                return false;
+            }
+            total_fees += fee_i;
+            if(total_fees < 0 || total_fees > SUPPLY_MAX_STOCKS){
+                printf("[BLOCK] REJECTED: fee overflow\n");
+                return false;
+            }
         }
     }
 
