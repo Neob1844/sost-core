@@ -15,21 +15,21 @@ echo ">> splash (animated pulsing logos)"
 
 # --- remote-sensing montage for the GeaSpirit "OPEN DATA + SATELLITE" scene ---
 PH="$W/photos"
-zc(){ local fr=$(awk -v d="$2" 'BEGIN{print int(d*30)}'); "$FF" -y -hide_banner -loglevel error -i "$1" \
-  -vf "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,zoompan=z='min(1.001+0.0008*on,1.12)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=$fr:s=1920x1080:fps=30,setsar=1,format=yuv420p" \
+sc(){ local fr=$(awk -v d="$2" 'BEGIN{print int(d*30)}'); "$FF" -y -hide_banner -loglevel error -loop 1 -t "$2" -i "$1" \
+  -vf "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30,setsar=1,format=yuv420p" \
   -frames:v $fr -an -r 30 -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "$3"; }
-for n in 0 1 2 3 4 5; do zc "$PH/m$n.png" 5.8 "$W/z$n.mp4"; done
+for n in 0 1 2 3 4 5; do sc "$PH/m$n.png" 4.1 "$W/z$n.mp4"; done   # STATIC photos (no jitter)
 "$FF" -y -hide_banner -loglevel error -i "$W/z0.mp4" -i "$W/z1.mp4" -i "$W/z2.mp4" -i "$W/z3.mp4" -i "$W/z4.mp4" -i "$W/z5.mp4" \
-  -filter_complex "[0:v][1:v]xfade=transition=fade:duration=0.6:offset=5.2[a1];[a1][2:v]xfade=transition=fade:duration=0.6:offset=10.4[a2];[a2][3:v]xfade=transition=fade:duration=0.6:offset=15.6[a3];[a3][4:v]xfade=transition=fade:duration=0.6:offset=20.8[a4];[a4][5:v]xfade=transition=fade:duration=0.6:offset=26.0,format=yuv420p[v]" \
+  -filter_complex "[0:v][1:v]xfade=transition=fade:duration=0.5:offset=3.6[a1];[a1][2:v]xfade=transition=fade:duration=0.5:offset=7.2[a2];[a2][3:v]xfade=transition=fade:duration=0.5:offset=10.8[a3];[a3][4:v]xfade=transition=fade:duration=0.5:offset=14.4[a4];[a4][5:v]xfade=transition=fade:duration=0.5:offset=18.0,format=yuv420p[v]" \
   -map "[v]" -an -r 30 -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "$W/seg5photos.mp4"
 # ConvergenceX logo — grows from small to big (de menos a mas)
 "$FF" -y -hide_banner -loglevel error -i "$W/logoframe.png" \
-  -vf "zoompan=z='min(1.0+0.0014*on,1.40)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=285:s=1920x1080:fps=30,setsar=1,format=yuv420p" \
-  -frames:v 285 -an -r 30 -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "$W/seg9logo.mp4"
+  -vf "scale=2560:1440,zoompan=z='min(zoom+0.00031,1.08)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=255:s=1920x1080:fps=30,setsar=1,format=yuv420p" \
+  -frames:v 255 -an -r 30 -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "$W/seg9logo.mp4"
 # Sovereign gold coin — slow push-in (acercandose lentamente)
 "$FF" -y -hide_banner -loglevel error -i "$W/coinframe.png" \
-  -vf "zoompan=z='min(1.0+0.0009*on,1.26)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=285:s=1920x1080:fps=30,setsar=1,format=yuv420p" \
-  -frames:v 285 -an -r 30 -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "$W/seg10coin.mp4"
+  -vf "scale=2560:1440,zoompan=z='min(zoom+0.0004,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=255:s=1920x1080:fps=30,setsar=1,format=yuv420p" \
+  -frames:v 255 -an -r 30 -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "$W/seg10coin.mp4"
 echo ">> montage (6 photos) + ConvergenceX logo + gold coin built"
 
 mapfile -t LINES < "$W/manifest3.txt"
@@ -82,7 +82,7 @@ FG+="[vx]fade=t=out:st=$FOUT:d=1.6[vout];"
 FG+="[${N}:a]loudnorm=I=-15:TP=-1.5:LRA=11,atrim=0:$TOTAL,afade=t=in:st=0:d=2,afade=t=out:st=$AOUT:d=4[aout]"
 
 OUT="$DL/SOST_x_GeaSpirit_2min.mp4"
-"$FF" -y -hide_banner -loglevel error "${INARGS[@]}" -stream_loop -1 -i "$AUDIO" \
+"$FF" -y -hide_banner -loglevel error "${INARGS[@]}" -i "$AUDIO" \
   -filter_complex "$FG" -map "[vout]" -map "[aout]" \
   -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart -t "$TOTAL" "$OUT"
 

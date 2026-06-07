@@ -120,18 +120,18 @@ fin.convert("RGB").save(W+"/finale_bg.png")
 # ---------- titles + manifest ----------
 # SRC, IN, DUR, COLOR, HEAD, SUB, MODE   (mode r = rainbow headline)
 SEGS=[
-("Drone Shot - 15241.mp4",8,10,GOLD,"THE EARTH HOLDS TRILLIONS","in minerals the world has forgotten","n"),
-("Digging - 27151.mp4",2,10,GOLD,"THOUSANDS OF MINES","abandoned · historic · overlooked","n"),
-("Working Site - 3741.mp4",0,10,GOLD,"ACTIVE · ABANDONED · FORGOTTEN","every site holds a second story","n"),
-("Gold Wash - 35565.mp4",3,9.5,GOLD,"VALUE LEFT BEHIND","a second chance, waiting to be found","n"),
+("Drone Shot - 15241.mp4",8,8.5,GOLD,"THE EARTH HOLDS TRILLIONS","in minerals the world has forgotten","n"),
+("Digging - 27151.mp4",2,8.5,GOLD,"THOUSANDS OF MINES","abandoned · historic · overlooked","n"),
+("Working Site - 3741.mp4",0,8.5,GOLD,"ACTIVE · ABANDONED · FORGOTTEN","every site holds a second story","n"),
+("Gold Wash - 35565.mp4",3,8.5,GOLD,"VALUE LEFT BEHIND","a second chance, waiting to be found","n"),
 ("Switzerland - 37423.mp4",0,6,GREEN,"GEASPIRIT","mineral intelligence platform","n"),
-("/tmp/gxvideo/seg5photos.mp4",0,31.8,GREEN,"OPEN DATA  +  SATELLITE","satellite · LiDAR · multispectral · spectral indices · 3D point clouds","n"),
-("river_-_76937 (1080p).mp4",5,10,GREEN,"A SCORE FOR EVERY ASSET","transparent · honest · second-chance first","n"),
-("Coal Mining - 40030.mp4",0,9.5,GREEN,"GEASPIRIT FINDS THE VALUE","where to look · what is undervalued","n"),
-("galaxy_-_56995 (540p).mp4",0,9.5,RED,"SOST PROTOCOL","a sovereign Layer-1 blockchain","n"),
-("/tmp/gxvideo/seg9logo.mp4",0,9.5,WHITE,"","","l"),
-("/tmp/gxvideo/seg10coin.mp4",0,9.5,RED,"SOVEREIGN BY DESIGN","no pools · no gatekeepers · no central mint","n"),
-("Nature - 35264.mp4",0,10,GOLD,"FROM THE EARTH TO THE CHAIN","mineral intelligence meets sovereign money","n"),
+("/tmp/gxvideo/seg5photos.mp4",0,22.1,GREEN,"OPEN DATA  +  SATELLITE","satellite · LiDAR · multispectral · spectral indices · 3D point clouds","n"),
+("river_-_76937 (1080p).mp4",5,8.5,GREEN,"A SCORE FOR EVERY ASSET","transparent · honest · second-chance first","n"),
+("Coal Mining - 40030.mp4",0,8.5,GREEN,"GEASPIRIT FINDS THE VALUE","where to look · what is undervalued","n"),
+("galaxy_-_56995 (540p).mp4",0,8.5,RED,"SOST PROTOCOL","a sovereign Layer-1 blockchain","n"),
+("/tmp/gxvideo/seg9logo.mp4",0,8.5,RED,"SOST PROOF-OF-WORK ENGINE","ConvergenceX — real computation, not a hash lottery","n"),
+("/tmp/gxvideo/seg10coin.mp4",0,8.5,RED,"SOVEREIGN BY DESIGN","no pools · no gatekeepers · no central mint","n"),
+("Nature - 35264.mp4",0,8.5,GOLD,"FROM THE EARTH TO THE CHAIN","mineral intelligence meets sovereign money","n"),
 ("Touch - 6424.mp4",0,8,WHITE,"","","f"),
 ]
 man=open(W+"/manifest3.txt","w")
