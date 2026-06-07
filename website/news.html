@@ -175,43 +175,6 @@
   </div>
 </section>
 
-<!-- V14 SECURITY UPDATE — action required -->
-<section class="section" style="padding:32px 0">
-  <div class="container">
-    <div style="background:linear-gradient(135deg,rgba(251,1,13,0.12),rgba(245,158,11,0.05) 60%,rgba(0,0,0,0.2));border:1px solid rgba(251,1,13,0.5);border-left:5px solid var(--red-primary);border-radius:10px;padding:28px 32px">
-      <div style="font-size:12px;letter-spacing:3px;color:#ff8f8f;text-transform:uppercase;font-weight:700;margin-bottom:8px">// SECURITY UPDATE &middot; ACTION REQUIRED</div>
-      <h2 style="font-family:var(--font-display);font-weight:700;font-size:clamp(22px,4vw,30px);line-height:1.2;color:#fff;margin:0 0 14px">SOST V14 &mdash; update your NODE and MINER as soon as possible</h2>
-      <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:#ffd9a8;margin-bottom:16px">
-        <span>Activation: <b style="color:#fff">block #15,000</b></span>
-        <span>Current chain: <b style="color:#fff">~#12,060 (rising)</b></span>
-        <span>Status: <b style="color:#fff">height-gated &middot; safe to update now</b></span>
-      </div>
-      <p style="font-size:14px;color:var(--text-secondary);line-height:1.8;margin:0 0 14px">
-        A new SOST binary is ready for the <b style="color:var(--text-primary)">V14 consensus hardening</b>.
-        <b style="color:var(--text-primary)">You must COMPILE the new binary first</b> (rebuild from the commit below) and then
-        <b style="color:var(--text-primary)">restart BOTH <code>sost-node</code> and <code>sost-miner</code></b> &mdash; as soon as possible,
-        well before block&nbsp;#15,000 &mdash; to stay on the network after activation. Do not wait for&nbsp;#15,000: build and restart now.
-      </p>
-      <div style="font-size:13px;color:var(--text-secondary);margin:0 0 6px">Required commit (<code>main</code>):</div>
-      <div style="font-family:var(--font-mono,monospace);font-size:12.5px;color:#ffd2d2;background:rgba(0,0,0,0.4);border:1px dashed rgba(251,1,13,0.4);border-radius:6px;padding:8px 12px;margin-bottom:14px;overflow-wrap:anywhere">
-        ef74e885997a1770c5e60977fa0813bc8a831bd3<br>&ldquo;consensus: gate H3/H4 block validation hardening at V14&rdquo;
-      </div>
-      <pre style="background:rgba(0,0,0,0.5);border:1px solid rgba(251,1,13,0.3);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:var(--font-mono,monospace);font-size:12.5px;color:#e7ffe7;line-height:1.7;margin:0 0 14px">cd /opt/sost
-git fetch origin &amp;&amp; git checkout main &amp;&amp; git pull origin main
-cd build &amp;&amp; cmake .. &amp;&amp; make -j"$(nproc)"
-sudo systemctl restart sost-node
-sudo systemctl restart sost-miner
-# if launched manually: stop them and start the newly compiled
-# sost-node AND sost-miner from the same commit</pre>
-      <p style="font-size:13px;color:#ffd9a8;line-height:1.8;margin:0;border-left:2px solid rgba(245,158,11,0.5);padding:6px 12px">
-        <b>Why now:</b> nodes/miners still on the old binary may <b>reject V14-valid blocks after&nbsp;#15,000</b>, risking a chain split
-        or mining on an orphaned fork. The new rules are height-gated and do nothing before&nbsp;#15,000 &mdash; so updating today is
-        safe and keeps you connected to the network.
-      </p>
-    </div>
-  </div>
-</section>
-
 <!-- TRACEABILITY — featured principle -->
 <section class="section" style="padding:40px 0">
   <div class="container">
@@ -231,6 +194,28 @@ sudo systemctl restart sost-miner
         the <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener" style="color:#22d3ee">GitHub history</a>,
         and the <a href="sost-explorer.html" style="color:#22d3ee">live explorer</a>.
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- V14 UPDATE NOTICE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// NETWORK UPGRADE &middot; BLOCK 15,000 &middot; action required</div>
+      <h2 class="section-title">V14 &mdash; <span class="accent">update your node and miner before block&nbsp;15,000</span></h2>
+      <div class="section-sub">A new binary is ready for the V14 consensus hardening. It is height-gated, so updating today is safe &mdash; and necessary to stay on the network after activation.</div>
+    </div>
+    <div class="info-card">
+      <p>The V14 hard fork activates at <b>block&nbsp;#15,000</b> (chain currently around #12,060). It tightens block validation (the H3/H4 hardening): mempool/relay policy no longer decides block validity, a transaction may spend an output created by an earlier transaction in the same block (validated against a temporary UTXO view), and duplicate transaction IDs inside a block are rejected. Before #15,000 the previous rules are preserved unchanged, so a node built today behaves exactly as before until activation.</p>
+      <p><b>What every node and miner operator must do:</b> rebuild from <code>main</code> and restart <b>both</b> <code>sost-node</code> and <code>sost-miner</code> &mdash; well before block&nbsp;#15,000. Don't wait for the fork: compile and restart now.</p>
+      <p style="margin-bottom:6px">Required consensus commit (<code>main</code>): <code>ef74e885997a1770c5e60977fa0813bc8a831bd3</code> &mdash; &ldquo;consensus: gate H3/H4 block validation hardening at V14&rdquo;.</p>
+      <pre style="background:#05070a;border:1px solid var(--border-med);border-radius:8px;padding:14px 16px;overflow-x:auto;font-size:12.5px;line-height:1.7;color:var(--text-secondary)">cd /opt/sost
+git fetch origin &amp;&amp; git checkout main &amp;&amp; git pull origin main
+cd build &amp;&amp; cmake .. &amp;&amp; make -j"$(nproc)"
+sudo systemctl restart sost-node
+sudo systemctl restart sost-miner</pre>
+      <p style="margin-top:12px"><b>Why it matters:</b> after block&nbsp;#15,000, nodes still on the old binary may reject V14-valid blocks &mdash; risking a chain split or mining on an orphaned fork. Because the new rules do nothing before #15,000, updating now carries no risk and keeps you on the canonical chain. Cross-posted on the <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk thread</a> and surfaced on the <a href="sost-explorer.html" style="color:#22d3ee">live explorer</a>.</p>
     </div>
   </div>
 </section>
