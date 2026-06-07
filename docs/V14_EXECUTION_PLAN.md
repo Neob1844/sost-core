@@ -34,9 +34,9 @@ This is the foundation every later consensus change depends on. All test/CI/scri
 | Task | Deliverable | Status |
 |------|-------------|--------|
 | A1 | **Fork-gate constant pins** `tests/test_v14_fork_gates.cpp` — `static_assert` on `V14_HEIGHT`, `DYNAMIC_FEE_BASE_V14`, deferred-gate flags. Build fails if a constant drifts without a conscious edit. | ▶ DONE in this commit |
-| A2 | **`--dry-run-replay` flag** on `sost-node`: load `chain.json`, replay 0..tip via `ConnectBlock`, print final height + a UTXO-set root hash, exit (no P2P/RPC). | TODO |
-| A3 | **`scripts/validate-v14-replay.sh`** — build candidate + baseline binaries, replay both to 14,999, assert bit-identical (height + UTXO root). Pre-deploy gate. | TODO |
-| A4 | **Testnet with low fork height** — `fork_height_at(profile, fork)` helper so `TESTNET` activates V14 at e.g. block 200; mine a small chain across the boundary. | TODO |
+| A2 | **`--dry-run-replay` flag** on `sost-node`: load `chain.json`, replay 0..tip via `ConnectBlock`, print final height + deterministic UTXO-set root (rolling SHA-256 over the ordered map), exit (no P2P/RPC). | ✅ DONE (verified deterministic) |
+| A3 | **`scripts/validate-v14-replay.sh`** — replay candidate + baseline binaries, assert bit-identical (height + UTXO root). Pre-deploy gate. | ✅ DONE |
+| A4 | **Testnet with low fork height** — `fork_height_at(profile, fork)` helper so `TESTNET` activates V14 at e.g. block 200; mine a small chain across the boundary. | ▶ NEXT |
 | A5 | **CI** `.github/workflows/v14-fork-safety.yml` — builds + runs `test-v14-fork-gates` + `test-v14-h3-h4` (hard gate) and best-effort full `ctest` on every push/PR. | ✅ DONE |
 | A6 | **Beacon V14 notice template** `docs/V14_BEACON_NOTICE_TEMPLATE.md` + unsigned JSON (II-A advisory to miners). | ✅ DONE |
 | A7 | **`docs/V14_DEPLOYMENT_CHECKLIST.md`** — operator runbook (build → replay-validate → testnet → sign beacon notice → deploy → verify → rollback). | ✅ DONE |
@@ -64,12 +64,12 @@ pre-fork path immutable (old blocks replay bit-identical).
   whitelists + lengths, set cap). Add a validator integration test (real block+tx+UTXO, gate ON).
 - B2 (if D3 = full): implement G4 auto-tally (67-block window, 90% threshold, **silence=accept**
   automatic at the validator), G5 Guardian pronouncement tx-type + 10-block grace + **auto-disconnect
-  at block 25,000** (automation the operator wants). Add cross-validator agreement test.
+  at block 100,000** (operator decision 2026-06-07; automation the operator wants). Add cross-validator agreement test.
 - B3: testnet soak across the activation height; replay-validate; then enable on mainnet via the gate.
 
 **DECISION (operator, 2026-06-07): V14 ships the FULL Gold Vault Phase I governance (G1/G2/G3a
 Slice 1 + G4 67-block signaling window with silence=accept auto-tally + G5 transitional Guardian
-with auto-disconnect at block 25,000).** This is the largest piece of V14 and depends on the Phase A
+with auto-disconnect at block 100,000).** This is the largest piece of V14 and depends on the Phase A
 node testnet/replay harness (A2-A4) being in place first. Execution order: A2-A4 → B1 (Slice 1) →
 B2 (G4 auto-tally) → B2 (G5 Guardian) → B3 (testnet soak + replay) → enable via the gate.
 

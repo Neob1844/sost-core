@@ -29,6 +29,7 @@
 #include "sost/transaction.h"
 #include "sost/types.h"
 #include "sost/utxo_set.h"
+#include "sost/crypto.h"   // sha256 — used by --dry-run-replay UTXO root
 #include "sost/mempool.h"
 #include "sost/tx_validation.h"
 #include "sost/emission.h"
@@ -92,6 +93,7 @@ using namespace sost;
 
 static Wallet       g_wallet;
 static UtxoSet      g_utxo_set;
+static bool         g_dry_run_replay = false;  // --dry-run-replay: replay chain, print UTXO root, exit
 static Mempool      g_mempool;
 static std::string  g_wallet_path = "wallet.json";
 static std::string  g_chain_path  = "";            // v0.3.2: for auto-save after block acceptance
@@ -7172,6 +7174,9 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--full-verify")){
             g_full_verify_mode = true;
         }
+        else if(!strcmp(argv[i],"--dry-run-replay")){
+            g_dry_run_replay=true;
+        }
         else if(!strcmp(argv[i],"--no-fast-sync")){
             g_full_verify_mode = true;
         }
@@ -7194,6 +7199,7 @@ int main(int argc, char** argv) {
             printf("  --p2p-enc off|on|required      P2P encryption mode (default: off)\n");
             printf("  --full-verify              Force full ConvergenceX verification (no fast sync)\n");
             printf("  --no-fast-sync             Same as --full-verify\n");
+            printf("  --dry-run-replay           Replay chain, print UTXO-set root + height, exit (no P2P/RPC)\n");
             printf("  --verbose / -v             Show CX-VERIFY and PARSE debug output\n");
             return 0;
         }
@@ -7265,6 +7271,39 @@ int main(int argc, char** argv) {
         } else {
             printf("Warning: failed to load chain from %s\n",chain_path.c_str());
         }
+    }
+
+    // --dry-run-replay (V14 safety net A2): the chain has been fully replayed
+    // through ConnectBlock by load_chain(). Emit a deterministic UTXO-set root
+    // (rolling SHA-256 over the ordered std::map) + final height, then exit
+    // BEFORE any P2P/RPC. Two binaries replaying the same chain.json MUST print
+    // the same root iff their resulting UTXO sets are byte-identical — this is
+    // the pre-deploy "no consensus drift" check (scripts/validate-v14-replay.sh).
+    if(g_dry_run_replay){
+        std::array<uint8_t,32> root{};  // seed = 32 zero bytes
+        for(const auto& kv : g_utxo_set.GetMap()){
+            const OutPoint&  op = kv.first;
+            const UTXOEntry& e  = kv.second;
+            std::vector<uint8_t> b;
+            b.reserve(96 + e.payload.size());
+            b.insert(b.end(), root.begin(), root.end());
+            b.insert(b.end(), op.txid.begin(), op.txid.end());
+            for(int s=0;s<4;s++) b.push_back((uint8_t)((op.index>>(8*s))&0xff));
+            for(int s=0;s<8;s++) b.push_back((uint8_t)(((uint64_t)e.amount>>(8*s))&0xff));
+            b.push_back(e.type);
+            b.insert(b.end(), e.pubkey_hash.begin(), e.pubkey_hash.end());
+            for(int s=0;s<2;s++) b.push_back((uint8_t)((e.payload_len>>(8*s))&0xff));
+            b.insert(b.end(), e.payload.begin(), e.payload.end());
+            for(int s=0;s<8;s++) b.push_back((uint8_t)(((uint64_t)e.height>>(8*s))&0xff));
+            b.push_back(e.is_coinbase?1:0);
+            root = sost::sha256(b);
+        }
+        printf("DRYRUN final_height: %lld\n",(long long)g_chain_height);
+        printf("DRYRUN utxo_count: %zu\n", g_utxo_set.Size());
+        printf("DRYRUN utxo_set_root: %s\n", to_hex(root.data(),32).c_str());
+        printf("DRYRUN tip_block_id: %s\n",
+               g_blocks.empty()?"none":to_hex(g_blocks.back().block_id.data(),32).c_str());
+        return 0;
     }
 
     // V12 hard fork startup notice. Printed after chain load so the local
