@@ -19,7 +19,7 @@
 | approval floor | **61** | `ceil(67 × 90 / 100)` — min YES blocks |
 | `GV_G4_FOUNDATION_PCT` | 10 | foundation "quality boost" weight |
 | foundation weight | **7** | `ceil(67 × 10 / 100)` blocks added when the foundation signals |
-| signaling channel | **DECISION PENDING** | see below — NOT the header version field |
+| signaling channel | **coinbase marker** | `GV_G4_APPROVAL_PKH` (0-value coinbase output) — NOT the header version field |
 
 ## ✅ Signaling channel — DECIDED: coinbase approval marker (2026-06-07)
 The initial sketch used a **block-header `version` bit**. That is **invalid**: SbPoW pins
@@ -49,8 +49,8 @@ tally below is channel-agnostic, so this decision only affects how `miner_yes` i
 effective_yes = min(window, miner_yes + (foundation_signaled ? foundation_weight : 0))
 approved      = effective_yes >= approval_floor          // 61 of 67
 ```
-- A miner approves a pending vault-spend proposal by setting `GV_G4_SIGNAL_BIT` in its
-  block version during the 67-block window that follows the proposal.
+- A miner approves the pending vault spend by including the `GV_G4_APPROVAL_PKH` 0-value
+  marker output in its coinbase; the validator counts marked coinbases over the 67-block window.
 - The foundation/developer "quality boost" adds 7 effective YES blocks (≈+10%) when it
   endorses — it cannot exceed the window.
 - **silence = accept** applies to the developer/genesis **veto** (G5): if no veto lands in

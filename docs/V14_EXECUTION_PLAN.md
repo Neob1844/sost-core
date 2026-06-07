@@ -85,6 +85,37 @@ B2 (G4 auto-tally) → B2 (G5 Guardian) → B3 (testnet soak + replay) → enabl
 
 ---
 
+## 2b. PHASE B — WIRING FINDINGS (2026-06-07, must address before enforcing G1-G5)
+
+Two architectural findings surfaced while wiring G4. They change WHERE the Gold Vault
+governance must be enforced. **Neither affects mainnet today** (everything is gated/deferred),
+but both must be handled before any flip:
+
+1. **`ValidateBlockTransactionsConsensus` (block_validation.cpp) has NO callers** — it is an
+   orphan/test-only L3 function. The running node validates blocks via `process_block`
+   (`src/sost-node.cpp`) → `UtxoSet::ConnectBlock` + `tx_validation.cpp` CB rules. **The Slice 1
+   (G1/G2/G3a) check currently lives only in that orphan function**, so it is NOT enforced by the
+   node binary. Consequence: Gold Vault governance (Slice 1 + G4 + G5) must be **integrated into
+   the node's real path** (`process_block`, alongside the V14 H3/H4 block, gated by
+   `gv_slice1_active_at` / `gv_g4_active_at`). The `gv_slice1.*` and `gv_g4.h` modules are correct
+   and reusable as-is — only the enforcement CALL SITE moves.
+2. **Coinbase shape is strict (CB11: Phase-2 PAYOUT coinbase = exactly 2 outputs; CB12 fixes the
+   amounts).** The G4 coinbase approval marker (a 3rd 0-value output) therefore needs a **gated
+   CB11/CB12 relaxation**: when `gv_g4_active_at(height)`, allow exactly one extra output that is
+   the `GV_G4_APPROVAL_PKH` 0-value marker (and nothing else). Pre-activation, CB11 is byte-identical.
+
+**Corrected wiring plan (high-risk, do deliberately + replay byte-identical):**
+- W1: move/duplicate the Slice 1 G1/G2/G3a enforcement into `process_block` (gated), with a
+  replay test proving pre-activation identical and the orphan L3 function removed or marked.
+- W2: gated CB11/CB12 to accept the single G4 marker coinbase output when active.
+- W3: in `process_block`, on a detected vault spend at height h, count `gv_g4_coinbase_approves`
+  over blocks [h-67, h-1] (from `g_blocks`) and require `gv_g4_window_approved(count)`.
+- W4: G5 veto/grace; then cross-validator + testnet soak; then the single final flip to V14_HEIGHT.
+
+> Status: gv_g4 pure module + coinbase-marker channel + detector DONE & tested (`test-gv-g4`,
+> 18/18). The wiring (W1-W3) is the next deliberate consensus step — it touches the node's real
+> block path and the coinbase rules, so it is done carefully with replay verification, not rushed.
+
 ## 3. PHASE C — PoPC Model A (component #6) — DEFER gate flip, build the rails
 
 The DTD-PoPC eligibility gate must NOT read `popc_registry.json` from consensus (it is per-node,
