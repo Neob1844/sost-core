@@ -44,8 +44,11 @@ namespace sost {
 // entries, so the placeholder row at index 0 is never read at len = 0.
 //
 const unsigned char GV_SLICE1_WHITELIST_MIRROR_DATA[][20] = {
-    // intentionally empty until the operator commits real values
-    { 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0 }   // placeholder; never read at len=0
+    // MIRROR of GV_SLICE1_WHITELIST_PRIMARY (genesis/founder miner,
+    // ADDR_MINER_FOUNDER = sost1 059d1ef8639bcf47ec35e9299c17dc0452c3df33).
+    // MUST equal the header copy byte-for-byte (G2 dual-whitelist cross-check).
+    { 0x05,0x9d,0x1e,0xf8,0x63,0x9b,0xcf,0x47,0xec,0x35,
+      0xe9,0x29,0x9c,0x17,0xdc,0x04,0x52,0xc3,0xdf,0x33 }
 };
 
 // =========================================================================

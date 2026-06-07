@@ -407,6 +407,12 @@ BlockConsensusResult ValidateBlockTransactionsConsensus(
                         "tx[" + std::to_string(i) +
                         "] gv_slice1: spend exceeds per-spend cap");
                 }
+                // G3a absolute cap (published governance: 1,000 SOST/spend).
+                if (!gv_slice1_amount_within_abs_cap(total_external_out)) {
+                    return BlockConsensusResult::Fail(
+                        "tx[" + std::to_string(i) +
+                        "] gv_slice1: spend exceeds absolute per-spend cap");
+                }
             }
         }
 

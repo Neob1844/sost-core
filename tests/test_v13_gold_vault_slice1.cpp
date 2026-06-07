@@ -51,12 +51,16 @@ static int g_pass = 0, g_fail = 0;
 
 static void test_sentinel_constants_pinned() {
     std::printf("\n=== 1) Sentinel constants pinned to disabled defaults ===\n");
-    TEST("GV_SLICE1_ACTIVATION_HEIGHT == INT64_MAX",
+#ifndef SOST_TESTNET_FORKS
+    // MAINNET: Slice 1 gate stays DEFERRED until the full G1-G5 ships.
+    TEST("GV_SLICE1_ACTIVATION_HEIGHT == INT64_MAX (mainnet deferred)",
          GV_SLICE1_ACTIVATION_HEIGHT == INT64_MAX);
-    TEST("GV_SLICE1_WHITELIST_PRIMARY_LEN == 0",
-         GV_SLICE1_WHITELIST_PRIMARY_LEN == 0);
-    TEST("GV_SLICE1_WHITELIST_MIRROR_LEN == 0",
-         GV_SLICE1_WHITELIST_MIRROR_LEN == 0);
+#endif
+    // B1: whitelist now CONFIGURED with the single genesis-miner destination.
+    TEST("GV_SLICE1_WHITELIST_PRIMARY_LEN == 1",
+         GV_SLICE1_WHITELIST_PRIMARY_LEN == 1);
+    TEST("GV_SLICE1_WHITELIST_MIRROR_LEN == 1",
+         GV_SLICE1_WHITELIST_MIRROR_LEN == 1);
     TEST("GV_SLICE1_PER_SPEND_CAP_BPS == 0",
          GV_SLICE1_PER_SPEND_CAP_BPS == 0);
     TEST("GV_SLICE1_RATE_LIMIT_BLOCKS == 0",
@@ -70,7 +74,11 @@ static void test_sentinel_constants_pinned() {
 }
 
 static void test_activation_gate_sentinel_at_every_height() {
-    std::printf("\n=== 2) Activation gate is INACTIVE at every height (sentinel) ===\n");
+#ifdef SOST_TESTNET_FORKS
+    std::printf("\n=== 2) [testnet build: Slice 1 active >= V14_HEIGHT, skipping deferred check] ===\n");
+    return;
+#endif
+    std::printf("\n=== 2) Activation gate is INACTIVE at every height (mainnet deferred) ===\n");
     const int64_t test_heights[] = {
         0, 1, 100, 7100, 9999, 10000, 12000, 12100, 15000, 25000,
         100000, 1000000, INT64_MAX - 1
@@ -240,10 +248,12 @@ static void test_sentinel_state_is_complete_noop() {
     //   Cap == 0 means cap-disabled, helper passes everything.
     // gv_slice1_rate_limit_ok(...) — true at every blocks_since (test #4).
     //   Rate-limit == 0 means disabled, helper passes everything.
-    TEST("active_at any sample height is false",
+#ifndef SOST_TESTNET_FORKS
+    TEST("active_at any sample height is false (mainnet deferred)",
          gv_slice1_active_at(0) == false
          && gv_slice1_active_at(12000) == false
          && gv_slice1_active_at(INT64_MAX - 1) == false);
+#endif
     TEST("whitelists_agree vacuously",
          gv_slice1_whitelists_agree() == true);
     TEST("amount_within_cap permits any amount",

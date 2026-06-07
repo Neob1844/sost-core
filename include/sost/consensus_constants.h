@@ -95,7 +95,7 @@ inline constexpr uint8_t  GV_PAYLOAD_GOLD_PURCHASE = 0x47; // 'G' — marks TX a
 //
 // All five steps land in a single small reviewable commit.
 //
-inline constexpr std::size_t GV_SLICE1_WHITELIST_MIRROR_LEN = 0;
+inline constexpr std::size_t GV_SLICE1_WHITELIST_MIRROR_LEN = 1;  // genesis miner (see gold_vault_slice1.cpp)
 // PubKeyHash is defined in include/sost/tx_signer.h; we only need the size
 // (20 bytes) here for the array declaration. To avoid a heavy include
 // chain in this header, the actual array is forward-declared as 20-byte

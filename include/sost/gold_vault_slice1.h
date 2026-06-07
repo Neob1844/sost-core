@@ -73,7 +73,16 @@ namespace sost {
 // whitelist + cap + rate-limit values. Until then, the validator wiring
 // is a no-op for every height (because height < INT64_MAX is always true).
 //
-inline constexpr int64_t GV_SLICE1_ACTIVATION_HEIGHT = INT64_MAX;
+// V14 Gold Vault Phase I — Slice 1 activation.
+// MAINNET: DEFERRED (INT64_MAX) until the full G1-G5 governance is built and
+// testnet-soaked; the final pre-fork commit flips this to V14_HEIGHT (15000).
+// TESTNET (-DSOST_TESTNET_FORKS): active at V14_HEIGHT (block 200) so the rule
+// can be dry-run end-to-end. Mainnet binary stays byte-identical meanwhile.
+#ifdef SOST_TESTNET_FORKS
+inline constexpr int64_t GV_SLICE1_ACTIVATION_HEIGHT = V14_HEIGHT;
+#else
+inline constexpr int64_t GV_SLICE1_ACTIVATION_HEIGHT = INT64_MAX;  // → V14_HEIGHT in final commit
+#endif
 
 // =========================================================================
 // Whitelist of legal Gold Vault spend destinations (G1 + G2)
@@ -97,9 +106,18 @@ inline constexpr int64_t GV_SLICE1_ACTIVATION_HEIGHT = INT64_MAX;
 // enforced statically here.
 //
 inline constexpr std::size_t GV_SLICE1_WHITELIST_MAX = 5;
-inline constexpr std::size_t GV_SLICE1_WHITELIST_PRIMARY_LEN = 0;
+inline constexpr std::size_t GV_SLICE1_WHITELIST_PRIMARY_LEN = 1;
+// Single legal Gold Vault spend destination = the genesis/founder miner
+// (params.h ADDR_MINER_FOUNDER = "sost1" + 059d1ef8639bcf47ec35e9299c17dc0452c3df33),
+// matching the published governance ("single destination = genesis miner").
+// The MIRROR copy in src/gold_vault_slice1.cpp MUST hold the same 20 bytes
+// (G2 dual-whitelist cross-check). test-gv-slice1-activation pins these bytes
+// against address_decode(ADDR_MINER_FOUNDER).
 inline constexpr std::array<PubKeyHash, GV_SLICE1_WHITELIST_PRIMARY_LEN>
-    GV_SLICE1_WHITELIST_PRIMARY{};
+    GV_SLICE1_WHITELIST_PRIMARY{{
+        PubKeyHash{{0x05,0x9d,0x1e,0xf8,0x63,0x9b,0xcf,0x47,0xec,0x35,
+                    0xe9,0x29,0x9c,0x17,0xdc,0x04,0x52,0xc3,0xdf,0x33}}
+    }};
 
 // =========================================================================
 // Per-spend cap (G3a) — basis points of vault balance
@@ -114,6 +132,14 @@ inline constexpr std::array<PubKeyHash, GV_SLICE1_WHITELIST_PRIMARY_LEN>
 //
 inline constexpr int32_t GV_SLICE1_PER_SPEND_CAP_BPS = 0;
 inline constexpr int32_t GV_SLICE1_BPS_DENOMINATOR   = 10000;
+
+// =========================================================================
+// Per-spend cap (G3a) — ABSOLUTE, in stocks. 0 = disabled.
+// =========================================================================
+// The published governance commits to "1,000 SOST per spend"; this absolute
+// cap is the canonical Phase I limit (the bps cap above stays 0). Enforced in
+// src/block_validation.cpp via gv_slice1_amount_within_abs_cap().
+inline constexpr int64_t GV_SLICE1_PER_SPEND_CAP_STOCKS = 1000 * STOCKS_PER_SOST; // 1,000 SOST
 
 // =========================================================================
 // Rate limit (G3b) — minimum blocks between vault spends
@@ -197,6 +223,17 @@ inline constexpr bool gv_slice1_amount_within_cap(
     const int64_t cap = (vault_balance / GV_SLICE1_BPS_DENOMINATOR)
                             * GV_SLICE1_PER_SPEND_CAP_BPS;
     return amount <= cap;
+}
+
+// =========================================================================
+// Helper G3a (absolute): is `amount` within the absolute per-spend cap?
+// =========================================================================
+// Returns true iff amount <= GV_SLICE1_PER_SPEND_CAP_STOCKS. Sentinel: if the
+// cap is 0, returns true unconditionally (disabled). Pure integer arithmetic.
+inline constexpr bool gv_slice1_amount_within_abs_cap(int64_t amount) {
+    if (GV_SLICE1_PER_SPEND_CAP_STOCKS == 0) return true;   // sentinel: disabled
+    if (amount < 0) return false;                           // defensive
+    return amount <= GV_SLICE1_PER_SPEND_CAP_STOCKS;
 }
 
 // =========================================================================

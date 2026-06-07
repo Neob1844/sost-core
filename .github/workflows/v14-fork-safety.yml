@@ -28,12 +28,19 @@ jobs:
         run: |
           cmake --build build --target test-v14-fork-gates -j2
           cmake --build build --target test-v14-h3-h4 -j2
+          cmake --build build --target test-gv-slice1-activation -j2
+          cmake --build build --target test-v13-gold-vault-slice1 -j2
 
       - name: Run V14 fork-gate pins (constants must not drift)
         run: ./build/test-v14-fork-gates
 
       - name: Run V14 H3/H4 block-validation semantics
         run: ./build/test-v14-h3-h4
+
+      - name: Run Gold Vault Slice 1 config + regression
+        run: |
+          ./build/test-gv-slice1-activation
+          ./build/test-v13-gold-vault-slice1
 
   # Best-effort full suite. Allowed to fail (informational) until all deps are
   # pinned in CI; the v14-safety job above is the hard gate.

@@ -282,6 +282,10 @@ add_executable(test-v14-fork-gates tests/test_v14_fork_gates.cpp)
 target_link_libraries(test-v14-fork-gates PRIVATE sost-core)
 add_test(NAME v14-fork-gates COMMAND test-v14-fork-gates)
 
+add_executable(test-gv-slice1-activation tests/test_gv_slice1_activation.cpp)
+target_link_libraries(test-gv-slice1-activation PRIVATE sost-core)
+add_test(NAME gv-slice1-activation COMMAND test-gv-slice1-activation)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)

@@ -50,10 +50,21 @@ static_assert(DTD_EMERGENCY_CONTROL_CONSENSUS_ACTIVE == false,
 // ---- Gold Vault Phase I governance ----------------------------------------
 static_assert(GV_THRESHOLD_EPOCH01 == 90,
     "Gold Vault governance threshold synced to 90% in V14-1; do not revert.");
+#ifdef SOST_TESTNET_FORKS
+static_assert(GV_SLICE1_ACTIVATION_HEIGHT == V14_HEIGHT,
+    "Testnet: Gold Vault Slice 1 activates at V14_HEIGHT to dry-run.");
+#else
 static_assert(GV_SLICE1_ACTIVATION_HEIGHT == INT64_MAX,
-    "Gold Vault Slice 1 ships DEFERRED (INT64_MAX). Activating it is an operator "
-    "decision (whitelist + cap) landed in one reviewed commit — see "
-    "docs/V14_EXECUTION_PLAN.md Phase B. Update this pin deliberately when ready.");
+    "MAINNET: Gold Vault Slice 1 stays DEFERRED (INT64_MAX) until full G1-G5 is "
+    "built + testnet-soaked; the final pre-fork commit flips it to V14_HEIGHT. "
+    "Do NOT flip here (docs/V14_EXECUTION_PLAN.md Phase B).");
+#endif
+// Whitelist + cap are now CONFIGURED (genesis miner, 1,000 SOST) even while the
+// mainnet gate is deferred — they only take effect once the gate is active.
+static_assert(GV_SLICE1_WHITELIST_PRIMARY_LEN == 1,
+    "Gold Vault Slice 1 whitelist must hold exactly the genesis miner.");
+static_assert(GV_SLICE1_PER_SPEND_CAP_STOCKS == 1000 * STOCKS_PER_SOST,
+    "Gold Vault Slice 1 absolute cap must be 1,000 SOST.");
 
 int main() {
     std::printf("V14 fork-gate constants pinned: PASS\n");

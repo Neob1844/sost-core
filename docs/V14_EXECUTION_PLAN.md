@@ -62,8 +62,12 @@ pre-fork path immutable (old blocks replay bit-identical).
   OR the full governance (G4 67-block signaling window + G5 transitional Guardian)?
 
 **Work (after decisions), most-automated form:**
-- B1: land Slice 1 in one reviewed commit (set `GV_SLICE1_ACTIVATION_HEIGHT=15000`, fill both
-  whitelists + lengths, set cap). Add a validator integration test (real block+tx+UTXO, gate ON).
+- B1: ✅ DONE — Slice 1 configured (whitelist=[genesis miner ADDR_MINER_FOUNDER], abs cap=1,000 SOST,
+  mirror filled, G3a absolute-cap check wired). Mainnet gate stays DEFERRED (INT64_MAX, replay
+  byte-identical); testnet (`-DSOST_TESTNET_FORKS`) activates it at block 200. Tests:
+  `test-gv-slice1-activation` (whitelist == decode(ADDR_MINER_FOUNDER), cap, dual-whitelist) +
+  `test-v13-gold-vault-slice1` (mainnet 45/45, testnet 30/30) + CI hard-gate. The mainnet
+  activation flips to 15000 only in the final pre-fork commit (after G4+G5 + soak).
 - B2 (if D3 = full): implement G4 auto-tally (67-block window, 90% threshold, **silence=accept**
   automatic at the validator), G5 Guardian pronouncement tx-type + 10-block grace + **auto-disconnect
   at block 100,000** (operator decision 2026-06-07; automation the operator wants). Add cross-validator agreement test.
