@@ -22,8 +22,13 @@
 using namespace sost;
 
 // ---- V14 fork height + the changes that actually ENFORCE in V14 -------------
+#ifdef SOST_TESTNET_FORKS
+static_assert(V14_HEIGHT == 200,
+    "Testnet build: V14_HEIGHT must be the early testnet height (200).");
+#else
 static_assert(V14_HEIGHT == 15000,
     "V14_HEIGHT moved from 15000 — re-audit the whole V14 scope before changing.");
+#endif
 static_assert(DYNAMIC_FEE_BASE == 1,
     "Pre-V14 relay floor base must stay 1 stock/byte (historical replay).");
 static_assert(DYNAMIC_FEE_BASE_V14 == 10,

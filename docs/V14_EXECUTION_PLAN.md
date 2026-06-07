@@ -36,13 +36,15 @@ This is the foundation every later consensus change depends on. All test/CI/scri
 | A1 | **Fork-gate constant pins** `tests/test_v14_fork_gates.cpp` — `static_assert` on `V14_HEIGHT`, `DYNAMIC_FEE_BASE_V14`, deferred-gate flags. Build fails if a constant drifts without a conscious edit. | ▶ DONE in this commit |
 | A2 | **`--dry-run-replay` flag** on `sost-node`: load `chain.json`, replay 0..tip via `ConnectBlock`, print final height + deterministic UTXO-set root (rolling SHA-256 over the ordered map), exit (no P2P/RPC). | ✅ DONE (verified deterministic) |
 | A3 | **`scripts/validate-v14-replay.sh`** — replay candidate + baseline binaries, assert bit-identical (height + UTXO root). Pre-deploy gate. | ✅ DONE |
-| A4 | **Testnet with low fork height** — `fork_height_at(profile, fork)` helper so `TESTNET` activates V14 at e.g. block 200; mine a small chain across the boundary. | ▶ NEXT |
+| A4 | **Testnet with low fork height** — compile-time `-DSOST_TESTNET_FORKS=ON` lowers `V14_HEIGHT` to 200; mainnet build byte-identical at 15000 (`V14_HEIGHT` stays `constexpr`, no call-site changes). | ✅ DONE (mainnet=15000, testnet=200 verified) |
 | A5 | **CI** `.github/workflows/v14-fork-safety.yml` — builds + runs `test-v14-fork-gates` + `test-v14-h3-h4` (hard gate) and best-effort full `ctest` on every push/PR. | ✅ DONE |
 | A6 | **Beacon V14 notice template** `docs/V14_BEACON_NOTICE_TEMPLATE.md` + unsigned JSON (II-A advisory to miners). | ✅ DONE |
 | A7 | **`docs/V14_DEPLOYMENT_CHECKLIST.md`** — operator runbook (build → replay-validate → testnet → sign beacon notice → deploy → verify → rollback). | ✅ DONE |
 
-**Remaining in Phase A (node-code, next):** A2 (`--dry-run-replay`), A3 (replay-vs-baseline
-script), A4 (testnet low fork-height helper). These touch `sost-node` and gate Phases B/C.
+**Phase A COMPLETE (A1-A7).** Safety net in place: pinned constants + CI, deterministic replay +
+bit-identical pre-deploy gate, throwaway-testnet build (V14 @ block 200), beacon notice + deploy
+checklist. Testnet: `cmake -S . -B build-testnet -DSOST_TESTNET_FORKS=ON && cmake --build build-testnet`.
+All consensus work below now builds on this.
 
 **Discipline to copy (proven V11/V12/V13):** height constant → `static_assert` pin → `..._at(height)`
 helper returning pre/post value → call sites use the helper → boundary test for every regime →

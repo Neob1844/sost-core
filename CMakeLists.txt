@@ -75,6 +75,17 @@ option(SOST_ENABLE_PHASE2_SBPOW
     "Phase 2 SbPoW Schnorr code path -- REQUIRED for mainnet consensus (default ON; OFF only for niche tooling)"
     ON)
 
+# Private-testnet fork heights. When ON, V14 (and future forks) activate at a low
+# block so the fork can be dry-run end-to-end on a throwaway chain. NEVER enable
+# for a mainnet binary -- it changes V14_HEIGHT. Default OFF => mainnet untouched.
+option(SOST_TESTNET_FORKS
+    "Lower fork heights for a private testnet dry-run (NEVER for mainnet)"
+    OFF)
+if(SOST_TESTNET_FORKS)
+    add_compile_definitions(SOST_TESTNET_FORKS)
+    message(WARNING "SOST_TESTNET_FORKS=ON -- V14 activates at block 200. TESTNET ONLY, do not deploy to mainnet.")
+endif()
+
 if(SOST_ENABLE_PHASE2_SBPOW)
     include(CheckIncludeFiles)
     include(CheckSymbolExists)

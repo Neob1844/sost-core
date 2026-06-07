@@ -990,7 +990,16 @@ inline constexpr bool is_sbpow_eligible(
 //   3) popc_registry.json becomes a cache/view, not source of truth.
 //   4) Coordinated point release flips DTD_POPC_GATE_CONSENSUS_ACTIVE
 //      under a fresh fork height and a documented announcement window.
-inline constexpr int64_t V14_HEIGHT                       = 15000;
+// V14 activation height. MAINNET = 15000 (immutable). A private testnet binary
+// built with -DSOST_TESTNET_FORKS=ON activates V14 early (block 200) to dry-run
+// the fork end-to-end. The macro is NEVER defined for mainnet builds, so the
+// mainnet value is byte-identical. Because this stays `constexpr`, no consensus
+// call site changes. (docs/V14_EXECUTION_PLAN.md A4)
+#ifdef SOST_TESTNET_FORKS
+inline constexpr int64_t V14_HEIGHT                       = 200;     // TESTNET ONLY
+#else
+inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET
+#endif
 inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT      = V14_HEIGHT;
 inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;
 
