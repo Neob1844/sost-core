@@ -20,7 +20,17 @@ namespace sost {
 inline constexpr int32_t GV_G4_SIGNAL_WINDOW  = 67;   // blocks
 inline constexpr int32_t GV_G4_THRESHOLD_PCT  = 90;   // affirmative %
 inline constexpr int32_t GV_G4_FOUNDATION_PCT = 10;   // +10% quality boost
-inline constexpr uint8_t GV_G4_SIGNAL_BIT     = 8;    // block-header version bit (proposals.h 8-28)
+
+// SIGNALING CHANNEL — DESIGN DECISION PENDING.
+//   The block-header `version` field CANNOT carry signaling bits: SbPoW pins it
+//   to exactly 1 (pre-7100) or 2 (post-7100) and rejects anything else
+//   (VERSION_MISMATCH). proposals.h's BIP9-style "bits 8-28 of version" is a
+//   placeholder that is NOT consensus-wired for the same reason. The per-block
+//   G4 approval signal must therefore travel through a different, deterministic
+//   channel (candidate: a recognized coinbase approval marker, or a dedicated
+//   approval-marker transaction counted per block over the window). The tally
+//   below is intentionally CHANNEL-AGNOSTIC — it consumes a yes-count, however
+//   that count is sourced. See docs/V14_GOLD_VAULT_G4_DESIGN.md.
 
 // Activation gate (testnet active @ V14_HEIGHT=200; mainnet deferred until the
 // full Gold Vault G1-G5 is built + soaked, then flipped to V14_HEIGHT).
@@ -59,17 +69,14 @@ inline constexpr int32_t gv_g4_effective_yes(int32_t miner_yes, bool foundation_
     return e > window ? window : e;
 }
 
-// Is a vault-spend proposal approved by the window?
+// Is a vault-spend proposal approved by the window? `miner_yes` is the count of
+// approving blocks in the preceding GV_G4_SIGNAL_WINDOW (sourced by the channel
+// chosen above), `foundation_signaled` adds the +10% quality boost.
 inline constexpr bool gv_g4_window_approved(int32_t miner_yes, bool foundation_signaled,
                                             int32_t window = GV_G4_SIGNAL_WINDOW) {
     if (miner_yes < 0 || miner_yes > window) return false;   // defensive
     return gv_g4_effective_yes(miner_yes, foundation_signaled, window)
                >= gv_g4_approval_floor(window);
-}
-
-// True iff `version` has the G4 approval bit set.
-inline constexpr bool gv_g4_version_signals(uint32_t version) {
-    return (version & (1u << GV_G4_SIGNAL_BIT)) != 0;
 }
 
 } // namespace sost

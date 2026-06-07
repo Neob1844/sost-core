@@ -31,10 +31,6 @@ int main() {
     CHECK("negative yes -> rejected",         gv_g4_window_approved(-1, false) == false);
     CHECK("yes > window -> rejected",         gv_g4_window_approved(68, false) == false);
 
-    // Version-bit signaling
-    CHECK("version with bit8 signals",        gv_g4_version_signals(1u << GV_G4_SIGNAL_BIT) == true);
-    CHECK("version without bit8 does not",    gv_g4_version_signals(1u) == false);
-
     // Activation gate
 #ifdef SOST_TESTNET_FORKS
     CHECK("testnet: active at V14_HEIGHT",    gv_g4_active_at(V14_HEIGHT) == true);

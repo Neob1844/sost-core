@@ -19,7 +19,30 @@
 | approval floor | **61** | `ceil(67 × 90 / 100)` — min YES blocks |
 | `GV_G4_FOUNDATION_PCT` | 10 | foundation "quality boost" weight |
 | foundation weight | **7** | `ceil(67 × 10 / 100)` blocks added when the foundation signals |
-| `GV_G4_SIGNAL_BIT` | 8 | block-header version bit miners set to approve (proposals.h bits 8-28) |
+| signaling channel | **DECISION PENDING** | see below — NOT the header version field |
+
+## ⚠ Signaling channel — design decision required
+The initial sketch used a **block-header `version` bit**. That is **invalid**: SbPoW pins
+`header.version` to exactly **1** (pre-7100) or **2** (post-7100) and rejects anything else
+(`VERSION_MISMATCH`, `include/sost/sbpow.h`). `proposals.h`'s BIP9-style "bits 8-28 of version"
+is a placeholder and is **not consensus-wired** for the same reason. So the per-block G4 approval
+signal needs a different, deterministic channel. Candidates:
+
+1. **Coinbase approval marker (recommended)** — each block's coinbase carries a recognized
+   0-value marker output (a tag) when its miner approves the pending vault-spend proposal. The
+   validator counts, over the previous 67 blocks, how many coinbases carry the marker. Pros:
+   per-block (matches "61 of 67"), deterministic from chain state, no header/SbPoW change.
+   Cost: the CB5/CB6 coinbase-shape validation must allow the extra recognized marker output
+   **only when G4 is active** (gated; pre-activation replay stays bit-identical).
+2. **Approval-marker transaction** — a dedicated tx-type a miner includes to approve; a block
+   "approves" if it contains a valid marker for the active proposal. Pros: doesn't touch the
+   coinbase. Cost: a new tx-type + "which proposal is active" definition.
+3. **Defer per-block signaling** — instead, require the vault-spend tx to reference a proposal
+   that has been on-chain ≥67 blocks with developer non-veto (silence=accept), dropping the
+   miner-percentage and relying on G5's veto. Simplest, but drops the "90% miner" property.
+
+**Recommendation:** option 1 (coinbase marker), gated at `GV_G4_ACTIVATION_HEIGHT`. The pure
+tally below is channel-agnostic, so this decision only affects how `miner_yes` is sourced.
 
 ## Tally rule (pure)
 ```
