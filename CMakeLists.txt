@@ -267,6 +267,10 @@ add_executable(test-v14-h3-h4 tests/test_v14_h3_h4.cpp)
 target_link_libraries(test-v14-h3-h4 PRIVATE sost-core)
 add_test(NAME v14-h3-h4 COMMAND test-v14-h3-h4)
 
+add_executable(test-v14-fork-gates tests/test_v14_fork_gates.cpp)
+target_link_libraries(test-v14-fork-gates PRIVATE sost-core)
+add_test(NAME v14-fork-gates COMMAND test-v14-fork-gates)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)
