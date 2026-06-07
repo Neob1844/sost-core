@@ -1,0 +1,54 @@
+name: V14 Fork Safety
+
+# Phase A / A5 of docs/V14_EXECUTION_PLAN.md — runs the V14 consensus safety
+# pins on every push/PR so a fork-gating constant cannot drift, and the H3/H4
+# block-validation semantics cannot regress, without CI going red.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  v14-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libssl-dev
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build V14 safety tests
+        run: |
+          cmake --build build --target test-v14-fork-gates -j2
+          cmake --build build --target test-v14-h3-h4 -j2
+
+      - name: Run V14 fork-gate pins (constants must not drift)
+        run: ./build/test-v14-fork-gates
+
+      - name: Run V14 H3/H4 block-validation semantics
+        run: ./build/test-v14-h3-h4
+
+  # Best-effort full suite. Allowed to fail (informational) until all deps are
+  # pinned in CI; the v14-safety job above is the hard gate.
+  full-ctest:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libssl-dev
+      - name: Configure + build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
+          cmake --build build -j2
+      - name: ctest
+        run: ctest --test-dir build --output-on-failure
