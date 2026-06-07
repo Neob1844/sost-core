@@ -284,4 +284,65 @@ inline bool gv_slice1_tx_spends_from_vault(
     return false;
 }
 
+// =========================================================================
+// W1: composite Slice 1 block-spend check
+// =========================================================================
+//
+// Pure composition over the G1/G2/G3a primitives above, shared by BOTH the
+// real node path (process_block, src/sost-node.cpp) and the orphan
+// ValidateBlockTransactionsConsensus (src/block_validation.cpp) so the two
+// can never drift. Caller supplies the UTXO lookup and the precomputed
+// current vault balance (kept UtxoSet-agnostic — no UtxoSet dependency here).
+// Callers MUST gate this on gv_slice1_active_at(height) first; this function
+// itself does not look at height.
+//
+enum class GvSlice1Verdict {
+    NotAVaultSpend,    // tx does not spend from the gold vault — unconstrained
+    Ok,                // vault spend, passes G1 + G2 + G3a
+    WhitelistDisagree, // G2: primary/mirror whitelists differ (operator misconfig)
+    DestNotAllowed,    // G1: a non-change output is not in the whitelist
+    OverRelCap,        // G3a: external out exceeds the relative per-spend cap
+    OverAbsCap         // G3a: external out exceeds the absolute per-spend cap
+};
+
+template <typename UtxoLookup>
+inline GvSlice1Verdict gv_slice1_check_block_spend(
+    const Transaction& tx,
+    const PubKeyHash& gold_vault_pkh,
+    UtxoLookup lookup_pkh,
+    int64_t vault_balance,
+    int64_t* external_out_total = nullptr)
+{
+    if (!gv_slice1_tx_spends_from_vault(tx, gold_vault_pkh, lookup_pkh))
+        return GvSlice1Verdict::NotAVaultSpend;
+    if (!gv_slice1_whitelists_agree())
+        return GvSlice1Verdict::WhitelistDisagree;
+    int64_t external = 0;
+    for (const auto& o : tx.outputs) {
+        if (o.pubkey_hash == gold_vault_pkh) continue;  // change back to the vault
+        if (!gv_slice1_destination_allowed(o.pubkey_hash))
+            return GvSlice1Verdict::DestNotAllowed;
+        external += o.amount;
+    }
+    if (external_out_total) *external_out_total = external;
+    if (!gv_slice1_amount_within_cap(external, vault_balance))
+        return GvSlice1Verdict::OverRelCap;
+    if (!gv_slice1_amount_within_abs_cap(external))
+        return GvSlice1Verdict::OverAbsCap;
+    return GvSlice1Verdict::Ok;
+}
+
+// Human-readable reason for a non-Ok verdict (logging / block-reject reasons).
+inline const char* gv_slice1_verdict_reason(GvSlice1Verdict v) {
+    switch (v) {
+        case GvSlice1Verdict::WhitelistDisagree: return "gv_slice1: dual whitelist disagreement";
+        case GvSlice1Verdict::DestNotAllowed:    return "gv_slice1: destination not in whitelist";
+        case GvSlice1Verdict::OverRelCap:        return "gv_slice1: spend exceeds per-spend cap";
+        case GvSlice1Verdict::OverAbsCap:        return "gv_slice1: spend exceeds absolute per-spend cap";
+        case GvSlice1Verdict::Ok:                return "gv_slice1: ok";
+        case GvSlice1Verdict::NotAVaultSpend:    return "gv_slice1: not a vault spend";
+    }
+    return "gv_slice1: unknown";
+}
+
 } // namespace sost

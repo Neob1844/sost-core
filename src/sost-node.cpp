@@ -39,6 +39,7 @@
 #include "sost/serialize.h"
 #include "sost/pow/convergencex.h"
 #include "sost/block_validation.h"
+#include "sost/gold_vault_slice1.h"   // W1: Gold Vault Slice 1 enforcement in the real block path
 #include "sost/sostcompact.h"
 #include "sost/checkpoints.h"
 #include "sost/popc.h"
@@ -4572,7 +4573,9 @@ static bool process_block(const std::string& block_json) {
     const bool v14_txrules = (sost::V14_HEIGHT != INT64_MAX && height >= sost::V14_HEIGHT);
     UtxoSet v14_scratch;
     std::unordered_set<std::string> v14_seen_txids;
-    if(v14_txrules){ v14_scratch = g_utxo_set; v14_seen_txids.reserve(txs.size()*2); }
+    PubKeyHash gv_slice1_gold_pkh{};   // W1: Gold Vault constitutional PKH for Slice 1 enforcement
+    if(v14_txrules){ v14_scratch = g_utxo_set; v14_seen_txids.reserve(txs.size()*2);
+                     address_decode(ADDR_GOLD_VAULT, gv_slice1_gold_pkh); }
 
     for(size_t i=1;i<txs.size();++i){
         if(txs[i].tx_type != TX_TYPE_STANDARD){
@@ -4601,6 +4604,36 @@ static bool process_block(const std::string& block_json) {
                 return false;
             }
             // H3: ValidateTransactionPolicy intentionally NOT run on the block path.
+
+            // W1 — Gold Vault Slice 1 governance (G1 whitelist + G2 dual-check + G3a caps),
+            // enforced in the node's REAL block path (NOT the orphan
+            // ValidateBlockTransactionsConsensus). Gated by gv_slice1_active_at(height):
+            // on mainnet GV_SLICE1_ACTIVATION_HEIGHT == INT64_MAX, so this whole block is
+            // a no-op and the chain replays byte-for-byte identical; the testnet build
+            // (-DSOST_TESTNET_FORKS) activates it at V14_HEIGHT. Mirrors the logic of
+            // gv_slice1 in src/block_validation.cpp. See docs/V14_EXECUTION_PLAN.md (W1).
+            if(gv_slice1_active_at(height)){
+                auto gv_lookup = [&v14_scratch](const Hash256& prev_txid, uint32_t prev_index,
+                                                PubKeyHash& out) -> bool {
+                    OutPoint op{prev_txid, prev_index};
+                    auto e = v14_scratch.GetUTXO(op);
+                    if(!e.has_value()) return false;
+                    out = e->pubkey_hash;
+                    return true;
+                };
+                int64_t gv_vault_balance = 0;
+                for(const auto& kv : v14_scratch.GetMap()){
+                    if(kv.second.pubkey_hash == gv_slice1_gold_pkh) gv_vault_balance += kv.second.amount;
+                }
+                auto gv_verdict = gv_slice1_check_block_spend(
+                    txs[i], gv_slice1_gold_pkh, gv_lookup, gv_vault_balance);
+                if(gv_verdict != GvSlice1Verdict::Ok && gv_verdict != GvSlice1Verdict::NotAVaultSpend){
+                    const char* gv_reason = gv_slice1_verdict_reason(gv_verdict);
+                    printf("[BLOCK] REJECTED: %s at tx %zu\n", gv_reason, i);
+                    record_block_reject(gv_reason);
+                    return false;
+                }
+            }
 
             int64_t fee_i=0; std::string ferr;
             if(!compute_fee_for_tx(txs[i], v14_scratch, fee_i, &ferr)){

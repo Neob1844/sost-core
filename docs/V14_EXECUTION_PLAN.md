@@ -105,16 +105,27 @@ but both must be handled before any flip:
    the `GV_G4_APPROVAL_PKH` 0-value marker (and nothing else). Pre-activation, CB11 is byte-identical.
 
 **Corrected wiring plan (high-risk, do deliberately + replay byte-identical):**
-- W1: move/duplicate the Slice 1 G1/G2/G3a enforcement into `process_block` (gated), with a
-  replay test proving pre-activation identical and the orphan L3 function removed or marked.
+- W1: ✅ DONE — Slice 1 G1/G2/G3a enforcement is now on the node's REAL block path
+  (`process_block`, `src/sost-node.cpp`), inside the `v14_txrules` branch and gated by
+  `gv_slice1_active_at(height)`. The composite check was extracted to a single shared inline
+  helper `gv_slice1_check_block_spend()` (+ `GvSlice1Verdict` / `gv_slice1_verdict_reason`) in
+  `include/sost/gold_vault_slice1.h`, used by BOTH `process_block` AND the orphan
+  `ValidateBlockTransactionsConsensus` so the two cannot drift. Mainnet stays a pure no-op
+  (`GV_SLICE1_ACTIVATION_HEIGHT == INT64_MAX`): the guard is false at every height, so live
+  block acceptance is byte-identical and `--dry-run-replay` (which replays via `ConnectBlock`,
+  not `process_block`) is unaffected. Tests: `test-gv-slice1-block` (6 W1 scenarios: non-vault
+  unaffected, whitelist OK, non-whitelist reject, abs-cap boundary OK, abs-cap+1 reject,
+  change-to-vault OK) — in CI hard-gate. The orphan L3 function is kept for now (test-only) and
+  will be removed once G4/G5 wiring lands. G3b rate-limit still deferred (needs last-spend height).
 - W2: gated CB11/CB12 to accept the single G4 marker coinbase output when active.
 - W3: in `process_block`, on a detected vault spend at height h, count `gv_g4_coinbase_approves`
   over blocks [h-67, h-1] (from `g_blocks`) and require `gv_g4_window_approved(count)`.
 - W4: G5 veto/grace; then cross-validator + testnet soak; then the single final flip to V14_HEIGHT.
 
 > Status: gv_g4 pure module + coinbase-marker channel + detector DONE & tested (`test-gv-g4`,
-> 18/18). The wiring (W1-W3) is the next deliberate consensus step — it touches the node's real
-> block path and the coinbase rules, so it is done carefully with replay verification, not rushed.
+> 18/18). **W1 DONE** (Slice 1 enforced on the real block path via the shared helper,
+> mainnet no-op, `test-gv-slice1-block` in CI). W2-W3 (G4 coinbase marker + 67-block window)
+> are next — they touch the coinbase rules, so done carefully with replay verification, not rushed.
 
 ## 3. PHASE C — PoPC Model A (component #6) — DEFER gate flip, build the rails
 

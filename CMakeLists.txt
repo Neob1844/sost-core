@@ -290,6 +290,11 @@ add_executable(test-gv-g4 tests/test_gv_g4.cpp)
 target_link_libraries(test-gv-g4 PRIVATE sost-core)
 add_test(NAME gv-g4 COMMAND test-gv-g4)
 
+# W1: Gold Vault Slice 1 composite block-spend check (shared by process_block + orphan)
+add_executable(test-gv-slice1-block tests/test_gv_slice1_block_enforcement.cpp)
+target_link_libraries(test-gv-slice1-block PRIVATE sost-core)
+add_test(NAME gv-slice1-block COMMAND test-gv-slice1-block)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)

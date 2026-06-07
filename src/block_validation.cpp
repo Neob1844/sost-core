@@ -372,47 +372,22 @@ BlockConsensusResult ValidateBlockTransactionsConsensus(
                 out = e->pubkey_hash;
                 return true;
             };
-            if (gv_slice1_tx_spends_from_vault(tx, gold_vault_pkh, lookup_pkh)) {
-                // G2: dual-whitelist agreement (operator-misconfig catch)
-                if (!gv_slice1_whitelists_agree()) {
-                    return BlockConsensusResult::Fail(
-                        "tx[" + std::to_string(i) +
-                        "] gv_slice1: dual whitelist disagreement");
+            // W1: use the SHARED composite check (include/sost/gold_vault_slice1.h)
+            // so this orphan path and the real node path (process_block) cannot
+            // drift. G3b rate-limit still not wired (needs last-spend height).
+            int64_t vault_balance = 0;
+            for (const auto& kv : scratch.GetMap()) {
+                if (kv.second.pubkey_hash == gold_vault_pkh) {
+                    vault_balance += kv.second.amount;
                 }
-                // G1: every non-change output destination must be in the
-                //     whitelist. Outputs back to the vault itself are
-                //     treated as change and accepted.
-                int64_t total_external_out = 0;
-                for (const auto& out : tx.outputs) {
-                    if (out.pubkey_hash == gold_vault_pkh) {
-                        continue; // change back to the vault
-                    }
-                    if (!gv_slice1_destination_allowed(out.pubkey_hash)) {
-                        return BlockConsensusResult::Fail(
-                            "tx[" + std::to_string(i) +
-                            "] gv_slice1: destination not in whitelist");
-                    }
-                    total_external_out += out.amount;
-                }
-                // G3a: per-spend cap against current vault balance in scratch.
-                int64_t vault_balance = 0;
-                for (const auto& kv : scratch.GetMap()) {
-                    if (kv.second.pubkey_hash == gold_vault_pkh) {
-                        vault_balance += kv.second.amount;
-                    }
-                }
-                if (!gv_slice1_amount_within_cap(total_external_out,
-                                                 vault_balance)) {
-                    return BlockConsensusResult::Fail(
-                        "tx[" + std::to_string(i) +
-                        "] gv_slice1: spend exceeds per-spend cap");
-                }
-                // G3a absolute cap (published governance: 1,000 SOST/spend).
-                if (!gv_slice1_amount_within_abs_cap(total_external_out)) {
-                    return BlockConsensusResult::Fail(
-                        "tx[" + std::to_string(i) +
-                        "] gv_slice1: spend exceeds absolute per-spend cap");
-                }
+            }
+            auto verdict = gv_slice1_check_block_spend(
+                tx, gold_vault_pkh, lookup_pkh, vault_balance);
+            if (verdict != GvSlice1Verdict::Ok &&
+                verdict != GvSlice1Verdict::NotAVaultSpend) {
+                return BlockConsensusResult::Fail(
+                    "tx[" + std::to_string(i) + "] " +
+                    gv_slice1_verdict_reason(verdict));
             }
         }
 
