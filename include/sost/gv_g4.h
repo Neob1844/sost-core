@@ -12,8 +12,10 @@
 // See docs/V14_GOLD_VAULT_G4_DESIGN.md.
 #pragma once
 #include "sost/params.h"
+#include "sost/transaction.h"   // Transaction, TxOutput — for the coinbase approval marker
 #include <cstdint>
 #include <climits>
+#include <array>
 
 namespace sost {
 
@@ -21,16 +23,29 @@ inline constexpr int32_t GV_G4_SIGNAL_WINDOW  = 67;   // blocks
 inline constexpr int32_t GV_G4_THRESHOLD_PCT  = 90;   // affirmative %
 inline constexpr int32_t GV_G4_FOUNDATION_PCT = 10;   // +10% quality boost
 
-// SIGNALING CHANNEL — DESIGN DECISION PENDING.
-//   The block-header `version` field CANNOT carry signaling bits: SbPoW pins it
-//   to exactly 1 (pre-7100) or 2 (post-7100) and rejects anything else
-//   (VERSION_MISMATCH). proposals.h's BIP9-style "bits 8-28 of version" is a
-//   placeholder that is NOT consensus-wired for the same reason. The per-block
-//   G4 approval signal must therefore travel through a different, deterministic
-//   channel (candidate: a recognized coinbase approval marker, or a dedicated
-//   approval-marker transaction counted per block over the window). The tally
-//   below is intentionally CHANNEL-AGNOSTIC — it consumes a yes-count, however
-//   that count is sourced. See docs/V14_GOLD_VAULT_G4_DESIGN.md.
+// SIGNALING CHANNEL = COINBASE APPROVAL MARKER (chosen 2026-06-07).
+//   The block-header `version` field cannot carry signal bits (SbPoW pins it to
+//   1/2). Instead, a block's miner approves the pending vault spend by including
+//   a recognized 0-value marker output in its coinbase (GV_G4_APPROVAL_PKH). The
+//   validator counts, over the previous GV_G4_SIGNAL_WINDOW blocks, how many
+//   coinbases carry the marker, and feeds that count to the channel-agnostic
+//   tally below. Deterministic from chain state; no SbPoW/header change. The
+//   coinbase-shape (CB5/CB6) rule must allow this extra recognized output ONLY
+//   when G4 is active (gated). See docs/V14_GOLD_VAULT_G4_DESIGN.md.
+
+// Fixed, unspendable marker pkh = ASCII "GV-G4-APPROVE-MARKER" (20 bytes). No
+// private key exists for it; a 0-value coinbase output here is a pure signal.
+inline constexpr std::array<uint8_t,20> GV_G4_APPROVAL_PKH = {
+    0x47,0x56,0x2D,0x47,0x34,0x2D,0x41,0x50,0x50,0x52,
+    0x4F,0x56,0x45,0x2D,0x4D,0x41,0x52,0x4B,0x45,0x52 };
+
+// True iff this coinbase tx carries the G4 approval marker (0-value output to
+// GV_G4_APPROVAL_PKH). Pure, no chain state.
+inline bool gv_g4_coinbase_approves(const Transaction& coinbase) {
+    for (const auto& o : coinbase.outputs)
+        if (o.amount == 0 && o.pubkey_hash == GV_G4_APPROVAL_PKH) return true;
+    return false;
+}
 
 // Activation gate (testnet active @ V14_HEIGHT=200; mainnet deferred until the
 // full Gold Vault G1-G5 is built + soaked, then flipped to V14_HEIGHT).

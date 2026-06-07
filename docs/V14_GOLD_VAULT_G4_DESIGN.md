@@ -21,7 +21,7 @@
 | foundation weight | **7** | `ceil(67 × 10 / 100)` blocks added when the foundation signals |
 | signaling channel | **DECISION PENDING** | see below — NOT the header version field |
 
-## ⚠ Signaling channel — design decision required
+## ✅ Signaling channel — DECIDED: coinbase approval marker (2026-06-07)
 The initial sketch used a **block-header `version` bit**. That is **invalid**: SbPoW pins
 `header.version` to exactly **1** (pre-7100) or **2** (post-7100) and rejects anything else
 (`VERSION_MISMATCH`, `include/sost/sbpow.h`). `proposals.h`'s BIP9-style "bits 8-28 of version"

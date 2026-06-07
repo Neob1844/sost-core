@@ -31,6 +31,16 @@ int main() {
     CHECK("negative yes -> rejected",         gv_g4_window_approved(-1, false) == false);
     CHECK("yes > window -> rejected",         gv_g4_window_approved(68, false) == false);
 
+    // Coinbase approval marker (the signaling channel)
+    {
+        Transaction cb_yes; TxOutput m; m.amount=0; m.pubkey_hash=GV_G4_APPROVAL_PKH; cb_yes.outputs.push_back(m);
+        CHECK("coinbase with 0-value marker approves", gv_g4_coinbase_approves(cb_yes)==true);
+        Transaction cb_no;  TxOutput n; n.amount=50; cb_no.outputs.push_back(n);
+        CHECK("coinbase without marker does not",       gv_g4_coinbase_approves(cb_no)==false);
+        Transaction cb_paid; TxOutput p; p.amount=100; p.pubkey_hash=GV_G4_APPROVAL_PKH; cb_paid.outputs.push_back(p);
+        CHECK("nonzero-value to marker pkh does NOT count", gv_g4_coinbase_approves(cb_paid)==false);
+    }
+
     // Activation gate
 #ifdef SOST_TESTNET_FORKS
     CHECK("testnet: active at V14_HEIGHT",    gv_g4_active_at(V14_HEIGHT) == true);
