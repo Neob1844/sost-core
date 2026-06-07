@@ -22,7 +22,10 @@ jobs:
           sudo apt-get install -y cmake g++ libssl-dev
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        # SBPOW=OFF: the V14 safety tests (fork constants, H3/H4, gold vault) do
+        # NOT need the Schnorr path, and the GitHub runner has no libsecp256k1
+        # schnorrsig module (SBPOW=ON would FATAL_ERROR at configure).
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=OFF
 
       - name: Build V14 safety tests
         run: |
@@ -55,7 +58,7 @@ jobs:
           sudo apt-get install -y cmake g++ libssl-dev
       - name: Configure + build
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=ON
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSOST_ENABLE_PHASE2_SBPOW=OFF
           cmake --build build -j2
       - name: ctest
         run: ctest --test-dir build --output-on-failure
