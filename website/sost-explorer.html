@@ -3831,6 +3831,19 @@ async function updateDashboard(info){
     var ph2card=document.getElementById('phase2ReadyMinersCard');
     if(ph2el){
       ph2el.textContent=String(ph2count);
+      // Floor PEAK ACTIVE MINERS at the updated-miners count so it shows a value
+      // on a fresh browser instead of "—". Distinct all-time producers is always
+      // >= updated-since-#7100, so this is a safe lower bound; the exact value is
+      // refined upward by the on-demand full-chain scan (sost_peak_miners_ever).
+      try{
+        var _pmEl=document.getElementById('dPeakMiner');
+        if(_pmEl){
+          var _pmCur=parseInt(String(_pmEl.textContent||'').replace(/[^0-9]/g,''),10)||0;
+          var _pmStore=parseInt(localStorage.getItem('sost_peak_miners_ever')||'0',10)||0;
+          var _pmFloor=Math.max(_pmCur,_pmStore,ph2count||0);
+          if(_pmFloor>0){_pmEl.textContent=String(_pmFloor);localStorage.setItem('sost_peak_miners_ever',String(_pmFloor));}
+        }
+      }catch(e){}
       // All text stays in the card's blue (#4488ff). Status is conveyed by
       // the pulsing red border instead — applied via the class below — so the
       // numbers themselves remain readable in any colour-blind setting.
