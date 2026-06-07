@@ -68,9 +68,13 @@ pre-fork path immutable (old blocks replay bit-identical).
   `test-gv-slice1-activation` (whitelist == decode(ADDR_MINER_FOUNDER), cap, dual-whitelist) +
   `test-v13-gold-vault-slice1` (mainnet 45/45, testnet 30/30) + CI hard-gate. The mainnet
   activation flips to 15000 only in the final pre-fork commit (after G4+G5 + soak).
-- B2 (if D3 = full): implement G4 auto-tally (67-block window, 90% threshold, **silence=accept**
-  automatic at the validator), G5 Guardian pronouncement tx-type + 10-block grace + **auto-disconnect
-  at block 100,000** (operator decision 2026-06-07; automation the operator wants). Add cross-validator agreement test.
+- B2 (G4): ▶ IN PROGRESS — pure tally module DONE (`include/sost/gv_g4.h`, `test-gv-g4`, in CI):
+  67-block window, 90% floor (61/67), +10% foundation boost, version-bit signaling, deferred on
+  mainnet / active on testnet. Design: `docs/V14_GOLD_VAULT_G4_DESIGN.md`. **Next:** wire the tally
+  into block validation (track pending proposal, count `GV_G4_SIGNAL_BIT` over the window, reject a
+  vault spend lacking 61/67) — replay byte-identical pre-activation.
+- B2 (G5): G5 Guardian pronouncement tx-type + 10-block grace + **silence=accept** + **auto-disconnect
+  at block 100,000** (operator decision 2026-06-07). Add cross-validator agreement test.
 - B3: testnet soak across the activation height; replay-validate; then enable on mainnet via the gate.
 
 **DECISION (operator, 2026-06-07): V14 ships the FULL Gold Vault Phase I governance (G1/G2/G3a

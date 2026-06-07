@@ -286,6 +286,10 @@ add_executable(test-gv-slice1-activation tests/test_gv_slice1_activation.cpp)
 target_link_libraries(test-gv-slice1-activation PRIVATE sost-core)
 add_test(NAME gv-slice1-activation COMMAND test-gv-slice1-activation)
 
+add_executable(test-gv-g4 tests/test_gv_g4.cpp)
+target_link_libraries(test-gv-g4 PRIVATE sost-core)
+add_test(NAME gv-g4 COMMAND test-gv-g4)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)
