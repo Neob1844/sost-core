@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-01-v328",
-  "note": "Trinity banner: 'Protocol Registry adds the proof, reputation and future-reward rail' (was 'SOST adds'). Force-reload open explorers. Meta tag and JSON stay in lockstep."
+  "v": "2026-06-07-v329",
+  "note": "V14 SECURITY UPDATE banner added: all external miners/node operators must COMPILE the new binary (commit ef74e885) and restart BOTH sost-node and sost-miner before block #15,000. Force-reload open explorers. Meta tag and JSON stay in lockstep."
 }
