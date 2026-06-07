@@ -68,7 +68,7 @@ static const int64_t STOCKS_PER_SOST = 100000000LL;
 // so FEE_RATE_DEFAULT=1 is already valid. The 100-stock flat floor is
 // a dust-protection safety margin, not a per-byte multiplier.
 static const int64_t MIN_FEE_STOCKS   = 100;    // flat floor: 0.000001 SOST
-static const int64_t FEE_RATE_DEFAULT  = 1;     // 1 stock/byte (consensus min S8)
+static const int64_t FEE_RATE_DEFAULT  = 10;    // 10 stocks/byte default (>= consensus min 1, S8; anti-spam, V14)
 
 // RPC auth credentials (empty = no auth header sent)
 static std::string g_rpc_user = "";

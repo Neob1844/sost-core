@@ -535,7 +535,10 @@ int64_t Mempool::GetDynamicRelayFloor(int64_t chain_height) const {
     else if (sz > DYNAMIC_FEE_PRESSURE_HIGH)   mult = DYNAMIC_FEE_MULT_HIGH;
     else if (sz > DYNAMIC_FEE_PRESSURE_MED)    mult = DYNAMIC_FEE_MULT_MED;
     else if (sz > DYNAMIC_FEE_PRESSURE_LOW)    mult = DYNAMIC_FEE_MULT_LOW;
-    int64_t floor = DYNAMIC_FEE_BASE * mult;
+    // V14 (block 15000): the NORMAL relay floor base rises 1 -> 10 stocks/byte.
+    // Policy only; pre-V14 behaviour is unchanged.
+    int64_t base = (chain_height >= V14_HEIGHT) ? DYNAMIC_FEE_BASE_V14 : DYNAMIC_FEE_BASE;
+    int64_t floor = base * mult;
     if (floor > DYNAMIC_FEE_CEILING) floor = DYNAMIC_FEE_CEILING;
     return floor;
 }
@@ -543,7 +546,7 @@ int64_t Mempool::GetDynamicRelayFloor(int64_t chain_height) const {
 DynamicFeeInfo Mempool::GetFeeInfo(int64_t chain_height) const {
     DynamicFeeInfo info;
     info.mempool_size = entries_.size();
-    info.base_fee = DYNAMIC_FEE_BASE;
+    info.base_fee = (chain_height >= V14_HEIGHT) ? DYNAMIC_FEE_BASE_V14 : DYNAMIC_FEE_BASE;
     info.relay_floor = GetDynamicRelayFloor(chain_height);
     info.multiplier = info.relay_floor / std::max<int64_t>(1, info.base_fee);
     if (info.mempool_size > DYNAMIC_FEE_PRESSURE_EXTREME)      info.pressure_level = "extreme";

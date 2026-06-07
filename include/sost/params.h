@@ -668,6 +668,10 @@ inline constexpr int64_t  DYNAMIC_FEE_ACTIVATION_HEIGHT   = 10000;
 
 // Base relay fee (same as current)
 inline constexpr int64_t  DYNAMIC_FEE_BASE                = 1;     // stocks/byte (floor)
+// V14 (block 15000): raise the NORMAL relay/mempool floor 1 -> 10 stocks/byte.
+// Policy only (relay/mempool acceptance) — block consensus still accepts >=1
+// stock/byte (S8), so this changes no block validity and causes no fork.
+inline constexpr int64_t  DYNAMIC_FEE_BASE_V14            = 10;    // stocks/byte (floor from V14_HEIGHT)
 
 // Pressure thresholds (mempool entry count)
 inline constexpr size_t   DYNAMIC_FEE_PRESSURE_LOW        = 100;   // >100 tx → 2x
