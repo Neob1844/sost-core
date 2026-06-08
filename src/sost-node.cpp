@@ -40,6 +40,7 @@
 #include "sost/pow/convergencex.h"
 #include "sost/block_validation.h"
 #include "sost/gold_vault_slice1.h"   // W1: Gold Vault Slice 1 enforcement in the real block path
+#include "sost/gv_g4.h"               // W3: Gold Vault G4 67-block miner-approval window
 #include "sost/sostcompact.h"
 #include "sost/checkpoints.h"
 #include "sost/popc.h"
@@ -4574,6 +4575,7 @@ static bool process_block(const std::string& block_json) {
     UtxoSet v14_scratch;
     std::unordered_set<std::string> v14_seen_txids;
     PubKeyHash gv_slice1_gold_pkh{};   // W1: Gold Vault constitutional PKH for Slice 1 enforcement
+    bool gv_vault_spend_in_block = false;   // W3: set if any tx spends from the Gold Vault
     if(v14_txrules){ v14_scratch = g_utxo_set; v14_seen_txids.reserve(txs.size()*2);
                      address_decode(ADDR_GOLD_VAULT, gv_slice1_gold_pkh); }
 
@@ -4633,6 +4635,9 @@ static bool process_block(const std::string& block_json) {
                     record_block_reject(gv_reason);
                     return false;
                 }
+                // W3: remember that this block contains a Gold Vault spend, so the
+                // G4 67-block miner-approval window can be enforced after the loop.
+                if(gv_verdict == GvSlice1Verdict::Ok) gv_vault_spend_in_block = true;
             }
 
             int64_t fee_i=0; std::string ferr;
@@ -4673,6 +4678,35 @@ static bool process_block(const std::string& block_json) {
                 printf("[BLOCK] REJECTED: fee overflow\n");
                 return false;
             }
+        }
+    }
+
+    // W3 — Gold Vault G4 miner-approval window. When G4 is active AND this block
+    // contains a Gold Vault spend, count the G4 approval markers in the coinbases
+    // of the preceding 67 blocks [height-67, height-1] and require >= 61/67
+    // (gv_g4_window_approved). The current block's own coinbase does NOT count.
+    // Gated by gv_g4_active_at(height): mainnet DEFERRED (INT64_MAX) → pure no-op,
+    // replay byte-identical; testnet active at V15_HEIGHT. Foundation quality
+    // boost (G5) is not wired yet → foundation_signaled=false. This is the step
+    // where the W2 markers finally DECIDE. See docs/V14_EXECUTION_PLAN.md (W3).
+    if(gv_g4_active_at(height) && gv_vault_spend_in_block){
+        // does the coinbase at height hh carry the G4 approval marker?
+        auto g4_approves_at = [](int64_t hh) -> bool {
+            if(hh < 0 || hh >= (int64_t)g_blocks.size()) return false;
+            const auto& psb = g_blocks[hh];
+            if(psb.tx_hexes.empty()) return false;
+            std::vector<Byte> craw;
+            if(!decode_tx_hex(psb.tx_hexes[0], craw)) return false;
+            Transaction pcb; std::string cberr;
+            if(!Transaction::Deserialize(craw, pcb, &cberr)) return false;
+            return gv_g4_coinbase_approves(pcb);
+        };
+        int32_t g4_yes = gv_g4_count_window(height, g4_approves_at);
+        if(!gv_g4_window_approved(g4_yes, /*foundation_signaled=*/false)){
+            printf("[BLOCK] REJECTED: gv_g4 vault spend lacks %d/%d miner approval (got %d) at height %lld\n",
+                   (int)gv_g4_approval_floor(), (int)sost::GV_G4_SIGNAL_WINDOW, g4_yes, (long long)height);
+            record_block_reject("gv_g4 vault spend lacks 67-block miner approval");
+            return false;
         }
     }
 

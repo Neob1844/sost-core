@@ -136,8 +136,17 @@ but both must be handled before any flip:
   INT64_MAX). Rejects: amount>0, wrong pkh, two markers, marker-not-last. Tests:
   `test-gv-g4-coinbase` (mainnet 4/4 + testnet 10/10) in the CI hard-gate. W2 only RECOGNIZES
   the marker — counting it over the 67-block window + enforcing 61/67 is W3.
-- W3: in `process_block`, on a detected vault spend at height h, count `gv_g4_coinbase_approves`
-  over blocks [h-67, h-1] (from `g_blocks`) and require `gv_g4_window_approved(count)`.
+- W3: ✅ DONE — in `process_block`, when `gv_g4_active_at(height)` AND the block contains a
+  Gold Vault spend (flagged by the W1 Slice-1 check), count the G4 markers in the coinbases of
+  the preceding 67 blocks `[h-67, h-1]` (deserialized from `g_blocks[hh].tx_hexes[0]` via
+  `gv_g4_coinbase_approves`) and require `gv_g4_window_approved(count, foundation=false)` — else
+  reject the block. Counting is the new pure helper `gv_g4_count_window(h, approves)` (current h
+  excluded, no off-by-one, negative heights skipped). Mainnet DEFERRED (gv_g4 INT64_MAX) → pure
+  no-op, replay byte-identical; testnet active at V15_HEIGHT. Tests: `test-gv-g4` +9 window cases
+  (h-1/h-67 inside, h-68 outside, current-h excluded, 61→approve/60→reject, genesis-safe).
+  Mainnet ctest 66/66; testnet build green. Foundation +10% boost (G5) not wired yet.
+  **Reorg note:** the window reads `g_blocks` (active chain); the final V15 mainnet flip must
+  re-verify behaviour under reorg replay before activation.
 - W4: G5 veto/grace; then cross-validator + testnet soak; then the single final flip to V14_HEIGHT.
 
 > Status: gv_g4 pure module + coinbase-marker channel + detector DONE & tested (`test-gv-g4`,

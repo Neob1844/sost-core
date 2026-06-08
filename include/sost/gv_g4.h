@@ -96,4 +96,20 @@ inline constexpr bool gv_g4_window_approved(int32_t miner_yes, bool foundation_s
                >= gv_g4_approval_floor(window);
 }
 
+// W3: count G4 approval markers over the window [h-window, h-1] using a per-height
+// lookup. `approves(height)` returns true iff the coinbase at that height carries
+// the marker. The current height `h` is NOT included (only PRECEDING blocks), and
+// heights < 0 are skipped. Pure — the caller supplies the chain lookup, so this is
+// unit-testable without the node. Result is clamped to [0, window].
+template <typename Approves>
+inline int32_t gv_g4_count_window(int64_t h, Approves approves,
+                                  int32_t window = GV_G4_SIGNAL_WINDOW) {
+    int32_t yes = 0;
+    for (int64_t hh = h - window; hh <= h - 1; ++hh) {
+        if (hh < 0) continue;
+        if (approves(hh)) { ++yes; if (yes >= window) break; }
+    }
+    return yes;
+}
+
 } // namespace sost

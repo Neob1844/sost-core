@@ -51,6 +51,35 @@ int main() {
     CHECK("mainnet: deferred at INT64_MAX-1",  gv_g4_active_at(INT64_MAX-1) == false);
 #endif
 
+    // W3 — window counting [h-67, h-1], current h excluded, no off-by-one.
+    {
+        const int64_t H = 10000;
+        // all 67 preceding blocks approve, the current one also "approves"
+        CHECK("count: all preceding approve -> 67",
+              gv_g4_count_window(H, [](int64_t){ return true; }) == 67);
+        // none approve -> 0
+        CHECK("count: none approve -> 0",
+              gv_g4_count_window(H, [](int64_t){ return false; }) == 0);
+        // only the current height h approves -> NOT counted (window is preceding only)
+        CHECK("count: current h not counted",
+              gv_g4_count_window(H, [H](int64_t hh){ return hh == H; }) == 0);
+        // boundaries: h-1 counts, h-67 counts, h-68 does NOT (outside window)
+        CHECK("count: h-1 inside window",
+              gv_g4_count_window(H, [H](int64_t hh){ return hh == H-1; }) == 1);
+        CHECK("count: h-67 inside window",
+              gv_g4_count_window(H, [H](int64_t hh){ return hh == H-GV_G4_SIGNAL_WINDOW; }) == 1);
+        CHECK("count: h-68 outside window",
+              gv_g4_count_window(H, [H](int64_t hh){ return hh == H-GV_G4_SIGNAL_WINDOW-1; }) == 0);
+        // exactly 61 of the 67 approve -> approved; 60 -> rejected (no off-by-one)
+        int32_t c61 = gv_g4_count_window(H, [H](int64_t hh){ return hh <= H-1 && hh >= H-61; });
+        int32_t c60 = gv_g4_count_window(H, [H](int64_t hh){ return hh <= H-1 && hh >= H-60; });
+        CHECK("count: 61 preceding -> 61 and approved", c61==61 && gv_g4_window_approved(c61,false));
+        CHECK("count: 60 preceding -> 60 and rejected", c60==60 && !gv_g4_window_approved(c60,false));
+        // near genesis: negative heights skipped, no crash
+        CHECK("count: near genesis (h=3) skips negative heights",
+              gv_g4_count_window(3, [](int64_t){ return true; }) == 3);
+    }
+
     std::printf("=== Results: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail==0 ? 0 : 1;
 }
