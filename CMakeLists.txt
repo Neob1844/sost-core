@@ -306,6 +306,11 @@ add_executable(test-gv-g5 tests/test_gv_g5.cpp)
 target_link_libraries(test-gv-g5 PRIVATE sost-core secp256k1)
 add_test(NAME gv-g5 COMMAND test-gv-g5)
 
+# B3: cross-validator / determinism of the composed Gold Vault governance verdict
+add_executable(test-gv-governance-determinism tests/test_gv_governance_determinism.cpp)
+target_link_libraries(test-gv-governance-determinism PRIVATE sost-core secp256k1)
+add_test(NAME gv-governance-determinism COMMAND test-gv-governance-determinism)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)

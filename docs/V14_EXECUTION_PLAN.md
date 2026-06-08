@@ -85,7 +85,12 @@ pre-fork path immutable (old blocks replay bit-identical).
   vault spend lacking 61/67) — replay byte-identical pre-activation.
 - B2 (G5): G5 Guardian pronouncement tx-type + 10-block grace + **silence=accept** + **auto-disconnect
   at block 100,000** (operator decision 2026-06-07). Add cross-validator agreement test.
-- B3: testnet soak across the activation height; replay-validate; then enable on mainnet via the gate.
+- B3: ▶ IN PROGRESS — hardening/validation (no new features). Automated: cross-validator /
+  determinism of the composed governance verdict (`test-gv-governance-determinism`, testnet
+  16/16 + mainnet 4/4, in CI) + reorg recompute-from-chain property + the mainnet replay
+  gate-off guarantee. Pending (needs a live testnet/chain, documented with commands in
+  `docs/V15_GOLD_VAULT_SOAK_REPORT.md`): multi-node soak across V15_HEIGHT, E2E reorg around
+  the window, full historical replay byte-identical vs baseline. Then enable on mainnet via the gate.
 
 **DECISION (operator, 2026-06-07): V14 ships the FULL Gold Vault Phase I governance (G1/G2/G3a
 Slice 1 + G4 67-block signaling window with silence=accept auto-tally + G5 transitional Guardian
