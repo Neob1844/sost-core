@@ -1000,7 +1000,9 @@ inline constexpr int64_t V14_HEIGHT                       = 200;     // TESTNET 
 #else
 inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET (UNCHANGED — H3/H4 hardening; already in deployed binaries, no node re-update needed)
 #endif
-inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT      = V14_HEIGHT;
+// DTD_POPC_ELIGIBILITY_HEIGHT is defined AFTER V15_HEIGHT below — it is
+// V15_HEIGHT + a grace window (P4c), so PoPC automation goes live before the
+// lottery starts REQUIRING an active commitment. The consensus flag stays false.
 inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;
 
 // V15 — full automation bundle (PoPC Model A/B, OTC/P2P atomic swap, Gold Vault
@@ -1014,6 +1016,17 @@ inline constexpr int64_t V15_HEIGHT                       = 300;     // TESTNET 
 #else
 inline constexpr int64_t V15_HEIGHT                       = 20000;   // MAINNET (target; automation gates stay deferred until soaked)
 #endif
+
+// P4c — staged V15 activation. PoPC automation (Register/Activate/Renew,
+// auto-slash/auto-settle, Gold Vault governance) goes live at V15_HEIGHT. The
+// DTD lottery only REQUIRES an active PoPC commitment from
+// DTD_POPC_ELIGIBILITY_HEIGHT = V15_HEIGHT + DTD_POPC_GRACE_BLOCKS, giving
+// miners/operators ~7 days (1000 blocks) to create + activate a contract before
+// the eligibility gate bites — nobody is dropped from the lottery by surprise.
+// The gate is STILL inert until DTD_POPC_GATE_CONSENSUS_ACTIVE is flipped in the
+// final, soaked, coordinated release (mainnet 21000 / testnet 1300).
+inline constexpr int64_t DTD_POPC_GRACE_BLOCKS           = 1000;
+inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT     = V15_HEIGHT + DTD_POPC_GRACE_BLOCKS;
 
 // =============================================================================
 // DTD Lottery Emergency Pause / Resume — signed control signal (DESIGNED,

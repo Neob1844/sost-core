@@ -105,11 +105,11 @@ int main(){
               popc_v15_commitment_status(e, A, 100000) == PopcV15Status::Settled);
     }
 
-    // ---- a bare Register (never Activated) has NO audit clock: never auto-slashed ----
+    // ---- a bare Register (never Activated) is Pending (P4c) — not active, not slashed ----
     {
         std::vector<PopcV15Event> e = { ev(PopcEventType::Register, A, oA, (uint8_t)PopcModel::A, 100, 100000) };
-        CHECK("never-activated commitment is not auto-slashed",
-              popc_v15_commitment_status(e, A, 100 + 10*I) == PopcV15Status::Active);
+        CHECK("never-activated commitment stays Pending (never active, never auto-slashed)",
+              popc_v15_commitment_status(e, A, 100 + 10*I) == PopcV15Status::Pending);
     }
 
     // ---- Model B: same auto-slash / auto-settle behaviour ----
@@ -136,11 +136,16 @@ int main(){
               popc_v15_commitment_status(missed, A, q) == PopcV15Status::Slashed);
     }
 
-    // ---- P2/P4a regression: explicit terminal + expiry membership unchanged ----
+    // ---- P4c: register-only is Pending (never in the active set); activated is ----
     {
         std::vector<PopcV15Event> e = { ev(PopcEventType::Register, A, oA, 0, 1000, 9000) };
-        CHECK("register-only active before end", inSet(chain_active_popc_set(e, 2000), A));
-        CHECK("register-only out at end",        !inSet(chain_active_popc_set(e, 9000), A));
+        CHECK("register-only NOT in active set (P4c)", !inSet(chain_active_popc_set(e, 2000), A));
+        std::vector<PopcV15Event> e2 = {
+            ev(PopcEventType::Register, A, oA, 0, 1000, 9000),
+            ev(PopcEventType::Activate, A, oA, 0, 1000, 9000),
+        };
+        CHECK("registered + activated IS in active set", inSet(chain_active_popc_set(e2, 2000), A));
+        CHECK("registered + activated out at end",       !inSet(chain_active_popc_set(e2, 9000), A));
     }
 
     // ---- gating: empty events = no-op; mainnet deferred; DTD bridge OFF ----

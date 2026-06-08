@@ -4223,13 +4223,24 @@ static bool compute_fee_for_tx(const Transaction& tx, const IUtxoView& view, int
     return true;
 }
 
-// P4a — collect canonical PoPC V15 events from the chain's carriers up to `height`.
-// Pure read of g_blocks (the active chain) → deterministic + reorg-safe (recomputed
-// on every call from the current chain, no cached state). Gated: returns empty when
-// PoPC V15 is not active (so mainnet, deferred at INT64_MAX, is a pure no-op). For
-// Activate carriers the signed attestation must verify (Model A: by the owner key).
-// This is the source registered into lottery::has_active_canonical_popc — it NEVER
-// reads popc_registry.json.
+// P4a/P4c — collect canonical PoPC V15 events from the chain's carriers up to
+// `height`. Pure read of g_blocks (the active chain) → deterministic + reorg-safe
+// (recomputed on every call from the current chain, no cached state). Gated:
+// returns empty when PoPC V15 is not active (so mainnet, deferred at INT64_MAX, is
+// a pure no-op). This is the source registered into lottery::has_active_canonical_popc
+// — it NEVER reads popc_registry.json.
+//
+// P4c AUTHORIZATION — every carried event must be authorized by the commitment
+// OWNER, so a third party cannot inject events on a commitment they do not own
+// just by posting a marker output:
+//   * Activate — the signed balance attestation must verify AND the signing key
+//     must be the owner's key (both Model A and B; supervisor co-sign is a future
+//     extension), otherwise the activation is ignored.
+//   * Register / Renew / Suspend — must carry an owner ECDSA signature over
+//     popc_v15_event_digest(...) (popc_v15_verify_event_auth); unsigned/forged
+//     ones are ignored.
+//   * Slash / Settle — NOT carriable at all: they are derived deterministically
+//     (auto-slash / auto-settle), so no manual or forged Slash/Settle can enter.
 static std::vector<sost::PopcV15Event> node_collect_popc_events(int64_t height) {
     std::vector<sost::PopcV15Event> ev;
     if (!sost::popc_v15_active_at(height)) return ev;     // gated → no-op pre-activation / mainnet
@@ -4245,12 +4256,17 @@ static std::vector<sost::PopcV15Event> node_collect_popc_events(int64_t height) 
                 if (!sost::popc_v15_is_carrier_output(o)) continue;
                 auto c = sost::popc_v15_decode_output(o, h);
                 if (!c.ok) continue;
+                if (!sost::popc_v15_event_is_carriable(c.event.type)) continue;  // P4c: no Slash/Settle/Expire carriers
                 if (c.event.type == sost::PopcEventType::Activate) {
-                    // attestation must verify; Model A binds the pubkey to the owner
+                    // attestation must verify AND be signed by the owner key
                     if (!sost::popc_v15_verify_attestation(c.event.commitment_id, c.balance_mg,
                                                            c.attest_height, c.pubkey, c.sig)) continue;
-                    if (c.event.model == (uint8_t)sost::PopcModel::A &&
-                        !sost::popc_v15_pubkey_is_owner(c.pubkey, c.event.owner_pkh)) continue;
+                    if (!sost::popc_v15_pubkey_is_owner(c.pubkey, c.event.owner_pkh)) continue;
+                } else {
+                    // Register / Renew / Suspend: require a valid owner authorization signature
+                    if (!c.has_sig) continue;
+                    if (!sost::popc_v15_verify_event_auth(c.event.type, c.event.commitment_id, c.event.owner_pkh,
+                                                          c.event.model, c.event.end_height, c.pubkey, c.sig)) continue;
                 }
                 ev.push_back(c.event);
             }

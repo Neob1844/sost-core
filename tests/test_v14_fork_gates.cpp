@@ -43,8 +43,13 @@ static_assert(DYNAMIC_FEE_ACTIVATION_HEIGHT == 10000,
     "Dynamic-fee policy activation height changed.");
 
 // ---- Deferred gates: MUST be no-ops in V14 (flip only via point release) ----
-static_assert(DTD_POPC_ELIGIBILITY_HEIGHT == V14_HEIGHT,
-    "DTD_POPC_ELIGIBILITY_HEIGHT must equal V14_HEIGHT.");
+// P4c — DTD-PoPC eligibility is staged AFTER PoPC automation (V15_HEIGHT) by a
+// grace window, so miners can create+activate a contract before the lottery
+// requires it. The gate itself still ships DEFERRED (flag false).
+static_assert(DTD_POPC_GRACE_BLOCKS == 1000,
+    "PoPC eligibility grace window changed from 1000 blocks — confirm intentional.");
+static_assert(DTD_POPC_ELIGIBILITY_HEIGHT == V15_HEIGHT + DTD_POPC_GRACE_BLOCKS,
+    "DTD_POPC_ELIGIBILITY_HEIGHT must equal V15_HEIGHT + DTD_POPC_GRACE_BLOCKS (21000 mainnet / 1300 testnet).");
 static_assert(DTD_POPC_GATE_CONSENSUS_ACTIVE == false,
     "PoPC eligibility gate must ship DEFERRED until on-chain PoPC migration "
     "(docs/V14_EXECUTION_PLAN.md Phase C). Do NOT flip here.");

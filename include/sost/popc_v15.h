@@ -170,6 +170,41 @@ struct PopcActiveEntry {
     int64_t    end_height{0};
 };
 
+// P4c — authorization digest for the NON-attest state-changing carriers
+// (Register / Renew / Suspend). The commitment owner signs this digest; the node
+// rejects any such carrier whose signature is missing, invalid, or not by the
+// owner key (pkh != owner_pkh). This stops a third party from emitting events on
+// a commitment they do not own just by posting a marker output. Domain-separated
+// and bound to (type, model, commitment_id, owner_pkh, end_height).
+inline constexpr char POPC_V15_EVENT_AUTH_DOMAIN[] = "SOST/POPC-V15-EVENT-AUTH/v1";
+inline Bytes32 popc_v15_event_digest(PopcEventType type, const Bytes32& commitment_id,
+                                     const PubKeyHash& owner, uint8_t model, int64_t end_height) {
+    std::vector<uint8_t> m;
+    for (size_t i = 0; i + 1 < sizeof(POPC_V15_EVENT_AUTH_DOMAIN); ++i) m.push_back((uint8_t)POPC_V15_EVENT_AUTH_DOMAIN[i]);
+    m.push_back((uint8_t)type); m.push_back(model);
+    for (uint8_t b : commitment_id) m.push_back(b);
+    for (uint8_t b : owner)         m.push_back(b);
+    _put_le64(m, end_height);
+    return sha256(m.data(), m.size());
+}
+
+// Which event types may ride on-chain as a carrier (P4c). Slash & Settle are
+// NEVER carried — they are derived deterministically (auto-slash / auto-settle),
+// so no manual/forged Slash or Settle can ever enter the chain. Expire is also
+// not carried (expiry is implied by end_height).
+inline constexpr bool popc_v15_event_is_carriable(PopcEventType t) {
+    return t == PopcEventType::Register || t == PopcEventType::Activate ||
+           t == PopcEventType::Renew    || t == PopcEventType::Suspend;
+}
+
+// P4c — verify a NON-attest carrier's owner authorization: the compact-ECDSA
+// signature must be valid over popc_v15_event_digest(...) AND `pubkey` must hash
+// to `owner` (the owner self-authorizes Register/Renew/Suspend). Pure crypto;
+// declared here, implemented in popc_v15.cpp (needs secp256k1).
+bool popc_v15_verify_event_auth(PopcEventType type, const Bytes32& commitment_id, const PubKeyHash& owner,
+                                uint8_t model, int64_t end_height,
+                                const std::vector<uint8_t>& pubkey, const std::vector<uint8_t>& sig_compact);
+
 // Audit cadence (protocol-wide, deterministic): an ACTIVATED commitment must be
 // re-attested by its owner at least once per interval. Missing a scheduled audit
 // by more than the grace window (POPC_V15_AUDIT_GRACE_BLOCKS) makes it
@@ -227,8 +262,10 @@ inline std::map<Bytes32, PopcV15Rec> chain_popc_recompute(
                        it->second.status == PopcV15Status::Settled)) continue;  // terminal: frozen
         switch (e.type) {
             case PopcEventType::Register:
+                // P4c — Register only DECLARES the commitment (Pending). It does
+                // NOT count as custody until a valid Activate attestation lands.
                 if (!exists) { PopcV15Rec r; r.owner=e.owner_pkh; r.model=e.model; r.end=e.end_height;
-                               r.status=PopcV15Status::Active; r.order=seq++; by_id.emplace(e.commitment_id, r); }
+                               r.status=PopcV15Status::Pending; r.order=seq++; by_id.emplace(e.commitment_id, r); }
                 // duplicate Register is idempotent (first wins) — deterministic
                 break;
             case PopcEventType::Activate:
@@ -342,15 +379,19 @@ inline constexpr std::array<uint8_t,20> POPC_V15_MARKER_PKH = {
 //   balance_mg(i64 LE,8) | attest_height(i64 LE,8) | pubkey(33, compressed) | sig(64, compact)
 inline constexpr size_t POPC_V15_CARRIER_BASE_LEN   = 67;
 inline constexpr size_t POPC_V15_CARRIER_ATTEST_LEN = 67 + 8 + 8 + 33 + 64;  // 180
+// P4c — owner-authorized non-attest carrier (Register/Renew/Suspend):
+//   base(67) | pubkey(33, compressed) | sig(64, compact over popc_v15_event_digest)
+inline constexpr size_t POPC_V15_CARRIER_SIGNED_LEN = 67 + 33 + 64;          // 164
 
 struct PopcV15Carrier {
     bool        ok{false};
     PopcV15Event event{};
-    bool        has_attest{false};
+    bool        has_attest{false};  // Activate carrier carries a balance attestation
+    bool        has_sig{false};     // P4c: carrier carries an owner-authorization signature
     int64_t     balance_mg{0};
     int64_t     attest_height{0};
-    std::vector<uint8_t> pubkey;   // 33-byte compressed (Activate only)
-    std::vector<uint8_t> sig;      // 64-byte compact   (Activate only)
+    std::vector<uint8_t> pubkey;   // 33-byte compressed (Activate or signed event)
+    std::vector<uint8_t> sig;      // 64-byte compact   (Activate or signed event)
 };
 
 inline int64_t _get_le64(const std::vector<uint8_t>& b, size_t off) {
@@ -368,6 +409,16 @@ inline std::vector<uint8_t> popc_v15_encode_event(PopcEventType type, const Byte
     p.insert(p.end(), cid.begin(), cid.end());
     p.insert(p.end(), owner.begin(), owner.end());
     _put_le64(p, end_height);
+    return p;
+}
+// P4c — encode an owner-authorized non-attest carrier (Register/Renew/Suspend):
+// base event + the owner's pubkey + the compact signature over popc_v15_event_digest.
+inline std::vector<uint8_t> popc_v15_encode_signed_event(PopcEventType type, const Bytes32& cid,
+                                                         const PubKeyHash& owner, uint8_t model, int64_t end_height,
+                                                         const std::vector<uint8_t>& pubkey33, const std::vector<uint8_t>& sig64) {
+    auto p = popc_v15_encode_event(type, cid, owner, model, end_height);
+    p.insert(p.end(), pubkey33.begin(), pubkey33.end());
+    p.insert(p.end(), sig64.begin(), sig64.end());
     return p;
 }
 // Encode an Activate (attestation response) carrier with the signed claim.
@@ -405,8 +456,13 @@ inline PopcV15Carrier popc_v15_decode_carrier(const std::vector<uint8_t>& p, int
         c.attest_height = _get_le64(p, 75);
         c.pubkey.assign(p.begin() + 83,  p.begin() + 83 + 33);
         c.sig.assign(   p.begin() + 116, p.begin() + 116 + 64);
+    } else if (p.size() == POPC_V15_CARRIER_SIGNED_LEN) {
+        // P4c — owner-authorized non-attest carrier: base + pubkey(33) + sig(64).
+        c.has_sig = true;
+        c.pubkey.assign(p.begin() + 67, p.begin() + 67 + 33);
+        c.sig.assign(   p.begin() + 100, p.begin() + 100 + 64);
     } else {
-        if (p.size() != POPC_V15_CARRIER_BASE_LEN) return c;                // non-attest must be exact base
+        if (p.size() != POPC_V15_CARRIER_BASE_LEN) return c;                // otherwise must be exact base
     }
     c.ok = true;
     return c;

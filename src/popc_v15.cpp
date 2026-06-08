@@ -43,4 +43,23 @@ bool popc_v15_verify_attestation(const Bytes32& commitment_id, int64_t balance_m
     return secp256k1_ecdsa_verify(ctx, &sig, digest.data(), &pk) == 1;
 }
 
+bool popc_v15_verify_event_auth(PopcEventType type, const Bytes32& commitment_id, const PubKeyHash& owner,
+                                uint8_t model, int64_t end_height,
+                                const std::vector<uint8_t>& pubkey, const std::vector<uint8_t>& sig_compact) {
+    // The signing key must be the owner's (no third party can authorize events on
+    // a commitment they do not own).
+    if (!popc_v15_pubkey_is_owner(pubkey, owner)) return false;
+    if (sig_compact.size() != 64) return false;
+    if (pubkey.size() != 33 && pubkey.size() != 65) return false;
+    secp256k1_context* ctx = pv_ctx();
+    if (!ctx) return false;
+    secp256k1_pubkey pk;
+    if (!secp256k1_ec_pubkey_parse(ctx, &pk, pubkey.data(), pubkey.size())) return false;
+    secp256k1_ecdsa_signature sig;
+    if (!secp256k1_ecdsa_signature_parse_compact(ctx, &sig, sig_compact.data())) return false;
+    secp256k1_ecdsa_signature_normalize(ctx, &sig, &sig);
+    Bytes32 digest = popc_v15_event_digest(type, commitment_id, owner, model, end_height);
+    return secp256k1_ecdsa_verify(ctx, &sig, digest.data(), &pk) == 1;
+}
+
 } // namespace sost

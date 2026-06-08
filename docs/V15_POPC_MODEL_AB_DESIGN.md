@@ -201,12 +201,31 @@ records the SOST-side commitment + bond + attestations. (OTC/P2P atomic swap is 
   answers/too-early, auto-settle in good standing, missed-audit-then-end slashes not settles, renew avoids
   wrong settle, explicit terminal preserved, never-activated immune, Model A & B, reorg recompute, P2/P4a
   regression, empty/no-op, DTD gate off). full ctest 73/73 on BOTH builds; in CI hard-gate.
-- **DTD↔PoPC bridge — PENDING / OFF.** `DTD_POPC_GATE_CONSENSUS_ACTIVE = false`. PoPC A/B is fully
-  automated for V15 / block #20000, but the lottery does NOT yet require an active PoPC commitment. Flipping
-  this gate is a consensus change (every node must agree, under a fresh announced fork height) and is
-  deferred to **P5** or a separate coordinated release — never flipped without a soak + replay.
+- **P4c** ✅ DONE — lifecycle correctness + carrier authorization (the two issues raised in the P4b
+  review). **(1) Register no longer counts as custody:** `chain_popc_recompute` creates a Register as
+  `Pending`; only a valid `Activate` attestation moves it to `Active`, so a register-only commitment is
+  never in the active set (`popc_v15_owner_active` false). **(2) Carriers are owner-authorized:** a new
+  signed non-attest carrier (`POPC_V15_CARRIER_SIGNED_LEN = 164` = base + pubkey(33) + sig(64)) carries the
+  owner's ECDSA signature over `popc_v15_event_digest(type, model, commitment_id, owner_pkh, end_height)`.
+  `node_collect_popc_events` now: rejects any non-carriable type (`popc_v15_event_is_carriable` ⇒ **Slash &
+  Settle are NOT carriable** — they are derived only, so no manual/forged slash/settle can enter); requires
+  a valid owner signature (`popc_v15_verify_event_auth`) on Register/Renew/Suspend; and requires the
+  Activate attestation to be signed by the **owner** key for both models. A third party can no longer inject
+  events on a commitment they do not own. Replay across fields is prevented by domain separation; height-
+  binding/supervisor co-sign (Model B) are noted future hardening. Tests: `test-popc-v15-authz` 17/17
+  (carriable matrix, owner-auth accept/reject for attacker key / tampered field / wrong type / empty sig,
+  signed-carrier encode→decode→verify round-trip, unsigned base has_sig=false) + updated set/eligibility/
+  lifecycle tests assert register-only is Pending/not-active. full ctest **74/74** on mainnet AND testnet;
+  in CI hard-gate. Mainnet stays no-op; `DTD_POPC_GATE_CONSENSUS_ACTIVE` still `false`.
+- **Staged V15 activation (P4c).** `V15_HEIGHT = 20000` (PoPC automation, Gold Vault gov go live);
+  `DTD_POPC_ELIGIBILITY_HEIGHT = V15_HEIGHT + DTD_POPC_GRACE_BLOCKS = 21000` (mainnet) / 1300 (testnet).
+  The 1000-block (~7 day) grace lets miners/operators create + activate a PoPC contract BEFORE the lottery
+  starts requiring one — nobody is dropped by surprise. Pinned by `static_assert` in test-v14-fork-gates.
+- **DTD↔PoPC bridge — PENDING / OFF.** `DTD_POPC_GATE_CONSENSUS_ACTIVE = false`. Even past 21000 the lottery
+  does NOT require PoPC until this flag is flipped. Flipping it is a consensus change (every node must agree,
+  under a fresh announced fork height) deferred to **P5** / a coordinated release — never without soak + replay.
 - **P5** — testnet soak across V15_HEIGHT + replay; then, only after that, the coordinated
-  `DTD_POPC_GATE_CONSENSUS_ACTIVE` flip.
+  `DTD_POPC_GATE_CONSENSUS_ACTIVE` flip at/after 21000.
 
 ## 8. Tests needed
 - Reward/schedule math (pure), attestation sign→verify + all rejections, `chain_active_popc_set`
