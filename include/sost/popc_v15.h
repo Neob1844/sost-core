@@ -14,6 +14,7 @@
 #include "sost/params.h"
 #include "sost/crypto.h"        // sha256, Bytes32
 #include "sost/tx_signer.h"     // PubKeyHash
+#include "sost/transaction.h"   // TxOutput (for the on-chain carrier)
 #include <cstdint>
 #include <climits>
 #include <array>
@@ -233,6 +234,112 @@ inline bool popc_v15_owner_active(const std::vector<PopcV15Event>& events,
     for (const auto& e : chain_active_popc_set(events, at_height))
         if (e.owner_pkh == owner_pkh) return true;
     return false;
+}
+
+// ============================================================================
+// P3 — on-chain carriers: the deterministic encoding of PoPC events in blocks.
+//
+// A PoPC event rides in a NORMAL transaction as a 0-value output to the fixed,
+// unspendable POPC_V15_MARKER_PKH, whose payload is a versioned, domain-separated
+// binary blob. P1's set engine (P2) consumes the decoded events; P3 only DEFINES
+// and DECODES the bytes — it is NOT wired into process_block or the DTD gate.
+// The decoder is PURE (byte parsing only); the gate (popc_v15_active_at) and the
+// attestation signature check (popc_v15_verify_attestation) are applied by the
+// caller in P4. Malformed / wrong-magic / wrong-version / wrong-length payloads
+// decode to ok=false, so pre-activation and normal txs are unaffected.
+// ============================================================================
+
+inline constexpr uint8_t POPC_V15_CARRIER_VERSION = 1;
+inline constexpr std::array<uint8_t,4> POPC_V15_MAGIC = { 'P','1','5', 0xC0 };
+// 20 ASCII bytes, unspendable (no private key) — the recognised carrier address.
+inline constexpr std::array<uint8_t,20> POPC_V15_MARKER_PKH = {
+    'P','O','P','C','-','V','1','5','-','M','A','R','K','E','R','-','0','0','0','1' };
+
+// Carrier layout v1 (base = 67 bytes):
+//   magic(4) | version(1) | event_type(1) | model(1) | commitment_id(32) | owner_pkh(20) | end_height(i64 LE,8)
+// For Activate (= attestation response), append (total 180):
+//   balance_mg(i64 LE,8) | attest_height(i64 LE,8) | pubkey(33, compressed) | sig(64, compact)
+inline constexpr size_t POPC_V15_CARRIER_BASE_LEN   = 67;
+inline constexpr size_t POPC_V15_CARRIER_ATTEST_LEN = 67 + 8 + 8 + 33 + 64;  // 180
+
+struct PopcV15Carrier {
+    bool        ok{false};
+    PopcV15Event event{};
+    bool        has_attest{false};
+    int64_t     balance_mg{0};
+    int64_t     attest_height{0};
+    std::vector<uint8_t> pubkey;   // 33-byte compressed (Activate only)
+    std::vector<uint8_t> sig;      // 64-byte compact   (Activate only)
+};
+
+inline int64_t _get_le64(const std::vector<uint8_t>& b, size_t off) {
+    int64_t v = 0; for (int i = 0; i < 8; ++i) v |= (int64_t)b[off + (size_t)i] << (8 * i); return v;
+}
+
+// Encode a non-attest event (Register/Renew/Suspend/Slash/Settle/Expire).
+inline std::vector<uint8_t> popc_v15_encode_event(PopcEventType type, const Bytes32& cid,
+                                                  const PubKeyHash& owner, uint8_t model, int64_t end_height) {
+    std::vector<uint8_t> p;
+    p.insert(p.end(), POPC_V15_MAGIC.begin(), POPC_V15_MAGIC.end());
+    p.push_back(POPC_V15_CARRIER_VERSION);
+    p.push_back((uint8_t)type);
+    p.push_back(model);
+    p.insert(p.end(), cid.begin(), cid.end());
+    p.insert(p.end(), owner.begin(), owner.end());
+    _put_le64(p, end_height);
+    return p;
+}
+// Encode an Activate (attestation response) carrier with the signed claim.
+inline std::vector<uint8_t> popc_v15_encode_attest(const Bytes32& cid, const PubKeyHash& owner, uint8_t model,
+                                                   int64_t end_height, int64_t balance_mg, int64_t attest_height,
+                                                   const std::vector<uint8_t>& pubkey33, const std::vector<uint8_t>& sig64) {
+    auto p = popc_v15_encode_event(PopcEventType::Activate, cid, owner, model, end_height);
+    _put_le64(p, balance_mg);
+    _put_le64(p, attest_height);
+    p.insert(p.end(), pubkey33.begin(), pubkey33.end());
+    p.insert(p.end(), sig64.begin(), sig64.end());
+    return p;
+}
+
+// Pure decode: payload bytes (+ the block height the carrier was seen at) → event.
+// ok=false on any malformed / wrong-magic / wrong-version / wrong-length payload.
+inline PopcV15Carrier popc_v15_decode_carrier(const std::vector<uint8_t>& p, int64_t block_height) {
+    PopcV15Carrier c;
+    if (p.size() < POPC_V15_CARRIER_BASE_LEN) return c;
+    for (size_t i = 0; i < 4; ++i) if (p[i] != POPC_V15_MAGIC[i]) return c;   // domain separation
+    if (p[4] != POPC_V15_CARRIER_VERSION) return c;                          // version
+    uint8_t type = p[5], model = p[6];
+    if (type > (uint8_t)PopcEventType::Settle) return c;                     // unknown event type
+    if (model > 1) return c;                                                 // model A=0 / B=1
+    PopcV15Event e;
+    e.type = (PopcEventType)type; e.model = model; e.height = block_height;
+    for (int i = 0; i < 32; ++i) e.commitment_id[(size_t)i] = p[7 + (size_t)i];
+    for (int i = 0; i < 20; ++i) e.owner_pkh[(size_t)i]     = p[39 + (size_t)i];
+    e.end_height = _get_le64(p, 59);
+    c.event = e;
+    if ((PopcEventType)type == PopcEventType::Activate) {
+        if (p.size() != POPC_V15_CARRIER_ATTEST_LEN) return c;              // attest needs exact length
+        c.has_attest = true;
+        c.balance_mg    = _get_le64(p, 67);
+        c.attest_height = _get_le64(p, 75);
+        c.pubkey.assign(p.begin() + 83,  p.begin() + 83 + 33);
+        c.sig.assign(   p.begin() + 116, p.begin() + 116 + 64);
+    } else {
+        if (p.size() != POPC_V15_CARRIER_BASE_LEN) return c;                // non-attest must be exact base
+    }
+    c.ok = true;
+    return c;
+}
+
+// Is this output a PoPC V15 carrier? (0-value, marker pkh, magic prefix.)
+inline bool popc_v15_is_carrier_output(const TxOutput& o) {
+    return o.amount == 0 && o.pubkey_hash == POPC_V15_MARKER_PKH && o.payload.size() >= 4
+        && o.payload[0] == POPC_V15_MAGIC[0] && o.payload[1] == POPC_V15_MAGIC[1]
+        && o.payload[2] == POPC_V15_MAGIC[2] && o.payload[3] == POPC_V15_MAGIC[3];
+}
+inline PopcV15Carrier popc_v15_decode_output(const TxOutput& o, int64_t block_height) {
+    if (!popc_v15_is_carrier_output(o)) return PopcV15Carrier{};
+    return popc_v15_decode_carrier(o.payload, block_height);
 }
 
 } // namespace sost

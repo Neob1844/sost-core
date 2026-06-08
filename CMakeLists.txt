@@ -322,6 +322,11 @@ add_executable(test-popc-v15-set tests/test_popc_v15_set.cpp)
 target_link_libraries(test-popc-v15-set PRIVATE sost-core)
 add_test(NAME popc-v15-set COMMAND test-popc-v15-set)
 
+# V15 PoPC P3 — on-chain carriers + decoder
+add_executable(test-popc-v15-carrier tests/test_popc_v15_carrier.cpp)
+target_link_libraries(test-popc-v15-carrier PRIVATE sost-core secp256k1)
+add_test(NAME popc-v15-carrier COMMAND test-popc-v15-carrier)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)

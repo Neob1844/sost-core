@@ -156,8 +156,16 @@ records the SOST-side commitment + bond + attestations. (OTC/P2P atomic swap is 
   call in P4 — it NEVER touches popc_registry.json. Tests: `test-popc-v15-set` 23/23 (empty, A/B
   active, expired/slashed/settled out, renew, duplicates, slash-vs-renew both orders, boundary,
   reorg, determinism). full ctest 70/70; in CI. **Still NOT wired to process_block or the DTD gate.**
-- **P3** — on-chain carriers (register/attest/slash/settle) with gated tx/coinbase-shape rules,
-  byte-identical pre-activation (mirror W2/W4b).
+- **P3** ✅ DONE — on-chain carriers in popc_v15.h: a PoPC event rides as a 0-value output to the
+  fixed unspendable `POPC_V15_MARKER_PKH` with a versioned, domain-separated payload
+  (`magic 'P15\xC0' | version | event_type | model | commitment_id(32) | owner_pkh(20) | end_height`;
+  Activate appends `balance | attest_height | pubkey(33) | sig(64)`). `popc_v15_encode_event` /
+  `popc_v15_encode_attest` build them; `popc_v15_decode_carrier` / `popc_v15_decode_output` are PURE
+  decoders that reject malformed / wrong-magic / wrong-version / unknown-type / wrong-length payloads
+  (so pre-activation and normal txs are unaffected). The decoded Activate attestation verifies via
+  P1's `popc_v15_verify_attestation`. Tests: `test-popc-v15-carrier` 25/25 (every event round-trips,
+  Model A/B, recognition, all malformed cases, attest sign→decode→verify). full ctest 71/71; in CI.
+  **Pure encode/decode only — NOT wired to process_block, the gate is applied by the caller in P4.**
 - **P4** — wire auto-audit/slash/settle into `process_block` (gated); DTD eligibility reads the
   chain set. Cross-validator + determinism tests (mirror B3).
 - **P5** — testnet soak across V15_HEIGHT + replay; then the coordinated flip.
