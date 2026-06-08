@@ -11,9 +11,11 @@
 // gv_g4_active_at is always false (INT64_MAX), so the marker is always rejected.
 #include "sost/tx_validation.h"
 #include "sost/gv_g4.h"
+#include "sost/gv_g5.h"
 #include "sost/transaction.h"
 #include "sost/params.h"
 #include <cstdio>
+#include <vector>
 using namespace sost;
 
 static int g_pass = 0, g_fail = 0;
@@ -109,10 +111,42 @@ int main() {
         auto r = ValidateCoinbaseConsensus(cb, H, SUB, FEES, GOLD, POPC, nullptr);
         CHECK("post-activation: marker not last -> REJECTED", !r.ok);
     }
+    // ---- W4b: G5 veto carrier output (0-value to GV_G5_VETO_PKH, payload [expiry||sig]) ----
+    auto g5_veto = [](size_t paylen){
+        TxOutput v; v.amount = 0; v.pubkey_hash = GV_G5_VETO_PKH;
+        v.payload.assign(paylen, 0xCD); return v;
+    };
+    {   // valid-shape G5 veto carrier (payload >= 16) accepted post-activation
+        auto cb = make_cb(H, SUB, FEES, GOLD, POPC);
+        cb.outputs.push_back(g5_veto(72));   // 8 expiry + 64 sig
+        auto r = ValidateCoinbaseConsensus(cb, H, SUB, FEES, GOLD, POPC, nullptr);
+        CHECK("post-activation: G5 veto carrier (payload) -> OK", r.ok);
+    }
+    {   // both a G4 marker AND a G5 veto, both trailing -> OK
+        auto cb = make_cb(H, SUB, FEES, GOLD, POPC);
+        cb.outputs.push_back(marker_out(0, GV_G4_APPROVAL_PKH));
+        cb.outputs.push_back(g5_veto(72));
+        auto r = ValidateCoinbaseConsensus(cb, H, SUB, FEES, GOLD, POPC, nullptr);
+        CHECK("post-activation: G4 marker + G5 veto trailing -> OK", r.ok);
+    }
+    {   // G5 veto with too-short payload (<16) -> not a recognized carrier -> rejected
+        auto cb = make_cb(H, SUB, FEES, GOLD, POPC);
+        cb.outputs.push_back(g5_veto(4));
+        auto r = ValidateCoinbaseConsensus(cb, H, SUB, FEES, GOLD, POPC, nullptr);
+        CHECK("post-activation: G5 veto short payload -> REJECTED", !r.ok);
+    }
 #else
     std::printf("  [mainnet build: post-activation cases run on the testnet build]\n");
-    // Mainnet stays a no-op: gv_g4_active_at is false at the V15 target height too.
+    // Mainnet stays a no-op: gv_g4 + gv_g5 are deferred at the V15 target height too.
     CHECK("mainnet: gv_g4 deferred at V15_HEIGHT (20000)", gv_g4_active_at(20000) == false);
+    CHECK("mainnet: gv_g5 deferred at V15_HEIGHT (20000)", gv_g5_active_at(20000) == false);
+    {   // mainnet: a G5 veto carrier in a coinbase is rejected (not recognized while deferred)
+        auto cb = make_cb(400, SUB, FEES, GOLD, POPC);
+        TxOutput v; v.amount = 0; v.pubkey_hash = GV_G5_VETO_PKH; v.payload.assign(72, 0xCD);
+        cb.outputs.push_back(v);
+        auto r = ValidateCoinbaseConsensus(cb, 400, SUB, FEES, GOLD, POPC, nullptr);
+        CHECK("mainnet: G5 veto carrier in coinbase -> REJECTED (deferred)", !r.ok);
+    }
 #endif
 
     std::printf("=== Results: %d passed, %d failed ===\n", g_pass, g_fail);

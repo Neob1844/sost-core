@@ -41,6 +41,7 @@
 #include "sost/block_validation.h"
 #include "sost/gold_vault_slice1.h"   // W1: Gold Vault Slice 1 enforcement in the real block path
 #include "sost/gv_g4.h"               // W3: Gold Vault G4 67-block miner-approval window
+#include "sost/gv_g5.h"               // W4b: Gold Vault G5 transitional Guardian veto
 #include "sost/sostcompact.h"
 #include "sost/checkpoints.h"
 #include "sost/popc.h"
@@ -4576,6 +4577,7 @@ static bool process_block(const std::string& block_json) {
     std::unordered_set<std::string> v14_seen_txids;
     PubKeyHash gv_slice1_gold_pkh{};   // W1: Gold Vault constitutional PKH for Slice 1 enforcement
     bool gv_vault_spend_in_block = false;   // W3: set if any tx spends from the Gold Vault
+    PubKeyHash gv_spend_dest{};             // W4b: external destination of the vault spend (for G5 veto)
     if(v14_txrules){ v14_scratch = g_utxo_set; v14_seen_txids.reserve(txs.size()*2);
                      address_decode(ADDR_GOLD_VAULT, gv_slice1_gold_pkh); }
 
@@ -4637,7 +4639,11 @@ static bool process_block(const std::string& block_json) {
                 }
                 // W3: remember that this block contains a Gold Vault spend, so the
                 // G4 67-block miner-approval window can be enforced after the loop.
-                if(gv_verdict == GvSlice1Verdict::Ok) gv_vault_spend_in_block = true;
+                if(gv_verdict == GvSlice1Verdict::Ok){
+                    gv_vault_spend_in_block = true;
+                    // W4b: capture the external destination (first non-change output) for the G5 veto check
+                    for(const auto& o : txs[i].outputs){ if(o.pubkey_hash != gv_slice1_gold_pkh){ gv_spend_dest = o.pubkey_hash; break; } }
+                }
             }
 
             int64_t fee_i=0; std::string ferr;
@@ -4706,6 +4712,38 @@ static bool process_block(const std::string& block_json) {
             printf("[BLOCK] REJECTED: gv_g4 vault spend lacks %d/%d miner approval (got %d) at height %lld\n",
                    (int)gv_g4_approval_floor(), (int)sost::GV_G4_SIGNAL_WINDOW, g4_yes, (long long)height);
             record_block_reject("gv_g4 vault spend lacks 67-block miner approval");
+            return false;
+        }
+    }
+
+    // W4b — Gold Vault G5 transitional Guardian veto. When G5 is active AND this
+    // block contains a Gold Vault spend, scan the grace window [height-10, height-1]
+    // for a valid, unexpired Guardian-signed veto for this spend's destination; if
+    // one is present, REJECT the spend. silence = accept (no veto → spend stands).
+    // gv_g5_active_at is unconditionally false from block 100,000 (auto-disconnect)
+    // and on mainnet (INT64_MAX) → pure no-op there, replay byte-identical. The
+    // signature is verified inside gv_g5_verify_veto_payload. See V14_EXECUTION_PLAN (W4).
+    if(gv_g5_active_at(height) && gv_vault_spend_in_block){
+        bool g5_vetoed = false;
+        for(int64_t hh = height - sost::GV_G5_GRACE_BLOCKS; hh <= height - 1 && !g5_vetoed; ++hh){
+            if(hh < 0 || hh >= (int64_t)g_blocks.size()) continue;
+            const auto& psb = g_blocks[hh];
+            if(psb.tx_hexes.empty()) continue;
+            std::vector<Byte> craw;
+            if(!decode_tx_hex(psb.tx_hexes[0], craw)) continue;
+            Transaction pcb; std::string cberr;
+            if(!Transaction::Deserialize(craw, pcb, &cberr)) continue;
+            for(const auto& o : pcb.outputs){
+                if(gv_g5_is_veto_output(o) &&
+                   gv_g5_verify_veto_payload(gv_spend_dest, height, o.payload)){
+                    g5_vetoed = true; break;
+                }
+            }
+        }
+        if(g5_vetoed){
+            printf("[BLOCK] REJECTED: gv_g5 Guardian veto blocks Gold Vault spend at height %lld\n",
+                   (long long)height);
+            record_block_reject("gv_g5 Guardian veto");
             return false;
         }
     }

@@ -155,10 +155,17 @@ but both must be handled before any flip:
     digest = sha256(DOMAIN || dest_pkh || expiry_height). Gated: mainnet DEFERRED (INT64_MAX),
     testnet active at V15_HEIGHT. Carrier = a 0-value coinbase output to `GV_G5_VETO_PKH` whose
     payload is [expiry u64 LE][compact ECDSA sig].
-  - W4b (next) — wire enforcement into process_block: gated coinbase relaxation to carry the
-    veto output + a grace-window scan of [h-10, h-1] that rejects a Gold Vault spend if a valid,
-    unexpired Guardian veto for the spend's destination is present; cross-validator test.
-  - then cross-validator + testnet soak; then the single final flip to V15_HEIGHT.
+  - W4b ✅ DONE — enforcement wired into the real block path:
+    * `ValidateCoinbaseConsensus` (gated) now also recognizes the G5 veto carrier alongside the
+      G4 marker: both are stripped via `real_outs` from CB shape, CB10 payload and R5/R6 checks
+      (the veto carries a payload). Pre-activation neither is recognized → rejected → replay
+      byte-identical. Tests: `test-gv-g4-coinbase` (mainnet 6/6 + testnet 13/13).
+    * `process_block`: when `gv_g5_active_at(height)` AND the block has a Gold Vault spend, scan
+      the grace window `[h-10, h-1]` for a Guardian-signed, unexpired veto for the spend's
+      destination (`gv_g5_verify_veto_payload`); if present → reject. silence = accept.
+    * Mainnet DEFERRED + auto-disconnect ≥100,000 → pure no-op. full ctest 67/67 (mainnet+testnet).
+  - Remaining: cross-validator agreement test + testnet soak (B3); then the single final flip
+    of all V15 gates (Slice 1, G4, G5) to V15_HEIGHT, re-verified under reorg replay.
 
 > Status: gv_g4 pure module + coinbase-marker channel + detector DONE & tested (`test-gv-g4`,
 > 18/18). **W1 DONE** (Slice 1 enforced on the real block path via the shared helper,

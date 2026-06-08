@@ -10,6 +10,7 @@
 #include "sost/capsule.h"
 #include "sost/lottery.h"   // V11 Phase 2 (C8) — phase2_coinbase_split
 #include "sost/gv_g4.h"     // W2 — G4 coinbase approval marker (GV_G4_APPROVAL_PKH, gv_g4_active_at)
+#include "sost/gv_g5.h"     // W4b — G5 Guardian veto carrier (GV_G5_VETO_PKH, gv_g5_active_at)
 
 #include <algorithm>
 #include <climits>
@@ -577,22 +578,39 @@ TxValidationResult ValidateCoinbaseConsensus(
     // W2 only RECOGNIZES the marker; counting it over the 67-block window and
     // enforcing 61/67 is W3.
     // -------------------------------------------------------------------------
-    bool g4_marker = false;
-    if (gv_g4_active_at(height)) {
-        size_t nmark = 0;
+    // W4b extends W2: also recognize the G5 veto carrier. When their gate is
+    // active, the coinbase MAY carry recognized 0-value TRAILING outputs:
+    //   * G4 approval marker — GV_G4_APPROVAL_PKH, empty payload (gv_g4_active_at)
+    //   * G5 veto carrier     — GV_G5_VETO_PKH, payload [expiry||sig] (gv_g5_active_at)
+    // Pre-activation they are NOT recognized → counted as ordinary outputs → the
+    // normal shape rules reject them → replay BYTE-IDENTICAL. Recognition only:
+    // the G4 67-block tally (W3) and the G5 grace-window veto (W4b) are enforced
+    // in process_block; the signature is verified there too.
+    size_t n_g4 = 0, n_g5 = 0;
+    if (gv_g4_active_at(height))
         for (const auto& o : tx.outputs)
-            if (o.amount == 0 && o.pubkey_hash == GV_G4_APPROVAL_PKH) ++nmark;
-        if (nmark > 0) {
-            const auto& last = tx.outputs.back();
-            if (nmark != 1 || !(last.amount == 0 && last.pubkey_hash == GV_G4_APPROVAL_PKH)) {
-                return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,
-                    "G4 marker: at most one 0-value GV_G4_APPROVAL_PKH output is allowed, "
-                    "and only as the LAST coinbase output");
-            }
-            g4_marker = true;
+            if (o.amount == 0 && o.pubkey_hash == GV_G4_APPROVAL_PKH) ++n_g4;
+    if (gv_g5_active_at(height))
+        for (const auto& o : tx.outputs)
+            if (gv_g5_is_veto_output(o)) ++n_g5;
+    const size_t gov_markers = n_g4 + n_g5;
+    if (gov_markers > 0) {
+        if (n_g4 > 1) return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,
+            "G4 marker: at most one GV_G4_APPROVAL_PKH output allowed");
+        if (n_g5 > 1) return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,
+            "G5 veto: at most one GV_G5_VETO_PKH output allowed");
+        if (tx.outputs.size() < gov_markers) return TxValidationResult::Fail(
+            TxValCode::CB11_LOTTERY_SHAPE, "governance markers exceed coinbase outputs");
+        // governance markers must occupy the LAST gov_markers outputs
+        for (size_t i = tx.outputs.size() - gov_markers; i < tx.outputs.size(); ++i) {
+            const auto& o = tx.outputs[i];
+            const bool is_g4 = (n_g4 && o.amount == 0 && o.pubkey_hash == GV_G4_APPROVAL_PKH);
+            const bool is_g5 = (n_g5 && gv_g5_is_veto_output(o));
+            if (!is_g4 && !is_g5) return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,
+                "Gold Vault governance markers must be the TRAILING coinbase outputs");
         }
     }
-    const size_t real_outs = tx.outputs.size() - (g4_marker ? 1u : 0u);
+    const size_t real_outs = tx.outputs.size() - gov_markers;
 
     // -------------------------------------------------------------------------
     // V11 Phase 2 (C8) — height-gated branch.
@@ -684,7 +702,7 @@ TxValidationResult ValidateCoinbaseConsensus(
             }
 
             // CB10 (Phase 2): empty payload on both outputs.
-            for (size_t i = 0; i < tx.outputs.size(); ++i) {
+            for (size_t i = 0; i < real_outs; ++i) {
                 if (!tx.outputs[i].payload.empty()) {
                     return TxValidationResult::Fail(TxValCode::CB10_CB_PAYLOAD,
                         "CB10: coinbase output[" + std::to_string(i) +
@@ -861,8 +879,8 @@ TxValidationResult ValidateCoinbaseConsensus(
             "CB6: popc pool pubkey_hash mismatch", -1, 2);
     }
 
-    // CB10: coinbase outputs payload must be empty
-    for (size_t i = 0; i < tx.outputs.size(); ++i) {
+    // CB10: coinbase outputs payload must be empty (governance markers excluded via real_outs)
+    for (size_t i = 0; i < real_outs; ++i) {
         if (!tx.outputs[i].payload.empty()) {
             return TxValidationResult::Fail(TxValCode::CB10_CB_PAYLOAD,
                 "CB10: coinbase output[" + std::to_string(i) +
