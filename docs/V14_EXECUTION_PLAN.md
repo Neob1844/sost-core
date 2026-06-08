@@ -1,5 +1,15 @@
-# V14 (block 15,000) — Execution Plan
+# V14 (block 15,000) + V15 (block 20,000) — Execution Plan
 
+> **SCOPE SPLIT (2026-06-08).** V14 ships UNCHANGED at **block 15,000**: only the
+> H3/H4 block-validation hardening (the dynamic fee floor already activated at
+> 10,000). It is already in the deployed binaries — **no node re-update is needed**
+> for it. The big automation track — **PoPC Model A/B, OTC/P2P Atomic Swap, and the
+> full Gold Vault governance G1-G5** — is moved into a NEW gate **V15_HEIGHT = 20,000**
+> so the already-shipped V14 fork is not disturbed and no forced re-coordination
+> happens now. All V15 gates ship DEFERRED (INT64_MAX) on mainnet and flip to
+> V15_HEIGHT only in the final, soaked, coordinated pre-fork commit. Testnet
+> (`-DSOST_TESTNET_FORKS`) dry-runs V14 at 200 and V15 at 300.
+>
 > Status date: 2026-06-07 · Target height **15,000** (~2026-06-27, retractable).
 > Principle: **consensus on a live chain with real value → a chain split is the #1 risk.**
 > Therefore: build the **automated safety net first**, then implement each component

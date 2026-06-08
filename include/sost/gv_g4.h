@@ -47,12 +47,14 @@ inline bool gv_g4_coinbase_approves(const Transaction& coinbase) {
     return false;
 }
 
-// Activation gate (testnet active @ V14_HEIGHT=200; mainnet deferred until the
-// full Gold Vault G1-G5 is built + soaked, then flipped to V14_HEIGHT).
+// Activation gate. Gold Vault governance is part of the V15 automation bundle
+// (block 20000), NOT V14 (block 15000 hardening, ships untouched). Testnet active
+// @ V15_HEIGHT=300; mainnet deferred until the full Gold Vault G1-G5 is built +
+// soaked, then flipped to V15_HEIGHT.
 #ifdef SOST_TESTNET_FORKS
-inline constexpr int64_t GV_G4_ACTIVATION_HEIGHT = V14_HEIGHT;
+inline constexpr int64_t GV_G4_ACTIVATION_HEIGHT = V15_HEIGHT;
 #else
-inline constexpr int64_t GV_G4_ACTIVATION_HEIGHT = INT64_MAX;  // -> V14_HEIGHT in final commit
+inline constexpr int64_t GV_G4_ACTIVATION_HEIGHT = INT64_MAX;  // -> V15_HEIGHT in final commit
 #endif
 
 inline constexpr bool gv_g4_active_at(int64_t height) {

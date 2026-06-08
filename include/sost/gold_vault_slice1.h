@@ -75,13 +75,15 @@ namespace sost {
 //
 // V14 Gold Vault Phase I — Slice 1 activation.
 // MAINNET: DEFERRED (INT64_MAX) until the full G1-G5 governance is built and
-// testnet-soaked; the final pre-fork commit flips this to V14_HEIGHT (15000).
-// TESTNET (-DSOST_TESTNET_FORKS): active at V14_HEIGHT (block 200) so the rule
+// testnet-soaked; the final pre-fork commit flips this to V15_HEIGHT (20000).
+// Gold Vault governance is part of the V15 automation bundle, NOT V14 — V14
+// (block 15000, H3/H4 hardening) ships untouched.
+// TESTNET (-DSOST_TESTNET_FORKS): active at V15_HEIGHT (block 300) so the rule
 // can be dry-run end-to-end. Mainnet binary stays byte-identical meanwhile.
 #ifdef SOST_TESTNET_FORKS
-inline constexpr int64_t GV_SLICE1_ACTIVATION_HEIGHT = V14_HEIGHT;
+inline constexpr int64_t GV_SLICE1_ACTIVATION_HEIGHT = V15_HEIGHT;
 #else
-inline constexpr int64_t GV_SLICE1_ACTIVATION_HEIGHT = INT64_MAX;  // → V14_HEIGHT in final commit
+inline constexpr int64_t GV_SLICE1_ACTIVATION_HEIGHT = INT64_MAX;  // → V15_HEIGHT in final commit
 #endif
 
 // =========================================================================

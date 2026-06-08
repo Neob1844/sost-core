@@ -998,10 +998,22 @@ inline constexpr bool is_sbpow_eligible(
 #ifdef SOST_TESTNET_FORKS
 inline constexpr int64_t V14_HEIGHT                       = 200;     // TESTNET ONLY
 #else
-inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET
+inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET (UNCHANGED — H3/H4 hardening; already in deployed binaries, no node re-update needed)
 #endif
 inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT      = V14_HEIGHT;
 inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;
+
+// V15 — full automation bundle (PoPC Model A/B, OTC/P2P atomic swap, Gold Vault
+// governance G1-G5). Kept SEPARATE from V14 so the already-shipped V14 hardening
+// at block 15000 is NOT disturbed (no forced node re-update). The automation
+// gates below ship DEFERRED (INT64_MAX) on mainnet and flip to V15_HEIGHT only in
+// the final, soaked, coordinated pre-fork commit. Testnet (-DSOST_TESTNET_FORKS)
+// dry-runs V15 just after V14 (block 300). See docs/V14_EXECUTION_PLAN.md.
+#ifdef SOST_TESTNET_FORKS
+inline constexpr int64_t V15_HEIGHT                       = 300;     // TESTNET ONLY
+#else
+inline constexpr int64_t V15_HEIGHT                       = 20000;   // MAINNET (target; automation gates stay deferred until soaked)
+#endif
 
 // =============================================================================
 // DTD Lottery Emergency Pause / Resume — signed control signal (DESIGNED,

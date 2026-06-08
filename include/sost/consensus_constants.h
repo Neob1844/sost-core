@@ -49,8 +49,8 @@ inline constexpr int64_t  GV_GOVERNANCE_ACTIVATION = 10000;
 // which is INT64_MAX in the V13 binary), so consensus behaviour up to
 // and including V13 is bit-identical between the old 95 % and the new
 // 90 % constant. Spend-side enforcement of these thresholds activates
-// for the first time at V14_HEIGHT (15000) via the Gold Vault Phase I
-// governance commit (V14-2).
+// for the first time at V15_HEIGHT (20000) via the Gold Vault governance
+// automation bundle (V15) — NOT V14 (block 15000 ships H3/H4 hardening only).
 inline constexpr int32_t  GV_THRESHOLD_EPOCH01  = 90;   // 90% in Epoch 0-1
 inline constexpr int32_t  GV_THRESHOLD_EPOCH2   = 90;   // 90% in Epoch 2+ (blocks 263106+)
 inline constexpr int32_t  GV_APPROVAL_WINDOW    = 288;  // ~48h voting window

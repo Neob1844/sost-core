@@ -41,12 +41,14 @@ int main() {
         CHECK("nonzero-value to marker pkh does NOT count", gv_g4_coinbase_approves(cb_paid)==false);
     }
 
-    // Activation gate
+    // Activation gate (G4 is part of the V15 automation bundle)
 #ifdef SOST_TESTNET_FORKS
-    CHECK("testnet: active at V14_HEIGHT",    gv_g4_active_at(V14_HEIGHT) == true);
+    CHECK("testnet: active at V15_HEIGHT",     gv_g4_active_at(V15_HEIGHT) == true);
+    CHECK("testnet: inactive before V15",      gv_g4_active_at(V15_HEIGHT-1) == false);
 #else
-    CHECK("mainnet: deferred at 15000",       gv_g4_active_at(15000) == false);
-    CHECK("mainnet: deferred at INT64_MAX-1", gv_g4_active_at(INT64_MAX-1) == false);
+    CHECK("mainnet: deferred at 15000 (V14)",  gv_g4_active_at(15000) == false);
+    CHECK("mainnet: deferred at 20000 (V15)",  gv_g4_active_at(20000) == false);
+    CHECK("mainnet: deferred at INT64_MAX-1",  gv_g4_active_at(INT64_MAX-1) == false);
 #endif
 
     std::printf("=== Results: %d passed, %d failed ===\n", g_pass, g_fail);

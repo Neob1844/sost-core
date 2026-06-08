@@ -25,9 +25,15 @@ using namespace sost;
 #ifdef SOST_TESTNET_FORKS
 static_assert(V14_HEIGHT == 200,
     "Testnet build: V14_HEIGHT must be the early testnet height (200).");
+static_assert(V15_HEIGHT == 300,
+    "Testnet build: V15_HEIGHT must be the early testnet height (300).");
 #else
 static_assert(V14_HEIGHT == 15000,
-    "V14_HEIGHT moved from 15000 — re-audit the whole V14 scope before changing.");
+    "V14_HEIGHT moved from 15000 — V14 (H3/H4 hardening) ships at 15000 UNCHANGED "
+    "(already in deployed binaries). The automation bundle is V15, not V14.");
+static_assert(V15_HEIGHT == 20000,
+    "V15_HEIGHT moved from 20000 — V15 (PoPC A/B, atomic swap, Gold Vault gov) is "
+    "the full automation bundle; re-audit scope before changing.");
 #endif
 static_assert(DYNAMIC_FEE_BASE == 1,
     "Pre-V14 relay floor base must stay 1 stock/byte (historical replay).");
@@ -51,13 +57,13 @@ static_assert(DTD_EMERGENCY_CONTROL_CONSENSUS_ACTIVE == false,
 static_assert(GV_THRESHOLD_EPOCH01 == 90,
     "Gold Vault governance threshold synced to 90% in V14-1; do not revert.");
 #ifdef SOST_TESTNET_FORKS
-static_assert(GV_SLICE1_ACTIVATION_HEIGHT == V14_HEIGHT,
-    "Testnet: Gold Vault Slice 1 activates at V14_HEIGHT to dry-run.");
+static_assert(GV_SLICE1_ACTIVATION_HEIGHT == V15_HEIGHT,
+    "Testnet: Gold Vault Slice 1 activates at V15_HEIGHT to dry-run (V15 bundle).");
 #else
 static_assert(GV_SLICE1_ACTIVATION_HEIGHT == INT64_MAX,
     "MAINNET: Gold Vault Slice 1 stays DEFERRED (INT64_MAX) until full G1-G5 is "
-    "built + testnet-soaked; the final pre-fork commit flips it to V14_HEIGHT. "
-    "Do NOT flip here (docs/V14_EXECUTION_PLAN.md Phase B).");
+    "built + testnet-soaked; the final pre-fork commit flips it to V15_HEIGHT "
+    "(automation bundle, block 20000). Do NOT flip here.");
 #endif
 // Whitelist + cap are now CONFIGURED (genesis miner, 1,000 SOST) even while the
 // mainnet gate is deferred — they only take effect once the gate is active.
