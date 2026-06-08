@@ -177,7 +177,15 @@ but both must be handled before any flip:
 > mainnet no-op, `test-gv-slice1-block` in CI). W2-W3 (G4 coinbase marker + 67-block window)
 > are next — they touch the coinbase rules, so done carefully with replay verification, not rushed.
 
-## 3. PHASE C — PoPC Model A (component #6) — DEFER gate flip, build the rails
+## 3. PHASE C — PoPC Model A/B (component #6, now V15) — DEFER gate flip, build the rails
+
+> **P0 design DONE (2026-06-08): `docs/V15_POPC_MODEL_AB_DESIGN.md`** — full audit of the current
+> PoPC (registry in `popc_registry.json`, reward math, Model A/B, the `has_active_canonical_popc`
+> stub), the determinism problem, the proposed deterministic on-chain rails (on-chain commitment +
+> bond lock, deterministic audit/slash/settle schedule, `chain_active_popc_set(height)`, and the
+> off-chain-custody-fact solution via signed attestation-under-bond / supervisor signature), the
+> consensus-vs-policy boundary, gating, risks and phases P1–P5. Open operator decision recorded:
+> confirm Model A = signed self-attestation-under-bond now (oracle/attester-set optional later).
 
 The DTD-PoPC eligibility gate must NOT read `popc_registry.json` from consensus (it is per-node,
 non-deterministic → instant chain split). Prerequisites (ordered):
