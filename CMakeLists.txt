@@ -156,6 +156,7 @@ add_library(sost-core STATIC
     # blockers (whitelist values, cap basis points, rate-limit blocks) that
     # must be filled BEFORE activation makes any consensus difference.
     src/gold_vault_slice1.cpp
+    src/gv_g5.cpp
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -299,6 +300,11 @@ add_test(NAME gv-slice1-block COMMAND test-gv-slice1-block)
 add_executable(test-gv-g4-coinbase tests/test_gv_g4_coinbase.cpp)
 target_link_libraries(test-gv-g4-coinbase PRIVATE sost-core)
 add_test(NAME gv-g4-coinbase COMMAND test-gv-g4-coinbase)
+
+# W4: G5 transitional Guardian veto (gated, ECDSA-signed, auto-disconnect @100k)
+add_executable(test-gv-g5 tests/test_gv_g5.cpp)
+target_link_libraries(test-gv-g5 PRIVATE sost-core secp256k1)
+add_test(NAME gv-g5 COMMAND test-gv-g5)
 
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)

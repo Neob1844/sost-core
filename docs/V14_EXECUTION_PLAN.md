@@ -147,7 +147,18 @@ but both must be handled before any flip:
   Mainnet ctest 66/66; testnet build green. Foundation +10% boost (G5) not wired yet.
   **Reorg note:** the window reads `g_blocks` (active chain); the final V15 mainnet flip must
   re-verify behaviour under reorg replay before activation.
-- W4: G5 veto/grace; then cross-validator + testnet soak; then the single final flip to V14_HEIGHT.
+- W4: G5 transitional Guardian veto.
+  - W4a ✅ DONE — pure module `include/sost/gv_g5.h` + `src/gv_g5.cpp` (ECDSA verify against the
+    Beacon II-A operator/Guardian key) + `test-gv-g5` (mainnet 12/12, testnet 19/19). Defines:
+    grace = 10 blocks, **silence = accept**, **AUTO-DISCONNECT at block 100,000** (gv_g5_active_at
+    is unconditionally false from 100,000 — the veto cannot become permanent), replay-safe signed
+    digest = sha256(DOMAIN || dest_pkh || expiry_height). Gated: mainnet DEFERRED (INT64_MAX),
+    testnet active at V15_HEIGHT. Carrier = a 0-value coinbase output to `GV_G5_VETO_PKH` whose
+    payload is [expiry u64 LE][compact ECDSA sig].
+  - W4b (next) — wire enforcement into process_block: gated coinbase relaxation to carry the
+    veto output + a grace-window scan of [h-10, h-1] that rejects a Gold Vault spend if a valid,
+    unexpired Guardian veto for the spend's destination is present; cross-validator test.
+  - then cross-validator + testnet soak; then the single final flip to V15_HEIGHT.
 
 > Status: gv_g4 pure module + coinbase-marker channel + detector DONE & tested (`test-gv-g4`,
 > 18/18). **W1 DONE** (Slice 1 enforced on the real block path via the shared helper,
