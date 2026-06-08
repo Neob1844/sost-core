@@ -147,8 +147,15 @@ records the SOST-side commitment + bond + attestations. (OTC/P2P atomic swap is 
   29/29 + testnet 29/29 (commitment id, bond/term, lifecycle, slash grace, attestation sign→verify
   + all rejections, Model A vs B, gating). full ctest 69/69; in the CI hard-gate. This is the PURE
   BASE — not enforcement.
-- **P2** — `chain_active_popc_set(height)` pure recompute + tests (reorg-safe), replacing the
-  `has_active_canonical_popc` stub behind the gate.
+- **P2** ✅ DONE — `chain_active_popc_set(events, at_height)` PURE recompute in popc_v15.h: a
+  deterministic fold over canonical `PopcV15Event`s (Register/Activate/Renew/Expire/Suspend/Slash/
+  Settle) → active set, with conflict resolution (idempotent duplicate Register, terminal Slash/
+  Settle, renew extends term, expiry boundary at `H < end_height`, future events ignored) and
+  reorg-safety (pure fn of the event list → recompute on a different chain, no cached state).
+  `popc_v15_owner_active(...)` is the pure replacement the `has_active_canonical_popc` stub will
+  call in P4 — it NEVER touches popc_registry.json. Tests: `test-popc-v15-set` 23/23 (empty, A/B
+  active, expired/slashed/settled out, renew, duplicates, slash-vs-renew both orders, boundary,
+  reorg, determinism). full ctest 70/70; in CI. **Still NOT wired to process_block or the DTD gate.**
 - **P3** — on-chain carriers (register/attest/slash/settle) with gated tx/coinbase-shape rules,
   byte-identical pre-activation (mirror W2/W4b).
 - **P4** — wire auto-audit/slash/settle into `process_block` (gated); DTD eligibility reads the

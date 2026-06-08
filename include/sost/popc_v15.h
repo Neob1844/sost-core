@@ -19,6 +19,9 @@
 #include <array>
 #include <vector>
 #include <string>
+#include <map>
+#include <algorithm>
+#include <utility>
 
 namespace sost {
 
@@ -37,11 +40,12 @@ inline constexpr int64_t POPC_V15_MIN_TERM_BLOCKS    = 4320; // ~30 days minimum
 
 enum class PopcModel  : uint8_t { A = 0, B = 1 };   // A=personal custody, B=supervised
 enum class PopcV15Status : uint8_t {
-    Pending  = 0,   // registered, before start_height / first activation
-    Active   = 1,   // live commitment
-    Expired  = 2,   // reached end_height in good standing, awaiting settle
-    Slashed  = 3,   // failed an audit challenge → bond forfeited
-    Settled  = 4,   // bond released + reward paid
+    Pending   = 0,   // registered, before start_height / first activation
+    Active    = 1,   // live commitment
+    Expired   = 2,   // reached end_height in good standing, awaiting settle
+    Slashed   = 3,   // failed an audit challenge → bond forfeited (terminal)
+    Settled   = 4,   // bond released + reward paid (terminal)
+    Suspended = 5,   // temporarily out of the active set (Activate can restore)
 };
 
 // Canonical on-chain commitment (the deterministic record that REPLACES the
@@ -128,10 +132,107 @@ bool popc_v15_pubkey_is_owner(const std::vector<uint8_t>& pubkey, const PubKeyHa
 bool popc_v15_verify_attestation(const Bytes32& commitment_id, int64_t balance_mg, int64_t attest_height,
                                  const std::vector<uint8_t>& pubkey, const std::vector<uint8_t>& sig_compact);
 
-// ---- future interface (NOT wired in P1) ------------------------------------
-// chain_active_popc_set(height): in a later phase, a PURE function that recomputes
-// the active commitment set from chain state (registrations minus completed/
-// slashed/expired up to `height`), replacing popc_registry.json AND the
-// has_active_canonical_popc stub. Declared here as the agreed interface only.
+// ============================================================================
+// P2 — chain_active_popc_set: PURE, reorg-safe recompute of the active set.
+//
+// A pure fold over the canonical PoPC events of the ACTIVE chain. It replaces
+// popc_registry.json (and, later, the has_active_canonical_popc stub) as the
+// source of truth. It is NOT wired into process_block or the DTD gate in P2 —
+// it is the deterministic brain only. Because it is a pure function of the
+// supplied event list, two nodes on the same chain compute the identical set,
+// and a reorg (a different event list) simply recomputes — no cached state.
+// ============================================================================
+
+enum class PopcEventType : uint8_t {
+    Register = 0,   // a commitment is registered (carries owner, model, end_height)
+    Activate = 1,   // Pending -> Active
+    Renew    = 2,   // extend end_height (only while non-terminal)
+    Expire   = 3,   // mark Expired (leaves the active set)
+    Suspend  = 4,   // mark Suspended (leaves the active set; Activate can restore)
+    Slash    = 5,   // TERMINAL: bond forfeited
+    Settle   = 6,   // TERMINAL: bond released + reward paid
+};
+
+struct PopcV15Event {
+    PopcEventType type{PopcEventType::Register};
+    Bytes32       commitment_id{};
+    PubKeyHash    owner_pkh{};
+    uint8_t       model{0};
+    int64_t       height{0};       // block height the event occurred at
+    int64_t       end_height{0};   // for Register / Renew
+};
+
+struct PopcActiveEntry {
+    Bytes32    commitment_id{};
+    PubKeyHash owner_pkh{};
+    uint8_t    model{0};
+    int64_t    end_height{0};
+};
+
+// Recompute the active commitment set as of `at_height`. Events are applied in
+// the order given (= chain order); only events with height <= at_height count.
+// Slash/Settle are terminal (later events for that id are ignored). A commitment
+// is ACTIVE iff its latest state is Active AND at_height < end_height.
+inline std::vector<PopcActiveEntry> chain_active_popc_set(
+        const std::vector<PopcV15Event>& events, int64_t at_height) {
+    struct Rec { PubKeyHash owner{}; uint8_t model{0}; int64_t end{0};
+                 PopcV15Status status{PopcV15Status::Pending}; int order{0}; };
+    std::map<Bytes32, Rec> by_id;
+    int seq = 0;
+    for (const auto& e : events) {
+        if (e.height > at_height) continue;                 // event in the future of the query
+        auto it = by_id.find(e.commitment_id);
+        bool exists = (it != by_id.end());
+        if (exists && (it->second.status == PopcV15Status::Slashed ||
+                       it->second.status == PopcV15Status::Settled)) continue;  // terminal: frozen
+        switch (e.type) {
+            case PopcEventType::Register:
+                if (!exists) { Rec r; r.owner=e.owner_pkh; r.model=e.model; r.end=e.end_height;
+                               r.status=PopcV15Status::Active; r.order=seq++; by_id.emplace(e.commitment_id, r); }
+                // duplicate Register is idempotent (first wins) — deterministic
+                break;
+            case PopcEventType::Activate:
+                if (exists && (it->second.status==PopcV15Status::Pending || it->second.status==PopcV15Status::Suspended))
+                    it->second.status = PopcV15Status::Active;
+                break;
+            case PopcEventType::Renew:
+                if (exists && it->second.status==PopcV15Status::Active && e.end_height > it->second.end)
+                    it->second.end = e.end_height;
+                break;
+            case PopcEventType::Expire:
+                if (exists) it->second.status = PopcV15Status::Expired;
+                break;
+            case PopcEventType::Suspend:
+                if (exists && it->second.status==PopcV15Status::Active) it->second.status = PopcV15Status::Suspended;
+                break;
+            case PopcEventType::Slash:
+                if (exists) it->second.status = PopcV15Status::Slashed;     // terminal
+                break;
+            case PopcEventType::Settle:
+                if (exists) it->second.status = PopcV15Status::Settled;     // terminal
+                break;
+        }
+    }
+    std::vector<std::pair<int,PopcActiveEntry>> tmp;
+    for (const auto& kv : by_id) {
+        const Rec& r = kv.second;
+        if (r.status == PopcV15Status::Active && at_height < r.end)
+            tmp.push_back({r.order, PopcActiveEntry{kv.first, r.owner, r.model, r.end}});
+    }
+    std::sort(tmp.begin(), tmp.end(), [](const auto&a, const auto&b){ return a.first < b.first; });
+    std::vector<PopcActiveEntry> out; out.reserve(tmp.size());
+    for (auto& p : tmp) out.push_back(p.second);
+    return out;   // deterministic order = registration order
+}
+
+// Does `owner_pkh` hold ANY active commitment at `at_height`? This is the pure
+// replacement that has_active_canonical_popc will call once wired (P4), instead
+// of ever touching popc_registry.json. NOT wired to the DTD gate in P2.
+inline bool popc_v15_owner_active(const std::vector<PopcV15Event>& events,
+                                  const PubKeyHash& owner_pkh, int64_t at_height) {
+    for (const auto& e : chain_active_popc_set(events, at_height))
+        if (e.owner_pkh == owner_pkh) return true;
+    return false;
+}
 
 } // namespace sost
