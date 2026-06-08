@@ -224,8 +224,15 @@ records the SOST-side commitment + bond + attestations. (OTC/P2P atomic swap is 
 - **DTD↔PoPC bridge — PENDING / OFF.** `DTD_POPC_GATE_CONSENSUS_ACTIVE = false`. Even past 21000 the lottery
   does NOT require PoPC until this flag is flipped. Flipping it is a consensus change (every node must agree,
   under a fresh announced fork height) deferred to **P5** / a coordinated release — never without soak + replay.
-- **P5** — testnet soak across V15_HEIGHT + replay; then, only after that, the coordinated
-  `DTD_POPC_GATE_CONSENSUS_ACTIVE` flip at/after 21000.
+- **P5** 🟡 IN PROGRESS — soak + replay before any flip. The **deterministic soak + replay-
+  equivalence is DONE in CI**: `lottery::popc_eligibility_enforced(height, gate)` makes the staged gate
+  pure/testable (used by the real call site), and `test-popc-v15-soak` (24/24 on mainnet AND testnet)
+  proves PoPC live at V15_HEIGHT, DTD eligibility only at 21000 and only with the flag on, the grace
+  window allows create+activate, register-only/unactivated don't count, reorg around the gates recomputes
+  deterministically, and mainnet replay is byte-identical with the shipped flag false. full ctest **75/75**
+  both builds. The **live multi-node testnet soak** across the gate heights is the remaining operational
+  step (checklist in `docs/V15_POPC_SOAK_REPORT.md`), run by the operator on the testnet. Only after that
+  sign-off is the coordinated `DTD_POPC_GATE_CONSENSUS_ACTIVE` flip (fresh announced fork height) considered.
 
 ## 8. Tests needed
 - Reward/schedule math (pure), attestation sign→verify + all rejections, `chain_active_popc_set`

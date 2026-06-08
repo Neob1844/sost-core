@@ -271,6 +271,16 @@ bool has_active_canonical_popc(const PubKeyHash& pkh, int64_t height);
 using PopcEventSource = std::function<std::vector<PopcV15Event>(int64_t)>;
 void set_popc_event_source(PopcEventSource src);
 
+// P5 — staged DTD-PoPC eligibility gate, made pure/testable. PoPC is REQUIRED for
+// DTD lottery eligibility ONLY from DTD_POPC_ELIGIBILITY_HEIGHT (= V15_HEIGHT +
+// grace) AND only when the consensus flag is active. `gate_active` is passed in
+// (= DTD_POPC_GATE_CONSENSUS_ACTIVE at the call site) so both states can be
+// exercised in tests without flipping the shipped constant. While the flag stays
+// false this is always false → the lottery never requires PoPC (mainnet no-op).
+inline bool popc_eligibility_enforced(int64_t height, bool gate_active) {
+    return gate_active && height >= DTD_POPC_ELIGIBILITY_HEIGHT;
+}
+
 // Select the winning index into a lex-sorted eligibility vector from a
 // recent block-history seed. Production Phase 2 uses this path so a
 // single previous block hash does not dominate the lottery roll.

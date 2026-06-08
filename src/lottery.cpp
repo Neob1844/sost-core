@@ -200,11 +200,11 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
             }
         }
 
-        // (c) V14 PoPC eligibility. The helper short-circuits to true
-        // until DTD_POPC_GATE_CONSENSUS_ACTIVE flips, so this branch
-        // is a no-op on eligibility in the current shipped build.
-        if (height >= DTD_POPC_ELIGIBILITY_HEIGHT &&
-            DTD_POPC_GATE_CONSENSUS_ACTIVE &&
+        // (c) Staged DTD-PoPC eligibility (P4c/P5). PoPC is required only from
+        // DTD_POPC_ELIGIBILITY_HEIGHT (= V15_HEIGHT + grace) AND only when the
+        // consensus flag is active — both encoded in popc_eligibility_enforced().
+        // The flag ships false, so this branch is a no-op on eligibility today.
+        if (popc_eligibility_enforced(height, DTD_POPC_GATE_CONSENSUS_ACTIVE) &&
             !has_active_canonical_popc(pkh, height)) {
             continue;
         }
