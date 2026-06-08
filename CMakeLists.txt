@@ -158,6 +158,13 @@ add_library(sost-core STATIC
     src/gold_vault_slice1.cpp
     src/gv_g5.cpp
     src/popc_v15.cpp
+    # OTC-0.5 — atomic-swap groundwork (dormant; gate at INT64_MAX, mainnet no-op).
+    # Pure modules only: BTC P2WSH redeem-script builder, BTC signing (stubs while
+    # SOST_BTC_HTLC_SIGNING=OFF), and the local swap coordinator state machine.
+    # The consensus HTLC types (OUT_HTLC_LOCK/CLAIM/REFUND) + helpers land in OTC-1.
+    src/atomic_swap_btc.cpp
+    src/atomic_swap_btc_signing.cpp
+    src/atomic_swap_coordinator.cpp
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -350,6 +357,39 @@ add_test(NAME popc-v15-soak COMMAND test-popc-v15-soak)
 # Testnet PoPC soak tooling — carrier-payload generator (not a test)
 add_executable(popc15-carrier tools/popc15_carrier.cpp)
 target_link_libraries(popc15-carrier PRIVATE sost-core secp256k1)
+
+# ---------------------------------------------------------------------------
+# OTC-0.5 — atomic-swap dormant groundwork (gate at INT64_MAX; mainnet no-op).
+# BTC HTLC signing stays a compile-time-disabled stub set unless the operator
+# explicitly builds with -DSOST_BTC_HTLC_SIGNING=ON (a future OTC-3 step). The
+# default OFF build compiles the module with inert stubs that return ok=false.
+# ---------------------------------------------------------------------------
+option(SOST_BTC_HTLC_SIGNING "Enable the real BTC HTLC signing backend (OTC-3; default OFF stubs)" OFF)
+if (SOST_BTC_HTLC_SIGNING)
+    target_compile_definitions(sost-core PRIVATE SOST_BTC_HTLC_SIGNING_ENABLED=1)
+    message(WARNING "SOST_BTC_HTLC_SIGNING=ON — real BTC signing backend requested (OTC-3 only).")
+endif()
+
+# Pure atomic-swap tests (no consensus surface; safe in OTC-0.5).
+add_executable(test-atomic-swap-btc-script tests/test_atomic_swap_btc_script.cpp)
+target_link_libraries(test-atomic-swap-btc-script PRIVATE sost-core)
+add_test(NAME atomic-swap-btc-script COMMAND test-atomic-swap-btc-script)
+
+add_executable(test-atomic-swap-btc-test-vectors tests/test_atomic_swap_btc_test_vectors.cpp)
+target_link_libraries(test-atomic-swap-btc-test-vectors PRIVATE sost-core)
+add_test(NAME atomic-swap-btc-test-vectors COMMAND test-atomic-swap-btc-test-vectors)
+
+add_executable(test-atomic-swap-btc-signing tests/test_atomic_swap_btc_signing.cpp)
+target_link_libraries(test-atomic-swap-btc-signing PRIVATE sost-core)
+add_test(NAME atomic-swap-btc-signing COMMAND test-atomic-swap-btc-signing)
+
+add_executable(test-atomic-swap-coordinator tests/test_atomic_swap_coordinator.cpp)
+target_link_libraries(test-atomic-swap-coordinator PRIVATE sost-core)
+add_test(NAME atomic-swap-coordinator COMMAND test-atomic-swap-coordinator)
+
+add_executable(test-atomic-swap-e2e-sim tests/test_atomic_swap_e2e_sim.cpp)
+target_link_libraries(test-atomic-swap-e2e-sim PRIVATE sost-core)
+add_test(NAME atomic-swap-e2e-sim COMMAND test-atomic-swap-e2e-sim)
 
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)

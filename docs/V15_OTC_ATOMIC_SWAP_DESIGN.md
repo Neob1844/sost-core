@@ -139,7 +139,27 @@ uncollectible until/unless unfrozen). **Design requirements:**
 ## 4. Phases (build-now, flip-later)
 
 - **OTC-0** ✅ (this doc) — design + impact map; confirm groundwork lives on the feat branch; gates stay `INT64_MAX`.
-- **OTC-0.5 — integrate groundwork into `main`** — port the dormant, gated pieces from `feat/atomic-swap-htlc-v13-candidate` onto `main` *without* changing behavior: `atomic_swap.h` (gate at `INT64_MAX`), helpers, BTC script builder (signing stays behind `SOST_BTC_HTLC_SIGNING=OFF`), coordinator, and their tests; register tests in CMake/CI. Mainnet byte-identical. Re-base the gate constant onto `V15_HEIGHT` semantics (still deferred).
+- **OTC-0.5** ✅ DONE — ported the *pure, non-consensus* dormant groundwork from
+  `feat/atomic-swap-htlc-v13-candidate` onto `main`, all gated/OFF, mainnet byte-identical:
+  - `include/sost/atomic_swap.h` — activation gate `ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX`
+    + `atomic_swap_htlc_active_at()` (cleaned: the stray local `V14_HEIGHT` redefine was removed so
+    it never shadows `params.h`; doc now points at `V15_HEIGHT`).
+  - `atomic_swap_btc.{h,cpp}` — BTC P2WSH HTLC redeem-script builder (pure byte assembly).
+  - `atomic_swap_btc_signing.{h,cpp}` — signing surface compiled as **inert stubs** (every call returns
+    `ok=false`) unless built with `-DSOST_BTC_HTLC_SIGNING=ON` (an OTC-3 step; default OFF).
+  - `atomic_swap_coordinator.{h,cpp}` — local swap state machine (no chain, no signing, no network).
+  - Tests wired into CMake + CI hard-gate: `test-atomic-swap-btc-script`, `-btc-test-vectors`,
+    `-btc-signing`, `-coordinator`, `-e2e-sim`. full ctest **80/80** on mainnet AND testnet.
+  - EVM artifacts (not C++-built): `contracts/atomic-swap/{README.md,foundry.toml,src/AtomicSwapHTLC.sol,
+    test/AtomicSwapHTLC.t.sol,test/mocks/MockERC20.sol}` (forge-std fetched via `forge install`, not vendored).
+  - All ~20 atomic-swap design docs ported under `docs/{design,release,reviews}/ATOMIC_SWAP_*`.
+  - **Deferred to OTC-1 (consensus surface):** `atomic_swap_helpers.{h,cpp}` and the
+    `test_atomic_swap_htlc_{lock,helpers,rpc}` tests were NOT ported, because they require the
+    `OUT_HTLC_LOCK/CLAIM/REFUND` output types + payload parsers in `transaction.h`/`tx_validation.*`.
+    The feat branch forked from `main` **before** the V15 PoPC/Gold-Vault work, so its versions of the
+    shared consensus files must NOT be taken wholesale — those additions will be hand-grafted onto
+    current `main` in OTC-1 together with the CLAIM/REFUND rules (LOCK+CLAIM+REFUND as one gated set,
+    so there is never a LOCK without a spend path).
 - **OTC-1 — SOST-side HTLC consensus** — finish CLAIM + REFUND validation rules (preimage check, signatures, timeout, adversarial tests: wrong preimage, claim-after-timeout, refund-before-timeout, double-spend, malformed payload), serialization, mempool acceptance, read-only HTLC/preimage indexing RPC. Gate stays deferred.
 - **OTC-2 — wallet + automation** — wallet builders (`createhtlclock/claimhtlc/refundhtlc/decodehtlc/gethtlcstatus`), the maker/taker order board (off-chain), and the non-custodial **watcher**: auto-claim on counterparty lock + preimage reveal, auto-refund after timeout, resume after restart, with timeout-ordering enforcement.
 - **OTC-3 — cross-chain legs** — enable BTC signing (libwally) behind review; deploy + external-audit the EVM `AtomicSwapHTLC.sol`; issuer-freeze warnings in wallet/UI; end-to-end testnet swaps (SOST↔BTC regtest, SOST↔EVM testnet).

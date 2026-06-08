@@ -48,6 +48,11 @@ jobs:
           cmake --build build --target test-popc-v15-lifecycle -j2
           cmake --build build --target test-popc-v15-authz -j2
           cmake --build build --target test-popc-v15-soak -j2
+          cmake --build build --target test-atomic-swap-btc-script -j2
+          cmake --build build --target test-atomic-swap-btc-test-vectors -j2
+          cmake --build build --target test-atomic-swap-btc-signing -j2
+          cmake --build build --target test-atomic-swap-coordinator -j2
+          cmake --build build --target test-atomic-swap-e2e-sim -j2
 
       - name: Run V14 fork-gate pins (constants must not drift)
         run: ./build/test-v14-fork-gates
@@ -71,6 +76,11 @@ jobs:
           ./build/test-popc-v15-lifecycle
           ./build/test-popc-v15-authz
           ./build/test-popc-v15-soak
+          ./build/test-atomic-swap-btc-script
+          ./build/test-atomic-swap-btc-test-vectors
+          ./build/test-atomic-swap-btc-signing
+          ./build/test-atomic-swap-coordinator
+          ./build/test-atomic-swap-e2e-sim
 
   # Best-effort full suite. Allowed to fail (informational) until all deps are
   # pinned in CI; the v14-safety job above is the hard gate.
