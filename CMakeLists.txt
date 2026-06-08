@@ -327,6 +327,11 @@ add_executable(test-popc-v15-carrier tests/test_popc_v15_carrier.cpp)
 target_link_libraries(test-popc-v15-carrier PRIVATE sost-core secp256k1)
 add_test(NAME popc-v15-carrier COMMAND test-popc-v15-carrier)
 
+# V15 PoPC P4a — consensus eligibility hook (set_popc_event_source / has_active_canonical_popc)
+add_executable(test-popc-v15-eligibility tests/test_popc_v15_eligibility.cpp)
+target_link_libraries(test-popc-v15-eligibility PRIVATE sost-core)
+add_test(NAME popc-v15-eligibility COMMAND test-popc-v15-eligibility)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)

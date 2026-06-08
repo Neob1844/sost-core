@@ -42,6 +42,7 @@
 #include "sost/gold_vault_slice1.h"   // W1: Gold Vault Slice 1 enforcement in the real block path
 #include "sost/gv_g4.h"               // W3: Gold Vault G4 67-block miner-approval window
 #include "sost/gv_g5.h"               // W4b: Gold Vault G5 transitional Guardian veto
+#include "sost/popc_v15.h"            // P4a: chain-derived PoPC active set (V15)
 #include "sost/sostcompact.h"
 #include "sost/checkpoints.h"
 #include "sost/popc.h"
@@ -4222,6 +4223,42 @@ static bool compute_fee_for_tx(const Transaction& tx, const IUtxoView& view, int
     return true;
 }
 
+// P4a — collect canonical PoPC V15 events from the chain's carriers up to `height`.
+// Pure read of g_blocks (the active chain) → deterministic + reorg-safe (recomputed
+// on every call from the current chain, no cached state). Gated: returns empty when
+// PoPC V15 is not active (so mainnet, deferred at INT64_MAX, is a pure no-op). For
+// Activate carriers the signed attestation must verify (Model A: by the owner key).
+// This is the source registered into lottery::has_active_canonical_popc — it NEVER
+// reads popc_registry.json.
+static std::vector<sost::PopcV15Event> node_collect_popc_events(int64_t height) {
+    std::vector<sost::PopcV15Event> ev;
+    if (!sost::popc_v15_active_at(height)) return ev;     // gated → no-op pre-activation / mainnet
+    int64_t top = std::min<int64_t>(height, (int64_t)g_blocks.size() - 1);
+    for (int64_t h = 0; h <= top; ++h) {
+        const auto& sb = g_blocks[(size_t)h];
+        for (const auto& txh : sb.tx_hexes) {
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(txh, raw)) continue;
+            Transaction tx; std::string err;
+            if (!Transaction::Deserialize(raw, tx, &err)) continue;
+            for (const auto& o : tx.outputs) {
+                if (!sost::popc_v15_is_carrier_output(o)) continue;
+                auto c = sost::popc_v15_decode_output(o, h);
+                if (!c.ok) continue;
+                if (c.event.type == sost::PopcEventType::Activate) {
+                    // attestation must verify; Model A binds the pubkey to the owner
+                    if (!sost::popc_v15_verify_attestation(c.event.commitment_id, c.balance_mg,
+                                                           c.attest_height, c.pubkey, c.sig)) continue;
+                    if (c.event.model == (uint8_t)sost::PopcModel::A &&
+                        !sost::popc_v15_pubkey_is_owner(c.pubkey, c.event.owner_pkh)) continue;
+                }
+                ev.push_back(c.event);
+            }
+        }
+    }
+    return ev;
+}
+
 static bool process_block(const std::string& block_json) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
 
@@ -7458,6 +7495,13 @@ int main(int argc, char** argv) {
             printf("PoPC registry: %zu active commitments\n", g_popc_registry.active_count());
         }
     }
+
+    // P4a — register the canonical, chain-derived PoPC V15 event source so the
+    // consensus eligibility path (lottery::has_active_canonical_popc) recomputes
+    // the active set from on-chain carriers instead of the per-node registry.
+    // Self-gated: node_collect_popc_events returns empty until popc_v15_active_at,
+    // so mainnet (deferred at INT64_MAX) is byte-identical / no-op.
+    sost::lottery::set_popc_event_source(node_collect_popc_events);
 
     // Wallet rescan from UTXO set
     {

@@ -166,9 +166,27 @@ records the SOST-side commitment + bond + attestations. (OTC/P2P atomic swap is 
   P1's `popc_v15_verify_attestation`. Tests: `test-popc-v15-carrier` 25/25 (every event round-trips,
   Model A/B, recognition, all malformed cases, attest sign→decode→verify). full ctest 71/71; in CI.
   **Pure encode/decode only — NOT wired to process_block, the gate is applied by the caller in P4.**
-- **P4** — wire auto-audit/slash/settle into `process_block` (gated); DTD eligibility reads the
-  chain set. Cross-validator + determinism tests (mirror B3).
-- **P5** — testnet soak across V15_HEIGHT + replay; then the coordinated flip.
+- **P4a** ✅ DONE — minimal, safe wiring of PoPC V15 into the real consensus path. The node now
+  derives canonical events from the chain instead of the per-node JSON: `node_collect_popc_events(height)`
+  in `sost-node.cpp` scans the active chain's blocks for carrier outputs (`popc_v15_is_carrier_output`
+  → `popc_v15_decode_output`), verifies each Activate's signed attestation (Model A binds the pubkey to
+  the owner via `popc_v15_pubkey_is_owner`), and returns the ordered `PopcV15Event` list. It is registered
+  once at startup via `lottery::set_popc_event_source(...)`. `has_active_canonical_popc` was rewritten to,
+  *only when `popc_v15_active_at(height)`*, recompute the active set from those events
+  (`popc_v15_owner_active`) — never reading `popc_registry.json`. **Gated end-to-end:** before the gate
+  (and on mainnet, deferred at `INT64_MAX`) the collector returns empty and the hook returns `true` —
+  byte-identical to pre-P4a; `DTD_POPC_GATE_CONSENSUS_ACTIVE` stays `false` so the hook is still dormant
+  in the shipped path (P4a wires plumbing only). The collector recomputes from the current chain on every
+  call → reorg-safe by construction. Tests: `test-popc-v15-eligibility` — mainnet build 5/5 (pure no-op
+  for active/unknown/expired/slashed), testnet build 12/12 (active passes; unknown/expired/slashed/
+  settled/suspended do NOT; Renew revives; below-gate no-op; reorg/time safety; defensive no-source).
+  full ctest 72/72 on BOTH mainnet and testnet builds; in CI hard-gate.
+  **No auto-slash, no auto-settle (deferred to P4b). No `process_block` mutation of state — read-only.**
+- **P4b** — deterministic auto-slash (node slashes when `popc_v15_slash_eligible`, no Guardian) and
+  auto-settle (at `end_height` in good standing) wired into `process_block` (gated). Cross-validator +
+  determinism tests (mirror B3).
+- **P5** — testnet soak across V15_HEIGHT + replay; then the coordinated `DTD_POPC_GATE_CONSENSUS_ACTIVE`
+  flip.
 
 ## 8. Tests needed
 - Reward/schedule math (pure), attestation sign→verify + all rejections, `chain_active_popc_set`

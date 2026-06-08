@@ -225,14 +225,17 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
 // replaced with a deterministic check against chain-derived PoPC
 // state. That migration is NOT part of this PR — see
 // docs/V14_DTD_POPC_ELIGIBILITY.md for the migration prerequisites.
+// P4a — chain-derived PoPC event source (registered by the node).
+static PopcEventSource g_popc_src{};
+void set_popc_event_source(PopcEventSource src) { g_popc_src = std::move(src); }
+
 bool has_active_canonical_popc(const PubKeyHash& pkh, int64_t height) {
-    (void)pkh;
-    (void)height;
-    if (!sost::DTD_POPC_GATE_CONSENSUS_ACTIVE) return true;
-    // Unreachable in this build (the flag is constexpr false). When the
-    // flag flips, the real implementation must inspect chain-derived
-    // PoPC state and never touch popc_registry.json from this path.
-    return false;
+    // Pre-activation — including ALL mainnet heights while POPC_V15_ACTIVATION_HEIGHT
+    // is INT64_MAX — behave exactly as before: eligible (no-op, byte-identical).
+    if (!popc_v15_active_at(height)) return true;
+    // V15 active: use the chain-derived active set, NEVER popc_registry.json.
+    if (!g_popc_src) return true;                     // defensive: no source wired
+    return popc_v15_owner_active(g_popc_src(height), pkh, height);
 }
 
 int64_t select_lottery_winner_index(

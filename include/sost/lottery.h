@@ -75,9 +75,11 @@
 #include "sost/types.h"
 #include "sost/params.h"      // V11_PHASE2_HEIGHT, LOTTERY_HIGH_FREQ_WINDOW
 #include "sost/tx_signer.h"   // PubKeyHash
+#include "sost/popc_v15.h"    // P4a — PopcV15Event, popc_v15_owner_active (chain-derived PoPC)
 #include <cstdint>
 #include <optional>
 #include <vector>
+#include <functional>
 
 namespace sost::lottery {
 
@@ -260,6 +262,14 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
 // separate, future, coordinated event documented in
 // docs/V14_DTD_POPC_ELIGIBILITY.md.
 bool has_active_canonical_popc(const PubKeyHash& pkh, int64_t height);
+
+// P4a — chain-derived PoPC event source. The node registers a function that
+// returns ALL canonical PoPC events up to a height (scanned from the chain's
+// carriers); once the V15 gate is active, has_active_canonical_popc uses it via
+// chain_active_popc_set, NEVER popc_registry.json. With no source registered (or
+// on mainnet, where the gate is deferred), the helper stays a no-op (eligible).
+using PopcEventSource = std::function<std::vector<PopcV15Event>(int64_t)>;
+void set_popc_event_source(PopcEventSource src);
 
 // Select the winning index into a lex-sorted eligibility vector from a
 // recent block-history seed. Production Phase 2 uses this path so a
