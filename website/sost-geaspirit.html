@@ -418,6 +418,46 @@ nav .container{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-
   </div>
 </section>
 
+<!-- CADASTRAL-REFERENCE INTELLIGENCE -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// PARCEL-LEVEL INTELLIGENCE</div>
+    <div class="section-title">From a Cadastral <span>Reference</span></div>
+    <div class="panel">
+      <p>Many countries publish public cadastral <b>parcel / finca</b> services — national cadastres, plus the INSPIRE <i>Cadastral Parcels</i> theme across the EU. GeaSpirit can start from a single parcel reference and resolve everything else automatically — <b>no coordinates required from the user</b>:</p>
+      <pre style="background:#0a0a0a;border:1px solid var(--border);border-left:3px solid var(--green);padding:14px 16px;color:#bbf7d0;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.7;overflow:auto;margin:14px 0">Cadastral reference
+  → coordinates (centroid)
+  → parcel polygon (exact footprint)
+  → geology
+  → geological heritage
+  → mining context
+  → report</pre>
+      <p style="color:#bbb;font-size:13px">The reference is geocoded to a centroid and the exact parcel polygon, and GeaSpirit runs its open-data layers over that real footprint — more precise than a single point. It works wherever a public cadastral / parcel service is available, which makes it a differentiating capability for <b>owners, investors and public administrations</b> in many jurisdictions.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WORKED EXAMPLE — HONEST TRIAGE -->
+<section class="section">
+  <div class="container">
+    <div class="section-id">// WORKED EXAMPLE — HONEST TRIAGE</div>
+    <div class="section-title">Case Study: <span>Cabezo Negro</span></div>
+    <div class="panel">
+      <p style="font-size:13px"><b>Parcel analysed.</b> Cabezo Negro (Campos del Río, Murcia) — cadastral reference <code style="color:var(--green)">30014A010002510000IM</code> · 38.02893, −1.31265 · ~5.6 ha.</p>
+      <p style="font-size:13px;color:#bbb"><b>First impression.</b> An ordinary rural parcel with no known mine.</p>
+      <p style="font-size:13px;color:#bbb"><b>What is really there.</b> Reviewing open geological sources, the parcel sits in the <b>Barqueros volcanic complex</b> — one of the most important <b>lamproite</b> areas of south-east Spain (rare, dark ultrapotassic volcanic rock) — and the surrounding basin contains <b>gypsum, marls and evaporitic materials</b>. So there is a real geological basis, and the name "Cabezo Negro" (Black Hill) makes geological sense.</p>
+      <p style="font-size:13px;color:#bbb"><b>Gold, copper, metals?</b> No open evidence. The honest read is potential for <b>gypsum, aggregates and volcanic rock as construction material</b> — no economically relevant metals identified.</p>
+      <p style="font-size:13px;color:var(--amber)"><b>Important constraint.</b> Similar Murcian volcanic hills are catalogued as <b>LIG / IELIG</b> (Sites / Spanish Inventory of Sites of Geological Interest). Heritage protection could heavily limit any extraction.</p>
+      <p style="font-size:13px;color:#bbb"><b>Confidence.</b> <span style="color:#fbbf24">LOW</span> at first → <span style="color:#fbbf24">MEDIUM-LOW</span> after consulting open geology: we now know the rock types, but there are no public reserve or production figures for this specific parcel.</p>
+      <div style="border:1px solid var(--green);background:rgba(0,255,65,.04);padding:16px;margin-top:14px">
+        <div style="color:var(--green);letter-spacing:1px;font-size:12px;margin-bottom:6px">THE POINT ISN'T THE GYPSUM</div>
+        <p style="font-size:13px;color:#cce;margin:0">The real result is that <b>GeaSpirit produced a reasonable geological fiche starting from a cadastral reference alone</b> — reference → coordinates → polygon → geology → heritage → mining context → report. That is a differentiating capability for owners, investors and administrations wherever public cadastral data exists.</p>
+      </div>
+      <p style="font-size:11px;color:#777;margin-top:12px">Open-data triage. Not legal verification, investment advice, ownership verification or a guaranteed-discovery claim. The spectral/engine pass over the polygon is the next step.</p>
+    </div>
+  </div>
+</section>
+
 <!-- RELATIONSHIP WITH SOST -->
 <section class="section">
   <div class="container">
