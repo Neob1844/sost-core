@@ -182,11 +182,31 @@ records the SOST-side commitment + bond + attestations. (OTC/P2P atomic swap is 
   settled/suspended do NOT; Renew revives; below-gate no-op; reorg/time safety; defensive no-source).
   full ctest 72/72 on BOTH mainnet and testnet builds; in CI hard-gate.
   **No auto-slash, no auto-settle (deferred to P4b). No `process_block` mutation of state — read-only.**
-- **P4b** — deterministic auto-slash (node slashes when `popc_v15_slash_eligible`, no Guardian) and
-  auto-settle (at `end_height` in good standing) wired into `process_block` (gated). Cross-validator +
-  determinism tests (mirror B3).
-- **P5** — testnet soak across V15_HEIGHT + replay; then the coordinated `DTD_POPC_GATE_CONSENSUS_ACTIVE`
-  flip.
+- **P4b** ✅ DONE — the PoPC A/B lifecycle is now closed automatically, PURELY and deterministically,
+  inside `chain_popc_recompute(events, at_height)` in popc_v15.h (no Guardian, no signature, no mandatory
+  oracle). Two derived transitions are applied to still-live commitments after the explicit-event fold:
+  **auto-slash** — an *activated* commitment whose latest scheduled audit went unanswered past the grace
+  window is slashed (`popc_v15_slash_eligible`); audits fall due every `POPC_V15_AUDIT_INTERVAL_BLOCKS`
+  (1440) from the first Activate, only within the term, and the owner's periodic re-attestation is an
+  Activate event whose on-chain height is the audit response. A bare Register (never Activated) has no
+  audit clock and is never auto-slashed. **auto-settle** — a live commitment that reaches `end_height` in
+  good standing settles automatically (no manual Settle carrier). auto-slash takes precedence over
+  auto-settle; explicit Slash/Settle carriers stay terminal and are never overridden. `popc_v15_commitment_status(...)`
+  exposes the full status. Because it is a pure recompute from chain events it is reorg-safe, and the P4a
+  wiring (`chain_active_popc_set` → `popc_v15_owner_active` → `has_active_canonical_popc`) consumes it with
+  NO new node code. **Gated/no-op:** pre-V15 / mainnet the collector supplies an empty event list, so the
+  result is empty → byte-identical replay. **`DTD_POPC_GATE_CONSENSUS_ACTIVE` stays `false` — the DTD↔PoPC
+  bridge is NOT activated by P4b; nobody is excluded from the lottery yet.** Tests:
+  `test-popc-v15-lifecycle` — mainnet 26/26 and testnet 26/26 (slash timing pre/post grace, re-attest
+  answers/too-early, auto-settle in good standing, missed-audit-then-end slashes not settles, renew avoids
+  wrong settle, explicit terminal preserved, never-activated immune, Model A & B, reorg recompute, P2/P4a
+  regression, empty/no-op, DTD gate off). full ctest 73/73 on BOTH builds; in CI hard-gate.
+- **DTD↔PoPC bridge — PENDING / OFF.** `DTD_POPC_GATE_CONSENSUS_ACTIVE = false`. PoPC A/B is fully
+  automated for V15 / block #20000, but the lottery does NOT yet require an active PoPC commitment. Flipping
+  this gate is a consensus change (every node must agree, under a fresh announced fork height) and is
+  deferred to **P5** or a separate coordinated release — never flipped without a soak + replay.
+- **P5** — testnet soak across V15_HEIGHT + replay; then, only after that, the coordinated
+  `DTD_POPC_GATE_CONSENSUS_ACTIVE` flip.
 
 ## 8. Tests needed
 - Reward/schedule math (pure), attestation sign→verify + all rejections, `chain_active_popc_set`

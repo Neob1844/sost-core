@@ -170,15 +170,54 @@ struct PopcActiveEntry {
     int64_t    end_height{0};
 };
 
-// Recompute the active commitment set as of `at_height`. Events are applied in
-// the order given (= chain order); only events with height <= at_height count.
-// Slash/Settle are terminal (later events for that id are ignored). A commitment
-// is ACTIVE iff its latest state is Active AND at_height < end_height.
-inline std::vector<PopcActiveEntry> chain_active_popc_set(
+// Audit cadence (protocol-wide, deterministic): an ACTIVATED commitment must be
+// re-attested by its owner at least once per interval. Missing a scheduled audit
+// by more than the grace window (POPC_V15_AUDIT_GRACE_BLOCKS) makes it
+// auto-slashable. Per-commitment audit intervals are reserved for a future
+// carrier extension; P4b uses this single protocol-wide cadence so every node
+// computes identical audit deadlines.
+inline constexpr int64_t POPC_V15_AUDIT_INTERVAL_BLOCKS = 1440;
+
+// ============================================================================
+// P4b — full per-commitment lifecycle, INCLUDING the deterministic
+// auto-transitions. There is NO Guardian, NO signature and NO mandatory oracle:
+// every node recomputes the identical state purely from the chain's events at
+// `at_height`, so it is reorg-safe by construction (a different event list just
+// recomputes — no cached state survives).
+//
+//   * auto-slash — an activated commitment whose latest scheduled audit went
+//     unanswered past the grace window is slashed (popc_v15_slash_eligible). The
+//     owner's periodic re-attestation is an Activate event (self-attested under
+//     bond) whose on-chain height is the audit response. Only commitments that
+//     have actually been Activated carry an audit clock; a bare Register has no
+//     attestation obligation and is never auto-slashed.
+//   * auto-settle — a live commitment that reaches end_height in good standing
+//     (no missed audit) settles automatically. No manual Settle carrier needed.
+//
+// auto-slash takes precedence over auto-settle: a term that lapsed an audit is
+// slashed, not settled. Explicit Slash/Settle carriers remain terminal and are
+// never overridden. Pre-V15 / mainnet the caller supplies an empty event list,
+// so this is a pure no-op (empty result) and replay stays byte-identical.
+// ============================================================================
+struct PopcV15Rec {
+    PubKeyHash    owner{};
+    uint8_t       model{0};
+    int64_t       end{0};
+    PopcV15Status status{PopcV15Status::Pending};
+    int           order{0};
+    bool          activated{false};      // saw at least one Activate (attestation)
+    int64_t       activation_height{0};  // height of the FIRST Activate
+    int64_t       last_attest{0};        // height of the LATEST Activate (re-attest)
+    bool          auto_slashed{false};   // derived: not from an explicit carrier
+    bool          auto_settled{false};   // derived: not from an explicit carrier
+};
+
+// Fold the explicit events (chain order; only height <= at_height), then apply
+// the deterministic auto-slash / auto-settle transitions. Returns every
+// commitment seen, keyed by id. PURE.
+inline std::map<Bytes32, PopcV15Rec> chain_popc_recompute(
         const std::vector<PopcV15Event>& events, int64_t at_height) {
-    struct Rec { PubKeyHash owner{}; uint8_t model{0}; int64_t end{0};
-                 PopcV15Status status{PopcV15Status::Pending}; int order{0}; };
-    std::map<Bytes32, Rec> by_id;
+    std::map<Bytes32, PopcV15Rec> by_id;
     int seq = 0;
     for (const auto& e : events) {
         if (e.height > at_height) continue;                 // event in the future of the query
@@ -188,13 +227,18 @@ inline std::vector<PopcActiveEntry> chain_active_popc_set(
                        it->second.status == PopcV15Status::Settled)) continue;  // terminal: frozen
         switch (e.type) {
             case PopcEventType::Register:
-                if (!exists) { Rec r; r.owner=e.owner_pkh; r.model=e.model; r.end=e.end_height;
+                if (!exists) { PopcV15Rec r; r.owner=e.owner_pkh; r.model=e.model; r.end=e.end_height;
                                r.status=PopcV15Status::Active; r.order=seq++; by_id.emplace(e.commitment_id, r); }
                 // duplicate Register is idempotent (first wins) — deterministic
                 break;
             case PopcEventType::Activate:
-                if (exists && (it->second.status==PopcV15Status::Pending || it->second.status==PopcV15Status::Suspended))
-                    it->second.status = PopcV15Status::Active;
+                if (exists) {
+                    if (it->second.status==PopcV15Status::Pending || it->second.status==PopcV15Status::Suspended)
+                        it->second.status = PopcV15Status::Active;
+                    it->second.activated = true;                       // starts/keeps the audit clock
+                    if (it->second.activation_height == 0) it->second.activation_height = e.height;
+                    if (e.height > it->second.last_attest) it->second.last_attest = e.height;
+                }
                 break;
             case PopcEventType::Renew:
                 if (exists && it->second.status==PopcV15Status::Active && e.end_height > it->second.end)
@@ -207,16 +251,44 @@ inline std::vector<PopcActiveEntry> chain_active_popc_set(
                 if (exists && it->second.status==PopcV15Status::Active) it->second.status = PopcV15Status::Suspended;
                 break;
             case PopcEventType::Slash:
-                if (exists) it->second.status = PopcV15Status::Slashed;     // terminal
+                if (exists) it->second.status = PopcV15Status::Slashed;     // terminal (explicit)
                 break;
             case PopcEventType::Settle:
-                if (exists) it->second.status = PopcV15Status::Settled;     // terminal
+                if (exists) it->second.status = PopcV15Status::Settled;     // terminal (explicit)
                 break;
         }
     }
+    // P4b — deterministic auto-transitions on still-live commitments.
+    for (auto& kv : by_id) {
+        PopcV15Rec& r = kv.second;
+        if (r.status != PopcV15Status::Active) continue;     // only live commitments transition
+        // auto-slash: an activated commitment has an audit clock. Audits fall due
+        // every interval from activation, but only within the term [.., end).
+        if (r.activated && r.activation_height > 0) {
+            int64_t horizon = (at_height < r.end) ? at_height : (r.end - 1);
+            if (horizon >= r.activation_height + POPC_V15_AUDIT_INTERVAL_BLOCKS) {
+                int64_t k = (horizon - r.activation_height) / POPC_V15_AUDIT_INTERVAL_BLOCKS;
+                int64_t last_due_audit = r.activation_height + k * POPC_V15_AUDIT_INTERVAL_BLOCKS;
+                if (popc_v15_slash_eligible(last_due_audit, r.last_attest, at_height)) {
+                    r.status = PopcV15Status::Slashed; r.auto_slashed = true;
+                    continue;                                 // slash wins over settle
+                }
+            }
+        }
+        // auto-settle: reached end_height in good standing.
+        if (at_height >= r.end) { r.status = PopcV15Status::Settled; r.auto_settled = true; }
+    }
+    return by_id;
+}
+
+// Recompute the active commitment set as of `at_height`. A commitment is ACTIVE
+// iff its (auto-transition-aware) latest state is Active AND at_height < end.
+inline std::vector<PopcActiveEntry> chain_active_popc_set(
+        const std::vector<PopcV15Event>& events, int64_t at_height) {
+    auto by_id = chain_popc_recompute(events, at_height);
     std::vector<std::pair<int,PopcActiveEntry>> tmp;
     for (const auto& kv : by_id) {
-        const Rec& r = kv.second;
+        const PopcV15Rec& r = kv.second;
         if (r.status == PopcV15Status::Active && at_height < r.end)
             tmp.push_back({r.order, PopcActiveEntry{kv.first, r.owner, r.model, r.end}});
     }
@@ -224,6 +296,15 @@ inline std::vector<PopcActiveEntry> chain_active_popc_set(
     std::vector<PopcActiveEntry> out; out.reserve(tmp.size());
     for (auto& p : tmp) out.push_back(p.second);
     return out;   // deterministic order = registration order
+}
+
+// P4b — canonical lifecycle status of one commitment at `at_height`, INCLUDING
+// the deterministic auto-slash / auto-settle. Unknown id -> Pending. PURE.
+inline PopcV15Status popc_v15_commitment_status(
+        const std::vector<PopcV15Event>& events, const Bytes32& commitment_id, int64_t at_height) {
+    auto by_id = chain_popc_recompute(events, at_height);
+    auto it = by_id.find(commitment_id);
+    return (it == by_id.end()) ? PopcV15Status::Pending : it->second.status;
 }
 
 // Does `owner_pkh` hold ANY active commitment at `at_height`? This is the pure
