@@ -35,17 +35,20 @@ Keep this build in its own dir (`build-testnet/`) so you never run it against ma
 
 ## 2. Start a testnet node + miner (separate chain, never touches mainnet)
 
-Use a **separate chain file and ports**, and `--profile testnet` (different magic bytes ⇒ cannot
-mix with mainnet peers):
+Use a **separate chain file and ports**, `--profile testnet`, and **isolate the node** with
+`--connect 127.0.0.1:1`. Without `--connect`, the node falls back to the default seed
+`seed.sostcore.com:19333` and starts ingesting the **mainnet** chain — never do that for a soak.
+For the 2-node reorg test, point the second node's `--connect` at the first node instead.
 
 ```bash
-# Node (testnet)
+# Node (testnet, ISOLATED)
 ./build-testnet/sost-node \
   --profile testnet \
   --genesis genesis_block.json \
   --chain testnet_chain.json \
   --port 19334 --rpc-port 18233 \
-  --rpc-user soak --rpc-pass soakpass &
+  --rpc-user soak --rpc-pass soakpass \
+  --connect 127.0.0.1:1 &        # isolation: do NOT use the mainnet seed
 
 # Miner (points at the testnet node's RPC)
 ./build-testnet/sost-miner \
@@ -65,6 +68,34 @@ For the reorg test (step F) start a **second** node on other ports with its own 
 `--connect 127.0.0.1:19334`, then briefly partition it.
 
 ---
+
+### Observing PoPC V15 state (read-only RPC)
+`getpopcv15status` reports the live lifecycle (recomputed from on-chain carriers at the tip).
+Optional param: an `owner_pkh` (40 hex, as printed by `popc15-carrier`) to query that owner:
+```bash
+curl -s --user soak:soakpass -H 'content-type: application/json' \
+  --data '{"method":"getpopcv15status","params":[],"id":1}' http://127.0.0.1:18233/
+# -> {"height":..,"v15_height":300,"v15_active":..,"eligibility_height":1300,
+#     "gate_active":false,"eligibility_enforced":..,"active_count":N}
+curl ... --data '{"method":"getpopcv15status","params":["<OWNER_PKH_40HEX>"],"id":1}' ...
+# -> adds "queried_owner_active": true|false
+```
+Read-only, gated (inactive before block 300), never changes state or the DTD gate.
+
+## 3a. Automated runner
+
+`scripts/run_testnet_soak.sh` automates steps A–E below with safety guards (testnet-only,
+refuses mainnet paths, never deletes without `--reset-testnet`, never touches mainnet/the DTD
+gate/systemd). It builds the testnet binaries if missing, starts an **isolated** node + miner,
+emits the carriers, polls `getpopcv15status`, and prints PASS/FAIL per step + a GO/NO-GO verdict.
+
+```bash
+scripts/run_testnet_soak.sh --dry-run        # print the plan, start nothing
+scripts/run_testnet_soak.sh                  # run A–E (reuses existing testnet data)
+scripts/run_testnet_soak.sh --reset-testnet  # wipe testnet_soak_data/ first, then run
+```
+Steps F (reorg) and G (replay) stay manual (see §3 below). If the node rejects a carrier at the
+mempool, the runner records it as **NO-GO** — that is a finding to fix separately, not to patch over.
 
 ## 3. Soak steps (maps 1:1 to docs/V15_POPC_SOAK_REPORT.md)
 

@@ -874,6 +874,7 @@ static void p2p_broadcast_tx(const std::string& hex_str, int exclude_fd = -1);
 static bool process_block(const std::string& block_json);
 static bool save_chain_internal(const std::string& path);  // v0.3.2: no-lock save
 static bool decode_tx_hex(const std::string& tx_hex, std::vector<Byte>& out_raw);
+static std::vector<sost::PopcV15Event> node_collect_popc_events(int64_t height);  // P5: read-only RPC observability
 
 // =============================================================================
 // RPC Basic Auth (Base64 decode)
@@ -3851,8 +3852,52 @@ static std::string handle_getrpcstats(const std::string& id, const std::vector<s
 
 // Dispatch
 using RpcHandler=std::function<std::string(const std::string&,const std::vector<std::string>&)>;
+// P5 — read-only observability for the PoPC V15 lifecycle (testnet soak).
+// Recomputes the active set from on-chain carriers at the current tip and reports
+// it. Optional param: an owner_pkh (40 hex) to query that owner's active status.
+// Pure read; gated (empty/inactive before V15). NEVER changes state, NEVER flips
+// the DTD gate — it just exposes what the consensus path would compute.
+static std::string handle_getpopcv15status(const std::string& id, const std::vector<std::string>& p) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    int64_t height = g_chain_height;
+    bool v15 = sost::popc_v15_active_at(height);
+    std::ostringstream s;
+    s << "{\"height\":" << (long long)height
+      << ",\"v15_height\":" << (long long)sost::V15_HEIGHT
+      << ",\"v15_active\":" << (v15 ? "true" : "false")
+      << ",\"eligibility_height\":" << (long long)sost::DTD_POPC_ELIGIBILITY_HEIGHT
+      << ",\"gate_active\":" << (sost::DTD_POPC_GATE_CONSENSUS_ACTIVE ? "true" : "false")
+      << ",\"eligibility_enforced\":"
+      << (sost::lottery::popc_eligibility_enforced(height, sost::DTD_POPC_GATE_CONSENSUS_ACTIVE) ? "true" : "false");
+    if (!v15) { s << ",\"active_count\":0}"; return rpc_result(id, s.str()); }
+    auto evs = node_collect_popc_events(height);
+    auto set = sost::chain_active_popc_set(evs, height);
+    s << ",\"active_count\":" << set.size();
+    if (!p.empty() && !p[0].empty()) {
+        const std::string& oh = p[0];
+        bool okp = (oh.size() == 40);
+        sost::PubKeyHash pkh{};
+        auto nib = [](char c)->int{ if(c>='0'&&c<='9')return c-'0'; if(c>='a'&&c<='f')return c-'a'+10;
+                                    if(c>='A'&&c<='F')return c-'A'+10; return -1; };
+        for (size_t i = 0; okp && i < 20; ++i) {
+            int hi = nib(oh[2*i]), lo = nib(oh[2*i+1]);
+            if (hi < 0 || lo < 0) { okp = false; break; }
+            pkh[i] = (uint8_t)((hi << 4) | lo);
+        }
+        if (okp) {
+            bool act = sost::popc_v15_owner_active(evs, pkh, height);
+            s << ",\"queried_owner_pkh\":\"" << oh << "\",\"queried_owner_active\":" << (act ? "true" : "false");
+        } else {
+            s << ",\"queried_owner_error\":\"owner_pkh must be 40 hex chars\"";
+        }
+    }
+    s << "}";
+    return rpc_result(id, s.str());
+}
+
 static std::map<std::string,RpcHandler> g_handlers={
     {"getblockcount",handle_getblockcount},
+    {"getpopcv15status",handle_getpopcv15status},
     {"getbestblockhash",handle_getbestblockhash},
     {"getblockhash",handle_getblockhash},
     {"getblock",handle_getblock},
@@ -6934,7 +6979,8 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         // state, none reveal credentials.
         "getrpcstats",
         "getaddressflows",
-        "getlotteryaudit"
+        "getlotteryaudit",
+        "getpopcv15status"   // P5: read-only PoPC V15 lifecycle observability (soak)
     };
     return kReadOnly.count(m) > 0;
 }
