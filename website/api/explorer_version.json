@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-07-v329",
-  "note": "V14 SECURITY UPDATE banner added: all external miners/node operators must COMPILE the new binary (commit ef74e885) and restart BOTH sost-node and sost-miner before block #15,000. Force-reload open explorers. Meta tag and JSON stay in lockstep."
+  "v": "2026-06-08-v330",
+  "note": "OTC/P2P Atomic Swap preview banner corrected to V15 / block 20,000 (was mislabelled V14 / 15,000) — consistent with V15_HEIGHT and ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX (gate OFF). V14 SECURITY UPDATE banner made collapsible, collapsed by default. Force-reload open explorers. Meta tag and JSON stay in lockstep."
 }
