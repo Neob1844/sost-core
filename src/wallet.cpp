@@ -5,6 +5,7 @@
 #include "sost/wallet.h"
 #include "sost/serialize.h"
 #include "sost/emission.h"
+#include "sost/popc_v15.h"      // POPC_V15_MARKER_PKH (testnet PoPC carrier tooling)
 
 #include <openssl/sha.h>
 #include <openssl/rand.h>
@@ -331,7 +332,8 @@ bool Wallet::create_transaction(
     std::string* err,
     const std::vector<Byte>* capsule_payload,
     bool mark_spent,
-    const PubKeyHash* from_pkh)
+    const PubKeyHash* from_pkh,
+    const std::vector<Byte>* popc_carrier_payload)
 {
     if (amount <= 0) {
         if (err) *err = "amount must be positive";
@@ -486,7 +488,20 @@ bool Wallet::create_transaction(
         out_tx.outputs.push_back(out);
     }
 
-    // Output 1: change (if any). Returns to the explicit source address
+    // Optional PoPC V15 carrier: an extra 0-value output to the unspendable
+    // marker pkh carrying the (already-signed) carrier payload. Appended before
+    // change so it is committed in every input's sighash.
+    if (popc_carrier_payload && !popc_carrier_payload->empty()) {
+        TxOutput carrier{};
+        carrier.amount = 0;
+        carrier.type = 0x00;
+        for (size_t i = 0; i < carrier.pubkey_hash.size() && i < sost::POPC_V15_MARKER_PKH.size(); ++i)
+            carrier.pubkey_hash[i] = sost::POPC_V15_MARKER_PKH[i];
+        carrier.payload = *popc_carrier_payload;
+        out_tx.outputs.push_back(carrier);
+    }
+
+    // Output: change (if any). Returns to the explicit source address
     // when from_pkh is set (so spending from key A never silently moves
     // change to key B); otherwise falls back to the first input's pkh.
     int64_t change = total_in - needed;

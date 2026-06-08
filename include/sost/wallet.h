@@ -106,6 +106,10 @@ public:
     // specific source — sost-cli's --from-label / --from-address resolve to
     // a pkh and pass it here. nullptr (default) preserves the original
     // "spend any UTXO whose key we hold" behaviour.
+    // popc_carrier_payload: optional. When non-null and non-empty, an extra
+    // 0-value output to the unspendable PoPC V15 marker pkh is appended carrying
+    // these bytes (a PoPC V15 carrier — testnet PoPC soak tooling). The bytes are
+    // signed in alongside the rest of the tx; the wallet does NOT validate them.
     bool create_transaction(
         const std::string& to_addr,
         int64_t amount,
@@ -116,7 +120,8 @@ public:
         std::string* err = nullptr,
         const std::vector<Byte>* capsule_payload = nullptr,
         bool mark_spent = true,
-        const PubKeyHash* from_pkh = nullptr);
+        const PubKeyHash* from_pkh = nullptr,
+        const std::vector<Byte>* popc_carrier_payload = nullptr);
 
     // sendmany: single TRANSFER tx with N outputs (one per recipient).
     // Caller passes a vector of (address, amount) pairs. Change (if any)

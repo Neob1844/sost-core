@@ -90,6 +90,7 @@ static std::string g_policy_path;
 // command. Sealed-* modes are intentionally not wired here yet — they
 // require ECIES which has its own commit. Public modes accepted:
 //   none, open-note, doc-ref, structured, cert
+static std::string g_popc_carrier_hex = "";       // --popc-carrier (testnet PoPC V15 carrier payload, hex)
 static std::string g_capsule_mode     = "none";  // --capsule-mode
 static std::string g_capsule_text     = "";       // --capsule-text   (mode-dependent)
 static std::string g_capsule_template = "";       // --capsule-template id name (structured only)
@@ -1183,7 +1184,8 @@ int main(int argc, char** argv) {
                     || flag == "--capsule-mode" || flag == "--capsule-text"
                     || flag == "--capsule-template" || flag == "--capsule-locator"
                     || flag == "--capsule-file"
-                    || flag == "--recipient-pubkey");
+                    || flag == "--recipient-pubkey"
+                    || flag == "--popc-carrier");
         if (needs_value) {
             if (i + 1 >= argc) {
                 fprintf(stderr, "Error: %s expects a value\n", flag.c_str());
@@ -1224,6 +1226,7 @@ int main(int argc, char** argv) {
             else if (flag == "--capsule-locator")   g_capsule_locator = val;
             else if (flag == "--capsule-file")      g_capsule_file = val;
             else if (flag == "--recipient-pubkey")  g_recipient_pubkey = val;
+            else if (flag == "--popc-carrier")      g_popc_carrier_hex = val;
             i += 2;
             continue;
         }
@@ -2010,6 +2013,26 @@ int main(int argc, char** argv) {
                    g_capsule_mode.c_str(), capsule_payload.size());
         }
 
+        // Optional PoPC V15 carrier (testnet soak tooling): decode the hex payload;
+        // create_transaction appends it as a 0-value marker output, signed in.
+        std::vector<sost::Byte> popc_carrier;
+        if (!g_popc_carrier_hex.empty()) {
+            const std::string& h = g_popc_carrier_hex;
+            auto nib = [](char c)->int{ if(c>='0'&&c<='9')return c-'0'; if(c>='a'&&c<='f')return c-'a'+10;
+                                        if(c>='A'&&c<='F')return c-'A'+10; return -1; };
+            if (h.size()%2 != 0) { fprintf(stderr, "Error: --popc-carrier hex length is odd\n"); return 1; }
+            for (size_t i=0;i<h.size();i+=2){ int hi=nib(h[i]),lo=nib(h[i+1]);
+                if(hi<0||lo<0){ fprintf(stderr,"Error: --popc-carrier has non-hex chars\n"); return 1; }
+                popc_carrier.push_back((sost::Byte)((hi<<4)|lo)); }
+            if (popc_carrier.empty()) {
+                fprintf(stderr, "Error: --popc-carrier expects a non-empty hex payload\n");
+                return 1;
+            }
+            printf("PoPC V15 carrier attached: %zu bytes (0-value marker output)\n", popc_carrier.size());
+        }
+        const std::vector<sost::Byte>* carrier_ptr =
+            popc_carrier.empty() ? nullptr : &popc_carrier;
+
         // Create transaction with dynamic fee
         sost::Hash256 genesis_hash = sost::from_hex(
             "6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37");
@@ -2026,7 +2049,7 @@ int main(int argc, char** argv) {
         if (!w.create_transaction(to_addr, amount, est_fee, genesis_hash,
                                   tx, chain_height, &err, cap_ptr,
                                   /*mark_spent=*/false,
-                                  from_pkh)) {
+                                  from_pkh, carrier_ptr)) {
             fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
@@ -2045,7 +2068,7 @@ int main(int argc, char** argv) {
             if (!w.create_transaction(to_addr, amount, real_fee, genesis_hash,
                                       tx2, chain_height, &err, cap_ptr,
                                       /*mark_spent=*/false,
-                                      from_pkh)) {
+                                      from_pkh, carrier_ptr)) {
                 fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
                 return 1;
             }
@@ -2063,7 +2086,7 @@ int main(int argc, char** argv) {
                 if (!w.create_transaction(to_addr, amount, final_fee, genesis_hash,
                                           tx3, chain_height, &err, cap_ptr,
                                           /*mark_spent=*/false,
-                                          from_pkh)) {
+                                          from_pkh, carrier_ptr)) {
                     fprintf(stderr, "Error (final fee pass): %s\n", err.c_str());
                     return 1;
                 }

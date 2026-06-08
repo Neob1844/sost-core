@@ -41,6 +41,9 @@ Pure, reproducible simulation of the full staged flow:
 
 ## Live testnet soak — operator checklist (NOT yet done)
 
+**Full step-by-step operator package: `docs/V15_POPC_TESTNET_SOAK_GUIDE.md`** (build flags, node/miner
+startup, the `popc15-carrier` payload generator + `sost-cli send --popc-carrier`, and go/no-go criteria).
+
 Run on a testnet built with `-DSOST_TESTNET_FORKS=ON` (V15_HEIGHT=300, eligibility=1300),
 ideally ≥2 nodes to confirm cross-node agreement:
 
