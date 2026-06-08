@@ -127,7 +127,15 @@ but both must be handled before any flip:
   unaffected, whitelist OK, non-whitelist reject, abs-cap boundary OK, abs-cap+1 reject,
   change-to-vault OK) — in CI hard-gate. The orphan L3 function is kept for now (test-only) and
   will be removed once G4/G5 wiring lands. G3b rate-limit still deferred (needs last-spend height).
-- W2: gated CB11/CB12 to accept the single G4 marker coinbase output when active.
+- W2: ✅ DONE — `ValidateCoinbaseConsensus` (src/tx_validation.cpp) now RECOGNIZES the G4
+  approval marker: when `gv_g4_active_at(height)`, the coinbase may carry exactly ONE extra
+  trailing 0-value output to `GV_G4_APPROVAL_PKH`. It is stripped via `real_outs` from all
+  shape (CB7/CB11) and R5/R6 amount checks; index-based amount checks (outputs[0]/[1]) are
+  untouched because the marker is forced to the LAST position. Pre-activation the marker is
+  rejected (extra output → shape fail) → replay BYTE-IDENTICAL; mainnet deferred (gv_g4 at
+  INT64_MAX). Rejects: amount>0, wrong pkh, two markers, marker-not-last. Tests:
+  `test-gv-g4-coinbase` (mainnet 4/4 + testnet 10/10) in the CI hard-gate. W2 only RECOGNIZES
+  the marker — counting it over the 67-block window + enforcing 61/67 is W3.
 - W3: in `process_block`, on a detected vault spend at height h, count `gv_g4_coinbase_approves`
   over blocks [h-67, h-1] (from `g_blocks`) and require `gv_g4_window_approved(count)`.
 - W4: G5 veto/grace; then cross-validator + testnet soak; then the single final flip to V14_HEIGHT.

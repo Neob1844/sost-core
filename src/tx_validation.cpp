@@ -9,6 +9,7 @@
 #include "sost/tx_validation.h"
 #include "sost/capsule.h"
 #include "sost/lottery.h"   // V11 Phase 2 (C8) — phase2_coinbase_split
+#include "sost/gv_g4.h"     // W2 — G4 coinbase approval marker (GV_G4_APPROVAL_PKH, gv_g4_active_at)
 
 #include <algorithm>
 #include <climits>
@@ -566,6 +567,34 @@ TxValidationResult ValidateCoinbaseConsensus(
     }
 
     // -------------------------------------------------------------------------
+    // W2 — G4 coinbase approval marker (GATED). When gv_g4_active_at(height) is
+    // true (testnet from V15_HEIGHT; mainnet DEFERRED at INT64_MAX), the coinbase
+    // MAY carry exactly ONE extra trailing 0-value output to GV_G4_APPROVAL_PKH —
+    // the miner's Gold Vault G4 approval signal. It is excluded from every shape
+    // and amount check below via `real_outs`, so the existing CB rules see the
+    // coinbase exactly as before. Pre-activation no marker is permitted (the
+    // normal shape checks reject the extra output) → replay BYTE-IDENTICAL.
+    // W2 only RECOGNIZES the marker; counting it over the 67-block window and
+    // enforcing 61/67 is W3.
+    // -------------------------------------------------------------------------
+    bool g4_marker = false;
+    if (gv_g4_active_at(height)) {
+        size_t nmark = 0;
+        for (const auto& o : tx.outputs)
+            if (o.amount == 0 && o.pubkey_hash == GV_G4_APPROVAL_PKH) ++nmark;
+        if (nmark > 0) {
+            const auto& last = tx.outputs.back();
+            if (nmark != 1 || !(last.amount == 0 && last.pubkey_hash == GV_G4_APPROVAL_PKH)) {
+                return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,
+                    "G4 marker: at most one 0-value GV_G4_APPROVAL_PKH output is allowed, "
+                    "and only as the LAST coinbase output");
+            }
+            g4_marker = true;
+        }
+    }
+    const size_t real_outs = tx.outputs.size() - (g4_marker ? 1u : 0u);
+
+    // -------------------------------------------------------------------------
     // V11 Phase 2 (C8) — height-gated branch.
     //
     // The Phase 2 coinbase shape only kicks in when ALL of the following
@@ -601,10 +630,10 @@ TxValidationResult ValidateCoinbaseConsensus(
         if (phase2_ctx->paid_out) {
             // -------- PAYOUT — 2 outputs (MINER + LOTTERY) --------
 
-            if (tx.outputs.size() != 2) {
+            if (real_outs != 2) {
                 return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,
                     "CB11: Phase 2 PAYOUT coinbase must have exactly 2 outputs, got " +
-                    std::to_string(tx.outputs.size()));
+                    std::to_string(real_outs));
             }
 
             // CB4 (Phase 2 PAYOUT): output[0]=MINER, output[1]=LOTTERY
@@ -667,7 +696,7 @@ TxValidationResult ValidateCoinbaseConsensus(
             // is always > 0 on a triggered block at non-zero subsidy/fee
             // levels (lottery_share = total_reward/2 > 0 for any realistic
             // SOST mining height).
-            for (size_t i = 0; i < tx.outputs.size(); ++i) {
+            for (size_t i = 0; i < real_outs; ++i) {
                 if (tx.outputs[i].amount <= 0) {
                     return TxValidationResult::Fail(TxValCode::R5_ZERO_AMOUNT,
                         "R5: PAYOUT output[" + std::to_string(i) + "] amount <= 0",
@@ -715,10 +744,10 @@ TxValidationResult ValidateCoinbaseConsensus(
         // withheld in chain-state pending, and the coinbase emits
         // ONLY a miner output. GOLD and POPC outputs are OMITTED.
 
-        if (tx.outputs.size() != 1) {
+        if (real_outs != 1) {
             return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,
                 "CB11: Phase 2 UPDATE coinbase must have exactly 1 output, got " +
-                std::to_string(tx.outputs.size()));
+                std::to_string(real_outs));
         }
 
         if (tx.outputs[0].type != OUT_COINBASE_MINER) {
@@ -779,10 +808,10 @@ TxValidationResult ValidateCoinbaseConsensus(
     // -------------------------------------------------------------------------
 
     // CB7: exactly 3 outputs
-    if (tx.outputs.size() != 3) {
+    if (real_outs != 3) {
         return TxValidationResult::Fail(TxValCode::CB7_CB_OUTPUT_COUNT,
             "CB7: coinbase must have exactly 3 outputs, got " +
-            std::to_string(tx.outputs.size()));
+            std::to_string(real_outs));
     }
 
     // CB4: output type order
@@ -841,8 +870,8 @@ TxValidationResult ValidateCoinbaseConsensus(
         }
     }
 
-    // R5/R6 on coinbase outputs
-    for (size_t i = 0; i < tx.outputs.size(); ++i) {
+    // R5/R6 on coinbase outputs (excluding the optional trailing G4 marker)
+    for (size_t i = 0; i < real_outs; ++i) {
         if (tx.outputs[i].amount <= 0) {
             return TxValidationResult::Fail(TxValCode::R5_ZERO_AMOUNT,
                 "R5: coinbase output[" + std::to_string(i) + "] amount <= 0",

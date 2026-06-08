@@ -295,6 +295,11 @@ add_executable(test-gv-slice1-block tests/test_gv_slice1_block_enforcement.cpp)
 target_link_libraries(test-gv-slice1-block PRIVATE sost-core)
 add_test(NAME gv-slice1-block COMMAND test-gv-slice1-block)
 
+# W2: G4 coinbase approval marker — gated CB11/CB7 relaxation
+add_executable(test-gv-g4-coinbase tests/test_gv_g4_coinbase.cpp)
+target_link_libraries(test-gv-g4-coinbase PRIVATE sost-core)
+add_test(NAME gv-g4-coinbase COMMAND test-gv-g4-coinbase)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)
