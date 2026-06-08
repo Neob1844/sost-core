@@ -55,6 +55,7 @@
   .section { padding: 56px 0; border-bottom: 1px solid var(--border-dim); }
   .section-header { margin-bottom: 32px; }
   .section-id { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px; }
+  .section-dates { font-size: 10.5px; color: var(--text-muted); letter-spacing: .4px; margin: -2px 0 12px; opacity: .85; }
   .section-title { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.5px; }
   .section-title .accent { color: var(--cyan-primary); }
   .section-sub { font-size: 13px; color: var(--text-dim); margin-top: 8px; }
@@ -198,11 +199,35 @@
   </div>
 </section>
 
+<!-- V15 — AUTOMATION BUNDLE @ BLOCK 20,000 -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// PLANNED &middot; BLOCK 20,000 &middot; full automation release</div>
+      <div class="section-dates">Published: 2026-06-08 &middot; Last updated: 2026-06-08</div>
+      <h2 class="section-title">V15 &mdash; <span class="accent">full automation: PoPC A/B, Atomic Swap &amp; Gold Vault governance</span></h2>
+      <div class="section-sub">Scope split (2026-06-08): V14 ships on time at block&nbsp;15,000 (validation hardening, no action needed). The larger automation track is regrouped here, into V15, so it ships fully integrated &mdash; never half-activated.</div>
+    </div>
+    <div class="info-card">
+      <p>Rather than rush the heaviest systems into V14, they are grouped into a dedicated release that activates together at <b>block&nbsp;#20,000</b>. Each gate ships <b>deferred (no-op) on mainnet</b> and is flipped only after full integration, testnet, replay and coordinated activation &mdash; never flipped blind on a live chain.</p>
+      <h3>Targeted for block 20,000</h3>
+      <ul>
+        <li><b>PoPC (Proof-of-Personal-Custody) Model&nbsp;A &amp; Model&nbsp;B &mdash; full automation</b> &mdash; consensus-side auto-audit, auto-slash and auto-settlement; the active set moves out of <code>popc_registry.json</code> into deterministic chain-state. Model&nbsp;B event-listener automation included.</li>
+        <li><b>OTC&nbsp;/&nbsp;P2P Atomic&nbsp;Swap (HTLC)</b> &mdash; non-custodial swaps with no bridges. PAXG&nbsp;/&nbsp;XAUT&nbsp;/&nbsp;USDT&nbsp;/&nbsp;USDC live on Ethereum, so the user keeps their own ETH account and performs a few small steps &mdash; with the rest of the flow prepared and near-fully automated. Activates only after BTC&nbsp;+&nbsp;EVM end-to-end testnet and review.</li>
+        <li><b>Gold&nbsp;Vault governance upgrade (G1&ndash;G5)</b> &mdash; consensus-enforced spend rules: <b>90&nbsp;% miner approval over a 67-block window</b> (ceil&nbsp;=&nbsp;61) + 10&nbsp;% quality boost or single-signer veto (developer&nbsp;/&nbsp;genesis); silence&nbsp;=&nbsp;accept; whitelisted destination; per-spend cap. Stronger security, decentralization and protection of the protocol's reserve-value mechanism.</li>
+        <li><b>Testnet, replay and coordinated activation</b> before any mainnet flip.</li>
+      </ul>
+      <p style="margin-top:12px"><b>For node&nbsp;/&nbsp;miner operators:</b> nothing to do for V15 yet &mdash; keep running your current V14 binary. A node update enabling the V15 features will be published well before block&nbsp;#20,000, with clear instructions. This is not an emergency; the chain continues normally. Goal: <b>automation first, no half-activated protocol systems</b>. Cross-posted on the <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk thread</a> and surfaced on the <a href="sost-explorer.html" style="color:#22d3ee">live explorer</a>.</p>
+    </div>
+  </div>
+</section>
+
 <!-- V14 UPDATE NOTICE -->
 <section class="section">
   <div class="container">
     <div class="section-header">
       <div class="section-id">// NETWORK UPGRADE &middot; BLOCK 15,000 &middot; action required</div>
+      <div class="section-dates">Published: 2026-06-05 &middot; Last updated: 2026-06-08</div>
       <h2 class="section-title">V14 &mdash; <span class="accent">update your node and miner before block&nbsp;15,000</span></h2>
       <div class="section-sub">A new binary is ready for the V14 consensus hardening. It is height-gated, so updating today is safe &mdash; and necessary to stay on the network after activation.</div>
     </div>
@@ -225,6 +250,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// ECOSYSTEM &middot; 2026-06-05 &middot; live &middot; build C87</div>
+      <div class="section-dates">Published: 2026-06-05 &middot; Last updated: 2026-06-08</div>
       <h2 class="section-title">GeaSpirit &mdash; <span class="accent" style="color:#00ff41">Second-Chance Mining Intelligence</span> is live</h2>
       <div class="section-sub">Open-data scoring of overlooked, abandoned and underused mining assets &mdash; fused with the SOST Protocol as one system.</div>
     </div>
@@ -272,23 +298,23 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// PLANNED &middot; BLOCK 15,000 &middot; target ~2026-06-27</div>
-      <h2 class="section-title">V14 &mdash; <span class="accent">Phase I governance + PoPC automation</span></h2>
-      <div class="section-sub">Retractable without drama if the pre-fork testnet checks fail.</div>
+      <div class="section-dates">Published: 2026-05-28 &middot; Last updated: 2026-06-08</div>
+      <h2 class="section-title">V14 &mdash; <span class="accent">block-validation hardening (H3/H4)</span></h2>
+      <div class="section-sub">Scope narrowed (2026-06-08): V14 now ships only the H3/H4 hardening. The governance &amp; automation track moved to <b>V15 (block&nbsp;20,000)</b> &mdash; see the V15 entry above. Retractable without drama if the pre-fork testnet checks fail.</div>
     </div>
     <div class="info-card">
       <h3>Activates at block 15,000</h3>
       <ul>
-        <li><b>Gold Vault Phase I governance</b> &mdash; consensus-enforced spend rules: <b>90&nbsp;% miner approval over a 67-block window</b> (~12&nbsp;h, ceil&nbsp;=&nbsp;61 blocks) + a 10&nbsp;% quality boost or single-signer veto (developer&nbsp;/&nbsp;genesis); silence = accept; single destination = genesis miner; cap 1,000&nbsp;SOST per spend / 5,000&nbsp;SOST per rolling 1,008-block week.</li>
-        <li><b>PoPC Model A chain-state migration</b> &mdash; the active set moves out of <code>popc_registry.json</code> into deterministic UTXO/chain-state.</li>
-        <li><b>PoPC Model A auto-audit / auto-slash / auto-settlement</b> &mdash; consensus-side scheduling (1,000-block grace period the first month).</li>
-        <li>The V13-wired <b>DTD-PoPC eligibility gate</b> flips to <code>true</code>.</li>
-        <li><b>Threshold sync 95&nbsp;% &rarr; 90&nbsp;%</b> (already in the binary; enforced from V14).</li>
+        <li><b>H3/H4 block-validation hardening</b> &mdash; mempool/relay policy no longer decides block validity; a transaction may spend an output created by an earlier transaction in the same block (validated against a temporary UTXO view); duplicate transaction IDs inside a block are rejected. (The dynamic fee floor 1&rarr;10 already activated at block&nbsp;10,000.)</li>
+        <li><b>Threshold constant sync 95&nbsp;% &rarr; 90&nbsp;%</b> is already in the binary; its spend-side <i>enforcement</i> arrives with the Gold Vault governance in <b>V15</b>.</li>
       </ul>
-      <h3 style="margin-top:14px">Conditional in V14</h3>
+      <h3 style="margin-top:14px">Moved to V15 (block 20,000)</h3>
       <ul>
-        <li><b>OTC / P2P Atomic swap HTLC</b> &mdash; activates only if the libwally-core sprint + end-to-end testnet pass before block 15,000 (otherwise stays gated at <code>INT64_MAX</code>, defers to V15).</li>
-        <li><b>PoPC Model B "supervised mode"</b> &mdash; operator manually verifies user-declared Ethereum contracts; full event-listener automation is a V15 target.</li>
+        <li><b>Gold Vault Phase I governance</b> (90&nbsp;% miner approval over a 67-block window, veto, caps).</li>
+        <li><b>PoPC Model A chain-state migration + auto-audit / auto-slash / auto-settlement</b> and the <b>DTD-PoPC eligibility gate</b> flip.</li>
+        <li><b>OTC&nbsp;/&nbsp;P2P Atomic&nbsp;Swap HTLC</b> and <b>PoPC Model B</b> full automation.</li>
       </ul>
+      <p style="margin-top:10px">These were regrouped so V14 ships on time and untouched, and the automation ships fully integrated and coordinated. See the <b>V15</b> entry above.</p>
     </div>
   </div>
 </section>
@@ -298,6 +324,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// RELEASE CANDIDATE (RC1) &middot; BLOCK 12,000</div>
+      <div class="section-dates">Published: 2026-05-20 &middot; Last updated: 2026-06-05</div>
       <h2 class="section-title">V13 &mdash; <span class="accent">cASERT H35, drift tightening &amp; Beacon</span></h2>
     </div>
     <div class="info-card">
@@ -324,6 +351,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// RECENT MILESTONES &middot; May&ndash;Jun 2026</div>
+      <div class="section-dates">Published: 2026-06-01 &middot; Last updated: 2026-06-05</div>
       <h2 class="section-title">Recent <span class="accent">milestones</span></h2>
     </div>
     <div class="info-card">
@@ -345,6 +373,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// V11 &amp; V12 &middot; SbPoW, LOTTERY &amp; CAPSULES</div>
+      <div class="section-dates">Published: 2026-05-05 &middot; Last updated: 2026-05-20</div>
       <h2 class="section-title">SbPoW, the <span class="accent">DTD lottery</span> &amp; capsules</h2>
     </div>
     <div class="info-card">
@@ -362,6 +391,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// PUBLIC POST-MORTEMS &middot; TRACEABILITY</div>
+      <div class="section-dates">Published: 2026-05-01 &middot; Last updated: 2026-06-05</div>
       <h2 class="section-title">Incident reports &amp; <span class="accent">post-mortems</span></h2>
       <div class="section-sub">Real failures during live pre-market testing, documented in full. Holder funds were never lost; pre-incident chain history was never altered.</div>
     </div>
@@ -411,6 +441,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// V2&ndash;V10 &middot; cASERT DIFFICULTY SERIES</div>
+      <div class="section-dates">Published: 2026-04-10 &middot; Last updated: 2026-05-01</div>
       <h2 class="section-title">The <span class="accent">difficulty &amp; liveness</span> hard-fork series</h2>
       <div class="section-sub">A sequence of forks that unified and hardened the cASERT bitsQ controller and stabilised block time around the 600&nbsp;s target.</div>
     </div>
@@ -445,6 +476,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// ENGINEERING POST-MORTEMS &middot; cASERT TUNING (Apr 2026)</div>
+      <div class="section-dates">Published: 2026-04-15 &middot; Last updated: 2026-04-30</div>
       <h2 class="section-title">The cASERT <span class="accent">calibration week</span></h2>
       <div class="section-sub">Consecutive forks (V3 &rarr; V6) hardened the dual-vector difficulty controller live on mainnet. Every root cause is documented &mdash; the controller only stabilised because real miners surfaced behaviours no single-node simulation reproduced.</div>
     </div>
@@ -485,6 +517,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// ANNOUNCEMENTS &amp; FIXES</div>
+      <div class="section-dates">Published: 2026-04-05 &middot; Last updated: 2026-06-05</div>
       <h2 class="section-title">Genesis, launch &amp; <span class="accent">operational fixes</span></h2>
     </div>
     <div class="info-card">
@@ -505,6 +538,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// ON THE RECORD &middot; TRACEABILITY</div>
+      <div class="section-dates">Published: 2026-04-05 &middot; Last updated: 2026-06-05</div>
       <h2 class="section-title">Honesty &amp; <span class="accent">traceability</span> record</h2>
     </div>
 
@@ -535,6 +569,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// EVERY PAUSE ON THE RECORD &middot; TRACEABILITY</div>
+      <div class="section-dates">Published: 2026-04-05 &middot; Last updated: 2026-06-05</div>
       <h2 class="section-title">Operational stalls &amp; <span class="accent">live incidents</span></h2>
       <div class="section-sub">Each chain pause is timestamped and explained. None was a consensus failure or a loss of funds; the chain refused bad blocks rather than accept what it could not verify.</div>
     </div>
@@ -577,6 +612,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// HARD TRUTHS, STATED &middot; TRACEABILITY</div>
+      <div class="section-dates">Published: 2026-04-05 &middot; Last updated: 2026-06-05</div>
       <h2 class="section-title">Mining fairness &amp; <span class="accent">honest reporting</span></h2>
     </div>
 
@@ -612,6 +648,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// ECOSYSTEM &amp; TOOLS</div>
+      <div class="section-dates">Published: 2026-05-01 &middot; Last updated: 2026-06-05</div>
       <h2 class="section-title">Wallet, DEX, escrow &amp; <span class="accent">research stack</span></h2>
     </div>
     <div class="info-card">
@@ -631,6 +668,7 @@ sudo systemctl restart sost-miner</pre>
   <div class="container">
     <div class="section-header">
       <div class="section-id">// FOLLOW</div>
+      <div class="section-dates">Published: 2026-04-05 &middot; Last updated: 2026-06-08</div>
       <h2 class="section-title">Announcements &amp; <span class="accent">sources</span></h2>
     </div>
     <div class="linkrow">
