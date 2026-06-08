@@ -136,9 +136,17 @@ records the SOST-side commitment + bond + attestations. (OTC/P2P atomic swap is 
 ---
 
 ## 7. Implementation phases (after this design is accepted)
-- **P1** — pure modules + constants (gated, INT64_MAX): commitment encoding, `commitment_id`,
-  audit/slash/settle schedule math, attestation digest + ECDSA verify (reuse the G5 pattern).
-  Unit-tested in isolation. No node wiring.
+- **P1** ✅ DONE — pure modules `include/sost/popc_v15.h` + `src/popc_v15.cpp` (+ `test-popc-v15`):
+  gated activation (`POPC_V15_ACTIVATION_HEIGHT` INT64_MAX mainnet / V15_HEIGHT testnet), the
+  canonical `PopcV15Commitment` + deterministic `popc_v15_commitment_id`, `PopcV15Status`
+  (Pending/Active/Expired/Slashed/Settled), pure lifecycle helpers (min-bond, term, expiry,
+  audit schedule/`next_audit`/`audit_due`, `slash_eligible` with the 288-block grace, `settle_eligible`),
+  the attestation digest, and ECDSA `verify_attestation` + `pubkey_pkh`/`pubkey_is_owner` (Model A
+  self-attestation binding vs Model B supervisor key). `chain_active_popc_set` declared as the
+  future interface only. **No node wiring, no DTD-gate change, mainnet no-op.** Tests: mainnet
+  29/29 + testnet 29/29 (commitment id, bond/term, lifecycle, slash grace, attestation sign→verify
+  + all rejections, Model A vs B, gating). full ctest 69/69; in the CI hard-gate. This is the PURE
+  BASE — not enforcement.
 - **P2** — `chain_active_popc_set(height)` pure recompute + tests (reorg-safe), replacing the
   `has_active_canonical_popc` stub behind the gate.
 - **P3** — on-chain carriers (register/attest/slash/settle) with gated tx/coinbase-shape rules,

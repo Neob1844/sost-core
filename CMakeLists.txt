@@ -157,6 +157,7 @@ add_library(sost-core STATIC
     # must be filled BEFORE activation makes any consensus difference.
     src/gold_vault_slice1.cpp
     src/gv_g5.cpp
+    src/popc_v15.cpp
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -310,6 +311,11 @@ add_test(NAME gv-g5 COMMAND test-gv-g5)
 add_executable(test-gv-governance-determinism tests/test_gv_governance_determinism.cpp)
 target_link_libraries(test-gv-governance-determinism PRIVATE sost-core secp256k1)
 add_test(NAME gv-governance-determinism COMMAND test-gv-governance-determinism)
+
+# V15 PoPC Model A/B — pure base (P1): commitment/lifecycle/attestation primitives
+add_executable(test-popc-v15 tests/test_popc_v15.cpp)
+target_link_libraries(test-popc-v15 PRIVATE sost-core secp256k1)
+add_test(NAME popc-v15 COMMAND test-popc-v15)
 
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
