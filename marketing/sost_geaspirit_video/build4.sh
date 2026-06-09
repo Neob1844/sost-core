@@ -24,11 +24,11 @@ for n in 0 1 2 3 4 5; do sc "$PH/m$n.png" 4.1 "$W/z$n.mp4"; done   # STATIC phot
   -map "[v]" -an -r 30 -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "$W/seg5photos.mp4"
 # ConvergenceX logo — grows from small to big (de menos a mas)
 "$FF" -y -hide_banner -loglevel error -i "$W/logoframe.png" \
-  -vf "scale=2560:1440,zoompan=z='min(zoom+0.00031,1.08)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=255:s=1920x1080:fps=30,setsar=1,format=yuv420p" \
+  -vf "scale=7680:4320:flags=lanczos,zoompan=z='min(zoom+0.00031,1.08)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=255:s=1920x1080:fps=30,setsar=1,format=yuv420p" \
   -frames:v 255 -an -r 30 -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "$W/seg9logo.mp4"
 # Sovereign gold coin — slow push-in (acercandose lentamente)
 "$FF" -y -hide_banner -loglevel error -i "$W/coinframe.png" \
-  -vf "scale=2560:1440,zoompan=z='min(zoom+0.0004,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=255:s=1920x1080:fps=30,setsar=1,format=yuv420p" \
+  -vf "scale=7680:4320:flags=lanczos,zoompan=z='min(zoom+0.0004,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=255:s=1920x1080:fps=30,setsar=1,format=yuv420p" \
   -frames:v 255 -an -r 30 -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "$W/seg10coin.mp4"
 echo ">> montage (6 photos) + ConvergenceX logo + gold coin built"
 

@@ -75,18 +75,18 @@ def rainbow_bar(img,x,y,w,h):
     img.alpha_composite(G.convert("RGBA"),(int(x),int(y)))
 
 # ---------- animated SPLASH (intense pulsing glow) ----------
-LS=290; PAD=150
+LS=290; PAD=130
 sost_b=badge(W+"/sost-logo.png",LS,False); gea_b=badge(W+"/geaspirit-logo.png",LS,True)
 badge(W+"/sost-logo.png",320,False).save(W+"/sostwm.png")  # corner watermark = SOST black rounded badge
 glow_s=glow_img(LS,SOST_GLOW,PAD); glow_g=glow_img(LS,GEA_GLOW,PAD)
-xS=560; xG=1360; cy=300
+xS=560; xG=1360; cy=322
 back=bg_grad(); dr=ImageDraw.Draw(back)
 ctext(dr,960,cy-95,"×",ImageFont.truetype(FB,150),WHITE)
 fn=ImageFont.truetype(FB,40)
 ctext(dr,xS,cy+LS//2+12,"SOST PROTOCOL",fn,RED); ctext(dr,xG,cy+LS//2+12,"GEASPIRIT",fn,GREEN)
 ft=fit(FB,"FUSING TWO WORLDS",70,1600,dr); ctext(dr,960,560,"FUSING TWO WORLDS",ft,WHITE)
 dr.rectangle([810,548,1110,553],fill=GOLD+(230,))
-ctext(dr,960,652,"sovereign money  +  mineral intelligence",ImageFont.truetype(FRG,42),GOLD)
+ctext(dr,960,652,"verifiable on-chain trust  +  mineral intelligence",ImageFont.truetype(FRG,42),GOLD)
 ctext(dr,960,722,"GeaSpirit finds the value · SOST anchors the trust on-chain",ImageFont.truetype(FRG,34),GREY)
 ctext(dr,960,792,"the on-chain trust layer for real-world mining",ImageFont.truetype(FRG,30),GREY)
 FPS=30; SPL=8.0; PER=2.4
@@ -96,7 +96,7 @@ for i in range(n):
     fr=back.copy()
     ps=(xS-LS//2-PAD,cy-LS//2-PAD); pg=(xG-LS//2-PAD,cy-LS//2-PAD)
     gs=with_alpha(glow_s,fac); gg=with_alpha(glow_g,fac)
-    for _ in range(3):    # composite for intensity
+    for _ in range(2):    # composite for intensity (softened)
         fr.alpha_composite(gs,ps); fr.alpha_composite(gg,pg)
     fr.alpha_composite(sost_b,(xS-LS//2,cy-LS//2)); fr.alpha_composite(gea_b,(xG-LS//2,cy-LS//2))
     fr.convert("RGB").save(FR_DIR+f"/f{i:04d}.png")
@@ -122,16 +122,16 @@ fin.convert("RGB").save(W+"/finale_bg.png")
 SEGS=[
 ("Drone Shot - 15241.mp4",8,8.5,GOLD,"THE EARTH HOLDS TRILLIONS","in minerals the world has forgotten","n"),
 ("Digging - 27151.mp4",2,8.5,GOLD,"THOUSANDS OF MINES","abandoned · historic · overlooked","n"),
-("Working Site - 3741.mp4",0,8.5,GOLD,"ACTIVE · ABANDONED · FORGOTTEN","every site holds a second story","n"),
+("203503 (1080p).mp4",0,8.5,GOLD,"ACTIVE · ABANDONED · FORGOTTEN","every site holds a second story","n"),
 ("Gold Wash - 35565.mp4",3,8.5,GOLD,"VALUE LEFT BEHIND","a second chance, waiting to be found","n"),
-("Switzerland - 37423.mp4",0,6,GREEN,"GEASPIRIT","mineral intelligence platform","n"),
+("waterfall_-_44189 (540p).mp4",0,6,GREEN,"GEASPIRIT","mineral intelligence platform","n"),
 ("/tmp/gxvideo/seg5photos.mp4",0,22.1,GREEN,"OPEN DATA  +  SATELLITE","satellite · LiDAR · multispectral · spectral indices · 3D point clouds","n"),
 ("river_-_76937 (1080p).mp4",5,8.5,GREEN,"A SCORE FOR EVERY ASSET","transparent · honest · second-chance first","n"),
 ("Coal Mining - 40030.mp4",0,8.5,GREEN,"GEASPIRIT FINDS THE VALUE","where to look · what is undervalued","n"),
 ("galaxy_-_56995 (540p).mp4",0,8.5,RED,"SOST PROTOCOL","a sovereign Layer-1 blockchain","n"),
 ("/tmp/gxvideo/seg9logo.mp4",0,8.5,RED,"SOST PROOF-OF-WORK ENGINE","ConvergenceX — real computation, not a hash lottery","n"),
 ("/tmp/gxvideo/seg10coin.mp4",0,8.5,RED,"SOVEREIGN BY DESIGN","no pools · no gatekeepers · no central mint","n"),
-("Nature - 35264.mp4",0,8.5,GOLD,"FROM THE EARTH TO THE CHAIN","mineral intelligence meets sovereign money","n"),
+("Nature - 35264.mp4",0,8.5,GOLD,"FROM THE EARTH TO THE CHAIN","mineral intelligence meets verifiable on-chain trust","n"),
 ("Touch - 6424.mp4",0,8,WHITE,"","","f"),
 ]
 man=open(W+"/manifest3.txt","w")
