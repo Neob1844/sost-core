@@ -219,18 +219,22 @@
       <div class="section-title">Send a <span class="accent">Message</span></div>
     </div>
 
-    <form id="contactForm" class="form-wrap fade-in delay-1" onsubmit="return submitContact()">
+    <form id="contactForm" class="form-wrap fade-in delay-1" novalidate>
       <div class="form-group">
         <label>Name *</label>
-        <input type="text" id="cfName" required placeholder="Your name">
+        <input type="text" id="cfName" name="name" required placeholder="Your name" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" id="cfEmail" name="email" required placeholder="you@example.com" autocomplete="email">
       </div>
       <div class="form-group">
         <label>Organization</label>
-        <input type="text" id="cfOrg" placeholder="Company or organization (optional)">
+        <input type="text" id="cfOrg" name="organization" placeholder="Company or organization (optional)" autocomplete="organization">
       </div>
       <div class="form-group">
         <label>Subject *</label>
-        <select id="cfSubject" required>
+        <select id="cfSubject" name="topic" required>
           <option value="">Select a subject...</option>
           <option value="General Inquiry">General Inquiry</option>
           <option value="Partnership">Partnership</option>
@@ -242,9 +246,13 @@
       </div>
       <div class="form-group">
         <label>Message *</label>
-        <textarea id="cfMessage" required placeholder="Your message..."></textarea>
+        <textarea id="cfMessage" name="message" required placeholder="Your message..."></textarea>
       </div>
-      <button type="submit" class="submit-btn">SEND MESSAGE</button>
+      <!-- honeypot: hidden from real users; bots that tick it are rejected -->
+      <input type="checkbox" name="botcheck" id="cfBot" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:0;height:0;opacity:0;">
+      <button type="submit" id="cfSubmit" class="submit-btn">SEND MESSAGE</button>
+      <div id="cfStatus" role="status" aria-live="polite" style="margin-top:14px;font-size:14px;line-height:1.5;display:none;"></div>
+      <p style="margin-top:12px;font-size:12px;color:var(--text-dim,#888);">You can also contact us directly at <a href="mailto:sost@sostcore.com" style="color:var(--cyan-primary);text-decoration:none;">sost@sostcore.com</a></p>
     </form>
 
     <div class="notice fade-in delay-2">
@@ -263,19 +271,75 @@
 </footer>
 
 <script>
-function submitContact() {
-  var parts = ['contact', 'sostcore.com'];
-  var addr = parts.join('@');
-  var name = document.getElementById('cfName').value;
-  var org = document.getElementById('cfOrg').value;
-  var subject = document.getElementById('cfSubject').value;
-  var message = document.getElementById('cfMessage').value;
-  var body = 'Name: ' + name + '\n';
-  if (org) body += 'Organization: ' + org + '\n';
-  body += '\n' + message;
-  window.location.href = 'mail' + 'to:' + addr + '?subject=' + encodeURIComponent('[SOST] ' + subject) + '&body=' + encodeURIComponent(body);
-  return false;
-}
+/* SOST contact form — real submission, NO mailto.
+   Sends to sost@sostcore.com via the Web3Forms relay (the access key below is a
+   PUBLIC client key by design — it carries no mailbox password and cannot read
+   mail; it only forwards form posts to the address it was registered with).
+   To activate: create a free key at https://web3forms.com registered to
+   sost@sostcore.com and paste it into WEB3FORMS_KEY below. */
+(function () {
+  "use strict";
+  var WEB3FORMS_KEY = "REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY";
+  var ENDPOINT = "https://api.web3forms.com/submit";
+  var form = document.getElementById("contactForm");
+  var btn = document.getElementById("cfSubmit");
+  var statusEl = document.getElementById("cfStatus");
+  function show(msg, ok) {
+    statusEl.style.display = "block";
+    statusEl.style.color = ok ? "#00ff41" : "#ff5555";
+    statusEl.textContent = msg;
+  }
+  function val(id) { var e = document.getElementById(id); return e ? e.value.trim() : ""; }
+  function validate() {
+    if (!val("cfName") || !val("cfEmail") || !val("cfSubject") || !val("cfMessage")) {
+      show("Please fill in all required fields.", false); return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val("cfEmail"))) {
+      show("Please enter a valid email address.", false); return false;
+    }
+    return true;
+  }
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (document.getElementById("cfBot").checked) return;   // honeypot tripped → silently drop
+    if (!validate()) return;
+    if (!WEB3FORMS_KEY || WEB3FORMS_KEY.indexOf("REPLACE") === 0) {
+      show("Message could not be sent. Please try again or email sost@sostcore.com directly.", false);
+      return;
+    }
+    var original = btn.textContent;
+    btn.disabled = true; btn.textContent = "Sending…"; statusEl.style.display = "none";
+    var payload = {
+      access_key: WEB3FORMS_KEY,
+      from_name: "SOST Contact Form",
+      subject: "[SOST] " + val("cfSubject"),
+      name: val("cfName"),
+      email: val("cfEmail"),
+      organization: val("cfOrg"),
+      topic: val("cfSubject"),
+      message: val("cfMessage"),
+      page_source: "sost-contact.html",
+      timestamp: new Date().toISOString(),
+      botcheck: false
+    };
+    fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.success) {
+        Array.prototype.forEach.call(form.querySelectorAll("input,select,textarea,button"), function (el) { el.disabled = true; });
+        show("Thank you. Your message has been sent successfully. We will reply as soon as possible.", true);
+      } else {
+        btn.disabled = false; btn.textContent = original;
+        show("Message could not be sent. Please try again or email sost@sostcore.com directly.", false);
+      }
+    }).catch(function () {
+      btn.disabled = false; btn.textContent = original;
+      show("Message could not be sent. Please try again or email sost@sostcore.com directly.", false);
+    });
+  });
+})();
 </script>
 
 <script src="sost-search.js"></script>
