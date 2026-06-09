@@ -1,0 +1,845 @@
+/* ============================================================================
+   SOST video — dark technical interface, cyan + gold accents.
+   Self-contained, no frameworks, no CDN, no remote fonts.
+   Target stage: 1920×1080. Letterboxed on any other aspect ratio.
+   ============================================================================ */
+
+:root {
+    --bg:          #05070a;
+    --bg-elev:    #0d1117;
+    --fg:          #ffffff;
+    --fg-muted:   #8a96a8;
+    --cyan:       #4dd0e1;
+    --cyan-bright:#7fe7f6;
+    --cyan-dim:   #2a6f78;
+    --gold:       #d4af37;
+    --gold-bright:#f0c75c;
+    --gold-dim:   #6a5519;
+    --warn:       #f5a623;
+    --rule:        rgba(255,255,255,0.08);
+    --sost-red:   #fb010d;            /* official SOST red, from website */
+    --cx-violet:  #6b3fa0;            /* violet end of ConvergenceX gradient */
+    --cx-green:   #4ade80;
+    --cx-yellow:  #f0c75c;
+
+    /* Title-rotation palette — every hex pulled verbatim from the
+       sostcore.com pages (index.html / sost-explorer.html /
+       sost-otc.html) so the video reads as the same brand system. */
+    --tc-white:   #ffffff;
+    --tc-green:   #4ade80;            /* index.html  --green-primary */
+    --tc-cyan:    #22d3ee;            /* index.html  --cyan-primary  */
+    --tc-orange:  #fb923c;            /* explorer/OTC --orange       */
+    --tc-blue:    #60a5fa;            /* explorer/OTC --blue         */
+    --tc-red:     #fb010d;            /* index.html  --red-primary   */
+    --tc-yellow:  #fbbf24;            /* explorer/OTC --yellow       */
+    --tc-magenta: #d946ef;            /* fuchsia used for Trinity / Protocol Registry links */
+
+    --t-scene:    900ms;
+    --t-text:     500ms;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0; padding: 0;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Arial, sans-serif;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Particle canvas sits below the stage, full viewport. */
+#particles {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* The 1920×1080 stage is centered + scaled by JS via CSS vars. */
+#stage {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    transform-origin: top left;
+    transform: translate(var(--ox, 0), var(--oy, 0)) scale(var(--scale, 1));
+    background:
+        linear-gradient(  0deg, rgba(77,208,225,0.045) 1px, transparent 1px) 0 0 / 80px 80px,
+        linear-gradient( 90deg, rgba(77,208,225,0.045) 1px, transparent 1px) 0 0 / 80px 80px,
+        radial-gradient(ellipse at 30% 15%, #0e1622 0%, #07090d 55%, #04060a 100%);
+    z-index: 2;
+    overflow: hidden;
+}
+
+#stage::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 280px;
+    background: radial-gradient(
+        ellipse at 50% -20%,
+        rgba(77,208,225,0.20) 0%,
+        rgba(77,208,225,0.04) 35%,
+        transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.scanlines {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.022) 0px,
+        rgba(255,255,255,0.022) 1px,
+        transparent 1px,
+        transparent 3px);
+    pointer-events: none;
+    z-index: 50;
+    mix-blend-mode: screen;
+    animation: scanShift 6s linear infinite;
+}
+@keyframes scanShift {
+    from { background-position: 0 0; }
+    to   { background-position: 0 3px; }
+}
+
+/* ---------- Scene ---------- */
+
+.scene {
+    position: absolute; inset: 0;
+    display: grid;
+    grid-template-rows: 1fr auto 1fr;
+    align-items: center;
+    justify-items: center;
+    padding: 0 160px;
+    opacity: 0;
+    transition: opacity var(--t-scene) ease;
+    pointer-events: none;
+    z-index: 5;
+}
+.scene.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.scene .center {
+    grid-row: 2;
+    text-align: center;
+    max-width: 1480px;
+    width: 100%;
+}
+
+.scene .tag {
+    display: inline-block;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--gold);
+    padding: 6px 18px;
+    border: 1px solid var(--gold-dim);
+    border-radius: 999px;
+    margin-bottom: 32px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity var(--t-text) 200ms ease,
+                transform var(--t-text) 200ms ease;
+    text-shadow: 0 0 12px rgba(212,175,55,0.35);
+}
+
+.scene .title {
+    font-size: 118px;
+    font-weight: 800;
+    line-height: 1.05;
+    margin: 0 0 28px 0;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity var(--t-text) 350ms ease,
+                transform var(--t-text) 350ms ease;
+    text-shadow:
+        0 0 24px rgba(77,208,225,0.18),
+        0 0 60px rgba(77,208,225,0.08);
+}
+
+/* Use `.t-fit` on titles that must NEVER wrap. Slightly smaller
+   font + tighter spacing + nowrap so even the 34-char
+   "Every block follows the same split" stays on one line at
+   1920×1080. `.t-fit-xl` is one step smaller for the 40-char
+   Scene 14 ("Either both sides settle, or both refund") which
+   does not fit at 84 px. */
+.scene .title.t-fit {
+    font-size: 84px;
+    white-space: nowrap;
+    letter-spacing: -0.025em;
+}
+.scene .title.t-fit-xl {
+    font-size: 76px;
+    white-space: nowrap;
+    letter-spacing: -0.025em;
+}
+
+.scene .subtitle {
+    font-size: 42px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--cyan);
+    margin: 0;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity var(--t-text) 500ms ease,
+                transform var(--t-text) 500ms ease;
+    text-shadow: 0 0 16px rgba(77,208,225,0.25);
+}
+
+.scene .meta {
+    display: block;
+    margin-top: 22px;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity var(--t-text) 650ms ease,
+                transform var(--t-text) 650ms ease;
+    text-shadow: 0 0 12px rgba(212,175,55,0.25);
+}
+
+.scene.active .tag,
+.scene.active .title,
+.scene.active .subtitle,
+.scene.active .meta {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ---------- Asset slot (background image, dim + vignette) ---------- */
+
+.scene .asset-bg {
+    position: absolute; inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity var(--t-scene) ease,
+                transform 14s ease-out;
+    transform: scale(1.05);
+    z-index: 0;
+}
+.scene.active .asset-bg {
+    opacity: 0.20;
+    transform: scale(1.12);
+}
+
+.scene::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 0%, transparent 32%, rgba(5,7,10,0.88) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+.scene > * { position: relative; z-index: 2; }
+
+/* ---------- Chips (scenes 2, 4, 7) ---------- */
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px 22px;
+    justify-content: center;
+    margin-top: 32px;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.chip {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 12px 24px;
+    border: 1.5px solid var(--cyan-dim);
+    border-radius: 14px;
+    color: var(--fg);
+    background: rgba(77,208,225,0.04);
+    box-shadow: inset 0 0 24px rgba(77,208,225,0.06);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 450ms ease, transform 450ms ease;
+}
+.scene.active .chip { opacity: 1; transform: translateY(0); }
+.scene.active .chip:nth-child(1) { transition-delay: 600ms; }
+.scene.active .chip:nth-child(2) { transition-delay: 700ms; }
+.scene.active .chip:nth-child(3) { transition-delay: 800ms; }
+.scene.active .chip:nth-child(4) { transition-delay: 900ms; }
+.scene.active .chip:nth-child(5) { transition-delay: 1000ms; }
+.scene.active .chip:nth-child(6) { transition-delay: 1100ms; }
+.scene.active .chip:nth-child(7) { transition-delay: 1200ms; }
+
+.chip.warn {
+    border-color: var(--warn);
+    background: rgba(245,166,35,0.06);
+    box-shadow: inset 0 0 24px rgba(245,166,35,0.08);
+    color: var(--gold-bright);
+}
+
+/* Per-scene chip recolour — opt-in by setting chipTone on the scene
+   data. Currently used by Scene 2 (No-launch-games) to paint the
+   chip text cyan while leaving Scene 3 / Scene 14 chips white. */
+.chips.chips-cyan .chip { color: var(--cyan-bright); }
+
+/* Force the chip row onto a single line. Each chip shrinks a touch
+   so all five Scene 2 chips fit horizontally without wrapping. */
+.chips.chips-fit {
+    flex-wrap: nowrap;
+    gap: 14px;
+    max-width: 1600px;
+}
+.chips.chips-fit .chip {
+    font-size: 28px;
+    padding: 10px 20px;
+    white-space: nowrap;
+}
+
+/* ---------- Constitutional split (scene 5) ---------- */
+
+.splits {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 26px;
+    margin-top: 36px;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.split {
+    border: 1.5px solid var(--cyan-dim);
+    border-radius: 20px;
+    padding: 38px 24px 32px;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(77,208,225,0.07), rgba(77,208,225,0));
+    box-shadow: inset 0 0 32px rgba(77,208,225,0.08),
+                0 0 24px rgba(77,208,225,0.05);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 600ms ease, transform 600ms ease;
+}
+.scene.active .split { opacity: 1; transform: translateY(0); }
+.scene.active .split:nth-child(1) { transition-delay: 550ms; }
+.scene.active .split:nth-child(2) { transition-delay: 750ms; }
+.scene.active .split:nth-child(3) { transition-delay: 950ms; }
+
+.split .pct {
+    display: block;
+    font-size: 112px;
+    font-weight: 800;
+    color: var(--cyan-bright);
+    line-height: 1;
+    margin-bottom: 14px;
+    font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    text-shadow:
+        0 0 24px rgba(77,208,225,0.35),
+        0 0 60px rgba(77,208,225,0.12);
+    letter-spacing: -0.02em;
+}
+.split .label {
+    display: block;
+    font-size: 24px;
+    letter-spacing: 0.10em;
+    color: var(--fg);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.split.gold {
+    border-color: var(--gold-dim);
+    background: linear-gradient(180deg, rgba(212,175,55,0.10), rgba(212,175,55,0));
+    box-shadow: inset 0 0 32px rgba(212,175,55,0.12),
+                0 0 28px rgba(212,175,55,0.08);
+}
+.split.gold .pct {
+    color: var(--gold-bright);
+    text-shadow:
+        0 0 24px rgba(212,175,55,0.35),
+        0 0 60px rgba(212,175,55,0.12);
+}
+
+/* ---------- Pair lanes (scene 8) ---------- */
+
+.pairs {
+    display: grid;
+    gap: 14px;
+    margin-top: 28px;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.pair {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+    padding: 16px 28px;
+    border: 1.5px solid var(--rule);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(77,208,225,0.04), rgba(77,208,225,0));
+    opacity: 0;
+    transform: translateX(-18px);
+    transition: opacity 500ms ease, transform 500ms ease;
+}
+.scene.active .pair { opacity: 1; transform: translateX(0); }
+.scene.active .pair:nth-child(1) { transition-delay: 500ms; }
+.scene.active .pair:nth-child(2) { transition-delay: 650ms; }
+.scene.active .pair:nth-child(3) { transition-delay: 800ms; }
+.scene.active .pair:nth-child(4) { transition-delay: 950ms; }
+.pair .from, .pair .to {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+.pair .from { text-align: right; color: var(--fg); }
+.pair .arrow {
+    font-size: 38px;
+    color: var(--cyan);
+    font-weight: 200;
+    line-height: 1;
+}
+.pair .to { text-align: left; color: var(--cyan-bright); }
+
+.pair.risky {
+    border-color: var(--gold-dim);
+    background: linear-gradient(180deg, rgba(212,175,55,0.06), rgba(212,175,55,0));
+}
+.pair.risky .to { color: var(--gold-bright); }
+.pair .risk-tag {
+    grid-column: 1 / -1;
+    font-size: 14px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--warn);
+    margin-top: 4px;
+    text-align: center;
+}
+
+/* ---------- Mining block diagram (scene 3) ---------- */
+
+.blocks {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 14px;
+    margin-top: 32px;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.block {
+    height: 92px;
+    border: 1.5px solid var(--cyan-dim);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(77,208,225,0.10), rgba(77,208,225,0.02));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    font-size: 14px;
+    color: var(--cyan);
+    letter-spacing: 0.08em;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 350ms ease, transform 350ms ease;
+    box-shadow: inset 0 0 24px rgba(77,208,225,0.08),
+                0 0 18px rgba(77,208,225,0.05);
+}
+.scene.active .block { opacity: 1; transform: translateY(0); }
+.scene.active .block:nth-child(1) { transition-delay: 500ms; }
+.scene.active .block:nth-child(2) { transition-delay: 600ms; }
+.scene.active .block:nth-child(3) { transition-delay: 700ms; }
+.scene.active .block:nth-child(4) { transition-delay: 800ms; }
+.scene.active .block:nth-child(5) { transition-delay: 900ms; }
+.scene.active .block:nth-child(6) { transition-delay: 1000ms; }
+.scene.active .block:nth-child(7) { transition-delay: 1100ms; box-shadow: 0 0 24px var(--cyan); border-color: var(--cyan-bright); }
+
+/* ---------- Intro logo lockup (scene 1) ---------- */
+
+.brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+/* The hero card mimics the rounded-square icon style used on the
+   sostcore.com homepage and favicon. Black background + large
+   border-radius + subtle red glow centered on the SOST mark. */
+.hero-logo-card {
+    width: 240px; height: 240px;
+    background: #000;
+    border-radius: 44px;
+    padding: 14px;
+    display: grid; place-items: center;
+    box-shadow:
+        0 0 48px rgba(251,1,13,0.30),
+        0 0 96px rgba(251,1,13,0.10),
+        inset 0 0 24px rgba(255,255,255,0.04);
+    opacity: 0;
+    transform: scale(0.94);
+    transition: opacity 800ms ease, transform 1400ms ease-out;
+    border: 1px solid rgba(251,1,13,0.18);
+}
+.scene.active .hero-logo-card {
+    opacity: 1; transform: scale(1.0);
+    animation: brandFloat 6s ease-in-out infinite,
+               glowPulse 2.6s ease-in-out infinite;
+}
+/* Splash logo: red glow ramps soft -> intense, then resets and repeats. */
+@keyframes glowPulse {
+    0% {
+        box-shadow: 0 0 22px rgba(251,1,13,0.22), 0 0 44px rgba(251,1,13,0.06), inset 0 0 24px rgba(255,255,255,0.04);
+        border-color: rgba(251,1,13,0.18);
+    }
+    85%, 92% {
+        box-shadow: 0 0 95px rgba(251,1,13,0.95), 0 0 180px rgba(251,1,13,0.55), 0 0 60px rgba(255,70,70,0.40), inset 0 0 26px rgba(255,255,255,0.07);
+        border-color: rgba(251,1,13,0.85);
+    }
+    100% {
+        box-shadow: 0 0 22px rgba(251,1,13,0.22), 0 0 44px rgba(251,1,13,0.06), inset 0 0 24px rgba(255,255,255,0.04);
+        border-color: rgba(251,1,13,0.18);
+    }
+}
+.hero-logo-card img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    border-radius: 30px;
+}
+
+@keyframes brandFloat {
+    0%, 100% { transform: translateY(0)    scale(1); }
+    50%      { transform: translateY(-6px) scale(1.01); }
+}
+
+/* Fallback if assets/sost-logo.png is missing — bold red "S" inside
+   the same rounded card. */
+.brand-fallback {
+    width: 100%; height: 100%;
+    border-radius: 30px;
+    display: grid; place-items: center;
+    font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    font-size: 120px;
+    font-weight: 800;
+    color: var(--sost-red);
+    background: #000;
+    text-shadow: 0 0 24px rgba(251,1,13,0.45);
+}
+
+/* ---------- Brand text helpers ---------- */
+/* SOST in official red, "Protocol" in muted white. Used inside the
+   intro scene's title HTML. */
+.sost-red {
+    color: var(--sost-red);
+    text-shadow:
+        0 0 24px rgba(251,1,13,0.35),
+        0 0 60px rgba(251,1,13,0.12);
+}
+.protocol-soft {
+    color: rgba(255,255,255,0.88);
+    font-weight: 800;
+}
+
+/* ConvergenceX rainbow wordmark.
+   Order: violet → cyan → green → yellow → orange → red, with the X
+   pinned to official red. Used wherever ConvergenceX appears as a
+   brand element in body text. */
+.cx-wordmark {
+    background: linear-gradient(
+        90deg,
+        var(--cx-violet)  0%,
+        var(--cyan)       22%,
+        var(--cx-green)   45%,
+        var(--cx-yellow)  65%,
+        var(--warn)       82%,
+        var(--sost-red)  100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    /* Keep the wordmark's natural case even inside uppercase tags. */
+    text-transform: none;
+    letter-spacing: 0.005em;
+    filter: drop-shadow(0 0 10px rgba(77,208,225,0.18));
+}
+.cx-wordmark .x {
+    background: none;
+    -webkit-text-fill-color: var(--sost-red);
+    color: var(--sost-red);
+    text-shadow: 0 0 14px rgba(251,1,13,0.55);
+}
+
+/* ---------- Title-rotation colour classes ----------
+   Every class overrides the default white `.scene .title` colour and
+   layers a same-hue glow on top. Use one class per scene from Scene 2
+   onward; Scene 12 (SOST DEX) uses .cx-wordmark instead for rainbow. */
+.scene .title .tc-w  { color: var(--tc-white);
+    text-shadow: 0 0 24px rgba(255,255,255,0.20),
+                 0 0 60px rgba(255,255,255,0.08); }
+.scene .title .tc-g  { color: var(--tc-green);
+    text-shadow: 0 0 24px rgba(74,222,128,0.35),
+                 0 0 60px rgba(74,222,128,0.15); }
+.scene .title .tc-c  { color: var(--tc-cyan);
+    text-shadow: 0 0 24px rgba(34,211,238,0.35),
+                 0 0 60px rgba(34,211,238,0.15); }
+.scene .title .tc-o  { color: var(--tc-orange);
+    text-shadow: 0 0 24px rgba(251,146,60,0.35),
+                 0 0 60px rgba(251,146,60,0.15); }
+.scene .title .tc-b  { color: var(--tc-blue);
+    text-shadow: 0 0 24px rgba(96,165,250,0.35),
+                 0 0 60px rgba(96,165,250,0.15); }
+.scene .title .tc-r  { color: var(--tc-red);
+    text-shadow: 0 0 24px rgba(251,1,13,0.35),
+                 0 0 60px rgba(251,1,13,0.15); }
+.scene .title .tc-y  { color: var(--tc-yellow);
+    text-shadow: 0 0 24px rgba(251,191,36,0.35),
+                 0 0 60px rgba(251,191,36,0.15); }
+.scene .title .tc-m  { color: var(--tc-magenta);
+    text-shadow: 0 0 24px rgba(217,70,239,0.35),
+                 0 0 60px rgba(217,70,239,0.15); }
+
+/* Optional white override for parts of a subtitle. Use sparingly —
+   the subtitle default colour is cyan; wrap the words that should
+   stand out in white inside `<span class="sub-w">…</span>`. */
+.scene .subtitle .sub-w {
+    color: var(--tc-white);
+    text-shadow: 0 0 16px rgba(255,255,255,0.18);
+}
+
+/* ---------- Final CTA grid (scene 9) ---------- */
+
+.linkgrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px 32px;
+    margin-top: 28px;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+}
+/* Each link entry is now a two-line stack: small gold label on top,
+   monospace cyan URL filling the row below. Wider linkgrid + single
+   line per URL = nothing gets cut. */
+.linkrow {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 16px 24px;
+    border: 1.5px solid var(--rule);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(77,208,225,0.03), rgba(77,208,225,0));
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 450ms ease, transform 450ms ease;
+    min-width: 0;          /* allow the inner URL to compute width fully */
+}
+.scene.active .linkrow { opacity: 1; transform: translateY(0); }
+.scene.active .linkrow:nth-child(1) { transition-delay: 600ms; }
+.scene.active .linkrow:nth-child(2) { transition-delay: 750ms; }
+.scene.active .linkrow:nth-child(3) { transition-delay: 900ms; }
+.scene.active .linkrow:nth-child(4) { transition-delay: 1050ms; }
+.scene.active .linkrow:nth-child(5) { transition-delay: 1200ms; }
+.scene.active .linkrow:nth-child(6) { transition-delay: 1350ms; }
+
+.linkrow .lbl {
+    font-size: 18px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    line-height: 1;
+}
+.linkrow .url {
+    font-size: 26px;
+    color: var(--cyan-bright);
+    font-weight: 600;
+    font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    /* Keep the whole URL on a single line — no mid-character breaks,
+       no domain-vs-path split. The linkrow is wide enough at the
+       1920×1080 stage to hold the longest URL (sost-explorer.html)
+       in one go. */
+    white-space: nowrap;
+    overflow: visible;
+    letter-spacing: 0.005em;
+    line-height: 1.15;
+}
+
+/* ---------- Watermark logos ---------- */
+/* Both side logos sit in their own rounded-square black "icon" card,
+   mirroring the homepage favicon / sostcore.com brand treatment. */
+
+.wm {
+    position: fixed;
+    z-index: 60;
+    opacity: 0.78;
+    user-select: none; pointer-events: none;
+}
+
+/* Shared chrome on both watermark images. Size + border-radius are
+   set on the .wm-left/.wm-right selectors below so both stay equal. */
+.wm img {
+    background: #000;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Both watermark cards share the same 200×200 footprint so neither
+   side dominates. `object-fit: contain` keeps the SOST square logo
+   crisp AND prevents the 800×533 ConvergenceX wordmark from being
+   stretched into a square — it sits centered with black padding
+   above and below, matching the rounded-icon language of the
+   sostcore.com brand. */
+/* The two cards differ in height (SOST 150 vs CX 230). Pushing the
+   SOST card down by half the height delta (= 40 px) lines up both
+   cards' vertical centres at the same Y, so the side rail reads as
+   balanced even with the size divergence. */
+.wm-right { top: 24px; right: 24px; display: flex; align-items: center; gap: 14px; }
+.wm-left  { top: 64px; left:  24px; }
+
+/* Shared chrome on each card; individual sizes set below so the
+   left (SOST) is a touch smaller and the right (ConvergenceX) a
+   touch larger, per latest art direction. */
+.wm-left  img,
+.wm-right img {
+    object-fit: contain;
+    padding: 12px;
+    border-radius: 40px;
+}
+.wm-left  img {
+    width: 150px;
+    height: 150px;
+    /* faint red glow to match the homepage brand treatment */
+    box-shadow:
+        0 0 20px rgba(0,0,0,0.75),
+        0 0 40px rgba(251,1,13,0.22);
+}
+.wm-right img {
+    width: 230px;
+    height: 230px;
+    box-shadow:
+        0 0 26px rgba(0,0,0,0.75);
+}
+.wm-right .wm-caption {
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    font-weight: 600;
+}
+
+/* ---------- Visual fade-out overlay (final 4 s) ---------- */
+
+#fadeout {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 90;
+    transition: opacity 4s linear;
+}
+body.fadeout #fadeout { opacity: 1; }
+
+/* ---------- Progress bar ---------- */
+
+#progress {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    z-index: 100;
+}
+#progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--gold));
+    box-shadow: 0 0 12px var(--cyan);
+    transition: width 100ms linear;
+}
+
+/* ---------- Controls ---------- */
+
+#controls {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(13,17,23,0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    color: var(--fg-muted);
+    font-size: 13px;
+    z-index: 200;
+    opacity: 0.85;
+    transition: opacity 200ms;
+}
+#controls button {
+    appearance: none;
+    background: transparent;
+    color: var(--cyan);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    font-family: inherit;
+}
+#controls button:hover { background: rgba(77,208,225,0.1); }
+#hint { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+#time { font-variant-numeric: tabular-nums; }
+
+/* Recording mode: every chrome hidden. */
+body.recording #controls,
+body.recording #progress {
+    display: none !important;
+}
+body.recording.nowatermark .wm { display: none !important; }
+
+/* Dev mode: small text in bottom-left listing missing assets. */
+#dev-warnings {
+    position: fixed;
+    left: 12px; bottom: 12px;
+    font-size: 11px;
+    color: var(--fg-muted);
+    background: rgba(13,17,23,0.7);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--rule);
+    z-index: 150;
+    display: none;
+    max-width: 360px;
+    line-height: 1.4;
+}
+body.dev #dev-warnings { display: block; }
+
+/* Pre-roll countdown for recording. */
+#preroll {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg-muted);
+    font-size: 32px;
+    z-index: 999;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+body.prerolling #preroll { display: flex; }
