@@ -783,11 +783,11 @@
     </div>
 
     <p class="fade-in delay-1" style="font-size:13.5px;line-height:1.65;color:var(--text-secondary);max-width:840px;margin:8px 0 0">
-      SOST treats &laquo;sound money&raquo; as four orthogonal properties that must hold simultaneously and
+      SOST follows a <b>sound-money-inspired design</b> &mdash; four orthogonal properties that must hold simultaneously and
       forever. Two of them enforce <i>credibility of issuance</i>: the chain advances at a predictable rate
       (Time) under a measurable, energy-bounded effort (Work). The other two enforce <i>credibility of
       value</i>: total supply is finite (Scarcity) and an explicit fraction is converted, by consensus,
-      into a gold-funded reserve (Store of Value). All four are hard-coded at genesis with no governance
+      into a gold-funded reserve (Store-of-Value Architecture). All four are hard-coded at genesis with no governance
       override. Every section of this whitepaper either specifies one of these pillars or proves it.
     </p>
 
@@ -858,12 +858,12 @@
 
       <!-- STORE OF VALUE -->
       <div class="wp-pillar" style="--card-accent:#d4af37">
-        <div class="wp-pillar-tag" style="color:#d4af37">◈ PILLAR 4 &mdash; STORE OF VALUE</div>
-        <div class="wp-pillar-headline">Up to 50% supply &rarr; gold-backed</div>
+        <div class="wp-pillar-tag" style="color:#d4af37">◈ PILLAR 4 &mdash; STORE-OF-VALUE ARCHITECTURE</div>
+        <div class="wp-pillar-headline">Up to 50% supply &rarr; gold reserve</div>
         <p class="wp-pillar-body">
           Every block coinbase is split <code>50&nbsp;/&nbsp;25&nbsp;/&nbsp;25</code> by consensus
           (PoW miner / Gold Funding Vault / PoPC Pool). Over the full emission curve this directs <b>up
-          to 50% of total supply</b> into two gold-backed channels:
+          to 50% of total supply</b> into two gold-reserve channels:
           <br><br>
           <b style="color:#d4af37">25% &mdash; Perpetual Gold Vault.</b> Protocol-funded, one-way TWAP
           purchases of tokenised precious metals (XAUT / PAXG today, broader basket later) deposited
@@ -876,6 +876,7 @@
           tokenised gold today and with physically self-custodied gold in the future, preserving
           operator privacy on-chain. See section 6.
           <br><br>
+          <b style="color:var(--text-dim)">No peg. No redemption right. No price floor. No investment return. No legal claim over the reserve.</b><br><br>
           The split is enforced at validation: a block with the wrong coinbase shape is invalid.
           See sections 5, 6, and Constitution C1&ndash;C15 (section 10).
         </p>
