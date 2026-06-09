@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-09-v333">
+<meta name="explorer-html-version" content="2026-06-09-v334">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -1951,7 +1951,7 @@ pkill -9 -f sost-miner 2&gt;/dev/null || true
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
   <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')" title="Unique addresses that have mined at least one block in the last 288 blocks (~48h). 'Top 3' shows what percentage of those 288 blocks were produced by the three most active miners. Click for the per-address breakdown."><div class="dash-label" style="white-space:nowrap">&#9874; BLOCK PRODUCERS &middot; 48H</div><div class="dash-val purple" id="dMiners">&mdash;</div><div class="dash-sub" id="dMinersSub">last 288 blocks (~48h)</div><div class="dash-sub" id="dDistributionSub" style="color:var(--green);margin-top:2px">top 3: &mdash;</div><span id="dDistribution" style="display:none">&mdash;</span></div>
-  <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Cumulative, monotonic count of distinct addresses that have produced an accepted Phase II block since the #7100 update — it never decreases (all miners that have ever updated, active now or not). Accumulated across visits and floored at the full-chain DTD-eligibility count (PEAK ACTIVE MINERS). Card pulses red permanently as a standing centralisation reminder." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; UPDATED MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #7100</div></div>
+  <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Cumulative, monotonic count of distinct addresses that have produced an accepted block since the #12100 (V13) update — the permanent 1-of-3 fork. It never decreases (all miners that have updated to V13, active now or not). Accumulated across visits from the full-chain scan. Card pulses red permanently as a standing centralisation reminder." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; UPDATED MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #12100 V13</div></div>
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
@@ -3182,9 +3182,10 @@ async function renderDTDPanel(body,title,silent){
     // is active, else UPDATE_EMPTY post-bootstrap). Track lottery payouts per
     // height for the charts further down.
     var ph2={blocks:0,payoutCount:0,normalCount:0,emptyCount:0,
-              lotteryWins:0,winners:{},payouts:[],minerCounts:{},
+              lotteryWins:0,winners:{},payouts:[],minerCounts:{},minerCountsV13:{},
               largestLottery:0,subsidyPhase2:0,minerSharePhase2:0,
               goldPhase2:0,popcPhase2:0,lotteryPhase2:0};
+    var V13_HEIGHT=12100;  // permanent 1-of-3 (V13) — start of the UPDATED MINERS window
     var PHASE2_START=7100;
     function ensure(addr){
       if(!addr)return null;
@@ -3202,7 +3203,7 @@ async function renderDTDPanel(body,title,silent){
     var recentBlocks=[];
     var _scanStart=0;
     try{
-      var _accRaw=localStorage.getItem('sost_dtd_acc_v2');
+      var _accRaw=localStorage.getItem('sost_dtd_acc_v3');
       if(_accRaw){
         var _acc=JSON.parse(_accRaw);
         if(_acc&&typeof _acc.scannedHeight==='number'&&_acc.scannedHeight>=7100&&_acc.scannedHeight<=height&&_acc.t&&_acc.rows){
@@ -3249,7 +3250,9 @@ async function renderDTDPanel(body,title,silent){
           }else{
             ph2.emptyCount++;
           }
-          if(b.miner_address)ph2.minerCounts[b.miner_address]=(ph2.minerCounts[b.miner_address]||0)+1;
+          if(b.miner_address){ph2.minerCounts[b.miner_address]=(ph2.minerCounts[b.miner_address]||0)+1;
+            // UPDATED MINERS window = since V13 (#12100), the permanent 1-of-3 fork
+            if((b.height||0)>=V13_HEIGHT){ph2.minerCountsV13=ph2.minerCountsV13||{};ph2.minerCountsV13[b.miner_address]=(ph2.minerCountsV13[b.miner_address]||0)+1;}}
         }
       }
       if(!silent&&start%(CHUNK*5)===0){body.innerHTML=dtdEligibilityBanner(height,'Scanning public chain data&hellip; <span style="color:var(--cyan)">#'+Math.min(height,start+CHUNK-1)+' / #'+height+'</span>');}
@@ -3267,7 +3270,7 @@ async function renderDTDPanel(body,title,silent){
     try{
       var _accRows={};Object.keys(rowsByAddr).forEach(function(a){var rr=rowsByAddr[a];_accRows[a]={mb:rr.minedBlocks,ms:rr.minedStocks,dws:rr.dtdWonStocks,dwc:rr.dtdWonCount,lm:rr.lastMined};});
       var _accStr=JSON.stringify({scannedHeight:height,t:{s:totalSubsidy,m:totalMiner,g:totalGold,p:totalPopc,l:totalLottery},rows:_accRows,ph2:ph2,recent:recentBlocks.filter(function(rb){return rb.h>height-320;})});
-      if(_accStr.length<4*1024*1024)localStorage.setItem('sost_dtd_acc_v2',_accStr);
+      if(_accStr.length<4*1024*1024)localStorage.setItem('sost_dtd_acc_v3',_accStr);
     }catch(eAccW){}
     var cooldownSet={};latestWinners.slice(-cdWindow).forEach(function(a){cooldownSet[a]=true;});
     // V13 anti-dominance gate (active from #12,100): exclude any miner whose
@@ -3524,17 +3527,24 @@ async function renderDTDPanel(body,title,silent){
       if(peakMinersEver<_pe)peakMinersEver=_pe;else localStorage.setItem('sost_peak_miners_ever',String(peakMinersEver));}catch(e){}
     var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
     var dpm=document.getElementById('dPeakMiner');if(dpm){dpm.textContent=peakMinersEver;}
-    // UPDATED MINERS (since #7100) — the full-chain scan knows the TRUE set of
+    // UPDATED MINERS (since #12100 V13) — the full-chain scan knows the TRUE set of
     // distinct Phase-2 producers (ph2.minerCounts). Merge it into the monotonic
     // localStorage set the dashboard reads, so the card reflects the all-time
     // count (~50) and never collapses to the recent-window count on a fresh
     // browser / after a reload. Then refresh the card immediately.
     try{
+      // sost_updated_miners_v1 (since #7100) feeds the DTD-eligibility banner's
+      // Phase-1 pool (era 7100–12100). Keep maintaining it from ph2.minerCounts.
       var _umRaw0=localStorage.getItem('sost_updated_miners_v1');
       var _um0=_umRaw0?JSON.parse(_umRaw0):null; var _set0=(_um0&&_um0.set)?_um0.set:{};
       Object.keys(ph2.minerCounts||{}).forEach(function(a){_set0[a]=1;});
       localStorage.setItem('sost_updated_miners_v1',JSON.stringify({h:height,set:_set0}));
-      var _umN=Object.keys(_set0).length;
+      // sost_updated_miners_v13 (since #12100, V13) feeds the UPDATED MINERS card.
+      var _v13Raw=localStorage.getItem('sost_updated_miners_v13');
+      var _v13o=_v13Raw?JSON.parse(_v13Raw):null; var _set13=(_v13o&&_v13o.set)?_v13o.set:{};
+      Object.keys(ph2.minerCountsV13||{}).forEach(function(a){_set13[a]=1;});
+      localStorage.setItem('sost_updated_miners_v13',JSON.stringify({h:height,set:_set13}));
+      var _umN=Object.keys(_set13).length;
       var _pmEl0=document.getElementById('dPhase2Miners');
       if(_pmEl0){var _cur0=parseInt(String(_pmEl0.textContent||'').replace(/[^0-9]/g,''),10)||0;
         if(_umN>_cur0)_pmEl0.textContent=String(_umN);}
@@ -3973,7 +3983,7 @@ async function updateDashboard(info){
     try{ localStorage.setItem('sost_dtd_lottery_v1',JSON.stringify({h:info.blocks||0,by:lotteryByAddr})); }catch(e){}
     for(var pi=0;pi<diffs.length;pi++){
       var d=diffs[pi]; if(!d||!d.miner)continue;
-      if((d.h||0)>=7100) ph2set[d.miner]=true;
+      if((d.h||0)>=12100) ph2set[d.miner]=true;
     }
     // UPDATED MINERS — cumulative & monotonic (never decreases). ph2set is the
     // distinct miners seen in the last 1000 blocks; merge it into a persisted
@@ -3983,17 +3993,18 @@ async function updateDashboard(info){
     // MINERS) so the all-time total shows even on a fresh browser.
     var ph2count;
     try {
-      var _umRaw = localStorage.getItem('sost_updated_miners_v1');
+      var _umRaw = localStorage.getItem('sost_updated_miners_v13');
       var _umSet = {};
       if (_umRaw) { var _um = JSON.parse(_umRaw); if (_um && _um.set) _umSet = _um.set; }
       Object.keys(ph2set).forEach(function(m){ _umSet[m] = 1; });
-      localStorage.setItem('sost_updated_miners_v1', JSON.stringify({h: info.blocks||0, set: _umSet}));
+      localStorage.setItem('sost_updated_miners_v13', JSON.stringify({h: info.blocks||0, set: _umSet}));
       ph2count = Object.keys(_umSet).length;
     } catch(e) { ph2count = Object.keys(ph2set).length; }
-    try {
-      var _dtdRaw = localStorage.getItem('sost_dtd_eligible_count');
-      if (_dtdRaw) { var _dm = String(_dtdRaw).match(/(\d+)/); if (_dm) ph2count = Math.max(ph2count, parseInt(_dm[1],10)); }
-    } catch(e) {}
+    // NOTE: no floor at the DTD-eligible count here. DTD eligibility uses the
+    // SbPoW-activity gate (a block at height >= #7100), so the eligible-now set
+    // can legitimately include miners who have NOT mined since #12100 — it is
+    // therefore NOT a lower bound for the V13 "updated miners" count and must
+    // not floor it (that would overstate the card).
     var ph2el=document.getElementById('dPhase2Miners');
     var ph2sub=document.getElementById('dPhase2MinersSub');
     var ph2card=document.getElementById('phase2ReadyMinersCard');
@@ -4001,7 +4012,7 @@ async function updateDashboard(info){
       ph2el.textContent=String(ph2count);
       // Floor PEAK ACTIVE MINERS at the updated-miners count so it shows a value
       // on a fresh browser instead of "—". Distinct all-time producers is always
-      // >= updated-since-#7100, so this is a safe lower bound; the exact value is
+      // >= updated-since-#12100, so this is a safe lower bound; the exact value is
       // refined upward by the on-demand full-chain scan (sost_peak_miners_ever).
       try{
         var _pmEl=document.getElementById('dPeakMiner');
@@ -4025,9 +4036,9 @@ async function updateDashboard(info){
         else                   ph2label='growing';
         // The fixed-window scan loads only the last AVG_WINDOW_LONG=1000
         // Cumulative & monotonic now: the count accumulates every distinct
-        // miner seen since #7100 and never regresses, so the range is always
-        // "since #7100" (no longer window-bound) and "growing" is honest.
-        ph2sub.textContent='since #7100 · ' + ph2label;
+        // miner seen since #12100 (V13) and never regresses, so the range is
+        // always "since #12100" (no longer window-bound) and "growing" is honest.
+        ph2sub.textContent='since #12100 V13 · ' + ph2label;
       }
       if(ph2card){
         // Pulse continuously in red — permanent. The card stays in alert

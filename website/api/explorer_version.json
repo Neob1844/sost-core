@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-09-v333",
-  "note": "DTD eligibility timeline banner now shows eligible-miner counts per phase: Phase 1 (7,100-12,100) 'up to N' from the all-time pool (~50, static/complete), Phase 2 (12,100-21,000) live dynamic eligible count (moves each block), Phase 3 (from 21,000) dynamic once active. Force-reload."
+  "v": "2026-06-09-v334",
+  "note": "UPDATED MINERS card now counts distinct miners since #12100 (V13, the permanent 1-of-3 fork) instead of #7100. Separate localStorage set (sost_updated_miners_v13) + V13 miner accumulator; the DTD-eligibility banner keeps the #7100 set for its Phase-1 pool. Accumulator cache bumped v2->v3 for a clean full-chain rebuild. Force-reload."
 }
