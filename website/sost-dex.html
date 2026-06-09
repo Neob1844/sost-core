@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST DEX — Buy, Sell, Split & Settle Gold-Linked Positions</title>
-<meta name="description" content="SOST DEX: non-custodial bilateral signed-offer interface for PoPC gold-backed positions. Client-side ED25519 signing + X25519 encryption. Encrypted relay (server cannot read). On-chain smart-contract escrow on Ethereum (SOSTEscrow), not SOST-operated escrow. SOST Protocol does not custody funds, gold, or positions, and does not intermediate, settle, or arbitrate trades.">
+<meta name="description" content="SOST DEX: non-custodial bilateral signed-offer interface for PoPC gold-referenced positions. Client-side ED25519 signing + X25519 encryption. Encrypted relay (server cannot read). On-chain smart-contract escrow on Ethereum (SOSTEscrow), not SOST-operated escrow. SOST Protocol does not custody funds, gold, or positions, and does not intermediate, settle, or arbitrate trades.">
 <meta name="keywords" content="SOST DEX, gold positions, position trading, reward rights, signed offers, settlement, tokenized gold, XAUT, PAXG">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
@@ -369,7 +369,7 @@
   <div class="container">
     <div class="hero-title fade-in"><span class="dex-text">SOST DEX</span></div>
     <p class="hero-subtitle fade-in delay-1" style="color:var(--gold-primary);font-weight:600;margin-bottom:10px;letter-spacing:0.3px">Decentralized exchange of PoPC (Proof of Personal Custody) contracts for tokenized and/or physical gold.</p>
-    <p class="hero-subtitle fade-in delay-2">Buy, sell, split and track gold-backed positions through client-side signed offers + end-to-end encrypted relay messages + on-chain Ethereum smart-contract escrow. The AI assistant only helps you fill the form; you sign every action yourself. Passkey &amp; biometric authentication stay on your device.</p>
+    <p class="hero-subtitle fade-in delay-2">Buy, sell, split and track gold-referenced positions through client-side signed offers + end-to-end encrypted relay messages + on-chain Ethereum smart-contract escrow. The AI assistant only helps you fill the form; you sign every action yourself. Passkey &amp; biometric authentication stay on your device.</p>
     <div class="hero-actions fade-in delay-2">
       <a href="javascript:void(0)" class="hero-btn hero-btn-green" onclick="var el=document.getElementById('trade-composer');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){var c=document.querySelector('[data-action=buy_full]');if(c)c.click();},500)"><span>&#9650;</span> BUY POSITION</a>
       <a href="javascript:void(0)" class="hero-btn hero-btn-gold" onclick="var el=document.getElementById('trade-composer');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){var c=document.querySelector('[data-action=sell_full]');if(c)c.click();},500)"><span>&#9660;</span> SELL POSITION</a>
@@ -893,7 +893,7 @@
           <input type="text" class="form-control" id="composerPositionCustom" placeholder="e.g. POS-2026-0001-XAUT-NeoB" oninput="customPositionInput()" style="margin-top:4px;">
           <div class="field-help" id="help-posid">
             <b>What is a Position ID?</b><br>
-            A unique identifier for a gold-backed position in the SOST system. Each position represents a PoPC commitment — gold locked in escrow that generates SOST rewards.<br><br>
+            A unique identifier for a gold-referenced position in the SOST system. Each position represents a PoPC commitment — gold locked in escrow that generates SOST rewards.<br><br>
             <b>Where do I find it?</b> If you already have a position, select it from the dropdown. If you're creating a new offer, type the position ID that the seller gave you.<br><br>
             <b>Example:</b> <code>POS-2026-0001-XAUT-NeoB</code><br>
             Format: POS-[year]-[number]-[gold type]-[owner name]
