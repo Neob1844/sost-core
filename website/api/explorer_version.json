@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-09-v331",
-  "note": "DTD lottery panel: eligibility-criteria timeline banner shown during scan (7,100->12,100 original; 12,100->21,000 V13 gates; from 21,000 V15 + open-PoPC-contract criterion). Scan accelerated: CHUNK 40->100, localStorage payload cache (cross-session), and incremental accumulator cache (only new blocks rescanned on tip advance). Force-reload open explorers."
+  "v": "2026-06-09-v332",
+  "note": "Fix UPDATED MINERS count: the full-chain DTD scan now persists the true distinct Phase-2 producer set (ph2.minerCounts) into the monotonic localStorage set the dashboard reads, so the 'since #7100' count reflects the all-time ~50 producers and never collapses to the recent-window count on a fresh browser/reload. Force-reload."
 }

@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-09-v331">
+<meta name="explorer-html-version" content="2026-06-09-v332">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -3510,6 +3510,21 @@ async function renderDTDPanel(body,title,silent){
       if(peakMinersEver<_pe)peakMinersEver=_pe;else localStorage.setItem('sost_peak_miners_ever',String(peakMinersEver));}catch(e){}
     var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
     var dpm=document.getElementById('dPeakMiner');if(dpm){dpm.textContent=peakMinersEver;}
+    // UPDATED MINERS (since #7100) — the full-chain scan knows the TRUE set of
+    // distinct Phase-2 producers (ph2.minerCounts). Merge it into the monotonic
+    // localStorage set the dashboard reads, so the card reflects the all-time
+    // count (~50) and never collapses to the recent-window count on a fresh
+    // browser / after a reload. Then refresh the card immediately.
+    try{
+      var _umRaw0=localStorage.getItem('sost_updated_miners_v1');
+      var _um0=_umRaw0?JSON.parse(_umRaw0):null; var _set0=(_um0&&_um0.set)?_um0.set:{};
+      Object.keys(ph2.minerCounts||{}).forEach(function(a){_set0[a]=1;});
+      localStorage.setItem('sost_updated_miners_v1',JSON.stringify({h:height,set:_set0}));
+      var _umN=Object.keys(_set0).length;
+      var _pmEl0=document.getElementById('dPhase2Miners');
+      if(_pmEl0){var _cur0=parseInt(String(_pmEl0.textContent||'').replace(/[^0-9]/g,''),10)||0;
+        if(_umN>_cur0)_pmEl0.textContent=String(_umN);}
+    }catch(e){}
     renderDTDTable(_dtdCache);
 
     // v317: store the FULL rendering payload in sessionStorage so a
