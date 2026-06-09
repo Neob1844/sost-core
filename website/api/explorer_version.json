@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-09-v334",
-  "note": "UPDATED MINERS card relabelled 'since #12100 V13' (the count itself is unchanged — still the monotonic distinct-miner set since #7100). Label-only change. Force-reload."
+  "v": "2026-06-09-v335",
+  "note": "HOTFIX: html meta and json version realigned (a v333/v334 mismatch caused an infinite reload loop). Auto-reload now guards with sessionStorage so a stale-cache mismatch can only trigger ONE reload, never a loop. Also carries the UPDATED MINERS 'since #12100 V13' label. Force-reload."
 }

@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-09-v333">
+<meta name="explorer-html-version" content="2026-06-09-v335">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8374,10 +8374,20 @@ window.addEventListener('focus',function(){refresh();});
         if(_htmlVersion && d.v && d.v!==_htmlVersion){
           var detail=document.getElementById('detailPanel');
           if(!detail||!detail.classList.contains('show')){
-            try{console.log('[explorer] stale HTML cached: '+_htmlVersion+
-                            ' vs server '+d.v+' — reloading');}catch(e){}
-            location.reload();
-            return;
+            // Guard against an infinite reload loop: only force-reload ONCE per
+            // server version. If we already reloaded for this d.v and the served
+            // HTML meta STILL doesn't match, a cache/CDN is serving stale HTML —
+            // reloading again would loop forever, so accept it and stop.
+            var _reloadedFor=null; try{_reloadedFor=sessionStorage.getItem('sost_expl_reloaded_for');}catch(e){}
+            if(_reloadedFor!==d.v){
+              try{sessionStorage.setItem('sost_expl_reloaded_for',d.v);}catch(e){}
+              try{console.log('[explorer] stale HTML cached: '+_htmlVersion+
+                              ' vs server '+d.v+' — reloading once');}catch(e){}
+              location.reload();
+              return;
+            }
+            try{console.warn('[explorer] HTML still '+_htmlVersion+' after reload for '+d.v+
+                             ' — stale cache; not reloading again');}catch(e){}
           }
         }
         _currentVersion=d.v;return;
