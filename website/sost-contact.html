@@ -250,6 +250,8 @@
       </div>
       <!-- honeypot: hidden from real users; bots that tick it are rejected -->
       <input type="checkbox" name="botcheck" id="cfBot" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:0;height:0;opacity:0;">
+      <!-- hCaptcha (Web3Forms managed site key — public by design) -->
+      <div class="h-captcha" id="cfCaptcha" data-sitekey="50b2fe65-b00b-4b9e-ad62-3ba471098be2" style="margin:6px 0 14px;"></div>
       <button type="submit" id="cfSubmit" class="submit-btn">SEND MESSAGE</button>
       <div id="cfStatus" role="status" aria-live="polite" style="margin-top:14px;font-size:14px;line-height:1.5;display:none;"></div>
       <p style="margin-top:12px;font-size:12px;color:var(--text-dim,#888);">You can also contact us directly at <a href="mailto:sost@sostcore.com" style="color:var(--cyan-primary);text-decoration:none;">sost@sostcore.com</a></p>
@@ -270,17 +272,28 @@
   </div>
 </footer>
 
+<script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 <script>
-/* SOST contact form — real submission, NO mailto.
-   Sends to sost@sostcore.com via the Web3Forms relay (the access key below is a
-   PUBLIC client key by design — it carries no mailbox password and cannot read
-   mail; it only forwards form posts to the address it was registered with).
-   To activate: create a free key at https://web3forms.com registered to
-   sost@sostcore.com and paste it into WEB3FORMS_KEY below. */
+/* SOST contact form — real submission, NO mailto, with layered spam protection:
+   honeypot + time-trap + heuristic content filters + hCaptcha (Web3Forms managed).
+   The Web3Forms access key and the hCaptcha site key are PUBLIC by design (no
+   mailbox password, no secret). Sends to sost@sostcore.com. */
 (function () {
   "use strict";
   var WEB3FORMS_KEY = "ed7c09a0-b426-4014-ba2a-fb121af53f9b";
   var ENDPOINT = "https://api.web3forms.com/submit";
+  var LOADED_AT = Date.now();
+  var SPAM_MSG = "Your message could not be submitted because it appears to match automated or unsolicited spam patterns.";
+  var SPAM_RE = [
+    /app\s*develop/i, /mobile\s*apps?/i, /android\s*app/i, /ios\s*app/i,
+    /(apple|google)\s*(&|and)?\s*(google)?\s*play\s*stores?/i, /play\s*stores?/i,
+    /business\s*consultant/i, /looking\s*for\s*work/i, /competitive\s*prices?/i,
+    /share\s*your\s*contact\s*(detail|details|info)/i, /affordable\s*quotation/i,
+    /\bseo\s*(services?|expert|company)/i, /web\s*(development|design)\s*services?/i,
+    /\bcasino\b/i, /crypto\s*recovery/i, /loan\s*offer/i, /\bbacklinks?\b/i,
+    /\bguest\s*post/i, /increase\s*your\s*(sales|traffic|ranking)/i,
+    /digital\s*marketing\s*services?/i, /web3\s*development\s*services?/i
+  ];
   var form = document.getElementById("contactForm");
   var btn = document.getElementById("cfSubmit");
   var statusEl = document.getElementById("cfStatus");
@@ -299,13 +312,35 @@
     }
     return true;
   }
+  // Heuristic spam gate — returns a user-facing message to show, or null if clean.
+  function spamReason(name, email, subject, message) {
+    if (Date.now() - LOADED_AT < 3000) return SPAM_MSG;            // bot-like instant submit
+    if (message.length < 30) return "Your message is too short — please add a little more detail (at least 30 characters).";
+    if (subject.length < 4) return "Please choose a subject.";
+    var hay = name + " \n " + subject + " \n " + message;
+    for (var i = 0; i < SPAM_RE.length; i++) if (SPAM_RE[i].test(hay)) return SPAM_MSG;
+    var links = (message.match(/(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|io|ru|cn|biz|info|xyz|top|site|online|shop)\b)/gi) || []).length;
+    if (links >= 3) return SPAM_MSG;                                // too many links
+    if (/(.)\1{7,}/.test(message) || /\S{45,}/.test(message)) return SPAM_MSG;  // repeated/spammy formatting
+    var nm = name.toLowerCase(), mg = message.toLowerCase();
+    if (nm && nm === mg) return SPAM_MSG;                           // name == message (generic sales text)
+    if (((email.split("@")[0]) || "").toLowerCase() === mg) return SPAM_MSG;
+    return null;
+  }
+  function captchaToken() {
+    try { if (typeof hcaptcha !== "undefined" && hcaptcha.getResponse) return hcaptcha.getResponse(); } catch (e) {}
+    var t = form.querySelector('textarea[name="h-captcha-response"]');
+    return t ? t.value : "";
+  }
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     if (document.getElementById("cfBot").checked) return;   // honeypot tripped → silently drop
     if (!validate()) return;
-    if (!WEB3FORMS_KEY || WEB3FORMS_KEY.indexOf("REPLACE") === 0) {
-      show("Message could not be sent. Please try again or email sost@sostcore.com directly.", false);
-      return;
+    var reason = spamReason(val("cfName"), val("cfEmail"), val("cfSubject"), val("cfMessage"));
+    if (reason) { show(reason, false); return; }
+    var token = captchaToken();
+    if (typeof hcaptcha !== "undefined" && !token) {        // captcha required only when its script actually loaded
+      show("Please complete the captcha to confirm you are human.", false); return;
     }
     var original = btn.textContent;
     btn.disabled = true; btn.textContent = "Sending…"; statusEl.style.display = "none";
@@ -322,6 +357,7 @@
       timestamp: new Date().toISOString(),
       botcheck: false
     };
+    if (token) payload["h-captcha-response"] = token;
     fetch(ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -332,10 +368,12 @@
         show("Thank you. Your message has been sent successfully. We will reply as soon as possible.", true);
       } else {
         btn.disabled = false; btn.textContent = original;
+        try { if (typeof hcaptcha !== "undefined") hcaptcha.reset(); } catch (e) {}
         show("Message could not be sent. Please try again or email sost@sostcore.com directly.", false);
       }
     }).catch(function () {
       btn.disabled = false; btn.textContent = original;
+      try { if (typeof hcaptcha !== "undefined") hcaptcha.reset(); } catch (e) {}
       show("Message could not be sent. Please try again or email sost@sostcore.com directly.", false);
     });
   });
