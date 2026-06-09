@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-09-v332",
-  "note": "Fix UPDATED MINERS count: the full-chain DTD scan now persists the true distinct Phase-2 producer set (ph2.minerCounts) into the monotonic localStorage set the dashboard reads, so the 'since #7100' count reflects the all-time ~50 producers and never collapses to the recent-window count on a fresh browser/reload. Force-reload."
+  "v": "2026-06-09-v333",
+  "note": "DTD eligibility timeline banner now shows eligible-miner counts per phase: Phase 1 (7,100-12,100) 'up to N' from the all-time pool (~50, static/complete), Phase 2 (12,100-21,000) live dynamic eligible count (moves each block), Phase 3 (from 21,000) dynamic once active. Force-reload."
 }
