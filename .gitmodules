@@ -1,0 +1,8 @@
+[submodule "vendor/libwally-core"]
+	path = vendor/libwally-core
+	url = https://github.com/ElementsProject/libwally-core
+	# Pinned to release_1.5.3 (commit 000137393a436d55a18971ca93a2d20a54d55437),
+	# GPG-verified per docs/design/ATOMIC_SWAP_LIBWALLY_VENDOR_CEREMONY.md.
+	# Only needed for the opt-in -DSOST_BTC_HTLC_SIGNING=ON (OTC-3a) build;
+	# the default OFF build never uses it. Init with:
+	#   git submodule update --init --recursive vendor/libwally-core
