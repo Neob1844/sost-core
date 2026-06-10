@@ -1,0 +1,1928 @@
+{
+ "updated": "2026-06-09",
+ "materials": [
+  {
+   "id": "graphene",
+   "name": {
+    "en": "Graphene"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — single-atom sp² hexagonal sheet",
+   "status": "lab-demonstrated",
+   "key_property": "Intrinsic tensile strength ~130 GPa and Young's modulus ~1 TPa — about 200× stronger than steel by specific strength; carrier mobility >200,000 cm²/V·s; thermal conductivity ~5000 W/m·K.",
+   "improvement": "Far higher strength-to-weight plus electrical/thermal conductivity than any metal or conventional composite.",
+   "uses": "Composites, transparent conductive films, sensors, batteries & supercapacitors, RF transistors, membranes.",
+   "origin": "Isolated by Geim & Novoselov, University of Manchester, 2004 (Nobel Prize 2010).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Graphen.jpg/640px-Graphen.jpg",
+   "source": "https://en.wikipedia.org/wiki/Graphene",
+   "papers": [
+    {
+     "title": "Electric Field Effect in Atomically Thin Carbon Films",
+     "authors": "Novoselov et al.",
+     "year": 2004,
+     "venue": "Science",
+     "doi": "10.1126/science.1102896",
+     "url": "https://doi.org/10.1126/science.1102896"
+    },
+    {
+     "title": "The rise of graphene",
+     "authors": "Geim & Novoselov",
+     "year": 2007,
+     "venue": "Nature Materials",
+     "doi": "10.1038/nmat1849",
+     "url": "https://doi.org/10.1038/nmat1849"
+    }
+   ]
+  },
+  {
+   "id": "swcnt",
+   "name": {
+    "en": "Single-walled carbon nanotube (SWCNT)"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — single rolled graphene cylinder",
+   "status": "commercial",
+   "key_property": "Tensile strength up to ~100 GPa, Young's modulus ~1 TPa; metallic or semiconducting depending on chirality.",
+   "improvement": "~10–100× stronger than steel at one-sixth the density; conductivity above copper per unit weight.",
+   "uses": "Conductive films, transistors, structural composites, field emitters, sensors, EMI shielding.",
+   "origin": "Single-wall tubes reported by Iijima (NEC) & Bethune (IBM), 1993.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/7/76/Kohlenstoffnanoroehre_Animation.gif",
+   "source": "https://en.wikipedia.org/wiki/Carbon_nanotube",
+   "papers": [
+    {
+     "title": "Single-shell carbon nanotubes of 1-nm diameter",
+     "authors": "Iijima & Ichihashi",
+     "year": 1993,
+     "venue": "Nature",
+     "doi": "10.1038/363603a0",
+     "url": "https://doi.org/10.1038/363603a0"
+    }
+   ]
+  },
+  {
+   "id": "mwcnt",
+   "name": {
+    "en": "Multi-walled carbon nanotube (MWCNT)"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — concentric nested graphene cylinders",
+   "status": "commercial",
+   "key_property": "Tensile strength ~10–60 GPa, modulus ~0.3–1 TPa; telescoping inner walls.",
+   "improvement": "High stiffness and conductivity at lower cost and higher production volume than SWCNTs.",
+   "uses": "Conductive plastics, battery-electrode additives, composites, coatings, EMI shielding.",
+   "origin": "Observed by Sumio Iijima, NEC, 1991.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/7/76/Kohlenstoffnanoroehre_Animation.gif",
+   "source": "https://en.wikipedia.org/wiki/Carbon_nanotube",
+   "papers": [
+    {
+     "title": "Helical microtubules of graphitic carbon",
+     "authors": "Iijima",
+     "year": 1991,
+     "venue": "Nature",
+     "doi": "10.1038/354056a0",
+     "url": "https://doi.org/10.1038/354056a0"
+    }
+   ]
+  },
+  {
+   "id": "c60",
+   "name": {
+    "en": "Fullerene C60 (buckminsterfullerene)"
+   },
+   "category": "carbon allotrope",
+   "formula": "C60 — 0.7 nm truncated-icosahedron cage",
+   "status": "commercial",
+   "key_property": "Spherical 60-atom carbon cage; strong electron acceptor; superconducting when alkali-doped (K₃C₆₀, Tc ~18 K).",
+   "improvement": "Molecular electron-acceptor/cage chemistry unavailable in bulk carbon.",
+   "uses": "Organic photovoltaics, antioxidants/cosmetics, lubricant additives, catalysis, molecular electronics.",
+   "origin": "Kroto, Curl & Smalley, Rice University, 1985 (Nobel Prize 1996).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/C60-Fulleren-kristallin.JPG/640px-C60-Fulleren-kristallin.JPG",
+   "source": "https://en.wikipedia.org/wiki/Buckminsterfullerene",
+   "papers": [
+    {
+     "title": "C60: Buckminsterfullerene",
+     "authors": "Kroto et al.",
+     "year": 1985,
+     "venue": "Nature",
+     "doi": "10.1038/318162a0",
+     "url": "https://doi.org/10.1038/318162a0"
+    },
+    {
+     "title": "Solid C60: a new form of carbon",
+     "authors": "Krätschmer et al.",
+     "year": 1990,
+     "venue": "Nature",
+     "doi": "10.1038/347354a0",
+     "url": "https://doi.org/10.1038/347354a0"
+    }
+   ]
+  },
+  {
+   "id": "carbyne",
+   "name": {
+    "en": "Carbyne (linear acetylenic carbon)"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — linear chain, alternating single/triple bonds",
+   "status": "research",
+   "key_property": "Predicted to be the stiffest/strongest material per unit mass — tensile strength ~200–300 GPa (theory), roughly double graphene; only stable as finite chains, e.g. inside nanotubes.",
+   "improvement": "Potentially the strongest material per mass known, ~2× graphene's tensile strength.",
+   "uses": "Potential ultra-strong nanofibres, nanoelectronics, energy storage (largely speculative — unstable in bulk).",
+   "origin": "Strength predicted at Rice University (Liu et al.), 2013; long chains stabilised in nanotubes, Vienna 2016.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Carbyne_TEM.jpg/640px-Carbyne_TEM.jpg",
+   "source": "https://en.wikipedia.org/wiki/Linear_acetylenic_carbon",
+   "papers": [
+    {
+     "title": "Confined linear carbon chains as a route to bulk carbyne",
+     "authors": "Shi et al.",
+     "year": 2016,
+     "venue": "Nature Materials",
+     "doi": "10.1038/nmat4617",
+     "url": "https://doi.org/10.1038/nmat4617"
+    }
+   ]
+  },
+  {
+   "id": "graphyne",
+   "name": {
+    "en": "Graphyne"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — 2D sp/sp² network with acetylenic links",
+   "status": "research",
+   "key_property": "2D sheet with predicted direction-dependent Dirac cones; stiffness/conductivity near graphene but with an intrinsic, tunable band structure.",
+   "improvement": "Offers natural band gaps and anisotropic transport that pristine graphene lacks.",
+   "uses": "Potential semiconductors, anodes, gas-separation membranes.",
+   "origin": "Predicted by Baughman, Eckhardt & Kertész, 1987; γ-graphyne bulk synthesis 2022 (CU Boulder).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Graphyne_v2.svg/640px-Graphyne_v2.svg.png",
+   "source": "https://en.wikipedia.org/wiki/Graphyne",
+   "papers": [
+    {
+     "title": "Structure-property predictions for new planar forms of carbon",
+     "authors": "Baughman et al.",
+     "year": 1987,
+     "venue": "J. Chem. Phys.",
+     "doi": "10.1063/1.453405",
+     "url": "https://doi.org/10.1063/1.453405"
+    }
+   ]
+  },
+  {
+   "id": "graphdiyne",
+   "name": {
+    "en": "Graphdiyne"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — 2D network with diacetylene links",
+   "status": "lab-demonstrated",
+   "key_property": "Uniform sub-nanometre pores, semiconducting, high in-plane mobility and large surface area; first all-carbon material of its kind synthesised at low temperature.",
+   "improvement": "Tunable band gap and built-in nanopores vs graphene — good for ion transport and catalysis.",
+   "uses": "Li/Na-battery anodes, electrocatalysis (HER, OER, N₂/CO₂ reduction), gas separation, sensors.",
+   "origin": "First synthesised by Yuliang Li, Chinese Academy of Sciences (ICCAS), 2010.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Graphyne_v2.svg/640px-Graphyne_v2.svg.png",
+   "source": "https://en.wikipedia.org/wiki/Graphdiyne",
+   "papers": [
+    {
+     "title": "Architecture of graphdiyne nanoscale films",
+     "authors": "Li et al.",
+     "year": 2010,
+     "venue": "Chem. Commun.",
+     "doi": "10.1039/b922733d",
+     "url": "https://doi.org/10.1039/b922733d"
+    },
+    {
+     "title": "Graphdiyne: synthesis, properties, and applications",
+     "authors": "Gao et al.",
+     "year": 2019,
+     "venue": "Chem. Soc. Rev.",
+     "doi": "10.1039/C8CS00773J",
+     "url": "https://doi.org/10.1039/C8CS00773J"
+    }
+   ]
+  },
+  {
+   "id": "nanothread",
+   "name": {
+    "en": "Diamond nanothreads"
+   },
+   "category": "carbon allotrope",
+   "formula": "C(H)ₓ — 1D sp³ thread from benzene",
+   "status": "lab-demonstrated",
+   "key_property": "1D diamond-like thread; simulated stiffness ~850 GPa and specific tenacity ~4.1×10⁷ N·m/kg, exceeding nanotubes and graphene.",
+   "improvement": "Combines diamond stiffness with thread flexibility; predicted strength above today's strongest fibres.",
+   "uses": "Potential ultra-strong lightweight fibres, space-tether-class cables (early stage).",
+   "origin": "Synthesised by Badding's group, Penn State, Nature Materials 2014.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/C60-rods.png/640px-C60-rods.png",
+   "source": "https://en.wikipedia.org/wiki/Carbon_nanothread",
+   "papers": [
+    {
+     "title": "Benzene-derived carbon nanothreads",
+     "authors": "Fitzgibbons et al.",
+     "year": 2015,
+     "venue": "Nature Materials",
+     "doi": "10.1038/nmat4088",
+     "url": "https://doi.org/10.1038/nmat4088"
+    }
+   ]
+  },
+  {
+   "id": "go",
+   "name": {
+    "en": "Graphene oxide (GO)"
+   },
+   "category": "carbon allotrope",
+   "formula": "CₓOᵧHᵤ — oxidised graphene",
+   "status": "commercial",
+   "key_property": "Electrically insulating but water-dispersible and chemically functionalisable; weaker than graphene but easily processed into films/membranes.",
+   "improvement": "Solution-processable and tunable vs pristine graphene; bonds well in composites and membranes.",
+   "uses": "Water purification/desalination membranes, composite reinforcement, coatings, biomedical carriers, rGO precursor.",
+   "origin": "Brodie 1859; modern Hummers' method 1958.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Graphite_oxide.svg/640px-Graphite_oxide.svg.png",
+   "source": "https://en.wikipedia.org/wiki/Graphene_oxide",
+   "papers": [
+    {
+     "title": "Preparation of Graphitic Oxide",
+     "authors": "Hummers & Offeman",
+     "year": 1958,
+     "venue": "J. Am. Chem. Soc.",
+     "doi": "10.1021/ja01539a017",
+     "url": "https://doi.org/10.1021/ja01539a017"
+    },
+    {
+     "title": "The chemistry of graphene oxide",
+     "authors": "Dreyer et al.",
+     "year": 2010,
+     "venue": "Chem. Soc. Rev.",
+     "doi": "10.1039/b917103g",
+     "url": "https://doi.org/10.1039/b917103g"
+    }
+   ]
+  },
+  {
+   "id": "rgo",
+   "name": {
+    "en": "Reduced graphene oxide (rGO)"
+   },
+   "category": "carbon allotrope",
+   "formula": "C with residual O — partially deoxygenated GO",
+   "status": "commercial",
+   "key_property": "Restores much of graphene's conductivity (orders of magnitude above GO) while remaining cheap and scalable.",
+   "improvement": "A low-cost, scalable route to conductive graphene-like material vs costly pristine graphene.",
+   "uses": "Supercapacitor/battery electrodes, conductive inks & films, sensors, composites, catalysis supports.",
+   "origin": "Chemical/thermal reduction of Hummers-type GO; widespread from the late 2000s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Graphite_oxide.svg/640px-Graphite_oxide.svg.png",
+   "source": "https://en.wikipedia.org/wiki/Graphene_oxide",
+   "papers": [
+    {
+     "title": "Synthesis of graphene-based nanosheets via chemical reduction of exfoliated graphite oxide",
+     "authors": "Stankovich et al.",
+     "year": 2007,
+     "venue": "Carbon",
+     "doi": "10.1016/j.carbon.2007.02.034",
+     "url": "https://doi.org/10.1016/j.carbon.2007.02.034"
+    }
+   ]
+  },
+  {
+   "id": "glassycarbon",
+   "name": {
+    "en": "Glassy (vitreous) carbon"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — isotropic non-graphitising amorphous carbon",
+   "status": "commercial",
+   "key_property": "Extreme chemical inertness, gas-impermeable, stable to ~3000 °C in inert atmosphere, low density ~1.4–1.5 g/cm³, biocompatible.",
+   "improvement": "Glass-like impermeability plus graphite-like conductivity with far better corrosion resistance.",
+   "uses": "Electrodes, crucibles, high-temperature labware, prosthetic heart valves, semiconductor processing.",
+   "origin": "Developed by Redfern / Carborundum and others, early 1960s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Glassy_carbon_and_a_1cm3_graphite_cube_HP68-79.jpg/640px-Glassy_carbon_and_a_1cm3_graphite_cube_HP68-79.jpg",
+   "source": "https://en.wikipedia.org/wiki/Glassy_carbon",
+   "papers": [
+    {
+     "title": "Fullerene-related structure of commercial glassy carbons",
+     "authors": "Harris",
+     "year": 2004,
+     "venue": "Phil. Mag.",
+     "doi": "10.1080/14786430410001720363",
+     "url": "https://doi.org/10.1080/14786430410001720363"
+    }
+   ]
+  },
+  {
+   "id": "carbonfiber",
+   "name": {
+    "en": "Carbon fibre"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — graphitic filaments (PAN or pitch precursor)",
+   "status": "commercial",
+   "key_property": "Tensile strength ~3.5–7 GPa, modulus ~230–600 GPa, density ~1.75–2.0 g/cm³ — very high specific strength and stiffness.",
+   "improvement": "Much higher strength- and stiffness-to-weight than steel or aluminium; corrosion-resistant.",
+   "uses": "Aerospace, automotive, wind-turbine blades, sporting goods, pressure vessels, civil reinforcement.",
+   "origin": "High-strength PAN fibres developed at RAE Farnborough (UK), 1963.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Effect_of_weave_on_the_properties_of_cloth_%28IA_effectofweaveonp11444schi%29.pdf/page1-500px-Effect_of_weave_on_the_properties_of_cloth_%28IA_effectofweaveonp11444schi%29.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Carbon_fiber_reinforced_polymer",
+   "papers": [
+    {
+     "title": "Carbon Fibers: Precursor Systems, Processing, Structure, and Properties",
+     "authors": "Frank et al.",
+     "year": 2014,
+     "venue": "Angew. Chem. Int. Ed.",
+     "doi": "10.1002/anie.201306129",
+     "url": "https://doi.org/10.1002/anie.201306129"
+    }
+   ]
+  },
+  {
+   "id": "qcarbon",
+   "name": {
+    "en": "Q-carbon"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — amorphous sp³-rich quenched phase",
+   "status": "lab-demonstrated",
+   "key_property": "Reported harder than diamond, ferromagnetic at room temperature, conductive and field-emissive; converts to diamond at ambient pressure.",
+   "improvement": "Uniquely combines above-diamond hardness with room-temperature ferromagnetism and conductivity.",
+   "uses": "Ambient-pressure diamond synthesis, hard coatings, field emitters, potential spintronics.",
+   "origin": "Narayan group, North Carolina State University, 2015.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Internal_combustion_engine_thin_film_thermocouples_%28IA_internalcombusti8531krei%29.pdf/page1-960px-Internal_combustion_engine_thin_film_thermocouples_%28IA_internalcombusti8531krei%29.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Q-carbon",
+   "papers": [
+    {
+     "title": "Novel phase of carbon, ferromagnetism, and conversion into diamond",
+     "authors": "Narayan & Bhaumik",
+     "year": 2015,
+     "venue": "J. Appl. Phys.",
+     "doi": "10.1063/1.4936595",
+     "url": "https://doi.org/10.1063/1.4936595"
+    }
+   ]
+  },
+  {
+   "id": "biphenylene",
+   "name": {
+    "en": "Biphenylene network (BPN)"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — 2D net of 4-, 6- and 8-membered rings",
+   "status": "lab-demonstrated",
+   "key_property": "Metallic (gapless) 2D carbon, unlike semiconducting graphene; predicted modulus ~0.6–0.7 TPa, anisotropic transport.",
+   "improvement": "Provides intrinsic metallic conduction in an all-carbon sheet, where graphene needs doping/patterning.",
+   "uses": "Potential conducting wires in carbon-only electronics, anodes, catalysis (proof-of-concept).",
+   "origin": "Synthesised on a gold surface (Fan, Gottfried et al.), Science 2021.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Polycyclic_aromatic_hydrocarbon_structure_index_%28IA_polycyclicaromat922sand%29.pdf/page1-960px-Polycyclic_aromatic_hydrocarbon_structure_index_%28IA_polycyclicaromat922sand%29.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Biphenylene_network",
+   "papers": [
+    {
+     "title": "Biphenylene network: A nonbenzenoid carbon allotrope",
+     "authors": "Fan et al.",
+     "year": 2021,
+     "venue": "Science",
+     "doi": "10.1126/science.abg4509",
+     "url": "https://doi.org/10.1126/science.abg4509"
+    }
+   ]
+  },
+  {
+   "id": "lonsdaleite",
+   "name": {
+    "en": "Lonsdaleite (hexagonal diamond)"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — hexagonal sp³ diamond polymorph",
+   "status": "lab-demonstrated",
+   "key_property": "Simulations predict up to ~58% harder than cubic diamond; 2025 bulk samples measured Vickers hardness ~114 GPa.",
+   "improvement": "Potentially harder and stiffer than ordinary diamond along certain directions.",
+   "uses": "Ultra-hard abrasives, cutting tools, wear coatings (mostly research; natural in impact craters).",
+   "origin": "First found in the Canyon Diablo meteorite, 1967; pure bulk samples 2025.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Lonsdaleite.png/640px-Lonsdaleite.png",
+   "source": "https://en.wikipedia.org/wiki/Lonsdaleite",
+   "papers": [
+    {
+     "title": "Hexagonal Diamond — A New Form of Carbon",
+     "authors": "Bundy & Kasper",
+     "year": 1967,
+     "venue": "J. Chem. Phys.",
+     "doi": "10.1063/1.1841236",
+     "url": "https://doi.org/10.1063/1.1841236"
+    },
+    {
+     "title": "Lonsdaleite, a Hexagonal Polymorph of Diamond",
+     "authors": "Frondel & Marvin",
+     "year": 1967,
+     "venue": "Nature",
+     "doi": "10.1038/214587a0",
+     "url": "https://doi.org/10.1038/214587a0"
+    }
+   ]
+  },
+  {
+   "id": "dlc",
+   "name": {
+    "en": "Diamond-like carbon (DLC / ta-C)"
+   },
+   "category": "carbon allotrope",
+   "formula": "C — disordered sp²/sp³ (ta-C high-sp³; a-C:H hydrogenated)",
+   "status": "commercial",
+   "key_property": "Hardness up to ~40–90 GPa (tetrahedral amorphous carbon), very low friction (~0.05–0.2), inert and smooth.",
+   "improvement": "Near-diamond hardness and wear/friction as a deposited film at far lower cost/temperature than diamond.",
+   "uses": "Wear/low-friction coatings on engine parts, tools, razor blades, hard disks, implants, optics.",
+   "origin": "Diamond-like carbon films first deposited by Aisenberg & Chabot, 1971.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Mpnvs-for-wikipedia.jpg",
+   "source": "https://en.wikipedia.org/wiki/Diamond-like_carbon",
+   "papers": [
+    {
+     "title": "Diamond-like amorphous carbon",
+     "authors": "Robertson",
+     "year": 2002,
+     "venue": "Mater. Sci. Eng. R",
+     "doi": "10.1016/S0927-796X(02)00005-0",
+     "url": "https://doi.org/10.1016/S0927-796X(02)00005-0"
+    }
+   ]
+  },
+  {
+   "id": "graphene-aerogel",
+   "name": {
+    "en": "Graphene aerogel (aerographene)"
+   },
+   "category": "aerogel / ultralight",
+   "formula": "3D network of covalently bonded graphene sheets, freeze-dried",
+   "status": "lab-demonstrated",
+   "key_property": "World's lightest solid at synthesis: density ~0.16 mg/cm³ (≈7× lighter than air); ≥99.99% air; absorbs up to ~900× its own weight in oil; elastically recovers after >50% strain.",
+   "improvement": "Far lighter than silica aerogel and metallic microlattice, yet compressible, conductive and hugely absorbent.",
+   "uses": "Oil-spill & water/air decontamination, thermal/acoustic insulation, supercapacitor & battery electrodes, pressure sensors, microwave absorption, aerospace lightweighting.",
+   "origin": "Zhejiang University (Gao Chao group), China, 2013.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Graphene_and_lasers_experiment_setup_ESA519410.png/960px-Graphene_and_lasers_experiment_setup_ESA519410.png",
+   "source": "https://en.wikipedia.org/wiki/Aerographene",
+   "papers": [
+    {
+     "title": "Multifunctional, Ultra-Flyweight, Synergistically Assembled Carbon Aerogels",
+     "authors": "Sun, Xu & Gao",
+     "year": 2013,
+     "venue": "Advanced Materials",
+     "doi": "10.1002/adma.201204576",
+     "url": "https://doi.org/10.1002/adma.201204576"
+    },
+    {
+     "title": "Ultralight and Highly Compressible Graphene Aerogels",
+     "authors": "Hu et al.",
+     "year": 2013,
+     "venue": "Advanced Materials",
+     "doi": "10.1002/adma.201204530",
+     "url": "https://doi.org/10.1002/adma.201204530"
+    }
+   ]
+  },
+  {
+   "id": "silica-aerogel",
+   "name": {
+    "en": "Silica aerogel ('frozen smoke')"
+   },
+   "category": "aerogel / ultralight",
+   "formula": "SiO₂ — amorphous nanostructured network, ~99% air",
+   "status": "commercial",
+   "key_property": "Translucent solid; density down to ~1 kg/m³; thermal conductivity ~0.004–0.03 W/m·K — the best solid insulator known; ~1000× less dense than glass.",
+   "improvement": "Up to ~39× more effective than the best fibreglass; one inch insulates like ~15 panes of glass.",
+   "uses": "Insulation (buildings, pipelines, spacesuits, Mars rovers), Cherenkov detectors, NASA Stardust dust collector.",
+   "origin": "First made by Samuel Kistler, 1931; commercialised (Aspen Aerogels, NASA).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Aerogel_hand.jpg/640px-Aerogel_hand.jpg",
+   "source": "https://en.wikipedia.org/wiki/Silica_aerogel",
+   "papers": [
+    {
+     "title": "Coherent Expanded Aerogels and Jellies",
+     "authors": "Kistler",
+     "year": 1931,
+     "venue": "Nature",
+     "doi": "10.1038/127741a0",
+     "url": "https://doi.org/10.1038/127741a0"
+    }
+   ]
+  },
+  {
+   "id": "carbon-aerogel",
+   "name": {
+    "en": "Carbon aerogel"
+   },
+   "category": "aerogel / ultralight",
+   "formula": "Mesoporous carbon (pyrolysed resorcinol-formaldehyde)",
+   "status": "research",
+   "key_property": "Density ~0.2–1.2 g/cm³, surface area up to ~1200 m²/g, conductive; supercapacitors with ~352 F/g and 100% retention over 65,000 cycles.",
+   "improvement": "Low weight, high surface area and conductivity outperform many activated-carbon electrodes in cycle stability.",
+   "uses": "Supercapacitor/battery electrodes, capacitive desalination, catalyst supports, hydrogen storage, EMI shielding.",
+   "origin": "Developed from organic aerogels by Pekala et al. (LLNL), late 1980s–90s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Aerogel_hand.jpg/640px-Aerogel_hand.jpg",
+   "source": "https://en.wikipedia.org/wiki/Carbon_aerogel",
+   "papers": [
+    {
+     "title": "Organic aerogels from the polycondensation of resorcinol with formaldehyde",
+     "authors": "Pekala",
+     "year": 1989,
+     "venue": "J. Mater. Sci.",
+     "doi": "10.1007/BF01139044",
+     "url": "https://doi.org/10.1007/BF01139044"
+    }
+   ]
+  },
+  {
+   "id": "aerographite",
+   "name": {
+    "en": "Aerographite"
+   },
+   "category": "aerogel / ultralight",
+   "formula": "Network of hollow porous carbon micro-tubes",
+   "status": "lab-demonstrated",
+   "key_property": "Density as low as ~0.18 mg/cm³; ~99.99% air; compressible up to ~1000× and springs back; withstands ~35× greater force per density than silica aerogel; conductive.",
+   "improvement": "More robust and resilient than silica aerogels and earlier CNT aerogels at lower density — gains strength under compression.",
+   "uses": "Battery/supercapacitor electrodes, EMI shielding, lightweight conductive composites, sensors.",
+   "origin": "TU Hamburg & University of Kiel, Germany, 2012.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/TUHH_CAU_newexampleAerographite_Netwok.png/640px-TUHH_CAU_newexampleAerographite_Netwok.png",
+   "source": "https://en.wikipedia.org/wiki/Aerographite",
+   "papers": [
+    {
+     "title": "Aerographite: Ultra Lightweight, Flexible Nanowall, Carbon Microtube Material",
+     "authors": "Mecklenburg et al.",
+     "year": 2012,
+     "venue": "Advanced Materials",
+     "doi": "10.1002/adma.201200491",
+     "url": "https://doi.org/10.1002/adma.201200491"
+    }
+   ]
+  },
+  {
+   "id": "microlattice",
+   "name": {
+    "en": "Metallic microlattice"
+   },
+   "category": "aerogel / ultralight",
+   "formula": "Open lattice of hollow Ni-P micro-tubes (~100 nm walls)",
+   "status": "prototype",
+   "key_property": "'World's lightest metal'; density as low as ~0.9 mg/cm³ (~100× lighter than Styrofoam); ~99.99% air; fully recovers after >50% compression.",
+   "improvement": "Ordered architecture gives far higher energy absorption and recoverable compression than random metal foams.",
+   "uses": "Aerospace structural cores, impact/energy absorption, acoustic/vibration damping, battery electrodes, insulation.",
+   "origin": "HRL Laboratories with UC Irvine & Caltech, 2011.",
+   "image": "https://upload.wikimedia.org/wikipedia/en/thumb/3/3e/Metallic_microlattice.jpg/640px-Metallic_microlattice.jpg",
+   "source": "https://en.wikipedia.org/wiki/Metallic_microlattice",
+   "papers": [
+    {
+     "title": "Ultralight Metallic Microlattices",
+     "authors": "Schaedler et al.",
+     "year": 2011,
+     "venue": "Science",
+     "doi": "10.1126/science.1211649",
+     "url": "https://doi.org/10.1126/science.1211649"
+    }
+   ]
+  },
+  {
+   "id": "cellulose-aerogel",
+   "name": {
+    "en": "Cellulose / nanocellulose aerogel"
+   },
+   "category": "aerogel / ultralight",
+   "formula": "Bio-based cellulose-nanofibril network, freeze/supercritically dried",
+   "status": "research",
+   "key_property": "Ultralow density (record ~8.1 kg/m³, porosity ~99.4%); thermal conductivity ~32–38 mW/m·K; biodegradable; >90% recovery after repeated compression.",
+   "improvement": "Sustainable, biodegradable alternative to petrochemical foams and brittle silica aerogels with competitive insulation.",
+   "uses": "Sustainable building insulation, oil/water separation, packaging, biomedical scaffolds, filtration.",
+   "origin": "Multiple groups (KTH, Aalto…), 2000s–2010s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Aerogel_hand.jpg/640px-Aerogel_hand.jpg",
+   "source": "https://en.wikipedia.org/wiki/Aerogel",
+   "papers": [
+    {
+     "title": "Long and entangled native cellulose I nanofibers allow flexible aerogels",
+     "authors": "Pääkkö et al.",
+     "year": 2008,
+     "venue": "Soft Matter",
+     "doi": "10.1039/B810371B",
+     "url": "https://doi.org/10.1039/B810371B"
+    }
+   ]
+  },
+  {
+   "id": "polyimide-aerogel",
+   "name": {
+    "en": "Polyimide aerogel"
+   },
+   "category": "aerogel / ultralight",
+   "formula": "Cross-linked aromatic polyimide polymer aerogel",
+   "status": "research",
+   "key_property": "Up to ~500× stronger than silica aerogel with comparable insulation; flexible/foldable films; withstands ≥~1100 °C without pore collapse.",
+   "improvement": "Mechanically robust and flexible, unlike brittle, dusty silica aerogels, with high R-values.",
+   "uses": "Spacecraft & EVA-suit insulation, antennas/substrates, pipeline & building insulation, insulated clothing.",
+   "origin": "NASA Glenn Research Center, ~2011; licensed commercially.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Aerogel_hand.jpg/640px-Aerogel_hand.jpg",
+   "source": "https://en.wikipedia.org/wiki/Aerogel",
+   "papers": [
+    {
+     "title": "Mechanically Strong, Flexible Polyimide Aerogels Cross-Linked with Aromatic Triamine",
+     "authors": "Meador et al.",
+     "year": 2012,
+     "venue": "ACS Appl. Mater. Interfaces",
+     "doi": "10.1021/am2014635",
+     "url": "https://doi.org/10.1021/am2014635"
+    }
+   ]
+  },
+  {
+   "id": "bn-aerogel",
+   "name": {
+    "en": "Boron nitride aerogel ('white-graphene' aerogel)"
+   },
+   "category": "aerogel / ultralight",
+   "formula": "Hexagonal boron-nitride (h-BN) nanosheet network",
+   "status": "lab-demonstrated",
+   "key_property": "Density ~0.1–1.4 mg/cm³ (can be less dense than air); superelastic (~95% strain); thermal superinsulation ~2.4 mW/m·K in vacuum; stable to ~900 °C in air.",
+   "improvement": "Electrically insulating yet ultralight and oxidation-resistant where carbon aerogels would burn.",
+   "uses": "High-temperature super-insulation, IR/thermal stealth, fire-resistant insulation, catalyst supports.",
+   "origin": "Academic groups, ~2015 onward.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Hbncrystals.jpg",
+   "source": "https://en.wikipedia.org/wiki/Boron_nitride",
+   "papers": [
+    {
+     "title": "Ultralight boron nitride aerogels via template-assisted chemical vapor deposition",
+     "authors": "Song et al.",
+     "year": 2015,
+     "venue": "Scientific Reports",
+     "doi": "10.1038/srep10337",
+     "url": "https://doi.org/10.1038/srep10337"
+    }
+   ]
+  },
+  {
+   "id": "cantor",
+   "name": {
+    "en": "Cantor alloy (CrMnFeCoNi)"
+   },
+   "category": "high-entropy alloy",
+   "formula": "CrMnFeCoNi — equiatomic FCC",
+   "status": "lab-demonstrated",
+   "key_property": "Fracture toughness >200 MPa·m½ at 77 K (up to ~459 at 20 K); tensile strength rises from 763 MPa (RT) to 1280 MPa at 77 K while ductility also rises.",
+   "improvement": "A single-phase alloy that gets both stronger AND tougher when cooled to cryogenic temperatures, via nanoscale twinning — defeating the usual trade-off.",
+   "uses": "Cryogenic structures, LNG and space hardware, damage-tolerant load-bearing parts (research).",
+   "origin": "Introduced by Cantor (UK) and Yeh (Taiwan), 2004; cryo toughness by Ritchie/LBNL, 2014.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Atomic_structure_model_of_fcc_CoCrFeMnNi.png/640px-Atomic_structure_model_of_fcc_CoCrFeMnNi.png",
+   "source": "https://en.wikipedia.org/wiki/High-entropy_alloy",
+   "papers": [
+    {
+     "title": "Microstructural development in equiatomic multicomponent alloys",
+     "authors": "Cantor et al.",
+     "year": 2004,
+     "venue": "Mater. Sci. Eng. A",
+     "doi": "10.1016/j.msea.2003.10.257",
+     "url": "https://doi.org/10.1016/j.msea.2003.10.257"
+    },
+    {
+     "title": "A fracture-resistant high-entropy alloy for cryogenic applications",
+     "authors": "Gludovatz et al.",
+     "year": 2014,
+     "venue": "Science",
+     "doi": "10.1126/science.1254581",
+     "url": "https://doi.org/10.1126/science.1254581"
+    }
+   ]
+  },
+  {
+   "id": "crconi",
+   "name": {
+    "en": "CrCoNi medium-entropy alloy"
+   },
+   "category": "high-entropy alloy",
+   "formula": "CrCoNi — equiatomic FCC ternary",
+   "status": "lab-demonstrated",
+   "key_property": "Crack-growth toughness exceeding 400 MPa·m½ at 20 K — among the highest damage tolerance ever measured for any material.",
+   "improvement": "Out-performs the 5-element Cantor alloy; sustained twinning gives record damage tolerance to liquid-helium temperatures.",
+   "uses": "Extreme-cryogenic & aerospace structures, fusion/superconducting-magnet hardware (research).",
+   "origin": "Gludovatz, George & Ritchie, LBNL/ORNL, 2016 (20 K record: Science 2022).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Atomic_structure_model_of_fcc_CoCrFeMnNi.png/640px-Atomic_structure_model_of_fcc_CoCrFeMnNi.png",
+   "source": "https://en.wikipedia.org/wiki/High-entropy_alloy",
+   "papers": [
+    {
+     "title": "Exceptional damage-tolerance of a medium-entropy alloy CrCoNi at cryogenic temperatures",
+     "authors": "Gludovatz et al.",
+     "year": 2016,
+     "venue": "Nature Communications",
+     "doi": "10.1038/ncomms10602",
+     "url": "https://doi.org/10.1038/ncomms10602"
+    }
+   ]
+  },
+  {
+   "id": "rhea-wnbmotav",
+   "name": {
+    "en": "WNbMoTaV refractory HEA"
+   },
+   "category": "high-entropy alloy",
+   "formula": "W₂₀Nb₂₀Mo₂₀Ta₂₀V₂₀ — BCC",
+   "status": "lab-demonstrated",
+   "key_property": "Retains yield strength ~477 MPa at 1600 °C; room-temperature hardness ~5.25 GPa; single-phase BCC.",
+   "improvement": "Resists high-temperature softening far better than Ni-based superalloys above ~800 °C.",
+   "uses": "Next-gen turbine, hypersonic, nuclear and rocket-nozzle high-temperature structures (research).",
+   "origin": "Senkov et al., US Air Force Research Laboratory, 2010.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Atomic_structure_model_of_fcc_CoCrFeMnNi.png/640px-Atomic_structure_model_of_fcc_CoCrFeMnNi.png",
+   "source": "https://en.wikipedia.org/wiki/High-entropy_alloy",
+   "papers": [
+    {
+     "title": "Refractory high-entropy alloys",
+     "authors": "Senkov et al.",
+     "year": 2010,
+     "venue": "Intermetallics",
+     "doi": "10.1016/j.intermet.2010.05.014",
+     "url": "https://doi.org/10.1016/j.intermet.2010.05.014"
+    },
+    {
+     "title": "Mechanical properties of NbMoTaW and VNbMoTaW refractory high-entropy alloys",
+     "authors": "Senkov et al.",
+     "year": 2011,
+     "venue": "Intermetallics",
+     "doi": "10.1016/j.intermet.2011.01.004",
+     "url": "https://doi.org/10.1016/j.intermet.2011.01.004"
+    }
+   ]
+  },
+  {
+   "id": "rhea-superalloy",
+   "name": {
+    "en": "AlMo₀.₅NbTa₀.₅TiZr refractory high-entropy superalloy"
+   },
+   "category": "high-entropy alloy",
+   "formula": "AlMo0.5NbTa0.5TiZr — BCC + ordered B2",
+   "status": "lab-demonstrated",
+   "key_property": "Compressive strength ~772 MPa at 1000 °C; density 7.4 g/cm³; hardness 5.8 GPa; nanoscale basketweave structure mimicking γ/γ′ superalloys.",
+   "improvement": "One of the first refractory HEAs with high-temperature strength superior to Ni-based superalloys.",
+   "uses": "High-temperature turbine and aerospace structural alloys (research).",
+   "origin": "Senkov et al., AFRL, 2016.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Atomic_structure_model_of_fcc_CoCrFeMnNi.png/640px-Atomic_structure_model_of_fcc_CoCrFeMnNi.png",
+   "source": "https://en.wikipedia.org/wiki/High-entropy_alloy",
+   "papers": [
+    {
+     "title": "Microstructure and Properties of Aluminum-Containing Refractory High-Entropy Alloys",
+     "authors": "Senkov et al.",
+     "year": 2014,
+     "venue": "JOM",
+     "doi": "10.1007/s11837-014-1066-0",
+     "url": "https://doi.org/10.1007/s11837-014-1066-0"
+    }
+   ]
+  },
+  {
+   "id": "lightweight-hea",
+   "name": {
+    "en": "Lightweight HEA (Al₂₀Li₂₀Mg₁₀Sc₂₀Ti₃₀)"
+   },
+   "category": "high-entropy alloy",
+   "formula": "Al20Li20Mg10Sc20Ti30 — nanocrystalline",
+   "status": "lab-demonstrated",
+   "key_property": "Density only 2.67 g/cm³ with hardness up to 5.9 GPa — strength-to-weight comparable to ceramics.",
+   "improvement": "Aluminium-like density combined with ceramic-class specific strength, far above conventional light alloys.",
+   "uses": "Potential aerospace & transport lightweighting (lab stage; contains costly Sc).",
+   "origin": "Youssef & Koch, North Carolina State University, 2014.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Atomic_structure_model_of_fcc_CoCrFeMnNi.png/640px-Atomic_structure_model_of_fcc_CoCrFeMnNi.png",
+   "source": "https://en.wikipedia.org/wiki/High-entropy_alloy",
+   "papers": [
+    {
+     "title": "A Novel Low-Density, High-Hardness, High-entropy Alloy with Close-packed Single-phase Nanocrystalline Structures",
+     "authors": "Youssef et al.",
+     "year": 2015,
+     "venue": "Mater. Res. Lett.",
+     "doi": "10.1080/21663831.2014.985855",
+     "url": "https://doi.org/10.1080/21663831.2014.985855"
+    }
+   ]
+  },
+  {
+   "id": "eutectic-hea",
+   "name": {
+    "en": "Eutectic HEA (AlCoCrFeNi₂.₁)"
+   },
+   "category": "high-entropy alloy",
+   "formula": "AlCoCrFeNi2.1 — FCC+B2 lamellar",
+   "status": "lab-demonstrated",
+   "key_property": "After cryo-rolling/annealing: yield ~1437 MPa, UTS ~1562 MPa, elongation ~14%; additive-made variants reach UTS ~1620–1737 MPa.",
+   "improvement": "Self-organised lamellar eutectic gives high strength AND ductility plus the castability single-phase HEAs lack.",
+   "uses": "Structural castings and additively-manufactured high-performance parts (research).",
+   "origin": "Lu, Liaw et al. (2014); strength-ductility work 2018–2020.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Atomic_structure_model_of_fcc_CoCrFeMnNi.png/640px-Atomic_structure_model_of_fcc_CoCrFeMnNi.png",
+   "source": "https://en.wikipedia.org/wiki/High-entropy_alloy",
+   "papers": [
+    {
+     "title": "A Promising New Class of High-Temperature Alloys: Eutectic High-Entropy Alloys",
+     "authors": "Lu et al.",
+     "year": 2014,
+     "venue": "Scientific Reports",
+     "doi": "10.1038/srep06200",
+     "url": "https://doi.org/10.1038/srep06200"
+    }
+   ]
+  },
+  {
+   "id": "he-nitride",
+   "name": {
+    "en": "Superhard high-entropy nitride coating"
+   },
+   "category": "high-entropy alloy",
+   "formula": "(TiZrNbVHf)N and related films",
+   "status": "lab-demonstrated",
+   "key_property": "Superhardness: (TiZrNbVHf)N ~63 GPa; (AlTiNbCrZr)N ~46 GPa — far above ~33 GPa for TiAlN.",
+   "improvement": "Single-phase high-entropy nitride films give superhard, wear- and oxidation-resistant coatings beyond TiAlN.",
+   "uses": "Cutting-tool, mould and wear-resistant hard coatings (sputter-deposited).",
+   "origin": "Multiple groups, ~2004 onward.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Atomic_structure_model_of_fcc_CoCrFeMnNi.png/640px-Atomic_structure_model_of_fcc_CoCrFeMnNi.png",
+   "source": "https://en.wikipedia.org/wiki/High-entropy_alloy",
+   "papers": [
+    {
+     "title": "Preparation and characterization of AlCrTaTiZr multi-element nitride coatings",
+     "authors": "Lai et al.",
+     "year": 2006,
+     "venue": "Surf. Coat. Technol.",
+     "doi": "10.1016/j.surfcoat.2006.06.048",
+     "url": "https://doi.org/10.1016/j.surfcoat.2006.06.048"
+    }
+   ]
+  },
+  {
+   "id": "vitreloy1",
+   "name": {
+    "en": "Vitreloy 1 (Zr-based bulk metallic glass)"
+   },
+   "category": "metallic glass",
+   "formula": "Zr41.2Ti13.8Cu12.5Ni10Be22.5",
+   "status": "commercial",
+   "key_property": "Yield strength ~1.9 GPa, elastic strain ~2% (~3× crystalline alloys), strength-to-weight >2× Ti/Al/Mg; casts amorphous in cm-thick sections.",
+   "improvement": "First easily-castable bulk metallic glass — very high strength & resilience plus near-net-shape moulding.",
+   "uses": "Golf-club faces, watch & phone casings, precision and defence parts (Liquidmetal/Materion).",
+   "origin": "Peker & Johnson, Caltech, 1993.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Bulk_Metallic_Glass_Sample.jpg/640px-Bulk_Metallic_Glass_Sample.jpg",
+   "source": "https://en.wikipedia.org/wiki/Amorphous_metal",
+   "papers": [
+    {
+     "title": "A highly processable metallic glass: Zr41.2Ti13.8Cu12.5Ni10.0Be22.5",
+     "authors": "Peker & Johnson",
+     "year": 1993,
+     "venue": "Appl. Phys. Lett.",
+     "doi": "10.1063/1.110520",
+     "url": "https://doi.org/10.1063/1.110520"
+    }
+   ]
+  },
+  {
+   "id": "pd-bmg",
+   "name": {
+    "en": "Pd-based damage-tolerant BMG"
+   },
+   "category": "metallic glass",
+   "formula": "Pd79Ag3.5P6Si9.5Ge2",
+   "status": "lab-demonstrated",
+   "key_property": "Combines ~1.5 GPa yield strength with fracture toughness exceeding ~200 MPa·m½ — rivalling the toughest crystalline metals.",
+   "improvement": "Extensive shear-band plasticity blunts cracks, overcoming the usual brittleness of metallic glasses.",
+   "uses": "Demonstrator for ultra-damage-tolerant glasses; biocompatible implants (Pd is costly).",
+   "origin": "Demetriou, Launey, Ritchie & Johnson, Caltech/LBNL, Nature Materials 2011.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Bulk_Metallic_Glass_Sample.jpg/640px-Bulk_Metallic_Glass_Sample.jpg",
+   "source": "https://en.wikipedia.org/wiki/Amorphous_metal",
+   "papers": [
+    {
+     "title": "A damage-tolerant glass",
+     "authors": "Demetriou et al.",
+     "year": 2011,
+     "venue": "Nature Materials",
+     "doi": "10.1038/nmat2930",
+     "url": "https://doi.org/10.1038/nmat2930"
+    }
+   ]
+  },
+  {
+   "id": "sam2x5",
+   "name": {
+    "en": "Amorphous steel SAM2X5 (Fe-based BMG)"
+   },
+   "category": "metallic glass",
+   "formula": "Fe49.7Cr17.7Mn1.9Mo7.4W1.6B15.2C3.8Si2.4",
+   "status": "research",
+   "key_property": "Hugoniot elastic limit ~8.6–11.8 GPa (a shock metric) and hardness above HV1200 (~2× ultra-high-strength steel); strong glass former.",
+   "improvement": "Extremely hard, high-elastic-limit iron glass with far better corrosion resistance than crystalline stainless.",
+   "uses": "Armour, wear/erosion- and corrosion-resistant coatings, nuclear-waste-container coatings (Navy/DOE).",
+   "origin": "DARPA Structural Amorphous Metals program, ~2000s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Bulk_Metallic_Glass_Sample.jpg/640px-Bulk_Metallic_Glass_Sample.jpg",
+   "source": "https://en.wikipedia.org/wiki/Amorphous_metal",
+   "papers": [
+    {
+     "title": "Fe-based bulk metallic glasses with diameter thickness larger than one centimeter",
+     "authors": "Ponnambalam et al.",
+     "year": 2004,
+     "venue": "J. Mater. Res.",
+     "doi": "10.1557/JMR.2004.0176",
+     "url": "https://doi.org/10.1557/JMR.2004.0176"
+    }
+   ]
+  },
+  {
+   "id": "metglas",
+   "name": {
+    "en": "Metglas 2605SA1 amorphous ribbon"
+   },
+   "category": "metallic glass",
+   "formula": "Fe78Si9B13 — melt-spun ribbon",
+   "status": "commercial",
+   "key_property": "Saturation induction 1.56 T, very high permeability and very low core loss; ribbon ~23 µm thick.",
+   "improvement": "No grain boundaries means dramatically lower transformer core loss than grain-oriented silicon steel.",
+   "uses": "Energy-efficient distribution-transformer cores, inductors, sensors, actuators.",
+   "origin": "Allied Signal/Metglas (melt-spinning by Pond & Duwez, Caltech, 1960).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Bulk_Metallic_Glass_Sample.jpg/640px-Bulk_Metallic_Glass_Sample.jpg",
+   "source": "https://en.wikipedia.org/wiki/Amorphous_metal"
+  },
+  {
+   "id": "he-bmg",
+   "name": {
+    "en": "High-entropy bulk metallic glass (Ti-Zr-Hf-Cu-Ni-Be)"
+   },
+   "category": "metallic glass",
+   "formula": "Ti16.7Zr16.7Hf16.7Cu16.7Ni16.7Be16.7",
+   "status": "lab-demonstrated",
+   "key_property": "Equiatomic high-entropy glass castable amorphous to >15 mm diameter — among the best glass-forming of any HE-BMG.",
+   "improvement": "Merges the high-mixing-entropy concept with the amorphous structure, broadening glass-forming compositions.",
+   "uses": "Bulk amorphous structural & precision components (research).",
+   "origin": "Reported ~2014.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Bulk_Metallic_Glass_Sample.jpg/640px-Bulk_Metallic_Glass_Sample.jpg",
+   "source": "https://en.wikipedia.org/wiki/Amorphous_metal",
+   "papers": [
+    {
+     "title": "High mixing entropy bulk metallic glasses",
+     "authors": "Gao et al.",
+     "year": 2011,
+     "venue": "J. Non-Cryst. Solids",
+     "doi": "10.1016/j.jnoncrysol.2011.07.016",
+     "url": "https://doi.org/10.1016/j.jnoncrysol.2011.07.016"
+    }
+   ]
+  },
+  {
+   "id": "maraging300",
+   "name": {
+    "en": "Maraging steel 300"
+   },
+   "category": "advanced steel",
+   "formula": "Fe-18Ni-9Co-5Mo-Ti, <0.03% C",
+   "status": "commercial",
+   "key_property": "Ultimate tensile strength ~2070 MPa (300 ksi) via age-hardened nanoscale intermetallic precipitates.",
+   "improvement": "High strength with good fracture toughness; near-zero carbon avoids brittleness of quench-hardened steels.",
+   "uses": "Rocket-motor casings, aerospace structural parts, high-performance gears & shafts, tooling.",
+   "origin": "International Nickel Company (INCO), 1960s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/%D0%90%D1%80%D0%BC%D0%B0%D1%82%D1%83%D1%80%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D0%BE%D0%BA%D0%B0%D1%82.jpg/640px-%D0%90%D1%80%D0%BC%D0%B0%D1%82%D1%83%D1%80%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D0%BE%D0%BA%D0%B0%D1%82.jpg",
+   "source": "https://en.wikipedia.org/wiki/Maraging_steel",
+   "papers": [
+    {
+     "title": "Modeling of precipitation hardening during the aging and overaging of 18Ni-Co-Mo-Ti maraging 300 steel",
+     "authors": "Pardal et al.",
+     "year": 2005,
+     "venue": "J. Alloys Compd.",
+     "doi": "10.1016/j.jallcom.2004.09.049",
+     "url": "https://doi.org/10.1016/j.jallcom.2004.09.049"
+    }
+   ]
+  },
+  {
+   "id": "maraging350",
+   "name": {
+    "en": "Maraging steel 350"
+   },
+   "category": "advanced steel",
+   "formula": "Fe-18Ni-12Co-4–5Mo, higher Ti, <0.03% C",
+   "status": "commercial",
+   "key_property": "Yield strength ~2400 MPa, UTS exceeding ~2500 MPa after heat treatment — among the strongest commercial maraging grades.",
+   "improvement": "Higher Co and Ti drive extra precipitation strengthening over grade 300.",
+   "uses": "High-load aerospace & defence components, ultra-high-strength tooling.",
+   "origin": "INCO maraging family, 1960s–70s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/%D0%90%D1%80%D0%BC%D0%B0%D1%82%D1%83%D1%80%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D0%BE%D0%BA%D0%B0%D1%82.jpg/640px-%D0%90%D1%80%D0%BC%D0%B0%D1%82%D1%83%D1%80%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D0%BE%D0%BA%D0%B0%D1%82.jpg",
+   "source": "https://en.wikipedia.org/wiki/Maraging_steel",
+   "papers": [
+    {
+     "title": "Precipitation in 18 wt% Ni maraging steel of grade 350",
+     "authors": "Tewari et al.",
+     "year": 2000,
+     "venue": "Acta Materialia",
+     "doi": "10.1016/S1359-6454(99)00370-5",
+     "url": "https://doi.org/10.1016/S1359-6454(99)00370-5"
+    }
+   ]
+  },
+  {
+   "id": "twip",
+   "name": {
+    "en": "TWIP steel (twinning-induced plasticity)"
+   },
+   "category": "advanced steel",
+   "formula": "Fe-(12–30)Mn-Si-Al-C, fully austenitic",
+   "status": "commercial",
+   "key_property": "Tensile strength typically >1000 MPa with elongation >50%; deformation twins act as moving grain boundaries.",
+   "improvement": "Exceptional strength-ductility combination far beyond conventional automotive steels; high energy absorption.",
+   "uses": "Automotive crash-absorbing structures, body-in-white, lightweighting.",
+   "origin": "High-Mn austenitic concept advanced 1990s–2000s (Grässel/Frommeyer).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/TWIP_and_TRIP_strengthening_mechanism.svg/640px-TWIP_and_TRIP_strengthening_mechanism.svg.png",
+   "source": "https://en.wikipedia.org/wiki/TWIP_steel",
+   "papers": [
+    {
+     "title": "High strength Fe-Mn-(Al, Si) TRIP/TWIP steels development",
+     "authors": "Grässel et al.",
+     "year": 2000,
+     "venue": "Int. J. Plasticity",
+     "doi": "10.1016/S0749-6419(00)00015-2",
+     "url": "https://doi.org/10.1016/S0749-6419(00)00015-2"
+    },
+    {
+     "title": "High manganese austenitic twinning induced plasticity steels: A review",
+     "authors": "Bouaziz et al.",
+     "year": 2011,
+     "venue": "Curr. Opin. Solid State Mater. Sci.",
+     "doi": "10.1016/j.cossms.2011.04.002",
+     "url": "https://doi.org/10.1016/j.cossms.2011.04.002"
+    }
+   ]
+  },
+  {
+   "id": "nanobainite",
+   "name": {
+    "en": "Nanostructured bainite (super-bainite)"
+   },
+   "category": "advanced steel",
+   "formula": "High-C, high-Si Fe-C-Si-Mn-Cr; <100 nm bainitic ferrite plates",
+   "status": "lab-demonstrated",
+   "key_property": "Tensile strength up to ~2.4 GPa with ~15% ductility; bainitic-ferrite plates under 100 nm thick formed by low-temperature isothermal transformation — no rapid quenching.",
+   "improvement": "Bulk nanoscale microstructure at ambient pressure; very high strength plus toughness from retained austenite.",
+   "uses": "Armour plate, bearings, wear-resistant high-strength parts.",
+   "origin": "Bhadeshia & Caballero, University of Cambridge, ~2000–2004.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Bainite_TEM.jpg/640px-Bainite_TEM.jpg",
+   "source": "https://en.wikipedia.org/wiki/Bainite",
+   "papers": [
+    {
+     "title": "Very strong bainite",
+     "authors": "Caballero & Bhadeshia",
+     "year": 2004,
+     "venue": "Curr. Opin. Solid State Mater. Sci.",
+     "doi": "10.1016/j.cossms.2004.09.005",
+     "url": "https://doi.org/10.1016/j.cossms.2004.09.005"
+    },
+    {
+     "title": "Nanostructured bainite",
+     "authors": "Bhadeshia",
+     "year": 2010,
+     "venue": "Proc. R. Soc. A",
+     "doi": "10.1098/rspa.2009.0407",
+     "url": "https://doi.org/10.1098/rspa.2009.0407"
+    }
+   ]
+  },
+  {
+   "id": "nanotwin-steel",
+   "name": {
+    "en": "Ultrastrong nanocrystalline / nanotwinned steel"
+   },
+   "category": "advanced steel",
+   "formula": "High-Mn austenitic (e.g. Fe-15Mn-0.6C-1.5Al), high-pressure-torsion processed",
+   "status": "lab-demonstrated",
+   "key_property": "Strength up to ~2.5–2.6 GPa — roughly ten times stronger than conventional coarse-grained stainless — via nanotwins, C segregation and nanograins.",
+   "improvement": "Among the highest strengths reported for any steel, combining several nanoscale strengthening mechanisms.",
+   "uses": "Research benchmark for ultra-high-strength structural and protective materials.",
+   "origin": "Demonstrated via high-pressure torsion, Nature Communications 2018.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/C60-rods.png/640px-C60-rods.png",
+   "source": "https://en.wikipedia.org/wiki/Nanocrystalline_material",
+   "papers": [
+    {
+     "title": "Strengthening materials by engineering coherent internal boundaries at the nanoscale",
+     "authors": "Lu et al.",
+     "year": 2009,
+     "venue": "Science",
+     "doi": "10.1126/science.1159610",
+     "url": "https://doi.org/10.1126/science.1159610"
+    }
+   ]
+  },
+  {
+   "id": "dp-supersteel",
+   "name": {
+    "en": "D&P 'super steel' (deformed & partitioned)"
+   },
+   "category": "advanced steel",
+   "formula": "Medium-Mn steel, warm+cold rolled and annealed",
+   "status": "lab-demonstrated",
+   "key_property": "Yield strength ~2.2 GPa with ~16% uniform elongation; high dislocation density raises both strength and ductility.",
+   "improvement": "Best yield-strength/uniform-elongation combination among high-strength metals at ~1/5 the cost of incumbent aerospace steel.",
+   "uses": "Potential aerospace & defence structures, lightweight high-strength components.",
+   "origin": "HKU-led team (M.X. Huang et al.), Science 2017.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/%D0%90%D1%80%D0%BC%D0%B0%D1%82%D1%83%D1%80%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D0%BE%D0%BA%D0%B0%D1%82.jpg/640px-%D0%90%D1%80%D0%BC%D0%B0%D1%82%D1%83%D1%80%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D0%BE%D0%BA%D0%B0%D1%82.jpg",
+   "source": "https://en.wikipedia.org/wiki/Steel",
+   "papers": [
+    {
+     "title": "High dislocation density-induced large ductility in deformed and partitioned steels",
+     "authors": "He et al.",
+     "year": 2017,
+     "venue": "Science",
+     "doi": "10.1126/science.aan0177",
+     "url": "https://doi.org/10.1126/science.aan0177"
+    }
+   ]
+  },
+  {
+   "id": "strenx",
+   "name": {
+    "en": "Strenx 1300 ultra-high-strength structural steel"
+   },
+   "category": "advanced steel",
+   "formula": "Low-alloy quenched-and-tempered structural steel",
+   "status": "commercial",
+   "key_property": "Minimum yield strength 1300 MPa (188 ksi) — among the strongest off-the-shelf structural plate.",
+   "improvement": "Far higher yield than ordinary structural steel, enabling major weight savings in load-bearing structures.",
+   "uses": "Crane booms, lifting & handling equipment, trailers, heavy machine frames.",
+   "origin": "SSAB (brand 2015; lineage from Weldox/Domex).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/%D0%90%D1%80%D0%BC%D0%B0%D1%82%D1%83%D1%80%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D0%BE%D0%BA%D0%B0%D1%82.jpg/640px-%D0%90%D1%80%D0%BC%D0%B0%D1%82%D1%83%D1%80%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D0%BE%D0%BA%D0%B0%D1%82.jpg",
+   "source": "https://en.wikipedia.org/wiki/Ultra-high-strength_steel"
+  },
+  {
+   "id": "hadfield",
+   "name": {
+    "en": "Hadfield manganese steel (mangalloy)"
+   },
+   "category": "advanced steel",
+   "formula": "Fe-(11.5–14)Mn-(1.0–1.4)C, austenitic",
+   "status": "commercial",
+   "key_property": "Work-hardens dramatically under impact (surface to ~550 BHN) while the core stays tough — extreme abrasion/impact wear resistance.",
+   "improvement": "Self-hardening surface under service loads; modern high-Mn grades add cryogenic toughness.",
+   "uses": "Rock-crusher jaws, rail crossings/frogs, excavator teeth, LNG/cryogenic structures.",
+   "origin": "Invented by Sir Robert Hadfield, 1882.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/M1917helmet.jpg/640px-M1917helmet.jpg",
+   "source": "https://en.wikipedia.org/wiki/Mangalloy",
+   "papers": [
+    {
+     "title": "Hadfield's Manganese Steel",
+     "authors": "Hadfield",
+     "year": 1888,
+     "venue": "Science",
+     "doi": "10.1126/science.ns-12.306.284.b",
+     "url": "https://doi.org/10.1126/science.ns-12.306.284.b"
+    },
+    {
+     "title": "Hadfield manganese austenitic steel: a review of manufacturing processes and properties",
+     "authors": "Sabzi et al.",
+     "year": 2019,
+     "venue": "Mater. Res. Express",
+     "doi": "10.1088/2053-1591/ab3ee3",
+     "url": "https://doi.org/10.1088/2053-1591/ab3ee3"
+    }
+   ]
+  },
+  {
+   "id": "cmsx4",
+   "name": {
+    "en": "CMSX-4 single-crystal nickel superalloy"
+   },
+   "category": "superalloy",
+   "formula": "Ni-base single crystal, ~3% Re + Cr,Co,W,Ta,Al,Ti",
+   "status": "commercial",
+   "key_property": "Creep & oxidation resistance to ~1150 °C; rhenium gives ~28 °C capability gain over 1st-generation alloys; ~70% γ′ volume fraction.",
+   "improvement": "Single-crystal casting eliminates grain boundaries, hugely improving creep life vs polycrystalline superalloys.",
+   "uses": "Gas-turbine and jet-engine turbine blades and vanes.",
+   "origin": "Cannon-Muskegon Corporation, 2nd-generation single-crystal alloy (1980s).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Effects_of_Re%2C_W_and_Co_on_dislocation_nucleation_at_the_crack_tip_in_the_%CE%B3-phase_of_Ni-based_single-crystal_superalloys_by_atomistic_simulation.pdf/page1-960px-Effects_of_Re%2C_W_and_Co_on_dislocation_nucleation_at_the_crack_tip_in_the_%CE%B3-phase_of_Ni-based_single-crystal_superalloys_by_atomistic_simulation.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Single_crystal_(superalloy)",
+   "papers": [
+    {
+     "title": "Development of two rhenium-containing superalloys for single-crystal blade and directionally solidified vane applications",
+     "authors": "Harris et al.",
+     "year": 1993,
+     "venue": "J. Mater. Eng. Perform.",
+     "doi": "10.1007/BF02661730",
+     "url": "https://doi.org/10.1007/BF02661730"
+    }
+   ]
+  },
+  {
+   "id": "renen6",
+   "name": {
+    "en": "CMSX-10 / René N6 (3rd-gen single crystal)"
+   },
+   "category": "superalloy",
+   "formula": "Ni-base single crystal, ~6% Re, high refractory, low Cr",
+   "status": "commercial",
+   "key_property": "Highest creep-rupture resistance of nickel single crystals; ~30 °C stronger than 2nd-gen; density up to ~9.1 g/cm³.",
+   "improvement": "Doubled rhenium pushes temperature capability higher (trade-off: TCP-phase risk, higher density).",
+   "uses": "Most demanding hot-section turbine blades in advanced aero engines.",
+   "origin": "CMSX-10 (Cannon-Muskegon) & René N6 (GE), mid-1990s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Effects_of_Re%2C_W_and_Co_on_dislocation_nucleation_at_the_crack_tip_in_the_%CE%B3-phase_of_Ni-based_single-crystal_superalloys_by_atomistic_simulation.pdf/page1-960px-Effects_of_Re%2C_W_and_Co_on_dislocation_nucleation_at_the_crack_tip_in_the_%CE%B3-phase_of_Ni-based_single-crystal_superalloys_by_atomistic_simulation.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Single_crystal_(superalloy)",
+   "papers": [
+    {
+     "title": "René N6: Third Generation Single Crystal Superalloy",
+     "authors": "Walston et al.",
+     "year": 1996,
+     "venue": "Superalloys 1996 (TMS)",
+     "doi": "10.7449/1996/Superalloys_1996_27_34",
+     "url": "https://doi.org/10.7449/1996/Superalloys_1996_27_34"
+    }
+   ]
+  },
+  {
+   "id": "ods",
+   "name": {
+    "en": "Oxide-dispersion-strengthened (ODS) alloy"
+   },
+   "category": "superalloy",
+   "formula": "Fe-Cr-Al + nanoscale Y₂O₃ dispersoids (e.g. MA956, PM2000)",
+   "status": "commercial",
+   "key_property": "Retains strength and oxidation resistance to ~1200 °C; nanoscale yttria dispersoids pin dislocations and grain boundaries.",
+   "improvement": "High-temperature creep strength and radiation-damage resistance beyond conventional superalloys/steels.",
+   "uses": "Nuclear (fission/fusion) structural components, high-temperature heat exchangers and combustors.",
+   "origin": "Mechanically-alloyed ODS family (INCO MA956, Plansee PM2000), 1970s–90s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Processing%2C_microstructure%2C_and_material_property_relationships_following_friction_stir_welding_of_oxide_dispersion_strengthened_steels_%28IA_processingmicros1094537582%29.pdf/page1-960px-thumbnail.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Oxide_dispersion-strengthened_alloy",
+   "papers": [
+    {
+     "title": "Dispersion strengthened superalloys by mechanical alloying",
+     "authors": "Benjamin",
+     "year": 1970,
+     "venue": "Metall. Trans.",
+     "doi": "10.1007/BF03037835",
+     "url": "https://doi.org/10.1007/BF03037835"
+    }
+   ]
+  },
+  {
+   "id": "mxene",
+   "name": {
+    "en": "MXene (Ti₃C₂Tₓ)"
+   },
+   "category": "2D material",
+   "formula": "Ti3C2Tx — 2D transition-metal carbide",
+   "status": "lab-demonstrated",
+   "key_property": "Metallic conductivity up to ~15,000 S/cm; volumetric capacitance ~900 F/cm³ (hydrogel electrodes up to 1500 F/cm³).",
+   "improvement": "Metal-like conductivity with a hydrophilic, tunable surface and far higher volumetric capacitance than activated carbon.",
+   "uses": "Supercapacitors, Li/Na-ion electrodes, EMI shielding, water desalination, gas/biosensors, transparent conductors.",
+   "origin": "Drexel University (Gogotsi & Barsoum; Naguib), 2011.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Enhancement_of_microwave_absorption_bandwidth_of_MXene_nanocomposites_through_macroscopic_design.pdf/page1-960px-Enhancement_of_microwave_absorption_bandwidth_of_MXene_nanocomposites_through_macroscopic_design.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/MXene",
+   "papers": [
+    {
+     "title": "Two-Dimensional Nanocrystals Produced by Exfoliation of Ti3AlC2",
+     "authors": "Naguib et al.",
+     "year": 2011,
+     "venue": "Advanced Materials",
+     "doi": "10.1002/adma.201102306",
+     "url": "https://doi.org/10.1002/adma.201102306"
+    },
+    {
+     "title": "2D metal carbides and nitrides (MXenes) for energy storage",
+     "authors": "Anasori et al.",
+     "year": 2017,
+     "venue": "Nature Reviews Materials",
+     "doi": "10.1038/natrevmats.2016.98",
+     "url": "https://doi.org/10.1038/natrevmats.2016.98"
+    }
+   ]
+  },
+  {
+   "id": "ti3sic2",
+   "name": {
+    "en": "Titanium silicon carbide (MAX phase)"
+   },
+   "category": "MAX phase",
+   "formula": "Ti3SiC2 — layered nanolaminate",
+   "status": "research",
+   "key_property": "~3× stiffer than titanium yet machinable with a hacksaw; recovers fully from ~1 GPa compression at room temperature.",
+   "improvement": "Unlike brittle ceramics it is machinable, thermal-shock- and damage-tolerant while keeping ceramic stiffness.",
+   "uses": "High-temperature structural parts, heating elements, electrical contacts, MXene precursor.",
+   "origin": "Drexel University, Barsoum & El-Raghy, first dense synthesis 1996.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/MAX_phases_periodic_table.png/640px-MAX_phases_periodic_table.png",
+   "source": "https://en.wikipedia.org/wiki/MAX_phases",
+   "papers": [
+    {
+     "title": "Synthesis and Characterization of a Remarkable Ceramic: Ti3SiC2",
+     "authors": "Barsoum & El-Raghy",
+     "year": 1996,
+     "venue": "J. Am. Ceram. Soc.",
+     "doi": "10.1111/j.1151-2916.1996.tb08018.x",
+     "url": "https://doi.org/10.1111/j.1151-2916.1996.tb08018.x"
+    },
+    {
+     "title": "The MN+1AXN phases: A new class of solids",
+     "authors": "Barsoum",
+     "year": 2000,
+     "venue": "Prog. Solid State Chem.",
+     "doi": "10.1016/S0079-6786(00)00006-6",
+     "url": "https://doi.org/10.1016/S0079-6786(00)00006-6"
+    }
+   ]
+  },
+  {
+   "id": "ti2alc",
+   "name": {
+    "en": "Titanium aluminium carbide (Ti₂AlC, MAX phase)"
+   },
+   "category": "MAX phase",
+   "formula": "Ti2AlC — layered carbide",
+   "status": "research",
+   "key_property": "Machinable, creep- and fatigue-resistant; forms a dense, self-healing alumina scale giving excellent oxidation resistance above ~1000 °C.",
+   "improvement": "Self-healing alumina scale gives oxidation resistance approaching alumina formers, while staying conductive and machinable.",
+   "uses": "High-temperature oxidation-resistant coatings, heating elements, burner nozzles, MXene precursor.",
+   "origin": "MAX-phase class (Barsoum et al.), studied from the late 1990s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/MAX_phases_periodic_table.png/640px-MAX_phases_periodic_table.png",
+   "source": "https://en.wikipedia.org/wiki/MAX_phases",
+   "papers": [
+    {
+     "title": "Processing and characterization of Ti2AlC, Ti2AlN, and Ti2AlC0.5N0.5",
+     "authors": "Barsoum et al.",
+     "year": 2000,
+     "venue": "Metall. Mater. Trans. A",
+     "doi": "10.1007/s11661-006-0243-3",
+     "url": "https://doi.org/10.1007/s11661-006-0243-3"
+    }
+   ]
+  },
+  {
+   "id": "borophene",
+   "name": {
+    "en": "Borophene"
+   },
+   "category": "2D material",
+   "formula": "B — single-atom boron sheet",
+   "status": "lab-demonstrated",
+   "key_property": "Metallic 2D sheet, more flexible than graphene (lowest reported bending stiffness); predicted specific strength above graphene; theoretical H₂ storage >15 wt%.",
+   "improvement": "Lightest experimentally realised 2D metal — flexible, metallic, with high theoretical hydrogen storage.",
+   "uses": "Flexible electronics/interconnects, battery anodes, hydrogen storage, composite reinforcement.",
+   "origin": "First confirmed 2015 on Ag(111) (Argonne/Northwestern and a separate team).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Crystal_structures_of_borophenes.png/960px-Crystal_structures_of_borophenes.png",
+   "source": "https://en.wikipedia.org/wiki/Borophene",
+   "papers": [
+    {
+     "title": "Synthesis of borophenes: Anisotropic, two-dimensional boron polymorphs",
+     "authors": "Mannix et al.",
+     "year": 2015,
+     "venue": "Science",
+     "doi": "10.1126/science.aad1080",
+     "url": "https://doi.org/10.1126/science.aad1080"
+    }
+   ]
+  },
+  {
+   "id": "hbn",
+   "name": {
+    "en": "Hexagonal boron nitride ('white graphene')"
+   },
+   "category": "2D material",
+   "formula": "BN — atomically thin hexagonal sheet",
+   "status": "lab-demonstrated",
+   "key_property": "Wide-bandgap insulator ~5.9–6.4 eV; atomically-thin h-BN reaches ~751 W/m·K thermal conductivity; ~2% lattice mismatch with graphene.",
+   "improvement": "An atomically-flat, defect-free dielectric that dramatically boosts 2D-device mobility vs SiO₂; excellent thermal/chemical stability.",
+   "uses": "Dielectric substrate/encapsulation for 2D devices, deep-UV emitters, high-temperature lubricant, ceramics.",
+   "origin": "Bulk h-BN long known; atomically-thin form studied from the late 2000s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Hbncrystals.jpg",
+   "source": "https://en.wikipedia.org/wiki/Hexagonal_boron_nitride",
+   "papers": [
+    {
+     "title": "Boron nitride substrates for high-quality graphene electronics",
+     "authors": "Dean et al.",
+     "year": 2010,
+     "venue": "Nature Nanotechnology",
+     "doi": "10.1038/nnano.2010.172",
+     "url": "https://doi.org/10.1038/nnano.2010.172"
+    }
+   ]
+  },
+  {
+   "id": "silicene",
+   "name": {
+    "en": "Silicene"
+   },
+   "category": "2D material",
+   "formula": "Si — buckled single-atom silicon sheet",
+   "status": "lab-demonstrated",
+   "key_property": "Buckled honeycomb silicon; a room-temperature field-effect transistor was demonstrated in 2015; tunable bandgap ~0–0.1 eV.",
+   "improvement": "Silicon-compatible 2D analogue of graphene with a tunable bandgap — potentially integrates with existing CMOS.",
+   "uses": "Field-effect & tunnel transistors, low-power electronics, hydrogen storage, supercapacitors.",
+   "origin": "First observed 2010 on silver; FET demonstrated 2015.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Silicene-Ag_STM5_crop.jpg/640px-Silicene-Ag_STM5_crop.jpg",
+   "source": "https://en.wikipedia.org/wiki/Silicene",
+   "papers": [
+    {
+     "title": "Silicene: Compelling Experimental Evidence for Graphenelike Two-Dimensional Silicon",
+     "authors": "Vogt et al.",
+     "year": 2012,
+     "venue": "Phys. Rev. Lett.",
+     "doi": "10.1103/PhysRevLett.108.155501",
+     "url": "https://doi.org/10.1103/PhysRevLett.108.155501"
+    }
+   ]
+  },
+  {
+   "id": "phosphorene",
+   "name": {
+    "en": "Phosphorene (black phosphorus monolayer)"
+   },
+   "category": "2D material",
+   "formula": "P — single-layer black phosphorus",
+   "status": "lab-demonstrated",
+   "key_property": "Direct, thickness-tunable bandgap ~0.3 eV (bulk) to ~1.88 eV (monolayer); high carrier mobility; strongly anisotropic puckered structure.",
+   "improvement": "Fills the gap between zero-gap graphene and large-gap TMDs, with high mobility and useful in-plane anisotropy.",
+   "uses": "Transistors, photodetectors/optoelectronics, IR devices, battery anodes (limited by air degradation).",
+   "origin": "Bulk black phosphorus 1914; monolayer isolated 2014.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Orthorhombic_bulk_black_phosphorus.png/640px-Orthorhombic_bulk_black_phosphorus.png",
+   "source": "https://en.wikipedia.org/wiki/Phosphorene",
+   "papers": [
+    {
+     "title": "Black phosphorus field-effect transistors",
+     "authors": "Li et al.",
+     "year": 2014,
+     "venue": "Nature Nanotechnology",
+     "doi": "10.1038/nnano.2014.35",
+     "url": "https://doi.org/10.1038/nnano.2014.35"
+    },
+    {
+     "title": "Phosphorene: An Unexplored 2D Semiconductor with a High Hole Mobility",
+     "authors": "Liu et al.",
+     "year": 2014,
+     "venue": "ACS Nano",
+     "doi": "10.1021/nn501226z",
+     "url": "https://doi.org/10.1021/nn501226z"
+    }
+   ]
+  },
+  {
+   "id": "mos2",
+   "name": {
+    "en": "Molybdenum disulfide monolayer"
+   },
+   "category": "2D material",
+   "formula": "MoS₂ — single-layer transition-metal dichalcogenide",
+   "status": "lab-demonstrated",
+   "key_property": "Direct ~1.8 eV bandgap in the monolayer; first single-layer transistor (2011) had on/off ratio ~10⁸; a 2D MoS₂ microprocessor was built in 2017.",
+   "improvement": "Provides a real semiconducting bandgap and high on/off switching that gapless graphene lacks.",
+   "uses": "Transistors & microprocessors, photodetectors, hydrogen-evolution catalysis, dry lubricant, flexible electronics.",
+   "origin": "Natural molybdenite; first monolayer FET 2011 (EPFL, Kis group).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/MoS2chips.jpg/640px-MoS2chips.jpg",
+   "source": "https://en.wikipedia.org/wiki/Molybdenum_disulfide",
+   "papers": [
+    {
+     "title": "Single-layer MoS2 transistors",
+     "authors": "Radisavljevic et al.",
+     "year": 2011,
+     "venue": "Nature Nanotechnology",
+     "doi": "10.1038/nnano.2010.279",
+     "url": "https://doi.org/10.1038/nnano.2010.279"
+    }
+   ]
+  },
+  {
+   "id": "diamene",
+   "name": {
+    "en": "Diamene"
+   },
+   "category": "2D material",
+   "formula": "C — bilayer graphene → diamond-like film under impact",
+   "status": "lab-demonstrated",
+   "key_property": "Two graphene layers that transiently become as stiff as bulk diamond under room-temperature impact, then revert.",
+   "improvement": "Switches from foil-light flexible film to harder-than-diamond on impact — far lighter than rigid diamond coatings.",
+   "uses": "Ultralight wear-resistant coatings, flexible bulletproof films, pressure-switchable electronics.",
+   "origin": "CUNY Advanced Science Research Center (Riedo group), Nature Nanotechnology 2017–2018.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Organic_photographic_developers_%28IA_organicphotograp00wein%29.pdf/page1-500px-Organic_photographic_developers_%28IA_organicphotograp00wein%29.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Diamane",
+   "papers": [
+    {
+     "title": "Ultrahard carbon film from epitaxial two-layer graphene",
+     "authors": "Gao et al.",
+     "year": 2018,
+     "venue": "Nature Nanotechnology",
+     "doi": "10.1038/s41565-017-0023-9",
+     "url": "https://doi.org/10.1038/s41565-017-0023-9"
+    }
+   ]
+  },
+  {
+   "id": "gamma-tial",
+   "name": {
+    "en": "Gamma titanium aluminide (γ-TiAl)"
+   },
+   "category": "intermetallic",
+   "formula": "TiAl — ordered intermetallic",
+   "status": "commercial",
+   "key_property": "Density ~4.0 g/cm³ (about half that of nickel superalloys) while keeping strength and oxidation resistance up to ~1000 °C.",
+   "improvement": "Near half the weight of nickel superalloys at comparable high-temperature performance (drawback: low room-temperature ductility).",
+   "uses": "Low-pressure jet-engine turbine blades (GE GEnx on Boeing 787/747-8), automotive turbocharger wheels.",
+   "origin": "First large-scale jet-engine use in GE GEnx, in service 2011.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Plastic_instability_of_platinum_modified_and_unmodified_aluminide_coatings_during_1100_C_cyclic_testing._%28IA_plasticinstabili00mccl%29.pdf/page1-960px-Plastic_instability_of_platinum_modified_and_unmodified_aluminide_coatings_during_1100_C_cyclic_testing._%28IA_plasticinstabili00mccl%29.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Titanium_aluminide",
+   "papers": [
+    {
+     "title": "Intermetallic alloys based on gamma titanium aluminide",
+     "authors": "Kim",
+     "year": 1989,
+     "venue": "JOM",
+     "doi": "10.1007/BF03220267",
+     "url": "https://doi.org/10.1007/BF03220267"
+    }
+   ]
+  },
+  {
+   "id": "ni3al",
+   "name": {
+    "en": "Nickel aluminide (Ni₃Al)"
+   },
+   "category": "intermetallic",
+   "formula": "Ni3Al — ordered L1₂ structure",
+   "status": "commercial",
+   "key_property": "Anomalous yield strength that rises with temperature up to ~600–700 °C; melting point ~1385 °C; good oxidation resistance.",
+   "improvement": "Strengthens superalloys (as the γ′ precipitate) far better at high temperature than disordered alloys.",
+   "uses": "γ′ strengthening phase in nickel superalloys; furnace fixtures, dies, high-temperature parts (B-doped for ductility).",
+   "origin": "Ductilised polycrystalline Ni₃Al developed at Oak Ridge (C.T. Liu, 1980s).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/An_investigation_of_the_hot_corrosion_protectivity_behavior_of_platinum_modified_aluminide_coatings_on_nickel-based_superalloys._%28IA_investigationofh00malu%29.pdf/page1-960px-An_investigation_of_the_hot_corrosion_protectivity_behavior_of_platinum_modified_aluminide_coatings_on_nickel-based_superalloys._%28IA_investigationofh00malu%29.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Nickel_aluminide",
+   "papers": [
+    {
+     "title": "Ductility improvement of Ni3Al by boron addition",
+     "authors": "Aoki & Izumi",
+     "year": 1979,
+     "venue": "J. Jpn. Inst. Met.",
+     "doi": "10.2320/jinstmet1952.43.12_1190",
+     "url": "https://doi.org/10.2320/jinstmet1952.43.12_1190"
+    },
+    {
+     "title": "Effect of boron on grain-boundaries in Ni3Al",
+     "authors": "Liu et al.",
+     "year": 1985,
+     "venue": "Acta Metallurgica",
+     "doi": "10.1016/0001-6160(85)90139-7",
+     "url": "https://doi.org/10.1016/0001-6160(85)90139-7"
+    }
+   ]
+  },
+  {
+   "id": "wc-co",
+   "name": {
+    "en": "Tungsten carbide–cobalt cermet (WC-Co)"
+   },
+   "category": "cermet",
+   "formula": "WC-Co — carbide grains in a cobalt binder",
+   "status": "commercial",
+   "key_property": "Vickers hardness ~1200–2200 HV with modulus ~450–650 GPa, tuned by cobalt content and WC grain size.",
+   "improvement": "Combines extreme carbide hardness/wear resistance with cobalt-binder toughness — vastly outlasting tool steels.",
+   "uses": "Cutting inserts, milling/turning tools, mining & drill bits, dies, wear parts.",
+   "origin": "Cemented carbide commercialised in the 1920s–30s (Krupp/WIDIA); nanograined grades from the 1990s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Inserti_widia.jpg/640px-Inserti_widia.jpg",
+   "source": "https://en.wikipedia.org/wiki/Cemented_carbide",
+   "papers": [
+    {
+     "title": "Cemented carbide microstructures: a review",
+     "authors": "García et al.",
+     "year": 2019,
+     "venue": "Int. J. Refract. Met. Hard Mater.",
+     "doi": "10.1016/j.ijrmhm.2018.12.004",
+     "url": "https://doi.org/10.1016/j.ijrmhm.2018.12.004"
+    }
+   ]
+  },
+  {
+   "id": "al-foam",
+   "name": {
+    "en": "Closed-cell aluminium foam"
+   },
+   "category": "metal foam",
+   "formula": "Al matrix with sealed gas-filled pores (~0.1–0.6 g/cm³)",
+   "status": "commercial",
+   "key_property": "Density 5–25% of solid aluminium with high specific stiffness and excellent crash energy absorption at near-constant plateau stress.",
+   "improvement": "Better stiffness-to-weight and impact absorption than solid sheet; non-combustible vs polymer foam.",
+   "uses": "Automotive crash absorbers, lightweight sandwich panels, sound/vibration damping, biomedical scaffolds.",
+   "origin": "Commercialised 1990s–2000s (Alulight/Cymat/Alporas).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Aluminium_foam.jpg/640px-Aluminium_foam.jpg",
+   "source": "https://en.wikipedia.org/wiki/Metal_foam",
+   "papers": [
+    {
+     "title": "Manufacture, characterisation and application of cellular metals and metal foams",
+     "authors": "Banhart",
+     "year": 2001,
+     "venue": "Prog. Mater. Sci.",
+     "doi": "10.1016/S0079-6425(00)00002-5",
+     "url": "https://doi.org/10.1016/S0079-6425(00)00002-5"
+    }
+   ]
+  },
+  {
+   "id": "opencell-foam",
+   "name": {
+    "en": "Open-cell metal foam"
+   },
+   "category": "metal foam",
+   "formula": "Reticulated interconnected-pore metal (Al, Ni, Cu)",
+   "status": "commercial",
+   "key_property": "Up to ~80–97% porosity with continuous open pores — very high surface area and permeability.",
+   "improvement": "Combines structural support with through-flow heat exchange and filtration impossible in solid metal.",
+   "uses": "Heat exchangers/sinks, catalyst supports, filters, electrodes, flame arrestors.",
+   "origin": "Developed mid-20th century onward (e.g. Duocel by ERG Aerospace).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Aluminium_foam.jpg/640px-Aluminium_foam.jpg",
+   "source": "https://en.wikipedia.org/wiki/Metal_foam",
+   "papers": [
+    {
+     "title": "Manufacture, characterisation and application of cellular metals and metal foams",
+     "authors": "Banhart",
+     "year": 2001,
+     "venue": "Prog. Mater. Sci.",
+     "doi": "10.1016/S0079-6425(00)00002-5",
+     "url": "https://doi.org/10.1016/S0079-6425(00)00002-5"
+    }
+   ]
+  },
+  {
+   "id": "syntactic-foam",
+   "name": {
+    "en": "Syntactic foam"
+   },
+   "category": "metal foam",
+   "formula": "Matrix (polymer/metal/ceramic) filled with hollow microspheres",
+   "status": "commercial",
+   "key_property": "Closed-porosity composite with tailorable low density (~0.4–0.7 g/cm³) plus high compressive and hydrostatic crush strength.",
+   "improvement": "Better compressive and pressure resistance per weight than open foams; buoyant at depth.",
+   "uses": "Deep-sea buoyancy modules and ROV floats, aerospace cores, marine & defence structures.",
+   "origin": "Developed in the 1960s for deep-sea buoyancy.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Syntacticfoam.JPG/640px-Syntacticfoam.JPG",
+   "source": "https://en.wikipedia.org/wiki/Syntactic_foam",
+   "papers": [
+    {
+     "title": "Applications of Polymer Matrix Syntactic Foams",
+     "authors": "Gupta et al.",
+     "year": 2014,
+     "venue": "JOM",
+     "doi": "10.1007/s11837-013-0796-8",
+     "url": "https://doi.org/10.1007/s11837-013-0796-8"
+    }
+   ]
+  },
+  {
+   "id": "nanocrystalline",
+   "name": {
+    "en": "Nanocrystalline metal"
+   },
+   "category": "exotic / nanostructured",
+   "formula": "Polycrystalline metal with grain size <100 nm",
+   "status": "commercial",
+   "key_property": "Hardness and yield strength several times the coarse-grained counterpart via Hall-Petch refinement (e.g. nanocrystalline Ni up to ~6× harder).",
+   "improvement": "Much higher strength, wear and corrosion resistance than conventional microcrystalline metals.",
+   "uses": "Wear-resistant coatings, sporting goods, MEMS, structural plating (e.g. Integran Nanovate).",
+   "origin": "Field pioneered in the 1980s (Gleiter); commercialised by Integran.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/C60-rods.png/640px-C60-rods.png",
+   "source": "https://en.wikipedia.org/wiki/Nanocrystalline_material",
+   "papers": [
+    {
+     "title": "Mechanical properties of nanocrystalline materials",
+     "authors": "Meyers et al.",
+     "year": 2006,
+     "venue": "Prog. Mater. Sci.",
+     "doi": "10.1016/j.pmatsci.2005.08.003",
+     "url": "https://doi.org/10.1016/j.pmatsci.2005.08.003"
+    }
+   ]
+  },
+  {
+   "id": "nanotwin-cu",
+   "name": {
+    "en": "Nanotwinned copper"
+   },
+   "category": "exotic / nanostructured",
+   "formula": "Pure Cu with high-density coherent nanotwins (~15 nm spacing)",
+   "status": "lab-demonstrated",
+   "key_property": "Tensile strength up to ~10× coarse-grained copper while keeping near-pure-copper electrical conductivity.",
+   "improvement": "Breaks the usual strength-vs-conductivity trade-off — twin boundaries block dislocations but barely scatter electrons.",
+   "uses": "High-performance interconnects, electrodes, electrical contacts, MEMS.",
+   "origin": "Lu et al., Institute of Metal Research (Shenyang), Science 2004 & 2009.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/1/10/Nanotwinned_copper_with_highlighted_grain_boundaries.jpg",
+   "source": "https://en.wikipedia.org/wiki/Twinning",
+   "papers": [
+    {
+     "title": "Ultrahigh Strength and High Electrical Conductivity in Copper",
+     "authors": "Lu et al.",
+     "year": 2004,
+     "venue": "Science",
+     "doi": "10.1126/science.1092905",
+     "url": "https://doi.org/10.1126/science.1092905"
+    }
+   ]
+  },
+  {
+   "id": "gum-metal",
+   "name": {
+    "en": "Gum metal (Ti-Nb-Ta-Zr-O)"
+   },
+   "category": "exotic / ultralight alloy",
+   "formula": "β-Ti alloy, e.g. Ti-23Nb-0.7Ta-2Zr-1.2O (at%)",
+   "status": "research",
+   "key_property": "Low Young's modulus ~40 GPa with strength >1100 MPa and ~2.5% elastic strain; deforms with little or no work hardening.",
+   "improvement": "Far lower modulus and higher elastic deformability than conventional Ti alloys — trace oxygen enables near dislocation-free deformation.",
+   "uses": "Biomedical implants (bone-matching stiffness), eyeglass frames, springs, precision instruments.",
+   "origin": "Toyota Central R&D Labs, 2003 (Saito et al., Science).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/The_practical_brass_and_iron_founder%27s_guide%3B_a_treatise_on_brass_founding%2C_moulding%2C_the_metals_and_their_alloys%2C_etc_%28IA_practicalbrassir00larkrich%29.pdf/page1-500px-The_practical_brass_and_iron_founder%27s_guide%3B_a_treatise_on_brass_founding%2C_moulding%2C_the_metals_and_their_alloys%2C_etc_%28IA_practicalbrassir00larkrich%29.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Gum_metal",
+   "papers": [
+    {
+     "title": "Multifunctional Alloys Obtained via a Dislocation-Free Plastic Deformation Mechanism",
+     "authors": "Saito et al.",
+     "year": 2003,
+     "venue": "Science",
+     "doi": "10.1126/science.1081957",
+     "url": "https://doi.org/10.1126/science.1081957"
+    }
+   ]
+  },
+  {
+   "id": "mg-li",
+   "name": {
+    "en": "Magnesium-lithium ultralight alloy"
+   },
+   "category": "exotic / ultralight alloy",
+   "formula": "Mg-Li based (e.g. LA141, Mg-14Li-1Al)",
+   "status": "commercial",
+   "key_property": "Density as low as ~1.35 g/cm³ — the lightest structural metallic alloys (lighter than Mg ~1.74 and Al ~2.7).",
+   "improvement": "Lower density and improved formability vs conventional Mg/Al alloys; high specific stiffness.",
+   "uses": "Aerospace & satellite structures, electronics housings, armour, portable-device frames.",
+   "origin": "Developed mid-20th century; LA141 in US aerospace since the 1960s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Scientific_articles_AZ91_AZ31.png/640px-Scientific_articles_AZ91_AZ31.png",
+   "source": "https://en.wikipedia.org/wiki/Magnesium_alloy",
+   "papers": [
+    {
+     "title": "Recent progress in magnesium-lithium alloys",
+     "authors": "Wu et al.",
+     "year": 2015,
+     "venue": "Int. Mater. Rev.",
+     "doi": "10.1179/1743280414Y.0000000044",
+     "url": "https://doi.org/10.1179/1743280414Y.0000000044"
+    }
+   ]
+  },
+  {
+   "id": "galinstan",
+   "name": {
+    "en": "Galinstan (room-temperature liquid metal)"
+   },
+   "category": "exotic",
+   "formula": "~68.5% Ga, 21.5% In, 10% Sn (eutectic GaInSn)",
+   "status": "commercial",
+   "key_property": "Liquid at room temperature (eutectic melts ~11 °C; branded Galinstan ~−19 °C); boils >1300 °C; non-toxic, mercury-free; conductive.",
+   "improvement": "A mercury-free, reconfigurable, self-healing liquid-metal conductor with high thermal conductivity.",
+   "uses": "Stretchable/reconfigurable electronics, soft robotics, thermometers, CPU thermal interface, antennas.",
+   "origin": "Galinstan trademarked by Geratherm Medical (1990s).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Galinstan_on_glass.jpg/640px-Galinstan_on_glass.jpg",
+   "source": "https://en.wikipedia.org/wiki/Galinstan",
+   "papers": [
+    {
+     "title": "Thermophysical Properties of the Liquid Ga-In-Sn Eutectic Alloy",
+     "authors": "Plevachuk et al.",
+     "year": 2014,
+     "venue": "J. Chem. Eng. Data",
+     "doi": "10.1021/je400882q",
+     "url": "https://doi.org/10.1021/je400882q"
+    }
+   ]
+  },
+  {
+   "id": "nitihf",
+   "name": {
+    "en": "NiTiHf high-temperature shape-memory alloy"
+   },
+   "category": "shape-memory",
+   "formula": "Ni-Ti-Hf (Hf substitutes Ti)",
+   "status": "research",
+   "key_property": "Raises shape-memory transformation temperatures well above conventional NiTi (~100 °C) toward ~500 °C, with work output above 500 MPa.",
+   "improvement": "Extends usable shape-memory/superelastic temperature range far beyond binary NiTi for hot environments.",
+   "uses": "Aerospace actuators, turbomachinery damping, high-temperature & automotive actuators.",
+   "origin": "NASA Glenn Research Center and academic studies, 2010s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Nitinol_draht.jpg/640px-Nitinol_draht.jpg",
+   "source": "https://en.wikipedia.org/wiki/Nickel_titanium",
+   "papers": [
+    {
+     "title": "NiTiHf-based shape memory alloys",
+     "authors": "Karaca et al.",
+     "year": 2014,
+     "venue": "Mater. Sci. Technol.",
+     "doi": "10.1179/1743284714Y.0000000598",
+     "url": "https://doi.org/10.1179/1743284714Y.0000000598"
+    }
+   ]
+  },
+  {
+   "id": "upsalite",
+   "name": {
+    "en": "Upsalite (amorphous magnesium carbonate)"
+   },
+   "category": "exotic",
+   "formula": "Anhydrous amorphous MgCO₃, pores <10 nm",
+   "status": "lab-demonstrated",
+   "key_property": "Record surface area for an alkaline-earth carbonate (~800 m²/g); adsorbs more water at low humidity than zeolites and regenerates at low energy.",
+   "improvement": "Long thought impossible to make anhydrous; out-performs zeolites for low-humidity moisture control.",
+   "uses": "Desiccant/moisture control for electronics & pharma, drug delivery, spill cleanup.",
+   "origin": "Uppsala University, Sweden, 2013 (Forsgren, Strømme et al.).",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/6/66/Electron_microscopy_images_of_Upsalite.png",
+   "source": "https://en.wikipedia.org/wiki/Upsalite",
+   "papers": [
+    {
+     "title": "A Template-Free, Ultra-Adsorbing, High Surface Area Carbonate Nanostructure",
+     "authors": "Forsgren et al.",
+     "year": 2013,
+     "venue": "PLoS ONE",
+     "doi": "10.1371/journal.pone.0068486",
+     "url": "https://doi.org/10.1371/journal.pone.0068486"
+    }
+   ]
+  },
+  {
+   "id": "cfrp",
+   "name": {
+    "en": "Advanced carbon-fibre-reinforced polymer (CFRP)"
+   },
+   "category": "composite",
+   "formula": "Carbon fibres in epoxy/thermoplastic; CNT/graphene hybrids",
+   "status": "commercial",
+   "key_property": "Very high specific strength and stiffness — ~5× stronger than steel at roughly one-fifth the density in the fibre direction.",
+   "improvement": "Large weight savings over aluminium/steel; nanofiller hybrids add interlaminar toughness and conductivity.",
+   "uses": "Aircraft (Boeing 787 ~50% composite), spacecraft, automotive, wind-turbine blades, sporting goods.",
+   "origin": "CFRP since the 1960s; nano-hybrid and thin-ply advances 2000s–2010s.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Fiber_reinforced_polymer_strengthening_in_construction_materials_%28IA_fiberreinforcedp109452329%29.pdf/page1-960px-Fiber_reinforced_polymer_strengthening_in_construction_materials_%28IA_fiberreinforcedp109452329%29.pdf.jpg",
+   "source": "https://en.wikipedia.org/wiki/Carbon-fiber-reinforced_polymer",
+   "papers": [
+    {
+     "title": "Review on carbon fiber reinforced polymer (CFRP) and their mechanical performance",
+     "authors": "Hegde et al.",
+     "year": 2019,
+     "venue": "Mater. Today Proc.",
+     "doi": "10.1016/j.matpr.2019.07.749",
+     "url": "https://doi.org/10.1016/j.matpr.2019.07.749"
+    }
+   ]
+  },
+  {
+   "id": "4d-print",
+   "name": {
+    "en": "4D-printed / programmable shape-memory material"
+   },
+   "category": "shape-memory",
+   "formula": "Additively-manufactured SMA/SMP (e.g. printed NiTi)",
+   "status": "prototype",
+   "key_property": "3D-printed structures that change shape or function over time in response to heat/stress via a programmed shape-memory transformation.",
+   "improvement": "Enables complex geometries and spatially graded transformation impossible with conventional SMA machining.",
+   "uses": "Self-deploying aerospace structures, soft robotics, biomedical stents, adaptive actuators.",
+   "origin": "Concept coined by Skylar Tibbits (MIT) ~2013; metal SMA additive work at NASA and universities since.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Multimaterial-4D-Printing-with-Tailorable-Shape-Memory-Polymers-srep31110-s7.ogv/960px--Multimaterial-4D-Printing-with-Tailorable-Shape-Memory-Polymers-srep31110-s7.ogv.jpg",
+   "source": "https://en.wikipedia.org/wiki/4D_printing",
+   "papers": [
+    {
+     "title": "Active materials by four-dimension printing",
+     "authors": "Ge et al.",
+     "year": 2013,
+     "venue": "Appl. Phys. Lett.",
+     "doi": "10.1063/1.4819837",
+     "url": "https://doi.org/10.1063/1.4819837"
+    },
+    {
+     "title": "Multi-shape active composites by 3D printing of digital shape memory polymers",
+     "authors": "Wu et al.",
+     "year": 2016,
+     "venue": "Scientific Reports",
+     "doi": "10.1038/srep24224",
+     "url": "https://doi.org/10.1038/srep24224"
+    }
+   ]
+  },
+  {
+   "id": "starlite",
+   "name": {
+    "en": "Starlite (unverified heat-resistant material)"
+   },
+   "category": "exotic / disputed",
+   "formula": "Undisclosed organic polymer/ceramic composite (~21 ingredients)",
+   "status": "disputed",
+   "key_property": "Claimed to resist a blowtorch / simulated nuclear flash to thousands of degrees with negligible damage via an intumescent char layer — never peer-reviewed or independently reproduced.",
+   "improvement": "Claimed dramatically better thermal/ablation resistance than known barriers, but UNVERIFIED.",
+   "uses": "Claimed thermal/fire protection, re-entry shielding; no verified commercial product.",
+   "origin": "Maurice Ward (UK), publicised ~1990 on BBC; formula lost on his death (2011). Status unverified.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Starlite_sample.jpg/640px-Starlite_sample.jpg",
+   "source": "https://en.wikipedia.org/wiki/Starlite"
+  },
+  {
+   "id": "metallic-hydrogen",
+   "name": {
+    "en": "Metallic hydrogen"
+   },
+   "category": "exotic / disputed",
+   "formula": "Hydrogen in a conductive metallic phase under extreme pressure (~495 GPa claimed)",
+   "status": "disputed",
+   "key_property": "Predicted to be a metal and possible room-temperature superconductor; a 2017 claim reported a reflective phase at ~495 GPa, widely disputed and the sample lost.",
+   "improvement": "Theoretical ultra-high-energy-density propellant and potential room-temperature superconductor.",
+   "uses": "Theoretical: rocket propellant, superconductors, fundamental high-pressure physics.",
+   "origin": "Predicted by Wigner & Huntington 1935; 2017 Harvard claim (Dias & Silvera), disputed.",
+   "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Diamond_anvil_cell_schematic.jpg/960px-Diamond_anvil_cell_schematic.jpg",
+   "source": "https://en.wikipedia.org/wiki/Metallic_hydrogen",
+   "papers": [
+    {
+     "title": "Observation of the Wigner-Huntington transition to metallic hydrogen",
+     "authors": "Dias & Silvera",
+     "year": 2017,
+     "venue": "Science (disputed)",
+     "doi": "10.1126/science.aal1579",
+     "url": "https://doi.org/10.1126/science.aal1579"
+    }
+   ]
+  }
+ ]
+}

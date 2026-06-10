@@ -2200,6 +2200,336 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
 </section>
 
 
+<!-- ============================================================ -->
+<!-- Open Materials Reference — open-data catalogue (Known Alloys  -->
+<!-- + Experimental & Advanced Materials), consolidated onto SOST  -->
+<!-- from the former GeaSpirit Materials Engine. Self-contained;   -->
+<!-- English (the GeaSpirit i18n layer is intentionally omitted).  -->
+<!-- ============================================================ -->
+<section class="section" id="open-materials-reference">
+  <div class="container">
+    <style>
+      #open-materials-reference .me-lead{color:#c9d6cf;font-size:15px;line-height:1.7;max-width:880px;margin:0 auto 0}
+      #open-materials-reference .me-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}
+      #open-materials-reference .me-panel{background:#0e151c;border:1px solid #1d2731;border-radius:10px;padding:14px 16px}
+      #open-materials-reference .me-panel h3{margin:0 0 6px;font-size:13px;letter-spacing:.4px;color:#35d6a0}
+      #open-materials-reference .me-panel p{margin:0;font-size:12.5px;color:#bbc7c0;line-height:1.6}
+      #open-materials-reference .me-h2{margin:34px 0 6px;font-size:20px;color:#eafaf3}
+      #open-materials-reference .me-sublead{color:#9fb0a8;font-size:13px;line-height:1.6;max-width:880px;margin:0 0 4px}
+      #open-materials-reference .gem-search{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 6px}
+      #open-materials-reference .gem-search input{flex:1;min-width:240px;padding:12px 14px;border:1px solid #2a3340;border-radius:8px;background:#0b1117;color:#e5e7eb;font-size:15px}
+      #open-materials-reference .gem-hint{font-size:12.5px;color:#8b97a6;margin:6px 0 20px}
+      #open-materials-reference .gem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+      #open-materials-reference .gem-card{background:#0e151c;border:1px solid #1d2731;border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s;display:flex;flex-direction:column}
+      #open-materials-reference .gem-card:hover{transform:translateY(-3px);border-color:#2f9e6f;box-shadow:0 8px 22px rgba(0,0,0,.4)}
+      #open-materials-reference .gem-thumb{width:100%;aspect-ratio:4/3;object-fit:cover;background:#10181f;display:block}
+      #open-materials-reference .gem-cbody{padding:11px 13px}
+      #open-materials-reference .gem-cname{font-size:15px;font-weight:700;color:#eafaf3;line-height:1.2}
+      #open-materials-reference .gem-cmeta{font-size:11.5px;color:#8fb7a6;margin-top:4px;font-family:monospace}
+      #open-materials-reference .gem-empty{color:#8b97a6;font-size:14px;padding:30px 0}
+      #open-materials-reference .gem-attr{font-size:11px;color:#6b7886;margin-top:24px;line-height:1.6;border-top:1px solid #1d2731;padding-top:14px}
+      #open-materials-reference .gem-attr a{color:#35d6a0}
+      .gem-modal{display:none;position:fixed;inset:0;z-index:1200;background:rgba(3,8,11,.78);align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+      .gem-modal.show{display:flex}
+      .gem-dialog{background:#0e151c;border:1px solid #25323c;border-radius:14px;max-width:760px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6);overflow:hidden}
+      .gem-mhead{display:flex;gap:14px;align-items:flex-start}
+      .gem-mimg{width:240px;flex:none;aspect-ratio:1/1;object-fit:cover;background:#10181f}
+      .gem-mtitle{padding:16px 18px}
+      .gem-mtitle h2{margin:0 0 4px;font-size:22px;color:#eafaf3}
+      .gem-mformula{font-family:monospace;color:#9ad9c1;font-size:14px}
+      .gem-mclose{position:absolute;top:14px;right:16px;width:40px;height:40px;border-radius:50%;border:none;background:#13202b;color:#cdeee0;font-size:20px;cursor:pointer}
+      .gem-mclose:hover{background:#1b2d39;color:#fff}
+      .gem-mbody{padding:0 18px 18px}
+      .gem-mdesc{color:#c9d6cf;font-size:14px;line-height:1.6;margin:10px 0 14px}
+      table.gem-props{width:100%;border-collapse:collapse;font-size:13px}
+      table.gem-props td{padding:7px 8px;border-bottom:1px solid #18222b;vertical-align:top}
+      table.gem-props td.k{color:#8fb7a6;width:38%}
+      table.gem-props td.v{color:#eafaf3}
+      .gem-msrc{font-size:11.5px;color:#7a8794;margin-top:12px;line-height:1.6}
+      .gem-msrc a{color:#35d6a0}
+      .gem-mph{font:700 .72rem/1 inherit;letter-spacing:.05em;text-transform:uppercase;color:#8fb7a6;margin:14px 0 6px}
+      .gem-plist{margin:0;padding:0 0 0 1.1rem;font-size:13px;line-height:1.55}
+      .gem-plist li{margin:0 0 6px}.gem-plist a{color:#35d6a0}.gem-plist .pmeta{color:#9aa7b4}
+      .gem-plist .pdoi{color:#6b7886;font-family:monospace;font-size:11.5px}
+      #open-materials-reference .exp-cats{display:flex;flex-wrap:wrap;gap:.4rem;margin:.2rem 0 1rem}
+      #open-materials-reference .exp-cat{font:600 .8rem/1 inherit;padding:.42rem .8rem;border-radius:999px;cursor:pointer;border:1px solid rgba(140,150,170,.32);background:rgba(140,150,170,.07);color:#cdd6df;opacity:.78;transition:.15s}
+      #open-materials-reference .exp-cat:hover{opacity:1}
+      #open-materials-reference .exp-cat.on{background:#0c2b3a;border-color:#1d6f93;color:#dff1fb;opacity:1}
+      .st-badge{display:inline-block;font:700 .66rem/1 inherit;letter-spacing:.03em;text-transform:uppercase;padding:.26rem .5rem;border-radius:6px;vertical-align:middle}
+      .st-commercial{background:rgba(34,160,90,.16);color:#3ad080;border:1px solid rgba(34,160,90,.4)}
+      .st-lab-demonstrated{background:rgba(46,120,220,.16);color:#6ab0ff;border:1px solid rgba(46,120,220,.42)}
+      .st-prototype{background:rgba(214,150,30,.16);color:#f0b542;border:1px solid rgba(214,150,30,.42)}
+      .st-research{background:rgba(150,90,220,.16);color:#bb8cff;border:1px solid rgba(150,90,220,.42)}
+      .st-theoretical{background:rgba(140,150,170,.16);color:#aab4c6;border:1px solid rgba(140,150,170,.4)}
+      .st-disputed{background:rgba(214,60,60,.16);color:#ff8a8a;border:1px solid rgba(214,60,60,.42)}
+      #open-materials-reference .gem-cclass{font:600 .68rem/1.2 inherit;opacity:.6;text-transform:uppercase;letter-spacing:.04em;margin-top:.15rem;color:#9fb0a8}
+      #open-materials-reference .gem-cstatus{margin-top:.4rem}
+    </style>
+
+    <h2 class="section-title">Open Materials <span class="accent">Reference</span></h2>
+    <p class="me-lead">The Materials Engine is the materials-knowledge layer of the SOST ecosystem — Predict · Detect · Discover. A graph-neural-network platform predicts material properties and generates novel candidates over a corpus of <b>76,193 materials</b> (100% with crystal structures); this open, multilingual reference catalogues the materials themselves — known and experimental alloys, advanced materials, minerals and chemical elements — with composition, atomic- and structural-level data, properties and citable sources in 16 languages. Its purpose is materials discovery: to explore the composition and crystal-structure space at the atomic level and surface non-theorized alloy combinations whose predicted properties surpass today's materials — greater strength, hardness and availability at lower density and cost.</p>
+
+    <div class="me-grid3">
+      <div class="me-panel"><h3>Computational platform</h3><p>GNN property prediction (CGCNN / ALIGNN-Lite) for formation energy, band gap and more — MAE &asymp; 0.15 eV/atom — over real crystal structures. Operational research system (v2.x).</p></div>
+      <div class="me-panel"><h3>Discovery &amp; novelty</h3><p>Autonomous discovery over the composition–structure space: a 104-dimension fingerprint with novelty-first filtering proposes non-theorized alloys and compounds and ranks them by predicted figures of merit — specific strength, hardness, cost and element availability — flagging those forecast to outperform incumbent materials, as candidates for synthesis and validation.</p></div>
+      <div class="me-panel"><h3>Open data foundation</h3><p>Built on public materials databases (JARVIS, Materials Project, AFLOW, COD) with a canonical schema — plus this open reference of known alloys, minerals and elements.</p></div>
+    </div>
+
+    <h2 class="me-h2" id="how">How it works · DFT &amp; quantum foundation</h2>
+    <p class="me-lead">Density Functional Theory (DFT) is the quantum-mechanical workhorse of modern materials science. Instead of solving the many-electron Schrödinger equation directly, it reformulates the problem in terms of the electron density and solves the Kohn–Sham equations self-consistently — yielding a material's ground-state energy, electronic band structure, elastic moduli and thermodynamic stability from first principles, with no empirical fitting. The open databases this engine builds on (Materials Project, JARVIS, AFLOW, OQMD, COD) are largely DFT-computed. DFT is accurate but expensive — hours to days of compute per crystal — so the engine trains graph-neural-network surrogates on DFT data to predict properties in milliseconds, then reserves full DFT to verify the most promising non-theorized candidates: a predict-then-verify loop.</p>
+
+    <div class="me-grid3">
+      <div class="me-panel"><h3>Where we are</h3><p>Today the engine spans a 76,193-material corpus (100% with crystal structures), GNN property prediction at MAE &asymp; 0.15 eV/atom for formation energy, a 104-dimension structural fingerprint with novelty-first filtering, and this open, multilingual reference of known and experimental alloys, minerals and elements with atomic- and structural-level data, photos and citable academic sources.</p></div>
+      <div class="me-panel"><h3>Where we are going</h3><p>Next: close the predict → DFT-verify → synthesize loop; extend coverage from oxides and intermetallics into multi-principal-element (high-entropy) alloy space; add cost and raw-material-availability objectives to the candidate ranking; and publish reproducible candidate dossiers with content hashes for independent verification.</p></div>
+      <div class="me-panel"><h3>Relation to SOST Useful Compute</h3><p>DFT and GNN materials discovery are deterministic, decomposable, replay-verifiable scientific workloads — precisely the class of computation SOST's Useful Compute architecture (Proof-of-Useful-Compute, via the Trinity research harness) is designed to host: tasks whose results can be re-executed and hash-matched across independent workers. The long-term vision is that materials-discovery jobs run as useful-compute tasks anchored on SOST. Note: Useful Compute rewards are NOT active — the infrastructure is in research / dry-run only, and any rewarded phase would require a future protocol redesign; nothing here implies active rewards.</p></div>
+    </div>
+
+    <h2 class="me-h2" id="alloys">Known Alloys</h2>
+    <p class="me-sublead">An open, growing reference of known engineered alloys — each with its composition, a description and links to Wikipedia, Wikidata or other public sources, in 16 languages. Curated and expanded incrementally.</p>
+    <div class="gem-search">
+      <input id="gq" type="text" autocomplete="off" placeholder="Search alloys by name or composition…">
+    </div>
+    <div class="gem-hint" id="gem-status">Loading the known-alloys database…</div>
+    <div class="gem-grid" id="gem-grid"></div>
+    <div class="gem-empty" id="gem-empty" style="display:none">No alloys match your search.</div>
+    <p class="gem-attr">
+      <span>Open data from <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a> (CC0); images from <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>, each under its own licence — open an entry and follow the image link for author and licence.</span>
+      <br><span>This is an open-data reference for education and engineering triage. It is not a materials specification, certification or warranty.</span>
+    </p>
+
+    <h2 class="me-h2" id="experimental">Experimental Alloys &amp; Advanced Materials</h2>
+    <p class="me-sublead">An open, research-sourced reference of experimental and advanced materials — carbon allotropes, aerogels, high-entropy alloys, metallic glasses, advanced steels, superalloys and 2D materials. Each fiche gives the composition, standout property, the improvement over conventional materials, applications, and whether it is commercial, lab-demonstrated or still theoretical. Fiche text is in English (scientific reference).</p>
+    <div class="exp-cats" id="exp-cats"></div>
+    <div class="gem-search">
+      <input id="eq" type="text" autocomplete="off" placeholder="Search experimental materials…">
+    </div>
+    <div class="gem-hint" id="exp-status">Loading the experimental-materials database…</div>
+    <div class="gem-grid" id="exp-grid"></div>
+    <div class="gem-empty" id="exp-empty" style="display:none">No materials match your search.</div>
+    <p class="gem-attr">
+      <span>Open data from <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a> (CC0); images from <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>, each under its own licence — open an entry and follow the image link for author and licence.</span>
+      <br><span>This is an open-data reference for education and engineering triage. It is not a materials specification, certification or warranty.</span>
+    </p>
+  </div>
+</section>
+
+<div class="gem-modal" id="gem-modal" role="dialog" aria-modal="true">
+  <div class="gem-dialog" style="position:relative">
+    <button class="gem-mclose" id="gem-mclose" aria-label="Close">×</button>
+    <div class="gem-mhead">
+      <img class="gem-mimg" id="gm-img" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'">
+      <div class="gem-mtitle"><h2 id="gm-name"></h2><div class="gem-mformula" id="gm-formula"></div></div>
+    </div>
+    <div class="gem-mbody">
+      <p class="gem-mdesc" id="gm-desc"></p>
+      <table class="gem-props"><tbody id="gm-props"></tbody></table>
+      <div class="gem-mpapers" id="gm-papers"></div>
+      <div class="gem-msrc" id="gm-src"></div>
+    </div>
+  </div>
+</div>
+
+<div class="gem-modal" id="exp-modal" role="dialog" aria-modal="true">
+  <div class="gem-dialog" style="position:relative">
+    <button class="gem-mclose" id="exp-mclose" aria-label="Close">×</button>
+    <div class="gem-mhead">
+      <img class="gem-mimg" id="ex-img" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'">
+      <div class="gem-mtitle"><h2 id="ex-name"></h2><div class="gem-mformula" id="ex-formula"></div><div id="ex-badge" style="margin-top:.5rem"></div></div>
+    </div>
+    <div class="gem-mbody">
+      <table class="gem-props"><tbody id="ex-props"></tbody></table>
+      <div class="gem-mpapers" id="ex-papers"></div>
+      <div class="gem-msrc" id="ex-src"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Known Alloys — open-data reference */
+(function(){
+  var ALL=[], statusEl=document.getElementById('gem-status'), gridEl=document.getElementById('gem-grid'),
+      emptyEl=document.getElementById('gem-empty'), qEl=document.getElementById('gq');
+  if(!statusEl||!gridEl||!qEl) return;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);});}
+  function L(o){ if(!o) return ''; if(typeof o==='string') return o; return o.en||''; }
+  fetch('/data/alloys.json').then(function(r){return r.json();}).then(function(d){
+    ALL=(d&&d.alloys)||[];
+    statusEl.textContent=ALL.length.toLocaleString()+' known alloys in the open database.';
+    render('');
+  }).catch(function(){ statusEl.textContent='Could not load the alloys database. Please retry.'; });
+  function cardHtml(m,i){
+    var name=esc(L(m.name)||m.id);
+    return '<div class="gem-card" data-i="'+i+'">'+
+      (m.image?'<img class="gem-thumb" loading="lazy" referrerpolicy="no-referrer" alt="'+name+'" src="'+esc(m.image)+'" onerror="this.style.visibility=\'hidden\'">':'<div class="gem-thumb"></div>')+
+      '<div class="gem-cbody"><div class="gem-cname">'+name+'</div>'+
+      (m.formula?'<div class="gem-cmeta">'+esc(m.formula)+'</div>':'')+'</div></div>';
+  }
+  function render(q){
+    q=(q||'').trim().toLowerCase();
+    var list=ALL;
+    if(q){ list=ALL.filter(function(m){
+      if((L(m.name)||'').toLowerCase().indexOf(q)>=0) return true;
+      if((m.formula||'').toLowerCase().indexOf(q)>=0) return true;
+      return false;
+    }); }
+    gridEl.innerHTML=list.map(function(m){return cardHtml(m,ALL.indexOf(m));}).join('');
+    emptyEl.style.display=list.length?'none':'block';
+    Array.prototype.forEach.call(gridEl.children,function(c){ c.addEventListener('click',function(){ openModal(ALL[+c.getAttribute('data-i')]); }); });
+  }
+  qEl.addEventListener('input',function(){ render(qEl.value); });
+  var modal=document.getElementById('gem-modal');
+  function row(k,v){ return v?('<tr><td class="k">'+esc(k)+'</td><td class="v">'+esc(v)+'</td></tr>'):''; }
+  function papersHtml(ps){
+    if(!ps||!ps.length) return '';
+    var items=ps.map(function(p){
+      var meta=[p.authors,p.venue,p.year].filter(Boolean).join(', ');
+      var u=p.url||(p.doi?('https://doi.org/'+p.doi):'');
+      var ttl=u?('<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(p.title)+' ↗</a>'):esc(p.title);
+      return '<li>'+ttl+(meta?'<span class="pmeta"> — '+esc(meta)+'</span>':'')+(p.doi?'<span class="pdoi"> doi:'+esc(p.doi)+'</span>':'')+'</li>';
+    }).join('');
+    return '<div class="gem-mph">Academic papers</div><ul class="gem-plist">'+items+'</ul>';
+  }
+  function openModal(m){
+    if(!m) return;
+    document.getElementById('gm-name').textContent=L(m.name)||m.id;
+    document.getElementById('gm-formula').textContent=m.formula||'';
+    var img=document.getElementById('gm-img');
+    if(m.image){ img.src=m.image.replace('width=480','width=600'); img.style.display=''; img.alt=L(m.name)||''; } else { img.style.display='none'; }
+    document.getElementById('gm-desc').textContent=L(m.desc)||'';
+    document.getElementById('gm-props').innerHTML=row('Composition',m.formula);
+    var src=[];
+    var w=m.wiki && m.wiki.en;
+    if(w) src.push('<a href="'+esc(w)+'" target="_blank" rel="noopener">Read more on Wikipedia ↗</a>');
+    if(m.source_url) src.push('<a href="'+esc(m.source_url)+'" target="_blank" rel="noopener">Source: '+esc(m.source||'Wikidata')+'</a>');
+    if(m.image_page) src.push('<a href="'+esc(m.image_page)+'" target="_blank" rel="noopener">Image source, author &amp; licence</a>');
+    document.getElementById('gm-src').innerHTML=src.join(' &nbsp;·&nbsp; ');
+    document.getElementById('gm-papers').innerHTML=papersHtml(m.papers);
+    modal.classList.add('show');
+  }
+  function closeModal(){ modal.classList.remove('show'); }
+  document.getElementById('gem-mclose').addEventListener('click',closeModal);
+  modal.addEventListener('click',function(e){ if(e.target===modal) closeModal(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeModal(); });
+})();
+</script>
+<script>
+/* Experimental & advanced materials */
+(function(){
+  var ALL=[], FILT='__all', q='',
+      grid=document.getElementById('exp-grid'), statusEl=document.getElementById('exp-status'),
+      emptyEl=document.getElementById('exp-empty'), catsEl=document.getElementById('exp-cats'),
+      qEl=document.getElementById('eq');
+  if(!grid||!statusEl||!catsEl||!qEl) return;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);});}
+  function L(o){ if(!o) return ''; if(typeof o==='string') return o; return o.en||''; }
+  function stLabel(s){ return ({'commercial':'Commercial','lab-demonstrated':'Lab-demonstrated','prototype':'Prototype','research':'Research','theoretical':'Theoretical','disputed':'Disputed / unverified'}[s]||s); }
+  function group(cat){
+    cat=(cat||'').toLowerCase();
+    if(cat.indexOf('carbon allotrope')>=0) return 'carbon';
+    if(cat.indexOf('aerogel')>=0||cat.indexOf('ultralight')>=0) return 'aerogel';
+    if(cat.indexOf('high-entropy')>=0) return 'hea';
+    if(cat.indexOf('metallic glass')>=0) return 'glass';
+    if(cat.indexOf('steel')>=0) return 'steel';
+    if(cat.indexOf('superalloy')>=0) return 'superalloy';
+    if(cat.indexOf('2d')>=0||cat.indexOf('max phase')>=0) return '2d';
+    if(cat.indexOf('intermetallic')>=0||cat.indexOf('cermet')>=0) return 'inter';
+    if(cat.indexOf('foam')>=0) return 'foam';
+    if(cat.indexOf('shape-memory')>=0) return 'sma';
+    return 'exotic';
+  }
+  var GFB={carbon:'Carbon forms',aerogel:'Aerogels & ultralight',hea:'High-entropy alloys',glass:'Metallic glasses',
+    steel:'Advanced steels',superalloy:'Superalloys','2d':'2D & MAX phases',inter:'Intermetallics & cermets',
+    foam:'Metal foams',sma:'Shape-memory',exotic:'Exotic & other'};
+  function glabel(g){ return GFB[g]||g; }
+  fetch('/data/experimental.json').then(function(r){return r.json();}).then(function(d){
+    ALL=(d&&d.materials)||[];
+    statusEl.textContent=ALL.length.toLocaleString()+' experimental & advanced materials.';
+    buildCats(); render();
+  }).catch(function(){ statusEl.textContent='Could not load the database. Please retry.'; });
+  function buildCats(){
+    var seen={}, order=[];
+    ALL.forEach(function(m){ var g=group(m.category); if(!seen[g]){seen[g]=1;order.push(g);} });
+    var html='<span class="exp-cat on" data-g="__all">All</span>';
+    order.forEach(function(g){ html+='<span class="exp-cat" data-g="'+g+'">'+esc(glabel(g))+'</span>'; });
+    catsEl.innerHTML=html;
+    Array.prototype.forEach.call(catsEl.children,function(c){ c.addEventListener('click',function(){
+      FILT=c.getAttribute('data-g');
+      Array.prototype.forEach.call(catsEl.children,function(x){ x.classList.toggle('on',x===c); });
+      render();
+    }); });
+  }
+  function cardHtml(m){
+    var name=esc(L(m.name)||m.id), st=esc(m.status||'research');
+    return '<div class="gem-card" data-id="'+esc(m.id)+'">'+
+      (m.image?'<img class="gem-thumb" loading="lazy" referrerpolicy="no-referrer" alt="'+name+'" src="'+esc(m.image)+'" onerror="this.style.visibility=\'hidden\'">':'<div class="gem-thumb"></div>')+
+      '<div class="gem-cbody"><div class="gem-cname">'+name+'</div>'+
+      '<div class="gem-cclass">'+esc(glabel(group(m.category))||m.category)+'</div>'+
+      (m.formula?'<div class="gem-cmeta">'+esc(m.formula)+'</div>':'')+
+      '<div class="gem-cstatus"><span class="st-badge st-'+st+'">'+esc(stLabel(m.status))+'</span></div>'+
+      '</div></div>';
+  }
+  function render(){
+    var list=ALL.filter(function(m){
+      if(FILT!=='__all'&&group(m.category)!==FILT) return false;
+      if(q){ var s=q.toLowerCase();
+        if((L(m.name)||'').toLowerCase().indexOf(s)>=0) return true;
+        if((m.formula||'').toLowerCase().indexOf(s)>=0) return true;
+        if((m.category||'').toLowerCase().indexOf(s)>=0) return true;
+        if((m.key_property||'').toLowerCase().indexOf(s)>=0) return true;
+        if((m.uses||'').toLowerCase().indexOf(s)>=0) return true;
+        return false;
+      }
+      return true;
+    });
+    grid.innerHTML=list.map(cardHtml).join('');
+    emptyEl.style.display=list.length?'none':'block';
+    Array.prototype.forEach.call(grid.children,function(c){ c.addEventListener('click',function(){
+      openModal(ALL.filter(function(m){return m.id===c.getAttribute('data-id');})[0]);
+    }); });
+  }
+  qEl.addEventListener('input',function(){ q=qEl.value; render(); });
+  var modal=document.getElementById('exp-modal');
+  function row(k,v){ return v?('<tr><td class="k">'+esc(k)+'</td><td class="v">'+esc(v)+'</td></tr>'):''; }
+  function papersHtml(ps){
+    if(!ps||!ps.length) return '';
+    var items=ps.map(function(p){
+      var meta=[p.authors,p.venue,p.year].filter(Boolean).join(', ');
+      var u=p.url||(p.doi?('https://doi.org/'+p.doi):'');
+      var ttl=u?('<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(p.title)+' ↗</a>'):esc(p.title);
+      return '<li>'+ttl+(meta?'<span class="pmeta"> — '+esc(meta)+'</span>':'')+(p.doi?'<span class="pdoi"> doi:'+esc(p.doi)+'</span>':'')+'</li>';
+    }).join('');
+    return '<div class="gem-mph">Academic papers</div><ul class="gem-plist">'+items+'</ul>';
+  }
+  function openModal(m){
+    if(!m) return;
+    document.getElementById('ex-name').textContent=L(m.name)||m.id;
+    document.getElementById('ex-formula').textContent=m.formula||'';
+    var st=esc(m.status||'research');
+    document.getElementById('ex-badge').innerHTML='<span class="st-badge st-'+st+'">'+esc(stLabel(m.status))+'</span>';
+    var img=document.getElementById('ex-img');
+    if(m.image){ img.src=m.image; img.style.display=''; img.alt=L(m.name)||''; } else { img.style.display='none'; }
+    document.getElementById('ex-props').innerHTML=
+      row('Class', glabel(group(m.category))||m.category)+
+      row('Composition', m.formula)+
+      row('Status', stLabel(m.status))+
+      row('Key property', m.key_property)+
+      row('Improvement', m.improvement)+
+      row('Applications', m.uses)+
+      row('Origin / first reported', m.origin);
+    var src=[];
+    if(m.source) src.push('<a href="'+esc(m.source)+'" target="_blank" rel="noopener">Read more on Wikipedia ↗</a>');
+    document.getElementById('ex-src').innerHTML=src.join(' &nbsp;·&nbsp; ');
+    document.getElementById('ex-papers').innerHTML=papersHtml(m.papers);
+    modal.classList.add('show');
+  }
+  function closeModal(){ modal.classList.remove('show'); }
+  document.getElementById('exp-mclose').addEventListener('click',closeModal);
+  modal.addEventListener('click',function(e){ if(e.target===modal) closeModal(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeModal(); });
+})();
+</script>
+
+
 <footer>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
