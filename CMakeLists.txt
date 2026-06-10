@@ -367,10 +367,75 @@ target_link_libraries(popc15-carrier PRIVATE sost-core secp256k1)
 # explicitly builds with -DSOST_BTC_HTLC_SIGNING=ON (a future OTC-3 step). The
 # default OFF build compiles the module with inert stubs that return ok=false.
 # ---------------------------------------------------------------------------
-option(SOST_BTC_HTLC_SIGNING "Enable the real BTC HTLC signing backend (OTC-3; default OFF stubs)" OFF)
+option(SOST_BTC_HTLC_SIGNING "Enable the real BTC HTLC signing backend (OTC-3a; requires vendored libwally-core; default OFF stubs)" OFF)
 if (SOST_BTC_HTLC_SIGNING)
-    target_compile_definitions(sost-core PRIVATE SOST_BTC_HTLC_SIGNING_ENABLED=1)
-    message(WARNING "SOST_BTC_HTLC_SIGNING=ON — real BTC signing backend requested (OTC-3 only).")
+    # OTC-3a — build & link the vendored libwally-core and switch the BTC HTLC
+    # signing backend from inert stubs to the real libwally implementation.
+    #
+    # libwally is built in ISOLATION via ExternalProject so its bundled
+    # secp256k1-zkp never collides with SOST's own system `secp256k1` target
+    # (used for consensus SbPoW). The default OFF build links NONE of this and
+    # is byte-identical — every change here is inside this `if` block.
+    #
+    # This is a regtest/review-only build. It does NOT activate mainnet, does
+    # NOT change ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT, and does NOT broadcast.
+    set(_wally_src "${CMAKE_CURRENT_SOURCE_DIR}/vendor/libwally-core")
+    # The vendor ceremony disables libwally's own CMake build by prefixing its
+    # build files with "_" (so the pristine tree never auto-builds). Restore
+    # them here, idempotently, only when this flag is ON — this is the explicit
+    # opt-in that enables the build. (No effect on the default OFF build.)
+    foreach(_wf "" "src/")
+        if (NOT EXISTS "${_wally_src}/${_wf}CMakeLists.txt"
+            AND EXISTS "${_wally_src}/${_wf}_CMakeLists.txt")
+            file(RENAME "${_wally_src}/${_wf}_CMakeLists.txt"
+                        "${_wally_src}/${_wf}CMakeLists.txt")
+        endif()
+    endforeach()
+    if (NOT EXISTS "${_wally_src}/cmake" AND EXISTS "${_wally_src}/_cmake")
+        file(RENAME "${_wally_src}/_cmake" "${_wally_src}/cmake")
+    endif()
+    if (NOT EXISTS "${_wally_src}/CMakeLists.txt")
+        message(FATAL_ERROR
+            "SOST_BTC_HTLC_SIGNING=ON but vendored libwally-core is missing at "
+            "${_wally_src}. See docs/V15_OTC_BTC_REGTEST_GUIDE.md to vendor "
+            "libwally-core (release_1.5.3, GPG-verified per the ceremony doc) "
+            "before turning this flag ON.")
+    endif()
+    include(ExternalProject)
+    set(_wally_build "${CMAKE_CURRENT_BINARY_DIR}/libwally-build")
+    set(_wally_lib  "${_wally_build}/src/libwallycore.a")
+    set(_wally_secp "${_wally_build}/src/secp256k1/src/libsecp256k1.a")
+    ExternalProject_Add(libwally_ext
+        SOURCE_DIR        "${_wally_src}"
+        BINARY_DIR        "${_wally_build}"
+        CMAKE_ARGS
+            -DCMAKE_BUILD_TYPE=Release
+            -DBUILD_SHARED_LIBS=OFF
+            -DWALLYCORE_ENABLE_TESTS=OFF
+            -DWALLYCORE_BUILD_ELEMENTS=OFF
+            -DWALLYCORE_INSTALL=OFF
+        BUILD_BYPRODUCTS  "${_wally_lib}" "${_wally_secp}"
+        INSTALL_COMMAND   ""
+        LOG_CONFIGURE     ON
+        LOG_BUILD         ON)
+    add_library(sost_wally_core STATIC IMPORTED GLOBAL)
+    set_target_properties(sost_wally_core PROPERTIES IMPORTED_LOCATION "${_wally_lib}")
+    add_dependencies(sost_wally_core libwally_ext)
+    add_library(sost_wally_secp STATIC IMPORTED GLOBAL)
+    set_target_properties(sost_wally_secp PROPERTIES IMPORTED_LOCATION "${_wally_secp}")
+    add_dependencies(sost_wally_secp libwally_ext)
+
+    # ENABLED gates the API surface; HAS_LIBWALLY gates the real backend bodies.
+    # PUBLIC so the test targets that link sost-core see ON-mode too.
+    target_compile_definitions(sost-core PUBLIC
+        SOST_BTC_HTLC_SIGNING_ENABLED=1
+        SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY=1)
+    # PUBLIC so test TUs that include <wally_*.h> under HAS_LIBWALLY resolve them.
+    target_include_directories(sost-core PUBLIC "${_wally_src}/include")
+    # System secp256k1 (consensus SbPoW) already links earlier and stays first;
+    # libwally's own secp256k1 is appended only for the wallycore symbols.
+    target_link_libraries(sost-core PUBLIC sost_wally_core sost_wally_secp)
+    message(WARNING "SOST_BTC_HTLC_SIGNING=ON — building & linking vendored libwally-core (OTC-3a; regtest/review-only).")
 endif()
 
 # Pure atomic-swap tests (no consensus surface; safe in OTC-0.5).
