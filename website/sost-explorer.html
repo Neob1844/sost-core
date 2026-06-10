@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-10-v337">
+<meta name="explorer-html-version" content="2026-06-10-v338">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -3853,20 +3853,29 @@ async function updateDashboard(info){
   // inflated count (e.g. 48) above the real producer set. Fire-and-forget,
   // cheap (in-memory on the node); the catch leaves the cards untouched on a
   // node that lacks the method.
-  // MINER COUNTS — anchor ONLY the UPDATED MINERS card (distinct Phase-II
-  // producers "since #12100") to the node's authoritative producers_total.
-  // PEAK ACTIVE MINERS ("since genesis") and DTD eligible are deliberately NOT
-  // touched here: geteligibleminers counts producers only from the DTD window
-  // start (block 7100), so it is NOT the right ceiling for a genesis-wide peak
-  // (early pre-SbPoW miners are excluded) nor for the live eligible-now set.
-  // Those two stay driven by the full-chain scan / cache. Fire-and-forget.
+  // MINER COUNTS — anchor both miner cards to the node's authoritative
+  // geteligibleminers, each to the RIGHT window:
+  //   UPDATED MINERS ("since #12100")  -> producers_total       (from block 7100)
+  //   PEAK ACTIVE MINERS ("since genesis") -> producers_since_genesis (from block 0,
+  //       legitimately larger — it includes early pre-SbPoW miners)
+  // This removes the old per-device localStorage / client-scan fragility that
+  // made the peak drift and disagree across devices. DTD eligible-now stays the
+  // live scan value. Fire-and-forget; older nodes without the genesis field
+  // simply leave the peak card to its existing scan/cache value.
   rpc('geteligibleminers').then(function(gem){
     if(!gem)return;
     var producers=parseInt(gem.producers_total,10)||0;
-    if(producers<=0)return;
-    window._nodeProducersTotal=producers;   // authoritative UPDATED-MINERS value
-    var um=document.getElementById('dPhase2Miners');
-    if(um)um.textContent=String(producers);
+    if(producers>0){
+      window._nodeProducersTotal=producers;   // authoritative UPDATED-MINERS value
+      var um=document.getElementById('dPhase2Miners');
+      if(um)um.textContent=String(producers);
+    }
+    var genesis=parseInt(gem.producers_since_genesis,10)||0;
+    if(genesis>0){
+      var pm=document.getElementById('dPeakMiner');
+      if(pm)pm.textContent=String(genesis);
+      try{localStorage.setItem('sost_peak_miners_ever',String(genesis));}catch(e){}
+    }
   }).catch(function(){});
   // RPC ACTIVITY — per-method telemetry. Same fire-and-forget pattern as
   // getminerstats. Cheap on the node (in-memory atomic counters).

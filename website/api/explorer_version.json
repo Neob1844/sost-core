@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-10-v337",
-  "note": "Miner cards corrected: PEAK ACTIVE MINERS is genesis-wide (distinct producers since block 0, ~53) and DTD eligible-now is restored on load — v336 wrongly capped both to geteligibleminers.producers_total, which only counts producers since the DTD window start (block 7100) and excludes early pre-SbPoW miners. Only UPDATED MINERS ('since #12100') stays anchored to producers_total (18). Force-reload."
+  "v": "2026-06-10-v338",
+  "note": "PEAK ACTIVE MINERS now anchored to the node's authoritative geteligibleminers.producers_since_genesis (distinct producers since block 0 = 53), ending the per-device localStorage/scan drift that kept showing 18. UPDATED MINERS stays anchored to producers_total (18, since #12100). Requires the node to expose producers_since_genesis. Force-reload."
 }

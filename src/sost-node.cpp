@@ -1875,22 +1875,28 @@ static std::string handle_getsupplyinfo(const std::string& id, const std::vector
 static std::string handle_geteligibleminers(const std::string& id, const std::vector<std::string>&) {
     static std::mutex elig_cache_mu;
     static int64_t elig_cached_tip = -1;
-    static int     elig_cached_total = 0, elig_cached_288 = 0;
+    static int     elig_cached_total = 0, elig_cached_288 = 0, elig_cached_genesis = 0;
     int64_t tip = 0;
-    int producers = 0, active288 = 0;
+    int producers = 0, active288 = 0, producers_genesis = 0;
     {
         std::lock_guard<std::mutex> cl(elig_cache_mu);
         { std::lock_guard<std::recursive_mutex> lk(g_chain_mu); tip = g_chain_height; }
         if (elig_cached_tip == tip) {
             producers = elig_cached_total;
             active288 = elig_cached_288;
+            producers_genesis = elig_cached_genesis;
         } else {
-            std::set<PubKeyHash> all, recent;
+            // `all` = distinct producers since V11_PHASE2_HEIGHT (the DTD window;
+            // the explorer's UPDATED MINERS). `all_genesis` = distinct producers
+            // since block 0 (the explorer's PEAK ACTIVE MINERS "since genesis",
+            // which legitimately exceeds `all` — it includes early pre-SbPoW
+            // miners). `recent` = last 288 blocks.
+            std::set<PubKeyHash> all, all_genesis, recent;
             const int64_t lo   = sost::V11_PHASE2_HEIGHT;
             const int64_t a288 = (tip >= 287) ? (tip - 287) : 0;
             std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
             for (const auto& b : g_blocks) {
-                if (b.height < lo || b.height > tip) continue;
+                if (b.height > tip) continue;   // count from genesis (height 0)
                 // Resolve the block producer's address-hash robustly. PREFER the
                 // SbPoW miner_pubkey carried in raw_block_json: from
                 // V11_PHASE2_HEIGHT it is consensus-mandatory and present even
@@ -1923,16 +1929,20 @@ static std::string handle_geteligibleminers(const std::string& id, const std::ve
                     }
                 }
                 if (!got) continue;
-                all.insert(pkh);
-                if (b.height >= a288) recent.insert(pkh);
+                all_genesis.insert(pkh);                 // since genesis
+                if (b.height >= lo)   all.insert(pkh);    // since V11_PHASE2_HEIGHT
+                if (b.height >= a288) recent.insert(pkh); // last 288
             }
             producers = (int)all.size();
             active288 = (int)recent.size();
-            elig_cached_tip = tip; elig_cached_total = producers; elig_cached_288 = active288;
+            producers_genesis = (int)all_genesis.size();
+            elig_cached_tip = tip; elig_cached_total = producers;
+            elig_cached_288 = active288; elig_cached_genesis = producers_genesis;
         }
     }
     std::ostringstream s;
     s << "{\"producers_total\":" << producers
+      << ",\"producers_since_genesis\":" << producers_genesis
       << ",\"active_288\":" << active288
       << ",\"window_start\":" << sost::V11_PHASE2_HEIGHT
       << ",\"chain_tip\":" << tip << "}";
