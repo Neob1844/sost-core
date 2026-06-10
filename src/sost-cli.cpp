@@ -40,6 +40,7 @@
 #include "sost/hd_wallet.h"
 #include "sost/addressbook.h"
 #include "sost/wallet_policy.h"
+#include "sost/atomic_swap_helpers.h"  // OTC-1 HTLC builders / OTC-2 CLI wiring
 #include "sost/types.h"
 #include "sost/params.h"
 #include "sost/address.h"
@@ -1070,6 +1071,16 @@ static void print_usage() {
     printf("  create-bond <amt> <blocks>  Create BOND_LOCK (timelocked to self)\n");
     printf("  create-escrow <amt> <blocks> <beneficiary>  Create ESCROW_LOCK\n");
     printf("  list-bonds             List active bond/escrow UTXOs\n");
+    printf("\nAtomic Swap / HTLC (OTC — gated until activation height; offline builders):\n");
+    printf("  createhtlclock <prev_txid> <prev_vout> <prev_amount> <prev_pkh>\n");
+    printf("                 <hashlock> <refund_height> <claim_pkh> <refund_pkh>\n");
+    printf("                 <lock_amount> <fee>   Build unsigned HTLC LOCK tx\n");
+    printf("  claimhtlc <lock_txid> <lock_vout> <lock_amount> <preimage>\n");
+    printf("            <claim_dest_pkh> <marker_dust_amount> <fee>  Build unsigned CLAIM tx\n");
+    printf("  refundhtlc <lock_txid> <lock_vout> <lock_amount>\n");
+    printf("             <refund_dest_pkh> <fee>   Build unsigned REFUND tx\n");
+    printf("  decodehtlc <raw_tx_hex>   Decode an HTLC LOCK/CLAIM/REFUND tx\n");
+    printf("  gethtlcstatus <lock_txid> <lock_vout>  Query lock status from node (read-only)\n");
     printf("  dumpprivkey <addr>     Reveal private key (DANGER)\n");
     printf("  wallet-export          Export encrypted wallet backup (AES-256-GCM)\n");
     printf("  wallet-import          Import encrypted wallet backup\n");
@@ -1376,6 +1387,84 @@ int main(int argc, char** argv) {
             fprintf(stderr, "  Raw: %s\n", resp.c_str());
         }
         return 1;
+    }
+
+    // =====================================================================
+    // HTLC atomic-swap wallet builders (OTC-1 core + OTC-2 CLI wiring)
+    //
+    // Like sendrawtransaction, these run BEFORE the wallet load: they are
+    // pure OFFLINE builders that need no keys and no wallet file.
+    //
+    // createhtlclock / claimhtlc / refundhtlc / decodehtlc call the OTC-1
+    // handlers locally and print the resulting UNSIGNED raw-tx hex (or, for
+    // decode, the parsed JSON). They NEVER sign, NEVER broadcast, and NEVER
+    // touch BTC or EVM. While the consensus gate sits at its activation
+    // height (INT64_MAX on mainnet) every builder cleanly reports the
+    // disabled message — a deliberate mainnet no-op until the OTC flip.
+    //
+    // gethtlcstatus forwards to the node's RPC (the chain context — tip
+    // height + UTXO view — lives on the node).
+    //
+    // Param order matches include/sost/atomic_swap_helpers.h exactly:
+    //   createhtlclock <prev_txid> <prev_vout> <prev_amount> <prev_pkh>
+    //                  <hashlock> <refund_height> <claim_pkh> <refund_pkh>
+    //                  <lock_amount> <fee>
+    //   claimhtlc      <lock_txid> <lock_vout> <lock_amount> <preimage>
+    //                  <claim_dest_pkh> <marker_dust_amount> <fee>
+    //   refundhtlc     <lock_txid> <lock_vout> <lock_amount>
+    //                  <refund_dest_pkh> <fee>
+    //   decodehtlc     <raw_tx_hex>
+    // =====================================================================
+    if (cmd == "createhtlclock" || cmd == "claimhtlc" ||
+        cmd == "refundhtlc"     || cmd == "decodehtlc") {
+        std::vector<std::string> params;
+        for (int i = arg_start + 1; i < argc; ++i)
+            params.push_back(argv[i]);
+
+        sost::atomic_swap::HtlcRpcResult r;
+        if (cmd == "createhtlclock")
+            r = sost::atomic_swap::HandleCreateHtlcLockRpc(params);
+        else if (cmd == "claimhtlc")
+            r = sost::atomic_swap::HandleClaimHtlcRpc(params);
+        else if (cmd == "refundhtlc")
+            r = sost::atomic_swap::HandleRefundHtlcRpc(params);
+        else
+            r = sost::atomic_swap::HandleDecodeHtlcRpc(params);
+
+        if (!r.ok) {
+            fprintf(stderr, "Error: %s\n", r.body.c_str());
+            return 1;
+        }
+        printf("%s\n", r.body.c_str());
+        return 0;
+    }
+
+    // =====================================================================
+    // gethtlcstatus <lock_txid> <lock_vout>
+    //
+    // Read-only. Forwards to the node's gethtlcstatus RPC, which resolves
+    // the lock against the live UTXO set + tip height. (Node-side RPC
+    // dispatch is wired in a later sprint; until then the node answers
+    // method-not-found, which this surfaces verbatim.)
+    // =====================================================================
+    if (cmd == "gethtlcstatus") {
+        if (argc < arg_start + 3) {
+            fprintf(stderr,
+                    "Usage: sost-cli gethtlcstatus <lock_txid> <lock_vout>\n");
+            return 1;
+        }
+        std::string txid = argv[arg_start + 1];
+        std::string vout = argv[arg_start + 2];
+        std::string params = "[\"" + txid + "\",\"" + vout + "\"]";
+        std::string resp = rpc_call("gethtlcstatus", params);
+        if (resp.empty()) {
+            fprintf(stderr,
+                    "Error: empty response — is the node running and RPC "
+                    "reachable?\n");
+            return 1;
+        }
+        printf("%s\n", resp.c_str());
+        return 0;
     }
 
     // All other commands need an existing wallet (except newwallet

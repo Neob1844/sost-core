@@ -166,6 +166,8 @@ add_library(sost-core STATIC
     src/atomic_swap_btc_signing.cpp
     src/atomic_swap_coordinator.cpp
     src/atomic_swap_helpers.cpp   # OTC-1 — HTLC build/RPC helpers (gated; mainnet no-op)
+    src/atomic_swap_orderbook.cpp # OTC-2 — off-chain maker/taker order board (pure)
+    src/atomic_swap_watcher.cpp   # OTC-2 — local non-custodial watcher / auto-pilot (pure)
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -405,6 +407,15 @@ add_test(NAME atomic-swap-htlc-helpers COMMAND test-atomic-swap-htlc-helpers)
 add_executable(test-atomic-swap-htlc-rpc tests/test_atomic_swap_htlc_rpc.cpp)
 target_link_libraries(test-atomic-swap-htlc-rpc PRIVATE sost-core)
 add_test(NAME atomic-swap-htlc-rpc COMMAND test-atomic-swap-htlc-rpc)
+
+# OTC-2 — wallet/watcher/order-board (pure userspace; no consensus surface).
+add_executable(test-atomic-swap-orderbook tests/test_atomic_swap_orderbook.cpp)
+target_link_libraries(test-atomic-swap-orderbook PRIVATE sost-core)
+add_test(NAME atomic-swap-orderbook COMMAND test-atomic-swap-orderbook)
+
+add_executable(test-atomic-swap-watcher tests/test_atomic_swap_watcher.cpp)
+target_link_libraries(test-atomic-swap-watcher PRIVATE sost-core)
+add_test(NAME atomic-swap-watcher COMMAND test-atomic-swap-watcher)
 
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
