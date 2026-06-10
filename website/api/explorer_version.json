@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-10-v338",
-  "note": "PEAK ACTIVE MINERS now anchored to the node's authoritative geteligibleminers.producers_since_genesis (distinct producers since block 0 = 53), ending the per-device localStorage/scan drift that kept showing 18. UPDATED MINERS stays anchored to producers_total (18, since #12100). Requires the node to expose producers_since_genesis. Force-reload."
+  "v": "2026-06-10-v339",
+  "note": "Explorer banners trimmed to only Developer Note + Join the official community; all roadmap/V13-RC/V14/Trinity/miner-setup banners removed. New flagship 'SOST OTC / P2P Atomic Swap' coding-milestone banner added (pillars, 7 pairs, plain-language HTLC flow, BTC/EVM technical paths, live gate state). Force-reload."
 }
