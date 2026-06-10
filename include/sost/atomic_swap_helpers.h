@@ -174,6 +174,40 @@ HtlcStatus GetHtlcStatus(
     const IUtxoView& utxos);
 
 // ---------------------------------------------------------------------------
+// OTC-2.5 — richer, spent-resolved status for the node read-only RPC / watcher
+// ---------------------------------------------------------------------------
+//
+// GetHtlcStatus above only distinguishes "Spent" because an IUtxoView cannot
+// tell HOW a lock was spent. The node, however, can resolve the spending tx
+// (CLAIM vs REFUND) and surface the revealed preimage. This classifier is the
+// PURE decision core the node handler calls once it has gathered the facts —
+// it adds no consensus rule, performs no I/O, and is gate-independent (a read
+// of existing chain state is never a consensus action; on mainnet, where the
+// HTLC gate is OFF, no HTLC_LOCK output can exist, so it naturally reports
+// Unknown for everything).
+enum class HtlcResolvedStatus {
+    Unknown,    // the outpoint is/was not an OUT_HTLC_LOCK (or no info)
+    Locked,     // lock UTXO present, current_height < refund_height (claimable)
+    Expired,    // lock UTXO present, current_height >= refund_height (refundable)
+    Claimed,    // lock spent by a TX_TYPE_HTLC_CLAIM (preimage revealed)
+    Refunded,   // lock spent by a TX_TYPE_HTLC_REFUND
+};
+const char* HtlcResolvedStatusName(HtlcResolvedStatus s);
+
+// Pure classifier over facts the node gathers:
+//   is_htlc_lock      : was the outpoint an OUT_HTLC_LOCK output at all?
+//   lock_present      : is that lock UTXO still unspent?
+//   current_height    : chain tip
+//   refund_height     : the lock's refund_height (from its payload)
+//   spent_by_tx_type  : 0 when unspent / unresolved, else TX_TYPE_HTLC_CLAIM
+//                       or TX_TYPE_HTLC_REFUND (the spending tx's type)
+HtlcResolvedStatus ClassifyHtlcStatus(bool is_htlc_lock,
+                                      bool lock_present,
+                                      int64_t current_height,
+                                      uint64_t refund_height,
+                                      uint8_t spent_by_tx_type);
+
+// ---------------------------------------------------------------------------
 // Internal unchecked builders (test-only) — bypass the gate check.
 // These exist so the test suite can verify the construction logic without
 // flipping the activation gate. They are NOT exposed via RPC.

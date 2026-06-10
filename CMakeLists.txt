@@ -417,6 +417,11 @@ add_executable(test-atomic-swap-watcher tests/test_atomic_swap_watcher.cpp)
 target_link_libraries(test-atomic-swap-watcher PRIVATE sost-core)
 add_test(NAME atomic-swap-watcher COMMAND test-atomic-swap-watcher)
 
+# OTC-2.5 — HTLC read-only status classifier + node-status->watcher pipeline.
+add_executable(test-atomic-swap-status tests/test_atomic_swap_status.cpp)
+target_link_libraries(test-atomic-swap-status PRIVATE sost-core)
+add_test(NAME atomic-swap-status COMMAND test-atomic-swap-status)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)

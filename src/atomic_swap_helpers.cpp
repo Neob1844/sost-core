@@ -344,6 +344,48 @@ HtlcStatus GetHtlcStatus(
 }
 
 // ---------------------------------------------------------------------------
+// OTC-2.5 — richer, spent-resolved status classifier (PURE, gate-independent)
+// ---------------------------------------------------------------------------
+
+const char* HtlcResolvedStatusName(HtlcResolvedStatus s) {
+    switch (s) {
+        case HtlcResolvedStatus::Unknown:  return "unknown";
+        case HtlcResolvedStatus::Locked:   return "locked";
+        case HtlcResolvedStatus::Expired:  return "expired";
+        case HtlcResolvedStatus::Claimed:  return "claimed";
+        case HtlcResolvedStatus::Refunded: return "refunded";
+    }
+    return "unknown";
+}
+
+HtlcResolvedStatus ClassifyHtlcStatus(bool is_htlc_lock,
+                                      bool lock_present,
+                                      int64_t current_height,
+                                      uint64_t refund_height,
+                                      uint8_t spent_by_tx_type)
+{
+    // Not an HTLC lock at all (or no information) -> Unknown.
+    if (!is_htlc_lock) return HtlcResolvedStatus::Unknown;
+
+    if (lock_present) {
+        // Still unspent: the only question is whether the refund window opened.
+        if ((uint64_t)current_height < refund_height)
+            return HtlcResolvedStatus::Locked;   // claimable
+        return HtlcResolvedStatus::Expired;       // refundable, not yet refunded
+    }
+
+    // Spent: classify by the spending tx type. A CLAIM reveals the preimage;
+    // a REFUND returns the funds to the maker.
+    if (spent_by_tx_type == TX_TYPE_HTLC_CLAIM)  return HtlcResolvedStatus::Claimed;
+    if (spent_by_tx_type == TX_TYPE_HTLC_REFUND) return HtlcResolvedStatus::Refunded;
+
+    // Spent but the spending tx could not be resolved (e.g. spender not found
+    // in the scanned range). It was an HTLC lock and it is gone; the safest
+    // honest answer is Unknown rather than guessing claimed vs refunded.
+    return HtlcResolvedStatus::Unknown;
+}
+
+// ---------------------------------------------------------------------------
 // Phase 3C-1: RPC layer helpers
 // ---------------------------------------------------------------------------
 

@@ -1081,6 +1081,7 @@ static void print_usage() {
     printf("             <refund_dest_pkh> <fee>   Build unsigned REFUND tx\n");
     printf("  decodehtlc <raw_tx_hex>   Decode an HTLC LOCK/CLAIM/REFUND tx\n");
     printf("  gethtlcstatus <lock_txid> <lock_vout>  Query lock status from node (read-only)\n");
+    printf("  listhtlclocks   List all open HTLC locks on chain (read-only)\n");
     printf("  dumpprivkey <addr>     Reveal private key (DANGER)\n");
     printf("  wallet-export          Export encrypted wallet backup (AES-256-GCM)\n");
     printf("  wallet-import          Import encrypted wallet backup\n");
@@ -1463,7 +1464,30 @@ int main(int argc, char** argv) {
                     "reachable?\n");
             return 1;
         }
-        printf("%s\n", resp.c_str());
+        // rpc_call returns the full HTTP response; print only the JSON body.
+        auto hb = resp.find("\r\n\r\n");
+        printf("%s\n", (hb != std::string::npos ? resp.substr(hb + 4) : resp).c_str());
+        return 0;
+    }
+
+    // =====================================================================
+    // listhtlclocks  (read-only; forwards to the node)
+    //
+    // Lists every currently-open OUT_HTLC_LOCK UTXO on the chain. Empty on
+    // mainnet (HTLC gate OFF -> no locks can exist); populated on a node
+    // where the gate is active. Used by the OTC-2 watcher to discover locks.
+    // =====================================================================
+    if (cmd == "listhtlclocks") {
+        std::string resp = rpc_call("listhtlclocks", "[]");
+        if (resp.empty()) {
+            fprintf(stderr,
+                    "Error: empty response — is the node running and RPC "
+                    "reachable?\n");
+            return 1;
+        }
+        // rpc_call returns the full HTTP response; print only the JSON body.
+        auto hb = resp.find("\r\n\r\n");
+        printf("%s\n", (hb != std::string::npos ? resp.substr(hb + 4) : resp).c_str());
         return 0;
     }
 

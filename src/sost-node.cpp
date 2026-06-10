@@ -32,6 +32,7 @@
 #include "sost/crypto.h"   // sha256 — used by --dry-run-replay UTXO root
 #include "sost/mempool.h"
 #include "sost/tx_validation.h"
+#include "sost/atomic_swap_helpers.h"  // OTC-2.5 HTLC read-only RPC (ClassifyHtlcStatus)
 #include "sost/emission.h"
 #include "sost/pow/casert.h"
 #include "sost/subsidy.h"
@@ -3895,8 +3896,173 @@ static std::string handle_getpopcv15status(const std::string& id, const std::vec
     return rpc_result(id, s.str());
 }
 
+// ---------------------------------------------------------------------------
+// OTC-2.5 — HTLC atomic-swap read-only RPC (gethtlcstatus / listhtlclocks)
+//
+// Pure reads over the live UTXO set + tx index. NO mutation, NO signing, NO
+// broadcast, NO consensus rule. Reading existing chain state is gate-independent
+// — and on mainnet the HTLC activation gate is OFF, so consensus rejects every
+// HTLC tx and no OUT_HTLC_LOCK output can ever enter the UTXO set. There these
+// handlers therefore report "unknown" / an empty list (a natural no-op). They
+// give the OTC-2 watcher a live source for lock state + revealed preimages on a
+// node where the gate is active (e.g. a testnet/regtest soak).
+//
+// Caller must hold g_chain_mu.
+// ---------------------------------------------------------------------------
+
+// Resolve a confirmed tx by txid via the tx-index. Returns true on success.
+static bool htlc_fetch_tx(const Hash256& txid, sost::Transaction& out_tx) {
+    auto iit = g_tx_index.find(txid);
+    if (iit == g_tx_index.end()) return false;
+    const auto& idx = iit->second;
+    if (idx.block_height < 0 || idx.block_height >= (int64_t)g_blocks.size()) return false;
+    const auto& sb = g_blocks[idx.block_height];
+    if (idx.tx_pos >= sb.tx_hexes.size()) return false;
+    std::vector<Byte> raw;
+    if (!decode_tx_hex(sb.tx_hexes[idx.tx_pos], raw)) return false;
+    std::string err;
+    return sost::Transaction::Deserialize(raw, out_tx, &err);
+}
+
+// Scan blocks [start_height, tip] for the tx that spends (lock_txid, lock_vout).
+// On success sets out_tx_type (the spender's tx_type) and, when the spender
+// carries an OUT_HTLC_CLAIM_WITNESS output, out_preimage + out_has_preimage.
+// Bounded by chain length; only reached when a known HTLC lock is already spent
+// (never on mainnet, where no HTLC lock can exist).
+static bool htlc_find_spender(const Hash256& lock_txid, uint32_t lock_vout,
+                              int64_t start_height,
+                              uint8_t& out_tx_type,
+                              std::array<uint8_t,32>& out_preimage,
+                              bool& out_has_preimage) {
+    out_has_preimage = false;
+    if (start_height < 0) start_height = 0;
+    for (int64_t h = start_height; h < (int64_t)g_blocks.size(); ++h) {
+        const auto& sb = g_blocks[h];
+        for (size_t ti = 0; ti < sb.tx_hexes.size(); ++ti) {
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(sb.tx_hexes[ti], raw)) continue;
+            sost::Transaction tx; std::string err;
+            if (!sost::Transaction::Deserialize(raw, tx, &err)) continue;
+            for (const auto& in : tx.inputs) {
+                if (in.prev_txid == lock_txid && in.prev_index == lock_vout) {
+                    out_tx_type = tx.tx_type;
+                    for (const auto& o : tx.outputs) {
+                        if (o.type == OUT_HTLC_CLAIM_WITNESS) {
+                            out_preimage = sost::ReadHtlcPreimage(o.payload);
+                            out_has_preimage = true;
+                            break;
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+// gethtlcstatus <lock_txid> <lock_vout> — full spent-resolved status of one lock.
+static std::string handle_gethtlcstatus(const std::string& id, const std::vector<std::string>& p) {
+    using namespace sost::atomic_swap;
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    if (p.size() < 2) return rpc_error(id, -1, "usage: gethtlcstatus <lock_txid> <lock_vout>");
+    Hash256 txid{};
+    if (!hex_to_bytes(p[0], txid.data(), 32)) return rpc_error(id, -8, "invalid txid");
+    uint32_t vout;
+    try { vout = (uint32_t)std::stoul(p[1]); } catch (...) { return rpc_error(id, -8, "invalid vout"); }
+
+    const int64_t height = g_chain_height;
+
+    bool is_htlc_lock = false, lock_present = false;
+    int64_t amount = 0;
+    std::array<uint8_t,32> hashlock{}; uint64_t refund_height = 0;
+    std::array<uint8_t,20> claim_pkh{}, refund_pkh{};
+    uint8_t spent_by = 0; bool has_preimage = false; std::array<uint8_t,32> preimage{};
+
+    OutPoint op{txid, vout};
+    auto entry = g_utxo_set.GetUTXO(op);
+    if (entry && entry->type == OUT_HTLC_LOCK && entry->payload.size() == sost::HTLC_LOCK_PAYLOAD_LEN) {
+        is_htlc_lock = true; lock_present = true;
+        amount = entry->amount;
+        hashlock      = sost::ReadHtlcHashlock(entry->payload);
+        refund_height = sost::ReadHtlcRefundHeight(entry->payload);
+        claim_pkh     = sost::ReadHtlcClaimPkh(entry->payload);
+        refund_pkh    = sost::ReadHtlcRefundPkh(entry->payload);
+    } else if (!entry) {
+        // Not in the UTXO set: it may be an HTLC lock that was already spent.
+        sost::Transaction ctx;
+        if (htlc_fetch_tx(txid, ctx) && vout < ctx.outputs.size()) {
+            const auto& o = ctx.outputs[vout];
+            if (o.type == OUT_HTLC_LOCK && o.payload.size() == sost::HTLC_LOCK_PAYLOAD_LEN) {
+                is_htlc_lock = true; lock_present = false;
+                amount = o.amount;
+                hashlock      = sost::ReadHtlcHashlock(o.payload);
+                refund_height = sost::ReadHtlcRefundHeight(o.payload);
+                claim_pkh     = sost::ReadHtlcClaimPkh(o.payload);
+                refund_pkh    = sost::ReadHtlcRefundPkh(o.payload);
+                int64_t lock_height = -1;
+                auto iit = g_tx_index.find(txid);
+                if (iit != g_tx_index.end()) lock_height = iit->second.block_height;
+                htlc_find_spender(txid, vout, lock_height, spent_by, preimage, has_preimage);
+            }
+        }
+    }
+    // (entry present but not an HTLC lock -> is_htlc_lock stays false -> unknown)
+
+    HtlcResolvedStatus st = ClassifyHtlcStatus(is_htlc_lock, lock_present, height, refund_height, spent_by);
+
+    std::ostringstream s;
+    s << "{\"txid\":\"" << to_hex(txid.data(),32) << "\",\"vout\":" << vout
+      << ",\"status\":\"" << HtlcResolvedStatusName(st) << "\""
+      << ",\"current_height\":" << height
+      << ",\"is_htlc_lock\":" << (is_htlc_lock ? "true" : "false")
+      << ",\"spent\":" << ((is_htlc_lock && !lock_present) ? "true" : "false");
+    if (is_htlc_lock) {
+        s << ",\"amount\":" << format_sost(amount)
+          << ",\"hashlock\":\"" << to_hex(hashlock.data(),32) << "\""
+          << ",\"refund_height\":" << refund_height
+          << ",\"claim_pkh\":\"" << to_hex(claim_pkh.data(),20) << "\""
+          << ",\"refund_pkh\":\"" << to_hex(refund_pkh.data(),20) << "\"";
+        if (st == HtlcResolvedStatus::Claimed && has_preimage)
+            s << ",\"revealed_preimage\":\"" << to_hex(preimage.data(),32) << "\"";
+    }
+    s << "}";
+    return rpc_result(id, s.str());
+}
+
+// listhtlclocks — all currently-open OUT_HTLC_LOCK UTXOs (unspent locks).
+static std::string handle_listhtlclocks(const std::string& id, const std::vector<std::string>&) {
+    using namespace sost::atomic_swap;
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    const int64_t height = g_chain_height;
+    std::ostringstream s; s << "[";
+    bool first = true;
+    for (const auto& kv : g_utxo_set.GetMap()) {
+        const auto& e = kv.second;
+        if (e.type != OUT_HTLC_LOCK || e.payload.size() != sost::HTLC_LOCK_PAYLOAD_LEN) continue;
+        auto hashlock      = sost::ReadHtlcHashlock(e.payload);
+        uint64_t refund_h  = sost::ReadHtlcRefundHeight(e.payload);
+        auto claim_pkh     = sost::ReadHtlcClaimPkh(e.payload);
+        auto refund_pkh    = sost::ReadHtlcRefundPkh(e.payload);
+        HtlcResolvedStatus st = ClassifyHtlcStatus(true, true, height, refund_h, 0);
+        if (!first) s << ",";
+        first = false;
+        s << "{\"txid\":\"" << to_hex(kv.first.txid.data(),32) << "\",\"vout\":" << kv.first.index
+          << ",\"amount\":" << format_sost(e.amount)
+          << ",\"hashlock\":\"" << to_hex(hashlock.data(),32) << "\""
+          << ",\"refund_height\":" << refund_h
+          << ",\"claim_pkh\":\"" << to_hex(claim_pkh.data(),20) << "\""
+          << ",\"refund_pkh\":\"" << to_hex(refund_pkh.data(),20) << "\""
+          << ",\"status\":\"" << HtlcResolvedStatusName(st) << "\"}";
+    }
+    s << "]";
+    return rpc_result(id, s.str());
+}
+
 static std::map<std::string,RpcHandler> g_handlers={
     {"getblockcount",handle_getblockcount},
+    {"gethtlcstatus",handle_gethtlcstatus},
+    {"listhtlclocks",handle_listhtlclocks},
     {"getpopcv15status",handle_getpopcv15status},
     {"getbestblockhash",handle_getbestblockhash},
     {"getblockhash",handle_getblockhash},
