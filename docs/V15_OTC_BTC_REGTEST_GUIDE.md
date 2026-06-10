@@ -45,15 +45,20 @@ for provenance: tag `release_1.5.3`, commit
 `000137393a436d55a18971ca93a2d20a54d55437`, maintainer key
 `129EE55E90E6E7BB5ED3530DFD9FCBA3C53CED20`).
 
-The vendor ceremony disables libwally's own CMake build by prefixing its build
-files with `_` (`_CMakeLists.txt`, `src/_CMakeLists.txt`, `_cmake/`) so the
-pristine tree never auto-builds. **You do not need to rename them by hand** —
-when `SOST_BTC_HTLC_SIGNING=ON`, the SOST CMake restores those names
-idempotently at configure time. If `vendor/libwally-core` is absent entirely,
-the configure step fails fast with a pointer back to this guide.
+`vendor/libwally-core` is registered as a **git submodule** pinned to that
+commit (see `.gitmodules`). Initialise it (and its nested secp256k1) before an
+ON build:
 
-> The 24 MB vendored tree is **not** committed to the repo by default (the OFF
-> build never needs it). Obtain it per the ceremony doc before an ON build.
+```bash
+git submodule update --init --recursive vendor/libwally-core
+```
+
+The default OFF build never initialises or uses the submodule, so most checkouts
+can ignore it entirely. If `SOST_BTC_HTLC_SIGNING=ON` is set without the
+submodule initialised, the configure step fails fast with a pointer back to
+this guide. (If a pristine upstream tree ever ships libwally's CMake build
+files prefixed with `_` to keep them dormant, the SOST CMake restores those
+names idempotently at configure time — no manual rename needed.)
 
 ---
 
