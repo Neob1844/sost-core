@@ -168,6 +168,7 @@ add_library(sost-core STATIC
     src/atomic_swap_helpers.cpp   # OTC-1 — HTLC build/RPC helpers (gated; mainnet no-op)
     src/atomic_swap_orderbook.cpp # OTC-2 — off-chain maker/taker order board (pure)
     src/atomic_swap_watcher.cpp   # OTC-2 — local non-custodial watcher / auto-pilot (pure)
+    src/atomic_swap_session.cpp   # OTC-4 — end-to-end swap session coordinator (pure)
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -361,6 +362,10 @@ add_test(NAME popc-v15-soak COMMAND test-popc-v15-soak)
 add_executable(popc15-carrier tools/popc15_carrier.cpp)
 target_link_libraries(popc15-carrier PRIVATE sost-core secp256k1)
 
+# OTC-4 — end-to-end swap session driver (operator tool, non-custodial)
+add_executable(otc-coordinator tools/otc_swap_coordinator.cpp)
+target_link_libraries(otc-coordinator PRIVATE sost-core)
+
 # ---------------------------------------------------------------------------
 # OTC-0.5 — atomic-swap dormant groundwork (gate at INT64_MAX; mainnet no-op).
 # BTC HTLC signing stays a compile-time-disabled stub set unless the operator
@@ -486,6 +491,11 @@ add_test(NAME atomic-swap-watcher COMMAND test-atomic-swap-watcher)
 add_executable(test-atomic-swap-status tests/test_atomic_swap_status.cpp)
 target_link_libraries(test-atomic-swap-status PRIVATE sost-core)
 add_test(NAME atomic-swap-status COMMAND test-atomic-swap-status)
+
+# OTC-4 — end-to-end swap session coordinator (pure full-flow + adversarial).
+add_executable(test-atomic-swap-session tests/test_atomic_swap_session.cpp)
+target_link_libraries(test-atomic-swap-session PRIVATE sost-core)
+add_test(NAME atomic-swap-session COMMAND test-atomic-swap-session)
 
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
