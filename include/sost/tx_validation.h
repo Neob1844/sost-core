@@ -97,6 +97,17 @@ enum class TxValCode : int {
     R13_PAYLOAD_TOO_LONG   = 113,
     R14_PAYLOAD_FORBIDDEN  = 114,
 
+    // Atomic Swap HTLC structural + spend rules (OTC-1; gated by
+    // atomic_swap_htlc_active_at(), mainnet no-op while gate = INT64_MAX).
+    R17_HTLC_PAYLOAD_INVALID          = 115,  // HTLC_LOCK payload (80B / refund_height / dust)
+    R18_HTLC_CLAIM_WITNESS_INVALID    = 116,  // HTLC_CLAIM_WITNESS payload / context
+    R19_HTLC_CLAIM_STRUCTURE_INVALID  = 117,  // HTLC_CLAIM tx structure (1 input, 1 witness marker)
+    R20_HTLC_CLAIM_INPUT_INVALID      = 118,  // LOCK spent by non-HTLC tx / wrong input
+    R21_HTLC_CLAIM_PREIMAGE_MISMATCH  = 119,  // sha256(preimage) != hashlock
+    R22_HTLC_CLAIM_TIMEOUT            = 120,  // CLAIM at/after refund_height
+    R23_HTLC_REFUND_STRUCTURE_INVALID = 121,  // HTLC_REFUND tx structure
+    R24_HTLC_REFUND_BEFORE_TIMEOUT    = 122,  // REFUND before refund_height
+
     // Spend / signature (S1-S12)
     S1_UTXO_NOT_FOUND      = 201,
     S2_PKH_MISMATCH        = 202,

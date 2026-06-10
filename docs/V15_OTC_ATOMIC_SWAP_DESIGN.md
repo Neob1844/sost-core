@@ -160,7 +160,30 @@ uncollectible until/unless unfrozen). **Design requirements:**
     shared consensus files must NOT be taken wholesale — those additions will be hand-grafted onto
     current `main` in OTC-1 together with the CLAIM/REFUND rules (LOCK+CLAIM+REFUND as one gated set,
     so there is never a LOCK without a spend path).
-- **OTC-1 — SOST-side HTLC consensus** — finish CLAIM + REFUND validation rules (preimage check, signatures, timeout, adversarial tests: wrong preimage, claim-after-timeout, refund-before-timeout, double-spend, malformed payload), serialization, mempool acceptance, read-only HTLC/preimage indexing RPC. Gate stays deferred.
+- **OTC-1 — SOST-side HTLC consensus** ✅ DONE — hand-grafted the complete LOCK+CLAIM+REFUND
+  consensus core onto current `main` (no V15 shared files overwritten), all gated by
+  `atomic_swap_htlc_active_at()` (gate still `INT64_MAX` → mainnet byte-identical / no-op):
+  - **Types** (`transaction.h`): `OUT_HTLC_LOCK 0x12`, `OUT_HTLC_CLAIM_WITNESS 0x13` (carries the
+    32-byte preimage), tx types `TX_TYPE_HTLC_CLAIM 0x10` / `TX_TYPE_HTLC_REFUND 0x11`. CLAIM/REFUND
+    are **spend paths of the LOCK utxo** (not new output types) — a LOCK can never exist without both.
+  - **Payload** (`transaction.h`): `HTLC_LOCK_PAYLOAD_LEN=80` = `[hashlock(32)|refund_height(8 LE)|claim_pkh(20)|refund_pkh(20)]`;
+    `HTLC_CLAIM_WITNESS_PAYLOAD_LEN=32` = preimage; pure short-payload-tolerant reader/writer helpers.
+  - **Rules** (`tx_validation.{h,cpp}`, codes R17–R24): R11 type-activation gate; R17 LOCK payload
+    (80B, `refund_height > height`, amount ≥ DUST); R18 witness payload (32B, only in a CLAIM tx); R2
+    tx-type gate; R19 CLAIM structure (1 input, exactly 1 witness marker); R20 a LOCK is only spendable
+    by CLAIM/REFUND (and CLAIM/REFUND only spend a LOCK); R21 `sha256(preimage)==hashlock`; R22 CLAIM
+    strictly before `refund_height`; R23 REFUND structure (no witness marker); R24 REFUND only at/after
+    `refund_height`. CLAIM verifies the signature against `claim_pkh`, REFUND against `refund_pkh`
+    (both overriding the LOCK's own `pubkey_hash`). The UTXO model makes CLAIM and REFUND mutually
+    exclusive (one output spent once) → claim-then-refund and refund-then-claim are both impossible.
+  - **Helpers + read-only RPC** (`atomic_swap_helpers.{h,cpp}`, all gated): unsigned LOCK/CLAIM/REFUND
+    tx builders; `createhtlclock/claimhtlc/refundhtlc/decodehtlc/gethtlcstatus` pure handlers over an
+    `IUtxoView` — list locks, report `locked/claimed/refunded/expired`, and expose a revealed preimage
+    so the counterparty's watcher can claim the mirror HTLC. No broadcast, no signing, no network.
+  - **Tests**: `test-atomic-swap-htlc-{lock,helpers,rpc}` cover valid + every adversarial path (bad
+    payload, wrong preimage, claim-after-timeout, refund-before-timeout, refund-by-non-owner, mutual
+    exclusion, pre-activation no-op, byte-identical replay with gate off). **Full ctest 88/88** green;
+    the 85 pre-existing tests unchanged → no consensus regression, mainnet untouched.
 - **OTC-2 — wallet + automation** — wallet builders (`createhtlclock/claimhtlc/refundhtlc/decodehtlc/gethtlcstatus`), the maker/taker order board (off-chain), and the non-custodial **watcher**: auto-claim on counterparty lock + preimage reveal, auto-refund after timeout, resume after restart, with timeout-ordering enforcement.
 - **OTC-3 — cross-chain legs** — enable BTC signing (libwally) behind review; deploy + external-audit the EVM `AtomicSwapHTLC.sol`; issuer-freeze warnings in wallet/UI; end-to-end testnet swaps (SOST↔BTC regtest, SOST↔EVM testnet).
 - **OTC-FLIP** — only after soak + external cryptographic/economic review: a single-line flip of `ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT` from `INT64_MAX` to the chosen V15-era height. Separate, explicit, coordinated. Rollback = back to `INT64_MAX`, no fork.

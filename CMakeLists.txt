@@ -165,6 +165,7 @@ add_library(sost-core STATIC
     src/atomic_swap_btc.cpp
     src/atomic_swap_btc_signing.cpp
     src/atomic_swap_coordinator.cpp
+    src/atomic_swap_helpers.cpp   # OTC-1 — HTLC build/RPC helpers (gated; mainnet no-op)
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -390,6 +391,20 @@ add_test(NAME atomic-swap-coordinator COMMAND test-atomic-swap-coordinator)
 add_executable(test-atomic-swap-e2e-sim tests/test_atomic_swap_e2e_sim.cpp)
 target_link_libraries(test-atomic-swap-e2e-sim PRIVATE sost-core)
 add_test(NAME atomic-swap-e2e-sim COMMAND test-atomic-swap-e2e-sim)
+
+# OTC-1 — SOST-side HTLC consensus (LOCK/CLAIM/REFUND) + helpers + RPC.
+# All gated by ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX (mainnet no-op).
+add_executable(test-atomic-swap-htlc-lock tests/test_atomic_swap_htlc_lock.cpp)
+target_link_libraries(test-atomic-swap-htlc-lock PRIVATE sost-core)
+add_test(NAME atomic-swap-htlc-lock COMMAND test-atomic-swap-htlc-lock)
+
+add_executable(test-atomic-swap-htlc-helpers tests/test_atomic_swap_htlc_helpers.cpp)
+target_link_libraries(test-atomic-swap-htlc-helpers PRIVATE sost-core)
+add_test(NAME atomic-swap-htlc-helpers COMMAND test-atomic-swap-htlc-helpers)
+
+add_executable(test-atomic-swap-htlc-rpc tests/test_atomic_swap_htlc_rpc.cpp)
+target_link_libraries(test-atomic-swap-htlc-rpc PRIVATE sost-core)
+add_test(NAME atomic-swap-htlc-rpc COMMAND test-atomic-swap-htlc-rpc)
 
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)

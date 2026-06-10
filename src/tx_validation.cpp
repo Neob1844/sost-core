@@ -11,6 +11,9 @@
 #include "sost/lottery.h"   // V11 Phase 2 (C8) — phase2_coinbase_split
 #include "sost/gv_g4.h"     // W2 — G4 coinbase approval marker (GV_G4_APPROVAL_PKH, gv_g4_active_at)
 #include "sost/gv_g5.h"     // W4b — G5 Guardian veto carrier (GV_G5_VETO_PKH, gv_g5_active_at)
+#include "sost/atomic_swap.h" // OTC-1 — ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT gate / atomic_swap_htlc_active_at
+#include "sost/crypto.h"      // OTC-1 — sha256() for HTLC preimage verification (R21)
+#include "sost/tx_signer.h"   // OTC-1 — SpentOutput / VerifyTransactionInput (HTLC spend dispatch)
 
 #include <algorithm>
 #include <climits>
@@ -35,6 +38,12 @@ static bool IsActiveOutputType(uint8_t type, int64_t height, int64_t bond_activa
         return true;
     if ((type == OUT_BOND_LOCK || type == OUT_ESCROW_LOCK) &&
         height >= bond_activation_height)
+        return true;
+    // OTC-1: Atomic Swap HTLC output types are active only once the HTLC gate
+    // opens (atomic_swap_htlc_active_at). With the gate at INT64_MAX this is
+    // always false → R11 rejects HTLC outputs, mainnet stays no-op.
+    if ((type == OUT_HTLC_LOCK || type == OUT_HTLC_CLAIM_WITNESS) &&
+        atomic_swap_htlc_active_at(height))
         return true;
     return false;
 }
@@ -98,10 +107,18 @@ static TxValidationResult ValidateStructure(
             "R1: version must be 1, got " + std::to_string(tx.version));
     }
 
-    // R2: tx_type in {0x00, 0x01}
-    if (tx.tx_type != TX_TYPE_STANDARD && tx.tx_type != TX_TYPE_COINBASE) {
-        return TxValidationResult::Fail(TxValCode::R2_BAD_TX_TYPE,
-            "R2: invalid tx_type 0x" + HexStr(&tx.tx_type, 1));
+    // R2: tx_type in {0x00, 0x01}; HTLC_CLAIM (0x10) / HTLC_REFUND (0x11) are
+    // additionally allowed only once atomic_swap_htlc_active_at(spend_height).
+    // While the gate is INT64_MAX those tx types are rejected → mainnet no-op.
+    {
+        bool std_tx_type = (tx.tx_type == TX_TYPE_STANDARD || tx.tx_type == TX_TYPE_COINBASE);
+        bool htlc_tx_type_allowed =
+            atomic_swap_htlc_active_at(ctx.spend_height) &&
+            (tx.tx_type == TX_TYPE_HTLC_CLAIM || tx.tx_type == TX_TYPE_HTLC_REFUND);
+        if (!std_tx_type && !htlc_tx_type_allowed) {
+            return TxValidationResult::Fail(TxValCode::R2_BAD_TX_TYPE,
+                "R2: invalid tx_type 0x" + HexStr(&tx.tx_type, 1));
+        }
     }
 
     // R3: 1 <= num_inputs <= 256
@@ -188,6 +205,55 @@ static TxValidationResult ValidateStructure(
             }
         }
 
+        // R18: HTLC_CLAIM_WITNESS payload must be exactly
+        //      HTLC_CLAIM_WITNESS_PAYLOAD_LEN (32) bytes (the preimage) and only
+        //      valid inside a TX_TYPE_HTLC_CLAIM transaction. Gated by R11 (type
+        //      inactive while the HTLC gate is closed), so mainnet stays no-op.
+        if (out.type == OUT_HTLC_CLAIM_WITNESS) {
+            if (out.payload.size() != HTLC_CLAIM_WITNESS_PAYLOAD_LEN) {
+                return TxValidationResult::Fail(TxValCode::R18_HTLC_CLAIM_WITNESS_INVALID,
+                    "R18: HTLC_CLAIM_WITNESS output[" + std::to_string(i) +
+                    "] payload must be " + std::to_string(HTLC_CLAIM_WITNESS_PAYLOAD_LEN) +
+                    " bytes (preimage), got " + std::to_string(out.payload.size()),
+                    -1, (int32_t)i);
+            }
+            if (tx.tx_type != TX_TYPE_HTLC_CLAIM) {
+                return TxValidationResult::Fail(TxValCode::R18_HTLC_CLAIM_WITNESS_INVALID,
+                    "R18: HTLC_CLAIM_WITNESS output[" + std::to_string(i) +
+                    "] only allowed inside TX_TYPE_HTLC_CLAIM (0x10); got tx_type 0x" +
+                    HexStr(&tx.tx_type, 1),
+                    -1, (int32_t)i);
+            }
+        }
+
+        // R17: HTLC_LOCK payload must be exactly HTLC_LOCK_PAYLOAD_LEN (80) bytes,
+        //      refund_height must be strictly > current spend_height, and amount
+        //      must be >= DUST_THRESHOLD. Gated by R11 (type inactive while closed).
+        if (out.type == OUT_HTLC_LOCK) {
+            if (out.payload.size() != HTLC_LOCK_PAYLOAD_LEN) {
+                return TxValidationResult::Fail(TxValCode::R17_HTLC_PAYLOAD_INVALID,
+                    "R17: HTLC_LOCK output[" + std::to_string(i) +
+                    "] payload must be " + std::to_string(HTLC_LOCK_PAYLOAD_LEN) +
+                    " bytes, got " + std::to_string(out.payload.size()),
+                    -1, (int32_t)i);
+            }
+            uint64_t refund_height = ReadHtlcRefundHeight(out.payload);
+            if (refund_height <= (uint64_t)ctx.spend_height) {
+                return TxValidationResult::Fail(TxValCode::R17_HTLC_PAYLOAD_INVALID,
+                    "R17: HTLC_LOCK output[" + std::to_string(i) +
+                    "] refund_height " + std::to_string(refund_height) +
+                    " must be > current height " + std::to_string(ctx.spend_height),
+                    -1, (int32_t)i);
+            }
+            if (out.amount < DUST_THRESHOLD) {
+                return TxValidationResult::Fail(TxValCode::R17_HTLC_PAYLOAD_INVALID,
+                    "R17: HTLC_LOCK output[" + std::to_string(i) +
+                    "] amount " + std::to_string(out.amount) +
+                    " < DUST_THRESHOLD " + std::to_string(DUST_THRESHOLD),
+                    -1, (int32_t)i);
+            }
+        }
+
         // R13: payload_len <= 512 (consensus limit)
         if (out.payload.size() > 512) {
             return TxValidationResult::Fail(TxValCode::R13_PAYLOAD_TOO_LONG,
@@ -203,6 +269,10 @@ static TxValidationResult ValidateStructure(
             bool payload_allowed = false;
             if (out.type == OUT_BOND_LOCK || out.type == OUT_ESCROW_LOCK) {
                 payload_allowed = true; // validated in R15/R16 above
+            } else if (out.type == OUT_HTLC_LOCK && atomic_swap_htlc_active_at(ctx.spend_height)) {
+                payload_allowed = true; // validated in R17 above (OTC-1)
+            } else if (out.type == OUT_HTLC_CLAIM_WITNESS && atomic_swap_htlc_active_at(ctx.spend_height)) {
+                payload_allowed = true; // validated in R18 above (OTC-1)
             } else if (ctx.spend_height >= ctx.capsule_activation_height) {
                 if (out.type == OUT_TRANSFER) payload_allowed = true;
             }
@@ -290,6 +360,167 @@ static TxValidationResult ValidateInputs(
                     (int32_t)i);
             }
             // Lock expired — output is spendable by the owner (pubkey_hash match)
+        }
+
+        // -------------------------------------------------------------------
+        // OTC-1: HTLC_LOCK spend dispatch. An OUT_HTLC_LOCK utxo can ONLY be
+        // spent by a TX_TYPE_HTLC_CLAIM (preimage, before timeout) or
+        // TX_TYPE_HTLC_REFUND (after timeout) transaction. Each branch runs its
+        // consensus checks, then calls VerifyTransactionInput with the claim/
+        // refund pubkey-hash from the LOCK payload (overriding the LOCK's own
+        // pubkey_hash field). Gated upstream by R2/R11: with the gate closed no
+        // HTLC_LOCK utxo can exist and no HTLC tx passes R2 → mainnet no-op.
+        // -------------------------------------------------------------------
+        if (utxo.type == OUT_HTLC_LOCK) {
+            if (tx.tx_type != TX_TYPE_HTLC_CLAIM &&
+                tx.tx_type != TX_TYPE_HTLC_REFUND) {
+                return TxValidationResult::Fail(TxValCode::R20_HTLC_CLAIM_INPUT_INVALID,
+                    "R20: input[" + std::to_string(i) + "] references HTLC_LOCK utxo "
+                    "but tx.tx_type 0x" + HexStr(&tx.tx_type, 1) +
+                    " is not HTLC_CLAIM/HTLC_REFUND",
+                    (int32_t)i);
+            }
+
+            if (tx.tx_type == TX_TYPE_HTLC_CLAIM) {
+                // R19a: CLAIM must have exactly 1 input (the LOCK reference).
+                if (tx.inputs.size() != 1) {
+                    return TxValidationResult::Fail(TxValCode::R19_HTLC_CLAIM_STRUCTURE_INVALID,
+                        "R19: HTLC_CLAIM tx must have exactly 1 input, got " +
+                        std::to_string(tx.inputs.size()), (int32_t)i);
+                }
+                // R19b: first output must be the OUT_HTLC_CLAIM_WITNESS marker.
+                if (tx.outputs.empty() ||
+                    tx.outputs[0].type != OUT_HTLC_CLAIM_WITNESS) {
+                    return TxValidationResult::Fail(TxValCode::R19_HTLC_CLAIM_STRUCTURE_INVALID,
+                        "R19: HTLC_CLAIM first output must be HTLC_CLAIM_WITNESS marker",
+                        (int32_t)i);
+                }
+                // R19c: exactly 1 OUT_HTLC_CLAIM_WITNESS marker in the tx.
+                int marker_count = 0;
+                for (const auto& o : tx.outputs) {
+                    if (o.type == OUT_HTLC_CLAIM_WITNESS) marker_count++;
+                }
+                if (marker_count != 1) {
+                    return TxValidationResult::Fail(TxValCode::R19_HTLC_CLAIM_STRUCTURE_INVALID,
+                        "R19: HTLC_CLAIM must have exactly 1 OUT_HTLC_CLAIM_WITNESS marker, got " +
+                        std::to_string(marker_count), (int32_t)i);
+                }
+
+                // R21: sha256(preimage) must equal LOCK.hashlock.
+                auto preimage = ReadHtlcPreimage(tx.outputs[0].payload);
+                auto hashlock = ReadHtlcHashlock(utxo.payload);
+                Bytes32 computed = sha256(preimage.data(), preimage.size());
+                if (computed != hashlock) {
+                    return TxValidationResult::Fail(TxValCode::R21_HTLC_CLAIM_PREIMAGE_MISMATCH,
+                        "R21: HTLC_CLAIM preimage hash mismatch", (int32_t)i);
+                }
+
+                // R22: claim must occur strictly BEFORE the LOCK's refund_height.
+                uint64_t refund_height = ReadHtlcRefundHeight(utxo.payload);
+                if ((uint64_t)ctx.spend_height >= refund_height) {
+                    return TxValidationResult::Fail(TxValCode::R22_HTLC_CLAIM_TIMEOUT,
+                        "R22: HTLC_CLAIM at spend_height " + std::to_string(ctx.spend_height) +
+                        " >= refund_height " + std::to_string(refund_height) +
+                        " (claim window expired)", (int32_t)i);
+                }
+
+                // Signature + pkh check with the claim_pkh from the LOCK payload
+                // (overriding utxo.pubkey_hash).
+                auto claim_pkh_arr = ReadHtlcClaimPkh(utxo.payload);
+                PubKeyHash claim_pkh{};
+                std::copy(claim_pkh_arr.begin(), claim_pkh_arr.end(), claim_pkh.begin());
+
+                std::string verify_err;
+                SpentOutput spent_for_claim;
+                spent_for_claim.amount = utxo.amount;
+                spent_for_claim.type   = utxo.type;
+                if (!VerifyTransactionInput(tx, i, spent_for_claim, ctx.genesis_hash,
+                                            claim_pkh, &verify_err)) {
+                    TxValCode code = TxValCode::S6_VERIFY_FAIL;
+                    if (verify_err.find("hash mismatch") != std::string::npos)
+                        code = TxValCode::S2_PKH_MISMATCH;
+                    else if (verify_err.find("all zeros") != std::string::npos)
+                        code = TxValCode::S4_ZERO_SIGNATURE;
+                    else if (verify_err.find("LOW-S") != std::string::npos ||
+                             verify_err.find("low-S") != std::string::npos ||
+                             verify_err.find("High-S") != std::string::npos)
+                        code = TxValCode::S5_HIGH_S;
+                    return TxValidationResult::Fail(code,
+                        "HTLC_CLAIM input[" + std::to_string(i) + "]: " + verify_err, (int32_t)i);
+                }
+
+                out_input_sum += utxo.amount;
+                if (out_input_sum > SUPPLY_MAX_STOCKS || out_input_sum < 0) {
+                    return TxValidationResult::Fail(TxValCode::R7_SUM_OVERFLOW,
+                        "input sum overflow at input[" + std::to_string(i) + "]", (int32_t)i);
+                }
+                continue;  // CLAIM path complete; skip the standard verify-input call.
+            }
+
+            if (tx.tx_type == TX_TYPE_HTLC_REFUND) {
+                // R23a: exactly 1 input.
+                if (tx.inputs.size() != 1) {
+                    return TxValidationResult::Fail(TxValCode::R23_HTLC_REFUND_STRUCTURE_INVALID,
+                        "R23: HTLC_REFUND tx must have exactly 1 input, got " +
+                        std::to_string(tx.inputs.size()), (int32_t)i);
+                }
+                // R23b: no OUT_HTLC_CLAIM_WITNESS marker in any output (no preimage reveal).
+                for (const auto& o : tx.outputs) {
+                    if (o.type == OUT_HTLC_CLAIM_WITNESS) {
+                        return TxValidationResult::Fail(TxValCode::R23_HTLC_REFUND_STRUCTURE_INVALID,
+                            "R23: HTLC_REFUND must not contain OUT_HTLC_CLAIM_WITNESS marker outputs",
+                            (int32_t)i);
+                    }
+                }
+                // R24: spend_height must be >= refund_height.
+                uint64_t refund_height = ReadHtlcRefundHeight(utxo.payload);
+                if ((uint64_t)ctx.spend_height < refund_height) {
+                    return TxValidationResult::Fail(TxValCode::R24_HTLC_REFUND_BEFORE_TIMEOUT,
+                        "R24: HTLC_REFUND at spend_height " + std::to_string(ctx.spend_height) +
+                        " < refund_height " + std::to_string(refund_height) +
+                        " (refund window not yet open)", (int32_t)i);
+                }
+
+                // Signature + pkh check with the refund_pkh from the LOCK payload.
+                auto refund_pkh_arr = ReadHtlcRefundPkh(utxo.payload);
+                PubKeyHash refund_pkh{};
+                std::copy(refund_pkh_arr.begin(), refund_pkh_arr.end(), refund_pkh.begin());
+
+                std::string verify_err;
+                SpentOutput spent_for_refund;
+                spent_for_refund.amount = utxo.amount;
+                spent_for_refund.type   = utxo.type;
+                if (!VerifyTransactionInput(tx, i, spent_for_refund, ctx.genesis_hash,
+                                            refund_pkh, &verify_err)) {
+                    TxValCode code = TxValCode::S6_VERIFY_FAIL;
+                    if (verify_err.find("hash mismatch") != std::string::npos)
+                        code = TxValCode::S2_PKH_MISMATCH;
+                    else if (verify_err.find("all zeros") != std::string::npos)
+                        code = TxValCode::S4_ZERO_SIGNATURE;
+                    else if (verify_err.find("LOW-S") != std::string::npos ||
+                             verify_err.find("low-S") != std::string::npos ||
+                             verify_err.find("High-S") != std::string::npos)
+                        code = TxValCode::S5_HIGH_S;
+                    return TxValidationResult::Fail(code,
+                        "HTLC_REFUND input[" + std::to_string(i) + "]: " + verify_err, (int32_t)i);
+                }
+
+                out_input_sum += utxo.amount;
+                if (out_input_sum > SUPPLY_MAX_STOCKS || out_input_sum < 0) {
+                    return TxValidationResult::Fail(TxValCode::R7_SUM_OVERFLOW,
+                        "input sum overflow at input[" + std::to_string(i) + "]", (int32_t)i);
+                }
+                continue;  // REFUND path complete; skip the standard verify-input call.
+            }
+        }
+
+        // R20: an HTLC_CLAIM/REFUND tx must reference an OUT_HTLC_LOCK utxo. If we
+        // reach here with an HTLC tx_type, the utxo is NOT HTLC_LOCK → reject.
+        if (tx.tx_type == TX_TYPE_HTLC_CLAIM || tx.tx_type == TX_TYPE_HTLC_REFUND) {
+            return TxValidationResult::Fail(TxValCode::R20_HTLC_CLAIM_INPUT_INVALID,
+                "R20: HTLC " + std::string(tx.tx_type == TX_TYPE_HTLC_CLAIM ? "CLAIM" : "REFUND") +
+                " input[" + std::to_string(i) + "] must reference an OUT_HTLC_LOCK utxo; got type 0x" +
+                HexStr(&utxo.type, 1), (int32_t)i);
         }
 
         if (utxo.is_coinbase) {
