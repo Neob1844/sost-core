@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-09-v335",
-  "note": "HOTFIX: html meta and json version realigned (a v333/v334 mismatch caused an infinite reload loop). Auto-reload now guards with sessionStorage so a stale-cache mismatch can only trigger ONE reload, never a loop. Also carries the UPDATED MINERS 'since #12100 V13' label. Force-reload."
+  "v": "2026-06-10-v336",
+  "note": "Miner-count cards (PEAK ACTIVE MINERS / UPDATED MINERS / DTD eligible) are now anchored to the node's authoritative geteligibleminers.producers_total instead of a per-device localStorage high-water mark. Fixes cross-device drift where a stale browser cache showed an inflated count (e.g. 48) above the real on-chain producer set. Force-reload."
 }

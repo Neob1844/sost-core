@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-09-v335">
+<meta name="explorer-html-version" content="2026-06-10-v336">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -2820,7 +2820,12 @@ function addrTag(addr){var r=ROLES[addr];if(!r)return'';var c=r==='GOLD VAULT'?'
 function addrLink(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+addr+'</span>'+addrTag(addr)+cpBtn(addr);}
 function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(\''+addr+'\')">'+sH(addr)+'</span>'+addrTag(addr);}
 
-try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;var pe=localStorage.getItem('sost_peak_miners_ever');var pm=document.getElementById('dPeakMiner');if(pe&&pm)pm.textContent=pe;});}catch(e){}
+// NOTE: the miner cards (PEAK ACTIVE / DTD eligible) are intentionally NOT
+// seeded from localStorage on load anymore — that per-device cache used to
+// flash an inflated, stale value (e.g. 48) that disagreed across devices and
+// could sit above the real on-chain producer set. They are now anchored to
+// the node's geteligibleminers on the first updateInfo tick (PEAK) and to the
+// live DTD scan (eligible), both capped to producers_total.
 // Phase X+1 — kick off a silent DTD scan ~3 s after page load so the
 // dashboard CIRCULATING SUPPLY + DTD LOTTERY BALANCE cards populate
 // with real values without the user having to open the DTD panel.
@@ -3090,12 +3095,16 @@ function dtdEligibilityBanner(height, progressHtml){
   //    set, which reached ~50) — shown as "up to N".
   //  • Phase 2 is CURRENT → the live eligible count (moves every block) — dynamic.
   //  • Phase 3 (from 21,000) is future → dynamic once active.
+  var _nodeCeil2=parseInt(window._nodeProducersTotal,10)||0;
   var poolPhase1=0, eligNow=null;
   try{ var _u=JSON.parse(localStorage.getItem('sost_updated_miners_v1')||'{}');
        poolPhase1=(_u&&_u.set)?Object.keys(_u.set).length:0; }catch(_e){}
   try{ var _pe=parseInt(localStorage.getItem('sost_peak_miners_ever')||'0',10)||0; if(_pe>poolPhase1)poolPhase1=_pe; }catch(_e){}
-  if(!poolPhase1)poolPhase1=50;   // documented Phase-1 peak fallback
+  // The node's producer set is authoritative — never overstate above it.
+  if(_nodeCeil2>0)poolPhase1=_nodeCeil2;
+  else if(!poolPhase1)poolPhase1=50;   // degraded-mode fallback (node unreachable)
   try{ var _m=String(localStorage.getItem('sost_dtd_eligible_count')||'').match(/(\d+)/); if(_m)eligNow=parseInt(_m[1],10); }catch(_e){}
+  if(_nodeCeil2>0&&eligNow!=null&&eligNow>_nodeCeil2)eligNow=_nodeCeil2;
   var elig1='<li style="color:#22c55e"><b>Eligible miners: up to '+poolPhase1+'</b> &middot; phase complete (static)</li>';
   var elig2='<li style="color:#22c55e"><b>Eligible miners now: '+(eligNow!=null?eligNow:'&mdash;')+'</b> &middot; dynamic, moves every block</li>';
   var elig3='<li style="color:#c084fc"><b>Eligible miners: &mdash;</b> &middot; dynamic once block 21,000 is reached</li>';
@@ -3516,12 +3525,17 @@ async function renderDTDPanel(body,title,silent){
       if(height<7100&&r.minedBlocks>0)return true;
       return false;
     }).length;
-    // PEAK MINERS EVER (monotonic): distinct addresses that have produced >=1
-    // block since genesis. Never decreases — floored across visits so a partial
-    // scan can't make it appear to drop.
+    // PEAK MINERS EVER: distinct addresses that have produced >=1 block. The
+    // node's geteligibleminers.producers_total is the AUTHORITATIVE on-chain
+    // ceiling, so we cap to it rather than to a per-device localStorage
+    // high-water mark (which used to drift above the real set and disagree
+    // across devices). Fall back to the live scan count only if the node
+    // value is not yet available this tick.
+    var _nodeCeil=parseInt(window._nodeProducersTotal,10)||0;
     var peakMinersEver=rows.filter(function(r){return (r.minedBlocks||0)>0;}).length;
-    try{var _pe=parseInt(localStorage.getItem('sost_peak_miners_ever')||'0',10)||0;
-      if(peakMinersEver<_pe)peakMinersEver=_pe;else localStorage.setItem('sost_peak_miners_ever',String(peakMinersEver));}catch(e){}
+    if(_nodeCeil>0)peakMinersEver=_nodeCeil;
+    try{localStorage.setItem('sost_peak_miners_ever',String(peakMinersEver));}catch(e){}
+    if(_nodeCeil>0&&eligibleRows>_nodeCeil)eligibleRows=_nodeCeil; // can't exceed producers
     var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
     var dpm=document.getElementById('dPeakMiner');if(dpm){dpm.textContent=peakMinersEver;}
     // UPDATED MINERS (since #7100) — the full-chain scan knows the TRUE set of
@@ -3535,9 +3549,11 @@ async function renderDTDPanel(body,title,silent){
       Object.keys(ph2.minerCounts||{}).forEach(function(a){_set0[a]=1;});
       localStorage.setItem('sost_updated_miners_v1',JSON.stringify({h:height,set:_set0}));
       var _umN=Object.keys(_set0).length;
+      // Cap to the node's on-chain producer set — the card must never claim
+      // more updated miners than have actually produced a block.
+      if(_nodeCeil>0&&_umN>_nodeCeil)_umN=_nodeCeil;
       var _pmEl0=document.getElementById('dPhase2Miners');
-      if(_pmEl0){var _cur0=parseInt(String(_pmEl0.textContent||'').replace(/[^0-9]/g,''),10)||0;
-        if(_umN>_cur0)_pmEl0.textContent=String(_umN);}
+      if(_pmEl0)_pmEl0.textContent=String(_umN);
     }catch(e){}
     renderDTDTable(_dtdCache);
 
@@ -3831,6 +3847,32 @@ async function updateDashboard(info){
     // Stash for the click-to-expand panel renderer.
     window._minerStats=stats;
   }).catch(function(){});
+  // MINER COUNTS — anchored to the node's authoritative geteligibleminers,
+  // NOT to any per-device localStorage high-water mark. producers_total is
+  // the distinct set of accepted block producers since window_start; it is
+  // the on-chain ceiling for every "miners" card. Anchoring here on every
+  // tick fixes the cross-device drift where a stale browser cache showed an
+  // inflated count (e.g. 48) above the real producer set. Fire-and-forget,
+  // cheap (in-memory on the node); the catch leaves the cards untouched on a
+  // node that lacks the method.
+  rpc('geteligibleminers').then(function(gem){
+    if(!gem)return;
+    var producers=parseInt(gem.producers_total,10)||0;
+    if(producers<=0)return;
+    window._nodeProducersTotal=producers;            // ceiling for the DTD scan
+    // PEAK ACTIVE MINERS = distinct producers ever (node-authoritative).
+    var pm=document.getElementById('dPeakMiner');
+    if(pm)pm.textContent=String(producers);
+    try{localStorage.setItem('sost_peak_miners_ever',String(producers));}catch(e){}
+    // UPDATED MINERS — never display above the on-chain producer set.
+    var um=document.getElementById('dPhase2Miners');
+    if(um){var cur=parseInt(String(um.textContent||'').replace(/[^0-9]/g,''),10)||0;
+      if(cur===0||cur>producers)um.textContent=String(producers);}
+    // DTD eligible card must never exceed the producer set either.
+    var dd=document.getElementById('dDTD');
+    if(dd){var em=String(dd.textContent||'').match(/(\d+)/);
+      if(em&&parseInt(em[1],10)>producers)dd.textContent=producers+' eligible';}
+  }).catch(function(){});
   // RPC ACTIVITY — per-method telemetry. Same fire-and-forget pattern as
   // getminerstats. Cheap on the node (in-memory atomic counters).
   // The catch surfaces a "method missing" hint so an operator running an
@@ -3981,6 +4023,7 @@ async function updateDashboard(info){
     // rolling window (same "never regress" pattern as the lottery cache above),
     // and floor it at the full-chain DTD-eligibility count (= PEAK ACTIVE
     // MINERS) so the all-time total shows even on a fresh browser.
+    var _nodeCeil3=parseInt(window._nodeProducersTotal,10)||0;
     var ph2count;
     try {
       var _umRaw = localStorage.getItem('sost_updated_miners_v1');
@@ -3990,26 +4033,31 @@ async function updateDashboard(info){
       localStorage.setItem('sost_updated_miners_v1', JSON.stringify({h: info.blocks||0, set: _umSet}));
       ph2count = Object.keys(_umSet).length;
     } catch(e) { ph2count = Object.keys(ph2set).length; }
-    try {
-      var _dtdRaw = localStorage.getItem('sost_dtd_eligible_count');
-      if (_dtdRaw) { var _dm = String(_dtdRaw).match(/(\d+)/); if (_dm) ph2count = Math.max(ph2count, parseInt(_dm[1],10)); }
-    } catch(e) {}
+    // The node's geteligibleminers.producers_total is the authoritative
+    // on-chain ceiling. Anchor to it so the card can't drift above the real
+    // producer set or disagree between devices (the old code maxed against a
+    // stale per-device localStorage eligible-count, which inflated it).
+    if(_nodeCeil3>0)ph2count=_nodeCeil3;
     var ph2el=document.getElementById('dPhase2Miners');
     var ph2sub=document.getElementById('dPhase2MinersSub');
     var ph2card=document.getElementById('phase2ReadyMinersCard');
     if(ph2el){
       ph2el.textContent=String(ph2count);
-      // Floor PEAK ACTIVE MINERS at the updated-miners count so it shows a value
-      // on a fresh browser instead of "—". Distinct all-time producers is always
-      // >= updated-since-#7100, so this is a safe lower bound; the exact value is
-      // refined upward by the on-demand full-chain scan (sost_peak_miners_ever).
+      // PEAK ACTIVE MINERS: anchor to the node ceiling when available. Only
+      // fall back to the local lower bound (and overwrite the stale cache)
+      // when the node value is momentarily absent.
       try{
         var _pmEl=document.getElementById('dPeakMiner');
         if(_pmEl){
-          var _pmCur=parseInt(String(_pmEl.textContent||'').replace(/[^0-9]/g,''),10)||0;
-          var _pmStore=parseInt(localStorage.getItem('sost_peak_miners_ever')||'0',10)||0;
-          var _pmFloor=Math.max(_pmCur,_pmStore,ph2count||0);
-          if(_pmFloor>0){_pmEl.textContent=String(_pmFloor);localStorage.setItem('sost_peak_miners_ever',String(_pmFloor));}
+          if(_nodeCeil3>0){
+            _pmEl.textContent=String(_nodeCeil3);
+            localStorage.setItem('sost_peak_miners_ever',String(_nodeCeil3));
+          }else{
+            var _pmCur=parseInt(String(_pmEl.textContent||'').replace(/[^0-9]/g,''),10)||0;
+            var _pmStore=parseInt(localStorage.getItem('sost_peak_miners_ever')||'0',10)||0;
+            var _pmFloor=Math.max(_pmCur,_pmStore,ph2count||0);
+            if(_pmFloor>0)_pmEl.textContent=String(_pmFloor);
+          }
         }
       }catch(e){}
       // All text stays in the card's blue (#4488ff). Status is conveyed by
