@@ -199,6 +199,64 @@
   </div>
 </section>
 
+<!-- SOST OTC / P2P ATOMIC SWAP — CODING MILESTONE -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// CODING MILESTONE &middot; OTC-1 &rarr; OTC-5 &middot; gate OFF on mainnet</div>
+      <div class="section-dates">Published: 2026-06-10 &middot; Last updated: 2026-06-10</div>
+      <h2 class="section-title">SOST OTC / P2P <span class="accent">Atomic Swap</span></h2>
+      <div class="section-sub">A trustless, non-custodial cross-chain swap engine &mdash; SOST&nbsp;&harr;&nbsp;BTC&nbsp;&middot;&nbsp;ETH&nbsp;&middot;&nbsp;BNB&nbsp;&middot;&nbsp;USDT&nbsp;&middot;&nbsp;USDC&nbsp;&middot;&nbsp;PAXG&nbsp;&middot;&nbsp;XAUT. The mechanism is a Hashed Time-Locked Contract (HTLC) on both chains &mdash; the same primitive that powers Lightning.</div>
+    </div>
+    <div class="info-card">
+      <p>Swap SOST for another cryptoasset with a stranger, <b>without trusting them</b> and <b>without SOST ever holding either side's funds</b>. Either both legs settle, or both legs refund &mdash; there is no in-between. No intermediary, no escrow operator, no admin key, no upgrade path, no pause switch, no emergency drain.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0">
+        <div style="border:1px solid var(--border-med);border-radius:8px;padding:12px 14px;background:#05070a"><b style="color:var(--cyan-primary)">&#9881; Decentralised</b><br><span style="color:var(--text-secondary);font-size:13px">No custody, no broker, no matching engine. The swap is bilateral &amp; cryptographic.</span></div>
+        <div style="border:1px solid var(--border-med);border-radius:8px;padding:12px 14px;background:#05070a"><b style="color:var(--cyan-primary)">&#10003; Atomic</b><br><span style="color:var(--text-secondary);font-size:13px">Both legs complete or both refund. No partial settlement is reachable.</span></div>
+        <div style="border:1px solid var(--border-med);border-radius:8px;padding:12px 14px;background:#05070a"><b style="color:var(--cyan-primary)">&#128274; Non-custodial</b><br><span style="color:var(--text-secondary);font-size:13px">The HTLC is the escrow. No owner can ever move the funds.</span></div>
+        <div style="border:1px solid var(--border-med);border-radius:8px;padding:12px 14px;background:#05070a"><b style="color:var(--cyan-primary)">&#128269; Verifiable</b><br><span style="color:var(--text-secondary);font-size:13px">Every step is a public on-chain tx. Anyone can replay &amp; verify it.</span></div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;font-size:12.5px">
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">5 build phases &middot; OTC-1 &rarr; OTC-5</span>
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">3 chains wired &middot; SOST + BTC + EVM</span>
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">7 asset pairs</span>
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">52 Solidity tests &middot; 92 core &middot; 80 BTC-sign</span>
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">end-to-end coordinator &middot; live-rehearsed</span>
+      </div>
+
+      <h3 style="margin-top:16px">Seven supported asset pairs</h3>
+      <p style="margin-bottom:8px"><code>SOST&harr;BTC</code> &middot; <code>SOST&harr;ETH</code> &middot; <code>SOST&harr;BNB</code> &middot; <code>SOST&harr;USDT&nbsp;&#9888;</code> &middot; <code>SOST&harr;USDC&nbsp;&#9888;</code> &middot; <code>SOST&harr;PAXG&nbsp;&#9888;</code> &middot; <code>SOST&harr;XAUT&nbsp;&#9888;</code></p>
+      <p style="font-size:13px;color:var(--text-secondary)">Pairs flagged <b style="color:var(--amber-primary)">&#9888;</b> are issuer tokens &mdash; Tether&nbsp;/&nbsp;Circle&nbsp;/&nbsp;Paxos&nbsp;/&nbsp;TG&nbsp;Commodities can freeze any address. Atomic-swap atomicity holds on the SOST side regardless; the issuer-freeze warning is for the counterparty leg only and is fully disclosed pre-swap in the wallet UI. BTC&nbsp;/&nbsp;ETH&nbsp;/&nbsp;BNB carry no issuer-freeze authority.</p>
+
+      <h3 style="margin-top:16px">How it works &mdash; plain language</h3>
+      <p style="margin-bottom:8px">Alice has SOST, wants BTC. Bob has BTC, wants SOST. They agree price on the OTC/P2P board; everything after is purely cryptographic, with no intermediary touching either coin:</p>
+      <ol style="color:var(--text-secondary);line-height:1.8;padding-left:20px">
+        <li>Alice locks her SOST in a SOST-side HTLC, redeemable by Bob with a secret only Alice knows. Refundable to Alice after timeout&nbsp;T1.</li>
+        <li>Bob locks his BTC in a Bitcoin-side HTLC, redeemable by Alice with the same secret. Refundable to Bob after timeout&nbsp;T2 (T2&nbsp;&lt;&nbsp;T1 by a wallet-enforced safety margin).</li>
+        <li>Alice claims the BTC by revealing the secret on the Bitcoin chain.</li>
+        <li>Bob reads the secret from the Bitcoin chain and uses it to claim the SOST.</li>
+      </ol>
+      <p style="font-size:13px;color:var(--text-secondary)">Either both legs succeed, or both refund when the timeouts fire. No half-states. No counterparty risk. No third party can move the funds.</p>
+
+      <h3 style="margin-top:16px">Two technical paths</h3>
+      <ul>
+        <li><b>&#8383; BTC path</b> &mdash; native Bitcoin HTLC, BIP-199-style P2WSH redeem script (SegWit&nbsp;v0). Signing delegated to the audited <b>libwally-core</b> (Blockstream &mdash; used in Liquid &amp; Green). BIP-143 sighash, BIP-173 Bech32, low-S signatures all from upstream-audited code. No Bitcoin script written from scratch.</li>
+        <li><b>&#11042; EVM path (ETH / BNB / ERC-20)</b> &mdash; a single 273-line <code>AtomicSwapHTLC.sol</code>. No owner, no upgrade, no pause, no drain. 52 Foundry tests: balance conservation, reentrancy (receiver&nbsp;+&nbsp;token), weird-ERC-20, EIP-6780 forced-ETH, claim/refund ordering, fuzz preimage, fuzz timeout boundary.</li>
+      </ul>
+
+      <h3 style="margin-top:16px">Live gate state &mdash; verifiable in the repo &middot; mainnet UNCHANGED</h3>
+      <pre style="background:#05070a;border:1px solid var(--border-med);border-radius:8px;padding:14px 16px;overflow-x:auto;font-size:12.5px;line-height:1.7;color:var(--text-secondary)">ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX   # SOST consensus gate, sentinel OFF
+SOST_BTC_HTLC_SIGNING             = OFF          # CMake flag, no real BTC signing compiled in
+V15_HEIGHT                        = 20,000       # intended activation height (NOT yet active)</pre>
+      <p style="font-size:13px;color:var(--text-secondary)">All atomic-swap wallet&nbsp;/&nbsp;RPC&nbsp;/&nbsp;CLI commands refuse <code>--sign --broadcast</code> while the gate stays at INT64_MAX. Activation only after Phase-4/5 sign-off + external audit.</p>
+
+      <p style="margin-top:14px"><b>One-line summary.</b> Two people, two chains, one shared secret, two timeouts &mdash; or both walk away with their own coins. Full reference at <a href="sost-otc.html" style="color:#22d3ee">sost-otc.html</a>.</p>
+    </div>
+  </div>
+</section>
+
 <!-- V15 — AUTOMATION BUNDLE @ BLOCK 20,000 -->
 <section class="section">
   <div class="container">
