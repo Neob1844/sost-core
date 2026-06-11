@@ -450,17 +450,17 @@
   </div>
 </section>
 
-<!-- ============ ATOMIC SWAP V14 — SUPPORTED ASSETS (CODE UNDER REVIEW) ============ -->
+<!-- ============ ATOMIC SWAP V15 — SUPPORTED ASSETS (CODE UNDER REVIEW) ============ -->
 <section style="border-bottom:1px solid var(--border-dim);background:rgba(34,211,238,0.04)" id="atomic-swap-v14-assets">
   <div class="container" style="padding:40px 0">
     <div style="margin-bottom:18px">
-      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// V14 ROADMAP &middot; SUPPORTED ASSETS</div>
-      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary);margin:0 0 8px">Atomic Swap V14 &mdash; <span style="color:#22d3ee">7 supported asset pairs</span></h2>
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// V15 ROADMAP &middot; SUPPORTED ASSETS</div>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary);margin:0 0 8px">Atomic Swap V15 &mdash; <span style="color:#22d3ee">7 supported asset pairs</span></h2>
       <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(251,1,13,0.15);border:1px solid #fb010d;border-radius:4px;padding:6px 12px;margin-top:6px">
         <span style="color:#fb010d;font-weight:900;letter-spacing:1.5px;font-size:11px">&#9888; DISABLED &mdash; CODE UNDER REVIEW</span>
       </div>
       <p style="color:var(--text-secondary);font-size:13.5px;line-height:1.75;margin-top:14px">
-        The SOST-side HTLC consensus, wallet helpers, RPC, and CLI for atomic swaps are <b>code-complete and tested</b> on a candidate branch, but <b>NOT active</b>. The activation height constant <code>ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT</code> stays at <code>INT64_MAX</code> (sentinel OFF) until counterparty integrations (Phase 4) ship and external cryptographic review (Phase 5) signs off. Target activation: <b>V14 / block 15,000</b>.
+        The SOST-side HTLC consensus, wallet helpers, RPC, and CLI for atomic swaps are <b>code-complete and tested</b> on a candidate branch, but <b>NOT active</b>. The activation height constant <code>ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT</code> stays at <code>INT64_MAX</code> (sentinel OFF) until counterparty integrations (Phase 4) ship and external cryptographic review (Phase 5) signs off. Target activation: <b>V15 / block 20,000</b>.
       </p>
     </div>
 
@@ -534,7 +534,7 @@
         <li>&#9633; Phase 4B: EVM Solidity HTLC contract &mdash; PENDING</li>
         <li>&#9633; Phase 4C: cross-chain coordinator state machine &mdash; PENDING</li>
         <li>&#9633; Phase 5: external cryptographic + economic review &mdash; PENDING</li>
-        <li>&#9633; Re-flip gate <code>INT64_MAX</code> &rarr; <code>V14_HEIGHT</code> &mdash; PENDING (only after all of the above are GREEN)</li>
+        <li>&#9633; Re-flip gate <code>INT64_MAX</code> &rarr; <code>V15_HEIGHT</code> &mdash; PENDING (only after all of the above are GREEN)</li>
       </ul>
     </div>
   </div>
@@ -544,7 +544,7 @@
 <section style="border-bottom:1px solid var(--border-dim);background:rgba(107,63,107,0.05)" id="atomic-swap-wizard">
   <div class="container" style="padding:40px 0">
     <div style="margin-bottom:18px">
-      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// V14 ROADMAP &middot; INTERACTIVE WIZARD &middot; PREVIEW ONLY</div>
+      <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// V15 ROADMAP &middot; INTERACTIVE WIZARD &middot; PREVIEW ONLY</div>
       <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary);margin:0 0 8px">Atomic Swap wizard &mdash; <span style="color:#6B3F6B">6-step flow preview</span></h2>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
         <span style="display:inline-flex;align-items:center;background:rgba(251,1,13,0.15);border:1px solid #fb010d;border-radius:4px;padding:6px 12px;color:#fb010d;font-weight:900;letter-spacing:1.5px;font-size:11px">&#9888; MAINNET NOT ACTIVE</span>
@@ -661,7 +661,7 @@
         $ sost-cli htlc-claim --lock-txid &lt;txid&gt; --preimage 0x&lt;hex&gt; --destination &lt;your_addr&gt;
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-        <button type="button" disabled aria-disabled="true" title="Activation gate is INT64_MAX. Real claim builds and broadcasts behind the gate are rejected by the network until V14." style="background:rgba(100,116,139,0.15);color:var(--text-muted);border:1px solid var(--border-bright);border-radius:4px;padding:10px 18px;font-family:var(--font-mono);font-size:12.5px;font-weight:700;letter-spacing:1px;cursor:not-allowed;opacity:0.7">
+        <button type="button" disabled aria-disabled="true" title="Activation gate is INT64_MAX. Real claim builds and broadcasts behind the gate are rejected by the network until V15." style="background:rgba(100,116,139,0.15);color:var(--text-muted);border:1px solid var(--border-bright);border-radius:4px;padding:10px 18px;font-family:var(--font-mono);font-size:12.5px;font-weight:700;letter-spacing:1px;cursor:not-allowed;opacity:0.7">
           REVEAL PREIMAGE &amp; CLAIM &mdash; disabled (preview)
         </button>
       </div>
@@ -694,7 +694,7 @@
         <li>Phase 4D &mdash; EVM HTLC contract hardened with the full Phase D test set (currently 29 baseline Foundry tests passing; +10 hardening tests pending per <code>docs/design/ATOMIC_SWAP_EVM_HARDENING_STOP_REPORT.md</code>).</li>
         <li>Phase 4E &mdash; end-to-end testnet swaps SOST &harr; BTC testnet AND SOST &harr; Sepolia ETH AND SOST &harr; Sepolia ERC-20 (PENDING).</li>
         <li>Phase 5 &mdash; external cryptographic + economic + smart-contract audit. The activation height stays at <code>INT64_MAX</code> until the auditor signs off in writing.</li>
-        <li>Activation PR &mdash; flips <code>ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT</code> from <code>INT64_MAX</code> to <code>V14_HEIGHT</code> AND <code>SOST_BTC_HTLC_SIGNING</code> from <code>OFF</code> to <code>ON</code> in coordinated commits. Both flips need audit evidence.</li>
+        <li>Activation PR &mdash; flips <code>ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT</code> from <code>INT64_MAX</code> to <code>V15_HEIGHT</code> AND <code>SOST_BTC_HTLC_SIGNING</code> from <code>OFF</code> to <code>ON</code> in coordinated commits. Both flips need audit evidence.</li>
       </ul>
       <p style="color:var(--text-primary);font-size:12.5px;line-height:1.7;margin:10px 0 0">
         Until every item above is GREEN, this section stays a preview. There is no admin override, no manual unlock, no escrow operator. The buttons above unlock only when the protocol does &mdash; not when a UI flag is flipped.
