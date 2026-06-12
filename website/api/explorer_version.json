@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-10-v339",
-  "note": "Explorer banners trimmed to only Developer Note + Join the official community; all roadmap/V13-RC/V14/Trinity/miner-setup banners removed. New flagship 'SOST OTC / P2P Atomic Swap' coding-milestone banner added (pillars, 7 pairs, plain-language HTLC flow, BTC/EVM technical paths, live gate state). Force-reload."
+  "v": "2026-06-12-v340",
+  "note": "BLOCK PRODUCERS card now headlines the all-time distinct block-producer set since genesis (producers_since_genesis); the 288-block count moves to the sub-line as 'N active · last 288 blocks'; top-3 concentration kept on the last 288 blocks. Force-reload."
 }
