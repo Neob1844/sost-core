@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-12-v340",
-  "note": "BLOCK PRODUCERS card now headlines the all-time distinct block-producer set since genesis (producers_since_genesis); the 288-block count moves to the sub-line as 'N active · last 288 blocks'; top-3 concentration kept on the last 288 blocks. Force-reload."
+  "v": "2026-06-12-v341",
+  "note": "Added collapsible (collapsed-by-default) GeaSpirit banner — SOST-ecosystem mining-asset intelligence: what it does + all milestones (30,000+ mines, 6,000+ mineral species with computed chemistry, GeaSpirit Score, S2 geophysics, 17 languages, open-data-only). Force-reload."
 }
