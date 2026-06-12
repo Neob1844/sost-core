@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-12-v341",
-  "note": "Added collapsible (collapsed-by-default) GeaSpirit banner — SOST-ecosystem mining-asset intelligence: what it does + all milestones (30,000+ mines, 6,000+ mineral species with computed chemistry, GeaSpirit Score, S2 geophysics, 17 languages, open-data-only). Force-reload."
+  "v": "2026-06-12-v342",
+  "note": "GeaSpirit banner: added live satellite-detection milestone (Sentinel-2 alteration ratios + Sentinel-1 radar + gravity/magnetic anomaly maps) and a 'See a sample report' link to the new Professional Report example. Force-reload."
 }
