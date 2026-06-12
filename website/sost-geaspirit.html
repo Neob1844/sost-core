@@ -1669,7 +1669,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
           <tr style="color:var(--green)"><td>Raw optical reflectance</td><td>PIPELINE_READY</td><td>open optical bands, cloud-masked</td></tr>
           <tr style="color:var(--green)"><td>Multi-Year vegetation index</td><td>PIPELINE_READY</td><td>open thermal EO 8, 2013-2024, 12 annual composites, 4 zones</td></tr>
           <tr style="color:var(--amber)"><td>Full Raster Export</td><td>PENDING</td><td>Requires async ee.batch.Export.image.toDrive()</td></tr>
-          <tr style="color:var(--amber)"><td>Spectral Unmixing</td><td>VALIDATION_PENDING</td><td>Needs exported rasters for real endmember decomposition</td></tr>
+          <tr style="color:var(--amber)"><td>Advanced spectral processing</td><td>VALIDATION_PENDING</td><td>Needs exported rasters for spectral decomposition</td></tr>
           <tr style="color:var(--amber)"><td>vegetation index Trend</td><td>VALIDATION_PENDING</td><td>Zambia +0.0043/yr greening &mdash; promising, needs full validation</td></tr>
         </tbody>
       </table>
@@ -1682,7 +1682,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
         <thead><tr><th>Frontier Candidate</th><th>Status</th><th>Root Cause</th></tr></thead>
         <tbody>
           <tr>
-            <td style="color:var(--amber)">Spectral Unmixing</td>
+            <td style="color:var(--amber)">Advanced spectral processing</td>
             <td><span style="background:rgba(251,1,13,.15);border:1px solid var(--red);color:var(--red);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">BLOCKED_BY_DATA</span></td>
             <td style="color:#aaa">Existing stacks contain <b style="color:var(--amber)">derived indices</b> (iron oxide ratio, clay ratio, vegetation index) &mdash; not raw open optical EO reflectance bands (B2&ndash;B12). Sub-pixel mineral unmixing requires raw reflectance as input. Cannot validate without rebuilding the data pipeline from raw S2 imagery.</td>
           </tr>
@@ -2394,7 +2394,7 @@ var D={
 'Cohen':'<b>Cohen\u2019s d</b> \u2014 Effect size measure. 0.2 = small, 0.5 = medium, 0.8 = large. Our thermal signal: d = \u22120.627 (medium\u2013large).',
 'p-value':'<b>p-value</b> \u2014 Probability the result is random chance. p < 0.05 = significant. p < 0.0001 = extremely significant. Our thermal: p < 0.0001.',
 'PR-AUC':'<b>PR-AUC</b> \u2014 Precision-Recall AUC. Better than ROC-AUC when deposits are rare compared to background.',
-'open optical EO':'<b>open optical EO</b> \u2014 ESA satellite, 13 bands at 10\u201360m. Free. Captures spectral for mineral and vegetation mapping.',
+'open optical EO':'<b>open optical EO</b> \u2014 open multispectral surface imagery for mineral and vegetation mapping.',
 'open radar EO':'<b>open radar EO</b> \u2014 ESA radar satellite. Works through clouds and at night. Surface texture and moisture.',
 'open thermal EO':'<b>open thermal EO</b> \u2014 NASA/USGS, 40+ years of data. Thermal infrared band for surface temperature. Free. Our 20-year thermal experiment uses this.',
 'advanced spectral EO':'<b>advanced spectral EO</b> \u2014 open hyperspectral surface-mineral identification (selective coverage).',
