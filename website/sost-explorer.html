@@ -625,7 +625,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s (Bitcoin-style)</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
-  <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')" title="Unique addresses that have mined at least one block in the last 288 blocks (~48h). 'Top 3' shows what percentage of those 288 blocks were produced by the three most active miners. Click for the per-address breakdown."><div class="dash-label" style="white-space:nowrap">&#9874; BLOCK PRODUCERS &middot; 48H</div><div class="dash-val purple" id="dMiners">&mdash;</div><div class="dash-sub" id="dMinersSub">last 288 blocks (~48h)</div><div class="dash-sub" id="dDistributionSub" style="color:var(--green);margin-top:2px">top 3: &mdash;</div><span id="dDistribution" style="display:none">&mdash;</span></div>
+  <div class="dash-card" data-panel="distribution" onclick="toggleDashPanel('distribution')" title="Distinct addresses that have produced at least one accepted block since genesis — the all-time block-producer set. The sub-line shows how many of them were active in the last 288 blocks (~48h); 'Top 3' is the concentration of those recent 288 blocks among the three most active miners. Click for the per-address breakdown."><div class="dash-label" style="white-space:nowrap">&#9874; BLOCK PRODUCERS &middot; ALL-TIME</div><div class="dash-val purple" id="dMiners">&mdash;</div><div class="dash-sub" id="dMinersSub">distinct since genesis</div><div class="dash-sub" id="dDistributionSub" style="color:var(--green);margin-top:2px">top 3: &mdash;</div><span id="dDistribution" style="display:none">&mdash;</span></div>
   <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Cumulative, monotonic count of distinct addresses that have produced an accepted Phase II block since the #12100 (V13) update — it never decreases (all miners that have ever updated, active now or not). Accumulated across visits and floored at the full-chain DTD-eligibility count (PEAK ACTIVE MINERS). Card pulses red permanently as a standing centralisation reminder." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; UPDATED MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #12100 V13</div></div>
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
@@ -1500,7 +1500,7 @@ function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(
 // instead of an empty "click to scan" placeholder. The silent DTD scan kicked
 // off a few seconds after load refreshes them to the current value. (UPDATED
 // MINERS is anchored separately to the node's producers_total each tick.)
-try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;var pe=localStorage.getItem('sost_peak_miners_ever');var pm=document.getElementById('dPeakMiner');if(pe&&pm)pm.textContent=pe;});}catch(e){}
+try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;var pe=localStorage.getItem('sost_peak_miners_ever');var pm=document.getElementById('dPeakMiner');if(pe&&pm)pm.textContent=pe;var bp0=document.getElementById('dMiners');if(pe&&bp0)bp0.textContent=pe;});}catch(e){}
 // Phase X+1 — kick off a silent DTD scan ~3 s after page load so the
 // dashboard CIRCULATING SUPPLY + DTD LOTTERY BALANCE cards populate
 // with real values without the user having to open the DTD panel.
@@ -2549,6 +2549,10 @@ async function updateDashboard(info){
     if(genesis>0){
       var pm=document.getElementById('dPeakMiner');
       if(pm)pm.textContent=String(genesis);
+      // BLOCK PRODUCERS · ALL-TIME headline = the same distinct-since-genesis set.
+      var bp=document.getElementById('dMiners');
+      if(bp)bp.textContent=String(genesis);
+      window._peakGenesis=genesis;
       try{localStorage.setItem('sost_peak_miners_ever',String(genesis));}catch(e){}
     }
   }).catch(function(){});
@@ -2649,9 +2653,12 @@ async function updateDashboard(info){
     if(!window._diff5kKicked){window._diff5kKicked=true;setTimeout(function(){
       try{loadDiffHistory5k(info&&info.blocks);}catch(e){}
     },4000);}
-    // Update unique miners card from freshly fetched data (288-window only)
-    document.getElementById('dMiners').textContent=minerSet.size;
-    document.getElementById('dMinersSub').textContent='last '+Math.min(AVG_WINDOW,info.blocks)+' blocks';
+    // BLOCK PRODUCERS · ALL-TIME: headline = distinct producers since genesis (set
+    // authoritatively by the geteligibleminers handler; cached fallback for the first
+    // paint). The 288-window unique count becomes the "active in the last 48h" sub-line.
+    var _bpg=window._peakGenesis||parseInt(localStorage.getItem('sost_peak_miners_ever'),10)||0;
+    if(_bpg>0)document.getElementById('dMiners').textContent=String(_bpg);
+    document.getElementById('dMinersSub').textContent=minerSet.size+' active · last '+Math.min(AVG_WINDOW,info.blocks)+' blocks';
     // Phase 2 miners health card — distinct addresses that mined any block at
     // height >= 7100. Centralisation indicator: red < 2, amber = 2, green >= 3.
     // diffs[] contains the latest AVG_WINDOW_LONG (1000) blocks already, so we
@@ -3882,7 +3889,7 @@ function renderDashPanel(key,body,title,silent){
       '<span style="color:var(--text3)">Time elapsed:</span> <span style="color:'+eClr+';font-weight:600">'+eStr+'</span> <span style="color:var(--text3)">/ target 10m 00s</span><br>'+
       '<span style="color:var(--text3)">Status:</span> <span style="color:#fbbf24">searching nonce\u2026</span></div>';
   } else if(key==='miners'){
-    title.textContent='// BLOCK PRODUCERS · 48H (last 288 blocks)';
+    title.textContent='// BLOCK PRODUCERS · recent activity (last 288 blocks, ~48h)';
     // Count unique miner addresses from _diffHistory (which stores recent blocks)
     if(!_diffHistory||_diffHistory.length<2){body.innerHTML='<div style="color:var(--text3)">Loading miner data...</div>';return;}
     if(_minersScanInProgress&&!silent){return;}
@@ -3961,8 +3968,11 @@ function renderDashPanel(key,body,title,silent){
       // pass needed.
 
       var addrs=Object.keys(miners);
-      document.getElementById('dMiners').textContent=addrs.length;
-      document.getElementById('dMinersSub').textContent='last '+lookback+' blocks';
+      // Headline stays the all-time distinct-since-genesis set; this deep scan reports
+      // how many were active in the recent lookback window as the sub-line.
+      var _bpg2=window._peakGenesis||parseInt(localStorage.getItem('sost_peak_miners_ever'),10)||addrs.length;
+      document.getElementById('dMiners').textContent=String(_bpg2);
+      document.getElementById('dMinersSub').textContent=addrs.length+' active · last '+lookback+' blocks';
       // For each block, determine active miners (mined >=1 in previous 12 blocks)
       var WINDOW=12;
       var simultaneousTotal=0;
