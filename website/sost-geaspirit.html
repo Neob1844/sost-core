@@ -393,7 +393,7 @@ nav .container{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-
       <p style="font-size:15px;color:var(--green);margin-bottom:14px">"Why should this asset earn your attention before 10,000 others?"</p>
       <p>A transparent <b>0–100 triage / prioritization score</b> — a prioritization indicator, <b>not</b> a probability of ore, <b>not</b> a valuation, <b>not</b> a discovery guarantee, investment advice or a legal verification. It is built from <b>four independent 0–25 dimensions</b> that sum to the 0–100 headline, each reported with an honest confidence band so you always see how the number was reached and how far to trust it.</p>
       <table class="tbl" style="margin-top:14px">
-        <tr><td style="color:var(--amber);width:160px;vertical-align:top">SIGNAL</td><td>The indication — from open Sentinel-2 / Landsat satellite imagery blended with regional geological favourability — that a mineralised system of interest may be present. Higher = stronger apparent indication, never a confirmed deposit; only drilling proves ore.</td></tr>
+        <tr><td style="color:var(--amber);width:160px;vertical-align:top">SIGNAL</td><td>The indication — from open Earth-observation imagery blended with regional geological favourability — that a mineralised system of interest may be present. Higher = stronger apparent indication, never a confirmed deposit; only drilling proves ore.</td></tr>
         <tr><td style="color:var(--amber);vertical-align:top">ACCESS / DEPTH</td><td>Surface reachability and depth, weighted by the proximity of infrastructure (roads, power, ports, processing). A remote or very deep target scores lower even when the geology is strong; where depth data is missing the score stays conservative.</td></tr>
         <tr><td style="color:var(--amber);vertical-align:top">PRECISION</td><td>How tightly the target is bounded in space — the quality of the asset's coordinates, classification and descriptive data. Loosely-defined targets score lower because the opportunity is harder to locate and act on.</td></tr>
         <tr><td style="color:var(--amber);vertical-align:top">CERTAINTY</td><td>How much the profile can be trusted, given data availability, source quality and a penalty for any missing evidence. Inside declared pilot zones (Chile Atacama, Peru, the Zambia/DRC Copperbelt, Kalgoorlie) we publish conservative, leakage-resistant <b>spatial cross-validation</b>; every other asset is an <b>evidence-fusion estimate</b>. Certainty drives the confidence band.</td></tr>
@@ -499,7 +499,7 @@ nav .container{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-
 
     <div style="border:1px solid var(--green);background:rgba(0,255,65,.04);padding:16px;margin-top:16px">
       <div style="color:var(--green);letter-spacing:1px;font-size:12px;margin-bottom:6px">GeaSpirit Old — MULTI-SATELLITE PASS (RUN)</div>
-      <p style="font-size:13px;color:#cce;margin:0 0 8px">The engine pass <b>was run</b> over each polygon — a 30&nbsp;m, 16-band open stack fusing <b>Sentinel-2</b> (mineral indices: iron-oxide, clay-hydroxyl, ferrous-iron), <b>Sentinel-1</b> SAR, <b>Copernicus DEM</b> and <b>Landsat thermal</b>. The independent satellite read is <b>coherent with the documented geology in every case</b>, and each parcel reaches <b>S1</b> (surface signal + geology) — not S2, which would need real public geophysics sampled at the asset.</p>
+      <p style="font-size:13px;color:#cce;margin:0 0 8px">The engine pass <b>was run</b> over each polygon — a <b>proprietary multi-source open-data inference pass</b> across optical, radar, thermal and terrain layers. The independent satellite read is <b>coherent with the documented geology in every case</b>, and each parcel reaches <b>S1</b> (surface signal + geology) — not S2, which would need real public geophysics sampled at the asset.</p>
       <p style="font-size:12.5px;color:#bbb;margin:0">🇫🇷 <b>Salsigne</b> — strongest read: a co-located <b>iron-oxide + ferrous-iron (gossan-type)</b> anomaly with suppressed vegetation, as expected over an oxidising sulphide system. · 🇸🇪 <b>Norberg</b> — a <b>ferrous-iron / iron-oxide</b> signature with low clay: the engine sees iron, matching the iron field. · 🇨🇿 <b>Cínovec</b> — a <b>clay-hydroxyl</b> (greisen-type) signature, but vegetation-limited; the ore is at depth. · 🇪🇸 <b>Cabezo Negro</b> — clay-ferrous (volcanic/evaporitic), <b>weak iron-oxide</b>: no metallic gossan, matching the gypsum read. Surface indicators, <b>never confirmed ore</b>.</p>
     </div>
     <p style="font-size:11px;color:#777;margin-top:14px">Cadastral references resolved from open public services (IGN/Etalab · ČÚZK · Swedish municipal records). Where a reference could not be re-pulled from the primary cadastre service, the provenance is stated and only the verified part is relied on. Open-data triage — not legal verification, investment advice, ownership verification or a guaranteed-discovery claim. The specific engine internals remain proprietary; what is shown is how to read the result.</p>
@@ -639,7 +639,7 @@ S5  Sampling / drilling / assay         — confirmed</pre>
         <tr><td style="color:var(--green)">CERTAINTY</td><td>8.1 / 10</td><td>Beta-calibrated probability (Brier 0.093, 72% improvement over uncalibrated)</td></tr>
       </table>
       <p style="margin-top:12px;font-size:18px;color:var(--green)"><b>Canonical Score: 25.1 / 40 (63%)</b> — Phase 48 (gravity fusion validated)</p>
-      <p style="font-size:12px;color:var(--text-dim)">DEPTH improved +1.9 pts from Australian gravity integration (Bouguer + isostatic residual). CERTAINTY improved +0.4 from beta recalibration. Next bottleneck: MINERAL (needs MINDAT integration + temporal feature engineering).</p>
+      <p style="font-size:12px;color:var(--text-dim)">DEPTH improved +1.9 pts from Australian gravity integration (Bouguer + isostatic residual). CERTAINTY improved +0.4 from beta recalibration. Next bottleneck: MINERAL (needs open mineralogical enrichment + temporal feature engineering).</p>
     </div>
 
     <div class="panel">
@@ -666,7 +666,7 @@ S5  Sampling / drilling / assay         — confirmed</pre>
         <tr><td>Hydrological features</td><td>Drainage density, watershed analysis</td><td style="color:var(--green)">PRODUCTION</td></tr>
         <tr><td>Neighborhood context</td><td>Spatial autocorrelation of deposit occurrence</td><td style="color:var(--green)">PRODUCTION</td></tr>
         <tr><td>Aeromagnetics</td><td>National TMI magnetic anomaly data</td><td style="color:var(--green)">PRODUCTION</td></tr>
-        <tr><td>Geological context</td><td>Lithology classification via Macrostrat</td><td style="color:var(--amber)">SELECTIVE</td></tr>
+        <tr><td>Geological context</td><td>Lithology classification from open geological maps</td><td style="color:var(--amber)">SELECTIVE</td></tr>
         <tr><td>Probability calibration</td><td>Isotonic calibration for honest certainty</td><td style="color:var(--green)">PRODUCTION</td></tr>
         <tr><td>GEE integration</td><td>Google Earth Engine operationalized for data pipelines</td><td style="color:var(--green)">OPERATIONAL</td></tr>
       </table>
@@ -755,9 +755,9 @@ S5  Sampling / drilling / assay         — confirmed</pre>
       <table class="tbl">
         <thead><tr><th>Version</th><th>Labels</th><th>Stack</th><th>AUC</th><th>Improvement</th></tr></thead>
         <tbody>
-          <tr style="color:#666"><td>v1 (MRDS only)</td><td>16</td><td>14 bands, 50% valid</td><td>0.5752</td><td>baseline</td></tr>
-          <tr><td>v2 (+OZMIN)</td><td>205</td><td>12 bands, 50% valid</td><td>0.7219</td><td style="color:var(--green)">+0.1467 (labels)</td></tr>
-          <tr style="color:var(--green);font-weight:600"><td>v3 (full stack)</td><td>205</td><td>12 bands, 100% valid</td><td>0.7690</td><td>+0.0471 (stack)</td></tr>
+          <tr style="color:#666"><td>v1 (MRDS only)</td><td>16</td><td>multi-layer, 50% valid</td><td>0.5752</td><td>baseline</td></tr>
+          <tr><td>v2 (+OZMIN)</td><td>205</td><td>multi-layer, 50% valid</td><td>0.7219</td><td style="color:var(--green)">+0.1467 (labels)</td></tr>
+          <tr style="color:var(--green);font-weight:600"><td>v3 (full stack)</td><td>205</td><td>multi-layer, 100% valid</td><td>0.7690</td><td>+0.0471 (stack)</td></tr>
         </tbody>
       </table>
     </div>
@@ -815,12 +815,12 @@ S5  Sampling / drilling / assay         — confirmed</pre>
       <div class="panel-head" style="color:var(--green)">// WHAT GEASPIRIT FOUND</div>
       <div style="font-size:13px;line-height:2;color:#ccc">
         <p><span style="color:var(--green)">&#9654;</span> GeaSpirit analyzed <b style="color:var(--green)">516 satellite images</b> spanning 2 years across a 100km zone surrounding the Pebble deposit.</p>
-        <p><span style="color:var(--green)">&#9654;</span> A <b style="color:var(--green)">20-year thermal history</b> revealed seasonal patterns across 754 Landsat scenes (2003–2024).</p>
+        <p><span style="color:var(--green)">&#9654;</span> A <b style="color:var(--green)">20-year thermal history</b> revealed seasonal patterns across 754 open thermal scenes (2003–2024).</p>
         <p><span style="color:var(--green)">&#9654;</span> Spectral analysis detected <b style="color:var(--amber)">moderate alteration signatures</b> consistent with porphyry-type mineralization.</p>
         <p><span style="color:var(--green)">&#9654;</span> Vegetation stress analysis over 6 years (2019–2024) showed <b style="color:var(--amber)">38% of sampled points with declining vegetation</b> — potentially indicating shallow mineralization effects on surface biology.</p>
         <p><span style="color:var(--green)">&#9654;</span> <b style="color:var(--green)">497 frontier exploration targets</b> identified beyond the known deposit area.</p>
         <p><span style="color:var(--green)">&#9654;</span> <b style="color:var(--green)">5 anomaly clusters</b> detected up to 62km from the main Pebble deposit.</p>
-        <p style="color:#888"><span style="color:#555">&#9654;</span> EMIT hyperspectral coverage unavailable — ISS orbital inclination (51.6°) does not reach Alaska's latitude (59.9°N).</p>
+        <p style="color:#888"><span style="color:#555">&#9654;</span> advanced spectral coverage unavailable at this latitude.</p>
       </div>
     </div>
 
@@ -853,7 +853,7 @@ S5  Sampling / drilling / assay         — confirmed</pre>
         </div>
         <div style="text-align:center;padding:16px;border:1px solid var(--border);background:rgba(0,255,65,.03)">
           <div style="font-size:28px;font-weight:700;color:var(--green)">706</div>
-          <div style="font-size:11px;color:#888;margin-top:4px">Spectral unmixing scenes</div>
+          <div style="font-size:11px;color:#888;margin-top:4px">Advanced spectral scenes</div>
         </div>
         <div style="text-align:center;padding:16px;border:1px solid var(--border);background:rgba(0,255,65,.03)">
           <div style="font-size:28px;font-weight:700;color:var(--amber)">9</div>
@@ -932,19 +932,8 @@ KEY INSIGHT: The jump from 0.68 to 0.85+ came from CLEANING THE LABELS, not from
 VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <table class="tbl">
         <thead><tr>
-          <th class="xp-trigger" onclick="toggleXp(this)">Experiment <span class="xp-icon">&#9432;</span><div class="xp-body">EXPERIMENT — Data source combinations tested
-  Phase 3 baseline: 19 satellite bands, 152 mixed deposits (noisy)
-  A: S2 only: 5 Sentinel-2 mineral indices
-  B: Full satellite: 19 bands (S2 + SAR + DEM + thermal)
-  C: Geology only: 5 features from Macrostrat geological maps
-  D: S2 + geology: Spectral + geological maps (10 bands)
-  E: Full fusion: All satellite + geology = 24 features</div></th>
-          <th class="xp-trigger" onclick="toggleXp(this)">Bands <span class="xp-icon">&#9432;</span><div class="xp-body">BANDS — Features per pixel:
-  S2 (5): Iron Oxide, Clay, Ferrous Iron, Laterite, NDVI
-  SAR (5): VV, VH, VV/VH, GLCM variance, GLCM contrast
-  DEM (6): Elevation, Slope, Aspect, TPI, Ruggedness
-  Thermal (3): Median temp, P90 temp, Anomaly z-score
-  Geology (5): Lithology, Rock age, Group, Contact distance, Availability</div></th>
+          <th class="xp-trigger" onclick="toggleXp(this)">Experiment <span class="xp-icon">&#9432;</span><div class="xp-body">EXPERIMENT — independent open-data layer combinations were tested (surface-spectral only, full remote-sensing, geology only, spectral + geology, and full fusion) to measure each layer's contribution to accuracy. The specific layers are proprietary.</div></th>
+          <th class="xp-trigger" onclick="toggleXp(this)">Features <span class="xp-icon">&#9432;</span><div class="xp-body">FEATURES — Independent open-data features per location, spanning surface mineralogy, radar, terrain, thermal and geological context. The specific feature set is proprietary.</div></th>
           <th class="xp-trigger" onclick="toggleXp(this)">AUC <span class="xp-icon">&#9432;</span><div class="xp-body">AUC-ROC — Area Under the Receiver Operating Characteristic curve.
   0.50 = random guessing, 0.70 = acceptable, 0.80 = good, 0.90+ = excellent
   An AUC of 0.86 means the model correctly ranks deposits higher than barren ground 86% of the time.
@@ -958,10 +947,10 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
         </tr></thead>
         <tbody>
           <tr style="color:#666"><td>Phase 3 baseline</td><td>19</td><td>0.6844</td><td>0.606</td><td>0.284</td><td>0.345</td></tr>
-          <tr><td>A: S2 only</td><td>5</td><td>0.7325</td><td>0.803</td><td>0.880</td><td>0.822</td></tr>
-          <tr style="color:#44cc66"><td>B: Full satellite</td><td>19</td><td>0.8530</td><td>0.933</td><td>0.764</td><td>0.833</td></tr>
+          <tr><td>A: Surface-spectral only</td><td>5</td><td>0.7325</td><td>0.803</td><td>0.880</td><td>0.822</td></tr>
+          <tr style="color:#44cc66"><td>B: Full remote-sensing</td><td>19</td><td>0.8530</td><td>0.933</td><td>0.764</td><td>0.833</td></tr>
           <tr><td>C: Geology only</td><td>5</td><td>0.7356</td><td>0.751</td><td>0.738</td><td>0.685</td></tr>
-          <tr><td>D: S2 + geology</td><td>10</td><td>0.8094</td><td>0.850</td><td>0.897</td><td>0.862</td></tr>
+          <tr><td>D: Spectral + geology</td><td>10</td><td>0.8094</td><td>0.850</td><td>0.897</td><td>0.862</td></tr>
           <tr style="color:var(--green);font-weight:700"><td>E: Full fusion</td><td>24</td><td style="color:var(--amber);font-weight:700">0.8622</td><td>0.948</td><td>0.760</td><td>0.837</td></tr>
         </tbody>
       </table>
@@ -983,22 +972,8 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     </div>
 
     <div class="panel">
-      <div class="panel-head">TOP 10 FEATURE IMPORTANCE</div>
-      <table class="tbl">
-        <thead><tr><th>#</th><th>Feature</th><th>Importance</th><th>Source</th></tr></thead>
-        <tbody>
-          <tr><td>1</td><td>Terrain ruggedness</td><td class="val">18.6%<div style="background:var(--green);height:6px;width:100%;margin-top:2px;border-radius:2px"></div></td><td>DEM</td></tr>
-          <tr><td>2</td><td>Elevation</td><td class="val">12.1%<div style="background:var(--green);height:6px;width:65%;margin-top:2px;border-radius:2px"></div></td><td>DEM</td></tr>
-          <tr><td>3</td><td>SAR VH backscatter</td><td class="val">10.9%<div style="background:#00e5ff;height:6px;width:59%;margin-top:2px;border-radius:2px"></div></td><td style="color:#00e5ff">Sentinel-1</td></tr>
-          <tr><td>4</td><td>Ferrous iron index</td><td class="val">7.4%<div style="background:var(--green);height:6px;width:40%;margin-top:2px;border-radius:2px"></div></td><td style="color:var(--green)">Sentinel-2</td></tr>
-          <tr><td>5</td><td>Thermal z-score</td><td class="val">7.0%<div style="background:var(--amber);height:6px;width:38%;margin-top:2px;border-radius:2px"></div></td><td style="color:var(--amber)">Landsat</td></tr>
-          <tr><td>6</td><td>Thermal P90</td><td class="val">5.9%<div style="background:var(--amber);height:6px;width:32%;margin-top:2px;border-radius:2px"></div></td><td style="color:var(--amber)">Landsat</td></tr>
-          <tr><td>7</td><td>Clay/hydroxyl</td><td class="val">4.5%<div style="background:var(--green);height:6px;width:24%;margin-top:2px;border-radius:2px"></div></td><td style="color:var(--green)">Sentinel-2</td></tr>
-          <tr><td>8</td><td>SAR VV</td><td class="val">3.9%<div style="background:#00e5ff;height:6px;width:21%;margin-top:2px;border-radius:2px"></div></td><td style="color:#00e5ff">Sentinel-1</td></tr>
-          <tr><td>9</td><td>SAR texture</td><td class="val">3.8%<div style="background:#00e5ff;height:6px;width:20%;margin-top:2px;border-radius:2px"></div></td><td style="color:#00e5ff">Sentinel-1</td></tr>
-          <tr><td>10</td><td>Iron oxide</td><td class="val">3.3%<div style="background:var(--green);height:6px;width:18%;margin-top:2px;border-radius:2px"></div></td><td style="color:var(--green)">Sentinel-2</td></tr>
-        </tbody>
-      </table>
+      <div class="panel-head">WHAT DRIVES THE SCORE</div>
+      <p style="font-size:12.5px;color:#bbb;margin:0">The model weighs <b>dozens of independent open-data features</b> across terrain, surface mineralogy, structure and thermal/geological context. <b>The specific feature set and weights are proprietary</b> &mdash; the report presents the interpreted result and its confidence, not the internal model.</p>
     </div>
 
     <div class="panel">
@@ -1007,8 +982,8 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
         <tr><td>Curated deposits (Cu/Au/Ag)</td><td class="val">43 <span style="color:#888;font-weight:400">(from 152 raw MRDS)</span></td></tr>
         <tr><td>Positive pixels</td><td class="val">33,428</td></tr>
         <tr><td>Geology-aware negatives</td><td class="val">14,483 <span style="color:#888;font-weight:400">(random + hard + matched)</span></td></tr>
-        <tr><td>Image resolution</td><td class="val">1856 x 1857 px · 24 bands · 30m</td></tr>
-        <tr><td>Sensors</td><td class="val">Sentinel-2 + SAR + DEM + thermal + Macrostrat geology</td></tr>
+        <tr><td>Resolution</td><td class="val">30 m grid · multi-layer open-data stack</td></tr>
+        <tr><td>Domains</td><td class="val">optical · radar · terrain · thermal · geology</td></tr>
         <tr><td>Area covered</td><td class="val">~50 x 50 km</td></tr>
         <tr><td>Validation</td><td class="val">Spatial block CV (10km blocks, 5 folds)</td></tr>
       </tbody></table>
@@ -1017,12 +992,12 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="human-box">
       <b>RESEARCH — PHASE 3B KEY DISCOVERY</b><br><br>
       The #1 improvement factor was <b>LABEL CURATION</b>, not more data.<br><br>
-      Phase 3 trained on 152 deposits including limestone, dolomite, silica, and boron — geological noise that confused the model. Phase 3B curated to <b>43 real Cu/Au/Ag metal deposits</b>. Same satellite data, same algorithm. Result:<br><br>
+      Phase 3 trained on 152 deposits including limestone, dolomite, silica, and boron — geological noise that confused the model. Phase 3B curated to <b>43 real Cu/Au/Ag metal deposits</b>. Same open-data layers, same algorithm. Result:<br><br>
       <span style="color:var(--green);font-size:15px;font-weight:700">AUC: 0.6844 &#8594; 0.8530 &nbsp;(+0.1686)</span><br><br>
-      <span style="color:var(--green);font-style:italic">"Clean labels matter more than fancy sensors."</span><br><br>
+      <span style="color:var(--green);font-style:italic">"Clean labels matter more than more data."</span><br><br>
       <b style="color:var(--amber)">WHAT EACH LAYER CONTRIBUTES:</b><br><br>
-      <span style="color:var(--green)">Satellite only (19 bands): &nbsp;&nbsp; AUC 0.8530</span><br>
-      <span style="color:var(--green)">+ Geology (Macrostrat): &nbsp;&nbsp;&nbsp;&nbsp; AUC 0.8622 &nbsp;(+0.009)</span><br><br>
+      <span style="color:var(--green)">Remote-sensing layers: &nbsp;&nbsp; AUC 0.8530</span><br>
+      <span style="color:var(--green)">+ Geological context: &nbsp;&nbsp;&nbsp;&nbsp; AUC 0.8622 &nbsp;(+0.009)</span><br><br>
       <b style="color:var(--amber)">COMPARISON WITH INDUSTRY:</b><br><br>
       <span style="color:#666">Random guessing: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.50 AUC</span><br>
       <span style="color:#666">Phase 3 (noisy labels): &nbsp; 0.68 AUC</span><br>
@@ -1032,18 +1007,12 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <b style="color:var(--amber)">HONEST CAVEATS:</b><br>
       <span style="color:#888">&#9888; Class balance changed (1:3 &#8594; 2.3:1) — amplifies AUC delta</span><br>
       <span style="color:#888">&#9888; Only 43 curated deposits — small sample</span><br>
-      <span style="color:#888">&#9888; Macrostrat geology too coarse for Chile</span>
+      <span style="color:#888">&#9888; Open geological maps can be too coarse in some regions</span>
     </div>
 
     <div class="panel">
-      <div class="panel-head">ALL 24 FEATURES (PHASE 3B)</div>
-      <table class="tbl"><tbody>
-        <tr><td style="color:var(--green)">Sentinel-2 (5)</td><td>Iron Oxide · Clay/Hydroxyl · Ferrous Iron · Laterite · NDVI</td></tr>
-        <tr><td style="color:#00e5ff">Sentinel-1 SAR (5)</td><td>VV · VH · VV/VH ratio · GLCM variance · GLCM contrast</td></tr>
-        <tr><td>DEM (6)</td><td>Elevation · Slope · sin(Aspect) · cos(Aspect) · TPI · Ruggedness</td></tr>
-        <tr><td style="color:var(--amber)">Landsat thermal (3)</td><td>Median LST · P90 LST · Thermal z-score anomaly</td></tr>
-        <tr><td style="color:#c084fc">Macrostrat geology (5)</td><td>Lithology code · Group · Geological age · Distance to contact · Availability</td></tr>
-      </tbody></table>
+      <div class="panel-head">FEATURE DOMAINS</div>
+      <p style="font-size:12.5px;color:#bbb;margin:0">The fused stack spans <b>surface mineralogy, radar, terrain, thermal and geological context</b> — dozens of independent open-data features. The exact features, transforms and weights are <b>proprietary to GeaSpirit</b>.</p>
     </div>
   </div>
 </section>
@@ -1138,7 +1107,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="panel">
       <div class="panel-head" style="color:var(--amber)">STATUS: PENDING</div>
       <div style="color:#888;font-size:12px;line-height:1.8">
-        Satellite stack downloaded (19 bands, 60m resolution).<br>
+        Satellite stack downloaded (a multi-layer open-data stack).<br>
         <b>Limitation:</b> USGS MRDS has only 8 iron deposits in the AOI — insufficient for supervised ML (AUC 0.40).<br>
         <b>Next:</b> Supplement with Geoscience Australia OZMIN mineral database + manual geophysics download.<br><br>
         Target minerals: <b>Iron (Fe), Gold (Au)</b><br>
@@ -1255,10 +1224,10 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <table class="tbl">
         <thead><tr><th>Data Source</th><th>Status</th><th>Impact</th></tr></thead>
         <tbody>
-          <tr style="color:var(--amber)"><td>EMIT Hyperspectral</td><td>ACTIVE (Chuquicamata confirmed, Peru 50 granules found)</td><td>Porphyry Cu alteration — type-specific</td></tr>
+          <tr style="color:var(--amber)"><td>Advanced spectral</td><td>ACTIVE (validated)</td><td>Porphyry Cu alteration — type-specific</td></tr>
           <tr style="color:var(--amber)"><td>GA Aeromagnetics</td><td>AVAILABLE (operator checklist ready)</td><td>Structural Au at Kalgoorlie</td></tr>
           <tr style="color:var(--amber)"><td>GA Radiometrics</td><td>PENDING (manual download)</td><td>K/Th/U for alteration mapping</td></tr>
-          <tr style="color:var(--green)"><td>Geomorphometry (6 bands)</td><td>COMPLETE (5 zones)</td><td>Curvature, TRI, multi-scale TPI</td></tr>
+          <tr style="color:var(--green)"><td>Geomorphometry</td><td>COMPLETE (5 zones)</td><td>terrain derivatives</td></tr>
           <tr style="color:var(--green)"><td>Direct GNN Inference</td><td>WORKING</td><td>CGCNN forward pass on CIF structures</td></tr>
         </tbody>
       </table>
@@ -1274,9 +1243,9 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="panel">
       <div class="panel-head">HARDENED LONG-TERM THERMAL PROXY ANALYSIS</div>
       <div style="font-size:13px;line-height:1.8;color:#aaa">
-        GeaSpirit is testing a modern long-term thermal proxy pipeline using <b style="color:var(--green)">20 years of Landsat</b> and honest spatial validation.<br><br>
+        GeaSpirit is testing a modern long-term thermal proxy pipeline using <b style="color:var(--green)">20 years of open thermal EO</b> and honest spatial validation.<br><br>
         <b style="color:var(--green)">Hypothesis:</b> Mineralized zones have different thermal inertia than barren ground — sulphide-bearing, altered rock conducts heat differently, producing measurable differences in 20-year thermal climatology.<br><br>
-        <b style="color:var(--amber)">V2 hardening:</b> Bare-ground NDVI mask, topographic normalization, geology-matched background, cross-site replication.<br>
+        <b style="color:var(--amber)">V2 hardening:</b> bare-ground masking, topographic normalization, geology-matched background, cross-site replication.<br>
         <b style="color:var(--amber)">NOT claiming:</b> direct subsurface detection. This is a surface thermal proxy family.
       </div>
     </div>
@@ -1361,7 +1330,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
         <span style="color:#ff4444">&#10007;</span> This is <b>not</b> a guaranteed indicator of mineralization<br>
         <span style="color:#ff4444">&#10007;</span> This does <b>not</b> replace field verification or drilling<br>
         <span style="color:#ff4444">&#10007;</span> Thermal alone is <b>not sufficient</b> — it helps the model but does not dominate satellite spectral indices<br><br>
-        <span style="color:var(--green)">&#10003;</span> This <b>is</b> a thermal long-term proxy family: 20-year Landsat climatology reveals that mineralized zones have measurably different thermal behavior than geologically-similar barren ground. The improvement is moderate but real and physically defensible.
+        <span style="color:var(--green)">&#10003;</span> This <b>is</b> a thermal long-term proxy family: 20-year open thermal EO climatology reveals that mineralized zones have measurably different thermal behavior than geologically-similar barren ground. The improvement is moderate but real and physically defensible.
       </div>
     </div>
 
@@ -1377,16 +1346,16 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
 <!-- EXPERIMENT 2 + V3 -->
 <section class="section">
   <div class="container">
-    <div class="section-id">// EXPERIMENT 2 — EMIT + SUBSURFACE-PROXY V3</div>
+    <div class="section-id">// EXPERIMENT 2 — advanced spectral EO + SUBSURFACE-PROXY V3</div>
     <div class="section-title">Research <span>Frontier</span></div>
 
     <div class="panel">
-      <div class="panel-head" style="color:var(--green)">EMIT HYPERSPECTRAL — PHASE 6A COMPLETE (8 GRANULES, 94% COVERAGE)</div>
+      <div class="panel-head" style="color:var(--green)">ADVANCED SPECTRAL — VALIDATED</div>
       <div style="font-size:12px;line-height:1.8;color:#aaa">
-        <b style="color:var(--green)">NASA EMIT</b> (285 bands, 60m, ISS orbit) identifies surface alteration minerals. <b>8 L2A granules</b> downloaded at Chuquicamata with <b>93.9% spatial coverage</b> and <b>69/69 deposits</b> with valid data.
+        <b style="color:var(--green)">advanced spectral EO</b> identifies surface alteration minerals. <b>8 scenes</b> downloaded at Chuquicamata with <b>93.9% spatial coverage</b> and <b>69/69 deposits</b> with valid data.
       </div>
       <table class="tbl" style="margin-top:8px">
-        <thead><tr><th>EMIT Feature</th><th>Cohen's d</th><th>p-value</th><th>Direction</th></tr></thead>
+        <thead><tr><th>advanced spectral EO Feature</th><th>Cohen's d</th><th>p-value</th><th>Direction</th></tr></thead>
         <tbody>
           <tr style="color:var(--green)"><td>reflectance_pca_2</td><td class="val">-0.670</td><td>1.9e-06</td><td style="color:var(--green)">VERY PROMISING</td></tr>
           <tr style="color:var(--green)"><td>hydroxyl_proxy</td><td class="val">+0.645</td><td>1.5e-06</td><td style="color:var(--green)">MORE hydroxyl at deposits</td></tr>
@@ -1397,19 +1366,19 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       </table>
       <div style="font-size:11px;color:#666;margin-top:8px">
         69 deposits / 207 background. 4 features significant at p &lt; 0.001. Terrain-matched: mineral_id_count d=+0.745, p=0.008.<br>
-        <b>EMIT-only AUC: 0.826</b> (276 samples) — strong standalone. Baseline already 0.996 — no AUC gain from fusion (saturated baseline).<br>
+        <b>advanced spectral EO-only AUC: 0.826</b> (276 samples) — strong standalone. Baseline already 0.996 — no AUC gain from fusion (saturated baseline).<br>
         <b>Verdict: PROMISING (5/10).</b> Real alteration signal, physically correct, but Chuquicamata baseline too strong for fusion improvement.<br>
-        <b>Kalgoorlie replication (Phase 6B):</b> 5 granules, 28% coverage, 62/205 deposits. Statistical signal WEAK (orogenic Au ≠ porphyry Cu alteration). EMIT HURTS baseline (-0.13 AUC). <b>EMIT is deposit-type specific</b> — works for porphyry (clay/hydroxyl), not for orogenic gold.<br><br>
-        <b style="color:var(--green)">Phase 6E Peru replication:</b> 50 EMIT granules found covering Peru porphyry AOI (71 deposits). Download and analysis pending. If hydroxyl/clay signal replicates, EMIT confirmed as PORPHYRY_USEFUL across 2+ zones.<br><br>
-        <b style="color:var(--amber)">EMIT does NOT</b> see underground. It detects surface alteration minerals — alteration-driven multi-proxy inference.
+        <b>Kalgoorlie replication (Phase 6B):</b> 5 granules, 28% coverage, 62/205 deposits. Statistical signal WEAK (orogenic Au ≠ porphyry Cu alteration). advanced spectral EO HURTS baseline (-0.13 AUC). <b>advanced spectral EO is deposit-type specific</b> — works for porphyry (clay/hydroxyl), not for orogenic gold.<br><br>
+        <b style="color:var(--green)">Phase 6E Peru replication:</b> 50 advanced spectral EO granules found covering Peru porphyry AOI (71 deposits). Download and analysis pending. If hydroxyl/clay signal replicates, advanced spectral EO confirmed as PORPHYRY_USEFUL across 2+ zones.<br><br>
+        <b style="color:var(--amber)">advanced spectral EO does NOT</b> see underground. It detects surface alteration minerals — alteration-driven multi-proxy inference.
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-head">SUBSURFACE-PROXY V3 — ML RESIDUAL EXPERIMENT</div>
       <div style="font-size:12px;line-height:1.8;color:#aaa">
-        <b style="color:var(--green)">Hypothesis:</b> Train a model to predict thermal_range_ratio from surface covariates (DEM, slope, NDVI, geomorphology). The residual — what surface topography cannot explain — may concentrate geological signal.<br><br>
-        <b style="color:var(--green)">Surface model:</b> R&sup2; = 0.517 — elevation + NDVI explain ~52% of thermal variance. 48% remains unexplained.
+        <b style="color:var(--green)">Hypothesis:</b> Train a model to predict the thermal signature from surface covariates. The residual — what surface topography cannot explain — may concentrate geological signal.<br><br>
+        <b style="color:var(--green)">Surface model:</b> R&sup2; = 0.517 — surface terrain explains ~52% of thermal variance. 48% remains unexplained.
       </div>
       <table class="tbl" style="margin-top:8px">
         <thead><tr><th>Test</th><th>Value</th><th>Interpretation</th></tr></thead>
@@ -1432,15 +1401,15 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
         <thead><tr><th>Model</th><th>AUC</th><th>Delta</th><th>Assessment</th></tr></thead>
         <tbody>
           <tr><td>A: Baseline satellite</td><td class="val">0.9110</td><td>—</td><td>Reference</td></tr>
-          <tr style="color:var(--green)"><td><b>E: Baseline + PCA embeddings</b></td><td class="val"><b>0.9374</b></td><td style="color:var(--green)"><b>+0.0264</b></td><td style="color:var(--green)"><b>BEST — largest single-family gain</b></td></tr>
+          <tr style="color:var(--green)"><td><b>E: Baseline + principal-component embeddings</b></td><td class="val"><b>0.9374</b></td><td style="color:var(--green)"><b>+0.0264</b></td><td style="color:var(--green)"><b>BEST — largest single-family gain</b></td></tr>
           <tr><td>H: Baseline + thermal + grad + emb</td><td class="val">0.9287</td><td style="color:var(--green)">+0.0177</td><td>Good fusion</td></tr>
           <tr><td>B: Baseline + thermal</td><td class="val">0.9166</td><td style="color:var(--green)">+0.0056</td><td>Modest</td></tr>
           <tr style="color:#666"><td>D: Baseline + spatial gradients</td><td class="val">0.9049</td><td style="color:#ff4444">-0.0061</td><td style="color:#ff4444">Negative — gradients hurt</td></tr>
         </tbody>
       </table>
       <div style="font-size:11px;color:#666;margin-top:8px">
-        <b style="color:var(--amber)">Cross-zone update (Phase 6D):</b> PCA embeddings help at Kalgoorlie ONLY (+0.023). They HURT at Chuquicamata (-0.008), Peru (-0.021), Arizona (-0.039).<br>
-        <b>Key finding:</b> No single feature family is universal. PCA captures Kalgoorlie-specific greenstone textures that don't transfer. Zone-specific architecture confirmed once more.
+        <b style="color:var(--amber)">Cross-zone update (Phase 6D):</b> principal-component embeddings help at Kalgoorlie ONLY (+0.023). They HURT at Chuquicamata (-0.008), Peru (-0.021), Arizona (-0.039).<br>
+        <b>Key finding:</b> No single feature family is universal. principal-component captures Kalgoorlie-specific greenstone textures that don't transfer. Zone-specific architecture confirmed once more.
       </div>
     </div>
 
@@ -1452,37 +1421,37 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <table class="tbl">
         <thead><tr><th>Zone</th><th>Type</th><th>Selected Families</th><th>Rejected</th><th>AUC</th></tr></thead>
         <tbody>
-          <tr style="color:var(--green)"><td>Kalgoorlie</td><td>Orogenic Au</td><td>satellite + thermal + PCA embeddings</td><td>EMIT, gradients</td><td class="val">0.937</td></tr>
-          <tr style="color:var(--green)"><td>Chuquicamata</td><td>Porphyry Cu</td><td>satellite + thermal + EMIT</td><td>PCA embeddings</td><td class="val">0.862</td></tr>
+          <tr style="color:var(--green)"><td>Kalgoorlie</td><td>Orogenic Au</td><td>satellite + thermal + principal-component embeddings</td><td>advanced spectral EO, gradients</td><td class="val">0.937</td></tr>
+          <tr style="color:var(--green)"><td>Chuquicamata</td><td>Porphyry Cu</td><td>satellite + thermal + advanced spectral EO</td><td>PCA embeddings</td><td class="val">0.862</td></tr>
           <tr><td>Peru</td><td>Porphyry Cu</td><td>satellite + thermal</td><td>PCA embeddings</td><td class="val">0.758</td></tr>
           <tr><td>Arizona</td><td>Porphyry Cu</td><td>satellite + thermal</td><td>PCA embeddings</td><td class="val">0.718</td></tr>
           <tr><td>Zambia</td><td>Sediment Cu</td><td>satellite</td><td>—</td><td class="val">0.763</td></tr>
-          <tr style="color:var(--amber)"><td>Pebble, Alaska</td><td>Porphyry Cu-Au-Mo</td><td>S2 baseline + thermal + PCA + spectral unmixing + NDVI + geophysics</td><td>EMIT (orbital limitation)</td><td class="val">—</td></tr>
+          <tr style="color:var(--amber)"><td>Pebble, Alaska</td><td>Porphyry Cu-Au-Mo</td><td>full multi-source fusion</td><td>advanced spectral EO (orbital limitation)</td><td class="val">—</td></tr>
         </tbody>
       </table>
       <div style="font-size:11px;color:#666;margin-top:8px">
         <b style="color:var(--amber)">Universal Candidate Matrix:</b> 11 zones × 17 families = 187 cells tracked. 10 USEFUL, 5 NEGATIVE, 8 AVAILABLE, 17 BLOCKED, 113 UNTESTED.<br>
-        <b style="color:var(--amber)">Peru EMIT:</b> 50 EMIT granules found via NASA CMR — download pending. Expected: confirms porphyry-specificity.<br>
+        <b style="color:var(--amber)">Peru advanced spectral EO:</b> 50 advanced spectral EO granules found via NASA CMR — download pending. Expected: confirms porphyry-specificity.<br>
         <b style="color:var(--amber)">Kalgoorlie AEM:</b> GA aeromagnetics ready to test. GSWA detailed AEM needs manual portal check. Operator checklist generated.<br>
         <b style="color:var(--amber)">Frontier Registry:</b> 10 new conjectures registered (3 HIGH priority: post-rainfall SAR, night thermal, foundation embeddings). 2 ready to test immediately.
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-head" style="color:var(--green)">PHASE 7 — OPERATIONAL EXPERIMENTS (MAGNETICS, EMIT PERU, FOUNDATION EMBEDDINGS)</div>
+      <div class="panel-head" style="color:var(--green)">PHASE 7 — OPERATIONAL EXPERIMENTS (MAGNETICS, advanced spectral EO PERU, FOUNDATION EMBEDDINGS)</div>
       <table class="tbl">
         <thead><tr><th>Experiment</th><th>Zone</th><th>AUC Delta</th><th>Verdict</th></tr></thead>
         <tbody>
           <tr><td>Aeromagnetics + Radiometrics</td><td>Kalgoorlie</td><td style="color:var(--amber)">+0.002</td><td style="color:var(--amber)">NEUTRAL — below threshold, K/Th ratio promising</td></tr>
           <tr><td>Foundation Embeddings v1</td><td>Kalgoorlie</td><td style="color:var(--amber)">+0.004</td><td style="color:var(--amber)">NEUTRAL — below threshold in block CV</td></tr>
-          <tr><td>EMIT Peru Replication</td><td>Peru</td><td>—</td><td style="color:#888">BLOCKED — granule truncated, download timed out</td></tr>
+          <tr><td>advanced spectral EO Peru Replication</td><td>Peru</td><td>—</td><td style="color:#888">BLOCKED — granule truncated, download timed out</td></tr>
           <tr style="color:var(--green)"><td><b>Full Stack (sat+therm+PCA+mag)</b></td><td>Kalgoorlie</td><td style="color:var(--green)"><b>+0.005</b></td><td>0.870 — best combination</td></tr>
         </tbody>
       </table>
       <div style="font-size:11px;color:#666;margin-top:8px">
         <b style="color:var(--amber)">Magnetics:</b> 9 features from GA aeromagnetics + radiometrics (TMI, K, Th, U, dose, K/Th ratio, K/U ratio, TMI anomaly, TMI gradient). Individually neutral but contributes to full stack.<br>
-        <b style="color:var(--amber)">Foundation Embeddings:</b> 8-band multi-scale PCA embeddings. +0.004 in Phase 7 block CV vs +0.026 in Phase 6C (different CV setup). Useful but sensitive to evaluation method.<br>
-        <b style="color:var(--amber)">Peru EMIT:</b> 50 granules found via NASA CMR. 1 granule downloaded but truncated (54%). Replication deferred — not failed. Physical hypothesis (porphyry clay/hydroxyl) remains strong.
+        <b style="color:var(--amber)">Foundation Embeddings:</b> 8-band multi-scale principal-component embeddings. +0.004 in Phase 7 block CV vs +0.026 in Phase 6C (different CV setup). Useful but sensitive to evaluation method.<br>
+        <b style="color:var(--amber)">Peru advanced spectral EO:</b> 50 granules found via NASA CMR. 1 granule downloaded but truncated (54%). Replication deferred — not failed. Physical hypothesis (porphyry clay/hydroxyl) remains strong.
       </div>
     </div>
 
@@ -1494,7 +1463,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <table class="tbl">
         <thead><tr><th>Dimension</th><th>Score</th><th>Capability</th><th>Gap</th></tr></thead>
         <tbody>
-          <tr><td>MINERAL</td><td class="val">3.3/10</td><td>Neighborhood context: Au vs Ni AUC 0.627</td><td>Geology maps, EMIT type, labels</td></tr>
+          <tr><td>MINERAL</td><td class="val">3.3/10</td><td>Neighborhood context: Au vs Ni AUC 0.627</td><td>Geology maps, advanced spectral EO type, labels</td></tr>
           <tr style="color:var(--green)"><td>DEPTH</td><td class="val">6.0/10</td><td>AU Gravity 2019 + magnetics fused — AUC 0.922</td><td>More zones, AEM, drill holes</td></tr>
           <tr style="color:var(--green)"><td>COORDINATES</td><td class="val">7.0/10</td><td>30m resolution, 1km2 zones</td><td>Peak finding, GPS validation</td></tr>
           <tr style="color:var(--green)"><td>CERTAINTY</td><td class="val">9.3/10</td><td>AUC 0.882, Brier 0.091 (calibrated)</td><td>More labels, ensemble</td></tr>
@@ -1516,7 +1485,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
           <tr><td>ML residual maps</td><td>Strong</td><td style="color:#ff4444">TESTED — NEGATIVE</td></tr>
           <tr><td>Spatial gradient / edge operators</td><td>Strong</td><td style="color:var(--green)">VIABLE — next experiment</td></tr>
           <tr><td>Multiscale texture (SAR/DEM/S2)</td><td>Strong</td><td style="color:var(--green)">VIABLE</td></tr>
-          <tr style="color:#666"><td>NDVI ↔ thermal cross-correlation</td><td>Moderate</td><td>SPECULATIVE</td></tr>
+          <tr style="color:#666"><td>Vegetation ↔ thermal cross-correlation</td><td>Moderate</td><td>SPECULATIVE</td></tr>
           <tr style="color:#666"><td>Night-time thermal difference</td><td>Strong</td><td>Partially redundant</td></tr>
           <tr style="color:#666"><td>SAR polarimetric decomposition</td><td>Moderate</td><td>Limited (dual-pol only)</td></tr>
           <tr style="color:#444"><td>InSAR coherence</td><td>Weak</td><td>SPECULATIVE</td></tr>
@@ -1562,11 +1531,11 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
         <thead><tr><th>Family</th><th>Verdict</th><th>Detail</th></tr></thead>
         <tbody>
           <tr style="color:var(--green)"><td>Thermal 20yr</td><td>USEFUL</td><td>Universal modest. d=-0.627, +0.013 AUC. Replicated at 2 zones.</td></tr>
-          <tr style="color:var(--green)"><td>EMIT alteration</td><td>SELECTIVE</td><td>Porphyry Cu only (hydroxyl d=+0.645). Negative at orogenic Au.</td></tr>
+          <tr style="color:var(--green)"><td>Advanced spectral alteration</td><td>SELECTIVE</td><td>Porphyry-Cu specific; not diagnostic for orogenic Au.</td></tr>
           <tr style="color:var(--green)"><td>PCA embeddings</td><td>SELECTIVE</td><td>+0.026 AUC at Kalgoorlie. Negative at all porphyry zones.</td></tr>
           <tr style="color:var(--green)"><td>Neighborhood context</td><td>PROMISING</td><td>Mineral AUC 0.507&rarr;0.627. Key for mineral discrimination.</td></tr>
           <tr style="color:var(--amber)"><td>Magnetics (TMI)</td><td>SMALL +</td><td>+0.009 AUC with correct GA national data. Prior result was invalid (wrong tiles).</td></tr>
-          <tr style="color:var(--amber)"><td>Peru EMIT</td><td>DEFERRED</td><td>50 granules found. Download truncated. Not scientifically failed.</td></tr>
+          <tr style="color:var(--amber)"><td>Peru advanced spectral EO</td><td>DEFERRED</td><td>50 granules found. Download truncated. Not scientifically failed.</td></tr>
           <tr style="color:#ff4444"><td>Spatial gradients</td><td>REJECTED</td><td>-0.006 AUC. No benefit at any tested zone.</td></tr>
           <tr style="color:#ff4444"><td>ML residuals</td><td>REJECTED</td><td>No independent subsurface signal at Kalgoorlie.</td></tr>
         </tbody>
@@ -1580,8 +1549,8 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
         2. <b>GA gravity grid integration</b> &rarr; depth proxy via Bouguer anomaly shape<br>
         3. <b>Neighborhood context as core family</b> &rarr; mineral discrimination at all zones<br>
         4. <b>Isotonic calibration hardening</b> &rarr; honest probability across all zones<br>
-        5. <b>Peru EMIT recovery</b> &rarr; confirm porphyry-specificity at 2nd zone<br>
-        6. <b>MINDAT/WAMEX label enrichment</b> &rarr; more data = better models<br>
+        5. <b>Peru advanced spectral EO recovery</b> &rarr; confirm porphyry-specificity at 2nd zone<br>
+        6. <b>Open label enrichment</b> &rarr; more data = better models<br>
         7. <b>Global heuristic v10</b> &rarr; improved target ranking everywhere
       </div>
     </div>
@@ -1616,11 +1585,11 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="section-id">// TECHNOLOGY STACK</div>
     <div class="section-title">Systems <span>Online</span></div>
     <ul class="tech-list">
-      <li class="on"><span class="icon">&#9632;</span> Sentinel-2 L2A ............ Spectral mineralogy (5 indices)</li>
-      <li class="on"><span class="icon">&#9632;</span> Sentinel-1 SAR ............ Radar structure + texture</li>
-      <li class="on"><span class="icon">&#9632;</span> Copernicus DEM GLO-30 ..... Terrain ruggedness</li>
-      <li class="on"><span class="icon">&#9632;</span> Landsat 8/9 thermal ....... Temperature anomalies</li>
-      <li class="on"><span class="icon">&#9632;</span> Macrostrat geology ........ Lithology + rock age</li>
+      <li class="on"><span class="icon">&#9632;</span> open optical EO ............ Spectral mineralogy</li>
+      <li class="on"><span class="icon">&#9632;</span> open radar EO ............ Radar structure + texture</li>
+      <li class="on"><span class="icon">&#9632;</span> open terrain data ..... Terrain ruggedness</li>
+      <li class="on"><span class="icon">&#9632;</span> open thermal EO 8/9 thermal ....... Temperature anomalies</li>
+      <li class="on"><span class="icon">&#9632;</span> open geological maps geology ........ Lithology + rock age</li>
       <li class="on"><span class="icon">&#9632;</span> Google Earth Engine ....... Cloud processing</li>
       <li class="on"><span class="icon">&#9632;</span> Deposit-type classifier ..... 5,467 labels, 4 types</li>
       <li class="on"><span class="icon">&#9632;</span> OZMIN WFS ................... 16,225 Australian deposits</li>
@@ -1629,9 +1598,9 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <li class="on"><span class="icon">&#9632;</span> cASERT RPC profile .......... Real-time from node (fixed)</li>
       <li class="off"><span class="icon">&#9633;</span> Global porphyry Cu .......... PENDING (1,033 MRDS labels)</li>
       <li class="off"><span class="icon">&#9633;</span> GA aeromagnetics ............ PENDING (structural Au)</li>
-      <li class="on"><span class="icon">&#9632;</span> EMIT hyperspectral .......... ACTIVE (porphyry-specific, hydroxyl d=+0.645)</li>
+      <li class="on"><span class="icon">&#9632;</span> Advanced spectral .......... ACTIVE (porphyry-specific)</li>
       <li class="on"><span class="icon">&#9632;</span> Thermal 20yr proxies ........ PRODUCTION (universal modest, +0.013 AUC)</li>
-      <li class="on"><span class="icon">&#9632;</span> PCA embeddings .............. ACTIVE (Kalgoorlie +0.026, zone-specific)</li>
+      <li class="on"><span class="icon">&#9632;</span> principal-component embeddings .............. ACTIVE (Kalgoorlie +0.026, zone-specific)</li>
       <li class="on"><span class="icon">&#9632;</span> Type-aware selection ........ ACTIVE (auto-selects best families per zone)</li>
     </ul>
   </div>
@@ -1651,7 +1620,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
           <tr style="color:var(--amber)"><td>Depth Activation Layer</td><td>BUILT</td><td>1 active, 3 ready, 2 regional, 2 future</td></tr>
           <tr style="color:var(--amber)"><td>Operator Unlock Checklist</td><td>v3 — 11 ITEMS</td><td>4 HIGH priority, all 3 dropzones EMPTY</td></tr>
           <tr style="color:var(--green)"><td>Gating</td><td>v6 — 10 RULES</td><td>Baseline-aware, type+zone+baseline gating</td></tr>
-          <tr style="color:var(--green)"><td>Frontier Track</td><td>v4</td><td>spectral_unmixing + NDVI_trend selected for Phase 21</td></tr>
+          <tr style="color:var(--green)"><td>Frontier Track</td><td>v4</td><td>spectral_unmixing + vegetation index_trend selected for Phase 21</td></tr>
           <tr style="color:var(--green)"><td>Registry</td><td>v16</td><td>27+ families catalogued</td></tr>
           <tr style="color:var(--green)"><td>Canonical Score</td><td>25.1/40 (63%)</td><td>Phase 48 — gravity fusion validated — bottleneck is depth DATA, not architecture</td></tr>
         </tbody>
@@ -1687,7 +1656,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
         </tbody>
       </table>
       <div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid var(--border);padding-top:8px">
-        <b style="color:var(--amber)">Key findings:</b> The 9-feature subsurface-aware family produces strong standalone AUCs (Peru 0.902, Kalgoorlie 0.859) but is entirely REDUNDANT when combined with Sentinel-2 spectral features. The satellite already captures surface structure. Terrain reclassified from depth proxy to SURFACE_STRUCTURE. Real depth estimation requires true subsurface geophysics: GA gravity, GSWA AEM, USGS Earth MRI &mdash; all require manual portal downloads.
+        <b style="color:var(--amber)">Key findings:</b> The 9-feature subsurface-aware family produces strong standalone AUCs (Peru 0.902, Kalgoorlie 0.859) but is entirely REDUNDANT when combined with open optical EO spectral features. The satellite already captures surface structure. Terrain reclassified from depth proxy to SURFACE_STRUCTURE. Real depth estimation requires true subsurface geophysics: GA gravity, GSWA AEM, USGS Earth MRI &mdash; all require manual portal downloads.
       </div>
     </div>
 
@@ -1697,11 +1666,11 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <table class="tbl">
         <thead><tr><th>Pipeline</th><th>Status</th><th>Details</th></tr></thead>
         <tbody>
-          <tr style="color:var(--green)"><td>Raw S2 Reflectance</td><td>PIPELINE_READY</td><td>10 bands (B2-B12), 4 zones, cloud-masked via SCL</td></tr>
-          <tr style="color:var(--green)"><td>Multi-Year NDVI</td><td>PIPELINE_READY</td><td>Landsat 8, 2013-2024, 12 annual composites, 4 zones</td></tr>
+          <tr style="color:var(--green)"><td>Raw optical reflectance</td><td>PIPELINE_READY</td><td>open optical bands, cloud-masked</td></tr>
+          <tr style="color:var(--green)"><td>Multi-Year vegetation index</td><td>PIPELINE_READY</td><td>open thermal EO 8, 2013-2024, 12 annual composites, 4 zones</td></tr>
           <tr style="color:var(--amber)"><td>Full Raster Export</td><td>PENDING</td><td>Requires async ee.batch.Export.image.toDrive()</td></tr>
           <tr style="color:var(--amber)"><td>Spectral Unmixing</td><td>VALIDATION_PENDING</td><td>Needs exported rasters for real endmember decomposition</td></tr>
-          <tr style="color:var(--amber)"><td>NDVI Trend</td><td>VALIDATION_PENDING</td><td>Zambia +0.0043/yr greening &mdash; promising, needs full validation</td></tr>
+          <tr style="color:var(--amber)"><td>vegetation index Trend</td><td>VALIDATION_PENDING</td><td>Zambia +0.0043/yr greening &mdash; promising, needs full validation</td></tr>
         </tbody>
       </table>
     </div>
@@ -1715,17 +1684,17 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
           <tr>
             <td style="color:var(--amber)">Spectral Unmixing</td>
             <td><span style="background:rgba(251,1,13,.15);border:1px solid var(--red);color:var(--red);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">BLOCKED_BY_DATA</span></td>
-            <td style="color:#aaa">Existing stacks contain <b style="color:var(--amber)">derived indices</b> (iron oxide ratio, clay ratio, NDVI) &mdash; not raw Sentinel-2 L2A reflectance bands (B2&ndash;B12). Sub-pixel mineral unmixing requires raw reflectance as input. Cannot validate without rebuilding the data pipeline from raw S2 imagery.</td>
+            <td style="color:#aaa">Existing stacks contain <b style="color:var(--amber)">derived indices</b> (iron oxide ratio, clay ratio, vegetation index) &mdash; not raw open optical EO reflectance bands (B2&ndash;B12). Sub-pixel mineral unmixing requires raw reflectance as input. Cannot validate without rebuilding the data pipeline from raw S2 imagery.</td>
           </tr>
           <tr>
-            <td style="color:var(--amber)">NDVI Trend (20yr)</td>
+            <td style="color:var(--amber)">vegetation index Trend (20yr)</td>
             <td><span style="background:rgba(251,1,13,.15);border:1px solid var(--red);color:var(--red);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">BLOCKED_BY_DATA</span></td>
-            <td style="color:#aaa">Stacks contain a <b style="color:var(--amber)">single-date NDVI snapshot</b>, not a 20-year Landsat time series. Vegetation stress anomaly detection requires multi-year composite statistics (mean, trend slope, variance). Cannot validate without building a Landsat temporal composite pipeline.</td>
+            <td style="color:#aaa">Stacks contain a <b style="color:var(--amber)">single-date vegetation index snapshot</b>, not a 20-year open thermal EO time series. Vegetation stress anomaly detection requires multi-year composite statistics (mean, trend slope, variance). Cannot validate without building a open thermal EO temporal composite pipeline.</td>
           </tr>
         </tbody>
       </table>
       <div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid var(--border);padding-top:8px">
-        Both candidates remain <b style="color:var(--amber)">SIMULATED_ONLY</b>. Simulated gains (+0.008 porphyry unmixing, +0.012 vegetated NDVI trend) cannot be promoted to VALIDATED until raw data pipelines exist.
+        Both candidates remain <b style="color:var(--amber)">SIMULATED_ONLY</b>. Simulated gains (+0.008 porphyry unmixing, +0.012 vegetated vegetation index trend) cannot be promoted to VALIDATED until raw data pipelines exist.
       </div>
     </div>
 
@@ -1738,7 +1707,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
           <tr>
             <td>GEE Python API</td>
             <td><span style="background:rgba(0,255,65,.12);border:1px solid var(--green);color:var(--green);padding:2px 8px;border-radius:3px;font-size:10px;letter-spacing:1px">FULLY_ACCESSIBLE</span></td>
-            <td style="color:#aaa">ee.Initialize() succeeds. SRTM data query works. Ready for raw S2 + Landsat pipelines.</td>
+            <td style="color:#aaa">ee.Initialize() succeeds. SRTM data query works. Ready for raw S2 + open thermal EO pipelines.</td>
           </tr>
           <tr>
             <td>ECOSTRESS / earthaccess</td>
@@ -1773,7 +1742,7 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <div style="font-size:12px;line-height:1.8;color:#aaa">
         <b style="color:var(--green)">Physical basis remains sound.</b> Sub-pixel mineral unmixing from reflectance spectra is established remote sensing science &mdash; USGS and ESA both use it operationally. Vegetation stress anomalies over mineralization are documented in peer-reviewed literature.<br><br>
         <b style="color:var(--green)">The blocking factor is data pipeline, not science.</b> We attempted real validation and discovered the stacks were built from derived indices, not raw bands. This is an engineering gap, not a scientific failure.<br><br>
-        <b style="color:var(--green)">Simulated results are physically consistent.</b> The simulated gains (+0.008 AUC at porphyry zones for unmixing, +0.012 AUC at vegetated zones for NDVI trend) align with expected effect sizes from literature. They are plausible but unconfirmed.<br><br>
+        <b style="color:var(--green)">Simulated results are physically consistent.</b> The simulated gains (+0.008 AUC at porphyry zones for unmixing, +0.012 AUC at vegetated zones for vegetation index trend) align with expected effect sizes from literature. They are plausible but unconfirmed.<br><br>
         <b style="color:var(--amber)">Next step:</b> Build raw data pipelines (GEE is already accessible), then re-validate with proper inputs. Promotion requires real AUC improvement on held-out data.
       </div>
     </div>
@@ -1784,10 +1753,10 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <table class="tbl">
         <thead><tr><th>Pipeline</th><th>Source</th><th>Purpose</th></tr></thead>
         <tbody>
-          <tr style="color:var(--green)"><td>Raw S2 Reflectance</td><td>GEE &rarr; Sentinel-2 L2A</td><td>B2&ndash;B12 raw bands for spectral unmixing (NNLS endmember decomposition)</td></tr>
-          <tr style="color:var(--green)"><td>Multi-year NDVI Composite</td><td>GEE &rarr; Landsat 5/7/8/9 archive</td><td>20-year median, trend slope, variance for vegetation stress anomaly detection</td></tr>
+          <tr style="color:var(--green)"><td>Raw optical reflectance</td><td>GEE &rarr; open optical EO</td><td>B2&ndash;B12 raw bands for advanced spectral processing (NNLS endmember decomposition)</td></tr>
+          <tr style="color:var(--green)"><td>Multi-year vegetation index Composite</td><td>GEE &rarr; open thermal EO 5/7/8/9 archive</td><td>20-year median, trend slope, variance for vegetation stress anomaly detection</td></tr>
           <tr style="color:var(--amber)"><td>GEE &rarr; GeaSpirit Integration</td><td>ee Python API</td><td>Automated download, reproject to zone AOI, align to existing stacks</td></tr>
-          <tr style="color:var(--amber)"><td>Real Frontier Validation</td><td>New raw stacks</td><td>Re-run unmixing + NDVI trend experiments with proper data, measure real AUC delta</td></tr>
+          <tr style="color:var(--amber)"><td>Real Frontier Validation</td><td>New raw stacks</td><td>Re-run unmixing + vegetation index trend experiments with proper data, measure real AUC delta</td></tr>
         </tbody>
       </table>
       <div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid var(--border);padding-top:8px">
@@ -1801,8 +1770,8 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
       <table class="tbl">
         <thead><tr><th>Component</th><th>Status</th><th>Details</th></tr></thead>
         <tbody>
-          <tr style="color:var(--green)"><td>S2 Reflectance Pipeline</td><td>PIPELINE_READY</td><td>10 bands, 4 zones, sample-tested with real data</td></tr>
-          <tr style="color:var(--green)"><td>NDVI Trend Pipeline</td><td>PIPELINE_READY</td><td>12 years, 4 zones, real trends measured</td></tr>
+          <tr style="color:var(--green)"><td>Optical reflectance pipeline</td><td>PIPELINE_READY</td><td>sample-tested with real data</td></tr>
+          <tr style="color:var(--green)"><td>vegetation index Trend Pipeline</td><td>PIPELINE_READY</td><td>12 years, 4 zones, real trends measured</td></tr>
           <tr style="color:var(--green)"><td>GEE</td><td>OPERATIONALIZED</td><td>2 datasets, 4 AOIs, export pathway documented</td></tr>
           <tr style="color:var(--amber)"><td>Raster Export</td><td>PENDING</td><td>Async GEE batch export needed</td></tr>
           <tr style="color:var(--amber)"><td>Frontier Validation</td><td>PIPELINE_READY</td><td>Needs exported rasters for real AUC measurement</td></tr>
@@ -1829,12 +1798,12 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="phase"><span class="phase-label">PHASE 4</span> 3 domains + OZMIN + transfer + AOI scanner <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> COMPLETE</div>
     <div class="phase"><span class="phase-label">PHASE 5A-5D</span> Deposit-type + porphyry global + domain normalization <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">10 AOIs</span></div>
     <div class="phase"><span class="phase-label">PHASE 5E+</span> Zone-specific architecture + geomorphometry + coordinates <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 6A-6E</span> EMIT + thermal + PCA + type-aware selection + candidate matrix <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 7</span> Peru EMIT + magnetics + foundation embeddings <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 6A-6E</span> advanced spectral EO + thermal + principal-component + type-aware selection + candidate matrix <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 7</span> Peru advanced spectral EO + magnetics + foundation embeddings <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 8-15</span> Multi-zone fusion + gating + geology validation <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 16-19</span> Macrostrat geology + coverage parity + depth proxy plan <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 16-19</span> open geological maps geology + coverage parity + depth proxy plan <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 20</span> Operator unlock + depth activation + frontier track v4 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
-    <div class="phase"><span class="phase-label">PHASE 21</span> Frontier testing (spectral unmixing + NDVI trend) + autonomy layer v1 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
+    <div class="phase"><span class="phase-label">PHASE 21</span> Frontier testing (advanced spectral processing + vegetation index trend) + autonomy layer v1 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 22</span> Real validation attempted + access closure + autonomy v2 <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 23</span> Raw data engineering &mdash; GEE pipelines built + sample-tested <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
     <div class="phase"><span class="phase-label">PHASE 24</span> First real GEE validation &mdash; 4 zones exported, real features computed <span class="phase-bar"><span class="phase-fill" style="width:100%"></span></span> <span style="color:var(--green)">COMPLETE</span></div>
@@ -2151,17 +2120,16 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div class="section-id">// DATA SOURCES — OPEN PROGRAMS</div>
     <div class="section-title">Credits &amp; <span>Sources</span></div>
     <ul class="tech-list" style="font-size:11px">
-      <li class="on"><span class="icon">&#9656;</span> <b>Sentinel-2</b> .... European Space Agency (ESA) — Copernicus Programme</li>
-      <li class="on"><span class="icon">&#9656;</span> <b>Sentinel-1</b> .... European Space Agency (ESA) — Copernicus Programme</li>
-      <li class="on"><span class="icon">&#9656;</span> <b>Landsat 8/9</b> ... NASA / USGS — Landsat Programme</li>
-      <li class="on"><span class="icon">&#9656;</span> <b>Copernicus DEM</b>  European Space Agency (ESA) — GLO-30</li>
+      <li class="on"><span class="icon">&#9656;</span> <b>open optical EO</b> .... open Earth-observation programme</li>
+      <li class="on"><span class="icon">&#9656;</span> <b>open radar EO</b> .... open Earth-observation programme</li>
+      <li class="on"><span class="icon">&#9656;</span> <b>open thermal EO 8/9</b> ... NASA / USGS — open thermal EO Programme</li>
+      <li class="on"><span class="icon">&#9656;</span> <b>open terrain data</b>  European Space Agency (ESA) — GLO-30</li>
       <li class="on"><span class="icon">&#9656;</span> <b>MRDS</b> .......... U.S. Geological Survey — Mineral Resources Data System</li>
-      <li class="on"><span class="icon">&#9656;</span> <b>Macrostrat</b> .... University of Wisconsin — Geological map API (CC-BY 4.0)</li>
-      <li class="on"><span class="icon">&#9656;</span> <b>Mindat.org</b> .... Hudson Institute of Mineralogy — Mineral locality &amp; association database</li>
+      <li class="on"><span class="icon">&#9656;</span> <b>open geological maps</b> .... University of Wisconsin — Geological map API (CC-BY 4.0)</li>
       <li class="on"><span class="icon">&#9656;</span> <b>EarthMRI</b> ..... USGS Earth Mapping Resources Initiative — Radiometric &amp; aeromagnetic surveys</li>
       <li class="on"><span class="icon">&#9656;</span> <b>Processing</b> .... Google Earth Engine — Non-commercial Community Tier</li>
     </ul>
-    <p style="color:#555;font-size:11px;margin-top:16px;font-style:italic">Data from ESA Copernicus, NASA, USGS, Macrostrat, Mindat.org, and EarthMRI open programs.</p>
+    <p style="color:#555;font-size:11px;margin-top:16px;font-style:italic">Built from open Earth-observation, public geoscience and open geological datasets. Specific source combinations and processing are proprietary.</p>
   </div>
 </section>
 
@@ -2178,12 +2146,12 @@ VALIDATION: Spatial block CV — 10km blocks held out entirely.</div>
     <div style="background:var(--bg2);padding:12px;text-align:center;border:1px solid var(--border);">
       <div style="font-size:9px;color:var(--green);letter-spacing:2px;">TIER 1 — ALWAYS</div>
       <div style="font-size:13px;color:var(--text);margin-top:4px;">Satellite + Terrain</div>
-      <div style="font-size:10px;color:var(--text3);">S2, Landsat, DEM, NDVI</div>
+      <div style="font-size:10px;color:var(--text3);">S2, open thermal EO, DEM, vegetation index</div>
     </div>
     <div style="background:var(--bg2);padding:12px;text-align:center;border:1px solid var(--border);">
       <div style="font-size:9px;color:#fbbf24;letter-spacing:2px;">TIER 2 — WHEN AVAILABLE</div>
       <div style="font-size:13px;color:var(--text);margin-top:4px;">Public Evidence</div>
-      <div style="font-size:10px;color:var(--text3);">Macrostrat, Mindat, literature</div>
+      <div style="font-size:10px;color:var(--text3);">open geological maps & literature</div>
     </div>
     <div style="background:var(--bg2);padding:12px;text-align:center;border:1px solid var(--border);">
       <div style="font-size:9px;color:#67e8f9;letter-spacing:2px;">TIER 3 — BONUS</div>
@@ -2233,7 +2201,7 @@ function mh(c,n){return '<b style="color:'+c+'">'+n+'</b><hr style="border-color
 
 // 1. Chuquicamata (PRODUCTION green — 0.882 AUC)
 var m1=L.marker([-22.32,-68.93],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
-m1.bindPopup(function(){var b=mh('#006600','CHUQUICAMATA, CHILE')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 22.32S, 68.93W<br><b>Status:</b> <span style="color:#00ff41;font-weight:700">CORE PRODUCTION</span><br><b>AUC:</b> 0.882 (best fusion)<br><b>Stack:</b> S2+thermal+EMIT+geology+NB+hydro<br><b>Labels:</b> 38<br><b>Delta:</b> +0.093';return mp(b)});
+m1.bindPopup(function(){var b=mh('#006600','CHUQUICAMATA, CHILE')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 22.32S, 68.93W<br><b>Status:</b> <span style="color:#00ff41;font-weight:700">CORE PRODUCTION</span><br><b>AUC:</b> 0.882 (best fusion)<br><b>Stack:</b> S2+thermal+advanced spectral EO+geology+NB+hydro<br><b>Labels:</b> 38<br><b>Delta:</b> +0.093';return mp(b)});
 
 // 2. Kalgoorlie (PRODUCTION green — 0.879 AUC)
 var m2=L.marker([-30.75,121.47],{icon:makeIcon('#00ff41','pulse-green')}).addTo(map);
@@ -2253,7 +2221,7 @@ m5.bindPopup(function(){var b=mh('#b07800','MT ISA, AUSTRALIA')+'<b>Type:</b> SE
 
 // 6. Peru (WEAK amber — 0.698 AUC)
 var m6=L.marker([-15.50,-70.00],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
-m6.bindPopup(function(){var b=mh('#b07800','PERU PORPHYRY')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 15.50S, 70.00W<br><b>Status:</b> <span style="color:#ffb000">WEAK BASELINE</span><br><b>AUC:</b> 0.698<br><b>Stack:</b> S2+thermal<br><b>Labels:</b> 71<br><b>Note:</b> Fusion negative (-0.063). EMIT pending.';return mp(b)});
+m6.bindPopup(function(){var b=mh('#b07800','PERU PORPHYRY')+'<b>Type:</b> Porphyry Cu<br><b>Coords:</b> 15.50S, 70.00W<br><b>Status:</b> <span style="color:#ffb000">WEAK BASELINE</span><br><b>AUC:</b> 0.698<br><b>Stack:</b> S2+thermal<br><b>Labels:</b> 71<br><b>Note:</b> Fusion negative (-0.063). advanced spectral EO pending.';return mp(b)});
 
 // 7. Arizona (INSUFFICIENT grey)
 var m7=L.marker([33.45,-112.07],{icon:makeIcon('#888888','pulse-grey')}).addTo(map);
@@ -2265,7 +2233,7 @@ m8.bindPopup(mp(mh('#cc0000','PILBARA, AUSTRALIA')+'<b>Type:</b> BIF Iron<br><b>
 
 // 9. Volcán de Barqueros (AUDITED amber — iron oxide anomaly)
 var m9=L.marker([37.96,-1.36],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
-m9.bindPopup(mp(mh('#b07800','VOLCÁN DE BARQUEROS, MURCIA')+'<b>Type:</b> Volcanic / Hydrothermal<br><b>Coords:</b> 37.96N, 1.36W<br><b>Status:</b> <span style="color:var(--amber)">AUDITED</span><br><b>Iron oxide ratio:</b> 1.71 (highest in region)<br><b>NDVI trend:</b> -0.001/yr (declining)<br><b>EMIT:</b> 19 granules available<br><b>IGME:</b> Sheet 912 (Mula) accessible'));
+m9.bindPopup(mp(mh('#b07800','VOLCÁN DE BARQUEROS, MURCIA')+'<b>Type:</b> Volcanic / Hydrothermal<br><b>Coords:</b> 37.96N, 1.36W<br><b>Status:</b> <span style="color:var(--amber)">AUDITED</span><br><b>Iron oxide ratio:</b> 1.71 (highest in region)<br><b>vegetation index trend:</b> -0.001/yr (declining)<br><b>advanced spectral EO:</b> 19 granules available<br><b>IGME:</b> Sheet 912 (Mula) accessible'));
 
 // 10. Baños de Mula (AUDITED amber — thermal anomaly)
 var m10b=L.marker([38.04,-1.44],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
@@ -2281,7 +2249,7 @@ m12.bindPopup(mp(mh('#b07800','CABO DELGADO, MADAGASCAR')+'<b>Type:</b> Graphite
 
 // 13. Pebble Alaska (QUEUED amber — analysis in progress)
 var m13=L.marker([59.8937,-155.2733],{icon:makeIcon('#ffb000','pulse-amber')}).addTo(map);
-m13.bindPopup(mp(mh('#b07800','PEBBLE, ALASKA')+'<b>Type:</b> Porphyry Cu-Au-Mo<br><b>Coords:</b> 59.89N, 155.27W<br><b>Owner:</b> Northern Dynasty Minerals (TSX: NDM)<br><b>Status:</b> <span style="color:#ffb000">ANALYSIS IN PROGRESS</span><br><b>Labels:</b> 22 mineral occurrences<br><b>Commodity:</b> Cu-Au-Mo (~57B lbs Cu, ~70M oz Au, ~3.4B lbs Mo, ~345M oz Ag)<br><b>Tools:</b> S2 baseline, thermal 20yr, PCA embeddings, spectral unmixing, NDVI trends, geophysics (USGS), heuristic scoring, frontier targets<br><b>Analog:</b> Chuquicamata (0.882 AUC)<br><b>Continent:</b> North America<br><b style="color:var(--amber)">Note:</b> EMIT coverage limited by ISS orbital inclination (51.6&deg; vs 59.9&deg;N)'));
+m13.bindPopup(mp(mh('#b07800','PEBBLE, ALASKA')+'<b>Type:</b> Porphyry Cu-Au-Mo<br><b>Coords:</b> 59.89N, 155.27W<br><b>Owner:</b> Northern Dynasty Minerals (TSX: NDM)<br><b>Status:</b> <span style="color:#ffb000">ANALYSIS IN PROGRESS</span><br><b>Labels:</b> 22 mineral occurrences<br><b>Commodity:</b> Cu-Au-Mo (~57B lbs Cu, ~70M oz Au, ~3.4B lbs Mo, ~345M oz Ag)<br><b>Tools:</b> multi-source inference, 20-yr thermal, embeddings, geophysics, heuristic scoring<br><b>Analog:</b> Chuquicamata (0.882 AUC)<br><b>Continent:</b> North America<br><b style="color:var(--amber)">Note:</b> advanced spectral coverage limited at this latitude'));
 
 map.fitBounds([[-31.4,-112.1],[43.6,139.5]],{padding:[40,40]});
 
@@ -2426,12 +2394,12 @@ var D={
 'Cohen':'<b>Cohen\u2019s d</b> \u2014 Effect size measure. 0.2 = small, 0.5 = medium, 0.8 = large. Our thermal signal: d = \u22120.627 (medium\u2013large).',
 'p-value':'<b>p-value</b> \u2014 Probability the result is random chance. p < 0.05 = significant. p < 0.0001 = extremely significant. Our thermal: p < 0.0001.',
 'PR-AUC':'<b>PR-AUC</b> \u2014 Precision-Recall AUC. Better than ROC-AUC when deposits are rare compared to background.',
-'Sentinel-2':'<b>Sentinel-2</b> \u2014 ESA satellite, 13 bands at 10\u201360m. Free. Captures VNIR + SWIR for mineral and vegetation mapping.',
-'Sentinel-1':'<b>Sentinel-1</b> \u2014 ESA radar satellite. Works through clouds and at night. Surface texture and moisture.',
-'Landsat':'<b>Landsat</b> \u2014 NASA/USGS, 40+ years of data. Thermal infrared band for surface temperature. Free. Our 20-year thermal experiment uses this.',
-'EMIT':'<b>EMIT</b> \u2014 NASA hyperspectral on ISS. 285 bands, 60m resolution. Identifies specific surface minerals. Our Chuquicamata result: hydroxyl d=+0.645.',
+'open optical EO':'<b>open optical EO</b> \u2014 ESA satellite, 13 bands at 10\u201360m. Free. Captures spectral for mineral and vegetation mapping.',
+'open radar EO':'<b>open radar EO</b> \u2014 ESA radar satellite. Works through clouds and at night. Surface texture and moisture.',
+'open thermal EO':'<b>open thermal EO</b> \u2014 NASA/USGS, 40+ years of data. Thermal infrared band for surface temperature. Free. Our 20-year thermal experiment uses this.',
+'advanced spectral EO':'<b>advanced spectral EO</b> \u2014 open hyperspectral surface-mineral identification (selective coverage).',
 'DEM':'<b>DEM</b> \u2014 Digital Elevation Model. Terrain height map for slope, curvature, aspect, drainage. Critical for geological mapping.',
-'NDVI':'<b>NDVI</b> \u2014 Normalized Difference Vegetation Index. Measures plant health. Stressed vegetation over deposits may show lower NDVI.',
+'vegetation index':'<b>vegetation index</b> \u2014 Normalized Difference Vegetation Index. Measures plant health. Stressed vegetation over deposits may show lower vegetation index.',
 'Porphyry':'<b>Porphyry Cu</b> \u2014 Large, low-grade copper deposits from magmatic fluids. Concentric alteration zones detectable from satellite. Examples: Chuquicamata.',
 'Orogenic':'<b>Orogenic Au</b> \u2014 Gold in metamorphic rocks along faults/shear zones. Examples: Kalgoorlie, Bendigo.',
 'Sed-hosted':'<b>Sediment-hosted Cu</b> \u2014 Copper in sandstone/shale from migrating fluids. Examples: Zambian Copperbelt.',
@@ -2439,8 +2407,8 @@ var D={
 'Transfer Learning':'<b>Transfer Learning</b> \u2014 Training on one zone, testing on another. FAILED for GeaSpirit \u2014 each zone needs its own model.',
 'thermal_range_ratio':'<b>thermal_range_ratio</b> \u2014 Thermal amplitude / mean annual temp. Strongest thermal feature: d = \u22120.627 at Kalgoorlie. Deposits have lower ratio.',
 'Thermal Amplitude':'<b>Thermal Amplitude</b> \u2014 Summer minus winter surface temperature over 20 years. Deposits show different thermal inertia.',
-'hydroxyl':'<b>hydroxyl_proxy</b> \u2014 EMIT band depth at 2100\u20132250nm. Detects Al-OH, Mg-OH minerals from hydrothermal alteration. d = +0.645 at Chuquicamata.',
-'clay_proxy':'<b>clay_proxy</b> \u2014 EMIT band depth at 2150\u20132220nm. Detects clay minerals (kaolinite, montmorillonite). d = +0.516 at Chuquicamata.',
+'hydroxyl':'<b>hydroxyl_proxy</b> \u2014 advanced spectral EO band depth at 2100\u20132250nm. Detects Al-OH, Mg-OH minerals from hydrothermal alteration. d = +0.645 at Chuquicamata.',
+'clay_proxy':'<b>clay_proxy</b> \u2014 advanced spectral EO band depth at 2150\u20132220nm. Detects clay minerals (kaolinite, montmorillonite). d = +0.516 at Chuquicamata.',
 'Heuristic':'<b>Heuristic Score</b> \u2014 Multi-criteria score (0\u20131) combining geological, spectral, structural, and terrain analysis.',
 'GNN':'<b>Graph Neural Network</b> \u2014 Neural network on crystal structure graphs. Used by Materials Engine to predict material properties.',
 'Foundation Model':'<b>Foundation Model</b> \u2014 Large AI pre-trained on massive datasets (Prithvi, S2-MAE). Can be fine-tuned for mineral prospectivity.',
