@@ -1107,10 +1107,19 @@
   }
 
   function fetchChartHist(cgId, days, cb) {
-    fetch('https://api.coingecko.com/api/v3/coins/' + cgId + '/market_chart?vs_currency=usd&days=' + days)
+    // Binance public klines (keyless, CORS *). CoinGecko market_chart is rate-limited (429).
+    // XAUT (Tether Gold) and PAXG (Pax Gold) both trade on Binance as USDT pairs.
+    var SYM = { 'tether-gold': 'XAUTUSDT', 'pax-gold': 'PAXGUSDT' };
+    var sym = SYM[cgId];
+    if (!sym) { if (cb) cb(); return; } // sost-ref / unknown ids use local data, never fetched here
+    var iv = { 1: ['15m', 96], 3: ['1h', 72], 7: ['1h', 168], 30: ['4h', 180], 180: ['1d', 180], 365: ['1d', 365] }[days] || ['1h', 168];
+    fetch('https://api.binance.com/api/v3/klines?symbol=' + sym + '&interval=' + iv[0] + '&limit=' + iv[1])
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        if (d && d.prices) { if (!chartCache[cgId]) chartCache[cgId] = {}; chartCache[cgId][days] = d.prices; }
+        if (Array.isArray(d) && d.length) {
+          if (!chartCache[cgId]) chartCache[cgId] = {};
+          chartCache[cgId][days] = d.map(function(k) { return [k[0], parseFloat(k[4])]; });
+        }
         if (cb) cb();
       }).catch(function() { if (cb) cb(); });
   }
@@ -1372,20 +1381,16 @@
   var coinDetailActiveCode = '';
 
   function getCoinDetailUrl(code, period) {
-    var urls = {
-      '1H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=' + code + '&tsym=USD&limit=60',
-      '4H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=' + code + '&tsym=USD&limit=240',
-      '8H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=' + code + '&tsym=USD&limit=480',
-      '24H': 'https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + code + '&tsym=USD&limit=24',
-      '3D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + code + '&tsym=USD&limit=72',
-      '7D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + code + '&tsym=USD&limit=168',
-      '30D': 'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=30',
-      '6M':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=180',
-      '1Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=365',
-      '3Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=1095',
-      '5Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=' + code + '&tsym=USD&limit=1825'
-    };
-    return urls[period] || urls['7D'];
+    // Binance public klines (keyless, CORS *). CryptoCompare now requires an API key.
+    // USDT has no USDTUSDT pair — use USDC (~$1) as proxy so the stablecoin row still charts.
+    var sym = (code === 'USDT' ? 'USDC' : code) + 'USDT';
+    var p = {
+      '1H':  ['1m', 60],  '4H': ['1m', 240], '8H': ['5m', 96],
+      '24H': ['1h', 24],  '3D': ['1h', 72],  '7D': ['1h', 168],
+      '30D': ['4h', 180], '6M': ['1d', 180], '1Y': ['1d', 365],
+      '3Y':  ['1w', 156], '5Y': ['1w', 260]
+    }[period] || ['1h', 168];
+    return 'https://api.binance.com/api/v3/klines?symbol=' + sym + '&interval=' + p[0] + '&limit=' + p[1];
   }
 
   function showCoinDetailModal(cgId, code) {
@@ -1457,8 +1462,8 @@
     fetch(url, { signal: controller.signal })
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        if (!d || !d.Data || !d.Data.Data || d.Data.Data.length < 2) throw new Error('No data');
-        var data = d.Data.Data.map(function(pt) { return [pt.time * 1000, pt.close]; });
+        if (!Array.isArray(d) || d.length < 2) throw new Error('No data');
+        var data = d.map(function(k) { return [k[0], parseFloat(k[4])]; }); // [openTime, close]
         drawCoinDetailChart(data, code, period);
       })
       .catch(function() {
@@ -1678,20 +1683,13 @@
   }
 
   function getFiatDetailUrl(code, period) {
-    var map = {
-      '1H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=USD&tsym=' + code + '&limit=60',
-      '4H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=USD&tsym=' + code + '&limit=240',
-      '8H':  'https://min-api.cryptocompare.com/data/v2/histominute?fsym=USD&tsym=' + code + '&limit=480',
-      '24H': 'https://min-api.cryptocompare.com/data/v2/histohour?fsym=USD&tsym=' + code + '&limit=24',
-      '3D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=USD&tsym=' + code + '&limit=72',
-      '7D':  'https://min-api.cryptocompare.com/data/v2/histohour?fsym=USD&tsym=' + code + '&limit=168',
-      '30D': 'https://min-api.cryptocompare.com/data/v2/histoday?fsym=USD&tsym=' + code + '&limit=30',
-      '6M':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=USD&tsym=' + code + '&limit=180',
-      '1Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=USD&tsym=' + code + '&limit=365',
-      '3Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=USD&tsym=' + code + '&limit=1095',
-      '5Y':  'https://min-api.cryptocompare.com/data/v2/histoday?fsym=USD&tsym=' + code + '&limit=1825'
-    };
-    return map[period] || map['7D'];
+    // Frankfurter (keyless, ECB reference rates, daily). CryptoCompare forex now needs a key.
+    // Returns USD->code over a date range; parser inverts to USD-per-unit. Daily resolution.
+    var back = { '1H':3,'4H':3,'8H':3,'24H':4,'3D':6,'7D':10,'30D':33,'6M':183,'1Y':368,'3Y':1098,'5Y':1828 }[period] || 10;
+    var end = new Date();
+    var start = new Date(end.getTime() - back * 86400000);
+    function fmt(dt) { return dt.toISOString().slice(0, 10); }
+    return 'https://api.frankfurter.dev/v1/' + fmt(start) + '..' + fmt(end) + '?base=USD&symbols=' + code;
   }
 
   function showFiatDetailModal(code) {
@@ -1762,8 +1760,12 @@
     fetch(url, { signal: controller.signal })
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        if (!d || !d.Data || !d.Data.Data || d.Data.Data.length < 2) throw new Error('No data');
-        var data = d.Data.Data.map(function(pt) { return [pt.time * 1000, 1 / pt.close]; });
+        if (!d || !d.rates) throw new Error('No data');
+        var data = Object.keys(d.rates).sort().map(function(dt) {
+          var r = d.rates[dt][code];
+          return r ? [new Date(dt + 'T00:00:00Z').getTime(), 1 / r] : null; // USD per 1 unit of code
+        }).filter(Boolean);
+        if (data.length < 2) throw new Error('No data');
         drawCoinDetailChart(data, code, period);
       })
       .catch(function() {
