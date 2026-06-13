@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-12-v342",
-  "note": "GeaSpirit banner: added live satellite-detection milestone (Sentinel-2 alteration ratios + Sentinel-1 radar + gravity/magnetic anomaly maps) and a 'See a sample report' link to the new Professional Report example. Force-reload."
+  "v": "2026-06-13-v343",
+  "note": "GeaSpirit banner: mines & deposits count updated 30,000+ -> 50,000+ (worldwide sweep crossed 50,000 assets). Force-reload."
 }
