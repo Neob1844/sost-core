@@ -7982,7 +7982,9 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     if(e.key==='Escape') closeSv(null,true);
   });
 </script>
-<!-- Visit counter — unique visits (seeded baseline), server-persisted, bot-filtered. -->
+<!-- Visit counter — hidden by default, revealed by a discreet button. The visit is
+     registered silently on load (unique, seeded baseline, server-persisted, bot-filtered);
+     the number is only shown if a visitor chooses to consult it. -->
 <script>
 (function(){
   var css="<style>.vcx{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border:1px solid var(--vcx-bd);border-radius:999px;background:var(--vcx-bg);font-family:ui-monospace,Menlo,Consolas,monospace;vertical-align:middle}"
@@ -7993,7 +7995,9 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
   +".vcx-s{display:flex;flex-direction:column;transition:transform 1.6s cubic-bezier(.16,1,.3,1)}"
   +".vcx-s>i{height:1.25em;line-height:1.25em;text-align:center;font-style:normal}"
   +".vcx-sep{display:inline-block;width:.32em;text-align:center;opacity:.65;color:var(--vcx-ac)}"
-  +".vcx-lbl{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--vcx-mut)}</style>";
+  +".vcx-lbl{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--vcx-mut)}"
+  +".vcx-btn{font:600 10px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:1.3px;text-transform:uppercase;color:var(--vcx-mut);background:transparent;border:1px solid var(--vcx-bd);border-radius:999px;padding:6px 12px;cursor:pointer;opacity:.7;transition:opacity .2s,color .2s,border-color .2s}"
+  +".vcx-btn:hover{opacity:1;color:var(--vcx-ac);border-color:var(--vcx-ac)}</style>";
   document.head.insertAdjacentHTML('beforeend',css);
   function fmt(n){ return Number(n).toLocaleString('en-US'); }
   function build(el,val){
@@ -8010,21 +8014,25 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
   }
   function mount(o){
     var host=document.getElementById(o.id); if(!host) return;
-    host.className='vcx';
     host.style.setProperty('--vcx-ac',o.accent); host.style.setProperty('--vcx-bd',o.border);
     host.style.setProperty('--vcx-bg',o.bg); host.style.setProperty('--vcx-mut',o.mut);
+    var sk='vcx_'+o.site, hit=!sessionStorage.getItem(sk);
+    if(hit){ try{sessionStorage.setItem(sk,'1');}catch(e){} fetch(o.base+'?site='+encodeURIComponent(o.site)+'&hit=1').catch(function(){}); }
+    var btn=document.createElement('button'); btn.type='button'; btn.className='vcx-btn'; btn.textContent=o.btn;
+    var box=document.createElement('span'); box.className='vcx'; box.style.display='none';
     var dot=document.createElement('span'); dot.className='vcx-dot';
     var num=document.createElement('span'); num.className='vcx-num';
     var lbl=document.createElement('span'); lbl.className='vcx-lbl'; lbl.textContent=o.label;
-    host.appendChild(dot); host.appendChild(num); host.appendChild(lbl);
-    var sk='vcx_'+o.site, hit=!sessionStorage.getItem(sk);
-    if(hit){ try{sessionStorage.setItem(sk,'1');}catch(e){} }
-    build(num,o.seed);
-    fetch(o.base+'?site='+encodeURIComponent(o.site)+(hit?'&hit=1':'')).then(function(r){return r.json();}).then(function(d){
-      if(d&&typeof d.count==='number') build(num,d.count);
-    }).catch(function(){});
+    box.appendChild(dot); box.appendChild(num); box.appendChild(lbl);
+    host.appendChild(btn); host.appendChild(box);
+    btn.addEventListener('click',function(){
+      btn.style.display='none'; box.style.display='inline-flex'; build(num,o.seed);
+      fetch(o.base+'?site='+encodeURIComponent(o.site)).then(function(r){return r.json();}).then(function(d){
+        if(d&&typeof d.count==='number') build(num,d.count);
+      }).catch(function(){});
+    });
   }
-  mount({id:'vcx-sost',site:'sostcore',seed:3375,base:'/counter',
+  mount({id:'vcx-sost',site:'sostcore',seed:3375,base:'/counter',btn:'▸ visitor count',
          accent:'#4ade80',border:'#16331f',bg:'rgba(8,16,10,.7)',mut:'#5f7a68',label:'explorer visits'});
 })();
 </script>
