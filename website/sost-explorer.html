@@ -114,7 +114,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}
 @keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}
+@keyframes marketsLivePulse{0%,100%{color:#4ade80;text-shadow:0 0 4px rgba(74,222,128,.45)}50%{color:#86efac;text-shadow:0 0 12px rgba(74,222,128,.95),0 0 22px rgba(74,222,128,.55)}}
 .header-link{font-size:11px;color:var(--text3);letter-spacing:1px;transition:color .15s}
+.header-link.markets-live{font-weight:700;animation:marketsLivePulse 1.6s ease-in-out infinite}
+.header-link.markets-live:hover{color:#bbf7d0}
 .header-link:hover{color:var(--red)}
 .offline{background:linear-gradient(90deg,var(--red),#c41d2f);color:#fff;text-align:center;padding:6px;font-size:11px;font-weight:600;display:none;letter-spacing:2px;text-transform:uppercase}
 .offline.show{display:block;animation:slideDown .3s ease}
@@ -420,7 +423,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:0 0 auto;">
       <span class="net-badge" id="netBadgeNav"><span class="net-dot"></span>MAINNET</span>
       <a class="header-link" style="cursor:pointer" onclick="showCXInfo()"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">O</span><span style="color:hsl(190,85%,55%)">N</span><span style="color:hsl(160,85%,50%)">V</span><span style="color:hsl(130,85%,50%)">E</span><span style="color:hsl(100,85%,50%)">R</span><span style="color:hsl(70,85%,50%)">G</span><span style="color:hsl(50,85%,50%)">E</span><span style="color:hsl(35,85%,50%)">N</span><span style="color:hsl(20,85%,50%)">C</span><span style="color:hsl(5,85%,45%)">E</span><span style="color:#fb010d">X</span></a>
-      <a class="header-link" href="sost-ai-engine.html" style="color:#22d3ee">AI ENGINE</a>
+      <a class="header-link markets-live" href="sost-markets.html" title="SOST live markets">MARKETS LIVE</a>
       <a class="header-link" href="https://sostcore.com" target="_blank">WEBSITE</a>
       <a class="header-link" href="sost-app/" style="color:var(--cyan)">📱 APP</a>
       <a class="header-link" href="https://github.com/Neob1844/sost-core" target="_blank">GITHUB</a>
