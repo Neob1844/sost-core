@@ -1235,6 +1235,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
 </div>
 <div class="footer">
   <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
+  <div style="margin-top:12px;text-align:center"><span id="vcx-sost"></span></div>
 </div>
 <script>
 let RPC='/rpc',RPC_USER='',RPC_PASS='',H=0,prevH=0,off=0;
@@ -7980,6 +7981,52 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape') closeSv(null,true);
   });
+</script>
+<!-- Visit counter — unique visits (seeded baseline), server-persisted, bot-filtered. -->
+<script>
+(function(){
+  var css="<style>.vcx{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border:1px solid var(--vcx-bd);border-radius:999px;background:var(--vcx-bg);font-family:ui-monospace,Menlo,Consolas,monospace;vertical-align:middle}"
+  +".vcx-dot{width:7px;height:7px;border-radius:50%;background:var(--vcx-ac);box-shadow:0 0 8px var(--vcx-ac);animation:vcxP 1.8s ease-in-out infinite;flex:0 0 auto}"
+  +"@keyframes vcxP{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}"
+  +".vcx-num{display:inline-flex;font-weight:700;font-size:15px;letter-spacing:.5px;color:var(--vcx-ac);text-shadow:0 0 10px var(--vcx-ac)}"
+  +".vcx-d{display:inline-block;height:1.25em;width:.64em;overflow:hidden}"
+  +".vcx-s{display:flex;flex-direction:column;transition:transform 1.6s cubic-bezier(.16,1,.3,1)}"
+  +".vcx-s>i{height:1.25em;line-height:1.25em;text-align:center;font-style:normal}"
+  +".vcx-sep{display:inline-block;width:.32em;text-align:center;opacity:.65;color:var(--vcx-ac)}"
+  +".vcx-lbl{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--vcx-mut)}</style>";
+  document.head.insertAdjacentHTML('beforeend',css);
+  function fmt(n){ return Number(n).toLocaleString('en-US'); }
+  function build(el,val){
+    var s=fmt(val); el.innerHTML='';
+    for(var i=0;i<s.length;i++){
+      var ch=s[i];
+      if(ch<'0'||ch>'9'){ var sp=document.createElement('span'); sp.className='vcx-sep'; sp.textContent=ch; el.appendChild(sp); continue; }
+      var d=document.createElement('span'); d.className='vcx-d';
+      var st=document.createElement('span'); st.className='vcx-s';
+      for(var k=0;k<=9;k++){ var it=document.createElement('i'); it.textContent=k; st.appendChild(it); }
+      d.appendChild(st); el.appendChild(d);
+      (function(st,t){ st.style.transform='translateY(0)'; setTimeout(function(){ st.style.transform='translateY(-'+(t*10)+'%)'; },80); })(st,+ch);
+    }
+  }
+  function mount(o){
+    var host=document.getElementById(o.id); if(!host) return;
+    host.className='vcx';
+    host.style.setProperty('--vcx-ac',o.accent); host.style.setProperty('--vcx-bd',o.border);
+    host.style.setProperty('--vcx-bg',o.bg); host.style.setProperty('--vcx-mut',o.mut);
+    var dot=document.createElement('span'); dot.className='vcx-dot';
+    var num=document.createElement('span'); num.className='vcx-num';
+    var lbl=document.createElement('span'); lbl.className='vcx-lbl'; lbl.textContent=o.label;
+    host.appendChild(dot); host.appendChild(num); host.appendChild(lbl);
+    var sk='vcx_'+o.site, hit=!sessionStorage.getItem(sk);
+    if(hit){ try{sessionStorage.setItem(sk,'1');}catch(e){} }
+    build(num,o.seed);
+    fetch(o.base+'?site='+encodeURIComponent(o.site)+(hit?'&hit=1':'')).then(function(r){return r.json();}).then(function(d){
+      if(d&&typeof d.count==='number') build(num,d.count);
+    }).catch(function(){});
+  }
+  mount({id:'vcx-sost',site:'sostcore',seed:3375,base:'/counter',
+         accent:'#4ade80',border:'#16331f',bg:'rgba(8,16,10,.7)',mut:'#5f7a68',label:'explorer visits'});
+})();
 </script>
 </body>
 </html>

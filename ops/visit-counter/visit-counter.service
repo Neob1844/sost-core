@@ -1,0 +1,14 @@
+[Unit]
+Description=Visit Counter (sostcore explorer + geaspirit)
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/visit-counter/counter.py
+Restart=always
+RestartSec=2
+User=www-data
+Group=www-data
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
