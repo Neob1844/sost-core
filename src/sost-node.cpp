@@ -1031,8 +1031,18 @@ static std::string handle_getblockhash(const std::string& id, const std::vector<
 static std::string handle_getblock(const std::string& id, const std::vector<std::string>& p) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.empty()) return rpc_error(id,-1,"missing blockhash");
-    for(const auto& b:g_blocks){
-        if(to_hex(b.block_id.data(),32)==p[0]){
+    // Verbose (2nd param "true"/"1") opts into the expensive per-call cASERT base
+    // recomputation; bulk callers (explorer diff-history) omit it for speed.
+    bool verbose = (p.size()>1 && (p[1]=="true" || p[1]=="1"));
+    // O(1) hash->height lookup via g_block_index (was an O(n) scan of every block
+    // on every call — with the explorer's bulk fetches that was the 504 cause).
+    int64_t _bh=-1;
+    { std::lock_guard<std::mutex> _ilk(g_block_index_mu);
+      auto _it=g_block_index.find(p[0]);
+      if(_it!=g_block_index.end()) _bh=_it->second.height; }
+    if(_bh>=0 && _bh<(int64_t)g_blocks.size() && to_hex(g_blocks[_bh].block_id.data(),32)==p[0]){
+        {
+            const auto& b=g_blocks[_bh];
             std::ostringstream s;
             s<<"{\"hash\":\""<<to_hex(b.block_id.data(),32)<<"\",\"height\":"<<b.height
              <<",\"previousblockhash\":\""<<to_hex(b.prev_hash.data(),32)
@@ -1125,20 +1135,25 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
             // This is the "base_profile" — the upper bound the miner was
             // allowed to declare. Useful to see how close the declared
             // profile was to the ceiling.
-            std::vector<BlockMeta> meta;
-            for(size_t j=0;j<size_t(b.height)&&j<g_blocks.size();++j){
-                BlockMeta bm; bm.block_id=g_blocks[j].block_id;
-                bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
-                bm.powDiffQ=g_blocks[j].bits_q;
-                bm.profile_index=g_blocks[j].profile_index;
-                meta.push_back(bm);
-            }
             int32_t base_pi = stored_pi;
             int32_t display_lag = 0;
-            if (!meta.empty()) {
-                auto cd_base = casert_compute(meta, b.height, 0);
-                base_pi = cd_base.profile_index;
-                display_lag = cd_base.lag;
+            // EXPENSIVE: rebuilds a [0..height] meta window (~O(height)) and runs
+            // casert_compute over it, only for the informational casert_base. Gated
+            // behind verbose so bulk getblock callers stay O(1).
+            if (verbose) {
+                std::vector<BlockMeta> meta;
+                for(size_t j=0;j<size_t(b.height)&&j<g_blocks.size();++j){
+                    BlockMeta bm; bm.block_id=g_blocks[j].block_id;
+                    bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
+                    bm.powDiffQ=g_blocks[j].bits_q;
+                    bm.profile_index=g_blocks[j].profile_index;
+                    meta.push_back(bm);
+                }
+                if (!meta.empty()) {
+                    auto cd_base = casert_compute(meta, b.height, 0);
+                    base_pi = cd_base.profile_index;
+                    display_lag = cd_base.lag;
+                }
             }
             s<<",\"casert_mode\":\""<<casert_profile_name(stored_pi)
              <<"\",\"casert_base\":\""<<casert_profile_name(base_pi)
