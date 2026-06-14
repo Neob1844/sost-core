@@ -1031,18 +1031,8 @@ static std::string handle_getblockhash(const std::string& id, const std::vector<
 static std::string handle_getblock(const std::string& id, const std::vector<std::string>& p) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.empty()) return rpc_error(id,-1,"missing blockhash");
-    // Verbose (2nd param "true"/"1") opts into the expensive per-call cASERT base
-    // recomputation; bulk callers (explorer diff-history) omit it for speed.
-    bool verbose = (p.size()>1 && (p[1]=="true" || p[1]=="1"));
-    // O(1) hash->height lookup via g_block_index (was an O(n) scan of every block
-    // on every call — with the explorer's bulk fetches that was the 504 cause).
-    int64_t _bh=-1;
-    { std::lock_guard<std::mutex> _ilk(g_block_index_mu);
-      auto _it=g_block_index.find(p[0]);
-      if(_it!=g_block_index.end()) _bh=_it->second.height; }
-    if(_bh>=0 && _bh<(int64_t)g_blocks.size() && to_hex(g_blocks[_bh].block_id.data(),32)==p[0]){
-        {
-            const auto& b=g_blocks[_bh];
+    for(const auto& b:g_blocks){
+        if(to_hex(b.block_id.data(),32)==p[0]){
             std::ostringstream s;
             s<<"{\"hash\":\""<<to_hex(b.block_id.data(),32)<<"\",\"height\":"<<b.height
              <<",\"previousblockhash\":\""<<to_hex(b.prev_hash.data(),32)
@@ -1135,25 +1125,20 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
             // This is the "base_profile" — the upper bound the miner was
             // allowed to declare. Useful to see how close the declared
             // profile was to the ceiling.
+            std::vector<BlockMeta> meta;
+            for(size_t j=0;j<size_t(b.height)&&j<g_blocks.size();++j){
+                BlockMeta bm; bm.block_id=g_blocks[j].block_id;
+                bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
+                bm.powDiffQ=g_blocks[j].bits_q;
+                bm.profile_index=g_blocks[j].profile_index;
+                meta.push_back(bm);
+            }
             int32_t base_pi = stored_pi;
             int32_t display_lag = 0;
-            // EXPENSIVE: rebuilds a [0..height] meta window (~O(height)) and runs
-            // casert_compute over it, only for the informational casert_base. Gated
-            // behind verbose so bulk getblock callers stay O(1).
-            if (verbose) {
-                std::vector<BlockMeta> meta;
-                for(size_t j=0;j<size_t(b.height)&&j<g_blocks.size();++j){
-                    BlockMeta bm; bm.block_id=g_blocks[j].block_id;
-                    bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
-                    bm.powDiffQ=g_blocks[j].bits_q;
-                    bm.profile_index=g_blocks[j].profile_index;
-                    meta.push_back(bm);
-                }
-                if (!meta.empty()) {
-                    auto cd_base = casert_compute(meta, b.height, 0);
-                    base_pi = cd_base.profile_index;
-                    display_lag = cd_base.lag;
-                }
+            if (!meta.empty()) {
+                auto cd_base = casert_compute(meta, b.height, 0);
+                base_pi = cd_base.profile_index;
+                display_lag = cd_base.lag;
             }
             s<<",\"casert_mode\":\""<<casert_profile_name(stored_pi)
              <<"\",\"casert_base\":\""<<casert_profile_name(base_pi)
@@ -1163,58 +1148,6 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
         }
     }
     return rpc_error(id,-5,"Block not found");
-}
-
-// Lightweight BATCH header range: getblockheaders <start> <count> -> array of
-// {height,hash,time,bits_q,profile_index}. No tx deserialization. One lock, one
-// response. Lets the explorer's diff-history fetch thousands of blocks in a single
-// call instead of N serialized getblock calls (the explorer-saturation fix).
-static std::string handle_getblockheaders(const std::string& id, const std::vector<std::string>& p) {
-    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
-    if(p.size()<2) return rpc_error(id,-1,"need start and count");
-    int64_t start=std::stoll(p[0]);
-    int64_t count=std::stoll(p[1]);
-    // verbose (3rd param "true"/"1"): also decode the coinbase for miner_address +
-    // lottery, so the explorer's main window gets everything in one call too.
-    bool verbose = (p.size()>2 && (p[2]=="true" || p[2]=="1"));
-    if(start<0) start=0;
-    if(count<0) count=0;
-    if(count>20000) count=20000;            // hard cap on response size
-    int64_t end=std::min(start+count,(int64_t)g_blocks.size());
-    std::ostringstream s; s<<"["; bool first=true;
-    for(int64_t h=start; h<end; ++h){
-        const auto& b=g_blocks[h];
-        if(!first) s<<","; first=false;
-        s<<"{\"height\":"<<b.height
-         <<",\"hash\":\""<<to_hex(b.block_id.data(),32)<<"\""
-         <<",\"time\":"<<b.timestamp
-         <<",\"bits_q\":"<<b.bits_q
-         <<",\"profile_index\":"<<b.profile_index;
-        if(verbose){
-            std::string miner_addr; std::string lwin; int64_t lpay=0;
-            if(!b.tx_hexes.empty()){
-                std::vector<Byte> cbraw; std::string cberr;
-                if(decode_tx_hex(b.tx_hexes[0],cbraw)){
-                    Transaction cbtx;
-                    if(Transaction::Deserialize(cbraw,cbtx,&cberr)&&!cbtx.outputs.empty()){
-                        miner_addr=address_encode(cbtx.outputs[0].pubkey_hash);
-                        for(const auto& out:cbtx.outputs){
-                            if(out.type==OUT_COINBASE_LOTTERY){ lwin=address_encode(out.pubkey_hash); lpay=out.amount; break; }
-                        }
-                    }
-                }
-            }
-            if(miner_addr.empty() && !b.raw_block_json.empty()){
-                std::string mpk=jstr(b.raw_block_json,"miner_pubkey");
-                if(mpk.size()==66){ PubKey pub{}; if(hex_to_bytes(mpk,pub.data(),pub.size())) miner_addr=address_encode(ComputePubKeyHash(pub)); }
-            }
-            s<<",\"miner_address\":\""<<miner_addr<<"\"";
-            if(lpay>0) s<<",\"lottery_winner_address\":\""<<lwin<<"\",\"lottery_payout\":"<<lpay;
-        }
-        s<<"}";
-    }
-    s<<"]";
-    return rpc_result(id,s.str());
 }
 
 static std::string handle_getinfo(const std::string& id, const std::vector<std::string>&) {
@@ -4144,7 +4077,6 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getbestblockhash",handle_getbestblockhash},
     {"getblockhash",handle_getblockhash},
     {"getblock",handle_getblock},
-    {"getblockheaders",handle_getblockheaders},
     {"getinfo",handle_getinfo},
     {"getlotterystate",handle_getlotterystate},
     {"getlotteryaudit",handle_getlotteryaudit},
@@ -7201,7 +7133,6 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "getblockcount",
         "getblockhash",
         "getblock",
-        "getblockheaders",
         "getbestblockhash",
         "getmempoolinfo",
         "getrawmempool",
