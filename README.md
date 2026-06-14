@@ -374,8 +374,10 @@ SOST is provided "AS IS" without warranty of any kind.
 
 ## License
 
-**ConvergenceX License — Source-Available with Refundable Deposit.** See [LICENSE](LICENSE) for full terms.
+SOST Protocol and the ConvergenceX implementation contained in this repository are released under the **MIT License**. See [LICENSE](LICENSE) for full terms.
 
-The source code is publicly readable, auditable, and open to contribution. No license is required to read, study, audit, or contribute. Commercial deployment and production use require a valid license obtained by locking a refundable security deposit of $1,000 USD equivalent in SOST for one year. The deposit is returned in full — no fees, no deductions. License verification is trustless and on-chain.
+The software may be used, copied, modified, integrated, distributed and deployed in accordance with the MIT License.
 
-The SOST name and ConvergenceX algorithm name are trademarks of the SOST Protocol Foundation.
+Exchanges, custodians, wallet providers, block explorers and infrastructure operators may integrate and operate SOST nodes, wallets and RPC services **without any licence fee, security deposit or additional permission**.
+
+The SOST and ConvergenceX names and associated branding may be subject to separate trademark rights.

@@ -1,11 +1,15 @@
-// license.h — ConvergenceX License System (Deposit-Based)
+// license.h — ConvergenceX optional on-chain attestation (NOT a usage requirement)
 //
-// Licenses are JSON documents signed by the Foundation's ECDSA key.
-// Verification is trustless: anyone can verify on-chain without contacting
-// the Foundation.
+// SOST Protocol / ConvergenceX is released under the MIT License. NO licence,
+// fee, deposit, registration or permission is required to use, modify, run or
+// commercially deploy this software — including by exchanges, custodians, wallet
+// providers, explorers, miners and infrastructure operators. Nothing in consensus
+// (block/tx validation) checks or requires a "license"; this module is never a gate.
 //
-// A license is required for commercial deployment of ConvergenceX.
-// No license is needed for: code study, research, private testing, contributions.
+// This struct/helper supports an OPTIONAL, voluntary on-chain attestation that an
+// operator can publish if they choose (a signed JSON tied to an ESCROW_LOCK). It is
+// purely informational and has no bearing on the right to use the software, which is
+// granted in full by the MIT License.
 #pragma once
 
 #include "sost/transaction.h"

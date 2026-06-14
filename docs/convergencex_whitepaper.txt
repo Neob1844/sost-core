@@ -2416,24 +2416,19 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 ConvergenceX is open source technology. The source code is publicly
 readable, auditable, and open to contribution without restriction.
 
-Commercial deployment, production use, and public-facing services require
-a valid license, obtained automatically by locking a refundable security
-deposit of USD 1,000 equivalent in SOST for one year (~52,560 blocks).
+ConvergenceX and the SOST Protocol implementation are released under the
+MIT License. The software may be used, copied, modified, integrated,
+distributed and deployed without restriction and without any licence fee,
+security deposit, registration or additional permission.
 
-The deposit is returned in full after the lock period. No fees, no
-deductions, no interest. The deposit is a system-protection measure, not
-a payment.
+This applies to all participants — including exchanges, custodians, wallet
+providers, block explorers, miners and infrastructure operators — for both
+non-commercial and commercial deployment.
 
-No license is required for: reading/studying/auditing the source code,
-academic research, private non-commercial testing, contributing to the
-project, or running a personal non-commercial node.
-
-License verification is trustless: anyone can verify a license on-chain
-by checking the ECDSA signature and the ESCROW_LOCK deposit existence.
-
-ConvergenceX is released under the MIT License. No deposit or fee required
-at the time of lock. The protocol makes no representation about future
-SOST value. This is not an investment product.
+The only obligation is the standard MIT requirement to retain the copyright
+and permission notice. The SOST and ConvergenceX names and associated
+branding may be subject to separate trademark rights. The protocol makes no
+representation about future SOST value. This is not an investment product.
 
 ## 10.5 Pre-Market Phase and Internal Valuation Model (PoPC)
 

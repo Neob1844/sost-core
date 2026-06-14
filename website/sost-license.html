@@ -168,26 +168,20 @@ nav .container{max-width:1100px;display:flex;align-items:center;justify-content:
 <p>Maximum freedom, minimum friction. We believe open source creates more value than restrictive licensing.</p>
 
 <h2>Full License Text</h2>
-<p>Licenses are <strong>cryptographically signed</strong> by the protocol and verifiable on-chain without contacting any centralized authority:</p>
-<ol style="padding-left:20px">
-<li>Download the license JSON</li>
-<li>Verify the ECDSA signature against the protocol's public key</li>
-<li>Verify on-chain that <code>deposit_txid</code> exists as an <code>ESCROW_LOCK</code></li>
-<li>Verify that the current block &lt; <code>unlock_block</code> (license not expired)</li>
-</ol>
-<p>Command: <code>python3 scripts/license_verify.py LICENSE.json</code></p>
+<p>The complete terms are the standard <strong>MIT License</strong>, included as the <code>LICENSE</code> file at the root of the <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">source repository</a>:</p>
+<div class="highlight">
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject only to inclusion of the copyright and permission notice. The Software is provided "AS IS", without warranty of any kind.</p>
+</div>
 
 <h2>FAQ</h2>
 <h3>Is this open source?</h3>
-<p>It is <strong>open source</strong>. You can read, audit, and contribute to all code. Commercial deployment requires a license.</p>
+<p>Yes &mdash; fully open source under the MIT License. You can read, audit, modify, integrate and deploy all code freely, <strong>including for commercial use</strong>.</p>
 
-<h3>What happens after 1 year?</h3>
-<p>Your SOST deposit is automatically returned via the <code>ESCROW_LOCK</code> mechanism. You can renew by creating a new deposit.</p>
+<h3>Do exchanges, wallets or node operators need a licence or deposit?</h3>
+<p><strong>No.</strong> Exchanges, custodians, wallet providers, block explorers and infrastructure operators may integrate and run SOST nodes, wallets and RPC services with <strong>no licence fee, no security deposit and no additional permission</strong>.</p>
 
-<!-- removed deposit FAQ -->
-<!-- removed deposit FAQ -->
-<!-- removed deposit FAQ -->
-<!-- removed deposit FAQ -->
+<h3>Are there any restrictions at all?</h3>
+<p>Only the standard MIT obligation: keep the copyright and permission notice in copies. The SOST and ConvergenceX names and branding may be subject to separate trademark rights.</p>
 
 <div class="disclaimer">
 </div>
