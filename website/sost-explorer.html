@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-13-v343">
+<meta name="explorer-html-version" content="2026-06-14-v348">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -1850,7 +1850,12 @@ async function renderDTDPanel(body,title,silent){
   // Make the title clickable. The expander only takes effect once the
   // body has loaded (the panel below is part of `body.innerHTML` and
   // does not exist before this function runs).
-  title.innerHTML =
+  // Guard: the silent dashboard pre-scan calls this with title===null /
+  // body===null (no panel rendered) purely to populate _dtdCache and the
+  // dashboard cards. Writing to a null element here threw
+  // "Cannot set properties of null (setting 'innerHTML')" and aborted the
+  // whole scan, so the CIRCULATING SUPPLY / DTD LOTTERY cards stayed blank.
+  if(title) title.innerHTML =
     '<span style="cursor:pointer;user-select:none" '
     + 'onclick="window.toggleDtdHowItWorks()" '
     + 'title="Click for the technical explanation of the lottery">'
@@ -1885,12 +1890,14 @@ async function renderDTDPanel(body,title,silent){
               window._dtdLotteryByAddr=_dtdCached.lotteryByAddr;
             if(_dtdCached.payouts)
               window._dtdPayouts=_dtdCached.payouts;
-            body.innerHTML=_dtdCached.bodyHtml;
-            try{ _drawDtdCharts(
-              _dtdCached.ph2, _dtdCache.rows,
-              _dtdCached.cooldownSet, height); }
-            catch(eC){console.warn('[dtd cache] chart re-render failed',eC);}
-            renderDTDTable(_dtdCache);
+            if(!silent&&body){
+              body.innerHTML=_dtdCached.bodyHtml;
+              try{ _drawDtdCharts(
+                _dtdCached.ph2, _dtdCache.rows,
+                _dtdCached.cooldownSet, height); }
+              catch(eC){console.warn('[dtd cache] chart re-render failed',eC);}
+              renderDTDTable(_dtdCache);
+            }
             var _ddc=document.getElementById('dDTD');
             if(_ddc&&typeof _dtdCached.eligibleCount==='number')
               _ddc.textContent=_dtdCached.eligibleCount+' eligible';
@@ -2227,7 +2234,7 @@ async function renderDTDPanel(body,title,silent){
       + 'Click the title again to hide this panel.</p>'
 
       + '</div>';
-    body.innerHTML = howItWorks + summary;
+    if(!silent&&body) body.innerHTML = howItWorks + summary;
     // Stash payouts list so the audit knows which heights to scan.
     window._dtdPayouts = ph2.payouts.slice();
     // Draw all 4 charts after DOM is in place. Wrapped in try so a render error
@@ -2281,7 +2288,7 @@ async function renderDTDPanel(body,title,silent){
       var _pmEl0=document.getElementById('dPhase2Miners');
       if(_pmEl0)_pmEl0.textContent=String(_umN);
     }catch(e){}
-    renderDTDTable(_dtdCache);
+    if(!silent&&body) renderDTDTable(_dtdCache);
 
     // v317: store the FULL rendering payload in sessionStorage so a
     // re-open at the same tip-height is instant. The cache key
@@ -2311,7 +2318,7 @@ async function renderDTDPanel(body,title,silent){
         }
       }catch(eStore){/* quota exceeded — ok, just skip */}
     }
-  }catch(e){body.innerHTML='<div class="td-err">DTD could not load: '+((e&&e.message)||e)+'</div>';}
+  }catch(e){ if(!silent&&body){ body.innerHTML='<div class="td-err">DTD could not load: '+((e&&e.message)||e)+'</div>'; } else { console.warn('[dtd silent scan]',(e&&e.message)||e); } }
 }
 
 // loadLotteryAudit() — calls getlotteryaudit per PAYOUT block and renders
@@ -5314,12 +5321,17 @@ async function showBlockByHeight(h){try{var hash=await rpc('getblockhash',[Strin
 // caller renders a "—" placeholder; the rest of the detail view never
 // blocks on this lookup.
 async function _getTxNeighbors(txid, blockHeight){
-  var out={prev:null, next:null, prevBlock:null, nextBlock:null};
+  // err/prevErr/nextErr distinguish a FAILED lookup (render "unavailable")
+  // from a genuine boundary (atGenesis / chain tip). Conflating them made a
+  // coinbase wrongly read "genesis side" whenever an RPC hiccup swallowed the
+  // h-1 fetch.
+  var out={prev:null, next:null, prevBlock:null, nextBlock:null,
+           err:false, prevErr:false, nextErr:false, atGenesis:false};
   if(typeof blockHeight!=='number' || !isFinite(blockHeight) || blockHeight<0) return out;
   try{
     var hash=await rpc('getblockhash',[String(blockHeight)]);
     var blk =await rpc('getblock',[hash]);
-    if(!blk||!blk.txids) return out;
+    if(!blk||!blk.txids){ out.err=true; return out; }
     var idx=blk.txids.indexOf(txid);
     if(idx<0) return out;
     if(idx>0){
@@ -5331,7 +5343,9 @@ async function _getTxNeighbors(txid, blockHeight){
         if(pb&&pb.txids&&pb.txids.length>0){
           out.prev=pb.txids[pb.txids.length-1]; out.prevBlock=blockHeight-1;
         }
-      }catch(e){}
+      }catch(e){ out.prevErr=true; }
+    } else {
+      out.atGenesis=true;   // block 0, first tx — genuinely no earlier tx
     }
     if(idx<blk.txids.length-1){
       out.next=blk.txids[idx+1]; out.nextBlock=blockHeight;
@@ -5342,9 +5356,10 @@ async function _getTxNeighbors(txid, blockHeight){
         if(nb&&nb.txids&&nb.txids.length>0){
           out.next=nb.txids[0]; out.nextBlock=blockHeight+1;
         }
-      }catch(e){ /* tip of chain — no next */ }
+        // else: genuinely the chain tip — no next tx yet
+      }catch(e){ /* getblockhash(h+1) throws at the tip — treat as no-next */ }
     }
-  }catch(e){}
+  }catch(e){ out.err=true; }
   return out;
 }
 
@@ -5353,23 +5368,35 @@ async function _getTxNeighbors(txid, blockHeight){
 // and block height, finds the two cells by id, and writes either a
 // link or a "—" tag explaining why there is none.
 function _paintTxNeighbors(txid, blockHeight){
-  _getTxNeighbors(txid, blockHeight).then(function(nb){
+  // Optional + non-blocking. Cap the whole lookup at 5s via Promise.race so a
+  // slow RPC can never leave the row stuck on "looking up neighbours…" — on
+  // timeout/failure we render a clear "unavailable" placeholder instead.
+  var timeout=new Promise(function(res){setTimeout(function(){res({err:true,timedOut:true});},5000);});
+  Promise.race([_getTxNeighbors(txid, blockHeight), timeout]).then(function(nb){
+    nb=nb||{err:true};
+    var dim='color:var(--text3);font-size:11px';
     var ne=document.getElementById('tx-nav-next');
     var pe=document.getElementById('tx-nav-prev');
     if(ne){
       if(nb.next){
         ne.innerHTML='<span class="td-link" onclick="showTxDetail(\''+nb.next+'\')">'+sH(nb.next)+'</span>'+cpBtn(nb.next)+
                      ' <span style="color:var(--text3);font-size:10px">block #'+nb.nextBlock+'</span>';
+      } else if(nb.err||nb.nextErr){
+        ne.innerHTML='<span style="'+dim+'">&mdash; unavailable</span>';
       } else {
-        ne.innerHTML='<span style="color:var(--text3);font-size:11px">— (chain tip; no later tx yet)</span>';
+        ne.innerHTML='<span style="'+dim+'">&mdash; chain tip (no later tx yet)</span>';
       }
     }
     if(pe){
       if(nb.prev){
         pe.innerHTML='<span class="td-link" onclick="showTxDetail(\''+nb.prev+'\')">'+sH(nb.prev)+'</span>'+cpBtn(nb.prev)+
                      ' <span style="color:var(--text3);font-size:10px">block #'+nb.prevBlock+'</span>';
+      } else if(nb.err||nb.prevErr){
+        pe.innerHTML='<span style="'+dim+'">&mdash; unavailable</span>';
+      } else if(nb.atGenesis){
+        pe.innerHTML='<span style="'+dim+'">&mdash; genesis (no earlier tx)</span>';
       } else {
-        pe.innerHTML='<span style="color:var(--text3);font-size:11px">— (genesis side; no earlier tx)</span>';
+        pe.innerHTML='<span style="'+dim+'">&mdash; no earlier tx</span>';
       }
     }
   });
