@@ -2669,18 +2669,24 @@ async function updateDashboard(info){
     // v36 — parallel block fetch in chunks of 50. Cuts initial load from ~5min
     // to a few seconds. Order is preserved by processing chunk results in the
     // same descending sequence used by _diffHistory.slice(0,AVG_WINDOW).reverse().
-    // ONE batched header call (verbose = miner + lottery) instead of ~1000 serialized
-    // getblockhash+getblock calls. That serial fetch saturated the node's single RPC
-    // thread / g_chain_mu and caused the multi-minute loads + 504s.
-    var _start=Math.max(0,info.blocks-fetchDepth+1);
-    var _hdrs=await rpc('getblockheaders',[String(_start),String(info.blocks-_start+1),'true']).catch(function(){return [];});
-    for(var _i=0;_i<(_hdrs||[]).length;_i++){
-      var b=_hdrs[_i];var h=b.height;
-      if(h>info.blocks-AVG_WINDOW)times.push(b.time);
-      if(h>info.blocks-600)times600.push(b.time);
-      if(h>info.blocks-AVG_WINDOW_LONG)times1000.push(b.time);
-      diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||'',lp:parseInt(b.lottery_payout||0,10),lw:b.lottery_winner_address||''});
-      if(b.miner_address && h>info.blocks-AVG_WINDOW)minerSet.add(b.miner_address);
+    var _heights=[];for(var _h=info.blocks;_h>Math.max(0,info.blocks-fetchDepth);_h--)_heights.push(_h);
+    var CHUNK=50;
+    for(var _ci=0;_ci<_heights.length;_ci+=CHUNK){
+      var _chunk=_heights.slice(_ci,_ci+CHUNK);
+      var _blocks=await Promise.all(_chunk.map(function(_hh){
+        return rpc('getblockhash',[String(_hh)])
+          .then(function(_hash){return rpc('getblock',[_hash]);})
+          .catch(function(){return null;});
+      }));
+      for(var _bi=0;_bi<_chunk.length;_bi++){
+        var b=_blocks[_bi];var h=_chunk[_bi];
+        if(!b)continue;
+        if(h>info.blocks-AVG_WINDOW)times.push(b.time);
+        if(h>info.blocks-600)times600.push(b.time);
+        if(h>info.blocks-AVG_WINDOW_LONG)times1000.push(b.time);
+        diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||'',lp:parseInt(b.lottery_payout||0,10),lw:b.lottery_winner_address||''});
+        if(b.miner_address && h>info.blocks-AVG_WINDOW)minerSet.add(b.miner_address);
+      }
     }
     // Charts and per-288 widgets only see the most-recent AVG_WINDOW entries.
     // The full diffs[] (up to AVG_WINDOW_LONG) is only used for the avg600 /
@@ -3677,14 +3683,26 @@ async function loadDiffHistory5k(tipHeight){
     var heights=[];
     for(var h=start;h<=tipHeight;h++)heights.push(h);
     if(sub)sub.textContent='· fetching '+heights.length+' blocks…';
-    // ONE batch call instead of N serialized getblock calls — getblock per block
-    // serialized on the node's single RPC thread / g_chain_mu and saturated it (the
-    // 504 / multi-minute loads). getblockheaders returns the whole range at once.
-    if(sub)sub.textContent='· fetching '+heights.length+' headers…';
-    var ov2=document.getElementById('diff5kScanning');
-    if(ov2)ov2.textContent='SCANNING DATA · '+heights.length+' headers';
-    var _hdrs=await rpc('getblockheaders',[String(start),String(heights.length)]).catch(function(){return [];});
-    var results=(_hdrs||[]).map(function(b){return {h:b.height,d:b.bits_q,t:b.time};});
+    var CHUNK=30;
+    var results=[];
+    var fetched=0;
+    for(var ci=0;ci<heights.length;ci+=CHUNK){
+      var chunk=heights.slice(ci,ci+CHUNK);
+      var blocks=await Promise.all(chunk.map(function(hh){
+        return rpc('getblockhash',[String(hh)])
+          .then(function(hash){return rpc('getblock',[hash]);})
+          .catch(function(){return null;});
+      }));
+      for(var bi=0;bi<chunk.length;bi++){
+        var b=blocks[bi];
+        if(!b)continue;
+        results.push({h:b.height,d:b.bits_q,t:b.time});
+      }
+      fetched+=chunk.length;
+      if(sub&&ci%(CHUNK*5)===0)sub.textContent='· fetched '+fetched+'/'+heights.length;
+      var ov2=document.getElementById('diff5kScanning');
+      if(ov2)ov2.textContent='SCANNING DATA · '+Math.min(fetched,heights.length)+' / '+heights.length;
+    }
     results.sort(function(a,b){return a.h-b.h;});
     _diffHistory5k=results;
     try{sessionStorage.setItem(key,JSON.stringify(results));}catch(e){/* quota OK */}

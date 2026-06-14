@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-14-v344",
-  "note": "GeaSpirit banner 50,000+ -> 172,000+ mines (MRDS curation expansion). Explorer now uses batched getblockheaders RPC (1 call instead of thousands of getblock) — fixes the 504/slow-load saturation. Force-reload."
+  "v": "2026-06-14-v345",
+  "note": "Explorer reverted to stable per-block fetch (the batched getblockheaders path had an ordering bug causing negative block-times/overdue display). Banner 172,000+ kept. getblock is O(1) on the node so loads are faster than before. Force-reload."
 }
