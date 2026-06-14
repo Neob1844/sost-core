@@ -1,8 +1,8 @@
 # SOST Protocol
 
-Sovereign Gold-Backed Cryptocurrency
+Native Layer 1 Proof-of-Work Blockchain
 
-CPU-friendly Proof-of-Work blockchain with constitutional gold reserves. Every block mined automatically allocates 25% to purchase physical gold (XAUT/PAXG) and 25% to Proof of Personal Custody rewards — hardcoded at genesis, immutable forever.
+CPU-friendly, memory-hard Proof-of-Work blockchain (ConvergenceX) with a transparent on-chain Gold Vault and Proof of Personal Custody (PoPC) architecture. Each block reward is split 50% miner / 25% Gold Vault / 25% PoPC — hardcoded at genesis. SOST is **not fully gold-backed at issuance**; the Gold Vault is a protocol-level reserve-accumulation mechanism, not a redeemable backing or financial guarantee. Open source under the **MIT License**.
 
 The Foundation's manual operations during Phase 1 are transitional by design, not permanent — progressive decentralization toward full automation is a constitutional commitment, not a discretionary goal.
 
