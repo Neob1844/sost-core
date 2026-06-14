@@ -2701,11 +2701,12 @@ async function updateDashboard(info){
     // blocks rather than relying on push order.
     diffs.sort(function(a,b){return b.h-a.h;});
     _diffHistory=diffs.slice(0,AVG_WINDOW).reverse();drawSparkline();
-    // Lazy-kick the 5000-block red variant once per page load. Runs ~4s after
-    // the main 288 paint so it doesn't compete for RPC bandwidth at boot.
-    if(!window._diff5kKicked){window._diff5kKicked=true;setTimeout(function(){
-      try{loadDiffHistory5k(info&&info.blocks);}catch(e){}
-    },4000);}
+    // 5000-block diff history DISABLED: it fired ~5000 getblock calls that saturated
+    // the node's single-thread RPC. Re-enable only with a batch RPC. (The main 288/600/
+    // 1000 sparklines above still render from the primary fetch.)
+    // if(!window._diff5kKicked){window._diff5kKicked=true;setTimeout(function(){
+    //   try{loadDiffHistory5k(info&&info.blocks);}catch(e){}
+    // },4000);}
     // BLOCK PRODUCERS · ALL-TIME: headline = distinct producers since genesis (set
     // authoritatively by the geteligibleminers handler; cached fallback for the first
     // paint). The 288-window unique count becomes the "active in the last 48h" sub-line.

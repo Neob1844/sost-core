@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-14-v346",
-  "note": "Node RPC reverted to original stable build (getblock changes caused RPC stalls). Explorer on stable per-block fetch + 172,000+ banner. Force-reload."
+  "v": "2026-06-14-v347",
+  "note": "getblock now skips the expensive per-call cASERT base recompute (no new locks, no deadlock) -> fast. 5000-block diff history disabled (was 5000 getblock calls saturating RPC). Loads should be back to normal. Force-reload."
 }

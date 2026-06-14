@@ -1125,20 +1125,27 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
             // This is the "base_profile" — the upper bound the miner was
             // allowed to declare. Useful to see how close the declared
             // profile was to the ceiling.
-            std::vector<BlockMeta> meta;
-            for(size_t j=0;j<size_t(b.height)&&j<g_blocks.size();++j){
-                BlockMeta bm; bm.block_id=g_blocks[j].block_id;
-                bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
-                bm.powDiffQ=g_blocks[j].bits_q;
-                bm.profile_index=g_blocks[j].profile_index;
-                meta.push_back(bm);
-            }
             int32_t base_pi = stored_pi;
             int32_t display_lag = 0;
-            if (!meta.empty()) {
-                auto cd_base = casert_compute(meta, b.height, 0);
-                base_pi = cd_base.profile_index;
-                display_lag = cd_base.lag;
+            // EXPENSIVE per-call cASERT base recompute over a [0..height] meta window
+            // (O(height) build + casert_compute — the dominant getblock cost at 13k+
+            // blocks, ~seconds each). Gate it behind an opt-in verbose flag (2nd param)
+            // so the explorer's bulk calls stay fast. NO new locks — purely skipping
+            // work, so it is safe under load (this is what was deadlock-causing before).
+            if (p.size()>1 && (p[1]=="true" || p[1]=="1")) {
+                std::vector<BlockMeta> meta;
+                for(size_t j=0;j<size_t(b.height)&&j<g_blocks.size();++j){
+                    BlockMeta bm; bm.block_id=g_blocks[j].block_id;
+                    bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
+                    bm.powDiffQ=g_blocks[j].bits_q;
+                    bm.profile_index=g_blocks[j].profile_index;
+                    meta.push_back(bm);
+                }
+                if (!meta.empty()) {
+                    auto cd_base = casert_compute(meta, b.height, 0);
+                    base_pi = cd_base.profile_index;
+                    display_lag = cd_base.lag;
+                }
             }
             s<<",\"casert_mode\":\""<<casert_profile_name(stored_pi)
              <<"\",\"casert_base\":\""<<casert_profile_name(base_pi)
