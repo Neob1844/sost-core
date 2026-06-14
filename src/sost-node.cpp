@@ -4353,49 +4353,55 @@ static bool p2p_send_adaptive(int fd, PeerCrypto& crypto, const char* cmd,
     const uint8_t* payload, size_t len);
 
 static void p2p_send_block(int fd, int64_t h, PeerCrypto* crypto = nullptr) {
-    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
-    if(h<0||h>=(int64_t)g_blocks.size()) return;
-    const auto& b=g_blocks[h];
-    // Use raw_block_json if available (contains complete Transcript V2 proof)
-    if (!b.raw_block_json.empty()) {
-        if (crypto && crypto->encrypted) {
-            p2p_send_encrypted(fd, *crypto, "BLCK",
-                (const uint8_t*)b.raw_block_json.data(), b.raw_block_json.size());
+    // Serialize the block into a local buffer UNDER g_chain_mu, then RELEASE the
+    // lock BEFORE the (potentially blocking) network send. Holding g_chain_mu
+    // across p2p_send() let a single slow peer doing initial block download
+    // freeze every RPC reader (getblock / getblockcount / getinfo) for as long
+    // as its TCP send buffer stayed full — the GETB handler sends up to 100
+    // blocks per request, so the lock was held across 100 blocking writes.
+    // Serialization is byte-for-byte unchanged; this is NOT a consensus change.
+    std::string js;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        if(h<0||h>=(int64_t)g_blocks.size()) return;
+        const auto& b=g_blocks[h];
+        // Use raw_block_json if available (contains complete Transcript V2 proof)
+        if (!b.raw_block_json.empty()) {
+            js = b.raw_block_json;
         } else {
-            p2p_send(fd, "BLCK", (const uint8_t*)b.raw_block_json.data(), b.raw_block_json.size());
+            // Fallback for genesis/legacy blocks without raw JSON
+            std::ostringstream s;
+            s<<"{\"block_id\":\""<<to_hex(b.block_id.data(),32)
+             <<"\",\"prev_hash\":\""<<to_hex(b.prev_hash.data(),32)
+             <<"\",\"merkle_root\":\""<<to_hex(b.merkle_root.data(),32)
+             <<"\",\"commit\":\""<<to_hex(b.commit.data(),32)
+             <<"\",\"checkpoints_root\":\""<<to_hex(b.checkpoints_root.data(),32)
+             <<"\",\"height\":"<<b.height
+             <<",\"timestamp\":"<<b.timestamp
+             <<",\"bits_q\":"<<b.bits_q
+             <<",\"nonce\":"<<b.nonce
+             <<",\"extra_nonce\":"<<b.extra_nonce
+             <<",\"subsidy\":"<<b.subsidy
+             <<",\"miner\":"<<b.miner_reward
+             <<",\"gold_vault\":"<<b.gold_vault_reward
+             <<",\"popc_pool\":"<<b.popc_pool_reward
+             <<",\"stability_metric\":"<<b.stability_metric;
+            if (!b.x_bytes_hex.size()) {} else { s<<",\"x_bytes\":\""<<b.x_bytes_hex<<"\""; }
+            if (!b.final_state_hex.empty()) { s<<",\"final_state\":\""<<b.final_state_hex<<"\""; }
+            if (!b.segments_root_hex.empty()) { s<<",\"segments_root\":\""<<b.segments_root_hex<<"\""; }
+            if (!b.tx_hexes.empty()) {
+                s << ",\"transactions\":[";
+                for (size_t t = 0; t < b.tx_hexes.size(); ++t) {
+                    if (t) s << ",";
+                    s << "\"" << b.tx_hexes[t] << "\"";
+                }
+                s << "]";
+            }
+            s << "}";
+            js = s.str();
         }
-        return;
     }
-    // Fallback for genesis/legacy blocks without raw JSON
-    std::ostringstream s;
-    s<<"{\"block_id\":\""<<to_hex(b.block_id.data(),32)
-     <<"\",\"prev_hash\":\""<<to_hex(b.prev_hash.data(),32)
-     <<"\",\"merkle_root\":\""<<to_hex(b.merkle_root.data(),32)
-     <<"\",\"commit\":\""<<to_hex(b.commit.data(),32)
-     <<"\",\"checkpoints_root\":\""<<to_hex(b.checkpoints_root.data(),32)
-     <<"\",\"height\":"<<b.height
-     <<",\"timestamp\":"<<b.timestamp
-     <<",\"bits_q\":"<<b.bits_q
-     <<",\"nonce\":"<<b.nonce
-     <<",\"extra_nonce\":"<<b.extra_nonce
-     <<",\"subsidy\":"<<b.subsidy
-     <<",\"miner\":"<<b.miner_reward
-     <<",\"gold_vault\":"<<b.gold_vault_reward
-     <<",\"popc_pool\":"<<b.popc_pool_reward
-     <<",\"stability_metric\":"<<b.stability_metric;
-    if (!b.x_bytes_hex.size()) {} else { s<<",\"x_bytes\":\""<<b.x_bytes_hex<<"\""; }
-    if (!b.final_state_hex.empty()) { s<<",\"final_state\":\""<<b.final_state_hex<<"\""; }
-    if (!b.segments_root_hex.empty()) { s<<",\"segments_root\":\""<<b.segments_root_hex<<"\""; }
-    if (!b.tx_hexes.empty()) {
-        s << ",\"transactions\":[";
-        for (size_t t = 0; t < b.tx_hexes.size(); ++t) {
-            if (t) s << ",";
-            s << "\"" << b.tx_hexes[t] << "\"";
-        }
-        s << "]";
-    }
-    s << "}";
-    std::string js=s.str();
+    // g_chain_mu released — a slow peer's blocking send no longer stalls RPC.
     if (crypto && crypto->encrypted) {
         p2p_send_encrypted(fd, *crypto, "BLCK", (const uint8_t*)js.data(), js.size());
     } else {
