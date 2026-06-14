@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-13-v343",
-  "note": "GeaSpirit banner: mines & deposits count updated 30,000+ -> 50,000+ (worldwide sweep crossed 50,000 assets). Force-reload."
+  "v": "2026-06-14-v344",
+  "note": "GeaSpirit banner 50,000+ -> 172,000+ mines (MRDS curation expansion). Explorer now uses batched getblockheaders RPC (1 call instead of thousands of getblock) — fixes the 504/slow-load saturation. Force-reload."
 }
