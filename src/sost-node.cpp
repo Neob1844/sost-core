@@ -1028,6 +1028,27 @@ static std::string handle_getblockhash(const std::string& id, const std::vector<
     return rpc_result(id,"\""+to_hex(g_blocks[h].block_id.data(),32)+"\"");
 }
 
+// Build a cASERT meta vector from only the last CASERT_META_WINDOW g_blocks ending
+// at index `end_exclusive`. cASERT reads at most the last 288 (BITSQ_AVG288_WINDOW),
+// so a 512-block window is BIT-IDENTICAL to passing the full chain (verified across
+// normal / overdue / anti-stall / slingshot scenarios, casert_next_bitsq AND
+// casert_compute) — but avoids the O(chain) build that, at 13k+ blocks, held
+// g_chain_mu for seconds on every getinfo / getblocktemplate / getblock poll and
+// starved all other RPC. Caller must hold g_chain_mu. NOT a consensus change.
+static std::vector<BlockMeta> build_casert_meta(size_t end_exclusive) {
+    constexpr size_t CASERT_META_WINDOW = 512;   // > 288 window + margin; proven identical
+    if (end_exclusive > g_blocks.size()) end_exclusive = g_blocks.size();
+    size_t start = (end_exclusive > CASERT_META_WINDOW) ? (end_exclusive - CASERT_META_WINDOW) : 0;
+    std::vector<BlockMeta> meta; meta.reserve(end_exclusive - start);
+    for (size_t i = start; i < end_exclusive; ++i) {
+        const auto& b = g_blocks[i];
+        BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp;
+        bm.powDiffQ=b.bits_q; bm.profile_index=b.profile_index;
+        meta.push_back(bm);
+    }
+    return meta;
+}
+
 static std::string handle_getblock(const std::string& id, const std::vector<std::string>& p) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     if(p.empty()) return rpc_error(id,-1,"missing blockhash");
@@ -1125,14 +1146,7 @@ static std::string handle_getblock(const std::string& id, const std::vector<std:
             // This is the "base_profile" — the upper bound the miner was
             // allowed to declare. Useful to see how close the declared
             // profile was to the ceiling.
-            std::vector<BlockMeta> meta;
-            for(size_t j=0;j<size_t(b.height)&&j<g_blocks.size();++j){
-                BlockMeta bm; bm.block_id=g_blocks[j].block_id;
-                bm.height=g_blocks[j].height; bm.time=g_blocks[j].timestamp;
-                bm.powDiffQ=g_blocks[j].bits_q;
-                bm.profile_index=g_blocks[j].profile_index;
-                meta.push_back(bm);
-            }
+            std::vector<BlockMeta> meta = build_casert_meta((size_t)b.height);
             int32_t base_pi = stored_pi;
             int32_t display_lag = 0;
             if (!meta.empty()) {
@@ -1167,8 +1181,7 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
     int32_t casert_profile_idx = 0;
     int32_t casert_lag = 0;
     if (!g_blocks.empty()) {
-        std::vector<BlockMeta> meta;
-        for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; bm.profile_index=b.profile_index; meta.push_back(bm); }
+        std::vector<BlockMeta> meta = build_casert_meta(g_blocks.size());
         next_diff = sost::casert_next_bitsq(meta, (int64_t)g_blocks.size(), std::time(nullptr));
         // Compute profile with current wall-clock time
         // casert_compute uses now_time for anti-stall and (at V6 calibration height)
@@ -2192,8 +2205,7 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
     std::string prev_hash = g_blocks.empty() ? std::string(64, '0') : to_hex(g_blocks.back().block_id.data(), 32);
     uint32_t next_bits = GENESIS_BITSQ;
     if (!g_blocks.empty()) {
-        std::vector<BlockMeta> meta;
-        for (const auto& b : g_blocks) { BlockMeta bm; bm.block_id=b.block_id; bm.height=b.height; bm.time=b.timestamp; bm.powDiffQ=b.bits_q; bm.profile_index=b.profile_index; meta.push_back(bm); }
+        std::vector<BlockMeta> meta = build_casert_meta(g_blocks.size());
         // V11 Phase 3 — Slingshot v2 needs now_time to evaluate its
         // second gate. Use current wall-clock at template build; the
         // miner stamps its own block.timestamp >= curtime, and the
