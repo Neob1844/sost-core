@@ -7201,6 +7201,7 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "getblockcount",
         "getblockhash",
         "getblock",
+        "getblockheaders",
         "getbestblockhash",
         "getmempoolinfo",
         "getrawmempool",
