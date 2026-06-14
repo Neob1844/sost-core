@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-14-v345",
-  "note": "Explorer reverted to stable per-block fetch (the batched getblockheaders path had an ordering bug causing negative block-times/overdue display). Banner 172,000+ kept. getblock is O(1) on the node so loads are faster than before. Force-reload."
+  "v": "2026-06-14-v346",
+  "note": "Node RPC reverted to original stable build (getblock changes caused RPC stalls). Explorer on stable per-block fetch + 172,000+ banner. Force-reload."
 }
