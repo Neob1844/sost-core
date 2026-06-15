@@ -20,7 +20,8 @@ The Foundation's manual operations during Phase 1 are transitional by design, no
 | coin_type (decimal) | `1869902947` |
 | coin_type (hex) | `0x6F747463` |
 | BIP-44 derivation path | `m/44'/1869902947'/0'/0/0` |
-| Standards | BIP-44, BIP-173, BIP-350 |
+
+> The reference wallet currently uses **BIP-39** mnemonics with the seed used directly as the key (no BIP-32 derivation). The official SLIP-0044 coin_type is registered; full **BIP-44** hierarchical derivation (the path above) is planned for a future wallet version, with migration tooling and advance community notice. This is a wallet/UX enhancement, not a consensus change — existing addresses and keys remain valid.
 
 ## System Requirements
 
