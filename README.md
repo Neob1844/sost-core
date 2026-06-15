@@ -11,6 +11,17 @@ The Foundation's manual operations during Phase 1 are transitional by design, no
 - **GitHub:** https://github.com/Neob1844/sost-core
 - **Whitepaper:** https://sostcore.com/whitepaper.pdf
 
+## Standards
+
+**✓ SLIP-0044 recognition (June 15, 2026)** — SOST is registered in the BIP-44 / SLIP-0044 coin-type registry, merged by SatoshiLabs (creators of Trezor) in [satoshilabs/slips#2004](https://github.com/satoshilabs/slips/pull/2004).
+
+| Field | Value |
+|-------|-------|
+| coin_type (decimal) | `1869902947` |
+| coin_type (hex) | `0x6F747463` |
+| BIP-44 derivation path | `m/44'/1869902947'/0'/0/0` |
+| Standards | BIP-44, BIP-173, BIP-350 |
+
 ## System Requirements
 
 | Role | RAM | CPU | Notes |
