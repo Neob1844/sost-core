@@ -1,0 +1,61 @@
+{
+  "calibration_status": "unavailable",
+  "campaign_id": "ree-prospective-v04-20260616",
+  "canonicalization_version": "v1",
+  "code_commit": "1382808bbeaee79d3f5ee7fef7fcef098ba8c5de",
+  "config_hash": "af2617a603b6f20112643dc151b72244015c269ddd8d4867e5e0e886506e42fb",
+  "control_count": 50,
+  "created_at_utc": "2026-06-16T00:00:00Z",
+  "dataset_manifest_hash": "e0e0447f8f6733702a48a10b7ff490558ae3129c73312a56ed1f5cf5914df656",
+  "dry_run_only": true,
+  "encrypted_package_checksum": "0a9f870d60b5d46626cd991d33646d26c0a5c91723830e0bcb16a7b125956f1a",
+  "general_geographic_coverage": {
+    "africa": 6,
+    "asia": 22,
+    "europe": 10,
+    "north_america": 29,
+    "oceania": 15,
+    "south_america": 18
+  },
+  "hash_algorithm": "sha256",
+  "leaf_count": 100,
+  "merkle_root": "7f29c11134232fcc7e998c8df7efe26ea0bc453de91792a61351368ca5a1bf7a",
+  "model_hash": "86801e58a97e504066dc7c86c233974ab59824cca1a0415e3c50e6d6477eaa81",
+  "no_broadcast": true,
+  "no_transaction_created": true,
+  "protocol_version": "ree_sealed_prospective_v04",
+  "resolution_protocol": {
+    "admissible_evidence": [
+      "government_or_lab_assay_with_provenance",
+      "documented_drilling",
+      "verifiable_technical_report",
+      "geological_survey_new_occurrence",
+      "documented_mineralogy",
+      "field_sampling_chain_of_custody",
+      "primary_scientific_publication"
+    ],
+    "inadmissible": [
+      "press",
+      "blogs",
+      "rumours",
+      "company_marketing",
+      "visual_coincidence",
+      "model_rescore",
+      "retrospective_reeval"
+    ],
+    "no_auto_true_false_positive": true,
+    "states": [
+      "unresolved",
+      "evidence_supports_ree_system",
+      "evidence_does_not_support_ree_system",
+      "inconclusive",
+      "inaccessible",
+      "censored",
+      "duplicate_or_preexisting"
+    ],
+    "version": "v04"
+  },
+  "resolution_protocol_hash": "0eb3852cc55c23dbccb14402fe3315055a739d75e229d192c6f557a0d25c6f04",
+  "score_type": "relative_regional_rank",
+  "target_count": 50
+}
