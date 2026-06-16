@@ -199,6 +199,60 @@
   </div>
 </section>
 
+<!-- PUBLIC LAUNCH -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// PUBLIC LAUNCH &middot; 2026-06-16 00:00 UTC &middot; ~92 days after genesis</div>
+      <div class="section-dates">Published: 2026-06-16 &middot; Last updated: 2026-06-16</div>
+      <h2 class="section-title">Official <span class="accent">Public Launch</span></h2>
+      <div class="section-sub">After ~92 days of protocol hardening performed directly on mainnet (genesis 2026-03-15 18:00 UTC), SOST exits its pre-market test phase.</div>
+    </div>
+    <div class="info-card">
+      <p>The chain has run continuously since genesis &mdash; through the <b>V13</b> hard fork (block&nbsp;12,000) and the <b>V14</b> H3/H4 validation hardening &mdash; with independent miners and nodes active (peak <b>53 miners</b>). No premine, no ICO, no VC allocation; the 50&nbsp;/&nbsp;25&nbsp;/&nbsp;25 coinbase split (miner&nbsp;/&nbsp;Gold&nbsp;Vault&nbsp;/&nbsp;PoPC) is hardcoded at genesis.</p>
+      <p style="color:var(--text-secondary)">At 00:00 UTC the pre-market banner and launch countdown retire automatically; only the Genesis counter remains. Full automation (PoPC A/B, OTC/P2P atomic swap, Gold-Vault governance) is grouped into <b>V15</b> at block&nbsp;20,000, after testnet, replay and coordinated activation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIP-0044 RECOGNITION -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// STANDARDS &middot; SLIP-0044 &middot; merged by SatoshiLabs</div>
+      <div class="section-dates">Published: 2026-06-15 &middot; Last updated: 2026-06-15</div>
+      <h2 class="section-title">Registered in <span class="accent">SLIP-0044</span></h2>
+      <div class="section-sub">SOST now has an official coin type in the BIP-44 / SLIP-0044 registry, merged by SatoshiLabs (creators of Trezor).</div>
+    </div>
+    <div class="info-card">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 14px;font-size:12.5px">
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">coin_type 1869902947</span>
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">m/44'/1869902947'/0'/0/0</span>
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">bech32 (BIP-173/350)</span>
+      </div>
+      <p>Merged in <a href="https://github.com/satoshilabs/slips/pull/2004" target="_blank" rel="noopener" style="color:#22d3ee">satoshilabs/slips#2004</a>. SOST is a native L1 PoW coin &mdash; not an ERC-20 &mdash; so there is no contract address; any "SOST contract address" is fake.</p>
+      <p style="color:var(--text-secondary)"><b>Transparency:</b> the reference wallet currently uses <b>BIP-39</b> seed phrases with direct key derivation (fully secure). Full <b>BIP-44</b> hierarchical derivation (the reserved path above) will be added in a future wallet version if the community requests it, with migration tooling and advance notice. This is a wallet/UX enhancement, <b>not a consensus change</b> &mdash; existing addresses and keys remain valid.</p>
+    </div>
+  </div>
+</section>
+
+<!-- NODE / EXPLORER RPC STALL — RESOLVED -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// INCIDENT &middot; RESOLVED &middot; service interruption &middot; consensus risk: none</div>
+      <div class="section-dates">Published: 2026-06-14 &middot; Last updated: 2026-06-14</div>
+      <h2 class="section-title">Public node / explorer <span class="accent">RPC stall</span> &mdash; fixed</h2>
+      <div class="section-sub">The public node's RPC became unresponsive (504 Gateway Time-out, "waiting for node"). The chain never halted &mdash; no fork, no lost funds, no consensus-rule change.</div>
+    </div>
+    <div class="info-card">
+      <p><b>Root cause:</b> a pre-existing P2P concurrency bug. <code>p2p_send_block</code> held the node's global chain mutex (<code>g_chain_mu</code>) across a blocking TCP send; a peer in initial block download with a full receive window froze the send while holding the lock, starving every RPC reader (getblockcount, getinfo, getblocktemplate) that serializes on the same mutex &mdash; producing the 504s and connection pile-up.</p>
+      <p><b>Fix:</b> serialize the block into a buffer under the lock, then release the lock <i>before</i> the network send (<code>226d8e09</code>) &mdash; wire output byte-identical. Plus window the cASERT difficulty metadata build to the last 512 blocks instead of recomputing over the full ~13k-block chain on every call (<code>5e3a3cfa</code>) &mdash; bit-for-bit identical output. RPC latency dropped from 8&ndash;20&nbsp;s timeouts to &lt;10&nbsp;ms.</p>
+      <p style="color:var(--text-secondary)">Recommended (not mandatory) stability update for self-hosted nodes/miners; the public RPC bridge is already patched. Old binaries remain in consensus.</p>
+    </div>
+  </div>
+</section>
+
 <!-- SOST OTC / P2P ATOMIC SWAP — CODING MILESTONE -->
 <section class="section">
   <div class="container">
