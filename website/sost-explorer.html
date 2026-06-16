@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-14-v348">
+<meta name="explorer-html-version" content="2026-06-16-v349">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -760,11 +760,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- page loads in the same session are instant.                  -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div class="sparkline-wrap"><div class="sparkline-box" style="border-color:rgba(251,1,13,.55);box-shadow:0 0 12px rgba(251,1,13,.10),inset 0 0 8px rgba(251,1,13,.04)">
-  <span class="sparkline-label pi" onclick="toggleChartInfo('diffhist')" style="color:#fb010d">DIFF HISTORY · last 5000 blocks <span id="diff5kSubLabel" style="color:var(--text3);font-size:8px;">· loading…</span> <span class="pi-i">ⓘ</span></span>
+  <span class="sparkline-label pi" onclick="toggleChartInfo('diffhist')" style="color:#fb010d">DIFF HISTORY · last 5000 blocks <span id="diff5kSubLabel" onclick="event.stopPropagation();kickDiff5k();" title="Heavy: scans ~5,000 blocks via the public node" style="color:#fb010d;font-size:8px;cursor:pointer;text-decoration:underline;">· click to load (heavy)</span> <span class="pi-i">ⓘ</span></span>
   <canvas class="sparkline-canvas" id="sparkCanvas5k" style="cursor:crosshair"></canvas>
   <div id="sparkTooltip5k" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:8px 12px;font-family:var(--code);font-size:10px;line-height:1.7;color:#e2e8f0;pointer-events:none;z-index:200;display:none;white-space:nowrap;border-radius:4px;"></div>
   <!-- Pulsing red overlay shown while loadDiffHistory5k() is fetching; hidden once data is ready. -->
-  <div id="diff5kScanning" style="position:absolute;top:34px;left:0;right:0;bottom:30px;display:flex;align-items:center;justify-content:center;background:rgba(6,6,6,.35);color:#fb010d;font-family:var(--code);font-size:15px;font-weight:800;letter-spacing:4px;text-transform:uppercase;text-shadow:0 0 12px rgba(251,1,13,.8),0 0 24px rgba(251,1,13,.4);pointer-events:none;z-index:5;animation:diff5kScanPulse 1.4s ease-in-out infinite;">SCANNING DATA…</div>
+  <div id="diff5kScanning" style="position:absolute;top:34px;left:0;right:0;bottom:30px;display:none;align-items:center;justify-content:center;background:rgba(6,6,6,.35);color:#fb010d;font-family:var(--code);font-size:15px;font-weight:800;letter-spacing:4px;text-transform:uppercase;text-shadow:0 0 12px rgba(251,1,13,.8),0 0 24px rgba(251,1,13,.4);pointer-events:none;z-index:5;animation:diff5kScanPulse 1.4s ease-in-out infinite;">SCANNING DATA…</div>
   <span class="sparkline-info" id="sparkInfo5k">&mdash;</span>
 </div></div>
 <style>
@@ -3655,6 +3655,17 @@ function _diff5kHideOverlay(){
 function _diff5kShowOverlay(){
   var ov=document.getElementById('diff5kScanning');
   if(ov){ov.style.display='flex';ov.textContent='SCANNING DATA…';}
+}
+// Opt-in trigger: the 5k-block scan fires ~5,000 getblock calls, which can
+// saturate the public single-thread node, so it is NEVER auto-run on page load
+// (that was the old "perpetual loading…" bug). The user starts it by clicking the
+// sub-label; results cache in sessionStorage per 100-block bucket.
+function kickDiff5k(){
+  if(window._diff5kKicked)return;
+  window._diff5kKicked=true;
+  var sub=document.getElementById('diff5kSubLabel');
+  if(sub){sub.textContent='· starting…';sub.style.textDecoration='none';sub.style.cursor='default';sub.onclick=null;}
+  try{loadDiffHistory5k();}catch(e){}
 }
 async function loadDiffHistory5k(tipHeight){
   var WINDOW=5000;

@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-14-v348",
-  "note": "Frontend hotfix: renderDTDPanel no longer throws on the silent dashboard pre-scan (null title/body guarded) so the supply/lottery cards populate; tx next/previous lookup capped at 5s with clear 'unavailable' vs genuine 'genesis'/'chain tip' wording; version meta resynced to clear the stale-cache reload loop. No node/consensus change."
+  "v": "2026-06-16-v349",
+  "note": "DIFF HISTORY (5,000-block) chart no longer shows a perpetual 'loading…/SCANNING' state: the heavy ~5k-block scan was disabled to protect the single-thread node but the UI still pulsed forever. Now it is opt-in — the sub-label reads 'click to load (heavy)' and the scan only runs on explicit user click (cached per 100-block bucket). No node/consensus change."
 }
