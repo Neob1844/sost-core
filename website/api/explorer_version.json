@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-16-v349",
-  "note": "DIFF HISTORY (5,000-block) chart no longer shows a perpetual 'loading…/SCANNING' state: the heavy ~5k-block scan was disabled to protect the single-thread node but the UI still pulsed forever. Now it is opt-in — the sub-label reads 'click to load (heavy)' and the scan only runs on explicit user click (cached per 100-block bucket). No node/consensus change."
+  "v": "2026-06-17-v350",
+  "note": "DIFF HISTORY (5,000-block) chart hidden: the public single-thread node cannot serve a ~5k-block scan (it 504s / 'LOAD FAILED' under ~10k getblock calls), and the opt-in loader therefore failed. The 288/600/1000-block diff charts above already cover recent difficulty. Re-enable later via a node-side batch/range RPC. No node/consensus change."
 }
