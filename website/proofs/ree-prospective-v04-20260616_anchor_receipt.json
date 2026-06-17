@@ -1,0 +1,33 @@
+{
+  "campaign_id": "ree-prospective-v04-20260616",
+  "mechanism": "capsule_open_note",
+  "capsule_text": "sost-protocol geaspirit-ree-v04 9da4548fdbfe8b57",
+  "commitment_locator": "https://sostcore.com/proofs/ree-prospective-v04-20260616_commitment.json",
+  "commitment_sha256": "9da4548fdbfe8b57090116e65db4ae15b948eb67927243ac9057da98b8b89d75",
+  "merkle_root": "7f29c11134232fcc7e998c8df7efe26ea0bc453de91792a61351368ca5a1bf7a",
+  "txid": "58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979",
+  "block_hash": "b7ea3075fcb439722b30c6473704f55e6cf8ca1e5d6200c9b24070b91657f698",
+  "block_height": 13483,
+  "block_time_utc": "2026-06-17T06:44:24Z",
+  "confirmations_at_receipt": 1,
+  "signer_address": "sost1ca9097d830b74495b95db9d779ad63c90579bc18",
+  "destination_address": "sost1ca9097d830b74495b95db9d779ad63c90579bc18",
+  "amount_sost": "0.00100000",
+  "fee_stocks": 263,
+  "explorer_reference": "https://sostcore.com/sost-explorer.html?search=58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979",
+  "registered": true,
+  "classification": "OFFICIAL",
+  "status": "sealed · prospective · unresolved",
+  "score_type": "relative_regional_rank",
+  "calibration_status": "unavailable",
+  "campaign_targets": 50,
+  "campaign_controls": 50,
+  "verification_commands": [
+    "curl -fsS https://sostcore.com/proofs/ree-prospective-v04-20260616_commitment.json | sha256sum   # must start 9da4548fdbfe8b57 / equal commitment_sha256",
+    "python -c \"import json,urllib.request;print(json.load(urllib.request.urlopen('https://sostcore.com/proofs/ree-prospective-v04-20260616_commitment.json'))['merkle_root'])\"   # must equal merkle_root",
+    "open https://sostcore.com/sost-explorer.html?search=58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979   # confirm Open Note capsule text + signer + block height"
+  ],
+  "proves": "Precedence and integrity: the sealed GeaSpirit REE v0.4 prospective campaign existed unchanged no later than SOST block 13483, signed by the operator address.",
+  "does_not_prove": "Presence, grade, depth, tonnage, resources or reserves of rare earths. The score is a relative regional rank, not a probability of a deposit. The campaign is unresolved.",
+  "privacy": "No coordinates, individual scores, Merkle leaves, inclusion proofs, model internals, keys or credentials are published."
+}

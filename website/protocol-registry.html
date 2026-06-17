@@ -712,6 +712,37 @@
       </p>
     </div>
 
+    <!-- GeaSpirit REE v0.4 sealed prospective campaign (ON-CHAIN, OFFICIAL) -->
+    <div class="info-card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">ON-CHAIN</span>
+        <span style="background:rgba(217,70,239,0.15);color:#d946ef;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">OFFICIAL &mdash; GEASPIRIT REE V0.4 SEALED PROSPECTIVE CAMPAIGN</span>
+        <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">block #13,483</span>
+      </div>
+      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">SOST Protocol &mdash; GeaSpirit REE v0.4 Sealed Prospective Campaign (anchored on-chain)</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary)">
+        <tbody>
+          <tr><td style="padding:5px 0;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:30%">Block</td><td style="padding:5px 0"><a href="sost-explorer.html?search=13483" style="color:#d946ef">#13,483</a> &middot; 2026-06-17 06:44:24 UTC</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Txid</td><td style="padding:5px 0"><a href="sost-explorer.html?search=58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979" style="color:#d946ef;word-break:break-all">58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Signer</td><td style="padding:5px 0"><b>OFFICIAL</b> &mdash; GeaSpirit / Protocol Registry operator <code style="word-break:break-all">sost1ca9097d830b74495b95db9d779ad63c90579bc18</code> (whitelisted)</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule text</td><td style="padding:5px 0"><code style="word-break:break-all">sost-protocol geaspirit-ree-v04 9da4548fdbfe8b57</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Commitment file</td><td style="padding:5px 0"><a href="proofs/ree-prospective-v04-20260616_commitment.json" style="color:#d946ef">proofs/ree-prospective-v04-20260616_commitment.json</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Commitment SHA-256</td><td style="padding:5px 0;word-break:break-all"><code>9da4548fdbfe8b57090116e65db4ae15b948eb67927243ac9057da98b8b89d75</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Merkle root</td><td style="padding:5px 0;word-break:break-all"><code style="color:#d946ef">7f29c11134232fcc7e998c8df7efe26ea0bc453de91792a61351368ca5a1bf7a</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Campaign</td><td style="padding:5px 0">50 sealed targets + 50 controls &middot; <code>score_type=relative_regional_rank</code> &middot; <code>calibration_status=unavailable</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Receipt</td><td style="padding:5px 0"><a href="proofs/ree-prospective-v04-20260616_anchor_receipt.json" style="color:#d946ef">proofs/ree-prospective-v04-20260616_anchor_receipt.json</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Status</td><td style="padding:5px 0"><code>registered=true</code> &middot; <code>capsule_mode=open-note</code> &middot; <code>sealed=true</code> &middot; <code>prospective=true</code> &middot; <code>unresolved=true</code></td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:12px 0 0">
+        <b>What this is.</b> GeaSpirit's private regional REE prior (a frozen model that ranks ground by geological favourability for carbonatite/alkaline rare-earth systems, using open data + craton context) selected <b>50 highest-ranked novel target areas</b> and <b>50 controls</b>, froze the model and sealed the set behind a Merkle tree. The exact coordinates, scores and evidence stay <b>private and encrypted</b>; only the file SHA-256 (<code>9da4548f&hellip;</code>) and the Merkle root (<code>7f29c111&hellip;</code>) are public. This capsule timestamps that sealed campaign on the SOST chain.
+        <br><br>
+        <b>What it proves.</b> Precedence + integrity: the campaign existed, unchanged, no later than block&nbsp;#13,483, signed by the operator address. The 50 targets cannot be edited after the fact without breaking these hashes &mdash; so any future hit cannot be cherry-picked retroactively.
+        <br><br>
+        <b>What it does NOT prove.</b> It is <b>not</b> evidence of mineralisation, grade, depth, tonnage, resources or reserves. The <code>score_type</code> is a <i>relative regional rank</i>, not a probability of a deposit. The campaign is <b>unresolved</b>; targets will be adjudicated later only by independent evidence (government/lab assays, drilling, primary publications) under the published resolution protocol. Verify independently: (1) fetch the commitment file and confirm its SHA-256 starts with <code>9da4548fdbfe8b57</code> (the on-chain capsule prefix); (2) confirm the JSON's <code>merkle_root</code> equals <code>7f29c111&hellip;</code>; (3) look up the txid in the explorer and confirm the Open Note capsule + signing address.
+      </p>
+    </div>
+
     <!-- Trinity Kalgoorlie Phase 1 -->
     <div class="info-card" style="margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
@@ -851,7 +882,8 @@
   "use strict";
   var SOST_OFFICIAL_WHITELIST = [
     "sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33", // genesis / protocol developer fee wallet
-    "sost1a8eae8f80fedd8d86187db628a0d81e0367f76de"  // developer
+    "sost1a8eae8f80fedd8d86187db628a0d81e0367f76de", // developer
+    "sost1ca9097d830b74495b95db9d779ad63c90579bc18"  // GeaSpirit / Protocol Registry operator
   ].map(function(s){ return s.toLowerCase(); });
   var NS = "sost-protocol ";
   var MAX_ROWS = 100;
