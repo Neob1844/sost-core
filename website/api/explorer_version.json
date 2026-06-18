@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-17-v350",
-  "note": "DIFF HISTORY (5,000-block) chart hidden: the public single-thread node cannot serve a ~5k-block scan (it 504s / 'LOAD FAILED' under ~10k getblock calls), and the opt-in loader therefore failed. The 288/600/1000-block diff charts above already cover recent difficulty. Re-enable later via a node-side batch/range RPC. No node/consensus change."
+  "v": "2026-06-18-v354",
+  "note": "GeaSpirit banner: pickaxe replaced by the GeaSpirit logo with a pulsating green glow. Added the REE Locator (sealed campaign v0.4) callout with on-chain commitment, plus RPC user/pass fields hardened against browser autofill. No node/consensus change."
 }

@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-18-v353">
+<meta name="explorer-html-version" content="2026-06-18-v354">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -531,11 +531,16 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- GEASPIRIT — SOST-ECOSYSTEM MINING INTELLIGENCE (collapsible,    -->
 <!-- collapsed by default via native <details>)                     -->
 <!-- ════════════════════════════════════════════════════════════ -->
+<style>
+@keyframes geaLogoPulse{0%,100%{filter:drop-shadow(0 0 6px rgba(0,255,65,.85)) drop-shadow(0 0 14px rgba(0,255,65,.4));transform:scale(1)}50%{filter:drop-shadow(0 0 15px rgba(0,255,65,1)) drop-shadow(0 0 32px rgba(0,255,65,.7));transform:scale(1.07)}}
+.gea-pulse-logo{width:31px;height:31px;border-radius:22%;object-fit:cover;background:#fff;padding:1px;box-sizing:border-box;flex:0 0 auto;animation:geaLogoPulse 2s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.gea-pulse-logo{animation:none;filter:drop-shadow(0 0 8px rgba(0,255,65,.7))}}
+</style>
 <div style="max-width:1400px;margin:10px auto 0;padding:0 24px;">
  <details style="background:linear-gradient(135deg,rgba(47,158,111,.13),rgba(53,214,160,.05));border:2px solid #2f9e6f;border-radius:10px;box-shadow:0 0 20px rgba(47,158,111,.22);overflow:hidden">
   <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px">
    <span style="display:flex;align-items:center;gap:11px">
-    <span style="font-size:23px;line-height:1">&#9935;&#65039;</span>
+    <img src="geaspirit-logo.png" alt="GeaSpirit" class="gea-pulse-logo"/>
     <span>
      <span style="font-size:15px;font-weight:900;background:linear-gradient(90deg,#2f9e6f,#35d6a0);-webkit-background-clip:text;background-clip:text;color:transparent">GeaSpirit &mdash; Mining-Asset Intelligence</span>
      <span style="display:block;font-size:10.5px;color:#8fb7a6;margin-top:2px">World&rsquo;s largest open intelligence platform for second-chance mining assets &middot; a SOST-ecosystem project</span>
