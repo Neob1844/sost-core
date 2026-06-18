@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-18-v351">
+<meta name="explorer-html-version" content="2026-06-18-v353">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -455,9 +455,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <span class="config-label">RPC&gt;</span>
   <input id="rpcUrl" value="/rpc" spellcheck="false"/>
   <span class="config-label" style="margin-left:8px">USER&gt;</span>
-  <input id="rpcUser" value="" placeholder="rpc username" type="password" spellcheck="false" style="width:120px"/>
+  <input id="rpcUser" value="" placeholder="rpc username" type="password" spellcheck="false" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore="true" name="sost-rpc-user-nofill" style="width:120px"/>
   <span class="config-label" style="margin-left:8px">PASS&gt;</span>
-  <input id="rpcPass" value="" placeholder="rpc password" type="password" spellcheck="false" style="width:120px"/>
+  <input id="rpcPass" value="" placeholder="rpc password" type="password" spellcheck="false" autocomplete="new-password" autocorrect="off" data-lpignore="true" data-1p-ignore="true" name="sost-rpc-pass-nofill" style="width:120px"/>
   <button onclick="connectRPC()">CONNECT</button>
   <span style="color:var(--text3);margin-left:12px;font-size:9px;">MY MINER&gt;</span>
   <input id="myMinerAddr" value="" placeholder="sost1... (for block alerts)" spellcheck="false" style="width:180px;font-size:10px;"
@@ -555,6 +555,20 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <span style="background:rgba(0,0,0,.28);border:1px solid rgba(47,158,111,.45);border-radius:5px;padding:5px 10px;font-size:10.5px;color:#bbf7d0"><b style="color:#35d6a0">6,000+</b> mineral species</span>
     <span style="background:rgba(0,0,0,.28);border:1px solid rgba(47,158,111,.45);border-radius:5px;padding:5px 10px;font-size:10.5px;color:#bbf7d0"><b style="color:#35d6a0">17</b> languages</span>
     <span style="background:rgba(0,0,0,.28);border:1px solid rgba(47,158,111,.45);border-radius:5px;padding:5px 10px;font-size:10.5px;color:#bbf7d0">GeaSpirit Score 0&ndash;100 &middot; S2 geophysics</span>
+   </div>
+
+   <div style="margin:0 0 14px;padding:12px 14px;background:rgba(0,255,65,.07);border:1px solid rgba(0,255,65,.45);border-radius:8px">
+    <div style="font-size:13px;font-weight:800;color:#7CFFA0;margin-bottom:5px">&#127760; New &mdash; REE Locator: a sealed, on-chain Rare-Earths Prospectivity campaign</div>
+    <p style="margin:0 0 8px;font-size:12px;color:#cfeede">A regional <b>Rare-Earth Fertility Prior</b> that ranks where carbonatite- and alkaline-related REE systems are geologically more plausible, from open satellite/geoscience data. It is a <b>relative regional rank</b> &mdash; <b style="color:#fbbf24">not</b> a reserve, grade, tonnage or probability of a deposit, and it does not claim rare earths are present anywhere; it points to regions worth scientific attention.</p>
+    <p style="margin:0 0 8px;font-size:12px;color:#cfeede"><b>Sealed campaign v0.4 (unresolved)</b> &mdash; committed and time-stamped on the SOST blockchain so the ranking cannot be altered after the fact. 50 prospective targets + 50 controls = 100 committed leaves (aggregate only). No coordinates, individual scores or Merkle leaves are disclosed.</p>
+    <div style="font-family:var(--code,monospace);font-size:10px;color:#9ae6c4;word-break:break-all;line-height:1.8;background:rgba(0,0,0,.3);border-radius:6px;padding:8px 10px;margin:0 0 8px">
+     <b style="color:#67e8f9">Block</b> 13,483 &middot; <b style="color:#67e8f9">Signer</b> sost1ca9097d830b74495b95db9d779ad63c90579bc18<br>
+     <b style="color:#67e8f9">SHA-256</b> 9da4548fdbfe8b57090116e65db4ae15b948eb67927243ac9057da98b8b89d75<br>
+     <b style="color:#67e8f9">Merkle root</b> 7f29c11134232fcc7e998c8df7efe26ea0bc453de91792a61351368ca5a1bf7a<br>
+     <b style="color:#67e8f9">TXID</b> 58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979
+    </div>
+    <p style="margin:0 0 9px;font-size:11.5px;color:#9fb8ab"><b>Proves:</b> precedence + integrity &mdash; the sealed set existed unchanged no later than block 13,483, signed by the operator address. <b>Does NOT prove:</b> presence, grade, depth, tonnage, resources or reserves. <b style="color:#fbbf24">Useful Compute is DRY-RUN only</b> &mdash; no rewards, no consensus change. Report Builder pending. 17 languages. Not investment advice, no guaranteed mineral discovery.</p>
+    <a href="https://geaspirit.com/ree-locator/" target="_blank" rel="noopener" style="display:inline-block;background:rgba(0,255,65,.14);border:1px solid rgba(0,255,65,.5);color:#7CFFA0;font-family:var(--code,monospace);font-size:11px;font-weight:800;letter-spacing:.6px;padding:6px 12px;border-radius:6px;text-decoration:none">&#10145; Explore the REE Locator &rarr; geaspirit.com/ree-locator/</a>
    </div>
 
    <div style="color:#2f9e6f;font-weight:800;letter-spacing:1.3px;font-size:11px;margin-bottom:7px">// MILESTONES &amp; WHAT&rsquo;S BEEN BUILT</div>
