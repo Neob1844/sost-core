@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-06-17-v350">
+<meta name="explorer-html-version" content="2026-06-18-v351">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -765,7 +765,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
      this back, add a batch/range RPC on the node (e.g. getblockheaders or a
      difficulty-series endpoint) and re-enable loadDiffHistory5k(); then flip this
      wrap back to visible and bump the explorer version. -->
-<div class="sparkline-wrap" style="display:none"><div class="sparkline-box" style="border-color:rgba(251,1,13,.55);box-shadow:0 0 12px rgba(251,1,13,.10),inset 0 0 8px rgba(251,1,13,.04)">
+<div class="sparkline-wrap-5k-disabled" style="display:none !important" hidden aria-hidden="true"><div class="sparkline-box" style="border-color:rgba(251,1,13,.55);box-shadow:0 0 12px rgba(251,1,13,.10),inset 0 0 8px rgba(251,1,13,.04)">
   <span class="sparkline-label pi" onclick="toggleChartInfo('diffhist')" style="color:#fb010d">DIFF HISTORY · last 5000 blocks <span id="diff5kSubLabel" onclick="event.stopPropagation();kickDiff5k();" title="Heavy: scans ~5,000 blocks via the public node" style="color:#fb010d;font-size:8px;cursor:pointer;text-decoration:underline;">· click to load (heavy)</span> <span class="pi-i">ⓘ</span></span>
   <canvas class="sparkline-canvas" id="sparkCanvas5k" style="cursor:crosshair"></canvas>
   <div id="sparkTooltip5k" style="position:absolute;background:rgba(6,6,6,.95);border:1px solid #444;padding:8px 12px;font-family:var(--code);font-size:10px;line-height:1.7;color:#e2e8f0;pointer-events:none;z-index:200;display:none;white-space:nowrap;border-radius:4px;"></div>
