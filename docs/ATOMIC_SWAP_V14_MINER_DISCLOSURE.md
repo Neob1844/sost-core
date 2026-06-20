@@ -15,10 +15,31 @@ recompile banner + announcement below.
   EVM contract unaffected (52/52). sost-core compiles.
 - Explorer banner (`website/sost-explorer.html`): urgent mandatory-miner-upgrade + DO-NOT-USE.
 
-## NOT done (awaiting dev review + coordinated go-live)
-Branch NOT merged to main. No release binary built. No deploy. No miner announcement sent.
-A full `ctest` and a clean **EVM-only release build** (default `SOST_BTC_HTLC_SIGNING=OFF`) must be
-run + the binary SHA-256 published before any miner upgrades.
+## DONE (merged to main 2026-06-20)
+- Merged to `main` at **commit `58e9cc9b`** (pushed to origin).
+- Full `ctest` **92/92 passed** with the gate ACTIVE.
+- EVM-only release built (default flags: `SOST_BTC_HTLC_SIGNING=OFF`, mainnet, Release). Gate
+  verified active in-binary; BTC signing OFF.
+
+### Reference build (canonical source = commit `58e9cc9b` on `main`)
+```
+git checkout main && git pull           # must be at 58e9cc9b (or later)
+cmake -S . -B build-v14 -DCMAKE_BUILD_TYPE=Release      # default flags (BTC OFF, mainnet)
+cmake --build build-v14 --target sost-node sost-cli sost-miner -j$(nproc)
+```
+Reference SHA-256 (from this build env — miners should rebuild from commit `58e9cc9b`; exact
+hashes can differ across toolchains, the COMMIT is the source of truth):
+```
+sost-node   7b5140d94a25e33c698c71d193b2987f37fc7c0c38f7b6a29468b8dacd1e7074
+sost-cli    e552b28bb4f4d29d826631a8f45c82fb88f43c0aab00191c4330a0eb2919bf7f
+sost-miner  4270df1e53779c136130c1d3b553fae72f20c143fd33913ebbcf0497b779cc04
+```
+
+## STILL on the operator (cannot be automated — your accounts/nodes)
+- Deploy website to VPS (`git pull` + `rsync` /opt/sost/website → /var/www/...) → banner live.
+- Publish the announcement (BitcoinTalk + Telegram) with commit `58e9cc9b` + build command above.
+- Coordinate ALL miners to recompile + restart between block 14,800 and 15,000.
+- First CLI test swap (smallest amounts) at/after block 15,000.
 
 ## BitcoinTalk announcement (DRAFT — publish only after dev approves + release binary + SHA-256)
 
