@@ -363,23 +363,19 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <script src="js/nav-toggle.js" defer></script>
 </head>
 <body>
-<!-- ============= V14 — MANDATORY MINER UPGRADE + ATOMIC SWAP DISCLOSURE ============= -->
-<!-- V14 activation height = block 15000. Atomic-swap HTLC consensus rules activate here. -->
+<!-- ASWARN: V14 mandatory miner upgrade + atomic-swap DO-NOT-USE (English only) -->
 <div id="asWarn" style="position:relative;z-index:100000;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;padding:14px 18px;font-size:13px;line-height:1.6">
   <div style="max-width:1100px;margin:0 auto">
-    <!-- MINERS: mandatory urgent upgrade -->
     <div style="color:#ffd400;font-weight:900;letter-spacing:1.5px;font-size:15px;margin-bottom:6px">&#128680; URGENT — ALL MINERS &amp; NODES MUST UPGRADE BEFORE BLOCK 15,000 &#128680;</div>
-    <div style="background:rgba(255,212,0,.08);border:1px solid #ffd400;border-radius:6px;padding:10px 12px;margin-bottom:10px">
-      <div><b>EN — EXTREMELY URGENT:</b> The <b>V14 fork activates at block 15,000</b> and enables the Atomic Swap HTLC consensus rules. This is a <b>MANDATORY binary upgrade</b>. <b>You MUST recompile the new binary and restart your node AND miner after block 14,800 and before block 15,000.</b> If you do not upgrade in time, from height 15,000 your node will <b>REJECT EVERY BLOCK</b> and you will be split off the network (forked chain). Recompile + restart in that window — do not skip it.</div>
-      <div style="margin-top:6px"><b>ES — EXTREMADAMENTE URGENTE:</b> El <b>fork V14 se activa en el bloque 15.000</b> y habilita las reglas de consenso del Atomic Swap HTLC. Es una <b>actualización de binario OBLIGATORIA</b>. <b>DEBES recompilar el binario nuevo y reiniciar tu nodo Y tu minero después del bloque 14.800 y antes del bloque 15.000.</b> Si no actualizas a tiempo, desde el bloque 15.000 tu nodo <b>RECHAZARÁ TODOS LOS BLOQUES</b> y quedarás separado de la red (cadena bifurcada). Recompila + reinicia en esa ventana — no lo omitas.</div>
-    </div>
-    <!-- USERS: do not use -->
-    <div style="color:#ff5b5b;font-weight:900;letter-spacing:1.5px;font-size:14px;margin-bottom:4px">&#9888; ATOMIC SWAP — DO NOT USE · NO USAR &#9888;</div>
-    <div><b>EN:</b> The SOST Atomic Swap (SOST &harr; ETH/BNB/USDT/USDC/PAXG/XAUT) is in <b>founder-only testing</b>. It has <b>NOT</b> been externally audited and is <b>NOT</b> validated for public use. <b>DO NOT USE IT — you can permanently lose your funds.</b> Do not use it under any circumstances until the developer officially confirms the system works and announces it is safe (SOST website, official BitcoinTalk thread, official Telegram). Until that announcement: do not use it. (SOST &harr; BTC is not active — deferred to V15.)</div>
-    <div style="margin-top:6px"><b>ES:</b> El Atomic Swap de SOST (SOST &harr; ETH/BNB/USDT/USDC/PAXG/XAUT) está en <b>pruebas solo del founder</b>. <b>NO</b> ha sido auditado externamente ni validado para uso público. <b>NO LO USES — puedes perder tus fondos de forma permanente.</b> No lo uses bajo ningún concepto hasta que el desarrollador confirme oficialmente que funciona y avise de que es seguro (web de SOST, hilo oficial de BitcoinTalk, Telegram oficial). Hasta ese aviso: no lo uses. (SOST &harr; BTC no está activo — aplazado a V15.)</div>
-    <button type="button" onclick="document.getElementById('asWarn').style.display='none'" style="margin-top:10px;background:transparent;border:1px solid #fb010d;color:#ff8a8a;border-radius:6px;padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer">I understand — hide / Entiendo — ocultar</button>
+    <div style="background:rgba(255,212,0,.08);border:1px solid #ffd400;border-radius:6px;padding:10px 12px;margin-bottom:10px"><b>EXTREMELY URGENT:</b> The <b>V14 fork activates at block 15,000</b> and enables the Atomic Swap HTLC consensus rules. This is a <b>MANDATORY binary upgrade.</b> <b>You MUST recompile the new binary and restart your node AND miner after block 14,800 and before block 15,000.</b> If you do not upgrade in time, from height 15,000 your node will <b>REJECT EVERY BLOCK</b> and be split off the network (forked chain). Do not skip it.</div>
+    <div style="color:#ff5b5b;font-weight:900;letter-spacing:1.5px;font-size:14px;margin-bottom:4px">&#9888; ATOMIC SWAP — DO NOT USE &#9888;</div>
+    <div>The SOST Atomic Swap (SOST &harr; ETH/BNB/USDT/USDC/PAXG/XAUT) is in <b>founder-only testing</b>, <b>NOT</b> externally audited and <b>NOT</b> validated for public use. <b>DO NOT USE IT — you can permanently lose your funds.</b> Wait for the founder's official "safe to use" announcement (SOST website, BitcoinTalk, Telegram). SOST &harr; BTC is not active (V15).</div>
+    <button type="button" onclick="document.getElementById('asWarn').style.display='none'" style="margin-top:10px;background:transparent;border:1px solid #fb010d;color:#ff8a8a;border-radius:6px;padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer">I understand — hide</button>
   </div>
 </div>
+
+<!-- ============= V14 — MANDATORY MINER UPGRADE + ATOMIC SWAP DISCLOSURE ============= -->
+<!-- V14 activation height = block 15000. Atomic-swap HTLC consensus rules activate here. -->
 <!-- LOADING OVERLAY — spinning logo countdown -->
 <div id="exLoadOv" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease;font-family:'JetBrains Mono',monospace;margin:0;padding:0;zoom:1.25">
   <img id="exLoadLogo" src="sost-logo.png" alt="SOST" style="width:120px;height:120px;border-radius:20%;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));transition:transform .15s ease-out;animation:sostLogoPulse 3.6s ease-in-out infinite">
@@ -617,7 +613,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- ════════════════════════════════════════════════════════════ -->
 <div style="max-width:1400px;margin:10px auto 0;padding:0 24px;">
  <div style="position:relative;background:linear-gradient(135deg,rgba(34,211,238,.11),rgba(168,85,247,.11) 48%,rgba(245,179,1,.10));border:2px solid #22d3ee;border-radius:10px;padding:18px 20px 16px;box-shadow:0 0 22px rgba(34,211,238,.30),0 0 46px rgba(168,85,247,.15);overflow:hidden">
-  <div style="position:absolute;top:0;right:0;background:linear-gradient(90deg,#22d3ee,#a855f7);color:#041018;font-size:9px;font-weight:900;letter-spacing:1.6px;padding:3px 13px;border-bottom-left-radius:9px">⚑ CODING MILESTONE · BUILT END-TO-END</div>
+  <div style="position:absolute;top:0;right:0;background:#fb010d;color:#fff;font-size:9px;font-weight:900;letter-spacing:1.6px;padding:3px 13px;border-bottom-left-radius:9px">⛔ FOUNDER TESTING · DO NOT USE</div>
+  <div style="background:#2a0606;border:1px solid #fb010d;border-radius:7px;padding:9px 12px;margin-bottom:11px;font-size:11.5px;line-height:1.6;color:#ffdede"><b style="color:#ff5b5b">⛔ DO NOT USE — FOUNDER TESTING PHASE.</b> The atomic swap is technically built and is being activated at block 15,000 (EVM-only) for the founder's own testing. It has had <b>no external audit</b> and is <b>not validated for public use — using it can cause permanent loss of funds.</b> The figures below describe engineering progress, <b>not</b> readiness. Do not use it until the founder officially announces it is safe. (SOST ↔ BTC is not active — V15.)</div>
   <div style="display:flex;align-items:flex-start;gap:13px;flex-wrap:wrap">
    <span style="font-size:26px;line-height:1;text-shadow:0 0 12px rgba(34,211,238,.6)">⚛</span>
    <div style="flex:1 1 340px">

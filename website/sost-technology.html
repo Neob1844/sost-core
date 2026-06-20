@@ -648,6 +648,17 @@
 <script src="js/nav-toggle.js" defer></script>
 </head>
 <body>
+<!-- ASWARN: V14 mandatory miner upgrade + atomic-swap DO-NOT-USE (English only) -->
+<div id="asWarn" style="position:relative;z-index:100000;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;padding:14px 18px;font-size:13px;line-height:1.6">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="color:#ffd400;font-weight:900;letter-spacing:1.5px;font-size:15px;margin-bottom:6px">&#128680; URGENT — ALL MINERS &amp; NODES MUST UPGRADE BEFORE BLOCK 15,000 &#128680;</div>
+    <div style="background:rgba(255,212,0,.08);border:1px solid #ffd400;border-radius:6px;padding:10px 12px;margin-bottom:10px"><b>EXTREMELY URGENT:</b> The <b>V14 fork activates at block 15,000</b> and enables the Atomic Swap HTLC consensus rules. This is a <b>MANDATORY binary upgrade.</b> <b>You MUST recompile the new binary and restart your node AND miner after block 14,800 and before block 15,000.</b> If you do not upgrade in time, from height 15,000 your node will <b>REJECT EVERY BLOCK</b> and be split off the network (forked chain). Do not skip it.</div>
+    <div style="color:#ff5b5b;font-weight:900;letter-spacing:1.5px;font-size:14px;margin-bottom:4px">&#9888; ATOMIC SWAP — DO NOT USE &#9888;</div>
+    <div>The SOST Atomic Swap (SOST &harr; ETH/BNB/USDT/USDC/PAXG/XAUT) is in <b>founder-only testing</b>, <b>NOT</b> externally audited and <b>NOT</b> validated for public use. <b>DO NOT USE IT — you can permanently lose your funds.</b> Wait for the founder's official "safe to use" announcement (SOST website, BitcoinTalk, Telegram). SOST &harr; BTC is not active (V15).</div>
+    <button type="button" onclick="document.getElementById('asWarn').style.display='none'" style="margin-top:10px;background:transparent;border:1px solid #fb010d;color:#ff8a8a;border-radius:6px;padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer">I understand — hide</button>
+  </div>
+</div>
+
 <nav>
   <div class="container">
     <a href="sost-explorer.html" class="nav-logo">
