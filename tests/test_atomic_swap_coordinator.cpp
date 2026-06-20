@@ -38,11 +38,11 @@ int main() {
     // Compile-time / runtime gate guarantees
     // -----------------------------------------------------------------
 
-    // T14. SOST consensus activation gate stays INT64_MAX.
-    static_assert(sost::ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == INT64_MAX,
-                  "Coordinator must never affect the consensus gate");
-    TEST("T14 SOST consensus gate ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == INT64_MAX",
-         sost::ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == INT64_MAX);
+    // T14. SOST consensus activation gate is the V14 activation height (CTO V14 decision).
+    static_assert(sost::ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == sost::V14_HEIGHT,
+                  "Atomic-swap gate must equal V14_HEIGHT (deliberate V14 activation)");
+    TEST("T14 SOST consensus gate ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == V14_HEIGHT",
+         sost::ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == sost::V14_HEIGHT);
 
     // T15. BTC signing backend stays disabled.
     TEST("T15 BTC signing backend OFF (IsBtcHtlcSigningEnabled == false)",

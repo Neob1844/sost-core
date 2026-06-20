@@ -1,62 +1,61 @@
-# Atomic Swap — miner/user disclosure (DRAFT for review — NOT published)
+# Atomic Swap — V14 activation + miner/user disclosure (branch `feature/v14-atomic-swap-evm-disclosure`)
 
-Status: **DRAFT on branch `feature/v14-atomic-swap-evm-disclosure`. Nothing merged, deployed
-or communicated.** The activation height is **NOT set** in code (see the open decision below).
+**CTO decision (executed on branch, NOT merged/deployed/announced):** activate the Atomic Swap
+HTLC consensus rules at **V14 / block 15,000**, **EVM-only** (SOST ↔ ETH/BNB/USDT/USDC/PAXG/XAUT);
+SOST ↔ BTC deferred to V15 (BTC funding path is a stub). The dev accepts that V14 was a no-update
+fork and that this makes V14 a **mandatory binary-upgrade** fork; mitigated by the urgent
+recompile banner + announcement below.
 
-## 1. Explorer banner (already added to `website/sost-explorer.html`)
-Bilingual red top banner: the Atomic Swap is founder-only testing, not externally audited, **DO
-NOT USE — funds can be lost**, wait for the founder's official "safe to use" announcement.
-Height-agnostic on purpose (no activation block baked in until the dev sets it).
+## What changed on the branch
+- `include/sost/atomic_swap.h`: `ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = V14_HEIGHT` (was INT64_MAX);
+  includes `sost/params.h`. `SOST_BTC_HTLC_SIGNING` stays OFF (EVM-only).
+- Gate tripwire tests updated to the active value (coordinator T14 static_assert + btc_signing T2
+  now assert `== V14_HEIGHT`; htlc-lock T23 updated to the real `R24_HTLC_REFUND_BEFORE_TIMEOUT`).
+- **Verified: all 12 C++ atomic-swap suites pass with the gate ACTIVE (44/44 htlc-lock).**
+  EVM contract unaffected (52/52). sost-core compiles.
+- Explorer banner (`website/sost-explorer.html`): urgent mandatory-miner-upgrade + DO-NOT-USE.
 
-## 2. BitcoinTalk announcement (DRAFT — publish only after you approve + the gate is finalised)
+## NOT done (awaiting dev review + coordinated go-live)
+Branch NOT merged to main. No release binary built. No deploy. No miner announcement sent.
+A full `ctest` and a clean **EVM-only release build** (default `SOST_BTC_HTLC_SIGNING=OFF`) must be
+run + the binary SHA-256 published before any miner upgrades.
+
+## BitcoinTalk announcement (DRAFT — publish only after dev approves + release binary + SHA-256)
 
 ```
-[CRITICAL] SOST Atomic Swap — FOUNDER TESTING PHASE — DO NOT USE
+[URGENT][V14] MANDATORY node/miner upgrade before block 15,000 — Atomic Swap activates
 
-Why "technically present" does NOT mean "ready to use".
+ALL NODES AND MINERS MUST UPGRADE BEFORE BLOCK 15,000. THIS IS EXTREMELY URGENT.
 
-The SOST-side HTLC consensus, the EVM HTLC contract, the BTC signing primitives,
-and the wallet/CLI/RPC builders for atomic swaps are code-complete and pass the
-internal test suites (SOST consensus 12/12; EVM contract 52/52; BTC crypto vectors
-green). The BTC funding path (UTXO selection + fee estimation) is still a stub, so
-only SOST <-> EVM (ETH/BNB/USDT/USDC/PAXG/XAUT) is in scope; SOST <-> BTC is not.
+The V14 fork activates at block 15,000 and enables the Atomic Swap HTLC consensus
+rules (SOST <-> ETH/BNB/USDT/USDC/PAXG/XAUT; BTC deferred to V15). This is a
+MANDATORY binary upgrade — unlike earlier V14 hardening, this changes consensus.
 
-DO NOT USE THE ATOMIC SWAP.
+WHAT YOU MUST DO:
+  1. git pull the latest sost-core.
+  2. Recompile the new binary (verify SHA-256 below).
+  3. Restart your NODE and your MINER.
+  4. Do this AFTER block 14,800 and BEFORE block 15,000.
 
-- No external cryptographic audit has been performed.
-- No third-party end-to-end mainnet validation has been performed.
-- Only the founder is testing, under controlled conditions.
-- A bug in un-audited cross-chain code can cause PERMANENT loss of funds.
+IF YOU DO NOT UPGRADE IN THAT WINDOW:
+  From height 15,000 your node will REJECT EVERY BLOCK and you will be split off
+  onto a dead forked chain. There is no recovery except upgrading and resyncing.
 
-Any use of the atomic-swap functionality before the official "safe to use"
-announcement is ENTIRELY AT THE USER'S OWN RISK. SOST Protocol / the founder
-assume no responsibility for funds lost during this testing phase.
+Binary SHA-256: <PUBLISH HERE>
+Build instructions: <link>
 
-The founder will announce — on this thread, the SOST website news section, and the
-official Telegram (t.me/SOSTProtocolOfficial) — WHEN the system has been validated
-as safe for public use. Until that announcement: do not use it. Use OTC P2P methods.
+--- ATOMIC SWAP: DO NOT USE (founder testing) ---
+The atomic swap is enabled in consensus but is in FOUNDER-ONLY TESTING. It has had
+NO external cryptographic audit and NO third-party validation. DO NOT USE IT — a bug
+can cause PERMANENT loss of funds. Use is entirely at your own risk. The founder will
+announce on this thread, the SOST website and Telegram (t.me/SOSTProtocolOfficial)
+WHEN it is validated as safe. Until then: do not use it.
 ```
 
-## 3. OPEN DECISION — activation height (needs the dev's informed call before any flip)
-`ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT` is still `INT64_MAX` (OFF). It was **not** changed.
-
-**Why not 15,000 (V14):** `params.h` states `V14_HEIGHT = 15000 // MAINNET (UNCHANGED —
-already in deployed binaries, no node re-update needed)`. V14 was designed to require **no new
-binary**. Injecting a brand-new consensus rule (atomic-swap activation) at 15,000 means the
-binaries miners are already running do **not** contain that rule → **a chain split is
-near-certain** unless every miner recompiles and redeploys a new binary in the few days before
-block 15,000. The disclosure banner does not mitigate a split — a split breaks the whole network.
-
-**Safer options to choose from (dev decides):**
-- A dedicated activation height comfortably ahead of "now" that gives miners a real
-  recompile/redeploy window (e.g. a round block a few weeks out), shipped as an explicit
-  network upgrade with SHA-256-published binaries and a coordinated miner announcement.
-- Or keep the documented `V15_HEIGHT = 20000` (atomic swap was always slated for V15).
-
-**To flip, once a height is chosen:** set `ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT` to that height
-(keep `SOST_BTC_HTLC_SIGNING=OFF` — EVM-only), run unit tests + full `ctest`, publish the new
-binary's SHA-256, and confirm every miner has upgraded before that block. EVM-only (BTC to V15).
-
-## 4. What is NOT done (by design, awaiting your review)
-- Gate NOT flipped. No release build. No deploy. No miner communication. OTC page left in its
-  current safe "disabled / preview" state. BTC stays OFF (funding path is a stub).
+## Miner coordination (operate before block 15,000; chain is ~1,900 blocks away at posting)
+- T-now: publish binary + SHA-256; post the announcement on BitcoinTalk + Telegram + the banner.
+- Reach the known high-hashrate miners directly (they MUST upgrade) — with few miners, every one
+  matters: a single un-upgraded miner with hashrate produces a competing (old-rules) chain.
+- Recompile/restart window: after block 14,800, before 15,000.
+- Rollback: if coverage is unsafe near 15,000, revert the gate to INT64_MAX (single constexpr) and
+  re-publish — before any miner builds the activation binary.

@@ -40,12 +40,11 @@ int main() {
     TEST("T1 IsBtcHtlcSigningEnabled() returns false (default OFF)",
          IsBtcHtlcSigningEnabled() == false);
 
-    // T2. The activation gate is independent and stays INT64_MAX. The
-    //     two flags are not coupled — even if a future build flips the
-    //     signing flag, the SOST consensus gate stays closed until the
-    //     re-flip checklist is met.
-    TEST("T2 SOST activation gate stays INT64_MAX",
-         ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == INT64_MAX);
+    // T2. The activation gate is independent of the BTC signing flag. At V14 the gate is set
+    //     to V14_HEIGHT (EVM-only activation); the BTC signing flag stays OFF independently
+    //     (BTC funding path is a stub, deferred to V15).
+    TEST("T2 SOST activation gate == V14_HEIGHT (BTC signing flag independent)",
+         ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == V14_HEIGHT);
 
     // -----------------------------------------------------------------
     // Stub behavior — every gated function returns disabled result.

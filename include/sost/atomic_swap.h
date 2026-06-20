@@ -50,6 +50,8 @@
 #include <cstdint>
 #include <climits>
 
+#include "sost/params.h"   // V14_HEIGHT / V15_HEIGHT (activation height source of truth)
+
 namespace sost {
 
 // -----------------------------------------------------------------------------
@@ -104,7 +106,13 @@ namespace sost {
 // single-line change and must be paired with a unit-test run + a
 // full ctest --output-on-failure run before the commit lands.
 // NOTE: V14_HEIGHT / V15_HEIGHT are defined in params.h — never redefined here.
-inline constexpr int64_t ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX;
+// CTO DECISION (V14 activation): atomic-swap HTLC consensus rules activate at V14_HEIGHT
+// (mainnet 15000 / testnet 200). EVM-only — SOST_BTC_HTLC_SIGNING stays OFF (BTC funding
+// path is still a stub, deferred to V15). This makes V14 a MANDATORY-BINARY-UPDATE fork:
+// every node/miner MUST recompile + restart with this binary BEFORE block 15000 or it will
+// reject every block from 15000 onward (chain-split). Coordinated via the urgent disclosure
+// banner + BitcoinTalk announcement (recompile window: after block 14800, before 15000).
+inline constexpr int64_t ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = V14_HEIGHT;
 
 // -----------------------------------------------------------------------------
 // is_height_active helper

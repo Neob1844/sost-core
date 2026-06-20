@@ -570,8 +570,9 @@ int main() {
     }
 
     // ------------------------------------------------------------------
-    // T23: HTLC_REFUND tx_type spending LOCK currently rejected by R20
-    //      (placeholder until 3B-2 implements REFUND validation)
+    // T23: HTLC_REFUND spending LOCK before the timeout window. 3B-2 REFUND validation is
+    //      implemented, so an early refund is now rejected by R24_HTLC_REFUND_BEFORE_TIMEOUT
+    //      (spend_height < the LOCK's refund_height), superseding the old R20 placeholder.
     // ------------------------------------------------------------------
     {
         Transaction tx;
@@ -593,8 +594,8 @@ int main() {
             TEST("T23 (closed) REFUND rejected by R2_BAD_TX_TYPE",
                  !r.ok && r.code == TxValCode::R2_BAD_TX_TYPE);
         } else {
-            TEST("T23 (open) REFUND rejected by R20_HTLC_CLAIM_INPUT_INVALID (3B-2 placeholder)",
-                 !r.ok && r.code == TxValCode::R20_HTLC_CLAIM_INPUT_INVALID);
+            TEST("T23 (open) early REFUND rejected by R24_HTLC_REFUND_BEFORE_TIMEOUT",
+                 !r.ok && r.code == TxValCode::R24_HTLC_REFUND_BEFORE_TIMEOUT);
         }
     }
 
