@@ -425,15 +425,15 @@
       </div>
       <div class="cp-range" id="cpSostRange"></div>
       <div id="cpSostDisclaimer" style="margin-top:10px;padding:10px 14px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:monospace;display:none">
-        <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// REFERENCE PRICE — NOT MARKET PRICE</div>
-        <div>SOST is not yet listed on any exchange. This price is calculated in real time as:</div>
+        <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// NON-MARKET PROTOCOL RESERVE METRIC — NOT A PRICE</div>
+        <div>SOST is not listed on any exchange and has no market price. It currently has <b>no value</b> and no gold or asset is associated with the SOST coin itself. This metric is shown as <b style="color:#ffd700">0</b>.</div>
         <div style="color:#4ade80;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
-          Price = (Gold committed in PoPC × Gold spot price) ÷ Total SOST supply<br>
-          Price = (<span id="cpSostDiscGoldOz">1.2</span> oz × $<span id="cpSostDiscGoldP">0</span>) ÷ <span id="cpSostDiscSupply">0</span> SOST = <span style="color:#ffd700;font-weight:600" id="cpSostDiscPrice">$0</span>
+          Reserve metric = <span style="color:#ffd700;font-weight:600" id="cpSostDiscPrice">0</span> &nbsp;(no value currently associated with SOST)
         </div>
-        <div style="margin-top:6px">When SOST is listed on a CEX or DEX, this section will display actual market data.</div>
-        <div style="margin-top:4px">Current backing: 0.6 XAUT + 0.6 PAXG (Protocol PoPC commitment)</div>
-        <div style="margin-top:4px">Verify gold holdings: <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Etherscan ↗</a></div>
+        <div style="margin-top:6px">If SOST is ever admitted to trading on a CEX or DEX, only then could a market price exist; this section would then show actual market data.</div>
+        <div style="margin-top:6px">Protocol-held gold commitment — <b>no peg, collateral backing, redemption right or legal claim for SOST holders.</b></div>
+        <div style="margin-top:6px;color:#cfeede"><b>SOST does not represent shares, equity, debt, dividends, profit participation, voting rights, ownership of a company, ownership of mining assets or any claim against the Gold Vault.</b></div>
+        <div style="margin-top:4px">Verify protocol-held gold (not holder-redeemable): <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Etherscan ↗</a></div>
       </div>
     </div>
     <table class="data-table" id="sostFiatTable">
@@ -1009,6 +1009,38 @@
   }
 
   function showSostPopcPrice() {
+    // SOST currently has NO value and nothing is associated with the coin itself — force the
+    // entire markets view (price, fiat table, chart) to 0 (non-market, not a price).
+    var _pEl = document.getElementById('cpSostPrice');
+    if (_pEl) { _pEl.textContent = '$0.00'; _pEl.style.color = 'var(--text-dim,#888)'; _pEl.style.fontSize = ''; }
+    var _chEl = document.getElementById('cpSostChange');
+    if (_chEl) { _chEl.textContent = 'Non-market reserve metric · 0'; _chEl.style.color = 'var(--text-dim,#888)'; }
+    var _rEl = document.getElementById('cpSostRange');
+    if (_rEl) _rEl.innerHTML = 'No market price — SOST currently has no associated value (0).';
+    var _discEl = document.getElementById('cpSostDisclaimer');
+    if (_discEl) { _discEl.style.display = 'block'; var _dPr = document.getElementById('cpSostDiscPrice'); if (_dPr) _dPr.textContent = '0'; }
+    var _tbody = document.getElementById('sostFiatBody');
+    if (_tbody) {
+      var _html = '';
+      CURRENCY_GROUPS.forEach(function (g) {
+        _html += regionRow(g.region, 3);
+        g.currencies.forEach(function (c) {
+          _html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code +
+                   '</td><td class="price-val"><span style="color:#888">0</span></td></tr>';
+        });
+      });
+      _tbody.innerHTML = _html;
+    }
+    chartCache['sost-ref'] = {};
+    var _now = Date.now();
+    [1, 3, 7, 30, 180, 365].forEach(function (days) {
+      var pts = [], n = Math.min(days * 24, 720), step = (days * 86400000) / n;
+      for (var i = 0; i <= n; i++) pts.push([_now - (n - i) * step, 0]);
+      chartCache['sost-ref'][days] = pts;
+    });
+    sostChartId = 'sost-ref';
+    return;   // zero state forced above; gold-derived calc below is intentionally unreachable
+    // eslint-disable-next-line no-unreachable
     var refUsd = calcSostPopcPrice();
     // Update the big SOST price display
     var pEl = document.getElementById('cpSostPrice');

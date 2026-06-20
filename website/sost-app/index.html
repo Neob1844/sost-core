@@ -1825,19 +1825,8 @@ SectionRenderers.dashboard = function(el) {
         }
       }
 
-      // Calculate SOST PoPC reference price
-      let sostPrice = 'N/A';
-      try {
-        const goldResp = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd');
-        const goldData = await goldResp.json();
-        const xautP = goldData['tether-gold'] ? goldData['tether-gold'].usd : 0;
-        const paxgP = goldData['pax-gold'] ? goldData['pax-gold'].usd : 0;
-        if (xautP > 0 || paxgP > 0) {
-          const avgGold = (xautP && paxgP) ? (xautP + paxgP) / 2 : (xautP || paxgP);
-          const refPrice = (1.2 * avgGold) / totalSupply;
-          sostPrice = '$' + (refPrice < 0.01 ? refPrice.toFixed(6) : refPrice.toFixed(4));
-        }
-      } catch(e) { sostPrice = 'N/A'; }
+      // SOST currently has NO value and nothing is associated with the coin itself.
+      let sostPrice = '$0.00';
 
       // Fetch best block hash and detail
       let bestHash = 'N/A', interval = 'N/A', lastBlockTime = 'N/A', subsidy = 'N/A', lastBlockEpoch = null;
@@ -2119,7 +2108,7 @@ SectionRenderers.dashboard = function(el) {
 
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>
-        <div class="stat-row"><span class="stat-label">SOST PRICE</span><span class="stat-value" style="color:#ffd700;font-weight:700">${sostPrice} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(PoPC ref.)</span></span></div>
+        <div class="stat-row"><span class="stat-label">SOST PRICE</span><span class="stat-value" style="color:var(--pip-dim,#888);font-weight:700">${sostPrice} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(no value)</span></span></div>
         <div style="padding:2px 12px;font-size:9px;color:#777;line-height:1.4">PoPC Reference · Not listed · 1.2 oz gold ÷ supply</div>
         <div class="stat-row"><span class="stat-label">TOTAL SUPPLY</span><span class="stat-value">${supplyDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">GOLD VAULT</span><span class="stat-value" style="color:#b8860b">${goldVault}</span></div>

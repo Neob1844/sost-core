@@ -946,15 +946,15 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       </div>
       <div class="price-card-range" id="sostRange"></div>
       <div id="sostDisclaimer" style="margin-top:10px;padding:10px 14px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:var(--code,monospace);display:none">
-        <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// REFERENCE PRICE — NOT MARKET PRICE</div>
-        <div>SOST is not yet listed on any exchange. This price is calculated in real time as:</div>
+        <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// NON-MARKET PROTOCOL RESERVE METRIC — NOT A PRICE</div>
+        <div>SOST is not listed on any exchange and has no market price. It currently has <b>no value</b> and no gold or asset is associated with the SOST coin itself. This metric is shown as <b style="color:#ffd700">0</b>.</div>
         <div style="color:#4ade80;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
-          Price = (Gold committed in PoPC × Gold spot price) ÷ Total SOST supply<br>
-          Price = (<span id="sostDiscGoldOz">1.2</span> oz × $<span id="sostDiscGoldP">0</span>) ÷ <span id="sostDiscSupply">0</span> SOST = <span style="color:#ffd700;font-weight:600" id="sostDiscPrice">$0</span>
+          Reserve metric = <span style="color:#ffd700;font-weight:600" id="sostDiscPrice">0</span> &nbsp;(no value currently associated with SOST)
         </div>
-        <div style="margin-top:6px">When SOST is listed on a CEX or DEX, this section will display actual market data.</div>
-        <div style="margin-top:4px">Current backing: 0.6 XAUT + 0.6 PAXG (Protocol PoPC commitment)</div>
-        <div style="margin-top:4px">Verify gold holdings: <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan,#22d3ee);text-decoration:none">Etherscan ↗</a></div>
+        <div style="margin-top:6px">If SOST is ever admitted to trading on a CEX or DEX, only then could a market price exist; this section would then show actual market data.</div>
+        <div style="margin-top:6px">Protocol-held gold commitment — <b>no peg, collateral backing, redemption right or legal claim for SOST holders.</b></div>
+        <div style="margin-top:6px;color:#cfeede"><b>SOST does not represent shares, equity, debt, dividends, profit participation, voting rights, ownership of a company, ownership of mining assets or any claim against the Gold Vault.</b></div>
+        <div style="margin-top:4px">Verify protocol-held gold (not holder-redeemable): <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan,#22d3ee);text-decoration:none">Etherscan ↗</a></div>
       </div>
     </div>
     </div>
@@ -7674,27 +7674,26 @@ function calcSostRefPrice(){
   var supply=0,bh=0;
   while(bh<=h){var ep=Math.floor(bh/EP);var r=R0*Math.pow(Q,ep);var ee=Math.min((ep+1)*EP-1,h);supply+=r*(ee-bh+1);bh=ee+1;}
   sostRefSupply=supply;
-  var totalGoldVal=sostRefGoldOz*goldPrice;
-  sostRefPrice=totalGoldVal/supply;
+  // SOST currently has NO value and nothing is associated with the coin itself, so the
+  // displayed reserve metric and chart are forced to 0 (non-market, not a price).
+  sostRefPrice=0;
   // Update SOST price display
   var el=document.getElementById('sostPrice');
   if(el){
-    el.textContent=sostRefPrice<0.01?'$'+sostRefPrice.toFixed(6):'$'+sostRefPrice.toFixed(4);
-    el.style.color='var(--gold)';el.style.fontSize='';
+    el.textContent='$0.00';
+    el.style.color='var(--text3)';el.style.fontSize='';
   }
   var chEl=document.getElementById('sostChange');
-  if(chEl){chEl.style.color='var(--text3)';chEl.textContent='PoPC reference price';}
+  if(chEl){chEl.style.color='var(--text3)';chEl.textContent='Non-market reserve metric · 0';}
   var rangeEl=document.getElementById('sostRange');
   if(rangeEl){
-    rangeEl.innerHTML='Gold: '+sostRefGoldOz+'oz × $'+goldPrice.toFixed(2)+'/oz = $'+totalGoldVal.toFixed(2)+' | Supply: '+supply.toFixed(0)+' SOST';
+    rangeEl.innerHTML='No market price — SOST currently has no associated value (0).';
   }
-  // Update disclaimer with dynamic values
+  // Update disclaimer
   var discEl=document.getElementById('sostDisclaimer');
   if(discEl){
     discEl.style.display='block';
-    var dGp=document.getElementById('sostDiscGoldP');if(dGp)dGp.textContent=goldPrice.toFixed(2);
-    var dSup=document.getElementById('sostDiscSupply');if(dSup)dSup.textContent=supply.toFixed(0);
-    var dPr=document.getElementById('sostDiscPrice');if(dPr)dPr.textContent=sostRefPrice<0.01?'$'+sostRefPrice.toFixed(6):'$'+sostRefPrice.toFixed(4);
+    var dPr=document.getElementById('sostDiscPrice');if(dPr)dPr.textContent='0';
   }
   // Build DYNAMIC price chart (price drops as supply increases)
   if(!cache['sost-ref']){cache['sost-ref']={};}
@@ -7702,7 +7701,7 @@ function calcSostRefPrice(){
   var GENESIS_MS=1773597600000;
   var R0_e=7.85100863,Q_e=0.7788007830714049,EP_e=131553;
   var bpd_e=144; // blocks per day
-  function priceAtH(h){var s=0,b=0;while(b<=h){var e=Math.floor(b/EP_e);var r=R0_e*Math.pow(Q_e,e);var ee=Math.min((e+1)*EP_e-1,h);s+=r*(ee-b+1);b=ee+1;}return(1.2*goldPrice)/s;}
+  function priceAtH(h){return 0;} // SOST has no associated value — chart is flat 0 (non-market)
   // Generate data for ALL time ranges (not just 1,3,7,30)
   [1,3,7,30,180,365,1095,1825].forEach(function(days){
     var p=[];
@@ -7721,7 +7720,7 @@ function calcSostRefPrice(){
       if(hh>H)hh=H;
       if(hh<1)continue;
       var pv=priceAtH(hh);
-      if(pv>50.0||pv<0.0001)continue;
+      if(pv>50.0||pv<0)continue;   // allow 0 so the chart draws a flat zero line (no value)
       p.push([t,pv]);
     }
     cache['sost-ref'][days]=p;

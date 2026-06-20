@@ -936,7 +936,11 @@
       CPU-friendly Native Layer 1 Proof-of-Work blockchain.
       Every block mined allocates 25% to an on-chain Gold Vault (tokenized precious metals)
       and 25% to Proof of Personal Custody rewards &mdash;
-      hardcoded at genesis, immutable forever.
+      hardcoded at genesis and enforced by the current consensus rules (any change requires a
+      transparent, network-adopted protocol upgrade).
+    </p>
+    <p class="fade-in delay-2" style="max-width:760px;margin:16px auto 0;padding:12px 16px;border:1px solid rgba(255,215,0,.35);border-left:3px solid #ffd700;border-radius:8px;background:rgba(255,215,0,.04);font-size:12px;line-height:1.6;color:#cfd8d2;text-align:left">
+      <b style="color:#ffd700">Important:</b> SOST is a native crypto-asset created solely by Proof-of-Work mining. It does <b>not</b> represent shares, equity, debt, dividends, profit participation, voting rights, ownership of a company, ownership of mining assets, or any redemption or legal claim against the Gold Vault or any reserve. SOST currently has <b>no market price and no associated value</b>. Nothing here is investment advice or an offer of securities.
     </p>
     <p class="fade-in delay-3" style="font-size:11px;color:#777;letter-spacing:2px;font-family:monospace;margin-top:16px;">SOST &middot; Sovereign Stock Token &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> PoW &middot; Native L1 Blockchain</p>
     <div class="protocol-badge fade-in delay-3">
@@ -1228,7 +1232,7 @@
     </div>
 
     <p class="fade-in delay-1" style="text-align:center;max-width:780px;margin:18px auto 0;font-size:13px;line-height:1.6;color:var(--text-secondary)">
-      Four properties hardcoded at genesis, immutable forever, with no governance override.
+      Four properties hardcoded at genesis and enforced by the current consensus rules &mdash; any change requires a transparent, network-adopted protocol upgrade.
       Two enforce credibility (Time, Work). Two enforce value (Scarcity, Store-of-Value Architecture).
     </p>
 
@@ -1313,7 +1317,7 @@
     </div>
 
     <p class="fade-in delay-3" style="margin-top:26px;font-size:11.5px;color:var(--text-dim);text-align:center;font-family:var(--font-mono);letter-spacing:1.5px">
-      Hardcoded at genesis &middot; immutable forever &middot; no governance override
+      Hardcoded at genesis &middot; enforced by the current consensus rules &middot; any change needs a network-adopted upgrade
     </p>
   </div>
 </section>
@@ -1880,17 +1884,11 @@ var _sharedGold={xaut:0,paxg:0,avg:0,ts:''};
   function renderSost(){
     var cur=CURRENCIES[curIdx];
     btnEl.textContent=SYMBOLS[cur];
-    if(sostUsd===null){
-      valEl.textContent='...';
-      subEl.textContent='loading gold prices';
-      return;
-    }
-    valEl.textContent=fmtPrice(sostUsd,cur);
-    valEl.style.color='#ffd700';
+    // SOST currently has NO value and nothing is associated with the coin — show 0, not a price.
+    valEl.textContent=(SYMBOLS[cur]||'$')+'0.00';
+    valEl.style.color='var(--text-dim,#888)';
     valEl.style.fontSize='20px';
-    var now=new Date();
-    var ts=now.getUTCHours().toString().padStart(2,'0')+':'+now.getUTCMinutes().toString().padStart(2,'0')+' UTC';
-    subEl.innerHTML=LABELS[cur]+liveBadge()+' '+ts;
+    subEl.innerHTML='No market price — SOST has no associated value';
   }
 
   // Called by the gold fetch when new data arrives
@@ -2089,8 +2087,8 @@ function fetchSostChart(){
     .finally(function(){
       var sup=0,bh=0;
       while(bh<=h){var ep=Math.floor(bh/EP);var r=R0*Math.pow(Q,ep);var ee=Math.min((ep+1)*EP-1,h);sup+=r*(ee-bh+1);bh=ee+1;}
-      var sostPrice=(1.2*goldAvg)/sup;
-      // Build 24-hour DYNAMIC reference line (price drops as supply increases)
+      var sostPrice=0;   // SOST has no associated value — flat 0 line (non-market)
+      // Build 24-hour reference line — flat 0 (SOST currently has no value)
       var now=Date.now(),labels=[],data=[];
       var bpd=144; // blocks per day
       var GENESIS_MS=1773597600000; // 2026-03-15 18:00 UTC
@@ -2102,9 +2100,7 @@ function fetchSostChart(){
         var hAtTime=Math.max(1, h - Math.round(bpd * (1 - i/24)));
         var s2=0,b2=0;
         while(b2<=hAtTime){var e2=Math.floor(b2/EP);var r2=R0*Math.pow(Q,e2);var ee2=Math.min((e2+1)*EP-1,hAtTime);s2+=r2*(ee2-b2+1);b2=ee2+1;}
-        var prc=(1.2*goldAvg)/s2;
-        if(prc>5.0||prc<0.001) continue; // filter absurd
-        data.push(prc);
+        data.push(0); // SOST has no associated value — flat 0
       }
       var ctx=canvasEl.getContext('2d');
       var grad=ctx.createLinearGradient(0,0,0,150);
@@ -2117,7 +2113,7 @@ function fetchSostChart(){
         options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'rgba(10,10,10,0.95)',titleColor:'#94a3b8',bodyColor:'#ffd700',borderColor:'#333',borderWidth:1,titleFont:{family:"'JetBrains Mono',monospace",size:10},bodyFont:{family:"'JetBrains Mono',monospace",size:12,weight:'bold'},padding:10,displayColors:false,callbacks:{title:function(items){return items[0].label+' UTC';},label:function(c){return 'SOST: $'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:4,maximumFractionDigits:6})+' (PoPC ref.)';}}}},hover:{mode:'index',intersect:false},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toFixed(4);}},grid:{color:'#1a1a1a'}}}}
       });
       var ts=new Date();
-      if(statusEl)statusEl.textContent='$'+sostPrice.toFixed(4)+' \u2014 '+ts.getUTCHours().toString().padStart(2,'0')+':'+ts.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+      if(statusEl)statusEl.textContent='$0.00 (no associated value) \u2014 '+ts.getUTCHours().toString().padStart(2,'0')+':'+ts.getUTCMinutes().toString().padStart(2,'0')+' UTC';
     });
 }
 </script>
