@@ -363,6 +363,16 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <script src="js/nav-toggle.js" defer></script>
 </head>
 <body>
+<!-- ================= ATOMIC SWAP — MINER/USER CRITICAL DISCLOSURE ================= -->
+<!-- Height-agnostic on purpose: do NOT bake an activation block here until the dev sets it. -->
+<div id="asWarn" style="position:relative;z-index:100000;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;padding:14px 18px;font-size:13px;line-height:1.6">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="color:#ff5b5b;font-weight:900;letter-spacing:1.5px;font-size:14px;margin-bottom:6px">&#9888; ATOMIC SWAP — DO NOT USE · NO USAR &#9888;</div>
+    <div><b>EN:</b> The SOST Atomic Swap is in <b>founder-only testing</b>. It has <b>NOT</b> been externally audited and is <b>NOT</b> validated for public use. <b>DO NOT USE IT — you can permanently lose your funds.</b> Do not use it under any circumstances until the developer officially confirms the system works and announces it is safe. The founder will announce on the SOST website, the official BitcoinTalk thread and the official Telegram when it is ready. Until that announcement: do not use it.</div>
+    <div style="margin-top:6px"><b>ES:</b> El Atomic Swap de SOST está en <b>pruebas solo del founder</b>. <b>NO</b> ha sido auditado externamente ni validado para uso público. <b>NO LO USES — puedes perder tus fondos de forma permanente.</b> No lo uses bajo ningún concepto hasta que el desarrollador confirme oficialmente que el sistema funciona y avise de que es seguro. El founder avisará en la web de SOST, el hilo oficial de BitcoinTalk y el Telegram oficial cuando esté listo. Hasta ese aviso: no lo uses.</div>
+    <button type="button" onclick="document.getElementById('asWarn').style.display='none'" style="margin-top:10px;background:transparent;border:1px solid #fb010d;color:#ff8a8a;border-radius:6px;padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer">I understand the risk — hide / Entiendo el riesgo — ocultar</button>
+  </div>
+</div>
 <!-- LOADING OVERLAY — spinning logo countdown -->
 <div id="exLoadOv" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease;font-family:'JetBrains Mono',monospace;margin:0;padding:0;zoom:1.25">
   <img id="exLoadLogo" src="sost-logo.png" alt="SOST" style="width:120px;height:120px;border-radius:20%;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));transition:transform .15s ease-out;animation:sostLogoPulse 3.6s ease-in-out infinite">
