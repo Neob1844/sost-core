@@ -58,8 +58,8 @@
 </style>
 </head>
 <body>
-<!-- ASWARN: V14 mandatory miner upgrade + atomic-swap DO-NOT-USE (English only, dismissible+persistent) -->
-<div id="asWarn" style="position:relative;z-index:100000;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;padding:14px 18px;font-size:13px;line-height:1.6">
+<!-- ASWARN: V14 miner-upgrade + atomic-swap DO-NOT-USE — dismissible+persistent, shown after splash -->
+<div id="asWarn" style="position:relative;z-index:9000;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;padding:14px 18px;font-size:13px;line-height:1.6;display:none">
   <div style="max-width:1100px;margin:0 auto">
     <div style="color:#ffd400;font-weight:900;letter-spacing:1.5px;font-size:15px;margin-bottom:6px">&#128680; URGENT — ALL MINERS &amp; NODES MUST UPGRADE BEFORE BLOCK 15,000 &#128680;</div>
     <div style="background:rgba(255,212,0,.08);border:1px solid #ffd400;border-radius:6px;padding:10px 12px;margin-bottom:10px"><b>EXTREMELY URGENT:</b> The <b>V14 fork activates at block 15,000</b> and enables the Atomic Swap HTLC consensus rules. This is a <b>MANDATORY binary upgrade.</b> <b>You MUST recompile the new binary and restart your node AND miner after block 14,800 and before block 15,000.</b> If you do not upgrade in time, from height 15,000 your node will <b>REJECT EVERY BLOCK</b> and be split off the network (forked chain). Do not skip it.</div>
@@ -68,7 +68,8 @@
     <button type="button" onclick="try{localStorage.setItem('sost_aswarn_hide','1')}catch(e){};document.getElementById('asWarn').style.display='none'" style="margin-top:10px;background:transparent;border:1px solid #fb010d;color:#ff8a8a;border-radius:6px;padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer">I understand — hide</button>
   </div>
 </div>
-<script>try{if(localStorage.getItem('sost_aswarn_hide')==='1'){var _aw=document.getElementById('asWarn');if(_aw)_aw.style.display='none';}}catch(e){}</script>
+<script>(function(){var aw=document.getElementById('asWarn');if(!aw)return;try{if(localStorage.getItem('sost_aswarn_hide')==='1')return;}catch(e){}function splashUp(){return ['sost-splash','exLoadOv','splash','preloader'].some(function(id){var s=document.getElementById(id);if(!s)return false;var c=getComputedStyle(s);return c.display!=='none'&&c.visibility!=='hidden'&&c.opacity!=='0';});}var n=0;function chk(){if(!splashUp()||n>40){aw.style.display='';return;}n++;setTimeout(chk,250);}if(document.readyState!=='loading')chk();else document.addEventListener('DOMContentLoaded',chk);})();</script>
+
 
 
 
