@@ -1,8 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<style id="sost-global-zoom">html{zoom:0.80}</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#05070a">
 <link rel="canonical" href="https://sostcore.com/atomic-swap-console.html">
 <link rel="icon" type="image/png" href="sost-logo.png">
 <meta name="robots" content="noindex,nofollow">
@@ -195,6 +203,7 @@
     <button class="tab" data-p="evm">EVM operate</button>
     <button class="tab" data-p="claim">2 · Claim flow (SOST CLI)</button>
     <button class="tab" data-p="status">Swap status</button>
+    <button class="tab" data-p="guide">Guía sencilla</button>
     <button class="tab" data-p="emergency">Emergency</button>
   </div>
 
@@ -413,6 +422,41 @@
       <button class="btn ghost" id="dlLog">Download swap log (JSON, no keys-to-server)</button>
       <button class="btn ghost" id="copyBundle">Copy emergency bundle (no private key)</button>
       <div id="statusOut"></div>
+    </div>
+  </div>
+
+  <!-- GUÍA SENCILLA DE USO -->
+  <div class="panel" id="p-guide">
+    <div class="card">
+      <h2>Guía sencilla de uso (founder-only)</h2>
+      <div class="warnmsg err"><b>⚠ NO la uses con dinero que te importe.</b> Está sin auditar y en pruebas. Primero ENSAYA en testnet. Esta consola nunca toca tu clave/seed: solo arma el comando/calldata y firma TU wallet.</div>
+      <p>En cristiano, qué hace un atomic swap: bloqueas fondos en una cadena bajo un “candado” (hashlock) con un plazo; quien revela el secreto cobra; si nadie cobra a tiempo, recuperas lo tuyo (refund). No hay intermediario.</p>
+
+      <h3>Antes de empezar (1 sola vez)</h3>
+      <ol style="font-size:13px;color:var(--text-secondary);line-height:1.9;padding-left:20px">
+        <li><b>Ensaya en testnet</b> (Sepolia o BNB testnet): despliega el contrato ahí con <code>forge create</code> y prueba todo el ciclo sin riesgo. La consola detecta la testnet sola.</li>
+        <li>Ten <b>MetaMask</b> con algo de gas (ETH/BNB) y una cantidad <b>mínima</b> para la prueba.</li>
+      </ol>
+
+      <h3>Paso a paso (pestaña “EVM operate”)</h3>
+      <ol style="font-size:13px;color:var(--text-secondary);line-height:1.9;padding-left:20px">
+        <li><b>Conecta MetaMask</b> → verás tu dirección, la red y tu saldo de gas.</li>
+        <li>Pega la <b>dirección del contrato</b> desplegado → pulsa <b>“Verify contract code”</b> (debe salir <b style="color:#4ade80">EXACT</b>).</li>
+        <li>Elige asset <b>Native (ETH/BNB)</b> y una <b>cantidad minúscula</b>. (ERC-20 está apagado por seguridad; BTC es para V15.)</li>
+        <li>Pulsa <b>“New S+H”</b> para generar el secreto y el hashlock → <b>guarda el secreto</b> (sin él no podrás reclamar). “Random” genera el swapId.</li>
+        <li>Pon <b>refundTime</b> (bloque EVM actual + margen) y las direcciones claimer/refunder.</li>
+        <li>Pulsa <b>LOCK</b> → revisa el recuadro (red, contrato, importe) y firma en MetaMask. Te da el tx con enlace al explorer.</li>
+        <li><b>Read swap status</b> → debe verse <b>LOCKED / CLAIMABLE</b>.</li>
+        <li>Para cobrar: <b>CLAIM</b> (pega el secreto; la consola comprueba que el sha256 coincide antes de firmar). Para recuperar tras el plazo: <b>REFUND</b>.</li>
+        <li>Guarda todo en <b>“Download swap log”</b> (pestaña Swap status). Nunca sube tu secreto a ningún sitio.</li>
+      </ol>
+
+      <h3>Primera prueba recomendada: REFUND primero</h3>
+      <p>Antes de un swap real, haz la pestaña <b>“1 · Refund test”</b>: bloquea una cantidad mínima en SOST y recupérala por refund. Si el refund funciona, sabes que nunca te quedas atrapado. Luego ya prueba CLAIM.</p>
+
+      <h3>Reglas de oro</h3>
+      <div class="warnmsg amber">Founder-only · cantidades ridículas · ETH/BNB nativo (no USDT/PAXG/XAUT) · primero testnet, luego mainnet (altura ≥ 15.010 + checklist) · si algo falla, NO crees más HTLCs → mira la pestaña <b>Emergency</b>.</div>
+      <p class="muted">Más detalle en cada pestaña: <b>Readiness</b> (¿está todo listo?), <b>EVM operate</b> (operación real), <b>Swap status</b> (consultar/registrar), <b>Emergency</b> (qué hacer si algo va mal).</p>
     </div>
   </div>
 
