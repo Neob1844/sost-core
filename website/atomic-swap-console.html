@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://sostcore.com/atomic-swap-console.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<meta name="robots" content="noindex,nofollow">
+<title>SOST Atomic Swap Console — Founder-only (DO NOT USE)</title>
+<meta name="description" content="Founder-only guided console for SOST Atomic Swap V14 (HTLC). Educational + command generator. Not public, not custody, no private keys in the browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;
+    --border-dim:#1a1a1a;--border-med:#2a2a2a;--border-bright:#3a3a3a;
+    --red-primary:#fb010d;--red-bright:#ff2d3b;--green-primary:#4ade80;
+    --cyan-primary:#22d3ee;--cyan-dim:#22d3ee33;--gold-primary:#b8860b;
+    --amber-primary:#f59e0b;--amber-dim:#f59e0b22;
+    --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;
+    --font-mono:'JetBrains Mono',monospace;--font-display:'Space Grotesk',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px);opacity:.12;pointer-events:none;z-index:0}
+  .container{max-width:1040px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
+  a{color:var(--cyan-primary)}
+  /* nav */
+  nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:10px 0}
+  nav .container{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .nav-logo{font-family:var(--font-display);font-weight:700;font-size:22px;color:var(--text-primary);letter-spacing:3px;text-decoration:none;display:flex;align-items:center;gap:12px}
+  .nav-logo .brand-sost{color:var(--red-primary)}
+  .nav-links{display:flex;gap:4px;flex-wrap:wrap}
+  .nav-links a{color:var(--text-dim);text-decoration:none;font-size:11px;padding:4px 10px;border-radius:4px;letter-spacing:.5px;white-space:nowrap}
+  .nav-links a:hover{color:var(--text-primary);background:rgba(255,255,255,.05)}
+  /* hero */
+  .hero{padding:48px 0 30px;border-bottom:1px solid var(--border-dim)}
+  .hero-label{font-size:11px;color:var(--red-primary);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+  .hero h1{font-family:var(--font-display);font-size:clamp(28px,4.6vw,46px);font-weight:700;line-height:1.1;margin-bottom:14px;letter-spacing:-1px}
+  .hero h1 span{color:var(--red-primary)}
+  .hero-sub{font-size:14px;color:var(--text-secondary);max-width:760px}
+  .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+  .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;letter-spacing:.5px;border:1px solid var(--border-med);color:var(--text-secondary);background:var(--bg-card)}
+  .chip.red{color:var(--red-bright);border-color:#5a1418;background:#2a0606}
+  .chip.amber{color:var(--amber-primary);border-color:#5a4622;background:var(--amber-dim)}
+  .chip.green{color:var(--green-primary);border-color:#1f5132;background:#08160e}
+  .chip.cyan{color:var(--cyan-primary);border-color:#164e57;background:#04161a}
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  /* tabs */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:26px 0 22px;border-bottom:1px solid var(--border-dim);padding-bottom:10px}
+  .tab{padding:9px 16px;border-radius:6px;border:1px solid var(--border-dim);background:var(--bg-card);color:var(--text-dim);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.5px}
+  .tab.active{color:var(--red-primary);border-color:var(--red-dim);background:#160305}
+  .tab:hover{color:var(--text-primary)}
+  .panel{display:none}
+  .panel.active{display:block}
+  /* cards */
+  .card{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:24px;margin-bottom:18px}
+  .card h2{font-family:var(--font-display);font-size:19px;margin-bottom:6px}
+  .card h3{font-family:var(--font-display);font-size:15px;margin:18px 0 8px;color:var(--text-primary)}
+  .card p,.card li{font-size:13px;color:var(--text-secondary);line-height:1.8}
+  .muted{color:var(--text-dim);font-size:12px}
+  .edu{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+  .edu .e{background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:8px;padding:16px}
+  .edu .e b{color:var(--cyan-primary);font-family:var(--font-display)}
+  /* readiness */
+  .rk{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-dim);font-size:13px}
+  .rk:last-child{border-bottom:none}
+  .rk .ic{font-size:16px;min-width:22px;text-align:center}
+  .rk input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--green-primary)}
+  .rk .lab{flex:1}
+  .rk .tag{font-size:10px;letter-spacing:1px;padding:2px 7px;border-radius:4px;text-transform:uppercase;font-weight:700}
+  .tag.live{background:#04161a;color:var(--cyan-primary);border:1px solid #164e57}
+  .tag.self{background:var(--amber-dim);color:var(--amber-primary);border:1px solid #5a4622}
+  /* form */
+  label.fl{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin:14px 0 5px}
+  input.fi,select.fi,textarea.fi{width:100%;padding:10px 12px;background:var(--bg-panel);border:1px solid var(--border-med);border-radius:7px;color:var(--text-primary);font-family:var(--font-mono);font-size:13px}
+  textarea.fi{resize:vertical;min-height:60px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:7px;border:1px solid var(--red-dim);background:#160305;color:var(--red-bright);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-top:14px;letter-spacing:.5px}
+  .btn:hover{background:#220509}
+  .btn.green{border-color:#1f5132;background:#08160e;color:var(--green-primary)}
+  .btn.cyan{border-color:#164e57;background:#04161a;color:var(--cyan-primary)}
+  .btn.ghost{border-color:var(--border-med);background:var(--bg-card);color:var(--text-secondary)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  pre.cmd{background:#040a0c;border:1px solid var(--border-med);border-left:3px solid var(--green-primary);border-radius:7px;padding:13px 15px;margin-top:12px;overflow:auto;font-size:12.5px;color:#cfeede;white-space:pre-wrap;word-break:break-all}
+  .warnmsg{font-size:12px;border-radius:7px;padding:10px 12px;margin-top:10px}
+  .warnmsg.err{background:#2a0606;border:1px solid #5a1418;color:#ffb3b3}
+  .warnmsg.ok{background:#08160e;border:1px solid #1f5132;color:var(--green-primary)}
+  .warnmsg.amber{background:var(--amber-dim);border:1px solid #5a4622;color:var(--amber-primary)}
+  .locked{filter:grayscale(.7);opacity:.5;pointer-events:none}
+  .footer{padding:40px 0;text-align:center}.footer p{font-size:11px;color:var(--text-muted)}
+  .gate-input{font-family:var(--font-mono);text-transform:none}
+</style>
+</head>
+<body>
+<!-- ASWARN: V14 DO-NOT-USE banner (shared pattern) -->
+<div id="asWarn" style="position:relative;z-index:9000;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;display:none">
+  <div id="asWarnMini" style="display:none;cursor:pointer;padding:8px 16px;text-align:center;color:#ffb3b3;font-weight:700" onclick="document.getElementById('asWarnMini').style.display='none';document.getElementById('asWarnFull').style.display='block';try{localStorage.setItem('sost_aswarn_collapsed','0')}catch(e){}">&#128680; ATOMIC SWAP V14 — FOUNDER-ONLY · DO NOT USE &nbsp;<span style="text-decoration:underline">expand &#9662;</span></div>
+  <div id="asWarnFull" style="padding:14px 18px">
+    <div style="max-width:1040px;margin:0 auto">
+      <div style="color:#ff5b5b;font-weight:900;letter-spacing:1.2px;font-size:15px;margin-bottom:6px">&#9888; ATOMIC SWAP — DO NOT USE &#9888;</div>
+      <div>The SOST Atomic Swap (SOST &harr; ETH/BNB/USDT/USDC/PAXG/XAUT) is in <b>founder-only testing</b>, <b>NOT</b> externally audited and <b>NOT</b> validated for public use. <b>You can permanently lose your funds.</b> This console only <b>explains and generates commands</b> — it never holds keys, signs, or moves funds. SOST &harr; BTC is not active (V15). Wait for the founder's official "safe to use" announcement.</div>
+      <button type="button" onclick="document.getElementById('asWarnFull').style.display='none';document.getElementById('asWarnMini').style.display='block';try{localStorage.setItem('sost_aswarn_collapsed','1')}catch(e){}" style="margin-top:10px;background:transparent;border:1px solid #fb010d;color:#ff8a8a;border-radius:6px;padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer">Collapse &#9652;</button>
+    </div>
+  </div>
+</div>
+<script>(function(){var aw=document.getElementById('asWarn');if(!aw)return;var full=document.getElementById('asWarnFull'),mini=document.getElementById('asWarnMini');function apply(){var c='0';try{c=localStorage.getItem('sost_aswarn_collapsed')||'0'}catch(e){}if(c==='1'){full.style.display='none';mini.style.display='block';}else{full.style.display='block';mini.style.display='none';}}apply();aw.style.display='';})();</script>
+
+<nav><div class="container">
+  <a href="sost-explorer.html" class="nav-logo"><img src="sost-logo.png" alt="SOST" style="height:54px;width:54px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 10px rgba(251,1,13,.8))"><span><span class="brand-sost">SOST</span> PROTOCOL</span></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="sost-explorer.html">Explorer</a>
+    <a href="sost-otc.html">OTC / P2P</a>
+    <a href="sost-dex.html">PoPC DEX</a>
+    <a href="sost-wallet.html">Wallet</a>
+    <a href="atomic-swap-console.html" style="color:var(--red-primary)">Atomic Swap</a>
+  </div>
+</div></nav>
+
+<div class="hero"><div class="container">
+  <div class="hero-label">// OTC · Atomic Swap · Founder Console</div>
+  <h1>SOST <span>Atomic Swap</span> Console</h1>
+  <p class="hero-sub">A guided, founder-only console for SOST &harr; EVM cross-chain atomic swaps (HTLC), activating at <b>block 15,000</b>. It <b>explains</b>, <b>validates</b> and <b>generates the exact <code>sost-cli</code> commands</b> for you to run in your own terminal. It never asks for a seed phrase or private key, never signs, never broadcasts, and never sends your secret anywhere.</p>
+  <div class="chips">
+    <span class="chip red"><span class="dot"></span>DO NOT USE · Founder-only</span>
+    <span class="chip amber">Unaudited · EVM-only (BTC = V15)</span>
+    <span class="chip cyan" id="statusChip"><span class="dot"></span>Status: checking…</span>
+    <span class="chip" id="heightChip">Height: —</span>
+  </div>
+</div></div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" data-p="overview">Overview &amp; Education</button>
+    <button class="tab" data-p="readiness">Readiness</button>
+    <button class="tab" data-p="refund">1 · Refund test</button>
+    <button class="tab" data-p="claim">2 · Claim flow</button>
+    <button class="tab" data-p="status">Swap status</button>
+    <button class="tab" data-p="emergency">Emergency</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="panel active" id="p-overview">
+    <div class="card">
+      <h2>What this is — and what it is NOT</h2>
+      <p>An HTLC (Hash Time-Locked Contract) is a self-custodial lockbox with two exits: <b>CLAIM</b> (whoever reveals the correct secret <code>S</code> whose <code>sha256(S)</code> equals the agreed hashlock can take the funds) and <b>REFUND</b> (if the timeout passes and nobody claimed, the owner takes their funds back). Two parties lock on their own chains under the same hashlock; revealing <code>S</code> to claim one side lets the other side be claimed too. No custodian, no trust.</p>
+      <div class="warnmsg amber">This page is <b>read-only + a command generator</b>. The real money moves only when <b>you</b> run the generated commands in your terminal, sign them, and broadcast them. If anything looks wrong, do not run it.</div>
+      <h3>Why it is delicate</h3>
+      <p>It touches real funds on two chains. A wrong hashlock, timeout or pkh can lock funds until refund; a bug or a chain reorg can break atomicity; and if un-upgraded miners reject HTLC blocks, the SOST network can split. <b>The point of no return is not block 15,000 — it is the FIRST HTLC you create.</b></p>
+    </div>
+    <div class="card">
+      <h2>Glossary</h2>
+      <div class="edu">
+        <div class="e"><b>HTLC</b><br>The lockbox contract with CLAIM + REFUND exits under one hashlock + timeout.</div>
+        <div class="e"><b>LOCK</b><br>The transaction that puts your SOST into the HTLC (here: <code>createhtlclock</code>).</div>
+        <div class="e"><b>CLAIM</b><br>Spending the lock by revealing the secret preimage (<code>claimhtlc</code>).</div>
+        <div class="e"><b>REFUND</b><br>Reclaiming your own locked funds after the timeout (<code>refundhtlc</code>).</div>
+        <div class="e"><b>secret / preimage (S)</b><br>A random 32-byte value you generate and keep private until you claim. Lose it → claim can fail.</div>
+        <div class="e"><b>hashlock (H)</b><br><code>H = sha256(S)</code>. Identical on both chains. Public.</div>
+        <div class="e"><b>refund_height</b><br>The SOST block height at/after which you may refund. Set it LATER than the counterparty's EVM timeout.</div>
+        <div class="e"><b>reorg</b><br>A chain reorganisation can un-mine a claim after the secret is already public on the other chain — the classic cross-chain risk.</div>
+        <div class="e"><b>Why native first</b><br>ETH/BNB native behave predictably. USDT/PAXG/XAUT (non-standard / fee-on-transfer) can break the locked-amount accounting — not for first tests.</div>
+        <div class="e"><b>Why BTC is off</b><br>BTC HTLC signing is not active until V15; the BTC builder is a stub.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- READINESS -->
+  <div class="panel" id="p-readiness">
+    <div class="card">
+      <h2>Readiness checklist</h2>
+      <p class="muted">Only <span class="tag live">live</span> items are verified by this page (via the public <code>/rpc</code>). <span class="tag self">self</span> items you must verify yourself on your machines — the website cannot inspect your node binary, flags or hashrate. Be honest with yourself.</p>
+      <div style="margin-top:16px">
+        <div class="rk"><span class="ic" id="rkHeightIc">…</span><span class="lab">Current height reached <b>15,010+</b> (settle past the fork before any HTLC) <span class="tag live">live</span><div class="muted" id="rkHeightTxt">checking height…</div></span></div>
+        <div class="rk"><span class="ic" id="rkNodeIc">…</span><span class="lab">Public node RPC reachable <span class="tag live">live</span><div class="muted" id="rkNodeTxt">checking…</div></span></div>
+        <div class="rk"><input type="checkbox" id="ckCommit"><span class="lab">VPS node + Beelink miner rebuilt at the V14 commit (<code>b57c41ed</code> or later) <span class="tag self">self</span><div class="muted">run <code>git rev-parse --short HEAD</code> on both</div></span></div>
+        <div class="rk"><input type="checkbox" id="ckFlags"><span class="lab">Both built with <code>SOST_ENABLE_PHASE2_SBPOW=ON</code> and <code>SOST_TESTNET_FORKS=OFF</code> <span class="tag self">self</span><div class="muted">grep CMakeCache.txt on both</div></span></div>
+        <div class="rk"><input type="checkbox" id="ckRestart"><span class="lab">Node restarted &amp; miner relaunched on the new binaries <span class="tag self">self</span></span></div>
+        <div class="rk"><input type="checkbox" id="ckExplorer"><span class="lab">Explorer height matches your node tip (no divergence) <span class="tag self">self</span></span></div>
+        <div class="rk"><input type="checkbox" id="ckReject"><span class="lab">No <code>REJECTED block</code> / <code>invalid</code> / <code>consensus</code> in node logs <span class="tag self">self</span></span></div>
+        <div class="rk"><input type="checkbox" id="ckHash"><span class="lab">Majority of hashrate is on the new binary (coordinate miners BEFORE the first HTLC) <span class="tag self">self</span></span></div>
+      </div>
+      <div id="readyVerdict" class="warnmsg amber" style="margin-top:16px">Readiness: not evaluated yet.</div>
+      <p class="muted" style="margin-top:8px">This checklist is advisory. Ticking boxes does not make the swap safe — it records that you checked. The hard invariant: <b>do not create the first HTLC until height ≥ 15,010 AND every box is genuinely true.</b></p>
+    </div>
+  </div>
+
+  <!-- REFUND TEST -->
+  <div class="panel" id="p-refund">
+    <div class="card" id="founderGate">
+      <h2>Founder unlock</h2>
+      <p>The command generators are locked until you confirm this is founder-only use. Type exactly: <b>I UNDERSTAND THIS IS FOUNDER-ONLY</b></p>
+      <input class="fi gate-input" id="gateInput" placeholder="type the sentence to unlock" autocomplete="off">
+      <div id="gateMsg" class="warnmsg amber" style="display:none"></div>
+    </div>
+    <div id="refundBody" class="locked">
+      <div class="card">
+        <h2>Test 1 — REFUND only (do this first)</h2>
+        <p>The safest first test: lock a tiny amount of SOST, let the timeout pass, and recover it by refund. If refund works, you know you can never get stuck. <b>No counterparty, no EVM, no claim.</b></p>
+        <div class="warnmsg amber">Prerequisites: a spendable SOST UTXO (txid, vout, amount, your pkh — from your wallet), height ≥ 15,010, and the smallest viable amount. The CLI builders output an <b>unsigned</b> tx — you sign + <code>sendrawtransaction</code> yourself.</div>
+
+        <h3>Step A — generate a fresh secret + hashlock (in your browser, never sent)</h3>
+        <button class="btn green" id="genSecret">Generate secret + hashlock</button>
+        <div id="secretOut" style="display:none">
+          <label class="fl">secret S (32 bytes hex) — KEEP PRIVATE, save it</label>
+          <input class="fi" id="secretHex" readonly>
+          <label class="fl">hashlock H = sha256(S)</label>
+          <input class="fi" id="hashlockHex" readonly>
+          <div class="warnmsg amber">Saved only in this tab's memory. Use “Download swap log” below to keep a copy. It is never uploaded.</div>
+        </div>
+
+        <h3>Step B — your inputs</h3>
+        <label class="fl">sost-cli prefix (path)</label>
+        <input class="fi" id="cliPrefix" value="./sost-cli">
+        <div class="grid2">
+          <div><label class="fl">prev_txid (your UTXO)</label><input class="fi" id="rPrevTxid" placeholder="64-hex txid"></div>
+          <div><label class="fl">prev_vout</label><input class="fi" id="rPrevVout" placeholder="0"></div>
+          <div><label class="fl">prev_amount (SOST)</label><input class="fi" id="rPrevAmt" placeholder="e.g. 0.10000000"></div>
+          <div><label class="fl">prev_pkh (your pkh, 20-byte hex)</label><input class="fi" id="rPrevPkh" placeholder="40-hex"></div>
+          <div><label class="fl">lock_amount (SOST) — tiny!</label><input class="fi" id="rLockAmt" placeholder="e.g. 0.01000000"></div>
+          <div><label class="fl">fee (SOST)</label><input class="fi" id="rFee" placeholder="e.g. 0.00010000"></div>
+          <div><label class="fl">your refund_pkh (20-byte hex)</label><input class="fi" id="rRefundPkh" placeholder="40-hex (usually = prev_pkh)"></div>
+          <div><label class="fl">refund_height (current + margin)</label><input class="fi" id="rRefundHeight" placeholder="current + ~20"></div>
+        </div>
+        <div class="muted" id="rHeightHint" style="margin-top:6px"></div>
+        <button class="btn" id="genRefundCmds">Generate refund-test commands</button>
+        <div id="refundCmdOut"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLAIM -->
+  <div class="panel" id="p-claim">
+    <div class="card">
+      <h2>Test 2 — full CLAIM flow</h2>
+      <p>Only attempt a claim after a refund test has succeeded. Native ETH/BNB only, cents-level amounts.</p>
+      <div class="rk"><input type="checkbox" id="ckRefundDone"><span class="lab"><b>Refund-only test completed successfully</b> (unlocks the claim generator)</span></div>
+      <div id="claimBody" class="locked" style="margin-top:8px">
+        <label class="fl">Counterparty EVM asset for this test</label>
+        <select class="fi" id="claimAsset">
+          <option value="native-eth">ETH (native) — recommended</option>
+          <option value="native-bnb">BNB (native) — recommended</option>
+          <option value="erc20">An ERC-20 token (not recommended yet)</option>
+          <option value="paxg-xaut-usdt">PAXG / XAUT / USDT (DO NOT use yet)</option>
+        </select>
+        <div id="assetWarn"></div>
+        <p style="margin-top:14px">Flow: (1) you generate S/H; (2) you LOCK SOST with H + your refund_height; (3) counterparty LOCKs the EVM side with the same H and an <b>earlier</b> timeout; (4) you confirm their lock (amount + hashlock) on the EVM explorer; (5) you CLAIM the EVM side, revealing S; (6) counterparty CLAIMs your SOST with the now-public S.</p>
+        <div class="grid2">
+          <div><label class="fl">lock_txid (your SOST lock)</label><input class="fi" id="cLockTxid" placeholder="64-hex"></div>
+          <div><label class="fl">lock_vout</label><input class="fi" id="cLockVout" placeholder="0"></div>
+          <div><label class="fl">lock_amount (SOST)</label><input class="fi" id="cLockAmt" placeholder="same as locked"></div>
+          <div><label class="fl">preimage S (revealed at claim)</label><input class="fi" id="cPreimage" placeholder="64-hex secret"></div>
+          <div><label class="fl">claim_dest_pkh (who receives)</label><input class="fi" id="cDestPkh" placeholder="40-hex"></div>
+          <div><label class="fl">marker_dust_amount (SOST)</label><input class="fi" id="cDust" placeholder="e.g. 0.00000546"></div>
+          <div><label class="fl">fee (SOST)</label><input class="fi" id="cFee" placeholder="e.g. 0.00010000"></div>
+        </div>
+        <button class="btn" id="genClaimCmds">Generate claim command</button>
+        <div id="claimCmdOut"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="panel" id="p-status">
+    <div class="card">
+      <h2>Swap status &amp; logbook</h2>
+      <p>Paste your swap identifiers to generate the read-only status command and to keep a local logbook. Your <b>secret stays local</b> and is never included in any upload.</p>
+      <div class="grid2">
+        <div><label class="fl">SOST lock_txid</label><input class="fi" id="sLockTxid"></div>
+        <div><label class="fl">lock_vout</label><input class="fi" id="sLockVout" placeholder="0"></div>
+        <div><label class="fl">hashlock H</label><input class="fi" id="sHashlock"></div>
+        <div><label class="fl">refund_height</label><input class="fi" id="sRefundHeight"></div>
+        <div><label class="fl">EVM lock txid (optional)</label><input class="fi" id="sEvmTxid"></div>
+        <div><label class="fl">secret S (LOCAL only — never sent)</label><input class="fi" id="sSecret" placeholder="optional, stays in this tab"></div>
+      </div>
+      <button class="btn cyan" id="genStatusCmd">Generate status command</button>
+      <button class="btn cyan" id="queryStatus">Query node (read-only)</button>
+      <button class="btn ghost" id="dlLog">Download swap log (JSON, no keys-to-server)</button>
+      <button class="btn ghost" id="copyBundle">Copy emergency bundle (no private key)</button>
+      <div id="statusOut"></div>
+    </div>
+  </div>
+
+  <!-- EMERGENCY -->
+  <div class="panel" id="p-emergency">
+    <div class="card">
+      <h2>Emergency plan</h2>
+      <div class="warnmsg err"><b>STOP rule:</b> at any sign of trouble — do NOT create more HTLCs, preserve all logs, and follow the matching scenario below. (Full runbook: <code>docs/ATOMIC_SWAP_V14_OPERATIONS.md</code>, section E.)</div>
+      <h3>1 · Before the first HTLC (benign window)</h3>
+      <p>Reaching block 15,000 changes nothing until an HTLC is mined. If miner coverage is unsafe or you have doubts: simply <b>do not create an HTLC</b>. The clean lever is to revert the gate to <code>INT64_MAX</code>, rebuild, redeploy and re-announce — no fork, because no HTLC ever existed.</p>
+      <h3>2 · Network split (chain diverges)</h3>
+      <p>Symptoms: peers stuck, your tip diverges from the explorer, <code>REJECTED block</code> in logs. Actions: stop all tests; create no more HTLCs; tell miners to rebuild on the new binary &amp; resync; the canonical chain is the majority-hashrate (your) chain; compare <code>getblockcount</code> / tip hash across node, explorer and peers before doing anything.</p>
+      <h3>3 · Bug AFTER an HTLC is mined (worst case)</h3>
+      <p>If you can't claim, can't refund, a tx is rejected, the EVM side mismatches, or a reorg hits: create no more HTLCs; harden the DO-NOT-USE banner; preserve everything (SOST txid, EVM txid, secret/hashlock, refund_height, node logs, block height, exact commands); check whether funds are recoverable via refund after the timeout; if it is a consensus bug, prepare a coordinated emergency point-release / fork; if it is a CLI/contract bug, patch and do not use again until tested.</p>
+      <div class="warnmsg amber">Golden rule: keep the first HTLC tiny and native, run REFUND before CLAIM, and don't scale until several clean cycles — so you never reach scenario 3 with real value.</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer"><div class="container"><p>SOST Atomic Swap Console · founder-only · DO NOT USE · this page never holds keys, signs, or moves funds · © SOST Protocol</p></div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+const HEX=/^[0-9a-fA-F]+$/;
+let CUR_HEIGHT=null;
+
+/* ---- tabs ---- */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$('p-'+t.dataset.p).classList.add('active');
+}));
+
+/* ---- live RPC (public read; no auth) ---- */
+async function rpc(method,params){
+  const r=await fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({jsonrpc:'2.0',id:1,method,params:params||[]})});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;
+}
+async function refreshHeight(){
+  try{
+    const h=await rpc('getblockcount');CUR_HEIGHT=h;
+    $('heightChip').textContent='Height: '+h;
+    $('rkNodeIc').textContent='✅';$('rkNodeTxt').textContent='public /rpc reachable';
+    let st,cls;
+    if(h<15000){st='PRE-ACTIVATION (gate at 15,000)';cls='amber';$('rkHeightIc').textContent='⏳';}
+    else if(h<15010){st='ACTIVE — WAIT, settle to 15,010+';cls='amber';$('rkHeightIc').textContent='⏳';}
+    else{st='ACTIVE — founder window (DO NOT USE publicly)';cls='red';$('rkHeightIc').textContent='✅';}
+    const chip=$('statusChip');chip.className='chip '+cls;chip.innerHTML='<span class="dot"></span>'+esc(st);
+    $('rkHeightTxt').textContent='height '+h+(h>=15010?' — past 15,010 ✓':' — need 15,010+');
+    $('rHeightHint').textContent=CUR_HEIGHT!=null?('current height '+CUR_HEIGHT+' → suggested refund_height ≈ '+(CUR_HEIGHT+20)):'';
+    evalReady();
+  }catch(e){
+    $('heightChip').textContent='Height: unreachable';
+    $('rkNodeIc').textContent='⚠️';$('rkNodeTxt').textContent='RPC unreachable: '+esc(e.message);
+    const chip=$('statusChip');chip.className='chip amber';chip.innerHTML='<span class="dot"></span>Status: node unreachable';
+  }
+}
+function evalReady(){
+  const selfBoxes=['ckCommit','ckFlags','ckRestart','ckExplorer','ckReject','ckHash'];
+  const selfOk=selfBoxes.every(id=>$(id).checked);
+  const heightOk=CUR_HEIGHT!=null&&CUR_HEIGHT>=15010;
+  const v=$('readyVerdict');
+  if(heightOk&&selfOk){v.className='warnmsg ok';v.innerHTML='✅ Height ≥ 15,010 and all self-checks ticked. You <i>may</i> proceed to a tiny REFUND test — at your own founder risk. Still DO NOT use publicly.';}
+  else{const miss=[];if(!heightOk)miss.push('height ≥ 15,010');const n=selfBoxes.filter(id=>!$(id).checked).length;if(n)miss.push(n+' self-check(s)');
+    v.className='warnmsg amber';v.innerHTML='⏳ Not ready — missing: '+esc(miss.join(', '))+'. The first-HTLC generators stay guarded.';}
+}
+['ckCommit','ckFlags','ckRestart','ckExplorer','ckReject','ckHash'].forEach(id=>$(id).addEventListener('change',evalReady));
+
+/* ---- founder gate ---- */
+$('gateInput').addEventListener('input',function(){
+  const ok=this.value.trim()==='I UNDERSTAND THIS IS FOUNDER-ONLY';
+  const m=$('gateMsg');m.style.display='block';
+  if(ok){m.className='warnmsg ok';m.textContent='Unlocked. Generators produce commands only — never keys or signatures.';
+    $('refundBody').classList.remove('locked');}
+  else{m.className='warnmsg amber';m.textContent='Type the exact sentence to unlock.';$('refundBody').classList.add('locked');}
+});
+
+/* ---- secret + hashlock (Web Crypto, local only) ---- */
+function toHex(buf){return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+$('genSecret').addEventListener('click',async function(){
+  const s=new Uint8Array(32);crypto.getRandomValues(s);
+  const H=await crypto.subtle.digest('SHA-256',s);
+  $('secretHex').value=toHex(s.buffer);$('hashlockHex').value=toHex(H);$('secretOut').style.display='block';
+});
+
+/* ---- refund command generator ---- */
+function gv(id){return ($(id).value||'').trim();}
+function heightGuard(){
+  if(CUR_HEIGHT==null)return 'Node height unknown — refresh and confirm height ≥ 15,010 before running anything.';
+  if(CUR_HEIGHT<15010)return 'Height '+CUR_HEIGHT+' < 15,010 — Atomic Swap not ready. Commands are for preview only; DO NOT run them yet.';
+  return null;
+}
+$('genRefundCmds').addEventListener('click',function(){
+  const out=$('refundCmdOut');const errs=[];
+  const cli=gv('cliPrefix')||'./sost-cli';
+  const H=gv('hashlockHex');
+  const f={prev_txid:gv('rPrevTxid'),prev_vout:gv('rPrevVout'),prev_amount:gv('rPrevAmt'),prev_pkh:gv('rPrevPkh'),
+    lock_amount:gv('rLockAmt'),fee:gv('rFee'),refund_pkh:gv('rRefundPkh'),refund_height:gv('rRefundHeight')};
+  if(!H||H.length!==64)errs.push('Generate a secret + hashlock first (step A).');
+  if(!HEX.test(f.prev_txid)||f.prev_txid.length!==64)errs.push('prev_txid must be 64-hex.');
+  if(!/^\d+$/.test(f.prev_vout))errs.push('prev_vout must be an integer.');
+  if(!(parseFloat(f.prev_amount)>0))errs.push('prev_amount must be > 0.');
+  if(!HEX.test(f.prev_pkh)||f.prev_pkh.length!==40)errs.push('prev_pkh must be 40-hex (20 bytes).');
+  if(!(parseFloat(f.lock_amount)>0))errs.push('lock_amount must be > 0 (use the smallest viable).');
+  if(parseFloat(f.lock_amount)>parseFloat(f.prev_amount))errs.push('lock_amount cannot exceed prev_amount.');
+  if(!(parseFloat(f.fee)>0))errs.push('fee must be > 0.');
+  if(!HEX.test(f.refund_pkh)||f.refund_pkh.length!==40)errs.push('refund_pkh must be 40-hex (20 bytes).');
+  if(!/^\d+$/.test(f.refund_height))errs.push('refund_height must be an integer.');
+  else if(CUR_HEIGHT!=null&&parseInt(f.refund_height)<=CUR_HEIGHT+5)errs.push('refund_height should be well above current height ('+CUR_HEIGHT+') — e.g. +20.');
+  if(parseFloat(f.lock_amount)>1)errs.push('lock_amount > 1 SOST on a first test — use cents.');
+  if(errs.length){out.innerHTML='<div class="warnmsg err">'+errs.map(esc).join('<br>')+'</div>';return;}
+  // claim_pkh is irrelevant for a refund-only test; use refund_pkh as a harmless placeholder.
+  const claim_pkh=f.refund_pkh;
+  const guard=heightGuard();
+  const lock=cli+' createhtlclock '+f.prev_txid+' '+f.prev_vout+' '+f.prev_amount+' '+f.prev_pkh+' '+H+' '+f.refund_height+' '+claim_pkh+' '+f.refund_pkh+' '+f.lock_amount+' '+f.fee;
+  const refund=cli+' refundhtlc <LOCK_TXID> 0 '+f.lock_amount+' '+f.refund_pkh+' '+f.fee;
+  out.innerHTML=(guard?'<div class="warnmsg amber">'+esc(guard)+'</div>':'')+
+    '<div class="warnmsg ok">Commands generated. They output UNSIGNED tx — you sign + broadcast yourself.</div>'+
+    '<p class="muted" style="margin-top:10px">1) Build the LOCK (unsigned), then sign it and broadcast; note the resulting lock_txid:</p>'+
+    block(lock)+block('# sign the unsigned hex with your wallet, then:\n'+cli+' sendrawtransaction <SIGNED_LOCK_HEX>')+
+    '<p class="muted">2) Confirm it is on chain:</p>'+block(cli+' gethtlcstatus <LOCK_TXID> 0')+
+    '<p class="muted">3) WAIT until height ≥ refund_height ('+esc(f.refund_height)+'), then build + sign + broadcast the REFUND (replace &lt;LOCK_TXID&gt;):</p>'+
+    block(refund)+block(cli+' sendrawtransaction <SIGNED_REFUND_HEX>')+
+    '<p class="muted">4) Confirm your balance returned and status shows refunded.</p>'+
+    '<div class="warnmsg amber">Refund is rejected before refund_height (rule R24). Inspect any unsigned tx first with <code>'+esc(cli)+' decodehtlc &lt;HEX&gt;</code>.</div>';
+});
+function block(s){return '<pre class="cmd">'+esc(s)+'</pre>';}
+
+/* ---- claim ---- */
+$('ckRefundDone').addEventListener('change',function(){$('claimBody').classList.toggle('locked',!this.checked);});
+$('claimAsset').addEventListener('change',function(){
+  const w=$('assetWarn');const v=this.value;
+  if(v==='paxg-xaut-usdt'){w.innerHTML='<div class="warnmsg err">PAXG / XAUT / USDT are non-standard / fee-on-transfer and are NOT validated — do not use them for a swap yet. Pick native ETH/BNB.</div>';}
+  else if(v==='erc20'){w.innerHTML='<div class="warnmsg amber">Generic ERC-20 not recommended for first swaps — accounting edge cases are untested. Prefer native ETH/BNB.</div>';}
+  else{w.innerHTML='<div class="warnmsg ok">Native asset — the recommended choice for founder testing.</div>';}
+});
+$('genClaimCmds').addEventListener('click',function(){
+  const out=$('claimCmdOut');const errs=[];const cli=gv('cliPrefix')||'./sost-cli';
+  if($('claimAsset').value==='paxg-xaut-usdt')errs.push('Selected asset class is blocked for testing (PAXG/XAUT/USDT).');
+  const f={t:gv('cLockTxid'),v:gv('cLockVout'),a:gv('cLockAmt'),p:gv('cPreimage'),d:gv('cDestPkh'),dust:gv('cDust'),fee:gv('cFee')};
+  if(!HEX.test(f.t)||f.t.length!==64)errs.push('lock_txid must be 64-hex.');
+  if(!/^\d+$/.test(f.v))errs.push('lock_vout must be an integer.');
+  if(!(parseFloat(f.a)>0))errs.push('lock_amount must be > 0.');
+  if(!HEX.test(f.p)||f.p.length!==64)errs.push('preimage S must be 64-hex (32 bytes).');
+  if(!HEX.test(f.d)||f.d.length!==40)errs.push('claim_dest_pkh must be 40-hex.');
+  if(!(parseFloat(f.dust)>0))errs.push('marker_dust_amount must be > 0.');
+  if(!(parseFloat(f.fee)>0))errs.push('fee must be > 0.');
+  if(errs.length){out.innerHTML='<div class="warnmsg err">'+errs.map(esc).join('<br>')+'</div>';return;}
+  const guard=heightGuard();
+  const claim=cli+' claimhtlc '+f.t+' '+f.v+' '+f.a+' '+f.p+' '+f.d+' '+f.dust+' '+f.fee;
+  out.innerHTML=(guard?'<div class="warnmsg amber">'+esc(guard)+'</div>':'')+
+    '<div class="warnmsg amber">Only claim AFTER you have confirmed the counterparty EVM lock (same hashlock + amount) on the EVM explorer. Claiming reveals S publicly.</div>'+
+    block(claim)+block(cli+' sendrawtransaction <SIGNED_CLAIM_HEX>')+
+    '<p class="muted">Then confirm: '+esc(cli)+' gethtlcstatus '+esc(f.t)+' '+esc(f.v)+'</p>';
+});
+
+/* ---- status ---- */
+function curLog(){return {sost_lock_txid:gv('sLockTxid'),lock_vout:gv('sLockVout'),hashlock:gv('sHashlock'),
+  refund_height:gv('sRefundHeight'),evm_lock_txid:gv('sEvmTxid'),note:'secret intentionally NOT included in shared/emergency exports',
+  current_height_seen:CUR_HEIGHT};}
+$('genStatusCmd').addEventListener('click',function(){
+  const cli=gv('cliPrefix')||'./sost-cli';const t=gv('sLockTxid'),v=gv('sLockVout')||'0';
+  if(!HEX.test(t)||t.length!==64){$('statusOut').innerHTML='<div class="warnmsg err">Enter a 64-hex lock_txid.</div>';return;}
+  $('statusOut').innerHTML=block(cli+' gethtlcstatus '+t+' '+v)+block(cli+' listhtlclocks   # sanity: your lock should appear');
+});
+$('queryStatus').addEventListener('click',async function(){
+  const t=gv('sLockTxid'),v=parseInt(gv('sLockVout')||'0');
+  if(!HEX.test(t)||t.length!==64){$('statusOut').innerHTML='<div class="warnmsg err">Enter a 64-hex lock_txid.</div>';return;}
+  $('statusOut').innerHTML='<div class="warnmsg amber">Querying node (read-only)…</div>';
+  try{const r=await rpc('gethtlcstatus',[t,v]);
+    $('statusOut').innerHTML='<div class="warnmsg ok">Node responded:</div>'+block(JSON.stringify(r,null,2));}
+  catch(e){$('statusOut').innerHTML='<div class="warnmsg amber">Read-only query failed (the public RPC may not expose this method): '+esc(e.message)+'. Use the generated command on your node instead.</div>';}
+});
+$('dlLog').addEventListener('click',function(){
+  const log=curLog();const s=gv('sSecret');
+  // The downloaded file stays on the user's disk. Secret included locally ONLY if the user typed it, with a loud note.
+  if(s)log.secret_LOCAL_FILE_ONLY=s;
+  const blob=new Blob([JSON.stringify(log,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sost_swap_log.json';a.click();
+  $('statusOut').innerHTML='<div class="warnmsg ok">Downloaded sost_swap_log.json to your disk. It was NOT uploaded.</div>';
+});
+$('copyBundle').addEventListener('click',function(){
+  const b=curLog();delete b.note;b.WARNING='emergency bundle — contains NO private key and NO secret';
+  navigator.clipboard.writeText(JSON.stringify(b,null,2)).then(()=>{
+    $('statusOut').innerHTML='<div class="warnmsg ok">Emergency bundle copied (txids/hashlock/refund_height only — no keys, no secret).</div>';
+  });
+});
+
+/* ---- boot ---- */
+refreshHeight();setInterval(refreshHeight,30000);
+</script>
+</body>
+</html>
