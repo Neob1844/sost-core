@@ -381,6 +381,7 @@
 <div class="footer"><div class="container"><p>SOST Atomic Swap Console · founder-only · DO NOT USE · this page never holds keys, signs, or moves funds · © SOST Protocol</p></div></div>
 
 <script src="js/atomic-swap-evm.js"></script>
+<script src="js/atomic-swap-htlc-runtime.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -601,8 +602,11 @@ $('evmSaveAddr').addEventListener('click',function(){
 $('evmCheckAddr').addEventListener('click',async function(){
   if(!HTLC){evmMsg('evmAddrMsg','err','Set an address first.');return;}
   try{const code=await ethReq('eth_getCode',[HTLC,'latest']);
-    if(!code||code==='0x'||code==='0x0')evmMsg('evmAddrMsg','err','No contract code at that address on this network — do NOT operate.');
-    else evmMsg('evmAddrMsg','ok','Contract code present ('+((code.length-2)/2)+' bytes). Still verify it is the audited AtomicSwapHTLC before using funds.');
+    const v=A.verifyCode(code,(typeof ASW_HTLC_RUNTIME!=='undefined')?ASW_HTLC_RUNTIME:null);
+    if(v==='EMPTY')evmMsg('evmAddrMsg','err','No contract code at that address on this network — do NOT operate.');
+    else if(v==='EXACT')evmMsg('evmAddrMsg','ok','✅ Bytecode EXACTLY matches the repo build of AtomicSwapHTLC ('+((code.length-2)/2)+' bytes). Still confirm the address + network on the explorer.');
+    else if(v==='DIFFERS')evmMsg('evmAddrMsg','amber','⚠️ Code present ('+((code.length-2)/2)+' bytes) but does NOT match the repo build (could be a different compiler/metadata or a different contract). Verify the source on the explorer before using funds.');
+    else evmMsg('evmAddrMsg','amber','Code present but no reference bytecode loaded to compare. Verify the source on the explorer.');
   }catch(e){evmMsg('evmAddrMsg','err','Code check failed: '+e.message);}
 });
 
@@ -618,10 +622,17 @@ async function tokenMeta(sym){
 function decodeStringRet(hex){try{var h=A.strip0x(hex);if(h.length<128)return null;var len=parseInt(h.slice(64,128),16);var s=h.slice(128,128+len*2);return decodeURIComponent(s.replace(/(..)/g,'%$1'));}catch(e){return null;}}
 
 async function assetChange(){
-  const sym=$('evmAsset').value;const isTok=sym!=='native';
+  let sym=$('evmAsset').value;const tw=$('evmTokenWarn');
+  // Native-first policy: ERC-20 disabled by default (contract is minimal; weird tokens are the
+  // UI's responsibility). Force native and explain.
+  if(sym!=='native'&&!A.ERC20_ENABLED){
+    $('evmAsset').value='native';sym='native';
+    tw.innerHTML='<div class="warnmsg amber"><b>ERC-20 disabled for now (native-first).</b> The minimal HTLC does not safely handle no-bool tokens (revert at lock) or fee-on-transfer tokens (funds get STUCK — e.g. PAXG). USDT/USDC/PAXG/XAUT stay off until SafeERC20 + balance-delta accounting + tests are added. Use native ETH/BNB.</div>';
+  }
+  const isTok=sym!=='native';
   $('evmErc20Row').style.display=isTok?'block':'none';
-  const tw=$('evmTokenWarn');
-  if(!isTok){$('evmAssetInfo').textContent=NET?('Native '+NET.native+' (18 decimals).'):'';tw.innerHTML='';return;}
+  if(!isTok){$('evmAssetInfo').textContent=NET?('Native '+NET.native+' (18 decimals).'):'';if(!tw.innerHTML)tw.innerHTML='';return;}
+  if(A.FEE_ON_TRANSFER.indexOf(sym)>=0){tw.innerHTML='<div class="warnmsg err"><b>'+sym+' is a fee-on-transfer token — BLOCKED.</b> The HTLC would record more than it receives and CLAIM/REFUND would revert, locking funds. Never use '+sym+' here.</div>';$('evmAsset').value='native';return assetChange();}
   if(A.FREEZE_RISK.indexOf(sym)>=0)tw.innerHTML='<div class="warnmsg amber"><b>Issuer-freeze risk:</b> '+sym+' can be frozen by its issuer (Tether/Circle/Paxos). If frozen mid-swap, the SOST side still refunds but the EVM side can become uncollectible. Verify the token address on the official explorer.</div>';
   if(!NET||!NET.tokens[sym]){$('evmAssetInfo').innerHTML='<span style="color:var(--red-bright)">'+sym+' has no reference address on '+(NET?NET.name:'this network')+'. Not available here.</span>';return;}
   try{const m=await tokenMeta(sym);let line='Token '+esc(m.symbol)+' · decimals '+m.decimals+' · <code>'+esc(m.address)+'</code> (verify on explorer)';
@@ -650,8 +661,10 @@ function evmGuards(){
 function v0x(s){s=(s||'').trim();return s.startsWith('0x')?s:('0x'+s);}
 async function previewSend(label,to,data,valueWeiHex){
   const out=$('evmActionOut');
-  out.innerHTML='<div class="warnmsg amber">'+esc(label)+' — review the calldata, MetaMask will ask you to sign:</div>'+
-    '<pre class="cmd">to: '+esc(to)+'\ndata: '+esc(data)+(valueWeiHex?('\nvalue: '+esc(valueWeiHex)+' wei'):'')+'</pre>';
+  const netLine='network: '+(NET?NET.name:'?')+' (chainId '+CHAINID+')'+(isTestnet?(isTestnet()?' · TESTNET rehearsal':' · MAINNET'):'');
+  out.innerHTML='<div class="warnmsg err"><b>⚠ Review before signing in MetaMask — DO NOT sign unless ALL of this is correct:</b></div>'+
+    '<div class="warnmsg amber">'+esc(label)+'</div>'+
+    '<pre class="cmd">'+esc(netLine)+'\ncontract: '+esc(to)+'\nfrom: '+esc(ACCOUNT||'?')+'\ndata: '+esc(data)+(valueWeiHex?('\nvalue: '+esc(valueWeiHex)+' wei'):'')+'</pre>';
   const p={from:ACCOUNT,to:to,data:data};if(valueWeiHex)p.value=valueWeiHex;
   const txh=await ethReq('eth_sendTransaction',[p]);
   const link=NET?(NET.explorerTx+txh):txh;
@@ -684,8 +697,16 @@ $('evmAllowance').addEventListener('click',async function(){
     evmMsg('evmActionOut','ok','allowance to HTLC: <b>'+A.fromBaseUnits(A.decUint(al),m.decimals)+'</b> '+m.symbol+' · your balance: <b>'+A.fromBaseUnits(A.decUint(ba),m.decimals)+'</b> '+m.symbol);
   }catch(e){evmMsg('evmActionOut','err',esc(e.message));}
 });
+function isTestnet(){return CHAINID==='0xaa36a7'||CHAINID==='0x61';}
 $('evmLock').addEventListener('click',async function(){
   const g=evmGuards();if(g){evmMsg('evmActionOut','err',esc(g));return;}
+  // Hard gate on a real mainnet LOCK: the SOST V14 fork must be settled (height >= 15,010) and the
+  // founder readiness self-checks must be ticked. Testnet (Sepolia/BNB-testnet) is a free rehearsal.
+  if(!isTestnet()){
+    if(CUR_HEIGHT==null||CUR_HEIGHT<15010){evmMsg('evmActionOut','err','LOCK blocked: SOST height '+(CUR_HEIGHT==null?'unknown':CUR_HEIGHT)+' < 15,010. Wait for the V14 fork to settle (or rehearse on Sepolia / BNB testnet first).');return;}
+    const selfBoxes=['ckCommit','ckFlags','ckRestart','ckExplorer','ckReject','ckHash'];
+    if(!selfBoxes.every(id=>$(id).checked)){evmMsg('evmActionOut','err','LOCK blocked: complete the Readiness checklist (all self-checks) before a real mainnet lock.');return;}
+  }
   try{const f=readSwapInputs();const errs=[];
     if(!A.isBytes32(f.swapId))errs.push('swapId must be 32-byte hex (use Random).');
     if(!A.isBytes32(f.hashlock))errs.push('hashlock must be 32-byte hex.');
@@ -711,7 +732,19 @@ $('evmClaim').addEventListener('click',async function(){
   const s=prompt('Paste the secret S (32-byte hex). It is sent to the contract as the preimage and becomes public on claim:');
   if(!s)return;const pre=v0x(s.trim());const f=readSwapInputs();
   if(!A.isBytes32(f.swapId)||!A.isBytes32(pre)){evmMsg('evmActionOut','err','swapId and secret must be 32-byte hex.');return;}
-  try{await previewSend('claim (reveals secret)',HTLC,A.dataClaim(f.swapId,pre));}catch(e){evmMsg('evmActionOut','err',esc(e.message));}
+  try{
+    // Local pre-check: sha256(secret) must equal the on-chain hashlock for this swap. Saves gas and
+    // prevents a confusing on-chain WRONG_PREIMAGE revert; also confirms the swap is CLAIMABLE.
+    const ret=await ethReq('eth_call',[{to:HTLC,data:A.dataGetSwap(f.swapId)},'latest']);
+    const sw=A.decodeGetSwap(ret);
+    const hb=await crypto.subtle.digest('SHA-256',new Uint8Array(A.strip0x(pre).match(/../g).map(h=>parseInt(h,16))));
+    const computed='0x'+toHex(hb);
+    if(sw.state!=='LOCKED'){evmMsg('evmActionOut','err','Swap is '+esc(sw.state)+', not LOCKED — cannot claim.');return;}
+    if(computed.toLowerCase()!==sw.hashlock.toLowerCase()){evmMsg('evmActionOut','err','Local check failed: sha256(secret) ('+esc(computed)+') ≠ on-chain hashlock ('+esc(sw.hashlock)+'). Wrong secret — not sending.');return;}
+    const bn=parseInt(await ethReq('eth_blockNumber'),16);
+    if(bn>=parseInt(sw.refundTime,10)){evmMsg('evmActionOut','amber','Warning: current block '+bn+' ≥ refundTime '+sw.refundTime+' — the contract will reject the claim (TIMEOUT_PASSED). Use refund instead.');return;}
+    await previewSend('claim (reveals secret · sha256 verified locally)',HTLC,A.dataClaim(f.swapId,pre));
+  }catch(e){evmMsg('evmActionOut','err',esc(e.message));}
 });
 $('evmRefund').addEventListener('click',async function(){
   const g=evmGuards();if(g){evmMsg('evmActionOut','err',esc(g));return;}

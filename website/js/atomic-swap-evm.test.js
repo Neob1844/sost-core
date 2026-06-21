@@ -101,4 +101,32 @@ t('config: networks present, htlc null (not deployed), tokens have addresses', f
   assert.deepStrictEqual(A.FREEZE_RISK.sort(), ['PAXG', 'USDC', 'USDT', 'XAUT']);
 });
 
+t('native-first policy + fee-on-transfer blacklist', function () {
+  assert.strictEqual(A.ERC20_ENABLED, false);              // ERC20 off by default
+  assert.ok(A.FEE_ON_TRANSFER.indexOf('PAXG') >= 0);       // PAXG hard-blocked (fee-on-transfer)
+});
+
+t('testnets present (native-only), mainnets present', function () {
+  assert.ok(A.NETWORKS['0xaa36a7'] && A.NETWORKS['0x61']); // Sepolia + BNB testnet
+  assert.deepStrictEqual(A.NETWORKS['0xaa36a7'].tokens, {});
+  assert.strictEqual(A.NETWORKS['0xaa36a7'].htlc, null);
+});
+
+t('verifyCode classifies empty / exact / differs', function () {
+  assert.strictEqual(A.verifyCode('0x', '0xabcd'), 'EMPTY');
+  assert.strictEqual(A.verifyCode('0x0', '0xabcd'), 'EMPTY');
+  assert.strictEqual(A.verifyCode('0xABcd', '0xabcd'), 'EXACT');   // case-insensitive
+  assert.strictEqual(A.verifyCode('0xdead', '0xabcd'), 'DIFFERS');
+  assert.strictEqual(A.verifyCode('0xab', null), 'UNKNOWN');
+});
+
+t('vendored runtime bytecode matches the forge artifact', function () {
+  var fs = require('fs'), path = require('path');
+  var runtime = require('./atomic-swap-htlc-runtime.js');
+  var art = JSON.parse(fs.readFileSync(path.join(__dirname,
+    '../../contracts/atomic-swap/out/AtomicSwapHTLC.sol/AtomicSwapHTLC.json'), 'utf8'));
+  assert.strictEqual(runtime.toLowerCase(), art.deployedBytecode.object.toLowerCase());
+  assert.strictEqual(A.verifyCode(art.deployedBytecode.object, runtime), 'EXACT');
+});
+
 console.log('ASWEVM codec: ' + n + ' tests passed');

@@ -63,8 +63,29 @@
     }
   };
 
+  // testnets (native-only) — recommended for first real tests before mainnet
+  NETWORKS['0xaa36a7'] = { name: 'Sepolia (testnet)', native: 'ETH',
+    explorerTx: 'https://sepolia.etherscan.io/tx/', blockTimeSec: 12, htlc: null, tokens: {} };
+  NETWORKS['0x61'] = { name: 'BNB Chain testnet', native: 'tBNB',
+    explorerTx: 'https://testnet.bscscan.com/tx/', blockTimeSec: 3, htlc: null, tokens: {} };
+
+  // Native-first policy. ERC-20 is DISABLED by default: the minimal HTLC does not handle weird
+  // tokens (no-bool return reverts at lock; fee-on-transfer gets STUCK) — the UI must enforce this.
+  // Flip to true only after SafeERC20 wrapping + balance-delta accounting + tests are in place.
+  var ERC20_ENABLED = false;
+
   // issuer-freeze warning (mirrors the contract comment)
   var FREEZE_RISK = ['USDT', 'USDC', 'PAXG', 'XAUT'];
+  // fee-on-transfer tokens are UNSUPPORTED by the contract (funds get stuck) — hard blacklist.
+  // PAXG (Paxos Gold) charges an on-chain transfer fee → never lock it in this HTLC.
+  var FEE_ON_TRANSFER = ['PAXG'];
+
+  // compare on-chain code to the repo build. expectedRuntime = ASW_HTLC_RUNTIME (vendored).
+  function verifyCode(codeHex, expectedRuntime) {
+    if (!codeHex || codeHex === '0x' || codeHex === '0x0') return 'EMPTY';
+    if (!expectedRuntime) return 'UNKNOWN';
+    return (codeHex.toLowerCase() === expectedRuntime.toLowerCase()) ? 'EXACT' : 'DIFFERS';
+  }
 
   // ---------------- low-level hex/abi helpers ----------------
   function strip0x(h) { return (h || '').replace(/^0x/i, ''); }
@@ -179,6 +200,7 @@
 
   return {
     SEL: SEL, TOPIC: TOPIC, STATE: STATE, NETWORKS: NETWORKS, FREEZE_RISK: FREEZE_RISK,
+    ERC20_ENABLED: ERC20_ENABLED, FEE_ON_TRANSFER: FEE_ON_TRANSFER, verifyCode: verifyCode,
     strip0x: strip0x, isBytes32: isBytes32, isAddress: isAddress,
     toBaseUnits: toBaseUnits, fromBaseUnits: fromBaseUnits,
     dataLockNative: dataLockNative, dataLockERC20: dataLockERC20, dataClaim: dataClaim,

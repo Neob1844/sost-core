@@ -98,8 +98,15 @@ reads, the EVM side signs through the user's MetaMask. Tabs:
   to Ethereum / BNB Chain and pastes the address in the console, EVM operations are disabled by
   design (the console refuses to call a non-existent contract). Deploying an unaudited contract to
   mainnet is an explicit founder decision and a separate step.
-- No external audit, no reorg tests, no live cross-chain e2e; non-standard ERC-20 (USDT/PAXG/XAUT)
-  untested — native ETH/BNB first.
+- **ERC-20 is DISABLED in the console (native ETH/BNB only).** The minimal HTLC does not handle
+  weird tokens: no-bool (USDT-style) reverts at lock (safe); fee-on-transfer (e.g. PAXG) gets STUCK.
+  Re-enable only after SafeERC20 + balance-delta accounting + tests. Console hard-blocks PAXG and
+  flags issuer-freeze on USDT/USDC/PAXG/XAUT.
+- Console real-LOCK is gated on SOST height ≥ 15,010 + readiness checklist (mainnet); Sepolia /
+  BNB-testnet allowed as a free rehearsal. CLAIM does a local sha256(secret)==hashlock check. The
+  console verifies deployed bytecode against the repo build. Codec verified end-to-end on anvil
+  (lock→getSwap→claim) and byte-identical to `cast`.
+- No external audit, no reorg tests, no live cross-chain e2e.
 - `refundTime` (EVM block.number) vs SOST `refund_height` ordering is wallet/operator-enforced, not
   contract-enforced.
 - **SOST ↔ BTC is deferred to V15** (BTC HTLC signing is a stub; the console excludes BTC entirely).

@@ -210,3 +210,32 @@ this commit). Solc `0.8.24`. Optimizer ON, runs 200.
   Solidity compiler does not detect this through the loop. Marking
   it `view` would still let the call go through; leaving it `public`
   matches the rest of the test conventions in this file.
+
+## V14 founder web console — verification & UI hardening (2026-06-21)
+
+The EVM side is now driven by the founder console (`website/atomic-swap-console.html` +
+`website/js/atomic-swap-evm.js`, a dependency-free ABI codec). This round's double-verification:
+
+- **End-to-end on local `anvil`:** deployed the real contract and ran `lockNative` → `getSwap` →
+  `claim` using the **exact calldata the console codec produces** → LOCKED→CLAIMED, funds delivered,
+  wrong-preimage claim reverts. Codec selectors are byte-identical to `cast` (selectors:
+  lockNative 0xbef939c1, lockERC20 0x9cbaca50, claim 0x84cc9dfb, refund 0x7249fbb6, getSwap
+  0x3da0e66e). `forge test` 57/57; codec unit tests 15/15.
+
+- **UI policy now enforces the "weird-ERC20 is the UI's job" decision:**
+  - `ERC20_ENABLED = false` → **native ETH/BNB only** until SafeERC20 + balance-delta land.
+  - `FEE_ON_TRANSFER = ['PAXG']` → PAXG hard-blocked (would get stuck per
+    `test_lockERC20_feeOnTransferTokenIsUnsupported_...`); USDT/USDC/PAXG/XAUT carry freeze warnings.
+  - Real mainnet **LOCK gated** on SOST height ≥ 15,010 + full readiness checklist; Sepolia /
+    BNB-testnet allowed as a free rehearsal.
+  - **Local `sha256(secret) == on-chain hashlock`** pre-check before CLAIM (+ state/timeout check).
+  - **Bytecode verification**: `eth_getCode` vs the vendored repo runtime
+    (`website/js/atomic-swap-htlc-runtime.js`, kept in sync with `out/.../AtomicSwapHTLC.json`).
+  - Pre-sign banner shows network + chainId + contract + from + calldata + value.
+
+- **Contract header updated** to current reality (gate = V14_HEIGHT, founder-only, EVM-only, NOT
+  audited, BTC→V15). Logic unchanged; 57/57 tests still green.
+
+Still REQUIRED before any non-founder use: external audit; live cross-chain e2e with reorg
+handling; SafeERC20 + balance-delta before re-enabling ERC-20; documented confirmation/reorg-depth
+policy in the console.

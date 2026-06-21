@@ -36,12 +36,18 @@ pragma solidity 0.8.24;
 // the SOST chain) but the EVM side becomes uncollectible until the
 // issuer unfreezes. The UI MUST surface this risk to users.
 //
-// This contract has been NOT been deployed, has NOT been audited, and
-// is NOT active. The SOST-side activation gate
-// (ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT in include/sost/atomic_swap.h)
-// stays at INT64_MAX (sentinel OFF) until the full Phase 4 stack
-// (BTC signing + this contract + coordinator + external review) is
-// complete.
+// AUDIT / DEPLOY STATUS: this contract has NOT been externally audited.
+// The SOST-side activation gate (ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT in
+// include/sost/atomic_swap.h) is now V14_HEIGHT (block 15,000): the
+// EVM-only atomic swap is enabled at V14 for FOUNDER-ONLY use, at the
+// founder's own risk, with no public or audited guarantee. SOST<->BTC is
+// deferred to V15 (BTC HTLC signing is not active). Deploying this
+// contract to any mainnet/testnet is a separate, explicit founder action;
+// the web console refuses to operate against an unset contract address.
+// ERC-20 weird-token handling (no-bool return, fee-on-transfer) is
+// intentionally out of scope of this minimal HTLC and MUST be enforced by
+// the wallet/UI (native-first; fee-on-transfer tokens blacklisted) — see
+// docs/design/ATOMIC_SWAP_EVM_AUDIT_CHECKLIST.md.
 //
 // =============================================================================
 
