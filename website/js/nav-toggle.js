@@ -290,7 +290,9 @@
     var nav=document.querySelector('nav');
     if(!nav) return;
     if(nav.querySelector('a[href="news.html"]')) return;          // already present
-    var watch=nav.querySelector('a[onclick="openSv()"]');
+    // Anchor on the Atomic Swap icon (the old WATCH icon was repurposed into it); fall back to
+    // the legacy WATCH icon for any page still using the old structure.
+    var watch=nav.querySelector('a[href="atomic-swap-console.html"]')||nav.querySelector('a[onclick="openSv()"]');
     if(!watch) return;                                            // need the logo-button row
     var sz=watch.offsetWidth||110;                               // match the sibling box
     var a=document.createElement('a');
