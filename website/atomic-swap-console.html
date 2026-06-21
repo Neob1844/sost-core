@@ -42,6 +42,9 @@
   .nav-links{display:flex;gap:4px;flex-wrap:wrap}
   .nav-links a{color:var(--text-dim);text-decoration:none;font-size:11px;padding:4px 10px;border-radius:4px;letter-spacing:.5px;white-space:nowrap}
   .nav-links a:hover{color:var(--text-primary);background:rgba(255,255,255,.05)}
+  /* Hide the hamburger on desktop (it was showing as a stray small box/'document' icon next to NEWS); show only on mobile, like every other page. */
+  .nav-hamburger{display:none;background:none;border:1px solid var(--border-dim);color:var(--text-dim);font-size:20px;padding:4px 8px;cursor:pointer;border-radius:4px;line-height:1}
+  @media(max-width:768px){.nav-hamburger{display:block}.nav-links{display:none;width:100%}.nav-links.open{display:flex}}
   /* hero */
   .hero{padding:48px 0 30px;border-bottom:1px solid var(--border-dim)}
   .hero-label{font-size:11px;color:var(--red-primary);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
