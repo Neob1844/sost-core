@@ -208,6 +208,7 @@
 (function(){
   "use strict";
   var SOST_NAV_LINKS = `
+            <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
             <a href="index.html">Home</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
@@ -335,4 +336,75 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', linkGeaLogos, {once:true});
   else linkGeaLogos();
+})();
+
+/* ============================================================================
+   SOST "Watch" (2-video) overlay — shared. Pages that already embed their own
+   #sv-modal + openSv() (e.g. Home) keep theirs untouched; every other page gets
+   this self-contained version so the nav "▶ Watch" link works everywhere.
+   ========================================================================== */
+(function(){
+  "use strict";
+  if(document.getElementById('sv-modal') || typeof window.openSv === 'function') return; // page has its own
+  function build(){
+    if(document.getElementById('sv-modal')) return;
+    var st=document.createElement('style');
+    st.textContent=[
+      '.sv-modal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);align-items:center;justify-content:center}',
+      '.sv-modal.open{display:flex}',
+      '.sv-content{position:relative;max-width:92vw;max-height:88vh;display:flex;flex-direction:column;gap:14px;align-items:center}',
+      '.sv-video{max-width:92vw;max-height:80vh;background:#000;border-radius:10px;box-shadow:0 0 60px rgba(251,1,13,.18);outline:none}',
+      '.sv-close{position:absolute;top:-46px;right:-2px;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.22);color:#fff;width:38px;height:38px;border-radius:50%;font-size:22px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}',
+      '.sv-close:hover{background:rgba(251,1,13,.4);border-color:#fb010d}',
+      '.sv-caption{text-align:center;font-size:11px;letter-spacing:3px;color:#94a3b8;font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase}',
+      '.sv-ch-title{text-align:center;font-size:12px;letter-spacing:4px;color:#22d3ee;font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;margin-bottom:6px}',
+      '.sv-cards{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;max-width:92vw}',
+      '.sv-card{width:340px;max-width:42vw;min-width:240px;background:linear-gradient(160deg,#0a1117,#0c1620);border:1px solid rgba(34,211,238,.30);border-radius:14px;padding:0 0 16px;cursor:pointer;display:flex;flex-direction:column;align-items:stretch;overflow:hidden;text-align:left;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}',
+      '.sv-card:hover{transform:translateY(-4px)}',
+      '.sv-card-sost:hover{border-color:#22d3ee;box-shadow:0 0 26px rgba(34,211,238,.35)}',
+      '.sv-card-gea{border-color:rgba(0,255,65,.30)}',
+      '.sv-card-gea:hover{border-color:#00ff41;box-shadow:0 0 26px rgba(0,255,65,.30)}',
+      '.sv-thumb{position:relative;width:100%;aspect-ratio:16/9;background:#000 center/cover no-repeat;display:flex;align-items:center;justify-content:center}',
+      '.sv-play{width:58px;height:58px;border-radius:50%;background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.85);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;padding-left:4px}',
+      '.sv-card-h{font-size:18px;font-weight:800;color:#e5e7eb;margin:14px 16px 2px;font-family:Inter,system-ui,sans-serif}',
+      '.sv-card-s{font-size:12.5px;color:#94a3b8;margin:0 16px;font-family:Inter,system-ui,sans-serif}',
+      '.sv-back{background:transparent;border:1px solid rgba(255,255,255,.22);color:#cbd5e1;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;letter-spacing:1px}',
+      '.sv-back:hover{border-color:#22d3ee;color:#22d3ee}',
+      '@media(max-width:560px){.sv-card{max-width:88vw}.sv-cards{gap:14px}}'
+    ].join('');
+    document.head.appendChild(st);
+    var m=document.createElement('div');
+    m.id='sv-modal'; m.className='sv-modal'; m.setAttribute('aria-hidden','true');
+    m.onclick=function(e){ window.closeSv(e); };
+    m.innerHTML=''
+      +'<div class="sv-content" onclick="event.stopPropagation()">'
+      +'<button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>'
+      +'<div id="sv-chooser" class="sv-chooser"><div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>'
+      +'<div class="sv-cards">'
+      +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-intro.mp4\',\'SOST in 2 Minutes &middot; Sovereign by Design\')">'
+      +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
+      +'<span class="sv-card-h">SOST in 2 Minutes</span><span class="sv-card-s">The protocol &middot; Sovereign by Design</span></button>'
+      +'<button class="sv-card sv-card-gea" type="button" onclick="pickSv(\'sost-geaspirit.mp4\',\'SOST &times; GeaSpirit &middot; Fusing Two Worlds\')">'
+      +'<span class="sv-thumb" style="background-image:url(\'sost-geaspirit-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
+      +'<span class="sv-card-h">SOST &times; GeaSpirit</span><span class="sv-card-s">Fusing Two Worlds &middot; mineral intelligence</span></button>'
+      +'</div></div>'
+      +'<div id="sv-player" class="sv-player" style="display:none">'
+      +'<video id="sv-video" class="sv-video" controls preload="metadata" playsinline><source id="sv-source" src="" type="video/mp4">Your browser does not support HTML5 video.</video>'
+      +'<div class="sv-caption" id="sv-caption"></div>'
+      +'<button class="sv-back" type="button" onclick="backSv()">&larr;&nbsp; Choose another video</button>'
+      +'</div></div>';
+    document.body.appendChild(m);
+  }
+  window.openSv=function(){ build(); var m=document.getElementById('sv-modal'); if(!m)return;
+    m.classList.add('open'); m.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; window.backSv(); };
+  window.pickSv=function(src,cap){ document.getElementById('sv-chooser').style.display='none';
+    document.getElementById('sv-player').style.display='flex'; document.getElementById('sv-caption').innerHTML=cap;
+    var v=document.getElementById('sv-video'),s=document.getElementById('sv-source'); s.setAttribute('src',src); v.load();
+    try{ v.currentTime=0; v.play().catch(function(){}); }catch(e){} };
+  window.backSv=function(){ var v=document.getElementById('sv-video'); try{ v.pause(); }catch(e){}
+    document.getElementById('sv-player').style.display='none'; document.getElementById('sv-chooser').style.display='block'; };
+  window.closeSv=function(evt,force){ if(evt&&!force&&evt.target.id!=='sv-modal')return;
+    var m=document.getElementById('sv-modal'); if(!m)return; m.classList.remove('open'); m.setAttribute('aria-hidden','true');
+    document.body.style.overflow=''; var v=document.getElementById('sv-video'); try{ v.pause(); }catch(e){} };
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') window.closeSv(null,true); });
 })();
