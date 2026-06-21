@@ -67,6 +67,8 @@
       "body.nav-collapsed nav .nav-links,",
       "body.nav-collapsed nav a[href=\"casert-spec.html\"],",
       "body.nav-collapsed nav a[href=\"sost-dex.html\"],",
+      "body.nav-collapsed nav a[href=\"atomic-swap-console.html\"],",
+      "body.nav-collapsed nav a[href^=\"https://geaspirit.com\"],",
       "body.nav-collapsed nav a[onclick=\"openSv()\"] {",
       "  display: none !important;",
       "}",
