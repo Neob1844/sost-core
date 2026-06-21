@@ -63,6 +63,49 @@ CLI steps: `docs/ATOMIC_SWAP_CLI_GUIDE.md`.
   D step 2 tiny and not scaling until many clean cycles.
 - Rollback commit is a single constexpr flip; keep it ready but unused unless needed.
 
+## Using the Web Console (`website/atomic-swap-console.html`)
+A founder-only guided console + operative EVM layer. Linked from the OTC and DEX nav (⚛ Atomic
+Swap). Reachable at `https://sostcore.com/atomic-swap-console.html` once the website is deployed.
+It never asks for a seed/private key, never holds keys; the SOST side is command-generation + RPC
+reads, the EVM side signs through the user's MetaMask. Tabs:
+- **Overview / education** — HTLC concept + glossary.
+- **Readiness** — LIVE height via `/rpc` + SELF-attested node/miner checks (commit, flags, restart,
+  explorer match, no REJECTED, hashrate). Self items are NOT verified by the page — verify them on
+  your machines.
+- **1 · Refund test** — generates secret+hashlock (Web Crypto, in-tab only) and the exact
+  `createhtlclock`/`refundhtlc` commands; guarded to preview-only below height 15,010.
+- **EVM operate (Phase II)** — real `AtomicSwapHTLC` calls via MetaMask: connect, network detect,
+  gas/token balance, ERC-20 decimals/allowance (read live, never assumed), `lockNative`/`lockERC20`/
+  `claim`/`refund`/`getSwap`. Calldata is shown before every signature; encoder is byte-verified
+  against the contract ABI (`website/js/atomic-swap-evm.js`, tests in `*.test.js`, cross-checked
+  with `cast`).
+- **2 · Claim flow (SOST CLI)** — generates the SOST-side `claimhtlc` command.
+- **Swap status** — `gethtlcstatus`/`listhtlclocks` command + read-only RPC query + local swap-log
+  download + emergency bundle (never includes keys/secret).
+- **Emergency** — the 3 scenarios above.
+
+## Founder-only mainnet procedure (web)
+1. Update VPS node + Beelink miner to the V14 build (commit `b57c41ed`+; SBPOW=ON, TESTNET=OFF).
+2. Wait to height ≥ 15,010. Tick the Readiness self-checks honestly.
+3. **SOST side:** generate S/H in the console, run the generated `createhtlclock` on your node, sign,
+   `sendrawtransaction`; verify with `gethtlcstatus`. First do a REFUND-only test (tiny amount).
+4. **EVM side (only after the contract is DEPLOYED — see limitations):** connect MetaMask, set the
+   contract address, pick native ETH/BNB, tiny amount, set `refundTime` EARLIER (wall-clock) than the
+   SOST `refund_height`; LOCK; counterparty confirms; CLAIM reveals S; the other side claims with S.
+
+## Known limitations (current)
+- **The EVM `AtomicSwapHTLC` contract is NOT deployed and NOT audited.** Until the founder deploys it
+  to Ethereum / BNB Chain and pastes the address in the console, EVM operations are disabled by
+  design (the console refuses to call a non-existent contract). Deploying an unaudited contract to
+  mainnet is an explicit founder decision and a separate step.
+- No external audit, no reorg tests, no live cross-chain e2e; non-standard ERC-20 (USDT/PAXG/XAUT)
+  untested — native ETH/BNB first.
+- `refundTime` (EVM block.number) vs SOST `refund_height` ordering is wallet/operator-enforced, not
+  contract-enforced.
+- **SOST ↔ BTC is deferred to V15** (BTC HTLC signing is a stub; the console excludes BTC entirely).
+
 ## Status snapshot
 Gate = V14_HEIGHT (15,000), EVM-only, `SOST_BTC_HTLC_SIGNING=OFF` (BTC = V15). ctest 92/92,
-EVM 52/52 (internal). Unverified: reorg, live e2e, external audit, non-standard ERC20. Founder-only.
+EVM 52/52 (internal). EVM contract NOT deployed/audited. Unverified: reorg, live e2e, external
+audit, non-standard ERC20. Founder-only. Web console: Phase I + Phase II (EVM operative once a
+contract address is configured).
