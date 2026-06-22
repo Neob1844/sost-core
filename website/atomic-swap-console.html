@@ -206,7 +206,7 @@
     <button class="tab" data-p="evm">EVM operate</button>
     <button class="tab" data-p="claim">2 · Claim flow (SOST CLI)</button>
     <button class="tab" data-p="status">Swap status</button>
-    <button class="tab" data-p="guide">Guía sencilla</button>
+    <button class="tab" data-p="guide">Simple Guide</button>
     <button class="tab" data-p="emergency">Emergency</button>
   </div>
 
@@ -431,35 +431,35 @@
   <!-- GUÍA SENCILLA DE USO -->
   <div class="panel" id="p-guide">
     <div class="card">
-      <h2>Guía sencilla de uso (founder-only)</h2>
-      <div class="warnmsg err"><b>⚠ NO la uses con dinero que te importe.</b> Está sin auditar y en pruebas. Primero ENSAYA en testnet. Esta consola nunca toca tu clave/seed: solo arma el comando/calldata y firma TU wallet.</div>
-      <p>En cristiano, qué hace un atomic swap: bloqueas fondos en una cadena bajo un “candado” (hashlock) con un plazo; quien revela el secreto cobra; si nadie cobra a tiempo, recuperas lo tuyo (refund). No hay intermediario.</p>
+      <h2>Simple usage guide (founder-only)</h2>
+      <div class="warnmsg err"><b>⚠ Do NOT use it with money you care about.</b> It is unaudited and in testing. ALWAYS rehearse on testnet first. This console never touches your key/seed: it only builds the command/calldata and YOUR wallet signs.</div>
+      <p>In plain terms, what an atomic swap does: you lock funds on one chain under a "lock" (hashlock) with a deadline; whoever reveals the secret gets paid; if nobody claims in time, you get your funds back (refund). No intermediary.</p>
 
-      <h3>Antes de empezar (1 sola vez)</h3>
+      <h3>Before you start (one time)</h3>
       <ol style="font-size:13px;color:var(--text-secondary);line-height:1.9;padding-left:20px">
-        <li><b>Ensaya en testnet</b> (Sepolia o BNB testnet): despliega el contrato ahí con <code>forge create</code> y prueba todo el ciclo sin riesgo. La consola detecta la testnet sola.</li>
-        <li>Ten <b>MetaMask</b> con algo de gas (ETH/BNB) y una cantidad <b>mínima</b> para la prueba.</li>
+        <li><b>Rehearse on testnet</b> (Sepolia or BNB testnet): deploy the contract there with <code>forge create</code> and run the whole cycle risk-free. The console detects the testnet automatically.</li>
+        <li>Have <b>MetaMask</b> with some gas (ETH/BNB) and a <b>minimal</b> amount for the test.</li>
       </ol>
 
-      <h3>Paso a paso (pestaña “EVM operate”)</h3>
+      <h3>Step by step (the “EVM operate” tab)</h3>
       <ol style="font-size:13px;color:var(--text-secondary);line-height:1.9;padding-left:20px">
-        <li><b>Conecta MetaMask</b> → verás tu dirección, la red y tu saldo de gas.</li>
-        <li>Pega la <b>dirección del contrato</b> desplegado → pulsa <b>“Verify contract code”</b> (debe salir <b style="color:#4ade80">EXACT</b>).</li>
-        <li>Elige asset <b>Native (ETH/BNB)</b> y una <b>cantidad minúscula</b>. (ERC-20 está apagado por seguridad; BTC es para V15.)</li>
-        <li>Pulsa <b>“New S+H”</b> para generar el secreto y el hashlock → <b>guarda el secreto</b> (sin él no podrás reclamar). “Random” genera el swapId.</li>
-        <li>Pon <b>refundTime</b> (bloque EVM actual + margen) y las direcciones claimer/refunder.</li>
-        <li>Pulsa <b>LOCK</b> → revisa el recuadro (red, contrato, importe) y firma en MetaMask. Te da el tx con enlace al explorer.</li>
-        <li><b>Read swap status</b> → debe verse <b>LOCKED / CLAIMABLE</b>.</li>
-        <li>Para cobrar: <b>CLAIM</b> (pega el secreto; la consola comprueba que el sha256 coincide antes de firmar). Para recuperar tras el plazo: <b>REFUND</b>.</li>
-        <li>Guarda todo en <b>“Download swap log”</b> (pestaña Swap status). Nunca sube tu secreto a ningún sitio.</li>
+        <li><b>Connect MetaMask</b> → you will see your address, the network and your gas balance.</li>
+        <li>Paste the deployed <b>contract address</b> → click <b>“Verify contract code”</b> (it must show <b style="color:#4ade80">EXACT</b>).</li>
+        <li>Choose asset <b>Native (ETH/BNB)</b> and a <b>tiny amount</b>. (ERC-20 is disabled for safety; BTC is for V15.)</li>
+        <li>Click <b>“New S+H”</b> to generate the secret and the hashlock → <b>save the secret</b> (without it you cannot claim). “Random” generates the swapId.</li>
+        <li>Set <b>refundTime</b> (current EVM block + margin) and the claimer/refunder addresses.</li>
+        <li>Click <b>LOCK</b> → review the box (network, contract, amount) and sign in MetaMask. It returns the tx with an explorer link.</li>
+        <li><b>Read swap status</b> → it must show <b>LOCKED / CLAIMABLE</b>.</li>
+        <li>To get paid: <b>CLAIM</b> (paste the secret; the console checks the sha256 matches before signing). To recover after the deadline: <b>REFUND</b>.</li>
+        <li>Save everything with <b>“Download swap log”</b> (Swap status tab). Never upload your secret anywhere.</li>
       </ol>
 
-      <h3>Primera prueba recomendada: REFUND primero</h3>
-      <p>Antes de un swap real, haz la pestaña <b>“1 · Refund test”</b>: bloquea una cantidad mínima en SOST y recupérala por refund. Si el refund funciona, sabes que nunca te quedas atrapado. Luego ya prueba CLAIM.</p>
+      <h3>Recommended first test: REFUND first</h3>
+      <p>Before a real swap, run the <b>“1 · Refund test”</b> tab: lock a minimal amount in SOST and recover it via refund. If refund works, you know you can never get stuck. Then try CLAIM.</p>
 
-      <h3>Reglas de oro</h3>
-      <div class="warnmsg amber">Founder-only · cantidades ridículas · ETH/BNB nativo (no USDT/PAXG/XAUT) · primero testnet, luego mainnet (altura ≥ 15.010 + checklist) · si algo falla, NO crees más HTLCs → mira la pestaña <b>Emergency</b>.</div>
-      <p class="muted">Más detalle en cada pestaña: <b>Readiness</b> (¿está todo listo?), <b>EVM operate</b> (operación real), <b>Swap status</b> (consultar/registrar), <b>Emergency</b> (qué hacer si algo va mal).</p>
+      <h3>Golden rules</h3>
+      <div class="warnmsg amber">Founder-only · tiny amounts · native ETH/BNB (not USDT/PAXG/XAUT) · testnet first, then mainnet (height ≥ 15,010 + checklist) · if anything fails, do NOT create more HTLCs → see the <b>Emergency</b> tab.</div>
+      <p class="muted">More detail in each tab: <b>Readiness</b> (is everything ready?), <b>EVM operate</b> (the real operation), <b>Swap status</b> (query / log), <b>Emergency</b> (what to do if something goes wrong).</p>
     </div>
   </div>
 
