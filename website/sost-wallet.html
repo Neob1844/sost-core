@@ -501,8 +501,15 @@ function toggleRpcHelp() {
 
 function quickConnect() {
   const url = document.getElementById('qRpcUrl').value.trim() || '/rpc/public';
-  const user = document.getElementById('qRpcUser').value.trim();
-  const pass = document.getElementById('qRpcPass').value;
+  let user = document.getElementById('qRpcUser').value.trim();
+  let pass = document.getElementById('qRpcPass').value;
+  // The public endpoint needs NO credentials (the server-side gateway injects auth for
+  // sendrawtransaction). Clear any leftover creds so they are neither stored nor shown.
+  if (classifyRpcEndpoint(url).kind === 'PUBLIC') {
+    user = ''; pass = '';
+    document.getElementById('qRpcUser').value = '';
+    document.getElementById('qRpcPass').value = '';
+  }
   // Save to settings
   const settings = JSON.parse(localStorage.getItem('sost_wallet_settings') || '{}');
   settings.rpcUrl = url;
@@ -537,8 +544,11 @@ function quickConnect() {
 document.addEventListener('DOMContentLoaded', () => {
   const s = JSON.parse(localStorage.getItem('sost_wallet_settings') || '{}');
   if (s.rpcUrl) document.getElementById('qRpcUrl').value = s.rpcUrl;
-  if (s.rpcUser) document.getElementById('qRpcUser').value = s.rpcUser;
-  if (s.rpcPass) document.getElementById('qRpcPass').value = s.rpcPass;
+  // Only restore RPC user/pass for a private (local/custom) node. The public /rpc(/public)
+  // endpoint needs none, so never pre-fill creds there (avoids the confusing pre-filled password).
+  var _pub = classifyRpcEndpoint(s.rpcUrl || '/rpc/public').kind === 'PUBLIC';
+  if (!_pub && s.rpcUser) document.getElementById('qRpcUser').value = s.rpcUser;
+  if (!_pub && s.rpcPass) document.getElementById('qRpcPass').value = s.rpcPass;
   // Show the badge immediately, even before CONNECT runs.
   applyRpcBadge(document.getElementById('qRpcUrl').value || '/rpc/public');
   // Keep the badge in sync as the user types/edits the URL.
