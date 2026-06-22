@@ -1,0 +1,16 @@
+[Unit]
+Description=SOST public RPC gateway (auth-inject for sendrawtransaction only)
+Documentation=https://github.com/Neob1844/sost-core/blob/main/docs/RPC_PROXY_ARCHITECTURE.md
+After=network.target
+
+[Service]
+# Deployed copy lives at /opt/sost/sost-rpc-proxy.py (cp'd from ops/ on each deploy).
+ExecStart=/usr/bin/python3 /opt/sost/sost-rpc-proxy.py
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
