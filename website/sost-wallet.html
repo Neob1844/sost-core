@@ -6124,9 +6124,11 @@ window.exportRevealOnce = async function () {
   if (_exportHideTimer) clearTimeout(_exportHideTimer);
   _exportHideTimer = setTimeout(function () {
     _exportWipe();
-    _exportMsg('Key hidden after 60s. Re-enter your password to reveal again.', false);
+    _exportMsg('Key hidden after 60s. Wallet locked for safety.', false);
+    // Honour "auto-lock after any export" for the reveal path too.
+    try { if (typeof lockWallet === 'function') lockWallet(); } catch (e) {}
   }, 60000);
-  _exportMsg('Revealed once. Use the eye button to view; it auto-hides in 60 seconds.', true);
+  _exportMsg('Revealed once. Use the eye button to view; it auto-hides and locks the wallet in 60 seconds.', true);
 };
 
 window.exportToggleRevealField = function () {

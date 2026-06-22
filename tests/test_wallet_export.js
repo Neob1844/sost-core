@@ -121,5 +121,13 @@ t("private key is never logged from the export block", () => {
 t("export forces an auto-lock", () => {
   assert.ok(BLOCK.indexOf("lockWallet") > 0, "export must force-lock the wallet");
 });
+t("reveal-once also locks the wallet (after the 60s auto-hide)", () => {
+  const s = HTML.indexOf("window.exportRevealOnce");
+  const e = HTML.indexOf("window.exportToggleRevealField");
+  assert.ok(s > 0 && e > s, "exportRevealOnce body not found");
+  const fn = HTML.slice(s, e);
+  assert.ok(/setTimeout/.test(fn), "reveal-once must auto-hide on a timer");
+  assert.ok(/lockWallet/.test(fn), "reveal-once must call lockWallet after the timer");
+});
 
 console.log("\n" + pass + " checks passed.");
