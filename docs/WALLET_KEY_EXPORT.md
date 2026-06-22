@@ -35,6 +35,21 @@ behind a danger warning.
 
 All files are generated **client-side** (Blob download); none touch a server.
 
+## Why not an *encrypted* export?
+An encrypted-at-rest export (the core's v2 scrypt+AES-GCM `wallet-export` format)
+was evaluated and **rejected for the mining path**: `sost-miner` only loads the
+**plaintext v1** wallet — it calls `Wallet::load()` (src/sost-miner.cpp:2377),
+has no `--wallet-pass`/passphrase flag and no prompt, and `load()` parses
+`"privkey"` fields that a v2 file does not contain. So an encrypted file would be
+"secure but unusable for mining." The plaintext v1 JSON below is therefore the
+mining format. Verified end-to-end with a throwaway dummy wallet: the miner
+prints `SbPoW signing key: label='…' (loaded from …)` and derives the address.
+
+**Handle the plaintext file safely:** keep it only inside WSL (not on the Windows
+filesystem), `chmod 600` it, and delete it when done. No TOTP/2FA is added — it
+cannot decrypt a client-side key and would only give false confidence; the
+password that encrypts the key in the browser is the real protection.
+
 ## CLI wallet JSON schema
 Matches the v1 format read by `src/wallet.cpp` / the miner:
 
