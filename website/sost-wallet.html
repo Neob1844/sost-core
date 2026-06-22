@@ -1352,6 +1352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="btn-group">
           <button class="btn btn-primary" id="sendBtn" onclick="sendTransaction()">Sign & Broadcast</button>
+          <button class="btn" id="sendCancelBtn" onclick="resetSend()" style="margin-left:8px;border:1px solid var(--border-dim);background:transparent;color:var(--text-secondary)" title="Clear the form before signing. Cannot recall a transaction already broadcast (a relayed tx is final on a UTXO chain).">Cancel / Clear</button>
         </div>
         <div id="sendResult" class="notice hidden" style="margin-top:16px"></div>
       </div>
@@ -4376,11 +4377,19 @@ async function autoSplitCapsuleSend(opts) {
   // funds" message. Reset every loop iteration; the catch reads the
   // last-set value, which corresponds to the failed chunk by construction.
   let diag = null;
+  window._autosplitStop = false;
 
   for (let i = 0; i < chunks.length; i++) {
     const idx = i + 1;
     const total = chunks.length;
     const chunkStocks = chunks[i];
+
+    // User pressed "Stop remaining": halt before sending the next chunk. Already-broadcast
+    // transactions are final (UTXO chain); the remaining chunks are simply not broadcast.
+    if (window._autosplitStop) {
+      failure = { idx: idx, message: 'Stopped by user — the remaining transactions were NOT broadcast.', diag: diag };
+      break;
+    }
 
     showSuccess('sendResult',
       '<div style="border:1px solid var(--cyan-primary,#67e8f9);border-radius:6px;padding:10px;margin-top:8px;background:rgba(103,232,249,0.04)">' +
@@ -4391,6 +4400,9 @@ async function autoSplitCapsuleSend(opts) {
       (broadcastTxids.length ?
         '<div style="font-size:10px;color:var(--text-dim);margin-top:4px">already broadcast: ' +
         broadcastTxids.length + '</div>' : '') +
+      '<button class="btn btn-small" style="margin-top:8px;background:#e63946;color:#fff;border:0" ' +
+        'onclick="window._autosplitStop=true;this.textContent=\'stopping after current tx…\';this.disabled=true" ' +
+        'title="Stop broadcasting the remaining transactions. Already-broadcast ones cannot be recalled.">■ Stop remaining</button>' +
       '</div>');
 
     try {
@@ -5936,6 +5948,18 @@ function recordDailySend(amountSost) {
 }
 
 // ==================== ENHANCED SEND (pre-send confirmation) ====================
+
+// Cancel / clear the send form BEFORE broadcasting. A transaction already broadcast
+// cannot be recalled on a UTXO chain — this only resets the form and signals an
+// in-progress auto-split to stop after the current chunk (remaining ones are not sent).
+window.resetSend = function() {
+  window._autosplitStop = true;
+  ['sendTo', 'sendAmount', 'capsuleText'].forEach(function(id){ var el = document.getElementById(id); if (el) el.value = ''; });
+  document.querySelectorAll('#recipientRows .recipient-row').forEach(function(r){ r.remove(); });
+  var info = document.getElementById('sendAddrInfo'); if (info) info.style.display = 'none';
+  var res = document.getElementById('sendResult'); if (res) { res.classList.add('hidden'); res.innerHTML = ''; }
+  var btn = document.getElementById('sendBtn'); if (btn) btn.disabled = false;
+};
 
 // Override sendTransaction to add address book + policy + confirmation
 const _origSendTransaction = window.sendTransaction;
