@@ -1556,6 +1556,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <option value="blocked">Blocked</option>
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label">Visibility</label>
+          <select id="abScope" class="form-input" style="background:#111;color:#e2e8f0;border:1px solid #333">
+            <option value="private" selected>Private — saved only on this browser</option>
+            <option value="public">Public — official label, shown to everyone</option>
+          </select>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:6px">Private labels stay in this browser's storage. Public labels are official, shipped with the wallet, and shown to all users (and survive a fresh/incognito session).</div>
+        </div>
         <button class="btn btn-primary" onclick="addToAddressBook()">Add to Address Book</button>
         <div id="abResult" class="notice hidden" style="margin-top:12px"></div>
       </div>
@@ -5774,10 +5782,13 @@ window.cancelTx = async function(originalTxid) {
 const AB_KEY = 'sost_addressbook';
 
 // Default constitutional addresses — pre-loaded for user convenience
+// Official / public labels — shipped with the wallet, shown to EVERY user (they prevail in
+// public view and survive a fresh/incognito session because they live in code, not localStorage).
+// To make a new address public-for-all, add it here (operator-maintained registry).
 const DEFAULT_ADDRESSES = [
-  { address: 'sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33', label: 'Genesis Miner (NeoB)', trust: 'trusted', note: 'Founder miner address' },
-  { address: 'sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d', label: 'Gold Vault (Constitutional)', trust: 'trusted', note: '25% of every block reward' },
-  { address: 'sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f', label: 'PoPC Pool (Constitutional)', trust: 'trusted', note: '25% of every block reward' },
+  { address: 'sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33', label: 'Genesis Miner (NeoB)', trust: 'trusted', scope: 'public', note: 'Founder miner address' },
+  { address: 'sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d', label: 'Gold Vault (Constitutional)', trust: 'trusted', scope: 'public', note: '25% of every block reward' },
+  { address: 'sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f', label: 'PoPC Pool (Constitutional)', trust: 'trusted', scope: 'public', note: '25% of every block reward' },
 ];
 
 function loadAddressBook() {
@@ -5802,19 +5813,24 @@ window.addToAddressBook = function() {
   const addr = document.getElementById('abAddr').value.trim();
   const label = document.getElementById('abLabel').value.trim();
   const trust = document.getElementById('abTrust').value;
+  const scope = (document.getElementById('abScope') || {}).value || 'private';
   if (!validateAddress(addr) && !(addr.startsWith('sost3') && addr.length===45)) {
     return showError('abResult', 'Invalid SOST address');
   }
   if (!label) return showError('abResult', 'Label is required');
   const ab = loadAddressBook();
   const existing = ab.addresses.findIndex(a => a.address === addr);
-  if (existing >= 0) ab.addresses[existing] = {address:addr,label,trust,added:new Date().toISOString()};
-  else ab.addresses.push({address:addr,label,trust,added:new Date().toISOString()});
+  if (existing >= 0) ab.addresses[existing] = {address:addr,label,trust,scope,added:new Date().toISOString()};
+  else ab.addresses.push({address:addr,label,trust,scope,added:new Date().toISOString()});
   saveAddressBook(ab);
   document.getElementById('abAddr').value = '';
   document.getElementById('abLabel').value = '';
-  showSuccess('abResult', 'Address added: ' + label + ' (' + trust + ')');
+  showSuccess('abResult', 'Address added: ' + label + ' (' + trust + ' · ' + scope + ')');
   renderAddressBook();
+  // Live-refresh the dashboard tx labels and the send-form recipient info so the new
+  // label appears immediately (previously it only showed after a manual page refresh).
+  if (typeof renderTxHistory === 'function') renderTxHistory();
+  if (typeof checkAddressBook === 'function') try { checkAddressBook(); } catch (e) {}
 };
 
 window.removeFromAddressBook = function(addr) {
@@ -5822,6 +5838,7 @@ window.removeFromAddressBook = function(addr) {
   ab.addresses = ab.addresses.filter(a => a.address !== addr);
   saveAddressBook(ab);
   renderAddressBook();
+  if (typeof renderTxHistory === 'function') renderTxHistory();
 };
 
 function renderAddressBook() {
@@ -5830,8 +5847,10 @@ function renderAddressBook() {
   if (!ab.addresses.length) { el.innerHTML = '<span style="color:var(--text-dim)">No addresses saved</span>'; return; }
   el.innerHTML = ab.addresses.map(a => {
     const trustColor = a.trust==='trusted'?'var(--green-primary)':a.trust==='known'?'#fbbf24':'#fb010d';
+    const scope = a.scope || 'private';
+    const scopeBadge = ' <span style="background:rgba(255,255,255,.05);padding:2px 6px;border-radius:3px;font-size:10px;color:'+(scope==='public'?'var(--cyan-primary)':'var(--text-dim)')+'">'+(scope==='public'?'🌐 public':'🔒 private')+'</span>';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #222;gap:8px">' +
-      '<div style="min-width:0;flex:1"><span style="color:'+trustColor+';font-weight:600">'+a.label+'</span> <span style="background:rgba(255,255,255,.05);padding:2px 6px;border-radius:3px;font-size:10px;color:'+trustColor+'">'+a.trust+'</span>' +
+      '<div style="min-width:0;flex:1"><span style="color:'+trustColor+';font-weight:600">'+a.label+'</span> <span style="background:rgba(255,255,255,.05);padding:2px 6px;border-radius:3px;font-size:10px;color:'+trustColor+'">'+a.trust+'</span>' + scopeBadge +
       '<div style="font-family:monospace;font-size:11px;color:var(--text-dim);word-break:break-all;margin-top:2px">'+a.address+'</div></div>' +
       '<div style="display:flex;gap:4px;flex-shrink:0">' +
       '<button class="btn btn-small" style="font-size:10px;padding:2px 8px" onclick="navigator.clipboard.writeText(\''+a.address+'\');this.textContent=\'Copied!\';setTimeout(()=>this.textContent=\'Copy\',1500)">Copy</button>' +
