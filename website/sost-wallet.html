@@ -314,6 +314,7 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js"></script>
+<script src="js/wallet-export.js"></script>
 <script src="js/nav-toggle.js" defer></script>
 </head>
 <body>
@@ -1814,6 +1815,58 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <button class="btn btn-primary" onclick="savePolicy()">Save Policy</button>
         <div id="policyResult" class="notice hidden" style="margin-top:12px"></div>
+      </div>
+
+      <!-- EXPORT PRIVATE KEY (Advanced) — collapsed by default, behind a danger gate.
+           For wallet migration / local sBPoW mining. Keys are decrypted only in this
+           browser and never sent anywhere. -->
+      <div class="card" id="exportKeyCard" style="border:1px solid #5a1010">
+        <h3 style="color:#fb010d">&#9888; Export Private Key <span style="font-size:11px;color:var(--text-muted);font-weight:400">(Advanced)</span></h3>
+        <p style="color:var(--text-secondary);font-size:12px;line-height:1.6;margin-bottom:12px">
+          For wallet migration or setting up local <b>sBPoW mining</b> with this address.
+          <b style="color:#fb010d">Anyone with your private key can spend all your SOST.</b>
+          Prefer encrypted seed backups for normal use. Keys are decrypted only in this browser and <b>never sent anywhere</b>.
+        </p>
+        <button class="btn" id="exportKeyToggle" type="button" onclick="toggleExportKey()" style="border:1px solid #5a1010;background:transparent;color:#fb010d">Show advanced export &#9662;</button>
+        <div id="exportKeyBody" class="hidden" style="margin-top:14px">
+          <div class="notice" style="border-left:3px solid #fb010d;margin-bottom:14px">
+            <strong style="color:#fb010d">DANGER ZONE.</strong> Only continue if you understand the risk. This wallet will <b>auto-lock after any export</b>.
+          </div>
+          <div class="form-group">
+            <label class="form-label">Wallet password</label>
+            <input type="password" id="exportKeyPass" class="form-input" autocomplete="off" placeholder="your wallet password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type to confirm: <code>EXPORT PRIVATE KEY</code></label>
+            <input type="text" id="exportKeyPhrase" class="form-input" autocomplete="off" placeholder="EXPORT PRIVATE KEY">
+          </div>
+          <div class="form-group" style="display:flex;align-items:center;gap:12px">
+            <input type="checkbox" id="exportKeyAck" style="width:18px;height:18px">
+            <label for="exportKeyAck" class="form-label" style="margin:0">I understand that anyone with this key can spend my SOST.</label>
+          </div>
+          <div class="form-group">
+            <label class="form-label">CLI wallet label (mining key label)</label>
+            <input type="text" id="exportKeyLabel" class="form-input" value="SOST CEX LIQUIDITY RESERVE">
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn" type="button" onclick="exportRevealOnce()">Reveal once</button>
+            <button class="btn btn-primary" type="button" onclick="exportDownloadCli()">Download CLI wallet JSON</button>
+            <button class="btn" type="button" onclick="exportDownloadRaw()" style="border:1px solid #5a1010;color:#fb010d;background:transparent">Download raw key .txt</button>
+          </div>
+          <div id="exportKeyRevealBox" class="hidden" style="margin-top:14px">
+            <label class="form-label">Private key (auto-hides in 60s)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="password" id="exportKeyReveal" class="form-input" readonly style="font-family:monospace;font-size:12px">
+              <button class="btn" type="button" onclick="exportToggleRevealField()" title="Show / hide">&#128065;</button>
+              <button class="btn" type="button" onclick="exportCopyReveal()" title="Copy">Copy</button>
+            </div>
+          </div>
+          <div id="exportKeyResult" class="notice hidden" style="margin-top:12px"></div>
+          <p style="color:var(--text-muted);font-size:11px;line-height:1.6;margin-top:12px">
+            Then mine with it:
+            <code style="font-size:10px">./sost-miner --wallet &lt;file&gt; --mining-key-label "SOST CEX LIQUIDITY RESERVE" --address &lt;sost1...&gt;</code>
+          </p>
+        </div>
       </div>
     </div>
 
@@ -5971,6 +6024,152 @@ function _walletConfirm(title, message, confirmText, onConfirm, cancelText) {
   ov.querySelector('[data-act=yes]').addEventListener('click', function(){ close(); if (onConfirm) onConfirm(); });
   document.body.appendChild(ov);
 }
+
+// ==================== EXPORT PRIVATE KEY (Advanced) ====================
+// Security model: the gate (password + exact phrase + checkbox) is enforced by
+// SostExport.validateExportGate. The wallet is decrypted ONLY here in browser
+// memory via loadWallet(password); the key is never sent over fetch/XHR/WebSocket,
+// never written to localStorage/sessionStorage, never logged. After any export the
+// wallet is force-locked and the plaintext is wiped from the DOM.
+
+window.toggleExportKey = function () {
+  var body = document.getElementById('exportKeyBody');
+  var btn = document.getElementById('exportKeyToggle');
+  if (!body) return;
+  var nowOpen = !body.classList.toggle('hidden');
+  if (btn) btn.textContent = nowOpen ? 'Hide advanced export ▴' : 'Show advanced export ▾';
+  if (!nowOpen) _exportWipe();
+};
+
+function _exportMsg(text, danger) {
+  var el = document.getElementById('exportKeyResult');
+  if (!el) return;
+  el.classList.remove('hidden');
+  el.style.borderLeft = '3px solid ' + (danger ? '#fb010d' : 'var(--green-primary, #4ade80)');
+  el.textContent = text;
+}
+
+var _exportHideTimer = null;
+function _exportWipe() {
+  if (_exportHideTimer) { clearTimeout(_exportHideTimer); _exportHideTimer = null; }
+  var rev = document.getElementById('exportKeyReveal');
+  if (rev) { rev.value = ''; rev.type = 'password'; }
+  var box = document.getElementById('exportKeyRevealBox');
+  if (box) box.classList.add('hidden');
+  var pass = document.getElementById('exportKeyPass');
+  if (pass) pass.value = '';
+}
+
+function _exportGateRead() {
+  var pass = document.getElementById('exportKeyPass');
+  var phrase = document.getElementById('exportKeyPhrase');
+  var ack = document.getElementById('exportKeyAck');
+  return SostExport.validateExportGate(
+    pass ? pass.value : '', phrase ? phrase.value : '', !!(ack && ack.checked));
+}
+
+function _exportGateError(reason) {
+  var m = {
+    'password-required': 'Enter your wallet password.',
+    'phrase-required': 'Type the exact phrase: EXPORT PRIVATE KEY',
+    'ack-required': 'Tick the acknowledgement checkbox first.'
+  };
+  _exportMsg('⚠ ' + (m[reason] || 'Cannot export.'), true);
+}
+
+// Re-decrypt locally with the entered password — this both verifies the password
+// and yields the key, with no network access. Returns wallet data or null.
+async function _exportUnlock() {
+  var passEl = document.getElementById('exportKeyPass');
+  var pass = passEl ? passEl.value : '';
+  var data;
+  try { data = await loadWallet(pass); }
+  catch (e) { _exportMsg('⚠ Wrong password — could not decrypt the wallet.', true); return null; }
+  if (!data) { _exportMsg('⚠ No wallet found in this browser.', true); return null; }
+  var v = SostExport.validateKeyMaterial(data);
+  if (!v.ok) {
+    _exportMsg(v.reason === 'watch-only'
+      ? '⚠ This is a watch-only wallet — it has no private key to export.'
+      : '⚠ Wallet key material is invalid; export aborted.', true);
+    return null;
+  }
+  return data;
+}
+
+// Common post-export step: wipe + force auto-lock + local audit line (spec 4 & 6).
+function _exportFinish() {
+  _exportWipe();
+  _exportMsg('✓ Private key export performed locally. Wallet locked for safety — the key was never sent anywhere.', false);
+  try { if (typeof lockWallet === 'function') lockWallet(); } catch (e) {}
+}
+
+// Trigger a client-side download (Blob + object URL). No server round-trip.
+function _exportDownloadBlob(filename, text, mime) {
+  var blob = new Blob([text], { type: mime || 'application/octet-stream' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+}
+
+window.exportRevealOnce = async function () {
+  var g = _exportGateRead(); if (!g.ok) return _exportGateError(g.reason);
+  var data = await _exportUnlock(); if (!data) return;
+  var box = document.getElementById('exportKeyRevealBox');
+  var rev = document.getElementById('exportKeyReveal');
+  if (rev) { rev.value = data.privKey; rev.type = 'password'; }
+  if (box) box.classList.remove('hidden');
+  data = null;
+  if (_exportHideTimer) clearTimeout(_exportHideTimer);
+  _exportHideTimer = setTimeout(function () {
+    _exportWipe();
+    _exportMsg('Key hidden after 60s. Wallet locked for safety.', false);
+    // Honour "auto-lock after any export" for the reveal path too.
+    try { if (typeof lockWallet === 'function') lockWallet(); } catch (e) {}
+  }, 60000);
+  _exportMsg('Revealed once. Use the eye button to view; it auto-hides and locks the wallet in 60 seconds.', true);
+};
+
+window.exportToggleRevealField = function () {
+  var rev = document.getElementById('exportKeyReveal');
+  if (rev) rev.type = (rev.type === 'password') ? 'text' : 'password';
+};
+
+window.exportCopyReveal = function () {
+  var rev = document.getElementById('exportKeyReveal');
+  if (rev && rev.value && navigator.clipboard) { navigator.clipboard.writeText(rev.value); }
+  _exportMsg('Copied to clipboard. Clear your clipboard after use.', true);
+};
+
+window.exportDownloadCli = async function () {
+  var g = _exportGateRead(); if (!g.ok) return _exportGateError(g.reason);
+  var data = await _exportUnlock(); if (!data) return;
+  var labelEl = document.getElementById('exportKeyLabel');
+  var label = labelEl ? labelEl.value : '';
+  var json = SostExport.buildCliWalletJson(data, label);
+  var fname = SostExport.exportFilename(label, SostExport.todayStamp());
+  _exportDownloadBlob(fname, JSON.stringify(json, null, 2), 'application/json');
+  data = null; json = null;
+  _exportFinish();
+};
+
+window.exportDownloadRaw = function () {
+  var g = _exportGateRead(); if (!g.ok) return _exportGateError(g.reason);
+  // Extra confirmation for the most dangerous option (spec 3).
+  _walletConfirm('Download RAW private key?',
+    'A plain .txt with your unencrypted private key is the most dangerous export. ' +
+    'Anyone who reads that file can spend all your SOST. Prefer the CLI wallet JSON.',
+    'Download raw key',
+    async function () {
+      var data = await _exportUnlock(); if (!data) return;
+      _exportDownloadBlob('sost-private-key-' + String(data.address).slice(0, 12) + '.txt',
+        data.privKey + '\n', 'text/plain');
+      data = null;
+      _exportFinish();
+    }, 'Cancel');
+};
+// ==================== /EXPORT PRIVATE KEY ====================
 
 function _sendFormHasData() {
   function v(id){ var e = document.getElementById(id); return e && e.value && e.value.trim(); }
