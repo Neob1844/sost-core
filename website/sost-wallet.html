@@ -4401,7 +4401,7 @@ async function autoSplitCapsuleSend(opts) {
         '<div style="font-size:10px;color:var(--text-dim);margin-top:4px">already broadcast: ' +
         broadcastTxids.length + '</div>' : '') +
       '<button class="btn btn-small" style="margin-top:8px;background:#e63946;color:#fff;border:0" ' +
-        'onclick="window._autosplitStop=true;this.textContent=\'stopping after current tx…\';this.disabled=true" ' +
+        'onclick="confirmStopAutosplit(' + broadcastTxids.length + ',' + total + ')" ' +
         'title="Stop broadcasting the remaining transactions. Already-broadcast ones cannot be recalled.">■ Stop remaining</button>' +
       '</div>');
 
@@ -5949,16 +5949,59 @@ function recordDailySend(amountSost) {
 
 // ==================== ENHANCED SEND (pre-send confirmation) ====================
 
-// Cancel / clear the send form BEFORE broadcasting. A transaction already broadcast
-// cannot be recalled on a UTXO chain — this only resets the form and signals an
-// in-progress auto-split to stop after the current chunk (remaining ones are not sent).
+// Lightweight, non-blocking confirm modal (styled; NOT window.confirm). Destructive
+// action in red, neutral "continue" in grey. Click-outside or "continue" dismisses.
+function _walletConfirm(title, message, confirmText, onConfirm, cancelText) {
+  var ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.style.display = 'flex';
+  ov.style.zIndex = '300';
+  ov.innerHTML =
+    '<div style="background:#0c0c0e;border:1px solid #333;border-radius:10px;max-width:440px;width:90%;padding:22px;box-shadow:0 0 40px rgba(0,0,0,.6)">' +
+      '<h3 style="margin:0 0 10px;color:var(--text-primary)">' + title + '</h3>' +
+      '<p style="color:var(--text-secondary);font-size:13px;line-height:1.6;margin:0 0 18px">' + message + '</p>' +
+      '<div style="display:flex;gap:10px;justify-content:flex-end">' +
+        '<button class="btn" data-act="no" style="border:1px solid var(--border-dim);background:transparent;color:var(--text-secondary)">' + (cancelText || 'Continue editing') + '</button>' +
+        '<button class="btn" data-act="yes" style="background:#e63946;color:#fff;border:0">' + confirmText + '</button>' +
+      '</div>' +
+    '</div>';
+  function close() { ov.remove(); }
+  ov.addEventListener('click', function(e){ if (e.target === ov) close(); });
+  ov.querySelector('[data-act=no]').addEventListener('click', close);
+  ov.querySelector('[data-act=yes]').addEventListener('click', function(){ close(); if (onConfirm) onConfirm(); });
+  document.body.appendChild(ov);
+}
+
+function _sendFormHasData() {
+  function v(id){ var e = document.getElementById(id); return e && e.value && e.value.trim(); }
+  return !!(v('sendTo') || v('sendAmount') || v('capsuleText') ||
+            document.querySelectorAll('#recipientRows .recipient-row').length);
+}
+
+// Cancel / clear the send form BEFORE broadcasting. A transaction already broadcast cannot be
+// recalled on a UTXO chain — this only resets the form (and signals an in-progress auto-split to
+// stop after the current chunk). Asks to confirm ONLY when the form has unsaved data.
 window.resetSend = function() {
-  window._autosplitStop = true;
-  ['sendTo', 'sendAmount', 'capsuleText'].forEach(function(id){ var el = document.getElementById(id); if (el) el.value = ''; });
-  document.querySelectorAll('#recipientRows .recipient-row').forEach(function(r){ r.remove(); });
-  var info = document.getElementById('sendAddrInfo'); if (info) info.style.display = 'none';
-  var res = document.getElementById('sendResult'); if (res) { res.classList.add('hidden'); res.innerHTML = ''; }
-  var btn = document.getElementById('sendBtn'); if (btn) btn.disabled = false;
+  function doClear() {
+    window._autosplitStop = true;
+    ['sendTo', 'sendAmount', 'capsuleText'].forEach(function(id){ var el = document.getElementById(id); if (el) el.value = ''; });
+    document.querySelectorAll('#recipientRows .recipient-row').forEach(function(r){ r.remove(); });
+    var info = document.getElementById('sendAddrInfo'); if (info) info.style.display = 'none';
+    var res = document.getElementById('sendResult'); if (res) { res.classList.add('hidden'); res.innerHTML = ''; }
+    var btn = document.getElementById('sendBtn'); if (btn) btn.disabled = false;
+  }
+  if (!_sendFormHasData()) { doClear(); return; }
+  _walletConfirm('Discard transaction draft?',
+    'You have unsaved changes (recipient, amount, capsule, additional recipients). This only clears the form — it cannot recall a transaction already broadcast.',
+    'Discard', doClear, 'Continue editing');
+};
+
+// Stop an in-progress auto-split — always confirms (the already-sent transactions are final).
+window.confirmStopAutosplit = function(sent, total) {
+  _walletConfirm('Stop remaining transactions?',
+    'You have sent ' + sent + ' of ' + total + '. The remaining ' + (total - sent) +
+    ' transaction(s) will NOT be broadcast. Transactions already sent CANNOT be reversed.',
+    'Stop remaining', function(){ window._autosplitStop = true; }, 'Continue sending');
 };
 
 // Override sendTransaction to add address book + policy + confirmation
