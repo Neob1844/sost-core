@@ -1408,7 +1408,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <li>NEVER take a photo. NEVER paste them in chat / email. NEVER store them in cloud notes.</li>
             <li>Anyone who reads these 12 words can move every SOST you own.</li>
           </ul>
-          <button class="btn btn-small" onclick="revealSeed()" style="margin-top:4px">I understand &mdash; reveal seed phrase</button>
+          <button class="btn btn-small" onclick="revealGeneratedSeed()" style="margin-top:4px">I understand &mdash; reveal seed phrase</button>
         </div>
 
         <div id="seedRevealBody" style="display:none">
@@ -3640,7 +3640,11 @@ window.generateWallet = async function() {
 // Reveal the seed only after the user clicks through the warning panel.
 // The seed grid stays in the DOM but inside a hidden block so the words
 // never paint to screen until this fires. Idempotent on re-click.
-window.revealSeed = function() {
+// Generate flow: the seed is already in memory — just un-blur it (NO password needed).
+// Renamed from revealSeed to avoid being overridden by the existing-wallet password
+// decrypt revealSeed() defined later (that collision caused the spurious
+// "Enter your password" alert when generating a new wallet).
+window.revealGeneratedSeed = function() {
   const gate = document.getElementById('seedRevealGate');
   const body = document.getElementById('seedRevealBody');
   if (gate) gate.style.display = 'none';
