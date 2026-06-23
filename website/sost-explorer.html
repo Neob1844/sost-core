@@ -1918,7 +1918,7 @@ async function renderDTDPanel(body,title,silent){
     + 'title="Click for the technical explanation of the lottery">'
     + '// DTD &middot; DETERMINISTIC TOKEN DISTRIBUTION '
     + '<span id="dtdHowChev" style="color:var(--text3);font-size:11px">'
-    + '▾</span>'
+    + '▴</span>'
     + '</span>';
   if(!silent)body.innerHTML=dtdEligibilityBanner(H||0,'Scanning public chain data&hellip; <span style="color:var(--cyan)">this may take a moment</span>');
   try{
@@ -2192,7 +2192,7 @@ async function renderDTDPanel(body,title,silent){
     // clicking the title. Self-contained HTML so a future refactor of
     // `summary` does not require editing this block.
     var howItWorks =
-      '<div id="dtdHowItWorks" style="display:none;background:rgba(0,0,0,.35);'
+      '<div id="dtdHowItWorks" style="display:block;background:rgba(0,0,0,.35);'
       + 'border:1px solid var(--border);border-left:3px solid #a855f7;'
       + 'padding:14px 16px;margin:0 0 14px 0;font-size:11px;line-height:1.7;'
       + 'color:var(--text2)">'
