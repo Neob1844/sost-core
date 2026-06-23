@@ -761,6 +761,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <button class="sidebar-btn" data-view="secguide" onclick="showView('secguide')">
         <span class="icon">&#128737;</span> <span>Security Guide</span>
       </button>
+      <!-- GeaSpirit Access (Sign Message) — hidden until GEA_SIGN_ENABLED=true -->
+      <button class="sidebar-btn" id="navAccessBtn" data-view="access" onclick="showView('access')" style="display:none">
+        <span class="icon">&#128279;</span> <span>GeaSpirit Access</span>
+      </button>
       <button class="sidebar-btn" data-view="psbt" onclick="showView('psbt')">
         <span class="icon">&#128196;</span> <span>PSBT</span>
       </button>
@@ -1764,6 +1768,26 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 
     <!-- SETTINGS -->
+    <div id="view-access" class="view hidden">
+      <h2><span class="accent">GeaSpirit Access</span> &mdash; Sign Message</h2>
+      <p class="subtitle">Prove control of your address (and your SOST holding) without ever sending your private key.</p>
+      <div class="card" style="padding:16px 18px;max-width:640px">
+        <div style="font-size:12px;color:var(--red-primary);border:1px solid var(--border-dim);border-radius:6px;padding:10px 12px;margin-bottom:12px;background:rgba(255,0,0,.05)">
+          &#9888; <strong>Only sign messages you understand.</strong> Signing proves you control this address. Your private key never leaves this browser; nothing is sent to any server.
+        </div>
+        <label class="form-label">Message (paste the exact text GeaSpirit gives you)</label>
+        <textarea id="geaSignMsg" class="form-input" style="height:90px;font-size:12px" placeholder="GeaSpirit access: prove control of sost1...&#10;nonce=..."></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="geaSignMessage()">Sign</button>
+          <button class="btn btn-small" onclick="geaClearSign()">Clear</button>
+        </div>
+        <div id="geaSignOut" style="margin-top:12px;font-size:12px"></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:10px;border-top:1px solid var(--border-dim);padding-top:8px">
+          Output = address + compressed pubkey + DER signature over SHA-256(message). Paste it into GeaSpirit &rarr; "Unlock with SOST". Nothing here is stored or transmitted.
+        </div>
+      </div>
+    </div>
+
     <div id="view-settings" class="view hidden">
       <h2><span class="accent">Settings</span></h2>
       <p class="subtitle">Wallet configuration</p>
@@ -6393,6 +6417,50 @@ function initExtensions() {
 
 init();
 initExtensions();
+
+// ===== GeaSpirit Access — Sign Message (OFF by default) =====
+// Non-custodial proof-of-control: signs SHA-256(message) with the in-memory key and
+// outputs address + compressed pubkey + DER signature, for the GeaSpirit Access API to
+// verify (coincurve verifies DER over SHA-256(message)). Nothing is sent or stored.
+const GEA_SIGN_ENABLED = false;   // <-- MASTER ON/OFF for this feature (set true to show it)
+
+window.geaSignMessage = function () {
+  const out = document.getElementById('geaSignOut');
+  const fail = (m) => { out.innerHTML = '<span style="color:var(--red-primary)">' + m + '</span>'; };
+  try {
+    if (!wallet || !wallet.privKey) return fail('Unlock your wallet first.');
+    if (wallet.watchOnly) return fail('Watch-only wallet cannot sign.');
+    const msg = (document.getElementById('geaSignMsg').value || '').trim();
+    if (!msg) return fail('Paste the message to sign.');
+    if (!confirm('Sign this message with your SOST key?\n\nOnly sign messages you understand.')) return;
+    const msgBytes = new TextEncoder().encode(msg);
+    const h = sha256(msgBytes);                                   // SHA-256(message)
+    const sig = secp.sign(h, wallet.privKey, { lowS: true });     // ECDSA secp256k1, low-S
+    const res = {
+      address: wallet.address,
+      pubkey: wallet.pubKey,                                      // compressed 33-byte hex
+      signature_der: bytesToHex(sigToDER(sig)),                   // DER hex
+      message_sha256: bytesToHex(h),
+      timestamp: new Date().toISOString()
+    };
+    const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    out.innerHTML =
+      '<div style="color:var(--cyan-primary);margin-bottom:6px">&#10003; Signed locally — paste this into GeaSpirit:</div>' +
+      '<textarea class="form-input" readonly style="height:150px;font-size:11px;color:var(--text-primary)">' +
+        esc(JSON.stringify(res, null, 2)) + '</textarea>';
+    // SECURITY: no fetch, no localStorage, private key never logged.
+  } catch (e) {
+    fail('Sign failed: ' + (e && e.message ? e.message : e));
+  }
+};
+window.geaClearSign = function () {
+  const m = document.getElementById('geaSignMsg'); if (m) m.value = '';
+  const o = document.getElementById('geaSignOut'); if (o) o.innerHTML = '';
+};
+// reveal the nav entry only when the flag is on
+if (GEA_SIGN_ENABLED) {
+  const b = document.getElementById('navAccessBtn'); if (b) b.style.display = '';
+}
 </script>
 
 <script>
