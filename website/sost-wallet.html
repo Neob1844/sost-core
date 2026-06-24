@@ -315,6 +315,7 @@
 </style>
 <script src="js/security.js"></script>
 <script src="js/wallet-export.js"></script>
+<script src="js/sost-gateway.js"></script>
 <script src="js/nav-toggle.js" defer></script>
 </head>
 <body>
@@ -773,6 +774,10 @@ document.addEventListener('DOMContentLoaded', () => {
       </button>
       <button class="sidebar-btn" data-view="popc" onclick="showView('popc')">
         <span class="icon">&#x1F6E1;</span> <span>PoPC</span>
+      </button>
+      <!-- SOST Gateway — hidden until SOST_GATEWAY_ENABLED=true (design skeleton, inert) -->
+      <button class="sidebar-btn" id="navGatewayBtn" data-view="gateway" onclick="showView('gateway')" style="display:none">
+        <span class="icon">&#x1F6AA;</span> <span>SOST Gateway</span>
       </button>
       <button class="sidebar-btn" data-view="totp" onclick="showView('totp')">
         <span class="icon">&#128272;</span> <span>2FA</span>
@@ -1785,6 +1790,68 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="font-size:10px;color:var(--text-dim);margin-top:10px;border-top:1px solid var(--border-dim);padding-top:8px">
           Output = address + compressed pubkey + DER signature over SHA-256(message). Paste it into GeaSpirit &rarr; "Unlock with SOST". Nothing here is stored or transmitted.
         </div>
+      </div>
+    </div>
+
+    <!-- ================= SOST GATEWAY (skeleton, OFF by default) ================= -->
+    <div id="view-gateway" class="view hidden">
+      <h2><span class="accent">SOST Gateway</span></h2>
+      <p class="subtitle">One door for SOST: prove holdings, pay, guarantee, and bridge liquidity. Design skeleton &mdash; inert and hidden in production.</p>
+      <div class="card" style="padding:10px 12px;max-width:760px;margin-bottom:12px;font-size:12px;color:var(--text-secondary);border:1px solid var(--border-dim);background:rgba(0,255,255,.03)">
+        &#9888; <strong>Skeleton only.</strong> Nothing here moves funds, signs, or contacts the network. Every module is behind a feature flag that defaults to OFF. See <code>docs/SOST_GATEWAY_WALLET_ARCHITECTURE.md</code>.
+      </div>
+      <div class="tab-bar" id="gwTabBar" style="max-width:760px">
+        <button class="tab-btn active" data-gw="hold"      onclick="showGatewayTab('hold')">Hold</button>
+        <button class="tab-btn"        data-gw="pay"       onclick="showGatewayTab('pay')">Pay</button>
+        <button class="tab-btn"        data-gw="escrow"    onclick="showGatewayTab('escrow')">Escrow</button>
+        <button class="tab-btn"        data-gw="swap"      onclick="showGatewayTab('swap')">Swap</button>
+        <button class="tab-btn"        data-gw="popc_bond" onclick="showGatewayTab('popc_bond')">PoPC Bond</button>
+      </div>
+
+      <div class="card gw-pane" id="gw-hold" style="padding:16px 18px;max-width:760px">
+        <h3 style="margin-top:0">Hold Access <span style="font-size:11px;color:var(--text-dim)">&mdash; prove you hold SOST</span></h3>
+        <p style="font-size:13px;color:var(--text-secondary)">Sign a challenge; the API reads your on-chain balance and unlocks access. <strong>No funds move, no key is sent</strong>, and the token expires so access cannot outlive your holding.</p>
+        <p style="font-size:12px;color:var(--text-dim)">Reuses the existing <a href="#" onclick="showView('access');return false;">GeaSpirit Access &rarr; Sign Message</a> flow. Proof JSON: <code id="gwHoldShape"></code></p>
+      </div>
+
+      <div class="card gw-pane" id="gw-pay" style="display:none;padding:16px 18px;max-width:760px">
+        <h3 style="margin-top:0">Pay with SOST <span style="font-size:11px;color:var(--text-dim)">&mdash; simple send, verifiable</span></h3>
+        <p style="font-size:13px;color:var(--text-secondary)">v1 verification: <strong>destination + amount + confirmations</strong>. (txindex is a later improvement.) The form below only <em>builds a dummy intent and validates it</em> &mdash; it never signs or broadcasts.</p>
+        <label class="form-label">Destination (sost1&hellip;)</label>
+        <input id="gwPayDest" class="form-input" placeholder="sost1..." spellcheck="false">
+        <label class="form-label" style="margin-top:8px">Amount (SOST)</label>
+        <input id="gwPayAmt" class="form-input" placeholder="25" inputmode="decimal">
+        <label class="form-label" style="margin-top:8px">Reference (optional)</label>
+        <input id="gwPayRef" class="form-input" placeholder="order-42" maxlength="64">
+        <div style="margin-top:10px"><button class="btn btn-primary" onclick="gwBuildPayIntent()">Build dummy intent</button></div>
+        <div id="gwPayOut" style="margin-top:12px;font-size:12px"></div>
+      </div>
+
+      <div class="card gw-pane" id="gw-escrow" style="display:none;padding:16px 18px;max-width:760px">
+        <h3 style="margin-top:0">Escrow / Guarantee <span style="font-size:11px;color:var(--text-dim)">&mdash; conditional lock</span></h3>
+        <p style="font-size:13px;color:var(--text-secondary)">Lock SOST with release / refund / dispute rules (native P2SH &mdash; <strong>no new consensus</strong>). v1 produces a <em>spec only</em>; no redeem-script is built here.</p>
+        <ul style="font-size:12px;color:var(--text-dim);line-height:1.7">
+          <li><code>multisig_2of3_cltv</code> &mdash; 2-of-3 {payer, beneficiary, arbiter} + CLTV refund. Marketplace / data-room / B2B.</li>
+          <li><code>hashlock_timelock</code> &mdash; preimage-before-expiry / refund-after. Event-tied &amp; the SWAP leg.</li>
+        </ul>
+        <p style="font-size:12px;color:var(--text-dim)">States: <code id="gwEscrowStates"></code>. Every escrow always has a refund branch (no funds can get stuck).</p>
+      </div>
+
+      <div class="card gw-pane" id="gw-swap" style="display:none;padding:16px 18px;max-width:760px">
+        <h3 style="margin-top:0">Need SOST? Swap <span style="font-size:11px;color:var(--text-dim)">&mdash; cross-chain HTLC (advanced)</span></h3>
+        <p style="font-size:13px;color:var(--text-secondary)">Liquidity bridge, not the checkout. v1 is a <strong>link to the Atomic Swap console</strong>; deep in-wallet integration waits for V15 / a mature SOST leg.</p>
+        <p style="font-size:12px;color:var(--text-dim)">Pairs: <code id="gwSwapPairs"></code></p>
+        <p style="font-size:12px;color:var(--text-dim)" id="gwSwapNote"></p>
+        <div><a class="btn btn-small" id="gwSwapLink" href="#" onclick="return false;">Open Atomic Swap console &rarr;</a></div>
+      </div>
+
+      <div class="card gw-pane" id="gw-popc_bond" style="display:none;padding:16px 18px;max-width:760px">
+        <h3 style="margin-top:0">PoPC Bond <span style="font-size:11px;color:var(--text-dim)">&mdash; guarantee with possible slashing</span></h3>
+        <p style="font-size:13px;color:var(--text-secondary)" id="gwPopcRec"></p>
+        <ul style="font-size:12px;color:var(--text-dim);line-height:1.7">
+          <li id="gwPopcB"></li>
+          <li id="gwPopcA"></li>
+        </ul>
       </div>
     </div>
 
@@ -6461,6 +6528,59 @@ window.geaClearSign = function () {
 if (GEA_SIGN_ENABLED) {
   const b = document.getElementById('navAccessBtn'); if (b) b.style.display = '';
 }
+
+// ===== SOST Gateway — skeleton glue (OFF by default; inert) =====
+// All gating lives in js/sost-gateway.js (window.SOSTGateway). Nothing here signs,
+// pays, or contacts the network — it only renders the design skeleton when the flag is on.
+(function () {
+  var GW = window.SOSTGateway;
+  if (!GW) return;
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]); }); };
+
+  window.showGatewayTab = function (name) {
+    document.querySelectorAll('#view-gateway .gw-pane').forEach(function (p) { p.style.display = 'none'; });
+    var pane = document.getElementById('gw-' + name); if (pane) pane.style.display = '';
+    document.querySelectorAll('#gwTabBar .tab-btn').forEach(function (b) { b.classList.remove('active'); });
+    var btn = document.querySelector('#gwTabBar .tab-btn[data-gw="' + name + '"]'); if (btn) btn.classList.add('active');
+  };
+
+  // PAY: build a DUMMY intent and validate — never signs, never broadcasts.
+  window.gwBuildPayIntent = function () {
+    var out = document.getElementById('gwPayOut');
+    try {
+      var it = GW.Pay.createDummyIntent({
+        destination: (document.getElementById('gwPayDest').value || '').trim(),
+        amount_sost: (document.getElementById('gwPayAmt').value || '').trim(),
+        reference: (document.getElementById('gwPayRef').value || '').trim(),
+        concept: 'wallet skeleton preview'
+      });
+      out.innerHTML = '<div style="color:var(--cyan-primary);margin-bottom:6px">&#10003; Dummy intent built (not sent):</div>' +
+        '<textarea class="form-input" readonly style="height:170px;font-size:11px">' + esc(JSON.stringify(it, null, 2)) + '</textarea>';
+    } catch (e) {
+      out.innerHTML = '<span style="color:var(--red-primary)">' + esc(e && e.message ? e.message : String(e)) + '</span>';
+    }
+  };
+
+  // Populate static, read-only fields from the (inert) module definitions.
+  function fill(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  fill('gwHoldShape', GW.Hold.proofShape().join(', '));
+  fill('gwEscrowStates', GW.Escrow.STATES.join(', '));
+  fill('gwSwapPairs', GW.Swap.PAIRS.join('  ·  '));
+  fill('gwSwapNote', GW.Swap.note());
+  var link = document.getElementById('gwSwapLink'); if (link) link.setAttribute('href', GW.Swap.consoleUrl());
+  fill('gwPopcRec', GW.PopcBond.recommendation());
+  fill('gwPopcB', GW.PopcBond.MODELS.B);
+  fill('gwPopcA', GW.PopcBond.MODELS.A);
+
+  // Apply an optional dev/test override (window.SOST_GATEWAY_CONFIG) without editing the
+  // base library. Absent in production → everything stays OFF and hidden.
+  if (window.SOST_GATEWAY_CONFIG) { GW.applyConfig(window.SOST_GATEWAY_CONFIG); }
+
+  // Reveal the nav entry ONLY when the master flag is on (defaults false → hidden in prod).
+  if (GW.gatewayVisible()) {
+    var nb = document.getElementById('navGatewayBtn'); if (nb) nb.style.display = '';
+  }
+})();
 </script>
 
 <script>
