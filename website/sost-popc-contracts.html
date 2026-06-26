@@ -19,20 +19,20 @@
 <link rel="icon" type="image/png" href="sost-logo.png">
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PoPC Smart Contracts — XAUT &amp; PAXG Ethereum Verification</title>
-<meta name="description" content="Ethereum smart contract addresses for XAUT and PAXG custody verification. Used by SOST Proof of Personal Custody to verify gold reserves on-chain.">
-<meta name="keywords" content="PoPC contracts, XAUT contract, PAXG contract, Ethereum verification, gold custody contracts, SOST PoPC">
+<title>PoPC Bond Staking — Single Native SOST Bond (Create / Monitor / Claim)</title>
+<meta name="description" content="PoPC Bond Staking specification: the single native SOST bond — the only collateral and the only slashable asset. Create, monitor and claim. Activates at V15 / block 20,000. Not tradeable in V15. Includes historical reference for the superseded Model A / Model B Ethereum escrow design.">
+<meta name="keywords" content="PoPC bond staking, SOST bond, native SOST bond, create monitor claim, PoPC V15, SOST staking, Proof of Personal Custody">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="PoPC Smart Contracts — XAUT &amp; PAXG Ethereum Verification">
-<meta property="og:description" content="Ethereum smart contract addresses for XAUT and PAXG custody verification. Used by SOST Proof of Personal Custody to verify gold reserves on-chain.">
+<meta property="og:title" content="PoPC Bond Staking — Single Native SOST Bond (Create / Monitor / Claim)">
+<meta property="og:description" content="PoPC Bond Staking: one native SOST bond, the only collateral and the only slashable asset. Create / monitor / claim. Activates V15 / block 20,000. Not tradeable in V15.">
 <meta property="og:url" content="https://sostcore.com/sost-popc-contracts.html">
 <meta property="og:site_name" content="SOST Protocol">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="PoPC Smart Contracts — XAUT &amp; PAXG Ethereum Verification">
-<meta name="twitter:description" content="Ethereum smart contract addresses for XAUT and PAXG custody verification. Used by SOST Proof of Personal Custody to verify gold reserves on-chain.">
+<meta name="twitter:title" content="PoPC Bond Staking — Single Native SOST Bond (Create / Monitor / Claim)">
+<meta name="twitter:description" content="PoPC Bond Staking: one native SOST bond, the only collateral and the only slashable asset. Create / monitor / claim. Activates V15 / block 20,000. Not tradeable in V15.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -257,28 +257,28 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">Sovereign Gold Custody Infrastructure</div>
-    <h1 class="fade-in delay-1">PoPC <span>Contracts</span></h1>
-    <p class="hero-sub fade-in delay-2">Complete specification and live registry for Proof of Personal Custody. Model A (autocustody bonds) and Model B (escrow timelocks). All parameters are constitutional and immutable since genesis. Every contract is publicly verifiable on-chain.</p>
+    <div class="hero-label fade-in">PoPC Bond Staking — Single Native SOST Bond</div>
+    <h1 class="fade-in delay-1">PoPC Bond <span>Staking</span></h1>
+    <p class="hero-sub fade-in delay-2">Specification for the single native SOST bond — the only collateral and the only slashable asset in PoPC. A staking product: <strong>create</strong> a bond, <strong>monitor</strong> it, then <strong>claim</strong> your reward. Activates at <strong>V15 / block 20,000</strong> and is <strong>not tradeable in V15</strong>. Gold Boost is an optional reward boost only — never collateral, never slashed — and is disabled on mainnet. The earlier Model A / Model B Ethereum SOSTEscrow design below is preserved as historical / superseded reference.</p>
   </div>
 </section>
 
-<!-- STATUS BANNER -->
+<!-- STATUS BANNER — current single-bond model supersession notice -->
 <section style="padding:0;">
   <div class="container" style="padding-top:24px;">
-    <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:16px 20px;font-size:12px;color:var(--text-secondary);line-height:1.8;">
-      <strong style="color:#00ff88;">&#9889; ALPHA LIVE ON SEPOLIA</strong> &mdash; SOSTEscrow is <strong>deployed and working on Sepolia</strong> with live on-chain deposits using mock tokenized gold. First deposit: 0.05 oz XAUT (depositId #0, 90-day lock). End-to-end settlement flow verified. The contract logic, locking model, and state transitions are functioning exactly as designed. <strong style="color:var(--green-primary)">572 tests passed</strong> (Python 294 + TypeScript 231 + Solidity 47). PoPC activation on mainnet after block 10,000. <span style="color:#fb923c">Mock tokens only — not mainnet XAUT/PAXG.</span>
+    <div style="background:rgba(192,132,252,0.08);border:1px solid rgba(192,132,252,0.35);border-radius:8px;padding:16px 20px;font-size:12px;color:var(--text-secondary);line-height:1.8;">
+      <strong style="color:#c084fc;">&#9776; CURRENT MODEL — SINGLE NATIVE SOST BOND</strong> &mdash; PoPC has been redesigned to a <strong>single native SOST bond</strong>: the only collateral and the only slashable asset. It is a <strong>staking product</strong> — create / monitor / claim — that activates at <strong>V15 / block 20,000</strong> and is <strong>not tradeable in V15</strong>. <strong style="color:#c084fc;">This single-bond model supersedes Model A, Model B and the Ethereum SOSTEscrow design</strong> shown further down this page, which is retained only as historical reference. <strong>Gold Boost</strong> is an optional reward boost only — never collateral, never slashed — and is <strong>disabled on mainnet</strong>. Everything below referencing the Ethereum escrow / XAUT-PAXG verification / Model A / Model B is <span style="color:#c084fc;">HISTORICAL / SUPERSEDED</span>.
     </div>
   </div>
 </section>
 
-<!-- ALPHA LIVE STATUS -->
+<!-- HISTORICAL — SEPOLIA ESCROW ALPHA (SUPERSEDED) -->
 <section style="padding:0;">
   <div class="container" style="padding-top:12px;">
-    <div id="alphaStatusBlock" style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:16px 20px;font-size:11px;color:var(--text-secondary);line-height:1.8;">
+    <div id="alphaStatusBlock" style="background:var(--bg-card);border:1px solid var(--border-dim);border-left:3px solid #c084fc;border-radius:8px;padding:16px 20px;font-size:11px;color:var(--text-secondary);line-height:1.8;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--cyan-primary);animation:pulse 2s ease infinite;"></span>
-        <strong style="color:var(--cyan-primary);letter-spacing:2px;font-size:12px;">ALPHA LIVE STATUS</strong>
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#c084fc;"></span>
+        <strong style="color:#c084fc;letter-spacing:2px;font-size:12px;">HISTORICAL — SEPOLIA ESCROW ALPHA (SUPERSEDED)</strong>
         <span style="margin-left:auto;font-size:9px;color:var(--text-muted);letter-spacing:1px" id="alphaPhase">PHASE VI</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
@@ -300,7 +300,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         </div>
       </div>
       <div style="margin-top:10px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--border-dim);padding-top:8px;">
-        <strong style="color:#fb923c">&#9888;</strong> This is an <strong>alpha system</strong>. Settlement is operator-assisted. Not yet a public trustless market. See <a href="sost-gold-dex.html" style="color:#f59e0b">SOST DEX spec</a> for the full architecture.
+        <strong style="color:#c084fc">&#9888;</strong> <strong>Historical / superseded.</strong> This Ethereum SOSTEscrow alpha is no longer the PoPC model. The current PoPC is the single native SOST bond (create / monitor / claim), activating V15 / block 20,000. Non-custodial swaps live in the separate <a href="sost-gold-dex.html" style="color:#f59e0b">Atomic Swap DEX</a> — SOST never custodies funds.
       </div>
     </div>
   </div>
@@ -357,25 +357,28 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   </div>
 </section>
 
-<!-- SECTION 02: Model A vs Model B -->
+<!-- SECTION 02: Model A vs Model B — HISTORICAL -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">// 02</div>
-      <div class="section-title">Model A vs <span class="accent">Model B</span></div>
+      <div class="section-title">Model A vs <span class="accent">Model B</span> — HISTORICAL</div>
+    </div>
+    <div class="notice" style="border-left-color:#c084fc;">
+      <strong style="color:#c084fc;">HISTORICAL / SUPERSEDED.</strong> The two-model design below (MODEL A — self-custody bonds, MODEL B — Ethereum escrow) is the earlier PoPC architecture. It has been superseded by the single native SOST bond (the only collateral, the only slashable asset). The single bond is a staking product — create / monitor / claim — and is <strong>not tradeable in V15</strong>. The figures below are kept for reference only.
     </div>
     <div class="spec-block fade-in delay-1">
-      <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Contract Models Comparison</span><span class="spec-tag">CONSTITUTIONAL</span></div>
+      <div class="spec-header"><div class="spec-icon" style="background:#c084fc;box-shadow:0 0 6px rgba(192,132,252,0.4)"></div><span class="spec-label">Contract Models Comparison — historical</span><span class="spec-tag" style="color:#c084fc;border-color:rgba(192,132,252,0.3)">HISTORICAL / SUPERSEDED</span></div>
       <div class="spec-body" style="overflow-x:auto">
         <table class="code-table">
-          <tr><th>Parameter</th><th>Model A &mdash; Self-Custody</th><th>Model B &mdash; Escrow</th></tr>
+          <tr><th>Parameter</th><th>Model A &mdash; Self-Custody &mdash; HISTORICAL</th><th>Model B &mdash; Escrow &mdash; HISTORICAL</th></tr>
           <tr><td class="highlight">Gold location</td><td>User's own Ethereum wallet (EOA)</td><td>SOSTEscrow contract on Ethereum</td></tr>
           <tr><td class="highlight">Bond requirement</td><td>10&ndash;25% of gold value (by SOST/gold ratio)</td><td>None</td></tr>
           <tr><td class="highlight">Reward payout</td><td>On successful completion</td><td>Immediate upon registration</td></tr>
           <tr><td class="highlight">Protocol fee</td><td class="green">3% (POPC_PROTOCOL_FEE_A_BPS = 300)</td><td style="color:var(--cyan-primary)">8% (POPC_PROTOCOL_FEE_B_BPS = 800)</td></tr>
           <tr><td class="highlight">Audits</td><td>Entropy-based via ConvergenceX (30%&ndash;5% by reputation)</td><td>None (escrow is self-verifying)</td></tr>
           <tr><td class="highlight">Slash risk</td><td style="color:#fb923c">Yes &mdash; 50% to PoPC Pool / 50% to Gold Vault</td><td class="green">None</td></tr>
-          <tr><td class="highlight">Transferable</td><td>Reward rights only (split_reward_right)</td><td>Full position transferable</td></tr>
+          <tr><td class="highlight">Transferable</td><td colspan="2" style="text-align:center;color:#c084fc">Historical design only — the current single native SOST bond is NOT tradeable in V15 (no PoPC DEX, no position/contract trading)</td></tr>
           <tr><td class="highlight">Discount rate (pricing)</td><td>12% annually (higher risk)</td><td>5% annually (lower risk)</td></tr>
           <tr><td class="highlight">Reward floor</td><td>1% or 10 SOST minimum (POPC_REWARD_FLOOR_A)</td><td>0.5% or 5 SOST minimum (POPC_REWARD_FLOOR_B)</td></tr>
           <tr><td class="highlight">Hard cap per contract</td><td colspan="2" style="text-align:center">1,000 SOST (POPC_MAX_REWARD_STOCKS = 100,000,000,000 stocks)</td></tr>
@@ -547,19 +550,22 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   </div>
 </section>
 
-<!-- SECTION 08: SOSTEscrow Contract -->
+<!-- SECTION 08: SOSTEscrow Contract — HISTORICAL -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">// 08</div>
-      <div class="section-title">SOSTEscrow <span class="accent">Contract</span></div>
+      <div class="section-title">SOSTEscrow <span class="accent">Contract</span> — HISTORICAL</div>
+    </div>
+    <div class="notice" style="border-left-color:#c084fc;">
+      <strong style="color:#c084fc;">HISTORICAL / SUPERSEDED.</strong> The Ethereum SOSTEscrow contract (the old Model B) is <strong>no longer part of the PoPC model</strong>. PoPC is now the single native SOST bond on the SOST chain — there is no Ethereum escrow in the current design. The addresses and parameters below describe a past testnet experiment and are <strong>not an active, deployed or live mainnet product</strong>.
     </div>
     <div class="spec-block fade-in delay-1">
-      <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Ethereum Escrow Smart Contract (Model B)</span><span class="spec-tag" style="color:#00ff88;border-color:rgba(0,255,136,0.3)">DEPLOYED ON SEPOLIA</span></div>
+      <div class="spec-header"><div class="spec-icon" style="background:#c084fc;box-shadow:0 0 6px rgba(192,132,252,0.4)"></div><span class="spec-label">Ethereum Escrow Smart Contract (Model B — historical)</span><span class="spec-tag" style="color:#c084fc;border-color:rgba(192,132,252,0.3)">HISTORICAL / SUPERSEDED</span></div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);margin-bottom:16px;line-height:1.8;">The SOSTEscrow contract holds tokenized gold for Model B participants. It is fully immutable with zero admin capabilities. <strong style="color:#00ff88">Now deployed and verified on Sepolia testnet with first on-chain gold deposit.</strong></p>
-        <div style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:6px;padding:14px 18px;font-size:11px;color:var(--text-secondary);line-height:2;margin-bottom:16px;">
-          <strong style="color:#00ff88">SEPOLIA DEPLOYMENT (Testnet &mdash; chain_id: 11155111)</strong><br>
+        <p style="color:var(--text-secondary);margin-bottom:16px;line-height:1.8;">The SOSTEscrow contract was the historical Model B escrow for tokenized gold. <strong style="color:#c084fc">This design has been superseded by the single native SOST bond; the addresses below reference a former Sepolia testnet experiment (mock tokens only) and are not a live or deployed product.</strong></p>
+        <div style="background:rgba(192,132,252,0.06);border:1px solid rgba(192,132,252,0.2);border-radius:6px;padding:14px 18px;font-size:11px;color:var(--text-secondary);line-height:2;margin-bottom:16px;">
+          <strong style="color:#c084fc">HISTORICAL SEPOLIA TESTNET REFERENCE (chain_id: 11155111 &mdash; superseded)</strong><br>
           SOSTEscrow: <span style="color:#67e8f9;font-family:var(--font-mono);font-size:10px">0x01Eaab645DA10E79c5Bae1C38d884B4D1a68f113</span><br>
           Mock XAUT: <span style="color:#67e8f9;font-family:var(--font-mono);font-size:10px">0x38Ca34c6B7b3772B44212d6c2597Fd91a6f944D0</span> (6 decimals)<br>
           Mock PAXG: <span style="color:#67e8f9;font-family:var(--font-mono);font-size:10px">0x754A7D020D559EDD60848450c563303262cAdec7</span> (18 decimals)<br>
@@ -600,7 +606,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       <div class="section-title">Gold Vault <span class="accent">Governance</span></div>
     </div>
     <div class="notice" style="border-left-color:var(--gold);margin-bottom:24px;">
-      <strong>Activation:</strong> Gold Vault governance activates at block <strong>10,000</strong> (GV_GOVERNANCE_ACTIVATION). Until then, vault funds accumulate but cannot be spent.
+      <strong>Activation:</strong> Gold Vault governance activates at <strong>V15 / block 20,000</strong> (GV_GOVERNANCE_ACTIVATION). Until then, vault funds accumulate but cannot be spent.
     </div>
     <div class="spec-block fade-in delay-1">
       <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Spending Rules (GV1&ndash;GV4)</span><span class="spec-tag">CONSENSUS-ENFORCED</span></div>
@@ -609,7 +615,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
           <tr><th>Rule</th><th>Type</th><th>Vote Required</th><th>Condition</th></tr>
           <tr><td class="highlight">GV1</td><td class="green">Gold Purchase</td><td class="green">No</td><td>TX contains GV_PAYLOAD_GOLD_PURCHASE marker (0x47). Direct gold acquisition for vault backing.</td></tr>
           <tr><td class="highlight">GV2</td><td style="color:#fbbf24">Small Operational</td><td class="green">No</td><td>&le; 10% of monthly vault balance (GV_MONTHLY_LIMIT_PCT). Within 4,320-block window (GV_MONTHLY_WINDOW ~30 days). Fresh window if expired.</td></tr>
-          <tr><td class="highlight">GV3</td><td style="color:#fb923c">Large / Non-standard</td><td style="color:#e63946;font-weight:600">Yes &mdash; miner vote</td><td>Epoch 0&ndash;1 (blocks 10,000&ndash;263,105): 95% threshold. Epoch 2+ (block 263,106+): 95% threshold. Voting window: 288 blocks (~48h).</td></tr>
+          <tr><td class="highlight">GV3</td><td style="color:#fb923c">Large / Non-standard</td><td style="color:#e63946;font-weight:600">Yes &mdash; miner vote</td><td>Epoch 0&ndash;1 (blocks 20,000&ndash;263,105): 95% threshold. Epoch 2+ (block 263,106+): 95% threshold. Voting window: 288 blocks (~48h).</td></tr>
           <tr><td class="highlight">GV4</td><td style="color:#e63946">Rejected</td><td>&mdash;</td><td>Spend doesn't match any rule &rarr; returned to vault automatically.</td></tr>
         </table>
       </div>
@@ -686,7 +692,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       <div class="spec-body"><div class="empty-state">No slashed contracts.</div></div>
     </div>
     <div class="notice">
-      <strong>Activation:</strong> Bond/Escrow lock activation at block <strong>10,000</strong> (BOND_ACTIVATION_HEIGHT_MAINNET). Protocol contracts will be the first to go live. Community contracts will appear here as participants register.
+      <strong>Activation:</strong> The single native SOST bond activates at <strong>V15 / block 20,000</strong> (BOND_ACTIVATION_HEIGHT_MAINNET). Bonds are created, monitored and claimed on the SOST chain and are not tradeable in V15. Community bonds will appear here as participants register. The Model A / Model B columns above reflect the historical / superseded design.
     </div>
   </div>
 </section>
@@ -702,8 +708,8 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       <div class="spec-header"><div class="spec-icon cyan"></div><span class="spec-label">How to Verify Any PoPC Contract</span><span class="spec-tag">TRUSTLESS</span></div>
       <div class="spec-body">
         <table class="code-table">
-          <tr><td class="highlight">Model A &mdash; Bond</td><td>SOST bond locked on SOST chain (verify via <a href="sost-explorer.html" style="color:var(--cyan-primary)">Explorer</a>). Gold balance verified via Ethereum RPC at the declared EOA wallet.</td></tr>
-          <tr><td class="highlight">Model B &mdash; Escrow</td><td>Gold locked in SOSTEscrow contract on Ethereum (verify via <a href="https://etherscan.io" target="_blank" rel="noopener" style="color:var(--cyan-primary)">Etherscan</a>). SOST reward delivered immediately and verifiable on-chain.</td></tr>
+          <tr><td class="highlight">Single native SOST bond</td><td>SOST bond locked on the SOST chain (verify via <a href="sost-explorer.html" style="color:var(--cyan-primary)">Explorer</a>). The bond is the only collateral and the only slashable asset; create / monitor / claim on-chain. Activates V15 / block 20,000.</td></tr>
+          <tr><td class="highlight" style="color:#c084fc">Model B &mdash; Escrow (historical)</td><td style="color:#c084fc">Historical / superseded. The former design locked gold in an Ethereum SOSTEscrow contract; it is no longer part of the current PoPC model.</td></tr>
           <tr><td class="highlight">Audit results</td><td>All audit triggers, results, and slash events are deterministic from block entropy. Replay the audit_seed computation from any full node.</td></tr>
           <tr><td class="highlight">Registry</td><td>All contract IDs, addresses, transaction hashes, states, and history are published in this registry and verifiable on both chains.</td></tr>
         </table>

@@ -19,19 +19,19 @@
 <link rel="icon" type="image/png" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Atomic Swap DEX & OTC — SOST Protocol</title>
-<meta name="description" content="SOST SOST DEX: decentralized exchange for XAUT/PAXG gold tokens with bilateral escrow settlement, ED25519 signing, and Proof of Personal Custody contracts.">
-<meta name="keywords" content="SOST gold DEX, tokenized gold, XAUT, PAXG, PoPC contracts, bilateral escrow, gold exchange, proof of personal custody">
+<meta name="description" content="SOST Atomic Swap DEX & OTC: non-custodial peer-to-peer swaps for XAUT/PAXG gold tokens and SOST, with on-chain HTLC / smart-contract escrow, signed offers (ED25519) and encrypted deal channels (X25519). SOST never custodies funds.">
+<meta name="keywords" content="SOST atomic swap DEX, OTC, non-custodial swap, tokenized gold, XAUT, PAXG, HTLC escrow, signed offers, encrypted deal channels">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SOST Atomic Swap DEX & OTC — SOST Protocol">
-<meta property="og:description" content="SOST SOST DEX: decentralized exchange for XAUT/PAXG gold tokens with bilateral escrow settlement and Proof of Personal Custody contracts.">
+<meta property="og:description" content="SOST Atomic Swap DEX & OTC: non-custodial peer-to-peer swaps for XAUT/PAXG gold tokens and SOST, with on-chain HTLC / smart-contract escrow, signed offers and encrypted deal channels.">
 <meta property="og:url" content="https://sostcore.com/sost-gold-dex.html">
 <meta property="og:site_name" content="SOST Protocol">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST Atomic Swap DEX & OTC — SOST Protocol">
-<meta name="twitter:description" content="SOST SOST DEX: decentralized exchange for XAUT/PAXG gold tokens with bilateral escrow settlement and Proof of Personal Custody contracts.">
+<meta name="twitter:description" content="SOST Atomic Swap DEX & OTC: non-custodial peer-to-peer swaps for XAUT/PAXG gold tokens and SOST, with on-chain HTLC / smart-contract escrow, signed offers and encrypted deal channels.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -201,13 +201,13 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 <div style="max-width:1100px;margin:14px auto 0;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center">&#9216; <b>Reframing in progress &mdash; Atomic Swap / OTC.</b> Trading PoPC staking contracts (buy/sell/split positions, sell reward rights) is <b>disabled</b> (<code>POPC_DEX_ENABLED=false</code>) and not part of V15. PoPC is a non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. This surface is being converted into non-custodial swap &amp; OTC coordination (signed offers, encrypted deal channels).</div>
 <section class="hero">
   <div class="c">
-    <div class="hero-label fade-in">GOLD DEX &amp; PoPC</div>
+    <div class="hero-label fade-in">ATOMIC SWAP DEX &amp; OTC</div>
     <h1 class="fade-in delay-1">
-      <span class="gold">SOST DEX</span><br>
-      &amp; PoPC Contracts
+      <span class="gold">SOST Atomic Swap DEX</span><br>
+      &amp; OTC Coordination
     </h1>
     <p class="hero-sub fade-in delay-2">
-      Decentralized exchange for tokenized gold (XAUT, PAXG) with bilateral escrow settlement, ED25519 message signing, and Proof of Personal Custody contract specifications. On-chain gold backing meets trustless peer-to-peer trading.
+      Non-custodial peer-to-peer swaps for tokenized gold (XAUT, PAXG) and SOST, settled with on-chain HTLC / smart-contract escrow. OTC coordination runs on signed offers (ED25519) and encrypted deal channels (X25519) &mdash; SOST never custodies funds. PoPC is a separate, non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:var(--gold)">PoPC Bond Staking</a>.
     </p>
   </div>
 </section>
@@ -217,79 +217,79 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 <h2 style="color:var(--gold);margin-bottom:16px">How It Works &mdash; <span style="color:var(--t1)">Simple</span></h2>
 
 <div style="background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--gold);padding:20px;border-radius:4px;line-height:2;font-size:13px;color:var(--t2)">
-<p style="color:var(--t1);font-weight:600;margin-bottom:12px">SOST lets you hold positions backed by tokenized gold, trade them with signed private messages, and settle automatically.</p>
+<p style="color:var(--t1);font-weight:600;margin-bottom:12px">SOST lets two parties agree a swap with signed private messages and settle it non-custodially through on-chain HTLC / smart-contract escrow &mdash; SOST never holds your funds.</p>
 
-<p><strong style="color:var(--gold)">1.</strong> You deposit tokenized gold (XAUT or PAXG) into an <strong>immutable escrow contract</strong> on Ethereum. No admin key on deposits &mdash; the immutable settlementOperator can update beneficiary for position transfers, but cannot withdraw funds. Only the current beneficiary can withdraw after the lock period.</p>
+<p><strong style="color:var(--gold)">1.</strong> A maker publishes a <strong>signed swap offer</strong> &mdash; for example, tokenized gold (XAUT or PAXG) for SOST, or SOST for an EVM asset. The offer carries a price, an amount, a unique nonce and an expiry, and is signed with the maker&rsquo;s ED25519 key.</p>
 
-<p><strong style="color:var(--gold)">2.</strong> The system registers a <strong>native SOST position</strong> with its own ID, owner, reward schedule, and expiry date. That position is now a tradeable asset inside the SOST ecosystem.</p>
+<p><strong style="color:var(--gold)">2.</strong> Counterparties discover the offer over OTC coordination. There is no order book that custodies anything &mdash; the offer is just a signed message describing the swap each side will execute.</p>
 
-<p><strong style="color:var(--gold)">3.</strong> You can <strong>sell the entire position</strong> to someone else for SOST. You get immediate liquidity without waiting for the lock to expire.</p>
+<p><strong style="color:var(--gold)">3.</strong> A taker <strong>accepts the offer</strong> with their own signed message. Both signatures derive a unique deal, and the two sides open an encrypted deal channel.</p>
 
-<p><strong style="color:var(--gold)">4.</strong> Or you can <strong>sell just the reward right</strong> &mdash; keep the gold-referenced principal, monetize only the future reward.</p>
+<p><strong style="color:var(--gold)">4.</strong> Each side <strong>locks its asset</strong> in escrow &mdash; an on-chain HTLC / smart-contract escrow on the EVM side and a SOST escrow lock on the SOST side. No party can take the other&rsquo;s funds without revealing the matching secret.</p>
 
-<p><strong style="color:var(--gold)">5.</strong> Trades happen through <strong>signed and end-to-end encrypted messages</strong> (ED25519 signatures + X25519 key agreement + ChaCha20-Poly1305 AEAD). Every message &mdash; offer, accept, cancel, settlement notice &mdash; has a hash, a signature, a nonce, and an expiry. No forgery. No replay. No middleman.</p>
+<p><strong style="color:var(--gold)">5.</strong> Coordination happens through <strong>signed and end-to-end encrypted messages</strong> (ED25519 signatures + X25519 key agreement + ChaCha20-Poly1305 AEAD). Every message &mdash; offer, accept, cancel, settlement notice &mdash; has a hash, a signature, a nonce, and an expiry. No forgery. No replay. No middleman.</p>
 
-<p><strong style="color:var(--gold)">6.</strong> The settlement engine <strong>verifies everything automatically</strong>: valid signatures, correct owner, no double-spend, no expired offers. Then it executes the transfer and records the complete audit trail.</p>
+<p><strong style="color:var(--gold)">6.</strong> The settlement engine <strong>verifies everything automatically</strong>: valid signatures, both legs locked, no double-spend, no expired offers. The atomic swap either completes for both sides or refunds both sides &mdash; never one-sided.</p>
 </div>
 
-<h3 style="color:var(--gold);margin:24px 0 12px">Example &mdash; <span style="color:var(--t1)">Angel sells a position to Pedro</span></h3>
+<h3 style="color:var(--gold);margin:24px 0 12px">Example &mdash; <span style="color:var(--t1)">Angel swaps gold for SOST with Pedro</span></h3>
 
 <div style="background:var(--bg2);border:1px solid var(--bdr);padding:20px;border-radius:4px;font-size:12px;color:var(--t2);line-height:2">
-<p>Angel has a <strong>Model B position</strong>: 0.5 oz of XAUT locked for 28 days, with a future reward of 2,000 SOST units. The position is valued at ~9.7 SOST.</p>
+<p>Angel holds 0.5 oz of XAUT and wants SOST. Pedro holds SOST and wants gold exposure. They agree a non-custodial atomic swap at ~9.7 SOST.</p>
 
-<p>Angel needs liquidity now. Pedro is willing to wait.</p>
+<p><strong style="color:var(--gold)">Step 1:</strong> Angel creates a signed offer: <em>&ldquo;I swap 0.5 oz XAUT for 9.7 SOST.&rdquo;</em> The offer is signed with Angel&rsquo;s ED25519 key, includes a unique nonce and expires in 1 hour.</p>
 
-<p><strong style="color:var(--gold)">Step 1:</strong> Angel creates a signed offer: <em>&ldquo;I sell position 8afed8fc for 9.7 SOST.&rdquo;</em> The offer is signed with Angel&rsquo;s ED25519 key, includes a unique nonce and expires in 1 hour.</p>
-
-<p><strong style="color:var(--gold)">Step 2:</strong> Pedro receives the offer through the private relay channel. He verifies the signature is valid, checks the position exists, and accepts: <em>&ldquo;I buy position 8afed8fc for 9.7 SOST.&rdquo;</em> Also signed.</p>
+<p><strong style="color:var(--gold)">Step 2:</strong> Pedro receives the offer through the encrypted deal channel. He verifies the signature is valid and accepts: <em>&ldquo;I swap 9.7 SOST for 0.5 oz XAUT.&rdquo;</em> Also signed.</p>
 
 <p><strong style="color:var(--gold)">Step 3:</strong> The system derives a unique <code style="background:var(--bg3);padding:1px 5px;color:var(--red)">deal_id</code> from both signatures and creates the deal.</p>
 
-<p><strong style="color:var(--gold)">Step 4:</strong> The settlement engine verifies: Angel is the real owner, the position is active, signatures are valid, no replay. Everything checks out.</p>
+<p><strong style="color:var(--gold)">Step 4:</strong> Each side locks its leg in escrow &mdash; Angel locks XAUT in the on-chain HTLC / smart-contract escrow, Pedro locks SOST in the SOST escrow. The settlement engine verifies both legs, signatures and timing.</p>
 
-<p><strong style="color:var(--gold)">Step 5:</strong> Ownership transfers. Pedro is now the owner of position 8afed8fc. Angel receives 9.7 SOST. A settlement notice is emitted and the full history is recorded in the audit log.</p>
+<p><strong style="color:var(--gold)">Step 5:</strong> The atomic swap settles. Pedro receives the XAUT, Angel receives 9.7 SOST. A settlement notice is emitted and the full history is recorded in the audit log. If either leg fails, both sides are refunded.</p>
 
-<p style="margin-top:12px"><strong style="color:var(--cyan)">Alternative:</strong> Angel could instead sell <em>only the reward right</em> &mdash; keeping the gold-referenced principal and selling the future 2,000 SOST reward to Pedro at a discount. The system creates a &ldquo;child position&rdquo; for Pedro (reward only) while Angel keeps the parent (principal only).</p>
+<p style="margin-top:12px"><strong style="color:var(--cyan)">Note:</strong> This is a swap of assets each party already holds &mdash; not the trading of PoPC staking contracts or reward rights. PoPC is a separate, non-tradeable native SOST bond; see <a href="sost-popc.html" style="color:var(--cyan)">PoPC Bond Staking</a>.</p>
 </div>
 
-<h3 style="color:var(--gold);margin:24px 0 12px">Why Trade Positions?</h3>
+<h3 style="color:var(--gold);margin:24px 0 12px">Why Use Atomic Swaps &amp; OTC?</h3>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
 <div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px">
-<p style="color:var(--green);font-weight:600;margin-bottom:8px">&#9654; Sellers</p>
+<p style="color:var(--green);font-weight:600;margin-bottom:8px">&#9654; Makers</p>
 <ul style="color:var(--t2);font-size:12px;line-height:1.8;padding-left:16px">
-<li>Get immediate liquidity</li>
-<li>Exit early without waiting for lock expiry</li>
-<li>Reduce risk exposure</li>
-<li>Rotate capital into new opportunities</li>
-<li>Sell only the reward, keep the principal</li>
+<li>Quote a swap on your own terms</li>
+<li>Keep custody until the moment of settlement</li>
+<li>Reach counterparties via OTC coordination</li>
+<li>Cancel any time before both legs lock</li>
+<li>Signed offers &mdash; no forgery, no replay</li>
 </ul>
 </div>
 <div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px">
-<p style="color:var(--cyan);font-weight:600;margin-bottom:8px">&#9654; Buyers</p>
+<p style="color:var(--cyan);font-weight:600;margin-bottom:8px">&#9654; Takers</p>
 <ul style="color:var(--t2);font-size:12px;line-height:1.8;padding-left:16px">
-<li>Acquire positions at a discount</li>
-<li>Earn future rewards by waiting</li>
-<li>Gain gold exposure without creating a contract from scratch</li>
-<li>Build a portfolio of positions with different maturities</li>
+<li>Swap gold tokens for SOST (and back) non-custodially</li>
+<li>Settle atomically &mdash; both legs or neither</li>
+<li>Verify the offer signature before committing</li>
+<li>On-chain HTLC / smart-contract escrow protects both sides</li>
 </ul>
 </div>
 </div>
 
-<p style="color:var(--gold);font-style:italic;font-size:12px;text-align:center;margin-bottom:0">The market exists because the same position doesn&rsquo;t have the same value for everyone: some prefer money today, others prefer future value.</p>
+<p style="color:var(--gold);font-style:italic;font-size:12px;text-align:center;margin-bottom:0">The DEX exists so two parties can swap assets they already hold &mdash; non-custodially, atomically, without a central counterparty.</p>
 
 </div></section>
 
-<!-- OWNERSHIP RULES -->
+<!-- OWNERSHIP RULES (HISTORICAL — Model B) -->
 <section style="border-bottom:none;padding-bottom:0"><div class="c">
-<h2>Ownership <span style="color:var(--t1)">Rules</span></h2>
+<h2>Ownership Rules <span style="color:var(--t1)">(Historical &mdash; Model B)</span></h2>
+
+<div class="warn"><strong>Historical / superseded.</strong> The split-ownership design below (Model B &ldquo;SOSTEscrow&rdquo; positions with separable principal and reward rights) is <strong>historical</strong> and has been <strong>superseded by the single native SOST bond model</strong>. PoPC is now one non-tradeable native SOST bond &mdash; create, monitor, claim &mdash; with no separable or sellable reward rights; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. None of the transfer flows described here are active, and trading PoPC positions or reward rights is disabled (<code>POPC_DEX_ENABLED=false</code>) and not part of V15. Retained for reference only.</div>
 
 <div style="background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--red);padding:20px;border-radius:4px;line-height:1.8;font-size:12px;color:var(--t2);margin-bottom:20px">
-<p style="color:var(--t1);font-weight:600;margin-bottom:8px">Constitutional Rule</p>
-<p><em style="color:var(--gold)">The right to the principal belongs to the <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">principal_owner</code>. The right to the reward belongs to the <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">reward_owner</code>. The escrow pays to the <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">currentBeneficiary</code>, which must always reflect the principal_owner.</em></p>
+<p style="color:var(--t1);font-weight:600;margin-bottom:8px">Historical rule (Model B)</p>
+<p><em style="color:var(--gold)">The right to the principal belonged to the <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">principal_owner</code>. The right to the reward belonged to the <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">reward_owner</code>. The escrow paid to the <code style="background:var(--bg3);padding:1px 4px;color:var(--red)">currentBeneficiary</code>, which always reflected the principal_owner.</em></p>
 </div>
 
-<p style="color:var(--t2);font-size:13px;line-height:1.8">Every Model B position has <strong>two separate rights</strong>:</p>
+<p style="color:var(--t2);font-size:13px;line-height:1.8">In the historical Model B design, every position had <strong>two separate rights</strong>:</p>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0">
 <div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px">
@@ -302,21 +302,21 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 </div>
 </div>
 
-<h3 style="color:var(--gold);margin:20px 0 12px">Full Position Sale</h3>
+<h3 style="color:var(--gold);margin:20px 0 12px">Full Position Transfer <span style="color:var(--t3);font-weight:400">(historical Model B)</span></h3>
 <div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px;font-size:12px;color:var(--t2);line-height:2;margin-bottom:16px">
 <strong style="color:var(--t1)">Before:</strong> principal_owner = Angel &middot; reward_owner = Angel &middot; eth_beneficiary = Angel<br>
 <strong style="color:var(--t1)">After:</strong> principal_owner = <span style="color:var(--green)">Pedro</span> &middot; reward_owner = <span style="color:var(--green)">Pedro</span> &middot; eth_beneficiary = <span style="color:var(--green)">Pedro</span><br>
 <strong style="color:var(--t1)">At maturity:</strong> Escrow returns gold to <span style="color:var(--green)">Pedro</span>. Reward SOST goes to <span style="color:var(--green)">Pedro</span>.
 </div>
 
-<h3 style="color:var(--cyan);margin:20px 0 12px">Reward-Right Sale Only</h3>
+<h3 style="color:var(--cyan);margin:20px 0 12px">Reward-Right Transfer Only <span style="color:var(--t3);font-weight:400">(historical Model B)</span></h3>
 <div style="background:var(--bg2);border:1px solid var(--bdr);padding:16px;border-radius:4px;font-size:12px;color:var(--t2);line-height:2;margin-bottom:16px">
 <strong style="color:var(--t1)">Before:</strong> principal_owner = Angel &middot; reward_owner = Angel &middot; eth_beneficiary = Angel<br>
 <strong style="color:var(--t1)">After:</strong> principal_owner = Angel &middot; reward_owner = <span style="color:var(--green)">Pedro</span> &middot; eth_beneficiary = Angel<br>
 <strong style="color:var(--t1)">At maturity:</strong> Escrow returns gold to <span style="color:var(--gold)">Angel</span>. Reward SOST goes to <span style="color:var(--green)">Pedro</span>.
 </div>
 
-<h3 style="color:var(--t1);margin:20px 0 12px">Automation Roadmap</h3>
+<h3 style="color:var(--t1);margin:20px 0 12px">Automation Roadmap <span style="color:var(--t3);font-weight:400">(historical Model B testnet components)</span></h3>
 <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px">
 <tr><th style="text-align:left;padding:8px;border-bottom:2px solid var(--bdr);color:var(--t3);font-size:10px">COMPONENT</th><th style="text-align:left;padding:8px;border-bottom:2px solid var(--bdr);color:var(--t3);font-size:10px">STATUS</th><th style="text-align:left;padding:8px;border-bottom:2px solid var(--bdr);color:var(--t3);font-size:10px">FUNCTION</th></tr>
 <tr><td style="padding:7px;border-bottom:1px solid var(--bdr);color:var(--t1)">Settlement Engine</td><td style="color:var(--green)">Operational</td><td style="color:var(--t2)">Verifies signatures, executes transfers, updates ownership</td></tr>
@@ -330,7 +330,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 </table>
 
 <div style="background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--gold);padding:14px;border-radius:4px;font-size:11px;color:var(--t2);line-height:1.8">
-<strong style="color:var(--gold)">Current status:</strong> SOSTEscrow v1 deployed on Sepolia. SOSTEscrow v2 (dynamic beneficiary + settlementOperator) implemented and tested. Auto-withdraw daemon and reward settlement engine implemented. Limited alpha remains operator-assisted while live proof and external audit are completed.
+<strong style="color:var(--gold)">Historical status:</strong> The Model B SOSTEscrow components above were testnet-only (Sepolia) and are <strong>superseded by the single native SOST bond model</strong>. They are not deployed to mainnet, not part of V15, and no PoPC position or reward-right transfer is active. See <a href="sost-popc.html" style="color:var(--gold);text-decoration:underline">PoPC Bond Staking</a> for the current non-tradeable bond design.
 </div>
 
 </div></section>
@@ -339,14 +339,14 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 <section><div class="c">
 <div class="toc">
 <strong style="color:var(--t1);display:block;margin-bottom:8px">TABLE OF CONTENTS</strong>
-<strong style="color:var(--gold);display:block;margin:8px 0 4px;font-size:10px;letter-spacing:2px">PART 1 &mdash; TOKENIZED GOLD DEX</strong>
-<a href="#params">1. Exchange Parameters</a>
-<a href="#messages">2. Trade Message Types</a>
+<strong style="color:var(--gold);display:block;margin:8px 0 4px;font-size:10px;letter-spacing:2px">PART 1 &mdash; ATOMIC SWAP DEX &amp; OTC</strong>
+<a href="#params">1. Swap Parameters</a>
+<a href="#messages">2. Swap Message Types</a>
 <a href="#states">3. Deal State Machine</a>
 <a href="#settlement">4. Settlement Flow</a>
-<a href="#pricing">5. Position Pricing</a>
-<strong style="color:var(--cyan);display:block;margin:12px 0 4px;font-size:10px;letter-spacing:2px">PART 2 &mdash; PoPC CONTRACTS</strong>
-<a href="#models" class="cyan">6. Model A vs Model B</a>
+<a href="#pricing">5. Reference Pricing (Historical)</a>
+<strong style="color:var(--cyan);display:block;margin:12px 0 4px;font-size:10px;letter-spacing:2px">PART 2 &mdash; PoPC CONTRACTS (HISTORICAL SPEC)</strong>
+<a href="#models" class="cyan">6. Model A vs Model B (Historical)</a>
 <a href="#rewards" class="cyan">7. Reward Rates</a>
 <a href="#bonds" class="cyan">8. Bond Sizing</a>
 <a href="#antiwhale" class="cyan">9. Anti-Whale Tiers</a>
@@ -359,25 +359,25 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 
 
 <!-- ======================================================================== -->
-<!-- PART 1 — TOKENIZED GOLD DEX                                             -->
+<!-- PART 1 — ATOMIC SWAP DEX & OTC                                          -->
 <!-- ======================================================================== -->
 
 <div class="part-divider">
   <div class="c">
-    <h2 style="color:var(--gold)">PART 1 &mdash; SOST DEX</h2>
-    <p>Decentralized peer-to-peer exchange for tokenized gold assets</p>
+    <h2 style="color:var(--gold)">PART 1 &mdash; SOST Atomic Swap DEX &amp; OTC</h2>
+    <p>Non-custodial peer-to-peer swaps for tokenized gold and SOST &mdash; signed offers, encrypted deal channels, on-chain HTLC / smart-contract escrow</p>
   </div>
 </div>
 
 <!-- 1. EXCHANGE PARAMETERS -->
 <section id="params"><div class="c">
-<h2>1. Exchange <span class="gold">Parameters</span></h2>
-<p>Core configuration for the SOST DEX bilateral exchange engine. All trades settle through peer-to-peer escrow with no central counterparty.</p>
+<h2>1. Swap <span class="gold">Parameters</span></h2>
+<p>Core configuration for the SOST Atomic Swap DEX engine. All swaps settle non-custodially through peer-to-peer on-chain HTLC / smart-contract escrow with no central counterparty &mdash; SOST never custodies funds.</p>
 
 <table>
 <tr><th>Parameter</th><th>Value</th><th>Description</th></tr>
-<tr><td>Trading Pairs</td><td><code>SOST/XAUT</code>, <code>SOST/PAXG</code></td><td>Tokenized gold pairs only</td></tr>
-<tr><td>Settlement Mode</td><td>Bilateral Escrow</td><td>Both parties lock funds before settlement</td></tr>
+<tr><td>Swap Pairs</td><td><code>SOST/XAUT</code>, <code>SOST/PAXG</code></td><td>Tokenized gold pairs only</td></tr>
+<tr><td>Settlement Mode</td><td>Non-custodial HTLC Escrow</td><td>Both parties lock their own leg before atomic settlement</td></tr>
 <tr><td>Message Signing</td><td>ED25519</td><td>All trade messages cryptographically signed</td></tr>
 <tr><td>ETH Confirmations</td><td>6</td><td>Required confirmations for ETH-side locks</td></tr>
 <tr><td>Deal Expiry</td><td>3,600 s</td><td>Unmatched offers expire after 1 hour</td></tr>
@@ -395,8 +395,8 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 
 <!-- 2. TRADE MESSAGE TYPES -->
 <section id="messages"><div class="c">
-<h2>2. Trade Message <span class="gold">Types</span></h2>
-<p>All messages are ED25519-signed and relayed via the SOST E2E encrypted protocol. Each message type drives the deal state machine forward.</p>
+<h2>2. Swap Message <span class="gold">Types</span></h2>
+<p>All swap messages are ED25519-signed and relayed via encrypted deal channels (SOST E2E protocol). Each message type drives the deal state machine forward. Offers describe a swap each side executes from its own custody &mdash; not the trading of PoPC positions or reward rights.</p>
 
 <table>
 <tr><th>Message Type</th><th>Direction</th><th>Payload</th><th>Effect</th></tr>
@@ -490,10 +490,11 @@ Step 6: NOTICE
 
 <!-- 5. POSITION PRICING -->
 <section id="pricing"><div class="c">
-<h2>5. Position <span class="gold">Pricing</span></h2>
-<p>Position valuation combines spot gold backing with time-discounted future rewards from PoPC contracts. This provides a fair-value reference for DEX trades.</p>
+<h2>5. Reference Pricing <span class="gold">(Historical)</span></h2>
+<div class="warn"><strong>Historical / superseded.</strong> The valuation model below was used by the historical Model A/Model B PoPC position design. PoPC positions and reward rights are <strong>not tradeable</strong> in V15 (<code>POPC_DEX_ENABLED=false</code>), so this is a reference model only &mdash; superseded by the single native SOST bond (<a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>). For atomic swaps, price is simply the rate the two parties sign into their offer.</div>
+<p>For reference, the historical model combined spot gold backing with time-discounted future rewards from PoPC contracts.</p>
 
-<h3>Pricing Formula</h3>
+<h3>Pricing Formula (historical reference)</h3>
 <pre>position_value = gold_backing + time_discounted_rewards - illiquidity_discount
 
 gold_backing     = oz_held * spot_gold_price
@@ -515,21 +516,21 @@ position_value   = $2,400 + $144 - $72 = $2,472</pre>
 <!-- 5.5 AI COPILOT LAYER -->
 <section id="ai-copilot"><div class="c">
 <h2>5.5 AI Copilot <span class="gold">Layer</span></h2>
-<p>The DEX ships with a browser-side AI Copilot stack that helps the user compose trades, understand
-positions and avoid common mistakes. The copilot is <strong>advisory only</strong> &mdash; it never signs
+<p>The DEX ships with a browser-side Copilot stack that helps the user compose swap offers, understand
+deals and avoid common mistakes. The copilot is <strong>advisory only</strong> &mdash; it never signs
 transactions, never moves funds and never updates ownership state. Sensitive actions still require
 the user's session unlock and (when configured) a passkey re-authentication.</p>
 
 <h3>Module Inventory</h3>
 <table>
 <tr><th>Module</th><th>File</th><th>Role</th></tr>
-<tr><td>Intent Parser</td><td><code>js/dex-intent-parser.js</code></td><td>Parses natural language (EN + ES) into structured trade intents (pair, side, amount, price, expiry).</td></tr>
-<tr><td>AI Form Assistant</td><td><code>js/dex-ai-assistant.js</code></td><td>Fills the Trade Composer / OTC form from a parsed intent and renders an explicit "what the assistant understood" review layer before any submission.</td></tr>
-<tr><td>Deal Explainer</td><td><code>js/dex-ai-explainer.js</code></td><td>Explains what a trade does in plain language &mdash; what changes in SOST, what changes in Ethereum, what stays the same; full sale vs reward-only comparison.</td></tr>
+<tr><td>Intent Parser</td><td><code>js/dex-intent-parser.js</code></td><td>Parses natural language (EN + ES) into structured swap intents (pair, side, amount, price, expiry).</td></tr>
+<tr><td>Form Assistant</td><td><code>js/dex-ai-assistant.js</code></td><td>Fills the Swap Composer / OTC form from a parsed intent and renders an explicit "what the assistant understood" review layer before any submission.</td></tr>
+<tr><td>Deal Explainer</td><td><code>js/dex-ai-explainer.js</code></td><td>Explains what a swap does in plain language &mdash; which leg locks on SOST, which leg locks on the EVM side, and what each party receives at atomic settlement.</td></tr>
 <tr><td>Risk Guardian</td><td><code>js/dex-ai-validator.js</code></td><td>Validates intents and detects problems before the user confirms. Warnings are classified <code>INFO</code>, <code>WARNING</code> or <code>BLOCKING</code>. <strong>BLOCKING</strong> warnings prevent the form from being submitted.</td></tr>
-<tr><td>Compare Helper</td><td><code>js/dex-ai-compare.js</code></td><td>Compares trade alternatives: full sale vs reward-only, sell now vs hold to maturity.</td></tr>
-<tr><td>Lifecycle Guide</td><td><code>js/dex-ai-lifecycle.js</code></td><td>Explains position lifecycle state and available actions (maturity, withdraw, reward settlement, beneficiary status).</td></tr>
-<tr><td>Trade Engine</td><td><code>js/dex-trade-engine.js</code></td><td>Builds offers from form data, signs with ED25519, encrypts with ChaCha20-Poly1305 via channel keys, submits to the blind relay.</td></tr>
+<tr><td>Compare Helper</td><td><code>js/dex-ai-compare.js</code></td><td>Compares swap alternatives: different rates, expiries and counterparties.</td></tr>
+<tr><td>Lifecycle Guide</td><td><code>js/dex-ai-lifecycle.js</code></td><td>Explains deal lifecycle state and available actions (offer, accept, lock, atomic settle, refund).</td></tr>
+<tr><td>Swap Engine</td><td><code>js/dex-trade-engine.js</code></td><td>Builds offers from form data, signs with ED25519, encrypts with ChaCha20-Poly1305 via channel keys, submits to the blind relay.</td></tr>
 <tr><td>Session Manager</td><td><code>js/dex-session.js</code></td><td>Manages unlock / lock / timeout. Bridges the keystore with the DEX UI and relay.</td></tr>
 <tr><td>Onboarding Glue</td><td><code>js/dex-onboarding.js</code></td><td>Connects all Phase A+B+C modules to the DEX page UI &mdash; public/private mode, wallet panel, AI assistant box, inbox, error/empty states.</td></tr>
 </table>
@@ -537,9 +538,9 @@ the user's session unlock and (when configured) a passkey re-authentication.</p>
 <h3>Risk Guardian &mdash; Severity Ladder</h3>
 <table>
 <tr><th>Severity</th><th>Effect</th><th>Examples</th></tr>
-<tr><td><code>INFO</code></td><td>Shown but does not block submission.</td><td>Position has &lt; 5 days to maturity; offer expires soon.</td></tr>
-<tr><td><code>WARNING</code></td><td>Shown prominently; user must acknowledge.</td><td>Price deviates significantly from fair-value reference; reward-right sale leaves principal exposed to maturity.</td></tr>
-<tr><td><code>BLOCKING</code></td><td>Submission is disabled until the user fixes the issue.</td><td>Owner mismatch; signature invalid; expired offer; reused nonce; reward already sold; trying to publish a guarantee-style claim.</td></tr>
+<tr><td><code>INFO</code></td><td>Shown but does not block submission.</td><td>Offer expires soon; counterparty has not locked its leg yet.</td></tr>
+<tr><td><code>WARNING</code></td><td>Shown prominently; user must acknowledge.</td><td>Rate deviates significantly from reference; short HTLC timeout relative to confirmation time.</td></tr>
+<tr><td><code>BLOCKING</code></td><td>Submission is disabled until the user fixes the issue.</td><td>Signature invalid; expired offer; reused nonce; insufficient balance to lock the leg; trying to publish a guarantee-style claim.</td></tr>
 </table>
 
 <h3>Authentication Surface</h3>
@@ -554,8 +555,8 @@ Re-auth gate:     sign offer, accept deal, export identity</pre>
 <table>
 <tr><th>Guarantee</th><th>Scope</th></tr>
 <tr><td>The AI Copilot never signs a transaction on its own.</td><td>All signatures originate from a user-initiated unlock + (optional) passkey re-auth.</td></tr>
-<tr><td>The AI Copilot never moves funds.</td><td>Funds are locked in the SOSTEscrow contract and on the SOST chain via standard <code>OUT_ESCROW_LOCK</code> transactions.</td></tr>
-<tr><td>The AI Copilot never updates the <code>currentBeneficiary</code>.</td><td>Beneficiary updates are performed by the <code>settlementOperator</code> based on a valid signed settlement, not by the browser AI.</td></tr>
+<tr><td>The Copilot never moves funds.</td><td>Each party locks its own leg in the on-chain HTLC / smart-contract escrow and on the SOST chain via standard <code>OUT_ESCROW_LOCK</code> transactions. SOST never custodies funds.</td></tr>
+<tr><td>The Copilot never settles on your behalf.</td><td>Atomic settlement is driven by the matching HTLC secret and valid signed messages, not by the browser copilot.</td></tr>
 <tr><td>Private keys never leave the device.</td><td>Keys live in IndexedDB encrypted with Argon2id. WebAuthn returns yes/no signals only.</td></tr>
 <tr><td>The relay never sees plaintext deals.</td><td>Trade messages are end-to-end encrypted before reaching the relay; the relay performs blind transport.</td></tr>
 <tr><td>BLOCKING warnings cannot be bypassed silently.</td><td>The Risk Guardian disables the submit path when a BLOCKING flag is raised; the user must address the cause.</td></tr>
@@ -585,15 +586,19 @@ is a <em>separate</em> internal research system; it does not run inside the DEX 
 
 <div class="part-divider">
   <div class="c">
-    <h2 style="color:var(--cyan)">PART 2 &mdash; PoPC Contracts</h2>
-    <p>Proof of Personal Custody &mdash; on-chain gold backing with verifiable reserves</p>
+    <h2 style="color:var(--cyan)">PART 2 &mdash; PoPC Contracts (Historical Spec)</h2>
+    <p>Historical Model A / Model B design &mdash; superseded by the single native SOST bond (PoPC Bond Staking)</p>
   </div>
 </div>
 
+<section style="padding-top:24px"><div class="c">
+<div class="warn"><strong>Historical / superseded.</strong> The dual-model PoPC design below (Model A self-custody and Model B escrow) is <strong>historical</strong>. PoPC has been redesigned to a <strong>single native SOST bond</strong> &mdash; the only collateral and the only thing slashable &mdash; created, monitored and claimed as a staking product that activates at <strong>V15 / block 20,000</strong>. PoPC bonds are <strong>not tradeable</strong> and there is no separable reward right. The optional &ldquo;Gold Boost&rdquo; is a reward boost only (never collateral, never slashed) and is disabled on mainnet. The spec below is retained for reference only &mdash; see <a href="sost-popc.html" style="color:var(--cyan);text-decoration:underline">PoPC Bond Staking</a> for the current model.</div>
+</div></section>
+
 <!-- 6. MODEL A vs MODEL B -->
 <section id="models"><div class="c">
-<h2>6. Model A vs <span class="cyan">Model B</span></h2>
-<p>Two custody models serve different risk profiles. Model A rewards self-custody with higher yields; Model B offers simplicity through immutable escrow.</p>
+<h2>6. Model A vs <span class="cyan">Model B</span> <span style="color:var(--t3);font-size:14px">(Historical)</span></h2>
+<p><strong>Historical reference.</strong> Two custody models once served different risk profiles &mdash; Model A rewarded self-custody with higher yields; Model B offered simplicity through immutable escrow. Both are <strong>superseded by the single native SOST bond</strong> (<a href="sost-popc.html" style="color:var(--cyan)">PoPC Bond Staking</a>) and are shown here for reference only.</p>
 
 <table>
 <tr><th>Attribute</th><th style="color:var(--gold)">Model A (Self-Custody)</th><th style="color:var(--cyan)">Model B (Escrow)</th></tr>
@@ -715,7 +720,7 @@ Blacklist:      After 3 slashes (permanent ban from Model A)</pre>
 <h2>12. Gold Vault <span class="cyan">Governance</span></h2>
 <p>Constitutional governance rules for the Gold Vault. These rules are immutable and enforced at consensus level.</p>
 
-<div class="warn"><strong>Activation:</strong> Gold Vault governance rules GV1&ndash;GV4 activate at block 10,000.</div>
+<div class="warn"><strong>Activation:</strong> Gold Vault governance rules GV1&ndash;GV4 activate at V15 / block 20,000.</div>
 
 <table>
 <tr><th>Rule</th><th>Name</th><th>Description</th></tr>
