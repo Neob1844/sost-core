@@ -24,7 +24,8 @@
     SOST_GATEWAY_PAY_ENABLED: false,
     SOST_GATEWAY_ESCROW_ENABLED: false,
     SOST_GATEWAY_ATOMIC_SWAP_ENABLED: false,
-    SOST_GATEWAY_POPC_BOND_ENABLED: false
+    SOST_GATEWAY_POPC_BOND_ENABLED: false,
+    POPC_DEX_ENABLED: false                 // trading PoPC contracts — NOT in V15, future RFC only
   };
 
   function flags() {
@@ -48,7 +49,8 @@
     pay: 'SOST_GATEWAY_PAY_ENABLED',
     escrow: 'SOST_GATEWAY_ESCROW_ENABLED',
     swap: 'SOST_GATEWAY_ATOMIC_SWAP_ENABLED',
-    popcBond: 'SOST_GATEWAY_POPC_BOND_ENABLED'
+    popcBond: 'SOST_GATEWAY_POPC_BOND_ENABLED',
+    popcDex: 'POPC_DEX_ENABLED'
   };
   function applyConfig(cfg) {
     if (!cfg || typeof cfg !== 'object') return flags();
@@ -235,6 +237,57 @@
              'surplus-only) so it cannot dilute the base reward; the Metals Reserve is untouched. ' +
              'No external chain in the root of security. Auto-slash/settle is V15-gated. ' +
              'Everything OFF by default.';
+    },
+
+    // ---- Dashboard pure helpers (no network; the UI renders from these) --------
+    V15_HEIGHT: 20000,                                       // mainnet PoPC base activation
+    DURATIONS: [1, 3, 6, 9, 12],                             // valid lock months
+    REWARD_BPS: { 1: 100, 3: 400, 6: 900, 9: 1400, 12: 2000 }, // base reward bps (1/4/9/14/20%)
+
+    // Scheduled below V15, active at/after it.
+    activationStatus: function (height) {
+      var h = Number(height);
+      if (!isFinite(h)) return { active: false, scheduled: true, label: 'Chain height unknown' };
+      if (h >= this.V15_HEIGHT) return { active: true, scheduled: false, label: 'PoPC active' };
+      return { active: false, scheduled: true, blocksLeft: this.V15_HEIGHT - h,
+               label: 'Scheduled — activates at block ' + this.V15_HEIGHT + ' (' + (this.V15_HEIGHT - h) + ' to go)' };
+    },
+    rewardBps: function (months) { return this.REWARD_BPS[Number(months)] || 0; },
+    rewardPctLabel: function (months) { return (this.rewardBps(months) / 100) + '%'; },
+    // Matches the node: 144 blocks/day * 30 days/month * months.
+    durationToBlocks: function (months) { return 144 * 30 * (Number(months) || 0); },
+    estimateUnlockBlock: function (currentHeight, months) {
+      return Number(currentHeight) + this.durationToBlocks(months);
+    },
+    // Base reward in stocks = floor(bond_stocks * rewardBps / 10000). Integer, no float drift.
+    estimateBaseRewardStocks: function (bondStocks, months) {
+      var bps = this.rewardBps(months);
+      if (!bps || !(bondStocks > 0)) return 0;
+      return Math.floor(bondStocks * bps / 10000);
+    },
+    // Claim (popc_release) is only available once the lock has expired.
+    claimAvailable: function (currentHeight, endHeight) {
+      var c = Number(currentHeight), e = Number(endHeight);
+      return isFinite(c) && isFinite(e) && c >= e;
+    },
+    // Gold Boost is DISABLED on mainnet — the dashboard always shows 0 here.
+    goldBoostMainnet: function () {
+      return { enabled: false, boost_stocks: 0,
+               note: 'Gold Boost is disabled on mainnet (future; requires continuous gold verification).' };
+    }
+  };
+
+  // ===========================================================================
+  // PoPC DEX / secondary market — DISABLED. Trading PoPC bonds is NOT part of V15;
+  // kept behind POPC_DEX_ENABLED (false) as a future RFC. No trading code is shown.
+  // ===========================================================================
+  var Dex = {
+    isEnabled: function () { return gatewayVisible() && FLAGS.POPC_DEX_ENABLED === true; },
+    note: function () {
+      return 'Future research (not active): a PoPC secondary market / DEX would let bonds be traded. ' +
+             'That raises unresolved questions — who bears slashing after a sale, who claims the reward, ' +
+             'and whether a personal-audit commitment is transferable — so V15 ships create / monitor / ' +
+             'claim only. No trading.';
     }
   };
 
@@ -259,6 +312,6 @@
     gatewayVisible: gatewayVisible, visibleModules: visibleModules,
     STOCKS_PER_SOST: STOCKS_PER_SOST,
     validateAddress: validateAddress, validateAmount: validateAmount, validateReference: validateReference,
-    Hold: Hold, Pay: Pay, Escrow: Escrow, Swap: Swap, PopcBond: PopcBond
+    Hold: Hold, Pay: Pay, Escrow: Escrow, Swap: Swap, PopcBond: PopcBond, Dex: Dex
   };
 }));

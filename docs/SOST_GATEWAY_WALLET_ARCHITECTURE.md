@@ -243,3 +243,32 @@ Model-A/Model-B split is superseded; the text below describes the unified design
 - Open decisions to confirm before building: (a) PAY verification path (watch-address vs txindex);
   (b) SWAP at launch = embed vs wait-for-V15. PoPC is now resolved: **single native SOST bond + optional
   Gold Boost** (see §6), no longer a Model-A/Model-B choice.
+
+---
+
+## 11. PoPC Bond Dashboard (V15) — create / monitor / claim, NO DEX
+
+The user-facing PoPC product for V15 is a **dashboard**, not a trading venue. Frontend only — no
+consensus, no Gold Boost on mainnet.
+
+**`website/js/sost-gateway.js` (`PopcBond`)** — pure helpers the UI renders from:
+`V15_HEIGHT=20000`, `activationStatus(height)` (scheduled below V15 / active at-or-after),
+`REWARD_BPS` (1/4/9/14/20%), `estimateBaseRewardStocks(bond,months)`, `durationToBlocks` (matches the
+node's `144*30*months`), `estimateUnlockBlock`, `claimAvailable(height,end)`, and `goldBoostMainnet()`
+(always 0 — Gold Boost disabled on mainnet).
+
+**`website/sost-wallet.html` (`#gw-popc_bond`)** — dashboard sections: activation status · create-bond
+form with a **live reward/unlock simulator** (works offline) · my-bonds list · settle result · safety
+panel. `Create`/`Claim` are wired to `popc_register` / `popc_release` **only** when a node-RPC hook
+(`window.SOST_GATEWAY_RPC`) is present and `height >= 20000`; otherwise they show a clear disabled
+state ("simulation only" / "activates at block 20,000"). The page may set `window.GEA_CHAIN_HEIGHT`
+and call `window.gwPopcRender()` to refresh.
+
+**PoPC DEX / secondary market — DISABLED.** Trading PoPC bonds is **not** in V15. Gated behind
+`POPC_DEX_ENABLED=false` (a future RFC, not deleted): selling a bond raises unresolved questions (who
+bears slashing after a sale, who claims the reward, transferability of a personal-audit commitment).
+The dashboard is **create / monitor / claim only**.
+
+Everything stays behind `SOST_GATEWAY_ENABLED=false` (hidden in production). Tested in
+`website/js/sost-gateway.test.js` (24 tests: activation gate, reward math 1/4/9/14/20%, unlock block,
+claim availability, Gold Boost = 0 on mainnet, DEX disabled).
