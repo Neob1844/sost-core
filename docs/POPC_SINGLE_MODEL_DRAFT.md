@@ -24,8 +24,11 @@ The change is height-gated with **two decoupled gates**:
 > is enabled at the same height only if verification is ready; otherwise it remains deferred and
 > non-critical.
 
-Even so, the constant change has **no behavioural effect yet**: the reward call site is not wired
-(deliberate follow-up), so the node behaves exactly as today until that wiring lands.
+The settle-time payout **is now wired** (app-layer, in the `popc_complete` handler — the V15
+auto-settle in `popc_v15.h` only decides *status*, not the reward amount). Even so there is **no
+behavioural change on mainnet today**: the base reward path is untouched, and the boost is a no-op
+until *both* gates are active — base is set to V15 (20000) and the Gold Boost stays deferred
+(`INT64_MAX`), so the boost is always 0 on mainnet until that gate is set to a finite height.
 
 ## Explicit guarantees (what this PR does NOT do)
 
@@ -120,11 +123,14 @@ base, the user receives 100 SOST, not 120 — the base is never sacrificed for a
 |------|--------|
 | `include/sost/params.h` | `POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT` + `popc_single_model_active(h)`; separate `POPC_GOLD_BOOST_HEIGHT` (mainnet `INT64_MAX`, testnet V15) + `popc_gold_boost_active(h)` |
 | `include/sost/popc.h` | Gold-boost constants + `popc_gold_boost_bps()` + `popc_apply_gold_boost()` + surplus-aware `popc_gold_boost_payout_stocks()`; `ESCROW_REWARD_RATES` marked deprecated |
-| `tests/test_popc_single_model.cpp` | 25 transition tests (both gates + boost math + surplus-aware payout) |
+| `include/sost/popc.h` (cont.) | `popc_settle_reward_stocks()` — full settle composition (base always paid, gated surplus-aware boost) |
+| `src/sost-node.cpp` | `popc_complete` handler wired to `popc_settle_reward_stocks` (base + optional boost from PoPC Pool surplus); base path untouched |
+| `tests/test_popc_single_model.cpp` | 33 transition tests (both gates + boost math + surplus payout + settle matrix) |
 | `CMakeLists.txt` | registers `test-popc-single-model` (ctest `popc-single-model`) |
 
-No `.cpp` consensus path is rewired yet — the reward-computation call site is intentionally
-left for a follow-up so this draft stays pure/inspectable. `emission.cpp` is **not** touched.
+The wired path is the **app-layer** `popc_complete` handler (the PoPC payout is application-layer;
+only the 25% pool inflow is consensus). The base reward formula is untouched — the boost is purely
+additive. `emission.cpp` is **not** touched.
 
 ## Transition tests (`ctest -R popc-single-model`)
 
@@ -142,14 +148,15 @@ boosted reward             -> never exceeds base * 1.25 (technical max)
 base reward table          -> unchanged (1/4/9/14/20%)
 ```
 
-25/25 pass. Existing `test-popc` (31/31) and `test-popc-v15` (29/29) unaffected.
+33/33 pass; the node binary compiles with the wiring. Existing `test-popc` (31/31) and
+`test-popc-v15` (29/29) unaffected.
 
 ## Blockers before merge
 
-1. **Activation height.** Base is set to V15 (block 20000). Confirm the **live chain height is
-   still below 20000** before leaving draft, and wire the reward call site (currently unwired).
-   Decide the **Gold Boost** height separately (`POPC_GOLD_BOOST_HEIGHT`): same 20000 only if
-   verification is ready, otherwise keep deferred.
+1. **Activation height.** Base is set to V15 (block 20000) and the settle path is wired. Confirm the
+   **live chain height is still below 20000** before leaving draft. Decide the **Gold Boost** height
+   separately (`POPC_GOLD_BOOST_HEIGHT`): same 20000 only if verification is ready, otherwise keep
+   deferred. Validate the full path on testnet (`-DSOST_TESTNET_FORKS=ON`, both gates at block 300).
 2. **Wallet / gateway compatibility.** `website/js/sost-gateway.js` + `sost-wallet.html` already
    describe the single model (OFF by default); confirm UI and any RPC surface agree with the
    activated reward math before flipping the height.
@@ -158,9 +165,9 @@ base reward table          -> unchanged (1/4/9/14/20%)
 
 ## How to activate (later)
 
-The base model is already scheduled at V15 (`POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT`). Going live
-means: (1) wire `popc_single_model_active()` into the reward call site, (2) confirm live height
-< 20000, (3) ship in a soaked, coordinated release.
+The base model is already scheduled at V15 (`POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT`) and the settle
+path is wired. Going live means: (1) confirm live height < 20000, (2) soak on testnet, (3) ship in a
+coordinated release. The Gold Boost stays off on mainnet until `POPC_GOLD_BOOST_HEIGHT` is set.
 
 Gold Boost is enabled separately in `include/sost/params.h`:
 

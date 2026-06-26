@@ -222,6 +222,70 @@ TEST(PSM45_payout_never_exceeds_ceiling_or_surplus) {
 }
 
 // =============================================================================
+// Settle-time reward composition (transition matrix) — base never depends on gold
+// =============================================================================
+
+TEST(PSM50_legacy_below_activation) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    // single_model OFF -> legacy == base, regardless of gold/surplus.
+    int64_t out = popc_settle_reward_stocks(false, false, base, true, 360, 1000 * (int64_t)STOCKS_PER_SOST);
+    EXPECT(out == base, "height < activation -> legacy base, no boost");
+}
+
+TEST(PSM51_single_model_base_when_gold_gate_deferred) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    // single ON but gold boost gate OFF -> base only.
+    int64_t out = popc_settle_reward_stocks(true, false, base, true, 360, 1000 * (int64_t)STOCKS_PER_SOST);
+    EXPECT(out == base, "single-model active, gold deferred -> base only");
+}
+
+TEST(PSM52_no_gold_means_base_only) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    int64_t out = popc_settle_reward_stocks(true, true, base, false, 360, 1000 * (int64_t)STOCKS_PER_SOST);
+    EXPECT(out == base, "no gold -> base only");
+}
+
+TEST(PSM53_boost_partial_tier_with_surplus) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    // 31-90 days -> +10%
+    int64_t out = popc_settle_reward_stocks(true, true, base, true, 90, 1000 * (int64_t)STOCKS_PER_SOST);
+    EXPECT(out == base + 10 * (int64_t)STOCKS_PER_SOST, "gold 90d + surplus -> base +10%");
+}
+
+TEST(PSM54_boost_full_tier_with_surplus) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    int64_t out = popc_settle_reward_stocks(true, true, base, true, 180, 1000 * (int64_t)STOCKS_PER_SOST);
+    EXPECT(out == base + 20 * (int64_t)STOCKS_PER_SOST, "gold 180d + surplus -> base +20%");
+}
+
+TEST(PSM55_insufficient_surplus_trims_boost_not_base) {
+    int64_t base    = 100 * (int64_t)STOCKS_PER_SOST;
+    int64_t surplus = 5   * (int64_t)STOCKS_PER_SOST;   // wants +20=20, only 5 available
+    int64_t out = popc_settle_reward_stocks(true, true, base, true, 360, surplus);
+    EXPECT(out == base + surplus, "partial surplus -> trimmed boost, base intact");
+    EXPECT(out >= base, "base is never reduced");
+}
+
+TEST(PSM56_zero_surplus_pays_base_only) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    int64_t out = popc_settle_reward_stocks(true, true, base, true, 360, 0);
+    EXPECT(out == base, "zero surplus -> base intact, boost 0");
+}
+
+TEST(PSM57_base_never_depends_on_gold_or_surplus) {
+    // THE invariant: for any gate/gold/surplus combo, the payout is >= base.
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    bool bools[] = {false, true};
+    int64_t surpluses[] = {-10, 0, 1, 7, 1000};
+    for (bool sm : bools) for (bool gb : bools) for (bool hg : bools)
+        for (int64_t d : {0, 30, 90, 180, 360})
+            for (int64_t s : surpluses) {
+                int64_t out = popc_settle_reward_stocks(sm, gb, base, hg, d, s * (int64_t)STOCKS_PER_SOST);
+                EXPECT(out >= base, "base_reward must never depend on gold or surplus");
+            }
+}
+
+// =============================================================================
 // Structural invariants
 // =============================================================================
 

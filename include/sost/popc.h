@@ -249,6 +249,32 @@ inline int64_t popc_gold_boost_payout_stocks(int64_t base_reward_stocks,
     return (desired <= pool_surplus_stocks) ? desired : pool_surplus_stocks;  // throttle to surplus
 }
 
+// Full settle-time reward composition (whitepaper §6.0). The BASE reward is
+// ALWAYS paid in full and NEVER depends on gold or pool surplus; the Gold Boost
+// is an optional extra added only when both gates are active, gold is present,
+// and the PoPC Pool has surplus. Gate booleans are passed in (kept decoupled from
+// params.h) — the caller evaluates popc_single_model_active(height) and
+// popc_gold_boost_active(height). PURE.
+//   single_model_active : height >= POPC_SINGLE_MODEL_HEIGHT
+//   gold_boost_active   : height >= POPC_GOLD_BOOST_HEIGHT
+//   base_reward_stocks  : base reward (from the frozen rate); paid in full
+//   has_gold            : commitment carries verified gold
+//   gold_verified_days  : continuously-verified gold days (e.g. term length)
+//   pool_surplus_stocks : PoPC Pool surplus available for boosts
+inline int64_t popc_settle_reward_stocks(bool single_model_active,
+                                         bool gold_boost_active,
+                                         int64_t base_reward_stocks,
+                                         bool has_gold,
+                                         int64_t gold_verified_days,
+                                         int64_t pool_surplus_stocks) {
+    if (base_reward_stocks < 0) base_reward_stocks = 0;
+    if (!single_model_active) return base_reward_stocks;            // legacy path == base
+    if (!gold_boost_active || !has_gold) return base_reward_stocks; // single-model base only
+    int64_t boost = popc_gold_boost_payout_stocks(base_reward_stocks,
+                                                  gold_verified_days, pool_surplus_stocks);
+    return base_reward_stocks + boost;                             // base + surplus-aware boost
+}
+
 // Hard cap: maximum SOST reward per contract (in stocks)
 inline constexpr int64_t POPC_MAX_REWARD_STOCKS = 100000000000;  // 1000 SOST
 
