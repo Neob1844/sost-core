@@ -190,7 +190,7 @@ node's gold/bond value computations) — no silent int64 wrap in the consensus-a
    term length. It defaults to 0 (no boost), so a registration snapshot can never earn a full-term
    boost. The continuous-verification pipeline that populates it (e.g. first/last verified height,
    min gold observed across the period) **must be built and soaked before `POPC_GOLD_BOOST_HEIGHT`
-   is set to a finite height**.
+   is set to a finite height**. Design sketch: `docs/GOLD_BOOST_CONTINUOUS_VERIFICATION_STUB.md`.
 3. **Gold Vault governance stays deferred.** `POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT` activates only
    the PoPC base model. Gold Vault spend-governance (`GV_G4_ACTIVATION_HEIGHT` / `GV_G5_ACTIVATION_HEIGHT`)
    remain `INT64_MAX` on mainnet and are **not** coupled to this gate — do not activate them at 20000;
