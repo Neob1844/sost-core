@@ -214,16 +214,25 @@
 
   // ===========================================================================
   // PoPC BOND — guarantee with possible slashing. Explanation only in v1.
+  // Unified, SOST-native model (whitepaper §6.0): ONE native SOST bond is the
+  // only collateral and the only thing that can be slashed. Gold is an OPTIONAL
+  // reward boost — held in the user's own wallet, never collateral, never slashed.
   // ===========================================================================
   var PopcBond = {
     isEnabled: function () { return gatewayVisible() && FLAGS.SOST_GATEWAY_POPC_BOND_ENABLED === true; },
-    MODELS: {
-      B: 'Model B (Gold Vault, XAUT/PAXG, no admin key) — FIRST, no aggressive slashing.',
-      A: 'Model A (native SOST bond via BOND_LOCK / ESCROW preset) — LATER, once ESCROW is proven.'
+    POINTS: {
+      bond: 'Bond: one native SOST bond — the only collateral and the only thing that can be ' +
+            'slashed. Base reward 1 / 4 / 9 / 14 / 20% for 1 / 3 / 6 / 9 / 12-month locks.',
+      gold: 'Gold Boost (optional): gold stays in your own wallet and only ADDS reward ' +
+            '(+0 / +10 / +20% on the base for 0-30 / 31-90 / 91+ verified days, cap +20%, ' +
+            'technical max +25%). Never collateral, never slashed — withdraw it and you simply ' +
+            'revert to the base reward.'
     },
     recommendation: function () {
-      return 'Model B first (no aggressive slashing). Native Model A bond reuses the ESCROW ' +
-             'module and ships only after ESCROW is tested. Auto-slash/settle is V15-gated.';
+      return 'PoPC is one native SOST bond: the only collateral and the only thing slashable. ' +
+             'Gold is an optional boost on the base reward, funded from a dedicated reserve so it ' +
+             'never dilutes the base pool. No external chain in the root of security. ' +
+             'Auto-slash/settle is V15-gated. Everything OFF by default.';
     }
   };
 

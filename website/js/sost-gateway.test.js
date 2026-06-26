@@ -130,9 +130,13 @@ t('Swap exposes pairs + console link, no integration', function () {
   assert.strictEqual(typeof G.Swap.consoleUrl(), 'string');
   assert.ok(/V15/.test(G.Swap.note()));
 });
-t('PopcBond recommends Model B first', function () {
-  assert.ok(/Model B/.test(G.PopcBond.recommendation()));
-  assert.ok(G.PopcBond.MODELS.A && G.PopcBond.MODELS.B);
+t('PopcBond is one native SOST bond, gold is only a boost', function () {
+  var rec = G.PopcBond.recommendation();
+  assert.ok(/native SOST bond/.test(rec));
+  assert.ok(/OFF by default/.test(rec));
+  assert.ok(G.PopcBond.POINTS.bond && G.PopcBond.POINTS.gold);
+  assert.ok(/slash/i.test(G.PopcBond.POINTS.bond));        // bond is the slashable collateral
+  assert.ok(/never collateral/i.test(G.PopcBond.POINTS.gold)); // gold never is
 });
 
 // ---- 9. SECURITY invariants: no funds, no network, no secrets ------------------

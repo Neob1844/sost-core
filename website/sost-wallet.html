@@ -1849,8 +1849,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <h3 style="margin-top:0">PoPC Bond <span style="font-size:11px;color:var(--text-dim)">&mdash; guarantee with possible slashing</span></h3>
         <p style="font-size:13px;color:var(--text-secondary)" id="gwPopcRec"></p>
         <ul style="font-size:12px;color:var(--text-dim);line-height:1.7">
-          <li id="gwPopcB"></li>
-          <li id="gwPopcA"></li>
+          <li id="gwPopcBond"></li>
+          <li id="gwPopcGold"></li>
         </ul>
       </div>
     </div>
@@ -6569,8 +6569,8 @@ if (GEA_SIGN_ENABLED) {
   fill('gwSwapNote', GW.Swap.note());
   var link = document.getElementById('gwSwapLink'); if (link) link.setAttribute('href', GW.Swap.consoleUrl());
   fill('gwPopcRec', GW.PopcBond.recommendation());
-  fill('gwPopcB', GW.PopcBond.MODELS.B);
-  fill('gwPopcA', GW.PopcBond.MODELS.A);
+  fill('gwPopcBond', GW.PopcBond.POINTS.bond);
+  fill('gwPopcGold', GW.PopcBond.POINTS.gold);
 
   // Apply an optional dev/test override (window.SOST_GATEWAY_CONFIG) without editing the
   // base library. Absent in production → everything stays OFF and hidden.

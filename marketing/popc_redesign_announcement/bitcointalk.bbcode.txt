@@ -1,0 +1,95 @@
+[center][img]http://sostcore.com/sost-logo.png[/img]
+
+[size=14pt][b]SOST — PoPC Redesigned: One Native Bond, Gold as a Boost[/b][/size]
+[i]Sovereign Stock Token[/i][/center]
+
+[hr]
+
+[size=12pt][b]TL;DR[/b][/size]
+Proof of Personal Custody (PoPC) has been redesigned from a two-model system into a [b]single, SOST-native protocol[/b]. There is now [b]one bond, posted in SOST[/b] — the only collateral and the only thing that can be slashed. Gold (XAUT/PAXG) becomes a [b]moderate reward boost[/b], never collateral and never slashable. No external blockchain sits in the root of security anymore.
+
+[hr]
+
+[size=12pt][b]Why we changed it[/b][/size]
+
+The previous design had two models:
+[list]
+[li][b]Model A[/b] — native SOST bond, slashable by consensus.[/li]
+[li][b]Model B[/b] — gold-vault escrow on Ethereum (XAUT/PAXG).[/li]
+[/list]
+
+The problem is simple and structural:
+
+[quote]Security that can be slashed must live where the protocol can slash it.[/quote]
+
+When the bond lived as gold on an external chain, enforcing a penalty required an off-chain watcher, oracle or signing key — a [b]trusted intermediary[/b]. That contradicts the exact property PoPC is meant to guarantee: native, automatic, judge-free enforcement.
+
+Anchoring the bond in SOST removes that dependency:
+[list]
+[li][b]No external chain as the root of security.[/b][/li]
+[li][b]Maximum decentralization[/b] — no operator holds a key that can release or seize anyone's bond.[/li]
+[li][b]Maximum automation[/b] — the full lifecycle (lock → audit → reward → slash) runs under SOST consensus, with no human or off-chain component in the trust path.[/li]
+[/list]
+
+[hr]
+
+[size=12pt][b]The unified model[/b][/size]
+
+[list]
+[li]Every participant posts a [b]single bond in native SOST[/b]. This is the only collateral and the only thing that can be slashed.[/li]
+[li]Gold (held in the user's own wallet) is [b]optional[/b]. When present and verified it pays an extra reward on top of the base, funded from a [b]dedicated reserve[/b] so it never dilutes the base reward.[/li]
+[li]Gold is [b]never seized[/b]: withdraw your gold, or if verification is temporarily unavailable, you simply revert to the base reward — no penalty, no slash.[/li]
+[/list]
+
+[b]Base reward (native SOST bond), by lock duration:[/b]
+[code]
+Lock duration   1mo    3mo    6mo    9mo    12mo
+Base reward      1%     4%     9%    14%     20%
+[/code]
+
+[b]Gold Boost — applied on top of the base reward:[/b]
+[code]
+Gold verified for   0-30 days   31-90 days   91+ days
+Boost on base          +0%        +10%        +20%
+[/code]
+
+[list]
+[li]Cap: [b]+20% operationally[/b], with a [b]+25% technical maximum[/b] reserved for future governance.[/li]
+[li]The boost is a multiplier on the base reward, not on the bond.[/li]
+[li]Recommended minimum lock: [b]90 days[/b].[/li]
+[/list]
+
+[b]Worked example:[/b] a 12-month native bond earns 20% base. With gold verified for 91+ days, the boost is +20%, so the total is 20% × 1.20 = [b]24%[/b]. The same bond without gold simply earns its 20%.
+
+[hr]
+
+[size=12pt][b]Coinbase allocation[/b][/size]
+
+The redesign repurposes the function of the former Gold Vault allocation [b]without changing the headline split[/b] — the old 25% that funded the gold-vault product now funds the Gold Boost from a dedicated bucket:
+
+[code]
+Recipient                          Before    After
+Miner                                50%       50%
+PoPC Base Pool                       25%       25%
+Gold Vault -> Gold Boost Reserve     25%       25%
+[/code]
+
+[hr]
+
+[size=12pt][b]Status[/b][/size]
+
+This is a design/documentation update. It introduces [b]no consensus change on its own[/b] and ships [b]disabled by default[/b]; activation follows the same scheduling discipline as the rest of PoPC.
+
+Full details are in the technical whitepaper, section 6 ("Proof of Personal Custody"):
+[url=http://sostcore.com]http://sostcore.com[/url]
+
+[hr]
+
+[b]Links[/b]
+[list]
+[li]Website: [url=http://sostcore.com]sostcore.com[/url][/li]
+[li]Telegram: [url=https://t.me/SOSTProtocolOfficial]t.me/SOSTProtocolOfficial[/url][/li]
+[li]Contact: sost@sostcore.com[/li]
+[/list]
+
+[center][i]SOST is MIT-licensed. No admin keys. No bridges in the root of security.[/i][/center]

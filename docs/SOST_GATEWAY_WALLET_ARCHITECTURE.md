@@ -22,7 +22,7 @@ onto **two** underlying engines:
 | Engine | What it does | Powers | Moves funds? |
 |---|---|---|---|
 | **E1 — Sign + balance read** | Wallet signs a challenge; API reads on-chain balance | **HOLD** | No |
-| **E2 — Script-lock (P2SH: hashlock + timelock + multisig)** | Lock UTXOs to a redeem script; spend by release / refund / hashlock | **ESCROW**, SOST-leg of **SWAP**, PoPC Model-A bond | Yes |
+| **E2 — Script-lock (P2SH: hashlock + timelock + multisig)** | Lock UTXOs to a redeem script; spend by release / refund / hashlock | **ESCROW**, SOST-leg of **SWAP**, PoPC native SOST bond | Yes |
 
 `PAY` is the **degenerate case of E2** — a plain P2PKH send with no script. So:
 
@@ -46,8 +46,8 @@ builder" (redeem-script + claim/refund/dispute spend paths) and expose the four 
 | Access API (HOLD/PAY backend, flags OFF) | DEPLOYED OFF | `apps/access-api` (GeaSpirit infra), console panel on VPS `/opt/ree-locator` |
 | EVM Atomic Swap HTLC (ETH/BNB/USDT/USDC/PAXG/XAUT) | LIVE V14 | `contracts/atomic-swap/src/AtomicSwapHTLC.sol` |
 | **SOST-native swap leg (BTC-style HTLC signing)** | **STUB — gated to V15** | `src/atomic_swap_btc_signing.cpp` |
-| PoPC bond (`BOND_LOCK` UTXO, dynamic sizing 12–25%) | EXISTS (app-layer, non-consensus) | `src/popc.cpp` |
-| PoPC Model-B Gold Vault (XAUT/PAXG, no admin key) | EXISTS | `contracts/SOSTEscrow.sol` |
+| PoPC bond — native SOST, the only slashable collateral (`BOND_LOCK` UTXO, dynamic sizing 12–25%) | EXISTS (app-layer, non-consensus) | `src/popc.cpp` |
+| Gold escrow (XAUT/PAXG, no admin key) — now an **optional Gold Boost**, not collateral | EXISTS | `contracts/SOSTEscrow.sol` |
 | RPC: `listunspent`, `sendrawtransaction` (via proxy), `gettxout`, `validateaddress`, `estimatefee` | EXISTS | `src/sost-rpc.cpp`, `ops/sost-rpc-proxy.py` |
 
 **Bottom line:** HOLD, PAY and SOST-native ESCROW are buildable **on V14 today** (script is already
@@ -163,14 +163,30 @@ I want a guarantee → escrow.*
 
 ---
 
-## 6. PoPC mapping
+## 6. PoPC mapping (unified model — whitepaper §6.0)
 
-- **Model A = native SOST bond** via `BOND_LOCK` UTXO (already in `src/popc.cpp`, sizing 12–25%).
-  It is a timelocked self-escrow with slashing → **reuses the ESCROW module (Engine 2)**.
-- **Model B = Gold Vault** (`contracts/SOSTEscrow.sol`, XAUT/PAXG, no admin key) — already exists.
-- **Recommendation:** start PoPC **Model B / no-slashing for normal users**; require **Model A bond
-  (native escrow) only for operators/validators** once slashing exists. Don't put any bond into the
-  first PAY. PoPC auto-slash/settle is already **V15-gated** (`DTD_POPC_ELIGIBILITY_HEIGHT`).
+PoPC has been **redesigned from two models into one SOST-native protocol**. The previous
+Model-A/Model-B split is superseded; the text below describes the unified design.
+
+- **One bond, native SOST** via `BOND_LOCK` UTXO (`src/popc.cpp`, dynamic sizing 12–25%). This is
+  the **only collateral and the only thing that can be slashed** → **reuses the ESCROW module (Engine 2)**.
+  Base reward 1 / 4 / 9 / 14 / 20% for 1 / 3 / 6 / 9 / 12-month locks.
+- **Gold is an optional reward boost, not collateral.** Gold (XAUT/PAXG) stays in the user's own
+  wallet and only *adds* reward: **+0 / +10 / +20%** on the base for 0–30 / 31–90 / 91+ continuously
+  verified days (operational cap **+20%**, technical max **+25%**). Gold is **never slashed** —
+  withdraw it (or if verification is briefly unavailable) and the participant simply reverts to the
+  base reward, no penalty.
+- **Why native.** Security that can be slashed must live where the protocol can slash it. A bond held
+  as gold on an external chain would need an off-chain watcher/oracle/key to enforce a penalty — a
+  trusted intermediary that defeats PoPC's purpose. Anchoring the bond in SOST removes that
+  dependency: **no external chain in the root of security**, maximum decentralization, full
+  automation (lock → audit → reward → slash under SOST consensus).
+- **Gold Boost Reserve.** The former 25% coinbase slice to the Gold Vault is **repurposed** to fund
+  the Gold Boost from a dedicated bucket, so boosts never dilute the base pool. Headline split is
+  unchanged: **50% miner / 25% PoPC Base Pool / 25% Gold Boost Reserve**.
+- `contracts/SOSTEscrow.sol` (gold escrow, no admin key) remains a **separate, optional product**,
+  no longer the security model of PoPC. Don't put any bond into the first PAY. PoPC auto-slash/settle
+  is already **V15-gated** (`DTD_POPC_ELIGIBILITY_HEIGHT`).
 
 ---
 
@@ -219,4 +235,5 @@ I want a guarantee → escrow.*
   `SOST_GATEWAY_ENABLED=false`) with the four sub-tabs as inert placeholders + flag/validation unit
   tests — no signing, no network, nothing visible in production.
 - Open decisions to confirm before building: (a) PAY verification path (watch-address vs txindex);
-  (b) SWAP at launch = embed vs wait-for-V15; (c) PoPC = Model B-first (recommended) vs Model A bond now.
+  (b) SWAP at launch = embed vs wait-for-V15. PoPC is now resolved: **single native SOST bond + optional
+  Gold Boost** (see §6), no longer a Model-A/Model-B choice.
