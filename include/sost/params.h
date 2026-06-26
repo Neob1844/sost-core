@@ -1029,6 +1029,34 @@ inline constexpr int64_t DTD_POPC_GRACE_BLOCKS           = 1000;
 inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT     = V15_HEIGHT + DTD_POPC_GRACE_BLOCKS;
 
 // =============================================================================
+// PoPC single-model redesign (whitepaper §6.0) — DRAFT, consensus-DEFERRED.
+// =============================================================================
+// Unifies the former Model A (native SOST bond) and Model B (gold-vault escrow)
+// into ONE native-SOST protocol: a single SOST bond is the only collateral and
+// the only thing that can be slashed; gold becomes an OPTIONAL reward boost
+// (never collateral, never slashed). Boost math lives in include/sost/popc.h.
+//
+// MINIMAL by construction:
+//   - The coinbase split is UNCHANGED (50% miner / 25% PoPC Base Pool /
+//     25% reserve). Only the *function* of the 25% reserve is renamed
+//     Gold Vault -> Gold Boost Reserve; emission.cpp does NOT change.
+//   - No new auto-slash. Auto-slash/settle stays V15-gated
+//     (DTD_POPC_ELIGIBILITY_HEIGHT) and is NOT activated by this gate.
+//   - Before POPC_SINGLE_MODEL_HEIGHT, behaviour is byte-identical to today.
+//
+// Ships DEFERRED (INT64_MAX) on mainnet — inert until a final, soaked,
+// coordinated commit replaces INT64_MAX with a finite height. Testnet
+// (-DSOST_TESTNET_FORKS) dry-runs it just after the V15 bundle (block 300).
+#ifdef SOST_TESTNET_FORKS
+inline constexpr int64_t POPC_SINGLE_MODEL_HEIGHT = 400;          // TESTNET ONLY (after V15 dry-run @300)
+#else
+inline constexpr int64_t POPC_SINGLE_MODEL_HEIGHT = INT64_MAX;    // MAINNET (DEFERRED — not scheduled yet)
+#endif
+inline constexpr bool popc_single_model_active(int64_t height) {
+    return height >= POPC_SINGLE_MODEL_HEIGHT;
+}
+
+// =============================================================================
 // DTD Lottery Emergency Pause / Resume — signed control signal (DESIGNED,
 // consensus-DEFERRED).
 // =============================================================================

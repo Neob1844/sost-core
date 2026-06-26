@@ -167,8 +167,66 @@ inline constexpr int64_t POPC_REWARD_FLOOR_B = 500000000;   // 5 SOST minimum (M
 inline constexpr uint16_t POPC_REWARD_FLOOR_A_BPS = 100;  // 1% floor for Model A
 inline constexpr uint16_t POPC_REWARD_FLOOR_B_BPS = 50;   // 0.5% floor for Model B
 
-// Model B base reward rates (% of gold value × 100)
+// Model B base reward rates (% of gold value × 100).
+// DEPRECATED by the single-model redesign (whitepaper §6.0): once
+// popc_single_model_active(height) is true (see sost/params.h), gold no longer
+// earns a standalone yield — it only BOOSTS the native bond reward (see
+// popc_gold_boost_bps below). Kept for pre-activation behaviour and historical
+// reference; migrating/removing this table is a tracked pre-merge item
+// (docs/POPC_SINGLE_MODEL_DRAFT.md).
 static constexpr uint16_t ESCROW_REWARD_RATES[] = {40, 150, 350, 550, 800};
+
+// =========================================================================
+// Gold Boost (single-model redesign — whitepaper §6.0)
+// =========================================================================
+// One native SOST bond is the only collateral / only slashable thing. Gold
+// (held in the user's OWN wallet) is an OPTIONAL reward boost: a multiplier ON
+// TOP of the base reward, scaled by the number of continuously-verified gold
+// days. Gold is NEVER collateral and NEVER slashed — withdraw it (or if
+// verification is briefly unavailable) and the participant simply reverts to the
+// base reward, no penalty. Funded from the Gold Boost Reserve (the repurposed
+// 25% coinbase slice — the emission split itself is unchanged at 50/25/25).
+//
+// These are PURE functions. The height gate (popc_single_model_active, params.h)
+// is applied at the CALL SITE: before activation, callers use the legacy path;
+// at/after activation, callers use the base reward + this boost.
+
+// Boost tiers by continuously-verified gold days (whitepaper §6.0):
+//   [0, 30] -> +0%   |   [31, 90] -> +10%   |   91+ -> +20%
+inline constexpr int64_t  POPC_GOLD_BOOST_DAYS_PARTIAL = 31;    // first day at +10%
+inline constexpr int64_t  POPC_GOLD_BOOST_DAYS_FULL    = 91;    // first day at +20%
+inline constexpr uint16_t POPC_GOLD_BOOST_BPS_NONE     = 0;     // +0%
+inline constexpr uint16_t POPC_GOLD_BOOST_BPS_PARTIAL  = 1000;  // +10%
+inline constexpr uint16_t POPC_GOLD_BOOST_BPS_FULL     = 2000;  // +20%
+
+// Operational cap (default ceiling) and technical maximum (governance headroom).
+inline constexpr uint16_t POPC_GOLD_BOOST_CAP_BPS = 2000;  // +20% operational cap
+inline constexpr uint16_t POPC_GOLD_BOOST_MAX_BPS = 2500;  // +25% technical maximum
+static_assert(POPC_GOLD_BOOST_CAP_BPS <= POPC_GOLD_BOOST_MAX_BPS,
+              "operational cap must never exceed the technical maximum");
+
+// Additive boost (bps on the base reward) for a number of continuously-verified
+// gold days. gold_verified_days <= 0 (no verified gold) -> 0. Never exceeds the
+// operational cap.
+inline uint16_t popc_gold_boost_bps(int64_t gold_verified_days) {
+    uint16_t boost;
+    if (gold_verified_days < POPC_GOLD_BOOST_DAYS_PARTIAL)   boost = POPC_GOLD_BOOST_BPS_NONE;     // +0%
+    else if (gold_verified_days < POPC_GOLD_BOOST_DAYS_FULL) boost = POPC_GOLD_BOOST_BPS_PARTIAL;  // +10%
+    else                                                     boost = POPC_GOLD_BOOST_BPS_FULL;     // +20%
+    if (boost > POPC_GOLD_BOOST_CAP_BPS) boost = POPC_GOLD_BOOST_CAP_BPS;  // operational cap
+    return boost;
+}
+
+// Apply the gold boost to a base reward rate (bps): result = base * (1 + boost).
+// The boost is hard-clamped to the technical maximum as a final safety ceiling,
+// so no future mis-set cap can push a single contract above base * 1.25.
+inline uint16_t popc_apply_gold_boost(uint16_t base_rate_bps, int64_t gold_verified_days) {
+    uint16_t boost = popc_gold_boost_bps(gold_verified_days);
+    if (boost > POPC_GOLD_BOOST_MAX_BPS) boost = POPC_GOLD_BOOST_MAX_BPS;  // hard ceiling (+25%)
+    int64_t out = (int64_t)base_rate_bps
+                + ((int64_t)base_rate_bps * (int64_t)boost) / 10000;
+    return (uint16_t)out;
+}
 
 // Hard cap: maximum SOST reward per contract (in stocks)
 inline constexpr int64_t POPC_MAX_REWARD_STOCKS = 100000000000;  // 1000 SOST
