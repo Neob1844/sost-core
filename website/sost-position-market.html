@@ -22,7 +22,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Position Market — Signed Market for Gold-Linked Positions</title>
 <meta name="description" content="SOST Position Market: a signed market infrastructure for identified positions and rights linked to tokenized gold, with private coordination and verifiable settlement.">
-<meta name="keywords" content="SOST position market, gold-referenced positions, signed trading, OTC market, PoPC positions, reward rights, settlement">
+<meta name="keywords" content="SOST position market, gold-referenced positions, signed trading, OTC market, PoPC positions, settlement">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
@@ -173,6 +173,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     </div>
   </div>
 </nav>
+<div style="max-width:1100px;margin:14px auto 0;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center">&#9216; <b>Reframing in progress &mdash; Atomic Swap / OTC.</b> Trading PoPC staking contracts (buy/sell/split positions, sell reward rights) is <b>disabled</b> (<code>POPC_DEX_ENABLED=false</code>) and not part of V15. PoPC is a non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. This surface is being converted into non-custodial swap &amp; OTC coordination (signed offers, encrypted deal channels).</div>
 <section class="hero"><div class="c">
 <h1>Position Market</h1>
 <p style="color:var(--text-secondary);margin-bottom:20px">Position viewing and management has moved to the unified SOST DEX.</p>
@@ -315,5 +316,6 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     if(e.key==='Escape') closeSv(null,true);
   });
 </script>
+<script src="js/popc-dex-gate.js"></script>
 </body>
 </html>
