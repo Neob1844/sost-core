@@ -353,6 +353,10 @@ add_executable(test-popc-v15-authz tests/test_popc_v15_authz.cpp)
 target_link_libraries(test-popc-v15-authz PRIVATE sost-core secp256k1)
 add_test(NAME popc-v15-authz COMMAND test-popc-v15-authz)
 
+add_executable(test-popc-v15-carrier-e2e tests/test_popc_v15_carrier_e2e.cpp)
+target_link_libraries(test-popc-v15-carrier-e2e PRIVATE sost-core secp256k1)
+add_test(NAME popc-v15-carrier-e2e COMMAND test-popc-v15-carrier-e2e)
+
 # V15 PoPC P5 — staged-activation soak (deterministic) + replay byte-identity
 add_executable(test-popc-v15-soak tests/test_popc_v15_soak.cpp)
 target_link_libraries(test-popc-v15-soak PRIVATE sost-core)
