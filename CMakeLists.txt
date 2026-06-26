@@ -848,6 +848,11 @@ add_executable(test-gold-vault tests/test_gold_vault.cpp)
 target_link_libraries(test-gold-vault PRIVATE sost-core)
 add_test(NAME gold-vault COMMAND test-gold-vault)
 
+# Gold Vault governance G1-G5 audit (DRAFT; mainnet gates stay INT64_MAX).
+add_executable(test-gv-governance-audit tests/test_gv_governance_audit.cpp)
+target_link_libraries(test-gv-governance-audit PRIVATE sost-core secp256k1)
+add_test(NAME gv-governance-audit COMMAND test-gv-governance-audit)
+
 # V13 Gold Vault Slice 1 — pure-function tests for helpers
 # (gv_slice1_active_at / agree / destination_allowed / amount_within_cap /
 #  rate_limit_ok) AND a fail-closed-design regression that asserts the
