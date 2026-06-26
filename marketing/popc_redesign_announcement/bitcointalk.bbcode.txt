@@ -56,6 +56,7 @@ Boost on base          +0%        +10%        +20%
 [list]
 [li]Cap: [b]+20% operationally[/b], with a [b]+25% technical maximum[/b] reserved for future governance.[/li]
 [li]The boost is a multiplier on the base reward, not on the bond.[/li]
+[li]Eligibility: tokenized gold worth at least [b]max(25% of the bond value, 0.25 PAXG/XAUT)[/b], held continuously for the verified period. Dust (0.001 PAXG) does not qualify.[/li]
 [li]Recommended minimum lock: [b]90 days[/b].[/li]
 [/list]
 

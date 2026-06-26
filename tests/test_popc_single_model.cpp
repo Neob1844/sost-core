@@ -286,6 +286,66 @@ TEST(PSM57_base_never_depends_on_gold_or_surplus) {
 }
 
 // =============================================================================
+// Gold Boost eligibility threshold: max(25% of bond value, 0.25 PAXG/XAUT)
+// =============================================================================
+
+TEST(PSM60_dust_gold_not_eligible) {
+    // 0.001 PAXG ~ 31 mg, far below the 0.25 oz (7775 mg) floor.
+    EXPECT(popc_gold_boost_eligible(31, 100000, 1000) == false,
+           "dust 0.001 PAXG must not qualify");
+}
+
+TEST(PSM61_below_quarter_oz_not_eligible) {
+    // 0.2 oz = 6220 mg < 7775 mg floor, even with a huge value.
+    EXPECT(popc_gold_boost_eligible(6220, 1000000000, 1000) == false,
+           "below 0.25 PAXG/XAUT must not qualify");
+}
+
+TEST(PSM62_below_25pct_bond_not_eligible) {
+    // Above the dust floor (8000 mg) but gold value < 25% of bond value:
+    // gold_value 1000 micro, bond_value 100000 micro -> 25% = 25000 > 1000.
+    EXPECT(popc_gold_boost_eligible(8000, 1000, 100000) == false,
+           "gold below 25% of bond value must not qualify");
+}
+
+TEST(PSM63_meets_both_qualifies) {
+    // 8000 mg (>= 0.25 oz) and gold_value 30000 >= 25% of bond 100000 (=25000).
+    EXPECT(popc_gold_boost_eligible(8000, 30000, 100000) == true,
+           "gold above max(25% bond, 0.25 PAXG/XAUT) qualifies");
+}
+
+TEST(PSM64_exactly_quarter_oz_floor) {
+    EXPECT(popc_gold_boost_eligible(POPC_GOLD_MIN_ABS_MG, 1000000, 1000) == true,
+           "exactly 0.25 oz with ample value qualifies");
+    EXPECT(popc_gold_boost_eligible(POPC_GOLD_MIN_ABS_MG - 1, 1000000, 1000) == false,
+           "one mg below 0.25 oz does not qualify");
+    EXPECT(POPC_GOLD_MIN_ABS_MG == 7775, "0.25 oz floor = 31103/4 = 7775 mg");
+}
+
+TEST(PSM65_eligible_plus_insufficient_surplus_clips_boost) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    bool elig = popc_gold_boost_eligible(8000, 30000, 100000);   // qualifies
+    int64_t out = popc_settle_reward_stocks(true, true, base, elig, 360, 5 * (int64_t)STOCKS_PER_SOST);
+    EXPECT(elig == true, "precondition: qualifies");
+    EXPECT(out == base + 5 * (int64_t)STOCKS_PER_SOST, "qualifying gold + small surplus -> clipped boost");
+}
+
+TEST(PSM66_eligible_plus_no_surplus_base_only) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    bool elig = popc_gold_boost_eligible(8000, 30000, 100000);
+    int64_t out = popc_settle_reward_stocks(true, true, base, elig, 360, 0);
+    EXPECT(out == base, "qualifying gold + no surplus -> base only");
+}
+
+TEST(PSM67_not_eligible_pays_base_only) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    bool elig = popc_gold_boost_eligible(31, 100, 100000);       // dust -> not eligible
+    int64_t out = popc_settle_reward_stocks(true, true, base, elig, 360, 1000 * (int64_t)STOCKS_PER_SOST);
+    EXPECT(elig == false, "precondition: dust does not qualify");
+    EXPECT(out == base, "non-qualifying gold -> base only despite surplus");
+}
+
+// =============================================================================
 // Structural invariants
 // =============================================================================
 

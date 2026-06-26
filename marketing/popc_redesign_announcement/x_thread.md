@@ -58,6 +58,8 @@ Withdraw it, or if verification is briefly unavailable → you simply drop back 
 
 Example: 12-mo bond = 20% base. + gold 91+ days = 20% × 1.20 = 24%.
 
+Eligibility: gold worth ≥ max(25% of the bond value, 0.25 PAXG/XAUT). Dust doesn't count.
+
 ---
 
 **7/**

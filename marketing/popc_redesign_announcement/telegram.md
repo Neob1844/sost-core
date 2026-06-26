@@ -24,6 +24,8 @@ Gold Boost (on top of base, if you also hold verified gold):
 
 🔹 Gold stays in *your* wallet, never seized. Withdraw it → you just drop back to the base reward. No penalty.
 
+🔹 Eligibility: you need tokenized gold worth at least **max(25% of the bond value, 0.25 PAXG/XAUT)** — dust (0.001 PAXG) doesn't count.
+
 **Example:** 12-month bond = 20% base. With gold 91+ days → 20% × 1.20 = **24%**.
 
 **Funding:** the Gold Boost is paid from the **PoPC Pool** (capped, surplus-only) so it can never dilute the base reward. The **Metals Reserve stays untouched**. Coinbase split unchanged:

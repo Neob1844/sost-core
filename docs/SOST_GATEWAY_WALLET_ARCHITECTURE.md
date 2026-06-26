@@ -181,6 +181,10 @@ Model-A/Model-B split is superseded; the text below describes the unified design
   trusted intermediary that defeats PoPC's purpose. Anchoring the bond in SOST removes that
   dependency: **no external chain in the root of security**, maximum decentralization, full
   automation (lock → audit → reward → slash under SOST consensus).
+- **Gold Boost eligibility.** To unlock any boost the holding must be worth at least the greater of
+  **25% of the SOST bond value** or **0.25 PAXG/XAUT** (≈ 0.25 troy oz), maintained continuously for
+  the verified period. Dust (e.g. 0.001 PAXG) never qualifies. No fiat threshold is hard-coded; the
+  floor is gold-native. Encoded in `popc_gold_boost_eligible()`.
 - **Gold Boost funding.** The Gold Boost is funded from the **PoPC Pool** and capped so it cannot
   dilute the base PoPC reward; the **Metals Protocol Reserve (§5) is untouched**. The coinbase split
   is unchanged: **50% miner / 25% Metals Reserve (Gold Vault, §5) / 25% PoPC Pool** (base reward +

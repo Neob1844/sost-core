@@ -225,8 +225,9 @@
             'slashed. Base reward 1 / 4 / 9 / 14 / 20% for 1 / 3 / 6 / 9 / 12-month locks.',
       gold: 'Gold Boost (optional): gold stays in your own wallet and only ADDS reward ' +
             '(+0 / +10 / +20% on the base for 0-30 / 31-90 / 91+ verified days, cap +20%, ' +
-            'technical max +25%). Never collateral, never slashed — withdraw it and you simply ' +
-            'revert to the base reward.'
+            'technical max +25%). Requires tokenized gold worth at least max(25% of the bond ' +
+            'value, 0.25 PAXG/XAUT) — dust does not qualify. Never collateral, never slashed — ' +
+            'withdraw it and you simply revert to the base reward.'
     },
     recommendation: function () {
       return 'PoPC is one native SOST bond: the only collateral and the only thing slashable. ' +

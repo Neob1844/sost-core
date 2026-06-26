@@ -275,6 +275,31 @@ inline int64_t popc_settle_reward_stocks(bool single_model_active,
     return base_reward_stocks + boost;                             // base + surplus-aware boost
 }
 
+// Gold Boost ELIGIBILITY threshold (whitepaper §6.0). To unlock ANY boost the
+// holding must clear the GREATER of:
+//   (1) 25% of the native SOST bond value, and
+//   (2) 0.25 PAXG/XAUT (= 25% of one token ≈ 0.25 troy oz) — a dust floor so a
+//       tiny holding (e.g. 0.001 PAXG ≈ 31 mg) can never unlock the boost.
+// Comparisons use the protocol's internal micro-USD price unit already used for
+// bond sizing; NO fiat threshold is hard-coded and the absolute floor is
+// gold-native (an amount of gold, price-independent).
+inline constexpr int64_t POPC_GOLD_OZ_MG      = 31103;             // 1 troy oz in mg (matches bond math)
+inline constexpr int64_t POPC_GOLD_MIN_ABS_MG = POPC_GOLD_OZ_MG / 4;  // 0.25 oz dust floor (7775 mg)
+
+// Returns true iff the holding clears BOTH thresholds (gold_value >= max(A,B)).
+// PURE.
+//   gold_amount_mg   : raw tokenized gold held (milligrams) — drives the dust floor
+//   gold_value_micro : value of that gold (micro-USD)
+//   bond_value_micro : value of the SOST bond (micro-USD)
+inline bool popc_gold_boost_eligible(int64_t gold_amount_mg,
+                                     int64_t gold_value_micro,
+                                     int64_t bond_value_micro) {
+    if (gold_amount_mg < POPC_GOLD_MIN_ABS_MG) return false;          // (2) 0.25 oz dust floor
+    if (bond_value_micro > 0 && gold_value_micro * 4 < bond_value_micro)
+        return false;                                                // (1) >= 25% of bond value
+    return true;
+}
+
 // Hard cap: maximum SOST reward per contract (in stocks)
 inline constexpr int64_t POPC_MAX_REWARD_STOCKS = 100000000000;  // 1000 SOST
 

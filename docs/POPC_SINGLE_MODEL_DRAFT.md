@@ -100,6 +100,11 @@ gold state) is confined to an upside-only, non-consensus path until ZK proofs ma
 > **The Gold Boost is funded from the PoPC Pool and capped so it cannot dilute the base PoPC reward.
 > The Metals Protocol Reserve remains untouched.**
 
+**Eligibility.** The boost requires tokenized gold worth at least the greater of **25% of the SOST
+bond value** or **0.25 PAXG/XAUT** (≈ 0.25 troy oz), held continuously for the verified period. Dust
+(e.g. 0.001 PAXG) never qualifies; larger bonds require proportionally more gold. No fiat threshold
+is hard-coded — the floor is gold-native (`popc_gold_boost_eligible`).
+
 The Metals Reserve (§5) is constitutional — it accumulates SOST toward future gold backing. The Gold
 Boost is a PoPC reward, so it is paid from the PoPC Pool (§6), never from the Metals Reserve. The
 coinbase split is genuinely unchanged: **50% miner / 25% Metals Reserve / 25% PoPC Pool**.
@@ -123,9 +128,9 @@ base, the user receives 100 SOST, not 120 — the base is never sacrificed for a
 |------|--------|
 | `include/sost/params.h` | `POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT` + `popc_single_model_active(h)`; separate `POPC_GOLD_BOOST_HEIGHT` (mainnet `INT64_MAX`, testnet V15) + `popc_gold_boost_active(h)` |
 | `include/sost/popc.h` | Gold-boost constants + `popc_gold_boost_bps()` + `popc_apply_gold_boost()` + surplus-aware `popc_gold_boost_payout_stocks()`; `ESCROW_REWARD_RATES` marked deprecated |
-| `include/sost/popc.h` (cont.) | `popc_settle_reward_stocks()` — full settle composition (base always paid, gated surplus-aware boost) |
+| `include/sost/popc.h` (cont.) | `popc_settle_reward_stocks()` — full settle composition (base always paid, gated surplus-aware boost); `popc_gold_boost_eligible()` — `max(25% bond value, 0.25 PAXG/XAUT)` threshold |
 | `src/sost-node.cpp` | `popc_complete` handler wired to `popc_settle_reward_stocks` (base + optional boost from PoPC Pool surplus); base path untouched |
-| `tests/test_popc_single_model.cpp` | 33 transition tests (both gates + boost math + surplus payout + settle matrix) |
+| `tests/test_popc_single_model.cpp` | 41 transition tests (gates + boost math + surplus payout + settle matrix + eligibility threshold) |
 | `CMakeLists.txt` | registers `test-popc-single-model` (ctest `popc-single-model`) |
 
 The wired path is the **app-layer** `popc_complete` handler (the PoPC payout is application-layer;
@@ -148,7 +153,7 @@ boosted reward             -> never exceeds base * 1.25 (technical max)
 base reward table          -> unchanged (1/4/9/14/20%)
 ```
 
-33/33 pass; the node binary compiles with the wiring. Existing `test-popc` (31/31) and
+41/41 pass; the node binary compiles with the wiring. Existing `test-popc` (31/31) and
 `test-popc-v15` (29/29) unaffected.
 
 ## Blockers before merge
