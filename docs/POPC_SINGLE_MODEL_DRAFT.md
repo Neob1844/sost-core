@@ -153,8 +153,11 @@ boosted reward             -> never exceeds base * 1.25 (technical max)
 base reward table          -> unchanged (1/4/9/14/20%)
 ```
 
-41/41 pass; the node binary compiles with the wiring. Existing `test-popc` (31/31) and
+42/42 pass; the node binary compiles with the wiring. Existing `test-popc` (31/31) and
 `test-popc-v15` (29/29) unaffected.
+
+Math is overflow-safe: all value/reward products use `__int128` (eligibility, payout, apply, and the
+node's gold/bond value computations) — no silent int64 wrap in the consensus-adjacent path.
 
 ## Blockers before merge
 
@@ -162,10 +165,20 @@ base reward table          -> unchanged (1/4/9/14/20%)
    **live chain height is still below 20000** before leaving draft. Decide the **Gold Boost** height
    separately (`POPC_GOLD_BOOST_HEIGHT`): same 20000 only if verification is ready, otherwise keep
    deferred. Validate the full path on testnet (`-DSOST_TESTNET_FORKS=ON`, both gates at block 300).
-2. **Wallet / gateway compatibility.** `website/js/sost-gateway.js` + `sost-wallet.html` already
+2. **Continuous gold verification (P1 — required before Gold Boost activation).** The boost uses
+   `commitment.gold_verified_days`, which is **PROVEN** by the audit/attestation pipeline — never the
+   term length. It defaults to 0 (no boost), so a registration snapshot can never earn a full-term
+   boost. The continuous-verification pipeline that populates it (e.g. first/last verified height,
+   min gold observed across the period) **must be built and soaked before `POPC_GOLD_BOOST_HEIGHT`
+   is set to a finite height**.
+3. **Gold Vault governance stays deferred.** `POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT` activates only
+   the PoPC base model. Gold Vault spend-governance (`GV_G4_ACTIVATION_HEIGHT` / `GV_G5_ACTIVATION_HEIGHT`)
+   remain `INT64_MAX` on mainnet and are **not** coupled to this gate — do not activate them at 20000;
+   they need their own soak.
+4. **Wallet / gateway compatibility.** `website/js/sost-gateway.js` + `sost-wallet.html` already
    describe the single model (OFF by default); confirm UI and any RPC surface agree with the
    activated reward math before flipping the height.
-3. **`ESCROW_REWARD_RATES` migration.** Decide how the legacy Model-B standalone yield table is
+5. **`ESCROW_REWARD_RATES` migration.** Decide how the legacy Model-B standalone yield table is
    retired/migrated for any pre-activation contracts so nothing is stranded across the boundary.
 
 ## How to activate (later)

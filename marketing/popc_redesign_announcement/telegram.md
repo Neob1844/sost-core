@@ -31,7 +31,7 @@ Gold Boost (on top of base, if you also hold verified gold):
 **Funding:** the Gold Boost is paid from the **PoPC Pool** (capped, surplus-only) so it can never dilute the base reward. The **Metals Reserve stays untouched**. Coinbase split unchanged:
 `50% miner · 25% Metals Reserve · 25% PoPC Pool (base + optional boost)`
 
-ℹ️ This is a design/docs update — no consensus change on its own, ships **off by default**.
+ℹ️ Draft consensus code is included, **height-gated** and inactive until merged + activated. Gold Boost stays deferred until gold verification is mature.
 
 📄 Full detail → whitepaper §6 at sostcore.com
 🌐 sostcore.com · ✉️ sost@sostcore.com

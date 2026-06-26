@@ -94,6 +94,12 @@ struct PoPCCommitment {
     // Frozen price reference
     int64_t     sost_price_usd_micro;  // micro-USD (integer)
     int64_t     gold_price_usd_micro;  // micro-USD per oz (integer)
+
+    // PROVEN continuous-verification days for the Gold Boost — set ONLY by the
+    // audit/attestation pipeline as it observes the gold held over the term. A
+    // registration snapshot does NOT count. Stays 0 until proven, so a snapshot
+    // can never earn a boost as if gold were held the whole period (whitepaper §6.0).
+    int64_t     gold_verified_days{0};
 };
 
 // =========================================================================
@@ -224,8 +230,8 @@ inline uint16_t popc_gold_boost_bps(int64_t gold_verified_days) {
 inline uint16_t popc_apply_gold_boost(uint16_t base_rate_bps, int64_t gold_verified_days) {
     uint16_t boost = popc_gold_boost_bps(gold_verified_days);
     if (boost > POPC_GOLD_BOOST_MAX_BPS) boost = POPC_GOLD_BOOST_MAX_BPS;  // hard ceiling (+25%)
-    int64_t out = (int64_t)base_rate_bps
-                + ((int64_t)base_rate_bps * (int64_t)boost) / 10000;
+    int64_t out = (int64_t)((__int128)base_rate_bps
+                + ((__int128)base_rate_bps * (int64_t)boost) / 10000);
     return (uint16_t)out;
 }
 
@@ -244,7 +250,7 @@ inline int64_t popc_gold_boost_payout_stocks(int64_t base_reward_stocks,
     if (base_reward_stocks <= 0 || pool_surplus_stocks <= 0) return 0;
     uint16_t boost_bps = popc_gold_boost_bps(gold_verified_days);
     if (boost_bps > POPC_GOLD_BOOST_MAX_BPS) boost_bps = POPC_GOLD_BOOST_MAX_BPS;  // hard ceiling
-    int64_t desired = (base_reward_stocks * (int64_t)boost_bps) / 10000;  // extra ON TOP of base
+    int64_t desired = (int64_t)(((__int128)base_reward_stocks * (int64_t)boost_bps) / 10000);  // extra ON TOP of base
     if (desired <= 0) return 0;
     return (desired <= pool_surplus_stocks) ? desired : pool_surplus_stocks;  // throttle to surplus
 }
@@ -295,7 +301,8 @@ inline bool popc_gold_boost_eligible(int64_t gold_amount_mg,
                                      int64_t gold_value_micro,
                                      int64_t bond_value_micro) {
     if (gold_amount_mg < POPC_GOLD_MIN_ABS_MG) return false;          // (2) 0.25 oz dust floor
-    if (bond_value_micro > 0 && gold_value_micro * 4 < bond_value_micro)
+    // 128-bit to avoid silent overflow on gold_value_micro * 4.
+    if (bond_value_micro > 0 && (__int128)gold_value_micro * 4 < (__int128)bond_value_micro)
         return false;                                                // (1) >= 25% of bond value
     return true;
 }

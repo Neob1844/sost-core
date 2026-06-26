@@ -70,7 +70,7 @@ The Gold Boost is paid from the PoPC Pool (capped, surplus-only) so it can never
 ---
 
 **8/**
-This is a design/docs update — no consensus change on its own, ships off by default.
+Draft consensus code is included, but it stays inactive until merged and activated by a height-gate (tied to V15). Gold Boost remains deferred separately.
 
 Full detail in the whitepaper §6 👇
 🌐 sostcore.com

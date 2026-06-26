@@ -1624,7 +1624,7 @@ Activation: protocol-scheduled after block 10,000, subject to network readiness 
 <div class="wp-spacer"></div>
 <p class="wp-p"><b>Protection.</b> The base reward is the mandatory payment and has absolute priority; the Gold Boost is an optional extra paid only from PoPC Pool surplus once the base is covered. It can never reduce the base reward, and if surplus is insufficient the boost is scaled down or paid as zero.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p" style="font-size:12px;color:var(--text-secondary);">This is a design/documentation update. It introduces no consensus change on its own and ships disabled by default; activation follows the same scheduling discipline as the rest of PoPC (see §6.13).</p>
+<p class="wp-p" style="font-size:12px;color:var(--text-secondary);">The draft implementation is scheduled behind a height-gate (tied to V15) and stays inactive until activated; before that height, behaviour is unchanged. The Gold Boost is gated separately and remains deferred until gold verification is mature (see §6.13).</p>
 <div class="wp-spacer"></div>
 <h4 id="sec-41" class="wp-h">6.1 What PoPC Is — And Is Not</h4>
 <div class="wp-spacer"></div>

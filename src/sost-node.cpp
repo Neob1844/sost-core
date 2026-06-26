@@ -3186,13 +3186,18 @@ static std::string handle_popc_release(const std::string& id, const std::vector<
     bool single_on = popc_single_model_active(current_height);
     bool gold_on   = popc_gold_boost_active(current_height);
     // Gold Boost eligibility: tokenized gold worth >= max(25% of bond value,
-    // 0.25 PAXG/XAUT). Dust (e.g. 0.001 PAXG) never qualifies.
+    // 0.25 PAXG/XAUT). Dust (e.g. 0.001 PAXG) never qualifies. 128-bit products
+    // so no value computation can silently overflow int64.
     int64_t gold_value_micro = (c->gold_amount_mg > 0 && c->gold_price_usd_micro > 0)
-        ? (c->gold_amount_mg * c->gold_price_usd_micro) / POPC_GOLD_OZ_MG : 0;
+        ? (int64_t)(((__int128)c->gold_amount_mg * c->gold_price_usd_micro) / POPC_GOLD_OZ_MG) : 0;
     int64_t bond_value_micro = (c->sost_price_usd_micro > 0)
-        ? (c->bond_sost_stocks * c->sost_price_usd_micro) / STOCKS_PER_SOST : 0;
+        ? (int64_t)(((__int128)c->bond_sost_stocks * c->sost_price_usd_micro) / STOCKS_PER_SOST) : 0;
     bool gold_qualifies = popc_gold_boost_eligible(c->gold_amount_mg, gold_value_micro, bond_value_micro);
-    int64_t gold_verified_days = gold_qualifies ? (int64_t)c->duration_months * 30 : 0;
+    // Continuous-verification days come from PROVEN audit history on the commitment,
+    // NEVER assumed from the term length (a registration snapshot does not count).
+    // Until the continuous-verification audit pipeline populates gold_verified_days
+    // it stays 0 -> no boost. Hard pre-activation requirement for the Gold Boost.
+    int64_t gold_verified_days = gold_qualifies ? c->gold_verified_days : 0;
     int64_t pool_surplus = 0;
     if (single_on && gold_on && gold_qualifies) {
         int64_t pool_balance = 0;

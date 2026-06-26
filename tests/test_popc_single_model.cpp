@@ -345,6 +345,16 @@ TEST(PSM67_not_eligible_pays_base_only) {
     EXPECT(out == base, "non-qualifying gold -> base only despite surplus");
 }
 
+TEST(PSM68_eligibility_overflow_safe) {
+    // gold_value_micro * 4 must not wrap. 4e18 * 4 overflows int64; with 128-bit
+    // math the huge-gold case still qualifies and the huge-bond case still rejects.
+    int64_t big = 4000000000000000000LL;  // 4e18
+    EXPECT(popc_gold_boost_eligible(8000, big, 1000) == true,
+           "huge gold value must not wrap to a rejection");
+    EXPECT(popc_gold_boost_eligible(8000, 1000, big) == false,
+           "huge bond value must not wrap to a false qualification");
+}
+
 // =============================================================================
 // Structural invariants
 // =============================================================================

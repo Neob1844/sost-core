@@ -81,7 +81,7 @@ Base reward has absolute priority; the boost is paid only from PoPC Pool surplus
 
 [size=12pt][b]Status[/b][/size]
 
-This is a design/documentation update. It introduces [b]no consensus change on its own[/b] and ships [b]disabled by default[/b]; activation follows the same scheduling discipline as the rest of PoPC.
+Draft consensus code is included, height-gated and tied to V15 — it stays [b]inactive until merged and activated by the height-gate[/b]. Before activation, behaviour is unchanged; the Gold Boost remains deferred separately until gold verification is mature.
 
 Full details are in the technical whitepaper, section 6 ("Proof of Personal Custody"):
 [url=http://sostcore.com]http://sostcore.com[/url]
