@@ -176,6 +176,11 @@ base reward table          -> unchanged (1/4/9/14/20%)
 49/49 pass; the node binary compiles with the wiring. Existing `test-popc` (31/31) and
 `test-popc-v15` (29/29) unaffected.
 
+Full `ctest` on a `TESTNET_FORKS=ON` build (all gates active at V15=300): **92/93**.
+**Known unrelated failure:** `atomic-swap-htlc-lock` assumes mainnet activation heights while
+`TESTNET_FORKS` enables HTLC at height 200 — it is not a PoPC change and passes on the mainnet build.
+The soak script (`scripts/soak_popc_v15_testnet.sh`) excludes it so a green run is meaningful.
+
 Math is overflow-safe: all value/reward products use `__int128` (eligibility, payout, apply, and the
 node's gold/bond value computations) — no silent int64 wrap in the consensus-adjacent path.
 
