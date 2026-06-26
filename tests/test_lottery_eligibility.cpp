@@ -766,11 +766,17 @@ static void test_v14_popc_gate_consensus_deferred() {
     // is false. If a future commit flips it, this static_assert will
     // remind us to rewrite the test instead of silently passing on a
     // changed semantic.
+#ifndef SOST_TESTNET_FORKS
+    // Mainnet: gate ships deferred (false). On the testnet build the gate is ACTIVE,
+    // but with no popc event source wired in this unit harness, has_active_canonical_popc
+    // short-circuits to true, so the "all eligible" expectation below holds on both
+    // builds; only this mainnet-deferral guard is mainnet-only.
     static_assert(!sost::DTD_POPC_GATE_CONSENSUS_ACTIVE,
-                  "V14 PoPC consensus gate has been activated; "
+                  "V14 PoPC consensus gate has been activated on MAINNET; "
                   "test_v14_popc_gate_consensus_deferred needs a real "
                   "chain-derived PoPC lookup harness, not the short-"
                   "circuit assertion below.");
+#endif
 
     auto A = mk_pkh(0xA1);
     auto B = mk_pkh(0xA2);

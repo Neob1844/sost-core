@@ -151,7 +151,11 @@ int main(){
     // ---- gating: empty events = no-op; mainnet deferred; DTD bridge OFF ----
     CHECK("no events -> empty active set (no-op)", chain_active_popc_set({}, 5000).empty());
     CHECK("no events -> Pending status (no-op)",   popc_v15_commitment_status({}, A, 5000) == PopcV15Status::Pending);
-    CHECK("DTD-PoPC bridge stays OFF (P4b does not flip it)", DTD_POPC_GATE_CONSENSUS_ACTIVE == false);
+#ifdef SOST_TESTNET_FORKS
+    CHECK("DTD-PoPC bridge ACTIVE on testnet (soak build)", DTD_POPC_GATE_CONSENSUS_ACTIVE == true);
+#else
+    CHECK("DTD-PoPC bridge stays OFF on mainnet (deferred)", DTD_POPC_GATE_CONSENSUS_ACTIVE == false);
+#endif
 #ifndef SOST_TESTNET_FORKS
     CHECK("mainnet: popc_v15 deferred (auto-slash/settle no-op)", popc_v15_active_at(20000) == false);
 #else

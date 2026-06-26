@@ -1002,8 +1002,21 @@ inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET 
 #endif
 // DTD_POPC_ELIGIBILITY_HEIGHT is defined AFTER V15_HEIGHT below — it is
 // V15_HEIGHT + a grace window (P4c), so PoPC automation goes live before the
-// lottery starts REQUIRING an active commitment. The consensus flag stays false.
-inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;
+// lottery starts REQUIRING an active commitment.
+//
+// Prerequisites 1-3 above are now MET: PoPC commitments ride on-chain as P4c
+// carriers (popc_v15_is_carrier_output / sost-cli popc carrier-hex), the active
+// set is recomputed DETERMINISTICALLY from chain state on every node
+// (node_collect_popc_events -> chain_active_popc_set, NEVER popc_registry.json),
+// and the registry is only a local view. The TESTNET build therefore ACTIVATES
+// the gate to soak the full rule end-to-end; MAINNET stays DEFERRED (false),
+// byte-identical, until prerequisite 4 — the coordinated point release — flips
+// the #else branch to true at a fork height with a miner-announcement window.
+#ifdef SOST_TESTNET_FORKS
+inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // TESTNET — soak the live rule
+#else
+inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;   // MAINNET — deferred (coordinated release flips this)
+#endif
 
 // V15 — full automation bundle (PoPC Model A/B, OTC/P2P atomic swap, Gold Vault
 // governance G1-G5). Kept SEPARATE from V14 so the already-shipped V14 hardening

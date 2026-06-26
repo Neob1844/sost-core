@@ -87,14 +87,24 @@ int main(){
         CHECK("recompute deterministic / no stale state",     !excluded(chain,      MINER, ELI, true));
     }
 
-    // ---- mainnet replay byte-identical while shipped gates are deferred/false ----
-    // Using the REAL shipped flag, a chain WITH PoPC carriers excludes nobody — so
-    // processing is identical to a chain with no PoPC at all.
-    CHECK("shipped flag is false", DTD_POPC_GATE_CONSENSUS_ACTIVE == false);
-    CHECK("shipped gate: active miner not excluded",
+    // ---- shipped-flag behaviour: mainnet deferred (no-op) vs testnet active ----
+#ifndef SOST_TESTNET_FORKS
+    // Mainnet: gate ships false -> a chain WITH PoPC carriers excludes nobody, so
+    // processing is byte-identical to a chain with no PoPC at all.
+    CHECK("mainnet: shipped flag is false", DTD_POPC_GATE_CONSENSUS_ACTIVE == false);
+    CHECK("mainnet: shipped gate excludes nobody (active miner)",
           !excluded(chain, MINER, ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
-    CHECK("shipped gate: no-PoPC owner not excluded (no-op)",
+    CHECK("mainnet: shipped gate excludes nobody (no-PoPC owner, no-op)",
           !excluded(chain, NONE,  ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
+#else
+    // Testnet (soak build): gate ships true -> the rule BITES with the REAL flag:
+    // an owner with a maintained PoPC is included, one without is excluded.
+    CHECK("testnet: shipped flag is true (soak)", DTD_POPC_GATE_CONSENSUS_ACTIVE == true);
+    CHECK("testnet: shipped gate keeps the maintained miner eligible",
+          !excluded(chain, MINER, ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
+    CHECK("testnet: shipped gate excludes the no-PoPC owner",
+          excluded(chain, NONE,  ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
+#endif
 
 #ifndef SOST_TESTNET_FORKS
     CHECK("mainnet: PoPC automation deferred at V15_HEIGHT (20000)", !popc_v15_active_at(H0));

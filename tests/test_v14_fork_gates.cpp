@@ -50,9 +50,14 @@ static_assert(DTD_POPC_GRACE_BLOCKS == 5000,
     "PoPC eligibility grace window changed from 5000 blocks — confirm intentional.");
 static_assert(DTD_POPC_ELIGIBILITY_HEIGHT == V15_HEIGHT + DTD_POPC_GRACE_BLOCKS,
     "DTD_POPC_ELIGIBILITY_HEIGHT must equal V15_HEIGHT + DTD_POPC_GRACE_BLOCKS (25000 mainnet / 5300 testnet).");
+#ifdef SOST_TESTNET_FORKS
+static_assert(DTD_POPC_GATE_CONSENSUS_ACTIVE == true,
+    "testnet build ACTIVATES the PoPC eligibility gate to soak the live rule.");
+#else
 static_assert(DTD_POPC_GATE_CONSENSUS_ACTIVE == false,
-    "PoPC eligibility gate must ship DEFERRED until on-chain PoPC migration "
-    "(docs/V14_EXECUTION_PLAN.md Phase C). Do NOT flip here.");
+    "PoPC eligibility gate must ship DEFERRED on mainnet until the coordinated "
+    "point release (docs/V14_EXECUTION_PLAN.md Phase C). Do NOT flip the mainnet branch here.");
+#endif
 static_assert(DTD_EMERGENCY_CONTROL_MIN_HEIGHT == V14_HEIGHT,
     "DTD emergency-control min height must equal V14_HEIGHT.");
 static_assert(DTD_EMERGENCY_CONTROL_CONSENSUS_ACTIVE == false,
