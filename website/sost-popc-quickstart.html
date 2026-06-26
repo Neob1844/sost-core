@@ -588,17 +588,17 @@ Yes, as many as your reputation tier allows. Each commitment is independent. Vet
 several simultaneous 10 oz commitments.
 </p>
 
-<h3>What about Model B (escrow)?</h3>
+<h3>What about Model A / Model B?</h3>
 <p>
-Model B requires an Ethereum smart contract that has not been deployed yet. The target activation is
-Q3 2026, pending security audit. The full roadmap is at
-<a href="https://github.com/Neob1844/sost-core/blob/main/docs/popc_model_b_roadmap.md"
-   style="color:var(--cyan-primary)">docs/popc_model_b_roadmap.md</a>. For now, use Model A.
+The old two-model design (Model A autocustody / Model B Ethereum escrow) is <strong>historical</strong>.
+PoPC is now a <strong>single native SOST bond</strong> &mdash; the only collateral and the only thing slashable.
+Gold is an optional reward boost (never collateral, never slashed) and is <strong>disabled on mainnet</strong>.
+There is no SOSTEscrow-based PoPC product and no PoPC contract trading in V15.
 </p>
 
 <h3>Is PoPC really fully decentralized?</h3>
 <p>
-Not yet. During the first 4 weeks after block 10,000+ activation, reward releases are processed
+Not yet. During the first 4 weeks after V15 / block 20,000 activation, reward releases are processed
 semi-manually as a safety measure. After that window, an automatic cron daemon handles them without
 operator intervention. The long-term goal — explicitly stated — is 100% autonomous operation with no
 operator in the loop. Every component of the system is designed to reach that state as soon as the

@@ -1321,14 +1321,13 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
         <span class="spec-tag overlay">CONDITION-DEPENDENT</span>
       </div>
       <div class="spec-body">
-        <p class="spec-desc">PoPC will be activated once <strong>all</strong> of the following technical and network conditions are met. Target activation: <strong>block 10,000+</strong> (April 2027). Activation proceeds only when the system is stable, all components are operational, and external audit is complete.</p>
+        <p class="spec-desc">The single native SOST bond model activates at <strong>V15 / block 20,000</strong>, once the following technical and network conditions are met. Activation proceeds only when the system is stable, all components are operational, and external audit is complete.</p>
         <table class="code-table">
-          <tr><td class="key">Block height &ge; 10,000</td><td class="val">Activation is tied to a protocol milestone and will not occur before this threshold.</td></tr>
+          <tr><td class="key">Block height &ge; 20,000 (V15)</td><td class="val">Activation is tied to the V15 protocol milestone and will not occur before this threshold.</td></tr>
           <tr><td class="key">Sustained network stability</td><td class="val">Consistent block production, stable sync across nodes, no critical consensus or networking issues.</td></tr>
           <tr><td class="key">Sufficient participation</td><td class="val">Minimum level of independent nodes and active miners to ensure reliable operation.</td></tr>
-          <tr><td class="key">Model A contract validation</td><td class="val">Registration, audit, reward, and slashing flows fully validated under live network testing.</td></tr>
-          <tr><td class="key">Ethereum escrow deployment</td><td class="val">Final escrow contracts deployed, verified, and publicly auditable before Model B activation.</td></tr>
-          <tr><td class="key">Explorer &amp; wallet integration</td><td class="val">Public interfaces correctly reflect all PoPC states (pending, active, completed, slashed).</td></tr>
+          <tr><td class="key">Single-bond contract validation</td><td class="val">Registration, audit, reward, and slashing flows for the native SOST bond fully validated under live network testing.</td></tr>
+          <tr><td class="key">Explorer &amp; wallet integration</td><td class="val">Create / monitor / claim flows correctly reflected in public interfaces (pending, active, completed, slashed). Gold Boost and any Ethereum escrow path are historical / deferred — not required for V15.</td></tr>
         </table>
         <p class="spec-desc" style="margin-top:12px;font-size:11px;color:var(--text-dim);">
           <strong>Activation note:</strong> PoPC activation is protocol-scheduled but condition-dependent. The protocol will announce activation with sufficient advance notice once all conditions are verified.
@@ -1463,9 +1462,9 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
       </div>
 
       <div style="background:var(--bg-panel);border:1px solid var(--border-med);border-left:3px solid var(--gold, #DAA520);padding:18px 20px;border-radius:4px;">
-        <h3 style="font-family:var(--font-display);font-size:16px;color:#DAA520;margin-bottom:8px;">Model B roadmap</h3>
-        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Formal roadmap for the Ethereum escrow smart contract that Model B requires. Covers what is missing, required security audit, realistic 16-22 week timeline, open design questions, and go/no-go criteria for mainnet launch.</p>
-        <p style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;">Status: <strong style="color:#4ade80;">implemented</strong> — SOSTEscrow V2 deployed on Sepolia. Model A and Model B both targeting block 10,000+ activation on mainnet.</p>
+        <h3 style="font-family:var(--font-display);font-size:16px;color:#DAA520;margin-bottom:8px;">Model B roadmap <span style="font-size:11px;color:#c084fc;">(historical)</span></h3>
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Historical roadmap for the Ethereum escrow smart contract that the old Model B required. Kept for reference only.</p>
+        <p style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;">Status: <strong style="color:#c084fc;">historical / superseded</strong> — replaced by the single native SOST bond model (activates at V15 / block 20,000). The SOSTEscrow / Model B path is not part of V15.</p>
         <a href="https://github.com/Neob1844/sost-core/blob/main/docs/popc_model_b_roadmap.md" target="_blank" rel="noopener" style="display:inline-block;color:var(--cyan-primary);text-decoration:none;font-size:12px;border:1px solid var(--cyan-primary);padding:6px 12px;border-radius:2px;margin-top:4px;">Read the roadmap on GitHub &rarr;</a>
       </div>
 
