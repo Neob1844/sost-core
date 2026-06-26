@@ -83,3 +83,6 @@ data/mode_arbiter/cases/
 .idea/
 *.swp
 *~
+
+# Private investor/strategy docs — NEVER publish
+marketing/private/
