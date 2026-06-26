@@ -1021,11 +1021,11 @@ inline constexpr int64_t V15_HEIGHT                       = 20000;   // MAINNET 
 // auto-slash/auto-settle, Gold Vault governance) goes live at V15_HEIGHT. The
 // DTD lottery only REQUIRES an active PoPC commitment from
 // DTD_POPC_ELIGIBILITY_HEIGHT = V15_HEIGHT + DTD_POPC_GRACE_BLOCKS, giving
-// miners/operators ~7 days (1000 blocks) to create + activate a contract before
+// miners/operators ~35 days (5000 blocks) to create + activate a contract before
 // the eligibility gate bites — nobody is dropped from the lottery by surprise.
 // The gate is STILL inert until DTD_POPC_GATE_CONSENSUS_ACTIVE is flipped in the
-// final, soaked, coordinated release (mainnet 21000 / testnet 1300).
-inline constexpr int64_t DTD_POPC_GRACE_BLOCKS           = 1000;
+// final, soaked, coordinated release (mainnet 25000 / testnet 5300).
+inline constexpr int64_t DTD_POPC_GRACE_BLOCKS           = 5000;
 inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT     = V15_HEIGHT + DTD_POPC_GRACE_BLOCKS;
 
 // =============================================================================
