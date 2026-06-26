@@ -1845,13 +1845,58 @@ document.addEventListener('DOMContentLoaded', () => {
         <div><a class="btn btn-small" id="gwSwapLink" href="#" onclick="return false;">Open Atomic Swap console &rarr;</a></div>
       </div>
 
-      <div class="card gw-pane" id="gw-popc_bond" style="display:none;padding:16px 18px;max-width:760px">
-        <h3 style="margin-top:0">PoPC Bond <span style="font-size:11px;color:var(--text-dim)">&mdash; guarantee with possible slashing</span></h3>
-        <p style="font-size:13px;color:var(--text-secondary)" id="gwPopcRec"></p>
-        <ul style="font-size:12px;color:var(--text-dim);line-height:1.7">
-          <li id="gwPopcBond"></li>
-          <li id="gwPopcGold"></li>
+      <div class="card gw-pane" id="gw-popc_bond" style="display:none;padding:16px 18px;max-width:820px">
+        <h3 style="margin-top:0">PoPC Bond Dashboard <span style="font-size:11px;color:var(--text-dim)">&mdash; native SOST bond · create · monitor · claim</span></h3>
+
+        <!-- Activation status -->
+        <div id="gwPopcStatus" style="border-radius:8px;padding:10px 14px;margin:6px 0 14px;font-size:13px"></div>
+
+        <!-- Create / simulate bond -->
+        <div style="border:1px solid var(--border,#2a2a2a);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+          <div style="font-weight:700;margin-bottom:10px">Create PoPC Bond</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <label style="font-size:12px;color:var(--text-secondary)">Bond amount (SOST)
+              <input id="gwPopcAmount" type="number" min="1" step="1" value="1000" class="form-input" style="width:100%"></label>
+            <label style="font-size:12px;color:var(--text-secondary)">Duration
+              <select id="gwPopcMonths" class="form-input" style="width:100%">
+                <option value="1">1 month — 1%</option>
+                <option value="3">3 months — 4%</option>
+                <option value="6">6 months — 9%</option>
+                <option value="9">9 months — 14%</option>
+                <option value="12" selected>12 months — 20%</option>
+              </select></label>
+            <label style="font-size:12px;color:var(--text-secondary)">Your SOST address
+              <input id="gwPopcSost" type="text" class="form-input" placeholder="sost1..." style="width:100%"></label>
+            <label style="font-size:12px;color:var(--text-secondary)">Ethereum EOA (future custody proof)
+              <input id="gwPopcEth" type="text" class="form-input" placeholder="0x..." style="width:100%"></label>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;font-size:12px;color:var(--text-dim)">
+            <div>Base reward<br><b id="gwPopcEstReward" style="font-size:15px;color:#35d6a0">—</b></div>
+            <div>Total at unlock<br><b id="gwPopcEstTotal" style="font-size:15px;color:var(--text-primary)">—</b></div>
+            <div>Unlock block<br><b id="gwPopcEstUnlock" style="font-size:15px;color:var(--text-primary)">—</b></div>
+          </div>
+          <p style="font-size:11px;color:#e0a030;margin:10px 0 0;line-height:1.5">&#9888; Only the native SOST bond is collateral and can be slashed. Gold is <b>not</b> collateral. Gold Boost is <b>disabled on mainnet</b>.</p>
+          <button id="gwPopcCreate" class="btn btn-small" style="margin-top:10px" disabled>Create PoPC Bond</button>
+          <span id="gwPopcCreateState" style="font-size:11px;color:var(--text-dim);margin-left:8px"></span>
+        </div>
+
+        <!-- My bonds -->
+        <div style="border:1px solid var(--border,#2a2a2a);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+          <div style="font-weight:700;margin-bottom:8px">My bonds</div>
+          <div id="gwPopcBonds" style="font-size:12px;color:var(--text-dim)">Connect the node RPC to list your bonds (create · status · claim).</div>
+        </div>
+
+        <!-- Result of a settle (popc_release) -->
+        <div id="gwPopcResult" style="display:none;border:1px solid var(--border,#2a2a2a);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:12px"></div>
+
+        <!-- Safety -->
+        <ul style="font-size:12px;color:var(--text-dim);line-height:1.7;margin:0 0 12px;padding-left:18px">
+          <li>PoPC base activates at block 20,000. Gold Boost: future only. Gold Vault governance: future only.</li>
+          <li id="gwPopcBondPt"></li>
         </ul>
+
+        <!-- PoPC DEX (disabled) -->
+        <div id="gwPopcDex" style="font-size:11px;color:var(--text-dim);border-top:1px solid var(--border,#2a2a2a);padding-top:10px"></div>
       </div>
     </div>
 
@@ -6568,9 +6613,54 @@ if (GEA_SIGN_ENABLED) {
   fill('gwSwapPairs', GW.Swap.PAIRS.join('  ·  '));
   fill('gwSwapNote', GW.Swap.note());
   var link = document.getElementById('gwSwapLink'); if (link) link.setAttribute('href', GW.Swap.consoleUrl());
-  fill('gwPopcRec', GW.PopcBond.recommendation());
-  fill('gwPopcBond', GW.PopcBond.POINTS.bond);
-  fill('gwPopcGold', GW.PopcBond.POINTS.gold);
+  // ---- PoPC Bond dashboard — renders from the pure GW.PopcBond helpers --------
+  (function () {
+    var P = GW.PopcBond, SPS = GW.STOCKS_PER_SOST;
+    function chainHeight() { var h = Number(window.GEA_CHAIN_HEIGHT); return isFinite(h) ? h : 0; }
+    function fmtSost(stocks) { return (stocks / SPS).toLocaleString(undefined, { maximumFractionDigits: 8 }) + ' SOST'; }
+    function $(id) { return document.getElementById(id); }
+    function setT(id, v) { var e = $(id); if (e) e.textContent = v; }
+
+    function renderStatus() {
+      var el = $('gwPopcStatus'); if (!el) return;
+      var st = P.activationStatus(chainHeight());
+      el.style.background = st.active ? 'rgba(0,255,136,0.08)' : 'rgba(251,191,36,0.07)';
+      el.style.border = '1px solid ' + (st.active ? 'rgba(0,255,136,0.30)' : 'rgba(251,191,36,0.30)');
+      el.innerHTML = '<b style="color:' + (st.active ? '#00ff88' : '#fbbf24') + '">' +
+        (st.active ? '● PoPC active' : '○ Scheduled, not active yet') + '</b> — ' +
+        st.label + ' · current height ' + chainHeight();
+    }
+    function recompute() {
+      var amt = Number(($('gwPopcAmount') || {}).value) || 0;
+      var months = Number(($('gwPopcMonths') || {}).value) || 12;
+      var bondStocks = Math.round(amt * SPS);
+      var reward = P.estimateBaseRewardStocks(bondStocks, months);
+      setT('gwPopcEstReward', amt > 0 ? fmtSost(reward) + ' (' + P.rewardPctLabel(months) + ')' : '—');
+      setT('gwPopcEstTotal', amt > 0 ? fmtSost(bondStocks + reward) : '—');
+      setT('gwPopcEstUnlock', '#' + P.estimateUnlockBlock(chainHeight(), months));
+    }
+    function wireCreate() {
+      var btn = $('gwPopcCreate'), state = $('gwPopcCreateState'); if (!btn) return;
+      var st = P.activationStatus(chainHeight()), rpc = (typeof window.SOST_GATEWAY_RPC === 'function');
+      if (!st.active) { btn.disabled = true; if (state) state.textContent = 'PoPC activates at block ' + P.V15_HEIGHT + ' — create disabled until then.'; return; }
+      if (!rpc) { btn.disabled = true; if (state) state.textContent = 'Node RPC not configured — simulation only.'; return; }
+      btn.disabled = false; if (state) state.textContent = '';
+      btn.onclick = function () {
+        window.SOST_GATEWAY_RPC('popc_register',
+          [($('gwPopcSost') || {}).value, ($('gwPopcEth') || {}).value, 'PAXG', '50000', String(($('gwPopcMonths') || {}).value)]);
+      };
+    }
+    function render() {
+      renderStatus(); recompute(); wireCreate();
+      setT('gwPopcBondPt', P.POINTS.bond);
+      var dex = $('gwPopcDex'); if (dex) dex.textContent = '⊘ PoPC DEX / trading: ' + GW.Dex.note();
+    }
+    ['gwPopcAmount', 'gwPopcMonths'].forEach(function (id) {
+      var e = $(id); if (e) { e.addEventListener('input', recompute); e.addEventListener('change', render); }
+    });
+    render();
+    window.gwPopcRender = render;   // wallet can set window.GEA_CHAIN_HEIGHT then call this to refresh
+  })();
 
   // Apply an optional dev/test override (window.SOST_GATEWAY_CONFIG) without editing the
   // base library. Absent in production → everything stays OFF and hidden.

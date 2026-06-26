@@ -139,10 +139,59 @@ t('PopcBond is one native SOST bond, gold is only a boost', function () {
   assert.ok(/never collateral/i.test(G.PopcBond.POINTS.gold)); // gold never is
 });
 
+// ---- 8b. PoPC Bond DASHBOARD (pure helpers) + DEX disabled ----------------------
+t('dashboard: activation status by height (V15=20000)', function () {
+  var P = G.PopcBond;
+  assert.strictEqual(P.V15_HEIGHT, 20000);
+  assert.strictEqual(P.activationStatus(19999).active, false);
+  assert.strictEqual(P.activationStatus(19999).scheduled, true);
+  assert.strictEqual(P.activationStatus(20000).active, true);
+  assert.strictEqual(P.activationStatus(25000).active, true);
+  assert.ok(/Scheduled/.test(P.activationStatus(0).label));
+  assert.ok(/active/i.test(P.activationStatus(20000).label));
+});
+t('dashboard: reward estimates match 1/4/9/14/20%', function () {
+  var P = G.PopcBond, SPS = G.STOCKS_PER_SOST, bond = 1000 * SPS;
+  assert.strictEqual(P.rewardBps(1), 100);
+  assert.strictEqual(P.rewardBps(12), 2000);
+  assert.strictEqual(P.rewardBps(7), 0);                       // invalid duration
+  assert.strictEqual(P.estimateBaseRewardStocks(bond, 12), 200 * SPS); // 20%
+  assert.strictEqual(P.estimateBaseRewardStocks(bond, 9), 140 * SPS);  // 14%
+  assert.strictEqual(P.estimateBaseRewardStocks(bond, 1), 10 * SPS);   // 1%
+  assert.strictEqual(P.estimateBaseRewardStocks(0, 12), 0);
+  assert.strictEqual(P.estimateBaseRewardStocks(bond, 7), 0);          // invalid -> 0
+});
+t('dashboard: unlock block matches node 144*30*months', function () {
+  var P = G.PopcBond;
+  assert.strictEqual(P.durationToBlocks(1), 144 * 30);
+  assert.strictEqual(P.durationToBlocks(12), 144 * 30 * 12);
+  assert.strictEqual(P.estimateUnlockBlock(20000, 1), 24320);
+});
+t('dashboard: claim only available at/after end_height', function () {
+  var P = G.PopcBond;
+  assert.strictEqual(P.claimAvailable(19999, 20000), false);
+  assert.strictEqual(P.claimAvailable(20000, 20000), true);
+  assert.strictEqual(P.claimAvailable(20001, 20000), true);
+});
+t('dashboard: Gold Boost disabled on mainnet (always 0)', function () {
+  var gb = G.PopcBond.goldBoostMainnet();
+  assert.strictEqual(gb.enabled, false);
+  assert.strictEqual(gb.boost_stocks, 0);
+});
+t('PoPC DEX is disabled (future RFC), no trading exposed', function () {
+  resetFlags();
+  assert.strictEqual(G.FLAGS.POPC_DEX_ENABLED, false);
+  assert.strictEqual(G.Dex.isEnabled(), false);
+  G.applyConfig({ enabled: true });
+  assert.strictEqual(G.Dex.isEnabled(), false);                // still off (popcDex not set)
+  assert.ok(/Future research|not active/i.test(G.Dex.note()));
+  assert.ok(/No trading/.test(G.Dex.note()));
+});
+
 // ---- 9. SECURITY invariants: no funds, no network, no secrets ------------------
 t('no module exposes signing / broadcasting / key material', function () {
   var leak = /priv|seed|mnemonic|secret|sign\b|broadcast|fetch|xhr|http/i;
-  ['Hold', 'Pay', 'Escrow', 'Swap', 'PopcBond'].forEach(function (modName) {
+  ['Hold', 'Pay', 'Escrow', 'Swap', 'PopcBond', 'Dex'].forEach(function (modName) {
     var mod = G[modName];
     Object.keys(mod).forEach(function (key) {
       assert.ok(!leak.test(key), modName + '.' + key + ' looks like a fund/key/network surface');
