@@ -307,6 +307,29 @@ inline bool popc_gold_boost_eligible(int64_t gold_amount_mg,
     return true;
 }
 
+// Continuous-verification INTERFACE (whitepaper §6.0). The commitment's
+// gold_verified_days MUST be derived ONLY from this — never from the term length.
+// The audit/attestation pipeline observes the held gold across the period and
+// calls this with the proven span and the MINIMUM gold seen over it. Continuity
+// is strict: if the gold ever dipped below the required threshold, continuity is
+// broken and the result is 0 (no partial credit for a dip). Otherwise the proven
+// span (last - first) converts to days. PURE — all inputs are verified observations.
+//   first_verified_height : first block gold was observed AT/ABOVE required
+//   last_verified_height  : last block gold was observed AT/ABOVE required
+//   min_gold_observed_mg  : MINIMUM gold seen across the span (the continuity test)
+//   required_mg           : eligibility threshold the holding must stay at/above
+//   blocks_per_day        : chain blocks per day (e.g. 144 at ~10 min/block)
+inline int64_t popc_continuous_verified_days(int64_t first_verified_height,
+                                             int64_t last_verified_height,
+                                             int64_t min_gold_observed_mg,
+                                             int64_t required_mg,
+                                             int64_t blocks_per_day) {
+    if (blocks_per_day <= 0) return 0;
+    if (first_verified_height <= 0 || last_verified_height <= first_verified_height) return 0;
+    if (min_gold_observed_mg < required_mg) return 0;   // dip below threshold → continuity broken
+    return (last_verified_height - first_verified_height) / blocks_per_day;
+}
+
 // Hard cap: maximum SOST reward per contract (in stocks)
 inline constexpr int64_t POPC_MAX_REWARD_STOCKS = 100000000000;  // 1000 SOST
 

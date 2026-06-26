@@ -18,6 +18,8 @@
 
 #include "sost/popc.h"
 #include "sost/params.h"
+#include "sost/gv_g4.h"   // GV_G4_ACTIVATION_HEIGHT — Gold Vault governance decoupling check
+#include "sost/gv_g5.h"   // GV_G5_ACTIVATION_HEIGHT
 
 #include <cstdint>
 #include <iostream>
@@ -353,6 +355,54 @@ TEST(PSM68_eligibility_overflow_safe) {
            "huge gold value must not wrap to a rejection");
     EXPECT(popc_gold_boost_eligible(8000, 1000, big) == false,
            "huge bond value must not wrap to a false qualification");
+}
+
+// =============================================================================
+// Continuous-verification interface + snapshot guard + governance decoupling
+// =============================================================================
+
+TEST(PSM69_snapshot_gold_earns_no_boost) {
+    // Eligible by amount/value, gates on, ample surplus — but 0 PROVEN continuous
+    // days (only a registration snapshot) -> base only. This is the anti-snapshot guard.
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    int64_t out = popc_settle_reward_stocks(true, true, base, true, 0, 1000 * (int64_t)STOCKS_PER_SOST);
+    EXPECT(out == base, "snapshot gold (0 continuous days) earns no boost despite surplus");
+}
+
+TEST(PSM70_payout_overflow_safe) {
+    // 1e17 stocks: base * 2000 overflows int64 without 128-bit math.
+    int64_t base = 100000000000000000LL;
+    int64_t out  = popc_gold_boost_payout_stocks(base, 91, base);   // ample surplus
+    EXPECT(out == base / 5, "1e17 base +20% computed without wrap (= base/5)");
+}
+
+TEST(PSM71_commitment_gold_verified_days_default_zero) {
+    PoPCCommitment c{};
+    EXPECT(c.gold_verified_days == 0, "gold_verified_days must default to 0 (no snapshot credit)");
+}
+
+TEST(PSM72_gold_vault_governance_decoupled) {
+    // Activating the PoPC single model must NOT activate Gold Vault spend-governance.
+    EXPECT(GV_G4_ACTIVATION_HEIGHT >= POPC_SINGLE_MODEL_HEIGHT, "G4 never activates before the base model");
+    EXPECT(GV_G5_ACTIVATION_HEIGHT >= POPC_SINGLE_MODEL_HEIGHT, "G5 never activates before the base model");
+}
+
+TEST(PSM73_continuous_days_broken_when_gold_dips) {
+    int64_t first = 1000, last = 1000 + 91 * 144, req = 8000, bpd = 144;
+    EXPECT(popc_continuous_verified_days(first, last, req - 1, req, bpd) == 0,
+           "a dip below required breaks continuity -> 0 days");
+}
+
+TEST(PSM74_continuous_days_full_span_when_held) {
+    int64_t first = 1000, last = 1000 + 91 * 144, req = 8000, bpd = 144;
+    EXPECT(popc_continuous_verified_days(first, last, req,        req, bpd) == 91, "held at required -> 91 days");
+    EXPECT(popc_continuous_verified_days(first, last, req + 5000, req, bpd) == 91, "held above required -> 91 days");
+}
+
+TEST(PSM75_continuous_days_edge_cases) {
+    EXPECT(popc_continuous_verified_days(0, 1000, 9000, 8000, 144) == 0, "no first height -> 0");
+    EXPECT(popc_continuous_verified_days(1000, 1000, 9000, 8000, 144) == 0, "zero span -> 0");
+    EXPECT(popc_continuous_verified_days(1000, 2000, 9000, 8000, 0) == 0, "blocks_per_day 0 -> 0");
 }
 
 // =============================================================================

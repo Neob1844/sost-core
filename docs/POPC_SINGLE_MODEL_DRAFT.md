@@ -122,13 +122,33 @@ Protection rules (encoded in `popc_gold_boost_payout_stocks`):
 Example: base = 100 SOST, gold +20% → target 120 SOST. If the PoPC Pool can only safely cover the
 base, the user receives 100 SOST, not 120 — the base is never sacrificed for a boost.
 
+## Automation status — ready except testnet/soak
+
+The PoPC automation is **fully implemented and wired**, with every sensitive feature height-gated and
+**inactive on mainnet** until testing is complete:
+
+- **PoPC base** — scheduled for **V15, block 20,000** (`POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT`). Native
+  SOST bond is the only collateral and the only slashable asset. Base reward path wired + tested.
+- **Gold Boost** — implemented but **disabled on mainnet** (`POPC_GOLD_BOOST_HEIGHT = INT64_MAX`).
+  Testnet activates at V15. Eligibility (`max(25% bond value, 0.25 PAXG/XAUT)`), surplus-aware payout
+  (base priority, PoPC-Pool-only), and the continuous-verification interface are all in place.
+- **Continuous verification** — `popc_continuous_verified_days()` is the **interface** the audit/
+  attestation pipeline feeds; `commitment.gold_verified_days` defaults to 0 and is the ONLY source of
+  the boost's day count (never the term length). The pipeline itself is still to be built+soaked.
+- **Gold Vault governance** — `GV_G4/G5` stay `INT64_MAX` on mainnet, **not coupled** to this gate.
+  Gold Vault **accumulation** (25% coinbase) is live as today; **spend-governance remains deferred**.
+- **Metals Reserve** — untouched.
+
+In short: **code complete, automation complete, sensitive mainnet features off — only testing remains.**
+
 ## Files in this change
 
 | File | Change |
 |------|--------|
 | `include/sost/params.h` | `POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT` + `popc_single_model_active(h)`; separate `POPC_GOLD_BOOST_HEIGHT` (mainnet `INT64_MAX`, testnet V15) + `popc_gold_boost_active(h)` |
 | `include/sost/popc.h` | Gold-boost constants + `popc_gold_boost_bps()` + `popc_apply_gold_boost()` + surplus-aware `popc_gold_boost_payout_stocks()`; `ESCROW_REWARD_RATES` marked deprecated |
-| `include/sost/popc.h` (cont.) | `popc_settle_reward_stocks()` — full settle composition (base always paid, gated surplus-aware boost); `popc_gold_boost_eligible()` — `max(25% bond value, 0.25 PAXG/XAUT)` threshold |
+| `include/sost/popc.h` (cont.) | `popc_settle_reward_stocks()` — full settle composition (base always paid, gated surplus-aware boost); `popc_gold_boost_eligible()` — `max(25% bond value, 0.25 PAXG/XAUT)` threshold; `popc_continuous_verified_days()` — continuous-verification interface (strict: a dip breaks continuity → 0) |
+| `include/sost/popc.h` (struct) | `PoPCCommitment.gold_verified_days` (proven, default 0) — serialized in `popc.cpp` |
 | `src/sost-node.cpp` | `popc_complete` handler wired to `popc_settle_reward_stocks` (base + optional boost from PoPC Pool surplus); base path untouched |
 | `tests/test_popc_single_model.cpp` | 41 transition tests (gates + boost math + surplus payout + settle matrix + eligibility threshold) |
 | `CMakeLists.txt` | registers `test-popc-single-model` (ctest `popc-single-model`) |
@@ -153,7 +173,7 @@ boosted reward             -> never exceeds base * 1.25 (technical max)
 base reward table          -> unchanged (1/4/9/14/20%)
 ```
 
-42/42 pass; the node binary compiles with the wiring. Existing `test-popc` (31/31) and
+49/49 pass; the node binary compiles with the wiring. Existing `test-popc` (31/31) and
 `test-popc-v15` (29/29) unaffected.
 
 Math is overflow-safe: all value/reward products use `__int128` (eligibility, payout, apply, and the
