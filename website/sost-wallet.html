@@ -3965,6 +3965,7 @@ window.refreshBalance = async function() {
     window._lastChainHeight = chainHeight;
     updateCapsuleActivation(chainHeight);
     updatePopcActivation(chainHeight);
+    if (typeof window.gwPopcRender === 'function') window.gwPopcRender();  // refresh PoPC Bond dashboard
     const utxos = addrInfo.utxos || [];
     window._lastUtxos = utxos; // cache for TX history
     // Drop in-flight reservations whose UTXOs the node already removed
@@ -6613,13 +6614,21 @@ if (GEA_SIGN_ENABLED) {
   fill('gwSwapPairs', GW.Swap.PAIRS.join('  ·  '));
   fill('gwSwapNote', GW.Swap.note());
   var link = document.getElementById('gwSwapLink'); if (link) link.setAttribute('href', GW.Swap.consoleUrl());
-  // ---- PoPC Bond dashboard — renders from the pure GW.PopcBond helpers --------
+  // ---- PoPC Bond dashboard — pure helpers + LIVE node RPC (popc_register/release/status) ----
+  // Wire the gateway RPC hook to the wallet's existing rpcCall (endpoint/auth from the connection
+  // bar). On the public proxy these operator methods may be blocked (401) — handled gracefully.
+  if (typeof rpcCall === 'function' && typeof window.SOST_GATEWAY_RPC !== 'function') {
+    window.SOST_GATEWAY_RPC = function (method, params) { return rpcCall(method, params); };
+  }
   (function () {
-    var P = GW.PopcBond, SPS = GW.STOCKS_PER_SOST;
-    function chainHeight() { var h = Number(window.GEA_CHAIN_HEIGHT); return isFinite(h) ? h : 0; }
+    var P = GW.PopcBond, SPS = GW.STOCKS_PER_SOST, LSK = 'sost_popc_bonds';
+    function chainHeight() { var h = Number(window.GEA_CHAIN_HEIGHT); if (!isFinite(h) || h <= 0) h = Number(window._lastChainHeight); return isFinite(h) ? h : 0; }
     function fmtSost(stocks) { return (stocks / SPS).toLocaleString(undefined, { maximumFractionDigits: 8 }) + ' SOST'; }
     function $(id) { return document.getElementById(id); }
     function setT(id, v) { var e = $(id); if (e) e.textContent = v; }
+    function loadBonds() { try { return JSON.parse(localStorage.getItem(LSK) || '[]'); } catch (e) { return []; } }
+    function saveBonds(a) { try { localStorage.setItem(LSK, JSON.stringify(a)); } catch (e) {} }
+    function hasRpc() { return typeof window.SOST_GATEWAY_RPC === 'function'; }
 
     function renderStatus() {
       var el = $('gwPopcStatus'); if (!el) return;
@@ -6633,25 +6642,66 @@ if (GEA_SIGN_ENABLED) {
     function recompute() {
       var amt = Number(($('gwPopcAmount') || {}).value) || 0;
       var months = Number(($('gwPopcMonths') || {}).value) || 12;
-      var bondStocks = Math.round(amt * SPS);
-      var reward = P.estimateBaseRewardStocks(bondStocks, months);
+      var reward = P.estimateBaseRewardStocks(Math.round(amt * SPS), months);
       setT('gwPopcEstReward', amt > 0 ? fmtSost(reward) + ' (' + P.rewardPctLabel(months) + ')' : '—');
-      setT('gwPopcEstTotal', amt > 0 ? fmtSost(bondStocks + reward) : '—');
+      setT('gwPopcEstTotal', amt > 0 ? fmtSost(Math.round(amt * SPS) + reward) : '—');
       setT('gwPopcEstUnlock', '#' + P.estimateUnlockBlock(chainHeight(), months));
+    }
+    function showResult(title, obj, isErr) {
+      var el = $('gwPopcResult'); if (!el) return; el.style.display = '';
+      if (isErr) { el.innerHTML = '<div style="font-weight:700;color:var(--red-primary,#f55)">' + esc(title) + '</div>' +
+        '<div style="font-size:11px;color:var(--text-dim)">' + esc(obj && obj.message ? obj.message : String(obj)) + '</div>'; return; }
+      var rows = '';
+      ['status', 'bond', 'base_reward', 'gold_boost', 'reward_amount', 'commitment_id'].forEach(function (k) {
+        if (obj && obj[k] !== undefined) rows += '<div><span style="color:var(--text-dim)">' + k + ':</span> <b>' + esc(String(obj[k])) + '</b></div>';
+      });
+      el.innerHTML = '<div style="font-weight:700;margin-bottom:6px">' + esc(title) + '</div>' +
+        (rows || '<pre style="white-space:pre-wrap;font-size:11px">' + esc(JSON.stringify(obj, null, 2)) + '</pre>');
+    }
+    function renderBonds() {
+      var box = $('gwPopcBonds'); if (!box) return;
+      var bonds = loadBonds();
+      if (!bonds.length) { box.textContent = 'No bonds yet. Create one above (its commitment id is recorded locally so you can claim later).'; return; }
+      var h = chainHeight();
+      box.innerHTML = bonds.map(function (b, i) {
+        var canClaim = P.claimAvailable(h, b.unlock);
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border,#222)">' +
+          '<span style="font-family:monospace;font-size:11px">' + esc(String(b.cid || '').slice(0, 12)) + '… · ' + esc(b.months) + 'mo · ' + esc(b.amount) + ' SOST · unlock #' + esc(b.unlock) + '</span>' +
+          '<button class="btn btn-small" ' + (canClaim && hasRpc() ? '' : 'disabled') + ' data-claim="' + i + '">' + (canClaim ? 'Claim' : 'Locked') + '</button></div>';
+      }).join('');
+      box.querySelectorAll('[data-claim]').forEach(function (btn) {
+        btn.onclick = function () {
+          var b = loadBonds()[Number(btn.getAttribute('data-claim'))]; if (!b || !hasRpc()) return;
+          btn.disabled = true; btn.textContent = '…';
+          window.SOST_GATEWAY_RPC('popc_release', [b.cid])
+            .then(function (r) { showResult('Claimed — settle result', r || {}); })
+            .catch(function (e) { showResult('Claim failed', e, true); btn.disabled = false; btn.textContent = 'Claim'; });
+        };
+      });
     }
     function wireCreate() {
       var btn = $('gwPopcCreate'), state = $('gwPopcCreateState'); if (!btn) return;
-      var st = P.activationStatus(chainHeight()), rpc = (typeof window.SOST_GATEWAY_RPC === 'function');
+      var st = P.activationStatus(chainHeight());
       if (!st.active) { btn.disabled = true; if (state) state.textContent = 'PoPC activates at block ' + P.V15_HEIGHT + ' — create disabled until then.'; return; }
-      if (!rpc) { btn.disabled = true; if (state) state.textContent = 'Node RPC not configured — simulation only.'; return; }
+      if (!hasRpc()) { btn.disabled = true; if (state) state.textContent = 'Connect a node RPC (top bar) to create bonds — simulation only.'; return; }
       btn.disabled = false; if (state) state.textContent = '';
       btn.onclick = function () {
-        window.SOST_GATEWAY_RPC('popc_register',
-          [($('gwPopcSost') || {}).value, ($('gwPopcEth') || {}).value, 'PAXG', '50000', String(($('gwPopcMonths') || {}).value)]);
+        var sost = ($('gwPopcSost') || {}).value, eth = ($('gwPopcEth') || {}).value;
+        var months = String(($('gwPopcMonths') || {}).value || '12'), amount = ($('gwPopcAmount') || {}).value;
+        btn.disabled = true; if (state) state.textContent = 'Submitting…';
+        window.SOST_GATEWAY_RPC('popc_register', [sost, eth, 'PAXG', '50000', months]).then(function (r) {
+          btn.disabled = false; if (state) state.textContent = '';
+          if (r && r.commitment_id) {
+            var bonds = loadBonds();
+            bonds.unshift({ cid: r.commitment_id, months: months, amount: amount, created: chainHeight(), unlock: P.estimateUnlockBlock(chainHeight(), months) });
+            saveBonds(bonds); renderBonds();
+          }
+          showResult('Bond created', r || {});
+        }).catch(function (e) { btn.disabled = false; if (state) state.textContent = ''; showResult('Create failed', e, true); });
       };
     }
     function render() {
-      renderStatus(); recompute(); wireCreate();
+      renderStatus(); recompute(); wireCreate(); renderBonds();
       setT('gwPopcBondPt', P.POINTS.bond);
       var dex = $('gwPopcDex'); if (dex) dex.textContent = '⊘ PoPC DEX / trading: ' + GW.Dex.note();
     }
@@ -6659,7 +6709,7 @@ if (GEA_SIGN_ENABLED) {
       var e = $(id); if (e) { e.addEventListener('input', recompute); e.addEventListener('change', render); }
     });
     render();
-    window.gwPopcRender = render;   // wallet can set window.GEA_CHAIN_HEIGHT then call this to refresh
+    window.gwPopcRender = render;   // wallet calls this after each height refresh
   })();
 
   // Apply an optional dev/test override (window.SOST_GATEWAY_CONFIG) without editing the
