@@ -39,10 +39,18 @@ int main(){
     const Bytes32 C = id(1);
     const PubKeyHash MINER = own(0xA1), LATE = own(0xB2), NONE = own(0xC3);
 
-    // A miner who creates + activates inside the 1000-block grace window.
+    // A miner who creates + activates inside the grace window AND keeps the
+    // commitment in good standing. With a 5000-block grace (> the 1440-block
+    // audit interval), a one-shot Register+Activate would auto-slash before the
+    // eligibility height — a PoPC must be MAINTAINED (an audit response every
+    // POPC_V15_AUDIT_INTERVAL_BLOCKS) to stay OPEN through the grace window. The
+    // extra Activate events model those audit responses (each updates last_attest).
     std::vector<PopcV15Event> chain = {
         ev(PopcEventType::Register, C, MINER, (uint8_t)PopcModel::A, H0 + 10, ELI + 100000),
         ev(PopcEventType::Activate, C, MINER, (uint8_t)PopcModel::A, H0 + 20, ELI + 100000),
+        ev(PopcEventType::Activate, C, MINER, (uint8_t)PopcModel::A, H0 + 20 + 1*POPC_V15_AUDIT_INTERVAL_BLOCKS, ELI + 100000),
+        ev(PopcEventType::Activate, C, MINER, (uint8_t)PopcModel::A, H0 + 20 + 2*POPC_V15_AUDIT_INTERVAL_BLOCKS, ELI + 100000),
+        ev(PopcEventType::Activate, C, MINER, (uint8_t)PopcModel::A, H0 + 20 + 3*POPC_V15_AUDIT_INTERVAL_BLOCKS, ELI + 100000),
     };
 
     // ---- staged gate logic (independent of the shipped flag value) ----
@@ -90,14 +98,14 @@ int main(){
 
 #ifndef SOST_TESTNET_FORKS
     CHECK("mainnet: PoPC automation deferred at V15_HEIGHT (20000)", !popc_v15_active_at(H0));
-    CHECK("mainnet: PoPC automation deferred at eligibility (21000)", !popc_v15_active_at(ELI));
+    CHECK("mainnet: PoPC automation deferred at eligibility (25000)", !popc_v15_active_at(ELI));
     CHECK("mainnet: V15_HEIGHT == 20000", H0 == 20000);
-    CHECK("mainnet: eligibility == 21000", ELI == 21000);
+    CHECK("mainnet: eligibility == 25000", ELI == 25000);
 #else
     CHECK("testnet: PoPC automation live at V15_HEIGHT", popc_v15_active_at(H0));
     CHECK("testnet: PoPC automation live at eligibility", popc_v15_active_at(ELI));
     CHECK("testnet: V15_HEIGHT == 300", H0 == 300);
-    CHECK("testnet: eligibility == 1300", ELI == 1300);
+    CHECK("testnet: eligibility == 5300", ELI == 5300);
 #endif
 
     std::printf("=== Results: %d passed, %d failed ===\n", g_pass, g_fail);

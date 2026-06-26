@@ -1874,12 +1874,12 @@ function dtdEligibilityBanner(height, progressHtml){
       +'<ul style="margin:5px 0 0;padding-left:16px;font-size:11px;color:var(--text2);line-height:1.6">'+items+'</ul></div>';
   }
   var h=height||0;
-  var e1=(h>=7100&&h<12100), e2=(h>=12100&&h<21000), e3=(h>=21000);
+  var e1=(h>=7100&&h<12100), e2=(h>=12100&&h<25000), e3=(h>=25000);
   // Live eligible-miner counts:
   //  • Phase 1 is PAST → its peak pool of eligible miners (all-time updated-miners
   //    set, which reached ~50) — shown as "up to N".
   //  • Phase 2 is CURRENT → the live eligible count (moves every block) — dynamic.
-  //  • Phase 3 (from 21,000) is future → dynamic once active.
+  //  • Phase 3 (from 25,000) is future → dynamic once active.
   // Phase-1 peak pool is genesis-wide (the all-time updated/peak set, ~50),
   // NOT the node's 7100-window producers_total — so it is read from the
   // full-chain scan caches, not capped to the narrower node count.
@@ -1891,15 +1891,15 @@ function dtdEligibilityBanner(height, progressHtml){
   try{ var _m=String(localStorage.getItem('sost_dtd_eligible_count')||'').match(/(\d+)/); if(_m)eligNow=parseInt(_m[1],10); }catch(_e){}
   var elig1='<li style="color:#22c55e"><b>Eligible miners: up to '+poolPhase1+'</b> &middot; phase complete (static)</li>';
   var elig2='<li style="color:#22c55e"><b>Eligible miners now: '+(eligNow!=null?eligNow:'&mdash;')+'</b> &middot; dynamic, moves every block</li>';
-  var elig3='<li style="color:#c084fc"><b>Eligible miners: &mdash;</b> &middot; dynamic once block 21,000 is reached</li>';
+  var elig3='<li style="color:#c084fc"><b>Eligible miners: &mdash;</b> &middot; dynamic once block 25,000 is reached</li>';
   return '<div style="max-width:820px;margin:0 auto 4px">'
     +'<div style="font-size:12px;font-weight:800;color:var(--cyan);letter-spacing:1px;margin-bottom:8px">// DTD LOTTERY &mdash; ELIGIBILITY CRITERIA TIMELINE</div>'
     +era(e1,'Blocks 7,100 &rarr; 12,100 &middot; original (V11 Phase&nbsp;2)',
         elig1+'<li>SbPoW-signed miner identity (block at height &ge; 7,100)</li><li>address has mined &ge; 1 valid block</li><li>recent-miner cooldown: 5 blocks</li><li>bootstrap cadence 2-of-3</li>','#fbbf24')
-    +era(e2,'Blocks 12,100 &rarr; 21,000 &middot; current gates (V13)',
+    +era(e2,'Blocks 12,100 &rarr; 25,000 &middot; current gates (V13)',
         elig2+'<li>everything above &mdash; cooldown raised to <b>6 blocks</b></li><li>permanent <b>1-of-3</b> cadence</li><li><b>anti-dominance gate</b>: excluded if &ge; 10% of the last 288 blocks</li><li><b>SbPoW-activity gate</b>: must have a recent SbPoW-signed block</li>','#22c55e')
-    +era(e3,'From block 21,000 &middot; V15 PoPC criterion',
-        elig3+'<li>everything above</li><li><b>+ must hold at least one OPEN PoPC contract (any type)</b></li><li style="color:var(--text3)">DTD_POPC_ELIGIBILITY_HEIGHT = 21,000 (V15 block 20,000 + 1,000-block grace)</li>','#c084fc')
+    +era(e3,'From block 25,000 &middot; V15 PoPC criterion',
+        elig3+'<li>everything above</li><li><b>+ must hold at least one OPEN PoPC contract (any type)</b></li><li style="color:var(--text3)">DTD_POPC_ELIGIBILITY_HEIGHT = 25,000 (V15 block 20,000 + 5,000-block grace)</li>','#c084fc')
     +'<div style="margin-top:6px;color:var(--text3);font-size:11.5px">'+(progressHtml||'')+'</div>'
     +'</div>';
 }
