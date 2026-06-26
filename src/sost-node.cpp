@@ -5492,7 +5492,14 @@ static bool process_block(const std::string& block_json) {
                 checkpoint_leaves_vec.size(), seg_proofs_vec.size(), round_witnesses_vec.size());
         fflush(stdout);
 
-        ConsensusParams cx_params = sost::get_consensus_params(sost::Profile::MAINNET, height);
+        // PROFILE FIX: derive consensus params from the node's RUNTIME profile
+        // (ACTIVE_PROFILE, set at startup from --profile), NOT a hardcoded MAINNET.
+        // get_consensus_params() also assigns ACTIVE_PROFILE = profile, so passing
+        // MAINNET here silently reset the global used by MAGIC_STR_BYTES() — every
+        // testnet block past the fast-sync height was then recomputed with MAINNET
+        // magic and rejected as a block_id mismatch. On mainnet ACTIVE_PROFILE is
+        // MAINNET, so this is byte-identical; on testnet it now stays TESTNET.
+        ConsensusParams cx_params = sost::get_consensus_params(sost::ACTIVE_PROFILE, height);
         // CONSENSUS-CRITICAL: Profile verification
         // The commit now includes profile_index, so we must verify the miner
         // used exactly the correct profile. No more trusting free params.
