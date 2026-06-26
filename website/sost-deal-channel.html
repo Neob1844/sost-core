@@ -259,6 +259,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 </div>
 
 <!-- HERO -->
+<div style="max-width:1100px;margin:14px auto 0;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center">&#9216; <b>Reframing in progress &mdash; Atomic Swap / OTC.</b> Trading PoPC staking contracts (buy/sell/split positions, sell reward rights) is <b>disabled</b> (<code>POPC_DEX_ENABLED=false</code>) and not part of V15. PoPC is a non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. This surface is being converted into non-custodial swap &amp; OTC coordination (signed offers, encrypted deal channels).</div>
 <section class="hero">
   <div class="container">
     <div class="hero-label fade-in">Deal Channels</div>
@@ -582,5 +583,6 @@ setInterval(fetchDeals, _refreshMs);
     if(e.key==='Escape') closeSv(null,true);
   });
 </script>
+<script src="js/popc-dex-gate.js"></script>
 </body>
 </html>
