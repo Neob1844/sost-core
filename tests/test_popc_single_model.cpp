@@ -287,6 +287,45 @@ TEST(PSM57_base_never_depends_on_gold_or_surplus) {
             }
 }
 
+// PSM58: the explicit by-height settle matrix — chains popc_single_model_active(h)
+// AND popc_gold_boost_active(h) into popc_settle_reward_stocks, the exact path the
+// node's popc_release handler runs. Build-agnostic: on the mainnet build the gold
+// gate is deferred (INT64_MAX) so V15 pays base only; on the -DSOST_TESTNET_FORKS
+// build the gold gate equals V15 so V15 can pay base+boost. We assert the right
+// branch from what the gates actually return, never from a hard-coded height.
+TEST(PSM58_by_height_settle_matrix) {
+    const int64_t base    = 100  * (int64_t)STOCKS_PER_SOST;
+    const int64_t surplus = 1000 * (int64_t)STOCKS_PER_SOST;
+
+    // h = V15_HEIGHT - 1  (e.g. 19,999 on mainnet): single-model inert -> legacy base,
+    // regardless of gold/days/surplus.
+    int64_t below = popc_settle_reward_stocks(
+        popc_single_model_active(V15_HEIGHT - 1),
+        popc_gold_boost_active(V15_HEIGHT - 1),
+        base, /*has_gold=*/true, /*days=*/360, surplus);
+    EXPECT(below == base, "one block before V15 -> legacy base, no boost");
+
+    // h = V15_HEIGHT (20,000 on mainnet): single-model ACTIVE. The two gates are
+    // independent — the gold boost applies ONLY if its own gate is also active.
+    bool single_at_v15 = popc_single_model_active(V15_HEIGHT);
+    bool gold_at_v15   = popc_gold_boost_active(V15_HEIGHT);
+    EXPECT(single_at_v15 == true, "single-model must be active at V15");
+    int64_t at_v15 = popc_settle_reward_stocks(single_at_v15, gold_at_v15,
+                                               base, /*has_gold=*/true, /*days=*/360, surplus);
+    if (gold_at_v15) {
+        // testnet build: gold gate == V15 -> base + full-tier boost (+20%).
+        EXPECT(at_v15 == base + 20 * (int64_t)STOCKS_PER_SOST,
+               "V15 with gold gate active (testnet) -> base + boost");
+    } else {
+        // mainnet build: gold gate deferred (INT64_MAX) -> base only, NO boost.
+        EXPECT(at_v15 == base, "V15 with gold boost deferred (mainnet) -> base only");
+    }
+
+    // single-model active != gold boost active: two distinct gates, gold never first.
+    EXPECT(POPC_GOLD_BOOST_HEIGHT >= POPC_SINGLE_MODEL_HEIGHT,
+           "gold boost gate must never precede the single-model gate");
+}
+
 // =============================================================================
 // Gold Boost eligibility threshold: max(25% of bond value, 0.25 PAXG/XAUT)
 // =============================================================================
