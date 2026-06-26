@@ -23,7 +23,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST OTC Desk — Request Quotes for SOST and Gold-Linked Positions</title>
 <meta name="description" content="SOST OTC Desk: request quotes for SOST tokens and gold-referenced positions. Operator-assisted execution with transparent fees.">
-<meta name="keywords" content="SOST OTC, over-the-counter, gold positions, quote request, operator-assisted, SOST trading">
+<meta name="keywords" content="SOST OTC, over-the-counter, atomic swaps, quote request, operator-assisted, SOST trading">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
@@ -243,6 +243,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 </div>
 
 <!-- HERO -->
+<div style="max-width:1100px;margin:14px auto 0;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center">&#9216; <b>Reframing in progress &mdash; Atomic Swap / OTC.</b> Trading PoPC staking contracts (buy/sell/split positions, sell reward rights) is <b>disabled</b> (<code>POPC_DEX_ENABLED=false</code>) and not part of V15. PoPC is a non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. This surface is being converted into non-custodial swap &amp; OTC coordination (signed offers, encrypted deal channels).</div>
 <section class="hero">
   <div class="container">
     <div class="hero-label fade-in">OTC Desk</div>
@@ -608,5 +609,6 @@ setInterval(fetchOtcRequests, _refreshMs);
     if(e.key==='Escape') closeSv(null,true);
   });
 </script>
+<script src="js/popc-dex-gate.js"></script>
 </body>
 </html>

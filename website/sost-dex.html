@@ -20,19 +20,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Atomic Swap DEX & OTC — Non-Custodial Swaps & Encrypted Deal Channels</title>
-<meta name="description" content="SOST DEX: non-custodial bilateral signed-offer interface for PoPC gold-referenced positions. Client-side ED25519 signing + X25519 encryption. Encrypted relay (server cannot read). On-chain smart-contract escrow on Ethereum (SOSTEscrow), not SOST-operated escrow. SOST Protocol does not custody funds, gold, or positions, and does not intermediate, settle, or arbitrate trades.">
-<meta name="keywords" content="SOST DEX, gold positions, position trading, reward rights, signed offers, settlement, tokenized gold, XAUT, PAXG">
+<meta name="description" content="Atomic Swap DEX: non-custodial bilateral signed-offer interface for non-custodial atomic swaps and OTC coordination. Client-side ED25519 signing + X25519 encryption. Encrypted relay (server cannot read). On-chain smart-contract escrow on Ethereum (SOSTEscrow), not SOST-operated escrow. SOST Protocol does not custody funds or gold, and does not intermediate, settle, or arbitrate trades.">
+<meta name="keywords" content="Atomic Swap DEX, atomic swap, OTC, signed offers, encrypted deal channels, non-custodial, settlement, tokenized gold, XAUT, PAXG">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SOST Atomic Swap DEX & OTC — Non-Custodial Swaps & Encrypted Deal Channels">
-<meta property="og:description" content="SOST DEX: non-custodial bilateral signed-offer interface. Client-side ED25519 signing, encrypted relay, on-chain smart-contract escrow. SOST does not custody, intermediate, or arbitrate trades.">
+<meta property="og:description" content="Atomic Swap DEX: non-custodial bilateral signed-offer interface. Client-side ED25519 signing, encrypted relay, on-chain smart-contract escrow. SOST does not custody, intermediate, or arbitrate trades.">
 <meta property="og:url" content="https://sostcore.com/sost-dex.html">
 <meta property="og:site_name" content="SOST Protocol">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST Atomic Swap DEX & OTC — Non-Custodial Swaps & Encrypted Deal Channels">
-<meta name="twitter:description" content="SOST DEX: non-custodial bilateral signed-offer interface. Client-side ED25519 signing, encrypted relay, on-chain smart-contract escrow. SOST does not custody, intermediate, or arbitrate trades.">
+<meta name="twitter:description" content="Atomic Swap DEX: non-custodial bilateral signed-offer interface. Client-side ED25519 signing, encrypted relay, on-chain smart-contract escrow. SOST does not custody, intermediate, or arbitrate trades.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -80,7 +80,7 @@
   @keyframes glowPulse { 0%,100%{filter:blur(18px) brightness(1)} 50%{filter:blur(28px) brightness(1.3)} }
   .hero-title { font-family: var(--font-display); font-size: clamp(56px, 10vw, 96px); font-weight: 800; line-height: 1.05; margin-bottom: 16px; letter-spacing: -3px; position: relative; display: inline-block; }
   .hero-title .dex-text { background: linear-gradient(90deg,#e63946,#ff6b35,#f59e0b,#fbbf24,#4ade80,#22d3ee,#818cf8,#c084fc,#e63946); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: rainbowShift 3s linear infinite; position: relative; z-index: 1; }
-  .hero-title::after { content: 'SOST DEX'; position: absolute; top: 0; left: 0; font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; background: linear-gradient(90deg,#e63946,#ff6b35,#f59e0b,#fbbf24,#4ade80,#22d3ee,#818cf8,#c084fc,#e63946); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: rainbowShift 3s linear infinite, glowPulse 2s ease-in-out infinite; opacity: 0.6; z-index: 0; }
+  .hero-title::after { content: 'Atomic Swap DEX'; position: absolute; top: 0; left: 0; font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; background: linear-gradient(90deg,#e63946,#ff6b35,#f59e0b,#fbbf24,#4ade80,#22d3ee,#818cf8,#c084fc,#e63946); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: rainbowShift 3s linear infinite, glowPulse 2s ease-in-out infinite; opacity: 0.6; z-index: 0; }
   .hero-subtitle { font-size: 16px; color: var(--text-secondary); max-width: 600px; line-height: 1.8; font-weight: 300; margin-bottom: 36px; }
   .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
   .hero-btn { display: flex; align-items: center; gap: 10px; padding: 14px 28px; border-radius: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1.5px; cursor: pointer; border: 1px solid; transition: all 0.3s; text-decoration: none; text-transform: uppercase; }
@@ -437,9 +437,9 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         <span style="background:rgba(245,158,11,0.15);color:var(--amber-primary);font-size:10px;font-weight:900;letter-spacing:1.5px;padding:4px 10px;border-radius:3px">READ FIRST</span>
       </div>
       <ul style="color:var(--text-primary);font-size:14px;line-height:1.75;margin:0 0 14px;padding-left:22px">
-        <li><b>SOST DEX does not custody user funds or gold.</b> Your SOST balance stays in your own wallet. Your gold (XAUT / PAXG) stays in your own Ethereum wallet or in the on-chain SOSTEscrow smart contract you yourself interact with.</li>
-        <li><b>SOST DEX is not a centralized escrow or broker.</b> Any escrow mentioned on this page refers to the on-chain Ethereum smart contract (SOSTEscrow). SOST Protocol does not operate, hold keys to, or manually release any escrow.</li>
-        <li><b>SOST DEX does not guarantee counterparties, prices, delivery, or outcomes.</b> Every offer is between two users, signed and encrypted client-side. SOST cannot reverse, force, or verify off-chain promises.</li>
+        <li><b>Atomic Swap DEX does not custody user funds or gold.</b> Your SOST balance stays in your own wallet. Your gold (XAUT / PAXG) stays in your own Ethereum wallet or in the on-chain SOSTEscrow smart contract you yourself interact with.</li>
+        <li><b>Atomic Swap DEX is not a centralized escrow or broker.</b> Any escrow mentioned on this page refers to the on-chain Ethereum smart contract (SOSTEscrow). SOST Protocol does not operate, hold keys to, or manually release any escrow.</li>
+        <li><b>Atomic Swap DEX does not guarantee counterparties, prices, delivery, or outcomes.</b> Every offer is between two users, signed and encrypted client-side. SOST cannot reverse, force, or verify off-chain promises.</li>
       </ul>
       <p style="color:var(--text-secondary);font-size:12.5px;line-height:1.7;margin:0">
         The relay can transport encrypted envelopes between users but <b>cannot read or alter the content</b>. SOST never sees your private keys, your private trade content, or your biometrics. The full rationale and safety guide is below.
@@ -448,13 +448,13 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   </div>
 </section>
 
-<!-- ============ WHY SOST DEX DOES NOT INTERVENE ============ -->
+<!-- ============ WHY Atomic Swap DEX DOES NOT INTERVENE ============ -->
 <section style="border-bottom:1px solid var(--border-dim);background:rgba(0,0,0,0.25)">
   <div class="container" style="padding:40px 0">
     <div style="margin-bottom:20px">
       <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// WHY NON-CUSTODIAL</div>
-      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">Why SOST DEX <span style="color:var(--amber-primary)">does not intervene</span></h2>
-      <p style="color:var(--text-secondary);font-size:14px;margin-top:10px;line-height:1.7">SOST DEX is a non-custodial software interface. Trades are between users. The protocol&apos;s role is to host the interface and transport encrypted messages, not to broker or settle deals.</p>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">Why Atomic Swap DEX <span style="color:var(--amber-primary)">does not intervene</span></h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-top:10px;line-height:1.7">Atomic Swap DEX is a non-custodial software interface. Trades are between users. The protocol&apos;s role is to host the interface and transport encrypted messages, not to broker or settle deals.</p>
     </div>
 
     <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-left:4px solid var(--amber-primary);border-radius:4px;padding:18px 22px;margin:0 0 18px">
@@ -470,12 +470,12 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   </div>
 </section>
 
-<!-- ============ WHAT SOST DEX CAN AND CANNOT VERIFY ============ -->
+<!-- ============ WHAT Atomic Swap DEX CAN AND CANNOT VERIFY ============ -->
 <section style="border-bottom:1px solid var(--border-dim)">
   <div class="container" style="padding:40px 0">
     <div style="margin-bottom:20px">
       <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// VERIFICATION LIMITS</div>
-      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">What SOST DEX <span style="color:#22c55e">can</span> &nbsp;and&nbsp; <span style="color:#fb010d">cannot</span> verify</h2>
+      <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">What Atomic Swap DEX <span style="color:#22c55e">can</span> &nbsp;and&nbsp; <span style="color:#fb010d">cannot</span> verify</h2>
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:0;border:1px solid var(--border-bright);border-radius:4px;overflow:hidden">
@@ -510,7 +510,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     <div style="margin-bottom:20px">
       <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// PATTERN RECOGNITION</div>
       <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary)">Honest DEX counterparty <span style="color:var(--text-muted)">vs</span> <span style="color:#fb010d">scammer</span></h2>
-      <p style="color:var(--text-secondary);font-size:13px;margin-top:6px">Specific to the DEX context (positions, reward rights, OTC requests, smart-contract escrow). If your counterparty matches the right column, stop the trade.</p>
+      <p style="color:var(--text-secondary);font-size:13px;margin-top:6px">Specific to the DEX context (positions, OTC requests, smart-contract escrow). If your counterparty matches the right column, stop the trade.</p>
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:0;border:1px solid var(--border-bright);border-radius:4px;overflow:hidden">
@@ -564,7 +564,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 
     <!-- Scam 2: fake DEX mirror URL -->
     <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px;margin:0 0 16px">
-      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">SCAM 2 &mdash; Fake SOST DEX mirror URL</div>
+      <div style="color:var(--amber-primary);font-weight:900;font-size:12px;letter-spacing:1px;margin-bottom:10px">SCAM 2 &mdash; Fake Atomic Swap DEX mirror URL</div>
       <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Pattern:</b> a counterparty in a chat or social media post sends you a URL that looks like the DEX but is hosted elsewhere: <code>sost-dex[.]net</code>, <code>sostdex[.]app</code>, <code>sostcore[.]io/dex</code>. The clone page steals your passphrase / seed when you &quot;Create Identity&quot; or &quot;Import Backup&quot;.</p>
       <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin:0 0 10px"><b>Warning signs:</b> URL is not exactly <code>sostcore.com/sost-dex.html</code> or <code>sostprotocol.com/sost-dex.html</code>. Page asks for your seed phrase. Page looks identical but is on a different domain.</p>
       <p style="color:var(--text-primary);font-size:13px;line-height:1.7;margin:0"><b>Safe response:</b> only ever load the DEX from <code>sostcore.com</code> or <code>sostprotocol.com</code>. Type the URL yourself; do not click links from DMs / Telegram / X. If in doubt, navigate from the nav of <code>sostcore.com</code> itself. No legitimate process EVER asks for your seed phrase or passphrase.</p>
@@ -620,8 +620,8 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 <section style="border-bottom:1px solid var(--border-dim);background:rgba(0,0,0,0.25)">
   <div class="container" style="padding:24px 0">
     <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:0">
-      <b style="color:var(--amber-primary)">SOST DEX disclaimer.</b>
-      SOST DEX is non-custodial software. It does not provide financial, legal, custody, brokerage, escrow, investment, or dispute-resolution services. Users are responsible for their own trades, keys, counterparties, taxes, compliance, and local-law obligations. Any reference to &quot;escrow&quot; on this page denotes the on-chain Ethereum smart contract (SOSTEscrow); SOST Protocol does not operate, hold keys to, or manually release any escrow. The relay transports encrypted envelopes between users and cannot read their content. SOST cannot reverse transactions, recover funds, force delivery, or arbitrate disputes.
+      <b style="color:var(--amber-primary)">Atomic Swap DEX disclaimer.</b>
+      Atomic Swap DEX is non-custodial software. It does not provide financial, legal, custody, brokerage, escrow, investment, or dispute-resolution services. Users are responsible for their own trades, keys, counterparties, taxes, compliance, and local-law obligations. Any reference to &quot;escrow&quot; on this page denotes the on-chain Ethereum smart contract (SOSTEscrow); SOST Protocol does not operate, hold keys to, or manually release any escrow. The relay transports encrypted envelopes between users and cannot read their content. SOST cannot reverse transactions, recover funds, force delivery, or arbitrate disputes.
     </p>
   </div>
 </section>
@@ -652,7 +652,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         <span class="field-help-btn">?</span>
       </div>
       <div class="field-help" id="help-dex-overview">
-        <b style="font-size:12px">SOST DEX — Complete Guide</b><br><br>
+        <b style="font-size:12px">Atomic Swap DEX — Complete Guide</b><br><br>
 
         <b style="color:var(--cyan-primary)">&#128274; Identity &amp; Wallet</b><br>
         The DEX uses a <b>local browser wallet</b> — your cryptographic identity (ED25519 signing + X25519 encryption keys) is created and stored in your browser using IndexedDB, encrypted with Argon2id from a passphrase you choose.<br>
@@ -791,13 +791,13 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     </div>
     <div id="liveStatus" style="font-size:10px;color:var(--text-muted);margin-top:8px;text-align:right;"></div>
 
-    <!-- SOST DEX — Position & Gold Overview Chart -->
+    <!-- Atomic Swap DEX — Atomic Swap / OTC Overview -->
     <div style="margin-top:24px;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:24px;position:relative;overflow:hidden">
       <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse 60% 40% at 50% 100%,rgba(251,1,13,0.06),transparent 70%);pointer-events:none"></div>
       <div style="position:relative;z-index:1">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
           <div>
-            <div style="font-size:11px;color:var(--red-primary);letter-spacing:2px;font-weight:700">SOST DEX — POSITIONS &amp; GOLD</div>
+            <div style="font-size:11px;color:var(--red-primary);letter-spacing:2px;font-weight:700">Atomic Swap DEX — ATOMIC SWAP / OTC</div>
             <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Live position data from PoPC escrow on Sepolia</div>
           </div>
           <div style="display:flex;gap:16px;font-size:10px">
@@ -1025,7 +1025,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
             </select>
             <div class="field-help" id="help-asset-type">
               <b>What exactly you're trading:</b><br><br>
-              <b>POSITION_FULL:</b> The entire position — principal ownership, reward rights, AND the gold escrow beneficiary. The buyer gets everything.<br><br>
+              <b>POSITION_FULL:</b> The entire position — principal ownership, AND the gold escrow beneficiary. The buyer gets everything.<br><br>
               <b>POSITION_REWARD_RIGHT:</b> Only the reward rights. The seller keeps the principal and the gold, but the buyer receives the SOST mining rewards from this position.<br><br>
               <b>GOLD:</b> Direct gold-token trade (XAUT or PAXG) without a PoPC position involved.
             </div>
@@ -1049,7 +1049,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
             <label class="form-label">Trading Fee <span class="field-help-btn" onclick="toggleFieldHelp('help-fee')">?</span></label>
             <input type="text" class="form-control" id="paramFee" readonly style="color:var(--green-primary);" value="0% — no trading fee">
             <div class="field-help" id="help-fee">
-              <b>No trading fee.</b> Buying and selling positions on the SOST DEX is free. There is no maker/taker fee for trades.<br><br>
+              <b>No trading fee.</b> The Atomic Swap DEX does not add a trading fee; you remain responsible for network fees and counterparty terms.<br><br>
               <b>Protocol fees (separate, not on trades):</b> 3% Model A / 8% Model B — these apply only to the PoPC reward when the position matures, not to the trade itself.
             </div>
           </div>
@@ -1199,14 +1199,14 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 <footer>
   <div class="container">
     <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
-    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="sost-dex.html">SOST DEX</a></p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="sost-dex.html">Atomic Swap DEX</a></p>
     <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
   </div>
 </footer>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
-   SOST DEX — Main Trading Page
+   Atomic Swap DEX — Atomic Swap / OTC
    ═══════════════════════════════════════════════════════════════════════ */
 
 /* ── Simple/Pro Mode Toggle ── */
@@ -1737,7 +1737,7 @@ setInterval(fetchAll, _refreshMs);
 <script src="js/crt-effects.js"></script>
 <script src="js/dex-onboarding.js"></script>
 <script>
-// SOST DEX Chart — positions + gold with red glow
+// Atomic Swap DEX Chart — positions + gold with red glow
 (function(){
   var GOLD_PRICE_USD = 2340;
   fetch('api/positions_live.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){
