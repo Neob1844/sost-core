@@ -45,6 +45,7 @@
 #include "sost/params.h"
 #include "sost/address.h"
 #include "sost/tx_signer.h"
+#include "sost/popc_v15.h"
 #include "sost/capsule.h"
 #include "sost/sealed_envelope.h" // Sealed Capsule (Fase Sealed-1.D)
 #include "sost/crypto.h"          // sha256(file bytes) for --capsule-file
@@ -3549,8 +3550,112 @@ int main(int argc, char** argv) {
             return 0;
         }
 
+        // carrier-hex: generate the ON-CHAIN PoPC V15 carrier payload (signed by
+        // the commitment owner) for a Register or Activate event. Print it as hex
+        // so it can be emitted with:  sost-cli send --to <self> --amount 1 \
+        //                                       --popc-carrier <hex>
+        // The node's deterministic collector (chain_active_popc_set) then sees the
+        // commitment on-chain — the ONLY source the DTD-PoPC lottery gate reads.
+        // SELF-VERIFY: the command decodes its own output and re-runs the exact
+        // owner-authorization check the node uses; it refuses to print if invalid.
+        if (sub == "carrier-hex") {
+            std::string sost_addr, cid_hex, type = "register";
+            int64_t end_height = -1, balance_mg = -1, attest_height = -1;
+            int model = 0;
+            for (int i = 3; i < argc; ++i) {
+                std::string a = argv[i];
+                if      ((a == "--sost-address" || a == "--sost") && i+1 < argc) sost_addr = argv[++i];
+                else if (a == "--commitment-id" && i+1 < argc)  cid_hex = argv[++i];
+                else if (a == "--type" && i+1 < argc)           type = argv[++i];
+                else if (a == "--end-height" && i+1 < argc)     end_height = std::stoll(argv[++i]);
+                else if (a == "--model" && i+1 < argc)          model = std::stoi(argv[++i]);
+                else if (a == "--balance-mg" && i+1 < argc)     balance_mg = std::stoll(argv[++i]);
+                else if (a == "--attest-height" && i+1 < argc)  attest_height = std::stoll(argv[++i]);
+            }
+            if (type != "register" && type != "activate") {
+                fprintf(stderr, "Error: --type must be 'register' or 'activate'\n"); return 1; }
+            if (sost_addr.empty() || cid_hex.size() != 64) {
+                fprintf(stderr, "Usage: sost-cli popc carrier-hex --type <register|activate> \\\n"
+                                "         --sost-address <owner sost1...> --commitment-id <64-hex> \\\n"
+                                "         --end-height <int> [--model 0|1]\n"
+                                "       (activate also needs: --balance-mg <int> --attest-height <int>)\n"); return 1; }
+            if (end_height <= 0) { fprintf(stderr, "Error: --end-height <positive int> is required\n"); return 1; }
+            if (model != 0 && model != 1) { fprintf(stderr, "Error: --model must be 0 (A) or 1 (B)\n"); return 1; }
+
+            // Resolve owner pkh + signing key.
+            sost::PubKeyHash owner_pkh{};
+            if (!sost::address_decode(sost_addr, owner_pkh)) {
+                fprintf(stderr, "Error: invalid --sost-address\n"); return 1; }
+            const sost::WalletKey* key = w.find_key_by_pkh(owner_pkh);
+            if (!key) { fprintf(stderr, "Error: wallet '%s' holds no key for %s (owner must sign)\n",
+                                wallet_path.c_str(), sost_addr.c_str()); return 1; }
+
+            // Parse commitment_id hex -> 32 bytes.
+            sost::Bytes32 cid{};
+            { auto nib=[](char c)->int{ if(c>='0'&&c<='9')return c-'0'; if(c>='a'&&c<='f')return c-'a'+10;
+                                        if(c>='A'&&c<='F')return c-'A'+10; return -1; };
+              for (size_t i=0;i<32;i++){ int hi=nib(cid_hex[i*2]),lo=nib(cid_hex[i*2+1]);
+                if(hi<0||lo<0){ fprintf(stderr,"Error: --commitment-id has non-hex chars\n"); return 1; }
+                cid[i]=(uint8_t)((hi<<4)|lo); } }
+
+            std::vector<uint8_t> pub(key->pubkey.begin(), key->pubkey.end());
+            std::vector<uint8_t> payload;
+
+            if (type == "register") {
+                sost::Bytes32 dg = sost::popc_v15_event_digest(sost::PopcEventType::Register, cid, owner_pkh,
+                                                               (uint8_t)model, end_height);
+                sost::Hash256 h{}; std::copy(dg.begin(), dg.end(), h.begin());
+                sost::Sig64 sig{}; std::string serr;
+                if (!sost::SignSighash(key->privkey, h, sig, &serr)) {
+                    fprintf(stderr, "Error signing register digest: %s\n", serr.c_str()); return 1; }
+                std::vector<uint8_t> sigv(sig.begin(), sig.end());
+                payload = sost::popc_v15_encode_signed_event(sost::PopcEventType::Register, cid, owner_pkh,
+                                                             (uint8_t)model, end_height, pub, sigv);
+                // SELF-VERIFY (double-check): decode + re-run the node's owner-auth filter.
+                auto c = sost::popc_v15_decode_carrier(payload, 0);
+                if (!(c.ok && c.has_sig && c.event.type == sost::PopcEventType::Register &&
+                      c.event.commitment_id == cid && c.event.owner_pkh == owner_pkh &&
+                      c.event.end_height == end_height &&
+                      sost::popc_v15_verify_event_auth(c.event.type, c.event.commitment_id, c.event.owner_pkh,
+                                                       c.event.model, c.event.end_height, c.pubkey, c.sig))) {
+                    fprintf(stderr, "FATAL self-check: generated Register carrier did not validate — NOT printing.\n");
+                    return 1;
+                }
+            } else { // activate (attestation)
+                if (balance_mg <= 0 || attest_height < 0) {
+                    fprintf(stderr, "Error: activate requires --balance-mg <positive> and --attest-height <>=0>\n"); return 1; }
+                sost::Bytes32 dg = sost::popc_v15_attest_digest(cid, balance_mg, attest_height);
+                sost::Hash256 h{}; std::copy(dg.begin(), dg.end(), h.begin());
+                sost::Sig64 sig{}; std::string serr;
+                if (!sost::SignSighash(key->privkey, h, sig, &serr)) {
+                    fprintf(stderr, "Error signing attest digest: %s\n", serr.c_str()); return 1; }
+                std::vector<uint8_t> sigv(sig.begin(), sig.end());
+                payload = sost::popc_v15_encode_attest(cid, owner_pkh, (uint8_t)model, end_height,
+                                                       balance_mg, attest_height, pub, sigv);
+                // SELF-VERIFY (double-check): decode + re-run attestation + owner check.
+                auto c = sost::popc_v15_decode_carrier(payload, 0);
+                if (!(c.ok && c.has_attest && c.event.type == sost::PopcEventType::Activate &&
+                      c.event.commitment_id == cid && c.event.owner_pkh == owner_pkh &&
+                      sost::popc_v15_verify_attestation(c.event.commitment_id, c.balance_mg, c.attest_height, c.pubkey, c.sig) &&
+                      sost::popc_v15_pubkey_is_owner(c.pubkey, c.event.owner_pkh))) {
+                    fprintf(stderr, "FATAL self-check: generated Activate carrier did not validate — NOT printing.\n");
+                    return 1;
+                }
+            }
+
+            // Emit hex.
+            static const char* HX = "0123456789abcdef";
+            std::string out; out.reserve(payload.size()*2);
+            for (uint8_t b : payload) { out.push_back(HX[b>>4]); out.push_back(HX[b&0xF]); }
+            fprintf(stderr, "PoPC V15 %s carrier (%zu bytes) — self-check OK. Emit with:\n"
+                            "  sost-cli send --to %s --amount 1 --popc-carrier <hex>\n",
+                    type.c_str(), payload.size(), sost_addr.c_str());
+            printf("%s\n", out.c_str());
+            return 0;
+        }
+
         fprintf(stderr, "Unknown popc subcommand: %s\n", sub.c_str());
-        fprintf(stderr, "Valid: register, status, check\n");
+        fprintf(stderr, "Valid: register, status, check, carrier-hex\n");
         return 1;
     }
 
