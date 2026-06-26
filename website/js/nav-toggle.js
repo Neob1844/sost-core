@@ -67,6 +67,7 @@
       "body.nav-collapsed nav .nav-links,",
       "body.nav-collapsed nav a[href=\"casert-spec.html\"],",
       "body.nav-collapsed nav a[href=\"sost-dex.html\"],",
+      "body.nav-collapsed nav a[href=\"sost-popc.html\"],",
       "body.nav-collapsed nav a[href=\"atomic-swap-console.html\"],",
       "body.nav-collapsed nav a[href^=\"https://geaspirit.com\"],",
       "body.nav-collapsed nav a[onclick=\"openSv()\"] {",
@@ -291,9 +292,11 @@
     var nav=document.querySelector('nav');
     if(!nav) return;
     if(nav.querySelector('a[href="news.html"]')) return;          // already present
-    // Anchor on the Atomic Swap icon (the old WATCH icon was repurposed into it); fall back to
-    // the legacy WATCH icon for any page still using the old structure.
-    var watch=nav.querySelector('a[href="atomic-swap-console.html"]')||nav.querySelector('a[onclick="openSv()"]');
+    // Anchor on the big Atomic Swap tile so NEWS lands in the large-button row, right
+    // after it (NOT in the small Watch/Home row). Match by its asBtnGlow animation so it
+    // is immune to href changes (the tile now points to sost-dex.html, formerly the
+    // founder console). Fall back to the legacy hrefs / WATCH icon for old structures.
+    var watch=nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]')||nav.querySelector('a[href="atomic-swap-console.html"]')||nav.querySelector('a[onclick="openSv()"]');
     if(!watch) return;                                            // need the logo-button row
     var sz=watch.offsetWidth||110;                               // match the sibling box
     var a=document.createElement('a');
