@@ -3176,12 +3176,50 @@ static std::string handle_popc_release(const std::string& id, const std::vector<
     int64_t reward = calculate_reward_stocks(c->bond_sost_stocks, c->reward_pct_bps);
     int64_t net_reward_release = reward - (reward * (int64_t)POPC_PROTOCOL_FEE_A_BPS / 10000);
 
+    // --- PoPC single-model Gold Boost (whitepaper §6.0) ---
+    // The base reward above is ALWAYS paid in full and never depends on gold or
+    // surplus. The Gold Boost is an optional, surplus-only extra from the PoPC
+    // Pool, gated by POPC_SINGLE_MODEL_HEIGHT + POPC_GOLD_BOOST_HEIGHT. Before
+    // activation (or with gold deferred) the boost is 0 and the payout is
+    // byte-identical to legacy. Reaching completion in good standing means gold
+    // was verified for the whole term, so verified-days = term length.
+    bool single_on = popc_single_model_active(current_height);
+    bool gold_on   = popc_gold_boost_active(current_height);
+    // Gold Boost eligibility: tokenized gold worth >= max(25% of bond value,
+    // 0.25 PAXG/XAUT). Dust (e.g. 0.001 PAXG) never qualifies. 128-bit products
+    // so no value computation can silently overflow int64.
+    int64_t gold_value_micro = (c->gold_amount_mg > 0 && c->gold_price_usd_micro > 0)
+        ? (int64_t)(((__int128)c->gold_amount_mg * c->gold_price_usd_micro) / POPC_GOLD_OZ_MG) : 0;
+    int64_t bond_value_micro = (c->sost_price_usd_micro > 0)
+        ? (int64_t)(((__int128)c->bond_sost_stocks * c->sost_price_usd_micro) / STOCKS_PER_SOST) : 0;
+    bool gold_qualifies = popc_gold_boost_eligible(c->gold_amount_mg, gold_value_micro, bond_value_micro);
+    // Continuous-verification days come from PROVEN audit history on the commitment,
+    // NEVER assumed from the term length (a registration snapshot does not count).
+    // Until the continuous-verification audit pipeline populates gold_verified_days
+    // it stays 0 -> no boost. Hard pre-activation requirement for the Gold Boost.
+    int64_t gold_verified_days = gold_qualifies ? c->gold_verified_days : 0;
+    int64_t pool_surplus = 0;
+    if (single_on && gold_on && gold_qualifies) {
+        int64_t pool_balance = 0;
+        PubKeyHash popc_pkh_set{};
+        address_decode(ADDR_POPC_POOL, popc_pkh_set);
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        const auto& umap = g_utxo_set.GetMap();
+        for (const auto& kv : umap)
+            if (kv.second.pubkey_hash == popc_pkh_set) pool_balance += kv.second.amount;
+        pool_surplus = pool_balance - g_popc_registry.committed_rewards();  // headroom beyond commitments
+    }
+    int64_t total_reward = popc_settle_reward_stocks(single_on, gold_on, net_reward_release,
+                                                     gold_qualifies, gold_verified_days, pool_surplus);
+    int64_t gold_boost_payout = total_reward - net_reward_release;
+
     // Mark as COMPLETED
     std::string comp_err;
     if (!g_popc_registry.complete(commitment_id, &comp_err))
         return rpc_error(id, -1, "complete failed: " + comp_err);
 
-    // Release committed rewards from PUR tracking
+    // Release committed rewards from PUR tracking (the BASE only — the boost was
+    // never committed; it is paid from surplus).
     g_popc_registry.release_committed(net_reward_release);
 
     // Save registry
@@ -3193,8 +3231,10 @@ static std::string handle_popc_release(const std::string& id, const std::vector<
       << ",\"status\":\"COMPLETED\""
       << ",\"bond\":\"" << format_sost(c->bond_sost_stocks) << "\""
       << ",\"reward_pct_bps\":" << (int)c->reward_pct_bps
-      << ",\"reward_amount\":\"" << format_sost(net_reward_release) << "\""
-      << ",\"instructions\":\"Broadcast a reward TX from the PoPC Pool to the user's SOST address using build_reward_tx()\""
+      << ",\"base_reward\":\"" << format_sost(net_reward_release) << "\""
+      << ",\"gold_boost\":\"" << format_sost(gold_boost_payout) << "\""
+      << ",\"reward_amount\":\"" << format_sost(total_reward) << "\""
+      << ",\"instructions\":\"Broadcast a reward TX of reward_amount from the PoPC Pool to the user's SOST address using build_reward_tx()\""
       << "}";
     return rpc_result(id, s.str());
 }
@@ -5452,7 +5492,14 @@ static bool process_block(const std::string& block_json) {
                 checkpoint_leaves_vec.size(), seg_proofs_vec.size(), round_witnesses_vec.size());
         fflush(stdout);
 
-        ConsensusParams cx_params = sost::get_consensus_params(sost::Profile::MAINNET, height);
+        // PROFILE FIX: derive consensus params from the node's RUNTIME profile
+        // (ACTIVE_PROFILE, set at startup from --profile), NOT a hardcoded MAINNET.
+        // get_consensus_params() also assigns ACTIVE_PROFILE = profile, so passing
+        // MAINNET here silently reset the global used by MAGIC_STR_BYTES() — every
+        // testnet block past the fast-sync height was then recomputed with MAINNET
+        // magic and rejected as a block_id mismatch. On mainnet ACTIVE_PROFILE is
+        // MAINNET, so this is byte-identical; on testnet it now stays TESTNET.
+        ConsensusParams cx_params = sost::get_consensus_params(sost::ACTIVE_PROFILE, height);
         // CONSENSUS-CRITICAL: Profile verification
         // The commit now includes profile_index, so we must verify the miner
         // used exactly the correct profile. No more trusting free params.

@@ -490,7 +490,8 @@ bool PoPCRegistry::save(const std::string& path, std::string* err) const {
         f << "      \"reward_pct_bps\": "        << (int)c.reward_pct_bps             << ",\n";
         f << "      \"status\": \""              << status_to_str(c.status)           << "\",\n";
         f << "      \"sost_price_usd_micro\": "  << c.sost_price_usd_micro            << ",\n";
-        f << "      \"gold_price_usd_micro\": "  << c.gold_price_usd_micro            << "\n";
+        f << "      \"gold_price_usd_micro\": "  << c.gold_price_usd_micro            << ",\n";
+        f << "      \"gold_verified_days\": "    << c.gold_verified_days              << "\n";
         f << "    }";
         if (i + 1 < commitments_.size()) f << ",";
         f << "\n";
@@ -594,6 +595,7 @@ bool PoPCRegistry::load(const std::string& path, std::string* err) {
             c.status             = status_from_str(extract_str(block, "status"));
             c.sost_price_usd_micro = extract_int(block, "sost_price_usd_micro");
             c.gold_price_usd_micro = extract_int(block, "gold_price_usd_micro");
+            c.gold_verified_days   = extract_int(block, "gold_verified_days");  // 0 if absent (old files)
             commitments_.push_back(std::move(c));
 
         } else if (in_reputations) {

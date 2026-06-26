@@ -255,6 +255,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 <a href="#sec-35" class="toc-l2">5.4 Heritage Reserve and Dissolution</a>
 <a href="#sec-39" class="toc-l2">5.5 Reserve Evolution Path</a>
 <a href="#sec-40" class="toc-l1">6. Proof of Personal Custody (PoPC)</a>
+<a href="#sec-40-redesign" class="toc-l2">6.0 Redesigned PoPC — One Native Bond, Gold as Boost</a>
 <a href="#sec-41" class="toc-l2">6.1 What PoPC Is — And Is Not</a>
 <a href="#sec-42" class="toc-l2">6.2 Why It Is Unique</a>
 <a href="#sec-43" class="toc-l2">6.3 <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> Entropy for Audits</a>
@@ -1583,6 +1584,48 @@ PROPERTIES:
 &#10004; <b style="color:#00ff88">First on-chain gold deposit (0.05 oz XAUT)</b><br>
 Activation: protocol-scheduled after block 10,000, subject to network readiness (see §6.13).
 </div>
+<h4 id="sec-40-redesign" class="wp-h">6.0 Redesigned PoPC — One Native Bond, Gold as Boost</h4>
+<div class="wp-spacer"></div>
+<div style="background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.28);border-radius:6px;padding:16px 20px;margin:8px 0 18px;line-height:1.85;">
+<b style="color:#00ff88;font-size:14px;">Redesign notice (supersedes the two-model framing below)</b>
+<div class="wp-spacer"></div>
+<p class="wp-p" style="margin:0;">PoPC is now a <b>single, SOST-native protocol</b>. The former two-model split — Model A (native SOST bond) and Model B (gold-vault escrow) — is unified into one design: there is <b>one bond, posted in SOST</b>, and gold becomes a <b>moderate reward boost</b>, never collateral and never slashable. The dual-model text in §6.4–§6.9 below is kept for historical reference; where it conflicts with this notice, this notice prevails.</p>
+</div>
+<div class="wp-spacer"></div>
+<p class="wp-p"><b>Why the redesign.</b> Security that can be slashed must live where the protocol can slash it. When the bond lived as gold on an external chain (Ethereum), enforcing a penalty required an off-chain watcher, oracle or signing key — a trusted intermediary that contradicts the exact property PoPC is meant to guarantee: native, automatic, judge-free enforcement. Anchoring the bond in SOST removes that dependency. The result is threefold: (1) <b>no external chain as the root of security</b>; (2) <b>maximum decentralization</b> — no operator holds a key that can release or seize anyone's bond; and (3) <b>maximum automation</b> — the full lifecycle (lock → audit → reward → slash) runs under SOST consensus with no human or off-chain component in the trust path.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><b>The unified model.</b> Every participant posts a single bond in native SOST — this is the only collateral and the only thing that can be slashed. Gold (XAUT/PAXG held in the user's own wallet) is optional: when present and verified it pays an extra reward on top of the base, funded from a dedicated reserve so it never dilutes the base reward. Gold is never seized: if a participant withdraws their gold, or verification is temporarily unavailable, they simply revert to the base reward — no penalty, no slash.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><b>Base reward (native SOST bond), by lock duration:</b></p>
+<div class="wp-table-wrap"><table class="wp-table">
+<tr><td>Lock duration</td><td>1 month</td><td>3 months</td><td>6 months</td><td>9 months</td><td>12 months</td></tr>
+<tr><td>Base reward</td><td>1%</td><td>4%</td><td>9%</td><td>14%</td><td>20%</td></tr>
+</table></div>
+<div class="wp-spacer"></div>
+<p class="wp-p"><b>Gold Boost</b> — applied on top of the base reward, scaling with the time gold has been continuously verified:</p>
+<div class="wp-table-wrap"><table class="wp-table">
+<tr><td>Gold verified for</td><td>0–30 days</td><td>31–90 days</td><td>91+ days</td></tr>
+<tr><td>Boost on base reward</td><td>+0%</td><td>+10%</td><td>+20%</td></tr>
+</table></div>
+<div class="wp-spacer"></div>
+<p class="wp-p"><b>Eligibility.</b> The Gold Boost requires tokenized gold worth at least the greater of <b>25% of the SOST bond value</b> or <b>0.25 PAXG/XAUT</b> (&asymp; 0.25 troy oz), maintained continuously for the verified period. A dust holding (e.g. 0.001 PAXG) never qualifies, and larger bonds require proportionally more gold.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p">The boost is capped at <b>+20% operationally</b>, with a <b>+25% technical maximum</b> reserved for future governance. It is a multiplier on the base reward, not on the bond. Recommended minimum lock: <b>90 days</b>.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><b>Worked example.</b> A 12-month native bond earns 20% base. With gold verified for 91+ days, the boost is +20%, so the total is 20% &times; 1.20 = <b>24%</b>. The same bond without gold simply earns its 20% base.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><b>Funding.</b> The Gold Boost is funded from the PoPC Pool and capped so it cannot dilute the base PoPC reward. The Metals Protocol Reserve (&sect;5) remains untouched. The coinbase split is unchanged:</p>
+<div class="wp-table-wrap"><table class="wp-table">
+<tr><td>Recipient</td><td>Share</td></tr>
+<tr><td>Miner</td><td>50%</td></tr>
+<tr><td>Metals Protocol Reserve (Gold Vault, &sect;5)</td><td>25%</td></tr>
+<tr><td>PoPC Pool (base reward + optional Gold Boost)</td><td>25%</td></tr>
+</table></div>
+<div class="wp-spacer"></div>
+<p class="wp-p"><b>Protection.</b> The base reward is the mandatory payment and has absolute priority; the Gold Boost is an optional extra paid only from PoPC Pool surplus once the base is covered. It can never reduce the base reward, and if surplus is insufficient the boost is scaled down or paid as zero.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p" style="font-size:12px;color:var(--text-secondary);">The draft implementation is scheduled behind a height-gate (tied to V15) and stays inactive until activated; before that height, behaviour is unchanged. The Gold Boost is gated separately and remains deferred until gold verification is mature (see §6.13).</p>
+<div class="wp-spacer"></div>
 <h4 id="sec-41" class="wp-h">6.1 What PoPC Is — And Is Not</h4>
 <div class="wp-spacer"></div>
 <p class="wp-p">PoPC is not a tokenization of gold. It does not promise yield, stability, or redeemability. It is a voluntary time-bound commitment protocol with automatic economic consequences. A participant promises to maintain custody of precious metals for a defined period, backs that promise with a SOST bond, and is rewarded if they keep their word. If they break it, their bond is slashed automatically — no human judge involved.</p>

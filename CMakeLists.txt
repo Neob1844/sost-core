@@ -820,6 +820,18 @@ add_executable(test-popc-tx tests/test_popc_tx.cpp)
 target_link_libraries(test-popc-tx PRIVATE sost-core)
 add_test(NAME popc-tx COMMAND test-popc-tx)
 
+# PoPC single-model redesign (whitepaper §6.0) — DRAFT, consensus-DEFERRED.
+# Transition tests: height gate + gold-boost math (pure functions).
+add_executable(test-popc-single-model tests/test_popc_single_model.cpp)
+target_link_libraries(test-popc-single-model PRIVATE sost-core)
+add_test(NAME popc-single-model COMMAND test-popc-single-model)
+
+# Regression: testnet submitblock must validate with the node's runtime profile,
+# not a hardcoded MAINNET (which flipped ACTIVE_PROFILE -> wrong block_id magic).
+add_executable(test-profile-magic tests/test_profile_magic.cpp)
+target_link_libraries(test-profile-magic PRIVATE sost-core)
+add_test(NAME profile-magic COMMAND test-profile-magic)
+
 add_executable(test-escrow tests/test_escrow.cpp)
 target_link_libraries(test-escrow PRIVATE sost-core)
 add_test(NAME escrow COMMAND test-escrow)
