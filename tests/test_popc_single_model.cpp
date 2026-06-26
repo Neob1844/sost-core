@@ -65,6 +65,27 @@ TEST(PSM02_gate_inert_before_height) {
            "single model must be inert at genesis");
 }
 
+TEST(PSM04_base_tied_to_v15) {
+    // The single-model base activates with V15 — it replaces Model A/B at the
+    // same height PoPC goes live (no superseded architecture is launched).
+    EXPECT(POPC_SINGLE_MODEL_HEIGHT == V15_HEIGHT,
+           "single-model base height must equal V15_HEIGHT");
+}
+
+TEST(PSM05_gold_never_before_base) {
+    EXPECT(POPC_GOLD_BOOST_HEIGHT >= POPC_SINGLE_MODEL_HEIGHT,
+           "Gold Boost must never activate before the native base model");
+}
+
+TEST(PSM06_gold_gate_active_and_inert) {
+    EXPECT(popc_gold_boost_active(POPC_GOLD_BOOST_HEIGHT) == true,
+           "gold boost active AT its gate");
+    EXPECT(popc_gold_boost_active(POPC_GOLD_BOOST_HEIGHT - 1) == false,
+           "gold boost inert one block before its gate");
+    EXPECT(popc_gold_boost_active(0) == false,
+           "gold boost inert at genesis");
+}
+
 TEST(PSM03_legacy_base_table_untouched) {
     // The redesign does NOT change the base reward table — the boost rides on top.
     EXPECT(POPC_REWARD_RATES[0] == 100,  "1mo base must stay 1%");

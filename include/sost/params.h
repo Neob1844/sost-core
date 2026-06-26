@@ -1044,17 +1044,33 @@ inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT     = V15_HEIGHT + DTD_POPC
 //     (DTD_POPC_ELIGIBILITY_HEIGHT) and is NOT activated by this gate.
 //   - Before POPC_SINGLE_MODEL_HEIGHT, behaviour is byte-identical to today.
 //
-// Ships DEFERRED (INT64_MAX) on mainnet — inert until a final, soaked,
-// coordinated commit replaces INT64_MAX with a finite height. Testnet
-// (-DSOST_TESTNET_FORKS) dry-runs it just after the V15 bundle (block 300).
-#ifdef SOST_TESTNET_FORKS
-inline constexpr int64_t POPC_SINGLE_MODEL_HEIGHT = 400;          // TESTNET ONLY (after V15 dry-run @300)
-#else
-inline constexpr int64_t POPC_SINGLE_MODEL_HEIGHT = INT64_MAX;    // MAINNET (DEFERRED — not scheduled yet)
-#endif
+// Base single-model activation is TIED TO V15 (the PoPC automation bundle): the
+// single native-SOST bond REPLACES the old Model A/B at the same height PoPC goes
+// live, so no superseded architecture is ever launched. Mainnet 20000 / testnet
+// 300 (= V15_HEIGHT). Still inert in practice until the reward call site is wired
+// (follow-up) — changing this constant alone has no behavioural effect. Verify the
+// live chain height is below this value before leaving draft.
+inline constexpr int64_t POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT;
 inline constexpr bool popc_single_model_active(int64_t height) {
     return height >= POPC_SINGLE_MODEL_HEIGHT;
 }
+
+// Gold Boost activates on its OWN gate, DECOUPLED from the base model. Gold reads
+// external-chain (Ethereum) state, so it is NON-CRITICAL and must never gate the
+// native bond: it can grant or deny a boost, never slash/seize/affect consensus
+// safety. Ships DEFERRED on mainnet (INT64_MAX) until verification is ready;
+// testnet dry-runs it at V15_HEIGHT. When mature, set this to the chosen height
+// (>= POPC_SINGLE_MODEL_HEIGHT). Trustless end-state = ZK state proofs (§6.14).
+#ifdef SOST_TESTNET_FORKS
+inline constexpr int64_t POPC_GOLD_BOOST_HEIGHT = V15_HEIGHT;     // TESTNET dry-run alongside base
+#else
+inline constexpr int64_t POPC_GOLD_BOOST_HEIGHT = INT64_MAX;      // MAINNET (DEFERRED — verification not ready)
+#endif
+inline constexpr bool popc_gold_boost_active(int64_t height) {
+    return height >= POPC_GOLD_BOOST_HEIGHT;
+}
+static_assert(POPC_GOLD_BOOST_HEIGHT >= POPC_SINGLE_MODEL_HEIGHT,
+              "Gold Boost must never activate before the native base model");
 
 // =============================================================================
 // DTD Lottery Emergency Pause / Resume — signed control signal (DESIGNED,
