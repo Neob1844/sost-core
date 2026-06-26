@@ -1,103 +1,88 @@
 #!/usr/bin/env bash
 # =============================================================================
-# soak_popc_v15_testnet.sh — end-to-end PoPC V15 soak on a TESTNET-forks build.
+# soak_popc_v15_testnet.sh — PoPC V15 settle soak on a TESTNET-forks node.
 #
-# Validates, on a build where V15_HEIGHT=300 (all gates active at 300):
-#   lock -> settle -> base_reward, and the Gold Boost gating:
-#     - gold_verified_days = 0 (snapshot)          -> gold_boost = 0  (base only)
-#     - gold_verified_days >= 91 (fixture-set)      -> gold_boost > 0  (if eligible + surplus)
+# Run this ON THE VPS (where the node + popc_registry.json live). The chain only
+# needs to be PAST V15 (testnet=300); it does NOT need to reach a real end_height
+# (PoPC durations are 144*30*months blocks — thousands — and are NOT scaled on
+# testnet, so we use a registry FIXTURE for end_height, the same way we fixture
+# gold_verified_days). This avoids mining thousands of blocks and the cASERT
+# slingshot that appears when many blocks are mined back-to-back.
 #
-# MAINNET IS UNAFFECTED: this only exercises a TESTNET_FORKS=ON binary. On mainnet
-# the Gold Boost stays INT64_MAX (off). Do NOT point this at a mainnet node.
+# Validates the popc_release settle path + Gold Boost gating:
+#   Scenario A: gold_verified_days = 0   -> gold_boost = 0  (base only)
+#   Scenario B: gold_verified_days = 120 -> gold_boost > 0  (if eligible + surplus)
 #
-# Usage:  cp scripts/soak_popc_v15_testnet.env.example .env && edit .env
-#         set -a; . ./.env; set +a; ./scripts/soak_popc_v15_testnet.sh
-# (or just export the vars below and run the script).
+# MAINNET IS UNAFFECTED. Do NOT point this at a mainnet node.
+# Usage: cp scripts/soak_popc_v15_testnet.env.example .env && edit .env
+#        set -a; . ./.env; set +a; ./scripts/soak_popc_v15_testnet.sh
 # =============================================================================
 set -euo pipefail
 
-# ---- Parameters (see scripts/soak_popc_v15_testnet.env.example) --------------
-RPC_URL="${RPC_URL:-http://127.0.0.1:18299/rpc}"   # node JSON-RPC endpoint
-RPC_AUTH="${RPC_AUTH:-}"                            # e.g. "-u user:pass" if your RPC needs auth
-MINER_CMD="${MINER_CMD:-}"                          # REQUIRED — mines $1 blocks to $2 (your miner)
-WALLET_ADDR="${WALLET_ADDR:-}"                      # SOST address to receive (blank -> getnewaddress)
-ETH_ADDR="${ETH_ADDR:-0xd38955822b88867CD010946F0Ba25680B9DfC7a6}"  # declared EOA (any test EOA)
-POPC_REGISTRY="${POPC_REGISTRY:-popc_registry.json}"               # registry path (for the fixture step)
-BUILD_DIR="${BUILD_DIR:-build-testnet}"
+RPC_URL="${RPC_URL:-http://127.0.0.1:18399/rpc}"
+RPC_AUTH="${RPC_AUTH:-}"                           # e.g. "-u user:pass"
+POPC_REGISTRY="${POPC_REGISTRY:-/opt/sost/testnet-soak/popc_registry.json}"
+WALLET_ADDR="${WALLET_ADDR:-}"                     # SOST address (blank -> getnewaddress)
+ETH_ADDR="${ETH_ADDR:-0xd38955822b88867CD010946F0Ba25680B9DfC7a6}"
+NODE_RESTART_CMD="${NODE_RESTART_CMD:-}"           # optional: command to restart the node so it
+                                                  # reloads the patched registry. If empty, the
+                                                  # script pauses and you restart it by hand.
 GOLD_TOKEN="${GOLD_TOKEN:-PAXG}"
-GOLD_MG="${GOLD_MG:-50000}"        # ~1.6 oz: well above the 0.25 oz dust floor (eligibility)
-MONTHS="${MONTHS:-12}"             # base reward tier (12mo = 20%)
-TARGET_START="${TARGET_START:-320}"  # mine past V15=300 before registering
+GOLD_MG="${GOLD_MG:-50000}"                        # ~1.6 oz, well above the 0.25 oz dust floor
+MONTHS_A="${MONTHS_A:-12}"                         # distinct months => distinct commitment_id
+MONTHS_B="${MONTHS_B:-9}"
 
 req() { command -v "$1" >/dev/null || { echo "missing dependency: $1" >&2; exit 1; }; }
 req curl; req jq
-[ -n "$MINER_CMD" ] || { echo "Set MINER_CMD (mines \$1 blocks to \$2). See .env.example. Aborting." >&2; exit 2; }
+[ -f "$POPC_REGISTRY" ] || { echo "POPC_REGISTRY not found: $POPC_REGISTRY (run on the VPS)" >&2; exit 2; }
 
-rpc() { # rpc METHOD [param ...] -> raw JSON result
-  local method="$1"; shift
-  local params; params=$(printf '%s\n' "$@" | jq -R . | jq -s .)
-  curl -s $RPC_AUTH "$RPC_URL" -H 'content-type:application/json' \
-    -d "{\"method\":\"$method\",\"params\":$params}"
-}
+rpc() { local m="$1"; shift; local p; p=$(printf '%s\n' "$@" | jq -R . | jq -s .)
+  curl -s $RPC_AUTH "$RPC_URL" -H 'content-type:application/json' -d "{\"method\":\"$m\",\"params\":$p}"; }
 height() { rpc getblockcount | jq -r '.result // .'; }
 is_zero() { case "$1" in 0|0.0|0.00000000|""|null) return 0;; *) return 1;; esac; }
-mine_to() { # mine until height >= $1
-  local target="$1"
-  while [ "$(height)" -lt "$target" ]; do
-    local need=$(( target - $(height) )); [ "$need" -lt 1 ] && need=1
-    local c="${MINER_CMD//\$1/$need}"; c="${c//\$2/$WALLET_ADDR}"; eval "$c" >/dev/null 2>&1 || true
-  done
-}
-settle() { # $1 = commitment_id -> popc_release JSON (advances to end_height first)
-  local cid="$1" end
-  end=$(rpc popc_status "$cid" | jq -r '.result.end_height // .result.commitments[0].end_height // empty')
-  [ -n "$end" ] && mine_to "$((end+1))"
-  rpc popc_release "$cid"
+reg_id() { echo "$1" | jq -r '.result.commitment_id // .result.id // empty'; }
+restart_node() {
+  if [ -n "$NODE_RESTART_CMD" ]; then eval "$NODE_RESTART_CMD"; sleep 3
+  else echo ">>> STOP the node, it is safe now to keep the patched registry, then START it again."
+       echo ">>> Press Enter once the node is back up..."; read -r _; fi
 }
 
-echo "== 1. Build testnet (V15=300) =="
-cmake -S . -B "$BUILD_DIR" -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=ON -DCMAKE_BUILD_TYPE=Release
-cmake --build "$BUILD_DIR" -j"$(nproc)"
-
-echo "== 2. Full ctest =="
-# atomic-swap-htlc-lock is a KNOWN, UNRELATED testnet-only failure (it assumes mainnet
-# activation heights while TESTNET_FORKS enables HTLC at height 200). Exclude it so a
-# green run is meaningful; everything else (incl. all PoPC) must pass.
-ctest --test-dir "$BUILD_DIR" --output-on-failure -E 'atomic-swap-htlc-lock'
-
-echo "== 3. Node must be running this TESTNET binary at $RPC_URL =="
+H=$(height); echo "chain height = $H"
+[ "$H" -ge 301 ] || { echo "Chain must be past V15 (testnet=300). Mine a few blocks first." >&2; exit 3; }
 [ -n "$WALLET_ADDR" ] || WALLET_ADDR="$(rpc getnewaddress | jq -r '.result // .')"
-echo "   miner/receiver address: $WALLET_ADDR"
+echo "receiver: $WALLET_ADDR"
 
-echo "== 4. Mine past V15 (>=$TARGET_START) =="
-mine_to "$TARGET_START"; echo "   height = $(height)"
+echo "== Register A (months=$MONTHS_A) and B (months=$MONTHS_B) =="
+CID_A=$(reg_id "$(rpc popc_register "$WALLET_ADDR" "$ETH_ADDR" "$GOLD_TOKEN" "$GOLD_MG" "$MONTHS_A")")
+CID_B=$(reg_id "$(rpc popc_register "$WALLET_ADDR" "$ETH_ADDR" "$GOLD_TOKEN" "$GOLD_MG" "$MONTHS_B")")
+echo "  A = $CID_A"; echo "  B = $CID_B"
+[ -n "$CID_A" ] && [ -n "$CID_B" ] || { echo "registration failed (check popc_register response)" >&2; exit 4; }
 
-echo "== Scenario A — snapshot (gold_verified_days=0) => boost MUST be 0 =="
-RA=$(rpc popc_register "$WALLET_ADDR" "$ETH_ADDR" "$GOLD_TOKEN" "$GOLD_MG" "$MONTHS")
-CID_A=$(echo "$RA" | jq -r '.result.commitment_id // .result.id // empty'); echo "   commitment_id A = $CID_A"
-OUT_A=$(settle "$CID_A")
-BASE_A=$(echo "$OUT_A" | jq -r '.result.base_reward // empty'); BOOST_A=$(echo "$OUT_A" | jq -r '.result.gold_boost // empty')
-SA="FAIL"; if ! is_zero "$BASE_A" && is_zero "$BOOST_A"; then SA="PASS"; fi
-
-echo "== Scenario B — fixture gold_verified_days=120 => boost SHOULD be > 0 (eligible+surplus) =="
-RB=$(rpc popc_register "$WALLET_ADDR" "$ETH_ADDR" "$GOLD_TOKEN" "$GOLD_MG" "$MONTHS")
-CID_B=$(echo "$RB" | jq -r '.result.commitment_id // .result.id // empty'); echo "   commitment_id B = $CID_B"
-# TEST FIXTURE ONLY — production gold_verified_days comes from the verification pipeline
-# (docs/GOLD_BOOST_CONTINUOUS_VERIFICATION_STUB.md). Patch the registry, then reload the node.
-echo "   patching $POPC_REGISTRY: gold_verified_days=120 for $CID_B (TEST FIXTURE)"
+echo "== FIXTURE: set end_height<=current for both; gold_verified_days=120 for B (TEST FIXTURE) =="
+echo ">>> STOP the node now (so it does not overwrite the registry), then press Enter to patch..."; read -r _
+H=$(height); H=${H:-$H}
 tmp=$(mktemp)
-jq --arg cid "$CID_B" '(.commitments[] | select(.commitment_id==$cid) | .gold_verified_days) = 120' \
-   "$POPC_REGISTRY" > "$tmp" && mv "$tmp" "$POPC_REGISTRY"
-echo "   >>> restart the node (or trigger a registry reload) so it picks up the patched value, then press Enter"; read -r _
-OUT_B=$(settle "$CID_B")
-BASE_B=$(echo "$OUT_B" | jq -r '.result.base_reward // empty'); BOOST_B=$(echo "$OUT_B" | jq -r '.result.gold_boost // empty')
-SB="FAIL"; if ! is_zero "$BASE_B"; then if ! is_zero "$BOOST_B"; then SB="PASS"; else SB="WARN"; fi; fi
+jq --arg a "$CID_A" --arg b "$CID_B" --argjson h "$H" '
+  (.commitments[] | select(.commitment_id==$a) | .end_height) = $h |
+  (.commitments[] | select(.commitment_id==$b) | .end_height) = $h |
+  (.commitments[] | select(.commitment_id==$b) | .gold_verified_days) = 120
+' "$POPC_REGISTRY" > "$tmp" && mv "$tmp" "$POPC_REGISTRY"
+echo "  patched end_height=$H (A,B) and gold_verified_days=120 (B)"
+restart_node
+
+echo "== Settle A (snapshot) and B (verified) =="
+OUT_A=$(rpc popc_release "$CID_A"); OUT_B=$(rpc popc_release "$CID_B")
+BA=$(echo "$OUT_A" | jq -r '.result.base_reward // empty'); GA=$(echo "$OUT_A" | jq -r '.result.gold_boost // empty')
+BB=$(echo "$OUT_B" | jq -r '.result.base_reward // empty'); GB=$(echo "$OUT_B" | jq -r '.result.gold_boost // empty')
+SA="FAIL"; ! is_zero "$BA" && is_zero "$GA" && SA="PASS"
+SB="FAIL"; if ! is_zero "$BB"; then if ! is_zero "$GB"; then SB="PASS"; else SB="WARN"; fi; fi
 
 echo
 echo "================ SOAK RESULT ================"
-echo "Scenario A: $SA — gold_verified_days=0,   gold_boost=$BOOST_A, base_reward=$BASE_A"
-echo "Scenario B: $SB — gold_verified_days=120, gold_boost=$BOOST_B, base_reward=$BASE_B"
-[ "$SB" = "WARN" ] && echo "  (B=WARN: boost 0 — verify gold>=max(25% bond,0.25oz) eligibility AND PoPC Pool surplus)"
+echo "Scenario A: $SA — gold_verified_days=0,   gold_boost=$GA, base_reward=$BA"
+echo "Scenario B: $SB — gold_verified_days=120, gold_boost=$GB, base_reward=$BB"
+[ "$SB" = "WARN" ] && echo "  (B=WARN: boost 0 — check gold>=max(25% bond,0.25oz) eligibility AND PoPC Pool surplus)"
 echo "============================================="
-[ "$SA" = "PASS" ] && { [ "$SB" = "PASS" ] || [ "$SB" = "WARN" ]; } || { echo "SOAK FAILED"; exit 3; }
+echo "raw A: $OUT_A"; echo "raw B: $OUT_B"
+[ "$SA" = "PASS" ] && { [ "$SB" = "PASS" ] || [ "$SB" = "WARN" ]; } || { echo "SOAK FAILED"; exit 5; }
 echo "SOAK OK"
