@@ -19,19 +19,19 @@
 <link rel="icon" type="image/png" href="sost-logo.png">
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Proof of Personal Custody (PoPC) — Gold Verification Protocol</title>
+<title>PoPC Bond Staking — Native SOST Bond (Create · Monitor · Claim)</title>
 <meta name="description" content="PoPC: cryptographic proof that gold reserves exist. Bond your stake, verify XAUT/PAXG custody on Ethereum, earn rewards. Unique to SOST Protocol.">
 <meta name="keywords" content="proof of personal custody, PoPC, gold verification, SOST PoPC, XAUT custody, PAXG verification, gold proof, custody protocol">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Proof of Personal Custody (PoPC) — Gold Verification Protocol">
+<meta property="og:title" content="PoPC Bond Staking — Native SOST Bond (Create · Monitor · Claim)">
 <meta property="og:description" content="PoPC: cryptographic proof that gold reserves exist. Bond your stake, verify XAUT/PAXG custody on Ethereum, earn rewards. Unique to SOST Protocol.">
 <meta property="og:url" content="https://sostcore.com/sost-popc.html">
 <meta property="og:site_name" content="SOST Protocol">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Proof of Personal Custody (PoPC) — Gold Verification Protocol">
+<meta name="twitter:title" content="PoPC Bond Staking — Native SOST Bond (Create · Monitor · Claim)">
 <meta name="twitter:description" content="PoPC: cryptographic proof that gold reserves exist. Bond your stake, verify XAUT/PAXG custody on Ethereum, earn rewards. Unique to SOST Protocol.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -691,7 +691,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     </a>
     <a href="sost-popc.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC Bond Staking"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:26px;font-weight:900;letter-spacing:-0.5px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">BOND</span></a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="atomic-swap-console.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="OTC · Atomic Swap DEX (founder-only)"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="OTC · Atomic Swap DEX (founder-only)"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -748,15 +748,16 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">CUSTODY PROTOCOL</div>
+    <div class="hero-label fade-in">BOND STAKING</div>
     <h1 class="fade-in delay-1">
-      <span>Proof of</span><br>
-      Personal Custody
+      <span>PoPC</span><br>
+      Bond Staking
     </h1>
     <p class="hero-sub fade-in delay-2">
-      A voluntary time-bound commitment protocol with automatic economic consequences.
-      Participants prove custody of precious metals, backed by SOST bonds, audited by
-      ConvergenceX block entropy. No oracle. No custodian. No governance.
+      A single <strong style="color:var(--text-primary)">native SOST bond</strong> is the only collateral and the only
+      thing slashable &mdash; a voluntary, time-bound commitment with automatic economic consequences.
+      <strong style="color:var(--text-primary)">Create, monitor, and claim</strong> your bond. No oracle. No custodian.
+      No governance. PoPC bonds are <strong style="color:#fbbf24">not tradeable</strong> in V15.
     </p>
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">PoPC</span>
@@ -771,15 +772,15 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   <div class="container" style="padding-top:24px;">
     <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:20px 24px;font-size:13px;color:var(--text-secondary);line-height:1.8;">
       <div style="font-size:11px;letter-spacing:2px;color:#fbbf24;font-weight:600;margin-bottom:10px;">&#9888; CURRENT STATUS</div>
-      <p>PoPC is <strong style="color:var(--text-primary)">implemented in the SOST node software</strong> and fully documented, but it is <strong style="color:#fbbf24">not yet active on mainnet</strong>. Activation is scheduled after <strong>block 10,000</strong> (target April 2027). Activation is protocol-scheduled and subject to network readiness, external audit, and all technical validation prerequisites being met.</p>
+      <p>PoPC is <strong style="color:var(--text-primary)">implemented in the SOST node software</strong> and fully documented, but it is <strong style="color:#fbbf24">not yet active on mainnet</strong>. The single-bond model activates at <strong>V15 / block 20,000</strong>. <strong>Gold Boost is disabled on mainnet</strong> (deferred, optional reward only &mdash; never collateral, never slashed). PoPC bonds are <strong>not tradeable in V15</strong>. Activation is protocol-scheduled and subject to network readiness, external audit, and all technical validation prerequisites being met.</p>
       <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;font-size:11px;">
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; Implemented in software</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; Documented publicly</span>
-        <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; RPC interfaces ready</span>
-        <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Not yet active on mainnet</span>
-        <span style="padding:4px 10px;border-radius:4px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88;">&#10004; SOSTEscrow deployed on Sepolia</span>
-        <span style="padding:4px 10px;border-radius:4px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88;">&#10004; First on-chain gold deposit (0.05 oz XAUT)</span>
-        <span style="padding:4px 10px;border-radius:4px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88;">&#10004; E2E settlement flow verified (259 tests, 0 failed)</span>
+        <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; RPC interfaces ready (create / monitor / claim)</span>
+        <span style="padding:4px 10px;border-radius:4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--gold,#f59e0b);">&#9679; Single native SOST bond model</span>
+        <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Activates at V15 / block 20,000</span>
+        <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Gold Boost disabled on mainnet</span>
+        <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Not tradeable (no PoPC DEX)</span>
       </div>
     </div>
   </div>
@@ -889,11 +890,27 @@ r = <span class="fn">PRF</span>( seed, contractId, periodIndex )
   </div>
 </section>
 
-<!-- MODEL A -->
+<!-- HISTORICAL NOTICE: Model A / Model B / SOSTEscrow superseded by the single-bond model -->
+<section class="section" style="padding-top:8px;">
+  <div class="container">
+    <div style="background:rgba(123,45,126,0.10);border:1px solid rgba(192,132,252,0.45);border-radius:10px;padding:18px 22px;line-height:1.8;">
+      <div style="font-size:11px;letter-spacing:2px;color:#c084fc;font-weight:700;margin-bottom:8px;">&#9888; HISTORICAL &mdash; SUPERSEDED DESIGN</div>
+      <p style="margin:0;color:var(--text-secondary);font-size:13px;">
+        The <strong>Model A / Model B</strong> design and the Ethereum <strong>SOSTEscrow</strong> contract below are
+        <strong style="color:#c084fc">historical</strong>. PoPC has been redesigned into a <strong style="color:var(--text-primary)">single native SOST bond</strong>
+        (the only collateral, the only thing slashable). <strong>Gold is an optional reward boost</strong> &mdash; never collateral,
+        never slashed &mdash; and is <strong>disabled on mainnet</strong>. There is no PoPC contract trading and no SOSTEscrow-based PoPC product in V15.
+        The sections below are kept for reference only; the live behaviour is the single-bond model that activates at <strong>V15 / block 20,000</strong>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- MODEL A (HISTORICAL) -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">MODEL A</div>
+      <div class="section-id">MODEL A &mdash; HISTORICAL</div>
       <h2 class="section-title">Commitment with <span class="accent">SOST Bond</span></h2>
     </div>
 
@@ -969,7 +986,7 @@ r = <span class="fn">PRF</span>( seed, contractId, periodIndex )
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">MODEL B</div>
+      <div class="section-id">MODEL B &mdash; HISTORICAL</div>
       <h2 class="section-title">Timelocked <span class="accent">Escrow</span></h2>
     </div>
 
