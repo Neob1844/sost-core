@@ -63,16 +63,18 @@ Boost on base          +0%        +10%        +20%
 
 [hr]
 
-[size=12pt][b]Coinbase allocation[/b][/size]
+[size=12pt][b]Funding[/b][/size]
 
-The redesign repurposes the function of the former Gold Vault allocation [b]without changing the headline split[/b] — the old 25% that funded the gold-vault product now funds the Gold Boost from a dedicated bucket:
+The Gold Boost is funded from the [b]PoPC Pool[/b] and capped so it cannot dilute the base PoPC reward. The Metals Protocol Reserve is [b]untouched[/b]. The coinbase split is unchanged:
 
 [code]
-Recipient                          Before    After
-Miner                                50%       50%
-PoPC Base Pool                       25%       25%
-Gold Vault -> Gold Boost Reserve     25%       25%
+Recipient                              Share
+Miner                                   50%
+Metals Protocol Reserve (Gold Vault)    25%
+PoPC Pool (base + optional Gold Boost)  25%
 [/code]
+
+Base reward has absolute priority; the boost is paid only from PoPC Pool surplus and can never reduce the base.
 
 [hr]
 

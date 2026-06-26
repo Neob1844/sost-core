@@ -1612,13 +1612,15 @@ Activation: protocol-scheduled after block 10,000, subject to network readiness 
 <div class="wp-spacer"></div>
 <p class="wp-p"><b>Worked example.</b> A 12-month native bond earns 20% base. With gold verified for 91+ days, the boost is +20%, so the total is 20% &times; 1.20 = <b>24%</b>. The same bond without gold simply earns its 20% base.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><b>Coinbase allocation.</b> The redesign repurposes the function of the former Gold Vault allocation without changing the headline split — the old 25% that funded the gold-vault product now funds the Gold Boost from a dedicated bucket, so boosts never dilute the base pool:</p>
+<p class="wp-p"><b>Funding.</b> The Gold Boost is funded from the PoPC Pool and capped so it cannot dilute the base PoPC reward. The Metals Protocol Reserve (&sect;5) remains untouched. The coinbase split is unchanged:</p>
 <div class="wp-table-wrap"><table class="wp-table">
-<tr><td>Recipient</td><td>Before</td><td>After</td></tr>
-<tr><td>Miner</td><td>50%</td><td>50%</td></tr>
-<tr><td>PoPC Base Pool</td><td>25%</td><td>25%</td></tr>
-<tr><td>Gold Vault &rarr; Gold Boost Reserve</td><td>25%</td><td>25%</td></tr>
+<tr><td>Recipient</td><td>Share</td></tr>
+<tr><td>Miner</td><td>50%</td></tr>
+<tr><td>Metals Protocol Reserve (Gold Vault, &sect;5)</td><td>25%</td></tr>
+<tr><td>PoPC Pool (base reward + optional Gold Boost)</td><td>25%</td></tr>
 </table></div>
+<div class="wp-spacer"></div>
+<p class="wp-p"><b>Protection.</b> The base reward is the mandatory payment and has absolute priority; the Gold Boost is an optional extra paid only from PoPC Pool surplus once the base is covered. It can never reduce the base reward, and if surplus is insufficient the boost is scaled down or paid as zero.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p" style="font-size:12px;color:var(--text-secondary);">This is a design/documentation update. It introduces no consensus change on its own and ships disabled by default; activation follows the same scheduling discipline as the rest of PoPC (see §6.13).</p>
 <div class="wp-spacer"></div>

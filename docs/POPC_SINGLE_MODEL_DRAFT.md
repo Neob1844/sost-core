@@ -35,9 +35,10 @@ No new auto-slash is activated — auto-slash/settle stays V15-gated
     (DTD_POPC_ELIGIBILITY_HEIGHT) and is untouched here.
 Gold is never converted into collateral.
 Gold is never slashable.
-The coinbase emission split is unchanged (50% miner / 25% PoPC Base Pool /
-    25% reserve). Only the *function* of the 25% reserve is renamed
-    Gold Vault -> Gold Boost Reserve. emission.cpp does not change.
+The coinbase emission split is unchanged (50% miner / 25% Metals Reserve /
+    25% PoPC Pool). emission.cpp does not change.
+The Gold Boost is funded from the PoPC Pool (capped, surplus-only); the Metals
+    Protocol Reserve (§5) is never touched.
 ```
 
 > **Gold verification may be automated, but until ZK state proofs are available it
@@ -91,13 +92,35 @@ This sequencing delivers real automation without an architectural mistake: the n
 is trustless from day one, and the only part that cannot yet be trustless (external-chain
 gold state) is confined to an upside-only, non-consensus path until ZK proofs mature.
 
+## Gold Boost funding & protection (decided)
+
+> **The Gold Boost is funded from the PoPC Pool and capped so it cannot dilute the base PoPC reward.
+> The Metals Protocol Reserve remains untouched.**
+
+The Metals Reserve (§5) is constitutional — it accumulates SOST toward future gold backing. The Gold
+Boost is a PoPC reward, so it is paid from the PoPC Pool (§6), never from the Metals Reserve. The
+coinbase split is genuinely unchanged: **50% miner / 25% Metals Reserve / 25% PoPC Pool**.
+
+Protection rules (encoded in `popc_gold_boost_payout_stocks`):
+
+```
+1. base_reward = mandatory PoPC payment, absolute priority.
+2. gold_boost  = optional extra, paid ONLY from PoPC Pool surplus after the base is covered.
+3. the boost can NEVER reduce the base reward.
+4. if surplus is insufficient, the boost is scaled down or paid as 0.
+5. cap +20% operational, +25% technical maximum (hard-clamped).
+```
+
+Example: base = 100 SOST, gold +20% → target 120 SOST. If the PoPC Pool can only safely cover the
+base, the user receives 100 SOST, not 120 — the base is never sacrificed for a boost.
+
 ## Files in this change
 
 | File | Change |
 |------|--------|
 | `include/sost/params.h` | `POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT` + `popc_single_model_active(h)`; separate `POPC_GOLD_BOOST_HEIGHT` (mainnet `INT64_MAX`, testnet V15) + `popc_gold_boost_active(h)` |
-| `include/sost/popc.h` | Gold-boost constants + `popc_gold_boost_bps()` + `popc_apply_gold_boost()`; `ESCROW_REWARD_RATES` marked deprecated |
-| `tests/test_popc_single_model.cpp` | 19 transition tests (both gates + boost math) |
+| `include/sost/popc.h` | Gold-boost constants + `popc_gold_boost_bps()` + `popc_apply_gold_boost()` + surplus-aware `popc_gold_boost_payout_stocks()`; `ESCROW_REWARD_RATES` marked deprecated |
+| `tests/test_popc_single_model.cpp` | 25 transition tests (both gates + boost math + surplus-aware payout) |
 | `CMakeLists.txt` | registers `test-popc-single-model` (ctest `popc-single-model`) |
 
 No `.cpp` consensus path is rewired yet — the reward-computation call site is intentionally
@@ -119,7 +142,7 @@ boosted reward             -> never exceeds base * 1.25 (technical max)
 base reward table          -> unchanged (1/4/9/14/20%)
 ```
 
-19/19 pass. Existing `test-popc` (31/31) and `test-popc-v15` (29/29) unaffected.
+25/25 pass. Existing `test-popc` (31/31) and `test-popc-v15` (29/29) unaffected.
 
 ## Blockers before merge
 

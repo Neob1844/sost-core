@@ -184,8 +184,9 @@ static constexpr uint16_t ESCROW_REWARD_RATES[] = {40, 150, 350, 550, 800};
 // TOP of the base reward, scaled by the number of continuously-verified gold
 // days. Gold is NEVER collateral and NEVER slashed — withdraw it (or if
 // verification is briefly unavailable) and the participant simply reverts to the
-// base reward, no penalty. Funded from the Gold Boost Reserve (the repurposed
-// 25% coinbase slice — the emission split itself is unchanged at 50/25/25).
+// base reward, no penalty. Funded from the PoPC Pool surplus (capped, base has
+// absolute priority) — the Metals Protocol Reserve (§5) is never touched; the
+// coinbase split is unchanged at 50/25/25.
 //
 // These are PURE functions. The height gate (popc_single_model_active, params.h)
 // is applied at the CALL SITE: before activation, callers use the legacy path;
@@ -226,6 +227,26 @@ inline uint16_t popc_apply_gold_boost(uint16_t base_rate_bps, int64_t gold_verif
     int64_t out = (int64_t)base_rate_bps
                 + ((int64_t)base_rate_bps * (int64_t)boost) / 10000;
     return (uint16_t)out;
+}
+
+// Surplus-aware Gold Boost PAYOUT (whitepaper §6.0 funding rules). The base
+// reward is the mandatory payment and has ABSOLUTE PRIORITY; the boost is paid
+// ONLY from PoPC Pool surplus remaining after the base is covered, and can never
+// reduce the base. Funded from the PoPC Pool — NOT the Metals Reserve (§5).
+// Returns the boost amount (stocks) actually payable: in [0, desired], throttled
+// by available surplus.
+//   base_reward_stocks  : the mandatory base reward (already funded)
+//   gold_verified_days  : continuously-verified gold days (drives the boost tier)
+//   pool_surplus_stocks : PoPC Pool funds available AFTER reserving the base
+inline int64_t popc_gold_boost_payout_stocks(int64_t base_reward_stocks,
+                                             int64_t gold_verified_days,
+                                             int64_t pool_surplus_stocks) {
+    if (base_reward_stocks <= 0 || pool_surplus_stocks <= 0) return 0;
+    uint16_t boost_bps = popc_gold_boost_bps(gold_verified_days);
+    if (boost_bps > POPC_GOLD_BOOST_MAX_BPS) boost_bps = POPC_GOLD_BOOST_MAX_BPS;  // hard ceiling
+    int64_t desired = (base_reward_stocks * (int64_t)boost_bps) / 10000;  // extra ON TOP of base
+    if (desired <= 0) return 0;
+    return (desired <= pool_surplus_stocks) ? desired : pool_surplus_stocks;  // throttle to surplus
 }
 
 // Hard cap: maximum SOST reward per contract (in stocks)

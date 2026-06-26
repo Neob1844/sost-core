@@ -61,9 +61,9 @@ Example: 12-mo bond = 20% base. + gold 91+ days = 20% × 1.20 = 24%.
 ---
 
 **7/**
-Coinbase split keeps the same headline numbers — the old 25% Gold Vault slice is repurposed as a dedicated Gold Boost Reserve, so boosts never dilute the base pool:
+The Gold Boost is paid from the PoPC Pool (capped, surplus-only) so it can never dilute the base reward. The Metals Reserve stays untouched. Coinbase split unchanged:
 
-50% miner · 25% PoPC Base Pool · 25% Gold Boost Reserve
+50% miner · 25% Metals Reserve · 25% PoPC Pool (base + optional boost)
 
 ---
 

@@ -173,6 +173,55 @@ TEST(PSM23_apply_never_exceeds_base_times_125) {
 }
 
 // =============================================================================
+// Surplus-aware Gold Boost payout (funding rules: PoPC Pool, base priority)
+// =============================================================================
+
+TEST(PSM40_payout_full_when_surplus_ample) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    int64_t out  = popc_gold_boost_payout_stocks(base, 91, 1000 * (int64_t)STOCKS_PER_SOST);
+    EXPECT(out == 20 * (int64_t)STOCKS_PER_SOST, "100 base + 91d, ample surplus -> 20 boost");
+}
+
+TEST(PSM41_payout_partial_tier) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    int64_t out  = popc_gold_boost_payout_stocks(base, 31, 1000 * (int64_t)STOCKS_PER_SOST);
+    EXPECT(out == 10 * (int64_t)STOCKS_PER_SOST, "100 base + 31d, ample surplus -> 10 boost");
+}
+
+TEST(PSM42_payout_throttled_by_surplus) {
+    int64_t base    = 100 * (int64_t)STOCKS_PER_SOST;
+    int64_t surplus = 5  * (int64_t)STOCKS_PER_SOST;   // desired +20% = 20, surplus only 5
+    EXPECT(popc_gold_boost_payout_stocks(base, 91, surplus) == surplus,
+           "boost throttled to available surplus");
+}
+
+TEST(PSM43_payout_zero_when_no_surplus) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    EXPECT(popc_gold_boost_payout_stocks(base, 91, 0)   == 0, "no surplus -> 0 boost");
+    EXPECT(popc_gold_boost_payout_stocks(base, 91, -50) == 0, "negative surplus -> 0 boost");
+}
+
+TEST(PSM44_payout_zero_without_gold_or_base) {
+    int64_t pool = 1000 * (int64_t)STOCKS_PER_SOST;
+    EXPECT(popc_gold_boost_payout_stocks(100 * (int64_t)STOCKS_PER_SOST, 0, pool) == 0,
+           "no verified gold -> 0 boost");
+    EXPECT(popc_gold_boost_payout_stocks(0, 91, pool) == 0, "no base reward -> 0 boost");
+}
+
+TEST(PSM45_payout_never_exceeds_ceiling_or_surplus) {
+    int64_t base = 100 * (int64_t)STOCKS_PER_SOST;
+    int64_t ceil = base * POPC_GOLD_BOOST_MAX_BPS / 10000;   // base * 25%
+    for (int64_t d = 0; d <= 1000; d += 11) {
+        for (int64_t s = 0; s <= base; s += base / 7 + 1) {
+            int64_t out = popc_gold_boost_payout_stocks(base, d, s);
+            EXPECT(out >= 0,        "payout never negative");
+            EXPECT(out <= ceil,     "payout never exceeds base * 1.25 ceiling");
+            EXPECT(out <= s,        "payout never exceeds surplus");
+        }
+    }
+}
+
+// =============================================================================
 // Structural invariants
 // =============================================================================
 

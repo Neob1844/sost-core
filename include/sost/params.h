@@ -1037,9 +1037,9 @@ inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT     = V15_HEIGHT + DTD_POPC
 // (never collateral, never slashed). Boost math lives in include/sost/popc.h.
 //
 // MINIMAL by construction:
-//   - The coinbase split is UNCHANGED (50% miner / 25% PoPC Base Pool /
-//     25% reserve). Only the *function* of the 25% reserve is renamed
-//     Gold Vault -> Gold Boost Reserve; emission.cpp does NOT change.
+//   - The coinbase split is UNCHANGED (50% miner / 25% Metals Reserve / 25% PoPC
+//     Pool); emission.cpp does NOT change. The Gold Boost is funded from the PoPC
+//     Pool (capped, surplus-only) — the Metals Reserve (§5) is never touched.
 //   - No new auto-slash. Auto-slash/settle stays V15-gated
 //     (DTD_POPC_ELIGIBILITY_HEIGHT) and is NOT activated by this gate.
 //   - Before POPC_SINGLE_MODEL_HEIGHT, behaviour is byte-identical to today.

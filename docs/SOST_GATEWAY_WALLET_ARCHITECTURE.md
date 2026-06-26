@@ -181,9 +181,11 @@ Model-A/Model-B split is superseded; the text below describes the unified design
   trusted intermediary that defeats PoPC's purpose. Anchoring the bond in SOST removes that
   dependency: **no external chain in the root of security**, maximum decentralization, full
   automation (lock → audit → reward → slash under SOST consensus).
-- **Gold Boost Reserve.** The former 25% coinbase slice to the Gold Vault is **repurposed** to fund
-  the Gold Boost from a dedicated bucket, so boosts never dilute the base pool. Headline split is
-  unchanged: **50% miner / 25% PoPC Base Pool / 25% Gold Boost Reserve**.
+- **Gold Boost funding.** The Gold Boost is funded from the **PoPC Pool** and capped so it cannot
+  dilute the base PoPC reward; the **Metals Protocol Reserve (§5) is untouched**. The coinbase split
+  is unchanged: **50% miner / 25% Metals Reserve (Gold Vault, §5) / 25% PoPC Pool** (base reward +
+  optional Gold Boost). Base reward has absolute priority; the boost is paid only from PoPC Pool
+  surplus and never reduces the base.
 - `contracts/SOSTEscrow.sol` (gold escrow, no admin key) remains a **separate, optional product**,
   no longer the security model of PoPC. Don't put any bond into the first PAY. PoPC auto-slash/settle
   is already **V15-gated** (`DTD_POPC_ELIGIBILITY_HEIGHT`).

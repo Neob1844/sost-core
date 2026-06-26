@@ -230,9 +230,10 @@
     },
     recommendation: function () {
       return 'PoPC is one native SOST bond: the only collateral and the only thing slashable. ' +
-             'Gold is an optional boost on the base reward, funded from a dedicated reserve so it ' +
-             'never dilutes the base pool. No external chain in the root of security. ' +
-             'Auto-slash/settle is V15-gated. Everything OFF by default.';
+             'Gold is an optional boost on the base reward, funded from the PoPC Pool (capped, ' +
+             'surplus-only) so it cannot dilute the base reward; the Metals Reserve is untouched. ' +
+             'No external chain in the root of security. Auto-slash/settle is V15-gated. ' +
+             'Everything OFF by default.';
     }
   };
 
