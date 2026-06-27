@@ -1015,7 +1015,7 @@ inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET 
 #ifdef SOST_TESTNET_FORKS
 inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // TESTNET — soak the live rule
 #else
-inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;   // MAINNET — deferred (coordinated release flips this)
+inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // MAINNET — ACTIVATED 2026-06-27 (V15 coordinated release; enforced from DTD_POPC_ELIGIBILITY_HEIGHT = 25000)
 #endif
 
 // V15 — full automation bundle (PoPC Model A/B, OTC/P2P atomic swap, Gold Vault

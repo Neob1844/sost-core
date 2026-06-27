@@ -88,12 +88,8 @@ int main(){
         CHECK("Activate without attest body -> reject", !popc_v15_decode_carrier(base,BH).ok);
     }
 
-    // gating: P3 decode is pure; mainnet stays deferred (P4 will no-op)
-#ifndef SOST_TESTNET_FORKS
-    CHECK("mainnet: popc_v15 deferred (P4 no-op)", popc_v15_active_at(20000)==false);
-#else
-    CHECK("testnet: popc_v15 active at V15_HEIGHT", popc_v15_active_at(V15_HEIGHT)==true);
-#endif
+    // gating: P3 decode is pure; V15 ACTIVATED — live from V15_HEIGHT on both profiles.
+    CHECK("popc_v15 active at V15_HEIGHT", popc_v15_active_at(V15_HEIGHT)==true);
 
     std::printf("=== Results: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail==0?0:1;

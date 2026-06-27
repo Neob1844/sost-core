@@ -86,14 +86,11 @@ int main(){
       CHECK("Model B: supervisor-signed verifies vs supervisor key", popc_v15_verify_attestation(cid,311035,1720,supPub,sig)==true);
       CHECK("Model B sig does NOT verify vs owner key", popc_v15_verify_attestation(cid,311035,1720,ownerPub,sig)==false); }
 
-    // activation gate (P1 is pure base — mainnet must be deferred)
-#ifdef SOST_TESTNET_FORKS
-    CHECK("testnet: active at V15_HEIGHT", popc_v15_active_at(V15_HEIGHT)==true);
-    CHECK("testnet: inactive before V15", popc_v15_active_at(V15_HEIGHT-1)==false);
-#else
-    CHECK("mainnet: deferred at 20000",    popc_v15_active_at(20000)==false);
-    CHECK("mainnet: deferred at INT64_MAX-1", popc_v15_active_at(INT64_MAX-1)==false);
-#endif
+    // activation gate — V15 ACTIVATED (2026-06-27): live from V15_HEIGHT on both
+    // profiles (testnet 300 / mainnet 20000).
+    CHECK("active at V15_HEIGHT", popc_v15_active_at(V15_HEIGHT)==true);
+    CHECK("inactive one block before V15_HEIGHT", popc_v15_active_at(V15_HEIGHT-1)==false);
+    CHECK("active far above V15_HEIGHT", popc_v15_active_at(INT64_MAX-1)==true);
 
     std::printf("=== Results: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail==0?0:1;
