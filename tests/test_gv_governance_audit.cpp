@@ -86,10 +86,12 @@ TEST(GV05_gates_state) {
 #endif
 }
 
-// G3b — rate-limit currently disabled (sentinel) + unwired; intended 144 is
-// exercised by scripts/gold_vault_governance_dry_run.py.
-TEST(GV06_rate_limit_unwired) {
+// G3b — rate-limit + cumulative cap now WIRED into process_block (gv_g3b.h) but
+// INERT: both live sentinels are 0 (disabled). Full G3b coverage lives in
+// tests/test_gv_g3b.cpp; intended values are exercised there + in the dry-run.
+TEST(GV06_rate_limit_wired_but_inert) {
     EXPECT(GV_SLICE1_RATE_LIMIT_BLOCKS == 0, "rate-limit currently disabled (sentinel 0)");
+    EXPECT(GV_SLICE1_CUMULATIVE_CAP_STOCKS == 0, "cumulative cap currently disabled (sentinel 0)");
     EXPECT(gv_slice1_rate_limit_ok(0) == true, "sentinel 0 -> always ok (helper)");
     EXPECT(gv_slice1_rate_limit_ok(INT64_MAX) == true, "no prior spend -> ok");
 }

@@ -30,11 +30,20 @@ table, forget the other) before it can split consensus. Two empty tables agree v
 - **Relative:** `GV_SLICE1_PER_SPEND_CAP_BPS` (bps of vault balance), **0 = disabled** by
   default. Helper `gv_slice1_amount_within_cap(amount, vault_balance)`.
 
-### G3b — Rate limit (timelock)
-`gv_slice1_rate_limit_ok(blocks_since_last_spend)` — minimum blocks between vault spends.
-Canonical value **144 (~24h)**; currently `GV_SLICE1_RATE_LIMIT_BLOCKS = 0` (disabled) and
-**not wired** into block validation (needs a new `StoredBlock.gold_vault_last_spend_height`
-field — a separate follow-up). The helper is pure and tested; it is **not** enforced yet.
+### G3b — Rate limit (timelock) + cumulative cap  (`include/sost/gv_g3b.h`)
+Two over-time bounds on top of G3a's per-spend cap:
+- **Rate limit** — minimum blocks between vault spends. Canonical **144 (~24h)**.
+- **Cumulative cap** — hard ceiling on the **total** external outflow ever spent. Pilot **10 SOST**.
+
+**Now WIRED** into the authoritative node path (`process_block`, `src/sost-node.cpp`). The
+required "last vault spend height" and "cumulative outflow" are **derived from the canonical
+chain** (`gv_g3b_derive_state` — a forward scan tracking live vault outpoints), so there is
+**no new serialized `StoredBlock` field** and the state is **reorg-safe by construction**
+(a reorg simply re-derives against the new active chain). It remains **INERT**: the live
+sentinels `GV_SLICE1_RATE_LIMIT_BLOCKS = 0` and `GV_SLICE1_CUMULATIVE_CAP_STOCKS = 0` are
+disabled, so the helpers return `true` and the chain replays byte-identical until a
+coordinated activation commit copies the pilot targets (`GV_G3B_PILOT_*`) onto them. Full
+coverage in `tests/test_gv_g3b.cpp` (helpers + spec scenarios + replay/reorg-safety).
 
 ### G4 — Miner signaling  (`include/sost/gv_g4.h`)
 An affirmative approval layer on top of G1–G3: a spend needs **≥90% miner approval over a
@@ -73,7 +82,8 @@ gold purchase / Heritage Reserve. Gold Vault governance is part of the **V15** b
 spend allowed  ⇔  G2 whitelists agree
               AND every external destination ∈ G1 whitelist
               AND amount ≤ G3a absolute cap (and ≤ relative cap if enabled)
-              AND blocks-since-last ≥ G3b rate-limit            (when wired)
+              AND blocks-since-last ≥ G3b rate-limit            (wired; inert at sentinel 0)
+              AND cumulative outflow + this spend ≤ G3b cumulative cap  (wired; inert at sentinel 0)
               AND G4 window approved (≥61/67 effective, incl. +10% foundation)
               AND NOT G5 vetoed (silence = accept)
 ```
@@ -81,7 +91,7 @@ spend allowed  ⇔  G2 whitelists agree
 ## Safe activation path (later, not now)
 
 1. Build + soak the full G1–G5 on **testnet** (`-DSOST_TESTNET_FORKS=ON`, gates at 300).
-2. Wire G3b rate-limit (`StoredBlock.gold_vault_last_spend_height`) — currently unenforced.
+2. ✅ G3b rate-limit + cumulative cap wired (`gv_g3b.h`, derived chain state — no new field). Inert at sentinel 0.
 3. Wire G4 coinbase-marker counting + G5 veto-payload verification into block validation
    under the gates.
 4. Populate the MIRROR whitelist + final cap/rate values in a single reviewable commit.
@@ -128,16 +138,18 @@ Pilot rails enforced by the dry-run (`scripts/gold_vault_governance_dry_run.py`)
 - **P1 per-spend cap = 1 SOST**, **P2 cumulative pilot cap = 10 SOST**.
 - **G3a/G3b/G4/G5** mirrored from the consensus helpers.
 
-### Why no mainnet activation yet — the G3b blocker
-The **cumulative cap (10 SOST) is NOT yet enforceable on-chain**: G3b
-(rate-limit / cumulative outflow) is not wired into consensus — it needs a new
-`StoredBlock.gold_vault_last_spend_height` field that does not exist. Without it,
-a 1-SOST per-spend pilot would still allow repeated 1-SOST spends, so the
-cumulative limit would be only operational, not consensus-enforced. Per the
-"activate only what you can protect" rule, fund-moving stays OFF.
+### G3b blocker — now RESOLVED (wired, inert)
+The cumulative-cap blocker is closed: G3b (rate-limit + cumulative outflow) is now
+**wired into consensus** (`process_block` via `include/sost/gv_g3b.h`), with the
+last-spend height and cumulative outflow **derived from the canonical chain** (no
+new serialized field, reorg-safe). It is **inert** — both live sentinels are `0` —
+so nothing changes on chain until a coordinated activation. The 10-SOST cumulative
+cap is now consensus-enforceable (it will reject a sequence of small spends past the
+ceiling) the moment the sentinel is set; until then it stays a documented pilot
+target. Fund-moving remains OFF (`GV_SLICE1_ACTIVATION_HEIGHT = INT64_MAX`).
 
-### Next PR (before any founder pilot activation)
-1. Wire G3b: track cumulative pilot outflow / last-spend height deterministically (new StoredBlock field).
-2. Enforce the 10 SOST cumulative cap + rate-limit on-chain, with tests + testnet soak.
-3. Confirm the whitelist destination is the correct foundation/founder address.
-4. Only then consider flipping the founder-only capped pilot gate on mainnet.
+### Remaining steps before any founder pilot activation
+1. ✅ Wire G3b (this PR) — rate-limit + cumulative cap, derived chain state, tests + testnet build green.
+2. Confirm the whitelist destination `059d1ef8…` is the correct foundation/founder-controlled address.
+3. Testnet soak with non-zero sentinels (set the pilot targets in a soak build, exercise rate-limit + cumulative rejects end-to-end).
+4. Only then a coordinated commit copies `GV_G3B_PILOT_*` onto the live sentinels and flips `GV_SLICE1_ACTIVATION_HEIGHT` to a future height.

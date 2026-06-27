@@ -149,13 +149,27 @@ inline constexpr int64_t GV_SLICE1_PER_SPEND_CAP_STOCKS = 1000 * STOCKS_PER_SOST
 //
 // 144 = ~24h at the target 10-minute block time. Sentinel: 0 = disabled.
 //
-// HELPER WIRING NOTE: the validator wiring for rate-limit requires a new
-// StoredBlock field gold_vault_last_spend_height that does not yet exist.
-// The rate-limit helper below is pure and unit-tested but NOT called from
-// src/block_validation.cpp. The chain-state extension is a separate
-// follow-up commit. Until then, rate-limit is documented but not enforced.
+// G3b WIRING (2026-06): the rate-limit AND the cumulative cap below are now
+// WIRED into the authoritative node path (process_block, src/sost-node.cpp).
+// The required "last vault spend height" and "cumulative outflow" are DERIVED
+// from the canonical chain (gv_g3b.h / gv_g3b_derive_state) — no serialized
+// StoredBlock field, reorg-safe by construction. They remain INERT because both
+// sentinels here are 0 (disabled) → the helpers (gv_g3b_rate_ok /
+// gv_g3b_cumulative_ok) return true and the chain replays byte-identical until a
+// coordinated activation commit sets non-zero values. See include/sost/gv_g3b.h.
 //
 inline constexpr int64_t GV_SLICE1_RATE_LIMIT_BLOCKS = 0;
+
+// =========================================================================
+// Cumulative outflow cap (G3b) — hard ceiling on TOTAL external vault spend
+// =========================================================================
+//
+// Bounds the sum of all external (non-change) outputs ever spent from the gold
+// vault, across the whole chain. Sentinel: 0 = disabled. The founder-only pilot
+// TARGET is 10 SOST (GV_G3B_PILOT_CUMULATIVE_CAP_STOCKS in gv_g3b.h); this live
+// sentinel stays 0 until a coordinated activation commit.
+//
+inline constexpr int64_t GV_SLICE1_CUMULATIVE_CAP_STOCKS = 0;
 
 // =========================================================================
 // Helper: is the Slice 1 rule active at this height?
