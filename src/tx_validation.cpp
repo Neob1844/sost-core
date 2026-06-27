@@ -12,6 +12,7 @@
 #include "sost/gv_g4.h"     // W2 — G4 coinbase approval marker (GV_G4_APPROVAL_PKH, gv_g4_active_at)
 #include "sost/gv_g5.h"     // W4b — G5 Guardian veto carrier (GV_G5_VETO_PKH, gv_g5_active_at)
 #include "sost/atomic_swap.h" // OTC-1 — ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT gate / atomic_swap_htlc_active_at
+#include "sost/popc_v15.h"    // P5 — PoPC V15 on-chain carrier output (0-value marker) exemption
 #include "sost/crypto.h"      // OTC-1 — sha256() for HTLC preimage verification (R21)
 #include "sost/tx_signer.h"   // OTC-1 — SpentOutput / VerifyTransactionInput (HTLC spend dispatch)
 
@@ -137,6 +138,25 @@ static TxValidationResult ValidateStructure(
     int64_t sum_outputs = 0;
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
         const auto& out = tx.outputs[i];
+
+        // P5 — PoPC V15 carrier output: a 0-value output to the unspendable PoPC
+        // marker pkh carrying a well-formed, carriable PoPC event. Recognized ONLY
+        // when V15 is active. On mainnet POPC_V15_ACTIVATION_HEIGHT is INT64_MAX, so
+        // popc_v15_active_at() is false and this exemption NEVER fires — 0-value
+        // outputs keep failing R5, byte-identical to today. When active, the carrier
+        // is exempt from R5 (0-value) and R14 (payload on the marker output); it
+        // carries no value (no supply impact, sum_outputs += 0), and OWNER
+        // authorization is enforced at collection time (node_collect_popc_events),
+        // so a malformed/unauthorized carrier-shaped output is simply ignored for
+        // eligibility. It must still DECODE to a carriable event here so this is not
+        // an open 0-value spam channel.
+        if (popc_v15_active_at(ctx.spend_height) && popc_v15_is_carrier_output(out)) {
+            auto _carrier = popc_v15_decode_output(out, ctx.spend_height);
+            if (_carrier.ok && popc_v15_event_is_carriable(_carrier.event.type)) {
+                continue;   // valid carrier: skip the value/type/payload rules for this 0-value output
+            }
+            // else: a malformed carrier-shaped output falls through and is rejected by R5 below
+        }
 
         // R5: every output amount > 0
         if (out.amount <= 0) {
@@ -724,6 +744,14 @@ TxValidationResult ValidateTransactionPolicy(
 
     // dust
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
+        // P5 — a recognized PoPC V15 carrier output is intentionally 0-value (an
+        // unspendable marker); exempt it from the dust policy when V15 is active.
+        // Mainnet (V15 deferred) never reaches here for a 0-value output because
+        // consensus R5 rejects it first, so this is inert on mainnet too.
+        if (popc_v15_active_at(ctx.spend_height) && popc_v15_is_carrier_output(tx.outputs[i])) {
+            auto _carrier = popc_v15_decode_output(tx.outputs[i], ctx.spend_height);
+            if (_carrier.ok && popc_v15_event_is_carriable(_carrier.event.type)) continue;
+        }
         if (tx.outputs[i].amount < DUST_THRESHOLD) {
             return TxValidationResult::Fail(TxValCode::P_DUST_OUTPUT,
                 "Policy: output[" + std::to_string(i) + "] amount " +

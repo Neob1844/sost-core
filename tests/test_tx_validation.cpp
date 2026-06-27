@@ -6,6 +6,7 @@
 #include "sost/tx_validation.h"
 #include "sost/tx_signer.h"
 #include "sost/transaction.h"
+#include "sost/popc_v15.h"   // P5 — PoPC V15 carrier output exemption (R5/R14)
 
 #include <cassert>
 #include <cstring>
@@ -1011,6 +1012,108 @@ TEST(T_FEE_SIZE_S8_one_below_floor_rejects) {
             g_genesis_hash, g_privkey, &err), err);
     EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx),
                 TxValCode::S8_FEE_TOO_LOW);
+    g_pass++;
+}
+
+// =============================================================================
+// P5 — PoPC V15 on-chain carrier output exemption (R5 zero-amount + R14 payload).
+// Found by the live testnet soak: the wallet could BUILD carrier txs but consensus
+// rejected them (0-value marker output with a payload). These prove the V15-gated
+// exemption: a valid carrier passes ONLY when V15 is active; everything else
+// (non-carrier zero outputs, malformed carriers, arbitrary payloads) still fails;
+// and the mainnet build stays inert (V15 deferred at INT64_MAX).
+// =============================================================================
+
+static TxOutput MakePopcCarrierOut(bool valid, int64_t end_h) {
+    TxOutput car{};
+    car.amount = 0;
+    car.type = OUT_TRANSFER;
+    for (size_t i = 0; i < 20; ++i) car.pubkey_hash[i] = sost::POPC_V15_MARKER_PKH[i];
+    if (valid) {
+        sost::Bytes32 cid{}; cid.fill(0x42);
+        std::vector<uint8_t> pub(g_pubkey.begin(), g_pubkey.end());
+        sost::Bytes32 dg = sost::popc_v15_event_digest(sost::PopcEventType::Register, cid, g_pkh, 0, end_h);
+        sost::Hash256 h{}; std::copy(dg.begin(), dg.end(), h.begin());
+        sost::Sig64 sig{}; std::string e; SignSighash(g_privkey, h, sig, &e);
+        std::vector<uint8_t> sigv(sig.begin(), sig.end());
+        car.payload = sost::popc_v15_encode_signed_event(sost::PopcEventType::Register, cid, g_pkh, 0, end_h, pub, sigv);
+    } else {
+        car.payload = {0xDE, 0xAD, 0xBE, 0xEF, 0x01}; // marker pkh + >=4 bytes but bad magic -> won't decode
+    }
+    return car;
+}
+
+// Build a valid signed 1-in / payment + one extra output tx at a given height.
+static TestTxBundle MakeTxWithExtra(int64_t spend_height, const TxOutput& extra) {
+    TestTxBundle b;
+    b.utxo_amount = 1000000;
+    b.ctx.genesis_hash = g_genesis_hash;
+    b.ctx.spend_height = spend_height;
+    Hash256 prev = MakeFakeTxid(0x22);
+    UTXOEntry u; u.amount = b.utxo_amount; u.type = OUT_TRANSFER; u.pubkey_hash = g_pkh;
+    u.height = 0; u.is_coinbase = false;
+    b.utxos.Add(prev, 0, u);
+    b.tx.version = 1; b.tx.tx_type = TX_TYPE_STANDARD;
+    TxInput in; in.prev_txid = prev; in.prev_index = 0; b.tx.inputs.push_back(in);
+    TxOutput pay; pay.amount = b.utxo_amount - 1000; pay.type = OUT_TRANSFER; pay.pubkey_hash = g_pkh;
+    b.tx.outputs.push_back(pay);
+    b.tx.outputs.push_back(extra);
+    SpentOutput spent{b.utxo_amount, OUT_TRANSFER};
+    std::string err;
+    bool ok = SignTransactionInput(b.tx, 0, spent, g_genesis_hash, g_privkey, &err);
+    assert(ok && "sign failed in MakeTxWithExtra");
+    return b;
+}
+
+TEST(TC50_carrier_rejected_before_v15) {
+    // popc_v15_active_at(250) is false on BOTH builds (testnet V15=300; mainnet INT64_MAX).
+    auto b = MakeTxWithExtra(250, MakePopcCarrierOut(true, 100250));
+    EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R5_ZERO_AMOUNT);
+    g_pass++;
+}
+
+#ifdef SOST_TESTNET_FORKS
+TEST(TC51_carrier_accepted_when_v15_active_testnet) {
+    // testnet V15=300 -> popc_v15_active_at(350) true -> carrier exempt -> tx valid.
+    auto b = MakeTxWithExtra(350, MakePopcCarrierOut(true, 100350));
+    EXPECT_OK(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx));
+    g_pass++;
+}
+#else
+TEST(TC51_mainnet_inert_even_above_v15_height) {
+    // mainnet V15_HEIGHT=20000 but POPC_V15_ACTIVATION_HEIGHT=INT64_MAX, so the
+    // exemption NEVER fires on mainnet: a 0-value carrier stays rejected even at 25000.
+    auto b = MakeTxWithExtra(25000, MakePopcCarrierOut(true, 125000));
+    EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R5_ZERO_AMOUNT);
+    g_pass++;
+}
+#endif
+
+TEST(TC52_noncarrier_zero_output_still_rejected) {
+    // A 0-value output that is NOT the PoPC marker is still rejected, even where
+    // V15 is active — the exemption is carrier-specific, it does not blanket 0-value.
+    TxOutput z{}; z.amount = 0; z.type = OUT_TRANSFER; z.pubkey_hash = g_pkh;
+    auto b = MakeTxWithExtra(350, z);
+    EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R5_ZERO_AMOUNT);
+    g_pass++;
+}
+
+TEST(TC53_malformed_carrier_payload_rejected) {
+    // 0-value to the marker pkh but the payload does not decode to a carriable
+    // event -> not exempt -> R5 (so the exemption is not an open 0-value channel).
+    auto b = MakeTxWithExtra(350, MakePopcCarrierOut(false, 0));
+    EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R5_ZERO_AMOUNT);
+    g_pass++;
+}
+
+TEST(TC54_arbitrary_payload_on_transfer_still_rejected) {
+    // A non-zero OUT_TRANSFER output carrying an arbitrary payload (not a carrier)
+    // is still rejected by R14 pre-capsule — the carrier exemption did not widen
+    // the general payload rules.
+    TxOutput p{}; p.amount = 1000; p.type = OUT_TRANSFER; p.pubkey_hash = g_pkh;
+    p.payload = {0x01, 0x02, 0x03};
+    auto b = MakeTxWithExtra(250, p);   // 250 < CAPSULE_ACTIVATION_HEIGHT_MAINNET (7350)
+    EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R14_PAYLOAD_FORBIDDEN);
     g_pass++;
 }
 
