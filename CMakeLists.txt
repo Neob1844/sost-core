@@ -379,6 +379,10 @@ target_link_libraries(popc15-carrier PRIVATE sost-core secp256k1)
 add_executable(otc-coordinator tools/otc_swap_coordinator.cpp)
 target_link_libraries(otc-coordinator PRIVATE sost-core)
 
+# Forensic: independent ConvergenceX PoW re-verifier (recomputes commit from scratch)
+add_executable(cx-reverify tools/cx_reverify.cpp)
+target_link_libraries(cx-reverify PRIVATE sost-core secp256k1)
+
 # ---------------------------------------------------------------------------
 # OTC-0.5 — atomic-swap dormant groundwork (gate at INT64_MAX; mainnet no-op).
 # BTC HTLC signing stays a compile-time-disabled stub set unless the operator
