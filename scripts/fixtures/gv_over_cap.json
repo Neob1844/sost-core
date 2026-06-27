@@ -1,0 +1,1 @@
+{"name":"over per-spend cap","destination_pkh":"059d1ef8639bcf47ec35e9299c17dc0452c3df33","amount_sost":5000,"prior_pilot_outflow_sost":0,"signed_by_founder":true,"whitelists_agree":true,"vault_balance_sost":100000,"blocks_since_last_spend":200,"miner_yes":62,"foundation_signaled":true,"veto_present":false,"height":25000}

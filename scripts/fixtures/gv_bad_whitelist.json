@@ -1,0 +1,1 @@
+{"name":"bad whitelist (unknown destination)","destination_pkh":"deadbeef00000000000000000000000000000000","amount_sost":1,"prior_pilot_outflow_sost":0,"signed_by_founder":true,"whitelists_agree":true,"vault_balance_sost":100000,"blocks_since_last_spend":200,"miner_yes":62,"foundation_signaled":true,"veto_present":false,"height":25000}
