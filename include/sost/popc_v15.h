@@ -26,12 +26,14 @@
 
 namespace sost {
 
-// ---- activation gate (part of the V15 bundle; mainnet DEFERRED) -------------
-#ifdef SOST_TESTNET_FORKS
+// ---- activation gate (part of the V15 bundle) -------------------------------
+// V15 MAINNET ACTIVATION (2026-06-27, after testnet soak PASS + carrier tx-validation
+// fix PR #24): the PoPC V15 on-chain carrier subsystem + single-model settle go live
+// at V15_HEIGHT on BOTH profiles (testnet 300 / mainnet 20000). DTD-PoPC lottery
+// eligibility additionally requires an OPEN PoPC from DTD_POPC_ELIGIBILITY_HEIGHT
+// (= V15_HEIGHT + grace; mainnet 25000). Gold Boost (POPC_GOLD_BOOST_HEIGHT) and
+// Gold Vault governance (GV_*) stay DEFERRED at INT64_MAX.
 inline constexpr int64_t POPC_V15_ACTIVATION_HEIGHT = V15_HEIGHT;
-#else
-inline constexpr int64_t POPC_V15_ACTIVATION_HEIGHT = INT64_MAX;   // -> V15_HEIGHT in the final commit
-#endif
 inline constexpr bool popc_v15_active_at(int64_t height) { return height >= POPC_V15_ACTIVATION_HEIGHT; }
 
 // ---- deterministic constants ----------------------------------------------

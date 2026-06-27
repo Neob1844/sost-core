@@ -148,19 +148,11 @@ int main(){
         CHECK("registered + activated out at end",       !inSet(chain_active_popc_set(e2, 9000), A));
     }
 
-    // ---- gating: empty events = no-op; mainnet deferred; DTD bridge OFF ----
+    // ---- gating: empty events = no-op (no carriers); V15 ACTIVATED on both profiles ----
     CHECK("no events -> empty active set (no-op)", chain_active_popc_set({}, 5000).empty());
     CHECK("no events -> Pending status (no-op)",   popc_v15_commitment_status({}, A, 5000) == PopcV15Status::Pending);
-#ifdef SOST_TESTNET_FORKS
-    CHECK("DTD-PoPC bridge ACTIVE on testnet (soak build)", DTD_POPC_GATE_CONSENSUS_ACTIVE == true);
-#else
-    CHECK("DTD-PoPC bridge stays OFF on mainnet (deferred)", DTD_POPC_GATE_CONSENSUS_ACTIVE == false);
-#endif
-#ifndef SOST_TESTNET_FORKS
-    CHECK("mainnet: popc_v15 deferred (auto-slash/settle no-op)", popc_v15_active_at(20000) == false);
-#else
-    CHECK("testnet: popc_v15 active at V15_HEIGHT", popc_v15_active_at(V15_HEIGHT) == true);
-#endif
+    CHECK("DTD-PoPC bridge ACTIVE (V15)", DTD_POPC_GATE_CONSENSUS_ACTIVE == true);
+    CHECK("popc_v15 active at V15_HEIGHT", popc_v15_active_at(V15_HEIGHT) == true);
 
     std::printf("=== Results: %d passed, %d failed ===\n", g_pass, g_fail);
     (void)oB;

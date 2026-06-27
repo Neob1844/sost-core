@@ -87,33 +87,23 @@ int main(){
         CHECK("recompute deterministic / no stale state",     !excluded(chain,      MINER, ELI, true));
     }
 
-    // ---- shipped-flag behaviour: mainnet deferred (no-op) vs testnet active ----
-#ifndef SOST_TESTNET_FORKS
-    // Mainnet: gate ships false -> a chain WITH PoPC carriers excludes nobody, so
-    // processing is byte-identical to a chain with no PoPC at all.
-    CHECK("mainnet: shipped flag is false", DTD_POPC_GATE_CONSENSUS_ACTIVE == false);
-    CHECK("mainnet: shipped gate excludes nobody (active miner)",
+    // ---- shipped-flag behaviour: V15 ACTIVATED — the gate is true on BOTH profiles
+    // and the rule BITES with the REAL shipped flag: an owner with a maintained PoPC
+    // is included, one without is excluded.
+    CHECK("shipped flag is true (V15 activated)", DTD_POPC_GATE_CONSENSUS_ACTIVE == true);
+    CHECK("shipped gate keeps the maintained miner eligible",
           !excluded(chain, MINER, ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
-    CHECK("mainnet: shipped gate excludes nobody (no-PoPC owner, no-op)",
-          !excluded(chain, NONE,  ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
-#else
-    // Testnet (soak build): gate ships true -> the rule BITES with the REAL flag:
-    // an owner with a maintained PoPC is included, one without is excluded.
-    CHECK("testnet: shipped flag is true (soak)", DTD_POPC_GATE_CONSENSUS_ACTIVE == true);
-    CHECK("testnet: shipped gate keeps the maintained miner eligible",
-          !excluded(chain, MINER, ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
-    CHECK("testnet: shipped gate excludes the no-PoPC owner",
+    CHECK("shipped gate excludes the no-PoPC owner",
           excluded(chain, NONE,  ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
-#endif
 
+    // PoPC automation is LIVE from V15_HEIGHT on both profiles; only the height
+    // values differ (mainnet 20000/25000 vs testnet 300/5300).
+    CHECK("PoPC automation live at V15_HEIGHT", popc_v15_active_at(H0));
+    CHECK("PoPC automation live at eligibility", popc_v15_active_at(ELI));
 #ifndef SOST_TESTNET_FORKS
-    CHECK("mainnet: PoPC automation deferred at V15_HEIGHT (20000)", !popc_v15_active_at(H0));
-    CHECK("mainnet: PoPC automation deferred at eligibility (25000)", !popc_v15_active_at(ELI));
     CHECK("mainnet: V15_HEIGHT == 20000", H0 == 20000);
     CHECK("mainnet: eligibility == 25000", ELI == 25000);
 #else
-    CHECK("testnet: PoPC automation live at V15_HEIGHT", popc_v15_active_at(H0));
-    CHECK("testnet: PoPC automation live at eligibility", popc_v15_active_at(ELI));
     CHECK("testnet: V15_HEIGHT == 300", H0 == 300);
     CHECK("testnet: eligibility == 5300", ELI == 5300);
 #endif

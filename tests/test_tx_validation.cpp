@@ -1080,10 +1080,16 @@ TEST(TC51_carrier_accepted_when_v15_active_testnet) {
     g_pass++;
 }
 #else
-TEST(TC51_mainnet_inert_even_above_v15_height) {
-    // mainnet V15_HEIGHT=20000 but POPC_V15_ACTIVATION_HEIGHT=INT64_MAX, so the
-    // exemption NEVER fires on mainnet: a 0-value carrier stays rejected even at 25000.
+TEST(TC51b_carrier_accepted_when_v15_active_mainnet) {
+    // V15 ACTIVATED: mainnet POPC_V15_ACTIVATION_HEIGHT = V15_HEIGHT (20000), so a
+    // valid carrier is accepted at/after 20000 (here 25000, past eligibility too).
     auto b = MakeTxWithExtra(25000, MakePopcCarrierOut(true, 125000));
+    EXPECT_OK(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx));
+    g_pass++;
+}
+TEST(TC51c_carrier_rejected_below_v15_mainnet) {
+    // ...but a carrier below V15_HEIGHT (here 19999) is still rejected by R5.
+    auto b = MakeTxWithExtra(19999, MakePopcCarrierOut(true, 119999));
     EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R5_ZERO_AMOUNT);
     g_pass++;
 }

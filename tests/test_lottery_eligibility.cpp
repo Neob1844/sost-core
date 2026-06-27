@@ -761,22 +761,15 @@ static void test_v135_sbpow_gate_off_below_gate_height() {
 // exercise the real consensus-deterministic lookup.
 
 static void test_v14_popc_gate_consensus_deferred() {
-    printf("\n=== V14.1) PoPC gate is consensus-deferred (flag false) → all eligible ===\n");
-    // Compile-time guard: this test only makes sense while the flag
-    // is false. If a future commit flips it, this static_assert will
-    // remind us to rewrite the test instead of silently passing on a
-    // changed semantic.
-#ifndef SOST_TESTNET_FORKS
-    // Mainnet: gate ships deferred (false). On the testnet build the gate is ACTIVE,
-    // but with no popc event source wired in this unit harness, has_active_canonical_popc
-    // short-circuits to true, so the "all eligible" expectation below holds on both
-    // builds; only this mainnet-deferral guard is mainnet-only.
-    static_assert(!sost::DTD_POPC_GATE_CONSENSUS_ACTIVE,
-                  "V14 PoPC consensus gate has been activated on MAINNET; "
-                  "test_v14_popc_gate_consensus_deferred needs a real "
-                  "chain-derived PoPC lookup harness, not the short-"
-                  "circuit assertion below.");
-#endif
+    printf("\n=== V14.1) PoPC gate active but no event source wired → all eligible (defensive no-op) ===\n");
+    // V15 ACTIVATION (2026-06-27): DTD_POPC_GATE_CONSENSUS_ACTIVE is now TRUE on
+    // both profiles. This unit harness wires NO popc event source, so
+    // has_active_canonical_popc() takes its defensive `!g_popc_src -> true` branch
+    // and every candidate is still eligible. That is exactly what this test pins:
+    // the gate never excludes anyone unless a chain-derived PoPC source is present.
+    static_assert(sost::DTD_POPC_GATE_CONSENSUS_ACTIVE,
+                  "Expected the DTD-PoPC gate to be ACTIVE in V15; if it was reverted to "
+                  "false, update this test's premise.");
 
     auto A = mk_pkh(0xA1);
     auto B = mk_pkh(0xA2);
