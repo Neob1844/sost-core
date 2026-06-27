@@ -132,6 +132,26 @@ int main(){
               !(lottery::popc_eligibility_enforced(QH, false) && !popc_v15_owner_active(evs, NOBODY, QH)));
     }
 
+    // ---- Finding 1: Register ALONE leaves the commitment PENDING -> NOT eligible.
+    //      popc_register must return BOTH carriers; broadcasting only the Register one
+    //      leaves the miner OUT of the lottery. Adding the Activate carrier -> ACTIVE -> eligible.
+    {
+        std::vector<CarrierAt> regOnly = { { ACT - 10, regCarrier(ownerSk, ownerPub) } };
+        auto e1 = collect(regOnly);
+        CHECK("Register-only: owner NOT active (Pending)", !popc_v15_owner_active(e1, OWNER, QH));
+        CHECK("Register-only @ eligibility, gate ON: owner EXCLUDED",
+              lottery::popc_eligibility_enforced(QH, true) && !popc_v15_owner_active(e1, OWNER, QH));
+
+        std::vector<CarrierAt> regAct = regOnly;
+        regAct.push_back({ ACT, attestCarrier(ACT) });
+        for (int64_t k = 1; ACT + k*POPC_V15_AUDIT_INTERVAL_BLOCKS <= QH; ++k)
+            regAct.push_back({ ACT + k*POPC_V15_AUDIT_INTERVAL_BLOCKS, attestCarrier(ACT + k*POPC_V15_AUDIT_INTERVAL_BLOCKS) });
+        auto e2 = collect(regAct);
+        CHECK("Register + Activate: owner ACTIVE", popc_v15_owner_active(e2, OWNER, QH));
+        CHECK("Register + Activate @ eligibility, gate ON: owner INCLUDED",
+              !(lottery::popc_eligibility_enforced(QH, true) && !popc_v15_owner_active(e2, OWNER, QH)));
+    }
+
     // ---- forged / unsigned carriers are ignored (no third-party injection) ----
     {
         // Attacker signs the Register digest with their OWN key but claims OWNER.

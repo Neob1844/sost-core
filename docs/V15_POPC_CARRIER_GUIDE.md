@@ -22,15 +22,27 @@ ready-to-broadcast carrier, never auto-spend):
   "activation_height": 20000,        // POPC_V15_ACTIVATION_HEIGHT (mainnet)
   "eligibility_height": 25000,       // DTD_POPC_ELIGIBILITY_HEIGHT (mainnet)
   "carrier_required": true,          // popc_v15_active_at(current_height)
-  "carrier_status": "ready_to_broadcast",   // or not_required_yet / needs_owner_key_in_wallet / sign_failed
-  "carrier_hex": "5031 35c0 …",      // signed Register carrier (present when ready)
-  "carrier_broadcast_cmd": "sost-cli send --to <addr> --amount 1 --popc-carrier <hex>"
+  "active_after_activate": true,     // commitment is ACTIVE only after BOTH carriers land
+  "register_carrier_status": "ready_to_broadcast",
+  "activate_carrier_status": "broadcast_after_register",
+  "register_carrier_hex": "5031 35c0 …",   // signed Register carrier (Pending)
+  "register_carrier_cmd":  "sost-cli send --to <addr> --amount 1 --popc-carrier <register_hex>",
+  "activate_carrier_hex":  "5031 35c0 …",   // signed Activate/attestation carrier (-> Active)
+  "activate_carrier_cmd":  "sost-cli send --to <addr> --amount 1 --popc-carrier <activate_hex>",
+  "carrier_note": "Register alone leaves the PoPC PENDING. Broadcast BOTH (Register then Activate) to be ACTIVE / DTD-eligible from 25000; create AND maintain."
 }
 ```
 
-- `not_required_yet` — before block 20,000 the carrier is rejected by consensus, so none is produced.
+**Register alone is NOT enough.** Register leaves the commitment **Pending**; the DTD lottery
+requires an **Active** PoPC, which needs the **Activate** carrier too. The response therefore
+returns BOTH, in order:
+1. broadcast `register_carrier_cmd`, wait for it to confirm,
+2. broadcast `activate_carrier_cmd`, wait for it to confirm → commitment is **Active**.
+
+Status values:
+- `not_required_yet` — before block 20,000 carriers are rejected by consensus, so none are produced.
 - `needs_owner_key_in_wallet` — this node's wallet does not hold the registering address's key; sign from the wallet that does.
-- `ready_to_broadcast` — `carrier_hex` is the signed Register carrier; broadcast it with `carrier_broadcast_cmd`.
+- `ready_to_broadcast` / `broadcast_after_register` — the hexes are signed and ready; broadcast Register, then Activate.
 
 The node **does not broadcast** the carrier itself (no surprise spend), does not
 touch consensus, and the carrier is rejected pre-V15 anyway — so this is inert on

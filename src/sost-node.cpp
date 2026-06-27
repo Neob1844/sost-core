@@ -2901,20 +2901,26 @@ static std::string handle_popc_register(const std::string& id, const std::vector
     if (reward_pct_bps == 0)
         return rpc_error(id, -1, "commitment_months must be 1, 3, 6, 9, or 12");
 
-    // Compute commitment_id = SHA256(eth_address || sost_address || gold_token || commitment_months)
-    Hash256 commitment_id{};
-    {
-        std::string canon = eth_addr + sost_addr + gold_token + std::to_string((int)commitment_months);
-        unsigned int digest_len = 32;
-        EVP_Digest(canon.data(), canon.size(),
-                   commitment_id.data(), &digest_len,
-                   EVP_sha256(), nullptr);
-    }
-
     int64_t current_height;
     {
         std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
         current_height = g_chain_height;
+    }
+
+    // commitment_id = SHA256(eth || sost || token || months || gold_amount_mg || start_height).
+    // Including gold_amount_mg + the start height makes each registration a DISTINCT id, so a
+    // user can create a NEW PoPC later (different height) and recreate after expiry. Re-running
+    // register at the same height with identical params stays idempotent (same inputs -> same id).
+    // Lottery eligibility binds to owner_pkh (not this id), so the canon change is safe.
+    Hash256 commitment_id{};
+    {
+        std::string canon = eth_addr + sost_addr + gold_token + std::to_string((int)commitment_months)
+                          + ":" + std::to_string((long long)gold_amount_mg)
+                          + ":" + std::to_string((long long)current_height);
+        unsigned int digest_len = 32;
+        EVP_Digest(canon.data(), canon.size(),
+                   commitment_id.data(), &digest_len,
+                   EVP_sha256(), nullptr);
     }
 
     // Load pricing from config/popc_pricing.json (with fallback defaults)
@@ -3026,30 +3032,37 @@ static std::string handle_popc_register(const std::string& id, const std::vector
         cid_hex[i*2+1] = HEX[commitment_id[i] & 0x0F];
     }
 
-    // P5 — carrier UX: register no longer leaves a hidden manual step. When V15 is
-    // active AND this node's wallet holds the owner key, we return the signed,
-    // ready-to-broadcast Register carrier_hex + the exact send command + status, so
-    // the caller (CLI / wallet dashboard) can one-click broadcast it. We DO NOT
-    // broadcast here (no surprise spend), DO NOT touch consensus, and the carrier is
+    // P5 — carrier UX: the normal flow must NOT leave a hidden manual step. Register
+    // ALONE leaves the commitment PENDING; DTD eligibility needs an ACTIVE PoPC, which
+    // requires the Activate (attestation) carrier too. So when V15 is active AND this
+    // node's wallet holds the owner key, we return BOTH signed, ready-to-broadcast
+    // carriers (Register then Activate) + their exact send commands + status. We DO NOT
+    // broadcast here (no surprise spend), DO NOT touch consensus, and carriers are
     // rejected by consensus before POPC_V15_ACTIVATION_HEIGHT anyway.
-    std::string carrier_hex, carrier_status;
+    std::string reg_carrier_hex, act_carrier_hex, carrier_status;
     const bool v15_on = sost::popc_v15_active_at(current_height);
     const sost::WalletKey* okey = g_wallet.find_key_by_pkh(user_pkh);
+    auto to_hex = [](const std::vector<uint8_t>& p){ std::string h; h.reserve(p.size()*2);
+        static const char HX[]="0123456789abcdef";
+        for (uint8_t b : p){ h.push_back(HX[b>>4]); h.push_back(HX[b&0x0F]); } return h; };
     if (!v15_on) {
-        carrier_status = "not_required_yet";          // accepted on-chain only from POPC_V15_ACTIVATION_HEIGHT
+        carrier_status = "not_required_yet";          // carriers accepted on-chain only from POPC_V15_ACTIVATION_HEIGHT
     } else if (!okey) {
-        carrier_status = "needs_owner_key_in_wallet"; // sign the carrier from the wallet that holds sost_address
+        carrier_status = "needs_owner_key_in_wallet"; // sign from the wallet that holds sost_address
     } else {
-        sost::Bytes32 dg = sost::popc_v15_event_digest(sost::PopcEventType::Register, commitment_id, user_pkh, 0, c.end_height);
-        sost::Hash256 sh{}; std::copy(dg.begin(), dg.end(), sh.begin());
-        sost::Sig64 sig{}; std::string se;
-        if (sost::SignSighash(okey->privkey, sh, sig, &se)) {
-            std::vector<uint8_t> pub(okey->pubkey.begin(), okey->pubkey.end());
-            std::vector<uint8_t> sigv(sig.begin(), sig.end());
-            auto payload = sost::popc_v15_encode_signed_event(sost::PopcEventType::Register, commitment_id, user_pkh, 0, c.end_height, pub, sigv);
-            carrier_hex.reserve(payload.size()*2);
-            for (uint8_t b : payload) { carrier_hex.push_back(HEX[b>>4]); carrier_hex.push_back(HEX[b&0x0F]); }
-            carrier_status = "ready_to_broadcast";
+        std::string se;
+        sost::Bytes32 rdg = sost::popc_v15_event_digest(sost::PopcEventType::Register, commitment_id, user_pkh, 0, c.end_height);
+        sost::Hash256 rsh{}; std::copy(rdg.begin(), rdg.end(), rsh.begin());
+        sost::Bytes32 adg = sost::popc_v15_attest_digest(commitment_id, gold_amount_mg, current_height);
+        sost::Hash256 ash{}; std::copy(adg.begin(), adg.end(), ash.begin());
+        sost::Sig64 rsig{}, asig{};
+        std::vector<uint8_t> pub(okey->pubkey.begin(), okey->pubkey.end());
+        if (sost::SignSighash(okey->privkey, rsh, rsig, &se) &&
+            sost::SignSighash(okey->privkey, ash, asig, &se)) {
+            std::vector<uint8_t> rsv(rsig.begin(), rsig.end()), asv(asig.begin(), asig.end());
+            reg_carrier_hex = to_hex(sost::popc_v15_encode_signed_event(sost::PopcEventType::Register, commitment_id, user_pkh, 0, c.end_height, pub, rsv));
+            act_carrier_hex = to_hex(sost::popc_v15_encode_attest(commitment_id, user_pkh, 0, c.end_height, gold_amount_mg, current_height, pub, asv));
+            carrier_status = "ready_to_broadcast";    // BOTH carriers must be broadcast (Register, then Activate)
         } else {
             carrier_status = "sign_failed";
         }
@@ -3078,11 +3091,18 @@ static std::string handle_popc_register(const std::string& id, const std::vector
       << ",\"activation_height\":" << (long long)sost::POPC_V15_ACTIVATION_HEIGHT
       << ",\"eligibility_height\":" << (long long)sost::DTD_POPC_ELIGIBILITY_HEIGHT
       << ",\"carrier_required\":" << (v15_on ? "true" : "false")
-      << ",\"carrier_status\":\"" << carrier_status << "\"";
-    if (!carrier_hex.empty())
-        s << ",\"carrier_hex\":\"" << carrier_hex << "\""
-          << ",\"carrier_broadcast_cmd\":\"sost-cli send --to " << sost_addr
-          << " --amount 1 --popc-carrier " << carrier_hex << "\"";
+      << ",\"active_after_activate\":true"
+      << ",\"register_carrier_status\":\"" << carrier_status << "\""
+      << ",\"activate_carrier_status\":\""
+        << (carrier_status == "ready_to_broadcast" ? "broadcast_after_register" : carrier_status) << "\""
+      << ",\"carrier_note\":\"Register alone leaves the PoPC PENDING. Broadcast BOTH carriers — Register first, then Activate — to reach ACTIVE and be DTD-eligible from block 25000. PoPC also auto-slashes if audits go unanswered (~every 1728 blocks): create AND maintain.\"";
+    if (!reg_carrier_hex.empty())
+        s << ",\"register_carrier_hex\":\"" << reg_carrier_hex << "\""
+          << ",\"register_carrier_cmd\":\"sost-cli send --to " << sost_addr
+          << " --amount 1 --popc-carrier " << reg_carrier_hex << "\""
+          << ",\"activate_carrier_hex\":\"" << act_carrier_hex << "\""
+          << ",\"activate_carrier_cmd\":\"sost-cli send --to " << sost_addr
+          << " --amount 1 --popc-carrier " << act_carrier_hex << "\"";
     if (pur >= PUR_WARNING_BPS)
         s << ",\"warning\":\"Pool utilization above 80% — reward rate reduced\"";
     s << ",\"message\":\"Bond required before PoPC Pool releases reward. Operator verifies gold custody before release.\""
