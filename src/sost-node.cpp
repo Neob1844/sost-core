@@ -3026,6 +3026,35 @@ static std::string handle_popc_register(const std::string& id, const std::vector
         cid_hex[i*2+1] = HEX[commitment_id[i] & 0x0F];
     }
 
+    // P5 — carrier UX: register no longer leaves a hidden manual step. When V15 is
+    // active AND this node's wallet holds the owner key, we return the signed,
+    // ready-to-broadcast Register carrier_hex + the exact send command + status, so
+    // the caller (CLI / wallet dashboard) can one-click broadcast it. We DO NOT
+    // broadcast here (no surprise spend), DO NOT touch consensus, and the carrier is
+    // rejected by consensus before POPC_V15_ACTIVATION_HEIGHT anyway.
+    std::string carrier_hex, carrier_status;
+    const bool v15_on = sost::popc_v15_active_at(current_height);
+    const sost::WalletKey* okey = g_wallet.find_key_by_pkh(user_pkh);
+    if (!v15_on) {
+        carrier_status = "not_required_yet";          // accepted on-chain only from POPC_V15_ACTIVATION_HEIGHT
+    } else if (!okey) {
+        carrier_status = "needs_owner_key_in_wallet"; // sign the carrier from the wallet that holds sost_address
+    } else {
+        sost::Bytes32 dg = sost::popc_v15_event_digest(sost::PopcEventType::Register, commitment_id, user_pkh, 0, c.end_height);
+        sost::Hash256 sh{}; std::copy(dg.begin(), dg.end(), sh.begin());
+        sost::Sig64 sig{}; std::string se;
+        if (sost::SignSighash(okey->privkey, sh, sig, &se)) {
+            std::vector<uint8_t> pub(okey->pubkey.begin(), okey->pubkey.end());
+            std::vector<uint8_t> sigv(sig.begin(), sig.end());
+            auto payload = sost::popc_v15_encode_signed_event(sost::PopcEventType::Register, commitment_id, user_pkh, 0, c.end_height, pub, sigv);
+            carrier_hex.reserve(payload.size()*2);
+            for (uint8_t b : payload) { carrier_hex.push_back(HEX[b>>4]); carrier_hex.push_back(HEX[b&0x0F]); }
+            carrier_status = "ready_to_broadcast";
+        } else {
+            carrier_status = "sign_failed";
+        }
+    }
+
     int32_t pur_pct         = pur / 100;
     int32_t factor_pct      = factor / 100;
 
@@ -3045,7 +3074,15 @@ static std::string handle_popc_register(const std::string& id, const std::vector
       << ",\"total_return_sost\":\"" << format_sost(total_return) << "\""
       << ",\"commitment_blocks\":" << popc_duration_to_blocks(commitment_months)
       << ",\"commitment_months\":" << (int)commitment_months
-      << ",\"expires_at_height\":" << c.end_height;
+      << ",\"expires_at_height\":" << c.end_height
+      << ",\"activation_height\":" << (long long)sost::POPC_V15_ACTIVATION_HEIGHT
+      << ",\"eligibility_height\":" << (long long)sost::DTD_POPC_ELIGIBILITY_HEIGHT
+      << ",\"carrier_required\":" << (v15_on ? "true" : "false")
+      << ",\"carrier_status\":\"" << carrier_status << "\"";
+    if (!carrier_hex.empty())
+        s << ",\"carrier_hex\":\"" << carrier_hex << "\""
+          << ",\"carrier_broadcast_cmd\":\"sost-cli send --to " << sost_addr
+          << " --amount 1 --popc-carrier " << carrier_hex << "\"";
     if (pur >= PUR_WARNING_BPS)
         s << ",\"warning\":\"Pool utilization above 80% — reward rate reduced\"";
     s << ",\"message\":\"Bond required before PoPC Pool releases reward. Operator verifies gold custody before release.\""
