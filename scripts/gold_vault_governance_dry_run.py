@@ -31,14 +31,16 @@ WHITELIST = {"059d1ef8639bcf47ec35e9299c17dc0452c3df33"}
 # G3a absolute per-spend cap (GV_SLICE1_PER_SPEND_CAP_STOCKS = 1000 SOST).
 ABS_CAP_SOST = 1000
 REL_CAP_BPS = 0                       # G3a relative cap (0 = off)
-RATE_LIMIT_BLOCKS = 144              # G3b timelock (intended; header sentinel 0/unwired)
+RATE_LIMIT_BLOCKS = 144              # G3b timelock (intended; live sentinel 0 = wired but inert)
 G4_WINDOW, G4_THRESHOLD_PCT, G4_FOUNDATION_PCT = 67, 90, 10
 G5_GRACE_BLOCKS, G5_AUTO_DISCONNECT_HEIGHT = 10, 100000
 
 # ---- FOUNDER-ONLY PILOT rails (tighter than consensus G3a) -------------------
-# These are the pilot limits. The CUMULATIVE cap is NOT yet enforceable on-chain
-# (G3b is not wired — needs StoredBlock.gold_vault_last_spend_height), so it is a
-# DOCUMENTED TARGET enforced here in the dry-run + operationally, until G3b lands.
+# These are the pilot limits. The CUMULATIVE cap + rate-limit are now WIRED into
+# consensus (process_block, via gv_g3b.h; state derived from the canonical chain,
+# no serialized field) but INERT — the live GV_SLICE1_* sentinels are 0. They stay
+# a DOCUMENTED TARGET here + operationally until a coordinated activation commit
+# copies these values onto the live sentinels.
 PILOT_PER_SPEND_CAP_SOST   = 1       # max 1 SOST per pilot spend
 PILOT_CUMULATIVE_CAP_SOST  = 10      # max 10 SOST total pilot outflow
 
@@ -80,13 +82,14 @@ def evaluate(p):
                    f"{amt} <= {PILOT_PER_SPEND_CAP_SOST} SOST" if p1
                    else f"{amt} > {PILOT_PER_SPEND_CAP_SOST} SOST pilot cap"))
 
-    # P2 — pilot CUMULATIVE cap (10 SOST). NOT YET consensus-enforced (G3b unwired)
-    # — documented target enforced here + operationally until G3b lands.
+    # P2 — pilot CUMULATIVE cap (10 SOST). G3b is now WIRED into consensus but
+    # INERT (live sentinel 0); this pilot value is enforced here + operationally
+    # until a coordinated activation copies it onto GV_SLICE1_CUMULATIVE_CAP_STOCKS.
     prior = p.get("prior_pilot_outflow_sost", 0)
     p2 = (prior + amt) <= PILOT_CUMULATIVE_CAP_SOST
     checks.append(("P2 pilot cumulative cap", p2,
                    f"{prior}+{amt} <= {PILOT_CUMULATIVE_CAP_SOST} SOST" if p2
-                   else f"{prior}+{amt} > {PILOT_CUMULATIVE_CAP_SOST} SOST cumulative (NOTE: not yet on-chain — G3b unwired)"))
+                   else f"{prior}+{amt} > {PILOT_CUMULATIVE_CAP_SOST} SOST cumulative (G3b wired but inert — sentinel 0)"))
 
     # G3a — consensus per-spend cap (absolute, and relative if enabled)
     g3a = amt <= ABS_CAP_SOST
@@ -97,12 +100,12 @@ def evaluate(p):
             g3a, detail = False, f"{amt} > {rel_cap} SOST relative cap"
     checks.append(("G3a per-spend cap", g3a, detail))
 
-    # G3b — rate-limit / timelock (consensus: NOT wired yet)
+    # G3b — rate-limit / timelock (consensus: WIRED but inert, live sentinel 0)
     since = p.get("blocks_since_last_spend", 0)
     g3b = since >= RATE_LIMIT_BLOCKS
     checks.append(("G3b timelock", g3b,
                    f"{since} >= {RATE_LIMIT_BLOCKS} blocks" if g3b
-                   else f"only {since} blocks since last spend (< {RATE_LIMIT_BLOCKS}) (NOTE: not yet on-chain)"))
+                   else f"only {since} blocks since last spend (< {RATE_LIMIT_BLOCKS}) (G3b wired but inert — sentinel 0)"))
 
     # G4 — miner signaling window
     yes = p.get("miner_yes", 0)

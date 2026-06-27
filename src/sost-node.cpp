@@ -43,6 +43,7 @@
 #include "sost/gold_vault_slice1.h"   // W1: Gold Vault Slice 1 enforcement in the real block path
 #include "sost/gv_g4.h"               // W3: Gold Vault G4 67-block miner-approval window
 #include "sost/gv_g5.h"               // W4b: Gold Vault G5 transitional Guardian veto
+#include "sost/gv_g3b.h"              // W5: Gold Vault G3b rate-limit + cumulative-outflow cap
 #include "sost/popc_v15.h"            // P4a: chain-derived PoPC active set (V15)
 #include "sost/sostcompact.h"
 #include "sost/checkpoints.h"
@@ -4611,6 +4612,53 @@ static std::vector<sost::PopcV15Event> node_collect_popc_events(int64_t height) 
     return ev;
 }
 
+// =========================================================================
+// W5 — Gold Vault G3b derived chain state (rate-limit + cumulative cap).
+// =========================================================================
+// Reconstruct, from the canonical chain (g_blocks, all blocks PRIOR to the one
+// being validated), the height of the most recent Gold Vault spend and the
+// cumulative external outflow ever spent from the vault. Self-contained: every
+// input's prev-output is an output of an earlier tx in g_blocks, so we
+// forward-scan tracking the set of LIVE vault outpoints and accumulate external
+// (non-change) outflow each time one is consumed. A pure function of the active
+// chain → reorg-safe by construction (a reorg simply re-derives against the new
+// active chain — no stale serialized state to roll back). Only invoked when a
+// vault spend is present in the current block (rare, and gated on activation),
+// so the O(total-tx) scan is paid at most once per governed spend.
+static sost::GvG3bState gv_g3b_derive_state(const PubKeyHash& vault_pkh) {
+    sost::GvG3bState st;
+    std::set<OutPoint> vault_utxos;
+    for (const auto& sb : g_blocks) {
+        for (const auto& txhex : sb.tx_hexes) {
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(txhex, raw)) continue;
+            Transaction tx; std::string e;
+            if (!Transaction::Deserialize(raw, tx, &e)) continue;
+            // Consume any live vault outpoints this tx spends.
+            bool spends_vault = false;
+            for (const auto& in : tx.inputs) {
+                auto it = vault_utxos.find(OutPoint{in.prev_txid, in.prev_index});
+                if (it != vault_utxos.end()) { spends_vault = true; vault_utxos.erase(it); }
+            }
+            if (spends_vault) {
+                int64_t external = 0;
+                for (const auto& o : tx.outputs)
+                    if (!(o.pubkey_hash == vault_pkh)) external += o.amount;
+                st.last_spend_height   = sb.height;
+                st.cumulative_outflow += external;
+            }
+            // Register this tx's new vault outpoints for later blocks.
+            Hash256 txid; std::string te;
+            if (tx.ComputeTxId(txid, &te)) {
+                for (uint32_t oi = 0; oi < (uint32_t)tx.outputs.size(); ++oi)
+                    if (tx.outputs[oi].pubkey_hash == vault_pkh)
+                        vault_utxos.insert(OutPoint{txid, oi});
+            }
+        }
+    }
+    return st;
+}
+
 static bool process_block(const std::string& block_json) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
 
@@ -4967,6 +5015,7 @@ static bool process_block(const std::string& block_json) {
     PubKeyHash gv_slice1_gold_pkh{};   // W1: Gold Vault constitutional PKH for Slice 1 enforcement
     bool gv_vault_spend_in_block = false;   // W3: set if any tx spends from the Gold Vault
     PubKeyHash gv_spend_dest{};             // W4b: external destination of the vault spend (for G5 veto)
+    int64_t gv_block_outflow = 0;           // W5: external outflow of THIS block's vault spend(s)
     if(v14_txrules){ v14_scratch = g_utxo_set; v14_seen_txids.reserve(txs.size()*2);
                      address_decode(ADDR_GOLD_VAULT, gv_slice1_gold_pkh); }
 
@@ -5018,8 +5067,9 @@ static bool process_block(const std::string& block_json) {
                 for(const auto& kv : v14_scratch.GetMap()){
                     if(kv.second.pubkey_hash == gv_slice1_gold_pkh) gv_vault_balance += kv.second.amount;
                 }
+                int64_t gv_ext_out = 0;   // W5: external (non-change) out of this spend
                 auto gv_verdict = gv_slice1_check_block_spend(
-                    txs[i], gv_slice1_gold_pkh, gv_lookup, gv_vault_balance);
+                    txs[i], gv_slice1_gold_pkh, gv_lookup, gv_vault_balance, &gv_ext_out);
                 if(gv_verdict != GvSlice1Verdict::Ok && gv_verdict != GvSlice1Verdict::NotAVaultSpend){
                     const char* gv_reason = gv_slice1_verdict_reason(gv_verdict);
                     printf("[BLOCK] REJECTED: %s at tx %zu\n", gv_reason, i);
@@ -5030,6 +5080,7 @@ static bool process_block(const std::string& block_json) {
                 // G4 67-block miner-approval window can be enforced after the loop.
                 if(gv_verdict == GvSlice1Verdict::Ok){
                     gv_vault_spend_in_block = true;
+                    gv_block_outflow += gv_ext_out;   // W5: accumulate this block's outflow
                     // W4b: capture the external destination (first non-change output) for the G5 veto check
                     for(const auto& o : txs[i].outputs){ if(o.pubkey_hash != gv_slice1_gold_pkh){ gv_spend_dest = o.pubkey_hash; break; } }
                 }
@@ -5133,6 +5184,33 @@ static bool process_block(const std::string& block_json) {
             printf("[BLOCK] REJECTED: gv_g5 Guardian veto blocks Gold Vault spend at height %lld\n",
                    (long long)height);
             record_block_reject("gv_g5 Guardian veto");
+            return false;
+        }
+    }
+
+    // W5 — Gold Vault G3b: rate-limit (timelock) + cumulative-outflow cap. When
+    // G3b is active AND this block contains a Gold Vault spend, derive from the
+    // canonical chain (gv_g3b_derive_state) the height of the last vault spend
+    // and the cumulative outflow so far, then enforce the minimum spacing and the
+    // total-outflow ceiling. Gated on gv_slice1_active_at(height) AND both live
+    // sentinels are 0 (disabled) → the helpers return true and this is a pure
+    // no-op, replaying byte-identical; mainnet GV_SLICE1_ACTIVATION_HEIGHT is
+    // INT64_MAX so the whole block never runs there. See include/sost/gv_g3b.h.
+    if(gv_slice1_active_at(height) && gv_vault_spend_in_block){
+        sost::GvG3bState g3b = gv_g3b_derive_state(gv_slice1_gold_pkh);
+        int64_t blocks_since = sost::gv_g3b_blocks_since(g3b, height);
+        if(!sost::gv_g3b_rate_ok(blocks_since, sost::GV_SLICE1_RATE_LIMIT_BLOCKS)){
+            printf("[BLOCK] REJECTED: gv_g3b rate-limit (only %lld blocks since last vault spend, need %lld) at height %lld\n",
+                   (long long)blocks_since, (long long)sost::GV_SLICE1_RATE_LIMIT_BLOCKS, (long long)height);
+            record_block_reject("gv_g3b rate-limit: vault spend too soon");
+            return false;
+        }
+        int64_t cumulative_after = g3b.cumulative_outflow + gv_block_outflow;
+        if(!sost::gv_g3b_cumulative_ok(cumulative_after, sost::GV_SLICE1_CUMULATIVE_CAP_STOCKS)){
+            printf("[BLOCK] REJECTED: gv_g3b cumulative cap (%lld + %lld > %lld stocks) at height %lld\n",
+                   (long long)g3b.cumulative_outflow, (long long)gv_block_outflow,
+                   (long long)sost::GV_SLICE1_CUMULATIVE_CAP_STOCKS, (long long)height);
+            record_block_reject("gv_g3b cumulative cap: vault outflow ceiling exceeded");
             return false;
         }
     }
