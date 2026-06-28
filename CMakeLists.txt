@@ -383,6 +383,10 @@ target_link_libraries(otc-coordinator PRIVATE sost-core)
 add_executable(cx-reverify tools/cx_reverify.cpp)
 target_link_libraries(cx-reverify PRIVATE sost-core secp256k1)
 
+# Founder tool: sign one input of an unsigned tx (enables HTLC LOCK/CLAIM/REFUND broadcast)
+add_executable(sost-signtx tools/sost_signtx.cpp)
+target_link_libraries(sost-signtx PRIVATE sost-core secp256k1)
+
 # ---------------------------------------------------------------------------
 # OTC-0.5 — atomic-swap dormant groundwork (gate at INT64_MAX; mainnet no-op).
 # BTC HTLC signing stays a compile-time-disabled stub set unless the operator

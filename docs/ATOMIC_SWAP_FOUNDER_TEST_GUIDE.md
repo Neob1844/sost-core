@@ -84,10 +84,23 @@ importe **diminuto** de SOST en un HTLC donde **`claim_pkh` y `refund_pkh` son d
 TUYAS**. Así no hay contraparte ni riesgo de robo: o lo reclamas con tu propio secreto, o lo
 recuperas tras el timeout.
 
-**Usa la consola web** (`website/sost-dex.html`, enlazada desde la wallet como "ATOMIC SWAP
-DEX"). Es la vía founder soportada porque **construye, firma y difunde** el HTLC por ti, y
-convierte dirección→pkh automáticamente. La CLI (sección 4) produce tx **sin firmar** y no
-trae un `signrawtransaction` de un solo paso, por eso para mainnet conviene la consola.
+**Vía CLI (completa).** Las builders producen tx **sin firmar**; firma con la herramienta
+**`sost-signtx`** (usa el signer de consenso del repo) y difunde con `sendrawtransaction`:
+
+```
+sost-signtx <unsigned_hex> <privkey_hex32> <spent_amount_stocks> <spent_type> [input_index=0] [genesis_hex]
+   spent_type: 0 = OUT_TRANSFER (UTXO normal, p.ej. el input que financia el LOCK)
+              18 = OUT_HTLC_LOCK (0x12, el UTXO que gasta un CLAIM/REFUND)
+   -> imprime el hex FIRMADO (y autoverifica la firma)
+sost-cli sendrawtransaction <hex_firmado>
+```
+- LOCK: `sost-signtx <lock_hex> <tu_privkey> <prev_amount> 0`  (firmas el input que financia)
+- CLAIM: `sost-signtx <claim_hex> <tu_privkey> <lock_amount> 18`
+- REFUND: `sost-signtx <refund_hex> <tu_privkey> <lock_amount> 18`
+
+(Nota: `sost-cli createhtlclock/...` devuelven JSON `{"raw_tx_hex":"…"}`; extrae el campo.
+`genesis_hex` por defecto es el de mainnet.) Alternativa GUI: la consola web `sost-dex.html`
+es el DEX cross-chain con escrow en Ethereum — distinto del self-swap HTLC nativo de esta guía.
 
 Pasos del self-swap mínimo:
 1. Genera el secreto y el hashlock (sección 5).
