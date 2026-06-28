@@ -40,11 +40,11 @@ int main() {
     TEST("T1 IsBtcHtlcSigningEnabled() returns false (default OFF)",
          IsBtcHtlcSigningEnabled() == false);
 
-    // T2. The activation gate is independent of the BTC signing flag. At V14 the gate is set
-    //     to V14_HEIGHT (EVM-only activation); the BTC signing flag stays OFF independently
-    //     (BTC funding path is a stub, deferred to V15).
-    TEST("T2 SOST activation gate == V14_HEIGHT (BTC signing flag independent)",
-         ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == V14_HEIGHT);
+    // T2. The activation gate is independent of the BTC signing flag. The gate is
+    //     set to V14_5_HEIGHT (the V14.5 HTLC fix activation; EVM-only); the BTC
+    //     signing flag stays OFF independently (BTC funding path is a stub).
+    TEST("T2 SOST activation gate == V14_5_HEIGHT (BTC signing flag independent)",
+         ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == V14_5_HEIGHT);
 
     // -----------------------------------------------------------------
     // Stub behavior — every gated function returns disabled result.

@@ -74,9 +74,18 @@ int main() {
     printf("\n== Atomic Swap HTLC Phase 3A — OUT_HTLC_LOCK structural tests ==\n\n");
     printf("  Gate state: ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = %lld\n",
            (long long)ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT);
-    const bool gate_open = atomic_swap_htlc_active_at(15000);
-    printf("  Gate is %s at height 15000 (post-activation tests %s)\n\n",
-           gate_open ? "OPEN" : "CLOSED",
+    // Gate-relative heights so this test tracks the activation height in BOTH the
+    // mainnet build (gate == V14_5_HEIGHT == 16000) and the testnet build (gate
+    // low). All "post-activation" heights are >= the gate; "pre" is gate-1.
+    const int64_t GATE_H   = ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT;
+    const int64_t PRE_H    = GATE_H - 1;          // inactive (below gate)
+    const int64_t POST_H   = GATE_H;              // first active height
+    const int64_t MID_H    = GATE_H + 1000;       // active, before the lock's refund_height
+    const int64_t REFUND_H = GATE_H + 20000;      // the lock's refund_height
+    const int64_t LATE_H   = REFUND_H + 5000;     // active, at/after timeout
+    const bool gate_open = atomic_swap_htlc_active_at(POST_H);
+    printf("  Gate is %s at POST_H=%lld (gate-relative; post-activation tests %s)\n\n",
+           gate_open ? "OPEN" : "CLOSED", (long long)POST_H,
            gate_open ? "WILL RUN" : "WILL BE SKIPPED");
 
     StubUtxoView utxos;
@@ -102,7 +111,7 @@ int main() {
     // T2: pre-activation HTLC_LOCK rejected with R11
     {
         Transaction tx = MakeStdTxWithHtlcLock(hashlock, 20000, claim_pkh, refund_pkh, 100000);
-        auto ctx = MakeCtx(14999);
+        auto ctx = MakeCtx(PRE_H);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
         TEST("T2 pre-activation HTLC_LOCK rejected at all", !r.ok);
         TEST("T2 pre-activation HTLC_LOCK rejected with R11_INACTIVE_TYPE",
@@ -114,7 +123,7 @@ int main() {
         printf("  SKIP: T3 (gate closed; post-activation acceptance not testable)\n");
     } else {
         Transaction tx = MakeStdTxWithHtlcLock(hashlock, 20000, claim_pkh, refund_pkh, 100000);
-        auto ctx = MakeCtx(15000);
+        auto ctx = MakeCtx(POST_H);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
         TEST("T3 post-activation not rejected with R11",
              r.code != TxValCode::R11_INACTIVE_TYPE);
@@ -128,7 +137,7 @@ int main() {
     } else {
         Transaction tx = MakeStdTxWithHtlcLock(hashlock, 20000, claim_pkh, refund_pkh, 100000);
         tx.outputs[0].payload.resize(79);
-        auto ctx = MakeCtx(15000);
+        auto ctx = MakeCtx(POST_H);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
         TEST("T4 wrong payload length rejected with R17",
              !r.ok && r.code == TxValCode::R17_HTLC_PAYLOAD_INVALID);
@@ -140,7 +149,7 @@ int main() {
     } else {
         Transaction tx = MakeStdTxWithHtlcLock(hashlock, 20000, claim_pkh, refund_pkh,
                                                 DUST_THRESHOLD - 1);
-        auto ctx = MakeCtx(15000);
+        auto ctx = MakeCtx(POST_H);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
         TEST("T5 amount < DUST rejected with R17",
              !r.ok && r.code == TxValCode::R17_HTLC_PAYLOAD_INVALID);
@@ -150,8 +159,8 @@ int main() {
     if (!gate_open) {
         printf("  SKIP: T6 (gate closed; R17 unreachable while LOCK is inactive)\n");
     } else {
-        Transaction tx = MakeStdTxWithHtlcLock(hashlock, 15000, claim_pkh, refund_pkh, 100000);
-        auto ctx = MakeCtx(15000);
+        Transaction tx = MakeStdTxWithHtlcLock(hashlock, POST_H, claim_pkh, refund_pkh, 100000);
+        auto ctx = MakeCtx(POST_H);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
         TEST("T6 refund_height == spend_height rejected with R17",
              !r.ok && r.code == TxValCode::R17_HTLC_PAYLOAD_INVALID);
@@ -161,8 +170,8 @@ int main() {
     if (!gate_open) {
         printf("  SKIP: T7 (gate closed; R17 unreachable while LOCK is inactive)\n");
     } else {
-        Transaction tx = MakeStdTxWithHtlcLock(hashlock, 14000, claim_pkh, refund_pkh, 100000);
-        auto ctx = MakeCtx(15000);
+        Transaction tx = MakeStdTxWithHtlcLock(hashlock, PRE_H, claim_pkh, refund_pkh, 100000);
+        auto ctx = MakeCtx(POST_H);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
         TEST("T7 refund_height in past rejected with R17",
              !r.ok && r.code == TxValCode::R17_HTLC_PAYLOAD_INVALID);
@@ -172,24 +181,25 @@ int main() {
     {
         Transaction tx = MakeStdTxWithHtlcLock(hashlock, 20000, claim_pkh, refund_pkh, 100000);
         tx.outputs[0].payload.resize(5);
-        auto ctx = MakeCtx(14999);
+        auto ctx = MakeCtx(PRE_H);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
         TEST("T8 pre-activation malformed HTLC_LOCK rejected (R11 fires first)",
              !r.ok && r.code == TxValCode::R11_INACTIVE_TYPE);
     }
 
-    // T9: gate helper boundaries
+    // T9: gate helper boundaries (gate-relative so it holds in both builds)
     {
         constexpr int64_t H = ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT;
+        const int64_t pre_sample = (H > 1) ? (H / 2) : 0;   // a height safely below the gate
         bool at_zero          = atomic_swap_htlc_active_at(0);
-        bool at_v13           = atomic_swap_htlc_active_at(12000);
+        bool at_pre           = atomic_swap_htlc_active_at(pre_sample);
         bool at_H             = atomic_swap_htlc_active_at(H);
-        TEST("T9a active_at(0) == false",          !at_zero);
-        TEST("T9b active_at(V13=12000) == false",  !at_v13);
-        TEST("T9c active_at(H) == true",            at_H);
+        TEST("T9a active_at(0) == false",            !at_zero);
+        TEST("T9b active_at(pre-gate) == false",     !at_pre);
+        TEST("T9c active_at(H) == true",              at_H);
         if (H > 0 && H != INT64_MAX) {
             bool at_just_below_H = atomic_swap_htlc_active_at(H - 1);
-            TEST("T9d active_at(H-1) == false",    !at_just_below_H);
+            TEST("T9d active_at(H-1) == false",      !at_just_below_H);
         }
     }
 
@@ -233,7 +243,7 @@ int main() {
         out.pubkey_hash.fill(0);
         WriteHtlcClaimWitnessPayload(out.payload, preimage);
         tx.outputs.push_back(out);
-        auto ctx = MakeCtx(15000);
+        auto ctx = MakeCtx(POST_H);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
         TEST("T11 pre-activation HTLC_CLAIM_WITNESS rejected at all", !r.ok);
         if (!gate_open) {
@@ -265,7 +275,7 @@ int main() {
         out.type = OUT_TRANSFER;
         out.pubkey_hash.fill(0);
         tx.outputs.push_back(out);
-        auto ctx = MakeCtx(15000);
+        auto ctx = MakeCtx(POST_H);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
         if (!gate_open) {
             TEST("T12 pre-activation TX_TYPE_HTLC_CLAIM rejected with R2_BAD_TX_TYPE",
@@ -297,7 +307,7 @@ int main() {
         out.type = OUT_TRANSFER;
         out.pubkey_hash.fill(0);
         tx.outputs.push_back(out);
-        auto ctx = MakeCtx(15000);
+        auto ctx = MakeCtx(POST_H);
         auto r = ValidateTransactionConsensus(tx, utxos, ctx);
         if (!gate_open) {
             TEST("T13 pre-activation TX_TYPE_HTLC_REFUND rejected with R2_BAD_TX_TYPE",
@@ -382,7 +392,7 @@ int main() {
     htlc_view.lock_txid.fill(0xCC);
     htlc_view.lock_vout = 0;
     htlc_view.lock_amount = 100000;
-    htlc_view.lock_refund_height = 30000;
+    htlc_view.lock_refund_height = REFUND_H;
     // hashlock = sha256("the secret 32 bytes test preimage!")
     std::array<uint8_t, 32> the_preimage{};
     for (size_t k = 0; k < the_preimage.size(); ++k) the_preimage[k] = static_cast<uint8_t>(k);
@@ -393,7 +403,7 @@ int main() {
     htlc_view.lock_claim_pkh.fill(0x55);
     htlc_view.lock_refund_pkh.fill(0x77);
 
-    auto ctx_v14 = MakeCtx(15500);  // post-V14_HEIGHT
+    auto ctx_v14 = MakeCtx(MID_H);  // active, before refund_height
 
     // ------------------------------------------------------------------
     // T14: valid CLAIM (when gate open) — wrong preimage rejected with R21
@@ -417,7 +427,7 @@ int main() {
     // ------------------------------------------------------------------
     {
         Transaction tx = MakeClaimTx(htlc_view.lock_txid, 0, the_preimage);
-        auto late_ctx = MakeCtx(40000);  // > refund_height (30000)
+        auto late_ctx = MakeCtx(LATE_H);  // > refund_height
         auto r = ValidateTransactionConsensus(tx, htlc_view, late_ctx);
         if (!gate_open) {
             TEST("T15 (closed) claim-after-timeout rejected by R2_BAD_TX_TYPE",
@@ -683,7 +693,7 @@ int main() {
     // ------------------------------------------------------------------
     {
         Transaction tx = MakeRefundTx(htlc_view.lock_txid, 0);
-        auto early_ctx = MakeCtx(20000);  // < refund_height 30000
+        auto early_ctx = MakeCtx(MID_H);  // < refund_height
         auto r = ValidateTransactionConsensus(tx, htlc_view, early_ctx);
         if (!gate_open) {
             TEST("T26 (closed) REFUND before timeout rejected by R2_BAD_TX_TYPE",
@@ -703,7 +713,7 @@ int main() {
     // ------------------------------------------------------------------
     {
         Transaction tx = MakeRefundTx(htlc_view.lock_txid, 0);
-        auto at_boundary_ctx = MakeCtx(30000);  // == refund_height
+        auto at_boundary_ctx = MakeCtx(REFUND_H);  // == refund_height
         auto r = ValidateTransactionConsensus(tx, htlc_view, at_boundary_ctx);
         if (!gate_open) {
             TEST("T27 (closed) REFUND at boundary rejected by R2_BAD_TX_TYPE",
@@ -726,7 +736,7 @@ int main() {
         marker.pubkey_hash.fill(0);
         WriteHtlcClaimWitnessPayload(marker.payload, the_preimage);
         tx.outputs.push_back(marker);
-        auto late_ctx = MakeCtx(35000);  // > refund_height
+        auto late_ctx = MakeCtx(LATE_H);  // > refund_height
         auto r = ValidateTransactionConsensus(tx, htlc_view, late_ctx);
         if (!gate_open) {
             TEST("T28 (closed) REFUND with witness marker rejected by R2_BAD_TX_TYPE",
@@ -746,7 +756,7 @@ int main() {
         HtlcLockUtxoView transfer_view = htlc_view;
         transfer_view.lock_type = OUT_TRANSFER;
         Transaction tx = MakeRefundTx(htlc_view.lock_txid, 0);
-        auto late_ctx = MakeCtx(35000);
+        auto late_ctx = MakeCtx(LATE_H);
         auto r = ValidateTransactionConsensus(tx, transfer_view, late_ctx);
         if (!gate_open) {
             TEST("T29 (closed) REFUND non-LOCK ref rejected by R2_BAD_TX_TYPE",
@@ -768,7 +778,7 @@ int main() {
         extra.signature.fill(0x03);
         extra.pubkey.fill(0x04);
         tx.inputs.push_back(extra);
-        auto late_ctx = MakeCtx(35000);
+        auto late_ctx = MakeCtx(LATE_H);
         auto r = ValidateTransactionConsensus(tx, htlc_view, late_ctx);
         if (!gate_open) {
             TEST("T30 (closed) REFUND with extra inputs rejected by R2_BAD_TX_TYPE",
@@ -786,7 +796,7 @@ int main() {
     // ------------------------------------------------------------------
     {
         Transaction tx = MakeRefundTx(htlc_view.lock_txid, 0);
-        auto late_ctx = MakeCtx(35000);
+        auto late_ctx = MakeCtx(LATE_H);
         auto r = ValidateTransactionConsensus(tx, htlc_view, late_ctx);
         if (!gate_open) {
             TEST("T31 (closed) REFUND bogus pubkey rejected by R2_BAD_TX_TYPE",

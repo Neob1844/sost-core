@@ -105,14 +105,42 @@ namespace sost {
 // without verifying the 3-condition checklist above. The flip is a
 // single-line change and must be paired with a unit-test run + a
 // full ctest --output-on-failure run before the commit lands.
-// NOTE: V14_HEIGHT / V15_HEIGHT are defined in params.h — never redefined here.
-// CTO DECISION (V14 activation): atomic-swap HTLC consensus rules activate at V14_HEIGHT
-// (mainnet 15000 / testnet 200). EVM-only — SOST_BTC_HTLC_SIGNING stays OFF (BTC funding
-// path is still a stub, deferred to V15). This makes V14 a MANDATORY-BINARY-UPDATE fork:
-// every node/miner MUST recompile + restart with this binary BEFORE block 15000 or it will
-// reject every block from 15000 onward (chain-split). Coordinated via the urgent disclosure
-// banner + BitcoinTalk announcement (recompile window: after block 14800, before 15000).
-inline constexpr int64_t ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = V14_HEIGHT;
+// NOTE: V14_HEIGHT / V14_5_HEIGHT / V15_HEIGHT are defined in params.h — never
+// redefined here.
+//
+// CTO DECISION (V14.5 activation — supersedes the earlier V14 plan):
+// The atomic-swap HTLC was *declared* active at V14 (block 15000) but was
+// NON-FUNCTIONAL on mainnet: a LOCK could be mined, but the CLAIM (0x10) /
+// REFUND (0x11) txs were rejected on the block path (process_block /
+// ConnectBlock "must be standard"), so locked funds could never settle.
+//
+// The corrected activation height is V14_5_HEIGHT (mainnet 16000 / testnet 30) —
+// a dedicated milestone, SEPARATE from the V15 automation bundle (PoPC / Gold
+// Vault) at 20000, which is left exactly as on main. One recompiled binary
+// carries BOTH milestones: the HTLC fix at 16000 and V15 PoPC at 20000.
+//
+// This single source of truth makes the ENTIRE HTLC feature activate together:
+//   - LOCK output acceptance (S9 allowlist + R11/R17 in tx_validation.cpp),
+//   - the R17–R24 CLAIM/REFUND consensus rules, AND
+//   - the CLAIM/REFUND block-path acceptance (sost-node.cpp + utxo_set.cpp),
+// all flip at the same height. Below V14.5 the feature is fully inert, so there
+// is no "stuck LOCK" window and the chain replay of blocks 0..16000 is
+// byte-identical to the pre-patch binaries (verified: the live chain has zero
+// HTLC txs today — listhtlclocks == []).
+//
+// Why this is safe: every historical block is below 16000, so
+// atomic_swap_htlc_active_at(height) is false for all of them and every HTLC
+// code path (S9, R-rules, block-path guards) is a no-op — replay stays
+// bit-identical. V14.5 is a MANDATORY-BINARY-UPDATE fork: every node/miner MUST
+// recompile + restart with this binary BEFORE block 16000 or it will diverge
+// once the first HTLC tx is mined. Coordinated via the disclosure banner +
+// BitcoinTalk announcement (recompile window: after block 15800, before 16000).
+// EVM-only — SOST_BTC_HTLC_SIGNING stays OFF (BTC funding path still a stub).
+//
+// Testnet (-DSOST_TESTNET_FORKS) resolves V14_5_HEIGHT to 30 (params.h), keeping
+// the activation low enough for the regtest/local soak to exercise the full
+// LOCK→CLAIM→REFUND lifecycle. The mainnet value is 16000 and byte-identical.
+inline constexpr int64_t ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = V14_5_HEIGHT;
 
 // -----------------------------------------------------------------------------
 // is_height_active helper

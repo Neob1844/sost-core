@@ -38,11 +38,15 @@ int main() {
     // Compile-time / runtime gate guarantees
     // -----------------------------------------------------------------
 
-    // T14. SOST consensus activation gate is the V14 activation height (CTO V14 decision).
-    static_assert(sost::ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == sost::V14_HEIGHT,
-                  "Atomic-swap gate must equal V14_HEIGHT (deliberate V14 activation)");
-    TEST("T14 SOST consensus gate ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == V14_HEIGHT",
-         sost::ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == sost::V14_HEIGHT);
+    // T14. SOST consensus activation gate is the V14.5 activation height. The
+    //      HTLC was originally declared at V14 (15000) but was non-functional on
+    //      the block path (CLAIM/REFUND rejected as non-standard); the corrected,
+    //      complete HTLC feature activates together at the dedicated V14.5
+    //      milestone (mainnet 16000), SEPARATE from the V15 automation bundle.
+    static_assert(sost::ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == sost::V14_5_HEIGHT,
+                  "Atomic-swap gate must equal V14_5_HEIGHT (V14.5 HTLC fix activation)");
+    TEST("T14 SOST consensus gate ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == V14_5_HEIGHT",
+         sost::ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT == sost::V14_5_HEIGHT);
 
     // T15. BTC signing backend stays disabled.
     TEST("T15 BTC signing backend OFF (IsBtcHtlcSigningEnabled == false)",

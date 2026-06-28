@@ -518,6 +518,13 @@ add_executable(test-atomic-swap-session tests/test_atomic_swap_session.cpp)
 target_link_libraries(test-atomic-swap-session PRIVATE sost-core)
 add_test(NAME atomic-swap-session COMMAND test-atomic-swap-session)
 
+# V14.5 — atomic-swap HTLC consensus fix: CLAIM/REFUND block-path acceptance
+# (ConnectBlock guard, mirrors process_block) + validation-path R17-R24, gated
+# at V14_5_HEIGHT (mainnet 16000). Regression guard for the live mainnet bug.
+add_executable(test-htlc-block-path-v14-5 tests/test_htlc_block_path_v14_5.cpp)
+target_link_libraries(test-htlc-block-path-v14-5 PRIVATE sost-core)
+add_test(NAME htlc-block-path-v14-5 COMMAND test-htlc-block-path-v14-5)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)

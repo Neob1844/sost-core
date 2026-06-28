@@ -33,6 +33,7 @@
 #include "sost/mempool.h"
 #include "sost/tx_validation.h"
 #include "sost/atomic_swap_helpers.h"  // OTC-2.5 HTLC read-only RPC (ClassifyHtlcStatus)
+#include "sost/atomic_swap.h"          // atomic_swap_htlc_active_at (block-path HTLC tx gate, V15)
 #include "sost/emission.h"
 #include "sost/pow/casert.h"
 #include "sost/subsidy.h"
@@ -5020,7 +5021,19 @@ static bool process_block(const std::string& block_json) {
                      address_decode(ADDR_GOLD_VAULT, gv_slice1_gold_pkh); }
 
     for(size_t i=1;i<txs.size();++i){
-        if(txs[i].tx_type != TX_TYPE_STANDARD){
+        // HTLC atomic-swap CLAIM (0x10) / REFUND (0x11) are valid block tx types
+        // ONLY once the atomic-swap consensus rules are active at this height.
+        // The gate atomic_swap_htlc_active_at == (height >= V14_5_HEIGHT); on
+        // mainnet V14.5 is 16000, so for every historical (pre-16000) block this
+        // is false and the reject below is unchanged → replay stays byte-identical.
+        // Their full structural rules (R17–R24) are enforced by
+        // ValidateTransactionConsensus. Without this exemption, mempool-accepted
+        // CLAIM/REFUND txs could never be mined and locked funds would be stuck.
+        const bool htlc_block_tx =
+            sost::atomic_swap_htlc_active_at(height) &&
+            (txs[i].tx_type == TX_TYPE_HTLC_CLAIM ||
+             txs[i].tx_type == TX_TYPE_HTLC_REFUND);
+        if(txs[i].tx_type != TX_TYPE_STANDARD && !htlc_block_tx){
             printf("[BLOCK] REJECTED: non-standard tx at index %zu\n", i);
             return false;
         }
