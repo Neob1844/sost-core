@@ -278,6 +278,10 @@
   /* === END NAV CSS === */
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
+<!-- V15: PoPC contract/position trading is disabled. PoPC is a non-tradeable native SOST bond.
+     This single global flag gates all legacy PoPC position-trading UI (see popc-dex-gate.js).
+     Must stay false. The Atomic Swap / OTC surface is unaffected. -->
+<script>window.POPC_DEX_ENABLED = false;</script>
 <script src="js/security.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.15/dist/modules/libsodium-wrappers.js"></script>
 <script src="js/browser-crypto.js"></script>
@@ -768,14 +772,14 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   <div class="container">
     <div class="stat-grid fade-in">
       <div class="stat-card" id="statPositions">
-        <div class="stat-label">Active Positions</div>
+        <div class="stat-label">Active Swaps</div>
         <div class="stat-val" style="color:var(--green-primary)">...</div>
         <div class="stat-sub">loading</div>
       </div>
       <div class="stat-card" id="statGold">
-        <div class="stat-label">Gold Locked</div>
+        <div class="stat-label">HTLC Locked</div>
         <div class="stat-val" style="color:var(--gold)">...</div>
-        <div class="stat-sub">XAUT + PAXG</div>
+        <div class="stat-sub">on-chain escrow</div>
       </div>
       <div class="stat-card" id="statDeals">
         <div class="stat-label">Active Deals</div>
@@ -783,19 +787,21 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         <div class="stat-sub">loading</div>
       </div>
       <div class="stat-card" id="statMaturity">
-        <div class="stat-label">Next Maturity</div>
+        <div class="stat-label">Next Expiry</div>
         <div class="stat-val" style="color:#fbbf24;font-size:18px">...</div>
         <div class="stat-sub">earliest expiry</div>
       </div>
       <div class="stat-card" id="statFee">
-        <div class="stat-label">Trading Fee</div>
+        <div class="stat-label">Swap Fee</div>
         <div class="stat-val" style="color:var(--green-primary);font-size:18px">0%</div>
-        <div class="stat-sub">free trading · PoPC fee 3%A/8%B on rewards</div>
+        <div class="stat-sub">non-custodial · you pay network gas</div>
       </div>
     </div>
     <div id="liveStatus" style="font-size:10px;color:var(--text-muted);margin-top:8px;text-align:right;"></div>
 
-    <!-- Atomic Swap DEX — Atomic Swap / OTC Overview -->
+    <!-- LEGACY PoPC position chart (Sepolia "SOSTEscrow V2"). DISABLED in V15: PoPC is a
+         non-tradeable native SOST bond, there is no live PoPC position/escrow data here.
+         Gated behind POPC_DEX_ENABLED=false (see popc-dex-gate.js); kept commented for reference.
     <div style="margin-top:24px;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:24px;position:relative;overflow:hidden">
       <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse 60% 40% at 50% 100%,rgba(251,1,13,0.06),transparent 70%);pointer-events:none"></div>
       <div style="position:relative;z-index:1">
@@ -833,6 +839,58 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
           </div>
         </div>
       </div>
+    </div>
+    --><!-- /LEGACY PoPC position chart -->
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- BLOCK B2 — GUIDED ATOMIC SWAP (HTLC) FLOW                             -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// ATOMIC SWAP</div>
+      <div class="section-title">Atomic Swap <span class="accent">HTLC Flow</span></div>
+    </div>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;max-width:760px;line-height:1.7">
+      Non-custodial cross-chain swap (SOST L1 &harr; EVM) via Hash Time-Locked Contracts. Each step runs in the
+      founder-only <a href="atomic-swap-console.html" style="color:var(--gold);text-decoration:underline">Atomic Swap Console</a>,
+      which validates inputs and generates the exact <code>sost-cli</code> / MetaMask actions &mdash; it never holds keys,
+      never signs, never broadcasts for you. <b>You</b> sign and broadcast every action.
+    </p>
+    <div style="font-size:11px;color:#ffce54;margin-bottom:16px">&#9216; PoPC bonds are <b>not tradeable</b> in V15 — this surface is swaps / OTC only. For bonds see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+      <a href="atomic-swap-console.html#readiness" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 1 · READINESS</div>
+        <div style="color:var(--text-primary);font-weight:600;margin-top:4px">HTLC active? Wallet & contract</div>
+        <div style="color:var(--text-secondary);font-size:11px;margin-top:4px">Confirm HTLC is active (block 15,000+), founder-only warning, contract deployed, wallet connected.</div>
+      </a>
+      <a href="atomic-swap-console.html" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 2 · SECRET</div>
+        <div style="color:var(--text-primary);font-weight:600;margin-top:4px">Generate secret & hashlock</div>
+        <div style="color:var(--text-secondary);font-size:11px;margin-top:4px">Create the preimage <code>S</code> and <code>sha256(S)</code> hashlock both chains share.</div>
+      </a>
+      <a href="atomic-swap-console.html" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 3 · SOST L1 HTLC</div>
+        <div style="color:var(--text-primary);font-weight:600;margin-top:4px">Lock on SOST L1</div>
+        <div style="color:var(--text-secondary);font-size:11px;margin-top:4px"><code>createhtlclock</code> &rarr; sign with <code>sost-signtx</code> &rarr; broadcast &rarr; status.</div>
+      </a>
+      <a href="atomic-swap-console.html" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 4 · EVM HTLC</div>
+        <div style="color:var(--text-primary);font-weight:600;margin-top:4px">Lock / Claim / Refund on EVM</div>
+        <div style="color:var(--text-secondary);font-size:11px;margin-top:4px">MetaMask LOCK / CLAIM / REFUND and on-chain status.</div>
+      </a>
+      <a href="atomic-swap-console.html" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 5 · SWAP STATUS</div>
+        <div style="color:var(--text-primary);font-weight:600;margin-top:4px">Track both sides</div>
+        <div style="color:var(--text-secondary);font-size:11px;margin-top:4px">Verify both legs and the revealed secret before considering the swap settled.</div>
+      </a>
+      <a href="atomic-swap-console.html#refund" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
+        <div style="font-size:9px;color:#ff8a8a;letter-spacing:1px">STEP 6 · EMERGENCY REFUND</div>
+        <div style="color:var(--text-primary);font-weight:600;margin-top:4px">Reclaim after timeout</div>
+        <div style="color:var(--text-secondary);font-size:11px;margin-top:4px">If a leg is never claimed, refund your own locked funds after the timelock expires.</div>
+      </a>
     </div>
   </div>
 </section>
@@ -883,14 +941,13 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
           <span class="field-help-btn" onclick="toggleFieldHelp('help-actions')" style="margin-left:4px">?</span>
         </div>
         <div class="field-help" id="help-actions" style="margin-bottom:12px">
-          <b>Choose the type of trade you want to make:</b><br><br>
-          <b>Buy Full Position:</b> You want to buy someone's entire position — you get the principal ownership, the reward rights, and become the gold escrow beneficiary. You pay SOST.<br><br>
-          <b>Sell Full Position:</b> You own a position and want to sell everything — principal, rewards, and escrow beneficiary — in exchange for SOST.<br><br>
-          <b>Sell Reward Right:</b> You keep your position's principal and gold, but sell only the right to receive the SOST mining rewards.<br><br>
-          <b>Buy Reward Right:</b> You want to buy only the reward stream from someone's position, without the gold or principal.<br><br>
-          <b>OTC Request:</b> A custom request — use this for anything that doesn't fit the above categories.
+          <b>Coordinate a non-custodial swap / OTC deal:</b><br><br>
+          <b>OTC Request:</b> Propose your terms (asset, amount, price, expiry) as a client-side signed offer and share it through an encrypted deal channel. You sign and settle every action yourself via on-chain HTLC / smart-contract escrow — SOST never custodies funds.<br><br>
+          <span style="color:#ffce54">&#9216; PoPC position/contract trading (buy/sell full position, sell reward right) is disabled in V15 — PoPC is a non-tradeable native SOST bond. See <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</span>
         </div>
         <div class="option-grid" id="actionOptions">
+          <!-- LEGACY PoPC position-trade actions. DISABLED in V15 (POPC_DEX_ENABLED=false).
+               Kept commented for reference; PoPC bonds are not tradeable.
           <div class="option-card" data-action="buy_full" onclick="selectAction(this)">
             <span class="opt-icon" style="color:var(--green-primary)">&#9650;</span>
             Buy Full Position
@@ -907,6 +964,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
             <span class="opt-icon" style="color:var(--green-primary)">&#9651;</span>
             Buy Reward Right
           </div>
+          -->
           <div class="option-card" data-action="otc" onclick="selectAction(this)">
             <span class="opt-icon" style="color:var(--orange)">&#9998;</span>
             OTC Request
@@ -1094,16 +1152,18 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">// PORTFOLIO</div>
-      <div class="section-title">Positions &amp; <span class="accent">Deals</span></div>
+      <div class="section-title">Your Swaps &amp; <span class="accent">Deals</span></div>
     </div>
 
     <div class="tab-bar fade-in delay-1">
-      <button class="tab-btn active" onclick="switchTab('mypos')">MY POSITIONS</button>
+      <button class="tab-btn active" onclick="switchTab('deals')">MY DEALS</button>
+      <!-- LEGACY PoPC position tabs disabled in V15 (POPC_DEX_ENABLED=false):
+      <button class="tab-btn" onclick="switchTab('mypos')">MY POSITIONS</button>
       <button class="tab-btn" onclick="switchTab('market')">MARKET</button>
-      <button class="tab-btn" onclick="switchTab('deals')">MY DEALS</button>
+      -->
     </div>
 
-    <!-- Tab 1: My Positions -->
+    <!-- Tab 1: My Positions (LEGACY — disabled in V15, POPC_DEX_ENABLED=false)
     <div class="tab-content active" id="tab-mypos">
       <div class="pos-table-wrap">
         <table class="pos-table" id="myPosTable">
@@ -1127,7 +1187,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       </div>
     </div>
 
-    <!-- Tab 2: Market -->
+    Tab 2: Market (legacy)
     <div class="tab-content" id="tab-market">
       <div class="pos-table-wrap">
         <table class="pos-table" id="marketTable">
@@ -1152,9 +1212,10 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         </table>
       </div>
     </div>
+    --><!-- /LEGACY PoPC position tabs -->
 
     <!-- Tab 3: My Deals -->
-    <div class="tab-content" id="tab-deals">
+    <div class="tab-content active" id="tab-deals">
       <div class="pos-table-wrap">
         <table class="pos-table" id="dealsTable">
           <thead>
@@ -1285,10 +1346,12 @@ function switchTab(tab) {
   var contents = document.querySelectorAll('.tab-content');
   for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
   for (var i = 0; i < contents.length; i++) contents[i].classList.remove('active');
-  document.getElementById('tab-' + tab).classList.add('active');
-  var btns = document.querySelectorAll('.tab-btn');
-  var map = { mypos: 0, market: 1, deals: 2 };
-  if (map[tab] !== undefined) btns[map[tab]].classList.add('active');
+  var pane = document.getElementById('tab-' + tab);
+  if (pane) pane.classList.add('active');
+  // Match the button by the tab it switches to (legacy PoPC tabs may be disabled).
+  for (var j = 0; j < tabs.length; j++) {
+    if ((tabs[j].getAttribute('onclick') || '').indexOf("'" + tab + "'") !== -1) { tabs[j].classList.add('active'); break; }
+  }
 }
 function toggleFieldHelp(id) {
   var el = document.getElementById(id);
@@ -1509,6 +1572,7 @@ function populateComposerDropdown(data) {
 /* ── Render My Positions ── */
 function renderMyPositions(data) {
   var tbody = document.getElementById('myPosBody');
+  if (!tbody) return; // legacy PoPC position tab disabled in V15 (POPC_DEX_ENABLED=false)
   if (!data.positions || data.positions.length === 0) {
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:40px 20px;">No positions found.</td></tr>';
     return;
@@ -1539,6 +1603,7 @@ function renderMyPositions(data) {
 /* ── Render Market ── */
 function renderMarket(data) {
   var tbody = document.getElementById('marketBody');
+  if (!tbody) return; // legacy PoPC market tab disabled in V15 (POPC_DEX_ENABLED=false)
   if (!data.positions || data.positions.length === 0) {
     tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:40px 20px;">No positions available on the market.</td></tr>';
     return;
@@ -1580,7 +1645,7 @@ function renderDeals(data) {
     var timeCol = d.settled_at ? d.settled_at.substring(0, 19).replace('T', ' ') : 'pending';
     html += '<tr style="cursor:pointer" onclick="toggleDealDetail(\'' + d.deal_id + '\')">';
     html += '<td><span class="pos-id">' + truncate(d.deal_id, 14) + '</span></td>';
-    html += '<td>' + (d.type === 'full_position' ? 'Full' : 'Reward') + '</td>';
+    html += '<td>' + ({atomic_swap:'Atomic Swap', otc_deal:'OTC'}[d.type] || (d.type || 'Deal')) + '</td>';
     html += '<td><span class="' + statusCls + '">' + d.status + '</span></td>';
     html += '<td style="font-size:10px">' + (d.taker || 'N/A') + '</td>';
     html += '<td style="color:var(--gold)">' + d.price_sost + '</td>';
