@@ -1000,6 +1000,28 @@ inline constexpr int64_t V14_HEIGHT                       = 200;     // TESTNET 
 #else
 inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET (UNCHANGED — H3/H4 hardening; already in deployed binaries, no node re-update needed)
 #endif
+
+// V14.5 — atomic-swap HTLC consensus fix activation height. The HTLC was
+// *declared* active at V14 (15000) but was NON-FUNCTIONAL: CLAIM (0x10) / REFUND
+// (0x11) txs were rejected on the block path ("must be standard"), so locked
+// funds could never settle. This dedicated milestone activates the ENTIRE,
+// corrected HTLC feature TOGETHER (LOCK output acceptance via S9, the R17–R24
+// rules, AND the CLAIM/REFUND block-path acceptance) at a clean future height,
+// SEPARATE from the V15 automation bundle (PoPC/Gold Vault) at 20000 which is
+// left exactly as on main. One recompiled binary carries BOTH milestones: the
+// HTLC fix at 16000 and V15 PoPC at 20000. Below 16000 the HTLC feature is fully
+// inert, so chain replay of blocks 0..16000 is byte-identical to the pre-patch
+// binaries (the live chain has zero HTLC txs today). MAINNET = 16000. A private
+// testnet binary (-DSOST_TESTNET_FORKS=ON) activates early (block 30) so the
+// regtest LOCK→CLAIM→REFUND soak still fits. The macro is NEVER defined for
+// mainnet, so the mainnet value is byte-identical. V14.5 is a
+// MANDATORY-BINARY-UPDATE fork: every node/miner MUST recompile + restart with
+// this binary BEFORE block 16000.
+#ifdef SOST_TESTNET_FORKS
+inline constexpr int64_t V14_5_HEIGHT                     = 30;      // TESTNET ONLY (low, so the regtest HTLC e2e fits)
+#else
+inline constexpr int64_t V14_5_HEIGHT                     = 16000;   // MAINNET — atomic-swap HTLC CLAIM/REFUND fix
+#endif
 // DTD_POPC_ELIGIBILITY_HEIGHT is defined AFTER V15_HEIGHT below — it is
 // V15_HEIGHT + a grace window (P4c), so PoPC automation goes live before the
 // lottery starts REQUIRING an active commitment.

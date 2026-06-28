@@ -13,6 +13,7 @@
 // =============================================================================
 
 #include "sost/utxo_set.h"
+#include "sost/atomic_swap.h"   // atomic_swap_htlc_active_at — allow HTLC CLAIM/REFUND in blocks once V14.5-active
 
 #include <cstring>
 #include <set>
@@ -297,7 +298,14 @@ bool UtxoSet::ConnectBlock(
         return false;
     }
     for (size_t t = 1; t < txs.size(); ++t) {
-        if (txs[t].tx_type != TX_TYPE_STANDARD) {
+        // HTLC atomic-swap CLAIM (0x10) / REFUND (0x11) are valid block tx types
+        // once the atomic-swap gate is open at this height (atomic_swap_htlc_active_at
+        // == height >= V14_5_HEIGHT; on mainnet 16000, so every historical block stays
+        // standard-only and ConnectBlock replays byte-identical below 16000).
+        const bool htlc_ok =
+            atomic_swap_htlc_active_at(height) &&
+            (txs[t].tx_type == TX_TYPE_HTLC_CLAIM || txs[t].tx_type == TX_TYPE_HTLC_REFUND);
+        if (txs[t].tx_type != TX_TYPE_STANDARD && !htlc_ok) {
             if (err) *err = "ConnectBlock: txs[" + std::to_string(t) + "] must be standard";
             return false;
         }

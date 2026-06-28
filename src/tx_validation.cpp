@@ -647,6 +647,17 @@ TxValidationResult ValidateTransactionConsensus(
         if (!allowed && ctx.spend_height >= ctx.bond_activation_height) {
             allowed = (t == OUT_BOND_LOCK || t == OUT_ESCROW_LOCK);
         }
+        // OTC-1: once the atomic-swap HTLC gate is open (atomic_swap_htlc_active_at
+        // == height >= V14_5_HEIGHT on mainnet), the HTLC output types are valid in
+        // a STANDARD tx: OUT_HTLC_LOCK (the LOCK tx) and OUT_HTLC_CLAIM_WITNESS (the
+        // CLAIM tx's preimage-witness marker). Their structure/payload is fully
+        // validated by R17/R18 in ValidateStructure; this only lifts the S9
+        // output-type allowlist. On mainnet this is false for every historical
+        // block (height < 16000), so chain replay stays byte-identical. Without
+        // this, S9 rejected the LOCK and CLAIM txs and the HTLC could never settle.
+        if (!allowed && atomic_swap_htlc_active_at(ctx.spend_height)) {
+            allowed = (t == OUT_HTLC_LOCK || t == OUT_HTLC_CLAIM_WITNESS);
+        }
         if (!allowed) {
             return TxValidationResult::Fail(TxValCode::S9_BAD_STD_OUTPUT_TYPE,
                 "S9: standard tx output[" + std::to_string(i) +
