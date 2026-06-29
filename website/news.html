@@ -230,6 +230,101 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   </div>
 </section>
 
+<!-- V14.5 MANDATORY UPGRADE — atomic-swap HTLC fix, activates block 16,000 -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// MANDATORY UPGRADE &middot; V14.5 &middot; activates block&nbsp;16,000 &middot; consensus risk: chain-split if not upgraded</div>
+      <div class="section-dates">Published: 2026-06-29 &middot; Last updated: 2026-06-29</div>
+      <h2 class="section-title">V14.5 &mdash; <span class="accent" style="color:#fb010d">all miners &amp; nodes must upgrade before block&nbsp;16,000</span></h2>
+      <div class="section-sub"><b style="color:#fb010d">&#128680; MANDATORY:</b> every miner and full node must recompile and restart <b>before block&nbsp;16,000</b>. V14.5 fixes the Atomic Swap HTLC so a locked swap can actually settle. Old binaries are rejected and split off from block&nbsp;16,000.</div>
+    </div>
+    <div class="info-card">
+      <p><b>What happened:</b> V14 (block&nbsp;15,000) switched on the Atomic Swap HTLC rules, but two leftover validation guards rejected the <b>CLAIM</b> and <b>REFUND</b> transactions &mdash; so a locked swap could never settle. <b style="color:#4ade80">No funds were affected:</b> the swap was never used publicly and there were zero open locks.</p>
+      <p><b style="color:#4ade80">V14.5 fixes it:</b> from block&nbsp;16,000, HTLC <b>LOCK / CLAIM / REFUND</b> all validate correctly.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;font-size:12.5px">
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">Activates block 16,000</span>
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">Byte-identical below 16,000</span>
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">Same binary carries V15 (PoPC) at 20,000</span>
+      </div>
+      <p style="color:var(--text-secondary)"><b>Below block&nbsp;16,000 the new binary is byte-identical</b> to the current one, so it is safe to deploy now. The same build also carries <b>V15 (PoPC)</b> at block&nbsp;20,000 &mdash; one upgrade covers both forks.</p>
+
+      <h3 style="color:#fb010d;margin:18px 0 6px">Step 1 &mdash; build (flags mandatory)</h3>
+      <pre style="margin:6px 0 0;padding:11px 13px;background:rgba(0,0,0,.4);border:1px solid var(--border-med);border-radius:6px;overflow:auto;font-size:12.5px;color:#cfeede;white-space:pre;line-height:1.7">cd sost-core
+git checkout main &amp;&amp; git pull origin main
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc)</pre>
+      <p style="color:#fbbf24;margin-top:8px">&#9888; <b>-DSOST_TESTNET_FORKS=OFF is required</b> (building with =ON throws you off mainnet). <b>-DSOST_ENABLE_PHASE2_SBPOW=ON is required.</b></p>
+
+      <h3 style="color:#fb010d;margin:18px 0 6px">Step 2 &mdash; restart your node</h3>
+      <pre style="margin:6px 0 0;padding:11px 13px;background:rgba(0,0,0,.4);border:1px solid var(--border-med);border-radius:6px;overflow:auto;font-size:12.5px;color:#cfeede;white-space:pre;line-height:1.7">sudo systemctl restart sost-node          # systemd
+# or: stop the old sost-node, then start ./build/sost-node &lt;your usual args&gt;</pre>
+
+      <h3 style="color:#fb010d;margin:18px 0 6px">Step 3 &mdash; restart your miner</h3>
+      <pre style="margin:6px 0 0;padding:11px 13px;background:rgba(0,0,0,.4);border:1px solid var(--border-med);border-radius:6px;overflow:auto;font-size:12.5px;color:#cfeede;white-space:pre;line-height:1.7"># stop the old sost-miner, then relaunch:
+./build/sost-miner &lt;your usual args&gt;</pre>
+
+      <p style="color:#fbbf24;margin-top:14px">&#9888; <b>Do NOT use the Atomic Swap yet.</b> It remains <b>founder-only testing</b> &mdash; not externally audited, not validated for public use. Wait for the official "safe to use" announcement (SOST website, BitcoinTalk, Telegram). SOST&nbsp;&harr;&nbsp;BTC is not active (V15).</p>
+    </div>
+  </div>
+</section>
+
+<!-- NETWORK UPDATE — regional seeds, atomic swap, compliance & listing strategy -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// NETWORK UPDATE &middot; regional seeds + listing strategy &middot; P2P-only, no consensus change</div>
+      <div class="section-dates">Published: 2026-06-29 &middot; Last updated: 2026-06-29</div>
+      <h2 class="section-title">SOST Network Update &mdash; <span class="accent">regional seeds, Atomic Swap, compliance &amp; listing strategy</span></h2>
+      <div class="section-sub">A clear, realistic update on two topics: network infrastructure after the recent V14 reports, and the future liquidity / listing strategy for SOST.</div>
+    </div>
+    <div class="info-card">
+      <h3 style="color:var(--cyan-primary);margin:4px 0 6px">1 &middot; Regional seed nodes</h3>
+      <p>Reports from miners outside Europe &mdash; especially Asia-Pacific &mdash; showed a real network-health issue: relying mainly on a Germany-based seed is not enough for a global Proof-of-Work network. High latency can increase orphan risk, local forks with less cumulative work, sync instability, and propagation disadvantage for distant miners.</p>
+      <p>To improve this, SOST is moving to a <b>multi-seed model</b>:</p>
+      <ul style="margin:0 0 8px 18px;line-height:1.85">
+        <li><code>seed-eu.sostcore.com</code> &mdash; Europe / current Germany infrastructure</li>
+        <li><code>seed-apac.sostcore.com</code> &mdash; Asia-Pacific region</li>
+        <li><code>seed-us.sostcore.com</code> &mdash; North America</li>
+        <li><code>seed.sostcore.com</code> &mdash; kept as a backward-compatible alias</li>
+      </ul>
+      <p>A <b>P2P-only multi-seed update</b> has already been prepared. It does <b>not</b> touch consensus, mining rules, PoPC, Gold Vault, Atomic Swap logic, or emission &mdash; it only improves peer discovery and regional resilience. As soon as possible, two additional VPS seed nodes (APAC + US) will be activated to improve propagation and make mining fairer for distant regions.</p>
+      <p style="color:var(--text-secondary)"><b>Community bootnodes are welcome.</b> A miner who can run a stable public node with port&nbsp;19333 open, RPC closed or localhost-only, and no wallet / private keys, helps decentralization and propagation.</p>
+
+      <h3 style="color:var(--cyan-primary);margin:18px 0 6px">2 &middot; Realistic listing strategy</h3>
+      <p>SOST will <b>not</b> chase low-quality listings just to appear on a centralized exchange. With respect to smaller exchanges, listing on a Tier&nbsp;4, Tier&nbsp;3 or weak Tier&nbsp;2 venue can create more risk than value: low liquidity, poor market quality, high delisting risk, unclear compliance, and reputational damage if the venue later becomes problematic.</p>
+      <p>The current strategy is to finish and founder-test Atomic Swap / OTC functionality; allow controlled <b>non-custodial</b> SOST liquidity through Atomic Swap once safe; keep public warnings active until founder testing is complete; record any treasury-related SOST sale transparently in the Protocol Registry; and allocate proceeds with a verifiable split between long-term reserve building and future Tier&nbsp;1 / Tier&nbsp;2 listing readiness.</p>
+      <p style="color:var(--text-secondary)"><b>Important:</b> Atomic Swap is not a centralized exchange. It is non-custodial software. SOST does not custody user funds, does not broker trades, and does not guarantee counterparties, prices, liquidity, or outcomes.</p>
+
+      <h3 style="color:var(--cyan-primary);margin:18px 0 6px">3 &middot; Use of proceeds</h3>
+      <p>If SOST is sold through founder-controlled, non-custodial channels after Atomic Swap has been tested, the intention is that all proceeds are tracked transparently:</p>
+      <ul style="margin:0 0 8px 18px;line-height:1.85">
+        <li>a portion to the perpetual <b>Gold / Metals Reserve</b>, to strengthen long-term intrinsic treasury backing;</li>
+        <li>a portion reserved exclusively for compliance, audit, legal work, market infrastructure, and potential future Tier&nbsp;1 / Tier&nbsp;2 listing preparation.</li>
+      </ul>
+      <p style="color:var(--text-secondary)">Any such movement should be recorded verifiably through the Protocol Registry or equivalent public reporting. The Gold / Metals Reserve is a protocol treasury reserve &mdash; <b>not</b> a redemption guarantee, <b>not</b> a price floor, and <b>not</b> a promise of profit.</p>
+
+      <h3 style="color:var(--cyan-primary);margin:18px 0 6px">4 &middot; Why compliance matters</h3>
+      <p>A serious listing is not just a payment &mdash; it requires regulatory and operational readiness. At minimum, SOST must work toward:</p>
+      <ul style="margin:0 0 8px 18px;line-height:1.85">
+        <li><b>Legal classification:</b> independent analysis on whether SOST is a crypto-asset, financial instrument / security, utility asset, or another category in relevant jurisdictions;</li>
+        <li><b>MiCA readiness in the EU:</b> where applicable, crypto-asset white paper / disclosures, admission-to-trading requirements, issuer disclosures, sustainability disclosures, and cooperation with regulated CASPs;</li>
+        <li><b>AML / KYC and Travel Rule compatibility:</b> AML controls, sanctions screening, and transfer-of-funds requirements;</li>
+        <li><b>Market integrity:</b> anti-manipulation standards, transparent tokenomics, treasury reporting, clear risk disclosures;</li>
+        <li><b>Technical audit:</b> review of consensus, wallet, Atomic Swap, bridge / escrow contracts where applicable, and operational security;</li>
+        <li><b>KYB / foundation structure:</b> legal entity, responsible contacts, documentation, and governance suitable for exchange due diligence;</li>
+        <li><b>Liquidity plan:</b> market-making, treasury controls, and a listing budget that does not compromise the protocol.</li>
+      </ul>
+      <p style="color:var(--text-secondary)">This is why SOST will not rush into a weak listing. A Tier&nbsp;1 or strong Tier&nbsp;2 exchange requires real preparation &mdash; legal work, audits, infrastructure, market quality and compliance &mdash; and the protocol will build what is necessary for that path instead of taking the fastest low-quality option.</p>
+
+      <h3 style="color:var(--cyan-primary);margin:18px 0 6px">5 &middot; Summary</h3>
+      <p><b>Short term:</b> activate regional seeds (EU / APAC / US); continue V14.5 upgrade communication; finish founder-only Atomic Swap testing; keep public Atomic Swap usage disabled until explicitly announced safe.</p>
+      <p><b>Medium term:</b> use Atomic Swap / OTC as the first controlled liquidity path; record treasury-related movements transparently; build compliance, audit, legal and listing readiness; target only serious Tier&nbsp;1 / Tier&nbsp;2 opportunities if they fit the protocol.</p>
+      <p style="color:var(--text-secondary)">SOST is still experimental. There are no guarantees of success, value, exchange listing, liquidity, or adoption. The objective is to build carefully, transparently, and with long-term credibility rather than chasing short-term optics. Thank you to the miners and community members reporting real operational issues &mdash; those reports directly improve the network.</p>
+    </div>
+  </div>
+</section>
+
 <!-- GEASPIRIT REE LOCATOR — sealed REE prospectivity campaign -->
 <section class="section">
   <div class="container">
