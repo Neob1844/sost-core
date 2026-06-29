@@ -3059,7 +3059,7 @@ async function updateDashboard(info){
     var _hsub=document.getElementById('dHashrateSub');
     if(_netAtt>0){
         document.getElementById('dHashrate').textContent=_fmtRate(_netAtt);
-        if(_hsub)_hsub.textContent='att/s · est. network · '+_fmtRate(_qualHps)+' qual H/s';
+        if(_hsub)_hsub.textContent='att/s est. · '+_fmtRate(_qualHps)+' qualified H/s · model-based';
     } else {
         document.getElementById('dHashrate').textContent=_fmtRate(_qualHps);
         if(_hsub)_hsub.textContent='qualified H/s';
