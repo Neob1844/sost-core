@@ -302,23 +302,23 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   <div class="container">
     <div class="section-header">
       <div class="section-id"></div>
-      <div class="section-title">Protocol PoPC <span class="accent">Commitments</span></div>
+      <div class="section-title">Foundation Metals <span class="accent">Reserve</span></div>
     </div>
 
     <div class="notice">
-      <strong>Constitutional Demonstration:</strong> The protocol commits its own assets to PoPC as a constitutional demonstration of protocol alignment. Model A: XAUT remains in Protocol wallet, SOST bond locked. Model B: PAXG locked in immutable escrow, SOST reward received immediately.
+      <strong>Reserve &amp; foundation balances:</strong> The metals shown below (XAUT/PAXG) are <strong>foundation / Metals Reserve holdings</strong>, not user PoPC collateral. Metals Reserve accumulation is <strong>separate</strong> from PoPC bonds. PoPC Bond Staking (V15 / block 20,000) uses a single <strong>native-SOST</strong> bond as its only collateral; the optional Gold Boost is not active and is never collateral or part of slashing.
     </div>
 
     <div class="spec-block">
       <div class="spec-header">
         <div class="spec-icon gold"></div>
-        <span class="spec-label">Protocol PoPC Contracts</span>
+        <span class="spec-label">Foundation Metals Reserve Holdings</span>
         <span class="spec-tag">ETHEREUM MAINNET</span>
       </div>
       <div class="spec-body" style="overflow-x:auto">
         <table class="code-table" id="foundationTable">
           <tr>
-            <th>Model</th><th>Asset</th><th>Amount</th><th>Duration</th><th>Start</th><th>End</th><th>Status</th><th>Contract</th><th>Etherscan</th>
+            <th>Type</th><th>Asset</th><th>Amount</th><th>Duration</th><th>Start</th><th>End</th><th>Status</th><th>Contract</th><th>Etherscan</th>
           </tr>
         </table>
       </div>
@@ -333,7 +333,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         <table class="code-table">
           <tr><th>Field</th><th>Value</th></tr>
           <tr><td>Address</td><td style="font-size:11px;word-break:break-all;color:var(--gold)">0xd38955822b88867CD010946F0Ba25680B9DfC7a6</td></tr>
-          <tr><td>Purpose</td><td>This wallet will hold XAUT/PAXG committed under the protocol's Model A PoPC contract. Contract deployment pending — estimated May 28, 2026.</td></tr>
+          <tr><td>Purpose</td><td>This wallet holds the foundation's XAUT/PAXG Metals Reserve holdings (separate from PoPC bonds). Funding pending — estimated May 28, 2026.</td></tr>
           <tr><td>Status</td><td style="color:#eab308;font-weight:600;">PENDING — contract not yet signed.</td></tr>
           <tr><td>Verify on Etherscan</td><td><a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;font-size:11px;word-break:break-all;">etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6</a></td></tr>
         </table>
@@ -396,6 +396,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
     <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
     <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Open source. <a href="sost-license.html" style="color:inherit;">MIT License — fully open source</a></p>
+    <p style="margin-top:8px;font-size:11px;color:var(--text-muted);">Earlier PoPC Model A/B language has been superseded by the V15 native SOST bond model.</p>
   </div>
 </footer>
 
@@ -414,8 +415,8 @@ var GENESIS_REWARD = 7.85100863;
 var BLOCKS_PER_HOUR = 6;
 
 var FOUNDATION_CONTRACTS = [
-  { model: 'Model A', asset: 'XAUT', amount: '0.5 oz', duration: '3 months', start: 'May 28, 2026', end: 'Aug 28, 2026', status: 'PENDING', contract: '0x68749665FF8D2d112Fa859AA293F07A622782F38', etherscan: 'etherscan.io/token/0x6874...2F38' },
-  { model: 'Model B', asset: 'PAXG', amount: '0.5 oz', duration: '3 months', start: 'May 28, 2026', end: 'Aug 28, 2026', status: 'PENDING', contract: '0x45804880De22913dAFE09f4980848ECE6EcbAf78', etherscan: 'etherscan.io/token/0x4580...bAf78' }
+  { model: 'Metals Reserve', asset: 'XAUT', amount: '0.5 oz', duration: '3 months', start: 'May 28, 2026', end: 'Aug 28, 2026', status: 'PENDING', contract: '0x68749665FF8D2d112Fa859AA293F07A622782F38', etherscan: 'etherscan.io/token/0x6874...2F38' },
+  { model: 'Metals Reserve', asset: 'PAXG', amount: '0.5 oz', duration: '3 months', start: 'May 28, 2026', end: 'Aug 28, 2026', status: 'PENDING', contract: '0x45804880De22913dAFE09f4980848ECE6EcbAf78', etherscan: 'etherscan.io/token/0x4580...bAf78' }
 ];
 
 /* ── Live Data State ── */
