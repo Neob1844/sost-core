@@ -7580,22 +7580,27 @@ static void p2p_server_thread(int port) {
     close(srv);
 }
 
-static void connect_peer(const std::string& host, int port) {
+// Returns true once a TCP connection is established and the peer handler is
+// spawned; false on resolve/socket/connect failure. (Existing call sites that
+// ignore the return value are unaffected — this is purely additive so the
+// multi-seed bootstrap below can report which seeds connected vs failed.)
+static bool connect_peer(const std::string& host, int port) {
     struct addrinfo hints{}, *res;
     hints.ai_family=AF_INET; hints.ai_socktype=SOCK_STREAM;
     std::string port_str=std::to_string(port);
     if(getaddrinfo(host.c_str(),port_str.c_str(),&hints,&res)!=0){
-        printf("[P2P] Cannot resolve %s\n",host.c_str()); return;
+        printf("[P2P] Cannot resolve %s\n",host.c_str()); return false;
     }
     int fd=socket(res->ai_family,res->ai_socktype,res->ai_protocol);
-    if(fd<0){freeaddrinfo(res);return;}
+    if(fd<0){freeaddrinfo(res);return false;}
     if(connect(fd,res->ai_addr,res->ai_addrlen)<0){
         printf("[P2P] Cannot connect to %s:%d\n",host.c_str(),port);
-        close(fd); freeaddrinfo(res); return;
+        close(fd); freeaddrinfo(res); return false;
     }
     freeaddrinfo(res);
     std::string addr=host+":"+std::to_string(port);
     std::thread([fd,addr](){handle_peer(fd,addr,true);}).detach();
+    return true;
 }
 
 // =============================================================================
@@ -7990,10 +7995,38 @@ int main(int argc, char** argv) {
     std::thread p2p_thread(p2p_server_thread, p2p_port);
     p2p_thread.detach();
 
-    // Default seed node (VPS) — used when no --connect is specified
+    // Default seeds — used when no --connect is specified. P2P-ONLY change (no
+    // consensus / mining / PoPC impact): instead of a single EU seed, try several
+    // geographically-distributed seeds so APAC/US nodes aren't bottlenecked on the
+    // German seed and one seed being down can't isolate a fresh node. Order: the
+    // three regional seeds first, then seed.sostcore.com as a backward-compatible
+    // alias (currently -> EU). Regional hostnames that don't resolve yet simply
+    // fail closed and are skipped, so this degrades gracefully to EU-only until
+    // the seed-apac/seed-us DNS records + nodes exist. Peer exchange grows the
+    // mesh from whatever connects, so 2-3 bootstrap seeds is plenty.
     if(connect_addrs.empty()){
-        printf("[P2P] No --connect specified, using default seed: seed.sostcore.com:%d\n", P2P_PORT_DEFAULT);
-        connect_peer("seed.sostcore.com", P2P_PORT_DEFAULT);
+        static const char* DEFAULT_SEEDS[] = {
+            "seed-eu.sostcore.com",
+            "seed-apac.sostcore.com",
+            "seed-us.sostcore.com",
+            "seed.sostcore.com",   // backward-compatible alias (currently -> EU)
+        };
+        const int NSEEDS = (int)(sizeof(DEFAULT_SEEDS)/sizeof(DEFAULT_SEEDS[0]));
+        const int WANT = 3;        // connect to up to 3 default seeds
+        printf("[P2P] No --connect specified; trying %d default seeds (want up to %d)...\n", NSEEDS, WANT);
+        int connected = 0;
+        for(int i=0;i<NSEEDS && connected<WANT;++i){
+            if(connect_peer(DEFAULT_SEEDS[i], P2P_PORT_DEFAULT)){
+                printf("[P2P]   seed connected: %s\n", DEFAULT_SEEDS[i]);
+                ++connected;
+            } else {
+                printf("[P2P]   seed unavailable: %s\n", DEFAULT_SEEDS[i]);
+            }
+        }
+        if(connected==0)
+            printf("[P2P] WARNING: no default seed reachable — pass --connect <host:port> to bootstrap.\n");
+        else
+            printf("[P2P] bootstrapped from %d default seed(s).\n", connected);
     }
     for(const auto& a:connect_addrs){
         auto colon=a.rfind(':');
