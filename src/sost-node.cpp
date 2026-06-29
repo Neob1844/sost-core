@@ -70,6 +70,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include <cmath>   // network att/s estimate in getinfo (observability only)
 #include <sstream>
 #include <algorithm>
 #include <map>
@@ -1214,6 +1215,51 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
         else if (pi <= 15) stability_pct = 1;
         else stability_pct = 0;
     }
+
+    // --- Network rate ESTIMATES (observability only — NOT consensus) ----------
+    // "qualified H/s" = rate of stability-passing hash candidates the chain
+    // actually consumes = 2^bits_real / avg_block_time. The raw ConvergenceX
+    // attempt rate the network sustains is that divided by the profile's
+    // stability pass-fraction. att/s is a MODEL ESTIMATE: the per-profile
+    // pass-fraction below extends the coarse integer stability_pct table with a
+    // geometric tail below 1% so the estimate is non-zero at hard profiles.
+    double _bits_real = (g_blocks.empty() ? 0.0 : (double)g_blocks.back().bits_q) / 65536.0;
+    double _exp_hashes = _bits_real > 0.0 ? std::pow(2.0, _bits_real) : 0.0;
+    double _avg_bt = 600.0;  // fallback = target spacing
+    if (g_blocks.size() > 1) {
+        size_t _n = std::min<size_t>(288, g_blocks.size() - 1);
+        int64_t _span = (int64_t)g_blocks.back().timestamp
+                      - (int64_t)g_blocks[g_blocks.size() - 1 - _n].timestamp;
+        if (_span > 0) _avg_bt = (double)_span / (double)_n;
+    }
+    double _qualified_hps = _avg_bt > 0.0 ? _exp_hashes / _avg_bt : 0.0;
+    // per-profile stability pass-fraction (pi = casert_profile_idx; E*/B0 -> ~1.0)
+    double _pass_frac;
+    {
+        int pi = casert_profile_idx;
+        if (pi <= 0)        _pass_frac = 1.00;
+        else if (pi == 1)   _pass_frac = 0.97;
+        else if (pi == 2)   _pass_frac = 0.92;
+        else if (pi == 3)   _pass_frac = 0.85;
+        else if (pi == 4)   _pass_frac = 0.78;
+        else if (pi == 5)   _pass_frac = 0.65;
+        else if (pi == 6)   _pass_frac = 0.50;
+        else if (pi == 7)   _pass_frac = 0.45;
+        else if (pi == 8)   _pass_frac = 0.35;
+        else if (pi == 9)   _pass_frac = 0.25;
+        else if (pi == 10)  _pass_frac = 0.12;
+        else if (pi == 11)  _pass_frac = 0.05;
+        else if (pi == 12)  _pass_frac = 0.030;
+        else if (pi == 13)  _pass_frac = 0.015;
+        else if (pi == 14)  _pass_frac = 0.010;
+        else if (pi == 15)  _pass_frac = 0.0070;
+        else { // H16..H35: geometric tail (~x0.68 per step) from H15
+            _pass_frac = 0.0070;
+            for (int k = 16; k <= pi && k <= 35; ++k) _pass_frac *= 0.68;
+        }
+    }
+    double _att_s_est = _pass_frac > 0.0 ? _qualified_hps / _pass_frac : 0.0;
+
     // Profile name from index (43 profiles: E7 through H35)
     static const char* PROF_NAMES[] = {
         "E7","E6","E5","E4","E3","E2","E1","B0",
@@ -1231,6 +1277,9 @@ static std::string handle_getinfo(const std::string& id, const std::vector<std::
      <<",\"casert_profile_index\":"<<casert_profile_idx
      <<",\"casert_lag\":"<<casert_lag
      <<",\"casert_stability_pct\":"<<stability_pct
+     <<",\"avg_block_time_s\":"<<(long long)(_avg_bt+0.5)
+     <<",\"network_qualified_hps\":"<<(long long)(_qualified_hps+0.5)
+     <<",\"network_att_s_est\":"<<(long long)(_att_s_est+0.5)
      <<",\"profile\":\""<<profile_str<<"\""
      <<",\"testnet\":"<<(ACTIVE_PROFILE==Profile::TESTNET?"true":"false")
      <<",\"balance\":\""<<format_sost(g_wallet.balance(g_chain_height))
