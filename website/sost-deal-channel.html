@@ -264,7 +264,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   <div class="container">
     <div class="hero-label fade-in">Deal Channels</div>
     <h1 class="fade-in delay-1"><span class="accent">Deal Channels</span></h1>
-    <p class="hero-sub fade-in delay-2">Encrypted Coordination for Position Trades</p>
+    <p class="hero-sub fade-in delay-2">Encrypted Coordination for Atomic Swap / OTC Deals</p>
     <div style="margin-top:16px" class="fade-in delay-3">
       <span class="status-badge" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.3);color:var(--cyan-primary);font-size:10px;padding:3px 12px;letter-spacing:2px;">E2E ENCRYPTED</span>
     </div>
@@ -406,7 +406,7 @@ function renderDeals(data) {
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;font-size:11px;">';
     html += '<div><span style="color:var(--text-muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px;">Maker</span><span style="color:var(--text-secondary)">' + d.maker + '</span></div>';
     html += '<div><span style="color:var(--text-muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px;">Taker</span><span style="color:var(--text-secondary)">' + d.taker + '</span></div>';
-    html += '<div><span style="color:var(--text-muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px;">Position</span><span style="color:var(--gold)">' + d.position_id + '</span></div>';
+    html += '<div><span style="color:var(--text-muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px;">Reference</span><span style="color:var(--gold)">' + (d.position_id || d.ref || '—') + '</span></div>';
     html += '<div><span style="color:var(--text-muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px;">Price</span><span style="color:var(--gold)">' + d.price_sost + ' SOST</span></div>';
     html += '</div>';
 

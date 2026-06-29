@@ -6703,7 +6703,7 @@ if (GEA_SIGN_ENABLED) {
     function render() {
       renderStatus(); recompute(); wireCreate(); renderBonds();
       setT('gwPopcBondPt', P.POINTS.bond);
-      var dex = $('gwPopcDex'); if (dex) dex.textContent = '⊘ PoPC DEX / trading: ' + GW.Dex.note();
+      var dex = $('gwPopcDex'); if (dex) dex.textContent = '⊘ PoPC contract/position trading: ' + GW.Dex.note();
     }
     ['gwPopcAmount', 'gwPopcMonths'].forEach(function (id) {
       var e = $(id); if (e) { e.addEventListener('input', recompute); e.addEventListener('change', render); }

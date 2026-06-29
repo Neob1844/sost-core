@@ -772,7 +772,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   <div class="container" style="padding-top:24px;">
     <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:20px 24px;font-size:13px;color:var(--text-secondary);line-height:1.8;">
       <div style="font-size:11px;letter-spacing:2px;color:#fbbf24;font-weight:600;margin-bottom:10px;">&#9888; CURRENT STATUS</div>
-      <p>PoPC is <strong style="color:var(--text-primary)">implemented in the SOST node software</strong> and fully documented, but it is <strong style="color:#fbbf24">not yet active on mainnet</strong>. The single-bond model activates at <strong>V15 / block 20,000</strong>. <strong>Gold Boost is disabled on mainnet</strong> (deferred, optional reward only &mdash; never collateral, never slashed). PoPC bonds are <strong>not tradeable in V15</strong>. Activation is protocol-scheduled and subject to network readiness, external audit, and all technical validation prerequisites being met.</p>
+      <p>PoPC is <strong style="color:var(--text-primary)">implemented in the SOST node software</strong> and fully documented, but it is <strong style="color:#fbbf24">not yet active on mainnet</strong>. The single-bond model activates at <strong>V15 / block 20,000</strong>; from <strong>block 25,000</strong> holding an open PoPC contract is required to be eligible for the DTD lottery (a 5,000-block grace window after activation). <strong>Gold Boost is disabled on mainnet</strong> (deferred, optional reward only &mdash; never collateral, never slashed). PoPC bonds are <strong>not tradeable in V15</strong>. Activation is protocol-scheduled and subject to network readiness, external audit, and all technical validation prerequisites being met.</p>
       <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;font-size:11px;">
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; Implemented in software</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; Documented publicly</span>
@@ -780,7 +780,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         <span style="padding:4px 10px;border-radius:4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--gold,#f59e0b);">&#9679; Single native SOST bond model</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Activates at V15 / block 20,000</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Gold Boost disabled on mainnet</span>
-        <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Not tradeable (no PoPC DEX)</span>
+        <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Not tradeable in V15 (no contract/position trading)</span>
       </div>
     </div>
   </div>
@@ -1323,7 +1323,8 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
       <div class="spec-body">
         <p class="spec-desc">The single native SOST bond model activates at <strong>V15 / block 20,000</strong>, once the following technical and network conditions are met. Activation proceeds only when the system is stable, all components are operational, and external audit is complete.</p>
         <table class="code-table">
-          <tr><td class="key">Block height &ge; 20,000 (V15)</td><td class="val">Activation is tied to the V15 protocol milestone and will not occur before this threshold.</td></tr>
+          <tr><td class="key">Block height &ge; 20,000 (V15)</td><td class="val">PoPC subsystem activation. Tied to the V15 protocol milestone; will not occur before this threshold.</td></tr>
+          <tr><td class="key">Block height &ge; 25,000 (DTD lottery eligibility)</td><td class="val">From this height, holding an <strong>OPEN PoPC contract</strong> is required to be eligible for the DTD lottery. Activation at 20,000 + a grace window (5,000 blocks) before eligibility is enforced.</td></tr>
           <tr><td class="key">Sustained network stability</td><td class="val">Consistent block production, stable sync across nodes, no critical consensus or networking issues.</td></tr>
           <tr><td class="key">Sufficient participation</td><td class="val">Minimum level of independent nodes and active miners to ensure reliable operation.</td></tr>
           <tr><td class="key">Single-bond contract validation</td><td class="val">Registration, audit, reward, and slashing flows for the native SOST bond fully validated under live network testing.</td></tr>
