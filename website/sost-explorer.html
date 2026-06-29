@@ -3045,21 +3045,24 @@ async function updateDashboard(info){
     // meaningless (bitsQ is a cuasi-target, not a hash count).
     var _bitsReal=(info.difficulty||0)/65536;
     var _expHashes=Math.pow(2,_bitsReal);
-    var _primaryHashrate=avg>0?_expHashes/avg:0;
-    var _filterPct=(info.casert_stability_pct&&info.casert_stability_pct>0)?info.casert_stability_pct:0;
-    var _effectiveAtt=(_filterPct>0&&avg>0)?(_expHashes/(_filterPct/100))/avg:0;
-    var hashrate=_primaryHashrate;
+    var _qualHps=avg>0?_expHashes/avg:0;   // qualified H/s = stability-passing candidates/s
+    // Prefer the node's modelled network attempt-rate estimate (getinfo
+    // network_att_s_est: difficulty + avg block time + the profile's stability
+    // pass-fraction). Fall back to qualified H/s for older nodes that don't
+    // expose it yet. att/s is a model ESTIMATE, not a measured value.
+    var _netAtt=(typeof info.network_att_s_est==='number'&&info.network_att_s_est>0)?info.network_att_s_est:0;
     function _fmtRate(v){
         if(v>=1e6)return (v/1e6).toFixed(1)+'M';
         if(v>=1e3)return (v/1e3).toFixed(1)+'K';
         return Math.floor(v);
     }
-    document.getElementById('dHashrate').textContent=_fmtRate(hashrate);
     var _hsub=document.getElementById('dHashrateSub');
-    if(_hsub){
-        _hsub.textContent=_effectiveAtt>0
-            ?'H/s · eff '+_fmtRate(_effectiveAtt)+' att/s'
-            :'H/s';
+    if(_netAtt>0){
+        document.getElementById('dHashrate').textContent=_fmtRate(_netAtt);
+        if(_hsub)_hsub.textContent='att/s est. · '+_fmtRate(_qualHps)+' qualified H/s · model-based';
+    } else {
+        document.getElementById('dHashrate').textContent=_fmtRate(_qualHps);
+        if(_hsub)_hsub.textContent='qualified H/s';
     }
     _lastBlockTime=times[0];_lastBitsQ=info.difficulty;_nextBitsQ=info.next_difficulty||info.difficulty;
     _prevBlockInterval=(times.length>=2)?(times[0]-times[1]):0;
