@@ -373,7 +373,7 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
     </div>
     <div class="info-card">
       <p>The chain has run continuously since genesis &mdash; through the <b>V13</b> hard fork (block&nbsp;12,000) and the <b>V14</b> H3/H4 validation hardening &mdash; with independent miners and nodes active (peak <b>53 miners</b>). No premine, no ICO, no VC allocation; the 50&nbsp;/&nbsp;25&nbsp;/&nbsp;25 coinbase split (miner&nbsp;/&nbsp;Gold&nbsp;Vault&nbsp;/&nbsp;PoPC) is hardcoded at genesis.</p>
-      <p style="color:var(--text-secondary)">At 00:00 UTC the pre-market banner and launch countdown retire automatically; only the Genesis counter remains. Full automation (PoPC A/B, OTC/P2P atomic swap, Gold-Vault governance) is grouped into <b>V15</b> at block&nbsp;20,000, after testnet, replay and coordinated activation.</p>
+      <p style="color:var(--text-secondary)">At 00:00 UTC the pre-market banner and launch countdown retire automatically; only the Genesis counter remains. Full automation (PoPC Bond Staking, OTC/P2P atomic swap, Gold-Vault governance) is grouped into <b>V15</b> at block&nbsp;20,000, after testnet, replay and coordinated activation.</p>
     </div>
   </div>
 </section>
@@ -480,7 +480,7 @@ V15_HEIGHT                        = 20,000       # intended activation height (N
     <div class="section-header">
       <div class="section-id">// PLANNED &middot; BLOCK 20,000 &middot; full automation release</div>
       <div class="section-dates">Published: 2026-06-08 &middot; Last updated: 2026-06-08</div>
-      <h2 class="section-title">V15 &mdash; <span class="accent">full automation: PoPC A/B, Atomic Swap &amp; Gold Vault governance</span></h2>
+      <h2 class="section-title">V15 &mdash; <span class="accent">full automation: PoPC Bond Staking, Atomic Swap &amp; Gold Vault governance</span></h2>
       <div class="section-sub">Scope split (2026-06-08): V14 ships on time at block&nbsp;15,000 (validation hardening, no action needed). The larger automation track is regrouped here, into V15, so it ships fully integrated &mdash; never half-activated.</div>
     </div>
     <div class="info-card">
@@ -586,8 +586,8 @@ sudo systemctl restart sost-miner</pre>
       <h3 style="margin-top:14px">Moved to V15 (block 20,000)</h3>
       <ul>
         <li><b>Gold Vault Phase I governance</b> (90&nbsp;% miner approval over a 67-block window, veto, caps).</li>
-        <li><b>PoPC Model A chain-state migration + auto-audit / auto-slash / auto-settlement</b> and the <b>DTD-PoPC eligibility gate</b> flip.</li>
-        <li><b>OTC&nbsp;/&nbsp;P2P Atomic&nbsp;Swap HTLC</b> and <b>PoPC Model B</b> full automation.</li>
+        <li><b>PoPC Bond Staking chain-state migration + auto-audit / auto-slash / auto-settlement</b> (single native-SOST bond; optional Gold Boost, never collateral) and the <b>DTD-PoPC eligibility gate</b> flip.</li>
+        <li><b>OTC&nbsp;/&nbsp;P2P Atomic&nbsp;Swap HTLC</b> full automation.</li>
       </ul>
       <p style="margin-top:10px">These were regrouped so V14 ships on time and untouched, and the automation ships fully integrated and coordinated. See the <b>V15</b> entry above.</p>
     </div>
