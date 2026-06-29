@@ -4,13 +4,16 @@
 .crt-zap{position:fixed;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9) 20%,#fff 50%,rgba(255,255,255,.9) 80%,transparent);box-shadow:0 0 30px 6px rgba(255,255,255,.6),0 0 60px 12px rgba(0,255,136,.2);z-index:99998;opacity:0;pointer-events:none;transition:opacity .08s}
 .crt-zap.on{opacity:1}
 
-/* Subtle scanlines on all pages */
+/* Subtle scanlines on all pages — STATIC (no drift animation).
+   The previous `animation:scanDrift 8s` recomposited this full-viewport
+   fixed overlay at every 8s loop boundary, producing a periodic full-screen
+   flicker that looked like the page was trying to reload every ~7-8s.
+   The 4px drift was visually negligible, so the scanlines are now static. */
 body::after{
   content:'';position:fixed;top:0;left:0;width:100%;height:100%;
   background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.025) 2px,rgba(0,0,0,.025) 4px);
-  pointer-events:none;z-index:99990;animation:scanDrift 8s linear infinite;
+  pointer-events:none;z-index:99990;
 }
-@keyframes scanDrift{0%{transform:translateY(0)}100%{transform:translateY(4px)}}
 
 /* Green phosphor glow */
 .crt-glow{text-shadow:0 0 5px rgba(0,255,136,.5),0 0 10px rgba(0,255,136,.2)}
