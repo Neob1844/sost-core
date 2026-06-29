@@ -717,8 +717,8 @@ S5  Sampling / drilling / assay         — confirmed</pre>
   </div>
 </section>
 
-<!-- ACCESS PANEL -->
-<div id="access-panel" style="text-align:center;padding:40px;border:1px solid var(--border);margin:40px auto;max-width:440px">
+<!-- ACCESS PANEL — opened to public; login UI retained but hidden (elements kept so listeners don't break) -->
+<div id="access-panel" style="display:none;text-align:center;padding:40px;border:1px solid var(--border);margin:40px auto;max-width:440px">
   <div style="color:var(--green);letter-spacing:2px;margin-bottom:20px;font-size:13px">
     &#9556;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9559;<br>
     &#9553;&nbsp; RESTRICTED ACCESS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9553;<br>
@@ -761,8 +761,8 @@ S5  Sampling / drilling / assay         — confirmed</pre>
   <button id="refresh-btn" onclick="refreshSession()" style="background:#004400;color:#00ff41;border:1px solid #00ff41;padding:6px 16px;font-family:monospace;cursor:pointer;font-size:12px;letter-spacing:1px">&#8635; REFRESH SESSION</button>
 </div>
 
-<!-- PROTECTED CONTENT — hidden until authenticated -->
-<div id="protected-content" style="display:none">
+<!-- PROTECTED CONTENT — now public (open access) -->
+<div id="protected-content" style="display:block">
 
 <!-- MULTI-DOMAIN BENCHMARK -->
 <section class="section">
