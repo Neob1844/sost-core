@@ -411,6 +411,57 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   </div>
 </section>
 
+<!-- SECTION 02.5: SLINGSHOT RELIEF -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id"></div>
+      <h2 class="section-title">Slingshot <span class="accent">Relief</span></h2>
+    </div>
+
+    <div class="spec-block fade-in delay-1">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
+          <span class="spec-label">Single-shot bitsQ relief</span>
+        </div>
+        <span class="spec-tag">EMERGENCY LIVENESS LAYER (V11 #7,000 / V12 #7,350)</span>
+      </div>
+      <div class="spec-body">
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:14px;"><b>In plain terms:</b> when a block is taking abnormally long to mine, Slingshot gives the difficulty one extra, bounded shove downward so the network finds the next block sooner &mdash; then immediately resets. Think of it as a separate emergency brake from the equalizer cascade and the anti-stall decay, built for one job: <b>stop a run of bad luck from compounding into back-to-back stalls</b> when the cascade is already sitting at its E7 floor.</p>
+        <p style="color:var(--text-dim);line-height:1.8;margin-bottom:16px;font-size:13px;"><b>Technically:</b> Slingshot is a single-shot multiplier applied to <code>bitsQ</code> <i>after</i> the avg288 controller and the dynamic cap, then re-clamped to <code>MIN_BITSQ</code>. It is <b>self-resetting</b> &mdash; the next block re-evaluates fresh against avg288, so there is no compounding: three slow blocks in a row each receive their own single drop, never drop &times; drop &times; drop. It does <b>not</b> replace cASERT, the relief cascade, the DTD lottery or SbPoW.</p>
+        <table class="code-table" style="font-size:12px;">
+          <tr><th>V12 tier (block 7,350+)</th><th>fires when current_elapsed &gt;</th><th>bitsQ drop</th></tr>
+          <tr><td class="label">T1</td><td class="value">1,200 s (20 min)</td><td class="value">&minus;6.5%</td></tr>
+          <tr><td class="label">T2</td><td class="value">1,800 s (30 min)</td><td class="value">&minus;12.5%</td></tr>
+          <tr><td class="label">T3</td><td class="value">3,600 s (60 min)</td><td class="cyan">&minus;25%</td></tr>
+          <tr><td class="label">T4</td><td class="value">7,200 s (120 min)</td><td class="cyan">&minus;37.5%</td></tr>
+          <tr><td class="label">T5</td><td class="value">10,800 s (180 min)</td><td class="highlight">&minus;50% &mdash; catastrophic relief</td></tr>
+        </table>
+        <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.7;">Strict greater-than at each threshold; the highest crossed tier wins and is applied as a same-block drop. Short blocks never cross even T1, so no relief is given when the chain is already healthy.</p>
+      </div>
+    </div>
+
+    <div class="mode-grid fade-in delay-2">
+      <div class="mode-card">
+        <div class="mode-tag" style="background:rgba(251,191,36,.12);color:#fbbf24;">V11 PATH &middot; #7,000&ndash;7,349</div>
+        <h3 style="color:#fbbf24;">Dual-gate, single tier</h3>
+        <p>The original Slingshot (block 7,000) required <b>two</b> gates: the previous block was slow (<code>prev_elapsed &gt; 1,800 s</code>, 30 min) <b>and</b> the current block is also taking long (<code>current_elapsed &gt; 600 s</code>, 10 min). When both fire: <code>bitsQ = bitsQ_avg288 &times; 0.875</code> (&minus;12.5%). The second gate withheld &ldquo;free relief&rdquo; once the chain had already recovered.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">V12 PATH &middot; #7,350+</div>
+        <h3 style="color:var(--cyan-primary);">Single-gate, 5 tiers</h3>
+        <p>From block 7,350 Slingshot is keyed on a single signal &mdash; <code>current_elapsed</code> &mdash; across the 5-tier ladder above. The same-block, single-gate design makes the V11 second gate structural: short blocks never reach T1, so relief is only ever given mid-stall. Emergency-only by construction.</p>
+      </div>
+      <div class="mode-card">
+        <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">SELF-RESETTING</div>
+        <h3 style="color:var(--green-primary);">No compounding</h3>
+        <p>Every block re-derives Slingshot from the chain alone (stateless &amp; deterministic &mdash; any two nodes compute the same drop). The drop is applied after the avg288 / dynamic-cap clamp and re-clamped to <code>MIN_BITSQ</code>, so it can never push difficulty below the global floor. An additional safety layer above cASERT, the cascade, the lottery and SbPoW &mdash; never a replacement.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- SECTION 03: EXPONENTIAL HERITAGE -->
 <section class="section">
   <div class="container">
@@ -466,8 +517,9 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
           <tr><td class="label">V8 cliff</td><td class="highlight">5,750</td><td class="cyan">Single-step relief valve: profile drops to E7 after 605&nbsp;s without a block. H13 ceiling (was H12). Removes H10/H11 dead-zones during stalls.</td></tr>
           <tr><td class="label">V9 staged</td><td class="highlight">6,550</td><td class="cyan">Staged relief cascade: drop 3 profile levels every 60&nbsp;s starting at 540&nbsp;s elapsed. Floor stays at E7. Future-drift cap MAX_FUTURE_DRIFT_STAGED=60&nbsp;s.</td></tr>
           <tr><td class="label">V10 granular</td><td class="highlight">6,700</td><td class="cyan">Granular relief cascade: drop 1 profile level every 60&nbsp;s starting at 600&nbsp;s elapsed. Lag-advance disabled at this height &mdash; lag is computed strictly from <code>chain.back().time</code>, validation deterministic w.r.t. <code>block.timestamp</code>. Floor stays at E7. No supply / reward change.</td></tr>
+          <tr><td class="label">V11 Slingshot</td><td class="highlight">7,000</td><td class="cyan">Slingshot single-shot bitsQ relief activates (dual-gate, single tier): when <code>prev_elapsed &gt; 1,800&nbsp;s</code> and <code>current_elapsed &gt; 600&nbsp;s</code>, <code>bitsQ = bitsQ_avg288 &times; 0.875</code> (&minus;12.5%). Self-resetting, no compounding. Additional liveness layer above the relief cascade &mdash; see the Slingshot Relief section.</td></tr>
           <tr><td class="label">V11 Phase 2</td><td class="highlight">7,100</td><td class="cyan">Consensus surface upgrade alongside cASERT: SbPoW (Signature-Bound PoW) activation — every valid block requires a Schnorr-style signature from the miner identity key over the block header, making pool topologies that delegate work without sharing the key cryptographically self-defeating. DTD lottery activates simultaneously (bootstrap 2-of-3 cadence; permanent 1-of-3 cadence opens at <code>V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW = 7,100 + 5,000 = 12,100</code>). No change to cASERT bitsQ math or to the equalizer profile table; cASERT continues to feed <code>powDiffQ</code> to ConvergenceX exactly as before. Anti-pool primary defense.</td></tr>
-          <tr><td class="label">V12</td><td class="highlight">7,350</td><td class="cyan">Equalizer hardening ceiling rises H13 &rarr; H20. Active profile set grows from 21 (E7..H13) to 28 (E7..H20). 15 profiles H21..H35 remain reserved for V13. <code>validator_profile_ceiling_at(height)</code> returns H20 from this height.</td></tr>
+          <tr><td class="label">V12</td><td class="highlight">7,350</td><td class="cyan">Equalizer hardening ceiling rises H13 &rarr; H20. Active profile set grows from 21 (E7..H13) to 28 (E7..H20). 15 profiles H21..H35 remain reserved for V13. <code>validator_profile_ceiling_at(height)</code> returns H20 from this height. <b>Slingshot</b> reworked to a single-gate 5-tier same-block ladder keyed on <code>current_elapsed</code> (T1 &minus;6.5% @20&nbsp;min &rarr; T5 &minus;50% @180&nbsp;min).</td></tr>
           <tr><td class="label">V13</td><td class="highlight">12,000</td><td class="cyan">Coordinated hard fork combining four consensus-level changes. (1) cASERT equalizer ceiling rises H20 &rarr; H35 &mdash; the full 43-profile range E7..H35 becomes active for the first time, closing the equalizer calibration started in V6. (2) DTD lottery cooldown 5 &rarr; 6: <code>lottery_exclusion_window_at(height)</code> returns 6 for <code>height &ge; V13_HEIGHT</code>, restoring deterministic 2-firing exclusion under the permanent 1-of-3 cadence that opens at block 12,100. (3) Future-timestamp drift cap 60&nbsp;s &rarr; 30&nbsp;s: <code>max_future_drift_at(height)</code> returns 30 for <code>height &ge; V13_HEIGHT</code> &mdash; <b style="color:#fb010d">NTP synchronisation strongly recommended post-V13</b>; any host whose clock is more than 30&nbsp;s ahead of true time will produce blocks that every validator rejects. (4) Beacon Phase II-A activates: <code>BEACON_PHASE2A_ACTIVATION_HEIGHT = V13_HEIGHT</code>. RC1 metadata signed (<code>release_status = signed_metadata_only</code>). DTD flip at 12,100 is automatic and verified.</td></tr>
           <tr><td class="label" style="color:#fbbf24">V14 fallback</td><td class="value" style="color:#fbbf24">15,000 <span style="font-size:9px;letter-spacing:1.5px">// TARGET</span></td><td class="value" style="color:var(--text-primary)">Proposed final hard fork in this cycle, <b style="color:#fbbf24">not guaranteed</b>. No cASERT bitsQ or equalizer change planned. Carries the spend-side Gold Vault governance bundle deferred from V13: 5-defense Gold Vault model (purpose restriction + dual destination whitelists + per-spend cap + rate limiting + <b>&ge;90% block-based miner signaling over a 67-block window</b>, ceil 61) plus the Transitional Guardian role (authorise / veto with 10-block pronouncement window after signaling closes; silence &rArr; miner result prevails; auto-disconnect at block 25,000 implemented in V13 source from day one, no future fork required). Carries PoPC + Escrow automatic lifecycle (POPC_ACTIVATION_HEIGHT consensus gate, deterministic per-block audit scheduler, auto-slash, auto-settlement, Ethereum bridge against deployed SOSTEscrow). Activates only if the corresponding V13-tracked readiness gates close in time; otherwise PoPC + Escrow + Vault governance remain application-layer (accumulation side unaffected &mdash; 25%/block to both reserve addresses continues unchanged since genesis). See <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code>, <code>docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md</code>, <code>docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</code>.</td></tr>
         </table>
@@ -567,6 +619,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
           <tr><td class="label">CASERT_K_V</td><td class="highlight">0.02</td><td class="value">Volatility gain (was 0.10)</td></tr>
           <tr><td class="label">SLEW_RATE</td><td class="highlight">&plusmn;1/block (V6+)</td><td class="value">Max profile change per block (V3: &plusmn;3, V6 block 5,000: returned to &plusmn;1)</td></tr>
           <tr><td class="label">ANTISTALL_FLOOR</td><td class="highlight">7,200s</td><td class="value">2-hour minimum before anti-stall decay activates</td></tr>
+          <tr><td class="label">SLINGSHOT relief</td><td class="highlight">V11 #7,000 / V12 #7,350</td><td class="value">Single-shot bitsQ relief. V11: dual-gate &minus;12.5%. V12: 5 tiers on current_elapsed &mdash; T1 &minus;6.5% (20m), T2 &minus;12.5% (30m), T3 &minus;25% (60m), T4 &minus;37.5% (120m), T5 &minus;50% (180m). Applied after avg288/dynamic-cap, re-clamped to MIN_BITSQ; self-resetting</td></tr>
           <tr><td class="label">ANTISTALL_DECAY</td><td class="highlight">zone-based</td><td class="value">H35&ndash;H7: 600s/lvl, H6&ndash;H4: 900s/lvl, H3&ndash;H1: 1200s/lvl. Decays to B0. E1&ndash;E4 after 6h at B0.</td></tr>
           <tr><td class="label">Safety: behind schedule</td><td class="value">cap B0</td><td class="value">Never harden when chain is behind schedule (lag &le; 0)</td></tr>
           <tr><td class="label">Safety: &lt;10 blocks</td><td class="value">cap B0</td><td class="value">Require 10 blocks before any hardening</td></tr>
