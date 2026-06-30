@@ -357,7 +357,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     <div class="section-header">
       <div class="section-id">// EXAMPLE</div>
       <h2 class="section-title">Example record: <span style="color:var(--gold-primary)">PoPC</span> &mdash; Proof of Personal Custody</h2>
-      <p class="section-sub">This is the schema of an example registry capsule documenting that SOST Protocol publicly records &quot;PoPC&quot; as the protocol term used for its custody-verification mechanism. <b>Marked as example schema</b> &mdash; not yet broadcast on-chain. A symbolic transaction from the SOST constitutional address may be published later after UI review.</p>
+      <p class="section-sub">This is the schema of an example registry capsule documenting that SOST Protocol publicly records &quot;PoPC&quot; as the protocol term used for its custody-verification mechanism. <b>Marked as example schema.</b> The PoPC term is now <b>anchored on-chain</b> at block&nbsp;#15,439 &mdash; see the resolved record in the <a href="#registered-capsules" style="color:var(--gold-primary)">Registered capsules</a> list below.</p>
     </div>
 
     <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:18px 22px">
@@ -770,6 +770,34 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         <b>What it proves.</b> Precedence + integrity: the campaign existed, unchanged, no later than block&nbsp;#13,483, signed by the operator address. The 50 targets cannot be edited after the fact without breaking these hashes &mdash; so any future hit cannot be cherry-picked retroactively.
         <br><br>
         <b>What it does NOT prove.</b> It is <b>not</b> evidence of mineralisation, grade, depth, tonnage, resources or reserves. The <code>score_type</code> is a <i>relative regional rank</i>, not a probability of a deposit. The campaign is <b>unresolved</b>; targets will be adjudicated later only by independent evidence (government/lab assays, drilling, primary publications) under the published resolution protocol. Verify independently: (1) fetch the commitment file and confirm its SHA-256 starts with <code>9da4548fdbfe8b57</code> (the on-chain capsule prefix); (2) confirm the JSON's <code>merkle_root</code> equals <code>7f29c111&hellip;</code>; (3) look up the txid in the explorer and confirm the Open Note capsule + signing address.
+      </p>
+    </div>
+
+    <!-- PoPC protocol term — manifesto v1 anchor (ON-CHAIN, OFFICIAL) -->
+    <div class="info-card" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">ON-CHAIN</span>
+        <span style="background:rgba(217,70,239,0.15);color:#d946ef;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">OFFICIAL &mdash; PoPC PROTOCOL TERM (PROOF OF PERSONAL CUSTODY)</span>
+        <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">block #15,439</span>
+      </div>
+      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">SOST Protocol &mdash; Proof of Personal Custody (PoPC) protocol term (anchored on-chain)</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary)">
+        <tbody>
+          <tr><td style="padding:5px 0;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:30%">Block</td><td style="padding:5px 0"><a href="sost-explorer.html?search=15439" style="color:#d946ef">#15,439</a> &middot; 2026-06-30 19:55:31 UTC</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Txid</td><td style="padding:5px 0"><a href="sost-explorer.html?search=6fa76c2a7a42f93de0f940aafffbbbc4cb0d11c3abd7dc513fad486085281dab" style="color:#d946ef;word-break:break-all">6fa76c2a7a42f93de0f940aafffbbbc4cb0d11c3abd7dc513fad486085281dab</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Signer</td><td style="padding:5px 0"><b>OFFICIAL</b> &mdash; Protocol Registry operator <code style="word-break:break-all">sost1ca9097d830b74495b95db9d779ad63c90579bc18</code> (whitelisted)</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule text</td><td style="padding:5px 0"><code style="word-break:break-all">sost-protocol popc-manifesto 3bed02e2f5c589e4</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Manifesto file</td><td style="padding:5px 0"><a href="api/sost-protocol-popc-manifesto-v1.json" style="color:#d946ef">api/sost-protocol-popc-manifesto-v1.json</a></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Manifesto SHA-256</td><td style="padding:5px 0;word-break:break-all"><code>3bed02e2f5c589e494b8e4db99200dc0ae7aa96fe5b8d87167799c51726870f4</code></td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Status</td><td style="padding:5px 0"><code>registered=true</code> &middot; <code>capsule_mode=open-note</code> &middot; <code>registry_type=protocol_term</code></td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:12px 0 0">
+        <b>What this is.</b> A signed, block-anchored timestamp recording that SOST Protocol publicly uses <b>&quot;Proof of Personal Custody&quot; (PoPC)</b> as a protocol term, binding it to the canonical PoPC manifesto (<code>api/sost-protocol-popc-manifesto-v1.json</code>). The on-chain capsule carries the first 16 hex (<code>3bed02e2f5c589e4</code>) of the manifesto&apos;s SHA-256.
+        <br><br>
+        <b>What it proves.</b> Precedence + integrity: the PoPC term and that exact manifesto existed, unchanged, no later than block&nbsp;#15,439, published by the operator address.
+        <br><br>
+        <b>What it does NOT prove.</b> It is <b>not</b> a patent, trademark or copyright, and it does not certify the truth of any claim in the manifesto. Verify independently: (1) fetch the manifesto JSON and confirm its SHA-256 starts with <code>3bed02e2f5c589e4</code> (the on-chain capsule prefix); (2) look up the txid in the explorer and confirm the Open Note capsule + signing address.
       </p>
     </div>
 
