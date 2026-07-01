@@ -1,4 +1,4 @@
 {
-  "v": "2026-06-18-v354",
-  "note": "GeaSpirit banner: pickaxe replaced by the GeaSpirit logo with a pulsating green glow. Added the REE Locator (sealed campaign v0.4) callout with on-chain commitment, plus RPC user/pass fields hardened against browser autofill. No node/consensus change."
+  "v": "2026-07-01-v358",
+  "note": "DTD lottery card label -> 'DTD LOTTERY DISTRIBUTED BALANCE' (display-only). Preserves the live V14.5 upgrade banner. No node/consensus change."
 }
