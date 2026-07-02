@@ -1,0 +1,88 @@
+{
+  "note": "SOST PQ V3 witness prototype vectors. Fixed 2-byte big-endian length prefixes. NOT consensus. Component payload bytes are placeholder fill bytes (not real signatures). See prototype/pq/pq_witness.h.",
+  "format": {
+    "layout": "alg_id(1) then per component: len_be16(2) + bytes[len]. No trailing bytes allowed.",
+    "alg_ids": {
+      "0x00": "LEGACY_ECDSA_SECP256K1",
+      "0x01": "PQ_ML_DSA_44",
+      "0x02": "HYBRID_ECDSA_ML_DSA_44",
+      "0x03": "ML_DSA_65_RESERVED",
+      "0x04": "ML_DSA_87_RESERVED",
+      "0x10": "SLH_DSA_RESERVED",
+      "0xFF": "INVALID"
+    },
+    "exact_sizes_bytes": {
+      "ecdsa_sig": 64,
+      "ecdsa_pk": 33,
+      "ml_dsa_44_sig": 2420,
+      "ml_dsa_44_pk": 1312
+    }
+  },
+  "valid": [
+    {
+      "name": "legacy_ecdsa",
+      "alg_id": "0x00",
+      "expect": "OK",
+      "hex": "000040111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110021222222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "name": "ml_dsa_44",
+      "alg_id": "0x01",
+      "expect": "OK",
+      "hex": "(2420-byte sig + 1312-byte pk; too large to inline \u2014 generate via serialize_witness)"
+    },
+    {
+      "name": "hybrid_ecdsa_ml_dsa_44",
+      "alg_id": "0x02",
+      "expect": "OK",
+      "hex": "(64+33 ECDSA half then 2420+1312 ML-DSA half \u2014 generate via serialize_witness)"
+    }
+  ],
+  "invalid": [
+    {
+      "name": "empty",
+      "hex": "",
+      "expect": "ERR_EMPTY"
+    },
+    {
+      "name": "unknown_algid",
+      "hex": "7e",
+      "expect": "ERR_UNKNOWN_ALGID"
+    },
+    {
+      "name": "reserved_ml_dsa_65",
+      "hex": "03",
+      "expect": "ERR_RESERVED_ALGID"
+    },
+    {
+      "name": "reserved_ml_dsa_87",
+      "hex": "04",
+      "expect": "ERR_RESERVED_ALGID"
+    },
+    {
+      "name": "reserved_slh_dsa",
+      "hex": "10",
+      "expect": "ERR_RESERVED_ALGID"
+    },
+    {
+      "name": "invalid_sentinel",
+      "hex": "ff",
+      "expect": "ERR_INVALID_ALGID"
+    },
+    {
+      "name": "truncated_prefix",
+      "hex": "0000",
+      "expect": "ERR_TRUNCATED"
+    },
+    {
+      "name": "wrong_len_63",
+      "hex": "00003f1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110021222222222222222222222222222222222222222222222222222222222222222222",
+      "expect": "ERR_WRONG_COMPONENT_LEN"
+    },
+    {
+      "name": "trailing_byte",
+      "hex": "000040111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110021222222222222222222222222222222222222222222222222222222222222222222ab",
+      "expect": "ERR_TRAILING_BYTES"
+    }
+  ]
+}
