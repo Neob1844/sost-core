@@ -829,22 +829,24 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       <div class="principle-card fade-in delay-1" style="--card-accent:var(--green-primary);">
         <div class="p-label" style="color:var(--green-primary);">VOLUNTARY COMMITMENT</div>
         <div class="p-desc">
-          A participant promises to maintain custody of precious metals for a defined period,
-          backs that promise with a SOST bond, and is rewarded if they keep their word.
+          A participant locks a native SOST bond for a defined period &mdash; a voluntary,
+          time-bound commitment. The bond is the only collateral. No gold is required.
         </div>
       </div>
       <div class="principle-card fade-in delay-2" style="--card-accent:var(--cyan-primary);">
-        <div class="p-label" style="color:var(--cyan-primary);">AUTOMATIC ENFORCEMENT</div>
+        <div class="p-label" style="color:var(--cyan-primary);">ONE SLASHABLE ASSET</div>
         <div class="p-desc">
-          If they break their commitment, their bond is slashed automatically &mdash;
-          no human judge involved. Audit schedule derived from PoW entropy.
+          The native SOST bond is the only thing that can be slashed &mdash; automatically,
+          no human judge, on a protocol-defined bond failure. Settlement &amp; audit schedule
+          derives from PoW entropy.
         </div>
       </div>
       <div class="principle-card fade-in delay-2" style="--card-accent:var(--red-primary);">
-        <div class="p-label" style="color:var(--red-primary);">UNIQUE IN CRYPTO</div>
+        <div class="p-label" style="color:var(--red-primary);">GOLD IS AN OPTIONAL BOOST</div>
         <div class="p-desc">
-          Lock SOST bond &rarr; prove custody of real gold (XAUT/PAXG). Audited by PoW entropy.
-          No custodian. No bridge. Unlike MakerDAO, Compound, or any staking protocol.
+          Optionally, holding tokenized gold (XAUT/PAXG) adds a reward boost on top of the base.
+          Gold is never collateral and never slashed &mdash; if it can&rsquo;t be verified, you
+          simply get no boost. No custodian. No bridge.
         </div>
       </div>
     </div>
@@ -875,38 +877,36 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         </p>
 
         <div class="code-snippet" data-label="AUDIT">
-<span class="cmt">// Audit seed from ConvergenceX proof</span>
+<span class="cmt">// Native SOST bond (Phase 1 &mdash; in-consensus, trustless)</span>
+<span class="cmt">//   base reward by lock duration; the bond is the ONLY</span>
+<span class="cmt">//   slashable asset. slash trigger: protocol-defined bond failure.</span>
+
+<span class="cmt">// Optional Gold Boost (Phase 2 &mdash; off-consensus, non-critical)</span>
 seed = <span class="fn">SHA256</span>( block_id || commit || checkpoints_root )
-
-<span class="cmt">// Per-contract trigger</span>
 r = <span class="fn">PRF</span>( seed, contractId, periodIndex )
-<span class="kw">if</span> r &lt; p(reputation_stars):
-    <span class="str">AUDIT REQUIRED</span>
-
-<span class="cmt">// Verification (script, no humans)</span>
-<span class="num">1.</span> User signs message with Ethereum wallet
-<span class="num">2.</span> <span class="fn">ecrecover</span>() confirms identity
-<span class="num">3.</span> <span class="fn">token.balanceOf</span>(wallet) &ge; committed_amount
-<span class="num">4.</span> <span class="kw">if</span> true: checkpoint passed
-<span class="num">5.</span> <span class="kw">if</span> false: <span class="fn">SLASH</span>
+<span class="kw">if</span> r &lt; p:
+    <span class="str">GOLD-BOOST CHECK</span>
+    verify tokenized gold (XAUT/PAXG) &ge; eligibility
+    <span class="kw">if</span> verified:     boost continues
+    <span class="kw">if</span> <span class="kw">not</span> verified: no boost   <span class="cmt">// never a slash, lock or penalty</span>
         </div>
 
         <div class="mode-grid">
           <div class="mode-card">
-            <div class="mode-name"><span class="indicator" style="background:var(--text-muted)"></span> 0 stars (new)</div>
-            <div class="mode-params">p = <span>0.30</span> &mdash; 30% of periods audited</div>
+            <div class="mode-name"><span class="indicator" style="background:var(--text-muted)"></span> Gold 0&ndash;30 days verified</div>
+            <div class="mode-params">boost = <span>+0%</span> &mdash; base reward only</div>
           </div>
           <div class="mode-card">
-            <div class="mode-name"><span class="indicator" style="background:var(--red-primary)"></span> 1 star</div>
-            <div class="mode-params">p = <span>0.20</span> &mdash; 20% of periods audited</div>
+            <div class="mode-name"><span class="indicator" style="background:var(--green-primary)"></span> Gold 31&ndash;90 days verified</div>
+            <div class="mode-params">boost = <span>+10%</span> &mdash; on top of base</div>
           </div>
           <div class="mode-card">
-            <div class="mode-name"><span class="indicator" style="background:var(--red-primary)"></span> 3 stars</div>
-            <div class="mode-params">p = <span>0.10</span> &mdash; 10% of periods audited</div>
+            <div class="mode-name"><span class="indicator" style="background:var(--green-primary)"></span> Gold 91+ days verified</div>
+            <div class="mode-params">boost = <span>+20%</span> &mdash; operational cap</div>
           </div>
           <div class="mode-card">
-            <div class="mode-name"><span class="indicator" style="background:var(--green-primary)"></span> 5 stars (veteran)</div>
-            <div class="mode-params">p = <span>0.05</span> &mdash; 5% of periods audited</div>
+            <div class="mode-name"><span class="indicator" style="background:var(--text-muted)"></span> Gold withdrawn / unverifiable</div>
+            <div class="mode-params">revert to base &mdash; no penalty, no slash</div>
           </div>
         </div>
       </div>
@@ -1374,31 +1374,32 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon red"></div>
-          <span class="spec-name">Automatic Slashing (Model A only)</span>
+          <span class="spec-name">Automatic Slashing (native SOST bond)</span>
         </div>
         <span class="spec-tag immutable">CONSTITUTIONAL C7/C8</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          Every fraud detected recycles the bond back into the protocol, funding future rewards and buying more gold
-          for the reserve. Dishonesty strengthens the protocol. No human can override once triggered.
+          If the native SOST bond commitment fails under consensus rules, the bond is slashed automatically &mdash;
+          no human can override once triggered. Gold is never slashed. The recycled bond remains inside the PoPC
+          economic system according to protocol rules.
         </p>
 
         <div class="arch-flow" style="margin:16px 0;">
           <div class="arch-node">
             <div class="node-label">Trigger</div>
-            <div class="node-name">Balance &lt; Committed</div>
-            <div class="node-detail">or 48h no-response<br>after GRACE</div>
+            <div class="node-name">Protocol-defined bond failure</div>
+            <div class="node-detail">automatic<br>no human override</div>
           </div>
           <div class="arch-node">
-            <div class="node-label">50%</div>
-            <div class="node-name">PoPC Pool</div>
-            <div class="node-detail">Funds future rewards</div>
+            <div class="node-label">Slashed bond</div>
+            <div class="node-name">Recycled per protocol rules</div>
+            <div class="node-detail">stays in the PoPC<br>economic system</div>
           </div>
           <div class="arch-node">
-            <div class="node-label">50%</div>
-            <div class="node-name">Gold Vault</div>
-            <div class="node-detail">Buys more gold</div>
+            <div class="node-label">Gold</div>
+            <div class="node-name">Never slashed</div>
+            <div class="node-detail">optional boost only<br>never collateral</div>
           </div>
         </div>
       </div>
