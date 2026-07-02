@@ -370,12 +370,10 @@
     var rect = canvas.getBoundingClientRect();
     var idx = hitTest(ev.clientX - rect.left, ev.clientY - rect.top);
     if (idx < 0) return;
-    var blk = lastBlocks[idx];
-    // DTD lottery block → open the winner's address if the explorer can show it.
-    if (blk.lp > 0 && blk.lw && typeof window.showAddress === 'function') {
-      try { window.showAddress(blk.lw); return; } catch (e) {}
-    }
-    var h = blk.h;
+    var h = lastBlocks[idx].h;
+    // Every tile (lottery or not) opens the block/tx data via the explorer's own
+    // search — from there the user can reach the winner / any wallet. The DTD
+    // winner itself is shown in the hover tooltip.
     // Reuse the explorer's own search if present; otherwise no-op.
     try {
       var inp = document.getElementById('searchIn');
@@ -605,15 +603,29 @@
   }
 
   function onResize() {
-    if (currentTab === 'blocks' && canvas && lastBlocks.length) {
-      layoutAndPaint();
-    }
+    // Re-render the active tab (blocks re-lays the canvas; mempool/producers reflow).
+    render();
   }
 
   function init() {
     if (!build()) return;
     render();
     hookRefresh();
+    // Re-render the moment the card regains width (e.g. returning from a block /
+    // search view) so the mosaic never stays squished waiting ~10 s for the next
+    // refresh cycle. Event-driven (no interval).
+    if (typeof ResizeObserver === 'function' && bodyEl) {
+      var roLastW = 0, roT;
+      var ro = new ResizeObserver(function () {
+        var w = bodyEl.clientWidth || 0;
+        if (w > 0 && Math.abs(w - roLastW) >= 2) {
+          roLastW = w;
+          clearTimeout(roT);
+          roT = setTimeout(render, 60);
+        }
+      });
+      try { ro.observe(bodyEl); } catch (e) {}
+    }
     var rt;
     window.addEventListener('resize', function () {
       clearTimeout(rt);

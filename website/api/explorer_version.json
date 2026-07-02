@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-01-v360-lottery",
-  "note": "Network Mosaic: DTD lottery blocks now marked with an L; hover shows the winner, click opens the winner address. Additive, no consensus change."
+  "v": "2026-07-01-v361-mosaicfix",
+  "note": "Mosaic fixes: lottery tile click now opens the block/tx data like other tiles (winner stays in the hover); ResizeObserver re-renders instantly on return so the mempool tiles no longer look squished for ~10s."
 }
