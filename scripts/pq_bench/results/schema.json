@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "sost-pq-bench-v3",
+  "title": "SOST PQ V3 benchmark result",
+  "description": "Output schema for scripts/pq_bench/pq_bench_v3.py. Timings MUST NOT be published without full provenance. When no PQ library is present, 'timings' is the literal string 'RESULTS_PENDING_COMPUTE_ENV'.",
+  "type": "object",
+  "required": ["schema", "environment", "sizes_bytes", "consensus_limits", "size_impact", "timings", "timings_status"],
+  "properties": {
+    "schema": { "const": "sost-pq-bench-v3" },
+    "environment": {
+      "type": "object",
+      "required": ["date_utc", "python", "platform", "machine", "processor", "git_commit", "git_branch"],
+      "description": "Mandatory provenance. No timing number may be published without ALL of: hardware/OS, compiler/interpreter, CPU, library+version, iterations, mean/median/percentiles/stddev, date, commit.",
+      "properties": {
+        "date_utc": { "type": "string" },
+        "python": { "type": "string" },
+        "platform": { "type": "string" },
+        "machine": { "type": "string" },
+        "processor": { "type": "string" },
+        "git_commit": { "type": "string" },
+        "git_branch": { "type": "string" }
+      }
+    },
+    "sizes_bytes": {
+      "type": "object",
+      "description": "Exact FIPS 204 component sizes (signature/public key) per algorithm."
+    },
+    "consensus_limits": {
+      "type": "object",
+      "properties": {
+        "MAX_TX_BYTES_CONSENSUS": { "type": "integer" },
+        "MAX_BLOCK_BYTES_CONSENSUS": { "type": "integer" }
+      }
+    },
+    "size_impact": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["config", "per_input_bytes", "max_inputs_per_tx_by_bytes", "max_inputs_per_tx_effective", "max_single_input_txs_per_block"],
+        "properties": {
+          "config": { "type": "string" },
+          "per_input_bytes": { "type": "integer" },
+          "max_inputs_per_tx_by_bytes": { "type": "integer" },
+          "max_inputs_per_tx_effective": { "type": "integer" },
+          "max_single_input_txs_per_block": { "type": "integer" }
+        }
+      }
+    },
+    "timings": {
+      "description": "Either the literal 'RESULTS_PENDING_COMPUTE_ENV' when no PQ library is present, or per-algorithm measured stats.",
+      "oneOf": [
+        { "const": "RESULTS_PENDING_COMPUTE_ENV" },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["status"],
+            "properties": {
+              "status": { "type": "string" },
+              "keygen": { "$ref": "#/$defs/opstats" },
+              "sign": { "$ref": "#/$defs/opstats" },
+              "verify": { "$ref": "#/$defs/opstats" }
+            }
+          }
+        }
+      ]
+    },
+    "timings_status": { "type": "string" }
+  },
+  "$defs": {
+    "opstats": {
+      "type": "object",
+      "required": ["iters", "mean_us", "median_us", "p95_us", "stddev_us"],
+      "properties": {
+        "iters": { "type": "integer" },
+        "mean_us": { "type": "number" },
+        "median_us": { "type": "number" },
+        "p95_us": { "type": "number" },
+        "stddev_us": { "type": "number" }
+      }
+    }
+  }
+}
