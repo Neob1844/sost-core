@@ -1410,7 +1410,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         <div>
           <div style="color:#fb010d;font-weight:700;letter-spacing:1.2px;font-size:11.5px;font-family:var(--font-mono);margin-bottom:10px">&#10007; NOT CLAIMED</div>
           <ul style="margin:0 0 0 18px;padding:0;color:var(--text-secondary)">
-            <li>Post-quantum signature safety &mdash; current scheme is secp256k1 + BIP-340 Schnorr; PQ migration is on the roadmap, not active</li>
+            <li>Post-quantum signature safety &mdash; transaction/account signatures currently use ECDSA over secp256k1 with canonical LOW-S (the BIP-340 Schnorr signature is only the SbPoW block-identity binding, not the spend scheme); PQ migration is under research, not active on mainnet</li>
             <li>Audited by an external security firm &mdash; not yet; independent reviewers welcome</li>
             <li>Market price floor &mdash; no peg, no redemption claim against the gold reserve</li>
             <li>Regulatory clearance in any jurisdiction &mdash; assess locally before participating</li>
