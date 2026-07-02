@@ -1,5 +1,33 @@
 # SOST Protocol — Changelog
 
+## Unreleased — Post-Quantum Migration V3 (RESEARCH / DOCS / PROTOTYPE, off-consensus)
+
+Draft, research-only. Changes NO consensus rule, activates NOTHING, adds NO
+build dependency, and compiles NOTHING into the node or miner. Supersedes the V2
+research iteration (PR #37, branch `draft/pq-migration-v2`), which is left intact.
+
+- docs: master index `docs/PQ_MIGRATION_V3.md` and the full V3 set
+  (`PQ_TX_FORMAT_V3`, `PQ_THREAT_MODEL_V3`, `PQ_SECURITY_ASSUMPTIONS_V3`,
+  `PQ_WALLET_MIGRATION_V3`, `PQ_ACTIVATION_PLAN_V3`, `PQ_PERFORMANCE_MODEL_V3`,
+  `PQ_BENCHMARK_RESULTS_V3`, `PQ_TESTNET_PLAN_V3`, `PQ_AUDIT_CHECKLIST_V3`,
+  `PQ_DECISION_LOG_V3`).
+- docs: canonical whitepaper content tree `docs/whitepaper/00..12` +
+  `docs/WHITEPAPER_MANIFEST.md`; seven ADRs `docs/ADR/ADR-001..007`.
+- prototype: `prototype/pq/` (algorithm registry, safe witness parser,
+  deterministic serializer, conceptual validation with domain separation and
+  hybrid-AND). NOT listed in CMake, NOT included by any consensus unit.
+- tests: `tests/pq_vectors/` standalone unit + negative + fuzz targets
+  (21/21 pass, off-ctest).
+- bench: `scripts/pq_bench/` size-math harness (exact FIPS 204) + schema; all
+  timings `RESULTS_PENDING_COMPUTE_ENV` (liboqs not installed).
+- tooling: `scripts/check_whitepaper_sync.py`, `scripts/check_crypto_claims.py`.
+- docs: honest Post-Quantum Migration Status added to `README.md` and the PQ copy
+  on `website/whitepaper-reader.html`, `website/sost-security.html`,
+  `website/sost-technology.html` corrected to remove fixed activation dates
+  (no deploy — repo only).
+- Mainnet-active crypto is unchanged: ECDSA secp256k1 + LOW-S (spend);
+  BIP-340 Schnorr (SbPoW block-identity only). No activation date, no height.
+
 ## v1.1.0 — Transcript V2 (Pre-Launch)
 
 ### ConvergenceX Transcript V2

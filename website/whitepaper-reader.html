@@ -3469,9 +3469,9 @@ TEST COVERAGE:
 <div class="wp-spacer"></div>
 <h3 class="wp-h">8.4 Post-Quantum Cryptography Roadmap</h3>
 <div class="wp-spacer"></div>
-<p class="wp-p">SOST Protocol currently uses secp256k1 ECDSA &mdash; the same scheme used by Bitcoin since 2009. While no practical quantum threat exists today, SOST has a constitutional migration plan. Selected algorithm: <strong>ML-DSA</strong> (NIST FIPS 204 winner). Signature size: 2,420 bytes. New address prefix: <strong>sost2</strong>.</p>
+<p class="wp-p">SOST Protocol currently uses secp256k1 ECDSA &mdash; the same scheme used by Bitcoin since 2009 &mdash; with canonical LOW-S for transaction spends. SOST is <strong>not</strong> post-quantum secure today and no post-quantum scheme is active on mainnet. Post-quantum support is under research only. Candidate signature algorithm: <strong>ML-DSA</strong> (NIST FIPS 204, standardised from CRYSTALS-Dilithium); ML-DSA-44 signature size 2,420 bytes, public key 1,312 bytes. A post-quantum address prefix (provisionally <strong>sost2</strong>) is reserved, not final.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Migration:</strong> Phase 1 Research (done) &rarr; Phase 2 Prototype (2027) &rarr; Phase 3 Dual signatures testnet (2028 Q1) &rarr; Phase 4 Mainnet sost2 (2028 Q3) &rarr; Phase 5 ECDSA deprecation via 95% vote (2030+). SHA-256 hashing remains quantum-safe.</p>
+<p class="wp-p"><strong>Migration (conditional phases, no fixed dates):</strong> Research &rarr; isolated prototype &rarr; dual-signature (hybrid) testnet &rarr; external audit &rarr; separately-reviewed consensus activation (opt-in) &rarr; eventual legacy deprecation by governance. There is <strong>no activation date and no activation height</strong>; any activation of post-quantum validation is a separate, reviewed, audited and announced consensus upgrade. SHA-256 hashing remains quantum-resistant (Grover gives only a quadratic speedup; 256-bit output stays adequate). See docs/PQ_MIGRATION_V3.md.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p" style="font-size:12px;color:#888;border-top:1px solid #333;padding-top:12px;">SOST source code is published under the MIT License — fully open source<a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:#4ecdc4;">LICENSE</a> file for full terms.</p>
   </main>
