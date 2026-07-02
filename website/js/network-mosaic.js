@@ -185,6 +185,7 @@
     for (var i = 0; i < blocks.length; i++) uniqueMiners[blocks[i].miner || '?'] = 1;
     if (foot) {
       foot.innerHTML = 'Each tile = one block · colour = producer · brightness = difficulty &amp; recency · ' +
+        '<b style="color:#000;background:#c9b3ff;border-radius:3px;padding:0 4px">L</b> = DTD lottery block (click for winner) · ' +
         Object.keys(uniqueMiners).length + ' producers in view · hover for detail';
     }
     startAnim();
@@ -253,6 +254,18 @@
       offCtx.lineWidth = 1;
       roundRect(offCtx, x + .5, y + .5, L.tile - 1, L.tile - 1, Math.min(3, L.tile / 6));
       offCtx.stroke();
+      // DTD lottery marker: a bold black "L" (white-outlined so it reads on any tile colour).
+      if (b.lp > 0 && L.tile >= 10) {
+        var lfs = Math.max(9, Math.round(L.tile * 0.62));
+        offCtx.font = '900 ' + lfs + 'px system-ui,Segoe UI,Arial,sans-serif';
+        offCtx.textAlign = 'center'; offCtx.textBaseline = 'middle';
+        var lcx = x + L.tile / 2, lcy = y + L.tile / 2 + 0.5;
+        offCtx.lineWidth = Math.max(2, lfs * 0.16);
+        offCtx.strokeStyle = 'rgba(255,255,255,.88)';
+        offCtx.strokeText('L', lcx, lcy);
+        offCtx.fillStyle = '#000';
+        offCtx.fillText('L', lcx, lcy);
+      }
     }
     // store tile geometry for hit-testing (map order-slot -> block index)
     L.geo = { n: n };
@@ -357,7 +370,12 @@
     var rect = canvas.getBoundingClientRect();
     var idx = hitTest(ev.clientX - rect.left, ev.clientY - rect.top);
     if (idx < 0) return;
-    var h = lastBlocks[idx].h;
+    var blk = lastBlocks[idx];
+    // DTD lottery block → open the winner's address if the explorer can show it.
+    if (blk.lp > 0 && blk.lw && typeof window.showAddress === 'function') {
+      try { window.showAddress(blk.lw); return; } catch (e) {}
+    }
+    var h = blk.h;
     // Reuse the explorer's own search if present; otherwise no-op.
     try {
       var inp = document.getElementById('searchIn');
@@ -379,6 +397,10 @@
     if (enr && enr.tx_count != null) lines.push('txs&nbsp;&nbsp;&nbsp;&nbsp;' + enr.tx_count);
     if (enr && enr.subsidy != null) lines.push('reward&nbsp;' + fmtSost(enr.subsidy) + ' SOST');
     else if (b.lp > 0) lines.push('lottery&nbsp;' + fmtSost(b.lp) + ' SOST');
+    if (b.lp > 0 && b.lw) {
+      lines.push('<span style="color:var(--purple)">&#127881; DTD winner&nbsp;' + shortAddr(b.lw) + '</span>');
+      lines.push('<span style="color:var(--text3);font-size:10px">click &rarr; open winner address</span>');
+    }
     var prof = enr && (enr.casert_mode || null);
     if (prof) lines.push('cASERT&nbsp;' + prof);
     if (b.d != null) lines.push('bits_q&nbsp;' + b.d.toLocaleString());
