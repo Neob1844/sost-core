@@ -890,6 +890,33 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
+          <span class="spec-name">No date &mdash; research</span>
+        </div>
+        <span class="spec-tag overlay">PQ RESEARCH &middot; NOT ACTIVE</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          <strong>Post-quantum migration research (ML-DSA).</strong> SOST maintains a documented
+          research track on a <em>possible future</em> post-quantum signature migration. It is
+          <strong>not a feature and not active</strong>: production cryptography on mainnet
+          <strong>is and remains ECDSA over secp256k1 (canonical LOW-S)</strong> for transaction and
+          account signatures, with BIP-340 Schnorr used only for SbPoW block-identity binding. The
+          research covers cryptographic agility, ML-DSA (FIPS 204) authorization, a
+          <strong>hybrid ECDSA <em>and</em> ML-DSA</strong> spending condition, variable-length
+          witnesses and a wallet-migration path &mdash; all in an <strong>isolated prototype not
+          compiled into the node or miner</strong>, with <strong>no activation height or date</strong>.
+          Any future deployment is contingent on <strong>independent external cryptographic review</strong>
+          and a separate, publicly announced consensus upgrade &mdash; <strong>SOST does not claim
+          quantum-resistance today</strong>. Public research:
+          <a href="https://github.com/Neob1844/sost-core/pull/38" target="_blank" rel="noopener">draft PR #38</a>.
+        </p>
+      </div>
+    </div>
+
+    <div class="spec-block fade-in delay-3">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon cyan"></div>
           <span class="spec-name">2028</span>
         </div>
         <span class="spec-tag overlay">ZK R&amp;D</span>
