@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-01-v358",
-  "note": "DTD lottery card label -> 'DTD LOTTERY DISTRIBUTED BALANCE' (display-only). Preserves the live V14.5 upgrade banner. No node/consensus change."
+  "v": "2026-07-01-v359-mosaic",
+  "note": "Added SOST Network Mosaic visual card (last 288 blocks / mempool / producer distribution) \u2014 additive observability, no consensus change. Also refreshes the V14.5 miner-upgrade banner text."
 }
