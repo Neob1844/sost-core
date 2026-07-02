@@ -17,9 +17,17 @@ Two kinds of output:
 
 ## Environment status (verified 2026-07-02)
 
-liboqs / python `oqs` is **NOT installed** in this build environment, so all
-timing results are `RESULTS_PENDING_COMPUTE_ENV`. The size math is complete and
-correct regardless.
+The node/miner **build** environment ships **no** PQ library. For research only,
+an **indicative** run was produced in an **isolated venv** (`liboqs 0.15.0` +
+`liboqs-python`, never global, not in the build) —
+`results/measured_2026-07-02_i9-10885H_wsl2.json`. Those ML-DSA timings are
+**order-of-magnitude only** (WSL2, turbo NOT pinned); ECDSA baseline / SLH-DSA
+stay `RESULTS_PENDING_COMPUTE_ENV` / N/A. The size math is complete regardless.
+
+Note: the harness resolves mechanism names by alias (final FIPS name first, e.g.
+`ML-DSA-44`, then the legacy `Dilithium2`) — modern liboqs (≥ 0.10) enables the
+final names only, so the legacy-only lookup used previously would have missed a
+valid install.
 
 ## Run
 

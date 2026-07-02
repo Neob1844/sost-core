@@ -245,7 +245,10 @@ consensus limits is itself a consensus change and out of scope for this research
 ML-DSA verification is more expensive than ECDSA verify. An attacker can craft many inputs to force
 expensive verification. **V3 mitigation:** *open / research* — reject on cheap checks first
 (alg-id, size, encoding) before the expensive verify; measure per-alg verify cost on the isolated
-testnet (`scripts/pq_bench/`) — **no timings are asserted in this document.**
+testnet (`scripts/pq_bench/`) — **no timings are asserted in this document.** A candidate
+per-transaction **verify-work budget** (weighted sum of per-input verify costs, checked before any
+verification, weights calibrated from measured timings) is described in
+`docs/PQ_PERFORMANCE_MODEL_V3.md §4.4`; it is a consensus-level bound and out of scope for this PR.
 
 ### 6.3 Memory-exhaustion DoS
 
@@ -357,3 +360,45 @@ Post-quantum transaction validation is **not active on mainnet**: no activation 
 merged. ML-DSA (FIPS 204), the crypto-agility registry, and the hybrid AND scheme exist only as a
 research prototype. The prototype uses `PQ_ACTIVATION_HEIGHT = INT64_MAX` ("never active"). No
 audit has been performed. This document changes no consensus rule and activates nothing.
+
+## 12. Secondary track: transport-channel (KEM) adversary — out of signature scope
+
+Everything above concerns **signatures** (spend authorisation), where the threat is
+"collect public keys now, forge later" and the answer is a PQ / hybrid *signature*.
+A separate adversary — carried over from the V2 analysis (PR #37, §5/§6) and kept
+here so the information is not lost — targets the **encrypted P2P transport
+channel**, which is a *different* problem with a *different* primitive family.
+
+### 12.1 Adversary A1 — harvest-now, decrypt-later (transport only)
+
+| Property | Value |
+|---|---|
+| Target | The node-to-node encrypted channel, today X25519 + ChaCha20-Poly1305 (`src/sost-node.cpp`) |
+| Capability | Records ciphertext **now**, decrypts **later** once a CRQC can break X25519 |
+| Primitive at risk | The **key-establishment** (Diffie-Hellman / KEM) step, **not** any signature |
+| What is exposed | P2P metadata and deal-channel relay content; SOST P2P otherwise carries public blocks/txs, so the marginal value is limited |
+
+This is the classic "harvest-now, decrypt-later" model — which is **why** §2.2
+stresses that the *signature* threat is emphatically **not** this model. The two
+must not be conflated.
+
+### 12.2 Direction (research, isolated-testnet only — activates nothing)
+
+A hybrid key-establishment step: keep X25519 and add **ML-KEM-768** (FIPS 203 —
+a key-encapsulation mechanism, **not** a signature scheme, never used for spends),
+concatenating the two shared secrets and running them through the existing KDF into
+the ChaCha20-Poly1305 key. Both halves must succeed, so the channel is at least as
+strong as X25519 today. Capability-negotiation bits are bound into the transcript
+hash that derives the AEAD key, so a downgrade attempt (stripping ML-KEM) changes
+the derived key and breaks authentication — transport-level downgrade protection.
+The symmetric layer (ChaCha20-Poly1305, 256-bit) is already Grover-adequate.
+
+### 12.3 Scope boundary
+
+- This track is **secondary** to the signature migration and **out of scope for
+  any activation in this PR**.
+- It sets no height, adds no build dependency, and changes no consensus rule; a
+  transport KEM is not a consensus object.
+- It would be exercised, if at all, only on the isolated experimental testnet
+  (`docs/PQ_TESTNET_PLAN_V3.md`), behind the same default-OFF posture as the rest
+  of the prototype.

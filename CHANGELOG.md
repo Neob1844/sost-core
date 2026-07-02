@@ -18,9 +18,30 @@ research iteration (PR #37, branch `draft/pq-migration-v2`), which is left intac
   hybrid-AND). NOT listed in CMake, NOT included by any consensus unit.
 - tests: `tests/pq_vectors/` standalone unit + negative + fuzz targets
   (21/21 pass, off-ctest).
-- bench: `scripts/pq_bench/` size-math harness (exact FIPS 204) + schema; all
-  timings `RESULTS_PENDING_COMPUTE_ENV` (liboqs not installed).
+- bench: `scripts/pq_bench/` size-math harness (exact FIPS 204) + schema.
 - tooling: `scripts/check_whitepaper_sync.py`, `scripts/check_crypto_claims.py`.
+
+### Consolidation (V2 → V3) — this change
+
+Reviewed PR #37 (V2) against PR #38 (V3) file-by-file and concept-by-concept;
+V3 is a superset. Ported the few useful V2-only items into V3 (single source of
+truth; V2 left intact, not closed):
+- `docs/PQ_MIGRATION_V3.md §1.1` — full migration-surface inventory (every
+  fixed-size key/sig field: multisig, RPC, wallet, address, SbPoW; verified
+  file:line) and `§1.2` — pointer to the secondary transport/KEM track.
+- `docs/PQ_THREAT_MODEL_V3.md §12` — transport-channel (ML-KEM-768) track,
+  explicitly out of the signature-activation scope.
+- `docs/PQ_PERFORMANCE_MODEL_V3.md §4.4` — verify-work-budget DoS bound (candidate;
+  weights pending measured timings).
+- `scripts/pq_bench/pq_bench_v3.py` — mechanism-name alias fallback (final
+  `ML-DSA-*` name then legacy `Dilithium*`) + verify-invalid measurement; the
+  legacy-only lookup missed liboqs ≥ 0.10 installs.
+- `docs/PQ_V3_CONSOLIDATION_REVIEW.md` — the full 19-point review + #37↔#38 matrix.
+- bench: **indicative** ML-DSA-44/65/87 timings measured in an isolated venv
+  (liboqs 0.15.0, WSL2, turbo NOT pinned, n=10000) —
+  `scripts/pq_bench/results/measured_2026-07-02_i9-10885H_wsl2.json`; ECDSA
+  baseline / HYBRID / memory / p99 stay `RESULTS_PENDING_COMPUTE_ENV`. No PQ
+  library is added to the node/miner build.
 - docs: honest Post-Quantum Migration Status added to `README.md` and the PQ copy
   on `website/whitepaper-reader.html`, `website/sost-security.html`,
   `website/sost-technology.html` corrected to remove fixed activation dates

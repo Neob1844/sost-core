@@ -119,11 +119,35 @@ few hundred PQ ones. Byte-for-byte, PQ meaningfully reduces effective per-block 
 
 ---
 
-## 5. Timing / CPU / memory — `RESULTS_PENDING_COMPUTE_ENV`
+### 4.4 Verify-work budget (candidate DoS bound — carried over from V2)
 
-No timing, CPU, or memory figures are published here. `liboqs`/`python-oqs` is **not installed**
-in this environment (verified), so any such number would be fabricated. All performance cells are
-**`RESULTS_PENDING_COMPUTE_ENV`**.
+Byte-size limits alone do not bound **verification CPU**: ML-DSA verify is more
+expensive than ECDSA verify, and a transaction can pack many inputs. The V2
+iteration (PR #37) proposed an explicit **per-transaction verify-work budget** —
+a weighted sum of per-input verification costs (ECDSA = weight 1; each PQ / hybrid
+`alg_id` a weight `> 1`) checked **before any signature is verified**, so an
+attacker cannot force a node to run hundreds of maximum-cost verifications by
+submitting a single oversized transaction. V3 records this as a **candidate**
+consensus-level DoS bound, complementary to the "cheapest checks first" ordering
+in `docs/PQ_THREAT_MODEL_V3.md §6.2`:
+
+- The per-`alg_id` weights are **not asserted** here — they must be **calibrated
+  from measured verify timings** (§5 / `docs/PQ_BENCHMARK_RESULTS_V3.md`), which
+  are `RESULTS_PENDING_COMPUTE_ENV`. No weight is invented.
+- Any actual budget constant is itself a **consensus change** and is therefore
+  **out of scope for this research PR**; it would be set only by a future,
+  separately-audited activation proposal (`docs/PQ_ACTIVATION_PLAN_V3.md`).
+- Ordering: reject on `alg_id` / size / encoding (cheap) first; only then spend
+  verify budget. This bounds the worst case to the budget, not to `MAX_INPUTS`.
+
+## 5. Timing / CPU / memory
+
+No timing figure is published **in this model doc**. **Indicative** ML-DSA-44/65/87 keygen/sign/
+verify medians (WSL2, turbo NOT pinned, n=10000, liboqs 0.15.0 in an isolated venv) now exist in
+`docs/PQ_BENCHMARK_RESULTS_V3.md §3` and `scripts/pq_bench/results/measured_2026-07-02_i9-10885H_wsl2.json`
+— they are order-of-magnitude only. The **authoritative** figures needed to size the §4.4
+verify-work budget (clock-pinned host, ECDSA baseline, HYBRID, memory, p99) remain
+**`RESULTS_PENDING_COMPUTE_ENV`**. No performance number is used to set any consensus value in this PR.
 
 ### 5.1 Reproducible instructions to obtain the numbers
 Run in a valid compute environment (see `scripts/pq_bench/` and record every field into

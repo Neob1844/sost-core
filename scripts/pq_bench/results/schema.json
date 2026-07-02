@@ -57,9 +57,13 @@
             "required": ["status"],
             "properties": {
               "status": { "type": "string" },
+              "mechanism": { "type": "string" },
+              "sig_bytes": { "type": "integer" },
+              "pk_bytes": { "type": "integer" },
               "keygen": { "$ref": "#/$defs/opstats" },
               "sign": { "$ref": "#/$defs/opstats" },
-              "verify": { "$ref": "#/$defs/opstats" }
+              "verify_valid": { "$ref": "#/$defs/opstats" },
+              "verify_invalid": { "$ref": "#/$defs/opstats" }
             }
           }
         }
@@ -76,6 +80,8 @@
         "mean_us": { "type": "number" },
         "median_us": { "type": "number" },
         "p95_us": { "type": "number" },
+        "min_us": { "type": "number" },
+        "max_us": { "type": "number" },
         "stddev_us": { "type": "number" }
       }
     }

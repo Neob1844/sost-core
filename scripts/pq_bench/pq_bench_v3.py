@@ -85,23 +85,40 @@ def size_table():
     return rows
 
 
+# Mechanism-name aliases. Modern liboqs (>= 0.10) exposes the FINAL FIPS 204
+# names ("ML-DSA-44"); older builds only expose the round-3 "Dilithium2" names.
+# Try the final name first, then fall back — otherwise a valid install is missed
+# (empirically, liboqs 0.15.0 enables ML-DSA-44 but NOT Dilithium2).
+OQS_ALIASES = {
+    "ML_DSA_44": ["ML-DSA-44", "Dilithium2"],
+    "ML_DSA_65": ["ML-DSA-65", "Dilithium3"],
+    "ML_DSA_87": ["ML-DSA-87", "Dilithium5"],
+}
+
+
+def _resolve_mech(enabled, aliases):
+    for n in aliases:
+        if n in enabled:
+            return n
+    return None
+
+
 def try_measure(iters):
     """Return a dict of measured timings, or None if no PQ library present."""
     try:
-        import oqs  # type: ignore
+        import oqs, time  # type: ignore
     except Exception:
         return None
+    enabled = set(oqs.get_enabled_sig_mechanisms())
     results = {}
-    for mech, name in [("Dilithium2", "ML_DSA_44"),
-                       ("Dilithium3", "ML_DSA_65"),
-                       ("Dilithium5", "ML_DSA_87")]:
+    msg = b"SOST-pq-bench-v3"
+    for name, aliases in OQS_ALIASES.items():
+        mech = _resolve_mech(enabled, aliases)
+        if mech is None:
+            results[name] = {"status": "MECH_NOT_ENABLED", "tried": aliases}
+            continue
         try:
-            import oqs, time  # noqa
-            if mech not in oqs.get_enabled_sig_mechanisms():
-                results[name] = {"status": "MECH_NOT_ENABLED"}
-                continue
-            keygen, sign, verify = [], [], []
-            msg = b"SOST-pq-bench-v3"
+            keygen, sign, verify_valid, verify_invalid = [], [], [], []
             for _ in range(iters):
                 with oqs.Signature(mech) as signer:
                     t = time.perf_counter(); pk = signer.generate_keypair()
@@ -110,8 +127,13 @@ def try_measure(iters):
                     sign.append(time.perf_counter() - t)
                     with oqs.Signature(mech) as ver:
                         t = time.perf_counter(); ok = ver.verify(msg, sig, pk)
-                        verify.append(time.perf_counter() - t)
-                        assert ok
+                        verify_valid.append(time.perf_counter() - t)
+                        assert ok, f"{mech}: valid signature failed to verify"
+                        # verify-INVALID: flip one signature bit; must be rejected
+                        bad = bytes([sig[0] ^ 0x01]) + sig[1:]
+                        t = time.perf_counter(); rej = ver.verify(msg, bad, pk)
+                        verify_invalid.append(time.perf_counter() - t)
+                        assert not rej, f"{mech}: forged signature accepted"
 
             def stats(xs):
                 xs_us = sorted(x * 1e6 for x in xs)
@@ -120,10 +142,17 @@ def try_measure(iters):
                     "mean_us": statistics.mean(xs_us),
                     "median_us": statistics.median(xs_us),
                     "p95_us": xs_us[int(0.95 * (len(xs_us) - 1))],
+                    "min_us": xs_us[0],
+                    "max_us": xs_us[-1],
                     "stddev_us": statistics.pstdev(xs_us),
                 }
-            results[name] = {"status": "MEASURED", "keygen": stats(keygen),
-                             "sign": stats(sign), "verify": stats(verify)}
+            results[name] = {
+                "status": "MEASURED", "mechanism": mech,
+                "sig_bytes": len(sig), "pk_bytes": len(pk),
+                "keygen": stats(keygen), "sign": stats(sign),
+                "verify_valid": stats(verify_valid),
+                "verify_invalid": stats(verify_invalid),
+            }
         except Exception as e:  # pragma: no cover
             results[name] = {"status": f"ERROR:{type(e).__name__}"}
     return results
@@ -177,11 +206,12 @@ def main():
         print(f"  Install liboqs + liboqs-python and re-run to populate.")
     else:
         for name, res in measured.items():
-            print(f"  {name}: {res.get('status')}")
+            extra = f" via {res['mechanism']}" if res.get("status") == "MEASURED" else ""
+            print(f"  {name}: {res.get('status')}{extra}")
             if res.get("status") == "MEASURED":
-                for op in ("keygen", "sign", "verify"):
+                for op in ("keygen", "sign", "verify_valid", "verify_invalid"):
                     s = res[op]
-                    print(f"    {op:7} mean={s['mean_us']:.1f}us median={s['median_us']:.1f}us "
+                    print(f"    {op:14} mean={s['mean_us']:.1f}us median={s['median_us']:.1f}us "
                           f"p95={s['p95_us']:.1f}us stddev={s['stddev_us']:.1f}us n={s['iters']}")
 
     out = {

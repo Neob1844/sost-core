@@ -35,6 +35,52 @@ quantum-safe.
   `-1`) still uses the legacy label "SPHINCS+/Dilithium"; it changes no behaviour
   and should eventually be reworded to ML-DSA.
 
+## 1.1 Full migration surface — every fixed-size key / signature field
+
+The signature-migration scope is not one field. Consolidated from the V2 audit
+(PR #37, `docs/PQ_MIGRATION_V2.md §1.1`) and re-verified against current source,
+these are **all** the fixed-size public-key / signature / hash sites a PQ
+migration must eventually address. Sizes and line numbers are current as of the
+`origin/main` this branch targets; none of these are changed by this research PR.
+
+| Field / surface | Size | Declared | (De)serialized |
+|---|---|---|---|
+| `TxInput.signature` | 64 B fixed | `include/sost/transaction.h:72` | `src/transaction.cpp:210-217` / `:220-225` |
+| `TxInput.pubkey` | 33 B fixed | `include/sost/transaction.h:73` | `src/transaction.cpp:210-217` / `:220-225` |
+| `TxOutput.pubkey_hash` | 20 B fixed | `include/sost/transaction.h:91` | `src/transaction.cpp` (output ser.) |
+| Per-input on-chain size | 133 B | — | `src/tx_validation.cpp:77` |
+| Type aliases (`PrivKey/PubKey/Sig64/PubKeyHash`) | 32/33/64/20 | `include/sost/tx_signer.h:23-26` | — |
+| Multisig redeem (`PubKey` list) | 33 B each | `include/sost/script.h:53` (`make_multisig_redeem_script`) | `src/script.cpp` (eval) |
+| Multisig scriptSig (`Sig64` list) | 64 B each | `include/sost/script.h:56` (`make_p2sh_script_sig`) | `src/script.cpp` (eval) |
+| Wallet key material | `PubKey[33]`, `PrivKey[32]`, `pkh[20]` | `src/hd_wallet.cpp:191-197,213-219` | `wallet.json` |
+| RPC pubkey field | `to_hex(...,33)` | `src/sost-rpc.cpp:167` | JSON out |
+| RPC address field | `address_encode(pkh)` | `src/sost-rpc.cpp:175,187,232` | JSON out |
+| Address (`sost1` + 40 hex) | 20-B pkh | `src/address.cpp:17,28` | — |
+| SbPoW miner identity (Schnorr, **not** spend) | 33-B `MinerPubkey` | `include/sost/sbpow.h:44` | `src/sbpow.cpp` |
+
+Consensus size limits that bound any new witness (must be honoured):
+`MAX_TX_BYTES_CONSENSUS = 100000` (`include/sost/consensus_constants.h:15`),
+`MAX_BLOCK_BYTES_CONSENSUS = 1000000` (`:16`), `MAX_INPUTS_CONSENSUS = 256`
+(`:17`), `MAX_OUTPUTS_CONSENSUS = 256` (`:18`).
+
+Two surfaces are explicitly **out of the signature-migration scope** and must not
+be conflated with it: (a) the SbPoW BIP-340 Schnorr miner-identity binding above,
+which authenticates a *block*, not a spend; and (b) the explorer's ED25519 /
+X25519 "EKEY" lines, which describe the encrypted deal-channel P2P relay, not a
+transaction signature. See §1.2 (transport track) and `docs/PQ_THREAT_MODEL_V3.md §12`.
+
+## 1.2 Secondary track: transport-channel (KEM) hardening — out of primary scope
+
+V3's primary scope is the **signature** migration (spend authorisation). A
+distinct, secondary concern carried over from V2 (PR #37, §5/§6) is the encrypted
+**P2P transport channel**, today X25519 + ChaCha20-Poly1305
+(`src/sost-node.cpp`). That channel faces a *different* adversary — genuine
+"harvest-now-decrypt-later" — and a *different* primitive family (a KEM, e.g.
+ML-KEM-768 / FIPS 203, which is **not** a signature scheme and is **never** used
+for spends). It is documented once, in full, in `docs/PQ_THREAT_MODEL_V3.md §12`,
+and is explicitly **out of the signature-activation scope of this PR**: it sets no
+height, adds no dependency, and changes no consensus rule.
+
 ## 2. The threat, framed correctly
 
 The signature risk is **not** "harvest now, decrypt later" (that is the
