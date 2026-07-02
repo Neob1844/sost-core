@@ -89,26 +89,26 @@ Branch: `draft/pq-migration-v3-docsync` (PR #38, **DRAFT**). `PQ_ACTIVATION_HEIG
 | FIPS 204 ACVP known-answer vectors | **NOT_RUN** (not available in-repo; audit-scope) |
 | Authoritative clock-pinned timings / ECDSA baseline / HYBRID / memory / p99 | **RESULTS_PENDING_COMPUTE_ENV** |
 
-## 7. SHA-256 of critical files (computed at tree `a5186643`)
+## 7. SHA-256 of critical files (recomputed at the BE16 length-unification commit)
 
 ```
 6da8e3f48441fa92c074a29d05b8ab1b5b91ade411af98d3ee748f44b1313b44  docs/PQ_MIGRATION_V3.md
-a5804b66914a6b5c905b772a1db6983718f329d75f43920c8d70f84e777f6705  docs/PQ_TX_FORMAT_V3.md
+803e8ae25467471a0a8c2fdc1d3c056b1af4308dcf783a4dcc56163ec7bdc2a0  docs/PQ_TX_FORMAT_V3.md
 21d8a367434ac050d810ef42e0065648733866f71455549bb937a4a210fa05fa  docs/PQ_THREAT_MODEL_V3.md
 3d067cab74216eb57b393e36e9ab9467c87fcf3d939c130a3278e792da6e0298  docs/PQ_SECURITY_ASSUMPTIONS_V3.md
 808e64919c45a2ee21e64bbba56a6f113ff91a8a57f7cf27c4959fa80a1df1fe  docs/PQ_WALLET_MIGRATION_V3.md
 28823cc80c2979365307de108d0283fe46dd864ec72f9d617ce69f3cf727d3ac  docs/PQ_ACTIVATION_PLAN_V3.md
-68df70d7cadb23eccfc49363907a3c3e1bc26eb268e2b75f6bef47f44c73383f  docs/PQ_PERFORMANCE_MODEL_V3.md
-b336eb9369ba48ef415093aea8227507d1bb7ab13daf30069b3650a2a09b4ff0  docs/PQ_BENCHMARK_RESULTS_V3.md
+5ce77f1ef3a469ec14dbb5aa79f26b7f79859659cd6b8d6ae81e73d7ec6f0446  docs/PQ_PERFORMANCE_MODEL_V3.md
+fc2b6f8e901b3dc6b5b1a13100bc81fe79c1ab62256e4993a93ca03bedd87aad  docs/PQ_BENCHMARK_RESULTS_V3.md
 d441d78af14f95bb826416182fb43f68bb9090bb1a301e29ae51763f45836698  docs/PQ_TESTNET_PLAN_V3.md
-b3eacf42713a73fcfdf43302fbb68b87e084d122e2ddd305e42f508a928d506f  docs/PQ_AUDIT_CHECKLIST_V3.md
-e601dfc4cef42d80e730a861d7af4dcd550fded131212bdac51a60390c8e9939  docs/PQ_DECISION_LOG_V3.md
+01272ac1fd172b4ead486a5c0d14e29512843bfa6bb801424307e8fedda06d04  docs/PQ_AUDIT_CHECKLIST_V3.md
+613c5e4c2d5c76d719ee6e760b05179f5e3fc512f52198857987f9ec1432f301  docs/PQ_DECISION_LOG_V3.md
 aa54729059b52bd9836cbeeb99e524a0f4a8352c369cce23babc20e1a31c0aff  docs/PQ_V3_CONSOLIDATION_REVIEW.md
-842628b5448aa9f052e00497bd06f8a537d2dce2459d2993940606977a9d1e51  docs/PQ_EXTERNAL_AUDIT_BRIEF_V3.md
-3d3266a069a1a922c5a0522b690b3a836bb36365a5a31512f00f69a9fed8567e  docs/PQ_EXTERNAL_AUDITOR_QUESTIONS_V3.md
+7869f7c7d4d4c2535ba618695e506ce74e29fa5a430b96b8e830aa95755f75cc  docs/PQ_EXTERNAL_AUDIT_BRIEF_V3.md
+c828c2f478558987e5eafd364e7b4d8ff28bdf54be0a7f7abaea2aaef21b6d46  docs/PQ_EXTERNAL_AUDITOR_QUESTIONS_V3.md
 2ef73277ec2f1d7fc1219af950be1a3efb84b50ec43cb258888c2d0ba79cc448  docs/ADR/ADR-001-crypto-agility.md
 66717ef6983452955bbdefbd9b4fc22f22560d29a2b6a49bda69db4a8c527129  docs/ADR/ADR-002-hybrid-not-or.md
-2ea8cfe483b212d3c89910479eead70bb4fb93414557146a57ea7b6d61fcb3ff  docs/ADR/ADR-003-variable-length-witness.md
+2bb58ed1e3350990b6619cf8f2b983b7381fafd4f0c60dc42bfb03a002428293  docs/ADR/ADR-003-variable-length-witness.md
 bf601982be6f91ef48dc986f2f92414cad09b0e287ca76c7de5f0e6b7705b619  docs/ADR/ADR-004-pq-library-isolation.md
 439fce757c9a750ff09f2357e01e9b4b2f90d8d2b010c8502731c05c899af136  docs/ADR/ADR-005-no-mainnet-activation-yet.md
 5020dc985f84136c62528b6b01cebc5c0b969fa243c14c190d5f9ace32050ae1  docs/ADR/ADR-006-whitepaper-as-code.md
@@ -117,10 +117,10 @@ e1aeee52d7a1f433b583d97e5a68b4b214247bce3125a3678c995f64f50c3314  prototype/pq/p
 5430161684157dd1634d18da427a12cfb81dc6be04fd3608610dc84ba3376c3c  prototype/pq/pq_witness.h
 1ae15c06a243ceae43d8d503f92cebff26496c2f2cf62c5427f125162c8a80aa  prototype/pq/pq_validate.h
 51774ec23b54e132f567e77a1bc219c77610a7981154029a42f315c7f1971603  prototype/pq/README.md
-3af0b65f0f6c16f7a3d141a4326d977aaab5de584e9f46886735e8afa546fd70  tests/pq_vectors/test_pq_witness.cpp
+85f53ad6f79e639fa14ce7b1cf2de7eae78d81a23436a11f5ebc6902971612fc  tests/pq_vectors/test_pq_witness.cpp
 f49af5eafbe7877a0fb39a1101d68d608df4074e5c7d290384e78de7834597ab  tests/pq_vectors/fuzz_pq_witness.cpp
 75117923c3c6bfa1b97c45ae73dd9fdb75273352301afbcaf3c1ea4f7525b890  tests/pq_vectors/README.md
-566dab6ab0ac740f9b838e4c5f99191d55c450358d4dd805b4580ff35654b8ff  docs/examples/pq/witness_vectors.json
+3269deebbdc94868924d00970b0404945b6c62193ee3cc3d266ae0fccc75b272  docs/examples/pq/witness_vectors.json
 b52c343e5f708690f216845f1dd33026dfe22c93bdebeddf1bc99274ecabbb71  scripts/pq_bench/pq_bench_v3.py
 e873c40d505f6a4f25f2bbc91d9fb497bcc3fd068d8cbfd04653712b298a58ad  scripts/pq_bench/README.md
 13e13d770e7429e4c9e59d54b5754f8b5edfde0b5731e8b53391a96beafbb036  scripts/pq_bench/results/schema.json
@@ -130,14 +130,19 @@ f662e860e739384d55b3686ce30497399720d00f54d4600b277b0f09c900763c  scripts/pq_ben
 5c8b700c406972154da8ec8f83db348832ebf621c4413ddb70765bec304e485c  scripts/check_whitepaper_sync.py
 ```
 
-To re-verify after checkout of the branch tip `a5186643`:
+To re-verify after checkout of the branch tip:
 ```
 git fetch origin
-git checkout a5186643e439ba1dd4af5a1d27c478aaeb7eb733
+git checkout draft/pq-migration-v3-docsync
 sha256sum -c <(sed -n '/^```$/,/^```$/p' docs/PQ_EXTERNAL_AUDIT_MANIFEST_V3.md | grep -E '^[0-9a-f]{64}  ')
 ```
-(The hand-off commit adds only the three `PQ_EXTERNAL_AUDIT_*_V3.md` docs on top of `a5186643`; all
-hashes above remain valid at the hand-off commit.)
+(Hashes were recomputed for the BE16 length-unification commit. That commit is docs/prototype/tests
+only — it unifies every V3 length reference on the fixed 2-byte big-endian encoding and touches no
+`src/`, `include/`, build, or consensus file. The ten files it edits — `PQ_TX_FORMAT_V3.md`,
+`PQ_PERFORMANCE_MODEL_V3.md`, `PQ_BENCHMARK_RESULTS_V3.md`, `PQ_AUDIT_CHECKLIST_V3.md`,
+`PQ_DECISION_LOG_V3.md`, `PQ_EXTERNAL_AUDIT_BRIEF_V3.md`, `PQ_EXTERNAL_AUDITOR_QUESTIONS_V3.md`,
+`ADR-003-variable-length-witness.md`, `tests/pq_vectors/test_pq_witness.cpp`,
+`docs/examples/pq/witness_vectors.json` — carry the updated hashes above.)
 
 ## 8. Reproduce the tests
 

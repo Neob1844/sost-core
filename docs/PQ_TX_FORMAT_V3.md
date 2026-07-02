@@ -80,8 +80,9 @@ SLH-DSA (FIPS 205) sizes are parameter-set dependent and are not pinned here.
 ## 5. Wire format (prototype)
 
 ```
-witness := alg_id(1 byte) || component*      (no trailing bytes allowed)
-component := len(2 bytes, big-endian) || bytes[len]
+witness   := alg_id(1 byte) || component*      (no trailing bytes allowed)
+component := len_be16 || component_bytes
+len_be16  := unsigned 16-bit integer, big-endian (network byte order)
 
 alg_id 0x00 LEGACY : sig(64)      pk(33)
 alg_id 0x01 ML-DSA : sig(2420)    pk(1312)
@@ -89,6 +90,30 @@ alg_id 0x02 HYBRID : ec_sig(64)   ec_pk(33)   ml_sig(2420)   ml_pk(1312)
 alg_id 0x03/0x04/0x10 RESERVED : rejected
 alg_id 0xFF INVALID  : rejected
 ```
+
+**Length encoding — single canonical rule (normative for V3).** Every component
+length is encoded as `len_be16`: an **unsigned 16-bit integer, big-endian
+(network byte order), occupying exactly 2 bytes**. There is exactly one length
+encoding in V3:
+
+- Exactly **2 length bytes** per component — never 1, never 3.
+- **Unsigned big-endian**, always network byte order, identical on every
+  architecture.
+- **No `CompactSize`, no varint, no short form, no long form, no alternative
+  prefix.** A `0xfd`/`0xfe`/`0xff` lead byte is just the high byte of a 16-bit
+  length, never a varint marker.
+- Each decoded `len_be16` **must equal the exact expected size** for the
+  component's algorithm **and position**; any other value — including a
+  correctly-formed length that names the wrong size — is rejected.
+
+Rejection is deterministic for: truncation (fewer than 2 length bytes, or fewer
+than `len_be16` component bytes), a wrong length, an over- or under-sized
+component, wrong component order, duplication, and trailing bytes after a
+complete witness. The parser performs **no allocation before the exact expected
+length has been checked**. This format is **PROVISIONAL**; it is not active on
+mainnet. An external auditor may question whether explicit per-component lengths
+are needed at all (the `alg_id` already fixes every exact size), but must never
+be presented with two incompatible encodings for the same witness version.
 
 Design choices:
 
@@ -100,6 +125,16 @@ Design choices:
   memory. This same rule catches duplicated / mis-ordered hybrid halves (a
   swapped half presents the wrong length for its position).
 - **No trailing bytes.** A witness must consume its input exactly.
+
+> **Decision note (V3 research prototype).** Fixed-width BE16 was selected for the
+> V3 research prototype because all currently proposed component sizes are below
+> 65536 bytes, every length has exactly one representation, and the parser avoids
+> CompactSize/varint canonicalisation rules. This remains provisional until
+> external review and a separate consensus proposal.
+>
+> A component larger than 65535 bytes (none is currently proposed) could not be
+> expressed under this encoding and would require a **new witness version**, never
+> an alternative interpretation of the V3 length field.
 
 The prototype parser (`prototype/pq/pq_witness.h`, `parse_witness`) returns one
 of these deterministic codes: `OK`, `ERR_EMPTY`, `ERR_UNKNOWN_ALGID`,
@@ -135,8 +170,8 @@ and the negative tests confirm rejection when either half fails
 
 ## 8. Weight / cost
 
-A PQ input is ~27x the size of a legacy input; a hybrid input slightly larger
-still. **No weight discount is assumed for PQ.** Size, per-input and per-tx
+A PQ input is ~28x the size of a legacy input (ML-DSA-44); a hybrid input
+slightly larger still (~29x). **No weight discount is assumed for PQ.** Size, per-input and per-tx
 validation cost, and the interaction with `MAX_TX_BYTES_CONSENSUS = 100000`
 (`include/sost/consensus_constants.h:15`), `MAX_BLOCK_BYTES_CONSENSUS = 1000000`
 (`:16`) and `MAX_INPUTS_CONSENSUS = 256` (`:17`) are analysed in

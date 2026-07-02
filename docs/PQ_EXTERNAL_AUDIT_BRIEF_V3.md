@@ -140,12 +140,17 @@ for txid stability and malleability resistance. The prototype (`prototype/pq/pq_
 `alg_id`, single-pass bounds-checked parsing, and **no trailing bytes**, returning deterministic
 codes (`OK`, `ERR_EMPTY`, `ERR_UNKNOWN_ALGID`, `ERR_RESERVED_ALGID`, `ERR_INVALID_ALGID`,
 `ERR_TRUNCATED`, `ERR_BAD_LENGTH_PREFIX`, `ERR_WRONG_COMPONENT_LEN`, `ERR_TRAILING_BYTES`,
-`ERR_DUP_OR_MISORDERED`). **Auditor note / known doc inconsistency:** the wire spec
-(`docs/PQ_TX_FORMAT_V3.md §5`) and the prototype use a **fixed 2-byte big-endian** length prefix,
-whereas `docs/PQ_PERFORMANCE_MODEL_V3.md §3` models overhead as `CompactSize` and
-`docs/PQ_AUDIT_CHECKLIST_V3.md §2` still says "shortest-form CompactSize"; the canonical length
-encoding must be reconciled to a single normative choice (see the auditor questions, canonical
-encoding).
+`ERR_DUP_OR_MISORDERED`). **Single canonical length encoding.** V3 uses **one** length encoding
+everywhere: each component length is an **unsigned 16-bit big-endian value in exactly 2 bytes**
+(`len_be16`). `CompactSize` / varint is **not part of the V3 proposal**; the wire spec
+(`docs/PQ_TX_FORMAT_V3.md §5`), the performance model (`docs/PQ_PERFORMANCE_MODEL_V3.md §3`), the
+checklist (`docs/PQ_AUDIT_CHECKLIST_V3.md §2`) and the prototype now all state this one encoding.
+This choice is **provisional** (pending external review); it is not presented as audited or
+production-final. **For auditor review:** whether BE16 is sufficient; whether explicit per-component
+lengths are worth keeping when `alg_id` already fixes every exact size; parser-differential risk;
+whether an additional global witness-size limit is warranted; and the rule that any future component
+larger than 65535 bytes would require a **new witness version**, never an alternative interpretation
+of the V3 length field.
 
 ## 11. Unknown-id rejection
 
@@ -161,8 +166,9 @@ Consensus limits any witness must honour (`include/sost/consensus_constants.h`):
 = 100000` (:15), `MAX_BLOCK_BYTES_CONSENSUS = 1000000` (:16), `MAX_INPUTS_CONSENSUS = 256` (:17),
 `MAX_OUTPUTS_CONSENSUS = 256` (:18); plus `MAX_TX_BYTES_STANDARD = 16000` (`include/sost/tx_validation.h:26`),
 `MAX_BLOCK_TXS_CONSENSUS = 65536` (`include/sost/block_validation.h:37`), `MAX_BLOCK_TX_COUNT = 4096`
-(`include/sost/mempool.h:22`). Modelled per-input size: legacy 133 B → ML-DSA-44 ~3775 B (~28×),
-ML-DSA-65 ~5304 B (~40×), HYBRID ~3874 B (~29×) (`docs/PQ_PERFORMANCE_MODEL_V3.md §3`). No weight
+(`include/sost/mempool.h:22`). Modelled per-input size (fixed 2-byte BE16 length prefixes): legacy 133 B →
+ML-DSA-44 3773 B (~28×), ML-DSA-65 5302 B (~40×), ML-DSA-87 7260 B (~55×), HYBRID 3874 B (~29×)
+(`docs/PQ_PERFORMANCE_MODEL_V3.md §3`). No weight
 discount is proposed for PQ. The full migration surface (every fixed-size key/sig/hash field) is
 inventoried in `docs/PQ_MIGRATION_V3.md §1.1`.
 

@@ -46,11 +46,18 @@ This document is research/architecture only. It changes no consensus rule and ac
 
 ## C. Encoding, malleability, binding
 
-- **C1 — Canonical encoding reconciliation.** The wire spec and prototype use a **fixed 2-byte
-  big-endian** length prefix (`docs/PQ_TX_FORMAT_V3.md §5`, `prototype/pq/pq_witness.h`), but
-  `docs/PQ_PERFORMANCE_MODEL_V3.md §3` and `docs/PQ_AUDIT_CHECKLIST_V3.md §2` reference `CompactSize`.
-  Which must be normative? Confirm the chosen encoding is single-valued (exactly one byte-string per
-  logical witness) and that non-canonical encodings are rejected.
+- **C1 — Canonical length encoding (single, provisional).** V3 uses **one** length encoding
+  everywhere: an **unsigned 16-bit big-endian value in exactly 2 bytes** (`len_be16`). The wire spec
+  (`docs/PQ_TX_FORMAT_V3.md §5`), performance model (`docs/PQ_PERFORMANCE_MODEL_V3.md §3`), checklist
+  (`docs/PQ_AUDIT_CHECKLIST_V3.md §2`) and prototype (`prototype/pq/pq_witness.h`) now all agree;
+  `CompactSize`/varint is **not** part of the proposal. This is **provisional** (pending this review),
+  not audited or production-final. Please assess: is BE16 sufficient? Are explicit per-component
+  lengths worth keeping when `alg_id` already fixes every exact size (an alternative is length-free,
+  size-by-`alg_id` parsing)? Is there parser-differential risk across implementations? Is a separate
+  global witness-size limit needed? Confirm the encoding is single-valued (exactly one byte-string per
+  logical witness) and that non-canonical encodings are rejected. Note: any future component larger
+  than 65535 bytes would require a **new witness version**, never a re-interpretation of the V3 length
+  field.
 - **C2 — Malleability / txid stability.** With exact-length + no-trailing-bytes + fixed field order,
   is there any third-party mutation that yields a different accepted witness (hence a different txid)
   for the same authorised spend? Consider ML-DSA's own signature-encoding malleability, if any.
@@ -123,7 +130,7 @@ This document is research/architecture only. It changes no consensus rule and ac
 ## I. Parameters and libraries
 
 - **I1 — ML-DSA-44 vs -65.** Is NIST L2 (ML-DSA-44) an acceptable default for a monetary chain, or
-  should L3 (ML-DSA-65) be the default given the modest size delta (~3775 vs ~5304 B/input)?
+  should L3 (ML-DSA-65) be the default given the modest size delta (~3773 vs ~5302 B/input)?
 - **I2 — ML-DSA-87 utility.** Is there any real utility to ML-DSA-87 (L5) for spend authorisation, or
   should it stay reserved-only?
 - **I3 — SLH-DSA reserve.** Is holding SLH-DSA (FIPS 205, hash-based) purely as a reserve the right

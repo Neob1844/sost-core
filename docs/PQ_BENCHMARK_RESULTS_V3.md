@@ -155,14 +155,16 @@ Signature / public-key sizes (FIPS 204; ECDSA from current SOST):
 | ML-DSA-87 (rsv.)  | 4627          | 2592           |
 | SLH-DSA           | parameter-set dependent | parameter-set dependent |
 
-Modelled per-input serialized size (outpoint 36 + alg_id 1 + length-prefixed fields; current legacy
-= 133 B at `src/tx_validation.cpp:77`; fixed 64/33 layout at `include/sost/transaction.h:72-73`):
+Modelled per-input serialized size (outpoint 36 + alg_id 1 + fixed 2-byte BE16 length-prefixed
+fields; current legacy = 133 B at `src/tx_validation.cpp:77`; fixed 64/33 layout at
+`include/sost/transaction.h:72-73`):
 
 | Class             | Per-input (B) | vs legacy 133 |
 |-------------------|---------------|---------------|
 | LEGACY (today)    | 133           | 1.0×          |
-| ML-DSA-44         | 3775          | ~28×          |
-| ML-DSA-65         | 5304          | ~40×          |
+| ML-DSA-44         | 3773          | ~28×          |
+| ML-DSA-65 (rsv.)  | 5302          | ~40×          |
+| ML-DSA-87 (rsv.)  | 7260          | ~55×          |
 | HYBRID (ECDSA+44) | 3874          | ~29×          |
 
 See `docs/PQ_PERFORMANCE_MODEL_V3.md` for the full arithmetic and the impact against

@@ -40,7 +40,15 @@ envelope with:
    scheme.
 2. **Explicit length prefixes** for each variable-length field (signature blob,
    public key blob; two of each in hybrid mode), so a parser never relies on an
-   implied fixed width.
+   implied fixed width. Each length is encoded as **`len_be16` — an unsigned
+   16-bit integer, big-endian (network byte order), occupying exactly 2 bytes**.
+   There is deliberately **no `CompactSize`, varint, short form or alternative
+   prefix**: a fixed width has exactly one representation of each value and needs
+   no shortest-form canonicalisation rule (all proposed component sizes are below
+   65536 bytes; largest is ML-DSA-87's 4627-byte signature). See ADR decision D8
+   in `docs/PQ_DECISION_LOG_V3.md` and the normative spec
+   `docs/PQ_TX_FORMAT_V3.md §5`. A component exceeding 65535 bytes would require a
+   **new witness version**, never a re-interpretation of the V3 length field.
 3. **Exact-size enforcement per alg_id.** The length prefixes are parse-level
    framing only; consensus validation additionally requires each field to be
    *exactly* the size mandated by the alg_id's scheme. Reference sizes (FIPS

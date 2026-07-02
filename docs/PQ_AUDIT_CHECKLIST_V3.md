@@ -29,7 +29,15 @@ This document is research/architecture only. It changes no consensus rule and ac
 - [ ] Rejects **oversized** witnesses (exceeds the per-class expected size / declared bound).
 - [ ] Rejects **duplicate** witness components.
 - [ ] Rejects **mis-ordered** components (fixed, documented field order).
-- [ ] Rejects **non-canonical** length encodings (shortest-form CompactSize only).
+- [ ] Every component length is encoded as **exactly one unsigned 16-bit big-endian value**; no
+      `CompactSize`, varint, short form or alternative form is accepted.
+- [ ] The length prefix is **exactly two bytes**; a one-byte prefix is rejected.
+- [ ] A `CompactSize`-style `0xfd` lead is treated as the high byte of a BE16 length, never as a
+      varint marker (no varint interpretation exists).
+- [ ] Truncation after only the first length-prefix byte is rejected (two prefix bytes required).
+- [ ] The exact expected component size is checked **before any allocation** driven by the length.
+- [ ] BE16 length decoding has **identical semantics on all architectures** (byte order is fixed,
+      not host-endian).
 - [ ] Signature/pubkey lengths must exactly match the class's fixed FIPS 204 sizes.
 - [ ] No unbounded allocation driven by attacker-supplied length fields.
 

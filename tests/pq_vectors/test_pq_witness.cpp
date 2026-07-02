@@ -139,6 +139,76 @@ int main() {
               "mis-ordered hybrid halves rejected");
     }
 
+    // ---- BE16-ONLY: accidental little-endian length (bytes swapped) ----
+    {
+        // sig length 64 is big-endian 0x00 0x40; a little-endian encoder would emit
+        // 0x40 0x00 = 0x4000 = 16384 under BE decoding -> WRONG_COMPONENT_LEN.
+        Bytes wire = serialize_witness(make_witness(AlgId::LEGACY_ECDSA_SECP256K1));
+        std::swap(wire[1], wire[2]);
+        PqWitness p;
+        CHECK(parse_witness(wire, p) == PqParseCode::ERR_WRONG_COMPONENT_LEN,
+              "little-endian length rejected (BE16 only)");
+    }
+
+    // ---- BE16-ONLY: one-byte length prefix (high byte dropped) ----
+    {
+        // Drop the high 0x00 byte so only one length byte precedes the data. The
+        // parser still reads TWO bytes; it sees 0x40,0x11 = 0x4011 -> WRONG_COMPONENT_LEN.
+        Bytes wire = serialize_witness(make_witness(AlgId::LEGACY_ECDSA_SECP256K1));
+        wire.erase(wire.begin() + 1);  // remove the 0x00 high length byte
+        PqWitness p;
+        CHECK(parse_witness(wire, p) == PqParseCode::ERR_WRONG_COMPONENT_LEN,
+              "one-byte length prefix rejected (exactly two bytes required)");
+    }
+
+    // ---- BE16-ONLY: three-byte CompactSize-style prefix (0xFD||uint16_le) ----
+    {
+        // CompactSize(2420) = FD 74 09. Under BE16 the first two bytes are
+        // 0xFD74 = 64884 != 2420 expected -> WRONG_COMPONENT_LEN. CompactSize is not
+        // a recognised encoding; 0xFD is just a high length byte here.
+        Bytes wire = { 0x01, 0xFD, 0x74, 0x09 };  // ML-DSA-44 alg + CompactSize sig len
+        PqWitness p;
+        CHECK(parse_witness(wire, p) == PqParseCode::ERR_WRONG_COMPONENT_LEN,
+              "three-byte CompactSize prefix rejected");
+    }
+
+    // ---- BE16-ONLY: 0xFD lead is NOT a varint marker ----
+    {
+        Bytes wire = { 0x00, 0xFD, 0x00 };  // BE16 = 0xFD00 = 64768 != 64
+        PqWitness p;
+        CHECK(parse_witness(wire, p) == PqParseCode::ERR_WRONG_COMPONENT_LEN,
+              "0xFD lead treated as high length byte, not varint");
+    }
+
+    // ---- INVALID: correct declared length but truncated component data ----
+    {
+        Bytes wire = serialize_witness(make_witness(AlgId::LEGACY_ECDSA_SECP256K1));
+        wire.resize(1 + 2 + 30);  // alg + len(=64) + only 30 of 64 sig bytes
+        PqWitness p;
+        CHECK(parse_witness(wire, p) == PqParseCode::ERR_TRUNCATED,
+              "correct length but truncated data rejected");
+    }
+
+    // ---- INVALID: wrong declared length (65) with more than enough bytes ----
+    {
+        Bytes wire = serialize_witness(make_witness(AlgId::LEGACY_ECDSA_SECP256K1));
+        wire[1] = 0x00; wire[2] = 0x41;  // declare 65, buffer still holds 64+ bytes
+        PqWitness p;
+        CHECK(parse_witness(wire, p) == PqParseCode::ERR_WRONG_COMPONENT_LEN,
+              "wrong length with enough data rejected before reading");
+    }
+
+    // ---- CANONICAL: serialize(parse(x)) is byte-identical for every active alg ----
+    for (AlgId id : { AlgId::LEGACY_ECDSA_SECP256K1,
+                      AlgId::PQ_ML_DSA_44,
+                      AlgId::HYBRID_ECDSA_ML_DSA_44 }) {
+        Bytes wire = serialize_witness(make_witness(id));
+        PqWitness parsed;
+        CHECK(parse_witness(wire, parsed) == PqParseCode::OK, "round-trip parse OK");
+        Bytes reser = serialize_witness(parsed);
+        CHECK(reser == wire, "canonical round-trip is byte-identical");
+    }
+
     // ---- VERIFY: LEGACY OK when ECDSA hook returns true ----
     {
         Verifiers v;

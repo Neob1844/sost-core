@@ -52,24 +52,28 @@ The 64-byte signature and 33-byte pubkey are a **fixed** layout with **no length
 ## 3. Modelled per-input size under the versioned PQ witness
 
 The outpoint (`prev_txid 32 + prev_index 4 = 36`) is unchanged. The variable witness carries a
-1-byte `alg_id`, then length-prefixed signature(s) and public key(s). Length prefixes are modelled
-as `CompactSize` (1 byte for values < 253; 3 bytes for 253–65535). **These envelope/overhead
-bytes are a model of a proposed format, not a shipped wire format.**
+1-byte `alg_id`, then each signature and public key component is emitted as a **fixed 2-byte
+big-endian (BE16) length prefix** followed by the component bytes. Every length occupies **exactly
+2 bytes** — there is **no `CompactSize`, no varint, and no short/long form**. This is the canonical
+encoding fixed in `docs/PQ_TX_FORMAT_V3.md` and `prototype/pq/pq_witness.h`. **These envelope/overhead
+bytes model a proposed format, not a shipped wire format.**
 
-| Class (alg_id)         | Outpoint | alg_id | sig len+sig            | pk len+pk             | **Per-input** |
-|------------------------|----------|--------|------------------------|-----------------------|---------------|
-| LEGACY (0x00) — today  | 36       | —      | 64 (fixed)             | 33 (fixed)            | **133**       |
-| LEGACY under envelope  | 36       | 1      | 1 + 64                 | 1 + 33                | **136**       |
-| ML-DSA-44 (0x01)       | 36       | 1      | 3 + 2420               | 3 + 1312              | **3775**      |
-| ML-DSA-65 (0x03 rsv.)  | 36       | 1      | 3 + 3309               | 3 + 1952              | **5304**      |
-| HYBRID (0x02)          | 36       | 1      | (1+64) + (3+2420)      | (1+33) + (3+1312)     | **3874**      |
+| Class (alg_id)              | Outpoint | alg_id | sig len+sig            | pk len+pk             | **Per-input** |
+|-----------------------------|----------|--------|------------------------|-----------------------|---------------|
+| LEGACY (0x00) — today, no envelope | 36 | —      | 64 (fixed)             | 33 (fixed)            | **133**       |
+| LEGACY under envelope (0x00)| 36       | 1      | 2 + 64                 | 2 + 33                | **138**       |
+| ML-DSA-44 (0x01)            | 36       | 1      | 2 + 2420               | 2 + 1312              | **3773**      |
+| ML-DSA-65 (0x03 rsv.)       | 36       | 1      | 2 + 3309               | 2 + 1952              | **5302**      |
+| ML-DSA-87 (0x04 rsv.)       | 36       | 1      | 2 + 4627               | 2 + 2592              | **7260**      |
+| HYBRID (0x02)               | 36       | 1      | (2+64) + (2+2420)      | (2+33) + (2+1312)     | **3874**      |
 
 HYBRID = ECDSA **AND** ML-DSA-44 (AND semantics): it carries **both** key/sig pairs. Explicit
-arithmetic: `36 + 1 + [1+64] + [1+33] + [3+2420] + [3+1312] = 3874 bytes` (ECDSA sig 64 + pk 33,
-ML-DSA-44 sig 2420 + pk 1312).
+arithmetic: `36 + 1 + [2+64] + [2+33] + [2+2420] + [2+1312] = 3874 bytes` (ECDSA sig 64 + pk 33,
+ML-DSA-44 sig 2420 + pk 1312, each with a 2-byte BE length prefix).
 
-**Takeaway:** a PQ input is roughly **28×** a legacy input (ML-DSA-44) and ML-DSA-65 roughly
-**40×**. A PQ transaction of the *same input count* is far larger than its legacy equivalent.
+**Takeaway:** a PQ input is roughly **28×** a legacy input (ML-DSA-44), ML-DSA-65 roughly **40×**,
+ML-DSA-87 roughly **55×**, and HYBRID roughly **29×**. A PQ transaction of the *same input count* is
+far larger than its legacy equivalent.
 
 ---
 
@@ -84,28 +88,35 @@ Consensus limits (verified):
 - `MAX_BLOCK_TX_COUNT = 4096` (`include/sost/mempool.h:22`)
 
 ### 4.1 Inputs that fit in one transaction (`MAX_TX_BYTES_CONSENSUS = 100000`)
-Approximate — ignores tx header and outputs, which reduce the count further. Also bounded by
-`MAX_INPUTS_CONSENSUS = 256`.
+Theoretical maxima **by byte budget only** (integer division of the budget by per-input size).
+These **exclude** the tx header, outputs and all other fields, which reduce the count further; the
+`MAX_INPUTS_CONSENSUS = 256` cap and per-tx limits may bind earlier. **These are not proposed
+consensus parameters.** Per-input sizes use the envelope model of §3 (LEGACY-under-envelope = 138).
 
-| Class      | ~Inputs by byte budget (100000 / per-input) | Also capped by MAX_INPUTS_CONSENSUS |
-|------------|---------------------------------------------|-------------------------------------|
-| LEGACY 133 | ~751                                        | **256** (input cap binds first)     |
-| ML-DSA-44  | ~26                                         | 26 (byte budget binds first)        |
-| ML-DSA-65  | ~18                                         | 18 (byte budget binds first)        |
-| HYBRID     | ~25                                         | 25 (byte budget binds first)        |
+| Class        | ~Inputs by byte budget (100000 / per-input) | Also capped by MAX_INPUTS_CONSENSUS |
+|--------------|---------------------------------------------|-------------------------------------|
+| LEGACY 138   | 724                                         | **256** (input cap binds first)     |
+| ML-DSA-44    | 26                                          | 26 (byte budget binds first)        |
+| ML-DSA-65    | 18                                          | 18 (byte budget binds first)        |
+| ML-DSA-87    | 13                                          | 13 (byte budget binds first)        |
+| HYBRID       | 25                                          | 25 (byte budget binds first)        |
 
-For a **standard** tx (`MAX_TX_BYTES_STANDARD = 16000`): ML-DSA-44 ≈ 4 inputs; ML-DSA-65 ≈ 3;
-HYBRID ≈ 4. PQ transactions hit the standard limit very quickly.
+For a **standard** tx (`MAX_TX_BYTES_STANDARD = 16000`, byte budget only): LEGACY ≈ 115 inputs;
+ML-DSA-44 ≈ 4; ML-DSA-65 ≈ 3; ML-DSA-87 ≈ 2; HYBRID ≈ 4. PQ transactions hit the standard limit
+very quickly.
 
 ### 4.2 Single-input transactions that fit in one block (`MAX_BLOCK_BYTES_CONSENSUS = 1000000`)
-Illustrative single-input-tx equivalents by byte budget; also bounded by `MAX_BLOCK_TX_COUNT = 4096`.
+Theoretical single-input-tx equivalents **by byte budget only** (integer division; excludes headers,
+outputs and other fields); also bounded by `MAX_BLOCK_TX_COUNT = 4096`. **Not proposed consensus
+parameters.** Per-input sizes use the envelope model of §3 (LEGACY-under-envelope = 138).
 
-| Class      | ~Single-input txs by byte budget (1000000 / per-input) |
-|------------|--------------------------------------------------------|
-| LEGACY 133 | ~7518 (block tx-count cap 4096 binds first)             |
-| ML-DSA-44  | ~264                                                    |
-| ML-DSA-65  | ~188                                                    |
-| HYBRID     | ~258                                                    |
+| Class        | ~Single-input txs by byte budget (1000000 / per-input) |
+|--------------|--------------------------------------------------------|
+| LEGACY 138   | 7246 (block tx-count cap 4096 binds first)             |
+| ML-DSA-44    | 265                                                    |
+| ML-DSA-65    | 188                                                    |
+| ML-DSA-87    | 137                                                    |
+| HYBRID       | 258                                                    |
 
 **Interpretation:** the same block that holds thousands of legacy single-input spends holds only a
 few hundred PQ ones. Byte-for-byte, PQ meaningfully reduces effective per-block spend throughput.
