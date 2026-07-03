@@ -887,7 +887,8 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     <p style="color:var(--text-dim);font-size:12px;margin-top:14px;line-height:1.7;">
       Ethereum mainnet is the initial choice for the Safe because of issuer nativeness (PAXG/XAUT are
       ERC-20 on mainnet), liquidity, and mature custody tooling. <strong>No single key should be able
-      to move reserve assets.</strong> This vault does not exist yet.
+      to move reserve assets.</strong> This vault does not exist yet. Technical design:
+      <a href="https://github.com/SOST-Protocol/sost-core/blob/main/docs/TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md" target="_blank" rel="noopener" style="color:#FFD700;">Safe multisig design (Safe 3/5 + timelock + allowlist)</a>.
     </p>
   </div>
 </section>
