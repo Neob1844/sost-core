@@ -913,9 +913,11 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     <p style="color:var(--text-dim);font-size:12px;line-height:1.8;margin-bottom:18px;max-width:840px;">
       It <strong>does not mint new SOST</strong>. It <strong>does not create a claim on gold</strong>.
       It is <strong>not a peg</strong>. It is <strong>not a dividend, yield or investment return</strong>.
-      It is <strong>planned / not active</strong>. A Founder Test is scheduled around block 20,000; a
-      limited mode may follow after block 25,000 only if the test passes; public participation remains
-      future / legal-review dependent.
+      It is <strong>planned / not active</strong>. A Founder Test is targeted <strong>no earlier than
+      block 20,000, subject to Safe setup, legal review and internal approval</strong>; a limited mode
+      may be <strong>considered no earlier than block 25,000, only if the founder test, legal review and
+      registry process are successful</strong>; public participation remains future / legal-review dependent.
+      None of these are commitments or guaranteed activation dates.
     </p>
 
     <!-- 1. CURRENT FORGE WINDOW -->
@@ -925,8 +927,8 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         <table class="code-table">
           <tr><td class="label">Window</td><td class="value">Forge #001</td></tr>
           <tr><td class="label">Mode</td><td class="value">Founder Test</td></tr>
-          <tr><td class="label">Status</td><td class="value" style="color:#fb010d;font-weight:600;">Scheduled / NOT ACTIVE</td></tr>
-          <tr><td class="label">Block</td><td class="value">20,000</td></tr>
+          <tr><td class="label">Status</td><td class="value" style="color:#fb010d;font-weight:600;">Planned / earliest target — NOT ACTIVE</td></tr>
+          <tr><td class="label">Block</td><td class="value">no earlier than 20,000 (subject to review)</td></tr>
           <tr><td class="label">Max amount</td><td class="value">100 SOST</td></tr>
           <tr><td class="label">Settlement</td><td class="value">PAXG only (atomic swap)</td></tr>
           <tr><td class="label">Destination</td><td class="value">Tokenized Gold Safe</td></tr>
@@ -934,7 +936,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
         </table>
       </div>
     </div>
-    <p style="color:var(--text-dim);font-size:11px;margin:6px 0 22px;">Example only — no window is open, scheduled data is illustrative, nothing executes today.</p>
+    <p style="color:var(--text-dim);font-size:11px;margin:6px 0 22px;">Example only — no window is open, all figures are illustrative/planned (not commitments), nothing executes today.</p>
 
     <!-- 2. FORGE RULES -->
     <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin:6px 0 8px;">2 · FORGE RULES</div>
@@ -950,16 +952,16 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     <!-- staged plan -->
     <div class="mode-grid" style="margin-top:12px;">
       <div class="mode-card">
-        <div class="mode-name"><span class="indicator" style="background:#fb010d;box-shadow:0 0 6px #fb010d;"></span>Block 20,000 — FOUNDER TEST</div>
-        <div class="mode-params">1 symbolic op, founder only, <span style="color:var(--text-primary);">50&ndash;100 SOST</span>, PAXG via atomic swap → Safe, Forge Proof published. <span style="color:#fb010d;">Planned, not active.</span></div>
+        <div class="mode-name"><span class="indicator" style="background:#fb010d;box-shadow:0 0 6px #fb010d;"></span>No earlier than block 20,000 — FOUNDER TEST</div>
+        <div class="mode-params">1 symbolic op, founder only, <span style="color:var(--text-primary);">50&ndash;100 SOST</span>, PAXG via atomic swap → Safe, Forge Proof published. Subject to Safe setup, legal review and internal approval. <span style="color:#fb010d;">Planned, not active — not a commitment.</span></div>
       </div>
       <div class="mode-card">
         <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Block 20,000&ndash;25,000 — OBSERVATION</div>
         <div class="mode-params">Audit the circuit: Safe works? Forge Proof clear/auditable? no flow errors? no legal/commercial confusion? Public status stays "founder-only test, public Forge not active."</div>
       </div>
       <div class="mode-card">
-        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Block 25,000 — LIMITED (only if test passes)</div>
-        <div class="mode-params">Same caps, whitelist / sealed-bid first, atomic settlement, gold → Safe only, emergency stop. Not a public AMM.</div>
+        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>No earlier than block 25,000 — LIMITED (may be considered)</div>
+        <div class="mode-params">May be considered no earlier than block 25,000, only if the founder test, legal review and registry process are successful. Same caps, whitelist / sealed-bid first, atomic settlement, gold → Safe only, emergency stop. Not a public AMM.</div>
       </div>
       <div class="mode-card">
         <div class="mode-name"><span class="indicator" style="background:var(--text-dim);"></span>Later — PUBLIC PARTICIPATION</div>
