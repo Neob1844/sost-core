@@ -93,17 +93,64 @@ Protocol Registry publishes everything
 
 ---
 
-## 5. Two-phase rollout
+## 5. Staged activation plan (by block height)
 
-**Phase 1 — Founder-controlled / whitelist / OTC auction.** Known counterparties,
-small amounts, floor price, settlement to the Safe, every op in the Registry. No
-aggressive marketing.
+The program is introduced conservatively, with a founder-only test before anything
+limited, and a public auction only much later. **Being breakthrough is not running
+faster than the brakes.** In one line:
 
-*Example first operation (illustrative only, not scheduled):* a symbolic auction of
-**100–250 SOST**, settled in **PAXG**, fully recorded, no marketing.
+> *V15 introduces a founder-only reserve conversion test. If successful, a limited
+> Gold Accumulation Program may begin around block 25,000. A public auction remains
+> a future step, dependent on legal/compliance review.*
 
-**Phase 2 — Public / more open auction.** Only after legal/compliance clears it.
-Same caps, same delivery-versus-payment, same public registry.
+### Phase 1 — V15 / block 20,000: FOUNDER TESTING
+
+```
+Gold Accumulation Program: FOUNDER TESTING
+Public auction:            NOT ACTIVE
+Gold Vault normal spending: NOT ACTIVE
+```
+
+Allowed:
+- **1 symbolic operation**, administrator/founder only.
+- Very small amount: **50–100 SOST**.
+- Settlement **only in PAXG** (XAUT possibly later), delivered to the future
+  Ethereum Safe multisig.
+- **Mandatory** record in the Protocol Registry.
+
+Not allowed: no public auction, no AMM, no CEX, no automatic weekly sale, no
+anonymous buyers, no investment marketing, no profit promise, no claim on the gold.
+
+Purpose — prove the full circuit end-to-end:
+```
+Gold Vault SOST → founder-only operation → founder delivers PAXG
+→ PAXG enters Safe multisig → SOST released → everything publicly recorded
+```
+
+### Phase 2 — between block 20,000 and 25,000: OBSERVATION
+
+Public status must read: **"Founder-only reserve conversion test. Public program not
+active."** Review before going further:
+- Does the Safe work? Is the public record clear and auditable?
+- Any flow errors? Any legal/commercial confusion? Does the community understand it?
+
+### Phase 3 — block 25,000: LIMITED ACTIVE (only if the test passes)
+
+```
+Gold Accumulation Program: LIMITED ACTIVE
+```
+
+- Weekly cap: `min(500 SOST, 0.5% of Gold Vault balance)`.
+- Monthly cap: `2% of Gold Vault balance`.
+- PAXG primary, XAUT secondary.
+- Safe multisig destination only.
+- Emergency stop active.
+- **Whitelist / OTC first — not a public AMM.**
+
+### Later — public / open auction
+
+Only when legal/compliance and a larger community are in place. Same caps, same
+delivery-versus-payment, same public registry. Not scheduled.
 
 ---
 
@@ -118,6 +165,7 @@ Requires:
 - legal / compliance review
 - first symbolic test
 - Protocol Registry live for reserve operations
+- public notice period
 ```
 
 ---

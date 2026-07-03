@@ -902,21 +902,46 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
     </div>
     <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:18px;max-width:820px;">
       A future, tightly-constrained mechanism to convert a <strong>limited</strong> amount of the Gold
-      Vault balance into tokenized gold through small, capped auctions &mdash; settled <strong>only</strong>
-      in PAXG/XAUT delivered directly to the Ethereum Safe, released only after receipt is verified, and
-      published in the Protocol Registry. Not a public AMM, not a CEX sale, not automatic. First phase is
-      founder-controlled / whitelisted / OTC-style; any public auction comes only after legal/compliance review.
+      Vault balance into tokenized gold &mdash; settled <strong>only</strong> in PAXG/XAUT delivered
+      directly to the Ethereum Safe, released only after receipt is verified, and published in the
+      Protocol Registry. Not a public AMM, not a CEX sale, not automatic. Rolled out conservatively:
+      a founder-only test first, a limited program later only if the test passes, and any public auction
+      only after legal/compliance review.
     </p>
+    <p style="color:var(--text-primary);font-weight:500;margin-bottom:16px;max-width:820px;">
+      V15 introduces a <strong>founder-only reserve conversion test</strong>. If successful, a limited
+      Gold Accumulation Program may begin around block 25,000. A public auction remains a future step,
+      dependent on legal/compliance review.
+    </p>
+
+    <!-- staged plan -->
     <div class="mode-grid">
-      <div class="mode-card"><div class="mode-params">Max weekly: <span style="color:var(--text-primary);">min(500 SOST, 0.5% of vault)</span></div></div>
-      <div class="mode-card"><div class="mode-params">Max monthly: <span style="color:var(--text-primary);">2% of vault balance</span></div></div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:#fb010d;box-shadow:0 0 6px #fb010d;"></span>V15 / block 20,000 — FOUNDER TESTING</div>
+        <div class="mode-params">1 symbolic op, founder only, <span style="color:var(--text-primary);">50&ndash;100 SOST</span>, PAXG → Safe, recorded in Registry. Public auction NOT active. <span style="color:#fb010d;">Planned, not active.</span></div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Block 20,000&ndash;25,000 — OBSERVATION</div>
+        <div class="mode-params">Audit the circuit: Safe works? record clear/auditable? no flow errors? no legal/commercial confusion? Public status: "founder-only test, public program not active."</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Block 25,000 — LIMITED (if test passes)</div>
+        <div class="mode-params">Weekly <span style="color:var(--text-primary);">min(500 SOST, 0.5%)</span>, monthly <span style="color:var(--text-primary);">2%</span>, PAXG primary / XAUT secondary, Safe only, emergency stop, whitelist/OTC first &mdash; not a public AMM.</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:var(--text-dim);"></span>Later — PUBLIC AUCTION</div>
+        <div class="mode-params">Only after legal/compliance and a larger community. Same caps, same delivery-versus-payment, same public registry. <span style="color:#fb010d;">Not scheduled.</span></div>
+      </div>
+    </div>
+
+    <div class="mode-grid" style="margin-top:12px;">
       <div class="mode-card"><div class="mode-params">Settlement: <span style="color:var(--text-primary);">PAXG primary / XAUT secondary → Safe only</span></div></div>
       <div class="mode-card"><div class="mode-params">Release: <span style="color:var(--text-primary);">SOST freed only after gold verified in Safe</span></div></div>
     </div>
     <div style="background:rgba(251,1,13,0.06);border:1px solid #fb010d;border-radius:8px;padding:16px 20px;margin-top:16px;">
       <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin-bottom:6px;">STATUS: NOT ACTIVE — REQUIRES</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.9;">
-        G3b complete · Safe multisig created · legal/compliance review · first symbolic test · Protocol Registry live
+        G3b complete · Safe multisig created · legal/compliance review · first symbolic test · Protocol Registry live · public notice period
       </div>
     </div>
     <p style="color:var(--text-dim);font-size:12px;margin-top:12px;line-height:1.7;">
