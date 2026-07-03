@@ -1050,6 +1050,91 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   </div>
 </section>
 
+<!-- ═══════════ GOLD VAULT SIGNAL (PLANNED / NOT ACTIVE — design preview) ═══════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SIGNAL</div>
+      <h2 class="section-title">Gold Vault <span class="accent">Signal</span>
+        <span style="font-size:11px;color:#fb010d;letter-spacing:1px;">(PLANNED / NOT ACTIVE — PREVIEW)</span></h2>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:8px;max-width:840px;">
+      A planned voting section in the explorer where SOST holders <strong>signal approval for strictly
+      limited reserve operations using signed wallet votes</strong>. Voting is by wallet signature,
+      weighted by SOST held at a snapshot block — <strong>not by mining, hashrate or coinbase</strong>.
+      A dominant miner gains no voting power. The Signal can only approve operations inside fixed safety
+      rails; it never grants open spending power.
+    </p>
+    <p style="color:var(--text-dim);font-size:12px;line-height:1.8;margin-bottom:18px;max-width:840px;">
+      This is a <strong>non-interactive design preview</strong>. No vote is live; early phases are
+      off-chain signed signalling (advisory + publicly verifiable), not consensus. <code>1 SOST at
+      snapshot = 1 vote · 1 wallet = 1 signed vote</code>.
+    </p>
+
+    <!-- mock proposal card -->
+    <div class="spec-block">
+      <div class="spec-header">
+        <div class="spec-header-left"><div class="spec-icon gold"></div><span class="spec-label">Proposal GV-001 — Founder Test / Planned</span></div>
+        <span class="spec-tag" style="color:#fb010d;">PREVIEW · NOT LIVE</span>
+      </div>
+      <div class="spec-body">
+        <table class="code-table">
+          <tr><td class="label">Action</td><td class="value">Convert up to 100 SOST into PAXG</td></tr>
+          <tr><td class="label">Destination</td><td class="value">Tokenized Gold Safe · verified when live (NOT CREATED YET)</td></tr>
+          <tr><td class="label">Snapshot</td><td class="value">voting_start − 1</td></tr>
+          <tr><td class="label">Your voting power</td><td class="value">— (connect wallet, Phase 2)</td></tr>
+          <tr><td class="label">Status</td><td class="value" style="color:#fb010d;font-weight:600;">Preview / NOT ACTIVE</td></tr>
+        </table>
+        <div style="margin-top:14px;font-size:12px;color:var(--text-dim);">Illustrative tally (not real votes):</div>
+        <div style="margin-top:6px;font-family:var(--font-mono);font-size:12px;">
+          <div style="display:flex;align-items:center;gap:8px;margin:3px 0;"><span style="width:34px;color:#4ade80;">YES</span>
+            <span style="flex:1;background:#111;border-radius:4px;overflow:hidden;"><span style="display:block;height:10px;width:72%;background:#4ade80;"></span></span><span style="width:38px;text-align:right;color:#4ade80;">72%</span></div>
+          <div style="display:flex;align-items:center;gap:8px;margin:3px 0;"><span style="width:34px;color:#fb010d;">NO</span>
+            <span style="flex:1;background:#111;border-radius:4px;overflow:hidden;"><span style="display:block;height:10px;width:28%;background:#fb010d;"></span></span><span style="width:38px;text-align:right;color:#fb010d;">28%</span></div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;">
+          <button type="button" disabled style="opacity:.5;cursor:not-allowed;background:rgba(74,222,128,.12);border:1px solid #4ade80;color:#4ade80;border-radius:6px;padding:7px 16px;font-family:var(--font-mono);font-size:12px;">Vote YES</button>
+          <button type="button" disabled style="opacity:.5;cursor:not-allowed;background:rgba(251,1,13,.12);border:1px solid #fb010d;color:#fb010d;border-radius:6px;padding:7px 16px;font-family:var(--font-mono);font-size:12px;">Vote NO</button>
+          <span style="align-self:center;font-size:11px;color:var(--text-dim);">Voting not live — Phase 1 preview</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- what can be voted -->
+    <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin:22px 0 8px;">WHAT CAN BE VOTED (strictly limited)</div>
+    <div class="mode-grid">
+      <div class="mode-card"><div class="mode-params">1 · Convert Gold-Vault SOST into <span style="color:var(--text-primary);">PAXG/XAUT</span> (a Forge window)</div></div>
+      <div class="mode-card"><div class="mode-params">2 · Move PAXG/XAUT to <span style="color:var(--text-primary);">another verified Safe</span></div></div>
+      <div class="mode-card"><div class="mode-params">3 · <span style="color:var(--text-primary);">Emergency migration</span> to a verified emergency Safe</div></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:11px;margin-top:8px;max-width:840px;">
+      Every proposal is bounded by the reserve rails: only PAXG/XAUT · only allowlisted verified Safe
+      destinations · weekly cap · timelock · Protocol Registry entry · emergency stop · no AMM · no CEX ·
+      no personal wallet. The vote never decides "do anything" — only YES/NO inside safe rails.
+    </p>
+
+    <!-- thresholds -->
+    <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin:22px 0 8px;">RULES (proposed)</div>
+    <div class="mode-grid">
+      <div class="mode-card">
+        <div class="mode-name">Normal</div>
+        <div class="mode-params">24 h vote · quorum ≥ 10% · approval ≥ 60% YES · weekly cap ≤ 1% of Safe gold · timelock 24 h · allowlisted destination</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name">Emergency</div>
+        <div class="mode-params">6 h vote · quorum ≥ 20% · approval ≥ 90% YES · may move up to 100% but only to a verified emergency Safe · timelock 6 h · reason mandatory</div>
+      </div>
+    </div>
+
+    <p style="color:var(--text-dim);font-size:12px;margin-top:18px;line-height:1.7;">
+      The tokenized gold belongs to the protocol's reserve — <strong>no individual redemption right</strong>
+      for holders/miners/buyers; not a peg; not gold-backed SOST; not a dividend/yield/equity; no new SOST
+      minted; NOT ACTIVE. Full design:
+      <a href="https://github.com/SOST-Protocol/sost-core/blob/main/docs/GOLD_VAULT_SIGNAL_DESIGN.md" target="_blank" rel="noopener" style="color:#FFD700;">Gold Vault Signal design</a>.
+    </p>
+  </div>
+</section>
+
 <!-- TWO-VAULT ARCHITECTURE -->
 <section class="section">
   <div class="container">
