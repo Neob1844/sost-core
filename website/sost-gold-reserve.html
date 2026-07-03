@@ -748,21 +748,213 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
 
 <section class="hero">
   <div class="container">
-    <div class="hero-label fade-in">GOLD RESERVE</div>
+    <div class="hero-label fade-in">GOLD &amp; METALS RESERVE</div>
     <h1 class="fade-in delay-1">
-      <span>Gold Protocol</span><br>
+      <span>Gold &amp; Metals</span><br>
       Reserve
     </h1>
     <p class="hero-sub fade-in delay-2">
-      Every mined block allocates 25% of issuance to an on-chain Gold Funding Vault
-      by consensus. Purchased precious-metal tokens are deposited into a Heritage
-      Reserve Vault on Ethereum mainnet &mdash; sealed by default, perpetual by design.
+      Transparent SOST-side accumulation today. Tokenized gold reserve planned.
+      <strong>Governed spending is not active.</strong> Every mined block allocates 25%
+      of issuance to an on-chain Gold Vault by consensus. The design below &mdash; sale
+      governance, an Ethereum custody vault, tokenized-gold rails &mdash; is the roadmap,
+      not something running today.
     </p>
     <div class="protocol-badge fade-in delay-3">
-      <span class="tag">HERITAGE</span>
+      <span class="tag">ACCUMULATING</span>
       <span class="sep">|</span>
-      <span class="val">Sealed by default &middot; Perpetual reserve &middot; Emergency dual-gate only</span>
+      <span class="val">Governed spending NOT active &middot; No gold reserve created yet &middot; Nothing being sold</span>
     </div>
+  </div>
+</section>
+
+<!-- ═══════════ LIVE STATUS (read-only) ═══════════ -->
+<section class="section" style="border-top:1px solid var(--border-dim);">
+  <div class="container">
+
+    <!-- Big clear message -->
+    <div style="background:rgba(251,1,13,0.06);border:1px solid #fb010d;border-radius:8px;padding:20px 24px;margin-bottom:32px;">
+      <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin-bottom:8px;">CURRENT STATE</div>
+      <div style="font-size:16px;line-height:1.7;color:var(--text-primary);font-weight:500;">
+        The Gold Vault accumulates SOST today. Governed spending is not active.
+        No SOST from the vault is currently being sold or moved.
+      </div>
+    </div>
+
+    <div class="section-header fade-in">
+      <div class="section-id">STATUS</div>
+      <h2 class="section-title">Reserve <span class="accent">Status</span></h2>
+    </div>
+
+    <div class="mode-grid">
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:#4ade80;box-shadow:0 0 6px #4ade80;"></span>SOST Gold Vault</div>
+        <div class="mode-params"><span style="color:#4ade80;font-weight:600;">ACCUMULATING</span><br>25% of every block, by consensus</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:#fb010d;box-shadow:0 0 6px #fb010d;"></span>Governed Spending</div>
+        <div class="mode-params"><span style="color:#fb010d;font-weight:600;">NOT ACTIVE</span><br>Activation height INT64_MAX (deferred)</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:#fb010d;box-shadow:0 0 6px #fb010d;"></span>Tokenized Gold Safe</div>
+        <div class="mode-params"><span style="color:#fb010d;font-weight:600;">NOT CREATED</span><br>No Ethereum contract exists yet</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>PAXG / XAUT Holdings</div>
+        <div class="mode-params"><span style="color:#FFD700;font-weight:600;">0 / PENDING</span><br>Nothing held in reserve</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Governance Gates</div>
+        <div class="mode-params"><span style="color:#FFD700;font-weight:600;">DEFERRED</span><br>G1&ndash;G5, planned V15 (block 20,000)</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Protocol Registry</div>
+        <div class="mode-params"><span style="color:#FFD700;font-weight:600;">PREPARED</span><br>No operations executed yet</div>
+      </div>
+    </div>
+
+    <p style="color:var(--text-dim);font-size:12px;margin-top:16px;line-height:1.7;">
+      Governance detail: the accumulation side is consensus-enforced. The spend side (gates
+      G1&ndash;G5) is scaffolding + audit only, sentinel-disabled on mainnet. <strong>G3b</strong>
+      (accumulated cap / rate-limit) is the current technical blocker before any activation.
+      Full policy: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/docs/GOLD_METALS_RESERVE_POLICY.md" target="_blank" rel="noopener" style="color:#FFD700;">GOLD_METALS_RESERVE_POLICY.md</a>.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════ TWO VAULTS, TWO RESPONSIBILITIES ═══════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">MODEL</div>
+      <h2 class="section-title">Two Vaults, <span class="accent">Two Responsibilities</span></h2>
+    </div>
+    <div class="mode-grid">
+      <div class="mode-card">
+        <div class="mode-name" style="color:#FFD700;">SOST Gold Vault</div>
+        <div class="mode-params">Lives on SOST. Receives the 25% emission. Can only ever move SOST through Gold Vault Governance. <span style="color:#4ade80;">Accumulation active</span>; governed spending not active.</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name" style="color:#4ade80;">Tokenized Gold Reserve</div>
+        <div class="mode-params">Future Ethereum/EVM vault. Planned Safe multisig 3/5 + timelock + whitelist. PAXG primary, XAUT secondary optional. <span style="color:#fb010d;">Not created yet</span> — 0 PAXG/XAUT held.</div>
+      </div>
+    </div>
+    <div class="code-snippet" style="margin-top:20px;background:var(--bg-panel);border:1px solid var(--border-dim);border-radius:6px;padding:16px 20px;font-size:12px;line-height:1.9;color:var(--text-secondary);white-space:pre-wrap;">SOST Gold Vault
+   ↓ governed proposal (G1–G5)
+   ↓ controlled OTC / Atomic Swap  (no public AMM, no wrapped SOST)
+   ↓ PAXG / XAUT received
+   ↓ Ethereum Safe multisig (sealed)
+   → public Protocol Registry entry</div>
+    <p style="color:var(--text-dim);font-size:12px;margin-top:14px;line-height:1.7;">
+      <strong>SOST/PAXG and SOST/XAUT are not the vault.</strong> They are future OTC / Atomic-Swap
+      conversion rails. The real reserve is the Ethereum Safe where the tokenized gold ends up. No
+      public AMM at the start — first small, founder-controlled operations with a public record.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════ WHAT CANNOT HAPPEN TODAY ═══════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">GUARANTEES</div>
+      <h2 class="section-title">What Cannot <span class="accent">Happen Today</span></h2>
+    </div>
+    <div class="mode-grid">
+      <div class="mode-card"><div class="mode-params" style="color:var(--text-secondary);">✕ No automatic sale of vault SOST</div></div>
+      <div class="mode-card"><div class="mode-params" style="color:var(--text-secondary);">✕ No public AMM (SOST/PAXG, SOST/XAUT)</div></div>
+      <div class="mode-card"><div class="mode-params" style="color:var(--text-secondary);">✕ No one-click / discretionary spending</div></div>
+      <div class="mode-card"><div class="mode-params" style="color:var(--text-secondary);">✕ No unlocked gold reserve to move</div></div>
+      <div class="mode-card"><div class="mode-params" style="color:var(--text-secondary);">✕ No hidden treasury movement</div></div>
+      <div class="mode-card"><div class="mode-params" style="color:var(--text-secondary);">✕ No single key able to move reserve assets</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FUTURE TOKENIZED GOLD VAULT ═══════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">PLANNED</div>
+      <h2 class="section-title">Future Tokenized <span class="accent">Gold Vault</span></h2>
+    </div>
+    <div class="mode-grid">
+      <div class="mode-card"><div class="mode-params"><span style="color:var(--text-primary);font-weight:600;">Safe multisig 3/5</span> — planned</div></div>
+      <div class="mode-card"><div class="mode-params"><span style="color:var(--text-primary);font-weight:600;">Timelock</span> — planned</div></div>
+      <div class="mode-card"><div class="mode-params"><span style="color:var(--text-primary);font-weight:600;">Whitelisted destinations</span> — planned</div></div>
+      <div class="mode-card"><div class="mode-params"><span style="color:var(--text-primary);font-weight:600;">Public dashboard</span> — planned</div></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:12px;margin-top:14px;line-height:1.7;">
+      Ethereum mainnet is the initial choice for the Safe because of issuer nativeness (PAXG/XAUT are
+      ERC-20 on mainnet), liquidity, and mature custody tooling. <strong>No single key should be able
+      to move reserve assets.</strong> This vault does not exist yet.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════ GOLD ACCUMULATION PROGRAM (PLANNED) ═══════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">PROGRAM</div>
+      <h2 class="section-title">Gold Accumulation <span class="accent">Program</span>
+        <span style="font-size:11px;color:#fb010d;letter-spacing:1px;">(PLANNED / NOT ACTIVE)</span></h2>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:18px;max-width:820px;">
+      A future, tightly-constrained mechanism to convert a <strong>limited</strong> amount of the Gold
+      Vault balance into tokenized gold through small, capped auctions &mdash; settled <strong>only</strong>
+      in PAXG/XAUT delivered directly to the Ethereum Safe, released only after receipt is verified, and
+      published in the Protocol Registry. Not a public AMM, not a CEX sale, not automatic. First phase is
+      founder-controlled / whitelisted / OTC-style; any public auction comes only after legal/compliance review.
+    </p>
+    <div class="mode-grid">
+      <div class="mode-card"><div class="mode-params">Max weekly: <span style="color:var(--text-primary);">min(500 SOST, 0.5% of vault)</span></div></div>
+      <div class="mode-card"><div class="mode-params">Max monthly: <span style="color:var(--text-primary);">2% of vault balance</span></div></div>
+      <div class="mode-card"><div class="mode-params">Settlement: <span style="color:var(--text-primary);">PAXG primary / XAUT secondary → Safe only</span></div></div>
+      <div class="mode-card"><div class="mode-params">Release: <span style="color:var(--text-primary);">SOST freed only after gold verified in Safe</span></div></div>
+    </div>
+    <div style="background:rgba(251,1,13,0.06);border:1px solid #fb010d;border-radius:8px;padding:16px 20px;margin-top:16px;">
+      <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin-bottom:6px;">STATUS: NOT ACTIVE — REQUIRES</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.9;">
+        G3b complete · Safe multisig created · legal/compliance review · first symbolic test · Protocol Registry live
+      </div>
+    </div>
+    <p style="color:var(--text-dim);font-size:12px;margin-top:12px;line-height:1.7;">
+      Not an investment return, claim on gold, equity, dividend, or guaranteed profit. Full design:
+      <a href="https://github.com/SOST-Protocol/sost-core/blob/main/docs/GOLD_ACCUMULATION_AUCTION_PROGRAM.md" target="_blank" rel="noopener" style="color:#FFD700;">GOLD_ACCUMULATION_AUCTION_PROGRAM.md</a>.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════ PROTOCOL REGISTRY PREVIEW ═══════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">REGISTRY</div>
+      <h2 class="section-title">Protocol Registry <span class="accent">Preview</span></h2>
+    </div>
+    <div style="background:rgba(251,1,13,0.06);border:1px solid #fb010d;border-radius:8px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin-bottom:6px;">EMPTY PREVIEW — NOT LIVE DATA</div>
+      <div style="font-size:14px;line-height:1.7;color:var(--text-primary);font-weight:600;">
+        No tokenized-gold reserve operations have been executed yet.
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:6px;">
+        The table below is an empty schema preview of how a future operation would be recorded. It contains no real entries.
+      </div>
+    </div>
+    <div class="spec-block">
+      <div class="spec-body" style="padding:0;">
+        <table class="code-table">
+          <tr><th>SOST txid</th><th>EVM txid</th><th>Token</th><th>Amount</th><th>Price/ref</th><th>Vault</th><th>New balance</th><th>Status</th></tr>
+          <tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:24px 16px;">No tokenized-gold reserve operations have been executed yet.</td></tr>
+        </table>
+      </div>
+    </div>
+    <p style="color:var(--text-dim);font-size:12px;margin-top:14px;line-height:1.7;">
+      When operations begin, each row will publish: SOST txid · EVM txid · token received · amount ·
+      price/reference · vault address · resulting balance · notes/status. See the full
+      <a href="protocol-registry.html" style="color:#d946ef;">Protocol Registry</a>.
+    </p>
   </div>
 </section>
 
@@ -771,7 +963,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">ARCHITECTURE</div>
-      <h2 class="section-title">Two-Vault <span class="accent">Architecture</span></h2>
+      <h2 class="section-title">Two-Vault <span class="accent">Architecture</span> <span style="font-size:11px;color:var(--text-dim);letter-spacing:1px;">(DESIGN / PLANNED)</span></h2>
     </div>
 
     <div class="arch-flow fade-in delay-1">
@@ -846,7 +1038,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">EXECUTION POLICY</div>
-      <h2 class="section-title">TWAP <span class="accent">Batch Sales</span></h2>
+      <h2 class="section-title">TWAP <span class="accent">Batch Sales</span> <span style="font-size:11px;color:var(--text-dim);letter-spacing:1px;">(DESIGN / NOT ACTIVE)</span></h2>
     </div>
 
     <div class="spec-block fade-in delay-1">
@@ -859,10 +1051,10 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          TWAP (Time-Weighted Average Price) executes a daily sell budget as many small,
+          TWAP (Time-Weighted Average Price) <em>would</em> execute a daily sell budget as many small,
           evenly spaced limit orders over time, so the realized price approximates the
           market&rsquo;s average and minimizes impact. No discretionary &ldquo;sell whenever
-          we want&rdquo; behavior.
+          we want&rdquo; behavior. This describes the planned model; it is not active today.
         </p>
 
         <div class="code-snippet" data-label="POLICY">
