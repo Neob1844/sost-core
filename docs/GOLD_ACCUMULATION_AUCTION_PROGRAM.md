@@ -1,167 +1,187 @@
-# Gold Accumulation Auction Program — Design (NOT ACTIVE)
+# Gold Reserve Forge — Design (NOT ACTIVE)
 
-**Also referred to as:** *SOST Reserve Gold Accumulation Program*.
+> **File note:** the public product name is **Gold Reserve Forge**. This file keeps
+> its original path (`GOLD_ACCUMULATION_AUCTION_PROGRAM.md`) so already-published
+> links do not break; it may be renamed later with clean redirects. "Auction /
+> window / RFQ / sealed-bid" appear below only as *implementation mechanics*, never
+> as the product's public branding.
 
-**Status: NOT ACTIVE.** This is a design/policy document only. It activates nothing,
-moves no funds, runs no auction, and deploys no smart contract. It defines *how* a
-future, tightly-constrained mechanism would convert a limited amount of the SOST
-Gold Vault balance into tokenized gold — **if and only if** the preconditions in §6
-are all met.
+**Status: PLANNED / NOT ACTIVE.** This is a design/policy document only. It activates
+nothing, moves no funds, runs no window, mints no token, and deploys no smart
+contract.
 
-> The Gold Vault accumulates SOST today. No auction exists, no SOST is being sold,
-> and no tokenized-gold reserve has been created.
+> The Gold Vault accumulates SOST today. No Forge exists, no SOST is being sold, and
+> no tokenized-gold reserve has been created.
 
 Related: [`GOLD_METALS_RESERVE_POLICY.md`](GOLD_METALS_RESERVE_POLICY.md),
+[`TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md`](TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md),
 [`V13_GOLD_VAULT_GOVERNANCE_GATES.md`](V13_GOLD_VAULT_GOVERNANCE_GATES.md).
 
 ---
 
-## 1. What this is (and is not)
+## 1. What the Gold Reserve Forge is (and is not)
 
-**It is:** a *framework policy*, approved once, that would permit small, capped,
-rule-bound auctions of SOST from the Gold Vault, settled **only** in tokenized gold
-delivered into a public Safe multisig, with every operation published.
+**The Gold Reserve Forge converts a limited amount of the SOST Gold Vault balance
+into tokenized gold reserve assets (PAXG / XAUT), progressively and verifiably.** It
+is a *reserve-conversion framework*, **not a token sale**.
 
-**It is not:**
-- Not "sell whenever someone votes each time." The community/miners do **not** vote
-  on each individual sale — they approve the framework; individual auctions run
-  inside its strict caps.
-- Not a public AMM (no SOST/PAXG or SOST/XAUT pool at launch).
-- Not a CEX-dependent sale.
-- Not automatic selling without governance.
-- Not a promise to hold gold. It is a mechanism to convert reserve value **into**
-  verifiable tokenized gold **progressively**.
+- **It does not mint new SOST.** Only existing Gold-Vault SOST is converted.
+- **It does not create a claim on gold.** The reserve belongs to the protocol.
+- **It is not a peg.** The reserve ratio is an observable metric, not a redemption right.
+- **It is not a dividend, yield, or investment return.**
+- **It is planned / not active.**
 
-**Narrative frame:** *SOST does not promise to have gold. SOST accumulates value and
-converts it progressively into verifiable tokenized reserve.*
+**Narrative frame:** *We are not selling SOST. We are forging a verifiable
+tokenized-gold reserve* — converting reserve SOST into gold, one publicly-proven
+operation at a time.
 
 ---
 
 ## 2. Core rules
 
-1. The program is **NOT ACTIVE**.
-2. It is a future controlled mechanism to convert a **limited** amount of the SOST
-   Gold Vault balance into tokenized gold.
-3. Each auction sells a **small, capped** amount of SOST.
-4. **Settlement must be in PAXG/XAUT delivered directly to the Tokenized Gold
-   Reserve Safe** (Ethereum multisig). No intermediate USDT/USDC "we'll buy gold
-   later" staging.
-5. **SOST is released only after the PAXG/XAUT transfer into the Safe is verified.**
-   Delivery-versus-payment: no gold in the Safe ⇒ no SOST released.
-6. Every operation is registered in the **Protocol Registry** (public).
-7. **No AMM at launch.**
-8. **No CEX dependency at launch.**
-9. First phase is **founder-controlled / whitelisted / OTC-style** (known buyers,
-   small amounts, fully recorded).
-10. A **public** auction happens **only after** legal/compliance review.
+1. The Forge is **NOT ACTIVE**.
+2. It converts a **limited, capped** amount of Gold-Vault SOST into tokenized gold.
+3. **Settlement is atomic.** Each conversion executes as a **SOST↔PAXG/XAUT atomic
+   swap (HTLC)** — the SOST↔EVM atomic-swap infrastructure already live from V14.
+   Both legs settle together or neither does; there is no "pay and trust". The gold
+   leg is delivered **directly into the Tokenized Gold Reserve Safe**.
+4. **No intermediate USDT/USDC staging.** Settlement is PAXG/XAUT → Safe, full stop.
+5. Every operation is published as a **Forge Proof** in the Protocol Registry.
+6. **No AMM. No CEX dependency.**
+7. **One-way / accumulation-only:** the protocol acquires gold; it does not run a
+   two-way market or buy SOST back.
+8. First phase is **founder-only**; wider participation is **whitelisted**; any fully
+   public phase happens **only after** legal/compliance review.
 
 ---
 
-## 3. Policy parameters (proposed, not enforced)
+## 3. Pricing — discovered, not discounted
+
+SOST has no market price yet, so the Forge **discovers** a price rather than offering
+a "discount" (a discount against a non-existent reference would be meaningless and
+regulatorily dangerous):
+
+- **Mechanic:** sealed-bid / RFQ. Approved participants submit a private offer
+  (SOST wanted, PAXG/XAUT offered). At window close the best valid bid is selected and
+  settled atomically.
+- **Floor:** a **reserve price derived from the reserve ratio** (tokenized gold in the
+  Safe ÷ SOST supply), not an arbitrary number. A bid below the floor does not execute.
+- **Honesty:** early windows are **plumbing + signal**, not a market price. Real price
+  discovery only begins in the whitelist phase, at small size. **We never present the
+  Forge as a discount or a bargain.**
+
+---
+
+## 4. Policy parameters (proposed, not enforced)
 
 | Parameter | Value |
 |---|---|
-| Max **weekly** sale | `min(500 SOST, 0.5% of Gold Vault SOST balance)` |
-| Max **monthly** sale | `2% of Gold Vault SOST balance` |
+| Max **weekly** conversion | `min(500 SOST, 0.5% of Gold Vault SOST balance)` |
+| Max **monthly** conversion | `2% of Gold Vault SOST balance` |
 | Accepted settlement assets | **PAXG (primary), XAUT (secondary)** |
-| Settlement destination | **Ethereum Safe multisig only** |
-| Minimum price | Auction executes **only if a floor/reserve price is met** |
-| Emergency stop | Guardian / governance can **pause** the program |
-| Timelock | Delay before any operation executes |
-| Release condition | SOST released **only after** verified PAXG/XAUT receipt in the Safe |
+| Settlement | **Atomic swap (HTLC)**, gold leg → **Ethereum Safe multisig only** |
+| Reserve price (floor) | Derived from the **reserve ratio**; below floor ⇒ no execution |
+| Release condition | Atomic — SOST releases **iff** the PAXG/XAUT leg settles into the Safe |
+| Emergency stop | Guardian / governance can **pause** the Forge |
 
-**Hard preconditions — no sale may occur while any is false:**
-- The tokenized-gold Safe multisig is **not created** ⇒ no sale.
-- **G3b** (accumulated cap / rate-limit) is **not complete/wired** ⇒ no sale.
-- Legal/compliance review is **missing** ⇒ no sale.
+**Hard preconditions — no conversion may occur while any is false:**
+- The tokenized-gold Safe multisig is **not created** ⇒ no conversion.
+- **G3b** (accumulated cap / rate-limit) is **not complete/wired** ⇒ no conversion.
+- Legal/compliance review is **missing** ⇒ no conversion.
 
 ---
 
-## 4. Flow
+## 5. Flow
 
 ```
 SOST Gold Vault
-   ↓ weekly capped auction (framework-approved, not per-sale vote)
-Buyer pays PAXG / XAUT
+   ↓  Forge Window (capped, framework-approved — not a per-op vote)
+Atomic swap (HTLC): SOST  ⇄  PAXG/XAUT
+   ↓  (both legs settle together, or neither)
+Tokenized Gold Reserve Safe   ← gold leg lands here
    ↓
-Ethereum Safe multisig  (receipt verified)
-   ↓
-SOST released to the buyer   (only after receipt verified)
-   ↓
-Protocol Registry publishes everything
+Forge Proof published in the Protocol Registry
 ```
 
 ---
 
-## 5. Staged activation plan (by block height)
+## 6. Staged activation plan (by block height)
 
-The program is introduced conservatively, with a founder-only test before anything
-limited, and a public auction only much later. **Being breakthrough is not running
-faster than the brakes.** In one line:
+Conservative rollout: a founder-only test before anything limited, a public phase only
+much later. **Being breakthrough is not running faster than the brakes.**
 
-> *V15 introduces a founder-only reserve conversion test. If successful, a limited
-> Gold Accumulation Program may begin around block 25,000. A public auction remains
-> a future step, dependent on legal/compliance review.*
+> *V15 introduces a founder-only reserve-conversion test. If successful, a limited
+> Gold Reserve Forge may begin around block 25,000. Public participation remains a
+> future step, dependent on legal/compliance review.*
 
-### Phase 1 — V15 / block 20,000: FOUNDER TESTING
+### Phase 1 — V15 / block 20,000: FOUNDER TEST
 
 ```
-Gold Accumulation Program: FOUNDER TESTING
-Public auction:            NOT ACTIVE
+Gold Reserve Forge:        FOUNDER TEST
+Public participation:      NOT ACTIVE
 Gold Vault normal spending: NOT ACTIVE
 ```
 
-Allowed:
-- **1 symbolic operation**, administrator/founder only.
-- Very small amount: **50–100 SOST**.
-- Settlement **only in PAXG** (XAUT possibly later), delivered to the future
-  Ethereum Safe multisig.
-- **Mandatory** record in the Protocol Registry.
+- **1 symbolic operation**, founder only, **50–100 SOST**.
+- Settlement **only in PAXG**, atomic swap, gold leg into the future Safe.
+- **Mandatory** Forge Proof in the Protocol Registry.
+- Not allowed: no public participation, no AMM, no CEX, no automatic window, no
+  anonymous participants, no investment marketing, no profit promise, no claim on gold.
 
-Not allowed: no public auction, no AMM, no CEX, no automatic weekly sale, no
-anonymous buyers, no investment marketing, no profit promise, no claim on the gold.
+Purpose — prove the full circuit end-to-end (atomic swap → gold in Safe → Forge Proof).
 
-Purpose — prove the full circuit end-to-end:
-```
-Gold Vault SOST → founder-only operation → founder delivers PAXG
-→ PAXG enters Safe multisig → SOST released → everything publicly recorded
-```
+### Phase 2 — block 20,000–25,000: OBSERVATION
 
-### Phase 2 — between block 20,000 and 25,000: OBSERVATION
+Public status stays: **"Founder-only reserve-conversion test. Public Forge not active."**
+Review: does the Safe work? is the Forge Proof clear/auditable? any flow errors? any
+legal/commercial confusion? does the community understand it?
 
-Public status must read: **"Founder-only reserve conversion test. Public program not
-active."** Review before going further:
-- Does the Safe work? Is the public record clear and auditable?
-- Any flow errors? Any legal/commercial confusion? Does the community understand it?
-
-### Phase 3 — block 25,000: LIMITED ACTIVE (only if the test passes)
+### Phase 3 — block 25,000: LIMITED (only if the test passes)
 
 ```
-Gold Accumulation Program: LIMITED ACTIVE
+Gold Reserve Forge:        LIMITED
 ```
 
-- Weekly cap: `min(500 SOST, 0.5% of Gold Vault balance)`.
-- Monthly cap: `2% of Gold Vault balance`.
+- Weekly cap `min(500 SOST, 0.5%)`, monthly cap `2%`.
 - PAXG primary, XAUT secondary.
-- Safe multisig destination only.
+- Atomic-swap settlement, gold → Safe only.
 - Emergency stop active.
-- **Whitelist / OTC first — not a public AMM.**
+- **Whitelist / sealed-bid first — not a public AMM.**
 
-### Later — public / open auction
+### Later — public participation
 
-Only when legal/compliance and a larger community are in place. Same caps, same
-delivery-versus-payment, same public registry. Not scheduled.
+Only with legal/compliance and a larger community. Same caps, same atomic settlement,
+same Forge Proofs. Not scheduled.
 
 ---
 
-## 6. Preconditions before Phase 1 can even be scheduled
+## 7. Forge Proofs (the public artifact)
+
+Every completed conversion publishes a **Forge Proof** — an on-chain-verifiable record,
+the centrepiece of the Forge (the proof is the protagonist, **not** a countdown):
+
+- SOST txid
+- Ethereum txid
+- PAXG/XAUT amount
+- Safe address
+- timestamp
+- reserve price used
+- status
+
+A **Reserve Growth Timeline** aggregates the proofs; a **Proof-of-Reserve Meter** shows
+only factual metrics (Gold-Vault SOST balance, PAXG/XAUT Safe balance, number of Forge
+Proofs). None of this implies a peg, backing guarantee, redemption right, or value.
+
+---
+
+## 8. Preconditions before Phase 1 can even be scheduled
 
 ```
 Status: NOT ACTIVE
 Requires:
 - G3b complete (accumulated cap / rate-limit wired + cross-validated)
 - Gold Vault Governance closed (G1–G5)
-- Safe multisig created (PAXG/XAUT custody, timelock, whitelist)
+- Safe multisig created (PAXG/XAUT custody, timelock, allowlist)
 - legal / compliance review
 - first symbolic test
 - Protocol Registry live for reserve operations
@@ -170,48 +190,46 @@ Requires:
 
 ---
 
-## 7. Optional non-financial participation (carefully bounded)
+## 9. Optional non-financial participation (carefully bounded)
 
 Participation may carry **reputational / transparency** recognition only — never a
 financial promise:
 
-- Public "Reserve Supporter" acknowledgement in the Protocol Registry.
-- Priority access in future OTC windows.
-- A small rule-bound discount **only** if strict conditions are met.
+- Public **"Reserve Supporter"** acknowledgement in the Protocol Registry (optional).
+- Priority access in future OTC/Forge windows.
+- Early access to reserve reports.
 - Reputational badge / transparent participation record.
-- Option to buy SOST and voluntarily lock it in PoPC once Bond v2 is ready.
 
 **Prohibited framing (must never appear):** "buy now and you will gain", "guaranteed
-price", "yield/return", "rights over the gold", "share in the vault", dividend, or
-equity.
+price", "yield/return", "rights over the gold", "share in the vault", "gold-backed
+SOST", dividend, or equity.
 
-> ⚠️ **This program must not be marketed as an investment return, claim on gold,
-> equity, dividend, or guaranteed profit.**
+> ⚠️ **The Gold Reserve Forge must not be marketed as an investment return, a claim on
+> gold, equity, a dividend, a yield, or a guaranteed profit.**
 
 ---
 
-## 8. What we will NOT do
+## 10. What the Forge deliberately does NOT do
 
-- No public SOST/PAXG AMM.
-- No public SOST/XAUT AMM.
-- No automatic sale without governance.
-- No direct sale from the vault to anyone.
+- No public SOST/PAXG or SOST/XAUT AMM.
+- No CEX dependency.
+- No automatic conversion without governance.
+- No non-atomic "pay and trust" settlement.
 - No USDT/USDC staging with a "we'll buy gold later" promise.
-
-Settlement must be **PAXG or XAUT → Safe multisig** directly, so the destination is
-never in doubt.
+- No new SOST minted; no claim on gold created.
 
 ---
 
-## 9. Regulatory note
+## 11. Regulatory note
 
-A public token auction can resemble a primary token sale or a crypto-asset service.
-In the EU, MiCA (Regulation (EU) 2023/1114) regulates crypto-asset offers and
-services in phases from 2024/2025. Nothing in this program is activated without
-prior legal/compliance review. This document is not legal advice.
+Even under the "Forge" framing, a public conversion window can resemble a primary
+token offering or a crypto-asset service — regulators look at substance, not name. In
+the EU, MiCA (Regulation (EU) 2023/1114) regulates crypto-asset offers and services in
+phases from 2024/2025. Nothing here activates without prior legal/compliance review.
+This document is not legal advice.
 
 ---
 
-**Bottom line:** the correct name is not "automatic sale" — it is a **controlled
-gold-accumulation program**. Serious, gradual, transparent, and off until every
-precondition in §6 is satisfied.
+**Bottom line:** it is not a sale and not an auction as a product — it is a **Gold
+Reserve Forge**: a sober, atomic, capped, publicly-proven conversion of reserve SOST
+into verifiable tokenized gold. Off until every precondition in §8 is satisfied.

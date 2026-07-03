@@ -892,61 +892,125 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
   </div>
 </section>
 
-<!-- ═══════════ GOLD ACCUMULATION PROGRAM (PLANNED) ═══════════ -->
+<!-- ═══════════ GOLD RESERVE FORGE (PLANNED / NOT ACTIVE) ═══════════ -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">PROGRAM</div>
-      <h2 class="section-title">Gold Accumulation <span class="accent">Program</span>
+      <div class="section-id">FORGE</div>
+      <h2 class="section-title">Gold Reserve <span class="accent">Forge</span>
         <span style="font-size:11px;color:#fb010d;letter-spacing:1px;">(PLANNED / NOT ACTIVE)</span></h2>
     </div>
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:18px;max-width:820px;">
-      A future, tightly-constrained mechanism to convert a <strong>limited</strong> amount of the Gold
-      Vault balance into tokenized gold &mdash; settled <strong>only</strong> in PAXG/XAUT delivered
-      directly to the Ethereum Safe, released only after receipt is verified, and published in the
-      Protocol Registry. Not a public AMM, not a CEX sale, not automatic. Rolled out conservatively:
-      a founder-only test first, a limited program later only if the test passes, and any public auction
-      only after legal/compliance review.
+
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:14px;max-width:840px;">
+      The <strong>Gold Reserve Forge converts a limited amount of the SOST Gold Vault balance into
+      tokenized gold reserve assets</strong> (PAXG / XAUT), progressively and verifiably. It is a
+      reserve-conversion framework &mdash; <strong>not a token sale</strong>. Settlement is atomic
+      (a SOST&harr;PAXG/XAUT atomic swap), the gold leg lands directly in the Tokenized Gold Safe, and
+      every operation is published as a Forge Proof. We are not selling SOST; we are forging a
+      verifiable tokenized-gold reserve.
     </p>
-    <p style="color:var(--text-primary);font-weight:500;margin-bottom:16px;max-width:820px;">
-      V15 introduces a <strong>founder-only reserve conversion test</strong>. If successful, a limited
-      Gold Accumulation Program may begin around block 25,000. A public auction remains a future step,
-      dependent on legal/compliance review.
+    <p style="color:var(--text-dim);font-size:12px;line-height:1.8;margin-bottom:18px;max-width:840px;">
+      It <strong>does not mint new SOST</strong>. It <strong>does not create a claim on gold</strong>.
+      It is <strong>not a peg</strong>. It is <strong>not a dividend, yield or investment return</strong>.
+      It is <strong>planned / not active</strong>. A Founder Test is scheduled around block 20,000; a
+      limited mode may follow after block 25,000 only if the test passes; public participation remains
+      future / legal-review dependent.
     </p>
 
-    <!-- staged plan -->
+    <!-- 1. CURRENT FORGE WINDOW -->
+    <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin:6px 0 8px;">1 · CURRENT FORGE WINDOW</div>
+    <div class="spec-block">
+      <div class="spec-body" style="padding:0;">
+        <table class="code-table">
+          <tr><td class="label">Window</td><td class="value">Forge #001</td></tr>
+          <tr><td class="label">Mode</td><td class="value">Founder Test</td></tr>
+          <tr><td class="label">Status</td><td class="value" style="color:#fb010d;font-weight:600;">Scheduled / NOT ACTIVE</td></tr>
+          <tr><td class="label">Block</td><td class="value">20,000</td></tr>
+          <tr><td class="label">Max amount</td><td class="value">100 SOST</td></tr>
+          <tr><td class="label">Settlement</td><td class="value">PAXG only (atomic swap)</td></tr>
+          <tr><td class="label">Destination</td><td class="value">Tokenized Gold Safe</td></tr>
+          <tr><td class="label">Public participation</td><td class="value" style="color:#fb010d;">disabled</td></tr>
+        </table>
+      </div>
+    </div>
+    <p style="color:var(--text-dim);font-size:11px;margin:6px 0 22px;">Example only — no window is open, scheduled data is illustrative, nothing executes today.</p>
+
+    <!-- 2. FORGE RULES -->
+    <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin:6px 0 8px;">2 · FORGE RULES</div>
     <div class="mode-grid">
+      <div class="mode-card"><div class="mode-params">Capped: weekly <span style="color:var(--text-primary);">min(500 SOST, 0.5%)</span>, monthly <span style="color:var(--text-primary);">2%</span></div></div>
+      <div class="mode-card"><div class="mode-params">Settlement: <span style="color:var(--text-primary);">atomic swap</span>, PAXG primary / XAUT optional later</div></div>
+      <div class="mode-card"><div class="mode-params">Destination: <span style="color:var(--text-primary);">Safe multisig only</span></div></div>
+      <div class="mode-card"><div class="mode-params">Protocol Registry entry <span style="color:var(--text-primary);">required</span></div></div>
+      <div class="mode-card"><div class="mode-params">Emergency stop <span style="color:var(--text-primary);">active</span></div></div>
+      <div class="mode-card"><div class="mode-params">No AMM · No CEX dependency</div></div>
+    </div>
+
+    <!-- staged plan -->
+    <div class="mode-grid" style="margin-top:12px;">
       <div class="mode-card">
-        <div class="mode-name"><span class="indicator" style="background:#fb010d;box-shadow:0 0 6px #fb010d;"></span>V15 / block 20,000 — FOUNDER TESTING</div>
-        <div class="mode-params">1 symbolic op, founder only, <span style="color:var(--text-primary);">50&ndash;100 SOST</span>, PAXG → Safe, recorded in Registry. Public auction NOT active. <span style="color:#fb010d;">Planned, not active.</span></div>
+        <div class="mode-name"><span class="indicator" style="background:#fb010d;box-shadow:0 0 6px #fb010d;"></span>Block 20,000 — FOUNDER TEST</div>
+        <div class="mode-params">1 symbolic op, founder only, <span style="color:var(--text-primary);">50&ndash;100 SOST</span>, PAXG via atomic swap → Safe, Forge Proof published. <span style="color:#fb010d;">Planned, not active.</span></div>
       </div>
       <div class="mode-card">
         <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Block 20,000&ndash;25,000 — OBSERVATION</div>
-        <div class="mode-params">Audit the circuit: Safe works? record clear/auditable? no flow errors? no legal/commercial confusion? Public status: "founder-only test, public program not active."</div>
+        <div class="mode-params">Audit the circuit: Safe works? Forge Proof clear/auditable? no flow errors? no legal/commercial confusion? Public status stays "founder-only test, public Forge not active."</div>
       </div>
       <div class="mode-card">
-        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Block 25,000 — LIMITED (if test passes)</div>
-        <div class="mode-params">Weekly <span style="color:var(--text-primary);">min(500 SOST, 0.5%)</span>, monthly <span style="color:var(--text-primary);">2%</span>, PAXG primary / XAUT secondary, Safe only, emergency stop, whitelist/OTC first &mdash; not a public AMM.</div>
+        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Block 25,000 — LIMITED (only if test passes)</div>
+        <div class="mode-params">Same caps, whitelist / sealed-bid first, atomic settlement, gold → Safe only, emergency stop. Not a public AMM.</div>
       </div>
       <div class="mode-card">
-        <div class="mode-name"><span class="indicator" style="background:var(--text-dim);"></span>Later — PUBLIC AUCTION</div>
-        <div class="mode-params">Only after legal/compliance and a larger community. Same caps, same delivery-versus-payment, same public registry. <span style="color:#fb010d;">Not scheduled.</span></div>
+        <div class="mode-name"><span class="indicator" style="background:var(--text-dim);"></span>Later — PUBLIC PARTICIPATION</div>
+        <div class="mode-params">Only after legal/compliance and a larger community. Same caps, same atomic settlement, same Forge Proofs. <span style="color:#fb010d;">Not scheduled.</span></div>
       </div>
     </div>
 
-    <div class="mode-grid" style="margin-top:12px;">
-      <div class="mode-card"><div class="mode-params">Settlement: <span style="color:var(--text-primary);">PAXG primary / XAUT secondary → Safe only</span></div></div>
-      <div class="mode-card"><div class="mode-params">Release: <span style="color:var(--text-primary);">SOST freed only after gold verified in Safe</span></div></div>
+    <!-- 3. FORGE PROOFS -->
+    <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin:22px 0 8px;">3 · FORGE PROOFS</div>
+    <p style="color:var(--text-secondary);font-size:13px;line-height:1.8;max-width:840px;">
+      Every completed conversion publishes a <strong>Forge Proof</strong> — an on-chain-verifiable record
+      (the proof is the point, not a countdown): <span style="color:var(--text-primary);">SOST txid · Ethereum txid ·
+      PAXG/XAUT amount · Safe address · timestamp · status</span>.
+    </p>
+
+    <!-- 4. RESERVE GROWTH TIMELINE -->
+    <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin:22px 0 8px;">4 · RESERVE GROWTH TIMELINE</div>
+    <div class="spec-block">
+      <div class="spec-body" style="text-align:center;color:var(--text-dim);padding:22px 16px;">
+        No Forge Proofs yet — no tokenized-gold reserve operations have been executed.
+      </div>
     </div>
-    <div style="background:rgba(251,1,13,0.06);border:1px solid #fb010d;border-radius:8px;padding:16px 20px;margin-top:16px;">
-      <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin-bottom:6px;">STATUS: NOT ACTIVE — REQUIRES</div>
+
+    <!-- 5. PROOF-OF-RESERVE METER -->
+    <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin:22px 0 8px;">5 · PROOF-OF-RESERVE METER</div>
+    <div class="mode-grid">
+      <div class="mode-card"><div class="mode-name">SOST Gold Vault balance</div><div class="mode-params">observable on-chain</div></div>
+      <div class="mode-card"><div class="mode-name">PAXG / XAUT Safe balance</div><div class="mode-params">0 — Safe not created</div></div>
+      <div class="mode-card"><div class="mode-name">Forge Proofs</div><div class="mode-params">0</div></div>
+    </div>
+    <p style="color:var(--text-dim);font-size:11px;margin-top:8px;max-width:840px;">
+      Factual metrics only. This is <strong>not a peg</strong>, implies <strong>no backing guarantee,
+      redemption right, or guaranteed value</strong>, and confers no claim on the reserve.
+    </p>
+
+    <!-- 6. RESERVE SUPPORTERS -->
+    <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin:22px 0 8px;">6 · RESERVE SUPPORTERS</div>
+    <p style="color:var(--text-secondary);font-size:13px;line-height:1.8;max-width:840px;">
+      Optional public recognition only — a participant may choose to be acknowledged in the Protocol
+      Registry. <strong>No financial rights, no priority profit, no claim on the reserve.</strong>
+    </p>
+
+    <!-- STATUS + EMERGENCY STOP + LINK -->
+    <div style="background:rgba(251,1,13,0.06);border:1px solid #fb010d;border-radius:8px;padding:16px 20px;margin-top:22px;">
+      <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin-bottom:6px;">STATUS: NOT ACTIVE — REQUIRES (+ EMERGENCY STOP)</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.9;">
-        G3b complete · Safe multisig created · legal/compliance review · first symbolic test · Protocol Registry live · public notice period
+        G3b complete · Safe multisig created · legal/compliance review · first symbolic test · Protocol Registry live · public notice period · guardian/governance emergency stop
       </div>
     </div>
     <p style="color:var(--text-dim);font-size:12px;margin-top:12px;line-height:1.7;">
-      Not an investment return, claim on gold, equity, dividend, or guaranteed profit. Full design:
-      <a href="https://github.com/SOST-Protocol/sost-core/blob/main/docs/GOLD_ACCUMULATION_AUCTION_PROGRAM.md" target="_blank" rel="noopener" style="color:#FFD700;">GOLD_ACCUMULATION_AUCTION_PROGRAM.md</a>.
+      Not an investment return, claim on gold, equity, dividend, yield, or guaranteed profit; no gold-backed SOST; no new SOST minted. Full design:
+      <a href="https://github.com/SOST-Protocol/sost-core/blob/main/docs/GOLD_ACCUMULATION_AUCTION_PROGRAM.md" target="_blank" rel="noopener" style="color:#FFD700;">Gold Reserve Forge design</a>.
     </p>
   </div>
 </section>
