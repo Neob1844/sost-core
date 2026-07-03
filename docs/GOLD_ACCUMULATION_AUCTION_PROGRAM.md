@@ -110,11 +110,13 @@ Forge Proof published in the Protocol Registry
 Conservative rollout: a founder-only test before anything limited, a public phase only
 much later. **Being breakthrough is not running faster than the brakes.**
 
-> *V15 introduces a founder-only reserve-conversion test. If successful, a limited
-> Gold Reserve Forge may begin around block 25,000. Public participation remains a
-> future step, dependent on legal/compliance review.*
+> *A founder-only reserve-conversion test is targeted **no earlier than block 20,000**,
+> subject to Safe setup, legal review and internal approval. A limited Gold Reserve Forge
+> **may be considered no earlier than block 25,000, only if** the founder test, legal review
+> and registry process are successful. Public participation remains a future step, dependent
+> on legal/compliance review. None of these are commitments or guaranteed activation dates.*
 
-### Phase 1 — V15 / block 20,000: FOUNDER TEST
+### Phase 1 — no earlier than block 20,000: FOUNDER TEST (subject to review)
 
 ```
 Gold Reserve Forge:        FOUNDER TEST
@@ -136,7 +138,7 @@ Public status stays: **"Founder-only reserve-conversion test. Public Forge not a
 Review: does the Safe work? is the Forge Proof clear/auditable? any flow errors? any
 legal/commercial confusion? does the community understand it?
 
-### Phase 3 — block 25,000: LIMITED (only if the test passes)
+### Phase 3 — no earlier than block 25,000: LIMITED (may be considered, only if the test passes)
 
 ```
 Gold Reserve Forge:        LIMITED
