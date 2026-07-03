@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-01-v361-mosaicfix",
-  "note": "Mosaic fixes: lottery tile click now opens the block/tx data like other tiles (winner stays in the hover); ResizeObserver re-renders instantly on return so the mempool tiles no longer look squished for ~10s."
+  "v": "2026-07-04-v362-banner-default",
+  "note": "V14.5 mandatory-upgrade banner now shown EXPANDED by default (collapsible, remembers a deliberate collapse). Version bumped to auto-reload open explorer tabs so miners/node operators see the upgrade notice immediately."
 }
