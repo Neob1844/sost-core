@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-04-v362-banner-default",
-  "note": "V14.5 mandatory-upgrade banner now shown EXPANDED by default (collapsible, remembers a deliberate collapse). Version bumped to auto-reload open explorer tabs so miners/node operators see the upgrade notice immediately."
+  "v": "2026-07-04-v363-producer-distribution",
+  "note": "New Block Producers Distribution card (donut of block share by producer address, All + 24h; longer periods disabled until extended block history). Version bumped so open explorer tabs auto-reload and everyone sees the new module."
 }

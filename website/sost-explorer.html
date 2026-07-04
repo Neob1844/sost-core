@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-07-04-v362-banner-default">
+<meta name="explorer-html-version" content="2026-07-04-v363-producer-distribution">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -782,6 +782,31 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
   <div id="networkMosaicCard"></div>
 </div>
 <script src="js/network-mosaic.js?v=v361" defer></script>
+
+<!-- ===== BLOCK PRODUCERS DISTRIBUTION (observability card) ===== -->
+<div class="section" id="producerDistSection">
+  <div class="sec-head"><div class="sec-title">// <b>BLOCK PRODUCERS DISTRIBUTION</b></div><div class="sec-meta">Share of blocks by producer address</div></div>
+  <div id="pdControls" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px"></div>
+  <div id="pdHint" style="font-size:10px;color:var(--text3);margin:0 0 12px"></div>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+    <div style="position:relative;flex:0 0 auto;margin:0 auto;width:240px;height:240px">
+      <canvas id="pdDonut" width="240" height="240" style="max-width:100%;height:auto"></canvas>
+      <div id="pdEmpty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:var(--text3);line-height:1.6">Loading producer<br>data&hellip;</div>
+      <div id="pdTip" style="position:absolute;pointer-events:none;display:none;background:rgba(0,0,0,.92);border:1px solid #333;border-radius:6px;padding:6px 9px;font-size:11px;color:#eee;z-index:6;white-space:nowrap"></div>
+    </div>
+    <div style="flex:1 1 340px;min-width:280px">
+      <div id="pdMetrics" style="display:flex;gap:18px;flex-wrap:wrap;font-size:12px;margin-bottom:12px"></div>
+      <div style="overflow-x:auto">
+        <table class="tbl" id="pdTable" style="width:100%;font-size:12px">
+          <thead><tr><th>#</th><th>PRODUCER</th><th>BLOCKS</th><th>SHARE</th><th>LAST BLOCK</th></tr></thead>
+          <tbody id="pdTableBody"><tr><td colspan="5" style="color:var(--text3)">Waiting for block producer data&hellip; (populates after the chain scan)</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div id="pdNote" style="font-size:10px;color:var(--text3);margin-top:10px">Share of blocks by producer address. The donut appears once the explorer's block scan finishes.</div>
+</div>
+
 <!-- CHART 1: Block Production — Real vs Expected -->
 <div class="diff-bar-wrap" id="chartProdWrap">
 <div style="background:var(--bg2);border:1px solid var(--border);padding:12px 16px;">
@@ -2328,6 +2353,8 @@ async function renderDTDPanel(body,title,silent){
     // Draw all 4 charts after DOM is in place. Wrapped in try so a render error
     // never blocks the table from loading below.
     try{ _drawDtdCharts(ph2,rows,cooldownSet,height); }catch(e){console.warn('[dtd] chart render failed',e);}
+    // Expose producer data (read-only) for the Block Producers Distribution card.
+    try{ window._producerRows=rows; window._recentBlocks=recentBlocks; window._phase2Start=PHASE2_START; if(window.renderProducerDist) window.renderProducerDist(); }catch(ePD){}
     _dtdCache={height:height,rows:rows,totalSubsidy:totalSubsidy,totalMiner:totalMiner,totalGold:totalGold,totalPopc:totalPopc,totalLottery:totalLottery,pending:pending};
     // Cache lottery wins per address so showAddress can display 'DTD LOTTERY RECEIVED'
     // without re-scanning the chain. Only addresses with a non-zero dtdWonStocks are stored.
@@ -8164,6 +8191,131 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
   }
   mount({id:'vcx-sost',site:'sostcore',seed:3375,base:'/counter',btn:'▸ visitor count',
          accent:'#4ade80',border:'#16331f',bg:'rgba(8,16,10,.7)',mut:'#5f7a68',label:'explorer visits'});
+})();
+</script>
+<!-- ===== Block Producers Distribution (observability card) ===== -->
+<script>
+(function(){
+  // recentBlocks holds ~320 height+miner pairs (no timestamp) => only 24h fits;
+  // longer windows need extended block history and are disabled honestly.
+  var PERIODS=[{k:'24h',label:'24h',blocks:135},{k:'3d',label:'3D',blocks:404},
+    {k:'1w',label:'1W',blocks:943},{k:'1m',label:'1M',blocks:4039},
+    {k:'3m',label:'3M',blocks:12117},{k:'all',label:'All',blocks:null}];
+  var PALETTE=['#22d3ee','#a855f7','#4ade80','#fbbf24','#fb7185','#38bdf8','#f472b6','#34d399','#c084fc','#facc15'];
+  var OTHERS='#5b6473';
+  window._pdPeriod=window._pdPeriod||'all';
+  var _segs=[];
+  function shortA(a){ return a? (a.slice(0,10)+'…'+a.slice(-4)) : 'unknown'; }
+  function needFor(k){ for(var i=0;i<PERIODS.length;i++){ if(PERIODS[i].k===k) return PERIODS[i].blocks; } return null; }
+
+  function counts(period){
+    var rows=window._producerRows||null, recent=window._recentBlocks||null;
+    if(period==='all'){
+      if(!rows||!rows.length) return null;
+      var c={},t=0,last={};
+      rows.forEach(function(r){ var n=r&&r.minedBlocks||0; if(n>0){ c[r.addr]=n; t+=n; last[r.addr]=r.lastMined||0; } });
+      return t? {c:c,t:t,last:last,note:'all recorded blocks (full-chain scan)'} : null;
+    }
+    if(!recent||!recent.length) return null;
+    var need=needFor(period);
+    if(recent.length<need) return {insufficient:true, have:recent.length, need:need};
+    var slice=recent.slice(-need), c={},t=0,last={};
+    slice.forEach(function(b){ if(!b||!b.m) return; c[b.m]=(c[b.m]||0)+1; t++; last[b.m]=Math.max(last[b.m]||0,b.h||0); });
+    return {c:c,t:t,last:last,note:'last '+need+' blocks (≈'+period+', height proxy: blocks ≈ 10.7 min)'};
+  }
+  function ranked(c){ return Object.keys(c).map(function(a){return {a:a,n:c[a]};}).sort(function(x,y){return y.n-x.n;}); }
+
+  function setEmpty(txt){ var e=document.getElementById('pdEmpty'); if(e){ e.innerHTML=txt; e.style.display='flex'; } }
+  function drawDonut(top,otherN,total){
+    var cv=document.getElementById('pdDonut'); if(!cv||!cv.getContext) return; var ctx=cv.getContext('2d');
+    var _e=document.getElementById('pdEmpty'); if(_e)_e.style.display='none';
+    var W=cv.width,H=cv.height,cx=W/2,cy=H/2,rO=Math.min(W,H)/2-6,rI=rO*0.58;
+    ctx.clearRect(0,0,W,H); _segs=[];
+    var segs=top.map(function(s,i){return {a:s.a,n:s.n,c:PALETTE[i%PALETTE.length]};});
+    if(otherN>0) segs.push({a:'Others',n:otherN,c:OTHERS});
+    var ang=-Math.PI/2;
+    segs.forEach(function(s){ var a2=ang+2*Math.PI*(s.n/total);
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,rO,ang,a2);ctx.closePath();ctx.fillStyle=s.c;ctx.fill();
+      _segs.push({a:s.a,n:s.n,a1:ang,a2:a2}); ang=a2; });
+    ctx.beginPath();ctx.arc(cx,cy,rI,0,2*Math.PI);ctx.fillStyle='#05070a';ctx.fill();
+    ctx.fillStyle='#e6edf3';ctx.textAlign='center';ctx.font='bold 20px "Fira Code",monospace';ctx.fillText(String(total),cx,cy-1);
+    ctx.fillStyle='#7a8794';ctx.font='9px "Fira Code",monospace';ctx.fillText('BLOCKS',cx,cy+13);
+  }
+  function clearDonut(){ var cv=document.getElementById('pdDonut'); if(cv&&cv.getContext){var x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);} _segs=[]; var e=document.getElementById('pdEmpty'); if(e)e.style.display='flex'; }
+
+  function fillTable(arr,total,last){
+    var tb=document.getElementById('pdTableBody'); if(!tb) return;
+    if(!arr.length){ tb.innerHTML='<tr><td colspan="5" style="color:var(--text3)">No producers in this period.</td></tr>'; return; }
+    tb.innerHTML=arr.slice(0,10).map(function(s,i){
+      return '<tr><td>'+(i+1)+'</td><td title="'+s.a+'" style="font-family:monospace">'+shortA(s.a)+
+        '</td><td>'+s.n+'</td><td>'+(100*s.n/total).toFixed(1)+'%</td><td>#'+(last[s.a]||'—')+'</td></tr>';
+    }).join('');
+  }
+  function metrics(arr,total){
+    var m=document.getElementById('pdMetrics'); if(!m) return;
+    var top1=arr.length?100*arr[0].n/total:0;
+    var t3=arr.slice(0,3).reduce(function(s,x){return s+x.n;},0); t3=total?100*t3/total:0;
+    function box(l,v,col){ return '<div><div style="color:var(--text3);font-size:10px">'+l+'</div><div style="font-weight:600;color:'+(col||'#e6edf3')+'">'+v+'</div></div>'; }
+    m.innerHTML=box('TOP 1',top1.toFixed(1)+'%',top1>50?'#fb010d':top1>33?'#fbbf24':'#4ade80')
+      +box('TOP 3',t3.toFixed(1)+'%',t3>66?'#fb010d':'#22d3ee')
+      +box('UNIQUE PRODUCERS',String(arr.length))
+      +box('PERIOD',(window._pdPeriod||'all').toUpperCase());
+  }
+  function buildControls(){
+    var c=document.getElementById('pdControls'); if(!c) return;
+    if(!c._built){ c._built=true;
+      c.innerHTML=PERIODS.map(function(p){ return '<button type="button" data-pd="'+p.k+'" style="background:transparent;border:1px solid #2a2a2a;color:#9aa6b2;border-radius:5px;padding:4px 11px;font:11px \'Fira Code\',monospace;cursor:pointer">'+p.label+'</button>'; }).join('');
+      Array.prototype.forEach.call(c.querySelectorAll('button'),function(b){ b.onclick=function(){ window._pdPeriod=b.getAttribute('data-pd'); window.renderProducerDist(); }; });
+    }
+    var recent=window._recentBlocks||[], off=[];
+    Array.prototype.forEach.call(c.querySelectorAll('button'),function(b){
+      var k=b.getAttribute('data-pd'), need=needFor(k);
+      var avail=(k==='all') ? !!(window._producerRows&&window._producerRows.length) : (recent.length>= (need||1e9));
+      var on=k===(window._pdPeriod||'all');
+      b.disabled=!avail; b.style.opacity=avail?'1':'.4'; b.style.cursor=avail?'pointer':'not-allowed';
+      b.title=avail?'':'Requires extended block history';
+      b.style.background=on&&avail?'rgba(34,211,238,.15)':'transparent';
+      b.style.color=on&&avail?'#22d3ee':'#9aa6b2';
+      b.style.borderColor=on&&avail?'#22d3ee':'#2a2a2a';
+      if(!avail && k!=='all') off.push(b.textContent);
+    });
+    var hint=document.getElementById('pdHint');
+    if(hint){
+      hint.innerHTML = off.length
+        ? 'Greyed periods (<b>'+off.join(' · ')+'</b>) require extended block history — the explorer keeps ≈'+(recent.length||0)+' recent blocks (~2–3 days). <b>24h</b> and <b>All</b> are available.'
+        : 'Select a period. <b>All</b> = full-chain producer share; <b>24h</b> = recent window.';
+    }
+  }
+  window.renderProducerDist=function(){
+    buildControls();
+    var period=window._pdPeriod||'all';
+    var note=document.getElementById('pdNote'), tb=document.getElementById('pdTableBody'), mm=document.getElementById('pdMetrics');
+    var res=counts(period);
+    if(res===null){ if(note)note.textContent='Share of blocks by producer address. The donut appears once the explorer\'s block scan finishes.'; if(tb)tb.innerHTML='<tr><td colspan="5" style="color:var(--text3)">Waiting for block producer data… (populates after the chain scan)</td></tr>'; if(mm)mm.innerHTML=''; clearDonut(); setEmpty('Waiting for block<br>producer data&hellip;'); return; }
+    if(res.insufficient){ if(note)note.textContent='This period requires extended block history (have ≈'+res.have+' recent blocks, need ≈'+res.need+').'; if(tb)tb.innerHTML='<tr><td colspan="5" style="color:var(--text3)">This period requires extended block history.</td></tr>'; if(mm)mm.innerHTML=''; clearDonut(); setEmpty('Extended block<br>history required'); return; }
+    var arr=ranked(res.c), top=arr.slice(0,10), otherN=arr.slice(10).reduce(function(s,x){return s+x.n;},0);
+    drawDonut(top,otherN,res.t); fillTable(arr,res.t,res.last); metrics(arr,res.t);
+    if(note)note.textContent=res.note+' · SOST has no traditional mining pools — shares are by producer/miner address.';
+  };
+  document.addEventListener('DOMContentLoaded',function(){
+    buildControls();
+    var cv=document.getElementById('pdDonut');
+    if(cv){
+      cv.addEventListener('mousemove',function(e){
+        var r=cv.getBoundingClientRect(), sx=cv.width/r.width, sy=cv.height/r.height;
+        var x=(e.clientX-r.left)*sx-cv.width/2, y=(e.clientY-r.top)*sy-cv.height/2;
+        var ang=Math.atan2(y,x); if(ang<-Math.PI/2)ang+=2*Math.PI;
+        var dist=Math.sqrt(x*x+y*y), tip=document.getElementById('pdTip'), rO=cv.width/2-6;
+        var hit=null; if(dist<=rO&&dist>=rO*0.58){ for(var i=0;i<_segs.length;i++){ if(ang>=_segs[i].a1&&ang<_segs[i].a2){hit=_segs[i];break;} } }
+        if(hit&&tip){ var tot=_segs.reduce(function(s,z){return s+z.n;},0);
+          tip.style.display='block'; tip.style.left=(e.clientX-r.left+10)+'px'; tip.style.top=(e.clientY-r.top+10)+'px';
+          tip.innerHTML=(hit.a==='Others'?'Others':shortA(hit.a))+'<br>'+hit.n+' blocks · '+(100*hit.n/tot).toFixed(1)+'% · '+(window._pdPeriod||'all').toUpperCase()+(hit.a!=='Others'?'<br><span style="color:#7a8794">'+hit.a+'</span>':'');
+        } else if(tip){ tip.style.display='none'; }
+      });
+      cv.addEventListener('mouseleave',function(){ var t=document.getElementById('pdTip'); if(t)t.style.display='none'; });
+    }
+    if(window._producerRows) window.renderProducerDist();  // data may already be ready
+  });
 })();
 </script>
 </body>
