@@ -2829,6 +2829,9 @@ async function updateDashboard(info){
     // blocks rather than relying on push order.
     diffs.sort(function(a,b){return b.h-a.h;});
     _diffHistory=diffs.slice(0,AVG_WINDOW).reverse();drawSparkline();
+    // Producer Distribution can render its recent window (24h) from this fast
+    // ~288-block buffer immediately, without waiting for the full-chain scan.
+    try{ if(window.renderProducerDist) window.renderProducerDist(); }catch(ePD){}
     // 5000-block diff history DISABLED: it fired ~5000 getblock calls that saturated
     // the node's single-thread RPC. Re-enable only with a batch RPC. (The main 288/600/
     // 1000 sparklines above still render from the primary fetch.)
@@ -8212,13 +8215,24 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     {k:'3m',label:'3M',blocks:12117},{k:'all',label:'All',blocks:null}];
   var PALETTE=['#22d3ee','#a855f7','#4ade80','#fbbf24','#fb7185','#38bdf8','#f472b6','#34d399','#c084fc','#facc15'];
   var OTHERS='#5b6473';
-  window._pdPeriod=window._pdPeriod||'all';
+  window._pdPeriod=window._pdPeriod||'24h';   // default to the fast recent window so the card shows immediately; All is one click away
+  // Recent-block source: prefer the full-chain scan buffer (large, up to ~13000) when
+  // ready; otherwise fall back to the fast ~288-block diff-history buffer that the
+  // Network Mosaic uses, so the 24h/recent window shows IMMEDIATELY instead of waiting
+  // for the full-chain scan. Both are ascending by height with {h, miner}.
+  function pdRecent(){
+    var full=window._recentBlocks;
+    if(full&&full.length) return full;
+    var dh=window._diffHistory;
+    if(dh&&dh.length) return dh.map(function(x){return {h:x.h||0,m:x.miner||''};}).filter(function(x){return x.m;});
+    return null;
+  }
   var _segs=[];
   function shortA(a){ return a? (a.slice(0,10)+'…'+a.slice(-4)) : 'unknown'; }
   function needFor(k){ for(var i=0;i<PERIODS.length;i++){ if(PERIODS[i].k===k) return PERIODS[i].blocks; } return null; }
 
   function counts(period){
-    var rows=window._producerRows||null, recent=window._recentBlocks||null;
+    var rows=window._producerRows||null, recent=pdRecent();
     if(period==='all'){
       if(!rows||!rows.length) return null;
       var c={},t=0,last={};
@@ -8285,7 +8299,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
       c.innerHTML=PERIODS.map(function(p){ return '<button type="button" data-pd="'+p.k+'" style="background:transparent;border:1px solid #2a2a2a;color:#9aa6b2;border-radius:5px;padding:4px 11px;font:11px \'Fira Code\',monospace;cursor:pointer">'+p.label+'</button>'; }).join('');
       Array.prototype.forEach.call(c.querySelectorAll('button'),function(b){ b.onclick=function(){ window._pdPeriod=b.getAttribute('data-pd'); window.renderProducerDist(); }; });
     }
-    var recent=window._recentBlocks||[], off=[];
+    var recent=pdRecent()||[], off=[];
     Array.prototype.forEach.call(c.querySelectorAll('button'),function(b){
       var k=b.getAttribute('data-pd'), need=needFor(k);
       var avail=(k==='all') ? !!(window._producerRows&&window._producerRows.length)
