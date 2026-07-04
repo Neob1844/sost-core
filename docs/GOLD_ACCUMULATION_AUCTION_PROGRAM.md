@@ -13,6 +13,15 @@ contract.
 > The Gold Vault accumulates SOST today. No Forge exists, no SOST is being sold, and
 > no tokenized-gold reserve has been created.
 
+> **Reserve framing (2026 update):** the Forge operates inside the **Gold Accumulation
+> Reserve** compartment (minimum 50%) of the **Protocol Strategic Reserve**. It only
+> ever converts *Gold-Accumulation* SOST into tokenized/custodied gold — never the
+> Growth/Listing/Compliance compartment. All activation is governed by the holder-vote
+> + guardian-veto model, and gold accumulation is chronologically the **second** step
+> (after a real SOST market/liquidity exists). Canonical policy, caps, timelock and the
+> economic caveat: [`GOLD_METALS_RESERVE_POLICY.md`](GOLD_METALS_RESERVE_POLICY.md).
+> SOST remains **not** gold-backed; "grams" is a treasury metric, not a peg or claim.
+
 Related: [`GOLD_METALS_RESERVE_POLICY.md`](GOLD_METALS_RESERVE_POLICY.md),
 [`TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md`](TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md),
 [`V13_GOLD_VAULT_GOVERNANCE_GATES.md`](V13_GOLD_VAULT_GOVERNANCE_GATES.md).
