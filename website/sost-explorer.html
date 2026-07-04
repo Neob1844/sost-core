@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-07-04-v363-producer-distribution">
+<meta name="explorer-html-version" content="2026-07-04-v364-producer-periods">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -781,7 +781,7 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
 <div class="diff-bar-wrap" id="networkMosaicWrap">
   <div id="networkMosaicCard"></div>
 </div>
-<script src="js/network-mosaic.js?v=v361" defer></script>
+<script src="js/network-mosaic.js?v=v364" defer></script>
 
 <!-- ===== BLOCK PRODUCERS DISTRIBUTION (observability card) ===== -->
 <div class="section" id="producerDistSection">
@@ -2058,7 +2058,7 @@ async function renderDTDPanel(body,title,silent){
     var recentBlocks=[];
     var _scanStart=0;
     try{
-      var _accRaw=localStorage.getItem('sost_dtd_acc_v2');
+      var _accRaw=localStorage.getItem('sost_dtd_acc_v3');
       if(_accRaw){
         var _acc=JSON.parse(_accRaw);
         if(_acc&&typeof _acc.scannedHeight==='number'&&_acc.scannedHeight>=7100&&_acc.scannedHeight<=height&&_acc.t&&_acc.rows){
@@ -2122,8 +2122,8 @@ async function renderDTDPanel(body,title,silent){
     // Persist accumulators so the next visit scans only the new blocks.
     try{
       var _accRows={};Object.keys(rowsByAddr).forEach(function(a){var rr=rowsByAddr[a];_accRows[a]={mb:rr.minedBlocks,ms:rr.minedStocks,dws:rr.dtdWonStocks,dwc:rr.dtdWonCount,lm:rr.lastMined};});
-      var _accStr=JSON.stringify({scannedHeight:height,t:{s:totalSubsidy,m:totalMiner,g:totalGold,p:totalPopc,l:totalLottery},rows:_accRows,ph2:ph2,recent:recentBlocks.filter(function(rb){return rb.h>height-320;})});
-      if(_accStr.length<4*1024*1024)localStorage.setItem('sost_dtd_acc_v2',_accStr);
+      var _accStr=JSON.stringify({scannedHeight:height,t:{s:totalSubsidy,m:totalMiner,g:totalGold,p:totalPopc,l:totalLottery},rows:_accRows,ph2:ph2,recent:recentBlocks.filter(function(rb){return rb.h>height-13000;})});
+      if(_accStr.length<4*1024*1024)localStorage.setItem('sost_dtd_acc_v3',_accStr);
     }catch(eAccW){}
     var cooldownSet={};latestWinners.slice(-cdWindow).forEach(function(a){cooldownSet[a]=true;});
     // V13 anti-dominance gate (active from #12,100): exclude any miner whose
@@ -2591,7 +2591,7 @@ function openDetail(){
   var p=document.getElementById('detailPanel');
   p.style.display='';
   p.classList.add('show');
-  var hide=['dashboard','diff-bar-wrap','sparkline-wrap','stats','blocksSection','txSection','mpSection','priceChartsRow'];
+  var hide=['dashboard','diff-bar-wrap','sparkline-wrap','stats','producerDistSection','blocksSection','txSection','mpSection','priceChartsRow'];
   for(var i=0;i<hide.length;i++){
     var els=document.querySelectorAll('#'+hide[i]+', .'+hide[i]);
     for(var j=0;j<els.length;j++) els[j].style.display='none';
@@ -2600,13 +2600,19 @@ function openDetail(){
 function hideDetail(){
   var p=document.getElementById('detailPanel');
   p.classList.remove('show');p.style.display='none';
-  var show=['dashboard','diff-bar-wrap','sparkline-wrap','stats','blocksSection','txSection','mpSection','priceChartsRow'];
+  var show=['dashboard','diff-bar-wrap','sparkline-wrap','stats','producerDistSection','blocksSection','txSection','mpSection','priceChartsRow'];
   for(var i=0;i<show.length;i++){
     var els=document.querySelectorAll('#'+show[i]+', .'+show[i]);
     for(var j=0;j<els.length;j++) els[j].style.display='';
   }
   _navStack=[];
   document.getElementById('detailNav').innerHTML='';
+  // Restored canvases (Network Mosaic, charts, producer donut) briefly rendered at
+  // width 0 while hidden; re-measure on the next frame so they don't flash "squished".
+  requestAnimationFrame(function(){
+    try{ window.dispatchEvent(new Event('resize')); }catch(e){}
+    try{ if(window.renderProducerDist) window.renderProducerDist(); }catch(e){}
+  });
 }
 function pushNav(type,label,id){_navStack.push({type:type,label:label,id:id});renderNav();}
 function navTo(idx){
@@ -8198,7 +8204,10 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 (function(){
   // recentBlocks holds ~320 height+miner pairs (no timestamp) => only 24h fits;
   // longer windows need extended block history and are disabled honestly.
-  var PERIODS=[{k:'24h',label:'24h',blocks:135},{k:'3d',label:'3D',blocks:404},
+  // Block-count windows (SOST block timestamps aren't a reliable time index yet, so
+  // every period is a recent-block-buffer proxy). 24h uses the 288-block dominance
+  // window; the rest use ~10.7-min spacing counts.
+  var PERIODS=[{k:'24h',label:'24h',blocks:288},{k:'3d',label:'3D',blocks:404},
     {k:'1w',label:'1W',blocks:943},{k:'1m',label:'1M',blocks:4039},
     {k:'3m',label:'3M',blocks:12117},{k:'all',label:'All',blocks:null}];
   var PALETTE=['#22d3ee','#a855f7','#4ade80','#fbbf24','#fb7185','#38bdf8','#f472b6','#34d399','#c084fc','#facc15'];
@@ -8217,11 +8226,15 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
       return t? {c:c,t:t,last:last,note:'all recorded blocks (full-chain scan)'} : null;
     }
     if(!recent||!recent.length) return null;
+    function tally(list){ var c={},t=0,last={}; list.forEach(function(b){ if(!b||!b.m) return; c[b.m]=(c[b.m]||0)+1; t++; last[b.m]=Math.max(last[b.m]||0,b.h||0); }); return {c:c,t:t,last:last}; }
+    // All window periods are block-count proxies over the recent block buffer
+    // (block timestamps aren't a reliable time index yet). Available once the buffer
+    // holds enough blocks; otherwise the period is disabled.
     var need=needFor(period);
     if(recent.length<need) return {insufficient:true, have:recent.length, need:need};
-    var slice=recent.slice(-need), c={},t=0,last={};
-    slice.forEach(function(b){ if(!b||!b.m) return; c[b.m]=(c[b.m]||0)+1; t++; last[b.m]=Math.max(last[b.m]||0,b.h||0); });
-    return {c:c,t:t,last:last,note:'last '+need+' blocks (≈'+period+', height proxy: blocks ≈ 10.7 min)'};
+    var use=recent.slice(-need), r=tally(use);
+    r.note=(period==='24h'?'24h proxy':'≈'+period)+' · last '+use.length+' blocks (recent block buffer; block-count proxy — SOST block timestamps are not a reliable time index yet)';
+    return r;
   }
   function ranked(c){ return Object.keys(c).map(function(a){return {a:a,n:c[a]};}).sort(function(x,y){return y.n-x.n;}); }
 
@@ -8247,8 +8260,13 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     var tb=document.getElementById('pdTableBody'); if(!tb) return;
     if(!arr.length){ tb.innerHTML='<tr><td colspan="5" style="color:var(--text3)">No producers in this period.</td></tr>'; return; }
     tb.innerHTML=arr.slice(0,10).map(function(s,i){
-      return '<tr><td>'+(i+1)+'</td><td title="'+s.a+'" style="font-family:monospace">'+shortA(s.a)+
-        '</td><td>'+s.n+'</td><td>'+(100*s.n/total).toFixed(1)+'%</td><td>#'+(last[s.a]||'—')+'</td></tr>';
+      var full=s.a||'', isAddr=/^sost1[0-9a-z]+$/i.test(full);
+      // Click a producer -> open that address in the explorer's own detail panel
+      // (reuses the native showAddress(); no page reload, no external wallet).
+      var prod=isAddr
+        ? '<span onclick="showAddress(\''+full+'\')" title="Open producer address" style="color:#22d3ee;cursor:pointer;text-decoration:underline">'+shortA(full)+'</span>'
+        : shortA(full);
+      return '<tr><td>'+(i+1)+'</td><td style="font-family:monospace">'+prod+'</td><td>'+s.n+'</td><td>'+(100*s.n/total).toFixed(1)+'%</td><td>#'+(last[full]||'—')+'</td></tr>';
     }).join('');
   }
   function metrics(arr,total){
@@ -8259,7 +8277,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     m.innerHTML=box('TOP 1',top1.toFixed(1)+'%',top1>50?'#fb010d':top1>33?'#fbbf24':'#4ade80')
       +box('TOP 3',t3.toFixed(1)+'%',t3>66?'#fb010d':'#22d3ee')
       +box('UNIQUE PRODUCERS',String(arr.length))
-      +box('PERIOD',(window._pdPeriod||'all').toUpperCase());
+      +box('PERIOD',(window._pdPeriod==='24h')?'24H PROXY':(window._pdPeriod||'all').toUpperCase());
   }
   function buildControls(){
     var c=document.getElementById('pdControls'); if(!c) return;
@@ -8270,10 +8288,11 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     var recent=window._recentBlocks||[], off=[];
     Array.prototype.forEach.call(c.querySelectorAll('button'),function(b){
       var k=b.getAttribute('data-pd'), need=needFor(k);
-      var avail=(k==='all') ? !!(window._producerRows&&window._producerRows.length) : (recent.length>= (need||1e9));
+      var avail=(k==='all') ? !!(window._producerRows&&window._producerRows.length)
+              : (recent.length>=(need||1e9));
       var on=k===(window._pdPeriod||'all');
       b.disabled=!avail; b.style.opacity=avail?'1':'.4'; b.style.cursor=avail?'pointer':'not-allowed';
-      b.title=avail?'':'Requires extended block history';
+      b.title=avail?(k==='24h'?'24h proxy · last 288 blocks':k==='all'?'Full-chain producer share':'≈'+k+' · block-count proxy'):'Not enough block history buffered yet';
       b.style.background=on&&avail?'rgba(34,211,238,.15)':'transparent';
       b.style.color=on&&avail?'#22d3ee':'#9aa6b2';
       b.style.borderColor=on&&avail?'#22d3ee':'#2a2a2a';
@@ -8282,8 +8301,8 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     var hint=document.getElementById('pdHint');
     if(hint){
       hint.innerHTML = off.length
-        ? 'Greyed periods (<b>'+off.join(' · ')+'</b>) require extended block history — the explorer keeps ≈'+(recent.length||0)+' recent blocks (~2–3 days). <b>24h</b> and <b>All</b> are available.'
-        : 'Select a period. <b>All</b> = full-chain producer share; <b>24h</b> = recent window.';
+        ? 'All periods are block-count proxies over the recent buffer (≈'+(recent.length||0)+' blocks so far). Greyed (<b>'+off.join(' · ')+'</b>) activate once enough blocks are buffered — the full-chain scan is still filling the buffer.'
+        : 'All periods active. Each window (24h/3D/1W/1M/3M) is a block-count proxy over the recent buffer; <b>All</b> = full-chain producer share.';
     }
   }
   window.renderProducerDist=function(){
