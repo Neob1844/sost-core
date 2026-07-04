@@ -8256,8 +8256,13 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     var tb=document.getElementById('pdTableBody'); if(!tb) return;
     if(!arr.length){ tb.innerHTML='<tr><td colspan="5" style="color:var(--text3)">No producers in this period.</td></tr>'; return; }
     tb.innerHTML=arr.slice(0,10).map(function(s,i){
-      return '<tr><td>'+(i+1)+'</td><td title="'+s.a+'" style="font-family:monospace">'+shortA(s.a)+
-        '</td><td>'+s.n+'</td><td>'+(100*s.n/total).toFixed(1)+'%</td><td>#'+(last[s.a]||'—')+'</td></tr>';
+      var full=s.a||'', isAddr=/^sost1[0-9a-z]+$/i.test(full);
+      // Click a producer -> open that address in the explorer's own detail panel
+      // (reuses the native showAddress(); no page reload, no external wallet).
+      var prod=isAddr
+        ? '<span onclick="showAddress(\''+full+'\')" title="Open producer address" style="color:#22d3ee;cursor:pointer;text-decoration:underline">'+shortA(full)+'</span>'
+        : shortA(full);
+      return '<tr><td>'+(i+1)+'</td><td style="font-family:monospace">'+prod+'</td><td>'+s.n+'</td><td>'+(100*s.n/total).toFixed(1)+'%</td><td>#'+(last[full]||'—')+'</td></tr>';
     }).join('');
   }
   function metrics(arr,total){
