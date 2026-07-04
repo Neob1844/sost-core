@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-04-v364-producer-periods",
-  "note": "Block Producers Distribution: all time windows active (24h/3D/1W/1M/3M block-count proxies + All full-chain), clickable producer addresses, and a fix so the Network Mosaic no longer deforms when opening/closing the wallet panel. Version bumped so open explorer tabs auto-reload."
+  "v": "2026-07-04-v365-producer-fastload",
+  "note": "Block Producers Distribution now loads its recent window instantly from the same fast block buffer the Network Mosaic uses (no more waiting minutes for the full-chain scan); default period 24h. Version bumped so open explorer tabs auto-reload."
 }
