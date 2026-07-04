@@ -208,6 +208,12 @@
 
   function layoutAndPaint() {
     if (!canvas || !ctx) return;
+    // Skip while the mosaic is hidden (e.g. an address/detail panel is open): its
+    // clientWidth is 0 then, so computeLayout would fall back to a narrow width and
+    // paint a wrong tile grid (fewer cols / more rows) that flashes "squished/stretched"
+    // for a moment when the section is shown again. Stay with the last good layout;
+    // the ResizeObserver repaints correctly once the container is visible again.
+    if (bodyEl && (bodyEl.offsetParent === null || (bodyEl.clientWidth || 0) === 0)) return;
     var L = computeLayout();
     lastLayout = L;
     canvas.width = Math.round(L.w * L.dpr);

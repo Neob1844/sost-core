@@ -781,7 +781,7 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
 <div class="diff-bar-wrap" id="networkMosaicWrap">
   <div id="networkMosaicCard"></div>
 </div>
-<script src="js/network-mosaic.js?v=v361" defer></script>
+<script src="js/network-mosaic.js?v=v364" defer></script>
 
 <!-- ===== BLOCK PRODUCERS DISTRIBUTION (observability card) ===== -->
 <div class="section" id="producerDistSection">
@@ -2591,7 +2591,7 @@ function openDetail(){
   var p=document.getElementById('detailPanel');
   p.style.display='';
   p.classList.add('show');
-  var hide=['dashboard','diff-bar-wrap','sparkline-wrap','stats','blocksSection','txSection','mpSection','priceChartsRow'];
+  var hide=['dashboard','diff-bar-wrap','sparkline-wrap','stats','producerDistSection','blocksSection','txSection','mpSection','priceChartsRow'];
   for(var i=0;i<hide.length;i++){
     var els=document.querySelectorAll('#'+hide[i]+', .'+hide[i]);
     for(var j=0;j<els.length;j++) els[j].style.display='none';
@@ -2600,13 +2600,19 @@ function openDetail(){
 function hideDetail(){
   var p=document.getElementById('detailPanel');
   p.classList.remove('show');p.style.display='none';
-  var show=['dashboard','diff-bar-wrap','sparkline-wrap','stats','blocksSection','txSection','mpSection','priceChartsRow'];
+  var show=['dashboard','diff-bar-wrap','sparkline-wrap','stats','producerDistSection','blocksSection','txSection','mpSection','priceChartsRow'];
   for(var i=0;i<show.length;i++){
     var els=document.querySelectorAll('#'+show[i]+', .'+show[i]);
     for(var j=0;j<els.length;j++) els[j].style.display='';
   }
   _navStack=[];
   document.getElementById('detailNav').innerHTML='';
+  // Restored canvases (Network Mosaic, charts, producer donut) briefly rendered at
+  // width 0 while hidden; re-measure on the next frame so they don't flash "squished".
+  requestAnimationFrame(function(){
+    try{ window.dispatchEvent(new Event('resize')); }catch(e){}
+    try{ if(window.renderProducerDist) window.renderProducerDist(); }catch(e){}
+  });
 }
 function pushNav(type,label,id){_navStack.push({type:type,label:label,id:id});renderNav();}
 function navTo(idx){
