@@ -782,6 +782,30 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
   <div id="networkMosaicCard"></div>
 </div>
 <script src="js/network-mosaic.js?v=v361" defer></script>
+
+<!-- ===== BLOCK PRODUCERS DISTRIBUTION (observability card) ===== -->
+<div class="section" id="producerDistSection">
+  <div class="sec-head"><div class="sec-title">// <b>BLOCK PRODUCERS DISTRIBUTION</b></div><div class="sec-meta">Share of blocks by producer address</div></div>
+  <div id="pdControls" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 14px"></div>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+    <div style="position:relative;flex:0 0 auto;margin:0 auto;width:240px;height:240px">
+      <canvas id="pdDonut" width="240" height="240" style="max-width:100%;height:auto"></canvas>
+      <div id="pdEmpty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:var(--text3);line-height:1.6">Loading producer<br>data&hellip;</div>
+      <div id="pdTip" style="position:absolute;pointer-events:none;display:none;background:rgba(0,0,0,.92);border:1px solid #333;border-radius:6px;padding:6px 9px;font-size:11px;color:#eee;z-index:6;white-space:nowrap"></div>
+    </div>
+    <div style="flex:1 1 340px;min-width:280px">
+      <div id="pdMetrics" style="display:flex;gap:18px;flex-wrap:wrap;font-size:12px;margin-bottom:12px"></div>
+      <div style="overflow-x:auto">
+        <table class="tbl" id="pdTable" style="width:100%;font-size:12px">
+          <thead><tr><th>#</th><th>PRODUCER</th><th>BLOCKS</th><th>SHARE</th><th>LAST BLOCK</th></tr></thead>
+          <tbody id="pdTableBody"><tr><td colspan="5" style="color:var(--text3)">Waiting for block producer data&hellip; (populates after the chain scan)</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div id="pdNote" style="font-size:10px;color:var(--text3);margin-top:10px">Share of blocks by producer address. The donut appears once the explorer's block scan finishes.</div>
+</div>
+
 <!-- CHART 1: Block Production — Real vs Expected -->
 <div class="diff-bar-wrap" id="chartProdWrap">
 <div style="background:var(--bg2);border:1px solid var(--border);padding:12px 16px;">
@@ -1211,27 +1235,6 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
     };
     </script>
   </div>
-  <div class="section" id="producerDistSection">
-    <div class="sec-head"><div class="sec-title">// <b>BLOCK PRODUCERS DISTRIBUTION</b></div><div class="sec-meta">Share of blocks by producer address</div></div>
-    <div id="pdControls" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 14px"></div>
-    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
-      <div style="position:relative;flex:0 0 auto;margin:0 auto">
-        <canvas id="pdDonut" width="240" height="240" style="max-width:100%;height:auto"></canvas>
-        <div id="pdTip" style="position:absolute;pointer-events:none;display:none;background:rgba(0,0,0,.92);border:1px solid #333;border-radius:6px;padding:6px 9px;font-size:11px;color:#eee;z-index:6;white-space:nowrap"></div>
-      </div>
-      <div style="flex:1 1 340px;min-width:280px">
-        <div id="pdMetrics" style="display:flex;gap:18px;flex-wrap:wrap;font-size:12px;margin-bottom:12px"></div>
-        <div style="overflow-x:auto">
-          <table class="tbl" id="pdTable" style="width:100%;font-size:12px">
-            <thead><tr><th>#</th><th>PRODUCER</th><th>BLOCKS</th><th>SHARE</th><th>LAST BLOCK</th></tr></thead>
-            <tbody id="pdTableBody"><tr><td colspan="5" style="color:var(--text3)">Waiting for block producer data&hellip;</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <div id="pdNote" style="font-size:10px;color:var(--text3);margin-top:10px"></div>
-  </div>
-
   <div class="section" id="blocksSection">
     <div class="sec-head"><div class="sec-title">// <b style="cursor:pointer" onclick="off=0;loadBlocks();">LATEST BLOCKS</b></div><div class="sec-meta" id="blockRange"></div></div>
     <table class="tbl"><thead><tr><th>HEIGHT</th><th>HASH</th><th>TXS</th><th>TIME</th><th>INTERVAL</th><th>DIFFICULTY</th><th>MINER</th><th>SUBSIDY</th><th>LOTTERY</th></tr></thead>
@@ -8221,8 +8224,10 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
   }
   function ranked(c){ return Object.keys(c).map(function(a){return {a:a,n:c[a]};}).sort(function(x,y){return y.n-x.n;}); }
 
+  function setEmpty(txt){ var e=document.getElementById('pdEmpty'); if(e){ e.innerHTML=txt; e.style.display='flex'; } }
   function drawDonut(top,otherN,total){
     var cv=document.getElementById('pdDonut'); if(!cv||!cv.getContext) return; var ctx=cv.getContext('2d');
+    var _e=document.getElementById('pdEmpty'); if(_e)_e.style.display='none';
     var W=cv.width,H=cv.height,cx=W/2,cy=H/2,rO=Math.min(W,H)/2-6,rI=rO*0.58;
     ctx.clearRect(0,0,W,H); _segs=[];
     var segs=top.map(function(s,i){return {a:s.a,n:s.n,c:PALETTE[i%PALETTE.length]};});
@@ -8235,7 +8240,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     ctx.fillStyle='#e6edf3';ctx.textAlign='center';ctx.font='bold 20px "Fira Code",monospace';ctx.fillText(String(total),cx,cy-1);
     ctx.fillStyle='#7a8794';ctx.font='9px "Fira Code",monospace';ctx.fillText('BLOCKS',cx,cy+13);
   }
-  function clearDonut(){ var cv=document.getElementById('pdDonut'); if(cv&&cv.getContext){var x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);} _segs=[]; }
+  function clearDonut(){ var cv=document.getElementById('pdDonut'); if(cv&&cv.getContext){var x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);} _segs=[]; var e=document.getElementById('pdEmpty'); if(e)e.style.display='flex'; }
 
   function fillTable(arr,total,last){
     var tb=document.getElementById('pdTableBody'); if(!tb) return;
@@ -8278,8 +8283,8 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     var period=window._pdPeriod||'all';
     var note=document.getElementById('pdNote'), tb=document.getElementById('pdTableBody'), mm=document.getElementById('pdMetrics');
     var res=counts(period);
-    if(res===null){ if(note)note.textContent=''; if(tb)tb.innerHTML='<tr><td colspan="5" style="color:var(--text3)">Waiting for block producer data…</td></tr>'; if(mm)mm.innerHTML=''; clearDonut(); return; }
-    if(res.insufficient){ if(note)note.textContent='This period requires extended block history (have ≈'+res.have+' recent blocks, need ≈'+res.need+').'; if(tb)tb.innerHTML='<tr><td colspan="5" style="color:var(--text3)">This period requires extended block history.</td></tr>'; if(mm)mm.innerHTML=''; clearDonut(); return; }
+    if(res===null){ if(note)note.textContent='Share of blocks by producer address. The donut appears once the explorer\'s block scan finishes.'; if(tb)tb.innerHTML='<tr><td colspan="5" style="color:var(--text3)">Waiting for block producer data… (populates after the chain scan)</td></tr>'; if(mm)mm.innerHTML=''; clearDonut(); setEmpty('Waiting for block<br>producer data&hellip;'); return; }
+    if(res.insufficient){ if(note)note.textContent='This period requires extended block history (have ≈'+res.have+' recent blocks, need ≈'+res.need+').'; if(tb)tb.innerHTML='<tr><td colspan="5" style="color:var(--text3)">This period requires extended block history.</td></tr>'; if(mm)mm.innerHTML=''; clearDonut(); setEmpty('Extended block<br>history required'); return; }
     var arr=ranked(res.c), top=arr.slice(0,10), otherN=arr.slice(10).reduce(function(s,x){return s+x.n;},0);
     drawDonut(top,otherN,res.t); fillTable(arr,res.t,res.last); metrics(arr,res.t);
     if(note)note.textContent=res.note+' · SOST has no traditional mining pools — shares are by producer/miner address.';
