@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-04-v363-producer-distribution",
-  "note": "New Block Producers Distribution card (donut of block share by producer address, All + 24h; longer periods disabled until extended block history). Version bumped so open explorer tabs auto-reload and everyone sees the new module."
+  "v": "2026-07-04-v364-producer-periods",
+  "note": "Block Producers Distribution: all time windows active (24h/3D/1W/1M/3M block-count proxies + All full-chain), clickable producer addresses, and a fix so the Network Mosaic no longer deforms when opening/closing the wallet panel. Version bumped so open explorer tabs auto-reload."
 }
