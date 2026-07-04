@@ -1791,6 +1791,27 @@ document.addEventListener('DOMContentLoaded', () => {
           Output = address + compressed pubkey + DER signature over SHA-256(message). Paste it into GeaSpirit &rarr; "Unlock with SOST". Nothing here is stored or transmitted.
         </div>
       </div>
+
+      <!-- Gold Vault Signal Receipt (Phase 2A) — NON-BINDING signed signal preview -->
+      <div id="gold-vault-signal" class="card" style="padding:16px 18px;max-width:640px;margin-top:16px">
+        <h3 style="margin:0 0 8px;color:#FFD700">Gold Vault Signal Receipt</h3>
+        <div style="font-size:12px;color:var(--red-primary);border:1px solid var(--border-dim);border-radius:6px;padding:10px 12px;margin-bottom:12px;background:rgba(255,0,0,.05)">
+          &#9888; <strong>This is a signed signal preview.</strong> It is <strong>not binding, not weighted</strong>, and does <strong>not execute any reserve action</strong>. It only produces a signed receipt you can keep or share.
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px">
+          <div><strong>Proposal:</strong> GV-001 &mdash; Convert up to 100 SOST into PAXG <span style="color:var(--text-dim)">(Founder Test / Preview)</span></div>
+          <div><strong>Signs:</strong> <code>GVOTE:GV-001:YES</code> or <code>GVOTE:GV-001:NO</code></div>
+          <div><strong>Status:</strong> NON_BINDING_SIGNAL_PREVIEW</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="gvSignSignal('YES')">Sign YES</button>
+          <button class="btn" onclick="gvSignSignal('NO')">Sign NO</button>
+        </div>
+        <div id="gvSignalOut" style="margin-top:12px;font-size:12px"></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:10px;border-top:1px solid var(--border-dim);padding-top:8px">
+          Signed locally with your SOST key (SHA-256 &rarr; ECDSA secp256k1, low-S). Your private key never leaves this browser. This does not compute voting power, does not use a snapshot, and does not report a proposal result &mdash; it is a signed signal, not a vote.
+        </div>
+      </div>
     </div>
 
     <!-- ================= SOST GATEWAY (skeleton, OFF by default) ================= -->
@@ -6570,6 +6591,72 @@ window.geaClearSign = function () {
   const m = document.getElementById('geaSignMsg'); if (m) m.value = '';
   const o = document.getElementById('geaSignOut'); if (o) o.innerHTML = '';
 };
+
+// ===== Gold Vault Signal Receipt (Phase 2A) — NON-BINDING signed signal =====
+// Reuses the same client-side signer as geaSignMessage (SHA-256 -> ECDSA
+// secp256k1 low-S, private key never leaves the browser). Produces a signed
+// receipt only: NOT a real vote, NOT weighted, executes nothing.
+window._gvReceipt = '';
+window.gvSignSignal = function (vote) {
+  const out = document.getElementById('gvSignalOut');
+  const fail = (msg) => { if (out) out.innerHTML = '<span style="color:var(--red-primary)">' + msg + '</span>'; };
+  try {
+    if (!wallet || !wallet.privKey) return fail('Unlock your wallet first.');
+    if (wallet.watchOnly) return fail('Watch-only wallet cannot sign.');
+    if (vote !== 'YES' && vote !== 'NO') return fail('Invalid vote.');
+    const message = 'GVOTE:GV-001:' + vote;
+    if (!confirm('Sign this NON-BINDING signal with your SOST key?\n\n' + message +
+                 '\n\nThis is a preview signal — it is not binding, not weighted, and executes nothing.')) return;
+    const h = sha256(new TextEncoder().encode(message));            // SHA-256(message)
+    const sig = secp.sign(h, wallet.privKey, { lowS: true });        // ECDSA secp256k1, low-S
+    const receipt = {
+      proposal_id: 'GV-001',
+      vote: vote,
+      address: wallet.address,
+      pubkey: wallet.pubKey,
+      message: message,
+      message_sha256: bytesToHex(h),
+      signature: bytesToHex(sigToDER(sig)),
+      timestamp: new Date().toISOString(),
+      chain: 'SOST',
+      status: 'NON_BINDING_SIGNAL_PREVIEW',
+      note: 'This is not binding and does not execute any reserve action.'
+    };
+    window._gvReceipt = JSON.stringify(receipt, null, 2);
+    const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    if (out) out.innerHTML =
+      '<div style="color:var(--cyan-primary);margin-bottom:6px">&#10003; Signal signed (NON-BINDING) — copy or download your receipt:</div>' +
+      '<textarea id="gvReceiptTa" class="form-input" readonly style="height:200px;font-size:11px;color:var(--text-primary)">' +
+        esc(window._gvReceipt) + '</textarea>' +
+      '<div style="margin-top:8px;display:flex;gap:8px">' +
+        '<button class="btn btn-small" onclick="gvCopyReceipt()">Copy JSON</button>' +
+        '<button class="btn btn-small" onclick="gvDownloadReceipt()">Download JSON</button>' +
+      '</div>';
+    // SECURITY: signed locally; nothing fetched, stored server-side, or transmitted.
+  } catch (e) { fail('Sign failed: ' + (e && e.message ? e.message : e)); }
+};
+window.gvCopyReceipt = function () {
+  const t = document.getElementById('gvReceiptTa'); if (!t) return;
+  t.select(); try { navigator.clipboard.writeText(t.value); } catch (e) { try { document.execCommand('copy'); } catch (e2) {} }
+};
+window.gvDownloadReceipt = function () {
+  try {
+    const b = new Blob([window._gvReceipt || ''], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+    a.download = 'gold-vault-signal-GV-001.json'; document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) {}
+};
+// Deep-link from the explorer: sost-wallet.html#gold-vault-signal opens the Sign view + scrolls here.
+document.addEventListener('DOMContentLoaded', function () {
+  if (location.hash === '#gold-vault-signal') {
+    setTimeout(function () {
+      try { if (window.showView) window.showView('access'); } catch (e) {}
+      const el = document.getElementById('gold-vault-signal');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 400);
+  }
+});
+
 // reveal the nav entry only when the flag is on
 if (GEA_SIGN_ENABLED) {
   const b = document.getElementById('navAccessBtn'); if (b) b.style.display = '';

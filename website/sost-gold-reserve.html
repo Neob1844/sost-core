@@ -1092,10 +1092,16 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
           <div style="display:flex;align-items:center;gap:8px;margin:3px 0;"><span style="width:34px;color:#fb010d;">NO</span>
             <span style="flex:1;background:#111;border-radius:4px;overflow:hidden;"><span style="display:block;height:10px;width:28%;background:#fb010d;"></span></span><span style="width:38px;text-align:right;color:#fb010d;">28%</span></div>
         </div>
-        <div style="margin-top:14px;display:flex;gap:10px;">
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
           <button type="button" disabled style="opacity:.5;cursor:not-allowed;background:rgba(74,222,128,.12);border:1px solid #4ade80;color:#4ade80;border-radius:6px;padding:7px 16px;font-family:var(--font-mono);font-size:12px;">Vote YES</button>
           <button type="button" disabled style="opacity:.5;cursor:not-allowed;background:rgba(251,1,13,.12);border:1px solid #fb010d;color:#fb010d;border-radius:6px;padding:7px 16px;font-family:var(--font-mono);font-size:12px;">Vote NO</button>
           <span style="align-self:center;font-size:11px;color:var(--text-dim);">Voting not live — Phase 1 preview</span>
+        </div>
+        <div style="margin-top:12px;">
+          <a href="sost-wallet.html#gold-vault-signal" style="display:inline-block;background:rgba(255,215,0,.10);border:1px solid #FFD700;color:#FFD700;border-radius:6px;padding:7px 16px;font-family:var(--font-mono);font-size:12px;text-decoration:none;">📝 Open Wallet to Sign Signal Receipt</a>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:6px;max-width:640px;">
+            Real voting is not live. You can sign a <strong>non-binding signal receipt</strong> in the SOST wallet (that is where your key is — the explorer never holds keys). It produces a signed proof only; it is not weighted, not a vote, and executes nothing.
+          </div>
         </div>
       </div>
     </div>
