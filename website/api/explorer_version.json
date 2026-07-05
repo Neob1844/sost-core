@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-05-v368-vote-overflow-fix",
-  "note": "Fix small horizontal overflow of the Strategic Reserve Governance Vote card. Version bumped so open explorer tabs auto-reload."
+  "v": "2026-07-05-v369-govvote-hide-detail",
+  "note": "Strategic Reserve Governance Vote card now hidden in tx/block/address detail views (shown only in the overview). Version bumped so open explorer tabs auto-reload."
 }
