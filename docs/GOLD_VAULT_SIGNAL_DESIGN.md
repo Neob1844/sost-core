@@ -17,6 +17,17 @@ wallet-signed signalling system in the explorer** by which SOST holders can appr
 > over a single key), and approval is **holder-weighted, not miner-block voting**.
 > Canonical rules: [`GOLD_METALS_RESERVE_POLICY.md`](GOLD_METALS_RESERVE_POLICY.md).
 
+> **Gold Vault Pulse (explorer preview, 2026):** a **visual, clearly-inactive** preview
+> module in `website/sost-explorer.html` (`#goldVaultPulse`) shows the community how the
+> future Protocol Strategic Reserve governance will look — compartments, rules (quorum
+> 15% / 51% / 1% weekly cap / 72h timelock / verified destinations / guardian veto /
+> public registry), and a preview proposal card. YES/NO buttons are **disabled**; the
+> wallet field only does a **local address-format check** (no balance query, no signing,
+> no fetch, no storage, no execution). Gold-side permitted assets shown: **PAXG / XAUT**
+> only. It is labelled **LOCKED / NOT ACTIVE** and *"Preview only — governance not
+> active · real voting will require a wallet signature · weighted voting requires
+> snapshot balance support."*
+
 Related: [`TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md`](TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md),
 [`GOLD_ACCUMULATION_AUCTION_PROGRAM.md`](GOLD_ACCUMULATION_AUCTION_PROGRAM.md) (Gold
 Reserve Forge), [`GOLD_METALS_RESERVE_POLICY.md`](GOLD_METALS_RESERVE_POLICY.md).
