@@ -366,7 +366,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- V145-BANNER-INJECT (surgical; delete this comment..closing comment to revert) -->
 <style>#asWarn{display:none!important}</style>
 <div id="v145banner" style="position:relative;z-index:99999;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6">
-  <div style="padding:10px 16px;text-align:center;cursor:pointer;font-weight:700" onclick="(function(){var d=document.getElementById('v145det'),o=(d.style.display==='none');d.style.display=o?'block':'none';var t=document.getElementById('v145tog');if(t)t.innerHTML=o?'hide &#9652;':'how to upgrade &#9662;';try{localStorage.setItem('sost_v145_collapsed',o?'0':'1')}catch(e){}})()">&#128680; <b>V14.5 MANDATORY UPGRADE BEFORE BLOCK 16,000</b> &middot; ATOMIC SWAP HTLC CLAIM/REFUND FIX &middot; Founder-only testing &middot; Public DO NOT USE &nbsp;<span id="v145tog" style="text-decoration:underline">how to upgrade &#9662;</span></div>
+  <div style="padding:10px 16px;text-align:center;cursor:pointer;font-weight:700" onclick="(function(){var d=document.getElementById('v145det'),o=(d.style.display==='none');d.style.display=o?'block':'none';var t=document.getElementById('v145tog');if(t)t.innerHTML=o?'hide &#9652;':'how to upgrade &#9662;';try{localStorage.setItem('sost_v145_open',o?'1':'0')}catch(e){}})()">&#128680; <b>V14.5 MANDATORY UPGRADE BEFORE BLOCK 16,000</b> &middot; ATOMIC SWAP HTLC CLAIM/REFUND FIX &middot; Founder-only testing &middot; Public DO NOT USE &nbsp;<span id="v145tog" style="text-decoration:underline">how to upgrade &#9662;</span></div>
   <div id="v145det" style="display:none;max-width:1000px;margin:0 auto;padding:0 18px 14px;font-size:12px;color:#ffecec;line-height:1.7">
     <div>Every miner &amp; full node MUST <b>recompile the new binary and restart</b> before block 16,000, or the node will reject HTLC blocks and split off. Below 16,000 the new binary is byte-identical (safe to deploy now). The same binary also carries V15 (PoPC) at block 20,000.</div>
     <pre style="margin:6px 0;padding:9px 11px;background:rgba(0,0,0,.4);border-radius:5px;overflow:auto;color:#cfeede;white-space:pre"># 1) BUILD the new binary (flags are MANDATORY):
@@ -384,7 +384,7 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
     <div>&#9888; <b>-DSOST_TESTNET_FORKS=OFF is required</b> (=ON throws you off mainnet). Atomic Swap stays <b>founder-only</b> &mdash; do NOT use publicly until the founder announces it safe. PoPC V15 unchanged (20,000 / 25,000). Gold Vault &amp; Gold Boost remain OFF.</div>
   </div>
 </div>
-<script>(function(){try{if((localStorage.getItem('sost_v145_collapsed')||'')==='0'){var d=document.getElementById('v145det');if(d)d.style.display='block';var t=document.getElementById('v145tog');if(t)t.innerHTML='hide &#9652;';}}catch(e){}})();</script>
+<script>(function(){try{if(localStorage.getItem('sost_v145_open')==='1'){var d=document.getElementById('v145det');if(d)d.style.display='block';var t=document.getElementById('v145tog');if(t)t.innerHTML='hide &#9652;';}}catch(e){}})();</script>
 <!-- /V145-BANNER-INJECT -->
 
 
