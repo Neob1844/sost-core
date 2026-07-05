@@ -811,11 +811,12 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
 <style>
   @keyframes gvpPulse{0%,100%{opacity:.6;box-shadow:0 0 0 0 rgba(251,1,13,.45)}50%{opacity:1;box-shadow:0 0 0 7px rgba(251,1,13,0)}}
   @keyframes gvpGlow{0%,100%{text-shadow:0 0 14px rgba(255,215,0,.30)}50%{text-shadow:0 0 28px rgba(255,215,0,.60)}}
+  @keyframes gvpShine{0%{background-position:140% 0}100%{background-position:-40% 0}}
   #goldVaultPulse{--gvGold:#FFD700;--gvCyan:#22d3ee;--gvGreen:#4ade80;--gvRed:#fb010d;max-width:100%;overflow-wrap:break-word}
   #goldVaultPulse .gvp-grid2{max-width:100%}
   #goldVaultPulse .gvp-grid2>*{min-width:0}
   #goldVaultPulse .gvp-dot{width:9px;height:9px;border-radius:50%;background:var(--gvRed);display:inline-block;animation:gvpPulse 2.2s ease-in-out infinite;vertical-align:middle}
-  #goldVaultPulse .gvp-title{font-size:clamp(18px,2.6vw,25px);font-weight:800;letter-spacing:1px;background:linear-gradient(90deg,#FFD700,#fff2b0,#FFD700);-webkit-background-clip:text;background-clip:text;color:transparent;animation:gvpGlow 3s ease-in-out infinite;margin:0}
+  #goldVaultPulse .gvp-title{font-size:clamp(18px,2.6vw,25px);font-weight:800;letter-spacing:1px;background:linear-gradient(100deg,#b8860b 0%,#FFD700 30%,#fff8d0 46%,#ffffff 50%,#fff8d0 54%,#FFD700 70%,#b8860b 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gvpShine 3.4s linear infinite,gvpGlow 3s ease-in-out infinite;margin:0}
   #goldVaultPulse .gvp-sub{font-size:11px;letter-spacing:2.5px;color:var(--gvCyan);text-transform:uppercase;margin-top:3px}
   #goldVaultPulse .gvp-badge{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;letter-spacing:2px;color:var(--gvRed);border:1.5px solid var(--gvRed);border-radius:8px;padding:5px 11px;background:rgba(251,1,13,.09);box-shadow:0 0 18px rgba(251,1,13,.18)}
   #goldVaultPulse .gvp-comp{border-radius:11px;padding:13px 15px}
