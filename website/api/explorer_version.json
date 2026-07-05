@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-05-v367-governance-vote-ui",
-  "note": "V14.5 banner collapsed by default; Strategic Reserve Governance Vote preview card (renamed, restyled, resized). Inactive preview only. Version bumped so open explorer tabs auto-reload."
+  "v": "2026-07-05-v368-vote-overflow-fix",
+  "note": "Fix small horizontal overflow of the Strategic Reserve Governance Vote card. Version bumped so open explorer tabs auto-reload."
 }
