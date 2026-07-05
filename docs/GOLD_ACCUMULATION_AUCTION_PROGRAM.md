@@ -15,7 +15,7 @@ contract.
 
 > **Reserve framing (2026 update):** the Forge operates inside the **Gold Accumulation
 > Reserve** compartment (minimum 50%) of the **Protocol Strategic Reserve**. It only
-> ever converts *Gold-Accumulation* SOST into tokenized/custodied gold — never the
+> ever converts *Gold-Accumulation* SOST into tokenized gold (**PAXG / XAUT** only) — never the
 > Growth/Listing/Compliance compartment. All activation is governed by the holder-vote
 > + guardian-veto model, and gold accumulation is chronologically the **second** step
 > (after a real SOST market/liquidity exists). Canonical policy, caps, timelock and the
