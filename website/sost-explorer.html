@@ -366,8 +366,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- V145-BANNER-INJECT (surgical; delete this comment..closing comment to revert) -->
 <style>#asWarn{display:none!important}</style>
 <div id="v145banner" style="position:relative;z-index:99999;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6">
-  <div style="padding:10px 16px;text-align:center;cursor:pointer;font-weight:700" onclick="(function(){var d=document.getElementById('v145det'),o=(d.style.display==='none');d.style.display=o?'block':'none';var t=document.getElementById('v145tog');if(t)t.innerHTML=o?'hide &#9652;':'how to upgrade &#9662;';try{localStorage.setItem('sost_v145_collapsed',o?'0':'1')}catch(e){}})()">&#128680; <b>V14.5 MANDATORY UPGRADE BEFORE BLOCK 16,000</b> &middot; ATOMIC SWAP HTLC CLAIM/REFUND FIX &middot; Founder-only testing &middot; Public DO NOT USE &nbsp;<span id="v145tog" style="text-decoration:underline">hide &#9652;</span></div>
-  <div id="v145det" style="display:block;max-width:1000px;margin:0 auto;padding:0 18px 14px;font-size:12px;color:#ffecec;line-height:1.7">
+  <div style="padding:10px 16px;text-align:center;cursor:pointer;font-weight:700" onclick="(function(){var d=document.getElementById('v145det'),o=(d.style.display==='none');d.style.display=o?'block':'none';var t=document.getElementById('v145tog');if(t)t.innerHTML=o?'hide &#9652;':'how to upgrade &#9662;';try{localStorage.setItem('sost_v145_open',o?'1':'0')}catch(e){}})()">&#128680; <b>V14.5 MANDATORY UPGRADE BEFORE BLOCK 16,000</b> &middot; ATOMIC SWAP HTLC CLAIM/REFUND FIX &middot; Founder-only testing &middot; Public DO NOT USE &nbsp;<span id="v145tog" style="text-decoration:underline">how to upgrade &#9662;</span></div>
+  <div id="v145det" style="display:none;max-width:1000px;margin:0 auto;padding:0 18px 14px;font-size:12px;color:#ffecec;line-height:1.7">
     <div>Every miner &amp; full node MUST <b>recompile the new binary and restart</b> before block 16,000, or the node will reject HTLC blocks and split off. Below 16,000 the new binary is byte-identical (safe to deploy now). The same binary also carries V15 (PoPC) at block 20,000.</div>
     <pre style="margin:6px 0;padding:9px 11px;background:rgba(0,0,0,.4);border-radius:5px;overflow:auto;color:#cfeede;white-space:pre"># 1) BUILD the new binary (flags are MANDATORY):
 cd sost-core
@@ -384,7 +384,7 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
     <div>&#9888; <b>-DSOST_TESTNET_FORKS=OFF is required</b> (=ON throws you off mainnet). Atomic Swap stays <b>founder-only</b> &mdash; do NOT use publicly until the founder announces it safe. PoPC V15 unchanged (20,000 / 25,000). Gold Vault &amp; Gold Boost remain OFF.</div>
   </div>
 </div>
-<script>(function(){try{if((localStorage.getItem('sost_v145_collapsed')||'0')==='1'){var d=document.getElementById('v145det');if(d)d.style.display='none';var t=document.getElementById('v145tog');if(t)t.innerHTML='how to upgrade &#9662;';}}catch(e){}})();</script>
+<script>(function(){try{if(localStorage.getItem('sost_v145_open')==='1'){var d=document.getElementById('v145det');if(d)d.style.display='block';var t=document.getElementById('v145tog');if(t)t.innerHTML='hide &#9652;';}}catch(e){}})();</script>
 <!-- /V145-BANNER-INJECT -->
 
 
@@ -807,26 +807,43 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
   <div id="pdNote" style="font-size:10px;color:var(--text3);margin-top:10px">Share of blocks by producer address. The donut appears once the explorer's block scan finishes.</div>
 </div>
 
-<!-- ===== GOLD VAULT PULSE (governance PREVIEW — LOCKED / NOT ACTIVE) ===== -->
+<!-- ===== STRATEGIC RESERVE GOVERNANCE VOTE (governance PREVIEW — LOCKED / NOT ACTIVE) ===== -->
 <style>
-  @keyframes gvpPulse{0%,100%{opacity:.55;box-shadow:0 0 0 0 rgba(255,215,0,.35)}50%{opacity:1;box-shadow:0 0 0 6px rgba(255,215,0,0)}}
-  #goldVaultPulse .gvp-dot{width:9px;height:9px;border-radius:50%;background:#fb010d;display:inline-block;animation:gvpPulse 2.4s ease-in-out infinite;vertical-align:middle}
-  #goldVaultPulse .gvp-card{background:linear-gradient(180deg,rgba(255,215,0,.04),rgba(0,0,0,0));border:1px solid rgba(255,215,0,.28);border-radius:10px;padding:18px 20px}
-  #goldVaultPulse .gvp-comp{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
-  #goldVaultPulse .gvp-btn{padding:8px 22px;border-radius:7px;border:1px solid #2a2a2a;background:rgba(255,255,255,.03);color:#6b7280;font-family:inherit;font-size:13px;letter-spacing:1px;cursor:not-allowed;opacity:.5}
-  #goldVaultPulse .gvp-rule{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.06);font-size:12px}
-  #goldVaultPulse .gvp-rule b{color:#e5e7eb;font-weight:600}
-  #goldVaultPulse input.gvp-wallet{width:100%;box-sizing:border-box;background:#0a0a0a;border:1px solid var(--border);border-radius:7px;color:#cbd5e1;font-family:'Fira Code',monospace;font-size:12px;padding:9px 11px;margin-top:6px}
-  #goldVaultPulse .gvp-badge{display:inline-block;font-size:11px;letter-spacing:2px;color:#fb010d;border:1px solid #fb010d;border-radius:5px;padding:3px 10px;background:rgba(251,1,13,.06)}
+  @keyframes gvpPulse{0%,100%{opacity:.6;box-shadow:0 0 0 0 rgba(251,1,13,.45)}50%{opacity:1;box-shadow:0 0 0 7px rgba(251,1,13,0)}}
+  @keyframes gvpGlow{0%,100%{text-shadow:0 0 14px rgba(255,215,0,.30)}50%{text-shadow:0 0 28px rgba(255,215,0,.60)}}
+  #goldVaultPulse{--gvGold:#FFD700;--gvCyan:#22d3ee;--gvGreen:#4ade80;--gvRed:#fb010d}
+  #goldVaultPulse .gvp-dot{width:9px;height:9px;border-radius:50%;background:var(--gvRed);display:inline-block;animation:gvpPulse 2.2s ease-in-out infinite;vertical-align:middle}
+  #goldVaultPulse .gvp-title{font-size:clamp(18px,2.6vw,25px);font-weight:800;letter-spacing:1px;background:linear-gradient(90deg,#FFD700,#fff2b0,#FFD700);-webkit-background-clip:text;background-clip:text;color:transparent;animation:gvpGlow 3s ease-in-out infinite;margin:0}
+  #goldVaultPulse .gvp-sub{font-size:11px;letter-spacing:2.5px;color:var(--gvCyan);text-transform:uppercase;margin-top:3px}
+  #goldVaultPulse .gvp-badge{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;letter-spacing:2px;color:var(--gvRed);border:1.5px solid var(--gvRed);border-radius:8px;padding:5px 11px;background:rgba(251,1,13,.09);box-shadow:0 0 18px rgba(251,1,13,.18)}
+  #goldVaultPulse .gvp-comp{border-radius:11px;padding:13px 15px}
+  #goldVaultPulse .gvp-comp.gold{background:linear-gradient(160deg,rgba(255,215,0,.11),rgba(255,215,0,.01));border:1.5px solid rgba(255,215,0,.45);box-shadow:0 0 22px rgba(255,215,0,.10) inset}
+  #goldVaultPulse .gvp-comp.grow{background:linear-gradient(160deg,rgba(74,222,128,.11),rgba(74,222,128,.01));border:1.5px solid rgba(74,222,128,.42);box-shadow:0 0 22px rgba(74,222,128,.08) inset}
+  #goldVaultPulse .gvp-comp h4{margin:0 0 5px;font-size:13px;font-weight:800;letter-spacing:.4px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  #goldVaultPulse .gvp-chip{display:inline-block;font-size:11px;font-weight:800;letter-spacing:1px;padding:2px 9px;border-radius:20px;margin-right:6px;color:#0a0a0a;background:linear-gradient(90deg,#FFD700,#ffe066)}
+  #goldVaultPulse .gvp-card{background:linear-gradient(180deg,rgba(255,215,0,.07),rgba(0,0,0,0));border:1.5px solid rgba(255,215,0,.38);border-radius:11px;padding:15px 17px;box-shadow:0 0 22px rgba(255,215,0,.07)}
+  #goldVaultPulse .gvp-btn{padding:8px 24px;border-radius:9px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:2px;cursor:not-allowed;opacity:.45;background:rgba(255,255,255,.03)}
+  #goldVaultPulse .gvp-btn.yes{border:1.5px solid var(--gvGreen);color:var(--gvGreen)}
+  #goldVaultPulse .gvp-btn.no{border:1.5px solid var(--gvRed);color:var(--gvRed)}
+  #goldVaultPulse .gvp-rule{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.08);font-size:12px}
+  #goldVaultPulse .gvp-rule .k{color:var(--gvCyan);font-weight:600;letter-spacing:.5px}
+  #goldVaultPulse .gvp-rule b{color:#fff;font-weight:700}
+  #goldVaultPulse input.gvp-wallet{width:100%;box-sizing:border-box;background:#060606;border:1.5px solid rgba(34,211,238,.35);border-radius:9px;color:#cbd5e1;font-family:'Fira Code',monospace;font-size:12px;padding:9px 11px;margin-top:6px}
+  #goldVaultPulse input.gvp-wallet:focus{outline:none;border-color:var(--gvCyan);box-shadow:0 0 14px rgba(34,211,238,.25)}
+  #goldVaultPulse .gvp-h{font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
+  @media(max-width:720px){#goldVaultPulse .gvp-grid2{grid-template-columns:1fr!important}}
 </style>
 <div class="section" id="goldVaultPulse">
-  <div class="sec-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-    <div class="sec-title">// <b style="color:#FFD700">GOLD VAULT PULSE</b> <span style="color:var(--text3);font-weight:400">— Protocol Strategic Reserve Governance</span></div>
-    <div><span class="gvp-dot"></span> <span class="gvp-badge">LOCKED / NOT ACTIVE</span></div>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px">
+    <div>
+      <h3 class="gvp-title">&#9670; STRATEGIC RESERVE GOVERNANCE VOTE</h3>
+      <div class="gvp-sub">Weighted SOST-holder voting &middot; Preview</div>
+    </div>
+    <span class="gvp-badge"><span class="gvp-dot"></span> LOCKED / NOT ACTIVE</span>
   </div>
 
-  <div style="font-size:12px;color:var(--text3);line-height:1.7;margin:6px 0 16px;max-width:820px">
-    <b style="color:#9aa6b2">Preview only — governance not active.</b> This is a visual preview of how the future
+  <div style="font-size:12px;color:#c8d0da;line-height:1.7;margin:11px 0 16px;max-width:900px">
+    <b style="color:#FFD700">Preview only — governance not active.</b> A visual preview of how the future
     Protocol Strategic Reserve governance will look. It executes nothing, moves no funds and stores nothing.
     Weighted voting requires snapshot balance support (not available yet); when live, real voting will require a
     wallet signature. Protocol may change before activation.
@@ -834,51 +851,53 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
 
   <!-- Compartments -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" class="gvp-grid2">
-    <div class="gvp-comp">
-      <div style="color:#FFD700;font-size:12px;letter-spacing:1px;margin-bottom:4px">GOLD ACCUMULATION RESERVE — MINIMUM 50%</div>
-      <div style="font-size:11px;color:var(--text3);line-height:1.6">Future tokenized-gold allocation. Permitted assets: <b style="color:#e5e7eb">PAXG</b> · <b style="color:#e5e7eb">XAUT</b>. Measured in grams of protocol-held gold (a treasury metric, not a peg or claim).</div>
+    <div class="gvp-comp gold">
+      <h4 style="color:#FFD700">&#9670; GOLD ACCUMULATION RESERVE &mdash; MINIMUM 50%</h4>
+      <div style="font-size:12px;color:#c8d0da;line-height:1.6">Future tokenized-gold allocation. Permitted assets:
+        <span class="gvp-chip">PAXG</span><span class="gvp-chip">XAUT</span><br>
+        Measured in <b style="color:#FFD700">grams of protocol-held gold</b> (a treasury metric, not a peg or claim).</div>
     </div>
-    <div class="gvp-comp">
-      <div style="color:#4ade80;font-size:12px;letter-spacing:1px;margin-bottom:4px">GROWTH / LISTING / COMPLIANCE RESERVE — MAXIMUM 50%</div>
-      <div style="font-size:11px;color:var(--text3);line-height:1.6">Future ecosystem allocation: compliance, MiCA/legal, audits, infrastructure, aggregators, serious listings, initial liquidity, security.</div>
+    <div class="gvp-comp grow">
+      <h4 style="color:#4ade80">&#9106; GROWTH / LISTING / COMPLIANCE RESERVE &mdash; MAXIMUM 50%</h4>
+      <div style="font-size:12px;color:#c8d0da;line-height:1.6">Future ecosystem allocation: compliance, MiCA/legal, audits, infrastructure, aggregators, serious listings, initial liquidity, security.</div>
     </div>
   </div>
 
   <!-- Preview proposal + rules -->
-  <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:14px" class="gvp-grid2">
+  <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:14px" class="gvp-grid2">
     <div class="gvp-card">
-      <div style="font-size:12px;letter-spacing:1px;color:#FFD700;margin-bottom:8px">GV-001 — PREVIEW PROPOSAL</div>
-      <div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:14px">Purpose: enable the future reserve governance framework. <i>Illustrative only — not an executable proposal.</i></div>
-      <div style="display:flex;gap:12px;margin-bottom:6px">
-        <button class="gvp-btn" id="gvpYes" disabled title="Voting not active — preview only">YES</button>
-        <button class="gvp-btn" id="gvpNo" disabled title="Voting not active — preview only">NO</button>
-        <div style="align-self:center;font-size:10px;color:var(--text3)">buttons disabled · preview</div>
+      <div class="gvp-h" style="color:#FFD700;margin-bottom:8px">GV-001 &mdash; PREVIEW PROPOSAL</div>
+      <div style="font-size:13px;color:#c8d0da;line-height:1.65;margin-bottom:16px">Purpose: enable the future reserve governance framework. <i style="color:var(--text3)">Illustrative only — not an executable proposal.</i></div>
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <button class="gvp-btn yes" id="gvpYes" disabled title="Voting not active — preview only">YES</button>
+        <button class="gvp-btn no" id="gvpNo" disabled title="Voting not active — preview only">NO</button>
+        <span style="font-size:11px;color:var(--text3);letter-spacing:1px">buttons disabled &middot; preview</span>
       </div>
-      <label style="font-size:11px;color:var(--text3)">Wallet (preview):
+      <label style="font-size:12px;color:#22d3ee;letter-spacing:1px;font-weight:700">WALLET (PREVIEW)
         <input class="gvp-wallet" id="gvpWallet" type="text" spellcheck="false" autocomplete="off" placeholder="Enter SOST address (sost1…)">
       </label>
-      <div id="gvpWalletMsg" style="font-size:11px;color:var(--text3);margin-top:8px;min-height:16px">Voting power: snapshot required — not active yet.</div>
+      <div id="gvpWalletMsg" style="font-size:12px;color:var(--text3);margin-top:10px;min-height:16px">Voting power: snapshot required — not active yet.</div>
     </div>
     <div>
-      <div style="font-size:11px;letter-spacing:1px;color:var(--text3);margin-bottom:6px">VOTING PROTOCOL — DRAFT / SUBJECT TO CHANGE</div>
-      <div class="gvp-rule"><span>Quorum</span><b>15% of votable SOST</b></div>
-      <div class="gvp-rule"><span>Approval</span><b>51% YES (weighted)</b></div>
-      <div class="gvp-rule"><span>Weekly cap</span><b>1% of the compartment</b></div>
-      <div class="gvp-rule"><span>Timelock</span><b>72h before execution</b></div>
-      <div class="gvp-rule"><span>Destinations</span><b>Verified / allowlisted only</b></div>
-      <div class="gvp-rule"><span>Guardian</span><b>Safety veto during timelock</b></div>
-      <div class="gvp-rule" style="border-bottom:none"><span>Registry</span><b>Public registry required</b></div>
+      <div class="gvp-h" style="color:#22d3ee;margin-bottom:8px">VOTING PROTOCOL &mdash; DRAFT / SUBJECT TO CHANGE</div>
+      <div class="gvp-rule"><span class="k">Quorum</span><b>15% of votable SOST</b></div>
+      <div class="gvp-rule"><span class="k">Approval</span><b>51% YES (weighted)</b></div>
+      <div class="gvp-rule"><span class="k">Weekly cap</span><b>1% of the compartment</b></div>
+      <div class="gvp-rule"><span class="k">Timelock</span><b>72h before execution</b></div>
+      <div class="gvp-rule"><span class="k">Destinations</span><b>Verified / allowlisted only</b></div>
+      <div class="gvp-rule"><span class="k">Guardian</span><b>Safety veto during timelock</b></div>
+      <div class="gvp-rule" style="border-bottom:none"><span class="k">Registry</span><b>Public registry required</b></div>
     </div>
   </div>
 
-  <div style="font-size:10px;color:var(--text3);line-height:1.7;margin-top:14px">
-    Founder/guardian safety veto, not spending power — can block a dangerous execution, cannot approve or spend.
+  <div style="font-size:11.5px;color:var(--text3);line-height:1.75;margin-top:18px;border-top:1px solid rgba(255,215,0,.16);padding-top:14px">
+    <b style="color:#e5e7eb">Founder/guardian safety veto, not spending power</b> — can block a dangerous execution, cannot approve or spend.
     No individual claim on gold; SOST is not gold-backed. Full policy:
     <a href="/sost-gold-reserve.html" style="color:#FFD700">Protocol Strategic Reserve</a>.
   </div>
 </div>
 <script>
-/* Gold Vault Pulse — PREVIEW ONLY. Local address-format check for preview.
+/* Strategic Reserve Governance Vote — PREVIEW ONLY. Local address-format check for preview.
    No balance query, no signing, no fetch/post, no localStorage, executes nothing. */
 (function(){
   try{
