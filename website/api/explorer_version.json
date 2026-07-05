@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-05-v366-gold-vault-pulse",
-  "note": "Adds the Gold Vault Pulse governance PREVIEW card (LOCKED / NOT ACTIVE — executes nothing, no voting, no funds). Version bumped so open explorer tabs auto-reload."
+  "v": "2026-07-05-v367-governance-vote-ui",
+  "note": "V14.5 banner collapsed by default; Strategic Reserve Governance Vote preview card (renamed, restyled, resized). Inactive preview only. Version bumped so open explorer tabs auto-reload."
 }
