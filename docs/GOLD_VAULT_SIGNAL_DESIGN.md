@@ -17,8 +17,9 @@ wallet-signed signalling system in the explorer** by which SOST holders can appr
 > over a single key), and approval is **holder-weighted, not miner-block voting**.
 > Canonical rules: [`GOLD_METALS_RESERVE_POLICY.md`](GOLD_METALS_RESERVE_POLICY.md).
 
-> **Gold Vault Pulse (explorer preview, 2026):** a **visual, clearly-inactive** preview
-> module in `website/sost-explorer.html` (`#goldVaultPulse`) shows the community how the
+> **Strategic Reserve Governance Vote (explorer preview, 2026):** a **visual,
+> clearly-inactive** preview module in `website/sost-explorer.html` (`#goldVaultPulse`,
+> was "Gold Vault Pulse") shows the community how the
 > future Protocol Strategic Reserve governance will look — compartments, rules (quorum
 > 15% / 51% / 1% weekly cap / 72h timelock / verified destinations / guardian veto /
 > public registry), and a preview proposal card. YES/NO buttons are **disabled**; the
