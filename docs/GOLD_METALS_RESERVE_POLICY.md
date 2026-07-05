@@ -23,7 +23,7 @@ Protocol Strategic Reserve  (the SOST the protocol accumulates on-chain)
 ```
 
 - **Gold Accumulation Reserve — minimum 50%.** Earmarked for a **future** metal
-  reserve (PAXG / XAUT / KAU / custodied gold). Its future measure is **grams of
+  reserve (**PAXG / XAUT** only). Its future measure is **grams of
   protocol-held gold** — a treasury metric, **not a peg and not a redemption claim.**
   There is **no** individual claim on gold, **no** "1 SOST = 1 gram", and SOST is
   **not** gold-backed.
@@ -45,7 +45,7 @@ The split is a **floor/ceiling policy**, not a physical partition: gold ≥ 50%,
 | **On-chain SOST accumulation** | **ACTIVE** since genesis | Consensus (coinbase rules CB5/CB6) |
 | **Any reserve spending (either compartment)** | **NOT ACTIVE / LOCKED** | Deferred — activation height `INT64_MAX` on mainnet |
 | **Gold Accumulation — tokenized gold acquired** | **NONE** | Off-chain; nothing bought, no Safe created |
-| **PAXG / XAUT / KAU held** | **0 / pending** | — |
+| **PAXG / XAUT held** | **0 / pending** | — |
 | **Growth / Listing / Compliance spending** | **NOT ACTIVE** | No SOST sold or paid out from the reserve |
 | **Weighted holder voting** | **NOT ACTIVE** | Requires snapshot-balance support (see §4) |
 | **Public Protocol Registry of operations** | **PREPARED (empty)** | No operations executed yet |
@@ -179,8 +179,8 @@ consensus yet.
   No single key should be able to move reserve assets: multi-authorised **and**
   time-delayed **and** destination-constrained.
 - **Asset policy:** **PAXG primary** (Paxos; NY-regulated, redeemable, monthly
-  attestations), **XAUT secondary/optional** (liquidity diversification). KAU is noted
-  as a reference model for the "grams" unit only. No more than these initially.
+  attestations), **XAUT secondary/optional** (liquidity diversification). **PAXG and
+  XAUT only** — no other gold instrument and no physical gold custody in this phase.
 - **Why Ethereum mainnet?** PAXG/XAUT are ERC-20 tokens native to Ethereum with their
   deepest liquidity and redemption there, and Safe custody/audit tooling is most
   battle-tested there. A sealed, rarely-moving reserve makes mainnet gas immaterial.
