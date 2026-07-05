@@ -8,6 +8,15 @@ wallet-signed signalling system in the explorer** by which SOST holders can appr
 > One line: *Gold Vault Signal lets SOST holders signal approval for strictly limited
 > reserve operations using signed wallet votes.*
 
+> **Binding status (2026 update):** this signal is a **NON-BINDING temperature check
+> only**. It must not be presented as binding governance. **Binding weighted voting is
+> not implemented** and requires **snapshot-balance support** (`getbalanceatheight` /
+> indexer) that does not exist yet — without it, vote weight by SOST held cannot be
+> computed. In the governance model the founder/guardian has a **time-boxed, reasoned
+> safety VETO, not spending power** (a guardian set of 2-of-3 / 3-of-5 is recommended
+> over a single key), and approval is **holder-weighted, not miner-block voting**.
+> Canonical rules: [`GOLD_METALS_RESERVE_POLICY.md`](GOLD_METALS_RESERVE_POLICY.md).
+
 Related: [`TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md`](TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md),
 [`GOLD_ACCUMULATION_AUCTION_PROGRAM.md`](GOLD_ACCUMULATION_AUCTION_PROGRAM.md) (Gold
 Reserve Forge), [`GOLD_METALS_RESERVE_POLICY.md`](GOLD_METALS_RESERVE_POLICY.md).

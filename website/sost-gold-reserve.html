@@ -765,6 +765,9 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       <span class="sep">|</span>
       <span class="val">Governed spending NOT active &middot; No gold reserve created yet &middot; Nothing being sold</span>
     </div>
+    <div class="fade-in delay-3" style="margin-top:18px;font-size:13px;line-height:1.7;color:var(--text-dim);max-width:760px;">
+      <strong style="color:#FFD700;">Protocol Strategic Reserve</strong> &mdash; Gold Accumulation + Growth / Listing / Compliance compartments. Both remain <strong style="color:#fb010d;">LOCKED / NOT ACTIVE</strong>.
+    </div>
   </div>
 </section>
 
@@ -818,6 +821,93 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       G1&ndash;G5) is scaffolding + audit only, sentinel-disabled on mainnet. <strong>G3b</strong>
       (accumulated cap / rate-limit) is the current technical blocker before any activation.
       Full policy: <a href="https://github.com/SOST-Protocol/sost-core/blob/main/docs/GOLD_METALS_RESERVE_POLICY.md" target="_blank" rel="noopener" style="color:#FFD700;">GOLD_METALS_RESERVE_POLICY.md</a>.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════ PROTOCOL STRATEGIC RESERVE (planned / NOT ACTIVE) ═══════════ -->
+<section class="section" style="border-top:1px solid var(--border-dim);">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">RESERVE MODEL</div>
+      <h2 class="section-title">Protocol Strategic <span class="accent">Reserve</span></h2>
+    </div>
+
+    <p style="color:var(--text-dim);font-size:13px;line-height:1.8;margin-bottom:24px;max-width:820px;">
+      What has been called the "Gold Vault" is, more precisely, one <strong>Protocol Strategic Reserve</strong>
+      &mdash; the SOST the protocol accumulates on-chain &mdash; with two clearly separated compartments.
+      Everything below is <strong style="color:#fb010d;">planned / NOT ACTIVE</strong>. Nothing is partitioned,
+      sold or moved today.
+    </p>
+
+    <div class="mode-grid">
+      <div class="mode-card">
+        <div class="mode-name" style="color:#FFD700;">Gold Accumulation Reserve &mdash; minimum 50%</div>
+        <div class="mode-params">
+          Earmarked for a <em>future</em> metal reserve (PAXG / XAUT / KAU / custodied gold). Its future
+          measure is <strong>grams of protocol-held gold</strong> &mdash; a treasury metric,
+          <strong>not a peg and not a redemption claim</strong>. No individual claim on gold,
+          no &ldquo;1&nbsp;SOST&nbsp;=&nbsp;1&nbsp;gram&rdquo;, and SOST is <strong>not gold-backed</strong>.
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name" style="color:#4ade80;">Growth / Listing / Compliance Reserve &mdash; maximum 50%</div>
+        <div class="mode-params">
+          Earmarked for a <em>future</em> set of ecosystem costs: compliance, MiCA/legal, audits,
+          infrastructure, aggregators, serious listings, initial liquidity and security. Rationale: the
+          founder should not have to personally fund every listing, legal, infrastructure or compliance
+          cost for the protocol to survive and grow.
+        </div>
+      </div>
+    </div>
+
+    <p style="color:var(--text-dim);font-size:12px;margin-top:14px;line-height:1.7;">
+      The split is a <strong>floor/ceiling policy</strong>, not a physical partition: gold&nbsp;&ge;&nbsp;50%,
+      growth&nbsp;&le;&nbsp;50%. Reserve status today: <strong style="color:#fb010d;">LOCKED / NOT ACTIVE</strong>
+      &mdash; the spend path is disabled at the consensus level (activation height <code>INT64_MAX</code>),
+      not merely by policy.
+    </p>
+
+    <!-- Economic caveat -->
+    <div style="background:rgba(255,215,0,0.05);border:1px solid rgba(255,215,0,0.35);border-radius:8px;padding:18px 22px;margin-top:26px;">
+      <div style="font-size:11px;letter-spacing:2px;color:#FFD700;margin-bottom:8px;">ECONOMIC REALITY</div>
+      <div style="font-size:14px;line-height:1.8;color:var(--text-primary);">
+        The reserve is denominated in SOST. Until SOST has an external market price and liquidity, the reserve
+        is <strong>potential capital, not immediately spendable capital</strong>. Growth/liquidity work is
+        therefore the <strong>first</strong> unlock; gold accumulation becomes meaningful once conversion can
+        happen without damaging the market.
+      </div>
+    </div>
+
+    <!-- Governance summary -->
+    <div class="section-header fade-in" style="margin-top:36px;">
+      <div class="section-id">GOVERNANCE (design, not active)</div>
+      <h2 class="section-title" style="font-size:22px;">Veto, not <span class="accent">spending power</span></h2>
+    </div>
+    <div class="mode-grid">
+      <div class="mode-card">
+        <div class="mode-name">Weighted holder approval</div>
+        <div class="mode-params">Vote weight = SOST held at a snapshot. Quorum &ge;&nbsp;15%, approval &ge;&nbsp;51% YES weighted. <strong>Not miner-block voting.</strong></div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name">Hard limits</div>
+        <div class="mode-params">Weekly cap &le;&nbsp;1% of the relevant compartment, allowlisted destinations only, 72h timelock, mandatory public registry.</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name">Founder / guardian safety veto</div>
+        <div class="mode-params">A time-boxed, public, reasoned <strong>veto only</strong> &mdash; can block a dangerous execution, <strong>cannot approve or spend</strong>. Recommended: a guardian set (2-of-3 / 3-of-5), not a single key.</div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name">Voting status today</div>
+        <div class="mode-params">Binding weighted voting is not implemented: it <strong>requires snapshot-balance support</strong> that does not exist yet. The wallet <code>GVOTE</code> signal is a <strong>non-binding temperature check only</strong>.</div>
+      </div>
+    </div>
+
+    <p style="color:var(--text-dim);font-size:12px;margin-top:16px;line-height:1.7;">
+      The mother rule: nothing leaves the reserve on a single key &mdash; not the founder, not a whale, not a
+      simple majority alone. It leaves only with weighted holder approval + allowlisted destination + weekly cap
+      + timelock + public registry + no guardian veto. Full policy:
+      <a href="https://github.com/SOST-Protocol/sost-core/blob/main/docs/GOLD_METALS_RESERVE_POLICY.md" target="_blank" rel="noopener" style="color:#FFD700;">GOLD_METALS_RESERVE_POLICY.md</a>.
     </p>
   </div>
 </section>
