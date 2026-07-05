@@ -21,6 +21,8 @@ contract.
 > (after a real SOST market/liquidity exists). Canonical policy, caps, timelock and the
 > economic caveat: [`GOLD_METALS_RESERVE_POLICY.md`](GOLD_METALS_RESERVE_POLICY.md).
 > SOST remains **not** gold-backed; "grams" is a treasury metric, not a peg or claim.
+> Payment/seed policy (buyer pays PAXG/XAUT; manual/OTC until the atomic swap is proven;
+> **never publish `$/SOST`**): [`FOUNDER_SEED_RESERVE_AND_FORGE_PAYMENT.md`](FOUNDER_SEED_RESERVE_AND_FORGE_PAYMENT.md).
 
 Related: [`GOLD_METALS_RESERVE_POLICY.md`](GOLD_METALS_RESERVE_POLICY.md),
 [`TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md`](TOKENIZED_GOLD_RESERVE_SAFE_DESIGN.md),

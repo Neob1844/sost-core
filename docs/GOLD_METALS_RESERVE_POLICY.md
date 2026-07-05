@@ -214,3 +214,10 @@ only.**
 **What SOST is not:** not gold, not gold-backed, not "1 SOST = 1 gram", no redemption
 right, no guaranteed return. "Grams of protocol-held gold" is a future treasury
 metric, **not a peg or a claim.**
+
+**Hard rule — never publish a `$/SOST` figure.** The reserve dashboard publishes how much
+gold the protocol holds (grams / USD in the Safe) — never a per-SOST number, not even as a
+"reference ratio". Any figure that lets someone compute gold-per-SOST (dividing reserve
+gold by a SOST count) is prohibited: no `$/SOST`, no floor price, no backing-per-SOST, no
+"1 SOST = X gold", no redemption ratio. Publish gold held; do not divide it by SOST. See
+[`FOUNDER_SEED_RESERVE_AND_FORGE_PAYMENT.md`](FOUNDER_SEED_RESERVE_AND_FORGE_PAYMENT.md).
