@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-05-v370-govvote-shimmer",
-  "note": "Shimmer/sparkle sweep on the Strategic Reserve Governance Vote title. Version bumped so open explorer tabs auto-reload."
+  "v": "2026-07-06-v371-miner-update-banner",
+  "note": "New prominent MINER/NODE update banner (atomic swap policy bug fixed & tested; build+restart instructions), replaces the V14.5 banner; other info banners collapsed by default. Version bumped so open explorer tabs auto-reload."
 }

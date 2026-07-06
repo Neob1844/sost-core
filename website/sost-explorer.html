@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-07-05-v370-govvote-shimmer">
+<meta name="explorer-html-version" content="2026-07-06-v371-miner-update-banner">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -365,10 +365,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <body>
 <!-- V145-BANNER-INJECT (surgical; delete this comment..closing comment to revert) -->
 <style>#asWarn{display:none!important}</style>
-<div id="v145banner" style="position:relative;z-index:99999;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6">
-  <div style="padding:10px 16px;text-align:center;cursor:pointer;font-weight:700" onclick="(function(){var d=document.getElementById('v145det'),o=(d.style.display==='none');d.style.display=o?'block':'none';var t=document.getElementById('v145tog');if(t)t.innerHTML=o?'hide &#9652;':'how to upgrade &#9662;';try{localStorage.setItem('sost_v145_open',o?'1':'0')}catch(e){}})()">&#128680; <b>V14.5 MANDATORY UPGRADE BEFORE BLOCK 16,000</b> &middot; ATOMIC SWAP HTLC CLAIM/REFUND FIX &middot; Founder-only testing &middot; Public DO NOT USE &nbsp;<span id="v145tog" style="text-decoration:underline">how to upgrade &#9662;</span></div>
-  <div id="v145det" style="display:none;max-width:1000px;margin:0 auto;padding:0 18px 14px;font-size:12px;color:#ffecec;line-height:1.7">
-    <div>Every miner &amp; full node MUST <b>recompile the new binary and restart</b> before block 16,000, or the node will reject HTLC blocks and split off. Below 16,000 the new binary is byte-identical (safe to deploy now). The same binary also carries V15 (PoPC) at block 20,000.</div>
+<style>@keyframes mbPulse{0%,100%{box-shadow:inset 0 0 0 0 rgba(251,1,13,0)}50%{box-shadow:inset 0 -3px 26px 0 rgba(251,1,13,.45)}}#minerBanner{animation:mbPulse 2s ease-in-out infinite}#minerBanner .mbdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#fb010d;box-shadow:0 0 10px #fb010d;margin-right:6px;vertical-align:middle}</style>
+<div id="minerBanner" style="position:relative;z-index:99999;background:linear-gradient(180deg,#3a0808,#2a0606);border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6">
+  <div style="padding:11px 16px;text-align:center;cursor:pointer;font-weight:700" onclick="(function(){var d=document.getElementById('mbDet'),o=(d.style.display==='none');d.style.display=o?'block':'none';var t=document.getElementById('mbTog');if(t)t.innerHTML=o?'hide &#9652;':'how to update &#9662;';try{localStorage.setItem('sost_miner_open',o?'1':'0')}catch(e){}})()"><span class="mbdot"></span>&#128295; <b>ACTION REQUIRED &mdash; ALL MINERS &amp; NODES: UPDATE TO THE NEW BINARY</b> &middot; Atomic Swap bug <b>FIXED &amp; tested</b> &middot; update so swaps work network-wide &nbsp;<span id="mbTog" style="text-decoration:underline">how to update &#9662;</span></div>
+  <div id="mbDet" style="display:none;max-width:1000px;margin:0 auto;padding:0 18px 14px;font-size:12px;color:#ffecec;line-height:1.7">
+    <div><b>What happened:</b> a bug in the SOST Atomic Swap was found &mdash; HTLC transactions were valid at consensus but the node's relay/mempool policy rejected them (a leftover check treated the HTLC output as a capsule), so swaps could not be broadcast or mined. It has now been <b>found, fixed and fully tested</b>. It is a <b>policy-only</b> fix &mdash; block/consensus validation is <b>byte-identical, so there is NO fork risk</b>; updating simply lets your node relay and mine atomic-swap transactions. Please update so the swap works across the whole network, not only on updated nodes.</div>
     <pre style="margin:6px 0;padding:9px 11px;background:rgba(0,0,0,.4);border-radius:5px;overflow:auto;color:#cfeede;white-space:pre"># 1) BUILD the new binary (flags are MANDATORY):
 cd sost-core
 git checkout main &amp;&amp; git pull origin main
@@ -376,15 +377,15 @@ cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMA
 cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc)
 
 # 2) RESTART your NODE on the new binary:
-#    stop the old sost-node, then start ./build/sost-node
-#    (systemd users: sudo systemctl restart sost-node)
+#    systemd:  sudo systemctl restart sost-node
+#    manual:   stop the old sost-node, then start ./build/sost-node
 
 # 3) RESTART your MINER on the new binary:
 #    stop the old sost-miner, then relaunch ./build/sost-miner with your usual args</pre>
-    <div>&#9888; <b>-DSOST_TESTNET_FORKS=OFF is required</b> (=ON throws you off mainnet). Atomic Swap stays <b>founder-only</b> &mdash; do NOT use publicly until the founder announces it safe. PoPC V15 unchanged (20,000 / 25,000). Gold Vault &amp; Gold Boost remain OFF.</div>
+    <div>&#9888; <b>-DSOST_TESTNET_FORKS=OFF is required</b> (=ON throws you off mainnet). Because this is a <b>policy fix, not a consensus change</b>, old and new binaries agree on which blocks are valid &mdash; <b>no fork, no split, no coordination window needed</b>. The Atomic Swap will be <b>ready for public use in a few days</b>, once the network has updated and the founder announces it safe. PoPC V15 (20,000 / 25,000), Gold Vault &amp; Gold Boost remain unchanged.</div>
   </div>
 </div>
-<script>(function(){try{if(localStorage.getItem('sost_v145_open')==='1'){var d=document.getElementById('v145det');if(d)d.style.display='block';var t=document.getElementById('v145tog');if(t)t.innerHTML='hide &#9652;';}}catch(e){}})();</script>
+<script>(function(){try{if(localStorage.getItem('sost_miner_open')==='1'){var d=document.getElementById('mbDet');if(d)d.style.display='block';var t=document.getElementById('mbTog');if(t)t.innerHTML='hide &#9652;';}}catch(e){}})();</script>
 <!-- /V145-BANNER-INJECT -->
 
 
@@ -530,11 +531,9 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
 <!-- OFFICIAL CHANNELS BANNER — community invitation + Discord at V13 -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div style="max-width:1400px;margin:8px auto 0;padding:0 24px;">
-  <div style="background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(74,222,128,0.09));border:2px solid #f5b301;border-radius:6px;padding:14px 18px;box-shadow:0 0 18px rgba(245,158,11,.28),0 0 34px rgba(74,222,128,.16);">
-    <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">
-      <span style="font-size:20px;line-height:1.1">📡</span>
-      <div style="flex:1 1 320px;font-size:12.5px;line-height:1.75;color:var(--text,#e8e8e8);">
-        <b style="color:#fbbf24;font-size:14px;letter-spacing:.3px">Join the official SOST community</b><br>
+  <details style="background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(74,222,128,0.09));border:2px solid #f5b301;border-radius:6px;box-shadow:0 0 18px rgba(245,158,11,.28),0 0 34px rgba(74,222,128,.16);overflow:hidden">
+    <summary style="list-style:none;cursor:pointer;padding:13px 18px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:#fbbf24;letter-spacing:.3px"><span style="font-size:18px">📡</span> Join the official SOST community <span style="margin-left:auto;background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.6);color:#fbbf24;font-family:var(--code,monospace);font-size:10px;font-weight:800;letter-spacing:1.2px;padding:5px 10px;border-radius:5px;white-space:nowrap">CHANNELS &#9662;</span></summary>
+      <div style="padding:0 18px 14px;font-size:12.5px;line-height:1.75;color:var(--text,#e8e8e8);">
         We would be honoured to have you with us. Our official <b style="color:#4ade80">Discord</b> server is <b style="color:#4ade80">coming soon</b> — and you are warmly invited to join. In the meantime, please follow our official channels below for announcements and updates. Thank you for being part of SOST.
         <div style="margin-top:11px;display:flex;flex-wrap:wrap;gap:9px;">
           <a href="https://t.me/SOSTProtocolOfficial" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:6px;background:rgba(74,222,128,.10);border:1px solid rgba(245,158,11,.6);color:#fbbf24;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:.4px;transition:all .15s">✈ Telegram · Announcements</a>
@@ -544,8 +543,7 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
           <a href="#" id="discordSoon" style="display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:6px;background:rgba(245,158,11,.06);border:1px dashed rgba(74,222,128,.6);color:#4ade80;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:.4px;cursor:default" onclick="return false">✦ Discord · coming soon</a>
         </div>
       </div>
-    </div>
-  </div>
+  </details>
 </div>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- DEVELOPER DISCLAIMER — permanent, always visible, never collapsed -->
