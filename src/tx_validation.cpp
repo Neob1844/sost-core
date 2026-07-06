@@ -710,7 +710,17 @@ TxValidationResult ValidateTransactionPolicy(
                     -1, (int32_t)i);
             }
 
-            if (ctx.spend_height >= ctx.capsule_activation_height) {
+            // HTLC outputs carry a typed 80-byte payload (hashlock / refund_height /
+            // claim_pkh / refund_pkh) or the 32-byte CLAIM preimage marker — NOT a
+            // capsule. ValidateTransactionConsensus (S9) already exempts these output
+            // types when the atomic swap is active; the relay/mining policy capsule
+            // check MUST match, otherwise HTLC LOCK/CLAIM txs are consensus-valid but
+            // are rejected on sendrawtransaction / never relayed or mined. V14.5 fixed
+            // the consensus path (block acceptance) but missed this policy path.
+            bool htlc_typed_payload = atomic_swap_htlc_active_at(ctx.spend_height) &&
+                (tx.outputs[i].type == OUT_HTLC_LOCK ||
+                 tx.outputs[i].type == OUT_HTLC_CLAIM_WITNESS);
+            if (ctx.spend_height >= ctx.capsule_activation_height && !htlc_typed_payload) {
                 auto cap_result = ValidateCapsulePolicy(tx.outputs[i].payload);
                 if (!cap_result.ok) {
                     return TxValidationResult::Fail(TxValCode::P_BAD_CAPSULE,
