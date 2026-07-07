@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-06-v372-miner-banner-expanded",
-  "note": "Miner/node UPDATE banner now EXPANDED by default on the explorer (build+restart instructions visible immediately). Version bumped so every open explorer tab (all miners) auto-reloads and sees the update notice."
+  "v": "2026-07-07-v373-swap-onhold",
+  "note": "Atomic Swap update banner replaced with a neutral ON HOLD notice (PR #63 frozen pending review; miners should NOT rebuild for the swap fix). Normal mining & consensus unaffected. Version bumped so open explorer tabs auto-reload."
 }
