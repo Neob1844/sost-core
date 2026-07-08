@@ -717,7 +717,16 @@ TxValidationResult ValidateTransactionPolicy(
             // check MUST match, otherwise HTLC LOCK/CLAIM txs are consensus-valid but
             // are rejected on sendrawtransaction / never relayed or mined. V14.5 fixed
             // the consensus path (block acceptance) but missed this policy path.
-            bool htlc_typed_payload = atomic_swap_htlc_active_at(ctx.spend_height) &&
+            //
+            // V14.7 (mainnet 18000): this relay exemption is gated on
+            // atomic_swap_relay_active_at — SEPARATE from and LATER than the consensus
+            // gate (atomic_swap_htlc_active_at, 16000). Below V14_7_HEIGHT HTLC outputs
+            // keep failing the capsule check here, so they never enter the mempool or a
+            // block template (every block stays txs=1) — mining is unaffected until the
+            // coordinated flag-day. This is the controlled re-activation of the PR #63
+            // fix after the first (ungated) deploy degraded mining via asymmetric
+            // mempools. Consensus/block validity is byte-identical either way.
+            bool htlc_typed_payload = atomic_swap_relay_active_at(ctx.spend_height) &&
                 (tx.outputs[i].type == OUT_HTLC_LOCK ||
                  tx.outputs[i].type == OUT_HTLC_CLAIM_WITNESS);
             if (ctx.spend_height >= ctx.capsule_activation_height && !htlc_typed_payload) {

@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-07-07-v373-swap-onhold">
+<meta name="explorer-html-version" content="2026-07-08-v374-v147-swap-block18000">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -364,9 +364,14 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </head>
 <body>
 <!-- V145-BANNER-INJECT (surgical; delete this comment..closing comment to revert) -->
-<style>#asWarn{display:none!important}</style>
-<div id="minerBanner" style="position:relative;z-index:99999;background:linear-gradient(180deg,#2e2712,#241f10);border-bottom:3px solid #d9a441;color:#ffe9c2;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6">
-  <div style="padding:11px 16px;text-align:center;font-weight:700">&#9208; <b>SOST Atomic Swap update &mdash; ON HOLD, pending review.</b> No action needed &middot; <b>do NOT rebuild for the swap fix right now.</b> Normal mining &amp; consensus are unaffected.</div>
+<style>#asWarn{display:none!important}
+@keyframes v147pulse{0%,100%{box-shadow:0 0 0 0 rgba(217,164,65,.0)}50%{box-shadow:0 0 22px 2px rgba(217,164,65,.55)}}</style>
+<div id="minerBanner" style="position:relative;z-index:99999;background:linear-gradient(180deg,#2e2712,#241f10);border-bottom:3px solid #d9a441;color:#ffe9c2;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.55;animation:v147pulse 2.4s ease-in-out infinite">
+  <div style="padding:12px 16px;text-align:center;font-weight:700">
+    &#128295; <b style="color:#ffd47a;letter-spacing:.5px">V14.7 &mdash; MANDATORY MINER &amp; NODE UPDATE &middot; ATOMIC SWAP ACTIVATES AT BLOCK 18,000</b><br>
+    <span style="font-weight:600">The Atomic Swap (HTLC) relay fix goes live at <b>block 18,000</b>. <b>Every miner and node MUST recompile + restart</b> in the window <b>after block 17,900 and before block 18,000</b>.</span><br>
+    <span style="font-size:11.5px;color:#e8d4a8">Build flags: <code style="color:#ffe9c2">-DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF</code> &middot; targets: <code style="color:#ffe9c2">sost-node sost-miner sost-cli</code>. Until block 18,000 nothing changes &mdash; mining &amp; consensus are unaffected. After 18,000, un-updated nodes will not relay or mine swap transactions.</span>
+  </div>
 </div>
 <!-- /V145-BANNER-INJECT -->
 

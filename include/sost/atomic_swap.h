@@ -157,4 +157,31 @@ inline constexpr bool atomic_swap_htlc_active_at(int64_t height) {
     return height >= ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT;
 }
 
+// -----------------------------------------------------------------------------
+// V14.7 — relay/policy activation (the PR #63 fix), DECOUPLED from consensus
+// -----------------------------------------------------------------------------
+//
+// atomic_swap_htlc_active_at (above, V14_5_HEIGHT / mainnet 16000) gates the
+// CONSENSUS acceptance of HTLC outputs and CLAIM/REFUND txs — already live and
+// UNCHANGED. This SEPARATE, LATER gate controls ONLY the relay/mempool policy
+// layer: the capsule-policy exemption in ValidateTransactionPolicy that lets HTLC
+// LOCK/CLAIM outputs be broadcast (sendrawtransaction) and included in block
+// templates.
+//
+// It is deliberately set HIGHER than the consensus gate (V14_7_HEIGHT, mainnet
+// 18000) so activation is a coordinated flag-day. Between V14_5_HEIGHT and
+// V14_7_HEIGHT the HTLC feature is consensus-valid but NON-RELAYABLE
+// (bad-capsule on broadcast), so no HTLC ever enters a template, every block
+// stays txs=1, and mining is unaffected — the asymmetric-mempool degradation of
+// the first (ungated) deploy cannot recur. At V14_7_HEIGHT every upgraded node
+// flips together. This is a POLICY gate: it never decides block validity, so a
+// non-upgraded node does not fork — but a coordinated recompile+restart in the
+// window after block 17900, before 18000, keeps the network's mempools
+// homogeneous (all txs=1 → all txs=N in lockstep). MANDATORY-BINARY-UPDATE.
+inline constexpr int64_t ATOMIC_SWAP_RELAY_ACTIVATION_HEIGHT = V14_7_HEIGHT;
+
+inline constexpr bool atomic_swap_relay_active_at(int64_t height) {
+    return height >= ATOMIC_SWAP_RELAY_ACTIVATION_HEIGHT;
+}
+
 } // namespace sost

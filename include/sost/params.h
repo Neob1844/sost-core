@@ -1022,6 +1022,24 @@ inline constexpr int64_t V14_5_HEIGHT                     = 30;      // TESTNET 
 #else
 inline constexpr int64_t V14_5_HEIGHT                     = 16000;   // MAINNET — atomic-swap HTLC CLAIM/REFUND fix
 #endif
+
+// V14.7 — atomic-swap HTLC RELAY/POLICY activation (the PR #63 fix): the
+// mempool/relay capsule-policy exemption for OUT_HTLC_LOCK / OUT_HTLC_CLAIM_WITNESS
+// outputs. CONSENSUS acceptance of HTLC txs is already live at V14_5_HEIGHT (16000)
+// and is NOT touched here. This milestone flips ONLY the relay layer so HTLC
+// LOCK/CLAIM txs can finally be broadcast (sendrawtransaction) and mined into
+// templates. It is gated SEPARATELY and LATER than the consensus gate so
+// activation is a coordinated flag-day: below V14_7_HEIGHT every node rejects HTLC
+// in the mempool (bad-capsule), so NO HTLC ever enters a template — every block
+// stays txs=1 and mining is unaffected (the asymmetric-mempool degradation of the
+// first, ungated deploy cannot recur). At V14_7_HEIGHT all upgraded nodes flip
+// together. MANDATORY-BINARY-UPDATE: recompile + restart in the window after block
+// 17900, before 18000.
+#ifdef SOST_TESTNET_FORKS
+inline constexpr int64_t V14_7_HEIGHT                     = 40;      // TESTNET ONLY (just above V14_5=30 for the regtest HTLC soak)
+#else
+inline constexpr int64_t V14_7_HEIGHT                     = 18000;   // MAINNET — atomic-swap relay/policy flag-day
+#endif
 // DTD_POPC_ELIGIBILITY_HEIGHT is defined AFTER V15_HEIGHT below — it is
 // V15_HEIGHT + a grace window (P4c), so PoPC automation goes live before the
 // lottery starts REQUIRING an active commitment.
