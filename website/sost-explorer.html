@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-07-08-v374-v147-swap-block18000">
+<meta name="explorer-html-version" content="2026-07-08-v375-v147-swap-block17000">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -365,12 +365,58 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <body>
 <!-- V145-BANNER-INJECT (surgical; delete this comment..closing comment to revert) -->
 <style>#asWarn{display:none!important}
-@keyframes v147pulse{0%,100%{box-shadow:0 0 0 0 rgba(217,164,65,.0)}50%{box-shadow:0 0 22px 2px rgba(217,164,65,.55)}}</style>
-<div id="minerBanner" style="position:relative;z-index:99999;background:linear-gradient(180deg,#2e2712,#241f10);border-bottom:3px solid #d9a441;color:#ffe9c2;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.55;animation:v147pulse 2.4s ease-in-out infinite">
-  <div style="padding:12px 16px;text-align:center;font-weight:700">
-    &#128295; <b style="color:#ffd47a;letter-spacing:.5px">V14.7 &mdash; MANDATORY MINER &amp; NODE UPDATE &middot; ATOMIC SWAP ACTIVATES AT BLOCK 18,000</b><br>
-    <span style="font-weight:600">The Atomic Swap (HTLC) relay fix goes live at <b>block 18,000</b>. <b>Every miner and node MUST recompile + restart</b> in the window <b>after block 17,900 and before block 18,000</b>.</span><br>
-    <span style="font-size:11.5px;color:#e8d4a8">Build flags: <code style="color:#ffe9c2">-DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF</code> &middot; targets: <code style="color:#ffe9c2">sost-node sost-miner sost-cli</code>. Until block 18,000 nothing changes &mdash; mining &amp; consensus are unaffected. After 18,000, un-updated nodes will not relay or mine swap transactions.</span>
+@keyframes v147pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,185,66,0)}50%{box-shadow:0 0 26px 2px rgba(240,185,66,.5)}}
+@keyframes v147chip{0%,100%{opacity:1}50%{opacity:.55}}
+#minerBanner code{background:rgba(0,0,0,.35);border:1px solid rgba(240,185,66,.35);border-radius:5px;padding:1px 6px;color:#ffe9c2;font-size:12px;word-break:break-all}
+#minerBanner .v147box{background:rgba(0,0,0,.28);border:1px solid rgba(240,185,66,.28);border-radius:10px;padding:12px 14px}
+#minerBanner .v147step{display:flex;gap:9px;align-items:flex-start;margin:5px 0}
+#minerBanner .v147num{flex:0 0 22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#f0b942,#c8892a);color:#241a05;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:12px}
+@media(max-width:720px){#minerBanner .v147grid{grid-template-columns:1fr!important}}</style>
+<div id="minerBanner" style="position:relative;z-index:99999;background:linear-gradient(160deg,#33290f 0%,#241d0d 55%,#1c1608 100%);border-bottom:3px solid #f0b942;color:#ffeecb;font-family:'JetBrains Mono',monospace;line-height:1.55;animation:v147pulse 2.6s ease-in-out infinite">
+  <div style="max-width:1000px;margin:0 auto;padding:16px 18px">
+
+    <!-- header -->
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="background:linear-gradient(135deg,#f0b942,#c8892a);color:#221803;font-weight:900;letter-spacing:1px;font-size:13px;padding:4px 12px;border-radius:6px;animation:v147chip 1.8s ease-in-out infinite">&#128295; V14.7</span>
+      <span style="font-weight:900;letter-spacing:1.2px;font-size:16px;color:#ffd97a">MANDATORY NODE &amp; MINER UPDATE</span>
+    </div>
+
+    <!-- headline -->
+    <div style="font-size:15px;font-weight:800;color:#ffeecb;margin-bottom:4px">
+      &#9883;&#65039; The <b style="color:#ffd97a">SOST Atomic Swap</b> re-activates at <b style="color:#ffd97a">BLOCK 17,000</b>
+    </div>
+    <div style="font-size:12px;color:#e3cfa0;margin-bottom:12px">Cross-chain HTLC (SOST &harr; ETH &middot; BSC/BNB &middot; BTC later). Coordinated flag-day &mdash; every node &amp; miner must run the updated binary before the chain reaches 17,000.</div>
+
+    <!-- WINDOW callout -->
+    <div style="background:linear-gradient(90deg,rgba(240,185,66,.18),rgba(240,185,66,.06));border:1px solid #f0b942;border-radius:10px;padding:11px 14px;margin-bottom:13px;text-align:center;font-weight:800;font-size:14px;color:#ffe9c2">
+      &#128295; RECOMPILE + RESTART your NODE and MINER in the window:<br>
+      <span style="color:#ffd97a;font-size:15px">AFTER block 16,900 &nbsp;&middot;&nbsp; BEFORE block 17,000</span>
+    </div>
+
+    <!-- two columns: steps + status -->
+    <div class="v147grid" style="display:grid;grid-template-columns:1.15fr .85fr;gap:12px">
+
+      <div class="v147box">
+        <div style="font-weight:800;color:#ffd97a;font-size:12px;letter-spacing:.5px;margin-bottom:8px">&#128736;&#65039; WHAT YOU MUST DO</div>
+        <div class="v147step"><span class="v147num">1</span><span><code>git pull</code> the latest <b>sost-core</b> (main).</span></div>
+        <div class="v147step"><span class="v147num">2</span><span>Recompile with the mandatory flags:<br><code>cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release &amp;&amp; cmake --build build --target sost-node sost-miner sost-cli -j$(nproc)</code></span></div>
+        <div class="v147step"><span class="v147num">3</span><span>Restart your <b>NODE</b> and your <b>MINER</b> &mdash; inside the 16,900&rarr;17,000 window.</span></div>
+      </div>
+
+      <div class="v147box">
+        <div style="font-weight:800;color:#ffd97a;font-size:12px;letter-spacing:.5px;margin-bottom:8px">&#8505;&#65039; WHAT TO EXPECT</div>
+        <div style="font-size:12px;color:#e8d9b6;margin-bottom:7px">&#9989; <b>Until block 17,000 nothing changes</b> &mdash; mining &amp; consensus are unaffected, and no funds are or were ever at risk.</div>
+        <div style="font-size:12px;color:#e8d9b6;margin-bottom:7px">&#128260; From <b>17,000</b>, all updated nodes flip together and begin relaying/mining swap transactions in lockstep.</div>
+        <div style="font-size:12px;color:#ffb4a0">&#9888;&#65039; A node that does <b>not</b> update will not relay or mine swap transactions.</div>
+      </div>
+
+    </div>
+
+    <!-- footer note -->
+    <div style="margin-top:11px;font-size:11.5px;color:#d8c191;text-align:center">
+      &#129514; The swap remains <b>founder-testing &mdash; DO NOT USE</b> until we announce it is validated. Details: <a href="https://sostcore.com" style="color:#ffd97a">sostcore.com</a> &middot; <a href="https://t.me/SOSTProtocolOfficial" style="color:#ffd97a">t.me/SOSTProtocolOfficial</a>
+    </div>
+
   </div>
 </div>
 <!-- /V145-BANNER-INJECT -->

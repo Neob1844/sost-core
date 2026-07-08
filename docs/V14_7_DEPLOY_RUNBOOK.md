@@ -1,14 +1,14 @@
-# V14.7 Deploy Runbook — Atomic Swap re-activation at block 18,000
+# V14.7 Deploy Runbook — Atomic Swap re-activation at block 17,000
 
 **STATUS: DOCUMENT ONLY — DO NOT RUN NOW.** Execute in the coordinated window
-**after block 17,900, before block 18,000.** As of writing the chain is ~16,520
+**after block 16,900, before block 17,000.** As of writing the chain is ~16,520
 (~1,500 blocks / several days away). The V14.7 binary is a **no-op until block
-18,000** — recompiling early is harmless but restarting the node/miner now buys
+17,000** — recompiling early is harmless but restarting the node/miner now buys
 nothing and risks re-introducing the mining disruption that the rollback fixed.
 
 ## What is already done (on `main`)
 
-- V14.7 relay gate (`atomic_swap_relay_active_at`, mainnet **18,000**) — PR #63
+- V14.7 relay gate (`atomic_swap_relay_active_at`, mainnet **17,000**) — PR #63
   capsule exemption re-gated as a coordinated flag-day.
 - Companion rule (commit `382f3520`): expired HTLC LOCKs are kept out of block
   templates and evicted from the mempool — closes the root cause of the earlier
@@ -59,7 +59,7 @@ sleep 3
 bash ~/auto_mine.sh   # OR your real launch command — must use sost1c1c6d…
 ```
 
-### Step 3 — Verify (both across block 18,000)
+### Step 3 — Verify (both across block 17,000)
 
 ```bash
 # node responsive + advancing:
@@ -70,9 +70,9 @@ curl -s -u USER:PASS -d '{"method":"getblockcount","params":[],"id":1}' http://1
   `sost1c1c6d…` (check the explorer / getblock).
 - Confirm mining stays healthy for 30–60 blocks (no repeated stale/reject).
 
-## After block 18,000 — swap self-test (founder, optional)
+## After block 17,000 — swap self-test (founder, optional)
 
-Once past 18,000 the HTLC relay is active. When testing a real self-swap:
+Once past 17,000 the HTLC relay is active. When testing a real self-swap:
 
 - **Set `refund_height` comfortably in the FUTURE** (e.g. current height + 500 or
   more) and CLAIM/REFUND promptly. The earlier incident was a lock that EXPIRED
@@ -84,6 +84,6 @@ Once past 18,000 the HTLC relay is active. When testing a real self-swap:
 ## Rollback (safe — policy gate, no fork risk)
 
 V14.7 is a relay/policy gate; block validity is byte-identical, so a rollback
-does not fork the chain. If coverage is unsafe near 18,000: raise `V14_7_HEIGHT`
+does not fork the chain. If coverage is unsafe near 17,000: raise `V14_7_HEIGHT`
 (one line in `include/sost/params.h`), recompile, re-announce — before miners
 build the activation binary.

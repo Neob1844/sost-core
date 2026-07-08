@@ -1,4 +1,4 @@
-# Atomic Swap V14.7 — Coordinated relay re-activation (block 18,000)
+# Atomic Swap V14.7 — Coordinated relay re-activation (block 17,000)
 
 ## Summary
 
@@ -17,15 +17,15 @@ blocks). That is why the deploy was rolled back and PR #63 frozen.
 
 ## The fix, re-applied as a coordinated flag-day (V14.7)
 
-- **New milestone `V14_7_HEIGHT`** (mainnet **18,000** / testnet 40) in `include/sost/params.h`.
+- **New milestone `V14_7_HEIGHT`** (mainnet **17,000** / testnet 40) in `include/sost/params.h`.
 - **New gate** `atomic_swap_relay_active_at()` + `ATOMIC_SWAP_RELAY_ACTIVATION_HEIGHT = V14_7_HEIGHT`
   in `include/sost/atomic_swap.h`, **decoupled** from the consensus gate
   `atomic_swap_htlc_active_at` (still `V14_5_HEIGHT` / 16,000, **unchanged**).
 - `src/tx_validation.cpp`: the PR #63 capsule exemption now keys off
   `atomic_swap_relay_active_at` (the **only** policy-path use; consensus-path uses stay on 16,000).
 
-Below block 18,000 every node keeps rejecting HTLC in the mempool, so no HTLC enters a
-template and every block stays `txs=1` — **mining is unaffected**. At 18,000 all upgraded
+Below block 17,000 every node keeps rejecting HTLC in the mempool, so no HTLC enters a
+template and every block stays `txs=1` — **mining is unaffected**. At 17,000 all upgraded
 nodes flip together, eliminating the asymmetry that caused the earlier disruption.
 
 **This is a POLICY gate, not a new consensus rule.** Block validity is byte-identical, so a
@@ -39,11 +39,11 @@ that every miner can relay/mine swap transactions.
   -DSOST_TESTNET_FORKS=OFF`, Release).
 - Tests pass: `tx-validation`, `capsule`, `v14-h3-h4`, all `atomic-swap*` / `htlc*`.
 
-## Recommended before the 18,000 window (CTO note)
+## Recommended before the 17,000 window (CTO note)
 
 Gating synchronizes **when** `txs=N` behavior begins but does not by itself prove `txs=N`
 blocks are safe. Run the regtest reproduction of a `txs=N` HTLC block (mine + propagate,
-pre-fix vs post-fix) before block 18,000 — there is ample runway. Also recommended: a
+pre-fix vs post-fix) before block 17,000 — there is ample runway. Also recommended: a
 **local node on the founder's miner** to remove tunnel latency.
 
 ## Build & activation
@@ -52,14 +52,14 @@ pre-fix vs post-fix) before block 18,000 — there is ample runway. Also recomme
 cd /opt/sost && git pull
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
-# restart NODE and MINER in the window: after block 17,900, before block 18,000
+# restart NODE and MINER in the window: after block 16,900, before block 17,000
 ```
 
 ## Miner coordination
 
 - Publish binary + SHA-256; post the announcement below on BitcoinTalk + Telegram + the site banners.
 - Reach the known high-hashrate miners directly — every one matters.
-- Recompile/restart window: after block 17,900, before 18,000.
+- Recompile/restart window: after block 16,900, before 17,000.
 - Rollback: because this is a policy gate, reverting is safe (raise `V14_7_HEIGHT`, recompile,
   re-announce) with no fork risk to the chain.
 
@@ -71,25 +71,25 @@ cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
 [center][img]http://sostcore.com/sost-logo.png[/img]
 
 [size=15pt][b][color=#d9a441]V14.7 — MANDATORY NODE & MINER UPDATE[/color][/b][/size]
-[size=12pt][b]Atomic Swap re-activates at BLOCK 18,000[/b][/size]
-[b]Recompile + restart window: after block 17,900, before block 18,000[/b][/center]
+[size=12pt][b]Atomic Swap re-activates at BLOCK 17,000[/b][/size]
+[b]Recompile + restart window: after block 16,900, before block 17,000[/b][/center]
 
 [hr]
 
 [b]WHAT THIS IS[/b]
 The SOST Atomic Swap (cross-chain HTLC — SOST <-> ETH, BSC/BNB, and later BTC) is being
-switched back on under a coordinated activation at [b]block 18,000[/b] (milestone V14.7).
-Every node and miner must run the updated binary before the chain reaches 18,000.
+switched back on under a coordinated activation at [b]block 17,000[/b] (milestone V14.7).
+Every node and miner must run the updated binary before the chain reaches 17,000.
 
 [b]WHAT YOU MUST DO[/b]
 1) git pull the latest sost-core (main).
 2) Recompile:
 [code]cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release && cmake --build build --target sost-node sost-miner sost-cli -j$(nproc)[/code]
 3) Restart your NODE and your MINER.
-4) Do it AFTER block 17,900 and BEFORE block 18,000.
+4) Do it AFTER block 16,900 and BEFORE block 17,000.
 
-[b]Until block 18,000 nothing changes[/b] — mining and consensus are unaffected, and no funds
-are or were ever at risk. From 18,000, all updated nodes flip together and begin relaying/mining
+[b]Until block 17,000 nothing changes[/b] — mining and consensus are unaffected, and no funds
+are or were ever at risk. From 17,000, all updated nodes flip together and begin relaying/mining
 swap transactions in lockstep.
 
 [hr]
@@ -106,8 +106,8 @@ We traced the exact root cause in the node logs (an expired swap transaction was
 templates and getting the whole block rejected by consensus), fixed it, and added a regression test
 that reproduces the issue and proves the fix. Anomalies like this typically surface only when
 pushing an improvement — and only on mainnet. Running V14.7 as a coordinated flag-day at block
-18,000 is how we make sure it cannot happen again: below 18,000 every node keeps swap transactions
-out of its mempool, so no block carries them; at 18,000 the whole network switches at once, so the
+17,000 is how we make sure it cannot happen again: below 17,000 every node keeps swap transactions
+out of its mempool, so no block carries them; at 17,000 the whole network switches at once, so the
 asymmetry that caused the earlier disruption cannot recur.
 
 [hr]

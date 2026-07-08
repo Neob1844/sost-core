@@ -1034,11 +1034,11 @@ inline constexpr int64_t V14_5_HEIGHT                     = 16000;   // MAINNET 
 // stays txs=1 and mining is unaffected (the asymmetric-mempool degradation of the
 // first, ungated deploy cannot recur). At V14_7_HEIGHT all upgraded nodes flip
 // together. MANDATORY-BINARY-UPDATE: recompile + restart in the window after block
-// 17900, before 18000.
+// 16900, before 17000.
 #ifdef SOST_TESTNET_FORKS
 inline constexpr int64_t V14_7_HEIGHT                     = 40;      // TESTNET ONLY (just above V14_5=30 for the regtest HTLC soak)
 #else
-inline constexpr int64_t V14_7_HEIGHT                     = 18000;   // MAINNET — atomic-swap relay/policy flag-day
+inline constexpr int64_t V14_7_HEIGHT                     = 17000;   // MAINNET — atomic-swap relay/policy flag-day
 #endif
 // DTD_POPC_ELIGIBILITY_HEIGHT is defined AFTER V15_HEIGHT below — it is
 // V15_HEIGHT + a grace window (P4c), so PoPC automation goes live before the
