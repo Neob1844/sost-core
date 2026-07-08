@@ -525,6 +525,10 @@ add_executable(test-htlc-block-path-v14-5 tests/test_htlc_block_path_v14_5.cpp)
 target_link_libraries(test-htlc-block-path-v14-5 PRIVATE sost-core)
 add_test(NAME htlc-block-path-v14-5 COMMAND test-htlc-block-path-v14-5)
 
+add_executable(test-htlc-expired-lock-template tests/test_htlc_expired_lock_template.cpp)
+target_link_libraries(test-htlc-expired-lock-template PRIVATE sost-core)
+add_test(NAME htlc-expired-lock-template COMMAND test-htlc-expired-lock-template)
+
 add_executable(test-bond-lock tests/test_bond_lock.cpp)
 target_link_libraries(test-bond-lock PRIVATE sost-core)
 add_test(NAME bond-lock COMMAND test-bond-lock)

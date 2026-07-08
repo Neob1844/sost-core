@@ -2249,7 +2249,9 @@ static constexpr size_t NODE_MAX_BLOCK_TX_BYTES = 500 * 1024;
 static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>&) {
     g_miner_stats.getblocktemplate_calls.fetch_add(1, std::memory_order_relaxed);
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
-    auto tmpl = g_mempool.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, NODE_MAX_BLOCK_TX_BYTES);
+    // V14.7: pass the height this template will be mined at (tip + 1) so an
+    // EXPIRED HTLC LOCK is kept out of the block (never poisons it — see R17).
+    auto tmpl = g_mempool.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, NODE_MAX_BLOCK_TX_BYTES, g_chain_height + 1);
 
     // Compute next block info
     int64_t next_height = g_chain_height + 1;
@@ -6108,6 +6110,14 @@ static bool process_block(const std::string& block_json) {
         std::vector<Transaction> stdtxs(txs.begin()+1, txs.end());
         size_t removed = g_mempool.RemoveForBlock(stdtxs);
         if(removed>0) printf("[BLOCK] Mempool: %zu txs removed\n", removed);
+    }
+
+    // V14.7 companion: evict any HTLC LOCK that has expired now that the tip
+    // advanced (refund_height <= height+1). An expired lock is un-mineable
+    // (R17) and must not linger to poison the next block template. No-op < V14.7.
+    {
+        size_t exp = g_mempool.RemoveExpiredHtlcLocks(height + 1);
+        if(exp>0) printf("[BLOCK] Mempool: %zu expired HTLC lock(s) evicted\n", exp);
     }
 
     // Mark block as known (prevents re-processing on relay back from peers)

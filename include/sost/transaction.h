@@ -263,4 +263,22 @@ std::string HexStr(const uint8_t* data, size_t len);
 // Convenience
 inline std::string HexStr(const Hash256& h) { return HexStr(h.data(), h.size()); }
 
+// V14.7 companion — EXPIRED HTLC LOCK detection.
+// Returns true if `tx` carries an OUT_HTLC_LOCK output whose refund_height is
+// <= `height` — i.e. a block mining this tx at `height` would be rejected by
+// consensus rule R17 ("refund_height must be > current height"). The mempool /
+// block-template layer uses this to (a) keep an expired lock OUT of the block
+// template and (b) evict it from the pool, so a stale lock can never poison every
+// template and get the miner's blocks consensus-rejected (the exact failure that
+// degraded mining in the first, ungated atomic-swap deploy). Gate-agnostic:
+// callers apply atomic_swap_relay_active_at() so it is a no-op before V14.7.
+inline bool tx_has_expired_htlc_lock(const Transaction& tx, int64_t height) {
+    for (const auto& o : tx.outputs) {
+        if (o.type == OUT_HTLC_LOCK &&
+            ReadHtlcRefundHeight(o.payload) <= static_cast<uint64_t>(height))
+            return true;
+    }
+    return false;
+}
+
 } // namespace sost

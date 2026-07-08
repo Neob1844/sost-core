@@ -117,15 +117,27 @@ public:
         size_t  total_size{0};
     };
 
-    // Standard block template (individual fee-rate ordering)
+    // Standard block template (individual fee-rate ordering).
+    // next_height = the height this template will be mined at (chain tip + 1).
+    // When > 0 and V14.7 relay is active, an EXPIRED HTLC LOCK (refund_height <=
+    // next_height) is skipped so it can never poison the block (see R17). 0 = no
+    // height filter (informational callers / tests) — byte-identical to before.
     BlockTemplate BuildBlockTemplate(
         size_t max_txs = MAX_BLOCK_TX_COUNT,
-        size_t max_block_size = 1000000) const;
+        size_t max_block_size = 1000000,
+        int64_t next_height = 0) const;
 
     // CPFP-aware block template (package fee-rate ordering)
     BlockTemplate BuildBlockTemplateCPFP(
         size_t max_txs = MAX_BLOCK_TX_COUNT,
-        size_t max_block_size = 1000000) const;
+        size_t max_block_size = 1000000,
+        int64_t next_height = 0) const;
+
+    // V14.7 companion — evict any HTLC LOCK that has expired at `next_height`
+    // (refund_height <= next_height). Called after a block connects so a stale,
+    // un-mineable lock does not linger and re-enter templates. No-op before V14.7.
+    // Returns the number of entries removed.
+    size_t RemoveExpiredHtlcLocks(int64_t next_height);
 
     bool HasTransaction(const Hash256& txid) const;
     const MempoolEntry* GetEntry(const Hash256& txid) const;

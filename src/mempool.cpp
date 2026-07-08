@@ -4,6 +4,7 @@
 
 #include <sost/mempool.h>
 #include <sost/params.h>
+#include <sost/atomic_swap.h>   // V14.7 — atomic_swap_relay_active_at() gate
 #include <algorithm>
 #include <limits>
 #include <ctime>
@@ -326,14 +327,38 @@ size_t Mempool::RemoveForBlock(const std::vector<Transaction>& block_txs) {
 }
 
 // ---------------------------------------------------------------------------
+// RemoveExpiredHtlcLocks (V14.7 companion)
+// ---------------------------------------------------------------------------
+// Evict any mempool tx carrying an HTLC LOCK that has expired at next_height
+// (refund_height <= next_height). Such a lock is un-mineable (consensus R17) and
+// would otherwise linger and re-enter every block template. No-op before V14.7.
+
+size_t Mempool::RemoveExpiredHtlcLocks(int64_t next_height) {
+    if (next_height <= 0 || !atomic_swap_relay_active_at(next_height)) return 0;
+
+    std::vector<Hash256> to_remove;
+    for (const auto& [txid, entry] : entries_) {
+        if (tx_has_expired_htlc_lock(entry.tx, next_height))
+            to_remove.push_back(txid);
+    }
+    for (const auto& id : to_remove) {
+        RemoveTransaction(id);
+    }
+    return to_remove.size();
+}
+
+// ---------------------------------------------------------------------------
 // BuildBlockTemplate
 // ---------------------------------------------------------------------------
 
 Mempool::BlockTemplate Mempool::BuildBlockTemplate(
     size_t max_txs,
-    size_t max_block_size) const
+    size_t max_block_size,
+    int64_t next_height) const
 {
     BlockTemplate tmpl;
+    const bool htlc_expiry_filter =
+        next_height > 0 && atomic_swap_relay_active_at(next_height);
 
     for (auto it = fee_rate_index_.rbegin(); it != fee_rate_index_.rend(); ++it) {
         if (tmpl.txs.size() >= max_txs) break;
@@ -343,6 +368,13 @@ Mempool::BlockTemplate Mempool::BuildBlockTemplate(
 
         const auto& entry = e_it->second;
         if (tmpl.total_size + entry.size > max_block_size) continue;
+
+        // V14.7 companion: never place an EXPIRED HTLC LOCK in the template.
+        // Once the chain reaches a lock's refund_height it is un-mineable
+        // (consensus R17), and mining it would get the WHOLE block rejected —
+        // the template-poisoning that degraded mining in the first swap deploy.
+        if (htlc_expiry_filter && tx_has_expired_htlc_lock(entry.tx, next_height))
+            continue;
 
         tmpl.txs.push_back(entry.tx);
         tmpl.txids.push_back(entry.txid);
@@ -359,9 +391,12 @@ Mempool::BlockTemplate Mempool::BuildBlockTemplate(
 
 Mempool::BlockTemplate Mempool::BuildBlockTemplateCPFP(
     size_t max_txs,
-    size_t max_block_size) const
+    size_t max_block_size,
+    int64_t next_height) const
 {
     if (entries_.empty()) return {};
+    const bool htlc_expiry_filter =
+        next_height > 0 && atomic_swap_relay_active_at(next_height);
 
     // Step 1: Build child→parent map (TX B spends unconfirmed TX A's output)
     //         parent_of[txid_B] = {txid_A, ...}
@@ -443,6 +478,21 @@ Mempool::BlockTemplate Mempool::BuildBlockTemplateCPFP(
         if (tmpl.txs.size() >= max_txs) break;
 
         auto& info = pkg_map[se.txid];
+
+        // V14.7 companion: drop the whole package if ANY tx in it carries an
+        // EXPIRED HTLC LOCK (un-mineable under R17) — it would poison the block.
+        if (htlc_expiry_filter) {
+            bool has_expired = false;
+            for (const auto& anc : info.ancestors) {
+                auto a_it = entries_.find(anc);
+                if (a_it != entries_.end() &&
+                    tx_has_expired_htlc_lock(a_it->second.tx, next_height)) {
+                    has_expired = true;
+                    break;
+                }
+            }
+            if (has_expired) continue;
+        }
 
         // Check if entire package fits
         size_t needed_size = 0;
