@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-07-08-v376-v147-banner-collapsible">
+<meta name="explorer-html-version" content="2026-07-08-v377-v147-banner-hide-en">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -379,7 +379,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px">
       <span style="background:linear-gradient(135deg,#f0b942,#c8892a);color:#221803;font-weight:900;letter-spacing:1px;font-size:13px;padding:4px 12px;border-radius:6px;animation:v147chip 1.8s ease-in-out infinite">&#128295; V14.7</span>
       <span style="font-weight:900;letter-spacing:1.2px;font-size:16px;color:#ffd97a">MANDATORY NODE &amp; MINER UPDATE</span>
-      <button id="v147btn" onclick="v147toggle()" title="Ocultar / mostrar aviso" style="margin-left:auto;background:rgba(0,0,0,.35);border:1px solid #f0b942;color:#ffd97a;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:6px;cursor:pointer;white-space:nowrap">&#9650; Ocultar</button>
+      <button id="v147btn" onclick="v147toggle()" title="Hide / show notice" style="margin-left:auto;background:rgba(0,0,0,.35);border:1px solid #f0b942;color:#ffd97a;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:6px;cursor:pointer;white-space:nowrap">&#9650; Hide</button>
     </div>
 
     <div id="v147body">
@@ -427,7 +427,7 @@ function v147toggle(){
   var b=document.getElementById('v147body'), btn=document.getElementById('v147btn'), bn=document.getElementById('minerBanner');
   var hide = (b.style.display!=='none');
   b.style.display = hide ? 'none' : '';
-  if(btn) btn.innerHTML = hide ? '&#9660; Mostrar' : '&#9650; Ocultar';
+  if(btn) btn.innerHTML = hide ? '&#9660; Show' : '&#9650; Hide';
   if(bn)  bn.style.animation = hide ? 'none' : '';
   try{ localStorage.setItem('v147_hidden', hide?'1':'0'); }catch(e){}
 }
@@ -436,7 +436,7 @@ function v147toggle(){
     if(localStorage.getItem('v147_hidden')==='1'){
       var b=document.getElementById('v147body'), btn=document.getElementById('v147btn'), bn=document.getElementById('minerBanner');
       if(b) b.style.display='none';
-      if(btn) btn.innerHTML='&#9660; Mostrar';
+      if(btn) btn.innerHTML='&#9660; Show';
       if(bn) bn.style.animation='none';
     }
   }catch(e){}
