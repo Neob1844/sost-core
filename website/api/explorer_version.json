@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-08-v375-v147-swap-block17000",
-  "note": "V14.7 mandatory node & miner update: Atomic Swap re-activates at BLOCK 17,000 (brought forward). Recompile + restart your node and miner AFTER block 16,900 and BEFORE block 17,000. Until 17,000 mining & consensus are unaffected; no funds at risk. Version bumped so open explorer tabs auto-reload to the new expanded banner."
+  "v": "2026-07-08-v376-v147-banner-collapsible",
+  "note": "V14.7 banner is now collapsible (Ocultar/Mostrar button, remembers choice). Same content, activation block 17,000."
 }
