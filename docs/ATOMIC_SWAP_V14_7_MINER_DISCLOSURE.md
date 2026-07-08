@@ -82,12 +82,11 @@ switched back on under a coordinated activation at [b]block 18,000[/b] (mileston
 Every node and miner must run the updated binary before the chain reaches 18,000.
 
 [b]WHAT YOU MUST DO[/b]
-[list=1]
-[li]git pull the latest sost-core (main).[/li]
-[li]Recompile: [code]cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release && cmake --build build --target sost-node sost-miner sost-cli -j$(nproc)[/code][/li]
-[li]Restart your NODE and your MINER.[/li]
-[li]Do it AFTER block 17,900 and BEFORE block 18,000.[/li]
-[/list]
+1) git pull the latest sost-core (main).
+2) Recompile:
+[code]cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release && cmake --build build --target sost-node sost-miner sost-cli -j$(nproc)[/code]
+3) Restart your NODE and your MINER.
+4) Do it AFTER block 17,900 and BEFORE block 18,000.
 
 [b]Until block 18,000 nothing changes[/b] — mining and consensus are unaffected, and no funds
 are or were ever at risk. From 18,000, all updated nodes flip together and begin relaying/mining
@@ -97,22 +96,19 @@ swap transactions in lockstep.
 
 [b][color=#d9a441]FORENSIC NOTE — full transparency[/color][/b]
 
-The atomic-swap fix is localized and tested. When we first implemented it — updating the binaries
-and restarting node and miner — even though we believed it did not touch consensus, an operational
-anomaly appeared: for roughly 134 blocks the dominant miner, through no fault of its own, kept
-mining with its blocks accepted normally, while the other miners who had updated saw their blocks
-effectively rejected.
+When the swap fix was first deployed, an operational anomaly appeared: while a founder test swap
+transaction was live on the network, some mined blocks were rejected and mining was briefly
+disrupted, while the dominant miner — through no fault of its own — kept producing blocks normally.
+This is nobody's fault; no miner is responsible for it. In a protocol built on trial, error,
+detection, diagnosis and fix, this is simply part of the process.
 
-Anomalies of this kind are not easy to detect and typically surface precisely when you are pushing
-an improvement or a bug fix. This is nobody's fault — no miner is responsible for it. In a protocol
-built on trial, error, detection, diagnosis and fix, this is simply part of the process.
-
-Root cause and remedy are now understood: the fix requires a [b]joint, synchronized update and
-restart of all of us — operators and miners together[/b]. That is exactly why it is being done as
-the V14.7 coordinated flag-day at block 18,000, instead of an ad-hoc deploy. Below 18,000 every node
-keeps rejecting swap transactions in its mempool, so no block carries them and mining stays
-untouched; at 18,000 the whole network switches at once, so the asymmetry that caused the earlier
-disruption cannot happen again.
+We traced the exact root cause in the node logs (an expired swap transaction was ending up in block
+templates and getting the whole block rejected by consensus), fixed it, and added a regression test
+that reproduces the issue and proves the fix. Anomalies like this typically surface only when
+pushing an improvement — and only on mainnet. Running V14.7 as a coordinated flag-day at block
+18,000 is how we make sure it cannot happen again: below 18,000 every node keeps swap transactions
+out of its mempool, so no block carries them; at 18,000 the whole network switches at once, so the
+asymmetry that caused the earlier disruption cannot recur.
 
 [hr]
 
