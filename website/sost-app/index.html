@@ -2109,7 +2109,7 @@ SectionRenderers.dashboard = function(el) {
       statusEl.innerHTML = `
         <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok"><span class="stat-badge ok">ONLINE</span></span></div>
         <div class="stat-row"><span class="stat-label">SOST PRICE</span><span class="stat-value" style="color:var(--pip-dim,#888);font-weight:700">${sostPrice} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(no value)</span></span></div>
-        <div style="padding:2px 12px;font-size:9px;color:#777;line-height:1.4">PoPC Reference · Not listed · 1.2 oz gold ÷ supply</div>
+        <div style="padding:2px 12px;font-size:9px;color:#777;line-height:1.4">Gold reference · Not listed · 1 SOST = 1.14 mg gold</div>
         <div class="stat-row"><span class="stat-label">TOTAL SUPPLY</span><span class="stat-value">${supplyDisplay}</span></div>
         <div class="stat-row"><span class="stat-label">GOLD VAULT</span><span class="stat-value" style="color:#b8860b">${goldVault}</span></div>
         <div class="stat-row"><span class="stat-label">POPC POOL</span><span class="stat-value" style="color:#22d3ee">${popcPool}</span></div>
@@ -2244,7 +2244,7 @@ function addTooltips() {
     'STATUS': 'Current network status. Online = node responding to RPC queries. Pre-market = mining active, no exchange listing yet.',
     'VERSION': 'Software version of the connected SOST node. Updated with each protocol release.',
     'BEST HASH': 'Hash of the most recent block accepted by the network. Changes with every new block mined.',
-    'SOST PRICE': 'PoPC Reference Price: (gold committed in PoPC × gold price) ÷ total SOST supply. Developer commitment: 0.6 XAUT + 0.6 PAXG = 1.2 oz. NOT a market price — will be replaced when SOST is listed on an exchange.',
+    'SOST PRICE': 'Gold reference: 1 SOST = 1.14 mg of gold (initial reference). NOT a market price — once SOST is listed and trades, its price evolves on its own, no longer tied to gold.',
     'INTERVAL': 'Time between the last two blocks. Target is 10 minutes (600 seconds). Green = fast, yellow = normal, red = slow.',
     'LAST BLOCK': 'How long ago the most recent block was mined. Long gaps may indicate low hashrate or network issues.',
     'SUBSIDY': 'Block reward for the current epoch. Decays smoothly following the Feigenbaum emission curve. Split 50/25/25 (miner/gold/PoPC).',
