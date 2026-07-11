@@ -370,6 +370,19 @@ document.getElementById('goldNow').textContent='$'+goldG.toFixed(2);
 document.getElementById('sGold').textContent='$'+goldG.toFixed(2);
 document.getElementById('sBw').textContent='×'+Math.round(goldG/1.126);
 document.getElementById('asof').textContent='As of '+D.labels[last]+'.';
+function _rref(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+function refreshLive(){
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether-gold&vs_currencies=usd')
+   .then(function(r){return r.json();}).then(function(j){
+     var oz=j&&j['tether-gold']&&j['tether-gold'].usd; if(!oz)return;
+     var perMg=oz/31103.4768, perG=perMg*1000, s=1.14*perMg, d=new Date();
+     _rref('eqUsd','$'+s.toFixed(4)); _rref('sRef','$'+s.toFixed(4));
+     _rref('goldNow','$'+perG.toFixed(2)); _rref('sGold','$'+perG.toFixed(2));
+     _rref('sBw','\u00d7'+Math.round(perG/1.126));
+     _rref('asof','Live \u00b7 '+('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2)+' UTC');
+   }).catch(function(){});
+}
+refreshLive(); setInterval(refreshLive,60000);
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 function draw(){
   const w=cv.parentElement,dpr=Math.min(window.devicePixelRatio||1,2),W=w.clientWidth,H=w.clientHeight;
