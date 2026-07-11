@@ -159,6 +159,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-reference.html" style="color:#e3b23c">SOST Reference</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
@@ -724,7 +725,7 @@ Blacklist:      After 3 slashes (permanent ban from Model A)</pre>
 
 <table>
 <tr><th>Rule</th><th>Name</th><th>Description</th></tr>
-<tr><td style="color:var(--gold)">GV1</td><td>Accumulation Only</td><td>Gold Vault funds may only be used to purchase physical gold or tokenized gold (XAUT, PAXG). No other expenditures permitted.</td></tr>
+<tr><td style="color:var(--gold)">GV1</td><td>Accumulation + Listing Reserve</td><td>Gold Vault SOST funds gold purchases (physical or tokenized XAUT/PAXG). Exception: the Foundation reserves the right to allocate up to 50% of the vault&rsquo;s SOST exclusively for future CEX-listing liquidity.</td></tr>
 <tr><td style="color:var(--gold)">GV2</td><td>Transparent Accounting</td><td>Every Gold Vault transaction must include an on-chain memo referencing the gold acquisition (weight, purity, custodian, or token contract address).</td></tr>
 <tr><td style="color:var(--gold)">GV3</td><td>Multi-Signature Requirement</td><td>Gold Vault disbursements require multi-signature authorization. No single key can move Gold Vault funds.</td></tr>
 <tr><td style="color:var(--gold)">GV4</td><td>Quarterly Proof of Reserves</td><td>The protocol must publish a quarterly proof-of-reserves report linking on-chain Gold Vault balances to verifiable gold holdings (physical receipts or Ethereum token balances).</td></tr>

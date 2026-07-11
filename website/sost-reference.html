@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOST — Gold Reference</title>
+<meta name="description" content="One SOST is referenced to a fixed 1.14 mg of gold — a transparent, informational unit of account. Not a peg, not redeemable, not investment advice.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+
+:root{
+  --bg:#0a0c11; --panel:#12161e; --panel2:#161b24; --line:#232b37;
+  --ink:#e9eef5; --muted:#94a1b2; --faint:#5f6b7a;
+  --gold:#e3b23c; --gold-2:#c9962b; --gold-soft:rgba(227,178,60,.13);
+  --red:#fb2530; --red-soft:rgba(251,37,48,.12);
+  --serif:Georgia,'Iowan Old Style','Times New Roman',serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --mono:ui-monospace,'SF Mono','Fira Code',Menlo,Consolas,monospace;
+  --maxw:1080px;
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#f4f1e9; --panel:#fffdf8; --panel2:#faf7ef; --line:#e6dfce;
+    --ink:#191c22; --muted:#5b6572; --faint:#8b93a0;
+    --gold:#9a7413; --gold-2:#7f5f0f; --gold-soft:rgba(154,116,19,.10);
+    --red:#c50710; --red-soft:rgba(197,7,16,.08); }
+}
+:root[data-theme="dark"]{ --bg:#0a0c11; --panel:#12161e; --panel2:#161b24; --line:#232b37;
+  --ink:#e9eef5; --muted:#94a1b2; --faint:#5f6b7a; --gold:#e3b23c; --gold-2:#c9962b;
+  --gold-soft:rgba(227,178,60,.13); --red:#fb2530; --red-soft:rgba(251,37,48,.12); }
+:root[data-theme="light"]{ --bg:#f4f1e9; --panel:#fffdf8; --panel2:#faf7ef; --line:#e6dfce;
+  --ink:#191c22; --muted:#5b6572; --faint:#8b93a0; --gold:#9a7413; --gold-2:#7f5f0f;
+  --gold-soft:rgba(154,116,19,.10); --red:#c50710; --red-soft:rgba(197,7,16,.08); }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  line-height:1.6;-webkit-font-smoothing:antialiased;font-size:16px}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+a{color:var(--gold);text-decoration:none}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-weight:700;letter-spacing:2px;font-size:13px}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 10px var(--red)}
+.brand small{color:var(--muted);font-weight:500;letter-spacing:1px}
+.navlinks{display:flex;gap:22px;font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--muted)}
+.navlinks a{color:var(--muted)} .navlinks a.on{color:var(--ink)}
+@media(max-width:640px){.navlinks{display:none}}
+
+/* hero */
+.hero{padding:72px 0 40px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:20px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(30px,5vw,52px);line-height:1.12;
+  letter-spacing:-.01em;margin:0 0 18px;text-wrap:balance;max-width:16ch}
+h1 em{font-style:italic;color:var(--gold)}
+.lede{font-size:clamp(17px,2.2vw,20px);color:var(--muted);max-width:60ch;margin:0 0 26px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{font-family:var(--mono);font-size:11px;letter-spacing:1px;padding:7px 12px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);background:var(--panel)}
+.chip.warn{border-color:color-mix(in srgb,var(--red) 45%,var(--line));color:var(--red);background:var(--red-soft)}
+
+/* the equation */
+.eq{margin:38px 0;padding:30px;border:1px solid var(--line);border-radius:16px;background:
+  linear-gradient(180deg,var(--gold-soft),transparent 70%),var(--panel);
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:14px 22px;justify-content:center;text-align:center}
+.eq .u{font-family:var(--mono);font-size:clamp(22px,3.4vw,34px);font-weight:600;letter-spacing:-.5px}
+.eq .u .g{color:var(--gold)} .eq .u .s{color:var(--red)}
+.eq .approx{color:var(--faint);font-family:var(--mono);font-size:clamp(22px,3.4vw,34px)}
+.eq .live{font-family:var(--mono);font-size:14px;color:var(--muted);width:100%;margin-top:6px}
+.eq .live b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* section scaffold */
+section{padding:44px 0;border-top:1px solid var(--line)}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;color:var(--gold);text-transform:uppercase;margin:0 0 14px}
+h2{font-family:var(--serif);font-weight:600;font-size:clamp(23px,3.4vw,32px);margin:0 0 16px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-family:var(--sans);font-weight:700;font-size:16px;margin:0 0 8px;letter-spacing:.2px}
+p{max-width:66ch;color:var(--muted)} p strong{color:var(--ink);font-weight:600}
+
+/* chart */
+.chartcard{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:22px 20px 14px;overflow:hidden}
+.charthead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:8px}
+.charttitle{font-family:var(--sans);font-weight:700;font-size:15px}
+.charttitle span{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-top:2px}
+.legend{display:flex;gap:18px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.legend i{display:inline-block;width:20px;height:0;border-top-width:3px;border-top-style:solid;
+  vertical-align:middle;margin-right:7px;border-radius:2px}
+.legend .g{border-top-color:var(--gold)} .legend .s{border-top-color:var(--red)}
+.canvas-wrap{position:relative;width:100%;height:360px}
+@media(max-width:560px){.canvas-wrap{height:300px}}
+canvas{width:100%;height:100%;display:block}
+.chartnote{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:10px;letter-spacing:.3px}
+
+/* stat grid */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{border:1px solid var(--line);border-radius:13px;background:var(--panel2);padding:18px}
+.stat .l{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.stat .v{font-family:var(--mono);font-weight:600;font-size:clamp(20px,3vw,26px);margin-top:8px;
+  font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.stat .v.gold{color:var(--gold)} .stat .s{font-size:11.5px;color:var(--faint);margin-top:4px}
+
+/* two-col compare */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+@media(max-width:720px){.cols{grid-template-columns:1fr}}
+.col{border:1px solid var(--line);border-radius:14px;padding:22px;background:var(--panel)}
+.col.is{border-top:3px solid var(--gold)} .col.isnt{border-top:3px solid var(--red)}
+.col ul{list-style:none;margin:12px 0 0;padding:0}
+.col li{position:relative;padding-left:24px;margin:9px 0;color:var(--muted);font-size:14.5px}
+.col li::before{position:absolute;left:0;top:0;font-family:var(--mono);font-weight:700}
+.col.is li::before{content:"+";color:var(--gold)}
+.col.isnt li::before{content:"\00d7";color:var(--red)}
+
+/* models table */
+.tbl{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+.tbl th,.tbl td{text-align:left;padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.tbl td:first-child{font-weight:600;color:var(--ink)}
+.tbl .no{color:var(--red);font-family:var(--mono)} .tbl .yes{color:var(--gold);font-family:var(--mono)}
+.tblscroll{overflow-x:auto}
+
+/* roadmap */
+.road{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px}
+@media(max-width:720px){.road{grid-template-columns:1fr}}
+.step{border:1px solid var(--line);border-radius:14px;padding:20px;background:var(--panel2)}
+.step .n{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:2px}
+.step h3{margin-top:10px}
+.step p{font-size:13.5px;margin:0}
+.step .tag{display:inline-block;margin-top:12px;font-family:var(--mono);font-size:10px;letter-spacing:1px;
+  padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+
+/* disclaimer */
+.disc{margin:8px 0 60px;border:1px solid color-mix(in srgb,var(--red) 30%,var(--line));border-radius:14px;
+  background:var(--red-soft);padding:22px 24px}
+.disc h3{color:var(--red);font-family:var(--mono);letter-spacing:1.5px;font-size:12px;text-transform:uppercase}
+.disc p{font-size:13px;color:var(--muted);max-width:none}
+footer{border-top:1px solid var(--line);padding:28px 0 60px;color:var(--faint);font-family:var(--mono);font-size:11px;letter-spacing:.5px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+body{margin:0}
+</style>
+</head>
+<body>
+
+
+<div class="top"><div class="wrap">
+  <a href="index.html" class="brand" style="text-decoration:none;color:inherit"><span class="dot"></span>SOST <small>· SOVEREIGN STOCK TOKEN</small></a>
+  <nav class="navlinks">
+    <a href="sost-explorer.html">Explorer</a><a href="sost-gold-reserve.html">Gold&nbsp;Reserve</a><a class="on" href="sost-reference.html">SOST&nbsp;Reference</a><a href="sost-whitepaper.html">Docs</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Monetary reference · gold-denominated</div>
+    <h1>One SOST is referenced to <em>1.14&nbsp;milligrams</em> of gold.</h1>
+    <p class="lede">A transparent unit of account that expresses SOST in a fixed weight of gold —
+      the same idea that anchored the dollar at Bretton Woods, adapted honestly for an experimental protocol.
+      It is a <strong>reference</strong>, not a price you are promised.</p>
+    <div class="chips">
+      <span class="chip warn">Reference — not a peg</span>
+      <span class="chip">Not redeemable for gold</span>
+      <span class="chip">Not investment advice</span>
+      <span class="chip">Experimental software</span>
+    </div>
+
+    <div class="eq">
+      <span class="u">1&nbsp;<span class="s">SOST</span></span>
+      <span class="u">&equiv;</span>
+      <span class="u"><span class="g">1.14&nbsp;mg</span> gold</span>
+      <span class="approx">&asymp;</span>
+      <span class="u" id="eqUsd">$0.1507</span>
+      <div class="live">Live gold reference · gold spot <b id="goldNow">$132.19</b>/g ·
+        derived from a fixed gold weight, updated as the gold price moves. <b id="asof"></b></div>
+    </div>
+  </header>
+</div>
+
+<div class="wrap">
+  <section style="border-top:none">
+    <div class="chartcard">
+      <div class="charthead">
+        <div class="charttitle">SOST gold reference vs. gold, per milligram
+          <span>Monthly, USD · 2019–2026 · the reference is gold, scaled to a fixed weight</span></div>
+        <div class="legend">
+          <span><i class="s"></i>SOST reference (1.14&nbsp;mg)</span>
+          <span><i class="g"></i>Gold (1&nbsp;mg)</span>
+        </div>
+      </div>
+      <div class="canvas-wrap"><canvas id="c" aria-label="Line chart of the SOST gold reference and the price of one milligram of gold, in US dollars, from 2019 to 2026."></canvas></div>
+      <div class="chartnote">Gold spot (XAU/USD), month-end close. The SOST line is the gold line multiplied by the
+        fixed reference weight (1.14 mg) — by construction it moves only with gold, never by decree.</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="l">Reference weight</div><div class="v gold">1.14 mg</div><div class="s">gold per SOST · fixed</div></div>
+      <div class="stat"><div class="l">Reference value today</div><div class="v" id="sRef">$0.1507</div><div class="s">1.14 mg × gold spot</div></div>
+      <div class="stat"><div class="l">Gold spot</div><div class="v" id="sGold">$132.19</div><div class="s">per gram · $ per mg ×1000</div></div>
+      <div class="stat"><div class="l">Gold vs. Bretton Woods</div><div class="v gold" id="sBw">×117</div><div class="s">$1.13/g (1944) → today</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="kicker">The idea</div>
+    <h2>Gold as the anchor — the way Bretton Woods actually worked</h2>
+    <p>In 1944, Bretton Woods fixed the dollar at <strong>$1 = 0.888 g of gold</strong>, and it held because two things
+      stood behind it: enormous <strong>gold reserves</strong>, and <strong>legal convertibility</strong> — anyone could
+      exchange $35 for one ounce at the U.S. Treasury. Gold was the anchor because you could <em>redeem</em> it, not
+      because a number was announced.</p>
+    <p style="margin-top:14px">SOST borrows the honest half of that idea. We express one SOST as a fixed weight of gold —
+      <strong>1.14 mg</strong> — so the reference rises and falls with gold, in plain sight. What we do <strong>not</strong>
+      do is pretend a declared number is a market price. That distinction is the whole design.</p>
+  </section>
+
+  <section>
+    <div class="kicker">Read this carefully</div>
+    <h2>What the reference is — and what it is not</h2>
+    <div class="cols">
+      <div class="col is">
+        <h3>What it is</h3>
+        <ul>
+          <li>A gold-denominated <strong>unit of account</strong>: 1 SOST ≡ 1.14 mg gold.</li>
+          <li>An <strong>informational reference</strong> that tracks the live gold price.</li>
+          <li>An <strong>initial anchor</strong> for first liquidity / listing — a fair starting number, not a floor.</li>
+          <li>The public expression of a <strong>growing gold reserve</strong> (see roadmap below).</li>
+        </ul>
+      </div>
+      <div class="col isnt">
+        <h3>What it is <u>not</u></h3>
+        <ul>
+          <li>Not a <strong>peg</strong>. The market price is set by supply and demand, not by this page.</li>
+          <li>Not <strong>redeemable</strong> — you cannot exchange SOST for physical gold.</li>
+          <li>Not a <strong>promise</strong> that “if gold rises, SOST rises”. No return is guaranteed.</li>
+          <li>Not <strong>investment advice</strong>, and not a security offering.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="kicker">Why a reference, not a peg</div>
+    <h2>Only three mechanisms can truly hold a price to gold</h2>
+    <p>A market price cannot be fixed by declaration. It can only follow gold if a real mechanism forces it to. Here are
+      the three honest options, and why SOST uses the third.</p>
+    <div class="tblscroll"><table class="tbl">
+      <thead><tr><th>Model</th><th>What it requires</th><th>Fit for SOST</th></tr></thead>
+      <tbody>
+        <tr><td>Gold stablecoin<br><span style="color:var(--faint);font-weight:400">(e.g. PAXG)</span></td>
+          <td>1 token = physical gold in a vault, fully redeemable</td>
+          <td class="no">✕ Heavy custody &amp; regulatory burden</td></tr>
+        <tr><td>Algorithmic peg</td>
+          <td>Mint/burn arbitrage against real collateral; without it, it collapses (Terra/UST)</td>
+          <td class="no">✕ Unbacked pegs fail</td></tr>
+        <tr><td>Reference + fractional reserve</td>
+          <td>A transparent gold oracle plus a real, growing reserve behind the coin</td>
+          <td class="yes">✓ This is SOST</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="kicker">How the anchor becomes real</div>
+    <h2>The reference is backed by a reserve we actually build</h2>
+    <p>A reference is only as honest as what stands behind it. SOST’s gold link is not a slogan — it is expressed through
+      the <strong>Gold &amp; Metals Reserve</strong>, accumulated in stages and published openly, so the anchor is
+      collateral, not a claim.</p>
+    <div class="road">
+      <div class="step"><div class="n">01</div><h3>Reference (live)</h3>
+        <p>The gold-denominated unit of account, shown transparently on this page. Informational only.</p>
+        <span class="tag">Active</span></div>
+      <div class="step"><div class="n">02</div><h3>Reserve accumulation</h3>
+        <p>Gold (and gold-backed instruments) added to the reserve in staged, published tranches — a soft, real backing.</p>
+        <span class="tag">Staged · not active</span></div>
+      <div class="step"><div class="n">03</div><h3>Backing ratio, published</h3>
+        <p>Reserve ÷ circulating supply, disclosed openly — so anyone can verify how much of the reference is real gold.</p>
+        <span class="tag">Roadmap</span></div>
+    </div>
+  </section>
+
+  <div class="disc">
+    <h3>Important — please read</h3>
+    <p>SOST is experimental software. The gold reference on this page is provided for information and transparency only.
+      It is <strong>not</strong> a peg, <strong>not</strong> a guarantee of value or return, <strong>not</strong> redeemable
+      for gold, and <strong>not</strong> an offer, solicitation, or recommendation to buy or sell any asset. SOST is not a
+      company and this is not a security. The market price of SOST, if and when it trades, is determined solely by supply
+      and demand and may differ materially from any reference shown here. Gold data: XAU/USD spot, month-end. Nothing here
+      is financial, legal, or tax advice. Do your own research.</p>
+  </div>
+</div>
+
+<footer><div class="wrap">SOST · Sovereign Stock Token — gold reference (informational). Not a peg · not redeemable · not investment advice.</div></footer>
+
+<script>
+const D={"labels": ["2019-08", "2019-09", "2019-10", "2019-11", "2019-12", "2020-01", "2020-02", "2020-03", "2020-04", "2020-05", "2020-06", "2020-07", "2020-08", "2020-09", "2020-10", "2020-11", "2020-12", "2021-01", "2021-02", "2021-03", "2021-04", "2021-05", "2021-06", "2021-07", "2021-08", "2021-09", "2021-10", "2021-11", "2021-12", "2022-01", "2022-02", "2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08", "2022-09", "2022-10", "2022-11", "2022-12", "2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11", "2023-12", "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07"], "sost": [0.05572, 0.05396, 0.05547, 0.05369, 0.05562, 0.05828, 0.0581, 0.05759, 0.06176, 0.06335, 0.0653, 0.07242, 0.07221, 0.0691, 0.06883, 0.06513, 0.06951, 0.06766, 0.06354, 0.06256, 0.06482, 0.06987, 0.06487, 0.06647, 0.06647, 0.06438, 0.06534, 0.06501, 0.06701, 0.06584, 0.06993, 0.071, 0.06951, 0.06733, 0.06623, 0.0647, 0.0627, 0.06083, 0.05986, 0.06482, 0.06687, 0.07066, 0.06697, 0.07213, 0.07292, 0.07192, 0.07036, 0.07199, 0.0711, 0.06774, 0.07267, 0.07461, 0.0756, 0.07467, 0.07489, 0.08182, 0.08373, 0.0853, 0.08528, 0.08971, 0.09176, 0.09657, 0.10067, 0.09713, 0.09617, 0.10249, 0.10445, 0.11452, 0.12066, 0.12053, 0.12106, 0.12093, 0.12696, 0.14181, 0.14645, 0.15454, 0.15802, 0.17833, 0.19344, 0.17167, 0.16938, 0.16649, 0.14689, 0.1507], "gold": [0.04888, 0.04733, 0.04866, 0.04709, 0.04879, 0.05113, 0.05096, 0.05052, 0.05418, 0.05557, 0.05728, 0.06353, 0.06334, 0.06062, 0.06038, 0.05713, 0.06097, 0.05935, 0.05573, 0.05488, 0.05686, 0.06129, 0.0569, 0.05831, 0.0583, 0.05648, 0.05732, 0.05703, 0.05878, 0.05776, 0.06134, 0.06228, 0.06097, 0.05906, 0.05809, 0.05675, 0.055, 0.05336, 0.05251, 0.05686, 0.05866, 0.06198, 0.05874, 0.06327, 0.06397, 0.06309, 0.06172, 0.06315, 0.06236, 0.05942, 0.06375, 0.06545, 0.06631, 0.0655, 0.06569, 0.07177, 0.07345, 0.07483, 0.0748, 0.07869, 0.08049, 0.08471, 0.0883, 0.0852, 0.08436, 0.0899, 0.09162, 0.10046, 0.10584, 0.10573, 0.10619, 0.10608, 0.11136, 0.1244, 0.12846, 0.13556, 0.13861, 0.15643, 0.16969, 0.15059, 0.14858, 0.14605, 0.12885, 0.13219], "refMg": 1.14};
+// ---- fill live figures from the latest data point ----
+const last=D.sost.length-1;
+const sostNow=D.sost[last], goldMg=D.gold[last], goldG=goldMg*1000;
+const usd=v=>'$'+v.toFixed(4).replace(/0+$/,'').replace(/\.$/,'.0');
+document.getElementById('eqUsd').textContent='$'+sostNow.toFixed(4);
+document.getElementById('sRef').textContent='$'+sostNow.toFixed(4);
+document.getElementById('goldNow').textContent='$'+goldG.toFixed(2);
+document.getElementById('sGold').textContent='$'+goldG.toFixed(2);
+document.getElementById('sBw').textContent='×'+Math.round(goldG/1.126);
+const mo=D.labels[last];
+document.getElementById('asof').textContent='As of '+mo+'.';
+
+// ---- chart ----
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function draw(){
+  const wrap=cv.parentElement, dpr=Math.min(window.devicePixelRatio||1,2);
+  const W=wrap.clientWidth, H=wrap.clientHeight;
+  cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const gold=css('--gold'), red=css('--red'), line=css('--line'), muted=css('--muted'), faint=css('--faint');
+  const padL=52,padR=14,padT=14,padB=26;
+  const n=D.sost.length;
+  const all=D.sost.concat(D.gold); let lo=Math.min(...all), hi=Math.max(...all);
+  const span=hi-lo; lo=Math.max(0,lo-span*0.08); hi=hi+span*0.10;
+  const X=i=>padL+(W-padL-padR)*(i/(n-1));
+  const Y=v=>padT+(H-padT-padB)*(1-(v-lo)/(hi-lo));
+  // grid + y labels
+  ctx.font='10px '+css('--mono')+',monospace'; ctx.textBaseline='middle';
+  const ticks=4;
+  for(let t=0;t<=ticks;t++){
+    const v=lo+(hi-lo)*t/ticks, y=Y(v);
+    ctx.strokeStyle=line; ctx.globalAlpha=.6; ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();ctx.globalAlpha=1;
+    ctx.fillStyle=faint; ctx.textAlign='right'; ctx.fillText('$'+v.toFixed(3),padL-8,y);
+  }
+  // x year labels
+  ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillStyle=faint;
+  let prevY=null;
+  for(let i=0;i<n;i++){ const y=D.labels[i].slice(0,4); if(y!==prevY){ prevY=y;
+    if(D.labels[i].slice(5)==='01'||i===0) ctx.fillText(y,X(i),H-padB+7); } }
+  // area under SOST
+  const grad=ctx.createLinearGradient(0,padT,0,H-padB);
+  grad.addColorStop(0,'rgba(227,178,60,.20)'); grad.addColorStop(1,'rgba(227,178,60,0)');
+  ctx.beginPath(); ctx.moveTo(X(0),Y(D.sost[0]));
+  for(let i=1;i<n;i++)ctx.lineTo(X(i),Y(D.sost[i]));
+  ctx.lineTo(X(n-1),H-padB); ctx.lineTo(X(0),H-padB); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+  // gold line (thin)
+  ctx.beginPath(); for(let i=0;i<n;i++){const x=X(i),y=Y(D.gold[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+  ctx.strokeStyle=gold; ctx.lineWidth=1.6; ctx.globalAlpha=.85; ctx.stroke(); ctx.globalAlpha=1;
+  // SOST line (thick, red/brand)
+  ctx.beginPath(); for(let i=0;i<n;i++){const x=X(i),y=Y(D.sost[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+  ctx.strokeStyle=red; ctx.lineWidth=2.6; ctx.lineJoin='round'; ctx.stroke();
+  // endpoint dot + label
+  const ex=X(n-1),ey=Y(D.sost[last]);
+  ctx.beginPath();ctx.arc(ex,ey,4,0,7);ctx.fillStyle=red;ctx.fill();
+  ctx.strokeStyle=css('--bg');ctx.lineWidth=2;ctx.stroke();
+}
+draw();
+let rt; addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw,100)});
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+</script>
+
+</body>
+</html>

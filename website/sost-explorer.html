@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-07-08-v377-v147-banner-hide-en">
+<meta name="explorer-html-version" content="2026-07-11-v379-nav-sost-reference">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8377,14 +8377,14 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
   // recentBlocks holds ~320 height+miner pairs (no timestamp) => only 24h fits;
   // longer windows need extended block history and are disabled honestly.
   // Block-count windows (SOST block timestamps aren't a reliable time index yet, so
-  // every period is a recent-block-buffer proxy). 24h uses the 288-block dominance
+  // every period is a recent-block-buffer proxy). the 48h bucket = the 288-block dominance/consensus
   // window; the rest use ~10.7-min spacing counts.
-  var PERIODS=[{k:'24h',label:'24h',blocks:288},{k:'3d',label:'3D',blocks:404},
+  var PERIODS=[{k:'48h',label:'48h',blocks:288},{k:'3d',label:'3D',blocks:404},
     {k:'1w',label:'1W',blocks:943},{k:'1m',label:'1M',blocks:4039},
     {k:'3m',label:'3M',blocks:12117},{k:'all',label:'All',blocks:null}];
   var PALETTE=['#22d3ee','#a855f7','#4ade80','#fbbf24','#fb7185','#38bdf8','#f472b6','#34d399','#c084fc','#facc15'];
   var OTHERS='#5b6473';
-  window._pdPeriod=window._pdPeriod||'24h';   // default to the fast recent window so the card shows immediately; All is one click away
+  window._pdPeriod=window._pdPeriod||'48h';   // default to the fast recent window so the card shows immediately; All is one click away
   // Recent-block source: prefer the full-chain scan buffer (large, up to ~13000) when
   // ready; otherwise fall back to the fast ~288-block diff-history buffer that the
   // Network Mosaic uses, so the 24h/recent window shows IMMEDIATELY instead of waiting
@@ -8416,7 +8416,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     var need=needFor(period);
     if(recent.length<need) return {insufficient:true, have:recent.length, need:need};
     var use=recent.slice(-need), r=tally(use);
-    r.note=(period==='24h'?'24h proxy':'≈'+period)+' · last '+use.length+' blocks (recent block buffer; block-count proxy — SOST block timestamps are not a reliable time index yet)';
+    r.note=(period==='48h'?'48h proxy (288-block consensus window)':'≈'+period)+' · last '+use.length+' blocks (recent block buffer; block-count proxy — SOST block timestamps are not a reliable time index yet)';
     return r;
   }
   function ranked(c){ return Object.keys(c).map(function(a){return {a:a,n:c[a]};}).sort(function(x,y){return y.n-x.n;}); }
@@ -8460,7 +8460,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     m.innerHTML=box('TOP 1',top1.toFixed(1)+'%',top1>50?'#fb010d':top1>33?'#fbbf24':'#4ade80')
       +box('TOP 3',t3.toFixed(1)+'%',t3>66?'#fb010d':'#22d3ee')
       +box('UNIQUE PRODUCERS',String(arr.length))
-      +box('PERIOD',(window._pdPeriod==='24h')?'24H PROXY':(window._pdPeriod||'all').toUpperCase());
+      +box('PERIOD',(window._pdPeriod==='48h')?'48H · 288':(window._pdPeriod||'all').toUpperCase());
   }
   function buildControls(){
     var c=document.getElementById('pdControls'); if(!c) return;
@@ -8475,7 +8475,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
               : (recent.length>=(need||1e9));
       var on=k===(window._pdPeriod||'all');
       b.disabled=!avail; b.style.opacity=avail?'1':'.4'; b.style.cursor=avail?'pointer':'not-allowed';
-      b.title=avail?(k==='24h'?'24h proxy · last 288 blocks':k==='all'?'Full-chain producer share':'≈'+k+' · block-count proxy'):'Not enough block history buffered yet';
+      b.title=avail?(k==='48h'?'48h proxy · last 288 blocks (the 288-block consensus window)':k==='all'?'Full-chain producer share':'≈'+k+' · block-count proxy'):'Not enough block history buffered yet';
       b.style.background=on&&avail?'rgba(34,211,238,.15)':'transparent';
       b.style.color=on&&avail?'#22d3ee':'#9aa6b2';
       b.style.borderColor=on&&avail?'#22d3ee':'#2a2a2a';
@@ -8485,7 +8485,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     if(hint){
       hint.innerHTML = off.length
         ? 'All periods are block-count proxies over the recent buffer (≈'+(recent.length||0)+' blocks so far). Greyed (<b>'+off.join(' · ')+'</b>) activate once enough blocks are buffered — the full-chain scan is still filling the buffer.'
-        : 'All periods active. Each window (24h/3D/1W/1M/3M) is a block-count proxy over the recent buffer; <b>All</b> = full-chain producer share.';
+        : 'All periods active. Each window (48h/3D/1W/1M/3M) is a block-count proxy over the recent buffer; <b>All</b> = full-chain producer share.';
     }
   }
   window.renderProducerDist=function(){
