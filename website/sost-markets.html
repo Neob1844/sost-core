@@ -393,8 +393,8 @@
   <div class="container">
     <div class="section-header">
       <div class="section-id">SOST REFERENCE VALUE</div>
-      <div class="section-title">SOST Reference Value <span class="accent">(PoPC Simulation)</span></div>
-      <div class="section-sub">Internal reference value in 60 fiat currencies &mdash; source: PoPC model + forex rates. <strong style="color:#fbbf24">This is NOT a market price. No active trading exists yet.</strong></div>
+      <div class="section-title">SOST Reference Value <span class="accent">(Gold Reference)</span></div>
+      <div class="section-sub">1 SOST = 1.14 mg of gold, expressed in 60 fiat currencies &mdash; source: gold spot + forex rates. <strong style="color:#fbbf24">This is NOT a market price. No active trading exists yet.</strong></div>
       <div style="margin:12px 0;padding:10px 16px;background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.2);font-size:11px;line-height:1.7;color:#999;font-family:monospace">
         <div style="color:#fbbf24;font-weight:600;letter-spacing:1px;margin-bottom:6px">// PRICE DISCOVERY STATUS</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:10px">
@@ -480,15 +480,15 @@
     <div class="section-header">
       <div class="section-id">SOST PAIRS</div>
       <div class="section-title">SOST Trading <span class="accent">Pairs</span></div>
-      <div class="section-sub">Simulated pair rates derived from PoPC reference price</div>
+      <div class="section-sub">Simulated pair rates derived from the gold reference price (1 SOST = 1.14 mg gold)</div>
     </div>
     <div style="margin-bottom:16px;padding:12px 16px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:monospace">
       <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// SIMULATED PAIR DATA &mdash; NOT LIVE MARKET</div>
       <div>SOST is <strong>not currently listed</strong> on any centralized or decentralized exchange. The pair rates below are
       <strong>theoretical values</strong> derived algorithmically from the PoPC (Proof of Personal Custody) reference price
       and the live market price of each counterpart asset.</div>
-      <div style="margin-top:6px;color:#666">The PoPC reference price reflects the observable gold-reserve reference value of SOST (observable, not a price floor or guarantee):
-      <code style="color:#4ade80">price = (0.6 XAUT + 0.6 PAXG) &times; gold_spot &divide; total_supply</code>.
+      <div style="margin-top:6px;color:#666">The gold reference expresses 1 SOST as a fixed 1.14 mg of gold &mdash; informational, not a price floor or guarantee:
+      <code style="color:#4ade80">price = 1.14 mg &times; gold_spot (fixed gold weight)</code>.
       This is a <strong>logical valuation</strong>, not a traded market price. Actual trading rates will differ once SOST
       is listed, as market price is determined by supply, demand, and liquidity &mdash; not solely by backing.</div>
       <div style="margin-top:6px;color:#555">Verify gold commitments: <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Etherscan &nearr;</a></div>
@@ -843,7 +843,7 @@
               var _sup=0,_bh=0,_h=2254;
               try{var _xhr=new XMLHttpRequest();_xhr.open('POST','/rpc',false);_xhr.setRequestHeader('Content-Type','application/json');_xhr.send(JSON.stringify({method:'getblockcount',id:1}));if(_xhr.status===200){var _rr=JSON.parse(_xhr.responseText);if(_rr&&_rr.result)_h=_rr.result;}}catch(e){}
               while(_bh<=_h){var _ep=Math.floor(_bh/_EP);var _r=_R0*Math.pow(_Q,_ep);var _ee=Math.min((_ep+1)*_EP-1,_h);_sup+=_r*(_ee-_bh+1);_bh=_ee+1;}
-              sostUsd = (1.2 * _gp) / _sup;
+              sostUsd = 1.14 * _gp / 31103.4768;
             }
             var sxv = (sostUsd && xaut.usd) ? xaut.usd / sostUsd : null;
             var spv = (sostUsd && paxg.usd) ? paxg.usd / sostUsd : null;
@@ -851,7 +851,7 @@
               var sEl = document.getElementById('cpSostPrice');
               if (sEl) { sEl.textContent = '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4); sEl.style.color = 'var(--gold-primary,#ffd700)'; }
             }
-            var sostLabel = ' <span style="font-size:8px;color:#ffd700;border:1px solid #ffd700;padding:0 4px;border-radius:2px;margin-left:4px">PoPC REF</span>';
+            var sostLabel = ' <span style="font-size:8px;color:#ffd700;border:1px solid #ffd700;padding:0 4px;border-radius:2px;margin-left:4px">GOLD REF</span>';
             html4 += '<tr class="clickable-crypto-sost" style="cursor:pointer" onclick="toggleSostGoldChart(this)"><td><span class="currency-name" style="color:#fb010d;font-weight:700">Sovereign Stock Token</span>' + sostLabel + ' <span style="font-size:8px;color:#555">&#9656;</span></td>' +
               '<td style="color:#fb010d;font-weight:600">SOST</td>' +
               '<td class="price-val">' + (sostUsd ? '$' + fmt(sostUsd, sostUsd < 1 ? 8 : 4) : '<span style="color:#444">\u2014</span>') + '</td>' +
@@ -863,7 +863,7 @@
             html4 += '<tr class="sost-gold-chart-row" style="display:none"><td colspan="7" style="padding:0">' +
               '<div style="background:#060606;border:1px solid #1a1a1a;border-top:none">' +
               '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px">' +
-              '<span style="font-size:10px;color:#888;letter-spacing:1px">SOST/USD — 24H (PoPC reference)</span>' +
+              '<span style="font-size:10px;color:#888;letter-spacing:1px">SOST gold reference (1.14 mg) — 24H</span>' +
               '<button onclick="event.stopPropagation();this.closest(\'.sost-gold-chart-row\').style.display=\'none\'" style="background:none;border:1px solid #333;color:#666;cursor:pointer;font-size:10px;padding:2px 8px;font-family:inherit">X</button>' +
               '</div>' +
               '<div style="position:relative">' +
@@ -1012,7 +1012,7 @@
     var sup=0, bh=0;
     while (bh <= h) { var ep = Math.floor(bh/EP); var r = R0*Math.pow(Q,ep); var ee = Math.min((ep+1)*EP-1,h); sup += r*(ee-bh+1); bh = ee+1; }
     _sostRefSup = sup;
-    _sostRefUsd = (1.2 * _sostRefGoldP) / sup;
+    _sostRefUsd = 1.14 * _sostRefGoldP / 31103.4768;
     return _sostRefUsd;
   }
 
@@ -1064,7 +1064,7 @@
     if (chEl) { chEl.textContent = 'PoPC Reference Price'; chEl.style.color = 'var(--text-dim,#888)'; }
     var rEl = document.getElementById('cpSostRange');
     if (rEl && refUsd && _sostRefGoldP && _sostRefSup) {
-      rEl.innerHTML = 'Gold backing: 1.2 oz &times; $' + _sostRefGoldP.toFixed(2) + '/oz = $' + (1.2*_sostRefGoldP).toFixed(2) + ' &divide; ' + _sostRefSup.toFixed(0) + ' SOST'
+      rEl.innerHTML = 'Gold reference: 1.14 mg &times; $' + (_sostRefGoldP/31103.4768).toFixed(5) + '/mg = $' + (1.14*_sostRefGoldP/31103.4768).toFixed(4) + '/SOST'
         + '<br><span style="font-size:9px;color:var(--text-dim,#666)">Not a market price. Based on PoPC gold commitments. Will be replaced when SOST is listed on an exchange.</span>';
     }
     // Update disclaimer with dynamic values
@@ -1084,10 +1084,10 @@
       g.currencies.forEach(function(c) {
         var label;
         if (refUsd && c.code === 'USD') {
-          label = '<span style="color:#ffd700">$' + fmt(refUsd, refUsd < 1 ? 6 : 4) + '</span> <span style="font-size:9px;color:#888">PoPC ref.</span>';
+          label = '<span style="color:#ffd700">$' + fmt(refUsd, refUsd < 1 ? 6 : 4) + '</span> <span style="font-size:9px;color:#888">gold ref.</span>';
         } else if (refUsd && forexRates[c.code]) {
           var lp = refUsd * forexRates[c.code];
-          label = '<span style="color:#ffd700">' + fmt(lp, lp < 1 ? 6 : 4) + '</span> <span style="font-size:9px;color:#888">PoPC ref.</span>';
+          label = '<span style="color:#ffd700">' + fmt(lp, lp < 1 ? 6 : 4) + '</span> <span style="font-size:9px;color:#888">gold ref.</span>';
         } else {
           label = '<span style="color:#555">Awaiting gold price data</span>';
         }
@@ -1096,7 +1096,7 @@
     });
     if (refUsd && _sostRefGoldP) {
       html += '<tr><td colspan="3" style="text-align:center;padding:12px;font-size:10px;color:#666;border-top:1px solid #222">'
-        + 'Formula: (0.6 XAUT + 0.6 PAXG) &times; gold price &divide; SOST supply = $' + refUsd.toFixed(6) + '/SOST. Not a market price.'
+        + '1 SOST = 1.14 mg of gold = $' + refUsd.toFixed(6) + '/SOST. Not a market price.'
         + '</td></tr>';
     }
     tbody.innerHTML = html;
@@ -1112,7 +1112,7 @@
       function priceAtHeight(h) {
         var sup=0, bh=0;
         while (bh <= h) { var ep=Math.floor(bh/EP_c); var r=R0_c*Math.pow(Q_c,ep); var ee=Math.min((ep+1)*EP_c-1,h); sup+=r*(ee-bh+1); bh=ee+1; }
-        return (1.2 * _sostRefGoldP) / sup;
+        return 1.14 * _sostRefGoldP / 31103.4768;
       }
 
       var GENESIS_TIME = 1773597600 * 1000; // 2026-03-15 18:00:00 UTC in ms
@@ -1349,7 +1349,7 @@
         function _pAH(h) {
           var s=0,b=0,R=7.85100863,Q=0.7788007830714049,E=131553;
           while(b<=h){var e2=Math.floor(b/E);var r=R*Math.pow(Q,e2);var ee=Math.min((e2+1)*E-1,h);s+=r*(ee-b+1);b=ee+1;}
-          return (1.2*_sostRefGoldP)/s;
+          return 1.14*_sostRefGoldP/31103.4768;
         }
         var GT = 1773597600 * 1000;
         [1, 3, 7, 30, 180, 365].forEach(function(days) {
@@ -1862,7 +1862,7 @@
     if (!tbody) return;
     var sostUsd = _sostRefUsd || calcSostPopcPrice();
     if (!sostUsd) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Awaiting gold price data for PoPC reference calculation...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Awaiting gold price data for the gold reference calculation...</td></tr>';
       return;
     }
 
