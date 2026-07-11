@@ -687,38 +687,15 @@
 </head>
 <body>
 <!-- V145-BANNER-INJECT (surgical; delete this comment..closing comment to revert) -->
-<style>#asWarn{display:none!important}</style>
+
 <div id="minerBanner" style="position:relative;z-index:99999;background:linear-gradient(180deg,#2e2712,#241f10);border-bottom:3px solid #d9a441;color:#ffe9c2;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6">
   <div style="padding:11px 16px;text-align:center;font-weight:700">&#128295; <b>V14.7 &mdash; mandatory node &amp; miner update.</b> Atomic Swap re-activates at <b>block 17,000</b> &middot; recompile + restart after block 16,900, before 17,000. Until then, mining &amp; consensus are unaffected.</div>
 </div>
 <!-- /V145-BANNER-INJECT -->
 
 
-<!-- ASWARN: V14 miner-upgrade + atomic-swap DO-NOT-USE — collapsible, shown after splash, never fully hidden -->
-<div id="asWarn" style="position:relative;z-index:9000;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;display:none">
-  <!-- collapsed bar -->
-  <div id="asWarnMini" style="display:none;cursor:pointer;padding:8px 16px;text-align:center;color:#ffb3b3;font-weight:700;letter-spacing:.3px" onclick="document.getElementById('asWarnMini').style.display='none';document.getElementById('asWarnFull').style.display='block';try{localStorage.setItem('sost_aswarn_collapsed','0')}catch(e){}">&#128680; V14 — MANDATORY node/miner upgrade before block 15,000 · ATOMIC SWAP: DO NOT USE &nbsp; <span style="text-decoration:underline">expand &#9662;</span></div>
-  <!-- expanded -->
-  <div id="asWarnFull" style="padding:14px 18px">
-    <div style="max-width:1100px;margin:0 auto">
-      <div style="color:#ffd400;font-weight:900;letter-spacing:1.5px;font-size:15px;margin-bottom:6px">&#128680; URGENT — ALL MINERS &amp; NODES MUST UPGRADE BEFORE BLOCK 15,000 &#128680;</div>
-      <div style="background:rgba(255,212,0,.08);border:1px solid #ffd400;border-radius:6px;padding:10px 12px;margin-bottom:10px">
-        <div><b>EXTREMELY URGENT:</b> The <b>V14 fork activates at block 15,000</b> and enables the Atomic Swap HTLC consensus rules. This is a <b>MANDATORY binary upgrade.</b> If you do not upgrade in time, from height 15,000 your node will <b>REJECT EVERY BLOCK</b> and be split off the network (forked chain).</div>
-        <div style="margin-top:8px"><b>HOW TO UPGRADE — do this AFTER block 14,800 and BEFORE block 15,000:</b></div>
-        <pre style="margin:6px 0 0;padding:9px 11px;background:rgba(0,0,0,.35);border-radius:5px;overflow:auto;font-size:12px;color:#cfeede;white-space:pre">cd sost-core
-git pull origin main                 # latest main (commit 58e9cc9b or newer)
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
-# then restart BOTH with the new binaries:
-#   stop your old node + miner, then start ./build/sost-node  and  ./build/sost-miner</pre>
-      </div>
-      <div style="color:#ff5b5b;font-weight:900;letter-spacing:1.5px;font-size:14px;margin-bottom:4px">&#9888; ATOMIC SWAP — DO NOT USE &#9888;</div>
-      <div>The SOST Atomic Swap (SOST &harr; ETH/BNB/USDT/USDC/PAXG/XAUT) is in <b>founder-only testing</b>, <b>NOT</b> externally audited and <b>NOT</b> validated for public use. <b>DO NOT USE IT — you can permanently lose your funds.</b> Wait for the founder's official "safe to use" announcement (SOST website, BitcoinTalk, Telegram). SOST &harr; BTC is not active (V15).</div>
-      <button type="button" onclick="document.getElementById('asWarnFull').style.display='none';document.getElementById('asWarnMini').style.display='block';try{localStorage.setItem('sost_aswarn_collapsed','1')}catch(e){}" style="margin-top:10px;background:transparent;border:1px solid #fb010d;color:#ff8a8a;border-radius:6px;padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer">Collapse &#9652;</button>
-    </div>
-  </div>
-</div>
-<script>(function(){var aw=document.getElementById('asWarn');if(!aw)return;var full=document.getElementById('asWarnFull'),mini=document.getElementById('asWarnMini');function apply(){var c='0';try{c=localStorage.getItem('sost_aswarn_collapsed')||'0'}catch(e){}if(c==='1'){full.style.display='none';mini.style.display='block';}else{full.style.display='block';mini.style.display='none';}}function splashUp(){return ['sost-splash','exLoadOv','splash','preloader'].some(function(id){var s=document.getElementById(id);if(!s)return false;var k=getComputedStyle(s);return k.display!=='none'&&k.visibility!=='hidden'&&k.opacity!=='0';});}var saw=false,n=0;function chk(){var up=splashUp();if(up)saw=true;if((saw&&!up)||(!saw&&n>8)||n>60){apply();aw.style.display='';return;}n++;setTimeout(chk,200);}if(document.readyState!=='loading')chk();else document.addEventListener('DOMContentLoaded',chk);})();</script>
+
+
 
 
 
@@ -919,7 +896,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Reference</a>
+      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
@@ -1552,13 +1529,13 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       <a class="panel-link" href="sost-markets.html">View all markets &rarr;</a>
     </div>
     <div class="stat-panel" id="panel-sost">
-      <div class="panel-title">SOST PoPC Reference Price &mdash; Last 24 Hours</div>
+      <div class="panel-title">SOST Gold Reference &mdash; Last 24 Hours</div>
       <canvas id="chartSost"></canvas>
       <div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
-        <span style="font-size:10px;color:var(--text-muted);"><span style="display:inline-block;width:8px;height:2px;background:#fb010d;margin-right:4px;vertical-align:middle;"></span>SOST/USD (PoPC ref.)</span>
+        <span style="font-size:10px;color:var(--text-muted);"><span style="display:inline-block;width:8px;height:2px;background:#fb010d;margin-right:4px;vertical-align:middle;"></span>SOST (1.14 mg gold) &nbsp;&nbsp;<span style="display:inline-block;width:8px;height:2px;background:#b8860b;margin-right:4px;vertical-align:middle;"></span>Gold (1 mg)</span>
         <span id="sostChartStatus" style="font-size:10px;color:var(--text-muted);margin-left:auto;"></span>
       </div>
-      <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.5;border-left:2px solid #ffd700;padding-left:8px;">Not a market price. Calculated as: (1.2 oz &times; gold spot) &divide; SOST supply. Updates when SOST is listed on an exchange.</p>
+      <p style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.5;border-left:2px solid #ffd700;padding-left:8px;">Gold reference &mdash; not a market price. 1&nbsp;SOST = 1.14&nbsp;mg of gold (initial reference). Once SOST is listed and trades, its price evolves on its own by supply and demand, no longer tied to gold.</p>
       <a class="panel-link" href="sost-markets.html">View all markets &rarr;</a>
     </div>
   </div>
@@ -2116,50 +2093,39 @@ function fetchGoldChart(){
 function fetchSostChart(){
   var canvasEl=document.getElementById('chartSost');
   var statusEl=document.getElementById('sostChartStatus');
+  if(!canvasEl)return;
   if(statusEl)statusEl.textContent='loading...';
-  var goldAvg=_sharedGold.avg;
-  if(!goldAvg){
-    // Gold hasn't loaded yet — retry in 2s
-    setTimeout(fetchSostChart,2000);
-    return;
-  }
-  // Calculate supply
-  var R0=7.85100863,Q=0.7788007830714049,EP=131553,h=2254;
-  fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'getblockcount',id:1})})
+  var MG=31103.4768, REF=1.14; // 1 SOST = 1.14 mg gold (informational gold reference, NOT a market price)
+  fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=usd&days=1')
     .then(function(r){return r.json();})
-    .then(function(rr){if(rr&&rr.result)h=rr.result;})
-    .catch(function(){})
-    .finally(function(){
-      var sup=0,bh=0;
-      while(bh<=h){var ep=Math.floor(bh/EP);var r=R0*Math.pow(Q,ep);var ee=Math.min((ep+1)*EP-1,h);sup+=r*(ee-bh+1);bh=ee+1;}
-      var sostPrice=0;   // SOST has no associated value — flat 0 line (non-market)
-      // Build 24-hour reference line — flat 0 (SOST currently has no value)
-      var now=Date.now(),labels=[],data=[];
-      var bpd=144; // blocks per day
-      var GENESIS_MS=1773597600000; // 2026-03-15 18:00 UTC
-      for(var i=0;i<=24;i++){
-        var tMs=now-((24-i)*3600000);
-        if(tMs<GENESIS_MS) continue; // No data before genesis
-        var d=new Date(tMs);
+    .then(function(res){
+      var pr=(res&&res.prices)||[];
+      if(!pr.length)throw 0;
+      var labels=[],sost=[],goldmg=[];
+      pr.forEach(function(p){
+        var d=new Date(p[0]);
         labels.push(d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0'));
-        var hAtTime=Math.max(1, h - Math.round(bpd * (1 - i/24)));
-        var s2=0,b2=0;
-        while(b2<=hAtTime){var e2=Math.floor(b2/EP);var r2=R0*Math.pow(Q,e2);var ee2=Math.min((e2+1)*EP-1,hAtTime);s2+=r2*(ee2-b2+1);b2=ee2+1;}
-        data.push(0); // SOST has no associated value — flat 0
-      }
+        var perMg=p[1]/MG;
+        goldmg.push(perMg);
+        sost.push(REF*perMg);
+      });
       var ctx=canvasEl.getContext('2d');
       var grad=ctx.createLinearGradient(0,0,0,150);
-      grad.addColorStop(0,'rgba(255,215,0,0.2)');
-      grad.addColorStop(1,'rgba(255,215,0,0)');
+      grad.addColorStop(0,'rgba(251,1,13,0.18)');grad.addColorStop(1,'rgba(251,1,13,0)');
       if(_chartInstances.sost){_chartInstances.sost.destroy();}
       _chartInstances.sost=new Chart(ctx,{
         type:'line',
-        data:{labels:labels,datasets:[{label:'SOST/USD (PoPC ref.)',data:data,borderColor:'#fb010d',backgroundColor:grad,fill:true,borderWidth:1.5,pointRadius:0,tension:0.3}]},
-        options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'rgba(10,10,10,0.95)',titleColor:'#94a3b8',bodyColor:'#ffd700',borderColor:'#333',borderWidth:1,titleFont:{family:"'JetBrains Mono',monospace",size:10},bodyFont:{family:"'JetBrains Mono',monospace",size:12,weight:'bold'},padding:10,displayColors:false,callbacks:{title:function(items){return items[0].label+' UTC';},label:function(c){return 'SOST: $'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:4,maximumFractionDigits:6})+' (PoPC ref.)';}}}},hover:{mode:'index',intersect:false},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toFixed(4);}},grid:{color:'#1a1a1a'}}}}
+        data:{labels:labels,datasets:[
+          {label:'SOST gold reference (1.14 mg)',data:sost,borderColor:'#fb010d',backgroundColor:grad,fill:true,borderWidth:2,pointRadius:0,tension:0.3},
+          {label:'Gold (1 mg)',data:goldmg,borderColor:'#b8860b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3}
+        ]},
+        options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'rgba(10,10,10,0.95)',titleColor:'#94a3b8',bodyColor:'#ffd700',borderColor:'#333',borderWidth:1,titleFont:{family:"'JetBrains Mono',monospace",size:10},bodyFont:{family:"'JetBrains Mono',monospace",size:11,weight:'bold'},padding:10,displayColors:true,callbacks:{title:function(items){return items[0].label+' UTC';},label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:4,maximumFractionDigits:5});}}}},hover:{mode:'index',intersect:false},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toFixed(4);}},grid:{color:'#1a1a1a'}}}}
       });
+      var cur=sost.length?sost[sost.length-1]:0;
       var ts=new Date();
-      if(statusEl)statusEl.textContent='$0.00 (no associated value) \u2014 '+ts.getUTCHours().toString().padStart(2,'0')+':'+ts.getUTCMinutes().toString().padStart(2,'0')+' UTC';
-    });
+      if(statusEl)statusEl.textContent='$'+cur.toFixed(4)+' gold reference (not a market price) — '+ts.getUTCHours().toString().padStart(2,'0')+':'+ts.getUTCMinutes().toString().padStart(2,'0')+' UTC';
+    })
+    .catch(function(){ if(statusEl)statusEl.textContent='reference unavailable'; });
 }
 </script>
 <script src="sost-search.js"></script>

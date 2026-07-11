@@ -108,18 +108,8 @@
 <script src="js/nav-toggle.js" defer></script>
 </head>
 <body>
-<!-- ASWARN: V14 DO-NOT-USE banner (shared pattern) -->
-<div id="asWarn" style="position:relative;z-index:9000;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;display:none">
-  <div id="asWarnMini" style="display:none;cursor:pointer;padding:8px 16px;text-align:center;color:#ffb3b3;font-weight:700" onclick="document.getElementById('asWarnMini').style.display='none';document.getElementById('asWarnFull').style.display='block';try{localStorage.setItem('sost_aswarn_collapsed','0')}catch(e){}">&#128680; ATOMIC SWAP V14 — FOUNDER-ONLY · DO NOT USE &nbsp;<span style="text-decoration:underline">expand &#9662;</span></div>
-  <div id="asWarnFull" style="padding:14px 18px">
-    <div style="max-width:1040px;margin:0 auto">
-      <div style="color:#ff5b5b;font-weight:900;letter-spacing:1.2px;font-size:15px;margin-bottom:6px">&#9888; ATOMIC SWAP — DO NOT USE &#9888;</div>
-      <div>The SOST Atomic Swap (SOST &harr; ETH/BNB/USDT/USDC/PAXG/XAUT) is in <b>founder-only testing</b>, <b>NOT</b> externally audited and <b>NOT</b> validated for public use. <b>You can permanently lose your funds.</b> This console only <b>explains and generates commands</b> — it never holds keys, signs, or moves funds. SOST &harr; BTC is not active (V15). Wait for the founder's official "safe to use" announcement.</div>
-      <button type="button" onclick="document.getElementById('asWarnFull').style.display='none';document.getElementById('asWarnMini').style.display='block';try{localStorage.setItem('sost_aswarn_collapsed','1')}catch(e){}" style="margin-top:10px;background:transparent;border:1px solid #fb010d;color:#ff8a8a;border-radius:6px;padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer">Collapse &#9652;</button>
-    </div>
-  </div>
-</div>
-<script>(function(){var aw=document.getElementById('asWarn');if(!aw)return;var full=document.getElementById('asWarnFull'),mini=document.getElementById('asWarnMini');function apply(){var c='0';try{c=localStorage.getItem('sost_aswarn_collapsed')||'0'}catch(e){}if(c==='1'){full.style.display='none';mini.style.display='block';}else{full.style.display='block';mini.style.display='none';}}apply();aw.style.display='';})();</script>
+
+
 
 <nav>
   <div class="container">
@@ -149,7 +139,7 @@
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Reference</a>
+      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>

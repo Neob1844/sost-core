@@ -224,31 +224,8 @@
 <script src="js/nav-toggle.js" defer></script>
 </head>
 <body>
-<!-- ASWARN: V14 miner-upgrade + atomic-swap DO-NOT-USE — collapsible, shown after splash, never fully hidden -->
-<div id="asWarn" style="position:relative;z-index:9000;background:#2a0606;border-bottom:3px solid #fb010d;color:#ffdede;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;display:none">
-  <!-- collapsed bar -->
-  <div id="asWarnMini" style="display:none;cursor:pointer;padding:8px 16px;text-align:center;color:#ffb3b3;font-weight:700;letter-spacing:.3px" onclick="document.getElementById('asWarnMini').style.display='none';document.getElementById('asWarnFull').style.display='block';try{localStorage.setItem('sost_aswarn_collapsed','0')}catch(e){}">&#128680; V14 — MANDATORY node/miner upgrade before block 15,000 · ATOMIC SWAP: DO NOT USE &nbsp; <span style="text-decoration:underline">expand &#9662;</span></div>
-  <!-- expanded -->
-  <div id="asWarnFull" style="padding:14px 18px">
-    <div style="max-width:1100px;margin:0 auto">
-      <div style="color:#ffd400;font-weight:900;letter-spacing:1.5px;font-size:15px;margin-bottom:6px">&#128680; URGENT — ALL MINERS &amp; NODES MUST UPGRADE BEFORE BLOCK 15,000 &#128680;</div>
-      <div style="background:rgba(255,212,0,.08);border:1px solid #ffd400;border-radius:6px;padding:10px 12px;margin-bottom:10px">
-        <div><b>EXTREMELY URGENT:</b> The <b>V14 fork activates at block 15,000</b> and enables the Atomic Swap HTLC consensus rules. This is a <b>MANDATORY binary upgrade.</b> If you do not upgrade in time, from height 15,000 your node will <b>REJECT EVERY BLOCK</b> and be split off the network (forked chain).</div>
-        <div style="margin-top:8px"><b>HOW TO UPGRADE — do this AFTER block 14,800 and BEFORE block 15,000:</b></div>
-        <pre style="margin:6px 0 0;padding:9px 11px;background:rgba(0,0,0,.35);border-radius:5px;overflow:auto;font-size:12px;color:#cfeede;white-space:pre">cd sost-core
-git pull origin main                 # latest main (commit 58e9cc9b or newer)
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
-# then restart BOTH with the new binaries:
-#   stop your old node + miner, then start ./build/sost-node  and  ./build/sost-miner</pre>
-      </div>
-      <div style="color:#ff5b5b;font-weight:900;letter-spacing:1.5px;font-size:14px;margin-bottom:4px">&#9888; ATOMIC SWAP — DO NOT USE &#9888;</div>
-      <div>The SOST Atomic Swap (SOST &harr; ETH/BNB/USDT/USDC/PAXG/XAUT) is in <b>founder-only testing</b>, <b>NOT</b> externally audited and <b>NOT</b> validated for public use. <b>DO NOT USE IT — you can permanently lose your funds.</b> Wait for the founder's official "safe to use" announcement (SOST website, BitcoinTalk, Telegram). SOST &harr; BTC is not active (V15).</div>
-      <button type="button" onclick="document.getElementById('asWarnFull').style.display='none';document.getElementById('asWarnMini').style.display='block';try{localStorage.setItem('sost_aswarn_collapsed','1')}catch(e){}" style="margin-top:10px;background:transparent;border:1px solid #fb010d;color:#ff8a8a;border-radius:6px;padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer">Collapse &#9652;</button>
-    </div>
-  </div>
-</div>
-<script>(function(){var aw=document.getElementById('asWarn');if(!aw)return;var full=document.getElementById('asWarnFull'),mini=document.getElementById('asWarnMini');function apply(){var c='0';try{c=localStorage.getItem('sost_aswarn_collapsed')||'0'}catch(e){}if(c==='1'){full.style.display='none';mini.style.display='block';}else{full.style.display='block';mini.style.display='none';}}function splashUp(){return ['sost-splash','exLoadOv','splash','preloader'].some(function(id){var s=document.getElementById(id);if(!s)return false;var k=getComputedStyle(s);return k.display!=='none'&&k.visibility!=='hidden'&&k.opacity!=='0';});}var saw=false,n=0;function chk(){var up=splashUp();if(up)saw=true;if((saw&&!up)||(!saw&&n>8)||n>60){apply();aw.style.display='';return;}n++;setTimeout(chk,200);}if(document.readyState!=='loading')chk();else document.addEventListener('DOMContentLoaded',chk);})();</script>
+
+
 
 
 
@@ -280,7 +257,7 @@ cmake --build build --target sost-node sost-cli sost-miner -j$(nproc)
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
-      <a href="sost-reference.html" style="color:#e3b23c">SOST Reference</a>
+      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
