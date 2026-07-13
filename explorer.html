@@ -401,6 +401,43 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
       <div class="gold-bar" id="popcBar"></div>
       <div style="font-size:8px;color:var(--text3);margin-top:4px;letter-spacing:1px">▮ bar height = block interval · last 50 blocks · hover for detail</div>
     </div>
+    <!-- ===================== V15 HISTORICAL DTD JACKPOT ===================== -->
+    <div class="gold-card" style="border-color:#3a2d0a">
+      <div class="gold-title" style="justify-content:space-between">
+        <span><span style="font-size:15px;color:var(--gold)">◈</span> // <b style="color:var(--gold)">HISTORICAL DTD JACKPOT</b></span>
+        <span id="jpStatus" style="font-size:9px;font-weight:600;color:var(--yellow);border:1px solid #4a3a10;border-radius:3px;padding:2px 6px;letter-spacing:1px">PLANNED · BLOCK 20,000</span>
+      </div>
+      <div class="gold-big" id="jpReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div>
+      <div class="gold-sub" id="jpReserveSub">Gold Vault + PoPC reserve — progressively returned to active miners</div>
+      <div style="font-size:9px;color:var(--text2);line-height:1.6;margin:-4px 0 10px">
+        <b style="color:var(--green)">Historical reserve wind-down — not a treasury, not founder spend, no new emission.</b><br>
+        <b style="color:var(--gold)">The reserve returns to active miners through protocol rules, not to a founder.</b><br>
+        Uses the same DTD eligibility rules: <span style="color:var(--cyan)">2016-block activity window · cooldown · anti-dominance · SbPoW · uniform selection</span>.
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:12px 0 10px;font-size:10px">
+        <div><span style="color:var(--text3)">FIRST JACKPOT</span><br><b style="color:var(--cyan)">block 20,286</b></div>
+        <div><span style="color:var(--text3)">NEXT JACKPOT</span><br><b class="cyan" id="jpNext">—</b></div>
+        <div><span style="color:var(--text3)">BASE PAYOUT</span><br><b style="color:var(--green)">100 SOST</b> <span style="color:var(--text3)">+ rollover</span></div>
+        <div><span style="color:var(--text3)">PER-PAYOUT CAP</span><br><b style="color:var(--green)">500 SOST</b></div>
+        <div><span style="color:var(--text3)">CADENCE</span><br><b style="color:var(--text)">every 96 DTD draws</b> <span style="color:var(--text3)">≈288 blk / ~48h</span></div>
+        <div><span style="color:var(--text3)">JACKPOT PENDING</span><br><b class="cyan" id="jpPending">—</b></div>
+        <div><span style="color:var(--text3)">LAST WINNER</span><br><b id="jpLastWinner" style="color:var(--text)">—</b></div>
+        <div><span style="color:var(--text3)">TOTAL DISTRIBUTED</span><br><b class="green" id="jpTotalPaid">—</b></div>
+      </div>
+
+      <div style="font-size:9px;line-height:1.6;color:var(--text2);border-top:1px solid var(--border);padding-top:8px">
+        <span style="color:var(--green);font-weight:600">WIND-DOWN, NOT TREASURY.</span>
+        From block 20,000 the Gold-Vault + PoPC coinbase outputs are eliminated and that 50% flows to DTD.
+        The existing reserve is a <b>real, supply-neutral protocol spend</b> back to active miners —
+        <b>no founder spend · no listing sale · no new emission · no mint</b>. Paid via a normal jackpot
+        transaction (<code style="color:var(--cyan)">txs[1]</code>), change re-locked to the vault.
+        <span style="color:var(--text3)">DTD normal = every-block 50% split · Historical Jackpot = the special periodic reserve payout above.</span>
+      </div>
+      <div id="jpDisclaimer" style="font-size:8px;color:var(--text3);margin-top:6px;letter-spacing:1px">
+        ◆ EXPERIMENTAL · PLANNED — activates at block 20,000, first payout block 20,286. Live winner/pending/total available after V15 activation.
+      </div>
+    </div>
     </div>
     <div class="emission-card">
       <div class="emission-title">// <b>EMISSION CURVE</b> <span style="font-size:10px;color:var(--text3)">smooth exponential decay · q = e<sup>-¼</sup> · Feigenbaum α epochs · δ supply cap</span></div>
@@ -763,7 +800,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
 
 </div>
 <div class="footer">
-  <span class="s-comment">&lt;!--</span> SOST Explorer v4.2 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> Constitutional Gold Reserves <span class="s-comment">--&gt;</span>
+  <span class="s-comment">&lt;!--</span> SOST Explorer v4.3 <span class="pipe">|</span> <a href="https://sostcore.com">sostcore.com</a> <span class="pipe">|</span> ConvergenceX PoW <span class="pipe">|</span> V15 Historical DTD Jackpot <span class="s-comment">--&gt;</span>
 </div>
 <script>
 // No domain redirect — both sostcore.com and sostprotocol.com serve identical content
@@ -932,6 +969,7 @@ async function updateDashboard(info){
     document.getElementById('goldSub').textContent='on-chain balance \u00B7 25% of every block reward since genesis';
     document.getElementById('popcTotal').textContent=bp.toFixed(4)+' SOST';
     document.getElementById('popcSub').textContent='on-chain balance \u00B7 25% of every block reward for PoPC participants';
+    updateJackpotCard(bg+bp, info.blocks);
   }catch(e){console.error('gold/popc balance error:',e);}
   // Miner balance (requires auth)
   if(RPC_USER&&RPC_PASS){try{
@@ -953,6 +991,48 @@ async function updateDashboard(info){
   document.getElementById('diffFill').style.width=pct+'%';
   document.getElementById('diffInfo').textContent='Epoch '+Math.floor(info.blocks/EP)+' \u00B7 '+fComma(bie)+'/'+fComma(EP)+' ('+pct+'%) \u00B7 diff: '+(info.difficulty/65536).toFixed(3)+' ('+info.difficulty.toLocaleString()+' Q16)';
   updateChainSync();
+}
+// ---- V15 Historical DTD Jackpot card (read-only / client-side) --------------
+// Consensus constants — MUST match include/sost/params.h + jackpot.h.
+var JP_V15=20000, JP_FIRST=20286, JP_CADENCE=288, JP_BASE=100, JP_CAP=500;
+function jpNextHeight(h){
+  if(h < JP_FIRST) return JP_FIRST;
+  var k=Math.ceil((h - JP_FIRST + 1)/JP_CADENCE); // strictly the next opportunity
+  return JP_FIRST + k*JP_CADENCE;
+}
+function updateJackpotCard(reserveSOST, height){
+  var elR=document.getElementById('jpReserve'); if(!elR)return;
+  var active = height >= JP_V15;
+  // Reserve remaining = live Gold Vault + PoPC balance (the pool that gets returned).
+  elR.textContent = reserveSOST.toFixed(4)+' SOST';
+  document.getElementById('jpReserveSub').textContent =
+    active ? 'reserve remaining · returned to active miners via periodic jackpots'
+           : 'reserve accumulating (25%+25%/block) · redirected to miners at block 20,000';
+  // Status badge.
+  var st=document.getElementById('jpStatus');
+  if(active){ st.textContent='ACTIVE'; st.style.color='var(--green)'; st.style.borderColor='#1c4a2a'; }
+  else { st.textContent='PLANNED · BLOCK 20,000'; st.style.color='var(--yellow)'; st.style.borderColor='#4a3a10'; }
+  // Next jackpot height + distance.
+  var nh=jpNextHeight(height), away=nh-height;
+  var etaH=Math.round(away*48/JP_CADENCE); // spec cadence: ~288 blk ≈ 48h
+  var eta = etaH<48 ? ('~'+etaH+'h') : ('~'+Math.round(etaH/24)+'d');
+  document.getElementById('jpNext').textContent='block '+fComma(nh)+(away>0?(' · '+fComma(away)+' blk '+eta):'');
+  // Fields the node RPC does not (yet) expose. Before the FIRST payout these are
+  // provably 0 / none; after activation they need node RPC wiring — never faked.
+  var prePayout = height < JP_FIRST;
+  var pend=document.getElementById('jpPending'),
+      lw=document.getElementById('jpLastWinner'),
+      tp=document.getElementById('jpTotalPaid');
+  if(prePayout){
+    pend.textContent='0 SOST'; pend.style.color='var(--text)';
+    lw.textContent='none yet'; lw.style.color='var(--text3)';
+    tp.textContent='0 SOST';
+  }else{
+    var wireMsg='available after V15 activation / RPC update';
+    pend.textContent=wireMsg; pend.style.color='var(--text3)'; pend.style.fontStyle='italic';
+    lw.textContent=wireMsg; lw.style.color='var(--text3)'; lw.style.fontStyle='italic';
+    tp.textContent=wireMsg; tp.style.color='var(--text3)'; tp.style.fontStyle='italic';
+  }
 }
 function drawReserveBars(){
   if(!_diffHistory||_diffHistory.length<2)return;
