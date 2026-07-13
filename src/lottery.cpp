@@ -70,7 +70,8 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     const std::vector<LotteryMinedBlockView>& blocks,
     int64_t                                   height,
     const PubKeyHash&                         current_miner_pkh,
-    int64_t                                   exclusion_window)
+    int64_t                                   exclusion_window,
+    int64_t                                   recent_miner_window)
 {
     // -----------------------------------------------------------------------
     // C7.1 rule (revised from C6): the current block's winner is NO LONGER
@@ -178,6 +179,17 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
 
         // (a) recent-winner cooldown.
         if (exclusion_window > 0 && recent_winners.count(pkh)) continue;
+
+        // (a1) V15 sliding recency window. When recent_miner_window > 0
+        // (from V15_HEIGHT) an address must have mined at least one block
+        // within [height - recent_miner_window, height - 1]. This REPLACES
+        // the pre-V15 "mined ever" rule and drops dormant addresses. The
+        // window reaches below the fork height at activation, so miners
+        // active just before V15 are eligible immediately (no cliff).
+        if (recent_miner_window > 0 &&
+            kv.second.last_mined_height < height - recent_miner_window) {
+            continue;
+        }
 
         // (a2) V13.5 SbPoW-activity gate. A candidate must have at least one
         // SbPoW-signed block, proven by its most recent block being at height

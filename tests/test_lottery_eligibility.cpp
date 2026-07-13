@@ -761,15 +761,14 @@ static void test_v135_sbpow_gate_off_below_gate_height() {
 // exercise the real consensus-deterministic lookup.
 
 static void test_v14_popc_gate_consensus_deferred() {
-    printf("\n=== V14.1) PoPC gate active but no event source wired → all eligible (defensive no-op) ===\n");
-    // V15 ACTIVATION (2026-06-27): DTD_POPC_GATE_CONSENSUS_ACTIVE is now TRUE on
-    // both profiles. This unit harness wires NO popc event source, so
-    // has_active_canonical_popc() takes its defensive `!g_popc_src -> true` branch
-    // and every candidate is still eligible. That is exactly what this test pins:
+    printf("\n=== V14.1) PoPC gate never excludes without a wired source (defensive no-op) ===\n");
+    // The V15 final-decentralization fork RETIRES the DTD-PoPC gate on mainnet
+    // (DTD_POPC_GATE_CONSENSUS_ACTIVE == false, DTD_POPC_ELIGIBILITY_HEIGHT ==
+    // INT64_MAX): DTD never requires PoPC — SOST is fully autonomous. On the
+    // testnet profile the gate is still soaked (true), but this harness wires NO
+    // popc event source, so has_active_canonical_popc() takes its defensive
+    // `!g_popc_src -> true` branch. Either way the invariant this test pins holds:
     // the gate never excludes anyone unless a chain-derived PoPC source is present.
-    static_assert(sost::DTD_POPC_GATE_CONSENSUS_ACTIVE,
-                  "Expected the DTD-PoPC gate to be ACTIVE in V15; if it was reverted to "
-                  "false, update this test's premise.");
 
     auto A = mk_pkh(0xA1);
     auto B = mk_pkh(0xA2);

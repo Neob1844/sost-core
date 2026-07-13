@@ -17,6 +17,20 @@ static PubKeyHash own(uint8_t b){ PubKeyHash p{}; p.fill(b); return p; }
 static TxOutput carrier(const std::vector<uint8_t>& payload){ TxOutput o; o.amount=0; o.pubkey_hash=POPC_V15_MARKER_PKH; o.payload=payload; return o; }
 
 int main(){
+#ifndef SOST_TESTNET_FORKS
+    // V15 final-decentralization fork RETIRES PoPC on mainnet: the PoPC V15
+    // subsystem never auto-activates (popc_v15_active_at == false at every
+    // height). This suite exercises the live subsystem only on the testnet
+    // profile; on mainnet it verifies the retirement invariant and exits green.
+    // See docs/V15_FINAL_DECENTRALIZATION_SPEC.md.
+    if (sost::popc_v15_active_at(sost::V15_HEIGHT) ||
+        sost::popc_v15_active_at(sost::V15_HEIGHT + 100000)) {
+        printf("FAIL: PoPC must be inactive (retired) on mainnet under the V15 fork\n");
+        return 1;
+    }
+    printf("[mainnet] PoPC retired by the V15 fork - subsystem is testnet-only. OK\n");
+    return 0;
+#endif
     std::printf("=== PoPC V15 P3 — on-chain carriers + decoder ===\n");
     const Bytes32 CID=id(0x11); const PubKeyHash OWN=own(0x22);
     const int64_t BH=5000;

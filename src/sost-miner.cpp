@@ -660,6 +660,7 @@ struct LotteryStateRpc {
     int64_t     popc_amount{0};
     int64_t     lottery_payout{0};
     std::string lottery_winner_pkh_hex;    // 40-char hex on PAYOUT, "" otherwise
+    std::string jackpot_tx_hex;            // V15: serialized jackpot tx for txs[1] ("" if none)
     int64_t     eligible_count{0};
     int64_t     winner_index{-1};
     int64_t     expected_pending_after{0};
@@ -710,6 +711,7 @@ static LotteryStateRpc fetch_lottery_state(int64_t /*expected_h*/) {
     r.popc_amount            = jint(raw_resp, "popc_amount");
     r.lottery_payout         = jint(raw_resp, "lottery_payout");
     r.lottery_winner_pkh_hex = jstr(raw_resp, "lottery_winner_pkh");
+    r.jackpot_tx_hex         = jstr(raw_resp, "jackpot_tx_hex");   // V15 Historical DTD Jackpot
     r.eligible_count         = jint(raw_resp, "eligible_count");
     r.winner_index           = jint(raw_resp, "winner_index");
     r.expected_pending_after = jint(raw_resp, "expected_pending_after");
@@ -1332,6 +1334,13 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     Transaction coinbase_tx;
 
     LotteryStateRpc ls = fetch_lottery_state(h);
+
+    // V15 Historical DTD Jackpot — the node (getlotterystate) builds the exact
+    // protocol jackpot tx for this block using the SAME functions the validator
+    // uses. Prepend it so it lands at txs[1] (right after the coinbase) in every
+    // assembly path; the validator (validate_block_jackpot) requires it byte-exact.
+    if (!ls.jackpot_tx_hex.empty())
+        mempool_tx_hexes.insert(mempool_tx_hexes.begin(), ls.jackpot_tx_hex);
     if (!ls.ok) {
         printf("[MINER] fetch_lottery_state failed: %s; aborting block candidate.\n",
                ls.error.c_str());

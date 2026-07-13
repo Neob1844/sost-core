@@ -12,6 +12,20 @@ static int g_pass=0, g_fail=0;
 #define CHECK(n,c) do{ if(c){++g_pass;std::printf("  ok  %s\n",n);} else {++g_fail;std::printf("  *** FAIL: %s\n",n);} }while(0)
 
 int main(){
+#ifndef SOST_TESTNET_FORKS
+    // V15 final-decentralization fork RETIRES PoPC on mainnet: the PoPC V15
+    // subsystem never auto-activates (popc_v15_active_at == false at every
+    // height). This suite exercises the live subsystem only on the testnet
+    // profile; on mainnet it verifies the retirement invariant and exits green.
+    // See docs/V15_FINAL_DECENTRALIZATION_SPEC.md.
+    if (sost::popc_v15_active_at(sost::V15_HEIGHT) ||
+        sost::popc_v15_active_at(sost::V15_HEIGHT + 100000)) {
+        printf("FAIL: PoPC must be inactive (retired) on mainnet under the V15 fork\n");
+        return 1;
+    }
+    printf("[mainnet] PoPC retired by the V15 fork - subsystem is testnet-only. OK\n");
+    return 0;
+#endif
     std::printf("=== PoPC V15 Model A/B — pure base (P1) ===\n");
 
     secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN|SECP256K1_CONTEXT_VERIFY);
