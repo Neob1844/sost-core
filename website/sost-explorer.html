@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-07-14-v388-jackpot-label-fix">
+<meta name="explorer-html-version" content="2026-07-14-v389-sost-gold-reference">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -999,15 +999,15 @@ sudo systemctl restart sost-node</pre>
       </div>
       <div class="price-card-range" id="sostRange"></div>
       <div id="sostDisclaimer" style="margin-top:10px;padding:10px 14px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:var(--code,monospace);display:none">
-        <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// NON-MARKET PROTOCOL RESERVE METRIC — NOT A PRICE</div>
-        <div>SOST is not listed on any exchange and has no market price. It currently has <b>no value</b> and no gold or asset is associated with the SOST coin itself. This metric is shown as <b style="color:#ffd700">0</b>.</div>
-        <div style="color:#4ade80;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
-          Reserve metric = <span style="color:#ffd700;font-weight:600" id="sostDiscPrice">0</span> &nbsp;(no value currently associated with SOST)
+        <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// MONETARY REFERENCE — GOLD-DENOMINATED · NOT A PRICE</div>
+        <div>SOST is not listed on any exchange and has no market price yet. As a transparent unit of account, <b style="color:#ffd700">1 SOST is referenced to 1.14 mg of gold</b> — the reference rises and falls only with the gold price, never by decree.</div>
+        <div style="color:#ffd700;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
+          1 SOST &equiv; 1.14 mg gold &asymp; <span style="font-weight:600" id="sostDiscPrice">$0.00</span> &nbsp;(reference value · tracks gold spot)
         </div>
-        <div style="margin-top:6px">If SOST is ever admitted to trading on a CEX or DEX, only then could a market price exist; this section would then show actual market data.</div>
-        <div style="margin-top:6px">Protocol-held gold commitment — <b>no peg, collateral backing, redemption right or legal claim for SOST holders.</b></div>
+        <div style="margin-top:6px"><b>Reference, not a peg.</b> If SOST is ever admitted to trading on a CEX/DEX, its market price is then set by supply and demand and may differ materially from this reference. This gold reference sets only an initial listing / first-liquidity anchor.</div>
+        <div style="margin-top:6px"><b>Not redeemable</b> for gold — no peg, collateral backing, redemption right or legal claim for SOST holders.</div>
         <div style="margin-top:6px;color:#cfeede"><b>SOST does not represent shares, equity, debt, dividends, profit participation, voting rights, ownership of a company, ownership of mining assets or any claim against the Gold Vault.</b></div>
-        <div style="margin-top:4px">Verify protocol-held gold (not holder-redeemable): <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan,#22d3ee);text-decoration:none">Etherscan ↗</a></div>
+        <div style="margin-top:4px">Full explanation &amp; the gold chart: <a href="sost-reference.html" style="color:var(--cyan,#22d3ee);text-decoration:none">SOST gold reference →</a> &middot; Verify protocol-held gold (not holder-redeemable): <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan,#22d3ee);text-decoration:none">Etherscan ↗</a></div>
       </div>
     </div>
     </div>
@@ -7771,60 +7771,40 @@ function calcSostRefPrice(){
   var supply=0,bh=0;
   while(bh<=h){var ep=Math.floor(bh/EP);var r=R0*Math.pow(Q,ep);var ee=Math.min((ep+1)*EP-1,h);supply+=r*(ee-bh+1);bh=ee+1;}
   sostRefSupply=supply;
-  // SOST currently has NO value and nothing is associated with the coin itself, so the
-  // displayed reserve metric and chart are forced to 0 (non-market, not a price).
-  sostRefPrice=0;
-  // Update SOST price display
+  // ---- V15 GOLD REFERENCE: 1 SOST is referenced to a FIXED weight of gold (1.14 mg).
+  // Informational unit of account, NOT a peg, NOT redeemable. The reference tracks the
+  // live gold price (XAUT/PAXG spot) scaled by the fixed weight. See sost-reference.html.
+  var OZ_G=31.1034768, MG=1.14;                 // troy ounce in grams · reference weight (mg)
+  var FACTOR=(MG/1000)/OZ_G;                     // multiply an oz-USD price -> per-SOST reference USD
+  var goldPerG=goldPrice/OZ_G;
+  var refUSD=goldPrice*FACTOR;                   // gold reference value per SOST
+  sostRefPrice=refUSD;
+  // ---- display ----
   var el=document.getElementById('sostPrice');
-  if(el){
-    el.textContent='$0.00';
-    el.style.color='var(--text3)';el.style.fontSize='';
-  }
+  if(el){ el.textContent='$'+refUSD.toFixed(4); el.style.color='var(--gold)'; el.style.fontSize=''; }
   var chEl=document.getElementById('sostChange');
-  if(chEl){chEl.style.color='var(--text3)';chEl.textContent='Non-market reserve metric · 0';}
+  if(chEl){ chEl.style.color='var(--gold)'; chEl.innerHTML='1 SOST &equiv; 1.14 mg gold &middot; reference, not a peg'; }
   var rangeEl=document.getElementById('sostRange');
-  if(rangeEl){
-    rangeEl.innerHTML='No market price — SOST currently has no associated value (0).';
-  }
-  // Update disclaimer
-  var discEl=document.getElementById('sostDisclaimer');
-  if(discEl){
-    discEl.style.display='block';
-    var dPr=document.getElementById('sostDiscPrice');if(dPr)dPr.textContent='0';
-  }
-  // Build DYNAMIC price chart (price drops as supply increases)
+  if(rangeEl){ rangeEl.innerHTML='Gold reference &middot; gold spot $'+goldPerG.toFixed(2)+'/g &middot; derived from a fixed gold weight, updates with gold &middot; <a href="sost-reference.html" style="color:var(--cyan);text-decoration:none">Full gold reference &rarr;</a>'; }
+  var discEl=document.getElementById('sostDisclaimer'); if(discEl)discEl.style.display='block';
+  var dPr=document.getElementById('sostDiscPrice'); if(dPr)dPr.textContent='$'+refUSD.toFixed(4);
+  // ---- gold-reference chart: the fetched gold history, scaled by the fixed weight ----
   if(!cache['sost-ref']){cache['sost-ref']={};}
-  var now=Date.now();
-  var GENESIS_MS=1773597600000;
-  var R0_e=7.85100863,Q_e=0.7788007830714049,EP_e=131553;
-  var bpd_e=144; // blocks per day
-  function priceAtH(h){return 0;} // SOST has no associated value — chart is flat 0 (non-market)
-  // Generate data for ALL time ranges (not just 1,3,7,30)
   [1,3,7,30,180,365,1095,1825].forEach(function(days){
-    var p=[];
-    // Clamp range to genesis
-    var rangeMs=days*86400000;
-    var startMs=Math.max(now-rangeMs,GENESIS_MS);
-    var actualMs=now-startMs;
-    var nPts=Math.min(Math.max(Math.round(actualMs/60000),2),720); // 1 point per minute, max 720
-    var step=actualMs/nPts;
-    var totalBlocks=Math.round((actualMs/1000)/600); // blocks in range
-    for(var i=0;i<=nPts;i++){
-      var t=startMs+i*step;
-      if(t<GENESIS_MS)continue;
-      var elapsedFromGenesis=(t-GENESIS_MS)/1000;
-      var hh=Math.max(1,Math.round(elapsedFromGenesis/600));
-      if(hh>H)hh=H;
-      if(hh<1)continue;
-      var pv=priceAtH(hh);
-      if(pv>50.0||pv<0)continue;   // allow 0 so the chart draws a flat zero line (no value)
-      p.push([t,pv]);
+    var src=(cache['tether-gold']&&cache['tether-gold'][days])||(cache['pax-gold']&&cache['pax-gold'][days]);
+    if(src&&src.length){
+      cache['sost-ref'][days]=src.map(function(pt){return [pt[0], pt[1]*FACTOR];});
+    } else {
+      // flat fallback at the current reference until that timeframe's gold history loads
+      var nowF=Date.now(), span=days*86400000, p=[];
+      for(var i=0;i<=60;i++){ p.push([nowF-span+i*(span/60), refUSD]); }
+      cache['sost-ref'][days]=p;
     }
-    cache['sost-ref'][days]=p;
   });
   sostId='sost-ref';COINS[2].id='sost-ref';
-  // Activate SOST buttons (remove disabled class)
   activateSost();
+  // activateSost() re-sets the value via fmtUsd (2 decimals, red) — restore the 4-decimal gold reference
+  if(el){ el.textContent='$'+refUSD.toFixed(4); el.style.color='var(--gold)'; }
   drawChart('sost');
 }
 
