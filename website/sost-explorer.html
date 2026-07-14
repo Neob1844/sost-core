@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-07-11-v379-nav-sost-reference">
+<meta name="explorer-html-version" content="2026-07-13-v385-convergencex-colorized">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -360,89 +360,79 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
 </style>
 <script src="js/security.js"></script>
-<script src="js/nav-toggle.js" defer></script>
+<script src="js/nav-toggle.js?v=v380" defer></script>
 </head>
 <body>
-<!-- V145-BANNER-INJECT (surgical; delete this comment..closing comment to revert) -->
+<!-- V15-BANNER-INJECT (surgical; delete this comment..closing comment to revert) -->
 <style>
-@keyframes v147pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,185,66,0)}50%{box-shadow:0 0 26px 2px rgba(240,185,66,.5)}}
-@keyframes v147chip{0%,100%{opacity:1}50%{opacity:.55}}
-#minerBanner code{background:rgba(0,0,0,.35);border:1px solid rgba(240,185,66,.35);border-radius:5px;padding:1px 6px;color:#ffe9c2;font-size:12px;word-break:break-all}
-#minerBanner .v147box{background:rgba(0,0,0,.28);border:1px solid rgba(240,185,66,.28);border-radius:10px;padding:12px 14px}
-#minerBanner .v147step{display:flex;gap:9px;align-items:flex-start;margin:5px 0}
-#minerBanner .v147num{flex:0 0 22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#f0b942,#c8892a);color:#241a05;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:12px}
-@media(max-width:720px){#minerBanner .v147grid{grid-template-columns:1fr!important}}</style>
-<div id="minerBanner" style="position:relative;z-index:99999;background:linear-gradient(160deg,#33290f 0%,#241d0d 55%,#1c1608 100%);border-bottom:3px solid #f0b942;color:#ffeecb;font-family:'JetBrains Mono',monospace;line-height:1.55;animation:v147pulse 2.6s ease-in-out infinite">
-  <div style="max-width:1000px;margin:0 auto;padding:16px 18px">
-
-    <!-- header -->
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px">
-      <span style="background:linear-gradient(135deg,#f0b942,#c8892a);color:#221803;font-weight:900;letter-spacing:1px;font-size:13px;padding:4px 12px;border-radius:6px;animation:v147chip 1.8s ease-in-out infinite">&#128295; V14.7</span>
-      <span style="font-weight:900;letter-spacing:1.2px;font-size:16px;color:#ffd97a">MANDATORY NODE &amp; MINER UPDATE</span>
-      <button id="v147btn" onclick="v147toggle()" title="Hide / show notice" style="margin-left:auto;background:rgba(0,0,0,.35);border:1px solid #f0b942;color:#ffd97a;font-family:inherit;font-size:12px;font-weight:700;padding:4px 11px;border-radius:6px;cursor:pointer;white-space:nowrap">&#9650; Hide</button>
-    </div>
-
-    <div id="v147body">
-    <!-- headline -->
-    <div style="font-size:15px;font-weight:800;color:#ffeecb;margin-bottom:4px">
-      &#9883;&#65039; The <b style="color:#ffd97a">SOST Atomic Swap</b> re-activates at <b style="color:#ffd97a">BLOCK 17,000</b>
-    </div>
-    <div style="font-size:12px;color:#e3cfa0;margin-bottom:12px">Cross-chain HTLC (SOST &harr; ETH &middot; BSC/BNB &middot; BTC later). Coordinated flag-day &mdash; every node &amp; miner must run the updated binary before the chain reaches 17,000.</div>
-
-    <!-- WINDOW callout -->
-    <div style="background:linear-gradient(90deg,rgba(240,185,66,.18),rgba(240,185,66,.06));border:1px solid #f0b942;border-radius:10px;padding:11px 14px;margin-bottom:13px;text-align:center;font-weight:800;font-size:14px;color:#ffe9c2">
-      &#128295; RECOMPILE + RESTART your NODE and MINER in the window:<br>
-      <span style="color:#ffd97a;font-size:15px">AFTER block 16,900 &nbsp;&middot;&nbsp; BEFORE block 17,000</span>
-    </div>
-
-    <!-- two columns: steps + status -->
-    <div class="v147grid" style="display:grid;grid-template-columns:1.15fr .85fr;gap:12px">
-
-      <div class="v147box">
-        <div style="font-weight:800;color:#ffd97a;font-size:12px;letter-spacing:.5px;margin-bottom:8px">&#128736;&#65039; WHAT YOU MUST DO</div>
-        <div class="v147step"><span class="v147num">1</span><span><code>git pull</code> the latest <b>sost-core</b> (main).</span></div>
-        <div class="v147step"><span class="v147num">2</span><span>Recompile with the mandatory flags:<br><code>cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release &amp;&amp; cmake --build build --target sost-node sost-miner sost-cli -j$(nproc)</code></span></div>
-        <div class="v147step"><span class="v147num">3</span><span>Restart your <b>NODE</b> and your <b>MINER</b> &mdash; inside the 16,900&rarr;17,000 window.</span></div>
-      </div>
-
-      <div class="v147box">
-        <div style="font-weight:800;color:#ffd97a;font-size:12px;letter-spacing:.5px;margin-bottom:8px">&#8505;&#65039; WHAT TO EXPECT</div>
-        <div style="font-size:12px;color:#e8d9b6;margin-bottom:7px">&#9989; <b>Until block 17,000 nothing changes</b> &mdash; mining &amp; consensus are unaffected, and no funds are or were ever at risk.</div>
-        <div style="font-size:12px;color:#e8d9b6;margin-bottom:7px">&#128260; From <b>17,000</b>, all updated nodes flip together and begin relaying/mining swap transactions in lockstep.</div>
-        <div style="font-size:12px;color:#ffb4a0">&#9888;&#65039; A node that does <b>not</b> update will not relay or mine swap transactions.</div>
-      </div>
-
-    </div>
-
-    <!-- footer note -->
-    <div style="margin-top:11px;font-size:11.5px;color:#d8c191;text-align:center">
-      &#129514; The swap remains <b>founder-testing &mdash; DO NOT USE</b> until we announce it is validated. Details: <a href="https://sostcore.com" style="color:#ffd97a">sostcore.com</a> &middot; <a href="https://t.me/SOSTProtocolOfficial" style="color:#ffd97a">t.me/SOSTProtocolOfficial</a>
-    </div>
-
-    </div><!-- /v147body -->
+@keyframes v15glow{0%,100%{box-shadow:0 0 0 0 rgba(251,1,13,0),0 0 20px rgba(124,255,160,.05)}50%{box-shadow:0 0 26px 3px rgba(251,1,13,.28),0 0 42px rgba(124,255,160,.12)}}
+@keyframes v15shine{0%{background-position:180% 0}100%{background-position:-80% 0}}
+#v15banner{position:relative;z-index:99990;max-width:1120px;margin:16px auto 0;padding:0 16px;font-family:'JetBrains Mono',monospace}
+#v15banner details{background:radial-gradient(120% 140% at 0% 0%,#2b0a10 0%,#180a14 45%,#0c0a12 100%);border:2px solid transparent;border-radius:14px;overflow:hidden;animation:v15glow 3.4s ease-in-out infinite;border-image:linear-gradient(120deg,#fb010d,#ffd166,#7CFFA0,#22d3ee,#fb010d) 1}
+#v15banner summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;align-items:center;gap:11px;padding:15px 18px;color:#ffe9ea}
+#v15banner summary::-webkit-details-marker{display:none}
+#v15banner .v15chip{background:linear-gradient(135deg,#fb010d,#a80009);color:#fff;font-weight:900;letter-spacing:1.5px;font-size:12px;padding:5px 12px;border-radius:7px;box-shadow:0 0 16px rgba(251,1,13,.5)}
+#v15banner .v15cx{background:linear-gradient(135deg,#0b3b2e,#12705a);color:#7CFFA0;font-weight:800;letter-spacing:1.4px;font-size:11px;padding:5px 11px;border-radius:7px;border:1px solid rgba(124,255,160,.5)}
+#v15banner .v15ttl{font-weight:900;font-size:16px;letter-spacing:.5px;background:linear-gradient(100deg,#fb010d 0%,#ffd166 30%,#fff 46%,#7CFFA0 54%,#22d3ee 70%,#fb010d 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:v15shine 4s linear infinite}
+#v15banner .v15go{margin-left:auto;font-size:10.5px;color:#7CFFA0;border:1px solid #2f9e6f;border-radius:6px;padding:3px 9px;white-space:nowrap}
+#v15banner .v15body{border-top:1px solid rgba(255,255,255,.08);padding:16px 18px 18px;color:#ecdfe0;font-size:13px;line-height:1.72}
+#v15banner .v15hero{font-size:clamp(19px,3vw,27px);font-weight:900;letter-spacing:1px;text-align:center;margin:6px 0 12px;background:linear-gradient(100deg,#7CFFA0,#22d3ee,#ffd166,#7CFFA0);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:v15shine 5s linear infinite}
+#v15banner h4{margin:15px 0 7px;color:#ffd166;font-size:11.5px;letter-spacing:1px;text-transform:uppercase}
+#v15banner .v15split{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 2px}
+#v15banner .v15split>div{flex:1;min-width:140px;background:rgba(0,0,0,.34);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px 12px;text-align:center}
+#v15banner .v15big{font-size:23px;font-weight:900}
+#v15banner .v15jack{margin:8px 0 0;padding:13px 15px;border-radius:11px;background:linear-gradient(160deg,rgba(255,209,102,.10),rgba(124,255,160,.05));border:1px solid rgba(255,209,102,.4);box-shadow:0 0 22px rgba(255,209,102,.08) inset}
+#v15banner pre{background:#080a09;border:1px solid #2a3a30;border-radius:9px;padding:11px 12px;overflow-x:auto;font-size:11px;color:#bde6c8;line-height:1.55;margin:6px 0 0}
+#v15banner ul{margin:6px 0 0 18px;padding:0;line-height:1.85}
+#v15banner .v15note{margin-top:14px;font-size:11px;color:#c9b48a;border-top:1px solid rgba(255,255,255,.08);padding-top:10px}
+#v15banner a{color:#ffd166;text-decoration:none}
+#v15banner b.hl{color:#7CFFA0}
+#v15banner .v15cxword{font-weight:900;letter-spacing:.3px;background:linear-gradient(100deg,#fb010d,#ffd166,#7CFFA0,#22d3ee,#a855f7,#fb010d);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:v15shine 3.2s linear infinite;text-shadow:0 0 18px rgba(124,255,160,.12)}
+@media(max-width:620px){#v15banner .v15ttl{font-size:14px}}
+</style>
+<div id="v15banner"><details open>
+ <summary>
+  <span class="v15chip">&#9881;&#65039; V15</span>
+  <span class="v15ttl">FULL DECENTRALIZATION FORK &mdash; block 20,000</span>
+  <span class="v15cx">PoW &middot; <span class="v15cxword">ConvergenceX</span></span>
+  <span class="v15go">PLANNED &middot; pending final implementation &amp; tests &middot; tap to expand</span>
+ </summary>
+ <div class="v15body">
+  <div class="v15hero">TOTAL DECENTRALIZATION</div>
+  <p style="margin:0 0 4px;color:#fff;font-weight:700;text-align:center">SOST already has a Proof-of-Work network that works.</p>
+  <p style="margin:0 0 12px;text-align:center">Making it more complex than it needs to be only makes the protocol harder for everyone to run and use. That is why we are pursuing the <b class="hl">full decentralization</b> of the protocol &mdash; native PoW + <b class="v15cxword">ConvergenceX</b>, no operator, no treasury.</p>
+  <div style="margin:6px 0 8px;padding:11px 14px;border-radius:10px;border:1px solid rgba(251,191,36,.55);background:rgba(251,191,36,.07);color:#f5d79a;font-size:11.5px;line-height:1.65">
+   <b style="color:#fbbf24;letter-spacing:.5px">&#9888;&#65039; EXPERIMENTAL &middot; NOT FORMALLY AUDITED.</b> This protocol has been hardened <b>empirically</b> &mdash; through its live mainnet history and a disciplined <b>trial &rarr; error &rarr; diagnosis &rarr; resolution</b> engineering cycle, with every issue and fix recorded on-chain for full <b>traceability</b>. The result is a system that behaves reliably and securely <i>in practice</i>, but it has <b>not undergone an independent third-party security audit</b>. Run, mine and participate accordingly &mdash; at your own risk, with no guarantees.
   </div>
-</div>
-<script>
-function v147toggle(){
-  var b=document.getElementById('v147body'), btn=document.getElementById('v147btn'), bn=document.getElementById('minerBanner');
-  var hide = (b.style.display!=='none');
-  b.style.display = hide ? 'none' : '';
-  if(btn) btn.innerHTML = hide ? '&#9660; Show' : '&#9650; Hide';
-  if(bn)  bn.style.animation = hide ? 'none' : '';
-  try{ localStorage.setItem('v147_hidden', hide?'1':'0'); }catch(e){}
-}
-(function(){
-  try{
-    if(localStorage.getItem('v147_hidden')==='1'){
-      var b=document.getElementById('v147body'), btn=document.getElementById('v147btn'), bn=document.getElementById('minerBanner');
-      if(b) b.style.display='none';
-      if(btn) btn.innerHTML='&#9660; Show';
-      if(bn) bn.style.animation='none';
-    }
-  }catch(e){}
-})();
-</script>
-<!-- /V145-BANNER-INJECT -->
+  <div class="v15split">
+   <div><div style="color:#9fe6bf;font-size:10.5px">MINER (direct)</div><div class="v15big" style="color:#7CFFA0">50%</div></div>
+   <div><div style="color:#9fe6bf;font-size:10.5px">DTD distribution</div><div class="v15big" style="color:#7CFFA0">50%</div></div>
+   <div><div style="color:#f5a3a3;font-size:10.5px">Gold Vault &middot; PoPC</div><div class="v15big" style="color:#f5a3a3">0%</div></div>
+  </div>
+  <p style="margin:9px 0 0">Future emission that went to Gold Vault / PoPC is redirected to <b>DTD</b>. <b style="color:#ffd166">SOST is not backed by gold &mdash; SOST is backed by its own rules.</b></p>
+  <h4>How DTD works</h4>
+  <ul>
+   <li>Permanent <b>1-of-3 cadence</b>: the DTD share accumulates for 2 blocks and pays on the 3rd (lottery block).</li>
+   <li>No valid winner &rarr; not lost: it <b>rolls forward</b> and grows.</li>
+   <li>Eligibility: mined <b class="hl">&ge;1 block in the last 2016</b> (~2 weeks) &mdash; active miners only.</li>
+   <li>Kept: recent-winner cooldown &middot; anti-dominance gate &middot; SbPoW gate &middot; uniform per-address selection.</li>
+  </ul>
+  <h4>&#127974; What happens to the existing Gold Vault + PoPC SOST</h4>
+  <div class="v15jack">
+   The SOST already accumulated in Gold Vault + PoPC are <b class="hl">not kept as a treasury</b> and <b>not sold for listings</b>. They are progressively <b style="color:#ffd166">returned to active miners</b> through a <b>Historical DTD Jackpot</b>: about <b style="color:#ffd166">100 SOST every ~288 blocks</b> (~48 h) to the DTD winner, using the very same DTD eligibility rules, until the historical balance is exhausted (~3 years). It is a real protocol spend of those coins &mdash; <b>no new emission</b>. The reserve returns to the network, not to a founder.
+  </div>
+  <h4>&#9203; Upgrade window &mdash; after block 19,900, before 20,000</h4>
+  <p style="margin:0 0 4px">All node operators, miners and explorers must update inside the window. Mandatory mainnet flags:</p>
+  <pre>cd /opt/sost &amp;&amp; git pull origin main
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc)
+sudo systemctl restart sost-node</pre>
+  <p style="margin:6px 0 0;font-size:11px;color:#f5c78a">Nodes / miners that do not update may become incompatible with the V15 reward rules after activation.</p>
+  <div class="v15note">&#9883;&#65039; Atomic Swap stays in controlled founder testing (not a public DEX). &#127760; GeaSpirit is an external ecosystem project &mdash; not required for SOST consensus. <b>V15 is PLANNED &mdash; pending final implementation and consensus tests.</b> Not active. The final build and exact upgrade steps will be published before activation. Details: <a href="https://sostcore.com">sostcore.com</a> &middot; <a href="https://t.me/SOSTProtocolOfficial">t.me/SOSTProtocolOfficial</a></div>
+ </div>
+</details></div>
+<!-- /V15-BANNER-INJECT -->
+
 
 
 
@@ -615,74 +605,6 @@ function v147toggle(){
   </div>
 </div>
 <!-- ════════════════════════════════════════════════════════════ -->
-<!-- GEASPIRIT — SOST-ECOSYSTEM MINING INTELLIGENCE (collapsible,    -->
-<!-- collapsed by default via native <details>)                     -->
-<!-- ════════════════════════════════════════════════════════════ -->
-<style>
-@keyframes geaLogoPulse{0%,100%{filter:drop-shadow(0 0 6px rgba(0,255,65,.85)) drop-shadow(0 0 14px rgba(0,255,65,.4));transform:scale(1)}50%{filter:drop-shadow(0 0 15px rgba(0,255,65,1)) drop-shadow(0 0 32px rgba(0,255,65,.7));transform:scale(1.07)}}
-.gea-pulse-logo{width:31px;height:31px;border-radius:22%;object-fit:cover;background:#fff;padding:1px;box-sizing:border-box;flex:0 0 auto;animation:geaLogoPulse 2s ease-in-out infinite}
-@media (prefers-reduced-motion:reduce){.gea-pulse-logo{animation:none;filter:drop-shadow(0 0 8px rgba(0,255,65,.7))}}
-</style>
-<div style="max-width:1400px;margin:10px auto 0;padding:0 24px;">
- <details style="background:linear-gradient(135deg,rgba(47,158,111,.13),rgba(53,214,160,.05));border:2px solid #2f9e6f;border-radius:10px;box-shadow:0 0 20px rgba(47,158,111,.22);overflow:hidden">
-  <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px">
-   <span style="display:flex;align-items:center;gap:11px">
-    <img src="geaspirit-logo.png" alt="GeaSpirit" class="gea-pulse-logo"/>
-    <span>
-     <span style="font-size:15px;font-weight:900;background:linear-gradient(90deg,#2f9e6f,#35d6a0);-webkit-background-clip:text;background-clip:text;color:transparent">GeaSpirit &mdash; Mining-Asset Intelligence</span>
-     <span style="display:block;font-size:10.5px;color:#8fb7a6;margin-top:2px">One of the largest open intelligence platforms for second-chance mining assets &middot; a SOST-ecosystem project</span>
-    </span>
-   </span>
-   <span style="background:rgba(47,158,111,.14);border:1px solid rgba(47,158,111,.6);color:#9ae6c4;font-family:var(--code,monospace);font-size:10px;font-weight:800;letter-spacing:1.2px;padding:6px 11px;border-radius:5px;white-space:nowrap">MILESTONES &#9662;</span>
-  </summary>
-  <div style="border-top:1px dashed rgba(47,158,111,.3);padding:15px 18px 17px;font-size:12.5px;line-height:1.75;color:var(--text,#e8e8e8)">
-
-   <p style="margin:0 0 12px;padding:11px 13px;background:rgba(47,158,111,.12);border:1px solid rgba(47,158,111,.5);border-radius:7px;color:#d6ffe9;font-size:13px;line-height:1.7">&#9935;&#65039; <b>The one of the largest open intelligence platforms for second-chance mining assets has expanded its curation to <span style="color:#35d6a0">166,000+ mines</span></b> &mdash; abandoned, historic, supposedly exhausted, tailings and care-and-maintenance.</p>
-
-   <p style="margin:0 0 12px">GeaSpirit reads the world&rsquo;s mines and mineral deposits from <b style="color:#9ae6c4">open data</b> and triages them &mdash; surfacing <b>overlooked, abandoned and underutilized &ldquo;second-chance&rdquo; assets</b>, and unifying every site into one searchable, scored, geophysically-screened intelligence layer in 17 languages. It is the resource-discovery arm of the SOST ecosystem.</p>
-
-   <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;font-family:var(--code,monospace)">
-    <span style="background:rgba(0,0,0,.28);border:1px solid rgba(47,158,111,.45);border-radius:5px;padding:5px 10px;font-size:10.5px;color:#bbf7d0"><b style="color:#35d6a0">166,000+</b> mines &amp; deposits</span>
-    <span style="background:rgba(0,0,0,.28);border:1px solid rgba(47,158,111,.45);border-radius:5px;padding:5px 10px;font-size:10.5px;color:#bbf7d0"><b style="color:#35d6a0">100+</b> countries</span>
-    <span style="background:rgba(0,0,0,.28);border:1px solid rgba(47,158,111,.45);border-radius:5px;padding:5px 10px;font-size:10.5px;color:#bbf7d0"><b style="color:#35d6a0">6,000+</b> mineral species</span>
-    <span style="background:rgba(0,0,0,.28);border:1px solid rgba(47,158,111,.45);border-radius:5px;padding:5px 10px;font-size:10.5px;color:#bbf7d0"><b style="color:#35d6a0">17</b> languages</span>
-    <span style="background:rgba(0,0,0,.28);border:1px solid rgba(47,158,111,.45);border-radius:5px;padding:5px 10px;font-size:10.5px;color:#bbf7d0">GeaSpirit Score 0&ndash;100 &middot; S2 geophysics</span>
-   </div>
-
-   <div style="margin:0 0 14px;padding:12px 14px;background:rgba(0,255,65,.07);border:1px solid rgba(0,255,65,.45);border-radius:8px">
-    <div style="font-size:13px;font-weight:800;color:#7CFFA0;margin-bottom:5px">&#127760; New &mdash; REE Locator: a sealed, on-chain Rare-Earths Prospectivity campaign</div>
-    <p style="margin:0 0 8px;font-size:12px;color:#cfeede">A regional <b>Rare-Earth Fertility Prior</b> that ranks where carbonatite- and alkaline-related REE systems are geologically more plausible, from open satellite/geoscience data. It is a <b>relative regional rank</b> &mdash; <b style="color:#fbbf24">not</b> a reserve, grade, tonnage or probability of a deposit, and it does not claim rare earths are present anywhere; it points to regions worth scientific attention.</p>
-    <p style="margin:0 0 8px;font-size:12px;color:#cfeede"><b>Sealed campaign v0.4 (unresolved)</b> &mdash; committed and time-stamped on the SOST blockchain so the ranking cannot be altered after the fact. 50 prospective targets + 50 controls = 100 committed leaves (aggregate only). No coordinates, individual scores or Merkle leaves are disclosed.</p>
-    <div style="font-family:var(--code,monospace);font-size:10px;color:#9ae6c4;word-break:break-all;line-height:1.8;background:rgba(0,0,0,.3);border-radius:6px;padding:8px 10px;margin:0 0 8px">
-     <b style="color:#67e8f9">Block</b> 13,483 &middot; <b style="color:#67e8f9">Signer</b> sost1ca9097d830b74495b95db9d779ad63c90579bc18<br>
-     <b style="color:#67e8f9">SHA-256</b> 9da4548fdbfe8b57090116e65db4ae15b948eb67927243ac9057da98b8b89d75<br>
-     <b style="color:#67e8f9">Merkle root</b> 7f29c11134232fcc7e998c8df7efe26ea0bc453de91792a61351368ca5a1bf7a<br>
-     <b style="color:#67e8f9">TXID</b> 58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979
-    </div>
-    <p style="margin:0 0 9px;font-size:11.5px;color:#9fb8ab"><b>Proves:</b> precedence + integrity &mdash; the sealed set existed unchanged no later than block 13,483, signed by the operator address. <b>Does NOT prove:</b> presence, grade, depth, tonnage, resources or reserves. <b style="color:#fbbf24">Useful Compute is DRY-RUN only</b> &mdash; no rewards, no consensus change. Report Builder pending. 17 languages. Not investment advice, no guaranteed mineral discovery.</p>
-    <a href="https://geaspirit.com/ree-locator/" target="_blank" rel="noopener" style="display:inline-block;background:rgba(0,255,65,.14);border:1px solid rgba(0,255,65,.5);color:#7CFFA0;font-family:var(--code,monospace);font-size:11px;font-weight:800;letter-spacing:.6px;padding:6px 12px;border-radius:6px;text-decoration:none">&#10145; Explore the REE Locator &rarr; geaspirit.com/ree-locator/</a>
-   </div>
-
-   <div style="color:#2f9e6f;font-weight:800;letter-spacing:1.3px;font-size:11px;margin-bottom:7px">// MILESTONES &amp; WHAT&rsquo;S BEEN BUILT</div>
-   <ul style="margin:0 0 13px 18px;padding:0;line-height:1.85">
-    <li><b style="color:#9ae6c4">Global asset map</b> &mdash; tens of thousands of mines &amp; deposits across every continent and major belt (Andes, Witwatersrand, Copperbelt, Great Basin, Pilbara&hellip;), each geocoded and searchable.</li>
-    <li><b style="color:#9ae6c4">GeaSpirit Score</b> &mdash; every asset triaged 0&ndash;100 with green/amber confidence bands across signal, access/depth, precision and certainty.</li>
-    <li><b style="color:#9ae6c4">S2 subsurface screening</b> &mdash; magnetic (EMAG2) + free-air gravity (Sandwell) sampled per site; ~96% of land assets earn the S2 evidence tier.</li>
-    <li><b style="color:#9ae6c4">Second-chance classification</b> &mdash; abandoned, historic, tailings, care-&amp;-maintenance and underused assets, honestly separated from active operations.</li>
-    <li><b style="color:#9ae6c4">Open-data fusion</b> &mdash; Wikidata (CC0) + OpenStreetMap (ODbL) + public geological surveys, deduplicated &amp; geocoded, with non-Latin names romanised (e.g. &#26472;&#23665;&#29028;&#30719; &rarr; &ldquo;Yang Shan Mei Kuang&rdquo;).</li>
-    <li><b style="color:#9ae6c4">Minerals &amp; Gems database</b> &mdash; 6,000+ species with chemistry <i>computed by GeaSpirit</i> (element wt%, molar mass, radioactivity from the formula via IUPAC weights), plus IMA symbol, crystal system, Nickel-Strunz class &amp; space group &mdash; all open data, no licensed source.</li>
-    <li><b style="color:#9ae6c4">17-language platform</b> &middot; Intelligence Reports (free Basic Scan + Professional).</li>
-    <li><b style="color:#9ae6c4">Legally clean by design</b> &mdash; only open / CC0 / ODbL / public-domain sources; never scrapes licensed databases (Mindat, RRUFF, etc.).</li>
-    <li><b style="color:#22d3ee">🛰 Live satellite detection</b> &mdash; on-demand <b>Sentinel-2 alteration-ratio mapping</b> (iron-oxide, clay/hydroxyl), <b>Sentinel-1 radar</b> texture and gravity/magnetic anomaly maps over any asset &mdash; the remote-sensing engine behind the Professional Report.</li>
-    <li><b style="color:#fbbf24">SOST fusion</b> &mdash; the on-chain trust &amp; provenance layer that sets GeaSpirit apart from every other mining database.</li>
-   </ul>
-
-   <a href="https://geaspirit.com" target="_blank" rel="noopener" style="display:inline-block;background:rgba(47,158,111,.16);border:1px solid rgba(47,158,111,.6);color:#9ae6c4;font-family:var(--code,monospace);font-size:11px;font-weight:800;letter-spacing:.8px;padding:7px 14px;border-radius:6px;text-decoration:none">Explore GeaSpirit &rarr; geaspirit.com</a>
-   <a href="https://geaspirit.com/report-sample/" target="_blank" rel="noopener" style="display:inline-block;margin-left:8px;background:rgba(34,211,238,.14);border:1px solid rgba(34,211,238,.6);color:#67e8f9;font-family:var(--code,monospace);font-size:11px;font-weight:800;letter-spacing:.8px;padding:7px 14px;border-radius:6px;text-decoration:none">&#128752; See a sample report &rarr;</a>
-  </div>
- </details>
-</div>
-<!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST OTC / P2P ATOMIC SWAP — CODING MILESTONE BANNER (V15)     -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div style="max-width:1400px;margin:10px auto 0;padding:0 24px;">
@@ -837,120 +759,6 @@ function v147toggle(){
   <div id="pdNote" style="font-size:10px;color:var(--text3);margin-top:10px">Share of blocks by producer address. The donut appears once the explorer's block scan finishes.</div>
 </div>
 
-<!-- ===== STRATEGIC RESERVE GOVERNANCE VOTE (governance PREVIEW — LOCKED / NOT ACTIVE) ===== -->
-<style>
-  @keyframes gvpPulse{0%,100%{opacity:.6;box-shadow:0 0 0 0 rgba(251,1,13,.45)}50%{opacity:1;box-shadow:0 0 0 7px rgba(251,1,13,0)}}
-  @keyframes gvpGlow{0%,100%{text-shadow:0 0 14px rgba(255,215,0,.30)}50%{text-shadow:0 0 28px rgba(255,215,0,.60)}}
-  @keyframes gvpShine{0%{background-position:140% 0}100%{background-position:-40% 0}}
-  #goldVaultPulse{--gvGold:#FFD700;--gvCyan:#22d3ee;--gvGreen:#4ade80;--gvRed:#fb010d;max-width:100%;overflow-wrap:break-word}
-  #goldVaultPulse .gvp-grid2{max-width:100%}
-  #goldVaultPulse .gvp-grid2>*{min-width:0}
-  #goldVaultPulse .gvp-dot{width:9px;height:9px;border-radius:50%;background:var(--gvRed);display:inline-block;animation:gvpPulse 2.2s ease-in-out infinite;vertical-align:middle}
-  #goldVaultPulse .gvp-title{font-size:clamp(18px,2.6vw,25px);font-weight:800;letter-spacing:1px;background:linear-gradient(100deg,#b8860b 0%,#FFD700 30%,#fff8d0 46%,#ffffff 50%,#fff8d0 54%,#FFD700 70%,#b8860b 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gvpShine 3.4s linear infinite,gvpGlow 3s ease-in-out infinite;margin:0}
-  #goldVaultPulse .gvp-sub{font-size:11px;letter-spacing:2.5px;color:var(--gvCyan);text-transform:uppercase;margin-top:3px}
-  #goldVaultPulse .gvp-badge{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;letter-spacing:2px;color:var(--gvRed);border:1.5px solid var(--gvRed);border-radius:8px;padding:5px 11px;background:rgba(251,1,13,.09);box-shadow:0 0 18px rgba(251,1,13,.18)}
-  #goldVaultPulse .gvp-comp{border-radius:11px;padding:13px 15px}
-  #goldVaultPulse .gvp-comp.gold{background:linear-gradient(160deg,rgba(255,215,0,.11),rgba(255,215,0,.01));border:1.5px solid rgba(255,215,0,.45);box-shadow:0 0 22px rgba(255,215,0,.10) inset}
-  #goldVaultPulse .gvp-comp.grow{background:linear-gradient(160deg,rgba(74,222,128,.11),rgba(74,222,128,.01));border:1.5px solid rgba(74,222,128,.42);box-shadow:0 0 22px rgba(74,222,128,.08) inset}
-  #goldVaultPulse .gvp-comp h4{margin:0 0 5px;font-size:13px;font-weight:800;letter-spacing:.4px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-  #goldVaultPulse .gvp-chip{display:inline-block;font-size:11px;font-weight:800;letter-spacing:1px;padding:2px 9px;border-radius:20px;margin-right:6px;color:#0a0a0a;background:linear-gradient(90deg,#FFD700,#ffe066)}
-  #goldVaultPulse .gvp-card{background:linear-gradient(180deg,rgba(255,215,0,.07),rgba(0,0,0,0));border:1.5px solid rgba(255,215,0,.38);border-radius:11px;padding:15px 17px;box-shadow:0 0 22px rgba(255,215,0,.07)}
-  #goldVaultPulse .gvp-btn{padding:8px 24px;border-radius:9px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:2px;cursor:not-allowed;opacity:.45;background:rgba(255,255,255,.03)}
-  #goldVaultPulse .gvp-btn.yes{border:1.5px solid var(--gvGreen);color:var(--gvGreen)}
-  #goldVaultPulse .gvp-btn.no{border:1.5px solid var(--gvRed);color:var(--gvRed)}
-  #goldVaultPulse .gvp-rule{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.08);font-size:12px}
-  #goldVaultPulse .gvp-rule .k{color:var(--gvCyan);font-weight:600;letter-spacing:.5px}
-  #goldVaultPulse .gvp-rule b{color:#fff;font-weight:700}
-  #goldVaultPulse input.gvp-wallet{width:100%;min-width:0;box-sizing:border-box;background:#060606;border:1.5px solid rgba(34,211,238,.35);border-radius:9px;color:#cbd5e1;font-family:'Fira Code',monospace;font-size:12px;padding:9px 11px;margin-top:6px}
-  #goldVaultPulse input.gvp-wallet:focus{outline:none;border-color:var(--gvCyan);box-shadow:0 0 14px rgba(34,211,238,.25)}
-  #goldVaultPulse .gvp-h{font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
-  @media(max-width:860px){#goldVaultPulse .gvp-grid2{grid-template-columns:1fr!important}}
-</style>
-<div class="section" id="goldVaultPulse">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px">
-    <div>
-      <h3 class="gvp-title">&#9670; STRATEGIC RESERVE GOVERNANCE VOTE</h3>
-      <div class="gvp-sub">Weighted SOST-holder voting &middot; Preview</div>
-    </div>
-    <span class="gvp-badge"><span class="gvp-dot"></span> LOCKED / NOT ACTIVE</span>
-  </div>
-
-  <div style="font-size:12px;color:#c8d0da;line-height:1.7;margin:11px 0 16px;max-width:900px">
-    <b style="color:#FFD700">Preview only — governance not active.</b> A visual preview of how the future
-    Protocol Strategic Reserve governance will look. It executes nothing, moves no funds and stores nothing.
-    Weighted voting requires snapshot balance support (not available yet); when live, real voting will require a
-    wallet signature. Protocol may change before activation.
-  </div>
-
-  <!-- Compartments -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" class="gvp-grid2">
-    <div class="gvp-comp gold">
-      <h4 style="color:#FFD700">&#9670; GOLD ACCUMULATION RESERVE &mdash; MINIMUM 50%</h4>
-      <div style="font-size:12px;color:#c8d0da;line-height:1.6">Future tokenized-gold allocation. Permitted assets:
-        <span class="gvp-chip">PAXG</span><span class="gvp-chip">XAUT</span><br>
-        Measured in <b style="color:#FFD700">grams of protocol-held gold</b> (a treasury metric, not a peg or claim).</div>
-    </div>
-    <div class="gvp-comp grow">
-      <h4 style="color:#4ade80">&#9106; GROWTH / LISTING / COMPLIANCE RESERVE &mdash; MAXIMUM 50%</h4>
-      <div style="font-size:12px;color:#c8d0da;line-height:1.6">Future ecosystem allocation: compliance, MiCA/legal, audits, infrastructure, aggregators, serious listings, initial liquidity, security.</div>
-    </div>
-  </div>
-
-  <!-- Preview proposal + rules -->
-  <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:14px" class="gvp-grid2">
-    <div class="gvp-card">
-      <div class="gvp-h" style="color:#FFD700;margin-bottom:8px">GV-001 &mdash; PREVIEW PROPOSAL</div>
-      <div style="font-size:13px;color:#c8d0da;line-height:1.65;margin-bottom:16px">Purpose: enable the future reserve governance framework. <i style="color:var(--text3)">Illustrative only — not an executable proposal.</i></div>
-      <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
-        <button class="gvp-btn yes" id="gvpYes" disabled title="Voting not active — preview only">YES</button>
-        <button class="gvp-btn no" id="gvpNo" disabled title="Voting not active — preview only">NO</button>
-        <span style="font-size:11px;color:var(--text3);letter-spacing:1px">buttons disabled &middot; preview</span>
-      </div>
-      <label style="font-size:12px;color:#22d3ee;letter-spacing:1px;font-weight:700">WALLET (PREVIEW)
-        <input class="gvp-wallet" id="gvpWallet" type="text" spellcheck="false" autocomplete="off" placeholder="Enter SOST address (sost1…)">
-      </label>
-      <div id="gvpWalletMsg" style="font-size:12px;color:var(--text3);margin-top:10px;min-height:16px">Voting power: snapshot required — not active yet.</div>
-    </div>
-    <div>
-      <div class="gvp-h" style="color:#22d3ee;margin-bottom:8px">VOTING PROTOCOL &mdash; DRAFT / SUBJECT TO CHANGE</div>
-      <div class="gvp-rule"><span class="k">Quorum</span><b>15% of votable SOST</b></div>
-      <div class="gvp-rule"><span class="k">Approval</span><b>51% YES (weighted)</b></div>
-      <div class="gvp-rule"><span class="k">Weekly cap</span><b>1% of the compartment</b></div>
-      <div class="gvp-rule"><span class="k">Timelock</span><b>72h before execution</b></div>
-      <div class="gvp-rule"><span class="k">Destinations</span><b>Verified / allowlisted only</b></div>
-      <div class="gvp-rule"><span class="k">Guardian</span><b>Safety veto during timelock</b></div>
-      <div class="gvp-rule" style="border-bottom:none"><span class="k">Registry</span><b>Public registry required</b></div>
-    </div>
-  </div>
-
-  <div style="font-size:11.5px;color:var(--text3);line-height:1.75;margin-top:18px;border-top:1px solid rgba(255,215,0,.16);padding-top:14px">
-    <b style="color:#e5e7eb">Founder/guardian safety veto, not spending power</b> — can block a dangerous execution, cannot approve or spend.
-    No individual claim on gold; SOST is not gold-backed. Full policy:
-    <a href="/sost-gold-reserve.html" style="color:#FFD700">Protocol Strategic Reserve</a>.
-  </div>
-</div>
-<script>
-/* Strategic Reserve Governance Vote — PREVIEW ONLY. Local address-format check for preview.
-   No balance query, no signing, no fetch/post, no localStorage, executes nothing. */
-(function(){
-  try{
-    var inp=document.getElementById('gvpWallet'), msg=document.getElementById('gvpWalletMsg');
-    if(!inp||!msg) return;
-    function check(){
-      var v=(inp.value||'').trim();
-      if(!v){ msg.style.color='var(--text3)'; msg.textContent='Voting power: snapshot required — not active yet.'; return; }
-      if(/^sost1[0-9a-fA-F]{38,42}$/.test(v)){
-        msg.style.color='#4ade80';
-        msg.textContent='Address accepted for preview. Voting power requires future snapshot.';
-      }else{
-        msg.style.color='#fb010d';
-        msg.textContent='Invalid SOST address format.';
-      }
-    }
-    inp.addEventListener('input',check);
-  }catch(eGVP){}
-})();
-</script>
 
 <!-- CHART 1: Block Production — Real vs Expected -->
 <div class="diff-bar-wrap" id="chartProdWrap">
