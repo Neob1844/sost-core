@@ -25,6 +25,20 @@ static bool inSet(const std::vector<PopcActiveEntry>& s, Bytes32 cid){
 }
 
 int main(){
+#ifndef SOST_TESTNET_FORKS
+    // V15 final-decentralization fork RETIRES PoPC on mainnet: the PoPC V15
+    // subsystem never auto-activates (popc_v15_active_at == false at every
+    // height). This suite exercises the live subsystem only on the testnet
+    // profile; on mainnet it verifies the retirement invariant and exits green.
+    // See docs/V15_FINAL_DECENTRALIZATION_SPEC.md.
+    if (sost::popc_v15_active_at(sost::V15_HEIGHT) ||
+        sost::popc_v15_active_at(sost::V15_HEIGHT + 100000)) {
+        printf("FAIL: PoPC must be inactive (retired) on mainnet under the V15 fork\n");
+        return 1;
+    }
+    printf("[mainnet] PoPC retired by the V15 fork - subsystem is testnet-only. OK\n");
+    return 0;
+#endif
     std::printf("=== PoPC V15 P4b — auto-slash + auto-settle (pure, reorg-safe) ===\n");
     const int64_t I = POPC_V15_AUDIT_INTERVAL_BLOCKS;     // 1440
     const int64_t G = POPC_V15_AUDIT_GRACE_BLOCKS;        // 288

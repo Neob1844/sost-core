@@ -33,7 +33,11 @@ namespace sost {
 // eligibility additionally requires an OPEN PoPC from DTD_POPC_ELIGIBILITY_HEIGHT
 // (= V15_HEIGHT + grace; mainnet 25000). Gold Boost (POPC_GOLD_BOOST_HEIGHT) and
 // Gold Vault governance (GV_*) stay DEFERRED at INT64_MAX.
+#ifdef SOST_TESTNET_FORKS
 inline constexpr int64_t POPC_V15_ACTIVATION_HEIGHT = V15_HEIGHT;
+#else
+inline constexpr int64_t POPC_V15_ACTIVATION_HEIGHT = INT64_MAX;   // MAINNET — RETIRED by the V15 final-decentralization fork; PoPC never auto-activates
+#endif
 inline constexpr bool popc_v15_active_at(int64_t height) { return height >= POPC_V15_ACTIVATION_HEIGHT; }
 
 // ---- deterministic constants ----------------------------------------------

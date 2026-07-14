@@ -53,6 +53,7 @@
 #include "sost/popc_model_b.h"
 #include "sost/proposals.h"
 #include "sost/lottery.h"
+#include "sost/jackpot.h"   // V15 Historical DTD Jackpot (opportunity/FIFO/expected tx)
 #include "sost/beacon.h"
 #include "sost/beacon_p2p.h"
 
@@ -190,6 +191,11 @@ struct StoredBlock {
     // 0 here; from height 10000 onwards triggered blocks may carry a
     // non-zero rollover amount.
     int64_t pending_lottery_after{0};
+    // V15 Historical DTD Jackpot — rollover pending carried to the next jackpot
+    // opportunity (docs/V15_HISTORICAL_JACKPOT_SPEC.md). Same backward-compatible
+    // pattern as pending_lottery_after: OPTIONAL field, missing == 0, emitted only
+    // when > 0, restored from the tip on reorg. Zero on every pre-V15 block.
+    int64_t jackpot_pending_after{0};
     // Raw JSON for the full block (includes segment_proofs, round_witnesses, etc.)
     // Stored once on acceptance, used for P2P relay and chain.json persistence.
     // This avoids re-serializing complex nested proof structures.
@@ -1347,11 +1353,19 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     const int64_t total_reward_no_fees = subsidy;
     const auto    split_no_fees = sost::lottery::phase2_coinbase_split(total_reward_no_fees);
 
-    const bool lottery_triggered =
+    // V15 final-decentralization fork (docs/V15_FINAL_DECENTRALIZATION_SPEC.md):
+    // from V15_HEIGHT every block routes through the DTD machinery (gold+popc
+    // emission redirected to the accumulator). A block only PAYS OUT on a
+    // lottery-cadence block; every other triggered block ACCUMULATES.
+    const bool can_payout =
         phase2_active && sost::lottery::is_lottery_block(height_next, phase2_h);
+    const bool block_triggered =
+        phase2_active && sost::lottery::dtd_block_triggered(
+                             height_next, phase2_h, sost::V15_HEIGHT);
+    const bool v15_active = sost::v15_dtd_fork_active(height_next);
 
     const int64_t current_lottery_amount =
-        lottery_triggered ? split_no_fees.lottery_share : 0;
+        block_triggered ? split_no_fees.lottery_share : 0;
 
     // ---- Eligibility scan + winner pick (only if triggered) ------------
     int64_t eligible_count = 0;
@@ -1359,9 +1373,11 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     PubKeyHash winner_pkh{};
     bool eligibility_empty = true;
 
-    if (lottery_triggered) {
+    if (can_payout) {
         // Project g_blocks into LotteryMinedBlockView. The lottery
         // helper expects every entry to have height < height_next.
+        // (Only lottery-cadence blocks pick a winner; V15 non-lottery
+        // blocks merely accumulate and need no eligibility scan.)
         std::vector<sost::lottery::LotteryMinedBlockView> history;
         history.reserve(g_blocks.size());
         for (const auto& b : g_blocks) {
@@ -1405,7 +1421,8 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
         PubKeyHash zero_pkh{};
         auto eligible = sost::lottery::compute_lottery_eligibility_set(
             history, height_next, zero_pkh,
-            sost::lottery_exclusion_window_at(height_next));
+            sost::lottery_exclusion_window_at(height_next),
+            v15_active ? sost::DTD_RECENT_MINER_WINDOW : 0);
         eligible_count = (int64_t)eligible.size();
         eligibility_empty = eligible.empty();
 
@@ -1418,6 +1435,30 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
         }
     }
 
+    // V15 Historical DTD Jackpot — build the EXACT jackpot tx the miner must place
+    // at txs[1], using the SAME functions the validator (validate_block_jackpot)
+    // uses, so it is byte-identical by construction. Empty unless this next block
+    // is a jackpot opportunity with a DTD winner and a positive payout.
+    std::string jackpot_tx_hex;
+    if (sost::jackpot::is_jackpot_opportunity(height_next, phase2_h, sost::V15_HEIGHT)
+        && !eligibility_empty) {
+        PubKeyHash j_gold{}, j_popc{};
+        address_decode(ADDR_GOLD_VAULT, j_gold);
+        address_decode(ADDR_POPC_POOL,  j_popc);
+        auto j_reserve = sost::jackpot::collect_reserve_utxos(g_utxo_set.GetMap(), j_gold, j_popc);
+        const int64_t j_reserve_rem = sost::jackpot::reserve_sum(j_reserve);
+        const int64_t j_pend = g_blocks.empty() ? 0 : g_blocks.back().jackpot_pending_after;
+        auto j_res = sost::jackpot::compute_jackpot(j_pend, j_reserve_rem, /*has_winner*/true);
+        if (j_res.payout > 0) {
+            auto j_plan = sost::jackpot::plan_jackpot_spend(j_reserve, j_res.payout);
+            if (j_plan.ok) {
+                Transaction j_tx = sost::jackpot::build_expected_jackpot_tx(j_plan, winner_pkh, j_gold);
+                std::vector<Byte> j_bytes;
+                if (j_tx.Serialize(j_bytes)) jackpot_tx_hex = to_hex(j_bytes.data(), j_bytes.size());
+            }
+        }
+    }
+
     // ---- Coinbase shape decision -------------------------------------
     const char* shape = "NORMAL";
     int64_t miner_amount   = 0;
@@ -1426,15 +1467,17 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     int64_t lottery_payout = 0;
     int64_t expected_pending_after = pending_before;
 
-    if (!lottery_triggered) {
-        // Pre-Phase2 OR Phase2 non-triggered → NORMAL 50/25/25.
+    if (!block_triggered) {
+        // Pre-Phase2 (h<7100) OR pre-V15 non-lottery block → NORMAL 50/25/25.
         // Use the standard emission split with subsidy only (fees are
         // miner-time). Miner computes final amounts including fees.
         auto std_split = coinbase_split(subsidy);
         miner_amount = std_split.miner;
         gold_amount  = std_split.gold_vault;
         popc_amount  = std_split.popc_pool;
-    } else if (eligibility_empty) {
+    } else if (!can_payout || eligibility_empty) {
+        // V15 non-lottery block (accumulate the redirected 50%), OR a
+        // lottery-cadence block with an empty eligibility set → UPDATE.
         shape        = "UPDATE_EMPTY";
         miner_amount = subsidy - split_no_fees.lottery_share; // = miner_share
         gold_amount  = 0;
@@ -1517,7 +1560,8 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
       << "\"height_next\":" << height_next
       << ",\"phase2_height\":" << phase2_h
       << ",\"phase2_active\":" << (phase2_active ? "true" : "false")
-      << ",\"lottery_triggered\":" << (lottery_triggered ? "true" : "false")
+      << ",\"lottery_triggered\":" << (block_triggered ? "true" : "false")
+      << ",\"can_payout\":" << (can_payout ? "true" : "false")
       << ",\"pending_lottery_before\":" << pending_before
       << ",\"current_lottery_amount\":" << current_lottery_amount
       << ",\"coinbase_shape\":\"" << shape << "\""
@@ -1526,6 +1570,7 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
       << ",\"popc_amount\":" << popc_amount
       << ",\"lottery_payout\":" << lottery_payout
       << ",\"lottery_winner_pkh\":\"" << winner_hex << "\""
+      << ",\"jackpot_tx_hex\":\"" << jackpot_tx_hex << "\""
       << ",\"eligible_count\":" << eligible_count
       << ",\"winner_index\":" << winner_index
       << ",\"cooldown_window\":" << cooldown_window
@@ -1615,11 +1660,14 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
     }
 
     // Cooldown window is height-gated through V13. The audit RPC must
-    // report the same window the consensus path used for `height`.
+    // report the same window the consensus path used for `height` — including
+    // the V15 sliding recency window, so the replayed winner matches the
+    // coinbase and no false "manipulation" alarm is raised past V15_HEIGHT.
     PubKeyHash zero_pkh{};
     auto eligible = sost::lottery::compute_lottery_eligibility_set(
         history, height, zero_pkh,
-        sost::lottery_exclusion_window_at(height));
+        sost::lottery_exclusion_window_at(height),
+        sost::v15_dtd_fork_active(height) ? sost::DTD_RECENT_MINER_WINDOW : 0);
     int64_t winner_index = -1;
     PubKeyHash winner_pkh{};
     if (!eligible.empty()) {
@@ -1878,9 +1926,17 @@ static int64_t supply_balance_of_address(const std::string& addr) {
 // validation. O(tip) integer loop — trivial at current heights.
 static int64_t supply_dtd_lottery_distributed(int64_t tip) {
     int64_t sum = 0;
-    for (int64_t h = sost::V11_PHASE2_HEIGHT; h <= tip; ++h)
-        if (sost::lottery::is_lottery_block(h, sost::V11_PHASE2_HEIGHT))
+    for (int64_t h = sost::V11_PHASE2_HEIGHT; h <= tip; ++h) {
+        // V15 final-decentralization fork: from V15_HEIGHT the full 50% of
+        // EVERY block is redirected to DTD (accumulated on non-lottery blocks,
+        // paid on lottery blocks). Below V15 only lottery-cadence blocks
+        // contribute their lottery_share. Both cases sum the redirected share.
+        const bool contributes = sost::v15_dtd_fork_active(h)
+            ? true
+            : sost::lottery::is_lottery_block(h, sost::V11_PHASE2_HEIGHT);
+        if (contributes)
             sum += sost::lottery::phase2_coinbase_split(sost_subsidy_stocks(h)).lottery_share;
+    }
     return sum;
 }
 
@@ -2086,23 +2142,28 @@ static std::string handle_sendrawtransaction(const std::string& id, const std::v
     Hash256 txid; if(!tx.ComputeTxId(txid,&err)) return rpc_error(id,-25,"TX reject: "+err);
 
     // -------------------------------------------------------------------------
-    // Gold Vault policy protection (not consensus — policy only)
-    // Detects and logs any TX that attempts to spend from the Gold Vault address.
-    // Currently WARNING only — does not block acceptance.
-    // To enable blocking: set a config flag and return rpc_error here instead.
+    // V15 reserve address-lock (mempool side). NO standalone transaction may
+    // spend a Gold Vault or PoPC Pool UTXO. The ONLY legitimate reserve spend is
+    // the protocol-mandated jackpot tx INSIDE a block (txs[1], byte-exact — see
+    // validate_block_jackpot). A jackpot tx (or any reserve-spending tx) must
+    // NEVER enter the mempool, regardless of whether the next block is near a
+    // jackpot opportunity, and even if the tx carries a (meaningless) signature.
+    // Unconditional: the mempool is relay policy (never replayed), so this is
+    // safe at all heights; no legitimate tx has ever spent the reserve.
     // -------------------------------------------------------------------------
     {
-        PubKeyHash gold_vault_pkh{};
+        PubKeyHash gold_vault_pkh{}, popc_pool_pkh{};
         address_decode(ADDR_GOLD_VAULT, gold_vault_pkh);
+        address_decode(ADDR_POPC_POOL,  popc_pool_pkh);
         for (const auto& txin : tx.inputs) {
             OutPoint op{txin.prev_txid, txin.prev_index};
             auto utxo = g_utxo_set.GetUTXO(op);
-            if (utxo && utxo->pubkey_hash == gold_vault_pkh) {
-                // Log a critical alert — Gold Vault is being spent
-                printf("[GOLD-VAULT-ALERT] TX spending from Gold Vault detected! txid=%s amount=%lld stocks\n",
-                       to_hex(txid.data(), 32).c_str(), (long long)utxo->amount);
-                // NOTE: blocking can be enabled here later via a config flag,
-                // e.g. return rpc_error(id,-403,"Gold Vault spend blocked by policy");
+            if (utxo && (utxo->pubkey_hash == gold_vault_pkh || utxo->pubkey_hash == popc_pool_pkh)) {
+                printf("[V15-RESERVE-LOCK] mempool REJECTED tx spending reserve (Gold/PoPC) txid=%s\n",
+                       to_hex(txid.data(), 32).c_str());
+                return rpc_error(id, -26,
+                    "reserve (Gold Vault / PoPC) UTXOs are spendable only by the protocol jackpot "
+                    "tx inside a block (txs[1], byte-exact) — never as a standalone/mempool transaction");
             }
         }
     }
@@ -5071,7 +5132,28 @@ static bool process_block(const std::string& block_json) {
     if(v14_txrules){ v14_scratch = g_utxo_set; v14_seen_txids.reserve(txs.size()*2);
                      address_decode(ADDR_GOLD_VAULT, gv_slice1_gold_pkh); }
 
+    // V15 Historical DTD Jackpot — the protocol-mandated jackpot tx spends reserve
+    // UTXOs with NO signature and zero fee; it is validated byte-exact separately
+    // by validate_block_jackpot() below. Exempt ANY reserve-spending tx from the
+    // generic ValidateTransactionConsensus here (it would fail on the missing
+    // signature and the S8 min-fee) but STILL connect it so its UTXO effects
+    // apply. Illegal reserve-spends are rejected by validate_block_jackpot().
+    PubKeyHash v15_gold_pkh{}, v15_popc_pkh{};
+    const bool v15_active_blk = sost::v15_dtd_fork_active(height);
+    if (v15_active_blk) { address_decode(ADDR_GOLD_VAULT, v15_gold_pkh);
+                          address_decode(ADDR_POPC_POOL, v15_popc_pkh); }
+    auto v15_spends_reserve = [&](const Transaction& tx) -> bool {
+        if (!v15_active_blk) return false;
+        for (const auto& in : tx.inputs) {
+            OutPoint op{in.prev_txid, in.prev_index};
+            auto e = g_utxo_set.GetUTXO(op);
+            if (e && (e->pubkey_hash == v15_gold_pkh || e->pubkey_hash == v15_popc_pkh)) return true;
+        }
+        return false;
+    };
+
     for(size_t i=1;i<txs.size();++i){
+        const bool v15_jackpot_tx = v15_spends_reserve(txs[i]);   // exempt from generic tx-consensus
         // HTLC atomic-swap CLAIM (0x10) / REFUND (0x11) are valid block tx types
         // ONLY once the atomic-swap consensus rules are active at this height.
         // The gate atomic_swap_htlc_active_at == (height >= V14_5_HEIGHT); on
@@ -5104,10 +5186,14 @@ static bool process_block(const std::string& block_json) {
             v14_seen_txids.insert(v14_hx);
 
             // H4: consensus check against the scratch view (sees earlier same-block outputs).
-            auto cres = ValidateTransactionConsensus(txs[i], v14_scratch, vctx);
-            if(!cres.ok){
-                printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
-                return false;
+            // V15: the protocol jackpot tx (reserve spend, no signature, fee 0) is
+            // exempt here — validate_block_jackpot() below is its sole authority.
+            if (!v15_jackpot_tx) {
+                auto cres = ValidateTransactionConsensus(txs[i], v14_scratch, vctx);
+                if(!cres.ok){
+                    printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
+                    return false;
+                }
             }
             // H3: ValidateTransactionPolicy intentionally NOT run on the block path.
 
@@ -5296,13 +5382,26 @@ static bool process_block(const std::string& block_json) {
     if (sost::V11_PHASE2_HEIGHT != INT64_MAX && height >= sost::V11_PHASE2_HEIGHT) {
         phase2_ctx.phase2_height = sost::V11_PHASE2_HEIGHT;
         phase2_ctx.pending_before = g_blocks.empty() ? 0 : g_blocks.back().pending_lottery_after;
-        phase2_ctx.triggered = sost::lottery::is_lottery_block(height, sost::V11_PHASE2_HEIGHT);
+        // V15 final-decentralization fork: from V15_HEIGHT every block routes
+        // through the DTD machinery; only lottery-cadence blocks pay out.
+        phase2_ctx.triggered = sost::lottery::dtd_block_triggered(
+            height, sost::V11_PHASE2_HEIGHT, sost::V15_HEIGHT);
+        const bool can_payout =
+            sost::lottery::is_lottery_block(height, sost::V11_PHASE2_HEIGHT);
         phase2_ctx.paid_out = false;
         phase2_ctx.lottery_payout = 0;
         phase2_ctx.expected_winner_pkh = PubKeyHash{};
         phase2_ctx.expected_pending_after = phase2_ctx.pending_before;
 
-        if (phase2_ctx.triggered) {
+        if (phase2_ctx.triggered && !can_payout) {
+            // V15 non-lottery block: accumulate the redirected 50% into
+            // pending; no winner is picked and no eligibility scan is needed.
+            const auto p2split =
+                sost::lottery::phase2_coinbase_split(subsidy + total_fees);
+            phase2_ctx.paid_out = false;
+            phase2_ctx.expected_pending_after =
+                phase2_ctx.pending_before + p2split.lottery_share;
+        } else if (phase2_ctx.triggered) {
             std::vector<sost::lottery::LotteryMinedBlockView> history;
             history.reserve(g_blocks.size());
             for (const auto& b : g_blocks) {
@@ -5349,7 +5448,8 @@ static bool process_block(const std::string& block_json) {
             // 5-block window unchanged; post-V13 callers receive 6.
             auto eligible = sost::lottery::compute_lottery_eligibility_set(
                 history, height, txs[0].outputs[0].pubkey_hash,
-                sost::lottery_exclusion_window_at(height));
+                sost::lottery_exclusion_window_at(height),
+                sost::v15_dtd_fork_active(height) ? sost::DTD_RECENT_MINER_WINDOW : 0);
 
             const auto p2split = sost::lottery::phase2_coinbase_split(subsidy + total_fees);
             if (eligible.empty()) {
@@ -5412,6 +5512,32 @@ static bool process_block(const std::string& block_json) {
             printf("[BLOCK] REJECTED: Phase 2 PAYOUT JSON rewards mismatch\n");
             return false;
         }
+    }
+
+    // =====================================================================
+    // V15 Historical DTD Jackpot — validate txs[1] (the protocol-mandated
+    // jackpot tx) + the reserve address-lock. See docs/V15_JACKPOT_TX_SPEC.md.
+    // The winner IS the DTD winner already picked above
+    // (phase2_ctx.expected_winner_pkh) — no separate eligibility. The reserve
+    // is the LIVE sum of Gold/PoPC UTXOs (no consensus counter). jackpot_pending
+    // carries in StoredBlock like pending_lottery_after (undo via tip).
+    // Gated to V15+ so pre-V15 validation is byte-identical.
+    // =====================================================================
+    int64_t jackpot_pending_after_val = 0;
+    {
+        const int64_t jpend_before = g_blocks.empty() ? 0 : g_blocks.back().jackpot_pending_after;
+        const bool has_winner_j = (phase2_ctx_ptr && phase2_ctx.paid_out);
+        const PubKeyHash winner_j = phase2_ctx_ptr ? phase2_ctx.expected_winner_pkh : PubKeyHash{};
+        auto jvr = sost::jackpot::validate_block_jackpot(
+            txs, height, sost::V11_PHASE2_HEIGHT, sost::V15_HEIGHT,
+            g_utxo_set.GetMap(), gold_pkh, popc_pkh,
+            has_winner_j, winner_j, jpend_before);
+        if (!jvr.ok) {
+            printf("[BLOCK] REJECTED: V15 jackpot: %s\n", jvr.reject ? jvr.reject : "?");
+            record_block_reject(std::string("V15 jackpot: ") + (jvr.reject ? jvr.reject : "?"));
+            return false;
+        }
+        jackpot_pending_after_val = jvr.jackpot_pending_after;
     }
 
     // Recompute block_id and verify PoW
@@ -6033,6 +6159,9 @@ static bool process_block(const std::string& block_json) {
     sb.popc_pool_reward = popc_r;
     sb.pending_lottery_after =
         phase2_ctx_ptr ? phase2_ctx.expected_pending_after : 0;
+    // V15 Historical DTD Jackpot — persist the rollover pending computed during
+    // block validation above (0 on every pre-V15 block; undo via tip on reorg).
+    sb.jackpot_pending_after = jackpot_pending_after_val;
     sb.stability_metric = stb;
     sb.x_bytes_hex = x_bytes_hex;
     sb.final_state_hex = final_state_hex;
@@ -7266,6 +7395,11 @@ static bool load_chain(const std::string& path) {
         if (bj.find("\"pending_lottery_after\"") != std::string::npos) {
             sb.pending_lottery_after = jint(bj,"pending_lottery_after");
         } // else keeps 0 default
+        // V15 Historical DTD Jackpot — jackpot_pending_after, same optional pattern.
+        // Missing (all pre-V15 blocks and legacy chain.json) keeps the 0 default.
+        if (bj.find("\"jackpot_pending_after\"") != std::string::npos) {
+            sb.jackpot_pending_after = jint(bj,"jackpot_pending_after");
+        } // else keeps 0 default
         sb.raw_block_json=bj; // preserve full JSON for P2P relay
 
         // Parse transactions if present (v0.3.2+)
@@ -7690,6 +7824,16 @@ static bool save_chain_internal(const std::string& path) {
                                + std::to_string(b.pending_lottery_after));
                 }
             }
+            // V15 Historical DTD Jackpot — inject jackpot_pending_after only when
+            // non-zero (from V15). Pre-V15 blocks keep chain.json byte-identical.
+            if (b.jackpot_pending_after > 0
+                && raw.find("\"jackpot_pending_after\"") == std::string::npos) {
+                size_t end = raw.rfind('}');
+                if (end != std::string::npos) {
+                    raw.insert(end, ",\"jackpot_pending_after\":"
+                               + std::to_string(b.jackpot_pending_after));
+                }
+            }
             f << "    " << raw;
         } else {
             // Fallback reconstruction for genesis/legacy blocks without raw JSON
@@ -7727,6 +7871,9 @@ static bool save_chain_internal(const std::string& path) {
             // crossed V11_PHASE2_HEIGHT.
             if (b.pending_lottery_after > 0) {
                 f << ",\"pending_lottery_after\":" << b.pending_lottery_after;
+            }
+            if (b.jackpot_pending_after > 0) {
+                f << ",\"jackpot_pending_after\":" << b.jackpot_pending_after;
             }
             if (!b.tx_hexes.empty()) {
                 f << ",\"transactions\":[";

@@ -61,6 +61,19 @@ static std::vector<PopcV15Event> collect(const std::vector<CarrierAt>& carriers)
 }
 
 int main(){
+#ifndef SOST_TESTNET_FORKS
+    // V15 final-decentralization fork RETIRES PoPC on mainnet: carriers are not
+    // consensus-recognized, so this carrier end-to-end soak has nothing to
+    // exercise on mainnet. It runs on the testnet profile; on mainnet it
+    // verifies the retirement invariant and exits green.
+    if (sost::popc_v15_active_at(sost::V15_HEIGHT) ||
+        sost::popc_v15_active_at(sost::V15_HEIGHT + 100000)) {
+        printf("FAIL: PoPC must be inactive (retired) on mainnet under the V15 fork\n");
+        return 1;
+    }
+    printf("[mainnet] PoPC retired by the V15 fork - carrier e2e is testnet-only. OK\n");
+    return 0;
+#endif
     std::printf("=== PoPC V15 — end-to-end signed carrier -> lottery eligibility ===\n");
     secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN|SECP256K1_CONTEXT_VERIFY);
 

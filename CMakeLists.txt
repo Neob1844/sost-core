@@ -714,6 +714,27 @@ add_executable(test-dtd-control tests/test_dtd_control.cpp)
 target_link_libraries(test-dtd-control PRIVATE sost-core)
 add_test(NAME dtd-control COMMAND test-dtd-control)
 
+# V15 Final Decentralization Fork — consensus unit tests.
+# Always built — pure functions. Verifies dtd_block_triggered (every block
+# routed through DTD from V15_HEIGHT, only lottery-cadence blocks pay out),
+# the sliding recency-window eligibility rule, the 50/50 split, and that the
+# deprecated PoPC/Gold-Vault automation gates are retired on mainnet.
+add_executable(test-v15-decentralization tests/test_v15_decentralization.cpp)
+target_link_libraries(test-v15-decentralization PRIVATE sost-core)
+add_test(NAME v15-decentralization COMMAND test-v15-decentralization)
+
+# V15 Historical DTD Jackpot — pure amount/cadence logic (Option A wind-down).
+# Constitutional-spend/UTXO/reorg parts land in the integration suite later.
+add_executable(test-v15-jackpot tests/test_v15_jackpot.cpp)
+target_link_libraries(test-v15-jackpot PRIVATE sost-core)
+add_test(NAME v15-jackpot COMMAND test-v15-jackpot)
+add_executable(test-v15-jackpot-runtime tests/test_v15_jackpot_runtime.cpp)
+target_link_libraries(test-v15-jackpot-runtime PRIVATE sost-core)
+add_test(NAME v15-jackpot-runtime COMMAND test-v15-jackpot-runtime)
+add_executable(test-v15-jackpot-reorg tests/test_v15_jackpot_reorg.cpp)
+target_link_libraries(test-v15-jackpot-reorg PRIVATE sost-core)
+add_test(NAME v15-jackpot-reorg COMMAND test-v15-jackpot-reorg)
+
 # V11 Phase 2 — component D (Lottery): rollover state machinery.
 # Always built — pure functions, no Schnorr, no chain state writes
 # (StoredBlock / BlockUndo persistence is C8). Verifies IDLE / UPDATE

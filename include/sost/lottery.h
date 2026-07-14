@@ -139,6 +139,27 @@ inline bool is_lottery_block(int64_t height, int64_t phase2_height) {
 }
 
 // ---------------------------------------------------------------------------
+// V15 Final Decentralization Fork (docs/V15_FINAL_DECENTRALIZATION_SPEC.md).
+//
+// From V15_HEIGHT the Gold-Vault and PoPC coinbase outputs are ELIMINATED and
+// that 50% is redirected into the DTD lottery accumulator: EVERY block routes
+// through the Phase-2 machinery (50% miner / 50% DTD). A block still only PAYS
+// OUT the jackpot on a lottery-cadence block (is_lottery_block); non-lottery
+// V15 blocks only ACCUMULATE into pending_lottery_amount. Below V15 only
+// lottery-cadence blocks are "triggered" (unchanged behaviour).
+//
+// phase2_height / v15_height are passed for testability (production values:
+// V11_PHASE2_HEIGHT = 7100, V15_HEIGHT = 20000). CONSENSUS-CRITICAL: miner
+// (block template) and validator MUST go through this single helper so the
+// coinbase shape they agree on never diverges.
+inline bool dtd_block_triggered(int64_t height, int64_t phase2_height,
+                                int64_t v15_height) {
+    if (v15_height != INT64_MAX && height >= v15_height)
+        return phase2_height != INT64_MAX && height >= phase2_height;
+    return is_lottery_block(height, phase2_height);
+}
+
+// ---------------------------------------------------------------------------
 // Trigger result for a given height. Older 3-arg API kept aborting in
 // the skeleton for backward-compat with tests written under the
 // previous draft. Prefer is_lottery_block above.
@@ -240,12 +261,17 @@ struct LotteryEligibilityResult {
 //
 // Empty vector means no winner this block (rollover semantics live
 // at the caller — C7).
+// `recent_miner_window` (V15): when > 0, an address is a candidate ONLY if it
+// mined >=1 block in the sliding window [height - recent_miner_window,
+// height - 1] — this REPLACES the pre-V15 "mined ever" rule and drops dormant
+// addresses. When 0 (pre-V15 / tests) the pre-V15 "mined ever" rule applies.
 std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     const std::vector<LotteryMinedBlockView>& blocks,
     int64_t                                   height,
     const PubKeyHash&                         current_miner_pkh,
     int64_t                                   exclusion_window =
-        LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
+        LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW,
+    int64_t                                   recent_miner_window = 0);
 
 // V14 PoPC eligibility helper.
 //

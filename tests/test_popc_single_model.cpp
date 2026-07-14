@@ -467,6 +467,20 @@ TEST(PSM31_tier_boundaries_consistent) {
 // =============================================================================
 
 int main() {
+#ifndef SOST_TESTNET_FORKS
+    // V15 final-decentralization fork RETIRES PoPC on mainnet: the PoPC V15
+    // subsystem never auto-activates (popc_v15_active_at == false at every
+    // height). This suite exercises the live subsystem only on the testnet
+    // profile; on mainnet it verifies the retirement invariant and exits green.
+    // See docs/V15_FINAL_DECENTRALIZATION_SPEC.md.
+    if (sost::popc_single_model_active(sost::V15_HEIGHT) ||
+        sost::popc_single_model_active(sost::V15_HEIGHT + 100000)) {
+        std::cout << "FAIL: single-model must be inactive (retired) on mainnet under the V15 fork" << std::endl;
+        return 1;
+    }
+    std::cout << "[mainnet] PoPC single-model retired by the V15 fork - subsystem is testnet-only. OK" << std::endl;
+    return 0;
+#endif
     std::cout << "=== PoPC single-model redesign (transition) Tests ===" << std::endl;
 
     for (auto& [name, fn] : tests()) {
