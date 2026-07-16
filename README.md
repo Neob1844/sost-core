@@ -284,6 +284,36 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 
 **cASERT profile update note:** No regenesis required. Genesis block hash, commit format, and Transcript V2 verification semantics are unchanged. However, the expanded cASERT profile range (E4-H35, 40 profiles) is consensus-affecting across software versions: the node validates the miner's declared profile against the permitted range. All nodes and miners must run the updated binary before launch to ensure consistent profile validation.
 
+## Post-Quantum Migration Status
+
+**Mainnet today (active):** transaction/account spend signatures use **ECDSA over
+secp256k1** with canonical **LOW-S** (see Network Parameters above;
+`src/tx_signer.cpp`). **BIP-340 Schnorr** is used **only** for SbPoW block-identity
+binding (`src/sbpow.cpp`), **not** for spending. SHA-256 hashing is only
+quadratically affected by Grover and remains adequate at 256-bit.
+
+**SOST is not post-quantum secure today, and no post-quantum scheme is active on
+mainnet.** Post-quantum support is under **research, prototype and testnet
+planning only**. The research covers: cryptographic agility (a 1-byte algorithm
+registry), **ML-DSA** (NIST FIPS 204; standardised from CRYSTALS-Dilithium),
+an ECDSA-**AND**-ML-DSA hybrid, a versioned variable-length signature witness, and
+a wallet-migration path. ML-KEM (FIPS 203) is a key-encapsulation mechanism, not a
+signature scheme; SLH-DSA (FIPS 205) is a reserved hash-based backup.
+
+Known limitations honestly stated: a PQ input is far larger than today's 133-byte
+input (ML-DSA-44 signature 2420 bytes, public key 1312 bytes per FIPS 204), so
+capacity and weight need review; performance timings are pending a compute
+environment with a PQ library (no numbers are published without full provenance);
+no external cryptographic audit has been performed; and there is **no activation
+date and no activation height**. Any activation of post-quantum transaction
+validation would be a **separate, reviewed, audited and announced consensus
+upgrade** — it is not part of this research.
+
+Details: `docs/PQ_MIGRATION_V3.md` (master index), `docs/PQ_TX_FORMAT_V3.md`,
+`docs/PQ_THREAT_MODEL_V3.md`, `docs/PQ_WALLET_MIGRATION_V3.md`,
+`docs/PQ_ACTIVATION_PLAN_V3.md`, the ADRs in `docs/ADR/`, and the non-compiled
+prototype in `prototype/pq/`.
+
 ## Fast Sync
 
 New nodes sync faster by skipping expensive ConvergenceX recomputation for trusted historical blocks. Structural, semantic, and economic validation always runs — only the expensive CX recompute (100K rounds, 4GB scratchpad + 4GB dataset, stability basin) is conditionally skipped. Note: with Transcript V2, node validation uses an 11-phase compact proof (segments_root + sampled round witnesses) at ~0.2ms per block — no scratchpad/dataset needed (both are independently indexable at O(1) via SplitMix64/SHA256).
