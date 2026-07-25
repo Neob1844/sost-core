@@ -1426,8 +1426,20 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     int64_t lottery_payout = 0;
     int64_t expected_pending_after = pending_before;
 
-    if (!lottery_triggered) {
-        // Pre-Phase2 OR Phase2 non-triggered → NORMAL 50/25/25.
+    if (!lottery_triggered && height_next >= sost::V15_HEIGHT) {
+        // V15 emission transition (T): post-V15 non-triggered block. Gold
+        // Vault / PoPC are no longer funded; the non-miner half is redirected
+        // to the DTD lottery pending. Same miner-only UPDATE shape the miner
+        // already knows how to build (build_phase2_update_coinbase_tx), so no
+        // miner-side change is needed — only this directive flips to UPDATE.
+        shape        = "UPDATE_EMPTY";
+        miner_amount = subsidy - split_no_fees.lottery_share; // = miner_share
+        gold_amount  = 0;
+        popc_amount  = 0;
+        lottery_payout = 0;
+        expected_pending_after = pending_before + split_no_fees.lottery_share;
+    } else if (!lottery_triggered) {
+        // Pre-V15 non-triggered (and pre-Phase2) → NORMAL 50/25/25.
         // Use the standard emission split with subsidy only (fees are
         // miner-time). Miner computes final amounts including fees.
         auto std_split = coinbase_split(subsidy);
@@ -5369,6 +5381,15 @@ static bool process_block(const std::string& block_json) {
                     p2split.lottery_share + phase2_ctx.pending_before;
                 phase2_ctx.expected_pending_after = 0;
             }
+        } else if (height >= sost::V15_HEIGHT) {
+            // V15 emission transition (T): non-triggered blocks post-V15 stop
+            // funding Gold Vault / PoPC and redirect the non-miner half to the
+            // DTD lottery pending (miner-only "UPDATE" coinbase shape). Same
+            // arithmetic as a triggered empty-eligibility UPDATE.
+            const auto p2split = sost::lottery::phase2_coinbase_split(subsidy + total_fees);
+            phase2_ctx.paid_out = false;
+            phase2_ctx.expected_pending_after =
+                phase2_ctx.pending_before + p2split.lottery_share;
         }
         phase2_ctx_ptr = &phase2_ctx;
     }
@@ -5384,8 +5405,13 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
-    // Also check JSON claimed split matches real coinbase outputs (hardening)
-    if (!phase2_ctx_ptr || !phase2_ctx.triggered) {
+    // Also check JSON claimed split matches real coinbase outputs (hardening).
+    // V15 (T): a post-V15 non-triggered block uses the miner-only UPDATE shape
+    // (redirect to pending), so it must NOT be validated against the legacy
+    // 3-output 50/25/25 shape — route it to the UPDATE branch below.
+    const bool v15_idle_hardening =
+        phase2_ctx_ptr && !phase2_ctx.triggered && height >= sost::V15_HEIGHT;
+    if ((!phase2_ctx_ptr || !phase2_ctx.triggered) && !v15_idle_hardening) {
         if((int64_t)txs[0].outputs.size()!=3){
             printf("[BLOCK] REJECTED: coinbase outputs != 3\n");
             return false;

@@ -1356,8 +1356,10 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     if (ls.coinbase_shape == "NORMAL") {
         coinbase_tx = build_coinbase_tx(h, total_reward, split, g_miner_pkh);
     } else if (ls.coinbase_shape == "UPDATE_EMPTY") {
-        // Phase 2 triggered + empty eligibility → withhold lottery share
-        // in chain-state pending; emit ONLY a MINER output.
+        // Emit ONLY a MINER output; the non-miner half is withheld in
+        // chain-state pending. Directed by the node for either a Phase-2
+        // triggered+empty-eligibility block OR (from V15) any non-triggered
+        // block — the V15 Gold Vault/PoPC emission transition (T).
         const auto p2split = sost::lottery::phase2_coinbase_split(total_reward);
         const int64_t miner_share = p2split.miner_share;
         json_miner_reward = miner_share;

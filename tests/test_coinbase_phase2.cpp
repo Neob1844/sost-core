@@ -565,6 +565,104 @@ static void test_subsidy_8_payout_no_pending() {
 }
 
 // ---------------------------------------------------------------------------
+// §V15 (T) — Gold Vault / PoPC emission transition.
+// From V15_HEIGHT, a NON-triggered block stops funding GOLD/POPC and redirects
+// the non-miner half to the DTD lottery pending (miner-only UPDATE shape). It
+// reuses the fully-tested UPDATE validation path. Pre-V15 non-triggered blocks
+// keep the legacy 3-output 50/25/25 shape byte-for-byte. Heights are relative
+// to sost::V15_HEIGHT so the test is correct on mainnet (25000) and testnet
+// (300) builds alike.
+// ---------------------------------------------------------------------------
+
+// Non-triggered V15-redirect context (triggered=false, redirect to pending).
+static Phase2CoinbaseContext mk_ctx_v15_idle(int64_t pending_before,
+                                             int64_t total_reward,
+                                             int64_t phase2_height = 100) {
+    auto split = sost::lottery::phase2_coinbase_split(total_reward);
+    Phase2CoinbaseContext c;
+    c.phase2_height          = phase2_height;
+    c.pending_before         = pending_before;
+    c.triggered              = false;   // NON-triggered — the V15 (T) redirect
+    c.paid_out               = false;
+    c.lottery_payout         = 0;
+    c.expected_winner_pkh    = PubKeyHash{};
+    c.expected_pending_after = pending_before + split.lottery_share;
+    return c;
+}
+
+static void test_v15_emission_transition() {
+    const int64_t subsidy = 785100863;   // odd → exercises /2 rounding
+    const int64_t fees    = 12345;
+    const int64_t total   = subsidy + fees;
+    const int64_t V15     = (int64_t)sost::V15_HEIGHT;
+    const int64_t P2H     = 100;         // phase2_height fixture (<= V15-1)
+
+    // 1) Pre-V15 non-triggered: legacy 50/25/25 still required and valid.
+    {
+        Phase2CoinbaseContext c;
+        c.phase2_height = P2H; c.pending_before = 0; c.triggered = false;
+        c.paid_out = false; c.expected_pending_after = 0;
+        Transaction cb = make_legacy_coinbase(V15 - 1, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15 - 1, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15-1 non-triggered: legacy 50/25/25 passes (unchanged)", r.ok);
+    }
+
+    // 2) Pre-V15 non-triggered: miner-only UPDATE must be REJECTED (not yet allowed).
+    {
+        Phase2CoinbaseContext c = mk_ctx_v15_idle(0, total, P2H);
+        Transaction cb = make_update_coinbase(V15 - 1, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15 - 1, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15-1 non-triggered: miner-only redirect rejected", !r.ok);
+    }
+
+    // 3) At V15 non-triggered: miner-only UPDATE (redirect) is now VALID.
+    {
+        Phase2CoinbaseContext c = mk_ctx_v15_idle(0, total, P2H);
+        Transaction cb = make_update_coinbase(V15, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15 non-triggered: miner-only redirect passes (T active)", r.ok);
+    }
+
+    // 4) At V15 non-triggered: legacy 50/25/25 must now be REJECTED.
+    {
+        Phase2CoinbaseContext c = mk_ctx_v15_idle(0, total, P2H);
+        Transaction cb = make_legacy_coinbase(V15, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15 non-triggered: legacy 50/25/25 rejected (vault/popc off)", !r.ok);
+    }
+
+    // 5) V15+1 non-triggered with existing pending: redirect accumulates OK.
+    {
+        Phase2CoinbaseContext c = mk_ctx_v15_idle(/*pending*/999999, total, P2H);
+        Transaction cb = make_update_coinbase(V15 + 1, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15 + 1, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15+1 non-triggered redirect with pending passes", r.ok);
+    }
+
+    // 6) At V15 non-triggered: corrupted expected_pending_after breaks CB14.
+    {
+        Phase2CoinbaseContext c = mk_ctx_v15_idle(0, total, P2H);
+        c.expected_pending_after += 1;   // corrupt redirect accounting
+        Transaction cb = make_update_coinbase(V15, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15 redirect: corrupted pending_after rejected (CB14)", !r.ok);
+    }
+
+    // 7) Supply-neutral: miner + redirect == subsidy + fees (no new mint).
+    {
+        auto split = sost::lottery::phase2_coinbase_split(total);
+        TEST("V15 redirect supply-neutral: miner + redirect == subsidy+fees",
+             split.miner_share + split.lottery_share == total);
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Driver
 // ---------------------------------------------------------------------------
 
@@ -600,6 +698,8 @@ int main() {
     test_subsidy_8_update();
     test_subsidy_8_payout_with_pending();
     test_subsidy_8_payout_no_pending();
+
+    test_v15_emission_transition();
 
     printf("\n== summary: %d pass, %d fail ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

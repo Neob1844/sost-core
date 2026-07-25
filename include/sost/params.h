@@ -1067,7 +1067,7 @@ inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // MAINNET 
 #ifdef SOST_TESTNET_FORKS
 inline constexpr int64_t V15_HEIGHT                       = 300;     // TESTNET ONLY
 #else
-inline constexpr int64_t V15_HEIGHT                       = 20000;   // MAINNET (target; automation gates stay deferred until soaked)
+inline constexpr int64_t V15_HEIGHT                       = 25000;   // MAINNET (target moved 20000 -> 25000 on 2026-07-25: chain was at 19021, ~6.8d runway was insufficient to implement + soak the V15 Core bundle [Historical DTD Jackpot, Gold Vault/PoPC emission transition, atomic-swap dashboard, BTC HTLC]. 25000 gives ~41d. Automation gates stay deferred until soaked.)
 #endif
 
 // P4c — staged V15 activation. PoPC automation (Register/Activate/Renew,
@@ -1124,6 +1124,75 @@ inline constexpr bool popc_gold_boost_active(int64_t height) {
 }
 static_assert(POPC_GOLD_BOOST_HEIGHT >= POPC_SINGLE_MODEL_HEIGHT,
               "Gold Boost must never activate before the native base model");
+
+// =============================================================================
+// V15 — Historical DTD Jackpot (parameters). Consensus logic: src/lottery.cpp
+// (hist_jackpot_*), spec: docs/design/V15_HISTORICAL_DTD_JACKPOT_SPEC.md.
+// =============================================================================
+//
+// At V15 the Gold Vault (25%/block) and PoPC Pool (25%/block) emission STOPS
+// (see coinbase split transition) and the balance ALREADY accumulated in those
+// two constitutional-address reserves is returned to active miners, block by
+// block, through the "Historical DTD Jackpot": a supply-neutral protocol spend
+// (no new mint) paid to the ordinary DTD lottery winner on a slow cadence until
+// the historical reserve is drained.
+//
+// The jackpot pays on JACKPOT blocks only. A jackpot block is, by construction,
+// also a DTD lottery/payout block (cadence 288 = 96 DTD draws of the 1-of-3
+// cadence), so the winner = the DTD winner of that same block under the IDENTICAL
+// 6-filter eligibility set — there is NO separate raffle and NO new selection
+// engine. If that block has no eligible DTD winner, the jackpot amount rolls
+// forward (capped) to the next jackpot block. See the spec for the exact
+// height-alignment proof and the reserve-accounting model (which reserve UTXOs
+// are spent) — those are consensus-critical and MUST NOT be inferred ad hoc.
+//
+// All amounts are in stocks (1 SOST = STOCKS_PER_SOST). Base/cap chosen to match
+// the published economics (base 100 SOST, hard cap 500 SOST, ~48h cadence).
+inline constexpr int64_t HIST_JACKPOT_ACTIVATION_HEIGHT = V15_HEIGHT;      // jackpot goes live with V15
+inline constexpr int64_t HIST_JACKPOT_CADENCE_BLOCKS    = 288;             // ~48h; == 96 DTD draws (288/3)
+inline constexpr int64_t HIST_JACKPOT_BASE_STOCKS       = 100 * STOCKS_PER_SOST;  // 100 SOST base per jackpot
+inline constexpr int64_t HIST_JACKPOT_CAP_STOCKS        = 500 * STOCKS_PER_SOST;  // hard cap incl. rollover
+
+// First jackpot height. A jackpot block MUST coincide with a DTD draw block
+// (permanent 1-of-3 regime: height % 3 == 0, valid only for height >=
+// V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW = 12100). Because the cadence
+// (288) is a multiple of 3, if the FIRST jackpot height is draw-aligned then
+// EVERY subsequent one is too. The offset also provides a short post-fork
+// warm-up before the first payout.
+//   MAINNET: V15_HEIGHT = 25000 (25000 % 3 == 1). Offset 290 -> first = 25290
+//            (25290 % 3 == 0, and 25290 >= 12100). Draw-aligned. [asserted below]
+//   TESTNET: V15_HEIGHT = 300 is BELOW the DTD activation (7100), so the jackpot
+//            CANNOT reuse DTD draws at that height. The testnet dry-run schedule
+//            (lower the DTD schedule for testnet, or give the jackpot a dedicated
+//            dry-run height >= 12100) is an OPEN design item resolved in
+//            docs/design/V15_HISTORICAL_DTD_JACKPOT_SPEC.md. The value below is a
+//            PROVISIONAL placeholder so both nets compile; do NOT treat the
+//            testnet first-height as final until the spec closes that item.
+#ifdef SOST_TESTNET_FORKS
+inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 290;             // PROVISIONAL — see spec (testnet DTD-schedule open item)
+#else
+inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 290;             // MAINNET: 25000 + 290 = 25290, draw-aligned
+#endif
+inline constexpr int64_t HIST_JACKPOT_FIRST_HEIGHT      = HIST_JACKPOT_ACTIVATION_HEIGHT + HIST_JACKPOT_FIRST_OFFSET;
+static_assert(HIST_JACKPOT_CADENCE_BLOCKS % 3 == 0,
+              "Jackpot cadence must be a whole number of DTD 1-of-3 draws so a jackpot block is always a DTD draw block");
+static_assert(HIST_JACKPOT_CAP_STOCKS >= HIST_JACKPOT_BASE_STOCKS,
+              "Jackpot cap must be >= base");
+#ifndef SOST_TESTNET_FORKS
+// MAINNET only: prove the first jackpot lands on a permanent-regime DTD draw block.
+static_assert(HIST_JACKPOT_FIRST_HEIGHT % 3 == 0,
+              "MAINNET first jackpot height must be a DTD draw block (height % 3 == 0)");
+static_assert(HIST_JACKPOT_FIRST_HEIGHT >= V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW,
+              "MAINNET first jackpot must be in the permanent 1-of-3 DTD regime (>= 12100)");
+#endif
+// Returns true iff `height` is a Historical DTD Jackpot block (cadence-aligned,
+// at/after the first jackpot height). NOTE: this is the CADENCE predicate only;
+// the consensus payout path additionally requires the reserve to be non-empty
+// and the block to be a DTD draw with an eligible winner — see spec.
+inline constexpr bool is_hist_jackpot_height(int64_t height) {
+    return height >= HIST_JACKPOT_FIRST_HEIGHT
+        && ((height - HIST_JACKPOT_FIRST_HEIGHT) % HIST_JACKPOT_CADENCE_BLOCKS) == 0;
+}
 
 // =============================================================================
 // DTD Lottery Emergency Pause / Resume — signed control signal (DESIGNED,
