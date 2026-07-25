@@ -194,6 +194,38 @@ Rules:
   no "vault-like" matching. `ADDR_GOLD_VAULT` / `ADDR_POPC_POOL` are the existing
   constitutional constants; the reserve is exactly what those two addresses hold.
 
+## 5c. (J) Payout transaction structure — A1 DECISION (LOCKED 2026-07-25)
+
+The reserve is real UTXOs, but the **coinbase cannot spend them**: coinbase is a
+single null-input transaction (`TX_TYPE_COINBASE`). Forcing reserve inputs into
+the coinbase would corrupt that structure. The tx model already supports
+consensus-authorized typed transactions with custom (signature-free) spend rules
+— the HTLC types (`TX_TYPE_HTLC_CLAIM/REFUND`) are the precedent (authorized by a
+preimage, not an ECDSA signature). The Gold Vault governance spend (G1–G5) is the
+wrong precedent — it is operator-initiated and authorized by an approval marker
+(G4)/veto (G5); the jackpot is automatic, keyless and protocol-mandated.
+
+**Decision:** the jackpot payout is a dedicated protocol transaction
+**`TX_TYPE_JACKPOT`** (new tx type), included at a fixed position (**index 1**, immediately
+after the coinbase) in — and only in — a jackpot block that has an eligible DTD
+winner and a non-empty reserve.
+- **Inputs:** EXACTLY the deterministic oldest-first reserve-UTXO selection
+  (§5b/§3.1) covering the payout. No signatures; the block being a valid jackpot
+  block IS the authorization (validators re-derive the identical selection).
+- **Outputs:** `[0] = winner (payout, to the DTD winner pkh)`, and if the selected
+  inputs exceed the payout, `[1] = change (remainder, to ADDR_GOLD_VAULT — the
+  canonical reserve sink)`. No other outputs. No miner/wallet/other destination.
+- **Supply-neutral:** `Σ inputs == Σ outputs` (payout + change). No mint, no fee,
+  no burn. Change re-enters the reserve set (§5b).
+- **Presence rule:** a jackpot block with a winner + non-empty reserve MUST contain
+  exactly one `TX_TYPE_JACKPOT` at index 1; any other block MUST contain none.
+  Missing/extra/misplaced/duplicate jackpot txs are rejected. If the block has no
+  eligible winner (or the reserve is empty) there is NO jackpot tx — the rollover/
+  retire accounting (§4) still applies via chain state.
+
+This keeps the coinbase structure untouched, reuses the existing typed-tx
+validation dispatch, and makes the jackpot spend fully auditable on-chain.
+
 ## 6. (J) Chain state, connect, disconnect/reorg
 
 New per-block chain state (persist in `StoredBlock`, mirror the existing
