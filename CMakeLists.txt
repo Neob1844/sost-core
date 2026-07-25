@@ -733,6 +733,13 @@ add_executable(test-coinbase-phase2 tests/test_coinbase_phase2.cpp)
 target_link_libraries(test-coinbase-phase2 PRIVATE sost-core)
 add_test(NAME coinbase-phase2 COMMAND test-coinbase-phase2)
 
+# V15 Historical DTD Jackpot (J) — pure consensus core (payout/rollover/cap,
+# reserve membership, deterministic UTXO ordering + selection). Header-only
+# logic in include/sost/jackpot.h; wiring to connect/validation lands later.
+add_executable(test-jackpot tests/test_jackpot.cpp)
+target_link_libraries(test-jackpot PRIVATE sost-core)
+add_test(NAME jackpot COMMAND test-jackpot)
+
 # V11 Phase 2 — miner ↔ validator integration (C11).
 # Always built. Exercises the full handshake: build coinbase the way the
 # production miner would (NORMAL / UPDATE_EMPTY / PAYOUT) and feed it to
