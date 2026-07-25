@@ -163,6 +163,67 @@ static void test_change_is_supply_neutral() {
          payout + change == selected_total && change == S(20));
 }
 
+static void test_canonical_jackpot_tx() {
+    const int64_t F = HIST_JACKPOT_FIRST_HEIGHT;
+    PubKeyHash winner = pkh_fill(0x77);
+    PubKeyHash gold   = pkh_fill(0xAA);
+
+    // Reserve: 70 + 60 SOST (payout 100 needs both → change 30).
+    std::vector<ReserveUtxo> res = {
+        {100, txid_fill(0x01), 0, S(70)},
+        {101, txid_fill(0x02), 1, S(60)},
+    };
+    std::sort(res.begin(), res.end(), reserve_utxo_less);
+
+    Transaction tx;
+    bool built = build_canonical_jackpot_tx(F, true, winner, S(52523), 0, res, gold, tx);
+    TEST("canonical tx built at jackpot height", built);
+    TEST("tx_type == TX_TYPE_JACKPOT", tx.tx_type == TX_TYPE_JACKPOT);
+    TEST("2 inputs selected (70+60 covers 100)", tx.inputs.size() == 2);
+    TEST("input keyless: zero signature", tx.inputs[0].signature[0] == 0 && tx.inputs[0].signature[63] == 0);
+    TEST("2 outputs (winner + change)", tx.outputs.size() == 2);
+    TEST("output0 = payout 100 to winner (OUT_TRANSFER)",
+         tx.outputs[0].amount == S(100) && tx.outputs[0].type == OUT_TRANSFER && tx.outputs[0].pubkey_hash == winner);
+    TEST("output1 = change 30 to reserve sink (OUT_COINBASE_GOLD)",
+         tx.outputs[1].amount == S(30) && tx.outputs[1].type == OUT_COINBASE_GOLD && tx.outputs[1].pubkey_hash == gold);
+    TEST("supply-neutral: Σin == Σout", (S(70)+S(60)) == (tx.outputs[0].amount + tx.outputs[1].amount));
+
+    // Exact-match validator accepts the canonical tx.
+    TEST("validator ACCEPTS canonical tx",
+         jackpot_tx_matches_canonical(tx, F, true, winner, S(52523), 0, res, gold));
+
+    // Tamper cases — all must be REJECTED.
+    { Transaction t = tx; t.outputs[0].pubkey_hash = pkh_fill(0x66);
+      TEST("reject: wrong winner", !jackpot_tx_matches_canonical(t, F, true, winner, S(52523), 0, res, gold)); }
+    { Transaction t = tx; t.outputs[0].amount += 1; t.outputs[1].amount -= 1;
+      TEST("reject: wrong payout amount", !jackpot_tx_matches_canonical(t, F, true, winner, S(52523), 0, res, gold)); }
+    { Transaction t = tx; TxOutput extra; extra.amount = 1; extra.type = OUT_TRANSFER; extra.pubkey_hash = pkh_fill(0x66); t.outputs.push_back(extra);
+      TEST("reject: extra output", !jackpot_tx_matches_canonical(t, F, true, winner, S(52523), 0, res, gold)); }
+    { Transaction t = tx; t.inputs[0].signature[0] = 0x01;
+      TEST("reject: non-keyless input (signature set)", !jackpot_tx_matches_canonical(t, F, true, winner, S(52523), 0, res, gold)); }
+    { Transaction t = tx; std::swap(t.inputs[0], t.inputs[1]);
+      TEST("reject: wrong input order", !jackpot_tx_matches_canonical(t, F, true, winner, S(52523), 0, res, gold)); }
+    { // A perfectly-formed tx at a NON-jackpot height is not expected → reject.
+      TEST("reject: jackpot tx at non-jackpot height",
+           !jackpot_tx_matches_canonical(tx, F + 1, true, winner, S(52523), 0, res, gold)); }
+    { // No winner this block → no jackpot tx expected → any tx rejected.
+      TEST("reject: jackpot tx when no eligible winner",
+           !jackpot_tx_matches_canonical(tx, F, false, winner, S(52523), 0, res, gold)); }
+
+    // Exact-reserve case: single UTXO == payout → no change output.
+    std::vector<ReserveUtxo> res2 = { {100, txid_fill(0x05), 0, S(100)} };
+    Transaction tx2;
+    bool built2 = build_canonical_jackpot_tx(F, true, winner, S(100), 0, res2, gold, tx2);
+    TEST("exact-reserve tx built", built2);
+    TEST("exact-reserve: 1 input, 1 output, no change",
+         tx2.inputs.size() == 1 && tx2.outputs.size() == 1 && tx2.outputs[0].amount == S(100));
+
+    // No tx expected when reserve is empty.
+    Transaction tx3;
+    TEST("empty reserve → no canonical tx built",
+         !build_canonical_jackpot_tx(F, true, winner, 0, 0, {}, gold, tx3));
+}
+
 int main() {
     printf("== test_jackpot — V15 Historical DTD Jackpot (J) pure core ==\n");
     test_cadence();
@@ -178,6 +239,7 @@ int main() {
     test_deterministic_ordering();
     test_selection_oldest_first();
     test_change_is_supply_neutral();
+    test_canonical_jackpot_tx();
     printf("\n== summary: %d pass, %d fail ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }

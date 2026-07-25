@@ -146,4 +146,106 @@ inline ReserveSelection select_reserve_utxos(const std::vector<ReserveUtxo>& sor
     return s;
 }
 
+// ---------------------------------------------------------------------------
+// A1 — canonical TX_TYPE_JACKPOT construction + exact-match validation.
+// The jackpot payout is a keyless protocol transaction (spec §5c). Its safety
+// rests entirely on: the validator RECONSTRUCTS the canonical tx from chain
+// state and requires an EXACT match. There is no signature to forge and no
+// discretion — wrong winner / amount / inputs / ordering / change all fail.
+// ---------------------------------------------------------------------------
+
+// Build the canonical TX_TYPE_JACKPOT for one jackpot block. Returns true and
+// fills out_tx iff a payout tx is required (jackpot height, winner exists,
+// reserve non-empty, payout > 0). `sorted_reserve` MUST be pre-sorted by
+// reserve_utxo_less. Deterministic: identical chain state -> identical tx.
+inline bool build_canonical_jackpot_tx(int64_t height,
+                                       bool winner_exists,
+                                       const PubKeyHash& winner_pkh,
+                                       int64_t reserve_before,
+                                       int64_t rollover_before,
+                                       const std::vector<ReserveUtxo>& sorted_reserve,
+                                       const PubKeyHash& reserve_change_pkh,
+                                       Transaction& out_tx) {
+    const JackpotResult r = hist_jackpot_apply(height, winner_exists,
+                                               reserve_before, rollover_before);
+    if (!r.is_jackpot_block || !r.paid || r.payout <= 0) return false;
+
+    const ReserveSelection sel = select_reserve_utxos(sorted_reserve, r.payout);
+    if (!sel.sufficient || sel.indices.empty()) return false;  // must be covered
+
+    out_tx = Transaction{};
+    out_tx.version = 1;
+    out_tx.tx_type = TX_TYPE_JACKPOT;
+
+    // Inputs: exactly the selected reserve UTXOs, in canonical order, keyless
+    // (zero signature/pubkey — like coinbase).
+    for (size_t k = 0; k < sel.indices.size(); ++k) {
+        const ReserveUtxo& u = sorted_reserve[sel.indices[k]];
+        TxInput in;
+        in.prev_txid  = u.txid;      // Hash256 and Bytes32 are the same 32-byte array
+        in.prev_index = u.vout;
+        in.signature.fill(0);
+        in.pubkey.fill(0);
+        out_tx.inputs.push_back(in);
+    }
+
+    // Output 0: payout -> winner (ordinary spendable OUT_TRANSFER).
+    TxOutput w;
+    w.amount = r.payout;
+    w.type = OUT_TRANSFER;
+    w.pubkey_hash = winner_pkh;
+    out_tx.outputs.push_back(w);
+
+    // Output 1 (only when change > 0): remainder -> canonical reserve sink,
+    // re-entering the reserve set as an OUT_COINBASE_GOLD output (spec §5b).
+    const int64_t change = sel.total - r.payout;
+    if (change > 0) {
+        TxOutput c;
+        c.amount = change;
+        c.type = OUT_COINBASE_GOLD;
+        c.pubkey_hash = reserve_change_pkh;
+        out_tx.outputs.push_back(c);
+    }
+    return true;
+}
+
+// True iff `tx` is EXACTLY the canonical jackpot tx for this chain state. If no
+// jackpot tx is expected (not a jackpot block / no winner / empty reserve), any
+// tx is a mismatch. This is the whole A1 authorization model.
+inline bool jackpot_tx_matches_canonical(const Transaction& tx,
+                                         int64_t height,
+                                         bool winner_exists,
+                                         const PubKeyHash& winner_pkh,
+                                         int64_t reserve_before,
+                                         int64_t rollover_before,
+                                         const std::vector<ReserveUtxo>& sorted_reserve,
+                                         const PubKeyHash& reserve_change_pkh) {
+    Transaction expected;
+    if (!build_canonical_jackpot_tx(height, winner_exists, winner_pkh,
+                                    reserve_before, rollover_before,
+                                    sorted_reserve, reserve_change_pkh, expected)) {
+        return false;
+    }
+    if (tx.tx_type != expected.tx_type)             return false;
+    if (tx.inputs.size()  != expected.inputs.size())  return false;
+    if (tx.outputs.size() != expected.outputs.size()) return false;
+    for (size_t i = 0; i < expected.inputs.size(); ++i) {
+        const TxInput& a = tx.inputs[i];
+        const TxInput& b = expected.inputs[i];
+        if (a.prev_txid  != b.prev_txid)  return false;
+        if (a.prev_index != b.prev_index) return false;
+        for (auto x : a.signature) if (x != 0) return false;  // keyless
+        for (auto x : a.pubkey)    if (x != 0) return false;
+    }
+    for (size_t i = 0; i < expected.outputs.size(); ++i) {
+        const TxOutput& a = tx.outputs[i];
+        const TxOutput& b = expected.outputs[i];
+        if (a.amount != b.amount)           return false;
+        if (a.type   != b.type)             return false;
+        if (a.pubkey_hash != b.pubkey_hash) return false;
+        if (!a.payload.empty())             return false;
+    }
+    return true;
+}
+
 } // namespace sost::jackpot
