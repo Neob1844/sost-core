@@ -169,6 +169,7 @@ add_library(sost-core STATIC
     src/atomic_swap_orderbook.cpp # OTC-2 — off-chain maker/taker order board (pure)
     src/atomic_swap_watcher.cpp   # OTC-2 — local non-custodial watcher / auto-pilot (pure)
     src/atomic_swap_session.cpp   # OTC-4 — end-to-end swap session coordinator (pure)
+    src/atomic_swap_policy.cpp    # OTC-5 — canonical cross-chain policy layer (pure)
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -517,6 +518,12 @@ add_test(NAME atomic-swap-status COMMAND test-atomic-swap-status)
 add_executable(test-atomic-swap-session tests/test_atomic_swap_session.cpp)
 target_link_libraries(test-atomic-swap-session PRIVATE sost-core)
 add_test(NAME atomic-swap-session COMMAND test-atomic-swap-session)
+
+# OTC-5 — canonical policy layer (timeout order, swapId derivation, funding,
+# EVM preimage extraction, RPC recovery, asset matrix). Pure; no consensus.
+add_executable(test-atomic-swap-policy tests/test_atomic_swap_policy.cpp)
+target_link_libraries(test-atomic-swap-policy PRIVATE sost-core)
+add_test(NAME atomic-swap-policy COMMAND test-atomic-swap-policy)
 
 # V14.5 — atomic-swap HTLC consensus fix: CLAIM/REFUND block-path acceptance
 # (ConnectBlock guard, mirrors process_block) + validation-path R17-R24, gated
