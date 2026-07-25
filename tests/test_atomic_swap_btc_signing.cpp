@@ -17,8 +17,19 @@
 #include <cstdio>
 #include <cstdint>
 #include <climits>
+#include <cstring>
 #include <string>
 #include <vector>
+
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+// Phase C.8 structural assertions parse the produced tx with libwally
+// (output count / amounts / locktime / sequence). Guarded so the OFF
+// build never references the vendored headers.
+extern "C" {
+#include <wally_core.h>
+#include <wally_transaction.h>
+}
+#endif
 
 using namespace sost;
 using namespace sost::atomic_swap::btc;
@@ -104,14 +115,25 @@ int main() {
     }
 
     // T5. SignBtcHtlcLockFunding
+    // Phase C.8 wired this stub. With INVALID inputs (fake_privkey is
+    // all-zeros, outside the secp256k1 scalar range), it returns ok=false
+    // even in ON mode — but with the input-validation message, not
+    // "disabled". The happy path (T40+ below) covers the ON success
+    // branch. In OFF mode the whole function is the inert disabled stub.
     {
         auto r = SignBtcHtlcLockFunding(
             fake_txid, 0, 200000, fake_privkey, addr,
             fake_redeem_script, 100000, 1000, network);
         TEST("T5 SignBtcHtlcLockFunding returns ok=false", r.ok == false);
-        TEST("T5 SignBtcHtlcLockFunding error mentions 'disabled'",
-             r.error.find("disabled") != std::string::npos);
         TEST("T5 SignBtcHtlcLockFunding raw_tx_hex empty", r.raw_tx_hex.empty());
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+        TEST("T5 SignBtcHtlcLockFunding error is a real validation message (ON)",
+             !r.error.empty() &&
+             r.error.find("disabled") == std::string::npos);
+#else
+        TEST("T5 SignBtcHtlcLockFunding error mentions 'disabled' (OFF)",
+             r.error.find("disabled") != std::string::npos);
+#endif
     }
 
     // T6. EncodeP2WSHAddress
@@ -719,6 +741,325 @@ int main() {
                 dest_addr_r.address, 1000, "fakenet");
             TEST("T35 SignBtcHtlcClaim rejects unknown bitcoin_network",
                  !bad3.ok);
+        }
+    }
+#endif
+
+    // =================================================================
+    // Phase C.8 — new pure helpers: OFF/ON disabled-shape invariants.
+    // =================================================================
+    // ExtractBtcHtlcPreimageFromWitnessStack / FromTxHex / ComputeBtcTxid
+    // must fail-closed in the default OFF build (disabled error) and, in
+    // ON mode with bogus inputs, still return ok=false with a real
+    // message.
+    {
+        std::array<uint8_t, 32> hl{};
+        for (size_t i = 0; i < 32; ++i) hl[i] = (uint8_t)i;
+
+        // T36. ExtractBtcHtlcPreimageFromWitnessStack — no matching item.
+        {
+            std::vector<std::vector<uint8_t>> stack;
+            stack.push_back(std::vector<uint8_t>(72, 0xAA));    // sig-ish
+            stack.push_back(std::vector<uint8_t>(32, 0x11));    // wrong secret
+            auto r = ExtractBtcHtlcPreimageFromWitnessStack(stack, hl);
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            TEST("T36 ExtractPreimage(stack): no match -> ok=false (ON)",
+                 r.ok == false && !r.error.empty() && r.bytes.empty());
+#else
+            TEST("T36 ExtractPreimage(stack): disabled (OFF)",
+                 r.ok == false &&
+                 r.error.find("disabled") != std::string::npos);
+#endif
+        }
+
+        // T37. ExtractBtcHtlcPreimageFromTxHex — garbage hex.
+        {
+            auto r = ExtractBtcHtlcPreimageFromTxHex("zzzz", 0, hl);
+            TEST("T37 ExtractPreimage(txhex): garbage -> ok=false", r.ok == false);
+#if !defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            TEST("T37 ExtractPreimage(txhex): disabled msg (OFF)",
+                 r.error.find("disabled") != std::string::npos);
+#endif
+        }
+
+        // T38. ComputeBtcTxid — garbage hex.
+        {
+            auto r = ComputeBtcTxid("nothex");
+            TEST("T38 ComputeBtcTxid: garbage -> ok=false", r.ok == false);
+#if !defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+            TEST("T38 ComputeBtcTxid: disabled msg (OFF)",
+                 r.error.find("disabled") != std::string::npos);
+#endif
+        }
+    }
+
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    // =================================================================
+    // Phase C.8 — funding tx + preimage extraction + txid (ON mode).
+    // =================================================================
+    {
+        auto from_hex = [](const std::string& s) {
+            std::vector<uint8_t> out; out.reserve(s.size()/2);
+            auto nib = [](char c) -> int {
+                if (c >= '0' && c <= '9') return c - '0';
+                if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+                if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+                return -1;
+            };
+            for (size_t i = 0; i + 1 < s.size(); i += 2) {
+                int hi = nib(s[i]); int lo = nib(s[i+1]);
+                if (hi < 0 || lo < 0) return std::vector<uint8_t>{};
+                out.push_back((uint8_t)((hi << 4) | lo));
+            }
+            return out;
+        };
+        // Parse a raw tx hex with libwally for structural assertions.
+        auto parse_tx = [](const std::string& hex) -> struct wally_tx* {
+            struct wally_tx* tx = nullptr;
+            if (wally_tx_from_hex(hex.c_str(), WALLY_TX_FLAG_USE_WITNESS, &tx) != 0)
+                return nullptr;
+            return tx;
+        };
+
+        // BIP-143 P2PK test key = the funder.
+        const std::string priv_hex =
+            "b8f28a772fccbf9b4f58a4f027e07dc2e35e7cd80529975e292ea34f84c4580c";
+        const std::string pub_hex =
+            "036d5c20fa14fb2f635474c1dc4ef5909d4568e5569b79fc94d3448486e14685f8";
+        auto priv_v = from_hex(priv_hex);
+        auto pub_v  = from_hex(pub_hex);
+        std::array<uint8_t, 32> funder_priv{};
+        std::copy(priv_v.begin(), priv_v.end(), funder_priv.begin());
+        std::array<uint8_t, 33> claim_pub{};
+        std::copy(pub_v.begin(), pub_v.end(), claim_pub.begin());
+
+        std::array<uint8_t, 32> refund_priv{};
+        refund_priv[31] = 0x42;
+        auto refund_pub_r = DeriveBtcCompressedPubkey(refund_priv);
+        std::array<uint8_t, 33> refund_pub{};
+        std::copy(refund_pub_r.bytes.begin(), refund_pub_r.bytes.end(),
+                  refund_pub.begin());
+
+        // hashlock = sha256(preimage)
+        std::array<uint8_t, 32> preimage{};
+        for (size_t i = 0; i < 32; ++i) preimage[i] = (uint8_t)(0x33 ^ i);
+        sost::Bytes32 hb = sost::sha256(preimage.data(), preimage.size());
+        std::array<uint8_t, 32> hashlock{};
+        std::copy(hb.begin(), hb.end(), hashlock.begin());
+
+        int64_t refund_height = 700000;
+        auto redeem = BuildBtcHtlcRedeemScript(
+            hashlock, refund_height, claim_pub, refund_pub);
+
+        // Expected HTLC scriptPubKey = OP_0 <sha256(redeem)>.
+        sost::Bytes32 wp = BtcHtlcWitnessProgram(redeem);
+        std::vector<uint8_t> htlc_spk;
+        htlc_spk.push_back(0x00); htlc_spk.push_back(0x20);
+        htlc_spk.insert(htlc_spk.end(), wp.begin(), wp.end());
+
+        // Change/destination address (a valid segwit address to decode).
+        std::array<uint8_t, 32> dprog{};
+        for (size_t i = 0; i < 32; ++i) dprog[i] = (uint8_t)(0x77 ^ i);
+        auto change_addr = EncodeP2WSHAddress(dprog, "regtest");
+        TEST("T39 change address encodes", change_addr.ok);
+
+        sost::Bytes32 prev_txid{};
+        for (size_t i = 0; i < 32; ++i) prev_txid[i] = (uint8_t)(0x10 ^ i);
+
+        // --- T40. Funding, change well above dust: 2 outputs ---
+        int64_t prev_amt = 1000000, lock_amt = 600000, fee = 1000;
+        int64_t expect_change = prev_amt - lock_amt - fee;  // 399000
+        auto fund = SignBtcHtlcLockFunding(
+            prev_txid, 0, prev_amt, funder_priv,
+            change_addr.address, redeem, lock_amt, fee, "regtest");
+        TEST("T40 SignBtcHtlcLockFunding happy path ok=true", fund.ok);
+        TEST("T40 funding tx version=2 (02000000)",
+             fund.ok && fund.raw_tx_hex.substr(0, 8) == "02000000");
+        TEST("T40 funding tx witness marker 0001",
+             fund.ok && fund.raw_tx_hex.substr(8, 4) == "0001");
+        if (fund.ok) {
+            auto* tx = parse_tx(fund.raw_tx_hex);
+            TEST("T40 funding tx parses", tx != nullptr);
+            if (tx) {
+                TEST("T40 funding tx has 2 outputs (HTLC + change)",
+                     tx->num_outputs == 2);
+                TEST("T40 vout0 amount == lock_amount",
+                     tx->num_outputs >= 1 &&
+                     (int64_t)tx->outputs[0].satoshi == lock_amt);
+                bool spk_match = tx->num_outputs >= 1 &&
+                    tx->outputs[0].script_len == htlc_spk.size() &&
+                    std::memcmp(tx->outputs[0].script, htlc_spk.data(),
+                                htlc_spk.size()) == 0;
+                TEST("T40 vout0 scriptPubKey == OP_0<sha256(redeem)> (P2WSH)",
+                     spk_match);
+                TEST("T40 vout1 amount == change",
+                     tx->num_outputs >= 2 &&
+                     (int64_t)tx->outputs[1].satoshi == expect_change);
+                TEST("T40 funding input sequence is final (0xFFFFFFFF)",
+                     tx->num_inputs == 1 &&
+                     tx->inputs[0].sequence == 0xFFFFFFFF);
+                TEST("T40 funding tx locktime == 0", tx->locktime == 0);
+                // P2WPKH witness: [sig+type, 33-byte pubkey].
+                TEST("T40 funding witness has 2 items",
+                     tx->inputs[0].witness &&
+                     tx->inputs[0].witness->num_items == 2);
+                TEST("T40 funding witness[1] is the 33-byte funder pubkey",
+                     tx->inputs[0].witness &&
+                     tx->inputs[0].witness->num_items == 2 &&
+                     tx->inputs[0].witness->items[1].witness_len == 33 &&
+                     std::memcmp(tx->inputs[0].witness->items[1].witness,
+                                 claim_pub.data(), 33) == 0);
+                wally_tx_free(tx);
+            }
+        }
+
+        // --- T41. Determinism ---
+        {
+            auto fund2 = SignBtcHtlcLockFunding(
+                prev_txid, 0, prev_amt, funder_priv,
+                change_addr.address, redeem, lock_amt, fee, "regtest");
+            TEST("T41 funding deterministic on identical inputs",
+                 fund2.ok && fund.ok && fund2.raw_tx_hex == fund.raw_tx_hex);
+        }
+
+        // --- T42. Sub-dust change is folded into fee -> 1 output ---
+        {
+            int64_t p = lock_amt + fee + 200;  // 200 <= dust(294)
+            auto f = SignBtcHtlcLockFunding(
+                prev_txid, 0, p, funder_priv,
+                change_addr.address, redeem, lock_amt, fee, "regtest");
+            TEST("T42 sub-dust funding ok", f.ok);
+            auto* tx = f.ok ? parse_tx(f.raw_tx_hex) : nullptr;
+            TEST("T42 sub-dust change dropped -> exactly 1 output (HTLC)",
+                 tx && tx->num_outputs == 1 &&
+                 (int64_t)tx->outputs[0].satoshi == lock_amt);
+            if (tx) wally_tx_free(tx);
+        }
+
+        // --- T43. Exact amount (change == 0) -> 1 output ---
+        {
+            int64_t p = lock_amt + fee;
+            auto f = SignBtcHtlcLockFunding(
+                prev_txid, 0, p, funder_priv,
+                change_addr.address, redeem, lock_amt, fee, "regtest");
+            TEST("T43 change==0 funding ok", f.ok);
+            auto* tx = f.ok ? parse_tx(f.raw_tx_hex) : nullptr;
+            TEST("T43 change==0 -> exactly 1 output",
+                 tx && tx->num_outputs == 1);
+            if (tx) wally_tx_free(tx);
+        }
+
+        // --- T44. Insufficient prev_amount rejected ---
+        {
+            auto f = SignBtcHtlcLockFunding(
+                prev_txid, 0, lock_amt + fee - 1, funder_priv,
+                change_addr.address, redeem, lock_amt, fee, "regtest");
+            TEST("T44 reject prev_amount < lock+fee", f.ok == false);
+        }
+
+        // --- T45. Bad inputs rejected ---
+        {
+            std::array<uint8_t, 32> zero{};
+            auto f1 = SignBtcHtlcLockFunding(
+                prev_txid, 0, prev_amt, zero,
+                change_addr.address, redeem, lock_amt, fee, "regtest");
+            TEST("T45 reject invalid funder privkey", f1.ok == false);
+            auto f2 = SignBtcHtlcLockFunding(
+                prev_txid, 0, prev_amt, funder_priv,
+                "not-an-address", redeem, lock_amt, fee, "regtest");
+            TEST("T45 reject undecodable change addr (change>dust)",
+                 f2.ok == false);
+            auto f3 = SignBtcHtlcLockFunding(
+                prev_txid, 0, prev_amt, funder_priv,
+                change_addr.address, redeem, lock_amt, fee, "fakenet");
+            TEST("T45 reject unknown network", f3.ok == false);
+            auto f4 = SignBtcHtlcLockFunding(
+                prev_txid, 0, prev_amt, funder_priv,
+                change_addr.address, {}, lock_amt, fee, "regtest");
+            TEST("T45 reject empty redeem script", f4.ok == false);
+        }
+
+        // --- T46. ComputeBtcTxid on the funding tx ---
+        {
+            TEST("T46 ComputeBtcTxid ok on funding tx",
+                 fund.ok);
+            auto tid = ComputeBtcTxid(fund.raw_tx_hex);
+            TEST("T46 txid is 32 bytes", tid.ok && tid.bytes.size() == 32);
+            // Segwit txid is witness-independent: recompute must match.
+            auto tid2 = ComputeBtcTxid(fund.raw_tx_hex);
+            TEST("T46 txid deterministic", tid2.ok && tid2.bytes == tid.bytes);
+        }
+
+        // --- CLAIM + REFUND for the same HTLC, to exercise extraction ---
+        sost::Bytes32 lock_txid{};
+        for (size_t i = 0; i < 32; ++i) lock_txid[i] = (uint8_t)(0x21 ^ i);
+        auto claim = SignBtcHtlcClaim(
+            lock_txid, 0, lock_amt, redeem, preimage, funder_priv,
+            change_addr.address, 1000, "regtest");
+        TEST("T47 CLAIM tx built", claim.ok);
+        auto refund = SignBtcHtlcRefund(
+            lock_txid, 0, lock_amt, redeem, refund_height, refund_priv,
+            change_addr.address, 1000, "regtest");
+        TEST("T47 REFUND tx built", refund.ok);
+
+        // --- T48. Preimage extraction from the CLAIM tx round-trips ---
+        {
+            auto ex = ExtractBtcHtlcPreimageFromTxHex(
+                claim.raw_tx_hex, 0, hashlock);
+            TEST("T48 extract preimage from CLAIM tx ok", ex.ok);
+            TEST("T48 extracted preimage matches original",
+                 ex.ok && ex.bytes.size() == 32 &&
+                 std::memcmp(ex.bytes.data(), preimage.data(), 32) == 0);
+        }
+
+        // --- T49. Wrong hashlock -> no extraction (fund-safe) ---
+        {
+            std::array<uint8_t, 32> wrong = hashlock;
+            wrong[0] ^= 0x01;
+            auto ex = ExtractBtcHtlcPreimageFromTxHex(
+                claim.raw_tx_hex, 0, wrong);
+            TEST("T49 wrong hashlock -> extraction fails", ex.ok == false);
+        }
+
+        // --- T50. REFUND tx reveals NO preimage (early-refund/no-secret) ---
+        {
+            auto ex = ExtractBtcHtlcPreimageFromTxHex(
+                refund.raw_tx_hex, 0, hashlock);
+            TEST("T50 REFUND tx yields no preimage", ex.ok == false);
+        }
+
+        // --- T51. Extraction from a witness stack directly ---
+        {
+            std::vector<uint8_t> sig(72, 0xAB); sig[71] = 0x01;
+            auto w = BuildBtcHtlcClaimWitness(sig, preimage, redeem);
+            TEST("T51 claim witness built", w.ok && w.stack.size() == 4);
+            auto ex = ExtractBtcHtlcPreimageFromWitnessStack(w.stack, hashlock);
+            TEST("T51 extract preimage from witness stack matches",
+                 ex.ok && ex.bytes.size() == 32 &&
+                 std::memcmp(ex.bytes.data(), preimage.data(), 32) == 0);
+            std::array<uint8_t, 32> wrong = hashlock; wrong[5] ^= 0x02;
+            auto ex2 = ExtractBtcHtlcPreimageFromWitnessStack(w.stack, wrong);
+            TEST("T51 wrong hashlock -> no match", ex2.ok == false);
+        }
+
+        // --- T52. Locktime/sequence: refund CANNOT settle before timeout ---
+        // The refund path must set nLockTime == refund_height AND an
+        // input sequence < 0xFFFFFFFF so OP_CHECKLOCKTIMEVERIFY is
+        // enforced; the claim path must set nLockTime == 0. This is what
+        // makes a refund-before-timeout impossible on a real node.
+        {
+            auto* rt = refund.ok ? parse_tx(refund.raw_tx_hex) : nullptr;
+            TEST("T52 refund tx locktime == refund_height",
+                 rt && rt->locktime == (uint32_t)refund_height);
+            TEST("T52 refund input sequence < 0xFFFFFFFF (CLTV enforced)",
+                 rt && rt->num_inputs == 1 &&
+                 rt->inputs[0].sequence == 0xFFFFFFFE);
+            if (rt) wally_tx_free(rt);
+
+            auto* ct = claim.ok ? parse_tx(claim.raw_tx_hex) : nullptr;
+            TEST("T52 claim tx locktime == 0 (no timelock on claim)",
+                 ct && ct->locktime == 0);
+            if (ct) wally_tx_free(ct);
         }
     }
 #endif
