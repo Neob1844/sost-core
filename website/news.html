@@ -99,7 +99,7 @@
   @keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js"></script>
-<script src="js/nav-toggle.js" defer></script>
+<script src="js/nav-toggle.js?v=v380" defer></script>
 </head>
 <body>
 
@@ -252,9 +252,9 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;font-size:12.5px">
         <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">Activates block 16,000</span>
         <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">Byte-identical below 16,000</span>
-        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">Same binary carries V15 (PoPC) at 20,000</span>
+        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">Same binary carries V15 (PoPC) at 25,000</span>
       </div>
-      <p style="color:var(--text-secondary)"><b>Below block&nbsp;16,000 the new binary is byte-identical</b> to the current one, so it is safe to deploy now. The same build also carries <b>V15 (PoPC)</b> at block&nbsp;20,000 &mdash; one upgrade covers both forks.</p>
+      <p style="color:var(--text-secondary)"><b>Below block&nbsp;16,000 the new binary is byte-identical</b> to the current one, so it is safe to deploy now. The same build also carries <b>V15 (PoPC)</b> at block&nbsp;25,000 &mdash; one upgrade covers both forks.</p>
 
       <h3 style="color:#fb010d;margin:18px 0 6px">Step 1 &mdash; build (flags mandatory)</h3>
       <pre style="margin:6px 0 0;padding:11px 13px;background:rgba(0,0,0,.4);border:1px solid var(--border-med);border-radius:6px;overflow:auto;font-size:12.5px;color:#cfeede;white-space:pre;line-height:1.7">cd sost-core
@@ -380,7 +380,7 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
     </div>
     <div class="info-card">
       <p>The chain has run continuously since genesis &mdash; through the <b>V13</b> hard fork (block&nbsp;12,000) and the <b>V14</b> H3/H4 validation hardening &mdash; with independent miners and nodes active (peak <b>53 miners</b>). No premine, no ICO, no VC allocation; the 50&nbsp;/&nbsp;25&nbsp;/&nbsp;25 coinbase split (miner&nbsp;/&nbsp;Gold&nbsp;Vault&nbsp;/&nbsp;PoPC) is hardcoded at genesis.</p>
-      <p style="color:var(--text-secondary)">At 00:00 UTC the pre-market banner and launch countdown retire automatically; only the Genesis counter remains. Full automation (PoPC Bond Staking, OTC/P2P atomic swap, Gold-Vault governance) is grouped into <b>V15</b> at block&nbsp;20,000, after testnet, replay and coordinated activation.</p>
+      <p style="color:var(--text-secondary)">At 00:00 UTC the pre-market banner and launch countdown retire automatically; only the Genesis counter remains. Full automation (PoPC Bond Staking, OTC/P2P atomic swap, Gold-Vault governance) is grouped into <b>V15</b> at block&nbsp;25,000, after testnet, replay and coordinated activation.</p>
     </div>
   </div>
 </section>
@@ -473,7 +473,7 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
       <h3 style="margin-top:16px">Live gate state &mdash; verifiable in the repo &middot; mainnet UNCHANGED</h3>
       <pre style="background:#05070a;border:1px solid var(--border-med);border-radius:8px;padding:14px 16px;overflow-x:auto;font-size:12.5px;line-height:1.7;color:var(--text-secondary)">ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX   # SOST consensus gate, sentinel OFF
 SOST_BTC_HTLC_SIGNING             = OFF          # CMake flag, no real BTC signing compiled in
-V15_HEIGHT                        = 20,000       # intended activation height (NOT yet active)</pre>
+V15_HEIGHT                        = 25,000       # intended activation height (NOT yet active)</pre>
       <p style="font-size:13px;color:var(--text-secondary)">All atomic-swap wallet&nbsp;/&nbsp;RPC&nbsp;/&nbsp;CLI commands refuse <code>--sign --broadcast</code> while the gate stays at INT64_MAX. Activation only after Phase-4/5 sign-off + external audit.</p>
 
       <p style="margin-top:14px"><b>One-line summary.</b> Two people, two chains, one shared secret, two timeouts &mdash; or both walk away with their own coins. Full reference at <a href="sost-otc.html" style="color:#22d3ee">sost-otc.html</a>.</p>
@@ -481,25 +481,25 @@ V15_HEIGHT                        = 20,000       # intended activation height (N
   </div>
 </section>
 
-<!-- V15 — AUTOMATION BUNDLE @ BLOCK 20,000 -->
+<!-- V15 — AUTOMATION BUNDLE @ BLOCK 25,000 -->
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">// PLANNED &middot; BLOCK 20,000 &middot; full automation release</div>
+      <div class="section-id">// PLANNED &middot; BLOCK 25,000 &middot; full automation release</div>
       <div class="section-dates">Published: 2026-06-08 &middot; Last updated: 2026-06-08</div>
       <h2 class="section-title">V15 &mdash; <span class="accent">full automation: PoPC Bond Staking, Atomic Swap &amp; Gold Vault governance</span></h2>
       <div class="section-sub">Scope split (2026-06-08): V14 ships on time at block&nbsp;15,000 (validation hardening, no action needed). The larger automation track is regrouped here, into V15, so it ships fully integrated &mdash; never half-activated.</div>
     </div>
     <div class="info-card">
-      <p>Rather than rush the heaviest systems into V14, they are grouped into a dedicated release that activates together at <b>block&nbsp;#20,000</b>. Each gate ships <b>deferred (no-op) on mainnet</b> and is flipped only after full integration, testnet, replay and coordinated activation &mdash; never flipped blind on a live chain.</p>
-      <h3>Targeted for block 20,000</h3>
+      <p>Rather than rush the heaviest systems into V14, they are grouped into a dedicated release that activates together at <b>block&nbsp;#25,000</b>. Each gate ships <b>deferred (no-op) on mainnet</b> and is flipped only after full integration, testnet, replay and coordinated activation &mdash; never flipped blind on a live chain.</p>
+      <h3>Targeted for block 25,000</h3>
       <ul>
         <li><b>PoPC (Proof-of-Personal-Custody) Model&nbsp;A &amp; Model&nbsp;B &mdash; full automation</b> &mdash; consensus-side auto-audit, auto-slash and auto-settlement; the active set moves out of <code>popc_registry.json</code> into deterministic chain-state. Model&nbsp;B event-listener automation included.</li>
         <li><b>OTC&nbsp;/&nbsp;P2P Atomic&nbsp;Swap (HTLC)</b> &mdash; non-custodial swaps with no bridges. PAXG&nbsp;/&nbsp;XAUT&nbsp;/&nbsp;USDT&nbsp;/&nbsp;USDC live on Ethereum, so the user keeps their own ETH account and performs a few small steps &mdash; with the rest of the flow prepared and near-fully automated. Activates only after BTC&nbsp;+&nbsp;EVM end-to-end testnet and review.</li>
         <li><b>Gold&nbsp;Vault governance upgrade (G1&ndash;G5)</b> &mdash; consensus-enforced spend rules: <b>90&nbsp;% miner approval over a 67-block window</b> (ceil&nbsp;=&nbsp;61) + 10&nbsp;% quality boost or single-signer veto (developer&nbsp;/&nbsp;genesis); silence&nbsp;=&nbsp;accept; whitelisted destination; per-spend cap. Stronger security, decentralization and protection of the protocol's reserve-value mechanism.</li>
         <li><b>Testnet, replay and coordinated activation</b> before any mainnet flip.</li>
       </ul>
-      <p style="margin-top:12px"><b>For node&nbsp;/&nbsp;miner operators:</b> nothing to do for V15 yet &mdash; keep running your current V14 binary. A node update enabling the V15 features will be published well before block&nbsp;#20,000, with clear instructions. This is not an emergency; the chain continues normally. Goal: <b>automation first, no half-activated protocol systems</b>. Cross-posted on the <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk thread</a> and surfaced on the <a href="sost-explorer.html" style="color:#22d3ee">live explorer</a>.</p>
+      <p style="margin-top:12px"><b>For node&nbsp;/&nbsp;miner operators:</b> nothing to do for V15 yet &mdash; keep running your current V14 binary. A node update enabling the V15 features will be published well before block&nbsp;#25,000, with clear instructions. This is not an emergency; the chain continues normally. Goal: <b>automation first, no half-activated protocol systems</b>. Cross-posted on the <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk thread</a> and surfaced on the <a href="sost-explorer.html" style="color:#22d3ee">live explorer</a>.</p>
     </div>
   </div>
 </section>
@@ -582,7 +582,7 @@ sudo systemctl restart sost-miner</pre>
       <div class="section-id">// PLANNED &middot; BLOCK 15,000 &middot; target ~2026-06-27</div>
       <div class="section-dates">Published: 2026-05-28 &middot; Last updated: 2026-06-08</div>
       <h2 class="section-title">V14 &mdash; <span class="accent">block-validation hardening (H3/H4)</span></h2>
-      <div class="section-sub">Scope narrowed (2026-06-08): V14 now ships only the H3/H4 hardening. The governance &amp; automation track moved to <b>V15 (block&nbsp;20,000)</b> &mdash; see the V15 entry above. Retractable without drama if the pre-fork testnet checks fail.</div>
+      <div class="section-sub">Scope narrowed (2026-06-08): V14 now ships only the H3/H4 hardening. The governance &amp; automation track moved to <b>V15 (block&nbsp;25,000)</b> &mdash; see the V15 entry above. Retractable without drama if the pre-fork testnet checks fail.</div>
     </div>
     <div class="info-card">
       <h3>Activates at block 15,000</h3>
@@ -590,7 +590,7 @@ sudo systemctl restart sost-miner</pre>
         <li><b>H3/H4 block-validation hardening</b> &mdash; mempool/relay policy no longer decides block validity; a transaction may spend an output created by an earlier transaction in the same block (validated against a temporary UTXO view); duplicate transaction IDs inside a block are rejected. (The dynamic fee floor 1&rarr;10 already activated at block&nbsp;10,000.)</li>
         <li><b>Threshold constant sync 95&nbsp;% &rarr; 90&nbsp;%</b> is already in the binary; its spend-side <i>enforcement</i> arrives with the Gold Vault governance in <b>V15</b>.</li>
       </ul>
-      <h3 style="margin-top:14px">Moved to V15 (block 20,000)</h3>
+      <h3 style="margin-top:14px">Moved to V15 (block 25,000)</h3>
       <ul>
         <li><b>Gold Vault Phase I governance</b> (90&nbsp;% miner approval over a 67-block window, veto, caps).</li>
         <li><b>PoPC Bond Staking chain-state migration + auto-audit / auto-slash / auto-settlement</b> (single native-SOST bond; optional Gold Boost, never collateral) and the <b>DTD-PoPC eligibility gate</b> flip.</li>

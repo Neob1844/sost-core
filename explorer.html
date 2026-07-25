@@ -405,7 +405,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
     <div class="gold-card" style="border-color:#3a2d0a">
       <div class="gold-title" style="justify-content:space-between">
         <span><span style="font-size:15px;color:var(--gold)">◈</span> // <b style="color:var(--gold)">HISTORICAL DTD JACKPOT</b></span>
-        <span id="jpStatus" style="font-size:9px;font-weight:600;color:var(--yellow);border:1px solid #4a3a10;border-radius:3px;padding:2px 6px;letter-spacing:1px">PLANNED · BLOCK 20,000</span>
+        <span id="jpStatus" style="font-size:9px;font-weight:600;color:var(--yellow);border:1px solid #4a3a10;border-radius:3px;padding:2px 6px;letter-spacing:1px">PLANNED · BLOCK 25,000</span>
       </div>
       <div class="gold-big" id="jpReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div>
       <div class="gold-sub" id="jpReserveSub">Gold Vault + PoPC reserve — progressively returned to active miners</div>
@@ -416,7 +416,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:12px 0 10px;font-size:10px">
-        <div><span style="color:var(--text3)">FIRST JACKPOT</span><br><b style="color:var(--cyan)">block 20,286</b></div>
+        <div><span style="color:var(--text3)">FIRST JACKPOT</span><br><b style="color:var(--cyan)">block 25,290</b></div>
         <div><span style="color:var(--text3)">NEXT JACKPOT</span><br><b class="cyan" id="jpNext">—</b></div>
         <div><span style="color:var(--text3)">BASE PAYOUT</span><br><b style="color:var(--green)">100 SOST</b> <span style="color:var(--text3)">+ rollover</span></div>
         <div><span style="color:var(--text3)">PER-PAYOUT CAP</span><br><b style="color:var(--green)">500 SOST</b></div>
@@ -428,14 +428,14 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(230,57,70,.4)}
 
       <div style="font-size:9px;line-height:1.6;color:var(--text2);border-top:1px solid var(--border);padding-top:8px">
         <span style="color:var(--green);font-weight:600">WIND-DOWN, NOT TREASURY.</span>
-        From block 20,000 the Gold-Vault + PoPC coinbase outputs are eliminated and that 50% flows to DTD.
+        From block 25,000 the Gold-Vault + PoPC coinbase outputs are eliminated and that 50% flows to DTD.
         The existing reserve is a <b>real, supply-neutral protocol spend</b> back to active miners —
         <b>no founder spend · no listing sale · no new emission · no mint</b>. Paid via a normal jackpot
         transaction (<code style="color:var(--cyan)">txs[1]</code>), change re-locked to the vault.
         <span style="color:var(--text3)">DTD normal = every-block 50% split · Historical Jackpot = the special periodic reserve payout above.</span>
       </div>
       <div id="jpDisclaimer" style="font-size:8px;color:var(--text3);margin-top:6px;letter-spacing:1px">
-        ◆ EXPERIMENTAL · PLANNED — activates at block 20,000, first payout block 20,286. Live winner/pending/total available after V15 activation.
+        ◆ EXPERIMENTAL · PLANNED — activates at block 25,000, first payout block 25,290. Live winner/pending/total available after V15 activation.
       </div>
     </div>
     </div>
@@ -994,7 +994,7 @@ async function updateDashboard(info){
 }
 // ---- V15 Historical DTD Jackpot card (read-only / client-side) --------------
 // Consensus constants — MUST match include/sost/params.h + jackpot.h.
-var JP_V15=20000, JP_FIRST=20286, JP_CADENCE=288, JP_BASE=100, JP_CAP=500;
+var JP_V15=25000, JP_FIRST=25290, JP_CADENCE=288, JP_BASE=100, JP_CAP=500;
 function jpNextHeight(h){
   if(h < JP_FIRST) return JP_FIRST;
   var k=Math.ceil((h - JP_FIRST + 1)/JP_CADENCE); // strictly the next opportunity
@@ -1007,11 +1007,11 @@ function updateJackpotCard(reserveSOST, height){
   elR.textContent = reserveSOST.toFixed(4)+' SOST';
   document.getElementById('jpReserveSub').textContent =
     active ? 'reserve remaining · returned to active miners via periodic jackpots'
-           : 'reserve accumulating (25%+25%/block) · redirected to miners at block 20,000';
+           : 'reserve accumulating (25%+25%/block) · redirected to miners at block 25,000';
   // Status badge.
   var st=document.getElementById('jpStatus');
   if(active){ st.textContent='ACTIVE'; st.style.color='var(--green)'; st.style.borderColor='#1c4a2a'; }
-  else { st.textContent='PLANNED · BLOCK 20,000'; st.style.color='var(--yellow)'; st.style.borderColor='#4a3a10'; }
+  else { st.textContent='PLANNED · BLOCK 25,000'; st.style.color='var(--yellow)'; st.style.borderColor='#4a3a10'; }
   // Next jackpot height + distance.
   var nh=jpNextHeight(height), away=nh-height;
   var etaH=Math.round(away*48/JP_CADENCE); // spec cadence: ~288 blk ≈ 48h

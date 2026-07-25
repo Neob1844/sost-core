@@ -240,7 +240,7 @@
     },
 
     // ---- Dashboard pure helpers (no network; the UI renders from these) --------
-    V15_HEIGHT: 20000,                                       // mainnet PoPC base activation
+    V15_HEIGHT: 25000,                                       // mainnet PoPC base activation
     DURATIONS: [1, 3, 6, 9, 12],                             // valid lock months
     REWARD_BPS: { 1: 100, 3: 400, 6: 900, 9: 1400, 12: 2000 }, // base reward bps (1/4/9/14/20%)
 

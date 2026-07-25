@@ -20,19 +20,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PoPC Bond Staking — Single Native SOST Bond (Create / Monitor / Claim)</title>
-<meta name="description" content="PoPC Bond Staking specification: the single native SOST bond — the only collateral and the only slashable asset. Create, monitor and claim. Activates at V15 / block 20,000. Not tradeable in V15. Includes historical reference for the superseded Model A / Model B Ethereum escrow design.">
+<meta name="description" content="PoPC Bond Staking specification: the single native SOST bond — the only collateral and the only slashable asset. Create, monitor and claim. Activates at V15 / block 25,000. Not tradeable in V15. Includes historical reference for the superseded Model A / Model B Ethereum escrow design.">
 <meta name="keywords" content="PoPC bond staking, SOST bond, native SOST bond, create monitor claim, PoPC V15, SOST staking, Proof of Personal Custody">
 <meta name="author" content="SOST Protocol">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="PoPC Bond Staking — Single Native SOST Bond (Create / Monitor / Claim)">
-<meta property="og:description" content="PoPC Bond Staking: one native SOST bond, the only collateral and the only slashable asset. Create / monitor / claim. Activates V15 / block 20,000. Not tradeable in V15.">
+<meta property="og:description" content="PoPC Bond Staking: one native SOST bond, the only collateral and the only slashable asset. Create / monitor / claim. Activates V15 / block 25,000. Not tradeable in V15.">
 <meta property="og:url" content="https://sostcore.com/sost-popc-contracts.html">
 <meta property="og:site_name" content="SOST Protocol">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="PoPC Bond Staking — Single Native SOST Bond (Create / Monitor / Claim)">
-<meta name="twitter:description" content="PoPC Bond Staking: one native SOST bond, the only collateral and the only slashable asset. Create / monitor / claim. Activates V15 / block 20,000. Not tradeable in V15.">
+<meta name="twitter:description" content="PoPC Bond Staking: one native SOST bond, the only collateral and the only slashable asset. Create / monitor / claim. Activates V15 / block 25,000. Not tradeable in V15.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -156,7 +156,7 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js"></script>
-<script src="js/nav-toggle.js" defer></script>
+<script src="js/nav-toggle.js?v=v380" defer></script>
 </head>
 <body>
 
@@ -237,7 +237,7 @@
   <div class="container">
     <div class="hero-label fade-in">PoPC Bond Staking — Single Native SOST Bond</div>
     <h1 class="fade-in delay-1">PoPC Bond <span>Staking</span></h1>
-    <p class="hero-sub fade-in delay-2">Specification for the single native SOST bond — the only collateral and the only slashable asset in PoPC. A staking product: <strong>create</strong> a bond, <strong>monitor</strong> it, then <strong>claim</strong> your reward. Activates at <strong>V15 / block 20,000</strong> and is <strong>not tradeable in V15</strong>. Gold Boost is an optional reward boost only — never collateral, never slashed — and is disabled on mainnet. The earlier Model A / Model B Ethereum SOSTEscrow design below is preserved as historical / superseded reference.</p>
+    <p class="hero-sub fade-in delay-2">Specification for the single native SOST bond — the only collateral and the only slashable asset in PoPC. A staking product: <strong>create</strong> a bond, <strong>monitor</strong> it, then <strong>claim</strong> your reward. Activates at <strong>V15 / block 25,000</strong> and is <strong>not tradeable in V15</strong>. Gold Boost is an optional reward boost only — never collateral, never slashed — and is disabled on mainnet. The earlier Model A / Model B Ethereum SOSTEscrow design below is preserved as historical / superseded reference.</p>
   </div>
 </section>
 
@@ -245,7 +245,7 @@
 <section style="padding:0;">
   <div class="container" style="padding-top:24px;">
     <div style="background:rgba(192,132,252,0.08);border:1px solid rgba(192,132,252,0.35);border-radius:8px;padding:16px 20px;font-size:12px;color:var(--text-secondary);line-height:1.8;">
-      <strong style="color:#c084fc;">&#9776; CURRENT MODEL — SINGLE NATIVE SOST BOND</strong> &mdash; PoPC has been redesigned to a <strong>single native SOST bond</strong>: the only collateral and the only slashable asset. It is a <strong>staking product</strong> — create / monitor / claim — that activates at <strong>V15 / block 20,000</strong> and is <strong>not tradeable in V15</strong>. <strong style="color:#c084fc;">This single-bond model supersedes Model A, Model B and the Ethereum SOSTEscrow design</strong> shown further down this page, which is retained only as historical reference. <strong>Gold Boost</strong> is an optional reward boost only — never collateral, never slashed — and is <strong>disabled on mainnet</strong>. Everything below referencing the Ethereum escrow / XAUT-PAXG verification / Model A / Model B is <span style="color:#c084fc;">HISTORICAL / SUPERSEDED</span>.
+      <strong style="color:#c084fc;">&#9776; CURRENT MODEL — SINGLE NATIVE SOST BOND</strong> &mdash; PoPC has been redesigned to a <strong>single native SOST bond</strong>: the only collateral and the only slashable asset. It is a <strong>staking product</strong> — create / monitor / claim — that activates at <strong>V15 / block 25,000</strong> and is <strong>not tradeable in V15</strong>. <strong style="color:#c084fc;">This single-bond model supersedes Model A, Model B and the Ethereum SOSTEscrow design</strong> shown further down this page, which is retained only as historical reference. <strong>Gold Boost</strong> is an optional reward boost only — never collateral, never slashed — and is <strong>disabled on mainnet</strong>. Everything below referencing the Ethereum escrow / XAUT-PAXG verification / Model A / Model B is <span style="color:#c084fc;">HISTORICAL / SUPERSEDED</span>.
     </div>
   </div>
 </section>
@@ -278,7 +278,7 @@
         </div>
       </div>
       <div style="margin-top:10px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--border-dim);padding-top:8px;">
-        <strong style="color:#c084fc">&#9888;</strong> <strong>Historical / superseded.</strong> This Ethereum SOSTEscrow alpha is no longer the PoPC model. The current PoPC is the single native SOST bond (create / monitor / claim), activating V15 / block 20,000. Non-custodial swaps live in the separate <a href="sost-gold-dex.html" style="color:#f59e0b">Atomic Swap DEX</a> — SOST never custodies funds.
+        <strong style="color:#c084fc">&#9888;</strong> <strong>Historical / superseded.</strong> This Ethereum SOSTEscrow alpha is no longer the PoPC model. The current PoPC is the single native SOST bond (create / monitor / claim), activating V15 / block 25,000. Non-custodial swaps live in the separate <a href="sost-gold-dex.html" style="color:#f59e0b">Atomic Swap DEX</a> — SOST never custodies funds.
       </div>
     </div>
   </div>
@@ -584,7 +584,7 @@
       <div class="section-title">Gold Vault <span class="accent">Governance</span></div>
     </div>
     <div class="notice" style="border-left-color:var(--gold);margin-bottom:24px;">
-      <strong>Activation:</strong> Gold Vault governance activates at <strong>V15 / block 20,000</strong> (GV_GOVERNANCE_ACTIVATION). Until then, vault funds accumulate but cannot be spent.
+      <strong>Activation:</strong> Gold Vault governance activates at <strong>V15 / block 25,000</strong> (GV_GOVERNANCE_ACTIVATION). Until then, vault funds accumulate but cannot be spent.
     </div>
     <div class="spec-block fade-in delay-1">
       <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Spending Rules (GV1&ndash;GV4)</span><span class="spec-tag">CONSENSUS-ENFORCED</span></div>
@@ -593,7 +593,7 @@
           <tr><th>Rule</th><th>Type</th><th>Vote Required</th><th>Condition</th></tr>
           <tr><td class="highlight">GV1</td><td class="green">Gold Purchase</td><td class="green">No</td><td>TX contains GV_PAYLOAD_GOLD_PURCHASE marker (0x47). Direct gold acquisition for vault backing.</td></tr>
           <tr><td class="highlight">GV2</td><td style="color:#fbbf24">Small Operational</td><td class="green">No</td><td>&le; 10% of monthly vault balance (GV_MONTHLY_LIMIT_PCT). Within 4,320-block window (GV_MONTHLY_WINDOW ~30 days). Fresh window if expired.</td></tr>
-          <tr><td class="highlight">GV3</td><td style="color:#fb923c">Large / Non-standard</td><td style="color:#e63946;font-weight:600">Yes &mdash; miner vote</td><td>Epoch 0&ndash;1 (blocks 20,000&ndash;263,105): 95% threshold. Epoch 2+ (block 263,106+): 95% threshold. Voting window: 288 blocks (~48h).</td></tr>
+          <tr><td class="highlight">GV3</td><td style="color:#fb923c">Large / Non-standard</td><td style="color:#e63946;font-weight:600">Yes &mdash; miner vote</td><td>Epoch 0&ndash;1 (blocks 25,000&ndash;263,105): 95% threshold. Epoch 2+ (block 263,106+): 95% threshold. Voting window: 288 blocks (~48h).</td></tr>
           <tr><td class="highlight">GV4</td><td style="color:#e63946">Rejected</td><td>&mdash;</td><td>Spend doesn't match any rule &rarr; returned to vault automatically.</td></tr>
         </table>
       </div>
@@ -670,7 +670,7 @@
       <div class="spec-body"><div class="empty-state">No slashed contracts.</div></div>
     </div>
     <div class="notice">
-      <strong>Activation:</strong> The single native SOST bond activates at <strong>V15 / block 20,000</strong> (BOND_ACTIVATION_HEIGHT_MAINNET). Bonds are created, monitored and claimed on the SOST chain and are not tradeable in V15. Community bonds will appear here as participants register. The Model A / Model B columns above reflect the historical / superseded design.
+      <strong>Activation:</strong> The single native SOST bond activates at <strong>V15 / block 25,000</strong> (BOND_ACTIVATION_HEIGHT_MAINNET). Bonds are created, monitored and claimed on the SOST chain and are not tradeable in V15. Community bonds will appear here as participants register. The Model A / Model B columns above reflect the historical / superseded design.
     </div>
   </div>
 </section>
@@ -686,7 +686,7 @@
       <div class="spec-header"><div class="spec-icon cyan"></div><span class="spec-label">How to Verify Any PoPC Contract</span><span class="spec-tag">TRUSTLESS</span></div>
       <div class="spec-body">
         <table class="code-table">
-          <tr><td class="highlight">Single native SOST bond</td><td>SOST bond locked on the SOST chain (verify via <a href="sost-explorer.html" style="color:var(--cyan-primary)">Explorer</a>). The bond is the only collateral and the only slashable asset; create / monitor / claim on-chain. Activates V15 / block 20,000.</td></tr>
+          <tr><td class="highlight">Single native SOST bond</td><td>SOST bond locked on the SOST chain (verify via <a href="sost-explorer.html" style="color:var(--cyan-primary)">Explorer</a>). The bond is the only collateral and the only slashable asset; create / monitor / claim on-chain. Activates V15 / block 25,000.</td></tr>
           <tr><td class="highlight" style="color:#c084fc">Model B &mdash; Escrow (historical)</td><td style="color:#c084fc">Historical / superseded. The former design locked gold in an Ethereum SOSTEscrow contract; it is no longer part of the current PoPC model.</td></tr>
           <tr><td class="highlight">Audit results</td><td>All audit triggers, results, and slash events are deterministic from block entropy. Replay the audit_seed computation from any full node.</td></tr>
           <tr><td class="highlight">Registry</td><td>All contract IDs, addresses, transaction hashes, states, and history are published in this registry and verifiable on both chains.</td></tr>
