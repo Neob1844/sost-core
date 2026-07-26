@@ -351,6 +351,62 @@ static void test_block_jackpot_rule() {
     }
 }
 
+static void test_connect_disconnect_jackpot() {
+    const int64_t F = HIST_JACKPOT_FIRST_HEIGHT;
+    PubKeyHash winner = pkh_fill(0x77), gold = pkh_fill(0xAA), popc = pkh_fill(0xBB);
+    UtxoSet u;
+    auto op_at = [](uint8_t tb, uint32_t vout){ OutPoint op; op.txid = txid_fill(tb); op.index = vout; return op; };
+    auto add = [&](uint8_t tb, uint32_t vout, int64_t h, uint8_t type, PubKeyHash pkh, int64_t amt){
+        UTXOEntry e; e.amount=amt; e.type=type; e.pubkey_hash=pkh; e.height=h; e.is_coinbase=true;
+        std::string err; u.AddUTXO(op_at(tb,vout), e, &err);
+    };
+    add(0x01, 0, 100, OUT_COINBASE_GOLD, gold, S(70));            // reserve A
+    add(0x02, 1, 101, OUT_COINBASE_POPC, popc, S(60));            // reserve B
+    add(0x09, 0, 102, OUT_COINBASE_MINER, pkh_fill(0xCC), S(500)); // unrelated
+
+    auto r = discover_reserve_utxos(u, gold, popc);
+    Transaction jtx;
+    build_canonical_jackpot_tx(F, /*winner*/true, winner, reserve_balance(r), 0, r, gold, jtx);
+    Hash256 jtxid; std::string e0; jtx.ComputeTxId(jtxid, &e0);
+    OutPoint wop; wop.txid = jtxid; wop.index = 0;   // winner output
+    OutPoint cop; cop.txid = jtxid; cop.index = 1;   // reserve-change output
+
+    std::vector<Transaction> txs = { make_dummy_coinbase(), jtx };
+    BlockUndo undo; std::string cerr;
+    bool connected = u.ConnectBlock(txs, F, undo, &cerr);
+    TEST("LIVE ConnectBlock accepts canonical jackpot block", connected);
+
+    // reserve inputs spent, winner + change created, unrelated untouched
+    TEST("reserve input A spent", !u.GetUTXO(op_at(0x01,0)).has_value());
+    TEST("reserve input B spent", !u.GetUTXO(op_at(0x02,1)).has_value());
+    { auto w = u.GetUTXO(wop);
+      TEST("winner UTXO created (100 SOST to winner)",
+           w.has_value() && w->amount == S(100) && w->pubkey_hash == winner); }
+    { auto c = u.GetUTXO(cop);
+      TEST("reserve-change UTXO created (30 SOST to gold sink)",
+           c.has_value() && c->amount == S(30) && c->pubkey_hash == gold); }
+    TEST("unrelated UTXO untouched", u.GetUTXO(op_at(0x09,0)).has_value());
+    TEST("LIVE supply-neutral: Σreserve-in == Σout", (S(70)+S(60)) == (S(100)+S(30)));
+
+    // change re-enters the reserve set (discover again finds it).
+    auto r2 = discover_reserve_utxos(u, gold, popc);
+    TEST("post-jackpot reserve = only the change (30 SOST)",
+         reserve_balance(r2) == S(30) && r2.size() == 1);
+
+    // DisconnectBlock restores STATE A exactly.
+    std::string derr;
+    bool disc = u.DisconnectBlock(txs, undo, &derr);
+    TEST("LIVE DisconnectBlock reverses the jackpot block", disc);
+    TEST("reserve input A restored", u.GetUTXO(op_at(0x01,0)).has_value());
+    TEST("reserve input B restored", u.GetUTXO(op_at(0x02,1)).has_value());
+    TEST("winner UTXO removed", !u.GetUTXO(wop).has_value());
+    TEST("reserve-change UTXO removed", !u.GetUTXO(cop).has_value());
+    // STATE_A == after disconnect: reserve back to 70+60.
+    auto r3 = discover_reserve_utxos(u, gold, popc);
+    TEST("reserve fully restored (A + B = 130 SOST)",
+         reserve_balance(r3) == S(130) && r3.size() == 2);
+}
+
 int main() {
     printf("== test_jackpot — V15 Historical DTD Jackpot (J) pure core ==\n");
     test_cadence();
@@ -370,6 +426,7 @@ int main() {
     test_jackpot_tx_serialization();
     test_reserve_discovery();
     test_block_jackpot_rule();
+    test_connect_disconnect_jackpot();
     printf("\n== summary: %d pass, %d fail ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }

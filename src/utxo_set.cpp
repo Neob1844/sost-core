@@ -14,6 +14,7 @@
 
 #include "sost/utxo_set.h"
 #include "sost/atomic_swap.h"   // atomic_swap_htlc_active_at — allow HTLC CLAIM/REFUND in blocks once V14.5-active
+#include "sost/params.h"        // is_hist_jackpot_height — allow TX_TYPE_JACKPOT at jackpot heights (V15)
 
 #include <cstring>
 #include <set>
@@ -305,7 +306,17 @@ bool UtxoSet::ConnectBlock(
         const bool htlc_ok =
             atomic_swap_htlc_active_at(height) &&
             (txs[t].tx_type == TX_TYPE_HTLC_CLAIM || txs[t].tx_type == TX_TYPE_HTLC_REFUND);
-        if (txs[t].tx_type != TX_TYPE_STANDARD && !htlc_ok) {
+        // V15 Historical DTD Jackpot: a TX_TYPE_JACKPOT protocol spend is allowed
+        // in the block ONLY at a jackpot-cadence height. This merely permits the
+        // UTXO connect phase to spend the reserve inputs / create the winner+change
+        // outputs; it authorizes nothing — the block validator has already required
+        // the tx to byte-match the canonical reconstruction (jackpot_block.h) BEFORE
+        // ConnectBlock is ever reached, and the standalone per-tx path still rejects
+        // this type (R2). Below the first jackpot height this stays standard-only, so
+        // historical replay is byte-identical.
+        const bool jackpot_ok =
+            sost::is_hist_jackpot_height(height) && txs[t].tx_type == TX_TYPE_JACKPOT;
+        if (txs[t].tx_type != TX_TYPE_STANDARD && !htlc_ok && !jackpot_ok) {
             if (err) *err = "ConnectBlock: txs[" + std::to_string(t) + "] must be standard";
             return false;
         }
