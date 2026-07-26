@@ -51,8 +51,13 @@ contract MockERC20 {
 }
 
 /// ERC-20 that returns FALSE on transferFrom — used to test the
-/// AtomicSwapHTLC ok-check rejection path.
+/// AtomicSwapHTLC ok-check rejection path. Implements balanceOf so the
+/// SafeERC20 balance-delta pre-read succeeds and the rejection is driven
+/// by the false return value (not a missing-function revert).
 contract MockFailERC20 {
+    function balanceOf(address) external pure returns (uint256) {
+        return 0;
+    }
     function transfer(address, uint256) external pure returns (bool) {
         return false;
     }

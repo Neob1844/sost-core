@@ -537,48 +537,71 @@ contract AtomicSwapHTLCTest is Test {
 
     // ---- D. Weird-ERC20 behaviour ------------------------------------------
 
-    /// No-return ERC-20 (legacy USDT shape). The IERC20 interface expects
-    /// `returns (bool)`; an empty return data fails to decode and reverts
-    /// the lockERC20 call. The contract therefore refuses to escrow these
-    /// tokens — the wallet UI must either wrap them or use a SafeERC20
-    /// adapter, which is intentionally out of scope for this minimal HTLC.
-    function test_lockERC20_rejectsNoReturnERC20() public {
+    /// No-return ERC-20 (legacy USDT shape). The SafeERC20 path treats an
+    /// empty return from transferFrom/transfer as success (only a non-empty
+    /// `false` return is rejected). The contract therefore escrows real USDT
+    /// correctly: lock, claim, and refund all work. This test pins the full
+    /// lifecycle so a regression in the SafeERC20 path surfaces as a diff.
+    function test_lockERC20_acceptsNoReturnERC20_usdtShape() public {
         MockNoReturnERC20 nrt = new MockNoReturnERC20();
         nrt.mint(alice, amount);
         vm.startPrank(alice);
         nrt.approve(address(htlc), amount);
-        // The transferFrom call returns nothing; abi decode of (bool) on
-        // empty data reverts at the call site. We do NOT pin to a specific
-        // revert string because the decode failure produces no string.
-        vm.expectRevert();
         htlc.lockERC20(swapId, address(nrt), amount, hashlock, refundTime, bob, alice);
         vm.stopPrank();
+        // Escrow holds exactly `amount`; state records `amount`.
+        assertEq(nrt.balanceOf(address(htlc)), amount);
+        AtomicSwapHTLC.Swap memory s = htlc.getSwap(swapId);
+        assertEq(s.amount, amount);
+        assertEq(uint(s.state), uint(AtomicSwapHTLC.State.LOCKED));
+        // Claim pays the claimer and drains escrow to zero.
+        vm.prank(carol);
+        htlc.claim(swapId, preimage);
+        assertEq(nrt.balanceOf(bob), amount);
+        assertEq(nrt.balanceOf(address(htlc)), 0);
     }
 
-    /// Fee-on-transfer ERC-20. The lock succeeds (transferFrom returns
-    /// true) but the contract receives `amount - FEE` while state records
-    /// `amount`. The asymmetry surfaces at claim time when the contract
-    /// tries to send `amount` from a balance of `amount - FEE` — the
-    /// underlying ERC-20 transfer reverts with "BAL" which the HTLC
-    /// surfaces as "TRANSFER_FAILED". Tokens of this kind are therefore
-    /// UNSUPPORTED and the wallet UI must blacklist them at compose time.
-    /// The test documents this exact failure mode so a future change in
-    /// the HTLC behaviour will surface as a test diff.
-    function test_lockERC20_feeOnTransferTokenIsUnsupported_lockSucceedsClaimFails() public {
+    /// No-return USDT-shape refund path also works.
+    function test_refundERC20_noReturnERC20_usdtShape() public {
+        MockNoReturnERC20 nrt = new MockNoReturnERC20();
+        nrt.mint(alice, amount);
+        vm.startPrank(alice);
+        nrt.approve(address(htlc), amount);
+        htlc.lockERC20(swapId, address(nrt), amount, hashlock, refundTime, bob, alice);
+        vm.stopPrank();
+        vm.roll(refundTime);
+        htlc.refund(swapId);
+        assertEq(nrt.balanceOf(alice), amount);
+        assertEq(nrt.balanceOf(address(htlc)), 0);
+    }
+
+    /// Fee-on-transfer ERC-20 (e.g. PAXG with a non-zero transfer fee). The
+    /// lock now records the ACTUAL amount received (balanceOf delta), so the
+    /// escrow is internally consistent: claim pays out exactly what is held
+    /// and never reverts on a balance shortfall. The claimer receives the
+    /// escrowed amount minus the token's OUTBOUND fee (inherent to FoT
+    /// tokens — the contract cannot conjure the burned fee), and the escrow
+    /// drains to zero. This is honest, non-reverting behaviour; the UI still
+    /// warns that FoT tokens deliver less than the nominal amount.
+    function test_lockERC20_feeOnTransfer_recordsActualReceived_claimSucceeds() public {
         MockFeeOnTransferERC20 fot = new MockFeeOnTransferERC20();
+        uint256 fee = fot.FEE();
         fot.mint(alice, amount);
         vm.startPrank(alice);
         fot.approve(address(htlc), amount);
-        // Lock succeeds (transferFrom returns true).
         htlc.lockERC20(swapId, address(fot), amount, hashlock, refundTime, bob, alice);
         vm.stopPrank();
-        // Contract recorded `amount` but only holds `amount - FEE`.
-        assertEq(fot.balanceOf(address(htlc)), amount - fot.FEE());
-        // Claim reverts because the recorded amount exceeds the actual
-        // balance. The inner ERC-20 reverts with "BAL"; the HTLC wraps it
-        // with "TRANSFER_FAILED" via the require-on-return-bool path.
-        vm.expectRevert();
+        // Escrow holds `amount - fee`; state records that exact received amount.
+        uint256 escrowed = amount - fee;
+        assertEq(fot.balanceOf(address(htlc)), escrowed);
+        AtomicSwapHTLC.Swap memory s = htlc.getSwap(swapId);
+        assertEq(s.amount, escrowed);
+        // Claim succeeds (no shortfall). Bob receives escrowed - fee (the
+        // outbound transfer also burns the fee), and the escrow drains to 0.
+        vm.prank(carol);
         htlc.claim(swapId, preimage);
+        assertEq(fot.balanceOf(bob), escrowed - fee);
+        assertEq(fot.balanceOf(address(htlc)), 0);
     }
 
     /// Malicious ERC-20 that re-enters lockERC20 during transferFrom. The
@@ -665,5 +688,44 @@ contract AtomicSwapHTLCTest is Test {
         htlc.claim(sid2, preimage);
         // Refund succeeds at refundTime exactly.
         htlc.refund(sid2);
+    }
+
+    // =========================================================================
+    // G. Collision-resistant swapId (anti-squatting DoS)
+    // =========================================================================
+
+    /// computeSwapId is deterministic for a fixed tuple and differs when ANY
+    /// binding input changes (participants, token, amount, hashlock,
+    /// refundTime, chainId, nonce). This is what lets a wallet derive an id
+    /// an attacker cannot reproduce without the secret nonce.
+    function test_computeSwapId_isDeterministicAndBinding() public view {
+        bytes32 nonce = keccak256("random-nonce");
+        bytes32 id = htlc.computeSwapId(alice, bob, alice, address(0), amount, hashlock, refundTime, 1, nonce);
+        // Deterministic.
+        assertEq(id, htlc.computeSwapId(alice, bob, alice, address(0), amount, hashlock, refundTime, 1, nonce));
+        // Each input change flips the id.
+        assertTrue(id != htlc.computeSwapId(carol, bob, alice, address(0), amount, hashlock, refundTime, 1, nonce));
+        assertTrue(id != htlc.computeSwapId(alice, carol, alice, address(0), amount, hashlock, refundTime, 1, nonce));
+        assertTrue(id != htlc.computeSwapId(alice, bob, carol, address(0), amount, hashlock, refundTime, 1, nonce));
+        assertTrue(id != htlc.computeSwapId(alice, bob, alice, address(token), amount, hashlock, refundTime, 1, nonce));
+        assertTrue(id != htlc.computeSwapId(alice, bob, alice, address(0), amount + 1, hashlock, refundTime, 1, nonce));
+        assertTrue(id != htlc.computeSwapId(alice, bob, alice, address(0), amount, keccak256("other"), refundTime, 1, nonce));
+        assertTrue(id != htlc.computeSwapId(alice, bob, alice, address(0), amount, hashlock, refundTime + 1, 1, nonce));
+        assertTrue(id != htlc.computeSwapId(alice, bob, alice, address(0), amount, hashlock, refundTime, 56, nonce));
+        assertTrue(id != htlc.computeSwapId(alice, bob, alice, address(0), amount, hashlock, refundTime, 1, keccak256("nonce2")));
+    }
+
+    /// A derived id is usable end-to-end: lock under the derived id, then
+    /// claim it. An attacker who does NOT know the nonce cannot pre-register
+    /// the same id, so the DUPLICATE_SWAP_ID griefing vector is closed.
+    function test_derivedSwapId_lockAndClaim() public {
+        bytes32 nonce = keccak256("victim-secret-nonce");
+        bytes32 derived = htlc.computeSwapId(alice, bob, alice, address(0), amount, hashlock, refundTime, 1, nonce);
+        vm.prank(alice);
+        htlc.lockNative{value: amount}(derived, hashlock, refundTime, bob, alice);
+        AtomicSwapHTLC.Swap memory s = htlc.getSwap(derived);
+        assertEq(uint(s.state), uint(AtomicSwapHTLC.State.LOCKED));
+        htlc.claim(derived, preimage);
+        assertEq(uint(htlc.getSwap(derived).state), uint(AtomicSwapHTLC.State.CLAIMED));
     }
 }

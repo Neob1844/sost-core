@@ -2,7 +2,7 @@
 pragma solidity 0.8.24;
 
 // =============================================================================
-// SOST Atomic Swap — EVM counterparty HTLC contract (Phase 4B-1)
+// SOST Atomic Swap — EVM counterparty HTLC contract (Phase 4B-1 / 4D-safe-erc20)
 // =============================================================================
 //
 // Non-custodial Hashed Time-Locked Contract for SOST <-> EVM atomic swaps
@@ -21,13 +21,35 @@ pragma solidity 0.8.24;
 // SOST refund_height (T1) MUST exceed this contract's refundTime (T2)
 // by a wallet-enforced safety margin so the responder cannot claim
 // the SOST side after refunding here. The contract does NOT verify
-// the cross-chain timeout ordering — that is the wallet's job.
+// the cross-chain timeout ordering — that is the wallet's job (see the
+// canonical policy in src/atomic_swap_policy.cpp::EvaluateTimeoutOrder).
+//
+// swapId collision-resistance (anti-squatting): the swapId is caller-
+// supplied, so a naive fixed id (e.g. keccak("swap-1")) can be
+// FRONT-RUN — an attacker locks a dust swap under the victim's intended
+// id, causing the victim's lock to revert DUPLICATE_SWAP_ID (a griefing
+// DoS). Wallets MUST derive the swapId from computeSwapId(...) below,
+// which binds it to the participants, token, amount, hashlock, refundTime
+// and a locally-random 32-byte nonce that is NOT revealed before the
+// lock is broadcast. An attacker cannot reproduce the id without the
+// nonce, and reproducing the exact tuple would only lock THEIR funds to
+// the victim's benefit — so squatting is defeated. The C++ coordinator
+// mirrors this derivation bit-for-bit in DeriveSwapId(...).
 //
 // Supported assets:
 //   - native chain currency: ETH (Ethereum), BNB (BNB Chain) — pass
 //     token = address(0).
 //   - ERC-20 tokens: USDT, USDC, PAXG, XAUT (and any other compliant
-//     ERC-20). The contract is asset-agnostic.
+//     ERC-20). The contract is asset-agnostic and uses a SafeERC20-style
+//     path (below) that tolerates the two most common real-world quirks:
+//       (a) no-bool-return tokens (legacy USDT): accepted (empty return
+//           data is treated as success, non-empty is decoded and must be
+//           true), and
+//       (b) fee-on-transfer / rebasing tokens (e.g. PAXG when its transfer
+//           fee is non-zero): lockERC20 records the ACTUAL amount received
+//           via a balanceOf delta, so claim/refund always pay out exactly
+//           what the escrow holds and never revert on a balance shortfall.
+//     Tokens that actively return false on failure are still rejected.
 //
 // ISSUER-RISK WARNING for USDT / USDC / PAXG / XAUT: the token issuer
 // (Tether / Circle / Paxos / TG Commodities) can freeze any address
@@ -37,24 +59,26 @@ pragma solidity 0.8.24;
 // issuer unfreezes. The UI MUST surface this risk to users.
 //
 // AUDIT / DEPLOY STATUS: this contract has NOT been externally audited.
-// The SOST-side activation gate (ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT in
-// include/sost/atomic_swap.h) is now V14_HEIGHT (block 15,000): the
-// EVM-only atomic swap is enabled at V14 for FOUNDER-ONLY use, at the
+// The SafeERC20 path and balance-delta accounting added here are standard,
+// well-understood patterns but MUST still be reviewed before any mainnet
+// deployment. The SOST-side activation gate
+// (ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT in include/sost/atomic_swap.h) is
+// V14.5: the EVM-only atomic swap is enabled for FOUNDER-ONLY use, at the
 // founder's own risk, with no public or audited guarantee. SOST<->BTC is
-// deferred to V15 (BTC HTLC signing is not active). Deploying this
-// contract to any mainnet/testnet is a separate, explicit founder action;
-// the web console refuses to operate against an unset contract address.
-// ERC-20 weird-token handling (no-bool return, fee-on-transfer) is
-// intentionally out of scope of this minimal HTLC and MUST be enforced by
-// the wallet/UI (native-first; fee-on-transfer tokens blacklisted) — see
-// docs/design/ATOMIC_SWAP_EVM_AUDIT_CHECKLIST.md.
+// deferred to V15 (BTC HTLC signing is not active). Deploying this contract
+// to any mainnet/testnet is a separate, explicit founder action; the web
+// console refuses to operate against an unset contract address.
 //
 // =============================================================================
 
-/// Minimal IERC20 interface — no full SafeERC20 dependency.
+/// Minimal IERC20 interface — no full SafeERC20 dependency. `balanceOf`
+/// is used for fee-on-transfer-safe delta accounting; transfer/transferFrom
+/// are declared `returns (bool)` but the SafeERC20 path below also tolerates
+/// tokens that return nothing (legacy USDT).
 interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
 }
 
 contract AtomicSwapHTLC {
@@ -67,7 +91,7 @@ contract AtomicSwapHTLC {
     struct Swap {
         State    state;       // current state of this swap
         address  token;       // address(0) for native ETH/BNB; ERC-20 otherwise
-        uint256  amount;      // locked amount in native units or ERC-20 units
+        uint256  amount;      // escrowed amount ACTUALLY held (post-fee for FoT)
         bytes32  hashlock;    // sha256(preimage); 32 bytes
         uint256  refundTime;  // absolute block.number at which refund opens
         address  claimer;     // entitled to claim with preimage before refundTime
@@ -108,11 +132,76 @@ contract AtomicSwapHTLC {
     }
 
     // -------------------------------------------------------------------------
-    // Read-only helper
+    // Read-only helpers
     // -------------------------------------------------------------------------
 
     function getSwap(bytes32 swapId) external view returns (Swap memory) {
         return swaps[swapId];
+    }
+
+    /// Collision-resistant swapId derivation (anti-squatting). Pure; wallets
+    /// call this off-chain (or on-chain) to obtain the id they then pass to
+    /// lockNative/lockERC20. The `nonce` MUST be a locally-random 32 bytes
+    /// kept secret until the lock is broadcast — this is what prevents an
+    /// attacker from pre-registering (front-running) the id. Uses sha256 so
+    /// the derivation is bit-identical to the SOST-side DeriveSwapId(...)
+    /// (sha256 is the shared hashlock primitive across both chains).
+    ///
+    ///   chainId : this contract's chain id (1 = Ethereum, 56 = BNB, ...);
+    ///             binds the id to the chain so the same tuple on two chains
+    ///             yields two distinct ids.
+    ///   token   : address(0) for native, ERC-20 address otherwise (binds asset).
+    function computeSwapId(
+        address locker,
+        address claimer,
+        address refunder,
+        address token,
+        uint256 amount,
+        bytes32 hashlock,
+        uint256 refundTime,
+        uint256 chainId,
+        bytes32 nonce
+    ) public pure returns (bytes32) {
+        return sha256(abi.encodePacked(
+            "SOST-ATOMIC-SWAP-ID-v1",
+            locker, claimer, refunder, token,
+            amount, hashlock, refundTime, chainId, nonce
+        ));
+    }
+
+    // -------------------------------------------------------------------------
+    // SafeERC20-style internal transfer helpers
+    // -------------------------------------------------------------------------
+    //
+    // Tolerates no-bool-return tokens (legacy USDT) and rejects tokens that
+    // return false. Bubbles the underlying revert reason on a hard failure
+    // (so e.g. an inner REENTRANT / BAL / ALLOW surfaces unchanged), and
+    // otherwise reverts with "TRANSFER_FAILED".
+
+    function _callOptionalReturn(address token, bytes memory data) private {
+        (bool success, bytes memory ret) = token.call(data);
+        if (!success) {
+            // Bubble the inner revert reason verbatim when present.
+            if (ret.length > 0) {
+                assembly {
+                    revert(add(32, ret), mload(ret))
+                }
+            }
+            revert("TRANSFER_FAILED");
+        }
+        // Non-empty return data must decode to true; empty data (legacy
+        // USDT) is treated as success.
+        if (ret.length > 0) {
+            require(abi.decode(ret, (bool)), "TRANSFER_FAILED");
+        }
+    }
+
+    function _safeTransfer(address token, address to, uint256 amount) private {
+        _callOptionalReturn(token, abi.encodeWithSelector(IERC20.transfer.selector, to, amount));
+    }
+
+    function _safeTransferFrom(address token, address from, address to, uint256 amount) private {
+        _callOptionalReturn(token, abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, amount));
     }
 
     // -------------------------------------------------------------------------
@@ -156,11 +245,19 @@ contract AtomicSwapHTLC {
     // -------------------------------------------------------------------------
     //
     // Caller MUST have approved this contract for at least `amount` of
-    // `token` before calling lockERC20. The contract uses transferFrom
-    // to pull the funds into escrow. The transferFrom return value is
-    // checked; tokens that return false on failure (e.g. some USDT
-    // variants) are rejected at lock time rather than silently leaving
-    // the swap in an inconsistent state.
+    // `token` before calling lockERC20. The contract pulls the funds via a
+    // SafeERC20-style transferFrom and records the ACTUAL amount received
+    // (measured with a balanceOf delta). This makes the escrow correct for
+    // fee-on-transfer / rebasing tokens: claim/refund always pay out exactly
+    // what is held, never reverting on a balance shortfall. Tokens that
+    // return false are rejected; no-bool-return tokens are accepted.
+    //
+    // NOTE ON ORDERING: the swap struct is written AFTER the external
+    // transferFrom (we can only learn the received amount post-transfer).
+    // This is safe because (a) the global nonReentrant mutex blocks any
+    // re-entry into lock/claim/refund during the transfer, and (b) the
+    // state==NONE / DUPLICATE_SWAP_ID guard is evaluated BEFORE the transfer,
+    // so an existing swap can never be overwritten.
 
     function lockERC20(
         bytes32 swapId,
@@ -178,23 +275,25 @@ contract AtomicSwapHTLC {
         require(refundTime > block.number,        "REFUND_IN_PAST");
         require(swaps[swapId].state == State.NONE, "DUPLICATE_SWAP_ID");
 
-        // Effects: record the swap BEFORE the external transferFrom call
-        // (checks-effects-interactions).
+        // Interaction (guarded by nonReentrant): pull funds and measure the
+        // actual amount that landed in escrow.
+        uint256 balBefore = IERC20(token).balanceOf(address(this));
+        _safeTransferFrom(token, msg.sender, address(this), amount);
+        uint256 received = IERC20(token).balanceOf(address(this)) - balBefore;
+        require(received > 0, "NO_TOKENS_RECEIVED");
+
+        // Effects: record the escrow using the ACTUAL received amount.
         swaps[swapId] = Swap({
             state:      State.LOCKED,
             token:      token,
-            amount:     amount,
+            amount:     received,
             hashlock:   hashlock,
             refundTime: refundTime,
             claimer:    claimer,
             refunder:   refunder
         });
 
-        // Interaction.
-        bool ok = IERC20(token).transferFrom(msg.sender, address(this), amount);
-        require(ok, "TRANSFER_FAILED");
-
-        emit LockCreated(swapId, msg.sender, token, amount,
+        emit LockCreated(swapId, msg.sender, token, received,
                          hashlock, refundTime, claimer, refunder);
     }
 
@@ -226,8 +325,7 @@ contract AtomicSwapHTLC {
             (bool ok, ) = to.call{value: amt}("");
             require(ok, "TRANSFER_FAILED");
         } else {
-            bool ok = IERC20(tok).transfer(to, amt);
-            require(ok, "TRANSFER_FAILED");
+            _safeTransfer(tok, to, amt);
         }
 
         emit Claimed(swapId, preimage, to);
@@ -253,8 +351,7 @@ contract AtomicSwapHTLC {
             (bool ok, ) = to.call{value: amt}("");
             require(ok, "TRANSFER_FAILED");
         } else {
-            bool ok = IERC20(tok).transfer(to, amt);
-            require(ok, "TRANSFER_FAILED");
+            _safeTransfer(tok, to, amt);
         }
 
         emit Refunded(swapId, to);
