@@ -6,6 +6,7 @@
 // on mainnet (25290) and testnet builds alike.
 // ============================================================================
 #include "sost/jackpot.h"
+#include "sost/jackpot_reserve.h"
 #include "sost/params.h"
 #include "sost/transaction.h"
 
@@ -255,6 +256,43 @@ static void test_jackpot_tx_serialization() {
          jackpot_tx_matches_canonical(back, F, true, winner, S(52523), 0, res, gold));
 }
 
+static void test_reserve_discovery() {
+    UtxoSet u;
+    PubKeyHash gold = pkh_fill(0xAA), popc = pkh_fill(0xBB), miner = pkh_fill(0xCC);
+    auto add = [&](uint8_t tb, uint32_t vout, int64_t h, uint8_t type, PubKeyHash pkh, int64_t amt){
+        OutPoint op; op.txid = txid_fill(tb); op.index = vout;
+        UTXOEntry e; e.amount = amt; e.type = type; e.pubkey_hash = pkh; e.height = h; e.is_coinbase = true;
+        std::string err; u.AddUTXO(op, e, &err);
+    };
+    // 3 genuine reserve UTXOs (added OUT OF ORDER) + 2 non-reserve decoys.
+    add(0x03, 0, 102, OUT_COINBASE_GOLD, gold,  S(40));
+    add(0x01, 0, 100, OUT_COINBASE_GOLD, gold,  S(30));
+    add(0x02, 1, 101, OUT_COINBASE_POPC, popc,  S(50));
+    add(0x09, 0, 103, OUT_COINBASE_MINER, miner, S(999));  // miner output — NOT reserve
+    add(0x0A, 0, 104, OUT_COINBASE_GOLD, popc,  S(7));      // GOLD type at wrong pkh — NOT reserve
+
+    auto r = discover_reserve_utxos(u, gold, popc);
+    TEST("discovery finds exactly the 3 reserve UTXOs", r.size() == 3);
+    TEST("discovery sorted oldest-first (h100 first, h102 last)",
+         r.front().height == 100 && r.back().height == 102);
+    TEST("discovery excludes miner + wrong-pkh decoys (balance == 120 SOST)",
+         reserve_balance(r) == S(120));
+
+    // Integration: discovered reserve -> canonical jackpot tx (payout 100).
+    Transaction tx;
+    bool built = build_canonical_jackpot_tx(HIST_JACKPOT_FIRST_HEIGHT, /*winner*/true,
+                                            pkh_fill(0x77), reserve_balance(r), 0, r, gold, tx);
+    TEST("canonical jackpot tx builds from DISCOVERED reserve",
+         built && tx.tx_type == TX_TYPE_JACKPOT && tx.outputs[0].amount == S(100));
+
+    // Empty UTXO set -> empty reserve -> no jackpot tx.
+    UtxoSet empty;
+    auto r0 = discover_reserve_utxos(empty, gold, popc);
+    Transaction tx0;
+    TEST("empty chainstate -> empty reserve -> no jackpot tx",
+         r0.empty() && !build_canonical_jackpot_tx(HIST_JACKPOT_FIRST_HEIGHT, true, pkh_fill(0x77), 0, 0, r0, gold, tx0));
+}
+
 int main() {
     printf("== test_jackpot — V15 Historical DTD Jackpot (J) pure core ==\n");
     test_cadence();
@@ -272,6 +310,7 @@ int main() {
     test_change_is_supply_neutral();
     test_canonical_jackpot_tx();
     test_jackpot_tx_serialization();
+    test_reserve_discovery();
     printf("\n== summary: %d pass, %d fail ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }
