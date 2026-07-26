@@ -7,6 +7,7 @@
 // ============================================================================
 #include "sost/jackpot.h"
 #include "sost/jackpot_reserve.h"
+#include "sost/jackpot_block.h"
 #include "sost/params.h"
 #include "sost/transaction.h"
 
@@ -293,6 +294,63 @@ static void test_reserve_discovery() {
          r0.empty() && !build_canonical_jackpot_tx(HIST_JACKPOT_FIRST_HEIGHT, true, pkh_fill(0x77), 0, 0, r0, gold, tx0));
 }
 
+static Transaction make_dummy_coinbase() {
+    Transaction t; t.tx_type = TX_TYPE_COINBASE;
+    TxInput in; in.prev_index = 0xFFFFFFFFu; t.inputs.push_back(in);
+    TxOutput o; o.amount = 100; o.type = OUT_COINBASE_MINER; o.pubkey_hash = pkh_fill(0xDD);
+    t.outputs.push_back(o);
+    return t;
+}
+
+static void test_block_jackpot_rule() {
+    const int64_t F = HIST_JACKPOT_FIRST_HEIGHT;
+    PubKeyHash winner = pkh_fill(0x77), gold = pkh_fill(0xAA), popc = pkh_fill(0xBB);
+    std::vector<ReserveUtxo> res = {
+        {100, txid_fill(0x01), 0, S(70)},
+        {101, txid_fill(0x02), 1, S(60)},
+    };
+    std::sort(res.begin(), res.end(), reserve_utxo_less);
+    const int64_t rb = reserve_balance(res);
+
+    Transaction jtx;
+    build_canonical_jackpot_tx(F, /*winner*/true, winner, rb, 0, res, gold, jtx);
+    Transaction cb = make_dummy_coinbase();
+
+    auto ok = [&](const std::vector<Transaction>& txs, int64_t h, bool we, int64_t reserve, int64_t roll){
+        return validate_block_jackpot(txs, h, res, we, winner, reserve, roll, gold).ok;
+    };
+
+    // 1) Jackpot height, [coinbase, canonical jackpot] -> ACCEPT.
+    TEST("jackpot block [coinbase, canonical J] accepted", ok({cb, jtx}, F, true, rb, 0));
+    // 2) Jackpot height, missing jackpot tx -> REJECT.
+    TEST("jackpot block MISSING the J tx rejected", !ok({cb}, F, true, rb, 0));
+    // 3) Duplicate jackpot tx -> REJECT.
+    TEST("duplicate TX_TYPE_JACKPOT rejected", !ok({cb, jtx, jtx}, F, true, rb, 0));
+    // 4) Jackpot tx at wrong position (index 2, not 1) -> REJECT.
+    TEST("jackpot tx at wrong position rejected", !ok({cb, make_dummy_coinbase(), jtx}, F, true, rb, 0));
+    // 5) Tampered jackpot (wrong winner) -> REJECT.
+    { Transaction bad = jtx; bad.outputs[0].pubkey_hash = pkh_fill(0x66);
+      TEST("tampered J tx (wrong winner) rejected", !ok({cb, bad}, F, true, rb, 0)); }
+    // 6) Tampered amount -> REJECT.
+    { Transaction bad = jtx; bad.outputs[0].amount += 1;
+      TEST("tampered J tx (wrong amount) rejected", !ok({cb, bad}, F, true, rb, 0)); }
+    // 7) Non-jackpot height, no jackpot tx -> ACCEPT.
+    TEST("non-jackpot height [coinbase] accepted", ok({cb}, F + 1, true, rb, 0));
+    // 8) Non-jackpot height WITH a jackpot tx -> REJECT (unauthorized).
+    TEST("non-jackpot height with J tx rejected", !ok({cb, jtx}, F + 1, true, rb, 0));
+    // 9) Jackpot height but NO eligible winner -> zero required; present -> REJECT.
+    TEST("jackpot height, no winner, [coinbase] accepted", ok({cb}, F, false, rb, 0));
+    TEST("jackpot height, no winner, J tx present rejected", !ok({cb, jtx}, F, false, rb, 0));
+    // 10) Jackpot height, empty reserve -> zero required; present -> REJECT.
+    {
+        std::vector<ReserveUtxo> empty;
+        auto rr = validate_block_jackpot({cb, jtx}, F, empty, true, winner, 0, 0, gold);
+        TEST("jackpot height, empty reserve, J tx present rejected", !rr.ok);
+        auto rr2 = validate_block_jackpot({cb}, F, empty, true, winner, 0, 0, gold);
+        TEST("jackpot height, empty reserve, no J tx accepted", rr2.ok);
+    }
+}
+
 int main() {
     printf("== test_jackpot — V15 Historical DTD Jackpot (J) pure core ==\n");
     test_cadence();
@@ -311,6 +369,7 @@ int main() {
     test_canonical_jackpot_tx();
     test_jackpot_tx_serialization();
     test_reserve_discovery();
+    test_block_jackpot_rule();
     printf("\n== summary: %d pass, %d fail ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }
