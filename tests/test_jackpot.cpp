@@ -407,6 +407,28 @@ static void test_connect_disconnect_jackpot() {
          reserve_balance(r3) == S(130) && r3.size() == 2);
 }
 
+static void test_rollover_derivation() {
+    const int64_t F = HIST_JACKPOT_FIRST_HEIGHT;
+    const int64_t C = HIST_JACKPOT_CADENCE_BLOCKS;
+    auto none_paid  = [](int64_t){ return false; };
+    auto all_paid   = [](int64_t){ return true;  };
+
+    // First jackpot: no prior history -> rollover 0.
+    TEST("rollover_before(first) == 0", derive_rollover_before(F, none_paid) == 0);
+    // After 1 miss -> BASE; after 2 -> 2*BASE ...
+    TEST("1 prior miss -> rollover 100", derive_rollover_before(F + C, none_paid) == S(100));
+    TEST("2 prior misses -> rollover 200", derive_rollover_before(F + 2*C, none_paid) == S(200));
+    TEST("4 prior misses -> rollover 400 (== CAP-BASE)", derive_rollover_before(F + 4*C, none_paid) == S(400));
+    TEST("5 prior misses -> clamped at 400", derive_rollover_before(F + 5*C, none_paid) == S(400));
+    // All prior paid -> rollover always 0.
+    TEST("all prior paid -> rollover 0", derive_rollover_before(F + 5*C, all_paid) == 0);
+    // A payout in the middle resets: miss, miss, PAY, then query next -> 0.
+    { auto paid_at_third = [&](int64_t h){ return h == F + 2*C; };
+      TEST("payout resets rollover", derive_rollover_before(F + 3*C, paid_at_third) == 0); }
+    // Non-jackpot height -> 0.
+    TEST("non-jackpot height rollover 0", derive_rollover_before(F + 1, none_paid) == 0);
+}
+
 int main() {
     printf("== test_jackpot — V15 Historical DTD Jackpot (J) pure core ==\n");
     test_cadence();
@@ -427,6 +449,7 @@ int main() {
     test_reserve_discovery();
     test_block_jackpot_rule();
     test_connect_disconnect_jackpot();
+    test_rollover_derivation();
     printf("\n== summary: %d pass, %d fail ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }

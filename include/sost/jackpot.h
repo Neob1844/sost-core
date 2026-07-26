@@ -94,6 +94,29 @@ inline JackpotResult hist_jackpot_apply(int64_t height,
     return r;
 }
 
+// Derive the rollover carried INTO the jackpot block at `height`, purely from
+// chain history — NO persisted StoredBlock field. `paid_at(h)` must return true
+// iff the prior jackpot block at height h paid out (i.e. its block contains a
+// TX_TYPE_JACKPOT). Replays the §4 accrual: a paid event resets rollover to 0
+// (prize<=cap by the clamp), a miss accrues BASE clamped at CAP-BASE. Cost is
+// one lookup per prior jackpot height (every cadence block), reproducible on
+// every node from stored blocks alone.
+template <typename PaidAtFn>
+inline int64_t derive_rollover_before(int64_t height, PaidAtFn paid_at) {
+    if (!is_hist_jackpot_height(height)) return 0;
+    const int64_t roll_cap = HIST_JACKPOT_CAP_STOCKS - HIST_JACKPOT_BASE_STOCKS;
+    int64_t rollover = 0;
+    for (int64_t h = HIST_JACKPOT_FIRST_HEIGHT; h < height; h += HIST_JACKPOT_CADENCE_BLOCKS) {
+        if (paid_at(h)) {
+            rollover = 0;                                  // payout -> reset
+        } else {
+            const int64_t nr = rollover + HIST_JACKPOT_BASE_STOCKS;
+            rollover = nr < roll_cap ? nr : roll_cap;      // miss -> accrue, clamped
+        }
+    }
+    return rollover;
+}
+
 // Reserve membership (spec §5b): an output belongs to the Historical Jackpot
 // reserve iff it is a Gold Vault or PoPC Pool coinbase output locked to its
 // constitutional address. Pure predicate over (type, pkh) — no heuristics.
