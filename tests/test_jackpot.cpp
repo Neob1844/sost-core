@@ -224,6 +224,37 @@ static void test_canonical_jackpot_tx() {
          !build_canonical_jackpot_tx(F, true, winner, 0, 0, {}, gold, tx3));
 }
 
+static void test_jackpot_tx_serialization() {
+    const int64_t F = HIST_JACKPOT_FIRST_HEIGHT;
+    PubKeyHash winner = pkh_fill(0x77), gold = pkh_fill(0xAA);
+    std::vector<ReserveUtxo> res = {
+        {100, txid_fill(0x01), 0, S(70)},
+        {101, txid_fill(0x02), 1, S(60)},
+    };
+    std::sort(res.begin(), res.end(), reserve_utxo_less);
+    Transaction tx;
+    build_canonical_jackpot_tx(F, true, winner, S(52523), 0, res, gold, tx);
+
+    // Serialize -> deserialize round-trip (tx_type 0x02 must survive).
+    std::vector<uint8_t> raw; std::string err;
+    TEST("jackpot tx serializes", tx.Serialize(raw, &err));
+    Transaction back; std::string err2;
+    TEST("jackpot tx deserializes (TX_TYPE_JACKPOT accepted)",
+         Transaction::Deserialize(raw, back, &err2));
+    TEST("round-trip preserves tx_type == TX_TYPE_JACKPOT", back.tx_type == TX_TYPE_JACKPOT);
+    TEST("round-trip preserves input/output counts",
+         back.inputs.size() == tx.inputs.size() && back.outputs.size() == tx.outputs.size());
+
+    // txid determinism across the round-trip.
+    Hash256 id1{}, id2{}; std::string e3, e4;
+    TEST("txid computes on both", tx.ComputeTxId(id1, &e3) && back.ComputeTxId(id2, &e4));
+    TEST("txid deterministic across round-trip", id1 == id2);
+
+    // The deserialized tx still passes canonical exact-match validation.
+    TEST("round-tripped tx still validates canonical",
+         jackpot_tx_matches_canonical(back, F, true, winner, S(52523), 0, res, gold));
+}
+
 int main() {
     printf("== test_jackpot — V15 Historical DTD Jackpot (J) pure core ==\n");
     test_cadence();
@@ -240,6 +271,7 @@ int main() {
     test_selection_oldest_first();
     test_change_is_supply_neutral();
     test_canonical_jackpot_tx();
+    test_jackpot_tx_serialization();
     printf("\n== summary: %d pass, %d fail ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;
 }
