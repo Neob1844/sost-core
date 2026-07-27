@@ -97,3 +97,30 @@ not disinterest**. Removing the wall (safely) is plausibly what turns SOST from
 "one operator holds it up" into "many miners, self-healing". That is a strong
 reason to design it right, and an equally strong reason NOT to bolt it onto the
 production node in a hurry.
+
+## 9. Security Q&A (answers to the 3 gating questions) — 2026-07-27
+Reference gateway (NOT deployed): `ops/sost-mining-gateway.py`.
+
+**Q1 — how many miners can the 3.8 GB node take?** Unknown, and that is the point:
+the node's RPC degrades INTERMITTENTLY even at near-zero load (observed
+getblockcount timeouts with node load ~0.07). The bottleneck is the RPC layer,
+not CPU/RAM. So the safe miner count on the current node is effectively "not
+public yet." Mitigations in the reference: a 2 s getblocktemplate CACHE (N miners
+share one node computation) + per-IP (5/s) and global (40/s, TUNE) rate limits.
+The global limit MUST be set from a load test on a >=8 GB staging node before any
+public launch. Do not open on the current node.
+
+**Q2 — does it expose sensitive methods?** No. STRICT allowlist: only
+getlotterystate / getblocktemplate / submitblock (+ getblockcount) are reachable;
+every other method (wallet, funds, dumpprivkey, admin, stop) returns 403 at the
+gateway and is NEVER forwarded. submitblock is the only auth-injected method (node
+creds never exposed). The node's own auth gate is a second layer.
+
+**Q3 — kill switch?** The gateway is a SEPARATE systemd service. `systemctl stop
+sost-mining-gateway` (or set MINING_ENABLED=0) closes the public mining endpoint
+instantly, without touching the node, proxy, or local mining.
+
+**Deploy order (unchanged):** cold review -> stand up on a >=8 GB staging node ->
+load-test 10/50/100 miners + verify node latency + kill switch -> enable publicly
+with tuned limits -> only then publish the "mine in 2 minutes" guide. NOT tonight,
+NOT on the current 3.8 GB node.
