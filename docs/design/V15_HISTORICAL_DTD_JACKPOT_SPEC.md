@@ -8,15 +8,22 @@ truth; the website/explorer copy is marketing and MUST be reconciled to match it
 (`HIST_JACKPOT_*`) and the moved `V15_HEIGHT` — the payout/transition logic is
 NOT in the validator as of this draft.
 
-Two DISTINCT mechanisms are bundled under "V15 Core / jackpot". Keep them separate:
+THREE DISTINCT mechanisms are bundled under "V15 Core / jackpot". Keep them separate:
 
+- **(D) DTD draw-frequency change** — at V15 the DTD lottery moves from the permanent
+  1-of-3 regime to **3-of-3 (a draw on EVERY block)**, permanently, for `height >=
+  V15_HEIGHT`. One height-anchored branch in the single existing draw predicate
+  (`is_lottery_block`); the payout machinery is unchanged. Supply-neutral (same DTD flow,
+  3× more/smaller payouts — maximum decentralisation). Founder decision 2026-08-02. See §1b.
 - **(T) Emission Transition** — at V15, stop feeding the Gold Vault (25%/block) and
   PoPC Pool (25%/block); redirect that flow to the DTD lottery. Small, surgical
-  change to the coinbase split. Deterministic, low-risk.
+  change to the coinbase split. Deterministic, low-risk. (With (D) active there are no
+  IDLE blocks post-V15 — every block is the draw shape.)
 - **(J) Historical Jackpot** — drain the reserve ALREADY accumulated in the Gold
   Vault + PoPC addresses at V15 (~52k SOST) back to DTD winners over ~3 years, on a
-  288-block cadence, base 100 / cap 500 SOST, supply-neutral. This is the novel,
-  higher-risk mechanism (it spends constitutional-address coins).
+  288-block cadence (~48h; founder-confirmed 2026-08-02), base 100 / cap 500 SOST,
+  supply-neutral. This is the novel, higher-risk mechanism (it spends
+  constitutional-address coins).
 
 ---
 
@@ -52,7 +59,57 @@ jackpot height iff `h >= HIST_JACKPOT_FIRST_HEIGHT` and
 `(h - HIST_JACKPOT_FIRST_HEIGHT) % 288 == 0`. Because 288 is a multiple of 3 and the
 first height is draw-aligned (`% 3 == 0`), **every** jackpot height is a DTD draw block
 in the permanent 1-of-3 regime. This is the load-bearing property that lets the
-jackpot reuse the DTD winner instead of running a second selection.
+jackpot reuse the DTD winner instead of running a second selection. **[Superseded by §1b: from V15 the DTD draws 3-of-3, so EVERY block is a draw block and this alignment is automatic. The `% 3` `static_assert`s stay satisfied (25290, 288) but are no longer load-bearing.]**
+
+---
+
+## 1b. (D) DTD draw-frequency change at V15 — 1-of-3 → 3-of-3 (permanent)
+
+**Founder decision (2026-08-02):** at V15 the DTD lottery draw frequency changes from the
+permanent 1-of-3 regime to **3-of-3 (a draw on EVERY block), permanently, for all
+`height >= V15_HEIGHT`**. This is the third V15 mechanism (D); keep it separate from (T)/(J).
+
+**The change** is a single new leading branch in the one existing draw predicate
+`is_lottery_block(height, phase2_height)` (`include/sost/lottery.h`). The full schedule
+becomes (height-anchored, NOT offset-anchored):
+
+| Height range | Draw rule | Regime | Status |
+|---|---|---|---|
+| `< 7100` (V11_PHASE2_HEIGHT) | never | pre-Phase 2 | unchanged |
+| `[7100, 12100)` | `(height % 3) != 0` | 2-of-3 bootstrap | unchanged |
+| `[12100, 25000)` | `(height % 3) == 0` | 1-of-3 permanent | unchanged |
+| **`>= 25000` (V15_HEIGHT)** | **`true`** | **3-of-3, every block** | **NEW (D)** |
+
+Implementation is the *first* schedule branch after the pre-Phase-2 guards:
+`if (height >= V15_HEIGHT) return true;`. Everything else in `is_lottery_block` is
+untouched. Both miner and validator MUST keep routing through this single helper.
+
+**Why low-risk:** the predicate is already parameterised by frequency (the chain ran
+2-of-3 then 1-of-3 through this exact function); 3-of-3 is one more frequency it already
+supports. The payout / accumulation machinery (`apply_lottery_block`, pending
+accumulate-and-flush, eligibility set, `pick_winner`) is **UNCHANGED** — only *which
+blocks draw* changes.
+
+**Supply-neutral:** total DTD flow per unit time is unchanged (still 50% of subsidy);
+with 3-of-3 it is distributed as **3× more, ~1/3-size payouts** — maximum decentralisation
+of the (T)-redirected reserve flow. No change to the emission curve.
+
+**Interaction with (T):** with (D) there are **no IDLE blocks for `height >= V15`**. The
+(T) "redirect 25/25 to pending on an idle block" branch (§2) is unreachable post-V15;
+every block is the draw shape `50 miner / 50 lottery`, paying the eligible winner (or
+accumulating pending only if the eligibility set is momentarily empty — existing behaviour).
+
+**Interaction with (J):** every block being a draw block makes the jackpot's "a jackpot
+block MUST coincide with a DTD draw block" property **trivially true** for every jackpot
+height (all `>= V15_HEIGHT`). Jackpot cadence stays 288.
+
+**Invariants:** PRE-V15 replay byte-identical (gate `height >= V15_HEIGHT`, height-anchored
+→ a reorg across V15 does not shift the schedule). Deterministic, overflow-safe, no oracle.
+
+**Test boundary (D):** `24999` (1-of-3: draw ⟺ `%3==0` → NO draw), `25000` (draw),
+`25001` (draw), `25002` (draw) — i.e. EVERY height `>= 25000` draws; reorg across 25000
+must not shift the schedule; a jackpot height (25290) still coincides with a draw. Assert
+pre-V15 heights (e.g. 24998/24999) keep the exact 1-of-3 pattern.
 
 ---
 
