@@ -47,6 +47,40 @@ when its release gate (below) is green, not when it compiles.
 3. **EVM contract audit** decision before any SafeERC20 landing/deploy.
 4. **Node-upgrade rollout plan** before the public Explorer banner is deployed.
 
+## Network-schedule refactor — resolved design (2026-08-04, the harness unblocker)
+The harness is blocked on getting a build where V15/DTD/jackpot activate at reachable
+heights. An investigation this session **proved why the naive fix is wrong** and picked the
+safe approach:
+
+**The trap (proven, do NOT repeat):** lowering testnet `V15` to a small height (e.g. 300)
+is incoherent. The V15 every-block DTD draw depends on machinery that activates *above* it:
+- `DTD_DOMINANCE_GATE_HEIGHT = 12100` (DTD anti-dominance / SbPoW-activity gate — `lottery.cpp:140,191`)
+- `V13_HEIGHT = 12000` (DTD flip, lottery window 6, drift 30s)
+- `V11_PHASE2_HEIGHT = 7100` (SBPoW active — required for DTD)
+- the cASERT difficulty ladder (`CASERT_V2..V6/CEILING/STAGED/GRANULAR`, heights 1450→7350).
+
+Dragging `V13`/`Phase2` down to be `< V15` forces the **entire ancient fork ladder** down
+with them — dozens of consensus-sensitive difficulty constants and ~20 cASERT/DTD test files
+(`test_casert_*`, `test_sbpow_*`, `test_v13_helpers`, `test_coinbase_phase2`, …). That is a
+large, consensus-divergence-risky cascade and must NOT be bulldozed. (Two prior attempts to
+lower `V13`/`Phase2`/`HIGH_FREQ` on testnet broke `test_v13_helpers`; both correctly reverted.)
+
+**Chosen approach — testnet/regtest V15 ABOVE the ancient ladder (zero ancient-ladder risk):**
+- Set testnet `V15_HEIGHT` to a value `> DTD_DOMINANCE_GATE_HEIGHT (12100)` and `> V13 (12000)`,
+  e.g. **12500** (order preserved by construction: `Phase2 7100 < V13 12000 < DTD 12100 < V15 12500 < first-J 12500+offset`).
+- **Touch zero cASERT/Phase2/V13/DTD constants** → no consensus-history risk, no cASERT/sbpow
+  test churn. The only cost is the harness mining ~12.5k regtest blocks (fine at regtest difficulty).
+- Rebase the V15-family tests to **relative offsets** (`V15_HEIGHT + k`, not literal `300`):
+  `test_v14_fork_gates` (the `V15_HEIGHT==300` static_assert), `test_popc_v15_soak`,
+  `test_popc_v15_eligibility`, `test_lottery_rollover`. This is the §6-groupA "tests consume
+  the parameter" change, small and self-contained.
+- Keep mainnet locked: `V15=25000, first-J=25290, cadence=288, eligibility=30000`.
+
+This is the exact, de-risked unblocker for the runtime harness — a focused next-session unit
+(commit `Consensus: separate mainnet testnet and regtest V15 schedules`), NOT a rushed
+end-of-session consensus edit. Repo remains green at `189081f9` (mainnet build ✅, ctest 101/101);
+no consensus code left half-rebased.
+
 ## Deliberately NOT enabled / done (by design)
 - Mainnet BTC capability (gate hardwired OFF; code is dormant behind a build option).
 - EVM contract change (held in a worktree for an audited PR).
