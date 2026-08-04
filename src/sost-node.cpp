@@ -2164,7 +2164,29 @@ static std::string handle_getrawtransaction(const std::string& id, const std::ve
     if(p.empty()) return rpc_error(id,-1,"missing txid");
     Hash256 txid{}; if(!hex_to_bytes(p[0],txid.data(),32)) return rpc_error(id,-8,"invalid txid");
     const MempoolEntry* entry=g_mempool.GetEntry(txid);
-    if(!entry) return rpc_error(id,-5,"Not in mempool");
+    if(!entry){
+        // Not in mempool — search CONFIRMED blocks and return the stored raw tx.
+        // (Needed so tooling/tests can fetch a mined tx, e.g. the canonical jackpot.)
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        for(const auto& b : g_blocks){
+            for(const auto& th : b.tx_hexes){
+                std::vector<Byte> raw2;
+                if(!decode_tx_hex(th, raw2)) continue;
+                Transaction t; std::string de;
+                if(!Transaction::Deserialize(raw2, t, &de)) continue;
+                Hash256 tid{}; t.ComputeTxId(tid, nullptr);
+                if(tid==txid){
+                    bool verbose2=(p.size()>1&&p[1]!="0"&&p[1]!="false");
+                    if(!verbose2) return rpc_result(id,"\""+to_hex(raw2.data(),raw2.size())+"\"");
+                    return rpc_result(id,"{\"txid\":\""+to_hex(txid.data(),32)
+                        +"\",\"size\":"+std::to_string(raw2.size())
+                        +",\"confirmed\":true,\"block_height\":"+std::to_string(b.height)
+                        +",\"hex\":\""+to_hex(raw2.data(),raw2.size())+"\"}");
+                }
+            }
+        }
+        return rpc_error(id,-5,"No such transaction (not in mempool or chain)");
+    }
     std::vector<Byte> raw; std::string err;
     if(!entry->tx.Serialize(raw,&err)) return rpc_error(id,-1,"serialize: "+err);
     bool verbose=(p.size()>1&&p[1]!="0"&&p[1]!="false");
