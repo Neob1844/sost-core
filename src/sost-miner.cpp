@@ -601,7 +601,14 @@ static BlockTemplateResult fetch_block_template() {
     result.total_fees = 0;
     result.count = 0;
 
-    std::string resp = rpc_call("getblocktemplate");
+    // Pass our payout address so the node can build the canonical Historical Jackpot
+    // (winner excludes the current miner) at a jackpot height. This address MUST match
+    // coinbase output[0] below, or the validator re-derives a different winner and rejects
+    // the block — keeping jackpot identity coupled to the real coinbase (not a loose param).
+    std::string gbt_params = "[]";
+    if (!g_miner_address.empty())
+        gbt_params = "[\"" + g_miner_address + "\"]";
+    std::string resp = rpc_call("getblocktemplate", gbt_params);
     if (resp.empty()) return result;
 
     int64_t fees_val = jint(resp, "total_fees");

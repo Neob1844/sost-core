@@ -2270,7 +2270,9 @@ static std::string handle_submitblock(const std::string& id, const std::vector<s
 // 500KB tx bytes in template (coinbase excluded here)
 static constexpr size_t NODE_MAX_BLOCK_TX_BYTES = 500 * 1024;
 
-static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>&) {
+static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, Transaction& out_tx);  // fwd (defined near validate_live_jackpot)
+
+static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>& p) {
     g_miner_stats.getblocktemplate_calls.fetch_add(1, std::memory_order_relaxed);
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     // V14.7: pass the height this template will be mined at (tip + 1) so an
@@ -2279,6 +2281,26 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
 
     // Compute next block info
     int64_t next_height = g_chain_height + 1;
+
+    // V15 (J) — Historical Jackpot template construction. At a jackpot height the block
+    // MUST carry the canonical TX_TYPE_JACKPOT as tx[1] (immediately after the coinbase),
+    // or the validator rejects it. The winner depends on the block's current miner, so the
+    // miner passes its payout address (params[0]); we derive cur_miner from it and build the
+    // EXACT canonical jackpot the validator will re-derive from the final coinbase. If the
+    // miner pays a different coinbase address than it passed here, validate_live_jackpot
+    // recomputes a different winner and rejects the block — so identity stays coupled to the
+    // real coinbase. Emitted first in the transactions array → block index 1 after coinbase.
+    std::string jackpot_hex;
+    if (sost::is_hist_jackpot_height(next_height) && !p.empty() && !p[0].empty()) {
+        PubKeyHash miner_pkh{};
+        if (address_decode(p[0], miner_pkh)) {
+            Transaction jtx;
+            if (build_live_jackpot_tx(miner_pkh, next_height, jtx)) {
+                std::vector<Byte> jraw; std::string jerr;
+                if (jtx.Serialize(jraw, &jerr)) jackpot_hex = to_hex(jraw.data(), jraw.size());
+            }
+        }
+    }
     std::string prev_hash = g_blocks.empty() ? std::string(64, '0') : to_hex(g_blocks.back().block_id.data(), 32);
     uint32_t next_bits = GENESIS_BITSQ;
     if (!g_blocks.empty()) {
@@ -2301,16 +2323,22 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
       << ",\"curtime\":" << curtime
       << ",\"coinbasevalue\":" << subsidy
       << ",\"transactions\":[";
+    bool first_tx = true;
+    // Canonical jackpot goes FIRST so the assembled block places it at index 1 (after coinbase).
+    if (!jackpot_hex.empty()) { s << "\"" << jackpot_hex << "\""; first_tx = false; }
     for (size_t i = 0; i < tmpl.txs.size(); ++i) {
-        if (i) s << ",";
         std::vector<Byte> raw;
         std::string err;
         if (tmpl.txs[i].Serialize(raw, &err)) {
+            if (!first_tx) s << ",";
             s << "\"" << to_hex(raw.data(), raw.size()) << "\"";
+            first_tx = false;
         }
     }
+    const size_t tmpl_count = tmpl.txs.size() + (jackpot_hex.empty() ? 0 : 1);
     s << "],\"total_fees\":" << tmpl.total_fees
-      << ",\"count\":" << tmpl.txs.size()
+      << ",\"has_jackpot\":" << (jackpot_hex.empty() ? "false" : "true")
+      << ",\"count\":" << tmpl_count
       << ",\"max_block_tx_bytes\":" << NODE_MAX_BLOCK_TX_BYTES
       << ",\"mempool_size\":" << g_mempool.Size() << "}";
     return rpc_result(id, s.str());
@@ -4744,6 +4772,59 @@ static sost::GvG3bState gv_g3b_derive_state(const PubKeyHash& vault_pkh) {
 // The signature exemption elsewhere is height+type; THIS is what makes it safe — an
 // arbitrary/unsigned jackpot can never match the reconstruction, on any code path.
 // Returns false (block MUST be rejected before any mutation) on any canonical mismatch.
+// Template-side companion to validate_live_jackpot: reconstruct the SAME canonical
+// jackpot the validator will require, and RETURN it (for block-template assembly).
+// `cur_miner` is the pkh that will own coinbase output[0] of the block being built —
+// it MUST equal the address the miner will actually pay itself, because the validator
+// re-derives cur_miner from the final coinbase (validate_live_jackpot) and rejects any
+// mismatch. Returns true and fills out_tx iff a canonical jackpot is required at `height`
+// (jackpot height + non-empty reserve + an eligible non-current-miner winner). Reuses the
+// exact shared canonical helpers (discover_reserve_utxos / compute_lottery_eligibility_set
+// / derive_rollover_before / build_canonical_jackpot_tx) — no logic is duplicated.
+static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, Transaction& out_tx) {
+    if (!sost::is_hist_jackpot_height(height)) return false;
+    PubKeyHash gold_pkh{}, popc_pkh{};
+    address_decode(ADDR_GOLD_VAULT, gold_pkh);
+    address_decode(ADDR_POPC_POOL, popc_pkh);
+    const auto reserve = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);
+    const int64_t reserve_before = sost::jackpot::reserve_balance(reserve);
+    std::vector<sost::lottery::LotteryMinedBlockView> history;
+    history.reserve(g_blocks.size());
+    for (const auto& b : g_blocks) {
+        if (b.height >= height) break;
+        if (b.tx_hexes.empty()) continue;
+        std::vector<Byte> raw;
+        if (!decode_tx_hex(b.tx_hexes[0], raw)) continue;
+        Transaction cb; std::string de;
+        if (!Transaction::Deserialize(raw, cb, &de) || cb.outputs.empty()) continue;
+        sost::lottery::LotteryMinedBlockView v;
+        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id;
+        history.push_back(v);
+    }
+    PubKeyHash winner_pkh{}; bool winner_exists = false;
+    auto eligible = sost::lottery::compute_lottery_eligibility_set(
+        history, height, cur_miner, sost::lottery_exclusion_window_at(height));
+    if (!eligible.empty()) {
+        int64_t wi = sost::lottery::select_lottery_winner_index_from_history(eligible, history, height);
+        if (wi >= 0 && wi < (int64_t)eligible.size()) { winner_pkh = eligible[(size_t)wi].pkh; winner_exists = true; }
+    }
+    const int64_t rollover_before = sost::jackpot::derive_rollover_before(
+        height,
+        [](int64_t h) -> bool {
+            if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
+            const StoredBlock& b = g_blocks[(size_t)h];
+            if (b.tx_hexes.size() < 2) return false;
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
+            Transaction t; std::string de;
+            if (!Transaction::Deserialize(raw, t, &de)) return false;
+            return t.tx_type == TX_TYPE_JACKPOT;
+        });
+    // gold_pkh is the canonical reserve-change destination (same as the validator uses).
+    return sost::jackpot::build_canonical_jackpot_tx(
+        height, winner_exists, winner_pkh, reserve_before, rollover_before, reserve, gold_pkh, out_tx);
+}
+
 static bool validate_live_jackpot(const std::vector<Transaction>& txs, int64_t height, std::string& err) {
     if (!sost::is_hist_jackpot_height(height) && sost::jackpot::count_jackpot_txs(txs) == 0)
         return true;   // fast path: no jackpot due and none present
