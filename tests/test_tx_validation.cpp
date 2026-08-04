@@ -1066,7 +1066,7 @@ static TestTxBundle MakeTxWithExtra(int64_t spend_height, const TxOutput& extra)
 }
 
 TEST(TC50_carrier_rejected_before_v15) {
-    // popc_v15_active_at(250) is false on BOTH builds (testnet V15=300; mainnet INT64_MAX).
+    // popc_v15_active_at(250) is false on BOTH builds (testnet V15=12500; mainnet 25000).
     auto b = MakeTxWithExtra(250, MakePopcCarrierOut(true, 100250));
     EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R5_ZERO_AMOUNT);
     g_pass++;
@@ -1074,8 +1074,9 @@ TEST(TC50_carrier_rejected_before_v15) {
 
 #ifdef SOST_TESTNET_FORKS
 TEST(TC51_carrier_accepted_when_v15_active_testnet) {
-    // testnet V15=300 -> popc_v15_active_at(350) true -> carrier exempt -> tx valid.
-    auto b = MakeTxWithExtra(350, MakePopcCarrierOut(true, 100350));
+    // testnet V15=12500 -> popc_v15_active_at(V15_HEIGHT+50) true -> carrier exempt -> tx valid.
+    const int64_t H = V15_HEIGHT + 50;
+    auto b = MakeTxWithExtra(H, MakePopcCarrierOut(true, H + 100000));
     EXPECT_OK(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx));
     g_pass++;
 }

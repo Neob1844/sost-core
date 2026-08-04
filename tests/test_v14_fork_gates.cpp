@@ -25,8 +25,12 @@ using namespace sost;
 #ifdef SOST_TESTNET_FORKS
 static_assert(V14_HEIGHT == 200,
     "Testnet build: V14_HEIGHT must be the early testnet height (200).");
-static_assert(V15_HEIGHT == 300,
-    "Testnet build: V15_HEIGHT must be the early testnet height (300).");
+static_assert(V15_HEIGHT == 12500,
+    "Testnet build: V15_HEIGHT is placed AFTER the historical ladder (Phase2 7100 < "
+    "V13 12000 < DTD gate 12100 < 12500) so the every-block DTD draw is active. "
+    "Ancient forks are NOT moved. See docs/V15_READINESS.md.");
+static_assert(V15_HEIGHT > DTD_DOMINANCE_GATE_HEIGHT && V15_HEIGHT > V13_HEIGHT,
+    "Testnet V15 must sit above the DTD dominance gate and V13 (coherent ordering).");
 #else
 static_assert(V14_HEIGHT == 15000,
     "V14_HEIGHT moved from 15000 — V14 (H3/H4 hardening) ships at 15000 UNCHANGED "
@@ -49,7 +53,7 @@ static_assert(DYNAMIC_FEE_ACTIVATION_HEIGHT == 10000,
 static_assert(DTD_POPC_GRACE_BLOCKS == 5000,
     "PoPC eligibility grace window changed from 5000 blocks — confirm intentional.");
 static_assert(DTD_POPC_ELIGIBILITY_HEIGHT == V15_HEIGHT + DTD_POPC_GRACE_BLOCKS,
-    "DTD_POPC_ELIGIBILITY_HEIGHT must equal V15_HEIGHT + DTD_POPC_GRACE_BLOCKS (25000 mainnet / 5300 testnet).");
+    "DTD_POPC_ELIGIBILITY_HEIGHT must equal V15_HEIGHT + DTD_POPC_GRACE_BLOCKS (30000 mainnet / 17500 testnet).");
 // V15 ACTIVATION (2026-06-27): the DTD-PoPC eligibility gate is now ACTIVE on
 // BOTH profiles (enforced from DTD_POPC_ELIGIBILITY_HEIGHT — mainnet 25000 /
 // testnet 5300). Pinned true so a future accidental revert to false fails here.

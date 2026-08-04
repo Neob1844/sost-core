@@ -1065,7 +1065,7 @@ inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // MAINNET 
 // the final, soaked, coordinated pre-fork commit. Testnet (-DSOST_TESTNET_FORKS)
 // dry-runs V15 just after V14 (block 300). See docs/V14_EXECUTION_PLAN.md.
 #ifdef SOST_TESTNET_FORKS
-inline constexpr int64_t V15_HEIGHT                       = 300;     // TESTNET ONLY
+inline constexpr int64_t V15_HEIGHT                       = 12500;   // TESTNET ONLY — positioned AFTER the whole historical ladder (Phase2 7100 < V13 12000 < DTD gate 12100 < 12500) so the V15 every-block DTD draw has its dependencies active. Does NOT move any ancient fork. See docs/V15_READINESS.md.
 #else
 inline constexpr int64_t V15_HEIGHT                       = 25000;   // MAINNET (target moved 20000 -> 25000 on 2026-07-25: chain was at 19021, ~6.8d runway was insufficient to implement + soak the V15 Core bundle [Historical DTD Jackpot, Gold Vault/PoPC emission transition, atomic-swap dashboard, BTC HTLC]. 25000 gives ~41d. Automation gates stay deferred until soaked.)
 #endif
@@ -1161,15 +1161,15 @@ inline constexpr int64_t HIST_JACKPOT_CAP_STOCKS        = 500 * STOCKS_PER_SOST;
 // warm-up before the first payout.
 //   MAINNET: V15_HEIGHT = 25000 (25000 % 3 == 1). Offset 290 -> first = 25290
 //            (25290 % 3 == 0, and 25290 >= 12100). Draw-aligned. [asserted below]
-//   TESTNET: V15_HEIGHT = 300 is BELOW the DTD activation (7100), so the jackpot
-//            CANNOT reuse DTD draws at that height. The testnet dry-run schedule
-//            (lower the DTD schedule for testnet, or give the jackpot a dedicated
-//            dry-run height >= 12100) is an OPEN design item resolved in
-//            docs/design/V15_HISTORICAL_DTD_JACKPOT_SPEC.md. The value below is a
-//            PROVISIONAL placeholder so both nets compile; do NOT treat the
-//            testnet first-height as final until the spec closes that item.
+//   TESTNET: V15_HEIGHT = 12500 (12500 % 3 == 2), positioned AFTER the whole
+//            historical ladder (Phase2 7100 < V13 12000 < DTD gate 12100 < 12500)
+//            so the every-block DTD draw the jackpot reuses is fully active. Offset
+//            292 -> first = 12792 (12792 % 3 == 0, >= 12100). Draw-aligned.
+//            RESOLVED (2026-08-04): the earlier "testnet V15 below DTD" incoherence
+//            is closed by placing V15 above the ladder rather than dragging the
+//            ladder down. See docs/V15_READINESS.md (network-schedule refactor).
 #ifdef SOST_TESTNET_FORKS
-inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 290;             // PROVISIONAL — see spec (testnet DTD-schedule open item)
+inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 292;             // TESTNET: 12500 + 292 = 12792, draw-aligned (% 3 == 0)
 #else
 inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 290;             // MAINNET: 25000 + 290 = 25290, draw-aligned
 #endif
@@ -1184,6 +1184,18 @@ static_assert(HIST_JACKPOT_FIRST_HEIGHT % 3 == 0,
               "MAINNET first jackpot height must be a DTD draw block (height % 3 == 0)");
 static_assert(HIST_JACKPOT_FIRST_HEIGHT >= V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW,
               "MAINNET first jackpot must be in the permanent 1-of-3 DTD regime (>= 12100)");
+#else
+// TESTNET only: same invariants under the accelerated-but-coherent schedule.
+// V15 (12500) is placed AFTER the historical ladder so the every-block DTD draw
+// is active; the ancient forks are NOT moved. Ordering: Phase2 < V13 < DTD gate < V15 < first J.
+static_assert(V15_HEIGHT > DTD_DOMINANCE_GATE_HEIGHT,
+              "TESTNET V15 must sit above the DTD dominance gate so the every-block DTD draw is active.");
+static_assert(V15_HEIGHT > V13_HEIGHT && V13_HEIGHT > V11_PHASE2_HEIGHT,
+              "TESTNET schedule must preserve Phase2 < V13 < V15 ordering.");
+static_assert(HIST_JACKPOT_FIRST_HEIGHT % 3 == 0,
+              "TESTNET first jackpot height must be a DTD draw block (height % 3 == 0)");
+static_assert(HIST_JACKPOT_FIRST_HEIGHT >= DTD_DOMINANCE_GATE_HEIGHT,
+              "TESTNET first jackpot must be in the permanent 1-of-3 DTD regime (>= DTD gate).");
 #endif
 // Returns true iff `height` is a Historical DTD Jackpot block (cadence-aligned,
 // at/after the first jackpot height). NOTE: this is the CADENCE predicate only;

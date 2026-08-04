@@ -136,7 +136,10 @@ static void test_non_triggered_never_pays_out() {
     printf("\n=== 3) Non-triggered with pending > 0 → no payout, pending unchanged ===\n");
     // Bootstrap rule (h - phase2_height < 5000): triggered iff h % 3 != 0.
     // Pick a height where h % 3 == 0 → IDLE.
-    const int64_t H = 13'002;     // H % 3 == 0 (within bootstrap)
+    // Pre-V15 height (< testnet V15=12500, > DTD gate 12100) so this exercises the
+    // pre-V15 bootstrap "non-triggered never pays" invariant. Post-V15 the D every-block
+    // draw makes every block triggered, so a non-triggered block only exists below V15.
+    const int64_t H = 12'300;     // H % 3 == 0 (within bootstrap), pre-V15 both nets
     const int64_t target = H + 3;    // (H+3) % 3 == 0 → IDLE
     auto eligible = std::vector<LotteryEligibilityEntry>{
         mk_entry(0x10), mk_entry(0x20), mk_entry(0x30)
@@ -229,7 +232,9 @@ static void test_triggered_nonempty_payout() {
 // ---------------------------------------------------------------------------
 static void test_undo_restores_pending() {
     printf("\n=== 7) undo_lottery_block restores pending_before across IDLE / UPDATE / PAYOUT ===\n");
-    const int64_t H = 13'002;
+    // Pre-V15 height so the IDLE (H+3, %3==0) case is genuinely non-triggered; post-V15
+    // the D every-block draw would make it triggered. UPDATE/PAYOUT (H+1) stay triggered.
+    const int64_t H = 12'300;
 
     // IDLE: pending_before = 555 → after IDLE step, undo restores 555.
     {

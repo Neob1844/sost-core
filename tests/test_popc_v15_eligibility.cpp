@@ -37,36 +37,47 @@ int main(){
 
     // Owners used across the scenarios.
     const uint8_t A=0x10, B=0x20, EXP=0x30, SLA=0x40, SET=0x50, SUS=0x60, REN=0x70, UNK=0x99;
-    const int64_t Q = 5000;   // query height (>= testnet V15_HEIGHT=300)
+    // Rebase the whole scenario around the gate: G = V15_HEIGHT. The query height Q is
+    // network-specific because the two builds exercise OPPOSITE paths:
+    //   * testnet (gate live at/after V15): Q ABOVE V15 → real chain-derived recompute;
+    //   * mainnet (gate deferred here):     Q BELOW V15 → pure no-op (always true) path.
+    // Terminal events keep end_height 0 (a sentinel). The event log below is anchored at
+    // G so the testnet timeline sits above the gate; on mainnet the no-op checks ignore it.
+    const int64_t G = V15_HEIGHT;
+#ifdef SOST_TESTNET_FORKS
+    const int64_t Q = G + 5000;   // testnet: well past V15_HEIGHT → recompute
+#else
+    const int64_t Q = G - 5000;   // mainnet: below V15_HEIGHT → deferred no-op
+#endif
 
     // Build one event log covering every state, applied in chain order. P4c:
     // Register only declares (Pending); a valid Activate makes it Active. "Active"
     // commitments activate just before Q so no audit is due (auto-slash inert).
     std::vector<PopcV15Event> log = {
         // A: registered + activated, end well past the query
-        ev(PopcEventType::Register, 0x01, A,   100,  100000),
-        ev(PopcEventType::Activate, 0x01, A,   4800, 100000),
+        ev(PopcEventType::Register, 0x01, A,   G+100,  G+100000),
+        ev(PopcEventType::Activate, 0x01, A,   G+4800, G+100000),
         // EXP: activated late (so active before its end), end reached by the query
-        ev(PopcEventType::Register, 0x02, EXP, 100,  4000),
-        ev(PopcEventType::Activate, 0x02, EXP, 3400, 4000),
+        ev(PopcEventType::Register, 0x02, EXP, G+100,  G+4000),
+        ev(PopcEventType::Activate, 0x02, EXP, G+3400, G+4000),
         // SLA: activated then slashed (terminal)
-        ev(PopcEventType::Register, 0x03, SLA, 100,  100000),
-        ev(PopcEventType::Activate, 0x03, SLA, 100,  100000),
-        ev(PopcEventType::Slash,    0x03, SLA, 200,  0),
+        ev(PopcEventType::Register, 0x03, SLA, G+100,  G+100000),
+        ev(PopcEventType::Activate, 0x03, SLA, G+100,  G+100000),
+        ev(PopcEventType::Slash,    0x03, SLA, G+200,  0),
         // SET: activated then settled (terminal)
-        ev(PopcEventType::Register, 0x04, SET, 100,  100000),
-        ev(PopcEventType::Activate, 0x04, SET, 100,  100000),
-        ev(PopcEventType::Settle,   0x04, SET, 200,  0),
+        ev(PopcEventType::Register, 0x04, SET, G+100,  G+100000),
+        ev(PopcEventType::Activate, 0x04, SET, G+100,  G+100000),
+        ev(PopcEventType::Settle,   0x04, SET, G+200,  0),
         // SUS: activated then suspended (not active until re-activated)
-        ev(PopcEventType::Register, 0x05, SUS, 100,  100000),
-        ev(PopcEventType::Activate, 0x05, SUS, 100,  100000),
-        ev(PopcEventType::Suspend,  0x05, SUS, 200,  0),
+        ev(PopcEventType::Register, 0x05, SUS, G+100,  G+100000),
+        ev(PopcEventType::Activate, 0x05, SUS, G+100,  G+100000),
+        ev(PopcEventType::Suspend,  0x05, SUS, G+200,  0),
         // REN: registered + activated, renewed further out — active at the query
-        ev(PopcEventType::Register, 0x06, REN, 100,  100000),
-        ev(PopcEventType::Activate, 0x06, REN, 4800, 100000),
-        ev(PopcEventType::Renew,    0x06, REN, 4900, 200000),
+        ev(PopcEventType::Register, 0x06, REN, G+100,  G+100000),
+        ev(PopcEventType::Activate, 0x06, REN, G+4800, G+100000),
+        ev(PopcEventType::Renew,    0x06, REN, G+4900, G+200000),
         // RO: register-only, never activated -> must NOT be active (P4c)
-        ev(PopcEventType::Register, 0x07, 0x80, 100, 100000),
+        ev(PopcEventType::Register, 0x07, 0x80, G+100, G+100000),
     };
 
     // Inject the source. node_collect_popc_events is bypassed on purpose — we are
@@ -100,12 +111,11 @@ int main(){
           lottery::has_active_canonical_popc(own(0x80), Q)==false);
 
     // Reorg/time safety: query strictly before an event sees the earlier state.
-    // At height 3500 REN's renew (height 300, end 100000) is already applied, but
-    // EXP (end 4000) is still active; at 4500 EXP has lapsed.
+    // At G+3500 EXP (activated G+3400, end G+4000) is still active; at G+4500 it has lapsed.
     CHECK("testnet: EXP active before its end_height",
-          lottery::has_active_canonical_popc(own(EXP), 3500)==true);
+          lottery::has_active_canonical_popc(own(EXP), G+3500)==true);
     CHECK("testnet: EXP inactive after its end_height",
-          lottery::has_active_canonical_popc(own(EXP), 4500)==false);
+          lottery::has_active_canonical_popc(own(EXP), G+4500)==false);
 
     // Defensive: with no source installed the hook falls back to true (no-op).
     lottery::set_popc_event_source(nullptr);

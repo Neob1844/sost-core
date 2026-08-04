@@ -97,15 +97,15 @@ int main(){
           excluded(chain, NONE,  ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
 
     // PoPC automation is LIVE from V15_HEIGHT on both profiles; only the height
-    // values differ (mainnet 20000/25000 vs testnet 300/5300).
+    // values differ (mainnet 25000/30000 vs testnet 12500/17500).
     CHECK("PoPC automation live at V15_HEIGHT", popc_v15_active_at(H0));
     CHECK("PoPC automation live at eligibility", popc_v15_active_at(ELI));
 #ifndef SOST_TESTNET_FORKS
     CHECK("mainnet: V15_HEIGHT == 25000", H0 == 25000);
     CHECK("mainnet: eligibility == 30000", ELI == 30000);
 #else
-    CHECK("testnet: V15_HEIGHT == 300", H0 == 300);
-    CHECK("testnet: eligibility == 5300", ELI == 5300);
+    CHECK("testnet: V15_HEIGHT == 12500", H0 == 12500);
+    CHECK("testnet: eligibility == 17500", ELI == 17500);
 #endif
 
     std::printf("=== Results: %d passed, %d failed ===\n", g_pass, g_fail);
