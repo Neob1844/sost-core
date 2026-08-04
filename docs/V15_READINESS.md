@@ -96,6 +96,15 @@ adjacent piece of node+miner work that must precede PART 10–20. Until then the
 at the module/integration level (test_jackpot 108 adversarial asserts) but not over the live
 mined node path.
 
+**SbPoW audit DONE (2026-08-04) — decision gate resolved.** The ~4 GB/block is INTENDED, not a
+cache bug: the dataset seed IS `block_prev_hash` (ASIC-resistance), so it must change every block;
+`is_valid_for` can't reuse across a growing chain by design. The 4 GB build is miner-only
+(`convergencex_attempt` + `generate_transcript_witnesses`); the node validator (`verify_cx_proof`)
+is already O(1). No cache fix helps → the isolated fast chain is genuinely required. **Head-start:
+`Profile::DEV` (enum 0) with distinct `MAGIC_DEV` bytes already exists** — network identity is a
+runtime axis orthogonal to the compile-time `SOST_TESTNET_FORKS` schedule, so PART-5 isolation is
+largely built. Full plan + touch-points: **docs/DEVNET_FAST.md**.
+
 ## Deliberately NOT enabled / done (by design)
 - Mainnet BTC capability (gate hardwired OFF; code is dormant behind a build option).
 - EVM contract change (held in a worktree for an audited PR).
