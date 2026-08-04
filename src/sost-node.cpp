@@ -4735,6 +4735,64 @@ static sost::GvG3bState gv_g3b_derive_state(const PubKeyHash& vault_pkh) {
     return st;
 }
 
+// V15 Historical Jackpot — the SINGLE canonical authorization for the keyless reserve
+// spend. Called before EVERY UtxoSet::ConnectBlock caller (process_block, reorg restore,
+// and load_chain/reindex), so no caller can connect a block whose TX_TYPE_JACKPOT was not
+// reconstructed and byte-exact matched from the PRE-BLOCK chainstate. Self-contained: it
+// recomputes THIS block's DTD winner (same eligibility+selection the coinbase T path and
+// the miner use) and the history-derived rollover, then defers to validate_block_jackpot.
+// The signature exemption elsewhere is height+type; THIS is what makes it safe — an
+// arbitrary/unsigned jackpot can never match the reconstruction, on any code path.
+// Returns false (block MUST be rejected before any mutation) on any canonical mismatch.
+static bool validate_live_jackpot(const std::vector<Transaction>& txs, int64_t height, std::string& err) {
+    if (!sost::is_hist_jackpot_height(height) && sost::jackpot::count_jackpot_txs(txs) == 0)
+        return true;   // fast path: no jackpot due and none present
+    PubKeyHash gold_pkh{}, popc_pkh{};
+    address_decode(ADDR_GOLD_VAULT, gold_pkh);
+    address_decode(ADDR_POPC_POOL, popc_pkh);
+    const auto reserve = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);  // PRE-block
+    const int64_t reserve_before = sost::jackpot::reserve_balance(reserve);
+    // This block's DTD winner — identical computation to the coinbase/miner path.
+    std::vector<sost::lottery::LotteryMinedBlockView> history;
+    history.reserve(g_blocks.size());
+    for (const auto& b : g_blocks) {
+        if (b.height >= height) break;
+        if (b.tx_hexes.empty()) continue;
+        std::vector<Byte> raw;
+        if (!decode_tx_hex(b.tx_hexes[0], raw)) continue;
+        Transaction cb; std::string de;
+        if (!Transaction::Deserialize(raw, cb, &de) || cb.outputs.empty()) continue;
+        sost::lottery::LotteryMinedBlockView v;
+        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id;
+        history.push_back(v);
+    }
+    PubKeyHash winner_pkh{}; bool winner_exists = false;
+    const PubKeyHash cur_miner =
+        (!txs.empty() && !txs[0].outputs.empty()) ? txs[0].outputs[0].pubkey_hash : PubKeyHash{};
+    auto eligible = sost::lottery::compute_lottery_eligibility_set(
+        history, height, cur_miner, sost::lottery_exclusion_window_at(height));
+    if (!eligible.empty()) {
+        int64_t wi = sost::lottery::select_lottery_winner_index_from_history(eligible, history, height);
+        if (wi >= 0 && wi < (int64_t)eligible.size()) { winner_pkh = eligible[(size_t)wi].pkh; winner_exists = true; }
+    }
+    const int64_t rollover_before = sost::jackpot::derive_rollover_before(
+        height,
+        [](int64_t h) -> bool {                          // a past event paid iff its block carries tx[1]==JACKPOT
+            if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
+            const StoredBlock& b = g_blocks[(size_t)h];
+            if (b.tx_hexes.size() < 2) return false;
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
+            Transaction t; std::string de;
+            if (!Transaction::Deserialize(raw, t, &de)) return false;
+            return t.tx_type == TX_TYPE_JACKPOT;
+        });
+    const auto jr = sost::jackpot::validate_block_jackpot(
+        txs, height, reserve, winner_exists, winner_pkh, reserve_before, rollover_before, gold_pkh);
+    if (!jr.ok) { err = jr.reason; return false; }
+    return true;
+}
+
 static bool process_block(const std::string& block_json) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
 
@@ -6066,41 +6124,14 @@ static bool process_block(const std::string& block_json) {
         }
     }
 
-    // V15 Historical DTD Jackpot — validate the block's jackpot rule BEFORE any
-    // chainstate mutation (jackpot_block.h). This is the SOLE authorization for the
-    // keyless TX_TYPE_JACKPOT protocol spend: a jackpot tx is accepted ONLY when it is
-    // byte-for-field identical to the canonical reconstruction from the PRE-BLOCK
-    // reserve set + THIS block's DTD winner + the history-derived rollover. It is NOT
-    // "type == JACKPOT -> skip signature": utxo_set.cpp permits the reserve spend by
-    // type+jackpot-height, and THIS check is what makes that safe (no other unsigned
-    // TX_TYPE_JACKPOT can ever match). Reuses phase2_ctx.expected_winner_pkh — the same
-    // DTD winner the coinbase validation used above — so miner and validator agree by
-    // construction. Runs at any jackpot-cadence height, or whenever a TX_TYPE_JACKPOT is
-    // present (so an out-of-schedule jackpot is rejected here, before ConnectBlock).
-    if (sost::is_hist_jackpot_height(height) || sost::jackpot::count_jackpot_txs(txs) > 0) {
-        const auto reserve = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);
-        const int64_t reserve_before  = sost::jackpot::reserve_balance(reserve);
-        const bool    winner_exists   = (phase2_ctx.expected_winner_pkh != PubKeyHash{});
-        // rollover_before is derived from the ACTIVE chain's past jackpot events: an
-        // event "paid" iff the block at that height carries a TX_TYPE_JACKPOT (only
-        // emitted on a paying event). No persisted rollover field — recomputed here.
-        const int64_t rollover_before = sost::jackpot::derive_rollover_before(
-            height,
-            [](int64_t h) -> bool {
-                if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
-                const StoredBlock& b = g_blocks[(size_t)h];
-                if (b.tx_hexes.size() < 2) return false;   // canonical jackpot is tx[1]
-                std::vector<Byte> raw;
-                if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
-                Transaction t; std::string de;
-                if (!Transaction::Deserialize(raw, t, &de)) return false;
-                return t.tx_type == TX_TYPE_JACKPOT;
-            });
-        const auto jr = sost::jackpot::validate_block_jackpot(
-            txs, height, reserve, winner_exists, phase2_ctx.expected_winner_pkh,
-            reserve_before, rollover_before, gold_pkh);
-        if (!jr.ok) {
-            printf("[BLOCK] REJECTED: Historical Jackpot: %s\n", jr.reason.c_str());
+    // V15 Historical DTD Jackpot — validate BEFORE any chainstate mutation, via the SINGLE
+    // canonical authorization (validate_live_jackpot; the exact same path reorg-restore and
+    // load_chain/reindex use). No jackpot can be connected on ANY caller without a byte-exact
+    // canonical match to the reconstruction from the pre-block reserve + DTD winner + rollover.
+    {
+        std::string jerr;
+        if (!validate_live_jackpot(txs, height, jerr)) {
+            printf("[BLOCK] REJECTED: Historical Jackpot: %s\n", jerr.c_str());
             return false;
         }
     }
@@ -6476,6 +6507,16 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             }
             BlockUndo undo;
             std::string uerr;
+            // Defense-in-depth: even restoring our own previously-validated blocks goes
+            // through the single jackpot authorization — no ConnectBlock caller is exempt.
+            {
+                std::string jerr;
+                if (!validate_live_jackpot(txs, sb.height, jerr)) {
+                    printf("[REORG] CRITICAL: Historical Jackpot mismatch restoring h=%lld: %s\n",
+                           (long long)sb.height, jerr.c_str());
+                    break;
+                }
+            }
             if (!g_utxo_set.ConnectBlock(txs, sb.height, undo, &uerr)) {
                 printf("[REORG] CRITICAL: Cannot restore original block h=%lld: %s\n",
                        (long long)sb.height, uerr.c_str());
@@ -7397,6 +7438,17 @@ static bool load_chain(const std::string& path) {
                 // Use ConnectBlock to atomically update UTXO set
                 BlockUndo undo;
                 std::string uerr;
+                // Reindex hardening: a persisted jackpot block must STILL match the canonical
+                // reconstruction, so a tampered datadir cannot inject a fraudulent reserve
+                // spend on load. Same single authorization as process_block/reorg.
+                {
+                    std::string jerr;
+                    if (!validate_live_jackpot(txs, height, jerr)) {
+                        printf("[CHAIN-LOAD] FATAL: Historical Jackpot mismatch at h=%lld: %s\n",
+                               (long long)height, jerr.c_str());
+                        return false;
+                    }
+                }
                 if (g_utxo_set.ConnectBlock(txs, height, undo, &uerr)) {
                     // Also register wallet UTXOs
                     for (size_t ti = 1; ti < txs.size(); ++ti) {
