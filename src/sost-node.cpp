@@ -2097,6 +2097,16 @@ static std::string handle_sendrawtransaction(const std::string& id, const std::v
     Transaction tx; std::string err;
     if(!Transaction::Deserialize(raw,tx,&err)) return rpc_error(id,-22,"TX decode: "+err);
 
+    // V15 mempool isolation (EXPLICIT policy, not merely the R2 validator rule):
+    // TX_TYPE_JACKPOT is a consensus-only protocol transaction. It is constructed and
+    // authorized SOLELY inside a jackpot block by the node (jackpot_block.h); it must
+    // never be user-submitted, relayed, rebroadcast, or admitted to the mempool. Reject
+    // it here up-front with a clear message (defense-in-depth over R2 in the validator,
+    // which also rejects it once it reaches AcceptToMempool).
+    if(tx.tx_type == TX_TYPE_JACKPOT){
+        return rpc_error(id,-26,"TX reject: TX_TYPE_JACKPOT is a consensus-only protocol transaction (emitted and authorized only inside a jackpot block); it cannot be user-submitted or relayed");
+    }
+
     Hash256 txid; if(!tx.ComputeTxId(txid,&err)) return rpc_error(id,-25,"TX reject: "+err);
 
     // -------------------------------------------------------------------------
@@ -5098,7 +5108,18 @@ static bool process_block(const std::string& block_json) {
             sost::atomic_swap_htlc_active_at(height) &&
             (txs[i].tx_type == TX_TYPE_HTLC_CLAIM ||
              txs[i].tx_type == TX_TYPE_HTLC_REFUND);
-        if(txs[i].tx_type != TX_TYPE_STANDARD && !htlc_block_tx){
+        // V15 Historical Jackpot: TX_TYPE_JACKPOT is a valid block tx type ONLY at a
+        // jackpot-cadence height. Its canonical correctness + keyless authorization are
+        // enforced by jackpot_block.h::validate_block_jackpot (above, before ConnectBlock);
+        // here it is exempted from the standard per-tx validation because it is a
+        // consensus-controlled reserve spend that carries NO signature. Narrowest surface:
+        // the exemption is only skipping R2/signature (below) + G1 vault governance; every
+        // other safety (input existence/unspent, value conservation, amounts) still runs via
+        // ConnectTransaction (scratch) and ConnectBlock. Below the first jackpot height this
+        // is always false, so pre-V15 replay is byte-identical.
+        const bool jackpot_block_tx =
+            sost::is_hist_jackpot_height(height) && txs[i].tx_type == TX_TYPE_JACKPOT;
+        if(txs[i].tx_type != TX_TYPE_STANDARD && !htlc_block_tx && !jackpot_block_tx){
             printf("[BLOCK] REJECTED: non-standard tx at index %zu\n", i);
             return false;
         }
@@ -5118,10 +5139,16 @@ static bool process_block(const std::string& block_json) {
             v14_seen_txids.insert(v14_hx);
 
             // H4: consensus check against the scratch view (sees earlier same-block outputs).
-            auto cres = ValidateTransactionConsensus(txs[i], v14_scratch, vctx);
-            if(!cres.ok){
-                printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
-                return false;
+            // The canonical jackpot is exempt: it carries no signature (protocol reserve
+            // spend) and R2 forbids its type in the standalone validator by design — it is
+            // already proven byte-exact by validate_block_jackpot, and its UTXO/amount safety
+            // comes from ConnectTransaction (below) + ConnectBlock.
+            if(!jackpot_block_tx){
+                auto cres = ValidateTransactionConsensus(txs[i], v14_scratch, vctx);
+                if(!cres.ok){
+                    printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
+                    return false;
+                }
             }
             // H3: ValidateTransactionPolicy intentionally NOT run on the block path.
 
@@ -5132,7 +5159,11 @@ static bool process_block(const std::string& block_json) {
             // a no-op and the chain replays byte-for-byte identical; the testnet build
             // (-DSOST_TESTNET_FORKS) activates it at V14_HEIGHT. Mirrors the logic of
             // gv_slice1 in src/block_validation.cpp. See docs/V14_EXECUTION_PLAN.md (W1).
-            if(gv_slice1_active_at(height)){
+            // The canonical jackpot legitimately spends Gold Vault reserve outputs; it is
+            // authorized by jackpot_block.h, NOT by G1 vault governance, so it is exempt here
+            // (else the testnet GV-slice1 build would reject the protocol payout as a
+            // non-whitelisted vault outflow). Mainnet GV-slice1 is deferred (INT64_MAX) anyway.
+            if(gv_slice1_active_at(height) && !jackpot_block_tx){
                 auto gv_lookup = [&v14_scratch](const Hash256& prev_txid, uint32_t prev_index,
                                                 PubKeyHash& out) -> bool {
                     OutPoint op{prev_txid, prev_index};
