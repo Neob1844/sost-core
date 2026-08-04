@@ -393,7 +393,11 @@ inline constexpr int32_t  V12_SLINGSHOT_T5_DROP_BPS = 5000;   // -50%
 // BOTH gate on this height. Other height-bearing constants
 // (CASERT_V11_HEIGHT, TIMESTAMP_MTP_FORK_HEIGHT) live in this same file
 // for the same reason — keeps consensus heights in one place.
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t  V11_PHASE2_HEIGHT                = 4;       // DEVNET_FAST ONLY
+#else
 inline constexpr int64_t  V11_PHASE2_HEIGHT                = 7100;
+#endif
 
 // V11 Phase 2 — PoP lottery (component D) consensus constants.
 //
@@ -421,7 +425,11 @@ inline constexpr int64_t  V11_PHASE2_HEIGHT                = 7100;
 // regardless of the window. Real sybil defense waits for
 // Memory-Lock per-instance (post block 12 000 study) and any
 // future stake-locked eligibility once a SOST market exists.
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t  LOTTERY_HIGH_FREQ_WINDOW                = 3;       // DEVNET_FAST ONLY
+#else
 inline constexpr int64_t  LOTTERY_HIGH_FREQ_WINDOW                = 5000;
+#endif
 inline constexpr int32_t  LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW  = 5;
 
 // Timestamp policy hardening — coordinated experimental fork at height
@@ -837,7 +845,11 @@ inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 60;
 // MUST be bit-identical: helpers return the pre-V13 constants for any
 // height < V13_HEIGHT.
 
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V13_HEIGHT                       = 8;       // DEVNET_FAST ONLY
+#else
 inline constexpr int64_t V13_HEIGHT                       = 12000;
+#endif
 
 // Beacon Phase II-B threshold (3-of-5) activation gate.
 //
@@ -909,7 +921,11 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
 // until their rolling share drops below 10 %. As soon as the rolling
 // window no longer holds 10 % of their blocks, they become eligible
 // again automatically — no operator action.
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 14;       // DEVNET_FAST ONLY
+#else
 inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 12100;
+#endif
 inline constexpr int32_t  DTD_DOMINANCE_WINDOW      = 288;
 inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 1000;  // 10.00 %
 
@@ -995,7 +1011,9 @@ inline constexpr bool is_sbpow_eligible(
 // the fork end-to-end. The macro is NEVER defined for mainnet builds, so the
 // mainnet value is byte-identical. Because this stays `constexpr`, no consensus
 // call site changes. (docs/V14_EXECUTION_PLAN.md A4)
-#ifdef SOST_TESTNET_FORKS
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V14_HEIGHT                       = 10;      // DEVNET_FAST ONLY
+#elif defined(SOST_TESTNET_FORKS)
 inline constexpr int64_t V14_HEIGHT                       = 200;     // TESTNET ONLY
 #else
 inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET (UNCHANGED — H3/H4 hardening; already in deployed binaries, no node re-update needed)
@@ -1020,7 +1038,11 @@ inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET 
 #ifdef SOST_TESTNET_FORKS
 inline constexpr int64_t V14_5_HEIGHT                     = 30;      // TESTNET ONLY (low, so the regtest HTLC e2e fits)
 #else
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V14_5_HEIGHT                     = 11;      // DEVNET_FAST ONLY
+#else
 inline constexpr int64_t V14_5_HEIGHT                     = 16000;   // MAINNET — atomic-swap HTLC CLAIM/REFUND fix
+#endif
 #endif
 
 // V14.7 — atomic-swap HTLC RELAY/POLICY activation (the PR #63 fix): the
@@ -1035,7 +1057,9 @@ inline constexpr int64_t V14_5_HEIGHT                     = 16000;   // MAINNET 
 // first, ungated deploy cannot recur). At V14_7_HEIGHT all upgraded nodes flip
 // together. MANDATORY-BINARY-UPDATE: recompile + restart in the window after block
 // 16900, before 17000.
-#ifdef SOST_TESTNET_FORKS
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V14_7_HEIGHT                     = 12;      // DEVNET_FAST ONLY
+#elif defined(SOST_TESTNET_FORKS)
 inline constexpr int64_t V14_7_HEIGHT                     = 40;      // TESTNET ONLY (just above V14_5=30 for the regtest HTLC soak)
 #else
 inline constexpr int64_t V14_7_HEIGHT                     = 17000;   // MAINNET — atomic-swap relay/policy flag-day
@@ -1064,7 +1088,9 @@ inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // MAINNET 
 // gates below ship DEFERRED (INT64_MAX) on mainnet and flip to V15_HEIGHT only in
 // the final, soaked, coordinated pre-fork commit. Testnet (-DSOST_TESTNET_FORKS)
 // dry-runs V15 just after V14 (block 300). See docs/V14_EXECUTION_PLAN.md.
-#ifdef SOST_TESTNET_FORKS
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V15_HEIGHT                       = 18;      // DEVNET_FAST ONLY (coherent: Phase2 4 < V13 8 < DTD gate 14 < 18 < first J 24)
+#elif defined(SOST_TESTNET_FORKS)
 inline constexpr int64_t V15_HEIGHT                       = 12500;   // TESTNET ONLY — positioned AFTER the whole historical ladder (Phase2 7100 < V13 12000 < DTD gate 12100 < 12500) so the V15 every-block DTD draw has its dependencies active. Does NOT move any ancient fork. See docs/V15_READINESS.md.
 #else
 inline constexpr int64_t V15_HEIGHT                       = 25000;   // MAINNET (target moved 20000 -> 25000 on 2026-07-25: chain was at 19021, ~6.8d runway was insufficient to implement + soak the V15 Core bundle [Historical DTD Jackpot, Gold Vault/PoPC emission transition, atomic-swap dashboard, BTC HTLC]. 25000 gives ~41d. Automation gates stay deferred until soaked.)
@@ -1078,7 +1104,11 @@ inline constexpr int64_t V15_HEIGHT                       = 25000;   // MAINNET 
 // the eligibility gate bites — nobody is dropped from the lottery by surprise.
 // The gate is STILL inert until DTD_POPC_GATE_CONSENSUS_ACTIVE is flipped in the
 // final, soaked, coordinated release (mainnet 25000 / testnet 5300).
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t DTD_POPC_GRACE_BLOCKS           = 6;       // DEVNET_FAST ONLY (eligibility = V15 18 + 6 = 24)
+#else
 inline constexpr int64_t DTD_POPC_GRACE_BLOCKS           = 5000;
+#endif
 inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT     = V15_HEIGHT + DTD_POPC_GRACE_BLOCKS;
 
 // =============================================================================
@@ -1149,7 +1179,11 @@ static_assert(POPC_GOLD_BOOST_HEIGHT >= POPC_SINGLE_MODEL_HEIGHT,
 // All amounts are in stocks (1 SOST = STOCKS_PER_SOST). Base/cap chosen to match
 // the published economics (base 100 SOST, hard cap 500 SOST, ~48h cadence).
 inline constexpr int64_t HIST_JACKPOT_ACTIVATION_HEIGHT = V15_HEIGHT;      // jackpot goes live with V15
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t HIST_JACKPOT_CADENCE_BLOCKS    = 6;               // DEVNET_FAST ONLY (== 2 DTD draws; jackpots at 24,30,36,…)
+#else
 inline constexpr int64_t HIST_JACKPOT_CADENCE_BLOCKS    = 288;             // ~48h; == 96 DTD draws (288/3)
+#endif
 inline constexpr int64_t HIST_JACKPOT_BASE_STOCKS       = 100 * STOCKS_PER_SOST;  // 100 SOST base per jackpot
 inline constexpr int64_t HIST_JACKPOT_CAP_STOCKS        = 500 * STOCKS_PER_SOST;  // hard cap incl. rollover
 
@@ -1168,7 +1202,9 @@ inline constexpr int64_t HIST_JACKPOT_CAP_STOCKS        = 500 * STOCKS_PER_SOST;
 //            RESOLVED (2026-08-04): the earlier "testnet V15 below DTD" incoherence
 //            is closed by placing V15 above the ladder rather than dragging the
 //            ladder down. See docs/V15_READINESS.md (network-schedule refactor).
-#ifdef SOST_TESTNET_FORKS
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 6;               // DEVNET_FAST: 18 + 6 = 24, draw-aligned (% 3 == 0), >= DTD gate 14
+#elif defined(SOST_TESTNET_FORKS)
 inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 292;             // TESTNET: 12500 + 292 = 12792, draw-aligned (% 3 == 0)
 #else
 inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 290;             // MAINNET: 25000 + 290 = 25290, draw-aligned

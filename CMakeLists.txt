@@ -86,6 +86,22 @@ if(SOST_TESTNET_FORKS)
     message(WARNING "SOST_TESTNET_FORKS=ON -- V14 activates at block 200. TESTNET ONLY, do not deploy to mainnet.")
 endif()
 
+# DEVNET_FAST — an isolated fast development chain (Profile::DEV + MAGIC_DEV, distinct
+# schedule + lightweight PoW). NEVER for mainnet or normal testnet. It is mutually
+# exclusive with SOST_TESTNET_FORKS: the two select different schedules, and a single
+# binary must commit to exactly one network identity so it can never accept the other's
+# blocks. See docs/DEVNET_FAST.md.
+option(SOST_DEVNET_FORKS
+    "Build the isolated DEVNET_FAST development chain (low heights, fast PoW). NEVER for mainnet/testnet."
+    OFF)
+if(SOST_DEVNET_FORKS)
+    if(SOST_TESTNET_FORKS)
+        message(FATAL_ERROR "SOST_DEVNET_FORKS and SOST_TESTNET_FORKS are mutually exclusive — pick one network identity.")
+    endif()
+    add_compile_definitions(SOST_DEVNET_FORKS)
+    message(WARNING "SOST_DEVNET_FORKS=ON -- DEVNET_FAST fast-mine chain. Profile::DEV only. NEVER deploy to mainnet or testnet.")
+endif()
+
 if(SOST_ENABLE_PHASE2_SBPOW)
     include(CheckIncludeFiles)
     include(CheckSymbolExists)
