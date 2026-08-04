@@ -53,6 +53,8 @@
 #include "sost/popc_model_b.h"
 #include "sost/proposals.h"
 #include "sost/lottery.h"
+#include "sost/jackpot_reserve.h"  // V15 (J) live wiring: reserve discovery / balance
+#include "sost/jackpot_block.h"    // V15 (J) live wiring: block-level jackpot validation (validate BEFORE mutate)
 #include "sost/beacon.h"
 #include "sost/beacon_p2p.h"
 
@@ -6029,6 +6031,45 @@ static bool process_block(const std::string& block_json) {
         if(g_checkpoints[ci].height <= g_chain_height && height <= g_checkpoints[ci].height){
             printf("[BLOCK] REJECTED: would reorg past checkpoint at height %lld\n",
                    (long long)g_checkpoints[ci].height);
+            return false;
+        }
+    }
+
+    // V15 Historical DTD Jackpot — validate the block's jackpot rule BEFORE any
+    // chainstate mutation (jackpot_block.h). This is the SOLE authorization for the
+    // keyless TX_TYPE_JACKPOT protocol spend: a jackpot tx is accepted ONLY when it is
+    // byte-for-field identical to the canonical reconstruction from the PRE-BLOCK
+    // reserve set + THIS block's DTD winner + the history-derived rollover. It is NOT
+    // "type == JACKPOT -> skip signature": utxo_set.cpp permits the reserve spend by
+    // type+jackpot-height, and THIS check is what makes that safe (no other unsigned
+    // TX_TYPE_JACKPOT can ever match). Reuses phase2_ctx.expected_winner_pkh — the same
+    // DTD winner the coinbase validation used above — so miner and validator agree by
+    // construction. Runs at any jackpot-cadence height, or whenever a TX_TYPE_JACKPOT is
+    // present (so an out-of-schedule jackpot is rejected here, before ConnectBlock).
+    if (sost::is_hist_jackpot_height(height) || sost::jackpot::count_jackpot_txs(txs) > 0) {
+        const auto reserve = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);
+        const int64_t reserve_before  = sost::jackpot::reserve_balance(reserve);
+        const bool    winner_exists   = (phase2_ctx.expected_winner_pkh != PubKeyHash{});
+        // rollover_before is derived from the ACTIVE chain's past jackpot events: an
+        // event "paid" iff the block at that height carries a TX_TYPE_JACKPOT (only
+        // emitted on a paying event). No persisted rollover field — recomputed here.
+        const int64_t rollover_before = sost::jackpot::derive_rollover_before(
+            height,
+            [](int64_t h) -> bool {
+                if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
+                const StoredBlock& b = g_blocks[(size_t)h];
+                if (b.tx_hexes.size() < 2) return false;   // canonical jackpot is tx[1]
+                std::vector<Byte> raw;
+                if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
+                Transaction t; std::string de;
+                if (!Transaction::Deserialize(raw, t, &de)) return false;
+                return t.tx_type == TX_TYPE_JACKPOT;
+            });
+        const auto jr = sost::jackpot::validate_block_jackpot(
+            txs, height, reserve, winner_exists, phase2_ctx.expected_winner_pkh,
+            reserve_before, rollover_before, gold_pkh);
+        if (!jr.ok) {
+            printf("[BLOCK] REJECTED: Historical Jackpot: %s\n", jr.reason.c_str());
             return false;
         }
     }
