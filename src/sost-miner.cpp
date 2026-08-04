@@ -106,6 +106,9 @@ static PubKeyHash  g_miner_pkh{};
 // its in-memory copy via secure_memzero on shutdown.
 static std::string g_wallet_path = "";
 static std::string g_mining_key_label = "";
+#ifdef SOST_DEVNET_FORKS
+static std::string g_attack_jackpot = "";  // DEVNET_FAST test-only: adversarial jackpot mutation name (see mine loop)
+#endif
 // V13 SbPoW hardening: chain-specific salt for the v13 signing preimage.
 // Queried lazily from the node (RPC getinfo "genesis_hash") the first
 // time we sign a block at height >= V13_HEIGHT. See docs/V13_SBPOW_HARDENING.md.
@@ -1419,6 +1422,38 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     block_txs.push_back(coinbase_tx);
     for (const auto& mtx : mempool_txs) block_txs.push_back(mtx);
 
+#ifdef SOST_DEVNET_FORKS
+    // DEVNET_FAST test-only adversarial mutation. Compiled ONLY into the devnet miner
+    // (never mainnet/testnet). It mutates the canonical Historical Jackpot (block_txs[1])
+    // or block structure, then lets the NORMAL path below recompute the merkle root and
+    // mine a VALID DEV PoW — no PoW bypass. The node receives an apparently-valid block and
+    // must reject it at validate_live_jackpot (or an earlier consensus rule) with ZERO state
+    // mutation. Selected by --attack-jackpot <name>; empty = normal honest mining.
+    if (!g_attack_jackpot.empty() && block_txs.size() >= 2 &&
+        block_txs[1].tx_type == TX_TYPE_JACKPOT) {
+        const std::string& m = g_attack_jackpot;
+        Transaction& j = block_txs[1];
+        printf("[ATTACK] DEV-only jackpot mutation: %s\n", m.c_str());
+        if      (m=="wrong-winner"  && !j.outputs.empty()) j.outputs[0].pubkey_hash[0] ^= 0xFF;              // A01
+        else if (m=="winner-self"   && !j.outputs.empty() && !block_txs[0].outputs.empty())
+                                                           j.outputs[0].pubkey_hash = block_txs[0].outputs[0].pubkey_hash; // A02
+        else if (m=="payout-plus"   && !j.outputs.empty()) j.outputs[0].amount += 1;                          // A04
+        else if (m=="payout-minus"  && !j.outputs.empty()) j.outputs[0].amount -= 1;                          // A05
+        else if (m=="payout-zero"   && !j.outputs.empty()) j.outputs[0].amount = 0;                           // A06
+        else if (m=="reverse-inputs")                      std::reverse(j.inputs.begin(), j.inputs.end());    // A08
+        else if (m=="remove-input"  && !j.inputs.empty())  j.inputs.pop_back();                               // A09
+        else if (m=="dup-input"     && !j.inputs.empty())  j.inputs.push_back(j.inputs.back());               // A10
+        else if (m=="extra-output"  && !j.outputs.empty()) j.outputs.push_back(j.outputs[0]);                 // A19
+        else if (m=="remove-winner-output" && !j.outputs.empty()) j.outputs.erase(j.outputs.begin());        // A20
+        else if (m=="move-jackpot"  && block_txs.size()>=3) std::swap(block_txs[1], block_txs[2]);            // A21
+        else if (m=="dup-jackpot")  { Transaction jc = block_txs[1]; block_txs.insert(block_txs.begin()+2, jc); } // A22
+        else if (m=="remove-jackpot") block_txs.erase(block_txs.begin()+1);                                   // A23
+        else if (m=="coinbase-mutate" && !block_txs[0].outputs.empty())
+                                                           block_txs[0].outputs[0].pubkey_hash[0] ^= 0xFF;    // A26 (coinbase→other, J retained)
+        else printf("[ATTACK] unknown mutation '%s' (no-op)\n", m.c_str());
+    }
+#endif
+
     Hash256 mrkl;
     std::string merr;
     if (!ComputeMerkleRootFromTxs(block_txs, mrkl, &merr)) {
@@ -2327,6 +2362,9 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--address") && i + 1 < argc) g_miner_address = argv[++i];
         else if (!strcmp(argv[i], "--wallet") && i + 1 < argc) g_wallet_path = argv[++i];
         else if (!strcmp(argv[i], "--mining-key-label") && i + 1 < argc) g_mining_key_label = argv[++i];
+#ifdef SOST_DEVNET_FORKS
+        else if (!strcmp(argv[i], "--attack-jackpot") && i + 1 < argc) g_attack_jackpot = argv[++i];  // DEV test-only
+#endif
         else if (!strcmp(argv[i], "--profile") && i + 1 < argc) {
             ++i;
             if (!strcmp(argv[i], "testnet")) prof = Profile::TESTNET;
