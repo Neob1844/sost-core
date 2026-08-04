@@ -927,7 +927,15 @@ inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 14;       // DEVNET_FAST O
 inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 12100;
 #endif
 inline constexpr int32_t  DTD_DOMINANCE_WINDOW      = 288;
+#if defined(SOST_DEVNET_FORKS)
+// DEVNET_FAST ONLY: a small dev chain runs with only a couple of miner identities, so the
+// 10% anti-dominance threshold would exclude EVERY miner and leave no eligible DTD winner
+// (the jackpot could then never pay). Relax to 80% so 2–3 dev miners stay eligible and a
+// non-current-miner winner exists at jackpot heights. Mainnet/testnet keep 10.00%.
+inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 8000;  // 80.00 % (DEV only)
+#else
 inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 1000;  // 10.00 %
+#endif
 
 inline constexpr bool is_dtd_dominant(
     int32_t mined_count_in_window,
@@ -1076,7 +1084,13 @@ inline constexpr int64_t V14_7_HEIGHT                     = 17000;   // MAINNET 
 // the gate to soak the full rule end-to-end; MAINNET stays DEFERRED (false),
 // byte-identical, until prerequisite 4 — the coordinated point release — flips
 // the #else branch to true at a fork height with a miner-announcement window.
-#ifdef SOST_TESTNET_FORKS
+#if defined(SOST_DEVNET_FORKS)
+// DEVNET_FAST: keep the PoPC-eligibility gate INERT so the Historical Jackpot lifecycle
+// can be exercised without also standing up PoPC commitments for every dev miner (the gate
+// would otherwise exclude all miners from height >= DTD_POPC_ELIGIBILITY_HEIGHT, leaving no
+// eligible DTD winner). The PoPC gate is a separate V14 feature tested on its own harness.
+inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;   // DEV only — jackpot lifecycle isolation
+#elif defined(SOST_TESTNET_FORKS)
 inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // TESTNET — soak the live rule
 #else
 inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // MAINNET — ACTIVATED 2026-06-27 (V15 coordinated release; enforced from DTD_POPC_ELIGIBILITY_HEIGHT = 25000)
