@@ -19,7 +19,7 @@ when its release gate (below) is green, not when it compiles.
 | Gold Vault/PoPC transition (T) | ✅ | ✅ 289 asserts | ❌ | live regtest soak; testnet DTD schedule |
 | Historical Jackpot (J) — pure core | ✅ | ✅ 62 asserts | ❌ | — |
 | Historical Jackpot (J) — A1 tx (canonical+exact-match) | ✅ | ✅ (in 62) | ❌ | — |
-| Historical Jackpot (J) — live wiring | ❌ | — | ❌ | serialization dispatch, reserve discovery, block validation, Connect/Disconnect, reorg, integration tests |
+| Historical Jackpot (J) — live wiring: process_block canonical gate + keyless auth + mempool isolation + min-validation exception | ✅ CODE (commits 9834c889/cf6c1afa/864ea3c2) | ✅ unit (jackpot 108 + block-rule); ❌ live integration | ❌ | regtest harness (needs accelerated testnet schedule: testnet V15=300 sits BELOW DTD activation 7100 — incoherent), miner/template jackpot construction, live Connect/Disconnect/reorg/restart/reindex tests, testnet, soak |
 | Explorer V15 (25,000/25,290/30,000) | ✅ | ✅ 24 (gateway) | ❌ (not deployed) | coordinate deploy with node rollout |
 | Consumer swap dashboard | ✅ | parse-validated | ❌ (founder-testing) | real quotes need counterparty; not deployed |
 | Atomic Swap — policy layer (timeout/swapId/preimage/RPC) | ✅ | ✅ 49 | n/a (off-chain) | route coordinator/orderbook through it |
@@ -27,14 +27,22 @@ when its release gate (below) is green, not when it compiles.
 | Atomic Swap BTC — HTLC signing lifecycle | ✅ (gated OFF) | ✅ 121 ON / 50 OFF | ❌ | live bitcoind regtest (no infra), external crypto review; gate stays OFF |
 
 ## Release gates
-**V15 CONSENSUS:** T ✅ · T tests ✅ · J core ✅ · J live wiring ❌ · activation-boundary (T) ✅ · reorg ❌ · regtest ❌ · testnet ❌ · soak ❌ → **NOT MET**
+**V15 CONSENSUS:** T ✅ · T tests ✅ · J core ✅ · J process_block gate ✅ · keyless auth (byte-exact canonical) ✅ · mempool isolation ✅ · min-validation exception ✅ · activation-boundary (T) ✅ · miner/template ❌ · live Connect/Disconnect ❌ · reorg ❌ · restart/reindex ❌ · regtest harness ❌ · testnet ❌ · soak ❌ → **NOT MET** (2026-08-04: primary code gap CLOSED; ctest 101/101; remaining = runtime integration + testnet/soak)
 **EVM SWAP:** create/fund/detect/redeem/refund logic present · timeout policy ✅ · persistence partial · E2E ❌ · contract audit ❌ → **NOT MET**
 **BTC SWAP:** script ✅ · funding ✅ · sign ✅ · redeem/refund ✅ · preimage ✅ · regtest ❌ · review ❌ → **NOT MET** (gate stays OFF)
 **DASHBOARD:** UI ✅ · backend hooks partial · history ✅ · unsupported pairs disabled ✅ · deployed ❌ → **NOT MET**
 
 ## Overall verdict
 **V15 READY FOR TESTNET/REGTEST ONLY (partial).** Real blockers to reach Release Candidate:
-1. **J live wiring** (the primary consensus gap) + its integration/reorg tests.
+1. **J live wiring CODE is done** (2026-08-04): process_block calls the canonical
+   `validate_block_jackpot` gate BEFORE `ConnectBlock` (the SOLE keyless authorization =
+   byte-exact match to the reconstruction from pre-block reserve + this block's DTD winner +
+   history-derived rollover), the block loop grants the narrowest exemption (skip R2/signature
+   + G1 governance only for the canonical jackpot at a jackpot height), and the mempool
+   rejects `TX_TYPE_JACKPOT` explicitly. ctest 101/101. **Remaining:** the regtest **harness**
+   (real node+miner) to PROVE end-to-end acceptance/disconnect/reorg/restart/reindex, the
+   **miner/block-template** jackpot construction, and testnet + soak. The harness is blocked
+   on the incoherent testnet schedule (V15=300 < DTD=7100) which must be lowered coherently.
 2. **Regtest/testnet infra**: lower testnet DTD schedule so V15+DTD+J are exercisable; a live fork+jackpot+reorg soak (needs bitcoind for the BTC leg).
 3. **EVM contract audit** decision before any SafeERC20 landing/deploy.
 4. **Node-upgrade rollout plan** before the public Explorer banner is deployed.
