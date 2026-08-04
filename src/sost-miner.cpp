@@ -1443,6 +1443,8 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         else if (m=="reverse-inputs")                      std::reverse(j.inputs.begin(), j.inputs.end());    // A08
         else if (m=="remove-input"  && !j.inputs.empty())  j.inputs.pop_back();                               // A09
         else if (m=="dup-input"     && !j.inputs.empty())  j.inputs.push_back(j.inputs.back());               // A10
+        else if (m=="foreign-input") { TxInput fk{}; fk.prev_txid.fill(0xAB); fk.prev_index=0;               // B04/B06: non-reserve/foreign input
+                                       j.inputs.push_back(fk); }
         else if (m=="extra-output"  && !j.outputs.empty()) j.outputs.push_back(j.outputs[0]);                 // A19
         else if (m=="remove-winner-output" && !j.outputs.empty()) j.outputs.erase(j.outputs.begin());        // A20
         else if (m=="move-jackpot"  && block_txs.size()>=3) std::swap(block_txs[1], block_txs[2]);            // A21

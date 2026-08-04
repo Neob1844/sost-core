@@ -109,7 +109,7 @@ log "running valid-PoW adversarial jackpot matrix…"
 #     tx[2] to swap with, so it is a no-op. (Position is already covered: the validator requires
 #     J at index 1, proven by remove-jackpot and dup-jackpot.)
 for M in wrong-winner winner-self payout-plus payout-minus payout-zero reverse-inputs \
-         remove-input dup-input extra-output dup-jackpot remove-jackpot coinbase-mutate; do
+         remove-input dup-input foreign-input extra-output dup-jackpot remove-jackpot coinbase-mutate; do
   run_attack "$M"
 done
 
