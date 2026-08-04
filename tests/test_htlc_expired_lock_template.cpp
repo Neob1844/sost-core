@@ -97,6 +97,15 @@ static Transaction MakeSignedHtlcLock(const Hash256& prev_txid, uint32_t prev_in
 int main() {
     printf("\n== V14.7 companion — expired HTLC LOCK must not poison the block template ==\n\n");
 
+#ifndef SOST_TESTNET_FORKS
+    // This test exercises the V14.7 relay gate at low heights (1200+), which is only
+    // active on the TESTNET build (V14_7_HEIGHT=40). On the MAINNET build V14_7_HEIGHT
+    // is 17000, so height 1200 is pre-gate and the scenario cannot be reproduced here.
+    // Skip cleanly on mainnet; the meaningful run is the testnet ctest. (Not a V15/J path.)
+    printf("SKIPPED on MAINNET build (V14.7 gate=17000 > test height 1200); run under SOST_TESTNET_FORKS.\n");
+    return 0;
+#endif
+
     // Sanity: on the testnet build the relay gate is active at the test heights.
     CHECK(atomic_swap_relay_active_at(1200), "V14.7 relay gate active at test height 1200");
 

@@ -101,8 +101,8 @@ int main(){
     CHECK("PoPC automation live at V15_HEIGHT", popc_v15_active_at(H0));
     CHECK("PoPC automation live at eligibility", popc_v15_active_at(ELI));
 #ifndef SOST_TESTNET_FORKS
-    CHECK("mainnet: V15_HEIGHT == 20000", H0 == 20000);
-    CHECK("mainnet: eligibility == 25000", ELI == 25000);
+    CHECK("mainnet: V15_HEIGHT == 25000", H0 == 25000);
+    CHECK("mainnet: eligibility == 30000", ELI == 30000);
 #else
     CHECK("testnet: V15_HEIGHT == 300", H0 == 300);
     CHECK("testnet: eligibility == 5300", ELI == 5300);

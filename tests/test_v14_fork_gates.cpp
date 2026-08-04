@@ -31,8 +31,8 @@ static_assert(V15_HEIGHT == 300,
 static_assert(V14_HEIGHT == 15000,
     "V14_HEIGHT moved from 15000 — V14 (H3/H4 hardening) ships at 15000 UNCHANGED "
     "(already in deployed binaries). The automation bundle is V15, not V14.");
-static_assert(V15_HEIGHT == 20000,
-    "V15_HEIGHT moved from 20000 — V15 (PoPC A/B, atomic swap, Gold Vault gov) is "
+static_assert(V15_HEIGHT == 25000,
+    "V15_HEIGHT moved from 25000 — V15 (PoPC A/B, atomic swap, Gold Vault gov) is "
     "the full automation bundle; re-audit scope before changing.");
 #endif
 static_assert(DYNAMIC_FEE_BASE == 1,

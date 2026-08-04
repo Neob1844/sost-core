@@ -136,7 +136,7 @@ static void test_non_triggered_never_pays_out() {
     printf("\n=== 3) Non-triggered with pending > 0 → no payout, pending unchanged ===\n");
     // Bootstrap rule (h - phase2_height < 5000): triggered iff h % 3 != 0.
     // Pick a height where h % 3 == 0 → IDLE.
-    const int64_t H = 1'000'002;     // H % 3 == 0 (within bootstrap)
+    const int64_t H = 13'002;     // H % 3 == 0 (within bootstrap)
     const int64_t target = H + 3;    // (H+3) % 3 == 0 → IDLE
     auto eligible = std::vector<LotteryEligibilityEntry>{
         mk_entry(0x10), mk_entry(0x20), mk_entry(0x30)
@@ -156,7 +156,7 @@ static void test_non_triggered_never_pays_out() {
 // ---------------------------------------------------------------------------
 static void test_triggered_empty_eligible_update() {
     printf("\n=== 4) Triggered + empty eligible → pending += amount, no payout ===\n");
-    const int64_t H = 1'000'002;
+    const int64_t H = 13'002;
     const int64_t target = H + 1;   // (H+1) % 3 == 1 → triggered (bootstrap)
     auto in = mk_input(target, H, /*pending*/0, /*amount*/100,
                        std::vector<LotteryEligibilityEntry>{});  // empty
@@ -173,7 +173,7 @@ static void test_triggered_empty_eligible_update() {
 // ---------------------------------------------------------------------------
 static void test_multiple_empty_triggered_stack() {
     printf("\n=== 5) Multiple empty triggered → pending stacks 0→100→200→300 ===\n");
-    const int64_t H = 1'000'002;
+    const int64_t H = 13'002;
     int64_t pending = 0;
     // Use three triggered heights (h % 3 != 0 within bootstrap).
     for (int step = 1; step <= 3; ++step) {
@@ -206,7 +206,7 @@ static void test_multiple_empty_triggered_stack() {
 // ---------------------------------------------------------------------------
 static void test_triggered_nonempty_payout() {
     printf("\n=== 6) Triggered + non-empty E → payout = pending + amount, pending = 0 ===\n");
-    const int64_t H = 1'000'002;
+    const int64_t H = 13'002;
     const int64_t target = H + 1;
     auto eligible = std::vector<LotteryEligibilityEntry>{
         mk_entry(0x10), mk_entry(0x20), mk_entry(0x30), mk_entry(0x40)
@@ -229,7 +229,7 @@ static void test_triggered_nonempty_payout() {
 // ---------------------------------------------------------------------------
 static void test_undo_restores_pending() {
     printf("\n=== 7) undo_lottery_block restores pending_before across IDLE / UPDATE / PAYOUT ===\n");
-    const int64_t H = 1'000'002;
+    const int64_t H = 13'002;
 
     // IDLE: pending_before = 555 → after IDLE step, undo restores 555.
     {
@@ -267,7 +267,7 @@ static void test_undo_restores_pending() {
     // undo_lottery_block over each saved result should land at the
     // pre-A pending value.
     {
-        const int64_t H_local = 1'000'002;
+        const int64_t H_local = 13'002;
         std::vector<LotteryApplyResult> log;
         int64_t pending = 0;
         // Step 1: UPDATE — pending 0 → 100
@@ -301,7 +301,7 @@ static void test_undo_restores_pending() {
 // ---------------------------------------------------------------------------
 static void test_overflow_protection() {
     printf("\n=== 8) Overflow detection: pending_before + lottery_amount ===\n");
-    const int64_t H = 1'000'002;
+    const int64_t H = 13'002;
     const int64_t target = H + 1;     // triggered
     const int64_t MAX = std::numeric_limits<int64_t>::max();
 
@@ -391,7 +391,7 @@ static void test_no_coinbase_mutation() {
     // Sanity asserts that consume only lottery API. If any of these
     // assertions ever require pulling in coinbase headers, the C7 scope
     // has expanded beyond its mandate.
-    auto in = mk_input(1'000'003, 1'000'002, 0, 100, {mk_entry(0x10)});
+    auto in = mk_input(1'000'003, 13'002, 0, 100, {mk_entry(0x10)});
     auto r = apply_lottery_block(in);
     TEST("apply_lottery_block does not depend on coinbase shape",
          r.triggered);
