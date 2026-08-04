@@ -76,10 +76,25 @@ lower `V13`/`Phase2`/`HIGH_FREQ` on testnet broke `test_v13_helpers`; both corre
   the parameter" change, small and self-contained.
 - Keep mainnet locked: `V15=25000, first-J=25290, cadence=288, eligibility=30000`.
 
-This is the exact, de-risked unblocker for the runtime harness — a focused next-session unit
-(commit `Consensus: separate mainnet testnet and regtest V15 schedules`), NOT a rushed
-end-of-session consensus edit. Repo remains green at `189081f9` (mainnet build ✅, ctest 101/101);
-no consensus code left half-rebased.
+**APPLIED (2026-08-04, commit `9f7ed835`):** testnet `V15` = 12500, first jackpot = 12792
+(draw-aligned), testnet ordering `static_assert`s added; five tests rebased to the schedule
+(`v14_fork_gates`, `popc_v15_soak`, `popc_v15_eligibility`, `lottery_rollover`, `tx_validation`).
+**Both builds green: mainnet ctest 101/101, testnet ctest 101/101.** No ancient fork moved.
+
+### Runtime-harness feasibility — the SbPoW time-hard blocker (2026-08-04)
+There is **no independent regtest network** (only `SOST_TESTNET_FORKS` on/off) and, critically,
+**no fast/simulated mining mode**: the miner's `--realtime` flag is a no-op and `sim_time=true`
+is unreachable via any flag, so blocks always carry real wall-clock timestamps. cASERT then
+targets `TARGET_SPACING = 600 s` of *real* time per block (600 s on every profile — no testnet
+override), and Phase2 SbPoW (from height 7100) is deliberately time-hard. Consequence: mining a
+fresh chain to the first testnet jackpot at 12792 (≈5700 SbPoW blocks) is **not achievable in a
+normal session** — and a "cached bootstrap fixture" doesn't help because generating it has the
+same cost. This gates the real-node harness (acceptance/atomicity/disconnect/reorg/restart/
+reindex over a mined chain). **The genuine prerequisite is a dev/regtest fast-mine capability**
+(trivial PoW + relaxed time-gate + MTP, testnet/dev-only, never mainnet) — a bounded, consensus-
+adjacent piece of node+miner work that must precede PART 10–20. Until then the jackpot is proven
+at the module/integration level (test_jackpot 108 adversarial asserts) but not over the live
+mined node path.
 
 ## Deliberately NOT enabled / done (by design)
 - Mainnet BTC capability (gate hardwired OFF; code is dormant behind a build option).
