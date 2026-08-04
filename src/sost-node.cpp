@@ -2294,6 +2294,33 @@ static constexpr size_t NODE_MAX_BLOCK_TX_BYTES = 500 * 1024;
 
 static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, Transaction& out_tx);  // fwd (defined near validate_live_jackpot)
 
+// getrawblock <blockhash> — return the EXACT original block JSON (as stored for reorg
+// re-validation), re-submittable unchanged through submitblock. Read-only; no chainstate
+// change, no PoW bypass. Enables integration/reorg harnesses to export a block from one node
+// and import it into another. Result is a JSON STRING (the block JSON), so callers can pass it
+// straight to submitblock as params[0].
+static std::string handle_getrawblock(const std::string& id, const std::vector<std::string>& p) {
+    if(p.empty()) return rpc_error(id,-1,"missing blockhash");
+    const std::string& bh = p[0];
+    if(bh.size()!=64) return rpc_error(id,-8,"invalid blockhash");
+    std::string raw;
+    // Active chain first (StoredBlock.raw_block_json — retained for every block >= Phase2).
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        for(const auto& b : g_blocks){
+            if(to_hex(b.block_id.data(),32)==bh){ raw = b.raw_block_json; break; }
+        }
+    }
+    // Fall back to the fork/orphan index (BlockIndexEntry.raw_json).
+    if(raw.empty()){
+        std::lock_guard<std::mutex> lk(g_block_index_mu);
+        auto it = g_block_index.find(bh);
+        if(it != g_block_index.end()) raw = it->second.raw_json;
+    }
+    if(raw.empty()) return rpc_error(id,-5,"No such block (unknown hash, pre-Phase2 header-only, or raw JSON not retained)");
+    return rpc_result(id, "\"" + json_escape(raw) + "\"");
+}
+
 static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>& p) {
     g_miner_stats.getblocktemplate_calls.fetch_add(1, std::memory_order_relaxed);
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
@@ -4332,6 +4359,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getpeerinfo",handle_getpeerinfo},
     {"submitblock",handle_submitblock},
     {"getblocktemplate",handle_getblocktemplate},
+    {"getrawblock",handle_getrawblock},
     {"getaddressinfo",handle_getaddressinfo},
     {"getaddressflows",handle_getaddressflows},
     {"gettransaction",handle_gettransaction},
