@@ -16,14 +16,19 @@ consensus bugs the reorg harness exposed fixed and proven:
 | **Failed-reorg atomicity** (mid-connect failure → exact rollback) | ✅ | `tests/run_v15_devnet_failed_reorg.sh` — F00 control + F01-F04 + 10 cycles = **49/49**; manifest before==after, `g_blocks==g_block_undos`, node healthy (commit ecccd704) |
 | DEV reorg-connect failpoint isolation | ✅ | compiled ONLY under `SOST_DEVNET_FORKS` + runtime-gated on `Profile::DEV`; `devsetreorgfailpoint`/`devchainstate` strings ABSENT from mainnet+testnet binaries (present ×3 in DEV) |
 | **Process-restart invariance** (pre-J / at-J / post-J / N tip cycles) | ✅ | `tests/run_v15_devnet_restart.sh` — 27/27; reloaded chain byte-identical, `g_blocks==g_block_undos`, mines forward (commit cecaa8b0) |
+| **Reindex / load_chain equivalence + tamper rejection** | ✅ | `tests/run_v15_devnet_reindex.sh` — replay byte-identical; a tampered persisted jackpot is rejected fail-closed, reserve never spent (commit b6410ff0) |
+| **Rollover accumulation** (no-winner events preserve reserve) | ✅ | `tests/run_v15_devnet_rollover.sh` — 5 no-winner events (24/30/36/42/48) keep the reserve intact; winner-spend proven by payout harness; numeric 100→500 cap needs a DEV rollover RPC (deferred) (commit afb3f29d) |
+| DEV functional soak (loops all proven harnesses) | 🔄 RUNNING | `tests/run_v15_devnet_soak.sh` — round 1 = 6/6 green, peak node RSS stable ~11MB (no leak); 3 rounds in progress (commit bb1cf8f8/b242d4ea) |
 | Mainnet + testnet full builds (failpoint compiles out) | ✅ | `cmake --build build` / `build-testnet` exit 0 |
 
-**Remaining V15 gates (next session):** complete valid-PoW attack matrix; reindex/load_chain
-equivalence; live rollover 100→500 cap across cadence heights (24,30,36,42,48 in DEV);
-reserve edge cases E01-E20; quick CI gate; DEV functional soak (background); **normal
-testnet long run (V15=12500, first J=12792, real SbPoW ~8.5h+ — long-lead, run with reduced
-threads so it never starves the live mainnet miner)**; full ctest regression matrix + static/
-sanitizer review; RC artifacts. Mainnet activation values UNCHANGED (25000 / 25290 / 30000).
+**Remaining V15 gates (next session / after soak frees CPU):** complete valid-PoW attack
+matrix (needs a miner rebuild → use a separate build dir so the soak's `build-devnet` is
+untouched); reserve edge cases E01-E20; the numeric rollover 100→500 cap (needs a dedicated
+DEV rollover RPC — a derived counter with no RPC surface today); quick CI gate; **normal
+testnet long run (V15=12500, first J=12792, real SbPoW ~8.5h+ — long-lead; box has 14 cores
+and the live mainnet miner already uses 13, so run it with reduced threads or on a separate
+machine so it never starves the miner)**; full ctest regression matrix + static/sanitizer
+review; RC artifacts. Mainnet activation values UNCHANGED (25000 / 25290 / 30000).
 
 ## Canonical activation values
 | Value | Height | Notes |
