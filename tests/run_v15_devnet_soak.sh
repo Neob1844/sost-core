@@ -61,7 +61,8 @@ for ((r=1;r<=ROUNDS;r++)); do
     t0=$(date +%s); rss=0
     # sample peak RSS in the background while the harness runs
     ( while :; do c=$(peak_rss); [[ -n "$c" && "$c" -gt "$rss" ]] 2>/dev/null && rss=$c; echo "$rss" > "$WORK/.rss_$name"; sleep 2; done ) & sampler=$!
-    if bash "$ROOT/tests/$cmd" > "$WORK/round${r}_${name}.log" 2>&1; then res=PASS; PASS=$((PASS+1)); else res=FAIL; FAIL=$((FAIL+1)); fi
+    # quote ONLY the path prefix so any trailing args in $cmd (e.g. "--cycles 3") word-split
+    if bash "$ROOT/tests/"$cmd > "$WORK/round${r}_${name}.log" 2>&1; then res=PASS; PASS=$((PASS+1)); else res=FAIL; FAIL=$((FAIL+1)); fi
     kill "$sampler" 2>/dev/null; wait "$sampler" 2>/dev/null
     dur=$(( $(date +%s) - t0 )); rss=$(cat "$WORK/.rss_$name" 2>/dev/null || echo 0)
     echo "$r,$name,$res,$dur,$rss" >> "$METRICS"
