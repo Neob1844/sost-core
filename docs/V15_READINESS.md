@@ -1,8 +1,29 @@
 # V15 Readiness
 
-Living status doc. Updated 2026-07-25. Branch `feat/v15-jackpot-explorer-card`
+Living status doc. Updated 2026-08-06. Branch `feat/v15-jackpot-explorer-card`
 (pushed; NOT on main, NOT deployed). Evidence-based — a feature is only "READY"
 when its release gate (below) is green, not when it compiles.
+
+## 2026-08-06 session update — reorg lifecycle PROVEN (live DEVNET_FAST)
+
+The live-node reorg/restart gates that were ❌ are now green, with the three
+consensus bugs the reorg harness exposed fixed and proven:
+
+| Gate | Status | Evidence |
+|---|---|---|
+| True A→B jackpot reorg (J_A off, J_B on, state == clean B) | ✅ | `tests/run_v15_devnet_reorg.sh` (HEAD 960afb6d) |
+| Reorg deadlock + undo-vector fixes (3 root causes) | ✅ | commit 960afb6d — self-deadlock on `g_block_index_mu`; known-block guard rejecting fork blocks in the connect loop; `g_blocks`/`g_block_undos` genesis+fast-sync off-by-one |
+| **Failed-reorg atomicity** (mid-connect failure → exact rollback) | ✅ | `tests/run_v15_devnet_failed_reorg.sh` — F00 control + F01-F04 + 10 cycles = **49/49**; manifest before==after, `g_blocks==g_block_undos`, node healthy (commit ecccd704) |
+| DEV reorg-connect failpoint isolation | ✅ | compiled ONLY under `SOST_DEVNET_FORKS` + runtime-gated on `Profile::DEV`; `devsetreorgfailpoint`/`devchainstate` strings ABSENT from mainnet+testnet binaries (present ×3 in DEV) |
+| **Process-restart invariance** (pre-J / at-J / post-J / N tip cycles) | ✅ | `tests/run_v15_devnet_restart.sh` — 27/27; reloaded chain byte-identical, `g_blocks==g_block_undos`, mines forward (commit cecaa8b0) |
+| Mainnet + testnet full builds (failpoint compiles out) | ✅ | `cmake --build build` / `build-testnet` exit 0 |
+
+**Remaining V15 gates (next session):** complete valid-PoW attack matrix; reindex/load_chain
+equivalence; live rollover 100→500 cap across cadence heights (24,30,36,42,48 in DEV);
+reserve edge cases E01-E20; quick CI gate; DEV functional soak (background); **normal
+testnet long run (V15=12500, first J=12792, real SbPoW ~8.5h+ — long-lead, run with reduced
+threads so it never starves the live mainnet miner)**; full ctest regression matrix + static/
+sanitizer review; RC artifacts. Mainnet activation values UNCHANGED (25000 / 25290 / 30000).
 
 ## Canonical activation values
 | Value | Height | Notes |
