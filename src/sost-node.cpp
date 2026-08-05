@@ -877,7 +877,7 @@ static std::vector<std::string> json_get_tx_hexes(const std::string& block_json)
 
 // Forward declarations
 static void p2p_broadcast_tx(const std::string& hex_str, int exclude_fd = -1);
-static bool process_block(const std::string& block_json);
+static bool process_block(const std::string& block_json, bool reorg_connect = false);
 static bool save_chain_internal(const std::string& path);  // v0.3.2: no-lock save
 static bool decode_tx_hex(const std::string& tx_hex, std::vector<Byte>& out_raw);
 static std::vector<sost::PopcV15Event> node_collect_popc_events(int64_t height);  // P5: read-only RPC observability
@@ -4924,7 +4924,7 @@ static bool validate_live_jackpot(const std::vector<Transaction>& txs, int64_t h
     return true;
 }
 
-static bool process_block(const std::string& block_json) {
+static bool process_block(const std::string& block_json, bool reorg_connect) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
 
     // Required fields
@@ -4948,8 +4948,12 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
-    // Already known? Skip silently (normal relay behavior, NOT misbehavior)
-    {
+    // Already known? Skip silently (normal relay behavior, NOT misbehavior).
+    // EXCEPTION: a reorg connect deliberately re-processes fork blocks that were
+    // marked known when first stored as fork candidates. Skipping the guard lets
+    // try_reorganize() replay them through the FULL validation path onto the
+    // rolled-back tip (no validation is bypassed — only this relay-dedup cache).
+    if (!reorg_connect) {
         std::lock_guard<std::mutex> lk2(g_known_mu);
         if (g_known_blocks.count(bid)) {
             return false; // silently ignore — not an error
@@ -5045,6 +5049,7 @@ static bool process_block(const std::string& block_json) {
         }
 
         // FORK CANDIDATE: parent is known but block doesn't extend active tip
+        bool needs_reorg = false;
         {
             std::lock_guard<std::mutex> lk(g_block_index_mu);
             if (g_block_index.size() < MAX_FORK_INDEX_ENTRIES) {
@@ -5082,12 +5087,13 @@ static bool process_block(const std::string& block_json) {
                            "Fork tip h=%lld, active tip h=%lld. Attempting reorg.\n",
                            (long long)height, (long long)g_chain_height);
                     fflush(stdout);
-                    // Release index lock before calling try_reorganize (it acquires chain_mu)
-                    // try_reorganize uses its own locking
-                    // NOTE: we already hold g_chain_mu from process_block(), so we call
-                    // the internal reorg function directly
-                    try { try_reorganize(bid); }
-                    catch (const std::exception& e) { fprintf(stderr, "[ERROR] try_reorganize: %s\n", e.what()); }
+                    // DEADLOCK FIX: we currently hold g_block_index_mu (non-recursive),
+                    // and try_reorganize() re-acquires g_block_index_mu in its fork-walk
+                    // step. Calling it here self-deadlocks (this thread also holds the
+                    // recursive g_chain_mu, so every other thread then piles up on
+                    // g_chain_mu and the whole node freezes). Defer the reorg until AFTER
+                    // this scope releases g_block_index_mu (below).
+                    needs_reorg = true;
                 } else {
                     auto cw_strip = [](const Bytes32& w) -> std::string {
                         std::string h = to_hex(w.data(), 32);
@@ -5100,6 +5106,13 @@ static bool process_block(const std::string& block_json) {
                            cw_strip(active_tip_work).c_str());
                 }
             }
+        }
+        // g_block_index_mu is now RELEASED. Safe to reorganize: this thread still
+        // holds the recursive g_chain_mu (from process_block), and try_reorganize()
+        // re-locks g_block_index_mu itself in short, self-contained scopes.
+        if (needs_reorg) {
+            try { try_reorganize(bid); }
+            catch (const std::exception& e) { fprintf(stderr, "[ERROR] try_reorganize: %s\n", e.what()); }
         }
         fflush(stdout);
         return false; // Don't add to main chain yet
@@ -5207,6 +5220,12 @@ static bool process_block(const std::string& block_json) {
             sb.raw_block_json=block_json;
             sb.cumulative_work = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
             g_blocks.push_back(sb);
+            // REORG FIX: keep g_block_undos height-aligned with g_blocks. This
+            // fast-sync/assumevalid header-only accept has no tx data and thus no
+            // real undo; an empty slot is correct (these blocks sit below the
+            // reorg-able range) and prevents a permanent off-by-one in the undo
+            // vector that would abort later reorgs.
+            g_block_undos.push_back(BlockUndo{});
             g_chain_height = height;
             mark_block_known(bid);
             // Note: chain auto-saved when next normal block arrives
@@ -6595,7 +6614,7 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     bool connect_success = true;
 
     for (size_t i = 0; i < fork_chain.size(); ++i) {
-        if (!process_block(fork_chain[i].raw_json)) {
+        if (!process_block(fork_chain[i].raw_json, /*reorg_connect=*/true)) {
             printf("[REORG] ABORTED: block at height %lld failed validation\n",
                    (long long)fork_chain[i].height);
             connect_success = false;
@@ -7421,6 +7440,11 @@ static bool load_genesis(const std::string& path) {
 
     g_genesis_hash=g.block_id;
     g_blocks.push_back(g);
+    // REORG FIX: g_block_undos is a per-height parallel vector to g_blocks
+    // (try_reorganize indexes g_block_undos[h]). Genesis spends no inputs, so its
+    // undo is genuinely empty — but it MUST occupy slot 0 or the whole vector is
+    // off-by-one forever, aborting every reorg with "missing undo data for height N".
+    g_block_undos.push_back(BlockUndo{});
     g_chain_height=0;
 
     // Mark genesis as known
@@ -7632,6 +7656,13 @@ static bool load_chain(const std::string& path) {
         Bytes32 parent_cw = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
         sb.cumulative_work = add_be256(parent_cw, bw);
         g_blocks.push_back(sb);
+        // REORG FIX: g_block_undos is a per-height parallel vector to g_blocks
+        // (try_reorganize indexes g_block_undos[h]). A coinbase-only legacy block
+        // (e.g. genesis) spends no inputs, so its undo is genuinely empty — but we
+        // MUST still push it to keep g_block_undos height-aligned with g_blocks.
+        // Omitting it left the undo vector permanently off-by-one, which aborted
+        // every post-restart reorg with "missing undo data for height N".
+        g_block_undos.push_back(BlockUndo{});
         mark_block_known(bid);
         struct{const char*a;int64_t v;uint8_t t;}cb[3]={
             {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},

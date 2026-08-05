@@ -38,7 +38,17 @@ declare -a PIDS=()
 log(){ printf '[reorg] %s\n' "$*"; }
 ok(){ printf '[reorg] PASS  %s\n' "$*"; }
 bad(){ printf '[reorg] FAIL  %s\n' "$*"; FAILED=1; }
-cleanup(){ for p in "${PIDS[@]}"; do kill "$p" 2>/dev/null; done; pkill -P $$ sost-miner 2>/dev/null; pkill -P $$ sost-node 2>/dev/null; wait 2>/dev/null; }
+cleanup(){
+  for p in "${PIDS[@]}"; do kill "$p" 2>/dev/null; done
+  # start_node spawns nodes inside $(...) command-substitution subshells, so PIDS+=($!)
+  # is lost and the node is reparented — it escapes both PIDS and `pkill -P $$`. Sweep by
+  # THIS run's unique mktemp work dir (which appears in every node/miner argv via --chain
+  # and --wallet). $WORK can NEVER match the live mainnet miner/node — no bare pkill.
+  if [[ -n "${WORK:-}" ]]; then
+    for pid in $(pgrep -f -- "$WORK" 2>/dev/null); do [[ "$pid" == "$$" ]] && continue; kill "$pid" 2>/dev/null; done
+  fi
+  wait 2>/dev/null
+}
 die(){ printf '[reorg] FATAL %s\n' "$*" >&2; cleanup; log "logs in $WORK"; exit 1; }
 trap cleanup EXIT
 grep -q '^SOST_DEVNET_FORKS:BOOL=ON' "$BUILD_DIR/CMakeCache.txt" 2>/dev/null || die "not a DEVNET build"
