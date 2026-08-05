@@ -117,6 +117,16 @@ static int32_t      g_last_accepted_profile = 0; // last block's declared cASERT
 static std::recursive_mutex g_chain_mu; // recursive: process_block→try_reorganize→process_block
 static bool g_in_reorg = false;        // guard against recursive reorg
 
+#ifdef SOST_DEVNET_FORKS
+// DEV/test-only one-shot reorg-connect failpoint. -1 = disarmed (default; and the ONLY
+// possible value in mainnet/testnet, where this symbol is compiled out entirely). When
+// >=0 AND ACTIVE_PROFILE==Profile::DEV, try_reorganize's connect loop forces a failure at
+// exactly this connection ordinal (blocks 0..ordinal-1 connect, then the NORMAL atomic
+// rollback runs), and auto-clears back to -1. Armed only via a DEV-guarded RPC; can never
+// be set by peers or block data; never bypasses PoW/validation/UTXO logic.
+static int g_dev_reorg_failpoint_ordinal = -1;
+#endif
+
 // RPC auth (fail-closed by default)
 static std::string g_rpc_user = "";
 static std::string g_rpc_pass = "";
@@ -4332,6 +4342,50 @@ static std::string handle_listhtlclocks(const std::string& id, const std::vector
     return rpc_result(id, s.str());
 }
 
+#ifdef SOST_DEVNET_FORKS
+// DEV/test-only: arm the one-shot reorg-connect failpoint. HARD-fails unless the node is
+// running Profile::DEV, so even inside a DEVNET build it is inert on any non-DEV profile.
+// params[0] = connection ordinal (>=0 arms, <0 disarms). Whole handler + its registration
+// are compiled out of mainnet/testnet binaries.
+static std::string handle_dev_set_reorg_failpoint(const std::string& id, const std::vector<std::string>& p) {
+    if (ACTIVE_PROFILE != sost::Profile::DEV)
+        return rpc_error(id, -1, "devsetreorgfailpoint is DEV-profile only");
+    if (p.empty()) return rpc_error(id, -1, "missing ordinal");
+    int ord = atoi(p[0].c_str());
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    g_dev_reorg_failpoint_ordinal = ord;
+    printf("[REORG][DEV-FAILPOINT] armed at ordinal %d\n", ord);
+    std::ostringstream s;
+    s << "{\"armed\":" << (ord >= 0 ? "true" : "false") << ",\"ordinal\":" << ord << "}";
+    return rpc_result(id, s.str());
+}
+
+// DEV/test-only introspection for atomicity harnesses: surfaces internal chainstate
+// invariants (g_blocks vs g_block_undos alignment; the block-index ACTIVE set) that no
+// production RPC exposes. DEV-profile-gated + compiled out of mainnet/testnet.
+static std::string handle_dev_chainstate(const std::string& id, const std::vector<std::string>&) {
+    if (ACTIVE_PROFILE != sost::Profile::DEV)
+        return rpc_error(id, -1, "devchainstate is DEV-profile only");
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    std::vector<std::string> active_ids;
+    {
+        std::lock_guard<std::mutex> lk2(g_block_index_mu);
+        for (const auto& kv : g_block_index)
+            if (kv.second.status == BlockStatus::ACTIVE) active_ids.push_back(kv.first);
+    }
+    std::sort(active_ids.begin(), active_ids.end());
+    std::ostringstream s;
+    s << "{\"chain_height\":" << g_chain_height
+      << ",\"blocks_size\":" << g_blocks.size()
+      << ",\"undos_size\":" << g_block_undos.size()
+      << ",\"active_index_count\":" << active_ids.size()
+      << ",\"active_index_ids\":[";
+    for (size_t i = 0; i < active_ids.size(); ++i) { if (i) s << ","; s << "\"" << active_ids[i] << "\""; }
+    s << "]}";
+    return rpc_result(id, s.str());
+}
+#endif
+
 static std::map<std::string,RpcHandler> g_handlers={
     {"getblockcount",handle_getblockcount},
     {"gethtlcstatus",handle_gethtlcstatus},
@@ -4360,6 +4414,10 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"submitblock",handle_submitblock},
     {"getblocktemplate",handle_getblocktemplate},
     {"getrawblock",handle_getrawblock},
+#ifdef SOST_DEVNET_FORKS
+    {"devsetreorgfailpoint",handle_dev_set_reorg_failpoint},
+    {"devchainstate",handle_dev_chainstate},
+#endif
     {"getaddressinfo",handle_getaddressinfo},
     {"getaddressflows",handle_getaddressflows},
     {"gettransaction",handle_gettransaction},
@@ -6614,6 +6672,23 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     bool connect_success = true;
 
     for (size_t i = 0; i < fork_chain.size(); ++i) {
+#ifdef SOST_DEVNET_FORKS
+        // DEV-only one-shot failpoint (see g_dev_reorg_failpoint_ordinal). Forces the
+        // connect loop to fail at a precise ordinal so the NORMAL atomic rollback path is
+        // exercised by tests. Runtime-guarded on Profile::DEV; compiled out of
+        // mainnet/testnet. No PoW/validation bypass — it simply declines to connect this
+        // block (nothing mutated for it) and triggers the existing rollback below.
+        if (g_dev_reorg_failpoint_ordinal >= 0 && ACTIVE_PROFILE == sost::Profile::DEV &&
+            (int)i == g_dev_reorg_failpoint_ordinal) {
+            printf("[REORG][DEV-FAILPOINT] Forcing connect failure at ordinal %d (height %lld) "
+                   "after %zu block(s) connected — exercising rollback\n",
+                   g_dev_reorg_failpoint_ordinal, (long long)fork_chain[i].height, connected);
+            fflush(stdout);
+            g_dev_reorg_failpoint_ordinal = -1; // one-shot: auto-clear
+            connect_success = false;
+            break;
+        }
+#endif
         if (!process_block(fork_chain[i].raw_json, /*reorg_connect=*/true)) {
             printf("[REORG] ABORTED: block at height %lld failed validation\n",
                    (long long)fork_chain[i].height);
@@ -6676,6 +6751,22 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             g_blocks.push_back(sb);
             g_block_undos.push_back(undo);
             g_chain_height = sb.height;
+        }
+        // Restore block-index status to match the rolled-back active chain. Any fork
+        // block we PARTIALLY connected was marked ACTIVE by process_block; revert every
+        // fork-chain entry to FORK, and re-assert the original blocks as ACTIVE. Mirrors
+        // the success-path Step-8 cleanup so a FAILED reorg leaves ZERO index drift
+        // (otherwise a stale ACTIVE fork entry survives at a height it no longer occupies).
+        {
+            std::lock_guard<std::mutex> lk(g_block_index_mu);
+            for (const auto& fc : fork_chain) {
+                auto it = g_block_index.find(to_hex(fc.block_id.data(), 32));
+                if (it != g_block_index.end()) it->second.status = BlockStatus::FORK;
+            }
+            for (const auto& sb : saved_blocks) {
+                auto it = g_block_index.find(to_hex(sb.block_id.data(), 32));
+                if (it != g_block_index.end()) it->second.status = BlockStatus::ACTIVE;
+            }
         }
         printf("[REORG] Rolled back to original tip %s at height %lld\n",
                to_hex(g_blocks.back().block_id.data(),32).substr(0,16).c_str(),
