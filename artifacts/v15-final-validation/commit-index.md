@@ -15,3 +15,6 @@ bb1cf8f8 tests: add V15 DEV functional soak harness (loops proven harnesses, tra
 cecaa8b0 V15: add Historical-Jackpot process-restart coverage (DEVNET_FAST)
 ecccd704 V15: prove failed-reorg rollback atomicity (DEV failpoint + zero-drift harness)
 960afb6d node: fix V15 jackpot-reorg deadlock + undo-vector misalignment (3 root causes)
+92991f57 feat(devnet): add isolated raw jackpot injection support (--inject-tx-at1, count=0 mainnet/testnet)
+fec1acbb feat(devnet): add devjackpotstate RPC for numeric rollover introspection (DEV-only, isolated)
+06fe4219 test(v15): reject jackpot at non-event height (M02) + stale replay (M03) + rollover-cap 100->500->500
