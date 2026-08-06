@@ -1,0 +1,12 @@
+[quick] PASS  DEV build is a DEVNET build (SOST_DEVNET_FORKS=ON)
+[quick] PASS  isolation 'inject-tx-at1' in sost-miner: DEV=4 main=0 testnet=0
+[quick] PASS  isolation 'attack-jackpot' in sost-miner: DEV=1 main=0 testnet=0
+[quick] PASS  isolation 'dump-block' in sost-miner: DEV=1 main=0 testnet=0
+[quick] PASS  isolation 'devjackpotstate' in sost-node: DEV=3 main=0 testnet=0
+[quick] PASS  test-jackpot — == summary: 108 pass, 0 fail ==
+[quick] PASS  test-lottery-rollover — === Summary: 53 passed, 0 failed ===
+[quick] PASS  test-dtd-control — === Summary: 44 passed, 0 failed ===
+[quick] PASS  test-lottery-eligibility — === Summary: 77 passed, 0 failed ===
+[quick] PASS  test-lottery-frequency — === Summary: 79 passed, 0 failed ===
+
+[quick] RESULT: GO — DEV isolation intact + V15 consensus arithmetic green (quick gate)
