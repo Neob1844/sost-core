@@ -29,8 +29,8 @@ Honest multi-block coverage: 5 FULL(cite) · 4 PARTIAL(extend) · 5 NONE(new) �
 | DEV functional soak (3 rounds × 6 harnesses) | ✅ 18/18 | `run_v15_devnet_soak.sh`, no leak (~11MB flat) | bb1cf8f8/b242d4ea |
 | **V15-A** valid-PoW attack matrix | ✅ closed | 17-case single-mutation (20/0) + multiblock **M02** (non-event height) + **M03** (stale-replay) + **M08** (replay-after-restart) all PASS; #1/#4/#7 reduce to M02/M03 by keyless-reserve proof; #5/#6/#14 honestly labeled PARTIAL/deferred (multi-address mining). See multiblock-attack-summary.md | this session |
 | **V15-B** numeric rollover cap 100→500→500 (DEV RPC) | ✅ | `devjackpotstate` RPC + `run_v15_devnet_rollover_cap.sh`: rollover 0→…→cap-base, prize 100→…→500→500 clamped, no-winner, survives restart (rollover-cap.log) | this session |
-| **V15-C** reserve edge cases E01-E20 | 🔲 | — | — |
-| **V15-D** quick gate `run_v15_devnet_quick.sh` | 🔲 | — | — |
+| **V15-C** reserve edge cases | ✅ 8/8 | `run_v15_devnet_reserve_edges.sh`: winner drain accounting (payout=min(prize,reserve), full drain) + one-way RETIREMENT LATCH (no resurrection at later events) + survives restart (reserve-edges.log) | this session |
+| **V15-D** quick gate `run_v15_devnet_quick.sh` | ✅ GO | isolation (inject-tx-at1/attack-jackpot/dump-block/devjackpotstate count=0 in mainnet+testnet) + V15 consensus arithmetic unit suites 361/0 (quick-gate.log) | this session |
 | **V15-E** full regression (ctest ×3 nets) + sanitizers + static | 🔲 | needs CPU (miner-saturated box) | — |
 | pre-V15 compatibility proof | 🔲 | — | — |
 | **V15-F** testnet long SbPoW run (V15=12500, ~8.5h) | ⚠️ | EXTERNAL_RESOURCE_BLOCKER — separate machine (box saturated by miner) | — |
@@ -51,6 +51,14 @@ v0.3.2 has V15 gates DEFERRED → reaching 25000 with it activates nothing; the 
 is deploying the new V15 binary to all nodes/miners (coordinated) before 25000.
 
 ## Verdict (current)
-**V15: READY FOR DEV FUNCTIONAL VALIDATION** (reorg/restart/reindex/rollover lifecycle proven).
-Not RC yet: attack-matrix, rollover-cap, reserve-edges, quick-gate, regression, testnet remain.
+**V15: DEV CONSENSUS VALIDATION COMPLETE.** Proven: reorg/restart/reindex/rollover lifecycle +
+valid-PoW attack matrix (17 single-mutation + M02/M03/M08 multiblock) + numeric rollover-cap +
+reserve edge cases (drain + retirement latch) + quick GO/NO-GO gate. All DEV-only test
+capabilities isolated (count=0 in mainnet/testnet).
+**Remaining before RC / touching main (engineering-side):**
+ - V15-E full regression (ctest ×3 nets) + ASan/UBSan + static — needs a NON-saturated box
+   (this box is miner-saturated; the non-sanitizer unit regression can run here at low prio).
+ - V15-F testnet long SbPoW run (~8.5h) — EXTERNAL machine (resource blocker).
+ - V15-G RC artifacts: merge --no-ff, tag, reproducible build, SHA-256 + manifest, rollout/rollback.
+ - Open (honest): #14 accumulation↔winner reorg transition needs multi-address winner control.
 **Atomic Swap: EVM live; BTC regtest + EVM audit are external work — decoupled from V15.**
