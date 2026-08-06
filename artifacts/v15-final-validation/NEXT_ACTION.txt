@@ -1,3 +1,13 @@
+OBJECTIVE CHANGED: end goal is now FINISH ALL GATES → merge to main (--no-ff) → build from
+clean main → tag → COORDINATED staged restart of mainnet node+miners before block 25000
+(the LAST consensus fork). See DEPLOYMENT_PLAN.md for the hard GO gates + the CRITICAL
+governance note (the live cutover is the only irreversible/outward step → human-supervised
+window recommended even though pre-authorized). main STAYS UNTOUCHED until every GO gate is green.
+Multi-block scenario COVERAGE MAPPING is in DEPLOYMENT_PLAN.md: several are already proven by
+existing harnesses (restart/reindex/failed_reorg/reorg/rollover/dup-all-inputs) — CITE them;
+only build a NEW harness (fresh ports ~18990) for: already-spent reserve input, J-at-non-event-
+height, old-J reused, stale-state J, coinbase B->A/B->C retaining J, keyless-valid-for-other-state.
+----------------------------------------------------------------------------------------------
 NEXT ACTION — V15 autonomous validation (resume point)
 ========================================================
 HEAD now: f23afb4b   Branch: feat/v15-jackpot-explorer-char (feat/v15-jackpot-explorer-card)
