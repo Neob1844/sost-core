@@ -1,6 +1,6 @@
 # V15 Final Validation — Autonomous Progress Tracker
 
-**Branch:** `feat/v15-jackpot-explorer-card` · **HEAD at last update:** `039dbbb3` (+ this setup commit)
+**Branch:** `feat/v15-jackpot-explorer-card` · **HEAD at last update:** `f23afb4b`
 **main:** `b822db4c` (untouched) · **Nothing merged/tagged/deployed.**
 **Mainnet miner:** PID 574503, 13 threads @ :18232 — **LIVE, never touched.**
 **Machine:** 14 cores, load ~13.9 (miner-saturated), 23 GiB RAM, 567 G free disk.
@@ -21,7 +21,7 @@ This file is the durable cross-session state for the CTO autonomous mission
 | Rollover accumulation (no-winner preserves reserve) | ✅ 9/9 | `run_v15_devnet_rollover.sh` | afb3f29d |
 | DEV failpoint isolation (absent from mainnet/testnet) | ✅ | `strings` check + builds | ecccd704 |
 | DEV functional soak (3 rounds × 6 harnesses) | ✅ 18/18 | `run_v15_devnet_soak.sh`, no leak (~11MB flat) | bb1cf8f8/b242d4ea |
-| **V15-A** valid-PoW attack matrix COMPLETE (~18 new cases) | 🔲 | needs new miner mutations + separate build | — |
+| **V15-A** valid-PoW attack matrix | 🔄 partial | +4 single-mutations (17-case, 20/0 PASS, f23afb4b); multi-block scenarios pending | f23afb4b |
 | **V15-B** numeric rollover cap 100→500→500 (DEV RPC) | 🔲 | needs DEV-only rollover RPC | — |
 | **V15-C** reserve edge cases E01-E20 | 🔲 | — | — |
 | **V15-D** quick gate `run_v15_devnet_quick.sh` | 🔲 | — | — |

@@ -1,5 +1,7 @@
 # V15 validation — commit index (feat/v15-jackpot-explorer-card)
 
+f23afb4b test(v15): extend valid-PoW attack matrix with 4 new single-mutations
+e4da908b chore(v15): set up autonomous-validation tracking + attack-matrix inventory (phase 0)
 039dbbb3 docs: DEV functional soak complete (18/18 PASS, 3 rounds, no leak)
 165a8b2c docs: record reindex/load_chain + rollover proofs and soak status in V15 readiness
 afb3f29d V15: add Historical-Jackpot rollover coverage (no-winner events preserve the reserve)

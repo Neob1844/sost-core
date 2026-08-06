@@ -1,41 +1,27 @@
 NEXT ACTION — V15 autonomous validation (resume point)
 ========================================================
-Last commit at handoff: 039dbbb3 (+ the artifacts/ setup commit on top)
-Branch: feat/v15-jackpot-explorer-card   main: b822db4c (untouched)
-Tree: clean, remote synced.
+HEAD now: f23afb4b   Branch: feat/v15-jackpot-explorer-char (feat/v15-jackpot-explorer-card)
+main: b822db4c (untouched). Tree clean, remote synced. Miner PID 574503 (13t/@18232) UNTOUCHED.
+MACHINE: 14 cores, miner uses 13 → build with `nice -n 19 ionice -c3` and `-j1`. Soak is DONE
+so build-devnet is idle and safe for FAST incremental DEV rebuilds (DEV changes are #ifdef-guarded).
+Heavy full builds / sanitizers OK at low prio; 8.5h SbPoW testnet = EXTERNAL_RESOURCE_BLOCKER (needs another machine).
 
-MACHINE CONSTRAINT (critical): 14 cores, mainnet miner uses 13 (load ~13.9).
-=> Heavy builds/sanitizers/testnet WILL contend with the live miner. Do NOT stop or
-   throttle the miner without explicit human approval. Prefer nice/low-priority; the
-   8.5h SbPoW testnet run needs a SEPARATE machine (mark EXTERNAL_RESOURCE_BLOCKER).
+LAST DONE: V15-A partial — added 4 valid-PoW attack single-mutations (input-index-bump,
+input-txid-flip, payout-intmax, dup-all-inputs) to sost-miner.cpp + run_v15_devnet_attacks.sh;
+17-case matrix RESULT: PASS 20/0 (evidence attack-matrix.log). Committed f23afb4b, pushed.
 
-DONE + committed (see AUTONOMOUS_PROGRESS.md): reorg deadlock fix, failed-reorg atomicity
-(49/49), restart (27/27), reindex+tamper, rollover accumulation (9/9), failpoint isolation,
-DEV soak (18/18 no leak), docs.
+NEXT (pick up here):
+ (a) FINISH V15-A multi-block scenarios (see attack-matrix.md "STILL pending"): already-spent
+     reserve input, J-at-non-event-height, old-J reused, stale-state J, coinbase B->A/B->C,
+     template/coinbase mismatch. These need dedicated harness scenarios (not simple mutations)
+     — build a new harness tests/run_v15_devnet_attacks_scenarios.sh on fresh ports (e.g. 18990).
+ (b) THEN V15-B: DEV-only rollover RPC (derive_rollover_before) + harness for 100->200->300->400
+     ->500->500 across cadence heights 24,30,36,42,48,54 (single miner = no-winner), persistence
+     across restart/reorg/reindex; RPC must be #ifdef SOST_DEVNET_FORKS + Profile::DEV, absent
+     from mainnet/testnet binaries (verify with strings/nm). Rebuild via build-devnet incremental.
+ (c) THEN V15-C E01-E20, V15-D quick gate, V15-E regression+sanitizers (nice/-j1), V15-F testnet
+     (external machine), V15-G RC + rollout docs. Atomic Swap §11 in parallel, non-blocking.
 
-NEXT CONCRETE STEP = Phase V15-A (attack matrix), per artifacts/.../attack-matrix.md:
-  1. `cmake -S . -B build-v15-attack-matrix -DSOST_DEVNET_FORKS=ON -DSOST_ENABLE_PHASE2_SBPOW=ON`
-     (SEPARATE build dir — never rebuild build-devnet).
-  2. Add the pending mutations to src/sost-miner.cpp under #ifdef SOST_DEVNET_FORKS
-     (wrong/missing change, alt-reserve-UTXO, coinbase-out-as-input, serialization bounds).
-  3. Extend tests/run_v15_devnet_attacks.sh (BUILD_DIR=build-v15-attack-matrix) with the new
-     single-mutation cases; add dedicated multi-block scenario tests for: already-spent
-     reserve input, J-at-non-event-height, old-J-reused, stale-state J, template/coinbase
-     mismatch (B→A / B→C).
-  4. Require EXACT rejection reason + zero state mutation per case; run ≥3× if flaky;
-     then submit the honest canonical block and require acceptance.
-  5. Evidence → artifacts/v15-final-validation/attack-matrix.log ; commit:
-     "test(v15): complete valid-PoW attack matrix" ; push ; update AUTONOMOUS_PROGRESS.md.
-
-THEN in order: V15-B (DEV rollover RPC + 100→500→500), V15-C (E01-E20), V15-D (quick gate),
-V15-E (regression+sanitizers+static+pre-V15 compat), V15-F (testnet long — external machine),
-V15-G (RC artifacts+rollout docs). Atomic Swap in parallel (§11) — non-blocking; BTC needs
-bitcoind regtest (INFRA_BLOCKER if unavailable); EVM contract stays undeployed (external audit).
-
-SAFETY: clean DEV procs ONLY by PID/port/$WORK (never pkill by name). Never touch miner.
-No merge to main, no tag (except RC on release branch), no deploy, no BTC-HTLC activation,
-no EVM deploy, no force-push.
-
-Own DEV ports in use by existing harnesses: reorg 18962-66, failed_reorg 18972-76,
-restart 18984, reindex 18994, rollover 18996, attacks 18980, payout 18960. Pick fresh ports.
-Leftover finished soak shells: pgrep -f run_v15_devnet_soak (hold NO nodes; safe to kill by PID).
+SAFETY: clean DEV procs ONLY by PID/port/$WORK (never pkill by name). Never touch the miner.
+No merge to main, no tag (except RC on a release branch), no deploy, no BTC-HTLC activation,
+no EVM deploy, no force-push. Own DEV ports used: 18960/18962-66/18972-76/18980/18984/18994/18996.
