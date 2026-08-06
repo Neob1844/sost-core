@@ -12,7 +12,7 @@ Legend: ✅ GREEN · 🔄 running · 🟡 partial/needs-work · ⛔ blocked (ext
 | 2 | rollover 100→500→500 (DEV RPC) | ✅ | `run_v15_devnet_rollover_cap.sh` via `devjackpotstate` (`rollover-cap.log`): rollover 0→cap-base, prize 100→500→500 clamped, survives restart |
 | 3 | reserve edge cases (E01-E20) | ✅ | `run_v15_devnet_reserve_edges.sh` (`reserve-edges.log`): drain accounting + one-way retirement latch + restart. (Scope is the genuinely-distinct reserve properties, not 20 padded cases — the arithmetic boundaries are additionally in `test-jackpot` 108/0.) |
 | 4 | quick gate ×2 | ✅ | `run_v15_devnet_quick.sh` run twice (before + after a mainnet rebuild), both `RESULT: GO` (`quick-gate.log`) |
-| 5 | ctest mainnet/testnet/DEV | 🔄 | mainnet consensus unit suites GREEN in quick gate (jackpot/rollover/dtd/eligibility/frequency = 361/0); FULL `ctest` regression running (`regression-ctest.log`); testnet/DEV ctest builds still to run |
+| 5 | ctest mainnet/testnet/DEV | 🟡 | mainnet FULL `ctest` **101/101, 0 fail** (`regression-ctest.log`); DEV consensus proven by the 9 DEV harnesses; testnet-profile ctest build still to run on a clean box |
 | 6 | ASan | ⛔ | needs a NON-miner-saturated box (this box runs the 13-thread mainnet miner) — resource blocker |
 | 7 | UBSan | ⛔ | same resource blocker |
 | 8 | static analysis (no critical/high) | ⬜ | not started (clang-tidy/cppcheck pass) |
@@ -22,7 +22,7 @@ Legend: ✅ GREEN · 🔄 running · 🟡 partial/needs-work · ⛔ blocked (ext
 | 12 | testnet long SbPoW run PASS (real) | ⛔ | ~8.5 h SbPoW run — EXTERNAL machine (resource blocker); must be real, not declared |
 | 13 | clean reproducible builds | ⬜ | RC step — build node/CLI/miner/signtx from clean main + SHA-256 + manifest |
 | 14 | no DEV RPC / failpoints in production binaries | ✅ | `dev-flag-isolation.log` + quick gate: inject-tx-at1 / attack-jackpot / dump-block / devjackpotstate / devsetreorgfailpoint / devchainstate all count=0 in mainnet+testnet binaries; mainnet build (DEVNET=OFF) recompiles clean |
-| 15 | no secrets | ⬜ | secret scan of the diff before merge |
+| 15 | no secrets | ✅ | `git diff main..HEAD` scanned: NO personal email, NO PEM/private-key literals, NO real mainnet RPC creds (AdminNeoB/sost125fa absent). Only benign hits: placeholder `--rpc-pass sost` in a doc example and public BTC test-vector keys in atomic-swap test code. (Re-run on the final merge diff.) |
 | 16 | rollout + rollback runbooks | 🟡 | `DEPLOYMENT_PLAN.md` has the staged-cutover procedure + governance note; needs a standalone operator/miner runbook with pinned tag+commit+SHA-256 |
 | 17 | merge --no-ff → tag → binaries + SHA-256 + manifest | ⬜ | RC step, GATED on all rows above being GREEN; the live cutover is human-supervised (governance note) |
 
