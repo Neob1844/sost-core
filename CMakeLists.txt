@@ -763,6 +763,12 @@ add_executable(test-jackpot tests/test_jackpot.cpp)
 target_link_libraries(test-jackpot PRIVATE sost-core)
 add_test(NAME jackpot COMMAND test-jackpot)
 
+# V15 activation boundary (P9) — header-only; compiled per active profile. On mainnet it must
+# see V15_HEIGHT=25000 and a clean 24999/25000 boundary + jackpot-first at 25290 (no off-by-one).
+add_executable(test-v15-activation-boundary tests/test_v15_activation_boundary.cpp)
+target_link_libraries(test-v15-activation-boundary PRIVATE sost-core)
+add_test(NAME v15-activation-boundary COMMAND test-v15-activation-boundary)
+
 # V11 Phase 2 — miner ↔ validator integration (C11).
 # Always built. Exercises the full handshake: build coinbase the way the
 # production miner would (NORMAL / UPDATE_EMPTY / PAYOUT) and feed it to
