@@ -13,8 +13,8 @@ Legend: ✅ GREEN · 🔄 running · 🟡 partial/needs-work · ⛔ blocked (ext
 | 3 | reserve edge cases (E01-E20) | ✅ | `run_v15_devnet_reserve_edges.sh` (`reserve-edges.log`): drain accounting + one-way retirement latch + restart. (Scope is the genuinely-distinct reserve properties, not 20 padded cases — the arithmetic boundaries are additionally in `test-jackpot` 108/0.) |
 | 4 | quick gate ×2 | ✅ | `run_v15_devnet_quick.sh` run twice (before + after a mainnet rebuild), both `RESULT: GO` (`quick-gate.log`) |
 | 5 | ctest mainnet/testnet/DEV | 🟡 | mainnet FULL `ctest` **101/101, 0 fail** (`regression-ctest.log`); DEV consensus proven by the 9 DEV harnesses; testnet-profile ctest build still to run on a clean box |
-| 6 | ASan | ⛔ | needs a NON-miner-saturated box (this box runs the 13-thread mainnet miner) — resource blocker |
-| 7 | UBSan | ⛔ | same resource blocker |
+| 6 | ASan | 🟡 | consensus arithmetic CLEAN under AddressSanitizer (jackpot/rollover/dtd/eligibility/frequency = 361 assertions, 0 errors — `sanitizer-consensus.log`, `run_sanitizer_consensus_tests.sh`); full node + integration harnesses under ASan still need a clean box |
+| 7 | UBSan | 🟡 | consensus arithmetic CLEAN under UndefinedBehaviorSanitizer (same 361 assertions, no signed-overflow/UB — `sanitizer-consensus.log`); full node under UBSan needs a clean box |
 | 8 | static analysis (no critical/high) | ⬜ | not started (clang-tidy/cppcheck pass) |
 | 9 | pre-V15 compatibility | ⬜ | need a test that a pre-V15 vs post-V15 binary agree on all state strictly below the fork height |
 | 10 | exact-activation @25000 | 🟡 | activation is height-gated + unit-tested; DEVNET_FAST crosses V15 (=18) live in every DEV harness; the literal mainnet height 25000 cannot be pre-run but the gating logic is covered |
