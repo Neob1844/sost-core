@@ -4,6 +4,13 @@
 *** Mainnet ~20,700 → ~4,200 blocks (~30 days) to 24,900. main UNTOUCHED until every GO gate PASS.
 *** COVERAGE (attack-coverage-map.md, rigorous per-assertion): 5 FULL cite, 4 PARTIAL extend,
 *** 5 NONE new. #8 replay-of-rejected-attack-after-restart is NOT covered by restart.sh — real gap.
+*** V15-A UPDATE: harness tests/run_v15_devnet_multiblock_attacks.sh EXISTS; M08 (replay-after-
+*** restart, byte-exact) is FULL/green (d2d85c4b). DEV flag --dump-block added (isolated).
+*** NEXT: add M02 (J at non-event height) + M03 (old-J reused) — need a DEV miner flag to
+*** inject/replay a raw tx at block_txs[1] (e.g. --inject-tx-at1 <hexfile>); capture h24's
+*** canonical jackpot via getrawtransaction, inject at h25 (reject) / at h30 (stale reject).
+*** Then M01 already-spent-reserve, M04 stale-state, M05 keyless-other-state, M06/M07 coinbase
+*** B->A/B->C (reorg-context, reuse failed_reorg fork machinery), M09 accumulation<->winner.
 *** NEXT harness (fresh ports ~18990) needs new #ifdef SOST_DEVNET_FORKS miner flags:
 ***   --inject-jackpot-at <h>, --replay-jackpot <h>, --stale-jackpot ; + already-spent-reserve,
 ***   coinbase B->A/B->C reorg-context, restart/reindex replay-of-attack. Then rollover→E01-E20→...
