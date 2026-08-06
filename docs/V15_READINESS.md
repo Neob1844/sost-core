@@ -18,7 +18,7 @@ consensus bugs the reorg harness exposed fixed and proven:
 | **Process-restart invariance** (pre-J / at-J / post-J / N tip cycles) | ✅ | `tests/run_v15_devnet_restart.sh` — 27/27; reloaded chain byte-identical, `g_blocks==g_block_undos`, mines forward (commit cecaa8b0) |
 | **Reindex / load_chain equivalence + tamper rejection** | ✅ | `tests/run_v15_devnet_reindex.sh` — replay byte-identical; a tampered persisted jackpot is rejected fail-closed, reserve never spent (commit b6410ff0) |
 | **Rollover accumulation** (no-winner events preserve reserve) | ✅ | `tests/run_v15_devnet_rollover.sh` — 5 no-winner events (24/30/36/42/48) keep the reserve intact; winner-spend proven by payout harness; numeric 100→500 cap needs a DEV rollover RPC (deferred) (commit afb3f29d) |
-| DEV functional soak (loops all proven harnesses) | 🔄 RUNNING | `tests/run_v15_devnet_soak.sh` — round 1 = 6/6 green, peak node RSS stable ~11MB (no leak); 3 rounds in progress (commit bb1cf8f8/b242d4ea) |
+| DEV functional soak (loops all proven harnesses) | ✅ **18/18** | `tests/run_v15_devnet_soak.sh` — 3 rounds × 6 harnesses, 0 failures, ~54 min; peak node RSS flat 10828→11364 KB across all 18 runs (no leak/growth) (commit bb1cf8f8/b242d4ea) |
 | Mainnet + testnet full builds (failpoint compiles out) | ✅ | `cmake --build build` / `build-testnet` exit 0 |
 
 **Remaining V15 gates (next session / after soak frees CPU):** complete valid-PoW attack
