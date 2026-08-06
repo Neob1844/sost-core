@@ -1,3 +1,13 @@
+*** HARD DEADLINE: T-24900 ENGINEERING FREEZE — ALL engineering (incl. merge to main, tag,
+*** clean build, checksums, runbooks) must be DONE BEFORE block 24,900. The 24,900–25,000
+*** window is DEPLOYMENT-ONLY (supervised). Block 25,000 = activation only. See DEPLOYMENT_PLAN.md.
+*** Mainnet ~20,700 → ~4,200 blocks (~30 days) to 24,900. main UNTOUCHED until every GO gate PASS.
+*** COVERAGE (attack-coverage-map.md, rigorous per-assertion): 5 FULL cite, 4 PARTIAL extend,
+*** 5 NONE new. #8 replay-of-rejected-attack-after-restart is NOT covered by restart.sh — real gap.
+*** NEXT harness (fresh ports ~18990) needs new #ifdef SOST_DEVNET_FORKS miner flags:
+***   --inject-jackpot-at <h>, --replay-jackpot <h>, --stale-jackpot ; + already-spent-reserve,
+***   coinbase B->A/B->C reorg-context, restart/reindex replay-of-attack. Then rollover→E01-E20→...
+===============================================================================================
 OBJECTIVE CHANGED: end goal is now FINISH ALL GATES → merge to main (--no-ff) → build from
 clean main → tag → COORDINATED staged restart of mainnet node+miners before block 25000
 (the LAST consensus fork). See DEPLOYMENT_PLAN.md for the hard GO gates + the CRITICAL

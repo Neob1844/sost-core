@@ -11,6 +11,12 @@ This file is the durable cross-session state for the CTO autonomous mission
 ## Legend
 ✅ done+committed · 🔄 running · 🔲 not started · ⚠️ blocked (external/resource)
 
+## ⏱️ HARD DEADLINE
+T-24900 ENGINEERING FREEZE: all engineering + merge-to-main + tag + clean build + checksums +
+runbooks DONE before block 24,900. Window 24,900–25,000 = supervised DEPLOYMENT only. Block
+25,000 = activation only. ~4,200 blocks (~30 days) left. See DEPLOYMENT_PLAN.md / attack-coverage-map.md.
+Honest multi-block coverage: 5 FULL(cite) · 4 PARTIAL(extend) · 5 NONE(new) — NOT "6 new".
+
 ## V15 gates
 | Phase | Status | Evidence / harness | Commit |
 |---|---|---|---|

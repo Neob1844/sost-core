@@ -51,3 +51,38 @@ GENUINELY NEW (need a dedicated multi-block harness, fresh ports e.g. 18990):
   already-spent reserve input · J-at-non-event-height · old-J reused at a later event ·
   stale-state J (reserve changed between template & submit) · coinbase B→A / B→C retaining J ·
   keyless authorization valid-for-one-state-not-current · reorg accumulation↔winner transition.
+
+## ⏱️ TIMELINE CORRECTION (user directive) — hard deadline is block 24,900, NOT 25,000
+The public upgrade window is **blocks 24,900–25,000** and is for DEPLOYMENT ONLY (distribute
+binaries, coordinated staged restart of node/miners/explorer, monitoring). Therefore:
+- **T-24900 ENGINEERING FREEZE (before block 24,900):** ALL of this must be DONE — multi-block
+  matrix, rollover 100→500→500, E01-E20, quick gate ×2, ctest mainnet/testnet/DEV, ASan/UBSan,
+  static analysis, pre-V15 compat, exact-activation @25000, restart/reindex/reorg crossing
+  activation, testnet long PASS, full diff review, **merge to main (--no-ff), push, definitive
+  tag, clean build from the tag, node/CLI/miner/signtx binaries + SHA-256 + manifest, rollout +
+  rollback runbooks, final operator/miner notice, explorer package, Atomic-Swap-non-blocking check.**
+- **CODE FREEZE after T-24900:** no features/refactor/consensus change; only a CRITICAL bug that
+  forces re-running ALL gates (and invalidates the binaries → new build + hashes + validation).
+- **24,900–25,000 window:** confirm height/hash → stop miners → stop+backup+swap node → verify →
+  canary miner → staged miners one-by-one → explorer → confirm all same commit/version → watch
+  watchdog/stalls/rejects/forks until past activation. Atomic (hash-verified) binary swap, no
+  `git pull` as the production mechanism, no `pkill`.
+- **Block 25,000:** ACTIVATION ONLY — network already updated; observe 50/50 split, Gold Vault/PoPC
+  0% new emission (dormant not removed), no chain split. No dev/merge/build/deploy at this point.
+- PRE-CUTOVER HOLD must be reached BEFORE 24,900 (not during the window).
+
+Mainnet height at last check ~20,700 → ~4,200 blocks to 24,900 (~30 days). Public site still
+says "PLANNED"; flip to "READY · mandatory upgrade window blocks 24,900–25,000" ONLY when every
+gate is truly PASS. The published upgrade command must pin the exact tag + commit + SHA-256 of the
+binaries and cover node AND miners AND explorer (the current `git pull origin main` snippet is not
+a safe production procedure).
+
+Terminal states: engineering ends with `T-24900 ENGINEERING FREEZE COMPLETE — MAIN, TAG, BINARIES
+AND CHECKSUMS READY`; the supervised window ends with `V15 UPGRADE COMPLETED BEFORE BLOCK 25,000 —
+NODE, MINERS AND EXPLORER READY FOR ACTIVATION`.
+
+## Coverage correction (honest, per attack-coverage-map.md)
+The "6 genuinely new" estimate was optimistic. Rigorous per-assertion audit: **5 FULL (cite),
+4 PARTIAL (extend — existing harness proves only the honest half), 5 NONE (new).** Notably #8
+"replay of a REJECTED attack after restart" is NOT covered by run_v15_devnet_restart.sh (that
+proves honest reload only) — a real gap to close, not an assumed cover.
