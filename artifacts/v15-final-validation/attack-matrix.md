@@ -18,7 +18,16 @@ mines valid DEV PoW → ordinary `submitblock` → node must reject with ZERO st
 | remove-winner-output | ✅ | ✗ | UNBUILDABLE: 0-output tx fails Serialize (stronger guarantee) |
 | move-jackpot | ✅ | ✗ | NO-OP in DEV (only 2 txs, no tx[2] to swap) |
 
-## Pending new cases (order §4) — TODO
+## DONE 2026-08-06 — 4 new valid-PoW single-mutations (17-case matrix, all rejected, honest block accepted)
+| Mutation | Rejected+atomic |
+|---|---|
+| input-index-bump (wrong vout on a reserve outpoint) | ✅ |
+| input-txid-flip (nonexistent/noncanonical input txid) | ✅ |
+| payout-intmax (INT64_MAX payout, serialization/overflow bound) | ✅ |
+| dup-all-inputs (bulk double-spend of every reserve UTXO) | ✅ |
+Evidence: artifacts/v15-final-validation/attack-matrix.log (RESULT: PASS, 20/0).
+
+## STILL pending (multi-block scenarios — need harness scenarios, not simple mutations) — TODO
 Some are single-mutation (add to miner + harness); several need MULTI-BLOCK setup
 (a plain mutation can't express them) and belong in dedicated harness scenarios:
 

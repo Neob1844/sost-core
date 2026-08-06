@@ -1452,6 +1452,11 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         else if (m=="remove-jackpot") block_txs.erase(block_txs.begin()+1);                                   // A23
         else if (m=="coinbase-mutate" && !block_txs[0].outputs.empty())
                                                            block_txs[0].outputs[0].pubkey_hash[0] ^= 0xFF;    // A26 (coinbase→other, J retained)
+        // --- extended matrix (V15-A): outpoint/amount/bulk mutations, all still valid-PoW ---
+        else if (m=="input-index-bump" && !j.inputs.empty()) j.inputs[0].prev_index += 1;                     // B: noncanonical OUTPOINT (wrong vout on a reserve tx)
+        else if (m=="input-txid-flip"  && !j.inputs.empty()) j.inputs[0].prev_txid[0] ^= 0xFF;                // B: nonexistent/noncanonical input txid (not a real reserve UTXO)
+        else if (m=="payout-intmax"    && !j.outputs.empty()) j.outputs[0].amount = 0x7fffffffffffffffLL;     // serialization/overflow bound: payout = INT64_MAX
+        else if (m=="dup-all-inputs")  { size_t n=j.inputs.size(); for(size_t k=0;k<n;k++) j.inputs.push_back(j.inputs[k]); } // bulk double-spend of every reserve UTXO
         else printf("[ATTACK] unknown mutation '%s' (no-op)\n", m.c_str());
     }
 #endif
