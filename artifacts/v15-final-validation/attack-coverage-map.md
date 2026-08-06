@@ -13,7 +13,7 @@ This audit re-classifies each requested multi-block scenario honestly.
 | 5 | coinbase B→A retaining B's J | run_v15_devnet_attacks.sh `coinbase-mutate` | flips coinbase pkh @ SAME height (not a cross-branch B→A reorg) | **PARTIAL** | NEW scenario (reorg-context) |
 | 6 | coinbase B→C retaining B's J | as #5 | — | **PARTIAL** | NEW |
 | 7 | keyless auth valid for other state, invalid for current | — | none | **NONE** | NEW |
-| 8 | replay of a REJECTED attack after restart | run_v15_devnet_restart.sh | proves HONEST chain reloads byte-identical — does NOT prove a rejected attack STAYS rejected post-restart | **PARTIAL** (honest side only) | extend: after an attack, restart, re-submit, assert still rejected + reserve intact |
+| 8 | replay of a REJECTED attack after restart | **run_v15_devnet_multiblock_attacks.sh (M08)** | byte-exact malicious block captured (--dump-block), rejected pre-restart, IDENTICAL bytes still rejected post-restart, reserve never spent, honest block accepted | **FULL ✅** | DONE (multiblock-attack-matrix.log) |
 | 9 | replay after reindex / tampered persisted J | run_v15_devnet_reindex.sh | a tampered persisted jackpot is rejected on load, reserve never spent | **FULL** | cite (add attack-block replay variant if time) |
 | 10 | failed reorg byte-identical rollback | run_v15_devnet_failed_reorg.sh | 49/49: manifest before==after, g_blocks==g_block_undos, node healthy | **FULL** | cite |
 | 11 | A→B jackpot reorg (cross-branch J connect/disconnect) | run_v15_devnet_reorg.sh | J_A disconnected, J_B connected, state==clean B | **FULL** | cite |

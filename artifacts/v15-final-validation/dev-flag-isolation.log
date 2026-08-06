@@ -1,0 +1,3 @@
+# DEV flag isolation — --dump-block
+DEV miner (build-devnet): 1 occurrence(s)
+mainnet miner (build, DEVNET=OFF): built before change + guarded #ifdef SOST_DEVNET_FORKS → absent (verify with a fresh build/ rebuild in the regression phase)

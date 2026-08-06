@@ -27,7 +27,7 @@ Honest multi-block coverage: 5 FULL(cite) · 4 PARTIAL(extend) · 5 NONE(new) �
 | Rollover accumulation (no-winner preserves reserve) | ✅ 9/9 | `run_v15_devnet_rollover.sh` | afb3f29d |
 | DEV failpoint isolation (absent from mainnet/testnet) | ✅ | `strings` check + builds | ecccd704 |
 | DEV functional soak (3 rounds × 6 harnesses) | ✅ 18/18 | `run_v15_devnet_soak.sh`, no leak (~11MB flat) | bb1cf8f8/b242d4ea |
-| **V15-A** valid-PoW attack matrix | 🔄 partial | +4 single-mutations (17-case, 20/0 PASS, f23afb4b); multi-block scenarios pending | f23afb4b |
+| **V15-A** valid-PoW attack matrix | 🔄 partial | 17-case single-mutation (20/0) + **M08 multiblock replay-after-restart FULL**; remaining: M01-M07,M09 | f23afb4b + this |
 | **V15-B** numeric rollover cap 100→500→500 (DEV RPC) | 🔲 | needs DEV-only rollover RPC | — |
 | **V15-C** reserve edge cases E01-E20 | 🔲 | — | — |
 | **V15-D** quick gate `run_v15_devnet_quick.sh` | 🔲 | — | — |

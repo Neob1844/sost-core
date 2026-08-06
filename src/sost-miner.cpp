@@ -108,6 +108,9 @@ static std::string g_wallet_path = "";
 static std::string g_mining_key_label = "";
 #ifdef SOST_DEVNET_FORKS
 static std::string g_attack_jackpot = "";  // DEVNET_FAST test-only: adversarial jackpot mutation name (see mine loop)
+#ifdef SOST_DEVNET_FORKS
+static std::string g_dump_block_file = "";  // DEV test-only: write each submitted block's exact JSON here (byte-exact replay, e.g. re-submit a rejected attack after restart)
+#endif
 #endif
 // V13 SbPoW hardening: chain-specific salt for the v13 signing preimage.
 // Queried lazily from the node (RPC getinfo "genesis_hash") the first
@@ -852,6 +855,17 @@ static int rpc_submit_block_full(
         bj += "\"" + tx_hexes_including_coinbase[i] + "\"";
     }
     bj += "]}";
+
+#ifdef SOST_DEVNET_FORKS
+    // DEV/test-only: write the exact block JSON we are about to submit so a harness can
+    // replay the IDENTICAL bytes later (e.g. re-submit a rejected attack block after a
+    // node restart to prove the rejection is not cleared by restart). Compiled out of
+    // mainnet/testnet entirely.
+    if (!g_dump_block_file.empty()) {
+        std::ofstream _df(g_dump_block_file, std::ios::trunc);
+        if (_df) { _df << bj; }
+    }
+#endif
 
     // Escape JSON for RPC param string
     std::string escaped;
@@ -2371,6 +2385,9 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--mining-key-label") && i + 1 < argc) g_mining_key_label = argv[++i];
 #ifdef SOST_DEVNET_FORKS
         else if (!strcmp(argv[i], "--attack-jackpot") && i + 1 < argc) g_attack_jackpot = argv[++i];  // DEV test-only
+#ifdef SOST_DEVNET_FORKS
+        else if (!strcmp(argv[i], "--dump-block") && i + 1 < argc) g_dump_block_file = argv[++i];  // DEV test-only
+#endif
 #endif
         else if (!strcmp(argv[i], "--profile") && i + 1 < argc) {
             ++i;
