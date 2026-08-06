@@ -5425,10 +5425,13 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         // enforced by jackpot_block.h::validate_block_jackpot (above, before ConnectBlock);
         // here it is exempted from the standard per-tx validation because it is a
         // consensus-controlled reserve spend that carries NO signature. Narrowest surface:
-        // the exemption is only skipping R2/signature (below) + G1 vault governance; every
-        // other safety (input existence/unspent, value conservation, amounts) still runs via
-        // ConnectTransaction (scratch) and ConnectBlock. Below the first jackpot height this
-        // is always false, so pre-V15 replay is byte-identical.
+        // the exemption is only skipping R2/signature (below) + G1 vault governance. Input
+        // existence/unspent + no-double-spend still run via ConnectTransaction/ConnectBlock;
+        // VALUE CONSERVATION for the jackpot is NOT provided by ConnectTransaction (it does not
+        // compare input vs output sums) — it is guaranteed by validate_live_jackpot's byte-exact
+        // canonical reconstruction (run before every ConnectBlock caller) AND, as an independent
+        // backstop, by the explicit sum(inputs) >= sum(outputs) check added below. Below the
+        // first jackpot height jackpot_block_tx is always false, so pre-V15 replay is byte-identical.
         const bool jackpot_block_tx =
             sost::is_hist_jackpot_height(height) && txs[i].tx_type == TX_TYPE_JACKPOT;
         if(txs[i].tx_type != TX_TYPE_STANDARD && !htlc_block_tx && !jackpot_block_tx){
@@ -5451,14 +5454,39 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             v14_seen_txids.insert(v14_hx);
 
             // H4: consensus check against the scratch view (sees earlier same-block outputs).
-            // The canonical jackpot is exempt: it carries no signature (protocol reserve
-            // spend) and R2 forbids its type in the standalone validator by design — it is
-            // already proven byte-exact by validate_block_jackpot, and its UTXO/amount safety
-            // comes from ConnectTransaction (below) + ConnectBlock.
+            // The canonical jackpot is exempt from ValidateTransactionConsensus: it carries no
+            // signature (protocol reserve spend) and R2 forbids its type in the standalone
+            // validator by design — it is already proven byte-exact by validate_block_jackpot.
             if(!jackpot_block_tx){
                 auto cres = ValidateTransactionConsensus(txs[i], v14_scratch, vctx);
                 if(!cres.ok){
                     printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
+                    return false;
+                }
+            } else {
+                // B-1 hardening (defense-in-depth): an INDEPENDENT value-conservation backstop
+                // for the keyless jackpot spend, since ValidateTransactionConsensus (which
+                // enforces S7 sum(in) >= sum(out)) is skipped above. The primary authorization
+                // is validate_live_jackpot's byte-exact canonical reconstruction — run before
+                // every ConnectBlock caller — but this guarantees no path (present or future)
+                // can let a TX_TYPE_JACKPOT MINT value. The canonical jackpot redistributes the
+                // reserve, so sum(inputs) == sum(outputs) by construction; require >= here.
+                int64_t j_in = 0, j_out = 0;
+                for (const auto& jo : txs[i].outputs) j_out += jo.amount;
+                for (const auto& ji : txs[i].inputs) {
+                    OutPoint jop; jop.txid = ji.prev_txid; jop.index = ji.prev_index;
+                    auto ju = v14_scratch.GetUTXO(jop);
+                    if (!ju.has_value()) {
+                        printf("[BLOCK] REJECTED: jackpot input[%zu] references missing UTXO\n", i);
+                        record_block_reject("jackpot input missing UTXO");
+                        return false;
+                    }
+                    j_in += ju->amount;
+                }
+                if (j_out > j_in) {
+                    printf("[BLOCK] REJECTED: jackpot value conservation (in=%lld < out=%lld)\n",
+                           (long long)j_in, (long long)j_out);
+                    record_block_reject("jackpot value conservation");
                     return false;
                 }
             }

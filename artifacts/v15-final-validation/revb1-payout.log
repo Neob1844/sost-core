@@ -1,0 +1,18 @@
+[payout] work=/tmp/v15payout.XImKlA  firstJ=24  rpc=18960
+[payout] PASS  node is DEV profile
+[payout] A=sost169ee21bf78f4dd9fe24f0e61874048f5b9b2eef7  B=sost19621b8434a72ef62ed8d0bc9f39f0d0fdf8cdb36
+[payout] stage 1: A mines to 13
+[payout]   height after A: 13
+[payout] stage 2: B mines to 23 (snapshot reserve)
+[payout]   reserve_before = 5103155590 stocks across 26 UTXOs (Gold+PoPC)
+[payout] PASS  reserve non-empty before jackpot (5103155590 stocks, 26 UTXOs)
+[payout] stage 3: B mines the jackpot block 24
+[payout] PASS  block 24 has coinbase + jackpot (tx_count=2)
+[payout] PASS  block 24 coinbase miner == B (the current miner)
+[payout] jackpot tx 6dd10d25d797950d5e488ec898948cd17f6eb91b19335279e8c1fb44bcf81b57 : inputs=26 (resolved 24), in_sum=4710605160, winner=sost169ee21bf78f4dd9fe24f0e61874048f5b9b2eef7 payout=5103155590 change=0
+[payout] PASS  winner is A (the eligible non-current miner)
+[payout] PASS  winner != B (anti-self-payout: current miner cannot win its own block)
+[payout] PASS  jackpot spends ALL 26 reserve UTXOs (#inputs == reserve count)
+[payout] PASS  EXACT accounting: reserve_before == payout + change (5103155590 == 5103155590 + 0); mint=burn=fee=0
+
+[payout] RESULT: PASS — first live Historical Jackpot verified end-to-end on DEVNET_FAST
