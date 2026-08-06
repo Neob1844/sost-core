@@ -1,0 +1,10 @@
+[mbattack] A=sost17f220a30aaec90d7aafc5aebdaecf6e4cbd5c81c B=sost1d8fe3edf62417e17f00820356be8340534818e87 work=/tmp/v15mbattack.Og9CoY scenario=M02
+[mbattack] ── M02: canonical jackpot injected at a NON-event height ──
+[mbattack] PASS  M02 A1: captured canonical jackpot tx 08685be4bc234e72… (6993 hex)
+[mbattack] PASS  M02 A3: target height 25 is a NON-event height (cadence 6 from 24 → 24,30,36…)
+[mbattack] PASS  M02 A2: attack block built with valid DEV PoW at h25 (jackpot injected at tx[1])
+[mbattack] PASS  M02 A4-A7: REJECTED — tip/height/reserve byte-unchanged (0:0) · reason: REJECTED by process_block
+[mbattack] PASS  M02 A8: same block STILL rejected after restart; reserve intact
+[mbattack] PASS  M02 A9: honest non-event block h25 accepted; chain continues
+
+[mbattack] RESULT: PASS — multi-block attack coverage (M02): non-event-height + stale-replay + restart-replay all rejected, state intact, honest blocks accepted

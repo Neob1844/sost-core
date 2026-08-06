@@ -1,0 +1,11 @@
+[mbattack] A=sost1c52e034dc357ab60a5efd023ca2ceb59561b990b B=sost16f7152ed4a11f0b4f4718f3f8e6b879fb0d50ee1 work=/tmp/v15mbattack.FXT0zq scenario=M03
+[mbattack] ── M03: OLD/stale jackpot replayed at a LATER event height ──
+[mbattack] PASS  M03 A1-A2: event A jackpot captured 2ee5aea6f579cc41… (canonical, accepted)
+[mbattack] PASS  M03 A3: advanced to h29; next event B = h30 (reserve after A = 0:0)
+[mbattack] PASS  M03 A4: attack block valid-PoW at event height h30 (old jackpot A injected)
+[mbattack] PASS  M03 A5: rejected AT a legitimate jackpot event (h30 is on-cadence) → obsolescence, not cadence (reason: REJECTED by process_block)
+[mbattack] PASS  M03 A6: tip/height/reserve byte-unchanged after the stale replay (0:0)
+[mbattack] PASS  M03 A7: same stale block STILL rejected after restart
+[mbattack] PASS  M03 A8-A9: correct honest event-B block h30 accepted; final reserve=0:0
+
+[mbattack] RESULT: PASS — multi-block attack coverage (M03): non-event-height + stale-replay + restart-replay all rejected, state intact, honest blocks accepted

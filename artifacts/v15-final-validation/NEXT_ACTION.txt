@@ -33,21 +33,26 @@ MACHINE: 14 cores, miner uses 13 → build with `nice -n 19 ionice -c3` and `-j1
 so build-devnet is idle and safe for FAST incremental DEV rebuilds (DEV changes are #ifdef-guarded).
 Heavy full builds / sanitizers OK at low prio; 8.5h SbPoW testnet = EXTERNAL_RESOURCE_BLOCKER (needs another machine).
 
-LAST DONE: V15-A partial — added 4 valid-PoW attack single-mutations (input-index-bump,
-input-txid-flip, payout-intmax, dup-all-inputs) to sost-miner.cpp + run_v15_devnet_attacks.sh;
-17-case matrix RESULT: PASS 20/0 (evidence attack-matrix.log). Committed f23afb4b, pushed.
+LAST DONE (this session): V15-A CLOSED + V15-B DONE.
+ - V15-A: added --inject-tx-at1 (miner, isolated) → multiblock harness M02 (J at non-event
+   height) + M03 (stale/old-J at a later on-cadence event) BOTH PASS; M08 regression PASS.
+   17-case single-mutation matrix still 20/0. #1/#4/#7 REDUCE to M02/M03 by the keyless-reserve
+   proof (reserve unspendable except by the canonical jackpot → re-listing a reserve UTXO == an
+   old-jackpot replay). #5/#6 = PARTIAL-by-composition (coinbase-mutate + reorg #11). #14 =
+   deferred (needs multi-address winner control). Evidence: m02.log/m03.log/m08.log +
+   multiblock-attack-summary.md.
+ - V15-B: added devjackpotstate RPC (#ifdef SOST_DEVNET_FORKS + Profile::DEV, count=0 in
+   mainnet/testnet) + run_v15_devnet_rollover_cap.sh: rollover_before 0→100→200→300→400→400,
+   prize_target 100→200→300→400→500→500 (clamped at cap), no-winner, survives restart. PASS
+   (rollover-cap.log).
 
 NEXT (pick up here):
- (a) FINISH V15-A multi-block scenarios (see attack-matrix.md "STILL pending"): already-spent
-     reserve input, J-at-non-event-height, old-J reused, stale-state J, coinbase B->A/B->C,
-     template/coinbase mismatch. These need dedicated harness scenarios (not simple mutations)
-     — build a new harness tests/run_v15_devnet_attacks_scenarios.sh on fresh ports (e.g. 18990).
- (b) THEN V15-B: DEV-only rollover RPC (derive_rollover_before) + harness for 100->200->300->400
-     ->500->500 across cadence heights 24,30,36,42,48,54 (single miner = no-winner), persistence
-     across restart/reorg/reindex; RPC must be #ifdef SOST_DEVNET_FORKS + Profile::DEV, absent
-     from mainnet/testnet binaries (verify with strings/nm). Rebuild via build-devnet incremental.
- (c) THEN V15-C E01-E20, V15-D quick gate, V15-E regression+sanitizers (nice/-j1), V15-F testnet
-     (external machine), V15-G RC + rollout docs. Atomic Swap §11 in parallel, non-blocking.
+ (a) V15-C reserve edge cases E01-E20 (fresh harness; reuse devjackpotstate; reserve==0 retire
+     latch, single-vault-empty, cap boundary, winner==reserve exact drain, etc.).
+ (b) V15-D quick gate run_v15_devnet_quick.sh (fast subset orchestrator) — DOES NOT EXIST, create.
+ (c) V15-E regression (ctest ×3 nets) + ASan/UBSan + static — needs a NON-saturated box.
+ (d) V15-F testnet long SbPoW (~8.5h) — EXTERNAL machine. V15-G RC + rollout docs.
+ Atomic Swap §11 in parallel, non-blocking. #14 multi-address-mining reorg transition still open.
 
 SAFETY: clean DEV procs ONLY by PID/port/$WORK (never pkill by name). Never touch the miner.
 No merge to main, no tag (except RC on a release branch), no deploy, no BTC-HTLC activation,
