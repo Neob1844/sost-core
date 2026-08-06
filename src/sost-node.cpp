@@ -4384,6 +4384,51 @@ static std::string handle_dev_chainstate(const std::string& id, const std::vecto
     s << "]}";
     return rpc_result(id, s.str());
 }
+
+// DEV/test-only: numeric jackpot accounting at a target height (params[0], default = tip+1),
+// so V15-B can verify the rollover-cap sequence (prize_target 100->200->...->500->500) and the
+// reserve directly — no jackpot tx has to be mined to observe the number. Reuses the EXACT
+// canonical helpers the validator uses (discover_reserve_utxos / reserve_balance /
+// derive_rollover_before with the same "past event paid iff tx[1]==JACKPOT" predicate), so the
+// reported value is byte-identical to what validate_live_jackpot reconstructs. Read-only.
+// DEV-profile-gated + compiled out of mainnet/testnet binaries.
+static std::string handle_dev_jackpotstate(const std::string& id, const std::vector<std::string>& p) {
+    if (ACTIVE_PROFILE != sost::Profile::DEV)
+        return rpc_error(id, -1, "devjackpotstate is DEV-profile only");
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    const int64_t height = p.empty() ? (g_chain_height + 1) : (int64_t)atoll(p[0].c_str());
+    PubKeyHash gold_pkh{}, popc_pkh{};
+    address_decode(ADDR_GOLD_VAULT, gold_pkh);
+    address_decode(ADDR_POPC_POOL, popc_pkh);
+    const auto reserve = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);
+    const int64_t reserve_before = sost::jackpot::reserve_balance(reserve);
+    const int64_t rollover_before = sost::jackpot::derive_rollover_before(
+        height,
+        [](int64_t h) -> bool {                          // a past event paid iff its block carries tx[1]==JACKPOT
+            if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
+            const StoredBlock& b = g_blocks[(size_t)h];
+            if (b.tx_hexes.size() < 2) return false;
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
+            Transaction t; std::string de;
+            if (!Transaction::Deserialize(raw, t, &de)) return false;
+            return t.tx_type == TX_TYPE_JACKPOT;
+        });
+    const bool is_j = sost::is_hist_jackpot_height(height);
+    const int64_t BASE = sost::HIST_JACKPOT_BASE_STOCKS;
+    const int64_t CAP  = sost::HIST_JACKPOT_CAP_STOCKS;
+    const int64_t roll_target  = BASE + rollover_before;
+    const int64_t prize_target = roll_target < CAP ? roll_target : CAP;   // == validator/apply clamp
+    std::ostringstream s;
+    s << "{\"height\":" << height
+      << ",\"is_jackpot_height\":" << (is_j ? "true" : "false")
+      << ",\"reserve_before\":" << reserve_before
+      << ",\"rollover_before\":" << rollover_before
+      << ",\"base\":" << BASE
+      << ",\"cap\":" << CAP
+      << ",\"prize_target\":" << prize_target << "}";
+    return rpc_result(id, s.str());
+}
 #endif
 
 static std::map<std::string,RpcHandler> g_handlers={
@@ -4417,6 +4462,7 @@ static std::map<std::string,RpcHandler> g_handlers={
 #ifdef SOST_DEVNET_FORKS
     {"devsetreorgfailpoint",handle_dev_set_reorg_failpoint},
     {"devchainstate",handle_dev_chainstate},
+    {"devjackpotstate",handle_dev_jackpotstate},
 #endif
     {"getaddressinfo",handle_getaddressinfo},
     {"getaddressflows",handle_getaddressflows},
