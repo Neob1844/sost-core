@@ -23,7 +23,7 @@ Legend: ✅ GREEN · 🔄 running · 🟡 partial/needs-work · ⛔ blocked (ext
 | 13 | clean reproducible builds | ⬜ | RC step — build node/CLI/miner/signtx from clean main + SHA-256 + manifest |
 | 14 | no DEV RPC / failpoints in production binaries | ✅ | `dev-flag-isolation.log` + quick gate: inject-tx-at1 / attack-jackpot / dump-block / devjackpotstate / devsetreorgfailpoint / devchainstate all count=0 in mainnet+testnet binaries; mainnet build (DEVNET=OFF) recompiles clean |
 | 15 | no secrets | ✅ | `git diff main..HEAD` scanned: NO personal email, NO PEM/private-key literals, NO real mainnet RPC creds (AdminNeoB/sost125fa absent). Only benign hits: placeholder `--rpc-pass sost` in a doc example and public BTC test-vector keys in atomic-swap test code. (Re-run on the final merge diff.) |
-| 16 | rollout + rollback runbooks | 🟡 | `DEPLOYMENT_PLAN.md` has the staged-cutover procedure + governance note; needs a standalone operator/miner runbook with pinned tag+commit+SHA-256 |
+| 16 | rollout + rollback runbooks | ✅ | `RUNBOOK_CUTOVER.md` — standalone operator runbook: pre-cutover HOLD checklist, atomic hash-verified staged swap (node→canary→miners→explorer), rollback (valid only pre-25000), safety invariants. `<PLACEHOLDER>`s filled at RC time (tag/commit/SHA-256) |
 | 17 | merge --no-ff → tag → binaries + SHA-256 + manifest | ⬜ | RC step, GATED on all rows above being GREEN; the live cutover is human-supervised (governance note) |
 
 ## Summary
