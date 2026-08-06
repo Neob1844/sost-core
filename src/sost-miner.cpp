@@ -110,6 +110,7 @@ static std::string g_mining_key_label = "";
 static std::string g_attack_jackpot = "";  // DEVNET_FAST test-only: adversarial jackpot mutation name (see mine loop)
 #ifdef SOST_DEVNET_FORKS
 static std::string g_dump_block_file = "";  // DEV test-only: write each submitted block's exact JSON here (byte-exact replay, e.g. re-submit a rejected attack after restart)
+static std::string g_inject_tx1_file = "";  // DEV test-only: insert a captured raw tx at block_txs[1] before merkle+PoW (M02 non-event-height / M03 stale-replay attacks)
 #endif
 #endif
 // V13 SbPoW hardening: chain-specific salt for the v13 signing preimage.
@@ -1473,6 +1474,33 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
         else if (m=="dup-all-inputs")  { size_t n=j.inputs.size(); for(size_t k=0;k<n;k++) j.inputs.push_back(j.inputs[k]); } // bulk double-spend of every reserve UTXO
         else printf("[ATTACK] unknown mutation '%s' (no-op)\n", m.c_str());
     }
+
+    // DEV/test-only raw-tx injection at block_txs[1] (before merkle+PoW): lets a harness replay a
+    // CAPTURED canonical jackpot at a NON-event height (M02) or a stale/old height (M03). Reads one
+    // hex-encoded transaction from a file. No wallet/keys; fails closed on any invalid input.
+    if (!g_inject_tx1_file.empty()) {
+        std::ifstream _inf(g_inject_tx1_file);
+        std::string _hx; std::getline(_inf, _hx);
+        while (!_hx.empty() && (_hx.back()=='\n' || _hx.back()=='\r' || _hx.back()==' ' || _hx.back()=='\t')) _hx.pop_back();
+        auto _hv = [](char c)->int { if (c>='0'&&c<='9') return c-'0'; if (c>='a'&&c<='f') return c-'a'+10; if (c>='A'&&c<='F') return c-'A'+10; return -1; };
+        if (_hx.size() < 2 || (_hx.size() % 2) != 0) {
+            fprintf(stderr, "[ATTACK] inject-tx-at1: empty/odd-length hex in %s\n", g_inject_tx1_file.c_str());
+        } else {
+            std::vector<Byte> _raw; _raw.reserve(_hx.size()/2); bool _ok = true;
+            for (size_t _k = 0; _k + 1 < _hx.size(); _k += 2) {
+                int hi = _hv(_hx[_k]), lo = _hv(_hx[_k+1]); if (hi < 0 || lo < 0) { _ok = false; break; }
+                _raw.push_back((Byte)((hi << 4) | lo));
+            }
+            Transaction _it; std::string _de;
+            if (!_ok) fprintf(stderr, "[ATTACK] inject-tx-at1: non-hex character\n");
+            else if (!Transaction::Deserialize(_raw, _it, &_de)) fprintf(stderr, "[ATTACK] inject-tx-at1: deserialize failed: %s\n", _de.c_str());
+            else {
+                if (block_txs.size() >= 1) block_txs.insert(block_txs.begin() + 1, _it);
+                else block_txs.push_back(_it);
+                printf("[ATTACK] injected raw tx at block_txs[1] (%zu bytes, tx_type=%d)\n", _raw.size(), (int)_it.tx_type);
+            }
+        }
+    }
 #endif
 
     Hash256 mrkl;
@@ -2387,6 +2415,7 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--attack-jackpot") && i + 1 < argc) g_attack_jackpot = argv[++i];  // DEV test-only
 #ifdef SOST_DEVNET_FORKS
         else if (!strcmp(argv[i], "--dump-block") && i + 1 < argc) g_dump_block_file = argv[++i];  // DEV test-only
+        else if (!strcmp(argv[i], "--inject-tx-at1") && i + 1 < argc) g_inject_tx1_file = argv[++i];  // DEV test-only
 #endif
 #endif
         else if (!strcmp(argv[i], "--profile") && i + 1 < argc) {
