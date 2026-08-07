@@ -18,7 +18,7 @@ echo "[rc] === dev-symbol leak check (MUST be empty in every production binary) 
 LEAK=0
 for b in sost-node sost-cli sost-miner sost-signtx; do
   [[ -x "$RC/$b" ]] || { echo "  MISSING $b"; LEAK=1; continue; }
-  hit=$(strings "$RC/$b" | grep -E 'devjackpotstate|devsetreorgfailpoint|devchainstate|inject-tx-at1|attack-jackpot|dump-block' | head)
+  hit=$( { strings "$RC/$b" | grep -E 'devjackpotstate|devsetreorgfailpoint|devchainstate|inject-tx-at1|attack-jackpot|dump-block' || true; } | head)
   if [[ -n "$hit" ]]; then echo "  LEAK in $b: $hit"; LEAK=1; else echo "  $b clean"; fi
 done
 echo "[rc] === manifest ==="
