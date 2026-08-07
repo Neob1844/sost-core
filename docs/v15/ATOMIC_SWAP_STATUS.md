@@ -47,7 +47,22 @@ miner box vs what needs the second (non-miner) box + external artifacts.
   consensus SbPoW run or the RC.
 - **Counterparty / orderbook / liquidity infra** → `WAITING_EXTERNAL_LIQUIDITY_INFRA`.
 
+## Code-completion update (owner "finish the code" order, this session)
+- **Finding A FIXED** — the policy layer no longer claims a SafeERC20 path the minimal-IERC20 contract
+  lacks. `EvmAssetStatusFor`: USDT (no-bool → reverts at lock) and PAXG (fee-on-transfer → stuck) are
+  now **Disabled**, not Testing; USDC/XAUT/ETH/BNB stay Testing; reasons corrected. Policy test 49/49
+  enforces it (AM4 USDT disabled, AM6 PAXG disabled). Commit — see git log `fix(swap): policy token matrix`.
+- **Finding B FIXED** — operational UI now shows the authoritative HTLC gate **16,000** (relay 17,000),
+  not the stale 15,000/15,010 (console + explorer banner + dex). Millisecond timers left untouched.
+- **Preimage at-rest** — documented in `atomic_swap_watcher.cpp` (public after first CLAIM; persistence
+  kept for restart-recovery; caller must write 0600); not wired to disk yet. No risky refactor.
+- **BTC** — signing is a deliberate fail-closed disabled stub (no fake-signed tx); left honest. Real BTC
+  + bitcoind regtest = WAIVED_BY_OWNER (see V15_FINAL_REPORT.md).
+
 ## Readiness
+**ATOMIC SWAP READINESS: NOT READY** (EVM code complete + honest; BTC intentionally OFF; real BTC
+regtest/E2E + external audit WAIVED_BY_OWNER / WAITING_EXTERNAL_AUDIT — not a discovered defect)
+&nbsp;&nbsp;·&nbsp;&nbsp;original line below:
 **ATOMIC SWAP READINESS: NOT READY** — EVM contract suite + all C++ unit/sim tests are GREEN and the
 EVM HTLC is live @16000, but: BTC HTLC is gated OFF (needs regtest-real redeem/refund + crypto
 review), the EVM contract is unaudited/undeployed (external audit), and the dashboard has no E2E.
