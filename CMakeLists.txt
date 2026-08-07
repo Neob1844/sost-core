@@ -189,6 +189,7 @@ add_library(sost-core STATIC
     src/bitcoin_backend.cpp       # OTC-6 — optional Bitcoin JSON-RPC backend (broadcast/queries; fail-closed, no libwally, no consensus)
     src/btc_swap_state.cpp        # OTC-6 — BTC swap state machine + persistable record (pure, idempotent)
     src/btc_funding.cpp           # OTC-6 — BTC HTLC funding coin-selection + gated signing orchestration
+    src/btc_watch.cpp             # OTC-6 — BTC-leg watch decision + restart-recovery store (pure + backend-fed)
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -559,6 +560,11 @@ add_test(NAME btc-swap-state COMMAND test-btc-swap-state)
 add_executable(test-btc-funding tests/test_btc_funding.cpp)
 target_link_libraries(test-btc-funding PRIVATE sost-core)
 add_test(NAME btc-funding COMMAND test-btc-funding)
+
+# OTC-6 — BTC-leg watch decision + restart-recovery store + chain reconcile.
+add_executable(test-btc-watch tests/test_btc_watch.cpp)
+target_link_libraries(test-btc-watch PRIVATE sost-core)
+add_test(NAME btc-watch COMMAND test-btc-watch)
 
 # V14.5 — atomic-swap HTLC consensus fix: CLAIM/REFUND block-path acceptance
 # (ConnectBlock guard, mirrors process_block) + validation-path R17-R24, gated
