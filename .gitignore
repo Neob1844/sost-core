@@ -86,3 +86,9 @@ data/mode_arbiter/cases/
 
 # Private investor/strategy docs — NEVER publish
 marketing/private/
+
+# Option B packaged binaries (large; provenance in PACKAGE_MANIFEST.md + SHA256SUMS.txt)
+deploy/v15-option-b/sost-node
+deploy/v15-option-b/sost-cli
+deploy/v15-option-b/sost-miner
+deploy/v15-option-b/sost-signtx
