@@ -1,0 +1,481 @@
+Consolidate compiler generated dependencies of target sost-core
+[ 17%] Built target sost-core
+Consolidate compiler generated dependencies of target test-chunk2
+[ 17%] Building CXX object CMakeFiles/test-chunk2.dir/tests/test_chunk2.cpp.o
+Consolidate compiler generated dependencies of target test-chunk1
+[ 18%] Building CXX object CMakeFiles/test-chunk1.dir/tests/test_chunk1.cpp.o
+[ 19%] Linking CXX executable test-chunk2
+[ 19%] Linking CXX executable test-chunk1
+[ 19%] Built target test-chunk1
+[ 19%] Built target test-chunk2
+Consolidate compiler generated dependencies of target test-transaction
+Consolidate compiler generated dependencies of target test-tx-signer
+[ 20%] Linking CXX executable test-transaction
+[ 20%] Linking CXX executable test-tx-signer
+[ 21%] Built target test-tx-signer
+Consolidate compiler generated dependencies of target test-tx-validation
+[ 21%] Building CXX object CMakeFiles/test-tx-validation.dir/tests/test_tx_validation.cpp.o
+[ 21%] Built target test-transaction
+Consolidate compiler generated dependencies of target test-capsule
+[ 21%] Building CXX object CMakeFiles/test-capsule.dir/tests/test_capsule_codec.cpp.o
+[ 22%] Linking CXX executable test-tx-validation
+[ 23%] Linking CXX executable test-capsule
+[ 23%] Built target test-tx-validation
+Consolidate compiler generated dependencies of target test-utxo-set
+[ 23%] Built target test-capsule
+[ 23%] Building CXX object CMakeFiles/test-utxo-set.dir/tests/test_utxo_set.cpp.o
+Consolidate compiler generated dependencies of target test-merkle-block
+[ 23%] Building CXX object CMakeFiles/test-merkle-block.dir/tests/test_merkle_block.cpp.o
+[ 24%] Linking CXX executable test-merkle-block
+[ 25%] Linking CXX executable test-utxo-set
+[ 25%] Built target test-merkle-block
+[ 25%] Built target test-utxo-set
+Consolidate compiler generated dependencies of target test-v14-h3-h4
+Consolidate compiler generated dependencies of target test-mempool
+[ 25%] Building CXX object CMakeFiles/test-v14-h3-h4.dir/tests/test_v14_h3_h4.cpp.o
+[ 26%] Building CXX object CMakeFiles/test-mempool.dir/tests/test_mempool.cpp.o
+[ 27%] Linking CXX executable test-v14-h3-h4
+[ 27%] Built target test-v14-h3-h4
+Consolidate compiler generated dependencies of target test-v14-fork-gates
+[ 28%] Building CXX object CMakeFiles/test-v14-fork-gates.dir/tests/test_v14_fork_gates.cpp.o
+[ 28%] Linking CXX executable test-v14-fork-gates
+[ 28%] Built target test-v14-fork-gates
+Consolidate compiler generated dependencies of target test-gv-slice1-activation
+[ 28%] Building CXX object CMakeFiles/test-gv-slice1-activation.dir/tests/test_gv_slice1_activation.cpp.o
+[ 29%] Linking CXX executable test-gv-slice1-activation
+[ 29%] Built target test-gv-slice1-activation
+Consolidate compiler generated dependencies of target test-gv-g4
+[ 30%] Building CXX object CMakeFiles/test-gv-g4.dir/tests/test_gv_g4.cpp.o
+[ 30%] Linking CXX executable test-mempool
+[ 30%] Built target test-mempool
+Consolidate compiler generated dependencies of target test-gv-slice1-block
+[ 30%] Building CXX object CMakeFiles/test-gv-slice1-block.dir/tests/test_gv_slice1_block_enforcement.cpp.o
+[ 30%] Linking CXX executable test-gv-g4
+[ 30%] Built target test-gv-g4
+Consolidate compiler generated dependencies of target test-gv-g4-coinbase
+[ 30%] Building CXX object CMakeFiles/test-gv-g4-coinbase.dir/tests/test_gv_g4_coinbase.cpp.o
+[ 30%] Linking CXX executable test-gv-slice1-block
+[ 30%] Built target test-gv-slice1-block
+Consolidate compiler generated dependencies of target test-gv-g5
+[ 30%] Building CXX object CMakeFiles/test-gv-g5.dir/tests/test_gv_g5.cpp.o
+/home/sost/SOST/sostcore/sost-core/tests/test_gv_g5.cpp: In function ‘int main()’:
+/home/sost/SOST/sostcore/sost-core/tests/test_gv_g5.cpp:63:53: warning: ignoring return value of ‘int secp256k1_ec_pubkey_create(const secp256k1_context*, secp256k1_pubkey*, const unsigned char*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   63 |     secp256k1_pubkey pub; secp256k1_ec_pubkey_create(ctx, &pub, seckey);
+      |                           ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+[ 31%] Linking CXX executable test-gv-g4-coinbase
+[ 31%] Built target test-gv-g4-coinbase
+Consolidate compiler generated dependencies of target test-gv-governance-audit
+[ 31%] Building CXX object CMakeFiles/test-gv-governance-audit.dir/tests/test_gv_governance_audit.cpp.o
+[ 32%] Linking CXX executable test-gv-g5
+[ 32%] Built target test-gv-g5
+Consolidate compiler generated dependencies of target test-gv-g3b
+[ 32%] Building CXX object CMakeFiles/test-gv-g3b.dir/tests/test_gv_g3b.cpp.o
+[ 32%] Linking CXX executable test-gv-governance-audit
+[ 32%] Built target test-gv-governance-audit
+Consolidate compiler generated dependencies of target test-gv-governance-determinism
+[ 33%] Building CXX object CMakeFiles/test-gv-governance-determinism.dir/tests/test_gv_governance_determinism.cpp.o
+/home/sost/SOST/sostcore/sost-core/tests/test_gv_governance_determinism.cpp: In function ‘void initKey()’:
+/home/sost/SOST/sostcore/sost-core/tests/test_gv_governance_determinism.cpp:41:53: warning: ignoring return value of ‘int secp256k1_ec_pubkey_create(const secp256k1_context*, secp256k1_pubkey*, const unsigned char*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   41 |     secp256k1_pubkey pub; secp256k1_ec_pubkey_create(CTX,&pub,SECKEY);
+      |                           ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+[ 33%] Linking CXX executable test-gv-governance-determinism
+[ 33%] Linking CXX executable test-gv-g3b
+[ 33%] Built target test-gv-governance-determinism
+Consolidate compiler generated dependencies of target test-popc-v15
+[ 33%] Building CXX object CMakeFiles/test-popc-v15.dir/tests/test_popc_v15.cpp.o
+[ 33%] Built target test-gv-g3b
+Consolidate compiler generated dependencies of target test-popc-v15-set
+[ 33%] Building CXX object CMakeFiles/test-popc-v15-set.dir/tests/test_popc_v15_set.cpp.o
+/home/sost/SOST/sostcore/sost-core/tests/test_popc_v15.cpp: In function ‘int main()’:
+/home/sost/SOST/sostcore/sost-core/tests/test_popc_v15.cpp:20:52: warning: ignoring return value of ‘int secp256k1_ec_pubkey_create(const secp256k1_context*, secp256k1_pubkey*, const unsigned char*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   20 |     secp256k1_pubkey pk; secp256k1_ec_pubkey_create(ctx,&pk,sk);
+      |                          ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/tests/test_popc_v15.cpp:26:53: warning: ignoring return value of ‘int secp256k1_ec_pubkey_create(const secp256k1_context*, secp256k1_pubkey*, const unsigned char*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   26 |     secp256k1_pubkey pk2; secp256k1_ec_pubkey_create(ctx,&pk2,sk2);
+      |                           ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~
+[ 33%] Linking CXX executable test-popc-v15
+[ 33%] Built target test-popc-v15
+Consolidate compiler generated dependencies of target test-popc-v15-carrier
+[ 34%] Building CXX object CMakeFiles/test-popc-v15-carrier.dir/tests/test_popc_v15_carrier.cpp.o
+[ 35%] Linking CXX executable test-popc-v15-set
+/home/sost/SOST/sostcore/sost-core/tests/test_popc_v15_carrier.cpp: In function ‘int main()’:
+/home/sost/SOST/sostcore/sost-core/tests/test_popc_v15_carrier.cpp:65:56: warning: ignoring return value of ‘int secp256k1_ec_pubkey_create(const secp256k1_context*, secp256k1_pubkey*, const unsigned char*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   65 |         secp256k1_pubkey pk; secp256k1_ec_pubkey_create(ctx,&pk,sk);
+      |                              ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+[ 35%] Built target test-popc-v15-set
+Consolidate compiler generated dependencies of target test-popc-v15-eligibility
+[ 35%] Building CXX object CMakeFiles/test-popc-v15-eligibility.dir/tests/test_popc_v15_eligibility.cpp.o
+[ 35%] Linking CXX executable test-popc-v15-carrier
+[ 35%] Built target test-popc-v15-carrier
+Consolidate compiler generated dependencies of target test-popc-v15-lifecycle
+[ 36%] Building CXX object CMakeFiles/test-popc-v15-lifecycle.dir/tests/test_popc_v15_lifecycle.cpp.o
+[ 36%] Linking CXX executable test-popc-v15-eligibility
+[ 36%] Built target test-popc-v15-eligibility
+Consolidate compiler generated dependencies of target test-popc-v15-authz
+[ 36%] Linking CXX executable test-popc-v15-lifecycle
+[ 37%] Building CXX object CMakeFiles/test-popc-v15-authz.dir/tests/test_popc_v15_authz.cpp.o
+[ 37%] Built target test-popc-v15-lifecycle
+Consolidate compiler generated dependencies of target test-popc-v15-carrier-e2e
+[ 37%] Building CXX object CMakeFiles/test-popc-v15-carrier-e2e.dir/tests/test_popc_v15_carrier_e2e.cpp.o
+/home/sost/SOST/sostcore/sost-core/tests/test_popc_v15_authz.cpp: In lambda function:
+/home/sost/SOST/sostcore/sost-core/tests/test_popc_v15_authz.cpp:25:56: warning: ignoring return value of ‘int secp256k1_ec_pubkey_create(const secp256k1_context*, secp256k1_pubkey*, const unsigned char*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   25 |         secp256k1_pubkey pk; secp256k1_ec_pubkey_create(ctx,&pk,sk);
+      |                              ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+[ 37%] Linking CXX executable test-popc-v15-authz
+/home/sost/SOST/sostcore/sost-core/tests/test_popc_v15_carrier_e2e.cpp: In lambda function:
+/home/sost/SOST/sostcore/sost-core/tests/test_popc_v15_carrier_e2e.cpp:69:56: warning: ignoring return value of ‘int secp256k1_ec_pubkey_create(const secp256k1_context*, secp256k1_pubkey*, const unsigned char*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   69 |         secp256k1_pubkey pk; secp256k1_ec_pubkey_create(ctx,&pk,sk);
+      |                              ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+[ 37%] Built target test-popc-v15-authz
+[ 38%] Linking CXX executable test-popc-v15-carrier-e2e
+Consolidate compiler generated dependencies of target test-popc-v15-soak
+[ 38%] Building CXX object CMakeFiles/test-popc-v15-soak.dir/tests/test_popc_v15_soak.cpp.o
+[ 38%] Linking CXX executable test-popc-v15-soak
+[ 38%] Built target test-popc-v15-soak
+[ 38%] Building CXX object CMakeFiles/popc15-carrier.dir/tools/popc15_carrier.cpp.o
+[ 38%] Built target test-popc-v15-carrier-e2e
+[ 38%] Building CXX object CMakeFiles/otc-coordinator.dir/tools/otc_swap_coordinator.cpp.o
+[ 39%] Linking CXX executable otc-coordinator
+[ 39%] Linking CXX executable popc15-carrier
+[ 39%] Built target otc-coordinator
+[ 39%] Building CXX object CMakeFiles/cx-reverify.dir/tools/cx_reverify.cpp.o
+[ 39%] Built target popc15-carrier
+[ 40%] Building CXX object CMakeFiles/sost-signtx.dir/tools/sost_signtx.cpp.o
+[ 41%] Linking CXX executable cx-reverify
+[ 41%] Linking CXX executable sost-signtx
+[ 41%] Built target cx-reverify
+[ 41%] Built target sost-signtx
+Consolidate compiler generated dependencies of target test-atomic-swap-btc-script
+Consolidate compiler generated dependencies of target test-atomic-swap-btc-test-vectors
+[ 42%] Linking CXX executable test-atomic-swap-btc-script
+[ 42%] Linking CXX executable test-atomic-swap-btc-test-vectors
+[ 42%] Built target test-atomic-swap-btc-script
+Consolidate compiler generated dependencies of target test-atomic-swap-btc-signing
+[ 43%] Built target test-atomic-swap-btc-test-vectors
+Consolidate compiler generated dependencies of target test-atomic-swap-coordinator
+[ 43%] Building CXX object CMakeFiles/test-atomic-swap-btc-signing.dir/tests/test_atomic_swap_btc_signing.cpp.o
+[ 43%] Building CXX object CMakeFiles/test-atomic-swap-coordinator.dir/tests/test_atomic_swap_coordinator.cpp.o
+[ 43%] Linking CXX executable test-atomic-swap-btc-signing
+[ 44%] Linking CXX executable test-atomic-swap-coordinator
+[ 44%] Built target test-atomic-swap-btc-signing
+Consolidate compiler generated dependencies of target test-atomic-swap-e2e-sim
+[ 44%] Built target test-atomic-swap-coordinator
+Consolidate compiler generated dependencies of target test-atomic-swap-htlc-lock
+[ 44%] Linking CXX executable test-atomic-swap-e2e-sim
+[ 45%] Building CXX object CMakeFiles/test-atomic-swap-htlc-lock.dir/tests/test_atomic_swap_htlc_lock.cpp.o
+[ 45%] Built target test-atomic-swap-e2e-sim
+[ 45%] Linking CXX executable test-atomic-swap-htlc-lock
+Consolidate compiler generated dependencies of target test-atomic-swap-htlc-helpers
+[ 46%] Building CXX object CMakeFiles/test-atomic-swap-htlc-helpers.dir/tests/test_atomic_swap_htlc_helpers.cpp.o
+[ 46%] Linking CXX executable test-atomic-swap-htlc-helpers
+[ 46%] Built target test-atomic-swap-htlc-helpers
+Consolidate compiler generated dependencies of target test-atomic-swap-htlc-rpc
+[ 46%] Built target test-atomic-swap-htlc-lock
+Consolidate compiler generated dependencies of target test-atomic-swap-orderbook
+[ 46%] Linking CXX executable test-atomic-swap-orderbook
+[ 46%] Building CXX object CMakeFiles/test-atomic-swap-htlc-rpc.dir/tests/test_atomic_swap_htlc_rpc.cpp.o
+[ 47%] Linking CXX executable test-atomic-swap-htlc-rpc
+[ 47%] Built target test-atomic-swap-orderbook
+Consolidate compiler generated dependencies of target test-atomic-swap-watcher
+[ 47%] Linking CXX executable test-atomic-swap-watcher
+[ 47%] Built target test-atomic-swap-htlc-rpc
+Consolidate compiler generated dependencies of target test-atomic-swap-status
+[ 47%] Building CXX object CMakeFiles/test-atomic-swap-status.dir/tests/test_atomic_swap_status.cpp.o
+[ 48%] Built target test-atomic-swap-watcher
+[ 48%] Linking CXX executable test-atomic-swap-status
+Consolidate compiler generated dependencies of target test-atomic-swap-session
+[ 49%] Linking CXX executable test-atomic-swap-session
+[ 49%] Built target test-atomic-swap-status
+Consolidate compiler generated dependencies of target test-atomic-swap-policy
+[ 49%] Built target test-atomic-swap-session
+[ 49%] Linking CXX executable test-atomic-swap-policy
+Consolidate compiler generated dependencies of target test-htlc-block-path-v14-5
+[ 49%] Building CXX object CMakeFiles/test-htlc-block-path-v14-5.dir/tests/test_htlc_block_path_v14_5.cpp.o
+[ 50%] Built target test-atomic-swap-policy
+Consolidate compiler generated dependencies of target test-htlc-expired-lock-template
+[ 50%] Building CXX object CMakeFiles/test-htlc-expired-lock-template.dir/tests/test_htlc_expired_lock_template.cpp.o
+[ 51%] Linking CXX executable test-htlc-expired-lock-template
+[ 52%] Linking CXX executable test-htlc-block-path-v14-5
+[ 52%] Built target test-htlc-expired-lock-template
+Consolidate compiler generated dependencies of target test-bond-lock
+[ 52%] Built target test-htlc-block-path-v14-5
+[ 53%] Building CXX object CMakeFiles/test-bond-lock.dir/tests/test_bond_lock.cpp.o
+Consolidate compiler generated dependencies of target test-casert
+[ 53%] Building CXX object CMakeFiles/test-casert.dir/tests/test_casert.cpp.o
+[ 54%] Linking CXX executable test-casert
+[ 54%] Built target test-casert
+Consolidate compiler generated dependencies of target test-casert-v11
+[ 54%] Building CXX object CMakeFiles/test-casert-v11.dir/tests/test_casert_v11.cpp.o
+[ 54%] Linking CXX executable test-bond-lock
+[ 54%] Linking CXX executable test-casert-v11
+[ 54%] Built target test-casert-v11
+Consolidate compiler generated dependencies of target test-slingshot
+[ 54%] Building CXX object CMakeFiles/test-slingshot.dir/tests/test_slingshot.cpp.o
+[ 54%] Built target test-bond-lock
+Consolidate compiler generated dependencies of target test-slingshot-miner-rebuild
+[ 54%] Building CXX object CMakeFiles/test-slingshot-miner-rebuild.dir/tests/test_slingshot_miner_rebuild.cpp.o
+[ 55%] Linking CXX executable test-slingshot-miner-rebuild
+[ 55%] Built target test-slingshot-miner-rebuild
+Consolidate compiler generated dependencies of target test-casert-v12-ceiling
+[ 56%] Building CXX object CMakeFiles/test-casert-v12-ceiling.dir/tests/test_casert_v12_ceiling.cpp.o
+[ 57%] Linking CXX executable test-slingshot
+[ 57%] Built target test-slingshot
+Consolidate compiler generated dependencies of target test-casert-v13-ceiling
+[ 57%] Building CXX object CMakeFiles/test-casert-v13-ceiling.dir/tests/test_casert_v13_ceiling.cpp.o
+[ 57%] Linking CXX executable test-casert-v12-ceiling
+[ 57%] Built target test-casert-v12-ceiling
+Consolidate compiler generated dependencies of target test-slingshot-v12-tier
+[ 57%] Building CXX object CMakeFiles/test-slingshot-v12-tier.dir/tests/test_slingshot_v12_tier.cpp.o
+[ 58%] Linking CXX executable test-casert-v13-ceiling
+[ 58%] Built target test-casert-v13-ceiling
+Consolidate compiler generated dependencies of target test-capsule-v12-activation
+[ 59%] Building CXX object CMakeFiles/test-capsule-v12-activation.dir/tests/test_capsule_v12_activation.cpp.o
+[ 59%] Linking CXX executable test-slingshot-v12-tier
+[ 59%] Built target test-slingshot-v12-tier
+Consolidate compiler generated dependencies of target test-slingshot-v12-timestamp-safety
+[ 60%] Building CXX object CMakeFiles/test-slingshot-v12-timestamp-safety.dir/tests/test_slingshot_v12_timestamp_safety.cpp.o
+[ 60%] Linking CXX executable test-slingshot-v12-timestamp-safety
+[ 60%] Linking CXX executable test-capsule-v12-activation
+[ 60%] Built target test-slingshot-v12-timestamp-safety
+Consolidate compiler generated dependencies of target test-v13-helpers
+[ 60%] Building CXX object CMakeFiles/test-v13-helpers.dir/tests/test_v13_helpers.cpp.o
+[ 61%] Linking CXX executable test-v13-helpers
+[ 61%] Built target test-capsule-v12-activation
+Consolidate compiler generated dependencies of target test-v13-lottery-cooldown-fork
+[ 61%] Building CXX object CMakeFiles/test-v13-lottery-cooldown-fork.dir/tests/test_v13_lottery_cooldown_fork.cpp.o
+[ 61%] Built target test-v13-helpers
+Consolidate compiler generated dependencies of target test-v13-drift-fork
+[ 62%] Building CXX object CMakeFiles/test-v13-drift-fork.dir/tests/test_v13_drift_fork.cpp.o
+[ 62%] Linking CXX executable test-v13-drift-fork
+[ 62%] Built target test-v13-drift-fork
+Consolidate compiler generated dependencies of target test-v13-beacon-phase2a
+[ 63%] Building CXX object CMakeFiles/test-v13-beacon-phase2a.dir/tests/test_v13_beacon_phase2a.cpp.o
+[ 63%] Linking CXX executable test-v13-lottery-cooldown-fork
+[ 63%] Built target test-v13-lottery-cooldown-fork
+Consolidate compiler generated dependencies of target test-v13-beacon-phase2b
+[ 63%] Building CXX object CMakeFiles/test-v13-beacon-phase2b.dir/tests/test_v13_beacon_phase2b.cpp.o
+[ 63%] Linking CXX executable test-v13-beacon-phase2a
+[ 63%] Built target test-v13-beacon-phase2a
+Consolidate compiler generated dependencies of target test-v13-beacon-phase3-p2p
+[ 64%] Linking CXX executable test-v13-beacon-phase2b
+[ 64%] Building CXX object CMakeFiles/test-v13-beacon-phase3-p2p.dir/tests/test_v13_beacon_phase3_p2p.cpp.o
+[ 64%] Built target test-v13-beacon-phase2b
+Consolidate compiler generated dependencies of target test-v13-beacon-p2p-scaffold
+[ 64%] Linking CXX executable test-v13-beacon-phase3-p2p
+[ 64%] Building CXX object CMakeFiles/test-v13-beacon-p2p-scaffold.dir/tests/test_v13_beacon_p2p_scaffold.cpp.o
+[ 64%] Linking CXX executable test-v13-beacon-p2p-scaffold
+[ 64%] Built target test-v13-beacon-phase3-p2p
+Consolidate compiler generated dependencies of target test-capsule-build-public
+[ 64%] Linking CXX executable test-capsule-build-public
+[ 64%] Built target test-v13-beacon-p2p-scaffold
+Consolidate compiler generated dependencies of target test-wallet-capsule-attach
+[ 65%] Building CXX object CMakeFiles/test-wallet-capsule-attach.dir/tests/test_wallet_capsule_attach.cpp.o
+[ 65%] Built target test-capsule-build-public
+Consolidate compiler generated dependencies of target test-sealed-envelope
+[ 65%] Linking CXX executable test-wallet-capsule-attach
+[ 65%] Linking CXX executable test-sealed-envelope
+[ 66%] Built target test-sealed-envelope
+Consolidate compiler generated dependencies of target test-sealed-capsule-packaging
+[ 66%] Built target test-wallet-capsule-attach
+[ 66%] Linking CXX executable test-sealed-capsule-packaging
+[ 67%] Building CXX object CMakeFiles/sealed-envelope-fixture.dir/tests/sealed_envelope_fixture.cpp.o
+/home/sost/SOST/sostcore/sost-core/tests/sealed_envelope_fixture.cpp: In function ‘void emit(const Vector&)’:
+/home/sost/SOST/sostcore/sost-core/tests/sealed_envelope_fixture.cpp:116:31: warning: ignoring return value of ‘int secp256k1_ec_pubkey_create(const secp256k1_context*, secp256k1_pubkey*, const unsigned char*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  116 |     secp256k1_ec_pubkey_create(ctx, &ep, v.eph_priv);
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+[ 67%] Linking CXX executable sealed-envelope-fixture
+[ 67%] Built target sealed-envelope-fixture
+[ 67%] Built target test-sealed-capsule-packaging
+Consolidate compiler generated dependencies of target test-miner-key-selection
+Consolidate compiler generated dependencies of target test-sbpow-header-v2
+[ 67%] Linking CXX executable test-sbpow-header-v2
+[ 67%] Building CXX object CMakeFiles/test-miner-key-selection.dir/tests/test_miner_key_selection.cpp.o
+[ 67%] Linking CXX executable test-miner-key-selection
+[ 68%] Built target test-sbpow-header-v2
+Consolidate compiler generated dependencies of target test-lottery-frequency
+[ 68%] Building CXX object CMakeFiles/test-lottery-frequency.dir/tests/test_lottery_frequency.cpp.o
+[ 68%] Built target test-miner-key-selection
+[ 69%] Linking CXX executable test-lottery-frequency
+Consolidate compiler generated dependencies of target test-lottery-eligibility
+[ 70%] Building CXX object CMakeFiles/test-lottery-eligibility.dir/tests/test_lottery_eligibility.cpp.o
+[ 70%] Built target test-lottery-frequency
+Consolidate compiler generated dependencies of target test-dtd-control
+[ 70%] Linking CXX executable test-lottery-eligibility
+[ 70%] Building CXX object CMakeFiles/test-dtd-control.dir/tests/test_dtd_control.cpp.o
+[ 71%] Linking CXX executable test-dtd-control
+[ 71%] Built target test-lottery-eligibility
+[ 71%] Built target test-dtd-control
+Consolidate compiler generated dependencies of target test-lottery-rollover
+Consolidate compiler generated dependencies of target test-coinbase-phase2
+[ 71%] Building CXX object CMakeFiles/test-lottery-rollover.dir/tests/test_lottery_rollover.cpp.o
+[ 71%] Building CXX object CMakeFiles/test-coinbase-phase2.dir/tests/test_coinbase_phase2.cpp.o
+[ 71%] Linking CXX executable test-coinbase-phase2
+[ 71%] Linking CXX executable test-lottery-rollover
+[ 71%] Built target test-coinbase-phase2
+[ 71%] Built target test-lottery-rollover
+[ 71%] Building CXX object CMakeFiles/test-v15-activation-boundary.dir/tests/test_v15_activation_boundary.cpp.o
+[ 71%] Linking CXX executable test-v15-activation-boundary
+Consolidate compiler generated dependencies of target test-jackpot
+[ 71%] Built target test-v15-activation-boundary
+[ 71%] Building CXX object CMakeFiles/test-jackpot.dir/tests/test_jackpot.cpp.o
+Consolidate compiler generated dependencies of target test-phase2-miner-integration
+[ 71%] Building CXX object CMakeFiles/test-phase2-miner-integration.dir/tests/test_phase2_miner_integration.cpp.o
+[ 72%] Linking CXX executable test-phase2-miner-integration
+[ 72%] Linking CXX executable test-jackpot
+[ 72%] Built target test-phase2-miner-integration
+Consolidate compiler generated dependencies of target test-sbpow-signing
+[ 72%] Linking CXX executable test-sbpow-signing
+[ 72%] Built target test-jackpot
+Consolidate compiler generated dependencies of target test-sbpow-validation
+[ 73%] Building CXX object CMakeFiles/test-sbpow-validation.dir/tests/test_sbpow_validation.cpp.o
+[ 74%] Built target test-sbpow-signing
+Consolidate compiler generated dependencies of target test-sbpow-adversarial
+[ 74%] Linking CXX executable test-sbpow-adversarial
+[ 74%] Linking CXX executable test-sbpow-validation
+[ 74%] Built target test-sbpow-validation
+Consolidate compiler generated dependencies of target test-sbpow-submit-integration
+[ 74%] Building CXX object CMakeFiles/test-sbpow-submit-integration.dir/tests/test_sbpow_submit_integration.cpp.o
+[ 74%] Built target test-sbpow-adversarial
+Consolidate compiler generated dependencies of target test-sbpow-v13-hardening
+[ 74%] Building CXX object CMakeFiles/test-sbpow-v13-hardening.dir/tests/test_sbpow_v13_hardening.cpp.o
+[ 74%] Linking CXX executable test-sbpow-v13-hardening
+[ 75%] Linking CXX executable test-sbpow-submit-integration
+[ 75%] Built target test-sbpow-v13-hardening
+Consolidate compiler generated dependencies of target test-convergencex-v11
+[ 76%] Building CXX object CMakeFiles/test-convergencex-v11.dir/tests/test_convergencex_v11.cpp.o
+[ 76%] Built target test-sbpow-submit-integration
+[ 76%] Linking CXX executable test-convergencex-v11
+Consolidate compiler generated dependencies of target test-scratchpad-cache
+[ 76%] Building CXX object CMakeFiles/test-scratchpad-cache.dir/tests/test_scratchpad_cache.cpp.o
+[ 77%] Linking CXX executable test-scratchpad-cache
+[ 77%] Built target test-scratchpad-cache
+Consolidate compiler generated dependencies of target test-relief-predict
+[ 77%] Linking CXX executable test-relief-predict
+[ 77%] Built target test-convergencex-v11
+Consolidate compiler generated dependencies of target test-mtp-fork
+[ 78%] Building CXX object CMakeFiles/test-mtp-fork.dir/tests/test_mtp_fork.cpp.o
+[ 78%] Linking CXX executable test-mtp-fork
+[ 79%] Built target test-relief-predict
+Consolidate compiler generated dependencies of target test-checkpoints
+[ 79%] Building CXX object CMakeFiles/test-checkpoints.dir/tests/test_checkpoints.cpp.o
+[ 79%] Linking CXX executable test-checkpoints
+[ 79%] Built target test-mtp-fork
+[ 79%] Built target test-checkpoints
+Consolidate compiler generated dependencies of target test-reorg
+Consolidate compiler generated dependencies of target test-transcript-v2
+[ 79%] Building CXX object CMakeFiles/test-transcript-v2.dir/tests/test_transcript_v2.cpp.o
+[ 79%] Building CXX object CMakeFiles/test-reorg.dir/tests/test_reorg.cpp.o
+[ 79%] Linking CXX executable test-transcript-v2
+[ 80%] Linking CXX executable test-reorg
+[ 80%] Built target test-transcript-v2
+Consolidate compiler generated dependencies of target test-chainwork
+[ 80%] Building CXX object CMakeFiles/test-chainwork.dir/tests/test_chainwork.cpp.o
+[ 80%] Built target test-reorg
+[ 81%] Linking CXX executable test-chainwork
+Consolidate compiler generated dependencies of target test-addressbook
+[ 81%] Linking CXX executable test-addressbook
+[ 81%] Built target test-chainwork
+Consolidate compiler generated dependencies of target test-wallet-policy
+[ 82%] Linking CXX executable test-wallet-policy
+[ 83%] Built target test-addressbook
+Consolidate compiler generated dependencies of target test-rbf
+[ 83%] Built target test-wallet-policy
+[ 83%] Building CXX object CMakeFiles/test-rbf.dir/tests/test_rbf.cpp.o
+Consolidate compiler generated dependencies of target test-cpfp
+[ 83%] Building CXX object CMakeFiles/test-cpfp.dir/tests/test_cpfp.cpp.o
+[ 83%] Linking CXX executable test-rbf
+[ 84%] Linking CXX executable test-cpfp
+[ 84%] Built target test-rbf
+[ 84%] Built target test-cpfp
+Consolidate compiler generated dependencies of target test-psbt
+Consolidate compiler generated dependencies of target test-hd-wallet
+[ 84%] Building CXX object CMakeFiles/test-psbt.dir/tests/test_psbt.cpp.o
+[ 84%] Linking CXX executable test-hd-wallet
+[ 85%] Linking CXX executable test-psbt
+[ 86%] Built target test-hd-wallet
+[ 86%] Built target test-psbt
+Consolidate compiler generated dependencies of target test-popc
+Consolidate compiler generated dependencies of target test-multisig
+[ 86%] Linking CXX executable test-popc
+[ 86%] Linking CXX executable test-multisig
+[ 86%] Built target test-popc
+[ 87%] Built target test-multisig
+Consolidate compiler generated dependencies of target test-popc-tx
+[ 87%] Building CXX object CMakeFiles/test-popc-tx.dir/tests/test_popc_tx.cpp.o
+Consolidate compiler generated dependencies of target test-popc-single-model
+[ 88%] Building CXX object CMakeFiles/test-popc-single-model.dir/tests/test_popc_single_model.cpp.o
+[ 89%] Linking CXX executable test-popc-tx
+[ 89%] Built target test-popc-tx
+[ 89%] Linking CXX executable test-popc-single-model
+Consolidate compiler generated dependencies of target test-profile-magic
+[ 90%] Building CXX object CMakeFiles/test-profile-magic.dir/tests/test_profile_magic.cpp.o
+[ 90%] Built target test-popc-single-model
+Consolidate compiler generated dependencies of target test-escrow
+[ 90%] Linking CXX executable test-escrow
+[ 91%] Built target test-escrow
+Consolidate compiler generated dependencies of target test-proposals
+[ 91%] Linking CXX executable test-proposals
+[ 91%] Linking CXX executable test-profile-magic
+[ 92%] Built target test-proposals
+Consolidate compiler generated dependencies of target test-dynamic-rewards
+[ 92%] Building CXX object CMakeFiles/test-dynamic-rewards.dir/tests/test_dynamic_rewards.cpp.o
+[ 92%] Built target test-profile-magic
+Consolidate compiler generated dependencies of target test-gold-vault
+[ 92%] Building CXX object CMakeFiles/test-gold-vault.dir/tests/test_gold_vault.cpp.o
+[ 92%] Linking CXX executable test-dynamic-rewards
+[ 93%] Linking CXX executable test-gold-vault
+[ 93%] Built target test-dynamic-rewards
+Consolidate compiler generated dependencies of target test-v13-gold-vault-slice1
+[ 93%] Built target test-gold-vault
+[ 93%] Building CXX object CMakeFiles/test-v13-gold-vault-slice1.dir/tests/test_v13_gold_vault_slice1.cpp.o
+[ 93%] Building CXX object CMakeFiles/sost-genesis.dir/src/genesis.cpp.o
+[ 94%] Linking CXX executable test-v13-gold-vault-slice1
+[ 94%] Built target test-v13-gold-vault-slice1
+Consolidate compiler generated dependencies of target sost-cli
+[ 95%] Built target sost-cli
+[ 95%] Building CXX object CMakeFiles/sost-rpc.dir/src/sost-rpc.cpp.o
+[ 95%] Linking CXX executable sost-genesis
+[ 95%] Built target sost-genesis
+/home/sost/SOST/sostcore/sost-core/src/sost-rpc.cpp: In function ‘void handle_connection(int)’:
+/home/sost/SOST/sostcore/sost-core/src/sost-rpc.cpp:275:14: warning: ignoring return value of ‘ssize_t write(int, const void*, size_t)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  275 |         write(fd,resp.c_str(),resp.size());close(fd);return;
+      |         ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/src/sost-rpc.cpp:279:14: warning: ignoring return value of ‘ssize_t write(int, const void*, size_t)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  279 |         write(fd,resp.c_str(),resp.size());close(fd);return;
+      |         ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/src/sost-rpc.cpp:283:10: warning: ignoring return value of ‘ssize_t write(int, const void*, size_t)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  283 |     write(fd,resp.c_str(),resp.size());close(fd);
+      |     ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Consolidate compiler generated dependencies of target sost-miner
+[ 96%] Building CXX object CMakeFiles/sost-miner.dir/src/sost-miner.cpp.o
+[ 96%] Linking CXX executable sost-rpc
+[ 96%] Built target sost-rpc
+Consolidate compiler generated dependencies of target sost-node
+[ 96%] Building CXX object CMakeFiles/sost-node.dir/src/sost-node.cpp.o
+/home/sost/SOST/sostcore/sost-core/src/sost-node.cpp: In function ‘void init_interrupt_pipe()’:
+/home/sost/SOST/sostcore/sost-core/src/sost-node.cpp:4547:13: warning: ignoring return value of ‘int pipe(int*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 4547 |         pipe(g_interrupt_pipe);
+      |         ~~~~^~~~~~~~~~~~~~~~~~
+[ 96%] Linking CXX executable sost-miner
+[ 96%] Built target sost-miner
+[ 96%] Building CXX object CMakeFiles/tx_send.dir/src/tx_send.cpp.o
+/home/sost/SOST/sostcore/sost-core/src/tx_send.cpp: In function ‘std::string rpc_call(const string&, const string&)’:
+/home/sost/SOST/sostcore/sost-core/src/tx_send.cpp:127:10: warning: ignoring return value of ‘ssize_t write(int, const void*, size_t)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  127 |     write(fd, req.c_str(), req.size());
+      |     ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[ 97%] Linking CXX executable tx_send
+[ 97%] Built target tx_send
+[ 98%] Building CXX object CMakeFiles/cx-benchmark.dir/tools/cx-benchmark.cpp.o
+[ 98%] Linking CXX executable cx-benchmark
+[ 98%] Built target cx-benchmark
+[ 98%] Building CXX object CMakeFiles/casert-simulator.dir/tools/casert-simulator.cpp.o
+[ 98%] Linking CXX executable casert-simulator
+[ 98%] Built target casert-simulator
+[ 98%] Building CXX object CMakeFiles/cx-variance.dir/tools/cx-variance.cpp.o
+[ 98%] Linking CXX executable cx-variance
+[ 98%] Built target cx-variance
+[ 99%] Linking CXX executable sost-node
+[100%] Building CXX object CMakeFiles/eq-benchmark.dir/tools/eq-benchmark.cpp.o
+[100%] Linking CXX executable eq-benchmark
+[100%] Built target sost-node
+[100%] Built target eq-benchmark

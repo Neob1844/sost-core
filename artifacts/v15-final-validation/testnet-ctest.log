@@ -1,0 +1,209 @@
+Test project /home/sost/SOST/sostcore/sost-core/build-testnet
+        Start   1: chunk1
+  1/102 Test   #1: chunk1 ...........................   Passed    0.00 sec
+        Start   2: chunk2
+  2/102 Test   #2: chunk2 ...........................   Passed   15.62 sec
+        Start   3: transaction
+  3/102 Test   #3: transaction ......................   Passed    0.01 sec
+        Start   4: tx-signer
+  4/102 Test   #4: tx-signer ........................   Passed    0.02 sec
+        Start   5: tx-validation
+  5/102 Test   #5: tx-validation ....................   Passed    0.03 sec
+        Start   6: capsule
+  6/102 Test   #6: capsule ..........................   Passed    0.02 sec
+        Start   7: utxo-set
+  7/102 Test   #7: utxo-set .........................   Passed    0.01 sec
+        Start   8: merkle-block
+  8/102 Test   #8: merkle-block .....................   Passed    0.03 sec
+        Start   9: mempool
+  9/102 Test   #9: mempool ..........................   Passed    0.03 sec
+        Start  10: v14-h3-h4
+ 10/102 Test  #10: v14-h3-h4 ........................   Passed    0.01 sec
+        Start  11: v14-fork-gates
+ 11/102 Test  #11: v14-fork-gates ...................   Passed    0.00 sec
+        Start  12: gv-slice1-activation
+ 12/102 Test  #12: gv-slice1-activation .............   Passed    0.00 sec
+        Start  13: gv-g4
+ 13/102 Test  #13: gv-g4 ............................   Passed    0.00 sec
+        Start  14: gv-slice1-block
+ 14/102 Test  #14: gv-slice1-block ..................   Passed    0.00 sec
+        Start  15: gv-g4-coinbase
+ 15/102 Test  #15: gv-g4-coinbase ...................   Passed    0.00 sec
+        Start  16: gv-g5
+ 16/102 Test  #16: gv-g5 ............................   Passed    0.00 sec
+        Start  17: gv-governance-audit
+ 17/102 Test  #17: gv-governance-audit ..............   Passed    0.00 sec
+        Start  18: gv-g3b
+ 18/102 Test  #18: gv-g3b ...........................   Passed    0.00 sec
+        Start  19: gv-governance-determinism
+ 19/102 Test  #19: gv-governance-determinism ........   Passed    0.07 sec
+        Start  20: popc-v15
+ 20/102 Test  #20: popc-v15 .........................   Passed    0.01 sec
+        Start  21: popc-v15-set
+ 21/102 Test  #21: popc-v15-set .....................   Passed    0.00 sec
+        Start  22: popc-v15-carrier
+ 22/102 Test  #22: popc-v15-carrier .................   Passed    0.00 sec
+        Start  23: popc-v15-eligibility
+ 23/102 Test  #23: popc-v15-eligibility .............   Passed    0.00 sec
+        Start  24: popc-v15-lifecycle
+ 24/102 Test  #24: popc-v15-lifecycle ...............   Passed    0.00 sec
+        Start  25: popc-v15-authz
+ 25/102 Test  #25: popc-v15-authz ...................   Passed    0.01 sec
+        Start  26: popc-v15-carrier-e2e
+ 26/102 Test  #26: popc-v15-carrier-e2e .............   Passed    0.01 sec
+        Start  27: popc-v15-soak
+ 27/102 Test  #27: popc-v15-soak ....................   Passed    0.00 sec
+        Start  28: atomic-swap-btc-script
+ 28/102 Test  #28: atomic-swap-btc-script ...........   Passed    0.00 sec
+        Start  29: atomic-swap-btc-test-vectors
+ 29/102 Test  #29: atomic-swap-btc-test-vectors .....   Passed    0.00 sec
+        Start  30: atomic-swap-btc-signing
+ 30/102 Test  #30: atomic-swap-btc-signing ..........   Passed    0.00 sec
+        Start  31: atomic-swap-coordinator
+ 31/102 Test  #31: atomic-swap-coordinator ..........   Passed    0.00 sec
+        Start  32: atomic-swap-e2e-sim
+ 32/102 Test  #32: atomic-swap-e2e-sim ..............   Passed    0.00 sec
+        Start  33: atomic-swap-htlc-lock
+ 33/102 Test  #33: atomic-swap-htlc-lock ............   Passed    0.01 sec
+        Start  34: atomic-swap-htlc-helpers
+ 34/102 Test  #34: atomic-swap-htlc-helpers .........   Passed    0.00 sec
+        Start  35: atomic-swap-htlc-rpc
+ 35/102 Test  #35: atomic-swap-htlc-rpc .............   Passed    0.00 sec
+        Start  36: atomic-swap-orderbook
+ 36/102 Test  #36: atomic-swap-orderbook ............   Passed    0.00 sec
+        Start  37: atomic-swap-watcher
+ 37/102 Test  #37: atomic-swap-watcher ..............   Passed    0.00 sec
+        Start  38: atomic-swap-status
+ 38/102 Test  #38: atomic-swap-status ...............   Passed    0.00 sec
+        Start  39: atomic-swap-session
+ 39/102 Test  #39: atomic-swap-session ..............   Passed    0.00 sec
+        Start  40: atomic-swap-policy
+ 40/102 Test  #40: atomic-swap-policy ...............   Passed    0.00 sec
+        Start  41: htlc-block-path-v14-5
+ 41/102 Test  #41: htlc-block-path-v14-5 ............   Passed    0.01 sec
+        Start  42: htlc-expired-lock-template
+ 42/102 Test  #42: htlc-expired-lock-template .......   Passed    0.01 sec
+        Start  43: bond-lock
+ 43/102 Test  #43: bond-lock ........................   Passed    0.02 sec
+        Start  44: casert
+ 44/102 Test  #44: casert ...........................   Passed    0.00 sec
+        Start  45: casert-v11
+ 45/102 Test  #45: casert-v11 .......................   Passed    0.00 sec
+        Start  46: slingshot
+ 46/102 Test  #46: slingshot ........................   Passed    0.00 sec
+        Start  47: slingshot-miner-rebuild
+ 47/102 Test  #47: slingshot-miner-rebuild ..........   Passed    0.00 sec
+        Start  48: casert-v12-ceiling
+ 48/102 Test  #48: casert-v12-ceiling ...............   Passed    0.00 sec
+        Start  49: casert-v13-ceiling
+ 49/102 Test  #49: casert-v13-ceiling ...............   Passed    0.00 sec
+        Start  50: slingshot-v12-tier
+ 50/102 Test  #50: slingshot-v12-tier ...............   Passed    0.00 sec
+        Start  51: capsule-v12-activation
+ 51/102 Test  #51: capsule-v12-activation ...........   Passed    0.01 sec
+        Start  52: slingshot-v12-timestamp-safety
+ 52/102 Test  #52: slingshot-v12-timestamp-safety ...   Passed    0.00 sec
+        Start  53: v13-helpers
+ 53/102 Test  #53: v13-helpers ......................   Passed    0.00 sec
+        Start  54: v13-lottery-cooldown-fork
+ 54/102 Test  #54: v13-lottery-cooldown-fork ........   Passed    0.00 sec
+        Start  55: v13-drift-fork
+ 55/102 Test  #55: v13-drift-fork ...................   Passed    0.00 sec
+        Start  56: v13-beacon-phase2a
+ 56/102 Test  #56: v13-beacon-phase2a ...............   Passed    0.03 sec
+        Start  57: v13-beacon-phase2b
+ 57/102 Test  #57: v13-beacon-phase2b ...............   Passed    0.08 sec
+        Start  58: v13-beacon-phase3-p2p
+ 58/102 Test  #58: v13-beacon-phase3-p2p ............   Passed    0.17 sec
+        Start  59: v13-beacon-p2p-scaffold
+ 59/102 Test  #59: v13-beacon-p2p-scaffold ..........   Passed    0.00 sec
+        Start  60: capsule-build-public
+ 60/102 Test  #60: capsule-build-public .............   Passed    0.00 sec
+        Start  61: wallet-capsule-attach
+ 61/102 Test  #61: wallet-capsule-attach ............   Passed    0.02 sec
+        Start  62: sealed-envelope
+ 62/102 Test  #62: sealed-envelope ..................   Passed    0.02 sec
+        Start  63: sealed-capsule-packaging
+ 63/102 Test  #63: sealed-capsule-packaging .........   Passed    0.02 sec
+        Start  64: sbpow-header-v2
+ 64/102 Test  #64: sbpow-header-v2 ..................   Passed    0.01 sec
+        Start  65: miner-key-selection
+ 65/102 Test  #65: miner-key-selection ..............   Passed    0.01 sec
+        Start  66: lottery-frequency
+ 66/102 Test  #66: lottery-frequency ................   Passed    0.00 sec
+        Start  67: lottery-eligibility
+ 67/102 Test  #67: lottery-eligibility ..............   Passed    0.02 sec
+        Start  68: dtd-control
+ 68/102 Test  #68: dtd-control ......................   Passed    0.00 sec
+        Start  69: lottery-rollover
+ 69/102 Test  #69: lottery-rollover .................   Passed    0.01 sec
+        Start  70: coinbase-phase2
+ 70/102 Test  #70: coinbase-phase2 ..................   Passed    0.00 sec
+        Start  71: jackpot
+ 71/102 Test  #71: jackpot ..........................   Passed    0.01 sec
+        Start  72: v15-activation-boundary
+ 72/102 Test  #72: v15-activation-boundary ..........   Passed    0.00 sec
+        Start  73: phase2-miner-integration
+ 73/102 Test  #73: phase2-miner-integration .........   Passed    0.00 sec
+        Start  74: sbpow-signing
+ 74/102 Test  #74: sbpow-signing ....................   Passed    0.01 sec
+        Start  75: sbpow-validation
+ 75/102 Test  #75: sbpow-validation .................   Passed    0.02 sec
+        Start  76: sbpow-adversarial
+ 76/102 Test  #76: sbpow-adversarial ................   Passed    0.01 sec
+        Start  77: phase2-sbpow-submit
+ 77/102 Test  #77: phase2-sbpow-submit ..............   Passed    0.01 sec
+        Start  78: sbpow-v13-hardening
+ 78/102 Test  #78: sbpow-v13-hardening ..............   Passed    0.02 sec
+        Start  79: convergencex-v11
+ 79/102 Test  #79: convergencex-v11 .................   Passed   28.86 sec
+        Start  80: scratchpad-cache
+ 80/102 Test  #80: scratchpad-cache .................   Passed    0.07 sec
+        Start  81: relief-predict
+ 81/102 Test  #81: relief-predict ...................   Passed    0.01 sec
+        Start  82: mtp-fork
+ 82/102 Test  #82: mtp-fork .........................   Passed    0.01 sec
+        Start  83: checkpoints
+ 83/102 Test  #83: checkpoints ......................   Passed    0.00 sec
+        Start  84: transcript-v2
+ 84/102 Test  #84: transcript-v2 ....................   Passed   21.09 sec
+        Start  85: reorg
+ 85/102 Test  #85: reorg ............................   Passed    0.01 sec
+        Start  86: chainwork
+ 86/102 Test  #86: chainwork ........................   Passed    0.00 sec
+        Start  87: addressbook
+ 87/102 Test  #87: addressbook ......................   Passed    0.00 sec
+        Start  88: wallet-policy
+ 88/102 Test  #88: wallet-policy ....................   Passed    0.00 sec
+        Start  89: rbf
+ 89/102 Test  #89: rbf ..............................   Passed    0.01 sec
+        Start  90: cpfp
+ 90/102 Test  #90: cpfp .............................   Passed    0.01 sec
+        Start  91: hd-wallet
+ 91/102 Test  #91: hd-wallet ........................   Passed    0.13 sec
+        Start  92: psbt
+ 92/102 Test  #92: psbt .............................   Passed    0.02 sec
+        Start  93: multisig
+ 93/102 Test  #93: multisig .........................   Passed    0.01 sec
+        Start  94: popc
+ 94/102 Test  #94: popc .............................   Passed    0.00 sec
+        Start  95: popc-tx
+ 95/102 Test  #95: popc-tx ..........................   Passed    0.01 sec
+        Start  96: popc-single-model
+ 96/102 Test  #96: popc-single-model ................   Passed    0.00 sec
+        Start  97: profile-magic
+ 97/102 Test  #97: profile-magic ....................   Passed    0.00 sec
+        Start  98: escrow
+ 98/102 Test  #98: escrow ...........................   Passed    0.00 sec
+        Start  99: proposals
+ 99/102 Test  #99: proposals ........................   Passed    0.00 sec
+        Start 100: dynamic-rewards
+100/102 Test #100: dynamic-rewards ..................   Passed    0.00 sec
+        Start 101: gold-vault
+101/102 Test #101: gold-vault .......................   Passed    0.00 sec
+        Start 102: v13-gold-vault-slice1
+102/102 Test #102: v13-gold-vault-slice1 ............   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 102
+
+Total Test time (real) =  66.94 sec
