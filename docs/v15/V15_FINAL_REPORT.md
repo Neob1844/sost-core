@@ -21,7 +21,7 @@
 | RC binaries + SHA-256 manifest | **PASS** built, leak-check CLEAN | RC_MANIFEST.txt | f3f1cfde |
 | pre-V15 compat (code-level B/D) | **PASS** | PREV15_COMPAT_REPORT.md | 9bcf8504 |
 | pre-V15 compat (binary A/C/E) | **WAITING_EXTERNAL_RESOURCE** | needs deployed v0.3.2 + chain snapshot on 2nd box | — |
-| ctest testnet | **WAITING_EXTERNAL_RESOURCE** | 2nd box (REMAINING_GATES.md §5) | — |
+| ctest testnet | **PASS** 102/102 | testnet-ctest.log (SOST_TESTNET_FORKS build; boundary test made profile-aware) | 2ed7167a |
 | Full sanitized ctest (ASan/UBSan whole suite) | **WAITING_EXTERNAL_RESOURCE** | 2nd box (§6/7) | — |
 | Testnet long SbPoW run (~8.5 h, real) | **WAITING_EXTERNAL_RESOURCE** | 2nd box (§12) | — |
 | cppcheck / clang-tidy cross-check | **WAITING_EXTERNAL_RESOURCE** | tools not installable here (no sudo) | — |
@@ -66,8 +66,26 @@ evidence yet because they require a second, non-miner machine (running DEV/testn
 OOM-killing the mainnet miner). Per the rule "do not declare READY FOR RC while an imperative gate
 lacks real evidence":
 
-**V15 TECHNICAL READINESS: NOT READY FOR RC** — blocked ONLY by WAITING_EXTERNAL_RESOURCE gates
-(second machine), not by any defect. Once those four gates are green on the 2nd box, this flips to
-READY FOR RC with no code change expected.
+## Update — ctest testnet closed on the miner box (safe subset)
+`ctest testnet` was the ONE remaining external gate closeable on this (miner) box without sustained
+mining: a bounded testnet-profile build + fast unit tests (no long SbPoW). Result **102/102, 0 fail**
+(commit 2ed7167a). One test (`v15-activation-boundary`) initially failed under the testnet profile
+because it hardcoded mainnet heights — a test-infra issue (class B), fixed by making it profile-aware
+(passes in mainnet + testnet + devnet). So of the original 5 external gates, **1 is now PASS**; the
+remaining 4 still require the 2nd (non-miner) box and/or external artifacts.
+
+## Release criteria — THREE tiers (product decision)
+Atomic Swap is now MANDATORY for the V15 RELEASE (not just consensus). The final verdict is split:
+
+**V15 CONSENSUS READINESS: NOT READY** — 3 hard consensus gates remain WAITING_EXTERNAL_RESOURCE
+(full sanitized ctest, long real testnet SbPoW, pre-V15 binary compat) + cppcheck; none is a defect.
+(ctest testnet now PASS; every other consensus gate PASS.)
+
+**ATOMIC SWAP READINESS: NOT READY** — EVM HTLC active @15000 + policy layer done, but BTC HTLC is
+gated OFF (needs bitcoind-regtest real redeem/refund + cross-chain E2E), EVM SafeERC20 needs the
+Foundry suite + external audit, dashboard needs E2E. See FASE 9B plan; start the EVM audit in parallel
+(multi-week lead time).
+
+**V15 RELEASE READINESS: NOT READY** = Consensus + Atomic Swap, neither complete yet.
 
 **V15 MAINNET: WAITING_HUMAN_CUTOVER.**
