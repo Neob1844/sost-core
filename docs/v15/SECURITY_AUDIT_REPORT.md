@@ -86,15 +86,18 @@ the project's existing consensus-hardening-backlog policy). Tracked there with t
 11. **Secrets / local paths / PII** — clean (none in the audited files).
 12. **TODO/FIXME/HACK** — clean (none in the new headers or diff).
 
-## Operational note — DEV harness re-runs must move to a second machine
-While re-validating on THIS box (which runs the 13-thread mainnet miner), the kernel OOM-killer
-killed several DEV SbPoW harness miners (`sost-miner`, ~4.2 GB RSS each — DEVNET SbPoW allocates
-~4 GB/block). The mainnet miner survived, but it carries the same `oom_score_adj:0` and is at risk:
-running DEV SbPoW harnesses concurrently with the mainnet miner can exhaust the 23 GiB RAM. This is
-exactly the "do not interfere with the miner" boundary. **Policy for the remainder of validation on
-this box: no concurrent DEV SbPoW harnesses.** The payout re-validation above completed BEFORE the
-pressure peaked and is conclusive for B-1; any further DEV harness re-runs (full attack matrix, M02,
-soak) and the long testnet SbPoW run belong on the second (non-miner) machine — see REMAINING_GATES.md.
+## Operational note — resource discipline on the miner box
+This box runs the 13-thread mainnet miner (PID 574503). Verified from `dmesg`: the mainnet miner
+was **NEVER** OOM-killed (0 occurrences) and has been up continuously (etime > 1d16h). The 8 OOM
+kills present in the ring buffer are all DEV `sost-miner` processes from a PRIOR session (~2.3 days
+ago by uptime timestamp) — DEVNET SbPoW allocates ~4 GB/block, so several CONCURRENT DEV miners can
+exhaust the 23 GiB RAM. During THIS validation the re-run of the full attack matrix and M02 failed
+by CPU STARVATION (too many concurrent heavy jobs: sanitizer build + static analyzer + DEV mining),
+not by OOM. **Policy applied: run ONE heavy job at a time, and never many concurrent DEV SbPoW
+miners, alongside the mainnet miner.** B-1's re-validation via the payout harness (a single DEV
+harness) completed cleanly and is conclusive. The long testnet SbPoW run + full sanitized ctest are
+still better placed on the second (non-miner) box for wall-clock, not because a single harness is
+unsafe here — see REMAINING_GATES.md.
 
 ## Net
 The V15 consensus surface is sound: no exploitable finding, the one money-minting gate is now
