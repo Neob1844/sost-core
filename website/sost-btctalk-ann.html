@@ -85,7 +85,7 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js"></script>
-<script src="js/nav-toggle.js" defer></script>
+<script src="js/nav-toggle.js?v=v380" defer></script>
 </head>
 <body>
 
@@ -221,7 +221,7 @@
 
 <p>The Gold Funding Vault accumulates SOST, which is periodically converted to XAUT and PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased gold tokens are deposited into a Heritage Reserve on Ethereum mainnet &mdash; sealed by default. The reserve is intended to remain perpetual. It cannot be moved except under an Emergency Catastrophe procedure requiring both 75% PoW miner signaling and a Protocol Execution Order.</p>
 
-<p>The remaining 25% flows to a PoPC Pool powering <b>PoPC Bond Staking</b> &mdash; Proof of Personal Custody, a single native-SOST bond model that rewards committed long-term holders. PoPC activates at the V15 fork (block 20,000).</p>
+<p>The remaining 25% flows to a PoPC Pool powering <b>PoPC Bond Staking</b> &mdash; Proof of Personal Custody, a single native-SOST bond model that rewards committed long-term holders. PoPC activates at the V15 fork (block 25,000).</p>
 
 <p><b>PoPC Bond Staking &mdash; one native-SOST bond.</b> A participant locks a bond of <b>native SOST</b> on the SOST chain and commits to a fixed term. ConvergenceX block entropy schedules verification. On successful completion of the term, the participant recovers their full bond plus a reward from the PoPC Pool. On failure to honour the commitment, the SOST bond is subject to slashing per consensus rules. <b>The bond collateral is SOST only.</b> There is no external custody contract and no off-chain settlement leg &mdash; everything settles natively on the SOST chain. See the full mechanism on the <a href="sost-popc.html">PoPC page</a>.</p>
 
@@ -286,7 +286,7 @@
 <table>
   <tr><th>Phase</th><th>Date</th><th>Milestone</th></tr>
   <tr><td>1</td><td>March 15, 2026</td><td>GENESIS BLOCK &mdash; 18:00:00 UTC. PoW chain live. Solo CPU mining. C++ miner released. GitHub public.</td></tr>
-  <tr><td>2</td><td>V15 / block 20,000</td><td>PoPC Bond Staking activates &mdash; a single native-SOST bond, settled on-chain. Bond collateral is SOST only.</td></tr>
+  <tr><td>2</td><td>V15 / block 25,000</td><td>PoPC Bond Staking activates &mdash; a single native-SOST bond, settled on-chain. Bond collateral is SOST only.</td></tr>
   <tr><td>3</td><td>Future phase</td><td>Optional Gold Boost enabled once continuous verification is ready. Gold is never collateral and never slashed.</td></tr>
   <tr><td>4</td><td>Q2 2027</td><td>XAUT/PAXG reserve purchases begin (8 months post-public-launch per G4, subject to sufficient SOST market liquidity). Heritage Reserve deployed on Ethereum mainnet. Public reserve dashboard.</td></tr>
   <tr><td>5</td><td>2027+</td><td>Multi-metal tokenization roadmap (silver, platinum). Physical gold proof extensions. Mobile audit app. ZK research.</td></tr>

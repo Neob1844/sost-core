@@ -105,7 +105,7 @@
   .footer{padding:40px 0;text-align:center}.footer p{font-size:11px;color:var(--text-muted)}
   .gate-input{font-family:var(--font-mono);text-transform:none}
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}</style>
-<script src="js/nav-toggle.js" defer></script>
+<script src="js/nav-toggle.js?v=v380" defer></script>
 </head>
 <body>
 
@@ -180,12 +180,13 @@
 <div class="hero"><div class="container">
   <div class="hero-label">// OTC · Atomic Swap · Founder Console</div>
   <h1>SOST <span>Atomic Swap</span> Console</h1>
-  <p class="hero-sub">A guided, founder-only console for SOST &harr; EVM cross-chain atomic swaps (HTLC), activating at <b>block 15,000</b>. It <b>explains</b>, <b>validates</b> and <b>generates the exact <code>sost-cli</code> commands</b> for you to run in your own terminal. It never asks for a seed phrase or private key, never signs, never broadcasts, and never sends your secret anywhere.</p>
+  <p class="hero-sub">A guided, founder-only console for SOST &harr; EVM cross-chain atomic swaps (HTLC), activating at <b>block 16,000</b>. It <b>explains</b>, <b>validates</b> and <b>generates the exact <code>sost-cli</code> commands</b> for you to run in your own terminal. It never asks for a seed phrase or private key, never signs, never broadcasts, and never sends your secret anywhere.</p>
   <div class="chips">
     <span class="chip red"><span class="dot"></span>DO NOT USE · Founder-only</span>
     <span class="chip amber">Unaudited · EVM-only (BTC = V15)</span>
     <span class="chip cyan" id="statusChip"><span class="dot"></span>Status: checking…</span>
     <span class="chip" id="heightChip">Height: —</span>
+    <span class="chip green"><a href="atomic-swap.html" style="color:inherit;text-decoration:none">← Consumer Atomic Swap (simple view)</a></span>
   </div>
 </div></div>
 
@@ -208,7 +209,7 @@
       <p>An HTLC (Hash Time-Locked Contract) is a self-custodial lockbox with two exits: <b>CLAIM</b> (whoever reveals the correct secret <code>S</code> whose <code>sha256(S)</code> equals the agreed hashlock can take the funds) and <b>REFUND</b> (if the timeout passes and nobody claimed, the owner takes their funds back). Two parties lock on their own chains under the same hashlock; revealing <code>S</code> to claim one side lets the other side be claimed too. No custodian, no trust.</p>
       <div class="warnmsg amber">This page is <b>read-only + a command generator</b>. The real money moves only when <b>you</b> run the generated commands in your terminal, sign them, and broadcast them. If anything looks wrong, do not run it.</div>
       <h3>Why it is delicate</h3>
-      <p>It touches real funds on two chains. A wrong hashlock, timeout or pkh can lock funds until refund; a bug or a chain reorg can break atomicity; and if un-upgraded miners reject HTLC blocks, the SOST network can split. <b>The point of no return is not block 15,000 — it is the FIRST HTLC you create.</b></p>
+      <p>It touches real funds on two chains. A wrong hashlock, timeout or pkh can lock funds until refund; a bug or a chain reorg can break atomicity; and if un-upgraded miners reject HTLC blocks, the SOST network can split. <b>The point of no return is not block 16,000 — it is the FIRST HTLC you create.</b></p>
     </div>
     <div class="card">
       <h2>Glossary</h2>
@@ -233,7 +234,7 @@
       <h2>Readiness checklist</h2>
       <p class="muted">Only <span class="tag live">live</span> items are verified by this page (via the public <code>/rpc</code>). <span class="tag self">self</span> items you must verify yourself on your machines — the website cannot inspect your node binary, flags or hashrate. Be honest with yourself.</p>
       <div style="margin-top:16px">
-        <div class="rk"><span class="ic" id="rkHeightIc">…</span><span class="lab">Current height reached <b>15,010+</b> (settle past the fork before any HTLC) <span class="tag live">live</span><div class="muted" id="rkHeightTxt">checking height…</div></span></div>
+        <div class="rk"><span class="ic" id="rkHeightIc">…</span><span class="lab">Current height reached <b>16,010+</b> (settle past the fork before any HTLC) <span class="tag live">live</span><div class="muted" id="rkHeightTxt">checking height…</div></span></div>
         <div class="rk"><span class="ic" id="rkNodeIc">…</span><span class="lab">Public node RPC reachable <span class="tag live">live</span><div class="muted" id="rkNodeTxt">checking…</div></span></div>
         <div class="rk"><input type="checkbox" id="ckCommit"><span class="lab">VPS node + Beelink miner rebuilt at the V14 commit (<code>b57c41ed</code> or later) <span class="tag self">self</span><div class="muted">run <code>git rev-parse --short HEAD</code> on both</div></span></div>
         <div class="rk"><input type="checkbox" id="ckFlags"><span class="lab">Both built with <code>SOST_ENABLE_PHASE2_SBPOW=ON</code> and <code>SOST_TESTNET_FORKS=OFF</code> <span class="tag self">self</span><div class="muted">grep CMakeCache.txt on both</div></span></div>
@@ -243,7 +244,7 @@
         <div class="rk"><input type="checkbox" id="ckHash"><span class="lab">Majority of hashrate is on the new binary (coordinate miners BEFORE the first HTLC) <span class="tag self">self</span></span></div>
       </div>
       <div id="readyVerdict" class="warnmsg amber" style="margin-top:16px">Readiness: not evaluated yet.</div>
-      <p class="muted" style="margin-top:8px">This checklist is advisory. Ticking boxes does not make the swap safe — it records that you checked. The hard invariant: <b>do not create the first HTLC until height ≥ 15,010 AND every box is genuinely true.</b></p>
+      <p class="muted" style="margin-top:8px">This checklist is advisory. Ticking boxes does not make the swap safe — it records that you checked. The hard invariant: <b>do not create the first HTLC until height ≥ 16,010 AND every box is genuinely true.</b></p>
     </div>
   </div>
 
@@ -259,7 +260,7 @@
       <div class="card">
         <h2>Test 1 — REFUND only (do this first)</h2>
         <p>The safest first test: lock a tiny amount of SOST, let the timeout pass, and recover it by refund. If refund works, you know you can never get stuck. <b>No counterparty, no EVM, no claim.</b></p>
-        <div class="warnmsg amber">Prerequisites: a spendable SOST UTXO (txid, vout, amount, your pkh — from your wallet), height ≥ 15,010, and the smallest viable amount. The CLI builders output an <b>unsigned</b> tx — you sign + <code>sendrawtransaction</code> yourself.</div>
+        <div class="warnmsg amber">Prerequisites: a spendable SOST UTXO (txid, vout, amount, your pkh — from your wallet), height ≥ 16,010, and the smallest viable amount. The CLI builders output an <b>unsigned</b> tx — you sign + <code>sendrawtransaction</code> yourself.</div>
 
         <h3>Step A — generate a fresh secret + hashlock (in your browser, never sent)</h3>
         <button class="btn green" id="genSecret">Generate secret + hashlock</button>
@@ -449,7 +450,7 @@
       <p>Before a real swap, run the <b>“1 · Refund test”</b> tab: lock a minimal amount in SOST and recover it via refund. If refund works, you know you can never get stuck. Then try CLAIM.</p>
 
       <h3>Golden rules</h3>
-      <div class="warnmsg amber">Founder-only · tiny amounts · native ETH/BNB (not USDT/PAXG/XAUT) · testnet first, then mainnet (height ≥ 15,010 + checklist) · if anything fails, do NOT create more HTLCs → see the <b>Emergency</b> tab.</div>
+      <div class="warnmsg amber">Founder-only · tiny amounts · native ETH/BNB (not USDT/PAXG/XAUT) · testnet first, then mainnet (height ≥ 16,010 + checklist) · if anything fails, do NOT create more HTLCs → see the <b>Emergency</b> tab.</div>
       <p class="muted">More detail in each tab: <b>Readiness</b> (is everything ready?), <b>EVM operate</b> (the real operation), <b>Swap status</b> (query / log), <b>Emergency</b> (what to do if something goes wrong).</p>
     </div>
   </div>
@@ -460,7 +461,8 @@
       <h2>Emergency plan</h2>
       <div class="warnmsg err"><b>STOP rule:</b> at any sign of trouble — do NOT create more HTLCs, preserve all logs, and follow the matching scenario below. (Full runbook: <code>docs/ATOMIC_SWAP_V14_OPERATIONS.md</code>, section E.)</div>
       <h3>1 · Before the first HTLC (benign window)</h3>
-      <p>Reaching block 15,000 changes nothing until an HTLC is mined. If miner coverage is unsafe or you have doubts: simply <b>do not create an HTLC</b>. The clean lever is to revert the gate to <code>INT64_MAX</code>, rebuild, redeploy and re-announce — no fork, because no HTLC ever existed.</p>
+      <p>Reaching block 16,000 changes nothing until an HTLC is mined. If miner coverage is unsafe or you have doubts: simply <b>do not create an HTLC</b>. The clean lever is to revert the gate to <code>INT64_MAX</code>, rebuild, redeploy and re-announce — no fork, because no HTLC ever existed.</p>
+      <p class="muted"><b>Two gates (authoritative, from HEAD):</b> HTLC consensus acceptance = <b>V14.5 / block 16,000</b>; mempool relay/policy of HTLC txs = <b>V14.7 / block 17,000</b>. Below 17,000 an HTLC is only mineable by a node that puts it in its own template — public broadcast/relay is not guaranteed until 17,000.</p>
       <h3>2 · Network split (chain diverges)</h3>
       <p>Symptoms: peers stuck, your tip diverges from the explorer, <code>REJECTED block</code> in logs. Actions: stop all tests; create no more HTLCs; tell miners to rebuild on the new binary &amp; resync; the canonical chain is the majority-hashrate (your) chain; compare <code>getblockcount</code> / tip hash across node, explorer and peers before doing anything.</p>
       <h3>3 · Bug AFTER an HTLC is mined (worst case)</h3>
@@ -501,11 +503,11 @@ async function refreshHeight(){
     $('heightChip').textContent='Height: '+h;
     $('rkNodeIc').textContent='✅';$('rkNodeTxt').textContent='public /rpc reachable';
     let st,cls;
-    if(h<15000){st='PRE-ACTIVATION (gate at 15,000)';cls='amber';$('rkHeightIc').textContent='⏳';}
-    else if(h<15010){st='ACTIVE — WAIT, settle to 15,010+';cls='amber';$('rkHeightIc').textContent='⏳';}
+    if(h<16000){st='PRE-ACTIVATION (gate at 16,000)';cls='amber';$('rkHeightIc').textContent='⏳';}
+    else if(h<16010){st='ACTIVE — WAIT, settle to 16,010+';cls='amber';$('rkHeightIc').textContent='⏳';}
     else{st='ACTIVE — founder window (DO NOT USE publicly)';cls='red';$('rkHeightIc').textContent='✅';}
     const chip=$('statusChip');chip.className='chip '+cls;chip.innerHTML='<span class="dot"></span>'+esc(st);
-    $('rkHeightTxt').textContent='height '+h+(h>=15010?' — past 15,010 ✓':' — need 15,010+');
+    $('rkHeightTxt').textContent='height '+h+(h>=16010?' — past 16,010 ✓':' — need 16,010+');
     $('rHeightHint').textContent=CUR_HEIGHT!=null?('current height '+CUR_HEIGHT+' → suggested refund_height ≈ '+(CUR_HEIGHT+20)):'';
     evalReady();
   }catch(e){
@@ -517,10 +519,10 @@ async function refreshHeight(){
 function evalReady(){
   const selfBoxes=['ckCommit','ckFlags','ckRestart','ckExplorer','ckReject','ckHash'];
   const selfOk=selfBoxes.every(id=>$(id).checked);
-  const heightOk=CUR_HEIGHT!=null&&CUR_HEIGHT>=15010;
+  const heightOk=CUR_HEIGHT!=null&&CUR_HEIGHT>=16010;
   const v=$('readyVerdict');
-  if(heightOk&&selfOk){v.className='warnmsg ok';v.innerHTML='✅ Height ≥ 15,010 and all self-checks ticked. You <i>may</i> proceed to a tiny REFUND test — at your own founder risk. Still DO NOT use publicly.';}
-  else{const miss=[];if(!heightOk)miss.push('height ≥ 15,010');const n=selfBoxes.filter(id=>!$(id).checked).length;if(n)miss.push(n+' self-check(s)');
+  if(heightOk&&selfOk){v.className='warnmsg ok';v.innerHTML='✅ Height ≥ 16,010 and all self-checks ticked. You <i>may</i> proceed to a tiny REFUND test — at your own founder risk. Still DO NOT use publicly.';}
+  else{const miss=[];if(!heightOk)miss.push('height ≥ 16,010');const n=selfBoxes.filter(id=>!$(id).checked).length;if(n)miss.push(n+' self-check(s)');
     v.className='warnmsg amber';v.innerHTML='⏳ Not ready — missing: '+esc(miss.join(', '))+'. The first-HTLC generators stay guarded.';}
 }
 ['ckCommit','ckFlags','ckRestart','ckExplorer','ckReject','ckHash'].forEach(id=>$(id).addEventListener('change',evalReady));
@@ -545,8 +547,8 @@ $('genSecret').addEventListener('click',async function(){
 /* ---- refund command generator ---- */
 function gv(id){return ($(id).value||'').trim();}
 function heightGuard(){
-  if(CUR_HEIGHT==null)return 'Node height unknown — refresh and confirm height ≥ 15,010 before running anything.';
-  if(CUR_HEIGHT<15010)return 'Height '+CUR_HEIGHT+' < 15,010 — Atomic Swap not ready. Commands are for preview only; DO NOT run them yet.';
+  if(CUR_HEIGHT==null)return 'Node height unknown — refresh and confirm height ≥ 16,010 before running anything.';
+  if(CUR_HEIGHT<16010)return 'Height '+CUR_HEIGHT+' < 16,010 — Atomic Swap not ready. Commands are for preview only; DO NOT run them yet.';
   return null;
 }
 $('genRefundCmds').addEventListener('click',function(){
@@ -793,10 +795,10 @@ $('evmAllowance').addEventListener('click',async function(){
 function isTestnet(){return CHAINID==='0xaa36a7'||CHAINID==='0x61';}
 $('evmLock').addEventListener('click',async function(){
   const g=evmGuards();if(g){evmMsg('evmActionOut','err',esc(g));return;}
-  // Hard gate on a real mainnet LOCK: the SOST V14 fork must be settled (height >= 15,010) and the
+  // Hard gate on a real mainnet LOCK: the SOST V14 fork must be settled (height >= 16,010) and the
   // founder readiness self-checks must be ticked. Testnet (Sepolia/BNB-testnet) is a free rehearsal.
   if(!isTestnet()){
-    if(CUR_HEIGHT==null||CUR_HEIGHT<15010){evmMsg('evmActionOut','err','LOCK blocked: SOST height '+(CUR_HEIGHT==null?'unknown':CUR_HEIGHT)+' < 15,010. Wait for the V14 fork to settle (or rehearse on Sepolia / BNB testnet first).');return;}
+    if(CUR_HEIGHT==null||CUR_HEIGHT<16010){evmMsg('evmActionOut','err','LOCK blocked: SOST height '+(CUR_HEIGHT==null?'unknown':CUR_HEIGHT)+' < 16,010. Wait for the V14 fork to settle (or rehearse on Sepolia / BNB testnet first).');return;}
     const selfBoxes=['ckCommit','ckFlags','ckRestart','ckExplorer','ckReject','ckHash'];
     if(!selfBoxes.every(id=>$(id).checked)){evmMsg('evmActionOut','err','LOCK blocked: complete the Readiness checklist (all self-checks) before a real mainnet lock.');return;}
   }

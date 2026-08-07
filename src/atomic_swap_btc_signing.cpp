@@ -23,6 +23,7 @@
 // activation prerequisites.
 // =============================================================================
 
+#include <cstdlib>
 #include "sost/atomic_swap_btc_signing.h"
 
 #include <string>
@@ -32,6 +33,7 @@ extern "C" {
 #include <wally_core.h>
 #include <wally_crypto.h>
 #include <wally_address.h>
+#include <wally_script.h>
 #include <wally_transaction.h>
 }
 #include <cstring>
@@ -48,13 +50,17 @@ bool IsBtcHtlcSigningEnabled() {
     // SOST_BTC_HTLC_SIGNING_ENABLED. With the option OFF (default)
     // the macro is undefined and this function returns false.
 #ifdef SOST_BTC_HTLC_SIGNING_ENABLED
-    // Even with the build flag ON, the function still returns false
-    // until a real signing backend has been wired AND the operator
-    // explicitly toggles a runtime acknowledgement. That runtime
-    // toggle does NOT exist in this commit; activating it is part
-    // of the future sprint that ships the real backend.
-    return false;
+    // The REAL libwally backend is compiled in (Option B build). It STILL stays OFF by default and
+    // only turns on when the operator explicitly opts in at runtime, because the backend has NOT been
+    // validated against a real Bitcoin node (no bitcoind-regtest round-trip yet). Set the environment
+    // variable SOST_BTC_ATOMIC_SWAP_ENABLED=1 to activate — ONLY after real regtest validation (see
+    // docs/v15/BTC_HTLC_COMPLETION_PLAN.md). This is the OPTION-A / OPTION-B release gate:
+    //   * Option A (V15 + EVM): build with SOST_BTC_HTLC_SIGNING=OFF → the #else below, always false.
+    //   * Option B (V15 + EVM + BTC): build with the flag ON AND set SOST_BTC_ATOMIC_SWAP_ENABLED=1.
+    const char* e = std::getenv("SOST_BTC_ATOMIC_SWAP_ENABLED");
+    return e != nullptr && (e[0] == '1' || e[0] == 't' || e[0] == 'T' || e[0] == 'y' || e[0] == 'Y');
 #else
+    // Option A (default) — stub build, no libwally, always fail-closed. No bitcoind dependency.
     return false;
 #endif
 }
@@ -338,17 +344,227 @@ BtcSigningResult SignBtcHtlcRefund(
 }
 
 BtcSigningResult SignBtcHtlcLockFunding(
-    const Bytes32& /*prev_txid*/,
-    uint32_t /*prev_vout*/,
-    int64_t /*prev_amount_sats*/,
-    const std::array<uint8_t, 32>& /*funder_privkey*/,
-    const std::string& /*funder_change_addr*/,
-    const std::vector<uint8_t>& /*redeem_script*/,
-    int64_t /*lock_amount_sats*/,
-    int64_t /*fee_sats*/,
-    const std::string& /*bitcoin_network*/)
+    const Bytes32& prev_txid,
+    uint32_t prev_vout,
+    int64_t prev_amount_sats,
+    const std::array<uint8_t, 32>& funder_privkey,
+    const std::string& funder_change_addr,
+    const std::vector<uint8_t>& redeem_script,
+    int64_t lock_amount_sats,
+    int64_t fee_sats,
+    const std::string& bitcoin_network)
 {
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    ensure_wally_init();
+    BtcSigningResult r;
+
+    // ---- input validation (fail-closed, fund-safety first) ----
+    if (prev_amount_sats <= 0) {
+        r.error = "prev_amount_sats must be > 0";
+        return r;
+    }
+    if (lock_amount_sats <= 0) {
+        r.error = "lock_amount_sats must be > 0";
+        return r;
+    }
+    if (fee_sats < 0) {
+        r.error = "fee_sats must be >= 0";
+        return r;
+    }
+    if (redeem_script.empty()) {
+        r.error = "redeem_script is empty";
+        return r;
+    }
+    // prev_amount must cover the HTLC output + fee. Using a checked
+    // sum so a caller-supplied overflow cannot wrap.
+    if (lock_amount_sats > INT64_MAX - fee_sats) {
+        r.error = "lock_amount_sats + fee_sats overflow";
+        return r;
+    }
+    const int64_t needed = lock_amount_sats + fee_sats;
+    if (prev_amount_sats < needed) {
+        r.error = "prev_amount_sats (" + std::to_string(prev_amount_sats) +
+                  ") does not cover lock_amount_sats + fee_sats (" +
+                  std::to_string(needed) + ")";
+        return r;
+    }
+    int64_t change = prev_amount_sats - lock_amount_sats - fee_sats;
+
+    if (wally_ec_private_key_verify(funder_privkey.data(), 32) != 0) {
+        r.error = "invalid secp256k1 funder private key";
+        return r;
+    }
+    const char* hrp = hrp_for_network(bitcoin_network);
+    if (!hrp) {
+        r.error = "unsupported bitcoin_network '" + bitcoin_network +
+                  "' (expect mainnet|testnet|regtest)";
+        return r;
+    }
+
+    // ---- derive funder pubkey + P2WPKH scriptCode ----
+    auto pub_r = DeriveBtcCompressedPubkey(funder_privkey);
+    if (!pub_r.ok || pub_r.bytes.size() != EC_PUBLIC_KEY_LEN) {
+        r.error = "SignBtcHtlcLockFunding: pubkey derivation failed: " +
+                  pub_r.error;
+        return r;
+    }
+    // BIP-143 scriptCode for a P2WPKH input is the classic P2PKH script
+    // OP_DUP OP_HASH160 <hash160(pubkey)> OP_EQUALVERIFY OP_CHECKSIG.
+    // wally_scriptpubkey_p2pkh_from_bytes with WALLY_SCRIPT_HASH160
+    // hashes the pubkey for us, producing exactly that 25-byte script.
+    unsigned char script_code[WALLY_SCRIPTPUBKEY_P2PKH_LEN];
+    std::size_t   script_code_len = 0;
+    int rc = wally_scriptpubkey_p2pkh_from_bytes(
+        pub_r.bytes.data(), pub_r.bytes.size(),
+        WALLY_SCRIPT_HASH160,
+        script_code, sizeof(script_code), &script_code_len);
+    if (rc != 0 || script_code_len != WALLY_SCRIPTPUBKEY_P2PKH_LEN) {
+        r.error = "SignBtcHtlcLockFunding: P2WPKH scriptCode build failed (rc="
+                  + std::to_string(rc) + ")";
+        return r;
+    }
+
+    // ---- HTLC output scriptPubKey: OP_0 <32-byte sha256(redeem)> ----
+    unsigned char htlc_program[SHA256_LEN];
+    rc = wally_sha256(redeem_script.data(), redeem_script.size(),
+                      htlc_program, sizeof(htlc_program));
+    if (rc != 0) {
+        r.error = "SignBtcHtlcLockFunding: wally_sha256(redeem_script) failed";
+        return r;
+    }
+    unsigned char htlc_spk[34];
+    htlc_spk[0] = 0x00;  // witness v0
+    htlc_spk[1] = 0x20;  // push 32
+    std::memcpy(htlc_spk + 2, htlc_program, SHA256_LEN);
+
+    // ---- change output scriptPubKey (only if above dust) ----
+    // A sub-dust remainder is folded into the fee (paid to miners),
+    // never routed anywhere the funder does not control.
+    bool have_change = change > kBtcP2wpkhDustSats;
+    unsigned char change_spk[WALLY_SEGWIT_ADDRESS_PUBKEY_MAX_LEN];
+    std::size_t   change_spk_len = 0;
+    if (have_change) {
+        rc = wally_addr_segwit_to_bytes(
+            funder_change_addr.c_str(), hrp, 0,
+            change_spk, sizeof(change_spk), &change_spk_len);
+        if (rc != 0 || change_spk_len == 0) {
+            r.error = "funder_change_addr does not decode as a segwit "
+                      "address for network '" + bitcoin_network + "' (rc=" +
+                      std::to_string(rc) + ")";
+            return r;
+        }
+    }
+
+    // ---- assemble the funding tx ----
+    struct wally_tx* tx = nullptr;
+    rc = wally_tx_init_alloc(2 /*version*/, 0 /*locktime*/, 1,
+                             have_change ? 2 : 1, &tx);
+    if (rc != 0 || tx == nullptr) {
+        r.error = "wally_tx_init_alloc failed";
+        return r;
+    }
+    // Funding input: no timelock, standard final sequence.
+    rc = wally_tx_add_raw_input(
+        tx, prev_txid.data(), prev_txid.size(),
+        prev_vout, 0xFFFFFFFF,
+        nullptr, 0,    // empty scriptSig (segwit)
+        nullptr, 0);   // witness attached later
+    if (rc != 0) {
+        wally_tx_free(tx);
+        r.error = "wally_tx_add_raw_input failed";
+        return r;
+    }
+    // vout 0 MUST be the HTLC P2WSH output (funding detection keys on it).
+    rc = wally_tx_add_raw_output(
+        tx, (uint64_t)lock_amount_sats, htlc_spk, sizeof(htlc_spk), 0);
+    if (rc != 0) {
+        wally_tx_free(tx);
+        r.error = "wally_tx_add_raw_output(htlc) failed";
+        return r;
+    }
+    if (have_change) {
+        rc = wally_tx_add_raw_output(
+            tx, (uint64_t)change, change_spk, change_spk_len, 0);
+        if (rc != 0) {
+            wally_tx_free(tx);
+            r.error = "wally_tx_add_raw_output(change) failed";
+            return r;
+        }
+    }
+
+    // ---- BIP-143 sighash over input 0 (P2WPKH scriptCode) ----
+    unsigned char sighash[32];
+    rc = wally_tx_get_btc_signature_hash(
+        tx, 0,
+        script_code, script_code_len,
+        (uint64_t)prev_amount_sats,
+        WALLY_SIGHASH_ALL,
+        WALLY_TX_FLAG_USE_WITNESS,
+        sighash, sizeof(sighash));
+    if (rc != 0) {
+        wally_tx_free(tx);
+        r.error = "wally_tx_get_btc_signature_hash failed";
+        return r;
+    }
+
+    auto sig_r = SignBtcEcdsaTestVector(funder_privkey, sighash, sizeof(sighash));
+    if (!sig_r.ok) {
+        wally_tx_free(tx);
+        r.error = "SignBtcHtlcLockFunding: " + sig_r.error;
+        return r;
+    }
+    std::vector<uint8_t> sig_with_type = sig_r.bytes;
+    sig_with_type.push_back(0x01);  // SIGHASH_ALL
+
+    // P2WPKH witness stack: [sig+sighash_type, pubkey].
+    struct wally_tx_witness_stack* witness = nullptr;
+    rc = wally_tx_witness_stack_init_alloc(2, &witness);
+    if (rc != 0 || witness == nullptr) {
+        wally_tx_free(tx);
+        r.error = "wally_tx_witness_stack_init_alloc failed";
+        return r;
+    }
+    rc = wally_tx_witness_stack_add(
+        witness, sig_with_type.data(), sig_with_type.size());
+    if (rc == 0) {
+        rc = wally_tx_witness_stack_add(
+            witness, pub_r.bytes.data(), pub_r.bytes.size());
+    }
+    if (rc != 0) {
+        wally_tx_witness_stack_free(witness);
+        wally_tx_free(tx);
+        r.error = "wally_tx_witness_stack_add failed";
+        return r;
+    }
+    rc = wally_tx_set_input_witness(tx, 0, witness);
+    if (rc != 0) {
+        wally_tx_witness_stack_free(witness);
+        wally_tx_free(tx);
+        r.error = "wally_tx_set_input_witness failed";
+        return r;
+    }
+
+    char* tx_hex = nullptr;
+    rc = wally_tx_to_hex(tx, WALLY_TX_FLAG_USE_WITNESS, &tx_hex);
+    if (rc != 0 || tx_hex == nullptr) {
+        wally_tx_witness_stack_free(witness);
+        wally_tx_free(tx);
+        r.error = "wally_tx_to_hex failed";
+        return r;
+    }
+    r.raw_tx_hex = tx_hex;
+    r.ok = true;
+
+    wally_free_string(tx_hex);
+    wally_tx_witness_stack_free(witness);
+    wally_tx_free(tx);
+    return r;
+#else
+    (void)prev_txid; (void)prev_vout; (void)prev_amount_sats;
+    (void)funder_privkey; (void)funder_change_addr; (void)redeem_script;
+    (void)lock_amount_sats; (void)fee_sats; (void)bitcoin_network;
     return disabled_result();
+#endif
 }
 
 BtcAddressResult EncodeP2WSHAddress(
@@ -794,6 +1010,134 @@ BtcBytesResult BuildBtcSpendingTxUnsignedHex(
     (void)fee_sats;
     (void)input_sequence;
     (void)lock_time;
+    return disabled_bytes_result();
+#endif
+}
+
+// =============================================================================
+// Phase C.8 — preimage extraction + txid (LAB ONLY)
+// =============================================================================
+
+BtcBytesResult ExtractBtcHtlcPreimageFromWitnessStack(
+    const std::vector<std::vector<uint8_t>>& witness_stack,
+    const std::array<uint8_t, 32>&           expected_hashlock)
+{
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    ensure_wally_init();
+    BtcBytesResult r;
+    // Match by hash, not by position: only ever return a 32-byte value
+    // whose SHA256 actually opens the hashlock. This is fund-safe (a
+    // wrong or absent secret yields ok=false) and robust to witness
+    // layout differences.
+    for (const auto& item : witness_stack) {
+        if (item.size() != 32) continue;
+        unsigned char h[SHA256_LEN];
+        int rc = wally_sha256(item.data(), item.size(), h, sizeof(h));
+        if (rc != 0) continue;
+        if (std::memcmp(h, expected_hashlock.data(), SHA256_LEN) == 0) {
+            r.bytes.assign(item.begin(), item.end());
+            r.ok = true;
+            return r;
+        }
+    }
+    r.ok = false;
+    r.error = "ExtractBtcHtlcPreimageFromWitnessStack: no 32-byte witness "
+              "element hashes to the expected hashlock";
+    return r;
+#else
+    (void)witness_stack;
+    (void)expected_hashlock;
+    return disabled_bytes_result();
+#endif
+}
+
+BtcBytesResult ExtractBtcHtlcPreimageFromTxHex(
+    const std::string&             raw_tx_hex,
+    uint32_t                       input_index,
+    const std::array<uint8_t, 32>& expected_hashlock)
+{
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    ensure_wally_init();
+    BtcBytesResult r;
+    struct wally_tx* tx = nullptr;
+    int rc = wally_tx_from_hex(
+        raw_tx_hex.c_str(), WALLY_TX_FLAG_USE_WITNESS, &tx);
+    if (rc != 0 || tx == nullptr) {
+        r.ok = false;
+        r.error = "ExtractBtcHtlcPreimageFromTxHex: tx did not parse (rc="
+                  + std::to_string(rc) + ")";
+        return r;
+    }
+    if (input_index >= tx->num_inputs) {
+        wally_tx_free(tx);
+        r.ok = false;
+        r.error = "ExtractBtcHtlcPreimageFromTxHex: input_index "
+                  + std::to_string(input_index) + " out of range (num_inputs="
+                  + std::to_string(tx->num_inputs) + ")";
+        return r;
+    }
+    const struct wally_tx_witness_stack* w = tx->inputs[input_index].witness;
+    if (w == nullptr || w->num_items == 0) {
+        wally_tx_free(tx);
+        r.ok = false;
+        r.error = "ExtractBtcHtlcPreimageFromTxHex: input has no witness";
+        return r;
+    }
+    for (std::size_t i = 0; i < w->num_items; ++i) {
+        const auto& it = w->items[i];
+        if (it.witness == nullptr || it.witness_len != 32) continue;
+        unsigned char h[SHA256_LEN];
+        if (wally_sha256(it.witness, it.witness_len, h, sizeof(h)) != 0)
+            continue;
+        if (std::memcmp(h, expected_hashlock.data(), SHA256_LEN) == 0) {
+            r.bytes.assign(it.witness, it.witness + it.witness_len);
+            r.ok = true;
+            wally_tx_free(tx);
+            return r;
+        }
+    }
+    wally_tx_free(tx);
+    r.ok = false;
+    r.error = "ExtractBtcHtlcPreimageFromTxHex: no witness element on input "
+              + std::to_string(input_index) + " opens the hashlock";
+    return r;
+#else
+    (void)raw_tx_hex;
+    (void)input_index;
+    (void)expected_hashlock;
+    return disabled_bytes_result();
+#endif
+}
+
+BtcBytesResult ComputeBtcTxid(const std::string& raw_tx_hex)
+{
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    ensure_wally_init();
+    BtcBytesResult r;
+    struct wally_tx* tx = nullptr;
+    int rc = wally_tx_from_hex(
+        raw_tx_hex.c_str(), WALLY_TX_FLAG_USE_WITNESS, &tx);
+    if (rc != 0 || tx == nullptr) {
+        r.ok = false;
+        r.error = "ComputeBtcTxid: tx did not parse (rc="
+                  + std::to_string(rc) + ")";
+        return r;
+    }
+    unsigned char txid[WALLY_TXHASH_LEN];
+    rc = wally_tx_get_txid(tx, txid, sizeof(txid));
+    if (rc != 0) {
+        wally_tx_free(tx);
+        r.ok = false;
+        r.error = "ComputeBtcTxid: wally_tx_get_txid failed (rc="
+                  + std::to_string(rc) + ")";
+        return r;
+    }
+    r.bytes.assign(txid, txid + sizeof(txid));
+    r.ok = true;
+    wally_tx_free(tx);
+    return r;
+#else
+    (void)raw_tx_hex;
     return disabled_bytes_result();
 #endif
 }

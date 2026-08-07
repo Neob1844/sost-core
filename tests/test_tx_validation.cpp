@@ -1066,7 +1066,7 @@ static TestTxBundle MakeTxWithExtra(int64_t spend_height, const TxOutput& extra)
 }
 
 TEST(TC50_carrier_rejected_before_v15) {
-    // popc_v15_active_at(250) is false on BOTH builds (testnet V15=300; mainnet INT64_MAX).
+    // popc_v15_active_at(250) is false on BOTH builds (testnet V15=12500; mainnet 25000).
     auto b = MakeTxWithExtra(250, MakePopcCarrierOut(true, 100250));
     EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R5_ZERO_AMOUNT);
     g_pass++;
@@ -1074,24 +1074,22 @@ TEST(TC50_carrier_rejected_before_v15) {
 
 #ifdef SOST_TESTNET_FORKS
 TEST(TC51_carrier_accepted_when_v15_active_testnet) {
-    // testnet V15=300 -> popc_v15_active_at(350) true -> carrier exempt -> tx valid.
-    auto b = MakeTxWithExtra(350, MakePopcCarrierOut(true, 100350));
+    // testnet V15=12500 -> popc_v15_active_at(V15_HEIGHT+50) true -> carrier exempt -> tx valid.
+    const int64_t H = V15_HEIGHT + 50;
+    auto b = MakeTxWithExtra(H, MakePopcCarrierOut(true, H + 100000));
     EXPECT_OK(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx));
     g_pass++;
 }
 #else
-TEST(TC51b_carrier_retired_on_mainnet_v15) {
-    // V15 FINAL DECENTRALIZATION: PoPC is retired on mainnet — POPC_V15_ACTIVATION_HEIGHT
-    // is INT64_MAX, so popc_v15_active_at() is false at EVERY mainnet height. The
-    // zero-amount PoPC carrier output therefore has no meaning and is rejected by R5
-    // even well past V15_HEIGHT (here 25000). PoPC bonds no longer exist post-V15.
+TEST(TC51b_carrier_accepted_when_v15_active_mainnet) {
+    // V15 ACTIVATED: mainnet POPC_V15_ACTIVATION_HEIGHT = V15_HEIGHT (20000), so a
+    // valid carrier is accepted at/after 20000 (here 25000, past eligibility too).
     auto b = MakeTxWithExtra(25000, MakePopcCarrierOut(true, 125000));
-    EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R5_ZERO_AMOUNT);
+    EXPECT_OK(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx));
     g_pass++;
 }
 TEST(TC51c_carrier_rejected_below_v15_mainnet) {
-    // Likewise below V15_HEIGHT (here 19999): still rejected by R5. Consistent with
-    // TC51b — the carrier is rejected on mainnet at all heights (PoPC retired).
+    // ...but a carrier below V15_HEIGHT (here 19999) is still rejected by R5.
     auto b = MakeTxWithExtra(19999, MakePopcCarrierOut(true, 119999));
     EXPECT_FAIL(ValidateTransactionConsensus(b.tx, b.utxos, b.ctx), TxValCode::R5_ZERO_AMOUNT);
     g_pass++;

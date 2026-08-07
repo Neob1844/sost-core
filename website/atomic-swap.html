@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style id="sost-global-zoom">html{zoom:1.0}</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#05070a">
+<link rel="canonical" href="https://sostcore.com/atomic-swap.html">
+<link rel="icon" type="image/png" href="sost-logo.png">
+<meta name="robots" content="noindex,nofollow">
+<title>SOST Atomic Swap — Send SOST, receive crypto (experimental)</title>
+<meta name="description" content="Consumer-friendly SOST Atomic Swap: pick what you send and receive, review, confirm. Trust-minimised cross-chain swaps (HTLC). Experimental / founder-testing — no custody, no keys in the browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#000;--bg-panel:#050505;--bg-card:#0a0a0a;--bg-hover:#111;
+    --border-dim:#1a1a1a;--border-med:#2a2a2a;--border-bright:#3a3a3a;
+    --red-primary:#fb010d;--red-bright:#ff2d3b;--red-dim:#5a1418;--green-primary:#4ade80;
+    --cyan-primary:#22d3ee;--cyan-dim:#22d3ee33;--gold-primary:#b8860b;
+    --amber-primary:#f59e0b;--amber-dim:#f59e0b22;--purple-primary:#c084fc;
+    --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--text-muted:#475569;
+    --font-mono:'JetBrains Mono',monospace;--font-display:'Space Grotesk',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;line-height:1.7;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,var(--border-dim) 60px,var(--border-dim) 61px);opacity:.12;pointer-events:none;z-index:0}
+  .container{max-width:1040px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
+  a{color:var(--cyan-primary)}
+  /* nav (matched to atomic-swap-console.html) */
+  nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:10px 0}
+  nav .container{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .nav-logo{font-family:var(--font-display);font-weight:700;font-size:22px;color:var(--text-primary);letter-spacing:3px;text-decoration:none;display:flex;align-items:center;gap:12px}
+  .nav-logo .brand-sost{color:var(--red-primary)}
+  .nav-links{display:flex;gap:4px;flex-wrap:wrap}
+  .nav-links a{color:var(--text-dim);text-decoration:none;font-size:11px;padding:4px 10px;border-radius:4px;letter-spacing:.5px;white-space:nowrap}
+  .nav-links a:hover{color:var(--text-primary);background:rgba(255,255,255,.05)}
+  .nav-hamburger{display:none;background:none;border:1px solid var(--border-dim);color:var(--text-dim);font-size:20px;padding:4px 8px;cursor:pointer;border-radius:4px;line-height:1}
+  @media(max-width:768px){.nav-hamburger{display:block}.nav-links{display:none;width:100%}.nav-links.open{display:flex}}
+  /* net banner (testnet vs mainnet — unmistakable) */
+  .netbar{position:sticky;top:0;z-index:99;font-size:12px;font-weight:700;letter-spacing:1px;text-align:center;padding:8px 14px;text-transform:uppercase}
+  .netbar.experimental{background:repeating-linear-gradient(45deg,#2a0606,#2a0606 14px,#180404 14px,#180404 28px);color:var(--red-bright);border-bottom:1px solid var(--red-dim)}
+  .netbar.testnet{background:repeating-linear-gradient(45deg,#04161a,#04161a 14px,#031015 14px,#031015 28px);color:var(--cyan-primary);border-bottom:1px solid #164e57}
+  .netbar.mainnet{background:repeating-linear-gradient(45deg,#2a0606,#2a0606 14px,#180404 14px,#180404 28px);color:var(--red-bright);border-bottom:1px solid var(--red-dim)}
+  /* hero */
+  .hero{padding:40px 0 26px;border-bottom:1px solid var(--border-dim)}
+  .hero-label{font-size:11px;color:var(--red-primary);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+  .hero h1{font-family:var(--font-display);font-size:clamp(28px,4.6vw,46px);font-weight:700;line-height:1.1;margin-bottom:14px;letter-spacing:-1px}
+  .hero h1 span{color:var(--red-primary)}
+  .hero-sub{font-size:14px;color:var(--text-secondary);max-width:760px}
+  .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+  .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;letter-spacing:.5px;border:1px solid var(--border-med);color:var(--text-secondary);background:var(--bg-card)}
+  .chip.red{color:var(--red-bright);border-color:#5a1418;background:#2a0606}
+  .chip.amber{color:var(--amber-primary);border-color:#5a4622;background:var(--amber-dim)}
+  .chip.green{color:var(--green-primary);border-color:#1f5132;background:#08160e}
+  .chip.cyan{color:var(--cyan-primary);border-color:#164e57;background:#04161a}
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  /* cards */
+  .card{background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:24px;margin-bottom:18px}
+  .card h2{font-family:var(--font-display);font-size:19px;margin-bottom:6px}
+  .card h3{font-family:var(--font-display);font-size:15px;margin:18px 0 8px;color:var(--text-primary)}
+  .card p,.card li{font-size:13px;color:var(--text-secondary);line-height:1.8}
+  .muted{color:var(--text-dim);font-size:12px}
+  /* swap widget */
+  .swapbox{background:var(--bg-panel);border:1px solid var(--border-med);border-radius:12px;padding:18px;margin-top:6px}
+  .leg{display:grid;grid-template-columns:1fr 1.1fr;gap:12px;align-items:center}
+  .leg .caplab{font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+  .leg select,.leg input{width:100%;padding:12px 12px;background:var(--bg-card);border:1px solid var(--border-med);border-radius:8px;color:var(--text-primary);font-family:var(--font-mono);font-size:15px}
+  .leg .assetfix{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg-card);border:1px solid var(--border-med);border-radius:8px;font-size:15px;font-weight:600}
+  .leg .assetfix .tick{width:24px;height:24px;border-radius:6px;background:var(--red-primary);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff}
+  .swap-arrow{display:flex;justify-content:center;align-items:center;margin:12px 0}
+  .swap-arrow span{width:38px;height:38px;border-radius:50%;border:1px solid var(--border-bright);background:var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--cyan-primary)}
+  .quote-line{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:7px 0;border-bottom:1px dashed var(--border-dim)}
+  .quote-line:last-child{border-bottom:none}
+  .quote-line .k{color:var(--text-dim)}
+  .quote-line .v{color:var(--text-primary);text-align:right}
+  .statusbadge{font-size:10px;letter-spacing:1px;padding:2px 8px;border-radius:5px;text-transform:uppercase;font-weight:800;white-space:nowrap}
+  .st-AVAILABLE{background:#08160e;color:var(--green-primary);border:1px solid #1f5132}
+  .st-TESTING{background:var(--amber-dim);color:var(--amber-primary);border:1px solid #5a4622}
+  .st-COMING_SOON{background:#04161a;color:var(--cyan-primary);border:1px solid #164e57}
+  .st-DISABLED{background:#160305;color:var(--text-muted);border:1px solid var(--border-med)}
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;border:1px solid var(--red-dim);background:#160305;color:var(--red-bright);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:14px;letter-spacing:.5px}
+  .btn:hover{background:#220509}
+  .btn.green{border-color:#1f5132;background:#08160e;color:var(--green-primary)}
+  .btn.cyan{border-color:#164e57;background:#04161a;color:var(--cyan-primary)}
+  .btn.ghost{border-color:var(--border-med);background:var(--bg-card);color:var(--text-secondary)}
+  .btn.big{width:100%;justify-content:center;font-size:15px;padding:14px}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .warnmsg{font-size:12px;border-radius:7px;padding:10px 12px;margin-top:10px}
+  .warnmsg.err{background:#2a0606;border:1px solid #5a1418;color:#ffb3b3}
+  .warnmsg.ok{background:#08160e;border:1px solid #1f5132;color:var(--green-primary)}
+  .warnmsg.amber{background:var(--amber-dim);border:1px solid #5a4622;color:var(--amber-primary)}
+  .warnmsg.cyan{background:#04161a;border:1px solid #164e57;color:var(--cyan-primary)}
+  /* timeline */
+  .timeline{list-style:none;margin:14px 0 0;padding:0}
+  .timeline li{position:relative;padding:0 0 20px 34px;font-size:13px;color:var(--text-dim)}
+  .timeline li::before{content:'';position:absolute;left:9px;top:20px;bottom:-2px;width:2px;background:var(--border-med)}
+  .timeline li:last-child::before{display:none}
+  .timeline .node{position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:50%;border:2px solid var(--border-bright);background:var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:10px}
+  .timeline li.done{color:var(--text-secondary)}
+  .timeline li.done .node{border-color:var(--green-primary);color:var(--green-primary)}
+  .timeline li.active{color:var(--text-primary);font-weight:600}
+  .timeline li.active .node{border-color:var(--cyan-primary);color:var(--cyan-primary);box-shadow:0 0 10px var(--cyan-dim)}
+  .timeline li.err .node{border-color:var(--red-bright);color:var(--red-bright)}
+  .timeline.refund li.done .node{border-color:var(--amber-primary);color:var(--amber-primary)}
+  /* details */
+  details.adv{margin-top:12px;border:1px solid var(--border-dim);border-radius:8px;background:var(--bg-panel)}
+  details.adv summary{cursor:pointer;padding:11px 14px;font-size:12px;color:var(--text-secondary);letter-spacing:.5px;list-style:none}
+  details.adv summary::-webkit-details-marker{display:none}
+  details.adv summary::before{content:'▸ ';color:var(--text-dim)}
+  details.adv[open] summary::before{content:'▾ '}
+  details.adv .advbody{padding:0 14px 14px}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;font-size:12px;padding:6px 0;border-top:1px solid var(--border-dim);word-break:break-all}
+  .kv .kk{color:var(--text-dim)}
+  .kv .vv{color:var(--text-primary);font-family:var(--font-mono)}
+  /* history table */
+  table.hist{width:100%;border-collapse:collapse;margin-top:6px;font-size:12px}
+  table.hist th,table.hist td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border-dim)}
+  table.hist th{color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+  table.hist td{color:var(--text-secondary)}
+  table.hist tr:hover td{background:rgba(255,255,255,.02)}
+  .pill{font-size:10px;letter-spacing:.5px;padding:2px 8px;border-radius:5px;font-weight:700;white-space:nowrap}
+  .pill.p-PREPARING{background:var(--amber-dim);color:var(--amber-primary)}
+  .pill.p-LOCKED,.pill.p-COUNTERPARTY_FUNDED,.pill.p-CONFIRMING,.pill.p-REDEEMING{background:#04161a;color:var(--cyan-primary)}
+  .pill.p-COMPLETED{background:#08160e;color:var(--green-primary)}
+  .pill.p-REFUNDED,.pill.p-TIMEOUT,.pill.p-REFUNDING{background:var(--amber-dim);color:var(--amber-primary)}
+  .pill.p-ERROR{background:#2a0606;color:#ffb3b3}
+  .linkbtn{background:none;border:none;color:var(--cyan-primary);cursor:pointer;font-family:inherit;font-size:12px;padding:0;text-decoration:underline}
+  .footer{padding:40px 0;text-align:center}.footer p{font-size:11px;color:var(--text-muted)}
+  @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
+</style>
+<script src="js/nav-toggle.js?v=v380" defer></script>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="sost-explorer.html" class="nav-logo">
+      <img src="sost-logo.png" alt="SOST" style="height:110px;width:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span> PROTOCOL</span>
+    </a>
+    <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
+      <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
+    </a>
+    <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="display:flex;justify-content:center;align-items:center;text-decoration:none;flex:0 0 auto;" title="GeaSpirit — Second-Chance Mining Intelligence">
+      <img src="geaspirit-logo.png" alt="GeaSpirit" style="width:110px;height:110px;border-radius:20%;object-fit:cover;background:#fff;padding:0;box-sizing:border-box;filter:drop-shadow(0 0 12px rgba(0,255,65,.95)) drop-shadow(0 0 30px rgba(0,255,65,.6))">
+    </a>
+    <a href="sost-popc.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC Bond Staking"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:26px;font-weight:900;letter-spacing:-0.5px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">BOND</span></a>
+      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+            <a href="index.html" data-watch="1" title="Watch · SOST videos">▶ Watch</a>
+            <a href="index.html">Home</a>
+      <a href="atomic-swap.html" style="color:var(--red-primary);font-weight:700" title="SOST Atomic Swap — consumer">⚛ Atomic Swap</a>
+      <a href="sost-protocol-spec.html">Layer 1</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
+      <a href="sost-materials-engine.html">Materials Engine</a>
+      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
+      <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-popc.html">PoPC</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
+      <a href="sost-popc-contracts.html">PoPC Contracts</a>
+      <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <a href="sost-gold-dex.html">Atomic Swap DEX</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
+      <a href="sost-help.html">Help</a>
+      <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
+      <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="sost-talk.html">SOST Talk</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Testnet vs mainnet — unmistakable. Colour + text change once a wallet reports its chain. -->
+<div class="netbar experimental" id="netbar">EXPERIMENTAL · FOUNDER-TESTING · NOT FOR PUBLIC USE · NO PAIR IS LIVE YET</div>
+
+<div class="hero"><div class="container">
+  <div class="hero-label">// Cross-chain · Atomic Swap · Trust-minimised</div>
+  <h1>SOST <span>Atomic Swap</span></h1>
+  <p class="hero-sub">Send SOST and receive crypto on another chain — no custodian, no exchange account, no one holding your funds in the middle. If a swap doesn't complete, a built-in timeout <b>refunds you automatically</b>. This is a consumer preview of the underlying HTLC engine; it is <b>experimental and in founder testing</b>, so no pair can be executed publicly yet.</p>
+  <div class="chips">
+    <span class="chip red"><span class="dot"></span>Experimental · Founder-testing</span>
+    <span class="chip cyan" id="statusChip"><span class="dot"></span>Network: checking…</span>
+    <span class="chip" id="heightChip">SOST height: —</span>
+    <span class="chip amber"><a href="atomic-swap-console.html" style="color:inherit;text-decoration:none">⚙ Advanced / Developer console →</a></span>
+  </div>
+</div></div>
+
+<div class="container">
+
+  <!-- ============ WIZARD ============ -->
+  <div class="card">
+    <h2>Swap</h2>
+    <p class="muted">Pick what you send and what you want to receive. We handle the cryptography (secret, hashlock, timeouts) for you — you never type any of it.</p>
+
+    <div class="swapbox">
+      <!-- YOU SEND -->
+      <div class="leg">
+        <div>
+          <div class="caplab">You send</div>
+          <div class="assetfix"><span class="tick">S</span> SOST</div>
+        </div>
+        <div>
+          <div class="caplab">Amount</div>
+          <input id="sendAmt" inputmode="decimal" placeholder="0.00" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="swap-arrow"><span>&#8645;</span></div>
+
+      <!-- YOU RECEIVE -->
+      <div class="leg">
+        <div>
+          <div class="caplab">You receive</div>
+          <select id="recvAsset"></select>
+        </div>
+        <div>
+          <div class="caplab">You get (estimate)</div>
+          <input id="recvAmt" placeholder="—" readonly>
+        </div>
+      </div>
+
+      <!-- pair status + estimates -->
+      <div style="margin-top:14px">
+        <div class="quote-line"><span class="k">Pair status</span><span class="v"><span id="pairStatus" class="statusbadge st-DISABLED">—</span></span></div>
+        <div class="quote-line"><span class="k">Rate</span><span class="v" id="qRate">Indicative — needs a counterparty</span></div>
+        <div class="quote-line"><span class="k">Network fee (est.)</span><span class="v" id="qFee">—</span></div>
+        <div class="quote-line"><span class="k">Expected time</span><span class="v" id="qTime">—</span></div>
+        <div class="quote-line"><span class="k">Refund protection</span><span class="v" id="qRefund">—</span></div>
+      </div>
+
+      <div id="pairNote"></div>
+
+      <button class="btn cyan big" id="reviewBtn" disabled>Review swap</button>
+    </div>
+  </div>
+
+  <!-- ============ REVIEW ============ -->
+  <div class="card" id="reviewCard" style="display:none">
+    <h2>Review</h2>
+    <p class="muted">Check the details, then confirm. Everything below the fold ("Advanced") is generated automatically — you don't need to read it.</p>
+    <div style="margin-top:6px">
+      <div class="quote-line"><span class="k">You send</span><span class="v" id="rvSend">—</span></div>
+      <div class="quote-line"><span class="k">You receive (est.)</span><span class="v" id="rvRecv">—</span></div>
+      <div class="quote-line"><span class="k">Route</span><span class="v" id="rvRoute">—</span></div>
+      <div class="quote-line"><span class="k">Refund if it fails</span><span class="v" id="rvRefund">—</span></div>
+      <div class="quote-line"><span class="k">Refund deadline</span><span class="v" id="rvDeadline">—</span></div>
+    </div>
+
+    <details class="adv">
+      <summary>Advanced details (auto-generated — swapId, secret hash, timeouts)</summary>
+      <div class="advbody" id="rvAdvBody"></div>
+    </details>
+
+    <div id="confirmMsg"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn green" id="confirmBtn" disabled>Confirm &amp; start swap</button>
+      <button class="btn ghost" id="cancelReview">Back</button>
+    </div>
+  </div>
+
+  <!-- ============ ACTIVE SWAP / TIMELINE ============ -->
+  <div class="card" id="activeCard" style="display:none">
+    <h2>Swap progress</h2>
+    <div id="activeSummary" class="warnmsg cyan"></div>
+    <ul class="timeline" id="timeline"></ul>
+    <details class="adv">
+      <summary>Advanced details</summary>
+      <div class="advbody" id="activeAdvBody"></div>
+    </details>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn ghost" href="atomic-swap-console.html" id="handoffBtn" style="text-decoration:none">Open developer console to execute →</a>
+      <button class="btn ghost" id="closeActive">Close</button>
+    </div>
+  </div>
+
+  <!-- ============ HISTORY ============ -->
+  <div class="card">
+    <h2>Your swaps</h2>
+    <p class="muted">Stored locally in this browser only (never uploaded). Active swaps survive a reload.</p>
+    <div style="overflow-x:auto">
+      <table class="hist">
+        <thead><tr><th>Date</th><th>Pair</th><th>Sent</th><th>Received</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="histBody"><tr><td colspan="6" class="muted">No swaps yet.</td></tr></tbody>
+      </table>
+    </div>
+    <button class="btn ghost" id="clearHist" style="font-size:12px">Clear history</button>
+  </div>
+
+  <!-- ============ WHAT THIS IS ============ -->
+  <div class="card">
+    <h2>How it works — and what it is not</h2>
+    <p>An atomic swap locks your SOST in a self-custodial lockbox (an HTLC) that has exactly two exits: the counterparty can take it only by revealing a secret that also releases your funds on the other chain, or — if nobody completes in time — the lockbox <b>refunds you</b>. No custodian ever holds your money, and the two legs either both happen or neither does.</p>
+    <div class="warnmsg amber">This page never asks for a seed phrase or private key, never signs, and never uploads your secret. Live execution runs through your own wallet / node in the <a href="atomic-swap-console.html">developer console</a>.</div>
+    <p class="muted" style="margin-top:10px">Status meanings: <b>Available</b> = usable by anyone. <b>Founder testing</b> = wired up but the contract is undeployed &amp; unaudited, so it's founder-only. <b>Coming soon</b> = not yet built (e.g. BTC lands with V15). <b>Disabled</b> = intentionally off (unsafe token type). Right now <b>nothing is Available</b> — this is a preview.</p>
+  </div>
+
+</div>
+
+<div class="footer"><div class="container"><p>SOST Atomic Swap · experimental / founder-testing · this page never holds keys, signs, or moves funds · © SOST Protocol</p></div></div>
+
+<script src="js/atomic-swap-evm.js"></script>
+<script src="js/atomic-swap-htlc-runtime.js"></script>
+<script src="sost-search.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+const A=window.ASWEVM;               // reuse the EVM codec / network+asset config from the console
+const HIST_KEY='sost_consumer_swaps';
+
+/* =====================================================================
+   ONE canonical asset/pair capability config.
+   Every UI element (receive dropdown, quote panel, review, execute gate)
+   derives from this single object. Token-path statuses are derived from
+   the shared plumbing flags in atomic-swap-evm.js (A.ERC20_ENABLED /
+   A.FEE_ON_TRANSFER) so there is no second, divergent source of truth.
+   Truthful & conservative: the HTLC contract is undeployed + unaudited,
+   so NOTHING is AVAILABLE yet.
+   ===================================================================== */
+const BASE={symbol:'SOST',name:'SOST',decimals:8};
+const PAIR_DEFS=[
+  {recv:'ETH', name:'Ethereum (native ETH)', chain:'evm', chainId:'0x1',       kind:'native', time:'~10–30 min', status:'TESTING',
+   note:'The EVM HTLC contract is not deployed and not audited — SOST↔ETH is founder-testing only.'},
+  {recv:'BNB', name:'BNB Chain (native BNB)', chain:'evm', chainId:'0x38',      kind:'native', time:'~3–15 min', status:'TESTING',
+   note:'The EVM HTLC contract is not deployed and not audited — SOST↔BNB is founder-testing only.'},
+  {recv:'USDT', name:'Tether (USDT, ERC-20)', chain:'evm', chainId:'0x1',       kind:'erc20',  time:'~10–30 min', status:'auto',
+   note:'ERC-20 path is off until SafeERC20 + balance-delta accounting + tests land. Issuer-freeze risk.'},
+  {recv:'USDC', name:'USD Coin (USDC, ERC-20)', chain:'evm', chainId:'0x1',     kind:'erc20',  time:'~10–30 min', status:'auto',
+   note:'ERC-20 path is off until SafeERC20 + balance-delta accounting + tests land. Issuer-freeze risk.'},
+  {recv:'PAXG', name:'PAX Gold (PAXG, ERC-20)', chain:'evm', chainId:'0x1',     kind:'erc20',  time:'~10–30 min', status:'auto',
+   note:'PAXG charges an on-chain transfer fee (fee-on-transfer) — permanently blocked in this HTLC (funds could get stuck).'},
+  {recv:'XAUT', name:'Tether Gold (XAUT, ERC-20)', chain:'evm', chainId:'0x1',  kind:'erc20',  time:'~10–30 min', status:'auto',
+   note:'ERC-20 gold path is off until SafeERC20 + accounting + tests land. Issuer-freeze risk.'},
+  {recv:'BTC', name:'Bitcoin (BTC)', chain:'btc', chainId:null,                 kind:'native', time:'~30–90 min', status:'COMING_SOON',
+   note:'Bitcoin HTLC signing activates with V15. The BTC builder is a stub today.'}
+];
+// derive final status for token paths from the shared plumbing flags (single source of truth)
+function pairStatus(p){
+  if(p.status!=='auto')return p.status;
+  if((A.FEE_ON_TRANSFER||[]).indexOf(p.recv)>=0)return 'DISABLED';   // e.g. PAXG
+  return A.ERC20_ENABLED ? 'TESTING' : 'DISABLED';                    // ERC20_ENABLED===false → DISABLED
+}
+const PAIRS=PAIR_DEFS.map(p=>({...p,status:pairStatus(p)}));
+function pairByRecv(sym){return PAIRS.find(p=>p.recv===sym);}
+const STATUS_LABEL={AVAILABLE:'Available',TESTING:'Founder testing',COMING_SOON:'Coming soon',DISABLED:'Disabled'};
+
+/* ---- populate the receive dropdown from the canonical config ---- */
+(function fillAssets(){
+  const sel=$('recvAsset');
+  sel.innerHTML=PAIRS.map(p=>'<option value="'+p.recv+'">'+esc(p.recv)+' — '+esc(STATUS_LABEL[p.status])+'</option>').join('');
+})();
+
+/* =====================================================================
+   Live SOST height + testnet/mainnet banner (reuses public /rpc)
+   ===================================================================== */
+let CUR_HEIGHT=null, EVM_CHAIN=null;
+async function rpc(method,params){
+  const r=await fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({jsonrpc:'2.0',id:1,method,params:params||[]})});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;
+}
+async function refreshHeight(){
+  try{const h=await rpc('getblockcount');CUR_HEIGHT=h;$('heightChip').textContent='SOST height: '+h;}
+  catch(e){$('heightChip').textContent='SOST height: unreachable';}
+}
+function isTestnet(cid){return cid==='0xaa36a7'||cid==='0x61';}
+function paintNetBanner(){
+  const bar=$('netbar'),chip=$('statusChip');
+  if(EVM_CHAIN&&isTestnet(EVM_CHAIN)){
+    const net=A.NETWORKS[EVM_CHAIN];
+    bar.className='netbar testnet';
+    bar.textContent='TESTNET REHEARSAL · '+(net?net.name:EVM_CHAIN)+' · play money — safe to experiment';
+    chip.className='chip cyan';chip.innerHTML='<span class="dot"></span>Wallet: '+esc(net?net.name:'testnet');
+  }else if(EVM_CHAIN&&A.NETWORKS[EVM_CHAIN]){
+    const net=A.NETWORKS[EVM_CHAIN];
+    bar.className='netbar mainnet';
+    bar.textContent='⚠ MAINNET · '+net.name+' · REAL FUNDS · experimental / founder-testing — do not use publicly';
+    chip.className='chip red';chip.innerHTML='<span class="dot"></span>Wallet: '+esc(net.name)+' (mainnet)';
+  }else{
+    bar.className='netbar experimental';
+    bar.textContent='EXPERIMENTAL · FOUNDER-TESTING · NOT FOR PUBLIC USE · NO PAIR IS LIVE YET';
+    chip.className='chip amber';chip.innerHTML='<span class="dot"></span>Wallet: not connected';
+  }
+}
+
+/* =====================================================================
+   Quote / capability panel — derives entirely from the canonical config
+   ===================================================================== */
+function currentPair(){return pairByRecv($('recvAsset').value);}
+function refreshQuote(){
+  const p=currentPair();if(!p)return;
+  const amt=parseFloat($('sendAmt').value);
+  $('pairStatus').className='statusbadge st-'+p.status;
+  $('pairStatus').textContent=STATUS_LABEL[p.status];
+  // rate/receive: there is NO orderbook/counterparty, so we never invent a price.
+  $('recvAmt').value='—';
+  $('qRate').textContent='Indicative only — a live rate needs a counterparty / order';
+  $('qFee').textContent=(p.chain==='btc')
+    ? 'SOST tx fee (tiny) + BTC miner fee (counterparty)'
+    : 'SOST tx fee (tiny) + '+p.recv+' network gas (paid by the counterparty on '+(A.NETWORKS[p.chainId]?A.NETWORKS[p.chainId].name:p.recv)+')';
+  $('qTime').textContent=p.time+' (both legs must confirm)';
+  $('qRefund').innerHTML=(p.status==='COMING_SOON')
+    ? 'Yes — timeout auto-refund (once built)'
+    : '<span style="color:var(--green-primary)">Yes — automatic refund if the swap doesn\'t complete in time</span>';
+  // note per pair
+  const nb=$('pairNote');
+  if(p.status==='AVAILABLE'){nb.innerHTML='';}
+  else if(p.status==='TESTING'){nb.innerHTML='<div class="warnmsg amber"><b>Founder testing.</b> '+esc(p.note)+' You can prepare a swap, but execution is handed to the developer console.</div>';}
+  else if(p.status==='COMING_SOON'){nb.innerHTML='<div class="warnmsg cyan"><b>Coming soon.</b> '+esc(p.note)+'</div>';}
+  else{nb.innerHTML='<div class="warnmsg err"><b>Disabled.</b> '+esc(p.note)+'</div>';}
+  // execute gate: only AVAILABLE pairs are executable in the consumer flow.
+  // TESTING pairs are preparable (hand-off to console); everything else is blocked.
+  const canPrepare=(p.status==='AVAILABLE'||p.status==='TESTING');
+  const rb=$('reviewBtn');
+  rb.disabled=!(canPrepare && amt>0);
+  rb.textContent = p.status==='AVAILABLE' ? 'Review swap'
+    : p.status==='TESTING' ? 'Prepare swap (founder testing)'
+    : p.status==='COMING_SOON' ? 'Coming soon'
+    : 'Unavailable';
+}
+$('recvAsset').addEventListener('change',refreshQuote);
+$('sendAmt').addEventListener('input',refreshQuote);
+
+/* =====================================================================
+   Auto-generate the crypto params (Web Crypto) — user never types these
+   ===================================================================== */
+function toHex(buf){return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+async function genSwapParams(){
+  const secret=new Uint8Array(32);crypto.getRandomValues(secret);
+  const swapId=new Uint8Array(32);crypto.getRandomValues(swapId);
+  const hb=await crypto.subtle.digest('SHA-256',secret);
+  return {
+    preimage:'0x'+toHex(secret.buffer),
+    hashlock:'0x'+toHex(hb),
+    swapId:'0x'+toHex(swapId.buffer),
+    // sensible default timeouts (the console lets a founder tune them precisely)
+    refundHeight:(CUR_HEIGHT!=null?CUR_HEIGHT+240:null),  // SOST side ~ later in wall-clock
+    refundTimeEvmOffset:240                                // EVM side ~ earlier; console sets absolute block
+  };
+}
+
+/* =====================================================================
+   Review + confirm
+   ===================================================================== */
+let PENDING=null;   // the swap being reviewed
+$('reviewBtn').addEventListener('click',async function(){
+  const p=currentPair();const amt=parseFloat($('sendAmt').value);
+  if(!p||!(amt>0))return;
+  const params=await genSwapParams();
+  PENDING={
+    id:'swap_'+Date.now().toString(36),
+    createdAt:new Date().toISOString(),
+    pair:BASE.symbol+'/'+p.recv,
+    sendAsset:BASE.symbol, sendAmount:$('sendAmt').value.trim(),
+    recvAsset:p.recv, recvAmount:'(quote pending counterparty)',
+    chain:p.chain, chainId:p.chainId, status:'PREPARING', route:p.status,
+    network:(p.chain==='evm'&&A.NETWORKS[p.chainId])?A.NETWORKS[p.chainId].name:(p.chain==='btc'?'Bitcoin':'—'),
+    htlcAddress:(p.chain==='evm'&&A.NETWORKS[p.chainId])?(A.NETWORKS[p.chainId].htlc||null):null,
+    swapId:params.swapId, hashlock:params.hashlock, preimage:params.preimage,
+    refundHeight:params.refundHeight, refundTimeEvm:null,
+    sostTxid:null, evmTxid:null, confirmations:0
+  };
+  // fill review
+  $('rvSend').textContent=PENDING.sendAmount+' '+BASE.symbol;
+  $('rvRecv').textContent=p.recv+' — estimate available once a counterparty quotes';
+  $('rvRoute').textContent=BASE.symbol+' (SOST L1 HTLC) → '+p.recv+' on '+PENDING.network;
+  $('rvRefund').innerHTML='<span style="color:var(--green-primary)">Automatic — your SOST returns to you if the swap is not completed by the deadline</span>';
+  $('rvDeadline').textContent=(PENDING.refundHeight!=null)?('SOST block ~'+PENDING.refundHeight+' (≈ current + 240)'):'set when the node height is known';
+  $('rvAdvBody').innerHTML=advKV(PENDING);
+  // confirm gate: truly executable only if AVAILABLE (never, today). TESTING → hand-off.
+  const cb=$('confirmBtn'),cm=$('confirmMsg');
+  if(p.status==='AVAILABLE'){
+    cb.disabled=false;cb.textContent='Confirm & start swap';cm.innerHTML='';
+  }else{ // TESTING
+    cb.disabled=true;cb.textContent='Confirm (disabled — founder testing)';
+    cm.innerHTML='<div class="warnmsg amber">This pair is <b>founder-testing only</b> (the contract is undeployed &amp; unaudited). You can save this prepared swap and finish it in the <b>developer console</b>, where your own wallet signs each step. Nothing has moved yet.</div>';
+  }
+  $('reviewCard').style.display='block';
+  $('reviewCard').scrollIntoView({behavior:'smooth',block:'start'});
+});
+$('cancelReview').addEventListener('click',()=>{$('reviewCard').style.display='none';PENDING=null;});
+
+function advKV(s){
+  const rows=[
+    ['Pair',s.pair],['Status',s.status],['Network',s.network],
+    ['swapId',s.swapId],['Secret hash (hashlock)',s.hashlock],
+    ['Secret preimage','•••••• (kept locally, revealed only when you redeem)'],
+    ['HTLC contract',s.htlcAddress||'not deployed on this network'],
+    ['SOST refund height',s.refundHeight!=null?s.refundHeight:'—'],
+    ['EVM refundTime',s.refundTimeEvm!=null?s.refundTimeEvm:'set in console (absolute EVM block)'],
+    ['SOST lock txid',s.sostTxid||'—'],['EVM lock txid',s.evmTxid||'—'],
+    ['Confirmations',s.confirmations]
+  ];
+  return rows.map(r=>'<div class="kv"><span class="kk">'+esc(r[0])+'</span><span class="vv">'+esc(r[1])+'</span></div>').join('');
+}
+
+$('confirmBtn').addEventListener('click',function(){
+  if(!PENDING)return;
+  // AVAILABLE-only path. Not reachable today (no pair is AVAILABLE), kept honest for when one is.
+  PENDING.status='LOCKED';
+  saveSwap(PENDING);renderHistory();showActive(PENDING);
+  $('reviewCard').style.display='none';
+});
+// Prepared founder-testing swaps: persist + hand off to the console.
+$('handoffBtn').addEventListener('click',function(){/* href navigates; state already saved */});
+
+/* =====================================================================
+   Active swap + status timeline
+   ===================================================================== */
+const FORWARD=[['PREPARING','Preparing'],['LOCKED','Funds locked'],['COUNTERPARTY_FUNDED','Counterparty funded'],
+  ['CONFIRMING','Confirming'],['REDEEMING','Redeeming'],['COMPLETED','Completed']];
+const REFUND=[['TIMEOUT','Timeout reached'],['REFUNDING','Refunding'],['REFUNDED','Refunded']];
+const REFUND_STATES=['TIMEOUT','REFUNDING','REFUNDED'];
+function renderTimeline(status){
+  const isRefund=REFUND_STATES.indexOf(status)>=0;
+  const stages=isRefund?REFUND:FORWARD;
+  const idx=stages.findIndex(s=>s[0]===status);
+  const el=$('timeline');el.className='timeline'+(isRefund?' refund':'');
+  if(status==='ERROR'){
+    el.innerHTML='<li class="err"><span class="node">✕</span>Swap error — funds are protected by the refund path. Open the developer console to inspect or refund.</li>';
+    return;
+  }
+  el.innerHTML=stages.map((s,i)=>{
+    const cls=i<idx?'done':(i===idx?'active':'');
+    const mark=i<idx?'✓':(i===idx?'●':'');
+    return '<li class="'+cls+'"><span class="node">'+mark+'</span>'+esc(s[1])+'</li>';
+  }).join('');
+}
+function showActive(s){
+  $('activeCard').style.display='block';
+  $('activeSummary').innerHTML='<b>'+esc(s.pair)+'</b> · sending '+esc(s.sendAmount)+' SOST · '+esc(s.network)+
+    ' · <span class="pill p-'+esc(s.status)+'">'+esc(s.status.replace(/_/g,' '))+'</span>';
+  renderTimeline(s.status);
+  $('activeAdvBody').innerHTML=advKV(s);
+  const hb=$('handoffBtn');
+  hb.style.display=(s.route==='TESTING')?'inline-flex':'none';
+  $('activeCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('closeActive').addEventListener('click',()=>{$('activeCard').style.display='none';});
+
+/* =====================================================================
+   History (localStorage-backed; secret preimage kept but not exported)
+   ===================================================================== */
+function loadSwaps(){try{return JSON.parse(localStorage.getItem(HIST_KEY)||'[]');}catch(e){return [];}}
+function saveSwap(s){const all=loadSwaps();const i=all.findIndex(x=>x.id===s.id);if(i>=0)all[i]=s;else all.unshift(s);
+  try{localStorage.setItem(HIST_KEY,JSON.stringify(all));}catch(e){}}
+function renderHistory(){
+  const all=loadSwaps();const tb=$('histBody');
+  if(!all.length){tb.innerHTML='<tr><td colspan="6" class="muted">No swaps yet.</td></tr>';return;}
+  tb.innerHTML=all.map(s=>{
+    const d=new Date(s.createdAt);const ds=isNaN(d)?'—':d.toISOString().slice(0,16).replace('T',' ');
+    return '<tr>'+
+      '<td>'+esc(ds)+'</td>'+
+      '<td>'+esc(s.pair)+'</td>'+
+      '<td>'+esc(s.sendAmount)+' SOST</td>'+
+      '<td>'+esc(s.recvAsset)+'</td>'+
+      '<td><span class="pill p-'+esc(s.status)+'">'+esc(s.status.replace(/_/g,' '))+'</span></td>'+
+      '<td><button class="linkbtn" data-open="'+esc(s.id)+'">Details</button></td>'+
+    '</tr>';
+  }).join('');
+  tb.querySelectorAll('button[data-open]').forEach(b=>b.addEventListener('click',()=>{
+    const s=loadSwaps().find(x=>x.id===b.dataset.open);if(s)showActive(s);
+  }));
+}
+$('clearHist').addEventListener('click',function(){
+  if(!confirm('Clear local swap history? This only affects this browser.'))return;
+  try{localStorage.removeItem(HIST_KEY);}catch(e){}renderHistory();$('activeCard').style.display='none';
+});
+
+/* =====================================================================
+   Boot — reuse the console's wallet-chain detection (read-only)
+   ===================================================================== */
+function eth(){return window.ethereum;}
+refreshHeight();setInterval(refreshHeight,30000);
+refreshQuote();renderHistory();paintNetBanner();
+if(eth()){
+  eth().request({method:'eth_chainId'}).then(c=>{EVM_CHAIN=c;paintNetBanner();refreshQuote();}).catch(()=>{});
+  if(eth().on){eth().on('chainChanged',c=>{EVM_CHAIN=c;paintNetBanner();refreshQuote();});}
+}
+</script>
+</body>
+</html>

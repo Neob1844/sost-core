@@ -53,7 +53,8 @@
 #include "sost/popc_model_b.h"
 #include "sost/proposals.h"
 #include "sost/lottery.h"
-#include "sost/jackpot.h"   // V15 Historical DTD Jackpot (opportunity/FIFO/expected tx)
+#include "sost/jackpot_reserve.h"  // V15 (J) live wiring: reserve discovery / balance
+#include "sost/jackpot_block.h"    // V15 (J) live wiring: block-level jackpot validation (validate BEFORE mutate)
 #include "sost/beacon.h"
 #include "sost/beacon_p2p.h"
 
@@ -115,6 +116,16 @@ static std::string    g_escrow_registry_path = "escrow_registry.json";
 static int32_t      g_last_accepted_profile = 0; // last block's declared cASERT profile index
 static std::recursive_mutex g_chain_mu; // recursive: process_block→try_reorganize→process_block
 static bool g_in_reorg = false;        // guard against recursive reorg
+
+#ifdef SOST_DEVNET_FORKS
+// DEV/test-only one-shot reorg-connect failpoint. -1 = disarmed (default; and the ONLY
+// possible value in mainnet/testnet, where this symbol is compiled out entirely). When
+// >=0 AND ACTIVE_PROFILE==Profile::DEV, try_reorganize's connect loop forces a failure at
+// exactly this connection ordinal (blocks 0..ordinal-1 connect, then the NORMAL atomic
+// rollback runs), and auto-clears back to -1. Armed only via a DEV-guarded RPC; can never
+// be set by peers or block data; never bypasses PoW/validation/UTXO logic.
+static int g_dev_reorg_failpoint_ordinal = -1;
+#endif
 
 // RPC auth (fail-closed by default)
 static std::string g_rpc_user = "";
@@ -191,11 +202,6 @@ struct StoredBlock {
     // 0 here; from height 10000 onwards triggered blocks may carry a
     // non-zero rollover amount.
     int64_t pending_lottery_after{0};
-    // V15 Historical DTD Jackpot — rollover pending carried to the next jackpot
-    // opportunity (docs/V15_HISTORICAL_JACKPOT_SPEC.md). Same backward-compatible
-    // pattern as pending_lottery_after: OPTIONAL field, missing == 0, emitted only
-    // when > 0, restored from the tip on reorg. Zero on every pre-V15 block.
-    int64_t jackpot_pending_after{0};
     // Raw JSON for the full block (includes segment_proofs, round_witnesses, etc.)
     // Stored once on acceptance, used for P2P relay and chain.json persistence.
     // This avoids re-serializing complex nested proof structures.
@@ -881,7 +887,7 @@ static std::vector<std::string> json_get_tx_hexes(const std::string& block_json)
 
 // Forward declarations
 static void p2p_broadcast_tx(const std::string& hex_str, int exclude_fd = -1);
-static bool process_block(const std::string& block_json);
+static bool process_block(const std::string& block_json, bool reorg_connect = false);
 static bool save_chain_internal(const std::string& path);  // v0.3.2: no-lock save
 static bool decode_tx_hex(const std::string& tx_hex, std::vector<Byte>& out_raw);
 static std::vector<sost::PopcV15Event> node_collect_popc_events(int64_t height);  // P5: read-only RPC observability
@@ -1353,19 +1359,11 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     const int64_t total_reward_no_fees = subsidy;
     const auto    split_no_fees = sost::lottery::phase2_coinbase_split(total_reward_no_fees);
 
-    // V15 final-decentralization fork (docs/V15_FINAL_DECENTRALIZATION_SPEC.md):
-    // from V15_HEIGHT every block routes through the DTD machinery (gold+popc
-    // emission redirected to the accumulator). A block only PAYS OUT on a
-    // lottery-cadence block; every other triggered block ACCUMULATES.
-    const bool can_payout =
+    const bool lottery_triggered =
         phase2_active && sost::lottery::is_lottery_block(height_next, phase2_h);
-    const bool block_triggered =
-        phase2_active && sost::lottery::dtd_block_triggered(
-                             height_next, phase2_h, sost::V15_HEIGHT);
-    const bool v15_active = sost::v15_dtd_fork_active(height_next);
 
     const int64_t current_lottery_amount =
-        block_triggered ? split_no_fees.lottery_share : 0;
+        lottery_triggered ? split_no_fees.lottery_share : 0;
 
     // ---- Eligibility scan + winner pick (only if triggered) ------------
     int64_t eligible_count = 0;
@@ -1373,11 +1371,9 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     PubKeyHash winner_pkh{};
     bool eligibility_empty = true;
 
-    if (can_payout) {
+    if (lottery_triggered) {
         // Project g_blocks into LotteryMinedBlockView. The lottery
         // helper expects every entry to have height < height_next.
-        // (Only lottery-cadence blocks pick a winner; V15 non-lottery
-        // blocks merely accumulate and need no eligibility scan.)
         std::vector<sost::lottery::LotteryMinedBlockView> history;
         history.reserve(g_blocks.size());
         for (const auto& b : g_blocks) {
@@ -1421,8 +1417,7 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
         PubKeyHash zero_pkh{};
         auto eligible = sost::lottery::compute_lottery_eligibility_set(
             history, height_next, zero_pkh,
-            sost::lottery_exclusion_window_at(height_next),
-            v15_active ? sost::DTD_RECENT_MINER_WINDOW : 0);
+            sost::lottery_exclusion_window_at(height_next));
         eligible_count = (int64_t)eligible.size();
         eligibility_empty = eligible.empty();
 
@@ -1435,30 +1430,6 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
         }
     }
 
-    // V15 Historical DTD Jackpot — build the EXACT jackpot tx the miner must place
-    // at txs[1], using the SAME functions the validator (validate_block_jackpot)
-    // uses, so it is byte-identical by construction. Empty unless this next block
-    // is a jackpot opportunity with a DTD winner and a positive payout.
-    std::string jackpot_tx_hex;
-    if (sost::jackpot::is_jackpot_opportunity(height_next, phase2_h, sost::V15_HEIGHT)
-        && !eligibility_empty) {
-        PubKeyHash j_gold{}, j_popc{};
-        address_decode(ADDR_GOLD_VAULT, j_gold);
-        address_decode(ADDR_POPC_POOL,  j_popc);
-        auto j_reserve = sost::jackpot::collect_reserve_utxos(g_utxo_set.GetMap(), j_gold, j_popc);
-        const int64_t j_reserve_rem = sost::jackpot::reserve_sum(j_reserve);
-        const int64_t j_pend = g_blocks.empty() ? 0 : g_blocks.back().jackpot_pending_after;
-        auto j_res = sost::jackpot::compute_jackpot(j_pend, j_reserve_rem, /*has_winner*/true);
-        if (j_res.payout > 0) {
-            auto j_plan = sost::jackpot::plan_jackpot_spend(j_reserve, j_res.payout);
-            if (j_plan.ok) {
-                Transaction j_tx = sost::jackpot::build_expected_jackpot_tx(j_plan, winner_pkh, j_gold);
-                std::vector<Byte> j_bytes;
-                if (j_tx.Serialize(j_bytes)) jackpot_tx_hex = to_hex(j_bytes.data(), j_bytes.size());
-            }
-        }
-    }
-
     // ---- Coinbase shape decision -------------------------------------
     const char* shape = "NORMAL";
     int64_t miner_amount   = 0;
@@ -1467,17 +1438,27 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
     int64_t lottery_payout = 0;
     int64_t expected_pending_after = pending_before;
 
-    if (!block_triggered) {
-        // Pre-Phase2 (h<7100) OR pre-V15 non-lottery block → NORMAL 50/25/25.
+    if (!lottery_triggered && height_next >= sost::V15_HEIGHT) {
+        // V15 emission transition (T): post-V15 non-triggered block. Gold
+        // Vault / PoPC are no longer funded; the non-miner half is redirected
+        // to the DTD lottery pending. Same miner-only UPDATE shape the miner
+        // already knows how to build (build_phase2_update_coinbase_tx), so no
+        // miner-side change is needed — only this directive flips to UPDATE.
+        shape        = "UPDATE_EMPTY";
+        miner_amount = subsidy - split_no_fees.lottery_share; // = miner_share
+        gold_amount  = 0;
+        popc_amount  = 0;
+        lottery_payout = 0;
+        expected_pending_after = pending_before + split_no_fees.lottery_share;
+    } else if (!lottery_triggered) {
+        // Pre-V15 non-triggered (and pre-Phase2) → NORMAL 50/25/25.
         // Use the standard emission split with subsidy only (fees are
         // miner-time). Miner computes final amounts including fees.
         auto std_split = coinbase_split(subsidy);
         miner_amount = std_split.miner;
         gold_amount  = std_split.gold_vault;
         popc_amount  = std_split.popc_pool;
-    } else if (!can_payout || eligibility_empty) {
-        // V15 non-lottery block (accumulate the redirected 50%), OR a
-        // lottery-cadence block with an empty eligibility set → UPDATE.
+    } else if (eligibility_empty) {
         shape        = "UPDATE_EMPTY";
         miner_amount = subsidy - split_no_fees.lottery_share; // = miner_share
         gold_amount  = 0;
@@ -1560,8 +1541,7 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
       << "\"height_next\":" << height_next
       << ",\"phase2_height\":" << phase2_h
       << ",\"phase2_active\":" << (phase2_active ? "true" : "false")
-      << ",\"lottery_triggered\":" << (block_triggered ? "true" : "false")
-      << ",\"can_payout\":" << (can_payout ? "true" : "false")
+      << ",\"lottery_triggered\":" << (lottery_triggered ? "true" : "false")
       << ",\"pending_lottery_before\":" << pending_before
       << ",\"current_lottery_amount\":" << current_lottery_amount
       << ",\"coinbase_shape\":\"" << shape << "\""
@@ -1570,7 +1550,6 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
       << ",\"popc_amount\":" << popc_amount
       << ",\"lottery_payout\":" << lottery_payout
       << ",\"lottery_winner_pkh\":\"" << winner_hex << "\""
-      << ",\"jackpot_tx_hex\":\"" << jackpot_tx_hex << "\""
       << ",\"eligible_count\":" << eligible_count
       << ",\"winner_index\":" << winner_index
       << ",\"cooldown_window\":" << cooldown_window
@@ -1660,14 +1639,11 @@ static std::string handle_getlotteryaudit(const std::string& id, const std::vect
     }
 
     // Cooldown window is height-gated through V13. The audit RPC must
-    // report the same window the consensus path used for `height` — including
-    // the V15 sliding recency window, so the replayed winner matches the
-    // coinbase and no false "manipulation" alarm is raised past V15_HEIGHT.
+    // report the same window the consensus path used for `height`.
     PubKeyHash zero_pkh{};
     auto eligible = sost::lottery::compute_lottery_eligibility_set(
         history, height, zero_pkh,
-        sost::lottery_exclusion_window_at(height),
-        sost::v15_dtd_fork_active(height) ? sost::DTD_RECENT_MINER_WINDOW : 0);
+        sost::lottery_exclusion_window_at(height));
     int64_t winner_index = -1;
     PubKeyHash winner_pkh{};
     if (!eligible.empty()) {
@@ -1926,17 +1902,9 @@ static int64_t supply_balance_of_address(const std::string& addr) {
 // validation. O(tip) integer loop — trivial at current heights.
 static int64_t supply_dtd_lottery_distributed(int64_t tip) {
     int64_t sum = 0;
-    for (int64_t h = sost::V11_PHASE2_HEIGHT; h <= tip; ++h) {
-        // V15 final-decentralization fork: from V15_HEIGHT the full 50% of
-        // EVERY block is redirected to DTD (accumulated on non-lottery blocks,
-        // paid on lottery blocks). Below V15 only lottery-cadence blocks
-        // contribute their lottery_share. Both cases sum the redirected share.
-        const bool contributes = sost::v15_dtd_fork_active(h)
-            ? true
-            : sost::lottery::is_lottery_block(h, sost::V11_PHASE2_HEIGHT);
-        if (contributes)
+    for (int64_t h = sost::V11_PHASE2_HEIGHT; h <= tip; ++h)
+        if (sost::lottery::is_lottery_block(h, sost::V11_PHASE2_HEIGHT))
             sum += sost::lottery::phase2_coinbase_split(sost_subsidy_stocks(h)).lottery_share;
-    }
     return sum;
 }
 
@@ -2139,31 +2107,36 @@ static std::string handle_sendrawtransaction(const std::string& id, const std::v
     Transaction tx; std::string err;
     if(!Transaction::Deserialize(raw,tx,&err)) return rpc_error(id,-22,"TX decode: "+err);
 
+    // V15 mempool isolation (EXPLICIT policy, not merely the R2 validator rule):
+    // TX_TYPE_JACKPOT is a consensus-only protocol transaction. It is constructed and
+    // authorized SOLELY inside a jackpot block by the node (jackpot_block.h); it must
+    // never be user-submitted, relayed, rebroadcast, or admitted to the mempool. Reject
+    // it here up-front with a clear message (defense-in-depth over R2 in the validator,
+    // which also rejects it once it reaches AcceptToMempool).
+    if(tx.tx_type == TX_TYPE_JACKPOT){
+        return rpc_error(id,-26,"TX reject: TX_TYPE_JACKPOT is a consensus-only protocol transaction (emitted and authorized only inside a jackpot block); it cannot be user-submitted or relayed");
+    }
+
     Hash256 txid; if(!tx.ComputeTxId(txid,&err)) return rpc_error(id,-25,"TX reject: "+err);
 
     // -------------------------------------------------------------------------
-    // V15 reserve address-lock (mempool side). NO standalone transaction may
-    // spend a Gold Vault or PoPC Pool UTXO. The ONLY legitimate reserve spend is
-    // the protocol-mandated jackpot tx INSIDE a block (txs[1], byte-exact — see
-    // validate_block_jackpot). A jackpot tx (or any reserve-spending tx) must
-    // NEVER enter the mempool, regardless of whether the next block is near a
-    // jackpot opportunity, and even if the tx carries a (meaningless) signature.
-    // Unconditional: the mempool is relay policy (never replayed), so this is
-    // safe at all heights; no legitimate tx has ever spent the reserve.
+    // Gold Vault policy protection (not consensus — policy only)
+    // Detects and logs any TX that attempts to spend from the Gold Vault address.
+    // Currently WARNING only — does not block acceptance.
+    // To enable blocking: set a config flag and return rpc_error here instead.
     // -------------------------------------------------------------------------
     {
-        PubKeyHash gold_vault_pkh{}, popc_pool_pkh{};
+        PubKeyHash gold_vault_pkh{};
         address_decode(ADDR_GOLD_VAULT, gold_vault_pkh);
-        address_decode(ADDR_POPC_POOL,  popc_pool_pkh);
         for (const auto& txin : tx.inputs) {
             OutPoint op{txin.prev_txid, txin.prev_index};
             auto utxo = g_utxo_set.GetUTXO(op);
-            if (utxo && (utxo->pubkey_hash == gold_vault_pkh || utxo->pubkey_hash == popc_pool_pkh)) {
-                printf("[V15-RESERVE-LOCK] mempool REJECTED tx spending reserve (Gold/PoPC) txid=%s\n",
-                       to_hex(txid.data(), 32).c_str());
-                return rpc_error(id, -26,
-                    "reserve (Gold Vault / PoPC) UTXOs are spendable only by the protocol jackpot "
-                    "tx inside a block (txs[1], byte-exact) — never as a standalone/mempool transaction");
+            if (utxo && utxo->pubkey_hash == gold_vault_pkh) {
+                // Log a critical alert — Gold Vault is being spent
+                printf("[GOLD-VAULT-ALERT] TX spending from Gold Vault detected! txid=%s amount=%lld stocks\n",
+                       to_hex(txid.data(), 32).c_str(), (long long)utxo->amount);
+                // NOTE: blocking can be enabled here later via a config flag,
+                // e.g. return rpc_error(id,-403,"Gold Vault spend blocked by policy");
             }
         }
     }
@@ -2201,7 +2174,29 @@ static std::string handle_getrawtransaction(const std::string& id, const std::ve
     if(p.empty()) return rpc_error(id,-1,"missing txid");
     Hash256 txid{}; if(!hex_to_bytes(p[0],txid.data(),32)) return rpc_error(id,-8,"invalid txid");
     const MempoolEntry* entry=g_mempool.GetEntry(txid);
-    if(!entry) return rpc_error(id,-5,"Not in mempool");
+    if(!entry){
+        // Not in mempool — search CONFIRMED blocks and return the stored raw tx.
+        // (Needed so tooling/tests can fetch a mined tx, e.g. the canonical jackpot.)
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        for(const auto& b : g_blocks){
+            for(const auto& th : b.tx_hexes){
+                std::vector<Byte> raw2;
+                if(!decode_tx_hex(th, raw2)) continue;
+                Transaction t; std::string de;
+                if(!Transaction::Deserialize(raw2, t, &de)) continue;
+                Hash256 tid{}; t.ComputeTxId(tid, nullptr);
+                if(tid==txid){
+                    bool verbose2=(p.size()>1&&p[1]!="0"&&p[1]!="false");
+                    if(!verbose2) return rpc_result(id,"\""+to_hex(raw2.data(),raw2.size())+"\"");
+                    return rpc_result(id,"{\"txid\":\""+to_hex(txid.data(),32)
+                        +"\",\"size\":"+std::to_string(raw2.size())
+                        +",\"confirmed\":true,\"block_height\":"+std::to_string(b.height)
+                        +",\"hex\":\""+to_hex(raw2.data(),raw2.size())+"\"}");
+                }
+            }
+        }
+        return rpc_error(id,-5,"No such transaction (not in mempool or chain)");
+    }
     std::vector<Byte> raw; std::string err;
     if(!entry->tx.Serialize(raw,&err)) return rpc_error(id,-1,"serialize: "+err);
     bool verbose=(p.size()>1&&p[1]!="0"&&p[1]!="false");
@@ -2307,7 +2302,36 @@ static std::string handle_submitblock(const std::string& id, const std::vector<s
 // 500KB tx bytes in template (coinbase excluded here)
 static constexpr size_t NODE_MAX_BLOCK_TX_BYTES = 500 * 1024;
 
-static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>&) {
+static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, Transaction& out_tx);  // fwd (defined near validate_live_jackpot)
+
+// getrawblock <blockhash> — return the EXACT original block JSON (as stored for reorg
+// re-validation), re-submittable unchanged through submitblock. Read-only; no chainstate
+// change, no PoW bypass. Enables integration/reorg harnesses to export a block from one node
+// and import it into another. Result is a JSON STRING (the block JSON), so callers can pass it
+// straight to submitblock as params[0].
+static std::string handle_getrawblock(const std::string& id, const std::vector<std::string>& p) {
+    if(p.empty()) return rpc_error(id,-1,"missing blockhash");
+    const std::string& bh = p[0];
+    if(bh.size()!=64) return rpc_error(id,-8,"invalid blockhash");
+    std::string raw;
+    // Active chain first (StoredBlock.raw_block_json — retained for every block >= Phase2).
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        for(const auto& b : g_blocks){
+            if(to_hex(b.block_id.data(),32)==bh){ raw = b.raw_block_json; break; }
+        }
+    }
+    // Fall back to the fork/orphan index (BlockIndexEntry.raw_json).
+    if(raw.empty()){
+        std::lock_guard<std::mutex> lk(g_block_index_mu);
+        auto it = g_block_index.find(bh);
+        if(it != g_block_index.end()) raw = it->second.raw_json;
+    }
+    if(raw.empty()) return rpc_error(id,-5,"No such block (unknown hash, pre-Phase2 header-only, or raw JSON not retained)");
+    return rpc_result(id, "\"" + json_escape(raw) + "\"");
+}
+
+static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>& p) {
     g_miner_stats.getblocktemplate_calls.fetch_add(1, std::memory_order_relaxed);
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     // V14.7: pass the height this template will be mined at (tip + 1) so an
@@ -2316,6 +2340,26 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
 
     // Compute next block info
     int64_t next_height = g_chain_height + 1;
+
+    // V15 (J) — Historical Jackpot template construction. At a jackpot height the block
+    // MUST carry the canonical TX_TYPE_JACKPOT as tx[1] (immediately after the coinbase),
+    // or the validator rejects it. The winner depends on the block's current miner, so the
+    // miner passes its payout address (params[0]); we derive cur_miner from it and build the
+    // EXACT canonical jackpot the validator will re-derive from the final coinbase. If the
+    // miner pays a different coinbase address than it passed here, validate_live_jackpot
+    // recomputes a different winner and rejects the block — so identity stays coupled to the
+    // real coinbase. Emitted first in the transactions array → block index 1 after coinbase.
+    std::string jackpot_hex;
+    if (sost::is_hist_jackpot_height(next_height) && !p.empty() && !p[0].empty()) {
+        PubKeyHash miner_pkh{};
+        if (address_decode(p[0], miner_pkh)) {
+            Transaction jtx;
+            if (build_live_jackpot_tx(miner_pkh, next_height, jtx)) {
+                std::vector<Byte> jraw; std::string jerr;
+                if (jtx.Serialize(jraw, &jerr)) jackpot_hex = to_hex(jraw.data(), jraw.size());
+            }
+        }
+    }
     std::string prev_hash = g_blocks.empty() ? std::string(64, '0') : to_hex(g_blocks.back().block_id.data(), 32);
     uint32_t next_bits = GENESIS_BITSQ;
     if (!g_blocks.empty()) {
@@ -2338,16 +2382,22 @@ static std::string handle_getblocktemplate(const std::string& id, const std::vec
       << ",\"curtime\":" << curtime
       << ",\"coinbasevalue\":" << subsidy
       << ",\"transactions\":[";
+    bool first_tx = true;
+    // Canonical jackpot goes FIRST so the assembled block places it at index 1 (after coinbase).
+    if (!jackpot_hex.empty()) { s << "\"" << jackpot_hex << "\""; first_tx = false; }
     for (size_t i = 0; i < tmpl.txs.size(); ++i) {
-        if (i) s << ",";
         std::vector<Byte> raw;
         std::string err;
         if (tmpl.txs[i].Serialize(raw, &err)) {
+            if (!first_tx) s << ",";
             s << "\"" << to_hex(raw.data(), raw.size()) << "\"";
+            first_tx = false;
         }
     }
+    const size_t tmpl_count = tmpl.txs.size() + (jackpot_hex.empty() ? 0 : 1);
     s << "],\"total_fees\":" << tmpl.total_fees
-      << ",\"count\":" << tmpl.txs.size()
+      << ",\"has_jackpot\":" << (jackpot_hex.empty() ? "false" : "true")
+      << ",\"count\":" << tmpl_count
       << ",\"max_block_tx_bytes\":" << NODE_MAX_BLOCK_TX_BYTES
       << ",\"mempool_size\":" << g_mempool.Size() << "}";
     return rpc_result(id, s.str());
@@ -4292,6 +4342,95 @@ static std::string handle_listhtlclocks(const std::string& id, const std::vector
     return rpc_result(id, s.str());
 }
 
+#ifdef SOST_DEVNET_FORKS
+// DEV/test-only: arm the one-shot reorg-connect failpoint. HARD-fails unless the node is
+// running Profile::DEV, so even inside a DEVNET build it is inert on any non-DEV profile.
+// params[0] = connection ordinal (>=0 arms, <0 disarms). Whole handler + its registration
+// are compiled out of mainnet/testnet binaries.
+static std::string handle_dev_set_reorg_failpoint(const std::string& id, const std::vector<std::string>& p) {
+    if (ACTIVE_PROFILE != sost::Profile::DEV)
+        return rpc_error(id, -1, "devsetreorgfailpoint is DEV-profile only");
+    if (p.empty()) return rpc_error(id, -1, "missing ordinal");
+    int ord = atoi(p[0].c_str());
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    g_dev_reorg_failpoint_ordinal = ord;
+    printf("[REORG][DEV-FAILPOINT] armed at ordinal %d\n", ord);
+    std::ostringstream s;
+    s << "{\"armed\":" << (ord >= 0 ? "true" : "false") << ",\"ordinal\":" << ord << "}";
+    return rpc_result(id, s.str());
+}
+
+// DEV/test-only introspection for atomicity harnesses: surfaces internal chainstate
+// invariants (g_blocks vs g_block_undos alignment; the block-index ACTIVE set) that no
+// production RPC exposes. DEV-profile-gated + compiled out of mainnet/testnet.
+static std::string handle_dev_chainstate(const std::string& id, const std::vector<std::string>&) {
+    if (ACTIVE_PROFILE != sost::Profile::DEV)
+        return rpc_error(id, -1, "devchainstate is DEV-profile only");
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    std::vector<std::string> active_ids;
+    {
+        std::lock_guard<std::mutex> lk2(g_block_index_mu);
+        for (const auto& kv : g_block_index)
+            if (kv.second.status == BlockStatus::ACTIVE) active_ids.push_back(kv.first);
+    }
+    std::sort(active_ids.begin(), active_ids.end());
+    std::ostringstream s;
+    s << "{\"chain_height\":" << g_chain_height
+      << ",\"blocks_size\":" << g_blocks.size()
+      << ",\"undos_size\":" << g_block_undos.size()
+      << ",\"active_index_count\":" << active_ids.size()
+      << ",\"active_index_ids\":[";
+    for (size_t i = 0; i < active_ids.size(); ++i) { if (i) s << ","; s << "\"" << active_ids[i] << "\""; }
+    s << "]}";
+    return rpc_result(id, s.str());
+}
+
+// DEV/test-only: numeric jackpot accounting at a target height (params[0], default = tip+1),
+// so V15-B can verify the rollover-cap sequence (prize_target 100->200->...->500->500) and the
+// reserve directly — no jackpot tx has to be mined to observe the number. Reuses the EXACT
+// canonical helpers the validator uses (discover_reserve_utxos / reserve_balance /
+// derive_rollover_before with the same "past event paid iff tx[1]==JACKPOT" predicate), so the
+// reported value is byte-identical to what validate_live_jackpot reconstructs. Read-only.
+// DEV-profile-gated + compiled out of mainnet/testnet binaries.
+static std::string handle_dev_jackpotstate(const std::string& id, const std::vector<std::string>& p) {
+    if (ACTIVE_PROFILE != sost::Profile::DEV)
+        return rpc_error(id, -1, "devjackpotstate is DEV-profile only");
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    const int64_t height = p.empty() ? (g_chain_height + 1) : (int64_t)atoll(p[0].c_str());
+    PubKeyHash gold_pkh{}, popc_pkh{};
+    address_decode(ADDR_GOLD_VAULT, gold_pkh);
+    address_decode(ADDR_POPC_POOL, popc_pkh);
+    const auto reserve = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);
+    const int64_t reserve_before = sost::jackpot::reserve_balance(reserve);
+    const int64_t rollover_before = sost::jackpot::derive_rollover_before(
+        height,
+        [](int64_t h) -> bool {                          // a past event paid iff its block carries tx[1]==JACKPOT
+            if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
+            const StoredBlock& b = g_blocks[(size_t)h];
+            if (b.tx_hexes.size() < 2) return false;
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
+            Transaction t; std::string de;
+            if (!Transaction::Deserialize(raw, t, &de)) return false;
+            return t.tx_type == TX_TYPE_JACKPOT;
+        });
+    const bool is_j = sost::is_hist_jackpot_height(height);
+    const int64_t BASE = sost::HIST_JACKPOT_BASE_STOCKS;
+    const int64_t CAP  = sost::HIST_JACKPOT_CAP_STOCKS;
+    const int64_t roll_target  = BASE + rollover_before;
+    const int64_t prize_target = roll_target < CAP ? roll_target : CAP;   // == validator/apply clamp
+    std::ostringstream s;
+    s << "{\"height\":" << height
+      << ",\"is_jackpot_height\":" << (is_j ? "true" : "false")
+      << ",\"reserve_before\":" << reserve_before
+      << ",\"rollover_before\":" << rollover_before
+      << ",\"base\":" << BASE
+      << ",\"cap\":" << CAP
+      << ",\"prize_target\":" << prize_target << "}";
+    return rpc_result(id, s.str());
+}
+#endif
+
 static std::map<std::string,RpcHandler> g_handlers={
     {"getblockcount",handle_getblockcount},
     {"gethtlcstatus",handle_gethtlcstatus},
@@ -4319,6 +4458,12 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getpeerinfo",handle_getpeerinfo},
     {"submitblock",handle_submitblock},
     {"getblocktemplate",handle_getblocktemplate},
+    {"getrawblock",handle_getrawblock},
+#ifdef SOST_DEVNET_FORKS
+    {"devsetreorgfailpoint",handle_dev_set_reorg_failpoint},
+    {"devchainstate",handle_dev_chainstate},
+    {"devjackpotstate",handle_dev_jackpotstate},
+#endif
     {"getaddressinfo",handle_getaddressinfo},
     {"getaddressflows",handle_getaddressflows},
     {"gettransaction",handle_gettransaction},
@@ -4772,7 +4917,118 @@ static sost::GvG3bState gv_g3b_derive_state(const PubKeyHash& vault_pkh) {
     return st;
 }
 
-static bool process_block(const std::string& block_json) {
+// V15 Historical Jackpot — the SINGLE canonical authorization for the keyless reserve
+// spend. Called before EVERY UtxoSet::ConnectBlock caller (process_block, reorg restore,
+// and load_chain/reindex), so no caller can connect a block whose TX_TYPE_JACKPOT was not
+// reconstructed and byte-exact matched from the PRE-BLOCK chainstate. Self-contained: it
+// recomputes THIS block's DTD winner (same eligibility+selection the coinbase T path and
+// the miner use) and the history-derived rollover, then defers to validate_block_jackpot.
+// The signature exemption elsewhere is height+type; THIS is what makes it safe — an
+// arbitrary/unsigned jackpot can never match the reconstruction, on any code path.
+// Returns false (block MUST be rejected before any mutation) on any canonical mismatch.
+// Template-side companion to validate_live_jackpot: reconstruct the SAME canonical
+// jackpot the validator will require, and RETURN it (for block-template assembly).
+// `cur_miner` is the pkh that will own coinbase output[0] of the block being built —
+// it MUST equal the address the miner will actually pay itself, because the validator
+// re-derives cur_miner from the final coinbase (validate_live_jackpot) and rejects any
+// mismatch. Returns true and fills out_tx iff a canonical jackpot is required at `height`
+// (jackpot height + non-empty reserve + an eligible non-current-miner winner). Reuses the
+// exact shared canonical helpers (discover_reserve_utxos / compute_lottery_eligibility_set
+// / derive_rollover_before / build_canonical_jackpot_tx) — no logic is duplicated.
+static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, Transaction& out_tx) {
+    if (!sost::is_hist_jackpot_height(height)) return false;
+    PubKeyHash gold_pkh{}, popc_pkh{};
+    address_decode(ADDR_GOLD_VAULT, gold_pkh);
+    address_decode(ADDR_POPC_POOL, popc_pkh);
+    const auto reserve = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);
+    const int64_t reserve_before = sost::jackpot::reserve_balance(reserve);
+    std::vector<sost::lottery::LotteryMinedBlockView> history;
+    history.reserve(g_blocks.size());
+    for (const auto& b : g_blocks) {
+        if (b.height >= height) break;
+        if (b.tx_hexes.empty()) continue;
+        std::vector<Byte> raw;
+        if (!decode_tx_hex(b.tx_hexes[0], raw)) continue;
+        Transaction cb; std::string de;
+        if (!Transaction::Deserialize(raw, cb, &de) || cb.outputs.empty()) continue;
+        sost::lottery::LotteryMinedBlockView v;
+        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id;
+        history.push_back(v);
+    }
+    PubKeyHash winner_pkh{}; bool winner_exists = false;
+    auto eligible = sost::lottery::compute_lottery_eligibility_set(
+        history, height, cur_miner, sost::lottery_exclusion_window_at(height));
+    if (!eligible.empty()) {
+        int64_t wi = sost::lottery::select_lottery_winner_index_from_history(eligible, history, height);
+        if (wi >= 0 && wi < (int64_t)eligible.size()) { winner_pkh = eligible[(size_t)wi].pkh; winner_exists = true; }
+    }
+    const int64_t rollover_before = sost::jackpot::derive_rollover_before(
+        height,
+        [](int64_t h) -> bool {
+            if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
+            const StoredBlock& b = g_blocks[(size_t)h];
+            if (b.tx_hexes.size() < 2) return false;
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
+            Transaction t; std::string de;
+            if (!Transaction::Deserialize(raw, t, &de)) return false;
+            return t.tx_type == TX_TYPE_JACKPOT;
+        });
+    // gold_pkh is the canonical reserve-change destination (same as the validator uses).
+    return sost::jackpot::build_canonical_jackpot_tx(
+        height, winner_exists, winner_pkh, reserve_before, rollover_before, reserve, gold_pkh, out_tx);
+}
+
+static bool validate_live_jackpot(const std::vector<Transaction>& txs, int64_t height, std::string& err) {
+    if (!sost::is_hist_jackpot_height(height) && sost::jackpot::count_jackpot_txs(txs) == 0)
+        return true;   // fast path: no jackpot due and none present
+    PubKeyHash gold_pkh{}, popc_pkh{};
+    address_decode(ADDR_GOLD_VAULT, gold_pkh);
+    address_decode(ADDR_POPC_POOL, popc_pkh);
+    const auto reserve = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);  // PRE-block
+    const int64_t reserve_before = sost::jackpot::reserve_balance(reserve);
+    // This block's DTD winner — identical computation to the coinbase/miner path.
+    std::vector<sost::lottery::LotteryMinedBlockView> history;
+    history.reserve(g_blocks.size());
+    for (const auto& b : g_blocks) {
+        if (b.height >= height) break;
+        if (b.tx_hexes.empty()) continue;
+        std::vector<Byte> raw;
+        if (!decode_tx_hex(b.tx_hexes[0], raw)) continue;
+        Transaction cb; std::string de;
+        if (!Transaction::Deserialize(raw, cb, &de) || cb.outputs.empty()) continue;
+        sost::lottery::LotteryMinedBlockView v;
+        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id;
+        history.push_back(v);
+    }
+    PubKeyHash winner_pkh{}; bool winner_exists = false;
+    const PubKeyHash cur_miner =
+        (!txs.empty() && !txs[0].outputs.empty()) ? txs[0].outputs[0].pubkey_hash : PubKeyHash{};
+    auto eligible = sost::lottery::compute_lottery_eligibility_set(
+        history, height, cur_miner, sost::lottery_exclusion_window_at(height));
+    if (!eligible.empty()) {
+        int64_t wi = sost::lottery::select_lottery_winner_index_from_history(eligible, history, height);
+        if (wi >= 0 && wi < (int64_t)eligible.size()) { winner_pkh = eligible[(size_t)wi].pkh; winner_exists = true; }
+    }
+    const int64_t rollover_before = sost::jackpot::derive_rollover_before(
+        height,
+        [](int64_t h) -> bool {                          // a past event paid iff its block carries tx[1]==JACKPOT
+            if (h < 0 || h >= (int64_t)g_blocks.size()) return false;
+            const StoredBlock& b = g_blocks[(size_t)h];
+            if (b.tx_hexes.size() < 2) return false;
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(b.tx_hexes[1], raw)) return false;
+            Transaction t; std::string de;
+            if (!Transaction::Deserialize(raw, t, &de)) return false;
+            return t.tx_type == TX_TYPE_JACKPOT;
+        });
+    const auto jr = sost::jackpot::validate_block_jackpot(
+        txs, height, reserve, winner_exists, winner_pkh, reserve_before, rollover_before, gold_pkh);
+    if (!jr.ok) { err = jr.reason; return false; }
+    return true;
+}
+
+static bool process_block(const std::string& block_json, bool reorg_connect) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
 
     // Required fields
@@ -4796,8 +5052,12 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
-    // Already known? Skip silently (normal relay behavior, NOT misbehavior)
-    {
+    // Already known? Skip silently (normal relay behavior, NOT misbehavior).
+    // EXCEPTION: a reorg connect deliberately re-processes fork blocks that were
+    // marked known when first stored as fork candidates. Skipping the guard lets
+    // try_reorganize() replay them through the FULL validation path onto the
+    // rolled-back tip (no validation is bypassed — only this relay-dedup cache).
+    if (!reorg_connect) {
         std::lock_guard<std::mutex> lk2(g_known_mu);
         if (g_known_blocks.count(bid)) {
             return false; // silently ignore — not an error
@@ -4893,6 +5153,7 @@ static bool process_block(const std::string& block_json) {
         }
 
         // FORK CANDIDATE: parent is known but block doesn't extend active tip
+        bool needs_reorg = false;
         {
             std::lock_guard<std::mutex> lk(g_block_index_mu);
             if (g_block_index.size() < MAX_FORK_INDEX_ENTRIES) {
@@ -4930,12 +5191,13 @@ static bool process_block(const std::string& block_json) {
                            "Fork tip h=%lld, active tip h=%lld. Attempting reorg.\n",
                            (long long)height, (long long)g_chain_height);
                     fflush(stdout);
-                    // Release index lock before calling try_reorganize (it acquires chain_mu)
-                    // try_reorganize uses its own locking
-                    // NOTE: we already hold g_chain_mu from process_block(), so we call
-                    // the internal reorg function directly
-                    try { try_reorganize(bid); }
-                    catch (const std::exception& e) { fprintf(stderr, "[ERROR] try_reorganize: %s\n", e.what()); }
+                    // DEADLOCK FIX: we currently hold g_block_index_mu (non-recursive),
+                    // and try_reorganize() re-acquires g_block_index_mu in its fork-walk
+                    // step. Calling it here self-deadlocks (this thread also holds the
+                    // recursive g_chain_mu, so every other thread then piles up on
+                    // g_chain_mu and the whole node freezes). Defer the reorg until AFTER
+                    // this scope releases g_block_index_mu (below).
+                    needs_reorg = true;
                 } else {
                     auto cw_strip = [](const Bytes32& w) -> std::string {
                         std::string h = to_hex(w.data(), 32);
@@ -4948,6 +5210,13 @@ static bool process_block(const std::string& block_json) {
                            cw_strip(active_tip_work).c_str());
                 }
             }
+        }
+        // g_block_index_mu is now RELEASED. Safe to reorganize: this thread still
+        // holds the recursive g_chain_mu (from process_block), and try_reorganize()
+        // re-locks g_block_index_mu itself in short, self-contained scopes.
+        if (needs_reorg) {
+            try { try_reorganize(bid); }
+            catch (const std::exception& e) { fprintf(stderr, "[ERROR] try_reorganize: %s\n", e.what()); }
         }
         fflush(stdout);
         return false; // Don't add to main chain yet
@@ -5055,6 +5324,12 @@ static bool process_block(const std::string& block_json) {
             sb.raw_block_json=block_json;
             sb.cumulative_work = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
             g_blocks.push_back(sb);
+            // REORG FIX: keep g_block_undos height-aligned with g_blocks. This
+            // fast-sync/assumevalid header-only accept has no tx data and thus no
+            // real undo; an empty slot is correct (these blocks sit below the
+            // reorg-able range) and prevents a permanent off-by-one in the undo
+            // vector that would abort later reorgs.
+            g_block_undos.push_back(BlockUndo{});
             g_chain_height = height;
             mark_block_known(bid);
             // Note: chain auto-saved when next normal block arrives
@@ -5132,28 +5407,7 @@ static bool process_block(const std::string& block_json) {
     if(v14_txrules){ v14_scratch = g_utxo_set; v14_seen_txids.reserve(txs.size()*2);
                      address_decode(ADDR_GOLD_VAULT, gv_slice1_gold_pkh); }
 
-    // V15 Historical DTD Jackpot — the protocol-mandated jackpot tx spends reserve
-    // UTXOs with NO signature and zero fee; it is validated byte-exact separately
-    // by validate_block_jackpot() below. Exempt ANY reserve-spending tx from the
-    // generic ValidateTransactionConsensus here (it would fail on the missing
-    // signature and the S8 min-fee) but STILL connect it so its UTXO effects
-    // apply. Illegal reserve-spends are rejected by validate_block_jackpot().
-    PubKeyHash v15_gold_pkh{}, v15_popc_pkh{};
-    const bool v15_active_blk = sost::v15_dtd_fork_active(height);
-    if (v15_active_blk) { address_decode(ADDR_GOLD_VAULT, v15_gold_pkh);
-                          address_decode(ADDR_POPC_POOL, v15_popc_pkh); }
-    auto v15_spends_reserve = [&](const Transaction& tx) -> bool {
-        if (!v15_active_blk) return false;
-        for (const auto& in : tx.inputs) {
-            OutPoint op{in.prev_txid, in.prev_index};
-            auto e = g_utxo_set.GetUTXO(op);
-            if (e && (e->pubkey_hash == v15_gold_pkh || e->pubkey_hash == v15_popc_pkh)) return true;
-        }
-        return false;
-    };
-
     for(size_t i=1;i<txs.size();++i){
-        const bool v15_jackpot_tx = v15_spends_reserve(txs[i]);   // exempt from generic tx-consensus
         // HTLC atomic-swap CLAIM (0x10) / REFUND (0x11) are valid block tx types
         // ONLY once the atomic-swap consensus rules are active at this height.
         // The gate atomic_swap_htlc_active_at == (height >= V14_5_HEIGHT); on
@@ -5166,7 +5420,21 @@ static bool process_block(const std::string& block_json) {
             sost::atomic_swap_htlc_active_at(height) &&
             (txs[i].tx_type == TX_TYPE_HTLC_CLAIM ||
              txs[i].tx_type == TX_TYPE_HTLC_REFUND);
-        if(txs[i].tx_type != TX_TYPE_STANDARD && !htlc_block_tx){
+        // V15 Historical Jackpot: TX_TYPE_JACKPOT is a valid block tx type ONLY at a
+        // jackpot-cadence height. Its canonical correctness + keyless authorization are
+        // enforced by jackpot_block.h::validate_block_jackpot (above, before ConnectBlock);
+        // here it is exempted from the standard per-tx validation because it is a
+        // consensus-controlled reserve spend that carries NO signature. Narrowest surface:
+        // the exemption is only skipping R2/signature (below) + G1 vault governance. Input
+        // existence/unspent + no-double-spend still run via ConnectTransaction/ConnectBlock;
+        // VALUE CONSERVATION for the jackpot is NOT provided by ConnectTransaction (it does not
+        // compare input vs output sums) — it is guaranteed by validate_live_jackpot's byte-exact
+        // canonical reconstruction (run before every ConnectBlock caller) AND, as an independent
+        // backstop, by the explicit sum(inputs) >= sum(outputs) check added below. Below the
+        // first jackpot height jackpot_block_tx is always false, so pre-V15 replay is byte-identical.
+        const bool jackpot_block_tx =
+            sost::is_hist_jackpot_height(height) && txs[i].tx_type == TX_TYPE_JACKPOT;
+        if(txs[i].tx_type != TX_TYPE_STANDARD && !htlc_block_tx && !jackpot_block_tx){
             printf("[BLOCK] REJECTED: non-standard tx at index %zu\n", i);
             return false;
         }
@@ -5186,12 +5454,39 @@ static bool process_block(const std::string& block_json) {
             v14_seen_txids.insert(v14_hx);
 
             // H4: consensus check against the scratch view (sees earlier same-block outputs).
-            // V15: the protocol jackpot tx (reserve spend, no signature, fee 0) is
-            // exempt here — validate_block_jackpot() below is its sole authority.
-            if (!v15_jackpot_tx) {
+            // The canonical jackpot is exempt from ValidateTransactionConsensus: it carries no
+            // signature (protocol reserve spend) and R2 forbids its type in the standalone
+            // validator by design — it is already proven byte-exact by validate_block_jackpot.
+            if(!jackpot_block_tx){
                 auto cres = ValidateTransactionConsensus(txs[i], v14_scratch, vctx);
                 if(!cres.ok){
                     printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
+                    return false;
+                }
+            } else {
+                // B-1 hardening (defense-in-depth): an INDEPENDENT value-conservation backstop
+                // for the keyless jackpot spend, since ValidateTransactionConsensus (which
+                // enforces S7 sum(in) >= sum(out)) is skipped above. The primary authorization
+                // is validate_live_jackpot's byte-exact canonical reconstruction — run before
+                // every ConnectBlock caller — but this guarantees no path (present or future)
+                // can let a TX_TYPE_JACKPOT MINT value. The canonical jackpot redistributes the
+                // reserve, so sum(inputs) == sum(outputs) by construction; require >= here.
+                int64_t j_in = 0, j_out = 0;
+                for (const auto& jo : txs[i].outputs) j_out += jo.amount;
+                for (const auto& ji : txs[i].inputs) {
+                    OutPoint jop; jop.txid = ji.prev_txid; jop.index = ji.prev_index;
+                    auto ju = v14_scratch.GetUTXO(jop);
+                    if (!ju.has_value()) {
+                        printf("[BLOCK] REJECTED: jackpot input[%zu] references missing UTXO\n", i);
+                        record_block_reject("jackpot input missing UTXO");
+                        return false;
+                    }
+                    j_in += ju->amount;
+                }
+                if (j_out > j_in) {
+                    printf("[BLOCK] REJECTED: jackpot value conservation (in=%lld < out=%lld)\n",
+                           (long long)j_in, (long long)j_out);
+                    record_block_reject("jackpot value conservation");
                     return false;
                 }
             }
@@ -5204,7 +5499,11 @@ static bool process_block(const std::string& block_json) {
             // a no-op and the chain replays byte-for-byte identical; the testnet build
             // (-DSOST_TESTNET_FORKS) activates it at V14_HEIGHT. Mirrors the logic of
             // gv_slice1 in src/block_validation.cpp. See docs/V14_EXECUTION_PLAN.md (W1).
-            if(gv_slice1_active_at(height)){
+            // The canonical jackpot legitimately spends Gold Vault reserve outputs; it is
+            // authorized by jackpot_block.h, NOT by G1 vault governance, so it is exempt here
+            // (else the testnet GV-slice1 build would reject the protocol payout as a
+            // non-whitelisted vault outflow). Mainnet GV-slice1 is deferred (INT64_MAX) anyway.
+            if(gv_slice1_active_at(height) && !jackpot_block_tx){
                 auto gv_lookup = [&v14_scratch](const Hash256& prev_txid, uint32_t prev_index,
                                                 PubKeyHash& out) -> bool {
                     OutPoint op{prev_txid, prev_index};
@@ -5382,26 +5681,13 @@ static bool process_block(const std::string& block_json) {
     if (sost::V11_PHASE2_HEIGHT != INT64_MAX && height >= sost::V11_PHASE2_HEIGHT) {
         phase2_ctx.phase2_height = sost::V11_PHASE2_HEIGHT;
         phase2_ctx.pending_before = g_blocks.empty() ? 0 : g_blocks.back().pending_lottery_after;
-        // V15 final-decentralization fork: from V15_HEIGHT every block routes
-        // through the DTD machinery; only lottery-cadence blocks pay out.
-        phase2_ctx.triggered = sost::lottery::dtd_block_triggered(
-            height, sost::V11_PHASE2_HEIGHT, sost::V15_HEIGHT);
-        const bool can_payout =
-            sost::lottery::is_lottery_block(height, sost::V11_PHASE2_HEIGHT);
+        phase2_ctx.triggered = sost::lottery::is_lottery_block(height, sost::V11_PHASE2_HEIGHT);
         phase2_ctx.paid_out = false;
         phase2_ctx.lottery_payout = 0;
         phase2_ctx.expected_winner_pkh = PubKeyHash{};
         phase2_ctx.expected_pending_after = phase2_ctx.pending_before;
 
-        if (phase2_ctx.triggered && !can_payout) {
-            // V15 non-lottery block: accumulate the redirected 50% into
-            // pending; no winner is picked and no eligibility scan is needed.
-            const auto p2split =
-                sost::lottery::phase2_coinbase_split(subsidy + total_fees);
-            phase2_ctx.paid_out = false;
-            phase2_ctx.expected_pending_after =
-                phase2_ctx.pending_before + p2split.lottery_share;
-        } else if (phase2_ctx.triggered) {
+        if (phase2_ctx.triggered) {
             std::vector<sost::lottery::LotteryMinedBlockView> history;
             history.reserve(g_blocks.size());
             for (const auto& b : g_blocks) {
@@ -5448,8 +5734,7 @@ static bool process_block(const std::string& block_json) {
             // 5-block window unchanged; post-V13 callers receive 6.
             auto eligible = sost::lottery::compute_lottery_eligibility_set(
                 history, height, txs[0].outputs[0].pubkey_hash,
-                sost::lottery_exclusion_window_at(height),
-                sost::v15_dtd_fork_active(height) ? sost::DTD_RECENT_MINER_WINDOW : 0);
+                sost::lottery_exclusion_window_at(height));
 
             const auto p2split = sost::lottery::phase2_coinbase_split(subsidy + total_fees);
             if (eligible.empty()) {
@@ -5469,6 +5754,15 @@ static bool process_block(const std::string& block_json) {
                     p2split.lottery_share + phase2_ctx.pending_before;
                 phase2_ctx.expected_pending_after = 0;
             }
+        } else if (height >= sost::V15_HEIGHT) {
+            // V15 emission transition (T): non-triggered blocks post-V15 stop
+            // funding Gold Vault / PoPC and redirect the non-miner half to the
+            // DTD lottery pending (miner-only "UPDATE" coinbase shape). Same
+            // arithmetic as a triggered empty-eligibility UPDATE.
+            const auto p2split = sost::lottery::phase2_coinbase_split(subsidy + total_fees);
+            phase2_ctx.paid_out = false;
+            phase2_ctx.expected_pending_after =
+                phase2_ctx.pending_before + p2split.lottery_share;
         }
         phase2_ctx_ptr = &phase2_ctx;
     }
@@ -5484,8 +5778,13 @@ static bool process_block(const std::string& block_json) {
         return false;
     }
 
-    // Also check JSON claimed split matches real coinbase outputs (hardening)
-    if (!phase2_ctx_ptr || !phase2_ctx.triggered) {
+    // Also check JSON claimed split matches real coinbase outputs (hardening).
+    // V15 (T): a post-V15 non-triggered block uses the miner-only UPDATE shape
+    // (redirect to pending), so it must NOT be validated against the legacy
+    // 3-output 50/25/25 shape — route it to the UPDATE branch below.
+    const bool v15_idle_hardening =
+        phase2_ctx_ptr && !phase2_ctx.triggered && height >= sost::V15_HEIGHT;
+    if ((!phase2_ctx_ptr || !phase2_ctx.triggered) && !v15_idle_hardening) {
         if((int64_t)txs[0].outputs.size()!=3){
             printf("[BLOCK] REJECTED: coinbase outputs != 3\n");
             return false;
@@ -5512,32 +5811,6 @@ static bool process_block(const std::string& block_json) {
             printf("[BLOCK] REJECTED: Phase 2 PAYOUT JSON rewards mismatch\n");
             return false;
         }
-    }
-
-    // =====================================================================
-    // V15 Historical DTD Jackpot — validate txs[1] (the protocol-mandated
-    // jackpot tx) + the reserve address-lock. See docs/V15_JACKPOT_TX_SPEC.md.
-    // The winner IS the DTD winner already picked above
-    // (phase2_ctx.expected_winner_pkh) — no separate eligibility. The reserve
-    // is the LIVE sum of Gold/PoPC UTXOs (no consensus counter). jackpot_pending
-    // carries in StoredBlock like pending_lottery_after (undo via tip).
-    // Gated to V15+ so pre-V15 validation is byte-identical.
-    // =====================================================================
-    int64_t jackpot_pending_after_val = 0;
-    {
-        const int64_t jpend_before = g_blocks.empty() ? 0 : g_blocks.back().jackpot_pending_after;
-        const bool has_winner_j = (phase2_ctx_ptr && phase2_ctx.paid_out);
-        const PubKeyHash winner_j = phase2_ctx_ptr ? phase2_ctx.expected_winner_pkh : PubKeyHash{};
-        auto jvr = sost::jackpot::validate_block_jackpot(
-            txs, height, sost::V11_PHASE2_HEIGHT, sost::V15_HEIGHT,
-            g_utxo_set.GetMap(), gold_pkh, popc_pkh,
-            has_winner_j, winner_j, jpend_before);
-        if (!jvr.ok) {
-            printf("[BLOCK] REJECTED: V15 jackpot: %s\n", jvr.reject ? jvr.reject : "?");
-            record_block_reject(std::string("V15 jackpot: ") + (jvr.reject ? jvr.reject : "?"));
-            return false;
-        }
-        jackpot_pending_after_val = jvr.jackpot_pending_after;
     }
 
     // Recompute block_id and verify PoW
@@ -6133,6 +6406,18 @@ static bool process_block(const std::string& block_json) {
         }
     }
 
+    // V15 Historical DTD Jackpot — validate BEFORE any chainstate mutation, via the SINGLE
+    // canonical authorization (validate_live_jackpot; the exact same path reorg-restore and
+    // load_chain/reindex use). No jackpot can be connected on ANY caller without a byte-exact
+    // canonical match to the reconstruction from the pre-block reserve + DTD winner + rollover.
+    {
+        std::string jerr;
+        if (!validate_live_jackpot(txs, height, jerr)) {
+            printf("[BLOCK] REJECTED: Historical Jackpot: %s\n", jerr.c_str());
+            return false;
+        }
+    }
+
     // Connect block to UTXO set atomically
     BlockUndo undo;
     std::string uerr;
@@ -6159,9 +6444,6 @@ static bool process_block(const std::string& block_json) {
     sb.popc_pool_reward = popc_r;
     sb.pending_lottery_after =
         phase2_ctx_ptr ? phase2_ctx.expected_pending_after : 0;
-    // V15 Historical DTD Jackpot — persist the rollover pending computed during
-    // block validation above (0 on every pre-V15 block; undo via tip on reorg).
-    sb.jackpot_pending_after = jackpot_pending_after_val;
     sb.stability_metric = stb;
     sb.x_bytes_hex = x_bytes_hex;
     sb.final_state_hex = final_state_hex;
@@ -6464,7 +6746,24 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     bool connect_success = true;
 
     for (size_t i = 0; i < fork_chain.size(); ++i) {
-        if (!process_block(fork_chain[i].raw_json)) {
+#ifdef SOST_DEVNET_FORKS
+        // DEV-only one-shot failpoint (see g_dev_reorg_failpoint_ordinal). Forces the
+        // connect loop to fail at a precise ordinal so the NORMAL atomic rollback path is
+        // exercised by tests. Runtime-guarded on Profile::DEV; compiled out of
+        // mainnet/testnet. No PoW/validation bypass — it simply declines to connect this
+        // block (nothing mutated for it) and triggers the existing rollback below.
+        if (g_dev_reorg_failpoint_ordinal >= 0 && ACTIVE_PROFILE == sost::Profile::DEV &&
+            (int)i == g_dev_reorg_failpoint_ordinal) {
+            printf("[REORG][DEV-FAILPOINT] Forcing connect failure at ordinal %d (height %lld) "
+                   "after %zu block(s) connected — exercising rollback\n",
+                   g_dev_reorg_failpoint_ordinal, (long long)fork_chain[i].height, connected);
+            fflush(stdout);
+            g_dev_reorg_failpoint_ordinal = -1; // one-shot: auto-clear
+            connect_success = false;
+            break;
+        }
+#endif
+        if (!process_block(fork_chain[i].raw_json, /*reorg_connect=*/true)) {
             printf("[REORG] ABORTED: block at height %lld failed validation\n",
                    (long long)fork_chain[i].height);
             connect_success = false;
@@ -6507,6 +6806,16 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             }
             BlockUndo undo;
             std::string uerr;
+            // Defense-in-depth: even restoring our own previously-validated blocks goes
+            // through the single jackpot authorization — no ConnectBlock caller is exempt.
+            {
+                std::string jerr;
+                if (!validate_live_jackpot(txs, sb.height, jerr)) {
+                    printf("[REORG] CRITICAL: Historical Jackpot mismatch restoring h=%lld: %s\n",
+                           (long long)sb.height, jerr.c_str());
+                    break;
+                }
+            }
             if (!g_utxo_set.ConnectBlock(txs, sb.height, undo, &uerr)) {
                 printf("[REORG] CRITICAL: Cannot restore original block h=%lld: %s\n",
                        (long long)sb.height, uerr.c_str());
@@ -6516,6 +6825,22 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             g_blocks.push_back(sb);
             g_block_undos.push_back(undo);
             g_chain_height = sb.height;
+        }
+        // Restore block-index status to match the rolled-back active chain. Any fork
+        // block we PARTIALLY connected was marked ACTIVE by process_block; revert every
+        // fork-chain entry to FORK, and re-assert the original blocks as ACTIVE. Mirrors
+        // the success-path Step-8 cleanup so a FAILED reorg leaves ZERO index drift
+        // (otherwise a stale ACTIVE fork entry survives at a height it no longer occupies).
+        {
+            std::lock_guard<std::mutex> lk(g_block_index_mu);
+            for (const auto& fc : fork_chain) {
+                auto it = g_block_index.find(to_hex(fc.block_id.data(), 32));
+                if (it != g_block_index.end()) it->second.status = BlockStatus::FORK;
+            }
+            for (const auto& sb : saved_blocks) {
+                auto it = g_block_index.find(to_hex(sb.block_id.data(), 32));
+                if (it != g_block_index.end()) it->second.status = BlockStatus::ACTIVE;
+            }
         }
         printf("[REORG] Rolled back to original tip %s at height %lld\n",
                to_hex(g_blocks.back().block_id.data(),32).substr(0,16).c_str(),
@@ -7280,6 +7605,11 @@ static bool load_genesis(const std::string& path) {
 
     g_genesis_hash=g.block_id;
     g_blocks.push_back(g);
+    // REORG FIX: g_block_undos is a per-height parallel vector to g_blocks
+    // (try_reorganize indexes g_block_undos[h]). Genesis spends no inputs, so its
+    // undo is genuinely empty — but it MUST occupy slot 0 or the whole vector is
+    // off-by-one forever, aborting every reorg with "missing undo data for height N".
+    g_block_undos.push_back(BlockUndo{});
     g_chain_height=0;
 
     // Mark genesis as known
@@ -7395,11 +7725,6 @@ static bool load_chain(const std::string& path) {
         if (bj.find("\"pending_lottery_after\"") != std::string::npos) {
             sb.pending_lottery_after = jint(bj,"pending_lottery_after");
         } // else keeps 0 default
-        // V15 Historical DTD Jackpot — jackpot_pending_after, same optional pattern.
-        // Missing (all pre-V15 blocks and legacy chain.json) keeps the 0 default.
-        if (bj.find("\"jackpot_pending_after\"") != std::string::npos) {
-            sb.jackpot_pending_after = jint(bj,"jackpot_pending_after");
-        } // else keeps 0 default
         sb.raw_block_json=bj; // preserve full JSON for P2P relay
 
         // Parse transactions if present (v0.3.2+)
@@ -7433,6 +7758,17 @@ static bool load_chain(const std::string& path) {
                 // Use ConnectBlock to atomically update UTXO set
                 BlockUndo undo;
                 std::string uerr;
+                // Reindex hardening: a persisted jackpot block must STILL match the canonical
+                // reconstruction, so a tampered datadir cannot inject a fraudulent reserve
+                // spend on load. Same single authorization as process_block/reorg.
+                {
+                    std::string jerr;
+                    if (!validate_live_jackpot(txs, height, jerr)) {
+                        printf("[CHAIN-LOAD] FATAL: Historical Jackpot mismatch at h=%lld: %s\n",
+                               (long long)height, jerr.c_str());
+                        return false;
+                    }
+                }
                 if (g_utxo_set.ConnectBlock(txs, height, undo, &uerr)) {
                     // Also register wallet UTXOs
                     for (size_t ti = 1; ti < txs.size(); ++ti) {
@@ -7485,6 +7821,13 @@ static bool load_chain(const std::string& path) {
         Bytes32 parent_cw = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
         sb.cumulative_work = add_be256(parent_cw, bw);
         g_blocks.push_back(sb);
+        // REORG FIX: g_block_undos is a per-height parallel vector to g_blocks
+        // (try_reorganize indexes g_block_undos[h]). A coinbase-only legacy block
+        // (e.g. genesis) spends no inputs, so its undo is genuinely empty — but we
+        // MUST still push it to keep g_block_undos height-aligned with g_blocks.
+        // Omitting it left the undo vector permanently off-by-one, which aborted
+        // every post-restart reorg with "missing undo data for height N".
+        g_block_undos.push_back(BlockUndo{});
         mark_block_known(bid);
         struct{const char*a;int64_t v;uint8_t t;}cb[3]={
             {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},
@@ -7824,16 +8167,6 @@ static bool save_chain_internal(const std::string& path) {
                                + std::to_string(b.pending_lottery_after));
                 }
             }
-            // V15 Historical DTD Jackpot — inject jackpot_pending_after only when
-            // non-zero (from V15). Pre-V15 blocks keep chain.json byte-identical.
-            if (b.jackpot_pending_after > 0
-                && raw.find("\"jackpot_pending_after\"") == std::string::npos) {
-                size_t end = raw.rfind('}');
-                if (end != std::string::npos) {
-                    raw.insert(end, ",\"jackpot_pending_after\":"
-                               + std::to_string(b.jackpot_pending_after));
-                }
-            }
             f << "    " << raw;
         } else {
             // Fallback reconstruction for genesis/legacy blocks without raw JSON
@@ -7871,9 +8204,6 @@ static bool save_chain_internal(const std::string& path) {
             // crossed V11_PHASE2_HEIGHT.
             if (b.pending_lottery_after > 0) {
                 f << ",\"pending_lottery_after\":" << b.pending_lottery_after;
-            }
-            if (b.jackpot_pending_after > 0) {
-                f << ",\"jackpot_pending_after\":" << b.jackpot_pending_after;
             }
             if (!b.tx_hexes.empty()) {
                 f << ",\"transactions\":[";

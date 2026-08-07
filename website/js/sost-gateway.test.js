@@ -140,15 +140,15 @@ t('PopcBond is one native SOST bond, gold is only a boost', function () {
 });
 
 // ---- 8b. PoPC Bond DASHBOARD (pure helpers) + DEX disabled ----------------------
-t('dashboard: activation status by height (V15=20000)', function () {
+t('dashboard: activation status by height (V15=25000)', function () {
   var P = G.PopcBond;
-  assert.strictEqual(P.V15_HEIGHT, 20000);
-  assert.strictEqual(P.activationStatus(19999).active, false);
-  assert.strictEqual(P.activationStatus(19999).scheduled, true);
-  assert.strictEqual(P.activationStatus(20000).active, true);
+  assert.strictEqual(P.V15_HEIGHT, 25000);
+  assert.strictEqual(P.activationStatus(24999).active, false);
+  assert.strictEqual(P.activationStatus(24999).scheduled, true);
   assert.strictEqual(P.activationStatus(25000).active, true);
+  assert.strictEqual(P.activationStatus(30000).active, true);
   assert.ok(/Scheduled/.test(P.activationStatus(0).label));
-  assert.ok(/active/i.test(P.activationStatus(20000).label));
+  assert.ok(/active/i.test(P.activationStatus(25000).label));
 });
 t('dashboard: reward estimates match 1/4/9/14/20%', function () {
   var P = G.PopcBond, SPS = G.STOCKS_PER_SOST, bond = 1000 * SPS;

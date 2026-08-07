@@ -106,6 +106,13 @@ static PubKeyHash  g_miner_pkh{};
 // its in-memory copy via secure_memzero on shutdown.
 static std::string g_wallet_path = "";
 static std::string g_mining_key_label = "";
+#ifdef SOST_DEVNET_FORKS
+static std::string g_attack_jackpot = "";  // DEVNET_FAST test-only: adversarial jackpot mutation name (see mine loop)
+#ifdef SOST_DEVNET_FORKS
+static std::string g_dump_block_file = "";  // DEV test-only: write each submitted block's exact JSON here (byte-exact replay, e.g. re-submit a rejected attack after restart)
+static std::string g_inject_tx1_file = "";  // DEV test-only: insert a captured raw tx at block_txs[1] before merkle+PoW (M02 non-event-height / M03 stale-replay attacks)
+#endif
+#endif
 // V13 SbPoW hardening: chain-specific salt for the v13 signing preimage.
 // Queried lazily from the node (RPC getinfo "genesis_hash") the first
 // time we sign a block at height >= V13_HEIGHT. See docs/V13_SBPOW_HARDENING.md.
@@ -601,7 +608,14 @@ static BlockTemplateResult fetch_block_template() {
     result.total_fees = 0;
     result.count = 0;
 
-    std::string resp = rpc_call("getblocktemplate");
+    // Pass our payout address so the node can build the canonical Historical Jackpot
+    // (winner excludes the current miner) at a jackpot height. This address MUST match
+    // coinbase output[0] below, or the validator re-derives a different winner and rejects
+    // the block — keeping jackpot identity coupled to the real coinbase (not a loose param).
+    std::string gbt_params = "[]";
+    if (!g_miner_address.empty())
+        gbt_params = "[\"" + g_miner_address + "\"]";
+    std::string resp = rpc_call("getblocktemplate", gbt_params);
     if (resp.empty()) return result;
 
     int64_t fees_val = jint(resp, "total_fees");
@@ -660,7 +674,6 @@ struct LotteryStateRpc {
     int64_t     popc_amount{0};
     int64_t     lottery_payout{0};
     std::string lottery_winner_pkh_hex;    // 40-char hex on PAYOUT, "" otherwise
-    std::string jackpot_tx_hex;            // V15: serialized jackpot tx for txs[1] ("" if none)
     int64_t     eligible_count{0};
     int64_t     winner_index{-1};
     int64_t     expected_pending_after{0};
@@ -711,7 +724,6 @@ static LotteryStateRpc fetch_lottery_state(int64_t /*expected_h*/) {
     r.popc_amount            = jint(raw_resp, "popc_amount");
     r.lottery_payout         = jint(raw_resp, "lottery_payout");
     r.lottery_winner_pkh_hex = jstr(raw_resp, "lottery_winner_pkh");
-    r.jackpot_tx_hex         = jstr(raw_resp, "jackpot_tx_hex");   // V15 Historical DTD Jackpot
     r.eligible_count         = jint(raw_resp, "eligible_count");
     r.winner_index           = jint(raw_resp, "winner_index");
     r.expected_pending_after = jint(raw_resp, "expected_pending_after");
@@ -844,6 +856,17 @@ static int rpc_submit_block_full(
         bj += "\"" + tx_hexes_including_coinbase[i] + "\"";
     }
     bj += "]}";
+
+#ifdef SOST_DEVNET_FORKS
+    // DEV/test-only: write the exact block JSON we are about to submit so a harness can
+    // replay the IDENTICAL bytes later (e.g. re-submit a rejected attack block after a
+    // node restart to prove the rejection is not cleared by restart). Compiled out of
+    // mainnet/testnet entirely.
+    if (!g_dump_block_file.empty()) {
+        std::ofstream _df(g_dump_block_file, std::ios::trunc);
+        if (_df) { _df << bj; }
+    }
+#endif
 
     // Escape JSON for RPC param string
     std::string escaped;
@@ -1334,13 +1357,6 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     Transaction coinbase_tx;
 
     LotteryStateRpc ls = fetch_lottery_state(h);
-
-    // V15 Historical DTD Jackpot — the node (getlotterystate) builds the exact
-    // protocol jackpot tx for this block using the SAME functions the validator
-    // uses. Prepend it so it lands at txs[1] (right after the coinbase) in every
-    // assembly path; the validator (validate_block_jackpot) requires it byte-exact.
-    if (!ls.jackpot_tx_hex.empty())
-        mempool_tx_hexes.insert(mempool_tx_hexes.begin(), ls.jackpot_tx_hex);
     if (!ls.ok) {
         printf("[MINER] fetch_lottery_state failed: %s; aborting block candidate.\n",
                ls.error.c_str());
@@ -1365,8 +1381,10 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     if (ls.coinbase_shape == "NORMAL") {
         coinbase_tx = build_coinbase_tx(h, total_reward, split, g_miner_pkh);
     } else if (ls.coinbase_shape == "UPDATE_EMPTY") {
-        // Phase 2 triggered + empty eligibility → withhold lottery share
-        // in chain-state pending; emit ONLY a MINER output.
+        // Emit ONLY a MINER output; the non-miner half is withheld in
+        // chain-state pending. Directed by the node for either a Phase-2
+        // triggered+empty-eligibility block OR (from V15) any non-triggered
+        // block — the V15 Gold Vault/PoPC emission transition (T).
         const auto p2split = sost::lottery::phase2_coinbase_split(total_reward);
         const int64_t miner_share = p2split.miner_share;
         json_miner_reward = miner_share;
@@ -1418,6 +1436,72 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     std::vector<Transaction> block_txs;
     block_txs.push_back(coinbase_tx);
     for (const auto& mtx : mempool_txs) block_txs.push_back(mtx);
+
+#ifdef SOST_DEVNET_FORKS
+    // DEVNET_FAST test-only adversarial mutation. Compiled ONLY into the devnet miner
+    // (never mainnet/testnet). It mutates the canonical Historical Jackpot (block_txs[1])
+    // or block structure, then lets the NORMAL path below recompute the merkle root and
+    // mine a VALID DEV PoW — no PoW bypass. The node receives an apparently-valid block and
+    // must reject it at validate_live_jackpot (or an earlier consensus rule) with ZERO state
+    // mutation. Selected by --attack-jackpot <name>; empty = normal honest mining.
+    if (!g_attack_jackpot.empty() && block_txs.size() >= 2 &&
+        block_txs[1].tx_type == TX_TYPE_JACKPOT) {
+        const std::string& m = g_attack_jackpot;
+        Transaction& j = block_txs[1];
+        printf("[ATTACK] DEV-only jackpot mutation: %s\n", m.c_str());
+        if      (m=="wrong-winner"  && !j.outputs.empty()) j.outputs[0].pubkey_hash[0] ^= 0xFF;              // A01
+        else if (m=="winner-self"   && !j.outputs.empty() && !block_txs[0].outputs.empty())
+                                                           j.outputs[0].pubkey_hash = block_txs[0].outputs[0].pubkey_hash; // A02
+        else if (m=="payout-plus"   && !j.outputs.empty()) j.outputs[0].amount += 1;                          // A04
+        else if (m=="payout-minus"  && !j.outputs.empty()) j.outputs[0].amount -= 1;                          // A05
+        else if (m=="payout-zero"   && !j.outputs.empty()) j.outputs[0].amount = 0;                           // A06
+        else if (m=="reverse-inputs")                      std::reverse(j.inputs.begin(), j.inputs.end());    // A08
+        else if (m=="remove-input"  && !j.inputs.empty())  j.inputs.pop_back();                               // A09
+        else if (m=="dup-input"     && !j.inputs.empty())  j.inputs.push_back(j.inputs.back());               // A10
+        else if (m=="foreign-input") { TxInput fk{}; fk.prev_txid.fill(0xAB); fk.prev_index=0;               // B04/B06: non-reserve/foreign input
+                                       j.inputs.push_back(fk); }
+        else if (m=="extra-output"  && !j.outputs.empty()) j.outputs.push_back(j.outputs[0]);                 // A19
+        else if (m=="remove-winner-output" && !j.outputs.empty()) j.outputs.erase(j.outputs.begin());        // A20
+        else if (m=="move-jackpot"  && block_txs.size()>=3) std::swap(block_txs[1], block_txs[2]);            // A21
+        else if (m=="dup-jackpot")  { Transaction jc = block_txs[1]; block_txs.insert(block_txs.begin()+2, jc); } // A22
+        else if (m=="remove-jackpot") block_txs.erase(block_txs.begin()+1);                                   // A23
+        else if (m=="coinbase-mutate" && !block_txs[0].outputs.empty())
+                                                           block_txs[0].outputs[0].pubkey_hash[0] ^= 0xFF;    // A26 (coinbase→other, J retained)
+        // --- extended matrix (V15-A): outpoint/amount/bulk mutations, all still valid-PoW ---
+        else if (m=="input-index-bump" && !j.inputs.empty()) j.inputs[0].prev_index += 1;                     // B: noncanonical OUTPOINT (wrong vout on a reserve tx)
+        else if (m=="input-txid-flip"  && !j.inputs.empty()) j.inputs[0].prev_txid[0] ^= 0xFF;                // B: nonexistent/noncanonical input txid (not a real reserve UTXO)
+        else if (m=="payout-intmax"    && !j.outputs.empty()) j.outputs[0].amount = 0x7fffffffffffffffLL;     // serialization/overflow bound: payout = INT64_MAX
+        else if (m=="dup-all-inputs")  { size_t n=j.inputs.size(); for(size_t k=0;k<n;k++) j.inputs.push_back(j.inputs[k]); } // bulk double-spend of every reserve UTXO
+        else printf("[ATTACK] unknown mutation '%s' (no-op)\n", m.c_str());
+    }
+
+    // DEV/test-only raw-tx injection at block_txs[1] (before merkle+PoW): lets a harness replay a
+    // CAPTURED canonical jackpot at a NON-event height (M02) or a stale/old height (M03). Reads one
+    // hex-encoded transaction from a file. No wallet/keys; fails closed on any invalid input.
+    if (!g_inject_tx1_file.empty()) {
+        std::ifstream _inf(g_inject_tx1_file);
+        std::string _hx; std::getline(_inf, _hx);
+        while (!_hx.empty() && (_hx.back()=='\n' || _hx.back()=='\r' || _hx.back()==' ' || _hx.back()=='\t')) _hx.pop_back();
+        auto _hv = [](char c)->int { if (c>='0'&&c<='9') return c-'0'; if (c>='a'&&c<='f') return c-'a'+10; if (c>='A'&&c<='F') return c-'A'+10; return -1; };
+        if (_hx.size() < 2 || (_hx.size() % 2) != 0) {
+            fprintf(stderr, "[ATTACK] inject-tx-at1: empty/odd-length hex in %s\n", g_inject_tx1_file.c_str());
+        } else {
+            std::vector<Byte> _raw; _raw.reserve(_hx.size()/2); bool _ok = true;
+            for (size_t _k = 0; _k + 1 < _hx.size(); _k += 2) {
+                int hi = _hv(_hx[_k]), lo = _hv(_hx[_k+1]); if (hi < 0 || lo < 0) { _ok = false; break; }
+                _raw.push_back((Byte)((hi << 4) | lo));
+            }
+            Transaction _it; std::string _de;
+            if (!_ok) fprintf(stderr, "[ATTACK] inject-tx-at1: non-hex character\n");
+            else if (!Transaction::Deserialize(_raw, _it, &_de)) fprintf(stderr, "[ATTACK] inject-tx-at1: deserialize failed: %s\n", _de.c_str());
+            else {
+                if (block_txs.size() >= 1) block_txs.insert(block_txs.begin() + 1, _it);
+                else block_txs.push_back(_it);
+                printf("[ATTACK] injected raw tx at block_txs[1] (%zu bytes, tx_type=%d)\n", _raw.size(), (int)_it.tx_type);
+            }
+        }
+    }
+#endif
 
     Hash256 mrkl;
     std::string merr;
@@ -2327,6 +2411,13 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--address") && i + 1 < argc) g_miner_address = argv[++i];
         else if (!strcmp(argv[i], "--wallet") && i + 1 < argc) g_wallet_path = argv[++i];
         else if (!strcmp(argv[i], "--mining-key-label") && i + 1 < argc) g_mining_key_label = argv[++i];
+#ifdef SOST_DEVNET_FORKS
+        else if (!strcmp(argv[i], "--attack-jackpot") && i + 1 < argc) g_attack_jackpot = argv[++i];  // DEV test-only
+#ifdef SOST_DEVNET_FORKS
+        else if (!strcmp(argv[i], "--dump-block") && i + 1 < argc) g_dump_block_file = argv[++i];  // DEV test-only
+        else if (!strcmp(argv[i], "--inject-tx-at1") && i + 1 < argc) g_inject_tx1_file = argv[++i];  // DEV test-only
+#endif
+#endif
         else if (!strcmp(argv[i], "--profile") && i + 1 < argc) {
             ++i;
             if (!strcmp(argv[i], "testnet")) prof = Profile::TESTNET;

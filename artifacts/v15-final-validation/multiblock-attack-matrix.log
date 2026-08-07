@@ -1,0 +1,32 @@
+[mbattack] A=sost1f22db38e22271b4e216660aa04141d1cacee2183 B=sost1a6aa6efb30716c81cf87572ae43ff785b66bee9f work=/tmp/v15mbattack.YXGGGV (rpc=18990)
+[mbattack] PASS  pre-J fixture h23 (reserve 5103155590:26, tip 3ccb504c0d6bef03…)
+[mbattack] M08: capturing an exact malicious block (--attack-jackpot wrong-winner --dump-block)…
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+tests/run_v15_devnet_multiblock_attacks.sh: line 92: [[: 0
+0: syntax error in expression (error token is "0")
+[mbattack] PASS  captured exact malicious block at height 24
+[mbattack] PASS  M08 pre-restart: attack REJECTED, tip/height/reserve unchanged
+[mbattack] M08: restarting the node from the same datadir…
+[mbattack] PASS  M08 post-restart: the SAME malicious block is STILL rejected; reserve never spent (5103155590:26)
+[mbattack] PASS  honest jackpot block 24 accepted after the restart-replay (chain continues)
+
+[mbattack] RESULT: PASS — M08: a rejected attack block stays rejected byte-for-byte across a node restart; reserve never spent; honest block accepted

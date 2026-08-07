@@ -1,0 +1,7 @@
+[mbattack] A=sost18854298c1e9d6d64082001f92448c8de7d5833d3 B=sost1dbbc5baac39f4d081998f04733c920739c160c81 work=/tmp/v15mbattack.0Wn60U scenario=M08
+[mbattack] ── M08: rejected attack block stays rejected byte-for-byte across restart ──
+[mbattack] PASS  M08: attack rejected pre-restart
+[mbattack] PASS  M08: same block STILL rejected after restart; reserve intact
+[mbattack] PASS  M08: honest jackpot block accepted after
+
+[mbattack] RESULT: PASS — multi-block attack coverage (M08): non-event-height + stale-replay + restart-replay all rejected, state intact, honest blocks accepted

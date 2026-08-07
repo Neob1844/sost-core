@@ -23,6 +23,15 @@ using Hash256 = std::array<Byte, 32>;
 
 constexpr uint8_t TX_TYPE_STANDARD = 0x00;
 constexpr uint8_t TX_TYPE_COINBASE = 0x01;
+// V15 Historical DTD Jackpot protocol transaction (spec §5c). A keyless,
+// consensus-authorized spend of Gold Vault / PoPC reserve UTXOs, included at
+// index 1 of a jackpot block only. Inputs carry zero signature/pubkey (like
+// coinbase); validity is derived entirely from chainstate — the validator
+// reconstructs the canonical tx and requires an EXACT match, so no attacker
+// can forge an alternative. Gated by height >= V15_HEIGHT; below activation the
+// validator rejects this tx type as inactive, so historical replay is
+// byte-identical (this type has never been mined). See include/sost/jackpot.h.
+constexpr uint8_t TX_TYPE_JACKPOT = 0x02;
 // Atomic Swap HTLC tx types (OTC-1). CLAIM consumes an OUT_HTLC_LOCK by
 // revealing the preimage; REFUND consumes the same output after the timeout.
 // Both are gated by atomic_swap_htlc_active_at() in include/sost/atomic_swap.h.

@@ -399,7 +399,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <div id="v15banner"><details open>
  <summary>
   <span class="v15chip">&#9881;&#65039; V15</span>
-  <span class="v15ttl">FULL DECENTRALIZATION FORK &mdash; block 20,000</span>
+  <span class="v15ttl">FULL DECENTRALIZATION FORK &mdash; block 25,000</span>
   <span class="v15cx">PoW &middot; <span class="v15cxword">ConvergenceX</span></span>
   <span class="v15go">PLANNED &middot; pending final implementation &amp; tests &middot; tap to expand</span>
  </summary>
@@ -427,7 +427,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="v15jack">
    The SOST already accumulated in Gold Vault + PoPC are <b class="hl">not kept as a treasury</b> and <b>not sold for listings</b>. They are progressively <b style="color:#ffd166">returned to active miners</b> through a <b>Historical DTD Jackpot</b>: about <b style="color:#ffd166">100 SOST every ~288 blocks</b> (~48 h) to the DTD winner, using the very same DTD eligibility rules, until the historical balance is exhausted (~3 years). It is a real protocol spend of those coins &mdash; <b>no new emission</b>. The reserve returns to the network, not to a founder.
   </div>
-  <h4>&#9203; Upgrade window &mdash; after block 19,900, before 20,000</h4>
+  <h4>&#9203; Upgrade window &mdash; after block 24,900, before 25,000</h4>
   <p style="margin:0 0 4px">All node operators, miners and explorers must update inside the window. Mandatory mainnet flags:</p>
   <pre>cd /opt/sost &amp;&amp; git pull origin main
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
@@ -454,7 +454,7 @@ sudo systemctl restart sost-node</pre>
 
 
 <!-- ============= V14 — MANDATORY MINER UPGRADE + ATOMIC SWAP DISCLOSURE ============= -->
-<!-- V14 activation height = block 15000. Atomic-swap HTLC consensus rules activate here. -->
+<!-- V14 activation height = block 16000. Atomic-swap HTLC consensus rules activate here. -->
 <!-- LOADING OVERLAY — spinning logo countdown -->
 <div id="exLoadOv" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease;font-family:'JetBrains Mono',monospace;margin:0;padding:0;zoom:1.0">
   <img id="exLoadLogo" src="sost-logo.png" alt="SOST" style="width:120px;height:120px;border-radius:20%;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));transition:transform .15s ease-out;animation:sostLogoPulse 3.6s ease-in-out infinite">
@@ -621,7 +621,7 @@ sudo systemctl restart sost-node</pre>
 <div style="max-width:1400px;margin:10px auto 0;padding:0 24px;">
  <div style="position:relative;background:linear-gradient(135deg,rgba(34,211,238,.11),rgba(168,85,247,.11) 48%,rgba(245,179,1,.10));border:2px solid #22d3ee;border-radius:10px;padding:18px 20px 16px;box-shadow:0 0 22px rgba(34,211,238,.30),0 0 46px rgba(168,85,247,.15);overflow:hidden">
   <div style="position:absolute;top:0;right:0;background:#fb010d;color:#fff;font-size:9px;font-weight:900;letter-spacing:1.6px;padding:3px 13px;border-bottom-left-radius:9px">⛔ FOUNDER TESTING · DO NOT USE</div>
-  <div style="background:#2a0606;border:1px solid #fb010d;border-radius:7px;padding:9px 12px;margin-bottom:11px;font-size:11.5px;line-height:1.6;color:#ffdede"><b style="color:#ff5b5b">⛔ DO NOT USE — FOUNDER TESTING PHASE.</b> The atomic swap is technically built and is being activated at block 15,000 (EVM-only) for the founder's own testing. It has had <b>no external audit</b> and is <b>not validated for public use — using it can cause permanent loss of funds.</b> The figures below describe engineering progress, <b>not</b> readiness. Do not use it until the founder officially announces it is safe. (SOST ↔ BTC is not active — V15.)</div>
+  <div style="background:#2a0606;border:1px solid #fb010d;border-radius:7px;padding:9px 12px;margin-bottom:11px;font-size:11.5px;line-height:1.6;color:#ffdede"><b style="color:#ff5b5b">⛔ DO NOT USE — FOUNDER TESTING PHASE.</b> The atomic swap is technically built and is being activated at block 16,000 (EVM-only; relay 17,000) for the founder's own testing. It has had <b>no external audit</b> and is <b>not validated for public use — using it can cause permanent loss of funds.</b> The figures below describe engineering progress, <b>not</b> readiness. Do not use it until the founder officially announces it is safe. (SOST ↔ BTC is not active — V15.)</div>
   <div style="display:flex;align-items:flex-start;gap:13px;flex-wrap:wrap">
    <span style="font-size:26px;line-height:1;text-shadow:0 0 12px rgba(34,211,238,.6)">⚛</span>
    <div style="flex:1 1 340px">
@@ -691,7 +691,7 @@ sudo systemctl restart sost-node</pre>
        <div style="color:#fbbf24;font-weight:800;letter-spacing:1.2px;margin-bottom:4px">// LIVE GATE STATE — verifiable in the repo · mainnet UNCHANGED</div>
        <code style="color:#cdeefa">ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT = INT64_MAX</code> — SOST consensus gate, sentinel <b style="color:#fb010d">OFF</b><br>
        <code style="color:#cdeefa">SOST_BTC_HTLC_SIGNING = OFF</code> — CMake flag, no real BTC signing compiled in<br>
-       <code style="color:#cdeefa">V15_HEIGHT = 20,000</code> — intended activation height (<b>NOT yet active</b>)<br>
+       <code style="color:#cdeefa">V15_HEIGHT = 25,000</code> — intended activation height (<b>NOT yet active</b>)<br>
        <span style="color:#9fb6c4">All atomic-swap wallet / RPC / CLI commands refuse <code>--sign --broadcast</code> while the gate stays at INT64_MAX. Activation only after Phase-4/5 sign-off + external audit.</span>
       </div>
 
@@ -712,10 +712,10 @@ sudo systemctl restart sost-node</pre>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="True circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE. Counts all SOST currently in user wallets (miners + lottery winners). The DTD lottery payouts ARE circulating — they sit in winners' wallets. The CIRCULATING MINING card next to this one shows only the miner-side share (excluding lottery)."><div class="dash-label" style="color:#FFFF00">CIRCULATING SUPPLY</div><div class="dash-val" id="dCircReal" style="color:#FFFF00">—</div><div class="dash-sub" id="dCircRealSub" style="color:#FFFF00">total − vault − pool</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Miner-side circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD LOTTERY BALANCE. Excludes DTD lottery payouts (those are shown as part of TRUE CIRCULATING SUPPLY to the left). Computed deterministically from consensus constants (V11 Phase 2 activation #7100, bootstrap cadence 2-of-3 until #12100, then 1-of-3 permanent; 50% of subsidy per triggered block). No background scan required."><div class="dash-label" style="color:var(--red)">CIRCULATING MINING</div><div class="dash-val red" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − lottery</div></div>
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
-  <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')" title="Gold Vault reserve. Until block 20,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the Historical DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--gold)">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub" id="dGoldBalSub">25%/block · ends at V15 (#20,000)</div></div>
-  <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')" title="PoPC Pool reserve. Until block 20,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the Historical DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--cyan)">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub" id="dPopcBalSub">25%/block · ends at V15 (#20,000)</div></div>
-  <div class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="V15 Historical DTD Jackpot (activates block 20,000; first payout #20,286). The existing Gold-Vault + PoPC reserve is progressively returned to active miners — a supply-neutral protocol spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence every 96 DTD draws (~288 blk). Reuses the DTD winner + identical eligibility. Before block 20,286 pending/last-winner/total are provably 0/none." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> HIST. DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--text3)">PLANNED · first #20,286 · base 100 / cap 500</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Before V15: 50% of subsidy × triggered blocks (bootstrap 2-of-3 in [7100,12100), then permanent 1-of-3 from #12100). From V15 (block 20,000): DTD receives 50% of EVERY block (the Gold-Vault + PoPC shares are redirected here) — 50% miner / 50% DTD. Click for the full DTD panel detail."><div class="dash-label" style="color:#ff00ff">⚡ DTD LOTTERY DISTRIBUTED BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts · 50% of every block from V15</div></div>
+  <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')" title="Gold Vault reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the Historical DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--gold)">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub" id="dGoldBalSub">25%/block · ends at V15 (#25,000)</div></div>
+  <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')" title="PoPC Pool reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the Historical DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--cyan)">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub" id="dPopcBalSub">25%/block · ends at V15 (#25,000)</div></div>
+  <div class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="V15 Historical DTD Jackpot (activates block 25,000; first payout #20,286). The existing Gold-Vault + PoPC reserve is progressively returned to active miners — a supply-neutral protocol spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence every 96 DTD draws (~288 blk). Reuses the DTD winner + identical eligibility. Before block 20,286 pending/last-winner/total are provably 0/none." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> HIST. DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--text3)">PLANNED · first #20,286 · base 100 / cap 500</div></div>
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Before V15: 50% of subsidy × triggered blocks (bootstrap 2-of-3 in [7100,12100), then permanent 1-of-3 from #12100). From V15 (block 25,000): DTD receives 50% of EVERY block (the Gold-Vault + PoPC shares are redirected here) — 50% miner / 50% DTD. Click for the full DTD panel detail."><div class="dash-label" style="color:#ff00ff">⚡ DTD LOTTERY DISTRIBUTED BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts · 50% of every block from V15</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label" style="color:var(--purple)">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label" style="color:var(--orange)">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label" style="color:var(--blue)">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -1893,7 +1893,7 @@ function dtdEligibilityBanner(height, progressHtml){
       +'<ul style="margin:5px 0 0;padding-left:16px;font-size:11px;color:var(--text2);line-height:1.6">'+items+'</ul></div>';
   }
   var h=height||0;
-  var e1=(h>=7100&&h<12100), e2=(h>=12100&&h<20000), e3=(h>=20000);
+  var e1=(h>=7100&&h<12100), e2=(h>=12100&&h<25000), e3=(h>=25000);
   // Live eligible-miner counts:
   //  • Phase 1 is PAST → its peak pool of eligible miners (all-time updated-miners
   //    set, which reached ~50) — shown as "up to N".
@@ -1910,14 +1910,14 @@ function dtdEligibilityBanner(height, progressHtml){
   try{ var _m=String(localStorage.getItem('sost_dtd_eligible_count')||'').match(/(\d+)/); if(_m)eligNow=parseInt(_m[1],10); }catch(_e){}
   var elig1='<li style="color:#22c55e"><b>Eligible miners: up to '+poolPhase1+'</b> &middot; phase complete (static)</li>';
   var elig2='<li style="color:#22c55e"><b>Eligible miners now: '+(eligNow!=null?eligNow:'&mdash;')+'</b> &middot; dynamic, moves every block</li>';
-  var elig3='<li style="color:#c084fc"><b>Eligible miners: &mdash;</b> &middot; dynamic once block 20,000 (V15) is reached</li>';
+  var elig3='<li style="color:#c084fc"><b>Eligible miners: &mdash;</b> &middot; dynamic once block 25,000 (V15) is reached</li>';
   return '<div style="max-width:820px;margin:0 auto 4px">'
     +'<div style="font-size:12px;font-weight:800;color:var(--cyan);letter-spacing:1px;margin-bottom:8px">// DTD LOTTERY &mdash; ELIGIBILITY CRITERIA TIMELINE</div>'
     +era(e1,'Blocks 7,100 &rarr; 12,100 &middot; original (V11 Phase&nbsp;2)',
         elig1+'<li>SbPoW-signed miner identity (block at height &ge; 7,100)</li><li>address has mined &ge; 1 valid block</li><li>recent-miner cooldown: 5 blocks</li><li>bootstrap cadence 2-of-3</li>','#fbbf24')
-    +era(e2,'Blocks 12,100 &rarr; 20,000 &middot; current gates (V13)',
+    +era(e2,'Blocks 12,100 &rarr; 25,000 &middot; current gates (V13)',
         elig2+'<li>everything above &mdash; cooldown raised to <b>6 blocks</b></li><li>permanent <b>1-of-3</b> cadence</li><li><b>anti-dominance gate</b>: excluded if &ge; 10% of the last 288 blocks</li><li><b>SbPoW-activity gate</b>: must have a recent SbPoW-signed block</li>','#22c55e')
-    +era(e3,'From block 20,000 &middot; V15 Final Decentralization',
+    +era(e3,'From block 25,000 &middot; V15 Final Decentralization',
         elig3+'<li>everything above</li><li><b>+ 2016-block recency window</b>: must have mined &ge; 1 block in the last 2016 (~2 weeks) &mdash; active miners only</li><li><b>50% miner / 50% DTD</b> every block (Gold-Vault + PoPC emission redirected to DTD)</li><li><span style="color:var(--gold)">◈</span> <b>Historical DTD Jackpot</b>: the existing reserve returned to active miners</li><li style="color:var(--text3)">No PoPC-contract requirement &mdash; the old PoPC eligibility gate is retired (DTD never requires PoPC)</li>','#c084fc')
     +'<div style="margin-top:6px;color:var(--text3);font-size:11.5px">'+(progressHtml||'')+'</div>'
     +'</div>';
@@ -2635,12 +2635,12 @@ function renderStats(i){
   document.getElementById('statsCode').innerHTML='<span class="s-comment">// SOST network status</span>\n<span class="s-type">const</span> <span class="s-key">chain</span> <span class="s-sep">=</span> <span class="s-bracket">{</span>\n  <span class="s-key">height</span><span class="s-sep">:</span>    <span class="s-red">'+i.blocks.toLocaleString()+'</span><span class="s-sep">,</span>\n  <span class="s-key">bits_q</span><span class="s-sep">:</span>    <span class="s-num">'+i.difficulty.toLocaleString()+'</span><span class="s-sep">,</span>    <span class="s-comment">// SOSTCompact Q16.16</span>\n  <span class="s-key">bits_real</span><span class="s-sep">:</span>  <span class="s-num">'+(i.difficulty/65536).toFixed(3)+'</span><span class="s-sep">,</span>    <span class="s-comment">// bits_q \u00F7 65536</span>\n  <span class="s-key">peers</span><span class="s-sep">:</span>      <span class="s-num">'+i.connections+'</span><span class="s-sep">,</span>\n  <span class="s-key">mempool</span><span class="s-sep">:</span>    <span class="s-num">'+i.mempool_size+'</span><span class="s-sep">,</span>\n  <span class="s-key">utxo_set</span><span class="s-sep">:</span>  <span class="s-num">'+i.utxo_count.toLocaleString()+'</span><span class="s-sep">,</span>\n  <span class="s-key">version</span><span class="s-sep">:</span>   <span class="s-str">"'+i.version+'"</span><span class="s-sep">,</span>\n  <span class="s-key">balance</span><span class="s-sep">:</span>   <span class="s-str">"'+i.balance+' SOST"</span>\n<span class="s-bracket">}</span><span class="s-sep">;</span>';
 }
 // ---- V15 Historical DTD Jackpot helpers (display-only; mirror include/sost/params.h + jackpot.h) ----
-var V15_H=20000, JP_FIRST=20286, JP_CADENCE=288, JP_BASE=100, JP_CAP=500;
+var V15_H=25000, JP_FIRST=25290, JP_CADENCE=288, JP_BASE=100, JP_CAP=500;
 function jpIsOpportunity(h){ return h>=JP_FIRST && ((h-JP_FIRST)%JP_CADENCE)===0; }
 function jpNextHeight(h){ if(h<JP_FIRST)return JP_FIRST; var k=Math.ceil((h-JP_FIRST+1)/JP_CADENCE); return JP_FIRST+k*JP_CADENCE; }
 function updateV15Cards(height, goldBal, popcBal){
   var active=height>=V15_H, prePayout=height<JP_FIRST;
-  var sub=active?'V15: emission ended · wind-down via jackpot':'25%/block · ends at V15 (#20,000)';
+  var sub=active?'V15: emission ended · wind-down via jackpot':'25%/block · ends at V15 (#25,000)';
   var gs=document.getElementById('dGoldBalSub'), ps=document.getElementById('dPopcBalSub');
   if(gs)gs.textContent=sub; if(ps)ps.textContent=sub;
   var jr=document.getElementById('dJackReserve'), jsub=document.getElementById('dJackSub');

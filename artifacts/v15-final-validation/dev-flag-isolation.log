@@ -1,0 +1,21 @@
+V15-A DEV attack-flag isolation proof
+generated: 2026-08-06T16:28:32Z  HEAD: 078fe154c211c2974c7e44d35d8f58accea878e0
+
+## DEV-only miner attack flags (must be PRESENT in build-devnet, ABSENT elsewhere)
+### --inject-tx-at1
+  DEVNET (build-devnet/sost-miner): count=4
+  MAINNET (build/sost-miner): count=0
+  TESTNET (build-testnet/sost-miner): count=0
+### --attack-jackpot
+  DEVNET (build-devnet/sost-miner): count=1
+  MAINNET (build/sost-miner): count=0
+  TESTNET (build-testnet/sost-miner): count=0
+### --dump-block
+  DEVNET (build-devnet/sost-miner): count=1
+  MAINNET (build/sost-miner): count=0
+  TESTNET (build-testnet/sost-miner): count=0
+
+## Build guard: SOST_DEVNET_FORKS
+  build-devnet: SOST_DEVNET_FORKS:BOOL=ON
+  build: SOST_DEVNET_FORKS:BOOL=OFF
+  build-testnet: SOST_DEVNET_FORKS:BOOL=OFF

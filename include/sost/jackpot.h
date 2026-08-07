@@ -1,318 +1,274 @@
-// jackpot.h — V15 Historical DTD Jackpot (Gold Vault + PoPC wind-down).
-// Spec: docs/V15_HISTORICAL_JACKPOT_SPEC.md  (Option A — progressive
-// constitutional spend, supply-neutral).
-//
-// This header holds ONLY the pure, deterministic amount/cadence logic that both
-// the miner and the validator must agree on. It has NO chain-state, NO UTXO, NO
-// I/O — the constitutional spend of the real Gold/PoPC UTXOs (FIFO selection,
-// change back to reserve, signature-bypass, UTXO apply/undo) lives separately in
-// the block-connect path and is intentionally NOT in this header.
-//
-// The jackpot is hung off the DTD lottery cadence (NOT a second height%N timer):
-// a jackpot OPPORTUNITY occurs on every HIST_JACKPOT_DTD_INTERVAL-th DTD LOTTERY
-// block (height % 3 == 0) since V15 — ~every 288 blocks (APPROXIMATE, block times
-// vary). An opportunity is INDEPENDENT of whether a winner exists:
-//   - opportunity + eligible winner  -> pay (reuses the DTD winner already picked)
-//   - opportunity + no eligible winner (empty set) OR reserve exhausted -> rollover
-// Non-lottery blocks and pre-V15 blocks never trigger a jackpot opportunity.
 #pragma once
-
-#include "sost/params.h"        // HIST_JACKPOT_* constants
-#include "sost/types.h"         // Bytes32
-#include "sost/transaction.h"   // Transaction / TxInput / TxOutput, TX_TYPE_STANDARD, OUT_TRANSFER
-#include "sost/tx_signer.h"     // PubKeyHash
-#include "sost/tx_validation.h" // OutPoint, UTXOEntry
-#include "sost/lottery.h"       // is_lottery_block (cadence)
+// ============================================================================
+// V15 — Historical DTD Jackpot (J): PURE consensus core.
+// Spec: docs/design/V15_HISTORICAL_DTD_JACKPOT_SPEC.md (Model A, LOCKED).
+//
+// This header holds ONLY pure, deterministic, side-effect-free helpers:
+//   - the per-block payout / rollover / cap arithmetic (hist_jackpot_apply)
+//   - reserve-UTXO membership (is_reserve_output)
+//   - deterministic reserve-UTXO ordering + oldest-first selection
+//
+// It does NOT touch the UTXO set, coinbase construction, block validation,
+// ConnectBlock/DisconnectBlock or reorg — that wiring lands in a later
+// increment on top of this tested core (exactly as apply_lottery_block is a
+// pure function wired separately). Nothing here mints SOST: the jackpot is a
+// spend of existing Gold Vault / PoPC reserve UTXOs (supply-neutral).
+// ============================================================================
 #include <cstdint>
 #include <vector>
-#include <algorithm>
-#include <map>
+#include <cstddef>
+#include "sost/params.h"        // HIST_JACKPOT_* + is_hist_jackpot_height
+#include "sost/types.h"         // Bytes32
+#include "sost/tx_signer.h"     // PubKeyHash
+#include "sost/transaction.h"   // OUT_COINBASE_GOLD/POPC
 
 namespace sost::jackpot {
 
-// Is this DTD lottery block a jackpot OPPORTUNITY (by index)?
-//   lottery_opportunity_index_since_v15 = count of DTD LOTTERY blocks
-//   (height % 3 == 0) strictly after V15_HEIGHT, including the current one
-//   (1-based). Every INTERVAL-th is an opportunity. NOTE: an opportunity is
-//   NOT the same as a payout — whether it actually pays depends on there being
-//   an eligible winner (see compute_jackpot / spec §2).
-inline bool is_jackpot_trigger(int64_t lottery_opportunity_index_since_v15) {
-    return lottery_opportunity_index_since_v15 > 0
-        && (lottery_opportunity_index_since_v15 % HIST_JACKPOT_DTD_INTERVAL) == 0;
-}
-
-// 1-based index of a lottery block within the jackpot cadence since V15.
-// Returns 0 if `height` is pre-V15 or is NOT a DTD lottery block. Only lottery
-// blocks can be jackpot opportunities; the 96th is the first (V15=20000 ->
-// first lottery 20001 -> #96 = 20286). V15 is far past the DTD bootstrap window,
-// so the steady 1-of-3 cadence holds (lottery blocks spaced by exactly 3).
-inline int64_t jackpot_lottery_index(int64_t height, int64_t phase2_height, int64_t v15_height) {
-    if (v15_height == INT64_MAX || height < v15_height) return 0;
-    if (!sost::lottery::is_lottery_block(height, phase2_height)) return 0;
-    int64_t first = v15_height;
-    while (!sost::lottery::is_lottery_block(first, phase2_height)) ++first;   // <= 3 iterations
-    if (height < first) return 0;
-    return (height - first) / 3 + 1;
-}
-
-// Is this block a jackpot OPPORTUNITY? (a lottery block, every 96th since V15).
-inline bool is_jackpot_opportunity(int64_t height, int64_t phase2_height, int64_t v15_height) {
-    return is_jackpot_trigger(jackpot_lottery_index(height, phase2_height, v15_height));
-}
-
+// Result of the pure per-block jackpot computation.
 struct JackpotResult {
-    int64_t payout;         // stocks paid to the winner this jackpot (0 => rollover / wound down)
-    int64_t pending_after;  // rollover carried to the next jackpot
+    bool    is_jackpot_block{false}; // height is cadence-aligned jackpot height
+    bool    paid{false};             // a payout occurred this block
+    int64_t payout{0};               // stocks paid to the DTD winner
+    int64_t reserve_after{0};        // reserve remaining after this block
+    int64_t rollover_after{0};       // carried prize after this block
+    bool    retired{false};          // reserve exhausted at/after this block
 };
 
-// Deterministic jackpot amount. All inputs are non-negative stocks.
+// Pure payout computation for one block. All inputs are chain-derived:
+//   height          : block height
+//   winner_exists   : true iff this block has an eligible DTD winner
+//   reserve_before  : historical reserve remaining before this block (stocks)
+//   rollover_before : carried prize before this block (stocks)
 //
-// Rules (spec §4):
-//   target  = pending_before + base(100)
-//   winner  -> payout = min(target, cap(500), reserve_remaining);
-//              excess (target - payout) rolls into pending_after.
-//   no win  -> payout = 0; pending grows by base but NEVER exceeds reserve.
-//   reserve exhausted (<=0) -> payout 0, pending 0 (jackpot disabled forever).
-//
-// Hard invariants (checked by tests + asserted by consensus):
-//   0 <= payout <= cap
-//   payout <= reserve_remaining            (never pays more than exists)
-//   payout + pending_after <= reserve_remaining  (never PROMISES more than exists)
-inline JackpotResult compute_jackpot(int64_t pending_before,
-                                     int64_t reserve_remaining,
-                                     bool    has_eligible_winner) {
-    if (reserve_remaining <= 0) return { 0, 0 };            // wound down — disabled forever
-    if (pending_before < 0) pending_before = 0;
+// Rules (spec §4), all overflow-safe int64 stocks:
+//   prize_target = BASE + rollover_before   (rollover is clamped <= CAP-BASE,
+//                                            so prize_target <= CAP always)
+//   prize        = min(prize_target, CAP)
+//   winner       -> payout = min(prize, reserve_before); carry only the
+//                   above-cap excess; if reserve-limited, drain + retire.
+//   no winner    -> pay nothing; base accrues to rollover (clamped); reserve
+//                   untouched.
+//   reserve == 0 -> jackpot retired (one-way latch); no payout ever again.
+inline JackpotResult hist_jackpot_apply(int64_t height,
+                                        bool    winner_exists,
+                                        int64_t reserve_before,
+                                        int64_t rollover_before) {
+    JackpotResult r;
+    r.reserve_after  = reserve_before;
+    r.rollover_after = rollover_before;
 
-    // Overflow guard (consensus hygiene). `pending` is always maintained
-    // <= reserve_remaining, and reserve_remaining <= total supply (<< INT64_MAX),
-    // so `pending + base` cannot overflow. Clamp defensively in case a corrupted
-    // or out-of-range `pending` is ever passed, so the sum below is always safe.
-    if (pending_before > reserve_remaining) pending_before = reserve_remaining;
+    // Defensive: never operate on negative state.
+    if (reserve_before < 0 || rollover_before < 0) return r;
+    if (!is_hist_jackpot_height(height)) return r;   // not a jackpot block
+    r.is_jackpot_block = true;
 
-    const int64_t target = pending_before + HIST_JACKPOT_BASE_STOCKS;  // safe: both operands bounded
+    if (reserve_before == 0) { r.retired = true; r.rollover_after = 0; return r; }
 
-    if (!has_eligible_winner) {
-        // Rollover: accumulate the base, but pending can never exceed the reserve.
-        int64_t pend = target;
-        if (pend > reserve_remaining) pend = reserve_remaining;
-        return { 0, pend };
+    const int64_t BASE = HIST_JACKPOT_BASE_STOCKS;
+    const int64_t CAP  = HIST_JACKPOT_CAP_STOCKS;
+
+    const int64_t prize_target = BASE + rollover_before;   // <= CAP by clamp
+    const int64_t prize        = prize_target < CAP ? prize_target : CAP;
+
+    if (!winner_exists) {
+        // No eligible winner: nothing paid; base accrues to rollover, clamped
+        // so the next prize_target can never exceed CAP.
+        const int64_t roll_cap = CAP - BASE;               // >= 0 (static_assert)
+        const int64_t roll     = rollover_before + BASE;
+        r.rollover_after = roll < roll_cap ? roll : roll_cap;
+        r.reserve_after  = reserve_before;                 // untouched
+        return r;
     }
 
-    int64_t payout = target;
-    if (payout > HIST_JACKPOT_CAP_STOCKS) payout = HIST_JACKPOT_CAP_STOCKS;  // per-payout cap
-    if (payout > reserve_remaining)       payout = reserve_remaining;        // final partial payout
-
-    int64_t pending_after = target - payout;                  // excess above cap rolls forward
-    const int64_t rem_after = reserve_remaining - payout;
-    if (pending_after > rem_after) pending_after = rem_after; // never promise more than remains
-    if (pending_after < 0) pending_after = 0;
-    return { payout, pending_after };
+    // Winner exists: pay min(prize, reserve).
+    const int64_t payout = prize < reserve_before ? prize : reserve_before;
+    r.paid          = payout > 0;
+    r.payout        = payout;
+    r.reserve_after = reserve_before - payout;
+    if (payout == prize) {
+        r.rollover_after = prize_target - prize;           // above-cap excess (>=0)
+    } else {
+        r.rollover_after = 0;                              // reserve-limited: drained
+    }
+    if (r.reserve_after == 0) r.retired = true;
+    return r;
 }
 
-// ---------------------------------------------------------------------------
-// Deterministic FIFO spend plan (the byte-exact root shared by miner + validator).
-//
-// The reserve (Gold Vault + PoPC UTXOs) is spent oldest-first. A reserve UTXO is
-// projected into this view before planning; the FIFO key is a TOTAL order so
-// every node on every architecture produces the identical plan for the same
-// reserve set + payout.
-// ---------------------------------------------------------------------------
+// Derive the rollover carried INTO the jackpot block at `height`, purely from
+// chain history — NO persisted StoredBlock field. `paid_at(h)` must return true
+// iff the prior jackpot block at height h paid out (i.e. its block contains a
+// TX_TYPE_JACKPOT). Replays the §4 accrual: a paid event resets rollover to 0
+// (prize<=cap by the clamp), a miss accrues BASE clamped at CAP-BASE. Cost is
+// one lookup per prior jackpot height (every cadence block), reproducible on
+// every node from stored blocks alone.
+template <typename PaidAtFn>
+inline int64_t derive_rollover_before(int64_t height, PaidAtFn paid_at) {
+    if (!is_hist_jackpot_height(height)) return 0;
+    const int64_t roll_cap = HIST_JACKPOT_CAP_STOCKS - HIST_JACKPOT_BASE_STOCKS;
+    int64_t rollover = 0;
+    for (int64_t h = HIST_JACKPOT_FIRST_HEIGHT; h < height; h += HIST_JACKPOT_CADENCE_BLOCKS) {
+        if (paid_at(h)) {
+            rollover = 0;                                  // payout -> reset
+        } else {
+            const int64_t nr = rollover + HIST_JACKPOT_BASE_STOCKS;
+            rollover = nr < roll_cap ? nr : roll_cap;      // miss -> accrue, clamped
+        }
+    }
+    return rollover;
+}
+
+// Reserve membership (spec §5b): an output belongs to the Historical Jackpot
+// reserve iff it is a Gold Vault or PoPC Pool coinbase output locked to its
+// constitutional address. Pure predicate over (type, pkh) — no heuristics.
+inline bool is_reserve_output(uint8_t out_type,
+                              const PubKeyHash& pkh,
+                              const PubKeyHash& gold_pkh,
+                              const PubKeyHash& popc_pkh) {
+    return (out_type == OUT_COINBASE_GOLD && pkh == gold_pkh)
+        || (out_type == OUT_COINBASE_POPC && pkh == popc_pkh);
+}
+
+// A reserve UTXO, reduced to the fields consensus needs for deterministic
+// selection. `txid` is the funding tx id, `vout` its output index.
 struct ReserveUtxo {
-    int64_t  height{0};   // creation height  — FIFO primary key
-    Bytes32  txid{};      // FIFO tiebreak #1 (lexicographic on 32 bytes)
-    uint32_t vout{0};     // FIFO tiebreak #2
-    int64_t  amount{0};   // stocks
+    int64_t  height{0};
+    Bytes32  txid{};
+    uint32_t vout{0};
+    int64_t  amount{0};
 };
 
-// Total FIFO order: oldest first (height ASC, then txid ASC, then vout ASC).
-inline bool reserve_fifo_less(const ReserveUtxo& a, const ReserveUtxo& b) {
+// Deterministic total order: oldest-first by (height, txid, vout). Bytes32 is
+// std::array<uint8_t,32>, whose operator< is lexicographic — stable across
+// nodes. This is the ONLY ordering consensus uses; wallet coin selection must
+// never influence it.
+inline bool reserve_utxo_less(const ReserveUtxo& a, const ReserveUtxo& b) {
     if (a.height != b.height) return a.height < b.height;
-    if (a.txid   != b.txid)   return a.txid   < b.txid;   // std::array<uint8_t,32> lexicographic
+    if (a.txid   != b.txid)   return a.txid   < b.txid;
     return a.vout < b.vout;
 }
 
-struct JackpotSpendPlan {
-    bool                     ok{false};        // false iff reserve total < payout (caller guards: payout<=reserve)
-    std::vector<ReserveUtxo> inputs;           // FIFO-selected reserve UTXOs, IN FIFO ORDER
-    int64_t                  input_sum{0};      // sum of selected inputs
-    int64_t                  winner_amount{0};  // == payout
-    int64_t                  change_amount{0};  // == input_sum - payout (0 => NO change output)
+struct ReserveSelection {
+    std::vector<size_t> indices;   // indices into the caller-sorted vector
+    int64_t total{0};              // sum of selected amounts
+    bool    sufficient{false};     // total >= needed
 };
 
-// Select FIFO-oldest reserve UTXOs summing to >= `payout`. `reserve` may be in any
-// order (sorted internally). Deterministic: identical output for identical input on
-// miner and validator. `payout` must already be <= sum(reserve) (compute_jackpot
-// guarantees payout <= reserve_remaining); ok=false signals a caller bug otherwise.
-inline JackpotSpendPlan plan_jackpot_spend(std::vector<ReserveUtxo> reserve, int64_t payout) {
-    JackpotSpendPlan p;
-    if (payout <= 0) { p.ok = true; return p; }              // nothing to spend
-    std::sort(reserve.begin(), reserve.end(), reserve_fifo_less);
-    int64_t sum = 0;
-    for (const auto& u : reserve) {
-        if (u.amount <= 0) continue;                          // ignore malformed/zero
-        if (sum > INT64_MAX - u.amount) { p.ok = false; return p; }  // overflow guard (consensus hygiene)
-        p.inputs.push_back(u);
-        sum += u.amount;
-        if (sum >= payout) break;
+// Oldest-first selection covering `needed` stocks. `sorted` MUST already be
+// ordered by reserve_utxo_less (caller sorts once). Selects the fewest oldest
+// UTXOs whose sum first reaches `needed`. If the whole reserve is insufficient,
+// returns everything with sufficient=false (caller pays min(prize,reserve)).
+inline ReserveSelection select_reserve_utxos(const std::vector<ReserveUtxo>& sorted,
+                                             int64_t needed) {
+    ReserveSelection s;
+    if (needed <= 0) { s.sufficient = true; return s; }
+    for (size_t i = 0; i < sorted.size() && s.total < needed; ++i) {
+        s.indices.push_back(i);
+        s.total += sorted[i].amount;
     }
-    if (sum < payout) { p.ok = false; return p; }             // reserve below payout — must not happen
-    p.ok            = true;
-    p.input_sum     = sum;
-    p.winner_amount = payout;
-    p.change_amount = sum - payout;                            // 0 => change output omitted
-    return p;
-}
-
-// ---------------------------------------------------------------------------
-// Node adapter — enumerate the LIVE reserve UTXOs (Gold Vault + PoPC) from the
-// UTXO set and project them into ReserveUtxo for the FIFO spend. This is the
-// bridge from `UtxoSet::GetMap()` to the pure core. Deterministic: the caller
-// passes the same map on miner and validator; plan_jackpot_spend then imposes
-// the FIFO order. `creation_height` comes straight from UTXOEntry.height
-// (verified present — utxo_set.cpp sets entry.height on connect).
-// ---------------------------------------------------------------------------
-inline std::vector<ReserveUtxo> collect_reserve_utxos(
-    const std::map<OutPoint, UTXOEntry>& utxos,
-    const PubKeyHash& gold_pkh,
-    const PubKeyHash& popc_pkh)
-{
-    std::vector<ReserveUtxo> out;
-    for (const auto& kv : utxos) {
-        const UTXOEntry& e = kv.second;
-        if (e.pubkey_hash != gold_pkh && e.pubkey_hash != popc_pkh) continue;  // reserve addresses only
-        ReserveUtxo u;
-        u.height = e.height;          // creation height (FIFO primary key)
-        u.txid   = kv.first.txid;     // Hash256 == Bytes32
-        u.vout   = kv.first.index;
-        u.amount = e.amount;
-        out.push_back(u);
-    }
-    return out;
-}
-
-// Live reserve balance = sum of all reserve UTXOs (the UTXO set IS the ledger;
-// no consensus counter). Overflow-guarded (bounded by total supply << INT64_MAX).
-inline int64_t reserve_sum(const std::vector<ReserveUtxo>& reserve) {
-    int64_t s = 0;
-    for (const auto& u : reserve)
-        if (u.amount > 0 && s <= INT64_MAX - u.amount) s += u.amount;
+    s.sufficient = s.total >= needed;
     return s;
 }
 
 // ---------------------------------------------------------------------------
-// Build the EXACT jackpot transaction from a spend plan. This is the single
-// function BOTH the miner and the validator call; the validator then requires
-// block.txs[1] to serialize byte-for-byte identically to this. There is no
-// discretion, so no attack surface.
-//
-//   inputs   = plan.inputs (FIFO reserve UTXOs), each with NO signature
-//              (constitutional spend — validity is byte-exactness, not a sig).
-//   out[0]   = winner (payout, normal spendable OUT_TRANSFER).
-//   out[1]   = change back to the reserve address (OUT_TRANSFER at reserve pkh),
-//              omitted iff change == 0. It is re-locked by the V15 ADDRESS-based
-//              consensus rule (TX_SPEC §6), so it can only be moved by a future
-//              jackpot tx.
-//
-// Identified in a block by POSITION (txs[1]) + byte-exact match — NOT by a new
-// tx_type. `tx_type` stays TX_TYPE_STANDARD; a standalone/mempool copy is
-// rejected because it carries no signatures and spends reserve UTXOs (§6/§8b).
-inline Transaction build_expected_jackpot_tx(const JackpotSpendPlan& plan,
-                                             const PubKeyHash& winner_pkh,
-                                             const PubKeyHash& reserve_change_pkh) {
-    Transaction tx;
-    tx.version = 1;
-    tx.tx_type = TX_TYPE_STANDARD;
-    tx.inputs.reserve(plan.inputs.size());
-    for (const auto& u : plan.inputs) {
+// A1 — canonical TX_TYPE_JACKPOT construction + exact-match validation.
+// The jackpot payout is a keyless protocol transaction (spec §5c). Its safety
+// rests entirely on: the validator RECONSTRUCTS the canonical tx from chain
+// state and requires an EXACT match. There is no signature to forge and no
+// discretion — wrong winner / amount / inputs / ordering / change all fail.
+// ---------------------------------------------------------------------------
+
+// Build the canonical TX_TYPE_JACKPOT for one jackpot block. Returns true and
+// fills out_tx iff a payout tx is required (jackpot height, winner exists,
+// reserve non-empty, payout > 0). `sorted_reserve` MUST be pre-sorted by
+// reserve_utxo_less. Deterministic: identical chain state -> identical tx.
+inline bool build_canonical_jackpot_tx(int64_t height,
+                                       bool winner_exists,
+                                       const PubKeyHash& winner_pkh,
+                                       int64_t reserve_before,
+                                       int64_t rollover_before,
+                                       const std::vector<ReserveUtxo>& sorted_reserve,
+                                       const PubKeyHash& reserve_change_pkh,
+                                       Transaction& out_tx) {
+    const JackpotResult r = hist_jackpot_apply(height, winner_exists,
+                                               reserve_before, rollover_before);
+    if (!r.is_jackpot_block || !r.paid || r.payout <= 0) return false;
+
+    const ReserveSelection sel = select_reserve_utxos(sorted_reserve, r.payout);
+    if (!sel.sufficient || sel.indices.empty()) return false;  // must be covered
+
+    out_tx = Transaction{};
+    out_tx.version = 1;
+    out_tx.tx_type = TX_TYPE_JACKPOT;
+
+    // Inputs: exactly the selected reserve UTXOs, in canonical order, keyless
+    // (zero signature/pubkey — like coinbase).
+    for (size_t k = 0; k < sel.indices.size(); ++k) {
+        const ReserveUtxo& u = sorted_reserve[sel.indices[k]];
         TxInput in;
-        in.prev_txid  = u.txid;      // Hash256 == Bytes32 (both array<uint8_t,32>)
+        in.prev_txid  = u.txid;      // Hash256 and Bytes32 are the same 32-byte array
         in.prev_index = u.vout;
-        in.signature.fill(0);        // constitutional spend — NO signature
+        in.signature.fill(0);
         in.pubkey.fill(0);
-        tx.inputs.push_back(in);
+        out_tx.inputs.push_back(in);
     }
-    TxOutput winner;
-    winner.amount      = plan.winner_amount;
-    winner.type        = OUT_TRANSFER;
-    winner.pubkey_hash = winner_pkh;
-    tx.outputs.push_back(winner);
-    if (plan.change_amount > 0) {
-        TxOutput change;
-        change.amount      = plan.change_amount;
-        change.type        = OUT_TRANSFER;        // normal type, but ADDRESS-locked by §6 (returns to reserve)
-        change.pubkey_hash = reserve_change_pkh;  // = ADDR_GOLD_VAULT pkh
-        tx.outputs.push_back(change);
+
+    // Output 0: payout -> winner (ordinary spendable OUT_TRANSFER).
+    TxOutput w;
+    w.amount = r.payout;
+    w.type = OUT_TRANSFER;
+    w.pubkey_hash = winner_pkh;
+    out_tx.outputs.push_back(w);
+
+    // Output 1 (only when change > 0): remainder -> canonical reserve sink,
+    // re-entering the reserve set as an OUT_COINBASE_GOLD output (spec §5b).
+    const int64_t change = sel.total - r.payout;
+    if (change > 0) {
+        TxOutput c;
+        c.amount = change;
+        c.type = OUT_COINBASE_GOLD;
+        c.pubkey_hash = reserve_change_pkh;
+        out_tx.outputs.push_back(c);
     }
-    return tx;
+    return true;
 }
 
-// ---------------------------------------------------------------------------
-// Block-level jackpot validation (the consensus rule, pure + testable).
-// Called from process_block() (the SINGLE common block-acceptance path:
-// submitblock, P2P, reorg, chain-load). Given the block's txs, the height, the
-// live UTXO set, the reserve addresses, and the DTD winner already selected,
-// it: (a) enforces txs[1] == the exact jackpot tx when a payout is due, (b)
-// enforces the reserve address-lock everywhere else, and (c) returns the
-// jackpot_pending_after to persist. Pre-V15 is a no-op (byte-identical).
-// ---------------------------------------------------------------------------
-struct BlockJackpotResult {
-    bool         ok{true};
-    const char*  reject{nullptr};          // reason when !ok
-    int64_t      jackpot_pending_after{0}; // value to store in StoredBlock
-};
-
-inline BlockJackpotResult validate_block_jackpot(
-    const std::vector<Transaction>&        txs,
-    int64_t height, int64_t phase2_height, int64_t v15_height,
-    const std::map<OutPoint, UTXOEntry>&   utxos,
-    const PubKeyHash& gold_pkh, const PubKeyHash& popc_pkh,
-    bool has_winner, const PubKeyHash& winner_pkh,
-    int64_t jackpot_pending_before)
-{
-    BlockJackpotResult r;
-    r.jackpot_pending_after = jackpot_pending_before;              // default: carry forward
-    if (v15_height == INT64_MAX || height < v15_height) return r;  // pre-V15: no-op
-
-    auto spends_reserve = [&](const Transaction& tx) -> bool {
-        for (const auto& in : tx.inputs) {
-            OutPoint op; op.txid = in.prev_txid; op.index = in.prev_index;
-            auto it = utxos.find(op);
-            if (it != utxos.end() &&
-                (it->second.pubkey_hash == gold_pkh || it->second.pubkey_hash == popc_pkh))
-                return true;
-        }
+// True iff `tx` is EXACTLY the canonical jackpot tx for this chain state. If no
+// jackpot tx is expected (not a jackpot block / no winner / empty reserve), any
+// tx is a mismatch. This is the whole A1 authorization model.
+inline bool jackpot_tx_matches_canonical(const Transaction& tx,
+                                         int64_t height,
+                                         bool winner_exists,
+                                         const PubKeyHash& winner_pkh,
+                                         int64_t reserve_before,
+                                         int64_t rollover_before,
+                                         const std::vector<ReserveUtxo>& sorted_reserve,
+                                         const PubKeyHash& reserve_change_pkh) {
+    Transaction expected;
+    if (!build_canonical_jackpot_tx(height, winner_exists, winner_pkh,
+                                    reserve_before, rollover_before,
+                                    sorted_reserve, reserve_change_pkh, expected)) {
         return false;
-    };
-
-    if (is_jackpot_opportunity(height, phase2_height, v15_height)) {
-        auto reserve = collect_reserve_utxos(utxos, gold_pkh, popc_pkh);
-        const int64_t reserve_rem = reserve_sum(reserve);
-        auto jr = compute_jackpot(jackpot_pending_before, reserve_rem, has_winner);
-        r.jackpot_pending_after = jr.pending_after;
-
-        if (has_winner && jr.payout > 0) {
-            if (txs.size() < 2) { r.ok=false; r.reject="jackpot opportunity missing txs[1]"; return r; }
-            auto plan = plan_jackpot_spend(reserve, jr.payout);
-            if (!plan.ok) { r.ok=false; r.reject="jackpot FIFO plan failed (reserve<payout)"; return r; }
-            Transaction expected = build_expected_jackpot_tx(plan, winner_pkh, gold_pkh);
-            std::vector<Byte> eb, gb;
-            if (!expected.Serialize(eb) || !txs[1].Serialize(gb) || eb != gb) {
-                r.ok=false; r.reject="jackpot txs[1] not byte-exact"; return r;
-            }
-            for (size_t ti=2; ti<txs.size(); ++ti)
-                if (spends_reserve(txs[ti])) { r.ok=false; r.reject="non-jackpot tx spends reserve"; return r; }
-        } else {
-            // opportunity but no winner / payout 0 -> no tx may spend reserve
-            for (size_t ti=1; ti<txs.size(); ++ti)
-                if (spends_reserve(txs[ti])) { r.ok=false; r.reject="reserve spend on no-payout jackpot block"; return r; }
-        }
-    } else {
-        // not a jackpot opportunity -> no tx may spend reserve at all
-        for (size_t ti=1; ti<txs.size(); ++ti)
-            if (spends_reserve(txs[ti])) { r.ok=false; r.reject="reserve spend outside jackpot block"; return r; }
     }
-    return r;
+    if (tx.tx_type != expected.tx_type)             return false;
+    if (tx.inputs.size()  != expected.inputs.size())  return false;
+    if (tx.outputs.size() != expected.outputs.size()) return false;
+    for (size_t i = 0; i < expected.inputs.size(); ++i) {
+        const TxInput& a = tx.inputs[i];
+        const TxInput& b = expected.inputs[i];
+        if (a.prev_txid  != b.prev_txid)  return false;
+        if (a.prev_index != b.prev_index) return false;
+        for (auto x : a.signature) if (x != 0) return false;  // keyless
+        for (auto x : a.pubkey)    if (x != 0) return false;
+    }
+    for (size_t i = 0; i < expected.outputs.size(); ++i) {
+        const TxOutput& a = tx.outputs[i];
+        const TxOutput& b = expected.outputs[i];
+        if (a.amount != b.amount)           return false;
+        if (a.type   != b.type)             return false;
+        if (a.pubkey_hash != b.pubkey_hash) return false;
+        if (!a.payload.empty())             return false;
+    }
+    return true;
 }
 
 } // namespace sost::jackpot

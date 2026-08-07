@@ -31,20 +31,6 @@ static bool excluded(const std::vector<PopcV15Event>& evs, const PubKeyHash& min
 }
 
 int main(){
-#ifndef SOST_TESTNET_FORKS
-    // V15 final-decentralization fork RETIRES PoPC on mainnet: the PoPC V15
-    // subsystem never auto-activates (popc_v15_active_at == false at every
-    // height). This suite exercises the live subsystem only on the testnet
-    // profile; on mainnet it verifies the retirement invariant and exits green.
-    // See docs/V15_FINAL_DECENTRALIZATION_SPEC.md.
-    if (sost::popc_v15_active_at(sost::V15_HEIGHT) ||
-        sost::popc_v15_active_at(sost::V15_HEIGHT + 100000)) {
-        printf("FAIL: PoPC must be inactive (retired) on mainnet under the V15 fork\n");
-        return 1;
-    }
-    printf("[mainnet] PoPC retired by the V15 fork - subsystem is testnet-only. OK\n");
-    return 0;
-#endif
     std::printf("=== PoPC V15 P5 — staged-activation soak (deterministic) ===\n");
     const int64_t H0  = V15_HEIGHT;                    // PoPC automation goes live
     const int64_t ELI = DTD_POPC_ELIGIBILITY_HEIGHT;   // DTD starts requiring PoPC (= H0 + grace)
@@ -111,15 +97,15 @@ int main(){
           excluded(chain, NONE,  ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
 
     // PoPC automation is LIVE from V15_HEIGHT on both profiles; only the height
-    // values differ (mainnet 20000/25000 vs testnet 300/5300).
+    // values differ (mainnet 25000/30000 vs testnet 12500/17500).
     CHECK("PoPC automation live at V15_HEIGHT", popc_v15_active_at(H0));
     CHECK("PoPC automation live at eligibility", popc_v15_active_at(ELI));
 #ifndef SOST_TESTNET_FORKS
-    CHECK("mainnet: V15_HEIGHT == 20000", H0 == 20000);
-    CHECK("mainnet: eligibility == 25000", ELI == 25000);
+    CHECK("mainnet: V15_HEIGHT == 25000", H0 == 25000);
+    CHECK("mainnet: eligibility == 30000", ELI == 30000);
 #else
-    CHECK("testnet: V15_HEIGHT == 300", H0 == 300);
-    CHECK("testnet: eligibility == 5300", ELI == 5300);
+    CHECK("testnet: V15_HEIGHT == 12500", H0 == 12500);
+    CHECK("testnet: eligibility == 17500", ELI == 17500);
 #endif
 
     std::printf("=== Results: %d passed, %d failed ===\n", g_pass, g_fail);

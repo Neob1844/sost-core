@@ -1,0 +1,622 @@
+artifacts/v15-final-validation/run_sanitizer_consensus_tests.sh: line 7: /build-asan.cfg.log: Permission denied
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  
+-- Looking for C++ include pthread.h
+-- Looking for C++ include pthread.h - found
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Looking for include files secp256k1.h, secp256k1_schnorrsig.h
+-- Looking for include files secp256k1.h, secp256k1_schnorrsig.h - found
+-- Looking for secp256k1_schnorrsig_verify
+-- Looking for secp256k1_schnorrsig_verify - found
+-- V11 Phase 2 SbPoW: ENABLED (Schnorr tests will be built)
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/sost/SOST/sostcore/sost-core/build-asan
+[  5%] Building CXX object CMakeFiles/sost-core.dir/src/subsidy.cpp.o
+[  5%] Building CXX object CMakeFiles/sost-core.dir/src/crypto.cpp.o
+/home/sost/SOST/sostcore/sost-core/src/crypto.cpp: In function ‘sost::Bytes32 sost::sha256(const uint8_t*, size_t)’:
+/home/sost/SOST/sostcore/sost-core/src/crypto.cpp:9:32: warning: ‘int SHA256_Init(SHA256_CTX*)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+    9 |     SHA256_CTX ctx; SHA256_Init(&ctx);
+      |                     ~~~~~~~~~~~^~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/crypto.cpp:4:
+/usr/include/openssl/sha.h:73:27: note: declared here
+   73 | OSSL_DEPRECATEDIN_3_0 int SHA256_Init(SHA256_CTX *c);
+      |                           ^~~~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/src/crypto.cpp:10:18: warning: ‘int SHA256_Update(SHA256_CTX*, const void*, size_t)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+   10 |     SHA256_Update(&ctx, data, len);
+      |     ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/crypto.cpp:4:
+/usr/include/openssl/sha.h:74:27: note: declared here
+   74 | OSSL_DEPRECATEDIN_3_0 int SHA256_Update(SHA256_CTX *c,
+      |                           ^~~~~~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/src/crypto.cpp:11:17: warning: ‘int SHA256_Final(unsigned char*, SHA256_CTX*)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+   11 |     SHA256_Final(out.data(), &ctx);
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/crypto.cpp:4:
+/usr/include/openssl/sha.h:76:27: note: declared here
+   76 | OSSL_DEPRECATEDIN_3_0 int SHA256_Final(unsigned char *md, SHA256_CTX *c);
+      |                           ^~~~~~~~~~~~
+[  5%] Building CXX object CMakeFiles/sost-core.dir/src/emission.cpp.o
+[  5%] Building CXX object CMakeFiles/sost-core.dir/src/pow/casert.cpp.o
+[ 11%] Building CXX object CMakeFiles/sost-core.dir/src/sostcompact.cpp.o
+[ 11%] Building CXX object CMakeFiles/sost-core.dir/src/pow/convergencex.cpp.o
+[ 11%] Building CXX object CMakeFiles/sost-core.dir/src/pow/scratchpad.cpp.o
+[ 16%] Building CXX object CMakeFiles/sost-core.dir/src/pow/scratchpad_cache.cpp.o
+[ 16%] Building CXX object CMakeFiles/sost-core.dir/src/pow/relief_predict.cpp.o
+[ 22%] Building CXX object CMakeFiles/sost-core.dir/src/transaction.cpp.o
+[ 22%] Building CXX object CMakeFiles/sost-core.dir/src/tx_signer.cpp.o
+/home/sost/SOST/sostcore/sost-core/src/tx_signer.cpp: In function ‘sost::PubKeyHash sost::ComputePubKeyHash(const PubKey&)’:
+/home/sost/SOST/sostcore/sost-core/src/tx_signer.cpp:495:14: warning: ‘unsigned char* RIPEMD160(const unsigned char*, size_t, unsigned char*)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+  495 |     RIPEMD160(sha.data(), sha.size(), pkh.data());
+      |     ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/tx_signer.cpp:28:
+/usr/include/openssl/ripemd.h:49:38: note: declared here
+   49 | OSSL_DEPRECATEDIN_3_0 unsigned char *RIPEMD160(const unsigned char *d, size_t n,
+      |                                      ^~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/src/tx_signer.cpp: In lambda function:
+/home/sost/SOST/sostcore/sost-core/src/tx_signer.cpp:49:44: warning: ignoring return value of ‘int secp256k1_context_randomize(secp256k1_context*, const unsigned char*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   49 |                 secp256k1_context_randomize(c, seed);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~
+[ 22%] Building CXX object CMakeFiles/sost-core.dir/src/tx_validation.cpp.o
+[ 27%] Building CXX object CMakeFiles/sost-core.dir/src/capsule.cpp.o
+[ 27%] Building CXX object CMakeFiles/sost-core.dir/src/sealed_envelope.cpp.o
+/home/sost/SOST/sostcore/sost-core/src/sealed_envelope.cpp: In lambda function:
+/home/sost/SOST/sostcore/sost-core/src/sealed_envelope.cpp:37:40: warning: ignoring return value of ‘int secp256k1_context_randomize(secp256k1_context*, const unsigned char*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+   37 |             secp256k1_context_randomize(ctx, seed);
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
+[ 27%] Building CXX object CMakeFiles/sost-core.dir/src/utxo_set.cpp.o
+[ 33%] Building CXX object CMakeFiles/sost-core.dir/src/block.cpp.o
+[ 33%] Building CXX object CMakeFiles/sost-core.dir/src/merkle.cpp.o
+[ 33%] Building CXX object CMakeFiles/sost-core.dir/src/mempool.cpp.o
+[ 38%] Building CXX object CMakeFiles/sost-core.dir/src/spam_guard.cpp.o
+[ 38%] Building CXX object CMakeFiles/sost-core.dir/src/address.cpp.o
+[ 38%] Building CXX object CMakeFiles/sost-core.dir/src/wallet.cpp.o
+[ 44%] Building CXX object CMakeFiles/sost-core.dir/src/block_validation.cpp.o
+[ 44%] Building CXX object CMakeFiles/sost-core.dir/src/gold_vault_slice1.cpp.o
+[ 50%] Building CXX object CMakeFiles/sost-core.dir/src/gv_g5.cpp.o
+[ 50%] Building CXX object CMakeFiles/sost-core.dir/src/popc_v15.cpp.o
+/home/sost/SOST/sostcore/sost-core/src/popc_v15.cpp: In function ‘sost::PubKeyHash sost::popc_v15_pubkey_pkh(const std::vector<unsigned char>&)’:
+/home/sost/SOST/sostcore/sost-core/src/popc_v15.cpp:17:14: warning: ‘unsigned char* RIPEMD160(const unsigned char*, size_t, unsigned char*)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+   17 |     RIPEMD160(sha, SHA256_DIGEST_LENGTH, rip);
+      |     ~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/popc_v15.cpp:7:
+/usr/include/openssl/ripemd.h:49:38: note: declared here
+   49 | OSSL_DEPRECATEDIN_3_0 unsigned char *RIPEMD160(const unsigned char *d, size_t n,
+      |                                      ^~~~~~~~~
+[ 50%] Building CXX object CMakeFiles/sost-core.dir/src/atomic_swap_btc.cpp.o
+[ 50%] Building CXX object CMakeFiles/sost-core.dir/src/atomic_swap_coordinator.cpp.o
+[ 55%] Building CXX object CMakeFiles/sost-core.dir/src/atomic_swap_btc_signing.cpp.o
+[ 55%] Building CXX object CMakeFiles/sost-core.dir/src/atomic_swap_helpers.cpp.o
+[ 61%] Building CXX object CMakeFiles/sost-core.dir/src/atomic_swap_orderbook.cpp.o
+[ 61%] Building CXX object CMakeFiles/sost-core.dir/src/atomic_swap_watcher.cpp.o
+[ 61%] Building CXX object CMakeFiles/sost-core.dir/src/atomic_swap_session.cpp.o
+[ 66%] Building CXX object CMakeFiles/sost-core.dir/src/atomic_swap_policy.cpp.o
+[ 66%] Building CXX object CMakeFiles/sost-core.dir/src/addressbook.cpp.o
+[ 66%] Building CXX object CMakeFiles/sost-core.dir/src/wallet_policy.cpp.o
+[ 72%] Building CXX object CMakeFiles/sost-core.dir/src/hd_wallet.cpp.o
+[ 72%] Building CXX object CMakeFiles/sost-core.dir/src/psbt.cpp.o
+[ 77%] Building CXX object CMakeFiles/sost-core.dir/src/script.cpp.o
+/home/sost/SOST/sostcore/sost-core/src/script.cpp: In function ‘sost::PubKeyHash sost::hash160(const uint8_t*, size_t)’:
+/home/sost/SOST/sostcore/sost-core/src/script.cpp:18:14: warning: ‘unsigned char* RIPEMD160(const unsigned char*, size_t, unsigned char*)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+   18 |     RIPEMD160(sha, 32, h.data());
+      |     ~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/script.cpp:4:
+/usr/include/openssl/ripemd.h:49:38: note: declared here
+   49 | OSSL_DEPRECATEDIN_3_0 unsigned char *RIPEMD160(const unsigned char *d, size_t n,
+      |                                      ^~~~~~~~~
+[ 77%] Building CXX object CMakeFiles/sost-core.dir/src/popc.cpp.o
+/home/sost/SOST/sostcore/sost-core/src/popc.cpp: In function ‘sost::Hash256 sost::compute_audit_seed(const Hash256&, const Hash256&, const Hash256&)’:
+/home/sost/SOST/sostcore/sost-core/src/popc.cpp:203:16: warning: ‘int SHA256_Init(SHA256_CTX*)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+  203 |     SHA256_Init(&ctx);
+      |     ~~~~~~~~~~~^~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/popc.cpp:11:
+/usr/include/openssl/sha.h:73:27: note: declared here
+   73 | OSSL_DEPRECATEDIN_3_0 int SHA256_Init(SHA256_CTX *c);
+      |                           ^~~~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/src/popc.cpp:204:18: warning: ‘int SHA256_Update(SHA256_CTX*, const void*, size_t)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+  204 |     SHA256_Update(&ctx, buf, 96);
+      |     ~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/popc.cpp:11:
+/usr/include/openssl/sha.h:74:27: note: declared here
+   74 | OSSL_DEPRECATEDIN_3_0 int SHA256_Update(SHA256_CTX *c,
+      |                           ^~~~~~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/src/popc.cpp:205:17: warning: ‘int SHA256_Final(unsigned char*, SHA256_CTX*)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+  205 |     SHA256_Final(out.data(), &ctx);
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/popc.cpp:11:
+/usr/include/openssl/sha.h:76:27: note: declared here
+   76 | OSSL_DEPRECATEDIN_3_0 int SHA256_Final(unsigned char *md, SHA256_CTX *c);
+      |                           ^~~~~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/src/popc.cpp: In function ‘bool sost::is_audit_triggered(const Hash256&, const Hash256&, uint16_t, uint16_t)’:
+/home/sost/SOST/sostcore/sost-core/src/popc.cpp:228:16: warning: ‘int SHA256_Init(SHA256_CTX*)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+  228 |     SHA256_Init(&ctx);
+      |     ~~~~~~~~~~~^~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/popc.cpp:11:
+/usr/include/openssl/sha.h:73:27: note: declared here
+   73 | OSSL_DEPRECATEDIN_3_0 int SHA256_Init(SHA256_CTX *c);
+      |                           ^~~~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/src/popc.cpp:229:18: warning: ‘int SHA256_Update(SHA256_CTX*, const void*, size_t)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+  229 |     SHA256_Update(&ctx, buf, 66);
+      |     ~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/popc.cpp:11:
+/usr/include/openssl/sha.h:74:27: note: declared here
+   74 | OSSL_DEPRECATEDIN_3_0 int SHA256_Update(SHA256_CTX *c,
+      |                           ^~~~~~~~~~~~~
+/home/sost/SOST/sostcore/sost-core/src/popc.cpp:230:17: warning: ‘int SHA256_Final(unsigned char*, SHA256_CTX*)’ is deprecated: Since OpenSSL 3.0 [-Wdeprecated-declarations]
+  230 |     SHA256_Final(digest, &ctx);
+      |     ~~~~~~~~~~~~^~~~~~~~~~~~~~
+In file included from /home/sost/SOST/sostcore/sost-core/src/popc.cpp:11:
+/usr/include/openssl/sha.h:76:27: note: declared here
+   76 | OSSL_DEPRECATEDIN_3_0 int SHA256_Final(unsigned char *md, SHA256_CTX *c);
+      |                           ^~~~~~~~~~~~
+[ 77%] Building CXX object CMakeFiles/sost-core.dir/src/popc_tx_builder.cpp.o
+[ 83%] Building CXX object CMakeFiles/sost-core.dir/src/popc_model_b.cpp.o
+[ 83%] Building CXX object CMakeFiles/sost-core.dir/src/sbpow.cpp.o
+[ 83%] Building CXX object CMakeFiles/sost-core.dir/src/lottery.cpp.o
+[ 88%] Building CXX object CMakeFiles/sost-core.dir/src/dtd_control.cpp.o
+[ 88%] Building CXX object CMakeFiles/sost-core.dir/src/beacon.cpp.o
+[ 88%] Building CXX object CMakeFiles/sost-core.dir/src/beacon_p2p.cpp.o
+[ 94%] Linking CXX static library libsost-core.a
+[ 94%] Built target sost-core
+[ 94%] Building CXX object CMakeFiles/test-jackpot.dir/tests/test_jackpot.cpp.o
+[100%] Linking CXX executable test-jackpot
+[100%] Built target test-jackpot
+Consolidate compiler generated dependencies of target sost-core
+[ 94%] Built target sost-core
+[ 94%] Building CXX object CMakeFiles/test-lottery-rollover.dir/tests/test_lottery_rollover.cpp.o
+[100%] Linking CXX executable test-lottery-rollover
+[100%] Built target test-lottery-rollover
+[ 94%] Built target sost-core
+[100%] Building CXX object CMakeFiles/test-dtd-control.dir/tests/test_dtd_control.cpp.o
+[100%] Linking CXX executable test-dtd-control
+[100%] Built target test-dtd-control
+[100%] Built target sost-core
+[100%] Building CXX object CMakeFiles/test-lottery-eligibility.dir/tests/test_lottery_eligibility.cpp.o
+[100%] Linking CXX executable test-lottery-eligibility
+[100%] Built target test-lottery-eligibility
+[ 94%] Built target sost-core
+[100%] Building CXX object CMakeFiles/test-lottery-frequency.dir/tests/test_lottery_frequency.cpp.o
+[100%] Linking CXX executable test-lottery-frequency
+[100%] Built target test-lottery-frequency
+=== test-jackpot (ASan+UBSan) ===
+== test_jackpot — V15 Historical DTD Jackpot (J) pure core ==
+  PASS: first jackpot height is a jackpot block
+  PASS: F-1 is NOT a jackpot block
+  PASS: F+1 is NOT a jackpot block
+  PASS: F+cadence IS a jackpot block
+  PASS: F+cadence-1 is NOT a jackpot block
+  PASS: activation height itself is NOT (warm-up)
+  PASS: is a jackpot block
+  PASS: winner paid base 100 SOST
+  PASS: reserve decreased by exactly payout
+  PASS: no rollover carried (prize < cap)
+  PASS: not retired
+  PASS: supply-neutral: payout <= reserve_before
+  PASS: no winner: nothing paid
+  PASS: no winner: reserve untouched
+  PASS: no winner: rollover += base
+  PASS: rollover clamped at CAP-BASE (400 SOST)
+  PASS: cap hit: payout == 500 SOST (cap)
+  PASS: cap hit: rollover resets to 0
+  PASS: cap hit: reserve -= 500
+  PASS: reserve-limited: payout == remaining reserve
+  PASS: reserve-limited: reserve_after == 0
+  PASS: reserve-limited: retired latch set
+  PASS: reserve-limited: no rollover
+  PASS: empty reserve: retired, no payout
+  PASS: empty reserve: reserve stays 0
+  PASS: non-jackpot height: not a jackpot block
+  PASS: non-jackpot height: state carried unchanged
+  PASS: negative reserve: no-op, not paid
+  PASS: GOLD output at gold addr is reserve
+  PASS: POPC output at popc addr is reserve
+  PASS: MINER output is NOT reserve
+  PASS: GOLD type at wrong pkh is NOT reserve
+  PASS: LOTTERY output is NOT reserve
+  PASS: older height sorts first
+  PASS: same height: lower txid first
+  PASS: same height+txid: lower vout first
+  PASS: ordering is antisymmetric
+  PASS: sorted oldest-first (height 100 first)
+  PASS: selection covers needed
+  PASS: selection took 3 oldest UTXOs
+  PASS: exact-first selection took 1 UTXO
+  PASS: insufficient reserve flagged
+  PASS: change back to reserve keeps supply constant
+  PASS: canonical tx built at jackpot height
+  PASS: tx_type == TX_TYPE_JACKPOT
+  PASS: 2 inputs selected (70+60 covers 100)
+  PASS: input keyless: zero signature
+  PASS: 2 outputs (winner + change)
+  PASS: output0 = payout 100 to winner (OUT_TRANSFER)
+  PASS: output1 = change 30 to reserve sink (OUT_COINBASE_GOLD)
+  PASS: supply-neutral: Σin == Σout
+  PASS: validator ACCEPTS canonical tx
+  PASS: reject: wrong winner
+  PASS: reject: wrong payout amount
+  PASS: reject: extra output
+  PASS: reject: non-keyless input (signature set)
+  PASS: reject: wrong input order
+  PASS: reject: jackpot tx at non-jackpot height
+  PASS: reject: jackpot tx when no eligible winner
+  PASS: exact-reserve tx built
+  PASS: exact-reserve: 1 input, 1 output, no change
+  PASS: empty reserve → no canonical tx built
+  PASS: jackpot tx serializes
+  PASS: jackpot tx deserializes (TX_TYPE_JACKPOT accepted)
+  PASS: round-trip preserves tx_type == TX_TYPE_JACKPOT
+  PASS: round-trip preserves input/output counts
+  PASS: txid computes on both
+  PASS: txid deterministic across round-trip
+  PASS: round-tripped tx still validates canonical
+  PASS: discovery finds exactly the 3 reserve UTXOs
+  PASS: discovery sorted oldest-first (h100 first, h102 last)
+  PASS: discovery excludes miner + wrong-pkh decoys (balance == 120 SOST)
+  PASS: canonical jackpot tx builds from DISCOVERED reserve
+  PASS: empty chainstate -> empty reserve -> no jackpot tx
+  PASS: jackpot block [coinbase, canonical J] accepted
+  PASS: jackpot block MISSING the J tx rejected
+  PASS: duplicate TX_TYPE_JACKPOT rejected
+  PASS: jackpot tx at wrong position rejected
+  PASS: tampered J tx (wrong winner) rejected
+  PASS: tampered J tx (wrong amount) rejected
+  PASS: non-jackpot height [coinbase] accepted
+  PASS: non-jackpot height with J tx rejected
+  PASS: jackpot height, no winner, [coinbase] accepted
+  PASS: jackpot height, no winner, J tx present rejected
+  PASS: jackpot height, empty reserve, J tx present rejected
+  PASS: jackpot height, empty reserve, no J tx accepted
+  PASS: LIVE ConnectBlock accepts canonical jackpot block
+  PASS: reserve input A spent
+  PASS: reserve input B spent
+  PASS: winner UTXO created (100 SOST to winner)
+  PASS: reserve-change UTXO created (30 SOST to gold sink)
+  PASS: unrelated UTXO untouched
+  PASS: LIVE supply-neutral: Σreserve-in == Σout
+  PASS: post-jackpot reserve = only the change (30 SOST)
+  PASS: LIVE DisconnectBlock reverses the jackpot block
+  PASS: reserve input A restored
+  PASS: reserve input B restored
+  PASS: winner UTXO removed
+  PASS: reserve-change UTXO removed
+  PASS: reserve fully restored (A + B = 130 SOST)
+  PASS: rollover_before(first) == 0
+  PASS: 1 prior miss -> rollover 100
+  PASS: 2 prior misses -> rollover 200
+  PASS: 4 prior misses -> rollover 400 (== CAP-BASE)
+  PASS: 5 prior misses -> clamped at 400
+  PASS: all prior paid -> rollover 0
+  PASS: payout resets rollover
+  PASS: non-jackpot height rollover 0
+
+== summary: 108 pass, 0 fail ==
+  [test-jackpot] clean
+=== test-lottery-rollover (ASan+UBSan) ===
+=== test_lottery_rollover (V11 Phase 2 C7) ===
+
+=== 1) V11_PHASE2_HEIGHT == 7100 (set by C13); INT64_MAX still idle ===
+  PASS: V11_PHASE2_HEIGHT == 7100 (C13 decision)
+  PASS: ok=true
+  PASS: triggered=false (INT64_MAX)
+  PASS: paid_out=false
+  PASS: pending_after == pending_before
+  PASS: lottery_payout == 0
+  PASS: winner_index == -1
+  PASS: height=7099 vs V11_PHASE2_HEIGHT → triggered=false
+  PASS: height=7099 vs V11_PHASE2_HEIGHT → pending unchanged
+
+=== 2) Pre-Phase 2 (height < phase2_height) → IDLE ===
+  PASS: triggered=false
+  PASS: pending_after unchanged
+  PASS: paid_out=false
+
+=== 3) Non-triggered with pending > 0 → no payout, pending unchanged ===
+  PASS: triggered=false
+  PASS: paid_out=false (NEVER pays out)
+  PASS: pending_after == pending_before
+  PASS: lottery_payout == 0
+  PASS: winner_index == -1
+
+=== 4) Triggered + empty eligible → pending += amount, no payout ===
+  PASS: triggered=true
+  PASS: paid_out=false (empty E)
+  PASS: pending_after == 100
+  PASS: lottery_payout == 0
+  PASS: winner_index == -1
+
+=== 5) Multiple empty triggered → pending stacks 0→100→200→300 ===
+  PASS: step is triggered+empty
+  PASS: step is triggered+empty
+  PASS: H+4 also triggered+empty
+  PASS: pending stacked to 300 across 3 empty triggered blocks
+
+=== 6) Triggered + non-empty E → payout = pending + amount, pending = 0 ===
+  PASS: triggered=true
+  PASS: paid_out=true
+  PASS: lottery_payout == 400 (pending 300 + amount 100)
+  PASS: pending_after == 0 (jackpot cleared)
+  PASS: winner_index in [0, 4)
+  PASS: winner_pkh equals eligible[winner_index].pkh
+
+=== 7) undo_lottery_block restores pending_before across IDLE / UPDATE / PAYOUT ===
+  PASS: IDLE: pending_after == pending_before == 555
+  PASS: IDLE: undo_lottery_block restores 555
+  PASS: UPDATE: pending_after == 200, pending_before == 100
+  PASS: UPDATE: undo_lottery_block restores 100
+  PASS: PAYOUT: pending_after == 0, pending_before == 300
+  PASS: PAYOUT: undo_lottery_block restores 300
+  PASS: reorg sim: forward chain ends with pending == 0 after PAYOUT
+  PASS: reorg sim: backward walk restores pending == 0 (pre-chain start)
+
+=== 8) Overflow detection: pending_before + lottery_amount ===
+  PASS: MAX-100 + 100 == MAX is accepted
+  PASS: pending_after == INT64_MAX (no rollover)
+  PASS: MAX-100 + 101 overflow → ok=false
+  PASS: error mentions overflow
+  PASS: pending_after NOT wrapped (still 0 = unset)
+  PASS: negative pending_before → ok=false
+  PASS: error mentions pending_before < 0
+  PASS: negative lottery_amount → ok=false
+  PASS: error mentions lottery_amount
+
+=== 9) Serialization roundtrip — DEFERRED to C8 (intentional) ===
+  (no assertion — see comment above)
+
+=== 10) No coinbase / reward / UTXO mutation by C7 ===
+  PASS: apply_lottery_block does not depend on coinbase shape
+  PASS: V11_PHASE2_HEIGHT == 7100 (C13)
+  PASS: LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW unchanged
+  PASS: LOTTERY_HIGH_FREQ_WINDOW unchanged
+
+=== Summary: 53 passed, 0 failed ===
+  [test-lottery-rollover] clean
+=== test-dtd-control (ASan+UBSan) ===
+=== DTD emergency pause/resume control ===
+
+=== Summary: 44 passed, 0 failed ===
+  [test-dtd-control] clean
+=== test-lottery-eligibility (ASan+UBSan) ===
+=== test_lottery_eligibility (V11 Phase 2 C7.1 + V13 + V14 prep) ===
+
+=== 1) Empty history → eligible empty ===
+  PASS: no history → eligible.empty()
+
+=== 2) Sole historical miner = current miner, last win OUTSIDE window → eligible (C7.1) ===
+  PASS: sole historical miner = current, no recent win → eligible (size 1)
+  PASS: eligible[0].pkh == A
+
+=== 3) Two historical, current = A, neither in window → BOTH eligible (C7.1) ===
+  PASS: eligible has exactly two entries (A and B)
+  PASS: eligible[0].pkh == A (lex sorted)
+  PASS: eligible[1].pkh == B
+  PASS: blocks_mined for A == 2
+  PASS: blocks_mined for B == 2
+  PASS: last_mined_height for A == 40
+  PASS: last_mined_height for B == 50
+
+=== 3b-A) C7.1 case A: Alice last won at H-20 → eligible ===
+  PASS: Alice (last win H-20, current miner) → eligible (size 1)
+  PASS: eligible[0].pkh == Alice
+
+=== 3b-B) C7.1 case B: Alice won at H-3 → excluded by recent-winner (NOT by current miner) ===
+  PASS: Alice excluded by recent-winner rule (H-3 in [H-5, H-1])
+  PASS: is_recent_reward_winner(Alice, H, 5) confirms exclusion path
+
+=== 3b-C) C7.1 case C: Alice won at H-6 → eligible (just outside window) ===
+  PASS: Alice (last win H-6, current miner) → eligible (size 1)
+  PASS: eligible[0].pkh == Alice (just outside cooldown window)
+  PASS: is_recent_reward_winner(Alice, H, 5) → false (H-6 outside)
+
+=== 4) Recent winner exclusion cap=5: H-1..H-5 excluded, H-6 eligible ===
+  PASS: eligible has exactly 1 entry (M0 only)
+  PASS: eligible[0] is M0 (height 94, outside window)
+  PASS: is_recent_reward_winner(M5, h=100, w=5) → true (H-1)
+  PASS: is_recent_reward_winner(M1, h=100, w=5) → true (H-5)
+  PASS: is_recent_reward_winner(M0, h=100, w=5) → false (H-6)
+  PASS: is_recent_reward_winner(M0, h=100, w=6) → true
+  PASS: is_recent_reward_winner(any, h=100, w=0) → false (cap disabled)
+
+=== 5) Duplicate history collapses; counts and bounds correct ===
+  PASS: 4 wins by X collapse to 1 entry
+  PASS: blocks_mined == 4
+  PASS: first_mined_height == 7 (min over input)
+  PASS: last_mined_height == 40 (max over input)
+
+=== 6) Output is sorted lex by raw pkh bytes ===
+  PASS: 4 distinct pkhs
+  PASS: eligible[0] < eligible[1]
+  PASS: eligible[1] < eligible[2]
+  PASS: eligible[2] < eligible[3]
+
+=== 7) Winner selection: deterministic + endian-safe + sensitive ===
+  PASS: same inputs → same index (determinism)
+  PASS: index in [0, eligible.size())
+  PASS: empty eligible → -1
+  PASS: varying prev_hash explores >=2 distinct indices
+  PASS: varying height explores >=2 distinct indices
+
+=== 7b) Winner selection: 16-block history seed ===
+  PASS: same 16-block history -> same index
+  PASS: history-seeded index in [0, eligible.size())
+  PASS: history-seeded empty eligible -> -1
+  PASS: changing an in-window hash explores >=2 distinct indices
+  PASS: changing hash older than the 16-block window does not affect index
+
+=== 8) Selection is uniform per-pkh, NOT weighted by blocks_mined ===
+  PASS: whale wins NOT >= 95 % (would imply weight-by-blocks_mined bug)
+  PASS: whale wins ≈ minnow wins (uniform per-pkh selection)
+
+=== 9) Phase 2 activation height pinned at 7100 ===
+  PASS: is_lottery_block(7000, V11_PHASE2_HEIGHT) → false (pre-activation, Phase 1 fork)
+  PASS: is_lottery_block(7099, V11_PHASE2_HEIGHT) → false (last pre block)
+  PASS: is_lottery_block(7100, V11_PHASE2_HEIGHT) → true (activation block)
+  PASS: is_lottery_block(7101, V11_PHASE2_HEIGHT) → false (bootstrap %3==0)
+  PASS: is_lottery_block(7102, V11_PHASE2_HEIGHT) → true (bootstrap %3==1)
+  PASS: INT64_MAX sentinel still returns false
+  PASS: V11_PHASE2_HEIGHT == 7100 (set by C13)
+
+=== 10) C7.1: current miner is NO LONGER auto-excluded (was true under C6) ===
+  PASS: eligible has 2 entries (both A and B — A not auto-excluded)
+  PASS: eligible[0] is A (current miner included under C7.1)
+  PASS: eligible[1] is B
+  PASS: is_recent_reward_winner(A, h=100, w=5) → false (50 outside [95,99])
+
+=== 11) Benchmark — compute_lottery_eligibility_set on 10k synthetic blocks ===
+  10k-block scan: 2919 µs  (2.92 ms)
+  PASS: eligible non-empty (sanity)
+  PASS: eligible.size() <= 9 distinct miners
+  PASS: scan < 50 ms (C9 G4.5 target met)
+
+=== V13.1) Dominance gate INACTIVE for height < 12100 ===
+  PASS: DOM still eligible at height 12099 (pre-gate) despite 100/288
+
+=== V13.2) Dominance gate ACTIVE at height 12100 ===
+  PASS: DOM excluded at height 12100 (gate active, 100/288 ≈ 34.7 %)
+  PASS: at least one small filler (<10 %) is eligible (gate did not nuke set)
+
+=== V13.3) 28/288 (9.72 %) is BELOW threshold → eligible ===
+  PASS: DOM eligible at 28/288 = 9.72 %
+
+=== V13.4) 29/288 (10.07 %) AT/ABOVE threshold → excluded ===
+  PASS: DOM excluded at 29/288 = 10.07 %
+
+=== V13.5) Dominant becomes eligible again when share drops < 10 % ===
+  PASS: 40/288 → excluded
+  PASS: 20/288 → eligible again (rolling recovery)
+
+=== V13.6) Recent-winner cooldown + dominance gate apply independently ===
+  PASS: DOM excluded by dominance gate (cooldown off)
+  PASS: SMALL eligible without cooldown (6/288 < 10 % → not dominant)
+  PASS: SMALL excluded by recent-winner cooldown
+  PASS: DOM still excluded by dominance gate (cooldown on)
+
+=== V13.7) Observed window < 288 still applies the 10 % rule ===
+  PASS: DOM excluded at 20/200 == 10 % (partial window meets threshold)
+
+=== V13.8) SbPoW gate excludes a pre-SbPoW (pre-7100) dormant miner ===
+  PASS: STALE excluded (last block 6010 < V11_PHASE2_HEIGHT = 7100)
+  PASS: ACTIVE eligible (has SbPoW blocks, last >= 7100, 10/288 < 10 %)
+
+=== V13.9) SbPoW gate OFF below 12100 (pre-SbPoW miner still eligible) ===
+  PASS: STALE eligible at 12099 (SbPoW gate off; pre-SbPoW history ignored)
+
+=== V14.1) PoPC gate active but no event source wired → all eligible (defensive no-op) ===
+  PASS: A eligible at V14_HEIGHT (PoPC gate short-circuits)
+  PASS: B eligible at V14_HEIGHT (PoPC gate short-circuits)
+
+=== V14.2) has_active_canonical_popc returns true (flag false) ===
+  PASS: helper short-circuits to true at height 15000
+  PASS: helper short-circuits to true at height 99999
+
+=== Summary: 77 passed, 0 failed ===
+  [test-lottery-eligibility] clean
+=== test-lottery-frequency (ASan+UBSan) ===
+=== test_lottery_frequency (V11 Phase 2 C5) ===
+
+=== 1) phase2_height == INT64_MAX → never trigger ===
+  PASS: height=0, INT64_MAX → false
+  PASS: height=7000 (post-Phase 1), INT64_MAX → false
+  PASS: height=7'100, INT64_MAX → false
+  PASS: height=1'000'000, INT64_MAX → false
+  PASS: height=INT64_MAX-1, INT64_MAX → false
+
+=== 2) pre-Phase 2 (height < phase2_height) → false ===
+  PASS: height=H-1 → false (pre-Phase 2)
+  PASS: height=0 → false (way pre-Phase 2)
+  PASS: height=H-2 → false even though height%3==1
+
+=== 6) Constants pinned ===
+  PASS: LOTTERY_HIGH_FREQ_WINDOW == 5000
+  PASS: LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW == 5
+  PASS: LOTTERY_RNG_DOMAIN == "SOST_LOTTERY_V11"
+  PASS: LOTTERY_RNG_DOMAIN_LEN == strlen of constant
+  PASS: V11_PHASE2_HEIGHT == 7100 (set by C13)
+
+=== 3) Bootstrap window: 2-of-3 by height%3 ===
+  PASS: phase2_height H itself: H%3==0 → false
+  PASS: H+1: (H+1)%3==1 → true
+  PASS: H+2: (H+2)%3==2 → true
+  PASS: H+3: (H+3)%3==0 → false
+  PASS: H+4: (H+4)%3==1 → true
+  PASS: H+5: (H+5)%3==2 → true
+  PASS: H+6: (H+6)%3==0 → false
+  PASS: 1500-block bootstrap stretch → exactly 1000 triggered (2/3)
+
+=== 4) Boundary at offset=LOTTERY_HIGH_FREQ_WINDOW (5000) ===
+  PASS: LOTTERY_HIGH_FREQ_WINDOW == 5000
+  PASS: offset=4999 (last bootstrap block, height%3==1) → true (bootstrap)
+  PASS: offset=5000 (first permanent block, height%3==2) → false (permanent)
+  PASS: H2: offset=4998, height%3==2 → true (bootstrap)
+  PASS: H2: offset=5001, height%3==2 → false (permanent rule flipped)
+
+=== 5) Permanent window: 1-of-3 by height%3 ===
+  PASS: 6000-block permanent stretch → exactly 2000 triggered (1/3)
+  PASS: permanent: height%3==2 → false
+  PASS: permanent: height%3==0 → true
+  PASS: permanent: height%3==1 → false
+  PASS: permanent: height%3==2 → false again
+
+=== 7) Production schedule with V11_PHASE2_HEIGHT (= 7100) ===
+  PASS: pre-activation height=0 → false
+  PASS: pre-activation height=1 → false
+  PASS: pre-activation height=1450 → false
+  PASS: pre-activation height=5000 → false
+  PASS: pre-activation height=6700 → false
+  PASS: pre-activation height=7000 → false
+  PASS: pre-activation height=7001 → false
+  PASS: pre-activation height=7050 → false
+  PASS: pre-activation height=7098 → false
+  PASS: pre-activation height=7099 → false
+  PASS: pre-boundary height=7099 (height < phase2) → false
+  PASS: activation height=7100 (bootstrap, 7100%3==2) → true
+  PASS: activation height=7101 (bootstrap, 7101%3==0) → false
+  PASS: activation height=7102 (bootstrap, 7102%3==1) → true
+  PASS: last bootstrap block height=12099 (offset=4999, 12099%3==0) → false
+  PASS: first permanent block height=12100 (offset=5000, 12100%3==1) → false
+  PASS: permanent height=12101 (h%3==2) → false
+  PASS: permanent height=12102 (h%3==0) → true (first permanent triggered)
+  PASS: permanent height=12103 (h%3==1) → false
+  PASS: (D) height=50001 (>= V15) → true (3-of-3)
+  PASS: (D) height=50002 (>= V15, was false under 1-of-3) → true (3-of-3)
+
+=== 8) DTD flip contiguity 12095..12110 (single sweep) ===
+  PASS: h=12095 bootstrap                  expected=FIRES got=FIRES
+  PASS: h=12096 bootstrap                  expected=---- got=----
+  PASS: h=12097 bootstrap                  expected=FIRES got=FIRES
+  PASS: h=12098 bootstrap                  expected=FIRES got=FIRES
+  PASS: h=12099 bootstrap (LAST)           expected=---- got=----
+  PASS: h=12100 permanent (FIRST)          expected=---- got=----
+  PASS: h=12101 permanent                  expected=---- got=----
+  PASS: h=12102 permanent (first 1-of-3)   expected=FIRES got=FIRES
+  PASS: h=12103 permanent                  expected=---- got=----
+  PASS: h=12104 permanent                  expected=---- got=----
+  PASS: h=12105 permanent                  expected=FIRES got=FIRES
+  PASS: h=12106 permanent                  expected=---- got=----
+  PASS: h=12107 permanent                  expected=---- got=----
+  PASS: h=12108 permanent                  expected=FIRES got=FIRES
+  PASS: h=12109 permanent                  expected=---- got=----
+  PASS: h=12110 permanent                  expected=---- got=----
+  PASS: bootstrap window 12095..12099 has 3 fires / 5 blocks
+  PASS: permanent window 12100..12110 has 3 fires / 11 blocks
+  PASS: V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW == 12100
+
+=== (D) V15 3-of-3: every block draws from V15_HEIGHT (=25000) ===
+  PASS: (D) pre-V15 height=24998 (1-of-3, %3==2) -> false
+  PASS: (D) pre-V15 height=24999 (1-of-3, %3==0) -> true
+  PASS: (D) V15 height=25000 (%3==1, false under 1-of-3) -> true
+  PASS: (D) height=25001 (%3==2, false under 1-of-3) -> true
+  PASS: (D) height=25002 (%3==0) -> true
+  PASS: (D) height=25003 (%3==1, false under 1-of-3) -> true
+  PASS: (D) [25000,25299] all 300 heights draw (3-of-3)
+  PASS: (D) first jackpot height 25290 is a draw block
+
+=== Summary: 79 passed, 0 failed ===
+  [test-lottery-frequency] clean
+SANITIZER RESULT rc=0

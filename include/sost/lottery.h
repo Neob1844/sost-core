@@ -106,11 +106,12 @@ inline constexpr int64_t LOTTERY_RNG_HISTORY_BLOCKS = 16;
 // Rules:
 //   1) phase2_height == INT64_MAX        →  return false (test-only sentinel for dormancy)
 //   2) height < phase2_height            →  return false (pre-Phase 2 block)
-//   3) offset = height - phase2_height
+//   3) height >= V15_HEIGHT              →  return true  ((D) 3-of-3, EVERY block, permanent — spec §1b)
+//   4) offset = height - phase2_height
 //      if offset < LOTTERY_HIGH_FREQ_WINDOW:
 //          return (height % 3) != 0     (2-of-3 bootstrap, first 5000 blocks)
 //      else:
-//          return (height % 3) == 0     (1-of-3 permanent, after bootstrap)
+//          return (height % 3) == 0     (1-of-3, until V15)
 //
 // Production: V11_PHASE2_HEIGHT == 7100 (params.h, set by C13).
 // This function returns false for every chain height < 7100 and the
@@ -129,34 +130,21 @@ inline bool is_lottery_block(int64_t height, int64_t phase2_height) {
     if (phase2_height == INT64_MAX) return false;
     if (height < phase2_height)     return false;
 
+    // (D) V15 draw-frequency change: from V15_HEIGHT the DTD draws on EVERY block
+    // (3-of-3), permanently. Height-anchored (uses the network-selected V15_HEIGHT
+    // constant: 25000 mainnet / 300 testnet) so a reorg across V15 does not shift the
+    // schedule. Founder decision 2026-08-02; spec §1b. This branch is reached only when
+    // phase2 is active and height >= phase2_height (guards above), and V15_HEIGHT is
+    // always > V11_PHASE2_HEIGHT, so the pre-V15 windows below are untouched.
+    if (height >= V15_HEIGHT) return true;
+
     const int64_t offset = height - phase2_height;
     if (offset < LOTTERY_HIGH_FREQ_WINDOW) {
         // Bootstrap: 2 of every 3 blocks.
         return (height % 3) != 0;
     }
-    // Steady state: 1 of every 3 blocks, permanently.
+    // Steady state: 1 of every 3 blocks, until V15 (then 3-of-3, branch above).
     return (height % 3) == 0;
-}
-
-// ---------------------------------------------------------------------------
-// V15 Final Decentralization Fork (docs/V15_FINAL_DECENTRALIZATION_SPEC.md).
-//
-// From V15_HEIGHT the Gold-Vault and PoPC coinbase outputs are ELIMINATED and
-// that 50% is redirected into the DTD lottery accumulator: EVERY block routes
-// through the Phase-2 machinery (50% miner / 50% DTD). A block still only PAYS
-// OUT the jackpot on a lottery-cadence block (is_lottery_block); non-lottery
-// V15 blocks only ACCUMULATE into pending_lottery_amount. Below V15 only
-// lottery-cadence blocks are "triggered" (unchanged behaviour).
-//
-// phase2_height / v15_height are passed for testability (production values:
-// V11_PHASE2_HEIGHT = 7100, V15_HEIGHT = 20000). CONSENSUS-CRITICAL: miner
-// (block template) and validator MUST go through this single helper so the
-// coinbase shape they agree on never diverges.
-inline bool dtd_block_triggered(int64_t height, int64_t phase2_height,
-                                int64_t v15_height) {
-    if (v15_height != INT64_MAX && height >= v15_height)
-        return phase2_height != INT64_MAX && height >= phase2_height;
-    return is_lottery_block(height, phase2_height);
 }
 
 // ---------------------------------------------------------------------------
@@ -261,17 +249,12 @@ struct LotteryEligibilityResult {
 //
 // Empty vector means no winner this block (rollover semantics live
 // at the caller — C7).
-// `recent_miner_window` (V15): when > 0, an address is a candidate ONLY if it
-// mined >=1 block in the sliding window [height - recent_miner_window,
-// height - 1] — this REPLACES the pre-V15 "mined ever" rule and drops dormant
-// addresses. When 0 (pre-V15 / tests) the pre-V15 "mined ever" rule applies.
 std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     const std::vector<LotteryMinedBlockView>& blocks,
     int64_t                                   height,
     const PubKeyHash&                         current_miner_pkh,
     int64_t                                   exclusion_window =
-        LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW,
-    int64_t                                   recent_miner_window = 0);
+        LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW);
 
 // V14 PoPC eligibility helper.
 //

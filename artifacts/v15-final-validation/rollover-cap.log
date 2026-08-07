@@ -1,0 +1,36 @@
+[rollcap] single miner A=sost1f85d468282c902c23d79835ab974052197e8f37d work=/tmp/v15rollcap.WyPmyK
+[rollcap] base=10000000000 cap=50000000000 roll_cap(cap-base)=40000000000
+[rollcap] PASS  ev1 h24 is a jackpot height
+[rollcap] PASS  ev1 h24 reserve_before=5103155590 (>0, live/not-retired)
+[rollcap] PASS  ev1 h24 rollover_before=0 == expected 0
+[rollcap] PASS  ev1 h24 prize_target=10000000000 == expected 10000000000
+[rollcap] PASS  ev1 h24 mined as NO-WINNER (tx_count=1, no jackpot payout)
+[rollcap] PASS  ev2 h30 is a jackpot height
+[rollcap] PASS  ev2 h30 reserve_before=5103155590 (>0, live/not-retired)
+[rollcap] PASS  ev2 h30 rollover_before=10000000000 == expected 10000000000
+[rollcap] PASS  ev2 h30 prize_target=20000000000 == expected 20000000000
+[rollcap] PASS  ev2 h30 mined as NO-WINNER (tx_count=1, no jackpot payout)
+[rollcap] PASS  ev3 h36 is a jackpot height
+[rollcap] PASS  ev3 h36 reserve_before=5103155590 (>0, live/not-retired)
+[rollcap] PASS  ev3 h36 rollover_before=20000000000 == expected 20000000000
+[rollcap] PASS  ev3 h36 prize_target=30000000000 == expected 30000000000
+[rollcap] PASS  ev3 h36 mined as NO-WINNER (tx_count=1, no jackpot payout)
+[rollcap] PASS  ev4 h42 is a jackpot height
+[rollcap] PASS  ev4 h42 reserve_before=5103155590 (>0, live/not-retired)
+[rollcap] PASS  ev4 h42 rollover_before=30000000000 == expected 30000000000
+[rollcap] PASS  ev4 h42 prize_target=40000000000 == expected 40000000000
+[rollcap] PASS  ev4 h42 mined as NO-WINNER (tx_count=1, no jackpot payout)
+[rollcap] PASS  ev5 h48 is a jackpot height
+[rollcap] PASS  ev5 h48 reserve_before=5103155590 (>0, live/not-retired)
+[rollcap] PASS  ev5 h48 rollover_before=40000000000 == expected 40000000000
+[rollcap] PASS  ev5 h48 prize_target=50000000000 == expected 50000000000
+[rollcap] PASS  ev5 h48 mined as NO-WINNER (tx_count=1, no jackpot payout)
+[rollcap] PASS  ev6 h54 is a jackpot height
+[rollcap] PASS  ev6 h54 reserve_before=5103155590 (>0, live/not-retired)
+[rollcap] PASS  ev6 h54 rollover_before=40000000000 == expected 40000000000
+[rollcap] PASS  ev6 h54 prize_target=50000000000 == expected 50000000000
+[rollcap] PASS  ev6 h54 mined as NO-WINNER (tx_count=1, no jackpot payout)
+[rollcap] PASS  CAP: rollover clamped at 40000000000 for events 5 & 6 (no unbounded growth)
+[rollcap] PASS  PERSIST: rollover_before(54)=40000000000 identical after restart
+
+[rollcap] RESULT: PASS — rollover accrues 0→…→cap-base and prize_target 100→…→500→500, clamped, no-winner, survives restart

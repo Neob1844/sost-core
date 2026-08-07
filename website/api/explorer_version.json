@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-11-v379-nav-sost-reference",
-  "note": "Added 'SOST Reference' (gold reference) page + nav link; Gold Vault CEX-listing reserve-right disclosure across pages."
+  "v": "2026-07-25-v386-v15-height-25000",
+  "note": "V15 activation rescheduled to block 25,000 and first Historical DTD Jackpot to block 25,290 (additional security validation + testing). Forces explorer reload."
 }
