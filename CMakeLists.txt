@@ -186,6 +186,10 @@ add_library(sost-core STATIC
     src/atomic_swap_watcher.cpp   # OTC-2 — local non-custodial watcher / auto-pilot (pure)
     src/atomic_swap_session.cpp   # OTC-4 — end-to-end swap session coordinator (pure)
     src/atomic_swap_policy.cpp    # OTC-5 — canonical cross-chain policy layer (pure)
+    src/bitcoin_backend.cpp       # OTC-6 — optional Bitcoin JSON-RPC backend (broadcast/queries; fail-closed, no libwally, no consensus)
+    src/btc_swap_state.cpp        # OTC-6 — BTC swap state machine + persistable record (pure, idempotent)
+    src/btc_funding.cpp           # OTC-6 — BTC HTLC funding coin-selection + gated signing orchestration
+    src/btc_watch.cpp             # OTC-6 — BTC-leg watch decision + restart-recovery store (pure + backend-fed)
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -540,6 +544,27 @@ add_test(NAME atomic-swap-session COMMAND test-atomic-swap-session)
 add_executable(test-atomic-swap-policy tests/test_atomic_swap_policy.cpp)
 target_link_libraries(test-atomic-swap-policy PRIVATE sost-core)
 add_test(NAME atomic-swap-policy COMMAND test-atomic-swap-policy)
+
+# OTC-6 — optional Bitcoin JSON-RPC backend (broadcast/queries). Fail-closed;
+# mock-transport unit test (no network, no bitcoind). Builds in Option A & B.
+add_executable(test-bitcoin-backend tests/test_bitcoin_backend.cpp)
+target_link_libraries(test-bitcoin-backend PRIVATE sost-core)
+add_test(NAME bitcoin-backend COMMAND test-bitcoin-backend)
+
+# OTC-6 — BTC swap state machine + persistable record (pure, idempotent).
+add_executable(test-btc-swap-state tests/test_btc_swap_state.cpp)
+target_link_libraries(test-btc-swap-state PRIVATE sost-core)
+add_test(NAME btc-swap-state COMMAND test-btc-swap-state)
+
+# OTC-6 — BTC HTLC funding coin-selection (pure) + gated signing orchestration.
+add_executable(test-btc-funding tests/test_btc_funding.cpp)
+target_link_libraries(test-btc-funding PRIVATE sost-core)
+add_test(NAME btc-funding COMMAND test-btc-funding)
+
+# OTC-6 — BTC-leg watch decision + restart-recovery store + chain reconcile.
+add_executable(test-btc-watch tests/test_btc_watch.cpp)
+target_link_libraries(test-btc-watch PRIVATE sost-core)
+add_test(NAME btc-watch COMMAND test-btc-watch)
 
 # V14.5 — atomic-swap HTLC consensus fix: CLAIM/REFUND block-path acceptance
 # (ConnectBlock guard, mirrors process_block) + validation-path R17-R24, gated

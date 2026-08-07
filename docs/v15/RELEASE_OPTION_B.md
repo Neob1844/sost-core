@@ -28,3 +28,18 @@ External requirements (Option B only): a Bitcoin node the operator broadcasts th
 confirmations/fees/timeout parameters, credentials via the operator's secret store (NEVER in Git).
 
 **OPTION B: NOT READY — BTC code buildable + unit-green but UNVALIDATED (needs bitcoind regtest).**
+
+---
+
+## OTC-6 update — BTC code completed around the signer (branch feat/btc-atomic-swap-complete)
+
+Option B is now **CODE READY** (not activated). Beyond the pure signer, the BTC
+leg now has: a fail-closed Bitcoin JSON-RPC backend (broadcast + queries), an
+idempotent swap state machine + persistable record, funding coin-selection, a
+reorg-aware watcher, a 0600 restart-recovery store with check-before-send
+reconciliation, and dashboard gating — all behind `SOST_BTC_ATOMIC_SWAP_ENABLED`
+(default OFF). Builds clean in Option A (0 libwally symbols) and Option B
+(libwally linked). New unit tests: 115/115. See `BTC_HTLC_COMPLETION.md`.
+
+**Still NOT READY for real funds** until the `bitcoind`-regtest round-trip is run
+(owner-waived here). `OPTION B: CODE READY — NOT ACTIVATED`.
