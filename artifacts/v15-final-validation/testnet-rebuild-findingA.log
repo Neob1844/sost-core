@@ -1,0 +1,12 @@
+[  5%] Building CXX object CMakeFiles/sost-core.dir/src/atomic_swap_policy.cpp.o
+[  5%] Building CXX object CMakeFiles/sost-core.dir/src/atomic_swap_watcher.cpp.o
+[ 11%] Linking CXX static library libsost-core.a
+[ 94%] Built target sost-core
+Consolidate compiler generated dependencies of target sost-node
+[100%] Linking CXX executable sost-node
+[100%] Built target sost-node
+Consolidate compiler generated dependencies of target sost-core
+[ 94%] Built target sost-core
+[100%] Building CXX object CMakeFiles/test-atomic-swap-policy.dir/tests/test_atomic_swap_policy.cpp.o
+[100%] Linking CXX executable test-atomic-swap-policy
+[100%] Built target test-atomic-swap-policy
