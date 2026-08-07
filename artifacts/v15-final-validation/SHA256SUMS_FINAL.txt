@@ -1,0 +1,13 @@
+f7c625fd7b203fd140f0142208ab1184fd69358187ececf36d13e9962d0e6661  sost-node
+f6c1075d22ac566269c4b40246b9d780bec6309481a885cb140001a18978a036  sost-cli
+19b8b09706be8f9959740e2b584fe407c453a81e1f9c1e769e791e3f467559c5  sost-miner
+ff53919b48cf3bcd6f1913ddaa609d6334c4ac26a6f6926fc7cb09aab324813f  sost-signtx
+
+# built from: main 65ebb139a6d9d7405140ac60ddd050b7ed39b0ad
+# compiler: g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+# flags: cmake -DCMAKE_BUILD_TYPE=Release (SOST_BTC_HTLC_SIGNING=OFF default), targets sost-node sost-cli sost-miner sost-signtx
+# profile: MAINNET  V15_HEIGHT=25000  first jackpot 25290  EVM HTLC 16000  relay 17000  BTC OFF
+# leak-check: 0 DEV/BTC symbols (devjackpotstate/inject-tx-at1/attack-jackpot/wally/SignBtcHtlc)
+# note: SHA differs from the earlier RC (0e576fe4) because main includes the BTC release-gate commit
+#       061de6be (atomic_swap_btc_signing.cpp env-gate + cstdlib) added after the RC. OFF-build behaviour
+#       is unchanged (BTC fail-closed); consensus code == canonical feature (0 diff). Explained, not a defect.
