@@ -87,6 +87,20 @@ bool FromHex(const std::string& s, std::array<uint8_t, N>& out) {
 }  // namespace
 
 std::string SerializeWatchedSwap(const WatchedSwap& s) {
+    // SECURITY — at-rest preimage exposure (audit threat model, watcher finding).
+    // This serialization includes the preimage in cleartext hex (field 10). Rationale + risk,
+    // documented rather than removed (removing persistence would risk LOSING the claim ability
+    // after a restart → fund loss for the claimant, which is worse):
+    //   * The preimage is only ever set by IngestRevealedPreimage(), i.e. AFTER it has been
+    //     observed on-chain in a counterparty CLAIM witness — at which point it is already PUBLIC.
+    //     So in the designed flow this persists an already-public value.
+    //   * If a wallet arms the watcher with its OWN not-yet-revealed secret to auto-claim, there is
+    //     a short at-rest window before the claim broadcasts and makes the secret public.
+    //   * The preimage becomes public at the FIRST CLAIM broadcast regardless.
+    // CALLER OBLIGATION: the wallet that writes this watchlist to disk MUST create the file with
+    // owner-only permissions (0600) in a user-protected directory, and treat it like key material.
+    // The watcher itself never writes the file (it only returns this string).
+    //
     // Pipe-delimited, fixed field order. swap_id must not contain '|' or '\n'.
     std::ostringstream o;
     o << s.swap_id << '|'
