@@ -187,6 +187,7 @@ add_library(sost-core STATIC
     src/atomic_swap_session.cpp   # OTC-4 — end-to-end swap session coordinator (pure)
     src/atomic_swap_policy.cpp    # OTC-5 — canonical cross-chain policy layer (pure)
     src/bitcoin_backend.cpp       # OTC-6 — optional Bitcoin JSON-RPC backend (broadcast/queries; fail-closed, no libwally, no consensus)
+    src/btc_swap_state.cpp        # OTC-6 — BTC swap state machine + persistable record (pure, idempotent)
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -547,6 +548,11 @@ add_test(NAME atomic-swap-policy COMMAND test-atomic-swap-policy)
 add_executable(test-bitcoin-backend tests/test_bitcoin_backend.cpp)
 target_link_libraries(test-bitcoin-backend PRIVATE sost-core)
 add_test(NAME bitcoin-backend COMMAND test-bitcoin-backend)
+
+# OTC-6 — BTC swap state machine + persistable record (pure, idempotent).
+add_executable(test-btc-swap-state tests/test_btc_swap_state.cpp)
+target_link_libraries(test-btc-swap-state PRIVATE sost-core)
+add_test(NAME btc-swap-state COMMAND test-btc-swap-state)
 
 # V14.5 — atomic-swap HTLC consensus fix: CLAIM/REFUND block-path acceptance
 # (ConnectBlock guard, mirrors process_block) + validation-path R17-R24, gated
