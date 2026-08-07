@@ -20,11 +20,11 @@
 | Rollout + rollback runbook | **PASS** | RUNBOOK_CUTOVER.md | f6ad4296 |
 | RC binaries + SHA-256 manifest | **PASS** built, leak-check CLEAN | RC_MANIFEST.txt | f3f1cfde |
 | pre-V15 compat (code-level B/D) | **PASS** | PREV15_COMPAT_REPORT.md | 9bcf8504 |
-| pre-V15 compat (binary A/C/E) | **WAITING_EXTERNAL_RESOURCE** | needs deployed v0.3.2 + chain snapshot on 2nd box | — |
+| pre-V15 compat (binary A/C/E) | **WAIVED_BY_OWNER — RISK_ACCEPTED** | needs deployed v0.3.2 + chain snapshot on 2nd box | — |
 | ctest testnet | **PASS** 102/102 | testnet-ctest.log (SOST_TESTNET_FORKS build; boundary test made profile-aware) | 2ed7167a |
-| Full sanitized ctest (ASan/UBSan whole suite) | **WAITING_EXTERNAL_RESOURCE** | 2nd box (§6/7) | — |
-| Testnet long SbPoW run (~8.5 h, real) | **WAITING_EXTERNAL_RESOURCE** | 2nd box (§12) | — |
-| cppcheck / clang-tidy cross-check | **WAITING_EXTERNAL_RESOURCE** | tools not installable here (no sudo) | — |
+| Full sanitized ctest (ASan/UBSan whole suite) | **WAIVED_BY_OWNER — RISK_ACCEPTED** | 2nd box (§6/7) | — |
+| Testnet long SbPoW run (~8.5 h, real) | **WAIVED_BY_OWNER — RISK_ACCEPTED** | 2nd box (§12) | — |
+| cppcheck / clang-tidy cross-check | **WAIVED_BY_OWNER — RISK_ACCEPTED** | tools not installable here (no sudo) | — |
 | merge --no-ff → tag → deploy → cutover | **WAITING_HUMAN_CUTOVER** | RUNBOOK_CUTOVER.md; blocks 24,900–25,000 | — |
 
 ## Report items
@@ -74,18 +74,45 @@ because it hardcoded mainnet heights — a test-infra issue (class B), fixed by 
 (passes in mainnet + testnet + devnet). So of the original 5 external gates, **1 is now PASS**; the
 remaining 4 still require the 2nd (non-miner) box and/or external artifacts.
 
-## Release criteria — THREE tiers (product decision)
-Atomic Swap is now MANDATORY for the V15 RELEASE (not just consensus). The final verdict is split:
+## OWNER RELEASE DECISION (authorized) — no second machine, no more heavy tests
+The owner has decided to finish the code and ship without executing the remaining heavy validation.
+Per the owner's rule, **unexecuted validations are NOT marked PASS** — they are recorded as
+`WAIVED_BY_OWNER — RISK_ACCEPTED`. The owner explicitly accepts the resulting risk (chain split,
+crash, pre-existing-state incompatibility, or Atomic-Swap fund lock/loss).
 
-**V15 CONSENSUS READINESS: NOT READY** — 3 hard consensus gates remain WAITING_EXTERNAL_RESOURCE
-(full sanitized ctest, long real testnet SbPoW, pre-V15 binary compat) + cppcheck; none is a defect.
-(ctest testnet now PASS; every other consensus gate PASS.)
+### Gates WAIVED (never run → never PASS)
+| Gate | Status |
+|------|--------|
+| pre-V15 compatibility (OLD v0.3.2 ↔ NEW) | **WAIVED_BY_OWNER — RISK_ACCEPTED** |
+| ASan/UBSan full suite | **WAIVED_BY_OWNER — RISK_ACCEPTED** (consensus arithmetic subset WAS run clean: 361/0) |
+| testnet long SbPoW (~8.5 h real) | **WAIVED_BY_OWNER — RISK_ACCEPTED** |
+| BTC bitcoind regtest real (redeem/refund) | **WAIVED_BY_OWNER — RISK_ACCEPTED** |
+| cross-chain E2E real | **WAIVED_BY_OWNER — RISK_ACCEPTED** |
+| dashboard real-liquidity E2E | **WAIVED_BY_OWNER — EXTERNAL_DEPENDENCY** (no counterparty/orderbook) |
+| cppcheck / clang-tidy | **WAIVED_BY_OWNER — RISK_ACCEPTED** (GCC `-fanalyzer` WAS run clean on all V15 code) |
+| EVM SafeERC20 external audit | **WAITING_EXTERNAL_AUDIT** (send ATOMIC_SWAP_AUDIT_SCOPE.md now) |
 
-**ATOMIC SWAP READINESS: NOT READY** — EVM HTLC active @15000 + policy layer done, but BTC HTLC is
-gated OFF (needs bitcoind-regtest real redeem/refund + cross-chain E2E), EVM SafeERC20 needs the
-Foundry suite + external audit, dashboard needs E2E. See FASE 9B plan; start the EVM audit in parallel
-(multi-week lead time).
+### Code-completion done this session (owner "finish the code" order)
+- Audit **finding A** FIXED: policy token matrix corrected to the real minimal-IERC20 contract
+  (USDT/PAXG → Disabled, no false SafeERC20 claim); policy test 49/49 enforces it.
+- Audit **finding B** FIXED: stale atomic-swap activation height 15,000 → **16,000** (relay 17,000)
+  in the operational console/explorer/dex.
+- Watcher at-rest **preimage** exposure: documented (public after first CLAIM; persistence kept for
+  restart-recovery; caller must write the file 0600) — no risky refactor; not wired to disk anyway.
+- **BTC HTLC**: script/test-vectors real+tested; signing is a deliberate **fail-closed disabled stub**
+  (returns ok=false even with the flag ON — no fake-signed tx, no fund-loss path). Left honest (not
+  hidden); real BTC signing + bitcoind regtest is deferred/WAIVED.
+- Release scan: no release-blocking TODO/FIXME/STUB in V15+swap code (only the intentional BTC stubs).
 
-**V15 RELEASE READINESS: NOT READY** = Consensus + Atomic Swap, neither complete yet.
-
-**V15 MAINNET: WAITING_HUMAN_CUTOVER.**
+## Terminal verdict (owner-waived release)
+**V15 CODE: COMPLETE** — consensus code complete + validated (attack matrix, rollover, reserve,
+payout, boundary 25000/25290, reorg/restart/reindex, B-1 backstop); mainnet+testnet ctest green.
+**ATOMIC SWAP CODE: COMPLETE (EVM) / INCOMPLETE (BTC, intentionally gated OFF, fail-closed)** — EVM
+HTLC live @16000, Foundry 57/57, policy/dashboard corrected; BTC signing is a documented fail-closed
+stub, not activated.
+**RELEASE ARTIFACTS: READY** — clean reproducible mainnet RC build + SHA-256 manifest (RC_MANIFEST.txt);
+dev-symbol leak-check CLEAN. (SHA-256 refreshed for the finding-A change.)
+**UNEXECUTED VALIDATION: RISK ACCEPTED BY OWNER** — see the WAIVED table above; nothing unexecuted is
+marked PASS.
+**V15 MAINNET: READY FOR DEPLOYMENT PROCEDURE** (owner-waived) — deployment is a separate, human-
+supervised step before block 25,000; do NOT merge/deploy in this session. `WAITING_HUMAN_CUTOVER`.
