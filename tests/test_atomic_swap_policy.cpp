@@ -259,12 +259,15 @@ int main() {
         // No EVM asset is over-claimed as Available (nothing audited/deployed/E2E).
         TEST("AM1 ETH testing",  EvmAssetStatusFor(Asset::ETH)  == EvmAssetStatus::Testing);
         TEST("AM2 BNB testing",  EvmAssetStatusFor(Asset::BNB)  == EvmAssetStatus::Testing);
-        TEST("AM3 USDC testing", EvmAssetStatusFor(Asset::USDC) == EvmAssetStatus::Testing);
-        TEST("AM4 USDT testing (now handled by SafeERC20)",
-             EvmAssetStatusFor(Asset::USDT) == EvmAssetStatus::Testing);
-        TEST("AM5 XAUT testing", EvmAssetStatusFor(Asset::XAUT) == EvmAssetStatus::Testing);
-        TEST("AM6 PAXG testing (fee-on-transfer handled via balance-delta)",
-             EvmAssetStatusFor(Asset::PAXG) == EvmAssetStatus::Testing);
+        TEST("AM3 USDC testing (standard bool ERC-20)", EvmAssetStatusFor(Asset::USDC) == EvmAssetStatus::Testing);
+        // The minimal-IERC20 + require(ok) contract REVERTS the lock for a no-bool token, so real
+        // USDT is NOT supported and must not be advertised (regression guard for the over-claim fix).
+        TEST("AM4 USDT disabled (no-bool token reverts at lock)",
+             EvmAssetStatusFor(Asset::USDT) == EvmAssetStatus::Disabled);
+        TEST("AM5 XAUT testing (standard bool ERC-20)", EvmAssetStatusFor(Asset::XAUT) == EvmAssetStatus::Testing);
+        // Fee-on-transfer escrows less than nominal, so claim/refund revert → stuck. NOT supported.
+        TEST("AM6 PAXG disabled (fee-on-transfer stuck-until-refund)",
+             EvmAssetStatusFor(Asset::PAXG) == EvmAssetStatus::Disabled);
         TEST("AM7 BTC disabled in EVM path",
              EvmAssetStatusFor(Asset::BTC) == EvmAssetStatus::Disabled);
         bool none_available =

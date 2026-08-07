@@ -287,15 +287,22 @@ RpcRecovery DecideRpcRecovery(const RpcHealthInput& in) {
 // 6. Truthful per-asset EVM support matrix
 // ---------------------------------------------------------------------------
 //
-// Ground truth as of this workstream:
-//   - The AtomicSwapHTLC contract now uses a SafeERC20 path (no-bool tolerant)
-//     + balance-delta accounting, so it is mechanically correct for native
-//     ETH/BNB, standard ERC-20 (USDC/XAUT), no-bool tokens (real USDT) and
-//     fee-on-transfer tokens (PAXG).
-//   - HOWEVER nothing is externally audited, deployed to a live network, or
-//     verified end-to-end on-chain. So the HONEST ceiling for every EVM leg is
-//     Testing (NOT Available). Nothing is Disabled anymore (the two previously
-//     broken cases — USDT no-bool and PAXG fee-on-transfer — are now handled).
+// Ground truth as of HEAD (verified against contracts/atomic-swap/src/AtomicSwapHTLC.sol
+// + its Foundry suite — the code, NOT an older summary):
+//   - The AtomicSwapHTLC contract uses a MINIMAL IERC20 interface with `require(ok)` on the
+//     boolean return (AtomicSwapHTLC.sol ~53, ~194, ~229). It does NOT use OpenZeppelin
+//     SafeERC20 and does NOT do balance-delta accounting. Therefore:
+//       * native ETH/BNB and standard bool-returning ERC-20 (USDC, XAUT) work → Testing;
+//       * a NO-BOOL token (real USDT) makes `bool ok = transferFrom(...)` revert on the empty
+//         return-data ABI-decode → the LOCK itself reverts (Foundry
+//         test_lockERC20_rejectsNoReturnERC20) → NOT supported → Disabled;
+//       * a FEE-ON-TRANSFER token (PAXG) LOCKS with the nominal amount but the contract only
+//         holds amount-fee, so the CLAIM/REFUND transfer of the nominal amount reverts →
+//         funds stuck until refund (Foundry
+//         test_lockERC20_feeOnTransferTokenIsUnsupported_lockSucceedsClaimFails) → Disabled.
+//   - Nothing is externally audited, deployed to a live network, or E2E-verified on-chain, so
+//     the HONEST ceiling for the SUPPORTED legs is Testing (never Available). The contract
+//     FAILS CLOSED on the unsupported tokens (no theft), but they must NOT be advertised.
 const char* EvmAssetStatusName(EvmAssetStatus s) {
     switch (s) {
         case EvmAssetStatus::Disabled:  return "DISABLED";
@@ -316,11 +323,18 @@ EvmAssetStatus EvmAssetStatusFor(Asset a) {
             // Native path: mechanically complete + unit-tested; not deployed/E2E.
             return EvmAssetStatus::Testing;
         case Asset::USDC:
-        case Asset::USDT:
         case Asset::XAUT:
-        case Asset::PAXG:
-            // ERC-20 path via SafeERC20 + balance-delta; unaudited/undeployed.
+            // Standard bool-returning ERC-20 via the minimal IERC20 + require(ok) path;
+            // mechanically works, unaudited/undeployed → Testing.
             return EvmAssetStatus::Testing;
+        case Asset::USDT:
+            // No-bool-return token: the LOCK reverts (require(ok) on empty return-data).
+            // The contract does NOT tolerate it. NOT supported.
+            return EvmAssetStatus::Disabled;
+        case Asset::PAXG:
+            // Fee-on-transfer token: LOCK succeeds with the nominal amount but the contract
+            // holds less, so CLAIM/REFUND revert → funds stuck. NOT safely supported.
+            return EvmAssetStatus::Disabled;
         case Asset::BTC:
             // BTC is NOT the EVM workstream — BTC HTLC signing stays OFF.
             return EvmAssetStatus::Disabled;
@@ -340,20 +354,22 @@ std::string EvmAssetStatusReason(Asset a) {
             return "Native BNB (same contract on BNB Chain). Mechanically complete and "
                    "unit-tested; NOT audited, deployed, or E2E-verified on-chain.";
         case Asset::USDC:
-            return "Standard bool-returning ERC-20 via the SafeERC20 path. Unaudited/undeployed. "
-                   "ISSUER_FREEZE_RISK: Circle can freeze escrowed funds.";
+            return "Standard bool-returning ERC-20 via the minimal IERC20 + require(ok) path. "
+                   "Unaudited/undeployed. ISSUER_FREEZE_RISK: Circle can freeze escrowed funds.";
         case Asset::USDT:
-            return "Legacy no-bool-return ERC-20 now handled by the SafeERC20 path (empty "
-                   "return treated as success). Unaudited/undeployed. ISSUER_FREEZE_RISK: "
-                   "Tether can freeze escrowed funds.";
+            return "NOT SUPPORTED by the current contract: real USDT does not return a bool, so "
+                   "`require(ok)` reverts on the empty return-data — the LOCK itself reverts "
+                   "(Foundry test_lockERC20_rejectsNoReturnERC20). Do not offer until the contract "
+                   "adopts a SafeERC20-style no-bool-tolerant path.";
         case Asset::XAUT:
-            return "Standard ERC-20 gold token via the SafeERC20 path. Unaudited/undeployed. "
-                   "ISSUER_FREEZE_RISK: TG Commodities can freeze escrowed funds.";
+            return "Standard bool-returning ERC-20 gold token via the minimal IERC20 + require(ok) "
+                   "path. Unaudited/undeployed. ISSUER_FREEZE_RISK: TG Commodities can freeze funds.";
         case Asset::PAXG:
-            return "Fee-on-transfer capable ERC-20; balance-delta accounting records the ACTUAL "
-                   "received amount so claim/refund never revert on a shortfall, but the claimer "
-                   "receives the escrowed amount minus the token's outbound fee (delivers less "
-                   "than nominal). Unaudited/undeployed. ISSUER_FREEZE_RISK: Paxos can freeze.";
+            return "NOT SUPPORTED by the current contract: fee-on-transfer means the LOCK escrows "
+                   "less than the nominal amount, so the CLAIM/REFUND transfer of the nominal amount "
+                   "reverts and funds are stuck until refund (Foundry "
+                   "test_lockERC20_feeOnTransferTokenIsUnsupported_lockSucceedsClaimFails). Do not "
+                   "offer until the contract adopts balance-delta accounting.";
         case Asset::BTC:
             return "BTC HTLC signing is a separate workstream and stays OFF in the EVM path.";
     }
