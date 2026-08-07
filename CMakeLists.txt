@@ -86,6 +86,22 @@ if(SOST_TESTNET_FORKS)
     message(WARNING "SOST_TESTNET_FORKS=ON -- V14 activates at block 200. TESTNET ONLY, do not deploy to mainnet.")
 endif()
 
+# DEVNET_FAST — an isolated fast development chain (Profile::DEV + MAGIC_DEV, distinct
+# schedule + lightweight PoW). NEVER for mainnet or normal testnet. It is mutually
+# exclusive with SOST_TESTNET_FORKS: the two select different schedules, and a single
+# binary must commit to exactly one network identity so it can never accept the other's
+# blocks. See docs/DEVNET_FAST.md.
+option(SOST_DEVNET_FORKS
+    "Build the isolated DEVNET_FAST development chain (low heights, fast PoW). NEVER for mainnet/testnet."
+    OFF)
+if(SOST_DEVNET_FORKS)
+    if(SOST_TESTNET_FORKS)
+        message(FATAL_ERROR "SOST_DEVNET_FORKS and SOST_TESTNET_FORKS are mutually exclusive — pick one network identity.")
+    endif()
+    add_compile_definitions(SOST_DEVNET_FORKS)
+    message(WARNING "SOST_DEVNET_FORKS=ON -- DEVNET_FAST fast-mine chain. Profile::DEV only. NEVER deploy to mainnet or testnet.")
+endif()
+
 if(SOST_ENABLE_PHASE2_SBPOW)
     include(CheckIncludeFiles)
     include(CheckSymbolExists)
@@ -169,6 +185,7 @@ add_library(sost-core STATIC
     src/atomic_swap_orderbook.cpp # OTC-2 — off-chain maker/taker order board (pure)
     src/atomic_swap_watcher.cpp   # OTC-2 — local non-custodial watcher / auto-pilot (pure)
     src/atomic_swap_session.cpp   # OTC-4 — end-to-end swap session coordinator (pure)
+    src/atomic_swap_policy.cpp    # OTC-5 — canonical cross-chain policy layer (pure)
     # Phase 7: wallet security layer (no consensus)
     src/addressbook.cpp
     src/wallet_policy.cpp
@@ -518,6 +535,12 @@ add_executable(test-atomic-swap-session tests/test_atomic_swap_session.cpp)
 target_link_libraries(test-atomic-swap-session PRIVATE sost-core)
 add_test(NAME atomic-swap-session COMMAND test-atomic-swap-session)
 
+# OTC-5 — canonical policy layer (timeout order, swapId derivation, funding,
+# EVM preimage extraction, RPC recovery, asset matrix). Pure; no consensus.
+add_executable(test-atomic-swap-policy tests/test_atomic_swap_policy.cpp)
+target_link_libraries(test-atomic-swap-policy PRIVATE sost-core)
+add_test(NAME atomic-swap-policy COMMAND test-atomic-swap-policy)
+
 # V14.5 — atomic-swap HTLC consensus fix: CLAIM/REFUND block-path acceptance
 # (ConnectBlock guard, mirrors process_block) + validation-path R17-R24, gated
 # at V14_5_HEIGHT (mainnet 16000). Regression guard for the live mainnet bug.
@@ -714,27 +737,6 @@ add_executable(test-dtd-control tests/test_dtd_control.cpp)
 target_link_libraries(test-dtd-control PRIVATE sost-core)
 add_test(NAME dtd-control COMMAND test-dtd-control)
 
-# V15 Final Decentralization Fork — consensus unit tests.
-# Always built — pure functions. Verifies dtd_block_triggered (every block
-# routed through DTD from V15_HEIGHT, only lottery-cadence blocks pay out),
-# the sliding recency-window eligibility rule, the 50/50 split, and that the
-# deprecated PoPC/Gold-Vault automation gates are retired on mainnet.
-add_executable(test-v15-decentralization tests/test_v15_decentralization.cpp)
-target_link_libraries(test-v15-decentralization PRIVATE sost-core)
-add_test(NAME v15-decentralization COMMAND test-v15-decentralization)
-
-# V15 Historical DTD Jackpot — pure amount/cadence logic (Option A wind-down).
-# Constitutional-spend/UTXO/reorg parts land in the integration suite later.
-add_executable(test-v15-jackpot tests/test_v15_jackpot.cpp)
-target_link_libraries(test-v15-jackpot PRIVATE sost-core)
-add_test(NAME v15-jackpot COMMAND test-v15-jackpot)
-add_executable(test-v15-jackpot-runtime tests/test_v15_jackpot_runtime.cpp)
-target_link_libraries(test-v15-jackpot-runtime PRIVATE sost-core)
-add_test(NAME v15-jackpot-runtime COMMAND test-v15-jackpot-runtime)
-add_executable(test-v15-jackpot-reorg tests/test_v15_jackpot_reorg.cpp)
-target_link_libraries(test-v15-jackpot-reorg PRIVATE sost-core)
-add_test(NAME v15-jackpot-reorg COMMAND test-v15-jackpot-reorg)
-
 # V11 Phase 2 — component D (Lottery): rollover state machinery.
 # Always built — pure functions, no Schnorr, no chain state writes
 # (StoredBlock / BlockUndo persistence is C8). Verifies IDLE / UPDATE
@@ -753,6 +755,19 @@ add_test(NAME lottery-rollover COMMAND test-lottery-rollover)
 add_executable(test-coinbase-phase2 tests/test_coinbase_phase2.cpp)
 target_link_libraries(test-coinbase-phase2 PRIVATE sost-core)
 add_test(NAME coinbase-phase2 COMMAND test-coinbase-phase2)
+
+# V15 Historical DTD Jackpot (J) — pure consensus core (payout/rollover/cap,
+# reserve membership, deterministic UTXO ordering + selection). Header-only
+# logic in include/sost/jackpot.h; wiring to connect/validation lands later.
+add_executable(test-jackpot tests/test_jackpot.cpp)
+target_link_libraries(test-jackpot PRIVATE sost-core)
+add_test(NAME jackpot COMMAND test-jackpot)
+
+# V15 activation boundary (P9) — header-only; compiled per active profile. On mainnet it must
+# see V15_HEIGHT=25000 and a clean 24999/25000 boundary + jackpot-first at 25290 (no off-by-one).
+add_executable(test-v15-activation-boundary tests/test_v15_activation_boundary.cpp)
+target_link_libraries(test-v15-activation-boundary PRIVATE sost-core)
+add_test(NAME v15-activation-boundary COMMAND test-v15-activation-boundary)
 
 # V11 Phase 2 — miner ↔ validator integration (C11).
 # Always built. Exercises the full handshake: build coinbase the way the

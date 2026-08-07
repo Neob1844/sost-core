@@ -316,7 +316,7 @@
 <script src="js/security.js"></script>
 <script src="js/wallet-export.js"></script>
 <script src="js/sost-gateway.js"></script>
-<script src="js/nav-toggle.js" defer></script>
+<script src="js/nav-toggle.js?v=v380" defer></script>
 </head>
 <body>
 
@@ -1772,7 +1772,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <!-- Gold Vault Signal Receipt (Phase 2A) — NON-BINDING signed signal preview -->
       <div id="gold-vault-signal" class="card" style="padding:16px 18px;max-width:640px;margin-top:16px">
-        <h3 style="margin:0 0 8px;color:#FFD700">Gold Vault Signal Receipt</h3>
+        <h3 style="margin:0 0 8px;color:#FFD700">Gold Vault Signal Receipt &mdash; RETIRED</h3>
         <div style="font-size:12px;color:var(--red-primary);border:1px solid var(--border-dim);border-radius:6px;padding:10px 12px;margin-bottom:12px;background:rgba(255,0,0,.05)">
           &#9888; <strong>This is a signed signal preview.</strong> It is <strong>not binding, not weighted</strong>, and does <strong>not execute any reserve action</strong>. It only produces a signed receipt you can keep or share.
         </div>
@@ -1782,8 +1782,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <div><strong>Status:</strong> NON_BINDING_SIGNAL_PREVIEW</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="gvSignSignal('YES')">Sign YES</button>
-          <button class="btn" onclick="gvSignSignal('NO')">Sign NO</button>
+          <div style="margin:10px 0;padding:9px 12px;border:1px solid #2f9e6f;border-radius:8px;background:rgba(47,158,111,.10);color:#9ae6c4;font-size:12px">&#128274; <b>RETIRED</b> &mdash; Gold Vault governance is replaced by the <b>V15 Historical DTD Jackpot</b>: the historical Gold Vault + PoPC balances are returned to active miners by protocol rule (no treasury, no vote).</div>
+          
         </div>
         <div id="gvSignalOut" style="margin-top:12px;font-size:12px"></div>
         <div style="font-size:10px;color:var(--text-dim);margin-top:10px;border-top:1px solid var(--border-dim);padding-top:8px">
@@ -1890,7 +1890,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <!-- Safety -->
         <ul style="font-size:12px;color:var(--text-dim);line-height:1.7;margin:0 0 12px;padding-left:18px">
-          <li>PoPC base activates at block 20,000. Gold Boost: future only. Gold Vault governance: future only.</li>
+          <li>PoPC base activates at block 25,000. Gold Boost: future only. Gold Vault governance: future only.</li>
           <li id="gwPopcBondPt"></li>
         </ul>
 

@@ -1,0 +1,22 @@
+SOST V15 Release Candidate manifest
+commit:   0e576fe480122f749dbe37cd42e6fcda8460b6fd   (binaries built at ac41da59; commits since are docs-only → byte-identical)
+branch:   feat/v15-jackpot-explorer-card   (main=b822db4c, NOT merged, NOT tagged)
+built:    clean Release build (rm -rf build-rc), 2026-08-07T09:15:29Z
+compiler: g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+cmake:    cmake version 3.22.1
+profile:  MAINNET (SOST_DEVNET_FORKS=OFF, SOST_TESTNET_FORKS=OFF)  V15_HEIGHT=25000
+build:    cmake -S . -B build-rc -DCMAKE_BUILD_TYPE=Release && cmake --build build-rc --target sost-node sost-cli sost-miner sost-signtx
+dev-symbol-leak-check: CLEAN (no devjackpotstate/devsetreorgfailpoint/devchainstate/inject-tx-at1/attack-jackpot/dump-block)
+testnet build: sost-node + tests compile clean (SOST_TESTNET_FORKS=ON); policy test 49/49 in both profiles
+
+NOTE ON REPRODUCIBILITY: these SHA-256 are byte-identical to the prior RC (commit 521dad48). Audit
+finding-A (policy token matrix) changed src/atomic_swap_policy.cpp + its test + the dashboard/docs, but
+EvmAssetStatusFor/Reason are NOT linked into the production node/miner/cli/signtx (0 symbols — the
+linker dead-strips them; the live dashboard blocks USDT/PAXG on its own). So the CONSENSUS binaries are
+correctly unchanged by finding-A. Finding-B is website-only (no binary).
+
+SHA-256 (build-rc):
+801516da500f22af33b431345ef2431f3418f9bb7cb9ed9201cb2095ca4adf82  sost-node
+304a0c2096cc5fe9b79639ff237ca0388c213e0f3753b8ebd1e31a304b8991b3  sost-cli
+f80cc60619896a08aca0291b67eaa1a4c88d0f9e2ab23acbdd5029c31d6b0f9c  sost-miner
+b294bfa4dcbba59cf171e207dbcefe1ac975cf64262d8c987105b96f62cb87bb  sost-signtx

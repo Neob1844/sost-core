@@ -928,7 +928,22 @@ TxValidationResult ValidateCoinbaseConsensus(
         && height >= phase2_ctx->phase2_height
         && phase2_ctx->triggered;
 
-    if (phase2_triggered) {
+    // V15 emission transition (T): from V15_HEIGHT onward the Gold Vault and
+    // PoPC Pool stop being funded. On a NON-triggered (non-draw) block the two
+    // former 25% slices are redirected to the DTD lottery pending, so the block
+    // takes the SAME miner-only "UPDATE" coinbase shape as a triggered
+    // empty-eligibility block. It routes through the existing, fully-tested
+    // UPDATE validation below (paid_out is false on any non-triggered block, so
+    // it lands in UPDATE, never PAYOUT). Pre-V15 blocks are untouched: the
+    // 50/25/25 pre-Phase-2 path still runs for every height < V15_HEIGHT.
+    const bool v15_idle_redirect =
+        phase2_ctx
+        && phase2_ctx->phase2_height != INT64_MAX
+        && height >= phase2_ctx->phase2_height
+        && height >= sost::V15_HEIGHT
+        && !phase2_ctx->triggered;
+
+    if (phase2_triggered || v15_idle_redirect) {
         const int64_t total_reward = subsidy + total_fees;
         const auto split = sost::lottery::phase2_coinbase_split(total_reward);
         const int64_t expected_miner   = split.miner_share;
@@ -1047,9 +1062,11 @@ TxValidationResult ValidateCoinbaseConsensus(
         }
 
         // -------- UPDATE — 1 output (MINER only) --------
-        // Triggered + empty eligibility set: the lottery share is
-        // withheld in chain-state pending, and the coinbase emits
-        // ONLY a miner output. GOLD and POPC outputs are OMITTED.
+        // Reached either by: (a) a triggered block with an empty eligibility
+        // set, or (b) a post-V15 non-triggered block (v15_idle_redirect). In
+        // both cases the lottery share is withheld in chain-state pending and
+        // the coinbase emits ONLY a miner output; GOLD and POPC outputs are
+        // OMITTED. (b) is the V15 Gold Vault/PoPC emission transition (T).
 
         if (real_outs != 1) {
             return TxValidationResult::Fail(TxValCode::CB11_LOTTERY_SHAPE,

@@ -1,0 +1,102 @@
+No files changed, compilation skipped
+
+Ran 5 tests for test/OtcRehearsal.t.sol:OtcRehearsal
+[PASS] test_rehearse_erc20Claim() (gas: 262340)
+Logs:
+  == OTC-5 EVM rehearsal ==
+  HTLC: 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+  MockERC20: 0x2e234DAe75C793f67A35089C9d99245E1C58470b
+  [erc20] locked; HTLC token bal: 1000000000000000000000
+  [erc20] claimed; BOB token bal: 1000000000000000000000
+  [erc20] PASS: delivered, drained
+
+[PASS] test_rehearse_nativeClaim() (gas: 204476)
+Logs:
+  == OTC-5 EVM rehearsal ==
+  HTLC: 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+  MockERC20: 0x2e234DAe75C793f67A35089C9d99245E1C58470b
+  [native] locked 1 ETH; HTLC balance: 1000000000000000000
+  [native] claimed; BOB +wei: 1000000000000000000
+  [native] PASS: CLAIMED, drained to 0
+
+[PASS] test_rehearse_nativeRefund() (gas: 197533)
+Logs:
+  == OTC-5 EVM rehearsal ==
+  HTLC: 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+  MockERC20: 0x2e234DAe75C793f67A35089C9d99245E1C58470b
+  [refund] refund-before-T2 correctly reverted
+  [refund] refunded; ALICE +wei: 500000000000000000
+  [refund] PASS: REFUNDED
+
+[PASS] test_rehearse_preimageMatchesHashlock() (gas: 6305)
+Logs:
+  == OTC-5 EVM rehearsal ==
+  HTLC: 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+  MockERC20: 0x2e234DAe75C793f67A35089C9d99245E1C58470b
+  [link] sha256(secret) == hashlock (shared across SOST/BTC/EVM)
+
+[PASS] test_rehearse_wrongPreimage() (gas: 183088)
+Logs:
+  == OTC-5 EVM rehearsal ==
+  HTLC: 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+  MockERC20: 0x2e234DAe75C793f67A35089C9d99245E1C58470b
+  [neg] wrong-preimage claim rejected
+
+Suite result: ok. 5 passed; 0 failed; 0 skipped; finished in 1.05ms (567.30µs CPU time)
+
+Ran 52 tests for test/AtomicSwapHTLC.t.sol:AtomicSwapHTLCTest
+[PASS] testFuzz_claim_onlyAcceptsExactPreimage(bytes32) (runs: 256, μ: 193065, ~: 193065)
+[PASS] testFuzz_refundTime_boundaryIsSharpAtRefundTime(uint16) (runs: 256, μ: 384857, ~: 384857)
+[PASS] test_balance_erc20Claim_drainsContractToZero() (gas: 268757)
+[PASS] test_balance_erc20Refund_drainsContractToZero() (gas: 265020)
+[PASS] test_balance_nativeClaim_drainsContractToZero() (gas: 210111)
+[PASS] test_balance_nativeRefund_drainsContractToZero() (gas: 179913)
+[PASS] test_claimAfterRefund_rejected() (gas: 202625)
+[PASS] test_claimERC20_afterRefund_rejected() (gas: 281309)
+[PASS] test_claimERC20_cannotClaimTwice() (gas: 283540)
+[PASS] test_claimERC20_happyPath() (gas: 271176)
+[PASS] test_claimERC20_rejectsAfterTimeout() (gas: 250338)
+[PASS] test_claimERC20_rejectsWrongPreimage() (gas: 248509)
+[PASS] test_claimNative_cannotClaimTwice() (gas: 230853)
+[PASS] test_claimNative_cannotClaimUnknownSwap() (gas: 35289)
+[PASS] test_claimNative_happyPath() (gas: 214884)
+[PASS] test_claimNative_rejectsAfterTimeout() (gas: 192341)
+[PASS] test_claimNative_rejectsWrongPreimage() (gas: 190560)
+[PASS] test_event_Claimed_ERC20() (gas: 267939)
+[PASS] test_event_Claimed_native() (gas: 211394)
+[PASS] test_event_LockCreated_ERC20() (gas: 230269)
+[PASS] test_event_LockCreated_native() (gas: 172187)
+[PASS] test_event_Refunded_ERC20() (gas: 263864)
+[PASS] test_event_Refunded_native() (gas: 180801)
+[PASS] test_forcedEthViaSelfdestruct_doesNotCorruptState() (gas: 248160)
+[PASS] test_lockERC20_blocksMaliciousTokenReentrancy() (gas: 809786)
+[PASS] test_lockERC20_feeOnTransferTokenIsUnsupported_lockSucceedsClaimFails() (gas: 525086)
+[PASS] test_lockERC20_happyPath() (gas: 230156)
+[PASS] test_lockERC20_rejectsDuplicateSwapId() (gas: 288971)
+[PASS] test_lockERC20_rejectsFailingToken() (gas: 277224)
+[PASS] test_lockERC20_rejectsNoReturnERC20() (gas: 469754)
+[PASS] test_lockERC20_rejectsRefundInPast() (gas: 44305)
+[PASS] test_lockERC20_rejectsZeroAmount() (gas: 44240)
+[PASS] test_lockERC20_rejectsZeroClaimer() (gas: 44194)
+[PASS] test_lockERC20_rejectsZeroRefunder() (gas: 44302)
+[PASS] test_lockERC20_rejectsZeroToken() (gas: 44210)
+[PASS] test_lockNative_happyPath() (gas: 172064)
+[PASS] test_lockNative_rejectsDuplicateSwapId() (gas: 197712)
+[PASS] test_lockNative_rejectsRefundInPast() (gas: 49224)
+[PASS] test_lockNative_rejectsZeroAmount() (gas: 42361)
+[PASS] test_lockNative_rejectsZeroClaimer() (gas: 49110)
+[PASS] test_lockNative_rejectsZeroRefunder() (gas: 51122)
+[PASS] test_noOwnerFunctionsExist_runtime() (gas: 13823)
+[PASS] test_reentrancy_blockedByGuardAndStateMachine() (gas: 423333)
+[PASS] test_refundAfterClaim_rejected() (gas: 231205)
+[PASS] test_refundERC20_afterClaim_rejected() (gas: 283761)
+[PASS] test_refundERC20_cannotRefundTwice() (gas: 279614)
+[PASS] test_refundERC20_happyPath() (gas: 262984)
+[PASS] test_refundERC20_rejectsBeforeTimeout() (gas: 247749)
+[PASS] test_refundNative_cannotRefundTwice() (gas: 200505)
+[PASS] test_refundNative_happyPath() (gas: 184714)
+[PASS] test_refundNative_rejectsBeforeTimeout() (gas: 189761)
+[PASS] test_rejectsPlainEthTransfer() (gas: 16925)
+Suite result: ok. 52 passed; 0 failed; 0 skipped; finished in 104.77ms (117.83ms CPU time)
+
+Ran 2 test suites in 117.95ms (105.82ms CPU time): 57 tests passed, 0 failed, 0 skipped (57 total tests)

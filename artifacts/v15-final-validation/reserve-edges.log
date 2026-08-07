@@ -1,0 +1,11 @@
+[resedge] A=sost1d8bd4a6885ffc9fdd91bc79571ae5a4d03a3e9c0 B=sost14e6fcbdc17d5461f5df045b8c57d701bce2a3f97 work=/tmp/v15resedge.xHT3UH
+[resedge] PASS  RE-A: h24 pre-event (tip=22) reserve_before=5103155590 (>0), prize_target=10000000000
+[resedge] PASS  RE-B1: winner event h24 carries the jackpot tx (tx_count=2)
+[resedge] PASS  RE-B2: reserve fully drained to 0 (payout=min(prize,reserve)=5103155590, reserve<prize)
+[resedge] PASS  RE-C1: h30 reserve_before=0 (stays drained — no post-V15 re-accrual)
+[resedge] PASS  RE-C2: RETIREMENT LATCH — h30 emits NO jackpot tx (coinbase-only, tx_count=1)
+[resedge] PASS  RE-C3: rollover stays 0 after retirement (no accrual on a retired jackpot)
+[resedge] PASS  RE-D: latch holds at h36 (reserve=0, tx_count=1, no jackpot)
+[resedge] PASS  RE-E: reserve==0 + retirement recomputed identically after restart (tip h36)
+
+[resedge] RESULT: PASS — winner drain accounting + one-way retirement latch (no resurrection) + survives restart

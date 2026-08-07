@@ -1,0 +1,8 @@
+# Preflight environment snapshot (2026-08-06T07:05:30Z)
+branch=feat/v15-jackpot-explorer-card HEAD=039dbbb3846794963bec93d47f77bb1bb7b39f69
+main=b822db4c3cdb31b67943d847aa35441795b50ad6
+nproc=14 loadavg=13.86 13.77 13.74
+mem_used=9.7Gi mem_total=23Gi
+disk_free=567G disk_total=1007G
+mainnet_miner_pid=574503 (threads=13, 18232, UNTOUCHED)
+dev_nodes_running=0

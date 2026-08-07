@@ -1,0 +1,17 @@
+=== V15 activation boundary (MAINNET profile) ===
+  [PASS] V15_HEIGHT == 25000 (mainnet, not DEV 18 / testnet 12500)
+  [PASS] h=24998 is PRE-V15 (>= gate false)
+  [PASS] h=24999 is PRE-V15 (last pre-fork block)
+  [PASS] h=25000 is the FIRST V15 block
+  [PASS] h=25001 is V15
+  [PASS] h=25002 is V15
+  [PASS] jackpot activation height == V15_HEIGHT
+  [PASS] first jackpot height == 25290 (V15 + offset 290)
+  [PASS] NO jackpot in [24998..25289] (incl. the fork block 25000)
+  [PASS] first jackpot at 25290
+  [PASS] no jackpot at 25291/25292 (cadence, not every block)
+  [PASS] second jackpot at 25290 + cadence
+  [PASS] first jackpot height is DTD-draw-aligned (%3==0)
+  [PASS] V15_HEIGHT > DTD dominance gate height
+  [PASS] jackpot cap >= base
+=== Summary: PASS (0 failures) ===

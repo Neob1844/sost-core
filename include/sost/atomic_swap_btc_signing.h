@@ -316,6 +316,59 @@ BtcBytesResult BuildBtcSpendingTxUnsignedHex(
     uint32_t                       input_sequence,
     uint32_t                       lock_time);
 
+// =============================================================================
+// Phase C.8 — funding-tx signing, preimage extraction, txid (LAB ONLY)
+// =============================================================================
+//
+// These complete the BTC HTLC lifecycle behind the SOST_BTC_HTLC_SIGNING
+// gate: (a) SignBtcHtlcLockFunding (declared above, previously an inert
+// stub, now wired below), (b) preimage extraction from a spending
+// witness — the maker's mechanism to learn the secret once the taker
+// claims the BTC — and (c) the txid computation a funding-detection /
+// confirmation-tracking layer watches for.
+//
+// Same invariants as the rest of the module: no wallet file, no RPC, no
+// network, no broadcast. Fail-closed (ok=false, "...disabled...") when
+// SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY is not defined. Actual broadcast,
+// mempool acceptance, funding detection and confirmation counting are
+// RPC operations that live OUTSIDE this pure module (node/wallet layer)
+// and are intentionally not implemented here.
+
+// Standard Bitcoin Core dust threshold for a P2WPKH output (sats). A
+// change output whose value would be at or below this is dropped and
+// its value folded into the fee (paid to miners) rather than creating
+// an unspendable/relay-rejected dust output. Never routes value to an
+// address the funder does not control.
+inline constexpr int64_t kBtcP2wpkhDustSats = 294;
+
+// Scan a spending witness stack for the 32-byte HTLC preimage: the
+// element whose SHA256 equals `expected_hashlock`. This matches by
+// hash (not by stack position) so it is robust to witness layout and
+// fund-safe — it only ever returns a preimage that actually opens the
+// hashlock. Returns ok=true, bytes = 32-byte preimage on a match;
+// ok=false when no element hashes to expected_hashlock.
+BtcBytesResult ExtractBtcHtlcPreimageFromWitnessStack(
+    const std::vector<std::vector<uint8_t>>& witness_stack,
+    const std::array<uint8_t, 32>&           expected_hashlock);
+
+// Parse a raw signed BTC tx (hex) and extract the HTLC preimage
+// revealed by the witness of input `input_index`, using the same
+// hash-match rule as above. ok=false if the tx does not parse, the
+// index is out of range, the input has no witness, or no witness
+// element opens the hashlock.
+BtcBytesResult ExtractBtcHtlcPreimageFromTxHex(
+    const std::string&             raw_tx_hex,
+    uint32_t                       input_index,
+    const std::array<uint8_t, 32>& expected_hashlock);
+
+// Compute the 32-byte Bitcoin txid of a raw tx hex (double-SHA256 over
+// the non-witness serialization, per BIP-141 — a segwit tx's txid is
+// witness-independent). bytes = the 32-byte txid in libwally's internal
+// byte order; reverse for the big-endian form block explorers display.
+// This is the identifier a funding-detection / confirmation layer keys
+// on. Pure; no network.
+BtcBytesResult ComputeBtcTxid(const std::string& raw_tx_hex);
+
 } // namespace btc
 } // namespace atomic_swap
 } // namespace sost

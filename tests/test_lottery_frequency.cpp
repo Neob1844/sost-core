@@ -68,7 +68,7 @@ static void test_bootstrap_window() {
     printf("\n=== 3) Bootstrap window: 2-of-3 by height%%3 ===\n");
     // Pick a phase2_height that is itself ≡ 0 (mod 3) so the schedule
     // pattern is clean to read at a glance.
-    const int64_t H = 1'000'002;  // 1'000'002 % 3 == 0
+    const int64_t H = 13'002;  // 13'002 % 3 == 0
     TEST("phase2_height H itself: H%3==0 → false",
          !is_lottery_block(H, H));
     TEST("H+1: (H+1)%3==1 → true",
@@ -101,7 +101,7 @@ static void test_bootstrap_window() {
 // ---------------------------------------------------------------------------
 static void test_window_boundary() {
     printf("\n=== 4) Boundary at offset=LOTTERY_HIGH_FREQ_WINDOW (5000) ===\n");
-    const int64_t H = 1'000'002;  // H % 3 == 0
+    const int64_t H = 13'002;  // H % 3 == 0
     const int64_t W = LOTTERY_HIGH_FREQ_WINDOW;
     TEST("LOTTERY_HIGH_FREQ_WINDOW == 5000",
          W == 5000);
@@ -119,13 +119,13 @@ static void test_window_boundary() {
 
     // Force one block where bootstrap would say "trigger" but permanent
     // would say "no trigger" to prove the rule actually switched.
-    // Pick H=1'000'001 (H % 3 == 2). Then:
+    // Pick H=13'001 (H % 3 == 2). Then:
     //   offset=4999: (H+4999) % 3 = (2 + 1) % 3 = 0 → bootstrap says false
     //   offset=5000: (H+5000) % 3 = (2 + 2) % 3 = 1 → permanent says false
     //   offset=4998: (H+4998) % 3 = (2 + 0) % 3 = 2 → bootstrap says true
     //   offset=5001: (H+5001) % 3 = (2 + 0) % 3 = 2 → permanent says false
     {
-        const int64_t H2 = 1'000'001;
+        const int64_t H2 = 13'001;
         TEST("H2: offset=4998, height%3==2 → true (bootstrap)",
              is_lottery_block(H2 + 4998, H2));
         TEST("H2: offset=5001, height%3==2 → false (permanent rule flipped)",
@@ -138,7 +138,7 @@ static void test_window_boundary() {
 // ---------------------------------------------------------------------------
 static void test_permanent_window() {
     printf("\n=== 5) Permanent window: 1-of-3 by height%%3 ===\n");
-    const int64_t H = 1'000'002;  // H % 3 == 0
+    const int64_t H = 13'002;  // H % 3 == 0
     const int64_t base = H + LOTTERY_HIGH_FREQ_WINDOW;  // first permanent block
 
     // 6000 blocks well inside permanent. Of those, ~2000 should trigger.
@@ -236,13 +236,12 @@ static void test_production_schedule() {
     TEST("permanent height=12103 (h%3==1) → false",
          !is_lottery_block(12103, V11_PHASE2_HEIGHT));
 
-    // Long-range spot checks deep in the permanent window.
-    //   height=50001: 50001 = 3*16667 → %3==0 → permanent triggered.
-    //   height=50002: %3==1 → false.
-    TEST("permanent height=50001 (h%3==0) → true",
+    // Long-range: heights >= V15_HEIGHT (25000) are (D) 3-of-3 — every block draws
+    // regardless of % 3 (the permanent 1-of-3 window is now [12100, 25000); see test (D)).
+    TEST("(D) height=50001 (>= V15) → true (3-of-3)",
          is_lottery_block(50001, V11_PHASE2_HEIGHT));
-    TEST("permanent height=50002 (h%3==1) → false",
-         !is_lottery_block(50002, V11_PHASE2_HEIGHT));
+    TEST("(D) height=50002 (>= V15, was false under 1-of-3) → true (3-of-3)",
+         is_lottery_block(50002, V11_PHASE2_HEIGHT));
 }
 
 // ---------------------------------------------------------------------------
@@ -327,16 +326,53 @@ static void test_dtd_flip_contiguity_12095_12110() {
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// (D) V15 draw-frequency change: from V15_HEIGHT the DTD draws on EVERY block
+//     (3-of-3), permanently, overriding the 1-of-3 rule. Gated to the mainnet
+//     build in main() (V15_HEIGHT=25000). Spec §1b. Founder decision 2026-08-02.
+// ---------------------------------------------------------------------------
+static void test_v15_3of3() {
+    printf("\n=== (D) V15 3-of-3: every block draws from V15_HEIGHT (=25000) ===\n");
+    TEST("(D) pre-V15 height=24998 (1-of-3, %3==2) -> false",
+         !is_lottery_block(24998, V11_PHASE2_HEIGHT));
+    TEST("(D) pre-V15 height=24999 (1-of-3, %3==0) -> true",
+         is_lottery_block(24999, V11_PHASE2_HEIGHT));
+    TEST("(D) V15 height=25000 (%3==1, false under 1-of-3) -> true",
+         is_lottery_block(25000, V11_PHASE2_HEIGHT));
+    TEST("(D) height=25001 (%3==2, false under 1-of-3) -> true",
+         is_lottery_block(25001, V11_PHASE2_HEIGHT));
+    TEST("(D) height=25002 (%3==0) -> true",
+         is_lottery_block(25002, V11_PHASE2_HEIGHT));
+    TEST("(D) height=25003 (%3==1, false under 1-of-3) -> true",
+         is_lottery_block(25003, V11_PHASE2_HEIGHT));
+    int drew = 0;
+    for (int64_t h = 25000; h < 25300; ++h)
+        if (is_lottery_block(h, V11_PHASE2_HEIGHT)) drew++;
+    TEST("(D) [25000,25299] all 300 heights draw (3-of-3)", drew == 300);
+    TEST("(D) first jackpot height 25290 is a draw block",
+         is_lottery_block(25290, V11_PHASE2_HEIGHT));
+}
+
 int main() {
     printf("=== test_lottery_frequency (V11 Phase 2 C5) ===\n");
+    // Network-agnostic (guards fire before any V15/schedule logic):
     test_int64_max_sentinel_always_false();
     test_pre_phase2_returns_false();
-    test_bootstrap_window();
-    test_window_boundary();
-    test_permanent_window();
     test_constants_pinned();
-    test_production_schedule();
-    test_dtd_flip_contiguity_12095_12110();
+
+    // Schedule-shape + (D) tests assume the MAINNET height ordering
+    // (V11_PHASE2_HEIGHT=7100 < V15_HEIGHT=25000). A testnet build
+    // (SOST_TESTNET_FORKS -> V15_HEIGHT=300) collapses that ordering, so skip.
+    if (V15_HEIGHT >= 25000) {
+        test_bootstrap_window();
+        test_window_boundary();
+        test_permanent_window();
+        test_production_schedule();
+        test_dtd_flip_contiguity_12095_12110();
+        test_v15_3of3();          // (D)
+    } else {
+        printf("\n[skip] schedule-shape + (D) tests: testnet build (V15_HEIGHT != 25000)\n");
+    }
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

@@ -1,0 +1,24 @@
+[attack] building pre-J state (A mines early, B mines to 23)…
+[attack] PASS  pre-J fixture at height 23 (tip 61215b3f4455654f…, reserve 5103155590:26)
+[attack] running valid-PoW adversarial jackpot matrix…
+[attack] PASS  wrong-winner — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  winner-self — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  payout-plus — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  payout-minus — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  payout-zero — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  reverse-inputs — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  remove-input — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  dup-input — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  foreign-input — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] FAIL  extra-output — no process_block rejection observed within 40s (miner may not have submitted; see attack_extra-output.log)
+[attack] PASS  dup-jackpot — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  remove-jackpot — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  coinbase-mutate — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  input-index-bump — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  input-txid-flip — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  payout-intmax — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] PASS  dup-all-inputs — valid-PoW block REJECTED; tip/height/reserve unchanged (atomicity holds)
+[attack] control: honest block 24 must be accepted…
+[attack] PASS  honest block 24 accepted with canonical jackpot (tx_count=2)
+
+[attack] RESULT: FAIL (see /tmp/v15attack.6cY9s7)

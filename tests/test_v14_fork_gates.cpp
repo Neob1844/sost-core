@@ -25,14 +25,18 @@ using namespace sost;
 #ifdef SOST_TESTNET_FORKS
 static_assert(V14_HEIGHT == 200,
     "Testnet build: V14_HEIGHT must be the early testnet height (200).");
-static_assert(V15_HEIGHT == 300,
-    "Testnet build: V15_HEIGHT must be the early testnet height (300).");
+static_assert(V15_HEIGHT == 12500,
+    "Testnet build: V15_HEIGHT is placed AFTER the historical ladder (Phase2 7100 < "
+    "V13 12000 < DTD gate 12100 < 12500) so the every-block DTD draw is active. "
+    "Ancient forks are NOT moved. See docs/V15_READINESS.md.");
+static_assert(V15_HEIGHT > DTD_DOMINANCE_GATE_HEIGHT && V15_HEIGHT > V13_HEIGHT,
+    "Testnet V15 must sit above the DTD dominance gate and V13 (coherent ordering).");
 #else
 static_assert(V14_HEIGHT == 15000,
     "V14_HEIGHT moved from 15000 — V14 (H3/H4 hardening) ships at 15000 UNCHANGED "
     "(already in deployed binaries). The automation bundle is V15, not V14.");
-static_assert(V15_HEIGHT == 20000,
-    "V15_HEIGHT moved from 20000 — V15 (PoPC A/B, atomic swap, Gold Vault gov) is "
+static_assert(V15_HEIGHT == 25000,
+    "V15_HEIGHT moved from 25000 — V15 (PoPC A/B, atomic swap, Gold Vault gov) is "
     "the full automation bundle; re-audit scope before changing.");
 #endif
 static_assert(DYNAMIC_FEE_BASE == 1,
@@ -48,20 +52,14 @@ static_assert(DYNAMIC_FEE_ACTIVATION_HEIGHT == 10000,
 // requires it. The gate itself still ships DEFERRED (flag false).
 static_assert(DTD_POPC_GRACE_BLOCKS == 5000,
     "PoPC eligibility grace window changed from 5000 blocks — confirm intentional.");
-// V15 Final Decentralization Fork: the DTD-PoPC eligibility gate is RETIRED on
-// mainnet (DTD never requires PoPC — SOST is fully autonomous). The testnet
-// profile keeps it soaked so the PoPC subsystem can still be exercised there.
-#ifdef SOST_TESTNET_FORKS
 static_assert(DTD_POPC_ELIGIBILITY_HEIGHT == V15_HEIGHT + DTD_POPC_GRACE_BLOCKS,
-    "Testnet: DTD_POPC_ELIGIBILITY_HEIGHT == V15_HEIGHT + grace (5300).");
+    "DTD_POPC_ELIGIBILITY_HEIGHT must equal V15_HEIGHT + DTD_POPC_GRACE_BLOCKS (30000 mainnet / 17500 testnet).");
+// V15 ACTIVATION (2026-06-27): the DTD-PoPC eligibility gate is now ACTIVE on
+// BOTH profiles (enforced from DTD_POPC_ELIGIBILITY_HEIGHT — mainnet 25000 /
+// testnet 5300). Pinned true so a future accidental revert to false fails here.
 static_assert(DTD_POPC_GATE_CONSENSUS_ACTIVE == true,
-    "Testnet: DTD-PoPC eligibility gate kept ACTIVE to soak the PoPC subsystem.");
-#else
-static_assert(DTD_POPC_ELIGIBILITY_HEIGHT == INT64_MAX,
-    "Mainnet: DTD-PoPC eligibility RETIRED to INT64_MAX by the V15 final-decentralization fork.");
-static_assert(DTD_POPC_GATE_CONSENSUS_ACTIVE == false,
-    "Mainnet: DTD-PoPC eligibility gate RETIRED (false) by the V15 final-decentralization fork.");
-#endif
+    "DTD-PoPC eligibility gate is ACTIVATED in V15 (enforced from DTD_POPC_ELIGIBILITY_HEIGHT). "
+    "Do NOT revert to false without a coordinated de-activation release.");
 static_assert(DTD_EMERGENCY_CONTROL_MIN_HEIGHT == V14_HEIGHT,
     "DTD emergency-control min height must equal V14_HEIGHT.");
 static_assert(DTD_EMERGENCY_CONTROL_CONSENSUS_ACTIVE == false,

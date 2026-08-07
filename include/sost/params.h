@@ -393,7 +393,11 @@ inline constexpr int32_t  V12_SLINGSHOT_T5_DROP_BPS = 5000;   // -50%
 // BOTH gate on this height. Other height-bearing constants
 // (CASERT_V11_HEIGHT, TIMESTAMP_MTP_FORK_HEIGHT) live in this same file
 // for the same reason — keeps consensus heights in one place.
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t  V11_PHASE2_HEIGHT                = 4;       // DEVNET_FAST ONLY
+#else
 inline constexpr int64_t  V11_PHASE2_HEIGHT                = 7100;
+#endif
 
 // V11 Phase 2 — PoP lottery (component D) consensus constants.
 //
@@ -421,7 +425,11 @@ inline constexpr int64_t  V11_PHASE2_HEIGHT                = 7100;
 // regardless of the window. Real sybil defense waits for
 // Memory-Lock per-instance (post block 12 000 study) and any
 // future stake-locked eligibility once a SOST market exists.
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t  LOTTERY_HIGH_FREQ_WINDOW                = 3;       // DEVNET_FAST ONLY
+#else
 inline constexpr int64_t  LOTTERY_HIGH_FREQ_WINDOW                = 5000;
+#endif
 inline constexpr int32_t  LOTTERY_RECENT_WINNER_EXCLUSION_WINDOW  = 5;
 
 // Timestamp policy hardening — coordinated experimental fork at height
@@ -837,7 +845,11 @@ inline constexpr int64_t MAX_FUTURE_DRIFT_STAGED = 60;
 // MUST be bit-identical: helpers return the pre-V13 constants for any
 // height < V13_HEIGHT.
 
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V13_HEIGHT                       = 8;       // DEVNET_FAST ONLY
+#else
 inline constexpr int64_t V13_HEIGHT                       = 12000;
+#endif
 
 // Beacon Phase II-B threshold (3-of-5) activation gate.
 //
@@ -909,9 +921,21 @@ inline constexpr int32_t lottery_exclusion_window_at(int64_t height) {
 // until their rolling share drops below 10 %. As soon as the rolling
 // window no longer holds 10 % of their blocks, they become eligible
 // again automatically — no operator action.
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 14;       // DEVNET_FAST ONLY
+#else
 inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 12100;
+#endif
 inline constexpr int32_t  DTD_DOMINANCE_WINDOW      = 288;
+#if defined(SOST_DEVNET_FORKS)
+// DEVNET_FAST ONLY: a small dev chain runs with only a couple of miner identities, so the
+// 10% anti-dominance threshold would exclude EVERY miner and leave no eligible DTD winner
+// (the jackpot could then never pay). Relax to 80% so 2–3 dev miners stay eligible and a
+// non-current-miner winner exists at jackpot heights. Mainnet/testnet keep 10.00%.
+inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 8000;  // 80.00 % (DEV only)
+#else
 inline constexpr uint16_t DTD_DOMINANCE_MAX_BPS     = 1000;  // 10.00 %
+#endif
 
 inline constexpr bool is_dtd_dominant(
     int32_t mined_count_in_window,
@@ -995,7 +1019,9 @@ inline constexpr bool is_sbpow_eligible(
 // the fork end-to-end. The macro is NEVER defined for mainnet builds, so the
 // mainnet value is byte-identical. Because this stays `constexpr`, no consensus
 // call site changes. (docs/V14_EXECUTION_PLAN.md A4)
-#ifdef SOST_TESTNET_FORKS
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V14_HEIGHT                       = 10;      // DEVNET_FAST ONLY
+#elif defined(SOST_TESTNET_FORKS)
 inline constexpr int64_t V14_HEIGHT                       = 200;     // TESTNET ONLY
 #else
 inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET (UNCHANGED — H3/H4 hardening; already in deployed binaries, no node re-update needed)
@@ -1020,7 +1046,11 @@ inline constexpr int64_t V14_HEIGHT                       = 15000;   // MAINNET 
 #ifdef SOST_TESTNET_FORKS
 inline constexpr int64_t V14_5_HEIGHT                     = 30;      // TESTNET ONLY (low, so the regtest HTLC e2e fits)
 #else
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V14_5_HEIGHT                     = 11;      // DEVNET_FAST ONLY
+#else
 inline constexpr int64_t V14_5_HEIGHT                     = 16000;   // MAINNET — atomic-swap HTLC CLAIM/REFUND fix
+#endif
 #endif
 
 // V14.7 — atomic-swap HTLC RELAY/POLICY activation (the PR #63 fix): the
@@ -1035,7 +1065,9 @@ inline constexpr int64_t V14_5_HEIGHT                     = 16000;   // MAINNET 
 // first, ungated deploy cannot recur). At V14_7_HEIGHT all upgraded nodes flip
 // together. MANDATORY-BINARY-UPDATE: recompile + restart in the window after block
 // 16900, before 17000.
-#ifdef SOST_TESTNET_FORKS
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V14_7_HEIGHT                     = 12;      // DEVNET_FAST ONLY
+#elif defined(SOST_TESTNET_FORKS)
 inline constexpr int64_t V14_7_HEIGHT                     = 40;      // TESTNET ONLY (just above V14_5=30 for the regtest HTLC soak)
 #else
 inline constexpr int64_t V14_7_HEIGHT                     = 17000;   // MAINNET — atomic-swap relay/policy flag-day
@@ -1052,10 +1084,16 @@ inline constexpr int64_t V14_7_HEIGHT                     = 17000;   // MAINNET 
 // the gate to soak the full rule end-to-end; MAINNET stays DEFERRED (false),
 // byte-identical, until prerequisite 4 — the coordinated point release — flips
 // the #else branch to true at a fork height with a miner-announcement window.
-#ifdef SOST_TESTNET_FORKS
+#if defined(SOST_DEVNET_FORKS)
+// DEVNET_FAST: keep the PoPC-eligibility gate INERT so the Historical Jackpot lifecycle
+// can be exercised without also standing up PoPC commitments for every dev miner (the gate
+// would otherwise exclude all miners from height >= DTD_POPC_ELIGIBILITY_HEIGHT, leaving no
+// eligible DTD winner). The PoPC gate is a separate V14 feature tested on its own harness.
+inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;   // DEV only — jackpot lifecycle isolation
+#elif defined(SOST_TESTNET_FORKS)
 inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // TESTNET — soak the live rule
 #else
-inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;   // MAINNET — RETIRED by the V15 final-decentralization fork; DTD never requires PoPC (SOST is fully autonomous)
+inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // MAINNET — ACTIVATED 2026-06-27 (V15 coordinated release; enforced from DTD_POPC_ELIGIBILITY_HEIGHT = 25000)
 #endif
 
 // V15 — full automation bundle (PoPC Model A/B, OTC/P2P atomic swap, Gold Vault
@@ -1064,36 +1102,13 @@ inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;   // MAINNET 
 // gates below ship DEFERRED (INT64_MAX) on mainnet and flip to V15_HEIGHT only in
 // the final, soaked, coordinated pre-fork commit. Testnet (-DSOST_TESTNET_FORKS)
 // dry-runs V15 just after V14 (block 300). See docs/V14_EXECUTION_PLAN.md.
-#ifdef SOST_TESTNET_FORKS
-inline constexpr int64_t V15_HEIGHT                       = 300;     // TESTNET ONLY
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t V15_HEIGHT                       = 18;      // DEVNET_FAST ONLY (coherent: Phase2 4 < V13 8 < DTD gate 14 < 18 < first J 24)
+#elif defined(SOST_TESTNET_FORKS)
+inline constexpr int64_t V15_HEIGHT                       = 12500;   // TESTNET ONLY — positioned AFTER the whole historical ladder (Phase2 7100 < V13 12000 < DTD gate 12100 < 12500) so the V15 every-block DTD draw has its dependencies active. Does NOT move any ancient fork. See docs/V15_READINESS.md.
 #else
-inline constexpr int64_t V15_HEIGHT                       = 20000;   // MAINNET (target; automation gates stay deferred until soaked)
+inline constexpr int64_t V15_HEIGHT                       = 25000;   // MAINNET (target moved 20000 -> 25000 on 2026-07-25: chain was at 19021, ~6.8d runway was insufficient to implement + soak the V15 Core bundle [Historical DTD Jackpot, Gold Vault/PoPC emission transition, atomic-swap dashboard, BTC HTLC]. 25000 gives ~41d. Automation gates stay deferred until soaked.)
 #endif
-
-// =============================================================================
-// V15 Final Decentralization Fork (docs/V15_FINAL_DECENTRALIZATION_SPEC.md).
-// =============================================================================
-// From V15_HEIGHT SOST becomes a fully autonomous PoW coin: the Gold-Vault and
-// PoPC coinbase outputs are ELIMINATED and that 50% is redirected into the DTD
-// lottery accumulator (every block: 50% miner / 50% DTD). DTD eligibility
-// additionally requires the address to have mined >=1 block within a sliding
-// recency window (drops dormant addresses). The deprecated PoPC/Gold-Vault
-// automation gates below are retired to INT64_MAX on mainnet so nothing
-// auto-activates at 20000/25000. Miner economics (50%) are unchanged.
-inline constexpr int64_t DTD_RECENT_MINER_WINDOW         = 2016;    // ~14 days at 600s blocks
-inline constexpr bool v15_dtd_fork_active(int64_t height) {
-    return V15_HEIGHT != INT64_MAX && height >= V15_HEIGHT;
-}
-
-// --- Historical DTD Jackpot (Gold Vault + PoPC wind-down) ---
-// docs/V15_HISTORICAL_JACKPOT_SPEC.md — Option A (progressive constitutional
-// spend, supply-neutral). From V15 the existing Gold/PoPC balances are returned
-// to active DTD winners via a periodic jackpot, hung off the DTD lottery cadence
-// (NOT a second height%N timer): every HIST_JACKPOT_DTD_INTERVAL-th DTD payout.
-// 1 SOST = 100,000,000 stocks (R0_STOCKS 785,100,863 = 7.851 SOST).
-inline constexpr int64_t HIST_JACKPOT_BASE_STOCKS   = 100LL * 100000000LL;  // 100 SOST base
-inline constexpr int64_t HIST_JACKPOT_CAP_STOCKS    = 500LL * 100000000LL;  // 500 SOST per-payout cap
-inline constexpr int64_t HIST_JACKPOT_DTD_INTERVAL  = 96;                   // every 96th DTD payout (~288 blocks)
 
 // P4c — staged V15 activation. PoPC automation (Register/Activate/Renew,
 // auto-slash/auto-settle, Gold Vault governance) goes live at V15_HEIGHT. The
@@ -1103,12 +1118,12 @@ inline constexpr int64_t HIST_JACKPOT_DTD_INTERVAL  = 96;                   // e
 // the eligibility gate bites — nobody is dropped from the lottery by surprise.
 // The gate is STILL inert until DTD_POPC_GATE_CONSENSUS_ACTIVE is flipped in the
 // final, soaked, coordinated release (mainnet 25000 / testnet 5300).
-inline constexpr int64_t DTD_POPC_GRACE_BLOCKS           = 5000;
-#ifdef SOST_TESTNET_FORKS
-inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT     = V15_HEIGHT + DTD_POPC_GRACE_BLOCKS;
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t DTD_POPC_GRACE_BLOCKS           = 6;       // DEVNET_FAST ONLY (eligibility = V15 18 + 6 = 24)
 #else
-inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT     = INT64_MAX;  // MAINNET — RETIRED by V15 final-decentralization fork (DTD never requires PoPC)
+inline constexpr int64_t DTD_POPC_GRACE_BLOCKS           = 5000;
 #endif
+inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT     = V15_HEIGHT + DTD_POPC_GRACE_BLOCKS;
 
 // =============================================================================
 // PoPC single-model redesign (whitepaper §6.0) — DRAFT, consensus-DEFERRED.
@@ -1132,11 +1147,7 @@ inline constexpr int64_t DTD_POPC_ELIGIBILITY_HEIGHT     = INT64_MAX;  // MAINNE
 // 300 (= V15_HEIGHT). Still inert in practice until the reward call site is wired
 // (follow-up) — changing this constant alone has no behavioural effect. Verify the
 // live chain height is below this value before leaving draft.
-#ifdef SOST_TESTNET_FORKS
 inline constexpr int64_t POPC_SINGLE_MODEL_HEIGHT = V15_HEIGHT;
-#else
-inline constexpr int64_t POPC_SINGLE_MODEL_HEIGHT = INT64_MAX;   // MAINNET — RETIRED by V15 final-decentralization fork
-#endif
 inline constexpr bool popc_single_model_active(int64_t height) {
     return height >= POPC_SINGLE_MODEL_HEIGHT;
 }
@@ -1157,6 +1168,93 @@ inline constexpr bool popc_gold_boost_active(int64_t height) {
 }
 static_assert(POPC_GOLD_BOOST_HEIGHT >= POPC_SINGLE_MODEL_HEIGHT,
               "Gold Boost must never activate before the native base model");
+
+// =============================================================================
+// V15 — Historical DTD Jackpot (parameters). Consensus logic: src/lottery.cpp
+// (hist_jackpot_*), spec: docs/design/V15_HISTORICAL_DTD_JACKPOT_SPEC.md.
+// =============================================================================
+//
+// At V15 the Gold Vault (25%/block) and PoPC Pool (25%/block) emission STOPS
+// (see coinbase split transition) and the balance ALREADY accumulated in those
+// two constitutional-address reserves is returned to active miners, block by
+// block, through the "Historical DTD Jackpot": a supply-neutral protocol spend
+// (no new mint) paid to the ordinary DTD lottery winner on a slow cadence until
+// the historical reserve is drained.
+//
+// The jackpot pays on JACKPOT blocks only. A jackpot block is, by construction,
+// also a DTD lottery/payout block (cadence 288 = 96 DTD draws of the 1-of-3
+// cadence), so the winner = the DTD winner of that same block under the IDENTICAL
+// 6-filter eligibility set — there is NO separate raffle and NO new selection
+// engine. If that block has no eligible DTD winner, the jackpot amount rolls
+// forward (capped) to the next jackpot block. See the spec for the exact
+// height-alignment proof and the reserve-accounting model (which reserve UTXOs
+// are spent) — those are consensus-critical and MUST NOT be inferred ad hoc.
+//
+// All amounts are in stocks (1 SOST = STOCKS_PER_SOST). Base/cap chosen to match
+// the published economics (base 100 SOST, hard cap 500 SOST, ~48h cadence).
+inline constexpr int64_t HIST_JACKPOT_ACTIVATION_HEIGHT = V15_HEIGHT;      // jackpot goes live with V15
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t HIST_JACKPOT_CADENCE_BLOCKS    = 6;               // DEVNET_FAST ONLY (== 2 DTD draws; jackpots at 24,30,36,…)
+#else
+inline constexpr int64_t HIST_JACKPOT_CADENCE_BLOCKS    = 288;             // ~48h; == 96 DTD draws (288/3)
+#endif
+inline constexpr int64_t HIST_JACKPOT_BASE_STOCKS       = 100 * STOCKS_PER_SOST;  // 100 SOST base per jackpot
+inline constexpr int64_t HIST_JACKPOT_CAP_STOCKS        = 500 * STOCKS_PER_SOST;  // hard cap incl. rollover
+
+// First jackpot height. A jackpot block MUST coincide with a DTD draw block
+// (permanent 1-of-3 regime: height % 3 == 0, valid only for height >=
+// V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW = 12100). Because the cadence
+// (288) is a multiple of 3, if the FIRST jackpot height is draw-aligned then
+// EVERY subsequent one is too. The offset also provides a short post-fork
+// warm-up before the first payout.
+//   MAINNET: V15_HEIGHT = 25000 (25000 % 3 == 1). Offset 290 -> first = 25290
+//            (25290 % 3 == 0, and 25290 >= 12100). Draw-aligned. [asserted below]
+//   TESTNET: V15_HEIGHT = 12500 (12500 % 3 == 2), positioned AFTER the whole
+//            historical ladder (Phase2 7100 < V13 12000 < DTD gate 12100 < 12500)
+//            so the every-block DTD draw the jackpot reuses is fully active. Offset
+//            292 -> first = 12792 (12792 % 3 == 0, >= 12100). Draw-aligned.
+//            RESOLVED (2026-08-04): the earlier "testnet V15 below DTD" incoherence
+//            is closed by placing V15 above the ladder rather than dragging the
+//            ladder down. See docs/V15_READINESS.md (network-schedule refactor).
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 6;               // DEVNET_FAST: 18 + 6 = 24, draw-aligned (% 3 == 0), >= DTD gate 14
+#elif defined(SOST_TESTNET_FORKS)
+inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 292;             // TESTNET: 12500 + 292 = 12792, draw-aligned (% 3 == 0)
+#else
+inline constexpr int64_t HIST_JACKPOT_FIRST_OFFSET      = 290;             // MAINNET: 25000 + 290 = 25290, draw-aligned
+#endif
+inline constexpr int64_t HIST_JACKPOT_FIRST_HEIGHT      = HIST_JACKPOT_ACTIVATION_HEIGHT + HIST_JACKPOT_FIRST_OFFSET;
+static_assert(HIST_JACKPOT_CADENCE_BLOCKS % 3 == 0,
+              "Jackpot cadence must be a whole number of DTD 1-of-3 draws so a jackpot block is always a DTD draw block");
+static_assert(HIST_JACKPOT_CAP_STOCKS >= HIST_JACKPOT_BASE_STOCKS,
+              "Jackpot cap must be >= base");
+#ifndef SOST_TESTNET_FORKS
+// MAINNET only: prove the first jackpot lands on a permanent-regime DTD draw block.
+static_assert(HIST_JACKPOT_FIRST_HEIGHT % 3 == 0,
+              "MAINNET first jackpot height must be a DTD draw block (height % 3 == 0)");
+static_assert(HIST_JACKPOT_FIRST_HEIGHT >= V11_PHASE2_HEIGHT + LOTTERY_HIGH_FREQ_WINDOW,
+              "MAINNET first jackpot must be in the permanent 1-of-3 DTD regime (>= 12100)");
+#else
+// TESTNET only: same invariants under the accelerated-but-coherent schedule.
+// V15 (12500) is placed AFTER the historical ladder so the every-block DTD draw
+// is active; the ancient forks are NOT moved. Ordering: Phase2 < V13 < DTD gate < V15 < first J.
+static_assert(V15_HEIGHT > DTD_DOMINANCE_GATE_HEIGHT,
+              "TESTNET V15 must sit above the DTD dominance gate so the every-block DTD draw is active.");
+static_assert(V15_HEIGHT > V13_HEIGHT && V13_HEIGHT > V11_PHASE2_HEIGHT,
+              "TESTNET schedule must preserve Phase2 < V13 < V15 ordering.");
+static_assert(HIST_JACKPOT_FIRST_HEIGHT % 3 == 0,
+              "TESTNET first jackpot height must be a DTD draw block (height % 3 == 0)");
+static_assert(HIST_JACKPOT_FIRST_HEIGHT >= DTD_DOMINANCE_GATE_HEIGHT,
+              "TESTNET first jackpot must be in the permanent 1-of-3 DTD regime (>= DTD gate).");
+#endif
+// Returns true iff `height` is a Historical DTD Jackpot block (cadence-aligned,
+// at/after the first jackpot height). NOTE: this is the CADENCE predicate only;
+// the consensus payout path additionally requires the reserve to be non-empty
+// and the block to be a DTD draw with an eligible winner — see spec.
+inline constexpr bool is_hist_jackpot_height(int64_t height) {
+    return height >= HIST_JACKPOT_FIRST_HEIGHT
+        && ((height - HIST_JACKPOT_FIRST_HEIGHT) % HIST_JACKPOT_CADENCE_BLOCKS) == 0;
+}
 
 // =============================================================================
 // DTD Lottery Emergency Pause / Resume — signed control signal (DESIGNED,

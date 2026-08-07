@@ -565,8 +565,190 @@ static void test_subsidy_8_payout_no_pending() {
 }
 
 // ---------------------------------------------------------------------------
+// §V15 (T) — Gold Vault / PoPC emission transition.
+// From V15_HEIGHT, a NON-triggered block stops funding GOLD/POPC and redirects
+// the non-miner half to the DTD lottery pending (miner-only UPDATE shape). It
+// reuses the fully-tested UPDATE validation path. Pre-V15 non-triggered blocks
+// keep the legacy 3-output 50/25/25 shape byte-for-byte. Heights are relative
+// to sost::V15_HEIGHT so the test is correct on mainnet (25000) and testnet
+// (300) builds alike.
+// ---------------------------------------------------------------------------
+
+// Non-triggered V15-redirect context (triggered=false, redirect to pending).
+static Phase2CoinbaseContext mk_ctx_v15_idle(int64_t pending_before,
+                                             int64_t total_reward,
+                                             int64_t phase2_height = 100) {
+    auto split = sost::lottery::phase2_coinbase_split(total_reward);
+    Phase2CoinbaseContext c;
+    c.phase2_height          = phase2_height;
+    c.pending_before         = pending_before;
+    c.triggered              = false;   // NON-triggered — the V15 (T) redirect
+    c.paid_out               = false;
+    c.lottery_payout         = 0;
+    c.expected_winner_pkh    = PubKeyHash{};
+    c.expected_pending_after = pending_before + split.lottery_share;
+    return c;
+}
+
+static void test_v15_emission_transition() {
+    const int64_t subsidy = 785100863;   // odd → exercises /2 rounding
+    const int64_t fees    = 12345;
+    const int64_t total   = subsidy + fees;
+    const int64_t V15     = (int64_t)sost::V15_HEIGHT;
+    const int64_t P2H     = 100;         // phase2_height fixture (<= V15-1)
+
+    // 1) Pre-V15 non-triggered: legacy 50/25/25 still required and valid.
+    {
+        Phase2CoinbaseContext c;
+        c.phase2_height = P2H; c.pending_before = 0; c.triggered = false;
+        c.paid_out = false; c.expected_pending_after = 0;
+        Transaction cb = make_legacy_coinbase(V15 - 1, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15 - 1, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15-1 non-triggered: legacy 50/25/25 passes (unchanged)", r.ok);
+    }
+
+    // 2) Pre-V15 non-triggered: miner-only UPDATE must be REJECTED (not yet allowed).
+    {
+        Phase2CoinbaseContext c = mk_ctx_v15_idle(0, total, P2H);
+        Transaction cb = make_update_coinbase(V15 - 1, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15 - 1, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15-1 non-triggered: miner-only redirect rejected", !r.ok);
+    }
+
+    // 3) At V15 non-triggered: miner-only UPDATE (redirect) is now VALID.
+    {
+        Phase2CoinbaseContext c = mk_ctx_v15_idle(0, total, P2H);
+        Transaction cb = make_update_coinbase(V15, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15 non-triggered: miner-only redirect passes (T active)", r.ok);
+    }
+
+    // 4) At V15 non-triggered: legacy 50/25/25 must now be REJECTED.
+    {
+        Phase2CoinbaseContext c = mk_ctx_v15_idle(0, total, P2H);
+        Transaction cb = make_legacy_coinbase(V15, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15 non-triggered: legacy 50/25/25 rejected (vault/popc off)", !r.ok);
+    }
+
+    // 5) V15+1 non-triggered with existing pending: redirect accumulates OK.
+    {
+        Phase2CoinbaseContext c = mk_ctx_v15_idle(/*pending*/999999, total, P2H);
+        Transaction cb = make_update_coinbase(V15 + 1, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15 + 1, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15+1 non-triggered redirect with pending passes", r.ok);
+    }
+
+    // 6) At V15 non-triggered: corrupted expected_pending_after breaks CB14.
+    {
+        Phase2CoinbaseContext c = mk_ctx_v15_idle(0, total, P2H);
+        c.expected_pending_after += 1;   // corrupt redirect accounting
+        Transaction cb = make_update_coinbase(V15, subsidy, fees);
+        auto r = ValidateCoinbaseConsensus(cb, V15, subsidy, fees,
+                                           g_gold_vault_pkh, g_popc_pool_pkh, &c);
+        TEST("V15 redirect: corrupted pending_after rejected (CB14)", !r.ok);
+    }
+
+    // 7) Supply-neutral: miner + redirect == subsidy + fees (no new mint).
+    {
+        auto split = sost::lottery::phase2_coinbase_split(total);
+        TEST("V15 redirect supply-neutral: miner + redirect == subsidy+fees",
+             split.miner_share + split.lottery_share == total);
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Driver
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// V15 (D)+(T) interaction: under (D) EVERY post-V15 block is a DTD draw block,
+// so the old "post-V15 idle" (T) branch is unreachable. Prove that at real
+// post-V15 heights the draw path (i) sends the non-miner half to the DTD
+// (payout or pending), (ii) pays Gold Vault / PoPC exactly 0, (iii) is
+// supply-neutral, and (iv) the validator rejects any vault/popc output or
+// legacy 50/25/25. Spec 1b + 2. Mainnet-scoped (V15_HEIGHT=25000 > phase2).
+// ---------------------------------------------------------------------------
+static void test_v15_d_t_interaction() {
+    printf("\n== V15 (D)+(T): every-block draw, DTD gets the non-miner half, vault/popc=0 ==\n");
+    if (sost::V15_HEIGHT < 25000) { printf("[skip] testnet/regtest build (V15_HEIGHT != 25000)\n"); return; }
+    const int64_t H = sost::V11_PHASE2_HEIGHT;
+
+    // (D) property: every post-V15 height is a draw block -> real validator
+    // never takes the (T) idle branch post-V15.
+    TEST("(D) is_lottery_block(25000)=true", sost::lottery::is_lottery_block(25000, H));
+    TEST("(D) is_lottery_block(25001)=true", sost::lottery::is_lottery_block(25001, H));
+    TEST("(D) is_lottery_block(25002)=true", sost::lottery::is_lottery_block(25002, H));
+
+    const int64_t subsidy = 800000000, fees = 12345;
+    const int64_t total   = subsidy + fees;
+    const auto    split   = sost::lottery::phase2_coinbase_split(total);
+
+    // A) post-V15 draw, NO eligible winner -> UPDATE (1 output). Non-miner half
+    //    rolls into pending; Gold Vault / PoPC = 0.
+    {
+        const int64_t pb = 0;
+        Transaction cb = make_update_coinbase(25000, subsidy, fees);
+        auto ctx = mk_ctx_update(pb, total, H);
+        auto r = ValidateCoinbaseConsensus(cb, 25000, subsidy, fees, g_gold_vault_pkh, g_popc_pool_pkh, &ctx);
+        TEST("A) post-V15 UPDATE (no winner) accepted", r.ok);
+        TEST("A) exactly 1 output (no vault/popc)", cb.outputs.size() == 1);
+        TEST("A) miner == miner_share", cb.outputs[0].amount == split.miner_share);
+        TEST("A) pending grows by lottery_share", ctx.expected_pending_after == pb + split.lottery_share);
+        TEST("A) supply-neutral (miner + pending_delta == subsidy+fees)",
+             cb.outputs[0].amount + (ctx.expected_pending_after - pb) == total);
+    }
+
+    // B) post-V15 draw WITH winner -> PAYOUT (2 outputs). Winner gets
+    //    lottery_share + accumulated pending; pending flushed to 0.
+    {
+        const int64_t pb = 987654321;
+        Transaction cb = make_payout_coinbase(25001, subsidy, fees, pb);
+        auto ctx = mk_ctx_payout(pb, total, g_winner_pkh, H);
+        auto r = ValidateCoinbaseConsensus(cb, 25001, subsidy, fees, g_gold_vault_pkh, g_popc_pool_pkh, &ctx);
+        TEST("B) post-V15 PAYOUT accepted", r.ok);
+        TEST("B) exactly 2 outputs (miner + winner, no vault/popc)", cb.outputs.size() == 2);
+        TEST("B) winner == lottery_share + pending", cb.outputs[1].amount == split.lottery_share + pb);
+        TEST("B) pending flushed to 0", ctx.expected_pending_after == 0);
+        TEST("B) supply-neutral (miner + winner + pending_delta == subsidy+fees)",
+             cb.outputs[0].amount + cb.outputs[1].amount + (ctx.expected_pending_after - pb) == total);
+    }
+
+    // C) REJECT: legacy 50/25/25 (pays Gold Vault + PoPC) at a post-V15 draw height.
+    {
+        Transaction cb = make_legacy_coinbase(25002, subsidy, fees);
+        auto ctx = mk_ctx_update(0, total, H);   // triggered draw block
+        auto r = ValidateCoinbaseConsensus(cb, 25002, subsidy, fees, g_gold_vault_pkh, g_popc_pool_pkh, &ctx);
+        TEST("C) post-V15 legacy 50/25/25 (vault+popc) REJECTED", !r.ok);
+    }
+
+    // D) REJECT: PAYOUT with an extra Gold Vault output post-V15.
+    {
+        Transaction cb = make_payout_coinbase(25003, subsidy, fees, 0);
+        TxOutput og; og.amount = 1; og.type = OUT_COINBASE_GOLD; og.pubkey_hash = g_gold_vault_pkh;
+        cb.outputs.push_back(og);
+        auto ctx = mk_ctx_payout(0, total, g_winner_pkh, H);
+        auto r = ValidateCoinbaseConsensus(cb, 25003, subsidy, fees, g_gold_vault_pkh, g_popc_pool_pkh, &ctx);
+        TEST("D) post-V15 coinbase with extra GOLD output REJECTED", !r.ok);
+    }
+
+    // E) Accumulation over 3 no-winner blocks, flush on the 4th.
+    {
+        const int64_t p3 = 3 * split.lottery_share;
+        Transaction cb = make_payout_coinbase(25012, subsidy, fees, p3);
+        auto ctx = mk_ctx_payout(p3, total, g_winner_pkh, H);
+        auto r = ValidateCoinbaseConsensus(cb, 25012, subsidy, fees, g_gold_vault_pkh, g_popc_pool_pkh, &ctx);
+        TEST("E) flush block accepted", r.ok);
+        TEST("E) winner paid lottery_share + 3x accumulated", cb.outputs[1].amount == split.lottery_share + p3);
+        TEST("E) pending reset to 0", ctx.expected_pending_after == 0);
+        TEST("E) supply-neutral over flush", cb.outputs[0].amount + cb.outputs[1].amount + (0 - p3) == total);
+    }
+}
 
 int main() {
     printf("== test_coinbase_phase2 (C8) — V11 Phase 2 coinbase shape ==\n");
@@ -600,6 +782,9 @@ int main() {
     test_subsidy_8_update();
     test_subsidy_8_payout_with_pending();
     test_subsidy_8_payout_no_pending();
+
+    test_v15_emission_transition();
+    test_v15_d_t_interaction();
 
     printf("\n== summary: %d pass, %d fail ==\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

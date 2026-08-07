@@ -206,7 +206,7 @@ int main() {
     TEST("HTLC gate moved off V14 (the broken declaration)", H != V14_HEIGHT);
 #ifndef SOST_TESTNET_FORKS
     TEST("MAINNET gate == 16000", H == 16000);
-    TEST("MAINNET V15_HEIGHT still 20000 (untouched)", V15_HEIGHT == 20000);
+    TEST("MAINNET V15_HEIGHT is 25000", V15_HEIGHT == 25000);
     TEST("MAINNET V14_HEIGHT still 15000 (untouched)", V14_HEIGHT == 15000);
 #else
     TEST("TESTNET gate is low (regtest soak fits)", H <= 1000);
