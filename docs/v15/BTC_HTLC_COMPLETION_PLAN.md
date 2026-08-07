@@ -49,6 +49,21 @@ sighash/serialization error is a silent fund-loss. So:
 - **OPTION B (V15 + EVM + real BTC): code can reach BUILDABLE + unit-green, but NOT READY** until a real
   bitcoind-regtest validation is run. That validation is the one external step still outstanding.
 
+## Verification done this session (empirical)
+- **Option B build (`SOST_BTC_HTLC_SIGNING=ON`) COMPILES CLEAN** — vendored libwally-core built via
+  ExternalProject + linked; `sost-node` + `test-atomic-swap-btc-signing` built, **0 errors**
+  (build-btc-on). So the real libwally path is not bitrotted; it builds today.
+- **BTC signing unit suite with the REAL backend: 121 passed, 0 failed** (claim/refund witness,
+  preimage extract, CLTV/locktime, tx build). This validates the tx STRUCTURE/logic — NOT real-network
+  acceptance (that needs bitcoind).
+- **Release gate wired** — `IsBtcHtlcSigningEnabled()` now returns false by default even in an ON build,
+  and true only when `SOST_BTC_ATOMIC_SWAP_ENABLED=1` (verified: false→true with the env). It is an
+  ADVISORY flag by design (the signing functions stay pure + unit-testable; the CALLER/operator tooling
+  checks the flag). There are currently NO node auto-callers of BTC signing — the BTC swap is
+  operator-driven (build+sign+broadcast via tooling, like the SOST-side CLI), so the node never signs BTC on its own.
+- **Option A (default, `SOST_BTC_HTLC_SIGNING=OFF`) confirmed intact** — rebuilt clean; **0 libwally /
+  signing symbols** in `build/sost-node`; no bitcoind dependency. BTC cannot fire in Option A at all.
+
 ## Guarantee
 Option A must remain deployable at all times. The BTC gate stays a config switch (default OFF); the SOST
 node must build + run + serve V15 with `SOST_BTC_HTLC_SIGNING=OFF` and no `bitcoind` present.

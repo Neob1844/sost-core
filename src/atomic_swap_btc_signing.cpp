@@ -23,6 +23,7 @@
 // activation prerequisites.
 // =============================================================================
 
+#include <cstdlib>
 #include "sost/atomic_swap_btc_signing.h"
 
 #include <string>
@@ -49,13 +50,17 @@ bool IsBtcHtlcSigningEnabled() {
     // SOST_BTC_HTLC_SIGNING_ENABLED. With the option OFF (default)
     // the macro is undefined and this function returns false.
 #ifdef SOST_BTC_HTLC_SIGNING_ENABLED
-    // Even with the build flag ON, the function still returns false
-    // until a real signing backend has been wired AND the operator
-    // explicitly toggles a runtime acknowledgement. That runtime
-    // toggle does NOT exist in this commit; activating it is part
-    // of the future sprint that ships the real backend.
-    return false;
+    // The REAL libwally backend is compiled in (Option B build). It STILL stays OFF by default and
+    // only turns on when the operator explicitly opts in at runtime, because the backend has NOT been
+    // validated against a real Bitcoin node (no bitcoind-regtest round-trip yet). Set the environment
+    // variable SOST_BTC_ATOMIC_SWAP_ENABLED=1 to activate — ONLY after real regtest validation (see
+    // docs/v15/BTC_HTLC_COMPLETION_PLAN.md). This is the OPTION-A / OPTION-B release gate:
+    //   * Option A (V15 + EVM): build with SOST_BTC_HTLC_SIGNING=OFF → the #else below, always false.
+    //   * Option B (V15 + EVM + BTC): build with the flag ON AND set SOST_BTC_ATOMIC_SWAP_ENABLED=1.
+    const char* e = std::getenv("SOST_BTC_ATOMIC_SWAP_ENABLED");
+    return e != nullptr && (e[0] == '1' || e[0] == 't' || e[0] == 'T' || e[0] == 'y' || e[0] == 'Y');
 #else
+    // Option A (default) — stub build, no libwally, always fail-closed. No bitcoind dependency.
     return false;
 #endif
 }
