@@ -367,12 +367,11 @@ const PAIR_DEFS=[
    note:'PAXG charges an on-chain transfer fee (fee-on-transfer) — permanently blocked in this HTLC (funds could get stuck).'},
   {recv:'XAUT', name:'Tether Gold (XAUT, ERC-20)', chain:'evm', chainId:'0x1',  kind:'erc20',  time:'~10–30 min', status:'auto',
    note:'ERC-20 gold path is off until SafeERC20 + accounting + tests land. Issuer-freeze risk.'},
-  {recv:'BTC', name:'Bitcoin (BTC)', chain:'btc', chainId:null,                 kind:'native', time:'~30–90 min', status:'auto',
-   note:'Bitcoin HTLC code is complete (redeem-script, sign, funding coin-selection, broadcast backend, watcher, restart-recovery) but BTC stays OFF until a separate activation (real bitcoind validation + operator enables SOST_BTC_ATOMIC_SWAP_ENABLED).'}
+  {recv:'BTC', name:'Bitcoin (BTC)', chain:'btc', chainId:null,                 kind:'native', time:'~30–90 min', status:'COMING_SOON',
+   note:'Bitcoin HTLC signing activates with V15. The BTC builder is a stub today.'}
 ];
 // derive final status for token paths from the shared plumbing flags (single source of truth)
 function pairStatus(p){
-  if(p.chain==='btc')return A.BTC_ENABLED ? 'TESTING' : 'COMING_SOON';   // BTC gate mirrors SOST_BTC_ATOMIC_SWAP_ENABLED; default OFF
   if(p.status!=='auto')return p.status;
   if((A.FEE_ON_TRANSFER||[]).indexOf(p.recv)>=0)return 'DISABLED';   // e.g. PAXG
   return A.ERC20_ENABLED ? 'TESTING' : 'DISABLED';                    // ERC20_ENABLED===false → DISABLED

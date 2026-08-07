@@ -67,19 +67,3 @@ regtest/E2E + external audit WAIVED_BY_OWNER / WAITING_EXTERNAL_AUDIT — not a 
 EVM HTLC is live @16000, but: BTC HTLC is gated OFF (needs regtest-real redeem/refund + crypto
 review), the EVM contract is unaudited/undeployed (external audit), and the dashboard has no E2E.
 None is a discovered defect; the gaps are real-environment tests + external audit/liquidity.
-
----
-
-## OTC-6 (BTC leg completion) — status delta
-
-| Row | Implemented | Tested (unit) | Real-net validated | Activated |
-|-----|-------------|---------------|--------------------|-----------|
-| BTC broadcast backend | ✅ | ✅ 29 | ❌ (regtest pending) | ❌ (gate OFF) |
-| BTC swap state machine + persistence | ✅ | ✅ 34 | n/a (pure) | ❌ |
-| BTC funding coin-selection | ✅ | ✅ 26 | ❌ | ❌ |
-| BTC watcher + restart-recovery | ✅ | ✅ 26 | ❌ | ❌ |
-| BTC dashboard gating | ✅ | manual | n/a | ❌ (default OFF) |
-
-Blocking for activation (unchanged): real `bitcoind`-regtest validation +
-operator flip of `SOST_BTC_ATOMIC_SWAP_ENABLED`. Option A unchanged; V15 mainnet
-unaffected.
