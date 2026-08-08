@@ -1,0 +1,17 @@
+# SOST V15 — Option B (BTC code included) — BTC backend config EXAMPLE.
+# Copy to a 0600 file on the WALLET/OTC-tooling host (NOT the consensus node)
+# and fill in real values. NEVER commit real secrets. BTC stays OFF until the
+# runtime gate is set AND the bitcoind-regtest validation has passed.
+
+# Runtime gate — MUST be 1 to enable BTC. Absent/0 => Null backend (fail-closed).
+SOST_BTC_ATOMIC_SWAP_ENABLED=0
+
+# bitcoind (or compatible) JSON-RPC endpoint. txindex=1 required.
+BTC_RPC_HOST=127.0.0.1
+BTC_RPC_PORT=18443          # 8332 mainnet / 18443 regtest / 18332 testnet
+BTC_RPC_USER=CHANGE_ME
+BTC_RPC_PASSWORD=CHANGE_ME  # never commit; store only in this 0600 file
+
+# Policy.
+BTC_NETWORK=regtest         # mainnet | testnet | regtest
+BTC_CONFIRMATIONS=1         # confs to treat a tx final (raise for mainnet)

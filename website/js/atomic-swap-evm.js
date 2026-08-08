@@ -74,6 +74,14 @@
   // Flip to true only after SafeERC20 wrapping + balance-delta accounting + tests are in place.
   var ERC20_ENABLED = false;
 
+  // BTC atomic-swap plumbing flag — the UI mirror of the node/tooling runtime
+  // gate SOST_BTC_ATOMIC_SWAP_ENABLED. DEFAULT false: even though the BTC HTLC
+  // code (redeem-script, sign, funding coin-selection, broadcast backend,
+  // watcher, restart-recovery) is now CODE-COMPLETE, BTC stays OFF until a
+  // separate activation (real bitcoind-regtest validation + operator flip).
+  // Flip to true ONLY when the backend is configured (BTC_RPC_*) and enabled.
+  var BTC_ENABLED = false;
+
   // issuer-freeze warning (mirrors the contract comment)
   var FREEZE_RISK = ['USDT', 'USDC', 'PAXG', 'XAUT'];
   // fee-on-transfer tokens are UNSUPPORTED by the contract (funds get stuck) — hard blacklist.
@@ -200,7 +208,7 @@
 
   return {
     SEL: SEL, TOPIC: TOPIC, STATE: STATE, NETWORKS: NETWORKS, FREEZE_RISK: FREEZE_RISK,
-    ERC20_ENABLED: ERC20_ENABLED, FEE_ON_TRANSFER: FEE_ON_TRANSFER, verifyCode: verifyCode,
+    ERC20_ENABLED: ERC20_ENABLED, BTC_ENABLED: BTC_ENABLED, FEE_ON_TRANSFER: FEE_ON_TRANSFER, verifyCode: verifyCode,
     strip0x: strip0x, isBytes32: isBytes32, isAddress: isAddress,
     toBaseUnits: toBaseUnits, fromBaseUnits: fromBaseUnits,
     dataLockNative: dataLockNative, dataLockERC20: dataLockERC20, dataClaim: dataClaim,
