@@ -16,7 +16,16 @@ JSON file of hashes and aggregate metadata.
 - It is **not** a resource or reserve estimate.
 
 ## `ree-prospective-v04-20260616_commitment.json`
-Public commitment for a sealed GeaSpirit REE prospective campaign (model E,
+
+> **Historical / legacy research anchor.** This commitment was made by a
+> third-party research operator in June 2026. It is preserved as an immutable
+> historical record and is **not** a current integration or an ongoing
+> relationship with any external platform. The commitment file and its anchor
+> receipt are kept byte-for-byte intact: `commitment.json` hashes to the value
+> committed on chain, so it is never edited. Any brand name still appearing
+> inside those files is part of the sealed record itself, not a live reference.
+
+Public commitment for a sealed REE prospective campaign (model E,
 relative regional rank). The underlying campaign remains **unresolved**; its
 targets stay private and encrypted. Prospective validation will follow the
 published resolution protocol over a multi-year horizon. The single number that
