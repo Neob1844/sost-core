@@ -42,7 +42,6 @@ MAIN_PAGES = (
     'sost-explorer.html',
     'sost-ai-engine.html',
     'sost-materials-engine.html',
-    'sost-geaspirit.html',
 )
 
 # Minimum HTML tag pattern set every page should declare.
