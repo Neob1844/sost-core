@@ -203,7 +203,7 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js"></script>
-<script src="js/nav-toggle.js" defer></script>
+<script src="js/nav-toggle.js?v=v380" defer></script>
 </head>
 <body>
 
@@ -220,9 +220,6 @@
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
     </a>
-    <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="display:flex;justify-content:center;align-items:center;text-decoration:none;flex:0 0 auto;" title="GeaSpirit — Second-Chance Mining Intelligence">
-      <img src="geaspirit-logo.png" alt="GeaSpirit" style="width:110px;height:110px;border-radius:20%;object-fit:cover;background:#fff;padding:0;box-sizing:border-box;filter:drop-shadow(0 0 12px rgba(0,255,65,.95)) drop-shadow(0 0 30px rgba(0,255,65,.6))">
-    </a>
     <a href="sost-popc.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC Bond Staking"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:26px;font-weight:900;letter-spacing:-0.5px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">BOND</span></a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
       <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
@@ -235,7 +232,6 @@
       <a href="sost-technology.html">Technology</a>
       <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
       <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
@@ -433,10 +429,10 @@
       </div>
       <div class="cp-range" id="cpSostRange"></div>
       <div id="cpSostDisclaimer" style="margin-top:10px;padding:10px 14px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:monospace;display:none">
-        <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// NON-MARKET PROTOCOL RESERVE METRIC — NOT A PRICE</div>
-        <div>SOST is not listed on any exchange and has no market price. It currently has <b>no value</b> and no gold or asset is associated with the SOST coin itself. This metric is shown as <b style="color:#ffd700">0</b>.</div>
+        <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// GOLD REFERENCE — NOT A MARKET PRICE</div>
+        <div>SOST is not listed on any exchange and has no <b>market</b> price. The value shown is a <b style="color:#ffd700">gold reference</b>: 1 SOST expressed as a fixed <b>1.14 mg of gold</b> — informational only, not a tradeable price.</div>
         <div style="color:#4ade80;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
-          Reserve metric = <span style="color:#ffd700;font-weight:600" id="cpSostDiscPrice">0</span> &nbsp;(no value currently associated with SOST)
+          Gold reference = <span style="color:#ffd700;font-weight:600" id="cpSostDiscPrice">$0.15</span> &nbsp;(1 SOST = 1.14 mg gold · informational, not a market price)
         </div>
         <div style="margin-top:6px">If SOST is ever admitted to trading on a CEX or DEX, only then could a market price exist; this section would then show actual market data.</div>
         <div style="margin-top:6px">Protocol-held gold commitment — <b>no peg, collateral backing, redemption right or legal claim for SOST holders.</b></div>
@@ -1017,38 +1013,8 @@
   }
 
   function showSostPopcPrice() {
-    // SOST currently has NO value and nothing is associated with the coin itself — force the
-    // entire markets view (price, fiat table, chart) to 0 (non-market, not a price).
-    var _pEl = document.getElementById('cpSostPrice');
-    if (_pEl) { _pEl.textContent = '$0.00'; _pEl.style.color = 'var(--text-dim,#888)'; _pEl.style.fontSize = ''; }
-    var _chEl = document.getElementById('cpSostChange');
-    if (_chEl) { _chEl.textContent = 'Non-market reserve metric · 0'; _chEl.style.color = 'var(--text-dim,#888)'; }
-    var _rEl = document.getElementById('cpSostRange');
-    if (_rEl) _rEl.innerHTML = 'No market price — SOST currently has no associated value (0).';
-    var _discEl = document.getElementById('cpSostDisclaimer');
-    if (_discEl) { _discEl.style.display = 'block'; var _dPr = document.getElementById('cpSostDiscPrice'); if (_dPr) _dPr.textContent = '0'; }
-    var _tbody = document.getElementById('sostFiatBody');
-    if (_tbody) {
-      var _html = '';
-      CURRENCY_GROUPS.forEach(function (g) {
-        _html += regionRow(g.region, 3);
-        g.currencies.forEach(function (c) {
-          _html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code +
-                   '</td><td class="price-val"><span style="color:#888">0</span></td></tr>';
-        });
-      });
-      _tbody.innerHTML = _html;
-    }
-    chartCache['sost-ref'] = {};
-    var _now = Date.now();
-    [1, 3, 7, 30, 180, 365].forEach(function (days) {
-      var pts = [], n = Math.min(days * 24, 720), step = (days * 86400000) / n;
-      for (var i = 0; i <= n; i++) pts.push([_now - (n - i) * step, 0]);
-      chartCache['sost-ref'][days] = pts;
-    });
-    sostChartId = 'sost-ref';
-    return;   // zero state forced above; gold-derived calc below is intentionally unreachable
-    // eslint-disable-next-line no-unreachable
+    // Show the SOST gold reference (1 SOST = 1.14 mg of gold) consistently across the markets
+    // view — big price, fiat table and chart. Informational reference, NOT a market price.
     var refUsd = calcSostPopcPrice();
     // Update the big SOST price display
     var pEl = document.getElementById('cpSostPrice');
@@ -1061,11 +1027,11 @@
       pEl.style.fontSize = '14px';
     }
     var chEl = document.getElementById('cpSostChange');
-    if (chEl) { chEl.textContent = 'PoPC Reference Price'; chEl.style.color = 'var(--text-dim,#888)'; }
+    if (chEl) { chEl.textContent = 'Gold reference price (1.14 mg)'; chEl.style.color = 'var(--text-dim,#888)'; }
     var rEl = document.getElementById('cpSostRange');
     if (rEl && refUsd && _sostRefGoldP && _sostRefSup) {
       rEl.innerHTML = 'Gold reference: 1.14 mg &times; $' + (_sostRefGoldP/31103.4768).toFixed(5) + '/mg = $' + (1.14*_sostRefGoldP/31103.4768).toFixed(4) + '/SOST'
-        + '<br><span style="font-size:9px;color:var(--text-dim,#666)">Not a market price. Based on PoPC gold commitments. Will be replaced when SOST is listed on an exchange.</span>';
+        + '<br><span style="font-size:9px;color:var(--text-dim,#666)">Not a market price. Based on the fixed 1.14 mg gold reference. Will be replaced when SOST is listed on an exchange.</span>';
     }
     // Update disclaimer with dynamic values
     var discEl = document.getElementById('cpSostDisclaimer');
@@ -2387,12 +2353,6 @@
           <span class="sv-card-h">SOST in 2 Minutes</span>
           <span class="sv-card-s">The protocol &middot; Sovereign by Design</span>
         </button>
-        <button class="sv-card sv-card-gea" type="button"
-          onclick="pickSv('sost-geaspirit.mp4','SOST &times; GeaSpirit &middot; Fusing Two Worlds')">
-          <span class="sv-thumb" style="background-image:url('sost-geaspirit-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST &times; GeaSpirit</span>
-          <span class="sv-card-s">Fusing Two Worlds &middot; mineral intelligence</span>
-        </button>
       </div>
     </div>
 
@@ -2456,7 +2416,6 @@
   .sv-back:hover{ border-color:#22d3ee; color:#22d3ee; }
   @media(max-width:560px){ .sv-card{ max-width:88vw; } .sv-cards{ gap:14px; } }
   /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
-  body.nav-collapsed nav a[href="https://geaspirit.com/"],
   body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
 </style>
 <script>

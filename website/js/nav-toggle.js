@@ -69,7 +69,6 @@
       "body.nav-collapsed nav a[href=\"sost-dex.html\"],",
       "body.nav-collapsed nav a[href=\"sost-popc.html\"],",
       "body.nav-collapsed nav a[href=\"atomic-swap-console.html\"],",
-      "body.nav-collapsed nav a[href^=\"https://geaspirit.com\"],",
       "body.nav-collapsed nav a[onclick=\"openSv()\"] {",
       "  display: none !important;",
       "}",
@@ -100,28 +99,21 @@
       "}",
       "html.pre-nav-collapsed body.nav-collapsed nav { padding: 4px 0 !important; }",
       /* ---- Unified logo bar across all sections ----
-         SOST logo + text stays left; ConvergenceX, GeaSpirit, PoPC DEX, Watch
-         and News group together on the right (drop ConvergenceX's flex:1 grow
-         and push the whole right group with margin-left:auto). */
+         SOST logo + text stays left; ConvergenceX, PoPC DEX, Watch and News
+         group together on the right (drop ConvergenceX's flex:1 grow and push
+         the whole right group with margin-left:auto). */
       "nav .container > a[href=\"casert-spec.html\"] {",
       "  flex: 0 0 auto !important;",
       "  margin-left: auto !important;",
       "}",
-      /* SOST PROTOCOL nav text identical on every page (the GeaSpirit page used",
-      "   a smaller 18px override — force the standard size everywhere). */
+      /* SOST PROTOCOL nav text identical on every page (some pages used a
+      "   smaller 18px override — force the standard size everywhere). */
       "nav .nav-logo { font-size: 26px !important; letter-spacing: 3px !important; gap: 14px !important; }",
       /* The ONLY pulsing logo on the whole site: the SOST mark — min->max glow. */
       "nav .nav-logo img { animation: sostLogoPulse 3.6s ease-in-out infinite; }",
       "@keyframes sostLogoPulse {",
       "  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,1,13,.45)) drop-shadow(0 0 10px rgba(251,1,13,.25)); }",
       "  50% { filter: drop-shadow(0 0 22px rgba(251,1,13,1)) drop-shadow(0 0 52px rgba(251,1,13,.92)) drop-shadow(0 0 88px rgba(251,1,13,.6)); }",
-      "}",
-      /* GeaSpirit nav logo pulses with the SAME rhythm + intensity as the SOST",
-      "   mark (3.6s ease-in-out), in its own green colour. */
-      "nav img[src$=\"geaspirit-logo.png\"] { animation: geaLogoPulse 3.6s ease-in-out infinite; }",
-      "@keyframes geaLogoPulse {",
-      "  0%, 100% { filter: drop-shadow(0 0 4px rgba(0,255,65,.45)) drop-shadow(0 0 10px rgba(0,255,65,.25)); }",
-      "  50% { filter: drop-shadow(0 0 22px rgba(0,255,65,1)) drop-shadow(0 0 52px rgba(0,255,65,.92)) drop-shadow(0 0 88px rgba(0,255,65,.6)); }",
       "}",
       /* Watch: fixed glow at maximum, no pulse (matches the other logos). */
       "nav a[onclick=\"openSv()\"] {",
@@ -215,7 +207,6 @@
       <a href="sost-technology.html">Technology</a>
       <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
       <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
@@ -313,36 +304,6 @@
 })();
 
 /* ============================================================================
-   Every GeaSpirit logo on the site links out to geaspirit.com. Logos already
-   wrapped in a single-purpose <a> get their href pointed there; bare logos are
-   wrapped. Logos inside a larger composite link are left untouched.
-   ========================================================================== */
-(function(){
-  "use strict";
-  var GEA = "https://geaspirit.com/";
-  function linkGeaLogos(){
-    var imgs = document.querySelectorAll('img[src*="geaspirit-logo.png"], img[src*="geaspirit-logo.svg"]');
-    for(var i=0;i<imgs.length;i++){
-      var img = imgs[i];
-      if(img.id === 'gea-splash-logo') continue;            // splash artwork, not a link
-      var a = img.parentNode && img.parentNode.tagName === 'A' ? img.parentNode : null;
-      if(a){
-        if(a.children.length === 1){                        // link wraps only the logo
-          a.setAttribute('href', GEA); a.setAttribute('target','_blank'); a.setAttribute('rel','noopener noreferrer');
-        }
-        continue;
-      }
-      var w = document.createElement('a');
-      w.href = GEA; w.target = '_blank'; w.rel = 'noopener noreferrer';
-      w.style.display = 'inline-flex'; w.style.cursor = 'pointer'; w.title = 'GeaSpirit — geaspirit.com';
-      img.parentNode.insertBefore(w, img); w.appendChild(img);
-    }
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', linkGeaLogos, {once:true});
-  else linkGeaLogos();
-})();
-
-/* ============================================================================
    SOST "Watch" (2-video) overlay — shared. Pages that already embed their own
    #sv-modal + openSv() (e.g. Home) keep theirs untouched; every other page gets
    this self-contained version so the nav "▶ Watch" link works everywhere.
@@ -366,8 +327,6 @@
       '.sv-card{width:340px;max-width:42vw;min-width:240px;background:linear-gradient(160deg,#0a1117,#0c1620);border:1px solid rgba(34,211,238,.30);border-radius:14px;padding:0 0 16px;cursor:pointer;display:flex;flex-direction:column;align-items:stretch;overflow:hidden;text-align:left;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}',
       '.sv-card:hover{transform:translateY(-4px)}',
       '.sv-card-sost:hover{border-color:#22d3ee;box-shadow:0 0 26px rgba(34,211,238,.35)}',
-      '.sv-card-gea{border-color:rgba(0,255,65,.30)}',
-      '.sv-card-gea:hover{border-color:#00ff41;box-shadow:0 0 26px rgba(0,255,65,.30)}',
       '.sv-thumb{position:relative;width:100%;aspect-ratio:16/9;background:#000 center/cover no-repeat;display:flex;align-items:center;justify-content:center}',
       '.sv-play{width:58px;height:58px;border-radius:50%;background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.85);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;padding-left:4px}',
       '.sv-card-h{font-size:18px;font-weight:800;color:#e5e7eb;margin:14px 16px 2px;font-family:Inter,system-ui,sans-serif}',
@@ -388,9 +347,6 @@
       +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-intro.mp4\',\'SOST in 2 Minutes &middot; Sovereign by Design\')">'
       +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
       +'<span class="sv-card-h">SOST in 2 Minutes</span><span class="sv-card-s">The protocol &middot; Sovereign by Design</span></button>'
-      +'<button class="sv-card sv-card-gea" type="button" onclick="pickSv(\'sost-geaspirit.mp4\',\'SOST &times; GeaSpirit &middot; Fusing Two Worlds\')">'
-      +'<span class="sv-thumb" style="background-image:url(\'sost-geaspirit-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
-      +'<span class="sv-card-h">SOST &times; GeaSpirit</span><span class="sv-card-s">Fusing Two Worlds &middot; mineral intelligence</span></button>'
       +'</div></div>'
       +'<div id="sv-player" class="sv-player" style="display:none">'
       +'<video id="sv-video" class="sv-video" controls preload="metadata" playsinline><source id="sv-source" src="" type="video/mp4">Your browser does not support HTML5 video.</video>'

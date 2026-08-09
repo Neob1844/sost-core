@@ -5,7 +5,6 @@
     "ai_engine_explainer",
     "casert_explainer",
     "dex_safety",
-    "geaspirit_public_methodology",
     "materials_engine_public",
     "mining_start",
     "mining_troubleshooting",
@@ -383,46 +382,6 @@
       ]
     },
     {
-      "item_id": "faq-geaspirit-public",
-      "category": "geaspirit_public_methodology",
-      "title": "Does GeaSpirit guarantee minerals at depth?",
-      "short_answer": "No. GeaSpirit produces probabilistic exploratory candidates only. Presence requires field validation.",
-      "tokens": [
-        "at",
-        "candidate",
-        "candidates",
-        "depth",
-        "does",
-        "exploratory",
-        "field",
-        "geaspirit",
-        "guarantee",
-        "if",
-        "is",
-        "mean",
-        "methodology",
-        "mineral",
-        "minerals",
-        "no",
-        "of",
-        "only",
-        "or",
-        "output",
-        "presence",
-        "probabilistic",
-        "produces",
-        "promise",
-        "public",
-        "quantity",
-        "requires",
-        "returns",
-        "target",
-        "that",
-        "there",
-        "validation"
-      ]
-    },
-    {
       "item_id": "faq-materials-public",
       "category": "materials_engine_public",
       "title": "Are Materials Engine candidates validated?",
@@ -672,22 +631,6 @@
       "warnings": [],
       "source_refs": [
         "sost-ai-engine.html"
-      ],
-      "publishability": "public_safe",
-      "last_reviewed": "2026-04-29"
-    },
-    {
-      "item_id": "faq-geaspirit-public",
-      "category": "geaspirit_public_methodology",
-      "title": "Does GeaSpirit guarantee minerals at depth?",
-      "question": "If GeaSpirit returns a candidate target, does that mean a mineral is there?",
-      "short_answer": "No. GeaSpirit produces probabilistic exploratory candidates only. Presence requires field validation.",
-      "detailed_answer": "GeaSpirit's public methodology screens candidate areas from open data using a documented scoring function. A high-score candidate is a hypothesis worth further field study — it is not a confirmation that a deposit exists or that a particular metal is present at any depth. Any claim stronger than 'candidate' falls outside the public methodology and the project does not make it.",
-      "warnings": [
-        "No GeaSpirit output is a promise of mineral presence or quantity."
-      ],
-      "source_refs": [
-        "sost-geaspirit.html"
       ],
       "publishability": "public_safe",
       "last_reviewed": "2026-04-29"

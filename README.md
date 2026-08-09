@@ -326,25 +326,6 @@ make -j$(nproc)
 ctest --output-on-failure
 ```
 
-### GeaSpirit — Mineral Intelligence Platform
-
-GeaSpirit is an advanced remote sensing and exploration intelligence platform based on multi-source fusion and zone-based validation. It identifies zones with high probability of containing mineral deposits — metallic AND non-metallic — from publicly available satellite, geophysical, geological, and mineralogical data.
-
-**Canonical Objective:** "There is [MINERAL] at [DEPTH] at [COORDINATES] with [X%] certainty."
-
-**Data sources:** Sentinel-2, Landsat 8/9, EMIT, SRTM DEM, MRDS, OZMIN, Macrostrat, Mindat.org, EarthMRI, Google Earth Engine.
-
-**Validated commodity types:** Porphyry Cu (0.882 AUC), Orogenic Au (0.922 AUC), IOCG (0.841), SEDEX Cu-Pb-Zn (0.781), Sediment-hosted Cu (0.760), Lithium brines/salares (0.891), Epithermal Au-Ag (queued).
-
-**Canonical Score: 25.1/40 (63%)** — Methodology frozen v4. Gravity integrated. 11+ zones across 4 continents.
-
-**Remote-first multi-zone (Phase 53):** Roșia Montană 27.4/40, Pebble Alaska 24.2/40, Kalgoorlie 15.0/40 — all without local geophysics. 3-tier architecture: universal remote baseline + public evidence + optional local bonus.
-
-**Case studies:** Pebble Mine Alaska (completed — 516 S2 images, 497 frontier targets, DS608 ground-truth integration), Roșia Montană Romania (epithermal Au-Ag, Golden Quadrilateral).
-
-Current phase: Phase 53 — Remote-first global mineral search engine with public evidence fusion.
-
-See `docs/GEASPIRIT_TECHNOLOGY_SUMMARY.md`.
 
 ### Materials Discovery Engine
 

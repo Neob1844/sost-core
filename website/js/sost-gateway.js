@@ -131,7 +131,7 @@
       if (!(Number.isInteger(conf) && conf >= 1 && conf <= 100)) throw new Error('required_confirmations: 1..100');
       return {
         kind: 'dummy',
-        merchant: String(o.merchant || 'GeaSpirit'),
+        merchant: String(o.merchant || 'SOST'),
         concept: String(o.concept || ''),
         amount_sost: m.stocks / STOCKS_PER_SOST,
         amount_stocks: m.stocks,
