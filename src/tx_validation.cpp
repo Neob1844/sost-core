@@ -14,6 +14,7 @@
 #include "sost/atomic_swap.h" // OTC-1 — ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT gate / atomic_swap_htlc_active_at
 #include "sost/popc_v15.h"    // P5 — PoPC V15 on-chain carrier output (0-value marker) exemption
 #include "sost/crypto.h"      // OTC-1 — sha256() for HTLC preimage verification (R21)
+#include "sost/jackpot.h"     // V15 (BLOCKER 2) — reserve freeze: is_reserve_output + gate
 #include "sost/tx_signer.h"   // OTC-1 — SpentOutput / VerifyTransactionInput (HTLC spend dispatch)
 
 #include <algorithm>
@@ -370,6 +371,41 @@ static TxValidationResult ValidateInputs(
                 (int32_t)i);
         }
 
+        // -------------------------------------------------------------------
+        // S13 (V15, BLOCKER 2) — CONSTITUTIONAL RESERVE FREEZE.
+        //
+        // From jackpot::RESERVE_FREEZE_ACTIVATION_HEIGHT (= V15_HEIGHT) a UTXO
+        // belonging to the Historical Jackpot reserve — a Gold Vault or PoPC
+        // Pool coinbase output at its constitutional address, per the EXISTING
+        // jackpot::is_reserve_output predicate — may be spent ONLY by the
+        // canonical TX_TYPE_JACKPOT protocol transaction, whose byte-exact
+        // reconstruction is enforced separately by validate_block_jackpot /
+        // validate_live_jackpot. Any other spender is rejected here, INCLUDING
+        // a transaction carrying a cryptographically valid signature from the
+        // holder of the constitutional private key.
+        //
+        // In practice a TX_TYPE_JACKPOT never reaches this function at all: R2
+        // above rejects the type, and the node's block path deliberately
+        // exempts the canonical jackpot from ValidateTransactionConsensus. The
+        // tx_type test is written out anyway so the RULE is stated exactly as
+        // specified and stays correct if R2's allow-list ever widens.
+        //
+        // Replay safety: below V15_HEIGHT reserve_freeze_active_at() is false,
+        // so this whole branch is dead and historical validation is unchanged
+        // byte-for-byte.
+        // -------------------------------------------------------------------
+        if (jackpot::reserve_freeze_active_at(ctx.spend_height) &&
+            jackpot::is_constitutional_reserve_utxo(utxo.type, utxo.pubkey_hash) &&
+            tx.tx_type != TX_TYPE_JACKPOT) {
+            return TxValidationResult::Fail(TxValCode::S13_RESERVE_FROZEN,
+                "S13: input[" + std::to_string(i) + "] spends a FROZEN constitutional "
+                "reserve output (Gold Vault / PoPC Pool). From height " +
+                std::to_string(jackpot::RESERVE_FREEZE_ACTIVATION_HEIGHT) +
+                " the Historical Jackpot reserve is spendable ONLY by the canonical "
+                "TX_TYPE_JACKPOT protocol transaction; a valid signature is not authority.",
+                (int32_t)i);
+        }
+
         if (utxo.type == OUT_BOND_LOCK || utxo.type == OUT_ESCROW_LOCK) {
             uint64_t lock_until = ReadLockUntil(utxo.payload);
             if ((uint64_t)ctx.spend_height < lock_until) {
@@ -678,6 +714,31 @@ TxValidationResult ValidateTransactionPolicy(
     const IUtxoView& utxos,
     const TxValidationContext& ctx)
 {
+    // V15 (BLOCKER 2) — relay/mempool mirror of the S13 consensus reserve freeze.
+    // Consensus already rejects these transactions, but policy must ALSO refuse to
+    // admit or relay them so a reserve-sweep attempt never propagates across the
+    // network, never sits in a mempool and never reaches a block template. Checked
+    // first so the rejection reason is the meaningful one. Height-gated identically
+    // to S13, so pre-V15 relay behaviour is unchanged.
+    if (jackpot::reserve_freeze_active_at(ctx.spend_height)) {
+        for (size_t i = 0; i < tx.inputs.size(); ++i) {
+            OutPoint rop;
+            rop.txid  = tx.inputs[i].prev_txid;
+            rop.index = tx.inputs[i].prev_index;
+            auto ru = utxos.GetUTXO(rop);
+            if (!ru.has_value()) continue;   // missing UTXO is S1's job, not policy's
+            if (jackpot::is_constitutional_reserve_utxo(ru->type, ru->pubkey_hash) &&
+                tx.tx_type != TX_TYPE_JACKPOT) {
+                return TxValidationResult::Fail(TxValCode::P_RESERVE_FROZEN,
+                    "Policy: input[" + std::to_string(i) + "] spends a FROZEN "
+                    "constitutional reserve output (Gold Vault / PoPC Pool) — not relayed, "
+                    "not admitted to the mempool, not mineable. Only the canonical "
+                    "TX_TYPE_JACKPOT may spend the Historical Jackpot reserve.",
+                    (int32_t)i);
+            }
+        }
+    }
+
     size_t tx_size = EstimateTxSerializedSize(tx);
     if (tx_size > (size_t)MAX_TX_BYTES_STANDARD) {
         return TxValidationResult::Fail(TxValCode::P_TX_TOO_LARGE,

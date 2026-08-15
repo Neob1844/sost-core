@@ -22,7 +22,20 @@
 using namespace sost;
 
 // ---- V14 fork height + the changes that actually ENFORCE in V14 -------------
-#ifdef SOST_TESTNET_FORKS
+#if defined(SOST_DEVNET_FORKS)
+// DEVNET_FAST compresses the whole fork ladder into the first few dozen blocks, so
+// the mainnet/testnet height pins below cannot hold. Pin the ORDERING invariant
+// instead — that is the property the ladder actually has to satisfy. (Without this
+// branch the file simply failed to compile in a DEVNET build, which is why the
+// devnet harnesses only ever built individual targets.)
+static_assert(V13_HEIGHT < DTD_DOMINANCE_GATE_HEIGHT &&
+              DTD_DOMINANCE_GATE_HEIGHT < V15_HEIGHT &&
+              V15_HEIGHT < HIST_JACKPOT_FIRST_HEIGHT,
+    "DEVNET_FAST: the compressed fork ladder must stay coherently ordered "
+    "(V13 < DTD dominance gate < V15 < first jackpot).");
+static_assert(V14_HEIGHT < V15_HEIGHT,
+    "DEVNET_FAST: V14 must precede V15.");
+#elif defined(SOST_TESTNET_FORKS)
 static_assert(V14_HEIGHT == 200,
     "Testnet build: V14_HEIGHT must be the early testnet height (200).");
 static_assert(V15_HEIGHT == 12500,
@@ -50,16 +63,36 @@ static_assert(DYNAMIC_FEE_ACTIVATION_HEIGHT == 10000,
 // P4c — DTD-PoPC eligibility is staged AFTER PoPC automation (V15_HEIGHT) by a
 // grace window, so miners can create+activate a contract before the lottery
 // requires it. The gate itself still ships DEFERRED (flag false).
+#if defined(SOST_DEVNET_FORKS)
+static_assert(DTD_POPC_GRACE_BLOCKS > 0,
+    "DEVNET_FAST: the grace window is compressed but must stay positive.");
+#else
 static_assert(DTD_POPC_GRACE_BLOCKS == 5000,
     "PoPC eligibility grace window changed from 5000 blocks — confirm intentional.");
+#endif
 static_assert(DTD_POPC_ELIGIBILITY_HEIGHT == V15_HEIGHT + DTD_POPC_GRACE_BLOCKS,
     "DTD_POPC_ELIGIBILITY_HEIGHT must equal V15_HEIGHT + DTD_POPC_GRACE_BLOCKS (30000 mainnet / 17500 testnet).");
-// V15 ACTIVATION (2026-06-27): the DTD-PoPC eligibility gate is now ACTIVE on
-// BOTH profiles (enforced from DTD_POPC_ELIGIBILITY_HEIGHT — mainnet 25000 /
-// testnet 5300). Pinned true so a future accidental revert to false fails here.
+// V15 FINAL (2026-08-15): the DTD-PoPC eligibility gate is PROFILE-SPLIT.
+//   MAINNET  -> false. PoPC ships DEACTIVATED in V15, so requiring a PoPC bond
+//               from block 30000 would empty the DTD eligibility set and stall
+//               both the per-block draw and the Historical Jackpot forever. The
+//               mainnet DTD is PERMISSIONLESS. Pinned false so an accidental
+//               flip to true cannot reach a release build unnoticed.
+//   TESTNET  -> true. The live rule keeps soaking end-to-end.
+//   DEVNET   -> false. Jackpot-lifecycle isolation.
+#if defined(SOST_DEVNET_FORKS)
+static_assert(DTD_POPC_GATE_CONSENSUS_ACTIVE == false,
+    "DEVNET: DTD-PoPC eligibility gate must stay inert (jackpot lifecycle isolation).");
+#elif defined(SOST_TESTNET_FORKS)
 static_assert(DTD_POPC_GATE_CONSENSUS_ACTIVE == true,
-    "DTD-PoPC eligibility gate is ACTIVATED in V15 (enforced from DTD_POPC_ELIGIBILITY_HEIGHT). "
-    "Do NOT revert to false without a coordinated de-activation release.");
+    "TESTNET: DTD-PoPC eligibility gate stays ACTIVE so the rule keeps soaking.");
+#else
+static_assert(DTD_POPC_GATE_CONSENSUS_ACTIVE == false,
+    "MAINNET: the DTD must be PERMISSIONLESS in V15 — PoPC ships deactivated, so a true "
+    "gate would empty the DTD eligibility set from block 30000 and permanently stall the "
+    "50% emission redistribution AND the Historical Jackpot. Do NOT flip to true without "
+    "a live PoPC bond market + a coordinated miner-announcement release.");
+#endif
 static_assert(DTD_EMERGENCY_CONTROL_MIN_HEIGHT == V14_HEIGHT,
     "DTD emergency-control min height must equal V14_HEIGHT.");
 static_assert(DTD_EMERGENCY_CONTROL_CONSENSUS_ACTIVE == false,

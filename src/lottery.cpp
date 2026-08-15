@@ -86,10 +86,20 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     //
     // V14 extension (from height >= DTD_POPC_ELIGIBILITY_HEIGHT, params.h):
     // additionally require has_active_canonical_popc(pkh, height) to
-    // return true. The gate is wired but consensus-deferred: see
-    // DTD_POPC_GATE_CONSENSUS_ACTIVE in params.h and the helper docs
-    // in include/sost/lottery.h. While the flag is false (current build)
-    // the helper returns true unconditionally and the gate is a no-op.
+    // return true. The gate is wired but its consensus effect depends on
+    // the BUILD PROFILE — read DTD_POPC_GATE_CONSENSUS_ACTIVE in params.h,
+    // do not assume:
+    //   * MAINNET  : flag = FALSE. PoPC ships deactivated in V15, so the DTD
+    //                is PERMISSIONLESS and this filter never runs. If the flag
+    //                were true the eligibility set would go EMPTY at block
+    //                30000 (nobody holds a commitment) and both the per-block
+    //                DTD draw and the Historical Jackpot would stall forever.
+    //   * TESTNET  : flag = TRUE — the live rule is soaked end-to-end.
+    //   * DEVNET   : flag = FALSE — jackpot-lifecycle isolation.
+    // NOTE FOR AUDITORS: a DEVNET/testnet run does NOT exercise the mainnet
+    // value of this flag. Any test that claims to cover the mainnet behaviour
+    // must be compiled with mainnet params (no SOST_DEVNET_FORKS/
+    // SOST_TESTNET_FORKS) — see tests/test_dtd_permissionless_mainnet.cpp.
     //
     // The `current_miner_pkh` parameter is retained for source-level
     // compatibility with C6/C7 callers and tests; it is no longer
@@ -203,7 +213,8 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
         // (c) Staged DTD-PoPC eligibility (P4c/P5). PoPC is required only from
         // DTD_POPC_ELIGIBILITY_HEIGHT (= V15_HEIGHT + grace) AND only when the
         // consensus flag is active — both encoded in popc_eligibility_enforced().
-        // The flag ships false, so this branch is a no-op on eligibility today.
+        // On MAINNET the flag is false (DTD permissionless, PoPC deactivated in
+        // V15), so this branch never excludes anybody; TESTNET soaks it as true.
         if (popc_eligibility_enforced(height, DTD_POPC_GATE_CONSENSUS_ACTIVE) &&
             !has_active_canonical_popc(pkh, height)) {
             continue;

@@ -151,7 +151,14 @@ int main(){
     // ---- gating: empty events = no-op (no carriers); V15 ACTIVATED on both profiles ----
     CHECK("no events -> empty active set (no-op)", chain_active_popc_set({}, 5000).empty());
     CHECK("no events -> Pending status (no-op)",   popc_v15_commitment_status({}, A, 5000) == PopcV15Status::Pending);
-    CHECK("DTD-PoPC bridge ACTIVE (V15)", DTD_POPC_GATE_CONSENSUS_ACTIVE == true);
+    // V15 FINAL: the DTD-PoPC bridge is profile-split — ACTIVE on testnet (soak),
+    // INERT on mainnet/devnet (the mainnet DTD is permissionless because PoPC
+    // ships deactivated; a true gate would empty the eligibility set at 30000).
+#if defined(SOST_TESTNET_FORKS)
+    CHECK("DTD-PoPC bridge ACTIVE (testnet soak)", DTD_POPC_GATE_CONSENSUS_ACTIVE == true);
+#else
+    CHECK("DTD-PoPC bridge INERT (mainnet: DTD permissionless)", DTD_POPC_GATE_CONSENSUS_ACTIVE == false);
+#endif
     CHECK("popc_v15 active at V15_HEIGHT", popc_v15_active_at(V15_HEIGHT) == true);
 
     std::printf("=== Results: %d passed, %d failed ===\n", g_pass, g_fail);

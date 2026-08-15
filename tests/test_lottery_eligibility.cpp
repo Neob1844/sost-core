@@ -762,14 +762,15 @@ static void test_v135_sbpow_gate_off_below_gate_height() {
 
 static void test_v14_popc_gate_consensus_deferred() {
     printf("\n=== V14.1) PoPC gate active but no event source wired → all eligible (defensive no-op) ===\n");
-    // V15 ACTIVATION (2026-06-27): DTD_POPC_GATE_CONSENSUS_ACTIVE is now TRUE on
-    // both profiles. This unit harness wires NO popc event source, so
-    // has_active_canonical_popc() takes its defensive `!g_popc_src -> true` branch
-    // and every candidate is still eligible. That is exactly what this test pins:
-    // the gate never excludes anyone unless a chain-derived PoPC source is present.
-    static_assert(sost::DTD_POPC_GATE_CONSENSUS_ACTIVE,
-                  "Expected the DTD-PoPC gate to be ACTIVE in V15; if it was reverted to "
-                  "false, update this test's premise.");
+    // V15 FINAL (2026-08-15): DTD_POPC_GATE_CONSENSUS_ACTIVE is profile-split
+    // (mainnet false = permissionless DTD, testnet true = soak). This harness is
+    // valid under BOTH values:
+    //   * flag false -> popc_eligibility_enforced() short-circuits, nobody excluded;
+    //   * flag true  -> no popc event source is wired here, so
+    //                   has_active_canonical_popc() takes its defensive
+    //                   `!g_popc_src -> true` branch and nobody is excluded either.
+    // What this test pins is the invariant common to both: the gate never excludes
+    // anyone unless a chain-derived PoPC source is present AND the flag is on.
 
     auto A = mk_pkh(0xA1);
     auto B = mk_pkh(0xA2);

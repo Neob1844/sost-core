@@ -2120,24 +2120,40 @@ static std::string handle_sendrawtransaction(const std::string& id, const std::v
     Hash256 txid; if(!tx.ComputeTxId(txid,&err)) return rpc_error(id,-25,"TX reject: "+err);
 
     // -------------------------------------------------------------------------
-    // Gold Vault policy protection (not consensus — policy only)
-    // Detects and logs any TX that attempts to spend from the Gold Vault address.
-    // Currently WARNING only — does not block acceptance.
-    // To enable blocking: set a config flag and return rpc_error here instead.
+    // Constitutional reserve protection at the RPC edge.
+    //
+    // Pre-V15 this was a WARNING-ONLY probe on the Gold Vault address: it logged
+    // the sweep and then accepted it. From RESERVE_FREEZE_ACTIVATION_HEIGHT
+    // (= V15_HEIGHT) the reserve is frozen by consensus (S13) and by relay policy
+    // (P_RESERVE_FROZEN), so refuse the submission outright here too — the earliest
+    // possible point — and never broadcast it. Covers BOTH constitutional sinks
+    // (Gold Vault and PoPC Pool) via the canonical is_reserve_output predicate,
+    // instead of the old pkh-only match on the Gold Vault.
+    //
+    // Below V15_HEIGHT the historical warn-and-accept behaviour is preserved
+    // exactly, so nothing about the current chain's relay behaviour changes.
     // -------------------------------------------------------------------------
     {
-        PubKeyHash gold_vault_pkh{};
-        address_decode(ADDR_GOLD_VAULT, gold_vault_pkh);
+        const int64_t spend_h = g_chain_height + 1;
         for (const auto& txin : tx.inputs) {
             OutPoint op{txin.prev_txid, txin.prev_index};
             auto utxo = g_utxo_set.GetUTXO(op);
-            if (utxo && utxo->pubkey_hash == gold_vault_pkh) {
-                // Log a critical alert — Gold Vault is being spent
-                printf("[GOLD-VAULT-ALERT] TX spending from Gold Vault detected! txid=%s amount=%lld stocks\n",
-                       to_hex(txid.data(), 32).c_str(), (long long)utxo->amount);
-                // NOTE: blocking can be enabled here later via a config flag,
-                // e.g. return rpc_error(id,-403,"Gold Vault spend blocked by policy");
+            if (!utxo) continue;
+            if (!sost::jackpot::is_constitutional_reserve_utxo(utxo->type, utxo->pubkey_hash)) continue;
+
+            if (sost::jackpot::reserve_freeze_active_at(spend_h)) {
+                printf("[RESERVE-FROZEN] REJECTED TX spending the constitutional reserve! "
+                       "txid=%s amount=%lld stocks height=%lld\n",
+                       to_hex(txid.data(), 32).c_str(), (long long)utxo->amount, (long long)spend_h);
+                return rpc_error(id, -26,
+                    "TX reject: input spends a FROZEN constitutional reserve output "
+                    "(Gold Vault / PoPC Pool). From the V15 activation height the Historical "
+                    "Jackpot reserve can be spent ONLY by the canonical TX_TYPE_JACKPOT "
+                    "protocol transaction; a valid signature is not authority.");
             }
+            // Pre-V15: unchanged warning-only alert.
+            printf("[GOLD-VAULT-ALERT] TX spending from Gold Vault detected! txid=%s amount=%lld stocks\n",
+                   to_hex(txid.data(), 32).c_str(), (long long)utxo->amount);
         }
     }
 
@@ -5438,6 +5454,44 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             printf("[BLOCK] REJECTED: non-standard tx at index %zu\n", i);
             return false;
         }
+        // ------------------------------------------------------------------
+        // V15 (BLOCKER 2) — CONSTITUTIONAL RESERVE FREEZE, block-path enforcement.
+        //
+        // S13 in ValidateTransactionConsensus is the primary rule and it runs on
+        // every non-jackpot tx below. This is an INDEPENDENT backstop placed on
+        // the node's real block path, outside the v14_txrules branch, so the
+        // freeze holds even if that branch is ever restructured: from
+        // RESERVE_FREEZE_ACTIVATION_HEIGHT (= V15_HEIGHT) no transaction other
+        // than the canonical TX_TYPE_JACKPOT may spend a Gold Vault / PoPC Pool
+        // reserve UTXO, however well-signed it is.
+        //
+        // The canonical jackpot itself is exempt (jackpot_block_tx) — it is the
+        // ONLY authorized spender, and it must still pass validate_live_jackpot's
+        // byte-exact canonical reconstruction, which every ConnectBlock caller
+        // runs before reaching here.
+        //
+        // Below V15_HEIGHT this is dead code, so historical replay is byte-identical.
+        // (V15_HEIGHT > V14_HEIGHT on every profile, so v14_scratch is always the
+        //  live view when the freeze applies; the static_assert pins that.)
+        static_assert(sost::V15_HEIGHT >= sost::V14_HEIGHT,
+            "Reserve freeze relies on the V14 scratch view being active at V15 heights.");
+        if(sost::jackpot::reserve_freeze_active_at(height) && !jackpot_block_tx){
+            const UtxoSet& rview = v14_txrules ? v14_scratch : g_utxo_set;
+            for(size_t ri = 0; ri < txs[i].inputs.size(); ++ri){
+                OutPoint rop; rop.txid = txs[i].inputs[ri].prev_txid;
+                rop.index = txs[i].inputs[ri].prev_index;
+                auto ru = rview.GetUTXO(rop);
+                if(!ru.has_value()) continue;   // missing-input is handled by the normal path
+                if(sost::jackpot::is_constitutional_reserve_utxo(ru->type, ru->pubkey_hash)){
+                    printf("[BLOCK] REJECTED: tx at index %zu spends a FROZEN constitutional "
+                           "reserve output (input %zu) — only TX_TYPE_JACKPOT may spend the "
+                           "Gold Vault / PoPC Pool reserve from height %lld\n",
+                           i, ri, (long long)sost::jackpot::RESERVE_FREEZE_ACTIVATION_HEIGHT);
+                    record_block_reject("constitutional reserve frozen (S13)");
+                    return false;
+                }
+            }
+        }
         if(v14_txrules){
             // H4: reject duplicate txid within the same block (R10).
             Hash256 v14_txid{}; std::string id_err;
@@ -8491,8 +8545,18 @@ int main(int argc, char** argv) {
     // P4a — register the canonical, chain-derived PoPC V15 event source so the
     // consensus eligibility path (lottery::has_active_canonical_popc) recomputes
     // the active set from on-chain carriers instead of the per-node registry.
-    // Self-gated: node_collect_popc_events returns empty until popc_v15_active_at,
-    // so mainnet (deferred at INT64_MAX) is byte-identical / no-op.
+    // Self-gated at TWO independent levels, so registering it unconditionally is
+    // safe and leaves historical replay byte-identical:
+    //   1. node_collect_popc_events returns an empty set below
+    //      POPC_V15_ACTIVATION_HEIGHT (= V15_HEIGHT, mainnet 25000), and
+    //   2. more importantly, the DTD eligibility filter that consumes this
+    //      source only runs when DTD_POPC_GATE_CONSENSUS_ACTIVE is true. That
+    //      flag is FALSE on mainnet (PoPC ships deactivated in V15; the DTD is
+    //      permissionless), so on mainnet this source is never consulted for
+    //      eligibility at all. It IS consulted on the testnet build, which soaks
+    //      the rule. (The old comment here claimed the gate was "deferred at
+    //      INT64_MAX" — that was stale: the eligibility height is a finite
+    //      30000, and the real thing keeping the mainnet DTD open is the flag.)
     sost::lottery::set_popc_event_source(node_collect_popc_events);
 
     // Wallet rescan from UTXO set

@@ -87,14 +87,27 @@ int main(){
         CHECK("recompute deterministic / no stale state",     !excluded(chain,      MINER, ELI, true));
     }
 
-    // ---- shipped-flag behaviour: V15 ACTIVATED — the gate is true on BOTH profiles
-    // and the rule BITES with the REAL shipped flag: an owner with a maintained PoPC
-    // is included, one without is excluded.
-    CHECK("shipped flag is true (V15 activated)", DTD_POPC_GATE_CONSENSUS_ACTIVE == true);
+    // ---- shipped-flag behaviour (V15 FINAL, profile-split) --------------------
+    // TESTNET keeps soaking the live rule: a maintained PoPC is included, an owner
+    // without one is excluded. MAINNET ships the gate INERT because PoPC is
+    // deactivated in V15 — the DTD is PERMISSIONLESS, so NOBODY is ever excluded
+    // for lacking a bond, at any height. (This is the check that would have caught
+    // BLOCKER 1: it only bites when compiled with mainnet params.)
+#if defined(SOST_TESTNET_FORKS)
+    CHECK("shipped flag is true (testnet soak)", DTD_POPC_GATE_CONSENSUS_ACTIVE == true);
     CHECK("shipped gate keeps the maintained miner eligible",
           !excluded(chain, MINER, ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
     CHECK("shipped gate excludes the no-PoPC owner",
           excluded(chain, NONE,  ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
+#else
+    CHECK("shipped flag is false (DTD permissionless)", DTD_POPC_GATE_CONSENSUS_ACTIVE == false);
+    CHECK("shipped gate keeps the maintained miner eligible",
+          !excluded(chain, MINER, ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
+    CHECK("shipped gate does NOT exclude the no-PoPC owner (permissionless DTD)",
+          !excluded(chain, NONE,  ELI, DTD_POPC_GATE_CONSENSUS_ACTIVE));
+    CHECK("shipped gate still open far past eligibility",
+          !excluded(chain, NONE,  ELI + 5000, DTD_POPC_GATE_CONSENSUS_ACTIVE));
+#endif
 
     // PoPC automation is LIVE from V15_HEIGHT on both profiles; only the height
     // values differ (mainnet 25000/30000 vs testnet 12500/17500).
