@@ -1081,9 +1081,37 @@ inline constexpr int64_t V14_7_HEIGHT                     = 17000;   // MAINNET 
 // set is recomputed DETERMINISTICALLY from chain state on every node
 // (node_collect_popc_events -> chain_active_popc_set, NEVER popc_registry.json),
 // and the registry is only a local view. The TESTNET build therefore ACTIVATES
-// the gate to soak the full rule end-to-end; MAINNET stays DEFERRED (false),
-// byte-identical, until prerequisite 4 — the coordinated point release — flips
-// the #else branch to true at a fork height with a miner-announcement window.
+// the gate to soak the full rule end-to-end; MAINNET ships the gate INERT
+// (false) — see the DTD-permissionless rationale immediately below.
+//
+// -----------------------------------------------------------------------------
+// V15 FINAL (2026-08-15) — MAINNET gate returned to false. RATIONALE (BLOCKER 1)
+// -----------------------------------------------------------------------------
+// The V15 mainnet release ships PoPC DEACTIVATED: there is no PoPC bond market,
+// no fee/reward flow that would make a bond rational, and the on-chain registry
+// holds ZERO commitments. With the gate true, popc_eligibility_enforced() starts
+// REQUIRING has_active_canonical_popc() from DTD_POPC_ELIGIBILITY_HEIGHT
+// (= 25000 + 5000 = 30000). Because no miner holds a commitment, the DTD
+// eligibility set computed by compute_lottery_eligibility_set() would be EMPTY
+// from block 30000 onwards. Consequences, all of them chain-visible:
+//   * the every-block DTD draw never has a winner  -> 50 % of the emission
+//     rolls over forever instead of being redistributed;
+//   * the Historical DTD Jackpot (which selects its winner from the SAME
+//     eligibility set, sost-node.cpp discover/select path) never pays, so the
+//     ~60 378 SOST historical reserve is never returned to the miners.
+// That directly contradicts the published V15 plan ("PoPC deactivated, 50 % to
+// the DTD, the reserve goes back to the miners") and would silently make the
+// DTD permissioned.
+//
+// The DTD is therefore PERMISSIONLESS on mainnet: no bond, no whitelist, no
+// registration — mining a block is the only qualification. The gate stays wired
+// and stays ACTIVE on testnet so the rule can keep soaking; re-enabling it on
+// mainnet is a future coordinated point release that must ship together with a
+// real PoPC bond market AND a miner-announcement window.
+//
+// Replay safety: DTD_POPC_ELIGIBILITY_HEIGHT is 30000 and the mainnet chain has
+// never reached it, so no historical block's eligibility set changes. Blocks
+// 0..29999 replay byte-identical either way.
 #if defined(SOST_DEVNET_FORKS)
 // DEVNET_FAST: keep the PoPC-eligibility gate INERT so the Historical Jackpot lifecycle
 // can be exercised without also standing up PoPC commitments for every dev miner (the gate
@@ -1093,7 +1121,7 @@ inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;   // DEV only
 #elif defined(SOST_TESTNET_FORKS)
 inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // TESTNET — soak the live rule
 #else
-inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = true;    // MAINNET — ACTIVATED 2026-06-27 (V15 coordinated release; enforced from DTD_POPC_ELIGIBILITY_HEIGHT = 25000)
+inline constexpr bool    DTD_POPC_GATE_CONSENSUS_ACTIVE   = false;   // MAINNET — DTD is PERMISSIONLESS in V15 (PoPC ships deactivated; see rationale above)
 #endif
 
 // V15 — full automation bundle (PoPC Model A/B, OTC/P2P atomic swap, Gold Vault

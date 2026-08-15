@@ -21,6 +21,7 @@
 #include "sost/types.h"         // Bytes32
 #include "sost/tx_signer.h"     // PubKeyHash
 #include "sost/transaction.h"   // OUT_COINBASE_GOLD/POPC
+#include "sost/address.h"       // V15 reserve freeze — decode ADDR_GOLD_VAULT/ADDR_POPC_POOL
 
 namespace sost::jackpot {
 
@@ -126,6 +127,81 @@ inline bool is_reserve_output(uint8_t out_type,
                               const PubKeyHash& popc_pkh) {
     return (out_type == OUT_COINBASE_GOLD && pkh == gold_pkh)
         || (out_type == OUT_COINBASE_POPC && pkh == popc_pkh);
+}
+
+// ============================================================================
+// V15 — CONSTITUTIONAL RESERVE FREEZE (BLOCKER 2)
+// ============================================================================
+// Until V15 the Gold Vault / PoPC Pool UTXOs were protected by NOTHING but key
+// custody: docs/CONSTITUTIONAL_ADDRESSES_AUDIT.md states plainly that "no
+// consensus rule prevents spending FROM Gold Vault or PoPC Pool — anyone with
+// the private key CAN spend". Because the Historical Jackpot reserve is not a
+// stored counter but simply "whatever those addresses hold" (jackpot_reserve.h)
+// and the jackpot RETIRES for good once the reserve hits 0 (hist_jackpot_apply),
+// one ordinary signed sweep would empty ~60 378 SOST and kill the jackpot
+// permanently. Key custody is not a protocol guarantee.
+//
+// From RESERVE_FREEZE_ACTIVATION_HEIGHT (= V15_HEIGHT) consensus makes the
+// reserve spendable EXCLUSIVELY by the canonical protocol transaction:
+//
+//   if any input of a tx spends a UTXO satisfying is_reserve_output(),
+//   then tx.tx_type MUST be TX_TYPE_JACKPOT
+//   (and that tx must still pass the byte-exact canonical reconstruction in
+//    validate_block_jackpot / validate_live_jackpot, which is unchanged).
+//
+// Anything else — including a cryptographically VALID signature by the holder
+// of the constitutional private key — is rejected by consensus and is not
+// relayed by policy. The jackpot's own change output re-enters the sink as an
+// OUT_COINBASE_GOLD at the Gold Vault address (jackpot_reserve.h), so it is
+// frozen by the same rule: intended, and required for the reserve to survive
+// between payouts.
+//
+// Height-gated strictly: below V15_HEIGHT the predicate is false and nothing
+// changes, so blocks 0..V15_HEIGHT-1 replay byte-identical.
+//
+// INTERACTION WITH GOLD VAULT GOVERNANCE (G1-G5). A governance spend is an
+// ORDINARY signed spend, so the freeze supersedes it: from V15_HEIGHT the Gold
+// Vault is not spendable by any signature-authorised path, governed or not.
+//   * MAINNET  — no interaction whatsoever: GV_SLICE1_ACTIVATION_HEIGHT is
+//                INT64_MAX (gold_vault_slice1.h), so G1-G5 is completely inert
+//                and nothing that used to be possible becomes impossible.
+//   * TESTNET  — G1-G5 activates at V15_HEIGHT, and from that height the freeze
+//                takes precedence over it. That is the intended ordering: the
+//                Historical Jackpot reserve is not a treasury. Any future
+//                governed outflow must be expressed as its own canonical
+//                protocol transaction type, never as a signed sweep.
+inline constexpr int64_t RESERVE_FREEZE_ACTIVATION_HEIGHT = V15_HEIGHT;
+
+inline constexpr bool reserve_freeze_active_at(int64_t height) {
+    return height >= RESERVE_FREEZE_ACTIVATION_HEIGHT;
+}
+
+// Constitutional reserve addresses, decoded once. These are compile-time
+// constants of the protocol (params.h ADDR_GOLD_VAULT / ADDR_POPC_POOL); the
+// decode is done lazily into a function-local static so every consensus caller
+// sees the identical bytes with no per-input cost and no global-init ordering
+// hazard. A decode failure would mean params.h itself is corrupt, so the
+// accessors fall back to an all-zero pkh, which matches no real output.
+inline const PubKeyHash& reserve_gold_pkh() {
+    static const PubKeyHash k = [] {
+        PubKeyHash p{};
+        if (!address_decode(ADDR_GOLD_VAULT, p)) p = PubKeyHash{};
+        return p;
+    }();
+    return k;
+}
+inline const PubKeyHash& reserve_popc_pkh() {
+    static const PubKeyHash k = [] {
+        PubKeyHash p{};
+        if (!address_decode(ADDR_POPC_POOL, p)) p = PubKeyHash{};
+        return p;
+    }();
+    return k;
+}
+
+// Convenience for validators: does this UTXO belong to the frozen reserve?
+inline bool is_constitutional_reserve_utxo(uint8_t out_type, const PubKeyHash& pkh) {
+    return is_reserve_output(out_type, pkh, reserve_gold_pkh(), reserve_popc_pkh());
 }
 
 // A reserve UTXO, reduced to the fields consensus needs for deterministic
@@ -249,6 +325,18 @@ inline bool jackpot_tx_matches_canonical(const Transaction& tx,
                                     sorted_reserve, reserve_change_pkh, expected)) {
         return false;
     }
+    // V15 FINAL — pin tx.version too. The canonical jackpot is EXEMPT from
+    // ValidateTransactionConsensus in the node's block path (it is keyless, and
+    // R2 forbids its type in the standalone validator), so R1's version check
+    // never runs on it. Without this comparison a miner could ship the same
+    // jackpot event with any version value: every amount, input and output would
+    // still be canonical, but the serialization — and therefore the jackpot
+    // tx's txid and the block's merkle root — would not be uniquely determined
+    // by chain state. "Byte-exact canonical reconstruction" must mean all four
+    // serialized fields (version, tx_type, inputs, outputs), not three.
+    // Only reachable at jackpot heights (>= HIST_JACKPOT_FIRST_HEIGHT), which
+    // are all in the future, so historical replay is unaffected.
+    if (tx.version != expected.version)             return false;
     if (tx.tx_type != expected.tx_type)             return false;
     if (tx.inputs.size()  != expected.inputs.size())  return false;
     if (tx.outputs.size() != expected.outputs.size()) return false;

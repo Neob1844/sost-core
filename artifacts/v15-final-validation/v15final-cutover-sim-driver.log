@@ -1,0 +1,40 @@
+==============================================================
+V15 driver tests (ssh/scp shimmed — no production contact)
+==============================================================
+
+D1: UNKNOWN installed binary + --yes  -> MUST ABORT
+  [PASS] exit non-zero (1)
+  [PASS] says UNRECOGNISED (1)
+  [PASS] mentions --force-unknown-binary (1)
+  [PASS] NO writes to the VPS (0)
+
+D2: UNKNOWN installed binary + --yes --dry-run -> STILL ABORTS
+  [PASS] exit non-zero (1)
+  [PASS] NO writes to the VPS (0)
+
+D3: UNKNOWN + explicit --force-unknown-binary --dry-run -> proceeds
+  [PASS] exit 0 (0)
+  [PASS] warned about the override (1)
+  [PASS] dry-run still wrote NOTHING (0)
+
+D4: expected pre-cutover binary + --dry-run -> READ-ONLY, exit 0
+  [PASS] exit 0 (0)
+  [PASS] declares read-only (1)
+  [PASS] NO writes to the VPS (0)
+
+D5: release already installed -> idempotent no-op
+  [PASS] exit 0 (0)
+  [PASS] reports already installed (1)
+  [PASS] NO writes to the VPS (0)
+
+D6: unreadable installed hash -> refuses to proceed blind
+  [PASS] exit non-zero (1)
+  [PASS] refuses blind (1)
+  [PASS] NO writes to the VPS (0)
+
+D7: local binaries verified against the manifest (real build-final)
+  [PASS] hash gate ran on real binaries (1)
+
+==============================================================
+  driver results: 19 passed, 0 failed
+==============================================================

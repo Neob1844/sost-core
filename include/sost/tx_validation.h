@@ -121,6 +121,13 @@ enum class TxValCode : int {
     S10_COINBASE_IMMATURE  = 210,
     S11_BOND_LOCKED        = 211,
     S12_BURN_UNSPENDABLE   = 212,
+    // V15 (BLOCKER 2) — CONSTITUTIONAL RESERVE FREEZE. From
+    // jackpot::RESERVE_FREEZE_ACTIVATION_HEIGHT (= V15_HEIGHT) a Gold Vault /
+    // PoPC Pool reserve UTXO can ONLY be spent by the canonical TX_TYPE_JACKPOT
+    // protocol transaction. An ordinary transfer is rejected here even when its
+    // ECDSA signature is perfectly valid: possession of the constitutional
+    // private key stops being sufficient authority at V15.
+    S13_RESERVE_FROZEN     = 213,
 
     // Coinbase (CB1-CB10)
     CB1_MISSING_COINBASE   = 301,
@@ -152,6 +159,7 @@ enum class TxValCode : int {
     P_DUST_OUTPUT          = 407,
     P_BAD_CAPSULE          = 408,   // capsule header/body validation failed
     P_BAD_BOND_PAYLOAD     = 409,   // BOND_LOCK/ESCROW_LOCK payload format invalid
+    P_RESERVE_FROZEN       = 410,   // V15 — relay policy mirror of S13 (never relay a reserve sweep)
 
     // Internal
     INTERNAL_ERROR         = 999,

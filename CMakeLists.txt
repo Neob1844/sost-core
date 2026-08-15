@@ -392,6 +392,31 @@ add_executable(test-popc-v15-soak tests/test_popc_v15_soak.cpp)
 target_link_libraries(test-popc-v15-soak PRIVATE sost-core)
 add_test(NAME popc-v15-soak COMMAND test-popc-v15-soak)
 
+# V15 BLOCKER 1 regression — the MAINNET DTD must stay PERMISSIONLESS.
+# MUST be run in a MAINNET-parameter build (no SOST_DEVNET_FORKS / SOST_TESTNET_FORKS);
+# under any other profile it self-skips, because the devnet value of
+# DTD_POPC_GATE_CONSENSUS_ACTIVE is what hid this blocker in the first place.
+add_executable(test-dtd-permissionless-mainnet tests/test_dtd_permissionless_mainnet.cpp)
+target_link_libraries(test-dtd-permissionless-mainnet PRIVATE sost-core)
+add_test(NAME dtd-permissionless-mainnet COMMAND test-dtd-permissionless-mainnet)
+
+# V15 BLOCKER 2 regression — CONSTITUTIONAL RESERVE FREEZE (S13 / P_RESERVE_FROZEN).
+# From V15_HEIGHT a Gold Vault / PoPC Pool reserve UTXO may only be spent by the
+# canonical TX_TYPE_JACKPOT; an ordinary signed sweep is rejected by consensus and
+# never relayed. Profile-independent (the freeze tracks V15_HEIGHT in every profile).
+add_executable(test-reserve-freeze tests/test_reserve_freeze.cpp)
+target_link_libraries(test-reserve-freeze PRIVATE sost-core)
+add_test(NAME reserve-freeze COMMAND test-reserve-freeze)
+
+# V15 jackpot attack matrix under MAINNET consensus constants. The valid-PoW
+# node-level matrix (tests/run_v15_devnet_attacks.sh) can only run under
+# DEVNET_FAST; this replays every one of its mutations against the canonical
+# reconstruction at mainnet heights (25000 / 25290 / 288) so the matrix is no
+# longer devnet-only. Self-skips under DEVNET/TESTNET builds.
+add_executable(test-jackpot-attack-matrix-mainnet tests/test_jackpot_attack_matrix_mainnet.cpp)
+target_link_libraries(test-jackpot-attack-matrix-mainnet PRIVATE sost-core)
+add_test(NAME jackpot-attack-matrix-mainnet COMMAND test-jackpot-attack-matrix-mainnet)
+
 # Testnet PoPC soak tooling — carrier-payload generator (not a test)
 add_executable(popc15-carrier tools/popc15_carrier.cpp)
 target_link_libraries(popc15-carrier PRIVATE sost-core secp256k1)
