@@ -1,0 +1,92 @@
+==============================================================
+V15 node cutover/rollback — simulation suite
+==============================================================
+
+T1: cutover happy path — block arrives during the wait window
+  [PASS] exit code (0)
+  [PASS] RESULT (SUCCESS)
+  [PASS] next block ACCEPTED (ACCEPTED)
+  [PASS] node installed = new (b16e710a6705f90456a4f2e933481c1b6a58caa899389d72dd4593bfbab99ead)
+  [PASS] all four post-verified (4)
+  [PASS] peers checked (yes)
+  [PASS] tip coherence checked (OK)
+  -- graceful stop evidence --
+  [PASS] no SIGKILL during stop (no)
+  [PASS] stop PID gone (no)
+  [PASS] unit result not timeout (success)
+  stop elapsed: 0s (budget 6s, systemd SIGKILLs at 30s)
+
+T2: chain/wallet/genesis/popc backed up and verified
+  [PASS] backup chain.json matches original (6d9209da785aec6239e4bdae9cfae616aeb145e8a22786116a967e24b24b65ba)
+  [PASS] backup wallet.json matches original (0d321c29092541062e54b40394306c20609c3261bd1da5b125fa28a2e64ed115)
+  [PASS] backup genesis_block.json matches original (3886bce4b192cf124954b48e85fe902b83dfd6b6959aa240cc1a319c03f196e0)
+  [PASS] backup popc_registry.json matches original (0485801b0bcf8a65d06793ed13c98d799e1c9fa3ea3362ff415129e2881345d3)
+  [PASS] chain.json size recorded (200000)
+  [PASS] data manifest written (yes)
+
+T3: TAMPERED staged binary — abort BEFORE touching anything
+  [PASS] exit non-zero (1)
+  [PASS] RESULT (FAILED)
+  [PASS] phase = verify-source (verify-source)
+  [PASS] install dir UNTOUCHED (6a86248bd39fdd626a516180a96bfec7d6571e84ca9e8c83858bb10eba407088)
+  [PASS] service never stopped (active)
+  [PASS] no backup dir created (no)
+
+T4: no block in the window -> TIMEOUT_INCONCLUSIVE, exit 0, no rollback
+  [PASS] exit 0 (not a failure) (0)
+  [PASS] RESULT (SUCCESS_TIMEOUT_INCONCLUSIVE)
+  [PASS] NEXTBLOCK (TIMEOUT_INCONCLUSIVE)
+
+T5: crash-loop DURING the stability window -> FAILED
+  [PASS] exit non-zero (1)
+  [PASS] RESULT (FAILED)
+  [PASS] detected in stability phase (stability)
+  [PASS] reason mentions crash loop (yes)
+
+T5b: node dies mid-window and is restarted (MainPID changes) -> FAILED
+  [PASS] exit non-zero (1)
+  [PASS] RESULT (FAILED)
+  [PASS] MainPID change detected (yes)
+
+T6: EMPTY-DIRECTORY ROLLBACK TEST (the old glob bug)
+  [PASS] rollback did NOT abort (0)
+  [PASS] RESULT (SUCCESS)
+  [PASS] old node restored (6a86248bd39fdd626a516180a96bfec7d6571e84ca9e8c83858bb10eba407088)
+  [PASS] all four restored (4)
+  [PASS] data NOT restored by default (no)
+
+T7: ROLLBACK RESTORES BINARIES + DATA (--restore-data)
+  [PASS] rollback exit 0 (0)
+  [PASS] DATA_RESTORED (yes)
+  [PASS] chain.json restored by hash (d17db0566c156d67b087aed08359d48ea3f59f6ba32d0b5551ec2317f9f3deba)
+  [PASS] wallet.json restored by hash (0d321c29092541062e54b40394306c20609c3261bd1da5b125fa28a2e64ed115)
+  [PASS] genesis_block.json restored by hash (3886bce4b192cf124954b48e85fe902b83dfd6b6959aa240cc1a319c03f196e0)
+  [PASS] popc_registry.json restored by hash (0485801b0bcf8a65d06793ed13c98d799e1c9fa3ea3362ff415129e2881345d3)
+  [PASS] binaries restored too (6a86248bd39fdd626a516180a96bfec7d6571e84ca9e8c83858bb10eba407088)
+
+T8: corrupted backup -> rollback REFUSES
+  [PASS] exit non-zero (1)
+  [PASS] RESULT (FAILED)
+  [PASS] install dir untouched (b16e710a6705f90456a4f2e933481c1b6a58caa899389d72dd4593bfbab99ead)
+
+T9: second concurrent run refused by the lock
+  [PASS] second run refused (1)
+  [PASS] reason is the lock (yes)
+
+T10: node will not exit -> ABORT without installing and without SIGKILL
+  [PASS] exit non-zero (1)
+  [PASS] RESULT (FAILED)
+  [PASS] phase = stop (stop)
+  [PASS] aborted without forcing (yes)
+  [PASS] binary NOT installed (6a86248bd39fdd626a516180a96bfec7d6571e84ca9e8c83858bb10eba407088)
+  [PASS] chain.json untouched (3766c84967d9a1d8129791cd95d3b4b8f52654a371768ebe996317532118d5f9)
+
+T11: systemd Result=timeout after stop -> abort before installing
+  [PASS] exit non-zero (1)
+  [PASS] RESULT (FAILED)
+  [PASS] SIGKILL detected (yes)
+  [PASS] binary NOT installed (6a86248bd39fdd626a516180a96bfec7d6571e84ca9e8c83858bb10eba407088)
+
+==============================================================
+  simulation results: 59 passed, 0 failed
+==============================================================
