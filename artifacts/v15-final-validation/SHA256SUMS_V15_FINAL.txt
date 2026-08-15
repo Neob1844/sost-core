@@ -1,0 +1,13 @@
+8c8ff89740d1b43a8c925d7d9ec398e4989a3d4de5759785aa84e3945b79bc4c  sost-node
+7379d34b74a34463745ad0885c170d2ca3bbd77efadf689aef6039ae34c1dace  sost-cli
+1a21a962c67b400814edde214d52176c28538c35ae67c8a366d7fde6ad34b9ab  sost-miner
+ac08c347ad315d3e1fb6bbbd49ebb6079ecdf5f1e914278a9df0f295e0fa67d9  sost-signtx
+
+# commit:   16b50a4bf5e910e25862b3a54b41a9a80cf48b6c  (branch release/v15-final-blockers)
+# base:     65ebb139a6d9d7405140ac60ddd050b7ed39b0ad  (the commit of the deployed node f7c625fd)
+# compiler: g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0 · cmake 3.22.1 · ld 2.38 · glibc 2.35 · OpenSSL 3.0.2
+# flags:    cmake -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
+# profile:  MAINNET  V15_HEIGHT=25000  first jackpot 25290  BTC OFF (0 wally symbols)
+# build dir: /home/sost/SOST/sostcore/sost-v15-final/build-final  (absolute path is embedded in DWARF)
+# replay:   mainnet 0..22027 byte-identical to the deployed binary
+#           utxo_set_root 6b46fcdc38b853cfb1c2a582ef76e7a3a27dc137621dd5dba68ce4022cf9c1fe

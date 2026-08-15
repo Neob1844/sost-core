@@ -1,0 +1,65 @@
+########## reorg ##########
+reorg exit=0
+[reorg] PASS  EQUIVALENCE: reorganised nodeA state == clean Branch-B state (tip 27, reserve 0:0)
+
+[reorg] RESULT: PASS — A→B reorg fully undid J_A and connected J_B; reorganised state == clean Branch B
+########## failed_reorg ##########
+failed_reorg exit=0
+[failreorg] PASS  CYC10: mined one more Branch-A block post-rollback (h=27)
+
+[failreorg] RESULT: PASS — every failed reorg rolled back to Branch A byte-identically; g_blocks==g_block_undos; node healthy; control reorg succeeded
+########## restart ##########
+restart exit=0
+[restart] PASS  node mines forward after 8 restarts (h=27)
+
+[restart] RESULT: PASS — Historical-Jackpot chain reloads byte-identically across every restart (pre-J, at-J, post-J, 8 tip cycles); g_blocks==g_block_undos; template obtainable; mines forward
+########## reindex ##########
+reindex exit=0
+[reindex] PASS  reserve INTACT after tampered load (5103155590:26 == pre-jackpot 5103155590:26) — no fraudulent spend
+
+[reindex] RESULT: PASS — load_chain replay is byte-identical; a tampered persisted jackpot is rejected with the reserve never spent
+########## rollover ##########
+rollover exit=0
+[rollover] PASS  rolled-over reserve remains INTACT + available past the window (5103155590:26); winner-spend proven by run_v15_devnet_payout.sh
+
+[rollover] RESULT: PASS — 5 consecutive no-winner jackpot events (24,30,36,42,48) rolled over preserving the reserve intact; reserve stays available for payout (winner-spend + exact accounting covered by run_v15_devnet_payout.sh). Numeric cap magnitude (100→500) needs a DEV rollover RPC — deferred.
+########## rollover_cap ##########
+rollover_cap exit=0
+[rollcap] PASS  PERSIST: rollover_before(54)=40000000000 identical after restart
+
+[rollcap] RESULT: PASS — rollover accrues 0→…→cap-base and prize_target 100→…→500→500, clamped, no-winner, survives restart
+########## reserve_edges ##########
+reserve_edges exit=0
+[resedge] PASS  RE-E: reserve==0 + retirement recomputed identically after restart (tip h36)
+
+[resedge] RESULT: PASS — winner drain accounting + one-way retirement latch (no resurrection) + survives restart
+########## mempool ##########
+mempool exit=0
+[mempool] PASS  final mempool empty (no jackpot ever admitted or relayed)
+
+[mempool] RESULT: PASS — TX_TYPE_JACKPOT cannot enter the mempool via RPC (consensus-only, block-context authorized)
+########## payout ##########
+payout exit=0
+[payout] PASS  EXACT accounting: reserve_before == payout + change (5103155590 == 5103155590 + 0); mint=burn=fee=0
+
+[payout] RESULT: PASS — first live Historical Jackpot verified end-to-end on DEVNET_FAST
+########## soak ##########
+soak exit=0
+[soak]   failed_reorg: PASS (218s, peak node RSS 10340KB)
+[soak]   restart: PASS (111s, peak node RSS 10236KB)
+[soak] RESULT: PASS — 18 harness runs over 3 rounds, 0 failures, 2100s. metrics=/tmp/v15soak.qFWhR9/metrics.csv
+########## multiblock M02 ##########
+mb-M02 exit=0
+[mbattack] PASS  M02 A9: honest non-event block h25 accepted; chain continues
+
+[mbattack] RESULT: PASS — multi-block attack coverage (M02): non-event-height + stale-replay + restart-replay all rejected, state intact, honest blocks accepted
+########## multiblock M03 ##########
+mb-M03 exit=0
+[mbattack] PASS  M03 A8-A9: correct honest event-B block h30 accepted; final reserve=0:0
+
+[mbattack] RESULT: PASS — multi-block attack coverage (M03): non-event-height + stale-replay + restart-replay all rejected, state intact, honest blocks accepted
+########## multiblock M08 ##########
+mb-M08 exit=0
+[mbattack] PASS  M08: honest jackpot block accepted after
+
+[mbattack] RESULT: PASS — multi-block attack coverage (M08): non-event-height + stale-replay + restart-replay all rejected, state intact, honest blocks accepted

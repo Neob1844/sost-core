@@ -1,0 +1,11 @@
+=== SOST Node v0.4.0 ===
+Profile: MAINNET | P2P: 19333 | RPC: 18232 | RPC auth: ON | P2P enc: off | Fast sync: OFF (--full-verify)
+Assumevalid: height=3554 hash=5034a6482ce19632
+
+Genesis: 6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37
+[CHAIN-LOAD] Tip chainwork: 0x3e93be58 (height=22027, work/block=0x3)
+Chain: 22028 blocks, height=22027, UTXOs=58167
+DRYRUN final_height: 22027
+DRYRUN utxo_count: 58167
+DRYRUN utxo_set_root: 6b46fcdc38b853cfb1c2a582ef76e7a3a27dc137621dd5dba68ce4022cf9c1fe
+DRYRUN tip_block_id: 1d275f91b9f8c553598085546c477a371c541e768054741348d2ee6ae852fe36
