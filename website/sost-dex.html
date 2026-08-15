@@ -335,12 +335,12 @@
   <span class="v15chip">&#9881;&#65039; V15</span>
   <span class="v15ttl">FULL DECENTRALIZATION FORK &mdash; block 25,000</span>
   <span class="v15cx">PoW &middot; <span class="v15cxword">ConvergenceX</span></span>
-  <span class="v15go">PLANNED &middot; pending final implementation &amp; tests &middot; tap to expand</span>
+  <span class="v15go">FINALIZATION IN PROGRESS &middot; do not upgrade yet &middot; tap to expand</span>
  </summary>
  <div class="v15body">
-  <div class="v15hero">TOTAL DECENTRALIZATION</div>
+  <div class="v15hero">PROTOCOL DESIGNED FOR FULL DECENTRALIZATION</div>
   <p style="margin:0 0 4px;color:#fff;font-weight:700;text-align:center">SOST already has a Proof-of-Work network that works.</p>
-  <p style="margin:0 0 12px;text-align:center">Making it more complex than it needs to be only makes the protocol harder for everyone to run and use. That is why we are pursuing the <b class="hl">full decentralization</b> of the protocol &mdash; native PoW + <b class="v15cxword">ConvergenceX</b>, no operator, no treasury.</p>
+  <p style="margin:0 0 12px;text-align:center">Making it more complex than it needs to be only makes the protocol harder for everyone to run and use. That is why we are pursuing the <b class="hl">full decentralization</b> of the protocol &mdash; native PoW + <b class="v15cxword">ConvergenceX</b>. The design goal is <b>no operator and no treasury</b>; the consensus changes that make it enforceable are in final testing and are not live yet.</p>
   <div style="margin:6px 0 8px;padding:11px 14px;border-radius:10px;border:1px solid rgba(251,191,36,.55);background:rgba(251,191,36,.07);color:#f5d79a;font-size:11.5px;line-height:1.65">
    <b style="color:#fbbf24;letter-spacing:.5px">&#9888;&#65039; EXPERIMENTAL &middot; NOT FORMALLY AUDITED.</b> This protocol has been hardened <b>empirically</b> &mdash; through its live mainnet history and a disciplined <b>trial &rarr; error &rarr; diagnosis &rarr; resolution</b> engineering cycle, with every issue and fix recorded on-chain for full <b>traceability</b>. The result is a system that behaves reliably and securely <i>in practice</i>, but it has <b>not undergone an independent third-party security audit</b>. Run, mine and participate accordingly &mdash; at your own risk, with no guarantees.
   </div>
@@ -354,21 +354,23 @@
   <ul>
    <li>Permanent <b>1-of-3 cadence</b>: the DTD share accumulates for 2 blocks and pays on the 3rd (lottery block).</li>
    <li>No valid winner &rarr; not lost: it <b>rolls forward</b> and grows.</li>
-   <li>Eligibility: mined <b class="hl">&ge;1 block in the last 2016</b> (~2 weeks) &mdash; active miners only.</li>
+   <li>Eligibility: mined <b class="hl">&ge;1 block at any point in chain history</b> &mdash; once an address has produced a block it stays in the eligible set.</li>
    <li>Kept: recent-winner cooldown &middot; anti-dominance gate &middot; SbPoW gate &middot; uniform per-address selection.</li>
   </ul>
   <h4>&#127974; What happens to the existing Gold Vault + PoPC SOST</h4>
   <div class="v15jack">
-   The SOST already accumulated in Gold Vault + PoPC are <b class="hl">not kept as a treasury</b> and <b>not sold for listings</b>. They are progressively <b style="color:#ffd166">returned to active miners</b> through a <b>Historical DTD Jackpot</b>: about <b style="color:#ffd166">100 SOST every ~288 blocks</b> (~48 h) to the DTD winner, using the very same DTD eligibility rules, until the historical balance is exhausted (~3 years). It is a real protocol spend of those coins &mdash; <b>no new emission</b>. The reserve returns to the network, not to a founder.
+   The SOST already accumulated in Gold Vault + PoPC are <b class="hl">not kept as a treasury</b> and <b>not sold for listings</b>. They are progressively <b style="color:#ffd166">returned to active miners</b> through a <b>Historical DTD Jackpot</b>: about <b style="color:#ffd166">100 SOST every ~288 blocks</b> (~48 h) to the DTD winner, using the very same DTD eligibility rules, until the historical balance is exhausted (~3 years). It is a real protocol spend of those coins &mdash; <b>no new emission</b>. The intent is that the reserve returns to the network, not to a founder. The consensus rule that makes this <i>enforceable</i> &mdash; locking those coins so they can only ever move through the Historical DTD Jackpot &mdash; is part of the V15 finalization currently under test.
   </div>
-  <h4>&#9203; Upgrade window &mdash; after block 24,900, before 25,000</h4>
-  <p style="margin:0 0 4px">All node operators, miners and explorers must update inside the window. Mandatory mainnet flags:</p>
-  <pre>cd /opt/sost &amp;&amp; git pull origin main
-cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc)
-sudo systemctl restart sost-node</pre>
-  <p style="margin:6px 0 0;font-size:11px;color:#f5c78a">Nodes / miners that do not update may become incompatible with the V15 reward rules after activation.</p>
-  <div class="v15note">&#9883;&#65039; Atomic Swap stays in controlled founder testing (not a public DEX). <b>V15 is PLANNED &mdash; pending final implementation and consensus tests.</b> Not active. The final build and exact upgrade steps will be published before activation. Details: <a href="https://sostcore.com">sostcore.com</a> &middot; <a href="https://t.me/SOSTProtocolOfficial">t.me/SOSTProtocolOfficial</a></div>
+  <h4>&#9203; V15 finalization in progress</h4>
+  <div style="margin:6px 0 8px;padding:12px 14px;border-radius:10px;border:1px solid rgba(251,191,36,.55);background:rgba(251,191,36,.07);color:#f5d79a;font-size:11.5px;line-height:1.7">
+   V15 is undergoing <b>final consensus hardening</b> for full protocol decentralization. Activation remains planned at block <b>25,000</b>.
+   <br><br>
+   <b style="color:#fbbf24">All nodes and miners must be on the final published V15 build BEFORE block 24,900.</b> Block 24,900 is the safety <b>deadline</b>, not the beginning of the upgrade window.
+   <br><br>
+   <b>Until the final release manifest is published, do not perform the V15 cutover.</b> The exact build commands and binary hashes will be published here and on Telegram before activation.
+  </div>
+  <p style="margin:6px 0 0;font-size:11px;color:#f5c78a">Nodes / miners that are not on the final build in time may become incompatible with the V15 reward rules after activation.</p>
+  <div class="v15note">&#9883;&#65039; Atomic Swap stays in controlled founder testing (not a public DEX). <b>V15 is implemented and in final consensus hardening.</b> Not active. The final build and exact upgrade steps will be published before activation. Details: <a href="https://sostcore.com">sostcore.com</a> &middot; <a href="https://t.me/SOSTProtocolOfficial">t.me/SOSTProtocolOfficial</a></div>
  </div>
 </details></div>
 <!-- /V15-BANNER-INJECT -->
