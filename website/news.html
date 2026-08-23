@@ -118,9 +118,6 @@
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
     </a>
-    <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="display:flex;justify-content:center;align-items:center;text-decoration:none;flex:0 0 auto;" title="GeaSpirit — Second-Chance Mining Intelligence">
-      <img src="geaspirit-logo.png" alt="GeaSpirit" style="width:110px;height:110px;border-radius:20%;object-fit:cover;background:#fff;padding:0;box-sizing:border-box;filter:drop-shadow(0 0 12px rgba(0,255,65,.95)) drop-shadow(0 0 30px rgba(0,255,65,.6))">
-    </a>
     <a href="sost-popc.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC Bond Staking"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:26px;font-weight:900;letter-spacing:-0.5px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">BOND</span></a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
       <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
@@ -133,7 +130,6 @@
       <a href="sost-technology.html">Technology</a>
       <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
       <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
@@ -175,6 +171,10 @@
     </div>
   </div>
 </nav>
+<!-- dtd-supersede-notice: gold store-of-value plan temporarily replaced by the DTD -->
+<div id="dtd-supersede-notice" style="box-sizing:border-box;width:100%;background:linear-gradient(90deg,rgba(57,255,20,.10),rgba(7,18,11,.9));border-top:1px solid #39ff14;border-bottom:1px solid #39ff14;color:#d6ffe0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;padding:11px 18px;text-align:center"><b style="color:#39ff14">◈ UPDATE &mdash; gold store-of-value plan no longer active.</b> The initial plan (Perpetual Gold Vault &middot; PoPC gold emission &middot; &ldquo;up to 50% &rarr; Gold&rdquo;) has been <b>temporarily replaced by the DTD (Deterministic Token Distribution)</b> at V15 (block #25,000): the 50%/block that would have funded gold is redirected to the DTD, and the reserve already accumulated is returned to participants via the DTD Jackpot. This page is kept for the historical record. <a href="/index.html#dtd" style="color:#39ff14;font-weight:700;text-decoration:underline">Learn about the DTD &rarr;</a></div>
+
+
 
 <section class="hero">
   <div class="container">
@@ -204,6 +204,33 @@
         the <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener" style="color:#22d3ee">GitHub history</a>,
         and the <a href="sost-explorer.html" style="color:#22d3ee">live explorer</a>.
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- INCIDENT & POST-MORTEM — chain stall at block 20,526 (node restart disconnected all miners); resolved -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// INCIDENT &amp; POST-MORTEM &middot; chain stall at block&nbsp;20,526 &middot; resolved &middot; no funds affected &middot; no consensus risk</div>
+      <div class="section-dates">Published: 2026-08-05 &middot; Last updated: 2026-08-05</div>
+      <h2 class="section-title">Chain stall at block&nbsp;20,526 &mdash; <span class="accent" style="color:#fbbf24">resolved</span>: the node was healthy; a node restart disconnected every miner at once</h2>
+      <div class="section-sub">The chain paused for <b>~3h&nbsp;37m</b> at block&nbsp;20,526. <b style="color:#4ade80">No funds were affected and consensus was never at risk.</b> Root cause found and being hardened.</div>
+    </div>
+    <div class="info-card">
+      <p><b>What happened.</b> An automated VPS <b>watchdog restarted the node</b> at 03:10&nbsp;UTC &mdash; a clean, and in this case <b>unnecessary</b>, restart. The node was healthy the whole time (its RPC answered in milliseconds and kept serving valid block templates). But when the node restarts, <b>every miner loses its connection to it at the same instant.</b> The active community miners did not reconnect on their own, and the node itself does not mine by design &mdash; so the chain was left with <b>zero miners delivering blocks</b>, and it paused.</p>
+      <p><b style="color:#4ade80">Recovery.</b> The moment a miner was reconnected, the chain resumed immediately &mdash; block&nbsp;20,527 was mined and the chain is advancing normally past block&nbsp;20,529. Any &ldquo;block rejected&rdquo; lines seen in the first minute were the <b>normal, transient</b> difficulty re-sync after a long pause (the anti-stall / Slingshot easing resetting), not a fault.</p>
+      <p style="color:#22d3ee"><b>The key point:</b> the node was never broken, <b>no funds moved</b>, and there was <b>no chain-split or consensus risk</b>. This was purely a <b>miner-connectivity</b> event caused by an avoidable node restart &mdash; not a bug in mining, emission, PoPC, Gold&nbsp;Vault or DTD.</p>
+      <h3 style="color:var(--cyan-primary);margin:18px 0 6px">What miners should do now</h3>
+      <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
+        <li><b>If you were mining and it stopped &mdash; simply restart your miner.</b> The chain is active again; there is nothing to fix on your side.</li>
+        <li><b>Keep your miner persistent</b> (a systemd service, a guard, or <code>nohup</code>) so it <b>auto-reconnects within seconds</b> of any brief node restart instead of staying idle.</li>
+        <li>Always mine with <code>--realtime</code> (mandatory) so block timestamps stay valid.</li>
+        <li><b>No recompile is required</b> &mdash; this was <b>not</b> a consensus change. Your current binary is correct.</li>
+      </ul>
+      <h3 style="color:var(--cyan-primary);margin:18px 0 6px">Root-cause fix (in progress)</h3>
+      <p>Two hardening changes are being prepared so this class of stall cannot recur: <b>(1)</b> the node watchdog will only restart the node if it is <b>genuinely hung</b> &mdash; no more restarts on a false &ldquo;stall&rdquo; signal, which were the real trigger; and <b>(2)</b> the reference miners will ship packaged to <b>reconnect automatically</b> after any node restart. With both in place, an occasional node restart no longer empties the chain of miners.</p>
+      <p style="color:#94a3b8;font-size:13px">Full traceability, as always: the stall, the block heights and the recovery are visible on the <a href="sost-explorer.html" style="color:#22d3ee">live explorer</a> and cross-checkable on <a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#22d3ee">BitcoinTalk</a> and <a href="https://t.me/SOSTProtocolOfficial" style="color:#22d3ee">t.me/SOSTProtocolOfficial</a>.</p>
     </div>
   </div>
 </section>
@@ -332,42 +359,6 @@ cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc
   </div>
 </section>
 
-<!-- GEASPIRIT REE LOCATOR — sealed REE prospectivity campaign -->
-<section class="section">
-  <div class="container">
-    <div class="section-header">
-      <div class="section-id">// GEASPIRIT &middot; REE LOCATOR &middot; sealed campaign v0.4 (unresolved) &middot; consensus risk: none</div>
-      <div class="section-dates">Published: 2026-06-18 &middot; Last updated: 2026-06-18</div>
-      <h2 class="section-title">GeaSpirit &mdash; <span class="accent" style="color:#00ff41">Rare-Earths Prospectivity Locator</span> is live</h2>
-      <div class="section-sub">GeaSpirit &mdash; the open-data, second-chance mining-intelligence platform built on the SOST ecosystem &mdash; has published a new public section: a <b>regional Rare-Earth Fertility Prior</b> that ranks where carbonatite- and alkaline-related REE systems are geologically more plausible, from open satellite/geoscience data. <a href="https://geaspirit.com/ree-locator/" target="_blank" rel="noopener" style="color:#22d3ee">geaspirit.com/ree-locator/</a></div>
-    </div>
-    <div class="info-card">
-      <p><b>What it is:</b> a <b>relative regional rank</b> &mdash; it points to regions worth scientific attention. <b style="color:#fbbf24">What it is NOT:</b> a reserve, grade, tonnage or probability of a deposit. It does <b>not</b> claim rare earths are present at any place.</p>
-
-      <h3 style="color:#00ff41;margin:18px 0 6px">Sealed campaign v0.4 (unresolved)</h3>
-      <p>The full campaign was committed before publication and time-stamped on the SOST blockchain, so the ranking cannot be altered after the fact. <b>50 prospective targets + 50 controls = 100 committed leaves (aggregate only).</b> No coordinates, individual scores or Merkle leaves are disclosed.</p>
-
-      <div style="display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 12px;font-size:12px">
-        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px">Block 13,483</span>
-        <span style="border:1px solid var(--gold-dim);color:var(--gold-primary);border-radius:20px;padding:5px 12px;font-family:monospace">Signer sost1ca9097d830b74495b95db9d779ad63c90579bc18</span>
-      </div>
-      <p style="font-family:monospace;font-size:11.5px;color:var(--text-secondary);word-break:break-all;line-height:1.95">
-        <b style="color:var(--cyan-primary)">SHA-256:</b> 9da4548fdbfe8b57090116e65db4ae15b948eb67927243ac9057da98b8b89d75<br>
-        <b style="color:var(--cyan-primary)">Merkle root:</b> 7f29c11134232fcc7e998c8df7efe26ea0bc453de91792a61351368ca5a1bf7a<br>
-        <b style="color:var(--cyan-primary)">TXID:</b> 58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979
-      </p>
-      <p><b>What it proves:</b> precedence + integrity &mdash; the sealed set existed unchanged no later than block 13,483, signed by the operator address. <b style="color:#fbbf24">What it does NOT prove:</b> presence, grade, depth, tonnage, resources or reserves. The campaign is unresolved.</p>
-
-      <h3 style="color:#00ff41;margin:18px 0 6px">Roadmap (honest status)</h3>
-      <ul style="margin:0 0 6px 18px;line-height:1.85">
-        <li>&#9881; <b>Useful Compute</b> &mdash; DRY-RUN only (no rewards, no consensus change)</li>
-        <li>&#128196; <b>Report Builder</b> &mdash; PENDING</li>
-        <li>&#127757; Available in 17 languages</li>
-      </ul>
-      <p style="color:var(--text-secondary)">Registered in the public Protocol Registry. Not investment advice, not legal advice, no guaranteed mineral discovery.</p>
-    </div>
-  </div>
-</section>
 
 <!-- PUBLIC LAUNCH -->
 <section class="section">
@@ -527,53 +518,6 @@ sudo systemctl restart sost-miner</pre>
   </div>
 </section>
 
-<!-- GEASPIRIT -->
-<section class="section">
-  <div class="container">
-    <div class="section-header">
-      <div class="section-id">// ECOSYSTEM &middot; 2026-06-05 &middot; live &middot; build C87</div>
-      <div class="section-dates">Published: 2026-06-05 &middot; Last updated: 2026-06-08</div>
-      <h2 class="section-title">GeaSpirit &mdash; <span class="accent" style="color:#00ff41">Second-Chance Mining Intelligence</span> is live</h2>
-      <div class="section-sub">Open-data scoring of overlooked, abandoned and underused mining assets &mdash; fused with the SOST Protocol as one system.</div>
-    </div>
-    <div class="info-card">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
-        <img src="geaspirit-logo.png" alt="GeaSpirit" style="width:64px;height:64px;border-radius:20%;object-fit:cover;background:#fff;padding:0;box-sizing:border-box;filter:drop-shadow(0 0 22px rgba(0,255,65,1)) drop-shadow(0 0 52px rgba(0,255,65,.92)) drop-shadow(0 0 88px rgba(0,255,65,.6));animation:geaLogoPulse 3.6s ease-in-out infinite;animation-delay:-1.8s">
-        <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="background:#00ff41;color:#04140a;font-weight:700;text-decoration:none;padding:10px 20px;border-radius:7px;letter-spacing:.5px">▸ OPEN GEASPIRIT.COM</a>
-        <a href="geaspirit-btctalk-ann.html" style="color:#00ff41;text-decoration:none;border:1px solid #1f7a3f;border-radius:7px;padding:10px 18px">Announcement &amp; BBCode</a>
-      </div>
-      <p style="margin-bottom:10px">Many mines were abandoned on <b>price</b>, not on geology. <b>GeaSpirit</b> maps and scores overlooked, abandoned, historic, tailings, care-and-maintenance and underused mining assets on open satellite and geoscience data &mdash; now with full expandable explanations on every part of the platform.</p>
-      <ul>
-        <li>A live world <b>Asset Atlas</b> of <b>1,400+ assets across 70+ jurisdictions</b> (including a seabed &amp; polar frontier layer) in <b>16 languages</b>, plus a <b>free, instant Basic Asset Scan</b> for any asset.</li>
-        <li>Honest by design: triage and prioritization, <b>not a guaranteed discovery</b>; not investment advice; it never invents production or resource figures &mdash; where open data is silent, the profile says so.</li>
-      </ul>
-
-      <h3 style="color:#00ff41;margin:18px 0 6px">The GeaSpirit Score &mdash; explainable, not a black box</h3>
-      <p style="margin-bottom:8px">A transparent <b>0&ndash;100</b> triage signal built from four independent <b>0&ndash;25</b> dimensions, each with an honest HIGH&nbsp;/&nbsp;MEDIUM&nbsp;/&nbsp;LOW confidence band:</p>
-      <ul>
-        <li><b>SIGNAL</b> &mdash; open satellite imagery (Sentinel-2 / Landsat) blended with regional geological favourability. An apparent indication, never a confirmed deposit &mdash; only drilling proves ore.</li>
-        <li><b>ACCESS / DEPTH</b> &mdash; surface reachability and depth, weighted by infrastructure proximity; remote or very deep targets score lower.</li>
-        <li><b>PRECISION</b> &mdash; how tightly the target is bounded in space (quality of coordinates and classification).</li>
-        <li><b>CERTAINTY</b> &mdash; validation strength minus a missing-data penalty; drives the confidence band. Pilot zones get conservative spatial cross-validation; every other asset is an evidence-fusion estimate.</li>
-      </ul>
-
-      <h3 style="color:#00ff41;margin:18px 0 6px">Why second-chance assets</h3>
-      <ul>
-        <li><b>Economic, not geologic</b> &mdash; closed on low prices, bankruptcy, dated technology or shallow historical drilling; the ore may still be there.</li>
-        <li><b>Tailings &amp; waste</b> &mdash; historic tailings and waste from old mines can hold recoverable critical minerals under modern processing (a reprocessing opportunity, not a guarantee).</li>
-        <li><b>Modern eyes</b> &mdash; satellite data, open geoscience and explainable scoring re-read assets with tools the original miners never had; precise coordinates are stored so the GeaSpirit engine can re-examine them over time.</li>
-      </ul>
-
-      <h3 style="color:#00ff41;margin:18px 0 6px">Where GeaSpirit is going &mdash; two differentiators</h3>
-      <ul>
-        <li><b>Physical mining &times; blockchain, as one system</b> &mdash; GeaSpirit and the <b>SOST Protocol</b> are designed to operate together, not as separate platforms: listings, reports and asset records can be anchored on-chain (timestamp + hash), fees payable in SOST, and trust mechanisms (escrow, bonds, attestations) on the same chain as the Materials engine, PoPC and the Gold Vault. No other mining platform fuses real assets with a public blockchain this way.</li>
-        <li><b>Second-chance focus</b> &mdash; without ruling out what the big platforms do, GeaSpirit centres on the overlooked middle: second-hand mines &amp; deposits, small and family operations, care-and-maintenance, tailings reprocessing and mining-site waste. We win on quality, traceability and useful scoring, not raw volume.</li>
-        <li><b>Planned marketplace &mdash; mines &amp; cargoes</b> &mdash; a publishing / connect marketplace to list mines, projects, JV / partner opportunities and mineral cargoes, each linked to its Atlas entry and an on-chain provenance record, with honest guardrails (seller KYC, sanctions screening, clear disclaimers). Not ownership verification, not a guarantee of any sale.</li>
-      </ul>
-      <p style="margin-top:10px">Powered by the GeaSpirit Engine and connected to SOST &mdash; the open-data platform is fully usable <b>without any blockchain</b>; holding SOST is not required. See the <a href="sost-geaspirit.html" style="color:#00ff41">ecosystem page</a> or the full <a href="https://geaspirit.com/#roadmap" target="_blank" rel="noopener noreferrer" style="color:#00ff41">roadmap on geaspirit.com</a>.</p>
-    </div>
-  </div>
-</section>
 
 <!-- V14 -->
 <section class="section">
@@ -1010,12 +954,6 @@ sudo systemctl restart sost-miner</pre>
           <span class="sv-card-h">SOST in 2 Minutes</span>
           <span class="sv-card-s">The protocol &middot; Sovereign by Design</span>
         </button>
-        <button class="sv-card sv-card-gea" type="button"
-          onclick="pickSv('sost-geaspirit.mp4','SOST &times; GeaSpirit &middot; Fusing Two Worlds')">
-          <span class="sv-thumb" style="background-image:url('sost-geaspirit-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST &times; GeaSpirit</span>
-          <span class="sv-card-s">Fusing Two Worlds &middot; mineral intelligence</span>
-        </button>
       </div>
     </div>
 
@@ -1079,7 +1017,6 @@ sudo systemctl restart sost-miner</pre>
   .sv-back:hover{ border-color:#22d3ee; color:#22d3ee; }
   @media(max-width:560px){ .sv-card{ max-width:88vw; } .sv-cards{ gap:14px; } }
   /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
-  body.nav-collapsed nav a[href="https://geaspirit.com/"],
   body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
 </style>
 <script>

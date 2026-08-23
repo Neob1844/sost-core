@@ -597,7 +597,7 @@
 </style>
 
 <script src="js/security.js"></script>
-<script src="js/nav-toggle.js" defer></script>
+<script src="js/nav-toggle.js?v=v380" defer></script>
 </head>
 <body>
 
@@ -614,9 +614,6 @@
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
     </a>
-    <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="display:flex;justify-content:center;align-items:center;text-decoration:none;flex:0 0 auto;" title="GeaSpirit — Second-Chance Mining Intelligence">
-      <img src="geaspirit-logo.png" alt="GeaSpirit" style="width:110px;height:110px;border-radius:20%;object-fit:cover;background:#fff;padding:0;box-sizing:border-box;filter:drop-shadow(0 0 12px rgba(0,255,65,.95)) drop-shadow(0 0 30px rgba(0,255,65,.6))">
-    </a>
     <a href="sost-popc.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC Bond Staking"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:26px;font-weight:900;letter-spacing:-0.5px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">BOND</span></a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
       <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
@@ -629,7 +626,6 @@
       <a href="sost-technology.html">Technology</a>
       <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
       <a href="sost-materials-engine.html" class="active">Materials Engine</a>
-      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
@@ -1048,7 +1044,7 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
 
   <div class="container" style="position:relative;z-index:3">
 
-    <!-- ACCESS GATE — same system as GeaSpirit, same passphrase -->
+    <!-- ACCESS GATE — shared operator passphrase -->
     <div id="me-access-panel" style="text-align:center;padding:40px 20px;max-width:440px;margin:0 auto">
       <div style="font-size:10px;color:#006600;letter-spacing:3px;margin-bottom:24px">02.5 &mdash; AUTONOMOUS DISCOVERY</div>
       <div style="color:#00ff41;letter-spacing:2px;margin-bottom:24px;font-size:12px;line-height:2">
@@ -1897,18 +1893,18 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
       <h2 class="section-title">Unified <span class="accent">Platform Vision</span></h2>
     </div>
 
-    <!-- GeaSpirit Overview -->
+    <!-- Platform Overview -->
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon cyan"></div>
-          <span class="spec-name">GeaSpirit &mdash; Predict &middot; Detect &middot; Discover</span>
+          <span class="spec-name">Materials Engine &mdash; Predict &middot; Detect &middot; Discover</span>
         </div>
         <span class="spec-tag overlay">VISION</span>
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          <strong>GeaSpirit</strong> is the unified platform combining computational materials science with remote geospatial detection.
+          The <strong>Materials Engine</strong> is a unified platform combining computational materials science with remote geospatial detection.
           The Materials Engine predicts properties and generates novel candidates. A future Remote Sensing module will detect mineral
           signatures from satellite imagery. Together they enable a <strong>closed discovery cycle</strong>:
         </p>
@@ -2134,7 +2130,7 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
           <tr><td class="key">Frontier Engine</td><td>Dual-target multiobjectve ranking: FE stability + BG fit + novelty + exotic + structure quality + validation priority</td></tr>
           <tr><td class="key">Band Gap Model</td><td>ALIGNN-Lite 20K promoted: MAE=0.3422 eV, R&sup2;=0.707 (14% improvement over 2K baseline)</td></tr>
           <tr><td class="key">Training Ladder</td><td>Both targets: 5 rungs (5K&rarr;76K), 20K optimal. CGCNN wins FE, ALIGNN-Lite wins BG</td></tr>
-          <tr><td class="key">Platform Strategy</td><td>GeaSpirit unified platform strategy + remote sensing viability report completed (docs/)</td></tr>
+          <tr><td class="key">Platform Strategy</td><td>Unified platform strategy + remote sensing viability report completed (docs/)</td></tr>
           <tr><td class="key" style="color:var(--green-primary)">Phase V</td><td>Direct GNN inference: CGCNN forward pass on crystal structures. Real property prediction for autonomous candidates.</td></tr>
           <tr><td class="key" style="color:var(--green-primary)">Autonomous Discovery</td><td>Iterative campaign engine with 8 profiles, error learning, validation queue (5 tiers), structure lift pipeline. 28/28 tests passing.</td></tr>
           <tr><td class="key" style="color:var(--green-primary)">Material Mixer</td><td>4 generation strategies: element substitution, single-site doping, mixed-parent, cross-substitution. Dual-output reports (technical + plain language).</td></tr>
@@ -2211,8 +2207,8 @@ fetch(API+'/status').then(function(r){return r.json()}).then(function(d){
 <!-- ============================================================ -->
 <!-- Open Materials Reference — open-data catalogue (Known Alloys  -->
 <!-- + Experimental & Advanced Materials), consolidated onto SOST  -->
-<!-- from the former GeaSpirit Materials Engine. Self-contained;   -->
-<!-- English (the GeaSpirit i18n layer is intentionally omitted).  -->
+<!-- from the former standalone Materials Engine. Self-contained;  -->
+<!-- English (the legacy i18n layer is intentionally omitted).     -->
 <!-- ============================================================ -->
 <section class="section" id="open-materials-reference">
   <div class="container">
@@ -3019,12 +3015,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           <span class="sv-card-h">SOST in 2 Minutes</span>
           <span class="sv-card-s">The protocol &middot; Sovereign by Design</span>
         </button>
-        <button class="sv-card sv-card-gea" type="button"
-          onclick="pickSv('sost-geaspirit.mp4','SOST &times; GeaSpirit &middot; Fusing Two Worlds')">
-          <span class="sv-thumb" style="background-image:url('sost-geaspirit-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST &times; GeaSpirit</span>
-          <span class="sv-card-s">Fusing Two Worlds &middot; mineral intelligence</span>
-        </button>
       </div>
     </div>
 
@@ -3088,7 +3078,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .sv-back:hover{ border-color:#22d3ee; color:#22d3ee; }
   @media(max-width:560px){ .sv-card{ max-width:88vw; } .sv-cards{ gap:14px; } }
   /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
-  body.nav-collapsed nav a[href="https://geaspirit.com/"],
   body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
 </style>
 <script>

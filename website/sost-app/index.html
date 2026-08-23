@@ -547,6 +547,10 @@ body {
 </style>
 </head>
 <body>
+<!-- dtd-supersede-notice: gold store-of-value plan temporarily replaced by the DTD -->
+<div id="dtd-supersede-notice" style="box-sizing:border-box;width:100%;background:linear-gradient(90deg,rgba(57,255,20,.10),rgba(7,18,11,.9));border-top:1px solid #39ff14;border-bottom:1px solid #39ff14;color:#d6ffe0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;padding:11px 18px;text-align:center"><b style="color:#39ff14">◈ UPDATE &mdash; gold store-of-value plan no longer active.</b> The initial plan (Perpetual Gold Vault &middot; PoPC gold emission &middot; &ldquo;up to 50% &rarr; Gold&rdquo;) has been <b>temporarily replaced by the DTD (Deterministic Token Distribution)</b> at V15 (block #25,000): the 50%/block that would have funded gold is redirected to the DTD, and the reserve already accumulated is returned to participants via the DTD Jackpot. This page is kept for the historical record. <a href="/index.html#dtd" style="color:#39ff14;font-weight:700;text-decoration:underline">Learn about the DTD &rarr;</a></div>
+
+
 
 <!-- ============================================================
      SPLASH SCREEN
@@ -651,7 +655,6 @@ const SECTIONS = [
   { id: 'e2e',        label: 'E2E PROTOCOL',      icon: '[6]' },
   { id: 'otc',        label: 'OTC',               icon: '[7]' },
   { id: 'security',   label: 'SECURITY',          icon: '[8]' },
-  { id: 'geaspirit',  label: 'GEASPIRIT',         icon: '[9]' },
   { id: 'materials',  label: 'MATERIALS ENGINE',  icon: '[A]' },
   { id: 'knowledge',  label: 'AI ENGINE',  icon: '[K]' },
   { id: 'documents',  label: 'DOCUMENTS',         icon: '[B]' },
@@ -1566,7 +1569,6 @@ function renderSection(id) {
   const sectionLinks = {
     dashboard: '/sost-explorer.html',
     security: '/sost-security.html',
-    geaspirit: '/sost-geaspirit.html',
     materials: '/sost-materials-engine.html',
     knowledge: '/sost-ai-engine.html',
     documents: '/sost-whitepaper.html',
@@ -2359,60 +2361,6 @@ SectionRenderers.security = function(el) {
   AudioEngine.ambient_scan();
 };
 
-// ── GEASPIRIT ──────────────────────────────────────────────────
-SectionRenderers.geaspirit = function(el) {
-  el.style.padding = '16px';
-  el.style.overflow = 'auto';
-  el.innerHTML = `
-    <div class="pip-panel" style="text-align:center">
-      <img src="https://sostcore.com/geaspirit-logo.png" alt="GeaSpirit logo" style="width:88px;height:88px;margin:4px auto 8px auto;display:block;filter:drop-shadow(0 0 12px rgba(0,255,65,.35))">
-      <h2 style="border:0;justify-content:center">// GEASPIRIT</h2>
-      <p style="color:var(--pip)">Second-Chance Mining Intelligence</p>
-      <p style="margin-top:8px;font-size:12px;color:var(--pip-dim)">Open-data intelligence for overlooked, abandoned, historic, tailings and care-and-maintenance mining assets. Explainable scoring, on-demand reports — prioritization, <b>not</b> a guaranteed discovery.</p>
-      <a href="https://geaspirit.com/?from=sost-app" target="_blank" rel="noopener noreferrer" class="pip-btn" style="display:block;margin-top:14px;text-align:center;padding:11px;font-weight:700;letter-spacing:1px;text-decoration:none">OPEN GEASPIRIT PLATFORM ↗</a>
-      <a href="https://geaspirit.com/reports/demo-geaspirit-asset-intelligence-report.html" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:10px;text-align:center;padding:10px;border:1px solid var(--pip-dim);border-radius:4px;color:var(--pip);text-decoration:none;font-weight:700;letter-spacing:1px;font-size:13px">READ DEMO REPORT ↗</a>
-    </div>
-    <div class="pip-panel">
-      <h2>// WHAT IT COVERS</h2>
-      <div class="stat-row"><span class="stat-label">ABANDONED / HISTORIC</span><span class="stat-value stat-ok">closed on price, not geology</span></div>
-      <div class="stat-row"><span class="stat-label">TAILINGS / WASTE</span><span class="stat-value">residual-value signal</span></div>
-      <div class="stat-row"><span class="stat-label">CARE &amp; MAINTENANCE</span><span class="stat-value">dormant projects</span></div>
-      <div class="stat-row"><span class="stat-label">UNDERUSED CONCESSIONS</span><span class="stat-value">held but inactive</span></div>
-      <div class="stat-row"><span class="stat-label">DATA</span><span class="stat-value stat-ok">open satellite + geoscience</span></div>
-      <div class="stat-row"><span class="stat-label">LANGUAGES</span><span class="stat-value">16</span></div>
-    </div>
-    <div class="pip-panel">
-      <h2>// GEASPIRIT SCORE</h2>
-      <p style="font-size:12px;color:var(--pip-dim);margin-bottom:8px">A transparent 0–100 triage score — not a probability of ore, not a discovery guarantee.</p>
-      <div class="stat-row"><span class="stat-label">SIGNAL</span><span class="stat-value">spectral + geological favourability</span></div>
-      <div class="stat-row"><span class="stat-label">ACCESS / DEPTH</span><span class="stat-value">reachability + infrastructure</span></div>
-      <div class="stat-row"><span class="stat-label">PRECISION</span><span class="stat-value">spatial tightness of target</span></div>
-      <div class="stat-row"><span class="stat-label">CERTAINTY</span><span class="stat-value">validation, missing-data penalty</span></div>
-      <div class="stat-row"><span class="stat-label">CONFIDENCE</span><span class="stat-value stat-ok">HIGH / MEDIUM / LOW band</span></div>
-    </div>
-    <div class="pip-panel">
-      <h2>// REPORTS</h2>
-      <ul style="padding-left:20px">
-        <li>Asset Scan — single-asset four-dimension breakdown</li>
-        <li>Comparative Asset Ranking — portfolio prioritization</li>
-        <li>Mining Opportunity Brief — region-level overview</li>
-        <li>Tailings / Abandoned Mine Review</li>
-      </ul>
-    </div>
-    <div class="pip-panel">
-      <h2>// SOST ECOSYSTEM &amp; LIMITS</h2>
-      <p style="font-size:12px;color:var(--pip-dim)">Powered by the GeaSpirit Engine and connected to the SOST ecosystem. SOST may support future payment / verification — but GeaSpirit is fully usable <b>without</b> any blockchain, and holding SOST is <b>not</b> required.</p>
-      <h3 style="margin-top:10px">NOT:</h3>
-      <ul style="padding-left:20px">
-        <li>Not a guaranteed discovery — only drilling confirms a deposit</li>
-        <li>Not investment or legal advice</li>
-        <li>Not a marketplace; no ownership verification</li>
-      </ul>
-      <a href="https://geaspirit.com/?from=sost-app" target="_blank" rel="noopener noreferrer" class="pip-btn" style="display:block;margin-top:12px;text-align:center;padding:11px;font-weight:700;letter-spacing:1px;text-decoration:none">LAUNCH GEASPIRIT.COM ↗</a>
-    </div>
-  `;
-  AudioEngine.ambient_scan();
-};
 
 // ── MATERIALS ENGINE ───────────────────────────────────────────
 SectionRenderers.materials = function(el) {
@@ -2477,7 +2425,7 @@ SectionRenderers.knowledge = function(el) {
   el.innerHTML = `
     <div class="pip-panel">
       <h2>// SOST AI ENGINE</h2>
-      <p>Internal autonomous research and validation system. Generates hypotheses, validates against local evidence, detects contradictions, scores utility — across Materials Engine, GeaSpirit, SOST and Useful Compute.</p>
+      <p>Internal autonomous research and validation system. Generates hypotheses, validates against local evidence, detects contradictions, scores utility — across Materials Engine, Geospatial Intelligence, SOST and Useful Compute.</p>
       <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok">PHASE 3 · M1+M2+M3+M4+M5+M6</span></div>
       <div class="stat-row"><span class="stat-label">TESTS</span><span class="stat-value stat-ok">439 / 439 passing</span></div>
       <div class="stat-row"><span class="stat-label">HYPOTHESIS CAPACITY</span><span class="stat-value">100,000 offline (seconds)</span></div>
@@ -2518,7 +2466,6 @@ SectionRenderers.knowledge = function(el) {
     <div class="pip-panel">
       <h2>// PROJECT INTEGRATIONS</h2>
       <div class="stat-row"><span class="stat-label">MATERIALS ENGINE</span><span class="stat-value">DFT priority + FP cleanup + family heuristics</span></div>
-      <div class="stat-row"><span class="stat-label">GEASPIRIT</span><span class="stat-value">depth-aware + public-safety conservative</span></div>
       <div class="stat-row"><span class="stat-label">SOST PROTOCOL</span><span class="stat-value">consensus / cASERT / explorer wording</span></div>
       <div class="stat-row"><span class="stat-label">USEFUL COMPUTE</span><span class="stat-value">heavy task design (rewards POSTPONED)</span></div>
     </div>
@@ -2948,7 +2895,6 @@ SectionRenderers.roadmap = function(el) {
     <div class="pip-panel">
       <h2>// PHASE 4 — ECOSYSTEM</h2>
       <div class="stat-row"><span class="stat-label">2026-2027</span><span class="stat-value">Exchange listings (post PoPC)</span></div>
-      <div class="stat-row"><span class="stat-label">ONGOING</span><span class="stat-value">GeaSpirit mineral data platform</span></div>
       <div class="stat-row"><span class="stat-label">ONGOING</span><span class="stat-value">Materials Engine integration</span></div>
       <div class="stat-row"><span class="stat-label">ONGOING</span><span class="stat-value">Independent miner + node growth</span></div>
     </div>
@@ -3238,7 +3184,6 @@ SectionRenderers.about = function(el) {
     <div class="pip-panel">
       <h2>// ECOSYSTEM</h2>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">SOST CORE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">C++ NODE + MINER + CLI</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">The sovereign proof-of-work blockchain. ConvergenceX mining (~8GB RAM), cASERT per-block difficulty, constitutional 50/25/25 economics. Written in C++17, 28 test suites.</div></div>
-      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">GEASPIRIT <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">MINERAL INTELLIGENCE</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Autonomous mineral prospectivity platform. Canonical Score 25.1/40 (63%). Validated at 6 zones across 4 continents. Best AUC: 0.922 (Kalgoorlie S2+gravity). 7 commodities. 53+ phases. Cost: $0.</div></div>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">MATERIALS ENGINE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">COMPUTATIONAL DISCOVERY</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Materials discovery engine. 76,193 materials corpus. CGCNN + ALIGNN-Lite + CHGNet. 29 campaign profiles, 16 industrial domains, 50+ validated candidates. $0/month on CPU.</div></div>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">BLOCK EXPLORER <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">WEB-BASED</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Real-time blockchain explorer. Block details, transactions, mining status, address balances, difficulty history. Connects directly to the SOST node via RPC.</div></div>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">WEB WALLET <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">HD + MULTISIG</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Browser-based SOST wallet. Send, receive, manage UTXOs. HD wallet with BIP39 seed phrases (12 words). P2SH multisig support. Encrypted local storage.</div></div>
@@ -3619,7 +3564,7 @@ if (document.readyState === 'loading') {
 <div id="block-detail-overlay"><div class="bdo-content" id="bdo-content"></div></div>
 <script>
 // === UNIFIED AUTH FOR APP — Server-side only. No client-side fallback. No hardcoded codes. ===
-// Mirrors sost-geaspirit.html and sost-materials-engine.html auth flow exactly.
+// Mirrors sost-geospatial.html and sost-materials-engine.html auth flow exactly.
 (function(){
   function appAuth(prefix, overlayId) {
     var loginBtn = document.getElementById(prefix+'-login-btn');
@@ -3720,7 +3665,6 @@ if (document.readyState === 'loading') {
   }
 
   // Wait for section renderers to create the DOM elements, then attach auth.
-  // (GeaSpirit section is now an open ecosystem gateway — no restricted login.)
   var _authInterval2 = setInterval(function() {
     if (document.getElementById('mat-app-login-btn')) {
       appAuth('mat-app', 'mat-tech-overlay');

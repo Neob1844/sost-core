@@ -335,12 +335,13 @@
   <span class="v15chip">&#9881;&#65039; V15</span>
   <span class="v15ttl">FULL DECENTRALIZATION FORK &mdash; block 25,000</span>
   <span class="v15cx">PoW &middot; <span class="v15cxword">ConvergenceX</span></span>
-  <span class="v15go">PLANNED &middot; pending final implementation &amp; tests &middot; tap to expand</span>
+  <span class="v15go">RELEASE PUBLISHED &middot; update before #24,900 &middot; tap to expand</span>
  </summary>
  <div class="v15body">
-  <div class="v15hero">TOTAL DECENTRALIZATION</div>
+  <div class="v15hero">FULL DECENTRALIZATION &mdash; PROTOCOL READY</div>
+  <div style="margin:0 0 12px;padding:11px 14px;border-radius:10px;border:1px solid rgba(124,255,160,.45);background:rgba(124,255,160,.06);color:#d7f5e4;font-size:12px;line-height:1.75;text-align:center"><b style="color:#7CFFA0">V15 final is deployed on mainnet.</b><br>Permissionless mining and node operation.<br>From block <b>#25,000</b>: no protocol treasury, and no operator control over the reserve funds.<br><span style="color:#9fb6c4">Final consensus activation at block #25,000.</span></div>
   <p style="margin:0 0 4px;color:#fff;font-weight:700;text-align:center">SOST already has a Proof-of-Work network that works.</p>
-  <p style="margin:0 0 12px;text-align:center">Making it more complex than it needs to be only makes the protocol harder for everyone to run and use. That is why we are pursuing the <b class="hl">full decentralization</b> of the protocol &mdash; native PoW + <b class="v15cxword">ConvergenceX</b>, no operator, no treasury.</p>
+  <p style="margin:0 0 12px;text-align:center">Making it more complex than it needs to be only makes the protocol harder for everyone to run and use. That is why we pursued the <b class="hl">full decentralization</b> of the protocol &mdash; native PoW + <b class="v15cxword">ConvergenceX</b>, <b>no operator and no treasury</b>. The consensus rules that enforce it are published and running on mainnet; they take effect at block <b>#25,000</b>.</p>
   <div style="margin:6px 0 8px;padding:11px 14px;border-radius:10px;border:1px solid rgba(251,191,36,.55);background:rgba(251,191,36,.07);color:#f5d79a;font-size:11.5px;line-height:1.65">
    <b style="color:#fbbf24;letter-spacing:.5px">&#9888;&#65039; EXPERIMENTAL &middot; NOT FORMALLY AUDITED.</b> This protocol has been hardened <b>empirically</b> &mdash; through its live mainnet history and a disciplined <b>trial &rarr; error &rarr; diagnosis &rarr; resolution</b> engineering cycle, with every issue and fix recorded on-chain for full <b>traceability</b>. The result is a system that behaves reliably and securely <i>in practice</i>, but it has <b>not undergone an independent third-party security audit</b>. Run, mine and participate accordingly &mdash; at your own risk, with no guarantees.
   </div>
@@ -354,21 +355,65 @@
   <ul>
    <li>Permanent <b>1-of-3 cadence</b>: the DTD share accumulates for 2 blocks and pays on the 3rd (lottery block).</li>
    <li>No valid winner &rarr; not lost: it <b>rolls forward</b> and grows.</li>
-   <li>Eligibility: mined <b class="hl">&ge;1 block in the last 2016</b> (~2 weeks) &mdash; active miners only.</li>
+   <li>Eligibility: mined <b class="hl">&ge;1 block at any point in chain history</b> &mdash; once an address has produced a block it stays in the eligible set.</li>
    <li>Kept: recent-winner cooldown &middot; anti-dominance gate &middot; SbPoW gate &middot; uniform per-address selection.</li>
   </ul>
   <h4>&#127974; What happens to the existing Gold Vault + PoPC SOST</h4>
   <div class="v15jack">
-   The SOST already accumulated in Gold Vault + PoPC are <b class="hl">not kept as a treasury</b> and <b>not sold for listings</b>. They are progressively <b style="color:#ffd166">returned to active miners</b> through a <b>Historical DTD Jackpot</b>: about <b style="color:#ffd166">100 SOST every ~288 blocks</b> (~48 h) to the DTD winner, using the very same DTD eligibility rules, until the historical balance is exhausted (~3 years). It is a real protocol spend of those coins &mdash; <b>no new emission</b>. The reserve returns to the network, not to a founder.
+   The SOST already accumulated in Gold Vault + PoPC are <b class="hl">not kept as a treasury</b> and <b>not sold for listings</b>. They are progressively <b style="color:#ffd166">returned to active miners</b> through a <b>Historical DTD Jackpot</b>: about <b style="color:#ffd166">100 SOST every ~288 blocks</b> (~48 h) to the DTD winner, using the very same DTD eligibility rules, until the historical balance is exhausted (~3 years). It is a real protocol spend of those coins &mdash; <b>no new emission</b>. The reserve returns to the network, not to a founder. This is <i>enforced</i>, not promised: from block #25,000 those coins are locked by consensus and can only ever move through the canonical Historical DTD Jackpot transaction &mdash; a valid signature is no longer authority over them.
   </div>
-  <h4>&#9203; Upgrade window &mdash; after block 24,900, before 25,000</h4>
-  <p style="margin:0 0 4px">All node operators, miners and explorers must update inside the window. Mandatory mainnet flags:</p>
-  <pre>cd /opt/sost &amp;&amp; git pull origin main
-cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
+  <h4>&#9888;&#65039; V15 hard fork &mdash; mandatory node &amp; miner update</h4>
+  <div style="margin:6px 0 8px;padding:12px 14px;border-radius:10px;border:1px solid rgba(251,191,36,.55);background:rgba(251,191,36,.07);color:#f5d79a;font-size:11.5px;line-height:1.7">
+   <b style="color:#fbbf24;letter-spacing:.4px">V15 activates on SOST mainnet at block 25,000.</b> This is a consensus-breaking upgrade. Every node operator and every miner must be running the final V15 release <b>before block 24,900</b>.
+   <pre style="margin:9px 0">UPDATE DEADLINE:             BEFORE #24,900
+FINAL RELEASE:               PUBLISHED &mdash; v0.4.1-v15-final
+V15 CONSENSUS ACTIVATION:    #25,000
+FIRST HISTORICAL JACKPOT:    #25,290
+SECOND CONSENSUS ACTIVATION: NONE
+V15 ACTIVATION AT #30,000:   NONE</pre>
+   <b style="color:#fbbf24">#24,900 is a deadline, not a start date.</b> Do not plan to upgrade between #24,900 and #25,000 &mdash; that gap is only 100 blocks, and SOST block times are highly variable. In the last seven days, 100 consecutive blocks have passed in as little as <b>5 h 50 min</b> of wall-clock time.
+   <br><br>
+   <b>What changes at #25,000.</b> Emission becomes <b>50 % miner / 50 % DTD</b>. Gold Vault and PoPC Pool stop receiving new emission (0 %). The balance already accumulated is <b>locked by consensus</b> and becomes spendable only through the canonical Historical DTD Jackpot transaction &mdash; a valid signature is no longer authority over those coins. The Historical DTD mechanism becomes part of the V15 rules at <b>#25,000</b>; its first scheduled jackpot payout is <b>#25,290</b>.
+   <br><br>
+   <b>There is no second consensus activation at #30,000.</b> DTD stays permissionless &mdash; no bond, no registration, no whitelist. One upgrade, one activation height: <b>#25,000</b>.
+   <br><br>
+   <b>Binaries.</b> Node operators must update <b>sost-node</b>; miners must update <b>sost-miner</b>. The canonical V15 release also includes matching <b>sost-cli</b> and <b>sost-signtx</b>, which should be updated where installed. The release will publish the final commit, SHA256 for all four binaries and the build manifest, so every operator can verify their binaries independently.
+   <br><br>
+   <b style="color:#7CFFA0">The final release is published.</b> Release <b>v0.4.1-v15-final</b> &middot; release commit <b>bacd6281</b> &middot; consensus commit <b>16b50a4b</b>.
+   Download the binaries and <b>verify the SHA256 before installing</b>:
+   <a href="https://github.com/Neob1844/sost-core/releases/tag/v0.4.1-v15-final">github.com/Neob1844/sost-core/releases/tag/v0.4.1-v15-final</a>
+  </div>
+
+  <h4>&#128273; SHA256 of the released binaries</h4>
+  <p style="margin:0 0 4px;font-size:11px;color:#c9b48a">Published here as well as on GitHub, so you can cross-check the two sources independently. If they ever disagree, do not install &mdash; ask on Telegram first.</p>
+  <pre>8c8ff89740d1b43a8c925d7d9ec398e4989a3d4de5759785aa84e3945b79bc4c  sost-node
+7379d34b74a34463745ad0885c170d2ca3bbd77efadf689aef6039ae34c1dace  sost-cli
+1a21a962c67b400814edde214d52176c28538c35ae67c8a366d7fde6ad34b9ab  sost-miner
+ac08c347ad315d3e1fb6bbbd49ebb6079ecdf5f1e914278a9df0f295e0fa67d9  sost-signtx</pre>
+
+  <h4>&#128295; How to update</h4>
+  <p style="margin:0 0 4px">Option A &mdash; download the released binaries and verify them (recommended):</p>
+  <pre>cd /tmp &amp;&amp; R=https://github.com/Neob1844/sost-core/releases/download/v0.4.1-v15-final
+for b in sost-node sost-cli sost-miner sost-signtx; do curl -LO $R/$b; done
+curl -LO $R/SHA256SUMS_V15_FINAL.txt
+sha256sum -c SHA256SUMS_V15_FINAL.txt        # must print OK for all four
+
+sudo systemctl stop sost-node                # node operators only
+sudo install -m 0755 sost-node sost-cli sost-signtx /opt/sost/build/
+sudo install -m 0755 sost-miner /opt/sost/build/
+sudo systemctl start sost-node
+sha256sum /opt/sost/build/sost-node          # must equal the published hash</pre>
+  <p style="margin:8px 0 4px">Option B &mdash; build from source and reproduce the release:</p>
+  <pre>cd /opt/sost &amp;&amp; git fetch origin &amp;&amp; git checkout main &amp;&amp; git pull --ff-only origin main
+git rev-parse HEAD                            # must be bacd6281…
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
+      -DSOST_DEVNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc)
 sudo systemctl restart sost-node</pre>
-  <p style="margin:6px 0 0;font-size:11px;color:#f5c78a">Nodes / miners that do not update may become incompatible with the V15 reward rules after activation.</p>
-  <div class="v15note">&#9883;&#65039; Atomic Swap stays in controlled founder testing (not a public DEX). &#127760; GeaSpirit is an external ecosystem project &mdash; not required for SOST consensus. <b>V15 is PLANNED &mdash; pending final implementation and consensus tests.</b> Not active. The final build and exact upgrade steps will be published before activation. Details: <a href="https://sostcore.com">sostcore.com</a> &middot; <a href="https://t.me/SOSTProtocolOfficial">t.me/SOSTProtocolOfficial</a></div>
+  <p style="margin:8px 0 0;font-size:11px;color:#c9b48a">The three build flags are <b>mandatory</b>. A binary built without them will not follow mainnet consensus. Toolchain used for the published binaries: g++ 11.4.0, cmake 3.22.1, ld 2.38, glibc 2.35, OpenSSL 3.0.2 &mdash; a different toolchain produces a different SHA256 for the same source, which is expected; verify against the manifest.</p>
+  <p style="margin:6px 0 0;font-size:11px;color:#c9b48a">Check afterwards: <b>sost-node --version</b>, <b>getblockcount</b> advancing, and <b>getpeerinfo</b> showing at least one peer.</p>
+  <p style="margin:6px 0 0;font-size:11px;color:#f5c78a">Nodes and miners still running the earlier build will diverge from the main chain after activation.</p>
+  <div class="v15note">&#9883;&#65039; Atomic Swap stays in controlled founder testing (not a public DEX). <b>V15 final is published and deployed; consensus activates at block #25,000.</b> The final build and exact upgrade steps will be published before activation. Details: <a href="https://sostcore.com">sostcore.com</a> &middot; <a href="https://t.me/SOSTProtocolOfficial">t.me/SOSTProtocolOfficial</a></div>
  </div>
 </details></div>
 <!-- /V15-BANNER-INJECT -->
@@ -389,9 +434,6 @@ sudo systemctl restart sost-node</pre>
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
     </a>
-    <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="display:flex;justify-content:center;align-items:center;text-decoration:none;flex:0 0 auto;" title="GeaSpirit — Second-Chance Mining Intelligence">
-      <img src="geaspirit-logo.png" alt="GeaSpirit" style="width:110px;height:110px;border-radius:20%;object-fit:cover;background:#fff;padding:0;box-sizing:border-box;filter:drop-shadow(0 0 12px rgba(0,255,65,.95)) drop-shadow(0 0 30px rgba(0,255,65,.6))">
-    </a>
     <a href="sost-popc.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC Bond Staking"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:26px;font-weight:900;letter-spacing:-0.5px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">BOND</span></a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
       <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
@@ -404,7 +446,6 @@ sudo systemctl restart sost-node</pre>
       <a href="sost-technology.html">Technology</a>
       <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
       <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
@@ -446,6 +487,10 @@ sudo systemctl restart sost-node</pre>
     </div>
   </div>
 </nav>
+<!-- dtd-supersede-notice: gold store-of-value plan temporarily replaced by the DTD -->
+<div id="dtd-supersede-notice" style="box-sizing:border-box;width:100%;background:linear-gradient(90deg,rgba(57,255,20,.10),rgba(7,18,11,.9));border-top:1px solid #39ff14;border-bottom:1px solid #39ff14;color:#d6ffe0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;padding:11px 18px;text-align:center"><b style="color:#39ff14">◈ UPDATE &mdash; gold store-of-value plan no longer active.</b> The initial plan (Perpetual Gold Vault &middot; PoPC gold emission &middot; &ldquo;up to 50% &rarr; Gold&rdquo;) has been <b>temporarily replaced by the DTD (Deterministic Token Distribution)</b> at V15 (block #25,000): the 50%/block that would have funded gold is redirected to the DTD, and the reserve already accumulated is returned to participants via the DTD Jackpot. This page is kept for the historical record. <a href="/index.html#dtd" style="color:#39ff14;font-weight:700;text-decoration:underline">Learn about the DTD &rarr;</a></div>
+
+
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- BLOCK A — HERO                                                        -->
@@ -1981,12 +2026,6 @@ setInterval(fetchAll, _refreshMs);
           <span class="sv-card-h">SOST in 2 Minutes</span>
           <span class="sv-card-s">The protocol &middot; Sovereign by Design</span>
         </button>
-        <button class="sv-card sv-card-gea" type="button"
-          onclick="pickSv('sost-geaspirit.mp4','SOST &times; GeaSpirit &middot; Fusing Two Worlds')">
-          <span class="sv-thumb" style="background-image:url('sost-geaspirit-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST &times; GeaSpirit</span>
-          <span class="sv-card-s">Fusing Two Worlds &middot; mineral intelligence</span>
-        </button>
       </div>
     </div>
 
@@ -2050,7 +2089,6 @@ setInterval(fetchAll, _refreshMs);
   .sv-back:hover{ border-color:#22d3ee; color:#22d3ee; }
   @media(max-width:560px){ .sv-card{ max-width:88vw; } .sv-cards{ gap:14px; } }
   /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
-  body.nav-collapsed nav a[href="https://geaspirit.com/"],
   body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
 </style>
 <script>

@@ -181,10 +181,19 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     //   (c) V14 PoPC eligibility (height >= DTD_POPC_ELIGIBILITY_HEIGHT
     //       AND DTD_POPC_GATE_CONSENSUS_ACTIVE — the helper short-circuits
     //       to "eligible" until the flag flips)
+    // (d) V15 DTD recency gate window (0 = disabled pre-V15; 5000 normal / 2016 jackpot).
+    // Computed once from `height` so every caller (miner + validator + jackpot) is identical.
+    const int64_t dtd_recency = dtd_recency_window_at(height);
+
     std::vector<LotteryEligibilityEntry> out;
     out.reserve(agg.size());
     for (const auto& kv : agg) {
         const auto& pkh = kv.first;
+
+        // (d) V15 DTD recency gate. From V15_HEIGHT a candidate must have mined at
+        // least one block within the recency window (normal 5000 / jackpot 2016).
+        // Height-gated (dtd_recency == 0 pre-V15) so historical replay is byte-identical.
+        if (dtd_recency > 0 && kv.second.last_mined_height < height - dtd_recency) continue;
 
         // (a) recent-winner cooldown.
         if (exclusion_window > 0 && recent_winners.count(pkh)) continue;

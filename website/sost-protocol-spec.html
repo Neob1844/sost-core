@@ -103,9 +103,6 @@ footer a{color:var(--t3);text-decoration:none}
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
     </a>
-    <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="display:flex;justify-content:center;align-items:center;text-decoration:none;flex:0 0 auto;" title="GeaSpirit — Second-Chance Mining Intelligence">
-      <img src="geaspirit-logo.png" alt="GeaSpirit" style="width:110px;height:110px;border-radius:20%;object-fit:cover;background:#fff;padding:0;box-sizing:border-box;filter:drop-shadow(0 0 12px rgba(0,255,65,.95)) drop-shadow(0 0 30px rgba(0,255,65,.6))">
-    </a>
     <a href="sost-popc.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC Bond Staking"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:26px;font-weight:900;letter-spacing:-0.5px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">BOND</span></a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
       <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
@@ -118,7 +115,6 @@ footer a{color:var(--t3);text-decoration:none}
       <a href="sost-technology.html">Technology</a>
       <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
       <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
@@ -159,6 +155,10 @@ footer a{color:var(--t3);text-decoration:none}
     </div>
   </div>
 </nav>
+<!-- dtd-supersede-notice: gold store-of-value plan temporarily replaced by the DTD -->
+<div id="dtd-supersede-notice" style="box-sizing:border-box;width:100%;background:linear-gradient(90deg,rgba(57,255,20,.10),rgba(7,18,11,.9));border-top:1px solid #39ff14;border-bottom:1px solid #39ff14;color:#d6ffe0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;padding:11px 18px;text-align:center"><b style="color:#39ff14">◈ UPDATE &mdash; gold store-of-value plan no longer active.</b> The initial plan (Perpetual Gold Vault &middot; PoPC gold emission &middot; &ldquo;up to 50% &rarr; Gold&rdquo;) has been <b>temporarily replaced by the DTD (Deterministic Token Distribution)</b> at V15 (block #25,000): the 50%/block that would have funded gold is redirected to the DTD, and the reserve already accumulated is returned to participants via the DTD Jackpot. This page is kept for the historical record. <a href="/index.html#dtd" style="color:#39ff14;font-weight:700;text-decoration:underline">Learn about the DTD &rarr;</a></div>
+
+
 
 
 
@@ -485,14 +485,13 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <tr><td>Blockchain core (C++ / protocol)</td><td>36,442</td><td>~280&ndash;310k</td></tr>
 <tr><td>Front-end &amp; explorer (HTML + JS + CSS)</td><td>69,975</td><td>&mdash;</td></tr>
 <tr><td>Materials Engine (Python)</td><td>161,282</td><td>&mdash;</td></tr>
-<tr><td>Geaspirit &mdash; geo-mineral ML (Python)</td><td>9,386</td><td>&mdash;</td></tr>
 <tr><td>Auth gateway (Python)</td><td>704</td><td>&mdash;</td></tr>
 <tr><td>Documentation (markdown)</td><td>23,975</td><td>(separate)</td></tr>
 <tr style="border-top:2px solid #fb010d"><td><strong>Total code (excl. docs)</strong></td><td><strong>~278,000</strong></td><td><strong>~280&ndash;310k</strong></td></tr>
 <tr><td><strong>Total code + docs</strong></td><td><strong>~302,000</strong></td><td>&mdash;</td></tr>
 </table>
 <p style="margin-top:14px"><strong>1. The blockchain core alone is 5&ndash;7&times; smaller than Bitcoin Core.</strong> Bitcoin Core has 15+ years of P2P hardening, scripting (Script + Taproot), thousands of tests, and dozens of network conditions handled in production. SOST does not, and pretending otherwise would be dishonest.</p>
-<p><strong>2. The full SOST stack matches Bitcoin Core in order of magnitude only because SOST is a vertical.</strong> The total includes a Materials Discovery Engine (161k LOC) and a geological prospectivity ML stack (Geaspirit) that Bitcoin Core does not contain. Comparing totals across different problem domains is not apples-to-apples.</p>
+<p><strong>2. The full SOST stack matches Bitcoin Core in order of magnitude only because SOST is a vertical.</strong> The total includes a Materials Discovery Engine (161k LOC) that Bitcoin Core does not contain. Comparing totals across different problem domains is not apples-to-apples.</p>
 <p><strong>3. What the numbers do show.</strong> SOST is a serious open-source project (~300k LOC total) with depth beyond a typical altcoin fork &mdash; the consensus is custom (ConvergenceX + cASERT), the wallet model is in-house, the front-end is hand-rolled, and the protocol is integrated with two external scientific systems.</p>
 <p><strong>4. What the numbers do NOT show.</strong> Network effect, peer count, security audits, deployed value, decentralisation. Those are independent of LOC and Bitcoin leads on every one of them.</p>
 <p style="font-size:11px;opacity:0.7;margin-top:12px">Counts measured 2026-05-10 with <code>find ... | xargs wc -l</code> over each component's own source tree, excluding build artefacts and vendored code. Bitcoin Core figure is the upstream <code>bitcoin/bitcoin</code> master snapshot, code + tests, no docs.</p>
@@ -557,12 +556,6 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
           <span class="sv-card-h">SOST in 2 Minutes</span>
           <span class="sv-card-s">The protocol &middot; Sovereign by Design</span>
         </button>
-        <button class="sv-card sv-card-gea" type="button"
-          onclick="pickSv('sost-geaspirit.mp4','SOST &times; GeaSpirit &middot; Fusing Two Worlds')">
-          <span class="sv-thumb" style="background-image:url('sost-geaspirit-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST &times; GeaSpirit</span>
-          <span class="sv-card-s">Fusing Two Worlds &middot; mineral intelligence</span>
-        </button>
       </div>
     </div>
 
@@ -626,7 +619,6 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
   .sv-back:hover{ border-color:#22d3ee; color:#22d3ee; }
   @media(max-width:560px){ .sv-card{ max-width:88vw; } .sv-cards{ gap:14px; } }
   /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
-  body.nav-collapsed nav a[href="https://geaspirit.com/"],
   body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
 </style>
 <script>

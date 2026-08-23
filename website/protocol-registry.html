@@ -175,7 +175,7 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js"></script>
-<script src="js/nav-toggle.js" defer></script>
+<script src="js/nav-toggle.js?v=v380" defer></script>
 </head>
 <body>
 
@@ -192,9 +192,6 @@
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:cover;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
     </a>
-    <a href="https://geaspirit.com/" target="_blank" rel="noopener noreferrer" style="display:flex;justify-content:center;align-items:center;text-decoration:none;flex:0 0 auto;" title="GeaSpirit — Second-Chance Mining Intelligence">
-      <img src="geaspirit-logo.png" alt="GeaSpirit" style="width:110px;height:110px;border-radius:20%;object-fit:cover;background:#fff;padding:0;box-sizing:border-box;filter:drop-shadow(0 0 12px rgba(0,255,65,.95)) drop-shadow(0 0 30px rgba(0,255,65,.6))">
-    </a>
     <a href="sost-popc.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#e63946,#f59e0b,#4ade80,#22d3ee,#c084fc,#e63946);background-size:200% auto;font-weight:900;text-decoration:none;line-height:1;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;box-shadow:0 0 18px rgba(245,158,11,0.42),0 0 32px rgba(74,222,128,0.18);animation:dexBtnRainbow 3s linear infinite,dexBtnGlow 2s ease-in-out infinite;overflow:hidden;flex:0 0 auto;" title="PoPC Bond Staking"><span style="color:#fb010d;font-size:22px;font-weight:900;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.35)">PoPC</span><span style="color:#0a0a0c;font-size:26px;font-weight:900;letter-spacing:-0.5px;text-shadow:0 1px 0 rgba(255,255,255,0.18)">BOND</span></a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
       <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
@@ -207,7 +204,6 @@
       <a href="sost-technology.html">Technology</a>
       <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
       <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-geaspirit.html" style="color:#00ff41">GeaSpirit</a>
       <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
@@ -248,6 +244,10 @@
     </div>
   </div>
 </nav>
+<!-- dtd-supersede-notice: gold store-of-value plan temporarily replaced by the DTD -->
+<div id="dtd-supersede-notice" style="box-sizing:border-box;width:100%;background:linear-gradient(90deg,rgba(57,255,20,.10),rgba(7,18,11,.9));border-top:1px solid #39ff14;border-bottom:1px solid #39ff14;color:#d6ffe0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;padding:11px 18px;text-align:center"><b style="color:#39ff14">◈ UPDATE &mdash; gold store-of-value plan no longer active.</b> The initial plan (Perpetual Gold Vault &middot; PoPC gold emission &middot; &ldquo;up to 50% &rarr; Gold&rdquo;) has been <b>temporarily replaced by the DTD (Deterministic Token Distribution)</b> at V15 (block #25,000): the 50%/block that would have funded gold is redirected to the DTD, and the reserve already accumulated is returned to participants via the DTD Jackpot. This page is kept for the historical record. <a href="/index.html#dtd" style="color:#39ff14;font-weight:700;text-decoration:underline">Learn about the DTD &rarr;</a></div>
+
+
 <!-- HERO -->
 <section class="hero">
   <div class="container">
@@ -721,19 +721,22 @@
       </p>
     </div>
 
-    <!-- GeaSpirit REE v0.4 sealed prospective campaign (ON-CHAIN, OFFICIAL) -->
+    <!-- REE v0.4 sealed prospective campaign (ON-CHAIN, HISTORICAL/LEGACY) -->
     <div class="info-card" style="margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
         <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">ON-CHAIN</span>
-        <span style="background:rgba(217,70,239,0.15);color:#d946ef;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">OFFICIAL &mdash; GEASPIRIT REE V0.4 SEALED PROSPECTIVE CAMPAIGN</span>
+        <span style="background:rgba(148,163,184,0.15);color:#94a3b8;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">HISTORICAL &mdash; LEGACY RESEARCH ANCHOR</span>
         <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">block #13,483</span>
       </div>
-      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">SOST Protocol &mdash; GeaSpirit REE v0.4 Sealed Prospective Campaign (anchored on-chain)</h3>
+      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">SOST Protocol &mdash; REE v0.4 Sealed Prospective Campaign (legacy research anchor)</h3>
+      <p style="color:var(--text-muted);font-size:11.5px;line-height:1.65;margin:0 0 12px;padding:9px 11px;border-left:2px solid #94a3b8;background:rgba(148,163,184,0.06)">
+        <b style="color:var(--text-secondary)">Historical record.</b> This anchor was committed by a third-party research operator in June 2026 and is preserved here unaltered, exactly as it exists on chain. It is <b>not</b> a current integration and does <b>not</b> represent an ongoing relationship between the SOST Protocol and any external platform. The on-chain data is immutable and is never edited or removed; only this description has been updated.
+      </p>
       <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary)">
         <tbody>
           <tr><td style="padding:5px 0;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:30%">Block</td><td style="padding:5px 0"><a href="sost-explorer.html?search=13483" style="color:#d946ef">#13,483</a> &middot; 2026-06-17 06:44:24 UTC</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Txid</td><td style="padding:5px 0"><a href="sost-explorer.html?search=58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979" style="color:#d946ef;word-break:break-all">58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979</a></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Signer</td><td style="padding:5px 0"><b>OFFICIAL</b> &mdash; GeaSpirit / Protocol Registry operator <code style="word-break:break-all">sost1ca9097d830b74495b95db9d779ad63c90579bc18</code> (whitelisted)</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Signer</td><td style="padding:5px 0"><b>OFFICIAL</b> &mdash; Protocol Registry operator <code style="word-break:break-all">sost1ca9097d830b74495b95db9d779ad63c90579bc18</code> (whitelisted)</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule text</td><td style="padding:5px 0"><code style="word-break:break-all">sost-protocol geaspirit-ree-v04 9da4548fdbfe8b57</code></td></tr>
           <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Commitment file</td><td style="padding:5px 0"><a href="proofs/ree-prospective-v04-20260616_commitment.json" style="color:#d946ef">proofs/ree-prospective-v04-20260616_commitment.json</a></td></tr>
           <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Commitment SHA-256</td><td style="padding:5px 0;word-break:break-all"><code>9da4548fdbfe8b57090116e65db4ae15b948eb67927243ac9057da98b8b89d75</code></td></tr>
@@ -744,7 +747,7 @@
         </tbody>
       </table>
       <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:12px 0 0">
-        <b>What this is.</b> GeaSpirit's private regional REE prior (a frozen model that ranks ground by geological favourability for carbonatite/alkaline rare-earth systems, using open data + craton context) selected <b>50 highest-ranked novel target areas</b> and <b>50 controls</b>, froze the model and sealed the set behind a Merkle tree. The exact coordinates, scores and evidence stay <b>private and encrypted</b>; only the file SHA-256 (<code>9da4548f&hellip;</code>) and the Merkle root (<code>7f29c111&hellip;</code>) are public. This capsule timestamps that sealed campaign on the SOST chain.
+        <b>What this is.</b> A third-party private regional REE prior (a frozen model that ranks ground by geological favourability for carbonatite/alkaline rare-earth systems, using open data + craton context) selected <b>50 highest-ranked novel target areas</b> and <b>50 controls</b>, froze the model and sealed the set behind a Merkle tree. The exact coordinates, scores and evidence stay <b>private and encrypted</b>; only the file SHA-256 (<code>9da4548f&hellip;</code>) and the Merkle root (<code>7f29c111&hellip;</code>) are public. This capsule timestamps that sealed campaign on the SOST chain.
         <br><br>
         <b>What it proves.</b> Precedence + integrity: the campaign existed, unchanged, no later than block&nbsp;#13,483, signed by the operator address. The 50 targets cannot be edited after the fact without breaking these hashes &mdash; so any future hit cannot be cherry-picked retroactively.
         <br><br>
@@ -796,7 +799,7 @@
           <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Txid</td><td style="padding:5px 0"><a href="sost-explorer.html?search=d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db" style="color:#d946ef;word-break:break-all">d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db</a></td></tr>
           <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Proof SHA-256</td><td style="padding:5px 0;word-break:break-all"><code>3a28a4b112fe95df85ab2ab91deb7698ebeb1d9182297f06635fd12fd4053a02</code></td></tr>
           <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Merkle root</td><td style="padding:5px 0;word-break:break-all"><code>a818a1e4799ec34fd5a65b17d180a9534f791d4cd49f54c97b21c11d7b0e28b4</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Pipeline</td><td style="padding:5px 0">GeaSpirit scorecard &rarr; AI Council dossier &rarr; Useful Compute plan (dry-run) &rarr; Campaign manifest &rarr; Proof bundle</td></tr>
+          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Pipeline</td><td style="padding:5px 0">Geospatial scorecard &rarr; AI Council dossier &rarr; Useful Compute plan (dry-run) &rarr; Campaign manifest &rarr; Proof bundle</td></tr>
           <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Status</td><td style="padding:5px 0"><code>registered=true</code> &middot; <code>no_rewards_active=true</code> &middot; <code>capsule_mode=open-note</code></td></tr>
           <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">More info</td><td style="padding:5px 0"><a href="sost-trinity.html#kalgoorlie" style="color:#d946ef">sost-trinity.html</a></td></tr>
         </tbody>
@@ -920,7 +923,7 @@
   var SOST_OFFICIAL_WHITELIST = [
     "sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33", // genesis / protocol developer fee wallet
     "sost1a8eae8f80fedd8d86187db628a0d81e0367f76de", // developer
-    "sost1ca9097d830b74495b95db9d779ad63c90579bc18"  // GeaSpirit / Protocol Registry operator
+    "sost1ca9097d830b74495b95db9d779ad63c90579bc18"  // Protocol Registry operator
   ].map(function(s){ return s.toLowerCase(); });
   var NS = "sost-protocol ";
   var MAX_ROWS = 100;
@@ -1134,12 +1137,6 @@
           <span class="sv-card-h">SOST in 2 Minutes</span>
           <span class="sv-card-s">The protocol &middot; Sovereign by Design</span>
         </button>
-        <button class="sv-card sv-card-gea" type="button"
-          onclick="pickSv('sost-geaspirit.mp4','SOST &times; GeaSpirit &middot; Fusing Two Worlds')">
-          <span class="sv-thumb" style="background-image:url('sost-geaspirit-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST &times; GeaSpirit</span>
-          <span class="sv-card-s">Fusing Two Worlds &middot; mineral intelligence</span>
-        </button>
       </div>
     </div>
 
@@ -1203,7 +1200,6 @@
   .sv-back:hover{ border-color:#22d3ee; color:#22d3ee; }
   @media(max-width:560px){ .sv-card{ max-width:88vw; } .sv-cards{ gap:14px; } }
   /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
-  body.nav-collapsed nav a[href="https://geaspirit.com/"],
   body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
 </style>
 <script>
