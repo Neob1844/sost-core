@@ -1257,6 +1257,24 @@ inline constexpr bool is_hist_jackpot_height(int64_t height) {
 }
 
 // =============================================================================
+// V15 DTD RECENCY GATE — active ONLY from V15_HEIGHT (pre-V15 replay byte-identical).
+// A DTD candidate must have mined at least one block within a recency window:
+//   - normal (non-jackpot) blocks: DTD_RECENCY_WINDOW  (5000 blocks)
+//   - jackpot blocks:              DTD_JACKPOT_RECENCY_WINDOW (2016 blocks, ~2 weeks)
+// The jackpot window is stricter and governs jackpot blocks (the single DTD winner
+// of a jackpot block receives both the normal DTD share and the jackpot).
+// Applied inside compute_lottery_eligibility_set(), so ALL callers (miner template +
+// every validator/jackpot path) share one predicate → guaranteed miner<->validator parity.
+// =============================================================================
+inline constexpr int64_t DTD_RECENCY_WINDOW         = 5000;
+inline constexpr int64_t DTD_JACKPOT_RECENCY_WINDOW = 2016;
+// Returns the recency window to apply at `height`, or 0 (disabled) for height < V15_HEIGHT.
+inline constexpr int64_t dtd_recency_window_at(int64_t height) {
+    if (height < V15_HEIGHT) return 0;
+    return is_hist_jackpot_height(height) ? DTD_JACKPOT_RECENCY_WINDOW : DTD_RECENCY_WINDOW;
+}
+
+// =============================================================================
 // DTD Lottery Emergency Pause / Resume — signed control signal (DESIGNED,
 // consensus-DEFERRED).
 // =============================================================================
