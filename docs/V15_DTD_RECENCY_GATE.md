@@ -37,6 +37,6 @@ both the normal DTD share and the jackpot). Dormant addresses drop out of eligib
 
 ## ⚠️ Coordinated upgrade REQUIRED (consensus)
 This changes which DTD winners are valid at ≥ #25,000. **Every node and miner MUST run a binary containing
-this rule before block #25,000**, or the network will split (some accept a DTD winner others reject).
+this rule in the coordinated window: after block #24,900 and before block #25,000**, or the network will split (some accept a DTD winner others reject).
 At time of writing mainnet height ≈ 23,186 → ~1,800 blocks (~12–13 days) of runway. The ~90% dominant miner
 must upgrade too. Do NOT deploy piecemeal.

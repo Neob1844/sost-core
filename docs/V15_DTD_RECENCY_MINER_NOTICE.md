@@ -8,7 +8,7 @@ SOST V15 (block **#25,000**) adds a **DTD recency eligibility rule**:
 Everything else is unchanged (block reward, SbPoW, cooldown, anti-dominance). Dormant addresses simply stop
 being eligible until they mine again — nothing is lost, no supply change.
 
-**Action:** upgrade your node and miner to the V15 build (which includes this rule) **before block #25,000**.
+**Action:** upgrade your node and miner to the V15 build (which includes this rule) in the coordinated window — **after block #24,900 and before block #25,000** (~16 h).
 Build with the mandatory flags: `-DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF`.
 Running an older binary past #25,000 will fork you off the network.
 
