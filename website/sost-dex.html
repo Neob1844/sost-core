@@ -353,9 +353,9 @@
   <p style="margin:9px 0 0">Future emission that went to Gold Vault / PoPC is redirected to <b>DTD</b>. <b style="color:#ffd166">SOST is not backed by gold &mdash; SOST is backed by its own rules.</b></p>
   <h4>How DTD works</h4>
   <ul>
-   <li>Permanent <b>1-of-3 cadence</b>: the DTD share accumulates for 2 blocks and pays on the 3rd (lottery block).</li>
+   <li><b>Cadence</b>: 1-of-3 until V15, then <b>3-of-3 &mdash; a draw on every block</b> from #25,000. The DTD share still accumulates and rolls forward when a block has no eligible winner.</li>
    <li>No valid winner &rarr; not lost: it <b>rolls forward</b> and grows.</li>
-   <li>Eligibility: mined <b class="hl">&ge;1 block at any point in chain history</b> &mdash; once an address has produced a block it stays in the eligible set.</li>
+   <li>Eligibility (from #25,000): an <b class="hl">active signed miner</b> that mined &ge;1 block in the last <b>5,000</b> blocks (normal draw) or <b>20,000</b> blocks (Historical Jackpot); dormant addresses drop out until they mine again.</li>
    <li>Kept: recent-winner cooldown &middot; anti-dominance gate &middot; SbPoW gate &middot; uniform per-address selection.</li>
   </ul>
   <h4>&#127974; What happens to the existing Gold Vault + PoPC SOST</h4>
@@ -366,7 +366,7 @@
   <div style="margin:6px 0 8px;padding:12px 14px;border-radius:10px;border:1px solid rgba(251,191,36,.55);background:rgba(251,191,36,.07);color:#f5d79a;font-size:11.5px;line-height:1.7">
    <b style="color:#fbbf24;letter-spacing:.4px">V15 activates on SOST mainnet at block 25,000.</b> This is a consensus-breaking upgrade. Every node operator and every miner must be running the final V15 release <b>before block 24,900</b>.
    <pre style="margin:9px 0">UPDATE DEADLINE:             BEFORE #24,900
-FINAL RELEASE:               PUBLISHED &mdash; v0.4.1-v15-final
+FINAL RELEASE:               PUBLISHED &mdash; v0.4.2-v15-final
 V15 CONSENSUS ACTIVATION:    #25,000
 FIRST HISTORICAL JACKPOT:    #25,290
 SECOND CONSENSUS ACTIVATION: NONE
@@ -379,21 +379,21 @@ V15 ACTIVATION AT #30,000:   NONE</pre>
    <br><br>
    <b>Binaries.</b> Node operators must update <b>sost-node</b>; miners must update <b>sost-miner</b>. The canonical V15 release also includes matching <b>sost-cli</b> and <b>sost-signtx</b>, which should be updated where installed. The release will publish the final commit, SHA256 for all four binaries and the build manifest, so every operator can verify their binaries independently.
    <br><br>
-   <b style="color:#7CFFA0">The final release is published.</b> Release <b>v0.4.1-v15-final</b> &middot; release commit <b>bacd6281</b> &middot; consensus commit <b>16b50a4b</b>.
+   <b style="color:#7CFFA0">The final release is published.</b> Release <b>v0.4.2-v15-final</b> &middot; consensus commit <b>82ba0521</b>.
    Download the binaries and <b>verify the SHA256 before installing</b>:
-   <a href="https://github.com/Neob1844/sost-core/releases/tag/v0.4.1-v15-final">github.com/Neob1844/sost-core/releases/tag/v0.4.1-v15-final</a>
+   <a href="https://github.com/Neob1844/sost-core/releases/tag/v0.4.2-v15-final">github.com/Neob1844/sost-core/releases/tag/v0.4.2-v15-final</a>
   </div>
 
   <h4>&#128273; SHA256 of the released binaries</h4>
   <p style="margin:0 0 4px;font-size:11px;color:#c9b48a">Published here as well as on GitHub, so you can cross-check the two sources independently. If they ever disagree, do not install &mdash; ask on Telegram first.</p>
-  <pre>8c8ff89740d1b43a8c925d7d9ec398e4989a3d4de5759785aa84e3945b79bc4c  sost-node
-7379d34b74a34463745ad0885c170d2ca3bbd77efadf689aef6039ae34c1dace  sost-cli
-1a21a962c67b400814edde214d52176c28538c35ae67c8a366d7fde6ad34b9ab  sost-miner
-ac08c347ad315d3e1fb6bbbd49ebb6079ecdf5f1e914278a9df0f295e0fa67d9  sost-signtx</pre>
+  <pre>7d43ef6bee690021eb928e2ecdf924bca1aa6fffafae3f6041d5dd568aeb77c8  sost-node
+f804640944666f3147f5ced3c8d618da60f516c0147dc992a9542a3660c3f54e  sost-cli
+79a73d8ac8ee2731006eab828e6c4cfb547eee1deb558d0f9aea772376fca859  sost-miner
+9f9579a5022bf1faa55f367cebcaf4a03d05d8f4fa3bda138bb4a7842b4f2052  sost-signtx</pre>
 
   <h4>&#128295; How to update</h4>
   <p style="margin:0 0 4px">Option A &mdash; download the released binaries and verify them (recommended):</p>
-  <pre>cd /tmp &amp;&amp; R=https://github.com/Neob1844/sost-core/releases/download/v0.4.1-v15-final
+  <pre>cd /tmp &amp;&amp; R=https://github.com/Neob1844/sost-core/releases/download/v0.4.2-v15-final
 for b in sost-node sost-cli sost-miner sost-signtx; do curl -LO $R/$b; done
 curl -LO $R/SHA256SUMS_V15_FINAL.txt
 sha256sum -c SHA256SUMS_V15_FINAL.txt        # must print OK for all four
@@ -405,12 +405,12 @@ sudo systemctl start sost-node
 sha256sum /opt/sost/build/sost-node          # must equal the published hash</pre>
   <p style="margin:8px 0 4px">Option B &mdash; build from source and reproduce the release:</p>
   <pre>cd /opt/sost &amp;&amp; git fetch origin &amp;&amp; git checkout main &amp;&amp; git pull --ff-only origin main
-git rev-parse HEAD                            # must be bacd6281…
+git rev-parse HEAD                            # must be 82ba0521…
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
       -DSOST_DEVNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target sost-node sost-cli sost-miner sost-signtx -j$(nproc)
 sudo systemctl restart sost-node</pre>
-  <p style="margin:8px 0 0;font-size:11px;color:#c9b48a">The three build flags are <b>mandatory</b>. A binary built without them will not follow mainnet consensus. Toolchain used for the published binaries: g++ 11.4.0, cmake 3.22.1, ld 2.38, glibc 2.35, OpenSSL 3.0.2 &mdash; a different toolchain produces a different SHA256 for the same source, which is expected; verify against the manifest.</p>
+  <p style="margin:8px 0 0;font-size:11px;color:#c9b48a">The three build flags are <b>mandatory</b>. A binary built without them will not follow mainnet consensus. Toolchain used for the published binaries: g++ 13.3.0, cmake 3.28.3, ld 2.42, glibc 2.39, OpenSSL 3.0.13 &mdash; a different toolchain produces a different SHA256 for the same source, which is expected; verify against the manifest.</p>
   <p style="margin:6px 0 0;font-size:11px;color:#c9b48a">Check afterwards: <b>sost-node --version</b>, <b>getblockcount</b> advancing, and <b>getpeerinfo</b> showing at least one peer.</p>
   <p style="margin:6px 0 0;font-size:11px;color:#f5c78a">Nodes and miners still running the earlier build will diverge from the main chain after activation.</p>
   <div class="v15note">&#9883;&#65039; Atomic Swap stays in controlled founder testing (not a public DEX). <b>V15 final is published and deployed; consensus activates at block #25,000.</b> The final build and exact upgrade steps will be published before activation. Details: <a href="https://sostcore.com">sostcore.com</a> &middot; <a href="https://t.me/SOSTProtocolOfficial">t.me/SOSTProtocolOfficial</a></div>
