@@ -1,5 +1,54 @@
 # SOST Protocol — Changelog
 
+## Unreleased — Post-Quantum Migration V3 (RESEARCH / DOCS / PROTOTYPE, off-consensus)
+
+Draft, research-only. Changes NO consensus rule, activates NOTHING, adds NO
+build dependency, and compiles NOTHING into the node or miner. Supersedes the V2
+research iteration (PR #37, branch `draft/pq-migration-v2`), which is left intact.
+
+- docs: master index `docs/PQ_MIGRATION_V3.md` and the full V3 set
+  (`PQ_TX_FORMAT_V3`, `PQ_THREAT_MODEL_V3`, `PQ_SECURITY_ASSUMPTIONS_V3`,
+  `PQ_WALLET_MIGRATION_V3`, `PQ_ACTIVATION_PLAN_V3`, `PQ_PERFORMANCE_MODEL_V3`,
+  `PQ_BENCHMARK_RESULTS_V3`, `PQ_TESTNET_PLAN_V3`, `PQ_AUDIT_CHECKLIST_V3`,
+  `PQ_DECISION_LOG_V3`).
+- docs: canonical whitepaper content tree `docs/whitepaper/00..12` +
+  `docs/WHITEPAPER_MANIFEST.md`; seven ADRs `docs/ADR/ADR-001..007`.
+- prototype: `prototype/pq/` (algorithm registry, safe witness parser,
+  deterministic serializer, conceptual validation with domain separation and
+  hybrid-AND). NOT listed in CMake, NOT included by any consensus unit.
+- tests: `tests/pq_vectors/` standalone unit + negative + fuzz targets
+  (21/21 pass, off-ctest).
+- bench: `scripts/pq_bench/` size-math harness (exact FIPS 204) + schema.
+- tooling: `scripts/check_whitepaper_sync.py`, `scripts/check_crypto_claims.py`.
+
+### Consolidation (V2 → V3) — this change
+
+Reviewed PR #37 (V2) against PR #38 (V3) file-by-file and concept-by-concept;
+V3 is a superset. Ported the few useful V2-only items into V3 (single source of
+truth; V2 left intact, not closed):
+- `docs/PQ_MIGRATION_V3.md §1.1` — full migration-surface inventory (every
+  fixed-size key/sig field: multisig, RPC, wallet, address, SbPoW; verified
+  file:line) and `§1.2` — pointer to the secondary transport/KEM track.
+- `docs/PQ_THREAT_MODEL_V3.md §12` — transport-channel (ML-KEM-768) track,
+  explicitly out of the signature-activation scope.
+- `docs/PQ_PERFORMANCE_MODEL_V3.md §4.4` — verify-work-budget DoS bound (candidate;
+  weights pending measured timings).
+- `scripts/pq_bench/pq_bench_v3.py` — mechanism-name alias fallback (final
+  `ML-DSA-*` name then legacy `Dilithium*`) + verify-invalid measurement; the
+  legacy-only lookup missed liboqs ≥ 0.10 installs.
+- `docs/PQ_V3_CONSOLIDATION_REVIEW.md` — the full 19-point review + #37↔#38 matrix.
+- bench: **indicative** ML-DSA-44/65/87 timings measured in an isolated venv
+  (liboqs 0.15.0, WSL2, turbo NOT pinned, n=10000) —
+  `scripts/pq_bench/results/measured_2026-07-02_i9-10885H_wsl2.json`; ECDSA
+  baseline / HYBRID / memory / p99 stay `RESULTS_PENDING_COMPUTE_ENV`. No PQ
+  library is added to the node/miner build.
+- docs: honest Post-Quantum Migration Status added to `README.md` and the PQ copy
+  on `website/whitepaper-reader.html`, `website/sost-security.html`,
+  `website/sost-technology.html` corrected to remove fixed activation dates
+  (no deploy — repo only).
+- Mainnet-active crypto is unchanged: ECDSA secp256k1 + LOW-S (spend);
+  BIP-340 Schnorr (SbPoW block-identity only). No activation date, no height.
+
 ## v1.1.0 — Transcript V2 (Pre-Launch)
 
 ### ConvergenceX Transcript V2

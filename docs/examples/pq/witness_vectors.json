@@ -1,0 +1,139 @@
+{
+  "note": "SOST PQ V3 witness prototype vectors. Fixed 2-byte big-endian length prefixes. NOT consensus. Component payload bytes are placeholder fill bytes (not real signatures). See prototype/pq/pq_witness.h.",
+  "format": {
+    "layout": "alg_id(1) then per component: len_be16(2) + bytes[len]. No trailing bytes allowed.",
+    "alg_ids": {
+      "0x00": "LEGACY_ECDSA_SECP256K1",
+      "0x01": "PQ_ML_DSA_44",
+      "0x02": "HYBRID_ECDSA_ML_DSA_44",
+      "0x03": "ML_DSA_65_RESERVED",
+      "0x04": "ML_DSA_87_RESERVED",
+      "0x10": "SLH_DSA_RESERVED",
+      "0xFF": "INVALID"
+    },
+    "exact_sizes_bytes": {
+      "ecdsa_sig": 64,
+      "ecdsa_pk": 33,
+      "ml_dsa_44_sig": 2420,
+      "ml_dsa_44_pk": 1312,
+      "ml_dsa_65_sig": 3309,
+      "ml_dsa_65_pk": 1952,
+      "ml_dsa_87_sig": 4627,
+      "ml_dsa_87_pk": 2592
+    },
+    "canonical_len_be16_prefixes_hex": {
+      "note": "The exactly-2-byte unsigned big-endian length prefix for each component. No CompactSize/varint. ML-DSA-65/87 are RESERVED (rejected by alg_id); their prefixes are shown for completeness only.",
+      "ecdsa_sig_64": "0040",
+      "ecdsa_pk_33": "0021",
+      "ml_dsa_44_sig_2420": "0974",
+      "ml_dsa_44_pk_1312": "0520",
+      "ml_dsa_65_sig_3309": "0ced",
+      "ml_dsa_65_pk_1952": "07a0",
+      "ml_dsa_87_sig_4627": "1213",
+      "ml_dsa_87_pk_2592": "0a20"
+    }
+  },
+  "valid": [
+    {
+      "name": "legacy_ecdsa",
+      "alg_id": "0x00",
+      "expect": "OK",
+      "hex": "000040111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110021222222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "name": "ml_dsa_44",
+      "alg_id": "0x01",
+      "expect": "OK",
+      "hex": "(2420-byte sig + 1312-byte pk; too large to inline \u2014 generate via serialize_witness)"
+    },
+    {
+      "name": "hybrid_ecdsa_ml_dsa_44",
+      "alg_id": "0x02",
+      "expect": "OK",
+      "hex": "(64+33 ECDSA half then 2420+1312 ML-DSA half \u2014 generate via serialize_witness)"
+    }
+  ],
+  "invalid": [
+    {
+      "name": "empty",
+      "hex": "",
+      "expect": "ERR_EMPTY"
+    },
+    {
+      "name": "unknown_algid",
+      "hex": "7e",
+      "expect": "ERR_UNKNOWN_ALGID"
+    },
+    {
+      "name": "reserved_ml_dsa_65",
+      "hex": "03",
+      "expect": "ERR_RESERVED_ALGID"
+    },
+    {
+      "name": "reserved_ml_dsa_87",
+      "hex": "04",
+      "expect": "ERR_RESERVED_ALGID"
+    },
+    {
+      "name": "reserved_slh_dsa",
+      "hex": "10",
+      "expect": "ERR_RESERVED_ALGID"
+    },
+    {
+      "name": "invalid_sentinel",
+      "hex": "ff",
+      "expect": "ERR_INVALID_ALGID"
+    },
+    {
+      "name": "truncated_prefix",
+      "hex": "0000",
+      "expect": "ERR_TRUNCATED"
+    },
+    {
+      "name": "wrong_len_63",
+      "hex": "00003f1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110021222222222222222222222222222222222222222222222222222222222222222222",
+      "expect": "ERR_WRONG_COMPONENT_LEN"
+    },
+    {
+      "name": "trailing_byte",
+      "hex": "000040111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110021222222222222222222222222222222222222222222222222222222222222222222ab",
+      "expect": "ERR_TRAILING_BYTES"
+    },
+    {
+      "name": "little_endian_length",
+      "note": "sig length 64 written little-endian (40 00); BE16 decode = 0x4000 = 16384 != 64.",
+      "hex": "004000111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110021222222222222222222222222222222222222222222222222222222222222222222",
+      "expect": "ERR_WRONG_COMPONENT_LEN"
+    },
+    {
+      "name": "one_byte_prefix",
+      "note": "sig length written as a single byte (40); parser still reads two bytes (40 11 = 0x4011).",
+      "hex": "0040111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110021222222222222222222222222222222222222222222222222222222222222222222",
+      "expect": "ERR_WRONG_COMPONENT_LEN"
+    },
+    {
+      "name": "compactsize_prefix_ml_dsa",
+      "note": "CompactSize(2420)=FD 74 09 for ML-DSA-44 sig; BE16 reads FD 74 = 0xFD74 = 64884 != 2420. CompactSize is not a recognised encoding.",
+      "hex": "01fd7409",
+      "expect": "ERR_WRONG_COMPONENT_LEN"
+    },
+    {
+      "name": "fd_lead_not_varint",
+      "note": "0xFD is the high byte of a BE16 length (0xFD00 = 64768), never a varint marker.",
+      "hex": "00fd00",
+      "expect": "ERR_WRONG_COMPONENT_LEN"
+    },
+    {
+      "name": "correct_len_truncated_data",
+      "note": "sig length correctly declared 64 (0040) but only 30 sig bytes follow.",
+      "hex": "000040111111111111111111111111111111111111111111111111111111111111",
+      "expect": "ERR_TRUNCATED"
+    },
+    {
+      "name": "wrong_len_65_enough_data",
+      "note": "sig length declared 65 (0041) with more than enough bytes present; rejected before reading.",
+      "hex": "000041111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110021222222222222222222222222222222222222222222222222222222222222222222",
+      "expect": "ERR_WRONG_COMPONENT_LEN"
+    }
+  ]
+}

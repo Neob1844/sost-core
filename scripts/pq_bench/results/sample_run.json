@@ -1,0 +1,70 @@
+{
+  "schema": "sost-pq-bench-v3",
+  "environment": {
+    "date_utc": "2026-07-02T17:20:56.666023+00:00",
+    "python": "3.10.12",
+    "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "machine": "x86_64",
+    "processor": "x86_64",
+    "git_commit": "682fd82092df1b22e89c5b204fcc8475702e8a74",
+    "git_branch": "draft/pq-migration-v3-docsync"
+  },
+  "sizes_bytes": {
+    "ECDSA_SECP256K1": {
+      "sig": 64,
+      "pk": 33,
+      "level": "classical"
+    },
+    "ML_DSA_44": {
+      "sig": 2420,
+      "pk": 1312,
+      "level": "NIST L2 (FIPS 204)"
+    },
+    "ML_DSA_65": {
+      "sig": 3309,
+      "pk": 1952,
+      "level": "NIST L3 (FIPS 204)"
+    },
+    "ML_DSA_87": {
+      "sig": 4627,
+      "pk": 2592,
+      "level": "NIST L5 (FIPS 204)"
+    }
+  },
+  "consensus_limits": {
+    "MAX_TX_BYTES_CONSENSUS": 100000,
+    "MAX_BLOCK_BYTES_CONSENSUS": 1000000
+  },
+  "size_impact": [
+    {
+      "config": "LEGACY_ECDSA",
+      "per_input_bytes": 138,
+      "max_inputs_per_tx_by_bytes": 724,
+      "max_inputs_per_tx_effective": 256,
+      "max_single_input_txs_per_block": 7246
+    },
+    {
+      "config": "PQ_ML_DSA_44",
+      "per_input_bytes": 3773,
+      "max_inputs_per_tx_by_bytes": 26,
+      "max_inputs_per_tx_effective": 26,
+      "max_single_input_txs_per_block": 265
+    },
+    {
+      "config": "PQ_ML_DSA_65",
+      "per_input_bytes": 5302,
+      "max_inputs_per_tx_by_bytes": 18,
+      "max_inputs_per_tx_effective": 18,
+      "max_single_input_txs_per_block": 188
+    },
+    {
+      "config": "HYBRID_ECDSA_ML_DSA_44",
+      "per_input_bytes": 3874,
+      "max_inputs_per_tx_by_bytes": 25,
+      "max_inputs_per_tx_effective": 25,
+      "max_single_input_txs_per_block": 258
+    }
+  ],
+  "timings": "RESULTS_PENDING_COMPUTE_ENV",
+  "timings_status": "RESULTS_PENDING_COMPUTE_ENV"
+}
