@@ -18,8 +18,7 @@
     "source_tools": [
       "trinity_scientific_prompt_intake",
       "trinity_orchestrator",
-      "materials_engine",
-      "geaspirit"
+      "materials_engine"
     ],
     "rpc_methods": [
       "getinfo",

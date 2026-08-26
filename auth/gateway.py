@@ -75,7 +75,7 @@ def create_auth_app():
                     "message": "Enter 6-digit code from your authenticator app"}
 
         # No 2FA — issue session directly
-        token = _sessions.create(req.username, "admin", ["geaspirit", "materials_engine"])
+        token = _sessions.create(req.username, "admin", [])
         _audit("login_success_no_2fa", ip=ip, user=req.username)
         return {"status": "authenticated", "requires_otp": False, "token": token,
                 "expires_in": cfg.SESSION_DURATION_SECONDS}
@@ -101,7 +101,7 @@ def create_auth_app():
             raise HTTPException(401, "Invalid code")
 
         _pending_2fa.pop(ip, None)
-        token = _sessions.create(user, "admin", ["geaspirit", "materials_engine"])
+        token = _sessions.create(user, "admin", [])
         _audit("login_success", ip=ip, user=user)
         return {"status": "authenticated", "token": token,
                 "expires_in": cfg.SESSION_DURATION_SECONDS}

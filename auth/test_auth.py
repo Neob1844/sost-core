@@ -100,7 +100,7 @@ class TestSessions(unittest.TestCase):
 
     def test_create_and_validate(self):
         store = SessionStore()
-        token = store.create("admin", "admin", ["geaspirit"])
+        token = store.create("admin", "admin", ["product_a"])
         session = store.validate(token)
         self.assertIsNotNone(session)
         self.assertEqual(session["user"], "admin")
@@ -124,11 +124,22 @@ class TestSessions(unittest.TestCase):
         store.refresh(token)
         self.assertGreater(store.validate(token)["expires"], old)
 
-    def test_has_access(self):
+    def test_has_access_denies_when_no_products_are_entitled(self):
+        # This used to assert that an admin token granted access to geaspirit and
+        # materials_engine. Those are unrelated products that never asked this gateway for
+        # anything, so their entitlements were removed and no role now carries a product.
+        #
+        # has_access reads the products of the ROLE in config, not of the token, so with no
+        # products configured it denies everything. That is the correct current behaviour and
+        # is what this test pins. The mechanism itself is now vestigial for SOST: nothing in
+        # the codebase calls it except the /access endpoint. It is left in place rather than
+        # ripped out of a running service, and should be removed deliberately if SOST never
+        # gates a product of its own.
         store = SessionStore()
-        token = store.create("admin", "admin", ["geaspirit", "materials_engine"])
-        self.assertTrue(store.has_access(token, "geaspirit"))
-        self.assertTrue(store.has_access(token, "materials_engine"))
+        token = store.create("admin", "admin", ["product_a"])
+        self.assertIsNotNone(store.validate(token))          # the session itself is valid
+        self.assertFalse(store.has_access(token, "product_a"))
+        self.assertFalse(store.has_access(token, "anything"))
 
     def test_revoke_all(self):
         store = SessionStore()

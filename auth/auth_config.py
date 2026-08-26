@@ -56,10 +56,13 @@ SCRYPT_DKLEN = 32
 
 # Roles
 ROLES = {
-    "public": {"level": 0, "products": []},
-    "user_tier_1": {"level": 1, "products": ["geaspirit", "materials_engine"]},
-    "user_tier_2": {"level": 2, "products": ["geaspirit", "materials_engine"]},
-    "user_tier_3": {"level": 3, "products": ["geaspirit", "materials_engine"]},
-    "operator": {"level": 8, "products": ["geaspirit", "materials_engine"]},
-    "admin": {"level": 10, "products": ["geaspirit", "materials_engine"]},
+    # GeaSpirit and materials_engine were listed here when the three were planned as one
+    # ecosystem. They are unrelated products and neither asks this gateway for anything —
+    # GeaSpirit authenticates entirely on its own. The entitlements were dead entries.
+    "public":      {"level": 0,  "products": []},
+    "user_tier_1": {"level": 1,  "products": []},
+    "user_tier_2": {"level": 2,  "products": []},
+    "user_tier_3": {"level": 3,  "products": []},
+    "operator":    {"level": 8,  "products": []},
+    "admin":       {"level": 10, "products": []},
 }

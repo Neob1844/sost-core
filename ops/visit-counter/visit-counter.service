@@ -1,5 +1,5 @@
 [Unit]
-Description=Visit Counter (sostcore explorer + geaspirit)
+Description=Visit Counter (sostcore explorer)
 After=network.target
 
 [Service]

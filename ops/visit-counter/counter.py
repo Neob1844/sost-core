@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Visit counter for sostcore.com (explorer) + geaspirit.com.
+"""Visit counter for sostcore.com (explorer).
 
 Counts UNIQUE visits (one per IP+UA+day, bot-filtered), seeded with a baseline
 because nginx logs do not reach back to launch. Privacy: raw IPs are never
@@ -11,7 +11,7 @@ from urllib.parse import urlparse, parse_qs
 
 DATA_DIR  = "/var/lib/visit-counter"
 DATA_FILE = os.path.join(DATA_DIR, "counts.json")
-SEED = {"sostcore": 3375, "geaspirit": 675}
+SEED = {"sostcore": 3375}   # geaspirit moved to its own counter — unrelated products
 SALT = "sost-vc-2026-a7"
 BOT_RE = re.compile(
     r"bot|spider|crawl|slurp|curl|wget|python|httpclient|java/|go-http|libwww|"
