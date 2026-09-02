@@ -32,7 +32,10 @@
       "  font-weight: 700;",
       "  letter-spacing: 1.6px;",
       "  padding: 7px 14px;",
-      "  border-radius: 6px;",
+      // 12px, not 6. One shape scale for the whole site: 20% on the large square
+      // modules, 12px on medium controls like this one and Watch, 10px on chips.
+      // The glow below is untouched — the pulse is the brand, not a rough edge.
+      "  border-radius: 12px;",
       "  cursor: pointer;",
       "  flex: 0 0 auto;",
       "  transition: transform .18s ease, color .18s ease, border-color .2s ease;",
@@ -40,6 +43,15 @@
       "  text-shadow: 0 0 6px rgba(251,1,13,0.55);",
       "  animation: sostNavPulse 2.4s ease-in-out infinite;",
       "  -webkit-tap-highlight-color: transparent;",
+      "}",
+      // Watch is the one nav link that HAS a box, and it inherited .nav-links a at 4px —
+      // nearly square beside the 12px Hide Nav it sits next to. Given its own rule rather
+      // than rounding all twenty text links, which would be the bubble UI the owner ruled
+      // out. The first attempt put this in the video-modal stylesheet, which returns early
+      // on any page that ships its own modal — so it never reached the home page at all.
+      "nav .nav-links a[data-watch] {",
+      "  border-radius: 12px;",
+      "  padding: 5px 12px;",
       "}",
       ".sost-nav-toggle:hover, .nav-toggle:hover {",
       "  color: #ffffff;",
@@ -367,4 +379,58 @@
     var m=document.getElementById('sv-modal'); if(!m)return; m.classList.remove('open'); m.setAttribute('aria-hidden','true');
     document.body.style.overflow=''; var v=document.getElementById('sv-video'); try{ v.pause(); }catch(e){} };
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') window.closeSv(null,true); });
+})();
+
+/* ============================================================================
+   DTD — injected into the large-button row on every page.
+
+   It existed on the home page only. Not "everywhere but the explorer": the explorer was simply
+   the page where its absence was noticed, and fifty-five others were missing it too. Pasting the
+   markup into each would have recreated the drift this file exists to prevent, so it is built
+   here once and anchored on the Atomic Swap tile — the same technique injectNewsBtn already
+   uses, and immune to href changes for the same reason.
+
+   Order matches the home page: ConvergenceX, DTD, Atomic Swap, News. DTD goes BEFORE the
+   anchor; News goes after it.
+   ========================================================================== */
+(function(){
+  "use strict";
+  function styleOnce(){
+    if(document.getElementById('sost-dtd-btn-style')) return;
+    var st=document.createElement('style'); st.id='sost-dtd-btn-style';
+    st.textContent=[
+      '@keyframes dtdBtnGlow{0%,100%{box-shadow:0 0 12px rgba(57,255,20,.45),0 0 22px rgba(57,255,20,.18)}',
+      '50%{box-shadow:0 0 26px rgba(57,255,20,.9),0 0 52px rgba(57,255,20,.55),0 0 78px rgba(57,255,20,.3)}}',
+      '.sost-dtd-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;',
+      'border-radius:20%;background:radial-gradient(circle at 50% 35%,#0f2417,#07120b);',
+      'border:1px solid #39ff14;text-decoration:none;line-height:1;flex:0 0 auto;',
+      'animation:dtdBtnGlow 2s ease-in-out infinite;overflow:hidden;',
+      '-webkit-tap-highlight-color:transparent}',
+      '.sost-dtd-btn:hover{border-color:#7CFFA0;transform:translateY(-1px);transition:transform .15s ease,border-color .2s ease}',
+      'body.nav-collapsed nav .sost-dtd-btn{display:none !important}'
+    ].join('');
+    (document.head||document.documentElement).appendChild(st);
+  }
+  function injectDtdBtn(){
+    var nav=document.querySelector('nav');
+    if(!nav) return;
+    // Already there — the home page ships its own inline copy and must not gain a second.
+    if(nav.querySelector('.sost-dtd-btn') || nav.querySelector('a[href$="#dtd"]')) return;
+    var anchor=nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
+    if(!anchor) return;                       // no large-button row on this page
+    styleOnce();
+    var sz=anchor.offsetWidth||72;            // match the sibling box, whatever this page uses
+    var a=document.createElement('a');
+    a.href='index.html#dtd'; a.title='DTD — Deterministic Token Distribution';
+    a.className='sost-dtd-btn';
+    a.style.width=sz+'px'; a.style.height=sz+'px'; a.style.minWidth=sz+'px';
+    var big=Math.max(16,Math.round(sz*0.28)), small=Math.max(6,Math.round(sz*0.09));
+    a.innerHTML='<span style="color:#39ff14;font-size:'+big+'px;font-weight:900;letter-spacing:1px;'
+      +'text-shadow:0 0 14px rgba(57,255,20,.85)">DTD</span>'
+      +'<span style="color:#7CFFA0;font-size:'+small+'px;font-weight:700;letter-spacing:.4px;'
+      +'text-align:center;margin-top:2px">TOKEN<br>DISTRIBUTION</span>';
+    anchor.parentNode.insertBefore(a, anchor);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',injectDtdBtn,{once:true});
+  else injectDtdBtn();
 })();
