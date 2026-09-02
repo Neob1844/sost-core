@@ -286,6 +286,44 @@
     st.id='sost-news-btn-style';
     st.textContent=[
       '@keyframes newsBtnGlow{0%,100%{box-shadow:0 0 12px rgba(245,158,11,.42),0 0 22px rgba(251,1,13,.14)}50%{box-shadow:0 0 20px rgba(245,158,11,.82),0 0 36px rgba(251,1,13,.32),0 0 52px rgba(245,158,11,.20)}}',
+      /* ------------------------------------------------------------------------------------
+         The four large modules take the mark's own silhouette.
+
+         ConvergenceX, DTD, Atomic Swap DEX and News were 20% rounded rectangles while the logo
+         beside them had become a superellipse, so the row read as two shape languages at once.
+         The curve here is the SAME one: exponent n = 2.466, whose enclosed area is 84.2% of its
+         bounding square — which is what the logo PNG's alpha actually measures. Derived from the
+         file, not eyeballed.
+
+         Two constructions, because the two kinds of element carry their glow differently.
+
+         ConvergenceX is an <img> glowing by filter: drop-shadow, and drop-shadow follows the
+         alpha it is handed — so masking the image yields a squircle whose halo follows the new
+         outline for free, at the same colour, blur and intensity.
+
+         DTD, Atomic Swap and News are <a> elements glowing by an ANIMATED box-shadow, and a
+         mask clips box-shadow. Masking them directly would have destroyed the one thing that
+         must not change. So each element keeps its box-shadow, its border-radius and its
+         keyframes exactly as they were, and only the visible body — gradient and border — moves
+         to a ::before that carries the mask. The halo is a 12-26px blur, so the handful of
+         pixels where a rounded rectangle and a superellipse disagree at the corner sit far below
+         what the eye can resolve.
+         ------------------------------------------------------------------------------------ */
+      '.sost-sq,.sost-sq-body::before{-webkit-mask-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M100.0%2050.0L99.7%2058.5L99.0%2064.8L97.7%2070.4L95.9%2075.4L93.7%2080.0L91.0%2084.1L87.7%2087.7L84.1%2091.0L80.0%2093.7L75.4%2095.9L70.4%2097.7L64.8%2099.0L58.5%2099.7L50.0%20100.0L41.5%2099.7L35.2%2099.0L29.6%2097.7L24.6%2095.9L20.0%2093.7L15.9%2091.0L12.3%2087.7L9.0%2084.1L6.3%2080.0L4.1%2075.4L2.3%2070.4L1.0%2064.8L0.3%2058.5L0.0%2050.0L0.3%2041.5L1.0%2035.2L2.3%2029.6L4.1%2024.6L6.3%2020.0L9.0%2015.9L12.3%2012.3L15.9%209.0L20.0%206.3L24.6%204.1L29.6%202.3L35.2%201.0L41.5%200.3L50.0%200.0L58.5%200.3L64.8%201.0L70.4%202.3L75.4%204.1L80.0%206.3L84.1%209.0L87.7%2012.3L91.0%2015.9L93.7%2020.0L95.9%2024.6L97.7%2029.6L99.0%2035.2L99.7%2041.5Z%22%2F%3E%3C%2Fsvg%3E\");mask-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M100.0%2050.0L99.7%2058.5L99.0%2064.8L97.7%2070.4L95.9%2075.4L93.7%2080.0L91.0%2084.1L87.7%2087.7L84.1%2091.0L80.0%2093.7L75.4%2095.9L70.4%2097.7L64.8%2099.0L58.5%2099.7L50.0%20100.0L41.5%2099.7L35.2%2099.0L29.6%2097.7L24.6%2095.9L20.0%2093.7L15.9%2091.0L12.3%2087.7L9.0%2084.1L6.3%2080.0L4.1%2075.4L2.3%2070.4L1.0%2064.8L0.3%2058.5L0.0%2050.0L0.3%2041.5L1.0%2035.2L2.3%2029.6L4.1%2024.6L6.3%2020.0L9.0%2015.9L12.3%2012.3L15.9%209.0L20.0%206.3L24.6%204.1L29.6%202.3L35.2%201.0L41.5%200.3L50.0%200.0L58.5%200.3L64.8%201.0L70.4%202.3L75.4%204.1L80.0%206.3L84.1%209.0L87.7%2012.3L91.0%2015.9L93.7%2020.0L95.9%2024.6L97.7%2029.6L99.0%2035.2L99.7%2041.5Z%22%2F%3E%3C%2Fsvg%3E\");-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}',
+      '.sost-sq{border-radius:0 !important}',
+      '.sost-sq-body{position:relative;isolation:isolate;background:none !important;',
+      '  border-color:transparent !important}',
+      '.sost-sq-body::before{content:"";position:absolute;inset:0;z-index:-1;',
+      '  background:var(--sq-bg);border:var(--sq-border, none)}',
+      /* one declaration per module: same silhouette, its own colours untouched */
+      '.sost-dtd-btn{--sq-bg:radial-gradient(circle at 50% 35%,#0f2417,#07120b);',
+      '  --sq-border:1px solid #39ff14}',
+      'nav a[style*="dtdBtnGlow"]{--sq-bg:radial-gradient(circle at 50% 35%,#0f2417,#07120b);',
+      '  --sq-border:1px solid #39ff14}',
+      'nav a[style*="asBtnGlow"]{--sq-bg:linear-gradient(135deg,#2a0f2c,#4a1f4d);',
+      '  --sq-border:1px solid #f5c518}',
+      '.sost-news-btn{--sq-bg:linear-gradient(135deg,#1b1206,#2c1d08,#3a2a0a);',
+      '  --sq-border:1px solid rgba(245,158,11,.6)}',
       '.sost-news-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20%;background:linear-gradient(135deg,#1b1206,#2c1d08,#3a2a0a);border:1px solid rgba(245,158,11,.6);text-decoration:none;line-height:1;flex:0 0 auto;box-shadow:0 0 20px rgba(245,158,11,.95),0 0 40px rgba(245,158,11,.55);overflow:hidden;-webkit-tap-highlight-color:transparent}',
       '.sost-news-btn:hover{border-color:rgba(255,200,87,.95);transform:translateY(-1px);transition:transform .15s ease,border-color .2s ease}',
       'body.nav-collapsed nav .sost-news-btn{display:none !important}'
@@ -304,7 +342,8 @@
     if(!watch) return;                                            // need the logo-button row
     var sz=watch.offsetWidth||110;                               // match the sibling box
     var a=document.createElement('a');
-    a.href='news.html'; a.title='News & Updates'; a.className='sost-news-btn';
+    a.href='news.html'; a.title='News & Updates';
+    a.className='sost-news-btn sost-sq-body';
     a.style.width=sz+'px'; a.style.height=sz+'px'; a.style.minWidth=sz+'px';
     var ic=Math.round(sz*0.30), tx=Math.max(9,Math.round(sz*0.115));
     a.innerHTML='<span style="font-size:'+ic+'px;line-height:1;margin-bottom:2px">📰</span>'
@@ -422,7 +461,7 @@
     var sz=anchor.offsetWidth||72;            // match the sibling box, whatever this page uses
     var a=document.createElement('a');
     a.href='index.html#dtd'; a.title='DTD — Deterministic Token Distribution';
-    a.className='sost-dtd-btn';
+    a.className='sost-dtd-btn sost-sq-body';
     a.style.width=sz+'px'; a.style.height=sz+'px'; a.style.minWidth=sz+'px';
     var big=Math.max(16,Math.round(sz*0.28)), small=Math.max(6,Math.round(sz*0.09));
     a.innerHTML='<span style="color:#39ff14;font-size:'+big+'px;font-weight:900;letter-spacing:1px;'
@@ -433,4 +472,36 @@
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',injectDtdBtn,{once:true});
   else injectDtdBtn();
+})();
+
+/* ============================================================================
+   Tag the four large modules so the shared silhouette applies to them.
+
+   Done here rather than by editing the markup on every page: the shape is a property of the
+   component, and putting a class into fifty-seven files by hand is how the header drifted in
+   the first place. Matching is by what each element IS — the ConvergenceX image, the tiles
+   carrying the glow animations — not by href, which has changed before.
+   ========================================================================== */
+(function(){
+  "use strict";
+  function tag(){
+    var nav=document.querySelector('nav');
+    if(!nav) return;
+    // ConvergenceX: an <img> glowing by drop-shadow. Masking it is enough — the halo follows.
+    nav.querySelectorAll('img[src*="convergencex-logo"]').forEach(function(el){
+      el.classList.add('sost-sq');
+    });
+    // The tiles that glow by box-shadow keep the shadow and move their body to ::before.
+    // dexBtnGlow — the explorer's rainbow tile — is deliberately NOT included: it is not one
+    // of the four, and its background is an animated gradient that a static ::before copy would
+    // freeze mid-cycle.
+    nav.querySelectorAll('a[style*="dtdBtnGlow"],a[style*="asBtnGlow"],'
+                       + '.sost-dtd-btn,.sost-news-btn').forEach(function(el){
+      el.classList.add('sost-sq-body');
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tag,{once:true});
+  else tag();
+  // The DTD and NEWS buttons are injected after this runs, so tag once more on the next turn.
+  setTimeout(tag,0); setTimeout(tag,400);
 })();
