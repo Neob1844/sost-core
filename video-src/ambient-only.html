@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>SOST ambient plate</title>
+<link rel="stylesheet" href="lib/brand.css">
+<style>.stage{background:#000}</style></head><body>
+<div class="stage"><canvas id="amb" width="1920" height="1080"></canvas></div>
+<script src="lib/ambient.js"></script>
+<script>
+/* A colour plate, screen-blended UNDER the finished mechanisms footage. That film's middle is
+   a render with no source project, so it cannot be re-composed -- but its background is very
+   near black, and screen blending lifts only those dark areas: the captions and diagrams on
+   top are already bright and barely move. It adds colour without repainting anything. */
+var t=parseFloat(new URLSearchParams(location.search).get('t')||'0');
+GeaAmbient.paint(document.getElementById('amb'), t, 'red', {n:120, grid:false});
+document.documentElement.setAttribute('data-ready','1');
+</script></body></html>

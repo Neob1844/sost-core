@@ -3,92 +3,161 @@
 <link rel="stylesheet" href="lib/brand.css">
 <style>
   .scene{position:absolute;inset:0;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;text-align:center;padding:0 140px}
-  .kicker{font-family:var(--mono);font-size:26px;letter-spacing:.34em;
-    color:#5C6670;text-transform:uppercase;margin-bottom:48px}
-  .head{font-family:var(--sans);font-weight:700;font-size:78px;color:var(--white);
-    letter-spacing:-.015em;line-height:1.14;max-width:26ch}
-  .head .r{color:var(--red)} .head .v{color:var(--violet)} .head .c{color:var(--cyan)}
-  .sub{font-family:var(--mono);font-size:33px;color:var(--dim);line-height:1.55;
-    margin-top:42px;max-width:60ch}
-  .mark{width:250px;height:250px}
-  .wordmark{font-size:86px;margin-top:62px}
-  .tag{font-family:var(--mono);font-size:34px;color:var(--dim);margin-top:46px;letter-spacing:.04em}
-  .rows{display:flex;flex-direction:column;gap:26px;margin-top:16px}
-  .rw{font-family:var(--mono);font-size:40px;color:var(--white);letter-spacing:.02em}
-  .rw span{color:#5C6670}
-  .big{font-family:var(--sans);font-weight:700;font-size:132px;color:var(--white);
-    letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .big .u{font-size:52px;color:var(--dim);font-weight:400;letter-spacing:.06em}
-  .chips{display:flex;gap:34px;margin-top:74px}
+    align-items:center;justify-content:center;text-align:center;padding:0 150px;z-index:1}
+  .kicker{font-family:var(--mono);font-size:25px;letter-spacing:.36em;
+    color:#7C8A96;text-transform:uppercase;margin-bottom:56px}
+  .head{font-family:var(--sans);font-weight:700;font-size:80px;color:var(--white);
+    letter-spacing:-.018em;line-height:1.12;max-width:24ch;
+    text-shadow:0 6px 40px rgba(0,0,0,.55)}
+  .head .r{color:#FF3D4F} .head .v{color:#D07BFF} .head .c{color:#5FE0F0}
+  .head .g{color:#FFC96B} .head .t{color:#4FE6BE}
+  .sub{font-family:var(--mono);font-size:32px;color:#B4C0CA;line-height:1.6;
+    margin-top:44px;max-width:58ch;text-shadow:0 3px 18px rgba(0,0,0,.6)}
+  .mark{width:262px;height:262px}
+  .wordmark{font-size:88px;margin-top:60px}
+  .tag{font-family:var(--mono);font-size:33px;color:#AAB6C0;margin-top:44px;letter-spacing:.06em}
+
+  /* scene motifs -------------------------------------------------- */
+  .rows{display:flex;flex-direction:column;gap:24px;margin-top:20px}
+  .rw{font-family:var(--mono);font-size:41px;color:var(--white);letter-spacing:.02em;
+    display:flex;align-items:center;gap:22px}
+  .rw i{width:13px;height:13px;border-radius:50%;flex:none;font-style:normal;
+    background:#FF3D4F;box-shadow:0 0 16px #FF3D4F}
+  .big{font-family:var(--sans);font-weight:700;font-size:146px;color:var(--white);
+    letter-spacing:-.025em;font-variant-numeric:tabular-nums;
+    text-shadow:0 0 60px rgba(255,190,90,.30),0 6px 40px rgba(0,0,0,.6)}
+  .big .u{font-size:52px;color:#B4C0CA;font-weight:400;letter-spacing:.10em}
+  .chips{display:flex;gap:34px;margin-top:70px}
   .ic{width:30px;height:30px;flex:none}
-  .note{font-family:var(--mono);font-size:25px;color:#4E5860;margin-top:54px;letter-spacing:.03em}
+  .note{font-family:var(--mono);font-size:24px;color:#6A7680;margin-top:48px;letter-spacing:.05em}
+  .blocks{display:flex;gap:11px;margin-top:16px;align-items:flex-end}
+  .blocks b{width:26px;border-radius:3px;display:block}
+  .three{display:flex;gap:30px;margin-top:22px}
+  .three s{width:104px;height:104px;border-radius:16px;display:flex;align-items:center;
+    justify-content:center;font-family:var(--sans);font-weight:700;font-size:38px;
+    text-decoration:none;border:2px solid #3A2A48;color:#6A5A78}
+  .three s.on{border-color:#D07BFF;color:#F0DAFF;box-shadow:0 0 34px rgba(208,123,255,.55);
+    background:rgba(208,123,255,.10)}
+  .swap{display:flex;align-items:center;gap:46px;margin-top:18px}
+  .swap u{width:150px;height:150px;border-radius:26px;display:flex;align-items:center;
+    justify-content:center;font-family:var(--sans);font-weight:700;font-size:40px;
+    text-decoration:none;border:2px solid rgba(255,61,79,.55);color:#FF7A88;
+    background:rgba(255,61,79,.07);box-shadow:0 0 30px rgba(255,61,79,.22)}
+  .swap em{font-style:normal;font-family:var(--mono);font-size:52px;color:#5FE0F0}
+  .nodes{display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;
+    justify-content:center;max-width:820px}
+  .nodes q{width:19px;height:19px;border-radius:50%;display:block}
+  .nodes q::before{content:""}
 </style></head><body>
-<div class="stage"><div class="scene" id="sc"></div></div>
+<div class="stage">
+  <canvas id="amb" width="1920" height="1080"></canvas>
+  <div class="scene" id="sc"></div>
+  <div class="vign"></div>
+  <div class="corner" id="corner">
+    <img id="cmk" src="lib/sost-logo.png" alt="">
+    <span class="cw">SOST</span>
+  </div>
+</div>
+<script src="lib/ambient.js"></script>
 <script>
-/* Every claim below was verified against the live site on 2026-09-02.
-   Nothing marked VERIFY or STALE in docs/SOST_INTRO_V15_VIDEO_SPEC.md is used:
-   PoPC is omitted (the site still mixes the superseded DEX framing) and the BTC
-   leg is omitted (no current public statement of its gate state).            */
+/* Every claim was verified against the live site on 2026-09-02. Nothing marked VERIFY or
+   STALE in docs/SOST_INTRO_V15_VIDEO_SPEC.md is used: PoPC is omitted (the site still mixes
+   the superseded DEX framing) and the BTC leg is omitted (no current public statement of its
+   gate state). Motion is a pure function of t and closes on GeaAmbient.LOOP. */
 var LOGO='<img class="mark" id="mk" src="lib/sost-logo.png" alt="">';
+var L = GeaAmbient.LOOP;
+function ph(t,k){ return 0.5-0.5*Math.cos(2*Math.PI*(t/L)*(k||1)); }   // 0..1, closed
+
+function blocks(t){
+  var s='';
+  for(var i=0;i<26;i++){
+    var w=0.5+0.5*Math.sin(2*Math.PI*(t/L)+i*0.55);
+    var h=26+w*66, on=i>=22;
+    s+='<b style="height:'+h.toFixed(0)+'px;background:'+(on?'#5FE0F0':'rgba(95,224,240,'+(0.14+0.16*w).toFixed(2)+')')+
+       (on?';box-shadow:0 0 22px #5FE0F0':'')+'"></b>';
+  }
+  return '<div class="blocks">'+s+'</div>';
+}
+function nodes(t){
+  var s='';
+  for(var i=0;i<64;i++){
+    var a=0.5-0.5*Math.cos(2*Math.PI*(t/L)*(1+(i%3))+i*0.8);
+    var c=i%7===0?'#4FE6BE':'#7C8A96';
+    s+='<q style="background:'+c+';opacity:'+(0.22+0.62*a).toFixed(2)+
+       ';box-shadow:0 0 '+(6+12*a).toFixed(0)+'px '+c+'"></q>';
+  }
+  return '<div class="nodes">'+s+'</div>';
+}
 
 var SCENES=[
- {d:10, pulse:true, html:LOGO+'<div class="wordmark">SOST</div>'+
-   '<div class="tag">Native Layer&nbsp;1 Proof-of-Work</div>'},
+ {pal:"red", pulse:1, html:LOGO+'<div class="wordmark">SOST</div>'+
+   '<div class="tag">Native Layer&nbsp;1 Proof-of-Work</div>', corner:false},
 
- {d:10, html:'<div class="kicker">How it started</div>'+
+ {pal:"ember", html:'<div class="kicker">How it started</div>'+
    '<div class="head">A <span class="r">fair launch</span>,<br>by construction.</div>'+
-   '<div class="rows" style="margin-top:52px">'+
-   '<div class="rw"><span>&mdash;</span> No ICO</div>'+
-   '<div class="rw"><span>&mdash;</span> No premine</div>'+
-   '<div class="rw"><span>&mdash;</span> No VC allocation</div>'+
-   '<div class="rw"><span>&mdash;</span> No dev tax</div></div>'},
+   '<div class="rows" style="margin-top:56px">'+
+   '<div class="rw"><i></i>No ICO</div><div class="rw"><i></i>No premine</div>'+
+   '<div class="rw"><i></i>No VC allocation</div><div class="rw"><i></i>No dev tax</div></div>'},
 
- {d:11, html:'<div class="kicker">The engine</div>'+
+ {pal:"red", html:'<div class="kicker">The engine</div>'+
    '<div class="head"><span class="r">ConvergenceX</span></div>'+
-   '<div class="sub">A memory-hard proof-of-work built for SOST.<br>'+
-   'Open source, MIT licensed.</div>'},
+   '<div class="sub">A memory-hard proof-of-work built for SOST.<br>Open source, MIT licensed.</div>'},
 
- {d:12, html:'<div class="kicker">The supply</div>'+
+ {pal:"gold", html:'<div class="kicker">The supply</div>'+
    '<div class="big">4,669,201 <span class="u">SOST</span></div>'+
-   '<div class="sub">A hard cap. ~9.03% annual decay,<br>'+
-   '~95% emitted over thirty years.<br>Blocks target ten minutes.</div>'},
+   '<div class="sub">A hard cap. ~9.03% annual decay,<br>~95% emitted over thirty years.<br>'+
+   'Blocks target ten minutes.</div>'},
 
- {d:11, html:'<div class="kicker">What changes next</div>'+
-   '<div class="head"><span class="c">V15</span> activates at<br>block <span class="c">25,000</span>.</div>'+
-   '<div class="sub">A scheduled protocol upgrade, on a known height.</div>'},
+ {pal:"cyan", dyn:blocks, html:'<div class="kicker">What changes next</div>'+
+   '<div class="head"><span class="c">V15</span> activates at block <span class="c">25,000</span>.</div>'+
+   '__DYN__<div class="sub" style="margin-top:34px">A scheduled protocol upgrade, on a known height.</div>'},
 
- {d:12, html:'<div class="kicker">Mechanism 1</div>'+
-   '<div class="head"><span class="v">DTD</span></div>'+
-   '<div class="sub">Deterministic Token Distribution &mdash; how the block reward<br>'+
-   'reaches miners on a fixed <span style="color:#C860FF">1-of-3</span> cadence,<br>'+
-   'by rules, not by decree.</div>'},
+ {pal:"violet", dyn:function(t){
+    var on=Math.floor((t/L)*3)%3;
+    return '<div class="three">'+[0,1,2].map(function(i){
+      return '<s class="'+(i===on?'on':'')+'">'+(i+1)+'</s>';}).join('')+'</div>';
+  }, html:'<div class="kicker">Mechanism 1</div>'+
+   '<div class="head"><span class="v">DTD</span></div>__DYN__'+
+   '<div class="sub" style="margin-top:34px">Deterministic Token Distribution &mdash; the block reward<br>'+
+   'reaches miners on a fixed <span style="color:#D07BFF">1-of-3</span> cadence,<br>by rules, not by decree.</div>'},
 
- {d:11, html:'<div class="kicker">Mechanism 2</div>'+
-   '<div class="head"><span class="r">Atomic Swap DEX</span></div>'+
-   '<div class="sub">Trade SOST trustlessly.<br>No custodian holds your coins.</div>'},
+ {pal:"red", dyn:function(t){
+    var k=ph(t,1), arrow=k<0.5?'&rarr;':'&larr;';
+    return '<div class="swap"><u>SOST</u><em style="opacity:'+(0.55+0.45*Math.abs(k-0.5)*2).toFixed(2)+'">'+
+           arrow+'</em><u style="border-color:rgba(95,224,240,.55);color:#8FE9F5;'+
+           'background:rgba(95,224,240,.07);box-shadow:0 0 30px rgba(95,224,240,.22)">EVM</u></div>';
+  }, html:'<div class="kicker">Mechanism 2</div>'+
+   '<div class="head"><span class="r">Atomic Swap DEX</span></div>__DYN__'+
+   '<div class="sub" style="margin-top:34px">Trade SOST trustlessly.<br>No custodian holds your coins.</div>'},
 
- {d:10, html:'<div class="kicker">Who runs it</div>'+
-   '<div class="head">Anyone with<br>a computer.</div>'+
-   '<div class="sub">Run a node. Point a miner at it.<br>There is no permission to ask for.</div>'},
+ {pal:"teal", dyn:nodes, html:'<div class="kicker">Who runs it</div>'+
+   '<div class="head">Anyone with<br><span class="t">a computer.</span></div>__DYN__'+
+   '<div class="sub" style="margin-top:30px">Run a node. Point a miner at it.<br>'+
+   'There is no permission to ask for.</div>'},
 
- {d:10, pulse:true, html:LOGO+
+ {pal:"red", pulse:1, corner:false, html:LOGO+
    '<div class="chips">'+
    '<span class="chip"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.6 2.6 15 0 18C9.4 18.4 9.4 5.6 12 3z"/></svg><span>sostcore.com</span></span>'+
    '<span class="chip"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M21.5 3.5 2.8 10.6l6.4 2.3 2.3 6.4z"/><path d="M21.5 3.5 9.2 12.9"/></svg><span>t.me/SOSTProtocolOfficial</span></span>'+
    '</div><div class="note">Open source &middot; MIT &middot; sostcore.com</div>'}
 ];
 
-var q=new URLSearchParams(location.search);
-var i=parseInt(q.get('scene')||'0',10), t=parseFloat(q.get('t')||'0');
-var s=SCENES[i];
-document.getElementById('sc').innerHTML=s.html;
-if(s.pulse){
+function glow(el,t){
   var k=0.5-0.5*Math.cos(2*Math.PI*t/2.4), e=0.62+0.38*k;
-  document.getElementById('mk').style.filter=
+  el.style.filter=
     'drop-shadow(0 0 '+(12+8*k).toFixed(1)+'px rgba(255,16,36,'+(0.55*e).toFixed(3)+')) '+
     'drop-shadow(0 0 '+(34+18*k).toFixed(1)+'px rgba(255,16,36,'+(0.40*e).toFixed(3)+')) '+
     'drop-shadow(0 0 '+(78+34*k).toFixed(1)+'px rgba(255,16,36,'+(0.24*e).toFixed(3)+'))';
 }
+
+var q=new URLSearchParams(location.search);
+var i=parseInt(q.get('scene')||'0',10), t=parseFloat(q.get('t')||'0');
+var s=SCENES[i];
+document.getElementById('sc').innerHTML = s.html.replace('__DYN__', s.dyn ? s.dyn(t) : '');
+GeaAmbient.paint(document.getElementById('amb'), t, s.pal, {n: s.pulse?190:150});
+if(s.pulse) glow(document.getElementById('mk'), t);
+// The corner mark rides every scene except the two that already carry the logo full size.
+var cn=document.getElementById('corner');
+if(s.corner===false) cn.style.display='none'; else glow(document.getElementById('cmk'), t);
 document.documentElement.setAttribute('data-ready','1');
 </script></body></html>

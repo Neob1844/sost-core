@@ -32,7 +32,9 @@ async function shoot(p, card, t, dest) {
                { waitUntil: 'networkidle0', timeout: 60000 });
   await p.waitForFunction('document.documentElement.dataset.ready==="1"', { timeout: 20000 });
   await p.evaluate(() => document.fonts.ready);
-  await p.screenshot({ path: dest, type: 'png', omitBackground: false });
+  // ALPHA=1 keeps the page background transparent, for overlays composited onto
+  // footage that cannot be re-authored.
+  await p.screenshot({ path: dest, type: 'png', omitBackground: !!process.env.ALPHA });
 }
 
 (async () => {

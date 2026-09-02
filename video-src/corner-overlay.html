@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>SOST corner mark — overlay</title>
+<link rel="stylesheet" href="lib/brand.css">
+<style>
+  /* Transparent by design: this is composited onto sost-mechanisms.mp4, whose middle is a
+     finished render with no source project. The mark is the one thing that can be added to
+     that footage without painting over it. */
+  html,body{background:transparent !important}
+  .stage{background:transparent}
+</style></head><body>
+<div class="stage">
+  <div class="corner">
+    <img id="cmk" src="lib/sost-logo.png" alt="">
+    <span class="cw">SOST</span>
+  </div>
+</div>
+<script>
+var t=parseFloat(new URLSearchParams(location.search).get('t')||'0');
+var k=0.5-0.5*Math.cos(2*Math.PI*t/2.4), e=0.62+0.38*k;
+document.getElementById('cmk').style.filter=
+  'drop-shadow(0 0 '+(12+8*k).toFixed(1)+'px rgba(255,16,36,'+(0.55*e).toFixed(3)+')) '+
+  'drop-shadow(0 0 '+(34+18*k).toFixed(1)+'px rgba(255,16,36,'+(0.40*e).toFixed(3)+')) '+
+  'drop-shadow(0 0 '+(78+34*k).toFixed(1)+'px rgba(255,16,36,'+(0.24*e).toFixed(3)+'))';
+document.documentElement.setAttribute('data-ready','1');
+</script></body></html>

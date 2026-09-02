@@ -60,3 +60,31 @@ body{
   border:2px solid var(--cyan);border-radius:12px;padding:16px 30px;
   font-family:var(--mono);font-size:34px;color:var(--cyan);
   box-shadow:0 0 22px rgba(79,216,232,.30),inset 0 0 18px rgba(79,216,232,.08)}
+
+/* =================================================================
+   AMBIENT + CORNER MARK  (added for the V15 films)
+   Everything here is driven by ?t= and loops seamlessly on LOOP
+   seconds, so a scene can be rendered once and repeated. No CSS
+   animations: a rendered frame must be a pure function of its
+   timestamp or the render is not reproducible.
+   ================================================================= */
+
+#amb{position:absolute;inset:0;z-index:0;pointer-events:none}
+/* Scope this to the scene only. Applying it to every child overrode .corner's
+   own absolute positioning and dropped the mark into the flex column. */
+.stage>.scene{position:absolute;inset:0;z-index:1}
+
+/* the mark, top-right, on every scene */
+.corner{position:absolute !important;top:48px;right:56px;z-index:4;display:flex;
+  align-items:center;gap:16px}
+.corner img{width:74px;height:74px;display:block}
+.corner .cw{font-family:var(--sans);font-weight:700;font-size:23px;color:var(--white);
+  letter-spacing:.16em;opacity:.92}
+
+/* a hairline that frames the composition without boxing it in */
+.vign{position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse 92% 86% at 50% 50%, transparent 52%, rgba(0,0,0,.55) 100%)}
+
+.kicker{position:relative}
+.kicker::after{content:"";position:absolute;left:50%;transform:translateX(-50%);
+  bottom:-20px;width:64px;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent)}

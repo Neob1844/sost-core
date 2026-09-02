@@ -10,10 +10,13 @@
   .subtitle{font-size:34px;margin-top:52px}
 </style></head><body>
 <div class="stage">
+  <canvas id="amb" width="1920" height="1080"></canvas>
   <img class="mark pulse" id="mark" src="lib/sost-logo.png" alt="">
   <div class="wordmark">SOST</div>
   <div class="subtitle"><span class="r">Atomic Swap</span> &amp; <span class="v">DTD</span> &mdash; how the two core mechanisms work</div>
 </div>
+  <div class="vign"></div>
+<script src="lib/ambient.js"></script>
 <script>
 // Deterministic pulse: intensity is a pure function of t, so frame N always
 // renders identically. 2.4 s cycle, matching the site's logo glow.
@@ -25,6 +28,7 @@
     'drop-shadow(0 0 '+(12+8*k).toFixed(1)+'px rgba(255,16,36,'+(0.55*e).toFixed(3)+')) '+
     'drop-shadow(0 0 '+(34+18*k).toFixed(1)+'px rgba(255,16,36,'+(0.40*e).toFixed(3)+')) '+
     'drop-shadow(0 0 '+(78+34*k).toFixed(1)+'px rgba(255,16,36,'+(0.24*e).toFixed(3)+'))';
+  GeaAmbient.paint(document.getElementById('amb'), t, 'red', {n:170});
   document.documentElement.setAttribute('data-ready','1');
 })();
 </script></body></html>
