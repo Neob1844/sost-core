@@ -396,6 +396,8 @@
       '.sv-close:hover{background:rgba(251,1,13,.4);border-color:#fb010d}',
       '.sv-caption{text-align:center;font-size:11px;letter-spacing:3px;color:#94a3b8;font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase}',
       '.sv-ch-title{text-align:center;font-size:12px;letter-spacing:4px;color:#22d3ee;font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;margin-bottom:6px}',
+      '.sv-cards .sv-card:only-child{width:560px;max-width:76vw}',
+      '.sv-cards .sv-card:only-child .sv-thumb{aspect-ratio:16/9}',
       '.sv-cards{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;max-width:92vw}',
       '.sv-card{width:340px;max-width:42vw;min-width:240px;background:linear-gradient(160deg,#0a1117,#0c1620);border:1px solid rgba(34,211,238,.30);border-radius:14px;padding:0 0 16px;cursor:pointer;display:flex;flex-direction:column;align-items:stretch;overflow:hidden;text-align:left;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}',
       '.sv-card:hover{transform:translateY(-4px)}',
@@ -416,11 +418,8 @@
     m.innerHTML=''
       +'<div class="sv-content" onclick="event.stopPropagation()">'
       +'<button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>'
-      +'<div id="sv-chooser" class="sv-chooser"><div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>'
+      +'<div id="sv-chooser" class="sv-chooser"><div class="sv-ch-title">&#9654; SOST MECHANISMS</div>'
       +'<div class="sv-cards">'
-      +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-intro.mp4\',\'SOST in 2 Minutes &middot; Sovereign by Design\')">'
-      +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
-      +'<span class="sv-card-h">SOST in 2 Minutes</span><span class="sv-card-s">The protocol &middot; Sovereign by Design</span></button>'
       // The second film existed and was served all along; it was simply never in the chooser.
       +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-mechanisms.mp4\',\'SOST Mechanisms &middot; Atomic Swap &amp; DTD\')">'
       +'<span class="sv-thumb" style="background-image:url(\'sost-mechanisms-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'

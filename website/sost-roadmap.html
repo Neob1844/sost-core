@@ -646,7 +646,7 @@
 </style>
 
 <script src="js/security.js"></script>
-<script src="js/nav-toggle.js?v=v385" defer></script>
+<script src="js/nav-toggle.js?v=v386" defer></script>
 </head>
 <body>
 
@@ -991,14 +991,8 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
     <button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>
     <!-- STEP 1 — chooser -->
     <div id="sv-chooser" class="sv-chooser">
-      <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
+      <div class="sv-ch-title">&#9654; SOST MECHANISMS</div>
       <div class="sv-cards">
-        <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4','SOST in 2 Minutes &middot; Sovereign by Design')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg')"><span class="sv-play">&#9654;</span></span>
-          <span class="sv-card-h">SOST in 2 Minutes</span>
-          <span class="sv-card-s">The protocol &middot; Sovereign by Design</span>
-        </button>
         <button class="sv-card sv-card-mech" type="button"
           onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')">
           <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span>
@@ -1046,6 +1040,11 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
   .sv-ch-title{ text-align:center; font-size:12px; letter-spacing:4px; color:#22d3ee;
     font-family:'JetBrains Mono','IBM Plex Mono',monospace; text-transform:uppercase; margin-bottom:6px; }
   .sv-cards{ display:flex; gap:22px; flex-wrap:wrap; justify-content:center; max-width:92vw; }
+  /* A single film must look chosen, not like a card went missing: the chooser widens and
+     the heading says how many there are. */
+  .sv-cards .sv-card:only-child{width:560px;max-width:76vw}
+  .sv-cards .sv-card:only-child .sv-thumb{aspect-ratio:16/9}
+
   .sv-card{ width:340px; max-width:42vw; min-width:240px; background:linear-gradient(160deg,#0a1117,#0c1620);
     border:1px solid rgba(34,211,238,.30); border-radius:14px; padding:0 0 16px; cursor:pointer;
     display:flex; flex-direction:column; align-items:stretch; overflow:hidden; text-align:left;
