@@ -418,9 +418,11 @@
     m.innerHTML=''
       +'<div class="sv-content" onclick="event.stopPropagation()">'
       +'<button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>'
-      +'<div id="sv-chooser" class="sv-chooser"><div class="sv-ch-title">&#9654; SOST MECHANISMS</div>'
+      +'<div id="sv-chooser" class="sv-chooser"><div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>'
       +'<div class="sv-cards">'
-      // The second film existed and was served all along; it was simply never in the chooser.
+      +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-intro.mp4\',\'SOST in 2 Minutes &middot; V15\')">'
+      +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
+      +'<span class="sv-card-h">SOST in 2 Minutes</span><span class="sv-card-s">The protocol &middot; V15</span></button>'
       +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-mechanisms.mp4\',\'SOST Mechanisms &middot; Atomic Swap &amp; DTD\')">'
       +'<span class="sv-thumb" style="background-image:url(\'sost-mechanisms-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
       +'<span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span></button>'

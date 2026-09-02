@@ -1,0 +1,62 @@
+/* SOST video brand kit — single source of truth for every rendered card.
+   Rendered head-less at 1920x1080 by render.py. Fonts are local (DejaVu) so a
+   render never depends on the network and never silently falls back. */
+
+@font-face{font-family:"SOSTMono";src:local("DejaVu Sans Mono");font-weight:400}
+@font-face{font-family:"SOSTMono";src:local("DejaVu Sans Mono Bold");font-weight:700}
+@font-face{font-family:"SOSTSans";src:local("DejaVu Sans");font-weight:400}
+@font-face{font-family:"SOSTSans";src:local("DejaVu Sans Bold");font-weight:700}
+
+:root{
+  --ink:#060508;               /* flat ground, measured off the finished film */
+  --halo:#12141f;              /* soft top halo, measured at y=60 centre */
+  --red:#FF1024;
+  --red-deep:#B00A18;
+  --white:#F2F4F6;
+  --dim:#98A0A8;
+  --cyan:#4FD8E8;
+  --violet:#C860FF;
+  --mono:"SOSTMono","DejaVu Sans Mono",monospace;
+  --sans:"SOSTSans","DejaVu Sans",sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden}
+body{
+  background:
+    radial-gradient(ellipse 130% 62% at 50% -12%, var(--halo) 0%, #0a0a11 44%, var(--ink) 78%),
+    var(--ink);
+  font-family:var(--mono);
+  -webkit-font-smoothing:antialiased;
+}
+.stage{width:1920px;height:1080px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;position:relative}
+
+/* ---------------------------------------------------------------
+   THE MARK.
+   The glow is a drop-shadow filter on the <img>, so it follows the
+   PNG's superellipse alpha. It is NOT a box-shadow: box-shadow would
+   trace the element's rectangle and produce the ghost box that the
+   previous render shipped with.
+   --------------------------------------------------------------- */
+.mark{display:block;filter:
+    drop-shadow(0 0 14px rgba(255,16,36,.62))
+    drop-shadow(0 0 38px rgba(255,16,36,.44))
+    drop-shadow(0 0 84px rgba(255,16,36,.26));
+  will-change:filter}
+.mark.pulse{ /* phase is driven by render.py, not by CSS animation, so every
+                frame is deterministic and re-renderable */ }
+
+.wordmark{font-family:var(--sans);font-weight:700;color:var(--white);
+  letter-spacing:.11em;line-height:1;
+  /* deliberately restrained: a heavy halo here reads as a smudge behind the
+     letterforms and was one of the defects in the previous render */
+  text-shadow:0 0 18px rgba(255,16,36,.16),0 0 46px rgba(255,16,36,.07)}
+
+.subtitle{font-family:var(--mono);color:var(--dim);letter-spacing:.005em;line-height:1.4;text-align:center}
+.subtitle .r{color:var(--red)} .subtitle .v{color:var(--violet)}
+
+.chip{display:inline-flex;align-items:center;gap:14px;
+  border:2px solid var(--cyan);border-radius:12px;padding:16px 30px;
+  font-family:var(--mono);font-size:34px;color:var(--cyan);
+  box-shadow:0 0 22px rgba(79,216,232,.30),inset 0 0 18px rgba(79,216,232,.08)}
