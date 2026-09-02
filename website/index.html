@@ -683,7 +683,7 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}@keyframes dtdBtnGlow{0%,100%{box-shadow:0 0 14px rgba(57,255,20,.5),0 0 26px rgba(74,222,128,.28)}50%{box-shadow:0 0 30px rgba(57,255,20,1),0 0 60px rgba(74,222,128,.7),0 0 90px rgba(124,255,160,.45)}}
 </style>
 <script src="js/security.js"></script>
-<script src="js/nav-toggle.js?v=v383" defer></script>
+<script src="js/nav-toggle.js?v=v384" defer></script>
 </head>
 <body>
 <!-- V15-BANNER-INJECT (surgical; delete this comment..closing comment to revert) -->
@@ -2363,6 +2363,7 @@ function fetchSostChart(){
           <span class="sv-card-h">SOST in 2 Minutes</span>
           <span class="sv-card-s">The protocol &middot; Sovereign by Design</span>
         </button>
+        <button class="sv-card sv-card-mech" type="button" onclick="pickSv('sost-mechanisms.mp4','SOST Mechanisms &middot; Atomic Swap &amp; DTD')"><span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg')"><span class="sv-play">&#9654;</span></span><span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span></button>
       </div>
     </div>
 
@@ -2380,10 +2381,15 @@ function fetchSostChart(){
 <style>
   .sv-modal{
     display:none; position:fixed; inset:0; z-index:9999;
-    background:rgba(0,0,0,.92); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    background:rgba(0,0,0,.975); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
     align-items:center; justify-content:center;
   }
   .sv-modal.open{ display:flex; }
+  /* Page furniture must not sit over the player. Hidden only while Watch is open — the banner
+     itself is untouched and returns on close. */
+  body.sv-open #v15banner, body.sv-open nav, body.sv-open .developer-note,
+  body.sv-open #developer-note { visibility:hidden !important; }
+  body.sv-open { overflow:hidden; }
   .sv-content{ position:relative; max-width:92vw; max-height:88vh;
     display:flex; flex-direction:column; gap:14px; align-items:center; }
   .sv-video{ max-width:92vw; max-height:80vh; background:#000;
@@ -2428,6 +2434,7 @@ function fetchSostChart(){
 </style>
 <script>
   function openSv(){
+    try{document.body.classList.add('sv-open');}catch(e){}
     var m=document.getElementById('sv-modal');
     m.classList.add('open'); m.setAttribute('aria-hidden','false');
     document.body.style.overflow='hidden';
@@ -2448,6 +2455,7 @@ function fetchSostChart(){
     document.getElementById('sv-chooser').style.display='block';
   }
   function closeSv(evt, force){
+    try{document.body.classList.remove('sv-open');}catch(e){}
     if(evt && !force && evt.target.id!=='sv-modal') return;
     var m=document.getElementById('sv-modal');
     m.classList.remove('open'); m.setAttribute('aria-hidden','true');

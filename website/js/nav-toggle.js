@@ -49,6 +49,15 @@
       // than rounding all twenty text links, which would be the bubble UI the owner ruled
       // out. The first attempt put this in the video-modal stylesheet, which returns early
       // on any page that ships its own modal — so it never reached the home page at all.
+      /* Page furniture must not sit over the Watch player. Fifty-four pages ship their own
+         #sv-modal and their own openSv, so this cannot live inside the shared modal's builder —
+         it goes in the stylesheet every page gets. Hidden only while Watch is open; the banner
+         is never removed from the site. */
+      "body.sv-open #v15banner, body.sv-open .v15banner, body.sv-open nav,",
+      "body.sv-open .developer-note, body.sv-open #developer-note {",
+      "  visibility: hidden !important;",
+      "}",
+      "body.sv-open { overflow: hidden; }",
       "nav .nav-links a[data-watch] {",
       "  border-radius: 12px;",
       "  padding: 5px 12px;",
@@ -315,7 +324,7 @@
       '.sq{-webkit-mask-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M100.0%2050.0L99.7%2058.5L99.0%2064.8L97.7%2070.4L95.9%2075.4L93.7%2080.0L91.0%2084.1L87.7%2087.7L84.1%2091.0L80.0%2093.7L75.4%2095.9L70.4%2097.7L64.8%2099.0L58.5%2099.7L50.0%20100.0L41.5%2099.7L35.2%2099.0L29.6%2097.7L24.6%2095.9L20.0%2093.7L15.9%2091.0L12.3%2087.7L9.0%2084.1L6.3%2080.0L4.1%2075.4L2.3%2070.4L1.0%2064.8L0.3%2058.5L0.0%2050.0L0.3%2041.5L1.0%2035.2L2.3%2029.6L4.1%2024.6L6.3%2020.0L9.0%2015.9L12.3%2012.3L15.9%209.0L20.0%206.3L24.6%204.1L29.6%202.3L35.2%201.0L41.5%200.3L50.0%200.0L58.5%200.3L64.8%201.0L70.4%202.3L75.4%204.1L80.0%206.3L84.1%209.0L87.7%2012.3L91.0%2015.9L93.7%2020.0L95.9%2024.6L97.7%2029.6L99.0%2035.2L99.7%2041.5Z%22%2F%3E%3C%2Fsvg%3E\");mask-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M100.0%2050.0L99.7%2058.5L99.0%2064.8L97.7%2070.4L95.9%2075.4L93.7%2080.0L91.0%2084.1L87.7%2087.7L84.1%2091.0L80.0%2093.7L75.4%2095.9L70.4%2097.7L64.8%2099.0L58.5%2099.7L50.0%20100.0L41.5%2099.7L35.2%2099.0L29.6%2097.7L24.6%2095.9L20.0%2093.7L15.9%2091.0L12.3%2087.7L9.0%2084.1L6.3%2080.0L4.1%2075.4L2.3%2070.4L1.0%2064.8L0.3%2058.5L0.0%2050.0L0.3%2041.5L1.0%2035.2L2.3%2029.6L4.1%2024.6L6.3%2020.0L9.0%2015.9L12.3%2012.3L15.9%209.0L20.0%206.3L24.6%204.1L29.6%202.3L35.2%201.0L41.5%200.3L50.0%200.0L58.5%200.3L64.8%201.0L70.4%202.3L75.4%204.1L80.0%206.3L84.1%209.0L87.7%2012.3L91.0%2015.9L93.7%2020.0L95.9%2024.6L97.7%2029.6L99.0%2035.2L99.7%2041.5Z%22%2F%3E%3C%2Fsvg%3E\");-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;border-radius:0 !important;box-shadow:none !important;border:0 !important;',
       '  position:relative;isolation:isolate;background:var(--sq-line) !important;',
       '  animation:none !important}',
-      '.sq::before{content:"";position:absolute;inset:1px;z-index:-1;-webkit-mask-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M100.0%2050.0L99.7%2058.5L99.0%2064.8L97.7%2070.4L95.9%2075.4L93.7%2080.0L91.0%2084.1L87.7%2087.7L84.1%2091.0L80.0%2093.7L75.4%2095.9L70.4%2097.7L64.8%2099.0L58.5%2099.7L50.0%20100.0L41.5%2099.7L35.2%2099.0L29.6%2097.7L24.6%2095.9L20.0%2093.7L15.9%2091.0L12.3%2087.7L9.0%2084.1L6.3%2080.0L4.1%2075.4L2.3%2070.4L1.0%2064.8L0.3%2058.5L0.0%2050.0L0.3%2041.5L1.0%2035.2L2.3%2029.6L4.1%2024.6L6.3%2020.0L9.0%2015.9L12.3%2012.3L15.9%209.0L20.0%206.3L24.6%204.1L29.6%202.3L35.2%201.0L41.5%200.3L50.0%200.0L58.5%200.3L64.8%201.0L70.4%202.3L75.4%204.1L80.0%206.3L84.1%209.0L87.7%2012.3L91.0%2015.9L93.7%2020.0L95.9%2024.6L97.7%2029.6L99.0%2035.2L99.7%2041.5Z%22%2F%3E%3C%2Fsvg%3E\");mask-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M100.0%2050.0L99.7%2058.5L99.0%2064.8L97.7%2070.4L95.9%2075.4L93.7%2080.0L91.0%2084.1L87.7%2087.7L84.1%2091.0L80.0%2093.7L75.4%2095.9L70.4%2097.7L64.8%2099.0L58.5%2099.7L50.0%20100.0L41.5%2099.7L35.2%2099.0L29.6%2097.7L24.6%2095.9L20.0%2093.7L15.9%2091.0L12.3%2087.7L9.0%2084.1L6.3%2080.0L4.1%2075.4L2.3%2070.4L1.0%2064.8L0.3%2058.5L0.0%2050.0L0.3%2041.5L1.0%2035.2L2.3%2029.6L4.1%2024.6L6.3%2020.0L9.0%2015.9L12.3%2012.3L15.9%209.0L20.0%206.3L24.6%204.1L29.6%202.3L35.2%201.0L41.5%200.3L50.0%200.0L58.5%200.3L64.8%201.0L70.4%202.3L75.4%204.1L80.0%206.3L84.1%209.0L87.7%2012.3L91.0%2015.9L93.7%2020.0L95.9%2024.6L97.7%2029.6L99.0%2035.2L99.7%2041.5Z%22%2F%3E%3C%2Fsvg%3E\");-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;',
+      '.sq::before{content:"";position:absolute;inset:0;z-index:-1;-webkit-mask-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M100.0%2050.0L99.7%2058.5L99.0%2064.8L97.7%2070.4L95.9%2075.4L93.7%2080.0L91.0%2084.1L87.7%2087.7L84.1%2091.0L80.0%2093.7L75.4%2095.9L70.4%2097.7L64.8%2099.0L58.5%2099.7L50.0%20100.0L41.5%2099.7L35.2%2099.0L29.6%2097.7L24.6%2095.9L20.0%2093.7L15.9%2091.0L12.3%2087.7L9.0%2084.1L6.3%2080.0L4.1%2075.4L2.3%2070.4L1.0%2064.8L0.3%2058.5L0.0%2050.0L0.3%2041.5L1.0%2035.2L2.3%2029.6L4.1%2024.6L6.3%2020.0L9.0%2015.9L12.3%2012.3L15.9%209.0L20.0%206.3L24.6%204.1L29.6%202.3L35.2%201.0L41.5%200.3L50.0%200.0L58.5%200.3L64.8%201.0L70.4%202.3L75.4%204.1L80.0%206.3L84.1%209.0L87.7%2012.3L91.0%2015.9L93.7%2020.0L95.9%2024.6L97.7%2029.6L99.0%2035.2L99.7%2041.5Z%22%2F%3E%3C%2Fsvg%3E\");mask-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M100.0%2050.0L99.7%2058.5L99.0%2064.8L97.7%2070.4L95.9%2075.4L93.7%2080.0L91.0%2084.1L87.7%2087.7L84.1%2091.0L80.0%2093.7L75.4%2095.9L70.4%2097.7L64.8%2099.0L58.5%2099.7L50.0%20100.0L41.5%2099.7L35.2%2099.0L29.6%2097.7L24.6%2095.9L20.0%2093.7L15.9%2091.0L12.3%2087.7L9.0%2084.1L6.3%2080.0L4.1%2075.4L2.3%2070.4L1.0%2064.8L0.3%2058.5L0.0%2050.0L0.3%2041.5L1.0%2035.2L2.3%2029.6L4.1%2024.6L6.3%2020.0L9.0%2015.9L12.3%2012.3L15.9%209.0L20.0%206.3L24.6%204.1L29.6%202.3L35.2%201.0L41.5%200.3L50.0%200.0L58.5%200.3L64.8%201.0L70.4%202.3L75.4%204.1L80.0%206.3L84.1%209.0L87.7%2012.3L91.0%2015.9L93.7%2020.0L95.9%2024.6L97.7%2029.6L99.0%2035.2L99.7%2041.5Z%22%2F%3E%3C%2Fsvg%3E\");-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;',
       '  background:var(--sq-bg)}',
       /* per module: its own colours, unchanged. Only the geometry is shared. */
       '.sq-dtd{--sq-line:#39ff14;--sq-bg:radial-gradient(circle at 50% 35%,#0f2417,#07120b)}',
@@ -328,6 +337,7 @@
          module: identical silhouette, a dark ground of its own, and the logo inside it. */
       '.sq-cx{--sq-line:rgba(34,211,238,.55);--sq-bg:#000003}',
       '.sq-wrap-cx{--g1:rgba(34,211,238,.8);--g2:rgba(34,211,238,.45);--g3:rgba(34,211,238,.22)}',
+      '.sq-cx::before{inset:1px}',
       '.sq-cx img{width:100%;height:100%;object-fit:contain;padding:4%;box-sizing:border-box;',
       '  filter:none !important;border-radius:0 !important;display:block;background:#000003}',
       '.sost-news-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20%;background:linear-gradient(135deg,#1b1206,#2c1d08,#3a2a0a);border:1px solid rgba(245,158,11,.6);text-decoration:none;line-height:1;flex:0 0 auto;box-shadow:0 0 20px rgba(245,158,11,.95),0 0 40px rgba(245,158,11,.55);overflow:hidden;-webkit-tap-highlight-color:transparent}',
@@ -372,8 +382,14 @@
     if(document.getElementById('sv-modal')) return;
     var st=document.createElement('style');
     st.textContent=[
-      '.sv-modal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);align-items:center;justify-content:center}',
+      '.sv-modal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.975);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);align-items:center;justify-content:center}',
       '.sv-modal.open{display:flex}',
+      /* The V15 banner and the sticky nav are page furniture, and the modal is an overlay on
+         top of the page — so they were showing through and across the player. Hidden only while
+         Watch is open, and restored on close: the banner is not removed from the site. */
+      'body.sv-open #v15banner,body.sv-open .v15banner,body.sv-open nav,',
+      'body.sv-open .developer-note,body.sv-open #developer-note{visibility:hidden !important}',
+      'body.sv-open{overflow:hidden}',
       '.sv-content{position:relative;max-width:92vw;max-height:88vh;display:flex;flex-direction:column;gap:14px;align-items:center}',
       '.sv-video{max-width:92vw;max-height:80vh;background:#000;border-radius:10px;box-shadow:0 0 60px rgba(251,1,13,.18);outline:none}',
       '.sv-close{position:absolute;top:-46px;right:-2px;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.22);color:#fff;width:38px;height:38px;border-radius:50%;font-size:22px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}',
@@ -384,6 +400,7 @@
       '.sv-card{width:340px;max-width:42vw;min-width:240px;background:linear-gradient(160deg,#0a1117,#0c1620);border:1px solid rgba(34,211,238,.30);border-radius:14px;padding:0 0 16px;cursor:pointer;display:flex;flex-direction:column;align-items:stretch;overflow:hidden;text-align:left;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}',
       '.sv-card:hover{transform:translateY(-4px)}',
       '.sv-card-sost:hover{border-color:#22d3ee;box-shadow:0 0 26px rgba(34,211,238,.35)}',
+      '.sv-card-mech:hover{border-color:#fb010d;box-shadow:0 0 26px rgba(251,1,13,.35)}',
       '.sv-thumb{position:relative;width:100%;aspect-ratio:16/9;background:#000 center/cover no-repeat;display:flex;align-items:center;justify-content:center}',
       '.sv-play{width:58px;height:58px;border-radius:50%;background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.85);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;padding-left:4px}',
       '.sv-card-h{font-size:18px;font-weight:800;color:#e5e7eb;margin:14px 16px 2px;font-family:Inter,system-ui,sans-serif}',
@@ -404,6 +421,10 @@
       +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-intro.mp4\',\'SOST in 2 Minutes &middot; Sovereign by Design\')">'
       +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
       +'<span class="sv-card-h">SOST in 2 Minutes</span><span class="sv-card-s">The protocol &middot; Sovereign by Design</span></button>'
+      // The second film existed and was served all along; it was simply never in the chooser.
+      +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-mechanisms.mp4\',\'SOST Mechanisms &middot; Atomic Swap &amp; DTD\')">'
+      +'<span class="sv-thumb" style="background-image:url(\'sost-mechanisms-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
+      +'<span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span></button>'
       +'</div></div>'
       +'<div id="sv-player" class="sv-player" style="display:none">'
       +'<video id="sv-video" class="sv-video" controls preload="metadata" playsinline><source id="sv-source" src="" type="video/mp4">Your browser does not support HTML5 video.</video>'
@@ -412,7 +433,8 @@
       +'</div></div>';
     document.body.appendChild(m);
   }
-  window.openSv=function(){ build(); var m=document.getElementById('sv-modal'); if(!m)return;
+  window.openSv=function(){ try{document.body.classList.add('sv-open');}catch(e){}
+     build(); var m=document.getElementById('sv-modal'); if(!m)return;
     m.classList.add('open'); m.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; window.backSv(); };
   window.pickSv=function(src,cap){ document.getElementById('sv-chooser').style.display='none';
     document.getElementById('sv-player').style.display='flex'; document.getElementById('sv-caption').innerHTML=cap;
@@ -421,6 +443,7 @@
   window.backSv=function(){ var v=document.getElementById('sv-video'); try{ v.pause(); }catch(e){}
     document.getElementById('sv-player').style.display='none'; document.getElementById('sv-chooser').style.display='block'; };
   window.closeSv=function(evt,force){ if(evt&&!force&&evt.target.id!=='sv-modal')return;
+    try{document.body.classList.remove('sv-open');}catch(e){}
     var m=document.getElementById('sv-modal'); if(!m)return; m.classList.remove('open'); m.setAttribute('aria-hidden','true');
     document.body.style.overflow=''; var v=document.getElementById('sv-video'); try{ v.pause(); }catch(e){} };
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') window.closeSv(null,true); });
@@ -519,4 +542,32 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tag,{once:true});
   else tag();
   setTimeout(tag,0); setTimeout(tag,400); setTimeout(tag,1200);
+})();
+
+/* ============================================================================
+   Flip a body class around whatever Watch implementation the page owns.
+
+   Fifty-four pages define their own openSv/closeSv inline, so the shared modal in this file
+   returns early on nearly all of them. Wrapping the globals reaches every one of them from a
+   single place — and if a page has no Watch at all, this does nothing.
+   ========================================================================== */
+(function(){
+  "use strict";
+  function wrapSv(){
+    if(window.__svWrapped) return;
+    var o=window.openSv, c=window.closeSv;
+    if(typeof o!=='function') return;
+    window.__svWrapped=1;
+    window.openSv=function(){ try{document.body.classList.add('sv-open');}catch(e){}
+      return o.apply(this,arguments); };
+    if(typeof c==='function'){
+      window.closeSv=function(){ var r=c.apply(this,arguments);
+        // only drop the class if the modal really closed — closeSv ignores clicks inside it
+        try{ if(!document.querySelector('.sv-modal.open')) document.body.classList.remove('sv-open'); }catch(e){}
+        return r; };
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wrapSv,{once:true});
+  else wrapSv();
+  setTimeout(wrapSv,0); setTimeout(wrapSv,600);
 })();
