@@ -325,13 +325,10 @@
       '  position:relative;isolation:isolate;background:var(--sq-line) !important;',
       '  animation:none !important}',
       '.sq::before{content:"";position:absolute;inset:0;z-index:-1;-webkit-mask-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M100.0%2050.0L99.7%2058.5L99.0%2064.8L97.7%2070.4L95.9%2075.4L93.7%2080.0L91.0%2084.1L87.7%2087.7L84.1%2091.0L80.0%2093.7L75.4%2095.9L70.4%2097.7L64.8%2099.0L58.5%2099.7L50.0%20100.0L41.5%2099.7L35.2%2099.0L29.6%2097.7L24.6%2095.9L20.0%2093.7L15.9%2091.0L12.3%2087.7L9.0%2084.1L6.3%2080.0L4.1%2075.4L2.3%2070.4L1.0%2064.8L0.3%2058.5L0.0%2050.0L0.3%2041.5L1.0%2035.2L2.3%2029.6L4.1%2024.6L6.3%2020.0L9.0%2015.9L12.3%2012.3L15.9%209.0L20.0%206.3L24.6%204.1L29.6%202.3L35.2%201.0L41.5%200.3L50.0%200.0L58.5%200.3L64.8%201.0L70.4%202.3L75.4%204.1L80.0%206.3L84.1%209.0L87.7%2012.3L91.0%2015.9L93.7%2020.0L95.9%2024.6L97.7%2029.6L99.0%2035.2L99.7%2041.5Z%22%2F%3E%3C%2Fsvg%3E\");mask-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M100.0%2050.0L99.7%2058.5L99.0%2064.8L97.7%2070.4L95.9%2075.4L93.7%2080.0L91.0%2084.1L87.7%2087.7L84.1%2091.0L80.0%2093.7L75.4%2095.9L70.4%2097.7L64.8%2099.0L58.5%2099.7L50.0%20100.0L41.5%2099.7L35.2%2099.0L29.6%2097.7L24.6%2095.9L20.0%2093.7L15.9%2091.0L12.3%2087.7L9.0%2084.1L6.3%2080.0L4.1%2075.4L2.3%2070.4L1.0%2064.8L0.3%2058.5L0.0%2050.0L0.3%2041.5L1.0%2035.2L2.3%2029.6L4.1%2024.6L6.3%2020.0L9.0%2015.9L12.3%2012.3L15.9%209.0L20.0%206.3L24.6%204.1L29.6%202.3L35.2%201.0L41.5%200.3L50.0%200.0L58.5%200.3L64.8%201.0L70.4%202.3L75.4%204.1L80.0%206.3L84.1%209.0L87.7%2012.3L91.0%2015.9L93.7%2020.0L95.9%2024.6L97.7%2029.6L99.0%2035.2L99.7%2041.5Z%22%2F%3E%3C%2Fsvg%3E\");-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;',
-      /* Inset by a pixel so the outline is a RING, not a leak.
-         At inset:0 both layers carried the same mask at the same size, so the line
-         colour underneath showed through the fill's own antialiased edge -- thick where
-         the silhouette runs horizontally (the bottom) and thin where it runs vertical.
-         That uneven rim is the seam under the cards: measured at dpr3, it lifted the
-         bottom row's mean brightness from 34.5 to 39.9. */
-      '  background:var(--sq-bg);inset:1px}',
+      /* inset:0 on purpose. Insetting this by a pixel exposes a real ring of
+         --sq-line and measures BRIGHTER at the bottom edge (+14.8 vs +9.8 at dpr3 with
+         the pulse frozen), which is the opposite of what it looks like it should do. */
+      '  background:var(--sq-bg)}',
       /* per module: its own colours, unchanged. Only the geometry is shared. */
       '.sq-dtd{--sq-line:#39ff14;--sq-bg:radial-gradient(circle at 50% 35%,#0f2417,#07120b)}',
       '.sq-wrap-dtd{--g1:rgba(57,255,20,.75);--g2:rgba(57,255,20,.45);--g3:rgba(57,255,20,.25)}',
@@ -343,6 +340,7 @@
          module: identical silhouette, a dark ground of its own, and the logo inside it. */
       '.sq-cx{--sq-line:rgba(34,211,238,.55);--sq-bg:#000003}',
       '.sq-wrap-cx{--g1:rgba(34,211,238,.8);--g2:rgba(34,211,238,.45);--g3:rgba(34,211,238,.22)}',
+      '.sq-cx::before{inset:1px}',
       '.sq-cx img{width:100%;height:100%;object-fit:contain;padding:4%;box-sizing:border-box;',
       '  filter:none !important;border-radius:0 !important;display:block;background:#000003}',
       '.sost-news-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20%;background:linear-gradient(135deg,#1b1206,#2c1d08,#3a2a0a);border:1px solid rgba(245,158,11,.6);text-decoration:none;line-height:1;flex:0 0 auto;box-shadow:0 0 20px rgba(245,158,11,.95),0 0 40px rgba(245,158,11,.55);overflow:hidden;-webkit-tap-highlight-color:transparent}',
