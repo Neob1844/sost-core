@@ -105,7 +105,7 @@ whether to clear a class of lessons.
 
 ## How it connects the four verticals
 
-- **Geaspirit** and **Materials Engine** live inside the
+- **geo-discovery** and **Materials Engine** live inside the
   orchestrator stage. If `materials-engine-private` is not
   reachable, those pipelines fail; the daemon records lessons and
   continues with whatever requests already exist in the inbox.

@@ -2738,7 +2738,7 @@ is subject to legal and operational review.
 ### 12.5.9 SOST AI Engine
 
 The SOST AI Engine is an internal autonomous research and validation
-system that supports decisions across Materials Engine, GeaSpirit, SOST protocol
+system that supports decisions across Materials Engine, a separate project, SOST protocol
 wording, and Useful Compute task design. It is intentionally off-chain, off-consensus
 and off-DEX: it does not modify the SOST chain, does not run inside the DEX page,
 does not sign transactions and does not have access to wallet keys, beneficiary
@@ -2773,10 +2773,10 @@ MILESTONES (PHASE 3).
     Ten-level evidence classification, claim extractor, public-claim guard
     with safer-rewrite suggestions, eight seeded eval cases derived from
     real past mistakes (UC rewards postponed, avg288 vs avg1000,
-    gold-redemption wording, GeaSpirit mineral-guarantee, DFT-validated
+    gold-redemption wording, a separate project mineral-guarantee, DFT-validated
     overclaim, etc.).
 
-  M2 — Validators (Materials, GeaSpirit, SOST):
+  M2 — Validators (Materials, a separate project, SOST):
     Read-only validators that cross-check claims against the actual local
     corpus. Unified ValidatorResult carries verdict, evidence_level,
     confidence, publishability, evidence_items, missing_evidence, risks
@@ -2785,7 +2785,7 @@ MILESTONES (PHASE 3).
 
   M3 — Hypothesis Factory + AI Council + Learning Loop:
     Mass local hypothesis generation across binary, ternary, quaternary
-    and doped compositions (materials), AOI x commodity (GeaSpirit), and
+    and doped compositions (materials), AOI x commodity (a separate project), and
     risky-wording / Heavy-task-design ideas (SOST / UC). Deterministic
     ranking. AI Council with validator-veto (not majority vote). Eight
     canonical campaign templates. Append-only outcome-driven rule-based
@@ -3649,7 +3649,7 @@ B.4 DYNAMIC FEE MARKET
   - Topological ordering: parents always before children in block
 - Neither changes consensus — relay/mempool/miner policy only
 
-C. GEASPIRIT MINERAL INTELLIGENCE PLATFORM
+C. SEPARATE PROJECT MINERAL INTELLIGENCE PLATFORM
 - 11+ AOIs across 5 continents, zone-specific ML models
 - AUC 0.72-0.86 (5 supervised zones), heuristic scanner for arbitrary AOIs
 - Direct GNN inference (CGCNN forward pass) on crystal structures
@@ -3678,7 +3678,7 @@ E. AUTONOMOUS MATERIALS DISCOVERY ENGINE
 - Dual-output explainer (technical + plain language)
 - 1,073 tests passing across 47 files
 
-F. GEASPIRIT MINERAL INTELLIGENCE MODULE
+F. SEPARATE PROJECT MINERAL INTELLIGENCE MODULE
 - Research-grade mineral prospectivity mapping, separate from consensus
 - 11 AOIs globally, 162+ targets, zone-specific models (AUC 0.72-0.86)
 - Long-term thermal proxy pipeline: 20-year Landsat climatology
@@ -3716,7 +3716,7 @@ I. cASERT V2 CONSENSUS UPGRADE (BLOCK 1450)
 - Anti-stall, profiles, PoW unchanged
 - Rationale: audit showed slow upward adjustment with V1 parameters
 
-J. GEASPIRIT MINERAL INTELLIGENCE MODULE (NON-CONSENSUS ECOSYSTEM NOTE)
+J. SEPARATE PROJECT MINERAL INTELLIGENCE MODULE (NON-CONSENSUS ECOSYSTEM NOTE)
 - Satellite-based mineral prospectivity mapping using free data and AI
 - NOT part of consensus — research/exploration module within SOST ecosystem
 - Phase 8 (March 2026): Multi-source exploration intelligence platform
@@ -3736,9 +3736,9 @@ J. GEASPIRIT MINERAL INTELLIGENCE MODULE (NON-CONSENSUS ECOSYSTEM NOTE)
 - All data free (Sentinel-2, Landsat, EMIT, DEM, MRDS, OZMIN, Mindat.org, EarthMRI, GA geophysics, GA gravity)
 - Gravity integrated (460m Bouguer) — outperforms spectral at subsurface deposits
 - Magnetics consolidated at 3 zones (+0.048 to +0.153 over S2)
-- Full methodology and results at: website/sost-geaspirit.html
+- Full methodology and results at: website/sost-separate-project.html
 
-K. GEASPIRIT CANONICAL OBJECTIVE STATUS (NON-CONSENSUS RESEARCH NOTE)
+K. SEPARATE PROJECT CANONICAL OBJECTIVE STATUS (NON-CONSENSUS RESEARCH NOTE)
 - Canonical objective: "There is [mineral] at [depth] at [coordinates] with [certainty%]"
 - Current score: 23.9/40 (60%). MINERAL expanded to include non-metallic commodities (lithium, graphite, REE, diamonds).
   - MINERAL:     4.0/10 — Deposit type discrimination (porphyry Cu, orogenic Au, sediment Cu)
@@ -3771,24 +3771,24 @@ K. GEASPIRIT CANONICAL OBJECTIVE STATUS (NON-CONSENSUS RESEARCH NOTE)
 - Ceiling with satellite + free geophysics: ~28-30/40
 - Ceiling with satellite + geophysics + drill holes: ~36/40
 - Path forward: geology integration + gravity + neighborhood context + calibration
-- GeaSpirit is a probabilistic, proxy-based exploration support tool
+- a separate project is a probabilistic, proxy-based exploration support tool
 - It does NOT claim direct subsurface imaging or guaranteed mineral identification
 
---- GeaSpirit Phase 22 Note (2026-03-26) ---
+--- a separate project Phase 22 Note (2026-03-26) ---
 Frontier validation of spectral unmixing and NDVI trend analysis was attempted
 but blocked by raw data availability (stacks contain derived indices, not raw
 reflectance). Google Earth Engine access confirmed, enabling raw data pipeline
 construction in Phase 23. Canonical score remains 22.8/40 (57%). The platform's
 bottleneck has shifted from ML architecture to data engineering.
 
---- GeaSpirit Phase 23 Note (2026-03-27) ---
+--- a separate project Phase 23 Note (2026-03-27) ---
 Raw data pipelines constructed via Google Earth Engine: Sentinel-2 L2A reflectance
 (10 spectral bands, 4 zones) and multi-year Landsat NDVI (12 annual composites,
 2013-2024). Both sample-tested with real satellite data. GEE operationalized within
-GeaSpirit. Full raster export and frontier validation pending. Canonical score
+a separate project. Full raster export and frontier validation pending. Canonical score
 remains 22.8/40 (57%).
 
---- GeaSpirit Phase 24 Note (2026-03-27) ---
+--- a separate project Phase 24 Note (2026-03-27) ---
 First real frontier validation on exported GEE rasters (no simulation). 4 zones
 exported: Chuquicamata (267 S2 images), Zambia (528), Kalgoorlie (180), Peru (55).
 Spectral unmixing real features computed on 500 real pixels per zone. NDVI trend:
@@ -3796,7 +3796,7 @@ Spectral unmixing real features computed on 500 real pixels per zone. NDVI trend
 +0.0032/yr). Chuquicamata not applicable (hyperarid). Validation blocked by spatial
 alignment between GEE pixels and labels. Canonical score remains 22.8/40 (57%).
 
---- GeaSpirit Phase 25 Note (2026-03-27) ---
+--- a separate project Phase 25 Note (2026-03-27) ---
 Spatial alignment resolved via GEE sampleRegions() at exact label coordinates.
 Zambia: S2 baseline 0.640, unmixing +0.001 (NEUTRAL), NDVI 0.772 (POSITIVE —
 best single family). Peru: S2 baseline 0.850, unmixing -0.003 (NEUTRAL), NDVI
@@ -3804,7 +3804,7 @@ best single family). Peru: S2 baseline 0.850, unmixing -0.003 (NEUTRAL), NDVI
 Spectral unmixing: NEUTRAL. NDVI trend: zone-specific (vegetated only).
 Canonical score remains 22.8/40 (57%) — no improvement exceeding +0.005 threshold.
 
---- GeaSpirit Phase 26 Note (2026-03-27) ---
+--- a separate project Phase 26 Note (2026-03-27) ---
 Terrain depth pilot: 8 depth sources audited, 3 GEE-accessible (SRTM, SAR,
 terrain derivatives). 4 zones piloted. Peru depth-only AUC 0.907 (+0.057 vs S2
 baseline — terrain features add real value). Zambia 0.642 (+0.002, neutral).
@@ -3813,7 +3813,7 @@ subsurface depth. True depth unlock needs GA gravity, AEM, Earth MRI (all blocke
 GEE terrain infrastructure operational at all 4 zones.
 Canonical score remains 22.8/40 (57%).
 
---- GeaSpirit Phase 27 Note (2026-03-27) ---
+--- a separate project Phase 27 Note (2026-03-27) ---
 9-feature subsurface-aware family built at all 4 zones via GEE (CSP/ERGo landform
 dataset). topo_diversity = top feature at 3/4 zones. Standalone AUCs strong:
 Peru 0.902, Kalgoorlie 0.859, Chuquicamata 0.846, Zambia 0.682. Combined with
@@ -3823,9 +3823,9 @@ with existing spectral. Terrain reclassified: SURFACE_STRUCTURE, not true depth.
 Real depth needs GA gravity, GSWA AEM, USGS Earth MRI (all manual portals).
 Canonical score remains 22.8/40 (57%).
 
---- SOST Ecosystem: GeaSpirit & Materials Engine ---
+--- SOST Ecosystem: a separate project & Materials Engine ---
 
-GeaSpirit — Mineral Intelligence Platform
+a separate project — Mineral Intelligence Platform
 Canonical Objective: "There is [MINERAL] at [DEPTH] at [COORDINATES] with [X%] certainty."
 Canonical Score: 25.1/40 (63%), Phase 48 (gravity fusion validated).
   - MINERAL 4.0/10, DEPTH 6.0/10, COORDINATES 7.0/10, CERTAINTY 8.1/10
@@ -3890,7 +3890,7 @@ operational phase.
 
 ---
 
-Phase 28 Note (2026-03-28): GeaSpirit is an advanced remote sensing and
+Phase 28 Note (2026-03-28): a separate project is an advanced remote sensing and
 exploration intelligence platform based on multi-source fusion and zone-based
 validation. Phase 28 adds QGIS operational layer spec: practical tool map,
 reproducible workflows, and canonical tool mapping. QGIS strengthens COORDINATES

@@ -200,7 +200,7 @@ The request schema's `$id` stays `trinity-useful-compute-request/v0.1`
 - **No source-tool expansion.** `source_tool` enum is
   unchanged; only `trinity_scientific_prompt_intake` produces
   a manifest. Other source tools (materials_engine,
-  geaspirit, trinity_orchestrator) keep their existing
+  geo-discovery, trinity_orchestrator) keep their existing
   request shape with no manifest field.
 - **No `--show-manifest` CLI flag.** The manifest is in the
   request JSON; the operator already has `cat` and `jq`.

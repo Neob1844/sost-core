@@ -118,15 +118,15 @@ Formato: SÍNTOMA → CAUSA PROBABLE → SOLUCIÓN
 → No hay rotación de logs configurada
 → Instalar cron con log_rotate.sh (ver `deploy/setup_cron.sh`)
 
-## GeaSpirit
+## a separate project
 
-**26.** Un script de GeaSpirit falla con "ModuleNotFoundError"
+**26.** Un script de a separate project falla con "ModuleNotFoundError"
 → Falta un paquete Python
 → `pip install rasterio scikit-learn xgboost pandas numpy scipy`
 
 **27.** "EMIT stack not found"
 → Los datos EMIT no están descargados
-→ Ver manual dropzone: `~/SOST/geaspirit/data/manual_drop/peru_emit/README.md`
+→ Ver manual dropzone: `~/SOST/geo-discovery/data/manual_drop/peru_emit/README.md`
 
 **28.** "rasterio: file not recognized"
 → El archivo descargado está truncado o es HTML

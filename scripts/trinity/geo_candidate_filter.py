@@ -50,7 +50,7 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 _INPUT_SCHEMA = "trinity-geo-candidate-pool/v0.1"
 _OUTPUT_SCHEMA = "trinity-geo-candidate-filter/v0.1"
-_TRACK = "geaspirit"
+_TRACK = "geo-discovery"
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
 
 
@@ -264,7 +264,7 @@ def build_filtered_pool(
             f"{pool.get('schema')!r}"
         )
     if pool.get("track") != _TRACK:
-        raise ValueError("input pool is not a geaspirit-track pool")
+        raise ValueError("input pool is not a geo-discovery-track pool")
 
     pool_sha = hashlib.sha256(raw).hexdigest()
     decisions: List[Dict[str, Any]] = []

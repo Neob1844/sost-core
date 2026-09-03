@@ -49,7 +49,7 @@
 | 11 | System architecture doc | DOES NOT EXIST |
 | 12 | Glossary | DOES NOT EXIST |
 | 13 | Alerting (email/telegram) | DOES NOT EXIST |
-| 14 | GeaSpirit auto-retrain | DOES NOT EXIST (scripts exist but no cron) |
+| 14 | a separate project auto-retrain | DOES NOT EXIST (scripts exist but no cron) |
 | 15 | Dead man switch | NOT DOCUMENTED |
 | 16 | Autonomy roadmap | EXISTS (docs/AUTONOMY_ROADMAP.md) but not implemented |
 
@@ -92,7 +92,7 @@
 - **Miner:** YES, works independently
 - **Web:** YES, static files
 - **Diagnosis:** NO runbook — human would struggle
-- **GeaSpirit retrain:** Scripts exist but require manual decisions
+- **a separate project retrain:** Scripts exist but require manual decisions
 - **Code understanding:** CLAUDE.md + comments adequate for experienced developer
 
 ---
@@ -115,7 +115,7 @@
 | 12 | Log rotation | **NOT DONE** | MEDIUM | Add logrotate config |
 | 13 | Alert system | **NOT DONE** | MEDIUM | Email or Telegram webhook |
 | 14 | Architecture diagram | **NOT DONE** | MEDIUM | Write docs/SYSTEM_ARCHITECTURE.md |
-| 15 | GeaSpirit auto-retrain | **NOT DONE** | LOW | Cron job for weekly retrain |
+| 15 | a separate project auto-retrain | **NOT DONE** | LOW | Cron job for weekly retrain |
 | 16 | Dead man switch | **NOT DONE** | LOW | Document recovery procedure |
 | 17 | Code documentation | **ADEQUATE** | LOW | CLAUDE.md + inline comments sufficient |
 

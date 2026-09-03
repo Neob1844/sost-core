@@ -38,7 +38,7 @@
 
 The SOST Useful Compute infrastructure is a voluntary computation layer
 where part of the network's CPU is directed toward real scientific
-workloads (Materials Engine and GeaSpirit research). Right now it is
+workloads (Materials Engine and a separate project research). Right now it is
 running as a **public dry-run / testing system**.
 
 You participate by running a small extra program — the **Useful Compute

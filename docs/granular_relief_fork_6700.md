@@ -229,7 +229,7 @@ or later. NTP must be active (the +60 s drift cap is unchanged).
 - Wallet behaviour, address format, signature scheme.
 - Mempool / RBF / fee policy.
 - ConvergenceX PoW (4 GB dataset + 4 GB scratchpad).
-- AI engine / GeaSpirit / Materials engine.
+- AI engine / a separate project / Materials engine.
 - Useful Compute remains paused for design (no rewards, no queue).
 - BurstCap, anti-stall floor (60 min), profile ceiling table.
 

@@ -65,7 +65,7 @@ def test_uc_request_index_is_consistent(tmp_path, orch_mod):
         first = idx["requests"][0]
         assert first["schema"] == "trinity-useful-compute-request/v0.1"
         assert first["source_tool"] in (
-            "materials_engine", "geaspirit", "trinity_orchestrator"
+            "materials_engine", "geo-discovery", "trinity_orchestrator"
         )
 
 

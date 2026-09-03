@@ -1,11 +1,11 @@
-# Access Security Audit — GeaSpirit + Materials Engine
+# Access Security Audit — a separate project + Materials Engine
 
 **Date:** 2026-03-24
 **Scope:** Access gates, secret hygiene, frontend exposure, git history
 
 ---
 
-## GeaSpirit Access Gate
+## a separate project Access Gate
 
 | Check | Status |
 |-------|--------|
@@ -24,13 +24,13 @@
 
 | Check | Status |
 |-------|--------|
-| Same hash as GeaSpirit | **YES** |
+| Same hash as a separate project | **YES** |
 | Same passphrase accepted | **YES** |
 | Password in plaintext | **NO** |
 | Client-side only | **YES** |
 | Session timer | **YES** (10 min) |
 
-**Verdict: PARTIALLY SECURE** — Same level as GeaSpirit.
+**Verdict: PARTIALLY SECURE** — Same level as a separate project.
 
 ## Worktree Exposure Scan
 
@@ -51,7 +51,7 @@
 |-------|--------|
 | `.env` committed | **No** |
 | Plaintext password committed | **No** |
-| SHA-256 hash in history | **Yes** (since GeaSpirit access gate) |
+| SHA-256 hash in history | **Yes** (since a separate project access gate) |
 | Founder private key in history | **Yes** (commit 711075b, in audit doc) |
 | Key already known compromised | **Yes** (SOST_MASTER_PLAN.md) |
 | History rewrite needed | **No** (key was already rotated to V2) |
@@ -62,7 +62,7 @@
 
 ```
 Admin/Operator: SHA-256 hash gate (client-side)
-  → Same passphrase for GeaSpirit + Materials Engine
+  → Same passphrase for a separate project + Materials Engine
   → Acceptable for research-phase access control
   → NOT suitable for production financial access
 
@@ -90,8 +90,8 @@ Added patterns: `.env`, `.env.*`, `*.key`, `*.pem`, `credentials.json`, `secrets
 
 | System | Status | Note |
 |--------|--------|------|
-| GeaSpirit gate | **Partially secure** | No plaintext password exposed. Client-side only. |
-| Materials Engine gate | **Partially secure** | Same system as GeaSpirit. |
+| a separate project gate | **Partially secure** | No plaintext password exposed. Client-side only. |
+| Materials Engine gate | **Partially secure** | Same system as a separate project. |
 | Worktree secrets | **Clean** (after redaction) | Founder key redacted. |
 | Git history | **Acceptable** | Compromised key was already rotated. |
 | .gitignore | **Hardened** | Secret patterns now covered. |

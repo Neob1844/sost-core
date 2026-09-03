@@ -144,7 +144,7 @@ def test_uc_request_schema_is_strict():
 
 def test_objectives_carry_hard_rules():
     import json
-    for name in ("geaspirit", "materials_engine",
+    for name in ("geo-discovery", "materials_engine",
                  "useful_compute", "sost_ai"):
         obj = json.loads(
             (CONFIG_DIR / f"{name}.json").read_text(encoding="utf-8")

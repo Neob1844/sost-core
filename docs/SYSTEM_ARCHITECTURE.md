@@ -19,7 +19,7 @@
 │         │    │    index.html              │                      │
 │         │    │    sost-explorer.html      │                      │
 │         │    │    sost-wallet.html        │                      │
-│         │    │    sost-geaspirit.html     │                      │
+│         │    │    sost-geo-discovery.html     │                      │
 │         │    │    sost-app/index.html     │                      │
 │         │    │    ... (30+ HTML files)    │                      │
 │         │    └───────────────────────────┘                      │
@@ -47,9 +47,9 @@
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
 │                                                                  │
 │  ┌──────────────┐  ┌──────────────┐                             │
-│  │  GeaSpirit   │  │  Materials   │                             │
+│  │  a separate project   │  │  Materials   │                             │
 │  │  Python ML   │  │  Engine      │                             │
-│  │  geaspirit/  │  │  materials/  │                             │
+│  │  geo-discovery/  │  │  materials/  │                             │
 │  └──────────────┘  └──────────────┘                             │
 └─────────────────────────────────────────────────────────────────┘
 ```

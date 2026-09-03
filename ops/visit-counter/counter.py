@@ -11,7 +11,7 @@ from urllib.parse import urlparse, parse_qs
 
 DATA_DIR  = "/var/lib/visit-counter"
 DATA_FILE = os.path.join(DATA_DIR, "counts.json")
-SEED = {"sostcore": 3375}   # geaspirit moved to its own counter — unrelated products
+SEED = {"sostcore": 3375}   # separate-project moved to its own counter — unrelated products
 SALT = "sost-vc-2026-a7"
 BOT_RE = re.compile(
     r"bot|spider|crawl|slurp|curl|wget|python|httpclient|java/|go-http|libwww|"

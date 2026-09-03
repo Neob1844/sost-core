@@ -79,7 +79,7 @@ _TASK_TYPES = (
 # (the schema already accepts the union).
 _SOURCE_TOOLS = (
     "materials_engine",
-    "geaspirit",
+    "geo-discovery",
     "trinity_orchestrator",
     "trinity_scientific_prompt_intake",
 )

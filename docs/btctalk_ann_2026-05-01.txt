@@ -194,7 +194,7 @@ For Materials Engine, future reward-bearing workloads may include:
 [li]photovoltaic / catalyst / membrane candidate filtering[/li]
 [/list]
 
-For GeaSpirit, future workloads may include:
+For a separate project, future workloads may include:
 
 [list]
 [li]deterministic mineral-target scoring[/li]
@@ -229,7 +229,7 @@ Examples of future Heavy task categories may include:
 - large-scale deterministic materials screening
 - advanced dopant and substitution analysis
 - high-value Materials Engine workloads
-- future GeaSpirit workloads when the worker environment is ready
+- future a separate project workloads when the worker environment is ready
 [/code]
 
 These tasks will not be activated suddenly.
@@ -253,7 +253,7 @@ requests tasks from sostcore.com
 
 Task Server
 ↓
-distributes curated Materials Engine / GeaSpirit tasks
+distributes curated Materials Engine / a separate project tasks
 
 Participants
 ↓
@@ -326,7 +326,7 @@ The SOST AI Engine is a private, gate-locked autonomous research system that run
 [code]
 SOST AI Engine        = brain + private cabin
 Materials Engine      = computational materials lab (77,296-material corpus)
-GeaSpirit / GeaDeep   = mineral intelligence + energy systems
+a separate project / GeaDeep   = mineral intelligence + energy systems
 Useful Compute        = future distributed work-sharing layer
 [/code]
 
@@ -366,7 +366,7 @@ Every approve / reject CLI requires an explicit non-empty <code>--operator</code
 
 [list]
 [li][b]Materials Engine:[/b] the AI proposes campaigns, ranks candidates, generates hypotheses, prepares DFT input drafts, scores false-positive risk and explores PGM-free / photovoltaic / catalyst / membrane families. It does not run DFT itself.[/li]
-[li][b]GeaSpirit / GeaDeep:[/b] the AI evaluates marine-pressure and corrosion systems, scores SAR / DEM / InSAR proxies, separates hypothesis from real proof, and refuses claims like "subsurface detected" without independent validation.[/li]
+[li][b]a separate project / GeaDeep:[/b] the AI evaluates marine-pressure and corrosion systems, scores SAR / DEM / InSAR proxies, separates hypothesis from real proof, and refuses claims like "subsurface detected" without independent validation.[/li]
 [li][b]Useful Compute:[/b] the AI designs candidate Heavy Tasks, classifies whether they are reward-worthy, simulates the queue and proposes which families could one day enter rewards. It cannot activate rewards or publish reward-bearing tasks. The public Useful Compute API remains dry-run.[/li]
 [/list]
 
@@ -655,9 +655,9 @@ Wallet:
 
 [size=14pt][b]Ecosystem[/b][/size]
 
-[b]GeaSpirit — Multi-Commodity Mineral Intelligence Platform[/b]
+[b]a separate project — Multi-Commodity Mineral Intelligence Platform[/b]
 
-GeaSpirit is a remote sensing and exploration intelligence platform for metallic and non-metallic mineral systems. Validated commodity types include Porphyry Cu, Orogenic Au, IOCG, SEDEX Cu-Pb-Zn, Sediment-hosted Cu and Lithium brines/salares.
+a separate project is a remote sensing and exploration intelligence platform for metallic and non-metallic mineral systems. Validated commodity types include Porphyry Cu, Orogenic Au, IOCG, SEDEX Cu-Pb-Zn, Sediment-hosted Cu and Lithium brines/salares.
 
 [i]Goal: know what lies beneath the Earth's surface before the first drill ever turns.[/i]
 
@@ -669,7 +669,7 @@ Computational materials discovery platform with a 77,296-material corpus and mis
 
 [b]SOST AI Engine[/b]
 
-Private autonomous research lab orchestrating Materials Engine, GeaSpirit and Useful Compute through a unified mission engine, scientist swarm and approval ritual. Localhost only. Gate-locked. See the dedicated section above.
+Private autonomous research lab orchestrating Materials Engine, a separate project and Useful Compute through a unified mission engine, scientist swarm and approval ritual. Localhost only. Gate-locked. See the dedicated section above.
 
 [hr]
 
@@ -705,7 +705,7 @@ Private autonomous research lab orchestrating Materials Engine, GeaSpirit and Us
 [li][b]Explorer:[/b] [url=https://sostcore.com/sost-explorer.html]https://sostcore.com/sost-explorer.html[/url][/li]
 [li][b]AI Engine page:[/b] [url=https://sostcore.com/sost-ai-engine.html]https://sostcore.com/sost-ai-engine.html[/url][/li]
 [li][b]Materials Engine page:[/b] [url=https://sostcore.com/sost-materials-engine.html]https://sostcore.com/sost-materials-engine.html[/url][/li]
-[li][b]GeaSpirit page:[/b] [url=https://sostcore.com/sost-geaspirit.html]https://sostcore.com/sost-geaspirit.html[/url][/li]
+[li][b]a separate project page:[/b] [url=https://sostcore.com/sost-separate-project.html]https://sostcore.com/sost-separate-project.html[/url][/li]
 [li][b]Useful Compute API:[/b] [url=https://sostcore.com/api/useful-compute/health]https://sostcore.com/api/useful-compute/health[/url][/li]
 [li][b]GitHub:[/b] [url=https://github.com/Neob1844/sost-core]https://github.com/Neob1844/sost-core[/url][/li]
 [li][b]Wallet:[/b] [url=https://sostcore.com/sost-wallet.html]https://sostcore.com/sost-wallet.html[/url][/li]

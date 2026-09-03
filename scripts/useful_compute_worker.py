@@ -344,7 +344,7 @@ def heavy_dft_input_preparation(payload: Dict) -> Dict:
     }
 
 
-def heavy_geaspirit_zone_pack(payload: Dict) -> Dict:
+def heavy_geo_zone_pack(payload: Dict) -> Dict:
     """Replay a zone pack with prepared metadata. No raster downloads."""
     zone = payload.get("zone", "")
     commodity = payload.get("commodity", "")
@@ -362,7 +362,7 @@ def heavy_geaspirit_zone_pack(payload: Dict) -> Dict:
     }
 
 
-def heavy_geaspirit_hypothesis_batch(payload: Dict) -> Dict:
+def heavy_geo_hypothesis_batch(payload: Dict) -> Dict:
     """Score a batch of feature-set hypotheses for one zone."""
     zone = payload.get("zone", "")
     feature_sets = payload.get("feature_sets", []) or []
@@ -377,7 +377,7 @@ def heavy_geaspirit_hypothesis_batch(payload: Dict) -> Dict:
     return {"zone": zone, "n_hypotheses": len(out), "ranking": out}
 
 
-def heavy_geaspirit_depth_proxy_batch(payload: Dict) -> Dict:
+def heavy_geo_depth_proxy_batch(payload: Dict) -> Dict:
     """Estimate a depth-proxy score from prepared zone features (no rasters)."""
     zone = payload.get("zone", "")
     targets = int(payload.get("labeled_targets", 0))
@@ -393,7 +393,7 @@ def heavy_geaspirit_depth_proxy_batch(payload: Dict) -> Dict:
     }
 
 
-def heavy_geaspirit_sensor_combo_batch(payload: Dict) -> Dict:
+def heavy_geo_sensor_combo_batch(payload: Dict) -> Dict:
     """Rank sensor combinations by expected signal contribution."""
     zone = payload.get("zone", "")
     feature_sets = payload.get("feature_sets", []) or []
@@ -408,7 +408,7 @@ def heavy_geaspirit_sensor_combo_batch(payload: Dict) -> Dict:
     return {"zone": zone, "n_combos": len(ranked), "ranking": ranked}
 
 
-def heavy_geaspirit_transfer_penalty_batch(payload: Dict) -> Dict:
+def heavy_geo_transfer_penalty_batch(payload: Dict) -> Dict:
     """Estimate transfer penalty between zones/commodities."""
     src_zone = payload.get("zone", "")
     src_commodity = payload.get("commodity", "")
@@ -430,11 +430,11 @@ HEAVY_HANDLERS = {
     "heavy_candidate_consensus_score":      heavy_candidate_consensus_score,
     "heavy_structure_precheck":             heavy_structure_precheck,
     "heavy_dft_input_preparation":          heavy_dft_input_preparation,
-    "heavy_geaspirit_zone_pack":            heavy_geaspirit_zone_pack,
-    "heavy_geaspirit_hypothesis_batch":     heavy_geaspirit_hypothesis_batch,
-    "heavy_geaspirit_depth_proxy_batch":    heavy_geaspirit_depth_proxy_batch,
-    "heavy_geaspirit_sensor_combo_batch":   heavy_geaspirit_sensor_combo_batch,
-    "heavy_geaspirit_transfer_penalty_batch": heavy_geaspirit_transfer_penalty_batch,
+    "heavy_geo_zone_pack":            heavy_geo_zone_pack,
+    "heavy_geo_hypothesis_batch":     heavy_geo_hypothesis_batch,
+    "heavy_geo_depth_proxy_batch":    heavy_geo_depth_proxy_batch,
+    "heavy_geo_sensor_combo_batch":   heavy_geo_sensor_combo_batch,
+    "heavy_geo_transfer_penalty_batch": heavy_geo_transfer_penalty_batch,
 }
 
 

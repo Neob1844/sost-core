@@ -25,14 +25,14 @@ This roadmap ensures that if all external AI disappears tomorrow, the system con
 | **Website** | YES | YES (static files) | N/A | NO (needs nginx) | LOW |
 | **Auth gateway** | YES | PARTIAL (config) | N/A | NO | MEDIUM |
 | **SSL/domains** | YES | PARTIAL (certbot renew) | N/A | YES (cron) | MEDIUM |
-| **GeaSpirit models** | YES (inference) | NO (retraining) | PARTIAL (auto-retrain script) | NO | HIGH |
-| **GeaSpirit data pipeline** | PARTIAL (GEE scripts) | NO (API changes) | NO | NO | HIGH |
+| **a separate project models** | YES (inference) | NO (retraining) | PARTIAL (auto-retrain script) | NO | HIGH |
+| **a separate project data pipeline** | PARTIAL (GEE scripts) | NO (API changes) | NO | NO | HIGH |
 | **Materials Engine** | YES (API) | NO (new campaigns) | PARTIAL (auto-discovery) | NO | MEDIUM |
 | **Backups** | NO (manual) | NO | N/A | NO | HIGH |
 | **Monitoring** | NO (manual checks) | NO | N/A | NO | HIGH |
 | **Documentation** | YES (static) | NO (updates) | N/A | N/A | MEDIUM |
 
-**Critical gaps:** Backups, monitoring, GeaSpirit retraining, troubleshooting documentation.
+**Critical gaps:** Backups, monitoring, a separate project retraining, troubleshooting documentation.
 
 ---
 
@@ -88,7 +88,7 @@ This roadmap ensures that if all external AI disappears tomorrow, the system con
 
 ## 5. Auto-Learning Plan
 
-### GeaSpirit Auto-Retrain (`geaspirit/scripts/auto_retrain.py`):
+### a separate project Auto-Retrain (`geo-discovery/scripts/auto_retrain.py`):
 1. Weekly cron: check for new labels (MINDAT, OZMIN updates)
 2. For each zone with changes: retrain with spatial block CV
 3. Compare new AUC vs current
@@ -96,7 +96,7 @@ This roadmap ensures that if all external AI disappears tomorrow, the system con
 5. If worse → keep old model, log regression
 6. Generate weekly report
 
-### GeaSpirit Drift Detection:
+### a separate project Drift Detection:
 - Monthly: KS test on feature distributions vs training data
 - If drift > threshold → flag for retraining
 - Log drift magnitude and affected features
@@ -113,7 +113,7 @@ This roadmap ensures that if all external AI disappears tomorrow, the system con
 
 ### Schedule:
 - **Daily (3 AM):** chain state, wallet files, auth config, nginx config
-- **Weekly (Sunday 4 AM):** full node data, GeaSpirit models, Materials corpus
+- **Weekly (Sunday 4 AM):** full node data, a separate project models, Materials corpus
 - **Monthly (1st, 5 AM):** complete system snapshot
 
 ### Retention: 30 daily, 12 weekly, 12 monthly
@@ -225,7 +225,7 @@ No AI needed — pure pattern matching.
 | Operations runbook | NOT DONE | HIGH | Write 20 procedures |
 | Troubleshooting guide | NOT DONE | HIGH | Write 50 entries |
 | Architecture diagram | NOT DONE | MEDIUM | Document system |
-| GeaSpirit auto-retrain | NOT DONE | MEDIUM | Create retrain script |
+| a separate project auto-retrain | NOT DONE | MEDIUM | Create retrain script |
 | Materials auto-discovery | PARTIAL | MEDIUM | Cron job |
 | Rule-based diagnostics | NOT DONE | LOW | Create sost-doctor |
 | Local AI backup | NOT DONE | LOW | Future hardware |
@@ -243,7 +243,7 @@ No AI needed — pure pattern matching.
 | 4 | Runbook (20 operations) |
 | 5 | Troubleshooting guide (50 symptoms) |
 | 6 | System architecture diagram |
-| 7 | GeaSpirit auto-retrain pipeline |
+| 7 | a separate project auto-retrain pipeline |
 | 8 | Rule-based diagnostic system |
 | 9 | Testing + hardening |
 | 10 | Documentation review + dead man switch |

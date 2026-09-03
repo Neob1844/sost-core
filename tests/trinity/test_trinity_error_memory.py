@@ -32,7 +32,7 @@ def mem_mod():
 def test_record_and_read_back(tmp_path, mem_mod):
     led = tmp_path / "errs.jsonl"
     mem_mod.record_lesson(
-        ledger_path=led, vertical="geaspirit",
+        ledger_path=led, vertical="geo-discovery",
         task_inputs={"action": "geo_pipeline", "count": 10},
         cause="compute_failed", detail="simulated",
         pinned_time="2026-05-11T00:00:00+00:00",
@@ -57,16 +57,16 @@ def test_repeat_detected_by_signature(tmp_path, mem_mod):
     led = tmp_path / "errs.jsonl"
     inputs = {"candidate_id": "GEO-007"}
     mem_mod.record_lesson(
-        ledger_path=led, vertical="geaspirit",
+        ledger_path=led, vertical="geo-discovery",
         task_inputs=inputs, cause="validation_failed",
         detail="x", pinned_time="2026-05-11T00:00:00+00:00",
     )
-    hit = mem_mod.has_repeat_lesson(led, "geaspirit", inputs)
+    hit = mem_mod.has_repeat_lesson(led, "geo-discovery", inputs)
     assert hit is not None
     assert hit["cause"] == "validation_failed"
 
     miss = mem_mod.has_repeat_lesson(
-        led, "geaspirit", {"candidate_id": "GEO-XXX"}
+        led, "geo-discovery", {"candidate_id": "GEO-XXX"}
     )
     assert miss is None
 
@@ -108,13 +108,13 @@ def test_orchestrator_refuses_repeat_without_flag(tmp_path):
     )
     led = tmp_path / "errs.jsonl"
     mem_mod_local.record_lesson(
-        ledger_path=led, vertical="geaspirit",
+        ledger_path=led, vertical="geo-discovery",
         task_inputs={"candidate_id": "GEO-0005"},
         cause="overclaim_risk", detail="x",
         pinned_time="2026-05-11T00:00:00+00:00",
     )
     hit = mem_mod_local.has_repeat_lesson(
-        led, "geaspirit", {"candidate_id": "GEO-0005"}
+        led, "geo-discovery", {"candidate_id": "GEO-0005"}
     )
     assert hit is not None
     assert hit["cause"] == "overclaim_risk"

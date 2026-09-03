@@ -6,7 +6,7 @@ Trinity Autonomy is the central coordination layer where the SOST AI
 council organises four verticals into a single, auditable, dry-run
 loop:
 
-1. **Geaspirit / Geo Discovery** — autonomous proposal of underexplored
+1. **geo-discovery / Geo Discovery** — autonomous proposal of underexplored
    areas of interest (AOIs) from open data only.
 2. **Materials Engine** — autonomous proposal of candidate materials,
    scored by structural and atomic plausibility.
@@ -44,11 +44,11 @@ Every decision is appended to `TRINITY_AUTONOMY_LEDGER.jsonl` with:
 - emitted useful-compute request id (if any)
 - pending reward forecast
 
-## How Geaspirit searches for AOIs
+## How geo-discovery searches for AOIs
 
 `scripts/trinity/geo_discovery_pipeline.py` is the existing v0.1 geo
 pipeline. The orchestrator invokes it in-process with the seed and
-pinned time from `config/trinity/objectives/geaspirit.json`. Outputs:
+pinned time from `config/trinity/objectives/geo-discovery.json`. Outputs:
 
 - 26-belt offline catalog of candidates
 - transparent filter (demo-AOI proximity, bbox overlap, protected

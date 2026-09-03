@@ -967,7 +967,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     p.add_argument(
         "--source-tool", default="trinity_orchestrator",
-        choices=["geaspirit", "materials_engine", "trinity_orchestrator"],
+        choices=["geo-discovery", "materials_engine", "trinity_orchestrator"],
     )
     p.add_argument(
         "--difficulty-class", default="low",

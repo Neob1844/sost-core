@@ -26,7 +26,7 @@
 | /sost-wallet.html | 200 | 200 | ✓ IDENTICAL | ✓ /rpc relative | None | NONE |
 | /sost-app/ | 200 | 200 | ✓ IDENTICAL | ✓ (fallback) | 5 to sostcore, 2 to sostprotocol | LOW |
 | /sost-contact.html | 200 | 200 | ✓ IDENTICAL | N/A | mailto only | NONE |
-| /sost-geaspirit.html | 200 | 200 | ✓ IDENTICAL | N/A | None | NONE |
+| /sost-geo-discovery.html | 200 | 200 | ✓ IDENTICAL | N/A | None | NONE |
 | /sost-materials-engine.html | 200 | 200 | ✓ IDENTICAL | API /api/ | None | LOW |
 | /sost-tokenomics.html | 200 | 200 | ✓ IDENTICAL | N/A | None | NONE |
 | /sost-quickstart.html | 200 | 200 | ✓ IDENTICAL | N/A | None | NONE |

@@ -268,7 +268,7 @@ def test_scorer_emits_v01_schema(tmp_path, gen_mod, filter_mod, scorer_mod):
         generated_at_utc="2026-05-10T00:00:00+00:00",
     )
     assert sc["schema"] == "trinity-geo-scorecard/v0.1"
-    assert sc["track"] == "geaspirit"
+    assert sc["track"] == "geo-discovery"
     for c in sc["candidates"]:
         assert 0.0 <= c["score"] <= 100.0
         assert c["evidence_level"] == "remote_proxy_only"

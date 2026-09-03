@@ -11,12 +11,12 @@
 | sost-cli (wallet) | PRODUCTION | YES | NO |
 | Explorer (web) | PRODUCTION | YES | NO (reads from node) |
 | Wallet (web) | PRODUCTION | YES | NO |
-| GeaSpirit (mineral ML) | RESEARCH | PARTIAL | YES (satellite, geophysics, labels) |
+| a separate project (mineral ML) | RESEARCH | PARTIAL | YES (satellite, geophysics, labels) |
 | Materials Engine | RESEARCH | PARTIAL | YES (JARVIS, AFLOW, crystal DBs) |
 | Auth Gateway | PRODUCTION | YES | NO |
 | Website | PRODUCTION | YES | NO |
 
-## GeaSpirit Status
+## a separate project Status
 
 - **Current Phase:** Phase 33 — Fail-Fast Access Guard + Operator Handoff + Autonomous Expansion (governance/infrastructure phase)
 - **Best AUC:** 0.882 (Chuquicamata full fusion)
@@ -68,15 +68,15 @@
 | Blockchain node | YES | YES (systemd) | N/A |
 | Miner | YES | YES (autossh) | N/A |
 | Web/Explorer | YES | YES (nginx) | N/A |
-| GeaSpirit inference | YES | NO | NO (manual retrain) |
-| GeaSpirit data pipeline | PARTIAL | NO | NO |
+| a separate project inference | YES | NO | NO (manual retrain) |
+| a separate project data pipeline | PARTIAL | NO | NO |
 | Materials inference | YES | NO | NO (manual retrain) |
 | Backups | SCRIPTS_READY | NOT_INSTALLED | N/A |
 | Health monitoring | SCRIPTS_READY | NOT_INSTALLED | N/A |
 
 ## What's Blocked
 
-- **GeaSpirit:** 8/11 fully blocked (GEE OPERATIONALIZED with terrain infrastructure at 4 zones, ECOSTRESS PARTIALLY_ACCESSIBLE) — 4 HIGH priority, all 3 dropzones EMPTY, gravity DEFINITIVELY BLOCKED (corrupted files), AEM BLOCKED_BY_PORTAL (DMIRS 403, GA THREDDS 404), all deposit-scale subsurface geophysics blocked, terrain REDUNDANT with spectral. **Phase 33 operator handoff ready:** detailed download specs for gravity/AEM/Earth MRI, fail-fast validation will auto-check any dropped data.
+- **a separate project:** 8/11 fully blocked (GEE OPERATIONALIZED with terrain infrastructure at 4 zones, ECOSTRESS PARTIALLY_ACCESSIBLE) — 4 HIGH priority, all 3 dropzones EMPTY, gravity DEFINITIVELY BLOCKED (corrupted files), AEM BLOCKED_BY_PORTAL (DMIRS 403, GA THREDDS 404), all deposit-scale subsurface geophysics blocked, terrain REDUNDANT with spectral. **Phase 33 operator handoff ready:** detailed download specs for gravity/AEM/Earth MRI, fail-fast validation will auto-check any dropped data.
 - **Materials:** 4 databases planned but not connected (MP, OQMD, NOMAD, COD)
 - **Autonomy:** Health/backup scripts created but cron not installed on VPS
 - **Documentation:** Runbook + troubleshooting created, need VPS deployment

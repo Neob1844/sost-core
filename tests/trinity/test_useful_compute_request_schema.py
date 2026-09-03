@@ -95,7 +95,7 @@ def test_builder_rejects_unknown_source(builder_mod):
 def test_builder_rejects_unknown_difficulty(builder_mod):
     with pytest.raises(ValueError):
         builder_mod.build_request(
-            source_tool="geaspirit",
+            source_tool="geo-discovery",
             candidate_id="x", input_bundle_bytes=b"x",
             expected_output_schema="y",
             difficulty_class="nuclear",
@@ -108,7 +108,7 @@ def test_cli_rejects_emit_flag(builder_mod, tmp_path):
     p_in = tmp_path / "in.bin"
     p_in.write_bytes(b"x")
     rc = builder_mod.main([
-        "--source-tool", "geaspirit",
+        "--source-tool", "geo-discovery",
         "--candidate-id", "GEO-x",
         "--input-bundle", str(p_in),
         "--expected-output-schema", "geo-followup/v0",

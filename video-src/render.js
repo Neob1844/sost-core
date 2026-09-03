@@ -8,7 +8,9 @@
  *   node render.js frames mech-title.html out/title 0 9.0 30
  *   node render.js still  mech-title.html out/poster.png 1.2
  */
-const puppeteer = require('/home/sost/SOST/geaspirit-platform/node_modules/puppeteer-core');
+/* Resolved inside this repository. It used to point at another project's node_modules on the
+ * same disk, which made this build depend on an unrelated tree being present. It does not. */
+const puppeteer = require('./node_modules/puppeteer-core');
 const path = require('path'), fs = require('fs');
 const CHROME = '/home/sost/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome';
 const HERE = __dirname, W = 1920, H = 1080;

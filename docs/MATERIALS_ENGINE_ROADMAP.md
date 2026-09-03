@@ -123,7 +123,7 @@ Future vision:
 3. **Lithium capture material** — Li-ion sieves, spinel LiMn₂O₄ variants
 4. **Desalination membrane** — ceramic/polymer for affordable water treatment
 5. **PV without rare elements** — Cu₂ZnSnS₄ (CZTS), perovskite ABX₃ variants
-6. **Corrosion-resistant alloys** — for deep mining/GeaSpirit drill targets
+6. **Corrosion-resistant alloys** — for deep mining/a separate project drill targets
 7. **Thermal storage material** — phase-change materials for solar thermal
 8. **CO₂ capture sorbent** — MOFs, amines on cheap supports
 

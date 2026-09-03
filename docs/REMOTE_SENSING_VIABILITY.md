@@ -1085,7 +1085,7 @@ It means the residual decomposition approach does not extract additional indepen
 
 ### Universal Candidate Matrix
 
-GeaSpirit now maintains a universal candidate family matrix tracking 17 feature families
+a separate project now maintains a universal candidate family matrix tracking 17 feature families
 across 9 zones (153 cells). Each family is classified as: USEFUL, NEGATIVE, AVAILABLE,
 BLOCKED, or UNTESTED.
 

@@ -92,3 +92,14 @@ deploy/v15-option-b/sost-node
 deploy/v15-option-b/sost-cli
 deploy/v15-option-b/sost-miner
 deploy/v15-option-b/sost-signtx
+
+# GeaSpirit is a separate project. Nothing from it belongs in this repository —
+# not its code, not its data, not a vendored copy "for reference".
+archive/geaspirit-separation/
+**/geaspirit-platform/
+
+# Build trees. Compiler output, not source — and some of it exceeds GitHub's
+# 100 MB hard limit, which is how it announced itself.
+build-*/
+popc_registry.json
+artifacts/v15-final-validation/

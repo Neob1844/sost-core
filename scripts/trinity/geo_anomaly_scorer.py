@@ -49,7 +49,7 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple
 _FILTER_SCHEMA = "trinity-geo-candidate-filter/v0.1"
 _POOL_SCHEMA = "trinity-geo-candidate-pool/v0.1"
 _OUTPUT_SCHEMA = "trinity-geo-scorecard/v0.1"
-_TRACK = "geaspirit"
+_TRACK = "geo-discovery"
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
 
 

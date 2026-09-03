@@ -3,7 +3,7 @@
 
 Produces ``TRINITY_MATERIALS_SCORECARD_<campaign>.json`` and its Markdown
 sidecar. The scorecard is the input artefact of the Materials Track,
-mirroring the role of a GeaSpirit scorecard in the Earth Track.
+mirroring the role of a a separate project scorecard in the Earth Track.
 
 DRY-RUN / MOCK-FIRST INVARIANTS
 - No live import of ``materials-engine-private``. v0 uses pinned data.
@@ -197,7 +197,7 @@ def build_scorecard(
         "input_set_version": "novel_frontier_v0_pinned",
     }
 
-    # features_available mirrors the GeaSpirit honesty signal. v0 ships
+    # features_available mirrors the a separate project honesty signal. v0 ships
     # with zero "validated" features so the downstream dossier stays in
     # fallback mode, exactly like Kalgoorlie Phase 1.
     features_available = 0

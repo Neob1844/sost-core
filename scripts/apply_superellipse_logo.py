@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Give the SOST mark the same curved silhouette GeaSpirit uses.
+"""Give the SOST mark the same curved silhouette a separate project uses.
 
 The shape is a SUPERELLIPSE — a squircle — not a rounded rectangle, and the difference is
 visible side by side: a rounded rectangle has straight edges with an arc pasted into each
@@ -7,13 +7,13 @@ corner, and the join is where the eye catches it. A superellipse has continuous 
 the way round.
 
 It is baked into the PNG's alpha channel rather than applied with CSS border-radius, for the
-same reason it is on the GeaSpirit side: `border-radius: 20%` was on the logo inline in the
+same reason it is on the a separate project side: `border-radius: 20%` was on the logo inline in the
 markup, so the shape lived in whichever stylesheet happened to reach the element, differed
 between the site and the explorer, and disappeared entirely anywhere the image was used outside
 a browser — an OG card, a PDF, an exchange listing form. A shape that belongs to the mark
 belongs in the file.
 
-The mask is taken from the GeaSpirit logo itself rather than re-derived from an exponent, so the
+The mask is taken from the a separate project logo itself rather than re-derived from an exponent, so the
 two silhouettes are identical by construction and cannot drift apart later.
 """
 import os
@@ -23,7 +23,7 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WEB = os.path.join(ROOT, "website")
-REFERENCE = "/home/sost/SOST/geaspirit-platform/public/assets/img/geaspirit-logo.png"
+REFERENCE = "/home/sost/SOST/geo-discovery-platform/public/assets/img/geo-discovery-logo.png"
 
 # Every square asset that IS the SOST mark. og-sost-logo.png is a 1200x630 social banner, not
 # the mark, and convergencex-logo.png is a different brand — neither is touched.

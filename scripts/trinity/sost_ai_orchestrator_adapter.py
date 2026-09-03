@@ -104,7 +104,7 @@ def _try_import_real_council() -> Optional[Dict[str, Any]]:
 
 
 _DEFAULT_PRIORITY = {
-    "geaspirit": 30,
+    "geo-discovery": 30,
     "materials_engine": 30,
     "useful_compute": 20,
     "sost_ai": 20,
@@ -118,7 +118,7 @@ def _deterministic_heuristic_rank(
 
     Inputs are expected to look like::
 
-        {"vertical": "geaspirit", "objective": "...",
+        {"vertical": "geo-discovery", "objective": "...",
          "candidate_id": "...", "score": 87.0,
          "evidence_strength": 0.5, "novelty": 0.7}
 
@@ -129,7 +129,7 @@ def _deterministic_heuristic_rank(
     for opt in options:
         vertical = opt.get("vertical", "")
         score = float(opt.get("score", 0.0))
-        if vertical == "geaspirit":
+        if vertical == "geo-discovery":
             score_norm = score / 100.0
         else:
             score_norm = score

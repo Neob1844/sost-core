@@ -33,7 +33,7 @@ from typing import Any, Dict, List, Optional
 
 _SCHEMA = "trinity-geo-uc-plan/v0.1"
 _DOSSIER_SCHEMA = "trinity-geo-dossier/v0.1"
-_TRACK = "geaspirit"
+_TRACK = "geo-discovery"
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
 
 _FORBIDDEN_SUBSTRINGS = (

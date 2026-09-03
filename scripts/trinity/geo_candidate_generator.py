@@ -31,7 +31,7 @@ Output schema (``trinity-geo-candidate-pool/v0.1``)
     {
       "schema": "trinity-geo-candidate-pool/v0.1",
       "commodity": "copper_gold_critical_minerals",
-      "track": "geaspirit",
+      "track": "geo-discovery",
       "mode": "offline-belts",
       "generated_at_utc": "2026-05-10T00:00:00+00:00",
       "seed": "trinity-geo-v0.1",
@@ -73,7 +73,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 _SCHEMA = "trinity-geo-candidate-pool/v0.1"
-_TRACK = "geaspirit"
+_TRACK = "geo-discovery"
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
 
 

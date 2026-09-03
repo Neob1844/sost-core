@@ -8,7 +8,7 @@ only: ``ValidatorMember``, ``LocalKnowledgeMember``, ``MockAIMember``).
 Emits ``TRINITY_GEO_DOSSIER_<campaign>.json`` and a Markdown sidecar.
 
 Mirrors the Materials Track v0.2 dossier pattern but builds
-``Hypothesis(project="geaspirit", type="mineral_target")`` per AOI so
+``Hypothesis(project="sost", type="mineral_target")`` per AOI so
 the council's reasoning context is geological, not chemical.
 
 Honesty disclaimers (in the rendered Markdown):
@@ -52,7 +52,7 @@ from typing import Any, Dict, List, Optional
 
 _SCHEMA = "trinity-geo-dossier/v0.1"
 _SCORECARD_SCHEMA = "trinity-geo-scorecard/v0.1"
-_TRACK = "geaspirit"
+_TRACK = "geo-discovery"
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
 
 # Mock thresholds for the --allow-local-mock fallback.
@@ -138,7 +138,7 @@ def _build_aoi_hypothesis(
     aoi: Dict[str, Any],
     council_module: Dict[str, Any],
 ) -> Any:
-    """Build one ``Hypothesis(project='geaspirit', type='mineral_target')``
+    """Build one ``Hypothesis(project='sost', type='mineral_target')``
     from a geo scorecard entry. The hypothesis carries enough context
     for the council members to reason about prospectivity vs.
     speculation."""
@@ -188,10 +188,10 @@ def _build_aoi_hypothesis(
     )
 
     return Hyp(
-        project="geaspirit",
+        project="sost",
         type="mineral_target",
         title=f"{aoi_id}: {name}",
-        subject=f"geaspirit|{region}|{aoi_id}",
+        subject=f"geo-discovery|{region}|{aoi_id}",
         claim=claim,
         why_it_might_be_true=(
             f"Region {region!r} is on the v0.1 commodity-belt catalog "

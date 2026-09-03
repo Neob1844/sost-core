@@ -42,7 +42,7 @@ from typing import Any, Dict, List, Optional, Tuple
 _SCHEMA = "trinity-geo-campaign/v0.1"
 _DOSSIER_SCHEMA = "trinity-geo-dossier/v0.1"
 _PLAN_SCHEMA = "trinity-geo-uc-plan/v0.1"
-_TRACK = "geaspirit"
+_TRACK = "geo-discovery"
 _HOST_PREFIXES = ("/home/", "/opt/", "/Users/", "C:/", "C:\\")
 
 _BUCKET_IMMEDIATE = "immediate_local"
@@ -411,7 +411,7 @@ def build_campaign(
             f"plan {plan_path.name} schema must be {_PLAN_SCHEMA!r}"
         )
     if dossier.get("track") != _TRACK or plan.get("track") != _TRACK:
-        raise ValueError("dossier or plan declares a non-geaspirit track")
+        raise ValueError("dossier or plan declares a non-geo-discovery track")
 
     dossier_sha = hashlib.sha256(dossier_path.read_bytes()).hexdigest()
     plan_sha = hashlib.sha256(plan_path.read_bytes()).hexdigest()

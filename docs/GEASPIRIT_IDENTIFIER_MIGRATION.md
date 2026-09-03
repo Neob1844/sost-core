@@ -1,15 +1,15 @@
-# The `geaspirit` identifier — why renaming it is not cosmetic
+# The `geo-discovery` identifier — why renaming it is not cosmetic
 
 **Status: DEFERRED.** A rename was attempted on 2026-08-09 as part of the
-SOST/GeaSpirit separation and was reverted the same day. This records what went
+SOST/a separate project separation and was reverted the same day. This records what went
 wrong so nobody retries it as a find-and-replace.
 
 ## What was tried
 
-Rename the internal Trinity track identifier `geaspirit` to `geospatial` across
+Rename the internal Trinity track identifier `geo-discovery` to `geospatial` across
 `scripts/trinity/`, `tests/trinity/`, `config/trinity/` and `schemas/trinity/`
 — 64 occurrences in 22 files, plus renaming
-`config/trinity/objectives/geaspirit.json` to `geospatial.json`.
+`config/trinity/objectives/geo-discovery.json` to `geospatial.json`.
 
 It looked safe. The consensus audit had already established that none of this
 reaches `sost-node`, `sost-miner` or `sost-cli`: zero matches in the 57 C++
@@ -31,7 +31,7 @@ def hypothesis_hash(self) -> str:
     return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
 ```
 
-`project` is the track name. Changing `geaspirit` to `geospatial` changes the
+`project` is the track name. Changing `geo-discovery` to `geospatial` changes the
 hash of **every hypothesis ever recorded under that track**. Trinity pins this:
 `test_pipeline_byte_identical_across_runs` and
 `test_pipeline_seed_change_changes_bundle` both failed, because the bundles
@@ -46,7 +46,7 @@ hashes to tidy up a name is a bad trade.
 
 ```python
 PROJECTS: Tuple[str, ...] = (
-    "materials", "geaspirit", "sost", "useful_compute", "generic",
+    "materials", "geo-discovery", "sost", "useful_compute", "generic",
 )
 ```
 
@@ -75,19 +75,19 @@ Back to the 5 pre-existing failures (`test_task_builder_reader_metadata` ×2,
 
 **Not implemented. Proposal only.**
 
-Keep `geaspirit` as the frozen storage identifier and add `geospatial` as a
+Keep `geo-discovery` as the frozen storage identifier and add `geospatial` as a
 display alias. Historical hashes stay valid because the hashed value never
 changes.
 
-1. **Storage identifier stays `geaspirit`** — forever, for anything that has
+1. **Storage identifier stays `geo-discovery`** — forever, for anything that has
    been hashed, serialized or written to a bundle. Treat it as a legacy
    constant, like a database enum value that outlived its name.
 
 2. **Add an alias layer** in `hypothesis_schema.py`:
    ```python
-   PROJECTS = ("materials", "geaspirit", "sost", "useful_compute", "generic")
-   PROJECT_ALIASES = {"geospatial": "geaspirit"}   # accepted on input
-   PROJECT_DISPLAY = {"geaspirit": "Geospatial"}   # shown in output
+   PROJECTS = ("materials", "geo-discovery", "sost", "useful_compute", "generic")
+   PROJECT_ALIASES = {"geospatial": "geo-discovery"}   # accepted on input
+   PROJECT_DISPLAY = {"geo-discovery": "Geospatial"}   # shown in output
    ```
    Normalize on input, so both spellings are accepted; hash the canonical
    (legacy) value only.
@@ -105,7 +105,7 @@ changes.
 
 ## Scope note
 
-This is separate from — and not required by — the SOST/GeaSpirit separation.
+This is separate from — and not required by — the SOST/a separate project separation.
 Phases 1 and 2 removed every public reference in both directions without
 touching this identifier. It is internal naming in an off-chain research
 harness that no user sees. Deferring it costs nothing.

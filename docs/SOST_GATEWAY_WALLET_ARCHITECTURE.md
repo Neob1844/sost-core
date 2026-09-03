@@ -43,7 +43,7 @@ builder" (redeem-script + claim/refund/dispute spend paths) and expose the four 
 | Multisig P2SH (`sost3`, 2-of-3), PSBT offline signing | EXISTS | `website/sost-wallet.html`, `src/psbt.cpp`, `src/script.cpp` |
 | Script opcodes for HTLC: `OP_SHA256`, `OP_HASH160`, `OP_CHECKMULTISIG`, P2SH eval, CLTV via nSequence | EXISTS (consensus-valid) | `src/script.cpp`, `src/atomic_swap_btc.cpp` (BIP-199 redeem builder) |
 | Sign-message for HOLD | EXISTS but **DISABLED** | `website/sost-wallet.html:6425` (`GEA_SIGN_ENABLED=false`) |
-| Access API (HOLD/PAY backend, flags OFF) | DEPLOYED OFF | `apps/access-api` (GeaSpirit infra), console panel on VPS `/opt/ree-locator` |
+| Access API (HOLD/PAY backend, flags OFF) | DEPLOYED OFF | `apps/access-api` (a separate project infra), console panel on VPS `/opt/ree-locator` |
 | EVM Atomic Swap HTLC (ETH/BNB/USDT/USDC/PAXG/XAUT) | LIVE V14 | `contracts/atomic-swap/src/AtomicSwapHTLC.sol` |
 | **SOST-native swap leg (BTC-style HTLC signing)** | **STUB — gated to V15** | `src/atomic_swap_btc_signing.cpp` |
 | PoPC bond — native SOST, the only slashable collateral (`BOND_LOCK` UTXO, dynamic sizing 12–25%) | EXISTS (app-layer, non-consensus) | `src/popc.cpp` |
@@ -67,7 +67,7 @@ SOST_GATEWAY_ESCROW_ENABLED     = false
 SOST_GATEWAY_ATOMIC_SWAP_ENABLED= false
 ```
 
-Backend (GeaSpirit access-api, already present, OFF): `GEA_ACCESS_API_ENABLED`,
+Backend (a separate project access-api, already present, OFF): `GEA_ACCESS_API_ENABLED`,
 `GEA_HOLDING_UNLOCK_ENABLED`, `GEA_PAY_WITH_SOST_ENABLED`. Rollback = set any flag to `0`.
 
 ---
@@ -91,7 +91,7 @@ Tiers (example): 100 SOST → light downloads · 1 000 → advanced reports · 1
 ### 4.2 PAY — buy access with SOST (Engine 2, degenerate: plain send)
 
 Flow:
-1. GeaSpirit/API creates a **payment intent**: `merchant, concept, amount_sost, destination,
+1. a separate project/API creates a **payment intent**: `merchant, concept, amount_sost, destination,
    memo/reference, expires_at, required_confirmations`.
 2. Wallet renders a strong confirmation screen → builds, signs, broadcasts a normal tx.
 3. Wallet shows `txid` + an exportable **receipt JSON** (no secrets) + a "Verify payment status" button.
@@ -144,7 +144,7 @@ then in-wallet once V15 lands. PAXG/XAUT only after SafeERC20 + balance-delta + 
 
 The two payment routes the user sees:
 - **Has SOST →** PAY directly (fast, cheap, single-chain).
-- **No SOST, has ETH/BNB/PAXG →** SWAP into SOST, then PAY. (We never "pay GeaSpirit in ETH" at
+- **No SOST, has ETH/BNB/PAXG →** SWAP into SOST, then PAY. (We never "pay a separate project in ETH" at
   launch — splits accounting, weakens SOST utility, and report-unlock is off-chain anyway.)
 
 ---

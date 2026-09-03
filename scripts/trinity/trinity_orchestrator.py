@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Trinity Autonomous Orchestrator v0.1.
 
-Coordinates geaspirit, materials_engine and useful_compute under the
+Coordinates geo-discovery, materials_engine and useful_compute under the
 authority of the SOST AI council (with deterministic-heuristic
 fallback).
 
@@ -9,7 +9,7 @@ What it does in one run
 -----------------------
 1. Loads the four canonical objectives from
    ``config/trinity/objectives/*.json``.
-2. Invokes geaspirit + materials_engine pipelines in *dry-run* mode
+2. Invokes geo-discovery + materials_engine pipelines in *dry-run* mode
    to produce candidate dossiers.
 3. Builds a queue of candidate decisions (one option per accepted
    dossier candidate, capped by ``max_decisions_per_run``).
@@ -55,7 +55,7 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _SCRIPTS_DIR.parent.parent
 
 _REQUIRED_OBJECTIVES = (
-    "geaspirit", "materials_engine", "useful_compute", "sost_ai",
+    "geo-discovery", "materials_engine", "useful_compute", "sost_ai",
 )
 
 
@@ -159,7 +159,7 @@ def _geo_options_from_dossier(
         # the same 0..100 space the orchestrator threshold expects.
         confidence = float(entry.get("confidence", 0.0))
         out.append({
-            "vertical": "geaspirit",
+            "vertical": "geo-discovery",
             "objective": "discover-aoi",
             "candidate_id": entry.get("aoi_id", ""),
             "score": confidence * 100.0,
@@ -215,7 +215,7 @@ def _emit_uc_request_if_eligible(
     threshold = float(
         obj.get("thresholds", {}).get("min_score_for_uc_request", 0.0)
     )
-    if vertical == "geaspirit":
+    if vertical == "geo-discovery":
         score = float(option.get("score", 0.0))  # 0..100
     else:
         score = float(option.get("score", 0.0))  # 0..1
@@ -229,7 +229,7 @@ def _emit_uc_request_if_eligible(
         "score": score, "pinned_time": pinned_time,
     }).encode("utf-8")
     deadline = pinned_time  # v0.1: no future scheduling
-    if vertical == "geaspirit":
+    if vertical == "geo-discovery":
         difficulty = "medium"
         expected_schema = "geo-followup-result/v0"
     else:
@@ -319,19 +319,19 @@ def run_orchestrator(
     mat_result: Optional[Dict[str, Any]] = None
     try:
         geo_result = _build_geo_candidates(
-            geo_dir, count=count, seed=objectives["geaspirit"]["default_seed"],
+            geo_dir, count=count, seed=objectives["geo-discovery"]["default_seed"],
             pinned_time=pinned_time,
         )
     except Exception as exc:
         errors.append({
-            "vertical": "geaspirit",
+            "vertical": "geo-discovery",
             "kind": "compute_failed",
             "detail": f"{type(exc).__name__}: {exc}",
             "trace": traceback.format_exc(limit=4),
         })
         error_mem_mod.record_lesson(
             ledger_path=error_mem_path,
-            vertical="geaspirit",
+            vertical="geo-discovery",
             task_inputs={"action": "geo_pipeline", "count": count},
             cause="compute_failed",
             detail=f"{type(exc).__name__}: {exc}",
@@ -365,7 +365,7 @@ def run_orchestrator(
         options.extend(_geo_options_from_dossier(
             Path(geo_result["paths"]["dossier_json"]),
             max_options=int(
-                objectives["geaspirit"]["thresholds"]
+                objectives["geo-discovery"]["thresholds"]
                 ["max_uc_requests_per_run"]
             ),
         ))
@@ -580,7 +580,7 @@ def _render_summary_md(
         "",
         "## Verticals",
         "",
-        f"- geaspirit pipeline ran: {geo_result is not None}",
+        f"- geo-discovery pipeline ran: {geo_result is not None}",
         f"- materials_engine pipeline ran: {mat_result is not None}",
         "",
     ]

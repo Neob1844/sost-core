@@ -125,7 +125,7 @@ class TestSessions(unittest.TestCase):
         self.assertGreater(store.validate(token)["expires"], old)
 
     def test_has_access_denies_when_no_products_are_entitled(self):
-        # This used to assert that an admin token granted access to geaspirit and
+        # This used to assert that an admin token granted access to separate-project and
         # materials_engine. Those are unrelated products that never asked this gateway for
         # anything, so their entitlements were removed and no role now carries a product.
         #

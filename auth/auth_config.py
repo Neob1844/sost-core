@@ -56,9 +56,9 @@ SCRYPT_DKLEN = 32
 
 # Roles
 ROLES = {
-    # GeaSpirit and materials_engine were listed here when the three were planned as one
+    # separate products were listed here when the three were planned as one
     # ecosystem. They are unrelated products and neither asks this gateway for anything —
-    # GeaSpirit authenticates entirely on its own. The entitlements were dead entries.
+    # a separate project authenticates entirely on its own. The entitlements were dead entries.
     "public":      {"level": 0,  "products": []},
     "user_tier_1": {"level": 1,  "products": []},
     "user_tier_2": {"level": 2,  "products": []},

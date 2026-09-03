@@ -40,14 +40,14 @@ _DIFFICULTY_TO_SECONDS = {
 
 _SOURCE_TO_TASK_TYPE = {
     "materials_engine":                "structure_relaxation",
-    "geaspirit":                       "scoring",
+    "geo-discovery":                       "scoring",
     "trinity_orchestrator":            "other",
     "trinity_scientific_prompt_intake": "scientific_intake",
 }
 
 _SOURCE_TO_VALIDATION = {
     "materials_engine":                "redundant_replay",
-    "geaspirit":                       "cross_worker_consensus",
+    "geo-discovery":                       "cross_worker_consensus",
     "trinity_orchestrator":            "deterministic_hash_check",
     "trinity_scientific_prompt_intake": "deterministic_hash_check",
 }

@@ -36,7 +36,7 @@ Reasons:
 The four canonical objectives are already wired in
 `config/trinity/objectives/`:
 
-- `geaspirit.json` — autonomous AOI proposals with hard disclaimers
+- `geo-discovery.json` — autonomous AOI proposals with hard disclaimers
 - `materials_engine.json` — autonomous material candidate proposals
 - `useful_compute.json` — manifest validation, never on-chain payouts
 - `sost_ai.json` — central planner using free-tier AI council as critic
@@ -60,7 +60,7 @@ currently active. Token costs are estimates assuming Sonnet 4.6.
 | R5 | slip-0044-pr-watch | 1×/day 12:00 | `gh api /repos/satoshilabs/slips/pulls/2004`; alert on mergeable change or new review | Bash (gh) | ~1k |
 | R6 | trinity-orchestrator-dry-run | 1×/day 04:00 | Execute `trinity_orchestrator.py --dry-run --max-decisions 10`; summarise emerging decisions | Bash | ~5k |
 | R7 | useful-compute-queue-stats | every 6h | Read pending rewards json; summarise queue + manual_review | Read | ~1.5k |
-| R8 | geaspirit-dossier-summary | 1×/day 06:00 | Recent dossier outputs; AOIs candidates with score >80 | Read, Glob | ~2k |
+| R8 | geo-discovery-dossier-summary | 1×/day 06:00 | Recent dossier outputs; AOIs candidates with score >80 | Read, Glob | ~2k |
 | R9 | explorer-health-check | every 4h | curl explorer page + verify chain status responsive | WebFetch | ~1k |
 | R10 | whitepaper-pdf-integrity | 1×/week Mon 08:00 | `curl -I` whitepaper.pdf, verify Content-Length | Bash | ~0.5k |
 | R11 | multi-ai-test-regression | 1×/day 02:00 | `cd materials-engine-private && pytest tests/test_multi_ai_*.py -q`; alert on fail | Bash | ~4k |
