@@ -13,7 +13,7 @@
  * Usage: await SOSTCrypto.ready(); then call functions.
  */
 
-// Loaded via <script src="libsodium-wrappers.min.js"> before this file.
+// Loaded via <script src="libsodium-wrappers.min.js?v=v392"> before this file.
 // sodium global becomes available after sodium.ready resolves.
 
 const SOSTCrypto = (function () {
@@ -27,7 +27,7 @@ const SOSTCrypto = (function () {
   async function ready() {
     if (_ready) return;
     if (typeof sodium === 'undefined') {
-      throw new Error('libsodium-wrappers not loaded. Add <script src="...libsodium-wrappers.min.js"> before browser-crypto.js');
+      throw new Error('libsodium-wrappers not loaded. Add <script src="...libsodium-wrappers.min.js?v=v392"> before browser-crypto.js');
     }
     await sodium.ready;
     _sodium = sodium;

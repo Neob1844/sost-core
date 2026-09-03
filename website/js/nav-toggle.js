@@ -127,7 +127,7 @@
       "  flex: 0 0 auto !important;",
       "  margin-left: auto !important;",
       "}",
-      /* SOST PROTOCOL nav text identical on every page (some pages used a
+      /* SOST nav text identical on every page (some pages used a
       "   smaller 18px override — force the standard size everywhere). */
       "nav .nav-logo { font-size: 26px !important; letter-spacing: 3px !important; gap: 14px !important; }",
       /* The ONLY pulsing logo on the whole site: the SOST mark — min->max glow. */
@@ -235,7 +235,7 @@
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
-      <a href="sost-protocol-spec.html">SOST Spec</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
       <a href="sost-whitepaper.html">Whitepaper</a>
       <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
       <a href="sost-network-status.html">Network</a>
@@ -248,13 +248,13 @@
       <a href="sost-foundation-balances.html">Governance Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
       <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
-      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Swap</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
       <!-- DEX link replaced by rainbow button next to logo -->
       <a href="sost-gold-dex.html">DEX Spec</a>
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
       <a href="beacon.html" style="color:#22d3ee">Beacon</a>
-      <a href="sost-registry.html" style="color:#d946ef">SOST Registry</a>
+      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
       <a href="casert-spec.html">cASERT</a>
       <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
       <a href="sost-help.html">Help</a>
