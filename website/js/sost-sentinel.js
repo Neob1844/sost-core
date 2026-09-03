@@ -35,7 +35,7 @@ const SOSTSentinel = (function () {
     /whatsapp\.com\/|wa\.me\//i,
     // ---- OTC / P2P board scam patterns ---------------------------
     // Anyone claiming to be an "official" buyer/seller/escrow is a scam.
-    // SOST Protocol does NOT intermediate, escrow, guarantee, or vouch
+    // SOST does NOT intermediate, escrow, guarantee, or vouch
     // for any OTC/P2P trade. These patterns are blocking; well-behaved
     // OTC posts use neutral wording ("WTB X SOST at Y", "WTS X SOST").
     /guaranteed\s*(buyer|seller|trade|deal|escrow|liquidity)/i,
@@ -186,7 +186,7 @@ const SOSTSentinel = (function () {
     if (/mine|miner|mining|sync|node|hash|block|peer|seed|wallet|bootstrap/i.test(lower)) return 'miners';
 
     // OTC / P2P board — peer-to-peer offers between users. Strictly
-    // community discussion: SOST Protocol does not intermediate.
+    // community discussion: SOST does not intermediate.
     // Match conservative OTC vocabulary; "trade"/"offer"/"deal" by
     // themselves can also belong to DEX context, so we require an
     // additional OTC-flavoured token to redirect here.

@@ -235,7 +235,7 @@
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
-      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-protocol-spec.html">SOST Spec</a>
       <a href="sost-whitepaper.html">Whitepaper</a>
       <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
       <a href="sost-network-status.html">Network</a>
@@ -248,13 +248,13 @@
       <a href="sost-foundation-balances.html">Governance Balances</a>
       <a href="sost-popc-contracts.html">PoPC Contracts</a>
       <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
-      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Swap</a>
       <!-- DEX link replaced by rainbow button next to logo -->
       <a href="sost-gold-dex.html">DEX Spec</a>
       <a href="sost-security.html">Security</a>
       <a href="sost-faq.html">FAQ</a>
       <a href="beacon.html" style="color:#22d3ee">Beacon</a>
-      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
+      <a href="sost-registry.html" style="color:#d946ef">SOST Registry</a>
       <a href="casert-spec.html">cASERT</a>
       <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
       <a href="sost-help.html">Help</a>
@@ -425,7 +425,7 @@
       +'<div class="sv-cards">'
       +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-intro.mp4\',\'SOST in 2 Minutes &middot; V15\')">'
       +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
-      +'<span class="sv-card-h">SOST in 2 Minutes</span><span class="sv-card-s">The protocol &middot; V15</span></button>'
+      +'<span class="sv-card-h">SOST in 2 Minutes</span><span class="sv-card-s">SOST &middot; V15</span></button>'
       +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-mechanisms.mp4\',\'SOST Mechanisms &middot; Atomic Swap &amp; DTD\')">'
       +'<span class="sv-thumb" style="background-image:url(\'sost-mechanisms-poster.jpg\')"><span class="sv-play">&#9654;</span></span>'
       +'<span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap &amp; DTD &middot; how the two core mechanisms work</span></button>'
