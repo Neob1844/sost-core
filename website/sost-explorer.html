@@ -5245,7 +5245,7 @@ async function loadBlocks(){
       var minerAddr=b.miner_address||'';
       var minerShort=minerAddr?'<span class="td-link" onclick="showAddress(\''+minerAddr+'\')" style="color:var(--orange);font-size:10px" title="'+minerAddr+'">'+minerAddr.substr(0,10)+'\u2026'+minerAddr.substr(-4)+'</span>':'';
       tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+blockProfileLabel+'</td><td>'+minerShort+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td><td>'+lottCell+'</td>';
-      tb.appendChild(tr);}
+      tb.appendChild(tr); try{if(window.sjpMaybeRow)window.sjpMaybeRow(tb,b);}catch(_e){}}
     document.getElementById('btnN').style.display=e>0?'':'none';document.getElementById('btnP').style.display=off>0?'':'none';document.getElementById('btnFirst').style.display=off>0?'':'none';document.getElementById('btnLast').style.display=e>0?'':'none';
   }catch(e){tb.innerHTML='<tr><td colspan="9" class="td-err">'+e.message+'</td></tr>';}
 }
@@ -8358,7 +8358,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     ov.onclick=function(e){ if(e.target===ov) close(); };
     document.addEventListener('keydown',function esch(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',esch);} });
   }
-  function celebrate(data){ if(!data)return; s(LS_LAST,String(data.block)); s(LS_DATA,JSON.stringify(data)); document.getElementById('sjp-replay').classList.add('on'); reveal(data,false); }
+  function celebrate(data){ if(!data)return; try{if(window.SJP&&SJP.recordJackpot)SJP.recordJackpot(data);}catch(_e){} s(LS_LAST,String(data.block)); s(LS_DATA,JSON.stringify(data)); document.getElementById('sjp-replay').classList.add('on'); reveal(data,false); }
   var FIXTURE={winner:'sost1demo0000000000000000000000000000demo', amount:100, block:JP_FIRST, txid:'demo', isHistorical:true};
   function replay(){ var d=g(LS_DATA,null); if(d){ try{ reveal(JSON.parse(d),false); return; }catch(e){} } reveal(FIXTURE,true); }
   // ---- canonical live detection: jackpot tx = txids[1] with tx_type==0x02 at a jackpot height ----
@@ -8488,6 +8488,47 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
 })();
 </script>
 <!-- /SOST-JACKPOT-DASHBOARD -->
+
+<!-- SOST-JACKPOT-LATESTBLOCKS-ROW (self-contained) -->
+<style id="sjp-row-style">
+tr.sjp-blkrow td{background:linear-gradient(90deg,rgba(245,209,102,.10),rgba(57,255,20,.08),rgba(0,0,0,.2));
+  border-top:1px solid #ffd166;border-bottom:1px solid #39ff14;color:#ffe9b0;font:700 12px/1.5 ui-monospace,Menlo,monospace;
+  letter-spacing:.3px;padding:9px 12px !important;box-shadow:inset 0 0 18px rgba(245,209,102,.15);animation:sjpRowPulse 2.2s ease-in-out infinite}
+@keyframes sjpRowPulse{0%,100%{box-shadow:inset 0 0 12px rgba(245,209,102,.12)}50%{box-shadow:inset 0 0 26px rgba(57,255,20,.28)}}
+@media (prefers-reduced-motion:reduce){tr.sjp-blkrow td{animation:none}}
+tr.sjp-blkrow .sjp-w{color:#39ff14;cursor:pointer;text-decoration:none}
+tr.sjp-blkrow .sjp-w:hover{text-decoration:underline}
+tr.sjp-blkrow .sjp-v{color:#0a0a0c;background:#39ff14;font:800 9px/1 ui-monospace;letter-spacing:1px;padding:3px 7px;border-radius:5px}
+@media(max-width:560px){tr.sjp-blkrow td{font-size:11px}}
+</style>
+<script id="sjp-row-script">
+(function(){
+  "use strict";
+  window.SJP=window.SJP||{}; if(!window.SJP.jackpots) window.SJP.jackpots={};
+  function isOpp(h){ return (typeof window.jpIsOpportunity==='function')?window.jpIsOpportunity(h):(h>=25290&&((h-25290)%288)===0); }
+  function esc(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);}); }
+  function fc(n){ return (typeof window.fComma==='function')?window.fComma(n):n; }
+  // Append the special HISTORICAL DTD JACKPOT row immediately below the block's normal row.
+  // ONLY for a confirmed canonical jackpot (in SJP.jackpots, populated by canonical detection).
+  // Never fires on lottery_payout / normal DTD.
+  window.sjpMaybeRow=function(tb,b){
+    if(!b||!isOpp(b.height)) return;
+    var jp=window.SJP.jackpots[b.height]; if(!jp) return;
+    var amt=(typeof jp.amount==='number')?jp.amount:parseFloat(jp.amount||0);
+    var win=esc(jp.winner||''); var wshort=win.length>16?win.substr(0,10)+'…'+win.substr(-4):win;
+    var tr=document.createElement('tr'); tr.className='sjp-blkrow';
+    var winHtml=(win&&typeof window.showAddress==='function')?'<span class="sjp-w" onclick="showAddress(\''+win+'\')" title="'+win+'">'+wshort+'</span>':wshort;
+    var txHtml=jp.txid?' · <span class="sjp-w" onclick="(window.showTxDetail&&showTxDetail(\''+esc(jp.txid)+'\'))">view tx</span>':'';
+    tr.innerHTML='<td colspan="9">&#127974; <b>HISTORICAL DTD JACKPOT</b> &middot; #'+fc(b.height)+' &middot; WINNER: '+winHtml+' &middot; <b style="color:#ffd166">+'+esc(amt)+' SOST</b>'+txHtml+' &middot; <span class="sjp-v">VERIFIED ON-CHAIN</span></td>';
+    tb.appendChild(tr);
+  };
+  // record a confirmed jackpot into the shared cache (single source of truth)
+  window.SJP.recordJackpot=function(d){ if(d&&d.block!=null){ window.SJP.jackpots[d.block]={winner:d.winner,amount:d.amount,txid:d.txid}; } };
+  // DEMO/fixture: inject a sample jackpot at the first height and reload the block table (isolated; never real data)
+  window.SJP.demoRow=function(){ window.SJP.jackpots[25290]={winner:'sost1demo0000000000000000000000000000demo',amount:100,txid:'demo'}; if(typeof window.loadBlocks==='function') window.loadBlocks(); };
+})();
+</script>
+<!-- /SOST-JACKPOT-LATESTBLOCKS-ROW -->
 
 </body>
 </html>
