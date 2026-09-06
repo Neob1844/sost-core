@@ -8507,7 +8507,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var reserve=state.reserve||'—', elig=state.eligible!=null?state.eligible:'—', paid=state.paid||0;
     var active=tip>=25000, prePayout=tip<JP_FIRST;
     var status=!active?'PLANNED':(prePayout?'ACTIVE · WAITING FOR #'+fc(JP_FIRST):'ACTIVE');
-    var winner=state.winner||'NOT YET DETERMINED';
+    var winner=state.jpWinner||state.winner||'NOT YET DETERMINED';
     d.innerHTML='<div class="sjpd-box"><div class="sjpd-hd"><h3>&#127974; HISTORICAL DTD JACKPOT</h3>'+
       '<button class="sjpd-x" id="sjpd-x">Close</button></div>'+
       '<div class="sjpd-grid">'+
@@ -8516,13 +8516,14 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         '<div class="sjpd-c"><div class="sjpd-l">BLOCKS REMAINING</div><div class="sjpd-v">'+fc(rem)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">ESTIMATED TIME</div><div class="sjpd-v">~'+eta(rem)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">RECENTLY ACTIVE (288)</div><div class="sjpd-v g">'+esc(elig)+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">JACKPOT ELIGIBLE (20k)</div><div class="sjpd-v c">'+(state.jpEligible!=null?esc(state.jpEligible):'\u2014')+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div></div>'+
       '</div>'+
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+esc(status)+'</div>'+
         '<div class="sjpd-l" style="margin-top:8px">WINNER</div><div class="sjpd-v" style="font-size:13px">'+esc(winner)+'</div></div>'+
       '<div class="sjpd-sec">HISTORICAL JACKPOT ELIGIBILITY</div>'+
       '<div class="sjpd-note">The Historical Jackpot reuses the DTD winner but with a <b>wider recency window: 20,000 blocks</b> (vs 5,000 for the normal draw), plus the same gates (recent-winner cooldown, anti-dominance, SbPoW). '+
-        'Recently active producers (last 288 blocks): <b>'+esc(elig)+'</b>. The exact per-address 20,000-window eligible set is not exposed by the current node RPC — see the DTD panel for the live producer/eligibility table: '+
+        'Recently active producers (last 288 blocks): <b>'+esc(elig)+'</b>. '+(state.jpEligible!=null?('The exact eligible producer <b>count</b> for the last jackpot (#'+fc(state.jpHeight||JP_FIRST)+', 20,000-window, canonical via getlotteryaudit): <b>'+esc(state.jpEligible)+'</b>. '):('The exact 20,000-window count becomes available from getlotteryaudit once the first jackpot block (#'+fc(JP_FIRST)+') is mined. '))+'For the full per-address list, see the DTD panel: '+
         '<a class="sjpd-link" id="sjpd-dtd">DTD lottery detail &rarr;</a></div>'+
       '<div class="sjpd-sec">HISTORICAL JACKPOT HISTORY</div>'+
       '<div class="sjpd-note" id="sjpd-hist">'+(paid>0?'':'No historical jackpots paid yet.')+'</div>'+
@@ -8544,7 +8545,21 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       window.rpc('getblockcount',[]).then(function(h){ state.tip=parseInt(h,10)||0;
         return window.rpc('geteligibleminers',[]); }).then(function(g){
           if(g&&g.active_288!=null) state.eligible=g.active_288;
+          // canonical jackpot eligible_count + winner from getlotteryaudit at the last
+          // jackpot height (compute_lottery_eligibility_set applies the 20,000 window).
+          var lastJp = state.tip>=JP_FIRST ? (JP_FIRST + Math.floor((state.tip-JP_FIRST)/CAD)*CAD) : 0;
+          state.paid = state.tip>=JP_FIRST ? (Math.floor((state.tip-JP_FIRST)/CAD)+1) : 0;
           render(state);
+          if(lastJp && lastJp<=state.tip){
+            window.rpc('getlotteryaudit',[String(lastJp)]).then(function(a){
+              if(a){
+                if(a.eligible_count!=null) state.jpEligible=a.eligible_count;
+                if(a.winner_address){ state.jpWinner=a.winner_address; state.jpHeight=lastJp;
+                  try{ if(window.SJP&&SJP.jackpots){ var e=SJP.jackpots[lastJp]||{}; e.winner=a.winner_address; e.eligible=a.eligible_count; SJP.jackpots[lastJp]=e; } }catch(_e){} }
+              }
+              render(state);
+            }).catch(function(){ render(state); });
+          }
         }).catch(function(){});
     }
   }
