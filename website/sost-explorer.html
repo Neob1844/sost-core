@@ -8361,7 +8361,33 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
   function celebrate(data){ if(!data)return; try{if(window.SJP&&SJP.recordJackpot)SJP.recordJackpot(data);}catch(_e){} s(LS_LAST,String(data.block)); s(LS_DATA,JSON.stringify(data)); document.getElementById('sjp-replay').classList.add('on'); reveal(data,false); }
   var FIXTURE={winner:'sost1demo0000000000000000000000000000demo', amount:100, block:JP_FIRST, txid:'demo', isHistorical:true};
   function replay(){ var d=g(LS_DATA,null); if(d){ try{ reveal(JSON.parse(d),false); return; }catch(e){} } reveal(FIXTURE,true); }
-  // ---- canonical live detection: jackpot tx = txids[1] with tx_type==0x02 at a jackpot height ----
+  // ---- canonical raw-tx parser (matches src/transaction.cpp byte layout) ----
+  // tx: version u32le | tx_type u8 | vin(compact) | inputs[133B each:
+  //     32 prev_txid +4 prev_index +64 sig +33 pubkey] | vout(compact) |
+  //     outputs[ amount i64le | type u8 | pubkey_hash 20B | payload_len u16le | payload ]
+  // address = "sost1" + lowercase hex(pubkey_hash) (src/address.cpp).
+  function sjpBytes(h){ h=(h||'').replace(/^0x/,''); if(!h||h.length%2) return null;
+    var a=new Uint8Array(h.length/2); for(var i=0;i<a.length;i++){ var b=parseInt(h.substr(i*2,2),16); if(isNaN(b)) return null; a[i]=b; } return a; }
+  function sjpCompact(a,o){ if(o>=a.length) return null; var f=a[o++];
+    if(f<0xfd) return [f,o];
+    if(f===0xfd){ if(o+2>a.length) return null; return [a[o]|(a[o+1]<<8), o+2]; }
+    if(f===0xfe){ if(o+4>a.length) return null; return [(a[o]+a[o+1]*256+a[o+2]*65536+a[o+3]*16777216), o+4]; }
+    if(o+8>a.length) return null; return [(a[o]+a[o+1]*256+a[o+2]*65536+a[o+3]*16777216), o+8]; }
+  function sjpI64LE(a,o){ var lo=a[o]+a[o+1]*256+a[o+2]*65536+a[o+3]*16777216;
+    var hi=a[o+4]+a[o+5]*256+a[o+6]*65536+a[o+7]*16777216; return lo + hi*4294967296; }
+  // Parse a confirmed jackpot tx hex -> {tx_type,out_type,amount(SOST),amount_sat,winner} or null.
+  window.sjpParseJackpotTx=function(hex){
+    var a=sjpBytes(hex); if(!a||a.length<6) return null;
+    var o=4; var txType=a[o++];                         // skip version, read tx_type
+    var r=sjpCompact(a,o); if(!r) return null; var nin=r[0]; o=r[1];
+    o += nin*133; if(o>a.length) return null;           // each input is fixed 133 bytes
+    r=sjpCompact(a,o); if(!r) return null; var nout=r[0]; o=r[1];
+    if(nout<1 || o+31>a.length) return null;            // need output[0]: 8+1+20+2
+    var amount=sjpI64LE(a,o); o+=8; var outType=a[o++];
+    var pkh=''; for(var i=0;i<20;i++){ pkh += ('0'+a[o+i].toString(16)).slice(-2); }
+    return { tx_type:txType, out_type:outType, amount_sat:amount, amount:amount/1e8, winner:'sost1'+pkh };
+  };
+  // ---- canonical live detection: jackpot tx = txids[1], TX_TYPE_JACKPOT(0x02), output[0] OUT_TRANSFER(0x00) ----
   function detect(height){
     if(!isOpp(height)) return Promise.resolve(null);
     if(typeof window.rpc!=='function') return Promise.resolve(null);
@@ -8372,12 +8398,20 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         var jid=tx[1];
         return window.rpc('getrawtransaction',[jid,true]).then(function(t){
           if(!t) return null;
-          var isJack=(t.tx_type===2||t.tx_type==='0x02'||t.type===2);   // TX_TYPE_JACKPOT=0x02
+          // Confirmed getrawtransaction returns {hex}. Parse the raw tx canonically.
+          var hex=t.hex||t.raw||null;
+          var pj=hex?window.sjpParseJackpotTx(hex):null;
+          if(pj){
+            if(pj.tx_type!==2 || pj.out_type!==0) return null;        // NEVER fire on non-jackpot / lottery
+            return {winner:pj.winner, amount:pj.amount, block:height, txid:jid, isHistorical:true};
+          }
+          // Fallback: a future node RPC may decode fields server-side.
+          var isJack=(t.tx_type===2||t.tx_type==='0x02'||t.type===2);
           var outs=t.outputs||t.vout||[];
-          if(!isJack||!outs.length) return null;                        // NEVER fire on non-jackpot tx / lottery_payout
+          if(!isJack||!outs.length) return null;
           var o0=outs[0];
-          var amt=(o0.amount!=null)?o0.amount:(o0.value!=null?o0.value:0);
-          var win=o0.address||o0.sost_address||o0.pubkey_hash||b.lottery_winner_address||'';
+          var amt=(o0.amount!=null)?o0.amount:(o0.value!=null?parseFloat(o0.value):0);
+          var win=o0.address||o0.sost_address||(o0.pubkey_hash?('sost1'+o0.pubkey_hash):'');
           return {winner:win, amount:amt, block:height, txid:jid, isHistorical:true};
         }).catch(function(){return null;});
       });
