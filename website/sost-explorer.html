@@ -450,6 +450,36 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </nav>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
+<!-- SOST-4-OVOID-ACCESS (top accesses: ConvergenceX · DTD · Atomic Swap DEX · News) -->
+<style id="sjp-ov4-style">
+#ov4{max-width:1400px;margin:14px auto 2px;padding:0 24px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap}
+.ov4{--sc:1;--acc:#22d3ee;position:relative;width:168px;height:100px;flex:0 0 auto;border-radius:50%;
+  text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:radial-gradient(120% 120% at 50% 22%,rgba(255,255,255,.05),rgba(0,0,0,.86) 62%,#000 100%);
+  border:1.6px solid var(--acc);box-shadow:0 0 0 1px rgba(0,0,0,.6) inset,0 0 18px -2px var(--acc),0 6px 20px rgba(0,0,0,.5);
+  transition:transform .18s ease,box-shadow .18s ease;overflow:hidden}
+.ov4::before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(60% 40% at 50% 0%,var(--acc),transparent 70%);opacity:.16;pointer-events:none}
+.ov4:hover{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(0,0,0,.6) inset,0 0 26px 0 var(--acc),0 10px 26px rgba(0,0,0,.6)}
+.ov4:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.ov4 .ic{font-size:calc(27px*var(--sc));line-height:1;filter:drop-shadow(0 0 7px var(--acc));font-variant-emoji:emoji}
+.ov4 .lb{font-family:'Space Grotesk',system-ui,sans-serif;font-weight:800;letter-spacing:.4px;
+  font-size:calc(14px*var(--sc));line-height:1.05;color:#f2f6f8;text-shadow:0 0 8px rgba(0,0,0,.9);white-space:nowrap}
+.ov4 .sub{font-size:calc(8.4px*var(--sc));letter-spacing:1.3px;text-transform:uppercase;color:var(--acc);opacity:.92;white-space:nowrap;font-weight:700}
+@media(max-width:720px){#ov4{gap:12px}.ov4{width:44%;max-width:190px;height:92px}}
+@media(max-width:420px){.ov4{width:47%}}
+</style>
+<div id="ov4" role="navigation" aria-label="SOST top accesses">
+  <a class="ov4" style="--acc:#22d3ee;--sc:1.25" href="casert-spec.html" title="ConvergenceX — memory-hard PoW">
+    <span class="ic">&#9883;</span><span class="lb">ConvergenceX</span><span class="sub">Proof-of-Work</span></a>
+  <a class="ov4" style="--acc:#f5b301;--sc:1.20" href="#" onclick="try{(window.SJP&&SJP.openDash)?SJP.openDash():toggleDashPanel('dtd');}catch(e){toggleDashPanel('dtd');}return false;" title="DTD — Token Distribution &amp; Historical Jackpot">
+    <span class="ic">&#127919;</span><span class="lb">DTD</span><span class="sub">Token Distribution</span></a>
+  <a class="ov4" style="--acc:#a855f7;--sc:1.18" href="sost-dex.html" title="Atomic Swap DEX — trustless cross-chain swaps">
+    <span class="ic">&#128257;</span><span class="lb">Atomic Swap</span><span class="sub">DEX</span></a>
+  <a class="ov4" style="--acc:#fb010d;--sc:1.22" href="index.html#news" title="SOST News &amp; Announcements">
+    <span class="ic">&#128240;</span><span class="lb">News</span><span class="sub">Updates</span></a>
+</div>
+<!-- /SOST-4-OVOID-ACCESS -->
+
 
 
 <div class="offline" id="offBanner">▲ node offline — rpc unreachable</div>
