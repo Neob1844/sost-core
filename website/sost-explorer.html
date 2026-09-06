@@ -639,7 +639,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')" title="Gold Vault reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the Historical DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--gold)">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub" id="dGoldBalSub">25%/block · ends at V15 (#25,000)</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')" title="PoPC Pool reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the Historical DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--cyan)">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub" id="dPopcBalSub">25%/block · ends at V15 (#25,000)</div></div>
-  <div class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="V15 Historical DTD Jackpot (activates block 25,000; first payout #25,290). The existing Gold-Vault + PoPC reserve is progressively returned to active miners — a supply-neutral treasury spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence every 96 DTD draws (~288 blk). Reuses the DTD winner + identical eligibility. Before block 25,290 pending/last-winner/total are provably 0/none." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> HIST. DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--text3)">PLANNED · first #25,290 · base 100 / cap 500</div></div>
+  <div class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="(window.SJP&&SJP.openDash)?SJP.openDash():toggleDashPanel('dtd')" title="V15 Historical DTD Jackpot (activates block 25,000; first payout #25,290). The existing Gold-Vault + PoPC reserve is progressively returned to active miners — a supply-neutral treasury spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence every 96 DTD draws (~288 blk). Reuses the DTD winner + identical eligibility. Before block 25,290 pending/last-winner/total are provably 0/none." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> HIST. DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--text3)">PLANNED · first #25,290 · base 100 / cap 500</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Before V15: 50% of subsidy × triggered blocks (bootstrap 2-of-3 in [7100,12100), then permanent 1-of-3 from #12100). From V15 (block 25,000): DTD receives 50% of EVERY block (the Gold-Vault + PoPC shares are redirected here) — 50% miner / 50% DTD. Click for the full DTD panel detail."><div class="dash-label" style="color:#ff00ff">⚡ DTD LOTTERY DISTRIBUTED BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts · 50% of every block from V15</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label" style="color:var(--purple)">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label" style="color:var(--orange)">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s</div></div>
@@ -8404,6 +8404,90 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
 })();
 </script>
 <!-- /SOST-JACKPOT-MOMENT -->
+
+<!-- SOST-JACKPOT-DASHBOARD (self-contained; extends the jackpot module) -->
+<style id="sjp-dash-style">
+#sjp-dash{position:fixed;inset:0;z-index:99998;display:none;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto;
+  background:radial-gradient(120% 120% at 50% 0%,rgba(10,14,10,.82),rgba(0,0,0,.92))}
+#sjp-dash.show{display:flex}
+.sjpd-box{max-width:720px;width:100%;border-radius:16px;padding:20px 22px;background:linear-gradient(160deg,#0c1510,#0a0a0c 70%,#120e05);
+  border:1px solid #2b7a3d;box-shadow:0 0 50px rgba(57,255,20,.18)}
+.sjpd-hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.sjpd-hd h3{margin:0;font:900 18px/1 'Space Grotesk',sans-serif;background:linear-gradient(90deg,#ffd166,#39ff14);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sjpd-x{margin-left:auto;background:#1b2530;border:1px solid #2a3340;color:#cdd6e0;border-radius:8px;padding:6px 12px;cursor:pointer;font:600 12px ui-monospace}
+.sjpd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.sjpd-c{background:rgba(0,0,0,.35);border:1px solid #1d2731;border-radius:10px;padding:10px 12px}
+.sjpd-l{font:700 9px/1 ui-monospace;letter-spacing:1.3px;color:#8a97a3;margin-bottom:5px}
+.sjpd-v{font:800 16px/1.1 ui-monospace;color:#ffd166}
+.sjpd-v.g{color:#39ff14}.sjpd-v.c{color:#22d3ee}
+.sjpd-sec{font:800 10px/1 ui-monospace;letter-spacing:1.5px;color:#39ff14;margin:14px 0 8px;border-top:1px solid #1d2731;padding-top:10px}
+.sjpd-note{font:600 11px/1.5 ui-monospace;color:#9aa6b2}
+.sjpd-note b{color:#ffd166}
+.sjpd-link{color:#22d3ee;cursor:pointer;text-decoration:none;font:600 12px ui-monospace}
+@media(max-width:560px){.sjpd-grid{grid-template-columns:1fr 1fr}.sjpd-box{padding:16px}}
+</style>
+<div id="sjp-dash" role="dialog" aria-modal="true" aria-label="Historical DTD Jackpot dashboard"></div>
+<script id="sjp-dash-script">
+(function(){
+  "use strict";
+  var JP_FIRST=25290, CAD=288, BLK_MIN=10;
+  function isOpp(h){ return (typeof window.jpIsOpportunity==='function')?window.jpIsOpportunity(h):(h>=JP_FIRST&&((h-JP_FIRST)%CAD)===0); }
+  function nextH(h){ return (typeof window.jpNextHeight==='function')?window.jpNextHeight(h):(h<JP_FIRST?JP_FIRST:JP_FIRST+Math.ceil((h-JP_FIRST+1)/CAD)*CAD); }
+  function fc(n){ return (typeof window.fComma==='function')?window.fComma(n):n; }
+  function esc(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);}); }
+  function eta(blks){ var m=blks*BLK_MIN; var h=Math.floor(m/60), mm=Math.round(m%60); return (h>0?h+' h ':'')+mm+' min'; }
+  function close(){ var d=document.getElementById('sjp-dash'); d.classList.remove('show'); }
+  function render(state){
+    var d=document.getElementById('sjp-dash');
+    var tip=state.tip||0, nh=nextH(tip), rem=Math.max(0,nh-tip);
+    var reserve=state.reserve||'—', elig=state.eligible!=null?state.eligible:'—', paid=state.paid||0;
+    var active=tip>=25000, prePayout=tip<JP_FIRST;
+    var status=!active?'PLANNED':(prePayout?'ACTIVE · WAITING FOR #'+fc(JP_FIRST):'ACTIVE');
+    var winner=state.winner||'NOT YET DETERMINED';
+    d.innerHTML='<div class="sjpd-box"><div class="sjpd-hd"><h3>&#127974; HISTORICAL DTD JACKPOT</h3>'+
+      '<button class="sjpd-x" id="sjpd-x">Close</button></div>'+
+      '<div class="sjpd-grid">'+
+        '<div class="sjpd-c"><div class="sjpd-l">RESERVE</div><div class="sjpd-v">'+esc(reserve)+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">NEXT JACKPOT</div><div class="sjpd-v c">#'+fc(nh)+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">BLOCKS REMAINING</div><div class="sjpd-v">'+fc(rem)+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">ESTIMATED TIME</div><div class="sjpd-v">~'+eta(rem)+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">RECENTLY ACTIVE (288)</div><div class="sjpd-v g">'+esc(elig)+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div></div>'+
+      '</div>'+
+      '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+esc(status)+'</div>'+
+        '<div class="sjpd-l" style="margin-top:8px">WINNER</div><div class="sjpd-v" style="font-size:13px">'+esc(winner)+'</div></div>'+
+      '<div class="sjpd-sec">HISTORICAL JACKPOT ELIGIBILITY</div>'+
+      '<div class="sjpd-note">The Historical Jackpot reuses the DTD winner but with a <b>wider recency window: 20,000 blocks</b> (vs 5,000 for the normal draw), plus the same gates (recent-winner cooldown, anti-dominance, SbPoW). '+
+        'Recently active producers (last 288 blocks): <b>'+esc(elig)+'</b>. The exact per-address 20,000-window eligible set is not exposed by the current node RPC — see the DTD panel for the live producer/eligibility table: '+
+        '<a class="sjpd-link" id="sjpd-dtd">DTD lottery detail &rarr;</a></div>'+
+      '<div class="sjpd-sec">HISTORICAL JACKPOT HISTORY</div>'+
+      '<div class="sjpd-note" id="sjpd-hist">'+(paid>0?'':'No historical jackpots paid yet.')+'</div>'+
+      '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button></div>'+
+      '</div>';
+    d.classList.add('show');
+    document.getElementById('sjpd-x').onclick=close;
+    d.onclick=function(e){ if(e.target===d) close(); };
+    var dl=document.getElementById('sjpd-dtd'); if(dl&&typeof window.toggleDashPanel==='function') dl.onclick=function(){ close(); window.toggleDashPanel('dtd'); };
+    var rp=document.getElementById('sjpd-replay'); if(rp) rp.onclick=function(){ if(window.SOSTJackpotDemo) window.SOSTJackpotDemo(); };
+    document.addEventListener('keydown',function esch(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',esch);} });
+  }
+  function openDash(){
+    // deterministic fields from the live permanent card + RPC (real data only)
+    var reserve=(document.getElementById('dJackReserve')||{}).textContent||'—';
+    var state={reserve:reserve,tip:0,eligible:null,paid:0,winner:null};
+    render(state);  // render immediately with card data
+    if(typeof window.rpc==='function'){
+      window.rpc('getblockcount',[]).then(function(h){ state.tip=parseInt(h,10)||0;
+        return window.rpc('geteligibleminers',[]); }).then(function(g){
+          if(g&&g.active_288!=null) state.eligible=g.active_288;
+          render(state);
+        }).catch(function(){});
+    }
+  }
+  window.SJP=window.SJP||{}; window.SJP.openDash=openDash;
+})();
+</script>
+<!-- /SOST-JACKPOT-DASHBOARD -->
 
 </body>
 </html>
