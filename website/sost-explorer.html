@@ -8263,5 +8263,147 @@ function fetchSostChart(){
 }
 window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
 </script>
+<!-- SOST-JACKPOT-MOMENT (self-contained; delete this block to revert) -->
+<style id="sjp-style">
+#sjp-ov{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:18px;
+  background:radial-gradient(120% 120% at 50% 0%,rgba(10,14,10,.86),rgba(0,0,0,.94))}
+#sjp-ov.show{display:flex}
+.sjp-card{position:relative;max-width:520px;width:100%;border-radius:18px;padding:26px 24px 20px;text-align:center;
+  background:linear-gradient(160deg,#0c1510,#0a0a0c 60%,#141006);border:2px solid transparent;
+  border-image:linear-gradient(120deg,#39ff14,#ffd166,#39ff14) 1;box-shadow:0 0 60px rgba(57,255,20,.25),0 0 120px rgba(245,209,102,.15)}
+.sjp-badge{font:800 11px/1 ui-monospace,Menlo,monospace;letter-spacing:2px;color:#0a0a0c;background:linear-gradient(90deg,#ffd166,#39ff14);
+  display:inline-block;padding:5px 12px;border-radius:20px;margin-bottom:10px}
+.sjp-demo{position:absolute;top:10px;right:12px;font:700 9px/1 ui-monospace;letter-spacing:1.5px;color:#ffd166;border:1px solid #6b5a2f;border-radius:6px;padding:3px 7px;opacity:.85}
+.sjp-title{font:900 24px/1.1 'Space Grotesk',sans-serif;margin:2px 0 4px;background:linear-gradient(90deg,#ffd166,#39ff14,#22d3ee);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sjp-reel{font:800 15px/1 ui-monospace,Menlo,monospace;color:#39ff14;height:22px;overflow:hidden;margin:12px 0 6px;letter-spacing:.5px;min-height:22px}
+.sjp-amt{font:900 40px/1 'Space Grotesk',sans-serif;color:#ffd166;text-shadow:0 0 22px rgba(245,209,102,.5);margin:8px 0}
+.sjp-win{font:700 13px/1.3 ui-monospace,Menlo,monospace;color:#9fe6bf;word-break:break-all;cursor:pointer}
+.sjp-win:hover{color:#39ff14;text-decoration:underline}
+.sjp-meta{font:600 12px/1.6 ui-monospace,Menlo,monospace;color:#c9d6cf;margin-top:8px}
+.sjp-meta a{color:#22d3ee;cursor:pointer;text-decoration:none}
+.sjp-note{font:700 11px/1.4 ui-monospace;letter-spacing:1px;color:#7CFFA0;margin-top:10px}
+.sjp-note b{color:#ffd166}
+.sjp-verified{font:800 10px/1 ui-monospace;letter-spacing:2px;color:#0a0a0c;background:#39ff14;display:inline-block;padding:4px 9px;border-radius:5px;margin-top:12px}
+.sjp-actions{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.sjp-btn{background:#111a12;border:1px solid #2b7a3d;color:#d6ffe0;border-radius:9px;padding:8px 14px;font:600 12px ui-monospace;cursor:pointer}
+.sjp-btn:hover{background:#16241a}
+#sjp-replay{position:fixed;right:14px;bottom:14px;z-index:9500;background:linear-gradient(135deg,#141006,#0a0a0c);
+  border:1px solid #ffd166;color:#ffd166;border-radius:10px;padding:8px 12px;font:700 11px ui-monospace;letter-spacing:.5px;cursor:pointer;
+  box-shadow:0 0 14px rgba(245,209,102,.25);display:none}
+#sjp-replay.on{display:block}
+@media(max-width:560px){.sjp-title{font-size:19px}.sjp-amt{font-size:30px}.sjp-card{padding:20px 16px}}
+@media (prefers-reduced-motion:reduce){.sjp-reel{display:none}}
+</style>
+<div id="sjp-ov" role="dialog" aria-modal="true" aria-label="Historical DTD Jackpot"></div>
+<button id="sjp-replay" type="button" title="Replay the last Historical DTD Jackpot">&#127920; REPLAY JACKPOT</button>
+<script id="sjp-script">
+(function(){
+  "use strict";
+  var JP_FIRST=(typeof window.jpNextHeight==='function')?25290:25290, CAD=288;
+  function isOpp(h){ return (typeof window.jpIsOpportunity==='function')?window.jpIsOpportunity(h):(h>=JP_FIRST&&((h-JP_FIRST)%CAD)===0); }
+  var LS_LAST='sjp_lastCelebratedBlock', LS_SND='sjp_sound', LS_DATA='sjp_lastData';
+  function g(k,d){ try{var v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;} }
+  function s(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+  var interacted=false; ['click','keydown','touchstart'].forEach(function(ev){document.addEventListener(ev,function(){interacted=true;},{once:true,passive:true});});
+  function soundOn(){ return g(LS_SND,'1')==='1'; }
+  // WebAudio: original, copyright-free rising reel + jackpot chord (only after user gesture)
+  function playSound(){
+    if(!soundOn()||!interacted) return;
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+      var ac=new AC(), t0=ac.currentTime;
+      // rising reel
+      var o=ac.createOscillator(), gg=ac.createGain(); o.type='square';
+      o.frequency.setValueAtTime(220,t0); o.frequency.exponentialRampToValueAtTime(880,t0+1.4);
+      gg.gain.setValueAtTime(0.0001,t0); gg.gain.exponentialRampToValueAtTime(0.09,t0+0.15); gg.gain.exponentialRampToValueAtTime(0.03,t0+1.4);
+      o.connect(gg); gg.connect(ac.destination); o.start(t0); o.stop(t0+1.5);
+      // final chord
+      [523.25,659.25,783.99].forEach(function(f,i){
+        var oo=ac.createOscillator(), g2=ac.createGain(); oo.type='triangle'; oo.frequency.value=f;
+        var ts=t0+1.5; g2.gain.setValueAtTime(0.0001,ts); g2.gain.exponentialRampToValueAtTime(0.08,ts+0.05); g2.gain.exponentialRampToValueAtTime(0.0001,ts+1.2);
+        oo.connect(g2); g2.connect(ac.destination); oo.start(ts); oo.stop(ts+1.25);
+      });
+    }catch(e){}
+  }
+  function esc(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);}); }
+  var POOL=['sost1a9c…7f0e','sost1c1c…6d3a','sost1993…a8b2','sost1ad0…1a55','sost1f7c…625d','sost1b2e…90cc','sost1d87…a30f','sost1e44…2b71'];
+  function close(){ var ov=document.getElementById('sjp-ov'); ov.classList.remove('show'); ov.innerHTML=''; }
+  function reveal(data,demo){
+    var ov=document.getElementById('sjp-ov');
+    var amt=(typeof data.amount==='number')?data.amount:parseFloat(data.amount||0);
+    var famt=(typeof window.fComma==='function')?window.fComma(amt.toFixed(amt%1?8:0)):amt;
+    ov.innerHTML='<div class="sjp-card">'+(demo?'<span class="sjp-demo">DEMO · FIXTURE</span>':'')+
+      '<span class="sjp-badge">&#127974; HISTORICAL DTD JACKPOT</span>'+
+      '<div class="sjp-title">JACKPOT</div>'+
+      '<div class="sjp-reel" id="sjp-reel">'+esc(POOL[0])+'</div>'+
+      '<div class="sjp-amt">+'+famt+' SOST</div>'+
+      '<div class="sjp-win" id="sjp-win" title="Open winner in Explorer">'+esc(data.winner||'—')+'</div>'+
+      '<div class="sjp-meta">BLOCK <a id="sjp-blk">#'+esc(data.block)+'</a>'+(data.txid?' · <a id="sjp-tx">view tx</a>':'')+'</div>'+
+      '<div class="sjp-note">RETURNED TO THE NETWORK &middot; <b>NO NEW EMISSION</b></div>'+
+      '<span class="sjp-verified">&#10003; VERIFIED ON-CHAIN</span>'+
+      '<div class="sjp-actions"><button class="sjp-btn" id="sjp-snd">'+(soundOn()?'&#128266; Sound ON':'&#128263; Sound OFF')+'</button>'+
+        '<button class="sjp-btn" id="sjp-close">Close</button></div></div>';
+    ov.classList.add('show');
+    // reel animation -> stop on real winner (visual only; winner already fixed on-chain)
+    var reel=document.getElementById('sjp-reel'), n=0, iv=setInterval(function(){
+      reel.textContent=POOL[n++%POOL.length];
+    },90);
+    setTimeout(function(){ clearInterval(iv); reel.textContent=esc(data.winner||'—'); reel.style.color='#ffd166'; },1500);
+    playSound();
+    var W=document.getElementById('sjp-win'); if(W&&data.winner&&typeof window.showAddress==='function') W.onclick=function(){close();window.showAddress(data.winner);};
+    var B=document.getElementById('sjp-blk'); if(B&&typeof window.showAddress==='function'){} // block view optional
+    var snd=document.getElementById('sjp-snd'); if(snd) snd.onclick=function(){ s(LS_SND, soundOn()?'0':'1'); snd.innerHTML=soundOn()?'&#128266; Sound ON':'&#128263; Sound OFF'; };
+    document.getElementById('sjp-close').onclick=close;
+    ov.onclick=function(e){ if(e.target===ov) close(); };
+    document.addEventListener('keydown',function esch(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',esch);} });
+  }
+  function celebrate(data){ if(!data)return; s(LS_LAST,String(data.block)); s(LS_DATA,JSON.stringify(data)); document.getElementById('sjp-replay').classList.add('on'); reveal(data,false); }
+  var FIXTURE={winner:'sost1demo0000000000000000000000000000demo', amount:100, block:JP_FIRST, txid:'demo', isHistorical:true};
+  function replay(){ var d=g(LS_DATA,null); if(d){ try{ reveal(JSON.parse(d),false); return; }catch(e){} } reveal(FIXTURE,true); }
+  // ---- canonical live detection: jackpot tx = txids[1] with tx_type==0x02 at a jackpot height ----
+  function detect(height){
+    if(!isOpp(height)) return Promise.resolve(null);
+    if(typeof window.rpc!=='function') return Promise.resolve(null);
+    return window.rpc('getblockhash',[height]).then(function(hash){
+      if(!hash) return null;
+      return window.rpc('getblock',[hash]).then(function(b){
+        var tx=b&&(b.txids||[]); if(!tx||tx.length<2) return null;   // jackpot tx sits at index 1
+        var jid=tx[1];
+        return window.rpc('getrawtransaction',[jid,true]).then(function(t){
+          if(!t) return null;
+          var isJack=(t.tx_type===2||t.tx_type==='0x02'||t.type===2);   // TX_TYPE_JACKPOT=0x02
+          var outs=t.outputs||t.vout||[];
+          if(!isJack||!outs.length) return null;                        // NEVER fire on non-jackpot tx / lottery_payout
+          var o0=outs[0];
+          var amt=(o0.amount!=null)?o0.amount:(o0.value!=null?o0.value:0);
+          var win=o0.address||o0.sost_address||o0.pubkey_hash||b.lottery_winner_address||'';
+          return {winner:win, amount:amt, block:height, txid:jid, isHistorical:true};
+        }).catch(function(){return null;});
+      });
+    }).catch(function(){return null;});
+  }
+  function poll(){
+    if(typeof window.rpc!=='function'){ return; }
+    window.rpc('getblockcount',[]).then(function(h){
+      if(!h) return; var tip=parseInt(h,10); var last=parseInt(g(LS_LAST,'0'),10)||0;
+      // check the most recent jackpot opportunity height that we haven't celebrated
+      var k=Math.floor((tip-JP_FIRST)/CAD); var cand=JP_FIRST+Math.max(0,k)*CAD;
+      if(tip>=JP_FIRST && isOpp(cand) && cand>last && cand<=tip){
+        detect(cand).then(function(d){ if(d&&d.winner) celebrate(d); });
+      }
+    }).catch(function(){});
+  }
+  // wire UI + start polling (light, 25s)
+  document.addEventListener('DOMContentLoaded',function(){
+    var rb=document.getElementById('sjp-replay'); if(rb){ if(g(LS_DATA,null)) rb.classList.add('on'); rb.onclick=replay; }
+    setInterval(poll,25000); setTimeout(poll,4000);
+  });
+  // expose a demo hook (isolated; never touches live state)
+  window.SOSTJackpotDemo=function(){ reveal(FIXTURE,true); };
+})();
+</script>
+<!-- /SOST-JACKPOT-MOMENT -->
+
 </body>
 </html>
