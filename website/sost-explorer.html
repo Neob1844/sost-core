@@ -376,9 +376,6 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
 
 
-
-
-
 <!-- ============= V14 — MANDATORY MINER UPGRADE + ATOMIC SWAP DISCLOSURE ============= -->
 <!-- V14 activation height = block 16000. Atomic-swap HTLC consensus rules activate here. -->
 <!-- LOADING OVERLAY — spinning logo countdown -->
@@ -429,10 +426,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <img src="sost-logo.png?v=v392" alt="SOST" style="height:72px;width:72px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));animation:sostLogoPulse 3.6s ease-in-out infinite"><span><span style="color:#fb010d">SOST</span> EXPLORER</span>
       </a>
       <a href="casert-spec.html" style="display:flex;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
-        <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="height:72px;width:72px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
+        <span style="display:inline-flex;width:72px;height:72px;align-items:center;justify-content:center;overflow:hidden;border-radius:20%"><img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="height:80px;width:80px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:auto"></span>
       </a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;min-width:72px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:22px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:7px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;min-width:72px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:25px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:8px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:0 0 auto;">
       <span class="net-badge" id="netBadgeNav"><span class="net-dot"></span>MAINNET</span>
@@ -450,35 +447,6 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
 </nav>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
-<!-- SOST-4-OVOID-ACCESS (top accesses: ConvergenceX · DTD · Atomic Swap DEX · News) -->
-<style id="sjp-ov4-style">
-#ov4{max-width:1400px;margin:14px auto 2px;padding:0 24px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap}
-.ov4{--sc:1;--acc:#22d3ee;position:relative;width:168px;height:100px;flex:0 0 auto;border-radius:50%;
-  text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  background:radial-gradient(120% 120% at 50% 22%,rgba(255,255,255,.05),rgba(0,0,0,.86) 62%,#000 100%);
-  border:1.6px solid var(--acc);box-shadow:0 0 0 1px rgba(0,0,0,.6) inset,0 0 18px -2px var(--acc),0 6px 20px rgba(0,0,0,.5);
-  transition:transform .18s ease,box-shadow .18s ease;overflow:hidden}
-.ov4::before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(60% 40% at 50% 0%,var(--acc),transparent 70%);opacity:.16;pointer-events:none}
-.ov4:hover{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(0,0,0,.6) inset,0 0 26px 0 var(--acc),0 10px 26px rgba(0,0,0,.6)}
-.ov4:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
-.ov4 .ic{font-size:calc(27px*var(--sc));line-height:1;filter:drop-shadow(0 0 7px var(--acc));font-variant-emoji:emoji}
-.ov4 .lb{font-family:'Space Grotesk',system-ui,sans-serif;font-weight:800;letter-spacing:.4px;
-  font-size:calc(14px*var(--sc));line-height:1.05;color:#f2f6f8;text-shadow:0 0 8px rgba(0,0,0,.9);white-space:nowrap}
-.ov4 .sub{font-size:calc(8.4px*var(--sc));letter-spacing:1.3px;text-transform:uppercase;color:var(--acc);opacity:.92;white-space:nowrap;font-weight:700}
-@media(max-width:720px){#ov4{gap:12px}.ov4{width:44%;max-width:190px;height:92px}}
-@media(max-width:420px){.ov4{width:47%}}
-</style>
-<div id="ov4" role="navigation" aria-label="SOST top accesses">
-  <a class="ov4" style="--acc:#22d3ee;--sc:1.25" href="casert-spec.html" title="ConvergenceX — memory-hard PoW">
-    <span class="ic">&#9883;</span><span class="lb">ConvergenceX</span><span class="sub">Proof-of-Work</span></a>
-  <a class="ov4" style="--acc:#f5b301;--sc:1.20" href="#" onclick="try{(window.SJP&&SJP.openDash)?SJP.openDash():toggleDashPanel('dtd');}catch(e){toggleDashPanel('dtd');}return false;" title="DTD — Token Distribution &amp; Historical Jackpot">
-    <span class="ic">&#127919;</span><span class="lb">DTD</span><span class="sub">Token Distribution</span></a>
-  <a class="ov4" style="--acc:#a855f7;--sc:1.18" href="sost-dex.html" title="Atomic Swap DEX — trustless cross-chain swaps">
-    <span class="ic">&#128257;</span><span class="lb">Atomic Swap</span><span class="sub">DEX</span></a>
-  <a class="ov4" style="--acc:#fb010d;--sc:1.22" href="index.html#news" title="SOST News &amp; Announcements">
-    <span class="ic">&#128240;</span><span class="lb">News</span><span class="sub">Updates</span></a>
-</div>
-<!-- /SOST-4-OVOID-ACCESS -->
 
 
 
@@ -669,7 +637,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')" title="Gold Vault reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the Historical DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--gold)">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub" id="dGoldBalSub">25%/block · ends at V15 (#25,000)</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')" title="PoPC Pool reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the Historical DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--cyan)">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub" id="dPopcBalSub">25%/block · ends at V15 (#25,000)</div></div>
-  <div class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="(window.SJP&&SJP.openDash)?SJP.openDash():toggleDashPanel('dtd')" title="V15 Historical DTD Jackpot (activates block 25,000; first payout #25,290). The existing Gold-Vault + PoPC reserve is progressively returned to active miners — a supply-neutral treasury spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence every 96 DTD draws (~288 blk). Reuses the DTD winner + identical eligibility. Before block 25,290 pending/last-winner/total are provably 0/none." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> HIST. DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--text3)">PLANNED · first #25,290 · base 100 / cap 500</div></div>
+  <div class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="(window.SJP&&SJP.openDash)?SJP.openDash():toggleDashPanel('dtd')" title="V15 Historical DTD Jackpot (activates block 25,000; first payout #25,290). The existing Gold-Vault + PoPC reserve is progressively returned to active miners — a supply-neutral treasury spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence every 96 DTD draws (~288 blk). Reuses the DTD winner + identical eligibility. Before block 25,290 pending/last-winner/total are provably 0/none." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> HIST. DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--text3)">PLANNED · first #25,290 · 100 SOST</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Before V15: 50% of subsidy × triggered blocks (bootstrap 2-of-3 in [7100,12100), then permanent 1-of-3 from #12100). From V15 (block 25,000): DTD receives 50% of EVERY block (the Gold-Vault + PoPC shares are redirected here) — 50% miner / 50% DTD. Click for the full DTD panel detail."><div class="dash-label" style="color:#ff00ff">⚡ DTD LOTTERY DISTRIBUTED BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts · 50% of every block from V15</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label" style="color:var(--purple)">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label" style="color:var(--orange)">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s</div></div>
@@ -731,7 +699,6 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   </div>
   <div id="pdNote" style="font-size:10px;color:var(--text3);margin-top:10px">Share of blocks by producer address. The donut appears once the explorer's block scan finishes.</div>
 </div>
-
 
 <!-- CHART 1: Block Production — Real vs Expected -->
 <div class="diff-bar-wrap" id="chartProdWrap">
@@ -2602,7 +2569,7 @@ function updateV15Cards(height, goldBal, popcBal){
   if(jr){ var reserve=(goldBal||0)+(popcBal||0); jr.textContent=reserve.toFixed(2)+' SOST';
     var nh=jpNextHeight(height), away=nh-height;
     if(jsub){
-      if(!active) jsub.textContent='PLANNED · first #'+fComma(JP_FIRST)+' · base 100 / cap 500';
+      if(!active) jsub.textContent='PLANNED · first #'+fComma(JP_FIRST)+' · 100 SOST base · rollover to 500';
       else if(prePayout) jsub.textContent='ACTIVE · next #'+fComma(nh)+' ('+fComma(away)+' blk) · 0 paid yet';
       else jsub.textContent='next #'+fComma(nh)+' · winner/total available after RPC update';
     }
@@ -8508,15 +8475,22 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var active=tip>=25000, prePayout=tip<JP_FIRST;
     var status=!active?'PLANNED':(prePayout?'ACTIVE · WAITING FOR #'+fc(JP_FIRST):'ACTIVE');
     var winner=state.jpWinner||state.winner||'NOT YET DETERMINED';
+    // JACKPOT ELIGIBLE (20k): FINAL (getlotteryaudit at a mined jackpot height) >
+    // PRELIMINARY (future eligible_addresses[] preview at tip) > pending label.
+    var jpEDisp, jpEStat;
+    if(state.jpEligible!=null){ jpEDisp=esc(state.jpEligible); jpEStat='FINAL &middot; verified on-chain'; }
+    else if(state.jpPrelim!=null){ jpEDisp=esc(state.jpPrelim); jpEStat='PRELIMINARY &middot; final at #'+fc(JP_FIRST); }
+    else { jpEDisp='<span style="font-size:12px;color:var(--text3)">calculated at #'+fc(JP_FIRST)+'</span>'; jpEStat=''; }
     d.innerHTML='<div class="sjpd-box"><div class="sjpd-hd"><h3>&#127974; HISTORICAL DTD JACKPOT</h3>'+
       '<button class="sjpd-x" id="sjpd-x">Close</button></div>'+
       '<div class="sjpd-grid">'+
         '<div class="sjpd-c"><div class="sjpd-l">RESERVE</div><div class="sjpd-v">'+esc(reserve)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">NEXT JACKPOT</div><div class="sjpd-v c">#'+fc(nh)+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">EXPECTED PAYOUT</div><div class="sjpd-v g">100 SOST</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">BLOCKS REMAINING</div><div class="sjpd-v">'+fc(rem)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">ESTIMATED TIME</div><div class="sjpd-v">~'+eta(rem)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">RECENTLY ACTIVE (288)</div><div class="sjpd-v g">'+esc(elig)+'</div></div>'+
-        '<div class="sjpd-c"><div class="sjpd-l">JACKPOT ELIGIBLE (20k)</div><div class="sjpd-v c">'+(state.jpEligible!=null?esc(state.jpEligible):'\u2014')+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">JACKPOT ELIGIBLE (20k)</div><div class="sjpd-v c">'+jpEDisp+'</div>'+(jpEStat?'<div style="font-size:8px;letter-spacing:.6px;color:var(--gold);margin-top:2px">'+jpEStat+'</div>':'')+'</div>'+
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div></div>'+
       '</div>'+
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+esc(status)+'</div>'+
@@ -8525,6 +8499,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       '<div class="sjpd-note">The Historical Jackpot reuses the DTD winner but with a <b>wider recency window: 20,000 blocks</b> (vs 5,000 for the normal draw), plus the same gates (recent-winner cooldown, anti-dominance, SbPoW). '+
         'Recently active producers (last 288 blocks): <b>'+esc(elig)+'</b>. '+(state.jpEligible!=null?('The exact eligible producer <b>count</b> for the last jackpot (#'+fc(state.jpHeight||JP_FIRST)+', 20,000-window, canonical via getlotteryaudit): <b>'+esc(state.jpEligible)+'</b>. '):('The exact 20,000-window count becomes available from getlotteryaudit once the first jackpot block (#'+fc(JP_FIRST)+') is mined. '))+'For the full per-address list, see the DTD panel: '+
         '<a class="sjpd-link" id="sjpd-dtd">DTD lottery detail &rarr;</a></div>'+
+      '<div class="sjpd-note" style="margin-top:2px"><b>100 SOST</b> base reward. Unpaid jackpots (no eligible winner) roll over to the next eligible jackpot, up to a <b>500 SOST</b> maximum. The first jackpot (#'+fc(JP_FIRST)+') pays <b>100 SOST</b> (no prior rollover). The Explorer always shows the <b>real on-chain amount</b> from the jackpot transaction.</div>'+
       '<div class="sjpd-sec">HISTORICAL JACKPOT HISTORY</div>'+
       '<div class="sjpd-note" id="sjpd-hist">'+(paid>0?'':'No historical jackpots paid yet.')+'</div>'+
       '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button></div>'+
