@@ -8156,7 +8156,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
   function fillTable(arr,total,last){
     var tb=document.getElementById('pdTableBody'); if(!tb) return;
     if(!arr.length){ tb.innerHTML='<tr><td colspan="5" style="color:var(--text3)">No producers in this period.</td></tr>'; return; }
-    tb.innerHTML=arr.slice(0,10).map(function(s,i){
+    tb.innerHTML=arr.slice(0,20).map(function(s,i){
       var full=s.a||'', isAddr=/^sost1[0-9a-z]+$/i.test(full);
       // Click a producer -> open that address in the explorer's own detail panel
       // (reuses the native showAddress(); no page reload, no external wallet).
