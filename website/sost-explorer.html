@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-07-v398-cooldown-goldref-dtd">
+<meta name="explorer-html-version" content="2026-09-07-v399-rpc-cooldown-splash-goldref">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8605,12 +8605,9 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
                 if(b.lottery_payout!=null) state.jpDtd=parseInt(b.lottery_payout,10)/1e8; render(state); } })
             .then(function(){ return window.rpc('gethistoricaljackpotstatus',[]).then(function(st){
                 if(st){ if(st.eligible_count!=null) state.jpPrelim=st.eligible_count;
-                        if(st.reserve!=null) state.reserve=st.reserve+' SOST'; }
-                render(state); }).catch(function(){}); })
-            .then(function(){ return window.rpc('getlotterystate',[]).then(function(ls){
-                if(ls){ if(ls.cooldown_window!=null) state.cooldownWindow=ls.cooldown_window;
-                        var pcw=ls.previous_cooldown_block_winners; // pkh hex of the miners of the last N blocks (canonical)
-                        if(Object.prototype.toString.call(pcw)==='[object Array]'){ var seen={},list=[]; for(var i=0;i<pcw.length;i++){ var a='sost1'+pcw[i]; if(!seen[a]){seen[a]=1;list.push(a);} } state.cooldownList=list; } }
+                        if(st.reserve!=null) state.reserve=st.reserve+' SOST';
+                        if(st.cooldown_window!=null) state.cooldownWindow=st.cooldown_window;
+                        if(Object.prototype.toString.call(st.cooldown_addresses)==='[object Array]') state.cooldownList=st.cooldown_addresses; }
                 render(state); }).catch(function(){}); })
             .catch(function(){ render(state); });
           }

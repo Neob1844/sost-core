@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-07-v398-cooldown-goldref-dtd",
-  "note": "Cooldown display fixed (canonical getlotterystate: window 6 blocks vs current in-cooldown count; recent-producer semantics); SOST GOLD REFERENCE framing (Explorer + markets); DTD panel CURRENT V15 (50/50) vs LEGACY (50/25/25). Single force reload."
+  "v": "2026-09-07-v399-rpc-cooldown-splash-goldref",
+  "note": "RPC cooldown fixed (tip-relative in preliminary; cooldown_window+count now correct = 2); dashboard uses the RPC as single cooldown source; splash SOST +20%; SOST GOLD REFERENCE framing. Single force reload."
 }
