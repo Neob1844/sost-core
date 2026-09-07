@@ -428,10 +428,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <a href="casert-spec.html" style="display:flex;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
         <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="height:72px;width:72px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
       </a>
-      <a href="#" onclick="try{(window.SJP&&SJP.openDash)?SJP.openDash():toggleDashPanel('dtd');}catch(e){toggleDashPanel('dtd');}return false;" title="DTD — Token Distribution &amp; Historical Jackpot" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;min-width:72px;border-radius:20%;background:linear-gradient(135deg,#0a2a10,#123d1a);border:1px solid #39ff14;text-decoration:none;line-height:1;flex:0 0 auto;"><span style="color:#39ff14;font-size:20px;font-weight:900;text-shadow:0 0 10px rgba(57,255,20,.6);line-height:1">DTD</span><span style="color:#39ff14;font-size:6px;font-weight:700;letter-spacing:.3px;text-align:center;margin-top:2px">TOKEN<br>DISTRIBUTION</span></a>
+      <a href="#" onclick="try{(window.SJP&&SJP.openDash)?SJP.openDash():toggleDashPanel('dtd');}catch(e){toggleDashPanel('dtd');}return false;" title="DTD — Token Distribution &amp; Historical Jackpot" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;min-width:72px;border-radius:50%;background:linear-gradient(135deg,#0a2a10,#123d1a);border:1px solid #39ff14;text-decoration:none;line-height:1;flex:0 0 auto;"><span style="color:#39ff14;font-size:20px;font-weight:900;text-shadow:0 0 10px rgba(57,255,20,.6);line-height:1">DTD</span><span style="color:#39ff14;font-size:6px;font-weight:700;letter-spacing:.3px;text-align:center;margin-top:2px">TOKEN<br>DISTRIBUTION</span></a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
       <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;min-width:72px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:25px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:8px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
-      <a href="index.html#news" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;min-width:72px;border-radius:20%;background:linear-gradient(135deg,#2a0606,#3d0a0a);border:1px solid #fb010d;text-decoration:none;line-height:1;flex:0 0 auto;" title="SOST News &amp; Announcements"><span style="font-size:24px;text-shadow:0 0 10px rgba(251,1,13,.6);margin-bottom:2px">&#128240;</span><span style="color:#ff5b5b;font-size:8px;font-weight:700;letter-spacing:.5px;text-align:center">NEWS</span></a>
+      <a href="index.html#news" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;min-width:72px;border-radius:50%;background:linear-gradient(135deg,#2a0606,#3d0a0a);border:1px solid #fb010d;text-decoration:none;line-height:1;flex:0 0 auto;" title="SOST News &amp; Announcements"><span style="font-size:24px;text-shadow:0 0 10px rgba(251,1,13,.6);margin-bottom:2px">&#128240;</span><span style="color:#ff5b5b;font-size:8px;font-weight:700;letter-spacing:.5px;text-align:center">NEWS</span></a>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:0 0 auto;">
       <span class="net-badge" id="netBadgeNav"><span class="net-dot"></span>MAINNET</span>
@@ -5244,7 +5244,7 @@ async function loadBlocks(){
       var minerAddr=b.miner_address||'';
       var minerShort=minerAddr?'<span class="td-link" onclick="showAddress(\''+minerAddr+'\')" style="color:var(--orange);font-size:10px" title="'+minerAddr+'">'+minerAddr.substr(0,10)+'\u2026'+minerAddr.substr(-4)+'</span>':'';
       tr.innerHTML='<td><span class="td-height" onclick="showBlock(\''+b.hash+'\')">#'+b.height+'</span></td><td><span class="td-hash" onclick="showBlock(\''+b.hash+'\')">'+sH(b.hash)+'</span></td><td>'+txC+'</td><td><span class="td-time">'+fT(b.time)+'</span></td><td><span style="color:var(--cyan)">\u23F1 '+iv+'</span></td><td><span class="td-diff">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="font-size:9px;color:var(--text3)">'+b.bits_q.toLocaleString()+'</span> '+blockProfileLabel+'</td><td>'+minerShort+'</td><td><span class="td-amt">'+fS(b.subsidy)+' SOST</span></td><td>'+lottCell+'</td>';
-      tb.appendChild(tr); try{if(window.sjpMaybeRow)window.sjpMaybeRow(tb,b);}catch(_e){}}
+      tb.appendChild(tr); try{if(window.sjpMaybeRow)window.sjpMaybeRow(tb,b,tr);}catch(_e){}}
     document.getElementById('btnN').style.display=e>0?'':'none';document.getElementById('btnP').style.display=off>0?'':'none';document.getElementById('btnFirst').style.display=off>0?'':'none';document.getElementById('btnLast').style.display=e>0?'':'none';
   }catch(e){tb.innerHTML='<tr><td colspan="9" class="td-err">'+e.message+'</td></tr>';}
 }
@@ -8592,16 +8592,40 @@ tr.sjp-blkrow .sjp-v{color:#0a0a0c;background:#39ff14;font:800 9px/1 ui-monospac
   // Append the special HISTORICAL DTD JACKPOT row immediately below the block's normal row.
   // ONLY for a confirmed canonical jackpot (in SJP.jackpots, populated by canonical detection).
   // Never fires on lottery_payout / normal DTD.
-  window.sjpMaybeRow=function(tb,b){
-    if(!b||!isOpp(b.height)) return;
-    var jp=window.SJP.jackpots[b.height]; if(!jp) return;
-    var amt=(typeof jp.amount==='number')?jp.amount:parseFloat(jp.amount||0);
-    var win=esc(jp.winner||''); var wshort=win.length>16?win.substr(0,10)+'…'+win.substr(-4):win;
-    var tr=document.createElement('tr'); tr.className='sjp-blkrow';
+  function sjpBuildRow(h, rec){
+    var amt=(typeof rec.amount==='number')?rec.amount:parseFloat(rec.amount||0);
+    var win=esc(rec.winner||''); var wshort=win.length>16?win.substr(0,10)+'…'+win.substr(-4):win;
+    var tr=document.createElement('tr'); tr.className='sjp-blkrow'; tr.setAttribute('data-sjp-h',String(h));
     var winHtml=(win&&typeof window.showAddress==='function')?'<span class="sjp-w" onclick="showAddress(\''+win+'\')" title="'+win+'">'+wshort+'</span>':wshort;
-    var txHtml=jp.txid?' · <span class="sjp-w" onclick="(window.showTxDetail&&showTxDetail(\''+esc(jp.txid)+'\'))">view tx</span>':'';
-    tr.innerHTML='<td colspan="9">&#127974; <b>HISTORICAL DTD JACKPOT</b> &middot; #'+fc(b.height)+' &middot; WINNER: '+winHtml+' &middot; <b style="color:#ffd166">+'+esc(amt)+' SOST</b>'+txHtml+' &middot; <span class="sjp-v">VERIFIED ON-CHAIN</span></td>';
-    tb.appendChild(tr);
+    var txHtml=rec.txid?' · <span class="sjp-w" onclick="(window.showTxDetail&&showTxDetail(\''+esc(rec.txid)+'\'))">view tx</span>':'';
+    tr.innerHTML='<td colspan="9">&#127974; <b>HISTORICAL DTD JACKPOT</b> &middot; #'+fc(h)+' &middot; WINNER: '+winHtml+' &middot; <b style="color:#ffd166">+'+esc(amt)+' SOST</b>'+txHtml+' &middot; <span class="sjp-v">VERIFIED ON-CHAIN</span></td>';
+    return tr;
+  }
+  // Reconstruct a jackpot from ON-CHAIN data (canonical; never depends on live-witnessed memory).
+  // getblock -> txids[1] -> getrawtransaction(hex) -> sjpParseJackpotTx. Caches into SJP.jackpots.
+  window.SJP.reconstruct=function(h){
+    var c=window.SJP.jackpots[h]; if(c&&c.winner) return Promise.resolve(c);
+    if(!isOpp(h)||typeof window.rpc!=='function') return Promise.resolve(null);
+    return window.rpc('getblockhash',[h]).then(function(hash){ if(!hash) return null;
+      return window.rpc('getblock',[hash]).then(function(b){
+        var tx=b&&(b.txids||[]); if(!tx||tx.length<2) return null; var jid=tx[1];
+        return window.rpc('getrawtransaction',[jid,true]).then(function(t){
+          var hex=t&&(t.hex||t.raw); var p=(hex&&window.sjpParseJackpotTx)?window.sjpParseJackpotTx(hex):null;
+          if(!p||p.tx_type!==2||p.out_type!==0) return null;
+          var rec={winner:p.winner,amount:p.amount,block:h,txid:jid}; window.SJP.jackpots[h]=rec; return rec;
+        });
+      });
+    }).catch(function(){return null;});
+  };
+  // Persistent special row: render from cache if present, else reconstruct from chain; inserted right below `tr`.
+  window.sjpMaybeRow=function(tb,b,tr){
+    if(!b||!isOpp(b.height)) return;
+    function place(rec){ if(!rec||!tr||!tr.parentNode) return;
+      var nx=tr.nextSibling; if(nx&&nx.getAttribute&&nx.getAttribute('data-sjp-h')===String(b.height)) return;
+      tr.parentNode.insertBefore(sjpBuildRow(b.height,rec), tr.nextSibling); }
+    var jp=window.SJP.jackpots[b.height];
+    if(jp&&jp.winner){ place(jp); return; }
+    window.SJP.reconstruct(b.height).then(place);
   };
   // record a confirmed jackpot into the shared cache (single source of truth)
   window.SJP.recordJackpot=function(d){ if(d&&d.block!=null){ window.SJP.jackpots[d.block]={winner:d.winner,amount:d.amount,txid:d.txid}; } };
