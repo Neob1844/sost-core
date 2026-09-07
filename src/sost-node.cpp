@@ -53,6 +53,7 @@
 #include "sost/popc_model_b.h"
 #include "sost/proposals.h"
 #include "sost/lottery.h"
+#include "sost/jackpot.h"
 #include "sost/jackpot_reserve.h"  // V15 (J) live wiring: reserve discovery / balance
 #include "sost/jackpot_block.h"    // V15 (J) live wiring: block-level jackpot validation (validate BEFORE mutate)
 #include "sost/beacon.h"
@@ -1580,6 +1581,115 @@ static std::string handle_getlotterystate(const std::string& id, const std::vect
 // at consensus time, so a mismatch between winner_address and the
 // coinbase output proves manipulation.
 // =============================================================================
+// gethistoricaljackpotstatus [height]
+// READ-ONLY. Historical DTD Jackpot status + the EXACT eligible producer set.
+//   - no arg / future height : PRELIMINARY set at the current tip, computed as if the
+//     next jackpot were drawn now (uses the 20,000 jackpot recency window via
+//     dtd_recency_window_at(next_jackpot_height) inside compute_lottery_eligibility_set).
+//     winner_address = "" (not determined until the real TX_TYPE_JACKPOT exists).
+//   - a past jackpot height <= tip : FINAL set for that jackpot + canonical winner.
+// Reuses ONLY the canonical consensus helpers (compute_lottery_eligibility_set,
+// select_lottery_winner_index_from_history, derive_rollover_before). No consensus /
+// miner / wallet / UTXO mutation. Emits eligible_count + eligible_addresses[].
+static std::string handle_gethistoricaljackpotstatus(const std::string& id, const std::vector<std::string>& p) {
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    const int64_t tip = (int64_t)g_blocks.size() - 1;
+    if (tip < 0) return rpc_error(id, -1, "empty chain");
+
+    // next jackpot height at/after tip+1 (or first if not yet reached)
+    auto next_jp = [](int64_t h)->int64_t{
+        if (h < sost::HIST_JACKPOT_FIRST_HEIGHT) return sost::HIST_JACKPOT_FIRST_HEIGHT;
+        int64_t k = ((h - sost::HIST_JACKPOT_FIRST_HEIGHT) / sost::HIST_JACKPOT_CADENCE_BLOCKS) + 1;
+        return sost::HIST_JACKPOT_FIRST_HEIGHT + k * sost::HIST_JACKPOT_CADENCE_BLOCKS;
+    };
+    const int64_t next_jackpot_height = next_jp(tip);
+
+    // resolve mode/target
+    bool final_mode = false;
+    int64_t target = next_jackpot_height;  // PRELIMINARY default
+    if (!p.empty()) {
+        int64_t req = 0; try { req = std::stoll(p[0]); } catch (...) { return rpc_error(id, -8, "invalid height"); }
+        if (req >= 0 && req <= tip && sost::is_hist_jackpot_height(req)) { final_mode = true; target = req; }
+        else if (req > tip) { final_mode = false; target = next_jp(req - 1); }
+        else if (req >= 0 && req <= tip) return rpc_error(id, -8, "height is not a jackpot height");
+    }
+
+    // build LotteryMinedBlockView history from g_blocks up to (but excluding) `target`
+    std::vector<sost::lottery::LotteryMinedBlockView> history;
+    history.reserve(g_blocks.size());
+    for (const auto& b : g_blocks) {
+        if (b.height >= target) break;
+        if (b.tx_hexes.empty()) continue;
+        std::vector<Byte> raw;
+        if (!decode_tx_hex(b.tx_hexes[0], raw)) continue;
+        Transaction cb; std::string derr;
+        if (!Transaction::Deserialize(raw, cb, &derr) || cb.outputs.empty()) continue;
+        sost::lottery::LotteryMinedBlockView v;
+        v.height = b.height; v.miner_pkh = cb.outputs[0].pubkey_hash; v.block_hash = b.block_id;
+        history.push_back(v);
+    }
+
+    // canonical eligibility (compute_lottery_eligibility_set applies dtd_recency_window_at(target)
+    // internally -> 20,000 window at a jackpot height) + all gates.
+    PubKeyHash zero_pkh{};
+    auto eligible = sost::lottery::compute_lottery_eligibility_set(
+        history, target, zero_pkh, sost::lottery_exclusion_window_at(target));
+
+    // winner: FINAL only (a real drawn jackpot); PRELIMINARY leaves it undetermined
+    std::string winner_addr;
+    if (final_mode && !eligible.empty()) {
+        int64_t wi = sost::lottery::select_lottery_winner_index_from_history(eligible, history, target);
+        if (wi >= 0 && wi < (int64_t)eligible.size()) winner_addr = address_encode(eligible[(size_t)wi].pkh);
+    }
+
+    // reserve = live balance of the frozen Gold Vault + PoPC Pool reserve addresses
+    auto bal_of = [](const char* a)->int64_t{
+        PubKeyHash pkh{}; if (!address_decode(a, pkh)) return 0;
+        int64_t tot = 0; const auto& um = g_utxo_set.GetMap();
+        for (const auto& kv : um) if (kv.second.pubkey_hash == pkh) tot += kv.second.amount;
+        return tot;
+    };
+    const int64_t reserve = bal_of(sost::ADDR_GOLD_VAULT) + bal_of(sost::ADDR_POPC_POOL);
+
+    // expected payout at next jackpot = min(BASE + rollover, CAP), rollover derived from
+    // whether each prior jackpot block actually paid (contains a TX_TYPE_JACKPOT tx).
+    auto paid_at = [&](int64_t h)->bool{
+        if (h < 0 || h > tip) return false;
+        const auto& b = g_blocks[(size_t)h];
+        for (size_t i = 1; i < b.tx_hexes.size(); ++i) {   // skip coinbase
+            std::vector<Byte> raw; if (!decode_tx_hex(b.tx_hexes[i], raw)) continue;
+            Transaction tx; std::string de;
+            if (Transaction::Deserialize(raw, tx, &de) && tx.tx_type == sost::TX_TYPE_JACKPOT) return true;
+        }
+        return false;
+    };
+    const int64_t rollover = sost::jackpot::derive_rollover_before(next_jackpot_height, paid_at);
+    int64_t prize = sost::HIST_JACKPOT_BASE_STOCKS + rollover;
+    if (prize > sost::HIST_JACKPOT_CAP_STOCKS) prize = sost::HIST_JACKPOT_CAP_STOCKS;
+    const int64_t expected_payout = prize < reserve ? prize : reserve;
+
+    std::ostringstream s;
+    s << "{\"current_height\":" << tip
+      << ",\"next_jackpot_height\":" << next_jackpot_height
+      << ",\"blocks_remaining\":" << (next_jackpot_height - tip)
+      << ",\"is_historical_jackpot\":" << (sost::is_hist_jackpot_height(tip) ? "true" : "false")
+      << ",\"mode\":\"" << (final_mode ? "final" : "preliminary") << "\""
+      << ",\"target_height\":" << target
+      << ",\"recency_window\":" << sost::dtd_recency_window_at(target)
+      << ",\"reserve\":" << format_sost(reserve)
+      << ",\"reserve_stocks\":" << reserve
+      << ",\"base_payout\":" << format_sost(sost::HIST_JACKPOT_BASE_STOCKS)
+      << ",\"cap_payout\":" << format_sost(sost::HIST_JACKPOT_CAP_STOCKS)
+      << ",\"rollover\":" << format_sost(rollover)
+      << ",\"expected_payout\":" << format_sost(expected_payout)
+      << ",\"winner_address\":\"" << winner_addr << "\""
+      << ",\"eligible_count\":" << eligible.size()
+      << ",\"eligible_addresses\":[";
+    for (size_t i = 0; i < eligible.size(); ++i) { if (i) s << ","; s << "\"" << address_encode(eligible[i].pkh) << "\""; }
+    s << "]}";
+    return rpc_result(id, s.str());
+}
+
 static std::string handle_getlotteryaudit(const std::string& id, const std::vector<std::string>& p) {
     if (p.empty()) return rpc_error(id, -1, "missing height");
     int64_t height = 0;
@@ -4458,6 +4568,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getinfo",handle_getinfo},
     {"getlotterystate",handle_getlotterystate},
     {"getlotteryaudit",handle_getlotteryaudit},
+    {"gethistoricaljackpotstatus",handle_gethistoricaljackpotstatus},
     {"getbeaconnotices",handle_getbeaconnotices},
     {"getv13readiness",handle_getv13readiness},
     {"getsupplyinfo",handle_getsupplyinfo},
