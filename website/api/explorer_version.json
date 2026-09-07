@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-07-v393-jackpot-persist-header",
-  "note": "Persistent on-chain Historical DTD Jackpot row in LATEST BLOCKS + header cleanup (removed added DTD/News tiles; restored original ConvergenceX). Forces all open explorers to reload."
+  "v": "2026-09-07-v394-address-earnings-breakdown",
+  "note": "Address page: EARNINGS BREAKDOWN (mining / DTD / Historical DTD Jackpot) with jackpot winner highlight + UTXO source label + collapsible gross-flow note. Forces explorer reload."
 }

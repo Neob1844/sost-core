@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-07-v393-jackpot-persist-header">
+<meta name="explorer-html-version" content="2026-09-07-v394-address-earnings-breakdown">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -5826,6 +5826,9 @@ function _buildUtxoRow(u,txidCounts){
   }else{
     typeHtml='<span style="color:'+tc+';font-size:9px;font-weight:600">'+tl.toUpperCase()+'</span>';
   }
+  // SOURCE label when this UTXO is a Historical DTD Jackpot output (keeps on-chain type TRANSFER)
+  try{ if(window.SJP&&window.SJP.jackpots){ for(var _jk in window.SJP.jackpots){ var _jj=window.SJP.jackpots[_jk];
+    if(_jj&&_jj.txid&&_jj.txid===txid){ typeHtml=typeHtml+' <span style="color:#ffd166;font-size:8px;font-weight:700" title="Economic source: Historical DTD Jackpot #'+_jk+'">\u00B7 \uD83C\uDFE6 HISTORICAL JACKPOT</span>'; break; } } } }catch(_e){}
   return '<tr><td><span class="td-link" onclick="showTxDetail(\''+txid+'\')">'+sH(txid)+':'+u.vout+'</span>'+cpBtn(txid)+'</td><td><span class="td-amt">'+(typeof u.amount==='number'?u.amount.toFixed(8):u.amount)+' SOST</span> '+changeBadge+'</td><td>'+typeHtml+'</td><td><span class="td-height" onclick="showBlockByHeight('+u.height+')">#'+u.height+'</span></td><td><span style="color:'+matColor+'">'+matIcon+' '+confs+'</span> '+matLabel+matBar+'</td></tr>';
 }
 /* Lazy CHANGE-self enrichment. For every unique non-coinbase txid in
@@ -6122,12 +6125,12 @@ async function showAddress(addr){
       'color:var(--text3)',
       'id="addrNetExtLbl"'
     );
-    balHtml+='<div style="grid-column:1 / -1;font-size:10px;color:var(--text3);padding:6px 10px;border-left:2px solid var(--border);margin-top:4px;line-height:1.55">'+
+    balHtml+='<details style="grid-column:1 / -1;font-size:10px;color:var(--text3);margin-top:4px"><summary style="cursor:pointer;color:var(--cyan);padding:4px 0">\u2139 About gross flows</summary><div style="padding:6px 10px;border-left:2px solid var(--border);line-height:1.55">'+
       '<b style="color:var(--cyan)">\u2139 Gross flow note.</b> The two GROSS rows above include <b>self-send transactions</b> '+
       '(capsule anchors, consolidations to the same address, change outputs returning to source). '+
       'A capsule self-send of N SOST shows as +N on BOTH rows even though the net amount leaving the address is the network fee only. '+
       'Use the per-TX flow view to inspect any specific outgoing TX and see exactly which outputs went external vs. came back as change.'+
-      '</div>';
+      '</div></details>';
     // Lottery rows. CURRENT UNSPENT comes directly from u.type==4 (always
     // accurate). LIFETIME WON uses the DTD cache when available; if not, we
     // tell the user to open DTD to populate it. TOTAL BALANCE always equals
@@ -6223,8 +6226,23 @@ async function showAddress(addr){
     // UTXO pagination — store data globally for page rendering
     var txidCounts={};for(var ui=0;ui<sorted.length;ui++){var tid=sorted[ui].txid||'';txidCounts[tid]=(txidCounts[tid]||0)+1;}
     window._addrUtxos=sorted;window._addrTxidCounts=txidCounts;window._addrPage=0;window._addrPageSize=10;
+    // EARNINGS BREAKDOWN — detect Historical DTD Jackpot win(s) for this address (canonical, from chain)
+    var jpWins=[], jpTotal=0;
+    try{ if(typeof window.jpIsOpportunity==='function' && window.SJP && typeof window.SJP.reconstruct==='function'){
+      for(var _jh=25290; _jh<=H; _jh+=288){ var _rec=await window.SJP.reconstruct(_jh);
+        if(_rec && _rec.winner===addr){ jpWins.push({h:_jh,amount:_rec.amount,txid:_rec.txid}); jpTotal+=_rec.amount; } }
+    } }catch(_e){}
     var utxoRows=_buildUtxoPage(0);
-    c.innerHTML='<div class="dtl-head"><b>Address</b> '+roleBadge+' '+mineBadge+'</div>'+
+    var _fmt8=function(n){return Number(n||0).toFixed(8);};
+    var _jpF=jpWins.length?jpWins[0]:null;
+    var breakdownHtml='<div style="margin:10px 0 4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px">'
+      +'<div style="font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:10px">// EARNINGS BREAKDOWN</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">'
+      +'<div><div style="font-size:10px;color:var(--text3)">\u26CF MINING REWARDS</div><div style="font-weight:700;color:#fbbf24;font-size:15px">'+_fmt8(minedAmt)+' SOST</div><div style="font-size:9px;color:var(--text3)">'+minedCount+' block'+(minedCount===1?'':'s')+'</div></div>'
+      +'<div><div style="font-size:10px;color:var(--text3)">\uD83C\uDFB0 DTD DISTRIBUTION</div><div style="font-weight:700;color:#ff00ff;font-size:15px">'+_fmt8(lottLifetimeSost)+' SOST</div><div style="font-size:9px;color:var(--text3)">'+lottLifetimeCount+' win'+(lottLifetimeCount===1?'':'s')+'</div></div>'
+      +(jpTotal>0?('<div style="background:linear-gradient(135deg,rgba(245,209,102,.12),rgba(57,255,20,.10));border:1px solid #ffd166;border-radius:6px;padding:8px 10px"><div style="font-size:10px;color:#ffd166">\uD83C\uDFE6 HISTORICAL DTD JACKPOT</div><div style="font-weight:800;color:#39ff14;font-size:15px">'+_fmt8(jpTotal)+' SOST</div><div style="font-size:9px;color:#ffd166">'+jpWins.length+' jackpot'+(jpWins.length===1?'':'s')+(_jpF?(' \u00B7 Block #'+fComma(_jpF.h)):'')+'</div>'+((_jpF&&_jpF.h===25290)?'<div style="font-size:8px;letter-spacing:.6px;color:#39ff14;margin-top:3px">\uD83C\uDFC6 FIRST HISTORICAL JACKPOT WINNER \u00B7 \u2713 VERIFIED ON-CHAIN</div>':'')+((_jpF&&_jpF.txid)?('<div style="font-size:8px;margin-top:2px"><span class="sjp-w" onclick="(window.showTxDetail&&showTxDetail(\''+_jpF.txid+'\'))" style="color:#22d3ee;cursor:pointer">view jackpot tx</span></div>'):'')+'</div>'):'')
+      +'</div></div>';
+    c.innerHTML='<div class="dtl-head"><b>Address</b> '+roleBadge+' '+mineBadge+'</div>'+breakdownHtml+
       '<div class="dtl-grid">'+
         '<div class="k">address</div><div class="v" style="color:var(--cyan)">'+a.address+cpBtn(a.address)+'</div>'+
         (role?'<div class="k">role</div><div class="v"><span style="color:var(--'+roleColor+');font-weight:600">'+role+'</span> <span style="color:var(--text3)">// constitutional \u2014 immutable since genesis</span></div>':'')+
