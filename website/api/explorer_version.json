@@ -1,4 +1,4 @@
 {
-  "v": "2026-07-25-v386-v15-height-25000",
-  "note": "V15 activation rescheduled to block 25,000 and first Historical DTD Jackpot to block 25,290 (additional security validation + testing). Forces explorer reload."
+  "v": "2026-09-07-v393-jackpot-persist-header",
+  "note": "Persistent on-chain Historical DTD Jackpot row in LATEST BLOCKS + header cleanup (removed added DTD/News tiles; restored original ConvergenceX). Forces all open explorers to reload."
 }
