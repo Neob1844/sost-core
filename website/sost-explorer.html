@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-07-v395-eligibility-checker">
+<meta name="explorer-html-version" content="2026-09-07-v396-dashboard-hardening">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8488,6 +8488,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
   function close(){ var d=document.getElementById('sjp-dash'); d.classList.remove('show'); }
   function render(state){
     var d=document.getElementById('sjp-dash');
+    if(!d){ try{ if(typeof window.toggleDashPanel==='function') window.toggleDashPanel('dtd'); }catch(_e){} return; }
     var tip=state.tip||0, nh=nextH(tip), rem=Math.max(0,nh-tip);
     var reserve=state.reserve||'—', elig=state.eligible!=null?state.eligible:'—', paid=state.paid||0;
     var active=tip>=25000, prePayout=tip<JP_FIRST;
@@ -8550,7 +8551,8 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       replayBtn+
       '</div>';
     d.classList.add('show');
-    document.getElementById('sjpd-x').onclick=close;
+    try{
+    var _xbtn=document.getElementById('sjpd-x'); if(_xbtn) _xbtn.onclick=close;
     d.onclick=function(e){ if(e.target===d) close(); };
     var dl=document.getElementById('sjpd-dtd'); if(dl&&typeof window.toggleDashPanel==='function') dl.onclick=function(){ close(); window.toggleDashPanel('dtd'); };
     var rp=document.getElementById('sjpd-replay'); if(rp) rp.onclick=function(){ if(window.SOSTJackpotDemo) window.SOSTJackpotDemo(); };
@@ -8559,6 +8561,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     if(_ei) _ei.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); window.SJP.checkEligibility(_ei.value); } });
     if(_em&&_ei) _em.onclick=function(){ var m=''; try{m=localStorage.getItem('sost_my_miner')||'';}catch(_x){} if(m){ _ei.value=m; window.SJP.checkEligibility(m); } };
     document.addEventListener('keydown',function esch(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',esch);} });
+    }catch(_werr){ try{console.warn('[sjp] dashboard wiring:',_werr&&_werr.message);}catch(_e){} }
   }
   function openDash(){
     // deterministic fields from the live permanent card + RPC (real data only)

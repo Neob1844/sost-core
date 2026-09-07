@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-07-v395-eligibility-checker",
-  "note": "Dashboard: CHECK YOUR JACKPOT ELIGIBILITY searcher (canonical via gethistoricaljackpotstatus.eligible_addresses[] once deployed; historical winner badge from chain now; CHECK MY MINER). Forces explorer reload."
+  "v": "2026-09-07-v396-dashboard-hardening",
+  "note": "Harden Historical DTD Jackpot dashboard render(): drawer null-guard + try/catch around all button wiring so the dashboard ALWAYS opens from the card even if a control is missing. Forces explorer reload."
 }
