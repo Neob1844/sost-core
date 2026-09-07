@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-07-v394-address-earnings-breakdown">
+<meta name="explorer-html-version" content="2026-09-07-v395-eligibility-checker">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8493,6 +8493,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var active=tip>=25000, prePayout=tip<JP_FIRST;
     var status=!active?'PLANNED':(prePayout?'ACTIVE · WAITING FOR #'+fc(JP_FIRST):'ACTIVE');
     var winner=state.jpWinner||state.winner||'NOT YET DETERMINED';
+    var myMiner=''; try{myMiner=localStorage.getItem('sost_my_miner')||'';}catch(_e){}
     // history + replay gating: only surface a real, paid jackpot (never before the first)
     var _lastH=state.jpHeight||(nextH(tip)-CAD);
     var _jd=(window.SJP&&SJP.jackpots)?SJP.jackpots[_lastH]:null;
@@ -8538,6 +8539,12 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         '<a class="sjpd-link" id="sjpd-dtd">DTD lottery detail &rarr;</a></div>'+
       '<div class="sjpd-note" style="margin-top:2px"><b>100 SOST</b> base reward. Unpaid jackpots (no eligible winner) roll over to the next eligible jackpot, up to a <b>500 SOST</b> maximum. The first jackpot (#'+fc(JP_FIRST)+') pays <b>100 SOST</b> (no prior rollover). The Explorer always shows the <b>real on-chain amount</b> from the jackpot transaction.</div>'+
       legendHtml+
+      '<div class="sjpd-sec">CHECK YOUR JACKPOT ELIGIBILITY</div>'+
+      '<div class="sjpd-note"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
+        '<input id="sjpd-elig-in" placeholder="Enter your SOST address (sost1…)" style="flex:1 1 240px;background:#0a0a0c;border:1px solid var(--border);color:#e6edf3;border-radius:5px;padding:7px 9px;font:12px ui-monospace" value="'+esc(myMiner)+'">'+
+        '<button class="sjpd-x" id="sjpd-elig-go" style="margin:0">CHECK</button>'+
+        (myMiner?'<button class="sjpd-x" id="sjpd-elig-mine" style="margin:0">CHECK MY MINER</button>':'')+
+      '</div><div id="sjpd-elig-res" style="margin-top:8px"></div></div>'+
       '<div class="sjpd-sec">HISTORICAL JACKPOT HISTORY</div>'+
       '<div class="sjpd-note" id="sjpd-hist">'+histHtml+'</div>'+
       replayBtn+
@@ -8547,6 +8554,10 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     d.onclick=function(e){ if(e.target===d) close(); };
     var dl=document.getElementById('sjpd-dtd'); if(dl&&typeof window.toggleDashPanel==='function') dl.onclick=function(){ close(); window.toggleDashPanel('dtd'); };
     var rp=document.getElementById('sjpd-replay'); if(rp) rp.onclick=function(){ if(window.SOSTJackpotDemo) window.SOSTJackpotDemo(); };
+    var _eg=document.getElementById('sjpd-elig-go'), _ei=document.getElementById('sjpd-elig-in'), _em=document.getElementById('sjpd-elig-mine');
+    if(_eg&&_ei) _eg.onclick=function(){ window.SJP.checkEligibility(_ei.value); };
+    if(_ei) _ei.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); window.SJP.checkEligibility(_ei.value); } });
+    if(_em&&_ei) _em.onclick=function(){ var m=''; try{m=localStorage.getItem('sost_my_miner')||'';}catch(_x){} if(m){ _ei.value=m; window.SJP.checkEligibility(m); } };
     document.addEventListener('keydown',function esch(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',esch);} });
   }
   function openDash(){
@@ -8581,6 +8592,41 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         }).catch(function(){});
     }
   }
+  // Eligibility checker: winner badge is canonical from chain (works now); the CURRENT/PRELIMINARY
+  // eligibility uses ONLY the node's canonical gethistoricaljackpotstatus.eligible_addresses[] —
+  // NEVER computed in JS and NEVER from RECENTLY ACTIVE. Shows a clear pending state if that
+  // read-only RPC is not yet deployed.
+  window.SJP.checkEligibility=function(addr){
+    var res=document.getElementById('sjpd-elig-res'); if(!res) return;
+    addr=(addr||'').trim();
+    if(!/^sost1[0-9a-fA-F]{40}$/.test(addr)){ res.innerHTML='<div style="color:#fb010d;font-size:11px">Invalid SOST address (expected sost1 + 40 hex).</div>'; return; }
+    var short=addr.substr(0,10)+'…'+addr.substr(-4);
+    res.innerHTML='<div style="color:var(--text3);font-size:11px">Checking '+esc(short)+'…</div>';
+    if(typeof window.rpc!=='function'){ res.innerHTML='<div style="color:var(--text3)">RPC unavailable.</div>'; return; }
+    window.rpc('getblockcount',[]).then(function(h){
+      var tip=parseInt(h,10)||0; var nh=(typeof window.jpNextHeight==='function')?window.jpNextHeight(tip):JP_FIRST;
+      var won=[]; var chain=Promise.resolve();
+      if(window.SJP&&typeof window.SJP.reconstruct==='function'){
+        for(var jh=JP_FIRST; jh<=tip; jh+=CAD){ (function(H2){ chain=chain.then(function(){ return window.SJP.reconstruct(H2).then(function(rec){ if(rec&&rec.winner===addr) won.push({h:H2,amount:rec.amount,txid:rec.txid}); }).catch(function(){}); }); })(jh); }
+      }
+      return chain.then(function(){ return {tip:tip,nh:nh,won:won}; });
+    }).then(function(ctx){
+      return window.rpc('gethistoricaljackpotstatus',[]).then(function(st){ ctx.st=st; return ctx; }).catch(function(){ ctx.st=null; return ctx; });
+    }).then(function(ctx){
+      var winBadge=''; if(ctx.won.length){ var w=ctx.won[0]; winBadge='<div style="margin-top:6px;background:linear-gradient(135deg,rgba(245,209,102,.14),rgba(57,255,20,.10));border:1px solid #ffd166;border-radius:6px;padding:7px 10px;font-size:10px"><b style="color:#ffd166">\uD83C\uDFC6 WINNER OF HISTORICAL JACKPOT #'+fc(w.h)+'</b> &middot; <b style="color:#39ff14">+'+esc(w.amount)+' SOST</b> &middot; VERIFIED ON-CHAIN</div>'; }
+      var st=ctx.st, main='';
+      if(st&&Object.prototype.toString.call(st.eligible_addresses)==='[object Array]'){
+        var cool=(Object.prototype.toString.call(st.cooldown_addresses)==='[object Array]')&&st.cooldown_addresses.indexOf(addr)>=0;
+        var elig=st.eligible_addresses.indexOf(addr)>=0;
+        if(cool) main='<div style="color:#f5b301;font-weight:800">\uD83D\uDFE0 COOLDOWN — not eligible for the next Historical Jackpot</div><div style="font-size:10px;color:var(--text3)">'+esc(short)+' &middot; recent-winner cooldown</div>';
+        else if(elig) main='<div style="color:#39ff14;font-weight:800;text-shadow:0 0 8px rgba(57,255,20,.5)">\uD83D\uDFE2 ELIGIBLE FOR THE NEXT HISTORICAL JACKPOT</div><div style="font-size:10px;color:var(--text3)">'+esc(short)+' &middot; Next #'+fc(ctx.nh)+' &middot; <b style="color:#ffd166">PRELIMINARY</b> &middot; 20,000-block window &middot; final at #'+fc(ctx.nh)+'</div>';
+        else main='<div style="color:#fb010d;font-weight:800">\uD83D\uDD34 NOT CURRENTLY ELIGIBLE</div><div style="font-size:10px;color:var(--text3)">'+esc(short)+' &middot; not in the current canonical eligible set for #'+fc(ctx.nh)+'</div>';
+      } else {
+        main='<div style="color:var(--text3);font-size:11px">\u23F3 Canonical eligibility check activates once the read-only <code>gethistoricaljackpotstatus</code> RPC is deployed (after the network converges). Eligibility is <b>never</b> computed client-side or from \"recently active\".</div>';
+      }
+      res.innerHTML=main+winBadge;
+    }).catch(function(e){ res.innerHTML='<div style="color:#fb010d;font-size:11px">Check failed: '+esc(e&&e.message||e)+'</div>'; });
+  };
   window.SJP=window.SJP||{}; window.SJP.openDash=openDash;
 })();
 </script>

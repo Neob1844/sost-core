@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-07-v394-address-earnings-breakdown",
-  "note": "Address page: EARNINGS BREAKDOWN (mining / DTD / Historical DTD Jackpot) with jackpot winner highlight + UTXO source label + collapsible gross-flow note. Forces explorer reload."
+  "v": "2026-09-07-v395-eligibility-checker",
+  "note": "Dashboard: CHECK YOUR JACKPOT ELIGIBILITY searcher (canonical via gethistoricaljackpotstatus.eligible_addresses[] once deployed; historical winner badge from chain now; CHECK MY MINER). Forces explorer reload."
 }
