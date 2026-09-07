@@ -8475,6 +8475,16 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var active=tip>=25000, prePayout=tip<JP_FIRST;
     var status=!active?'PLANNED':(prePayout?'ACTIVE · WAITING FOR #'+fc(JP_FIRST):'ACTIVE');
     var winner=state.jpWinner||state.winner||'NOT YET DETERMINED';
+    // history + replay gating: only surface a real, paid jackpot (never before the first)
+    var _lastH=state.jpHeight||(nextH(tip)-CAD);
+    var _jd=(window.SJP&&SJP.jackpots)?SJP.jackpots[_lastH]:null;
+    var _w=(_jd&&_jd.winner)||state.jpWinner||'';
+    var _amt=(_jd&&_jd.amount!=null)?_jd.amount:100;
+    var _wshort=_w?(_w.length>16?_w.substr(0,10)+'…'+_w.substr(-4):_w):'—';
+    var histHtml=(paid>0&&_w)
+      ? ('<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span>#'+fc(_lastH)+'</span><span class="sjp-w" onclick="showAddress(\''+esc(_w)+'\')" style="color:#39ff14;cursor:pointer">'+esc(_wshort)+'</span><span style="color:#ffd166;font-weight:700">+'+esc(_amt)+' SOST</span></div>'+(paid>1?('<div style="font-size:9px;color:var(--text3);margin-top:4px">+ '+(paid-1)+' earlier jackpot(s)</div>'):''))
+      : 'No historical jackpots paid yet.';
+    var replayBtn=(paid>0&&_w)?'<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button></div>':'';
     // JACKPOT ELIGIBLE (20k): FINAL (getlotteryaudit at a mined jackpot height) >
     // PRELIMINARY (future eligible_addresses[] preview at tip) > pending label.
     var jpEDisp, jpEStat;
@@ -8501,8 +8511,8 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         '<a class="sjpd-link" id="sjpd-dtd">DTD lottery detail &rarr;</a></div>'+
       '<div class="sjpd-note" style="margin-top:2px"><b>100 SOST</b> base reward. Unpaid jackpots (no eligible winner) roll over to the next eligible jackpot, up to a <b>500 SOST</b> maximum. The first jackpot (#'+fc(JP_FIRST)+') pays <b>100 SOST</b> (no prior rollover). The Explorer always shows the <b>real on-chain amount</b> from the jackpot transaction.</div>'+
       '<div class="sjpd-sec">HISTORICAL JACKPOT HISTORY</div>'+
-      '<div class="sjpd-note" id="sjpd-hist">'+(paid>0?'':'No historical jackpots paid yet.')+'</div>'+
-      '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button></div>'+
+      '<div class="sjpd-note" id="sjpd-hist">'+histHtml+'</div>'+
+      replayBtn+
       '</div>';
     d.classList.add('show');
     document.getElementById('sjpd-x').onclick=close;
