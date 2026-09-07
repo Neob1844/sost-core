@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/sost-gold-reference.js?v=v399"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- Cache-Control: tell every browser to NEVER cache this HTML.
      Cards added to the dashboard (CIRCULATING SUPPLY canary-yellow,
@@ -18,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-07-v399-rpc-cooldown-splash-goldref">
+<meta name="explorer-html-version" content="2026-09-07-v400-shared-gold-reference">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -7716,7 +7717,7 @@ function calcSostRefPrice(){
   var OZ_G=31.1034768, MG=1.14;                 // troy ounce in grams · reference weight (mg)
   var FACTOR=(MG/1000)/OZ_G;                     // multiply an oz-USD price -> per-SOST reference USD
   var goldPerG=goldPrice/OZ_G;
-  var refUSD=goldPrice*FACTOR;                   // gold reference value per SOST
+  var refUSD=window.SOSTGold.sostFromOz(goldPrice); // gold reference per SOST (shared source: js/sost-gold-reference.js)
   sostRefPrice=refUSD;
   // ---- display ----
   var el=document.getElementById('sostPrice');

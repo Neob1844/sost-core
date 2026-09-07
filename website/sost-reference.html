@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/sost-gold-reference.js?v=v399"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -374,7 +375,7 @@ function refreshLive(){
   fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether-gold&vs_currencies=usd')
    .then(function(r){return r.json();}).then(function(j){
      var oz=j&&j['tether-gold']&&j['tether-gold'].usd; if(!oz)return;
-     var perMg=oz/31103.4768, perG=perMg*1000, s=1.14*perMg, d=new Date();
+     var perG=window.SOSTGold.gramFromOz(oz), perMg=perG/1000, s=window.SOSTGold.sostFromOz(oz), d=new Date();
      _rref('eqUsd','$'+s.toFixed(4)); _rref('sRef','$'+s.toFixed(4));
      _rref('goldNow','$'+perG.toFixed(2)); _rref('sGold','$'+perG.toFixed(2));
      _rref('sBw','\u00d7'+Math.round(perG/1.126));

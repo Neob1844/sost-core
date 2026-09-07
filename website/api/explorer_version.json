@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-07-v399-rpc-cooldown-splash-goldref",
-  "note": "RPC cooldown fixed (tip-relative in preliminary; cooldown_window+count now correct = 2); dashboard uses the RPC as single cooldown source; splash SOST +20%; SOST GOLD REFERENCE framing. Single force reload."
+  "v": "2026-09-07-v400-shared-gold-reference",
+  "note": "Single shared Gold Reference module (js/sost-gold-reference.js): constants + formula (1 SOST = 1.14mg gold) now live in ONE place; Explorer/index/markets/reference consume it. Single force reload."
 }

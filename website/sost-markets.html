@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/sost-gold-reference.js?v=v399"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -842,7 +843,7 @@
               var _sup=0,_bh=0,_h=2254;
               try{var _xhr=new XMLHttpRequest();_xhr.open('POST','/rpc',false);_xhr.setRequestHeader('Content-Type','application/json');_xhr.send(JSON.stringify({method:'getblockcount',id:1}));if(_xhr.status===200){var _rr=JSON.parse(_xhr.responseText);if(_rr&&_rr.result)_h=_rr.result;}}catch(e){}
               while(_bh<=_h){var _ep=Math.floor(_bh/_EP);var _r=_R0*Math.pow(_Q,_ep);var _ee=Math.min((_ep+1)*_EP-1,_h);_sup+=_r*(_ee-_bh+1);_bh=_ee+1;}
-              sostUsd = 1.14 * _gp / 31103.4768;
+              sostUsd = window.SOSTGold.sostFromOz(_gp);
             }
             var sxv = (sostUsd && xaut.usd) ? xaut.usd / sostUsd : null;
             var spv = (sostUsd && paxg.usd) ? paxg.usd / sostUsd : null;
@@ -1011,7 +1012,7 @@
     var sup=0, bh=0;
     while (bh <= h) { var ep = Math.floor(bh/EP); var r = R0*Math.pow(Q,ep); var ee = Math.min((ep+1)*EP-1,h); sup += r*(ee-bh+1); bh = ee+1; }
     _sostRefSup = sup;
-    _sostRefUsd = 1.14 * _sostRefGoldP / 31103.4768;
+    _sostRefUsd = window.SOSTGold.sostFromOz(_sostRefGoldP);
     return _sostRefUsd;
   }
 
@@ -1033,7 +1034,7 @@
     if (chEl) { chEl.textContent = 'Gold reference price (1.14 mg)'; chEl.style.color = 'var(--text-dim,#888)'; }
     var rEl = document.getElementById('cpSostRange');
     if (rEl && refUsd && _sostRefGoldP && _sostRefSup) {
-      rEl.innerHTML = 'Gold reference: 1.14 mg &times; $' + (_sostRefGoldP/31103.4768).toFixed(5) + '/mg = $' + (1.14*_sostRefGoldP/31103.4768).toFixed(4) + '/SOST'
+      rEl.innerHTML = 'Gold reference: 1.14 mg &times; $' + (_sostRefGoldP/31103.4768).toFixed(5) + '/mg = $' + (window.SOSTGold.sostFromOz(_sostRefGoldP)).toFixed(4) + '/SOST'
         + '<br><span style="font-size:9px;color:var(--text-dim,#666)">Not a market price. Based on the fixed 1.14 mg gold reference. Will be replaced when SOST is listed on an exchange.</span>';
     }
     // Update disclaimer with dynamic values
@@ -1081,7 +1082,7 @@
       function priceAtHeight(h) {
         var sup=0, bh=0;
         while (bh <= h) { var ep=Math.floor(bh/EP_c); var r=R0_c*Math.pow(Q_c,ep); var ee=Math.min((ep+1)*EP_c-1,h); sup+=r*(ee-bh+1); bh=ee+1; }
-        return 1.14 * _sostRefGoldP / 31103.4768;
+        return window.SOSTGold.sostFromOz(_sostRefGoldP);
       }
 
       var GENESIS_TIME = 1773597600 * 1000; // 2026-03-15 18:00:00 UTC in ms
@@ -1318,7 +1319,7 @@
         function _pAH(h) {
           var s=0,b=0,R=7.85100863,Q=0.7788007830714049,E=131553;
           while(b<=h){var e2=Math.floor(b/E);var r=R*Math.pow(Q,e2);var ee=Math.min((e2+1)*E-1,h);s+=r*(ee-b+1);b=ee+1;}
-          return 1.14*_sostRefGoldP/31103.4768;
+          return window.SOSTGold.sostFromOz(_sostRefGoldP);
         }
         var GT = 1773597600 * 1000;
         [1, 3, 7, 30, 180, 365].forEach(function(days) {

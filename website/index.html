@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/sost-gold-reference.js?v=v399"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -1995,7 +1996,7 @@ var _sharedGold={xaut:0,paxg:0,avg:0,ts:''};
   function calcSostFromGold(){
     var goldAvg=_sharedGold.avg;
     if(!goldAvg) return;
-    sostUsd = 1.14 * goldAvg / 31103.4768;  // 31103.4768 mg per troy oz
+    sostUsd = window.SOSTGold.sostFromOz(goldAvg);  // 31103.4768 mg per troy oz
     renderSost();
   }
 
