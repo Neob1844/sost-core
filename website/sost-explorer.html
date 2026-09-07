@@ -8481,14 +8481,22 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var _w=(_jd&&_jd.winner)||state.jpWinner||'';
     var _amt=(_jd&&_jd.amount!=null)?_jd.amount:100;
     var _wshort=_w?(_w.length>16?_w.substr(0,10)+'…'+_w.substr(-4):_w):'—';
+    var _tx=state.jpTxid||''; var _dtd=(state.jpDtd!=null)?state.jpDtd.toFixed(4):null;
     var histHtml=(paid>0&&_w)
-      ? ('<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span>#'+fc(_lastH)+'</span><span class="sjp-w" onclick="showAddress(\''+esc(_w)+'\')" style="color:#39ff14;cursor:pointer">'+esc(_wshort)+'</span><span style="color:#ffd166;font-weight:700">+'+esc(_amt)+' SOST</span></div>'+(paid>1?('<div style="font-size:9px;color:var(--text3);margin-top:4px">+ '+(paid-1)+' earlier jackpot(s)</div>'):''))
+      ? ('<div style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;background:rgba(245,209,102,.05)">'
+         +'<div style="display:flex;justify-content:space-between;align-items:center"><b>BLOCK #'+fc(_lastH)+'</b><span style="font-size:8px;letter-spacing:.8px;color:#0a0a0c;background:#39ff14;padding:2px 6px;border-radius:4px;font-weight:800">VERIFIED ON-CHAIN</span></div>'
+         +'<div style="margin-top:5px;font-size:11px"><span style="color:var(--text3)">WINNER </span>&#127942; <span class="sjp-w" onclick="showAddress(\''+esc(_w)+'\')" style="color:#39ff14;cursor:pointer" title="'+esc(_w)+'">'+esc(_wshort)+'</span></div>'
+         +'<div style="font-size:11px">'+(_dtd!=null?('<span style="color:var(--text3)">DTD PAYOUT </span>'+_dtd+' SOST &middot; '):'')+'<span style="color:var(--text3)">HISTORICAL JACKPOT </span><b style="color:#ffd166">+'+esc(_amt)+' SOST</b></div>'
+         +'<div style="font-size:11px"><span style="color:var(--text3)">ELIGIBLE </span>'+esc(state.jpEligible!=null?state.jpEligible:'\u2014')+' <span style="color:var(--text3)">(20k window)</span>'+(_tx?(' &middot; <span class="sjp-w" onclick="(window.showTxDetail&&showTxDetail(\''+esc(_tx)+'\'))" style="cursor:pointer;color:#22d3ee">view tx</span>'):'')+'</div>'
+         +'</div>'+(paid>1?('<div style="font-size:9px;color:var(--text3);margin-top:4px">+ '+(paid-1)+' earlier jackpot(s)</div>'):''))
       : 'No historical jackpots paid yet.';
+    var legendHtml='<div style="display:flex;flex-wrap:wrap;gap:10px;font-size:9px;color:var(--text3);margin:8px 0 2px">'
+      +'<span>&#127942; WINNER</span><span style="color:#39ff14">&#128994; HIST. JACKPOT ELIGIBLE</span><span style="color:#22d3ee">&#128309; DTD ELIGIBLE</span><span style="color:#f5b301">&#128992; COOLDOWN</span><span>&#9899; NOT ELIGIBLE</span></div>';
     var replayBtn=(paid>0&&_w)?'<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button></div>':'';
     // JACKPOT ELIGIBLE (20k): FINAL (getlotteryaudit at a mined jackpot height) >
     // PRELIMINARY (future eligible_addresses[] preview at tip) > pending label.
     var jpEDisp, jpEStat;
-    if(state.jpEligible!=null){ jpEDisp=esc(state.jpEligible); jpEStat='FINAL &middot; verified on-chain'; }
+    if(state.jpEligible!=null){ jpEDisp=esc(state.jpEligible); jpEStat='FINAL &middot; verified at #'+fc(state.jpHeight||JP_FIRST); }
     else if(state.jpPrelim!=null){ jpEDisp=esc(state.jpPrelim); jpEStat='PRELIMINARY &middot; final at #'+fc(JP_FIRST); }
     else { jpEDisp='<span style="font-size:12px;color:var(--text3)">calculated at #'+fc(JP_FIRST)+'</span>'; jpEStat=''; }
     d.innerHTML='<div class="sjpd-box"><div class="sjpd-hd"><h3>&#127974; HISTORICAL DTD JACKPOT</h3>'+
@@ -8501,6 +8509,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         '<div class="sjpd-c"><div class="sjpd-l">ESTIMATED TIME</div><div class="sjpd-v">~'+eta(rem)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">RECENTLY ACTIVE (288)</div><div class="sjpd-v g">'+esc(elig)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOT ELIGIBLE (20k)</div><div class="sjpd-v c">'+jpEDisp+'</div>'+(jpEStat?'<div style="font-size:8px;letter-spacing:.6px;color:var(--gold);margin-top:2px">'+jpEStat+'</div>':'')+'</div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">\uD83D\uDFE0 COOLDOWN</div><div class="sjpd-v">'+(state.jpCooldown?state.jpCooldown.length:'\u2014')+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div></div>'+
       '</div>'+
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+esc(status)+'</div>'+
@@ -8510,6 +8519,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         'Recently active producers (last 288 blocks): <b>'+esc(elig)+'</b>. '+(state.jpEligible!=null?('The exact eligible producer <b>count</b> for the last jackpot (#'+fc(state.jpHeight||JP_FIRST)+', 20,000-window, canonical via getlotteryaudit): <b>'+esc(state.jpEligible)+'</b>. '):('The exact 20,000-window count becomes available from getlotteryaudit once the first jackpot block (#'+fc(JP_FIRST)+') is mined. '))+'For the full per-address list, see the DTD panel: '+
         '<a class="sjpd-link" id="sjpd-dtd">DTD lottery detail &rarr;</a></div>'+
       '<div class="sjpd-note" style="margin-top:2px"><b>100 SOST</b> base reward. Unpaid jackpots (no eligible winner) roll over to the next eligible jackpot, up to a <b>500 SOST</b> maximum. The first jackpot (#'+fc(JP_FIRST)+') pays <b>100 SOST</b> (no prior rollover). The Explorer always shows the <b>real on-chain amount</b> from the jackpot transaction.</div>'+
+      legendHtml+
       '<div class="sjpd-sec">HISTORICAL JACKPOT HISTORY</div>'+
       '<div class="sjpd-note" id="sjpd-hist">'+histHtml+'</div>'+
       replayBtn+
@@ -8539,11 +8549,16 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
             window.rpc('getlotteryaudit',[String(lastJp)]).then(function(a){
               if(a){
                 if(a.eligible_count!=null) state.jpEligible=a.eligible_count;
+                if(a.cooldown_addresses) state.jpCooldown=a.cooldown_addresses;
                 if(a.winner_address){ state.jpWinner=a.winner_address; state.jpHeight=lastJp;
                   try{ if(window.SJP&&SJP.jackpots){ var e=SJP.jackpots[lastJp]||{}; e.winner=a.winner_address; e.eligible=a.eligible_count; SJP.jackpots[lastJp]=e; } }catch(_e){} }
               }
               render(state);
-            }).catch(function(){ render(state); });
+              return window.rpc('getblockhash',[lastJp]);
+            }).then(function(bh){ if(!bh) return null; return window.rpc('getblock',[bh]); })
+            .then(function(b){ if(b){ if(b.txids&&b.txids.length>1) state.jpTxid=b.txids[1];
+                if(b.lottery_payout!=null) state.jpDtd=parseInt(b.lottery_payout,10)/1e8; render(state); } })
+            .catch(function(){ render(state); });
           }
         }).catch(function(){});
     }
