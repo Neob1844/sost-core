@@ -1686,6 +1686,21 @@ static std::string handle_gethistoricaljackpotstatus(const std::string& id, cons
       << ",\"eligible_count\":" << eligible.size()
       << ",\"eligible_addresses\":[";
     for (size_t i = 0; i < eligible.size(); ++i) { if (i) s << ","; s << "\"" << address_encode(eligible[i].pkh) << "\""; }
+    // cooldown_addresses: distinct miners over [target - exclusion_window, target-1] (canonical, same as getlotteryaudit)
+    s << "],\"cooldown_addresses\":[";
+    {
+        std::set<std::string> _seen; bool _f = true;
+        const int64_t _cd_lo = target - sost::lottery_exclusion_window_at(target), _cd_hi = target - 1;
+        for (const auto& b : g_blocks) {
+            if (b.height < _cd_lo || b.height > _cd_hi) continue;
+            if (b.tx_hexes.empty()) continue;
+            std::vector<Byte> _raw; if (!decode_tx_hex(b.tx_hexes[0], _raw)) continue;
+            Transaction _cb; std::string _de;
+            if (!Transaction::Deserialize(_raw, _cb, &_de) || _cb.outputs.empty()) continue;
+            std::string _a = address_encode(_cb.outputs[0].pubkey_hash);
+            if (_seen.insert(_a).second) { if (!_f) s << ","; s << "\"" << _a << "\""; _f = false; }
+        }
+    }
     s << "]}";
     return rpc_result(id, s.str());
 }
