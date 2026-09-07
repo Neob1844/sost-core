@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-07-v400-shared-gold-reference",
-  "note": "Single shared Gold Reference module (js/sost-gold-reference.js): constants + formula (1 SOST = 1.14mg gold) now live in ONE place; Explorer/index/markets/reference consume it. Single force reload."
+  "v": "2026-09-07-v401-gold-source-final",
+  "note": "Gold reference fully single-sourced (js/sost-gold-reference.js incl. mgFromOz for the markets $/mg breakdown); 0 duplicated gold calcs site-wide; app 'SOST PRICE' label -> GOLD REFERENCE. Single force reload."
 }

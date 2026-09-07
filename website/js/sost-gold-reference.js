@@ -13,6 +13,7 @@
   function sostFromOz(goldUsdPerOz) { return (Number(goldUsdPerOz) || 0) * WEIGHT_MG / MG_PER_TROY_OZ; }
   function sostFromGram(goldUsdPerGram) { return (Number(goldUsdPerGram) || 0) * (WEIGHT_MG / 1000); } // = *0.00114
   function gramFromOz(oz) { return (Number(oz) || 0) / 31.1034768; }
+  function mgFromOz(oz) { return (Number(oz) || 0) / MG_PER_TROY_OZ; } // USD per mg of gold from an oz price
 
   var _state = { goldUsdPerOz: 0, goldUsdPerGram: 0, goldUsdPerMg: 0, sostReferenceUsd: 0, ts: '', ok: false };
   function _apply(oz) {
@@ -47,6 +48,7 @@
     sostFromOz: sostFromOz,
     sostFromGram: sostFromGram,
     gramFromOz: gramFromOz,
+    mgFromOz: mgFromOz,
     load: load,
     get: function () { return _state; },
     // convenience label used across surfaces

@@ -1034,7 +1034,7 @@
     if (chEl) { chEl.textContent = 'Gold reference price (1.14 mg)'; chEl.style.color = 'var(--text-dim,#888)'; }
     var rEl = document.getElementById('cpSostRange');
     if (rEl && refUsd && _sostRefGoldP && _sostRefSup) {
-      rEl.innerHTML = 'Gold reference: 1.14 mg &times; $' + (_sostRefGoldP/31103.4768).toFixed(5) + '/mg = $' + (window.SOSTGold.sostFromOz(_sostRefGoldP)).toFixed(4) + '/SOST'
+      rEl.innerHTML = 'Gold reference: 1.14 mg &times; $' + (window.SOSTGold.mgFromOz(_sostRefGoldP)).toFixed(5) + '/mg = $' + (window.SOSTGold.sostFromOz(_sostRefGoldP)).toFixed(4) + '/SOST'
         + '<br><span style="font-size:9px;color:var(--text-dim,#666)">Not a market price. Based on the fixed 1.14 mg gold reference. Will be replaced when SOST is listed on an exchange.</span>';
     }
     // Update disclaimer with dynamic values
