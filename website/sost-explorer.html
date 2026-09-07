@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-07-v397-jackpot-rpc-live">
+<meta name="explorer-html-version" content="2026-09-07-v398-cooldown-goldref-dtd">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -902,7 +902,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div class="price-col">
     <div class="price-card">
       <div class="price-card-head">
-        <div class="price-card-title">// <b style="color:var(--red)">SOST PRICE</b></div>
+        <div class="price-card-title">// <b style="color:#ffd700">SOST GOLD REFERENCE</b> <span style="font-size:9px;color:var(--text3)">· not a market price</span></div>
         <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
       </div>
       <div class="price-card-val" id="sostPrice" style="color:var(--red)">—</div>
@@ -2201,9 +2201,10 @@ async function renderDTDPanel(body,title,silent){
       + 'almost every block pays out.</p>'
 
       + '<p style="margin:4px 0"><b style="color:var(--text)">6. Coinbase '
-      + 'split (constant by consensus).</b> Every block (PAYOUT or not) '
-      + 'splits its base subsidy 50/25/25 between miner, Gold Funding '
-      + 'Vault and PoPC Pool. The lottery prize is an ADDITIONAL payout '
+      + 'split.</b> <b style="color:#39ff14">CURRENT (V15, since #25,000): 50% miner / 50% DTD</b> '
+      + '(Gold Vault &amp; PoPC <b>new emission = 0</b>). '
+      + '<span style="color:var(--text3)">LEGACY (Phase II, pre-V15): base subsidy split 50/25/25 miner / Gold Funding Vault / PoPC Pool.</span> '
+      + 'The DTD prize is an ADDITIONAL payout '
       + 'on top of this split, sourced from the lottery pool, not from '
       + 'the miner&apos;s 50%. The miner therefore always receives their '
       + 'standard share regardless of whether the block is a PAYOUT.</p>'
@@ -8541,13 +8542,13 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         '<div class="sjpd-c"><div class="sjpd-l">ESTIMATED TIME</div><div class="sjpd-v">~'+eta(rem)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">RECENTLY ACTIVE (288)</div><div class="sjpd-v g">'+esc(elig)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOT ELIGIBLE (20k)</div><div class="sjpd-v c">'+jpEDisp+'</div>'+(jpEStat?'<div style="font-size:8px;letter-spacing:.6px;color:var(--gold);margin-top:2px">'+jpEStat+'</div>':'')+'</div>'+
-        '<div class="sjpd-c"><div class="sjpd-l">\uD83D\uDFE0 COOLDOWN</div><div class="sjpd-v">'+(state.jpCooldown?state.jpCooldown.length:'\u2014')+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">\uD83D\uDFE0 IN COOLDOWN</div><div class="sjpd-v">'+(state.cooldownList?state.cooldownList.length:'\u2014')+'</div><div style="font-size:8px;color:var(--text3);margin-top:2px">window '+(state.cooldownWindow!=null?state.cooldownWindow:6)+' blocks</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div></div>'+
       '</div>'+
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+esc(status)+'</div>'+
         '<div class="sjpd-l" style="margin-top:8px">WINNER</div><div class="sjpd-v" style="font-size:13px">'+esc(winner)+'</div></div>'+
       '<div class="sjpd-sec">HISTORICAL JACKPOT ELIGIBILITY</div>'+
-      '<div class="sjpd-note">The Historical Jackpot reuses the DTD winner but with a <b>wider recency window: 20,000 blocks</b> (vs 5,000 for the normal draw), plus the same gates (recent-winner cooldown, anti-dominance, SbPoW). '+
+      '<div class="sjpd-note">The Historical Jackpot reuses the DTD winner but with a <b>wider recency window: 20,000 blocks</b> (vs 5,000 for the normal draw), plus the same gates (recent-producer cooldown (miner of one of the last 6 blocks), anti-dominance, SbPoW). '+
         'Recently active producers (last 288 blocks): <b>'+esc(elig)+'</b>. '+(state.jpEligible!=null?('The exact eligible producer <b>count</b> for the last jackpot (#'+fc(state.jpHeight||JP_FIRST)+', 20,000-window, canonical via getlotteryaudit): <b>'+esc(state.jpEligible)+'</b>. '):('The exact 20,000-window count becomes available from getlotteryaudit once the first jackpot block (#'+fc(JP_FIRST)+') is mined. '))+'For the full per-address list, see the DTD panel: '+
         '<a class="sjpd-link" id="sjpd-dtd">DTD lottery detail &rarr;</a></div>'+
       '<div class="sjpd-note" style="margin-top:2px"><b>100 SOST</b> base reward. Unpaid jackpots (no eligible winner) roll over to the next eligible jackpot, up to a <b>500 SOST</b> maximum. The first jackpot (#'+fc(JP_FIRST)+') pays <b>100 SOST</b> (no prior rollover). The Explorer always shows the <b>real on-chain amount</b> from the jackpot transaction.</div>'+
@@ -8604,8 +8605,12 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
                 if(b.lottery_payout!=null) state.jpDtd=parseInt(b.lottery_payout,10)/1e8; render(state); } })
             .then(function(){ return window.rpc('gethistoricaljackpotstatus',[]).then(function(st){
                 if(st){ if(st.eligible_count!=null) state.jpPrelim=st.eligible_count;
-                        if(st.reserve!=null) state.reserve=st.reserve+' SOST';
-                        if(Object.prototype.toString.call(st.cooldown_addresses)==='[object Array]') state.jpCooldown=st.cooldown_addresses; }
+                        if(st.reserve!=null) state.reserve=st.reserve+' SOST'; }
+                render(state); }).catch(function(){}); })
+            .then(function(){ return window.rpc('getlotterystate',[]).then(function(ls){
+                if(ls){ if(ls.cooldown_window!=null) state.cooldownWindow=ls.cooldown_window;
+                        var pcw=ls.previous_cooldown_block_winners; // pkh hex of the miners of the last N blocks (canonical)
+                        if(Object.prototype.toString.call(pcw)==='[object Array]'){ var seen={},list=[]; for(var i=0;i<pcw.length;i++){ var a='sost1'+pcw[i]; if(!seen[a]){seen[a]=1;list.push(a);} } state.cooldownList=list; } }
                 render(state); }).catch(function(){}); })
             .catch(function(){ render(state); });
           }
@@ -8638,7 +8643,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       if(st&&Object.prototype.toString.call(st.eligible_addresses)==='[object Array]'){
         var cool=(Object.prototype.toString.call(st.cooldown_addresses)==='[object Array]')&&st.cooldown_addresses.indexOf(addr)>=0;
         var elig=st.eligible_addresses.indexOf(addr)>=0;
-        if(cool) main='<div style="color:#f5b301;font-weight:800">\uD83D\uDFE0 COOLDOWN — not eligible for the next Historical Jackpot</div><div style="font-size:10px;color:var(--text3)">'+esc(short)+' &middot; recent-winner cooldown</div>';
+        if(cool) main='<div style="color:#f5b301;font-weight:800">\uD83D\uDFE0 COOLDOWN — not eligible for the next Historical Jackpot</div><div style="font-size:10px;color:var(--text3)">'+esc(short)+' &middot; recent-producer cooldown (miner of one of the last 6 blocks)</div>';
         else if(elig) main='<div style="color:#39ff14;font-weight:800;text-shadow:0 0 8px rgba(57,255,20,.5)">\uD83D\uDFE2 ELIGIBLE FOR THE NEXT HISTORICAL JACKPOT</div><div style="font-size:10px;color:var(--text3)">'+esc(short)+' &middot; Next #'+fc(ctx.nh)+' &middot; <b style="color:#ffd166">PRELIMINARY</b> &middot; 20,000-block window &middot; final at #'+fc(ctx.nh)+'</div>';
         else main='<div style="color:#fb010d;font-weight:800">\uD83D\uDD34 NOT CURRENTLY ELIGIBLE</div><div style="font-size:10px;color:var(--text3)">'+esc(short)+' &middot; not in the current canonical eligible set for #'+fc(ctx.nh)+'</div>';
       } else {
