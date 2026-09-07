@@ -8085,6 +8085,7 @@ static bool rpc_is_readonly_method(const std::string& body_json) {
         "getrpcstats",
         "getaddressflows",
         "getlotteryaudit",
+        "gethistoricaljackpotstatus",
         "getpopcv15status"   // P5: read-only PoPC V15 lifecycle observability (soak)
     };
     return kReadOnly.count(m) > 0;
