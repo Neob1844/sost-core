@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-07-v396-dashboard-hardening",
-  "note": "Harden Historical DTD Jackpot dashboard render(): drawer null-guard + try/catch around all button wiring so the dashboard ALWAYS opens from the card even if a control is missing. Forces explorer reload."
+  "v": "2026-09-07-v397-jackpot-rpc-live",
+  "note": "Jackpot dashboard navigation fix + canonical replay + live eligibility (gethistoricaljackpotstatus deployed): CHECK YOUR JACKPOT ELIGIBILITY now returns real 20k-window results; V15 & green-DTD banners removed. Single force reload."
 }

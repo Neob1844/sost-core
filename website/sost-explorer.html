@@ -18,7 +18,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-07-v396-dashboard-hardening">
+<meta name="explorer-html-version" content="2026-09-07-v397-jackpot-rpc-live">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8528,9 +8528,9 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     // JACKPOT ELIGIBLE (20k): FINAL (getlotteryaudit at a mined jackpot height) >
     // PRELIMINARY (future eligible_addresses[] preview at tip) > pending label.
     var jpEDisp, jpEStat;
-    if(state.jpEligible!=null){ jpEDisp=esc(state.jpEligible); jpEStat='FINAL &middot; verified at #'+fc(state.jpHeight||JP_FIRST); }
-    else if(state.jpPrelim!=null){ jpEDisp=esc(state.jpPrelim); jpEStat='PRELIMINARY &middot; final at #'+fc(JP_FIRST); }
-    else { jpEDisp='<span style="font-size:12px;color:var(--text3)">calculated at #'+fc(JP_FIRST)+'</span>'; jpEStat=''; }
+    if(state.jpPrelim!=null){ jpEDisp=esc(state.jpPrelim); jpEStat='PRELIMINARY &middot; final at #'+fc(nh); }
+    else if(state.jpEligible!=null){ jpEDisp=esc(state.jpEligible); jpEStat='FINAL &middot; verified at #'+fc(state.jpHeight||JP_FIRST); }
+    else { jpEDisp='<span style="font-size:12px;color:var(--text3)">calculated at #'+fc(nh)+'</span>'; jpEStat=''; }
     d.innerHTML='<div class="sjpd-box"><div class="sjpd-hd"><h3>&#127974; HISTORICAL DTD JACKPOT</h3>'+
       '<button class="sjpd-x" id="sjpd-x">Close</button></div>'+
       '<div class="sjpd-grid">'+
@@ -8602,6 +8602,11 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
             }).then(function(bh){ if(!bh) return null; return window.rpc('getblock',[bh]); })
             .then(function(b){ if(b){ if(b.txids&&b.txids.length>1) state.jpTxid=b.txids[1];
                 if(b.lottery_payout!=null) state.jpDtd=parseInt(b.lottery_payout,10)/1e8; render(state); } })
+            .then(function(){ return window.rpc('gethistoricaljackpotstatus',[]).then(function(st){
+                if(st){ if(st.eligible_count!=null) state.jpPrelim=st.eligible_count;
+                        if(st.reserve!=null) state.reserve=st.reserve+' SOST';
+                        if(Object.prototype.toString.call(st.cooldown_addresses)==='[object Array]') state.jpCooldown=st.cooldown_addresses; }
+                render(state); }).catch(function(){}); })
             .catch(function(){ render(state); });
           }
         }).catch(function(){});
