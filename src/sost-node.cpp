@@ -1687,10 +1687,14 @@ static std::string handle_gethistoricaljackpotstatus(const std::string& id, cons
       << ",\"eligible_addresses\":[";
     for (size_t i = 0; i < eligible.size(); ++i) { if (i) s << ","; s << "\"" << address_encode(eligible[i].pkh) << "\""; }
     // cooldown_addresses: distinct miners over [target - exclusion_window, target-1] (canonical, same as getlotteryaudit)
-    s << "],\"cooldown_addresses\":[";
+    // cooldown: PRELIMINARY -> current cooldown (last `win` mined blocks up to tip);
+    // FINAL (target<=tip) -> exact cooldown context of that jackpot height. Never use future blocks.
+    const int64_t _win = sost::lottery_exclusion_window_at(target);
+    const int64_t _cd_hi = std::min<int64_t>(target - 1, tip);
+    const int64_t _cd_lo = _cd_hi - _win + 1;
+    s << "],\"cooldown_window\":" << _win << ",\"cooldown_addresses\":[";
     {
         std::set<std::string> _seen; bool _f = true;
-        const int64_t _cd_lo = target - sost::lottery_exclusion_window_at(target), _cd_hi = target - 1;
         for (const auto& b : g_blocks) {
             if (b.height < _cd_lo || b.height > _cd_hi) continue;
             if (b.tx_hexes.empty()) continue;
