@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-07-v401-gold-source-final",
-  "note": "Gold reference fully single-sourced (js/sost-gold-reference.js incl. mgFromOz for the markets $/mg breakdown); 0 duplicated gold calcs site-wide; app 'SOST PRICE' label -> GOLD REFERENCE. Single force reload."
+  "v": "2026-09-08-v402-cx-label-jacksub-gold",
+  "note": "Nav CONVERGENCEX text link +20% (13.2px); HIST. DTD JACKPOT card 'next #' sub-line recolored gray->gold. Single force reload."
 }
