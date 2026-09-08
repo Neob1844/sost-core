@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-08-v403-overlay-charts",
-  "note": "Two overlay comparison charts added below the 4 gold charts: XAUT vs PAXG, and XAUT/BTC vs PAXG/BTC — same time-range selector, timestamp-aligned, shared engine, combined tooltip. Single force reload."
+  "v": "2026-09-08-v404-overlay-dual-axis",
+  "note": "Overlay charts redone: XAUT PRICE+XAUT/BTC and PAXG PRICE+PAXG/BTC, dual Y axis (USD left / BTC right), below the 4 untouched originals. Single force reload."
 }
