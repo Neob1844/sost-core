@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-08-v402-cx-label-jacksub-gold",
-  "note": "Nav CONVERGENCEX text link +20% (13.2px); HIST. DTD JACKPOT card 'next #' sub-line recolored gray->gold. Single force reload."
+  "v": "2026-09-08-v403-overlay-charts",
+  "note": "Two overlay comparison charts added below the 4 gold charts: XAUT vs PAXG, and XAUT/BTC vs PAXG/BTC — same time-range selector, timestamp-aligned, shared engine, combined tooltip. Single force reload."
 }
