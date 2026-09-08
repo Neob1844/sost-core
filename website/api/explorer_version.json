@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-08-v405-overlay-columns",
-  "note": "Overlay charts placed each under its own column: XAUT overlay below the XAUT column, PAXG overlay below the PAXG column (2 cols x 3 rows). Single force reload."
+  "v": "2026-09-08-v406-nav-4-compact-circles",
+  "note": "Nav: 4 compact 72px circle buttons (ConvergenceX/DTD/Atomic/News) — same outer size, inner content scaled (CX/News larger, DTD/Atomic moderate); SOST EXPLORER + all charts untouched. Single force reload."
 }
