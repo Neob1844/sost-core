@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-08-v404-overlay-dual-axis",
-  "note": "Overlay charts redone: XAUT PRICE+XAUT/BTC and PAXG PRICE+PAXG/BTC, dual Y axis (USD left / BTC right), below the 4 untouched originals. Single force reload."
+  "v": "2026-09-08-v405-overlay-columns",
+  "note": "Overlay charts placed each under its own column: XAUT overlay below the XAUT column, PAXG overlay below the PAXG column (2 cols x 3 rows). Single force reload."
 }
