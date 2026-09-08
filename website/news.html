@@ -207,6 +207,58 @@
   </div>
 </section>
 
+<!-- HISTORICAL DTD JACKPOT — first-ever payout at block 25,290 -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// HISTORICAL DTD JACKPOT &middot; first-ever payout &middot; block&nbsp;25,290 &middot; verified on-chain</div>
+      <div class="section-dates">Published: 2026-09-07 &middot; Last updated: 2026-09-07</div>
+      <h2 class="section-title">The first Historical DTD Jackpot paid <span class="accent" style="color:#39ff14">100&nbsp;SOST</span> at block&nbsp;25,290</h2>
+      <div class="section-sub">The network's <b>first-ever</b> Historical DTD Jackpot was drawn at block&nbsp;<b>25,290</b> and paid <b style="color:#39ff14">100&nbsp;SOST</b> to a single canonical DTD winner &mdash; <b>verified on-chain</b>.</div>
+    </div>
+    <div class="info-card">
+      <p><b>What happened.</b> At block&nbsp;25,290 the consensus selected a Historical Jackpot winner and paid <b style="color:#39ff14">100&nbsp;SOST</b> as a dedicated <code>TX_TYPE_JACKPOT</code> transaction (on top of that block's normal DTD payout of ~3.9255&nbsp;SOST to the same address).</p>
+      <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
+        <li><b>Winner:</b> <code>sost141bfebb4b830c2f4136fd324318a5e708c2215a4</code></li>
+        <li><b>Amount:</b> +100 SOST &middot; <b>TX:</b> <code>5286762e&hellip;</code> &middot; <b>Eligible set:</b> 192 addresses (20,000-block window)</li>
+        <li><b>Producer &ne; winner:</b> the block was mined by <code>sost1ad01a&hellip;</code>, but the jackpot went to a <b>different</b> address &mdash; the miner does not control who wins.</li>
+      </ul>
+      <h3 style="color:var(--cyan-primary);margin:18px 0 6px">How the Historical DTD Jackpot works</h3>
+      <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
+        <li>Every <b>288 blocks (~48h)</b> a Historical Jackpot draws <b>one</b> canonical DTD winner.</li>
+        <li>At a jackpot height the eligibility uses an <b>expanded 20,000-block activity window</b> (vs 5,000 on normal blocks) plus the same canonical gates: recent-producer cooldown, anti-dominance and SbPoW.</li>
+        <li><b>Base reward 100&nbsp;SOST.</b> If a jackpot has no eligible winner it rolls over to the next one, up to a hard cap of <b>500&nbsp;SOST</b>.</li>
+        <li>The reserve (~68,174&nbsp;SOST, frozen at the V15 emission transition) funds the jackpots and drains gradually over several years.</li>
+      </ul>
+      <p style="margin-top:12px"><b>Next scheduled jackpot: block&nbsp;25,578.</b> You can check whether your address is currently eligible in the Explorer &mdash; open <b>HIST. DTD JACKPOT &rarr; CHECK YOUR JACKPOT ELIGIBILITY</b> and paste your <code>sost1&hellip;</code> address (status before the jackpot height is <b>preliminary</b> and can change).</p>
+      <p style="color:#94a3b8;font-size:13px">Everything is fully traceable on the <a href="sost-explorer.html">SOST Explorer</a> &mdash; the block, the winner, the jackpot transaction and the eligible set are all on-chain.</p>
+    </div>
+  </div>
+</section>
+
+<!-- V15 CONSENSUS — full decentralization, activated block 25,000 -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// V15 CONSENSUS &middot; full decentralization &middot; activated block&nbsp;25,000</div>
+      <div class="section-dates">Published: 2026-09-05 &middot; Last updated: 2026-09-07</div>
+      <h2 class="section-title">V15 is live &mdash; <span class="accent" style="color:#fbbf24">emission transition + Historical DTD Jackpot</span> at block&nbsp;25,000</h2>
+      <div class="section-sub">At block&nbsp;<b>25,000</b> the network activated <b>V15</b>: the emission transition to a fully community-distributed model, and the new <b>Historical DTD Jackpot</b>.</div>
+    </div>
+    <div class="info-card">
+      <p><b>What changed at block&nbsp;25,000.</b> V15 completes the move to a fully decentralized distribution:</p>
+      <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
+        <li><b>Coinbase split is now 50% miner / 50% DTD</b> (Daily Token Distribution). The previous 50&nbsp;/&nbsp;25&nbsp;/&nbsp;25 miner&nbsp;/&nbsp;Gold&nbsp;Vault&nbsp;/&nbsp;PoPC split is <b>legacy</b>.</li>
+        <li><b>New Gold Vault &amp; PoPC emission &rarr; 0%.</b> No new SOST is minted into those reserves; their existing balances are frozen and repurposed to fund the Historical DTD Jackpot.</li>
+        <li><b>Historical DTD Jackpot</b> introduced &mdash; first paid at block&nbsp;25,290 (see the entry above).</li>
+        <li><b>DTD recency gate:</b> normal blocks use a 5,000-block activity window; jackpot heights use 20,000.</li>
+      </ul>
+      <p style="margin-top:12px"><b>For miners &amp; node operators.</b> Run the <b>final V15 release</b> and mine with <code>--realtime</code> (mandatory) and a clock synced via NTP. A node on a pre-V15 or incompatible build can diverge from mainnet.</p>
+      <p style="color:#94a3b8;font-size:13px"><b>No second consensus activation is scheduled at block&nbsp;30,000.</b> V15 is the current mainnet consensus (consensus commit <code>82ba0521</code>). Verify your node passes block&nbsp;25,000 and follows the network tip on the <a href="sost-explorer.html">Explorer</a>.</p>
+    </div>
+  </div>
+</section>
+
 <!-- INCIDENT & POST-MORTEM — chain stall at block 20,526 (node restart disconnected all miners); resolved -->
 <section class="section">
   <div class="container">
