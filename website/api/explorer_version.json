@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-08-v406-nav-4-compact-circles",
-  "note": "Nav: 4 compact 72px circle buttons (ConvergenceX/DTD/Atomic/News) — same outer size, inner content scaled (CX/News larger, DTD/Atomic moderate); SOST EXPLORER + all charts untouched. Single force reload."
+  "v": "2026-09-08-v407-nav-rollback-original",
+  "note": "Nav rolled back to original (SOST EXPLORER + ConvergenceX logo + Atomic Swap DEX tile); all logo/nav experiments removed. The 6 charts (4 originals + 2 overlays) are unchanged. Single force reload."
 }
