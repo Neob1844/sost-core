@@ -1298,7 +1298,13 @@ inline constexpr bool is_hist_jackpot_height(int64_t height) {
 // jackpot #30,186; #30,000 itself is not a jackpot height).
 // =============================================================================
 #if defined(SOST_DEVNET_FORKS)
+#  if defined(SOST_DEVNET_V2_FIRST_JACKPOT)
+inline constexpr int64_t HIST_JACKPOT_V2_HEIGHT = 18;    // DEVNET TEST: makes the FIRST jackpot (#24) a V2 jackpot,
+                                                          // so a V2 winner can be paid BEFORE the tiny devnet reserve
+                                                          // is drained+retired by a V15 jackpot. Test-build only.
+#  else
 inline constexpr int64_t HIST_JACKPOT_V2_HEIGHT = 42;     // DEVNET_FAST ONLY (a jackpot height: 24,30,36,42,…)
+#  endif
 inline constexpr int64_t NODE_EPOCH_LENGTH      = 6;      // DEVNET_FAST epoch == jackpot cadence
 #elif defined(SOST_TESTNET_FORKS)
 inline constexpr int64_t HIST_JACKPOT_V2_HEIGHT = 13500;  // TESTNET

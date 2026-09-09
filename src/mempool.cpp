@@ -100,6 +100,12 @@ MempoolAcceptResult Mempool::AcceptToMempool(
     // node's sendrawtransaction handler (which has chain + node-state access) and,
     // authoritatively, by ConnectBlock's connect_block_node_txs before acceptance.
     if (tx.tx_type == TX_TYPE_NODE_BIND || tx.tx_type == TX_TYPE_NODE_HEARTBEAT) {
+        // Activation guard at RELAY time: a node tx that would be invalid at the
+        // next block MUST NOT enter the mempool — otherwise it poisons the miner's
+        // block template (every block including it is rejected by ConnectBlock).
+        if (!sost::node_participation_active_at(ctx.spend_height))
+            return MempoolAcceptResult::Fail(MempoolAcceptCode::POLICY_FAIL,
+                "node tx before V16 activation");
         Hash256 nid{}; std::string nerr;
         if (!tx.ComputeTxId(nid, &nerr))
             return MempoolAcceptResult::Fail(MempoolAcceptCode::INTERNAL_ERROR, "node tx txid: " + nerr);
