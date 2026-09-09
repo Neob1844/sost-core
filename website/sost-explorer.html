@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-08-v407-nav-rollback-original">
+<meta name="explorer-html-version" content="2026-09-09-v408-jackpot-archive-header125-splash135">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -110,13 +110,13 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .logo-exp{font-size:20px;font-weight:300;color:var(--text);font-family:var(--sans);letter-spacing:1px}
 .logo-tag{font-size:11px;color:var(--text3);margin-left:6px}
 .header-right{display:flex;align-items:center;gap:20px}
-.net-badge{font-size:10px;border:1px solid rgba(74,222,128,.3);border-radius:2px;padding:3px 10px;color:var(--green);letter-spacing:2px;display:flex;align-items:center;gap:6px}
-.net-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite}
+.net-badge{font-size:12.5px;border:1px solid rgba(74,222,128,.3);border-radius:2px;padding:3.75px 12.5px;color:var(--green);letter-spacing:2.5px;display:flex;align-items:center;gap:7.5px}
+.net-dot{width:7.5px;height:7.5px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}
 @keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 @keyframes marketsLivePulse{0%,100%{color:#4ade80;text-shadow:0 0 4px rgba(74,222,128,.45)}50%{color:#86efac;text-shadow:0 0 12px rgba(74,222,128,.95),0 0 22px rgba(74,222,128,.55)}}
-.header-link{font-size:11px;color:var(--text3);letter-spacing:1px;transition:color .15s}
+.header-link{font-size:13.75px;color:var(--text3);letter-spacing:1.25px;transition:color .15s}
 .header-link.markets-live{font-weight:700;animation:marketsLivePulse 1.6s ease-in-out infinite}
 .header-link.markets-live:hover{color:#bbf7d0}
 .header-link:hover{color:var(--red)}
@@ -381,9 +381,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- V14 activation height = block 16000. Atomic-swap HTLC consensus rules activate here. -->
 <!-- LOADING OVERLAY — spinning logo countdown -->
 <div id="exLoadOv" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease;font-family:'JetBrains Mono',monospace;margin:0;padding:0;zoom:1.0">
-  <img id="exLoadLogo" src="sost-logo.png?v=v392" alt="SOST" style="width:120px;height:120px;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));transition:transform .15s ease-out;animation:sostLogoPulse 3.6s ease-in-out infinite">
-  <div id="exLoadNum" style="font-size:28px;color:#fff;font-weight:700;margin-top:16px">60</div>
-  <div id="exLoadLbl" style="margin-top:10px;font-size:14px;letter-spacing:2px;font-weight:600;color:#00ff88;animation:exPulse 1.5s ease infinite">LOADING DATA...</div>
+  <img id="exLoadLogo" src="sost-logo.png?v=v392" alt="SOST" style="width:162px;height:162px;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));transition:transform .15s ease-out;animation:sostLogoPulse 3.6s ease-in-out infinite">
+  <div id="exLoadNum" style="font-size:37.8px;color:#fff;font-weight:700;margin-top:21.6px">60</div>
+  <div id="exLoadLbl" style="margin-top:13.5px;font-size:18.9px;letter-spacing:2.7px;font-weight:600;color:#00ff88;animation:exPulse 1.5s ease infinite">LOADING DATA...</div>
 </div>
 <style>
 @keyframes exPulse{0%,100%{opacity:.4}50%{opacity:1}}
@@ -420,19 +420,19 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   },2000);
 })();
 </script>
-<nav style="position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);padding:12px 0;">
-  <div style="max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:10px;flex:0 0 auto;">
-      <a href="index.html" style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:#e2e8f0;letter-spacing:2px;text-decoration:none;display:flex;align-items:center;gap:10px;flex:0 0 auto;">
-        <img src="sost-logo.png?v=v392" alt="SOST" style="height:72px;width:72px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));animation:sostLogoPulse 3.6s ease-in-out infinite"><span><span style="color:#fb010d">SOST</span> EXPLORER</span>
+<nav style="position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);padding:15px 0;">
+  <div style="max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:12.5px;flex:0 0 auto;">
+      <a href="index.html" style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22.5px;color:#e2e8f0;letter-spacing:2.5px;text-decoration:none;display:flex;align-items:center;gap:10px;flex:0 0 auto;">
+        <img src="sost-logo.png?v=v392" alt="SOST" style="height:90px;width:90px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));animation:sostLogoPulse 3.6s ease-in-out infinite"><span><span style="color:#fb010d">SOST</span> EXPLORER</span>
       </a>
       <a href="casert-spec.html" style="display:flex;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
-        <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="height:72px;width:72px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
+        <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="height:90px;width:90px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
       </a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;min-width:72px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:22px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:7px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:90px;height:90px;min-width:90px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:27.5px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:8.75px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:0 0 auto;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:0 0 auto;">
       <span class="net-badge" id="netBadgeNav"><span class="net-dot"></span>MAINNET</span>
       <a class="header-link" style="cursor:pointer" onclick="showCXInfo()"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">O</span><span style="color:hsl(190,85%,55%)">N</span><span style="color:hsl(160,85%,50%)">V</span><span style="color:hsl(130,85%,50%)">E</span><span style="color:hsl(100,85%,50%)">R</span><span style="color:hsl(70,85%,50%)">G</span><span style="color:hsl(50,85%,50%)">E</span><span style="color:hsl(35,85%,50%)">N</span><span style="color:hsl(20,85%,50%)">C</span><span style="color:hsl(5,85%,45%)">E</span><span style="color:#fb010d">X</span></a>
       <a class="header-link markets-live" href="sost-markets.html" title="SOST live markets">MARKETS LIVE</a>
@@ -8615,7 +8615,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       : 'No historical jackpots paid yet.';
     var legendHtml='<div style="display:flex;flex-wrap:wrap;gap:10px;font-size:9px;color:var(--text3);margin:8px 0 2px">'
       +'<span>&#127942; WINNER</span><span style="color:#39ff14">&#128994; HIST. JACKPOT ELIGIBLE</span><span style="color:#22d3ee">&#128309; DTD ELIGIBLE</span><span style="color:#f5b301">&#128992; COOLDOWN</span><span>&#9899; NOT ELIGIBLE</span></div>';
-    var replayBtn=(paid>0&&_w)?'<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button></div>':'';
+    var replayBtn=(paid>0&&_w)?'<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button><button class="sjpd-x" id="sjpd-archive-btn" style="margin:0;border-color:#2b7a3d;color:#39ff14">&#128220; View all jackpots ('+paid+')</button></div>':'';
     // JACKPOT ELIGIBLE (20k): FINAL (getlotteryaudit at a mined jackpot height) >
     // PRELIMINARY (future eligible_addresses[] preview at tip) > pending label.
     var jpEDisp, jpEStat;
@@ -8659,6 +8659,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     d.onclick=function(e){ if(e.target===d) close(); };
     var dl=document.getElementById('sjpd-dtd'); if(dl&&typeof window.toggleDashPanel==='function') dl.onclick=function(){ close(); window.toggleDashPanel('dtd'); };
     var rp=document.getElementById('sjpd-replay'); if(rp) rp.onclick=function(){ if(window.SJP&&window.SJP.replayLast) window.SJP.replayLast(); };
+    var _arb=document.getElementById('sjpd-archive-btn'); if(_arb) _arb.onclick=function(){ if(window.SJP&&window.SJP.openArchive) window.SJP.openArchive(); };
     var _eg=document.getElementById('sjpd-elig-go'), _ei=document.getElementById('sjpd-elig-in'), _em=document.getElementById('sjpd-elig-mine');
     if(_eg&&_ei) _eg.onclick=function(){ window.SJP.checkEligibility(_ei.value); };
     if(_ei) _ei.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); window.SJP.checkEligibility(_ei.value); } });
@@ -8808,6 +8809,109 @@ tr.sjp-blkrow .sjp-v{color:#0a0a0c;background:#39ff14;font:800 9px/1 ui-monospac
 })();
 </script>
 <!-- /SOST-JACKPOT-LATESTBLOCKS-ROW -->
+
+<!-- SOST-JACKPOT-ARCHIVE (self-contained; canonical, reconstructed from chain) -->
+<style id="sjp-arc-style">
+#sjp-archive{position:fixed;inset:0;z-index:99999;display:none;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto;
+  background:radial-gradient(120% 120% at 50% 0%,rgba(10,14,10,.82),rgba(0,0,0,.94))}
+#sjp-archive.show{display:flex}
+.sjpa-box{max-width:880px;width:100%;border-radius:16px;padding:20px 22px;background:linear-gradient(160deg,#0c1510,#0a0a0c 70%,#120e05);
+  border:1px solid #2b7a3d;box-shadow:0 0 50px rgba(57,255,20,.18)}
+.sjpa-hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.sjpa-hd h3{margin:0;font:900 18px/1 'Space Grotesk',sans-serif;background:linear-gradient(90deg,#ffd166,#39ff14);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sjpa-x{margin-left:auto;background:#1b2530;border:1px solid #2a3340;color:#cdd6e0;border-radius:8px;padding:6px 12px;cursor:pointer;font:600 12px ui-monospace}
+.sjpa-sum{font:700 11px/1.5 ui-monospace;color:#9aa6b2;margin-bottom:12px}
+.sjpa-sum b{color:#ffd166}
+.sjpa-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.sjpa-t{width:100%;border-collapse:collapse;font:600 12px/1.4 ui-monospace,Menlo,monospace}
+table.sjpa-t th{font:800 9px/1 ui-monospace;letter-spacing:1.2px;color:#8a97a3;text-align:left;padding:8px 10px;border-bottom:1px solid #1d2731;white-space:nowrap}
+table.sjpa-t td{padding:9px 10px;border-bottom:1px solid #141c16;color:#cdd6e0;white-space:nowrap}
+table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
+.sjpa-lnk{color:#22d3ee;cursor:pointer;text-decoration:none}
+.sjpa-lnk:hover{text-decoration:underline}
+.sjpa-amt{color:#ffd166;font-weight:800}
+.sjpa-dtd{color:#39ff14}
+.sjpa-mut{color:#8a97a3}
+.sjpa-badge{display:inline-block;background:#39ff14;color:#0a0a0c;font:800 8px/1 ui-monospace;letter-spacing:1px;padding:4px 7px;border-radius:5px}
+.sjpa-empty{color:#8a97a3;font:600 12px ui-monospace;padding:16px 4px}
+@media(max-width:560px){.sjpa-box{padding:16px}table.sjpa-t{font-size:11px}}
+</style>
+<div id="sjp-archive" role="dialog" aria-modal="true" aria-label="Jackpot archive"></div>
+<script id="sjp-arc-script">
+(function(){
+  "use strict";
+  window.SJP=window.SJP||{};
+  var JP_FIRST=25290, CAD=288;
+  function esc(x){ return String(x==null?'':x).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);}); }
+  function fc(n){ return (typeof window.fComma==='function')?window.fComma(n):String(n); }
+  function short(a){ a=String(a||''); return a.length>18?a.substr(0,12)+'…'+a.substr(-4):a; }
+  function ago(ts){ if(!ts) return ''; var s=Math.floor(Date.now()/1000)-ts; if(s<0)s=0;
+    if(s<60) return s+'s ago'; if(s<3600) return Math.floor(s/60)+'m ago';
+    if(s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; }
+  function amtSost(v){ var n=(typeof v==='number')?v:parseFloat(v||0); return (Math.round(n*1e4)/1e4).toString(); }
+
+  // Gather one jackpot fully from CANONICAL chain data.
+  function gather(h){
+    var out={h:h, hash:null, winner:null, amount:null, txid:null, dtd:null, elig:null, ts:null};
+    return window.rpc('getblockhash',[h]).then(function(hash){
+      if(!hash) return out; out.hash=hash;
+      return window.rpc('getblock',[hash]).then(function(b){
+        if(b){ out.ts=b.time||null; if(b.lottery_payout!=null) out.dtd=parseInt(b.lottery_payout,10)/1e8; }
+        return window.SJP.reconstruct(h);
+      }).then(function(rec){
+        if(rec){ out.winner=rec.winner; out.amount=rec.amount; out.txid=rec.txid; }
+        return window.rpc('getlotteryaudit',[String(h)]).catch(function(){return null;});
+      }).then(function(a){
+        if(a&&a.eligible_count!=null) out.elig=a.eligible_count;
+        return out;
+      });
+    }).catch(function(){ return out; });
+  }
+
+  function rowHtml(o){
+    var blk=o.hash?'<a class="sjpa-lnk" onclick="showBlock(\''+esc(o.hash)+'\')">#'+fc(o.h)+'</a>':('#'+fc(o.h));
+    var win=o.winner?'<a class="sjpa-lnk" onclick="showAddress(\''+esc(o.winner)+'\')" title="'+esc(o.winner)+'">'+esc(short(o.winner))+'</a>':'<span class="sjpa-mut">pending</span>';
+    var jp=(o.amount!=null)?'<span class="sjpa-amt">+'+amtSost(o.amount)+' SOST</span>':'<span class="sjpa-mut">—</span>';
+    var dtd=(o.dtd!=null&&o.dtd>0)?'<span class="sjpa-dtd">'+amtSost(o.dtd)+' SOST</span>':'<span class="sjpa-mut">—</span>';
+    var el=(o.elig!=null)?fc(o.elig):'<span class="sjpa-mut">—</span>';
+    var tx=o.txid?'<a class="sjpa-lnk" onclick="showTxDetail(\''+esc(o.txid)+'\')">view tx</a>':'<span class="sjpa-mut">—</span>';
+    var st=o.winner?'<span class="sjpa-badge">VERIFIED ON-CHAIN</span>':'<span class="sjpa-mut">unconfirmed</span>';
+    var age=o.ts?'<span class="sjpa-mut">'+esc(ago(o.ts))+'</span>':'';
+    return '<tr><td>'+blk+'</td><td>'+age+'</td><td>'+win+'</td><td>'+jp+'</td><td>'+dtd+'</td><td>'+el+'</td><td>'+tx+'</td><td>'+st+'</td></tr>';
+  }
+
+  function render(list){
+    var body=document.getElementById('sjpa-body'); if(!body) return;
+    var paid=list.filter(function(o){return o.winner;});
+    if(!paid.length){ body.innerHTML='<div class="sjpa-empty">No jackpots have been paid yet.</div>'; return; }
+    var totalJp=paid.reduce(function(s,o){return s+((typeof o.amount==='number')?o.amount:parseFloat(o.amount||0));},0);
+    var totalDtd=list.reduce(function(s,o){return s+((o.dtd!=null)?o.dtd:0);},0);
+    var sum='<div class="sjpa-sum"><b>'+paid.length+'</b> jackpot'+(paid.length>1?'s':'')+' paid · Historical Jackpot distributed <b>+'+amtSost(totalJp)+' SOST</b> · with DTD <b>'+amtSost(totalDtd)+' SOST</b> · reconstructed from the canonical chain</div>';
+    var rows=list.map(rowHtml).join('');
+    body.innerHTML=sum+'<div class="sjpa-wrap"><table class="sjpa-t"><thead><tr>'+
+      '<th>BLOCK</th><th>AGE</th><th>WINNER</th><th>HISTORICAL JACKPOT</th><th>DTD PAYOUT</th><th>ELIGIBLE</th><th>TX</th><th>STATUS</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }
+
+  window.SJP.openArchive=function(){
+    var d=document.getElementById('sjp-archive'); if(!d) return;
+    d.innerHTML='<div class="sjpa-box"><div class="sjpa-hd"><h3>📜 JACKPOT ARCHIVE</h3><button class="sjpa-x" id="sjpa-x">Close</button></div>'+
+      '<div id="sjpa-body"><div class="sjpa-empty">Reconstructing from chain…</div></div></div>';
+    d.classList.add('show');
+    var xb=document.getElementById('sjpa-x'); if(xb) xb.onclick=function(){ d.classList.remove('show'); };
+    d.onclick=function(e){ if(e.target===d) d.classList.remove('show'); };
+    if(typeof window.rpc!=='function'){ var bd=document.getElementById('sjpa-body'); if(bd) bd.innerHTML='<div class="sjpa-empty">Node RPC unavailable.</div>'; return; }
+    window.rpc('getblockcount',[]).then(function(h){
+      var tip=parseInt(h,10)||0; var heights=[];
+      for(var jh=JP_FIRST; jh<=tip; jh+=CAD) heights.push(jh);
+      heights.reverse(); // newest first
+      if(!heights.length){ render([]); return; }
+      return Promise.all(heights.map(gather)).then(render);
+    }).catch(function(){ var bd=document.getElementById('sjpa-body'); if(bd) bd.innerHTML='<div class="sjpa-empty">Could not reach the node.</div>'; });
+  };
+})();
+</script>
+<!-- /SOST-JACKPOT-ARCHIVE -->
 
 </body>
 </html>

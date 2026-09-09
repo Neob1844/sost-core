@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-08-v407-nav-rollback-original",
-  "note": "Nav rolled back to original (SOST EXPLORER + ConvergenceX logo + Atomic Swap DEX tile); all logo/nav experiments removed. The 6 charts (4 originals + 2 overlays) are unchanged. Single force reload."
+  "v": "2026-09-09-v408-jackpot-archive-header125-splash135",
+  "note": "Jackpot Archive drawer (VIEW ALL JACKPOTS: all paid jackpots reconstructed from the canonical chain, newest-first, linkable block/winner/tx, VERIFIED ON-CHAIN, DTD payout, eligible count, age). Top header block +25%; splash/loading screen +35%. Single force reload."
 }
