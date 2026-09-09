@@ -56,59 +56,6 @@ bool deserialize_heartbeat(const std::vector<uint8_t>& b, NodeHeartbeatTx& out) 
     return true;
 }
 
-// ---- Transaction transport -------------------------------------------------
-static Transaction wrap_protocol_tx(uint8_t tx_type, const std::vector<uint8_t>& payload) {
-    Transaction tx;
-    tx.version = 1;
-    tx.tx_type = tx_type;
-    tx.inputs.clear();                 // node txs spend nothing
-    TxOutput o;
-    o.amount = 0;                      // MUST be 0
-    o.type   = OUT_NODE_PROTOCOL;      // non-spendable protocol-data output
-    o.pubkey_hash.fill(0);            // unused
-    o.payload = payload;               // canonical bytes
-    tx.outputs.push_back(o);
-    return tx;
-}
-Transaction build_node_bind_tx(const NodeBindTx& b)      { return wrap_protocol_tx(TX_TYPE_NODE_BIND,      serialize_bind(b)); }
-Transaction build_node_heartbeat_tx(const NodeHeartbeatTx& h){ return wrap_protocol_tx(TX_TYPE_NODE_HEARTBEAT, serialize_heartbeat(h)); }
-
-NodeTxKind classify_node_tx(const Transaction& tx) {
-    if (tx.tx_type == TX_TYPE_NODE_BIND)      return NodeTxKind::Bind;
-    if (tx.tx_type == TX_TYPE_NODE_HEARTBEAT) return NodeTxKind::Heartbeat;
-    return NodeTxKind::None;
-}
-
-// Shared canonical shape check; returns the single protocol payload or false.
-static bool extract_payload(const Transaction& tx, uint8_t want_type, size_t want_len,
-                            std::vector<uint8_t>& out, const char** reason) {
-    auto fail = [&](const char* r){ if (reason) *reason = r; return false; };
-    if (tx.tx_type != want_type)            return fail("wrong_tx_type");
-    if (!tx.inputs.empty())                 return fail("node_tx_has_inputs");
-    if (tx.outputs.size() != 1)             return fail("not_exactly_one_output");
-    const TxOutput& o = tx.outputs[0];
-    if (o.type != OUT_NODE_PROTOCOL)        return fail("output_not_protocol");
-    if (o.amount != 0)                      return fail("amount_not_zero");
-    if (o.payload.size() != want_len)       return fail("payload_size_mismatch");
-    out = o.payload;
-    return true;
-}
-
-bool extract_bind(const Transaction& tx, NodeBindTx& out, const char** reason) {
-    std::vector<uint8_t> p;
-    if (!extract_payload(tx, TX_TYPE_NODE_BIND, NODE_BIND_WIRE_BYTES, p, reason)) return false;
-    if (!deserialize_bind(p, out)) { if (reason) *reason = "bad_encoding"; return false; }
-    if (reason) *reason = "ok";
-    return true;
-}
-bool extract_heartbeat(const Transaction& tx, NodeHeartbeatTx& out, const char** reason) {
-    std::vector<uint8_t> p;
-    if (!extract_payload(tx, TX_TYPE_NODE_HEARTBEAT, NODE_HEARTBEAT_WIRE_BYTES, p, reason)) return false;
-    if (!deserialize_heartbeat(p, out)) { if (reason) *reason = "bad_encoding"; return false; }
-    if (reason) *reason = "ok";
-    return true;
-}
-
 // ---- signing messages ------------------------------------------------------
 Bytes32 bind_message(const PubKeyHash& mining_pkh, const NodePubKey& node_pubkey, uint64_t bind_seq) {
     std::vector<uint8_t> m;
