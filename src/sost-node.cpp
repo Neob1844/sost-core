@@ -29,7 +29,6 @@
 #include "sost/transaction.h"
 #include "sost/types.h"
 #include "sost/utxo_set.h"
-#include "sost/node_participation.h"   // V16 — node participation state
 #include "sost/crypto.h"   // sha256 — used by --dry-run-replay UTXO root
 #include "sost/mempool.h"
 #include "sost/tx_validation.h"
@@ -105,9 +104,6 @@ using namespace sost;
 
 static Wallet       g_wallet;
 static UtxoSet      g_utxo_set;
-// V16 — node participation state (chain-derived; reorg/reindex-safe).
-static sost::node_participation::NodeState g_node_state;
-static std::map<int64_t, sost::node_participation::ConnectResult> g_node_undos;
 static bool         g_dry_run_replay = false;  // --dry-run-replay: replay chain, print UTXO root, exit
 static Mempool      g_mempool;
 static std::string  g_wallet_path = "wallet.json";
@@ -5085,38 +5081,6 @@ static sost::GvG3bState gv_g3b_derive_state(const PubKeyHash& vault_pkh) {
 // (jackpot height + non-empty reserve + an eligible non-current-miner winner). Reuses the
 // exact shared canonical helpers (discover_reserve_utxos / compute_lottery_eligibility_set
 // / derive_rollover_before / build_canonical_jackpot_tx) — no logic is duplicated.
-// V16 — Historical Jackpot V2 winner: node-gated eligibility + linear PoW weight
-// + domain-separated seed + weighted draw. Used ONLY at is_hist_jackpot_v2_height.
-// Reads pre-block g_node_state (bindings/heartbeats from blocks < height).
-static void compute_v2_jackpot_winner(
-    const std::vector<sost::lottery::LotteryMinedBlockView>& history,
-    int64_t height, PubKeyHash& winner_pkh, bool& winner_exists) {
-    namespace jv2 = sost::jackpot_v2;
-    const int64_t A = sost::HIST_JACKPOT_V2_HEIGHT, L = sost::NODE_EPOCH_LENGTH;
-    const int64_t lo = height - sost::JACKPOT_V2_POW_WINDOW, hi = height - 1;
-    std::map<PubKeyHash,int64_t> powc;
-    for (const auto& v : history) if (v.height >= lo && v.height <= hi) powc[v.miner_pkh]++;
-    std::vector<jv2::JackpotV2Candidate> cands; cands.reserve(powc.size());
-    for (const auto& kv : powc) {
-        jv2::JackpotV2Candidate c;
-        c.mining_pkh = kv.first;
-        c.sbpow_valid = true;                    // every window block (>=~25000) is SbPoW-signed
-        c.pow_blocks  = kv.second;               // LINEAR weight
-        c.node_bound  = g_node_state.is_node_bound(kv.first, height - 1);
-        c.heartbeats_in_window = g_node_state.heartbeats_in_window(kv.first, A, L, height);
-        cands.push_back(c);
-    }
-    auto weighted = jv2::jv2_build_weighted_set(cands, A, L, height);
-    // entropy = the LOTTERY_RNG_HISTORY_BLOCKS most-recent block hashes (ascending)
-    const int64_t elo = height - sost::lottery::LOTTERY_RNG_HISTORY_BLOCKS, ehi = height - 1;
-    std::vector<sost::Bytes32> entropy;
-    for (const auto& v : history) if (v.height >= elo && v.height <= ehi) entropy.push_back(v.block_hash);
-    const sost::Bytes32 seed = jv2::jv2_seed(entropy, height);   // domain "SOST_HIST_JACKPOT"
-    winner_exists = false;
-    const int64_t wi = jv2::jv2_select_winner_index(weighted, seed);
-    if (wi >= 0) { winner_pkh = weighted[(size_t)wi].pkh; winner_exists = true; }
-}
-
 static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, Transaction& out_tx) {
     if (!sost::is_hist_jackpot_height(height)) return false;
     PubKeyHash gold_pkh{}, popc_pkh{};
@@ -5138,15 +5102,11 @@ static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, T
         history.push_back(v);
     }
     PubKeyHash winner_pkh{}; bool winner_exists = false;
-    if (sost::is_hist_jackpot_v2_height(height)) {
-        compute_v2_jackpot_winner(history, height, winner_pkh, winner_exists);   // V16 selector
-    } else {
-        auto eligible = sost::lottery::compute_lottery_eligibility_set(
-            history, height, cur_miner, sost::lottery_exclusion_window_at(height));
-        if (!eligible.empty()) {
-            int64_t wi = sost::lottery::select_lottery_winner_index_from_history(eligible, history, height);
-            if (wi >= 0 && wi < (int64_t)eligible.size()) { winner_pkh = eligible[(size_t)wi].pkh; winner_exists = true; }
-        }
+    auto eligible = sost::lottery::compute_lottery_eligibility_set(
+        history, height, cur_miner, sost::lottery_exclusion_window_at(height));
+    if (!eligible.empty()) {
+        int64_t wi = sost::lottery::select_lottery_winner_index_from_history(eligible, history, height);
+        if (wi >= 0 && wi < (int64_t)eligible.size()) { winner_pkh = eligible[(size_t)wi].pkh; winner_exists = true; }
     }
     const int64_t rollover_before = sost::jackpot::derive_rollover_before(
         height,
@@ -5188,17 +5148,13 @@ static bool validate_live_jackpot(const std::vector<Transaction>& txs, int64_t h
         history.push_back(v);
     }
     PubKeyHash winner_pkh{}; bool winner_exists = false;
-    if (sost::is_hist_jackpot_v2_height(height)) {
-        compute_v2_jackpot_winner(history, height, winner_pkh, winner_exists);   // V16 selector
-    } else {
-        const PubKeyHash cur_miner =
-            (!txs.empty() && !txs[0].outputs.empty()) ? txs[0].outputs[0].pubkey_hash : PubKeyHash{};
-        auto eligible = sost::lottery::compute_lottery_eligibility_set(
-            history, height, cur_miner, sost::lottery_exclusion_window_at(height));
-        if (!eligible.empty()) {
-            int64_t wi = sost::lottery::select_lottery_winner_index_from_history(eligible, history, height);
-            if (wi >= 0 && wi < (int64_t)eligible.size()) { winner_pkh = eligible[(size_t)wi].pkh; winner_exists = true; }
-        }
+    const PubKeyHash cur_miner =
+        (!txs.empty() && !txs[0].outputs.empty()) ? txs[0].outputs[0].pubkey_hash : PubKeyHash{};
+    auto eligible = sost::lottery::compute_lottery_eligibility_set(
+        history, height, cur_miner, sost::lottery_exclusion_window_at(height));
+    if (!eligible.empty()) {
+        int64_t wi = sost::lottery::select_lottery_winner_index_from_history(eligible, history, height);
+        if (wi >= 0 && wi < (int64_t)eligible.size()) { winner_pkh = eligible[(size_t)wi].pkh; winner_exists = true; }
     }
     const int64_t rollover_before = sost::jackpot::derive_rollover_before(
         height,
@@ -5216,46 +5172,6 @@ static bool validate_live_jackpot(const std::vector<Transaction>& txs, int64_t h
         txs, height, reserve, winner_exists, winner_pkh, reserve_before, rollover_before, gold_pkh);
     if (!jr.ok) { err = jr.reason; return false; }
     return true;
-}
-
-// ===========================================================================
-// V16 — node-participation apply/undo hooks (called alongside every ConnectBlock
-// / DisconnectBlock caller so g_node_state tracks the chain and reorg/reindex are
-// exact). tip_ref for heartbeats resolves from g_blocks[h].block_id.
-// ===========================================================================
-static bool node_block_hash_at(int64_t h, sost::Bytes32& out) {
-    if (h < 0 || (size_t)h >= g_blocks.size()) return false;
-    const auto& id = g_blocks[(size_t)h].block_id;
-    std::copy(id.begin(), id.end(), out.begin());
-    return true;
-}
-static bool apply_node_state_for_block(const std::vector<Transaction>& txs, int64_t height, std::string& err) {
-    namespace np = sost::node_participation;
-    np::BlockNodeTxs bnt;
-    for (size_t i = 1; i < txs.size(); ++i) {
-        auto k = np::classify_node_tx(txs[i]);
-        if (k == np::NodeTxKind::Bind) {
-            np::NodeBindTx b; const char* r = nullptr;
-            if (!np::extract_bind(txs[i], b, &r)) { err = std::string("node_bind_encoding:") + (r?r:""); return false; }
-            bnt.binds.push_back(b);
-        } else if (k == np::NodeTxKind::Heartbeat) {
-            np::NodeHeartbeatTx hb; const char* r = nullptr;
-            if (!np::extract_heartbeat(txs[i], hb, &r)) { err = std::string("node_hb_encoding:") + (r?r:""); return false; }
-            bnt.heartbeats.push_back(hb);
-        }
-    }
-    auto res = np::connect_block_node_txs(g_node_state, bnt, height,
-                   sost::HIST_JACKPOT_V2_HEIGHT, sost::NODE_EPOCH_LENGTH, node_block_hash_at);
-    if (!res.ok) { err = std::string("node_block:") + res.reason; return false; }
-    if (res.binds_applied || res.hbs_applied) g_node_undos[height] = res;
-    return true;
-}
-static void undo_node_state_for_block(int64_t height) {
-    auto it = g_node_undos.find(height);
-    if (it != g_node_undos.end()) {
-        sost::node_participation::disconnect_block_node_txs(g_node_state, it->second);
-        g_node_undos.erase(it);
-    }
 }
 
 static bool process_block(const std::string& block_json, bool reorg_connect) {
@@ -6686,22 +6602,10 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         }
     }
 
-    // V16: validate + apply node-participation state (NODE_BIND/HEARTBEAT) against
-    // the PRE-BLOCK bindings — INVALID block if any node tx is invalid. Applied
-    // before ConnectBlock; rolled back if ConnectBlock fails (atomic).
-    {
-        std::string nerr;
-        if (!apply_node_state_for_block(txs, height, nerr)) {
-            printf("[BLOCK] REJECTED: node participation: %s\n", nerr.c_str());
-            return false;
-        }
-    }
-
     // Connect block to UTXO set atomically
     BlockUndo undo;
     std::string uerr;
     if(!g_utxo_set.ConnectBlock(txs, height, undo, &uerr)){
-        undo_node_state_for_block(height);
         printf("[BLOCK] REJECTED: UTXO ConnectBlock failed: %s\n", uerr.c_str());
         return false;
     }
@@ -7010,7 +6914,6 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             // (This shouldn't happen since DisconnectBlock uses recorded undo data)
             return false;
         }
-        undo_node_state_for_block(h);
         disconnected.push_back(g_blocks[h]);
         disconnected_txs.push_back(txs);
         printf("[REORG] Disconnected block h=%lld\n", (long long)h);
@@ -7067,7 +6970,6 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             }
             std::string derr;
             g_utxo_set.DisconnectBlock(txs, g_block_undos[h], &derr);
-            undo_node_state_for_block(h);
         }
         g_blocks.resize(fork_point + 1);
         g_block_undos.resize(fork_point + 1);
@@ -7098,16 +7000,7 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
                     break;
                 }
             }
-            {
-                std::string nerr;
-                if (!apply_node_state_for_block(txs, sb.height, nerr)) {
-                    printf("[REORG] CRITICAL: node participation restoring h=%lld: %s\n",
-                           (long long)sb.height, nerr.c_str());
-                    break;
-                }
-            }
             if (!g_utxo_set.ConnectBlock(txs, sb.height, undo, &uerr)) {
-                undo_node_state_for_block(sb.height);
                 printf("[REORG] CRITICAL: Cannot restore original block h=%lld: %s\n",
                        (long long)sb.height, uerr.c_str());
                 // This should never happen — the original chain was valid
@@ -8057,14 +7950,6 @@ static bool load_chain(const std::string& path) {
                     if (!validate_live_jackpot(txs, height, jerr)) {
                         printf("[CHAIN-LOAD] FATAL: Historical Jackpot mismatch at h=%lld: %s\n",
                                (long long)height, jerr.c_str());
-                        return false;
-                    }
-                }
-                {
-                    std::string nerr;
-                    if (!apply_node_state_for_block(txs, height, nerr)) {
-                        printf("[CHAIN-LOAD] FATAL: node participation at h=%lld: %s\n",
-                               (long long)height, nerr.c_str());
                         return false;
                     }
                 }
