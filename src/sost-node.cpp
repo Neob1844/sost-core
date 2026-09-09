@@ -5664,14 +5664,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         // first jackpot height jackpot_block_tx is always false, so pre-V15 replay is byte-identical.
         const bool jackpot_block_tx =
             sost::is_hist_jackpot_height(height) && txs[i].tx_type == TX_TYPE_JACKPOT;
-        // V16: NODE_BIND / NODE_HEARTBEAT are consensus-controlled 0-input protocol
-        // txs (own Schnorr sig), validated authoritatively by connect_block_node_txs
-        // (apply_node_state_for_block) before ConnectBlock. Exempt them from the
-        // standard per-tx path exactly like the canonical jackpot tx.
-        const bool node_block_tx =
-            sost::node_participation_active_at(height) &&
-            (txs[i].tx_type == TX_TYPE_NODE_BIND || txs[i].tx_type == TX_TYPE_NODE_HEARTBEAT);
-        if(txs[i].tx_type != TX_TYPE_STANDARD && !htlc_block_tx && !jackpot_block_tx && !node_block_tx){
+        if(txs[i].tx_type != TX_TYPE_STANDARD && !htlc_block_tx && !jackpot_block_tx){
             printf("[BLOCK] REJECTED: non-standard tx at index %zu\n", i);
             return false;
         }
@@ -5696,7 +5689,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         //  live view when the freeze applies; the static_assert pins that.)
         static_assert(sost::V15_HEIGHT >= sost::V14_HEIGHT,
             "Reserve freeze relies on the V14 scratch view being active at V15 heights.");
-        if(sost::jackpot::reserve_freeze_active_at(height) && !jackpot_block_tx && !node_block_tx){
+        if(sost::jackpot::reserve_freeze_active_at(height) && !jackpot_block_tx){
             const UtxoSet& rview = v14_txrules ? v14_scratch : g_utxo_set;
             for(size_t ri = 0; ri < txs[i].inputs.size(); ++ri){
                 OutPoint rop; rop.txid = txs[i].inputs[ri].prev_txid;
@@ -5732,7 +5725,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             // The canonical jackpot is exempt from ValidateTransactionConsensus: it carries no
             // signature (protocol reserve spend) and R2 forbids its type in the standalone
             // validator by design — it is already proven byte-exact by validate_block_jackpot.
-            if(!jackpot_block_tx && !node_block_tx){
+            if(!jackpot_block_tx){
                 auto cres = ValidateTransactionConsensus(txs[i], v14_scratch, vctx);
                 if(!cres.ok){
                     printf("[BLOCK] REJECTED: tx consensus fail: %s\n", cres.message.c_str());
@@ -5778,7 +5771,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             // authorized by jackpot_block.h, NOT by G1 vault governance, so it is exempt here
             // (else the testnet GV-slice1 build would reject the protocol payout as a
             // non-whitelisted vault outflow). Mainnet GV-slice1 is deferred (INT64_MAX) anyway.
-            if(gv_slice1_active_at(height) && !jackpot_block_tx && !node_block_tx){
+            if(gv_slice1_active_at(height) && !jackpot_block_tx){
                 auto gv_lookup = [&v14_scratch](const Hash256& prev_txid, uint32_t prev_index,
                                                 PubKeyHash& out) -> bool {
                     OutPoint op{prev_txid, prev_index};

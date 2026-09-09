@@ -49,8 +49,6 @@
 #include "sost/capsule.h"
 #include "sost/sealed_envelope.h" // Sealed Capsule (Fase Sealed-1.D)
 #include "sost/crypto.h"          // sha256(file bytes) for --capsule-file
-#include "sost/node_participation.h" // V16 — NODE_BIND / NODE_HEARTBEAT builders
-#include "sost/sbpow.h"           // V16 — Schnorr sign/derive for node txs
 
 #include <cstdio>
 #include <cstdlib>
@@ -2983,62 +2981,6 @@ int main(int argc, char** argv) {
     // =====================================================================
     // dumpprivkey <address>
     // =====================================================================
-    // =====================================================================
-    // V16 node participation — build signed NODE_BIND / NODE_HEARTBEAT tx hex.
-    //   createnodebind <bind_seq> <node_privkey_hex>
-    //   nodeheartbeat  <node_privkey_hex> <epoch_idx> <tip_ref_hex>
-    // The mining key (wallet label "default") signs the bind; the node key signs
-    // the heartbeat. Output is raw tx hex -> broadcast with sendrawtransaction.
-    // =====================================================================
-    if (cmd == "createnodebind" || cmd == "nodeheartbeat") {
-        auto parse32 = [](const std::string& h, std::array<uint8_t,32>& out) -> bool {
-            if (h.size() != 64) return false;
-            auto hv = [](char c)->int{ if(c>='0'&&c<='9')return c-'0'; if(c>='a'&&c<='f')return 10+c-'a'; if(c>='A'&&c<='F')return 10+c-'A'; return -1; };
-            for (int i=0;i<32;++i){ int hi=hv(h[i*2]),lo=hv(h[i*2+1]); if(hi<0||lo<0)return false; out[i]=(uint8_t)((hi<<4)|lo); }
-            return true;
-        };
-        if (cmd == "createnodebind") {
-            if (argc < arg_start + 3) { fprintf(stderr, "Usage: sost-cli --wallet <w> createnodebind <bind_seq> <node_privkey_hex>\n"); return 1; }
-            uint64_t seq = strtoull(argv[arg_start+1], nullptr, 10);
-            sost::sbpow::MinerPrivkey nsk{};
-            if (!parse32(argv[arg_start+2], nsk)) { fprintf(stderr, "Error: node_privkey must be 64 hex chars\n"); return 1; }
-            const sost::WalletKey* mk = w.find_key_by_label("default");
-            if (!mk) { fprintf(stderr, "Error: wallet has no 'default' mining key\n"); return 1; }
-            sost::sbpow::MinerPrivkey msk{}; std::copy(mk->privkey.begin(), mk->privkey.end(), msk.begin());
-            sost::sbpow::MinerPubkey mpk{}, npk{};
-            if (!sost::sbpow::derive_compressed_pubkey_from_privkey(msk, mpk) ||
-                !sost::sbpow::derive_compressed_pubkey_from_privkey(nsk, npk)) { fprintf(stderr, "Error: pubkey derive failed\n"); return 1; }
-            sost::node_participation::NodeBindTx b;
-            b.mining_pubkey = mpk; b.node_pubkey = npk; b.bind_seq = seq;
-            sost::PubKeyHash pkh = sost::sbpow::derive_pkh_from_pubkey(mpk);
-            sost::Bytes32 msg = sost::node_participation::bind_message(pkh, npk, seq);
-            if (!sost::sbpow::sign_sbpow_commitment(msk, msg, b.mining_sig)) { fprintf(stderr, "Error: sign failed\n"); return 1; }
-            sost::Transaction tx = sost::node_participation::build_node_bind_tx(b);
-            std::vector<sost::Byte> raw; std::string e;
-            if (!tx.Serialize(raw, &e)) { fprintf(stderr, "Error: serialize: %s\n", e.c_str()); return 1; }
-            printf("%s\n", to_hex(raw.data(), raw.size()).c_str());
-            return 0;
-        } else {
-            if (argc < arg_start + 4) { fprintf(stderr, "Usage: sost-cli nodeheartbeat <node_privkey_hex> <epoch_idx> <tip_ref_hex>\n"); return 1; }
-            sost::sbpow::MinerPrivkey nsk{};
-            if (!parse32(argv[arg_start+1], nsk)) { fprintf(stderr, "Error: node_privkey must be 64 hex chars\n"); return 1; }
-            uint64_t epoch = strtoull(argv[arg_start+2], nullptr, 10);
-            sost::Bytes32 tipref{};
-            if (!parse32(argv[arg_start+3], tipref)) { fprintf(stderr, "Error: tip_ref must be 64 hex chars\n"); return 1; }
-            sost::sbpow::MinerPubkey npk{};
-            if (!sost::sbpow::derive_compressed_pubkey_from_privkey(nsk, npk)) { fprintf(stderr, "Error: pubkey derive failed\n"); return 1; }
-            sost::node_participation::NodeHeartbeatTx h;
-            h.node_pubkey = npk; h.epoch_idx = epoch; h.tip_ref_hash = tipref;
-            sost::Bytes32 msg = sost::node_participation::heartbeat_message(npk, epoch, tipref);
-            if (!sost::sbpow::sign_sbpow_commitment(nsk, msg, h.node_sig)) { fprintf(stderr, "Error: sign failed\n"); return 1; }
-            sost::Transaction tx = sost::node_participation::build_node_heartbeat_tx(h);
-            std::vector<sost::Byte> raw; std::string e;
-            if (!tx.Serialize(raw, &e)) { fprintf(stderr, "Error: serialize: %s\n", e.c_str()); return 1; }
-            printf("%s\n", to_hex(raw.data(), raw.size()).c_str());
-            return 0;
-        }
-    }
-
     if (cmd == "dumpprivkey") {
         if (argc < arg_start + 2) {
             fprintf(stderr, "Usage: sost-cli dumpprivkey <address>\n");
