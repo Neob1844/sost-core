@@ -234,14 +234,6 @@ add_library(sost-core STATIC
     # commit ships the inert handler and limits so that future enabling
     # commit cannot relax the constraints by accident.
     src/beacon_p2p.cpp
-
-    # V16 — Historical Jackpot V2 (J2): PURE consensus core (epoch/bootstrap math,
-    # NODE_BIND active derivation, heartbeat window count, eligibility, linear
-    # weight, canonical order, domain-separated seed, integer weighted draw).
-    # DORMANT on real heights until HIST_JACKPOT_V2_HEIGHT; tx-type/mempool/reorg
-    # wiring lands in later increments on top of this tested core.
-    # Spec: docs/v16/HISTORICAL_JACKPOT_V2_SPEC.md.
-    src/jackpot_v2.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -823,13 +815,6 @@ add_test(NAME coinbase-phase2 COMMAND test-coinbase-phase2)
 add_executable(test-jackpot tests/test_jackpot.cpp)
 target_link_libraries(test-jackpot PRIVATE sost-core)
 add_test(NAME jackpot COMMAND test-jackpot)
-
-# V16 — Historical Jackpot V2 pure consensus core (epoch/bootstrap, NODE_BIND
-# derivation, heartbeat window, eligibility, linear weight, canonical order,
-# seed, integer weighted draw, Sybil/ordering invariance, 0/1-eligible edges).
-add_executable(test-jackpot-v2 tests/test_jackpot_v2.cpp)
-target_link_libraries(test-jackpot-v2 PRIVATE sost-core)
-add_test(NAME jackpot-v2 COMMAND test-jackpot-v2)
 
 # V15 activation boundary (P9) — header-only; compiled per active profile. On mainnet it must
 # see V15_HEIGHT=25000 and a clean 24999/25000 boundary + jackpot-first at 25290 (no off-by-one).
