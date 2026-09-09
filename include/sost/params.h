@@ -1325,14 +1325,6 @@ inline constexpr bool is_hist_jackpot_v2_height(int64_t height) {
     return height >= HIST_JACKPOT_V2_HEIGHT && is_hist_jackpot_height(height);
 }
 
-// Node-participation tx types (TX_TYPE_NODE_BIND / TX_TYPE_NODE_HEARTBEAT) are
-// accepted in a block ONLY from the V2 activation height. Below it the validator
-// rejects them (must be standard) so historical replay is byte-identical. This
-// is the block-level ACTIVATION GUARD for V16.
-inline constexpr bool node_participation_active_at(int64_t height) {
-    return height >= HIST_JACKPOT_V2_HEIGHT;
-}
-
 // =============================================================================
 // V15 DTD RECENCY GATE — active ONLY from V15_HEIGHT (pre-V15 replay byte-identical).
 // A DTD candidate must have mined at least one block within a recency window:

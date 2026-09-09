@@ -19,37 +19,36 @@ static bool bind_less(const NodeBindRecord& a, const NodeBindRecord& b) {
     return a.node_pubkey < b.node_pubkey;
 }
 
-DerivedBindState jv2_derive_bind_state(std::vector<NodeBindRecord> records, int64_t H) {
+std::map<PubKeyHash, ActiveBinding>
+jv2_active_bindings_at(std::vector<NodeBindRecord> records, int64_t H) {
     std::sort(records.begin(), records.end(), bind_less);
 
-    DerivedBindState st;
+    std::map<PubKeyHash, ActiveBinding> active;      // current active binding per miner
+    std::map<PubKeyHash, int64_t>       max_seq;     // highest accepted bind_seq per miner
+    std::map<NodePubKey, PubKeyHash>    owner;       // node_pubkey -> owning miner (first claim wins, forever)
+
     for (const auto& r : records) {
         const int64_t effective = r.inclusion_height + 1;   // FROZEN: effective at inclusion_height+1
         if (effective > H) continue;                        // not yet in force at H
 
         // Global node_pubkey uniqueness: first miner to claim owns it forever.
-        auto oit = st.owner.find(r.node_pubkey);
-        if (oit != st.owner.end() && oit->second != r.mining_pkh) continue;  // claimed by a DIFFERENT miner -> reject
+        auto oit = owner.find(r.node_pubkey);
+        if (oit != owner.end() && oit->second != r.mining_pkh) continue;  // claimed by a DIFFERENT miner -> reject
 
         // Per-miner strictly-increasing bind_seq (replay / stale -> reject).
-        auto mit = st.max_seq.find(r.mining_pkh);
-        if (mit != st.max_seq.end() && r.bind_seq <= mit->second) continue;
+        auto mit = max_seq.find(r.mining_pkh);
+        if (mit != max_seq.end() && r.bind_seq <= mit->second) continue;
 
         // Accept.
-        st.max_seq[r.mining_pkh] = r.bind_seq;
-        if (oit == st.owner.end()) st.owner.emplace(r.node_pubkey, r.mining_pkh);
+        max_seq[r.mining_pkh] = r.bind_seq;
+        if (oit == owner.end()) owner.emplace(r.node_pubkey, r.mining_pkh);
         ActiveBinding ab;
         ab.node_pubkey      = r.node_pubkey;
         ab.bind_seq         = r.bind_seq;
         ab.effective_height = effective;
-        st.active[r.mining_pkh] = ab;
+        active[r.mining_pkh] = ab;
     }
-    return st;
-}
-
-std::map<PubKeyHash, ActiveBinding>
-jv2_active_bindings_at(std::vector<NodeBindRecord> records, int64_t H) {
-    return jv2_derive_bind_state(std::move(records), H).active;
+    return active;
 }
 
 bool jv2_is_node_bound_at(const std::vector<NodeBindRecord>& records,

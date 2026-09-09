@@ -39,14 +39,6 @@ constexpr uint8_t TX_TYPE_JACKPOT = 0x02;
 // tx types, so mainnet stays byte-identical / no-op.
 constexpr uint8_t TX_TYPE_HTLC_CLAIM  = 0x10;
 constexpr uint8_t TX_TYPE_HTLC_REFUND = 0x11;
-// V16 Historical Jackpot V2 node-participation tx types. Gated by
-// node_participation_active_at() (== height >= HIST_JACKPOT_V2_HEIGHT; mainnet
-// 30000). Below activation the validator never accepts these types, so historical
-// replay stays byte-identical. NODE_BIND registers a node key under a mining key;
-// NODE_HEARTBEAT proves periodic node participation. Both are 0-value protocol
-// txs (no UTXO inputs/outputs); they carry a canonical payload + Schnorr sig.
-constexpr uint8_t TX_TYPE_NODE_BIND      = 0x20;
-constexpr uint8_t TX_TYPE_NODE_HEARTBEAT = 0x21;
 
 constexpr uint8_t OUT_TRANSFER      = 0x00;
 constexpr uint8_t OUT_COINBASE_MINER= 0x01;
