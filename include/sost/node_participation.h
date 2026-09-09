@@ -15,7 +15,6 @@
 #include <array>
 #include <vector>
 #include <map>
-#include <functional>
 
 #include "sost/jackpot_v2.h"   // NodeBindRecord, HeartbeatRecord, NodePubKey, queries
 #include "sost/sbpow.h"        // MinerPubkey, MinerSignature, verify_sbpow_signature, derive_pkh_from_pubkey
@@ -89,11 +88,6 @@ public:
     bool apply_heartbeat(const NodePubKey& node_pubkey, int64_t epoch_idx, int64_t inclusion_height);
     void undo_heartbeat();  // pop the last-applied heartbeat (reorg)
 
-    // Canonical dedup helper: is there already a heartbeat for (mining_pkh, epoch)?
-    bool has_heartbeat(const PubKeyHash& mining_pkh, int64_t epoch_idx) const;
-    // Direct heartbeat record (owner already resolved against the PRE-BLOCK state).
-    void record_heartbeat(const PubKeyHash& mining_pkh, int64_t epoch_idx);
-
     bool    is_node_bound(const PubKeyHash& mining_pkh, int64_t H) const;
     int64_t heartbeats_in_window(const PubKeyHash& mining_pkh, int64_t A, int64_t L, int64_t H) const;
     std::map<PubKeyHash, jackpot_v2::ActiveBinding> active_bindings(int64_t H) const;
@@ -105,37 +99,5 @@ private:
     std::vector<jackpot_v2::NodeBindRecord>  binds_;
     std::vector<jackpot_v2::HeartbeatRecord> hbs_;
 };
-
-// ---- Block-level node-tx processing (the function ConnectBlock calls) --------
-// FROZEN semantics (order-independent within the block):
-//   * height < HIST_JACKPOT_V2_HEIGHT: any node tx present -> INVALID BLOCK.
-//   * two-phase: heartbeats of block H are validated & credited against the
-//     PRE-BLOCK active bindings (bindings from blocks < H); the block's own
-//     NODE_BINDs become effective only at H+1. So a heartbeat signed by a
-//     same-block NEW node key is INVALID regardless of tx order.
-//   * same-block structural caps (else INVALID BLOCK): <=1 NODE_BIND per
-//     mining_pkh; a node_pubkey appears in at most one bind; <=1 NODE_HEARTBEAT
-//     per (mining_pkh, epoch). Canonical chain cap: <=1 heartbeat per
-//     (mining_pkh, epoch) ever.
-// A block is accepted (state mutated) only if EVERY node tx is valid.
-struct BlockNodeTxs {
-    std::vector<NodeBindTx>      binds;
-    std::vector<NodeHeartbeatTx> heartbeats;
-};
-struct ConnectResult {
-    bool        ok{false};
-    const char* reason{"ok"};
-    int         binds_applied{0};
-    int         hbs_applied{0};
-};
-
-// block_hash_at(h, out) must yield the canonical block hash at height h on the
-// connecting chain (used for the heartbeat tip_ref check). A,L = activation, epoch.
-ConnectResult connect_block_node_txs(
-    NodeState& state, const BlockNodeTxs& txs, int64_t height, int64_t A, int64_t L,
-    const std::function<bool(int64_t, Bytes32&)>& block_hash_at);
-
-// Exact reversal for DisconnectBlock (reorg): pops what connect applied.
-void disconnect_block_node_txs(NodeState& state, const ConnectResult& applied);
 
 } // namespace sost::node_participation

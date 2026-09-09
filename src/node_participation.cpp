@@ -10,8 +10,6 @@
 #include "sost/params.h"       // node_participation_active_at, HIST_JACKPOT_V2_HEIGHT
 
 #include <cstring>
-#include <set>
-#include <utility>
 
 namespace sost::node_participation {
 
@@ -137,16 +135,6 @@ bool NodeState::apply_heartbeat(const NodePubKey& node_pubkey, int64_t epoch_idx
 }
 void NodeState::undo_heartbeat() { if (!hbs_.empty()) hbs_.pop_back(); }
 
-bool NodeState::has_heartbeat(const PubKeyHash& mining_pkh, int64_t epoch_idx) const {
-    for (const auto& h : hbs_)
-        if (h.mining_pkh == mining_pkh && h.epoch_idx == epoch_idx) return true;
-    return false;
-}
-void NodeState::record_heartbeat(const PubKeyHash& mining_pkh, int64_t epoch_idx) {
-    HeartbeatRecord h; h.mining_pkh = mining_pkh; h.epoch_idx = epoch_idx;
-    hbs_.push_back(h);
-}
-
 bool NodeState::is_node_bound(const PubKeyHash& mining_pkh, int64_t H) const {
     return jv2_is_node_bound_at(binds_, mining_pkh, H);
 }
@@ -155,76 +143,6 @@ int64_t NodeState::heartbeats_in_window(const PubKeyHash& mining_pkh, int64_t A,
 }
 std::map<PubKeyHash, ActiveBinding> NodeState::active_bindings(int64_t H) const {
     return jv2_active_bindings_at(binds_, H);
-}
-
-// ---- block-level processing (what ConnectBlock calls) ----------------------
-ConnectResult connect_block_node_txs(
-    NodeState& state, const BlockNodeTxs& txs, int64_t height, int64_t A, int64_t L,
-    const std::function<bool(int64_t, Bytes32&)>& block_hash_at) {
-
-    ConnectResult r;
-
-    // Activation guard: below activation NO node tx may appear.
-    if (!node_participation_active_at(height)) {
-        if (!txs.binds.empty() || !txs.heartbeats.empty()) { r.reason = "node_tx_before_activation"; return r; }
-        r.ok = true; return r;
-    }
-
-    // ---- validate BINDS (structural + same-block caps + pre-block accept) ----
-    std::set<PubKeyHash> block_bind_miners;
-    std::set<NodePubKey> block_bind_nodes;
-    std::vector<NodeBindRecord> to_bind;
-    for (const auto& b : txs.binds) {
-        BindCheck bc = check_bind(b, height);
-        if (!bc.ok) { r.reason = bc.reason; return r; }
-        if (!block_bind_miners.insert(bc.mining_pkh).second) { r.reason = "double_bind_same_block"; return r; }
-        if (!block_bind_nodes.insert(b.node_pubkey).second)  { r.reason = "node_pubkey_twice_same_block"; return r; }
-        // pre-block state acceptance (seq strictly increasing + global uniqueness)
-        if (!state.bind_acceptable(bc.mining_pkh, b.node_pubkey, b.bind_seq, height)) { r.reason = "bind_not_acceptable"; return r; }
-        NodeBindRecord rec; rec.mining_pkh = bc.mining_pkh; rec.node_pubkey = b.node_pubkey;
-        rec.bind_seq = (int64_t)b.bind_seq; rec.inclusion_height = height;
-        to_bind.push_back(rec);
-    }
-
-    // ---- validate HEARTBEATS vs PRE-BLOCK active bindings --------------------
-    const int64_t e = jackpot_v2::jv2_epoch_of_height(A, L, height);
-    Bytes32 expected_tip{};
-    if (e >= 0) {
-        const int64_t ref_h = jackpot_v2::jv2_epoch_start(A, L, e) - 1;
-        if (!block_hash_at(ref_h, expected_tip)) { r.reason = "no_tip_ref"; return r; }
-    }
-    // PRE-BLOCK bindings: this block's binds are NOT yet applied, so this is the
-    // state at the START of block H. Order-independent by construction.
-    auto preblock_active = state.active_bindings(height);
-    std::set<std::pair<std::array<uint8_t,20>, int64_t>> block_hb;
-    std::vector<std::pair<PubKeyHash,int64_t>> to_hb;
-    for (const auto& h : txs.heartbeats) {
-        HeartbeatCheck hc = check_heartbeat(h, height, A, L, expected_tip);
-        if (!hc.ok) { r.reason = hc.reason; return r; }
-        // resolve owner via PRE-BLOCK active bindings (same-block new key -> invalid)
-        const PubKeyHash* owner = nullptr;
-        for (const auto& kv : preblock_active)
-            if (kv.second.node_pubkey == h.node_pubkey) { owner = &kv.first; break; }
-        if (!owner) { r.reason = "heartbeat_node_not_active_preblock"; return r; }
-        auto key = std::make_pair(*owner, (int64_t)h.epoch_idx);
-        if (!block_hb.insert(key).second)           { r.reason = "dup_heartbeat_same_block"; return r; }
-        if (state.has_heartbeat(*owner, (int64_t)h.epoch_idx)) { r.reason = "heartbeat_already_on_chain"; return r; }
-        to_hb.emplace_back(*owner, (int64_t)h.epoch_idx);
-    }
-
-    // ---- all valid -> APPLY: heartbeats first, then binds (H+1 effective) ----
-    for (const auto& hb : to_hb) state.record_heartbeat(hb.first, hb.second);
-    for (const auto& rec : to_bind)
-        state.apply_bind(rec.mining_pkh, rec.node_pubkey, (uint64_t)rec.bind_seq, rec.inclusion_height);
-
-    r.ok = true; r.binds_applied = (int)to_bind.size(); r.hbs_applied = (int)to_hb.size();
-    return r;
-}
-
-void disconnect_block_node_txs(NodeState& state, const ConnectResult& applied) {
-    if (!applied.ok) return;
-    for (int i = 0; i < applied.binds_applied; ++i) state.undo_bind();       // binds applied last -> undo first
-    for (int i = 0; i < applied.hbs_applied;   ++i) state.undo_heartbeat();
 }
 
 } // namespace sost::node_participation

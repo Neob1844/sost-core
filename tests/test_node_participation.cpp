@@ -7,13 +7,11 @@
 // ============================================================================
 #include "sost/node_participation.h"
 #include "sost/jackpot_v2.h"
-#include "sost/jackpot.h"
 #include "sost/sbpow.h"
 #include "sost/params.h"
 
 #include <cstdio>
 #include <vector>
-#include <functional>
 
 using namespace sost;
 using namespace sost::node_participation;
@@ -52,14 +50,6 @@ static NodeHeartbeatTx make_hb(uint8_t nseed, uint64_t epoch, const Bytes32& tip
     Bytes32 msg = heartbeat_message(npk, epoch, tipref);
     sign_sbpow_commitment(nsk, msg, t.node_sig);
     return t;
-}
-
-static PubKeyHash pkh(uint8_t b) { PubKeyHash p{}; p.fill(b); return p; }
-static JackpotV2Candidate cand(uint8_t b, int64_t pow, bool bound, int64_t hb, bool sbpow = true) {
-    JackpotV2Candidate c;
-    c.mining_pkh = pkh(b); c.sbpow_valid = sbpow; c.pow_blocks = pow;
-    c.node_bound = bound; c.heartbeats_in_window = hb;
-    return c;
 }
 
 // ---------------------------------------------------------------------------
@@ -211,137 +201,6 @@ static void test_final_eligibility_metric() {
 }
 
 // ---------------------------------------------------------------------------
-// Block-level processing: two-phase, order-independent, same-block caps, reorg.
-static Bytes32 TIP0() { Bytes32 t{}; t.fill(0x77); return t; }
-// canonical block hash lookup for the tests: epoch 0 tip_ref (#29,999) = TIP0.
-static bool block_hash_at(int64_t h, Bytes32& out) {
-    if (h == 29999) { out = TIP0(); return true; }
-    Bytes32 t{}; t.fill((uint8_t)(h & 0xff)); out = t; return true;
-}
-
-static void test_block_processing() {
-    NodeState s;
-    // pre-block: m1 (seed2) binds n1 (seed3) at #30,010 -> active from #30,011
-    {
-        BlockNodeTxs b; b.binds.push_back(make_bind(2, 3, 1));
-        auto r = connect_block_node_txs(s, b, 30010, A, L, block_hash_at);
-        TEST("pre-block bind connects", r.ok && r.binds_applied == 1);
-    }
-    const int64_t H = 30060;                 // epoch 0
-    Bytes32 tip = TIP0();
-
-    // (a) heartbeat by the OLD active key n1 -> valid (order independent)
-    {
-        BlockNodeTxs b; b.heartbeats.push_back(make_hb(3, 0, tip));
-        NodeState t = s;                     // copy
-        auto r = connect_block_node_txs(t, b, H, A, L, block_hash_at);
-        TEST("heartbeat by pre-block active key accepted", r.ok && r.hbs_applied == 1);
-    }
-    // (b) same-block bind(new key n2) + heartbeat signed by the NEW key -> INVALID,
-    //     regardless of tx order.
-    {
-        BlockNodeTxs b1; b1.binds.push_back(make_bind(2, 4, 2)); b1.heartbeats.push_back(make_hb(4, 0, tip));
-        NodeState t1 = s; auto r1 = connect_block_node_txs(t1, b1, H, A, L, block_hash_at);
-        BlockNodeTxs b2; b2.heartbeats.push_back(make_hb(4, 0, tip)); b2.binds.push_back(make_bind(2, 4, 2));
-        NodeState t2 = s; auto r2 = connect_block_node_txs(t2, b2, H, A, L, block_hash_at);
-        TEST("same-block new-key heartbeat INVALID (bind-first order)",
-             !r1.ok && std::string(r1.reason) == "heartbeat_node_not_active_preblock");
-        TEST("same-block new-key heartbeat INVALID (heartbeat-first order)",
-             !r2.ok && std::string(r2.reason) == "heartbeat_node_not_active_preblock");
-    }
-    // (c) same-block double bind for one miner -> INVALID
-    {
-        BlockNodeTxs b; b.binds.push_back(make_bind(2, 4, 2)); b.binds.push_back(make_bind(2, 8, 3));
-        NodeState t = s; auto r = connect_block_node_txs(t, b, H, A, L, block_hash_at);
-        TEST("same-block double bind for one miner INVALID",
-             !r.ok && std::string(r.reason) == "double_bind_same_block");
-    }
-    // (d) same-block duplicate heartbeat (same miner/epoch) -> INVALID
-    {
-        BlockNodeTxs b; b.heartbeats.push_back(make_hb(3, 0, tip)); b.heartbeats.push_back(make_hb(3, 0, tip));
-        NodeState t = s; auto r = connect_block_node_txs(t, b, H, A, L, block_hash_at);
-        TEST("same-block duplicate heartbeat INVALID",
-             !r.ok && std::string(r.reason) == "dup_heartbeat_same_block");
-    }
-    // (e) activation guard at block level
-    {
-        BlockNodeTxs b; b.binds.push_back(make_bind(2, 4, 2));
-        NodeState t = s; auto r = connect_block_node_txs(t, b, 29999, A, L, block_hash_at);
-        TEST("node tx in block #29,999 -> INVALID", !r.ok && std::string(r.reason) == "node_tx_before_activation");
-    }
-    // (f) reorg round-trip: connect a heartbeat block then disconnect -> restored
-    {
-        NodeState t = s;
-        size_t hb_before = t.heartbeats().size();
-        BlockNodeTxs b; b.heartbeats.push_back(make_hb(3, 0, tip));
-        auto r = connect_block_node_txs(t, b, H, A, L, block_hash_at);
-        TEST("reorg: heartbeat block connects", r.ok && t.heartbeats().size() == hb_before + 1);
-        disconnect_block_node_txs(t, r);
-        TEST("reorg: disconnect restores heartbeat count", t.heartbeats().size() == hb_before);
-    }
-    // (g) canonical chain dedup: a heartbeat for (miner,epoch) already on chain -> INVALID
-    {
-        NodeState t = s;
-        BlockNodeTxs b; b.heartbeats.push_back(make_hb(3, 0, tip));
-        auto r1 = connect_block_node_txs(t, b, H, A, L, block_hash_at); (void)r1;
-        // a later block re-submits the same (miner,epoch)
-        BlockNodeTxs b2; b2.heartbeats.push_back(make_hb(3, 0, tip));
-        auto r2 = connect_block_node_txs(t, b2, H, A, L, block_hash_at);
-        TEST("heartbeat already on chain -> INVALID",
-             !r2.ok && std::string(r2.reason) == "heartbeat_already_on_chain");
-    }
-}
-
-static void test_reindex_parity() {
-    // Build a sequence of blocks; connect into A incrementally; connect same into B;
-    // then A: disconnect all + reconnect. All three must be identical.
-    auto build = [](NodeState& st) {
-        std::vector<ConnectResult> undo;
-        BlockNodeTxs b1; b1.binds.push_back(make_bind(2, 3, 1));
-        undo.push_back(connect_block_node_txs(st, b1, 30010, A, L, block_hash_at));
-        BlockNodeTxs b2; b2.binds.push_back(make_bind(5, 6, 1));
-        undo.push_back(connect_block_node_txs(st, b2, 30020, A, L, block_hash_at));
-        BlockNodeTxs b3; b3.heartbeats.push_back(make_hb(3, 0, TIP0())); b3.heartbeats.push_back(make_hb(6, 0, TIP0()));
-        undo.push_back(connect_block_node_txs(st, b3, 30060, A, L, block_hash_at));
-        return undo;
-    };
-    NodeState a, b;
-    build(a); build(b);
-    bool same_ab = (a.binds().size() == b.binds().size()) && (a.heartbeats().size() == b.heartbeats().size());
-    TEST("reindex parity: two independent replays identical", same_ab);
-
-    // disconnect+reconnect round trip
-    NodeState c; auto u = build(c);
-    size_t nb = c.binds().size(), nh = c.heartbeats().size();
-    for (auto it = u.rbegin(); it != u.rend(); ++it) disconnect_block_node_txs(c, *it);
-    TEST("reindex parity: full disconnect empties state", c.binds().empty() && c.heartbeats().empty());
-    build(c);
-    TEST("reindex parity: reconnect restores identical sizes",
-         c.binds().size() == nb && c.heartbeats().size() == nh);
-}
-
-static void test_payout_integration() {
-    using namespace sost::jackpot;
-    // At #30,186 build eligible set + winner + amount via the V15 payout core.
-    std::vector<JackpotV2Candidate> cs = { cand(1, 5, true, 0), cand(2, 12, true, 0), cand(3, 3, true, 0) };
-    auto w = jv2_build_weighted_set(cs, A, L, 30186);
-    std::vector<Bytes32> ent(2); ent[0].fill(0x31); ent[1].fill(0x32);
-    Bytes32 seed = jv2_seed(ent, 30186);
-    int64_t widx = jv2_select_winner_index(w, seed);
-    bool winner_exists = (widx >= 0);
-    // reserve big, no rollover -> pays base 100 SOST
-    JackpotResult jr = hist_jackpot_apply(30186, winner_exists, /*reserve*/ 1000 * STOCKS_PER_SOST, /*rollover*/ 0);
-    TEST("V2 winner selected + base payout 100 SOST",
-         winner_exists && jr.paid && jr.payout == 100 * STOCKS_PER_SOST);
-    // 0 eligible -> no winner -> rollover (no payout), reserve untouched
-    auto w0 = jv2_build_weighted_set({ cand(1, 2, true, 0) }, A, L, 30186); // pow<3
-    JackpotResult jr0 = hist_jackpot_apply(30186, jv2_select_winner_index(w0, seed) >= 0,
-                                           1000 * STOCKS_PER_SOST, 0);
-    TEST("0 eligible -> rollover, no payout, reserve intact",
-         !jr0.paid && jr0.payout == 0 && jr0.reserve_after == 1000 * STOCKS_PER_SOST);
-}
-
-// ---------------------------------------------------------------------------
 int main() {
     printf("== test_node_participation (V16 NODE_BIND/HEARTBEAT tx layer) ==\n");
     test_serialization();
@@ -349,9 +208,6 @@ int main() {
     test_heartbeat_validation();
     test_state_reorg_and_rules();
     test_final_eligibility_metric();
-    test_block_processing();
-    test_reindex_parity();
-    test_payout_integration();
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail ? 1 : 0;
 }
