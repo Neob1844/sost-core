@@ -1285,6 +1285,47 @@ inline constexpr bool is_hist_jackpot_height(int64_t height) {
 }
 
 // =============================================================================
+// V16 — HISTORICAL JACKPOT V2 (independent draw; NODE = eligibility gate,
+// PoW = linear weight). Spec: docs/v16/HISTORICAL_JACKPOT_V2_SPEC.md.
+// The cadence + is_hist_jackpot_height() are UNCHANGED. At any jackpot height h:
+//     h <  HIST_JACKPOT_V2_HEIGHT  -> V15 rules (unchanged)
+//     h >= HIST_JACKPOT_V2_HEIGHT  -> V2 rules
+// DTD-normal (eligibility/cadence/cooldown/anti-dominance/payout/seed) is
+// UNTOUCHED. Jackpot payout economics (base 100 / cap 500 / rollover / reserve,
+// supply-neutral) are UNCHANGED — only jackpot ELIGIBILITY, WEIGHT and the
+// winner-SELECTION seed change. Jackpot COOLDOWN = NONE, ANTI-DOMINANCE = NONE.
+// OWNER-LOCKED activation: MAINNET #30,000 (last V15 jackpot #29,898; first V2
+// jackpot #30,186; #30,000 itself is not a jackpot height).
+// =============================================================================
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t HIST_JACKPOT_V2_HEIGHT = 42;     // DEVNET_FAST ONLY (a jackpot height: 24,30,36,42,…)
+inline constexpr int64_t NODE_EPOCH_LENGTH      = 6;      // DEVNET_FAST epoch == jackpot cadence
+#elif defined(SOST_TESTNET_FORKS)
+inline constexpr int64_t HIST_JACKPOT_V2_HEIGHT = 13500;  // TESTNET
+inline constexpr int64_t NODE_EPOCH_LENGTH      = 288;    // TESTNET epoch == jackpot cadence
+#else
+inline constexpr int64_t HIST_JACKPOT_V2_HEIGHT = 30000;  // MAINNET — OWNER-LOCKED, DO NOT CHANGE
+inline constexpr int64_t NODE_EPOCH_LENGTH      = 288;    // MAINNET epoch == jackpot cadence
+#endif
+inline constexpr int64_t JACKPOT_V2_POW_WINDOW  = 5000;   // PoW weight/eligibility window [h-5000, h-1]
+inline constexpr int64_t JACKPOT_V2_MIN_BLOCKS  = 3;      // minimum SbPoW blocks in the window to enter
+inline constexpr int64_t HEARTBEAT_MAX_WINDOW   = 4;      // permanent heartbeat window (of last 4 epochs)
+inline constexpr int64_t HEARTBEAT_REQUIRED     = 3;      // permanent heartbeats required (3 of last 4)
+
+static_assert(HIST_JACKPOT_V2_HEIGHT >= HIST_JACKPOT_ACTIVATION_HEIGHT,
+              "V2 activation must be at/after V15 jackpot activation");
+static_assert(NODE_EPOCH_LENGTH == HIST_JACKPOT_CADENCE_BLOCKS,
+              "epoch length is aligned to the jackpot cadence by design");
+static_assert(HEARTBEAT_REQUIRED <= HEARTBEAT_MAX_WINDOW,
+              "heartbeats required cannot exceed the window");
+
+// V2 rules apply at a jackpot height iff it is a jackpot height AND at/after
+// the V2 activation. (#30,000 itself is NOT a jackpot height on mainnet.)
+inline constexpr bool is_hist_jackpot_v2_height(int64_t height) {
+    return height >= HIST_JACKPOT_V2_HEIGHT && is_hist_jackpot_height(height);
+}
+
+// =============================================================================
 // V15 DTD RECENCY GATE — active ONLY from V15_HEIGHT (pre-V15 replay byte-identical).
 // A DTD candidate must have mined at least one block within a recency window:
 //   - normal (non-jackpot) blocks: DTD_RECENCY_WINDOW  (5000 blocks)
