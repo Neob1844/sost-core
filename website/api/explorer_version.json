@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-09-v409-overlay-fetch-serialized-retry",
-  "note": "Fix ONLY the two overlay charts (XAUT price+XAUT/BTC, PAXG price+PAXG/BTC): fetch the two source series one at a time with retry+backoff on the rate-limited API and reuse the shared cache the original charts fill, so an overlay renders whenever its source series have data (30D/6M/1Y all OK). Original 4 charts untouched. 3Y/5Y remain source-limited (CoinGecko free cap >365d). Single force reload."
+  "v": "2026-09-09-v410-overlay-btcusdc-ref",
+  "note": "Overlay charts: add a THIRD reference series BTC/USDC (bitcoin vs USD), normalized to base 100 at range start (dashed, orange) so it never crushes the XAUT/PAXG scales. Same timeframe engine/cache/fetch, all bands, combined tooltip shows real BTC/USDC price. The 4 original charts and both existing overlay lines are untouched. Single force reload."
 }
