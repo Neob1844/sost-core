@@ -5,6 +5,8 @@
 #include <sost/mempool.h>
 #include <sost/params.h>
 #include <sost/atomic_swap.h>   // V14.7 — atomic_swap_relay_active_at() gate
+#include <sost/node_participation.h>  // V16 — NODE_BIND/HEARTBEAT structural accept
+#include <sost/transaction.h>         // TX_TYPE_NODE_BIND / TX_TYPE_NODE_HEARTBEAT
 #include <algorithm>
 #include <limits>
 #include <ctime>
@@ -89,6 +91,34 @@ MempoolAcceptResult Mempool::AcceptToMempool(
 
     if (current_time == 0) {
         current_time = (int64_t)std::time(nullptr);
+    }
+
+    // V16: node-participation txs (NODE_BIND / NODE_HEARTBEAT) are 0-value / 0-fee
+    // protocol txs (no UTXO inputs). They bypass the fee/input/relay-floor path.
+    // Only the canonical SHAPE is checked here; full validation (activation guard,
+    // Schnorr signature, tip_ref, node-state seq/uniqueness/dedup) is done by the
+    // node's sendrawtransaction handler (which has chain + node-state access) and,
+    // authoritatively, by ConnectBlock's connect_block_node_txs before acceptance.
+    if (tx.tx_type == TX_TYPE_NODE_BIND || tx.tx_type == TX_TYPE_NODE_HEARTBEAT) {
+        Hash256 nid{}; std::string nerr;
+        if (!tx.ComputeTxId(nid, &nerr))
+            return MempoolAcceptResult::Fail(MempoolAcceptCode::INTERNAL_ERROR, "node tx txid: " + nerr);
+        if (entries_.count(nid))
+            return MempoolAcceptResult::Fail(MempoolAcceptCode::ALREADY_IN_POOL, "already in mempool", nid);
+        bool shape_ok = false;
+        if (tx.tx_type == TX_TYPE_NODE_BIND) {
+            sost::node_participation::NodeBindTx b; shape_ok = sost::node_participation::extract_bind(tx, b, nullptr);
+        } else {
+            sost::node_participation::NodeHeartbeatTx h; shape_ok = sost::node_participation::extract_heartbeat(tx, h, nullptr);
+        }
+        if (!shape_ok)
+            return MempoolAcceptResult::Fail(MempoolAcceptCode::CONSENSUS_FAIL, "malformed node tx", nid);
+        MempoolEntry e; e.tx = tx; e.txid = nid; e.fee = 0;
+        e.size = EstimateTxSerializedSize(tx); if (!e.size) e.size = 1;
+        e.time_added = current_time;
+        AddToIndexes(e);
+        entries_[nid] = std::move(e);
+        return MempoolAcceptResult::Ok(nid, 0, 0.0);
     }
 
     // txid
