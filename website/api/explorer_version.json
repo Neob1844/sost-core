@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-09-v408-jackpot-archive-header125-splash135",
-  "note": "Jackpot Archive drawer (VIEW ALL JACKPOTS: all paid jackpots reconstructed from the canonical chain, newest-first, linkable block/winner/tx, VERIFIED ON-CHAIN, DTD payout, eligible count, age). Top header block +25%; splash/loading screen +35%. Single force reload."
+  "v": "2026-09-09-v409-overlay-fetch-serialized-retry",
+  "note": "Fix ONLY the two overlay charts (XAUT price+XAUT/BTC, PAXG price+PAXG/BTC): fetch the two source series one at a time with retry+backoff on the rate-limited API and reuse the shared cache the original charts fill, so an overlay renders whenever its source series have data (30D/6M/1Y all OK). Original 4 charts untouched. 3Y/5Y remain source-limited (CoinGecko free cap >365d). Single force reload."
 }

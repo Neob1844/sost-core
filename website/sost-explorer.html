@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-09-v408-jackpot-archive-header125-splash135">
+<meta name="explorer-html-version" content="2026-09-09-v409-overlay-fetch-serialized-retry">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -7846,6 +7846,7 @@ setInterval(refresh,60000);
     {key:'ovpaxg', a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'btc',color:'#d946ef',label:'PAXG / BTC',fmt:'btc'}}
   ];
   var ovTf={ovxaut:'24H',ovpaxg:'24H'};
+  var ovLoading={ovxaut:false,ovpaxg:false};
   function ovSeries(id,vs,tf){ var ck=cKey(id,vs),def=TF_MAP[tf]; var raw=(cache[ck]&&cache[ck][def.days])||[]; if(!raw.length)return[]; if(def.ms){var cut=Date.now()-def.ms;return raw.filter(function(pp){return pp[0]>=cut;});} return raw; }
   function ovFmt1(fmt,v){ return fmt==='btc'?fmtBtc(v):fmtUsd(v); }
   function ovScale(arr){ var vs=arr.map(function(p){return p[1];}); var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs); var r=mx-mn; if(r===0)r=mn*0.001||1; mn-=r*0.05; mx+=r*0.05; return {mn:mn,mx:mx,rng:(mx-mn)||1}; }
@@ -7858,7 +7859,7 @@ setInterval(refresh,60000);
     var pL=52,pR=58,pT=6,pB=20,cw=w-pL-pR,ch=h-pT-pB;
     ctx.strokeStyle='#111';ctx.lineWidth=1;
     for(var g=1;g<=3;g++){var gy=pT+ch*g/4;ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(pL+cw,gy);ctx.stroke();}
-    if(A.length<2&&B.length<2){ctx.fillStyle='#333';ctx.font='11px '+codeFont;ctx.textAlign='center';ctx.fillText('No data available for this period',pL+cw/2,pT+ch/2);updOvRange(cfg,A,B);return;}
+    if(A.length<2&&B.length<2){ctx.fillStyle='#333';ctx.font='11px '+codeFont;ctx.textAlign='center';ctx.fillText(ovLoading[cfg.key]?'Loading data…':'No data available for this period',pL+cw/2,pT+ch/2);updOvRange(cfg,A,B);return;}
     var allT=A.concat(B).map(function(pp){return pp[0];});
     var minT=Math.min.apply(null,allT),maxT=Math.max.apply(null,allT);var trng=(maxT-minT)||1;
     var sA=A.length?ovScale(A):null, sB=B.length?ovScale(B):null;
@@ -7898,7 +7899,27 @@ setInterval(refresh,60000);
     });
     cv.addEventListener('mouseleave',function(){tip.style.display='none';clearOvC(cfg);});
   }
-  function ovEnsureDraw(cfg){ var days=TF_MAP[ovTf[cfg.key]].days; var need=2; function done(){need--;if(need<=0)drawOverlay(cfg);} fetchHist(cfg.a.id,days,cfg.a.vs,done); fetchHist(cfg.b.id,days,cfg.b.vs,done); }
+  // Overlay fetch: ONE series at a time (never burst two requests at once) with
+  // retry + backoff on the shared, rate-limited CoinGecko API. Reuses the exact
+  // cache slots the ORIGINAL charts fill (fetchHist dedupes by cache+TTL), so the
+  // overlay renders whenever its source series have data. Never touches originals.
+  function ovHas(id,vs,days){ var ck=cKey(id,vs); return !!(cache[ck]&&cache[ck][days]&&cache[ck][days].length>0); }
+  function ovFetchOne(id,days,vs,attempt,cb){
+    fetchHist(id,days,vs,function(){
+      if(ovHas(id,vs,days)||attempt>=4){ cb(); return; }
+      setTimeout(function(){ ovFetchOne(id,days,vs,attempt+1,cb); }, 1200*(attempt+1));
+    });
+  }
+  function ovEnsureDraw(cfg){
+    var days=TF_MAP[ovTf[cfg.key]].days;
+    ovLoading[cfg.key]=true; drawOverlay(cfg);            // paint current cache immediately (progressive)
+    ovFetchOne(cfg.a.id,days,cfg.a.vs,0,function(){
+      drawOverlay(cfg);                                    // series A settled -> draw partial
+      ovFetchOne(cfg.b.id,days,cfg.b.vs,0,function(){
+        ovLoading[cfg.key]=false; drawOverlay(cfg);        // both settled -> final draw
+      });
+    });
+  }
   function setupOvTf(cfg){ var cont=document.getElementById(cfg.key+'TfBtns'); if(!cont)return; var btns=cont.querySelectorAll('.tf-btn'); btns.forEach(function(btn){ btn.addEventListener('click',function(){ btns.forEach(function(b){b.classList.remove('active');}); btn.classList.add('active'); ovTf[cfg.key]=btn.getAttribute('data-tf'); ovEnsureDraw(cfg); }); }); }
   OVERLAYS.forEach(function(cfg){ setupOvTf(cfg); setupOvTooltip(cfg); ovEnsureDraw(cfg); });
 
