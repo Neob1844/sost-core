@@ -79,6 +79,13 @@ constexpr uint8_t OUT_HTLC_CLAIM_WITNESS = 0x13;
 // Pool, 50% Gold Funding Vault); nothing is ever burned.
 constexpr uint8_t OUT_BURN          = 0x20;
 
+// V16 node-participation PROTOCOL-DATA output (NON-SPENDABLE). Carries the
+// canonical NODE_BIND / NODE_HEARTBEAT payload (tx_type disambiguates which).
+// amount MUST be 0. This output is NEVER added to the spendable UTXO set — it
+// exists only to transport + cryptographically commit the data inside the tx.
+// See include/sost/node_participation.h.
+constexpr uint8_t OUT_NODE_PROTOCOL = 0x30;
+
 // -----------------------------------------------------------------------------
 // TxInput
 // -----------------------------------------------------------------------------

@@ -143,6 +143,11 @@ bool UtxoSet::ConnectTransaction(
         const auto& txout = tx.outputs[i];
         OutPoint op{txid, (uint32_t)i};
 
+        // V16: OUT_NODE_PROTOCOL is NON-SPENDABLE protocol data — it MUST NOT
+        // enter the spendable UTXO set (no zero-value UTXO pollution). Skip it;
+        // the node-participation state is derived separately from the chain.
+        if (txout.type == OUT_NODE_PROTOCOL) continue;
+
         UTXOEntry entry;
         entry.amount = txout.amount;
         entry.type = txout.type;
@@ -238,6 +243,9 @@ bool UtxoSet::DisconnectTransaction(
 {
     // 1. Remove outputs that were added by this tx
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
+        // V16: OUT_NODE_PROTOCOL was never added to the UTXO set (non-spendable),
+        // so there is nothing to remove here — mirror the ConnectTransaction skip.
+        if (tx.outputs[i].type == OUT_NODE_PROTOCOL) continue;
         OutPoint op{txid, (uint32_t)i};
         if (!SpendUTXO(op, nullptr, err)) {
             if (err) *err = "DisconnectTransaction: remove output[" +
@@ -316,7 +324,13 @@ bool UtxoSet::ConnectBlock(
         // historical replay is byte-identical.
         const bool jackpot_ok =
             sost::is_hist_jackpot_height(height) && txs[t].tx_type == TX_TYPE_JACKPOT;
-        if (txs[t].tx_type != TX_TYPE_STANDARD && !htlc_ok && !jackpot_ok) {
+        // V16 node participation: NODE_BIND / NODE_HEARTBEAT are valid block tx
+        // types only from the V2 activation height (mainnet 30000). Below it they
+        // are rejected (must be standard), so historical replay is byte-identical.
+        const bool node_ok =
+            sost::node_participation_active_at(height) &&
+            (txs[t].tx_type == TX_TYPE_NODE_BIND || txs[t].tx_type == TX_TYPE_NODE_HEARTBEAT);
+        if (txs[t].tx_type != TX_TYPE_STANDARD && !htlc_ok && !jackpot_ok && !node_ok) {
             if (err) *err = "ConnectBlock: txs[" + std::to_string(t) + "] must be standard";
             return false;
         }
