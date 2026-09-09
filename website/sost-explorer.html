@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-09-v410-overlay-btcusdc-ref">
+<meta name="explorer-html-version" content="2026-09-09-v411-archive-canonical-reconstruct">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8808,7 +8808,7 @@ tr.sjp-blkrow .sjp-v{color:#0a0a0c;background:#39ff14;font:800 9px/1 ui-monospac
   // Reconstruct a jackpot from ON-CHAIN data (canonical; never depends on live-witnessed memory).
   // getblock -> txids[1] -> getrawtransaction(hex) -> sjpParseJackpotTx. Caches into SJP.jackpots.
   window.SJP.reconstruct=function(h){
-    var c=window.SJP.jackpots[h]; if(c&&c.winner) return Promise.resolve(c);
+    var c=window.SJP.jackpots[h]; if(c&&c.winner&&c.txid&&c.amount!=null) return Promise.resolve(c); // full-record cache only; a partial {winner,eligible} must re-reconstruct from chain
     if(!isOpp(h)||typeof window.rpc!=='function') return Promise.resolve(null);
     return window.rpc('getblockhash',[h]).then(function(hash){ if(!hash) return null;
       return window.rpc('getblock',[hash]).then(function(b){
