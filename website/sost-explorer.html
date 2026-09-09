@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-09-v411-archive-canonical-reconstruct">
+<meta name="explorer-html-version" content="2026-09-09-v412-overlay-pipeline-reqid-perseries">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -7846,14 +7846,24 @@ setInterval(refresh,60000);
     {key:'ovpaxg', a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'btc',color:'#d946ef',label:'PAXG / BTC',fmt:'btc'}, c:{id:'bitcoin',vs:'usd',color:'#f7931a',label:'BTC / USDC',fmt:'usd'}}
   ];
   var ovTf={ovxaut:'24H',ovpaxg:'24H'};
-  var ovLoading={ovxaut:false,ovpaxg:false};
+  var ovReq={ovxaut:0,ovpaxg:0};       // request generation per chart (stale-response guard)
+  var ovState={ovxaut:{},ovpaxg:{}};   // per-series load state: 'pending' | 'ready' | 'error'
   function ovSeries(id,vs,tf){ var ck=cKey(id,vs),def=TF_MAP[tf]; var raw=(cache[ck]&&cache[ck][def.days])||[]; if(!raw.length)return[]; if(def.ms){var cut=Date.now()-def.ms;return raw.filter(function(pp){return pp[0]>=cut;});} return raw; }
   function ovFmt1(fmt,v){ return fmt==='btc'?fmtBtc(v):fmtUsd(v); }
   function ovScale(arr){ var vs=arr.map(function(p){return p[1];}); var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs); var r=mx-mn; if(r===0)r=mn*0.001||1; mn-=r*0.05; mx+=r*0.05; return {mn:mn,mx:mx,rng:(mx-mn)||1}; }
   // BTC/USDC reference: normalize to base 100 at the start of the visible range so
   // its (much larger, volatile) scale never crushes the XAUT/PAXG lines.
   function ovNorm(arr){ if(!arr.length)return[]; var base=arr[0][1]||1; return arr.map(function(pp){return [pp[0], 100*pp[1]/base];}); }
-  function updOvRange(cfg,A,B,C){ var el=document.getElementById(cfg.key+'Range'); if(!el)return; if(!A.length&&!B.length){el.textContent='';return;} el.textContent=cfg.a.label+' '+A.length+' pts'+(A.length?' (High '+ovFmt1(cfg.a.fmt,Math.max.apply(null,A.map(function(p){return p[1];})))+')':'')+' · '+cfg.b.label+' '+B.length+' pts'+(B.length?' (High '+ovFmt1(cfg.b.fmt,Math.max.apply(null,B.map(function(p){return p[1];})))+')':'')+((C&&C.length)?' · '+cfg.c.label+' '+C.length+' pts (norm 100)':''); }
+  function updOvRange(cfg,A,B,C){
+    var el=document.getElementById(cfg.key+'Range'); if(!el)return;
+    function tok(k,arr,extra){ var st=ovState[cfg.key][k];
+      if(st==='pending') return cfg[k].label+': loading…';
+      if(st==='error')   return cfg[k].label+': unavailable';
+      return cfg[k].label+': '+arr.length+' pts'+(extra||''); }
+    var parts=[tok('a',A,''), tok('b',B,'')];
+    if(cfg.c) parts.push(tok('c',C,' (norm 100)'));
+    el.textContent=parts.join(' · ');
+  }
   function drawOverlay(cfg){
     var c=document.getElementById(cfg.key+'Chart'); if(!c)return;
     var tf=ovTf[cfg.key]; var A=ovSeries(cfg.a.id,cfg.a.vs,tf), B=ovSeries(cfg.b.id,cfg.b.vs,tf), C=cfg.c?ovSeries(cfg.c.id,cfg.c.vs,tf):[];
@@ -7862,10 +7872,16 @@ setInterval(refresh,60000);
     var pL=52,pR=58,pT=6,pB=20,cw=w-pL-pR,ch=h-pT-pB;
     ctx.strokeStyle='#111';ctx.lineWidth=1;
     for(var g=1;g<=3;g++){var gy=pT+ch*g/4;ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(pL+cw,gy);ctx.stroke();}
-    if(A.length<2&&B.length<2){ctx.fillStyle='#333';ctx.font='11px '+codeFont;ctx.textAlign='center';ctx.fillText(ovLoading[cfg.key]?'Loading data…':'No data available for this period',pL+cw/2,pT+ch/2);updOvRange(cfg,A,B,C);return;}
+    if(A.length<2&&B.length<2&&C.length<2){
+      var anyPending=(ovState[cfg.key].a==='pending'||ovState[cfg.key].b==='pending'||(cfg.c&&ovState[cfg.key].c==='pending'));
+      var total=cfg.c?3:2, ready=0; ['a','b','c'].forEach(function(k){ if(cfg[k]&&ovState[cfg.key][k]==='ready')ready++; });
+      ctx.fillStyle='#333';ctx.font='11px '+codeFont;ctx.textAlign='center';
+      ctx.fillText(anyPending?('Loading historical data… ('+ready+'/'+total+')'):'No data available for this period',pL+cw/2,pT+ch/2);
+      updOvRange(cfg,A,B,C);return;
+    }
     var allT=A.concat(B).concat(C).map(function(pp){return pp[0];});
     var minT=Math.min.apply(null,allT),maxT=Math.max.apply(null,allT);var trng=(maxT-minT)||1;
-    var sA=A.length?ovScale(A):null, sB=B.length?ovScale(B):null;
+    var sA=A.length>=2?ovScale(A):null, sB=B.length>=2?ovScale(B):null;
     ctx.font='9px '+codeFont;
     // left axis (series A, USD)
     if(sA){ ctx.textAlign='right';ctx.fillStyle=cfg.a.color; for(var yi=0;yi<4;yi++){var yv=sA.mx-sA.rng*yi/3;var yp=pT+ch*yi/3;ctx.fillText(ovFmt1(cfg.a.fmt,yv),pL-4,yp+3);} }
@@ -7886,7 +7902,7 @@ setInterval(refresh,60000);
     cv.style.cursor='crosshair';
     cv.addEventListener('mousemove',function(e){
       var tf=ovTf[cfg.key]; var A=ovSeries(cfg.a.id,cfg.a.vs,tf),B=ovSeries(cfg.b.id,cfg.b.vs,tf),C=cfg.c?ovSeries(cfg.c.id,cfg.c.vs,tf):[];
-      if(A.length<2&&B.length<2){tip.style.display='none';clearOvC(cfg);return;}
+      if(A.length<2&&B.length<2&&C.length<2){tip.style.display='none';clearOvC(cfg);return;}
       var rect=cv.getBoundingClientRect();var mx=e.clientX-rect.left;var w=cv.offsetWidth,h=cv.offsetHeight;
       var pL=52,pR=58,pT=6,pB=20,cw=w-pL-pR,ch=h-pT-pB;var rel=(mx-pL)/cw;if(rel<0||rel>1){tip.style.display='none';clearOvC(cfg);return;}
       var allT=A.concat(B).concat(C).map(function(pp){return pp[0];});var minT=Math.min.apply(null,allT),maxT=Math.max.apply(null,allT);var trng=(maxT-minT)||1;
@@ -7910,23 +7926,29 @@ setInterval(refresh,60000);
   // cache slots the ORIGINAL charts fill (fetchHist dedupes by cache+TTL), so the
   // overlay renders whenever its source series have data. Never touches originals.
   function ovHas(id,vs,days){ var ck=cKey(id,vs); return !!(cache[ck]&&cache[ck][days]&&cache[ck][days].length>0); }
-  function ovFetchOne(id,days,vs,attempt,cb){
-    fetchHist(id,days,vs,function(){
-      if(ovHas(id,vs,days)||attempt>=4){ cb(); return; }
-      setTimeout(function(){ ovFetchOne(id,days,vs,attempt+1,cb); }, 1200*(attempt+1));
-    });
+  // Per-series fetch: reqId-guarded (a newer timeframe abandons this one; a stale
+  // response is discarded — never overwrites the current selection), retry+backoff,
+  // and each series resolves INDEPENDENTLY setting its own state (pending/ready/error).
+  function ovFetchSeries(cfg,k,reqId,days){
+    var s=cfg[k]; if(!s)return;
+    (function attempt(n){
+      if(ovReq[cfg.key]!==reqId) return;                 // superseded -> stop (no stale writes)
+      fetchHist(s.id,days,s.vs,function(){
+        if(ovReq[cfg.key]!==reqId) return;               // stale response -> discard
+        if(ovHas(s.id,s.vs,days)){ ovState[cfg.key][k]='ready'; drawOverlay(cfg); return; }
+        if(n>=4){ ovState[cfg.key][k]='error'; drawOverlay(cfg); return; }
+        setTimeout(function(){ attempt(n+1); }, 900*(n+1));
+      });
+    })(0);
   }
   function ovEnsureDraw(cfg){
+    var reqId=++ovReq[cfg.key];                           // new generation for this timeframe selection
     var days=TF_MAP[ovTf[cfg.key]].days;
-    ovLoading[cfg.key]=true; drawOverlay(cfg);            // paint current cache immediately (progressive)
-    ovFetchOne(cfg.a.id,days,cfg.a.vs,0,function(){
-      drawOverlay(cfg);                                    // series A settled -> draw partial
-      ovFetchOne(cfg.b.id,days,cfg.b.vs,0,function(){
-        drawOverlay(cfg);                                  // B settled -> draw
-        if(cfg.c){ ovFetchOne(cfg.c.id,days,cfg.c.vs,0,function(){ ovLoading[cfg.key]=false; drawOverlay(cfg); }); }
-        else { ovLoading[cfg.key]=false; drawOverlay(cfg); }
-      });
-    });
+    ovState[cfg.key]={a:'pending',b:'pending'}; if(cfg.c) ovState[cfg.key].c='pending';
+    drawOverlay(cfg);                                     // immediate: cached lines (if any) + loading state
+    ovFetchSeries(cfg,'a',reqId,days);                    // 3 series resolve independently, reqId-guarded
+    ovFetchSeries(cfg,'b',reqId,days);
+    if(cfg.c) ovFetchSeries(cfg,'c',reqId,days);
   }
   function setupOvTf(cfg){ var cont=document.getElementById(cfg.key+'TfBtns'); if(!cont)return; var btns=cont.querySelectorAll('.tf-btn'); btns.forEach(function(btn){ btn.addEventListener('click',function(){ btns.forEach(function(b){b.classList.remove('active');}); btn.classList.add('active'); ovTf[cfg.key]=btn.getAttribute('data-tf'); ovEnsureDraw(cfg); }); }); }
   OVERLAYS.forEach(function(cfg){ setupOvTf(cfg); setupOvTooltip(cfg); ovEnsureDraw(cfg); });

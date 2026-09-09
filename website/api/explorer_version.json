@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-09-v411-archive-canonical-reconstruct",
-  "note": "Fix Jackpot Archive: reconstruct() cache-hit now requires a FULL record (winner+txid+amount); a partial {winner,eligible} entry (written by the status panel for the last jackpot) no longer short-circuits it, so #25,578 reconstructs its Historical Jackpot (+100 SOST) + view tx canonically from chain like #25,290. One shared canonical source (SJP.reconstruct) feeds History + Archive + Replay; Archive totals now sum real reconstructed amounts (2 jackpots -> +200 SOST). No design/layout change. Single force reload."
+  "v": "2026-09-09-v412-overlay-pipeline-reqid-perseries",
+  "note": "Overlay charts loading pipeline hardened: per-timeframe request-id guard (stale/late responses discarded; fast timeframe switching never mixes results), independent per-series state (pending/ready/error) so a series still loading shows 'loading…' and a failed one shows 'unavailable' — never a false '0 pts'; 3 series (price, /BTC, BTC/USDC) resolve independently with retry+backoff (a slow/failed one no longer blocks the others); loading message shows progress (k/3). The 4 original charts are untouched. Single force reload."
 }
