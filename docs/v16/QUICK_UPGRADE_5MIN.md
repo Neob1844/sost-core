@@ -7,6 +7,33 @@
 PoW-weighted draw (first V2 draw **#30,186**). DTD-normal and the 100/500/rollover
 payout are unchanged. A V15 node will fork off after #30,000.
 
+## Timeline at a glance
+```text
+BEFORE #29,900
+  -> read instructions / download / prepare (do NOT switch yet)
+
+AFTER #29,900 AND BEFORE #30,000            (the update window — ~16-17 h)
+  -> stop node + miner
+  -> update / recompile
+  -> verify SHA256 against the published hashes
+  -> restart
+  -> confirm: synced, tip matches network, correct version
+
+AT #30,000
+  -> V16 activates AUTOMATICALLY
+  -> no restart, no manual switch
+
+AFTER #30,000                                (only if you want the jackpot)
+  -> register NODE_BIND (step 2) and run the node with --node-key (step 3)
+
+BEFORE #30,186  (first DTD Jackpot V2 draw)
+  -> confirm your NODE_BIND is active
+  -> check DTD Jackpot eligibility (step 4): eligible:true, reasons:[]
+```
+> Upgrading the node is **not the finish line** for the jackpot: to enter the first
+> V2 draw you must, **after #30,000**, have `NODE_BIND` confirmed and heartbeating,
+> and verify eligibility **before #30,186**.
+
 Set these once:
 ```bash
 SRC=/path/to/sost-core          # your source checkout
