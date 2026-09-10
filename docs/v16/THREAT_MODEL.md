@@ -1,4 +1,4 @@
-# V16 — Historical Jackpot V2 · Threat Model (living document)
+# V16 — DTD Jackpot V2 · Threat Model (living document)
 
 Activation **#30,000** (owner-locked). DTD-normal untouched. NODE = eligibility
 gate; PoW = linear weight; no jackpot cooldown; no jackpot anti-dominance.

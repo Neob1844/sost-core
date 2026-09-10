@@ -1,8 +1,8 @@
-# SOST V16 — Historical Jackpot V2 — Release Notes (DRAFT)
+# SOST V16 — DTD Jackpot V2 — Release Notes (DRAFT)
 
 **Type:** mandatory consensus upgrade (hard fork).
 **Activation height:** **#30,000** (mainnet). Auto-activates by height — no manual step.
-**First Historical Jackpot V2 draw:** **#30,186** (the first cadence jackpot at/after activation).
+**First DTD Jackpot V2 draw:** **#30,186** (the first cadence jackpot at/after activation).
 **Operator update window:** after **#29,900** and before **#30,000**.
 
 > Pre-#30,000 the V16 binary is **byte-identical to V15** (all V16 artifacts are
@@ -14,10 +14,10 @@
 
 - **DTD-normal is 100% UNCHANGED** (eligibility, cadence, cooldown, anti-dominance,
   payout, seed). It keeps paying its frequent per-block winner exactly as today.
-- The **Historical Jackpot becomes an independent draw** with its own winner. The
-  DTD-normal winner and the Historical Jackpot winner may be the **same or
+- The **DTD Jackpot becomes an independent draw** with its own winner. The
+  DTD-normal winner and the DTD Jackpot winner may be the **same or
   different** addresses — both are valid.
-- **Eligibility for the Historical Jackpot V2** (ALL required):
+- **Eligibility for the DTD Jackpot V2** (ALL required):
   1. valid SbPoW mining identity;
   2. **≥ 3 SbPoW blocks in the last 5,000 blocks** (real PoW contribution);
   3. an **active NODE_BIND** (a node key cryptographically bound to the mining key);
@@ -32,7 +32,7 @@
 - **Independent, domain-separated seed** (`SOST_HIST_JACKPOT`) — the jackpot draw is
   separate from and independent of the DTD-normal draw.
 - **Payout economics UNCHANGED:** base 100 SOST, cap 500 (rollover), spent from the
-  existing Historical reserve (supply-neutral, no new emission); miner 50% / DTD 50%
+  existing DTD reserve (supply-neutral, no new emission); miner 50% / DTD 50%
   and Gold/PoPC new-emission = 0% are untouched. If there are **0 eligible**
   participants at a jackpot height, it **rolls over** (no winner, funds preserved).
 

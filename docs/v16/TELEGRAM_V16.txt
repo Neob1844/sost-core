@@ -1,8 +1,8 @@
-📢 *SOST — Historical Jackpot V2*
+📢 *SOST — DTD Jackpot V2*
 🔧 _Advance notice · activates at block #30,000_
 
 ✅ *Normal DTD does NOT change.* The regular per-block reward keeps its current rules.
-🎰 The change affects *only the Historical DTD Jackpot* → from V2 it becomes an *independent draw*.
+🎰 The change affects *only the DTD Jackpot* → from V2 it becomes an *independent draw*.
 
 🧭 *The principle:*
 👉 *Node participation = eligibility*
