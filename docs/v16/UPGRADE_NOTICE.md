@@ -40,12 +40,38 @@ Release notes + verified binary hashes: (link at release).
 
 ---
 
+### Operational safeguards (freeze → monitor → release-day)
+These are process rules, **not** protocol changes. Consensus is frozen.
+
+1. **Feature branch frozen de facto.** From now, nothing lands on
+   `feat/historical-jackpot-v2-30000` except a fix for a **critical bug**. No "minor"
+   change may touch already-validated code. Any fix re-runs the FULL suite before it
+   is accepted.
+2. **Clean-room build on release day.** Build from the tag, then do a **second clean
+   build in a fresh checkout** and confirm the binaries/hashes match. If they are not
+   byte-for-byte reproducible, document exactly the **compiler, its version, and the
+   build environment** alongside the published hashes.
+3. **Abort plan before #30,000.** If a critical problem appears during the
+   #29,900–#29,999 window, **stop the rollout and publish a correction before the chain
+   crosses #30,000.** Once V16 activates at #30,000, "go back to V15" is **not** a normal
+   downgrade — treat pre-activation as the only safe abort point.
+4. **Announce early.** The 100-block window is short (~16–17 h at current cadence).
+   Publish the BitcoinTalk/Telegram notice and the guides **well before #29,900** so
+   operators know exactly what to do, even though they execute the switch only inside
+   the window.
+
 ### Release-day checklist (internal — before publishing the notice)
 ```
+[ ] feature branch frozen; only a critical-bug fix may land (full suite re-run if it does)
 [ ] freeze consensus commit on feat/historical-jackpot-v2-30000
 [ ] reintroduce V16 into main via revert-of-reverts OR clean cherry-pick (NOT a naive merge)
-[ ] build final: sost-node, sost-miner, sost-cli  (-DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF)
-[ ] record: NODE VERSION / CONSENSUS COMMIT / SHA256(node,miner,cli)
-[ ] confirm ALL green: unit, devnet paid-E2E, reorg, reindex, restart, upgrade V15->V16
-[ ] publish binaries + hashes; THEN publish this notice
+[ ] verify HIST_JACKPOT_V2_HEIGHT == 30000  (mainnet)
+[ ] confirm ALL green: unit, devnet paid-E2E, rollover->cap, reorg, reindex, restart, upgrade V15->V16, auto-heartbeat
+[ ] create the FINAL release tag
+[ ] build final FROM THE TAG: sost-node, sost-miner, sost-cli  (-DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF)
+[ ] SECOND clean build in a fresh checkout; confirm hashes match (else document toolchain+env)
+[ ] record: NODE VERSION / CONSENSUS COMMIT+TAG / SHA256(node,miner,cli)  (finals REPLACE the RC hashes)
+[ ] publish binaries + FINAL hashes + source commit/tag; publish QUICK_UPGRADE_5MIN
+[ ] publish this notice (BitcoinTalk/Telegram) WELL BEFORE #29,900
+[ ] abort point: any critical issue in #29,900–#29,999 -> halt + fix BEFORE #30,000
 ```
