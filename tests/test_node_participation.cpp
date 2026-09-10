@@ -10,6 +10,9 @@
 #include "sost/jackpot.h"
 #include "sost/sbpow.h"
 #include "sost/params.h"
+#include "sost/mempool.h"
+#include "sost/utxo_set.h"
+#include "sost/tx_validation.h"
 
 #include <cstdio>
 #include <vector>
@@ -396,6 +399,46 @@ static void test_tx_encoding() {
 }
 
 // ---------------------------------------------------------------------------
+// Mempool relay anti-spam: <=1 pending bind/miner (higher bind_seq replaces),
+// <=1 pending heartbeat/(node,epoch), all before activation rejected.
+static void test_mempool_antispam() {
+    sost::Mempool mp;
+    sost::UtxoSet utxo;
+    sost::TxValidationContext ctx; ctx.spend_height = sost::HIST_JACKPOT_V2_HEIGHT + 1; // activation live
+    auto acc=[&](const Transaction& tx){ return mp.AcceptToMempool(tx, utxo, ctx, 1000).accepted; };
+
+    // before activation -> rejected
+    { sost::TxValidationContext c0; c0.spend_height = sost::HIST_JACKPOT_V2_HEIGHT - 1;
+      auto r=mp.AcceptToMempool(build_node_bind_tx(make_bind(2,3,1)), utxo, c0, 1000);
+      TEST("node tx before activation -> rejected from mempool", !r.accepted); }
+
+    // bind miner(2) seq1 accepted; different node key same miner same seq1 -> rejected
+    TEST("NODE_BIND(miner2,seq1) accepted", acc(build_node_bind_tx(make_bind(2,3,1))));
+    TEST("2nd NODE_BIND(miner2,seq1,diff node) -> rejected (<= pending seq)",
+         !acc(build_node_bind_tx(make_bind(2,4,1))));
+    size_t before=mp.Size();
+    TEST("NODE_BIND(miner2,seq2) higher -> accepted (replaces)", acc(build_node_bind_tx(make_bind(2,5,2))));
+    TEST("replace kept pending count stable (evicted seq1)", mp.Size()==before);
+
+    // a DIFFERENT miner can bind independently
+    TEST("NODE_BIND(miner9,seq1) other miner -> accepted", acc(build_node_bind_tx(make_bind(9,6,1))));
+
+    // heartbeat (node3, epoch0) accepted; same (node,epoch) diff tip_ref -> rejected
+    Bytes32 tipA{}; tipA.fill(0x11); Bytes32 tipB{}; tipB.fill(0x22);
+    TEST("NODE_HEARTBEAT(node3,ep0) accepted", acc(build_node_heartbeat_tx(make_hb(3,0,tipA))));
+    TEST("dup NODE_HEARTBEAT(node3,ep0,diff tipref) -> rejected",
+         !acc(build_node_heartbeat_tx(make_hb(3,0,tipB))));
+    TEST("NODE_HEARTBEAT(node3,ep1) different epoch -> accepted", acc(build_node_heartbeat_tx(make_hb(3,1,tipA))));
+
+    // RemoveForBlock clears dedup -> a fresh bind for miner2 becomes acceptable again
+    std::vector<Transaction> blk; // include the accepted seq2 bind to confirm it
+    blk.push_back(build_node_bind_tx(make_bind(2,5,2)));
+    mp.RemoveForBlock(blk);
+    TEST("after RemoveForBlock, miner2 bind index cleared -> new bind accepted",
+         acc(build_node_bind_tx(make_bind(2,7,3))));
+}
+
+// ---------------------------------------------------------------------------
 int main() {
     printf("== test_node_participation (V16 NODE_BIND/HEARTBEAT tx layer) ==\n");
     test_serialization();
@@ -407,6 +450,7 @@ int main() {
     test_reindex_parity();
     test_payout_integration();
     test_tx_encoding();
+    test_mempool_antispam();
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail ? 1 : 0;
 }

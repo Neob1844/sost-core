@@ -34,6 +34,21 @@ void Mempool::RemoveFromIndexes(const MempoolEntry& entry) {
     for (const auto& op : entry.spent_outpoints) {
         spent_index_.erase(op);
     }
+    // V16: keep the node-participation relay-dedup indexes consistent on ANY removal
+    // (RemoveTransaction, RBF eviction, RemoveForBlock all route through here).
+    if (entry.tx.tx_type == TX_TYPE_NODE_BIND) {
+        sost::node_participation::NodeBindTx b;
+        if (sost::node_participation::extract_bind(entry.tx, b, nullptr)) {
+            auto it = node_bind_pending_.find(b.mining_pubkey);
+            if (it != node_bind_pending_.end() && it->second.first == entry.txid) node_bind_pending_.erase(it);
+        }
+    } else if (entry.tx.tx_type == TX_TYPE_NODE_HEARTBEAT) {
+        sost::node_participation::NodeHeartbeatTx h;
+        if (sost::node_participation::extract_heartbeat(entry.tx, h, nullptr)) {
+            auto it = node_hb_pending_.find(std::make_pair(h.node_pubkey, h.epoch_idx));
+            if (it != node_hb_pending_.end() && it->second == entry.txid) node_hb_pending_.erase(it);
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -111,20 +126,49 @@ MempoolAcceptResult Mempool::AcceptToMempool(
             return MempoolAcceptResult::Fail(MempoolAcceptCode::INTERNAL_ERROR, "node tx txid: " + nerr);
         if (entries_.count(nid))
             return MempoolAcceptResult::Fail(MempoolAcceptCode::ALREADY_IN_POOL, "already in mempool", nid);
-        bool shape_ok = false;
+        // Rate-limit: cap total pending node txs (cheap DoS bound before any parse).
+        if (node_bind_pending_.size() + node_hb_pending_.size() >= NODE_TX_MEMPOOL_MAX)
+            return MempoolAcceptResult::Fail(MempoolAcceptCode::POLICY_FAIL, "node-tx mempool full", nid);
+
+        // Helper to finish acceptance once policy passes.
+        auto accept = [&]() {
+            MempoolEntry e; e.tx = tx; e.txid = nid; e.fee = 0;
+            e.size = EstimateTxSerializedSize(tx); if (!e.size) e.size = 1;
+            e.time_added = current_time;
+            AddToIndexes(e);
+            entries_[nid] = std::move(e);
+            return MempoolAcceptResult::Ok(nid, 0, 0.0);
+        };
+
         if (tx.tx_type == TX_TYPE_NODE_BIND) {
-            sost::node_participation::NodeBindTx b; shape_ok = sost::node_participation::extract_bind(tx, b, nullptr);
+            sost::node_participation::NodeBindTx b;
+            if (!sost::node_participation::extract_bind(tx, b, nullptr))
+                return MempoolAcceptResult::Fail(MempoolAcceptCode::CONSENSUS_FAIL, "malformed NODE_BIND", nid);
+            // At most 1 pending bind per mining identity; a strictly-higher bind_seq
+            // replaces the pending one (RBF-like for rotation), else reject.
+            auto it = node_bind_pending_.find(b.mining_pubkey);
+            if (it != node_bind_pending_.end()) {
+                if (b.bind_seq <= it->second.second)
+                    return MempoolAcceptResult::Fail(MempoolAcceptCode::POLICY_FAIL,
+                        "a NODE_BIND with >= bind_seq is already pending for this miner", nid);
+                RemoveTransaction(it->second.first);   // evict lower-seq pending bind
+            }
+            auto r = accept();
+            node_bind_pending_[b.mining_pubkey] = std::make_pair(nid, b.bind_seq);
+            return r;
         } else {
-            sost::node_participation::NodeHeartbeatTx h; shape_ok = sost::node_participation::extract_heartbeat(tx, h, nullptr);
+            sost::node_participation::NodeHeartbeatTx h;
+            if (!sost::node_participation::extract_heartbeat(tx, h, nullptr))
+                return MempoolAcceptResult::Fail(MempoolAcceptCode::CONSENSUS_FAIL, "malformed NODE_HEARTBEAT", nid);
+            // At most 1 pending heartbeat per (node_pubkey, epoch).
+            auto key = std::make_pair(h.node_pubkey, h.epoch_idx);
+            if (node_hb_pending_.count(key))
+                return MempoolAcceptResult::Fail(MempoolAcceptCode::POLICY_FAIL,
+                    "a NODE_HEARTBEAT for this (node,epoch) is already pending", nid);
+            auto r = accept();
+            node_hb_pending_[key] = nid;
+            return r;
         }
-        if (!shape_ok)
-            return MempoolAcceptResult::Fail(MempoolAcceptCode::CONSENSUS_FAIL, "malformed node tx", nid);
-        MempoolEntry e; e.tx = tx; e.txid = nid; e.fee = 0;
-        e.size = EstimateTxSerializedSize(tx); if (!e.size) e.size = 1;
-        e.time_added = current_time;
-        AddToIndexes(e);
-        entries_[nid] = std::move(e);
-        return MempoolAcceptResult::Ok(nid, 0, 0.0);
     }
 
     // txid

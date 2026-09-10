@@ -11,6 +11,9 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <array>
+#include <utility>
+#include <cstdint>
 
 namespace sost {
 
@@ -186,6 +189,15 @@ private:
 
     // outpoint → txid
     std::map<OutPoint, Hash256> spent_index_;
+
+    // V16 node-participation RELAY dedup / anti-spam (NOT consensus — consensus is
+    // enforced by connect_block_node_txs). NODE_BIND: at most 1 pending per mining
+    // identity (mining_pubkey); a strictly-higher bind_seq replaces the pending one.
+    // NODE_HEARTBEAT: at most 1 pending per (node_pubkey, epoch). Total pending node
+    // txs are rate-limited to NODE_TX_MEMPOOL_MAX.
+    std::map<std::array<uint8_t,33>, std::pair<Hash256,uint64_t>> node_bind_pending_; // mining_pubkey -> (txid, bind_seq)
+    std::map<std::pair<std::array<uint8_t,33>,uint64_t>, Hash256> node_hb_pending_;   // (node_pubkey, epoch) -> txid
+    static constexpr size_t NODE_TX_MEMPOOL_MAX = 4096;
 
     void AddToIndexes(const MempoolEntry& entry);
     void RemoveFromIndexes(const MempoolEntry& entry);
