@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-09-v412-overlay-pipeline-reqid-perseries",
-  "note": "Overlay charts loading pipeline hardened: per-timeframe request-id guard (stale/late responses discarded; fast timeframe switching never mixes results), independent per-series state (pending/ready/error) so a series still loading shows 'loading…' and a failed one shows 'unavailable' — never a false '0 pts'; 3 series (price, /BTC, BTC/USDC) resolve independently with retry+backoff (a slow/failed one no longer blocks the others); loading message shows progress (k/3). The 4 original charts are untouched. Single force reload."
+  "v": "2026-09-10-v413-dtd-jackpot-rename-v2preview",
+  "note": "Public rename: the jackpot is now called the DTD Jackpot everywhere in the UI (no 'Historical' left in any public label, card, dashboard, history table, eligibility panel or archive) — internal RPC names (gethistoricaljackpotstatus) and identifiers are unchanged. Added a V16 pre-activation preview banner to the DTD Jackpot dashboard: announces DTD Jackpot V2 at block #30,000 (first V2 draw #30,186), explains the independent node-gated + SbPoW-linear draw (active node bind + heartbeats, no cooldown, no anti-dominance), rollover 100->500 unchanged, DTD normal unchanged. Banner auto-switches to 'V16 ACTIVE' after #30,000. The 4 original charts and overlays are untouched. Single force reload."
 }
