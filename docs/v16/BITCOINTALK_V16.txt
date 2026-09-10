@@ -1,0 +1,83 @@
+[center][img]http://sostcore.com/sost-logo.png[/img]
+
+[size=20pt][b]SOST — V16 · Historical Jackpot V2[/b][/size]
+[size=12pt][b]MANDATORY NETWORK UPGRADE — activates at block #30,000[/b][/size]
+[i]Sovereign Stock Token · ConvergenceX Native L1 Proof-of-Work · Open source (MIT)[/i][/center]
+
+[hr]
+
+[size=14pt][b]TL;DR[/b][/size]
+[list]
+[li][b]Activation:[/b] block [b]#30,000[/b] — automatic, by height (no command/restart at the height).[/li]
+[li][b]Operator update window:[/b] after [b]#29,900[/b] and before [b]#30,000[/b].[/li]
+[li][b]First Historical Jackpot V2 draw:[/b] block [b]#30,186[/b].[/li]
+[li][b]Who must update:[/b] every validating node and every miner. A node left on the old version after #30,000 will fork off the network.[/li]
+[/list]
+
+[hr]
+
+[size=14pt][b]What changes at #30,000[/b][/size]
+
+The regular per-block DTD reward is [b]unchanged[/b]. What changes is the [b]Historical Jackpot[/b]: it becomes an [b]independent draw[/b] with its own winner, and it now rewards miners who contribute [b]both real Proof-of-Work and node participation[/b].
+
+[b]New eligibility for the Historical Jackpot (all required):[/b]
+[list=1]
+[li]A valid SbPoW mining identity (signed blocks).[/li]
+[li][b]≥ 3 SbPoW blocks in the last 5,000 blocks[/b] — a minimum of real work.[/li]
+[li][b]An active NODE_BIND[/b] — a node key cryptographically bound to your mining key.[/li]
+[li][b]Node heartbeats[/b] — a signed periodic proof your node is following the chain. Bootstrapped after activation and reaching the permanent rule of [b]3 of the last 4 epochs[/b] (1 epoch = 288 blocks): #30,186 = bind only → 1/1 → 2/2 → 3/3 → [b]3/4 from #31,338[/b].[/li]
+[/list]
+
+[b]How the winner is chosen:[/b]
+[list]
+[li][b]Weight = number of SbPoW blocks you mined in the window (LINEAR).[/b] This is the only Sybil-neutral rule: splitting the same work across many addresses does [b]not[/b] increase your total weight, and running more nodes never adds weight (the node is an eligibility gate, not a multiplier).[/li]
+[li][b]No cooldown, no anti-dominance[/b] on the jackpot: your probability is proportional to the security and node participation you actually contribute.[/li]
+[li][b]Independent, domain-separated draw[/b] — the jackpot winner and the DTD-normal winner may be the same or different addresses; both are valid.[/li]
+[li][b]Payout unchanged:[/b] 100 SOST base, up to 500 with rollover, paid from the existing on-chain reserve (supply-neutral — no new emission). If nobody is eligible at a jackpot height, it simply rolls over.[/li]
+[/list]
+
+[i]Honest wording: node participation is verified as "Verified node participation" — a bound node key that follows the chain and signs heartbeats. It is NOT a proof of an independent physical machine, unique location, or 24/7 serving. Faking extra nodes gains nothing, because nodes add no weight.[/i]
+
+[hr]
+
+[size=14pt][b]What operators must do[/b][/size]
+[list=1]
+[li]Have the new software ready [b]before[/b] #29,900.[/li]
+[li]Between #29,900 and #29,999: stop the node, back up the data dir, build/install the V16 release, verify the published SHA256, restart. [b]Miners: run with [tt]--realtime[/tt].[/b][/li]
+[li]Do nothing at #30,000 — V2 activates automatically by height.[/li]
+[/list]
+A V16 node [b]before[/b] #30,000 behaves byte-identically to the current version, so it is safe to restart inside the window.
+
+[b]To take part in the jackpot[/b] (optional): bind a node key to your mining key, keep it heartbeating each epoch, and mine your ≥3 blocks. Full step-by-step + a ready-to-cron heartbeat snippet + RPC to check your status are in the Operator Guide (sostcore.com → docs/v16). You can verify your standing any time with:
+[code]checkhistoricaljackpoteligibility <your-mining-address>[/code]
+
+[hr]
+
+[size=14pt][b]A note from the developer[/b][/size]
+
+[quote]
+I am aware there have been several forks to fine-tune the system. From the very beginning it was stated that SOST is an [b]experimental[/b] project — it is a new kind of Proof-of-Work — but a [b]fully functional[/b] one, currently in [b]pre-market[/b].
+
+Things are no longer like the early days of crypto, when you could list on almost any exchange. Today most of the large exchanges require capital and audit conditions that SOST does not have at this moment. So the system has to evolve on its own — now that it is almost entirely decentralized, with only the Singapore node left to activate — by listing on a venue better suited to our current, early stage, presumably [b]non-KYC[/b]. And there is an essential reason for that:
+
+As far as it has been tested, the protocol works well, but it needs to be seen operating in a [b]real environment, inside an exchange[/b], to assess that neither its security nor its functionality is compromised.
+
+This does not mean the protocol will succeed, or that we will not be delisted after a few months. It is one more step on this hard road, and it has to be taken. If it goes well, we will take the necessary measures to keep moving toward a [b]solid legal entity[/b] and to plan an [b]audit[/b] that meets current European and American standards.
+
+But let us not fool ourselves: this is a tedious and challenging path, where things may work out or may not — and that has to be kept in mind.
+
+— NeoB
+[/quote]
+
+[hr]
+
+[size=14pt][b]Links[/b][/size]
+[list]
+[li]Website: [url=https://sostcore.com]sostcore.com[/url][/li]
+[li]Explorer: [url=https://sostcore.com/sost-explorer.html]sostcore.com/sost-explorer.html[/url][/li]
+[li]Source (MIT): [url=https://github.com/Neob1844/sost-core]github.com/Neob1844/sost-core[/url][/li]
+[li]Telegram: [url=https://t.me/SOSTProtocolOfficial]t.me/SOSTProtocolOfficial[/url][/li]
+[li]Contact: sost@sostcore.com[/li]
+[/list]
+
+[center][i]SOST is experimental software provided under the MIT license, with no warranty. Participation, mining, and any market activity are entirely at your own risk.[/i][/center]
