@@ -736,8 +736,7 @@
     <p class="hero-sub fade-in delay-2">
       A single <strong style="color:var(--text-primary)">native SOST bond</strong> is the only collateral and the only
       thing slashable &mdash; a voluntary, time-bound commitment with automatic economic consequences.
-      <strong style="color:var(--text-primary)">Create, monitor, and claim</strong> your bond. No oracle. No custodian.
-      No governance. PoPC bonds are <strong style="color:#fbbf24">not tradeable</strong> in V15.
+      No oracle. No custodian. No governance. <strong style="color:#fbbf24">PoPC is currently paused indefinitely</strong> &mdash; its role has been superseded by the DTD / DTD Jackpot architecture (see status below). This page is kept as a technical reference.
     </p>
     <div class="protocol-badge fade-in delay-3">
       <span class="tag">PoPC</span>
@@ -752,12 +751,12 @@
   <div class="container" style="padding-top:24px;">
     <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:20px 24px;font-size:13px;color:var(--text-secondary);line-height:1.8;">
       <div style="font-size:11px;letter-spacing:2px;color:#fbbf24;font-weight:600;margin-bottom:10px;">&#9888; CURRENT STATUS</div>
-      <p>PoPC is <strong style="color:var(--text-primary)">implemented in the SOST node software</strong> and fully documented, but it is <strong style="color:#fbbf24">not yet active on mainnet</strong>. The single-bond model activates at <strong>V15 / block 25,000</strong>; from <strong>block 30,000</strong> holding an open PoPC contract is required to be eligible for the DTD lottery (a 5,000-block grace window after activation). <strong>Gold Boost is disabled on mainnet</strong> (deferred, optional reward only &mdash; never collateral, never slashed). PoPC bonds are <strong>not tradeable in V15</strong>. Activation is consensus-scheduled and subject to network readiness, external audit, and all technical validation prerequisites being met.</p>
+      <p>PoPC Bond Staking is <strong style="color:#fbbf24">paused indefinitely</strong>. Its role has been <strong style="color:var(--text-primary)">superseded by the DTD / DTD Jackpot architecture</strong>: the recurring per-block DTD distribution and the DTD Jackpot &mdash; which returns the previously-accumulated Gold Vault + PoPC reserve to miners &mdash; are the active mechanisms. The single-bond design remains implemented in the node software and is documented below for <strong>reference only</strong>; it is <strong>not active</strong> and is <strong>not required</strong> for DTD or DTD Jackpot eligibility. <strong>Gold Boost is disabled on mainnet</strong>. This page is retained as a legacy / technical reference.</p>
       <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;font-size:11px;">
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; Implemented in software</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; Documented publicly</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">&#10004; RPC interfaces ready (create / monitor / claim)</span>
-        <span style="padding:4px 10px;border-radius:4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--gold,#f59e0b);">&#9679; Single native SOST bond model</span>
+        <span style="padding:4px 10px;border-radius:4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--gold,#f59e0b);">&#9679; PAUSED INDEFINITELY &middot; superseded by DTD / DTD Jackpot</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Activates at V15 / block 25,000</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Gold Boost disabled on mainnet</span>
         <span style="padding:4px 10px;border-radius:4px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">&#10008; Not tradeable in V15 (no contract/position trading)</span>
@@ -1301,10 +1300,10 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
         <span class="spec-tag overlay">CONDITION-DEPENDENT</span>
       </div>
       <div class="spec-body">
-        <p class="spec-desc">The single native SOST bond model activates at <strong>V15 / block 25,000</strong>, once the following technical and network conditions are met. Activation proceeds only when the system is stable, all components are operational, and external audit is complete.</p>
+        <p class="spec-desc"><strong style="color:#fbbf24">Legacy design &mdash; PoPC is paused indefinitely; the schedule below is NOT in effect.</strong> It documents the activation conditions envisaged for the earlier PoPC-gated design, retained for reference. DTD and DTD Jackpot do not depend on any of it.</p>
         <table class="code-table">
           <tr><td class="key">Block height &ge; 25,000 (V15)</td><td class="val">PoPC subsystem activation. Tied to the V15 protocol milestone; will not occur before this threshold.</td></tr>
-          <tr><td class="key">Block height &ge; 30,000 (DTD lottery eligibility)</td><td class="val">From this height, holding an <strong>OPEN PoPC contract</strong> is required to be eligible for the DTD lottery. Activation at 25,000 + a grace window (5,000 blocks) before eligibility is enforced.</td></tr>
+          <tr><td class="key">Block height &ge; 30,000 (legacy note)</td><td class="val"><strong style="color:#fbbf24">Not in effect.</strong> DTD and DTD Jackpot eligibility do <strong>not</strong> require a PoPC contract. From block 30,000 the <strong>DTD Jackpot V2</strong> activates and uses <strong>node participation + linear PoW weight</strong> (not PoPC) &mdash; see the Explorer.</td></tr>
           <tr><td class="key">Sustained network stability</td><td class="val">Consistent block production, stable sync across nodes, no critical consensus or networking issues.</td></tr>
           <tr><td class="key">Sufficient participation</td><td class="val">Minimum level of independent nodes and active miners to ensure reliable operation.</td></tr>
           <tr><td class="key">Single-bond contract validation</td><td class="val">Registration, audit, reward, and slashing flows for the native SOST bond fully validated under live network testing.</td></tr>
