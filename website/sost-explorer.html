@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-10-v413-dtd-jackpot-rename-v2preview">
+<meta name="explorer-html-version" content="2026-09-10-v414-web-audit-banner-historical">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8665,7 +8665,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
          +'</div>'+(paid>1?('<div style="font-size:9px;color:var(--text3);margin-top:4px">+ '+(paid-1)+' earlier jackpot(s)</div>'):''))
       : 'No DTD jackpots paid yet.';
     var legendHtml='<div style="display:flex;flex-wrap:wrap;gap:10px;font-size:9px;color:var(--text3);margin:8px 0 2px">'
-      +'<span>&#127942; WINNER</span><span style="color:#39ff14">&#128994; HIST. JACKPOT ELIGIBLE</span><span style="color:#22d3ee">&#128309; DTD ELIGIBLE</span><span style="color:#f5b301">&#128992; COOLDOWN</span><span>&#9899; NOT ELIGIBLE</span></div>';
+      +'<span>&#127942; WINNER</span><span style="color:#39ff14">&#128994; DTD JACKPOT ELIGIBLE</span><span style="color:#22d3ee">&#128309; DTD ELIGIBLE</span><span style="color:#f5b301">&#128992; COOLDOWN</span><span>&#9899; NOT ELIGIBLE</span></div>';
     var replayBtn=(paid>0&&_w)?'<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button><button class="sjpd-x" id="sjpd-archive-btn" style="margin:0;border-color:#2b7a3d;color:#39ff14">&#128220; View all jackpots ('+paid+')</button></div>':'';
     // JACKPOT ELIGIBLE (20k): FINAL (getlotteryaudit at a mined jackpot height) >
     // PRELIMINARY (future eligible_addresses[] preview at tip) > pending label.

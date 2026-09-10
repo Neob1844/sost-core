@@ -928,11 +928,6 @@
 
 
 
-<!-- PRE-MARKET BANNER (auto-hidden at launch by the countdown script) -->
-<div id="premarket-banner" style="background:linear-gradient(90deg,#1a0a00,#2a1500,#1a0a00);border-bottom:1px solid #fbbf24;padding:10px 20px;text-align:center;font-size:11px;letter-spacing:2px;color:#fbbf24;font-family:'JetBrains Mono','IBM Plex Mono',monospace">
-  PRE-MARKET PHASE &mdash; NETWORK UNDER ACTIVE TESTING &mdash; PUBLIC LAUNCH: JUNE 16, 2026
-</div>
-
 <!-- HERO -->
 <section class="hero">
   <div class="container">
@@ -966,15 +961,7 @@
         <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-mono);margin-bottom:10px;">March 15, 2026 &mdash; 18:00:00 UTC</div>
         <div id="genesis-timer" style="font-family:'Courier New',monospace;font-size:clamp(28px,5vw,48px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
       </div>
-      <div id="testphase-note" style="margin:20px auto;max-width:640px;padding:10px 20px;border:1px solid rgba(251,146,60,0.3);border-radius:6px;background:rgba(251,146,60,0.05);text-align:center;">
-        <span style="font-size:11px;letter-spacing:1px;color:#fb923c;font-family:var(--font-mono);line-height:1.7;">&#9888; MAINNET TEST PHASE &mdash; All protocol hardening and stress testing is performed <b>directly on mainnet</b> (genesis <b>March 15, 2026 &middot; 18:00 UTC</b>), not on a throwaway testnet. Because that work landed faster than expected, the originally planned launch date was <b>brought forward</b> &mdash; a decision <b>publicly recorded on BitcoinTalk on April 5, 2026</b> (<a href="https://bitcointalk.org/index.php?topic=5579432.0" target="_blank" rel="noopener" style="color:#fb923c;text-decoration:underline;">ANN thread</a>). Independent miners and nodes are already active &mdash; <b>current peak: 53 miners</b>. Official public launch: <b>June 16, 2026</b>.</span>
-      </div>
-      <div id="countdown-launch">
-        <div style="font-size:11px;letter-spacing:3px;color:#777;font-family:monospace;margin-bottom:4px;text-transform:uppercase;">Official Public Launch</div>
-        <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-mono);margin-bottom:10px;">June 16, 2026 &mdash; 00:00:00 UTC</div>
-        <div id="launch-timer" style="font-family:'Courier New',monospace;font-size:clamp(28px,5vw,48px);font-weight:700;color:#ffffff;letter-spacing:2px;"></div>
-      </div>
-    </div>
+                </div>
 
     <div class="hero-actions fade-in delay-4">
       <a href="javascript:void(0)" onclick="openSv()" class="dl-btn"
@@ -1405,7 +1392,7 @@
         </div>
       </div>
       <div class="four-pillar-card" style="--card-accent:#7CFFA0">
-        <div class="four-pillar-tag" style="color:#7CFFA0">② DTD JACKPOT &mdash; THE HISTORICAL DRAIN</div>
+        <div class="four-pillar-tag" style="color:#7CFFA0">② DTD JACKPOT &mdash; THE RESERVE DRAIN</div>
         <div class="four-pillar-headline" style="font-size:22px">Every 288 blocks (~48h)</div>
         <p class="four-pillar-body">
           The DTD Jackpot returns the reserve <b>already accumulated</b> in the Gold Vault + PoPC addresses
@@ -1419,7 +1406,7 @@
           <p class="four-pillar-body" style="margin:0;font-size:12.5px">
             The Jackpot winner <b>is</b> the DTD draw winner of that jackpot block — it reuses the <b>exact same eligibility set</b> as the base draw (signed miner + recent-winner cooldown + anti-dominance + uniform, keyless selection).<br><br>
             <b style="color:#7CFFA0">No separate entry</b> — there is no ticket, no purchase, no fiat/$-amount rule and no new selection engine.<br>
-            <b style="color:#7CFFA0">Broad by design</b> — a jackpot candidate must have mined <b>&ge;1 block in the last 20,000 blocks</b> (~19 weeks) — a much wider window than the normal draw&rsquo;s 5,000. The Historical Jackpot returns the vault to ~the whole network, not a recent few.<br>
+            <b style="color:#7CFFA0">Broad by design</b> — a jackpot candidate must have mined <b>&ge;1 block in the last 20,000 blocks</b> (~19 weeks) — a much wider window than the normal draw&rsquo;s 5,000. The DTD Jackpot returns the vault to ~the whole network, not a recent few.<br>
             <b style="color:#7CFFA0">Must have an eligible winner</b> — if a jackpot block has no eligible address, <b>nothing is paid</b>: the prize rolls over to the next jackpot and the reserve is left untouched.
           </p>
         </div>
@@ -1445,7 +1432,7 @@
     <div class="four-pillars-grid fade-in delay-3" style="margin-top:16px">
       <div class="four-pillar-card" style="--card-accent:#39ff14"><div class="four-pillar-tag" style="color:#39ff14">◈ SUPPLY-NEUTRAL</div><p class="four-pillar-body">The DTD and the Jackpot never mint new SOST. They redistribute value that consensus already assigned. Total supply stays capped at 4,669,201 SOST.</p></div>
       <div class="four-pillar-card" style="--card-accent:#7CFFA0"><div class="four-pillar-tag" style="color:#7CFFA0">◈ NO OPERATOR</div><p class="four-pillar-body">Winners are computed deterministically from chain state by the published rules. No treasury, no admin key, no discretion &mdash; height-anchored and enforced at #25,000.</p></div>
-      <div class="four-pillar-card" style="--card-accent:#2b7a3d"><div class="four-pillar-tag" style="color:#4ade80">◈ VERIFIABLE &amp; OPEN</div><p class="four-pillar-body">Every draw and jackpot is on-chain and auditable in the explorer. Consensus is open source (MIT). Canonical spec: V15 Historical DTD Jackpot.</p></div>
+      <div class="four-pillar-card" style="--card-accent:#2b7a3d"><div class="four-pillar-tag" style="color:#4ade80">◈ VERIFIABLE &amp; OPEN</div><p class="four-pillar-body">Every draw and jackpot is on-chain and auditable in the explorer. Consensus is open source (MIT). Canonical spec: V15 DTD Jackpot.</p></div>
     </div>
 
     <p class="fade-in delay-3" style="margin-top:22px;font-size:11.5px;color:var(--text-dim);text-align:center;font-family:var(--font-mono);letter-spacing:1.2px">
@@ -1489,7 +1476,7 @@
             <li>Audited by an external security firm &mdash; not yet; independent reviewers welcome</li>
             <li>Market price floor &mdash; no peg, no redemption claim against the gold reserve</li>
             <li>Regulatory clearance in any jurisdiction &mdash; assess locally before participating</li>
-            <li>Listing on any centralised exchange &mdash; pre-market; outreach planned from 2026-06-16</li>
+            <li>Listing on any centralised exchange &mdash; pre-market; exchange outreach in progress</li>
             <li>Network maturity &mdash; chain is young, hashrate is concentrated, decentralisation is in progress</li>
           </ul>
         </div>
@@ -2026,9 +2013,7 @@ var _sharedGold={xaut:0,paxg:0,avg:0,ts:''};
 <script>
 (function(){
   var GENESIS = new Date('2026-03-15T18:00:00Z').getTime();
-  var LAUNCH  = new Date('2026-06-16T00:00:00Z').getTime();
   var genesisEl = document.getElementById('genesis-timer');
-  var launchEl  = document.getElementById('launch-timer');
 
   function fmtDown(diff){
     var d=Math.floor(diff/86400000);
@@ -2054,22 +2039,12 @@ var _sharedGold={xaut:0,paxg:0,avg:0,ts:''};
 
   function tick(){
     var now=Date.now();
-    var gDiff=GENESIS-now, lDiff=LAUNCH-now;
+    var gDiff=GENESIS-now;
 
     if(gDiff>0){
       genesisEl.innerHTML = fmtDown(gDiff);
     } else {
       genesisEl.innerHTML = fmtUp(-gDiff);
-    }
-
-    if(lDiff>0){
-      launchEl.innerHTML = fmtDown(lDiff);
-    } else {
-      // Launch reached — remove the launch countdown, the pre-market banner and the
-      // test-phase note. Only the Genesis counter remains afterwards.
-      ['countdown-launch','premarket-banner','testphase-note'].forEach(function(id){
-        var el=document.getElementById(id); if(el) el.style.display='none';
-      });
     }
   }
   tick();

@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-10-v413-dtd-jackpot-rename-v2preview",
-  "note": "Public rename: the jackpot is now called the DTD Jackpot everywhere in the UI (no 'Historical' left in any public label, card, dashboard, history table, eligibility panel or archive) — internal RPC names (gethistoricaljackpotstatus) and identifiers are unchanged. Added a V16 pre-activation preview banner to the DTD Jackpot dashboard: announces DTD Jackpot V2 at block #30,000 (first V2 draw #30,186), explains the independent node-gated + SbPoW-linear draw (active node bind + heartbeats, no cooldown, no anti-dominance), rollover 100->500 unchanged, DTD normal unchanged. Banner auto-switches to 'V16 ACTIVE' after #30,000. The 4 original charts and overlays are untouched. Single force reload."
+  "v": "2026-09-10-v414-web-audit-banner-historical",
+  "note": "Global web audit pass 1: removed the obsolete PRE-MARKET / 'PUBLIC LAUNCH: JUNE 16, 2026' banner and the broken launch countdown site-wide (index + markets); softened future-tense launch-date phrasing to historical. Public jackpot name is now 'DTD Jackpot' everywhere (0 'Historical Jackpot' / 'Hist.' left in any public UI); internal RPC gethistoricaljackpotstatus unchanged. Explorer legend + labels updated."
 }
