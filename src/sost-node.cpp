@@ -108,6 +108,10 @@ static UtxoSet      g_utxo_set;
 // V16 — node participation state (chain-derived; reorg/reindex-safe).
 static sost::node_participation::NodeState g_node_state;
 static std::map<int64_t, sost::node_participation::ConnectResult> g_node_undos;
+// V16 — RPC report helper (defined after compute_v2_jackpot_winner).
+struct V2Cand { PubKeyHash pkh; int64_t pow_blocks; bool node_bound; int64_t hb; int64_t hb_required; bool eligible; int64_t weight; };
+static std::vector<V2Cand> v2_report(const std::vector<sost::lottery::LotteryMinedBlockView>& history, int64_t height);
+static void compute_v2_jackpot_winner(const std::vector<sost::lottery::LotteryMinedBlockView>& history, int64_t height, PubKeyHash& winner_pkh, bool& winner_exists);
 static bool         g_dry_run_replay = false;  // --dry-run-replay: replay chain, print UTXO root, exit
 static Mempool      g_mempool;
 static std::string  g_wallet_path = "wallet.json";
@@ -1713,6 +1717,59 @@ static std::string handle_gethistoricaljackpotstatus(const std::string& id, cons
     return rpc_result(id, s.str());
 }
 
+static std::string handle_getjackpotv2audit(const std::string& id, const std::vector<std::string>& p){
+  if(p.empty()) return rpc_error(id,-1,"missing height");
+  int64_t height=0; try{height=std::stoll(p[0]);}catch(...){return rpc_error(id,-8,"invalid height");}
+  std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+  bool isv2 = sost::is_hist_jackpot_v2_height(height);
+  std::ostringstream s; s<<"{\"height\":"<<height<<",\"is_v2_jackpot\":"<<(isv2?"true":"false")
+    <<",\"activation_height\":"<<sost::HIST_JACKPOT_V2_HEIGHT
+    <<",\"pow_window\":"<<sost::JACKPOT_V2_POW_WINDOW
+    <<",\"min_pow_blocks\":"<<sost::JACKPOT_V2_MIN_BLOCKS
+    <<",\"epoch_length\":"<<sost::NODE_EPOCH_LENGTH;
+  if(!isv2){ s<<"}"; return rpc_result(id,s.str()); }
+  std::vector<sost::lottery::LotteryMinedBlockView> history;
+  for(const auto& b:g_blocks){ if(b.height>=height)break; if(b.tx_hexes.empty())continue; std::vector<Byte> raw; if(!decode_tx_hex(b.tx_hexes[0],raw))continue; Transaction cb; std::string de; if(!Transaction::Deserialize(raw,cb,&de)||cb.outputs.empty())continue; sost::lottery::LotteryMinedBlockView v; v.height=b.height; v.miner_pkh=cb.outputs[0].pubkey_hash; v.block_hash=b.block_id; history.push_back(v); }
+  auto rp=v2_report(history,height);
+  int64_t total=0,elig=0; for(auto&c:rp){ total+=c.weight; if(c.eligible)elig++; }
+  PubKeyHash win{}; bool we=false; compute_v2_jackpot_winner(history,height,win,we);
+  int64_t comp=sost::jackpot_v2::jv2_completed_epochs_before(sost::HIST_JACKPOT_V2_HEIGHT,sost::NODE_EPOCH_LENGTH,height);
+  s<<",\"completed_epochs\":"<<comp
+   <<",\"heartbeat_required\":"<<sost::jackpot_v2::jv2_heartbeat_required(comp)
+   <<",\"heartbeat_window\":"<<sost::jackpot_v2::jv2_heartbeat_window(comp)
+   <<",\"total_weight\":"<<total<<",\"eligible_count\":"<<elig
+   <<",\"winner_address\":\""<<(we?address_encode(win):std::string(""))<<"\""
+   <<",\"candidates\":[";
+  for(size_t i=0;i<rp.size();++i){ auto&c=rp[i]; if(i)s<<","; s<<"{\"address\":\""<<address_encode(c.pkh)<<"\",\"pow_blocks\":"<<c.pow_blocks<<",\"node_bound\":"<<(c.node_bound?"true":"false")<<",\"heartbeats\":"<<c.hb<<",\"heartbeats_required\":"<<c.hb_required<<",\"eligible\":"<<(c.eligible?"true":"false")<<",\"weight\":"<<c.weight<<"}"; }
+  s<<"]}";
+  return rpc_result(id,s.str());
+}
+static std::string handle_checkhistoricaljackpoteligibility(const std::string& id, const std::vector<std::string>& p){
+  if(p.empty()) return rpc_error(id,-1,"missing address");
+  PubKeyHash pkh{}; if(!address_decode(p[0],pkh)) return rpc_error(id,-8,"invalid address");
+  std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+  int64_t tip=g_chain_height; int64_t nextJ=-1;
+  for(int64_t hh=tip+1; hh<tip+1+2*sost::HIST_JACKPOT_CADENCE_BLOCKS; ++hh){ if(sost::is_hist_jackpot_v2_height(hh)){ nextJ=hh; break; } }
+  std::vector<sost::lottery::LotteryMinedBlockView> history;
+  for(const auto& b:g_blocks){ if(b.tx_hexes.empty())continue; std::vector<Byte> raw; if(!decode_tx_hex(b.tx_hexes[0],raw))continue; Transaction cb; std::string de; if(!Transaction::Deserialize(raw,cb,&de)||cb.outputs.empty())continue; sost::lottery::LotteryMinedBlockView v; v.height=b.height; v.miner_pkh=cb.outputs[0].pubkey_hash; v.block_hash=b.block_id; history.push_back(v); }
+  int64_t H = nextJ>0?nextJ:(tip+1);
+  auto rp=v2_report(history,H);
+  std::ostringstream s; s<<"{\"address\":\""<<p[0]<<"\",\"next_v2_jackpot_height\":"<<nextJ<<",\"eval_height\":"<<H<<",\"pow_minimum\":"<<sost::JACKPOT_V2_MIN_BLOCKS;
+  const V2Cand* mine=nullptr; for(auto&c:rp) if(c.pkh==pkh){mine=&c;break;}
+  if(!mine){ s<<",\"eligible\":false,\"pow_blocks\":0,\"node_bound\":"<<(g_node_state.is_node_bound(pkh,tip)?"true":"false")<<",\"reasons\":[\"no_sbpow_blocks_in_window\"]}"; return rpc_result(id,s.str()); }
+  std::vector<std::string> reasons;
+  if(mine->pow_blocks<sost::JACKPOT_V2_MIN_BLOCKS) reasons.push_back("pow_below_minimum");
+  if(!mine->node_bound) reasons.push_back("not_node_bound");
+  if(mine->hb<mine->hb_required) reasons.push_back("heartbeats_short");
+  s<<",\"eligible\":"<<(mine->eligible?"true":"false")
+   <<",\"node_bound\":"<<(mine->node_bound?"true":"false")
+   <<",\"pow_blocks\":"<<mine->pow_blocks
+   <<",\"heartbeats_valid\":"<<mine->hb<<",\"heartbeats_required\":"<<mine->hb_required
+   <<",\"weight\":"<<mine->weight<<",\"reasons\":[";
+  for(size_t i=0;i<reasons.size();++i){ if(i)s<<","; s<<"\""<<reasons[i]<<"\""; }
+  s<<"]}";
+  return rpc_result(id,s.str());
+}
 static std::string handle_getlotteryaudit(const std::string& id, const std::vector<std::string>& p) {
     if (p.empty()) return rpc_error(id, -1, "missing height");
     int64_t height = 0;
@@ -4591,6 +4648,8 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getinfo",handle_getinfo},
     {"getlotterystate",handle_getlotterystate},
     {"getlotteryaudit",handle_getlotteryaudit},
+    {"getjackpotv2audit",handle_getjackpotv2audit},
+    {"checkhistoricaljackpoteligibility",handle_checkhistoricaljackpoteligibility},
     {"gethistoricaljackpotstatus",handle_gethistoricaljackpotstatus},
     {"getbeaconnotices",handle_getbeaconnotices},
     {"getv13readiness",handle_getv13readiness},
@@ -5115,6 +5174,29 @@ static void compute_v2_jackpot_winner(
     winner_exists = false;
     const int64_t wi = jv2::jv2_select_winner_index(weighted, seed);
     if (wi >= 0) { winner_pkh = weighted[(size_t)wi].pkh; winner_exists = true; }
+}
+
+// V16 — per-candidate eligibility report for RPC (same gates as compute_v2_jackpot_winner).
+static std::vector<V2Cand> v2_report(const std::vector<sost::lottery::LotteryMinedBlockView>& history, int64_t height) {
+    namespace jv2 = sost::jackpot_v2;
+    const int64_t A=sost::HIST_JACKPOT_V2_HEIGHT, L=sost::NODE_EPOCH_LENGTH;
+    const int64_t lo=height-sost::JACKPOT_V2_POW_WINDOW, hi=height-1;
+    const int64_t req = jv2::jv2_heartbeat_required(jv2::jv2_completed_epochs_before(A,L,height));
+    std::map<PubKeyHash,int64_t> powc;
+    for(const auto& v:history) if(v.height>=lo&&v.height<=hi) powc[v.miner_pkh]++;
+    std::vector<V2Cand> out; out.reserve(powc.size());
+    for(const auto& kv:powc){
+        V2Cand c; c.pkh=kv.first; c.pow_blocks=kv.second;
+        c.node_bound=g_node_state.is_node_bound(kv.first, height-1);
+        c.hb=g_node_state.heartbeats_in_window(kv.first, A, L, height);
+        c.hb_required=req;
+        jv2::JackpotV2Candidate jc; jc.mining_pkh=kv.first; jc.sbpow_valid=true; jc.pow_blocks=kv.second; jc.node_bound=c.node_bound; jc.heartbeats_in_window=c.hb;
+        c.eligible=jv2::jv2_is_eligible(jc,A,L,height);
+        c.weight=c.eligible?kv.second:0;
+        out.push_back(c);
+    }
+    std::sort(out.begin(),out.end(),[](const V2Cand&a,const V2Cand&b){return a.pkh<b.pkh;});
+    return out;
 }
 
 static bool build_live_jackpot_tx(const PubKeyHash& cur_miner, int64_t height, Transaction& out_tx) {

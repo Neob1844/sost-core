@@ -70,6 +70,12 @@ HBHEX="$("$CLI" --wallet "$WORK/b.json" nodeheartbeat "$NODEB" 0 "$TIPREF" 2>>"$
 echo "$(rpc sendrawtransaction "[\"$HBHEX\"]")" | grep -qiE '"result"|txid|accepted' && ok "NODE_HEARTBEAT(B,epoch0) accepted" || bad "heartbeat rejected"
 mine_to "$B" "$WORK/b.json" 23 150
 
+# --- RPC V2 checks (against real state: B bound+heartbeat, A unbound) ---
+EB="$(rpc checkhistoricaljackpoteligibility "[\"$B\"]")"; log "RPC checkelig B: $EB"
+EA="$(rpc checkhistoricaljackpoteligibility "[\"$A\"]")"; log "RPC checkelig A: $EA"
+echo "$EB" | grep -q '"eligible":true'  && ok "RPC checkeligibility: B eligible=true" || bad "RPC B not eligible"
+echo "$EA" | grep -q '"eligible":false' && ok "RPC checkeligibility: A eligible=false (node gate)" || bad "RPC A eligible unexpectedly"
+
 # snapshot reserve, then B mines the PAID V2 jackpot #24
 read -r RB RC < <(resv "$GOLD" "$POPC"); log "reserve_before=$RB ($RC UTXOs)"
 [[ "$RB" -gt 0 ]] && ok "reserve non-empty before V2 jackpot" || bad "reserve empty"
@@ -105,6 +111,9 @@ if [[ -n "$JTXID" ]]; then
   [[ -n "$JWIN_PKH" && "$JWIN_PKH" == "$CB_PKH" ]] && ok "V2 WINNER == B == CURRENT MINER (V15 anti-self forbids) -> V2 PAYMENT LIVE" || bad "jackpot winner pkh=$JWIN_PKH != B pkh=$CB_PKH"
   [[ -n "$JWIN_PKH" && "$JWIN_PKH" != "$A_PKH" ]] && ok "unbound A excluded by node gate (A pkh did NOT win)" || bad "A (unbound) won"
 fi
+AUD="$(rpc getjackpotv2audit "[24]")"; log "RPC getjackpotv2audit #24: $AUD"
+echo "$AUD" | grep -q '"is_v2_jackpot":true' && ok "RPC audit: #24 is V2 jackpot" || bad "RPC audit not v2"
+echo "$AUD" | grep -q "\"winner_address\":\"$B\"" && ok "RPC audit winner == B" || bad "RPC audit winner != B"
 read -r RA RAC < <(resv "$GOLD" "$POPC"); log "reserve_after=$RA ($RAC UTXOs)"
 [[ "$RA" -lt "$RB" ]] && ok "reserve spent by V2 jackpot ($RB -> $RA)" || bad "reserve not spent"
 
