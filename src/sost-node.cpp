@@ -1734,9 +1734,23 @@ static std::string handle_getjackpotv2audit(const std::string& id, const std::ve
   int64_t total=0,elig=0; for(auto&c:rp){ total+=c.weight; if(c.eligible)elig++; }
   PubKeyHash win{}; bool we=false; compute_v2_jackpot_winner(history,height,win,we);
   int64_t comp=sost::jackpot_v2::jv2_completed_epochs_before(sost::HIST_JACKPOT_V2_HEIGHT,sost::NODE_EPOCH_LENGTH,height);
+  // Pot / rollover / reserve (same computation the payout path uses).
+  PubKeyHash gold_pkh{}, popc_pkh{}; address_decode(ADDR_GOLD_VAULT,gold_pkh); address_decode(ADDR_POPC_POOL,popc_pkh);
+  const auto rez = sost::jackpot::discover_reserve_utxos(g_utxo_set, gold_pkh, popc_pkh);
+  const int64_t reserve_before = sost::jackpot::reserve_balance(rez);
+  const int64_t rollover_before = sost::jackpot::derive_rollover_before(height, [](int64_t h)->bool{
+      if(h<0||h>=(int64_t)g_blocks.size())return false; const StoredBlock&b=g_blocks[(size_t)h];
+      if(b.tx_hexes.size()<2)return false; std::vector<Byte> raw; if(!decode_tx_hex(b.tx_hexes[1],raw))return false;
+      Transaction t; std::string de; if(!Transaction::Deserialize(raw,t,&de))return false; return t.tx_type==TX_TYPE_JACKPOT; });
+  const int64_t pot = std::min(sost::HIST_JACKPOT_BASE_STOCKS + rollover_before, sost::HIST_JACKPOT_CAP_STOCKS);
   s<<",\"completed_epochs\":"<<comp
    <<",\"heartbeat_required\":"<<sost::jackpot_v2::jv2_heartbeat_required(comp)
    <<",\"heartbeat_window\":"<<sost::jackpot_v2::jv2_heartbeat_window(comp)
+   <<",\"reserve_stocks\":"<<reserve_before
+   <<",\"rollover_stocks\":"<<rollover_before
+   <<",\"current_pot_stocks\":"<<pot
+   <<",\"base_stocks\":"<<sost::HIST_JACKPOT_BASE_STOCKS
+   <<",\"cap_stocks\":"<<sost::HIST_JACKPOT_CAP_STOCKS
    <<",\"total_weight\":"<<total<<",\"eligible_count\":"<<elig
    <<",\"winner_address\":\""<<(we?address_encode(win):std::string(""))<<"\""
    <<",\"candidates\":[";
