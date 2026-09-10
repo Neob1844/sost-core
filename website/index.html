@@ -902,8 +902,6 @@
       <a href="sost-community.html">Community</a>
       <a href="sost-foundation.html">Governance</a>
       <a href="sost-foundation-balances.html">Governance Balances</a>
-      <a href="sost-popc-contracts.html">PoPC Contracts</a>
-      <a href="sost-popc-quickstart.html" style="color:var(--green-primary)">PoPC Quick Start</a>
       <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
       <!-- DEX link replaced by rainbow button next to logo -->
       <a href="sost-gold-dex.html">Atomic Swap DEX</a>
@@ -1755,14 +1753,13 @@
 
       <div class="pillar-card" style="--card-accent: var(--cyan-primary);">
         <div class="pillar-number">PILLAR 03</div>
-        <div class="pillar-name">Proof of Personal Custody (PoPC)</div>
+        <div class="pillar-name">Proof of Personal Custody (PoPC) <span style="color:#fbbf24;font-size:10px;border:1px solid #fbbf24;border-radius:10px;padding:1px 7px;margin-left:6px;letter-spacing:.5px">PAUSED / LEGACY</span></div>
         <p class="pillar-desc">
-          25% of every block&rsquo;s coinbase is allocated to the PoPC Pool address.
-          Rewards distributed to holders who prove continued custody of their SOST
-          through cryptographic attestation. Model A (self-custody bonds) and
-          Model B (escrow timelock) available.
+          PoPC is <strong>paused indefinitely</strong>. Its previous role has been superseded by the current
+          <strong>DTD / DTD Jackpot</strong> architecture, which redistributes the accumulated reserve on-chain.
+          The 25% coinbase allocation now flows to DTD. Kept here as legacy architecture context.
         </p>
-        <a href="sost-popc.html" class="pillar-link">Explore PoPC &rarr;</a>
+        <a href="sost-popc.html" class="pillar-link">PoPC (legacy) &rarr;</a>
       </div>
     </div>
   </div>
@@ -1803,9 +1800,8 @@
         <div class="pillar-number">PoPC</div>
         <div class="pillar-name">Contract Layer</div>
         <p class="pillar-desc">
-          Timelocked collateral for self-custodied gold participation.
-          No admin key, no proxy, no pause, no emergency withdrawal.
-          Constitutional and immutable &mdash; <code style="color:var(--green-primary);font-size:11px;">SOSTEscrow.sol</code> as base.
+          <strong style="color:#fbbf24">Paused / legacy.</strong> The PoPC contract layer (<code style="color:var(--green-primary);font-size:11px;">SOSTEscrow.sol</code> base)
+          is retained for reference; PoPC is superseded by the current DTD / DTD Jackpot architecture and is not an active mechanism.
         </p>
         <a href="sost-technology.html#value-stack" class="pillar-link">Technical Details &rarr;</a>
       </div>
