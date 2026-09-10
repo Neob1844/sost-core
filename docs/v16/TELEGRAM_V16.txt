@@ -1,0 +1,55 @@
+📢 *SOST — Historical Jackpot V2*
+🔧 _Advance notice · activates at block #30,000_
+
+✅ *Normal DTD does NOT change.* The regular per-block reward keeps its current rules.
+🎰 The change affects *only the Historical DTD Jackpot* → from V2 it becomes an *independent draw*.
+
+🧭 *The principle:*
+👉 *Node participation = eligibility*
+👉 *Proof-of-Work = weight*
+
+*To take part in the Jackpot (all required):*
+🔑 a valid SbPoW mining identity
+⛏️ ≥ *3 mined blocks in the last 5,000*
+🔗 a node key linked to your mining key (`NODE_BIND`)
+💓 periodic signed node *heartbeats*
+
+⚖️ Your odds are *proportional to your real PoW* in the 5,000-block window (linear weight).
+
+📊 *Example:*
+```
+Miner A: 10 blocks + node ✓  -> weight 10
+Miner B:  5 blocks + node ✓  -> weight 5
+Miner C: 30 blocks, no node  -> NOT eligible
+Draw:  A ~66.7%   B ~33.3%
+```
+
+⚠️ *Running more nodes does NOT give you more tickets.*
+The node only grants *access*; your PoW sets the *probability*. Splitting work across many addresses adds no weight.
+
+💰 Jackpot: *100 SOST* base, rollover up to the *500 SOST* cap, paid from the *existing reserve* — *no new emission*. If nobody is eligible, it rolls over.
+
+🔒 *Everything is verified on-chain* — the network reconstructs eligibility by reading the blockchain (signatures, NODE_BIND, heartbeats). No central database, no manual approval, no trust in the user.
+ℹ️ Honest scope: we call it *Verified Node Participation* — not a proof of a unique physical machine (and it doesn't need to be, since nodes add no weight).
+
+🛠️ *For operators (advance notice):*
+• Normal DTD → nothing to do.
+• A *mandatory* node/miner update ships before activation. Update *after block #29,900 and before #30,000*.
+• It keeps V15 rules before #30,000 and *activates V2 automatically at #30,000* — no action at the height. Miners: run with `--realtime`.
+• 📅 First V2 Jackpot draw: *block #30,186*.
+• 🧷 *Final binaries, SHA256 hashes and exact upgrade commands will be published once final testing is complete.*
+
+🔗 sostcore.com · Explorer: sostcore.com/sost-explorer.html · Source (MIT): github.com/Neob1844/sost-core
+
+━━━━━━━━━━━━━━━
+🧑‍💻 *A note from the developer*
+
+_I am aware there have been several forks to fine-tune the system. From the start it was stated that SOST is an *experimental* project — a new kind of Proof-of-Work — but a *fully functional* one, currently in *pre-market*._
+
+_Things are no longer like the early days of crypto, when you could list on almost any exchange. Today the large exchanges require capital and audit conditions that SOST does not have yet. So the system has to evolve on its own — now that it is almost fully decentralized, with only the Singapore node left to activate — by listing on a venue better suited to our early stage, presumably *non-KYC*. The reason is essential: as far as it has been tested the protocol works well, but it needs to be seen operating in a *real environment, inside an exchange*, to confirm that neither its security nor its functionality is compromised._
+
+_This does not mean the protocol will succeed, or that we won't be delisted after a few months. It is one more step on a hard road, and it has to be taken. If it goes well, we will move toward a *solid legal entity* and an *audit* meeting current EU and US standards. But let's not fool ourselves: it is a tedious, challenging path where things may work out or may not — and that must be kept in mind._
+
+— *NeoB*
+━━━━━━━━━━━━━━━
+⚠️ _SOST is experimental software (MIT, no warranty). Mining, participation and any market activity are entirely at your own risk._
