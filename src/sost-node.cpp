@@ -108,6 +108,14 @@ static UtxoSet      g_utxo_set;
 // V16 — node participation state (chain-derived; reorg/reindex-safe).
 static sost::node_participation::NodeState g_node_state;
 static std::map<int64_t, sost::node_participation::ConnectResult> g_node_undos;
+// V16 — native auto-heartbeat (opt-in via --node-key <hex64>). When enabled the
+// node signs and broadcasts one NODE_HEARTBEAT per epoch for its bound node key,
+// but never before the DTD Jackpot V2 activation height. Reorg-safe: it derives
+// everything from g_node_state each tick and dedups against the deterministic
+// on-chain / mempool heartbeat, so a reorg that drops a heartbeat is re-filled.
+static bool                     g_auto_heartbeat = false;
+static sost::sbpow::MinerPrivkey g_node_key{};      // 32B node private key
+static sost::sbpow::MinerPubkey  g_node_pubkey{};   // 33B compressed (derived)
 // V16 — RPC report helper (defined after compute_v2_jackpot_winner).
 struct V2Cand { PubKeyHash pkh; int64_t pow_blocks; bool node_bound; int64_t hb; int64_t hb_required; bool eligible; int64_t weight; };
 static std::vector<V2Cand> v2_report(const std::vector<sost::lottery::LotteryMinedBlockView>& history, int64_t height);
@@ -5354,6 +5362,101 @@ static void undo_node_state_for_block(int64_t height) {
     }
 }
 
+// ===========================================================================
+// V16 — native auto-heartbeat thread.
+//
+// Once the DTD Jackpot V2 activation height is reached, a bound node must emit
+// one NODE_HEARTBEAT per epoch to stay eligible. This thread automates that so
+// operators never have to run a cron/CLI loop:
+//   * NEVER emits before HIST_JACKPOT_V2_HEIGHT (mempool would reject anyway).
+//   * emits for the epoch of the *expected inclusion height* (tip+1) so the
+//     heartbeat lands in-epoch (check_heartbeat requires epoch==epoch_of(H)).
+//   * dedups against the canonical on-chain heartbeat (has_heartbeat) AND against
+//     the mempool (deterministic txid -> ALREADY_IN_POOL) — so it is idempotent
+//     and reorg-safe: if a reorg removes the heartbeat from both chain and pool,
+//     the next tick simply re-emits it.
+//   * only runs while the node's node_pubkey is the ACTIVE binding for some miner
+//     (a bind must confirm first), and requires the epoch's tip_ref block to be
+//     known locally.
+// It reuses the exact submit+relay path of sendrawtransaction (AcceptToMempool
+// then p2p_broadcast_tx).
+// ===========================================================================
+static void node_heartbeat_thread() {
+    namespace np  = sost::node_participation;
+    namespace jv2 = sost::jackpot_v2;
+    const int64_t A = sost::HIST_JACKPOT_V2_HEIGHT, L = sost::NODE_EPOCH_LENGTH;
+
+    sost::jackpot_v2::NodePubKey npk{};
+    std::copy(g_node_pubkey.begin(), g_node_pubkey.end(), npk.begin());
+    printf("[NODE-HEARTBEAT] auto-heartbeat enabled for node pubkey %s "
+           "(active from block #%lld)\n",
+           to_hex(npk.data(), npk.size()).c_str(), (long long)A);
+
+    for (;;) {
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+
+        std::string hex; int64_t emit_epoch = -1;
+        {
+            std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+            const int64_t tip     = g_chain_height;
+            const int64_t spend_h = tip + 1;              // expected inclusion height
+            if (!sost::node_participation_active_at(spend_h)) continue; // not before #30,000
+
+            const int64_t epoch = jv2::jv2_epoch_of_height(A, L, spend_h);
+            // Avoid guaranteed-stale emissions right at an epoch boundary: if we are
+            // in the final few blocks of the epoch the tx would likely be mined in
+            // the next epoch and rejected as wrong_epoch. Wait for the roll-over.
+            const int64_t into = spend_h - jv2::jv2_epoch_start(A, L, epoch);
+            if (L > 8 && into > L - 4) continue;
+
+            // Resolve our owner via the ACTIVE binding at tip (bind must have confirmed).
+            PubKeyHash owner{}; bool bound = false;
+            auto ab = g_node_state.active_bindings(tip);
+            for (const auto& kv : ab) {
+                if (kv.second.node_pubkey == npk) { owner = kv.first; bound = true; break; }
+            }
+            if (!bound) continue;
+
+            // Canonical dedup: heartbeat for (owner, epoch) already on-chain?
+            if (g_node_state.has_heartbeat(owner, epoch)) continue;
+
+            // tip_ref = hash(epoch_start(epoch) - 1); must be known locally.
+            const int64_t ref_h = jv2::jv2_epoch_start(A, L, epoch) - 1;
+            sost::Bytes32 tipref{};
+            if (!node_block_hash_at(ref_h, tipref)) continue;
+
+            np::NodeHeartbeatTx h;
+            h.node_pubkey  = npk;
+            h.epoch_idx    = (uint64_t)epoch;
+            h.tip_ref_hash = tipref;
+            const sost::Bytes32 msg = np::heartbeat_message(npk, (uint64_t)epoch, tipref);
+            if (!sost::sbpow::sign_sbpow_commitment(g_node_key, msg, h.node_sig)) continue;
+
+            Transaction tx = np::build_node_heartbeat_tx(h);
+            std::vector<Byte> raw; std::string e;
+            if (!tx.Serialize(raw, &e)) continue;
+
+            TxValidationContext ctx;
+            ctx.genesis_hash = g_genesis_hash;
+            ctx.spend_height = spend_h;
+            auto r = g_mempool.AcceptToMempool(tx, g_utxo_set, ctx, (int64_t)time(nullptr));
+            if (r.accepted) {
+                hex = to_hex(raw.data(), raw.size());
+                emit_epoch = epoch;
+            }
+            // ALREADY_IN_POOL (already pending) or any rejection: no broadcast; the
+            // next tick re-evaluates (reorg-safe, since the deterministic txid makes
+            // re-submission idempotent).
+        } // unlock before network I/O
+
+        if (!hex.empty()) {
+            p2p_broadcast_tx(hex);
+            printf("[NODE-HEARTBEAT] emitted heartbeat for epoch %lld\n",
+                   (long long)emit_epoch);
+        }
+    }
+}
+
 static bool process_block(const std::string& block_json, bool reorg_connect) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
 
@@ -8692,6 +8795,17 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--connect")&&i+1<argc) connect_addrs.push_back(argv[++i]);
         else if(!strcmp(argv[i],"--rpc-user")&&i+1<argc) g_rpc_user=argv[++i];
         else if(!strcmp(argv[i],"--rpc-pass")&&i+1<argc) g_rpc_pass=argv[++i];
+        else if(!strcmp(argv[i],"--node-key")&&i+1<argc){
+            std::string nk=argv[++i];
+            sost::sbpow::MinerPrivkey k{};
+            if(nk.size()!=64||!hex_to_bytes(nk,k.data(),32)){
+                fprintf(stderr,"Error: --node-key must be 64 hex chars (32-byte node private key)\n"); return 1;
+            }
+            if(!sost::sbpow::derive_compressed_pubkey_from_privkey(k,g_node_pubkey)){
+                fprintf(stderr,"Error: --node-key: pubkey derive failed\n"); return 1;
+            }
+            g_node_key=k; g_auto_heartbeat=true;
+        }
         else if(!strcmp(argv[i],"--rpc-noauth")) g_rpc_auth_required=false;
         else if(!strcmp(argv[i],"--rpc-public")) g_rpc_public=true;
         else if(!strcmp(argv[i],"--profile")&&i+1<argc){
@@ -8731,6 +8845,8 @@ int main(int argc, char** argv) {
             printf("  --rpc-user <u>             RPC Basic Auth user (required by default)\n");
             printf("  --rpc-pass <p>             RPC Basic Auth pass (required by default)\n");
             printf("  --rpc-noauth               Disable RPC auth (NOT recommended)\n");
+            printf("  --node-key <hex64>         Node private key (32B hex) — enables native\n");
+            printf("                             DTD Jackpot V2 auto-heartbeat (>= block #%lld)\n", (long long)sost::HIST_JACKPOT_V2_HEIGHT);
             printf("  --rpc-public               Bind RPC to 0.0.0.0 (default: 127.0.0.1)\n");
             printf("  --profile mainnet|testnet|dev  Network profile (default: mainnet)\n");
             printf("  --p2p-enc off|on|required      P2P encryption mode (default: off)\n");
@@ -8943,6 +9059,11 @@ int main(int argc, char** argv) {
 
     std::thread p2p_thread(p2p_server_thread, p2p_port);
     p2p_thread.detach();
+
+    // V16 — native DTD Jackpot V2 auto-heartbeat (opt-in via --node-key).
+    if (g_auto_heartbeat) {
+        std::thread(node_heartbeat_thread).detach();
+    }
 
     // Default seeds — used when no --connect is specified. P2P-ONLY change (no
     // consensus / mining / PoPC impact): instead of a single EU seed, try several
