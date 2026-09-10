@@ -1,6 +1,6 @@
 [center][img]http://sostcore.com/sost-logo.png[/img]
 
-[size=20pt][b]SOST — Historical Jackpot V2[/b][/size]
+[size=20pt][b]SOST — DTD Jackpot V2[/b][/size]
 [size=12pt][b]Advance notice — activates at block #30,000[/b][/size]
 [i]Sovereign Stock Token · ConvergenceX Native L1 Proof-of-Work · Open source (MIT)[/i][/center]
 
@@ -9,7 +9,7 @@
 [size=14pt][b]TL;DR[/b][/size]
 [list]
 [li][b]Normal DTD does NOT change.[/b] The regular per-block DTD reward keeps its current rules.[/li]
-[li]The change affects only the [b]Historical DTD Jackpot[/b] — from V2 it becomes an [b]independent draw[/b].[/li]
+[li]The change affects only the [b]DTD Jackpot[/b] — from V2 it becomes an [b]independent draw[/b].[/li]
 [li][b]Activation:[/b] block [b]#30,000[/b] (automatic, by height). First V2 jackpot draw: block [b]#30,186[/b].[/li]
 [li][b]The principle:[/b] [b]Node participation determines eligibility. Proof-of-Work determines weight.[/b][/li]
 [li]A mandatory node/miner update will be released before activation. [b]Final binaries, hashes and exact upgrade commands will be published once final testing is complete.[/b][/li]
@@ -19,7 +19,7 @@
 
 [size=14pt][b]What changes at #30,000[/b][/size]
 
-To take part in the Historical Jackpot, a miner will need [b]all[/b] of the following:
+To take part in the DTD Jackpot, a miner will need [b]all[/b] of the following:
 [list]
 [li]a valid SbPoW mining identity;[/li]
 [li]at least [b]3 valid mined blocks within the previous 5,000 blocks[/b];[/li]
@@ -27,7 +27,7 @@ To take part in the Historical Jackpot, a miner will need [b]all[/b] of the foll
 [li]verified node participation through periodic signed heartbeats.[/li]
 [/list]
 
-Your Jackpot probability is then [b]proportional to your real PoW contribution[/b] in the 5,000-block window (LINEAR weight). The Historical Jackpot has its own independent deterministic draw, [b]no cooldown[/b], [b]no anti-dominance[/b], a [b]100 SOST[/b] base, rollover up to the existing [b]500 SOST[/b] cap, and is paid from the existing historical reserve — [b]there is no new emission.[/b] If there is no eligible winner, it rolls over.
+Your Jackpot probability is then [b]proportional to your real PoW contribution[/b] in the 5,000-block window (LINEAR weight). The DTD Jackpot has its own independent deterministic draw, [b]no cooldown[/b], [b]no anti-dominance[/b], a [b]100 SOST[/b] base, rollover up to the existing [b]500 SOST[/b] cap, and is paid from the existing historical reserve — [b]there is no new emission.[/b] If there is no eligible winner, it rolls over.
 
 [size=12pt][color=red][b]Running more nodes does not give you more Jackpot tickets.[/b][/color][/size]
 A node is a [b]requirement for participation[/b]; your actual PoW contribution determines your probability. Node = access. PoW = probability.

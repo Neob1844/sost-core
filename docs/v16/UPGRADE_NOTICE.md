@@ -6,17 +6,17 @@ Contact: sost@sostcore.com · logo: http://sostcore.com/sost-logo.png
 
 ---
 
-## 📣 SOST — MANDATORY NETWORK UPGRADE (V16 · Historical Jackpot V2)
+## 📣 SOST — MANDATORY NETWORK UPGRADE (V16 · DTD Jackpot V2)
 
 **All node operators and miners must update.**
 
 - **Update window:** after block **#29,900** and before block **#30,000**.
 - **Activation:** block **#30,000** (automatic — no command or restart at the height).
-- **First Historical Jackpot V2 draw:** block **#30,186**.
+- **First DTD Jackpot V2 draw:** block **#30,186**.
 
 ### What it does
-From #30,000 the **Historical Jackpot** becomes an **independent draw**. The regular
-DTD reward is **unchanged**. To be eligible for the Historical Jackpot a miner must:
+From #30,000 the **DTD Jackpot** becomes an **independent draw**. The regular
+DTD reward is **unchanged**. To be eligible for the DTD Jackpot a miner must:
 
 - contribute real Proof-of-Work (≥ 3 signed blocks in the last 5,000), **and**
 - run a node: bind a node key to the mining key and keep it heartbeating.

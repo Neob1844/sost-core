@@ -32,7 +32,7 @@ safe to restart in the window. Restarting at, say, #29,930 does NOT change any r
   "timestamp too far in future"). Keep the machine clock NTP-synced.
 - The miner needs no other change for V16; it keeps signing SbPoW blocks as today.
 
-## 3. Participating in the Historical Jackpot V2 (optional, from #30,000)
+## 3. Participating in the DTD Jackpot V2 (optional, from #30,000)
 
 To be eligible you must (a) mine real PoW (≥3 SbPoW blocks / 5,000) **and** (b) bind a
 node key and keep it heartbeating. Extra nodes do **not** increase your odds — only PoW
@@ -51,10 +51,23 @@ sost-cli --rpc <node-host:port> sendrawtransaction "$BIND_HEX"      # or via the
 Do this once (bind_seq starts at 1). To rotate the node key later, bind again with a
 **strictly higher bind_seq**.
 
-**Step C — emit one heartbeat per epoch** (epoch = 288 blocks, aligned to #30,000).
-The heartbeat must land inside its own epoch and reference that epoch's `tip_ref`
-(= hash of the block at `epoch_start − 1`). A ready-to-cron snippet (bash + a node RPC
-at `$RPC`):
+**Step C — heartbeat once per epoch** (epoch = 288 blocks, aligned to #30,000).
+A bound node stays eligible by publishing one signed `NODE_HEARTBEAT` per epoch.
+
+**Recommended — native auto-heartbeat (no cron):** start `sost-node` with the same
+node key you bound, and the node does it for you:
+```
+sost-node ... --node-key "$NODE_PRIV"
+```
+The node then signs and broadcasts exactly one heartbeat per epoch for that key. It
+never emits before #30,000, only runs while the bind is active, and is idempotent and
+reorg-safe (it re-fills a heartbeat a reorg dropped). You do nothing else. Keep the
+node running; that is the whole job. **The `--node-key` value must match the node key
+you bound in Step B.**
+
+**Fallback — manual cron** (only if you cannot pass `--node-key`, e.g. you bind against
+a node you don't control). The heartbeat must land inside its own epoch and reference
+that epoch's `tip_ref` (= hash of the block at `epoch_start − 1`):
 ```bash
 A=30000; L=288                                   # activation, epoch length (mainnet)
 rpc(){ curl -s -H 'content-type:application/json' --data "{\"method\":\"$1\",\"params\":$2,\"id\":1}" "$RPC"; }
@@ -67,10 +80,9 @@ HB=$(sost-cli --wallet <any-wallet.json> nodeheartbeat "$NODE_PRIV" "$EPOCH" "$T
 rpc sendrawtransaction "[\"$HB\"]" >/dev/null
 ```
 Run it a few times per epoch (e.g. cron every ~30–60 min). The mempool accepts **one**
-heartbeat per (node, epoch); duplicates are ignored, so re-running is safe.
-
-> A native `--auto-heartbeat` mode may ship in a follow-up; the cron above is the
-> supported path today and is fully robust (idempotent, restart/reorg safe).
+heartbeat per (node, epoch); duplicates are ignored, so re-running is safe. Do **not**
+run the cron and `--node-key` for the same key at once — it's harmless (duplicates are
+deduped) but pointless.
 
 **Step D — check your status any time:**
 ```
