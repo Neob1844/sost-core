@@ -1,4 +1,4 @@
 {
   "v": "2026-09-10-v414-web-audit-banner-historical",
-  "note": "Global web audit pass 1: removed the obsolete PRE-MARKET / 'PUBLIC LAUNCH: JUNE 16, 2026' banner and the broken launch countdown site-wide (index + markets); softened future-tense launch-date phrasing to historical. Public jackpot name is now 'DTD Jackpot' everywhere (0 'Historical Jackpot' / 'Hist.' left in any public UI); internal RPC gethistoricaljackpotstatus unchanged. Explorer legend + labels updated."
+  "note": "Global web audit: removed the obsolete pre-market launch banner and the past-dated launch countdown site-wide; softened future-tense launch-date phrasing to historical. Public jackpot name is now 'DTD Jackpot' everywhere (no legacy jackpot naming left in public UI); internal RPC identifiers unchanged. Gold Vault and PoPC are presented as paused/legacy, superseded by the DTD / DTD Jackpot architecture."
 }
