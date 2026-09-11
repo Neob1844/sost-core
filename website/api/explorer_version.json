@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-11-v416-jackpot-callout-cycle",
-  "note": "DTD Jackpot card callout now runs on a continuous cycle: appears (animated pointing hand + tooltip 'Click/Tap here to see jackpot info & winners' + soft gold pulse), stays 15s, hides, and reappears 30s later — repeating. Removed the previous once-per-session / localStorage gate. Non-invasive: absolutely-positioned in the card, pointer-events:none, no layout change, dashboard untouched."
+  "v": "2026-09-11-v417-jackpot-callout-bigger-glow",
+  "note": "DTD Jackpot callout: ~35% larger (15px), now uses the SAME pulsing gold glow as the card (jackpotGoldPulse), appears immediately when the Explorer opens, stays 15s, hides 15s, repeats (15/15 cycle). Non-invasive; dashboard untouched."
 }
