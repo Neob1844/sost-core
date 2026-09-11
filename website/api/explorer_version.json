@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-11-v415-jackpot-callout-hint",
-  "note": "Added an elegant, non-invasive callout on the DTD Jackpot card: an animated pointing hand + tooltip ('Click/Tap here to see jackpot info & winners', desktop/mobile aware) with a soft gold pulse. Shows once on load only if the jackpot dashboard hasn't been opened, hides after 5s, reappears after ~75s if still unopened (capped a few times per session), and permanently stops once the card is opened (localStorage). No layout change, dashboard behavior untouched."
+  "v": "2026-09-11-v416-jackpot-callout-cycle",
+  "note": "DTD Jackpot card callout now runs on a continuous cycle: appears (animated pointing hand + tooltip 'Click/Tap here to see jackpot info & winners' + soft gold pulse), stays 15s, hides, and reappears 30s later — repeating. Removed the previous once-per-session / localStorage gate. Non-invasive: absolutely-positioned in the card, pointer-events:none, no layout change, dashboard untouched."
 }

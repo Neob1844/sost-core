@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-11-v415-jackpot-callout-hint">
+<meta name="explorer-html-version" content="2026-09-11-v416-jackpot-callout-cycle">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8994,30 +8994,15 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
 <script id="jackpotHintScript">
 (function(){
   "use strict";
-  var card=document.getElementById('jackpotCard'); if(!card) return;
-  var KEY='sost_jackpot_hint_v1';
-  function everOpened(){ try{return localStorage.getItem(KEY)==='opened';}catch(e){return false;} }
-  var sessionDone=false, shownCount=0, hideT=null, reT=null;
-  var hint=document.createElement('div'); hint.id='jackpotHint';
-  var mobile=false; try{mobile=window.matchMedia('(max-width:640px)').matches;}catch(e){}
-  hint.innerHTML='<span class="jh-hand">&#128070;</span>'+(mobile?'Tap':'Click')+' here to see jackpot info &amp; winners';
+  var card=document.getElementById("jackpotCard"); if(!card) return;
+  var hint=document.createElement("div"); hint.id="jackpotHint";
+  var mobile=false; try{mobile=window.matchMedia("(max-width:640px)").matches;}catch(e){}
+  hint.innerHTML='<span class="jh-hand">&#128070;</span>'+(mobile?"Tap":"Click")+" here to see jackpot info &amp; winners";
   card.appendChild(hint);
-  function hide(){ hint.classList.remove('show'); card.classList.remove('jackpot-hint-glow'); }
-  function schedule(){ if(sessionDone||everOpened()||shownCount>=4) return;
-    clearTimeout(reT); reT=setTimeout(show, 75000); }
-  function show(){ if(sessionDone||everOpened()) return;
-    hint.classList.add('show'); card.classList.add('jackpot-hint-glow'); shownCount++;
-    clearTimeout(hideT); hideT=setTimeout(function(){ hide(); schedule(); }, 5000); }
-  function stop(){ sessionDone=true; try{localStorage.setItem(KEY,'opened');}catch(e){}
-    clearTimeout(hideT); clearTimeout(reT); hide(); }
-  // desactivar en cuanto el usuario abra/pulse la card
-  card.addEventListener('click', stop);
-  if(window.SJP&&typeof window.SJP.openDash==='function'){
-    var orig=window.SJP.openDash;
-    window.SJP.openDash=function(){ stop(); return orig.apply(this,arguments); };
-  }
-  // primera aparición al cargar, solo si nunca se abrió
-  if(!everOpened()){ setTimeout(show, 1200); }
+  // Ciclo continuo: visible 15s -> oculto 30s -> repetir.
+  function show(){ hint.classList.add("show"); card.classList.add("jackpot-hint-glow"); setTimeout(hide,15000); }
+  function hide(){ hint.classList.remove("show"); card.classList.remove("jackpot-hint-glow"); setTimeout(show,30000); }
+  setTimeout(show,1200);
 })();
 </script>
 
