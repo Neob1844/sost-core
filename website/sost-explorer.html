@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-10-v414-web-audit-banner-historical">
+<meta name="explorer-html-version" content="2026-09-11-v415-jackpot-callout-hint">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -638,7 +638,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')" title="Gold Vault reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--gold)">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub" id="dGoldBalSub">25%/block · ends at V15 (#25,000)</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')" title="PoPC Pool reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--cyan)">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub" id="dPopcBalSub">25%/block · ends at V15 (#25,000)</div></div>
-  <div class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="try{if(window.SJP&&window.SJP.openDash)window.SJP.openDash();}catch(e){};return false;" title="V15 DTD Jackpot (activates block 25,000; first payout #25,290). The existing Gold-Vault + PoPC reserve is progressively returned to active miners — a supply-neutral treasury spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence every 96 DTD draws (~288 blk). Reuses the DTD winner + identical eligibility. Before block 25,290 pending/last-winner/total are provably 0/none." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--gold)">PLANNED · first #25,290 · 100 SOST</div></div>
+  <div id="jackpotCard" class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="try{if(window.SJP&&window.SJP.openDash)window.SJP.openDash();}catch(e){};return false;" title="V15 DTD Jackpot (activates block 25,000; first payout #25,290). The existing Gold-Vault + PoPC reserve is progressively returned to active miners — a supply-neutral treasury spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence every 96 DTD draws (~288 blk). Reuses the DTD winner + identical eligibility. Before block 25,290 pending/last-winner/total are provably 0/none." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--gold)">PLANNED · first #25,290 · 100 SOST</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Before V15: 50% of subsidy × triggered blocks (bootstrap 2-of-3 in [7100,12100), then permanent 1-of-3 from #12100). From V15 (block 25,000): DTD receives 50% of EVERY block (the Gold-Vault + PoPC shares are redirected here) — 50% miner / 50% DTD. Click for the full DTD panel detail."><div class="dash-label" style="color:#ff00ff">⚡ DTD LOTTERY DISTRIBUTED BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts · 50% of every block from V15</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label" style="color:var(--purple)">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label" style="color:var(--orange)">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s</div></div>
@@ -8973,6 +8973,53 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
 })();
 </script>
 <!-- /SOST-JACKPOT-ARCHIVE -->
+
+
+<style id="jackpotHintStyle">
+#jackpotHint{position:absolute;z-index:60;bottom:100%;left:50%;transform:translateX(-50%) translateY(-2px);
+  background:linear-gradient(135deg,rgba(8,10,14,.97),rgba(24,18,0,.97));
+  border:1px solid var(--gold,#f5d166);border-radius:8px;padding:7px 11px;white-space:nowrap;
+  font:600 11px var(--font-mono,ui-monospace,monospace);color:var(--gold,#f5d166);letter-spacing:.4px;
+  box-shadow:0 0 16px rgba(245,209,102,.40);pointer-events:none;opacity:0;
+  transition:opacity .35s ease, transform .35s ease}
+#jackpotHint.show{opacity:1;transform:translateX(-50%) translateY(-8px)}
+#jackpotHint::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:var(--gold,#f5d166)}
+#jackpotHint .jh-hand{display:inline-block;margin-right:5px;animation:jhBob 1s ease-in-out infinite}
+@keyframes jhBob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+#jackpotCard.jackpot-hint-glow{animation:jhGlow 1.4s ease-in-out infinite}
+@keyframes jhGlow{0%,100%{box-shadow:0 0 0 0 rgba(245,209,102,0)}50%{box-shadow:0 0 0 3px rgba(245,209,102,.45)}}
+@media (max-width:640px){#jackpotHint{white-space:normal;max-width:190px;text-align:center}}
+</style>
+<script id="jackpotHintScript">
+(function(){
+  "use strict";
+  var card=document.getElementById('jackpotCard'); if(!card) return;
+  var KEY='sost_jackpot_hint_v1';
+  function everOpened(){ try{return localStorage.getItem(KEY)==='opened';}catch(e){return false;} }
+  var sessionDone=false, shownCount=0, hideT=null, reT=null;
+  var hint=document.createElement('div'); hint.id='jackpotHint';
+  var mobile=false; try{mobile=window.matchMedia('(max-width:640px)').matches;}catch(e){}
+  hint.innerHTML='<span class="jh-hand">&#128070;</span>'+(mobile?'Tap':'Click')+' here to see jackpot info &amp; winners';
+  card.appendChild(hint);
+  function hide(){ hint.classList.remove('show'); card.classList.remove('jackpot-hint-glow'); }
+  function schedule(){ if(sessionDone||everOpened()||shownCount>=4) return;
+    clearTimeout(reT); reT=setTimeout(show, 75000); }
+  function show(){ if(sessionDone||everOpened()) return;
+    hint.classList.add('show'); card.classList.add('jackpot-hint-glow'); shownCount++;
+    clearTimeout(hideT); hideT=setTimeout(function(){ hide(); schedule(); }, 5000); }
+  function stop(){ sessionDone=true; try{localStorage.setItem(KEY,'opened');}catch(e){}
+    clearTimeout(hideT); clearTimeout(reT); hide(); }
+  // desactivar en cuanto el usuario abra/pulse la card
+  card.addEventListener('click', stop);
+  if(window.SJP&&typeof window.SJP.openDash==='function'){
+    var orig=window.SJP.openDash;
+    window.SJP.openDash=function(){ stop(); return orig.apply(this,arguments); };
+  }
+  // primera aparición al cargar, solo si nunca se abrió
+  if(!everOpened()){ setTimeout(show, 1200); }
+})();
+</script>
 
 </body>
 </html>

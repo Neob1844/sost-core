@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-10-v414-web-audit-banner-historical",
-  "note": "Global web audit: removed the obsolete pre-market launch banner and the past-dated launch countdown site-wide; softened future-tense launch-date phrasing to historical. Public jackpot name is now 'DTD Jackpot' everywhere (no legacy jackpot naming left in public UI); internal RPC identifiers unchanged. Gold Vault and PoPC are presented as paused/legacy, superseded by the DTD / DTD Jackpot architecture."
+  "v": "2026-09-11-v415-jackpot-callout-hint",
+  "note": "Added an elegant, non-invasive callout on the DTD Jackpot card: an animated pointing hand + tooltip ('Click/Tap here to see jackpot info & winners', desktop/mobile aware) with a soft gold pulse. Shows once on load only if the jackpot dashboard hasn't been opened, hides after 5s, reappears after ~75s if still unopened (capped a few times per session), and permanently stops once the card is opened (localStorage). No layout change, dashboard behavior untouched."
 }
