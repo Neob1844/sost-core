@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-11-v417-jackpot-callout-bigger-glow">
+<meta name="explorer-html-version" content="2026-09-11-v418-jackpot-callout-clickable">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8980,9 +8980,9 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
   background:linear-gradient(135deg,rgba(8,10,14,.97),rgba(24,18,0,.97));
   border:1px solid var(--gold,#f5d166);border-radius:9px;padding:9px 15px;white-space:nowrap;
   font:600 15px var(--font-mono,ui-monospace,monospace);color:var(--gold,#f5d166);letter-spacing:.4px;
-  pointer-events:none;opacity:0;transition:opacity .35s ease, transform .35s ease;
+  pointer-events:none;cursor:pointer;opacity:0;transition:opacity .35s ease, transform .35s ease;
   animation:jackpotGoldPulse 1.6s ease-in-out infinite}
-#jackpotHint.show{opacity:1;transform:translateX(-50%) translateY(-9px)}
+#jackpotHint.show{opacity:1;transform:translateX(-50%) translateY(-9px);pointer-events:auto}
 #jackpotHint::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
   border:8px solid transparent;border-top-color:var(--gold,#f5d166)}
 #jackpotHint .jh-hand{display:inline-block;margin-right:7px;animation:jhBob 1s ease-in-out infinite}
@@ -8998,6 +8998,8 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
   var mobile=false; try{mobile=window.matchMedia("(max-width:640px)").matches;}catch(e){}
   hint.innerHTML='<span class="jh-hand">&#128070;</span>'+(mobile?"Tap":"Click")+" here to see jackpot info &amp; winners";
   card.appendChild(hint);
+  hint.addEventListener("click",function(ev){ ev.stopPropagation();
+    if(window.SJP&&typeof window.SJP.openDash==="function") window.SJP.openDash(); });
   // Ciclo continuo: visible 15s -> oculto 30s -> repetir.
   function show(){ hint.classList.add("show"); card.classList.add("jackpot-hint-glow"); setTimeout(hide,15000); }
   function hide(){ hint.classList.remove("show"); card.classList.remove("jackpot-hint-glow"); setTimeout(show,15000); }

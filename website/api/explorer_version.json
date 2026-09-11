@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-11-v417-jackpot-callout-bigger-glow",
-  "note": "DTD Jackpot callout: ~35% larger (15px), now uses the SAME pulsing gold glow as the card (jackpotGoldPulse), appears immediately when the Explorer opens, stays 15s, hides 15s, repeats (15/15 cycle). Non-invasive; dashboard untouched."
+  "v": "2026-09-11-v418-jackpot-callout-clickable",
+  "note": "DTD Jackpot callout is now clickable: clicking the tooltip opens the DTD Jackpot dashboard (same as clicking the card). It only intercepts clicks while visible (pointer-events auto only in .show; none when hidden, so it never blocks anything). +35% size, card's pulsing glow, immediate on load, 15s/15s cycle."
 }
