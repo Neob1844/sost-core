@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-11-v418-jackpot-callout-clickable">
+<meta name="explorer-html-version" content="2026-09-11-v419-jackpot-dash-reopen-fix">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8639,7 +8639,8 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
   function fc(n){ return (typeof window.fComma==='function')?window.fComma(n):n; }
   function esc(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);}); }
   function eta(blks){ var m=blks*BLK_MIN; var h=Math.floor(m/60), mm=Math.round(m%60); return (h>0?h+' h ':'')+mm+' min'; }
-  function close(){ var d=document.getElementById('sjp-dash'); d.classList.remove('show'); }
+  var _dashOpen=false;
+  function close(){ _dashOpen=false; var d=document.getElementById('sjp-dash'); d.classList.remove('show'); }
   function render(state){
     var d=document.getElementById('sjp-dash');
     if(!d){ return; }
@@ -8714,7 +8715,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       '<div class="sjpd-note" id="sjpd-hist">'+histHtml+'</div>'+
       replayBtn+
       '</div>';
-    d.classList.add('show');
+    if(_dashOpen) d.classList.add('show');
     try{
     var _xbtn=document.getElementById('sjpd-x'); if(_xbtn) _xbtn.onclick=close;
     d.onclick=function(e){ if(e.target===d) close(); };
@@ -8729,6 +8730,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     }catch(_werr){ try{console.warn('[sjp] dashboard wiring:',_werr&&_werr.message);}catch(_e){} }
   }
   function openDash(){
+    _dashOpen=true;
     // deterministic fields from the live permanent card + RPC (real data only)
     var reserve=(document.getElementById('dJackReserve')||{}).textContent||'—';
     var state={reserve:reserve,tip:0,eligible:null,paid:0,winner:null};

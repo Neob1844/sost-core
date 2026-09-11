@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-11-v418-jackpot-callout-clickable",
-  "note": "DTD Jackpot callout is now clickable: clicking the tooltip opens the DTD Jackpot dashboard (same as clicking the card). It only intercepts clicks while visible (pointer-events auto only in .show; none when hidden, so it never blocks anything). +35% size, card's pulsing glow, immediate on load, 15s/15s cycle."
+  "v": "2026-09-11-v419-jackpot-dash-reopen-fix",
+  "note": "Fix: DTD Jackpot dashboard reopened itself after closing (had to close twice). openDash() runs several async render() calls (one per RPC) and each re-added the 'show' class; a late RPC re-showed the dashboard after the user closed it. Added a _dashOpen guard: render() only shows while the dashboard is intended open (set true on openDash, false on close). Verified with a headless simulation of the real code. Also: callout is clickable, +35% size, card pulse, 15s/15s cycle."
 }
