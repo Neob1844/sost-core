@@ -202,9 +202,6 @@
       <a href="sost-protocol-spec.html">Layer 1</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
-      <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
-      <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
@@ -566,7 +563,7 @@
         <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">sost-cli &middot; terminal + RPC credentials needed</span>
       </div>
       <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">Register via sost-cli (for operators, scripts, CI/CD)</h3>
-      <p>Use this method when you are publishing capsules from a script, a CI/CD pipeline or a headless operator machine. It uses the same Open Note capsule mode as Method A and produces the exact same on-chain record. The flow is the one already used for the Trinity Kalgoorlie Phase 1 proof bundle.</p>
+      <p>Use this method when you are publishing capsules from a script, a CI/CD pipeline or a headless operator machine. It uses the same Open Note capsule mode as Method A and produces the exact same on-chain record.</p>
 
       <!-- Before you start -->
       <div style="background:rgba(100,116,139,0.05);border:1px solid var(--border-bright);border-radius:4px;padding:10px 14px;margin:12px 0;font-size:12.5px;line-height:1.7">
@@ -717,40 +714,6 @@
       </p>
     </div>
 
-    <!-- REE v0.4 sealed prospective campaign (ON-CHAIN, HISTORICAL/LEGACY) -->
-    <div class="info-card" style="margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-        <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">ON-CHAIN</span>
-        <span style="background:rgba(148,163,184,0.15);color:#94a3b8;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">HISTORICAL &mdash; LEGACY RESEARCH ANCHOR</span>
-        <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">block #13,483</span>
-      </div>
-      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">SOST &mdash; REE v0.4 Sealed Prospective Campaign (legacy research anchor)</h3>
-      <p style="color:var(--text-muted);font-size:11.5px;line-height:1.65;margin:0 0 12px;padding:9px 11px;border-left:2px solid #94a3b8;background:rgba(148,163,184,0.06)">
-        <b style="color:var(--text-secondary)">Historical record.</b> This anchor was committed by a third-party research operator in June 2026 and is preserved here unaltered, exactly as it exists on chain. It is <b>not</b> a current integration and does <b>not</b> represent an ongoing relationship between the SOST and any external platform. The on-chain data is immutable and is never edited or removed; only this description has been updated.
-      </p>
-      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary)">
-        <tbody>
-          <tr><td style="padding:5px 0;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:30%">Block</td><td style="padding:5px 0"><a href="sost-explorer.html?search=13483" style="color:#d946ef">#13,483</a> &middot; 2026-06-17 06:44:24 UTC</td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Txid</td><td style="padding:5px 0"><a href="sost-explorer.html?search=58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979" style="color:#d946ef;word-break:break-all">58448c80da83b11fa135399db88a8be93b6bcf6c5cc749e8e797f8982e0f4979</a></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Signer</td><td style="padding:5px 0"><b>OFFICIAL</b> &mdash; Protocol Registry operator <code style="word-break:break-all">sost1ca9097d830b74495b95db9d779ad63c90579bc18</code> (whitelisted)</td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule text</td><td style="padding:5px 0"><code style="word-break:break-all">sost-protocol geaspirit-ree-v04 9da4548fdbfe8b57</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Commitment file</td><td style="padding:5px 0"><a href="proofs/ree-prospective-v04-20260616_commitment.json" style="color:#d946ef">proofs/ree-prospective-v04-20260616_commitment.json</a></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Commitment SHA-256</td><td style="padding:5px 0;word-break:break-all"><code>9da4548fdbfe8b57090116e65db4ae15b948eb67927243ac9057da98b8b89d75</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Merkle root</td><td style="padding:5px 0;word-break:break-all"><code style="color:#d946ef">7f29c11134232fcc7e998c8df7efe26ea0bc453de91792a61351368ca5a1bf7a</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Campaign</td><td style="padding:5px 0">50 sealed targets + 50 controls &middot; <code>score_type=relative_regional_rank</code> &middot; <code>calibration_status=unavailable</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Receipt</td><td style="padding:5px 0"><a href="proofs/ree-prospective-v04-20260616_anchor_receipt.json" style="color:#d946ef">proofs/ree-prospective-v04-20260616_anchor_receipt.json</a></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Status</td><td style="padding:5px 0"><code>registered=true</code> &middot; <code>capsule_mode=open-note</code> &middot; <code>sealed=true</code> &middot; <code>prospective=true</code> &middot; <code>unresolved=true</code></td></tr>
-        </tbody>
-      </table>
-      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:12px 0 0">
-        <b>What this is.</b> A third-party private regional REE prior (a frozen model that ranks ground by geological favourability for carbonatite/alkaline rare-earth systems, using open data + craton context) selected <b>50 highest-ranked novel target areas</b> and <b>50 controls</b>, froze the model and sealed the set behind a Merkle tree. The exact coordinates, scores and evidence stay <b>private and encrypted</b>; only the file SHA-256 (<code>9da4548f&hellip;</code>) and the Merkle root (<code>7f29c111&hellip;</code>) are public. This capsule timestamps that sealed campaign on the SOST chain.
-        <br><br>
-        <b>What it proves.</b> Precedence + integrity: the campaign existed, unchanged, no later than block&nbsp;#13,483, signed by the operator address. The 50 targets cannot be edited after the fact without breaking these hashes &mdash; so any future hit cannot be cherry-picked retroactively.
-        <br><br>
-        <b>What it does NOT prove.</b> It is <b>not</b> evidence of mineralisation, grade, depth, tonnage, resources or reserves. The <code>score_type</code> is a <i>relative regional rank</i>, not a probability of a deposit. The campaign is <b>unresolved</b>; targets will be adjudicated later only by independent evidence (government/lab assays, drilling, primary publications) under the published resolution protocol. Verify independently: (1) fetch the commitment file and confirm its SHA-256 starts with <code>9da4548fdbfe8b57</code> (the on-chain capsule prefix); (2) confirm the JSON's <code>merkle_root</code> equals <code>7f29c111&hellip;</code>; (3) look up the txid in the explorer and confirm the Open Note capsule + signing address.
-      </p>
-    </div>
-
     <!-- PoPC protocol term — manifesto v1 anchor (ON-CHAIN, OFFICIAL) -->
     <div class="info-card" style="margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
@@ -776,32 +739,6 @@
         <b>What it proves.</b> Precedence + integrity: the PoPC term and that exact manifesto existed, unchanged, no later than block&nbsp;#15,439, published by the operator address.
         <br><br>
         <b>What it does NOT prove.</b> It is <b>not</b> a patent, trademark or copyright, and it does not certify the truth of any claim in the manifesto. Verify independently: (1) fetch the manifesto JSON and confirm its SHA-256 starts with <code>3bed02e2f5c589e4</code> (the on-chain capsule prefix); (2) look up the txid in the explorer and confirm the Open Note capsule + signing address.
-      </p>
-    </div>
-
-    <!-- Trinity Kalgoorlie Phase 1 -->
-    <div class="info-card" style="margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-        <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">ON-CHAIN</span>
-        <span style="background:rgba(217,70,239,0.15);color:#d946ef;font-size:10px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:3px">SCIENTIFIC PROOF BUNDLE</span>
-        <span style="color:var(--text-muted);font-size:11px;letter-spacing:1px">block #8085</span>
-      </div>
-      <h3 style="font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-primary);margin:0 0 10px">Trinity Kalgoorlie Phase 1 &mdash; proof bundle</h3>
-      <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text-primary)">
-        <tbody>
-          <tr><td style="padding:5px 0;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:30%">AOI</td><td style="padding:5px 0">Kalgoorlie Phase 1</td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Block</td><td style="padding:5px 0"><a href="sost-explorer.html?search=8085" style="color:#d946ef">#8085</a></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Capsule text</td><td style="padding:5px 0"><code style="word-break:break-all">trinity-proof kalgoorlie_phase1 3a28a4b112fe95df</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Txid</td><td style="padding:5px 0"><a href="sost-explorer.html?search=d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db" style="color:#d946ef;word-break:break-all">d68678b5d15ca8a60b70a7aa17647bfa12271d342eef066e1b4a832f4624f3db</a></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Proof SHA-256</td><td style="padding:5px 0;word-break:break-all"><code>3a28a4b112fe95df85ab2ab91deb7698ebeb1d9182297f06635fd12fd4053a02</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Merkle root</td><td style="padding:5px 0;word-break:break-all"><code>a818a1e4799ec34fd5a65b17d180a9534f791d4cd49f54c97b21c11d7b0e28b4</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Pipeline</td><td style="padding:5px 0">Geospatial scorecard &rarr; AI Council dossier &rarr; Useful Compute plan (dry-run) &rarr; Campaign manifest &rarr; Proof bundle</td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">Status</td><td style="padding:5px 0"><code>registered=true</code> &middot; <code>no_rewards_active=true</code> &middot; <code>capsule_mode=open-note</code></td></tr>
-          <tr><td style="padding:5px 0;color:var(--text-muted);vertical-align:top">More info</td><td style="padding:5px 0"><a href="sost-trinity.html#kalgoorlie" style="color:#d946ef">sost-trinity.html</a></td></tr>
-        </tbody>
-      </table>
-      <p style="color:var(--text-secondary);font-size:12px;line-height:1.7;margin:12px 0 0">
-        This capsule is a public cryptographic timestamp proving that Trinity existed and produced its first verifiable proof bundle on SOST at block #8085. It is not a mineral reserve claim, not a geological conclusion, and not an announcement of active Useful Compute rewards. The bundle binds four SHA-256 anchors (scorecard + dossier + Useful Compute plan + campaign manifest) into one document with a Merkle root; the on-chain capsule carries the first 16 hex of the bundle SHA-256, and the full 64-hex hash lives in the published JSON for independent verification by any third party.
       </p>
     </div>
 

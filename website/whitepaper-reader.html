@@ -153,9 +153,6 @@
       <a href="sost-protocol-spec.html">Layer 1</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
-      <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
-      <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
@@ -269,13 +266,6 @@
 <a href="#sec-svs-5" class="toc-l2">12.5.5 Strategic Direction</a>
 <a href="#sec-71" class="toc-l1">13. Conclusion</a>
 <a href="#sec-72" class="toc-l1">Legal Disclaimer</a>
-<a href="#sec-materials" class="toc-l1" style="color:var(--red-primary);">11. EXPERIMENTAL: Materials Discovery Engine</a>
-<a href="#sec-materials-1" class="toc-l2">11.1 Overview</a>
-<a href="#sec-materials-2" class="toc-l2">11.2 Architecture</a>
-<a href="#sec-materials-3" class="toc-l2">11.3 Access Model</a>
-<a href="#sec-materials-4" class="toc-l2">11.4 Relationship to SOST</a>
-<a href="#sec-materials-5" class="toc-l2">11.5 Output Specification</a>
-<a href="#sec-materials-6" class="toc-l2">11.6 Disclaimer</a>
 <a href="#sec-73" class="toc-l1">Appendix A: Canonical Constants (Normative)</a>
 <a href="#sec-74" class="toc-l1">Appendix B: Serialization (Normative)</a>
 <a href="#sec-75" class="toc-l1">Appendix C: PRNG Specification (Normative)</a>
@@ -2667,23 +2657,6 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <p class="wp-p">The SOST position market begins as a private, signed market for identified positions and rights &mdash; not a public mass token exchange. <strong>Trade contracts, not pools. Identify positions, not mass tokens. Coordinate privately, settle verifiably.</strong> Any broader public market phase is subject to legal and operational review.</p>
 <div class="wp-spacer"></div>
 
-<h3 id="sec-svs-ke" class="wp-h">12.5.8 SOST AI Engine</h3>
-<div class="wp-spacer"></div>
-<p class="wp-p">The <strong>SOST AI Engine</strong> is an internal autonomous research and validation system designed to support decisions across <em>Materials Engine</em>, <em>Geospatial Intelligence</em>, <em>SOST</em> wording, and <em>Useful Compute</em> task design. It is intentionally <strong>off-chain, off-consensus and off-DEX</strong>: the engine does not modify the SOST chain, does not run inside the DEX page, does not sign transactions and does not have access to wallet keys, beneficiary state or signed deal messages.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>Core principle.</strong> No conclusion is accepted because a model said it. Every claim is classified by evidence level &mdash; <em>local_code_verified</em>, <em>local_data_verified</em>, <em>local_doc_supported</em>, <em>multi_source_supported</em>, <em>external_official_supported</em>, <em>model_consensus_only</em>, <em>speculative</em>, <em>contradicted</em>, <em>insufficient_evidence</em>, or <em>do_not_publish</em>. Public outputs are <strong>internal-only by default</strong> and require explicit human review before being promoted into public copy.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>Pipeline.</strong> Mass local hypothesis generation (10s to 100,000 candidates, deterministic, offline) &rarr; deduplication by stable hash and project-specific keys &rarr; local-evidence search across <code>docs/</code>, <code>reports/</code> and <code>outputs/</code> &rarr; multi-validator pass with strictest-verdict merging &rarr; deterministic weighted ranking &rarr; top-N retention &rarr; AI Council review of top-K only with validator-veto (not majority vote) &rarr; structured applicability profile (utility, false-positive risk, validation pathway, publishability) &rarr; report, dashboard and append-only persistence &rarr; <strong>human review</strong> before any public claim or DFT promotion.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>Milestones.</strong> Phase 3 ships in four milestones. <em>M1 &mdash; Evidence Core &amp; Public Claim Guard:</em> ten-level evidence classification, claim extractor, public-claim guard with safer-rewrite suggestions, eight seeded eval cases derived from real past mistakes (Useful Compute rewards postponed, avg288 vs avg1000, gold-redemption wording, mineral-guarantee, DFT-validated overclaim, etc.). <em>M2 &mdash; Validators:</em> read-only validators for Materials, Geospatial Intelligence and SOST; unified <code>ValidatorResult</code> with verdict, evidence_level, confidence, publishability, evidence_items, missing_evidence, risks and next_steps; orchestrator merging with strictest-verdict winning. <em>M3 &mdash; Hypothesis Factory + AI Council + Learning Loop:</em> mass local hypothesis generation (binary, ternary, quaternary and doped compositions for materials; AOI&times;commodity for geospatial; risky-wording and Heavy-task-design ideas for SOST/UC), deterministic ranking, AI Council with validator-veto, eight canonical campaign templates, append-only outcome-driven rule-based learning loop, static HTML dashboard generator. <em>M4 &mdash; Applicability &amp; Utility Engine:</em> per-hypothesis structured profile with theoretical basis, evidence summary, missing evidence, false-positive risk, validation pathway and recommended action.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>AI Council.</strong> The Council is <em>not</em> a majority vote. It is a panel with three always-on members &mdash; <em>ValidatorMember</em> (wraps M2 validators), <em>LocalKnowledgeMember</em> (greps the local corpus), and <em>MockAIMember</em> (deterministic offline stand-in) &mdash; plus four optional members that <strong>self-skip</strong> when network is disabled or paid models are not enabled: <em>OllamaMember</em>, <em>OpenRouterMember</em>, <em>HuggingFaceMember</em>, and <em>PaidJudgeInterface</em>. Validator <em>contradicted</em> verdicts are a hard veto regardless of any other opinions.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>Provider budget.</strong> Four canonical modes &mdash; <code>tiny</code> (max 100 hypotheses, 0 provider calls, 0 paid calls), <code>normal</code> (max 1,000, up to 20 provider calls only when <code>--network</code> is explicit), <code>deep</code> (max 100,000, up to 100 provider calls only when <code>--network</code> is explicit), and <code>paid_judge</code> (paid calls only when both <code>--network</code> and <code>--allow-paid</code> are passed and a paid token is configured). The default for any campaign is network OFF, paid OFF.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>Hard guarantees.</strong> The engine never publishes autonomous conclusions; never activates Useful Compute rewards; never modifies SOST consensus, miner code or node code; never writes to Useful Compute queues; never signs transactions; never reads wallet files or private keys; never scrapes websites or bypasses rate limits; never calls paid models without an explicit operator flag; never makes a network call by default; and never treats model-only consensus as verified evidence. The full public-facing description is at <a href="sost-ai-engine.html">sost-ai-engine.html</a>.</p>
-<div class="wp-spacer"></div>
-
 <h3 id="sec-71" class="wp-h">13. Conclusion</h3>
 <div class="wp-spacer"></div>
 <p class="wp-p">SOST is built on three ideas that individually exist, but have never been combined:</p>
@@ -2744,86 +2717,6 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <div class="wp-spacer"></div>
 <hr class="wp-hr">
 <div class="wp-spacer"></div>
-<h3 id="sec-materials" class="wp-h" style="color:var(--red-primary);">11. EXPERIMENTAL: SOST Materials Discovery Engine</h3>
-<div class="wp-spacer"></div>
-
-<h4 id="sec-materials-1" class="wp-h">11.1 Overview</h4>
-<div class="wp-spacer"></div>
-<p class="wp-p">The SOST Materials Discovery Engine is an experimental project that extends the SOST ecosystem beyond financial infrastructure into scientific discovery. It is a computational platform for predicting, generating, and evaluating novel material compositions &mdash; with a focus on materials derived from abundant, low-cost, or recycled precursors.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p">This project has a natural relationship with SOST: SOST is built on the premise that physical metals (gold, silver, platinum) have intrinsic value derived from their atomic properties. The Materials Engine explores this same domain &mdash; the physics and chemistry of elements, their combinations, and the emergent properties of their structures.</p>
-<div class="wp-spacer"></div>
-
-<h4 id="sec-materials-2" class="wp-h">11.2 Architecture</h4>
-<div class="wp-spacer"></div>
-<p class="wp-p">The engine operates in layers:</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>Layer 1 &mdash; Data:</strong> A curated database of 76,193 validated crystalline materials sourced from JARVIS-DFT (75,993) and AFLOW (200). Each entry includes composition, crystal structure (CIF), and DFT-computed properties (formation energy, band gap, spacegroup, lattice parameters). Dual-target GNN models (CGCNN for formation energy, ALIGNN-Lite for band gap) enable property prediction on novel candidates.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>Layer 2 &mdash; Inverse Search:</strong> Users specify desired properties and constraints. The engine returns ranked candidates from known materials, scored by match percentage.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>Layer 3 &mdash; Property Prediction:</strong> Machine learning models (gradient boosting, neural networks) trained on known materials predict properties of hypothetical compositions not yet in the database. Each prediction includes a confidence interval and uncertainty estimate.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>Layer 4 &mdash; Generative Discovery:</strong> An evolutionary algorithm generates random material compositions within user-defined constraints (element availability, cost, toxicity). A genetic algorithm iterates over generations, mutating and combining successful candidates. The predictor estimates properties for each candidate. Top candidates are ranked by fitness against the user&rsquo;s requirements.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>Layer 5 &mdash; Continuous Learning:</strong> The system improves over time. User queries, community feedback, and published experimental results are incorporated into the training data. The models retrain periodically, expanding coverage and improving accuracy.</p>
-<div class="wp-spacer"></div>
-
-<h4 id="sec-materials-3" class="wp-h">11.3 Access Model</h4>
-<div class="wp-spacer"></div>
-<p class="wp-p">Access to the Materials Discovery Engine is under study. Any future access model, if implemented, would be denominated in USD-equivalent terms to preserve stability and usability. The algorithm itself is free &mdash; any access mechanism would serve as spam prevention, not as a fee for the science.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>The final access structure, technical route, and user model have not been fixed yet.</strong> Details will be published when the model has been validated and approved. Pending study and validation of the best access method.</p>
-<div class="wp-spacer"></div>
-
-<h4 id="sec-materials-4" class="wp-h">11.4 Relationship to SOST</h4>
-<div class="wp-spacer"></div>
-<p class="wp-p">The Materials Engine does not modify the SOST blockchain or its consensus rules. It is an application-layer service. The SOST provides:</p>
-<ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
-<li>Payment rail (SOST token)</li>
-<li>On-chain verification infrastructure (if access model requires it)</li>
-<li>Economic alignment (potential token utility for access)</li>
-</ul>
-<div class="wp-spacer"></div>
-<p class="wp-p">The blockchain provides the trust layer. The Materials Engine provides the utility layer. Together, they create a feedback loop: scientific utility drives SOST demand, SOST demand strengthens the gold reserve, the gold reserve underpins the token&rsquo;s value.</p>
-<div class="wp-spacer"></div>
-
-<h4 id="sec-materials-5" class="wp-h">11.5 Output Specification</h4>
-<div class="wp-spacer"></div>
-<p class="wp-p">For each candidate material, the engine produces a standardized report:</p>
-<ul style="margin:8px 0 8px 24px;color:var(--text-secondary);font-size:13px;line-height:1.8;">
-<li>Candidate ID (SOST-MAT-XXXXX)</li>
-<li>Composition (formula + elemental percentages)</li>
-<li>Predicted structure (crystal system, space group)</li>
-<li>Property estimates with confidence intervals: hardness, bulk modulus, shear modulus, bandgap, density, melting point, thermal conductivity, electrical conductivity, corrosion resistance, magnetic properties</li>
-<li>Stability assessment (formation energy, hull distance)</li>
-<li>Synthesizability estimate (temperature, pressure, method)</li>
-<li>Cost estimate (based on elemental prices)</li>
-<li>Toxicity classification</li>
-<li>Elemental abundance check</li>
-<li>Similar known materials (nearest neighbors)</li>
-<li>Suggested applications</li>
-<li>Risk assessment (prediction confidence)</li>
-</ul>
-<div class="wp-spacer"></div>
-
-<h4 id="sec-materials-6" class="wp-h">11.6 Disclaimer</h4>
-<div class="wp-spacer"></div>
-<p class="wp-p" style="color:var(--red-primary);"><strong>EXPERIMENTAL PROJECT:</strong> The SOST Materials Discovery Engine is a research initiative, not a guaranteed deliverable. Implementation will proceed only if the following conditions are met:</p>
-<div class="wp-spacer"></div>
-<p class="wp-p">(a) The underlying machine learning models demonstrate verified accuracy against independent test datasets with published benchmarks.</p>
-<p class="wp-p">(b) The prediction pipeline produces no systematic errors that could mislead users into pursuing dangerous or impossible synthesis paths.</p>
-<p class="wp-p">(c) The escrow integration passes independent security audit with zero critical vulnerabilities.</p>
-<p class="wp-p">(d) The system&rsquo;s computational requirements are sustainable within SOST&rsquo;s operational budget.</p>
-<p class="wp-p">(e) The technology does not introduce any attack vector against the SOST blockchain or its users.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p">SOST commits to full transparency: if the project does not meet these criteria, it will be discontinued or restructured rather than deployed in an unsafe or misleading state. No timeline is guaranteed. The Materials Engine is a vision, not a promise.</p>
-<div class="wp-spacer"></div>
-<p class="wp-p"><strong>This project does not affect the SOST blockchain, its consensus rules, emission schedule, or any constitutional parameter. It is an independent application-layer service that can be added or removed without any protocol change.</strong></p>
-<div class="wp-spacer"></div>
-<hr class="wp-hr">
-<div class="wp-spacer"></div>
-
 <h3 id="sec-73" class="wp-h">Appendix A: Canonical Constants (Normative)</h3>
 <div class="wp-spacer"></div>
 <p class="wp-p">All values below are consensus-critical. Any deviation constitutes a consensus failure.</p>

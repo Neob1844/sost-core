@@ -49,7 +49,6 @@ server {
 - Splash screen (sizing, duration, animations)
 - CRT effects and retro sounds
 - Explorer and wallet functionality
-- Materials Engine demo page
 - API proxy configuration
 - Security headers
 

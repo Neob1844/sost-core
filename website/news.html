@@ -128,9 +128,6 @@
       <a href="sost-protocol-spec.html">Layer 1</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
-      <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
-      <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
@@ -826,10 +823,7 @@ sudo systemctl restart sost-miner</pre>
       <p>Reading the source line by line, the operator disclosed two gaps before they could bite: the Gold Vault governance rules (GV1&ndash;GV4) were unit-tested (17/17) but the <b>validator wiring to the live transaction pipeline was never completed</b> &mdash; at the original height it would have triggered nothing; and the <code>getproposals</code> signaling RPC returned <b>placeholder data</b> instead of reading real block versions. Both were disclosed openly and scheduled to ship wired-in, rather than patched in panic. The 25%&nbsp;+&nbsp;25% accumulation to Gold&nbsp;Vault / PoPC&nbsp;Pool has been consensus-enforced since genesis throughout; only the <i>spending governance</i> was deferred.</p>
     </div>
 
-    <div class="info-card">
-      <h3>Useful Compute trial &mdash; announced, then postponed on purpose</h3>
-      <p>A 1,000-block rewarded Useful-Compute trial was announced for blocks 7,000&ndash;8,000, backed by real outputs: a DFT-validated low-cost catalyst candidate (<code>FeMgO&#8322;</code>), a near-optimal photovoltaic semiconductor (<code>Dy&#8323;S&#8323;N</code>, 1.39&nbsp;eV vs the ~1.34&nbsp;eV optimum), and mineral-prospectivity models (Kalgoorlie orogenic gold AUC&nbsp;0.922, Salar&nbsp;de&nbsp;Atacama lithium AUC&nbsp;0.891). After review the rewarded phase was <b>postponed</b> &mdash; SOST will not pay for weak or symbolic CPU work. The infrastructure stays live as a public dry-run; <b style="color:var(--amber-primary)">block 7,000 did not &mdash; and block 12,000 will not &mdash; activate Useful-Compute rewards.</b></p>
-    </div>
+    >
 
     <div class="info-card">
       <h3>Sovereign value stack &mdash; alpha proven on Sepolia (verifiable)</h3>
@@ -929,8 +923,8 @@ sudo systemctl restart sost-miner</pre>
       <ul>
         <li><b>SOST DEX Alpha</b> &mdash; browser wallet with native encryption (ED25519, X25519, ChaCha20-Poly1305) and encrypted deal flow.</li>
         <li><b>SOSTEscrow V2</b> (Sepolia testnet) &mdash; <code>currentBeneficiary</code> + <code>settlementOperator</code>, 47 Solidity tests.</li>
-        <li><b>SOST AI Engine</b> &mdash; private autonomous research lab (materials discovery).</li>
-        <li><b>Useful Compute infrastructure</b> &mdash; task server, worker, ranking, audit export. <b style="color:var(--amber-primary)">Dry-run / testing only &mdash; rewards remain POSTPONED</b> (block 12,000 does NOT activate Useful-Compute rewards).</li>
+        
+        
         <li>No change to the coinbase split (50&nbsp;% miner / 25&nbsp;% Gold&nbsp;Vault / 25&nbsp;% PoPC&nbsp;Pool), the emission schedule, or the 4,669,201&nbsp;SOST hard cap.</li>
       </ul>
     </div>

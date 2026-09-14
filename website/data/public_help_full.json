@@ -1,15 +1,12 @@
 {
   "version": 1,
-  "n_items": 12,
+  "n_items": 8,
   "categories": [
-    "ai_engine_explainer",
     "casert_explainer",
     "dex_safety",
-    "materials_engine_public",
     "mining_start",
     "mining_troubleshooting",
     "no_pools",
-    "useful_compute_status",
     "wallet_safety"
   ],
   "entries": [
@@ -315,112 +312,6 @@
       ]
     },
     {
-      "item_id": "faq-useful-compute-status",
-      "category": "useful_compute_status",
-      "title": "Are Useful Compute rewards active?",
-      "short_answer": "No. Useful Compute infrastructure is live for testing, but rewards are postponed.",
-      "tokens": [
-        "activation",
-        "active",
-        "announced",
-        "any",
-        "are",
-        "assume",
-        "be",
-        "but",
-        "compute",
-        "do",
-        "explicitly",
-        "for",
-        "future",
-        "infrastructure",
-        "is",
-        "live",
-        "no",
-        "not",
-        "now",
-        "postponed",
-        "reward",
-        "rewards",
-        "right",
-        "sost",
-        "status",
-        "testing",
-        "useful",
-        "will"
-      ]
-    },
-    {
-      "item_id": "faq-ai-engine",
-      "category": "ai_engine_explainer",
-      "title": "What is the SOST AI Engine?",
-      "short_answer": "SOST has an internal research and review engine. It does not publish autonomously and it does not decide consensus.",
-      "tokens": [
-        "ai",
-        "an",
-        "and",
-        "autonomously",
-        "consensus",
-        "decide",
-        "decisions",
-        "does",
-        "engine",
-        "explainer",
-        "has",
-        "have",
-        "internal",
-        "is",
-        "it",
-        "make",
-        "not",
-        "publish",
-        "research",
-        "review",
-        "sost",
-        "the",
-        "what"
-      ]
-    },
-    {
-      "item_id": "faq-materials-public",
-      "category": "materials_engine_public",
-      "title": "Are Materials Engine candidates validated?",
-      "short_answer": "Only when the candidate is explicitly backed by DFT/CHGNet output or known public data. Otherwise it is an internal hypothesis.",
-      "tokens": [
-        "an",
-        "are",
-        "backed",
-        "by",
-        "can",
-        "candidate",
-        "candidates",
-        "chgnet",
-        "data",
-        "dft",
-        "engine",
-        "explicitly",
-        "formula",
-        "highly",
-        "hypothesis",
-        "if",
-        "internal",
-        "is",
-        "it",
-        "known",
-        "materials",
-        "only",
-        "or",
-        "otherwise",
-        "output",
-        "public",
-        "ranks",
-        "the",
-        "trust",
-        "validated",
-        "when"
-      ]
-    },
-    {
       "item_id": "faq-dex-trustless",
       "category": "dex_safety",
       "title": "Is the SOST DEX fully trustless?",
@@ -601,50 +492,6 @@
       "source_refs": [
         "sost-explorer.html",
         "casert-spec.html"
-      ],
-      "publishability": "public_safe",
-      "last_reviewed": "2026-04-29"
-    },
-    {
-      "item_id": "faq-useful-compute-status",
-      "category": "useful_compute_status",
-      "title": "Are Useful Compute rewards active?",
-      "question": "Are SOST Useful Compute rewards active right now?",
-      "short_answer": "No. Useful Compute infrastructure is live for testing, but rewards are postponed.",
-      "detailed_answer": "The Useful Compute trial worker can be run today against the public worker endpoint, but no rewards are paid for current activity and block 7000 will not activate any rewarded compute window. The rewarded phase is postponed until the final task design is properly defined, tested and announced in advance.",
-      "warnings": [
-        "Do not assume any future Useful Compute reward; activation will be announced explicitly."
-      ],
-      "source_refs": [
-        "useful-compute-trial.html"
-      ],
-      "publishability": "public_safe",
-      "last_reviewed": "2026-04-29"
-    },
-    {
-      "item_id": "faq-ai-engine",
-      "category": "ai_engine_explainer",
-      "title": "What is the SOST AI Engine?",
-      "question": "Does SOST have an AI? Does it make decisions?",
-      "short_answer": "SOST has an internal research and review engine. It does not publish autonomously and it does not decide consensus.",
-      "detailed_answer": "The SOST AI Engine is internal-only. It generates hypotheses, reviews public wording, runs deterministic validators against canonical claims and stores its output in review packs that a human inspects before anything reaches the public website. There is no live public chatbot. Consensus is decided by code and validators, not by external models.",
-      "warnings": [],
-      "source_refs": [
-        "sost-ai-engine.html"
-      ],
-      "publishability": "public_safe",
-      "last_reviewed": "2026-04-29"
-    },
-    {
-      "item_id": "faq-materials-public",
-      "category": "materials_engine_public",
-      "title": "Are Materials Engine candidates validated?",
-      "question": "If Materials Engine ranks a formula highly, can I trust it?",
-      "short_answer": "Only when the candidate is explicitly backed by DFT/CHGNet output or known public data. Otherwise it is an internal hypothesis.",
-      "detailed_answer": "Materials Engine produces ranked candidate lists by running deterministic feature scoring over public datasets. A candidate appearing on a list is a starting point for review, not a validated material. The public site only labels a candidate as backed when DFT, CHGNet or peer-reviewed data accompanies it.",
-      "warnings": [],
-      "source_refs": [
-        "sost-materials-engine.html"
       ],
       "publishability": "public_safe",
       "last_reviewed": "2026-04-29"

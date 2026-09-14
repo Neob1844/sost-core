@@ -327,19 +327,6 @@ ctest --output-on-failure
 ```
 
 
-### Materials Discovery Engine
-
-Autonomous computational materials discovery platform. Predicts formation energy and electronic band gap from crystal structure without physical synthesis.
-
-- **Corpus:** 76,193 validated crystalline materials (JARVIS DFT + AFLOW)
-- **Campaign profiles:** 19 discovery profiles including battery, semiconductor, water/lithium/membrane
-- **Functional discovery:** Ion separation, desalination, lithium recovery, membrane candidates
-- **Full-corpus scan:** 35,589 functionally relevant materials screened, 11,339 multi-function candidates identified
-- **Validation bridge:** Prediction → observation lifecycle with reconciliation
-- **Cost:** $0/month — runs entirely on CPU
-
-**Phase 30 — Consensus ranking:** Multi-track consensus ranker, PV false-positive risk flags (6 physics-informed), DFT triage queues (exploit/explore/cross-track). 21 candidates ranked → 11 DFT-queued. Cross-track winner: GaIn.
-
 ## Security
 
 - Build hardening: stack protector, ASLR (PIE), RELRO, FORTIFY_SOURCE — 15/15 tests pass

@@ -21,13 +21,13 @@
 <link rel="icon" type="image/png" href="sost-logo.png?v=v392">
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST Help Center — Mining, Nodes, Useful Compute, DEX, AI Engine</title>
-<meta name="description" content="Safe answers about SOST mining, nodes, Useful Compute, PoPC, DEX, AI Engine. Public, static, no chatbot, no upload.">
+<title>SOST Help Center — Mining, Nodes, DEX, Wallet</title>
+<meta name="description" content="Safe answers about SOST mining, nodes, PoPC and the DEX. Public, static, no chatbot, no upload.">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SOST Help Center">
-<meta property="og:description" content="Safe answers about SOST mining, nodes, Useful Compute, PoPC, DEX, AI Engine.">
+<meta property="og:description" content="Safe answers about SOST mining, nodes, PoPC and the DEX.">
 <meta property="og:url" content="https://sostcore.com/sost-help.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
@@ -138,9 +138,6 @@
       <a href="sost-protocol-spec.html">Layer 1</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
-      <a href="sost-ai-engine.html" style="color:#22d3ee">AI Engine</a>
-      <a href="sost-materials-engine.html">Materials Engine</a>
-      <a href="sost-trinity.html" style="color:#d946ef">Trinity</a>
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
@@ -182,7 +179,7 @@
   <div class="container">
     <div class="hero-label">HELP CENTER &middot; STATIC &middot; NO CHATBOT</div>
     <h1>SOST <span>Help</span> Center</h1>
-    <p class="hero-sub">Safe answers about mining, nodes, Useful Compute, PoPC, the DEX, and the SOST AI Engine. Static content reviewed by a human before publication. No live AI on this page. Nothing leaves your browser.</p>
+    <p class="hero-sub">Safe answers about mining, nodes, PoPC and the DEX. Static content reviewed by a human before publication. No live AI on this page. Nothing leaves your browser.</p>
   </div>
 </header>
 
@@ -193,8 +190,7 @@
       <b>Read this once before anything else:</b>
       <ul>
         <li>SOST will never ask for a private key, recovery words or wallet password.</li>
-        <li>Useful Compute rewards are <b>postponed</b>. Infrastructure is live for testing only.</li>
-        <li>Solo mining has high variance. Expect long gaps with no blocks.</li>
+                <li>Solo mining has high variance. Expect long gaps with no blocks.</li>
         <li>SOST is in <b>pre-market testing</b>. There is no exchange listing and no guaranteed value.</li>
       </ul>
     </div>
@@ -206,7 +202,7 @@
     <div class="section-id">SEARCH</div>
     <h2 class="section-title">Find an answer</h2>
     <div class="search-bar">
-      <input type="search" id="help-search" placeholder="Search the public help center (e.g. 'orphan block', 'threads', 'useful compute')&hellip;" autocomplete="off">
+      <input type="search" id="help-search" placeholder="Search the public help center (e.g. 'orphan block', 'threads', 'node sync')&hellip;" autocomplete="off">
       <select id="help-category" aria-label="Filter by category">
         <option value="">All categories</option>
         <option value="mining_start">Start Mining</option>
@@ -215,11 +211,11 @@
         <option value="no_pools">Why No Pools</option>
         <option value="node_sync">Node Sync</option>
         <option value="casert_explainer">cASERT &amp; Network</option>
-        <option value="useful_compute_status">Useful Compute</option>
+        
         <option value="dex_safety">DEX Safety</option>
         <option value="popc_explainer">PoPC</option>
-        <option value="ai_engine_explainer">AI Engine</option>
-        <option value="materials_engine_public">Materials Engine</option>
+        
+        
         <option value="wallet_safety">Wallet Safety</option>
       </select>
     </div>
@@ -262,7 +258,7 @@
   <div class="container">
     <div class="section-id">HOW THIS PAGE WORKS</div>
     <h2 class="section-title">Static, reviewed, no chatbot</h2>
-    <p>The answers on this page come from a human-reviewed export of the SOST AI Engine. The engine itself is internal and is not reachable from this page. Search runs locally in your browser against <code>data/public_help_index.json</code>; no query is sent to a server. The page works on any modern browser with JavaScript; without it you still see the static fallback above.</p>
+    <p>The answers on this page are written and reviewed by a human before publication. Search runs locally in your browser against <code>data/public_help_index.json</code>; no query is sent to a server. The page works on any modern browser with JavaScript; without it you still see the static fallback above.</p>
     <p>Every answer carries a <code>last_reviewed</code> date and is filtered by a public-claim guard before it is allowed to land here. If you spot wording that looks like overclaim, please report it on the BitcoinTalk thread.</p>
   </div>
 </section>
