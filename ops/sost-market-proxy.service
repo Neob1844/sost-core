@@ -1,0 +1,16 @@
+[Unit]
+Description=SOST market-history gateway (shared cache for the explorer price charts)
+Documentation=https://github.com/Neob1844/sost-core/blob/main/docs/MARKET_PROXY.md
+After=network.target
+
+[Service]
+# Deployed copy lives at /opt/sost/sost-market-proxy.py (cp'd from ops/ on each deploy).
+ExecStart=/usr/bin/python3 /opt/sost/sost-market-proxy.py
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
