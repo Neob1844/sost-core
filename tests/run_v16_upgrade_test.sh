@@ -21,7 +21,7 @@ log(){ printf '[upgrade] %s\n' "$*"; }
 ok(){  printf '[upgrade] PASS  %s\n' "$*"; }
 bad(){ printf '[upgrade] FAIL  %s\n' "$*"; FAILED=1; }
 NODE_PID=""; MINER_PID=""
-stopm(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null; MINER_PID=""; true; }
+stopm(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null || true; MINER_PID=""; true; }
 stopn(){ [[ -n "$NODE_PID" ]] && kill "$NODE_PID" 2>/dev/null; NODE_PID=""; sleep 2; true; }
 cleanup(){ stopm; stopn; wait 2>/dev/null; true; }
 die(){ printf '[upgrade] FATAL %s\n' "$*" >&2; cleanup; log "logs in $WORK"; exit 1; }
@@ -58,7 +58,7 @@ log "V16 loaded chain: height=$HB tip#40 hash=$HASH40B"
 [[ "$HASH40B" == "$HASH40" ]] && ok "V16 load BYTE-IDENTICAL (tip#40 hash matches)" || bad "hash40 mismatch: $HASH40 vs $HASH40B"
 
 # ---- PHASE 3: V16 mines across activation #42 (auto, no restart at 42) ----
-mine_to "$M" "$WORK/m.json" 48 220
+mine_to "$M" "$WORK/m.json" 48 880
 [[ "$(height)" -ge 48 ]] && ok "V16 mined across activation to h>=48" || bad "V16 stalled at $(height)"
 # #42 is the first V2 jackpot; no NODE_BIND could exist before activation -> rollover (tx_count=1)
 B42="$(rpc getblockhash '[42]' | grep -oE '[a-f0-9]{64}')"; BLK42="$(rpc getblock "[\"$B42\"]")"

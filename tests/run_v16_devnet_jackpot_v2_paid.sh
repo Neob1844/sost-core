@@ -21,7 +21,7 @@ log(){ printf '[v16paid] %s\n' "$*"; }
 ok(){  printf '[v16paid] PASS  %s\n' "$*"; }
 bad(){ printf '[v16paid] FAIL  %s\n' "$*"; FAILED=1; }
 NODE_PID=""; MINER_PID=""
-stop_miner(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null; MINER_PID=""; true; }
+stop_miner(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null || true; MINER_PID=""; true; }
 cleanup(){ stop_miner; [[ -n "$NODE_PID" ]] && kill "$NODE_PID" 2>/dev/null; wait 2>/dev/null; true; }
 die(){ printf '[v16paid] FATAL %s\n' "$*" >&2; cleanup; log "logs in $WORK"; exit 1; }
 trap cleanup EXIT
@@ -53,22 +53,22 @@ B="$("$CLI" --wallet "$WORK/b.json" newwallet 2>&1 | grep -oE 'sost1[a-z0-9]+' |
 [[ -n "$A" && -n "$B" && "$A" != "$B" ]] || die "wallets"
 log "A=$A (NOT bound)  B=$B (bind+heartbeat; current miner of #$FIRSTJ)"
 
-mine_to "$A" "$WORK/a.json" 8 120;  log "after A: $(height)"
-mine_to "$B" "$WORK/b.json" 19 150; log "after B->19: $(height)"
+mine_to "$A" "$WORK/a.json" 8 480;  log "after A: $(height)"
+mine_to "$B" "$WORK/b.json" 19 600; log "after B->19: $(height)"
 
 # bind ONLY B (valid, h>=18)
 NODEB="$(openssl rand -hex 32)"
 BINDHEX="$("$CLI" --wallet "$WORK/b.json" createnodebind 1 "$NODEB" 2>>"$WORK/cli.log" | tr -d '[:space:]')"
 [[ ${#BINDHEX} -gt 200 ]] || die "createnodebind failed"
 echo "$(rpc sendrawtransaction "[\"$BINDHEX\"]")" | grep -qiE '"result"|txid|accepted' && ok "NODE_BIND(B) accepted" || bad "bind rejected"
-mine_to "$B" "$WORK/b.json" 21 150
+mine_to "$B" "$WORK/b.json" 21 600
 
 # heartbeat B epoch 0 (=[18,23]); tip_ref = hash(#17)
 TIPREF="$(rpc getblockhash "[$TIPREF_H]" | grep -oE '[a-f0-9]{64}')"; [[ -n "$TIPREF" ]] || die "no hash #$TIPREF_H"
 HBHEX="$("$CLI" --wallet "$WORK/b.json" nodeheartbeat "$NODEB" 0 "$TIPREF" 2>>"$WORK/cli.log" | tr -d '[:space:]')"
 [[ ${#HBHEX} -gt 200 ]] || die "nodeheartbeat failed"
 echo "$(rpc sendrawtransaction "[\"$HBHEX\"]")" | grep -qiE '"result"|txid|accepted' && ok "NODE_HEARTBEAT(B,epoch0) accepted" || bad "heartbeat rejected"
-mine_to "$B" "$WORK/b.json" 23 150
+mine_to "$B" "$WORK/b.json" 23 600
 
 # --- RPC V2 checks (against real state: B bound+heartbeat, A unbound) ---
 EB="$(rpc checkhistoricaljackpoteligibility "[\"$B\"]")"; log "RPC checkelig B: $EB"

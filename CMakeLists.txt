@@ -121,6 +121,27 @@ if(SOST_DEVNET_FORKS)
     message(WARNING "SOST_DEVNET_FORKS=ON -- DEVNET_FAST fast-mine chain. Profile::DEV only. NEVER deploy to mainnet or testnet.")
 endif()
 
+# include/sost/params.h selects HIST_JACKPOT_V2_HEIGHT = 18 instead of 42 when this macro
+# is defined, which is what lets a V2 winner actually be PAID on devnet: by the time the
+# standard devnet reaches #42 the tiny reserve has already been drained by the V15
+# jackpots at 24/30/36, so only a first-jackpot-at-#24 build can exercise the payout path.
+#
+# It had no option() here, so -DSOST_DEVNET_V2_FIRST_JACKPOT=ON on the cmake line set a
+# CMake variable nobody read: the compiler never saw the macro and the build came out with
+# activation 42 while claiming to be an activation-18 build. Every test that depended on it
+# then failed for a reason that had nothing to do with consensus. Wiring it here removes
+# the trap; the tests verify the activation over RPC as well, rather than trusting the flag.
+option(SOST_DEVNET_V2_FIRST_JACKPOT
+    "DEVNET only: put the V2 activation at #18 so the FIRST jackpot (#24) is a V2 jackpot and can be paid."
+    OFF)
+if(SOST_DEVNET_V2_FIRST_JACKPOT)
+    if(NOT SOST_DEVNET_FORKS)
+        message(FATAL_ERROR "SOST_DEVNET_V2_FIRST_JACKPOT requires SOST_DEVNET_FORKS=ON — it only moves the DEVNET activation height.")
+    endif()
+    add_compile_definitions(SOST_DEVNET_V2_FIRST_JACKPOT)
+    message(WARNING "SOST_DEVNET_V2_FIRST_JACKPOT=ON -- DEVNET V2 activation moved to #18. Test builds only.")
+endif()
+
 if(SOST_ENABLE_PHASE2_SBPOW)
     include(CheckIncludeFiles)
     include(CheckSymbolExists)

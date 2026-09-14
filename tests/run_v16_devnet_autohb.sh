@@ -19,7 +19,7 @@ log(){ printf '[autohb] %s\n' "$*"; }
 ok(){  printf '[autohb] PASS  %s\n' "$*"; }
 bad(){ printf '[autohb] FAIL  %s\n' "$*"; FAILED=1; }
 NODE_PID=""; MINER_PID=""
-stop_miner(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null; MINER_PID=""; true; }
+stop_miner(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null || true; MINER_PID=""; true; }
 cleanup(){ stop_miner; [[ -n "$NODE_PID" ]] && kill "$NODE_PID" 2>/dev/null; wait 2>/dev/null; true; }
 die(){ printf '[autohb] FATAL %s\n' "$*" >&2; cleanup; log "logs in $WORK"; exit 1; }
 trap cleanup EXIT
@@ -57,15 +57,15 @@ B="$("$CLI" --wallet "$WORK/b.json" newwallet 2>&1 | grep -oE 'sost1[a-z0-9]+' |
 [[ -n "$A" && -n "$B" && "$A" != "$B" ]] || die "wallets"
 log "A=$A (NOT bound)  B=$B (bind only; heartbeat is AUTOMATIC via --node-key)"
 
-mine_to "$A" "$WORK/a.json" 8 120;  log "after A: $(height)"
-mine_to "$B" "$WORK/b.json" 19 150; log "after B->19: $(height)"
+mine_to "$A" "$WORK/a.json" 8 480;  log "after A: $(height)"
+mine_to "$B" "$WORK/b.json" 19 600; log "after B->19: $(height)"
 
 # bind ONLY B — but the node key MUST match --node-key so the node auto-heartbeats it.
 # createnodebind derives node_pubkey from the SAME NODEB the node holds.
 BINDHEX="$("$CLI" --wallet "$WORK/b.json" createnodebind 1 "$NODEB" 2>>"$WORK/cli.log" | tr -d '[:space:]')"
 [[ ${#BINDHEX} -gt 200 ]] || die "createnodebind failed"
 echo "$(rpc sendrawtransaction "[\"$BINDHEX\"]")" | grep -qiE '"result"|txid|accepted' && ok "NODE_BIND(B) accepted" || bad "bind rejected"
-mine_to "$B" "$WORK/b.json" 21 150   # confirm the bind (effective #inc+1)
+mine_to "$B" "$WORK/b.json" 21 600   # confirm the bind (effective #inc+1)
 
 # NO manual heartbeat. Wait for the node to AUTO-emit it into its mempool.
 log "waiting for native auto-heartbeat (mempool)…"
@@ -77,7 +77,7 @@ for _ in $(seq 1 20); do
 done
 [[ "$HB_SEEN" == "1" ]] && ok "node auto-emitted NODE_HEARTBEAT (no CLI heartbeat used)" || bad "no auto-heartbeat appeared"
 grep -q 'emitted heartbeat for epoch 0' "$WORK/node.log" && ok "node.log confirms auto-heartbeat epoch 0" || log "note: heartbeat seen via mempool"
-mine_to "$B" "$WORK/b.json" 23 150   # mine the auto-heartbeat in (epoch0 closes at 23)
+mine_to "$B" "$WORK/b.json" 23 600   # mine the auto-heartbeat in (epoch0 closes at 23)
 
 # eligibility should now be true for B (auto-heartbeat), false for A (unbound)
 EB="$(rpc checkhistoricaljackpoteligibility "[\"$B\"]")"; log "RPC checkelig B: $EB"

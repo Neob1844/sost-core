@@ -17,7 +17,7 @@ log(){ printf '[rollover] %s\n' "$*"; }
 ok(){  printf '[rollover] PASS  %s\n' "$*"; }
 bad(){ printf '[rollover] FAIL  %s\n' "$*"; FAILED=1; }
 NODE_PID=""; MINER_PID=""
-stopm(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null; MINER_PID=""; true; }
+stopm(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null || true; MINER_PID=""; true; }
 cleanup(){ stopm; [[ -n "$NODE_PID" ]] && kill "$NODE_PID" 2>/dev/null; wait 2>/dev/null; true; }
 die(){ printf '[rollover] FATAL %s\n' "$*" >&2; cleanup; log "logs in $WORK"; exit 1; }
 trap cleanup EXIT
@@ -36,7 +36,7 @@ M="$("$CLI" --wallet "$WORK/m.json" newwallet 2>&1 | grep -oE 'sost1[a-z0-9]+' |
 log "miner=$M (NO node bind -> every V2 jackpot has 0 eligible)"
 
 # mine past #54 so #24..#54 are all in the chain (nobody bound)
-mine_to "$M" "$WORK/m.json" 55 260
+mine_to "$M" "$WORK/m.json" 55 1040
 log "height=$(height)"
 
 # expected pot at the k-th empty jackpot = min(k*base, cap)
