@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-14-v427-header-equal-tiles-swap-banner-collapsible-market-persistence">
+<meta name="explorer-html-version" content="2026-09-14-v428-out-of-range-dims-all-charts">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -7658,6 +7658,9 @@ function fetchHist(id,days,vsOrCb,cb){
           finish('ok');
         } else if(d&&d.source_status==='out_of_range'){
           _outOfRange[ck]=true;
+          // Dim that timeframe on every chart that shares the series, not only on the one
+          // that happened to ask: the range is unavailable for all of them equally.
+          try{['xaut','paxg','xautbtc','paxgbtc'].forEach(checkTfAvail);}catch(e){}
           finish('out_of_range');
         } else if(!r.ok){
           var e=(d&&d.error)||'http_error';
