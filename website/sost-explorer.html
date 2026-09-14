@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-14-v428-out-of-range-dims-all-charts">
+<meta name="explorer-html-version" content="2026-09-14-v429-jackpot-card-last-winner">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8850,7 +8850,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div></div>'+
       '</div>'+
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+esc(status)+'</div>'+
-        '<div class="sjpd-l" style="margin-top:8px">WINNER</div><div class="sjpd-v" style="font-size:13px">'+esc(winner)+'</div></div>'+
+        '<div class="sjpd-l" style="margin-top:8px">LAST WINNER</div><div class="sjpd-v" style="font-size:13px">'+esc(winner)+'</div></div>'+
       '<div class="sjpd-sec">DTD JACKPOT ELIGIBILITY</div>'+
       '<div class="sjpd-note">The DTD Jackpot reuses the DTD winner but with a <b>wider recency window: 20,000 blocks</b> (vs 5,000 for the normal draw), plus the same gates (recent-producer cooldown (miner of one of the last 6 blocks), anti-dominance, SbPoW). '+
         'Recently active producers (last 288 blocks): <b>'+esc(elig)+'</b>. '+(state.jpEligible!=null?('The exact eligible producer <b>count</b> for the last jackpot (#'+fc(state.jpHeight||JP_FIRST)+', 20,000-window, canonical via getlotteryaudit): <b>'+esc(state.jpEligible)+'</b>. '):('The exact 20,000-window count becomes available from getlotteryaudit once the first jackpot block (#'+fc(JP_FIRST)+') is mined. '))+'For the full per-address list, see the DTD panel: '+

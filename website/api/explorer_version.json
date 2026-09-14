@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-14-v428-out-of-range-dims-all-charts",
-  "note": "Follow-up to v427: a range the data source cannot serve now dims that timeframe button on every chart that shares the series, not only on the one that happened to request it. Verified live: 3Y and 5Y settle on \"extended history unavailable\" across all six series in both overlays, with no spinner left behind."
+  "v": "2026-09-14-v429-jackpot-card-last-winner",
+  "note": "DTD Jackpot dashboard: the address field is labelled LAST WINNER instead of WINNER. It shows the winner of the jackpot that already paid, not of the one being counted down to, and WINNER next to a live NEXT JACKPOT countdown read as if that address had already won the upcoming draw."
 }
