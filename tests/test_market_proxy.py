@@ -341,5 +341,63 @@ class ProviderRangeCap(unittest.TestCase):
         self.assertEqual(reason, 'out_of_range')
 
 
+class BackgroundWarm(unittest.TestCase):
+    """The trickle refresh keeps the working set warm without fetching speculatively."""
+
+    def setUp(self):
+        self.fake = FakeUpstream()
+        reset(self.fake)
+
+    def _one_pass(self):
+        """Run exactly one iteration of the warm loop's body."""
+        now = time.time()
+        due = None
+        with mp._cache_lock:
+            for key, entry in mp._cache.items():
+                if entry.get('status') == 'out_of_range':
+                    continue
+                days = int(key.split('|')[2])
+                age = now - entry['fetched_at']
+                if age < mp.TTL[days] * mp.WARM_LEAD:
+                    continue
+                if due is None or age / mp.TTL[days] > due[1]:
+                    due = (key, age / mp.TTL[days])
+        if not due:
+            return None
+        key = due[0]
+        asset, vs, days = key.split('|')
+        mp._refresh(key, asset, vs, int(days))
+        return key
+
+    def test_nothing_is_fetched_speculatively(self):
+        self.assertIsNone(self._one_pass())
+        self.assertEqual(self.fake.calls, [])
+
+    def test_a_fresh_entry_is_left_alone(self):
+        mp.get_series('bitcoin', 'usd', 30)
+        self.assertIsNone(self._one_pass())
+        self.assertEqual(len(self.fake.calls), 1)
+
+    def test_an_entry_near_expiry_is_refreshed(self):
+        mp.get_series('bitcoin', 'usd', 30)
+        mp._cache['bitcoin|usd|30']['fetched_at'] -= mp.TTL[30] * 0.9
+        self.assertEqual(self._one_pass(), 'bitcoin|usd|30')
+        self.assertEqual(len(self.fake.calls), 2)
+
+    def test_a_range_the_plan_cannot_serve_is_never_re_asked(self):
+        self.fake.mode = 'out_of_range'
+        mp.get_series('pax-gold', 'btc', 1825)
+        mp._cache['pax-gold|btc|1825']['fetched_at'] -= mp.OUT_OF_RANGE_TTL * 2
+        self.assertIsNone(self._one_pass())
+        self.assertEqual(len(self.fake.calls), 1)
+
+    def test_it_picks_the_most_overdue_entry(self):
+        mp.get_series('bitcoin', 'usd', 30)
+        mp.get_series('bitcoin', 'usd', 7)
+        mp._cache['bitcoin|usd|30']['fetched_at'] -= mp.TTL[30] * 0.85
+        mp._cache['bitcoin|usd|7']['fetched_at'] -= mp.TTL[7] * 1.5
+        self.assertEqual(self._one_pass(), 'bitcoin|usd|7')
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

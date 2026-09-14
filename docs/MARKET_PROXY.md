@@ -105,6 +105,22 @@ history.
 If a paid plan is ever added, this classification is the only thing that has to
 change for 3Y and 5Y to start working.
 
+## Keeping the working set warm
+
+A trickle of background refreshes keeps entries that somebody has already asked
+for from going cold, so a visitor does not pay for a cold fetch and does not
+depend on arriving at the right moment.
+
+* Nothing is fetched speculatively — only series already in the cache.
+* One at a time, 20 s apart, through the same dedup and concurrency limits as a
+  request, so it can never contribute to a burst.
+* It picks the most overdue entry once it is 75% through its TTL, and refreshes
+  it directly rather than through the cache path, which would otherwise just hand
+  the entry back.
+* Ranges the plan cannot serve are skipped entirely.
+
+A failure in a warm pass is swallowed: warming must never take the service down.
+
 ## Client
 
 `website/sost-explorer.html` calls only this endpoint. There is deliberately

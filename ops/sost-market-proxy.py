@@ -326,7 +326,58 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
 
+WARM_INTERVAL = 20          # seconds between background refreshes
+WARM_LEAD = 0.75            # refresh once an entry is this far through its TTL
+
+
+def _warm_loop():
+    """Keep the working set warm with a trickle, so a visitor never pays for a cold
+    entry and never depends on arriving at the right moment.
+
+    It only refreshes series somebody has already asked for — nothing is fetched
+    speculatively — one at a time, well spaced, and through the same dedup and
+    concurrency limits as a request. A range the plan cannot serve is skipped."""
+    while True:
+        time.sleep(WARM_INTERVAL)
+        try:
+            now = time.time()
+            due = None
+            with _cache_lock:
+                for key, entry in _cache.items():
+                    if entry.get('status') == 'out_of_range':
+                        continue
+                    days = int(key.split('|')[2])
+                    age = now - entry['fetched_at']
+                    if age < TTL[days] * WARM_LEAD:
+                        continue
+                    if due is None or age / TTL[days] > due[1]:
+                        due = (key, age / TTL[days])
+            if not due:
+                continue
+            key = due[0]
+            asset, vs, days = key.split('|')
+            days = int(days)
+            # Refresh directly rather than through get_series: the entry is still inside
+            # its TTL — that is the point of warming it early — so get_series would just
+            # hand back the cache. Take the in-flight slot so a real request arriving now
+            # waits for this fetch instead of starting a second one.
+            with _inflight_lock:
+                if key in _inflight:
+                    continue            # a request is already fetching it
+                ev = threading.Event()
+                _inflight[key] = ev
+            try:
+                _refresh(key, asset, vs, days)
+            finally:
+                with _inflight_lock:
+                    _inflight.pop(key, None)
+                ev.set()
+        except Exception:
+            pass                        # a warm pass must never take the service down
+
+
 def main():
+    threading.Thread(target=_warm_loop, daemon=True).start()
     srv = ThreadingHTTPServer(LISTEN, Handler)
     srv.daemon_threads = True
     srv.serve_forever()
