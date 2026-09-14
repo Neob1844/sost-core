@@ -21,6 +21,7 @@
 #include "sost/sbpow.h"        // MinerPubkey, MinerSignature, verify_sbpow_signature, derive_pkh_from_pubkey
 #include "sost/types.h"        // Bytes32
 #include "sost/tx_signer.h"    // PubKeyHash
+#include "sost/transaction.h"  // Transaction, TxOutput, OUT_NODE_PROTOCOL, TX_TYPE_NODE_*
 
 namespace sost::node_participation {
 
@@ -54,6 +55,29 @@ bool deserialize_heartbeat(const std::vector<uint8_t>&, NodeHeartbeatTx&);
 // ---- Signing messages (domain-separated; NEVER reuse the DTD/block message) -
 Bytes32 bind_message(const PubKeyHash& mining_pkh, const NodePubKey& node_pubkey, uint64_t bind_seq);
 Bytes32 heartbeat_message(const NodePubKey& node_pubkey, uint64_t epoch_idx, const Bytes32& tip_ref_hash);
+
+// ---- Transaction transport (single 0-value OUT_NODE_PROTOCOL output) --------
+// A node tx is: tx_type in {NODE_BIND, NODE_HEARTBEAT}; NO inputs; EXACTLY one
+// output of type OUT_NODE_PROTOCOL with amount==0 and payload == the canonical
+// bytes. OUT_NODE_PROTOCOL is NEVER spendable (see output_is_spendable).
+enum class NodeTxKind { None, Bind, Heartbeat };
+
+// True unless the output type is a non-spendable protocol-data output. The UTXO
+// create path uses this to keep OUT_NODE_PROTOCOL out of the spendable set.
+inline bool output_is_spendable(uint8_t out_type) { return out_type != OUT_NODE_PROTOCOL; }
+
+Transaction build_node_bind_tx(const NodeBindTx&);
+Transaction build_node_heartbeat_tx(const NodeHeartbeatTx&);
+
+// Classify by tx_type only (cheap). Returns None for non-node txs.
+NodeTxKind classify_node_tx(const Transaction&);
+
+// Canonical extraction + shape validation (NOT signature). Enforces: correct
+// tx_type; zero inputs; exactly one output; output.type==OUT_NODE_PROTOCOL;
+// amount==0; payload size EXACT; canonical decode with no trailing bytes.
+// Returns false (with reason) on any deviation -> the block/tx is INVALID.
+bool extract_bind(const Transaction&, NodeBindTx& out, const char** reason = nullptr);
+bool extract_heartbeat(const Transaction&, NodeHeartbeatTx& out, const char** reason = nullptr);
 
 // ---- Structural validation (activation guard + fields + signature) ----------
 struct BindCheck { bool ok{false}; PubKeyHash mining_pkh{}; const char* reason{"ok"}; };

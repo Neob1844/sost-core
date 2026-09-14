@@ -304,7 +304,11 @@ bool Transaction::Serialize(std::vector<Byte>& out, std::string* err) const {
     out.clear();
 
     // Validate structural constraints before serializing
-    if (inputs.empty()) {
+    // V16: node-participation txs (NODE_BIND/NODE_HEARTBEAT) are 0-input protocol
+    // txs (payload rides in a single OUT_NODE_PROTOCOL output). All other txs
+    // still require >= 1 input.
+    if (inputs.empty()
+        && tx_type != TX_TYPE_NODE_BIND && tx_type != TX_TYPE_NODE_HEARTBEAT) {
         if (err) *err = "Transaction::Serialize: no inputs";
         return false;
     }
@@ -352,7 +356,8 @@ bool Transaction::Deserialize(const std::vector<Byte>& in,
     // Inputs
     uint64_t num_inputs = 0;
     if (!ReadCompactSize(in, offset, num_inputs, err)) return false;
-    if (num_inputs == 0) {
+    if (num_inputs == 0
+        && tmp.tx_type != TX_TYPE_NODE_BIND && tmp.tx_type != TX_TYPE_NODE_HEARTBEAT) {
         if (err) *err = "Transaction::Deserialize: zero inputs";
         return false;
     }

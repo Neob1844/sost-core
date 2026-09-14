@@ -342,6 +342,60 @@ static void test_payout_integration() {
 }
 
 // ---------------------------------------------------------------------------
+// Transaction transport: single 0-value OUT_NODE_PROTOCOL output, non-spendable.
+static void test_tx_encoding() {
+    NodeBindTx b = make_bind(2, 3, 7);
+    Transaction tx = build_node_bind_tx(b);
+    TEST("bind tx: tx_type NODE_BIND", tx.tx_type == TX_TYPE_NODE_BIND);
+    TEST("bind tx: no inputs", tx.inputs.empty());
+    TEST("bind tx: exactly 1 output", tx.outputs.size() == 1);
+    TEST("bind tx: output OUT_NODE_PROTOCOL, amount 0",
+         tx.outputs[0].type == OUT_NODE_PROTOCOL && tx.outputs[0].amount == 0);
+    TEST("classify -> Bind", classify_node_tx(tx) == NodeTxKind::Bind);
+    NodeBindTx got; const char* rs = nullptr;
+    TEST("extract_bind round-trips", extract_bind(tx, got, &rs)
+         && got.mining_pubkey == b.mining_pubkey && got.bind_seq == b.bind_seq && got.mining_sig == b.mining_sig);
+
+    // full serialized tx bytes
+    std::vector<uint8_t> wire; std::string e;
+    bool sok = tx.Serialize(wire, &e);
+    Transaction hbtx = build_node_heartbeat_tx(make_hb(3, 1, TIP0()));
+    std::vector<uint8_t> hwire; hbtx.Serialize(hwire, &e);
+    printf("  [MEASURED] FULL NODE_BIND TX = %zuB   FULL NODE_HEARTBEAT TX = %zuB\n", wire.size(), hwire.size());
+    TEST("full node txs serialize", sok && wire.size() > NODE_BIND_WIRE_BYTES);
+
+    // full serialize -> deserialize -> extract round trip + txid stable
+    { Transaction back; std::string de;
+      bool dok = Transaction::Deserialize(wire, back, &de);
+      NodeBindTx rb; const char* rr = nullptr;
+      Hash256 id1{}, id2{}; std::string ie;
+      TEST("full node tx serialize->deserialize->extract round-trips",
+           dok && back.tx_type == TX_TYPE_NODE_BIND && extract_bind(back, rb, &rr)
+           && rb.mining_pubkey == b.mining_pubkey && rb.bind_seq == b.bind_seq);
+      TEST("node tx has a stable txid (0-input path works)",
+           tx.ComputeTxId(id1, &ie) && back.ComputeTxId(id2, &ie) && id1 == id2);
+    }
+
+    // non-spendable predicate
+    TEST("OUT_NODE_PROTOCOL is non-spendable", !output_is_spendable(OUT_NODE_PROTOCOL));
+    TEST("OUT_TRANSFER is spendable", output_is_spendable(OUT_TRANSFER));
+
+    // ---- malformed cases (all must FAIL extraction) ----
+    const char* r = nullptr;
+    NodeBindTx tmp;
+    { Transaction t = tx; t.outputs.clear(); TEST("0 outputs -> FAIL", !extract_bind(t, tmp, &r)); }
+    { Transaction t = tx; t.outputs.push_back(t.outputs[0]); TEST("2 outputs -> FAIL", !extract_bind(t, tmp, &r)); }
+    { Transaction t = tx; t.outputs[0].amount = 1; TEST("amount != 0 -> FAIL", !extract_bind(t, tmp, &r)); }
+    { Transaction t = tx; t.outputs[0].payload.pop_back(); TEST("truncated payload -> FAIL", !extract_bind(t, tmp, &r)); }
+    { Transaction t = tx; t.outputs[0].payload.push_back(0); TEST("extra byte -> FAIL", !extract_bind(t, tmp, &r)); }
+    { Transaction t = tx; t.outputs[0].type = OUT_TRANSFER; TEST("wrong output type -> FAIL", !extract_bind(t, tmp, &r)); }
+    { Transaction t = tx; TxInput in{}; t.inputs.push_back(in); TEST("node tx with inputs -> FAIL", !extract_bind(t, tmp, &r)); }
+    { Transaction t = tx; t.tx_type = TX_TYPE_STANDARD; TEST("wrong tx_type -> FAIL", !extract_bind(t, tmp, &r)); }
+    // heartbeat extraction on a bind tx must fail (tx_type disambiguation)
+    { NodeHeartbeatTx h; TEST("extract_heartbeat on bind tx -> FAIL", !extract_heartbeat(tx, h, &r)); }
+}
+
+// ---------------------------------------------------------------------------
 int main() {
     printf("== test_node_participation (V16 NODE_BIND/HEARTBEAT tx layer) ==\n");
     test_serialization();
@@ -352,6 +406,7 @@ int main() {
     test_block_processing();
     test_reindex_parity();
     test_payout_integration();
+    test_tx_encoding();
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail ? 1 : 0;
 }
