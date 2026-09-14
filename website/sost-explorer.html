@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-11-v419-jackpot-dash-reopen-fix">
+<meta name="explorer-html-version" content="2026-09-14-v420-v16-jackpot-notice">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -484,6 +484,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- V16 DTD JACKPOT V2 ADVANCE NOTICE — injected by js/v16-jackpot-notice.js -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div id="sost-v16-notice-mount" style="max-width:1400px;margin:0 auto;padding:0 24px;"></div>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- OFFICIAL CHANNELS BANNER — community invitation + Discord at V13 -->
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -7982,6 +7986,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
+<script src="js/v16-jackpot-notice.js?v=v420" defer></script>
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks
