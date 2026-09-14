@@ -655,8 +655,6 @@ const SECTIONS = [
   { id: 'e2e',        label: 'E2E PROTOCOL',      icon: '[6]' },
   { id: 'otc',        label: 'OTC',               icon: '[7]' },
   { id: 'security',   label: 'SECURITY',          icon: '[8]' },
-  { id: 'materials',  label: 'MATERIALS ENGINE',  icon: '[A]' },
-  { id: 'knowledge',  label: 'AI ENGINE',  icon: '[K]' },
   { id: 'documents',  label: 'DOCUMENTS',         icon: '[B]' },
   { id: 'markets',    label: 'MARKETS',           icon: '[C]' },
   { id: 'tokenomics', label: 'TOKENOMICS',        icon: '[D]' },
@@ -1569,8 +1567,6 @@ function renderSection(id) {
   const sectionLinks = {
     dashboard: '/sost-explorer.html',
     security: '/sost-security.html',
-    materials: '/sost-materials-engine.html',
-    knowledge: '/sost-ai-engine.html',
     documents: '/sost-whitepaper.html',
     markets: '/sost-markets.html',
     dex: '/sost-dex.html',
@@ -2362,130 +2358,6 @@ SectionRenderers.security = function(el) {
 };
 
 
-// ── MATERIALS ENGINE ───────────────────────────────────────────
-SectionRenderers.materials = function(el) {
-  el.style.padding = '16px';
-  el.style.overflow = 'auto';
-  el.innerHTML = `
-    <div class="pip-panel">
-      <h2>// MATERIALS ENGINE v3.2.0</h2>
-      <p>Autonomous computational materials discovery. GNN predictions from crystal structure.</p>
-      <div class="stat-row"><span class="stat-label">MATERIALS IN DB</span><span class="stat-value stat-ok">76,193</span></div>
-      <div class="stat-row"><span class="stat-label">CAMPAIGNS</span><span class="stat-value">29 profiles · 16 industrial domains</span></div>
-      <div class="stat-row"><span class="stat-label">CANDIDATES</span><span class="stat-value">50+ validated</span></div>
-      <div class="stat-row"><span class="stat-label">MODELS</span><span class="stat-value">CGCNN + ALIGNN-Lite + CHGNet</span></div>
-      <div class="stat-row"><span class="stat-label">COST</span><span class="stat-value">$0/month (CPU workload)</span></div>
-    </div>
-    <div class="pip-panel">
-      <h2>// FEATURES</h2>
-      <ul style="padding-left:20px">
-        <li>Material Mixer MVP: theoretical candidates from parent pairs</li>
-        <li>Autonomous Discovery Engine: iterative candidate generation</li>
-        <li>22 elemental + 22 compound curated overrides</li>
-        <li>Multilingual search across 9 languages</li>
-        <li>Crystal structure visualization</li>
-        <li>Property prediction (formation energy, band gap)</li>
-      </ul>
-    </div>
-    <div id="mat-tech-locked" class="pip-panel" style="position:relative;min-height:250px;overflow:hidden;">
-      <h2>// TECHNICAL ARCHITECTURE <span style="color:var(--pip-red);font-size:14px">[RESTRICTED]</span></h2>
-      <div id="mat-tech-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;border-radius:8px;min-height:280px;">
-        <p style="color:var(--pip-amber);margin-bottom:12px;font-size:16px;letter-spacing:2px">&#128274; RESTRICTED ACCESS</p>
-        <p style="color:var(--pip-dim);margin-bottom:12px;font-size:12px">Enter credentials to view Materials Engine architecture</p>
-        <div id="mat-app-login-step">
-          <input type="text" id="mat-app-user" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none;margin-bottom:8px" placeholder="admin" autocomplete="username">
-          <input type="password" id="mat-app-pwd" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:14px;padding:8px 16px;width:200px;border-radius:4px;outline:none" placeholder="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')document.getElementById('mat-app-login-btn').click()">
-          <p id="mat-app-msg" style="color:var(--pip-dim);font-size:11px;margin-top:6px;min-height:16px"></p>
-          <button id="mat-app-login-btn" class="pip-btn" style="margin-top:8px;font-size:14px;padding:8px 32px">LOGIN</button>
-        </div>
-        <div id="mat-app-totp-step" style="display:none">
-          <p style="color:var(--pip-amber);font-size:12px;margin-bottom:8px">Two-Factor Authentication</p>
-          <input type="text" id="mat-app-totp" style="background:#111;border:2px solid var(--pip-dim);color:var(--pip);font-family:var(--font);font-size:18px;padding:8px 16px;width:160px;text-align:center;letter-spacing:6px;border-radius:4px;outline:none" placeholder="000000" maxlength="6" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')document.getElementById('mat-app-totp-btn').click()">
-          <p id="mat-app-totp-msg" style="color:var(--pip-dim);font-size:11px;margin-top:6px;min-height:16px"></p>
-          <button id="mat-app-totp-btn" class="pip-btn" style="margin-top:8px;font-size:14px;padding:8px 32px">VERIFY</button>
-        </div>
-        <p id="mat-app-session-info" style="color:var(--pip-dim);margin-top:8px;font-size:9px;display:none">Session: <span id="mat-app-timer">10:00</span> — <span onclick="matAppRefresh()" style="cursor:pointer;color:var(--pip-amber)">REFRESH</span></p>
-        <p style="color:var(--pip-dim);margin-top:8px;font-size:9px">Server-side authentication required</p>
-      </div>
-      <div class="stat-row"><span class="stat-label">CGCNN FORMATION ENERGY</span><span class="stat-value stat-ok">MAE 0.1528 eV/atom</span></div>
-      <div class="stat-row"><span class="stat-label">ALIGNN-LITE BAND GAP</span><span class="stat-value stat-ok">MAE 0.3422 eV</span></div>
-      <div class="stat-row"><span class="stat-label">BACKEND</span><span class="stat-value">PYTHON / FLASK</span></div>
-      <div class="stat-row"><span class="stat-label">ML FRAMEWORK</span><span class="stat-value">PYTORCH</span></div>
-      <div class="stat-row"><span class="stat-label">DATABASE</span><span class="stat-value">76K MATERIALS (MP + CUSTOM)</span></div>
-      <div class="stat-row"><span class="stat-label">INFERENCE</span><span class="stat-value">CGCNN + ALIGNN-LITE</span></div>
-    </div>
-  `;
-  AudioEngine.ambient_beep();
-};
-
-// ── AI ENGINE ───────────────────────────────────────────
-SectionRenderers.knowledge = function(el) {
-  el.style.padding = '16px';
-  el.style.overflow = 'auto';
-  el.innerHTML = `
-    <div class="pip-panel">
-      <h2>// SOST AI ENGINE</h2>
-      <p>Internal autonomous research and validation system. Generates hypotheses, validates against local evidence, detects contradictions, scores utility — across Materials Engine, Geospatial Intelligence, SOST and Useful Compute.</p>
-      <div class="stat-row"><span class="stat-label">STATUS</span><span class="stat-value stat-ok">PHASE 3 · M1+M2+M3+M4+M5+M6</span></div>
-      <div class="stat-row"><span class="stat-label">TESTS</span><span class="stat-value stat-ok">439 / 439 passing</span></div>
-      <div class="stat-row"><span class="stat-label">HYPOTHESIS CAPACITY</span><span class="stat-value">100,000 offline (seconds)</span></div>
-      <div class="stat-row"><span class="stat-label">SOURCE CONNECTORS</span><span class="stat-value">8 (arXiv, OpenAlex, Crossref, PubChem, JARVIS, MP, USGS, generic)</span></div>
-      <div class="stat-row"><span class="stat-label">AUTONOMOUS DAEMON</span><span class="stat-value stat-ok">SHIPPED (manual scripts only)</span></div>
-      <div class="stat-row"><span class="stat-label">NETWORK</span><span class="stat-value stat-ok">OFF by default</span></div>
-      <div class="stat-row"><span class="stat-label">PAID MODELS</span><span class="stat-value stat-ok">OFF by default</span></div>
-      <div class="stat-row"><span class="stat-label">PUBLIC OUTPUTS</span><span class="stat-value stat-warn">Human review required · daemon never publishes</span></div>
-    </div>
-
-    <div class="pip-panel">
-      <h2>// PIPELINE</h2>
-      <ul style="padding-left:20px;margin-bottom:12px">
-        <li>Mass local hypothesis generation (10s to 100,000)</li>
-        <li>Deduplication by stable hash + project-specific keys</li>
-        <li>Local evidence search (read-only docs/, reports/, outputs/)</li>
-        <li>Validator pass with strictest-verdict merge</li>
-        <li>Deterministic ranking (configurable weights)</li>
-        <li>Top-N selection per campaign</li>
-        <li>AI council on top-K only (validator-veto, not majority vote)</li>
-        <li>Applicability profile: utility, FP risk, validation pathway</li>
-        <li>Report + dashboard + SQLite log</li>
-        <li>Human review before any public claim or DFT promotion</li>
-      </ul>
-    </div>
-
-    <div class="pip-panel">
-      <h2>// MILESTONES</h2>
-      <div class="stat-row"><span class="stat-label">M1 EVIDENCE CORE</span><span class="stat-value stat-ok">SHIPPED</span></div>
-      <div class="stat-row"><span class="stat-label">M2 VALIDATORS</span><span class="stat-value stat-ok">SHIPPED</span></div>
-      <div class="stat-row"><span class="stat-label">M3 HYPOTHESIS FACTORY</span><span class="stat-value stat-ok">SHIPPED</span></div>
-      <div class="stat-row"><span class="stat-label">M4 APPLICABILITY</span><span class="stat-value stat-ok">SHIPPED</span></div>
-      <div class="stat-row"><span class="stat-label">M5 KNOWLEDGE CONNECTORS</span><span class="stat-value stat-ok">SHIPPED</span></div>
-      <div class="stat-row"><span class="stat-label">M6 AUTONOMOUS DAEMON</span><span class="stat-value stat-ok">SHIPPED</span></div>
-      <div class="stat-row"><span class="stat-label">M7 LIVE AI WIRING</span><span class="stat-value stat-warn">DEFERRED</span></div>
-    </div>
-
-    <div class="pip-panel">
-      <h2>// PROJECT INTEGRATIONS</h2>
-      <div class="stat-row"><span class="stat-label">MATERIALS ENGINE</span><span class="stat-value">DFT priority + FP cleanup + family heuristics</span></div>
-      <div class="stat-row"><span class="stat-label">SOST PROTOCOL</span><span class="stat-value">consensus / cASERT / explorer wording</span></div>
-      <div class="stat-row"><span class="stat-label">USEFUL COMPUTE</span><span class="stat-value">heavy task design (rewards POSTPONED)</span></div>
-    </div>
-
-    <div class="pip-panel">
-      <h2>// HARD GUARANTEES</h2>
-      <ul style="padding-left:20px">
-        <li>Never publishes autonomous conclusions</li>
-        <li>Never activates Useful Compute rewards</li>
-        <li>Never modifies SOST consensus</li>
-        <li>Never signs transactions or moves funds</li>
-        <li>Never reads wallet files or private keys</li>
-        <li>Never makes a network call by default</li>
-        <li>Never treats model-only consensus as verified evidence</li>
-      </ul>
-    </div>
-  `;
-  AudioEngine.ambient_beep();
-};
-
 // ── DOCUMENTS ──────────────────────────────────────────────────
 SectionRenderers.documents = function(el) {
   el.style.padding = '16px';
@@ -2895,7 +2767,6 @@ SectionRenderers.roadmap = function(el) {
     <div class="pip-panel">
       <h2>// PHASE 4 — ECOSYSTEM</h2>
       <div class="stat-row"><span class="stat-label">2026-2027</span><span class="stat-value">Exchange listings (post PoPC)</span></div>
-      <div class="stat-row"><span class="stat-label">ONGOING</span><span class="stat-value">Materials Engine integration</span></div>
       <div class="stat-row"><span class="stat-label">ONGOING</span><span class="stat-value">Independent miner + node growth</span></div>
     </div>
     <div class="pip-panel" style="text-align:center;padding:20px">
@@ -3184,7 +3055,6 @@ SectionRenderers.about = function(el) {
     <div class="pip-panel">
       <h2>// ECOSYSTEM</h2>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">SOST CORE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">C++ NODE + MINER + CLI</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">The sovereign proof-of-work blockchain. ConvergenceX mining (~8GB RAM), cASERT per-block difficulty, constitutional 50/25/25 economics. Written in C++17, 28 test suites.</div></div>
-      <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">MATERIALS ENGINE <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">COMPUTATIONAL DISCOVERY</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Materials discovery engine. 76,193 materials corpus. CGCNN + ALIGNN-Lite + CHGNet. 29 campaign profiles, 16 industrial domains, 50+ validated candidates. $0/month on CPU.</div></div>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">BLOCK EXPLORER <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">WEB-BASED</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Real-time blockchain explorer. Block details, transactions, mining status, address balances, difficulty history. Connects directly to the SOST node via RPC.</div></div>
       <div class="stat-row" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="this.querySelector('.eco-tip').style.display=this.querySelector('.eco-tip').style.display==='none'?'block':'none'"><div style="display:flex;justify-content:space-between"><span class="stat-label">WEB WALLET <span style="font-size:9px;opacity:0.4">ⓘ</span></span><span class="stat-value">HD + MULTISIG</span></div><div class="eco-tip" style="display:none;margin-top:6px;padding:8px;background:rgba(0,0,0,0.9);border:1px solid var(--pip-dark);border-radius:4px;font-size:12px;color:var(--pip-dim);line-height:1.6">Browser-based SOST wallet. Send, receive, manage UTXOs. HD wallet with BIP39 seed phrases (12 words). P2SH multisig support. Encrypted local storage.</div></div>
     </div>
@@ -3564,7 +3434,7 @@ if (document.readyState === 'loading') {
 <div id="block-detail-overlay"><div class="bdo-content" id="bdo-content"></div></div>
 <script>
 // === UNIFIED AUTH FOR APP — Server-side only. No client-side fallback. No hardcoded codes. ===
-// Mirrors sost-geospatial.html and sost-materials-engine.html auth flow exactly.
+// Server-side auth flow, shared by every restricted panel in the app.
 (function(){
   function appAuth(prefix, overlayId) {
     var loginBtn = document.getElementById(prefix+'-login-btn');
