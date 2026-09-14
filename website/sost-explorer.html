@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-14-v421-v16-blink-window-and-hashrate-fix">
+<meta name="explorer-html-version" content="2026-09-14-v422-overlay-fetch-dedup-throttle-timeout">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -7560,25 +7560,77 @@ function getData(key){
   return raw;
 }
 
+// ---- CoinGecko request layer (shared by the 4 original charts and the 2 overlays)
+//
+// v422 ROOT CAUSE. fetchHist had no in-flight dedup. The TTL cache is only
+// written when a response lands, so every concurrent caller missed the cache and
+// fired its own request. At page load that is 12 requests for only 5 distinct
+// series (both overlays ask for bitcoin/usd, and at the default 24H both also
+// duplicate the 4 original charts). CoinGecko's keyless tier answers that burst
+// with HTTP 429, whose JSON body carries no `.prices` — the old code treated that
+// exactly like "no data", cached nothing, and invoked cb() with no way to tell a
+// rate-limit from an empty series. A hung request never called cb() at all, so
+// the caller stayed pending forever. That is the whole intermittent-loading /
+// unavailable / false-0-pts family of symptoms.
+//
+// Fix, all inside this layer (callers and cache slots are unchanged):
+//   - dedup identical in-flight requests (one fetch, many callbacks)
+//   - cap concurrency and space requests apart so we stop tripping the limiter
+//   - per-request AbortController + timeout scaled to the range (never shared)
+//   - classify the outcome and pass it to the callback:
+//     'ok' | 'empty' | 'rate_limited' | 'http_error' | 'timeout' | 'network'
+// cb(outcome) is additive: the original charts ignore the argument.
+var _cgInflight={};                 // cacheKey -> [callbacks awaiting this request]
+var _cgQueue=[],_cgActive=0,_cgLastStart=0;
+var CG_MAX_CONCURRENT=2,CG_MIN_GAP=350;
+function _cgTimeoutFor(days){return days<=7?15000:(days<=180?25000:35000);}
+function _cgPump(){
+  if(_cgActive>=CG_MAX_CONCURRENT||!_cgQueue.length)return;
+  var wait=CG_MIN_GAP-(Date.now()-_cgLastStart);
+  if(wait>0){setTimeout(_cgPump,wait);return;}
+  var job=_cgQueue.shift();_cgActive++;_cgLastStart=Date.now();
+  job(function(){_cgActive--;_cgPump();});
+}
+function _cgEnqueue(job){_cgQueue.push(job);_cgPump();}
+
 function fetchHist(id,days,vsOrCb,cb){
   // Backwards-compatible: fetchHist(id,days,cb) defaults vs=usd.
   var vs='usd';
   if(typeof vsOrCb==='function'){cb=vsOrCb;}
   else if(typeof vsOrCb==='string'){vs=vsOrCb;}
   var nsKey=cKey(id,vs);
-  var ck=nsKey+'_'+days;
+  var ck=nsKey+'_'+days;                       // cache key = asset + vs pair + range
   if(cache[nsKey]&&cache[nsKey][days]&&cacheTimes[ck]&&(Date.now()-cacheTimes[ck]<CACHE_TTL)){
-    if(cb)cb();return;
+    if(cb)cb('ok');return;
   }
-  fetch('https://api.coingecko.com/api/v3/coins/'+id+'/market_chart?vs_currency='+vs+'&days='+days)
-  .then(function(r){return r.json();}).then(function(d){
-    if(d&&d.prices&&d.prices.length>0){
-      if(!cache[nsKey])cache[nsKey]={};
-      cache[nsKey][days]=d.prices;
-      cacheTimes[ck]=Date.now();
+  if(_cgInflight[ck]){if(cb)_cgInflight[ck].push(cb);return;}   // same request already running
+  _cgInflight[ck]=cb?[cb]:[];
+  _cgEnqueue(function(done){
+    var ctl=(typeof AbortController!=='undefined')?new AbortController():null;  // per request
+    var timedOut=false,finished=false;
+    var timer=setTimeout(function(){timedOut=true;if(ctl){try{ctl.abort();}catch(e){}}},_cgTimeoutFor(days));
+    function finish(outcome){
+      if(finished)return;finished=true;
+      clearTimeout(timer);
+      var cbs=_cgInflight[ck]||[];delete _cgInflight[ck];
+      done();
+      for(var i=0;i<cbs.length;i++){try{cbs[i](outcome);}catch(e){}}
     }
-    if(cb)cb();
-  }).catch(function(){if(cb)cb();});
+    var url='https://api.coingecko.com/api/v3/coins/'+id+'/market_chart?vs_currency='+vs+'&days='+days;
+    fetch(url,ctl?{signal:ctl.signal}:undefined).then(function(r){
+      if(r.status===429){finish('rate_limited');return;}
+      if(!r.ok){finish('http_error');return;}
+      return r.json().then(function(d){
+        if(d&&d.prices&&d.prices.length>0){
+          if(!cache[nsKey])cache[nsKey]={};
+          cache[nsKey][days]=d.prices;
+          cacheTimes[ck]=Date.now();
+          finish('ok');
+        } else if(d&&d.status&&d.status.error_code===429){finish('rate_limited');}
+        else {finish('empty');}
+      },function(){finish('http_error');});
+    },function(){finish(timedOut?'timeout':'network');});
+  });
 }
 
 function drawChart(key){
@@ -7861,7 +7913,7 @@ setInterval(refresh,60000);
   ];
   var ovTf={ovxaut:'24H',ovpaxg:'24H'};
   var ovReq={ovxaut:0,ovpaxg:0};       // request generation per chart (stale-response guard)
-  var ovState={ovxaut:{},ovpaxg:{}};   // per-series load state: 'pending' | 'ready' | 'error'
+  var ovState={ovxaut:{},ovpaxg:{}};   // per-series state: 'pending'|'ready'|'empty'|'error' (never inferred from point count)
   function ovSeries(id,vs,tf){ var ck=cKey(id,vs),def=TF_MAP[tf]; var raw=(cache[ck]&&cache[ck][def.days])||[]; if(!raw.length)return[]; if(def.ms){var cut=Date.now()-def.ms;return raw.filter(function(pp){return pp[0]>=cut;});} return raw; }
   function ovFmt1(fmt,v){ return fmt==='btc'?fmtBtc(v):fmtUsd(v); }
   function ovScale(arr){ var vs=arr.map(function(p){return p[1];}); var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs); var r=mx-mn; if(r===0)r=mn*0.001||1; mn-=r*0.05; mx+=r*0.05; return {mn:mn,mx:mx,rng:(mx-mn)||1}; }
@@ -7870,9 +7922,14 @@ setInterval(refresh,60000);
   function ovNorm(arr){ if(!arr.length)return[]; var base=arr[0][1]||1; return arr.map(function(pp){return [pp[0], 100*pp[1]/base];}); }
   function updOvRange(cfg,A,B,C){
     var el=document.getElementById(cfg.key+'Range'); if(!el)return;
+    // Honest status: '0 pts' is NEVER printed for a series that is still in
+    // flight, and a READY series whose points all fall outside the selected
+    // window says so instead of reading as an empty provider response.
     function tok(k,arr,extra){ var st=ovState[cfg.key][k];
-      if(st==='pending') return cfg[k].label+': loading…';
+      if(!st||st==='pending') return cfg[k].label+': loading…';
       if(st==='error')   return cfg[k].label+': unavailable';
+      if(st==='empty')   return cfg[k].label+': no data';
+      if(!arr.length)    return cfg[k].label+': no data in window';
       return cfg[k].label+': '+arr.length+' pts'+(extra||''); }
     var parts=[tok('a',A,''), tok('b',B,'')];
     if(cfg.c) parts.push(tok('c',C,' (norm 100)'));
@@ -7887,7 +7944,8 @@ setInterval(refresh,60000);
     ctx.strokeStyle='#111';ctx.lineWidth=1;
     for(var g=1;g<=3;g++){var gy=pT+ch*g/4;ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(pL+cw,gy);ctx.stroke();}
     if(A.length<2&&B.length<2&&C.length<2){
-      var anyPending=(ovState[cfg.key].a==='pending'||ovState[cfg.key].b==='pending'||(cfg.c&&ovState[cfg.key].c==='pending'));
+      var _pend=function(k){var st=ovState[cfg.key][k];return !st||st==='pending';};
+      var anyPending=(_pend('a')||_pend('b')||(cfg.c&&_pend('c')));
       var total=cfg.c?3:2, ready=0; ['a','b','c'].forEach(function(k){ if(cfg[k]&&ovState[cfg.key][k]==='ready')ready++; });
       ctx.fillStyle='#333';ctx.font='11px '+codeFont;ctx.textAlign='center';
       ctx.fillText(anyPending?('Loading historical data… ('+ready+'/'+total+')'):'No data available for this period',pL+cw/2,pT+ch/2);
@@ -7943,15 +8001,27 @@ setInterval(refresh,60000);
   // Per-series fetch: reqId-guarded (a newer timeframe abandons this one; a stale
   // response is discarded — never overwrites the current selection), retry+backoff,
   // and each series resolves INDEPENDENTLY setting its own state (pending/ready/error).
+  // Retry budget is driven by WHY the request failed, not by a flat counter: a
+  // rate limit needs to outlast CoinGecko's window (the old flat 0.9/1.8/2.7/3.6s
+  // ladder gave up after ~9s and painted 'unavailable' on a series that would
+  // have answered), while a genuinely empty provider range must not be retried
+  // forever. Jitter keeps the two overlays from re-colliding in lockstep.
+  var OV_MAX_ATTEMPTS=6;
+  function ovBackoff(outcome,n){
+    if(outcome==='rate_limited') return Math.min(45000,4000*Math.pow(1.7,n))+Math.random()*800;
+    if(outcome==='timeout'||outcome==='network') return Math.min(20000,1500*Math.pow(1.8,n))+Math.random()*500;
+    return Math.min(15000,1200*(n+1))+Math.random()*400;
+  }
   function ovFetchSeries(cfg,k,reqId,days){
     var s=cfg[k]; if(!s)return;
     (function attempt(n){
       if(ovReq[cfg.key]!==reqId) return;                 // superseded -> stop (no stale writes)
-      fetchHist(s.id,days,s.vs,function(){
+      fetchHist(s.id,days,s.vs,function(outcome){
         if(ovReq[cfg.key]!==reqId) return;               // stale response -> discard
         if(ovHas(s.id,s.vs,days)){ ovState[cfg.key][k]='ready'; drawOverlay(cfg); return; }
-        if(n>=4){ ovState[cfg.key][k]='error'; drawOverlay(cfg); return; }
-        setTimeout(function(){ attempt(n+1); }, 900*(n+1));
+        if(outcome==='empty'&&n>=1){ ovState[cfg.key][k]='empty'; drawOverlay(cfg); return; }
+        if(n>=OV_MAX_ATTEMPTS){ ovState[cfg.key][k]='error'; drawOverlay(cfg); return; }
+        setTimeout(function(){ attempt(n+1); }, ovBackoff(outcome,n));
       });
     })(0);
   }
