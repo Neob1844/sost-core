@@ -115,7 +115,6 @@ These improve the protocol but are not required on launch day.
 
 ### 3C. Platform Extensions
 
-- [ ] a separate project operator data access (gravity, AEM, drill holes) — see GEASPIRIT_CTO_NEXT_PHASE.md
 - [ ] Materials Engine public API documentation
 - [ ] Web wallet (browser-compatible HD wallet)
 - [ ] PWA installable on mobile (service worker v62+)
