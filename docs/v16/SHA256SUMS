@@ -1,0 +1,24 @@
+# SOST V16 — official binary hashes
+#
+# Release artifact for tag v16.0.0-jackpot-v2 (commit b3300912b78c462b875c2e482633976dafc5d3b7).
+# Committed AFTER that tag on purpose: a hash of a binary built from a tag cannot live
+# inside that tag. The tag is not moved and never will be.
+#
+# Verify:   sha256sum -c docs/v16/SHA256SUMS
+#
+# Built from the tag with the mainnet flags, in the environment recorded in
+# docs/v16/RELEASE_MANIFEST.md:
+#   cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
+#         -DCMAKE_BUILD_TYPE=Release
+#   cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+#
+# PATH-INDEPENDENT BUILD = YES   — the same tag built in two different directories
+#                                  produced these exact bytes, 0 embedded build paths.
+# CROSS-MACHINE REPRODUCIBILITY = NOT PROVEN — a different compiler, linker or libc can
+#                                  still produce different bytes. A mismatch on a
+#                                  different toolchain is expected, not evidence of
+#                                  tampering. For an OFFICIAL downloaded binary the hash
+#                                  must match exactly.
+9b93a1f8affe651ced45ea37fa789be5b06441ecf5ef8535634a03b41dc3acc3  sost-node
+71e4d1cd63c8db0b568a5ebe679b7dda3967c35e687f3dacf2b8e1e37b9fb4b6  sost-miner
+024d8d86c3138ad63d3cc15f5b643ec16df4b9d15400321b45dc51353085ab64  sost-cli
