@@ -26,6 +26,7 @@ Listens on 127.0.0.1:18310; nginx /api/market-history proxies to it.
 No credentials of any kind are used or stored: the upstream endpoint is keyless.
 """
 import json
+import os
 import threading
 import time
 import urllib.error
@@ -34,6 +35,15 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 LISTEN = ('127.0.0.1', 18310)
+# The cache lives in memory; this file is its copy on disk, so a restart does not start
+# cold and send every visitor's first request upstream at once. Small and self-describing
+# on purpose — a JSON file is enough for a few dozen series and needs no database.
+STATE_FILE = os.environ.get('SOST_MARKET_CACHE', '/var/lib/sost/market-cache.json')
+STATE_SAVE_INTERVAL = 60      # seconds between saves, and saved again on a clean stop
+# Optional read-only provider key. Raises the rate limit; it does NOT extend the 365-day
+# history cap, so it does not make 3Y or 5Y work. Read from the environment (systemd
+# EnvironmentFile) — never from the repository, never sent to a browser, never logged.
+API_KEY = os.environ.get('COINGECKO_API_KEY', '').strip()
 UPSTREAM = 'https://api.coingecko.com/api/v3/coins/{asset}/market_chart'
 USER_AGENT = 'sost-market-proxy/1.0 (+https://sostcore.com)'
 
@@ -90,6 +100,68 @@ STATS = {'client_requests': 0, 'upstream_requests': 0, 'cache_hits': 0,
 _stats_lock = threading.Lock()
 _active_upstream = [0]
 _last_upstream_failure = [0.0]      # when upstream last refused us
+_last_upstream_success = [0.0]
+_last_upstream_429 = [0.0]
+
+
+def save_state():
+    """Write the cache to disk. Best effort and atomic: a half-written file would be worse
+    than no file, so it is written beside the target and renamed."""
+    try:
+        with _cache_lock:
+            snapshot = {k: dict(v) for k, v in _cache.items()}
+        d = os.path.dirname(STATE_FILE)
+        if d:
+            os.makedirs(d, exist_ok=True)
+        tmp = STATE_FILE + '.tmp'
+        with open(tmp, 'w') as f:
+            json.dump({'version': 1, 'saved_at': time.time(), 'entries': snapshot}, f)
+        os.replace(tmp, STATE_FILE)
+        return True
+    except Exception:
+        return False
+
+
+def load_state():
+    """Restore the cache on boot. Entries keep their ORIGINAL fetched_at, so a restored
+    entry is exactly as old as it really is: still fresh inside its TTL, stale-eligible
+    past it, and dropped once it is past the stale window. A restart must not make data
+    look newer than it is."""
+    try:
+        with open(STATE_FILE) as f:
+            blob = json.load(f)
+    except Exception:
+        return 0
+    if not isinstance(blob, dict) or blob.get('version') != 1:
+        return 0
+    now, restored = time.time(), 0
+    for key, entry in (blob.get('entries') or {}).items():
+        try:
+            parts = key.split('|')
+            if len(parts) != 3 or parts[0] not in ASSETS or parts[1] not in VS:
+                continue
+            days = int(parts[2])
+            if days not in DAYS or not isinstance(entry.get('prices'), list):
+                continue
+            age = now - float(entry.get('fetched_at', 0))
+            limit = (OUT_OF_RANGE_TTL if entry.get('status') == 'out_of_range'
+                     else min(TTL[days] * STALE_FACTOR, STALE_MAX))
+            if age < 0 or age > limit:
+                continue                      # too old to be worth anything
+            with _cache_lock:
+                _cache[key] = {'prices': entry['prices'],
+                               'fetched_at': float(entry['fetched_at']),
+                               'status': entry.get('status', 'ok')}
+            restored += 1
+        except Exception:
+            continue
+    return restored
+
+
+def _save_loop():
+    while True:
+        time.sleep(STATE_SAVE_INTERVAL)
+        save_state()
 
 
 def _bump(name, n=1):
@@ -145,8 +217,10 @@ def _fetch_upstream(asset, vs, days):
     """One upstream request. Returns (prices, reason). prices is None on failure."""
     url = UPSTREAM.format(asset=asset) + '?' + urllib.parse.urlencode(
         {'vs_currency': vs, 'days': days})
-    req = urllib.request.Request(url, headers={'User-Agent': USER_AGENT,
-                                               'Accept': 'application/json'})
+    headers = {'User-Agent': USER_AGENT, 'Accept': 'application/json'}
+    if API_KEY:
+        headers['x-cg-demo-api-key'] = API_KEY
+    req = urllib.request.Request(url, headers=headers)
     with _upstream_sem:
         with _gap_lock:
             wait = MIN_UPSTREAM_GAP - (time.time() - _last_upstream[0])
@@ -163,14 +237,16 @@ def _fetch_upstream(asset, vs, days):
                 body = json.loads(r.read().decode('utf-8'))
             prices = body.get('prices') if isinstance(body, dict) else None
             if prices:
+                _last_upstream_success[0] = time.time()
                 return prices, 'ok'
             if isinstance(body, dict) and isinstance(body.get('status'), dict) \
                     and body['status'].get('error_code') == 429:
+                _last_upstream_failure[0] = _last_upstream_429[0] = time.time()
                 return None, 'rate_limited'
             return [], 'empty'
         except urllib.error.HTTPError as e:
             if e.code == 429:
-                _last_upstream_failure[0] = time.time()
+                _last_upstream_failure[0] = _last_upstream_429[0] = time.time()
                 return None, 'rate_limited'
             # The keyless tier refuses anything older than 365 days with 401/10012
             # ("Your request exceeds the allowed time range"). That is a permanent
@@ -296,6 +372,24 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlsplit(self.path)
         path = parsed.path.rstrip('/')
+        if path.endswith('/health'):
+            now = time.time()
+            with _cache_lock:
+                ages = [now - e['fetched_at'] for e in _cache.values()]
+            self._send(200, {
+                'service': 'ok',
+                'cache_entries': len(ages),
+                'cache_max_age_s': int(max(ages)) if ages else None,
+                'last_upstream_success_s_ago':
+                    int(now - _last_upstream_success[0]) if _last_upstream_success[0] else None,
+                'last_upstream_429_s_ago':
+                    int(now - _last_upstream_429[0]) if _last_upstream_429[0] else None,
+                'upstream_backoff_active':
+                    now - _last_upstream_failure[0] < WARM_COOLDOWN,
+                'provider_key_configured': bool(API_KEY),   # whether, never which
+                'state_file_present': os.path.exists(STATE_FILE),
+            })
+            return
         if path.endswith('/stats'):
             with _stats_lock:
                 self._send(200, dict(STATS, cached_series=len(_cache)))
@@ -387,10 +481,15 @@ def _warm_loop():
 
 
 def main():
+    load_state()
     threading.Thread(target=_warm_loop, daemon=True).start()
+    threading.Thread(target=_save_loop, daemon=True).start()
     srv = ThreadingHTTPServer(LISTEN, Handler)
     srv.daemon_threads = True
-    srv.serve_forever()
+    try:
+        srv.serve_forever()
+    finally:
+        save_state()          # a planned restart keeps everything it had
 
 
 if __name__ == '__main__':

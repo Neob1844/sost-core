@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-14-v426-webroot-science-sweep">
+<meta name="explorer-html-version" content="2026-09-14-v427-header-equal-tiles-swap-banner-collapsible-market-persistence">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -427,10 +427,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <img src="sost-logo.png?v=v392" alt="SOST" style="height:90px;width:90px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));animation:sostLogoPulse 3.6s ease-in-out infinite"><span><span style="color:#fb010d">SOST</span> EXPLORER</span>
       </a>
       <a href="casert-spec.html" style="display:flex;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
-        <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="height:72px;width:72px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
+        <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="height:90px;width:90px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
       </a>
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;min-width:72px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:22px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:7px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:90px;height:90px;min-width:90px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:27.5px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:8.75px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:0 0 auto;">
       <span class="net-badge" id="netBadgeNav"><span class="net-dot"></span>MAINNET</span>
@@ -547,6 +547,17 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 <!-- SOST OTC / P2P ATOMIC SWAP — CODING MILESTONE BANNER (V15)     -->
 <!-- ════════════════════════════════════════════════════════════ -->
 <div style="max-width:1400px;margin:10px auto 0;padding:0 24px;">
+ <details id="atomicSwapBanner" style="background:linear-gradient(135deg,rgba(34,211,238,.10),rgba(168,85,247,.10) 48%,rgba(245,179,1,.09));border:2px solid #22d3ee;border-radius:10px;box-shadow:0 0 18px rgba(34,211,238,.24),0 0 36px rgba(168,85,247,.12);overflow:hidden">
+  <summary style="list-style:none;cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:11px;flex-wrap:wrap">
+   <span style="font-size:20px;line-height:1;text-shadow:0 0 12px rgba(34,211,238,.6)">&#9883;</span>
+   <span style="flex:1 1 300px;min-width:0">
+    <span style="display:block;font-size:14.5px;font-weight:900;letter-spacing:.3px;background:linear-gradient(90deg,#22d3ee,#a855f7 60%,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent">SOST OTC / P2P Atomic Swap</span>
+    <span style="display:block;font-size:10.5px;color:#9fb6c4;letter-spacing:.4px;margin-top:2px">Trustless, non-custodial cross-chain swaps &mdash; SOST &harr; BTC &middot; ETH &middot; BNB &middot; USDT &middot; USDC &middot; PAXG &middot; XAUT</span>
+   </span>
+   <span style="flex:0 0 auto;background:#fb010d;color:#fff;font-size:9px;font-weight:900;letter-spacing:1.4px;padding:4px 10px;border-radius:5px;white-space:nowrap">&#9940; DO NOT USE &middot; FOUNDER TESTING</span>
+   <span style="flex:0 0 auto;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.6);color:#a5f3fc;font-family:var(--code,monospace);font-size:10px;font-weight:800;letter-spacing:1.2px;padding:5px 10px;border-radius:5px;white-space:nowrap">READ &#9662;</span>
+  </summary>
+  <div style="padding:0 16px 14px">
  <div style="position:relative;background:linear-gradient(135deg,rgba(34,211,238,.11),rgba(168,85,247,.11) 48%,rgba(245,179,1,.10));border:2px solid #22d3ee;border-radius:10px;padding:18px 20px 16px;box-shadow:0 0 22px rgba(34,211,238,.30),0 0 46px rgba(168,85,247,.15);overflow:hidden">
   <div style="position:absolute;top:0;right:0;background:#fb010d;color:#fff;font-size:9px;font-weight:900;letter-spacing:1.6px;padding:3px 13px;border-bottom-left-radius:9px">⛔ FOUNDER TESTING · DO NOT USE</div>
   <div style="background:#2a0606;border:1px solid #fb010d;border-radius:7px;padding:9px 12px;margin-bottom:11px;font-size:11.5px;line-height:1.6;color:#ffdede"><b style="color:#ff5b5b">⛔ DO NOT USE — FOUNDER TESTING PHASE.</b> The atomic swap is technically built and is being activated at block 16,000 (EVM-only; relay 17,000) for the founder's own testing. It has had <b>no external audit</b> and is <b>not validated for public use — using it can cause permanent loss of funds.</b> The figures below describe engineering progress, <b>not</b> readiness. Do not use it until the founder officially announces it is safe. (SOST ↔ BTC is not active — V15.)</div>
@@ -629,6 +640,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
    </div>
   </div>
  </div>
+  </div>
+ </details>
 </div>
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label" style="color:var(--red)">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
@@ -7580,6 +7593,13 @@ function getData(key){
 //   - classify the outcome and pass it to the callback:
 //     'ok' | 'empty' | 'rate_limited' | 'http_error' | 'timeout' | 'network'
 // cb(outcome) is additive: the original charts ignore the argument.
+// Ranges the data source will never serve. The provider's plan caps historical data at
+// 365 days, so 3Y and 5Y are not a transient failure and must not be retried, left
+// spinning, or labelled 'unavailable' as if something were broken. The gateway reports
+// them as out_of_range and they are recorded here once.
+var _outOfRange={};                 // cacheKey_days -> true
+var OUT_OF_RANGE_MSG='Extended history unavailable with current data source';
+function isOutOfRange(id,vs,days){ return !!_outOfRange[cKey(id,vs)+'_'+days]; }
 var _cgInflight={};                 // cacheKey -> [callbacks awaiting this request]
 var _cgQueue=[],_cgActive=0,_cgLastStart=0;
 var CG_MAX_CONCURRENT=2,CG_MIN_GAP=350;
@@ -7636,6 +7656,9 @@ function fetchHist(id,days,vsOrCb,cb){
           // client asks again soon instead of sitting on it for the full window.
           cacheTimes[ck]=Date.now()-(d.source_status==='stale'?Math.floor(CACHE_TTL*0.8):0);
           finish('ok');
+        } else if(d&&d.source_status==='out_of_range'){
+          _outOfRange[ck]=true;
+          finish('out_of_range');
         } else if(!r.ok){
           var e=(d&&d.error)||'http_error';
           finish(e==='rate_limited'||e==='network'||e==='http_error'?e:'http_error');
@@ -7660,8 +7683,9 @@ function drawChart(key){
   ctx.strokeStyle='#111';ctx.lineWidth=1;
   for(var g=1;g<=3;g++){var gy=pT+ch*g/4;ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(pL+cw,gy);ctx.stroke();}
   if(data.length<2){
-    ctx.fillStyle='#333';ctx.font='11px '+codeFont;ctx.textAlign='center';
-    ctx.fillText(data.length===0?'No data available for this period':'Insufficient data',pL+cw/2,pT+ch/2);
+    var _id=cid(key),_oor=_id&&isOutOfRange(_id,vsOf(key),TF_MAP[tf].days);
+    ctx.fillStyle=_oor?'#5a5a5a':'#333';ctx.font='11px '+codeFont;ctx.textAlign='center';
+    ctx.fillText(_oor?OUT_OF_RANGE_MSG:(data.length===0?'No data available for this period':'Insufficient data'),pL+cw/2,pT+ch/2);
     updChange(key,null);updRange(key,null);return;
   }
   var prices=data.map(function(d){return d[1];});
@@ -7778,7 +7802,9 @@ function checkTfAvail(key){
     var days=TF_MAP[tf]&&TF_MAP[tf].days;
     if(!days)return;
     var d=cache[nsKey]&&cache[nsKey][days];
-    if(d&&d.length<10){
+    if(isOutOfRange(id,vsOf(key),days)){
+      btn.style.opacity='0.3';btn.title=OUT_OF_RANGE_MSG;
+    } else if(d&&d.length<10){
       btn.style.opacity='0.3';btn.title='Not enough history for this period';
     } else {
       btn.style.opacity='';btn.title='';
@@ -7920,7 +7946,7 @@ var goldFetchDone={xaut:false,paxg:false,xautbtc:false,paxgbtc:false};
     fetchHist(gid,1,'btc',function(outcome){
       var have=cache[cKey(gid,'btc')]&&cache[cKey(gid,'btc')][1];
       if(have&&have.length){drawChart(k);checkTfAvail(k);updateBtcSpot(k);return;}
-      if(outcome==='empty'||n>=3)return;                 // nothing to recover
+      if(outcome==='empty'||outcome==='out_of_range'||n>=3)return;   // nothing to recover
       setTimeout(function(){attempt(n+1);},2000*(n+1)+Math.random()*500);
     });
   })(0);
@@ -7947,7 +7973,7 @@ setInterval(refresh,60000);
   ];
   var ovTf={ovxaut:'24H',ovpaxg:'24H'};
   var ovReq={ovxaut:0,ovpaxg:0};       // request generation per chart (stale-response guard)
-  var ovState={ovxaut:{},ovpaxg:{}};   // per-series state: 'pending'|'ready'|'empty'|'error' (never inferred from point count)
+  var ovState={ovxaut:{},ovpaxg:{}};   // per-series state: 'pending'|'ready'|'empty'|'out_of_range'|'error' (never inferred from point count)
   function ovSeries(id,vs,tf){ var ck=cKey(id,vs),def=TF_MAP[tf]; var raw=(cache[ck]&&cache[ck][def.days])||[]; if(!raw.length)return[]; if(def.ms){var cut=Date.now()-def.ms;return raw.filter(function(pp){return pp[0]>=cut;});} return raw; }
   function ovFmt1(fmt,v){ return fmt==='btc'?fmtBtc(v):fmtUsd(v); }
   function ovScale(arr){ var vs=arr.map(function(p){return p[1];}); var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs); var r=mx-mn; if(r===0)r=mn*0.001||1; mn-=r*0.05; mx+=r*0.05; return {mn:mn,mx:mx,rng:(mx-mn)||1}; }
@@ -7962,6 +7988,7 @@ setInterval(refresh,60000);
     function tok(k,arr,extra){ var st=ovState[cfg.key][k];
       if(!st||st==='pending') return cfg[k].label+': loading…';
       if(st==='error')   return cfg[k].label+': unavailable';
+      if(st==='out_of_range') return cfg[k].label+': extended history unavailable';
       if(st==='empty')   return cfg[k].label+': no data';
       if(!arr.length)    return cfg[k].label+': no data in window';
       return cfg[k].label+': '+arr.length+' pts'+(extra||''); }
@@ -7982,7 +8009,9 @@ setInterval(refresh,60000);
       var anyPending=(_pend('a')||_pend('b')||(cfg.c&&_pend('c')));
       var total=cfg.c?3:2, ready=0; ['a','b','c'].forEach(function(k){ if(cfg[k]&&ovState[cfg.key][k]==='ready')ready++; });
       ctx.fillStyle='#333';ctx.font='11px '+codeFont;ctx.textAlign='center';
-      ctx.fillText(anyPending?('Loading historical data… ('+ready+'/'+total+')'):'No data available for this period',pL+cw/2,pT+ch/2);
+      var _oor=['a','b','c'].every(function(k){return !cfg[k]||ovState[cfg.key][k]==='out_of_range';});
+      ctx.fillText(anyPending?('Loading historical data… ('+ready+'/'+total+')')
+                   :(_oor?OUT_OF_RANGE_MSG:'No data available for this period'),pL+cw/2,pT+ch/2);
       updOvRange(cfg,A,B,C);return;
     }
     var allT=A.concat(B).concat(C).map(function(pp){return pp[0];});
@@ -8053,6 +8082,7 @@ setInterval(refresh,60000);
       fetchHist(s.id,days,s.vs,function(outcome){
         if(ovReq[cfg.key]!==reqId) return;               // stale response -> discard
         if(ovHas(s.id,s.vs,days)){ ovState[cfg.key][k]='ready'; drawOverlay(cfg); return; }
+        if(outcome==='out_of_range'){ ovState[cfg.key][k]='out_of_range'; drawOverlay(cfg); return; }
         if(outcome==='empty'&&n>=1){ ovState[cfg.key][k]='empty'; drawOverlay(cfg); return; }
         if(n>=OV_MAX_ATTEMPTS){ ovState[cfg.key][k]='error'; drawOverlay(cfg); return; }
         setTimeout(function(){ attempt(n+1); }, ovBackoff(outcome,n));

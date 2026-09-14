@@ -125,6 +125,50 @@ depend on arriving at the right moment.
 
 A failure in a warm pass is swallowed: warming must never take the service down.
 
+## Surviving a restart
+
+The cache lives in memory and is mirrored to `/var/lib/sost/market-cache.json` every
+60 seconds and again on a clean stop. On boot it is restored, so a restart does not
+send every visitor's first request upstream at once.
+
+Restored entries keep their **original** `fetched_at`, so a restart never makes data
+look newer than it is: an entry still inside its TTL serves as `cached`, one past it
+is stale-eligible, and one past the stale window is dropped rather than loaded. A
+corrupt, truncated, wrong-version or hostile state file is ignored entirely — every
+key is re-validated against the allowlist before it is accepted. Writes are atomic
+(temp file + rename), because a half-written file would be worse than no file.
+
+Measured: warm the cache, restart the process, and the next visitor gets all five
+series from cache with a **cold-start burst of 0** upstream requests.
+
+## Health
+
+`GET /api/market-history/health` reports service state, cache entry count, the age of
+the oldest entry, how long ago upstream last succeeded and last returned 429, whether
+the backoff is currently active, whether a provider key is configured (never which),
+and whether the state file exists. No secret is ever included.
+
+`GET /api/market-history/stats` reports the request counters.
+
+## Provider plans — what a key does and does not fix
+
+An optional read-only key can be supplied through `COINGECKO_API_KEY` in
+`/etc/sost/market.env` (systemd `EnvironmentFile`, never the repository, never sent to
+a browser, never logged, sent as a header and never in the URL).
+
+It raises the rate limit. It does **not** extend the history cap:
+
+| plan | history |
+|---|---|
+| Demo / keyless | ~1 year |
+| Basic | 2 years |
+| Analyst and above | long history |
+
+So a Demo key does not make 3Y or 5Y work. Those two ranges stay classified as
+`out_of_range` and the explorer says so plainly — "Extended history unavailable with
+current data source" — instead of spinning, retrying, or showing an ambiguous
+"unavailable" that reads like a fault.
+
 ## Client
 
 `website/sost-explorer.html` calls only this endpoint. There is deliberately

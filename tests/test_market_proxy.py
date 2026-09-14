@@ -7,7 +7,9 @@ CoinGecko: every failure mode the real API produces is injected on demand.
 import importlib.util
 import json
 import os
+import shutil
 import sys
+import tempfile
 import threading
 import time
 import unittest
@@ -431,6 +433,86 @@ class BackgroundWarm(unittest.TestCase):
         mp._cache['bitcoin|usd|30']['fetched_at'] -= mp.TTL[30] * 0.85
         mp._cache['bitcoin|usd|7']['fetched_at'] -= mp.TTL[7] * 1.5
         self.assertEqual(self._one_pass(), 'bitcoin|usd|7')
+
+
+class Persistence(unittest.TestCase):
+    """A restart must not start cold — and must not make data look newer than it is."""
+
+    def setUp(self):
+        self.fake = FakeUpstream()
+        reset(self.fake)
+        self.tmp = tempfile.mkdtemp()
+        mp.STATE_FILE = os.path.join(self.tmp, 'market-cache.json')
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def _restart(self):
+        """Save, wipe memory as a process restart would, restore."""
+        self.assertTrue(mp.save_state())
+        mp._cache.clear()
+        return mp.load_state()
+
+    def test_a_warm_cache_survives_a_restart(self):
+        mp.get_series('bitcoin', 'usd', 30)
+        mp.get_series('tether-gold', 'btc', 7)
+        self.assertEqual(self._restart(), 2)
+        before = len(self.fake.calls)
+        payload, status = mp.get_series('bitcoin', 'usd', 30)
+        self.assertEqual(status, 200)
+        self.assertEqual(payload['source_status'], 'cached')
+        self.assertEqual(len(self.fake.calls), before)      # no cold-start fetch
+
+    def test_restored_entries_keep_their_real_age(self):
+        mp.get_series('bitcoin', 'usd', 30)
+        mp._cache['bitcoin|usd|30']['fetched_at'] -= mp.TTL[30] * 0.5
+        self._restart()
+        self.assertAlmostEqual(time.time() - mp._cache['bitcoin|usd|30']['fetched_at'],
+                               mp.TTL[30] * 0.5, delta=5)
+
+    def test_an_entry_past_its_stale_window_is_not_restored(self):
+        mp.get_series('bitcoin', 'usd', 30)
+        mp._cache['bitcoin|usd|30']['fetched_at'] -= mp.TTL[30] * mp.STALE_FACTOR + 60
+        self.assertEqual(self._restart(), 0)
+
+    def test_out_of_range_survives_so_we_never_re_ask_after_a_restart(self):
+        self.fake.mode = 'out_of_range'
+        mp.get_series('pax-gold', 'btc', 1825)
+        self.assertEqual(self._restart(), 1)
+        before = len(self.fake.calls)
+        payload, status = mp.get_series('pax-gold', 'btc', 1825)
+        self.assertEqual(payload['source_status'], 'out_of_range')
+        self.assertEqual(len(self.fake.calls), before)
+
+    def test_a_corrupt_or_hostile_state_file_is_ignored(self):
+        for blob in ('{not json', '{}', '{"version": 99, "entries": {}}',
+                     '{"version": 1, "entries": {"../../etc/passwd|usd|30": {"prices": [[1,2]], "fetched_at": 1}}}',
+                     '{"version": 1, "entries": {"dogecoin|usd|30": {"prices": [[1,2]], "fetched_at": 1}}}',
+                     '{"version": 1, "entries": {"bitcoin|usd|9999": {"prices": [[1,2]], "fetched_at": 1}}}',
+                     '{"version": 1, "entries": {"bitcoin|usd|30": {"prices": "nope", "fetched_at": 1}}}'):
+            with open(mp.STATE_FILE, 'w') as f:
+                f.write(blob)
+            mp._cache.clear()
+            self.assertEqual(mp.load_state(), 0, blob[:40])
+            self.assertEqual(len(mp._cache), 0)
+
+    def test_saving_is_atomic(self):
+        mp.get_series('bitcoin', 'usd', 30)
+        mp.save_state()
+        self.assertTrue(os.path.exists(mp.STATE_FILE))
+        self.assertFalse(os.path.exists(mp.STATE_FILE + '.tmp'))
+
+
+class ProviderKey(unittest.TestCase):
+    """An optional key raises the rate limit. It does not extend the history cap."""
+
+    def test_no_key_configured_by_default_in_tests(self):
+        self.assertIsInstance(mp.API_KEY, str)
+
+    def test_the_key_is_never_placed_in_the_url(self):
+        url = mp.UPSTREAM.format(asset='bitcoin')
+        self.assertNotIn('api_key', url)
+        self.assertNotIn('x_cg', url)
 
 
 if __name__ == '__main__':

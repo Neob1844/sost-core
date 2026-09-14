@@ -8,9 +8,26 @@ After=network.target
 ExecStart=/usr/bin/python3 /opt/sost/sost-market-proxy.py
 Restart=always
 RestartSec=2
+
+# The cache is written here so a restart does not start cold. systemd creates and owns
+# the directory; the service never writes anywhere else.
+StateDirectory=sost
+Environment=SOST_MARKET_CACHE=/var/lib/sost/market-cache.json
+
+# Optional provider key (raises the rate limit; it does NOT extend the 365-day history
+# cap, so it does not make 3Y/5Y work). Create the file with COINGECKO_API_KEY=... and
+# chmod 600. Absent by design — the dash makes systemd ignore it when missing.
+EnvironmentFile=-/etc/sost/market.env
+
 NoNewPrivileges=true
 ProtectSystem=full
+ProtectHome=true
 PrivateTmp=true
+
+# Logs go to the journal, which is already size-capped system-wide. Nothing sensitive is
+# logged: request logging is off and the key is never printed.
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
