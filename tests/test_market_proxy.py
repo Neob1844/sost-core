@@ -22,6 +22,7 @@ spec = importlib.util.spec_from_file_location(
     'market_proxy', os.path.join(ROOT, 'ops', 'sost-market-proxy.py'))
 mp = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mp)
+REAL_FETCH = mp._fetch_upstream      # kept before any test swaps in a fake
 
 
 class FakeUpstream:
@@ -59,6 +60,8 @@ class FakeUpstream:
                 return [[1000 + i, 10.0 + i] for i in range(days * 2 + 5)], 'ok'
             if self.mode == 'empty':
                 return [], 'empty'
+            if self.mode == 'out_of_range':
+                return [], 'out_of_range'
             return None, self.mode
         finally:
             with self.lock:
@@ -283,6 +286,59 @@ class RetryBudget(unittest.TestCase):
         payload, status = mp.get_series('bitcoin', 'usd', 30)
         self.assertEqual(status, 503)
         self.assertLess(time.time() - t0, 10.0)
+
+
+class ProviderRangeCap(unittest.TestCase):
+    """The keyless plan refuses anything older than 365 days (401 / error_code 10012).
+
+    That is permanent, not transient: 3Y and 5Y can never be served. It must settle as an
+    empty range that is cached, not as an error that is retried forever."""
+
+    def setUp(self):
+        self.fake = FakeUpstream()
+        reset(self.fake)
+
+    def test_out_of_range_settles_as_an_empty_range(self):
+        self.fake.mode = 'out_of_range'
+        payload, status = mp.get_series('pax-gold', 'btc', 1825)
+        self.assertEqual(status, 200)
+        self.assertEqual(payload['prices'], [])
+        self.assertEqual(payload['source_status'], 'out_of_range')
+
+    def test_out_of_range_is_not_re_asked_on_every_visit(self):
+        self.fake.mode = 'out_of_range'
+        for _ in range(5):
+            mp.get_series('pax-gold', 'btc', 1825)
+        self.assertEqual(len(self.fake.calls), 1)
+
+    def test_out_of_range_ttl_outlasts_a_normal_one(self):
+        self.assertGreater(mp.OUT_OF_RANGE_TTL, max(mp.TTL.values()))
+
+    def test_a_401_with_the_range_error_is_classified(self):
+        """Exercises the real classification path, not a shortcut in the fake."""
+        body = json.dumps({'error': {'status': {'error_code': 10012,
+                                                'error_message': 'exceeds the allowed time range'}}})
+
+        class FakeHTTPError(urllib.error.HTTPError):
+            def __init__(self):
+                self.code = 401
+                self._b = body.encode()
+
+            def read(self):
+                return self._b
+
+        real_urlopen = mp.urllib.request.urlopen
+
+        def boom(*a, **k):
+            raise FakeHTTPError()
+
+        mp.urllib.request.urlopen = boom
+        try:
+            prices, reason = REAL_FETCH('pax-gold', 'btc', 1825)
+        finally:
+            mp.urllib.request.urlopen = real_urlopen
+        self.assertEqual(prices, [])
+        self.assertEqual(reason, 'out_of_range')
 
 
 if __name__ == '__main__':

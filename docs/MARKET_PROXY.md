@@ -88,6 +88,23 @@ A 5Y line does not change meaningfully within hours; a 24H line does.
 * **Per-IP rate limit** — 120 requests/minute, so one client cannot drain the
   shared budget.
 
+## The provider's 365-day cap
+
+The keyless plan refuses anything older than 365 days with HTTP 401 and
+`error_code 10012` ("Your request exceeds the allowed time range"). That is a
+property of the plan, not a transient failure: **3Y and 5Y can never be served**.
+
+Treating it as an error meant retrying, on every visit, a request that cannot
+succeed — spending the shared budget and painting "unavailable", which reads like
+something is broken. It is now classified as `out_of_range`, answered as an empty
+range with `source_status: "out_of_range"`, and cached for 12 hours. The client
+sees an empty series, settles on its final "no data" state and stops asking; the
+timeframe button dims itself, as it already does for any range without enough
+history.
+
+If a paid plan is ever added, this classification is the only thing that has to
+change for 3Y and 5Y to start working.
+
 ## Client
 
 `website/sost-explorer.html` calls only this endpoint. There is deliberately

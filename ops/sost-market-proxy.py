@@ -58,6 +58,8 @@ TTL = {1: 120, 3: 300, 7: 300, 30: 900, 180: 3600, 365: 3600, 1095: 21600, 1825:
 # How long past the TTL a stale copy may still answer when upstream is failing.
 STALE_FACTOR = 24
 STALE_MAX = 7 * 24 * 3600
+# A range the plan will never serve is not worth re-asking hourly.
+OUT_OF_RANGE_TTL = 12 * 3600
 
 TIMEOUT = {1: 15, 3: 15, 7: 15, 30: 25, 180: 25, 365: 25, 1095: 35, 1825: 35}
 
@@ -166,7 +168,22 @@ def _fetch_upstream(asset, vs, days):
                 return None, 'rate_limited'
             return [], 'empty'
         except urllib.error.HTTPError as e:
-            return None, 'rate_limited' if e.code == 429 else 'http_error'
+            if e.code == 429:
+                return None, 'rate_limited'
+            # The keyless tier refuses anything older than 365 days with 401/10012
+            # ("Your request exceeds the allowed time range"). That is a permanent
+            # property of the plan, not a transient failure: 3Y and 5Y can never be
+            # served. Retrying it forever would spend the shared budget on a request
+            # that cannot succeed, so it is answered as an empty range and cached.
+            if e.code in (401, 403):
+                try:
+                    detail = json.loads(e.read().decode('utf-8'))
+                except Exception:
+                    detail = {}
+                status = (detail.get('error') or detail).get('status') or {}
+                if status.get('error_code') == 10012 or e.code == 401:
+                    return [], 'out_of_range'
+            return None, 'http_error'
         except Exception:
             return None, 'network'
         finally:
@@ -180,10 +197,12 @@ def _refresh(key, asset, vs, days):
     for attempt in range(UPSTREAM_ATTEMPTS):
         prices, reason = _fetch_upstream(asset, vs, days)
         if prices is not None:
+            status = 'ok' if prices else ('out_of_range' if reason == 'out_of_range'
+                                          else 'empty')
             with _cache_lock:
                 _cache[key] = {'prices': prices, 'fetched_at': time.time(),
-                               'status': 'ok' if prices else 'empty'}
-            return 'fresh' if prices else 'empty'
+                               'status': status}
+            return 'fresh' if prices else status
         if attempt + 1 < UPSTREAM_ATTEMPTS:
             time.sleep(min(UPSTREAM_BACKOFF_CAP,
                            (1.5 if reason == 'rate_limited' else 0.7) * (2 ** attempt)))
@@ -198,6 +217,8 @@ def get_series(asset, vs, days):
 
     with _cache_lock:
         entry = _cache.get(key)
+    if entry and entry.get('status') == 'out_of_range':
+        ttl = OUT_OF_RANGE_TTL
     if entry and now - entry['fetched_at'] < ttl:
         _bump('cache_hits')
         return _payload(entry, 'cached', now), 200
@@ -227,7 +248,7 @@ def get_series(asset, vs, days):
 
     with _cache_lock:
         entry = _cache.get(key)
-    if outcome in ('fresh', 'empty') and entry:
+    if outcome in ('fresh', 'empty', 'out_of_range') and entry:
         return _payload(entry, 'fresh', time.time()), 200
     # Upstream failed. Serve the last good copy while it is still inside the stale window.
     if entry:
@@ -239,6 +260,8 @@ def get_series(asset, vs, days):
 
 
 def _payload(entry, status, now, reason=None):
+    if entry.get('status') == 'out_of_range':
+        status = 'out_of_range'
     p = {'prices': entry['prices'],
          'source_status': status,
          'age_s': int(now - entry['fetched_at'])}
