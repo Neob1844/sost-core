@@ -3,6 +3,25 @@ project(sost-core LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Always include debug symbols for crash diagnostics (core dumps)
+# ---------------------------------------------------------------------------
+# Reproducible release binaries: keep the build directory out of the object code.
+#
+# Without this, every binary carries the absolute path it was compiled in (36
+# occurrences in sost-node), so the same commit built in two directories gives two
+# different SHA256. That makes a published hash unverifiable: an operator building in
+# /opt/sost-v16 cannot match a hash produced in the maintainer's own tree.
+#
+# -ffile-prefix-map rewrites those paths to a fixed token at compile time. It changes
+# no code and no behaviour — only what the binary records about where it was built.
+# Measured: the same tag built in two different directories now produces byte-identical
+# binaries, with zero embedded build paths.
+#
+# This makes the build PATH-INDEPENDENT. It does not by itself make it reproducible
+# across machines: a different compiler, linker or libc can still produce a different
+# binary. The official build environment is recorded in docs/v16/RELEASE_MANIFEST.md.
+# ---------------------------------------------------------------------------
+add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=/sost)
+
 add_compile_options(-g)
 
 # === Security hardening flags ===
