@@ -89,6 +89,7 @@ STATS = {'client_requests': 0, 'upstream_requests': 0, 'cache_hits': 0,
          'peak_upstream_concurrency': 0}
 _stats_lock = threading.Lock()
 _active_upstream = [0]
+_last_upstream_failure = [0.0]      # when upstream last refused us
 
 
 def _bump(name, n=1):
@@ -169,6 +170,7 @@ def _fetch_upstream(asset, vs, days):
             return [], 'empty'
         except urllib.error.HTTPError as e:
             if e.code == 429:
+                _last_upstream_failure[0] = time.time()
                 return None, 'rate_limited'
             # The keyless tier refuses anything older than 365 days with 401/10012
             # ("Your request exceeds the allowed time range"). That is a permanent
@@ -183,8 +185,10 @@ def _fetch_upstream(asset, vs, days):
                 status = (detail.get('error') or detail).get('status') or {}
                 if status.get('error_code') == 10012 or e.code == 401:
                     return [], 'out_of_range'
+            _last_upstream_failure[0] = time.time()
             return None, 'http_error'
         except Exception:
+            _last_upstream_failure[0] = time.time()
             return None, 'network'
         finally:
             with _stats_lock:
@@ -328,6 +332,7 @@ class Handler(BaseHTTPRequestHandler):
 
 WARM_INTERVAL = 20          # seconds between background refreshes
 WARM_LEAD = 0.75            # refresh once an entry is this far through its TTL
+WARM_COOLDOWN = 120         # pause warming this long after upstream refuses us
 
 
 def _warm_loop():
@@ -341,6 +346,11 @@ def _warm_loop():
         time.sleep(WARM_INTERVAL)
         try:
             now = time.time()
+            # Warming is optional work. If upstream has just refused a request, the
+            # budget belongs to visitors asking for something they are looking at,
+            # not to a refresh of something already in the cache.
+            if now - _last_upstream_failure[0] < WARM_COOLDOWN:
+                continue
             due = None
             with _cache_lock:
                 for key, entry in _cache.items():

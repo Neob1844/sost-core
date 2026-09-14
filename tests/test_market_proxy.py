@@ -391,6 +391,40 @@ class BackgroundWarm(unittest.TestCase):
         self.assertIsNone(self._one_pass())
         self.assertEqual(len(self.fake.calls), 1)
 
+
+    def test_warming_yields_while_upstream_is_refusing(self):
+        """A refresh of something already cached must not compete with a visitor asking
+        for something they are looking at."""
+        mp.get_series('bitcoin', 'usd', 30)
+        mp._cache['bitcoin|usd|30']['fetched_at'] -= mp.TTL[30] * 0.9
+        before = len(self.fake.calls)
+        mp._last_upstream_failure[0] = time.time()          # upstream just refused us
+        now = time.time()
+        skipped = now - mp._last_upstream_failure[0] < mp.WARM_COOLDOWN
+        self.assertTrue(skipped, 'cooldown should be active')
+        self.assertEqual(len(self.fake.calls), before)      # nothing fetched
+
+        mp._last_upstream_failure[0] = now - mp.WARM_COOLDOWN - 1   # cooldown elapsed
+        self.assertEqual(self._one_pass(), 'bitcoin|usd|30')
+        self.assertEqual(len(self.fake.calls), before + 1)
+
+    def test_a_refusal_is_recorded(self):
+        """The cooldown is driven by real upstream refusals, not by a guess."""
+        real_urlopen = mp.urllib.request.urlopen
+        mp._last_upstream_failure[0] = 0.0
+
+        def boom(*a, **k):
+            raise urllib.error.URLError('refused')
+
+        mp.urllib.request.urlopen = boom
+        try:
+            prices, reason = REAL_FETCH('bitcoin', 'usd', 30)
+        finally:
+            mp.urllib.request.urlopen = real_urlopen
+        self.assertIsNone(prices)
+        self.assertEqual(reason, 'network')
+        self.assertGreater(mp._last_upstream_failure[0], 0.0)
+
     def test_it_picks_the_most_overdue_entry(self):
         mp.get_series('bitcoin', 'usd', 30)
         mp.get_series('bitcoin', 'usd', 7)

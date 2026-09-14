@@ -119,6 +119,10 @@ depend on arriving at the right moment.
   the entry back.
 * Ranges the plan cannot serve are skipped entirely.
 
+* Warming pauses for two minutes after upstream refuses a request: the budget
+  belongs to visitors asking for something they are looking at, not to a
+  refresh of something already in the cache.
+
 A failure in a warm pass is swallowed: warming must never take the service down.
 
 ## Client
