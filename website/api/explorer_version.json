@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-14-v424-sost-geaspirit-separation",
+  "v": "2026-09-14-v424-scientific-modules-retired",
   "note": "SOST is now exclusively a blockchain project. Trinity, the Materials Engine, the AI Engine and the Useful Compute consoles are retired: removed from every navigation, from the sitemap and from the whitepaper, help, news, privacy, protocol-spec and registry pages; their URLs now serve minimal noindex ARCHIVED stubs so no link 404s. The scientific code trees (scripts/trinity, scripts/useful_compute, tests/trinity, schemas/trinity, config/trinity, data/trinity, the TRINITY_* artefacts and their docs) are removed from HEAD and preserved in the git tag trinity-final-archive. Capsule / generic proof anchoring stays in SOST as a blockchain utility, with its geological examples removed. Nothing on-chain is modified and no consensus, node or miner file is touched."
 }
