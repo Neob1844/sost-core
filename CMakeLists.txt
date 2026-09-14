@@ -242,6 +242,11 @@ add_library(sost-core STATIC
     # wiring lands in later increments on top of this tested core.
     # Spec: docs/v16/HISTORICAL_JACKPOT_V2_SPEC.md.
     src/jackpot_v2.cpp
+
+    # V16 — node participation tx layer (NODE_BIND/HEARTBEAT serialization,
+    # domain-separated signing messages, structural validation incl. activation
+    # guard, reorg-safe node state). Dormant on real heights until activation.
+    src/node_participation.cpp
 )
 # EXCLUDED (use old Block API, will be updated later):
 #   src/node.cpp src/miner.cpp src/wallet.cpp
@@ -830,6 +835,12 @@ add_test(NAME jackpot COMMAND test-jackpot)
 add_executable(test-jackpot-v2 tests/test_jackpot_v2.cpp)
 target_link_libraries(test-jackpot-v2 PRIVATE sost-core)
 add_test(NAME jackpot-v2 COMMAND test-jackpot-v2)
+
+# V16 — NODE_BIND/HEARTBEAT tx layer (serialization, real Schnorr sign+verify,
+# activation guard, heartbeat rules, reorg-safe state, final-eligibility metric).
+add_executable(test-node-participation tests/test_node_participation.cpp)
+target_link_libraries(test-node-participation PRIVATE sost-core)
+add_test(NAME node-participation COMMAND test-node-participation)
 
 # V15 activation boundary (P9) — header-only; compiled per active profile. On mainnet it must
 # see V15_HEIGHT=25000 and a clean 24999/25000 boundary + jackpot-first at 25290 (no off-by-one).

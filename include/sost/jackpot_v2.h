@@ -42,8 +42,9 @@
 
 namespace sost::jackpot_v2 {
 
-// A node public key is a 32-byte x-only Schnorr key (same family as SbPoW).
-using NodePubKey = std::array<uint8_t, 32>;
+// A node public key is a 33-byte secp256k1 compressed key (same family/type as
+// the SbPoW MinerPubkey, so NODE_BIND/HEARTBEAT reuse the audited Schnorr crypto).
+using NodePubKey = std::array<uint8_t, 33>;
 
 // Domain-separation tags (never reuse the DTD seed).
 inline constexpr char JACKPOT_V2_DOMAIN[]  = "SOST_HIST_JACKPOT";
@@ -107,6 +108,17 @@ struct ActiveBinding {
 //     DIFFERENT mining_pkh is rejected
 // Records are consumed in canonical order (inclusion_height, then bind_seq,
 // then mining_pkh) so the result is order-independent of input vector order.
+// Full derived bind state at height H (single source of truth):
+//   active  — active binding per mining_pkh (highest accepted seq, effective<=H)
+//   owner   — node_pubkey -> owning mining_pkh (first claimant owns it forever)
+//   max_seq — highest accepted bind_seq per mining_pkh
+struct DerivedBindState {
+    std::map<PubKeyHash, ActiveBinding> active;
+    std::map<NodePubKey, PubKeyHash>    owner;
+    std::map<PubKeyHash, int64_t>       max_seq;
+};
+DerivedBindState jv2_derive_bind_state(std::vector<NodeBindRecord> records, int64_t H);
+
 std::map<PubKeyHash, ActiveBinding>
 jv2_active_bindings_at(std::vector<NodeBindRecord> records, int64_t H);
 
