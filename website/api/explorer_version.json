@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-14-v420-v16-jackpot-notice",
-  "note": "Site-wide collapsible V16 / DTD Jackpot V2 miner & node-operator advance notice (js/v16-jackpot-notice.js). Collapsed by default, animated gradient banner. On the explorer it mounts above the community-channels banner via #sost-v16-notice-mount; on every other page it injects below the developer-note strip. Summarises: normal DTD unchanged, Jackpot V2 activates #30,000, first V2 draw #30,186, NODE_BIND + heartbeats = eligibility, PoW = weight, mandatory update window #29,900-#30,000."
+  "v": "2026-09-14-v421-v16-blink-window-and-hashrate-fix",
+  "note": "V16/DTD Jackpot V2 banner: added a blinking red MANDATORY ACTION alert (compile/install the new V16 binaries and restart node + miner only after block #29,900 and before #30,000) plus a blinking red chip in the collapsed header, with a prefers-reduced-motion opt-out. Explorer fix: EST. HASHRATE card printed a bare 0 because _fmtRate floored sub-1 rates; at bitsQ=65536 (bits_real 1.0) the network only needs 2 qualified hashes per block, so qualified H/s = 2/60 = 0.033. Now shows 3 decimals below 1 and the sub-label explains the low-difficulty case (same ladder as _fmtNetRate, v316)."
 }

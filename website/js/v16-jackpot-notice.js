@@ -80,6 +80,24 @@
 .sost-v16-body li{margin:.3em 0;font-size:12px;line-height:1.6}
 .sost-v16-code{margin:10px 0 0;padding:10px 13px;border-radius:8px;background:#07090e;border:1px solid rgba(255,255,255,.10);
   color:#bfe9ff;font-size:11.5px;line-height:1.65;white-space:pre;overflow-x:auto}
+.sost-v16-blink{margin:12px 0 0;padding:12px 14px;border-radius:8px;border:2px solid #fb010d;
+  background:linear-gradient(135deg,rgba(251,1,13,.20),rgba(251,1,13,.06));color:#ffe3e3;
+  font-size:13px;line-height:1.7;animation:sost-v16-blink 1.1s steps(1,end) infinite}
+.sost-v16-blink b{color:#fff}
+.sost-v16-blink .hdr{display:block;color:#ff3b3b;font-weight:900;letter-spacing:1.3px;text-transform:uppercase;font-size:12px;margin-bottom:5px}
+.sost-v16-blink .win{color:#ff6b6b;font-weight:900}
+@keyframes sost-v16-blink{
+  0%,49%{border-color:#fb010d;box-shadow:0 0 20px rgba(251,1,13,.55);background:linear-gradient(135deg,rgba(251,1,13,.24),rgba(251,1,13,.08))}
+  50%,100%{border-color:rgba(251,1,13,.35);box-shadow:0 0 0 rgba(251,1,13,0);background:linear-gradient(135deg,rgba(251,1,13,.07),rgba(251,1,13,.02))}}
+.sost-v16-redchip{flex:0 0 auto;padding:5px 11px;border-radius:6px;font-size:10.5px;font-weight:900;letter-spacing:1px;
+  color:#fff;background:#fb010d;border:1px solid #ff6b6b;white-space:nowrap;
+  animation:sost-v16-chipblink 1.1s steps(1,end) infinite}
+@keyframes sost-v16-chipblink{0%,49%{opacity:1;box-shadow:0 0 16px rgba(251,1,13,.75)}50%,100%{opacity:.32;box-shadow:0 0 0 rgba(251,1,13,0)}}
+@media (prefers-reduced-motion:reduce){
+  .sost-v16-blink,.sost-v16-redchip,.sost-v16-icon,.sost-v16-title,.sost-v16{animation:none !important}
+  .sost-v16-blink{border-color:#fb010d;box-shadow:0 0 16px rgba(251,1,13,.45)}
+  .sost-v16-redchip{opacity:1}
+}
 .sost-v16-warn{margin:13px 0 0;padding:11px 14px;border-radius:8px;border:1px solid rgba(251,1,13,.65);
   background:linear-gradient(135deg,rgba(251,1,13,.12),rgba(251,1,13,.04));color:#ffdede;font-size:12px;line-height:1.65}
 .sost-v16-warn b{color:#ff6b6b}
@@ -109,10 +127,19 @@
       <span class="sost-v16-sub">Mandatory node/miner update before block #30,000 &middot; <b>Normal DTD does NOT change</b></span>
     </span>
     <span class="sost-v16-chip">ACTIVATION #30,000</span>
+    <span class="sost-v16-redchip">&#9888; RECOMPILE &amp; RESTART: #29,900 &rarr; #30,000</span>
     <span class="sost-v16-cta"><span class="sost-v16-cta-label" data-when="closed">Read</span><span class="sost-v16-cta-label" data-when="open" hidden>Hide</span><span class="sost-v16-chev" aria-hidden="true">&#9662;</span></span>
   </button>
 
   <div class="sost-v16-body" id="sostV16Body" hidden>
+
+    <div class="sost-v16-blink">
+      <span class="hdr">&#9888; Mandatory action for every miner and node operator</span>
+      You <b>must compile / install the new V16 binaries and restart your node and your miner</b> &mdash;
+      and you must do it <span class="win">only after block #29,900 and before block #30,000</span>.
+      Not earlier, not later. A validating node that is still on the old consensus software at #30,000
+      <b>may diverge from the V16 chain</b>.
+    </div>
 
     <div class="sost-v16-alert">
       <span class="k">THIS CHANGE ONLY AFFECTS THE DTD JACKPOT.</span><br>
