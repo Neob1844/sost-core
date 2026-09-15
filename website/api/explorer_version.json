@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-14-v429-jackpot-card-last-winner",
-  "note": "DTD Jackpot dashboard: the address field is labelled LAST WINNER instead of WINNER. It shows the winner of the jackpot that already paid, not of the one being counted down to, and WINNER next to a live NEXT JACKPOT countdown read as if that address had already won the upcoming draw."
+  "v": "2026-09-15-v430-jackpot-archive-navigation",
+  "note": "Jackpot Archive: the block, winner and view-tx links looked dead. They were generated correctly, with full hashes, addresses and txids, and showBlock/showAddress/showTxDetail did run - but the archive is a fixed overlay at z-index 99999 that stayed open, so the detail panel opened behind it and nothing appeared to happen. The links now close the overlay (and the jackpot dashboard) before navigating."
 }

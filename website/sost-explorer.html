@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-14-v429-jackpot-card-last-winner">
+<meta name="explorer-html-version" content="2026-09-15-v430-jackpot-archive-navigation">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -9083,13 +9083,22 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
     }).catch(function(){ return out; });
   }
 
+  // The archive is a fixed overlay at z-index 99999 that stays open when a row is
+  // clicked, so showBlock/showAddress/showTxDetail opened the detail panel BEHIND it and
+  // the links looked dead. Close the overlay first, then navigate.
+  window.SJP.go=function(fn,arg){
+    var d=document.getElementById('sjp-archive'); if(d) d.classList.remove('show');
+    var jd=document.getElementById('sjp-dash'); if(jd) jd.classList.remove('show');
+    if(typeof window[fn]==='function') window[fn](arg);
+  };
+
   function rowHtml(o){
-    var blk=o.hash?'<a class="sjpa-lnk" onclick="showBlock(\''+esc(o.hash)+'\')">#'+fc(o.h)+'</a>':('#'+fc(o.h));
-    var win=o.winner?'<a class="sjpa-lnk" onclick="showAddress(\''+esc(o.winner)+'\')" title="'+esc(o.winner)+'">'+esc(short(o.winner))+'</a>':'<span class="sjpa-mut">pending</span>';
+    var blk=o.hash?'<a class="sjpa-lnk" onclick="SJP.go(\'showBlock\',\''+esc(o.hash)+'\')">#'+fc(o.h)+'</a>':('#'+fc(o.h));
+    var win=o.winner?'<a class="sjpa-lnk" onclick="SJP.go(\'showAddress\',\''+esc(o.winner)+'\')" title="'+esc(o.winner)+'">'+esc(short(o.winner))+'</a>':'<span class="sjpa-mut">pending</span>';
     var jp=(o.amount!=null)?'<span class="sjpa-amt">+'+amtSost(o.amount)+' SOST</span>':'<span class="sjpa-mut">—</span>';
     var dtd=(o.dtd!=null&&o.dtd>0)?'<span class="sjpa-dtd">'+amtSost(o.dtd)+' SOST</span>':'<span class="sjpa-mut">—</span>';
     var el=(o.elig!=null)?fc(o.elig):'<span class="sjpa-mut">—</span>';
-    var tx=o.txid?'<a class="sjpa-lnk" onclick="showTxDetail(\''+esc(o.txid)+'\')">view tx</a>':'<span class="sjpa-mut">—</span>';
+    var tx=o.txid?'<a class="sjpa-lnk" onclick="SJP.go(\'showTxDetail\',\''+esc(o.txid)+'\')">view tx</a>':'<span class="sjpa-mut">—</span>';
     var st=o.winner?'<span class="sjpa-badge">VERIFIED ON-CHAIN</span>':'<span class="sjpa-mut">unconfirmed</span>';
     var age=o.ts?'<span class="sjpa-mut">'+esc(ago(o.ts))+'</span>':'';
     return '<tr><td>'+blk+'</td><td>'+age+'</td><td>'+win+'</td><td>'+jp+'</td><td>'+dtd+'</td><td>'+el+'</td><td>'+tx+'</td><td>'+st+'</td></tr>';
