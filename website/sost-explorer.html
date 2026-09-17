@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-15-v430-jackpot-archive-navigation">
+<meta name="explorer-html-version" content="2026-09-17-v431-eth-price-charts">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -860,6 +860,33 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       </div>
       <div class="price-card-range" id="xautbtcRange"></div>
     </div>
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:var(--gold)">XAUT / ETH</b> &mdash; Tether Gold vs Ethereum</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="xautethPrice" style="color:var(--gold)">&mdash;</div>
+      <div class="price-change" id="xautethChange">&mdash;</div>
+      <div class="tf-btns" id="xautethTfBtns">
+        <button class="tf-btn" data-tf="1H">1H</button>
+        <button class="tf-btn" data-tf="4H">4H</button>
+        <button class="tf-btn" data-tf="8H">8H</button>
+        <button class="tf-btn active" data-tf="24H">24H</button>
+        <button class="tf-btn" data-tf="3D">3D</button>
+        <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
+        <button class="tf-btn" data-tf="3Y">3Y</button>
+        <button class="tf-btn" data-tf="5Y">5Y</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="xautethChart" style="width:100%;height:150px"></canvas>
+        <canvas id="xautethOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="xautethTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="xautethRange"></div>
+    </div>
     <!-- overlay: XAUT price + XAUT/BTC (left column) -->
     <div class="price-card">
       <div class="price-card-head"><div class="price-card-title">// <b style="color:#d4af37">XAUT PRICE + XAUT / BTC</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
@@ -871,6 +898,18 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <div class="price-tooltip" id="ovxautTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
       </div>
       <div class="price-card-range" id="ovxautRange"></div>
+    </div>
+    <!-- overlay: XAUT price + XAUT/ETH (left column) -->
+    <div class="price-card">
+      <div class="price-card-head"><div class="price-card-title">// <b style="color:#d4af37">XAUT PRICE + XAUT / ETH</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
+      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#d4af37">■ XAUT PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#22d3ee">■ XAUT / ETH <span style="color:var(--text3)">(ETH, right)</span></span></div>
+      <div class="tf-btns" id="ovxautethTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
+      <div class="chart-wrap">
+        <canvas id="ovxautethChart" style="width:100%;height:150px"></canvas>
+        <canvas id="ovxautethOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="ovxautethTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="ovxautethRange"></div>
     </div>
     </div>
     <div class="price-col">
@@ -928,6 +967,33 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       </div>
       <div class="price-card-range" id="paxgbtcRange"></div>
     </div>
+    <div class="price-card">
+      <div class="price-card-head">
+        <div class="price-card-title">// <b style="color:var(--green)">PAXG / ETH</b> &mdash; Pax Gold vs Ethereum</div>
+        <div class="price-card-badge"><span class="pdot"></span>LIVE</div>
+      </div>
+      <div class="price-card-val" id="paxgethPrice" style="color:var(--green)">&mdash;</div>
+      <div class="price-change" id="paxgethChange">&mdash;</div>
+      <div class="tf-btns" id="paxgethTfBtns">
+        <button class="tf-btn" data-tf="1H">1H</button>
+        <button class="tf-btn" data-tf="4H">4H</button>
+        <button class="tf-btn" data-tf="8H">8H</button>
+        <button class="tf-btn active" data-tf="24H">24H</button>
+        <button class="tf-btn" data-tf="3D">3D</button>
+        <button class="tf-btn" data-tf="7D">7D</button>
+        <button class="tf-btn" data-tf="30D">30D</button>
+        <button class="tf-btn" data-tf="6M">6M</button>
+        <button class="tf-btn" data-tf="1Y">1Y</button>
+        <button class="tf-btn" data-tf="3Y">3Y</button>
+        <button class="tf-btn" data-tf="5Y">5Y</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="paxgethChart" style="width:100%;height:150px"></canvas>
+        <canvas id="paxgethOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="paxgethTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="paxgethRange"></div>
+    </div>
     <!-- overlay: PAXG price + PAXG/BTC (right column) -->
     <div class="price-card">
       <div class="price-card-head"><div class="price-card-title">// <b style="color:#4ade80">PAXG PRICE + PAXG / BTC</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
@@ -939,6 +1005,18 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <div class="price-tooltip" id="ovpaxgTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
       </div>
       <div class="price-card-range" id="ovpaxgRange"></div>
+    </div>
+    <!-- overlay: PAXG price + PAXG/ETH (right column) -->
+    <div class="price-card">
+      <div class="price-card-head"><div class="price-card-title">// <b style="color:#4ade80">PAXG PRICE + PAXG / ETH</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
+      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#4ade80">■ PAXG PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#d946ef">■ PAXG / ETH <span style="color:var(--text3)">(ETH, right)</span></span></div>
+      <div class="tf-btns" id="ovpaxgethTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
+      <div class="chart-wrap">
+        <canvas id="ovpaxgethChart" style="width:100%;height:150px"></canvas>
+        <canvas id="ovpaxgethOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
+        <div class="price-tooltip" id="ovpaxgethTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="ovpaxgethRange"></div>
     </div>
     </div>
     <div class="price-col">
@@ -7541,27 +7619,35 @@ var COINS=[
   {id:'pax-gold',key:'paxg',color:'#4ade80',vs:'usd'},
   {id:'tether-gold',key:'xautbtc',color:'#b8860b',vs:'btc'},
   {id:'pax-gold',key:'paxgbtc',color:'#4ade80',vs:'btc'},
+  {id:'tether-gold',key:'xauteth',color:'#b8860b',vs:'eth'},
+  {id:'pax-gold',key:'paxgeth',color:'#4ade80',vs:'eth'},
   {id:null,key:'sost',color:'#fb010d',vs:'usd'}
 ];
+// The ratio charts (gold priced in a crypto denominator) are driven off COINS rather
+// than listed again: fetching, refreshing and the spot-price label all walk this list,
+// so adding a denominator is one line above and nothing else.
+var RATIO_PAIRS=COINS.filter(function(c){return c.id&&c.vs!=='usd';})
+                     .map(function(c){return {id:c.id,key:c.key,vs:c.vs};});
 var TF_MAP={
   '1H':{days:1,ms:3600000},'4H':{days:1,ms:14400000},'8H':{days:1,ms:28800000},
   '24H':{days:1,ms:null},'3D':{days:3,ms:null},'7D':{days:7,ms:null},
   '30D':{days:30,ms:null},'6M':{days:180,ms:null},'1Y':{days:365,ms:null},'3Y':{days:1095,ms:null},'5Y':{days:1825,ms:null}
 };
-var cache={},cacheTimes={},CACHE_TTL=300000,activeTf={xaut:'24H',paxg:'24H',xautbtc:'24H',paxgbtc:'24H',sost:'24H'},sostId=null,sostChecked=false;
+var cache={},cacheTimes={},CACHE_TTL=300000,activeTf={xaut:'24H',paxg:'24H',xautbtc:'24H',paxgbtc:'24H',xauteth:'24H',paxgeth:'24H',sost:'24H'},sostId=null,sostChecked=false;
 var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var codeFont;try{codeFont=getComputedStyle(document.documentElement).getPropertyValue('--code');}catch(e){}
 if(!codeFont)codeFont="'Fira Code',monospace";
 
 function fmtUsd(n){return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtBtc(n){if(n>=1)return'\u20BF'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:6});return'\u20BF'+n.toLocaleString('en-US',{minimumFractionDigits:6,maximumFractionDigits:8});}
+function fmtEth(n){if(n>=1)return'\u039E'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:6});return'\u039E'+n.toLocaleString('en-US',{minimumFractionDigits:6,maximumFractionDigits:8});}
 function vsOf(key){var co=COINS.find(function(c){return c.key===key;});return co&&co.vs?co.vs:'usd';}
-function fmtFor(key,n){return vsOf(key)==='btc'?fmtBtc(n):fmtUsd(n);}
+function fmtFor(key,n){var v=vsOf(key);return v==='btc'?fmtBtc(n):(v==='eth'?fmtEth(n):fmtUsd(n));}
 function fmtTip(ts){var d=new Date(ts);return MO[d.getUTCMonth()]+' '+d.getUTCDate()+', '+('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2)+' UTC';}
 function shortTf(tf){return tf==='1H'||tf==='4H'||tf==='8H'||tf==='24H';}
 function fmtAx(ts,period){var d=new Date(ts);if(period==='1H'||period==='4H'||period==='8H')return('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);if(period==='24H')return('0'+d.getUTCHours()).slice(-2)+':00';if(period==='3D'||period==='7D'||period==='30D')return MO[d.getUTCMonth()]+' '+d.getUTCDate();if(period==='6M'||period==='1Y')return MO[d.getUTCMonth()]+' '+d.getUTCFullYear().toString().slice(-2);if(period==='3Y'||period==='5Y')return d.getUTCFullYear().toString();return MO[d.getUTCMonth()]+' '+d.getUTCDate();}
-function cid(key){if(key==='xaut'||key==='xautbtc')return'tether-gold';if(key==='paxg'||key==='paxgbtc')return'pax-gold';return sostId;}
-function cKey(idOrKey,vs){var id=(idOrKey&&typeof idOrKey==='string'&&idOrKey.indexOf(':')===-1)?idOrKey:idOrKey;return vs==='btc'?id+':btc':id;}
+function cid(key){if(key==='xaut'||key==='xautbtc'||key==='xauteth')return'tether-gold';if(key==='paxg'||key==='paxgbtc'||key==='paxgeth')return'pax-gold';return sostId;}
+function cKey(idOrKey,vs){var id=(idOrKey&&typeof idOrKey==='string'&&idOrKey.indexOf(':')===-1)?idOrKey:idOrKey;return (vs&&vs!=='usd')?id+':'+vs:id;}   // usd keeps the bare id; btc/eth get their own slot
 
 function getData(key){
   var id=cid(key);if(!id)return[];
@@ -7660,7 +7746,7 @@ function fetchHist(id,days,vsOrCb,cb){
           _outOfRange[ck]=true;
           // Dim that timeframe on every chart that shares the series, not only on the one
           // that happened to ask: the range is unavailable for all of them equally.
-          try{['xaut','paxg','xautbtc','paxgbtc'].forEach(checkTfAvail);}catch(e){}
+          try{['xaut','paxg','xautbtc','paxgbtc','xauteth','paxgeth'].forEach(checkTfAvail);}catch(e){}
           finish('out_of_range');
         } else if(!r.ok){
           var e=(d&&d.error)||'http_error';
@@ -7710,7 +7796,7 @@ function drawChart(key){
   var grd=ctx.createLinearGradient(0,pT,0,pT+ch);grd.addColorStop(0,color+'1a');grd.addColorStop(1,color+'00');
   ctx.lineTo(pL+cw,pT+ch);ctx.lineTo(pL,pT+ch);ctx.closePath();ctx.fillStyle=grd;ctx.fill();
   updChange(key,data);updRange(key,prices);
-  if(vsOf(key)==='btc')updateBtcSpot(key);
+  if(vsOf(key)!=='usd')updateRatioSpot(key);
 }
 
 function updChange(key,data){
@@ -7815,15 +7901,17 @@ function checkTfAvail(key){
   });
 }
 
-// Update the spot price <div> for a BTC chart from its latest cache point.
-function updateBtcSpot(key){
+// Update the spot price <div> for a ratio chart from its latest cache point. The
+// denominator is read from the chart's own `vs`, so the same function serves
+// XAUT/BTC, PAXG/BTC, XAUT/ETH and PAXG/ETH.
+function updateRatioSpot(key){
   var id=cid(key);if(!id)return;
-  var ck=cKey(id,'btc');
+  var ck=cKey(id,vsOf(key));
   var arr=cache[ck]&&cache[ck][1];
   if(!arr||!arr.length)return;
   var last=arr[arr.length-1][1];
   var el=document.getElementById(key+'Price');
-  if(el)el.textContent=fmtBtc(last);
+  if(el)el.textContent=fmtFor(key,last);
 }
 // Calculate SOST reference price from gold backing
 var sostRefPrice=null,sostRefXaut=null,sostRefPaxg=null,sostRefGoldOz=1.2,sostRefSupply=null;
@@ -7896,12 +7984,11 @@ function activateSost(){
 }
 
 function refresh(){
-  // The BTC pairs are refreshed here too (v425). They used to be fetched exactly once at
-  // load, so a failed first request left those two charts empty for the whole session.
-  ['tether-gold','pax-gold'].forEach(function(gid){
-    var bk=(gid==='tether-gold')?'xautbtc':'paxgbtc';
-    var bdays=TF_MAP[activeTf[bk]].days;
-    fetchHist(gid,bdays,'btc',function(){drawChart(bk);checkTfAvail(bk);updateBtcSpot(bk);});
+  // The ratio pairs are refreshed here too (v425). They used to be fetched exactly once
+  // at load, so a failed first request left those charts empty for the whole session.
+  RATIO_PAIRS.forEach(function(p){
+    var bdays=TF_MAP[activeTf[p.key]].days;
+    fetchHist(p.id,bdays,p.vs,function(){drawChart(p.key);checkTfAvail(p.key);updateRatioSpot(p.key);});
   });
   ['tether-gold','pax-gold'].forEach(function(id){
     var key=id==='tether-gold'?'xaut':'paxg';
@@ -7934,21 +8021,21 @@ function refresh(){
 }
 
 // Init
-['xaut','paxg','xautbtc','paxgbtc','sost'].forEach(function(k){setupTfBtns(k);setupTooltip(k);});
-var goldFetchDone={xaut:false,paxg:false,xautbtc:false,paxgbtc:false};
-// Fan-out BTC fetches for the two gold coins so the new charts populate alongside USD.
+['xaut','paxg','xautbtc','paxgbtc','xauteth','paxgeth','sost'].forEach(function(k){setupTfBtns(k);setupTooltip(k);});
+var goldFetchDone={xaut:false,paxg:false,xautbtc:false,paxgbtc:false,xauteth:false,paxgeth:false};
+// Fan-out the crypto-denominated fetches for the two gold coins so those charts
+// populate alongside USD.
 //
-// v425: these two fetched once and gave up. If that single request failed — a rate
-// limit at page load was enough — XAUT/BTC and PAXG/BTC stayed blank until the visitor
-// reloaded, because refresh() only ever re-fetched the USD series. Retry on a real
-// failure (not on a genuinely empty range), and refresh() now covers the BTC pairs too,
-// so a chart that misses its first fetch recovers on its own.
-['tether-gold','pax-gold'].forEach(function(gid){
-  var k=(gid==='tether-gold')?'xautbtc':'paxgbtc';
+// v425: these fetched once and gave up. If that single request failed — a rate limit at
+// page load was enough — the ratio charts stayed blank until the visitor reloaded,
+// because refresh() only ever re-fetched the USD series. Retry on a real failure (not on
+// a genuinely empty range), and refresh() now covers the ratio pairs too, so a chart
+// that misses its first fetch recovers on its own.
+RATIO_PAIRS.forEach(function(p){
   (function attempt(n){
-    fetchHist(gid,1,'btc',function(outcome){
-      var have=cache[cKey(gid,'btc')]&&cache[cKey(gid,'btc')][1];
-      if(have&&have.length){drawChart(k);checkTfAvail(k);updateBtcSpot(k);return;}
+    fetchHist(p.id,1,p.vs,function(outcome){
+      var have=cache[cKey(p.id,p.vs)]&&cache[cKey(p.id,p.vs)][1];
+      if(have&&have.length){drawChart(p.key);checkTfAvail(p.key);updateRatioSpot(p.key);return;}
       if(outcome==='empty'||outcome==='out_of_range'||n>=3)return;   // nothing to recover
       setTimeout(function(){attempt(n+1);},2000*(n+1)+Math.random()*500);
     });
@@ -7967,21 +8054,28 @@ var goldFetchDone={xaut:false,paxg:false,xautbtc:false,paxgbtc:false};
 });
 initSost();
 setInterval(refresh,60000);
-  // ===== OVERLAY CHARTS — each asset overlaid with its own BTC pair (dual Y axis) =====
-  // Card A: XAUT PRICE (USD, left axis) + XAUT/BTC (BTC, right axis)
-  // Card B: PAXG PRICE (USD, left axis) + PAXG/BTC (BTC, right axis)
+  // ===== OVERLAY CHARTS — each asset overlaid with its own crypto pair (dual Y axis) ==
+  // Card A: XAUT PRICE (USD, left axis) + XAUT/BTC (BTC, right axis) + BTC/USDC (dashed)
+  // Card B: PAXG PRICE (USD, left axis) + PAXG/BTC (BTC, right axis) + BTC/USDC (dashed)
+  // Card C: the same as A with ETH as the denominator (XAUT/ETH + ETH/USDC)
+  // Card D: the same as B with ETH as the denominator (PAXG/ETH + ETH/USDC)
+  // The ETH cards keep the BTC cards' shape and colours; only the third, dashed context
+  // line carries the denominator's brand colour (#f7931a BTC vs #627eea ETH).
   var OVERLAYS=[
     {key:'ovxaut', a:{id:'tether-gold',vs:'usd',color:'#d4af37',label:'XAUT PRICE',fmt:'usd'}, b:{id:'tether-gold',vs:'btc',color:'#22d3ee',label:'XAUT / BTC',fmt:'btc'}, c:{id:'bitcoin',vs:'usd',color:'#f7931a',label:'BTC / USDC',fmt:'usd'}},
-    {key:'ovpaxg', a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'btc',color:'#d946ef',label:'PAXG / BTC',fmt:'btc'}, c:{id:'bitcoin',vs:'usd',color:'#f7931a',label:'BTC / USDC',fmt:'usd'}}
+    {key:'ovpaxg', a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'btc',color:'#d946ef',label:'PAXG / BTC',fmt:'btc'}, c:{id:'bitcoin',vs:'usd',color:'#f7931a',label:'BTC / USDC',fmt:'usd'}},
+    {key:'ovxauteth', a:{id:'tether-gold',vs:'usd',color:'#d4af37',label:'XAUT PRICE',fmt:'usd'}, b:{id:'tether-gold',vs:'eth',color:'#22d3ee',label:'XAUT / ETH',fmt:'eth'}, c:{id:'ethereum',vs:'usd',color:'#627eea',label:'ETH / USDC',fmt:'usd'}},
+    {key:'ovpaxgeth', a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'eth',color:'#d946ef',label:'PAXG / ETH',fmt:'eth'}, c:{id:'ethereum',vs:'usd',color:'#627eea',label:'ETH / USDC',fmt:'usd'}}
   ];
-  var ovTf={ovxaut:'24H',ovpaxg:'24H'};
-  var ovReq={ovxaut:0,ovpaxg:0};       // request generation per chart (stale-response guard)
-  var ovState={ovxaut:{},ovpaxg:{}};   // per-series state: 'pending'|'ready'|'empty'|'out_of_range'|'error' (never inferred from point count)
+  // Per-card state, built from OVERLAYS so a new card needs no second list to update.
+  var ovTf={},ovReq={},ovState={};     // timeframe · request generation (stale-response guard) · per-series state ('pending'|'ready'|'empty'|'out_of_range'|'error', never inferred from point count)
+  OVERLAYS.forEach(function(_c){ovTf[_c.key]='24H';ovReq[_c.key]=0;ovState[_c.key]={};});
   function ovSeries(id,vs,tf){ var ck=cKey(id,vs),def=TF_MAP[tf]; var raw=(cache[ck]&&cache[ck][def.days])||[]; if(!raw.length)return[]; if(def.ms){var cut=Date.now()-def.ms;return raw.filter(function(pp){return pp[0]>=cut;});} return raw; }
-  function ovFmt1(fmt,v){ return fmt==='btc'?fmtBtc(v):fmtUsd(v); }
+  function ovFmt1(fmt,v){ return fmt==='btc'?fmtBtc(v):(fmt==='eth'?fmtEth(v):fmtUsd(v)); }
   function ovScale(arr){ var vs=arr.map(function(p){return p[1];}); var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs); var r=mx-mn; if(r===0)r=mn*0.001||1; mn-=r*0.05; mx+=r*0.05; return {mn:mn,mx:mx,rng:(mx-mn)||1}; }
-  // BTC/USDC reference: normalize to base 100 at the start of the visible range so
-  // its (much larger, volatile) scale never crushes the XAUT/PAXG lines.
+  // Denominator reference line (BTC/USDC or ETH/USDC): normalize to base 100 at the
+  // start of the visible range so its (much larger, volatile) scale never crushes the
+  // XAUT/PAXG lines.
   function ovNorm(arr){ if(!arr.length)return[]; var base=arr[0][1]||1; return arr.map(function(pp){return [pp[0], 100*pp[1]/base];}); }
   function updOvRange(cfg,A,B,C){
     var el=document.getElementById(cfg.key+'Range'); if(!el)return;
@@ -8030,7 +8124,7 @@ setInterval(refresh,60000);
     for(var xi=0;xi<6;xi++){var tt=minT+trng*xi/5;var xp=pL+xi/5*cw;ctx.fillText(fmtAx(tt,tf),xp,h-3);}
     function line(arr,color,sc){ if(arr.length<2||!sc)return; ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.beginPath(); for(var j=0;j<arr.length;j++){var px=pL+((arr[j][0]-minT)/trng)*cw;var py=pT+ch-((arr[j][1]-sc.mn)/sc.rng)*ch;if(j===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);} ctx.stroke(); }
     line(A,cfg.a.color,sA); line(B,cfg.b.color,sB);
-    // BTC/USDC context: normalized to base 100, dashed, its own implicit scale.
+    // Denominator context (BTC/USDC, ETH/USDC): base-100 normalized, dashed, own scale.
     if(C.length>=2){ var Cn=ovNorm(C), sC=ovScale(Cn); ctx.save(); ctx.setLineDash([5,3]); line(Cn,cfg.c.color,sC); ctx.restore(); }
     updOvRange(cfg,A,B,C);
   }
@@ -8104,7 +8198,7 @@ setInterval(refresh,60000);
   function setupOvTf(cfg){ var cont=document.getElementById(cfg.key+'TfBtns'); if(!cont)return; var btns=cont.querySelectorAll('.tf-btn'); btns.forEach(function(btn){ btn.addEventListener('click',function(){ btns.forEach(function(b){b.classList.remove('active');}); btn.classList.add('active'); ovTf[cfg.key]=btn.getAttribute('data-tf'); ovEnsureDraw(cfg); }); }); }
   OVERLAYS.forEach(function(cfg){ setupOvTf(cfg); setupOvTooltip(cfg); ovEnsureDraw(cfg); });
 
-window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','sost'].forEach(drawChart);OVERLAYS.forEach(drawOverlay);});
+window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','xauteth','paxgeth','sost'].forEach(drawChart);OVERLAYS.forEach(drawOverlay);});
 })();
 
 </script>

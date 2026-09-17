@@ -93,6 +93,16 @@ class ParamValidation(unittest.TestCase):
         a, vs, label, days = mp.parse_params('asset=pax-gold&vs=btc&days=365')
         self.assertEqual((a, vs, label, days), ('pax-gold', 'btc', '1Y', 365))
 
+    def test_accepts_eth_denominated_pairs(self):
+        """The ETH charts ask for the same shapes the BTC charts do: the gold assets
+        priced in ETH, plus ETH's own USD line."""
+        self.assertEqual(mp.parse_params('asset=tether-gold&vs=eth&range=24H'),
+                         ('tether-gold', 'eth', '24H', 1))
+        self.assertEqual(mp.parse_params('asset=pax-gold&vs=eth&days=30'),
+                         ('pax-gold', 'eth', '30D', 30))
+        self.assertEqual(mp.parse_params('asset=ethereum&vs=usd&range=7D'),
+                         ('ethereum', 'usd', '7D', 7))
+
     def test_range_defaults_vs_to_usd(self):
         self.assertEqual(mp.parse_params('asset=bitcoin&range=7D')[1], 'usd')
 

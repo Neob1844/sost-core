@@ -49,8 +49,12 @@ USER_AGENT = 'sost-market-proxy/1.0 (+https://sostcore.com)'
 
 # ---------------------------------------------------------------- allowlist
 # Every dimension a caller can influence is enumerated here. Anything else is a 400.
-ASSETS = {'tether-gold', 'pax-gold', 'bitcoin'}
-VS = {'usd', 'btc'}
+# `ethereum` and `eth` are here for the same reason `bitcoin` and `btc` are: the
+# explorer draws the two gold assets priced in a crypto denominator (vs=btc / vs=eth)
+# and, alongside them, that denominator's own USD line (asset=bitcoin / asset=ethereum,
+# vs=usd). Nothing else about the request shape changes.
+ASSETS = {'tether-gold', 'pax-gold', 'bitcoin', 'ethereum'}
+VS = {'usd', 'btc', 'eth'}
 # range label -> days asked of the upstream API.
 RANGES = {'1H': 1, '4H': 1, '8H': 1, '24H': 1, '3D': 3, '7D': 7,
           '30D': 30, '6M': 180, '1Y': 365, '3Y': 1095, '5Y': 1825}

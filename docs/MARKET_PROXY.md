@@ -24,8 +24,8 @@ With the gateway:
 ## Endpoint
 
 ```
-GET /api/market-history?asset=<asset>&vs=<usd|btc>&range=<label>
-GET /api/market-history?asset=<asset>&vs=<usd|btc>&days=<n>
+GET /api/market-history?asset=<asset>&vs=<usd|btc|eth>&range=<label>
+GET /api/market-history?asset=<asset>&vs=<usd|btc|eth>&days=<n>
 GET /api/market-history/stats
 ```
 
@@ -47,8 +47,8 @@ allowlist:
 
 | dimension | allowed |
 |---|---|
-| `asset`   | `tether-gold`, `pax-gold`, `bitcoin` |
-| `vs`      | `usd`, `btc` |
+| `asset`   | `tether-gold`, `pax-gold`, `bitcoin`, `ethereum` |
+| `vs`      | `usd`, `btc`, `eth` |
 | `range`   | 1H, 4H, 8H, 24H, 3D, 7D, 30D, 6M, 1Y, 3Y, 5Y |
 
 Anything else is a 400 before any network call. The upstream URL is built here
