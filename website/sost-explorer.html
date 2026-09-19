@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-17-v431-eth-price-charts">
+<meta name="explorer-html-version" content="2026-09-19-v432-dtd-cadence-cooldown-list">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -4904,15 +4904,20 @@ function updateMiningPanel(elapsed){
   if(mh)mh.textContent='#'+nextH;
   var li=document.getElementById('miningLotteryInfo');
   if(li){
-    var phase2=7100, permanent=12100;
+    // Cadence gates, same heights consensus uses (lottery.h::is_lottery_block):
+    //   [7100,12100)  bootstrap 2-of-3   ·  [12100,25000) permanent 1-of-3
+    //   >= 25000 (V15) 3-of-3 — a draw on EVERY block. This last branch was
+    //   missing, so the panel kept advertising 1-of-3 long after V15.
+    var phase2=7100, permanent=12100, v15=25000;
     var triggered=false, mode='pre-Phase 2';
-    if(nextH>=phase2&&nextH<permanent){triggered=(nextH%3)!==0;mode='2-of-3 schedule';}
+    if(nextH>=v15){triggered=true;mode='3-of-3 schedule';}
     else if(nextH>=permanent){triggered=(nextH%3)===0;mode='1-of-3 schedule';}
+    else if(nextH>=phase2){triggered=(nextH%3)!==0;mode='2-of-3 schedule';}
     if(nextH<phase2){
-      li.textContent='lottery: pre-Phase 2';
+      li.textContent='DTD: pre-Phase 2';
       li.style.color='#ff00ff';
     }else{
-      li.textContent='lottery: '+(triggered?'YES':'NO')+' · '+mode;
+      li.textContent='DTD: '+(triggered?'YES':'NO')+' · '+mode;
       li.style.color='#ff00ff';
     }
   }
@@ -8929,6 +8934,13 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       : ('<div style="border:1px solid #2b7a3d;border-radius:8px;padding:9px 13px;margin:2px 0 14px;background:rgba(57,255,20,.06)">'
          +'<div style="font:800 11px ui-monospace;letter-spacing:.8px;color:#39ff14">&#9989; V16 ACTIVE &middot; DTD JACKPOT V2 (node-gated, PoW-weighted)</div>'
          +'<div style="font-size:11px;color:var(--text2);margin-top:5px">First V2 draw #'+fc(V2FIRST)+'. Eligibility = active node + SbPoW identity; win chance linear in SbPoW blocks.</div></div>');
+    var cdArr=(Object.prototype.toString.call(state.cooldownList)==='[object Array]')?state.cooldownList:[];
+    var cdCount=state.cooldownList?cdArr.length:'\u2014';
+    var cdWindow=(state.cooldownWindow!=null?state.cooldownWindow:6);
+    var cdListHtml=cdArr.length
+      ? ('<div style="font:700 8px/1 ui-monospace;letter-spacing:1px;color:#8a97a3;margin-bottom:5px">WALLET / MINING IDENTITY IN COOLDOWN</div>'
+         +cdArr.map(function(a){return '<div style="font:600 10px/1.7 ui-monospace;color:#22d3ee;cursor:pointer;word-break:break-all" title="Open address detail" onclick="event.stopPropagation();showAddress(\''+esc(a)+'\')">'+esc(a)+'</div>';}).join(''))
+      : '<div style="font:600 10px/1.5 ui-monospace;color:var(--text3)">No identities currently in cooldown</div>';
     d.innerHTML='<div class="sjpd-box"><div class="sjpd-hd"><h3>&#127974; DTD JACKPOT</h3>'+
       '<button class="sjpd-x" id="sjpd-x">Close</button></div>'+
       v2Banner+
@@ -8940,7 +8952,14 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         '<div class="sjpd-c"><div class="sjpd-l">ESTIMATED TIME</div><div class="sjpd-v">~'+eta(rem)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">RECENTLY ACTIVE (288)</div><div class="sjpd-v g">'+esc(elig)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOT ELIGIBLE (20k)</div><div class="sjpd-v c">'+jpEDisp+'</div>'+(jpEStat?'<div style="font-size:8px;letter-spacing:.6px;color:var(--gold);margin-top:2px">'+jpEStat+'</div>':'')+'</div>'+
-        '<div class="sjpd-c"><div class="sjpd-l">\uD83D\uDFE0 IN COOLDOWN</div><div class="sjpd-v">'+(state.cooldownList?state.cooldownList.length:'\u2014')+'</div><div style="font-size:8px;color:var(--text3);margin-top:2px">window '+(state.cooldownWindow!=null?state.cooldownWindow:6)+' blocks</div></div>'+
+        // The cooldown belongs to DTD NORMAL — DTD Jackpot V2 has none. Label it so,
+        // and let the card expand into the identities behind the count (already on
+        // state.cooldownList, from getlotteryaudit's cooldown_addresses).
+        '<div class="sjpd-c" style="cursor:pointer" title="Normal-DTD recent-producer cooldown. Click to list the identities. DTD Jackpot V2 has NO cooldown." onclick="var e=document.getElementById(\'sjpd-cd-list\');if(e)e.style.display=(e.style.display===\'none\'?\'block\':\'none\');">'+
+          '<div class="sjpd-l">\uD83D\uDFE0 NORMAL DTD COOLDOWN</div><div class="sjpd-v">'+cdCount+'</div>'+
+          '<div style="font-size:8px;color:var(--text3);margin-top:2px">window '+cdWindow+' blocks \u00B7 click to list</div>'+
+          '<div id="sjpd-cd-list" style="display:none;margin-top:8px;border-top:1px solid #1d2731;padding-top:6px">'+cdListHtml+'</div>'+
+        '</div>'+
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div></div>'+
       '</div>'+
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+esc(status)+'</div>'+
