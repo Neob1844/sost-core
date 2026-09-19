@@ -27,6 +27,9 @@
 - **Weight = number of SbPoW blocks in the window (LINEAR)** — the only Sybil-neutral
   weighting: splitting the same work across many addresses does **not** increase your
   total weight; running more nodes never adds weight (node = eligibility gate only).
+  Splitting can only ever LOSE weight: an identity below the 3-blocks-per-5,000 minimum
+  is not eligible at all and contributes 0, and every identity needs its own NODE_BIND
+  and its own heartbeats. See the Errata at the end of this file.
 - **No jackpot cooldown. No jackpot anti-dominance.** The jackpot is a probabilistic
   reward proportional to contributed security + node participation.
 - **Independent, domain-separated seed** (`SOST_HIST_JACKPOT`) — the jackpot draw is
@@ -61,3 +64,24 @@ add weight, so faking additional nodes gains nothing.
 - Regressions with V16 present but inactive: payout / reorg / reindex / restart — PASS.
 - **V15→V16 upgrade** across activation (V15 chain loads byte-identically in V16 and
   crosses the activation automatically) — PASS.
+
+## Errata — published announcement, not the protocol
+
+The long-form BitcoinTalk announcement carried an anti-Sybil example reading
+`100 identities x 1 block each = total weight 100`. That is **wrong against this
+release**, and the correction is that the protocol is STRICTER than advertised,
+never looser:
+
+```
+  1 identity  x 100 blocks -> 1 eligible   -> total weight 100
+ 10 identities x  10 blocks -> 10 eligible -> total weight 100
+100 identities x   1 block  -> 0 eligible  -> total weight   0   <-- announcement said 100
+```
+
+`jv2_build_weighted_set()` (`src/jackpot_v2.cpp:93-109`) drops every candidate that
+fails `jv2_eligibility_reason()`, and one block is below `JACKPOT_V2_MIN_BLOCKS = 3`
+(`src/jackpot_v2.cpp:83`), so such identities carry no weight at all. `tests/
+test_jackpot_v2.cpp:178` already noted this and covers only the 1x100 and 10x10 cases.
+
+No consensus code changed for this: the binaries and the tag `v16.0.0-jackpot-v2`
+stay frozen, and the hashes in `docs/v16/SHA256SUMS` remain the ones to verify.

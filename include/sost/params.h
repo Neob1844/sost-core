@@ -1344,8 +1344,8 @@ inline constexpr bool node_participation_active_at(int64_t height) {
 // A DTD candidate must have mined at least one block within a recency window:
 //   - normal (non-jackpot) blocks: DTD_RECENCY_WINDOW  (5000 blocks)
 //   - jackpot blocks:              DTD_JACKPOT_RECENCY_WINDOW (20000 blocks, ~19 weeks)
-// The jackpot window is stricter and governs jackpot blocks (the single DTD winner
-// of a jackpot block receives both the normal DTD share and the jackpot).
+// The jackpot window is stricter and governs jackpot blocks. V15 rationale: the DTD
+// winner took the jackpot too. From V16 the jackpot has its OWN winner (jackpot_v2.h).
 // Applied inside compute_lottery_eligibility_set(), so ALL callers (miner template +
 // every validator/jackpot path) share one predicate → guaranteed miner<->validator parity.
 // =============================================================================
