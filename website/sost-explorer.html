@@ -8955,10 +8955,11 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         // The cooldown belongs to DTD NORMAL — DTD Jackpot V2 has none. Label it so,
         // and let the card expand into the identities behind the count (already on
         // state.cooldownList, from getlotteryaudit's cooldown_addresses).
-        '<div class="sjpd-c" style="cursor:pointer" title="Normal-DTD recent-producer cooldown. Click to list the identities. DTD Jackpot V2 has NO cooldown." onclick="var e=document.getElementById(\'sjpd-cd-list\');if(e)e.style.display=(e.style.display===\'none\'?\'block\':\'none\');">'+
+        '<div class="sjpd-c" style="cursor:pointer" title="Normal-DTD recent-producer cooldown. Click to list the identities. DTD Jackpot V2 has NO cooldown." onclick="window._sjpdCdOpen=!window._sjpdCdOpen;var e=document.getElementById(\'sjpd-cd-list\');if(e)e.style.display=window._sjpdCdOpen?\'block\':\'none\';">'+
           '<div class="sjpd-l">\uD83D\uDFE0 NORMAL DTD COOLDOWN</div><div class="sjpd-v">'+cdCount+'</div>'+
           '<div style="font-size:8px;color:var(--text3);margin-top:2px">window '+cdWindow+' blocks \u00B7 click to list</div>'+
-          '<div id="sjpd-cd-list" style="display:none;margin-top:8px;border-top:1px solid #1d2731;padding-top:6px">'+cdListHtml+'</div>'+
+          // render() re-runs as each RPC lands; keep the dropdown open across re-renders.
+          '<div id="sjpd-cd-list" style="display:'+(window._sjpdCdOpen?'block':'none')+';margin-top:8px;border-top:1px solid #1d2731;padding-top:6px">'+cdListHtml+'</div>'+
         '</div>'+
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div></div>'+
       '</div>'+
