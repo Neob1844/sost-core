@@ -839,6 +839,10 @@ add_executable(test-dtd-recency tests/test_dtd_recency.cpp)
 target_link_libraries(test-dtd-recency PRIVATE sost-core)
 add_test(NAME dtd-recency COMMAND test-dtd-recency)
 
+add_executable(test-dtd-v16-gates tests/test_dtd_v16_gates.cpp)
+target_link_libraries(test-dtd-v16-gates PRIVATE sost-core)
+add_test(NAME dtd-v16-gates COMMAND test-dtd-v16-gates)
+
 add_executable(test-dtd-control tests/test_dtd_control.cpp)
 target_link_libraries(test-dtd-control PRIVATE sost-core)
 add_test(NAME dtd-control COMMAND test-dtd-control)

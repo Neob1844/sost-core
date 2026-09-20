@@ -1,4 +1,5 @@
-// V15 DTD recency gate tests — normal=5000, jackpot="ever" (no recency window).
+// DTD recency gate tests. V15: normal=5000, jackpot=20000. V16 (#30,000): 288 at every
+// height, jackpot heights included. Pre-V16 heights must replay byte-identically.
 //   dtd_recency_window_at(height): 0 pre-V15 · 10000 normal · 0 jackpot ("ever").
 //   compute_lottery_eligibility_set applies it (one predicate -> miner<->validator parity).
 // Height-gated at V15_HEIGHT; pre-V15 replay byte-identical (window 0).
@@ -22,6 +23,8 @@ int main(){
     TEST("post-V15 normal (25010) window 5000", dtd_recency_window_at(25010)==5000);
     TEST("jackpot (25290) window 20000", dtd_recency_window_at(25290)==20000);
     TEST("post-jackpot normal (25291) window 5000", dtd_recency_window_at(25291)==5000);
+    TEST("V16 normal (30010) window 288",  dtd_recency_window_at(30010)==DTD_RECENCY_WINDOW_V16);
+    TEST("V16 jackpot (30186) window 288", dtd_recency_window_at(30186)==DTD_RECENCY_WINDOW_V16);
 
     const PubKeyHash RECENT=mk(1), MID=mk(2), OLD=mk(3);
 
@@ -55,16 +58,19 @@ int main(){
         TEST("jackpot: 2290-ago ELIGIBLE (<20000)", has(e,RECENT));
         TEST("jackpot: 15000-ago ELIGIBLE (<20000)", has(e,OLD));
     }
-    printf("== JACKPOT boundary at a far jackpot height (window 20000 excludes >20000) ==\n");
+    printf("== V16 (#30,000): recency is 288 at EVERY height, jackpot heights included ==\n");
     {
-        int64_t h=45450; // (h-25290)=20160, %288==0 -> a real jackpot height
+        // The wide jackpot window existed because the V15 jackpot paid the DTD winner.
+        // From V16 the jackpot has its own winner, so the DTD-normal draw at a jackpot
+        // height uses the same 288 window as any other block.
+        int64_t h=45450; // (h-25290)=20160, %288==0 -> a real jackpot height, and >= 30000
         std::vector<LotteryMinedBlockView> hist; fill(hist,h);
         const PubKeyHash A=mk(7), B=mk(8);
-        hist.push_back(blk(h-15450,A));  // age 15450 <20000 -> eligible (30000, sbpow ok)
-        hist.push_back(blk(h-20450,B));  // age 20450 >20000 -> excluded (25000, sbpow ok)
+        hist.push_back(blk(h-100,A));    // 100 ago   -> inside 288
+        hist.push_back(blk(h-15450,B));  // 15450 ago -> outside 288 (was ELIGIBLE pre-V16 under 20000)
         auto e=compute_lottery_eligibility_set(hist,h,PubKeyHash{},lottery_exclusion_window_at(h));
-        TEST("jackpot@45450: 15450-ago ELIGIBLE (<20000)", has(e,A));
-        TEST("jackpot@45450: 20450-ago EXCLUDED (>20000)", !has(e,B));
+        TEST("V16 jackpot height: 100-ago ELIGIBLE (<288)", has(e,A));
+        TEST("V16 jackpot height: 15450-ago EXCLUDED (288 applies, not 20000)", !has(e,B));
     }
 
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);

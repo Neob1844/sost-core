@@ -927,6 +927,13 @@ inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 14;       // DEVNET_FAST O
 inline constexpr int64_t  DTD_DOMINANCE_GATE_HEIGHT = 12100;
 #endif
 inline constexpr int32_t  DTD_DOMINANCE_WINDOW      = 288;
+// V16 (#30,000): the 10% gate only makes sense once the window holds enough distinct
+// miners. With N miners sharing 288 blocks the average share is 288/N, so for N <= 10
+// at least one miner is necessarily at or above 10% — and with a tight recency window
+// the gate can exclude every active miner and leave the draw with nobody. From V16 it
+// is therefore armed only at >= this many distinct miners in the dominance window.
+// Below that the network is too small for "dominance" to mean anything.
+inline constexpr int32_t  DTD_DOMINANCE_MIN_MINERS  = 11;
 #if defined(SOST_DEVNET_FORKS)
 // DEVNET_FAST ONLY: a small dev chain runs with only a couple of miner identities, so the
 // 10% anti-dominance threshold would exclude EVERY miner and leave no eligible DTD winner
@@ -1313,7 +1320,7 @@ inline constexpr int64_t NODE_EPOCH_LENGTH      = 288;    // TESTNET epoch == ja
 inline constexpr int64_t HIST_JACKPOT_V2_HEIGHT = 30000;  // MAINNET — OWNER-LOCKED, DO NOT CHANGE
 inline constexpr int64_t NODE_EPOCH_LENGTH      = 288;    // MAINNET epoch == jackpot cadence
 #endif
-inline constexpr int64_t JACKPOT_V2_POW_WINDOW  = 5000;   // PoW weight/eligibility window [h-5000, h-1]
+inline constexpr int64_t JACKPOT_V2_POW_WINDOW  = 2016;   // PoW weight/eligibility window [h-2016, h-1] (~14 d)
 inline constexpr int64_t JACKPOT_V2_MIN_BLOCKS  = 3;      // minimum SbPoW blocks in the window to enter
 inline constexpr int64_t HEARTBEAT_MAX_WINDOW   = 4;      // permanent heartbeat window (of last 4 epochs)
 inline constexpr int64_t HEARTBEAT_REQUIRED     = 3;      // permanent heartbeats required (3 of last 4)
@@ -1349,11 +1356,18 @@ inline constexpr bool node_participation_active_at(int64_t height) {
 // Applied inside compute_lottery_eligibility_set(), so ALL callers (miner template +
 // every validator/jackpot path) share one predicate → guaranteed miner<->validator parity.
 // =============================================================================
+// V16 (#30,000) — DTD-normal eligibility is re-pointed at genuinely current miners:
+// the recency window drops to 288 blocks (~2 days at the 600 s target), and applies at
+// EVERY height, jackpot heights included (the wider jackpot window existed because the
+// V15 jackpot paid the DTD winner; from V16 the jackpot has its own winner).
+inline constexpr int64_t DTD_V16_ELIGIBILITY_HEIGHT = HIST_JACKPOT_V2_HEIGHT;
+inline constexpr int64_t DTD_RECENCY_WINDOW_V16     = 288;
 inline constexpr int64_t DTD_RECENCY_WINDOW         = 5000;   // normal DTD: mined within last 5000 blocks (~5 wk) — strong active-participation incentive
 inline constexpr int64_t DTD_JACKPOT_RECENCY_WINDOW = 20000;  // jackpot: mined within last 20000 blocks (~19 wk) — broad (returns the vault to ~the whole network), not concentrated
 // Returns the recency window to apply at `height`, or 0 (disabled) for height < V15_HEIGHT.
 inline constexpr int64_t dtd_recency_window_at(int64_t height) {
     if (height < V15_HEIGHT) return 0;
+    if (height >= DTD_V16_ELIGIBILITY_HEIGHT) return DTD_RECENCY_WINDOW_V16;   // 288, all heights
     return is_hist_jackpot_height(height) ? DTD_JACKPOT_RECENCY_WINDOW : DTD_RECENCY_WINDOW;
 }
 
