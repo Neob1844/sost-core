@@ -34,7 +34,7 @@ safe to restart in the window. Restarting at, say, #29,930 does NOT change any r
 
 ## 3. Participating in the DTD Jackpot V2 (optional, from #30,000)
 
-To be eligible you must (a) mine real PoW (≥3 SbPoW blocks / 5,000) **and** (b) bind a
+To be eligible you must (a) mine real PoW (≥3 SbPoW blocks / 2,016) **and** (b) bind a
 node key and keep it heartbeating. Extra nodes do **not** increase your odds — only PoW
 does; the node requirement is a gate.
 
@@ -101,7 +101,8 @@ public V16 node are unaffected.
 ## 5. Key facts
 
 - Activation: **#30,000**. First V2 jackpot draw: **#30,186**.
-- DTD-normal is unchanged; the jackpot is now a separate, node-gated, PoW-weighted draw.
+- DTD-normal eligibility changes (recency 288; cooldown and anti-dominance become
+  conditional); the jackpot is now a separate, node-gated, PoW-weighted draw.
 - Payout unchanged (100 base / 500 cap / rollover, from the existing reserve).
 - Honest wording for any public messaging: **"Verified node participation"** — not a
   claim of an independent/unique/24-7 physical node.

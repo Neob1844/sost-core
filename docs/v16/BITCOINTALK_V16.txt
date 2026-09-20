@@ -8,7 +8,7 @@
 
 [size=14pt][b]TL;DR[/b][/size]
 [list]
-[li][b]Normal DTD does NOT change.[/b] The regular per-block DTD reward keeps its current rules.[/li]
+[li][b]Normal DTD DOES change in V16.1[/b] — its ELIGIBILITY does (recency 288, conditional cooldown, conditional anti-dominance). The draw, the 50/50 split and the seed are untouched. Details below.[/li]
 [li]The change affects only the [b]DTD Jackpot[/b] — from V2 it becomes an [b]independent draw[/b].[/li]
 [li][b]Activation:[/b] block [b]#30,000[/b] (automatic, by height). First V2 jackpot draw: block [b]#30,186[/b].[/li]
 [li][b]The principle:[/b] [b]Node participation determines eligibility. Proof-of-Work determines weight.[/b][/li]
@@ -17,17 +17,37 @@
 
 [hr]
 
+[size=14pt][b]DTD normal — what changes at #30,000[/b][/size]
+
+[b]Correction to the earlier notice in this thread:[/b] it said normal DTD would not change. In V16.1 it does. The draw is still every block, still uniform between eligible identities, still never weighted by PoW, same seed and same 50/50 split — what changes is [b]who qualifies[/b].
+
+[code]                 V15 (to #29,999)             V16.1 (from #30,000)
+recency          5,000 blocks                 288 blocks (~2 days)
+                 (20,000 at jackpot heights)  at EVERY height
+minimum          >=1 block                    >=1 block (unchanged)
+cooldown         miners of the last 6 out     same, but YIELDS if that would
+                                              leave nobody eligible
+anti-dominance   >=10% of last 288 out        same, but ARMED ONLY at >=11
+                                              distinct miners in the window
+selection        uniform                      uniform (unchanged)[/code]
+
+With N miners sharing 288 blocks the average share is 288/N, so below 11 miners the 10% gate starts excluding the very miners keeping the chain alive, and a 6-block cooldown on a chain with one or two producers switched the draw off completely. Both relaxations are floors, not repeals: the cooldown still applies whenever somebody else qualifies, and the gate returns at 11 distinct miners.
+
+[b]Said plainly: while only one miner is active, that miner receives 100% of the block[/b] — the 50% miner share plus the 50% DTD share, because it is the only eligible identity. That is the intended consequence of paying current participation on a chain nobody else is securing. As soon as other miners appear within the 288-block window, the DTD is drawn among them again.
+
+[hr]
+
 [size=14pt][b]What changes at #30,000[/b][/size]
 
 To take part in the DTD Jackpot, a miner will need [b]all[/b] of the following:
 [list]
 [li]a valid SbPoW mining identity;[/li]
-[li]at least [b]3 valid mined blocks within the previous 5,000 blocks[/b];[/li]
+[li]at least [b]3 valid mined blocks within the previous 2,016 blocks[/b];[/li]
 [li]a cryptographically linked SOST node identity ([tt]NODE_BIND[/tt]);[/li]
 [li]verified node participation through periodic signed heartbeats.[/li]
 [/list]
 
-Your Jackpot probability is then [b]proportional to your real PoW contribution[/b] in the 5,000-block window (LINEAR weight). The DTD Jackpot has its own independent deterministic draw, [b]no cooldown[/b], [b]no anti-dominance[/b], a [b]100 SOST[/b] base, rollover up to the existing [b]500 SOST[/b] cap, and is paid from the existing historical reserve — [b]there is no new emission.[/b] If there is no eligible winner, it rolls over.
+Your Jackpot probability is then [b]proportional to your real PoW contribution[/b] in the 2,016-block window (LINEAR weight). The DTD Jackpot has its own independent deterministic draw, [b]no cooldown[/b], [b]no anti-dominance[/b], a [b]100 SOST[/b] base, rollover up to the existing [b]500 SOST[/b] cap, and is paid from the existing historical reserve — [b]there is no new emission.[/b] If there is no eligible winner, it rolls over.
 
 [size=12pt][color=red][b]Running more nodes does not give you more Jackpot tickets.[/b][/color][/size]
 A node is a [b]requirement for participation[/b]; your actual PoW contribution determines your probability. Node = access. PoW = probability.
@@ -43,8 +63,8 @@ Every SOST block carries a [b]mining public key + a signature[/b]. So the chain 
 [code]miner  ->  mining private key  ->  signs the block  ->  mining identity (sost1ABC...)  ->  BLOCKCHAIN[/code]
 You cannot just claim "I mined this block" — the chain can check the signature. This is a [b]cryptographic mining identity[/b]; it is not your name, IP, or physical computer.
 
-[b]2) At least 3 blocks in the last 5,000[/b]
-At a jackpot height (e.g. #30,186) the system looks back over the last 5,000 blocks and counts how many your identity signed. No report is needed — it just counts signatures:
+[b]2) At least 3 blocks in the last 2,016[/b]
+At a jackpot height (e.g. #30,186) the system looks back over the last 2,016 blocks and counts how many your identity signed. No report is needed — it just counts signatures:
 [code]sost1AAA...  ->  #29,811, #29,945, #30,041, #30,100  =  4  (4 >= 3  -> OK)
 sost1BBB...  ->  #29,930, #30,020                      =  2  (2 <  3  -> not eligible)[/code]
 
@@ -59,14 +79,14 @@ Registering once is not enough — the node must keep proving it is following th
 Others check: signature matches the registered node key? epoch correct? the block reference matches the real chain? not already sent for this period? If all yes -> heartbeat valid. Because the [b]recent-block reference is not known until the chain reaches it[/b], heartbeats cannot be pre-fabricated — the node has to actually be following the chain.
 
 [b]Full example — three miners[/b]
-[code]MINER A:  SbPoW ok · 10 blocks/5000 · NODE_BIND ok · heartbeats ok   ->  ELIGIBLE, weight 10
-MINER B:  SbPoW ok ·  5 blocks/5000 · NODE_BIND ok · heartbeats ok   ->  ELIGIBLE, weight  5
-MINER C:  SbPoW ok · 30 blocks/5000 · NODE_BIND NO · heartbeats NO   ->  NOT ELIGIBLE[/code]
+[code]MINER A:  SbPoW ok · 10 blocks/2016 · NODE_BIND ok · heartbeats ok   ->  ELIGIBLE, weight 10
+MINER B:  SbPoW ok ·  5 blocks/2016 · NODE_BIND ok · heartbeats ok   ->  ELIGIBLE, weight  5
+MINER C:  SbPoW ok · 30 blocks/2016 · NODE_BIND NO · heartbeats NO   ->  NOT ELIGIBLE[/code]
 C mined the most, but did not meet the node requirement, so C is out. The draw is then:
 [code]A weight 10  +  B weight 5  =  total 15
 A ~= 66.7%     B ~= 33.3%[/code]
 
-[b]How does any node know all this?[/b] It reconstructs everything by reading the blockchain alone — count SbPoW signatures over the last 5,000 blocks, find the NODE_BIND, find the valid heartbeats, then compute eligible/weight. [b]No central database, no trust in the user, no manual approval.[/b]
+[b]How does any node know all this?[/b] It reconstructs everything by reading the blockchain alone — count SbPoW signatures over the last 2,016 blocks, find the NODE_BIND, find the valid heartbeats, then compute eligible/weight. [b]No central database, no trust in the user, no manual approval.[/b]
 
 [b]An honest limitation[/b]
 The system can prove "this node key participated correctly and was bound to this miner." It [b]cannot[/b] prove there is a distinct physical machine in a distinct place behind that key. That is why we call it [b]Verified Node Participation[/b], not "verified independent physical node". For the Jackpot this is fine, precisely because [b]more nodes add no weight[/b] — the node only grants access; your PoW sets the probability.

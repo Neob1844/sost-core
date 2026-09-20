@@ -1,7 +1,7 @@
 📢 *SOST — DTD Jackpot V2*
 🔧 _Advance notice · activates at block #30,000_
 
-✅ *Normal DTD does NOT change.* The regular per-block reward keeps its current rules.
+⚠️ *Normal DTD DOES change in V16.1* — who qualifies, not how it pays. Recency drops to *288 blocks* (~2 days); the 6-block cooldown yields if it would leave nobody; anti-dominance is armed only at *11+ distinct miners*. While a single miner is active it can take *100% of the block* (50% miner + 50% DTD). Draw, split and seed unchanged.
 🎰 The change affects *only the DTD Jackpot* → from V2 it becomes an *independent draw*.
 
 🧭 *The principle:*
@@ -10,11 +10,11 @@
 
 *To take part in the Jackpot (all required):*
 🔑 a valid SbPoW mining identity
-⛏️ ≥ *3 mined blocks in the last 5,000*
+⛏️ ≥ *3 mined blocks in the last 2,016*
 🔗 a node key linked to your mining key (`NODE_BIND`)
 💓 periodic signed node *heartbeats*
 
-⚖️ Your odds are *proportional to your real PoW* in the 5,000-block window (linear weight).
+⚖️ Your odds are *proportional to your real PoW* in the 2,016-block window (linear weight).
 
 📊 *Example:*
 ```

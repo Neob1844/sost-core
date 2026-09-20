@@ -95,6 +95,76 @@ int main(){
         TEST("pre-V16: gate unconditional -> 10 miners at ~10% excluded", e.empty());
     }
 
+    printf("== EXACT activation boundary: #29,999 vs #30,000 ==\n");
+    {
+        const int64_t A = DTD_V16_ELIGIBILITY_HEIGHT;      // 30,000
+        TEST("window at A-1 is the V15 one (5000)", dtd_recency_window_at(A-1)==DTD_RECENCY_WINDOW);
+        TEST("window at A   is the V16 one (288)",  dtd_recency_window_at(A)==DTD_RECENCY_WINDOW_V16);
+
+        // One address whose only block is 1,000 ago: inside V15's 5,000, outside V16's 288.
+        const PubKeyHash OLD=mk(11);
+        auto mkhist=[&](int64_t h){ std::vector<LotteryMinedBlockView> v;
+            for(int i=0;i<30;i++) v.push_back(blk(h-40+i, mk((uint8_t)(100+i))));   // 30 fillers, inside 288
+            v.push_back(blk(h-1000,OLD)); return v; };
+        TEST("#29,999: 1000-ago ELIGIBLE (5000 window)",  has(run(mkhist(A-1),A-1),OLD));
+        TEST("#30,000: 1000-ago EXCLUDED (288 window)",  !has(run(mkhist(A),  A),  OLD));
+
+        // Recency edge: exactly at the window rim. last_mined < height - 288 is excluded,
+        // so height-288 is IN and height-289 is OUT.
+        const PubKeyHash RIM_IN=mk(12), RIM_OUT=mk(13);
+        std::vector<LotteryMinedBlockView> h2;
+        for(int i=0;i<30;i++) h2.push_back(blk(A-40+i, mk((uint8_t)(100+i))));
+        h2.push_back(blk(A-288,RIM_IN));
+        h2.push_back(blk(A-289,RIM_OUT));
+        auto e2=run(h2,A);
+        TEST("#30,000: block at h-288 is INSIDE the window",  has(e2,RIM_IN));
+        TEST("#30,000: block at h-289 is OUTSIDE the window", !has(e2,RIM_OUT));
+    }
+
+    printf("== miner-count matrix: 1 / 2 / 10 / 11 distinct miners ==\n");
+    {
+        const int64_t A = DTD_V16_ELIGIBILITY_HEIGHT;
+        auto equal_share=[&](int64_t h,int n){                 // n miners, 288 blocks, equal share
+            std::vector<LotteryMinedBlockView> v;
+            for(int k=0;k<288;k++) v.push_back(blk(h-1-k, mk((uint8_t)(200+(k%n)))));
+            return v; };
+        // 1 miner: 100% of the window, and miner of the last 6 -> both gates would kill it.
+        auto e1=run(equal_share(A,1),A);
+        TEST("V16 · 1 miner  -> 1 eligible (both relaxations fire)", e1.size()==1);
+        // 2 miners: 50% each, both mined inside the last 6.
+        auto e2=run(equal_share(A,2),A);
+        TEST("V16 · 2 miners -> 2 eligible (dominance off, cooldown yields)", e2.size()==2);
+        // 10 miners round-robin over 288: eight hold 29 blocks (>= the 10% threshold of
+        // 28.8) and two hold 28. Post-V16 the gate is NOT armed, so all 10 are candidates
+        // and only the cooldown bites (the 6 most recent blocks belong to 6 distinct
+        // miners) -> 4. Pre-V16 the gate IS unconditional, so the eight dominant ones are
+        // dropped and only the two 28-block miners survive -> 2. The difference between
+        // 4 and 2 is exactly, and only, the arming rule.
+        auto e10=run(equal_share(A,10),A);
+        TEST("V16 · 10 miners -> gate NOT armed, cooldown applies, 4 eligible", e10.size()==4);
+        auto e10old=run(equal_share(A-1,10),A-1);
+        TEST("#29,999 · 10 miners -> gate armed unconditionally, 2 eligible", e10old.size()==2);
+        // 11 miners: gate armed. 288/11 = 26.2 blocks = 9.09% < 10% -> nobody is dominant,
+        // but the cooldown now bites the 6 most recent miners because others remain.
+        auto e11=run(equal_share(A,11),A);
+        TEST("V16 · 11 miners -> gate armed, cooldown applies, 5 eligible", e11.size()==5);
+        // Same 11-miner shape below the fork: dominance unconditional, still 9.09% each,
+        // so the only difference must be nil -> proves the gate arming is the ONLY change.
+        auto e11old=run(equal_share(A-1,11),A-1);
+        TEST("#29,999 · 11 miners -> identical outcome (5 eligible)", e11old.size()==5);
+    }
+
+    printf("== Jackpot V2 constants are the frozen V16.1 ones ==\n");
+    {
+        TEST("JACKPOT_V2_POW_WINDOW == 2016", JACKPOT_V2_POW_WINDOW==2016);
+        TEST("JACKPOT_V2_MIN_BLOCKS == 3",    JACKPOT_V2_MIN_BLOCKS==3);
+        TEST("V2 activation == 30,000",       HIST_JACKPOT_V2_HEIGHT==30000);
+        TEST("#30,000 is NOT a jackpot height",  !is_hist_jackpot_height(30000));
+        TEST("#30,186 IS the first V2 jackpot",   is_hist_jackpot_height(30186) && is_hist_jackpot_v2_height(30186));
+        TEST("#29,898 is the last pre-V2 jackpot", is_hist_jackpot_height(29898) && !is_hist_jackpot_v2_height(29898));
+        TEST("cadence unchanged at 288", HIST_JACKPOT_CADENCE_BLOCKS==288);
+    }
+
     printf("\n=== Summary: %d passed, %d failed ===\n", g_pass, g_fail);
     return g_fail==0?0:1;
 }

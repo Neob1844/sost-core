@@ -11,7 +11,7 @@
 | First V2 jackpot | **30186** (#30,000 is not a jackpot height) |
 | Last V15 jackpot | 29,898 |
 | `NODE_EPOCH_LENGTH` | 288 (= jackpot cadence) |
-| `JACKPOT_V2_POW_WINDOW` | 5000 |
+| `JACKPOT_V2_POW_WINDOW` | 2016 |
 | `JACKPOT_V2_MIN_BLOCKS` | 3 |
 | `HEARTBEAT_REQUIRED` / `HEARTBEAT_MAX_WINDOW` | 3 of last 4 |
 
@@ -76,13 +76,17 @@ been tested. So:
 
 ## Frozen consensus parameters
 
-DTD-normal is **unchanged**: same eligibility, payout, cooldown and
-anti-dominance. No NODE_BIND, no heartbeats.
+DTD-normal keeps its payout, its cadence, its uniform selection and its seed, and it
+still needs **no** NODE_BIND and **no** heartbeats. What changes in V16.1 is its
+ELIGIBILITY: recency 5,000/20,000 -> **288 at every height**; the 6-block cooldown
+**yields** when applying it would leave nobody; the 10%/288 anti-dominance gate is
+**armed only at >= 11 distinct miners**. With a single active miner that miner can
+take 100% of the block (50% miner + 50% DTD).
 
 DTD Jackpot V2, from #30,000:
 
 * eligibility = valid SbPoW identity **and** ≥3 valid blocks in the previous
-  5,000 **and** an active NODE_BIND **and** heartbeats per the bootstrap;
+  2,016 **and** an active NODE_BIND **and** heartbeats per the bootstrap;
 * weight = number of valid SbPoW blocks in the window, **linear**, one block one
   unit — no sqrt, no log, no cap, no node multiplier;
 * node participation is a **gate**, never weight: more nodes do not raise odds;
