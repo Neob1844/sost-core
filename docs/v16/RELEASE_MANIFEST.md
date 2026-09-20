@@ -1,12 +1,18 @@
-# SOST V16 — Release Manifest
+# SOST V16.1 — Release Manifest
 
-**DTD Jackpot V2.** Activation **#30,000** (mainnet, owner-locked). First V2 draw **#30,186**.
+**SOST V16.1 — DTD Eligibility + Jackpot V2.** Activation **#30,000** (mainnet,
+owner-locked). First V2 draw **#30,186**.
+
+V16.1 supersedes `v16.0.0-jackpot-v2`, which stays untouched as a historical artifact.
+It carries everything that release did, plus the DTD-normal eligibility change and the
+2,016-block jackpot PoW window. **Its binaries differ, so its hashes differ**: the
+SHA256SUMS published for v16.0.0 must NOT be used to verify a V16.1 binary.
 
 | | |
 |---|---|
-| Version | `v16.0.0-jackpot-v2` |
-| Tag | `v16.0.0-jackpot-v2` |
-| Final commit | see `git rev-list -n1 v16.0.0-jackpot-v2` |
+| Version | `v16.1.0` |
+| Tag | `v16.1.0` |
+| Final commit | see `git rev-list -n1 v16.1.0` |
 | `HIST_JACKPOT_V2_HEIGHT` | **30000** |
 | First V2 jackpot | **30186** (#30,000 is not a jackpot height) |
 | Last V15 jackpot | 29,898 |
@@ -14,6 +20,9 @@
 | `JACKPOT_V2_POW_WINDOW` | 2016 |
 | `JACKPOT_V2_MIN_BLOCKS` | 3 |
 | `HEARTBEAT_REQUIRED` / `HEARTBEAT_MAX_WINDOW` | 3 of last 4 |
+| `DTD_V16_ELIGIBILITY_HEIGHT` | **30000** (same height) |
+| `DTD_RECENCY_WINDOW_V16` | **288** (every height, jackpot included) |
+| `DTD_DOMINANCE_MIN_MINERS` | **11** (gate armed only at or above this) |
 
 ## Where the SHA256 hashes live, and why they are not in this file
 

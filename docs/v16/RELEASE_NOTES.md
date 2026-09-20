@@ -116,5 +116,6 @@ fails `jv2_eligibility_reason()`, and one block is below `JACKPOT_V2_MIN_BLOCKS 
 (`src/jackpot_v2.cpp:83`), so such identities carry no weight at all. `tests/
 test_jackpot_v2.cpp:178` already noted this and covers only the 1x100 and 10x10 cases.
 
-No consensus code changed for this: the binaries and the tag `v16.0.0-jackpot-v2`
-stay frozen, and the hashes in `docs/v16/SHA256SUMS` remain the ones to verify.
+No consensus code changed for this errata: it corrected the announcement, not the
+protocol. (`v16.0.0-jackpot-v2` remains an immutable historical artifact; the release
+to verify against is now `v16.1.0`, with its own `docs/v16/SHA256SUMS`.)

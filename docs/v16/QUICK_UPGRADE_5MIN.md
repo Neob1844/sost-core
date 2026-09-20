@@ -30,9 +30,9 @@ moves.
 ```bash
 cd /opt/sost
 git fetch --all --tags --prune
-git worktree add /opt/sost-v16 v16.0.0-jackpot-v2
+git worktree add /opt/sost-v16 v16.1.0
 cd /opt/sost-v16
-git describe --tags --exact-match          # must print v16.0.0-jackpot-v2
+git describe --tags --exact-match          # must print v16.1.0
 git rev-parse HEAD
 
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
@@ -89,7 +89,7 @@ No hooks in this tree, so a detached checkout of the tag is fine.
 cd /home/sost/SOST/sostcore/sost-core
 git status --short
 git fetch --all --tags --prune
-git checkout --detach v16.0.0-jackpot-v2
+git checkout --detach v16.1.0
 git describe --tags --exact-match
 
 rm -rf build-v16
