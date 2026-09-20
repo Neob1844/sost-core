@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-19-v432-dtd-cadence-cooldown-list">
+<meta name="explorer-html-version" content="2026-09-20-v433-cooldown-recent-miner-wording">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8938,7 +8938,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var cdCount=state.cooldownList?cdArr.length:'\u2014';
     var cdWindow=(state.cooldownWindow!=null?state.cooldownWindow:6);
     var cdListHtml=cdArr.length
-      ? ('<div style="font:700 8px/1 ui-monospace;letter-spacing:1px;color:#8a97a3;margin-bottom:5px">WALLET / MINING IDENTITY IN COOLDOWN</div>'
+      ? ('<div style="font:700 8px/1.3 ui-monospace;letter-spacing:1px;color:#8a97a3;margin-bottom:5px">WALLET / MINING IDENTITY IN COOLDOWN<br><span style="font-weight:400;letter-spacing:.4px;color:var(--text3)">mined a block in the window \u2014 not a DTD win</span></div>'
          +cdArr.map(function(a){return '<div style="font:600 10px/1.7 ui-monospace;color:#22d3ee;cursor:pointer;word-break:break-all" title="Open address detail" onclick="event.stopPropagation();showAddress(\''+esc(a)+'\')">'+esc(a)+'</div>';}).join(''))
       : '<div style="font:600 10px/1.5 ui-monospace;color:var(--text3)">No identities currently in cooldown</div>';
     d.innerHTML='<div class="sjpd-box"><div class="sjpd-hd"><h3>&#127974; DTD JACKPOT</h3>'+
@@ -8955,9 +8955,9 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         // The cooldown belongs to DTD NORMAL — DTD Jackpot V2 has none. Label it so,
         // and let the card expand into the identities behind the count (already on
         // state.cooldownList, from getlotteryaudit's cooldown_addresses).
-        '<div class="sjpd-c" style="cursor:pointer" title="Normal-DTD recent-producer cooldown. Click to list the identities. DTD Jackpot V2 has NO cooldown." onclick="window._sjpdCdOpen=!window._sjpdCdOpen;var e=document.getElementById(\'sjpd-cd-list\');if(e)e.style.display=window._sjpdCdOpen?\'block\':\'none\';">'+
-          '<div class="sjpd-l">\uD83D\uDFE0 NORMAL DTD COOLDOWN</div><div class="sjpd-v">'+cdCount+'</div>'+
-          '<div style="font-size:8px;color:var(--text3);margin-top:2px">window '+cdWindow+' blocks \u00B7 click to list</div>'+
+        '<div class="sjpd-c" style="cursor:pointer" title="Miners of the last '+cdWindow+' blocks are temporarily excluded from the normal DTD draw. This is based on recent block mining, NOT on winning the DTD. DTD Jackpot V2 has no cooldown." onclick="window._sjpdCdOpen=!window._sjpdCdOpen;var e=document.getElementById(\'sjpd-cd-list\');if(e)e.style.display=window._sjpdCdOpen?\'block\':\'none\';">'+
+          '<div class="sjpd-l">\uD83D\uDFE0 NORMAL DTD RECENT-MINER COOLDOWN</div><div class="sjpd-v">'+cdCount+'</div>'+
+          '<div style="font-size:8px;color:var(--text3);margin-top:2px;line-height:1.35">miners of the last '+cdWindow+' blocks \u00B7 click to list</div>'+
           // render() re-runs as each RPC lands; keep the dropdown open across re-renders.
           '<div id="sjpd-cd-list" style="display:'+(window._sjpdCdOpen?'block':'none')+';margin-top:8px;border-top:1px solid #1d2731;padding-top:6px">'+cdListHtml+'</div>'+
         '</div>'+
