@@ -21,8 +21,8 @@ log(){ printf '[upgrade] %s\n' "$*"; }
 ok(){  printf '[upgrade] PASS  %s\n' "$*"; }
 bad(){ printf '[upgrade] FAIL  %s\n' "$*"; FAILED=1; }
 NODE_PID=""; MINER_PID=""
-stopm(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null || true; MINER_PID=""; true; }
-stopn(){ [[ -n "$NODE_PID" ]] && kill "$NODE_PID" 2>/dev/null; NODE_PID=""; sleep 2; true; }
+stopm(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null || true; pkill -P $$ sost-miner 2>/dev/null || true; MINER_PID=""; true; }
+stopn(){ [[ -n "$NODE_PID" ]] && kill "$NODE_PID" 2>/dev/null || true; NODE_PID=""; sleep 2; true; }
 cleanup(){ stopm; stopn; wait 2>/dev/null; true; }
 die(){ printf '[upgrade] FATAL %s\n' "$*" >&2; cleanup; log "logs in $WORK"; exit 1; }
 trap cleanup EXIT

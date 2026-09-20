@@ -3,8 +3,9 @@
 **What:** one mandatory upgrade for every node and miner.
 **When:** update **after block #29,900 and before #30,000**.
 **Why:** from #30,000 the DTD Jackpot becomes an independent, node-gated,
-PoW-weighted draw (first V2 draw #30,186). DTD-normal and the 100/500/rollover
-payout are unchanged. A V15 node may diverge after #30,000.
+PoW-weighted draw (first V2 draw #30,186), AND DTD-normal eligibility is re-pointed
+at current miners (recency 288, conditional cooldown/anti-dominance). The 100/500/
+rollover payout and the 50/50 split are unchanged. A V15 node diverges after #30,000.
 
 ```text
 BEFORE #29,900     read this, download, prepare — do NOT switch yet
@@ -129,7 +130,7 @@ Nothing else is needed. At #30,000 V16 activates by itself.
 Separate from the upgrade above. Do **not** run any of this before #30,000; node
 transactions are not valid until the activation height.
 
-Eligibility = real PoW (**≥3 SbPoW blocks per 5,000**) **and** an active,
+Eligibility = real PoW (**≥3 SbPoW blocks per 2,016**) **and** an active,
 heartbeating node. Extra nodes do not raise your odds — only your PoW does.
 
 **Bind your node key once** (in WSL, with the wallet that signs your blocks):

@@ -16,9 +16,11 @@ Contact: sost@sostcore.com · logo: http://sostcore.com/sost-logo.png
 
 ### What it does
 From #30,000 the **DTD Jackpot** becomes an **independent draw**. The regular
-DTD reward is **unchanged**. To be eligible for the DTD Jackpot a miner must:
+DTD payout is **unchanged**; DTD-normal **eligibility** changes (recency 288,
+conditional cooldown and anti-dominance — see RELEASE_NOTES). To be eligible for the
+DTD Jackpot a miner must:
 
-- contribute real Proof-of-Work (≥ 3 signed blocks in the last 5,000), **and**
+- contribute real Proof-of-Work (≥ 3 signed blocks in the last 2,016), **and**
 - run a node: bind a node key to the mining key and keep it heartbeating.
 
 Your **odds are proportional to your Proof-of-Work** (linear weight). Creating extra

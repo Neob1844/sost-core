@@ -185,6 +185,12 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
     // Computed once from `height` so every caller (miner + validator + jackpot) is identical.
     const int64_t dtd_recency = dtd_recency_window_at(height);
 
+    const bool v16_rules = (height >= DTD_V16_ELIGIBILITY_HEIGHT);
+    const bool dominance_gate_armed =
+        (height >= DTD_DOMINANCE_GATE_HEIGHT) &&
+        (!v16_rules || (int32_t)dominance_count.size() >= DTD_DOMINANCE_MIN_MINERS);
+
+    auto build_set = [&](bool apply_cooldown) {
     std::vector<LotteryEligibilityEntry> out;
     out.reserve(agg.size());
     for (const auto& kv : agg) {
@@ -195,8 +201,10 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
         // Height-gated (dtd_recency == 0 pre-V15) so historical replay is byte-identical.
         if (dtd_recency > 0 && kv.second.last_mined_height < height - dtd_recency) continue;
 
-        // (a) recent-winner cooldown.
-        if (exclusion_window > 0 && recent_winners.count(pkh)) continue;
+        // (a) recent-winner cooldown. From V16 it is skipped entirely on the
+        // retry pass (apply_cooldown == false), which only happens when applying
+        // it would have left the draw with nobody at all.
+        if (apply_cooldown && exclusion_window > 0 && recent_winners.count(pkh)) continue;
 
         // (a2) V13.5 SbPoW-activity gate. A candidate must have at least one
         // SbPoW-signed block, proven by its most recent block being at height
@@ -207,7 +215,7 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
         // (b) V13 anti-dominance gate. The helper short-circuits to
         // false for height < DTD_DOMINANCE_GATE_HEIGHT so pre-V13.5
         // behaviour is preserved bit-for-bit.
-        if (height >= DTD_DOMINANCE_GATE_HEIGHT) {
+        if (dominance_gate_armed) {
             auto it = dominance_count.find(pkh);
             const int32_t mined_in_window = (it == dominance_count.end())
                 ? 0
@@ -230,6 +238,23 @@ std::vector<LotteryEligibilityEntry> compute_lottery_eligibility_set(
         }
 
         out.push_back(kv.second);
+    }
+    return out;
+    };
+
+    // V16 (#30,000) — two conditional relaxations, both height-gated so every block
+    // below DTD_V16_ELIGIBILITY_HEIGHT replays byte-identically.
+    //
+    //   cooldown : applied as always, EXCEPT when doing so would empty the set. A
+    //              6-block exclusion is a fairness rule between competing miners; on
+    //              a chain with one or two producers it silently switched the draw
+    //              off. The retry is deterministic (same inputs -> same decision) and
+    //              costs a second pass only in the rare case where the first is empty.
+    //   dominance: armed only with >= DTD_DOMINANCE_MIN_MINERS distinct miners in the
+    //              window — see the note at that constant.
+    std::vector<LotteryEligibilityEntry> out = build_set(true);
+    if (v16_rules && out.empty() && exclusion_window > 0) {
+        out = build_set(false);
     }
     return out;
 }

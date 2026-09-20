@@ -17,8 +17,8 @@ log(){ printf '[rollover] %s\n' "$*"; }
 ok(){  printf '[rollover] PASS  %s\n' "$*"; }
 bad(){ printf '[rollover] FAIL  %s\n' "$*"; FAILED=1; }
 NODE_PID=""; MINER_PID=""
-stopm(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null || true; MINER_PID=""; true; }
-cleanup(){ stopm; [[ -n "$NODE_PID" ]] && kill "$NODE_PID" 2>/dev/null; wait 2>/dev/null; true; }
+stopm(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null || true; pkill -P $$ sost-miner 2>/dev/null || true; MINER_PID=""; true; }
+cleanup(){ stopm; [[ -n "$NODE_PID" ]] && kill "$NODE_PID" 2>/dev/null || true; wait 2>/dev/null; true; }
 die(){ printf '[rollover] FATAL %s\n' "$*" >&2; cleanup; log "logs in $WORK"; exit 1; }
 trap cleanup EXIT
 [[ -x "$NODE" && -x "$MINER" && -x "$CLI" ]] || die "binaries missing in $BUILD_DIR"

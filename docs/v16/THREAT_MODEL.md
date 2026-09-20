@@ -117,7 +117,7 @@ TEST =** and fixed before #30,000 — never silently patched.
 - SEVERITY: low
 - EXPLOIT: pack a block with node txs.
 - CONSENSUS IMPACT: chain growth.
-- MITIGATION: measured real sizes NODE_BIND=138B, HEARTBEAT=137B; at 5,000
+- MITIGATION: measured real sizes NODE_BIND=138B, HEARTBEAT=137B; at 2,016
   participants ≈ 2.4 KB/block avg amortized. Cap per-block node-tx count in policy — **OPEN**.
 - TEST: byte measurement `NODE_BIND=138B / HEARTBEAT=137B`. **TESTED (size)** / OPEN (per-block cap).
 
@@ -125,7 +125,7 @@ TEST =** and fixed before #30,000 — never silently patched.
 - SEVERITY: high
 - EXPLOIT: craft weights to overflow the draw.
 - CONSENSUS IMPACT: non-determinism / wrong winner.
-- MITIGATION: integer-only; window ≤ 5000 ⇒ total_weight ≤ 5000 (int64 headroom huge);
+- MITIGATION: integer-only; window ≤ 2016 ⇒ total_weight ≤ 2016 (int64 headroom huge);
   `roll = read_u64_le(seed) % total`; cumulative in uint64. No floats anywhere.
 - TEST: `total weight helper`, draw determinism, linear weight. **TESTED**
 
