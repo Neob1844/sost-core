@@ -21,8 +21,8 @@ log(){ printf '[v16jp] %s\n' "$*"; }
 ok(){  printf '[v16jp] PASS  %s\n' "$*"; }
 bad(){ printf '[v16jp] FAIL  %s\n' "$*"; FAILED=1; }
 NODE_PID=""; MINER_PID=""
-stop_miner(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null; pkill -P $$ sost-miner 2>/dev/null || true; MINER_PID=""; true; }
-cleanup(){ stop_miner; [[ -n "$NODE_PID" ]] && kill "$NODE_PID" 2>/dev/null; wait 2>/dev/null; true; }
+stop_miner(){ [[ -n "$MINER_PID" ]] && kill "$MINER_PID" 2>/dev/null || true; pkill -P $$ sost-miner 2>/dev/null || true; MINER_PID=""; true; }
+cleanup(){ stop_miner; [[ -n "$NODE_PID" ]] && kill "$NODE_PID" 2>/dev/null || true; wait 2>/dev/null; true; }
 die(){ printf '[v16jp] FATAL %s\n' "$*" >&2; cleanup; log "logs in $WORK"; exit 1; }
 trap cleanup EXIT
 [[ -x "$NODE" && -x "$MINER" && -x "$CLI" ]] || die "binaries missing in $BUILD_DIR"
