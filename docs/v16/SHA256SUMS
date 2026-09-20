@@ -1,8 +1,13 @@
-# SOST V16 — official binary hashes
+# SOST V16.1 — official binary hashes
 #
-# Release artifact for tag v16.0.0-jackpot-v2 (commit b3300912b78c462b875c2e482633976dafc5d3b7).
+# Release artifact for tag v16.1.0 (commit 25915c74e638819a643063f8aada77fc6e207c83).
 # Committed AFTER that tag on purpose: a hash of a binary built from a tag cannot live
 # inside that tag. The tag is not moved and never will be.
+#
+# These SUPERSEDE the v16.0.0-jackpot-v2 hashes. V16.1 changes consensus (DTD-normal
+# eligibility + the 2,016-block jackpot PoW window), so the binaries are different by
+# construction. Verifying a V16.1 binary against the V16.0 list MUST fail — that is
+# correct, not tampering.
 #
 # Verify:   sha256sum -c docs/v16/SHA256SUMS
 #
@@ -12,13 +17,13 @@
 #         -DCMAKE_BUILD_TYPE=Release
 #   cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
 #
-# PATH-INDEPENDENT BUILD = YES   — the same tag built in two different directories
-#                                  produced these exact bytes, 0 embedded build paths.
+# PATH-INDEPENDENT BUILD = YES   — MEASURED AGAIN for this release: the tag built in
+#                                  two different directories produced these exact bytes.
 # CROSS-MACHINE REPRODUCIBILITY = NOT PROVEN — a different compiler, linker or libc can
 #                                  still produce different bytes. A mismatch on a
 #                                  different toolchain is expected, not evidence of
 #                                  tampering. For an OFFICIAL downloaded binary the hash
 #                                  must match exactly.
-9b93a1f8affe651ced45ea37fa789be5b06441ecf5ef8535634a03b41dc3acc3  sost-node
-71e4d1cd63c8db0b568a5ebe679b7dda3967c35e687f3dacf2b8e1e37b9fb4b6  sost-miner
-024d8d86c3138ad63d3cc15f5b643ec16df4b9d15400321b45dc51353085ab64  sost-cli
+b94c2650a93bfadbee755fb82969557b2218ff37392e6a0a0cc79ce7e335e696  sost-node
+fc4fe36db7a251036e53b8dd3d213ac5e61f75e16bd203be552dd78d55424dd8  sost-miner
+eb96f26ddb98c96a0cf8acf052e424b00ba34a09fc712bebafa452ea62ab5c35  sost-cli
