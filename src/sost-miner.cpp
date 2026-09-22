@@ -14,6 +14,7 @@
 //   - Submits FULL block to node (including commit/checkpoints_root/extra_nonce/txs)
 //   - Supports RPC Basic Auth
 
+#include "sost/secret_input.h"
 #include "sost/types.h"
 #include "sost/params.h"
 #include "sost/pow/convergencex.h"
@@ -105,6 +106,13 @@ static PubKeyHash  g_miner_pkh{};
 // callers (signing helpers) read it on demand and the process zeroes
 // its in-memory copy via secure_memzero on shutdown.
 static std::string g_wallet_path = "";
+// Descriptor to read the wallet passphrase from. -1 = prompt on the terminal.
+// Only the NUMBER is an argument; the secret never appears in the command line.
+static int         g_wallet_pass_fd = -1;
+// RPC credential sources that keep the secret out of argv.
+static int         g_rpc_pass_fd   = -1;
+static std::string g_rpc_pass_file = "";
+static bool        g_rpc_pass_in_argv = false;
 static std::string g_mining_key_label = "";
 #ifdef SOST_DEVNET_FORKS
 static std::string g_attack_jackpot = "";  // DEVNET_FAST test-only: adversarial jackpot mutation name (see mine loop)
@@ -912,7 +920,26 @@ static int rpc_submit_block_full(
     close(fd);
 
     if (nr <= 0) return -1; // connection lost during read
-    return std::string(rbuf).find("\"result\":true") != std::string::npos ? 1 : 0;
+    const std::string resp(rbuf);
+    if (resp.find("\"result\":true") != std::string::npos) return 1;
+    // A 401 is not a consensus rejection: the block was never even looked at.
+    // Say so once, loudly — otherwise a wrong RPC password looks like a bad block.
+    if (resp.find("401 Unauthorized") != std::string::npos ||
+        resp.find("Authentication required") != std::string::npos) {
+        static bool warned = false;
+        if (!warned) {
+            warned = true;
+            fprintf(stderr,
+                "\n*** RPC AUTHENTICATION REJECTED (HTTP 401) ***\n"
+                "The node refused the block submission because the RPC credentials are\n"
+                "wrong — the block itself was never validated. Check --rpc-user and the\n"
+                "password: it is the password OF THE NODE you connect to, set in that\n"
+                "node's --rpc-user/--rpc-pass-file, not a SOST-wide password.\n\n");
+        } else {
+            fprintf(stderr, "  (RPC 401 again — credentials still wrong)\n");
+        }
+    }
+    return 0;
 }
 
 // =============================================================================
@@ -2407,9 +2434,15 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--realtime")) sim_time = false;
         else if (!strcmp(argv[i], "--rpc") && i + 1 < argc) g_rpc_url = argv[++i];
         else if (!strcmp(argv[i], "--rpc-user") && i + 1 < argc) g_rpc_user = argv[++i];
-        else if (!strcmp(argv[i], "--rpc-pass") && i + 1 < argc) g_rpc_pass = argv[++i];
+        // --rpc-pass puts the node credential in argv, where any local user can
+        // read it with ps. The -fd and -file forms keep it out of the command
+        // line; only the descriptor NUMBER or the path is an argument.
+        else if (!strcmp(argv[i], "--rpc-pass") && i + 1 < argc) { g_rpc_pass = argv[++i]; g_rpc_pass_in_argv = true; }
+        else if (!strcmp(argv[i], "--rpc-pass-fd") && i + 1 < argc) g_rpc_pass_fd = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--rpc-pass-file") && i + 1 < argc) g_rpc_pass_file = argv[++i];
         else if (!strcmp(argv[i], "--address") && i + 1 < argc) g_miner_address = argv[++i];
         else if (!strcmp(argv[i], "--wallet") && i + 1 < argc) g_wallet_path = argv[++i];
+        else if (!strcmp(argv[i], "--wallet-passphrase-fd") && i + 1 < argc) g_wallet_pass_fd = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--mining-key-label") && i + 1 < argc) g_mining_key_label = argv[++i];
 #ifdef SOST_DEVNET_FORKS
         else if (!strcmp(argv[i], "--attack-jackpot") && i + 1 < argc) g_attack_jackpot = argv[++i];  // DEV test-only
@@ -2440,11 +2473,43 @@ int main(int argc, char** argv) {
             printf("  --chain <path>     Chain file (default: chain.json)\n");
             printf("  --rpc <host:port>  Submit blocks to node via RPC\n");
             printf("  --rpc-user <u>     RPC Basic Auth user\n");
-            printf("  --rpc-pass <p>     RPC Basic Auth pass\n");
+            printf("  --rpc-pass <p>     RPC Basic Auth pass (VISIBLE in ps — prefer the two below)\n");
+            printf("  --rpc-pass-fd <n>  Read the RPC pass from descriptor n\n");
+            printf("  --rpc-pass-file <p> Read the RPC pass from a PRIVATE file (mode 600)\n");
             printf("  --profile <p>      mainnet|testnet|dev\n");
             printf("  --threads <n>      Parallel mining threads (default: 1). Share 1 scratchpad.\n");
             printf("  --realtime         Real timestamps\n");
+            printf("  --wallet-passphrase-fd <n>  Read the passphrase of an encrypted (v2)\n");
+            printf("                     wallet from descriptor n instead of prompting.\n");
+            printf("                     Pass the NUMBER, never the passphrase itself.\n");
             return 0;
+        }
+    }
+
+    // Resolve the RPC credential from whichever source was given. Exactly one
+    // may be used, so a stale --rpc-pass cannot silently win over a secure one.
+    {
+        int sources = (g_rpc_pass_in_argv ? 1 : 0) + (g_rpc_pass_fd >= 0 ? 1 : 0) + (!g_rpc_pass_file.empty() ? 1 : 0);
+        if (sources > 1) {
+            fprintf(stderr, "ERROR: use only one of --rpc-pass, --rpc-pass-fd, --rpc-pass-file.\n");
+            return 1;
+        }
+        std::string rerr;
+        if (g_rpc_pass_fd >= 0) {
+            sost::Secret sec;
+            if (!sost::read_secret_fd(g_rpc_pass_fd, sec, &rerr)) {
+                fprintf(stderr, "ERROR: --rpc-pass-fd: %s\n", rerr.c_str()); return 1;
+            }
+            g_rpc_pass = sec.str();
+        } else if (!g_rpc_pass_file.empty()) {
+            sost::Secret sec;
+            if (!sost::read_secret_file(g_rpc_pass_file, sec, &rerr)) {
+                fprintf(stderr, "ERROR: --rpc-pass-file: %s\n", rerr.c_str()); return 1;
+            }
+            g_rpc_pass = sec.str();
+        } else if (g_rpc_pass_in_argv) {
+            fprintf(stderr, "WARNING: --rpc-pass is visible to any local user via ps. "
+                            "Use --rpc-pass-fd or --rpc-pass-file.\n");
         }
     }
 
@@ -2473,11 +2538,57 @@ int main(int argc, char** argv) {
             fprintf(stderr, "ERROR: --wallet requires --mining-key-label <label>.\n");
             return 1;
         }
+        // ENCRYPTED (v2) WALLETS.
+        //
+        // The mining key signs every block AND controls every reward paid to it:
+        // in SbPoW the payout address is derived from the signing key and cannot
+        // be separated from it. Leaving that file in clear on a laptop is the
+        // largest single exposure this project has, so the miner now opens the
+        // encrypted format.
+        //
+        // The passphrase never reaches argv, an environment variable, a config
+        // file or a log. It comes from the terminal with echo off, or from a
+        // descriptor the operator already opened (--wallet-passphrase-fd N) —
+        // a pipe from a password manager, for instance. Passing the NUMBER
+        // means the secret itself is never an argument.
+        //
+        // This protects the file at rest. It does not protect a running miner on
+        // a machine somebody else already controls: once the process holds the
+        // key, whoever owns the host can read it.
         std::string werr;
-        if (!g_wallet.load(g_wallet_path, &werr)) {
-            fprintf(stderr, "ERROR: failed to load wallet '%s': %s\n",
-                    g_wallet_path.c_str(), werr.c_str());
+        bool encrypted = false;
+        std::string derr;
+        if (!sost::wallet_file_is_encrypted(g_wallet_path, encrypted, &derr)) {
+            fprintf(stderr, "ERROR: cannot read wallet '%s': %s\n", g_wallet_path.c_str(), derr.c_str());
             return 1;
+        }
+        if (!encrypted) {
+            if (!g_wallet.load(g_wallet_path, &werr)) {
+                fprintf(stderr, "ERROR: failed to load wallet '%s': %s\n",
+                        g_wallet_path.c_str(), werr.c_str());
+                return 1;
+            }
+            fprintf(stderr, "WARNING: '%s' is an UNENCRYPTED (v1) wallet — its private keys are\n"
+                            "         readable by anything that can read the file. Convert it with\n"
+                            "         sost-cli and restart with the encrypted copy.\n",
+                    g_wallet_path.c_str());
+        } else {
+            sost::Secret pass;
+            std::string perr;
+            bool got = (g_wallet_pass_fd >= 0)
+                     ? sost::read_secret_fd(g_wallet_pass_fd, pass, &perr)
+                     : sost::read_secret_tty("Passphrase for " + g_wallet_path + ": ", pass, &perr);
+            if (!got) {
+                fprintf(stderr, "ERROR: no passphrase: %s\n", perr.c_str());
+                return 1;
+            }
+            if (!g_wallet.load_encrypted(g_wallet_path, pass.str(), &werr)) {
+                // Never echo the passphrase, never hint at its length.
+                fprintf(stderr, "ERROR: cannot decrypt wallet '%s': %s\n",
+                        g_wallet_path.c_str(), werr.c_str());
+                return 1;
+            }
+            pass.wipe();
         }
 
         // Initial resolution uses phase2_required=false; the per-block

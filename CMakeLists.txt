@@ -256,6 +256,7 @@ add_library(sost-core STATIC
     src/lottery.cpp
     src/json_rpc.cpp
     src/sweep.cpp
+    src/secret_input.cpp
 
     # DTD lottery emergency pause/resume — signed control state machine.
     # Pure reference functions (parse / nonce supersede / reorg undo / the
@@ -852,6 +853,10 @@ add_test(NAME sweep-planner COMMAND test-sweep-planner)
 add_executable(test-sweep-batching tests/test_sweep_batching.cpp)
 target_link_libraries(test-sweep-batching PRIVATE sost-core)
 add_test(NAME sweep-batching COMMAND test-sweep-batching)
+
+add_executable(test-secret-input tests/test_secret_input.cpp)
+target_link_libraries(test-secret-input PRIVATE sost-core)
+add_test(NAME secret-input COMMAND test-secret-input)
 
 add_executable(test-json-rpc-adversarial tests/test_json_rpc_adversarial.cpp)
 target_link_libraries(test-json-rpc-adversarial PRIVATE sost-core)

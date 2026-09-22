@@ -23,6 +23,7 @@
 // - getblocktemplate enforces 500KB max block tx bytes (excluding coinbase)
 // - relay/mempool min fee handled by tx_validation policy
 
+#include "sost/secret_input.h"
 #include "sost/wallet.h"
 #include "sost/address.h"
 #include "sost/params.h"
@@ -8795,6 +8796,11 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--connect")&&i+1<argc) connect_addrs.push_back(argv[++i]);
         else if(!strcmp(argv[i],"--rpc-user")&&i+1<argc) g_rpc_user=argv[++i];
         else if(!strcmp(argv[i],"--rpc-pass")&&i+1<argc) g_rpc_pass=argv[++i];
+        // --node-key <hex> keeps working for compatibility, but it puts a private
+        // key in argv: visible in `ps`, in /proc/PID/cmdline, in `systemctl show`
+        // and in anything that captures command lines. --node-key-file reads the
+        // same key from a file that must be private (600, owned by this account),
+        // so the secret never becomes an argument.
         else if(!strcmp(argv[i],"--node-key")&&i+1<argc){
             std::string nk=argv[++i];
             sost::sbpow::MinerPrivkey k{};
@@ -8805,6 +8811,39 @@ int main(int argc, char** argv) {
                 fprintf(stderr,"Error: --node-key: pubkey derive failed\n"); return 1;
             }
             g_node_key=k; g_auto_heartbeat=true;
+            fprintf(stderr,"WARNING: --node-key puts the node private key in this process's command "
+                           "line, where any local user can read it. Use --node-key-file instead.\n");
+        }
+        else if(!strcmp(argv[i],"--node-key-file")&&i+1<argc){
+            const std::string path=argv[++i];
+            sost::Secret sec; std::string serr;
+            if(!sost::read_secret_file(path, sec, &serr)){
+                fprintf(stderr,"Error: --node-key-file: %s\n", serr.c_str()); return 1;
+            }
+            sost::sbpow::MinerPrivkey k{};
+            if(sec.str().size()!=64||!hex_to_bytes(sec.str(),k.data(),32)){
+                // Never echo the contents, not even a prefix.
+                fprintf(stderr,"Error: --node-key-file: %s must contain exactly 64 hex characters "
+                               "(a 32-byte node private key)\n", path.c_str()); return 1;
+            }
+            if(!sost::sbpow::derive_compressed_pubkey_from_privkey(k,g_node_pubkey)){
+                fprintf(stderr,"Error: --node-key-file: pubkey derive failed\n"); return 1;
+            }
+            g_node_key=k; g_auto_heartbeat=true;
+            sec.wipe();
+        }
+        // The systemd unit expands ${RPC_PASS} into ExecStart, so the credential
+        // ends up in argv on the node too — readable with ps by any local user.
+        // --rpc-pass-file reads it from a private file instead, so the unit can
+        // reference the PATH rather than the value.
+        else if(!strcmp(argv[i],"--rpc-pass-file")&&i+1<argc){
+            const std::string path=argv[++i];
+            sost::Secret sec; std::string serr;
+            if(!sost::read_secret_file(path, sec, &serr)){
+                fprintf(stderr,"Error: --rpc-pass-file: %s\n", serr.c_str()); return 1;
+            }
+            g_rpc_pass = sec.str();
+            sec.wipe();
         }
         else if(!strcmp(argv[i],"--rpc-noauth")) g_rpc_auth_required=false;
         else if(!strcmp(argv[i],"--rpc-public")) g_rpc_public=true;
@@ -8844,8 +8883,13 @@ int main(int argc, char** argv) {
             printf("  --connect <host:port>      Connect to peer\n");
             printf("  --rpc-user <u>             RPC Basic Auth user (required by default)\n");
             printf("  --rpc-pass <p>             RPC Basic Auth pass (required by default)\n");
+            printf("  --rpc-pass-file <path>     RPC pass read from a PRIVATE file (mode 600).\n");
+            printf("                             PREFERRED over --rpc-pass, which lands in argv.\n");
             printf("  --rpc-noauth               Disable RPC auth (NOT recommended)\n");
-            printf("  --node-key <hex64>         Node private key (32B hex) — enables native\n");
+            printf("  --node-key-file <path>     Node private key read from a PRIVATE file\n");
+            printf("                             (mode 600, owned by this account). PREFERRED:\n");
+            printf("                             the key never appears in the command line.\n");
+            printf("  --node-key <hex64>         Node private key (32B hex) - enables native\n");
             printf("                             DTD Jackpot V2 auto-heartbeat (>= block #%lld)\n", (long long)sost::HIST_JACKPOT_V2_HEIGHT);
             printf("  --rpc-public               Bind RPC to 0.0.0.0 (default: 127.0.0.1)\n");
             printf("  --profile mainnet|testnet|dev  Network profile (default: mainnet)\n");

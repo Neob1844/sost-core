@@ -37,6 +37,7 @@
 //   sost-cli info                       Wallet summary
 
 #include "sost/wallet.h"
+#include "sost/secret_input.h"
 #include "sost/json_rpc.h"
 #include "sost/sweep.h"   // strict reader for node replies (see json_rpc.h)
 #include "sost/hd_wallet.h"
@@ -3201,11 +3202,56 @@ int main(int argc, char** argv) {
             for (int i=0;i<32;++i){ int hi=hv(h[i*2]),lo=hv(h[i*2+1]); if(hi<0||lo<0)return false; out[i]=(uint8_t)((hi<<4)|lo); }
             return true;
         };
+        // The node private key must NOT travel in argv: /proc/<pid>/cmdline is
+        // world-readable, so `ps` hands it to every local user, and it is the key
+        // that signs your heartbeats. --node-key-file / --node-key-fd keep it out.
+        // The positional hex form still works (compatibility) but warns.
+        std::string nk_file; int nk_fd = -1;
+        // Split the tail into flags and positionals so the positional indices do
+        // not shift depending on which key source was used.
+        std::vector<std::string> pos;
+        for (int i = arg_start + 1; i < argc; ++i) {
+            if (!strcmp(argv[i], "--node-key-file") && i + 1 < argc) nk_file = argv[++i];
+            else if (!strcmp(argv[i], "--node-key-fd") && i + 1 < argc) nk_fd = atoi(argv[++i]);
+            else pos.push_back(argv[i]);
+        }
+        // Load the key from the secure source, if one was given. Returns:
+        //   1 = loaded, 0 = no secure source given, -1 = error already reported.
+        auto load_node_key = [&](sost::sbpow::MinerPrivkey& out) -> int {
+            if (nk_file.empty() && nk_fd < 0) return 0;
+            if (!nk_file.empty() && nk_fd >= 0) {
+                fprintf(stderr, "Error: use either --node-key-file or --node-key-fd, not both\n"); return -1;
+            }
+            sost::Secret sec; std::string serr;
+            const bool ok = nk_fd >= 0 ? sost::read_secret_fd(nk_fd, sec, &serr)
+                                       : sost::read_secret_file(nk_file, sec, &serr);
+            if (!ok) { fprintf(stderr, "Error: node key: %s\n", serr.c_str()); return -1; }
+            std::string hex = sec.str(); sec.wipe();
+            // Never echo the content on failure — only the shape is reported.
+            if (!parse32(hex, out)) {
+                for (auto& c : hex) c = 0;
+                fprintf(stderr, "Error: node key source must contain exactly 64 hex characters\n"); return -1;
+            }
+            for (auto& c : hex) c = 0;
+            return 1;
+        };
         if (cmd == "createnodebind") {
-            if (argc < arg_start + 3) { fprintf(stderr, "Usage: sost-cli --wallet <w> createnodebind <bind_seq> <node_privkey_hex>\n"); return 1; }
-            uint64_t seq = strtoull(argv[arg_start+1], nullptr, 10);
             sost::sbpow::MinerPrivkey nsk{};
-            if (!parse32(argv[arg_start+2], nsk)) { fprintf(stderr, "Error: node_privkey must be 64 hex chars\n"); return 1; }
+            const int loaded = load_node_key(nsk);
+            if (loaded < 0) return 1;
+            const size_t need = loaded ? 1u : 2u;   // <seq> [<hex>]
+            if (pos.size() < need) {
+                fprintf(stderr, "Usage: sost-cli --wallet <w> createnodebind <bind_seq> --node-key-file <path>\n");
+                fprintf(stderr, "   or: sost-cli --wallet <w> createnodebind <bind_seq> --node-key-fd <n>\n");
+                fprintf(stderr, "   or: sost-cli --wallet <w> createnodebind <bind_seq> <node_privkey_hex>   (VISIBLE in ps)\n");
+                return 1;
+            }
+            uint64_t seq = strtoull(pos[0].c_str(), nullptr, 10);
+            if (!loaded) {
+                fprintf(stderr, "WARNING: the node private key is visible to any local user via ps. "
+                                "Use --node-key-file <path> (mode 600) or --node-key-fd <n>.\n");
+                if (!parse32(pos[1], nsk)) { fprintf(stderr, "Error: node_privkey must be 64 hex chars\n"); return 1; }
+            }
             const sost::WalletKey* mk = w.find_key_by_label("default");
             if (!mk) { fprintf(stderr, "Error: wallet has no 'default' mining key\n"); return 1; }
             sost::sbpow::MinerPrivkey msk{}; std::copy(mk->privkey.begin(), mk->privkey.end(), msk.begin());
@@ -3223,12 +3269,24 @@ int main(int argc, char** argv) {
             printf("%s\n", to_hex(raw.data(), raw.size()).c_str());
             return 0;
         } else {
-            if (argc < arg_start + 4) { fprintf(stderr, "Usage: sost-cli nodeheartbeat <node_privkey_hex> <epoch_idx> <tip_ref_hex>\n"); return 1; }
             sost::sbpow::MinerPrivkey nsk{};
-            if (!parse32(argv[arg_start+1], nsk)) { fprintf(stderr, "Error: node_privkey must be 64 hex chars\n"); return 1; }
-            uint64_t epoch = strtoull(argv[arg_start+2], nullptr, 10);
+            const int loaded = load_node_key(nsk);
+            if (loaded < 0) return 1;
+            // With a secure key source the hex positional is absent.
+            const size_t base = loaded ? 0u : 1u;   // [<hex>] <epoch_idx> <tip_ref>
+            if (pos.size() < base + 2) {
+                fprintf(stderr, "Usage: sost-cli nodeheartbeat --node-key-file <path> <epoch_idx> <tip_ref_hex>\n");
+                fprintf(stderr, "   or: sost-cli nodeheartbeat <node_privkey_hex> <epoch_idx> <tip_ref_hex>   (VISIBLE in ps)\n");
+                return 1;
+            }
+            if (!loaded) {
+                fprintf(stderr, "WARNING: the node private key is visible to any local user via ps. "
+                                "Use --node-key-file <path> (mode 600) or --node-key-fd <n>.\n");
+                if (!parse32(pos[0], nsk)) { fprintf(stderr, "Error: node_privkey must be 64 hex chars\n"); return 1; }
+            }
+            uint64_t epoch = strtoull(pos[base].c_str(), nullptr, 10);
             sost::Bytes32 tipref{};
-            if (!parse32(argv[arg_start+3], tipref)) { fprintf(stderr, "Error: tip_ref must be 64 hex chars\n"); return 1; }
+            if (!parse32(pos[base+1], tipref)) { fprintf(stderr, "Error: tip_ref must be 64 hex chars\n"); return 1; }
             sost::sbpow::MinerPubkey npk{};
             if (!sost::sbpow::derive_compressed_pubkey_from_privkey(nsk, npk)) { fprintf(stderr, "Error: pubkey derive failed\n"); return 1; }
             sost::node_participation::NodeHeartbeatTx h;
@@ -3265,9 +3323,11 @@ int main(int argc, char** argv) {
     if (cmd == "wallet-export") {
         std::string output_path;
         bool encrypted = false;
+        int pass_fd = -1;
         for (int i = arg_start + 1; i < argc; ++i) {
             if (!strcmp(argv[i], "--encrypted")) encrypted = true;
             else if (!strcmp(argv[i], "--output") && i + 1 < argc) output_path = argv[++i];
+            else if (!strcmp(argv[i], "--passphrase-fd") && i + 1 < argc) pass_fd = atoi(argv[++i]);
         }
         if (output_path.empty()) {
             fprintf(stderr, "Usage: sost-cli wallet-export --encrypted --output <file>\n");
@@ -3278,29 +3338,38 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        // Prompt passphrase twice
-        printf("Enter passphrase for encrypted backup: ");
-        fflush(stdout);
-        char pass1[256]{}, pass2[256]{};
-        if (!fgets(pass1, sizeof(pass1), stdin)) { fprintf(stderr, "Error reading passphrase\n"); return 1; }
-        pass1[strcspn(pass1, "\r\n")] = 0;
-
-        printf("Confirm passphrase: ");
-        fflush(stdout);
-        if (!fgets(pass2, sizeof(pass2), stdin)) { fprintf(stderr, "Error reading passphrase\n"); return 1; }
-        pass2[strcspn(pass2, "\r\n")] = 0;
-
-        if (strcmp(pass1, pass2) != 0) {
-            fprintf(stderr, "Error: passphrases do not match\n");
-            return 1;
-        }
-        if (strlen(pass1) < 8) {
-            fprintf(stderr, "Error: passphrase must be at least 8 characters\n");
-            return 1;
+        // The passphrase is typed with terminal echo OFF (it used to be printed on
+        // screen and left in the scrollback). Scripts pass it on a descriptor; the
+        // confirmation prompt is then skipped because there is nothing to mistype.
+        sost::Secret pass;
+        {
+            std::string perr;
+            if (pass_fd >= 0) {
+                if (!sost::read_secret_fd(pass_fd, pass, &perr)) {
+                    fprintf(stderr, "Error: --passphrase-fd: %s\n", perr.c_str()); return 1;
+                }
+            } else {
+                if (!sost::read_secret_tty("Enter passphrase for encrypted backup: ", pass, &perr)) {
+                    fprintf(stderr, "Error: %s\n", perr.c_str()); return 1;
+                }
+                sost::Secret confirm;
+                if (!sost::read_secret_tty("Confirm passphrase: ", confirm, &perr)) {
+                    fprintf(stderr, "Error: %s\n", perr.c_str()); pass.wipe(); return 1;
+                }
+                const bool same = (confirm.str() == pass.str());
+                confirm.wipe();
+                if (!same) { pass.wipe(); fprintf(stderr, "Error: passphrases do not match\n"); return 1; }
+            }
+            if (pass.str().size() < 8) {
+                pass.wipe();
+                fprintf(stderr, "Error: passphrase must be at least 8 characters\n");
+                return 1;
+            }
         }
 
         std::string err;
-        if (!w.save_encrypted(output_path, std::string(pass1), &err)) {
+        if (!w.save_encrypted(output_path, pass.str(), &err)) {
+            pass.wipe();
             fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
@@ -3317,9 +3386,7 @@ int main(int argc, char** argv) {
         printf("    sost-cli --wallet %s listaddresses\n", wallet_path.c_str());
         printf("\n*** REMEMBER YOUR PASSPHRASE — IT CANNOT BE RECOVERED ***\n");
 
-        // Zero passphrase memory
-        memset(pass1, 0, sizeof(pass1));
-        memset(pass2, 0, sizeof(pass2));
+        pass.wipe();
         return 0;
     }
 
@@ -3329,9 +3396,11 @@ int main(int argc, char** argv) {
     if (cmd == "wallet-import") {
         std::string input_path;
         bool encrypted = false;
+        int pass_fd = -1;
         for (int i = arg_start + 1; i < argc; ++i) {
             if (!strcmp(argv[i], "--encrypted")) encrypted = true;
             else if (!strcmp(argv[i], "--input") && i + 1 < argc) input_path = argv[++i];
+            else if (!strcmp(argv[i], "--passphrase-fd") && i + 1 < argc) pass_fd = atoi(argv[++i]);
         }
         if (input_path.empty()) {
             fprintf(stderr, "Usage: sost-cli wallet-import --encrypted --input <file>\n");
@@ -3342,20 +3411,27 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        printf("Enter passphrase for encrypted backup: ");
-        fflush(stdout);
-        char pass[256]{};
-        if (!fgets(pass, sizeof(pass), stdin)) { fprintf(stderr, "Error reading passphrase\n"); return 1; }
-        pass[strcspn(pass, "\r\n")] = 0;
+        // Echo OFF here too — the import passphrase is the same secret.
+        sost::Secret pass;
+        {
+            std::string perr;
+            if (pass_fd >= 0) {
+                if (!sost::read_secret_fd(pass_fd, pass, &perr)) {
+                    fprintf(stderr, "Error: --passphrase-fd: %s\n", perr.c_str()); return 1;
+                }
+            } else if (!sost::read_secret_tty("Enter passphrase for encrypted backup: ", pass, &perr)) {
+                fprintf(stderr, "Error: %s\n", perr.c_str()); return 1;
+            }
+        }
 
         sost::Wallet imported;
         std::string err;
-        if (!imported.load_encrypted(input_path, std::string(pass), &err)) {
+        if (!imported.load_encrypted(input_path, pass.str(), &err)) {
             fprintf(stderr, "Error: %s\n", err.c_str());
-            memset(pass, 0, sizeof(pass));
+            pass.wipe();
             return 1;
         }
-        memset(pass, 0, sizeof(pass));
+        pass.wipe();
 
         // Save as the active wallet (plaintext format for node use)
         if (!imported.save(wallet_path, &err)) {
