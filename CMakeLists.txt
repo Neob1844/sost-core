@@ -255,6 +255,7 @@ add_library(sost-core STATIC
     # is reached on real chain heights yet.
     src/lottery.cpp
     src/json_rpc.cpp
+    src/sweep.cpp
 
     # DTD lottery emergency pause/resume — signed control state machine.
     # Pure reference functions (parse / nonce supersede / reorg undo / the
@@ -843,6 +844,10 @@ add_test(NAME dtd-recency COMMAND test-dtd-recency)
 add_executable(test-json-rpc tests/test_json_rpc.cpp)
 target_link_libraries(test-json-rpc PRIVATE sost-core)
 add_test(NAME json-rpc COMMAND test-json-rpc)
+
+add_executable(test-sweep-planner tests/test_sweep_planner.cpp)
+target_link_libraries(test-sweep-planner PRIVATE sost-core)
+add_test(NAME sweep-planner COMMAND test-sweep-planner)
 
 add_executable(test-sweep-batching tests/test_sweep_batching.cpp)
 target_link_libraries(test-sweep-batching PRIVATE sost-core)

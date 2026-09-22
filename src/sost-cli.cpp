@@ -37,7 +37,8 @@
 //   sost-cli info                       Wallet summary
 
 #include "sost/wallet.h"
-#include "sost/json_rpc.h"   // strict reader for node replies (see json_rpc.h)
+#include "sost/json_rpc.h"
+#include "sost/sweep.h"   // strict reader for node replies (see json_rpc.h)
 #include "sost/hd_wallet.h"
 #include "sost/addressbook.h"
 #include "sost/wallet_policy.h"
@@ -1839,6 +1840,154 @@ int main(int argc, char** argv) {
     // =====================================================================
     // listunspent [address]
     // =====================================================================
+    // =====================================================================
+    // sweep-plan <destination> [--state <journal>]
+    //
+    // PLANS a consolidation of the wallet's address into batches the network
+    // will actually relay. It NEVER signs and NEVER broadcasts: the output is a
+    // plan plus a journal audit, both reviewable before a single stock moves.
+    //
+    // Two things it refuses to assume:
+    //   * the batch size — taken from EstimateTxSerializedSize, the same
+    //     function ValidateTransactionPolicy uses, so the planner and the
+    //     mempool cannot drift apart;
+    //   * that a confirmation is final — every journal entry is re-checked
+    //     against the chain, because a reorg can undo a batch and re-planning
+    //     its inputs would pay twice.
+    // =====================================================================
+    if (cmd == "sweep-plan") {
+        if (argc < arg_start + 2) {
+            fprintf(stderr, "Usage: sost-cli sweep-plan <destination_address> [--state <journal.json>]\n");
+            fprintf(stderr, "  Plans only. Never signs, never broadcasts.\n");
+            return 1;
+        }
+        const std::string dest = argv[arg_start + 1];
+        std::string journal_path = "sweep-journal.json";
+        for (int i = arg_start + 2; i + 1 < argc; ++i)
+            if (!strcmp(argv[i], "--state")) journal_path = argv[i + 1];
+
+        sost::PubKeyHash dest_pkh{};
+        if (!sost::address_decode(dest, dest_pkh)) {
+            fprintf(stderr, "Error: destination '%s' is not a valid SOST address.\n", dest.c_str());
+            return 1;
+        }
+        const std::string src = w.default_address();
+        if (src.empty()) { fprintf(stderr, "Error: wallet has no address.\n"); return 1; }
+        if (dest == src) {
+            fprintf(stderr, "Error: destination equals the source address — that is not a sweep.\n");
+            return 1;
+        }
+
+        // ---- 1. journal + reorg audit, BEFORE looking at any UTXO ----------
+        sost::sweep::Journal jr;
+        std::string jerr;
+        bool have_journal = sost::sweep::journal_load(journal_path, jr, &jerr);
+        if (!have_journal && jerr != "no_journal") {
+            fprintf(stderr, "REFUSING TO PLAN: %s\n", jerr.c_str());
+            fprintf(stderr, "A journal that cannot be read is NOT an empty journal. Fix or restore it first.\n");
+            return 1;
+        }
+        int reorged = 0, unconfirmed = 0;
+        if (have_journal) {
+            printf("JOURNAL %s — %zu batch(es) recorded\n", journal_path.c_str(), jr.entries.size());
+            for (const auto& e : jr.entries) {
+                if (e.confirmed_height < 0) {
+                    ++unconfirmed;
+                    printf("  batch %d  txid %s  NOT CONFIRMED — its inputs stay reserved\n",
+                           e.batch_index, e.txid.empty() ? "(none)" : e.txid.c_str());
+                    continue;
+                }
+                std::string resp = rpc_call("getblockhash", "[" + std::to_string(e.confirmed_height) + "]");
+                std::string body, rerr;
+                sost::json::Value res;
+                if (!sost::json::http_body(resp, body, &rerr) || !sost::json::rpc_result(body, res, &rerr)) {
+                    fprintf(stderr, "REFUSING TO PLAN: cannot verify batch %d against the chain (%s).\n",
+                            e.batch_index, rerr.c_str());
+                    return 1;                     // never plan blind over a journal
+                }
+                const std::string now_hash = (res.type == sost::json::Value::T::Str) ? res.s : std::string();
+                if (now_hash.empty()) {
+                    printf("  batch %d  height %lld no longer exists — CHAIN ROLLED BACK\n",
+                           e.batch_index, (long long)e.confirmed_height);
+                    ++reorged;
+                } else if (!e.confirmed_block_hash.empty() && now_hash != e.confirmed_block_hash) {
+                    printf("  batch %d  REORG at height %lld\n", e.batch_index, (long long)e.confirmed_height);
+                    printf("            recorded %s\n            chain now %s\n",
+                           e.confirmed_block_hash.c_str(), now_hash.c_str());
+                    ++reorged;
+                } else {
+                    printf("  batch %d  txid %s  confirmed at %lld — still on chain\n",
+                           e.batch_index, e.txid.c_str(), (long long)e.confirmed_height);
+                }
+            }
+            if (reorged) {
+                fprintf(stderr, "\nSTOP: %d batch(es) were reorganised out.\n", reorged);
+                fprintf(stderr, "Their inputs may be spendable again, or may have been re-mined in a\n"
+                                "different block. Re-check each txid before planning anything else —\n"
+                                "planning over this would risk paying twice.\n");
+                return 2;
+            }
+        } else {
+            printf("JOURNAL %s — none yet (first run)\n", journal_path.c_str());
+        }
+
+        // ---- 2. chain UTXOs -------------------------------------------------
+        std::string raw = rpc_call("getaddressutxos", "[\"" + src + "\"]");
+        if (raw.empty()) { fprintf(stderr, "Error: node not reachable — cannot plan without chain truth.\n"); return 1; }
+        std::string body, err2;
+        sost::json::Value res;
+        if (!sost::json::http_body(raw, body, &err2) || !sost::json::rpc_result(body, res, &err2) || !res.is_arr()) {
+            fprintf(stderr, "Error: node query failed (%s) — NOT planning on a failed read.\n", err2.c_str());
+            return 1;
+        }
+        std::vector<sost::sweep::Utxo> all;
+        for (const auto& u : res.a) {
+            sost::sweep::Utxo x;
+            int64_t v = 0;
+            if (!u.get_int("amount_stocks", x.amount)) {
+                fprintf(stderr, "Error: a UTXO arrived without an integer amount — refusing to guess.\n");
+                return 1;
+            }
+            u.get_str("txid", x.txid);
+            if (u.get_int("vout", v)) x.vout = (uint32_t)v;
+            u.get_int("height", x.height);
+            u.get_bool("coinbase", x.coinbase);
+            u.get_bool("mature", x.mature);
+            u.get_bool("spendable", x.spendable);
+            all.push_back(std::move(x));
+        }
+
+        // ---- 3. plan --------------------------------------------------------
+        const auto consumed = sost::sweep::consumed_keys(jr);
+        auto spendable = sost::sweep::filter_spendable(all, consumed);
+        const auto L = sost::sweep::default_limits();
+        auto plan = sost::sweep::plan_batches(spendable, L);
+
+        int64_t chain_total = 0; for (const auto& u : all) chain_total += u.amount;
+        int64_t plan_total = 0, plan_fees = 0;
+        for (const auto& b : plan) { plan_total += b.to_destination; plan_fees += b.fee; }
+
+        printf("\nSOURCE      %s\nDESTINATION %s\n", src.c_str(), dest.c_str());
+        printf("on chain    %zu UTXOs, %s SOST\n", all.size(), format_sost(chain_total).c_str());
+        printf("spendable   %zu UTXOs (mature, not already journalled)\n", spendable.size());
+        printf("limits      %d bytes / %u inputs, margin %d -> %zu inputs per batch\n",
+               L.max_tx_bytes_standard, L.max_inputs_standard, L.byte_margin,
+               sost::sweep::max_inputs_per_batch(L));
+        printf("\nPLAN — %zu transaction(s)\n", plan.size());
+        for (size_t i = 0; i < plan.size(); ++i) {
+            const auto& b = plan[i];
+            printf("  batch %2zu  %3zu inputs  %6zu bytes  fee %s  ->  %s SOST\n",
+                   i, b.inputs.size(), b.est_bytes,
+                   format_sost(b.fee).c_str(), format_sost(b.to_destination).c_str());
+        }
+        printf("\ntotal to destination %s SOST · total fees %s SOST\n",
+               format_sost(plan_total).c_str(), format_sost(plan_fees).c_str());
+        if (unconfirmed)
+            printf("\n%d batch(es) are still unconfirmed; their inputs are excluded from this plan.\n", unconfirmed);
+        printf("\nThis is a PLAN. Nothing was signed and nothing was broadcast.\n");
+        return 0;
+    }
+
     if (cmd == "listunspent") {
         // CHAIN FIRST, cache second, and never conflate the two.
         //
