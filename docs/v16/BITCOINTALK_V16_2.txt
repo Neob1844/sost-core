@@ -1,0 +1,147 @@
+[center][size=18pt][b]SOST V16.2.0 released — and the update window is back: after #29,900, before #30,000[/b][/size]
+[size=12pt]Consensus unchanged: activation [b]#30,000[/b] · first DTD Jackpot V2 draw [b]#30,186[/b][/size][/center]
+
+[hr]
+
+Two things in this post, and only two.
+
+[b]1.[/b] [b]v16.2.0[/b] is released. It is the build to install, on [b]your node and your miner[/b].
+[b]2.[/b] The update happens in a [b]coordinated window: after block #29,900 and before block #30,000.[/b] This [b]replaces[/b] what the V16.1 post above says in section 19 ("You may update at ANY time before #30,000", "Do not wait for #29,900"). Those lines are withdrawn. The window stands.
+
+Nothing else changes. Activation is still #30,000, the first V2 Jackpot is still #30,186, and every rule described in the V16.1 post remains exactly as written.
+
+[hr]
+
+[size=14pt][b]1. The update window — what to do and when[/b][/size]
+
+[code]
+BEFORE #29,900     get the binaries, verify their SHA256, read this post.
+                   Do NOT switch yet.
+
+#29,900 -> #30,000 THE WINDOW (~16-17 hours). Stop your node and your miner,
+                   install the v16.2.0 binaries on BOTH, restart both.
+
+AT #30,000         V16 activates by itself. No command, no config switch,
+                   no restart at the height.
+
+AFTER #30,000      optional: NODE_BIND + node key, if you want to play
+                   the DTD Jackpot.
+[/code]
+
+The point of a window is coordination: the whole network switches inside the same stretch and crosses the activation running the same code. Do the download, the build and the hash check [b]before[/b] the window opens, so that inside it you only stop, install and restart.
+
+A validating node still on older consensus software after #30,000 [b]may diverge from the V16 chain[/b]. The upgrade is mandatory.
+
+[hr]
+
+[size=14pt][b]2. What v16.2.0 changes — and what it does not[/b][/size]
+
+[b]It changes no consensus rule.[/b] Not one. V16.2.0 and v16.1.0 follow the same chain, accept each other's blocks, and compute the same DTD draws. That is measured, not asserted:
+
+[code]
+Two nodes on one devnet, one running v16.1.0, one running v16.2.0:
+  - each accepts every block the other produces
+  - all 61 heights hash identically on both
+  - the DTD lottery audit matches at every height
+
+Both releases loading a COPY of the real production chain, offline:
+  - both reach height 27,544
+  - neither logs a rejection
+  - 959 sampled heights hash identically
+  - the tip block serialises identically
+  - the lottery audit agrees at all 959 heights
+[/code]
+
+Both harnesses are in the repository (tests/run_v162_equivalence.sh and
+tests/run_v162_historical_replay.sh), so anyone can re-run them.
+
+[b]What it does change is operator safety.[/b] Until now every secret this protocol asks you to handle had to be typed on a command line or echoed on your screen. /proc/<pid>/cmdline is world-readable, which means [b]ps[/b] handed your RPC password and your node key to any local account on the same machine.
+
+[code]
+miner   --rpc-pass-fd <n>          read the RPC password from a descriptor
+        --rpc-pass-file <path>     ...or from a mode-600 file
+        --wallet-passphrase-file   unattended restart with an encrypted wallet
+        --rpc-pass                 still works, now warns that ps can see it
+
+node    --rpc-pass-file <path>     so systemd names a PATH, not a password
+        --node-key-file <path>     the heartbeat key, out of argv
+
+cli     createnodebind  --node-key-file | --node-key-fd
+        nodeheartbeat   --node-key-file | --node-key-fd
+        wallet-export / wallet-import  --passphrase-fd, and the terminal
+                                        no longer echoes the passphrase
+[/code]
+
+A secret file must be [b]mode 600, owned by you, one line and nothing else[/b]. A file other users can read is refused, not read with a warning, and no error message ever echoes what it rejected. The three password sources are mutually exclusive, so an old --rpc-pass left in a script cannot quietly win over a secure one.
+
+Also fixed: a wrong RPC password used to look like a rejected block. It now says what it is — [b]the credentials are wrong and the block was never validated[/b].
+
+[b]Encrypted (v2) wallets[/b] are supported end to end, and encrypting one does not change your mining identity or your payout address. [b]v1 (plaintext) wallets keep working with no conversion and no deadline.[/b] Encryption is optional and stays optional.
+
+[hr]
+
+[size=14pt][b]3. One correction about verifying the hashes[/b][/size]
+
+If you build from source and compare against docs/v16/SHA256SUMS, [b]the build directory must be named "build"[/b]:
+
+[code]
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
+      -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+[/code]
+
+The source path does not matter — it is normalised out of the binary, and that is measured: the same commit built in two different directories produces byte-identical binaries. The [b]build directory name[/b] is not normalised, so building into "build-v16" or "build-v162" produces different bytes from the same commit and will not match the published hashes.
+
+The earlier guides told you to build into build-v16 / build-v162. That was our mistake: anyone who followed it got a mismatch on all three binaries with no way to tell a build difference from a tampered file. The guides are corrected.
+
+[code]
+b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node
+2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner
+212e37d8f925afd4d4e1f9971a86bd49120be2978e09ec1cf77b713ebc0812c5  sost-cli
+[/code]
+
+An official downloaded binary [b]must[/b] match exactly. A binary you compiled on a different compiler, linker or libc may legitimately differ — cross-machine reproducibility is [b]not[/b] proven and we do not claim it.
+
+The v16.1.0 list is kept as docs/v16/SHA256SUMS_V16_1, because that is what a rollback binary verifies against.
+
+[hr]
+
+[size=14pt][b]4. Rolling back[/b][/size]
+
+Nothing in v16.2.0 changes the on-disk chain format, so a rollback is the old binary and nothing else — no reindex, no migration, in either direction. One caveat, and only one: a wallet you [b]encrypted[/b] with v16.2.0 cannot be read by an older binary. Keep your v1 wallet file until the encrypted one has mined a block.
+
+[hr]
+
+[size=14pt][b]5. Checklist[/b][/size]
+
+[code]
+BEFORE #29,900
+  [ ] get v16.2.0 (official binary, or build with -B build)
+  [ ] verify SHA256 against docs/v16/SHA256SUMS
+  [ ] keep your current binaries, with a timestamp in the name
+
+#29,900 -> #30,000
+  [ ] stop node and miner
+  [ ] install v16.2.0 on BOTH
+  [ ] restart BOTH
+  [ ] check the RUNNING binary:  sha256sum /proc/<pid>/exe
+  [ ] height advancing and matching the network
+  [ ] a block submitted and accepted
+
+AFTER #30,000  (optional, Jackpot only)
+  [ ] NODE_BIND with --node-key-file
+  [ ] node running with --node-key-file so it heartbeats by itself
+  [ ] check eligibility before #30,186
+[/code]
+
+Full guide: docs/v16/UPGRADE_V16_2.md · V15 -> V16 guide: docs/v16/QUICK_UPGRADE_5MIN.md · manifest: docs/v16/RELEASE_MANIFEST_V16_2.md
+
+[hr]
+
+Website: https://sostcore.com
+Explorer: https://sostcore.com/sost-explorer.html
+Source (MIT): https://github.com/Neob1844/sost-core
+Telegram: https://t.me/SOSTProtocolOfficial
+Contact: sost@sostcore.com
+
+[i]SOST is experimental open-source software distributed under the MIT license and provided without warranty. Mining, node operation and any market activity involve risk and are undertaken at the participant's own responsibility.[/i]

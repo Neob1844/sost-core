@@ -11,9 +11,21 @@ Your coins, your keys, your wallet file and your payout address are
 nothing to re-register. Encrypting your wallet is **optional** and always will
 be.
 
+**Update window: after block #29,900 and before block #30,000** — on your node
+**and** your miner. V16.2.0 is consensus-identical to V16.1.0, so the window is
+coordination, not a technical constraint: the point is that the whole network
+crosses the activation running the same code. Download, build and verify the
+hashes *before* the window opens, so inside it you only stop, install, restart.
+
 ```text
+BEFORE #29,900     get the binaries, verify SHA256 — do NOT switch yet
+#29,900 -> #30,000 THE WINDOW (~16-17 h): stop, install, restart. Node AND miner.
+AT #30,000         V16 activates by itself — you do nothing
+AFTER #30,000      optional: NODE_BIND, if you want the DTD Jackpot
+
 V15            -> MUST upgrade before #30,000 (a V15 node diverges after it)
-V16.0 / V16.1  -> recommended, not consensus-critical; same rules, safer handling
+V16.0 / V16.1  -> same consensus as V16.2.0; upgrade in the window anyway, so
+                  everyone is on one build when the rules change
 ```
 
 ---

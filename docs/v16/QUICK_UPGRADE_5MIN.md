@@ -1,11 +1,11 @@
 # SOST V16 — miner & node upgrade
 
 **What:** one mandatory upgrade for every node and miner.
-**Which release:** install **v16.2.0** — the current one. V16.1.0 also crosses the
-fork correctly; V16.2.0 carries the same consensus rules plus the operator-side
-fixes, and is what `docs/v16/SHA256SUMS` now verifies. If you are already on
-V16.1.0 you are safe for #30,000 and should read `docs/v16/UPGRADE_V16_2.md`
-instead of this file.
+**Which release:** install **v16.2.0** — the current one, on your node **and**
+your miner, inside the update window below. V16.1.0 carries the same consensus
+rules, so it crosses the fork correctly too; V16.2.0 adds the operator-side
+fixes and is what `docs/v16/SHA256SUMS` verifies. Already on V16.1.0? Update in
+the same window anyway — see `docs/v16/UPGRADE_V16_2.md` for what changed.
 **When:** update **after block #29,900 and before #30,000**.
 **Why:** from #30,000 the DTD Jackpot becomes an independent, node-gated,
 PoW-weighted draw (first V2 draw #30,186), AND DTD-normal eligibility is re-pointed

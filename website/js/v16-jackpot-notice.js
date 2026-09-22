@@ -123,11 +123,11 @@
   <button type="button" class="sost-v16-head" aria-expanded="false" aria-controls="sostV16Body" title="Open the DTD Jackpot V2 advance notice">
     <span class="sost-v16-icon" aria-hidden="true">🏆</span>
     <span class="sost-v16-titles">
-      <span class="sost-v16-title">SOST V16.1 &mdash; DTD Eligibility + Jackpot V2 &middot; Miner &amp; Node Operator Notice</span>
-      <span class="sost-v16-sub">Mandatory node/miner update before block #30,000 &middot; <b>Normal DTD eligibility DOES change</b></span>
+      <span class="sost-v16-title">SOST V16.2.0 &mdash; DTD Eligibility + Jackpot V2 &middot; Miner &amp; Node Operator Notice</span>
+      <span class="sost-v16-sub">Install the new binaries on your <b>node AND your miner</b> &mdash; <b>after block #29,900 and before #30,000</b> &middot; Normal DTD eligibility DOES change</span>
     </span>
     <span class="sost-v16-chip">ACTIVATION #30,000</span>
-    <span class="sost-v16-redchip">&#9888; UPDATE NOW &mdash; any time BEFORE #30,000</span>
+    <span class="sost-v16-redchip">&#9888; UPDATE WINDOW &mdash; AFTER #29,900, BEFORE #30,000</span>
     <span class="sost-v16-cta"><span class="sost-v16-cta-label" data-when="closed">Read</span><span class="sost-v16-cta-label" data-when="open" hidden>Hide</span><span class="sost-v16-chev" aria-hidden="true">&#9662;</span></span>
   </button>
 
@@ -135,12 +135,12 @@
 
     <div class="sost-v16-blink">
       <span class="hdr">&#9888; Mandatory action for every miner and node operator</span>
-      You <b>must install the V16.1 binaries and restart your node and your miner</b> &mdash;
-      <span class="win">at any point before block #30,000</span>. Earlier is better: a V16.1 node below the
-      activation height replays the chain <b>byte-identically</b> to the previous release, so there is nothing
-      to gain by waiting and a short window to miss. The earlier advice to update only between #29,900 and
-      #30,000 was a coordination convention and has been withdrawn. A validating node still on older
-      consensus software at #30,000 <b>may diverge from the V16 chain</b>.
+      Install the <b>new V16.2.0 binaries on your node AND on your miner</b> and restart both &mdash;
+      <span class="win">after block #29,900 and before block #30,000</span>. That is the coordinated
+      update window for the network: everyone switches inside the same ~16&ndash;17&nbsp;hour stretch, so
+      the whole network crosses the activation running the same code. Get the binaries and verify their
+      SHA256 <b>before</b> the window opens, so the window itself is only stop, install, restart.
+      A validating node still on older consensus software at #30,000 <b>may diverge from the V16 chain</b>.
     </div>
 
     <div class="sost-v16-alert">
@@ -150,9 +150,10 @@
     </div>
 
     <div class="sost-v16-nums">
+      <div class="sost-v16-num"><span class="n">#29,900 &rarr; #30,000</span><span class="l"><b>Update window</b> &mdash; install the new binaries here</span></div>
       <div class="sost-v16-num"><span class="n">#30,000</span><span class="l">V16 activates automatically by block height</span></div>
       <div class="sost-v16-num"><span class="n">#30,186</span><span class="l">First DTD Jackpot V2 draw</span></div>
-      <div class="sost-v16-num"><span class="n">v16.2.0</span><span class="l">Current release &mdash; install any time before #30,000</span></div>
+      <div class="sost-v16-num"><span class="n">v16.2.0</span><span class="l">The binaries to install &mdash; node AND miner</span></div>
       <div class="sost-v16-num"><span class="n">288</span><span class="l">Jackpot cadence &amp; heartbeat epoch (unchanged)</span></div>
       <div class="sost-v16-num"><span class="n">100 &rarr; 500</span><span class="l">Jackpot base SOST, rollover cap &mdash; existing historical reserve, <b>no new emission</b></span></div>
     </div>
@@ -177,9 +178,9 @@
       <div class="sost-v16-card miner">
         <h4>&#9935; If you mine</h4>
         <ol>
-          <li>Download or compile <b>v16.2.0</b> &mdash; it is <b>already published</b>, with its own SHA256SUMS. Building it yourself is optional; an official verified binary is equally valid. (v16.1.0 also crosses the fork correctly: V16.2.0 changes <b>no consensus rule</b>, it keeps operator passwords and keys out of the process command line.)</li>
+          <li><b>Before the window:</b> download or compile <b>v16.2.0</b> &mdash; it is <b>already published</b>, with its own SHA256SUMS. Building it yourself is optional; an official verified binary is equally valid. Build with <code>-B build</code>: the published hashes only reproduce from a build directory with that name.</li>
           <li>Verify the version and the official <b>SHA256</b>.</li>
-          <li>Stop your node/miner, install v16.2.0, restart &mdash; <b>any time before #30,000</b>.</li>
+          <li><b>In the window (after #29,900, before #30,000):</b> stop your node and your miner, install the v16.2.0 binaries on <b>both</b>, restart both.</li>
           <li>Keep mining normally &mdash; V16 activates by itself at #30,000. No command, no config switch, no restart exactly at the activation height.</li>
           <li>Register your <b>NODE_BIND</b> once V2 is active.</li>
           <li>Check your eligibility and PoW weight in the Explorer.</li>
@@ -189,6 +190,7 @@
         <h4>&#9881; If you run a node</h4>
         <ol>
           <li>The V16 upgrade is <b>mandatory for validating nodes</b>: below #30,000 it follows current V15 rules, from #30,000 it follows V16 rules.</li>
+          <li>Install the <b>v16.2.0</b> node binary in the update window: <b>after #29,900, before #30,000</b>.</li>
           <li>Nodes still running the old consensus software after #30,000 <b>may diverge from the V16 chain</b>.</li>
           <li>Create/configure your <b>node identity</b> and keep the node running.</li>
           <li>Maintain the signed <b>heartbeats</b> (the guide will cover automatic maintenance).</li>

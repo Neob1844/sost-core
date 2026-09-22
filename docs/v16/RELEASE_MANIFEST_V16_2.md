@@ -129,8 +129,12 @@ There is no chain surgery, no reindex and no state migration in either direction
 
 ## Upgrade window
 
-There isn't one. V16.2.0 is consensus-identical to V16.1.0, so it can be
-installed at any height without coordination. What still has a deadline is the
-V15 → V16 upgrade: **any node still on V15 after #30,000 diverges.** For that,
-see `docs/v16/QUICK_UPGRADE_5MIN.md`; for this release, see
-`docs/v16/UPGRADE_V16_2.md`.
+**After #29,900 and before #30,000** — node and miner, both. Technically
+V16.2.0 is consensus-identical to V16.1.0 and could be installed at any height;
+the window exists for coordination, so the whole network crosses the activation
+running the same code. Get the binaries and check their hashes *before* the
+window opens; inside it, only stop, install, restart.
+
+The deadline itself belongs to the V15 → V16 change: **any node still on V15
+after #30,000 diverges.** See `docs/v16/QUICK_UPGRADE_5MIN.md` for that path and
+`docs/v16/UPGRADE_V16_2.md` for this release.

@@ -1,3 +1,11 @@
+>>> SUPERSEDED IN PART — DO NOT REPOST AS IS. <<<
+>>> Point 3 below ("update any time before #30,000, the #29,900 window is
+>>> withdrawn") was REVERSED by the owner on 2026-09-22: the coordinated
+>>> window after #29,900 and before #30,000 is back, and the release to
+>>> install is v16.2.0 on node AND miner. The post to publish is
+>>> docs/v16/BITCOINTALK_V16_2.txt. Everything else in this file still holds
+>>> and is already reflected in the published thread.
+
 [center][size=18pt][b]CORRECTION — V16.1 supersedes the notice above[/b][/size]
 [size=12pt]Activation is unchanged: block [b]#30,000[/b] · first V2 draw [b]#30,186[/b][/size][/center]
 
