@@ -109,6 +109,7 @@ static std::string g_wallet_path = "";
 // Descriptor to read the wallet passphrase from. -1 = prompt on the terminal.
 // Only the NUMBER is an argument; the secret never appears in the command line.
 static int         g_wallet_pass_fd = -1;
+static std::string g_wallet_pass_file = "";
 // RPC credential sources that keep the secret out of argv.
 static int         g_rpc_pass_fd   = -1;
 static std::string g_rpc_pass_file = "";
@@ -2443,6 +2444,7 @@ int main(int argc, char** argv) {
         else if (!strcmp(argv[i], "--address") && i + 1 < argc) g_miner_address = argv[++i];
         else if (!strcmp(argv[i], "--wallet") && i + 1 < argc) g_wallet_path = argv[++i];
         else if (!strcmp(argv[i], "--wallet-passphrase-fd") && i + 1 < argc) g_wallet_pass_fd = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--wallet-passphrase-file") && i + 1 < argc) g_wallet_pass_file = argv[++i];
         else if (!strcmp(argv[i], "--mining-key-label") && i + 1 < argc) g_mining_key_label = argv[++i];
 #ifdef SOST_DEVNET_FORKS
         else if (!strcmp(argv[i], "--attack-jackpot") && i + 1 < argc) g_attack_jackpot = argv[++i];  // DEV test-only
@@ -2479,6 +2481,8 @@ int main(int argc, char** argv) {
             printf("  --profile <p>      mainnet|testnet|dev\n");
             printf("  --threads <n>      Parallel mining threads (default: 1). Share 1 scratchpad.\n");
             printf("  --realtime         Real timestamps\n");
+            printf("  --wallet-passphrase-file <p> Read the wallet passphrase from a PRIVATE\n");
+            printf("                     file (mode 600), for unattended restarts.\n");
             printf("  --wallet-passphrase-fd <n>  Read the passphrase of an encrypted (v2)\n");
             printf("                     wallet from descriptor n instead of prompting.\n");
             printf("                     Pass the NUMBER, never the passphrase itself.\n");
@@ -2575,9 +2579,16 @@ int main(int argc, char** argv) {
         } else {
             sost::Secret pass;
             std::string perr;
+            if (g_wallet_pass_fd >= 0 && !g_wallet_pass_file.empty()) {
+                fprintf(stderr, "ERROR: use only one of --wallet-passphrase-fd and "
+                                "--wallet-passphrase-file.\n");
+                return 1;
+            }
             bool got = (g_wallet_pass_fd >= 0)
                      ? sost::read_secret_fd(g_wallet_pass_fd, pass, &perr)
-                     : sost::read_secret_tty("Passphrase for " + g_wallet_path + ": ", pass, &perr);
+                     : (!g_wallet_pass_file.empty()
+                        ? sost::read_secret_file(g_wallet_pass_file, pass, &perr)
+                        : sost::read_secret_tty("Passphrase for " + g_wallet_path + ": ", pass, &perr));
             if (!got) {
                 fprintf(stderr, "ERROR: no passphrase: %s\n", perr.c_str());
                 return 1;

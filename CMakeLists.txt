@@ -854,6 +854,10 @@ add_executable(test-sweep-batching tests/test_sweep_batching.cpp)
 target_link_libraries(test-sweep-batching PRIVATE sost-core)
 add_test(NAME sweep-batching COMMAND test-sweep-batching)
 
+add_executable(test-v16-mainnet-calendar tests/test_v16_mainnet_calendar.cpp)
+target_link_libraries(test-v16-mainnet-calendar PRIVATE sost-core)
+add_test(NAME v16-mainnet-calendar COMMAND test-v16-mainnet-calendar)
+
 add_executable(test-secret-input tests/test_secret_input.cpp)
 target_link_libraries(test-secret-input PRIVATE sost-core)
 add_test(NAME secret-input COMMAND test-secret-input)
