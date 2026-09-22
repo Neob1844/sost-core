@@ -36,8 +36,11 @@
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@noble/secp256k1@2.1.0/lib/esm/index.min.js" type="module" crossorigin></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" crossorigin></script>
+<!-- Crypto and QR are SELF-HOSTED on purpose. This page accepts seed phrases and
+     private keys; fetching the very libraries that touch them from a third-party CDN
+     means a CDN/DNS/package compromise silently exfiltrates user keys, and ES module
+     imports cannot carry Subresource Integrity. Pinned copies live in js/vendor/. -->
+<script type="module">import QRCode from './js/vendor/qrcode.esm.js'; window.QRCode = QRCode;</script>
 <style>
   :root {
     --bg-deep: #000000;
@@ -666,11 +669,11 @@
 // ============================================================
 
 // --- Noble crypto imports ---
-import * as secp from 'https://cdn.jsdelivr.net/npm/@noble/secp256k1@2.1.0/+esm';
-import { sha256 } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/sha256.js/+esm';
-import { ripemd160 } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/ripemd160.js/+esm';
-import { pbkdf2 } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/pbkdf2.js/+esm';
-import { hmac } from 'https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/hmac.js/+esm';
+import * as secp from './js/vendor/secp256k1.js';
+import { sha256 } from './js/vendor/sha256.js';
+import { ripemd160 } from './js/vendor/ripemd160.js';
+import { pbkdf2 } from './js/vendor/pbkdf2.js';
+import { hmac } from './js/vendor/hmac.js';
 
 // --- Constants ---
 const SOST_PREFIX = 'sost1';

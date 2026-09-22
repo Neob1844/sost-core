@@ -2,7 +2,7 @@
 
 Native Layer 1 Proof-of-Work Blockchain
 
-CPU-friendly, memory-hard Proof-of-Work blockchain (ConvergenceX) with a transparent on-chain Gold Vault and Proof of Personal Custody (PoPC) architecture. Each block reward is split 50% miner / 25% Gold Vault / 25% PoPC — hardcoded at genesis. SOST is **not fully gold-backed at issuance**; the Gold Vault is a protocol-level reserve-accumulation mechanism, not a redeemable backing or financial guarantee. Open source under the **MIT License**.
+CPU-friendly, memory-hard Proof-of-Work blockchain (ConvergenceX) with a transparent on-chain Gold Vault and Proof of Personal Custody (PoPC) architecture. Each block reward is split **50% miner / 50% DTD** (the on-chain distribution draw). Until V15 (block 25,000) the split was 50% miner / 25% Gold Vault / 25% PoPC; at V15 the Gold Vault and PoPC shares of NEW emission went to 0 and their accumulated balances became the reserve the DTD Jackpot spends — supply-neutral, no new emission. SOST is **not fully gold-backed at issuance**; the Gold Vault is a protocol-level reserve-accumulation mechanism, not a redeemable backing or financial guarantee. Open source under the **MIT License**.
 
 The Foundation's manual operations during Phase 1 are transitional by design, not permanent — progressive decentralization toward full automation is a constitutional commitment, not a discretionary goal.
 
@@ -189,7 +189,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 | Epoch length | 131,553 blocks (~2.503 years, Feigenbaum alpha) |
 | Max supply | 4,669,201 SOST hard cap, enforced at consensus level (subsidy drops to zero when cap is reached; miners earn fees only) |
 | 95% supply | ~12 epochs (~30 years) |
-| Reward split | 50% miner / 25% Gold Funding Vault / 25% PoPC Pool |
+| Reward split | **50% miner / 50% DTD** from V15 (#25,000). Before V15: 50% miner / 25% Gold Funding Vault / 25% PoPC Pool. Gold Vault and PoPC receive **0% of new emission** from V15; their existing balances fund the DTD Jackpot (100 SOST base, 500 cap, no new emission). |
 | Coinbase maturity | 1,000 blocks |
 | Min relay fee | 1,000 stocks (0.00001 SOST) |
 | Address format | sost1 + 40 hex chars (20-byte pubkey hash) |

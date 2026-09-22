@@ -37,7 +37,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- noble/secp256k1 loaded via dynamic import() in module script below -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" crossorigin></script>
+<!-- self-hosted: the CDN path 404s and this page handles wallet data -->
+<script type="module">import QRCode from './js/vendor/qrcode.esm.js'; window.QRCode = QRCode;</script></script>
 <style>
   :root {
     --bg-deep: #000000;
@@ -2018,33 +2019,27 @@ document.addEventListener('DOMContentLoaded', () => {
 // SOST Web Wallet — Client-side, keys never leave the browser
 // ============================================================
 
-// --- Noble crypto imports (with error handling) ---
+// --- Noble crypto imports — SELF-HOSTED on purpose ---
+// This page holds wallet keys in the browser. Loading the libraries that touch them
+// from a third-party CDN means a CDN/DNS/package compromise silently exfiltrates
+// them, and ES module imports cannot carry Subresource Integrity (jsDelivr itself
+// says so for its generated bundles). Pinned copies live in js/vendor/, served from
+// this origin, and the CSP blocks any other script source.
+// Two silent failures this replaces: the jsDelivr `@noble/hashes/+esm` barrel always
+// threw ("noble-hashes have no entry-point"), so every load fell through to a SECOND
+// CDN (esm.sh) that nobody had reviewed; and qrcode's CDN path 404s.
 let secp, sha256, sha1, ripemd160, pbkdf2, hmac;
 try {
-  secp = await import('https://cdn.jsdelivr.net/npm/@noble/secp256k1@2.1.0/+esm');
-  const hashes = await import('https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/+esm');
-  sha256 = hashes.sha256;
-  ripemd160 = hashes.ripemd160;
-  pbkdf2 = hashes.pbkdf2;
-  hmac = hashes.hmac;
+  secp         = await import('./js/vendor/secp256k1.js');
+  sha256       = (await import('./js/vendor/sha256.js')).sha256;
+  ripemd160    = (await import('./js/vendor/ripemd160.js')).ripemd160;
+  pbkdf2       = (await import('./js/vendor/pbkdf2.js')).pbkdf2;
+  hmac         = (await import('./js/vendor/hmac.js')).hmac;
   // SHA1 needed for TOTP (Google Authenticator uses HMAC-SHA1)
-  try { const sha1m = await import('https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/sha1/+esm'); sha1 = sha1m.sha1; } catch(e) { }
+  try { sha1 = (await import('./js/vendor/sha1.js')).sha1; } catch (e) { }
 } catch (e) {
-  // Fallback: try individual imports
-  try {
-    secp = await import('https://esm.sh/@noble/secp256k1@2.1.0');
-    const sha256m = await import('https://esm.sh/@noble/hashes@1.4.0/sha256');
-    const ripemd160m = await import('https://esm.sh/@noble/hashes@1.4.0/ripemd160');
-    const pbkdf2m = await import('https://esm.sh/@noble/hashes@1.4.0/pbkdf2');
-    const hmacm = await import('https://esm.sh/@noble/hashes@1.4.0/hmac');
-    sha256 = sha256m.sha256;
-    ripemd160 = ripemd160m.ripemd160;
-    pbkdf2 = pbkdf2m.pbkdf2;
-    hmac = hmacm.hmac;
-  } catch (e2) {
-    console.error('WALLET: Failed to load crypto libraries:', e2);
-    document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;background:#fb010d;color:#fff;padding:12px;text-align:center;z-index:9999;font-family:monospace;">Wallet Error: Could not load crypto libraries. Check your internet connection and try again.</div>';
-  }
+  console.error('WALLET: Failed to load crypto libraries:', e);
+  document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;background:#fb010d;color:#fff;padding:12px;text-align:center;z-index:9999;font-family:monospace;">Wallet Error: Could not load crypto libraries. Reload the page.</div>';
 }
 // CRITICAL: noble/secp256k1 v2+ requires hmacSha256Sync for synchronous signing
 // Without this, sign() throws "etc.hmacSha256Sync not set"
