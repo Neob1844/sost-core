@@ -127,7 +127,7 @@
       <span class="sost-v16-sub">Mandatory node/miner update before block #30,000 &middot; <b>Normal DTD eligibility DOES change</b></span>
     </span>
     <span class="sost-v16-chip">ACTIVATION #30,000</span>
-    <span class="sost-v16-redchip">&#9888; RECOMPILE &amp; RESTART: #29,900 &rarr; #30,000</span>
+    <span class="sost-v16-redchip">&#9888; UPDATE NOW &mdash; any time BEFORE #30,000</span>
     <span class="sost-v16-cta"><span class="sost-v16-cta-label" data-when="closed">Read</span><span class="sost-v16-cta-label" data-when="open" hidden>Hide</span><span class="sost-v16-chev" aria-hidden="true">&#9662;</span></span>
   </button>
 
@@ -135,10 +135,12 @@
 
     <div class="sost-v16-blink">
       <span class="hdr">&#9888; Mandatory action for every miner and node operator</span>
-      You <b>must compile / install the new V16 binaries and restart your node and your miner</b> &mdash;
-      and you must do it <span class="win">only after block #29,900 and before block #30,000</span>.
-      Not earlier, not later. A validating node that is still on the old consensus software at #30,000
-      <b>may diverge from the V16 chain</b>.
+      You <b>must install the V16.1 binaries and restart your node and your miner</b> &mdash;
+      <span class="win">at any point before block #30,000</span>. Earlier is better: a V16.1 node below the
+      activation height replays the chain <b>byte-identically</b> to the previous release, so there is nothing
+      to gain by waiting and a short window to miss. The earlier advice to update only between #29,900 and
+      #30,000 was a coordination convention and has been withdrawn. A validating node still on older
+      consensus software at #30,000 <b>may diverge from the V16 chain</b>.
     </div>
 
     <div class="sost-v16-alert">
@@ -150,7 +152,7 @@
     <div class="sost-v16-nums">
       <div class="sost-v16-num"><span class="n">#30,000</span><span class="l">V16 activates automatically by block height</span></div>
       <div class="sost-v16-num"><span class="n">#30,186</span><span class="l">First DTD Jackpot V2 draw</span></div>
-      <div class="sost-v16-num"><span class="n">#29,900</span><span class="l">Update window opens &mdash; update before #30,000</span></div>
+      <div class="sost-v16-num"><span class="n">v16.1.0</span><span class="l">Released &mdash; install any time before #30,000</span></div>
       <div class="sost-v16-num"><span class="n">288</span><span class="l">Jackpot cadence &amp; heartbeat epoch (unchanged)</span></div>
       <div class="sost-v16-num"><span class="n">100 &rarr; 500</span><span class="l">Jackpot base SOST, rollover cap &mdash; existing historical reserve, <b>no new emission</b></span></div>
     </div>
@@ -158,26 +160,26 @@
     <div class="sost-v16-h mag">The core rule</div>
     <div class="sost-v16-rule">
       <div class="gate"><b>NODE PARTICIPATION &rarr; ELIGIBILITY.</b><br>A node does not give you Jackpot tickets. It lets you enter the eligibility set. Running 10 nodes gives exactly the same weight as running 1.</div>
-      <div class="weight"><b>PROOF-OF-WORK &rarr; WEIGHT.</b><br>1 valid SbPoW block in the previous 5,000 blocks = 1 unit of weight. Splitting your work across many addresses does not create extra weight &mdash; 100 blocks is weight 100 either way.</div>
+      <div class="weight"><b>PROOF-OF-WORK &rarr; WEIGHT.</b><br>1 valid SbPoW block in the previous 2,016 blocks = 1 unit of weight. Splitting your work across many addresses does not create extra weight &mdash; 100 blocks is weight 100 either way.</div>
     </div>
 
     <div class="sost-v16-h">Eligibility from block #30,000 (ALL four required)</div>
     <ol>
       <li>A valid <b>SbPoW mining identity</b> (the signed mining key in your blocks).</li>
-      <li>At least <b>3 valid mined blocks</b> in the previous <b>5,000 blocks</b>.</li>
+      <li>At least <b>3 valid mined blocks</b> in the previous <b>2,016 blocks</b> (~14 days).</li>
       <li>A <b>NODE_BIND</b>: your node key cryptographically authorised by your mining key, on-chain. No registry, no whitelist, no approval.</li>
       <li>Verified node participation through periodic signed <b>NODE_HEARTBEAT</b> messages (~every 288 blocks, referencing recent chain state).</li>
     </ol>
-    <p>Then: <b>Jackpot weight = number of valid SbPoW blocks you mined in the previous 5,000 blocks.</b> A miner with 10 eligible blocks has twice the probability of one with 5 &mdash; not a guaranteed win. DTD Jackpot V2 has <b>no cooldown and no anti-dominance</b> on purpose: ~20% of eligible work should mean ~20% of the probability. With no eligible participants the prize <b>rolls over</b> (up to the 500 SOST cap) &mdash; no fallback winner is invented.</p>
+    <p>Then: <b>Jackpot weight = number of valid SbPoW blocks you mined in the previous 2,016 blocks.</b> A miner with 10 eligible blocks has twice the probability of one with 5 &mdash; not a guaranteed win. DTD Jackpot V2 has <b>no cooldown and no anti-dominance</b> on purpose: ~20% of eligible work should mean ~20% of the probability. With no eligible participants the prize <b>rolls over</b> (up to the 500 SOST cap) &mdash; no fallback winner is invented.</p>
 
     <div class="sost-v16-h cy">What you actually have to do</div>
     <div class="sost-v16-cols">
       <div class="sost-v16-card miner">
         <h4>&#9935; If you mine</h4>
         <ol>
-          <li>Download or compile the <b>final V16 release</b> when it is published.</li>
+          <li>Download or compile <b>v16.1.0</b> &mdash; it is <b>already published</b>, with its own SHA256SUMS. Building it yourself is optional; an official verified binary is equally valid.</li>
           <li>Verify the version and the official <b>SHA256</b>.</li>
-          <li>Stop your node/miner, install V16, restart <b>after #29,900 and before #30,000</b>.</li>
+          <li>Stop your node/miner, install v16.1.0, restart &mdash; <b>any time before #30,000</b>.</li>
           <li>Keep mining normally &mdash; V16 activates by itself at #30,000. No command, no config switch, no restart exactly at the activation height.</li>
           <li>Register your <b>NODE_BIND</b> once V2 is active.</li>
           <li>Check your eligibility and PoW weight in the Explorer.</li>
