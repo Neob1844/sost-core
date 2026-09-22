@@ -1,29 +1,36 @@
-# SOST V16.1 — official binary hashes
+# SOST V16.2 — official binary hashes
 #
-# Release artifact for tag v16.1.0 (commit 25915c74e638819a643063f8aada77fc6e207c83).
+# Release artifact for tag v16.2.0 (commit 8f6b9ddf4df857d1cfb9ef8b6aeec566be93a14e).
 # Committed AFTER that tag on purpose: a hash of a binary built from a tag cannot live
 # inside that tag. The tag is not moved and never will be.
 #
-# These SUPERSEDE the v16.0.0-jackpot-v2 hashes. V16.1 changes consensus (DTD-normal
-# eligibility + the 2,016-block jackpot PoW window), so the binaries are different by
-# construction. Verifying a V16.1 binary against the V16.0 list MUST fail — that is
-# correct, not tampering.
+# These supersede the v16.1.0 hashes for verifying a CURRENT binary. The V16.1 list is
+# kept alongside, as docs/v16/SHA256SUMS_V16_1, because it is what a rollback binary
+# must verify against — do not delete it.
+#
+# V16.2.0 changes NO consensus rule. It is not a fork, it activates nothing, and a
+# V16.1.0 node and a V16.2.0 node follow the same chain. The binaries still differ,
+# because the code that handles passwords and keys changed, so a V16.2 binary MUST NOT
+# verify against the V16.1 list — that is correct, not tampering.
 #
 # Verify:   sha256sum -c docs/v16/SHA256SUMS
 #
 # Built from the tag with the mainnet flags, in the environment recorded in
-# docs/v16/RELEASE_MANIFEST.md:
+# docs/v16/RELEASE_MANIFEST_V16_2.md:
 #   cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
 #         -DCMAKE_BUILD_TYPE=Release
 #   cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
 #
-# PATH-INDEPENDENT BUILD = YES   — MEASURED AGAIN for this release: the tag built in
-#                                  two different directories produced these exact bytes.
+# The build directory must be named `build`, inside the source tree. The source path
+# itself does not matter (-ffile-prefix-map normalises it), and that is measured: the
+# same commit built at /home/sost/SOST/sostcore/rel-v162-a and at /tmp/rel-v162-b
+# produced these exact bytes. A build directory with a DIFFERENT NAME (build-v162,
+# out/, …) produces different bytes from the same source — expected, not tampering.
+#
+# PATH-INDEPENDENT BUILD = YES   — measured again for this release, two directories.
 # CROSS-MACHINE REPRODUCIBILITY = NOT PROVEN — a different compiler, linker or libc can
-#                                  still produce different bytes. A mismatch on a
-#                                  different toolchain is expected, not evidence of
-#                                  tampering. For an OFFICIAL downloaded binary the hash
-#                                  must match exactly.
-b94c2650a93bfadbee755fb82969557b2218ff37392e6a0a0cc79ce7e335e696  sost-node
-fc4fe36db7a251036e53b8dd3d213ac5e61f75e16bd203be552dd78d55424dd8  sost-miner
-eb96f26ddb98c96a0cf8acf052e424b00ba34a09fc712bebafa452ea62ab5c35  sost-cli
+#                                  still produce different bytes. For an OFFICIAL
+#                                  downloaded binary the hash must match exactly.
+b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node
+2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner
+212e37d8f925afd4d4e1f9971a86bd49120be2978e09ec1cf77b713ebc0812c5  sost-cli

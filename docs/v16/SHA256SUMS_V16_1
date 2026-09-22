@@ -1,0 +1,29 @@
+# SOST V16.1 — official binary hashes
+#
+# Release artifact for tag v16.1.0 (commit 25915c74e638819a643063f8aada77fc6e207c83).
+# Committed AFTER that tag on purpose: a hash of a binary built from a tag cannot live
+# inside that tag. The tag is not moved and never will be.
+#
+# These SUPERSEDE the v16.0.0-jackpot-v2 hashes. V16.1 changes consensus (DTD-normal
+# eligibility + the 2,016-block jackpot PoW window), so the binaries are different by
+# construction. Verifying a V16.1 binary against the V16.0 list MUST fail — that is
+# correct, not tampering.
+#
+# Verify:   sha256sum -c docs/v16/SHA256SUMS
+#
+# Built from the tag with the mainnet flags, in the environment recorded in
+# docs/v16/RELEASE_MANIFEST.md:
+#   cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
+#         -DCMAKE_BUILD_TYPE=Release
+#   cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+#
+# PATH-INDEPENDENT BUILD = YES   — MEASURED AGAIN for this release: the tag built in
+#                                  two different directories produced these exact bytes.
+# CROSS-MACHINE REPRODUCIBILITY = NOT PROVEN — a different compiler, linker or libc can
+#                                  still produce different bytes. A mismatch on a
+#                                  different toolchain is expected, not evidence of
+#                                  tampering. For an OFFICIAL downloaded binary the hash
+#                                  must match exactly.
+b94c2650a93bfadbee755fb82969557b2218ff37392e6a0a0cc79ce7e335e696  sost-node
+fc4fe36db7a251036e53b8dd3d213ac5e61f75e16bd203be552dd78d55424dd8  sost-miner
+eb96f26ddb98c96a0cf8acf052e424b00ba34a09fc712bebafa452ea62ab5c35  sost-cli
