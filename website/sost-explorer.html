@@ -1935,7 +1935,7 @@ function dtdEligibilityBanner(height, progressHtml){
       +'<ul style="margin:5px 0 0;padding-left:16px;font-size:11px;color:var(--text2);line-height:1.6">'+items+'</ul></div>';
   }
   var h=height||0;
-  var e1=(h>=7100&&h<12100), e2=(h>=12100&&h<25000), e3=(h>=25000);
+  var e1=(h>=7100&&h<12100), e2=(h>=12100&&h<25000), e3=(h>=25000&&h<30000), e4=(h>=30000);
   // Live eligible-miner counts:
   //  • Phase 1 is PAST → its peak pool of eligible miners (all-time updated-miners
   //    set, which reached ~50) — shown as "up to N".
@@ -1953,14 +1953,21 @@ function dtdEligibilityBanner(height, progressHtml){
   var elig1='<li style="color:#22c55e"><b>Eligible miners: up to '+poolPhase1+'</b> &middot; phase complete (static)</li>';
   var elig2='<li style="color:#22c55e"><b>Eligible miners now: '+(eligNow!=null?eligNow:'&mdash;')+'</b> &middot; dynamic, moves every block</li>';
   var elig3='<li style="color:#c084fc"><b>Eligible miners: &mdash;</b> &middot; dynamic once block 25,000 (V15) is reached</li>';
+  var elig4='<li style="color:#ffd166"><b>Eligible miners: &mdash;</b> &middot; dynamic from block 30,000 (V16.1)</li>';
   return '<div style="max-width:820px;margin:0 auto 4px">'
     +'<div style="font-size:12px;font-weight:800;color:var(--cyan);letter-spacing:1px;margin-bottom:8px">// DTD LOTTERY &mdash; ELIGIBILITY CRITERIA TIMELINE</div>'
     +era(e1,'Blocks 7,100 &rarr; 12,100 &middot; original (V11 Phase&nbsp;2)',
         elig1+'<li>SbPoW-signed miner identity (block at height &ge; 7,100)</li><li>address has mined &ge; 1 valid block</li><li>recent-miner cooldown: 5 blocks</li><li>bootstrap cadence 2-of-3</li>','#fbbf24')
     +era(e2,'Blocks 12,100 &rarr; 25,000 &middot; current gates (V13)',
         elig2+'<li>everything above &mdash; cooldown raised to <b>6 blocks</b></li><li>permanent <b>1-of-3</b> cadence</li><li><b>anti-dominance gate</b>: excluded if &ge; 10% of the last 288 blocks</li><li><b>SbPoW-activity gate</b>: must have a recent SbPoW-signed block</li>','#22c55e')
-    +era(e3,'From block 25,000 &middot; V15 Final Decentralization',
-        elig3+'<li>everything above</li><li><b>+ 2016-block recency window</b>: must have mined &ge; 1 block in the last 2016 (~2 weeks) &mdash; active miners only</li><li><b>50% miner / 50% DTD</b> every block (Gold-Vault + PoPC emission redirected to DTD)</li><li><span style="color:var(--gold)">◈</span> <b>DTD Jackpot</b>: the existing reserve returned to active miners</li><li style="color:var(--text3)">No PoPC-contract requirement &mdash; the old PoPC eligibility gate is retired (DTD never requires PoPC)</li>','#c084fc')
+    +era(e3,'Blocks 25,000 &rarr; 30,000 &middot; V15 Final Decentralization',
+        elig3+'<li>everything above</li><li><b>+ recency window</b>: must have mined &ge; 1 block in the last <b>5,000</b> (20,000 at a jackpot height) &mdash; active miners only</li><li><b>50% miner / 50% DTD</b> every block (Gold-Vault + PoPC emission redirected to DTD)</li><li><span style="color:var(--gold)">◈</span> <b>DTD Jackpot</b>: the existing reserve returned to active miners</li><li style="color:var(--text3)">No PoPC-contract requirement &mdash; the old PoPC eligibility gate is retired (DTD never requires PoPC)</li>','#c084fc')
+    +era(e4,'From block 30,000 &middot; V16.1 &mdash; current miners only',
+        elig4+'<li><b>recency tightened to 288 blocks</b> (~2 days), at EVERY height &mdash; the wider jackpot-height window is gone, because the jackpot now has its own winner</li>'
+        +'<li><b>cooldown yields</b>: the 6-block recent-producer exclusion is skipped when applying it would leave the draw with nobody</li>'
+        +'<li><b>anti-dominance armed only at &ge;11 distinct miners</b> in the 288-block window &mdash; below that it would exclude the only miners securing the chain</li>'
+        +'<li>unchanged: every-block cadence, uniform selection, the seed, the 50/50 split, and NO NODE_BIND / NO heartbeats &mdash; those belong to the Jackpot V2 only</li>'
+        +'<li style="color:#ffd166">Consequence: while a single miner is active it can take <b>100% of the block</b> (50% miner + 50% DTD)</li>','#ffd166')
     +'<div style="margin-top:6px;color:var(--text3);font-size:11.5px">'+(progressHtml||'')+'</div>'
     +'</div>';
 }
@@ -2214,7 +2221,8 @@ async function renderDTDPanel(body,title,silent){
       if(height>=12100)summary+=cell('dominance-gated (≥10% of 288)',String(Object.keys(domSet).length),'#fb010d');
       summary+='</div>';
       if(height>=12000)summary+='<div style="margin-top:8px;padding:8px 10px;background:rgba(34,197,94,.05);border-left:3px solid #22c55e;border-radius:3px;font-size:10px;color:var(--text3);line-height:1.6">'
-        +'<b style="color:#22c55e">V13 DTD eligibility (active)</b> &mdash; recent-miner cooldown <b>'+cdWindow+' blocks</b> (was 5)'
+        +'<b style="color:'+(height>=30000?'#ffd166':'#22c55e')+'">'+(height>=30000?'V16.1 DTD eligibility (active)':'V13 DTD eligibility (active)')+'</b> &mdash; recent-producer cooldown <b>'+cdWindow+' blocks</b> (was 5)'
+        +(height>=30000?' — <b>yields if it would leave nobody eligible</b>':'')
         +(height>=12100?'; '+(height>=25000?'<b>3-of-3</b> (every block) cadence + active-miner recency (5,000 / 20,000 jackpot); ':'permanent <b>1-of-3</b> cadence; ')+'<b>anti-dominance gate</b> excludes any address with &ge; 10% of the last 288 blocks ('+win288+'-block window); <b>SbPoW-activity gate</b> requires a block at height &ge; 7,100.':'; anti-dominance + 1-of-3 cadence activate at #12,100.')
         +'</div>';
       // Charts row: schedule pie · lottery distribution bar · top miners bar
@@ -8966,9 +8974,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+esc(status)+'</div>'+
         '<div class="sjpd-l" style="margin-top:8px">LAST WINNER</div><div class="sjpd-v" style="font-size:13px">'+esc(winner)+'</div></div>'+
       '<div class="sjpd-sec">DTD JACKPOT ELIGIBILITY</div>'+
-      '<div class="sjpd-note">The DTD Jackpot reuses the DTD winner but with a <b>wider recency window: 20,000 blocks</b> (vs 5,000 for the normal draw), plus the same gates (recent-producer cooldown (miner of one of the last 6 blocks), anti-dominance, SbPoW). '+
-        'Recently active producers (last 288 blocks): <b>'+esc(elig)+'</b>. '+(state.jpEligible!=null?('The exact eligible producer <b>count</b> for the last jackpot (#'+fc(state.jpHeight||JP_FIRST)+', 20,000-window, canonical via getlotteryaudit): <b>'+esc(state.jpEligible)+'</b>. '):('The exact 20,000-window count becomes available from getlotteryaudit once the first jackpot block (#'+fc(JP_FIRST)+') is mined. '))+'For the full per-address list, see the DTD panel: '+
-        '<a class="sjpd-link" id="sjpd-dtd">DTD lottery detail &rarr;</a></div>'+
+      '<div class="sjpd-note">Until #30,000 the DTD Jackpot reuses the DTD winner and its eligibility (a wider <b>20,000-block</b> recency window instead of 5,000, plus the same gates: recent-producer cooldown, anti-dominance, SbPoW). <b style="color:#ffd166">From #30,000 (V16.1) it is an INDEPENDENT draw</b> with its own winner: node-gated (NODE_BIND + heartbeats), weighted linearly by SbPoW blocks in the previous 2,016, <b>no cooldown and no anti-dominance</b>. DTD-normal keeps its payout and needs neither NODE_BIND nor heartbeats, but its own eligibility tightens the same day (288-block recency, conditional cooldown, anti-dominance only at &ge;11 miners). </div>'+
       '<div class="sjpd-note" style="margin-top:2px"><b>100 SOST</b> base reward. Unpaid jackpots (no eligible winner) roll over to the next eligible jackpot, up to a <b>500 SOST</b> maximum. The first jackpot (#'+fc(JP_FIRST)+') pays <b>100 SOST</b> (no prior rollover). The Explorer always shows the <b>real on-chain amount</b> from the jackpot transaction.</div>'+
       legendHtml+
       '<div class="sjpd-sec">CHECK YOUR JACKPOT ELIGIBILITY</div>'+
