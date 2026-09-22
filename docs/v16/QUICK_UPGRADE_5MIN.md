@@ -20,6 +20,10 @@ AFTER #30,000      optional: NODE_BIND + --node-key, to play the DTD Jackpot
 BEFORE #30,186     confirm eligibility for the first V2 draw
 ```
 
+**Official binaries:** https://github.com/Neob1844/sost-core/releases/tag/v16.2.0
+(`sost-node`, `sost-miner`, `sost-cli`, `SHA256SUMS`). Compiling is optional —
+downloading and verifying the hash is equally valid.
+
 Verify every binary against `docs/v16/SHA256SUMS` before running it. If a hash
 does not match, **do not restart the node** — see the manifest on what a
 mismatch does and does not mean.

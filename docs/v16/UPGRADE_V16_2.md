@@ -30,6 +30,30 @@ V16.0 / V16.1  -> same consensus as V16.2.0; upgrade in the window anyway, so
 
 ---
 
+## 0 · Get the binaries (no compiler needed)
+
+The official binaries are published with the release, so compiling is optional:
+
+```bash
+mkdir -p ~/sost-v162 && cd ~/sost-v162
+for f in sost-node sost-miner sost-cli SHA256SUMS; do
+  curl -fsSL -O "https://github.com/Neob1844/sost-core/releases/download/v16.2.0/$f"
+done
+sha256sum -c SHA256SUMS      # must print: sost-node: OK / sost-miner: OK / sost-cli: OK
+chmod +x sost-node sost-miner sost-cli
+```
+
+If `sha256sum -c` does not print OK for all three, **stop and do not run them**.
+They are built for Linux x86_64 (Ubuntu 22.04 toolchain, glibc 2.35). If your
+system cannot run them, build from source as described below — the hashes will
+differ on a different toolchain, and that alone is not evidence of tampering.
+
+The previous release is downloadable too, at
+`https://github.com/Neob1844/sost-core/releases/tag/v16.1.0`, so a rollback does
+not depend on you having kept a copy.
+
+---
+
 ## 1 · What actually changed
 
 | | V16.1.0 | V16.2.0 |

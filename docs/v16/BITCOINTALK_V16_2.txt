@@ -106,6 +106,22 @@ The v16.1.0 list is kept as docs/v16/SHA256SUMS_V16_1, because that is what a ro
 
 [hr]
 
+[size=14pt][b]3b. Where to get it[/b][/size]
+
+The official binaries are published with the release — compiling is optional:
+
+[code]
+https://github.com/Neob1844/sost-core/releases/tag/v16.2.0
+
+  sost-node  sost-miner  sost-cli  SHA256SUMS
+
+  sha256sum -c SHA256SUMS
+[/code]
+
+Linux x86_64, built on the Ubuntu 22.04 toolchain (glibc 2.35). The previous release stays downloadable at /releases/tag/v16.1.0, so a rollback does not depend on having kept a copy.
+
+[hr]
+
 [size=14pt][b]4. Rolling back[/b][/size]
 
 Nothing in v16.2.0 changes the on-disk chain format, so a rollback is the old binary and nothing else — no reindex, no migration, in either direction. One caveat, and only one: a wallet you [b]encrypted[/b] with v16.2.0 cannot be read by an older binary. Keep your v1 wallet file until the encrypted one has mined a block.

@@ -178,7 +178,7 @@
       <div class="sost-v16-card miner">
         <h4>&#9935; If you mine</h4>
         <ol>
-          <li><b>Before the window:</b> download or compile <b>v16.2.0</b> &mdash; it is <b>already published</b>, with its own SHA256SUMS. Building it yourself is optional; an official verified binary is equally valid. Build with <code>-B build</code>: the published hashes only reproduce from a build directory with that name.</li>
+          <li><b>Before the window:</b> get <b>v16.2.0</b> &mdash; official binaries at <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.0" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases</a> (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, <code>SHA256SUMS</code>). Compiling is optional; a downloaded binary whose <b>SHA256 matches</b> is equally valid. If you do build it, use <code>-B build</code>: the published hashes only reproduce from a build directory with that name.</li>
           <li>Verify the version and the official <b>SHA256</b>.</li>
           <li><b>In the window (after #29,900, before #30,000):</b> stop your node and your miner, install the v16.2.0 binaries on <b>both</b>, restart both.</li>
           <li>Keep mining normally &mdash; V16 activates by itself at #30,000. No command, no config switch, no restart exactly at the activation height.</li>
