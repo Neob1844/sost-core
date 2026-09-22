@@ -1,0 +1,101 @@
+[center][size=18pt][b]CORRECTION — V16.1 supersedes the notice above[/b][/size]
+[size=12pt]Activation is unchanged: block [b]#30,000[/b] · first V2 draw [b]#30,186[/b][/size][/center]
+
+[hr]
+
+The advance notice in this thread described V16.0. The released consensus is [b]v16.1.0[/b], and five statements in that post are no longer true. Corrections below; everything not listed here still stands.
+
+[hr]
+
+[size=14pt][b]1. Normal DTD DOES change at #30,000[/b][/size]
+
+The original notice said, repeatedly and in red, that normal DTD does not change. [b]That is no longer correct.[/b] What changes is [b]who qualifies[/b] — not how it pays.
+
+[b]Unchanged:[/b] the payout logic, the every-block cadence, uniform selection among eligible identities, the draw seed, the 50% miner / 50% DTD split, and — importantly — normal DTD still requires [b]no NODE_BIND and no heartbeats[/b]. Those belong to the Jackpot only.
+
+[b]Changed from #30,000:[/b]
+
+[code]
+                  until #29,999              from #30,000 (V16.1)
+recency           mined in last 5,000        mined in last 288 blocks (~2 days),
+                  (20,000 at a jackpot       at EVERY height including jackpot
+                  height)                    heights
+cooldown          miner of any of the last   same, EXCEPT it yields when applying
+                  6 blocks is excluded       it would leave nobody eligible
+anti-dominance    >=10% of the last 288      same, but ARMED ONLY when the window
+                  is excluded, always        holds >= 11 distinct miners
+[/code]
+
+[b]Why the two relaxations.[/b] With N miners sharing 288 blocks the average share is 288/N, so below 11 miners the 10% gate starts excluding the very miners keeping the chain alive, and a 6-block cooldown on a chain with one or two producers switched the draw off entirely. Both are floors, not repeals: the cooldown still applies whenever somebody else qualifies, and the gate returns at 11 distinct miners.
+
+[b]Stated plainly:[/b] while only one miner is active, that miner can receive [b]100% of the block[/b] — the 50% miner share plus the 50% DTD share, because it is the only eligible identity. That is the intended consequence of paying current participation on a chain nobody else is securing. As soon as other miners appear inside the 288-block window, the DTD is drawn among them again.
+
+[b]Note on the cooldown's name:[/b] it keys on [b]having mined[/b] one of the last 6 blocks, not on having won anything. The old "recent-winner" wording caused real confusion; it is a recent-[b]producer[/b] cooldown.
+
+[hr]
+
+[size=14pt][b]2. The Jackpot PoW window is 2,016 blocks, not 5,000[/b][/size]
+
+Everywhere the original notice says "3 valid mined blocks during the previous 5,000" or "weight = blocks in the previous 5,000", read [b]2,016 blocks[/b] (~14 days).
+
+[code]
+eligibility minimum   >= 3 valid SbPoW blocks in the previous 2,016
+Jackpot weight        number of valid SbPoW blocks in the previous 2,016
+[/code]
+
+The worked examples keep their shape; only the window changes. The separation is deliberate: [b]normal DTD measures recent presence[/b] (288 blocks, one block is enough, everyone eligible has the same probability), while the [b]Jackpot measures sustained contribution[/b] (2,016 blocks, at least 3, probability proportional to blocks).
+
+[hr]
+
+[size=14pt][b]3. Update any time before #30,000 — the #29,900 window is withdrawn[/b][/size]
+
+The original notice said operators must update "after block #29,900 and before block #30,000 — not earlier, not later". [b]Do not wait.[/b]
+
+A v16.1.0 node below the activation height replays the chain [b]byte-identically[/b] to the previous release — verified by an end-to-end upgrade test in which a chain written by the previous binary loads with the same tip hash and crosses the activation on its own. The window was a coordination convention, and it created a 100-block slot operators could miss for no benefit.
+
+[hr]
+
+[size=14pt][b]4. The release is already published[/b][/size]
+
+The original notice described the final release, the operator guide and the SHA256 hashes as forthcoming. They exist:
+
+[code]
+tag          v16.1.0
+title        SOST V16.1 - DTD Eligibility + Jackpot V2
+hashes       docs/v16/SHA256SUMS  (node, miner, cli)
+guides       docs/v16/QUICK_UPGRADE_5MIN.md
+             docs/v16/OPERATOR_GUIDE.md
+             docs/v16/RELEASE_MANIFEST.md
+[/code]
+
+Compiling is [b]optional[/b]: an official verified binary is equally valid. Verify whatever you install against docs/v16/SHA256SUMS before running it. The hashes for v16.0.0-jackpot-v2 do [b]not[/b] apply to a V16.1 binary — consensus changed, so the binaries changed, and a mismatch against the old list is correct rather than suspicious. Never mix V16.0 and V16.1 binaries.
+
+Reproducibility, stated honestly: the same tag built twice in different directories on the same machine produces identical bytes. It has [b]not[/b] been proven that a different machine, compiler or libc reproduces them — a mismatch on a different toolchain is expected, not evidence of tampering. For an official downloaded binary the hash must match exactly.
+
+[hr]
+
+[size=14pt][b]5. No new pending cap, and no fallback winner[/b][/size]
+
+Unchanged and worth restating: if no participant is eligible at a Jackpot height, the prize [b]rolls over[/b] (100 → 200 → 300 → 400 → 500, then held at the cap). No fallback winner is invented and the normal DTD winner does not automatically receive the Jackpot. The Jackpot still spends the existing historical reserve — [b]no new emission[/b].
+
+[hr]
+
+[size=14pt][b]What is NOT affected by this correction[/b][/size]
+
+[list]
+[li]Activation height [b]#30,000[/b] and first V2 draw [b]#30,186[/b].[/li]
+[li]Node participation determines Jackpot eligibility; PoW determines Jackpot weight.[/li]
+[li]More nodes never create more weight. Splitting PoW never creates PoW — and splitting it below the 3-block minimum removes eligibility entirely, since each mining identity is evaluated independently and needs its own NODE_BIND and heartbeats.[/li]
+[li]The heartbeat bootstrap: #30,186 = 0/0, #30,474 = 1/1, #30,762 = 2/2, #31,050 = 3/3, #31,338 and later = 3 of the last 4.[/li]
+[li]Jackpot cadence 288 blocks; no Jackpot cooldown, no Jackpot anti-dominance.[/li]
+[li]Domain-separated deterministic draw, integer arithmetic only, auditable from the chain.[/li]
+[li]The 50% miner / 50% DTD emission structure.[/li]
+[li]No manual command and no restart exactly at #30,000: activation is by block height.[/li]
+[/list]
+
+[hr]
+
+[center][size=12pt][b]V16.1 · ACTIVATION #30,000 · FIRST V2 DRAW #30,186[/b][/size]
+
+[i]SOST is experimental open-source software distributed under the MIT license and provided without warranty.
+Mining, node operation and any market activity involve risk and are undertaken at the participant's own responsibility.[/i][/center]

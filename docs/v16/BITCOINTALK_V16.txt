@@ -96,7 +96,7 @@ The system can prove "this node key participated correctly and was bound to this
 [size=14pt][b]For operators (advance notice)[/b][/size]
 [list]
 [li]Normal DTD is untouched — nothing to do there.[/li]
-[li]A mandatory node/miner update will be released [b]before[/b] activation. You will be asked to update and restart [b]after block #29,900 and before block #30,000[/b].[/li]
+[li][b]v16.1.0 is already published[/b], with its own SHA256SUMS. Install it [b]at any time before block #30,000[/b] — earlier is better: below the activation height it replays the chain byte-identically, so there is nothing to gain by waiting. Building it yourself is optional; an official verified binary is equally valid.[/li]
 [li]The new software keeps the current (V15) rules before #30,000 and activates V2 automatically at #30,000 — [b]no manual activation or restart at #30,000[/b].[/li]
 [li][b]Final binaries, SHA256 hashes, consensus commit and exact upgrade commands will be published once final testing is complete.[/b][/li]
 [/list]
