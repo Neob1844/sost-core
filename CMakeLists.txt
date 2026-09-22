@@ -844,6 +844,10 @@ add_executable(test-json-rpc tests/test_json_rpc.cpp)
 target_link_libraries(test-json-rpc PRIVATE sost-core)
 add_test(NAME json-rpc COMMAND test-json-rpc)
 
+add_executable(test-sweep-batching tests/test_sweep_batching.cpp)
+target_link_libraries(test-sweep-batching PRIVATE sost-core)
+add_test(NAME sweep-batching COMMAND test-sweep-batching)
+
 add_executable(test-json-rpc-adversarial tests/test_json_rpc_adversarial.cpp)
 target_link_libraries(test-json-rpc-adversarial PRIVATE sost-core)
 add_test(NAME json-rpc-adversarial COMMAND test-json-rpc-adversarial)
