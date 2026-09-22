@@ -44,38 +44,48 @@ first V2 jackpot, #31,338 the permanent 3-of-4 heartbeat rule.
 Same command you already use, with a new binary. Nothing about your setup
 changes.
 
+Build in a **worktree from the tag**, so your working tree and your running
+binaries are untouched — and name the build directory `build`, because the
+published hashes only reproduce from a directory with that name.
+
 ```bash
-# 1. get the release
+# 1. get the release, in its own worktree
 cd /path/to/sost-core
 git fetch --all --tags --prune
-git checkout --detach v16.2.0
+git worktree add ../sost-v162 v16.2.0
+cd ../sost-v162
 git describe --tags --exact-match          # must print v16.2.0
 
-# 2. build into a SEPARATE directory (your running binary stays untouched)
-cmake -S . -B build-v162 -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
+# 2. build
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
       -DCMAKE_BUILD_TYPE=Release
-cmake --build build-v162 --target sost-node sost-miner sost-cli -j"$(nproc)"
+cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
 
 # 3. verify BEFORE you install anything
-sha256sum build-v162/sost-node build-v162/sost-miner build-v162/sost-cli
-
-# compare each one against the manifest, by name
 for b in sost-node sost-miner sost-cli; do
-  mine=$(sha256sum "build-v162/$b" | awk '{print $1}')
+  mine=$(sha256sum "build/$b" | awk '{print $1}')
   published=$(awk -v b="$b" '$2 == b {print $1}' docs/v16/SHA256SUMS)
-  [ "$mine" = "$published" ] && echo "OK   $b" || echo "DIFFERS  $b  ($mine)"
+  [ "$mine" = "$published" ] && echo "OK       $b" || echo "DIFFERS  $b  ($mine)"
 done
 ```
+
+**Why the directory name matters.** The source path is normalised out of the
+binary (`-ffile-prefix-map`), which is why the same commit reproduces from any
+source directory — that is measured, twice, for this release. The *build*
+directory name is not normalised, so `-B build-v162` yields different bytes
+from the same source. Use `-B build`.
 
 **If a hash does not match, stop.** A mismatch usually means a different
 compiler or flags, not a tampered file — but you cannot tell the two apart from
 the outside, so treat it as a reason to ask before running the binary.
 
 ```bash
-# 4. install, keeping the old binaries
+# 4. install, keeping the old binaries (from your normal tree)
+cd /path/to/sost-core
 cp build/sost-miner "build/sost-miner.v161.$(date -u +%Y%m%d-%H%M%S)"
-install -m 0755 build-v162/sost-miner build/sost-miner
-install -m 0755 build-v162/sost-cli   build/sost-cli
+cp build/sost-cli   "build/sost-cli.v161.$(date -u +%Y%m%d-%H%M%S)"
+install -m 0755 ../sost-v162/build/sost-miner build/sost-miner
+install -m 0755 ../sost-v162/build/sost-cli   build/sost-cli
 
 # 5. restart the miner with EXACTLY the flags you used before
 ```

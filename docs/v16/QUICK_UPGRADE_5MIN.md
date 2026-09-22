@@ -1,6 +1,11 @@
 # SOST V16 — miner & node upgrade
 
 **What:** one mandatory upgrade for every node and miner.
+**Which release:** install **v16.2.0** — the current one. V16.1.0 also crosses the
+fork correctly; V16.2.0 carries the same consensus rules plus the operator-side
+fixes, and is what `docs/v16/SHA256SUMS` now verifies. If you are already on
+V16.1.0 you are safe for #30,000 and should read `docs/v16/UPGRADE_V16_2.md`
+instead of this file.
 **When:** update **after block #29,900 and before #30,000**.
 **Why:** from #30,000 the DTD Jackpot becomes an independent, node-gated,
 PoW-weighted draw (first V2 draw #30,186), AND DTD-normal eligibility is re-pointed
@@ -30,9 +35,9 @@ moves.
 ```bash
 cd /opt/sost
 git fetch --all --tags --prune
-git worktree add /opt/sost-v16 v16.1.0
+git worktree add /opt/sost-v16 v16.2.0
 cd /opt/sost-v16
-git describe --tags --exact-match          # must print v16.1.0
+git describe --tags --exact-match          # must print v16.2.0
 git rev-parse HEAD
 
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
@@ -42,7 +47,8 @@ cmake --build build --target sost-node sost-cli -j"$(nproc)"
 sha256sum build/sost-node build/sost-cli
 ```
 
-**Stop here** and compare against `docs/v16/SHA256SUMS`. Only continue if they
+**Stop here** and compare against `docs/v16/SHA256SUMS` (the V16.2.0 list;
+`docs/v16/SHA256SUMS_V16_1` is kept for verifying a rollback binary). Only continue if they
 match. The miner is not built on the VPS — there is no `sost-miner` service there.
 
 ```bash
@@ -85,29 +91,40 @@ The height must advance and match the network. Done.
 
 No hooks in this tree, so a detached checkout of the tag is fine.
 
+Build it in a **worktree from the tag**, with the build directory named
+`build` — the published hashes only reproduce from a directory with that name
+(see the note below).
+
 ```bash
 cd /home/sost/SOST/sostcore/sost-core
 git status --short
 git fetch --all --tags --prune
-git checkout --detach v16.1.0
-git describe --tags --exact-match
+git worktree add /home/sost/sost-v162 v16.2.0
+cd /home/sost/sost-v162
+git describe --tags --exact-match          # must print v16.2.0
 
-rm -rf build-v16
-cmake -S . -B build-v16 -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
       -DCMAKE_BUILD_TYPE=Release
-cmake --build build-v16 --target sost-miner sost-cli -j"$(nproc)"
+cmake --build build --target sost-miner sost-cli -j"$(nproc)"
 
-sha256sum build-v16/sost-miner build-v16/sost-cli
+sha256sum build/sost-miner build/sost-cli
 ```
+
+> **The build directory must be called `build`.** The source path does not
+> matter — `-ffile-prefix-map` normalises it, and that is measured. The build
+> directory name is not normalised, so `-B build-v16` produces different bytes
+> from the same commit and will not match the published hashes.
 
 **Stop here** and compare against `docs/v16/SHA256SUMS`. Then stop the miner
 (Ctrl+C in its window), install, and restart it with **exactly** the same command
 as before — no flag changes:
 
 ```bash
+cd /home/sost/SOST/sostcore/sost-core
 cp build/sost-miner "build/sost-miner.v15.backup.$(date -u +%Y%m%d-%H%M%S)"
-install -m 0755 build-v16/sost-miner build/sost-miner
-install -m 0755 build-v16/sost-cli   build/sost-cli
+cp build/sost-cli   "build/sost-cli.v15.backup.$(date -u +%Y%m%d-%H%M%S)"
+install -m 0755 /home/sost/sost-v162/build/sost-miner build/sost-miner
+install -m 0755 /home/sost/sost-v162/build/sost-cli   build/sost-cli
 
 /home/sost/SOST/sostcore/sost-core/build/sost-miner \
   --wallet /home/sost/sost-keys/cex-wallet.json \
