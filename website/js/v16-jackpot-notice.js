@@ -123,8 +123,8 @@
   <button type="button" class="sost-v16-head" aria-expanded="false" aria-controls="sostV16Body" title="Open the DTD Jackpot V2 advance notice">
     <span class="sost-v16-icon" aria-hidden="true">🏆</span>
     <span class="sost-v16-titles">
-      <span class="sost-v16-title">SOST V16 &mdash; DTD Jackpot V2 &middot; Miner &amp; Node Operator Advance Notice</span>
-      <span class="sost-v16-sub">Mandatory node/miner update before block #30,000 &middot; <b>Normal DTD does NOT change</b></span>
+      <span class="sost-v16-title">SOST V16.1 &mdash; DTD Eligibility + Jackpot V2 &middot; Miner &amp; Node Operator Notice</span>
+      <span class="sost-v16-sub">Mandatory node/miner update before block #30,000 &middot; <b>Normal DTD eligibility DOES change</b></span>
     </span>
     <span class="sost-v16-chip">ACTIVATION #30,000</span>
     <span class="sost-v16-redchip">&#9888; RECOMPILE &amp; RESTART: #29,900 &rarr; #30,000</span>
@@ -142,8 +142,8 @@
     </div>
 
     <div class="sost-v16-alert">
-      <span class="k">THIS CHANGE ONLY AFFECTS THE DTD JACKPOT.</span><br>
-      Normal DTD keeps its current consensus rules: same eligibility, same payout logic, same cooldown and anti-dominance safeguards, <b>no NODE_BIND, no heartbeats</b>. An active SbPoW miner keeps participating in normal DTD exactly as today.
+      <span class="k">CORRECTION &mdash; V16.1 ALSO CHANGES NORMAL DTD ELIGIBILITY.</span><br>
+      An earlier version of this notice said normal DTD would not change. That is no longer true. Normal DTD keeps its <b>payout logic, its every-block cadence, its uniform selection and its seed</b>, and it still needs <b>no NODE_BIND and no heartbeats</b> &mdash; but from #30,000 <b>who qualifies</b> changes: the activity window drops to <b>288 blocks</b> (~2 days), the 6-block cooldown <b>yields if applying it would leave nobody eligible</b>, and the 10%/288 anti-dominance gate is <b>armed only at 11 or more distinct miners</b>. While a single miner is active it can therefore take 100% of the block (50% miner + 50% DTD). An active SbPoW miner keeps participating in normal DTD exactly as today.
       <b>DTD Jackpot V2</b> becomes a separate, independent draw that rewards miners who contribute <b>real Proof-of-Work</b> <i>and</i> <b>verified node participation</b>.
     </div>
 
@@ -208,7 +208,7 @@
 
     <div class="sost-v16-h">What does NOT change</div>
     <ul>
-      <li>Normal DTD: eligibility, payout logic, cooldown and anti-dominance &mdash; untouched.</li>
+      <li>Normal DTD: <b>payout logic, every-block cadence, uniform selection and seed</b> &mdash; untouched. Its <b>eligibility</b> does change (288-block window, conditional cooldown, conditional anti-dominance) &mdash; see the correction above.</li>
       <li>The 50% miner / 50% DTD emission structure.</li>
       <li>The DTD Jackpot cadence of 288 blocks.</li>
       <li>The Jackpot funding source: the existing historical reserve. <b>No new emission is created.</b></li>
