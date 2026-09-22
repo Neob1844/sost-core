@@ -152,7 +152,7 @@
     <div class="sost-v16-nums">
       <div class="sost-v16-num"><span class="n">#30,000</span><span class="l">V16 activates automatically by block height</span></div>
       <div class="sost-v16-num"><span class="n">#30,186</span><span class="l">First DTD Jackpot V2 draw</span></div>
-      <div class="sost-v16-num"><span class="n">v16.1.0</span><span class="l">Released &mdash; install any time before #30,000</span></div>
+      <div class="sost-v16-num"><span class="n">v16.2.0</span><span class="l">Current release &mdash; install any time before #30,000</span></div>
       <div class="sost-v16-num"><span class="n">288</span><span class="l">Jackpot cadence &amp; heartbeat epoch (unchanged)</span></div>
       <div class="sost-v16-num"><span class="n">100 &rarr; 500</span><span class="l">Jackpot base SOST, rollover cap &mdash; existing historical reserve, <b>no new emission</b></span></div>
     </div>
@@ -177,9 +177,9 @@
       <div class="sost-v16-card miner">
         <h4>&#9935; If you mine</h4>
         <ol>
-          <li>Download or compile <b>v16.1.0</b> &mdash; it is <b>already published</b>, with its own SHA256SUMS. Building it yourself is optional; an official verified binary is equally valid.</li>
+          <li>Download or compile <b>v16.2.0</b> &mdash; it is <b>already published</b>, with its own SHA256SUMS. Building it yourself is optional; an official verified binary is equally valid. (v16.1.0 also crosses the fork correctly: V16.2.0 changes <b>no consensus rule</b>, it keeps operator passwords and keys out of the process command line.)</li>
           <li>Verify the version and the official <b>SHA256</b>.</li>
-          <li>Stop your node/miner, install v16.1.0, restart &mdash; <b>any time before #30,000</b>.</li>
+          <li>Stop your node/miner, install v16.2.0, restart &mdash; <b>any time before #30,000</b>.</li>
           <li>Keep mining normally &mdash; V16 activates by itself at #30,000. No command, no config switch, no restart exactly at the activation height.</li>
           <li>Register your <b>NODE_BIND</b> once V2 is active.</li>
           <li>Check your eligibility and PoW weight in the Explorer.</li>
