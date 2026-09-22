@@ -844,6 +844,10 @@ add_executable(test-json-rpc tests/test_json_rpc.cpp)
 target_link_libraries(test-json-rpc PRIVATE sost-core)
 add_test(NAME json-rpc COMMAND test-json-rpc)
 
+add_executable(test-json-rpc-adversarial tests/test_json_rpc_adversarial.cpp)
+target_link_libraries(test-json-rpc-adversarial PRIVATE sost-core)
+add_test(NAME json-rpc-adversarial COMMAND test-json-rpc-adversarial)
+
 add_executable(test-dtd-v16-gates tests/test_dtd_v16_gates.cpp)
 target_link_libraries(test-dtd-v16-gates PRIVATE sost-core)
 add_test(NAME dtd-v16-gates COMMAND test-dtd-v16-gates)
