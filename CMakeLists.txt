@@ -254,6 +254,7 @@ add_library(sost-core STATIC
     # V11_PHASE2_HEIGHT == INT64_MAX in params.h; nothing in this file
     # is reached on real chain heights yet.
     src/lottery.cpp
+    src/json_rpc.cpp
 
     # DTD lottery emergency pause/resume — signed control state machine.
     # Pure reference functions (parse / nonce supersede / reorg undo / the
@@ -838,6 +839,10 @@ add_test(NAME lottery-eligibility COMMAND test-lottery-eligibility)
 add_executable(test-dtd-recency tests/test_dtd_recency.cpp)
 target_link_libraries(test-dtd-recency PRIVATE sost-core)
 add_test(NAME dtd-recency COMMAND test-dtd-recency)
+
+add_executable(test-json-rpc tests/test_json_rpc.cpp)
+target_link_libraries(test-json-rpc PRIVATE sost-core)
+add_test(NAME json-rpc COMMAND test-json-rpc)
 
 add_executable(test-dtd-v16-gates tests/test_dtd_v16_gates.cpp)
 target_link_libraries(test-dtd-v16-gates PRIVATE sost-core)

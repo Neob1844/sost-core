@@ -37,6 +37,7 @@
 //   sost-cli info                       Wallet summary
 
 #include "sost/wallet.h"
+#include "sost/json_rpc.h"   // strict reader for node replies (see json_rpc.h)
 #include "sost/hd_wallet.h"
 #include "sost/addressbook.h"
 #include "sost/wallet_policy.h"
@@ -1839,6 +1840,58 @@ int main(int argc, char** argv) {
     // listunspent [address]
     // =====================================================================
     if (cmd == "listunspent") {
+        // CHAIN FIRST, cache second, and never conflate the two.
+        //
+        // This used to read w.list_unspent() only — the wallet's local cache.
+        // A mining wallet never imports UTXOs (it only signs blocks), so its
+        // cache is empty by construction and the command printed "No unspent
+        // outputs" for an address holding thousands of them on chain. Worse,
+        // an RPC that was down or auth-rejected produced the same sentence.
+        // A wallet tool must never let "the node said no" look like "you have
+        // nothing".
+        const std::string want_addr = (argc > arg_start + 1) ? argv[arg_start + 1] : w.default_address();
+        bool chain_shown = false;
+        if (!want_addr.empty()) {
+            std::string raw = rpc_call("getaddressutxos", "[\"" + want_addr + "\"]");
+            if (raw.empty()) {
+                fprintf(stderr, "Node not reachable — showing the LOCAL WALLET CACHE only.\n"
+                                "This is NOT proof that the address is empty. Check --rpc / --rpc-user / --rpc-pass.\n\n");
+            } else {
+                std::string body, err;
+                sost::json::Value res;
+                if (!sost::json::http_body(raw, body, &err) || !sost::json::rpc_result(body, res, &err)) {
+                    fprintf(stderr, "Node query FAILED (%s) — showing the LOCAL WALLET CACHE only.\n"
+                                    "This is NOT proof that the address is empty.\n\n", err.c_str());
+                } else if (!res.is_arr()) {
+                    fprintf(stderr, "Node returned an unexpected shape for getaddressutxos — cache only.\n\n");
+                } else {
+                    int64_t tot = 0, mat = 0, imm = 0; int nm = 0, ni = 0;
+                    printf("ON-CHAIN UTXOs for %s\n", want_addr.c_str());
+                    for (const auto& u : res.a) {
+                        int64_t amount = 0, height = 0; bool mature = false, coinbase = false;
+                        std::string txid; int64_t vout = 0;
+                        if (!u.get_int("amount_stocks", amount)) {
+                            fprintf(stderr, "Node returned a UTXO without an integer amount — refusing to guess.\n");
+                            return 1;                       // never invent an amount
+                        }
+                        u.get_str("txid", txid); u.get_int("vout", vout);
+                        u.get_int("height", height); u.get_bool("mature", mature);
+                        u.get_bool("coinbase", coinbase);
+                        tot += amount;
+                        if (mature) { mat += amount; ++nm; } else { imm += amount; ++ni; }
+                        printf("txid: %s  vout: %lld  amount: %s SOST  height: %lld%s%s\n",
+                               txid.c_str(), (long long)vout, format_sost(amount).c_str(),
+                               (long long)height, coinbase ? "  [coinbase]" : "",
+                               mature ? "" : "  [IMMATURE — not spendable yet]");
+                    }
+                    printf("\nOn chain: %zu UTXOs, %s SOST total\n", res.a.size(), format_sost(tot).c_str());
+                    printf("  spendable now : %d UTXOs, %s SOST\n", nm, format_sost(mat).c_str());
+                    printf("  immature      : %d UTXOs, %s SOST\n", ni, format_sost(imm).c_str());
+                    chain_shown = true;
+                }
+            }
+        }
+
         std::vector<sost::WalletUTXO> utxos;
         if (argc > arg_start + 1) {
             utxos = w.list_unspent(argv[arg_start + 1]);
@@ -1846,9 +1899,11 @@ int main(int argc, char** argv) {
             utxos = w.list_unspent();
         }
         if (utxos.empty()) {
-            printf("No unspent outputs.\n");
+            if (chain_shown) printf("\nLocal wallet cache: empty (normal for a mining wallet — it only signs blocks).\n");
+            else             printf("No unspent outputs in the local wallet cache.\n");
             return 0;
         }
+        printf("\nLOCAL WALLET CACHE\n");
         for (const auto& u : utxos) {
             printf("txid: %s  vout: %u  amount: %s SOST  height: %lld",
                    to_hex(u.txid.data(), 32).c_str(),
