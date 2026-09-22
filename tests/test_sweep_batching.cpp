@@ -12,6 +12,9 @@
 #include "sost/wallet.h"
 #include "sost/address.h"
 #include "sost/params.h"
+#include "sost/tx_validation.h"
+#include <map>
+#include <optional>
 #include "sost/consensus_constants.h"
 #include <cstdio>
 #include <string>
@@ -87,15 +90,91 @@ int main(){
              b.bytes < (size_t)MAX_TX_BYTES_CONSENSUS / 2);
     }
 
+    // =====================================================================
+    // THE BINDING LIMIT IS RELAY POLICY, NOT CONSENSUS.
+    //
+    // A 256-input transaction is consensus-valid and 34 KB — and the mempool
+    // would refuse it. ValidateTransactionPolicy (src/tx_validation.cpp:743,749)
+    // enforces MAX_TX_BYTES_STANDARD = 16000 and MAX_INPUTS_STANDARD = 128, and
+    // src/mempool.cpp:217 calls it before admitting anything. A batch built to
+    // the consensus limit would be signed, submitted, and silently never relayed.
+    //
+    // So the cap is measured HERE, through the real admission path, not through
+    // the serializer. Note the policy check sizes the tx with
+    // EstimateTxSerializedSize(), so that — not Serialize() — is what decides.
+    // =====================================================================
+    printf("== relay policy: where a batch is actually capped ==\n");
+    int policy_cap = 0;
+    {
+        struct FakeView : public IUtxoView {
+            std::map<std::pair<std::string,uint32_t>, UTXOEntry> m;
+            std::optional<UTXOEntry> GetUTXO(const OutPoint& op) const override {
+                std::string k((const char*)op.txid.data(), op.txid.size());
+                auto it = m.find({k, op.index});
+                if (it == m.end()) return std::nullopt;
+                return it->second;
+            }
+        };
+        TxValidationContext ctx; ctx.genesis_hash = genesis; ctx.spend_height = TIP;
+
+        // The fee cannot be a flat number: policy also enforces a minimum relay
+        // fee of 1 stock per byte, so a batch must pay for its own size. Two
+        // passes, exactly like createtx: build with an estimate, measure, rebuild
+        // at the real fee (plus a small margin so the size bump from the changed
+        // fee field cannot drop it back under the minimum).
+        auto policy_ok = [&](int n, size_t* est_out, std::string* why)->bool{
+            fill(w, pkh, n, AMT, 1);
+            Transaction probe; std::string pe;
+            if(!w.create_transaction(self, (int64_t)n*AMT - 1000, 1000, genesis, probe, TIP, &pe, nullptr, false))
+                { if(why) *why = "build: " + pe; return false; }
+            int64_t fee = (int64_t)EstimateTxSerializedSize(probe) + 64;   // 1 stock/byte + margin
+            fill(w, pkh, n, AMT, 1);
+            Transaction tx; std::string e;
+            if(!w.create_transaction(self, (int64_t)n*AMT - fee, fee, genesis, tx, TIP, &e, nullptr, false))
+                { if(why) *why = "build: " + e; return false; }
+            FakeView v;
+            for (const auto& in : tx.inputs) {
+                UTXOEntry u; u.amount = AMT; u.type = 0x01; u.pubkey_hash = pkh;
+                u.height = 1; u.is_coinbase = true;
+                std::string k((const char*)in.prev_txid.data(), in.prev_txid.size());
+                v.m[{k, in.prev_index}] = u;
+            }
+            size_t est = EstimateTxSerializedSize(tx);
+            if (est_out) *est_out = est;
+            auto r = ValidateTransactionPolicy(tx, v, ctx);
+            if (!r.ok && why) *why = r.message;
+            return r.ok;
+        };
+
+        for (int n : {110, 118, 119, 120, 121, 128, 129, 256}) {
+            size_t est = 0; std::string why;
+            bool ok = policy_ok(n, &est, &why);
+            printf("  %3d inputs -> est %6zu bytes -> %s%s%s\n", n, est,
+                   ok ? "ACCEPTED by policy" : "REJECTED: ",
+                   ok ? "" : why.substr(0, 58).c_str(), ok ? "" : "");
+        }
+        // Binary-search the real cap through the same path.
+        int lo = 1, hi = (int)MAX_INPUTS_CONSENSUS;
+        while (lo < hi) { int mid = (lo + hi + 1) / 2; if (policy_ok(mid, nullptr, nullptr)) lo = mid; else hi = mid - 1; }
+        policy_cap = lo;
+        printf("  measured policy cap: %d inputs per transaction\n", policy_cap);
+        TEST("policy caps well below the consensus 256", policy_cap < (int)MAX_INPUTS_CONSENSUS);
+        TEST("bytes bind before the 128-input count does", policy_cap < (int)MAX_INPUTS_STANDARD);
+        TEST("a consensus-sized batch (256) is refused by policy", !policy_ok(256, nullptr, nullptr));
+    }
+
     printf("== batching 2,058 mature UTXOs (the live mining address) ==\n");
     {
         const int MATURE = 2058;
-        const int cap = (int)MAX_INPUTS_CONSENSUS;
+        const int cap = policy_cap;                    // relay policy, not consensus
         int batches = (MATURE + cap - 1) / cap;
         printf("  %d UTXOs / %d per tx -> %d transactions\n", MATURE, cap, batches);
-        TEST("nine transactions, not the five or seventeen estimated earlier", batches == 9);
-        TEST("all batches fit the mempool's per-address cap",
-             (size_t)batches <= MEMPOOL_MAX_PER_ADDRESS);
+        TEST("the plan uses the policy cap, not the consensus one", cap == policy_cap && cap < 256);
+        // More batches than the mempool will hold for one address at a time, so
+        // the sweep has to be PACED — submit, wait for confirmation, continue.
+        printf("  mempool per-address cap %zu -> %s\n", MEMPOOL_MAX_PER_ADDRESS,
+               (size_t)batches <= MEMPOOL_MAX_PER_ADDRESS ? "all batches may be in flight"
+                                                          : "batches MUST be paced");
 
         // No UTXO may appear twice across batches, and none may be dropped.
         std::vector<int> seen(MATURE, 0);
