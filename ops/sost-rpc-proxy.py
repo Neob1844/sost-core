@@ -32,10 +32,26 @@ LISTEN = ('127.0.0.1', 18299)
 # Broadcasting a signed transaction is safe to expose (cf. Bitcoin's public sendrawtransaction).
 BROADCAST_METHODS = {'sendrawtransaction'}
 
+# Methods the gateway refuses outright for anonymous callers, even though the node would
+# answer them without credentials.
+#
+# getblocktemplate is not a read: it assembles a full candidate block (coinbase, mempool
+# selection, merkle root) on every call, on a node that is already CPU-bound by SbPoW.
+# Exposed anonymously it is a cheap way to degrade the node — and nothing public needs
+# it: the explorer never calls it (it reads the counter via getrpcstats), and a miner
+# talks to its OWN node, authenticated, not to this gateway. Refused here rather than in
+# the node so the published v16.1.0 binaries and their hashes stay untouched.
+PUBLIC_DENY_METHODS = {'getblocktemplate'}
+
 
 def needs_node_auth(method):
     """True iff the gateway should inject node credentials for this RPC method."""
     return method in BROADCAST_METHODS
+
+
+def denied_to_public(method):
+    """True iff the gateway refuses this method for anonymous callers."""
+    return method in PUBLIC_DENY_METHODS
 
 
 def clean_request(data):
@@ -86,6 +102,13 @@ def make_handler(auth_header):
                 if not isinstance(data, dict):
                     return self._send(400, '{"error":"single requests only"}')
                 method = str(data.get('method', ''))
+                if denied_to_public(method):
+                    sys.stderr.write('[rpc-proxy] method=%s code=403 denied_public=1\n' % method)
+                    return self._send(403, json.dumps({
+                        'jsonrpc': '2.0', 'id': data.get('id', 1),
+                        'error': {'code': -32601,
+                                  'message': 'method not available on the public gateway; '
+                                             'run your own node'}}))
                 body = clean_request(data).encode()
                 req = urllib.request.Request(NODE_URL, data=body, headers={'Content-Type': 'application/json'})
                 if needs_node_auth(method):

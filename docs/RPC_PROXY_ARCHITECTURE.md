@@ -83,3 +83,14 @@ The gateway is the single chokepoint, so these slot in here without touching the
 - Per-IP broadcast quota (beyond nginx's `limit_req`) — e.g. N `sendrawtransaction`/min per IP.
 - Reject obviously-malformed tx hex before forwarding (cheap pre-filter).
 - Structured audit log to a file for longer retention.
+
+## Publicly refused methods
+
+`getblocktemplate` is refused for anonymous callers (HTTP 403). It is not a read: it
+assembles a candidate block — coinbase, mempool selection, merkle root — on every call,
+on a node already CPU-bound by SbPoW, so anonymous access is a cheap degradation vector.
+Nothing public needs it: the explorer never calls it (it reads the counter through
+`getrpcstats`), and a miner talks to its own node over an authenticated connection.
+
+The refusal lives in the gateway, not in the node, so the published release binaries and
+their hashes are unaffected.
