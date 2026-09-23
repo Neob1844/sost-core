@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-23-v457-regression-clean">
+<meta name="explorer-html-version" content="2026-09-23-v458-jackpot-archive">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8290,7 +8290,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/v16-jackpot-notice.js?v=v457" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v458" defer></script>
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks
@@ -8808,7 +8808,10 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       '<div class="sjp-meta">BLOCK <a id="sjp-blk">#'+esc(data.block)+'</a>'+(data.txid?' · <a id="sjp-tx">view tx</a>':'')+'</div>'+
       '<div class="sjp-note">RETURNED TO THE NETWORK &middot; <b>NO NEW EMISSION</b></div>'+
       '<span class="sjp-verified">&#10003; VERIFIED ON-CHAIN</span>'+
+      // The winner overlay is where people ask "and the previous ones?" — so the
+      // archive is one click from here too, not only from the dashboard panel.
       '<div class="sjp-actions"><button class="sjp-btn" id="sjp-snd">'+(soundOn()?'&#128266; Sound ON':'&#128263; Sound OFF')+'</button>'+
+        '<button class="sjp-btn" id="sjp-arch" style="border-color:#2b7a3d;color:#39ff14">&#128220; View all jackpots</button>'+
         '<button class="sjp-btn" id="sjp-close">Close</button></div></div>';
     ov.classList.add('show');
     // reel animation -> stop on real winner (visual only; winner already fixed on-chain)
@@ -8820,6 +8823,8 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var W=document.getElementById('sjp-win'); if(W&&data.winner&&typeof window.showAddress==='function') W.onclick=function(){close();window.showAddress(data.winner);};
     var B=document.getElementById('sjp-blk'); if(B&&typeof window.showAddress==='function'){} // block view optional
     var snd=document.getElementById('sjp-snd'); if(snd) snd.onclick=function(){ s(LS_SND, soundOn()?'0':'1'); snd.innerHTML=soundOn()?'&#128266; Sound ON':'&#128263; Sound OFF'; };
+    var _av=document.getElementById('sjp-arch');
+    if(_av) _av.onclick=function(){ close(); if(window.SJP&&window.SJP.openArchive) window.SJP.openArchive(); };
     document.getElementById('sjp-close').onclick=close;
     ov.onclick=function(e){ if(e.target===ov) close(); };
     document.addEventListener('keydown',function esch(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',esch);} });
@@ -8976,7 +8981,12 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       : 'No DTD jackpots paid yet.';
     var legendHtml='<div style="display:flex;flex-wrap:wrap;gap:10px;font-size:9px;color:var(--text3);margin:8px 0 2px">'
       +'<span>&#127942; WINNER</span><span style="color:#39ff14">&#128994; DTD JACKPOT ELIGIBLE</span><span style="color:#22d3ee">&#128309; DTD ELIGIBLE</span><span style="color:#f5b301">&#128992; COOLDOWN</span><span>&#9899; NOT ELIGIBLE</span></div>';
-    var replayBtn=(paid>0&&_w)?'<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button><button class="sjpd-x" id="sjpd-archive-btn" style="margin:0;border-color:#2b7a3d;color:#39ff14">&#128220; View all jackpots ('+paid+')</button></div>':'';
+    // Replay needs a known last winner; the ARCHIVE does not — it reconstructs from
+    // the chain — so the two buttons are gated separately. Before this, a visitor
+    // whose last-winner lookup had not landed yet saw no way into the archive at all.
+    var _replayOne=(paid>0&&_w)?'<button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button>':'';
+    var _archiveOne='<button class="sjpd-x" id="sjpd-archive-btn" style="margin:0;border-color:#2b7a3d;color:#39ff14">&#128220; View all jackpots'+(paid>0?' ('+paid+')':'')+'</button>';
+    var replayBtn='<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">'+_replayOne+_archiveOne+'</div>';
     // JACKPOT ELIGIBLE (20k): FINAL (getlotteryaudit at a mined jackpot height) >
     // PRELIMINARY (future eligible_addresses[] preview at tip) > pending label.
     var jpEDisp, jpEStat;
@@ -9010,16 +9020,23 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         '<div class="sjpd-c"><div class="sjpd-l">ESTIMATED TIME</div><div class="sjpd-v">~'+eta(rem)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">RECENTLY ACTIVE (288)</div><div class="sjpd-v g">'+esc(elig)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">JACKPOT ELIGIBLE (20k)</div><div class="sjpd-v c">'+jpEDisp+'</div>'+(jpEStat?'<div style="font-size:8px;letter-spacing:.6px;color:var(--gold);margin-top:2px">'+jpEStat+'</div>':'')+'</div>'+
-        // The cooldown belongs to DTD NORMAL — DTD Jackpot V2 has none. Label it so,
-        // and let the card expand into the identities behind the count (already on
-        // state.cooldownList, from getlotteryaudit's cooldown_addresses).
-        '<div class="sjpd-c" style="cursor:pointer" title="Miners of the last '+cdWindow+' blocks are temporarily excluded from the normal DTD draw. This is based on recent block mining, NOT on winning the DTD. DTD Jackpot V2 has no cooldown." onclick="window._sjpdCdOpen=!window._sjpdCdOpen;var e=document.getElementById(\'sjpd-cd-list\');if(e)e.style.display=window._sjpdCdOpen?\'block\':\'none\';">'+
-          '<div class="sjpd-l">\uD83D\uDFE0 NORMAL DTD RECENT-MINER COOLDOWN</div><div class="sjpd-v">'+cdCount+'</div>'+
-          '<div style="font-size:8px;color:var(--text3);margin-top:2px;line-height:1.35">miners of the last '+cdWindow+' blocks \u00B7 click to list</div>'+
-          // render() re-runs as each RPC lands; keep the dropdown open across re-renders.
-          '<div id="sjpd-cd-list" style="display:'+(window._sjpdCdOpen?'block':'none')+';margin-top:8px;border-top:1px solid #1d2731;padding-top:6px">'+cdListHtml+'</div>'+
+        // The recent-miner cooldown belongs to DTD NORMAL and DTD Jackpot V2 has
+        // none, so a cooldown card inside the JACKPOT panel only ever taught people
+        // the wrong rule. The slot now opens the archive of paid jackpots instead;
+        // the cooldown itself is still explained (and listed) in the eligibility
+        // note further down, where it is about the right draw.
+        '<div class="sjpd-c sjpd-archive-card" style="cursor:pointer;border-color:#2b7a3d" '+
+             'title="Every DTD Jackpot paid so far: block, winner, amount, eligible set and transaction." '+
+             'onclick="event.stopPropagation();if(window.SJP&&window.SJP.openArchive)window.SJP.openArchive();">'+
+          '<div class="sjpd-l" style="color:#39ff14">\uD83D\uDCDC JACKPOT ARCHIVE</div>'+
+          '<div class="sjpd-v g">'+fc(paid)+'</div>'+
+          '<div style="font-size:8px;color:var(--text3);margin-top:2px;line-height:1.35">jackpots paid \u00B7 click to view all winners</div>'+
         '</div>'+
-        '<div class="sjpd-c"><div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div></div>'+
+        '<div class="sjpd-c" style="cursor:pointer" title="Click to open the full jackpot archive" '+
+             'onclick="event.stopPropagation();if(window.SJP&&window.SJP.openArchive)window.SJP.openArchive();">'+
+          '<div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div>'+
+          '<div style="font-size:8px;color:var(--text3);margin-top:2px">click to view all winners</div>'+
+        '</div>'+
       '</div>'+
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+esc(status)+'</div>'+
         '<div class="sjpd-l" style="margin-top:8px">LAST WINNER</div><div class="sjpd-v" style="font-size:13px">'+esc(winner)+'</div></div>'+
@@ -9027,6 +9044,16 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       '<div class="sjpd-note">Until #30,000 the DTD Jackpot reuses the DTD winner and its eligibility (a wider <b>20,000-block</b> recency window instead of 5,000, plus the same gates: recent-producer cooldown, anti-dominance, SbPoW). <b style="color:#ffd166">From #30,000 (V16.1) it is an INDEPENDENT draw</b> with its own winner: node-gated (NODE_BIND + heartbeats), weighted linearly by SbPoW blocks in the previous 2,016, <b>no cooldown and no anti-dominance</b>. DTD-normal keeps its payout and needs neither NODE_BIND nor heartbeats, but its own eligibility tightens the same day (288-block recency, conditional cooldown, anti-dominance only at &ge;11 miners). </div>'+
       '<div class="sjpd-note" style="margin-top:2px"><b>100 SOST</b> base reward. Unpaid jackpots (no eligible winner) roll over to the next eligible jackpot, up to a <b>500 SOST</b> maximum. The first jackpot (#'+fc(JP_FIRST)+') pays <b>100 SOST</b> (no prior rollover). The Explorer always shows the <b>real on-chain amount</b> from the jackpot transaction.</div>'+
       legendHtml+
+      // The cooldown that used to sit in a jackpot card lives here instead, stated
+      // as what it is: a NORMAL-DTD rule that has no effect on the Jackpot draw.
+      '<div class="sjpd-note" style="margin-top:2px;border-left:2px solid #f59e0b;padding-left:8px">'+
+        '<b>Normal DTD only \u2014 not the Jackpot.</b> The miners of the last '+cdWindow+' blocks are '+
+        'temporarily excluded from the <i>normal</i> DTD draw (based on having mined recently, not on having won). '+
+        '<b>DTD Jackpot V2 has no cooldown and no anti-dominance.</b> '+
+        'Currently <b>'+cdCount+'</b> identit'+(cdArr.length===1?'y':'ies')+' in cooldown '+
+        '<span style="cursor:pointer;color:#22d3ee" onclick="event.stopPropagation();window._sjpdCdOpen=!window._sjpdCdOpen;var e=document.getElementById(\'sjpd-cd-list\');if(e)e.style.display=window._sjpdCdOpen?\'block\':\'none\';">[list]</span>'+
+        '<div id="sjpd-cd-list" style="display:'+(window._sjpdCdOpen?'block':'none')+';margin-top:8px;border-top:1px solid #1d2731;padding-top:6px">'+cdListHtml+'</div>'+
+      '</div>'+
       '<div class="sjpd-sec">CHECK YOUR JACKPOT ELIGIBILITY</div>'+
       '<div class="sjpd-note"><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
         '<input id="sjpd-elig-in" placeholder="Enter your SOST address (sost1…)" style="flex:1 1 240px;background:#0a0a0c;border:1px solid var(--border);color:#e6edf3;border-radius:5px;padding:7px 9px;font:12px ui-monospace" value="'+esc(myMiner)+'">'+
