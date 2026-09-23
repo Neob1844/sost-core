@@ -256,234 +256,484 @@
   </div>
 </nav>
 
+<style>
+/* ── Guía de mineros V16.2.3 ─────────────────────────────────────────────
+   Secciones plegables nativas (<details>): funcionan sin JavaScript, así que
+   la guía sigue siendo legible si el script falla o el navegador lo bloquea.
+   Nada aquí depende del estado de la sesión del Explorer.                */
+.mg-wrap{max-width:1000px;margin:0 auto;padding:0 22px 70px}
+.mg-state{border:1px solid var(--border,#222);border-radius:10px;padding:16px 18px;margin:18px 0 26px;
+  background:linear-gradient(150deg,rgba(232,121,249,.06),rgba(34,211,238,.04))}
+.mg-badge{display:inline-block;font-family:var(--font-mono,monospace);font-size:11px;font-weight:800;
+  letter-spacing:1px;padding:4px 10px;border-radius:5px;border:1px solid;white-space:normal}
+.mg-toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:9px;margin:22px 0 30px}
+.mg-toc a{display:block;padding:11px 13px;border:1px solid var(--border,#222);border-radius:8px;
+  text-decoration:none;font-size:13px;line-height:1.45;color:var(--text2,#cbd5e1);background:rgba(255,255,255,.015)}
+.mg-toc a:hover{border-color:var(--cyan-primary,#22d3ee)}
+.mg-toc b{display:block;color:#fff;font-size:13px;margin-bottom:2px}
+details.mg{border:1px solid var(--border,#222);border-radius:9px;margin:11px 0;background:rgba(255,255,255,.012)}
+details.mg>summary{cursor:pointer;padding:14px 17px;font-weight:700;font-size:15px;color:#fff;list-style:none;
+  display:flex;align-items:center;gap:10px}
+details.mg>summary::-webkit-details-marker{display:none}
+details.mg>summary::before{content:"\25B8";color:var(--cyan-primary,#22d3ee);transition:transform .15s;flex:0 0 auto}
+details.mg[open]>summary::before{transform:rotate(90deg)}
+details.mg>summary:hover{background:rgba(34,211,238,.05)}
+.mg-in{padding:2px 18px 18px;font-size:14px;line-height:1.72;color:var(--text2,#cbd5e1)}
+.mg-in h4{margin:18px 0 6px;font-size:14px;color:#fff;letter-spacing:.3px}
+.mg-in ul,.mg-in ol{margin:.5em 0 .5em 1.2em;padding:0}
+.mg-in li{margin:.35em 0}
+.mg-in table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.mg-in th,.mg-in td{border:1px solid var(--border,#222);padding:7px 10px;text-align:left;vertical-align:top}
+.mg-in th{background:rgba(255,255,255,.04);color:#fff;font-weight:600}
+.mg-cmd{position:relative;margin:11px 0}
+.mg-cmd pre{background:#07070a;border:1px solid #23232b;border-radius:7px;padding:13px 15px;
+  overflow-x:auto;font-family:var(--font-mono,monospace);font-size:12.5px;line-height:1.65;margin:0;color:#d7e2ea}
+.mg-copy{position:absolute;top:7px;right:7px;background:#16161c;border:1px solid #33333d;color:#9fb6c4;
+  font-family:var(--font-mono,monospace);font-size:10px;letter-spacing:1px;padding:4px 9px;border-radius:5px;cursor:pointer}
+.mg-copy:hover{color:#fff;border-color:var(--cyan-primary,#22d3ee)}
+.mg-note{border-left:3px solid;padding:10px 14px;margin:13px 0;border-radius:0 7px 7px 0;font-size:13.5px;line-height:1.65}
+.mg-warn{border-color:#fb010d;background:rgba(251,1,13,.07)}
+.mg-ok{border-color:#39ff14;background:rgba(57,255,20,.055)}
+.mg-info{border-color:#22d3ee;background:rgba(34,211,238,.055)}
+.mg-hash{font-family:var(--font-mono,monospace);font-size:11px;word-break:break-all;color:#9fb6c4}
+@media(max-width:768px){
+  .mg-wrap{padding:0 14px 50px}
+  .mg-toc{grid-template-columns:1fr}
+  .mg-in{padding:2px 13px 15px;font-size:13.5px}
+  details.mg>summary{font-size:14px;padding:12px 13px}
+  .mg-in table,.mg-in th,.mg-in td{font-size:12px}
+  .mg-cmd pre{font-size:11.5px;padding:11px 11px}
+}
+</style>
+
 <section class="hero">
   <div class="container">
-    <h1 style="font-family:var(--font-display);letter-spacing:2px">UPGRADE TO <span style="color:var(--red-primary)">V16.2.3</span></h1>
-    <p style="font-size:17px;max-width:820px">For a node and a miner that are <strong>already running</strong>. The update window agreed with the network is <strong style="color:#ffd166">after block #29,900 and before block #30,000</strong>.</p>
-    <div class="notice green" style="max-width:820px;margin-top:14px">
-      <strong>You keep everything.</strong> Your SOST, your wallet file, your private keys, your SbPoW mining identity and your payout address are <strong>not touched</strong> by this upgrade. There is nothing to convert, nothing to move, no new wallet and no re-registration. Encrypting your wallet is optional and always will be.
-    </div>
+    <h1 style="font-family:var(--font-display);letter-spacing:2px">SOST V16 &mdash; <span style="color:var(--red-primary)">MINER &amp; NODE GUIDE</span></h1>
+    <p style="font-size:17px;max-width:860px">Everything you need to install, configure and run SOST V16.2.3 &mdash; and to decide whether you want to enter the DTD Jackpot V2 draw. Written for someone who has never run a node before, with the exact commands for someone who has.</p>
   </div>
 </section>
 
-<section>
-  <div class="container">
-    <h2>The calendar</h2>
-    <div class="code-block" style="line-height:1.8">
-BEFORE #29,900     download v16.2.3, verify the SHA-256, back up. Do NOT switch yet.
-#29,900 → #30,000  THE WINDOW (~16–17 h): stop, install, restart. Node AND miner.
-AT #30,000         V16 consensus activates by itself. No command, no restart.
-#30,186            first DTD Jackpot V2 draw.
+<div class="mg-wrap">
+
+  <!-- ═══ 1 · STATE ═══════════════════════════════════════════════════ -->
+  <div class="mg-state">
+    <div style="font-size:11px;letter-spacing:2px;color:var(--text3,#7b8794);margin-bottom:8px">WHERE THE CHAIN IS RIGHT NOW</div>
+    <div id="mgBadge" class="mg-badge" style="border-color:#7b8794;color:#9fb6c4">reading the chain&hellip;</div>
+    <div id="mgLine" style="font-size:13.5px;line-height:1.7;margin-top:10px;color:var(--text2,#cbd5e1)">
+      V16 activates at block <b>#30,000</b>. The coordinated upgrade window is <b>after #29,900 and before #30,000</b>.
     </div>
-    <p>The window is a <strong>coordination</strong> convention, not a consensus rule: it exists so the whole network crosses the activation running the same build. v16.2.3 is consensus-identical to v16.1.0 — a node running either one follows the same chain. What is <em>not</em> optional is being off V15: a validating node still on old consensus software after #30,000 may diverge.</p>
-    <div class="notice">
-      <strong>Already on v16.2.0 or v16.2.1?</strong> All v16.2.x releases ship the <strong>same</strong> <code>sost-node</code> and <code>sost-miner</code>, byte for byte, with the same published hashes. Only <code>sost-cli</code> changed. Replace the CLI and you are done — nothing needs restarting.
+    <div style="font-size:12px;color:var(--text3,#7b8794);margin-top:9px;line-height:1.6">
+      Three different things, often confused:
+      <b style="color:#cbd5e1">installing the software</b> (do it before the window),
+      <b style="color:#cbd5e1">the consensus activation</b> (happens by itself at #30,000, nobody triggers it), and
+      <b style="color:#cbd5e1">registering NODE_BIND</b> (optional, only for the Jackpot, and only after #30,000).
     </div>
   </div>
-</section>
 
-<section>
-  <div class="container">
-    <h2>Step 1 — Before the window: get it and check it</h2>
-    <p>Official binaries, no compiler needed:</p>
-    <div class="code-block">mkdir -p ~/sost-v1622 &amp;&amp; cd ~/sost-v1622
-for f in sost-node sost-miner sost-cli SHA256SUMS; do
-  curl -fsSL -O "https://github.com/Neob1844/sost-core/releases/download/v16.2.3/$f"
-done
-sha256sum -c SHA256SUMS
-chmod +x sost-node sost-miner sost-cli</div>
-    <p>It must print <code style="color:var(--green-primary)">sost-node: OK</code>, <code style="color:var(--green-primary)">sost-miner: OK</code>, <code style="color:var(--green-primary)">sost-cli: OK</code>. If any line says FAILED, <strong>stop and do not run the binary</strong>.</p>
-    <div class="code-block">b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node
-2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner
-489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  sost-cli</div>
-    <p>Prefer to build it yourself? The build directory <strong>must be named <code>build</code></strong>, or the hashes will not match — the source path is normalised out of the binary, the build directory name is not:</p>
-    <div class="code-block">git fetch --all --tags --prune
-git worktree add ../sost-v1622 v16.2.3 &amp;&amp; cd ../sost-v1622
-cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"</div>
-    <p>A different compiler or libc can legitimately produce a different hash. That alone is not evidence of tampering — but an <em>official downloaded</em> binary must match exactly.</p>
-
-    <h3>Back up, before you touch anything</h3>
-    <div class="code-block">TS=$(date -u +%Y%m%d-%H%M%S)
-cp -a ~/sost-keys/your-wallet.json  ~/backup/your-wallet.$TS.json   # your wallet
-cp -a build/sost-node   build/sost-node.prev.$TS                    # the binaries you run now
-cp -a build/sost-miner  build/sost-miner.prev.$TS
-cp -a build/sost-cli    build/sost-cli.prev.$TS
-sudo cp -a /etc/systemd/system/sost-node.service /root/sost-node.service.$TS   # if you use systemd</div>
-    <p>Copy the wallet backup somewhere off this machine as well. The key inside it receives every block you mine.</p>
+  <div class="mg-toc">
+    <a href="#s2"><b>1 &middot; Download &amp; verify</b>Official binaries and SHA-256</a>
+    <a href="#s3"><b>2 &middot; Do you need a node?</b>Three setups, one honest answer</a>
+    <a href="#s4"><b>3 &middot; Your RPC password</b>There is no universal one</a>
+    <a href="#s5"><b>4 &middot; Start node &amp; miner</b>Verified commands</a>
+    <a href="#s6"><b>5 &middot; Encryption</b>Three separate things</a>
+    <a href="#s7"><b>6 &middot; DTD vs Jackpot V2</b>What you get without doing anything</a>
+    <a href="#s8"><b>7 &middot; NODE_BIND</b>Optional, and only after #30,000</a>
+    <a href="#s9"><b>8 &middot; Backups &amp; mistakes</b>What to keep, what leaks</a>
+    <a href="#s10"><b>9 &middot; Troubleshooting</b>The messages you will actually see</a>
+    <a href="#s11"><b>10 &middot; Network status</b>What is not fixed yet</a>
   </div>
-</section>
 
-<section>
-  <div class="container">
-    <h2>Step 2 — Inside the window: stop, install, restart</h2>
-    <div class="notice red">
-      <strong>Stop the right process, by name of service or by PID.</strong> Never use a blanket <code>pkill -f sost</code>: on a machine that also runs a node, a CLI or another miner, it kills things you did not mean to kill.
+  <div class="mg-note mg-ok">
+    <b>Already running v16.2.x? You probably need to do nothing today.</b>
+    v16.2.0, v16.2.1, v16.2.2 and v16.2.3 ship the <b>byte-identical</b> <code>sost-node</code> and <code>sost-miner</code>.
+    Only <code>sost-cli</code> changed. If your node and miner are already on any v16.2.x, replacing <code>sost-cli</code>
+    is enough and <b>there is nothing to restart</b>. Do not stop a healthy miner to "upgrade" to the same binary.
+  </div>
+
+  <!-- ═══ 2 · DOWNLOAD ════════════════════════════════════════════════ -->
+  <details class="mg" id="s2"><summary>1 &middot; Download the official binaries and verify them</summary><div class="mg-in">
+    <p>Everything is published in one place:
+      <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.3" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v16.2.3</a>.
+      Download <code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code> and <code>SHA256SUMS</code>.</p>
+
+    <h4>Verify before you run anything</h4>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>sha256sum -c SHA256SUMS</pre></div>
+    <p>Or check them one by one against the published values:</p>
+    <table>
+      <tr><th>File</th><th>SHA-256</th></tr>
+      <tr><td><code>sost-node</code></td><td class="mg-hash">b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897</td></tr>
+      <tr><td><code>sost-miner</code></td><td class="mg-hash">2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2</td></tr>
+      <tr><td><code>sost-cli</code></td><td class="mg-hash">489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07</td></tr>
+    </table>
+    <div class="mg-note mg-warn">
+      <b>If the hash does not match, stop.</b> Downloading a file from the right URL does not make it the right file.
+      A mismatch means the download is corrupt or the file is not ours &mdash; delete it and try again. Never run it "just to see".
     </div>
+    <h4>What these binaries are</h4>
+    <p>Linux x86-64 ELF executables. They are not signed installers and there is no Windows or macOS build in this release.
+      On Windows, run them under WSL2. Building from source (MIT licence) is always an option and is how you can check
+      the binaries yourself.</p>
+    <p>Practical requirements: the miner allocates a <b>4 GB</b> dataset per block, so plan for ~6 GB of free RAM for the
+      miner alone. A full node keeps the chain in memory; today that is under 1 GB, and it grows.</p>
+  </div></details>
 
-    <h3>A · systemd service (typical for a node on a server)</h3>
-    <div class="code-block">sudo systemctl stop sost-node
-sudo install -m 0755 ~/sost-v1622/sost-node /opt/sost/build/sost-node
-sudo install -m 0755 ~/sost-v1622/sost-cli  /opt/sost/build/sost-cli
-sudo systemctl start sost-node
-sleep 20 &amp;&amp; systemctl status sost-node --no-pager | head -8</div>
-    <p>Loading the chain takes a few minutes on a large chain file. That is normal; the miner will retry meanwhile.</p>
+  <!-- ═══ 3 · WHO NEEDS A NODE ════════════════════════════════════════ -->
+  <details class="mg" id="s3"><summary>2 &middot; Do you need to run a node?</summary><div class="mg-in">
+    <p>A miner does not talk to "the network". It talks to <b>one node</b>, over RPC, and that node is what accepts your
+      block and relays it. So the real question is <i>whose node</i>.</p>
+    <h4>A &mdash; Node and miner on the same machine</h4>
+    <p>The simplest setup, and the one we recommend if you are starting. The miner connects to <code>127.0.0.1:18232</code>,
+      which never leaves your machine. You control the password because you set it.</p>
+    <h4>B &mdash; Your node on a VPS, your miner at home</h4>
+    <p>Also fine, and it is what we run. The miner still connects to <code>127.0.0.1:18232</code> &mdash; the difference is that
+      an <b>SSH tunnel</b> maps that local port to the node on the server. The RPC port stays closed to the internet.</p>
+    <h4>C &mdash; Someone else's node</h4>
+    <p>Only if that operator has <b>explicitly authorised you to mine against it</b> and has given you credentials. Mining
+      through a node means asking it for work and asking it to accept your blocks; that is not something you do to a
+      stranger's server.</p>
+    <div class="mg-note mg-warn">
+      <b><code>https://sostcore.com/rpc/public</code> is not a mining server.</b> It is a read-only gateway: it answers
+      questions like the block height and it relays a signed transaction. It does <b>not</b> serve mining work and it does
+      <b>not</b> accept <code>submitblock</code>. Pointing a miner at it will not mine anything.
+    </div>
+    <h4>P2P and RPC are not the same port</h4>
+    <table>
+      <tr><th></th><th>P2P &mdash; 19333</th><th>RPC &mdash; 18232</th></tr>
+      <tr><td>Who talks to it</td><td>other nodes</td><td>you, and your miner</td></tr>
+      <tr><td>Should it face the internet?</td><td>yes, that is its job</td><td><b>no</b>, never</td></tr>
+      <tr><td>Password</td><td>none, it is a public protocol</td><td><b>yes, always</b></td></tr>
+    </table>
+  </div></details>
 
-    <h3>B · Manual terminal (node or miner started by hand)</h3>
-    <div class="code-block"># find YOUR process and confirm it is the one you think it is
-pgrep -a sost-miner            # shows the pid and the full command line
-PID=&lt;the pid you just saw&gt;
-kill "$PID"                    # by PID. Not by name, not -9 first.
-# wait for it to exit, then install and relaunch with the SAME command line
-install -m 0755 ~/sost-v1622/sost-miner build/sost-miner</div>
+  <!-- ═══ 4 · RPC PASSWORD ════════════════════════════════════════════ -->
+  <details class="mg" id="s4"><summary>3 &middot; Your RPC password &mdash; read this one</summary><div class="mg-in">
+    <div class="mg-note mg-info">
+      <b>There is no SOST RPC password.</b> There is no shared one, none is issued to you, and nobody can send you one.
+      <b>You create your own</b> when you start your own node. If you mine against someone else's node, only that operator
+      can give you theirs.
+    </div>
+    <h4>Create one and put it in a file</h4>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>umask 077
+mkdir -p ~/.sost
+openssl rand -hex 32 > ~/.sost/rpc.pass
+chmod 600 ~/.sost/rpc.pass</pre></div>
+    <p>That is 256 bits of randomness. It must be a <b>single line</b>, owned by the account that runs the node, mode
+      <code>600</code>. The binaries refuse to read a secret from a file that is group- or world-readable, and refuse a file
+      with more than one line &mdash; that is deliberate, not a bug.</p>
+    <h4>Never pass it on the command line</h4>
+    <div class="mg-note mg-warn">
+      <code>--rpc-pass &lt;password&gt;</code> puts your password in the process arguments, where <b>any local user can read it
+      with <code>ps</code></b> for as long as the process runs. It does not matter that you typed it invisibly.
+      Use <code>--rpc-pass-file</code> (or <code>--rpc-pass-fd</code>). The binaries' own help says the same.
+    </div>
+    <h4>Keep it on loopback</h4>
+    <p>The node binds RPC to <code>127.0.0.1</code> by default. Leave it there. <code>--rpc-public</code> exists for people who
+      know exactly why they need it; if you are reading this guide, you do not. To reach a remote node, use SSH (next section)
+      &mdash; it gives you an encrypted tunnel and it does not open a port to the world.</p>
+  </div></details>
 
-    <h3>C · Windows / WSL</h3>
-    <p>Same as B, inside your Ubuntu window. If the miner runs in its own terminal, press <strong>Ctrl+C</strong> in that terminal — that stops exactly that miner and nothing else. Then install the new binary and start it again with the same command you always use.</p>
+  <!-- ═══ 5 · START ═══════════════════════════════════════════════════ -->
+  <details class="mg" id="s5"><summary>4 &middot; Starting your node and your miner</summary><div class="mg-in">
+    <p>Every option below was checked against <code>--help</code> on the published v16.2.3 binaries. Paths, labels and users
+      are placeholders &mdash; replace them with yours.</p>
 
-    <h3>Relaunch — the command line does not change</h3>
-    <p>Use <strong>exactly</strong> the flags you used before. If your old command carried the RPC password in the open, this is the moment to move it into a file (see below); nothing else changes.</p>
-    <div class="code-block">./sost-miner \
-  --wallet ~/sost-keys/your-wallet.json \
-  --mining-key-label "your-label" \
+    <h4>Start a node</h4>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>./sost-node \
   --genesis genesis_block.json \
-  --rpc 127.0.0.1:18232 --rpc-user your-user --rpc-pass-file ~/.sost/rpc.pass \
-  --blocks 999999 --profile mainnet --realtime --threads 8</div>
-    <div class="notice">
-      <code>--wallet</code> + <code>--mining-key-label</code> select the key that <strong>signs</strong> your blocks. Do not replace them with <code>--address</code>: your V16 jackpot eligibility and your NODE_BIND both depend on that signed identity.
+  --chain chain.json \
+  --rpc-user myuser \
+  --rpc-pass-file ~/.sost/rpc.pass \
+  --profile mainnet \
+  --p2p-enc on</pre></div>
+
+    <h4>Start a miner</h4>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>./sost-miner \
+  --wallet ~/sost-keys/my-wallet.json \
+  --mining-key-label "my-mining-key" \
+  --genesis genesis_block.json \
+  --rpc 127.0.0.1:18232 \
+  --rpc-user myuser \
+  --rpc-pass-file ~/.sost/rpc.pass \
+  --blocks 999999 --max-nonce 500000 \
+  --profile mainnet --realtime --threads 8</pre></div>
+    <div class="mg-note mg-warn">
+      <b><code>--realtime</code> is not optional.</b> Without it the miner stamps blocks far in the future and your node
+      rejects every one of them with "timestamp too far in future". You can mine for hours and produce nothing.
     </div>
-  </div>
-</section>
+    <p><b><code>--mining-key-label</code> must match a label that actually exists in your wallet</b>, exactly, spaces included.
+      Check what you have:</p>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>./sost-cli --wallet ~/sost-keys/my-wallet.json info</pre></div>
 
-<section>
-  <div class="container">
-    <h2>Step 3 — Verify, in this order</h2>
-    <div class="code-block"># 1. the binary that is RUNNING, not the file on disk
-PID=$(systemctl show sost-node -p MainPID --value)      # or the pid of your manual process
-sha256sum "$(readlink -f /proc/$PID/exe)"               # must equal the published hash
+    <h4>Miner at home, node on a VPS</h4>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>ssh -N -L 18232:127.0.0.1:18232 \
+  -o ServerAliveInterval=15 -o ExitOnForwardFailure=yes \
+  -i ~/.ssh/your_key user@your-server</pre></div>
+    <p>Leave that running, and point the miner at <code>127.0.0.1:18232</code> exactly as above. The RPC port on the server
+      stays closed; the traffic travels inside SSH.</p>
 
-# 2. the chain is advancing and matches the network
-./sost-cli --rpc 127.0.0.1:18232 --rpc-user your-user --rpc-pass-file ~/.sost/rpc.pass \
-  --wallet ~/sost-keys/your-wallet.json getbalance
+    <h4>Is it actually mining?</h4>
+    <p>Startup takes a minute or two &mdash; it loads the chain and builds a 4 GB dataset. You are mining when you see
+      <code>[DATASET] regenerated</code> followed by <code>[MINING] Starting N threads</code> and a line with
+      <code>att/s</code>. Compare the height and difficulty it prints against
+      <a href="/sost-explorer.html">the Explorer</a>: they should agree.</p>
 
-# 3. RPC and P2P are listening
-ss -ltn | grep -E '18232|19333'
+    <h4>Found is not the same as accepted</h4>
+    <table>
+      <tr><th>What you see</th><th>What it means</th></tr>
+      <tr><td><code>[BLOCK 12345] &hellip;</code></td><td>your machine solved it. Nothing is on the chain yet.</td></tr>
+      <tr><td><code>-&gt; submitted to node OK</code></td><td>your node <b>accepted and stored</b> it, and is relaying it.</td></tr>
+      <tr><td>It appears in the Explorer</td><td>the network has it. This is the one that counts.</td></tr>
+    </table>
+    <div class="mg-note mg-warn">
+      <b>Do not run two miners with the same wallet and label.</b> They race for the same height, both submit, and one of
+      the two is thrown away as a duplicate. You do not get more blocks &mdash; you burn electricity to lose half your work.
+      Check with <code>pgrep -ax sost-miner</code>.
+    </div>
+  </div></details>
 
-# 4. your miner is building templates and getting blocks accepted
-#    look for:  [MINING] h=NNNNN ...   and   -> submitted to node OK</div>
-    <p>Then check that a block you mine is credited to <strong>your usual address</strong> — the one your wallet label maps to. It does not change with this upgrade.</p>
-  </div>
-</section>
+  <!-- ═══ 6 · ENCRYPTION ══════════════════════════════════════════════ -->
+  <details class="mg" id="s6"><summary>5 &middot; "Encryption" means three different things</summary><div class="mg-in">
+    <p>People mix these up constantly. They protect different things and none of them replaces another.</p>
+    <table>
+      <tr><th></th><th>What it protects</th><th>How</th></tr>
+      <tr><td><b>RPC transport</b></td><td>the channel between your miner and your node</td><td>loopback, or SSH tunnel</td></tr>
+      <tr><td><b>P2P transport</b></td><td>the channel between your node and other nodes</td><td><code>--p2p-enc on</code></td></tr>
+      <tr><td><b>Wallet v2</b></td><td>your private keys, on disk</td><td>passphrase, AES-256-GCM</td></tr>
+    </table>
+    <h4>P2P: what <code>on</code> really does</h4>
+    <p><code>--p2p-enc</code> takes <code>off</code> (the default), <code>on</code> or <code>required</code>. With <code>on</code>,
+      your node offers an X25519 + ChaCha20-Poly1305 handshake and <b>falls back to plaintext if the other node does not
+      support it</b>. That fallback is what keeps the network connected while operators upgrade &mdash; and it also means
+      "on" does not guarantee an encrypted link. If you need the guarantee, <code>required</code> refuses plaintext peers,
+      at the cost of connecting to fewer of them.</p>
+    <h4>Wallet v2 is optional, and v1 still works</h4>
+    <p>A v1 wallet holds your private keys <b>unencrypted</b>: anything that can read the file can spend your coins. It keeps
+      working, and the miner will warn you on every start. Converting changes nothing about your mining identity or your
+      payout address &mdash; same keys, different container.</p>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>./sost-cli --wallet ~/sost-keys/my-wallet.json wallet-export</pre></div>
+    <p>For unattended restarts the miner reads the passphrase from a file or a descriptor
+      (<code>--wallet-passphrase-file</code>, <code>--wallet-passphrase-fd</code>) instead of prompting.
+      <code>-fd</code> takes the descriptor <b>number</b>, never the passphrase itself.</p>
+    <div class="mg-note mg-warn">
+      <b>Do not delete your v1 file until the v2 one has mined a block.</b> Keep it offline until then. The passphrase
+      cannot be recovered: lose it and the keys in that file are gone, with no support desk to call.
+    </div>
+  </div></details>
 
-<section>
-  <div class="container">
-    <h2>Your RPC password</h2>
-    <div class="notice red"><strong>There is no SOST-wide RPC password.</strong> Each operator sets one for their <strong>own</strong> node. Nobody can give you "the SOST RPC password", and nobody should ever ask you for yours — or for your wallet keys.</div>
-    <p>It is not your wallet passphrase either. The node and the miner (and the CLI) must use the <strong>same</strong> credentials because the miner authenticates to <em>your</em> node.</p>
-    <div class="code-block">mkdir -p ~/.sost &amp;&amp; umask 077
-openssl rand -base64 30 &gt; ~/.sost/rpc.pass
-chmod 600 ~/.sost/rpc.pass</div>
-    <p>Then point everything at the file instead of typing the secret:</p>
-    <div class="code-block">sost-node  --rpc-user your-user --rpc-pass-file ~/.sost/rpc.pass   ...
-sost-miner --rpc-user your-user --rpc-pass-file ~/.sost/rpc.pass   ...
-sost-cli   --rpc-user your-user --rpc-pass-file ~/.sost/rpc.pass   ...</div>
-    <p>The file must be <strong>mode 600, owned by you, one line and nothing else</strong> — the binaries refuse anything else rather than reading a secret others can see. If your node runs under systemd, the unit names the <em>path</em>, so the password no longer appears in <code>systemctl show</code> or in <code>ps</code>:</p>
-    <div class="code-block">ExecStart=/opt/sost/build/sost-node --genesis genesis_block.json --chain chain.json \
-  --rpc-user ${RPC_USER} --rpc-pass-file /etc/sost/rpc.pass --profile mainnet --p2p-enc on</div>
-
-    <h3>HTTP 401 — what it means and what to check</h3>
-    <p>From v16.2.x the miner says it plainly: <code style="color:var(--red-primary)">*** RPC AUTHENTICATION REJECTED (HTTP 401) ***</code>. That is <strong>not</strong> a rejected block — the node never validated it. Check, in order:</p>
+  <!-- ═══ 7 · DTD vs JACKPOT ══════════════════════════════════════════ -->
+  <details class="mg" id="s7"><summary>6 &middot; Normal DTD and Jackpot V2 are not the same thing</summary><div class="mg-in">
+    <table>
+      <tr><th></th><th>Normal DTD</th><th>DTD Jackpot V2</th></tr>
+      <tr><td>Since</td><td>block #25,000</td><td>first draw at <b>#30,186</b>, then every 288 blocks</td></tr>
+      <tr><td>How often</td><td><b>every block</b></td><td>every 288 blocks (~48 h)</td></tr>
+      <tr><td>NODE_BIND</td><td><b>not needed</b></td><td><b>required</b></td></tr>
+      <tr><td>What you must do</td><td>nothing &mdash; just mine</td><td>bind a node key and keep it online</td></tr>
+    </table>
+    <p>Half of every block's emission already goes to the DTD distribution, and you take part by mining. Nothing to register,
+      nothing to sign up for.</p>
+    <h4>What Jackpot V2 asks for</h4>
     <ul>
-      <li>the same <code>--rpc-user</code> on node and miner;</li>
-      <li>the same password file contents (a trailing edit, a second line, or a copied space are the usual culprits — the file must hold one line);</li>
-      <li>the node actually restarted after you changed its password;</li>
-      <li>you are talking to <em>your</em> node (<code>--rpc 127.0.0.1:18232</code>), not someone else's.</li>
+      <li>Your <b>SbPoW mining identity</b> &mdash; the key behind <code>--mining-key-label</code>.</li>
+      <li>At least <b>3 blocks</b> mined in the last <b>2,016</b> (~14 days).</li>
+      <li>An active <b>NODE_BIND</b> tying a node key to that mining key.</li>
+      <li><b>Heartbeats</b>, on a ramp: <b>0 are required for the first draw at #30,186</b>, because no epoch has completed
+        yet. It rises 1-of-1, then 2-of-2, then 3-of-3, and settles at the permanent rule &mdash; <b>3 of the last 4 epochs</b>
+        of 288 blocks &mdash; from <b>#31,338</b>.</li>
     </ul>
+    <h4>Check your own eligibility &mdash; no keys involved</h4>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>curl -s -X POST https://sostcore.com/rpc/public -d '{"jsonrpc":"1.0","id":"a",
+ "method":"checkhistoricaljackpoteligibility","params":["sost1YOUR_MINING_ADDRESS"]}'</pre></div>
+    <p>It takes a public address and returns <code>node_bound</code>, <code>pow_blocks</code>, <code>heartbeats_valid</code>,
+      <code>eligible</code> and the reasons you are not. <b>It never asks for a private key.</b> Anyone who asks you for one
+      is stealing from you.</p>
+  </div></details>
 
-    <h3>Rotating it without breaking mining</h3>
-    <p>The order matters: if you change one side only, the miner submits blocks the node refuses.</p>
-    <div class="code-block">umask 077
-openssl rand -base64 30 &gt; ~/.sost/rpc.pass.new     # 1. write the new secret
-cp -a ~/.sost/rpc.pass ~/.sost/rpc.pass.old         # 2. keep the old one
-mv ~/.sost/rpc.pass.new ~/.sost/rpc.pass            # 3. one atomic swap
-sudo systemctl restart sost-node                    # 4. node first
-# 5. then restart the miner (it reads the same file)
-# 6. verify: no "RPC AUTHENTICATION REJECTED" in the miner output</div>
-  </div>
-</section>
-
-<section>
-  <div class="container">
-    <h2>Your wallet: v1 keeps working</h2>
-    <p>A plaintext (v1) wallet works exactly as before — no conversion, no deadline. The miner loads it, warns once that its private keys are readable by anything that can read the file, and mines.</p>
-    <p>Encrypting it (v2: scrypt + AES-256-GCM) is <strong>optional</strong>. If you do it, the procedure never overwrites your only copy:</p>
-    <div class="code-block"># 1. export an ENCRYPTED COPY (the original stays where it is)
-sost-cli --wallet ~/sost-keys/your-wallet.json wallet-export \
-  --encrypted --output ~/sost-keys/your-wallet.v2.json
-# the passphrase is typed twice, with the terminal NOT echoing it
-
-# 2. RECOVERY DRILL — restore the copy into a different file and compare
-sost-cli --wallet /tmp/restore-test.json newwallet
-sost-cli --wallet /tmp/restore-test.json wallet-import --encrypted \
-  --input ~/sost-keys/your-wallet.v2.json
-diff &lt;(sost-cli --wallet ~/sost-keys/your-wallet.json listaddresses) \
-     &lt;(sost-cli --wallet /tmp/restore-test.json listaddresses) &amp;&amp; echo "SAME ADDRESSES"
-
-# 3. only now, mine one block with the encrypted wallet
-sost-miner --wallet ~/sost-keys/your-wallet.v2.json --mining-key-label "your-label" \
-  --wallet-passphrase-file ~/.sost/wallet.pass  ...rest of your usual flags...</div>
-    <div class="notice red">
-      <strong>Keep the v1 file until the encrypted one has mined a block.</strong> The passphrase cannot be recovered: lose both it and your backup and the SOST controlled by those keys is gone for good. Encryption protects the file at rest — it does not protect a machine somebody else already controls while the miner is running.
+  <!-- ═══ 8 · NODE_BIND ═══════════════════════════════════════════════ -->
+  <details class="mg" id="s8"><summary>7 &middot; NODE_BIND &mdash; optional, and not before #30,000</summary><div class="mg-in">
+    <div class="mg-note mg-info">
+      <b>You do not need this to mine.</b> Mining and normal DTD work without it. NODE_BIND exists for one reason: to enter
+      the Jackpot V2 draw.
     </div>
-    <p>Encrypting does <strong>not</strong> change your address or your SbPoW identity: it is the same keys in a different container. And you never need to move SOST to another address to encrypt a wallet.</p>
-  </div>
-</section>
+    <h4>Preparing is not registering</h4>
+    <p>You can <b>create and protect the key today</b>. You <b>cannot register it</b> until V16 is live at #30,000 &mdash; the
+      transaction type does not exist before that height, and broadcasting it early achieves nothing.</p>
+    <h4>Now: create the node key</h4>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>umask 077
+openssl rand -hex 32 > ~/.sost/node.key
+chmod 600 ~/.sost/node.key</pre></div>
+    <p>This is a <b>different key</b> from your mining key and from your wallet. It identifies your node. It cannot move
+      coins &mdash; but whoever holds it can impersonate your node's heartbeats, so treat it as a secret and back it up
+      (see the next section).</p>
+    <h4>After #30,000: build the transaction</h4>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>./sost-cli --wallet ~/sost-keys/my-wallet.json \
+  --mining-key-label "my-mining-key" \
+  createnodebind 1 --node-key-file ~/.sost/node.key</pre></div>
+    <p>It prints which mining key it is binding and then the raw transaction hex. <b>The label must be the same one your
+      miner signs blocks with</b> &mdash; if it does not exist, the command refuses and lists your wallet's labels instead of
+      binding the wrong key. <code>1</code> is the bind sequence; it only increases if you ever replace the node key.</p>
+    <div class="mg-note mg-warn">
+      There is an older form, <code>createnodebind 1 &lt;hex&gt;</code>, that takes the private key on the command line.
+      It still works and the tool warns you: it leaves your node key visible in <code>ps</code>. Use <code>--node-key-file</code>.
+    </div>
+    <h4>Then: broadcast it and check it landed</h4>
+    <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>curl -s -X POST https://sostcore.com/rpc/public \
+  -d '{"jsonrpc":"1.0","id":"a","method":"sendrawtransaction","params":["PASTE_HEX"]}'</pre></div>
+    <p>If it does not return a txid, <b>do not resend blindly</b> &mdash; check <code>getrawmempool</code> first. Then restart
+      your node with <code>--node-key-file ~/.sost/node.key</code> so it emits its own heartbeats.</p>
+    <p><b>The proof that it worked</b> is not "I sent the transaction". It is
+      <code>checkhistoricaljackpoteligibility</code> answering <code>"node_bound": true</code> and
+      <code>"eligible": true</code>. Check it before #30,186.</p>
+    <div class="mg-note mg-warn">
+      <b>Being eligible is not winning.</b> The draw weights miners by their proof-of-work over the last 2,016 blocks.
+      Registering NODE_BIND buys you a ticket, nothing more.
+    </div>
+  </div></details>
 
-<section>
-  <div class="container">
-    <h2>After #30,000 — NODE_BIND, heartbeats and the Jackpot</h2>
-    <p>Only if you want to enter the <strong>DTD Jackpot V2</strong> draw. Normal DTD needs <strong>none</strong> of this: no NODE_BIND, no heartbeats, no node key.</p>
-    <div class="notice"><strong>A node key is not your wallet key and not your RPC password.</strong> It is a separate 32-byte key that identifies your node, authorised on-chain by your mining key.</div>
-    <div class="code-block"># 1. create the node key (after #30,000)
-mkdir -p ~/.sost &amp;&amp; umask 077
-openssl rand -hex 32 &gt; ~/.sost/node.key
-chmod 600 ~/.sost/node.key        # SAVE A COPY somewhere safe
+  <!-- ═══ 9 · BACKUPS ═════════════════════════════════════════════════ -->
+  <details class="mg" id="s9"><summary>8 &middot; What to back up, and the mistakes people actually make</summary><div class="mg-in">
+    <table>
+      <tr><th>File</th><th>Secret?</th><th>If you lose it</th></tr>
+      <tr><td>wallet <code>.json</code></td><td><b>YES &mdash; the worst one</b></td><td>your coins are gone. Nobody can help.</td></tr>
+      <tr><td><code>node.key</code></td><td><b>yes</b></td><td>make a new one, register with bind_seq 2</td></tr>
+      <tr><td><code>rpc.pass</code></td><td><b>yes</b></td><td>set a new one, restart node and miner</td></tr>
+      <tr><td><code>chain.json</code></td><td>no</td><td>nothing &mdash; it re-syncs</td></tr>
+      <tr><td>your mining address</td><td>no, it is public</td><td>&mdash;</td></tr>
+    </table>
+    <h4>How to keep a backup that is actually a backup</h4>
+    <ul>
+      <li>Encrypt it, and store it <b>off the machine that holds the original</b>. A copy on the same server does not survive losing the server.</li>
+      <li><b>Store the passphrase separately.</b> On the same USB stick as the encrypted file, the encryption is decoration.</li>
+      <li><b>Test the restore.</b> An untested backup is a belief, not a backup. Recover it into a temporary folder and compare the checksum.</li>
+      <li><code>chmod 600</code> and owned by the right account, everywhere.</li>
+    </ul>
+    <h4>The five we keep seeing</h4>
+    <ol>
+      <li><b>Password in <code>ps</code></b> &mdash; started with <code>--rpc-pass</code>. Every local user can read it.</li>
+      <li><b>Two miners running</b> &mdash; usually one forgotten in another terminal. Half your work is discarded.</li>
+      <li><b>RPC exposed</b> &mdash; <code>--rpc-public</code> without a firewall. That is your wallet on the internet.</li>
+      <li><b>Wrong <code>--mining-key-label</code></b> &mdash; a label that does not exist, or with different spacing.</li>
+      <li><b>Unverified binaries</b> &mdash; downloaded and run without checking the SHA-256.</li>
+    </ol>
+  </div></details>
 
-# 2. build the NODE_BIND with the SAME label your miner signs blocks with
-sost-cli --wallet ~/sost-keys/your-wallet.json \
-  --mining-key-label "your-label" \
-  createnodebind 1 --node-key-file ~/.sost/node.key
-# -> prints the raw transaction hex; broadcast it:
-sost-cli --rpc 127.0.0.1:18232 --rpc-user your-user --rpc-pass-file ~/.sost/rpc.pass \
-  sendrawtransaction &lt;the hex&gt;
+  <!-- ═══ 10 · TROUBLESHOOTING ════════════════════════════════════════ -->
+  <details class="mg" id="s10"><summary>9 &middot; Troubleshooting &mdash; the messages you will actually see</summary><div class="mg-in">
+    <h4>"Why is nothing asking me for an RPC password?"</h4>
+    <p>Because there is nothing to ask. You create it yourself on your own node. If you are mining against someone else's
+      node, that operator gives it to you. Nobody else can.</p>
+    <h4>"UNENCRYPTED (v1) wallet" on every miner start</h4>
+    <p>A warning, not an error. Your wallet file holds the keys in the clear. Mining works. Section 5 covers converting.</p>
+    <h4>"Local height: 0" when it starts</h4>
+    <p>Normal. It is still loading. Wait for <code>[DATASET] regenerated</code> and then <code>[MINING] Starting N threads</code>
+      &mdash; typically one to two minutes.</p>
+    <h4>"Is it really mining?"</h4>
+    <p>Look for a line with <code>att/s</code> that keeps updating, and CPU usage near <code>threads &times; 100%</code>.
+      A static log is a stuck miner.</p>
+    <h4>"submitted to node OK" &mdash; did I earn it?</h4>
+    <p>Your node accepted it. It is on your chain and being relayed. It is really yours when the Explorer shows it.</p>
+    <h4>"RPC AUTHENTICATION REJECTED (HTTP 401)"</h4>
+    <p>User or password does not match what the node was started with. Most often: the password file changed but the node
+      or the miner was never restarted &mdash; both read it once, at startup.</p>
+    <h4>"My node has no peers"</h4>
+    <p>Check that P2P port 19333 is open <i>inbound</i> on your server; that is a different port from RPC. Read the
+      status section below before assuming your node is broken.</p>
+    <h4>"Am I ready for Jackpot V2?"</h4>
+    <p>Run <code>checkhistoricaljackpoteligibility</code> (section 6). It answers with reasons.</p>
+    <h4>"Do I restart at #30,000?"</h4>
+    <p><b>No.</b> Activation is automatic. Install the binaries in the window, and then leave your node alone. The only later
+      restart is optional: adding <code>--node-key-file</code> for the Jackpot.</p>
+    <h4>"What if I stay on the old version?"</h4>
+    <p>Before #30,000, nothing happens. From #30,000 a pre-V16 node applies the old rules and will reject blocks the network
+      accepts &mdash; it follows a chain nobody else is on. Your coins are safe; your node is not useful.</p>
+  </div></details>
 
-# 3. let the node heartbeat by itself: add to its command line / unit
-#    --node-key-file /etc/sost/node.key     then restart the node once
+  <!-- ═══ 11 · STATUS ═════════════════════════════════════════════════ -->
+  <details class="mg" id="s11"><summary>10 &middot; Honest network status &mdash; what is <i>not</i> fixed yet</summary><div class="mg-in">
+    <div class="mg-note mg-warn">
+      <b>Two known problems are under investigation and are NOT fixed in the published binaries.</b>
+      They do not affect your coins, your keys or your ability to mine. They affect a node's ability to
+      <b>serve the chain to a brand-new node</b>.
+    </div>
+    <ul>
+      <li><b>Block serving.</b> Under load, a node can leave a block frame half-written and keep sending, which
+        desynchronises the peer and makes it disconnect. A fix is written and tested in a branch. <b>It is not deployed.</b></li>
+      <li><b>Historical revalidation.</b> <b>19 blocks</b> between heights 4,160 and 5,410, all mined in April 2026, cannot be
+        re-validated by the current rules &mdash; consensus parameters were changed while those blocks were being produced.
+        Everything above height 5,410 replays exactly. A bounded fix is designed; <b>it is not implemented or deployed.</b></li>
+    </ul>
+    <p><b>What this means for you:</b> if you already have a synced chain, nothing. If you are starting a node from scratch
+      today, a full sync from genesis will stop at those blocks. Start from a recent <code>chain.json</code> instead, or
+      wait for the fix to ship.</p>
+    <p>The recommended binaries are still the published <b>v16.2.3</b> ones, with the hashes above. We will not describe
+      anything as deployed before it is.</p>
+  </div></details>
 
-# 4. check your eligibility before #30,186
-curl -s -u "your-user:$(cat ~/.sost/rpc.pass)" -H 'content-type: application/json' \
-  --data '{"method":"checkhistoricaljackpoteligibility","params":["sost1your...address"],"id":1}' \
-  http://127.0.0.1:18232/</div>
-    <p><code>--mining-key-label</code> matters: the bind must authorise the key that actually signs your blocks. If you omit it the CLI uses the label <code>default</code>, and if your mining key carries a different label the bind would be useless — the tool now lists the labels in your wallet when it cannot find the one you asked for.</p>
-    <p>The <strong>first</strong> V2 jackpot, at #30,186, requires a valid bind and at least <strong>3 SbPoW blocks in the previous 2,016</strong>, but <strong>zero heartbeats</strong> — no epoch has completed yet. The requirement then ramps 1/1 → 2/2 → 3/3 and settles at the permanent <strong>3 of the last 4 epochs</strong> from #31,338. Running more nodes never adds weight: node participation is a gate, your PoW is the weight.</p>
-  </div>
-</section>
+  <p style="margin-top:34px;font-size:13.5px;color:var(--text3,#7b8794);line-height:1.75">
+    Questions: <a href="mailto:sost@sostcore.com">sost@sostcore.com</a> &middot;
+    <a href="https://t.me/SOSTProtocolOfficial" target="_blank" rel="noopener">Telegram</a> &middot;
+    <a href="https://bitcointalk.org/index.php?topic=5579432" target="_blank" rel="noopener">BitcoinTalk</a> &middot;
+    <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener">Source (MIT)</a><br>
+    Nobody from SOST will ever ask you for a private key, a wallet file or a passphrase.
+  </p>
+</div>
 
-<section>
-  <div class="container">
-    <h2>Rolling back</h2>
-    <p>Nothing in v16.2.x changes the on-disk chain format, so a rollback is the old binary and nothing else — no reindex, no migration, in either direction. Every previous release stays downloadable with its own hash list.</p>
-    <div class="code-block">sudo systemctl stop sost-node
-sudo install -m 0755 /opt/sost/build/sost-node.prev.&lt;timestamp&gt; /opt/sost/build/sost-node
-sudo systemctl start sost-node</div>
-    <div class="notice"><strong>One caveat.</strong> A wallet you <em>encrypted</em> with v16.2.x cannot be read by a pre-v16.2 binary. If you encrypted and then roll back, point the old binary at the v1 file you kept.</div>
-    <p style="margin-top:14px">
-      Release and hashes: <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.3" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v16.2.3</a> &middot;
-      new to SOST? <a href="sost-quickstart.html">Start here</a> &middot;
-      mining details: <a href="sost-mine.html">Mining guide</a> &middot;
-      <a href="sost-explorer.html">Explorer</a>
-    </p>
-  </div>
-</section>
+<script>
+/* Botón de copiar: coge el <pre> hermano. Sin dependencias. */
+function mgCopy(btn){
+  var pre = btn.parentNode.querySelector('pre'); if(!pre) return;
+  var txt = pre.innerText;
+  var done = function(){ var o=btn.textContent; btn.textContent='COPIED'; setTimeout(function(){btn.textContent=o;},1400); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, function(){ mgFallback(txt,done); });
+  } else { mgFallback(txt,done); }
+}
+function mgFallback(txt,done){
+  try{ var ta=document.createElement('textarea'); ta.value=txt;
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+  }catch(e){}
+}
+/* Estado real de la cadena. Si el nodo no responde, el texto estático se queda
+   como está: nunca se anuncia como activo algo que todavía no lo está. */
+(function(){
+  var V16=30000, WIN=29900, FIRST=30186;
+  function fc(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,","); }
+  fetch('https://sostcore.com/rpc/public',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({jsonrpc:'1.0',id:'g',method:'getblockcount',params:[]})})
+   .then(function(r){ return r.json(); })
+   .then(function(j){
+     var h=j && j.result; if(typeof h!=='number') return;
+     var b=document.getElementById('mgBadge'), l=document.getElementById('mgLine');
+     if(!b||!l) return;
+     if(h>=V16){
+       b.textContent='V16 ACTIVE · chain at #'+fc(h);
+       b.style.borderColor='#39ff14'; b.style.color='#39ff14';
+       l.innerHTML='V16 activated at block <b>#30,000</b>. The first DTD Jackpot V2 draw is <b>#'+fc(FIRST)+'</b>'+
+         (h>=FIRST?' and has already taken place.':' — '+fc(FIRST-h)+' blocks away.');
+     } else if(h>=WIN){
+       b.textContent='UPGRADE WINDOW OPEN · chain at #'+fc(h);
+       b.style.borderColor='#fb010d'; b.style.color='#ff6b6b';
+       l.innerHTML='<b>Install now.</b> The window closes at <b>#30,000</b> — '+fc(V16-h)+
+         ' blocks away. Update the node AND the miner.';
+     } else {
+       b.textContent='NOT YET ACTIVE · chain at #'+fc(h)+' · '+fc(V16-h)+' blocks to go';
+       b.style.borderColor='#fbbf24'; b.style.color='#fbbf24';
+       l.innerHTML='Preparation phase. Download and verify now; install during the window, '+
+         '<b>after #'+fc(WIN)+' and before #'+fc(V16)+'</b> — that window opens in '+fc(WIN-h)+' blocks.';
+     }
+   }).catch(function(){});
+})();
+/* Abrir la sección apuntada por el ancla (#s5) al llegar desde el banner. */
+(function(){
+  function openHash(){ var id=location.hash.replace('#',''); if(!id) return;
+    var el=document.getElementById(id); if(el && el.tagName==='DETAILS'){ el.open=true;
+      setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'start'}); },40); } }
+  window.addEventListener('hashchange',openHash); openHash();
+  document.querySelectorAll('.mg-toc a').forEach(function(a){
+    a.addEventListener('click',function(){ var el=document.getElementById(a.getAttribute('href').slice(1));
+      if(el) el.open=true; }); });
+})();
+</script>
 
 <footer>
   <div class="container">
@@ -514,7 +764,7 @@ function showOS(os) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v467" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v468" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
