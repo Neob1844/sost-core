@@ -155,6 +155,14 @@ footer a{color:var(--t3);text-decoration:none}
 
 
 
+<div style="max-width:1000px;margin:16px auto;padding:14px 18px;border:2px solid #4ade80;border-radius:10px;background:rgba(74,222,128,.08);font-size:14.5px;line-height:1.65">
+<b style="color:#4ade80">RULES IN FORCE TODAY.</b> Sections below that describe the 50/25/25 emission split, the Gold Vault funding stream or PoPC bonds as consensus requirements are <b>historical</b> &mdash; true for blocks below #25,000, and kept because validating those blocks still needs them.
+<ul style="margin:8px 0 0 18px">
+<li>From <b>#25,000 (V15)</b>: coinbase split <b>50% miner / 50% DTD</b>; gold and PoPC coinbase amounts are <b>0</b>.</li>
+<li>The <b>DTD is permissionless</b>: <code>DTD_POPC_GATE_CONSENSUS_ACTIVE = false</code> on mainnet &mdash; no PoPC bond is required to be eligible.</li>
+<li>From <b>#30,000 (V16)</b>: DTD-normal eligibility tightens (288-block recency, conditional cooldown and anti-dominance) and the <b>DTD Jackpot V2</b> becomes an independent node-gated, PoW-weighted draw. First V2 draw <b>#30,186</b>. One activation, automatic by height.</li>
+<li>Current release: <b>v16.2.3</b> &middot; <a href="sost-upgrade-v1622.html" style="color:#39ff14;font-weight:700">operator upgrade guide</a></li>
+</ul></div>
 <section class="hero">
   <div class="c">
     <div class="hero-label fade-in">PROTOCOL SPEC</div>
@@ -430,7 +438,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <tr><td>PoPC Pool</td><td><code>sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</code></td><td>25% of every block</td></tr>
 </table>
 <p>The remaining 50% goes to whichever miner solves the block (configured via <code>--address</code>). The miner address is NOT constitutional &mdash; it changes per miner. Only the Gold Vault and PoPC Pool addresses are hardcoded and immutable.</p>
-<p>Enforced by CB4 (output order) and CB6 (PKH validation). Any block deviating from the 50/25/25 split or sending gold/popc to wrong addresses is rejected. <em>Source: params.h:187-188</em></p>
+<p>Enforced by CB4 (output order) and CB6 (PKH validation). Any block deviating from the split in force at its height, or sending gold/popc to wrong addresses, is rejected. <b style="color:#f59e0b">The split changed at V15 (#25,000):</b> blocks below that height carry 50/25/25 (miner / Gold Vault / PoPC) and are validated against it forever; from #25,000 the consensus split is <b>50% miner / 50% DTD</b> and the gold and PoPC coinbase outputs are <b>zero</b> &mdash; see <code>src/sost-node.cpp</code> (the V15 emission-transition branch). <em>Source: params.h:187-188</em></p>
 <p><strong>Hard cap:</strong> Total supply &le; 466,920,160,910,299 stocks (~4,669,201 SOST). Enforced in subsidy calculation at consensus level.</p>
 <p><strong>Coinbase maturity:</strong> 1000 blocks (~7 days). Coinbase outputs cannot be spent before this.</p>
 </div></section>
@@ -532,7 +540,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v442" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v443" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->

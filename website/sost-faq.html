@@ -218,7 +218,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is SOST?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST is a CPU-friendly proof-of-work cryptocurrency built on ConvergenceX, a mining algorithm that requires 8 GB RAM per mining thread (4 GB dataset + 4 GB scratchpad) and 100,000 sequential rounds per attempt. Running a node requires only ~500 MB RAM. Every block automatically allocates <strong>25% to a Gold Funding Vault</strong> (for purchasing XAUT/PAXG) and <strong>25% to a PoPC Pool</strong> (for Proof of Personal Custody rewards). These splits are hardcoded at genesis and immutable.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST is a CPU-friendly proof-of-work cryptocurrency built on ConvergenceX, a mining algorithm that requires 8 GB RAM per mining thread (4 GB dataset + 4 GB scratchpad) and 100,000 sequential rounds per attempt. Running a node requires only ~500 MB RAM. Since <strong>V15 (block #25,000)</strong> every block splits <strong>50% to the miner and 50% to the DTD distribution</strong>. The Gold Funding Vault and the PoPC Pool receive <strong>no new emission</strong>. <span style="color:var(--text-dim)">Historical: until #24,999 the split was 50% miner / 25% Gold Funding Vault / 25% PoPC Pool. Those addresses and everything they already hold remain on chain and publicly auditable &mdash; nothing new flows into them.</span></div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -263,7 +263,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>What is the block reward and emission schedule?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">SOST emission follows a smooth epoch-based decay governed by the mathematical constant q = e<sup>-1/4</sup> &asymp; 0.7788007830714049:<br><br>&bull; Initial reward R&#8320; = <strong>7.85100863 SOST/block</strong> (785,100,863 stocks)<br>&bull; Each epoch is exactly 131,553 blocks (~2.502907875095892 years — the Feigenbaum alpha constant &alpha;)<br>&bull; Decay: reward(height) = floor(R&#8320; &times; q<sup>epoch</sup>) where epoch = height &divide; 131,553<br>&bull; No halvings, no cliffs — continuous ~9.03% annual decay<br>&bull; Asymptotic maximum supply: <strong>~4,669,201 SOST</strong> (Feigenbaum &delta; &times; 10&#8310;, strict limit by mathematical construction)<br>&bull; ~95% mined in ~30 years (~12 epochs)<br>&bull; Split: 50% miner &middot; 25% Gold Funding Vault &middot; 25% PoPC Pool<br>&bull; All arithmetic is deterministic integer-only (Q16.16 fixed-point). No floating-point operations — that would be a consensus failure.</div></div>
+      <div class="faq-a"><div class="faq-a-inner">SOST emission follows a smooth epoch-based decay governed by the mathematical constant q = e<sup>-1/4</sup> &asymp; 0.7788007830714049:<br><br>&bull; Initial reward R&#8320; = <strong>7.85100863 SOST/block</strong> (785,100,863 stocks)<br>&bull; Each epoch is exactly 131,553 blocks (~2.502907875095892 years — the Feigenbaum alpha constant &alpha;)<br>&bull; Decay: reward(height) = floor(R&#8320; &times; q<sup>epoch</sup>) where epoch = height &divide; 131,553<br>&bull; No halvings, no cliffs — continuous ~9.03% annual decay<br>&bull; Asymptotic maximum supply: <strong>~4,669,201 SOST</strong> (Feigenbaum &delta; &times; 10&#8310;, strict limit by mathematical construction)<br>&bull; ~95% mined in ~30 years (~12 epochs)<br>&bull; Split: <b>50% miner &middot; 50% DTD</b> from V15 (#25,000). Historical, until #24,999: 50% miner &middot; 25% Gold Funding Vault &middot; 25% PoPC Pool<br>&bull; All arithmetic is deterministic integer-only (Q16.16 fixed-point). No floating-point operations — that would be a consensus failure.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -293,7 +293,7 @@
 
     <div class="faq-item fade-in delay-1">
       <div class="faq-q"><h3>How does the gold reserve work?</h3><span class="toggle">+</span></div>
-      <div class="faq-a"><div class="faq-a-inner">25% of every block reward flows to the <strong>Gold Funding Vault</strong> by consensus. SOST periodically converts accumulated SOST to XAUT/PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased tokens are deposited into a <strong>Heritage Reserve</strong> on Ethereum mainnet — sealed by default, intended to remain perpetual.</div></div>
+      <div class="faq-a"><div class="faq-a-inner"><b style="color:#f59e0b">HISTORICAL &mdash; this stopped at block #25,000.</b> Until V15, 25% of every block reward flowed to the <strong>Gold Funding Vault</strong> by consensus; since then the gold and PoPC emission shares are <b>zero</b> and that half of the block goes to the DTD distribution instead. What follows describes what the vault was designed to do with what it already holds. SOST periodically converts accumulated SOST to XAUT/PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased tokens are deposited into a <strong>Heritage Reserve</strong> on Ethereum mainnet — sealed by default, intended to remain perpetual.</div></div>
     </div>
 
     <div class="faq-item fade-in delay-1">
@@ -493,7 +493,7 @@ document.querySelectorAll('.faq-q').forEach(function(q) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v442" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v443" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->

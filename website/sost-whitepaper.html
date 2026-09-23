@@ -737,6 +737,17 @@
 
 
 
+<div style="max-width:1000px;margin:16px auto;padding:14px 18px;border:2px solid #4ade80;border-radius:10px;background:rgba(74,222,128,.08);font-size:14.5px;line-height:1.65">
+<b style="color:#4ade80;letter-spacing:.5px">WHAT THE PROTOCOL DOES TODAY &mdash; read this before the sections below.</b><br>
+This whitepaper still describes the <b>original</b> gold/PoPC economics in several places. They were superseded on chain:
+<ul style="margin:8px 0 0 18px">
+<li><b>Block reward split: 50% miner / 50% DTD</b> since <b>V15, block #25,000</b>. The Gold Funding Vault and the PoPC Pool receive <b>no new emission</b> &mdash; their historical balances stay on chain and auditable, but nothing new flows in.</li>
+<li><b>The DTD is permissionless.</b> No PoPC bond, no whitelist, no registration: mining one valid block is what makes an address eligible. From <b>#30,000</b> (V16) eligibility additionally requires having mined within the last <b>288</b> blocks.</li>
+<li><b>#30,000</b> activates V16: DTD-normal eligibility changes and the <b>DTD Jackpot V2</b> becomes an independent, node-gated, PoW-weighted draw. First V2 draw <b>#30,186</b>. It is <b>one</b> activation, automatic, by block height.</li>
+<li><b>SOST is not backed by gold.</b> The metals reserve is a Foundation-held reserve with published policy; it is not a peg, not a redemption right and not a claim on the protocol. <a href="sost-gold-reserve.html" style="color:#22d3ee">Reserve status</a>.</li>
+</ul>
+Current operator documentation: <a href="sost-upgrade-v1622.html" style="color:#39ff14;font-weight:700">upgrade guide</a> &middot; <a href="sost-quickstart.html" style="color:#39ff14">quick start</a> &middot; <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a>.
+</div>
 <section class="hero">
   <div class="container">
     <div class="hero-label fade-in">WHITEPAPER</div>
@@ -1135,7 +1146,7 @@
       <p style="margin-top:16px;">However, two economic custody components are still temporarily centralized during Phase I (until governance activates — originally targeted for V6 / block 10,000, deferred to <b style="color:#fbbf24">V14 / block 15,000</b> after the 2026-05-18 scope review; see banner above and <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code>):</p>
       <ul style="margin:12px 0 12px 24px;color:var(--text-primary);">
         <li><strong style="color:var(--gold);">Gold Vault</strong> (25% of every block reward): the 5-defense governance model once targeted for V14 / block 15,000 was <b>deferred and never activated</b> and is now <b style="color:#fbbf24">paused indefinitely / legacy</b>. From <b>V15 (block 25,000)</b> the accumulated reserve is redistributed on-chain to miners via the <b>DTD / DTD Jackpot</b> architecture (supply-neutral). Historical audit at <code>docs/V13_GOLD_VAULT_GOVERNANCE_GATES.md</code>.</li>
-        <li><strong style="color:var(--cyan);">PoPC Pool</strong> (25% of every block reward): developer-held custody until the single-model PoPC bond operational launch (native SOST bond only &mdash; gold is an optional reward boost, never PoPC collateral, never escrow, never slashed) — <b style="color:#fbbf24">V15 / block 25,000</b> target, with the DTD lottery requiring an active PoPC bond from block 30,000. The Gold Vault / Metals Reserve (the other 25%) is a separate channel and is <b>not</b> the PoPC reward source. Full audit at <code>docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</code></li>
+        <li><strong style="color:var(--cyan);">PoPC Pool</strong> (25% of every block reward <b style="color:#f59e0b">until block #25,000 &mdash; 0% since</b>): developer-held custody of what it already received. The single-model PoPC bond (native SOST bond only &mdash; gold is an optional reward boost, never PoPC collateral, never escrow, never slashed) is <b>not operational</b>. <b style="color:#4ade80">Correction:</b> an earlier draft of this paragraph said the DTD lottery would require an active PoPC bond from block 30,000. <b>It does not.</b> On mainnet the PoPC eligibility gate ships deactivated (<code>DTD_POPC_GATE_CONSENSUS_ACTIVE = false</code>): <b>the DTD is permissionless &mdash; mining one valid block is the only requirement</b>, and V16 at #30,000 changes which miners qualify, not whether a bond is needed. The Gold Vault / Metals Reserve (the other 25%) is a separate channel and is <b>not</b> the PoPC reward source. Full audit at <code>docs/V13_POPC_ESCROW_AUTO_ACTIVATION_GAPS.md</code></li>
       </ul>
       <p>SOST developer cannot change the constitutional 50/25/25 split, because it is hardcoded at genesis. What remains centralized during Phase I is <em>custody</em>, not the emission rule itself.</p>
       <p style="margin-top:16px;"><strong>Custody transition roadmap:</strong></p>
@@ -1430,7 +1441,7 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v442" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v443" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
