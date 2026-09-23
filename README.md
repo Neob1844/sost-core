@@ -71,16 +71,16 @@ openssl rand -base64 30 > ~/.sost/rpc.pass && chmod 600 ~/.sost/rpc.pass
 
 ## Binaries
 
-**Current release: `v16.2.2`.** Official binaries and hashes:
-<https://github.com/Neob1844/sost-core/releases/tag/v16.2.2> — verify with
+**Current release: `v16.2.3`.** Official binaries and hashes:
+<https://github.com/Neob1844/sost-core/releases/tag/v16.2.3> — verify with
 `sha256sum -c SHA256SUMS` before running anything. If you build from source the
 build directory must be named `build`, or the hashes will not match.
 
-| Binary | SHA-256 (v16.2.2) | Description |
+| Binary | SHA-256 (v16.2.3) | Description |
 |--------|-------------------|-------------|
 | sost-node | `b253e4a9c352ea4b…` | Full node — P2P, JSON-RPC, chain validation, mempool |
 | sost-miner | `2ef9d0a77f243224…` | ConvergenceX Transcript V2 PoW miner (SbPoW-signed blocks) |
-| sost-cli | `39170309cb0d0560…` | Wallet CLI — keys, balances, transactions, NODE_BIND |
+| sost-cli | `489f43741437a08b…` | Wallet CLI — keys, balances, transactions, NODE_BIND |
 | sost-rpc | (built from source) | Standalone RPC client for node queries |
 
 **Already running a node or a miner?** The agreed update window is **after block

@@ -18,9 +18,9 @@ handle needs to sit in `argv` or on a screen any more.**
 | Activation height | 30,000 (unchanged) |
 | First V2 jackpot | 30,186 (unchanged) |
 
-## v16.2.2 — the last hand-rolled parsers
+## v16.2.3 — the last hand-rolled parsers
 
-`v16.2.2` ships **only a new `sost-cli`** for the third time; `sost-node` and
+`v16.2.3` ships **only a new `sost-cli`** for the third time; `sost-node` and
 `sost-miner` keep the same hashes they had in v16.2.0. It converts the two
 paths left over from v16.2.1:
 
@@ -41,7 +41,7 @@ nested-object vin that used to truncate the list.
 ```
 b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node   (unchanged since v16.2.0)
 2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner  (unchanged since v16.2.0)
-39170309cb0d0560f4ca82a225f5dd3b1c3d7eaeda1928273c4824f26141facf  sost-cli    (v16.2.2)
+489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  sost-cli    (v16.2.3)
 ```
 
 ## v16.2.1 — the CLI follow-up

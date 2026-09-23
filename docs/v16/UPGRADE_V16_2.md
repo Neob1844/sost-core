@@ -1,6 +1,6 @@
-# SOST V16.2.2 — upgrade guide for miners and node operators
+# SOST V16.2.3 — upgrade guide for miners and node operators
 
-> **v16.2.2 changes only `sost-cli`.** `sost-node` and `sost-miner` are
+> **v16.2.3 changes only `sost-cli`.** `sost-node` and `sost-miner` are
 > byte-identical to v16.2.0, so if you already run v16.2.0 you only replace the
 > CLI — no restart and no mining time lost. Everything below applies unchanged.
 
@@ -41,7 +41,7 @@ The official binaries are published with the release, so compiling is optional:
 ```bash
 mkdir -p ~/sost-v162 && cd ~/sost-v162
 for f in sost-node sost-miner sost-cli SHA256SUMS; do
-  curl -fsSL -O "https://github.com/Neob1844/sost-core/releases/download/v16.2.2/$f"
+  curl -fsSL -O "https://github.com/Neob1844/sost-core/releases/download/v16.2.3/$f"
 done
 sha256sum -c SHA256SUMS      # must print: sost-node: OK / sost-miner: OK / sost-cli: OK
 chmod +x sost-node sost-miner sost-cli
@@ -92,9 +92,9 @@ published hashes only reproduce from a directory with that name.
 # 1. get the release, in its own worktree
 cd /path/to/sost-core
 git fetch --all --tags --prune
-git worktree add ../sost-v162 v16.2.2
+git worktree add ../sost-v162 v16.2.3
 cd ../sost-v162
-git describe --tags --exact-match          # must print v16.2.2
+git describe --tags --exact-match          # must print v16.2.3
 
 # 2. build
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \

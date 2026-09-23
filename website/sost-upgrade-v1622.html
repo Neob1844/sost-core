@@ -19,13 +19,13 @@
 <link rel="icon" type="image/png" href="sost-logo.png?v=v392">
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST V16.2.2 — Upgrade your node and miner (window #29,900 → #30,000)</title>
-<meta name="description" content="How to update an already-running SOST node and miner to v16.2.2 inside the agreed window, after block #29,900 and before #30,000. You keep your coins, wallet, keys and payout address.">
+<title>SOST V16.2.3 — Upgrade your node and miner (window #29,900 → #30,000)</title>
+<meta name="description" content="How to update an already-running SOST node and miner to v16.2.3 inside the agreed window, after block #29,900 and before #30,000. You keep your coins, wallet, keys and payout address.">
 <meta name="keywords" content="SOST quickstart, how to mine SOST, SOST setup, build SOST, run SOST node, SOST mining guide">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SOST V16.2.2 — Upgrade your node and miner">
+<meta property="og:title" content="SOST V16.2.3 — Upgrade your node and miner">
 <meta property="og:description" content="Update window after #29,900 and before #30,000. Verified commands for manual, systemd and WSL setups.">
 <meta property="og:url" content="https://sostcore.com/sost-upgrade-v1622.html">
 <meta property="og:site_name" content="SOST">
@@ -258,7 +258,7 @@
 
 <section class="hero">
   <div class="container">
-    <h1 style="font-family:var(--font-display);letter-spacing:2px">UPGRADE TO <span style="color:var(--red-primary)">V16.2.2</span></h1>
+    <h1 style="font-family:var(--font-display);letter-spacing:2px">UPGRADE TO <span style="color:var(--red-primary)">V16.2.3</span></h1>
     <p style="font-size:17px;max-width:820px">For a node and a miner that are <strong>already running</strong>. The update window agreed with the network is <strong style="color:#ffd166">after block #29,900 and before block #30,000</strong>.</p>
     <div class="notice green" style="max-width:820px;margin-top:14px">
       <strong>You keep everything.</strong> Your SOST, your wallet file, your private keys, your SbPoW mining identity and your payout address are <strong>not touched</strong> by this upgrade. There is nothing to convert, nothing to move, no new wallet and no re-registration. Encrypting your wallet is optional and always will be.
@@ -270,12 +270,12 @@
   <div class="container">
     <h2>The calendar</h2>
     <div class="code-block" style="line-height:1.8">
-BEFORE #29,900     download v16.2.2, verify the SHA-256, back up. Do NOT switch yet.
+BEFORE #29,900     download v16.2.3, verify the SHA-256, back up. Do NOT switch yet.
 #29,900 → #30,000  THE WINDOW (~16–17 h): stop, install, restart. Node AND miner.
 AT #30,000         V16 consensus activates by itself. No command, no restart.
 #30,186            first DTD Jackpot V2 draw.
     </div>
-    <p>The window is a <strong>coordination</strong> convention, not a consensus rule: it exists so the whole network crosses the activation running the same build. v16.2.2 is consensus-identical to v16.1.0 — a node running either one follows the same chain. What is <em>not</em> optional is being off V15: a validating node still on old consensus software after #30,000 may diverge.</p>
+    <p>The window is a <strong>coordination</strong> convention, not a consensus rule: it exists so the whole network crosses the activation running the same build. v16.2.3 is consensus-identical to v16.1.0 — a node running either one follows the same chain. What is <em>not</em> optional is being off V15: a validating node still on old consensus software after #30,000 may diverge.</p>
     <div class="notice">
       <strong>Already on v16.2.0 or v16.2.1?</strong> All v16.2.x releases ship the <strong>same</strong> <code>sost-node</code> and <code>sost-miner</code>, byte for byte, with the same published hashes. Only <code>sost-cli</code> changed. Replace the CLI and you are done — nothing needs restarting.
     </div>
@@ -288,17 +288,17 @@ AT #30,000         V16 consensus activates by itself. No command, no restart.
     <p>Official binaries, no compiler needed:</p>
     <div class="code-block">mkdir -p ~/sost-v1622 &amp;&amp; cd ~/sost-v1622
 for f in sost-node sost-miner sost-cli SHA256SUMS; do
-  curl -fsSL -O "https://github.com/Neob1844/sost-core/releases/download/v16.2.2/$f"
+  curl -fsSL -O "https://github.com/Neob1844/sost-core/releases/download/v16.2.3/$f"
 done
 sha256sum -c SHA256SUMS
 chmod +x sost-node sost-miner sost-cli</div>
     <p>It must print <code style="color:var(--green-primary)">sost-node: OK</code>, <code style="color:var(--green-primary)">sost-miner: OK</code>, <code style="color:var(--green-primary)">sost-cli: OK</code>. If any line says FAILED, <strong>stop and do not run the binary</strong>.</p>
     <div class="code-block">b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node
 2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner
-39170309cb0d0560f4ca82a225f5dd3b1c3d7eaeda1928273c4824f26141facf  sost-cli</div>
+489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  sost-cli</div>
     <p>Prefer to build it yourself? The build directory <strong>must be named <code>build</code></strong>, or the hashes will not match — the source path is normalised out of the binary, the build directory name is not:</p>
     <div class="code-block">git fetch --all --tags --prune
-git worktree add ../sost-v1622 v16.2.2 &amp;&amp; cd ../sost-v1622
+git worktree add ../sost-v1622 v16.2.3 &amp;&amp; cd ../sost-v1622
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"</div>
     <p>A different compiler or libc can legitimately produce a different hash. That alone is not evidence of tampering — but an <em>official downloaded</em> binary must match exactly.</p>
@@ -477,7 +477,7 @@ sudo install -m 0755 /opt/sost/build/sost-node.prev.&lt;timestamp&gt; /opt/sost/
 sudo systemctl start sost-node</div>
     <div class="notice"><strong>One caveat.</strong> A wallet you <em>encrypted</em> with v16.2.x cannot be read by a pre-v16.2 binary. If you encrypted and then roll back, point the old binary at the v1 file you kept.</div>
     <p style="margin-top:14px">
-      Release and hashes: <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.2" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v16.2.2</a> &middot;
+      Release and hashes: <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.3" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v16.2.3</a> &middot;
       new to SOST? <a href="sost-quickstart.html">Start here</a> &middot;
       mining details: <a href="sost-mine.html">Mining guide</a> &middot;
       <a href="sost-explorer.html">Explorer</a>

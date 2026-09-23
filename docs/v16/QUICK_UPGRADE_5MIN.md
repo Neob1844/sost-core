@@ -1,7 +1,7 @@
 # SOST V16 — miner & node upgrade
 
 **What:** one mandatory upgrade for every node and miner.
-**Which release:** install **v16.2.2** — the current one, on your node **and**
+**Which release:** install **v16.2.3** — the current one, on your node **and**
 your miner, inside the update window below. V16.1.0 carries the same consensus
 rules, so it crosses the fork correctly too; V16.2.0 adds the operator-side
 fixes and is what `docs/v16/SHA256SUMS` verifies. Already on V16.1.0? Update in
@@ -20,7 +20,7 @@ AFTER #30,000      optional: NODE_BIND + --node-key, to play the DTD Jackpot
 BEFORE #30,186     confirm eligibility for the first V2 draw
 ```
 
-**Official binaries:** https://github.com/Neob1844/sost-core/releases/tag/v16.2.2
+**Official binaries:** https://github.com/Neob1844/sost-core/releases/tag/v16.2.3
 (`sost-node`, `sost-miner`, `sost-cli`, `SHA256SUMS`). Compiling is optional —
 downloading and verifying the hash is equally valid.
 
@@ -39,9 +39,9 @@ moves.
 ```bash
 cd /opt/sost
 git fetch --all --tags --prune
-git worktree add /opt/sost-v16 v16.2.2
+git worktree add /opt/sost-v16 v16.2.3
 cd /opt/sost-v16
-git describe --tags --exact-match          # must print v16.2.2
+git describe --tags --exact-match          # must print v16.2.3
 git rev-parse HEAD
 
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
@@ -103,9 +103,9 @@ Build it in a **worktree from the tag**, with the build directory named
 cd /home/sost/SOST/sostcore/sost-core
 git status --short
 git fetch --all --tags --prune
-git worktree add /home/sost/sost-v162 v16.2.2
+git worktree add /home/sost/sost-v162 v16.2.3
 cd /home/sost/sost-v162
-git describe --tags --exact-match          # must print v16.2.2
+git describe --tags --exact-match          # must print v16.2.3
 
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
       -DCMAKE_BUILD_TYPE=Release
