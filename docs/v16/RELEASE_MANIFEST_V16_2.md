@@ -18,7 +18,42 @@ handle needs to sit in `argv` or on a screen any more.**
 | Activation height | 30,000 (unchanged) |
 | First V2 jackpot | 30,186 (unchanged) |
 
-## Official binary hashes
+## v16.2.1 — the CLI follow-up
+
+`v16.2.1` (commit `84f93015`) ships **only a new `sost-cli`**. `sost-node` and
+`sost-miner` are **byte-identical** to v16.2.0, verified by hash, so a node or a
+miner already running v16.2.0 does not restart for this release and loses no
+mining time. Consensus is unchanged for the third release running.
+
+What it fixes, all of it in the CLI's RPC layer:
+
+* `rpc_call` could not read a large answer. It stopped as soon as a buffer
+  happened to end with `}` whenever it did not find a literal
+  `Content-Length: ` header — and header names are case-insensitive, and the
+  public RPC gateway answers with `Transfer-Encoding: chunked` and no
+  Content-Length at all. Every UTXO object ends in `}`, so a large
+  `getaddressutxos` was cut at a chunk boundary and surfaced as `bad_json`.
+  Fixed: case-insensitive header, chunked decoding, read-to-close, and a socket
+  timeout bounding all three.
+* `send` bypassed `rpc_call` entirely — its own socket, one `read()` into a
+  4 KB buffer, and "accepted" decided by finding `"result":"` anywhere in the
+  reply. That decision marks the wallet's coins spent.
+* Balances, UTXO import, broadcast, sendmany, bump-fee, the mempool check and
+  the chain height were all parsed by substring search. `query_chain_height`
+  called `std::stoll` on whatever followed `"blocks":` — which throws and
+  aborts on a non-numeric body, and that height decides coinbase maturity.
+
+All of them now go through `sost::json`: **23 call sites, zero remaining
+`"result"` substring searches**. A broadcast counts as accepted only when the
+JSON-RPC result IS a string txid. When an answer cannot be read, the wallet
+leaves the inputs unspent and says "not confirmed" rather than "rejected",
+pointing the operator at `getrawmempool` before they build another transaction.
+The CLI also gained `--rpc-pass-file` / `--rpc-pass-fd`.
+
+Hashes: `docs/v16/SHA256SUMS`. The v16.2.0 list is kept as
+`SHA256SUMS_V16_2_0`, and v16.1.0 as `SHA256SUMS_V16_1`.
+
+## Official binary hashes (v16.2.0)
 
 ```
 b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node
