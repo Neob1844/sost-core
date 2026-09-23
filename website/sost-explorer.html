@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-23-v445-popc-claim-cleared">
+<meta name="explorer-html-version" content="2026-09-23-v446-explorer-split">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -1071,8 +1071,9 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <span style="color:var(--text3)">•</span> <b style="color:var(--green)">~95% of total supply emitted by epoch ~12 (~30 years)</b><br>
         <span style="color:var(--text3)">•</span> Emission continues through <b>~82 epochs (~205 years)</b> until rewards become negligible<br>
         <span style="color:var(--text3)">•</span> 100% emission is asymptotic — mathematically approaches but never reaches the cap<br><br>
-        <b style="color:var(--gold)">Coinbase Split (every block, forever)</b><br>
-        <span style="color:var(--orange)">50% Miner</span> · <span style="color:var(--gold)">25% Gold Vault</span> · <span style="color:var(--cyan)">25% PoPC Pool</span><br><br>
+        <b style="color:var(--gold)">Coinbase Split</b><br>
+        <span style="color:var(--orange)">50% Miner</span> · <span style="color:#39ff14">50% DTD</span> &mdash; since <b>V15 (#25,000)</b><br>
+        <span style="color:var(--text3)">Historical, blocks 0&ndash;24,999: 50% Miner · 25% Gold Vault · 25% PoPC Pool. Those two shares are <b>0</b> today.</span><br><br>
         <b style="color:var(--gold)">Why Feigenbaum?</b><br>
         The Feigenbaum constants (δ = 4.6692..., α = 2.5029...) are universal mathematical constants from chaos theory that describe the rate at which period-doubling bifurcations occur in dynamical systems. In SOST, they are used purely as irrational constants to set the supply cap and epoch length — values that cannot be derived from simple fractions, making them resistant to arbitrary parameter choices. The emission curve is deterministic, immutable, and verifiable by anyone from the genesis block.
       </div>
@@ -8287,7 +8288,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/v16-jackpot-notice.js?v=v445" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v446" defer></script>
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks
