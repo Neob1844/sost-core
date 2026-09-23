@@ -201,8 +201,8 @@
       </div>
     </div>
 
-    <div class="sost-v16-h">First-Jackpot bootstrap &mdash; not another fork</div>
-    <p>NODE_BIND only becomes available once V2 activates, so there is no completed heartbeat epoch for the first draw. The requirement ramps deterministically from the number of completed V2 epochs:</p>
+    <div class="sost-v16-h">First-Jackpot bootstrap &mdash; the heartbeat ramp is NOT a second activation</div>
+    <p><b>#30,000 is the only activation.</b> It happens once, automatically, by block height &mdash; the ramp below is that one rule counting completed epochs, not a further fork and not a second update. NODE_BIND only becomes available once V2 activates, so there is no completed heartbeat epoch for the first draw. The requirement ramps deterministically from the number of completed V2 epochs:</p>
     <div class="sost-v16-code">#30,186   NODE_BIND required   heartbeats 0/0
 #30,474   NODE_BIND required   heartbeats 1/1
 #30,762   NODE_BIND required   heartbeats 2/2
