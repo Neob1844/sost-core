@@ -5544,6 +5544,170 @@ static void node_heartbeat_thread() {
     }
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPATIBILIDAD HISTÓRICA — 19 bloques, del 13 al 22 de abril de 2026.
+//
+// QUÉ PASÓ. Durante esos nueve días se cambiaron reglas de cASERT mientras la
+// red minaba, y en tres ocasiones se movió la altura de activación DESPUÉS de
+// que ya hubiera bloques minados bajo la anterior. Esos bloques eran válidos
+// bajo las reglas que su nodo ejecutaba; el binario de hoy aplica otras y los
+// recalcula distinto. No hay dato corrupto ni minero tramposo: hay un
+// despliegue que se adelantó a su puerta.
+//
+// QUÉ HACE ESTA TABLA. Para UN bloque concreto, identificado por su altura Y
+// por su hash completo, acepta el valor histórico de UNA magnitud recalculada
+// (bits_q o el techo de profile_index) en lugar de rechazarlo.
+//
+// QUÉ NO HACE, y es lo que la hace segura:
+//   · No afloja PoW, firma SbPoW, merkle, encadenamiento, coinbase ni UTXO.
+//     Todo eso se sigue exigiendo igual, y se exige DESPUÉS.
+//   · No acepta OTRO bloque a esas alturas: la clave es el hash completo de
+//     32 bytes recomputado a partir del contenido, no un campo declarado.
+//   · No puede crecer: son 19 alturas fijas, la más alta 5410, 22269 bloques por
+//     debajo de la punta. Ninguna altura futura puede caer aquí.
+//   · No cambia ninguna regla para bloques nuevos.
+struct HistoricReplayException {
+    int64_t     height;
+    const char* block_id_hex;   // 64 hex, recomputado del contenido
+    uint32_t    bits_q;         // 0 = esta entrada no excepciona bits_q
+    int32_t     profile_index;  // INT32_MIN = esta entrada no excepciona el perfil
+};
+static const HistoricReplayException HISTORIC_REPLAY_EXCEPTIONS[] = {
+    {  4160, "64179516d3cce82bc7cee1c1768a92ce61929ee7f846d2aee2c28c0c5cf35d3b",          0u, 9 },
+    {  5150, "79866c91281e18b6e3f873ab55d0f99ab9e06ce47edc21b00966185f45950df2",     964420u, INT32_MIN },
+    {  5151, "ac490e6728a27673c98ab2858607597cc3c12b08a64c0bb3d0d3685252776933",     907002u, INT32_MIN },
+    {  5152, "de65160b98f7b29d568dfb95cb45da50ea15608fc7cd4e3d079afd76bb9403cc",     907119u, INT32_MIN },
+    {  5153, "91b1dc5465f678309a2fadfbb977ebaf2663c1a28b8b96a3e19cbcdae78d0d99",     912564u, INT32_MIN },
+    {  5154, "2fbea2aed295d4e1033f2a8eb4be4a0b57d12701cb2102b77be67a2c45e0f068",     920170u, INT32_MIN },
+    {  5155, "b776ed64078cfa5b4c994e278077e3529b06c14c1257546cd337c2baff2546dd",     925148u, INT32_MIN },
+    {  5156, "6cfa08215d996610c2f359db3a803588e7fbb7ea7f7c39b1a4b7b4787106667c",     917039u, INT32_MIN },
+    {  5157, "49796dd703bef5c6ee3ffa8c36d781b0978a1305d0a60665b21ed457966a97e2",     918359u, INT32_MIN },
+    {  5158, "507d7dfe0d2e91b108d3a29e33c0b38684076a2a96e010548f41c7d88b26201d",     903999u, INT32_MIN },
+    {  5320, "c1eb51aef343256130111a56fa4467731059704cfbb5c873d360ec2b5f62f115",          0u, 6 },
+    {  5321, "6c834f2a71b4408e230fd2c22006f105515c3fbb051a7f70bd9026800275a0bc",          0u, 6 },
+    {  5335, "a4e209a15b5319b2c7b1c5a4f926bde7e33d38fa87c81c3a9f65a385f9b1c1db",          0u, 5 },
+    {  5362, "a3ef2078e7709010589db837561cb8ea8eb6e557f20dccb230687c31918149fc",          0u, 7 },
+    {  5363, "817ca01fd83fe4d8d3d42a2f17f411cb8c30c9cffc09c3543c087acdda3b32df",          0u, 6 },
+    {  5386, "a2032954f8ca26adf0634d3e502f7fde345129a46a33ff63d96776c616cfcbe7",          0u, 7 },
+    {  5394, "b08e333137616cd3e9389a4b229cc223bf4e505d801af1ec003ef9eb4dedaf6f",          0u, 7 },
+    {  5401, "49e1af4e397f0c913713b12d9dec729175e9a8c22503912c5b4f6211bf8175b1",          0u, 8 },
+    {  5410, "d5771d7486616768d97a42481ab33c7c57175893a31c0a4c1d95af300efcc82b",          0u, 7 },
+};
+static const size_t HISTORIC_REPLAY_EXCEPTIONS_N =
+    sizeof(HISTORIC_REPLAY_EXCEPTIONS)/sizeof(HISTORIC_REPLAY_EXCEPTIONS[0]);
+static const int64_t HISTORIC_REPLAY_MAX_HEIGHT = 5410;
+
+// Busca por ALTURA. El hash se confirma aparte, contra el id recomputado.
+static const HistoricReplayException* historic_exception_at(int64_t h) {
+    if (h > HISTORIC_REPLAY_MAX_HEIGHT) return nullptr;   // corte duro
+    for (size_t i = 0; i < HISTORIC_REPLAY_EXCEPTIONS_N; ++i)
+        if (HISTORIC_REPLAY_EXCEPTIONS[i].height == h) return &HISTORIC_REPLAY_EXCEPTIONS[i];
+    return nullptr;
+}
+static bool historic_exception_id_matches(const HistoricReplayException* e, const Bytes32& computed_bid) {
+    if (!e) return false;
+    return to_hex(computed_bid.data(), 32) == std::string(e->block_id_hex);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPATIBILIDAD HISTÓRICA (2) — 47 bloques, alturas 4715 a 5038.
+//
+// QUÉ PASÓ. La tabla canónica de parámetros por perfil se corrigió mientras la
+// red minaba, y durante unos días convivieron mineros con la tabla vieja y
+// mineros con la nueva. El validador de entonces no comparaba los stab_* del
+// bloque contra la tabla, así que ambos entraron. Las alturas se solapan
+// (5031 y 5035 llevan un juego, 5036 el otro, 5037 otra vez el primero), de
+// modo que NO existe una altura de corte: no se puede arreglar con una tabla
+// por altura, sólo bloque a bloque.
+//
+// Tres juegos históricos, todos ellos inexistentes en la tabla de hoy:
+//   H10 {scale 3, steps 7, k 6, margin 115}  — 3 bloques (4715, 4769, 4892)
+//   H10 {scale 2, steps 7, k 7, margin 115}  — 39 bloques
+//   H11 {scale 2, steps 8, k 7, margin 110}  — 4 bloques   (margin 110: la
+//   H11 {scale 2, steps 8, k 8, margin 110}  — 1 bloque     tabla nueva ya
+//                                                           documenta "was 110")
+//
+// QUÉ HACE. Para UN bloque concreto, identificado por su altura Y por su hash
+// completo de 32 bytes recomputado del contenido, verifica la transcripción
+// CX con los parámetros que su minero usó de verdad, en lugar de con los de la
+// tabla actual.
+//
+// QUÉ NO HACE:
+//   · No afloja PoW, firma SbPoW, merkle, encadenamiento, coinbase ni UTXO.
+//   · No acepta OTRO bloque a esas alturas: la clave es el hash recomputado.
+//   · No puede crecer: 47 alturas fijas, la más alta 5038, muy por debajo de la
+//     punta. Ninguna altura futura cae aquí.
+//   · No cambia ninguna regla para bloques nuevos.
+struct HistoricParamException {
+    int64_t     height;
+    const char* block_id_hex;   // 64 hex, recomputado del contenido
+    int32_t     scale, steps, k, margin;
+};
+static const HistoricParamException HISTORIC_PARAM_EXCEPTIONS[] = {
+    {  4715, "7d1ab12ac95dc2c2d5d490fd818d50c5bc6d2a601eeff1af8beb380bc2d3b784", 3,  7,  6, 115 },
+    {  4769, "d0b8103dd3cb425f67af4cdac7be463681e79c5a5c20f82533926a5c1abdaefb", 3,  7,  6, 115 },
+    {  4892, "1fec55359aa1c78649446314a9142ac0de066e4a0047941d62d635847537bc60", 3,  7,  6, 115 },
+    {  4932, "3e4fadc59d3f22cb190bb85c08f9529e399f54eed3597d45385b121f1b9d33a6", 2,  7,  7, 115 },
+    {  4938, "bdc47aca02e848c960a1bd9071df61b506567c96cf4fa1c87d249c1c2bfbafaa", 2,  7,  7, 115 },
+    {  4939, "15f44aba3981fc6a37ab14e33c97aca1308a3937865a521875c044989ee4ed73", 2,  7,  7, 115 },
+    {  4946, "48ed953f1f700d4cb89c8081802624a104356dab84873513237f0210a5f4a1a1", 2,  7,  7, 115 },
+    {  4947, "6e2d36d02f7bd2134614a754813f609a3aa8aa7561a25efbc5ad4c63b09f2951", 2,  7,  7, 115 },
+    {  4953, "5bb71eb24ce462fa852ab4f587a89fdc048ef3d54c1f0d843147ae73fd68061a", 2,  7,  7, 115 },
+    {  4954, "fa7766625c81e468dc1859fe4325f1747dc275bfa80c647b2e26f446e12d3761", 2,  8,  7, 110 },
+    {  4959, "1f1de3133b04435e152aa67338b628fe5f62133bbf482e9b5eaff4e8dd3bc402", 2,  7,  7, 115 },
+    {  4960, "e2246e15bfb94bca7cc840cd902e2c3956603c86e7d13b75c53ebedfc181f13a", 2,  7,  7, 115 },
+    {  4967, "33d58d58dac119c739c15ce54e5d10c69f2f3025af3ddeea0634a7b61cc54085", 2,  7,  7, 115 },
+    {  4968, "cd45b39a4217ca8f57a9531c2a5399c3df22445db2745b2e1ab03ff4c8b652fa", 2,  8,  7, 110 },
+    {  4969, "9d5d502763b83287f2764e853f5e198e1e7c70276e2c18429169cf20a95a9916", 2,  7,  7, 115 },
+    {  4976, "48772c738fb9ad401bd7682d585f3fa0813f1ca9eb340bd693e62bd4f824a8fa", 2,  7,  7, 115 },
+    {  4977, "7b7ef346f33377277575c693989d72a3a37a706a6e8544dc70abf1bfb41bdad9", 2,  8,  7, 110 },
+    {  4980, "2fdc0e0050de34576f1dd72290d43ace69382ec105c7befeed1deca9787d5177", 2,  7,  7, 115 },
+    {  4984, "65d8e2a3570266446047e27937f5efcc82643d4acde560235053df62da7cb8e5", 2,  7,  7, 115 },
+    {  4985, "d94690f2829d109a46a6323115dcd716ab6eb6f2ca052e35de5e38b43d4c7008", 2,  7,  7, 115 },
+    {  4989, "4daa8e17b22d06601119820fe09697565bbccdb8f246dc1962a6ab01eb334965", 2,  7,  7, 115 },
+    {  4990, "558cdd457a46ff868c4edad5eb075e313f8f2be895c8922a3ce76b5589676344", 2,  7,  7, 115 },
+    {  4995, "b0d898e4a3eee4d6b62aaf4be151424d6a06a58c583f20a7fa824e3f5b9afb7d", 2,  7,  7, 115 },
+    {  4996, "70d5d44c9fd1af92948a401bd871f0518dbb602ef0bc4d1f34dbcec87891fe11", 2,  7,  7, 115 },
+    {  5006, "5d049271e55a6ad47062c72b71dd509c9591b3e2bbadbdbd7356cab35abeae85", 2,  7,  7, 115 },
+    {  5007, "6e0c019269b3e3d26ae2817f5b9996d4074461a5fb57d34ff4d9256ae53d1ed8", 2,  7,  7, 115 },
+    {  5009, "0df5a7c2b42d1dca283f36ca47bb5f2876f0ec2c58274d839b9d01d79439c837", 2,  7,  7, 115 },
+    {  5010, "317f848fe7945dbc81146ca095c337a0ac3acfc7ba75867ccfef0424e6ae0ce3", 2,  7,  7, 115 },
+    {  5011, "63062cc2f73bc92a6888cb52bb5390d6a9505627eb52798c395e12b5cea97af3", 2,  7,  7, 115 },
+    {  5012, "8fab483ad474054a3372613a05d9baaf094de85bfb35f09e7f2f04d14969a798", 2,  7,  7, 115 },
+    {  5013, "f7fc09945998a7e43d1f3b2628cea95bfb8a5ad62e82a35c210cb22c2006b4ed", 2,  7,  7, 115 },
+    {  5014, "c7be9594381eb282ab05c38f48d161a407bfc1376648a329ba5161e9f4fc31ea", 2,  7,  7, 115 },
+    {  5016, "09b7afa2ee266f50be50b47a8e8ad69ec0f8ddc629c92e22c6e634ec6261571c", 2,  7,  7, 115 },
+    {  5017, "b67dc8a4135d8e04f1058e173f944600dc4bd73a3ab60acebbc5bff001707418", 2,  7,  7, 115 },
+    {  5018, "b4992ce8a102cdaa1c22cff082e27ba5d72bd6161154eb647fa6042b8acb8df1", 2,  7,  7, 115 },
+    {  5019, "13670df76010e1445766a23af61de0e9343b25232ac64a7a2367a6e708fb0744", 2,  8,  7, 110 },
+    {  5020, "5fe66577e60bc971435c505c0d5f040d79df71b8d54b56bc7a00a1e0f21e4a13", 2,  7,  7, 115 },
+    {  5022, "945b85f9327902f9e25d9b44ac4d4316c4a38cd89424840a8e303c8b8010ee72", 2,  7,  7, 115 },
+    {  5023, "f8ca5f76a37010b347affbc7e31dfcb8042b2d8e03711a4cf6a099adb6eae2c1", 2,  7,  7, 115 },
+    {  5024, "021d2201cb32cfbabab98e5ad1e08d2641a64892330df7b5b88539a55ba4dc37", 2,  7,  7, 115 },
+    {  5025, "14ac9e42f2c533b24fdce19c57cd0db34287c20d5e95b9aaf8bb1a68db5335b1", 2,  7,  7, 115 },
+    {  5026, "0782bfe48ff8fbb5f3e7ad4693a8184ecf90b6edb1027a3236851a7e88e0540c", 2,  7,  7, 115 },
+    {  5027, "a01bd280e58fe1856cbcbfc123da972cd8e14ddf87a82fbb6b2ad81edcc86274", 2,  7,  7, 115 },
+    {  5029, "f77afedbf53736f053944b0653b731879c7ff8c28ba98bd9b4e04abb08cfeddd", 2,  7,  7, 115 },
+    {  5030, "231c35ebc035e03a280d61e8ac40791d9f065ab4bcb0b1fb8f91d7025a1304f1", 2,  7,  7, 115 },
+    {  5036, "336280b334daad0d5ac119fc75a241337a6aac4ec75367fcec90186c37609a38", 2,  7,  7, 115 },
+    {  5038, "4556ac446a5d7be636baa919df9f46a09c4b37c61820c3e58249dbf76e283ba0", 2,  8,  8, 110 },
+};
+static const size_t HISTORIC_PARAM_EXCEPTIONS_N =
+    sizeof(HISTORIC_PARAM_EXCEPTIONS)/sizeof(HISTORIC_PARAM_EXCEPTIONS[0]);
+static const int64_t HISTORIC_PARAM_MAX_HEIGHT = 5038;
+
+static const HistoricParamException* historic_param_exception_at(int64_t h) {
+    if (h > HISTORIC_PARAM_MAX_HEIGHT) return nullptr;   // corte duro
+    for (size_t i = 0; i < HISTORIC_PARAM_EXCEPTIONS_N; ++i)
+        if (HISTORIC_PARAM_EXCEPTIONS[i].height == h) return &HISTORIC_PARAM_EXCEPTIONS[i];
+    return nullptr;
+}
+static bool historic_param_id_matches(const HistoricParamException* e, const Bytes32& computed_bid) {
+    if (!e) return false;
+    return to_hex(computed_bid.data(), 32) == std::string(e->block_id_hex);
+}
+
 static bool process_block(const std::string& block_json, bool reorg_connect) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
 
@@ -5803,10 +5967,24 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     }
     uint32_t expected_diff = casert_next_bitsq(chain_meta, height,
         (height >= CASERT_V6PP_HEIGHT) ? ts64 : 0);
+    const HistoricReplayException* hx_bq = nullptr;
     if(bits_q != expected_diff){
-        printf("[BLOCK] REJECTED: bits_q mismatch (got=%u expected=%u)\n",bits_q,expected_diff);
-        record_block_reject("bits_q mismatch");
-        return false;
+        // Compatibilidad histórica: sólo si HAY entrada para esta altura y el
+        // bits_q declarado es EXACTAMENTE el que la cadena canónica lleva. La
+        // identidad del bloque se confirma más abajo contra el id recomputado;
+        // aquí todavía no se conoce, así que esto sólo aplaza el rechazo, nunca
+        // lo evita para un bloque que no sea el canónico.
+        const HistoricReplayException* e = historic_exception_at(height);
+        if(e && e->bits_q != 0u && e->bits_q == bits_q){
+            hx_bq = e;
+            printf("[BLOCK] historic replay exception at h=%lld: bits_q %u accepted "
+                   "(recomputed %u) - pending block_id confirmation\n",
+                   (long long)height, bits_q, expected_diff);
+        } else {
+            printf("[BLOCK] REJECTED: bits_q mismatch (got=%u expected=%u)\n",bits_q,expected_diff);
+            record_block_reject("bits_q mismatch");
+            return false;
+        }
     }
 
     // FAST-SYNC: if block is under assumevalid, allow missing/empty transactions
@@ -6481,6 +6659,18 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         return false;
     }
 
+    // Confirmación de la excepción de bits_q. El id ya está recomputado a partir
+    // del CONTENIDO del bloque, así que aquí es donde se comprueba que el bloque
+    // al que se le perdonó el bits_q es exactamente el de la cadena canónica y
+    // no otro fabricado a la misma altura.
+    if(hx_bq && !historic_exception_id_matches(hx_bq, computed_bid)){
+        printf("[BLOCK] REJECTED: historic bits_q exception claimed at h=%lld but block_id "
+               "does not match the canonical block (%s)\n",
+               (long long)height, to_hex(computed_bid.data(),32).c_str());
+        record_block_reject("historic exception id mismatch");
+        return false;
+    }
+
     // ALWAYS verify commit <= target (cheap PoW inequality check).
     // This runs regardless of fast sync mode.
     if(!pow_meets_target(commit32, bits_q)){
@@ -6767,9 +6957,20 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                     }
                 }
                 if (declared_pi > base_profile) {
-                    printf("[BLOCK] REJECTED: profile_index %d exceeds base profile %d (can only ease, not harden beyond base)\n",
-                           declared_pi, base_profile);
-                    return false;
+                    // Compatibilidad histórica, anclada a altura Y hash completo.
+                    // computed_bid ya está verificado contra el contenido, así que
+                    // un bloque distinto a la misma altura no puede entrar por aquí.
+                    const HistoricReplayException* e = historic_exception_at(height);
+                    if (e && e->profile_index != INT32_MIN && e->profile_index == declared_pi
+                          && historic_exception_id_matches(e, computed_bid)) {
+                        printf("[BLOCK] historic replay exception at h=%lld: profile_index %d accepted "
+                               "(recomputed base %d, block_id confirmed)\n",
+                               (long long)height, declared_pi, base_profile);
+                    } else {
+                        printf("[BLOCK] REJECTED: profile_index %d exceeds base profile %d (can only ease, not harden beyond base)\n",
+                               declared_pi, base_profile);
+                        return false;
+                    }
                 }
                 // V3.1 SECURITY: enforce lag floor as minimum profile
                 // Miners cannot declare a profile below the lag floor.
@@ -6816,6 +7017,28 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                 dec_for_profile.profile_index = declared_pi;
                 cx_params = sost::casert_apply_profile(cx_params, dec_for_profile, height);
             }
+
+            // Compatibilidad histórica (2): 47 bloques de abril de 2026 se
+            // minaron con una tabla de parámetros por perfil que después se
+            // corrigió. La transcripción CX sólo verifica con los parámetros
+            // que el minero usó de verdad. Anclado a altura Y hash completo
+            // recomputado, de modo que otro bloque a la misma altura no entra.
+            {
+                const HistoricParamException* pe = historic_param_exception_at(height);
+                if (pe && historic_param_id_matches(pe, computed_bid)) {
+                    printf("[BLOCK] historic param exception at h=%lld: verifying with the miner's "
+                           "original profile parameters (scale=%d steps=%d k=%d margin=%d; "
+                           "current table says scale=%d steps=%d k=%d margin=%d), block_id confirmed\n",
+                           (long long)height, pe->scale, pe->steps, pe->k, pe->margin,
+                           cx_params.stab_scale, cx_params.stab_steps,
+                           cx_params.stab_k, cx_params.stab_margin);
+                    cx_params.stab_scale  = pe->scale;
+                    cx_params.stab_steps  = pe->steps;
+                    cx_params.stab_k      = pe->k;
+                    cx_params.stab_margin = pe->margin;
+                }
+            }
+
             cx_params.verbose = g_verbose;
 
             if(g_verbose) printf("[BLOCK-V3] Profile: declared=%d (params: scale=%d k=%d margin=%d steps=%d)\n",
