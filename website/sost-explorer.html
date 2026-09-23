@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-23-v458-jackpot-archive">
+<meta name="explorer-html-version" content="2026-09-23-v459-jackpot-panel-2016">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -8290,7 +8290,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/v16-jackpot-notice.js?v=v458" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v459" defer></script>
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks
@@ -8998,7 +8998,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       ? ('<div style="border:1px solid #f5b301;border-radius:8px;padding:11px 13px;margin:2px 0 14px;background:rgba(245,179,1,.07)">'
          +'<div style="font:800 11px ui-monospace;letter-spacing:.8px;color:#ffd166">&#11014;&#65039; V16 UPGRADE &middot; DTD JACKPOT V2 &middot; PREVIEW</div>'
          +'<div style="font-size:11px;color:var(--text2);margin-top:6px;line-height:1.5">Activates at block <b>#'+fc(V2H)+'</b> &middot; first V2 draw <b>#'+fc(V2FIRST)+'</b> &middot; <b>'+fc(_v2rem)+'</b> blocks remaining (~'+eta(_v2rem)+').<br>'
-         +'From #'+fc(V2H)+' the DTD Jackpot becomes an <b>independent draw</b>: eligibility = an <b>active node</b> (NODE_BIND + heartbeats) with a valid SbPoW identity and &ge;3 SbPoW blocks in the last 5,000; win chance is <b>linear in your SbPoW blocks</b>. <b>No cooldown, no anti-dominance.</b> Rollover 100&rarr;500 SOST is unchanged. <b>DTD normal keeps its payout and needs no NODE_BIND</b>, but from #'+fc(V2H)+' its ELIGIBILITY changes too: 288-block window, cooldown yields if it would empty the draw, anti-dominance only at &ge;11 miners.</div></div>')
+         +'From #'+fc(V2H)+' the DTD Jackpot becomes an <b>independent draw</b>: eligibility = an <b>active node</b> (NODE_BIND + heartbeats) with a valid SbPoW identity and &ge;3 SbPoW blocks in the last <b>2,016</b>; win chance is <b>linear in your SbPoW blocks</b>. <b>No cooldown, no anti-dominance.</b> The <b>first draw (#30,186) requires 0/0 heartbeats</b> &mdash; no epoch has completed yet &mdash; ramping to the permanent 3-of-4 from #31,338. Rollover 100&rarr;500 SOST is unchanged. <b>DTD normal keeps its payout and needs no NODE_BIND</b>, but from #'+fc(V2H)+' its ELIGIBILITY changes too: 288-block window, cooldown yields if it would empty the draw, anti-dominance only at &ge;11 miners.</div></div>')
       : ('<div style="border:1px solid #2b7a3d;border-radius:8px;padding:9px 13px;margin:2px 0 14px;background:rgba(57,255,20,.06)">'
          +'<div style="font:800 11px ui-monospace;letter-spacing:.8px;color:#39ff14">&#9989; V16 ACTIVE &middot; DTD JACKPOT V2 (node-gated, PoW-weighted)</div>'
          +'<div style="font-size:11px;color:var(--text2);margin-top:5px">First V2 draw #'+fc(V2FIRST)+'. Eligibility = active node + SbPoW identity; win chance linear in SbPoW blocks.</div></div>');
