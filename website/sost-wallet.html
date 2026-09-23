@@ -2452,8 +2452,8 @@ function createWatchOnlyWallet(address) {
   };
 }
 
-async function saveWallet(w, password) {
-  const data = {
+function walletPayload(w) {
+  return {
     privKey: w.privKey,
     pubKey: w.pubKey,
     address: w.address,
@@ -2461,10 +2461,201 @@ async function saveWallet(w, password) {
     entropy: w.entropy,
     watchOnly: w.watchOnly
   };
-  const encrypted = await encryptData(data, password);
+}
+
+async function saveWallet(w, password) {
+  const encrypted = await encryptData(walletPayload(w), password);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(encrypted));
   encryptedStore = encrypted;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ESCRITURA SEGURA — escribir, verificar, y sólo entonces sustituir.
+//
+// Cambiar la contraseña o el coste de derivación significa re-cifrar lo único
+// que el usuario tiene. Si el navegador se cierra entre "borrar lo viejo" y
+// "escribir lo nuevo", sus claves desaparecen. Aquí nunca existe ese instante:
+//
+//   1. el registro nuevo se escribe en una clave APARTE (sost_wallet_pending)
+//   2. se descifra ESE registro y se comparan clave privada y dirección
+//   3. sólo si coinciden se promueve a sost_wallet
+//   4. y sólo entonces se borra el pendiente
+//
+// Si el navegador muere en cualquier punto, al arrancar queda o la cartera
+// original intacta (pasos 1-2) o un pendiente ya verificado que se puede
+// promover (paso 3). Nunca las dos ausentes.
+const STORAGE_PENDING_KEY = 'sost_wallet_pending';
+
+async function safeReplaceWallet(newEncrypted, passwordForNew, expected) {
+  // 1 · a un lado, sin tocar lo que ya hay
+  const envelope = { ts: Date.now(), enc: newEncrypted,
+                     addr: expected && expected.address ? expected.address : null };
+  localStorage.setItem(STORAGE_PENDING_KEY, JSON.stringify(envelope));
+
+  // 2 · leer de vuelta lo ESCRITO, no lo que tenemos en memoria: así se
+  //     comprueba también que localStorage lo guardó entero.
+  let back;
+  try {
+    back = JSON.parse(localStorage.getItem(STORAGE_PENDING_KEY)).enc;
+  } catch (e) {
+    localStorage.removeItem(STORAGE_PENDING_KEY);
+    throw new Error('write-failed');
+  }
+  let plain;
+  try {
+    plain = await decryptData(back, passwordForNew);
+  } catch (e) {
+    localStorage.removeItem(STORAGE_PENDING_KEY);
+    throw new Error('verify-failed-decrypt');
+  }
+  if (!expected || plain.address !== expected.address || plain.privKey !== expected.privKey) {
+    localStorage.removeItem(STORAGE_PENDING_KEY);
+    throw new Error('verify-failed-mismatch');
+  }
+
+  // 3 · promover, 4 · limpiar
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(back));
+  encryptedStore = back;
+  localStorage.removeItem(STORAGE_PENDING_KEY);
+  return true;
+}
+
+// Se llama al arrancar. Sólo actúa si la cartera activa falta o es ilegible y
+// hay un pendiente verificable: es el caso de un cierre entre los pasos 3 y 4.
+function recoverPendingWallet() {
+  let pend = null;
+  try { pend = JSON.parse(localStorage.getItem(STORAGE_PENDING_KEY)); } catch (e) { pend = null; }
+  if (!pend || !pend.enc) return { recovered:false, reason:'no-pending' };
+  const cur = localStorage.getItem(STORAGE_KEY);
+  let curOk = false;
+  if (cur) { try { curOk = encFormatInfo(JSON.parse(cur)).ok; } catch (e) { curOk = false; } }
+  if (curOk) return { recovered:false, reason:'active-wallet-is-fine' };   // no se toca nada
+  if (!encFormatInfo(pend.enc).ok) {
+    localStorage.removeItem(STORAGE_PENDING_KEY);
+    return { recovered:false, reason:'pending-unreadable' };
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(pend.enc));
+  localStorage.removeItem(STORAGE_PENDING_KEY);
+  return { recovered:true };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OPERACIONES DEL CENTRO DE SEGURIDAD
+//
+// Todas trabajan en el navegador. Ninguna envía nada a ningún servidor, y
+// ninguna escribe una contraseña, una frase de recuperación o una clave
+// privada en un log, una URL o un almacenamiento sin cifrar.
+
+// Estado REAL, derivado del registro cifrado y de si hay clave en memoria.
+// No hay ninguna variable decorativa: si el formato no se puede leer, se dice.
+function walletSecurityState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return { state:'NO_WALLET' };
+  let enc; try { enc = JSON.parse(raw); } catch (e) { return { state:'UNREADABLE', reason:'bad-json' }; }
+  const info = encFormatInfo(enc);
+  if (!info.ok) return { state:'UNREADABLE', reason:info.reason };
+  const unlocked = !!(typeof wallet !== 'undefined' && wallet && typeof walletPassword !== 'undefined' && walletPassword);
+  return {
+    state: unlocked ? 'ENCRYPTED_UNLOCKED' : 'ENCRYPTED_LOCKED',
+    iterations: info.iterations,
+    version: info.version,
+    kdf: info.kdf,
+    upgradeAvailable: info.iterations < WALLET_KDF_ITER_NEW,
+    address: unlocked ? wallet.address : null
+  };
+}
+
+// CHANGE PASSWORD — misma cartera, mismas claves, otra contraseña.
+// Conserva el coste de derivación del registro actual: cambiar la contraseña
+// no es el momento de migrar, y mezclarlo haría que un fallo en la migración
+// se confundiera con un fallo al cambiar la contraseña.
+async function changeWalletPassword(oldPass, newPass) {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) throw new Error('no-wallet');
+  const enc = JSON.parse(raw);
+  const info = encFormatInfo(enc);
+  if (!info.ok) throw new Error('unreadable-wallet-format:' + info.reason);
+
+  let data;
+  try { data = await decryptData(enc, oldPass); }
+  catch (e) { throw new Error('wrong-current-password'); }
+
+  const fresh = await encryptData(data, newPass, { iterations: info.iterations });
+  await safeReplaceWallet(fresh, newPass, { address: data.address, privKey: data.privKey });
+
+  // la contraseña anterior ya no abre la copia activa
+  let oldStillWorks = false;
+  try { await decryptData(JSON.parse(localStorage.getItem(STORAGE_KEY)), oldPass); oldStillWorks = true; } catch (e) {}
+  if (oldStillWorks) throw new Error('old-password-still-valid');
+
+  if (typeof walletPassword !== 'undefined' && walletPassword) walletPassword = newPass;
+  return { ok:true, iterations: info.iterations, address: data.address };
+}
+
+// UPGRADE PROTECTION — mismo dato, mismas claves, derivación más cara.
+// Voluntario y explícito: nada llama a esto por su cuenta.
+async function upgradeWalletProtection(password) {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) throw new Error('no-wallet');
+  const enc = JSON.parse(raw);
+  const info = encFormatInfo(enc);
+  if (!info.ok) throw new Error('unreadable-wallet-format:' + info.reason);
+  if (info.iterations >= WALLET_KDF_ITER_NEW) return { ok:true, already:true, iterations:info.iterations };
+
+  let data;
+  try { data = await decryptData(enc, password); }
+  catch (e) { throw new Error('wrong-password'); }
+
+  const fresh = await encryptData(data, password, { iterations: WALLET_KDF_ITER_NEW });
+  await safeReplaceWallet(fresh, password, { address: data.address, privKey: data.privKey });
+  return { ok:true, from:info.iterations, to:WALLET_KDF_ITER_NEW, address:data.address };
+}
+
+// VERIFY BACKUP — descifra el fichero DE VERDAD y compara con la cartera
+// activa. No escribe nada: la cartera no se toca en ningún momento.
+// Descargar un fichero no demuestra que se pueda recuperar; esto sí.
+async function verifyBackupFile(text, password) {
+  let enc;
+  try { enc = JSON.parse(text); } catch (e) { return { ok:false, reason:'not-json' }; }
+  // un backup web es el propio registro cifrado; admite el envoltorio antiguo
+  if (enc && enc.enc && !enc.ct) enc = enc.enc;
+  const info = encFormatInfo(enc);
+  if (!info.ok) return { ok:false, reason:'unsupported-format', detail:info.reason };
+  let data;
+  try { data = await decryptData(enc, password); }
+  catch (e) { return { ok:false, reason:'wrong-password-or-corrupt' }; }
+  if (!data || typeof data.address !== 'string' || typeof data.privKey !== 'string')
+    return { ok:false, reason:'incomplete-contents' };
+
+  const out = { ok:true, address:data.address, iterations:info.iterations,
+                version:info.version, hasSeed: !!data.seedPhrase };
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw && typeof wallet !== 'undefined' && wallet && wallet.address) {
+    out.matchesActive = (data.address === wallet.address);
+  }
+  return out;
+}
+
+// RESTORE — descifra, enseña la dirección, y NO sustituye nada hasta que el
+// usuario confirma. Si ya hay cartera activa, exige haber verificado una copia.
+async function restoreWalletFromBackup(text, password, opts) {
+  const chk = await verifyBackupFile(text, password);
+  if (!chk.ok) return chk;
+  if (!opts || !opts.confirmed) return { ok:true, preview:true, address:chk.address };
+
+  const existing = localStorage.getItem(STORAGE_KEY);
+  if (existing && !(opts && opts.acceptOverwrite))
+    return { ok:false, reason:'would-overwrite-active-wallet', address:chk.address };
+
+  let enc = JSON.parse(text); if (enc && enc.enc && !enc.ct) enc = enc.enc;
+  const data = await decryptData(enc, password);
+  // se re-cifra con el formato actual para que la cartera restaurada no herede
+  // 100.000 iteraciones sin que nadie lo sepa; la contraseña no cambia.
+  const fresh = await encryptData(data, password, { iterations: WALLET_KDF_ITER_NEW });
+  await safeReplaceWallet(fresh, password, { address: data.address, privKey: data.privKey });
+  return { ok:true, restored:true, address:data.address, iterations:WALLET_KDF_ITER_NEW };
+}
+
 
 async function loadWallet(password) {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -6983,7 +7174,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v474" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v475" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
