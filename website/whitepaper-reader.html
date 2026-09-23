@@ -363,7 +363,7 @@
 <div class="wp-spacer"></div>
 <p class="wp-p">Every block splits the coinbase reward by consensus:</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">50% + remainder to the miner,</p>
+<p class="wp-p">(blocks 0&ndash;24,999) 50% + remainder to the miner,</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">25% to a Gold Funding Vault,</p>
 <div class="wp-spacer"></div>
@@ -1072,7 +1072,7 @@ PROPERTIES:
 <li>Timestamp validation (MTP monotonicity + future drift)</li>
 <li>cASERT bitsQ difficulty compliance</li>
 <li>SOSTCompact target threshold (commit &lt;= target)</li>
-<li>Coinbase split correctness (50/25/25)</li>
+<li>Coinbase split correctness (50/25/25 to #24,999; 50/50 miner/DTD since #25,000)</li>
 <li>Constitutional address verification</li>
 <li>Transaction structure and semantic rules</li>
 <li>UTXO set updates (ConnectBlock)</li>
@@ -3380,7 +3380,7 @@ function tocBtnClick(){
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v449" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v450" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->

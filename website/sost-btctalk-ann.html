@@ -276,7 +276,7 @@
 
 <p>Of the total supply, approximately 50% goes to miners, 25% to the Gold Funding Vault, and 25% to the PoPC Pool. These ratios hold for every block from genesis to the final emission. There is no founder allocation, no team vesting schedule, and no treasury. SOST is funded by the constitutional coinbase split itself &mdash; never by minted coins outside the schedule.</p>
 
-<p><strong>End of emission:</strong> The last block with a nonzero subsidy occurs around epoch 81 (~year 2228, ~202 years after genesis). After that, block rewards are exactly 0 &mdash; the integer arithmetic truncates sub-stock values to zero. There is <strong>no tail emission</strong> (unlike Monero). The hard cap is not a counter that can be changed &mdash; it is a mathematical consequence of the geometric series converging. No function in the code can mint new coins. After emission ends, miners are compensated entirely by transaction fees. The same 50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) applies to fees: 50% to the miner, 25% to the Gold Funding Vault, 25% to the PoPC Pool. The minimum relay fee is 1 stock/byte (~0.00000001 SOST/byte), ensuring every transaction always pays something. This is the same economic design as Bitcoin &mdash; long-term security funded by fee revenue &mdash; but with the structural advantage that 25% of all fees continue accumulating gold reserves in perpetuity.</p>
+<p><strong>End of emission:</strong> The last block with a nonzero subsidy occurs around epoch 81 (~year 2228, ~202 years after genesis). After that, block rewards are exactly 0 &mdash; the integer arithmetic truncates sub-stock values to zero. There is <strong>no tail emission</strong> (unlike Monero). The hard cap is not a counter that can be changed &mdash; it is a mathematical consequence of the geometric series converging. No function in the code can mint new coins. After emission ends, miners are compensated entirely by transaction fees. The same 50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) applies to fees: 50% to the miner, 25% to the Gold Funding Vault, 25% to the PoPC Pool. The minimum relay fee is 1 stock/byte (~0.00000001 SOST/byte), ensuring every transaction always pays something. This is the same economic design as Bitcoin &mdash; long-term security funded by fee revenue &mdash; but with the structural advantage that 25% of all fees continued accumulating gold reserves &mdash; <b>until block #25,000</b>. Since V15 that share is <b>0</b>: fees go to the miner and the non-miner half of the subsidy goes to the DTD.</p>
 
 <hr>
 
@@ -423,7 +423,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v449" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v450" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
