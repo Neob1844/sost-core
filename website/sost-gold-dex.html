@@ -711,8 +711,8 @@ Blacklist:      After 3 slashes (permanent ban from Model A)</pre>
 
 <table>
 <tr><th>Role</th><th>Address</th><th>Allocation</th></tr>
-<tr><td style="color:var(--cyan)">PoPC Pool</td><td><code>sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</code></td><td>25% of every block reward</td></tr>
-<tr><td style="color:var(--gold)">Gold Vault</td><td><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></td><td>25% of every block reward</td></tr>
+<tr><td style="color:var(--cyan)">PoPC Pool</td><td><code>sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</code></td><td>25% of every block reward (until #25,000; 0 since)</td></tr>
+<tr><td style="color:var(--gold)">Gold Vault</td><td><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></td><td>25% of every block reward (until #25,000; 0 since)</td></tr>
 </table>
 
 <p>The remaining 50% goes to the miner who solves the block. The PoPC Pool funds all custody rewards (Model A and Model B). The Gold Vault accumulates funds exclusively for gold acquisition under GV1&ndash;GV4 governance rules.</p>
@@ -723,7 +723,7 @@ miner     = (subsidy + fees) - 2*q    // 50% + rounding remainder
 gold_vault = q                         // 25% &rarr; sost11a9c6fe1de...
 popc_pool  = q                         // 25% &rarr; sost1d876c5b85...</pre>
 
-<div class="note"><strong>Enforcement:</strong> Any block deviating from the 50/25/25 split or sending gold/popc funds to addresses other than the constitutional addresses is rejected at consensus level. These addresses cannot be changed without a hard fork.</div>
+<div class="note"><strong>Enforcement:</strong> Any block deviating from the 50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) or sending gold/popc funds to addresses other than the constitutional addresses is rejected at consensus level. These addresses cannot be changed without a hard fork.</div>
 </div></section>
 
 
@@ -740,7 +740,7 @@ popc_pool  = q                         // 25% &rarr; sost1d876c5b85...</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v447" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v448" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->

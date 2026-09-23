@@ -244,7 +244,7 @@ Gold Funding Vault and PoPC Pool addresses are defined in `include/sost/params.h
 | Fee market | RBF (Replace-by-Fee) + CPFP (Child-Pays-for-Parent) |
 | Arithmetic | Rational integer (no floating-point in consensus) |
 
-Fees follow the same constitutional 50/25/25 split as block subsidies. After emission ends, fees continue accumulating gold reserves in perpetuity.
+Fees follow the same constitutional 50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) as block subsidies. After emission ends, fees continue accumulating gold reserves in perpetuity.
 
 ## Native Financial Primitives
 

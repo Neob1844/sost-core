@@ -1461,7 +1461,7 @@
           <ul style="margin:0 0 0 18px;padding:0;color:var(--text-secondary)">
             <li>Open source from genesis &mdash; <a href="https://github.com/Neob1844/sost-core" target="_blank" rel="noopener" style="color:var(--cyan-primary)">github.com/Neob1844/sost-core</a></li>
             <li>No premine, no ICO, no dev tax &mdash; reproducible from <code>genesis_block.json</code></li>
-            <li>Constitutional immutability &mdash; <code>50/25/25</code> split and hard cap live in <code>include/sost/params.h</code></li>
+            <li>Consensus constants live in <code>include/sost/params.h</code> &mdash; the hard cap, and the emission split for each height range (<code>50/25/25</code> for blocks 0&ndash;24,999, <code>50/50</code> miner/DTD from #25,000)</li>
             <li>Observable gold reserve &mdash; <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan-primary)">Etherscan</a></li>
             <li>SbPoW miner-identity binding &mdash; every block from <code>#7,100</code> carries a Schnorr signature over its PoW commitment</li>
             <li>V13 anti-dominance DTD gate at <code>#12,100</code> &mdash; addresses with &ge; 10 % share of the previous 288 blocks are excluded from the DTD lottery until their rolling share drops below 10 %, and only miners with an SbPoW-signed block (most recent block at height &ge; 7,100) are eligible; logic lives in <code>src/lottery.cpp::compute_lottery_eligibility_set</code> and <code>include/sost/params.h::is_dtd_dominant</code> / <code>is_sbpow_eligible</code></li>
@@ -2187,7 +2187,7 @@ function fetchSostChart(){
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v447" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v448" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
 <!-- ════════════════════════════════════════════════════════════ -->

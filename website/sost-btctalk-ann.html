@@ -216,7 +216,7 @@
 
 <h2>The Solution</h2>
 
-<p>Every SOST block automatically allocates 25% of the coinbase reward to a Gold Funding Vault address. This is not a governance decision. It is not a DAO vote. It is a consensus rule &mdash; any block that does not include the correct 50/25/25 split to the correct constitutional addresses is invalid and rejected by every node on the network. The split is hardcoded at genesis and cannot be modified.</p>
+<p>Every SOST block automatically allocates 25% of the coinbase reward to a Gold Funding Vault address. This is not a governance decision. It is not a DAO vote. It is a consensus rule &mdash; any block that does not include the correct 50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) to the correct constitutional addresses is invalid and rejected by every node on the network. The split is hardcoded at genesis and cannot be modified.</p>
 
 <p>The Gold Funding Vault accumulates SOST, which is periodically converted to XAUT and PAXG via a rule-based TWAP execution policy (rate-limited, anti-momentum, publicly auditable). Purchased gold tokens are deposited into a Heritage Reserve on Ethereum mainnet &mdash; sealed by default. The reserve is intended to remain perpetual. It cannot be moved except under an Emergency Catastrophe procedure requiring both 75% PoW miner signaling and a Execution Order.</p>
 
@@ -251,7 +251,7 @@
 <ul>
   <li><b>Genesis:</b> March 15, 2026, 18:00:00 UTC</li>
   <li><b>Genesis difficulty:</b> 11.6841 (bitsQ = 765,730)</li>
-  <li><b>Block 0 reward:</b> 7.85100863 SOST, split 50/25/25 to constitutional addresses</li>
+  <li><b>Block 0 reward:</b> 7.85100863 SOST, split 50/25/25 (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) to constitutional addresses</li>
   <li><b>No coins pre-mined.</b> No coins reserved for founders, team, or investors</li>
   <li><b>Anyone can mine from block 1.</b> CPU-competitive at launch &mdash; no ASIC advantage</li>
   <li><b>Coinbase maturity:</b> 1,000 blocks (~7 days) before mined coins are spendable</li>
@@ -276,7 +276,7 @@
 
 <p>Of the total supply, approximately 50% goes to miners, 25% to the Gold Funding Vault, and 25% to the PoPC Pool. These ratios hold for every block from genesis to the final emission. There is no founder allocation, no team vesting schedule, and no treasury. SOST is funded by the constitutional coinbase split itself &mdash; never by minted coins outside the schedule.</p>
 
-<p><strong>End of emission:</strong> The last block with a nonzero subsidy occurs around epoch 81 (~year 2228, ~202 years after genesis). After that, block rewards are exactly 0 &mdash; the integer arithmetic truncates sub-stock values to zero. There is <strong>no tail emission</strong> (unlike Monero). The hard cap is not a counter that can be changed &mdash; it is a mathematical consequence of the geometric series converging. No function in the code can mint new coins. After emission ends, miners are compensated entirely by transaction fees. The same 50/25/25 split applies to fees: 50% to the miner, 25% to the Gold Funding Vault, 25% to the PoPC Pool. The minimum relay fee is 1 stock/byte (~0.00000001 SOST/byte), ensuring every transaction always pays something. This is the same economic design as Bitcoin &mdash; long-term security funded by fee revenue &mdash; but with the structural advantage that 25% of all fees continue accumulating gold reserves in perpetuity.</p>
+<p><strong>End of emission:</strong> The last block with a nonzero subsidy occurs around epoch 81 (~year 2228, ~202 years after genesis). After that, block rewards are exactly 0 &mdash; the integer arithmetic truncates sub-stock values to zero. There is <strong>no tail emission</strong> (unlike Monero). The hard cap is not a counter that can be changed &mdash; it is a mathematical consequence of the geometric series converging. No function in the code can mint new coins. After emission ends, miners are compensated entirely by transaction fees. The same 50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) applies to fees: 50% to the miner, 25% to the Gold Funding Vault, 25% to the PoPC Pool. The minimum relay fee is 1 stock/byte (~0.00000001 SOST/byte), ensuring every transaction always pays something. This is the same economic design as Bitcoin &mdash; long-term security funded by fee revenue &mdash; but with the structural advantage that 25% of all fees continue accumulating gold reserves in perpetuity.</p>
 
 <hr>
 
@@ -374,7 +374,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
   <li><b>Timestamps / MTP</b> (monotonicity, future drift) &mdash; microseconds</li>
   <li><b>cASERT bitsQ</b> (exponential target check) &mdash; microseconds</li>
   <li><b>PoW inequality</b> (commit &le; target) &mdash; microseconds</li>
-  <li><b>Coinbase rules</b> (50/25/25 split, constitutional addresses) &mdash; microseconds</li>
+  <li><b>Coinbase rules</b> (50/25/25 split (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000), constitutional addresses) &mdash; microseconds</li>
   <li><b>Transaction validation</b> (R/S/CB rules, ECDSA verify) &mdash; milliseconds</li>
   <li><b>UTXO connect</b> (atomic state update with reorg support) &mdash; milliseconds</li>
   <li><b>ConvergenceX recomputation</b> (100K gradient steps + 4GB scratchpad + 4GB dataset) &mdash; 5-30 seconds (miner-only memory)</li>
@@ -423,7 +423,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v447" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v448" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
