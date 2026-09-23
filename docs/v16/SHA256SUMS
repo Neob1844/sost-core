@@ -1,29 +1,30 @@
-# SOST V16.2.1 — official binary hashes
+# SOST V16.2.2 — official binary hashes
 #
-# Release artifact for tag v16.2.1 (commit 84f93015). Committed AFTER that tag on
-# purpose: a hash of a binary built from a tag cannot live inside that tag.
+# Release artifact for tag v16.2.2. Committed AFTER that tag on purpose: a hash of a
+# binary built from a tag cannot live inside that tag.
 #
-# v16.2.1 changes ONLY sost-cli. sost-node and sost-miner are BYTE-IDENTICAL to
-# v16.2.0 — the two hashes below are the same values that release published, and that
-# is deliberate: a node or a miner already running v16.2.0 does NOT need to restart
-# for this release, so the update costs no mining time.
+# v16.2.2 changes ONLY sost-cli, again. sost-node and sost-miner are BYTE-IDENTICAL to
+# v16.2.0 and v16.2.1 — the same two hashes all three releases publish — so a node or a
+# miner already running any v16.2.x does NOT restart for this release and loses no
+# mining time. Only the CLI binary is replaced.
 #
-# Consensus is unchanged, again: V16 activates at #30,000 and the first DTD Jackpot V2
-# is #30,186, exactly as in v16.1.0 and v16.2.0.
+# Consensus is unchanged across every v16.2.x: V16 activates at #30,000 and the first
+# DTD Jackpot V2 is #30,186, exactly as in v16.1.0.
 #
-# The previous lists are kept: docs/v16/SHA256SUMS_V16_1 (v16.1.0, for a rollback) and
-# docs/v16/SHA256SUMS_V16_2_0 (v16.2.0).
+# Older lists are kept, because a rollback binary verifies against them:
+#   docs/v16/SHA256SUMS_V16_2_1   (v16.2.1)
+#   docs/v16/SHA256SUMS_V16_2_0   (v16.2.0)
+#   docs/v16/SHA256SUMS_V16_1     (v16.1.0)
 #
 # Verify:   sha256sum -c docs/v16/SHA256SUMS
 #
 # Built from the tag with the mainnet flags, in the environment recorded in
-# docs/v16/RELEASE_MANIFEST_V16_2.md. The build directory must be named `build`:
-# the SOURCE path is normalised out of the binary (measured again here — the same
-# commit built at /home/sost/SOST/sostcore/rel-v1621-a and at /tmp/rel-v1621-b gave
-# these exact bytes), the BUILD directory name is not.
+# docs/v16/RELEASE_MANIFEST_V16_2.md. The build directory must be named `build`: the
+# SOURCE path is normalised out of the binary (measured again for this build — two
+# different directories produced these exact bytes), the BUILD directory name is not.
 #
 # PATH-INDEPENDENT BUILD = YES   — measured, two directories.
 # CROSS-MACHINE REPRODUCIBILITY = NOT PROVEN.
 b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node
 2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner
-f50952bb3a02e061f239eca27a9d28a9267c5ee63ada714354357f433728b292  sost-cli
+39170309cb0d0560f4ca82a225f5dd3b1c3d7eaeda1928273c4824f26141facf  sost-cli

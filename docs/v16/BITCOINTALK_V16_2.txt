@@ -1,11 +1,11 @@
-[center][size=18pt][b]SOST V16.2.1 released — and the update window is back: after #29,900, before #30,000[/b][/size]
+[center][size=18pt][b]SOST V16.2.2 released — and the update window is back: after #29,900, before #30,000[/b][/size]
 [size=12pt]Consensus unchanged: activation [b]#30,000[/b] · first DTD Jackpot V2 draw [b]#30,186[/b][/size][/center]
 
 [hr]
 
 Two things in this post, and only two.
 
-[b]1.[/b] [b]v16.2.1[/b] is released. It is the build to install, on [b]your node and your miner[/b]. (It follows v16.2.0 by a few hours and changes only [b]sost-cli[/b] — sost-node and sost-miner are byte-identical to v16.2.0, same hashes, so a node already on v16.2.0 replaces just the CLI and never restarts.)
+[b]1.[/b] [b]v16.2.2[/b] is released. It is the build to install, on [b]your node and your miner[/b]. (v16.2.0, .1 and .2 all ship the SAME sost-node and sost-miner — byte-identical, same hashes. Only the CLI was corrected, twice, after an audit of the paths that handle funds. Install the latest: the node and the miner you install are the same binaries either way.)
 [b]2.[/b] The update happens in a [b]coordinated window: after block #29,900 and before block #30,000.[/b] This [b]replaces[/b] what the V16.1 post above says in section 19 ("You may update at ANY time before #30,000", "Do not wait for #29,900"). Those lines are withdrawn. The window stands.
 
 Nothing else changes. Activation is still #30,000, the first V2 Jackpot is still #30,186, and every rule described in the V16.1 post remains exactly as written.
@@ -19,7 +19,7 @@ BEFORE #29,900     get the binaries, verify their SHA256, read this post.
                    Do NOT switch yet.
 
 #29,900 -> #30,000 THE WINDOW (~16-17 hours). Stop your node and your miner,
-                   install the v16.2.1 binaries on BOTH, restart both.
+                   install the v16.2.2 binaries on BOTH, restart both.
 
 AT #30,000         V16 activates by itself. No command, no config switch,
                    no restart at the height.
@@ -97,7 +97,7 @@ The earlier guides told you to build into build-v16 / build-v162. That was our m
 [code]
 b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node   (identical in v16.2.0 and v16.2.1)
 2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner  (identical in v16.2.0 and v16.2.1)
-f50952bb3a02e061f239eca27a9d28a9267c5ee63ada714354357f433728b292  sost-cli    (v16.2.1)
+39170309cb0d0560f4ca82a225f5dd3b1c3d7eaeda1928273c4824f26141facf  sost-cli    (v16.2.2)
 [/code]
 
 An official downloaded binary [b]must[/b] match exactly. A binary you compiled on a different compiler, linker or libc may legitimately differ — cross-machine reproducibility is [b]not[/b] proven and we do not claim it.
@@ -111,7 +111,7 @@ The v16.1.0 list is kept as docs/v16/SHA256SUMS_V16_1, because that is what a ro
 The official binaries are published with the release — compiling is optional:
 
 [code]
-https://github.com/Neob1844/sost-core/releases/tag/v16.2.1
+https://github.com/Neob1844/sost-core/releases/tag/v16.2.2
 
   sost-node  sost-miner  sost-cli  SHA256SUMS
 
@@ -132,13 +132,13 @@ Nothing in v16.2.0 changes the on-disk chain format, so a rollback is the old bi
 
 [code]
 BEFORE #29,900
-  [ ] get v16.2.1 (official binary, or build with -B build)
+  [ ] get v16.2.2 (official binary, or build with -B build)
   [ ] verify SHA256 against docs/v16/SHA256SUMS
   [ ] keep your current binaries, with a timestamp in the name
 
 #29,900 -> #30,000
   [ ] stop node and miner
-  [ ] install v16.2.1 on BOTH
+  [ ] install v16.2.2 on BOTH
   [ ] restart BOTH
   [ ] check the RUNNING binary:  sha256sum /proc/<pid>/exe
   [ ] height advancing and matching the network

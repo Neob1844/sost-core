@@ -18,6 +18,32 @@ handle needs to sit in `argv` or on a screen any more.**
 | Activation height | 30,000 (unchanged) |
 | First V2 jackpot | 30,186 (unchanged) |
 
+## v16.2.2 — the last hand-rolled parsers
+
+`v16.2.2` ships **only a new `sost-cli`** for the third time; `sost-node` and
+`sost-miner` keep the same hashes they had in v16.2.0. It converts the two
+paths left over from v16.2.1:
+
+* **`cancel-tx` / `bump-fee`** rebuilt the original transaction by scanning the
+  raw response. `"fee"` was searched from offset 0 (any earlier field of that
+  name won), a vin was delimited by the first `}` (one nested object truncated
+  the list — and every dropped vin is a `prev_value` missing from `total_in`,
+  which is what `total_in - new_fee` returns to the wallet), and fields were
+  read with `std::stoll` on the raw C string, which throws and aborts on a null
+  or quoted value.
+* **`capsule-decrypt`** counted `payload_hex` matches in order, guessing which
+  vout each belonged to, and read a truncated reply as "no capsule here".
+
+The CLI now has **zero substring-scanned RPC answers**.
+`tests/audit_v162_rbf.sh` covers it with 10 assertions, including the
+nested-object vin that used to truncate the list.
+
+```
+b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node   (unchanged since v16.2.0)
+2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner  (unchanged since v16.2.0)
+39170309cb0d0560f4ca82a225f5dd3b1c3d7eaeda1928273c4824f26141facf  sost-cli    (v16.2.2)
+```
+
 ## v16.2.1 — the CLI follow-up
 
 `v16.2.1` (commit `84f93015`) ships **only a new `sost-cli`**. `sost-node` and
