@@ -87,7 +87,10 @@
 <script src="js/security.js?v=v392"></script>
 <script src="js/nav-toggle.js?v=v392" defer></script>
 </head>
-<body>
+<body><div style="max-width:960px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:14px;line-height:1.6">
+<b style="color:#f59e0b">HISTORICAL PAGE.</b> This is an archived announcement. For current instructions use the <a href="sost-upgrade-v1622.html" style="color:#39ff14;font-weight:700">operator upgrade guide</a>, <a href="sost-quickstart.html" style="color:#39ff14">quick start</a> and the <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.3" target="_blank" rel="noopener" style="color:#22d3ee">official v16.2.3 release</a>. Commands here were updated so nobody copies an unsafe one, but the surrounding text describes an earlier release.
+</div>
+
 
 
 
@@ -304,7 +307,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 
 <p><b>Run node (terminal 1):</b></p>
 <pre>./sost-node --genesis genesis_block.json --chain chain.json \
-    --rpc-user YOUR_USER --rpc-pass YOUR_PASS --profile mainnet</pre>
+    --rpc-user YOUR_USER --rpc-pass-file ~/.sost/rpc.pass --profile mainnet</pre>
 
 <p><b>Create a Phase 2 mining wallet + label</b> (required from block 7,100 onward; SbPoW Schnorr signing):</p>
 <pre>./sost-cli --wallet phase2-miner-wallet.json newwallet
@@ -318,7 +321,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
     --wallet phase2-miner-wallet.json \
     --mining-key-label phase2-miner \
     --rpc 127.0.0.1:18232 \
-    --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
+    --rpc-user YOUR_USER --rpc-pass-file ~/.sost/rpc.pass \
     --blocks 999999 --profile mainnet --threads N</pre>
 
 <p>The miner connects to your local node via RPC, fetches mempool transactions via getblocktemplate, signs the v2 header with the wallet key tagged by the label, and submits solved blocks via submitblock. First solo miner to solve a valid ConvergenceX proof and provide a valid SbPoW signature gets the block reward. <code>--address</code>-only mining is rejected post-#7,100.</p>
@@ -417,7 +420,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release &amp;&amp; make -j$(nproc)</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v441" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v442" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->

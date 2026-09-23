@@ -1421,7 +1421,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
         <h3 style="font-family:var(--font-display);font-size:16px;color:var(--cyan-primary);margin-bottom:8px;">popc_monitor.py</h3>
         <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Live dashboard for the PoPC Pool. Shows pool balance, active contracts, PUR%, current reward tier, dynamic factor, and effective rewards at the current tier. Alerts when PUR crosses 50%.</p>
         <pre style="background:var(--bg-card);padding:10px 12px;font-size:11px;color:var(--green-primary);overflow-x:auto;border-radius:2px;">python3 scripts/popc_monitor.py \
-  --rpc-user USER --rpc-pass PASS \
+  --rpc-user USER --rpc-pass-file ~/.sost/rpc.pass \
   --watch 30</pre>
         <p style="color:var(--text-dim);font-size:11px;margin-top:8px;">Read-only · no consensus interaction · one-shot or --watch N mode.</p>
       </div>
@@ -1430,7 +1430,7 @@ SOST_reward = gold_value &times; APR(duration) &times; (months / <span class="nu
         <h3 style="font-family:var(--font-display);font-size:16px;color:var(--cyan-primary);margin-bottom:8px;">popc_oracle.py</h3>
         <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">Etherscan audit tool. For each active commitment, queries the declared Ethereum wallet's XAUT/PAXG balance and compares it to the committed gold amount. Prints PASS/FAIL/ERROR per commitment and writes a CSV snapshot.</p>
         <pre style="background:var(--bg-card);padding:10px 12px;font-size:11px;color:var(--green-primary);overflow-x:auto;border-radius:2px;">python3 scripts/popc_oracle.py \
-  --rpc-user USER --rpc-pass PASS \
+  --rpc-user USER --rpc-pass-file ~/.sost/rpc.pass \
   --etherscan-key KEY \
   --csv /tmp/audit.csv</pre>
         <p style="color:var(--text-dim);font-size:11px;margin-top:8px;">Read-only · never slashes automatically · operator decides on failures.</p>
@@ -1487,7 +1487,7 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v441" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v442" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->

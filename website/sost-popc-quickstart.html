@@ -518,7 +518,7 @@ the bond is slashed.
   <span class="title">popc_monitor.py — live pool dashboard</span>
   <div class="body">
     <pre>python3 scripts/popc_monitor.py \
-  --rpc-user USER --rpc-pass PASS --watch 30</pre>
+  --rpc-user USER --rpc-pass-file ~/.sost/rpc.pass --watch 30</pre>
     <p>Shows pool balance, active contracts, PUR (Pool Utilization Ratio), current reward tier, and
     effective rewards at the current tier. Alerts when PUR crosses 50%. Refreshes every 30 seconds
     with <code>--watch</code>.</p>
@@ -529,7 +529,7 @@ the bond is slashed.
   <span class="title">popc_oracle.py — Etherscan audit tool</span>
   <div class="body">
     <pre>python3 scripts/popc_oracle.py \
-  --rpc-user USER --rpc-pass PASS \
+  --rpc-user USER --rpc-pass-file ~/.sost/rpc.pass \
   --etherscan-key YOUR_FREE_API_KEY \
   --csv /tmp/popc_audit.csv</pre>
     <p>Queries Etherscan for every active commitment's declared wallet and checks that the XAUT/PAXG
@@ -612,7 +612,7 @@ interested in earning passive SOST rewards without giving up custody, please for
 
 </div>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v441" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v442" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
 <!-- ════════════════════════════════════════════════════════════ -->
