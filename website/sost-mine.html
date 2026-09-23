@@ -215,12 +215,44 @@ nav .nav-links { width: 100%; }
 </header>
 
 <div style="max-width:960px;margin:14px auto;padding:12px 16px;border:1px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.08);font-size:14px;line-height:1.6">
-<b style="color:#ffd166">Already running a node or a miner?</b> The v16.2.2 update window is <b>after block #29,900 and before #30,000</b> &mdash;
+<b style="color:#ffd166">Already running a node or a miner?</b> The <b>v16.2.3</b> update window is <b>after block #29,900 and before #30,000</b> &mdash;
 <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">read the upgrade guide</a>.
 </div>
 <div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
 <b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
 </div>
+<!-- ══════════════════════════════════════════════════════════════════════
+     Puerta de entrada a la guía completa. NO se duplica el contenido: la guía
+     vive en sost-upgrade.html y es la misma que abre el banner de las 57
+     páginas. Aquí sólo se enlazan las secciones que un minero busca cuando
+     llega a esta página, para que no tenga que leerla entera.
+     ══════════════════════════════════════════════════════════════════════ -->
+<div style="max-width:1000px;margin:20px auto;padding:18px 20px;border:1px solid rgba(57,255,20,.45);border-radius:10px;background:linear-gradient(150deg,rgba(57,255,20,.06),rgba(34,211,238,.04))">
+  <div style="font-size:11px;letter-spacing:2px;color:#7b8794;margin-bottom:7px">FULL REFERENCE</div>
+  <div style="font-size:19px;font-weight:800;color:#39ff14;margin-bottom:8px">SOST V16 &mdash; Miner &amp; Node Guide</div>
+  <div style="font-size:14px;line-height:1.7;color:#b9c6d4;margin-bottom:14px">
+    This page gets you mining in ten minutes. The guide answers everything that comes after:
+    where your RPC password comes from (<b>there is no universal one</b> &mdash; you create it),
+    why <code>sostcore.com/rpc/public</code> is <b>not</b> a mining server, what the three different
+    things called &ldquo;encryption&rdquo; actually protect, how normal DTD differs from the Jackpot V2 draw,
+    and what to back up before you need it.
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:7px;font-size:12px;font-family:var(--font-mono,monospace)">
+    <a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:7px 14px;border-radius:6px;text-decoration:none">OPEN THE FULL GUIDE</a>
+    <a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:7px 11px;border-radius:6px;text-decoration:none">Download &amp; verify</a>
+    <a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:7px 11px;border-radius:6px;text-decoration:none">RPC password</a>
+    <a href="sost-upgrade.html#s6" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:7px 11px;border-radius:6px;text-decoration:none">DTD vs Jackpot V2</a>
+    <a href="sost-upgrade.html#s8" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:7px 11px;border-radius:6px;text-decoration:none">Backups</a>
+    <a href="sost-upgrade.html#s9" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:7px 11px;border-radius:6px;text-decoration:none">Troubleshooting</a>
+  </div>
+  <div style="margin-top:13px;padding:10px 13px;border-left:3px solid #fb010d;background:rgba(251,1,13,.07);font-size:12.5px;line-height:1.65;color:#d7c2c2">
+    <b style="color:#ff6b6b">Before you build a node from scratch:</b> a full sync from the genesis block
+    currently stalls on 19 historical blocks (heights 4,160&ndash;5,410) that the published binaries cannot
+    re-validate. It is diagnosed and a bounded fix is designed, but <b>not deployed</b>. Start from a recent
+    <code>chain.json</code> instead. <a href="sost-upgrade.html#s11" style="color:#ff9f9f">Full status &rarr;</a>
+  </div>
+</div>
+
 <section id="requirements">
   <div class="container">
     <div class="section-id">REQUIREMENTS</div>
@@ -378,7 +410,9 @@ Miner address: sost1...   (derived from wallet key)</div>
     <ul>
       <li><b>High variance.</b> You can mine for hours and find nothing, then hit two blocks in 20 minutes. That is mathematically expected, not a bug. See the <a href="sost-mining-calculator.html">calculator</a> for the numbers on your hashrate.</li>
       <li><b>No guaranteed earnings.</b> SOST is in pre-market testing &mdash; there is no exchange listing, no market price, no liquidity. SOST may not reach market value at all.</li>
-      <li><b>Block reward today: ~7.85 SOST.</b> 50% to miner, 25% to Gold Vault, 25% to PoPC Pool. Hardcoded, immutable.</li>
+      <li><b>Block reward today: ~7.85 SOST</b>, split <b>50% miner / 50% DTD</b> since V15 at block #25,000.
+          The 50/25/25 split with a Gold Vault and a PoPC Pool share was the rule <b>below</b> #25,000; those two
+          emission streams are zero today. The DTD draws on every block and needs no PoPC bond.</li>
       <li><b>The reference miner is CPU-oriented.</b> SOST does not enforce CPU-only at consensus level &mdash; ConvergenceX is memory-hard and CPU-friendly by design, but no public claim is made that GPU/ASIC ports are impossible.</li>
     </ul>
     <p>For more context on the lack of pools, read <a href="sost-why-no-pools.html">Why no pools</a> &mdash; or see the live <a href="#founding-miners">Founding Miners</a> hall of fame below, read straight from the chain.</p>
@@ -610,7 +644,7 @@ cmake --build . -j$(nproc)
 
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v469" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v470" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
 <!-- ════════════════════════════════════════════════════════════ -->
