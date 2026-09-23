@@ -1266,10 +1266,10 @@
           tokenized gold exposure via the TWAP execution pipeline.
         </p>
         <table class="code-table">
-          <tr><td class="key">Allocation</td><td class="val"><code>25%</code> of every block reward <span class="comment">// q = reward // 4</span></td></tr>
-          <tr><td class="key">Enforcement</td><td class="val">Consensus validation <span class="comment">// invalid block if missing</span></td></tr>
-          <tr><td class="key">Year 1 accumulation</td><td class="val"><code>103,160</code> SOST</td></tr>
-          <tr><td class="key">30-year total</td><td class="val"><code>1,167,300</code> SOST</td></tr>
+          <tr><td class="key">Allocation</td><td class="val"><code>25%</code> of every block reward <b style="color:#f59e0b">until #25,000 &mdash; <code>0</code> since V15</b> <span class="comment">// q = reward // 4, while it applied</span></td></tr>
+          <tr><td class="key">Enforcement</td><td class="val">Consensus validation for blocks 0&ndash;24,999 <span class="comment">// invalid block if missing, at those heights</span></td></tr>
+          <tr><td class="key">Year 1 accumulation <span class="comment">(pre-V15 projection)</span></td><td class="val"><code>103,160</code> SOST</td></tr>
+          <tr><td class="key">30-year total <span class="comment">(pre-V15 projection; will not accrue)</span></td><td class="val"><code>1,167,300</code> SOST</td></tr>
           <tr><td class="key">Default split</td><td class="val">50/50 XAUt / PAXG <span class="comment">// adjustable for future purchases</span></td></tr>
           <tr><td class="key">Staging assets</td><td class="val">USDC + USDT <span class="comment">// &le;72 hours temporary only</span></td></tr>
         </table>
@@ -1533,7 +1533,7 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v453" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v454" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
