@@ -5003,6 +5003,39 @@ static bool p2p_send_block(int fd, int64_t h, PeerCrypto* crypto = nullptr) {
             js = s.str();
         }
     }
+    // The relay form must state the header version EXPLICITLY. chain.json omits
+    // "version" for every pre-Phase-2 block (they are all v1 by rule), so after a
+    // restart those blocks go out without it — and a receiver that reads an absent
+    // key as -1 sees 4294967295, concludes "v2 header", and rejects the block for
+    // having no miner_pubkey. That single missing word is why a new node dies on
+    // block #1 and can never sync the chain from genesis.
+    //
+    // Emitting it is NOT inventing data. Below V11_PHASE2_HEIGHT the consensus
+    // rule in sbpow.h fixes header_version at exactly 1 — it is the only legal
+    // value, the block was accepted under it, and for a v1 header the version
+    // word does not enter the hash preimage, so the block_id is untouched.
+    //
+    // At or above Phase 2 the version is NOT derivable: a v2 block carries a
+    // signed SbPoW extension, and a stored block missing that word is one we
+    // cannot reconstruct faithfully. Refuse it instead of guessing.
+    if (!incomplete && h > 0 && js.find("\"version\"") == std::string::npos) {
+        if (h >= sost::V11_PHASE2_HEIGHT) {
+            printf("[P2P] REFUSING to serve block #%lld: stored form has no \"version\" "
+                   "and at height >= %lld it cannot be derived (a v2 header carries a "
+                   "signed SbPoW extension)\n", (long long)h, (long long)sost::V11_PHASE2_HEIGHT);
+            fflush(stdout);
+            return false;
+        }
+        const size_t ob = js.find('{');
+        if (ob == std::string::npos) {
+            printf("[P2P] REFUSING to serve block #%lld: stored form is not a JSON object\n",
+                   (long long)h);
+            fflush(stdout);
+            return false;
+        }
+        js.insert(ob + 1, "\"version\":1,");
+    }
+
     // Never put an incomplete block on the wire. Serving one costs the peer a
     // +10 misbehaviour penalty and a disconnect, and tells it nothing about
     // what is actually wrong. Refusing is visible, local, and lets the peer
@@ -6360,8 +6393,23 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     //   - v2 missing pubkey/signature → reject
     // The parsed bytes feed both the block_id recompute below (v2 hash
     // includes the SbPoW extension) and ValidateSbPoW further down.
-    uint32_t hdr_version = (uint32_t)jint(block_json, "version");
-    if (hdr_version == 0) hdr_version = 1;  // legacy default
+    // jint() returns -1 for an ABSENT key, and (uint32_t)(-1) is 4294967295,
+    // which is >= 2 — so the normalisation below never fired and EVERY block
+    // before Phase 2 (heights 1..7099 carry no "version" field at all) was read
+    // as a v2 header and rejected for "missing miner_pubkey". That is why no
+    // node could sync from genesis: it died on block #1.
+    //
+    // The contract is stated three lines above: "version" (int; defaults to 1
+    // if missing). This restores it, using the same presence disambiguation the
+    // profile_index path already does for exactly this reason.
+    //
+    // NOT a consensus relaxation: the height gate lives in validate_sbpow_for_block
+    // (sbpow.h) and is unchanged — below phase2_height header_version MUST be 1,
+    // at or above it MUST be 2. A block at height >= 7100 that omits "version"
+    // still fails with VERSION_MISMATCH; it just fails for the right reason.
+    const bool     ver_present     = (block_json.find("\"version\"") != std::string::npos);
+    const int64_t  hdr_version_raw = ver_present ? jint(block_json, "version") : 0;
+    uint32_t hdr_version = (hdr_version_raw <= 0) ? 1u : (uint32_t)hdr_version_raw;
     sost::sbpow::MinerPubkey    sbpow_pubkey{};
     sost::sbpow::MinerSignature sbpow_signature{};
     if (hdr_version >= 2) {
