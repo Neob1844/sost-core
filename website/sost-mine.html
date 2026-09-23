@@ -376,7 +376,7 @@ export SOST_RPC_USER="changeme"</div>
         <p>Expected startup lines (the label echoed back is whichever one you chose):</p>
         <div class="code">SbPoW signing key: label='phase2-miner'
 Miner address: sost1...   (derived from wallet key)</div>
-        <div class="note"><b>Threads:</b> try <code>--threads 16</code> first. ConvergenceX is memory-bandwidth bound &mdash; throwing 64 threads at it on most boxes <i>does not</i> mine faster, and on some hardware actually slows down. If 16 looks unstable on your machine, drop to 8 and try again.</div>
+        <div class="note"><b>Threads:</b> a tuning knob, not a required value. ConvergenceX is memory-bandwidth bound, so more threads is <b>not</b> automatically faster &mdash; on many machines 64 threads mine slower than 8. Start at <code>8</code>, try <code>16</code>, and keep whichever gives the higher <code>stable/s</code> figure in your own miner log. The example above uses 16; the <a href="sost-upgrade.html#s5" style="color:#9fe8ff">guide</a> and the BitcoinTalk notice use 8 for the same reason &mdash; neither number is a rule.</div>
         <div class="note"><b>Lottery eligibility:</b> a brand-new address is not eligible for the DTD lottery until it mines its first valid block. Eligibility is per-address and unlocks automatically once the address mines once.</div>
       </div>
     </div>
@@ -644,7 +644,7 @@ cmake --build . -j$(nproc)
 
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v472" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v473" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
 <!-- ════════════════════════════════════════════════════════════ -->
