@@ -19,7 +19,11 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
+<<<<<<< HEAD
 <meta name="explorer-html-version" content="2026-09-23-v468-miner-guide">
+=======
+<meta name="explorer-html-version" content="2026-09-23-v475-nav-two-rows">
+>>>>>>> main
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -116,9 +120,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}
 @keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 @keyframes marketsLivePulse{0%,100%{color:#4ade80;text-shadow:0 0 4px rgba(74,222,128,.45)}50%{color:#86efac;text-shadow:0 0 12px rgba(74,222,128,.95),0 0 22px rgba(74,222,128,.55)}}
-/* Header scaled to match the main site: the square modules went 90 -> 110 px and
-   the brand to 26px/3px, so the link row is scaled by the same ratio instead of
-   being left small next to it. Layout, colours and spacing ratios untouched. */
+/* Tamanos del nav restaurados a los previos a v460 (90px / 22.5px / 13.75px).
+   El escalado a 110px/26px/16px hacia que la fila de la marca y la de enlaces
+   no cupieran juntas en los 1352px de la columna y se apilaran en dos lineas.
+   No se toca nada mas del header: mismo marcado, mismos colores, mismo orden. */
 .header-link{font-size:16px;color:var(--text3);letter-spacing:1.4px;transition:color .15s}
 .header-link.markets-live{font-weight:700;animation:marketsLivePulse 1.6s ease-in-out infinite}
 .header-link.markets-live:hover{color:#bbf7d0}
@@ -206,6 +211,12 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .price-tooltip-date{color:#666}
 .price-tooltip-val{color:#c8c8c8;font-weight:600}
 .price-card-range{font-size:9px;color:var(--text3);margin-top:8px;letter-spacing:.5px}
+/* Variación por serie de las cards overlay. El verde/rojo va SOLO en el
+   número; el cuadrito y el nombre conservan el color del activo. */
+.ov-pct{display:flex;flex-wrap:wrap;gap:6px 18px;margin:2px 0 7px;font-size:11.5px;
+  font-family:var(--code);letter-spacing:.3px;line-height:1.5;min-height:17px}
+.ov-pct b{font-size:12.5px;font-weight:700}
+@media(max-width:768px){.ov-pct{gap:4px 12px;font-size:10.5px}.ov-pct b{font-size:11.5px}}
 @media(max-width:768px){.price-cards{grid-template-columns:minmax(0,1fr)}}
 /* The four comparison charts sit OUTSIDE .main so they get the full window
    width without a 100vw breakout (100vw includes the scrollbar and would
@@ -225,9 +236,21 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
    was a CONSEQUENCE of the document being stretched by those three.
    Desktop is untouched: every rule here lives behind a media query.
    ══════════════════════════════════════════════════════════════════════════ */
+/* ── NAV en dos filas, a TODAS las anchuras ───────────────────────────────
+   Los logotipos vuelven a 110x110 para igualar la portada y las secciones.
+   A ese tamaño la fila de la marca y la de enlaces no caben una al lado de
+   la otra dentro de los 1352px de la columna, así que en vez de dejar que
+   se apilen por accidente —que es lo que producía el reparto irregular— se
+   declaran como dos filas completas: arriba la marca y los siete módulos,
+   abajo todos los enlaces, que envuelven ordenadamente si hace falta.
+   Ningún enlace se quita y nada se oculta con overflow. */
+.nav-row-brand,.nav-row-links{flex:1 1 100% !important;min-width:0}
+.nav-row-brand{justify-content:flex-start;flex-wrap:wrap}
+.nav-row-links{justify-content:flex-start;flex-wrap:wrap;gap:10px 14px !important;
+  padding-top:2px;border-top:1px solid rgba(255,255,255,.055);margin-top:2px}
 @media(max-width:1024px){
-  .nav-row-brand,.nav-row-links{flex:1 1 100% !important;min-width:0;flex-wrap:wrap !important;justify-content:center}
-  .nav-row-links{gap:8px !important}
+  .nav-row-brand,.nav-row-links{justify-content:center}
+  .nav-row-links{gap:8px !important;border-top:none}
 }
 @media(max-width:768px){
   /* the 110px header tiles do not fit four-across on a phone */
@@ -499,7 +522,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
       <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:27.5px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:8.75px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     </div>
-    <div class="nav-row-links" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:0 0 auto;">
+    <div class="nav-row-links" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:0 0 auto;">
       <span class="net-badge" id="netBadgeNav"><span class="net-dot"></span>MAINNET</span>
       <a class="header-link" style="cursor:pointer" onclick="showCXInfo()"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">O</span><span style="color:hsl(190,85%,55%)">N</span><span style="color:hsl(160,85%,50%)">V</span><span style="color:hsl(130,85%,50%)">E</span><span style="color:hsl(100,85%,50%)">R</span><span style="color:hsl(70,85%,50%)">G</span><span style="color:hsl(50,85%,50%)">E</span><span style="color:hsl(35,85%,50%)">N</span><span style="color:hsl(20,85%,50%)">C</span><span style="color:hsl(5,85%,45%)">E</span><span style="color:#fb010d">X</span></a>
       <a class="header-link markets-live" href="sost-markets.html" title="SOST live markets">MARKETS LIVE</a>
@@ -1071,6 +1094,31 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     </div>
     </div>
     <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- FULL-WIDTH overlay: XAUT PRICE + PAXG PRICE.                       -->
+    <!-- Sits immediately ABOVE the BTC+ETH card and is built the same way:  -->
+    <!-- one more entry in OVERLAYS plus its DOM ids, so it inherits the     -->
+    <!-- LIVE badge, the 11 timeframes, the crosshair tooltip and the        -->
+    <!-- per-series status line without a second code path.                  -->
+    <!-- Two gold prices, both USD and within a few dollars of each other,   -->
+    <!-- but each keeps its own axis: a shared scale would hide exactly the  -->
+    <!-- spread this card exists to show. No dashed context line — both      -->
+    <!-- series ARE prices, so the two lines are the comparison.             -->
+    <!-- Full cents on the axes: four figures fit the gutter, unlike BTC.    -->
+    <!-- Sources: CoinGecko tether-gold/usd and pax-gold/usd — the series    -->
+    <!-- the gold cards already pull, so this adds NO new API requests.      -->
+    <div class="price-card" style="grid-column:1 / -1">
+      <div class="price-card-head"><div class="price-card-title">// <b style="color:#d4af37">XAUT PRICE</b> + <b style="color:#4ade80">PAXG PRICE</b> &mdash; Overlay <span style="font-size:9px;color:var(--text3)">&middot; Comparison</span></div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
+      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#d4af37">■ XAUT PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#4ade80">■ PAXG PRICE <span style="color:var(--text3)">(USD, right)</span></span></div>
+      <div class="ov-pct" id="ovxautpaxgPct"></div>
+      <div class="tf-btns" id="ovxautpaxgTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
+      <div class="chart-wrap">
+        <canvas id="ovxautpaxgChart" style="width:100%;height:220px"></canvas>
+        <canvas id="ovxautpaxgOverlay" class="chart-overlay" style="width:100%;height:220px"></canvas>
+        <div class="price-tooltip" id="ovxautpaxgTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="ovxautpaxgRange"></div>
+    </div>
+    <!-- ══════════════════════════════════════════════════════════════════ -->
     <!-- FULL-WIDTH overlay: BTC PRICE + ETH PRICE.                         -->
     <!-- Spans the whole grid (grid-column:1/-1) so it sits BELOW the three -->
     <!-- columns above instead of inside one of them. Same card chrome,     -->
@@ -1085,6 +1133,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div class="price-card" style="grid-column:1 / -1">
       <div class="price-card-head"><div class="price-card-title">// <b style="color:#f7931a">BTC PRICE</b> + <b style="color:#627eea">ETH PRICE</b> &mdash; Overlay</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
       <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#f7931a">■ BTC PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#627eea">■ ETH PRICE <span style="color:var(--text3)">(USD, right)</span></span></div>
+      <div class="ov-pct" id="ovbtcethPct"></div>
       <div class="tf-btns" id="ovbtcethTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
       <div class="chart-wrap">
         <canvas id="ovbtcethChart" style="width:100%;height:220px"></canvas>
@@ -1113,6 +1162,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div class="price-card">
       <div class="price-card-head"><div class="price-card-title">// <b style="color:#d4af37">XAUT PRICE + XAUT / BTC</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
       <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#d4af37">■ XAUT PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#22d3ee">■ XAUT / BTC <span style="color:var(--text3)">(BTC, right)</span></span></div>
+      <div class="ov-pct" id="ovxautPct"></div>
       <div class="tf-btns" id="ovxautTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
       <div class="chart-wrap">
         <canvas id="ovxautChart" style="width:100%;height:210px"></canvas>
@@ -1125,6 +1175,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div class="price-card">
       <div class="price-card-head"><div class="price-card-title">// <b style="color:#4ade80">PAXG PRICE + PAXG / BTC</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
       <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#4ade80">■ PAXG PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#d946ef">■ PAXG / BTC <span style="color:var(--text3)">(BTC, right)</span></span></div>
+      <div class="ov-pct" id="ovpaxgPct"></div>
       <div class="tf-btns" id="ovpaxgTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
       <div class="chart-wrap">
         <canvas id="ovpaxgChart" style="width:100%;height:210px"></canvas>
@@ -1137,6 +1188,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div class="price-card">
       <div class="price-card-head"><div class="price-card-title">// <b style="color:#d4af37">XAUT PRICE + XAUT / ETH</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
       <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#d4af37">■ XAUT PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#22d3ee">■ XAUT / ETH <span style="color:var(--text3)">(ETH, right)</span></span></div>
+      <div class="ov-pct" id="ovxautethPct"></div>
       <div class="tf-btns" id="ovxautethTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
       <div class="chart-wrap">
         <canvas id="ovxautethChart" style="width:100%;height:210px"></canvas>
@@ -1149,6 +1201,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
     <div class="price-card">
       <div class="price-card-head"><div class="price-card-title">// <b style="color:#4ade80">PAXG PRICE + PAXG / ETH</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
       <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#4ade80">■ PAXG PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#d946ef">■ PAXG / ETH <span style="color:var(--text3)">(ETH, right)</span></span></div>
+      <div class="ov-pct" id="ovpaxgethPct"></div>
       <div class="tf-btns" id="ovpaxgethTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
       <div class="chart-wrap">
         <canvas id="ovpaxgethChart" style="width:100%;height:210px"></canvas>
@@ -8032,12 +8085,58 @@ function drawChart(key){
   if(vsOf(key)!=='usd')updateRatioSpot(key);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// VARIACIÓN PORCENTUAL — una sola implementación para TODO el Explorer.
+// La usan las gráficas simples (updChange) y las overlay (ovPctRender). Una
+// gráfica nueva recibe su porcentaje con sólo declarar sus series.
+//
+// Se calcula SIEMPRE sobre los valores ORIGINALES de la serie: nunca sobre
+// coordenadas de pantalla, ejes reescalados ni la serie normalizada a base 100
+// que la card dibuja como línea de contexto. Esa normalización es un recurso
+// de dibujo; su primer punto vale 100 por construcción y daría 0% siempre.
+function pctSeries(arr){
+  if(!arr || arr.length < 2) return {ok:false};
+  var i=0, j=arr.length-1;
+  while(i<arr.length && !(isFinite(arr[i][1]) && arr[i][1]>0)) i++;   // primer válido
+  while(j>i        && !(isFinite(arr[j][1]) && arr[j][1]>0)) j--;     // último válido
+  if(i>=j) return {ok:false};
+  return {ok:true, pct:(arr[j][1]/arr[i][1]-1)*100,
+          first:arr[i][1], last:arr[j][1], t0:arr[i][0], t1:arr[j][0], n:j-i+1};
+}
+// Dos decimales como norma. Un ratio puede moverse tan poco que toFixed(2) lo
+// redondearía a "0.00%" y parecería plano cuando no lo es: en ese caso se
+// añaden decimales hasta que el número deja de ser cero. Cero exacto es
+// neutro, no verde ni rojo.
+function pctText(p){
+  if(!p || !p.ok) return {txt:'\u2014', color:'var(--text3)'};
+  var v=p.pct;
+  if(v===0) return {txt:'0.00%', color:'var(--text3)'};
+  var s=null;
+  for(var d=2; d<=6; d++){ s=Math.abs(v).toFixed(d); if(parseFloat(s)!==0) break; }
+  if(parseFloat(s)===0) s=Math.abs(v).toExponential(1);
+  return {txt:(v>0?'+':'\u2212')+s+'%', color:(v>0?'var(--green)':'var(--red)')};
+}
+// Cobertura real frente a la pedida. Nunca se presenta una variación parcial
+// como si fuese 1Y/3Y/5Y completos: si los datos no llegan, se dice cuánto
+// abarcan de verdad.
+function pctSpanNote(p, tf){
+  if(!p || !p.ok) return '';
+  var def=TF_MAP[tf]; if(!def) return '';
+  var want = def.ms ? def.ms : def.days*86400000;
+  var got  = p.t1 - p.t0;
+  if(!want || got >= want*0.9) return '';
+  var dd = got/86400000;
+  return ' <span style="color:var(--text3);font-size:8px">('+(dd>=1?dd.toFixed(0)+'d':(got/3600000).toFixed(0)+'h')+' of '+tf+')</span>';
+}
+
 function updChange(key,data){
   var el=document.getElementById(key+'Change');if(!el)return;
   if(!data||data.length<2){el.textContent='\u2014';el.style.color='var(--text3)';return;}
-  var f=data[0][1],l=data[data.length-1][1],d=l-f,a=Math.abs(d),ap=Math.abs(d/f*100);
-  if(d>=0){el.style.color='var(--green)';el.textContent='+'+fmtFor(key,a)+' (+'+ap.toFixed(2)+'%)';}
-  else{el.style.color='var(--red)';el.textContent='\u2212'+fmtFor(key,a)+' (\u2212'+ap.toFixed(2)+'%)';}
+  // Mismo cálculo que las overlay: una sola función para todo el Explorer.
+  var p=pctSeries(data); if(!p.ok){el.textContent='\u2212';el.style.color='var(--text3)';return;}
+  var t=pctText(p), d=p.last-p.first;
+  el.style.color=t.color;
+  el.textContent=(d>=0?'+':'\u2212')+fmtFor(key,Math.abs(d))+' ('+t.txt+')';
 }
 
 function updRange(key,prices){
@@ -8304,6 +8403,10 @@ setInterval(refresh,60000);
     // there is no 'c' context line to normalize — the two lines ARE the
     // comparison. Each keeps its own scale (BTC ~1e5 against ETH ~1e3 would
     // crush one of them on a shared axis): BTC left axis, ETH right axis.
+    // XAUT vs PAXG: los dos oros tokenizados, cada uno en su eje. No lleva
+    // serie 'c' de contexto porque ambas SON precios; y no lleva afmt porque
+    // cuatro cifras con céntimos sí caben en el margen de 52px.
+    {key:'ovxautpaxg', a:{id:'tether-gold',vs:'usd',color:'#d4af37',label:'XAUT PRICE',fmt:'usd'}, b:{id:'pax-gold',vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}},
     {key:'ovbtceth', a:{id:'bitcoin', vs:'usd',color:'#f7931a',label:'BTC PRICE',fmt:'usd',afmt:'usd0'}, b:{id:'ethereum',vs:'usd',color:'#627eea',label:'ETH PRICE',fmt:'usd',afmt:'usd0'}}
   ];
   // Per-card state, built from OVERLAYS so a new card needs no second list to update.
@@ -8319,6 +8422,28 @@ setInterval(refresh,60000);
   // start of the visible range so its (much larger, volatile) scale never crushes the
   // XAUT/PAXG lines.
   function ovNorm(arr){ if(!arr.length)return[]; var base=arr[0][1]||1; return arr.map(function(pp){return [pp[0], 100*pp[1]/base];}); }
+  // Pinta la variación de CADA serie de una card overlay. Usa siempre los datos
+  // ORIGINALES: para la tercera línea se pasa C y no su versión normalizada a
+  // base 100, que arrancaría en 100 y daría 0% en todos los intervalos.
+  // El color verde/rojo vive SOLO en el número: las líneas del gráfico
+  // conservan el color que identifica a cada activo.
+  function ovPctRender(cfg,A,B,C){
+    var el=document.getElementById(cfg.key+'Pct'); if(!el)return;
+    var tf=ovTf[cfg.key];
+    var parts=[];
+    [['a',A],['b',B],['c',C]].forEach(function(pair){
+      var k=pair[0], arr=pair[1];
+      if(!cfg[k]) return;
+      var st=ovState[cfg.key][k];
+      var p=pctSeries(arr||[]), t=pctText(p);
+      var val = (st==='pending'&&!p.ok) ? '<span style="color:var(--text3)">&hellip;</span>'
+              : '<b style="color:'+t.color+'">'+t.txt+'</b>'+pctSpanNote(p,tf);
+      parts.push('<span style="white-space:nowrap"><span style="color:'+cfg[k].color+'">\u25A0 '+
+                 cfg[k].label+'</span> '+val+'</span>');
+    });
+    el.innerHTML=parts.join('');
+  }
+
   function updOvRange(cfg,A,B,C){
     var el=document.getElementById(cfg.key+'Range'); if(!el)return;
     // Honest status: '0 pts' is NEVER printed for a series that is still in
@@ -8351,7 +8476,7 @@ setInterval(refresh,60000);
       var _oor=['a','b','c'].every(function(k){return !cfg[k]||ovState[cfg.key][k]==='out_of_range';});
       ctx.fillText(anyPending?('Loading historical data… ('+ready+'/'+total+')')
                    :(_oor?OUT_OF_RANGE_MSG:'No data available for this period'),pL+cw/2,pT+ch/2);
-      updOvRange(cfg,A,B,C);return;
+      updOvRange(cfg,A,B,C); ovPctRender(cfg,A,B,C); return;
     }
     var allT=A.concat(B).concat(C).map(function(pp){return pp[0];});
     var minT=Math.min.apply(null,allT),maxT=Math.max.apply(null,allT);var trng=(maxT-minT)||1;
@@ -8373,6 +8498,7 @@ setInterval(refresh,60000);
     // Denominator context (BTC/USDC, ETH/USDC): base-100 normalized, dashed, own scale.
     if(C.length>=2){ var Cn=ovNorm(C), sC=ovScale(Cn); ctx.save(); ctx.setLineDash([5,3]); line(Cn,cfg.c.color,sC); ctx.restore(); }
     updOvRange(cfg,A,B,C);
+    ovPctRender(cfg,A,B,C);
   }
   function clearOvC(cfg){ var ov=document.getElementById(cfg.key+'Overlay'); if(!ov)return; var dpr=window.devicePixelRatio||1; ov.width=ov.offsetWidth*dpr;ov.height=ov.offsetHeight*dpr; }
   function setupOvTooltip(cfg){
@@ -8473,7 +8599,11 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
+<<<<<<< HEAD
 <script src="js/v16-jackpot-notice.js?v=v468" defer></script>
+=======
+<script src="js/v16-jackpot-notice.js?v=v475" defer></script>
+>>>>>>> main
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks
