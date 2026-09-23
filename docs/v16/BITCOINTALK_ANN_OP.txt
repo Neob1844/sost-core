@@ -1,0 +1,367 @@
+[img]https://sostcore.com/sost-logo.png[/img]               [img]https://sostcore.com/convergencex-logo.png[/img]
+
+[size=16pt][b]SOST — Sovereign Stock Token[/b][/size]
+Native Proof-of-Work chain. CPU-first. No bridges. No smart contracts on the SOST base layer. No governance tokens.
+
+[size=8pt]DEVELOPER NOTE: ALL NODES AND MINERS MUST UNDERSTAND THAT THIS PROJECT IS BEING BUILT WITH ENGINEERING RIGOR, BUT THAT DOES NOT GUARANTEE THAT IT WILL SUCCEED OR HAVE FUTURE VALUE. RIGHT NOW, YOU ARE MINING WITH VERY LOW ENERGY COST, USING ONLY CPU AND 8 GB RAM, BUT THE SUCCESS OF THE PROJECT DEPENDS ON THREE CRUCIAL FACTORS, NONE OF WHICH IS GUARANTEED: FIRST, THAT IT COMPLIES WITH ALL APPLICABLE CRYPTO AND POSSIBLY FINANCIAL REGULATIONS IN THE COUNTRIES WHERE IT MAY OPERATE; SECOND, THAT THE CRYPTO COMMUNITY ACCEPTS AND SUPPORTS THE PROJECT; AND THIRD, THAT ONE OR MORE CEXs DECIDE TO LIST THE PROJECT. IN ADDITION, WE ARE OPERATING A NATIVE AND EXPERIMENTAL PROOF-OF-WORK SYSTEM, DEPLOYED DIRECTLY ON MAINNET, WHICH HAS HUNDREDS OF TESTS BEHIND IT BUT HAS NOT BEEN AUDITED BY ANY INDEPENDENT FIRM. WITHOUT THESE FACTORS, THE TOKEN MAY HAVE NO VALUE. THIS MUST BE CLEAR TO EVERYONE, SO THAT NO FALSE EXPECTATIONS ARE CREATED.[/size]
+
+[b]Genesis Block:[/b] March 15, 2026 — 18:00:00 UTC
+[b]Public announcement:[/b] April 05, 2026
+
+✓ MAINNET LIVE — Explorer: [url=https://sostcore.com/sost-explorer.html]SOST Explorer[/url]
+
+[hr]
+
+[center][size=15pt][color=red][b]NEXT EVENT — V16 ACTIVATES AT BLOCK #30,000[/b][/color][/size]
+[b]Coordinated upgrade window: after block #29,900 and before block #30,000[/b][/center]
+
+[b]Current release:[/b] v16.2.3 — [url=https://github.com/Neob1844/sost-core/releases/tag/v16.2.3]binaries + SHA256SUMS[/url]
+[b]Upgrade guide:[/b] [url=https://sostcore.com/sost-upgrade.html]sostcore.com/sost-upgrade.html[/url]
+[b]Consensus activation:[/b] #30,000 — automatic, by block height. No command, no restart at that block.
+[b]First DTD Jackpot V2 draw:[/b] #30,186
+
+A validating node still running pre-V16 consensus software after #30,000 may diverge from the chain. The window is an operational coordination decision, not a consensus rule.
+
+Full upgrade notice with copy-paste commands: see the dedicated V16.2.3 post in this thread.
+
+[hr]
+
+[size=14pt][b]LAST UPDATED — September 23, 2026[/b][/size]
+
+What is live on mainnet today:
+
+[code]
+#7,100    V11 Phase 2 — SbPoW (signature-bound PoW) + DTD lottery      LIVE
+#7,350    V12 — H20 ceiling, 4-tier Slingshot, capsules                LIVE
+#12,000   V13 — cASERT E7–H35, cooldown 6, drift cap 30 s, Beacon      LIVE
+#15,000   V14 — hardening                                             LIVE
+#16,000   V14.5 — HTLC consensus acceptance                           LIVE
+#17,000   V14.7 — HTLC mempool/relay                                  LIVE
+#25,000   V15 — emission transition: 50% miner / 50% DTD,             LIVE
+          DTD draws on EVERY block (3-of-3), recency gate
+#30,000   V16 — DTD eligibility change + independent Jackpot V2       PENDING
+#30,186   first DTD Jackpot V2 draw                                   PENDING
+[/code]
+
+[b]The most important change since the original post:[/b] at block #25,000 the emission split changed. The Gold Funding Vault and the PoPC Pool stopped receiving any new emission. Everything about them in this post is now a [b]historical record[/b], kept because blocks 0–24,999 really were paid that way and any validator still has to reproduce them.
+
+[hr]
+
+[size=14pt][b]CORE ECONOMIC DESIGN — WHAT THE PROTOCOL DOES TODAY[/b][/size]
+
+[code]
+Blocks 0 – 24,999   (historical)     Blocks 25,000 onward  (in force)
+  50% → Miner                          50% → Miner
+  25% → Gold Funding Vault             50% → DTD distribution
+  25% → PoPC Pool                       0% → Gold Funding Vault
+                                        0% → PoPC Pool
+[/code]
+
+This is a consensus rule at every height: a block carrying the wrong split for its height is invalid.
+
+The DTD distribution returns that half to active miners by a per-block draw. Since V15 the DTD draws on [b]every block[/b] (3-of-3). The older cadences — 2-of-3 bootstrap from #7,100, then 1-of-3 from #12,100 — ended at #25,000.
+
+[b]The DTD is permissionless.[/b] No registration, no whitelist, no NODE_BIND, no heartbeats and [b]no PoPC bond[/b] — on mainnet the PoPC eligibility gate ships deactivated. Mining one valid block inside the recency window is what makes an address eligible.
+
+[b]SOST is not backed by gold.[/b] There is no peg, no redemption right, no oracle in consensus and no stablecoin mechanic.
+
+[hr]
+
+[size=14pt][b]HISTORICAL RECORD — GOLD FUNDING VAULT AND PoPC POOL[/b][/size]
+
+[i]This section documents a mechanism that operated from genesis to block #25,000 and no longer receives emission. It is kept for auditability, not as a description of current behaviour.[/i]
+
+From genesis until block #24,999, every normal block allocated 25% of the subsidy to the Gold Funding Vault and 25% to the PoPC Pool, enforced by consensus. On triggered lottery blocks from #7,100 those two shares went to the lottery winner or to the pending jackpot instead.
+
+[b]What changed at #25,000 (V15).[/b] The non-miner half of every block is redirected to the DTD distribution. In the node's emission-transition branch both amounts are literally zero from that height on.
+
+[b]What remains true.[/b] The vault and pool addresses still exist on chain and still hold what they received before V15. Every one of those coinbase outputs is publicly auditable in the explorer. Nothing new flows in, nothing was burned, and nothing was redirected into anyone's pocket: the DTD Jackpot progressively returns that accumulated reserve to active miners as a supply-neutral treasury spend — no new emission is created for it.
+
+[b]PoPC.[/b] Proof of Personal Custody was implemented and documented but never became operationally active on mainnet, and the DTD never required it. Planned spend-side Gold Vault governance (the ≥90% miner-signalling supermajority over a 67-block window) was never activated either. Both are recorded here as project history.
+
+[hr]
+
+[size=14pt][b]DTD JACKPOT V2 — WHAT CHANGES AT #30,000[/b][/size]
+
+[b]Normal DTD[/b] keeps its payout, its every-block cadence, its uniform selection among eligible identities and its seed. What changes is who qualifies:
+
+[code]
+                    until #29,999                from #30,000
+recency             mined in last 5,000          mined in last 288 blocks
+                    (20,000 at jackpot heights)  (at EVERY height)
+minimum             >= 1 block                   >= 1 block
+cooldown            miner of last 6 excluded     same, but it YIELDS if
+                                                 applying it would leave
+                                                 nobody eligible
+anti-dominance      >=10% of last 288 excluded   same, but ARMED only at
+                                                 >= 11 distinct miners
+[/code]
+
+With few active miners those two gates used to exclude the very miners holding the chain up. They are now floors, not repeals: the cooldown applies whenever somebody else qualifies, and the 10% gate returns as soon as 11 distinct miners appear in the window.
+
+[b]DTD Jackpot V2[/b] becomes a separate draw with its own winner. Eligibility, all required:
+
+[list=1]
+[li]a valid SbPoW mining identity;[/li]
+[li]at least 3 valid mined blocks in the previous 2,016 blocks;[/li]
+[li]an active NODE_BIND — a node key authorised on-chain by your mining key;[/li]
+[li]node heartbeats, per the bootstrap schedule below.[/li]
+[/list]
+
+Weight = number of SbPoW blocks in the window, [b]linear[/b]. Splitting the same work across identities does not create weight, and running more nodes adds none: node participation is a gate, PoW is the weight. No jackpot cooldown and no jackpot anti-dominance, by design.
+
+[b]The first draw, #30,186, requires ZERO heartbeats.[/b] NODE_BIND only becomes available at #30,000, so no epoch has completed and nobody can be excluded for lacking history. The requirement then ramps 1/1 → 2/2 → 3/3 and settles at the permanent 3-of-4 from #31,338. That ramp is one rule counting completed epochs — [b]not[/b] a second fork and not a second update.
+
+Payout: base 100 SOST, rollover to a 500 SOST cap, paid from the existing historical reserve. [b]No new emission.[/b] Zero eligible participants means rollover, never an invented winner.
+
+[hr]
+
+[size=14pt][b]HOW TO MINE[/b][/size]
+
+Requirements: Linux x86_64, 8 GB RAM for mining (4 GB dataset + 4 GB scratchpad), CPU-only. A node alone needs ~500 MB.
+
+[b]1 — Get the binaries[/b] (downloading is equally valid; compiling is optional)
+
+[code]
+mkdir -p ~/sost && cd ~/sost
+for f in sost-node sost-miner sost-cli SHA256SUMS; do
+  curl -fsSL -O "https://github.com/Neob1844/sost-core/releases/download/v16.2.3/$f"
+done
+sha256sum -c SHA256SUMS        # must print OK for all three
+chmod +x sost-node sost-miner sost-cli
+[/code]
+
+Or build from source — this exact sequence was run from a clean clone and produced the published hashes:
+
+[code]
+sudo apt update && sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
+git clone --depth 1 --branch v16.2.3 https://github.com/Neob1844/sost-core.git sost-src
+cd sost-src
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+cd build && sha256sum -c <(grep -E '^[0-9a-f]{64}' ../docs/v16/SHA256SUMS)
+[/code]
+
+The build directory must be named [tt]build[/tt] — the source path is normalised out of the binary, the directory name is not. A different compiler legitimately yields a different hash; cross-machine reproducibility is not claimed, but an official [i]downloaded[/i] binary must match exactly.
+
+[b]2 — Create a wallet and label the mining key[/b]
+
+[code]
+umask 077
+./sost-cli --wallet wallet.json newwallet
+./sost-cli --wallet wallet.json getnewaddress "my-miner"
+chmod 600 wallet.json
+# BACK THIS FILE UP, off this machine. The key in it receives every block you mine.
+[/code]
+
+[b]3 — Choose YOUR OWN RPC password[/b]
+
+There is no universal SOST RPC password. You pick one for your own node; the miner authenticates to it. It is not your wallet passphrase, and it never belongs on a command line, where every local user can read it with [tt]ps[/tt].
+
+[code]
+mkdir -p ~/.sost && umask 077
+openssl rand -base64 30 > ~/.sost/rpc.pass
+chmod 600 ~/.sost/rpc.pass
+[/code]
+
+[b]4 — Start the node[/b]
+
+[code]
+cp ../genesis_block.json .
+./sost-node --genesis genesis_block.json --chain chain.json \
+  --connect seed.sostcore.com:19333 \
+  --rpc-user myuser --rpc-pass-file ~/.sost/rpc.pass \
+  --profile mainnet --p2p-enc on
+[/code]
+
+Optional fast start: [tt]curl -o chain.json https://sostcore.com/bootstrap-chain.json[/tt] before launching.
+
+[b]5 — Start the miner[/b] (in a second terminal, once the node is synced)
+
+[code]
+./sost-miner \
+  --wallet wallet.json --mining-key-label "my-miner" \
+  --genesis genesis_block.json \
+  --rpc 127.0.0.1:18232 \
+  --rpc-user myuser --rpc-pass-file ~/.sost/rpc.pass \
+  --blocks 999999 --max-nonce 500000 \
+  --profile mainnet --realtime --threads 8
+[/code]
+
+[tt]--wallet[/tt] + [tt]--mining-key-label[/tt] select the key that [b]signs[/b] your blocks (SbPoW); the payout address is derived from it. Do not use [tt]--address[/tt] instead: your V16 Jackpot eligibility and your NODE_BIND both depend on that signed identity.
+
+[b]6 — Check[/b]
+
+[code]
+./sost-cli --rpc 127.0.0.1:18232 --rpc-user myuser \
+  --rpc-pass-file ~/.sost/rpc.pass --wallet wallet.json getbalance
+[/code]
+
+Coinbase outputs mature after 1,000 blocks (~7 days), so a fresh balance shows as immature first. Full guide: [url=https://sostcore.com/sost-quickstart.html]quick start[/url] · [url=https://sostcore.com/sost-mine.html]mining guide[/url]. Never paste a private key, seed phrase or wallet file anywhere.
+
+[hr]
+
+[size=14pt][b]QUICK SPECS[/b][/size]
+
+[table]
+[tr][td][b]Parameter[/b][/td][td][b]Value[/b][/td][/tr]
+[tr][td]Algorithm[/td][td]ConvergenceX v2.0 — memory-hard, CPU-friendly[/td][/tr]
+[tr][td]Block time[/td][td]600 s / 10 min[/td][/tr]
+[tr][td]Max supply[/td][td]4,669,201 SOST[/td][/tr]
+[tr][td]Emission[/td][td]Exponential decay, q = e^(-1/4) ≈ 0.7788, epoch = 131,553 blocks[/td][/tr]
+[tr][td]Epoch 0 reward[/td][td]7.85100863 SOST/block[/td][/tr]
+[tr][td][b]Coinbase split[/b][/td][td][b]50% miner / 50% DTD since #25,000.[/b] Historical, blocks 0–24,999: 50% miner / 25% Gold Funding Vault / 25% PoPC Pool[/td][/tr]
+[tr][td]DTD cadence[/td][td]Every block (3-of-3) since #25,000. Historical: 2-of-3 from #7,100, 1-of-3 from #12,100[/td][/tr]
+[tr][td]DTD eligibility[/td][td]Permissionless: mine 1 valid block in the recency window. No PoPC bond, no NODE_BIND[/td][/tr]
+[tr][td]Difficulty[/td][td]cASERT unified rate control, avg288 controller, ConvergenceX profiles E7–H35, E7 relief valve[/td][/tr]
+[tr][td]Encoding[/td][td]SOSTCompact Q16.16 fixed-point, integer-only consensus[/td][/tr]
+[tr][td]P2P transport[/td][td]X25519 + ChaCha20-Poly1305 AEAD + HKDF-SHA256, modes off/on/required[/td][/tr]
+[tr][td]Coinbase maturity[/td][td]1,000 blocks (~7 days)[/td][/tr]
+[tr][td]Future-timestamp drift cap[/td][td]30 s since V13 (#12,000). NTP sync strongly recommended[/td][/tr]
+[tr][td]Current release[/td][td]v16.2.3 — node/miner byte-identical across all v16.2.x[/td][/tr]
+[tr][td]Premine / ICO / dev tax[/td][td]NONE / NONE / NONE[/td][/tr]
+[tr][td]Source[/td][td][url=https://github.com/Neob1844/sost-core]github.com/Neob1844/sost-core[/url] (MIT)[/td][/tr]
+[/table]
+
+[hr]
+
+[size=14pt][b]CONVERGENCEX v2.0 — TECHNICAL SUMMARY[/b][/size]
+
+ConvergenceX is a Proof of Irreversible Convergence algorithm. Each attempt solves a linear system A(x)=b and proves the solution sits in a stable basin — small perturbations converge back to the same attractor — verified by deterministic stability checks.
+
+[code]
+PROBLEM     A(x) = M^T(Mx) + λx = b   — n×n SPD system
+DIMENSION   n = 32                     (CX_N)
+ROUNDS      100,000 per attempt        (CX_ROUNDS_M)
+λ           100                        (CX_LAM) — unique solution
+LR SHIFT    18 → learning rate 2^-18   (CX_LR_SHIFT)
+DATASET     4 GB SplitMix64-indexed, O(1) per value
+MEMORY      mining ~8 GB (4 GB dataset + 4 GB scratchpad); node ~500 MB
+PROGRAM     256 ops per block (MUL/XOR/ADD/ROT/AND/OR/NOT/SUB) — changes every block
+TRANSCRIPT  V2: segment commitments + sampled round witnesses
+[/code]
+
+From V11 Phase 1 (block 7,000) the dataset index is state-dependent — [tt]dataset[state_lo % size][/tt] derived from the previous round's SHA-256 state, instead of a predictable [tt]r % size[/tt].
+
+[b]SbPoW[/b] (V11 Phase 2, live since #7,100): every block header carries a public key and a signature over the PoW commitment, and the coinbase must pay the address derived from that key. Post-hoc coinbase relabelling is impossible. SbPoW is the protocol's only anti-pool defence — per-instance Memory-Lock was evaluated and rejected because it penalises small miners proportionally more than large rigs.
+
+Chain selection is by cumulative work, [tt]work = floor(2^256 / (target + 1))[/tt], with atomic reorg and rollback on failure.
+
+[b]Open-source and attribution.[/b] ConvergenceX has been public since genesis. Projects that use, reference or derive from it are asked to identify ConvergenceX as the underlying PoW design and, when practical, display the logo: [url=https://sostcore.com/convergencex-logo.png]convergencex-logo.png[/url]
+
+[hr]
+
+[size=14pt][b]ATOMIC SWAP / DEX — REAL STATUS[/b][/size]
+
+The SOST-side HTLC gates are live: consensus acceptance since block #16,000, mempool relay since #17,000. [b]That does not make the feature available to third parties.[/b]
+
+[list]
+[li]The EVM contract is undeployed and unaudited — founder testing only.[/li]
+[li]The [b]Bitcoin leg is OFF[/b] in the official binaries. Its code is complete (redeem script, signing, funding coin-selection, broadcast backend, watcher, restart recovery) but stays disabled pending real bitcoind validation and an explicit operator enable.[/li]
+[li]The desk at [url=https://sostcore.com/sost-dex.html]sostcore.com/sost-dex.html[/url] is an alpha: signed offers, encrypted deal channels, operator-assisted gates. Not an AMM, not a public swap service.[/li]
+[/list]
+
+Treat it as experimental. Nothing there is a product you should route funds through today.
+
+[hr]
+
+[size=14pt][b]USEFUL COMPUTE — INFRASTRUCTURE ONLY, REWARDS POSTPONED[/b][/size]
+
+The public task server and audit endpoints are live and can be inspected:
+
+[code]
+https://sostcore.com/api/useful-compute/health
+https://sostcore.com/api/useful-compute/ranking
+https://sostcore.com/api/useful-compute/queue_stats
+https://sostcore.com/api/useful-compute/audit_export
+[/code]
+
+[b]No rewards are paid, and there is no worker to run right now.[/b] The standalone worker daemon that earlier versions of this post told you to clone and execute has been [b]removed from the repository[/b]; those commands no longer work and should not be copied from the old post. The task layer is being reorganised around workloads heavy and useful enough to justify rewards. Nothing about this touches consensus, block rewards, wallets or keys.
+
+The SOST allocated to the postponed trial was never spent or redirected.
+
+[hr]
+
+[size=14pt][b]FAIR LAUNCH[/b][/size]
+
+— Genesis: March 15, 2026, 18:00:00 UTC
+— No premine. No ICO / IEO. No dev tax.
+— Source public from genesis, MIT licensed.
+— Founder mining disclosure: the founder mined solo during the early post-genesis phase for live consensus and infrastructure testing. All blocks are publicly visible in the explorer. Same binary, same rules, no algorithmic advantage.
+
+[hr]
+
+[size=14pt][b]PRE-MARKET STATUS[/b][/size]
+
+SOST remains in a pre-market phase. There is no active market, no exchange listing and no guaranteed price. Any value reference published on the website is informational and does not represent market price, liquidity or future valuation.
+
+Miners, node operators, independent reviewers and adversarial testers are invited to stress the system: bootstrap and live sync, P2P plaintext and encrypted transport, ConvergenceX transcript verification, consensus stability under adversarial conditions, fork/reorg handling, difficulty behaviour, mempool propagation, wallet/node interoperability, crash and desync scenarios.
+
+SOST has not been audited by any external security firm. If there is a weakness, I want it found now. Reproducible bug reports and detailed logs are welcome.
+
+[hr]
+
+[size=14pt][b]CODE SIZE — MEASURED 2026-09-23[/b][/size]
+
+[table]
+[tr][td][b]Component[/b][/td][td][b]Lines[/b][/td][/tr]
+[tr][td]Blockchain core (C++ — src/ + include/)[/td][td]53,180[/td][/tr]
+[tr][td]Front-end, explorer and wallet (HTML / JS / CSS)[/td][td]80,892[/td][/tr]
+[/table]
+
+Measured with [tt]find <dir> -name '*.cpp' -o -name '*.h' | xargs wc -l[/tt] over this repository, excluding build artefacts and vendored code. Anyone can clone and rerun it. LOC is an engineering surface metric and nothing more: it says nothing about network effect, peer count, audits or deployed economic value, and Bitcoin Core leads on every one of those.
+
+[hr]
+
+[size=14pt][b]ROADMAP SNAPSHOT[/b][/size]
+
+[table]
+[tr][td][b]Milestone[/b][/td][td][b]Status[/b][/td][/tr]
+[tr][td]Genesis + fair launch[/td][td]DONE[/td][/tr]
+[tr][td]V11 Phase 2 — SbPoW + DTD lottery (#7,100)[/td][td]LIVE[/td][/tr]
+[tr][td]V12 — H20 ceiling, Slingshot, capsules (#7,350)[/td][td]LIVE[/td][/tr]
+[tr][td]V13 — E7–H35, cooldown 6, drift cap 30 s, Beacon (#12,000)[/td][td]LIVE[/td][/tr]
+[tr][td]V14 / V14.5 / V14.7 — hardening, HTLC consensus, HTLC relay[/td][td]LIVE[/td][/tr]
+[tr][td]V15 — 50/50 emission transition, every-block DTD, recency gate (#25,000)[/td][td]LIVE[/td][/tr]
+[tr][td]Gold Vault + PoPC emission[/td][td]ENDED at #25,000 — historical record[/td][/tr]
+[tr][td]v16.2.3 release — binaries + SHA256SUMS published[/td][td]DONE[/td][/tr]
+[tr][td]Operator upgrade window #29,900 → #30,000[/td][td]OPEN WHEN THE CHAIN REACHES IT[/td][/tr]
+[tr][td]V16 — DTD eligibility + independent Jackpot V2 (#30,000)[/td][td]PENDING — automatic by height[/td][/tr]
+[tr][td]First DTD Jackpot V2 draw (#30,186)[/td][td]PENDING[/td][/tr]
+[tr][td]Atomic swap — SOST-side HTLC[/td][td]LIVE (#16,000 / #17,000); EVM founder-only, BTC OFF[/td][/tr]
+[tr][td]Useful Compute[/td][td]INFRASTRUCTURE ONLY — rewards postponed, worker removed[/td][/tr]
+[tr][td]Exchange outreach[/td][td]NOT DONE — no listing, no market[/td][/tr]
+[/table]
+
+[hr]
+
+[size=14pt][b]LINKS[/b][/size]
+
+— Website: [url=https://sostcore.com]https://sostcore.com[/url]
+— Explorer: [url=https://sostcore.com/sost-explorer.html]https://sostcore.com/sost-explorer.html[/url]
+— Upgrade guide: [url=https://sostcore.com/sost-upgrade.html]https://sostcore.com/sost-upgrade.html[/url]
+— Release v16.2.3: [url=https://github.com/Neob1844/sost-core/releases/tag/v16.2.3]github.com/Neob1844/sost-core/releases/tag/v16.2.3[/url]
+— Whitepaper (HTML, canonical): [url=https://sostcore.com/sost-whitepaper.html]https://sostcore.com/sost-whitepaper.html[/url]
+— Protocol spec: [url=https://sostcore.com/sost-protocol-spec.html]https://sostcore.com/sost-protocol-spec.html[/url]
+— Metals reserve (historical): [url=https://sostcore.com/sost-gold-reserve.html]https://sostcore.com/sost-gold-reserve.html[/url]
+— Wallet: [url=https://sostcore.com/sost-wallet.html]https://sostcore.com/sost-wallet.html[/url]
+— GitHub: [url=https://github.com/Neob1844/sost-core]github.com/Neob1844/sost-core[/url]
+— Contact: [url=https://sostcore.com/sost-contact.html]https://sostcore.com/sost-contact.html[/url]
+
+[i]Note: the whitepaper and some older pages still describe the original gold/PoPC economics in places. Those sections are marked as historical; where a document and this post disagree about what the protocol does today, the rule enforced by the node — 50% miner / 50% DTD since #25,000 — is the one that counts.[/i]
+
+[hr]
+
+[size=14pt][b]LEGAL DISCLAIMER[/b][/size]
+
+SOST is experimental software: a new proof-of-work protocol written from scratch in C++17. It is [b]not[/b] a fork of Bitcoin, Litecoin, Monero, Ethereum, RandomX, Ethash, Equihash, CryptoNight, Scrypt, X11 or any other existing cryptocurrency or mining algorithm. ConvergenceX, cASERT and the economic model are original designs that have not been independently verified by any third-party security auditing firm.
+
+This software is provided "AS IS" without warranty of any kind. The developer (NeoB) makes no representations or warranties regarding security, reliability or fitness for purpose. Undiscovered vulnerabilities, bugs or design flaws may exist that could result in loss of funds, consensus failures or other adverse outcomes.
+
+The historical gold reserve mechanism was never a redemption right, a price guarantee or a stability mechanism, and it no longer receives emission. SOST is not a security, not a stablecoin, not backed by gold and not financial advice.
+
+Useful Compute rewards are postponed; current activity is not reward-eligible and no payout manifest will be generated for it.
+
+By participating in the SOST network — mining, holding, transacting or testing — you accept these terms and acknowledge full personal responsibility for any outcomes.
+
+— NeoB
