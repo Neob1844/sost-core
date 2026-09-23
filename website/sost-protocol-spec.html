@@ -355,7 +355,7 @@ result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <h3>ECDSA Signing (secp256k1)</h3>
 <p>Sighash preimage (146 bytes): version[4] || tx_type[1] || hashPrevouts[32] || prev_txid[32] || prev_index[4] || spent_amount[8] || spent_type[1] || hashOutputs[32] || genesis_hash[32]. Double SHA256. Compact 64-byte signature (r[32] || s[32]). LOW-S mandatory: s &le; n/2. <em>Source: tx_signer.cpp:154-182</em></p>
 
-<h3>Coinbase Split (50/25/25)</h3>
+<h3>Coinbase Split (50/25/25 for blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000)</h3>
 <pre>q = (subsidy + fees) / 4
 miner = (subsidy + fees) - 2*q    // 50% + rounding remainder
 gold_vault = q                     // 25%
@@ -434,8 +434,8 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <h3>Constitutional Addresses</h3>
 <table>
 <tr><th>Role</th><th>Address</th><th>Allocation</th></tr>
-<tr><td>Gold Funding Vault</td><td><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></td><td>25% of every block</td></tr>
-<tr><td>PoPC Pool</td><td><code>sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</code></td><td>25% of every block</td></tr>
+<tr><td>Gold Funding Vault</td><td><code>sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d</code></td><td>25% of every block until #25,000 (0 since)</td></tr>
+<tr><td>PoPC Pool</td><td><code>sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f</code></td><td>25% of every block until #25,000 (0 since)</td></tr>
 </table>
 <p>The remaining 50% goes to whichever miner solves the block (configured via <code>--address</code>). The miner address is NOT constitutional &mdash; it changes per miner. Only the Gold Vault and PoPC Pool addresses are hardcoded and immutable.</p>
 <p>Enforced by CB4 (output order) and CB6 (PKH validation). Any block deviating from the split in force at its height, or sending gold/popc to wrong addresses, is rejected. <b style="color:#f59e0b">The split changed at V15 (#25,000):</b> blocks below that height carry 50/25/25 (miner / Gold Vault / PoPC) and are validated against it forever; from #25,000 the consensus split is <b>50% miner / 50% DTD</b> and the gold and PoPC coinbase outputs are <b>zero</b> &mdash; see <code>src/sost-node.cpp</code> (the V15 emission-transition branch). <em>Source: params.h:187-188</em></p>
@@ -540,7 +540,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v448" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v449" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
