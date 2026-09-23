@@ -205,10 +205,10 @@
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">// V16 CONSENSUS &middot; activates block&nbsp;30,000 &middot; upgrade window #29,900&rarr;#30,000</div>
+      <div class="section-id">// V16 CONSENSUS &middot; <span id="v16State">SCHEDULED</span> &middot; block&nbsp;30,000 &middot; upgrade window #29,900&rarr;#30,000</div>
       <div class="section-dates">Published: 2026-09-23 &middot; Last updated: 2026-09-23</div>
-      <h2 class="section-title">V16 activates at block <span class="accent" style="color:#ffd166">30,000</span> — update your node and miner in the window</h2>
-      <div class="section-sub">The coordinated operator window is <b style="color:#ffd166">after block&nbsp;#29,900 and before #30,000</b>. Activation itself is automatic, by block height: nothing to run at that block.</div>
+      <h2 class="section-title">SOST V16 — <span id="v16Head">activation scheduled for</span> block <span class="accent" style="color:#ffd166">30,000</span></h2>
+      <div class="section-sub"><span id="v16Live" style="display:inline-block;margin-bottom:6px;padding:3px 9px;border:1px solid #ffd166;border-radius:999px;font:700 11px ui-monospace;letter-spacing:1px;color:#ffd166">NOT YET ACTIVE &middot; checking the chain…</span><br>The coordinated operator window is <b style="color:#ffd166">after block&nbsp;#29,900 and before #30,000</b>. Activation itself is automatic, by block height: nothing to run at that block.</div>
     </div>
     <div class="info-card">
       <p><b>What activates.</b> Two things, one activation. <b>DTD-normal eligibility</b> is re-pointed at current miners — recency drops to <b>288 blocks</b> at every height, the 6-block producer cooldown <b>yields</b> when applying it would leave the draw with nobody, and the 10%/288 anti-dominance gate is <b>armed only at 11 or more distinct miners</b>. And the <b>DTD Jackpot becomes an independent draw</b> (V2): node-gated by NODE_BIND plus heartbeats, weighted linearly by SbPoW blocks in the previous <b>2,016</b>, with no cooldown and no anti-dominance.</p>
@@ -279,7 +279,7 @@
       <div class="section-id">// EXPLORER &middot; jackpot archive &middot; DTD panel corrections</div>
       <div class="section-dates">Published: 2026-09-23 &middot; Last updated: 2026-09-23</div>
       <h2 class="section-title">Every jackpot ever paid, in one place — <span class="accent" style="color:#ffd166">JACKPOT ARCHIVE</span></h2>
-      <div class="section-sub">Nine jackpots paid, <b>900&nbsp;SOST</b> distributed, each one reconstructed from the canonical chain with its block, winner, amount, eligible set and transaction.</div>
+      <div class="section-sub"><b id="jpCount">9</b> jackpot draws have taken place since #25,290 <span id="jpAsOf" style="color:#8a97a3">(as of 2026-09-23: nine paid, 900&nbsp;SOST distributed)</span> — each one reconstructed from the canonical chain with its block, winner, amount, eligible set and transaction. The exact on-chain amount of every draw is in the archive itself, not fixed in this page.</div>
     </div>
     <div class="info-card">
       <p>The archive opens from five places — the <b>JACKPOT ARCHIVE</b> card, the <b>JACKPOTS PAID</b> card, the <b>View all jackpots</b> button, the winner overlay after a live or replayed jackpot, and the jackpot dashboard — all calling one component over one data source.</p>
@@ -1058,7 +1058,7 @@ sudo systemctl restart sost-miner</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v462" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v463" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- NON-CUSTODIAL DISCLAIMER (footer) -->
@@ -1199,6 +1199,47 @@ sudo systemctl restart sost-miner</pre>
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape') closeSv(null,true);
   });
+</script>
+
+<!-- Live chain state for the V16 and jackpot entries. A news page is a dated
+     record, so the prose keeps its "as of" snapshot; these few numbers read the
+     chain instead of ageing badly. Read-only public RPC, no credentials, and
+     every write is guarded: if the node cannot be reached the static text that
+     was rendered server-side simply stays. -->
+<script id="newsLiveChain">
+(function(){
+  "use strict";
+  var RPC='https://sostcore.com/rpc/public', V16=30000, WINDOW=29900, FIRST=25290, CAD=288;
+  function rpc(m,p){
+    return fetch(RPC,{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({method:m,params:p||[],id:1})})
+      .then(function(r){return r.json();}).then(function(j){return j&&j.result;});
+  }
+  function set(id,html){ var e=document.getElementById(id); if(e) e.innerHTML=html; }
+  function fc(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+  rpc('getblockcount',[]).then(function(h){
+    h=parseInt(h,10); if(!isFinite(h)||h<=0) return;
+    // ---- V16: scheduled / window open / active, decided by the chain ----
+    if(h>=V16){
+      set('v16State','ACTIVE');
+      set('v16Head','active since');
+      set('v16Live','<span style="display:inline-block;padding:3px 9px;border:1px solid #39ff14;border-radius:999px;font:700 11px ui-monospace;letter-spacing:1px;color:#39ff14">ACTIVE &middot; since block #'+fc(V16)+'</span>');
+    } else if(h>=WINDOW){
+      set('v16State','UPGRADE WINDOW OPEN');
+      set('v16Live','<span style="display:inline-block;padding:3px 9px;border:1px solid #fb010d;border-radius:999px;font:700 11px ui-monospace;letter-spacing:1px;color:#fb010d">UPGRADE WINDOW OPEN &middot; '+fc(V16-h)+' blocks to activation</span>');
+    } else {
+      set('v16Live','<span style="display:inline-block;padding:3px 9px;border:1px solid #ffd166;border-radius:999px;font:700 11px ui-monospace;letter-spacing:1px;color:#ffd166">NOT YET ACTIVE &middot; chain at #'+fc(h)+' &middot; '+fc(V16-h)+' blocks to go</span>');
+    }
+    // ---- Jackpot: how many draw heights have passed. The AMOUNT of each one is
+    //      parsed from its transaction by the explorer's archive, which is the
+    //      single source for it — this page does not re-implement that parser. ----
+    if(h>=FIRST){
+      var n=Math.floor((h-FIRST)/CAD)+1;
+      set('jpCount',String(n));
+      set('jpAsOf','(chain at #'+fc(h)+' &middot; <a href="sost-explorer.html" style="color:#22d3ee">see each amount in the archive</a>)');
+    }
+  }).catch(function(){ /* node unreachable: the static text stays as written */ });
+})();
 </script>
 </body>
 </html>
