@@ -1,0 +1,241 @@
+[size=14pt][b]ConvergenceX Testing / Network Status / Sync Updates[/b][/size]
+
+This reserved post is dedicated to [b]ConvergenceX testing[/b], bootstrap/sync status, P2P hardening, cASERT behaviour and external validation of the live network.
+
+[b]Updated: September 23, 2026 — chain height ~27,640.[/b] Everything below the "historical record" line describes the calibration era around blocks 4,100–5,750 and is kept as the record of what was found and fixed; it is not a description of the network today.
+
+[hr]
+
+[size=12pt][b]WHERE THE NETWORK IS TODAY[/b][/size]
+
+[code]
+Height                 ~27,640
+Current release        v16.2.3  (node/miner byte-identical across all v16.2.x)
+Next consensus event   V16 activates at #30,000 — automatic, by block height
+Operator window        after #29,900, before #30,000
+First DTD Jackpot V2   #30,186
+Emission split         50% miner / 50% DTD   (since V15 at #25,000)
+DTD cadence            every block, 3-of-3   (since #25,000)
+cASERT ceiling         H35                   (since V13 at #12,000)
+Timestamp drift cap    30 s                  (since V13)
+HTLC                   consensus #16,000 · mempool relay #17,000
+[/code]
+
+Upgrade guide with copy-paste commands: [url=https://sostcore.com/sost-upgrade.html]sostcore.com/sost-upgrade.html[/url]
+Release and hashes: [url=https://github.com/Neob1844/sost-core/releases/tag/v16.2.3]releases/tag/v16.2.3[/url]
+
+[hr]
+
+[size=12pt][b]WHAT IS UNDER OBSERVATION NOW[/b][/size]
+
+[list]
+[li][b]The V16 activation at #30,000[/b] — DTD-normal eligibility tightens to a 288-block recency window, the 6-block producer cooldown yields when applying it would leave nobody eligible, and the 10%/288 anti-dominance gate arms only at ≥11 distinct miners.[/li]
+[li][b]Miner distribution.[/b] Measured today over a sample of 96 blocks inside the last 288: [b]38 distinct producing addresses[/b], with two of them holding most of the blocks and a long tail of addresses carrying a single block each. Two consequences worth knowing before #30,000: the anti-dominance gate [b]will[/b] be armed, and single-block addresses do [b]not[/b] reach the Jackpot V2 minimum of 3 blocks per 2,016.[/li]
+[li][b]The first Jackpot V2 draw at #30,186[/b] — NODE_BIND propagation, heartbeat bootstrap (0/0 at the first draw), and whether eligible sets look the way the simulations predicted.[/li]
+[li][b]cASERT under the current hashrate[/b] — avg288 + median288 + dynamic cap behaviour, profile transitions with the H35 ceiling available, relief valve and anti-stall.[/li]
+[li][b]HTLC relay[/b] since #17,000: no HTLC should enter a template unless one is actually broadcast; block templates staying at txs=1 is the expected steady state.[/li]
+[li][b]Bootstrap from height 0[/b] across every fork boundary — the chain now crosses V11, V12, V13, V14, V14.5, V14.7 and V15 during a full sync.[/li]
+[li][b]P2P robustness[/b] under non-ideal network conditions, encrypted and plaintext transport.[/li]
+[/list]
+
+If there is a weakness in ConvergenceX, the network path, cASERT coordination or the V16 eligibility rules, I want it found [b]now[/b] — before #30,000, not after.
+
+[hr]
+
+[size=12pt][b]HOW TO TEST FROM A CLEAN SYNC[/b][/size]
+
+[b]Build.[/b] The SbPoW flag is mandatory: a binary built without it cannot produce blocks the network accepts after #7,100.
+
+[code]
+sudo apt update && sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
+
+git clone --depth 1 --branch v16.2.3 https://github.com/Neob1844/sost-core.git sost-src
+cd sost-src
+
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
+      -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+
+# optional: verify you built the published bytes
+cd build && sha256sum -c <(grep -E '^[0-9a-f]{64}' ../docs/v16/SHA256SUMS)
+[/code]
+
+The build directory must be named [tt]build[/tt] for the hashes to match; the source path does not matter. A different toolchain legitimately produces a different hash.
+
+[b]Run the test suites.[/b]
+
+[code]
+cmake --build build -j"$(nproc)"          # builds every test binary
+cd build && ctest --output-on-failure      # 119 test binaries
+./test-casert                              # cASERT: 229 assertions
+[/code]
+
+Expected today: [tt]100% tests passed, 0 tests failed out of 119[/tt], and [tt]229 passed, 0 failed[/tt] for cASERT. (The older "193 passed" in previous versions of this post was the count before the V11–V16 work.)
+
+[b]Clean sync.[/b]
+
+[code]
+cd build
+cp ../genesis_block.json .
+rm -f chain.json
+
+# your own RPC password, in a private file — never on the command line
+mkdir -p ~/.sost && umask 077
+openssl rand -base64 30 > ~/.sost/rpc.pass && chmod 600 ~/.sost/rpc.pass
+
+./sost-node --genesis genesis_block.json --chain chain.json \
+  --connect seed.sostcore.com:19333 \
+  --rpc-user myuser --rpc-pass-file ~/.sost/rpc.pass \
+  --profile mainnet --p2p-enc on
+[/code]
+
+[b]Wait for the node to finish syncing before starting the miner.[/b]
+
+[code]
+./sost-cli --wallet wallet.json newwallet
+./sost-cli --wallet wallet.json getnewaddress "test-miner"
+chmod 600 wallet.json
+
+./sost-miner \
+  --wallet wallet.json --mining-key-label "test-miner" \
+  --genesis genesis_block.json \
+  --rpc 127.0.0.1:18232 --rpc-user myuser --rpc-pass-file ~/.sost/rpc.pass \
+  --blocks 999999 --profile mainnet --realtime --threads 4
+[/code]
+
+[tt]--wallet[/tt] + [tt]--mining-key-label[/tt] select the key that signs your blocks (SbPoW, live since #7,100). Do not use [tt]--address[/tt] on its own: it is the pre-SbPoW path, and your V16 Jackpot eligibility and NODE_BIND both depend on the signed identity.
+
+Explorer: [url=https://sostcore.com/sost-explorer.html]sostcore.com/sost-explorer.html[/url]
+
+[hr]
+
+[size=12pt][b]REPORTING A PROBLEM[/b][/size]
+
+Please include as much as possible:
+
+[list]
+[li]Operating system and version; RAM; native Linux / WSL2 / VPS[/li]
+[li]Exact git tag or commit, and confirmation of a rebuild[/li]
+[li]Whether the build used [tt]-DSOST_ENABLE_PHASE2_SBPOW=ON[/tt][/li]
+[li]Whether you started from clean chain data[/li]
+[li]Full node log; full miner log if mining started[/li]
+[li]Whether the failure happened during sync, post-checkpoint validation, mining, or RPC use[/li]
+[li]Approximate latency to the seed, if relevant[/li]
+[/list]
+
+Two things that look like bugs and usually are not:
+
+[list]
+[li][b]"timestamp too far in future" rejects interleaved with accepts.[/b] The miner stamps at least 60 s after the previous block while the node refuses anything more than 30 s ahead of its clock. The same block lands seconds later. Only [i]continuous[/i] rejects with no accepts are a fault — then suspect clock skew (check NTP; a laptop resuming from sleep can be minutes ahead).[/li]
+[li][b]"RPC AUTHENTICATION REJECTED (HTTP 401)".[/b] Not a rejected block: the node never validated it. Node and miner must use the same credentials, and the RPC password is the one [i]your[/i] node was started with — there is no network-wide SOST RPC password.[/li]
+[/list]
+
+Report issues: [url=https://sostcore.com/sost-contact.html]contact page[/url] or this thread.
+
+[hr]
+
+[size=12pt][b]SOST DEX / ATOMIC SWAP — HONEST STATUS[/b][/size]
+
+The SOST-side HTLC gates are live (consensus #16,000, mempool relay #17,000). [b]That does not make the feature usable by third parties:[/b]
+
+[list]
+[li]the EVM contract is [b]undeployed and unaudited[/b] — founder testing only;[/li]
+[li]the [b]Bitcoin leg is OFF[/b] in the official binaries: the code is complete (redeem script, signing, funding coin-selection, broadcast backend, watcher, restart recovery) but stays disabled pending real bitcoind validation and an explicit operator enable;[/li]
+[li]the desk is an alpha: signed offers (ED25519), encrypted deal channels (X25519 + ChaCha20-Poly1305), private inbox, operator-assisted gates. Not an AMM and not a public swap service.[/li]
+[/list]
+
+Browser crypto tests: [url=https://sostcore.com/dex-crypto-test.html]dex-crypto-test.html[/url] · desk: [url=https://sostcore.com/sost-dex.html]sost-dex.html[/url]
+
+Do not route funds through it today. Test it, try to break it, report what you find.
+
+[hr]
+
+[size=12pt][b]CONSENSUS TIMELINE[/b][/size]
+
+[code]
+#1,450    V2   24 h halflife, 12.5% cap
+#4,100    V3   equalizer slew ±3, lag floor
+#4,110    V3.1 slew enforcement fix, profile_index validation
+#4,170    V4   sentinel profile_index fix
+#4,300    V5   stateless Ahead Guard, EBR cliffs, anti-stall 1 h
+#5,000    V6   slew ±1, scale=2, Ahead Guard removed
+#5,050    V6 calibration: lag cap H ≤ lag, live lag, 60 min anti-stall
+#5,175    V6++ avg288 bitsQ (replaces the anchor exponential)
+#5,260    dynamic cap + median288 reality check
+#5,323    direct lag mapping: profile = clamp(lag, 0, ceiling)
+#5,480    H11 ceiling
+#5,560    profile floor enforcement
+#5,635    H12 ceiling + relief valve V1
+#5,750    H13 ceiling, E7 relief @605 s, E7–E5 added, margins recalibrated
+#7,000    V11 Phase 1  state-dependent dataset access + linear cascade
+#7,100    V11 Phase 2  SbPoW + DTD lottery (bootstrap 2-of-3)
+#7,350    V12          H20 ceiling, 4-tier Slingshot, capsules
+#12,000   V13          cASERT E7–H35, DTD cooldown 6, drift cap 30 s, Beacon
+#12,100   DTD cadence  2-of-3 → 1-of-3
+#15,000   V14          hardening
+#16,000   V14.5        HTLC consensus acceptance
+#17,000   V14.7        HTLC mempool/relay flag-day
+#25,000   V15          50% miner / 50% DTD · DTD every block (3-of-3) ·
+                       recency gate · Gold Vault and PoPC emission → 0
+#30,000   V16          DTD eligibility change + independent Jackpot V2   PENDING
+#30,186   first DTD Jackpot V2 draw                                      PENDING
+[/code]
+
+Two corrections to earlier versions of this post. The line "Block 10,000 — planned: Gold Vault governance, PoPC activation, sig-bound PoW" was wrong on all three counts: signature-bound PoW arrived at [b]#7,100[/b], Gold Vault spend governance was [b]never activated[/b], and PoPC [b]never became operational[/b] — the DTD has never required a PoPC bond at any height. And the "FINAL CALIBRATION" declared at #5,750 was not final: V13 raised the ceiling to H35 at #12,000.
+
+[hr]
+
+[size=12pt][b]HISTORICAL RECORD — THE 4,100–5,750 CALIBRATION ERA[/b][/size]
+
+[i]Kept because it is the record of what external testers found and what was fixed. It describes the network as it was around block 5,750, not as it is now.[/i]
+
+[b]What was found[/b]
+
+[list]
+[li]Historical blocks served without sufficient proof data for full CX verification[/li]
+[li]Checkpoint gaps: new peers reached the assumevalid boundary and failed on the immediate post-checkpoint blocks[/li]
+[li]Sync-mode peers incorrectly penalised by the P2P rate limiter[/li]
+[li]High-latency / packet-loss conditions exposing incomplete block transport[/li]
+[li]cASERT equalizer profile oscillation (H3↔H12) from a slew-rate recomputation bug[/li]
+[li]Anti-stall threshold scaling to 11 h+ at high lag[/li]
+[li]Blocks accepted without [tt]profile_index[/tt], causing E1-style validation instead of H12[/li]
+[li]bitsQ dropping aggressively during equalizer braking, undoing part of the correction[/li]
+[li]Miner not detecting anti-stall profile changes, grinding at 0% stability[/li]
+[li]RPC connection accumulation ([tt]CLOSE-WAIT[/tt]) eventually crashing the node[/li]
+[li]V3.1 fallback-without-label: [tt]BlockMeta::profile_index[/tt] defaulted to 0, making legitimate B0 blocks indistinguishable from missing values and silently disabling the ±3 slew rate[/li]
+[li]Deterministic B0→H6→H9→H12→stall oscillation every ~30 blocks, caused by a static-state variable inside the Ahead Guard path[/li]
+[li]Stale [tt]test_checkpoints.cpp[/tt] referencing removed constants, breaking fresh-clone builds (reported by colerus)[/li]
+[li]H10 stability cliff: scale jumped from 2 (H9) to 3 (H10), making H10+ unreachable (vostokzyf, oswaldzc)[/li]
+[li]Slew rate ±3 producing a B0→H3→H6→H9→stall sawtooth[/li]
+[li]H11 non-viable on modest hardware: 0.0% stability over 60–70+ minute stalls[/li]
+[li]Two-controller coordination problem: bitsQ and equalizer correcting simultaneously, H9↔H10 oscillation with lag accumulating past 19 blocks[/li]
+[li]Anchor-based exponential bitsQ accumulating lag since genesis — a 27% difficulty spike at block 5,150[/li]
+[li]Fixed 12.5% cap too aggressive for the avg288 controller: bitsQ rose 12.7 → 16.1 bits in 50 blocks[/li]
+[li]avg288 dead-band trap: 5-second blocks and 67-minute blocks cancelling in the arithmetic mean, leaving bitsQ stuck for 17+ consecutive blocks[/li]
+[li]Relief valve at H1 insufficient: H1 blocks still taking 10–40 minutes because most miners lacked lag-adjust and missed the profile change[/li]
+[li]Profile floor enforcement gap at block 5,525: miner declared H1 when context required H9/H10[/li]
+[li]Slew descent stuck during stalls: the profile could not descend more than one level per block even after 53+ minutes with no block[/li]
+[/list]
+
+[b]What was fixed[/b]
+
+Dynamic assumevalid/checkpoint updates · sync-mode exemption from misbehaviour scoring · relaxed sync traffic limits · fast-sync for trusted historical ranges · P2P transport hardening for high-latency links · the V3 → V3.1 → V4 → V5 → V6 cASERT sequence listed in the timeline above · direct lag mapping and asymmetric descent · profile floor enforcement · relief valve and margin recalibration · miner lag-adjust reduced from 30 s to ~6 s · avg288 controller with dynamic cap and median288 override · multi-threaded mining ([tt]--threads N[/tt]) · real-time hashrate display · the RPC [tt]CLOSE-WAIT[/tt] fix (socket timeouts, shutdown, linger) · fake-height peer detection and disconnect.
+
+[b]Since then[/b], the work moved on to SbPoW and the DTD lottery (V11 Phase 2), capsules and Slingshot (V12), the E7–H35 ceiling and Beacon (V13), HTLC (V14.5/V14.7), the emission transition (V15) and now Jackpot V2 (V16). The V16.2.x releases also removed operator secrets from process command lines and replaced the CLI's hand-rolled JSON parsing in every path that handles funds.
+
+[hr]
+
+[size=12pt][b]TEST COUNTS — MEASURED TODAY[/b][/size]
+
+[code]
+ctest suite (C++)     119 test binaries, 0 failures
+cASERT assertions     229 passed, 0 failed
+devnet E2E harnesses    8 (jackpot V2 paid/rollover, heartbeats, V15 payout,
+                          reorg, mempool, rollover)
+[/code]
+
+Earlier versions of this post quoted "193 cASERT tests" and "825+ tests across C++, Python, TypeScript, Solidity and browser". The first number has grown to 229; the second covered components outside this repository and has not been re-verified for this update, so it is not repeated as a current claim.
+
+[hr]
+
+[b]Thank you for supporting SOST.[/b] Reproducible bug reports and hostile testing are the most useful contribution anyone can make right now, and the most valuable window is the one before #30,000.
