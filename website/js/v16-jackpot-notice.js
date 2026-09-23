@@ -93,6 +93,15 @@
   color:#fff;background:#fb010d;border:1px solid #ff6b6b;white-space:nowrap;
   animation:sost-v16-chipblink 1.1s steps(1,end) infinite}
 @keyframes sost-v16-chipblink{0%,49%{opacity:1;box-shadow:0 0 16px rgba(251,1,13,.75)}50%,100%{opacity:.32;box-shadow:0 0 0 rgba(251,1,13,0)}}
+/* Narrow screens: the chip is white-space:nowrap at ~368px, wider than a
+   phone, and flex:0 0 auto stops it shrinking - it widened every page that
+   carries the notice. Let it wrap instead. */
+@media (max-width:768px){
+  .sost-v16-head{flex-wrap:wrap;gap:9px;padding:12px 13px}
+  .sost-v16-redchip,.sost-v16-chip,.sost-v16-cta{flex:0 1 auto;max-width:100%;white-space:normal;
+    font-size:9.5px;letter-spacing:.6px;line-height:1.35}
+  .sost-v16-titles{flex:1 1 100%}
+}
 @media (prefers-reduced-motion:reduce){
   .sost-v16-blink,.sost-v16-redchip,.sost-v16-icon,.sost-v16-title,.sost-v16{animation:none !important}
   .sost-v16-blink{border-color:#fb010d;box-shadow:0 0 16px rgba(251,1,13,.45)}

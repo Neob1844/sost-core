@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-23-v465-wide-comparison-charts">
+<meta name="explorer-html-version" content="2026-09-23-v466-no-mobile-hscroll">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -126,9 +126,11 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .offline{background:linear-gradient(90deg,var(--red),#c41d2f);color:#fff;text-align:center;padding:6px;font-size:11px;font-weight:600;display:none;letter-spacing:2px;text-transform:uppercase}
 .offline.show{display:block;animation:slideDown .3s ease}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:none}}
-.new-block-toast{position:fixed;top:60px;right:24px;background:var(--green-dim);border:1px solid var(--green);color:var(--green);padding:10px 20px;font-size:12px;font-weight:600;letter-spacing:1px;z-index:100;opacity:0;transform:translateX(100%);transition:all .4s ease;pointer-events:none}
-.new-block-toast.show{opacity:1;transform:translateX(0)}
-.config{max-width:1400px;margin:12px auto 0;padding:0 24px;display:flex;align-items:center;gap:6px}
+/* Parked off-screen with transform:translateX(100%) while hidden, which still
+   counts as layout on some engines. visibility:hidden takes it out entirely. */
+.new-block-toast{visibility:hidden;position:fixed;top:60px;right:24px;background:var(--green-dim);border:1px solid var(--green);color:var(--green);padding:10px 20px;font-size:12px;font-weight:600;letter-spacing:1px;z-index:100;opacity:0;transform:translateX(100%);transition:all .4s ease;pointer-events:none}
+.new-block-toast.show{visibility:visible;opacity:1;transform:translateX(0)}
+.config{max-width:1400px;margin:12px auto 0;padding:0 24px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .config-label{font-size:10px;color:var(--text3);letter-spacing:2px}
 .config input{background:var(--bg2);border:1px solid var(--border);color:var(--green);font-family:var(--code);font-size:12px;padding:5px 10px;width:340px;outline:none;transition:border .15s}
 .config input:focus{border-color:var(--red)}
@@ -204,12 +206,49 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .price-tooltip-date{color:#666}
 .price-tooltip-val{color:#c8c8c8;font-weight:600}
 .price-card-range{font-size:9px;color:var(--text3);margin-top:8px;letter-spacing:.5px}
-@media(max-width:768px){.price-cards{grid-template-columns:1fr}}
+@media(max-width:768px){.price-cards{grid-template-columns:minmax(0,1fr)}}
 /* The four comparison charts sit OUTSIDE .main so they get the full window
    width without a 100vw breakout (100vw includes the scrollbar and would
    add a horizontal scroll). Same 24px gutter and 12px gap as the rest. */
 .price-overlays-wide{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 24px;margin:0 auto 20px;position:relative;z-index:2}
-@media(max-width:900px){.price-overlays-wide{grid-template-columns:1fr}}
+@media(max-width:900px){.price-overlays-wide{grid-template-columns:minmax(0,1fr)}}
+/* ══════════════════════════════════════════════════════════════════════════
+   NARROW SCREENS — no horizontal page scroll.
+   The page used to be ~960px wider than a 390px phone. Fixed here at the
+   three elements that actually caused it, NOT with overflow-x:hidden on the
+   page (that hides the symptom and makes whatever sticks out unreachable):
+     1. the two header rows carry inline flex:0 0 auto, which pins them to
+        their max-content width (846px and 1325px) and defeats flex-wrap;
+     2. .config has pixel-width inputs (120+120+180) in a non-wrapping row;
+     3. .sost-v16-redchip is white-space:nowrap at 368px.
+   Everything else that appeared to overflow (dashboard cards, fixed buttons)
+   was a CONSEQUENCE of the document being stretched by those three.
+   Desktop is untouched: every rule here lives behind a media query.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media(max-width:1024px){
+  .nav-row-brand,.nav-row-links{flex:1 1 100% !important;min-width:0;flex-wrap:wrap !important;justify-content:center}
+  .nav-row-links{gap:8px !important}
+}
+@media(max-width:768px){
+  /* the 110px header tiles do not fit four-across on a phone */
+  .nav-row-brand img{height:62px !important;width:62px !important;min-width:0 !important}
+  .nav-row-brand .sq-wrap a,.nav-row-brand>a:not([href="index.html"]){width:62px !important;height:62px !important;min-width:62px !important}
+  .nav-row-brand>a[href="index.html"]{font-size:17px !important;letter-spacing:1.4px !important;gap:9px !important}
+  .header-link{font-size:12px !important;letter-spacing:.8px !important;padding:4px 7px !important}
+  /* RPC controls: fluid instead of fixed pixels, still all reachable */
+  .config{gap:6px 8px}
+  .config input{width:auto !important;flex:1 1 140px;min-width:0}
+  .config #rpcUrl{flex:1 1 96px}
+  .config button{flex:0 0 auto}
+  /* long tables scroll INSIDE their own box rather than widening the page */
+  .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
+@media(max-width:400px){
+  .nav-row-brand img{height:52px !important;width:52px !important}
+  .nav-row-brand .sq-wrap a,.nav-row-brand>a:not([href="index.html"]){width:52px !important;height:52px !important;min-width:52px !important}
+  .nav-row-brand>a[href="index.html"]{font-size:15px !important}
+}
+
 @media(max-width:768px){.price-overlays-wide{padding:0 16px}}
 .emission-card{background:var(--bg2);border:1px solid var(--border);padding:16px 20px}
 .emission-title{font-size:11px;letter-spacing:2px;color:var(--text3);margin-bottom:12px}
@@ -351,7 +390,26 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   .casert-params{grid-template-columns:1fr}
 }
 @media(max-width:768px){
-  .dashboard{grid-template-columns:repeat(2,1fr)}
+  .dashboard{grid-template-columns:repeat(2,minmax(0,1fr))}
+  /* 1fr never shrinks below min-content; these labels are long and
+     letter-spaced, so the grid stayed wider than the phone. */
+  .dash-card{overflow-wrap:anywhere;padding:12px 12px}
+  .dash-label{letter-spacing:1px}
+  #nodesSummary{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  /* one dash-card carries an inline min-width:230px, which forced the whole
+     2-column grid to 470px on a 390px phone. */
+  .dash-card{min-width:0 !important}
+  .sparkline-label,.sparkline-info{overflow-wrap:anywhere;letter-spacing:.6px}
+  /* inline repeat(N,1fr) grids: same min-content floor as the dashboard */
+  #mpFeePanel{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  .tx-filters{flex-wrap:wrap}
+  .tx-filter{padding:5px 9px}
+  /* Chart.js writes an inline pixel width on its canvas and only revises it
+     on a resize event, so it can keep a width measured before these rules
+     applied. Clamp it; the chart is maintainAspectRatio:false in a sized box. */
+  #chartSost{max-width:100% !important}
+  .tbl{table-layout:fixed;width:100%}
+  .tbl td,.tbl th{overflow-wrap:anywhere}
   .stats-code{font-size:11px;padding:12px}
   .dtl-grid{grid-template-columns:100px 1fr}
   .tbl th:nth-child(n+4),.tbl td:nth-child(n+4){display:none}
@@ -431,7 +489,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 </script>
 <nav style="position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);padding:18px 0;">
   <div style="max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:12px;flex:0 0 auto;">
+    <div class="nav-row-brand" style="display:flex;align-items:center;gap:12px;flex:0 0 auto;">
       <a href="index.html" style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:#e2e8f0;letter-spacing:3px;text-decoration:none;display:flex;align-items:center;gap:14px;flex:0 0 auto;">
         <img src="sost-logo.png?v=v392" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));animation:sostLogoPulse 3.6s ease-in-out infinite"><span><span style="color:#fb010d">SOST</span> EXPLORER</span>
       </a>
@@ -441,7 +499,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
       <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:27.5px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:8.75px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
     </div>
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:0 0 auto;">
+    <div class="nav-row-links" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:0 0 auto;">
       <span class="net-badge" id="netBadgeNav"><span class="net-dot"></span>MAINNET</span>
       <a class="header-link" style="cursor:pointer" onclick="showCXInfo()"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">O</span><span style="color:hsl(190,85%,55%)">N</span><span style="color:hsl(160,85%,50%)">V</span><span style="color:hsl(130,85%,50%)">E</span><span style="color:hsl(100,85%,50%)">R</span><span style="color:hsl(70,85%,50%)">G</span><span style="color:hsl(50,85%,50%)">E</span><span style="color:hsl(35,85%,50%)">N</span><span style="color:hsl(20,85%,50%)">C</span><span style="color:hsl(5,85%,45%)">E</span><span style="color:#fb010d">X</span></a>
       <a class="header-link markets-live" href="sost-markets.html" title="SOST live markets">MARKETS LIVE</a>
@@ -8352,7 +8410,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/v16-jackpot-notice.js?v=v465" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v466" defer></script>
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks
