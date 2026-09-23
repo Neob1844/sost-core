@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-23-v463-news-live-state">
+<meta name="explorer-html-version" content="2026-09-23-v464-btc-eth-overlay">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -1053,6 +1053,29 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <div style="margin-top:4px">Full explanation &amp; the gold chart: <a href="sost-reference.html" style="color:var(--cyan,#22d3ee);text-decoration:none">SOST gold reference →</a> &middot; Verify network-held gold (not holder-redeemable): <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan,#22d3ee);text-decoration:none">Etherscan ↗</a></div>
       </div>
     </div>
+    </div>
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- FULL-WIDTH overlay: BTC PRICE + ETH PRICE.                         -->
+    <!-- Spans the whole grid (grid-column:1/-1) so it sits BELOW the three -->
+    <!-- columns above instead of inside one of them. Same card chrome,     -->
+    <!-- same 11 timeframes, same tooltip/status line: it is just another   -->
+    <!-- entry in OVERLAYS, so there is no second code path to keep in sync.-->
+    <!-- Both series are USD, so the axes carry a compact axis format       -->
+    <!-- (afmt:'usd0' -> $110,432) — five-figure BTC with cents would not   -->
+    <!-- fit the 52px gutter. The tooltip still shows the exact cents.      -->
+    <!-- Sources: CoinGecko bitcoin/usd and ethereum/usd — the very series  -->
+    <!-- the gold cards already pull as their dashed context line, so this  -->
+    <!-- card adds NO new requests to the rate-limited API, it reuses cache.-->
+    <div class="price-card" style="grid-column:1 / -1">
+      <div class="price-card-head"><div class="price-card-title">// <b style="color:#f7931a">BTC PRICE</b> + <b style="color:#627eea">ETH PRICE</b> &mdash; Overlay</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
+      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#f7931a">■ BTC PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#627eea">■ ETH PRICE <span style="color:var(--text3)">(USD, right)</span></span></div>
+      <div class="tf-btns" id="ovbtcethTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
+      <div class="chart-wrap">
+        <canvas id="ovbtcethChart" style="width:100%;height:220px"></canvas>
+        <canvas id="ovbtcethOverlay" class="chart-overlay" style="width:100%;height:220px"></canvas>
+        <div class="price-tooltip" id="ovbtcethTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="ovbtcethRange"></div>
     </div>
   </div>
   <div style="margin-bottom:24px">
@@ -8132,12 +8155,21 @@ setInterval(refresh,60000);
     {key:'ovpaxg', a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'btc',color:'#d946ef',label:'PAXG / BTC',fmt:'btc'}, c:{id:'bitcoin',vs:'usd',color:'#f7931a',label:'BTC / USDC',fmt:'usd'}},
     {key:'ovxauteth', a:{id:'tether-gold',vs:'usd',color:'#d4af37',label:'XAUT PRICE',fmt:'usd'}, b:{id:'tether-gold',vs:'eth',color:'#22d3ee',label:'XAUT / ETH',fmt:'eth'}, c:{id:'ethereum',vs:'usd',color:'#627eea',label:'ETH / USDC',fmt:'usd'}},
     {key:'ovpaxgeth', a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'eth',color:'#d946ef',label:'PAXG / ETH',fmt:'eth'}, c:{id:'ethereum',vs:'usd',color:'#627eea',label:'ETH / USDC',fmt:'usd'}}
+,
+    // Full-width card below the three columns. Both series are USD prices, so
+    // there is no 'c' context line to normalize — the two lines ARE the
+    // comparison. Each keeps its own scale (BTC ~1e5 against ETH ~1e3 would
+    // crush one of them on a shared axis): BTC left axis, ETH right axis.
+    {key:'ovbtceth', a:{id:'bitcoin', vs:'usd',color:'#f7931a',label:'BTC PRICE',fmt:'usd',afmt:'usd0'}, b:{id:'ethereum',vs:'usd',color:'#627eea',label:'ETH PRICE',fmt:'usd',afmt:'usd0'}}
   ];
   // Per-card state, built from OVERLAYS so a new card needs no second list to update.
   var ovTf={},ovReq={},ovState={};     // timeframe · request generation (stale-response guard) · per-series state ('pending'|'ready'|'empty'|'out_of_range'|'error', never inferred from point count)
   OVERLAYS.forEach(function(_c){ovTf[_c.key]='24H';ovReq[_c.key]=0;ovState[_c.key]={};});
   function ovSeries(id,vs,tf){ var ck=cKey(id,vs),def=TF_MAP[tf]; var raw=(cache[ck]&&cache[ck][def.days])||[]; if(!raw.length)return[]; if(def.ms){var cut=Date.now()-def.ms;return raw.filter(function(pp){return pp[0]>=cut;});} return raw; }
-  function ovFmt1(fmt,v){ return fmt==='btc'?fmtBtc(v):(fmt==='eth'?fmtEth(v):fmtUsd(v)); }
+  // 'usd0' is an AXIS-ONLY format: $110,432 instead of $110,432.00, because a
+  // five-figure BTC label with cents does not fit the 52px left gutter. Only a
+  // card that asks for it (afmt) gets it; tooltips always use the full format.
+  function ovFmt1(fmt,v){ if(fmt==='usd0')return '$'+Math.round(v).toLocaleString('en-US'); return fmt==='btc'?fmtBtc(v):(fmt==='eth'?fmtEth(v):fmtUsd(v)); }
   function ovScale(arr){ var vs=arr.map(function(p){return p[1];}); var mn=Math.min.apply(null,vs),mx=Math.max.apply(null,vs); var r=mx-mn; if(r===0)r=mn*0.001||1; mn-=r*0.05; mx+=r*0.05; return {mn:mn,mx:mx,rng:(mx-mn)||1}; }
   // Denominator reference line (BTC/USDC or ETH/USDC): normalize to base 100 at the
   // start of the visible range so its (much larger, volatile) scale never crushes the
@@ -8182,9 +8214,9 @@ setInterval(refresh,60000);
     var sA=A.length>=2?ovScale(A):null, sB=B.length>=2?ovScale(B):null;
     ctx.font='9px '+codeFont;
     // left axis (series A, USD)
-    if(sA){ ctx.textAlign='right';ctx.fillStyle=cfg.a.color; for(var yi=0;yi<4;yi++){var yv=sA.mx-sA.rng*yi/3;var yp=pT+ch*yi/3;ctx.fillText(ovFmt1(cfg.a.fmt,yv),pL-4,yp+3);} }
+    if(sA){ ctx.textAlign='right';ctx.fillStyle=cfg.a.color; for(var yi=0;yi<4;yi++){var yv=sA.mx-sA.rng*yi/3;var yp=pT+ch*yi/3;ctx.fillText(ovFmt1(cfg.a.afmt||cfg.a.fmt,yv),pL-4,yp+3);} }
     // right axis (series B, BTC)
-    if(sB){ ctx.textAlign='left';ctx.fillStyle=cfg.b.color; for(var yj=0;yj<4;yj++){var yv2=sB.mx-sB.rng*yj/3;var yp2=pT+ch*yj/3;ctx.fillText(ovFmt1(cfg.b.fmt,yv2),pL+cw+4,yp2+3);} }
+    if(sB){ ctx.textAlign='left';ctx.fillStyle=cfg.b.color; for(var yj=0;yj<4;yj++){var yv2=sB.mx-sB.rng*yj/3;var yp2=pT+ch*yj/3;ctx.fillText(ovFmt1(cfg.b.afmt||cfg.b.fmt,yv2),pL+cw+4,yp2+3);} }
     // X labels (shared time)
     ctx.fillStyle='#333';ctx.textAlign='center';
     for(var xi=0;xi<6;xi++){var tt=minT+trng*xi/5;var xp=pL+xi/5*cw;ctx.fillText(fmtAx(tt,tf),xp,h-3);}
@@ -8293,7 +8325,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/v16-jackpot-notice.js?v=v463" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v464" defer></script>
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks
