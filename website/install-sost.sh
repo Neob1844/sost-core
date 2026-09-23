@@ -127,23 +127,37 @@ Binaries are in:
 
 Next steps (each is a separate command you run yourself):
 
-  ${C_GRN}1. Create a wallet${C_OFF}
+  ${C_GRN}1. Create a wallet and label the mining key${C_OFF}
      cd $INSTALL_DIR/build
-     ./sost-cli newwallet
-     ./sost-cli getnewaddress "mining"
-     # copy the sost1... address — you'll need it for the miner.
+     umask 077
+     ./sost-cli --wallet wallet.json newwallet
+     ./sost-cli --wallet wallet.json getnewaddress "my-miner"
+     chmod 600 wallet.json
+     # BACK THIS FILE UP. The key in it receives every block you mine.
 
-  ${C_GRN}2. Start the node${C_OFF} (in its own terminal or systemd unit)
+  ${C_GRN}2. Choose YOUR OWN RPC password${C_OFF} (it is not a SOST-wide password)
+     mkdir -p ~/.sost && umask 077
+     openssl rand -base64 30 > ~/.sost/rpc.pass
+     chmod 600 ~/.sost/rpc.pass
+     # The node and the miner both read this file. It is NOT your wallet passphrase.
+
+  ${C_GRN}3. Start the node${C_OFF} (in its own terminal or systemd unit)
      cd $INSTALL_DIR/build
-     ./sost-node --rpc-user YOUR_USER --rpc-pass YOUR_PASS
+     ./sost-node --rpc-user myuser --rpc-pass-file ~/.sost/rpc.pass \\
+       --genesis genesis_block.json --chain chain.json \\
+       --profile mainnet --p2p-enc on
 
-  ${C_GRN}3. Start the miner${C_OFF} (in another terminal)
+  ${C_GRN}4. Start the miner${C_OFF} (in another terminal)
      cd $INSTALL_DIR/build
      ./sost-miner \\
-       --address sost1YOURADDRESS \\
+       --wallet wallet.json --mining-key-label "my-miner" \\
+       --genesis genesis_block.json \\
        --rpc 127.0.0.1:18232 \\
-       --rpc-user YOUR_USER --rpc-pass YOUR_PASS \\
-       --blocks 999999 --profile mainnet --threads 16
+       --rpc-user myuser --rpc-pass-file ~/.sost/rpc.pass \\
+       --blocks 999999 --profile mainnet --realtime --threads 16
+     # --wallet + --mining-key-label select the key that SIGNS your blocks
+     # (SbPoW). Do not replace them with --address: your V16 jackpot
+     # eligibility and your NODE_BIND both depend on that signing identity.
 
 Notes:
   - Try 16 or 32 threads first. ConvergenceX is memory-bandwidth bound;

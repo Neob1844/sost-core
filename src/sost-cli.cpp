@@ -80,6 +80,12 @@ static const int64_t FEE_RATE_DEFAULT  = 10;    // 10 stocks/byte default (>= co
 // RPC auth credentials (empty = no auth header sent)
 static std::string g_rpc_user = "";
 static std::string g_rpc_pass = "";
+// Which wallet key signs a NODE_BIND. A miner launched with
+//   --mining-key-label "SOST CEX LIQUIDITY RESERVE"
+// signs its blocks with THAT key, so the bind must authorise the same one.
+// createnodebind used to hardcode "default", which meant an operator whose
+// mining key carries any other label could not produce a valid bind at all.
+static std::string g_mining_key_label = "default";
 
 // v1.3: global node address and fee rate
 static std::string g_node_host = "127.0.0.1";
@@ -1110,6 +1116,8 @@ static void print_usage() {
     printf("\nOptions:\n");
     printf("  --wallet <path>        Wallet file (default: wallet.json)\n");
     printf("  --rpc-user <user>      RPC Basic Auth username\n");
+    printf("  --mining-key-label <l> Which wallet key signs a NODE_BIND (default: \"default\").\n");
+    printf("                         Use the SAME label your miner signs blocks with.\n");
     printf("  --rpc-pass-file <path> RPC password from a PRIVATE file (mode 600)\n");
     printf("  --rpc-pass-fd <n>      RPC password from an open descriptor\n");
     printf("  --rpc-pass <pass>      RPC Basic Auth password\n");
@@ -1202,6 +1210,7 @@ int main(int argc, char** argv) {
         needs_value = (flag == "--wallet" || flag == "--from"
                     || flag == "--rpc-user" || flag == "--rpc-pass"
                     || flag == "--rpc-pass-file" || flag == "--rpc-pass-fd"
+                    || flag == "--mining-key-label"
                     || flag == "--node" || flag == "--rpc"
                     || flag == "--fee-rate"
                     || flag == "--to" || flag == "--amount"
@@ -1218,6 +1227,7 @@ int main(int argc, char** argv) {
             }
             std::string val = argv[i + 1];
             if (flag == "--wallet" || flag == "--from")          wallet_path = val;
+            else if (flag == "--mining-key-label")               g_mining_key_label = val;
             else if (flag == "--rpc-user")                       g_rpc_user = val;
             else if (flag == "--rpc-pass") {
                 // Kept for compatibility, but it is visible in `ps` like any
@@ -3218,8 +3228,19 @@ int main(int argc, char** argv) {
                                 "Use --node-key-file <path> (mode 600) or --node-key-fd <n>.\n");
                 if (!parse32(pos[1], nsk)) { fprintf(stderr, "Error: node_privkey must be 64 hex chars\n"); return 1; }
             }
-            const sost::WalletKey* mk = w.find_key_by_label("default");
-            if (!mk) { fprintf(stderr, "Error: wallet has no 'default' mining key\n"); return 1; }
+            const sost::WalletKey* mk = w.find_key_by_label(g_mining_key_label);
+            if (!mk) {
+                fprintf(stderr, "Error: this wallet has no key labelled '%s'.\n",
+                        g_mining_key_label.c_str());
+                fprintf(stderr, "  The bind must authorise the SAME key your miner signs blocks with,\n"
+                                "  the one you pass to sost-miner as --mining-key-label.\n");
+                fprintf(stderr, "  Labels in this wallet:\n");
+                for (const auto& k : w.keys())
+                    fprintf(stderr, "    %-28s %s\n", k.label.c_str(), k.address.c_str());
+                return 1;
+            }
+            fprintf(stderr, "Binding the node key to mining key '%s' (%s)\n",
+                    g_mining_key_label.c_str(), mk->address.c_str());
             sost::sbpow::MinerPrivkey msk{}; std::copy(mk->privkey.begin(), mk->privkey.end(), msk.begin());
             sost::sbpow::MinerPubkey mpk{}, npk{};
             if (!sost::sbpow::derive_compressed_pubkey_from_privkey(msk, mpk) ||

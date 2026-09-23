@@ -42,34 +42,51 @@ cd sost-core && mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
 
 # 2. Create wallet
-./sost-cli newwallet
+./sost-cli --wallet wallet.json newwallet
+./sost-cli --wallet wallet.json getnewaddress "my-miner"   # label the mining key
 
-# 3. Import genesis block UTXOs
-./sost-cli importgenesis genesis_block.json
+# 3. Pick YOUR OWN RPC password and keep it out of the command line.
+#    There is no SOST-wide RPC password: this one protects YOUR node, and it
+#    is not your wallet passphrase.
+mkdir -p ~/.sost && umask 077
+openssl rand -base64 30 > ~/.sost/rpc.pass && chmod 600 ~/.sost/rpc.pass
 
 # 4. Start node (terminal 1) — connects to seed.sostcore.com automatically
 ./sost-node --genesis genesis_block.json --chain chain.json \
-    --rpc-user <user> --rpc-pass <pass> --profile mainnet
+    --rpc-user <user> --rpc-pass-file ~/.sost/rpc.pass \
+    --profile mainnet --p2p-enc on
 
-# 5. Start mining (terminal 2) — use YOUR wallet address
-./sost-miner --address $(./sost-cli listaddresses | head -1) \
-    --genesis genesis_block.json --chain chain.json \
+# 5. Start mining (terminal 2). --wallet + --mining-key-label select the key
+#    that SIGNS your blocks (SbPoW); the payout address is derived from it.
+./sost-miner --wallet wallet.json --mining-key-label "my-miner" \
+    --genesis genesis_block.json \
     --rpc 127.0.0.1:18232 \
-    --rpc-user <user> --rpc-pass <pass> --threads 4 --blocks 100
+    --rpc-user <user> --rpc-pass-file ~/.sost/rpc.pass \
+    --profile mainnet --realtime --threads 4 --blocks 100
 
 # 6. Send SOST (requires 1,000+ confirmations on coinbase UTXOs)
-./sost-cli --wallet wallet.json --rpc-user <user> --rpc-pass <pass> \
+./sost-cli --wallet wallet.json --rpc-user <user> --rpc-pass-file ~/.sost/rpc.pass \
     send <destination_address> 10.0
 ```
 
 ## Binaries
 
-| Binary | Version | Description |
-|--------|---------|-------------|
-| sost-node | v0.3.2 | Full node — P2P networking, JSON-RPC (17 methods), chain validation, mempool |
-| sost-miner | v0.6 | ConvergenceX Transcript V2 PoW miner with mempool integration via RPC |
-| sost-cli | v1.3 | Wallet CLI — create keys, send transactions, automatic fee calculation |
-| sost-rpc | v0.1 | Standalone RPC client for node queries |
+**Current release: `v16.2.2`.** Official binaries and hashes:
+<https://github.com/Neob1844/sost-core/releases/tag/v16.2.2> — verify with
+`sha256sum -c SHA256SUMS` before running anything. If you build from source the
+build directory must be named `build`, or the hashes will not match.
+
+| Binary | SHA-256 (v16.2.2) | Description |
+|--------|-------------------|-------------|
+| sost-node | `b253e4a9c352ea4b…` | Full node — P2P, JSON-RPC, chain validation, mempool |
+| sost-miner | `2ef9d0a77f243224…` | ConvergenceX Transcript V2 PoW miner (SbPoW-signed blocks) |
+| sost-cli | `39170309cb0d0560…` | Wallet CLI — keys, balances, transactions, NODE_BIND |
+| sost-rpc | (built from source) | Standalone RPC client for node queries |
+
+**Already running a node or a miner?** The agreed update window is **after block
+#29,900 and before #30,000**: <https://sostcore.com/sost-upgrade-v1622.html>.
+V16 consensus activates by itself at **#30,000**; the first DTD Jackpot V2 draw
+is **#30,186**.
 
 ## Node
 
@@ -81,7 +98,8 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)
   --port <n>             P2P port (default: 19333)
   --rpc-port <n>         RPC port (default: 18232)
   --rpc-user <user>      RPC authentication username (required unless --rpc-noauth)
-  --rpc-pass <pass>      RPC authentication password (required unless --rpc-noauth)
+  --rpc-pass-file <path> RPC password read from a PRIVATE file (mode 600) — preferred
+  --rpc-pass <pass>      RPC authentication password (visible in ps; use --rpc-pass-file)
   --rpc-noauth           Disable RPC authentication (not recommended)
   --connect <host:port>  Connect to specific peer (default: seed.sostcore.com:19333)
   --profile <p>          Network profile: mainnet|testnet|dev (default: mainnet)
@@ -104,7 +122,9 @@ The node:
   --chain <path>         Chain state file (required)
   --rpc <host:port>      Submit blocks to node via RPC (recommended)
   --rpc-user <user>      RPC authentication username
-  --rpc-pass <pass>      RPC authentication password
+  --rpc-pass-file <path> RPC password from a PRIVATE file (mode 600) — preferred
+  --rpc-pass-fd <n>      RPC password from an open descriptor
+  --rpc-pass <pass>      RPC authentication password (visible in ps)
   --blocks <n>           Number of blocks to mine (default: 5)
   --max-nonce <n>        Max nonce per round (default: 500000)
   --profile <p>          Network profile: mainnet|testnet|dev
@@ -118,7 +138,7 @@ The node:
 ## Wallet CLI
 
 ```
-./sost-cli [--wallet <path>] [--rpc-user <user> --rpc-pass <pass>] <command> [args...]
+./sost-cli [--wallet <path>] [--rpc-user <user> --rpc-pass-file <path>] <command> [args...]
 
   newwallet                    Create new wallet file
   getnewaddress [label]        Generate new receiving address

@@ -141,6 +141,8 @@
       the whole network crosses the activation running the same code. Get the binaries and verify their
       SHA256 <b>before</b> the window opens, so the window itself is only stop, install, restart.
       A validating node still on older consensus software at #30,000 <b>may diverge from the V16 chain</b>.
+      <br><a href="sost-upgrade-v1622.html" style="color:#39ff14;font-weight:700;text-decoration:underline">&#9654; Full upgrade guide &mdash; commands, verification, rollback</a>
+      &nbsp;&middot;&nbsp;<a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.2" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700;text-decoration:underline">Official release &amp; SHA-256</a>
     </div>
 
     <div class="sost-v16-alert">
@@ -180,7 +182,7 @@
         <ol>
           <li><b>Before the window:</b> get <b>v16.2.2</b> &mdash; official binaries at <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.2" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases</a> (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, <code>SHA256SUMS</code>). Compiling is optional; a downloaded binary whose <b>SHA256 matches</b> is equally valid. If you do build it, use <code>-B build</code>: the published hashes only reproduce from a build directory with that name.</li>
           <li>Verify the version and the official <b>SHA256</b>.</li>
-          <li><b>In the window (after #29,900, before #30,000):</b> stop your node and your miner, install the v16.2.2 binaries on <b>both</b>, restart both.</li>
+          <li><b>In the window (after #29,900, before #30,000):</b> stop your node and your miner, install the v16.2.2 binaries on <b>both</b>, restart both. Step-by-step, with the commands for systemd / manual / WSL: <a href="sost-upgrade-v1622.html" style="color:#39ff14;font-weight:700">OPERATOR UPGRADE GUIDE</a>.</li>
           <li>Keep mining normally &mdash; V16 activates by itself at #30,000. No command, no config switch, no restart exactly at the activation height.</li>
           <li>Register your <b>NODE_BIND</b> once V2 is active.</li>
           <li>Check your eligibility and PoW weight in the Explorer.</li>

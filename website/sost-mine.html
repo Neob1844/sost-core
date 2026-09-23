@@ -214,6 +214,10 @@ nav .nav-links { width: 100%; }
   </div>
 </header>
 
+<div style="max-width:960px;margin:14px auto;padding:12px 16px;border:1px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.08);font-size:14px;line-height:1.6">
+<b style="color:#ffd166">Already running a node or a miner?</b> The v16.2.2 update window is <b>after block #29,900 and before #30,000</b> &mdash;
+<a href="sost-upgrade-v1622.html" style="color:#39ff14;font-weight:700">read the upgrade guide</a>.
+</div>
 <section id="requirements">
   <div class="container">
     <div class="section-id">REQUIREMENTS</div>
@@ -297,9 +301,11 @@ chmod 600 phase2-miner-wallet.json phase2-miner-wallet.json.bak</div>
       <div class="step-body">
         <h3>Pick RPC credentials</h3>
         <p>The node and the miner talk to each other over local RPC with HTTP Basic Auth. Choose any user/pass &mdash; both processes need to know them.</p>
-        <div class="code">export SOST_RPC_USER="changeme"
-export SOST_RPC_PASS="changemenow"</div>
-        <div class="note"><b>Tip:</b> these are <i>local-only</i> credentials &mdash; the RPC binds to <code>127.0.0.1</code> by default, never to the public internet. They protect against other local users on the same box, not against the wider network. Use any reasonable password.</div>
+        <div class="code">mkdir -p ~/.sost &amp;&amp; umask 077
+openssl rand -base64 30 &gt; ~/.sost/rpc.pass
+chmod 600 ~/.sost/rpc.pass
+export SOST_RPC_USER="changeme"</div>
+        <div class="note"><b>These credentials are yours and only yours.</b> There is no SOST-wide RPC password: you choose one for <i>your</i> node, and your miner and CLI read it from that file. It is <b>not</b> your wallet passphrase. The RPC binds to <code>127.0.0.1</code> by default, never to the public internet &mdash; the password protects you from other local users on the same box. Keeping it in a mode-600 file instead of the command line matters for the same reason: anything on a command line is visible through <code>ps</code>.</div>
       </div>
     </div>
 
@@ -310,7 +316,8 @@ export SOST_RPC_PASS="changemenow"</div>
         <div class="code">cd ~/sost-core/build
 ./sost-node \
   --rpc-user "$SOST_RPC_USER" \
-  --rpc-pass "$SOST_RPC_PASS"</div>
+  --rpc-pass-file ~/.sost/rpc.pass \
+  --p2p-enc on</div>
         <p>You should see lines like <code>Chain loaded: NNNN blocks</code> and the node connecting to peers. Leave this terminal open. To run as a service later, create a systemd unit (sample under <code>docs/systemd/</code> in the repo).</p>
       </div>
     </div>
@@ -326,8 +333,9 @@ export SOST_RPC_PASS="changemenow"</div>
   --mining-key-label phase2-miner \
   --rpc 127.0.0.1:18232 \
   --rpc-user "$SOST_RPC_USER" \
-  --rpc-pass "$SOST_RPC_PASS" \
+  --rpc-pass-file ~/.sost/rpc.pass \
   --blocks 999999 \
+  --realtime \
   --profile mainnet \
   --threads 16</div>
         <p>Expected startup lines (the label echoed back is whichever one you chose):</p>
@@ -346,7 +354,7 @@ Miner address: sost1...   (derived from wallet key)</div>
         <ul>
           <li><b>Miner log</b> &mdash; you should see <code>[MINING] H... bitsQ=...</code> lines and a periodic effective stable/s rate.</li>
           <li><b>Height</b> &mdash; ask the node what block you are on:
-            <div class="code">curl -s -u "$SOST_RPC_USER:$SOST_RPC_PASS" \
+            <div class="code">curl -s -u "$SOST_RPC_USER:$(cat ~/.sost/rpc.pass)" \
   -d '{"method":"getblockcount","params":[],"id":1}' \
   http://127.0.0.1:18232</div>
           </li>
@@ -383,7 +391,7 @@ Miner address: sost1...   (derived from wallet key)</div>
       <summary>Node has 0 peers / not syncing</summary>
       <div>
         <p>Check P2P connectivity. The node listens on <code>:19333</code>. Allow outbound connections in your firewall. If you are behind NAT, you do not need to forward 19333 to mine, but you need outbound TCP.</p>
-        <div class="code">curl -s -u "$SOST_RPC_USER:$SOST_RPC_PASS" \
+        <div class="code">curl -s -u "$SOST_RPC_USER:$(cat ~/.sost/rpc.pass)" \
   -d '{"method":"getpeerinfo","params":[],"id":1}' \
   http://127.0.0.1:18232 | head -c 600</div>
       </div>
@@ -599,7 +607,7 @@ cmake --build . -j$(nproc)
 
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v440" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v441" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
 <!-- ════════════════════════════════════════════════════════════ -->

@@ -238,6 +238,10 @@
 
 
 <!-- HERO -->
+<div style="max-width:960px;margin:14px auto;padding:12px 16px;border:1px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.08);font-size:14px;line-height:1.6">
+<b style="color:#ffd166">Already running a node or a miner?</b> The v16.2.2 update window is <b>after block #29,900 and before #30,000</b> &mdash;
+<a href="sost-upgrade-v1622.html" style="color:#39ff14;font-weight:700">read the upgrade guide</a>.
+</div>
 <section class="hero">
   <div class="container">
     <div class="hero-label fade-in">Getting Started</div>
@@ -433,8 +437,12 @@ ctest --output-on-failure</div>
       <div class="spec-body">
         <div class="code-snippet"><span class="comment"># Start full node — connects to seed node and syncs the blockchain</span>
 <span class="comment"># Run from build/ directory. Copy genesis_block.json first: cp ../genesis_block.json .</span>
+# 1) Put YOUR OWN RPC password in a private file (never in the command):
+umask 077; openssl rand -base64 30 &gt; ~/.sost/rpc.pass; chmod 600 ~/.sost/rpc.pass
+
+# 2) Start the node pointing at that file
 ./sost-node --genesis genesis_block.json --connect seed.sostcore.com:19333 \
-    --rpc-user myuser --rpc-pass mypass --profile mainnet
+    --rpc-user myuser --rpc-pass-file ~/.sost/rpc.pass --profile mainnet --p2p-enc on
 
 <span class="comment"># The node will sync ~3000+ blocks in under a minute (fast sync enabled by default)</span>
 <span class="comment"># You should see: [BLOCK] Height N accepted: ... for each block</span>
@@ -463,7 +471,7 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
           <tr><td class="value" style="font-family:var(--font-mono)">--port &lt;n&gt;</td><td class="label">19333</td><td class="value">P2P port</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--rpc-port &lt;n&gt;</td><td class="label">18232</td><td class="value">RPC port</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--rpc-user &lt;user&gt;</td><td class="highlight">required</td><td class="value">RPC authentication username</td></tr>
-          <tr><td class="value" style="font-family:var(--font-mono)">--rpc-pass &lt;pass&gt;</td><td class="highlight">required</td><td class="value">RPC authentication password</td></tr>
+          <tr><td class="value" style="font-family:var(--font-mono)">--rpc-pass-file &lt;path&gt;</td><td class="highlight">required</td><td class="value">RPC authentication password</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--connect &lt;host:port&gt;</td><td class="label">seed.sostcore.com</td><td class="value">Connect to specific peer</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--profile &lt;p&gt;</td><td class="label">mainnet</td><td class="value">Network profile</td></tr>
           <tr><td class="value" style="font-family:var(--font-mono)">--full-verify</td><td class="label">off</td><td class="value">Force full ConvergenceX verification (no fast sync)</td></tr>
@@ -507,11 +515,11 @@ echo "PASS: $(openssl rand -hex 20)"</div>
         <div style="margin-bottom:16px;">
           <div style="font-size:11px;color:var(--cyan-primary);letter-spacing:2px;margin-bottom:8px;">USAGE EXAMPLE</div>
           <div class="code-snippet"><span class="comment"># Terminal 1 — Start node</span>
-./sost-node --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
-    --genesis genesis_block.json --chain chain.json --profile mainnet
+./sost-node --rpc-user YOUR_USER --rpc-pass-file ~/.sost/rpc.pass \
+    --genesis genesis_block.json --chain chain.json --profile mainnet --p2p-enc on
 
 <span class="comment"># Terminal 2 — Start miner (Phase 2 wallet-backed, same RPC credentials)</span>
-./sost-miner --rpc-user YOUR_USER --rpc-pass YOUR_PASS \
+./sost-miner --rpc-user YOUR_USER --rpc-pass-file ~/.sost/rpc.pass \
     --rpc 127.0.0.1:18232 \
     --wallet phase2-miner-wallet.json --mining-key-label phase2-miner \
     --genesis genesis_block.json --blocks 999999 --realtime</div>
@@ -593,7 +601,7 @@ echo "PASS: $(openssl rand -hex 20)"</div>
     --mining-key-label phase2-miner \
     --genesis genesis_block.json --chain chain.json \
     --rpc 127.0.0.1:18232 \
-    --rpc-user myuser --rpc-pass mypass \
+    --rpc-user myuser --rpc-pass-file ~/.sost/rpc.pass \
     --threads 4 --blocks 10
 
 <span class="comment"># Verify blocks are being accepted</span>
@@ -663,7 +671,7 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
       </div>
       <div class="spec-body">
         <div class="code-snippet"><span class="comment"># Send SOST to an address (requires 1000+ confirmations on coinbase UTXOs)</span>
-./sost-cli --wallet wallet.json --rpc-user myuser --rpc-pass mypass \
+./sost-cli --wallet wallet.json --rpc-user myuser --rpc-pass-file ~/.sost/rpc.pass \
     send sost1abc123...def456 10.0</div>
       </div>
     </div>
@@ -797,7 +805,7 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
     http://localhost:18232
 
 <span class="comment"># 3. Check wallet balance</span>
-./sost-cli --wallet wallet.json --rpc-user myuser --rpc-pass mypass getbalance</div>
+./sost-cli --wallet wallet.json --rpc-user myuser --rpc-pass-file ~/.sost/rpc.pass getbalance</div>
       </div>
     </div>
 
@@ -813,7 +821,7 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
         <table class="code-table">
           <tr><th>Problem</th><th>Solution</th></tr>
           <tr><td class="label">Connection refused on RPC</td><td class="value">Ensure sost-node is running and --rpc-port matches (default 18232)</td></tr>
-          <tr><td class="label">Authentication failed</td><td class="value">Check --rpc-user and --rpc-pass match between node, miner, and CLI</td></tr>
+          <tr><td class="label">Authentication failed</td><td class="value">Check that --rpc-user and the password FILE match between node, miner and CLI. From v16.2.x the miner prints "RPC AUTHENTICATION REJECTED (HTTP 401)" when the credentials are wrong — the block was never validated, it was not rejected by consensus.</td></tr>
           <tr><td class="label">No peers connected</td><td class="value">Check firewall allows port 19333; try --connect seed.sostcore.com:19333</td></tr>
           <tr><td class="label">Miner finds no template</td><td class="value">Node must be fully synced before mining; check getinfo height</td></tr>
           <tr><td class="label">"Immature coinbase" error</td><td class="value">Coinbase outputs require 1000 confirmations (~7 days) before spending</td></tr>
@@ -840,7 +848,7 @@ curl -s -u myuser:mypass -X POST -H "Content-Type: application/json" \
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v440" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v441" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
