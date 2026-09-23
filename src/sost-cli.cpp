@@ -289,28 +289,83 @@ static std::string rpc_call(const std::string& method,
 
     write(fd, req.c_str(), req.size());
 
-    // Read full response
+    // Read the FULL response.
+    //
+    // The previous loop stopped as soon as the buffer happened to end with '}'
+    // whenever it could not find a "Content-Length: " header. Two ways that
+    // truncates a perfectly good answer:
+    //   * HTTP header names are case-insensitive and the search was not, so a
+    //     proxy sending "content-length:" fell through to the heuristic;
+    //   * the public RPC gateway answers with Transfer-Encoding: chunked and NO
+    //     Content-Length at all, and every UTXO object in a getaddressutxos
+    //     reply ends in '}' — so a large answer was cut at a chunk boundary and
+    //     surfaced as "bad_json", on exactly the command a miner uses to look
+    //     at their own coins.
+    // So: honour Content-Length case-insensitively, decode chunked framing, and
+    // otherwise read until the peer closes. A socket timeout bounds all three.
+    {
+        struct timeval tv{}; tv.tv_sec = 30; tv.tv_usec = 0;
+        setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+        setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+    }
+    auto ci_find = [](const std::string& hay, const char* needle_lower,
+                      size_t limit) -> size_t {
+        const size_t nl = strlen(needle_lower);
+        if (limit < nl) return std::string::npos;
+        for (size_t i = 0; i + nl <= limit; ++i) {
+            size_t j = 0;
+            while (j < nl && (char)tolower((unsigned char)hay[i + j]) == needle_lower[j]) ++j;
+            if (j == nl) return i;
+        }
+        return std::string::npos;
+    };
+
     std::string resp;
     char buf[8192];
     ssize_t n;
-    while ((n = read(fd, buf, sizeof(buf) - 1)) > 0) {
-        buf[n] = 0;
-        resp += buf;
-        // Check if we have complete HTTP response with JSON body
-        auto hdr_end = resp.find("\r\n\r\n");
-        if (hdr_end != std::string::npos) {
-            // Check Content-Length if present
-            auto cl_pos = resp.find("Content-Length: ");
-            if (cl_pos != std::string::npos && cl_pos < hdr_end) {
-                int64_t cl = std::stoll(resp.substr(cl_pos + 16));
-                int64_t body_received = (int64_t)(resp.size() - hdr_end - 4);
-                if (body_received >= cl) break;
-            } else if (resp.size() > hdr_end + 4 && resp.back() == '}') {
-                break;
+    size_t hdr_end = std::string::npos;
+    int64_t content_len = -1;
+    bool chunked = false;
+    while ((n = read(fd, buf, sizeof(buf))) > 0) {
+        resp.append(buf, (size_t)n);
+        if (hdr_end == std::string::npos) {
+            hdr_end = resp.find("\r\n\r\n");
+            if (hdr_end == std::string::npos) {
+                if (resp.size() > (1u << 20)) break;   // absurd header, give up
+                continue;
             }
+            size_t cl = ci_find(resp, "content-length:", hdr_end);
+            if (cl != std::string::npos) {
+                size_t v = resp.find(':', cl) + 1;
+                while (v < hdr_end && (resp[v] == ' ' || resp[v] == '\t')) ++v;
+                content_len = strtoll(resp.c_str() + v, nullptr, 10);
+            }
+            chunked = ci_find(resp, "transfer-encoding: chunked", hdr_end) != std::string::npos;
         }
+        if (content_len >= 0 && (int64_t)(resp.size() - hdr_end - 4) >= content_len) break;
+        if (resp.size() > (size_t)(64u * 1024u * 1024u)) break;   // hard cap
+        // chunked, or neither header: keep reading until the peer closes.
     }
     close(fd);
+
+    if (chunked && hdr_end != std::string::npos) {
+        // Decode the chunk framing into a plain body, then hand back a response
+        // the caller parses exactly like any other.
+        const std::string head = resp.substr(0, hdr_end + 4);
+        std::string in = resp.substr(hdr_end + 4), out;
+        size_t pos = 0;
+        while (pos < in.size()) {
+            size_t eol = in.find("\r\n", pos);
+            if (eol == std::string::npos) break;
+            const long long csz = strtoll(in.substr(pos, eol - pos).c_str(), nullptr, 16);
+            if (csz <= 0) break;                       // 0 = last chunk
+            const size_t data = eol + 2;
+            if (data + (size_t)csz > in.size()) break; // truncated: stop, never invent
+            out.append(in, data, (size_t)csz);
+            pos = data + (size_t)csz + 2;              // skip the chunk's CRLF
+        }
+        return head + out;
+    }
     return resp;
 }
 
@@ -319,11 +374,17 @@ static int64_t query_chain_height() {
     std::string resp = rpc_call("getinfo");
     if (resp.empty()) return -1;
 
-    // Find "blocks":NNN in JSON
-    auto pos = resp.find("\"blocks\":");
-    if (pos == std::string::npos) return -1;
-    pos += 9;  // skip past "blocks":
-    return std::stoll(resp.substr(pos));
+    // The height decides which coinbase outputs are mature enough to spend,
+    // so it is read strictly: the old version scanned for "blocks": and called
+    // std::stoll on whatever followed — which throws (and aborts the process)
+    // on a non-numeric body, and happily believed a truncated number.
+    std::string body, err;
+    sost::json::Value res;
+    if (!sost::json::http_body(resp, body, &err)
+        || !sost::json::rpc_result(body, res, &err)) return -1;
+    int64_t h = 0;
+    if (!res.get_int("blocks", h)) return -1;
+    return h;
 }
 
 // =============================================================================
@@ -385,78 +446,41 @@ static ChainAddressBalance query_address_chain_balance(const std::string& addr) 
         }
     }
 
-    auto body_start = resp.find("\r\n\r\n");
-    std::string json_body = (body_start != std::string::npos)
-                              ? resp.substr(body_start + 4) : resp;
-
-    // JSON-RPC error object → distinguish from a successful empty result.
-    auto err_pos = json_body.find("\"error\":");
-    if (err_pos != std::string::npos) {
-        // Make sure it is not "error":null (some servers always include the
-        // field for protocol compliance).
-        size_t p = err_pos + 8;
-        while (p < json_body.size() && (json_body[p] == ' ' || json_body[p] == '\t')) ++p;
-        if (p < json_body.size() && json_body[p] != 'n') {  // not "null"
-            // Pull out the message field if there is one — useful for the
-            // surfaced error.
-            auto m = json_body.find("\"message\":\"", err_pos);
-            if (m != std::string::npos) {
-                m += 11;
-                auto e = json_body.find('"', m);
-                std::string msg = (e != std::string::npos)
-                                    ? json_body.substr(m, e - m) : "rpc_error";
-                r.error = "rpc_error: " + msg;
-            } else {
-                r.error = "rpc_error";
-            }
-            return r;
-        }
-    }
-
-    auto result_pos = json_body.find("\"result\":");
-    if (result_pos != std::string::npos) {
-        json_body = json_body.substr(result_pos + 9);
-    }
-    auto arr_start = json_body.find('[');
-    auto arr_end   = json_body.rfind(']');
-    if (arr_start == std::string::npos || arr_end == std::string::npos
-        || arr_end <= arr_start) {
-        r.ok = true;  // node answered with no UTXOs (empty/foreign address)
+    // Strict parsing from here on. The hand-rolled version below used to scan
+    // for '[' and ']' and split objects on the first '}' — which cannot tell a
+    // truncated array from an empty one, accepts "amount_stocks": 12abc, and
+    // silently returns "no UTXOs" for a body it simply failed to read. Money
+    // decisions are made from these numbers, so they go through the same reader
+    // the rest of the release uses.
+    std::string body, perr;
+    if (!sost::json::http_body(resp, body, &perr)) {
+        r.error = (perr == "http_401" || perr == "http_403") ? "auth_required" : perr;
         return r;
     }
-
-    std::string arr = json_body.substr(arr_start, arr_end - arr_start + 1);
-    size_t pos = 0;
-    while (pos < arr.size()) {
-        auto obj_start = arr.find('{', pos);
-        if (obj_start == std::string::npos) break;
-        auto obj_end = arr.find('}', obj_start);
-        if (obj_end == std::string::npos) break;
-        std::string obj = arr.substr(obj_start, obj_end - obj_start + 1);
-        pos = obj_end + 1;
-
-        auto get_int = [&](const std::string& key) -> int64_t {
-            auto p = obj.find("\"" + key + "\":");
-            if (p == std::string::npos) return 0;
-            p += key.size() + 3;
-            try { return std::stoll(obj.substr(p)); } catch (...) { return 0; }
-        };
-        auto get_bool = [&](const std::string& key) -> bool {
-            auto p = obj.find("\"" + key + "\":");
-            if (p == std::string::npos) return false;
-            return obj.substr(p + key.size() + 3, 4) == "true";
-        };
-
-        int64_t amt    = get_int("amount_stocks");
-        bool spendable = get_bool("spendable");
-        bool mature    = get_bool("mature");
-        if (amt <= 0) continue;
-
-        r.total += amt;
-        r.utxo_count++;
-        if (spendable) r.spendable += amt;
-        if (mature)   { r.mature   += amt; r.mature_count++; }
-        else          { r.immature += amt; r.immature_count++; }
+    sost::json::Value res;
+    if (!sost::json::rpc_result(body, res, &perr)) {
+        r.error = (perr.rfind("rpc_error", 0) == 0) ? perr : ("rpc_error: " + perr);
+        return r;
+    }
+    if (!res.is_arr()) {
+        r.error = "bad_shape: getaddressutxos did not return an array";
+        return r;
+    }
+    for (const auto& u : res.a) {
+        int64_t amount = 0, height = 0;
+        if (!u.get_int("amount_stocks", amount)) {
+            r.error = "bad_shape: a UTXO carries no integer amount";
+            return r;                         // never guess an amount
+        }
+        u.get_int("height", height);
+        bool mature = false, spendable = false;
+        u.get_bool("mature", mature);
+        if (!u.get_bool("spendable", spendable)) spendable = mature;
+        r.total += amount;
+        ++r.utxo_count;
+        if (mature) { r.mature += amount; ++r.mature_count; }
+        else        { r.immature += amount; ++r.immature_count; }
+        if (spendable) r.spendable += amount;
     }
     r.ok = true;
     return r;
@@ -559,6 +583,25 @@ static bool resolve_source_address(const sost::Wallet& w,
 // wallet's default. Used by --from-label / --from-address so multi-key
 // wallets can spend from a non-default account.
 // =============================================================================
+// Did the node ACCEPT the transaction? Answered by the strict parser, not by
+// looking for the substring "result":" anywhere in the response — an error
+// message that happens to contain those characters must never read as an
+// accepted broadcast, and a truncated body must read as "I do not know".
+// Returns true only on a JSON-RPC result that is a string (the txid).
+static bool rpc_accepted_txid(const std::string& resp, std::string& txid_out,
+                              std::string& err_out) {
+    std::string body;
+    if (!sost::json::http_body(resp, body, &err_out)) return false;
+    sost::json::Value res;
+    if (!sost::json::rpc_result(body, res, &err_out)) return false;
+    if (res.type != sost::json::Value::T::Str || res.s.empty()) {
+        err_out = "the node answered without a txid";
+        return false;
+    }
+    txid_out = res.s;
+    return true;
+}
+
 static int sync_wallet_utxos_from_node(sost::Wallet& w,
                                        const std::string& addr_override = "") {
     std::string addr = !addr_override.empty() ? addr_override : w.default_address();
@@ -575,62 +618,35 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w,
         printf("[DEBUG] RPC response length: %zu bytes\n", resp.size());
         if (resp.empty()) { printf("[DEBUG] Empty response — RPC failed\n"); return 0; }
 
-        // Extract JSON body from HTTP response, then find "result" array
-        auto body_start = resp.find("\r\n\r\n");
-        std::string json_body = (body_start != std::string::npos) ? resp.substr(body_start + 4) : resp;
-
-        // Look for "result":[ in the JSON-RPC response
-        auto result_pos = json_body.find("\"result\":");
-        if (result_pos != std::string::npos) {
-            json_body = json_body.substr(result_pos + 9);  // Skip past "result":
-        }
-
-        auto arr_start = json_body.find('[');
-        auto arr_end = json_body.rfind(']');
-        if (arr_start == std::string::npos || arr_end == std::string::npos) {
-            printf("[DEBUG] No JSON array found. Body: %.300s\n", json_body.c_str());
+        // Strict parsing: these UTXOs become transaction INPUTS, so a
+        // half-read array must be an error, not a shorter list of coins.
+        std::string body, perr;
+        sost::json::Value res;
+        if (!sost::json::http_body(resp, body, &perr)
+            || !sost::json::rpc_result(body, res, &perr)) {
+            fprintf(stderr, "Node query FAILED (%s) — NOT importing any UTXO.\n"
+                            "This is not the same as 'the address is empty'.\n", perr.c_str());
             return 0;
         }
-        // Use json_body instead of resp for parsing
-        std::string arr = json_body.substr(arr_start, arr_end - arr_start + 1);
-        printf("[DEBUG] Parsed UTXO array: %zu chars\n", arr.size());
-
-        // Simple JSON array parsing — find each {...} object
-        size_t pos = 0;
-        while (pos < arr.size()) {
-            auto obj_start = arr.find('{', pos);
-            if (obj_start == std::string::npos) break;
-            auto obj_end = arr.find('}', obj_start);
-            if (obj_end == std::string::npos) break;
-            std::string obj = arr.substr(obj_start, obj_end - obj_start + 1);
-
-            // Extract fields
-            auto get_str = [&](const std::string& key) -> std::string {
-                auto p = obj.find("\"" + key + "\":\"");
-                if (p == std::string::npos) return "";
-                p += key.size() + 4;
-                auto e = obj.find('"', p);
-                return e != std::string::npos ? obj.substr(p, e - p) : "";
-            };
-            auto get_int = [&](const std::string& key) -> int64_t {
-                auto p = obj.find("\"" + key + "\":");
-                if (p == std::string::npos) return 0;
-                p += key.size() + 3;
-                try { return std::stoll(obj.substr(p)); } catch (...) { return 0; }
-            };
-            auto get_bool = [&](const std::string& key) -> bool {
-                auto p = obj.find("\"" + key + "\":");
-                if (p == std::string::npos) return false;
-                return obj.substr(p + key.size() + 3, 4) == "true";
-            };
-
-            std::string txid_hex = get_str("txid");
-            int64_t vout = get_int("vout");
-            int64_t amount_stocks = get_int("amount_stocks");
-            int64_t height = get_int("height");
-            int64_t output_type = get_int("output_type");
-            bool is_coinbase = get_bool("coinbase");
-            bool spendable = get_bool("spendable");
+        if (!res.is_arr()) {
+            fprintf(stderr, "getaddressutxos returned an unexpected shape — importing nothing.\n");
+            return 0;
+        }
+        printf("[DEBUG] UTXOs returned by the node: %zu\n", res.a.size());
+        for (const auto& u : res.a) {
+            std::string txid_hex;
+            int64_t vout = 0, amount_stocks = 0, height = 0, output_type = 0;
+            bool is_coinbase = false, spendable = false;
+            u.get_str("txid", txid_hex);
+            u.get_int("vout", vout);
+            if (!u.get_int("amount_stocks", amount_stocks)) {
+                fprintf(stderr, "A UTXO came back without an integer amount — refusing to import it.\n");
+                return 0;
+            }
+            u.get_int("height", height);
+            u.get_int("output_type", output_type);
+            u.get_bool("coinbase", is_coinbase);
+            u.get_bool("spendable", spendable);
 
             if (!txid_hex.empty() && amount_stocks > 0 && spendable) {
                 sost::WalletUTXO utxo{};
@@ -639,32 +655,20 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w,
                 utxo.amount = amount_stocks;
                 utxo.height = height;
                 utxo.spent = false;
-                // Determine output type: use explicit field if present, else infer from coinbase flag + vout
                 if (output_type > 0) {
                     utxo.output_type = (uint8_t)output_type;
                 } else if (is_coinbase) {
-                    // Coinbase outputs: vout=0 → miner (0x01), vout=1 → gold (0x02), vout=2 → popc (0x03)
                     if (vout == 0) utxo.output_type = 0x01;       // OUT_COINBASE_MINER
                     else if (vout == 1) utxo.output_type = 0x02;  // OUT_COINBASE_GOLD
                     else if (vout == 2) utxo.output_type = 0x03;  // OUT_COINBASE_POPC
-                    else utxo.output_type = 0x01;                 // fallback
+                    else utxo.output_type = 0x01;
                 } else {
-                    utxo.output_type = 0x00;  // TRANSFER
+                    utxo.output_type = 0x00;                      // TRANSFER
                 }
-                // Decode address to pubkey hash
                 sost::address_decode(addr, utxo.pkh);
                 w.add_utxo(utxo);
                 total_imported++;
-                printf("[DEBUG] Imported UTXO: %lld stocks, type=0x%02x (coinbase=%d, vout=%d, parsed_type=%lld) height=%lld\n",
-                       (long long)utxo.amount, utxo.output_type, is_coinbase, (int)vout, (long long)output_type, (long long)utxo.height);
-                // TEMP REMOVE NEXT LINE AFTER FIX:
-                printf("[DEBUG-OLD] Imported UTXO: %lld stocks (%.8f SOST) height=%lld\n",
-                       (long long)utxo.amount,
-                       (double)utxo.amount / 100000000.0,
-                       (long long)utxo.height);
             }
-
-            pos = obj_end + 1;
         }
     }
     printf("[DEBUG] Total UTXOs imported from node: %d\n", total_imported);
@@ -1106,6 +1110,8 @@ static void print_usage() {
     printf("\nOptions:\n");
     printf("  --wallet <path>        Wallet file (default: wallet.json)\n");
     printf("  --rpc-user <user>      RPC Basic Auth username\n");
+    printf("  --rpc-pass-file <path> RPC password from a PRIVATE file (mode 600)\n");
+    printf("  --rpc-pass-fd <n>      RPC password from an open descriptor\n");
     printf("  --rpc-pass <pass>      RPC Basic Auth password\n");
     printf("  --node <host:port>     Node address (default: 127.0.0.1:18232)\n");
     printf("  --fee-rate <n>         Fee rate in stocks/byte (default: 1)\n");
@@ -1195,6 +1201,7 @@ int main(int argc, char** argv) {
         // Two-arg flags: value follows on the next argv slot.
         needs_value = (flag == "--wallet" || flag == "--from"
                     || flag == "--rpc-user" || flag == "--rpc-pass"
+                    || flag == "--rpc-pass-file" || flag == "--rpc-pass-fd"
                     || flag == "--node" || flag == "--rpc"
                     || flag == "--fee-rate"
                     || flag == "--to" || flag == "--amount"
@@ -1212,7 +1219,30 @@ int main(int argc, char** argv) {
             std::string val = argv[i + 1];
             if (flag == "--wallet" || flag == "--from")          wallet_path = val;
             else if (flag == "--rpc-user")                       g_rpc_user = val;
-            else if (flag == "--rpc-pass")                       g_rpc_pass = val;
+            else if (flag == "--rpc-pass") {
+                // Kept for compatibility, but it is visible in `ps` like any
+                // other argument — the same exposure the node and the miner
+                // already avoid. Say so, and offer the two safe forms.
+                g_rpc_pass = val;
+                fprintf(stderr, "WARNING: --rpc-pass is visible to any local user via ps. "
+                                "Use --rpc-pass-file <path> (mode 600) or --rpc-pass-fd <n>.\n");
+            }
+            else if (flag == "--rpc-pass-file") {
+                sost::Secret sec; std::string perr;
+                if (!sost::read_secret_file(val, sec, &perr)) {
+                    fprintf(stderr, "Error: --rpc-pass-file: %s\n", perr.c_str());
+                    return 1;
+                }
+                g_rpc_pass = sec.str(); sec.wipe();
+            }
+            else if (flag == "--rpc-pass-fd") {
+                sost::Secret sec; std::string perr;
+                if (!sost::read_secret_fd(atoi(val.c_str()), sec, &perr)) {
+                    fprintf(stderr, "Error: --rpc-pass-fd: %s\n", perr.c_str());
+                    return 1;
+                }
+                g_rpc_pass = sec.str(); sec.wipe();
+            }
             else if (flag == "--node" || flag == "--rpc") {
                 auto colon = val.find(':');
                 if (colon != std::string::npos) {
@@ -1369,30 +1399,20 @@ int main(int argc, char** argv) {
         }
         std::string resp = rpc_call("sendrawtransaction",
                                     "[\"" + raw_hex + "\"]");
-        auto rpos = resp.find("\"result\":\"");
-        if (rpos != std::string::npos) {
-            auto txstart = rpos + 10;
-            auto txend = resp.find('"', txstart);
-            std::string txid = resp.substr(txstart, txend - txstart);
+        std::string txid, aerr;
+        if (rpc_accepted_txid(resp, txid, aerr)) {
             printf("Txid: %s\n", txid.c_str());
             return 0;
         }
-        if (resp.find("401") != std::string::npos) {
-            fprintf(stderr, "Error: 401 Unauthorized\n");
-            fprintf(stderr,
-                "  Use: --rpc-user <user> --rpc-pass <pass>\n");
+        if (aerr == "http_401" || aerr == "http_403") {
+            fprintf(stderr, "Error: %s — the node refused the credentials.\n", aerr.c_str());
+            fprintf(stderr, "  Use --rpc-user <user> with --rpc-pass-file <path> or --rpc-pass-fd <n>.\n");
             return 1;
         }
-        auto epos = resp.find("\"message\":\"");
-        if (epos != std::string::npos) {
-            auto eend = resp.find('"', epos + 11);
-            std::string emsg = resp.substr(
-                epos + 11, eend - epos - 11);
-            fprintf(stderr, "Error: %s\n", emsg.c_str());
-        } else {
-            fprintf(stderr, "Error: unknown node response\n");
-            fprintf(stderr, "  Raw: %s\n", resp.c_str());
-        }
+        fprintf(stderr, "Error: the node did not confirm the broadcast (%s).\n", aerr.c_str());
+        fprintf(stderr, "  This is NOT proof that it was rejected. Before sending again, check\n"
+                        "  getrawmempool / getrawtransaction for this txid — resending blind can\n"
+                        "  pay twice.\n");
         return 1;
     }
 
@@ -1679,16 +1699,20 @@ int main(int argc, char** argv) {
                 return 1;
             }
 
-            // Strip HTTP headers and locate the result array.
-            auto body_start = resp.find("\r\n\r\n");
-            std::string json_body = (body_start != std::string::npos)
-                                      ? resp.substr(body_start + 4) : resp;
-            auto result_pos = json_body.find("\"result\":");
-            if (result_pos != std::string::npos) {
-                json_body = json_body.substr(result_pos + 9);
+            // Strict parsing: a balance printed from a half-read array is a
+            // wrong balance, and "I could not read the answer" must never be
+            // displayed as a number.
+            std::string gbody, gerr;
+            sost::json::Value gres;
+            if (!sost::json::http_body(resp, gbody, &gerr)
+                || !sost::json::rpc_result(gbody, gres, &gerr)
+                || !gres.is_arr()) {
+                fprintf(stderr, "Error: the node's answer could not be read (%s).\n", gerr.c_str());
+                fprintf(stderr, "  NOT printing a balance from an unreadable reply. "
+                                "Falling back to the wallet-local figure.\n");
+                printf("%s SOST\n", format_sost(w.balance(addr)).c_str());
+                return 1;
             }
-            auto arr_start = json_body.find('[');
-            auto arr_end   = json_body.rfind(']');
 
             int64_t total_stocks    = 0;
             int64_t spendable_stocks = 0;
@@ -1698,41 +1722,22 @@ int main(int argc, char** argv) {
             int     mature_count    = 0;
             int     immature_count  = 0;
 
-            if (arr_start != std::string::npos && arr_end != std::string::npos
-                && arr_end > arr_start) {
-                std::string arr = json_body.substr(arr_start, arr_end - arr_start + 1);
-                size_t pos = 0;
-                while (pos < arr.size()) {
-                    auto obj_start = arr.find('{', pos);
-                    if (obj_start == std::string::npos) break;
-                    auto obj_end = arr.find('}', obj_start);
-                    if (obj_end == std::string::npos) break;
-                    std::string obj = arr.substr(obj_start, obj_end - obj_start + 1);
-                    pos = obj_end + 1;
-
-                    auto get_int = [&](const std::string& key) -> int64_t {
-                        auto p = obj.find("\"" + key + "\":");
-                        if (p == std::string::npos) return 0;
-                        p += key.size() + 3;
-                        try { return std::stoll(obj.substr(p)); } catch (...) { return 0; }
-                    };
-                    auto get_bool = [&](const std::string& key) -> bool {
-                        auto p = obj.find("\"" + key + "\":");
-                        if (p == std::string::npos) return false;
-                        return obj.substr(p + key.size() + 3, 4) == "true";
-                    };
-
-                    int64_t amt    = get_int("amount_stocks");
-                    bool spendable = get_bool("spendable");
-                    bool mature    = get_bool("mature");
-                    if (amt <= 0) continue;
-
-                    total_stocks += amt;
-                    utxo_count++;
-                    if (spendable) spendable_stocks += amt;
-                    if (mature)   { mature_stocks   += amt; mature_count++; }
-                    else          { immature_stocks += amt; immature_count++; }
+            for (const auto& u : gres.a) {
+                int64_t amt = 0;
+                if (!u.get_int("amount_stocks", amt)) {
+                    fprintf(stderr, "Error: a UTXO came back without an integer amount — "
+                                    "refusing to total a guess.\n");
+                    return 1;
                 }
+                if (amt <= 0) continue;
+                bool spendable = false, mature = false;
+                u.get_bool("spendable", spendable);
+                u.get_bool("mature", mature);
+                total_stocks += amt;
+                utxo_count++;
+                if (spendable) spendable_stocks += amt;
+                if (mature)   { mature_stocks   += amt; mature_count++; }
+                else          { immature_stocks += amt; immature_count++; }
             }
 
             // Backward-compatible: first line is the simple SOST total so
@@ -2504,72 +2509,38 @@ int main(int argc, char** argv) {
         // Broadcast via JSON-RPC: sendrawtransaction
         printf("Sending to node %s:%d...\n", g_node_host.c_str(), g_node_port);
 
-        std::string rpc_body = "{\"method\":\"sendrawtransaction\",\"params\":[\""
-            + raw_hex + "\"],\"id\":1}";
-
-        int fd = socket(AF_INET, SOCK_STREAM, 0);
-        if (fd < 0) { perror("socket"); return 1; }
-        struct sockaddr_in saddr{};
-        saddr.sin_family = AF_INET;
-        saddr.sin_port = htons(g_node_port);
-        struct hostent* he = gethostbyname(g_node_host.c_str());
-        if (!he) {
-            fprintf(stderr, "Cannot resolve %s\n", g_node_host.c_str());
-            close(fd);
-            return 1;
-        }
-        memcpy(&saddr.sin_addr, he->h_addr_list[0], he->h_length);
-        if (connect(fd, (struct sockaddr*)&saddr, sizeof(saddr)) < 0) {
-            fprintf(stderr, "Cannot connect to %s:%d\n",
-                    g_node_host.c_str(), g_node_port);
-            close(fd);
-            return 1;
-        }
-
-        std::string http_req = "POST / HTTP/1.1\r\nHost: " + g_node_host
-            + "\r\nContent-Type: application/json\r\n"
-            + rpc_auth_header()
-            + "Content-Length: " + std::to_string(rpc_body.size())
-            + "\r\n\r\n" + rpc_body;
-
-        write(fd, http_req.c_str(), http_req.size());
-
-        char rbuf[4096]{};
-        read(fd, rbuf, sizeof(rbuf) - 1);
-        close(fd);
-
-        std::string resp(rbuf);
-        if (resp.find("\"result\":\"") != std::string::npos) {
-            // Node accepted: now safe to mark the tx's inputs spent locally
-            // and persist the wallet so the next CLI invocation does not
-            // try to reuse those UTXOs before mempool propagates back.
+        // This used to open its own socket and take ONE read() into a 4 KB
+        // buffer, then decide "accepted" by looking for the substring
+        // "result":" anywhere in it. A longer answer, a proxy that chunks it,
+        // or an error message containing those characters all decided whether
+        // the wallet marked its coins spent. It goes through rpc_call now —
+        // full read, timeout, chunked framing — and through the strict parser.
+        std::string resp = rpc_call("sendrawtransaction", "[\"" + raw_hex + "\"]");
+        std::string node_txid, aerr;
+        if (rpc_accepted_txid(resp, node_txid, aerr)) {
+            // Accepted: only now is it safe to mark the inputs spent locally,
+            // so the next invocation does not reuse them before the mempool
+            // propagates back.
             w.mark_tx_inputs_spent(tx);
             std::string save_err;
             if (!w.save(wallet_path, &save_err)) {
-                fprintf(stderr, "Warning: failed to save wallet: %s\n",
-                        save_err.c_str());
+                fprintf(stderr, "Warning: failed to save wallet: %s\n", save_err.c_str());
             }
-            printf("\nTX accepted by node! Txid: %s\n",
-                   to_hex(txid.data(), 32).c_str());
+            printf("\nTX accepted by node! Txid: %s\n", to_hex(txid.data(), 32).c_str());
             printf("  Waiting for next mined block to confirm...\n");
-        } else if (resp.find("401") != std::string::npos) {
-            fprintf(stderr, "\nTX rejected: 401 Unauthorized\n");
-            fprintf(stderr, "  Node requires auth. Use: --rpc-user <user> --rpc-pass <pass>\n");
-            return 1;
-        } else {
-            auto err_pos = resp.find("\"message\":\"");
-            if (err_pos != std::string::npos) {
-                auto err_end = resp.find('"', err_pos + 11);
-                std::string err_msg = resp.substr(err_pos + 11,
-                                                   err_end - err_pos - 11);
-                fprintf(stderr, "\nTX rejected: %s\n", err_msg.c_str());
-            } else {
-                fprintf(stderr, "\nTX rejected (unknown error)\n");
-                fprintf(stderr, "  Raw response: %s\n", resp.c_str());
-            }
+            return 0;
+        }
+        if (aerr == "http_401" || aerr == "http_403") {
+            fprintf(stderr, "\nTX not confirmed: %s — the node refused the credentials.\n", aerr.c_str());
+            fprintf(stderr, "  Use --rpc-user <user> with --rpc-pass-file <path> or --rpc-pass-fd <n>.\n");
             return 1;
         }
-        return 0;
+        fprintf(stderr, "\nTX NOT CONFIRMED by the node (%s).\n", aerr.c_str());
+        fprintf(stderr, "  The inputs were left UNSPENT locally, which is the safe side of the\n"
+                        "  doubt — but it is not proof the node rejected the transaction. Check\n"
+                        "  getrawmempool / getrawtransaction for txid %s before building another\n"
+                        "  one: resending blind can pay twice.\n", to_hex(txid.data(), 32).c_str());
+        return 1;
     }
 
     // =====================================================================
@@ -2720,11 +2691,11 @@ int main(int argc, char** argv) {
         printf("Sending to node %s:%d...\n", g_node_host.c_str(), g_node_port);
         std::string resp = rpc_call("sendrawtransaction",
                                     "[\"" + raw_hex + "\"]");
-        if (resp.find("\"result\":\"") != std::string::npos) {
-            // Now that the node accepted the tx, mark its inputs as spent
-            // in the local UTXO list and persist the wallet so subsequent
-            // CLI invocations don't try to reuse those UTXOs before the
-            // node's mempool propagates back.
+        std::string node_txid2, aerr2;
+        if (rpc_accepted_txid(resp, node_txid2, aerr2)) {
+            // Accepted: only now mark the inputs spent in the local UTXO list
+            // and persist the wallet, so a later invocation does not reuse
+            // them before the node's mempool propagates back.
             w.mark_tx_inputs_spent(tx);
             std::string save_err;
             if (!w.save(wallet_path, &save_err)) {
@@ -2735,20 +2706,15 @@ int main(int argc, char** argv) {
             printf("  Waiting for next mined block to confirm...\n");
             return 0;
         }
-        if (resp.find("401") != std::string::npos) {
-            fprintf(stderr, "\nTX rejected: 401 Unauthorized\n");
-            fprintf(stderr, "  Use: --rpc-user <user> --rpc-pass <pass>\n");
+        if (aerr2 == "http_401" || aerr2 == "http_403") {
+            fprintf(stderr, "\nTX not confirmed: the node refused the credentials.\n");
+            fprintf(stderr, "  Use --rpc-user <user> with --rpc-pass-file <path> or --rpc-pass-fd <n>.\n");
             return 1;
         }
-        auto err_pos = resp.find("\"message\":\"");
-        if (err_pos != std::string::npos) {
-            auto err_end = resp.find('"', err_pos + 11);
-            std::string err_msg = resp.substr(err_pos + 11, err_end - err_pos - 11);
-            fprintf(stderr, "\nTX rejected: %s\n", err_msg.c_str());
-        } else {
-            fprintf(stderr, "\nTX rejected (unknown error)\n");
-            fprintf(stderr, "  Raw response: %s\n", resp.c_str());
-        }
+        fprintf(stderr, "\nTX NOT CONFIRMED by the node (%s).\n", aerr2.c_str());
+        fprintf(stderr, "  The inputs were left UNSPENT locally. That is the safe side of the\n"
+                        "  doubt, not proof of rejection — check getrawmempool / getrawtransaction\n"
+                        "  before building another transaction.\n");
         return 1;
     }
 
@@ -2788,22 +2754,42 @@ int main(int argc, char** argv) {
             }
         }
 
-        // 1) Confirm tx is still in mempool.
+        // 1) Confirm tx is still in mempool. Strictly: an unreadable answer is
+        //    "I do not know", never "it is gone" — replacing a transaction on a
+        //    wrong assumption is how the same coins get spent twice.
         std::string mp_resp = rpc_call("getrawmempool");
-        if (mp_resp.find("\"" + orig_txid + "\"") == std::string::npos) {
-            fprintf(stderr, "Error: tx %s is not in the mempool. It may already be\n",
-                    orig_txid.c_str());
-            fprintf(stderr, "  confirmed or have been dropped — RBF is no longer possible.\n");
-            return 1;
+        {
+            std::string mbody, merr;
+            sost::json::Value mres;
+            if (!sost::json::http_body(mp_resp, mbody, &merr)
+                || !sost::json::rpc_result(mbody, mres, &merr) || !mres.is_arr()) {
+                fprintf(stderr, "Error: could not read the mempool (%s).\n", merr.c_str());
+                fprintf(stderr, "  Refusing to replace a transaction on an unreadable answer.\n");
+                return 1;
+            }
+            bool present = false;
+            for (const auto& e : mres.a)
+                if (e.type == sost::json::Value::T::Str && e.s == orig_txid) { present = true; break; }
+            if (!present) {
+                fprintf(stderr, "Error: tx %s is not in the mempool. It may already be\n",
+                        orig_txid.c_str());
+                fprintf(stderr, "  confirmed or have been dropped — RBF is no longer possible.\n");
+                return 1;
+            }
         }
 
         // 2) Pull verbose tx with prev_value / prev_address per vin.
         std::string tx_resp = rpc_call("getrawtransaction",
                                        "[\"" + orig_txid + "\",1]");
-        if (tx_resp.find("\"result\":") == std::string::npos) {
-            fprintf(stderr, "Error: getrawtransaction failed.\n");
-            fprintf(stderr, "  Raw response: %s\n", tx_resp.c_str());
-            return 1;
+        {   // Strict check: a body that cannot be parsed is a failure, not a
+            // transaction whose fields we can go on to read.
+            std::string tbody, terr;
+            sost::json::Value tres;
+            if (!sost::json::http_body(tx_resp, tbody, &terr)
+                || !sost::json::rpc_result(tbody, tres, &terr)) {
+                fprintf(stderr, "Error: getrawtransaction failed (%s).\n", terr.c_str());
+                return 1;
+            }
         }
 
         // 3) Tiny field extractor for the JSON shape we control.
@@ -2989,21 +2975,16 @@ int main(int argc, char** argv) {
 
         printf("Broadcasting replacement...\n");
         std::string resp = rpc_call("sendrawtransaction", "[\"" + raw_hex + "\"]");
-        if (resp.find("\"result\":\"") != std::string::npos) {
+        std::string rep_txid, rerr2;
+        if (rpc_accepted_txid(resp, rep_txid, rerr2)) {
             printf("\nReplacement accepted! New txid: %s\n",
                    to_hex(new_txid.data(), 32).c_str());
             printf("  Original tx %s is now replaced.\n", orig_txid.c_str());
             return 0;
         }
-        auto err_pos = resp.find("\"message\":\"");
-        if (err_pos != std::string::npos) {
-            auto err_end = resp.find('"', err_pos + 11);
-            std::string err_msg = resp.substr(err_pos + 11, err_end - err_pos - 11);
-            fprintf(stderr, "\nReplacement rejected: %s\n", err_msg.c_str());
-        } else {
-            fprintf(stderr, "\nReplacement rejected (unknown error)\n");
-            fprintf(stderr, "  Raw response: %s\n", resp.c_str());
-        }
+        fprintf(stderr, "\nReplacement NOT confirmed (%s).\n", rerr2.c_str());
+        fprintf(stderr, "  Check getrawmempool for both txids before trying again — the original\n"
+                        "  may still be in flight.\n");
         return 1;
     }
 
