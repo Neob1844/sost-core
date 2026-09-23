@@ -4940,7 +4940,12 @@ static void p2p_send_version(int fd) {
 static bool p2p_send_adaptive(int fd, PeerCrypto& crypto, const char* cmd,
     const uint8_t* payload, size_t len);
 
-static void p2p_send_block(int fd, int64_t h, PeerCrypto* crypto = nullptr) {
+// Returns false when the block could NOT be delivered intact. Two reasons:
+// (a) we cannot build a complete block for this height, or (b) the frame was
+// only partially written. Either way the caller must stop sending on this
+// connection: a half-written frame leaves the peer's stream desynchronised,
+// and everything after it is read as garbage.
+static bool p2p_send_block(int fd, int64_t h, PeerCrypto* crypto = nullptr) {
     // Serialize the block into a local buffer UNDER g_chain_mu, then RELEASE the
     // lock BEFORE the (potentially blocking) network send. Holding g_chain_mu
     // across p2p_send() let a single slow peer doing initial block download
@@ -4949,9 +4954,10 @@ static void p2p_send_block(int fd, int64_t h, PeerCrypto* crypto = nullptr) {
     // blocks per request, so the lock was held across 100 blocking writes.
     // Serialization is byte-for-byte unchanged; this is NOT a consensus change.
     std::string js;
+    bool incomplete = false;
     {
         std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
-        if(h<0||h>=(int64_t)g_blocks.size()) return;
+        if(h<0||h>=(int64_t)g_blocks.size()) return false;
         const auto& b=g_blocks[h];
         // Use raw_block_json if available (contains complete Transcript V2 proof)
         if (!b.raw_block_json.empty()) {
@@ -4977,6 +4983,12 @@ static void p2p_send_block(int fd, int64_t h, PeerCrypto* crypto = nullptr) {
             if (!b.x_bytes_hex.size()) {} else { s<<",\"x_bytes\":\""<<b.x_bytes_hex<<"\""; }
             if (!b.final_state_hex.empty()) { s<<",\"final_state\":\""<<b.final_state_hex<<"\""; }
             if (!b.segments_root_hex.empty()) { s<<",\"segments_root\":\""<<b.segments_root_hex<<"\""; }
+            // The receiver REQUIRES transactions[] with at least the coinbase
+            // (see "REJECTED: missing transactions[]"). The old code emitted the
+            // field only when tx_hexes happened to be populated, so a block with
+            // neither raw_block_json nor tx_hexes went out as a header-shaped
+            // object the peer could only reject. Emit it whenever we have the
+            // data, and record when we do not so the caller can refuse to send.
             if (!b.tx_hexes.empty()) {
                 s << ",\"transactions\":[";
                 for (size_t t = 0; t < b.tx_hexes.size(); ++t) {
@@ -4984,17 +4996,58 @@ static void p2p_send_block(int fd, int64_t h, PeerCrypto* crypto = nullptr) {
                     s << "\"" << b.tx_hexes[t] << "\"";
                 }
                 s << "]";
+            } else {
+                incomplete = true;   // no canonical tx data for this height
             }
             s << "}";
             js = s.str();
         }
     }
-    // g_chain_mu released — a slow peer's blocking send no longer stalls RPC.
-    if (crypto && crypto->encrypted) {
-        p2p_send_encrypted(fd, *crypto, "BLCK", (const uint8_t*)js.data(), js.size());
-    } else {
-        p2p_send(fd, "BLCK", (const uint8_t*)js.data(), js.size());
+    // Never put an incomplete block on the wire. Serving one costs the peer a
+    // +10 misbehaviour penalty and a disconnect, and tells it nothing about
+    // what is actually wrong. Refusing is visible, local, and lets the peer
+    // fetch the same height from someone else.
+    if (incomplete) {
+        printf("[P2P] REFUSING to serve block #%lld: no transaction data available "
+               "(raw_block_json empty AND tx_hexes empty). The block is intact on "
+               "this chain; only its relay form could not be built.\n", (long long)h);
+        fflush(stdout);
+        return false;
     }
+    // g_chain_mu released — a slow peer's blocking send no longer stalls RPC.
+    //
+    // Serialize the write with this peer's write_mu, the same mutex every other
+    // writer uses. Without it a PING from the main loop could land in the middle
+    // of a block frame. Lock order is safe: the chain lock is ALREADY released
+    // here, get_peer_write_mu() takes and releases g_peers_mu before we lock,
+    // and nothing under write_mu ever reaches for g_peers_mu or g_chain_mu — so
+    // there is no cycle to deadlock on. The lock is taken per block, not per
+    // 100-block batch, so a broadcaster never waits behind a whole batch.
+    bool ok;
+    {
+        std::shared_ptr<std::mutex> wmu = get_peer_write_mu(fd);
+        if (wmu) {
+            std::lock_guard<std::mutex> wlk(*wmu);
+            ok = (crypto && crypto->encrypted)
+                 ? p2p_send_encrypted(fd, *crypto, "BLCK", (const uint8_t*)js.data(), js.size())
+                 : p2p_send(fd, "BLCK", (const uint8_t*)js.data(), js.size());
+        } else {
+            ok = (crypto && crypto->encrypted)
+                 ? p2p_send_encrypted(fd, *crypto, "BLCK", (const uint8_t*)js.data(), js.size())
+                 : p2p_send(fd, "BLCK", (const uint8_t*)js.data(), js.size());
+        }
+    }
+    if (!ok) {
+        // write_exact() gives the socket 5s to drain and then returns false with
+        // the frame HALF WRITTEN. That is the real corruption: the peer reads the
+        // tail of a block as the header of the next one. The old code ignored
+        // this and kept pushing the remaining blocks of the batch into an already
+        // desynchronised stream.
+        printf("[P2P] block #%lld: send failed (peer slow or gone) — aborting this "
+               "batch so we do not write into a desynchronised stream\n", (long long)h);
+        fflush(stdout);
+    }
+    return ok;
 }
 
 static void p2p_broadcast_tx(const std::string& hex_str, int exclude_fd) {
@@ -7776,10 +7829,30 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         else if (!strcmp(msg.cmd, "GETB")) {
             if (msg.payload.size() >= 8) {
                 int64_t from_h = read_i64(msg.payload.data());
+                // Use the connection's NEGOTIATED transport. The old code passed
+                // nullptr, so every block of an initial block download went out
+                // in clear text on a connection both sides had agreed to encrypt
+                // — the one place where the bulk of the chain actually travels.
+                // Passing &crypto is safe here: PeerCrypto lives on this
+                // handle_peer thread's stack and its send_nonce counter is only
+                // ever advanced by this thread.
+                //
+                // Stop at the first failure. Continuing after a half-written
+                // frame is what turned one slow socket into a rejected block and
+                // a disconnect on the other side.
+                bool batch_ok = true;
                 for (int64_t h = from_h; h <= g_chain_height && h < from_h + 100; ++h) {
-                    p2p_send_block(fd, h, nullptr); // plaintext — avoids write_mu deadlock
+                    if (!p2p_send_block(fd, h, &crypto)) { batch_ok = false; break; }
                 }
-                p2p_send(fd, "DONE", nullptr, 0); // plaintext DONE
+                if (batch_ok) {
+                    std::shared_ptr<std::mutex> wmu = get_peer_write_mu(fd);
+                    if (wmu) {
+                        std::lock_guard<std::mutex> wlk(*wmu);
+                        p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
+                    } else {
+                        p2p_send_adaptive(fd, crypto, "DONE", nullptr, 0);
+                    }
+                }
             }
         }
         else if (!strcmp(msg.cmd, "BLCK")) {
@@ -9162,7 +9235,15 @@ int main(int argc, char** argv) {
                 for(auto& p:g_peers){
                     if(p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50)
                         continue;
-                    if(p.version_acked) p2p_send(p.fd,"PING",nullptr,0);
+                    // Serialize with the peer's own writer. This PING is sent
+                    // from the MAIN thread while handle_peer may be midway
+                    // through a block frame; without the mutex the two writes
+                    // interleave on the same socket and corrupt both. Every
+                    // other writer already takes it — this one was the exception.
+                    if(p.version_acked){
+                        std::lock_guard<std::mutex> wlk(*p.write_mu);
+                        p2p_send(p.fd,"PING",nullptr,0);
+                    }
                 }
                 // Auto-reconnect: if no peers and we have connect addresses, reconnect
                 if(g_peers.empty() && !connect_addrs.empty()){
