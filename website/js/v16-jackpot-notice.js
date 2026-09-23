@@ -137,7 +137,7 @@
     </span>
     <span class="sost-v16-chip">ACTIVATION #30,000</span>
     <span class="sost-v16-redchip">&#9888; UPDATE WINDOW &mdash; AFTER #29,900, BEFORE #30,000</span>
-    <span class="sost-v16-cta"><span class="sost-v16-cta-label" data-when="closed">Read</span><span class="sost-v16-cta-label" data-when="open" hidden>Hide</span><span class="sost-v16-chev" aria-hidden="true">&#9662;</span></span>
+    <span class="sost-v16-cta"><span class="sost-v16-cta-label" data-when="closed">Miner guide</span><span class="sost-v16-cta-label" data-when="open" hidden>Hide</span><span class="sost-v16-chev" aria-hidden="true">&#9662;</span></span>
   </button>
 
   <div class="sost-v16-body" id="sostV16Body" hidden>
@@ -150,8 +150,7 @@
       the whole network crosses the activation running the same code. Get the binaries and verify their
       SHA256 <b>before</b> the window opens, so the window itself is only stop, install, restart.
       A validating node still on older consensus software at #30,000 <b>may diverge from the V16 chain</b>.
-      <br><a href="sost-upgrade.html" style="color:#39ff14;font-weight:700;text-decoration:underline">&#9654; Full upgrade guide &mdash; commands, verification, rollback</a>
-      &nbsp;&middot;&nbsp;<a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.3" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700;text-decoration:underline">Official release &amp; SHA-256</a>
+      <div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.05)"><div style="font-size:12.5px;font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:7px">&#9654; SOST V16 &mdash; MINER &amp; NODE GUIDE</div><div style="font-size:11.5px;line-height:1.65;color:#b9c6d4;margin-bottom:9px">Download and verify &middot; who needs a node &middot; your RPC password (there is no universal one) &middot; the exact start commands &middot; wallet encryption &middot; DTD vs Jackpot V2 &middot; NODE_BIND &middot; backups &middot; troubleshooting.</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;font-family:var(--code,monospace)"><a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:5px 11px;border-radius:5px;text-decoration:none">OPEN THE FULL GUIDE</a><a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Download &amp; verify</a><a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">RPC password</a><a href="sost-upgrade.html#s5" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Start commands</a><a href="sost-upgrade.html#s8" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">NODE_BIND</a><a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.3" target="_blank" rel="noopener" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">GitHub release</a></div><div style="font-size:10.5px;color:#7b8794;margin-top:8px;line-height:1.55">Already on v16.2.x? node and miner are byte-identical across v16.2.0&ndash;v16.2.3 &mdash; only sost-cli changed. Nothing to restart.</div></div>
     </div>
 
     <div class="sost-v16-alert">
