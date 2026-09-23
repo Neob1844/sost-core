@@ -1237,7 +1237,7 @@ PROPERTIES:
 <div class="wp-spacer"></div>
 <p class="wp-p">FUNDING VAULT (operational, on SOST chain):</p>
 <div class="wp-bullet">Hardcoded destination in genesis consensus rules (coinbase output).</div>
-<div class="wp-bullet">Receives exactly 25% of each block subsidy by consensus (q = reward // 4).</div>
+<div class="wp-bullet">Received exactly 25% of each <b style="color:#f59e0b">(until block #25,000 &mdash; 0 since V15; the address keeps what it received.)</b> block subsidy by consensus (q = reward // 4).</div>
 <div class="wp-bullet">Consensus-enforced: any block without the correct vault output is invalid.</div>
 <div class="wp-bullet">Accumulates SOST and periodically converts it into tokenized gold exposure (XAUT/PAXG)</div>
 <pre class="wp-code-inline">  via publicly auditable operational execution (Section 5.3).</pre>
@@ -2666,7 +2666,7 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Proof-of-Work that produces a mathematical certificate.</strong> ConvergenceX replaces the hash lottery with gradient descent convergence, memory-hard scratchpad dependency, checkpoint Merkle trees, and formal stability basin verification. The result is not just a hash below a target — it is a verifiable proof that meaningful mathematical work occurred, producing useful entropy as a byproduct.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Automatic, constitutional accumulation of gold reserve.</strong> Every mined block allocates 25% to a Gold Funding Vault. Accumulated SOST is converted to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default. After V6 activation (block 10,000), custody transitions directly from SOST developer to SOST under the 5-defense Gold Vault model, requiring ≥95% miner supermajority for any non-routine reserve movement. The Gold Vault must be able to change form, but not purpose. The accumulation is a structural property of SOST, not a promise made by people.</p>
+<p class="wp-p"><strong>Automatic, constitutional accumulation of gold reserve.</strong> Until #25,000 every mined block allocated 25% to a Gold (0 since) Funding Vault. Accumulated SOST is converted to tokenized gold exposure (XAUT/PAXG) through an automated pipeline with public attestation. The reserve is Heritage sealed — perpetual and untouched by default. After V6 activation (block 10,000), custody transitions directly from SOST developer to SOST under the 5-defense Gold Vault model, requiring ≥95% miner supermajority for any non-routine reserve movement. The Gold Vault must be able to change form, but not purpose. The accumulation is a structural property of SOST, not a promise made by people.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p"><strong>Voluntary custody commitments audited by PoW-derived entropy.</strong> PoPC uses the entropy triple from ConvergenceX blocks to schedule random audits of gold custody — no oracle, no trusted third party, no governance. The audit schedule is a deterministic function of the proof-of-work itself.</p>
 <div class="wp-spacer"></div>
@@ -3380,7 +3380,7 @@ function tocBtnClick(){
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v450" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v451" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
