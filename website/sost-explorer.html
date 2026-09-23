@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-23-v466-no-mobile-hscroll">
+<meta name="explorer-html-version" content="2026-09-23-v467-peer-table-honest">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -1428,8 +1428,12 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
     <div class="sec-head"><div class="sec-title">// <b>ACTIVE NODES</b></div><div class="sec-meta" id="nodesInfo">refreshing...</div></div>
     <div id="nodesSummary" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;">
       <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
-        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">CONNECTED</div>
+        <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">CONNECTIONS</div>
         <div style="font-size:16px;font-weight:600;color:var(--green);" id="nConnected">0</div>
+        <!-- Sockets and machines are not the same number: one machine can hold
+             several connections, and a node that dials its own seed shows the two
+             ends of ONE connection as two peers. -->
+        <div style="font-size:8px;color:var(--text3);margin-top:3px;line-height:1.5" id="nConnBreak">&mdash;</div>
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
         <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">NEAR TIP</div>
@@ -1448,9 +1452,13 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
         <div style="font-size:16px;font-weight:600;color:var(--gold);" id="nSeedCandidates">0</div>
       </div>
     </div>
-    <table class="tbl"><thead><tr><th>NODE</th><th>DIRECTION</th><th>HEIGHT</th><th>DELTA</th><th>TRANSPORT</th><th>UPTIME</th><th>STATUS</th><th>RELIABILITY</th></tr></thead>
+    <table class="tbl"><thead><tr><th>NODE</th><th>DIRECTION</th><th title="The height the peer announced in its VERSION handshake. It is NOT a live reading: for a long-lived connection it stays frozen at the value announced when the connection was opened.">HEIGHT @ HANDSHAKE</th><th title="That announced height minus our tip NOW. A large negative number on an old connection usually means the announcement is old, not that the peer is stuck.">DRIFT vs OUR TIP</th><th>TRANSPORT</th><th>UPTIME</th><th>STATUS</th><th>RELIABILITY</th></tr></thead>
     <tbody id="nodesBody"><tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">loading...</td></tr></tbody></table>
     <div style="font-size:8px;color:var(--text3);margin-top:8px;line-height:1.8;font-family:var(--code);">
+      <b style="color:var(--cyan)">HEIGHT @ HANDSHAKE</b> = what the peer said when the connection opened. It does not tick.
+      A peer showing a large negative drift on a day-old connection is usually just an old announcement.<br>
+      <b style="color:var(--gold)">SELF?</b> = probably the two ends of one connection this node opened to its own address, so the peer list counts it twice. Signature, not proof: outbound + inbound opened in the same second, same announced height, same transport.
+      <b style="color:var(--cyan)">xN</b> = several connections to the same machine.<br>
       <b style="color:var(--gold)">&#9733; SEED CANDIDATE</b> = reliability &ge;70 + synced + version acked + uptime &gt;24h<br>
       <b>Reliability score:</b> uptime (0-40pts) + delta accuracy (0-30pts) + handshake (0-15pts) + encrypted (+10) + outbound (+5) &minus; ban penalty<br>
       <span style="color:var(--green)">&#9632; EXCELLENT (80-100)</span> &middot; <span style="color:var(--cyan)">&#9632; GOOD (60-79)</span> &middot; <span style="color:var(--yellow)">&#9632; FAIR (40-59)</span> &middot; <span style="color:var(--orange)">&#9632; LOW (20-39)</span> &middot; <span style="color:var(--red)">&#9632; POOR (0-19)</span>
@@ -7616,6 +7624,41 @@ window.addEventListener('focus',function(){refresh();});
       var nConn=peers.length,nNear=0,nEnc=0,nPlain=0,nAcked=0;
       var tipH=H||0;
       var nowSec=Math.floor(Date.now()/1000);
+      // ── Sockets are not machines ───────────────────────────────────────────
+      // getpeerinfo lists CONNECTIONS. One machine can hold several, and a node
+      // that dials its own seed address gets back the two ends of a single
+      // connection, listed as an outbound peer and an inbound peer. Shown as
+      // four "peers", that reads as four nodes and, worse, as two of them stuck
+      // 100 blocks behind — when it is this node talking to itself.
+      // The node masks the last two octets of every address, so the grouping key
+      // is that masked host: it cannot separate two machines in the same /16,
+      // which is why the self label below stays a STATED heuristic, not a claim.
+      var hostOf=function(a){ var t=String(a||''); var i=t.lastIndexOf(':'); return i>0?t.slice(0,i):t; };
+      var byHost={};
+      peers.forEach(function(p){ var h=hostOf(p.addr); (byHost[h]=byHost[h]||[]).push(p); });
+      // Self-connection signature. NOT grouped by host: when a node dials its own
+      // seed NAME, the outbound entry reads as the hostname and the inbound one as
+      // a numeric address, so the two halves of the very pair we are looking for
+      // never share a host string. What they do share is that they are the two
+      // ends of one dial: one outbound + one inbound, opened in the same second,
+      // announcing the same height, over the same transport. Marked on the pair,
+      // and labelled as PROBABLE, because from this side it is a signature and
+      // not a proof - only the node knows its own address.
+      var selfIdx={}, _used={};
+      for(var _a=0;_a<peers.length;_a++){
+        if(peers[_a].direction!=='outbound'||_used[_a]) continue;
+        for(var _b=0;_b<peers.length;_b++){
+          if(_a===_b||_used[_b]||peers[_b].direction!=='inbound') continue;
+          if(Math.abs((peers[_a].conntime||0)-(peers[_b].conntime||0))<=2 &&
+             peers[_a].height===peers[_b].height &&
+             peers[_a].enc_mode===peers[_b].enc_mode){
+            selfIdx[_a]=true; selfIdx[_b]=true; _used[_a]=true; _used[_b]=true; break;
+          }
+        }
+      }
+      var nSelfConn=0, extHosts={};
+      peers.forEach(function(p,ix){ if(selfIdx[ix]) nSelfConn++; else extHosts[hostOf(p.addr)]=true; });
+      var nExtHosts=Object.keys(extHosts).length;
       for(var i=0;i<peers.length;i++){
         var p=peers[i];
         // Near tip: peer height >= (our height - 3)
@@ -7627,22 +7670,32 @@ window.addEventListener('focus',function(){refresh();});
       document.getElementById('nNearTip').textContent=nNear;
       document.getElementById('nEncrypted').textContent=nEnc;
       document.getElementById('nPlaintext').textContent=nPlain;
-      document.getElementById('nodesInfo').textContent=nConn+' peers connected';
+      var brk=document.getElementById('nConnBreak');
+      if(brk) brk.innerHTML=nExtHosts+' external machine'+(nExtHosts===1?'':'s')+
+        (nSelfConn?' &middot; <span style="color:var(--gold)">'+nSelfConn+' self</span>':'');
+      document.getElementById('nodesInfo').textContent=
+        nConn+' connection'+(nConn===1?'':'s')+' \u2014 '+nExtHosts+' external machine'+(nExtHosts===1?'':'s')+
+        (nSelfConn?' + '+nSelfConn+' self-connection'+(nSelfConn===1?'':'s'):'');
       // Update the header card — count only version_acked peers as unique nodes
       var dNodesEl=document.getElementById('dNodes');
-      if(dNodesEl) dNodesEl.textContent=nAcked;
+      // "Unique nodes" must not count this node's own loopback pair as two peers.
+      if(dNodesEl) dNodesEl.textContent=Math.max(0,nAcked-nSelfConn);
       var tbody=document.getElementById('nodesBody');
       if(!peers.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">no peers connected</td></tr>';return;}
       var html='';
       var seedCandidates=0;
       for(var i=0;i<peers.length;i++){
         var p=peers[i];
+        var connSec0=(p.conntime&&p.conntime>0)?(nowSec-p.conntime):0;
         var delta=p.height>=0?(p.height-tipH):'\u2014';
         var deltaClr='var(--text3)';
         if(typeof delta==='number'){
           if(delta===0)deltaClr='var(--green)';
           else if(Math.abs(delta)<=3)deltaClr='var(--cyan)';
-          else deltaClr='var(--yellow)';
+          // A wide drift on a connection that has been open for hours is expected:
+          // the announcement is that old. Only flag it as amber when the
+          // announcement is RECENT, because then the peer really is behind.
+          else deltaClr=(connSec0<1800?'var(--yellow)':'var(--text3)');
         }
         var encClr=p.enc_mode==='encrypted'?'var(--purple)':'var(--text3)';
         var statusTxt='handshaking';var statusClr='var(--yellow)';
@@ -7691,16 +7744,26 @@ window.addEventListener('focus',function(){refresh();});
         else if(relScore>=20){relClr='var(--orange)';relLabel='LOW';}
         else{relClr='var(--red)';relLabel='POOR';}
         // Seed candidate: score >= 70 + synced + acked + uptime > 1 day
-        var isSeedCandidate=(relScore>=70&&statusTxt==='synced'&&p.version_acked&&connSec>=86400);
+        var isSeedCandidate=(relScore>=70&&statusTxt==='synced'&&p.version_acked&&connSec>=86400&&!selfIdx[i]);
         if(isSeedCandidate)seedCandidates++;
         // Progress bar
         var barW=Math.round(relScore/100*40);
         relBar='<div style="display:inline-block;width:40px;height:4px;background:var(--bg3);border-radius:2px;vertical-align:middle;margin-right:4px;overflow:hidden"><div style="width:'+barW+'px;height:100%;background:'+relClr+';border-radius:2px;box-shadow:0 0 4px '+relClr+'"></div></div>';
         var nid=nodeId(p.addr);
+        var _h=hostOf(p.addr);
+        var _grp=(byHost[_h]||[]).length;
+        var tag='';
+        if(selfIdx[i]) tag=' <span style="color:var(--gold);font-size:8px;border:1px solid var(--gold);border-radius:2px;padding:0 3px" title="Looks like both ends of ONE connection this node opened to its own address: an outbound and an inbound opened in the same second, announcing the same height over the same transport. The peer list counts it twice; it is probably not another node.">SELF?</span>';
+        else if(_grp>1) tag=' <span style="color:var(--cyan);font-size:8px;border:1px solid var(--cyan);border-radius:2px;padding:0 3px" title="This machine holds '+_grp+' separate connections to this node.">x'+_grp+'</span>';
         html+='<tr'+(isSeedCandidate?' style="background:rgba(245,158,11,.04)"':'')+'>';
-        html+='<td style="font-size:11px;color:var(--cyan);" title="Connected '+relTime(connSec)+'">'+nid+(isSeedCandidate?' <span style="color:var(--gold);font-size:8px" title="Seed candidate: high reliability, synced, 24h+ uptime">\u2605</span>':'')+'</td>';
+        html+='<td style="font-size:11px;color:var(--cyan);" title="Connected '+relTime(connSec)+'">'+nid+tag+(isSeedCandidate?' <span style="color:var(--gold);font-size:8px" title="Seed candidate: high reliability, synced, 24h+ uptime">\u2605</span>':'')+'</td>';
         html+='<td style="color:'+dirClr+'">'+p.direction+'</td>';
-        html+='<td style="color:var(--text);">'+(p.height>=0?p.height:'\u2014')+'</td>';
+        // The height column is the VERSION announcement, so it is dated. Saying
+        // when it was announced is the difference between "this peer is 109
+        // blocks behind" and "this peer said that 18 hours ago".
+        var annAge=connSec>=3600?(Math.floor(connSec/3600)+'h ago'):(connSec>=60?(Math.floor(connSec/60)+'m ago'):'just now');
+        html+='<td style="color:var(--text);">'+(p.height>=0?p.height:'\u2014')+
+              '<div style="font-size:8px;color:var(--text3);line-height:1.4">announced '+annAge+'</div></td>';
         html+='<td style="color:'+deltaClr+';font-weight:600;">'+(typeof delta==='number'?(delta>0?'+':'')+delta:delta)+'</td>';
         html+='<td style="color:'+encClr+';">'+p.enc_mode+'</td>';
         html+='<td style="font-size:10px;color:var(--text2);">'+uptimeStr+'</td>';
@@ -8410,7 +8473,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/v16-jackpot-notice.js?v=v466" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v467" defer></script>
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks
