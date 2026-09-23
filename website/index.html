@@ -934,10 +934,11 @@
     </h1>
     <p class="hero-sub fade-in delay-2">
       CPU-friendly Native Layer 1 Proof-of-Work blockchain.
-      Every block mined allocates 25% to an on-chain Gold Vault (tokenized precious metals)
-      and 25% to Proof of Personal Custody rewards &mdash;
-      hardcoded at genesis and enforced by the current consensus rules (any change requires a
-      transparent, network-adopted protocol upgrade).
+      Every block splits <b>50% to the miner and 50% to the DTD distribution</b>, which returns
+      that half to active miners by lottery &mdash; enforced by consensus since <b>V15, block
+      #25,000</b>. <span style="opacity:.75">Until #25,000 the other half funded an on-chain Gold
+      Vault and Proof of Personal Custody rewards; those shares are <b>0</b> today, and what they
+      already hold stays on chain and auditable.</span>
     </p>
     <p class="fade-in delay-2" style="max-width:760px;margin:16px auto 0;padding:12px 16px;border:1px solid rgba(255,215,0,.35);border-left:3px solid #ffd700;border-radius:8px;background:rgba(255,215,0,.04);font-size:12px;line-height:1.6;color:#cfd8d2;text-align:left">
       <b style="color:#ffd700">Important:</b> SOST is a native crypto-asset created solely by Proof-of-Work mining. It does <b>not</b> represent shares, equity, debt, dividends, profit participation, voting rights, ownership of a company, ownership of mining assets, or any redemption or legal claim against the Gold Vault or any reserve. SOST currently has <b>no market price and no associated value</b>. Nothing here is investment advice or an offer of securities.
@@ -1288,14 +1289,17 @@
       <div class="four-pillar-card" style="--card-accent:#d4af37;position:relative">
         <div style="margin:-2px 0 12px;padding:9px 12px;border:1px solid #39ff14;border-radius:6px;background:rgba(57,255,20,.07);color:#7CFFA0;font-size:11.5px;line-height:1.5;font-family:var(--font-mono);letter-spacing:.3px"><b style="color:#39ff14">◈ NO LONGER THE ACTIVE PLAN.</b> At V15 (block #25,000) this store-of-value architecture has been <b>temporarily superseded by the DTD</b> (Deterministic Token Distribution): the 50%/block that would have funded gold is redirected to the DTD, and the reserve already accumulated is returned to participants via the DTD Jackpot. <a href="#dtd" style="color:#39ff14;text-decoration:underline">See DTD &rarr;</a></div>
         <div class="four-pillar-tag" style="color:#d4af37">◈ PILLAR 4 &mdash; STORE-OF-VALUE ARCHITECTURE <span style="color:#39ff14;font-size:10px;border:1px solid #39ff14;border-radius:10px;padding:1px 7px;margin-left:6px;letter-spacing:.5px">SUPERSEDED</span></div>
-        <div class="four-pillar-headline">Up to 50% &rarr; Gold</div>
+        <div class="four-pillar-headline" style="opacity:.85">Historical: Up to 50% &rarr; Gold <span style="font-size:.6em;color:#f59e0b;letter-spacing:1px">&nbsp;ENDED AT #25,000</span></div>
         <p class="four-pillar-body">
-          Up to half of total supply is gradually converted into gold-funded reserve value, by consensus, every block:
+          <b style="color:#f59e0b">This was the plan until block #25,000. It is no longer in force:</b> since V15 the
+          non-miner half of every block goes to the DTD distribution, and the two shares below are <b>zero</b>.
+          What follows is the record of the original design.<br><br>
+          <span style="opacity:.75">Up to half of total supply was to be gradually converted into gold-funded reserve value, by consensus, every block:</span>
           <br><br>
-          <b style="color:#d4af37">25%</b> &mdash; <b>Proof of Personal Custody (PoPC)</b>: contracts collateralised
+          <b style="color:#d4af37">25% (until #25,000; 0 since)</b> &mdash; <b>Proof of Personal Custody (PoPC)</b>: contracts collateralised
           by tokenised gold today, by physically self-custodied gold in the future, with on-chain
           cryptographic proof and operator privacy preserved.<br><br>
-          <b style="color:#d4af37">25%</b> &mdash; <b>Perpetual Gold Vault</b>: network-funded, one-way purchases of
+          <b style="color:#d4af37">25% (until #25,000; 0 since)</b> &mdash; <b>Perpetual Gold Vault</b>: network-funded, one-way purchases of
           tokenised precious metals (XAUT/PAXG today, broader basket later), accumulated forever in a
           Heritage Reserve. Observable reserve ratio &mdash; not a peg, not a redemption right.<br><br>
           <b style="color:var(--text-dim)">No peg. No redemption right. No price floor. No investment return. No legal claim over the reserve.</b>
@@ -1543,8 +1547,8 @@
       </div>
       <div class="stat-card" onclick="togglePanel('panel-split',this)">
         <div class="stat-label">Coinbase Split</div>
-        <div class="stat-value">50/25/25</div>
-        <div class="stat-sub">Miner / Gold / PoPC</div>
+        <div class="stat-value">50/50</div>
+        <div class="stat-sub">Miner / DTD &middot; since #25,000</div>
       </div>
       <div class="stat-card" onclick="togglePanel('panel-algo',this)">
         <div class="stat-label">Algorithm</div>
@@ -1593,14 +1597,14 @@
       <p style="font-size:10px;color:var(--text-muted);margin-top:10px;">q = e<sup>-1/4</sup> &asymp; 0.7788 &middot; Epoch = 131,553 blocks (&asymp;2.5 years)</p>
     </div>
     <div class="stat-panel" id="panel-split">
-      <div class="panel-title">Constitutional Split &mdash; Every Block</div>
+      <div class="panel-title">Emission Split &mdash; 50% miner / 50% DTD since #25,000 <span style="font-size:.75em;color:#f59e0b">(the 50/25/25 below is historical)</span></div>
       <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
         <canvas id="chartSplit" style="max-width:180px;max-height:180px;"></canvas>
         <div style="font-size:12px;color:var(--text-secondary);line-height:2;">
           <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fb010d;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">50%</b> Miner</div>
-          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#b8860b;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">25%</b> Gold Funding Vault</div>
-          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#22d3ee;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">25%</b> PoPC Pool</div>
-          <p style="font-size:10px;color:var(--text-muted);margin-top:8px;">Hardcoded at genesis. Immutable.</p>
+          <div><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#39ff14;margin-right:8px;vertical-align:middle;"></span><b style="color:var(--text-primary)">50%</b> DTD distribution</div>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.6;">In force since <b>V15, block #25,000</b>.<br>
+          <span style="opacity:.75">Historical, blocks 0&ndash;24,999: 50% Miner &middot; 25% Gold Funding Vault &middot; 25% PoPC Pool. Those two shares are <b>0</b> today &mdash; nothing new flows into them, and what they already hold stays on chain and auditable.</span></p>
         </div>
       </div>
     </div>
@@ -1613,7 +1617,7 @@
     </div>
     <div class="stat-panel" id="panel-genesis">
       <div class="panel-title">Genesis Block</div>
-      <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Block 0 mined on <b style="color:var(--text-primary)">March 15, 2026 at 18:00:00 UTC</b>. First reward: 7.85100863 SOST split constitutionally between miner, Gold Funding Vault, and PoPC Pool.</p>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:12px;">Block 0 mined on <b style="color:var(--text-primary)">March 15, 2026 at 18:00:00 UTC</b>. First reward: 7.85100863 SOST, split under the rules in force then (miner / Gold Funding Vault / PoPC Pool). Since #25,000 the split is 50% miner / 50% DTD.</p>
       <a class="panel-link" href="sost-genesis.html">View genesis block details &rarr;</a>
     </div>
     <div class="stat-panel" id="panel-gold">
@@ -1695,16 +1699,18 @@
       </div>
       <div class="spec-body">
         <p class="spec-desc">
-          SOST is a Proof-of-Work cryptocurrency where each mined block allocates 25% of issuance
-          to an on-chain Gold Funding Vault by consensus. Conversions to XAUT/PAXG are operational
+          SOST is a Proof-of-Work cryptocurrency. Since <b>V15 (#25,000)</b> each mined block splits
+          <b>50% miner / 50% DTD</b> and no issuance goes to the Gold Funding Vault.
+          <span style="opacity:.75">Until #25,000, 25% of issuance was allocated to that vault by consensus.</span> Conversions to XAUT/PAXG are operational
           actions executed with public attestations and auditable trails. The reserve is observable
           on Ethereum mainnet &mdash; not a peg, not a guarantee, but a verifiable commitment.
         </p>
         <table class="code-table">
           <tr><td class="key">Consensus</td><td class="val"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> PoW &mdash; memory-hard, CPU-friendly (reference miner CPU-oriented; protocol does not enforce CPU-only at consensus)</td></tr>
           <tr><td class="key">Monetary Policy</td><td class="val">Smooth exponential decay (q=e<sup>-&frac14;</sup>), Feigenbaum-derived constants, ~30 years to 95% supply</td></tr>
-          <tr><td class="key">Reserve</td><td class="val">25% of every block &rarr; tokenized gold (XAUT, PAXG) on Ethereum</td></tr>
-          <tr><td class="key">PoPC</td><td class="val">25% of every block &rarr; Proof of Personal Custody rewards (Phase 2+)</td></tr>
+          <tr><td class="key">Emission split</td><td class="val"><b>50% miner / 50% DTD</b> since #25,000 (gold and PoPC shares: <b>0</b>)</td></tr>
+          <tr><td class="key">Reserve</td><td class="val" style="opacity:.8">Historical: 25% of every block &rarr; tokenized gold (XAUT, PAXG) on Ethereum, until #25,000. Existing holdings remain; SOST is <b>not</b> backed by gold.</td></tr>
+          <tr><td class="key">PoPC</td><td class="val" style="opacity:.8">Historical: 25% of every block until #25,000. The DTD requires <b>no</b> PoPC bond at any height.</td></tr>
           <tr><td class="key">Governance</td><td class="val">None. Consensus rules are immutable at genesis.</td></tr>
           <tr><td class="key">Unit</td><td class="val"><code>1 SOST = 100,000,000 stocks</code></td></tr>
           <tr><td class="key">Address Format</td><td class="val"><code>sost1</code> + 40 hex chars (20-byte pubkey hash)</td></tr>
@@ -2099,7 +2105,7 @@ function initPanelChart(id){
   if(id==='panel-split'&&!_chartInstances.split){
     _chartInstances.split=new Chart(document.getElementById('chartSplit').getContext('2d'),{
       type:'doughnut',
-      data:{labels:['Miner 50%','Gold Vault 25%','PoPC Pool 25%'],datasets:[{data:[50,25,25],backgroundColor:['#fb010d','#b8860b','#22d3ee'],borderColor:['#0d0d0d','#0d0d0d','#0d0d0d'],borderWidth:2}]},
+      data:{labels:['Miner 50%','DTD distribution 50%'],datasets:[{data:[50,50],backgroundColor:['#fb010d','#39ff14'],borderColor:['#0d0d0d','#0d0d0d'],borderWidth:2}]},
       options:{responsive:true,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.label;}}}}}
     });
   }
@@ -2181,7 +2187,7 @@ function fetchSostChart(){
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v446" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v447" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
 <!-- ════════════════════════════════════════════════════════════ -->
