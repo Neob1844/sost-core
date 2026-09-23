@@ -1,0 +1,35 @@
+[b]Short follow-up — post this ONLY if the thread already carries the v16.2.0 or
+v16.2.1 text. If nothing is posted yet, publish BITCOINTALK_V16_2.txt instead,
+which is already current and says all of this.[/b]
+
+----------------------------------------------------------------------
+
+[center][size=16pt][b]Small correction: install [color=green]v16.2.2[/color] — the node and miner binaries are the same ones[/b][/size][/center]
+
+[hr]
+
+Since the post above, the CLI was corrected twice. [b]The node and the miner are not affected:[/b] v16.2.0, v16.2.1 and v16.2.2 all ship the [b]same sost-node and the same sost-miner[/b], byte for byte, with the same published hashes:
+
+[code]
+b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node   (all of v16.2.x)
+2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner  (all of v16.2.x)
+39170309cb0d0560f4ca82a225f5dd3b1c3d7eaeda1928273c4824f26141facf  sost-cli    (v16.2.2)
+[/code]
+
+So: download [b]v16.2.2[/b] and you get the same node and miner you would have got from v16.2.0, plus a CLI that no longer reads the node's answers by scanning text.
+
+[b]https://github.com/Neob1844/sost-core/releases/tag/v16.2.2[/b]
+
+[b]Nothing else changes.[/b] Consensus is untouched since v16.1.0 — V16 still activates at [b]#30,000[/b], the first DTD Jackpot V2 is still [b]#30,186[/b] — and the update window stands: install on your [b]node AND your miner after block #29,900 and before #30,000[/b].
+
+[b]What the CLI fixes[/b], for anyone who wants the detail. An audit asked which code paths really used the strict JSON parser shipped in v16.2.0, and the ones that handle funds did not:
+
+[list]
+[li][b]Large answers were truncated.[/b] The reader looked for a literal "Content-Length: " — HTTP header names are case-insensitive, and a gateway in front of a node replies chunked with no Content-Length at all — then fell back to "stop when the buffer ends in }". Every UTXO object ends in '}', so a large getaddressutxos was cut mid-array and reported as bad JSON, on the very command you use to look at your own coins.[/li]
+[li][b]send decided acceptance by substring.[/b] It opened its own socket, took one 4 KB read, and treated the transaction as accepted if "result":" appeared anywhere in the reply — the decision that marks your coins spent locally.[/li]
+[li][b]cancel-tx / bump-fee could drop inputs.[/b] Each vin was delimited by the first '}', so one nested object truncated the input list — and every dropped input is a prev_value missing from the total that decides how much a replacement returns to your wallet. It also parsed numbers with a call that aborts the process on a null or quoted value.[/li]
+[/list]
+
+All of it now goes through the strict parser: a broadcast counts as accepted only when the JSON-RPC result [b]is[/b] a string txid, and when an answer cannot be read the wallet leaves the inputs unspent and says [b]not confirmed[/b] — not "rejected" — pointing you at getrawmempool before you build another transaction. Resending blind is how the same coins get spent twice.
+
+If you already installed v16.2.0 or v16.2.1: replace only sost-cli. Your node and miner binaries are already the final ones, so there is nothing to restart.
