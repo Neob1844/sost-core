@@ -201,6 +201,100 @@
   </div>
 </section>
 
+<!-- V16 — activation schedule and the coordinated upgrade window -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// V16 CONSENSUS &middot; activates block&nbsp;30,000 &middot; upgrade window #29,900&rarr;#30,000</div>
+      <div class="section-dates">Published: 2026-09-23 &middot; Last updated: 2026-09-23</div>
+      <h2 class="section-title">V16 activates at block <span class="accent" style="color:#ffd166">30,000</span> — update your node and miner in the window</h2>
+      <div class="section-sub">The coordinated operator window is <b style="color:#ffd166">after block&nbsp;#29,900 and before #30,000</b>. Activation itself is automatic, by block height: nothing to run at that block.</div>
+    </div>
+    <div class="info-card">
+      <p><b>What activates.</b> Two things, one activation. <b>DTD-normal eligibility</b> is re-pointed at current miners — recency drops to <b>288 blocks</b> at every height, the 6-block producer cooldown <b>yields</b> when applying it would leave the draw with nobody, and the 10%/288 anti-dominance gate is <b>armed only at 11 or more distinct miners</b>. And the <b>DTD Jackpot becomes an independent draw</b> (V2): node-gated by NODE_BIND plus heartbeats, weighted linearly by SbPoW blocks in the previous <b>2,016</b>, with no cooldown and no anti-dominance.</p>
+      <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
+        <li><b>First DTD Jackpot V2 draw:</b> block <b>#30,186</b> — it requires a valid NODE_BIND and &ge;3 SbPoW blocks in the previous 2,016, but <b>zero heartbeats (0/0)</b>: no epoch has completed yet, so nobody is excluded for lacking history. The requirement ramps 1/1 &rarr; 2/2 &rarr; 3/3 and settles at the permanent 3-of-4 from <b>#31,338</b>. That ramp is one rule counting epochs, <b>not</b> a second fork.</li>
+        <li><b>Payout economics unchanged:</b> base 100&nbsp;SOST, rollover to a 500&nbsp;SOST cap, spent from the existing historical reserve. <b>No new emission.</b></li>
+        <li><b>DTD-normal needs no NODE_BIND, no heartbeats and no PoPC bond</b> — it stays permissionless at every height.</li>
+        <li><b>A validating node still on pre-V16 software after #30,000 may diverge.</b> The window is a coordination decision, not a consensus rule.</li>
+      </ul>
+      <p style="margin-top:10px">Step-by-step commands for systemd, a manual terminal and WSL: <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator upgrade guide</a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- V16.2.3 — operator credentials out of argv, official binaries published -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// RELEASE &middot; v16.2.3 &middot; official binaries published &middot; consensus unchanged</div>
+      <div class="section-dates">Published: 2026-09-23 &middot; Last updated: 2026-09-23</div>
+      <h2 class="section-title">v16.2.3: no credential this protocol asks you to handle needs to live in <span class="accent" style="color:#fb010d">argv</span></h2>
+      <div class="section-sub">Four releases in the v16.2.x line, all shipping the <b>same node and miner binaries</b> — only the CLI changed. Consensus is untouched: V16 still activates at #30,000 and the first Jackpot V2 is still #30,186.</div>
+    </div>
+    <div class="info-card">
+      <p><b>The problem.</b> Until now the RPC password, the node heartbeat key and the wallet passphrase all had to be typed on a command line or echoed on screen. <code>/proc/&lt;pid&gt;/cmdline</code> is world-readable, so <code>ps</code> handed them to any other local account on the machine.</p>
+      <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
+        <li><b>node:</b> <code>--rpc-pass-file</code> and <code>--node-key-file</code>, so a systemd unit names a <i>path</i> instead of expanding a password into <code>ExecStart</code>.</li>
+        <li><b>miner:</b> <code>--rpc-pass-fd</code>, <code>--rpc-pass-file</code>, <code>--wallet-passphrase-file</code>. <code>--rpc-pass</code> still works and now warns that <code>ps</code> can see it. An HTTP 401 on submit says what it means — <b>the credentials are wrong and the block was never validated</b> — instead of looking like a rejected block.</li>
+        <li><b>cli:</b> <code>createnodebind</code> / <code>nodeheartbeat</code> take <code>--node-key-file</code> or <code>--node-key-fd</code>; <code>wallet-export</code> and <code>wallet-import</code> prompt with the terminal echo <b>off</b>.</li>
+        <li>A secret file must be <b>mode 600, owned by you, one line and nothing else</b>. Group- or world-readable is <b>refused</b>, not read with a warning, and no error ever echoes what it rejected.</li>
+        <li><b>Encrypted (v2) wallets</b> work end to end and do <b>not</b> change your mining identity or payout address. <b>v1 wallets keep working</b>, with no conversion and no deadline.</li>
+      </ul>
+      <p style="margin-top:10px"><b>Why .1, .2 and .3 followed.</b> An audit asked which code paths really used the strict JSON parser, and the ones handling funds did not: a large <code>getaddressutxos</code> could be truncated (chunked replies, case-sensitive header search), <code>send</code> decided acceptance by substring search on a 4&nbsp;KB read, and <code>cancel-tx</code> could silently drop transaction inputs. The last one, in v16.2.3, matters for the Jackpot: <code>createnodebind</code> always bound the key labelled <code>default</code>, so any miner whose signing key carries another label could not produce a valid NODE_BIND at all. It now takes <code>--mining-key-label</code>.</p>
+      <p style="margin-top:10px"><b>Official binaries are downloadable for the first time in this cycle</b> — no compiler needed:</p>
+      <div style="font-family:ui-monospace,monospace;font-size:12px;background:#0a0a0c;border:1px solid #1d2731;border-radius:6px;padding:10px;color:#9fb0c0;overflow-x:auto">b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897&nbsp;&nbsp;sost-node&nbsp;&nbsp;<span style="color:#39ff14">(same in v16.2.0/.1/.2/.3)</span><br>2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2&nbsp;&nbsp;sost-miner&nbsp;<span style="color:#39ff14">(same in v16.2.0/.1/.2/.3)</span><br>489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07&nbsp;&nbsp;sost-cli&nbsp;&nbsp;&nbsp;<span style="color:#ffd166">(v16.2.3)</span></div>
+      <p style="margin-top:10px"><a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.3" target="_blank" rel="noopener" style="color:#22d3ee">Release and SHA256SUMS</a> &middot; verify with <code>sha256sum -c SHA256SUMS</code> before running anything. If you build it yourself the build directory <b>must be named <code>build</code></b>: the source path is normalised out of the binary, the directory name is not.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Documentation: gold and PoPC become the historical record they are on chain -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// DOCUMENTATION &middot; gold vault &amp; PoPC moved to historical record &middot; 63 pages audited</div>
+      <div class="section-dates">Published: 2026-09-23 &middot; Last updated: 2026-09-23</div>
+      <h2 class="section-title">The site now says what the node enforces: <span class="accent" style="color:#39ff14">50% miner / 50% DTD</span></h2>
+      <div class="section-sub">Since <b>V15 at block #25,000</b> the Gold Funding Vault and the PoPC Pool receive <b>no new emission</b>. Every page that still described the old 50/25/25 split as current has been corrected or dated.</div>
+    </div>
+    <div class="info-card">
+      <p><b>What was wrong.</b> The homepage hero still told a new visitor that every block allocates 25% to a Gold Vault and 25% to PoPC, "hardcoded at genesis". The FAQ said the same, the protocol spec validated blocks against "the 50/25/25 split" without mentioning that the rule changed at #25,000, and the Gold Reserve page reported a green <b>ACCUMULATING</b> status for a vault that has received nothing since V15.</p>
+      <p><b>Worse, and now fixed:</b> the whitepaper stated in two places that the DTD lottery would require an active PoPC bond from block 30,000. <b>It does not, at any height.</b> On mainnet the PoPC eligibility gate ships deactivated and the DTD is permissionless — mining one valid block is the only requirement.</p>
+      <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
+        <li><b>Nothing was deleted.</b> Blocks 0&ndash;24,999 really were paid 50/25/25 and any validator still reproduces them, so the historical rule is kept, dated and visibly historical.</li>
+        <li><b>Nothing was burned or redirected.</b> The vault and pool addresses still hold what they received and remain auditable in the explorer; the DTD Jackpot returns that reserve to active miners as a supply-neutral spend.</li>
+        <li><b>SOST is not backed by gold</b> — the metals reserve is a Foundation-held reserve with published policy, not a peg and not a redemption right. The phrase "gold backed" was also removed from the page metadata, which is what a search result shows.</li>
+        <li>Operator instructions were rewritten too: <b>no page on this site now teaches typing an RPC password into a command line</b>, and every mining example selects the SbPoW signing key with <code>--wallet</code> + <code>--mining-key-label</code>.</li>
+      </ul>
+      <p style="margin-top:10px">All 63 served pages were fetched with caching disabled, compared byte for byte against the repository and scanned sentence by sentence. Current references: <a href="sost-protocol-spec.html" style="color:#22d3ee">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#22d3ee">upgrade guide</a> &middot; <a href="sost-gold-reserve.html" style="color:#22d3ee">metals reserve (historical)</a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Explorer: jackpot archive + panel corrections -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// EXPLORER &middot; jackpot archive &middot; DTD panel corrections</div>
+      <div class="section-dates">Published: 2026-09-23 &middot; Last updated: 2026-09-23</div>
+      <h2 class="section-title">Every jackpot ever paid, in one place — <span class="accent" style="color:#ffd166">JACKPOT ARCHIVE</span></h2>
+      <div class="section-sub">Nine jackpots paid, <b>900&nbsp;SOST</b> distributed, each one reconstructed from the canonical chain with its block, winner, amount, eligible set and transaction.</div>
+    </div>
+    <div class="info-card">
+      <p>The archive opens from five places — the <b>JACKPOT ARCHIVE</b> card, the <b>JACKPOTS PAID</b> card, the <b>View all jackpots</b> button, the winner overlay after a live or replayed jackpot, and the jackpot dashboard — all calling one component over one data source.</p>
+      <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
+        <li><b>A cooldown card was removed from the jackpot panel.</b> The recent-miner cooldown is a <b>normal-DTD</b> rule and the Jackpot V2 draw has none — showing it among the jackpot metrics taught the opposite of the rule. It now lives in the eligibility section, labelled "Normal DTD only — not the Jackpot", with the same list of identities currently excluded.</li>
+        <li><b>Two eligibility numbers, never one.</b> The 20,000-block count is the rule in force <i>today</i> and does not carry over. Beside it there is now a card headed "FROM #30,000 — DIFFERENT RULE": &ge;3 blocks per 2,016 plus NODE_BIND, and the first draw's 0/0 heartbeats.</li>
+        <li><b>Cadence corrected.</b> The panel still called the DTD cadence "permanent 1-of-3". Since V15 the DTD draws on <b>every block</b> (3-of-3) — which is why blocks whose height is not a multiple of 3 pay a DTD share.</li>
+        <li>The V16 preview inside the panel also quoted the old <b>5,000</b>-block PoW window; the rule is <b>2,016</b>.</li>
+        <li>The explorer header now renders at the same size as the main site.</li>
+      </ul>
+      <p style="margin-top:10px">Open it: <a href="sost-explorer.html" style="color:#39ff14;font-weight:700">SOST Explorer</a> &rarr; DTD JACKPOT card.</p>
+    </div>
+  </div>
+</section>
+
 <!-- DTD JACKPOT — first-ever payout at block 25,290 -->
 <section class="section">
   <div class="container">
@@ -964,7 +1058,7 @@ sudo systemctl restart sost-miner</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v461" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v462" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- NON-CUSTODIAL DISCLAIMER (footer) -->
