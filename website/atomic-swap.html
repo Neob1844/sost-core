@@ -320,7 +320,7 @@
     <h2>How it works — and what it is not</h2>
     <p>An atomic swap locks your SOST in a self-custodial lockbox (an HTLC) that has exactly two exits: the counterparty can take it only by revealing a secret that also releases your funds on the other chain, or — if nobody completes in time — the lockbox <b>refunds you</b>. No custodian ever holds your money, and the two legs either both happen or neither does.</p>
     <div class="warnmsg amber">This page never asks for a seed phrase or private key, never signs, and never uploads your secret. Live execution runs through your own wallet / node in the <a href="atomic-swap-console.html">developer console</a>.</div>
-    <p class="muted" style="margin-top:10px">Status meanings: <b>Available</b> = usable by anyone. <b>Founder testing</b> = wired up but the contract is undeployed &amp; unaudited, so it's founder-only. <b>Coming soon</b> = not yet built (e.g. BTC lands with V15). <b>Disabled</b> = intentionally off (unsafe token type). Right now <b>nothing is Available</b> — this is a preview.</p>
+    <p class="muted" style="margin-top:10px">Status meanings: <b>Available</b> = usable by anyone. <b>Founder testing</b> = wired up but the contract is undeployed &amp; unaudited, so it's founder-only. <b>Coming soon</b> = not yet built. <b style="color:#f59e0b">An earlier version of this line said "BTC lands with V15": V15 activated at block #25,000 and Bitcoin is still OFF</b> &mdash; the BTC leg needs its own activation (real bitcoind validation plus the operator enabling it) and is not enabled in the official binaries. <b>Disabled</b> = intentionally off (unsafe token type). Right now <b>nothing is Available</b> — this is a preview.</p>
   </div>
 
 </div>
@@ -609,6 +609,6 @@ if(eth()){
   if(eth().on){eth().on('chainChanged',c=>{EVM_CHAIN=c;paintNetBanner();refreshQuote();});}
 }
 </script>
-<script src="js/v16-jackpot-notice.js?v=v454" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v455" defer></script>
 </body>
 </html>

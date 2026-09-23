@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-23-v454-allocation-table">
+<meta name="explorer-html-version" content="2026-09-23-v455-banner-release-state">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -656,7 +656,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')" title="Gold Vault reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--gold)">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub" id="dGoldBalSub">25%/block · ends at V15 (#25,000)</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')" title="PoPC Pool reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--cyan)">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub" id="dPopcBalSub">25%/block · ends at V15 (#25,000)</div></div>
   <div id="jackpotCard" class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="try{if(window.SJP&&window.SJP.openDash)window.SJP.openDash();}catch(e){};return false;" title="DTD Jackpot — live since #25,290. The existing Gold-Vault + PoPC reserve is progressively returned to active miners: a supply-neutral treasury spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence 288 blocks. Until #30,000 it reuses the DTD winner and its eligibility; from #30,000 (V16.1) it becomes an INDEPENDENT draw — node-gated (NODE_BIND + heartbeats) and weighted linearly by SbPoW blocks in the previous 2,016 — with its own winner, no cooldown and no anti-dominance. First V2 draw #30,186." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--gold)">PLANNED · first #25,290 · 100 SOST</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Before V15: 50% of subsidy × triggered blocks (bootstrap 2-of-3 in [7100,12100), then permanent 1-of-3 from #12100). From V15 (block 25,000): DTD receives 50% of EVERY block (the Gold-Vault + PoPC shares are redirected here) — 50% miner / 50% DTD. Click for the full DTD panel detail."><div class="dash-label" style="color:#ff00ff">⚡ DTD LOTTERY DISTRIBUTED BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts · 50% of every block from V15</div></div>
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Before V15: 50% of subsidy × triggered blocks (bootstrap 2-of-3 in [7100,12100), then 1-of-3 from #12100). From V15 (block 25,000): DTD receives 50% of EVERY block (the Gold-Vault + PoPC shares are redirected here) — 50% miner / 50% DTD. Click for the full DTD panel detail."><div class="dash-label" style="color:#ff00ff">⚡ DTD LOTTERY DISTRIBUTED BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts · 50% of every block from V15</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label" style="color:var(--purple)">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label" style="color:var(--orange)">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label" style="color:var(--blue)">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -1960,7 +1960,7 @@ function dtdEligibilityBanner(height, progressHtml){
     +era(e1,'Blocks 7,100 &rarr; 12,100 &middot; original (V11 Phase&nbsp;2)',
         elig1+'<li>SbPoW-signed miner identity (block at height &ge; 7,100)</li><li>address has mined &ge; 1 valid block</li><li>recent-miner cooldown: 5 blocks</li><li>bootstrap cadence 2-of-3</li>','#fbbf24')
     +era(e2,'Blocks 12,100 &rarr; 25,000 &middot; current gates (V13)',
-        elig2+'<li>everything above &mdash; cooldown raised to <b>6 blocks</b></li><li>permanent <b>1-of-3</b> cadence</li><li><b>anti-dominance gate</b>: excluded if &ge; 10% of the last 288 blocks</li><li><b>SbPoW-activity gate</b>: must have a recent SbPoW-signed block</li>','#22c55e')
+        elig2+'<li>everything above &mdash; cooldown raised to <b>6 blocks</b></li><li><b>1-of-3</b> cadence (superseded at #25,000 by every-block)</li><li><b>anti-dominance gate</b>: excluded if &ge; 10% of the last 288 blocks</li><li><b>SbPoW-activity gate</b>: must have a recent SbPoW-signed block</li>','#22c55e')
     +era(e3,'Blocks 25,000 &rarr; 30,000 &middot; V15 Final Decentralization',
         elig3+'<li>everything above</li><li><b>+ recency window</b>: must have mined &ge; 1 block in the last <b>5,000</b> (20,000 at a jackpot height) &mdash; active miners only</li><li><b>draw cadence 3-of-3</b>: the DTD now draws on <b>every block</b>, superseding the 1-of-3 steady state</li><li><b>50% miner / 50% DTD</b> every block (Gold-Vault + PoPC emission redirected to DTD)</li><li><span style="color:var(--gold)">◈</span> <b>DTD Jackpot</b>: the existing reserve returned to active miners</li><li style="color:var(--text3)">No PoPC-contract requirement &mdash; the old PoPC eligibility gate is retired (DTD never requires PoPC)</li>','#c084fc')
     +era(e4,'From block 30,000 &middot; V16.1 rules &middot; software v16.2.0 &mdash; current miners only',
@@ -2230,7 +2230,7 @@ async function renderDTDPanel(body,title,silent){
       if(height>=12000)summary+='<div style="margin-top:8px;padding:8px 10px;background:rgba(34,197,94,.05);border-left:3px solid #22c55e;border-radius:3px;font-size:10px;color:var(--text3);line-height:1.6">'
         +'<b style="color:'+(height>=30000?'#ffd166':'#22c55e')+'">'+(height>=30000?'V16.1 DTD eligibility (active)':'V13 DTD eligibility (active)')+'</b> &mdash; recent-producer cooldown <b>'+cdWindow+' blocks</b> (was 5)'
         +(height>=30000?' — <b>yields if it would leave nobody eligible</b>':'')
-        +(height>=12100?'; '+(height>=25000?'<b>3-of-3</b> (every block) cadence + active-miner recency (5,000 / 20,000 jackpot); ':'permanent <b>1-of-3</b> cadence; ')+'<b>anti-dominance gate</b> excludes any address with &ge; 10% of the last 288 blocks ('+win288+'-block window); <b>SbPoW-activity gate</b> requires a block at height &ge; 7,100.':'; anti-dominance + 1-of-3 cadence activate at #12,100.')
+        +(height>=12100?'; '+(height>=25000?'<b>3-of-3</b> (every block) cadence + active-miner recency (5,000 / 20,000 jackpot); ':'<b>1-of-3</b> cadence; ')+'<b>anti-dominance gate</b> excludes any address with &ge; 10% of the last 288 blocks ('+win288+'-block window); <b>SbPoW-activity gate</b> requires a block at height &ge; 7,100.':'; anti-dominance + 1-of-3 cadence activate at #12,100.')
         +'</div>';
       // Charts row: schedule pie · lottery distribution bar · top miners bar
       summary+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-top:8px">'
@@ -3373,9 +3373,11 @@ async function updateDashboard(info){
       if(circSub)     circSub.textContent     = 'total − vault − pool − lottery';
       if(dtdEl)       dtdEl.textContent       = fComma(dtd.toFixed(4)) + ' SOST';
       if(dtdSub){
+        // Three cadence eras, not two: is_lottery_block() returns true for EVERY
+        // height from V15 (#25,000), so "permanent 1-of-3" stopped being true there.
         var phase = (h < DTD_FLIP_HEIGHT)
           ? ('bootstrap 2-of-3 · until #' + fComma(DTD_FLIP_HEIGHT))
-          : 'permanent 1-of-3';
+          : (h < 25000 ? '1-of-3 · until #25,000' : '3-of-3 · every block (since #25,000)');
         dtdSub.textContent = phase;
       }
     }catch(e){console.warn('circ/dtd formula update:',e);}
@@ -4961,7 +4963,7 @@ function updateMiningPanel(elapsed){
   var li=document.getElementById('miningLotteryInfo');
   if(li){
     // Cadence gates, same heights consensus uses (lottery.h::is_lottery_block):
-    //   [7100,12100)  bootstrap 2-of-3   ·  [12100,25000) permanent 1-of-3
+    //   [7100,12100) bootstrap 2-of-3 · [12100,25000) 1-of-3 · [25000,∞) 3-of-3 (every block)
     //   >= 25000 (V15) 3-of-3 — a draw on EVERY block. This last branch was
     //   missing, so the panel kept advertising 1-of-3 long after V15.
     var phase2=7100, permanent=12100, v15=25000;
@@ -8288,7 +8290,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/v16-jackpot-notice.js?v=v454" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v455" defer></script>
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks

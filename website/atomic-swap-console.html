@@ -173,7 +173,7 @@
 <div class="hero"><div class="container">
   <div class="hero-label">// OTC · Atomic Swap · Founder Console</div>
   <h1>SOST <span>Atomic Swap</span> Console</h1>
-  <p class="hero-sub">A guided, founder-only console for SOST &harr; EVM cross-chain atomic swaps (HTLC), activating at <b>block 16,000</b>. It <b>explains</b>, <b>validates</b> and <b>generates the exact <code>sost-cli</code> commands</b> for you to run in your own terminal. It never asks for a seed phrase or private key, never signs, never broadcasts, and never sends your secret anywhere.</p>
+  <p class="hero-sub">A guided, <b>founder-only</b> console for SOST &harr; EVM cross-chain atomic swaps (HTLC). Both SOST-side gates are <b>already live</b> &mdash; HTLC consensus acceptance since <b>block 16,000</b>, mempool relay since <b>block 17,000</b>. That does <b>not</b> make the feature available to third parties: the EVM contract is undeployed and unaudited, and the <b>Bitcoin leg is OFF</b> in the official binaries. It <b>explains</b>, <b>validates</b> and <b>generates the exact <code>sost-cli</code> commands</b> for you to run in your own terminal. It never asks for a seed phrase or private key, never signs, never broadcasts, and never sends your secret anywhere.</p>
   <div class="chips">
     <span class="chip red"><span class="dot"></span>DO NOT USE · Founder-only</span>
     <span class="chip amber">Unaudited · EVM-only (BTC = V15)</span>
@@ -454,7 +454,7 @@
       <h2>Emergency plan</h2>
       <div class="warnmsg err"><b>STOP rule:</b> at any sign of trouble — do NOT create more HTLCs, preserve all logs, and follow the matching scenario below. (Full runbook: <code>docs/ATOMIC_SWAP_V14_OPERATIONS.md</code>, section E.)</div>
       <h3>1 · Before the first HTLC (benign window)</h3>
-      <p>Reaching block 16,000 changes nothing until an HTLC is mined. If miner coverage is unsafe or you have doubts: simply <b>do not create an HTLC</b>. The clean lever is to revert the gate to <code>INT64_MAX</code>, rebuild, redeploy and re-announce — no fork, because no HTLC ever existed.</p>
+      <p>Block 16,000 has long passed and nothing changed by itself: a gate only matters once an HTLC is actually mined. If miner coverage is unsafe or you have doubts: simply <b>do not create an HTLC</b>. The clean lever is to revert the gate to <code>INT64_MAX</code>, rebuild, redeploy and re-announce — no fork, because no HTLC ever existed.</p>
       <p class="muted"><b>Two gates (authoritative, from HEAD):</b> HTLC consensus acceptance = <b>V14.5 / block 16,000</b>; mempool relay/policy of HTLC txs = <b>V14.7 / block 17,000</b>. Below 17,000 an HTLC is only mineable by a node that puts it in its own template — public broadcast/relay is not guaranteed until 17,000.</p>
       <h3>2 · Network split (chain diverges)</h3>
       <p>Symptoms: peers stuck, your tip diverges from the explorer, <code>REJECTED block</code> in logs. Actions: stop all tests; create no more HTLCs; tell miners to rebuild on the new binary &amp; resync; the canonical chain is the majority-hashrate (your) chain; compare <code>getblockcount</code> / tip hash across node, explorer and peers before doing anything.</p>
@@ -856,6 +856,6 @@ $('evmReadSwap').addEventListener('click',async function(){
 refreshHeight();setInterval(refreshHeight,30000);
 if(eth()){eth().request({method:'eth_chainId'}).then(c=>{CHAINID=c;NET=A.NETWORKS[c]||null;}).catch(()=>{});}
 </script>
-<script src="js/v16-jackpot-notice.js?v=v454" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v455" defer></script>
 </body>
 </html>
