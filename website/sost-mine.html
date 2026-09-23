@@ -644,7 +644,7 @@ cmake --build . -j$(nproc)
 
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v470" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v471" defer></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -736,6 +736,19 @@ cmake --build . -j$(nproc)
   @media(max-width:560px){ .sv-card{ max-width:88vw; } .sv-cards{ gap:14px; } }
   /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
   body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
+
+/* ── Móvil: los bloques de comandos desbordaban la página ──────────────────
+   274 px de scroll horizontal en un teléfono de 390 px, causados por <pre> y
+   por los contenedores de pasos, que no envolvían. Se corrige donde está el
+   problema: cada bloque de código se desplaza DENTRO de su propia caja, y los
+   contenedores dejan de imponer su ancho mínimo. No se oculta con
+   overflow-x:hidden en la página, que dejaría los comandos inalcanzables. */
+@media(max-width:768px){
+  .step-body,.step,section,.card{min-width:0}
+  .step-body pre,pre,.code,.cmd{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+  .step-body span.c,span.c{overflow-wrap:anywhere;white-space:pre-wrap}
+  .step-body table{display:block;overflow-x:auto}
+}
 </style>
 <script>
   function openSv(){
