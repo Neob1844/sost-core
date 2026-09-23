@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-23-v464-btc-eth-overlay">
+<meta name="explorer-html-version" content="2026-09-23-v465-wide-comparison-charts">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -205,6 +205,12 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .price-tooltip-val{color:#c8c8c8;font-weight:600}
 .price-card-range{font-size:9px;color:var(--text3);margin-top:8px;letter-spacing:.5px}
 @media(max-width:768px){.price-cards{grid-template-columns:1fr}}
+/* The four comparison charts sit OUTSIDE .main so they get the full window
+   width without a 100vw breakout (100vw includes the scrollbar and would
+   add a horizontal scroll). Same 24px gutter and 12px gap as the rest. */
+.price-overlays-wide{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 24px;margin:0 auto 20px;position:relative;z-index:2}
+@media(max-width:900px){.price-overlays-wide{grid-template-columns:1fr}}
+@media(max-width:768px){.price-overlays-wide{padding:0 16px}}
 .emission-card{background:var(--bg2);border:1px solid var(--border);padding:16px 20px}
 .emission-title{font-size:11px;letter-spacing:2px;color:var(--text3);margin-bottom:12px}
 .emission-title b{color:var(--purple)}
@@ -890,31 +896,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       </div>
       <div class="price-card-range" id="xautethRange"></div>
     </div>
-    <!-- overlay: XAUT price + XAUT/BTC (left column) -->
-    <div class="price-card">
-      <div class="price-card-head"><div class="price-card-title">// <b style="color:#d4af37">XAUT PRICE + XAUT / BTC</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
-      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#d4af37">■ XAUT PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#22d3ee">■ XAUT / BTC <span style="color:var(--text3)">(BTC, right)</span></span></div>
-      <div class="tf-btns" id="ovxautTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
-      <div class="chart-wrap">
-        <canvas id="ovxautChart" style="width:100%;height:150px"></canvas>
-        <canvas id="ovxautOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
-        <div class="price-tooltip" id="ovxautTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
-      </div>
-      <div class="price-card-range" id="ovxautRange"></div>
-    </div>
-    <!-- overlay: XAUT price + XAUT/ETH (left column) -->
-    <div class="price-card">
-      <div class="price-card-head"><div class="price-card-title">// <b style="color:#d4af37">XAUT PRICE + XAUT / ETH</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
-      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#d4af37">■ XAUT PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#22d3ee">■ XAUT / ETH <span style="color:var(--text3)">(ETH, right)</span></span></div>
-      <div class="tf-btns" id="ovxautethTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
-      <div class="chart-wrap">
-        <canvas id="ovxautethChart" style="width:100%;height:150px"></canvas>
-        <canvas id="ovxautethOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
-        <div class="price-tooltip" id="ovxautethTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
-      </div>
-      <div class="price-card-range" id="ovxautethRange"></div>
-    </div>
-    </div>
+            </div>
     <div class="price-col">
     <div class="price-card">
       <div class="price-card-head">
@@ -997,31 +979,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       </div>
       <div class="price-card-range" id="paxgethRange"></div>
     </div>
-    <!-- overlay: PAXG price + PAXG/BTC (right column) -->
-    <div class="price-card">
-      <div class="price-card-head"><div class="price-card-title">// <b style="color:#4ade80">PAXG PRICE + PAXG / BTC</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
-      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#4ade80">■ PAXG PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#d946ef">■ PAXG / BTC <span style="color:var(--text3)">(BTC, right)</span></span></div>
-      <div class="tf-btns" id="ovpaxgTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
-      <div class="chart-wrap">
-        <canvas id="ovpaxgChart" style="width:100%;height:150px"></canvas>
-        <canvas id="ovpaxgOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
-        <div class="price-tooltip" id="ovpaxgTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
-      </div>
-      <div class="price-card-range" id="ovpaxgRange"></div>
-    </div>
-    <!-- overlay: PAXG price + PAXG/ETH (right column) -->
-    <div class="price-card">
-      <div class="price-card-head"><div class="price-card-title">// <b style="color:#4ade80">PAXG PRICE + PAXG / ETH</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
-      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#4ade80">■ PAXG PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#d946ef">■ PAXG / ETH <span style="color:var(--text3)">(ETH, right)</span></span></div>
-      <div class="tf-btns" id="ovpaxgethTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
-      <div class="chart-wrap">
-        <canvas id="ovpaxgethChart" style="width:100%;height:150px"></canvas>
-        <canvas id="ovpaxgethOverlay" class="chart-overlay" style="width:100%;height:150px"></canvas>
-        <div class="price-tooltip" id="ovpaxgethTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
-      </div>
-      <div class="price-card-range" id="ovpaxgethRange"></div>
-    </div>
-    </div>
+            </div>
     <div class="price-col">
     <div class="price-card">
       <div class="price-card-head">
@@ -1078,6 +1036,71 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
       <div class="price-card-range" id="ovbtcethRange"></div>
     </div>
   </div>
+  </div><!-- /.main : the four comparison charts break OUT of the 1400px
+       content column so they can use the real window width. .main is
+       reopened right after; nothing queries it, it only carries the
+       max-width/margins. -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- FOUR COMPARISON CHARTS — full window width, 2 x 2.            -->
+  <!-- Row 1: XAUT/BTC · PAXG/BTC   Row 2: XAUT/ETH · PAXG/ETH       -->
+  <!-- They are the SAME cards as before (same ids, same OVERLAYS     -->
+  <!-- entries, same data/colours/timeframes) — only the container    -->
+  <!-- changed, so no chart logic was touched. Canvas height 150->210 -->
+  <!-- because the cards are ~2x wider; the canvas is re-rasterised   -->
+  <!-- at devicePixelRatio on every draw/resize, so it is never       -->
+  <!-- stretched or blurry. One column under 900px.                   -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="price-overlays-wide">
+<!-- overlay: XAUT price + XAUT/BTC (row 1/2 left) -->
+    <div class="price-card">
+      <div class="price-card-head"><div class="price-card-title">// <b style="color:#d4af37">XAUT PRICE + XAUT / BTC</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
+      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#d4af37">■ XAUT PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#22d3ee">■ XAUT / BTC <span style="color:var(--text3)">(BTC, right)</span></span></div>
+      <div class="tf-btns" id="ovxautTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
+      <div class="chart-wrap">
+        <canvas id="ovxautChart" style="width:100%;height:210px"></canvas>
+        <canvas id="ovxautOverlay" class="chart-overlay" style="width:100%;height:210px"></canvas>
+        <div class="price-tooltip" id="ovxautTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="ovxautRange"></div>
+    </div>
+<!-- overlay: PAXG price + PAXG/BTC (row 1/2 right) -->
+    <div class="price-card">
+      <div class="price-card-head"><div class="price-card-title">// <b style="color:#4ade80">PAXG PRICE + PAXG / BTC</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
+      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#4ade80">■ PAXG PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#d946ef">■ PAXG / BTC <span style="color:var(--text3)">(BTC, right)</span></span></div>
+      <div class="tf-btns" id="ovpaxgTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
+      <div class="chart-wrap">
+        <canvas id="ovpaxgChart" style="width:100%;height:210px"></canvas>
+        <canvas id="ovpaxgOverlay" class="chart-overlay" style="width:100%;height:210px"></canvas>
+        <div class="price-tooltip" id="ovpaxgTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="ovpaxgRange"></div>
+    </div>
+<!-- overlay: XAUT price + XAUT/ETH (row 1/2 left) -->
+    <div class="price-card">
+      <div class="price-card-head"><div class="price-card-title">// <b style="color:#d4af37">XAUT PRICE + XAUT / ETH</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
+      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#d4af37">■ XAUT PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#22d3ee">■ XAUT / ETH <span style="color:var(--text3)">(ETH, right)</span></span></div>
+      <div class="tf-btns" id="ovxautethTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
+      <div class="chart-wrap">
+        <canvas id="ovxautethChart" style="width:100%;height:210px"></canvas>
+        <canvas id="ovxautethOverlay" class="chart-overlay" style="width:100%;height:210px"></canvas>
+        <div class="price-tooltip" id="ovxautethTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="ovxautethRange"></div>
+    </div>
+<!-- overlay: PAXG price + PAXG/ETH (row 1/2 right) -->
+    <div class="price-card">
+      <div class="price-card-head"><div class="price-card-title">// <b style="color:#4ade80">PAXG PRICE + PAXG / ETH</b> &mdash; Overlay Comparison</div><div class="price-card-badge"><span class="pdot"></span>LIVE</div></div>
+      <div style="display:flex;gap:16px;margin:2px 0 6px;font-size:10px;font-family:var(--code);letter-spacing:.5px"><span style="color:#4ade80">■ PAXG PRICE <span style="color:var(--text3)">(USD, left)</span></span><span style="color:#d946ef">■ PAXG / ETH <span style="color:var(--text3)">(ETH, right)</span></span></div>
+      <div class="tf-btns" id="ovpaxgethTfBtns"><button class="tf-btn" data-tf="1H">1H</button><button class="tf-btn" data-tf="4H">4H</button><button class="tf-btn" data-tf="8H">8H</button><button class="tf-btn active" data-tf="24H">24H</button><button class="tf-btn" data-tf="3D">3D</button><button class="tf-btn" data-tf="7D">7D</button><button class="tf-btn" data-tf="30D">30D</button><button class="tf-btn" data-tf="6M">6M</button><button class="tf-btn" data-tf="1Y">1Y</button><button class="tf-btn" data-tf="3Y">3Y</button><button class="tf-btn" data-tf="5Y">5Y</button></div>
+      <div class="chart-wrap">
+        <canvas id="ovpaxgethChart" style="width:100%;height:210px"></canvas>
+        <canvas id="ovpaxgethOverlay" class="chart-overlay" style="width:100%;height:210px"></canvas>
+        <div class="price-tooltip" id="ovpaxgethTooltip"><div class="price-tooltip-date"></div><div class="price-tooltip-val"></div></div>
+      </div>
+      <div class="price-card-range" id="ovpaxgethRange"></div>
+    </div>
+  </div>
+  <div class="main"><!-- /.main reopened: normal 1400px column resumes -->
   <div style="margin-bottom:24px">
     <div class="emission-card">
       <div class="emission-title" style="cursor:pointer" onclick="var el=document.getElementById('emissionExplain');if(el.style.maxHeight==='0px'){el.style.maxHeight='600px';el.style.padding='12px 16px';}else{el.style.maxHeight='0px';el.style.padding='0 16px';}">// <b>EMISSION CURVE</b> <span style="font-size:10px;color:var(--text3)">smooth exponential decay · q = e<sup>-¼</sup> · Feigenbaum α epochs · δ supply cap</span> <span class="pi-i">ⓘ</span></div>
@@ -8151,10 +8174,10 @@ setInterval(refresh,60000);
   // The ETH cards keep the BTC cards' shape and colours; only the third, dashed context
   // line carries the denominator's brand colour (#f7931a BTC vs #627eea ETH).
   var OVERLAYS=[
-    {key:'ovxaut', a:{id:'tether-gold',vs:'usd',color:'#d4af37',label:'XAUT PRICE',fmt:'usd'}, b:{id:'tether-gold',vs:'btc',color:'#22d3ee',label:'XAUT / BTC',fmt:'btc'}, c:{id:'bitcoin',vs:'usd',color:'#f7931a',label:'BTC / USDC',fmt:'usd'}},
-    {key:'ovpaxg', a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'btc',color:'#d946ef',label:'PAXG / BTC',fmt:'btc'}, c:{id:'bitcoin',vs:'usd',color:'#f7931a',label:'BTC / USDC',fmt:'usd'}},
-    {key:'ovxauteth', a:{id:'tether-gold',vs:'usd',color:'#d4af37',label:'XAUT PRICE',fmt:'usd'}, b:{id:'tether-gold',vs:'eth',color:'#22d3ee',label:'XAUT / ETH',fmt:'eth'}, c:{id:'ethereum',vs:'usd',color:'#627eea',label:'ETH / USDC',fmt:'usd'}},
-    {key:'ovpaxgeth', a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'eth',color:'#d946ef',label:'PAXG / ETH',fmt:'eth'}, c:{id:'ethereum',vs:'usd',color:'#627eea',label:'ETH / USDC',fmt:'usd'}}
+    {key:'ovxaut', xauto:true, a:{id:'tether-gold',vs:'usd',color:'#d4af37',label:'XAUT PRICE',fmt:'usd'}, b:{id:'tether-gold',vs:'btc',color:'#22d3ee',label:'XAUT / BTC',fmt:'btc'}, c:{id:'bitcoin',vs:'usd',color:'#f7931a',label:'BTC / USDC',fmt:'usd'}},
+    {key:'ovpaxg', xauto:true, a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'btc',color:'#d946ef',label:'PAXG / BTC',fmt:'btc'}, c:{id:'bitcoin',vs:'usd',color:'#f7931a',label:'BTC / USDC',fmt:'usd'}},
+    {key:'ovxauteth', xauto:true, a:{id:'tether-gold',vs:'usd',color:'#d4af37',label:'XAUT PRICE',fmt:'usd'}, b:{id:'tether-gold',vs:'eth',color:'#22d3ee',label:'XAUT / ETH',fmt:'eth'}, c:{id:'ethereum',vs:'usd',color:'#627eea',label:'ETH / USDC',fmt:'usd'}},
+    {key:'ovpaxgeth', xauto:true, a:{id:'pax-gold',  vs:'usd',color:'#4ade80',label:'PAXG PRICE',fmt:'usd'}, b:{id:'pax-gold',  vs:'eth',color:'#d946ef',label:'PAXG / ETH',fmt:'eth'}, c:{id:'ethereum',vs:'usd',color:'#627eea',label:'ETH / USDC',fmt:'usd'}}
 ,
     // Full-width card below the three columns. Both series are USD prices, so
     // there is no 'c' context line to normalize — the two lines ARE the
@@ -8219,7 +8242,11 @@ setInterval(refresh,60000);
     if(sB){ ctx.textAlign='left';ctx.fillStyle=cfg.b.color; for(var yj=0;yj<4;yj++){var yv2=sB.mx-sB.rng*yj/3;var yp2=pT+ch*yj/3;ctx.fillText(ovFmt1(cfg.b.afmt||cfg.b.fmt,yv2),pL+cw+4,yp2+3);} }
     // X labels (shared time)
     ctx.fillStyle='#333';ctx.textAlign='center';
-    for(var xi=0;xi<6;xi++){var tt=minT+trng*xi/5;var xp=pL+xi/5*cw;ctx.fillText(fmtAx(tt,tf),xp,h-3);}
+    // X labels. 6 ticks across a 900px card is one label every 150px, so a
+    // card that opts in (xauto) scales the count with its real width. Cards
+    // without the flag keep exactly 6, unchanged.
+    var NX=cfg.xauto?(cw>820?9:(cw>560?7:6)):6;
+    for(var xi=0;xi<NX;xi++){var tt=minT+trng*xi/(NX-1);var xp=pL+xi/(NX-1)*cw;ctx.fillText(fmtAx(tt,tf),xp,h-3);}
     function line(arr,color,sc){ if(arr.length<2||!sc)return; ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.beginPath(); for(var j=0;j<arr.length;j++){var px=pL+((arr[j][0]-minT)/trng)*cw;var py=pT+ch-((arr[j][1]-sc.mn)/sc.rng)*ch;if(j===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);} ctx.stroke(); }
     line(A,cfg.a.color,sA); line(B,cfg.b.color,sB);
     // Denominator context (BTC/USDC, ETH/USDC): base-100 normalized, dashed, own scale.
@@ -8325,7 +8352,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/v16-jackpot-notice.js?v=v464" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v465" defer></script>
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks
