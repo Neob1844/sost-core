@@ -2781,42 +2781,36 @@ int main(int argc, char** argv) {
         // 2) Pull verbose tx with prev_value / prev_address per vin.
         std::string tx_resp = rpc_call("getrawtransaction",
                                        "[\"" + orig_txid + "\",1]");
-        {   // Strict check: a body that cannot be parsed is a failure, not a
-            // transaction whose fields we can go on to read.
-            std::string tbody, terr;
-            sost::json::Value tres;
-            if (!sost::json::http_body(tx_resp, tbody, &terr)
-                || !sost::json::rpc_result(tbody, tres, &terr)) {
-                fprintf(stderr, "Error: getrawtransaction failed (%s).\n", terr.c_str());
-                return 1;
-            }
+        // Parsed ONCE, strictly, and every field below comes out of that tree.
+        // The previous version pulled fields with find()+std::stoll on the raw
+        // response: "fee" was searched from offset 0 (so any earlier field of
+        // that name won), a vin object was delimited by the first '}' (so one
+        // nested object truncated the list), and std::stoll on a non-numeric
+        // value throws — uncaught, that aborts the process. All three decide
+        // money here: prev_value sums into total_in, and total_in minus the
+        // bumped fee is what the replacement returns to the wallet.
+        std::string tbody, terr;
+        sost::json::Value tx;
+        if (!sost::json::http_body(tx_resp, tbody, &terr)
+            || !sost::json::rpc_result(tbody, tx, &terr)) {
+            fprintf(stderr, "Error: getrawtransaction failed (%s).\n", terr.c_str());
+            return 1;
+        }
+        if (!tx.is_obj()) {
+            fprintf(stderr, "Error: getrawtransaction did not return a transaction object.\n");
+            return 1;
         }
 
-        // 3) Tiny field extractor for the JSON shape we control.
-        auto extract_int = [&](const std::string& key, size_t pos) -> int64_t {
-            std::string pat = "\"" + key + "\":";
-            auto p = tx_resp.find(pat, pos);
-            if (p == std::string::npos) return -1;
-            p += pat.size();
-            return std::stoll(tx_resp.c_str() + p);
-        };
-        auto extract_str = [&](const std::string& key, size_t pos) -> std::string {
-            std::string pat = "\"" + key + "\":\"";
-            auto p = tx_resp.find(pat, pos);
-            if (p == std::string::npos) return "";
-            p += pat.size();
-            auto e = tx_resp.find('"', p);
-            return tx_resp.substr(p, e - p);
-        };
-
-        int64_t orig_size = extract_int("size", 0);
-        int64_t orig_fee  = extract_int("fee",  0);
+        int64_t orig_size = 0, orig_fee = 0;
+        if (!tx.get_int("size", orig_size) || !tx.get_int("fee", orig_fee)) {
+            fprintf(stderr, "Error: the transaction carries no integer size/fee.\n");
+            return 1;
+        }
         if (orig_size <= 0 || orig_fee < 0) {
             fprintf(stderr, "Error: malformed getrawtransaction response.\n");
             return 1;
         }
 
-        // 4) Walk vin[] and gather inputs.
         struct VinEntry {
             std::string txid;
             uint32_t    vout{0};
@@ -2825,37 +2819,28 @@ int main(int argc, char** argv) {
             uint8_t     prev_type{0};
         };
         std::vector<VinEntry> vins;
-        auto vin_start = tx_resp.find("\"vin\":[");
-        auto vin_end   = tx_resp.find("],\"vout\"", vin_start);
-        if (vin_start == std::string::npos || vin_end == std::string::npos) {
-            fprintf(stderr, "Error: missing vin[] in response.\n");
+        const sost::json::Value* vin_arr = tx.find("vin");
+        if (!vin_arr || !vin_arr->is_arr() || vin_arr->a.empty()) {
+            fprintf(stderr, "Error: missing or empty vin[] in response.\n");
             return 1;
         }
-        size_t cur = vin_start;
-        while (true) {
-            auto obj = tx_resp.find('{', cur);
-            if (obj == std::string::npos || obj >= vin_end) break;
-            auto obj_end = tx_resp.find('}', obj);
-            if (obj_end == std::string::npos || obj_end > vin_end) break;
+        for (const auto& vo : vin_arr->a) {
             VinEntry v;
-            v.txid         = extract_str("txid", obj);
-            v.vout         = (uint32_t)extract_int("vout", obj);
-            v.prev_value   = extract_int("prev_value", obj);
-            v.prev_address = extract_str("prev_address", obj);
-            v.prev_type    = (uint8_t)extract_int("prev_type", obj);
-            if (v.txid.empty() || v.prev_value < 0 || v.prev_address.empty()) {
-                fprintf(stderr, "Error: vin missing prev_value/prev_address. "
+            int64_t vout = 0, ptype = 0;
+            vo.get_str("txid", v.txid);
+            vo.get_int("vout", vout);
+            vo.get_int("prev_type", ptype);
+            v.vout = (uint32_t)vout;
+            v.prev_type = (uint8_t)ptype;
+            if (!vo.get_int("prev_value", v.prev_value)
+                || !vo.get_str("prev_address", v.prev_address)
+                || v.txid.empty() || v.prev_value < 0 || v.prev_address.empty()) {
+                fprintf(stderr, "Error: a vin is missing prev_value/prev_address. "
                                 "Node may need redeploy of the extended RPC.\n");
-                return 1;
+                return 1;              // never total a partial input set
             }
             vins.push_back(v);
-            cur = obj_end + 1;
         }
-        if (vins.empty()) {
-            fprintf(stderr, "Error: no vin entries parsed.\n");
-            return 1;
-        }
-
         // 5) Verify wallet owns every input.
         int64_t total_in = 0;
         for (const auto& v : vins) {
@@ -4007,19 +3992,34 @@ int main(int argc, char** argv) {
                     g_node_host.c_str(), g_node_port);
             return 1;
         }
-        // Find each "payload_hex":"..." occurrence in the JSON. The node
-        // (3241078) emits payload_hex per-vout when the output payload is
-        // non-empty. We collect them in order.
-        std::vector<std::pair<int, std::string>> payloads_hex;  // (vout_idx, hex)
-        size_t pos = 0; int vout_idx = 0;
-        while (true) {
-            auto p = resp.find("\"payload_hex\":\"", pos);
-            if (p == std::string::npos) break;
-            p += std::strlen("\"payload_hex\":\"");
-            auto e = resp.find('"', p);
-            if (e == std::string::npos) break;
-            payloads_hex.emplace_back(vout_idx++, resp.substr(p, e - p));
-            pos = e + 1;
+        // Collect payload_hex per vout, from the parsed tree rather than by
+        // scanning the raw text: a scan cannot tell which vout a payload
+        // belongs to (it just counted matches in order), and a truncated reply
+        // silently produced a shorter list — which here reads as "this output
+        // carries no capsule" rather than "I could not read the answer".
+        std::vector<std::pair<int, std::string>> payloads_hex;  // (vout index, hex)
+        {
+            std::string cbody, cerr;
+            sost::json::Value ctx;
+            if (!sost::json::http_body(resp, cbody, &cerr)
+                || !sost::json::rpc_result(cbody, ctx, &cerr)) {
+                fprintf(stderr, "ERROR: could not read the node's answer (%s).\n", cerr.c_str());
+                return 1;
+            }
+            const sost::json::Value* vouts = ctx.find("vout");
+            if (!vouts || !vouts->is_arr()) {
+                fprintf(stderr, "ERROR: the transaction carries no vout array.\n");
+                return 1;
+            }
+            int idx = 0;
+            for (const auto& o : vouts->a) {
+                std::string hex;
+                int64_t n = idx;
+                o.get_int("n", n);              // use the node's own index when present
+                if (o.get_str("payload_hex", hex) && !hex.empty())
+                    payloads_hex.emplace_back((int)n, hex);
+                ++idx;
+            }
         }
         if (payloads_hex.empty()) {
             printf("No outputs in this TX carry a payload.\n");
