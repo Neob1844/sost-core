@@ -16,7 +16,9 @@ b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node   (a
 489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  sost-cli    (v16.2.3)
 [/code]
 
-So: download [b]v16.2.3[/b] and you get the same node and miner you would have got from v16.2.0, plus a CLI that no longer reads the node's answers by scanning text.
+So: download [b]v16.2.3[/b] and you get the same node and miner you would have got from v16.2.0, plus a CLI that no longer reads the node's answers by scanning text. It is [b]published now[/b] - tag, three binaries and SHA256SUMS - and the step-by-step operator guide is at https://sostcore.com/sost-upgrade.html .
+
+Two clarifications while I am here. [b]The first Jackpot V2 draw (#30,186) requires ZERO heartbeats[/b]: a valid NODE_BIND and >=3 SbPoW blocks in the previous 2,016, but no heartbeat history, because no epoch has completed yet. The requirement ramps 1/1 -> 2/2 -> 3/3 and settles at 3-of-4 from #31,338 - one rule counting epochs, not a second fork. And [b]DTD-normal draws on EVERY block[/b] since V15 (#25,000); the "1 of every 3" some pages still showed was the #12,100-#25,000 era.
 
 [b]https://github.com/Neob1844/sost-core/releases/tag/v16.2.3[/b]
 

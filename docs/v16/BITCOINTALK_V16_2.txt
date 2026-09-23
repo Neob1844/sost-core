@@ -8,6 +8,8 @@ Two things in this post, and only two.
 [b]1.[/b] [b]v16.2.3[/b] is released. It is the build to install, on [b]your node and your miner[/b]. (v16.2.0, .1 and .2 all ship the SAME sost-node and sost-miner — byte-identical, same hashes. Only the CLI was corrected, twice, after an audit of the paths that handle funds. Install the latest: the node and the miner you install are the same binaries either way.)
 [b]2.[/b] The update happens in a [b]coordinated window: after block #29,900 and before block #30,000.[/b] This [b]replaces[/b] what the V16.1 post above says in section 19 ("You may update at ANY time before #30,000", "Do not wait for #29,900"). Those lines are withdrawn. The window stands.
 
+[b]The release is published, not forthcoming.[/b] The tag, the three binaries and SHA256SUMS are downloadable now at https://github.com/Neob1844/sost-core/releases/tag/v16.2.3 and the step-by-step operator guide is at https://sostcore.com/sost-upgrade.html .
+
 Nothing else changes. Activation is still #30,000, the first V2 Jackpot is still #30,186, and every rule described in the V16.1 post remains exactly as written.
 
 [hr]
@@ -25,7 +27,13 @@ AT #30,000         V16 activates by itself. No command, no config switch,
                    no restart at the height.
 
 AFTER #30,000      optional: NODE_BIND + node key, if you want to play
-                   the DTD Jackpot.
+                   the DTD Jackpot. The FIRST draw (#30,186) needs a valid
+                   NODE_BIND and >=3 SbPoW blocks in the previous 2,016, but
+                   ZERO heartbeats (0/0) - no epoch has completed yet, so
+                   nobody is excluded for lacking heartbeat history. The
+                   requirement then ramps 1/1 -> 2/2 -> 3/3 and settles at
+                   3-of-4 from #31,338. That ramp is one rule counting
+                   completed epochs, NOT a second fork.
 [/code]
 
 The point of a window is coordination: the whole network switches inside the same stretch and crosses the activation running the same code. Do the download, the build and the hash check [b]before[/b] the window opens, so that inside it you only stop, install and restart.
@@ -108,6 +116,14 @@ The v16.1.0 list is kept as docs/v16/SHA256SUMS_V16_1, because that is what a ro
 
 [hr]
 
+[size=14pt][b]3a. Two things people keep asking[/b][/size]
+
+[b]DTD-normal cadence:[/b] since V15 (block #25,000) the DTD draws on [b]EVERY block[/b] - 3 of 3. The old "1 of every 3" was the steady state between #12,100 and #25,000 and is history. V16 does not change the cadence; it changes who qualifies.
+
+[b]Atomic swap:[/b] the SOST-side HTLC gates are live (consensus #16,000, relay #17,000), but that does [b]not[/b] mean the feature is available: the EVM contract is undeployed and unaudited, and the [b]Bitcoin leg is OFF[/b] in the official binaries. Treat it as experimental and founder-only.
+
+[hr]
+
 [size=14pt][b]3b. Where to get it[/b][/size]
 
 The official binaries are published with the release — compiling is optional:
@@ -152,7 +168,7 @@ AFTER #30,000  (optional, Jackpot only)
   [ ] check eligibility before #30,186
 [/code]
 
-Full guide: docs/v16/UPGRADE_V16_2.md · V15 -> V16 guide: docs/v16/QUICK_UPGRADE_5MIN.md · manifest: docs/v16/RELEASE_MANIFEST_V16_2.md
+Full guide: https://sostcore.com/sost-upgrade.html (also docs/v16/UPGRADE_V16_2.md) · V15 -> V16 guide: docs/v16/QUICK_UPGRADE_5MIN.md · manifest: docs/v16/RELEASE_MANIFEST_V16_2.md
 
 [hr]
 
