@@ -9421,6 +9421,12 @@ int main(int argc, char** argv) {
     signal(SIGSEGV, crash_handler);
     signal(SIGABRT, crash_handler);
     signal(SIGFPE,  crash_handler);
+    // V6 (NON-CONSENSUS availability fix): a peer that closes its socket while we
+    // are writing to it delivers SIGPIPE, whose default action KILLS the node.
+    // Connection churn + relay traffic triggered this in the adversarial lab and
+    // killed the node in ~6 s. Ignore it: the write() then fails with EPIPE and
+    // write_exact() returns false, dropping just that peer.
+    signal(SIGPIPE, SIG_IGN);
     setbuf(stdout, NULL); // unbuffered for crash visibility
 
     // Telemetry boot timestamp for the getminerstats RPC.
