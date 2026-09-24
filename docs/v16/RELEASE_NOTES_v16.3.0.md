@@ -1,6 +1,6 @@
 # SOST v16.3.0 — release notes
 
-**Commit:** `4b1e970f51a5a188488bef59ace15e04d128ecfb` (main)
+**Commit:** `a69e7182e8dacc8a6143918d6dbf7a9e35294339` (main)
 **Type:** node functional update. Consensus activation heights are UNCHANGED
 (V16 still activates by height at #30,000; first DTD Jackpot V2 at #30,186).
 

@@ -12,7 +12,7 @@ SOST V16.3.0 is the current release and replaces V16.2.3 as the recommended vers
 [b]Consensus activation:[/b] #30,000 (unchanged)
 [b]First DTD Jackpot V2 draw:[/b] #30,186 (unchanged)
 [b]Recommended version:[/b] V16.3.0
-[b]Release commit:[/b] 4b1e970f51a5a188488bef59ace15e04d128ecfb
+[b]Release commit:[/b] a69e7182e8dacc8a6143918d6dbf7a9e35294339
 
 [hr]
 
