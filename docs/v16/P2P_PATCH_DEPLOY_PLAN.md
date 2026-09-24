@@ -76,23 +76,51 @@ cp /opt/sost/build/sost-node /opt/sost/rollback-p2p-$(date +%Y%m%d_%H%M%S)/sost-
 El nodo actual arranca con `--p2p-enc on --connect 127.0.0.1:1`; el parche
 respeta ambos.
 
-## Reversión
+## Despliegue ejecutado — 2026-09-24
 
-El parche no cambia el formato en disco de `chain.json` salvo por añadir el
-campo `version` a bloques que no lo tenían. Ese campo lo entienden **los dos**
-binarios (el actual ya lo infiere cuando falta), así que **la reversión es
-simétrica y sin migración**:
+Instalado en STRATO el commit `cfcfe9df` (`main`). Binario del nodo compilado en
+el propio VPS con las banderas obligatorias:
+
+```
+caef71a3bfaac317b31d47cbafdec7454e26247cb3d11677b612ff84613f26f4   sost-node  (nativo VPS, cfcfe9df)
+```
+
+(El hash difiere del binario compilado en WSL — `29ada78f…` — sólo por el
+toolchain; mismo commit. 10/10 pruebas de consenso pasaron en el binario nativo
+del VPS antes de instalar.) Altura previa 27803 → nodo recuperado en 27803 con
+el mismo tip, 67703 UTXOs, RPC y P2P activos, 0 baneos por tasa. Backup oficial
+en la ruta exacta de la sección de Reversión.
+
+## Reversión (ruta exacta, sin comodín)
+
+El despliegue del 2026-09-24 guardó el binario oficial en una **ruta fija**, con
+su hash y verificado byte a byte:
+
+```
+/opt/sost/rollback-p2p-20260924_201231/sost-node.official
+  b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897   (= v16.2.3 oficial)
+```
+
+Para volver al binario oficial (comprobando el hash ANTES de arrancar):
 
 ```bash
-# volver al binario oficial guardado en el paso 3
-systemctl stop sost-node        # o kill <PID> del nodo, nunca pkill
-cp /opt/sost/rollback-p2p-YYYYmmdd_HHMMSS/sost-node /opt/sost/build/sost-node
+BK=/opt/sost/rollback-p2p-20260924_201231/sost-node.official   # ruta exacta
+TARGET=/opt/sost/build/sost-node
+# 1. comprobar que el backup sigue íntegro
+sha256sum -c /opt/sost/rollback-p2p-20260924_201231/SHA256.orig
+# 2. parar SÓLO el nodo (por servicio; nunca pkill)
+systemctl stop sost-node
+# 3. restaurar y verificar el hash del binario ya instalado
+cp -a "$BK" "$TARGET"
+test "$(sha256sum "$TARGET" | awk '{print $1}')" = \
+     "b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897" \
+     && echo "restauración verificada" || { echo "HASH NO COINCIDE"; exit 1; }
+# 4. arrancar
 systemctl start sost-node
 ```
 
 No hay estado que deshacer: la cadena que escribió el binario parcheado la lee
-el oficial sin cambios (probado: los `chain.json` de ambos son byte a byte
-idénticos salvo el `version` explícito, que el oficial acepta).
+el oficial sin cambios (el campo `version` explícito ya lo infiere).
 
 ## Lo que NO arregla este parche, y queda anotado
 
