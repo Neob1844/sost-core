@@ -1,0 +1,63 @@
+# SOST security CI — V4 hardening.
+# Adds sanitizer builds and a fuzz smoke run, and makes the full test suite a
+# REQUIRED gate (no continue-on-error). Prepared as part of the pre-#30,000
+# security update; not yet merged to main.
+name: security-hardening
+
+on:
+  push:
+    branches: [ feat/fork-store-hardening ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit-and-consensus:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: deps
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake libssl-dev libsecp256k1-dev
+      - name: build
+        run: cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release && cmake --build build -j"$(nproc)"
+      - name: ctest (REQUIRED — no continue-on-error)
+        run: ctest --test-dir build --output-on-failure   # a single failure fails the job
+
+  asan-ubsan:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: deps
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake libssl-dev libsecp256k1-dev
+      - name: build with ASan+UBSan
+        run: cmake -S . -B build-asan -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g" && cmake --build build-asan -j"$(nproc)"
+      - name: consensus tests under sanitizers (REQUIRED)
+        run: ctest --test-dir build-asan -R "casert|reorg|transcript|chainwork|checkpoints|jackpot|node-participation|json-rpc" --output-on-failure
+
+  tsan:
+    runs-on: ubuntu-22.04
+    continue-on-error: true   # informative until known-benign races are triaged
+    steps:
+      - uses: actions/checkout@v4
+      - name: deps
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake libssl-dev libsecp256k1-dev
+      - name: build with TSan
+        run: cmake -S . -B build-tsan -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=thread -g" && cmake --build build-tsan -j"$(nproc)"
+
+  fuzz-smoke:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: deps
+        run: sudo apt-get update && sudo apt-get install -y clang libssl-dev libsecp256k1-dev cmake build-essential
+      - name: build sost-core lib
+        run: cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release && cmake --build build --target sost-core -j"$(nproc)"
+      - name: build fuzzers
+        run: |
+          clang++ -std=c++17 -O1 -g -fsanitize=fuzzer,address,undefined -I include -I . \
+            tests/fuzz/fuzz_tx_block.cpp build/libsost-core.a -lcrypto -lssl -lsecp256k1 -o fuzz_txblock
+          clang++ -std=c++17 -O1 -g -fsanitize=fuzzer,address,undefined -I include \
+            tests/fuzz/fuzz_json_rpc.cpp src/json_rpc.cpp -o fuzz_json
+      - name: fuzz smoke (REQUIRED — 60s each, any crash fails)
+        run: |
+          ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./fuzz_txblock -max_total_time=60 tests/fuzz/corpus_tx_block
+          ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./fuzz_json     -max_total_time=60
