@@ -583,6 +583,22 @@ chmod 600 ~/.sost/node.key</pre></div>
     <p><b>The proof that it worked</b> is not "I sent the transaction". It is
       <code>checkhistoricaljackpoteligibility</code> answering <code>"node_bound": true</code> and
       <code>"eligible": true</code>. Check it before #30,186.</p>
+
+      <h4>Keeping the heartbeats alive</h4>
+      <p>Once the node runs with <code>--node-key-file</code>, it does the heartbeats <b>by itself</b>: a thread
+        signs and broadcasts <b>one NODE_HEARTBEAT per epoch</b> &mdash; an epoch is <b>288 blocks (~48&nbsp;h)</b>,
+        the same cadence as the jackpot &mdash; but only once the node is bound and V16 is live (#30,000). You do
+        not run <code>nodeheartbeat</code> by hand; that command exists only for unusual setups where the signing
+        node is not the one you want emitting.</p>
+      <p>What you actually have to do is <b>keep the node up</b>. Miss an epoch (node down, key removed) and that
+        epoch's heartbeat is simply absent &mdash; the permanent rule is <b>3 of the last 4 epochs</b>, so one gap
+        is survivable, two in a row are not. Check it is working:</p>
+      <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>ssh root@YOUR_VPS 'grep -a "auto-heartbeat" /var/log/sost-node.log | tail -2'</pre></div>
+      <p>You want <code>[NODE-HEARTBEAT] auto-heartbeat enabled for node pubkey …</code> at startup, and later
+        <code>emitted heartbeat for epoch N</code> once per epoch. Or read it back from consensus:
+        <code>checkhistoricaljackpoteligibility</code> shows <code>heartbeats_valid</code> climbing toward
+        <code>heartbeats_required</code>. Before #30,186 both are <b>0</b>, which is why the first draw needs no
+        heartbeat history at all.</p>
     <div class="mg-note mg-warn">
       <b>Being eligible is not winning.</b> The draw weights miners by their proof-of-work over the last 2,016 blocks.
       Registering NODE_BIND buys you a ticket, nothing more.
@@ -649,24 +665,34 @@ chmod 600 ~/.sost/node.key</pre></div>
 
   <!-- ═══ 11 · STATUS ═════════════════════════════════════════════════ -->
   <details class="mg" id="s11"><summary>10 &middot; Honest network status &mdash; what is <i>not</i> fixed yet</summary><div class="mg-in">
-    <div class="mg-note mg-warn">
-      <b>Two known problems are under investigation and are NOT fixed in the published binaries.</b>
-      They do not affect your coins, your keys or your ability to mine. They affect a node's ability to
-      <b>serve the chain to a brand-new node</b>.
-    </div>
-    <ul>
-      <li><b>Block serving.</b> Under load, a node can leave a block frame half-written and keep sending, which
-        desynchronises the peer and makes it disconnect. A fix is written and tested in a branch. <b>It is not deployed.</b></li>
-      <li><b>Historical revalidation.</b> <b>19 blocks</b> between heights 4,160 and 5,410, all mined in April 2026, cannot be
-        re-validated by the current rules &mdash; consensus parameters were changed while those blocks were being produced.
-        Everything above height 5,410 replays exactly. A bounded fix is designed; <b>it is not implemented or deployed.</b></li>
-    </ul>
-    <p><b>What this means for you:</b> if you already have a synced chain, nothing. If you are starting a node from scratch
-      today, a full sync from genesis will stop at those blocks. Start from a recent <code>chain.json</code> instead, or
-      wait for the fix to ship.</p>
-    <p>The recommended binaries are still the published <b>v16.2.3</b> ones, with the hashes above. We will not describe
-      anything as deployed before it is.</p>
-  </div></details>
+    <div class="mg-note">
+        <b>Both problems this section used to list are now fixed in the source and running on the network's
+        production node.</b> They never affected your coins, your keys or your ability to mine &mdash; only a
+        node's ability to <b>serve the chain to a brand-new node</b>.
+      </div>
+      <ul>
+        <li><b>Block serving &amp; sync rate limit.</b> Under load a node could leave a block frame half-written,
+          desynchronising the peer, and a freshly-synced node could ban the very peer that had just served it the
+          chain. <b>Fixed in <code>main</code> (commit <code>cfcfe9df</code>) and deployed to the production node on
+          2026-09-24</b> &mdash; the node accepted new blocks after the restart with zero undue bans.</li>
+        <li><b>Historical revalidation.</b> <b>66 blocks</b> (19 with recomputed cASERT values, 4,160&ndash;5,410;
+          47 with a since-corrected profile-parameter table, 4,715&ndash;5,038), all mined in April 2026, could not
+          be re-validated by today's rules. The fix pins each one by <b>height and full block hash</b>, changes no
+          rule for any new block, and is in the same commit. Verified by a <b>full genesis&rarr;tip sync</b>
+          (encrypted and plaintext): both clients reached the tip with the same hashes as the reference node,
+          0 rejects, all 66 exceptions used once each.</li>
+      </ul>
+      <div class="mg-note mg-warn">
+        <b>The downloadable v16.2.3 binaries above do NOT yet include this fix.</b> The code is merged and the
+        production node runs it, but a signed binary release has not been cut. So today: if you already have a
+        synced chain, nothing to do. If you are starting a node from scratch, a full sync from genesis on the
+        <b>downloaded v16.2.3</b> binary still stops in the 4,160&ndash;5,410 range &mdash; <b>build from
+        <code>main</code></b> to get the fix, or start from a recent <code>chain.json</code>, until the binary
+        release ships.
+      </div>
+      <p>We keep three states separate and describe as <i>deployed</i> only what is proven in the right
+        environment: <b>merged in GitHub</b>, <b>running on the production node</b>, and <b>published as a signed
+        binary release</b>. The first two are done; the third is pending.</p></div></details>
 
   <p style="margin-top:34px;font-size:13.5px;color:var(--text3,#7b8794);line-height:1.75">
     Questions: <a href="mailto:sost@sostcore.com">sost@sostcore.com</a> &middot;
@@ -764,7 +790,7 @@ function showOS(os) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v475" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v476" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->

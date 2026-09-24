@@ -83,13 +83,18 @@ sudo systemctl daemon-reload && sudo systemctl restart sost-node
 /opt/sost/build/sost-cli --rpc-user AdminNeoB --rpc-pass-file /etc/sost/rpc.pass \
   --mining-key-label "SOST CEX LIQUIDITY RESERVE" createnodebind
 
-# 4. Confirmar que está en cadena antes del #30.000
-/opt/sost/build/sost-cli --rpc-user AdminNeoB --rpc-pass-file /etc/sost/rpc.pass getnodebinds
+# 4. Confirmar que está en cadena antes del #30.186 (NO existe "getnodebinds")
+#    La comprobación real es checkhistoricaljackpoteligibility sobre la dirección minera:
+curl -s -X POST http://127.0.0.1/rpc --data \
+  '{"jsonrpc":"2.0","id":1,"method":"checkhistoricaljackpoteligibility","params":["<DIRECCION_MINERA>"]}'
+#    Debe pasar de "node_bound":false a "node_bound":true, y "reasons" quedar vacío.
 ```
 
-`getnodebinds` a través del proxy público devuelve `-401 Authentication
-required`, como debe ser: es un método de administración y el proxy sólo deja
-pasar `sendrawtransaction`.
+Nota: **no existe un método `getnodebinds`**. El estado del vínculo se lee con
+`checkhistoricaljackpoteligibility <address>` (campo `node_bound`), o con
+`getjackpotv2audit` / `gethistoricaljackpotstatus` para la vista del sorteo.
+Estos métodos de consulta son públicos por el proxy; `sendrawtransaction` es lo
+único que el proxy deja pasar para escribir.
 
 ## Recuperación de la clave
 

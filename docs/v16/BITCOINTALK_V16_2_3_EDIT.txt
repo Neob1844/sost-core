@@ -84,11 +84,11 @@ Linux x86_64, built on Ubuntu 22.04.5 LTS (gcc 11.4.0, glibc 2.35).
 
 [b]A full synchronisation from the genesis block does not currently complete.[/b] This is a known, diagnosed defect and it is stated here because it decides whether the next section is useful to you.
 
-A node starting from block 0 stops at [b]19 historical blocks between heights 4,160 and 5,410[/b], all produced in April 2026. The published binaries cannot re-validate them: consensus parameters were changed while those blocks were being mined, so the rules in force for them are not the rules the current code applies. Everything above height 5,410 replays exactly — 21,563 consecutive blocks and counting.
+A node starting from block 0 stops at [b]66 historical blocks between heights 4,160 and 5,410[/b] (19 with recomputed cASERT values; 47, at 4,715–5,038, mined against a profile-parameter table that was later corrected), all produced in April 2026. The published binaries cannot re-validate them: consensus parameters were changed while those blocks were being mined. Everything above height 5,410 replays exactly.
 
 There is a second, separate defect in block serving: under load a node can leave a block frame half-written and keep sending, which desynchronises the receiving peer and makes it disconnect.
 
-[b]Neither fix is deployed.[/b] A patch for the serving defect is written and tested in a branch; a bounded fix for the 19 blocks is designed but not implemented. Nothing here is claimed as fixed, and no external audit of this software has been performed.
+[b]Both fixes are now merged in the source and running on the network's production node[/b] (commit cfcfe9df): a bounded exception pins each of the 66 blocks by height and full hash — changing no rule for any new block — and the block-serving/rate-limit defect is corrected. A full genesis→tip sync was verified end to end, encrypted and plaintext, reaching the same tip as the reference node with zero rejects. [b]The downloadable v16.2.3 binaries above do NOT yet include this[/b]: a signed binary release has not been cut, so if you build a new node today, either build from [tt]main[/tt] or start from a recent chain.json. No external security audit of this software has been performed.
 
 [b]What this means in practice:[/b]
 
