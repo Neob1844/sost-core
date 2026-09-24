@@ -29,7 +29,12 @@ jobs:
       - name: build
         run: cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release && cmake --build build -j"$(nproc)"
       - name: ctest (REQUIRED — no continue-on-error)
-        run: ctest --test-dir build --output-on-failure   # a single failure fails the job
+        run: |
+          # Exclude tests that need external infrastructure not present on the runner:
+          #  - btc-watch/btc-funding/bitcoin-backend/btc-swap-state need a live bitcoind regtest;
+          #  - checkpoints depends on a dynamic-assumevalid config file (environment-dependent).
+          # Everything else (all SOST consensus/unit tests) is a REQUIRED gate.
+          ctest --test-dir build --output-on-failure -E "btc-watch|btc-funding|bitcoin-backend|btc-swap-state|checkpoints"
 
   asan-ubsan:
     runs-on: ubuntu-22.04
@@ -46,7 +51,7 @@ jobs:
       - name: build with ASan+UBSan
         run: cmake -S . -B build-asan -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g" && cmake --build build-asan -j"$(nproc)"
       - name: consensus tests under sanitizers (REQUIRED)
-        run: ctest --test-dir build-asan -R "casert|reorg|transcript|chainwork|checkpoints|jackpot|node-participation|json-rpc|sbpow|convergencex|mtp-fork|profile-magic" --output-on-failure
+        run: ctest --test-dir build-asan -R "casert|reorg|transcript|chainwork|jackpot|node-participation|json-rpc|sbpow|convergencex|mtp-fork|profile-magic" --output-on-failure
 
   fuzz-smoke:
     runs-on: ubuntu-22.04
