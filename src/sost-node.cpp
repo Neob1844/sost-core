@@ -404,6 +404,28 @@ static size_t count_transient_entries() {
     return n;
 }
 
+// Evict the oldest transient entry whose origin is in `subnet` (/24). Used so a
+// full subnet quota rotates its OWN oldest junk instead of hard-blocking an
+// honest peer that shares the /24 (same NAT/VPN/ISP). Returns true if evicted.
+static bool fork_store_evict_oldest_of_subnet(const std::string& subnet) {
+    auto victim = g_block_index.end(); time_t oldest = 0;
+    for (auto it = g_block_index.begin(); it != g_block_index.end(); ++it) {
+        const auto& e = it->second;
+        if (e.status != BlockStatus::FORK && e.status != BlockStatus::ORPHAN) continue;
+        if (origin_subnet(e.origin) != subnet) continue;
+        if (victim == g_block_index.end() || e.stored_at < oldest) { victim = it; oldest = e.stored_at; }
+    }
+    if (victim == g_block_index.end()) return false;
+    const auto& e = victim->second;
+    std::string prev_hex = to_hex(e.prev_hash.data(), 32);
+    auto range = g_orphans_by_prev.equal_range(prev_hex);
+    for (auto oit = range.first; oit != range.second; )
+        oit = (oit->second == victim->first) ? g_orphans_by_prev.erase(oit) : std::next(oit);
+    g_fork_store_bytes -= (e.bytes <= g_fork_store_bytes ? e.bytes : g_fork_store_bytes);
+    g_block_index.erase(victim);
+    return true;
+}
+
 static bool fork_store_admit(const std::string& origin, size_t bytes, bool is_orphan) {
     fork_store_expire_ttl();
     (void)count_transient_entries();  // refresh g_fork_store_bytes from the index
@@ -413,9 +435,14 @@ static bool fork_store_admit(const std::string& origin, size_t bytes, bool is_or
         size_t per_ip, per_sub, bytes_ip;
         fork_store_counts(origin, per_ip, per_sub, bytes_ip);
         const size_t cap_ip = is_orphan ? ORPHAN_ENTRIES_PER_ORIGIN : FORK_ENTRIES_PER_ORIGIN;
-        if (per_ip >= cap_ip) return false;                       // this IP is at its quota
-        if (per_sub >= FORK_ENTRIES_PER_SUBNET) return false;      // this /24 is at its quota
+        if (per_ip >= cap_ip) return false;                       // this IP is at its quota (use another IP)
         if (bytes_ip + bytes > FORK_STORE_BYTES_PER_ORIGIN) return false;
+        // Per-/24 cap: rotate the subnet's OWN oldest junk rather than hard-block
+        // an honest peer that shares the /24 with an attacker (NAT/VPN/ISP). If the
+        // subnet somehow has no evictable entry, only then refuse.
+        if (per_sub >= FORK_ENTRIES_PER_SUBNET) {
+            if (!fork_store_evict_oldest_of_subnet(origin_subnet(origin))) return false;
+        }
     }
     // Global transient-COUNT budget: if full, evict the most over-represented
     // OTHER origin so a fresh (e.g. honest) origin is never blocked behind junk.
