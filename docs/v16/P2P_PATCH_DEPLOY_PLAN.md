@@ -24,6 +24,31 @@ contador anti-spam del receptor.
 - **El cambio de `version` es de representación**, no de identidad: no altera
   ningún `block_id` (demostrado con la huella SHA-256 de los 26.974 ids).
 
+## Binario preparado (para verificar tras construir)
+
+Construido desde la rama con las banderas obligatorias
+(`-DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DSOST_DEVNET_FORKS=OFF`,
+Release). El hash completo del ejecutable varía con la metainformación de
+compilación (ruta, timestamp), pero las secciones de código (`.text`) y de datos
+de sólo lectura (`.rodata`) son idénticas a las del binario que superó la
+sincronización completa desde génesis. Referencia de esta preparación:
+
+```
+29ada78fa687336181db4b5f54f05c5dcd649bfdd6d19a98f2ca6c5a6a48df86  sost-node
+3e3b79f7b07df7f7bdd431e4e5fcf5a8faf822c773b53b1287224686430d37c2  sost-cli
+```
+
+Verificación de que NO cambia el minero ni las reglas de bloques nuevos:
+- El diff toca `src/sost-node.cpp` (sólo lo enlaza el nodo) y dos herramientas
+  standalone; NO toca `src/sost-miner.cpp` ni ninguna de las 25 fuentes de la
+  biblioteca `sost-core`, así que el binario del minero es el mismo.
+- Las dos tablas de excepción tienen corte duro por altura: cASERT ≤ 5.410,
+  parámetros ≤ 5.038, ambos ~21.500 bloques por debajo de la punta (26.973) y
+  bajo el ancla `assumevalid` (3.554). No pueden dispararse en un bloque nuevo.
+- El cambio del límite de tasa no añade ninguna llamada a la validación de
+  consenso (`process_block`, `verify_cx`, `casert_*`, `subsidy`, `merkle`,
+  `coinbase`): es sólo el contador anti-spam del transporte.
+
 ## Despliegue (cuando lo autorices)
 
 STRATO corre **un** nodo. El parche es compatible con el binario actual, así
