@@ -201,6 +201,29 @@
   </div>
 </section>
 
+  <!-- V16.3.0 — node fix released: full sync from genesis -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-id">// RELEASE &middot; v16.3.0 &middot; node binary fixed &middot; consensus unchanged</div>
+        <div class="section-dates">Published: 2026-09-24 &middot; Last updated: 2026-09-24</div>
+        <h2 class="section-title">v16.3.0: a fresh node now <span class="accent" style="color:#39ff14">syncs from genesis</span> — v16.2.3 could not</h2>
+        <div class="section-sub">Only the node changed. <b>sost-miner</b> and <b>sost-cli</b> are byte-identical to v16.2.3. Consensus is unchanged: V16 still activates at #30,000, the first DTD Jackpot V2 is still #30,186.</div>
+      </div>
+      <div class="info-card">
+        <p><b>The fix.</b> A node built from v16.2.3 could not complete a full synchronisation from block&nbsp;0: it stopped on <b>66 historical blocks</b> (heights 4,160&ndash;5,410) mined in April&nbsp;2026 under consensus parameters that were later changed. v16.3.0 pins each of the 66 by <b>height and full block hash</b> — changing no rule for any new block — and also fixes P2P block serving and a sync-time rate-limit that could ban the peer serving you the chain. A full genesis&rarr;tip sync was verified end to end, encrypted and plaintext, matching the reference node with zero rejects; 119/119 tests pass.</p>
+        <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
+          <li><b>Only sost-node changed.</b> The miner (<code>2ef9d0a7…</code>) and CLI (<code>489f4374…</code>) are the same binaries as v16.2.3, byte for byte. Upgrading is one file: swap <code>sost-node</code>.</li>
+          <li><b>New node hash:</b> <code>304d056d504960b4179543672f14bee28146788b985363a5e95d476cc6b1492e</code>.</li>
+          <li><b>v16.2.3 does NOT contain the fix.</b> If you downloaded v16.2.3 and have not synced from genesis, update the node.</li>
+        </ul>
+        <p style="margin-top:10px"><b>Official binaries — verify before running anything:</b></p>
+        <p style="margin-top:6px"><a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener" style="color:#22d3ee">Release and SHA256SUMS</a> &middot; step-by-step <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>. Build directory must be named <code>build</code> if you compile.</p>
+      </div>
+    </div>
+  </section>
+
+
 <!-- V16 — activation schedule and the coordinated upgrade window -->
 <section class="section">
   <div class="container">
@@ -1058,7 +1081,7 @@ sudo systemctl restart sost-miner</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v476" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v477" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- NON-CUSTODIAL DISCLAIMER (footer) -->

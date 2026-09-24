@@ -20,12 +20,12 @@
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST — Upgrade your node and miner (window #29,900 → #30,000)</title>
-<meta name="description" content="How to update an already-running SOST node and miner to v16.2.3 inside the agreed window, after block #29,900 and before #30,000. You keep your coins, wallet, keys and payout address.">
+<meta name="description" content="How to update an already-running SOST node and miner to v16.3.0 inside the agreed window, after block #29,900 and before #30,000. You keep your coins, wallet, keys and payout address.">
 <meta name="keywords" content="SOST quickstart, how to mine SOST, SOST setup, build SOST, run SOST node, SOST mining guide">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SOST V16.2.3 — Upgrade your node and miner">
+<meta property="og:title" content="SOST V16.3.0 — Upgrade your node and miner">
 <meta property="og:description" content="Update window after #29,900 and before #30,000. Verified commands for manual, systemd and WSL setups.">
 <meta property="og:url" content="https://sostcore.com/sost-upgrade.html">
 <meta property="og:site_name" content="SOST">
@@ -257,7 +257,7 @@
 </nav>
 
 <style>
-/* ── Guía de mineros V16.2.3 ─────────────────────────────────────────────
+/* ── Guía de mineros V16.3.0 ─────────────────────────────────────────────
    Secciones plegables nativas (<details>): funcionan sin JavaScript, así que
    la guía sigue siendo legible si el script falla o el navegador lo bloquea.
    Nada aquí depende del estado de la sesión del Explorer.                */
@@ -309,7 +309,7 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
 <section class="hero">
   <div class="container">
     <h1 style="font-family:var(--font-display);letter-spacing:2px">SOST V16 &mdash; <span style="color:var(--red-primary)">MINER &amp; NODE GUIDE</span></h1>
-    <p style="font-size:17px;max-width:860px">Everything you need to install, configure and run SOST V16.2.3 &mdash; and to decide whether you want to enter the DTD Jackpot V2 draw. Written for someone who has never run a node before, with the exact commands for someone who has.</p>
+    <p style="font-size:17px;max-width:860px">Everything you need to install, configure and run SOST V16.3.0 &mdash; and to decide whether you want to enter the DTD Jackpot V2 draw. Written for someone who has never run a node before, with the exact commands for someone who has.</p>
   </div>
 </section>
 
@@ -344,16 +344,16 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
   </div>
 
   <div class="mg-note mg-ok">
-    <b>Already running v16.2.x? You probably need to do nothing today.</b>
-    v16.2.0, v16.2.1, v16.2.2 and v16.2.3 ship the <b>byte-identical</b> <code>sost-node</code> and <code>sost-miner</code>.
-    Only <code>sost-cli</code> changed. If your node and miner are already on any v16.2.x, replacing <code>sost-cli</code>
-    is enough and <b>there is nothing to restart</b>. Do not stop a healthy miner to "upgrade" to the same binary.
+    <b>Already running v16.2.x? Update your NODE to v16.3.0.</b>
+      v16.3.0 changes only <code>sost-node</code> (it makes a full sync from genesis complete). <code>sost-miner</code>
+      and <code>sost-cli</code> are <b>byte-identical</b> to v16.2.3 &mdash; the same SHA-256, nothing to change there.
+      So the upgrade is one binary: swap <code>sost-node</code>, and your miner keeps running.
   </div>
 
   <!-- ═══ 2 · DOWNLOAD ════════════════════════════════════════════════ -->
   <details class="mg" id="s2"><summary>1 &middot; Download the official binaries and verify them</summary><div class="mg-in">
     <p>Everything is published in one place:
-      <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.2.3" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v16.2.3</a>.
+      <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v16.3.0</a>.
       Download <code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code> and <code>SHA256SUMS</code>.</p>
 
     <h4>Verify before you run anything</h4>
@@ -361,7 +361,7 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
     <p>Or check them one by one against the published values:</p>
     <table>
       <tr><th>File</th><th>SHA-256</th></tr>
-      <tr><td><code>sost-node</code></td><td class="mg-hash">b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897</td></tr>
+      <tr><td><code>sost-node</code></td><td class="mg-hash">304d056d504960b4179543672f14bee28146788b985363a5e95d476cc6b1492e</td></tr>
       <tr><td><code>sost-miner</code></td><td class="mg-hash">2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2</td></tr>
       <tr><td><code>sost-cli</code></td><td class="mg-hash">489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07</td></tr>
     </table>
@@ -434,7 +434,7 @@ chmod 600 ~/.sost/rpc.pass</pre></div>
 
   <!-- ═══ 5 · START ═══════════════════════════════════════════════════ -->
   <details class="mg" id="s5"><summary>4 &middot; Starting your node and your miner</summary><div class="mg-in">
-    <p>Every option below was checked against <code>--help</code> on the published v16.2.3 binaries. Paths, labels and users
+    <p>Every option below was checked against <code>--help</code> on the published v16.3.0 binaries. Paths, labels and users
       are placeholders &mdash; replace them with yours.</p>
 
     <h4>Start a node</h4>
@@ -682,17 +682,16 @@ chmod 600 ~/.sost/node.key</pre></div>
           (encrypted and plaintext): both clients reached the tip with the same hashes as the reference node,
           0 rejects, all 66 exceptions used once each.</li>
       </ul>
-      <div class="mg-note mg-warn">
-        <b>The downloadable v16.2.3 binaries above do NOT yet include this fix.</b> The code is merged and the
-        production node runs it, but a signed binary release has not been cut. So today: if you already have a
-        synced chain, nothing to do. If you are starting a node from scratch, a full sync from genesis on the
-        <b>downloaded v16.2.3</b> binary still stops in the 4,160&ndash;5,410 range &mdash; <b>build from
-        <code>main</code></b> to get the fix, or start from a recent <code>chain.json</code>, until the binary
-        release ships.
-      </div>
-      <p>We keep three states separate and describe as <i>deployed</i> only what is proven in the right
-        environment: <b>merged in GitHub</b>, <b>running on the production node</b>, and <b>published as a signed
-        binary release</b>. The first two are done; the third is pending.</p></div></details>
+        <div class="mg-note mg-ok">
+          <b>This is fixed and downloadable in v16.3.0</b> (the binaries at the top of this page). A node from
+          v16.3.0 completes a full sync from genesis; you no longer need a pre-seeded <code>chain.json</code>.
+          <b>v16.2.3 does NOT contain the fix</b> &mdash; if you downloaded v16.2.3 and have not synced, update the
+          node binary to v16.3.0. Only <code>sost-node</code> changed; <code>sost-miner</code> and
+          <code>sost-cli</code> are the same binaries as v16.2.3.
+        </div>
+        <p>We describe as <i>done</i> only what is proven: the fix is <b>merged in GitHub</b>, <b>running on the
+          production node</b>, and <b>published as a signed binary release (v16.3.0)</b> whose downloaded artifacts
+          were re-verified against their SHA-256. No external security audit of this software has been performed.</p></div></details>
 
   <p style="margin-top:34px;font-size:13.5px;color:var(--text3,#7b8794);line-height:1.75">
     Questions: <a href="mailto:sost@sostcore.com">sost@sostcore.com</a> &middot;
@@ -790,7 +789,7 @@ function showOS(os) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v476" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v477" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->
