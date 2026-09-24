@@ -536,7 +536,13 @@ struct PeerRateLimit {
 static std::map<int, PeerRateLimit> g_peer_rates; // fd -> rate state
 static std::mutex g_rate_mu;
 static const int STEADY_STATE_BLOCKS_PER_MIN = 50;
-static const int SYNC_MODE_BLOCKS_PER_MIN = 5000;  // effectively unlimited during sync
+static const int SYNC_MODE_BLOCKS_PER_MIN = 5000;  // relaxed, but still a ceiling
+
+// How many blocks one GETB may answer. The serving loop stops at this many,
+// and the requesting side credits exactly this many as solicited, so the two
+// can never drift apart. Changing it in one place without the other is what
+// would re-open the gap this constant exists to close.
+static const int64_t GETB_BATCH_MAX = 100;
 
 static bool check_block_rate(int fd, bool is_syncing) {
     std::lock_guard<std::mutex> lk(g_rate_mu);
@@ -7904,6 +7910,11 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         std::chrono::steady_clock::time_point last_progress;
         int retries{0};
         int empty_done_count{0};  // consecutive DONE with 0 blocks received
+        // Blocks still expected from a GETB batch WE asked for. This is the
+        // only thing that entitles a peer to the relaxed sync rate, and it
+        // only ever goes up when this node sends a GETB — never on anything
+        // the peer says. See the BLCK handler.
+        int64_t outstanding{0};
     };
     static constexpr int MAX_EMPTY_DONE = 3; // disconnect after 3 empty DONEs
     SyncState sync;
@@ -8012,6 +8023,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             uint8_t buf[8];
             write_i64(buf, g_chain_height + 1);
             p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+            // Credit exactly what this batch may return. The serving loop stops
+            // at GETB_BATCH_MAX, so anything beyond it was never asked for.
+            sync.outstanding = GETB_BATCH_MAX;
         }
     };
 
@@ -8073,6 +8087,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     uint8_t buf[8];
                     write_i64(buf, g_chain_height + 1);
                     p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+                    // Credit exactly what this batch may return. The serving loop stops
+                    // at GETB_BATCH_MAX, so anything beyond it was never asked for.
+                    sync.outstanding = GETB_BATCH_MAX;
                 }
             }
         }
@@ -8095,6 +8112,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 uint8_t buf[8];
                 write_i64(buf, g_chain_height + 1);
                 p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+                // Credit exactly what this batch may return. The serving loop stops
+                // at GETB_BATCH_MAX, so anything beyond it was never asked for.
+                sync.outstanding = GETB_BATCH_MAX;
             }
         }
         else if (!strcmp(msg.cmd, "GETB")) {
@@ -8112,7 +8132,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 // frame is what turned one slow socket into a rejected block and
                 // a disconnect on the other side.
                 bool batch_ok = true;
-                for (int64_t h = from_h; h <= g_chain_height && h < from_h + 100; ++h) {
+                for (int64_t h = from_h; h <= g_chain_height && h < from_h + GETB_BATCH_MAX; ++h) {
                     if (!p2p_send_block(fd, h, &crypto)) { batch_ok = false; break; }
                 }
                 if (batch_ok) {
@@ -8128,36 +8148,71 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         }
         else if (!strcmp(msg.cmd, "BLCK")) {
           try {
-            bool is_syncing = false;
-            {
-                std::lock_guard<std::mutex> lk(g_peers_mu);
-                for (auto& p : g_peers) {
-                    if (p.fd == fd) {
-                        is_syncing = (p.their_height < 0) ||
-                                     (p.their_height > g_chain_height) ||
-                                     (g_chain_height > p.their_height + 10);
-                        break;
+            // Which allowance applies to THIS block.
+            //
+            // What entitles a block to the sync allowance is that WE asked for
+            // it. `sync.outstanding` counts the blocks still owed on GETB
+            // batches this node issued; nothing the peer sends can raise it,
+            // it is assigned (never accumulated) so it cannot exceed one batch,
+            // and DONE spends whatever is left. This is a bounded credit, not a
+            // clock: we only ask again after the peer's DONE, so our own
+            // request loop paces the rate. It is deliberately NOT counted in
+            // the 60-second window — a window holding a whole batch would put
+            // the counter over the steady-state limit the instant sync ended,
+            // which was exactly the ban that hit the peer serving us the chain.
+            //
+            // The old test instead read the height the peer announced in its
+            // VERSION handshake, frozen for the life of the connection. It
+            // flipped to relay the moment our height caught that stale value —
+            // while the tail of a batch we had asked for was still arriving,
+            // banning the peer that had just served us the chain — and, the
+            // other way, `g_chain_height > their_height + 10` handed the relaxed
+            // allowance to any peer that announced a height below ours, for
+            // traffic nobody had requested.
+            const bool solicited = (sync.outstanding > 0);
+            if (solicited) --sync.outstanding;
+
+            std::string block_json((char*)msg.payload.data(), msg.payload.size());
+            std::string blk_bid_check = jstr(block_json, "block_id");
+            int64_t blk_height = jint(block_json, "height");
+
+            // A block we already have is a benign echo — most often our own
+            // relay coming back from a peer that is still catching up. It is
+            // discarded without validation and must NOT count toward the relay
+            // rate limit, or a node serving the chain to a lagging peer would
+            // be banned for the peer's rebroadcasts. "Already have" means the
+            // id is in the recent-known set, or it names a height at or below
+            // our tip whose stored block_id matches — the latter also covers a
+            // node that has just loaded its chain from disk, before the set is
+            // repopulated. An id that does NOT match the chain at that height
+            // is not benign: it falls through to the rate check as new traffic.
+            bool already_have = false;
+            if (blk_bid_check.size() == 64) {
+                {
+                    std::lock_guard<std::mutex> lk3(g_known_mu);
+                    already_have = g_known_blocks.count(blk_bid_check) > 0;
+                }
+                if (!already_have) {
+                    std::lock_guard<std::recursive_mutex> lkc(g_chain_mu);
+                    if (blk_height >= 0 && blk_height <= g_chain_height
+                        && (size_t)blk_height < g_blocks.size()
+                        && to_hex(g_blocks[blk_height].block_id.data(), 32) == blk_bid_check) {
+                        already_have = true;
                     }
                 }
             }
-            if (!is_syncing && !check_block_rate(fd, is_syncing)) {
-                printf("[P2P] Rate limit exceeded from %s (mode=relay)\n", addr.c_str());
+            if (already_have) return true; // silently skip — benign relay, no penalty
+
+            // New block we did not ask for: relay traffic, subject to the
+            // steady-state limit like anyone else's. Solicited blocks skip the
+            // check (they are paced by our request loop, above).
+            if (!solicited && !check_block_rate(fd, false)) {
+                printf("[P2P] Rate limit exceeded from %s (mode=relay, unsolicited new block)\n",
+                       addr.c_str());
                 if (add_misbehavior(fd, addr, 5, "block rate limit")) return false;
                 return true;
             }
 
-            std::string block_json((char*)msg.payload.data(), msg.payload.size());
-
-            // Check if block is already known BEFORE expensive validation
-            std::string blk_bid_check = jstr(block_json, "block_id");
-            {
-                std::lock_guard<std::mutex> lk3(g_known_mu);
-                if (blk_bid_check.size() == 64 && g_known_blocks.count(blk_bid_check)) {
-                    return true; // silently skip — normal relay, no penalty
-                }
-            }
-
-            int64_t blk_height = jint(block_json, "height");
             auto t_start = std::chrono::steady_clock::now();
             g_last_reject_reason.clear();
             if (!process_block(block_json)) {
@@ -8248,6 +8303,12 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                    addr.c_str(), (long long)g_chain_height, (long long)sync.peer_height,
                    (long long)sync.blocks_received, g_blocks.size());
 
+            // DONE closes the batch: whatever credit is left is spent, not
+            // carried over. Without this a peer could bank unused credit from
+            // short batches and spend it later as unsolicited relay traffic.
+            // If we ask for another batch below, it re-credits from zero.
+            sync.outstanding = 0;
+
             if (sync.mode == SyncState::HISTORICAL && g_chain_height < sync.peer_height) {
                 // Track empty DONE responses (peer claims height but sends no blocks)
                 if (sync.blocks_received == 0) {
@@ -8277,6 +8338,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 uint8_t buf[8];
                 write_i64(buf, g_chain_height + 1);
                 p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+                // Credit exactly what this batch may return. The serving loop stops
+                // at GETB_BATCH_MAX, so anything beyond it was never asked for.
+                sync.outstanding = GETB_BATCH_MAX;
             } else if (sync.mode == SyncState::HISTORICAL) {
                 printf("[SYNC] Sync complete: height %lld\n", (long long)g_chain_height);
                 sync.mode = SyncState::LIVE;
