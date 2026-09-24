@@ -250,6 +250,11 @@ struct BlockIndexEntry {
     BlockStatus status;
     std::string raw_json;      // original JSON for re-validation during reorg
     bool has_undo{false};
+    // V16.3.x fork-store hardening (non-consensus): who sent it and when, so a
+    // single origin cannot monopolise the index and stale junk can expire.
+    std::string origin;        // peer IP (no port); "" = local/self (submitblock, reorg)
+    time_t      stored_at{0};  // wall-clock time the entry was inserted
+    size_t      bytes{0};      // raw_json.size(), cached for the byte budget
 };
 
 // Block index: every known block by hash
@@ -261,6 +266,168 @@ static std::mutex g_block_index_mu;
 static std::multimap<std::string, std::string> g_orphans_by_prev; // prev_hash_hex -> block_hash_hex
 static const size_t MAX_ORPHAN_BLOCKS = 200;
 static const size_t MAX_FORK_INDEX_ENTRIES = 1000;
+
+// ── V16.3.x fork/orphan store hardening (NON-CONSENSUS: resource management
+// only; block validity and reorg rules are unchanged) ─────────────────────
+// Per-origin quotas stop one peer (or one /24 via reconnection/Sybil) from
+// filling the global index with cheap unverified junk and thereby preventing
+// a legitimate higher-work fork from ever being stored and triggering a reorg.
+// Eviction NEVER uses unverified cumulative_work to prioritise; it evicts the
+// oldest entry of the MOST over-represented origin, and TTL expires stale junk.
+static const size_t FORK_ENTRIES_PER_ORIGIN   = 50;    // 1 IP: <= 50 of the 1000 forks
+static const size_t ORPHAN_ENTRIES_PER_ORIGIN = 20;    // 1 IP: <= 20 of the 200 orphans
+static const size_t FORK_ENTRIES_PER_SUBNET   = 150;   // 1 /24: <= 150 forks (allows honest NAT/VPN sharing)
+static const size_t FORK_STORE_BYTES_GLOBAL   = 96ull*1024*1024;  // 96 MB hard cap on retained fork/orphan JSON
+static const size_t FORK_STORE_BYTES_PER_ORIGIN = 8ull*1024*1024; // 8 MB per IP
+static const time_t FORK_ENTRY_TTL_SECS       = 900;   // 15 min: stale fork/orphan junk expires
+
+// Thread-local origin of the block currently being processed. The P2P BLCK
+// handler sets it to the peer IP before calling process_block(); submitblock,
+// reorg-connect and orphan-connect leave it empty (local/self, quota-exempt).
+static std::string to_hex(const uint8_t* d, size_t len);  // fwd decl for fork-store helpers
+static thread_local std::string g_block_origin;
+// running byte total of everything retained in g_block_index (guarded by g_block_index_mu)
+static size_t g_fork_store_bytes = 0;
+
+// ── fork-store hardening helpers (NON-CONSENSUS) ──────────────────────────
+// All of these run under g_block_index_mu held by the caller.
+
+// /24 subnet of an IPv4 "a.b.c.d" (best-effort; non-IPv4 returns the string
+// unchanged, which simply makes the subnet quota fall back to the exact host).
+static std::string origin_subnet(const std::string& ip) {
+    size_t p3 = ip.rfind('.');
+    return p3 == std::string::npos ? ip : ip.substr(0, p3);
+}
+
+// Drop every fork/orphan entry older than the TTL. Returns how many were removed.
+// Keeps g_fork_store_bytes and g_orphans_by_prev in sync with g_block_index.
+static size_t fork_store_expire_ttl() {
+    const time_t now = time(nullptr);
+    size_t removed = 0;
+    for (auto it = g_block_index.begin(); it != g_block_index.end(); ) {
+        const auto& e = it->second;
+        const bool transient = (e.status == BlockStatus::FORK || e.status == BlockStatus::ORPHAN);
+        if (transient && e.stored_at > 0 && (now - e.stored_at) > FORK_ENTRY_TTL_SECS) {
+            // unhook from the orphan-by-prev multimap if present
+            std::string prev_hex = to_hex(e.prev_hash.data(), 32);
+            auto range = g_orphans_by_prev.equal_range(prev_hex);
+            for (auto oit = range.first; oit != range.second; ) {
+                if (oit->second == it->first) oit = g_orphans_by_prev.erase(oit);
+                else ++oit;
+            }
+            g_fork_store_bytes -= (e.bytes <= g_fork_store_bytes ? e.bytes : g_fork_store_bytes);
+            it = g_block_index.erase(it);
+            ++removed;
+        } else {
+            ++it;
+        }
+    }
+    return removed;
+}
+
+// Count transient (fork/orphan) entries for one origin IP and one /24 subnet.
+static void fork_store_counts(const std::string& origin, size_t& per_ip,
+                              size_t& per_subnet, size_t& bytes_ip) {
+    per_ip = per_subnet = bytes_ip = 0;
+    if (origin.empty()) return;  // local/self is quota-exempt
+    const std::string sub = origin_subnet(origin);
+    for (const auto& kv : g_block_index) {
+        const auto& e = kv.second;
+        if (e.status != BlockStatus::FORK && e.status != BlockStatus::ORPHAN) continue;
+        if (e.origin == origin)             { ++per_ip; bytes_ip += e.bytes; }
+        if (origin_subnet(e.origin) == sub)  ++per_subnet;
+    }
+}
+
+// Evict one transient entry to make room. Strategy (never uses unverified work):
+//   1. prefer the oldest entry of the origin that currently holds the MOST
+//      transient entries (the most over-represented / most abusive origin);
+//   2. break ties by oldest stored_at.
+// Returns true if something was evicted. A verified/active-chain entry is never
+// touched. If `protect_origin` is non-empty, entries from that origin are spared
+// (so we never evict the honest peer that is bringing the new fork).
+static bool fork_store_evict_one(const std::string& protect_origin) {
+    // tally transient entries per origin
+    std::map<std::string, size_t> per_origin;
+    for (const auto& kv : g_block_index) {
+        const auto& e = kv.second;
+        if (e.status == BlockStatus::FORK || e.status == BlockStatus::ORPHAN)
+            per_origin[e.origin]++;
+    }
+    if (per_origin.empty()) return false;
+    // pick the most over-represented origin, excluding the protected one
+    std::string worst; size_t worst_n = 0;
+    for (const auto& kv : per_origin) {
+        if (!protect_origin.empty() && kv.first == protect_origin) continue;
+        if (kv.second > worst_n) { worst_n = kv.second; worst = kv.first; }
+    }
+    if (worst_n == 0) return false;  // only the protected origin has entries
+    // evict the oldest entry of that origin
+    auto victim = g_block_index.end(); time_t oldest = 0;
+    for (auto it = g_block_index.begin(); it != g_block_index.end(); ++it) {
+        const auto& e = it->second;
+        if ((e.status != BlockStatus::FORK && e.status != BlockStatus::ORPHAN)) continue;
+        if (e.origin != worst) continue;
+        if (victim == g_block_index.end() || e.stored_at < oldest) { victim = it; oldest = e.stored_at; }
+    }
+    if (victim == g_block_index.end()) return false;
+    const auto& e = victim->second;
+    std::string prev_hex = to_hex(e.prev_hash.data(), 32);
+    auto range = g_orphans_by_prev.equal_range(prev_hex);
+    for (auto oit = range.first; oit != range.second; ) {
+        if (oit->second == victim->first) oit = g_orphans_by_prev.erase(oit);
+        else ++oit;
+    }
+    g_fork_store_bytes -= (e.bytes <= g_fork_store_bytes ? e.bytes : g_fork_store_bytes);
+    g_block_index.erase(victim);
+    return true;
+}
+
+// Admission decision for a new transient (fork/orphan) entry of `bytes` from
+// `origin`. Enforces per-origin count, per-subnet count, per-origin bytes and a
+// global byte budget, expiring TTL and evicting the most abusive origin as
+// needed. Returns true if the entry may be stored. Never evicts `origin`'s own
+// entries and never blocks a fresh origin behind another origin's junk.
+// Count transient (fork/orphan) entries currently held. ACTIVE chain entries are
+// NOT counted, so a long-running node does not starve the fork budget (this also
+// fixes a latent bug where the global cap mixed ACTIVE + fork entries).
+static size_t count_transient_entries() {
+    size_t n = 0, bytes = 0;
+    for (const auto& kv : g_block_index)
+        if (kv.second.status == BlockStatus::FORK || kv.second.status == BlockStatus::ORPHAN) {
+            ++n; bytes += kv.second.bytes;
+        }
+    // Keep the byte total honest regardless of any delete path that forgot to
+    // decrement it (cleanup_old_forks, fork->ACTIVE promotion, orphan-connect):
+    // the index itself is the single source of truth.
+    g_fork_store_bytes = bytes;
+    return n;
+}
+
+static bool fork_store_admit(const std::string& origin, size_t bytes, bool is_orphan) {
+    fork_store_expire_ttl();
+    (void)count_transient_entries();  // refresh g_fork_store_bytes from the index
+    // local/self (submitblock, reorg, orphan-connect) is exempt from per-origin
+    // quotas but must still fit the global count/byte budgets.
+    if (!origin.empty()) {
+        size_t per_ip, per_sub, bytes_ip;
+        fork_store_counts(origin, per_ip, per_sub, bytes_ip);
+        const size_t cap_ip = is_orphan ? ORPHAN_ENTRIES_PER_ORIGIN : FORK_ENTRIES_PER_ORIGIN;
+        if (per_ip >= cap_ip) return false;                       // this IP is at its quota
+        if (per_sub >= FORK_ENTRIES_PER_SUBNET) return false;      // this /24 is at its quota
+        if (bytes_ip + bytes > FORK_STORE_BYTES_PER_ORIGIN) return false;
+    }
+    // Global transient-COUNT budget: if full, evict the most over-represented
+    // OTHER origin so a fresh (e.g. honest) origin is never blocked behind junk.
+    while (count_transient_entries() >= MAX_FORK_INDEX_ENTRIES) {
+        if (!fork_store_evict_one(origin)) return false;          // only our own entries remain
+    }
+    // Global byte budget: same eviction policy.
+    while (g_fork_store_bytes + bytes > FORK_STORE_BYTES_GLOBAL) {
+        if (!fork_store_evict_one(origin)) return false;
+    }
+    return true;
+}
 
 // Forward declarations for reorg
 static bool try_reorganize(const std::string& fork_tip_hash);
@@ -1799,6 +1966,35 @@ static std::string handle_checkhistoricaljackpoteligibility(const std::string& i
   s<<"]}";
   return rpc_result(id,s.str());
 }
+// getforkstats — NON-CONSENSUS diagnostics for the fork/orphan store hardening.
+// Exposes retained transient entries, bytes and the top origins, so an operator
+// (and the regression test) can see the store is bounded and quota-fair.
+static std::string handle_getforkstats(const std::string& id, const std::vector<std::string>&) {
+    std::lock_guard<std::mutex> lk(g_block_index_mu);
+    size_t forks=0, orphans=0, active=0, bytes=0;
+    std::map<std::string,size_t> by_origin;
+    for (const auto& kv : g_block_index) {
+        const auto& e = kv.second;
+        if (e.status == BlockStatus::FORK)      { ++forks;   bytes+=e.bytes; by_origin[e.origin]++; }
+        else if (e.status == BlockStatus::ORPHAN){ ++orphans; bytes+=e.bytes; by_origin[e.origin]++; }
+        else ++active;
+    }
+    std::ostringstream s;
+    s << "{\"forks\":" << forks << ",\"orphans\":" << orphans
+      << ",\"active\":" << active << ",\"transient_bytes\":" << bytes
+      << ",\"max_forks\":" << MAX_FORK_INDEX_ENTRIES
+      << ",\"max_orphans\":" << MAX_ORPHAN_BLOCKS
+      << ",\"per_origin_fork_cap\":" << FORK_ENTRIES_PER_ORIGIN
+      << ",\"origins\":[";
+    bool first=true;
+    for (const auto& kv : by_origin) {
+        if(!first) s << ","; first=false;
+        s << "{\"origin\":\"" << (kv.first.empty()?"local":kv.first) << "\",\"entries\":" << kv.second << "}";
+    }
+    s << "]}";
+    return rpc_result(id, s.str());
+}
+
 static std::string handle_getlotteryaudit(const std::string& id, const std::vector<std::string>& p) {
     if (p.empty()) return rpc_error(id, -1, "missing height");
     int64_t height = 0;
@@ -4677,6 +4873,7 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getinfo",handle_getinfo},
     {"getlotterystate",handle_getlotterystate},
     {"getlotteryaudit",handle_getlotteryaudit},
+      {"getforkstats",handle_getforkstats},
     {"getjackpotv2audit",handle_getjackpotv2audit},
     {"checkhistoricaljackpoteligibility",handle_checkhistoricaljackpoteligibility},
     {"gethistoricaljackpotstatus",handle_gethistoricaljackpotstatus},
@@ -5818,7 +6015,11 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         if (!parent_known) {
             // ORPHAN: parent not known locally
             std::lock_guard<std::mutex> lk(g_block_index_mu);
-            if (g_orphans_by_prev.size() < MAX_ORPHAN_BLOCKS) {
+            const size_t obytes = block_json.size();
+            // Global count cap AND per-origin quota (stops one IP/subnet from
+            // filling the orphan pool via reconnection). Non-consensus.
+            if (g_orphans_by_prev.size() < MAX_ORPHAN_BLOCKS &&
+                fork_store_admit(g_block_origin, obytes, /*is_orphan=*/true)) {
                 BlockIndexEntry entry;
                 entry.block_id = from_hex(bid);
                 entry.prev_hash = prev_h;
@@ -5828,11 +6029,18 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                 entry.cumulative_work = {}; // unknown until parent found
                 entry.status = BlockStatus::ORPHAN;
                 entry.raw_json = block_json;
+                entry.origin = g_block_origin;
+                entry.stored_at = time(nullptr);
+                entry.bytes = obytes;
                 g_block_index[bid] = entry;
                 g_orphans_by_prev.insert({prev_hex, bid});
+                g_fork_store_bytes += obytes;
                 mark_block_known(bid);
                 printf("[ORPHAN] Block h=%lld stored (parent %s unknown). %zu orphans total.\n",
                        (long long)height, prev_hex.substr(0,16).c_str(), g_orphans_by_prev.size());
+            } else {
+                printf("[ORPHAN] Block h=%lld DROPPED (quota/budget) origin=%s\n",
+                       (long long)height, g_block_origin.empty()?"local":g_block_origin.c_str());
             }
             fflush(stdout);
             return false;
@@ -5842,7 +6050,8 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         bool needs_reorg = false;
         {
             std::lock_guard<std::mutex> lk(g_block_index_mu);
-            if (g_block_index.size() < MAX_FORK_INDEX_ENTRIES) {
+            const size_t fbytes = block_json.size();
+            if (fork_store_admit(g_block_origin, fbytes, /*is_orphan=*/false)) {
                 BlockIndexEntry entry;
                 entry.block_id = from_hex(bid);
                 entry.prev_hash = prev_h;
@@ -5867,7 +6076,11 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                 entry.cumulative_work = add_be256(parent_cw, entry.block_work);
                 entry.status = BlockStatus::FORK;
                 entry.raw_json = block_json;
+                entry.origin = g_block_origin;
+                entry.stored_at = time(nullptr);
+                entry.bytes = fbytes;
                 g_block_index[bid] = entry;
+                g_fork_store_bytes += fbytes;
                 mark_block_known(bid);
 
                 // Check if this fork has MORE cumulative work than active tip
@@ -8215,7 +8428,11 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
 
             auto t_start = std::chrono::steady_clock::now();
             g_last_reject_reason.clear();
-            if (!process_block(block_json)) {
+            // Tag the origin so the fork/orphan store can quota this peer.
+            g_block_origin = peer_ip(addr);
+            const bool _pb_ok = process_block(block_json);
+            g_block_origin.clear();  // never leak the origin to later local calls
+            if (!_pb_ok) {
                 std::string blk_bid = jstr(block_json, "block_id");
                 uint32_t blk_bitsq = (uint32_t)jint(block_json, "bits_q");
 
