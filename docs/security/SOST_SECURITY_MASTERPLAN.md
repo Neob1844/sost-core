@@ -1,0 +1,54 @@
+# SOST Security Masterplan — el "Security Gauntlet"
+
+Programa integral de endurecimiento previo a #30.000. Todo el trabajo va en ramas
+de desarrollo, sin tocar main, producción, el minero ni las reglas de consenso.
+Regla de oro: **nada se marca COMPLETADO si sólo está PREPARADO.**
+
+Estados: `HECHO+VERIFICADO` · `PREPARADO` (escrito, no ejecutado) · `PENDIENTE`.
+Última actualización: 2026-09-25. Referencia estable: **v16.3.0** (nodo 304d056d).
+Rama de esta fase: `feat/fork-store-hardening` (publicada en GitHub, sin merge).
+
+## Fase 1 — V1–V5 (fork-store hardening + herramientas)
+
+| # | Mejora | Estado | Consenso | Commit | Pruebas | Riesgo residual |
+|---|---|---|---|---|---|---|
+| V1 | Índice de forks: cuota por origen + admisión validada | **HECHO+VERIFICADO** | No | 0e907618 | Regresión antes/después: envenenado→honesto NO entra; endurecido→SÍ entra | Ninguno conocido en este vector |
+| V2 | Límite de bytes global (96 MB) + por origen (8 MB) | **HECHO+VERIFICADO** | No | 0e907618 | RAM estable ~10–12 MB bajo flood, sin OOM | Falta el peor caso con bloques de 1 MB (medición pendiente) |
+| V3 | Cuota por /24 con **eviction de subred** (no bloquea honestos NAT/VPN) | **HECHO+VERIFICADO** | No | 533f4aef | Honesto misma /24 que atacantes → ENTRA; memoria acotada | Un atacante puede rotar su propia cuota (sin crecer memoria) |
+| V4 | CI: ASan/UBSan/TSan + fuzz-smoke + ctest como gate | **HECHO+VERIFICADO** | No | 941a952d | Workflow ejecutado en GitHub Actions: unit-and-consensus ✓, asan-ubsan ✓, fuzz-smoke ✓ | btc-*/checkpoints excluidos (infra externa / config de entorno) |
+| V5 | Fuzzer de tx/bloque (deserializadores) | **HECHO+VERIFICADO** | No | 86dfee03 | >23 M ejecuciones, 0 crashes, 0 hallazgos ASan/UBSan; corpus conservado | Cobertura saturada en cov:47; faltan fuzzers de más superficie (fase A) |
+
+**Bug latente arreglado (no-consenso):** el cap de forks mezclaba entradas ACTIVE
+(sin poda) con forks; ahora cuenta sólo transitorios.
+**Reorg E2E:** verificada con el binario endurecido (arnés devnet): un fork con más
+trabajo reorganiza, desconecta el jackpot viejo, conecta el nuevo y el estado
+resultante == estado limpio.
+**Sync desde génesis:** en curso hasta la punta con el binario endurecido; a través
+de las 66 excepciones ya verificado (5500/5500, 0 rechazos, 0 DROPPED en sync normal).
+**Interoperabilidad v16.3.0 ↔ endurecido:** 0 rechazos en ambas direcciones,
+cifrado y sin cifrar.
+
+## Fases pendientes (registradas para no perderlas)
+
+| Fase | Trabajo | Estado | Prioridad | Consenso |
+|---|---|---|---|---|
+| **A** | Fuzzing integral: **P2P framing/handshake**, mempool, RPC, SbPoW, NODE_BIND, heartbeats, Jackpot | PENDIENTE | Alta | No (tooling) |
+| **B** | Auditoría de aritmética segura e **invariantes monetarias** (inflación, inputs duplicados, RBF, DTD, Jackpot, reservas) con tests adversariales | PENDIENTE (base ya existe: subsidy check, guards de overflow) | Alta | No (tests) |
+| **C** | **Property-based testing** + **implementación de referencia independiente** (Python) para differential testing del consenso C++ | PENDIENTE | Media | No (tests) |
+| **D** | **Laboratorio de ataques masivos**: flood P2P, forks, huérfanos, churn, mempool, double-spend, eclipse, Sybil, particiones, reorgs, ataques de Jackpot | PENDIENTE (base: arneses devnet) | Alta | No |
+| **E** | **Chaos testing**: kill -9 en escrituras/reorgs, disco lleno, ficheros truncados, reinicios, recuperación | PENDIENTE | Media | No |
+| **F** | CPU-DoS: orden barato-antes-de-caro, límites de parsers, **diversidad de peers**, mitigación de eclipse | PENDIENTE (S2 sospecha sin cuantificar) | Media | No |
+| **G** | **Builds reproducibles** independientes de la ruta, releases firmadas, manifiestos/SBOM, dependencias verificadas, **endurecimiento systemd de STRATO** (mínimo privilegio) | PENDIENTE | Media | No |
+| **H** | **SOST Security Gauntlet**: `tests/security-gauntlet.sh` que ejecute todo lo anterior de forma reproducible con puertas obligatorias | PENDIENTE | Alta | No |
+
+### Sospechas abiertas (a cuantificar)
+- **S1** double-spend en RBF / cadenas de dependencia del mempool — fuzzing + property tests (fase B/C).
+- **S2** CPU-DoS por orden de validación — auditar cada ruta (fase F).
+- **Test frágil** `test-checkpoints`: depende de config de assumevalid dinámica del
+  entorno; hacerlo determinista (fase C).
+
+### Regla para #30.000
+Sólo entra en el fork de #30.000 una corrección de **consenso** con vulnerabilidad
+reproducible, corrección probada y análisis de compatibilidad, y con autorización
+explícita. Todo lo NO-consenso (V1–V5 y fases A–H) se distribuye antes, compatible
+con v16.3.0, sin fork.
