@@ -1,0 +1,28 @@
+# SOST V16.2.3 — official binary hashes
+#
+# Release artifact for tag v16.2.3. Only sost-cli changes; sost-node and sost-miner are
+# BYTE-IDENTICAL to v16.2.0, v16.2.1 and v16.2.2 — the same two hashes every v16.2.x
+# release publishes. A node or miner already on any v16.2.x does NOT restart for this
+# release: replace the CLI and you are done.
+#
+# Why this release exists: the NODE_BIND procedure could not be followed. sost-cli had
+# no --mining-key-label flag, and createnodebind always bound the key labelled
+# "default", so an operator whose mining key carries any other label could not produce
+# a valid bind for the #30,186 jackpot. v16.2.3 takes the label, says which mining key
+# it bound, and lists the wallet's labels when the one asked for is missing.
+#
+# Consensus is unchanged across every v16.2.x: V16 activates at #30,000, first DTD
+# Jackpot V2 #30,186.
+#
+# Previous lists are kept, because a rollback binary verifies against them:
+#   docs/v16/SHA256SUMS_V16_2_2  docs/v16/SHA256SUMS_V16_2_1
+#   docs/v16/SHA256SUMS_V16_2_0  docs/v16/SHA256SUMS_V16_1
+#
+# Verify:   sha256sum -c docs/v16/SHA256SUMS
+#
+# Build directory must be named `build`; the source path does not matter (measured
+# again here: two directories, identical bytes).
+# PATH-INDEPENDENT BUILD = YES (measured).  CROSS-MACHINE REPRODUCIBILITY = NOT PROVEN.
+b253e4a9c352ea4b8557eec78d57e1c7619ab267af228c3e8f24bf8d7b69b897  sost-node
+2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner
+489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  sost-cli
