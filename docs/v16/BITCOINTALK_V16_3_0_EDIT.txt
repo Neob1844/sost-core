@@ -1,0 +1,360 @@
+[center][size=18pt][b]SOST V16.3.0 — OFFICIAL RELEASE (node fix included)[/b][/size]
+[size=13pt][b]New node binary — full sync from genesis now works. v16.2.3 did NOT include this.[/b][/size][/center]
+
+[hr]
+
+[b]FOR ALL SOST MINERS AND NODE OPERATORS[/b]
+
+SOST V16.3.0 is the current release and replaces V16.2.3 as the recommended version. It does not change any consensus rule: V16 still activates by block height, on its own, at block #30,000, and the first DTD Jackpot V2 draw is still #30,186. What changed is the [b]node[/b].
+
+[b]The single most important thing in this release:[/b] a node built from V16.2.3 could not complete a full synchronisation from the genesis block. V16.3.0 can. If you downloaded V16.2.3 and have not synced yet, [b]update your node[/b].
+
+[b]Consensus activation:[/b] #30,000 (unchanged)
+[b]First DTD Jackpot V2 draw:[/b] #30,186 (unchanged)
+[b]Recommended version:[/b] V16.3.0
+[b]Release commit:[/b] 4b1e970f51a5a188488bef59ace15e04d128ecfb
+
+[hr]
+
+[size=14pt][b]WHAT CHANGED SINCE V16.2.3 — AND WHAT DID NOT[/b][/size]
+
+[b]Only the node binary changed.[/b] The miner and the CLI are [b]byte-identical[/b] to v16.2.3 — the same SHA-256, exactly.
+
+[code]
+sost-node    CHANGED   b253e4a9…  ->  304d056d…   (the fixes below)
+sost-miner   SAME      2ef9d0a7…  ->  2ef9d0a7…   (byte-identical to v16.2.3)
+sost-cli     SAME      489f4374…  ->  489f4374…   (byte-identical to v16.2.3)
+[/code]
+
+So in practice: [b]if your node and miner are already running and synced, you only need to swap sost-node.[/b] Your miner does not need to be touched — its binary did not change. Nobody has to restart anything at #30,000; activation is automatic by height.
+
+The new [b]sost-node[/b] fixes three things, all in node networking and historical validation — [b]none of them touches consensus rules for new blocks, reward economics, the Jackpot parameters, the mining algorithm or wallet formats[/b]:
+
+[list]
+[li][b]Full sync from genesis now completes.[/b] 66 historical blocks (heights 4,160–5,410) mined in April 2026 could not be re-validated by later rules — consensus parameters were changed while they were being produced. v16.3.0 pins each of the 66 by [b]height AND full block hash[/b]; it changes no rule for any new block and cannot fire above height 5,410.[/li]
+[li][b]Block serving.[/b] Under load a node could leave a block frame half-written and keep sending, desynchronising the receiving peer. Fixed.[/li]
+[li][b]Sync rate limit.[/b] A freshly-synced node could ban the very peer that had just served it the whole chain. Fixed; genuine flood abuse is still banned.[/li]
+[/list]
+
+[b]Verification behind those claims:[/b] a full genesis→tip sync (to #26,973) completed twice, encrypted and plaintext, reaching the same block hashes as the reference node across all 26,974 blocks with zero rejects and all 66 exceptions used once each; 119/119 automated tests pass; a v16.3.0 node and a v16.2.3 node interoperate in both directions. No external security audit of this software has been performed.
+
+[hr]
+
+[size=14pt][b]OPTION A — DOWNLOAD THE OFFICIAL BINARIES (no compiler needed)[/b][/size]
+
+[code]
+mkdir -p ~/sost-v1630 && cd ~/sost-v1630
+
+for f in sost-node sost-miner sost-cli SHA256SUMS; do
+  curl -fsSL -O "https://github.com/Neob1844/sost-core/releases/download/v16.3.0/$f"
+done
+
+sha256sum -c SHA256SUMS
+chmod +x sost-node sost-miner sost-cli
+[/code]
+
+It must print, for all three:
+
+[code]
+sost-node: OK
+sost-miner: OK
+sost-cli: OK
+[/code]
+
+[b]If any line does not say OK, stop and do not run that binary.[/b] SHA256SUMS also contains comment lines; [tt]sha256sum -c[/tt] skips them and prints only the three results above.
+
+Published hashes:
+
+[code]
+304d056d504960b4179543672f14bee28146788b985363a5e95d476cc6b1492e  sost-node    (v16.3.0 — new)
+2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner   (identical to v16.2.x)
+489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  sost-cli     (identical to v16.2.3)
+[/code]
+
+Linux x86_64, built on Ubuntu 22.04.5 LTS (gcc 11.4.0, glibc 2.35).
+
+[hr]
+
+[size=14pt][b]A NEW NODE FROM SCRATCH NOW SYNCS FROM GENESIS[/b][/size]
+
+This is the section that used to warn you not to try. It is reversed now.
+
+With [b]v16.3.0[/b], a node started from block 0 synchronises all the way to the tip — you do [b]not[/b] need a pre-seeded [tt]chain.json[/tt] any more. The 66 historical blocks that stopped older binaries are validated against their real April-2026 parameters, pinned by height and full hash.
+
+[b]v16.2.3 does NOT contain this fix.[/b] If you are still on v16.2.3 and try a full sync from genesis, it will stop in the 4,160–5,410 range. The remedy is simply to run v16.3.0. Anyone who already downloaded v16.2.3 should update the node binary.
+
+[code]
+# fresh node, from block 0, no seed file needed:
+./sost-node --genesis genesis_block.json --chain chain.json \
+    --profile mainnet --rpc-user your-user --rpc-pass-file ~/.sost/rpc.pass --p2p-enc on
+[/code]
+
+Your coins, your keys and your ability to mine were never affected by those defects — only a node's ability to serve the whole chain to a brand-new node.
+
+[hr]
+
+[size=14pt][b]OPTION B — BUILD FROM SOURCE[/b][/size]
+
+Compiling is optional; a downloaded binary whose SHA-256 matches is equally valid. These exact commands were run from a clean clone before this post and produced the [b]same published hashes[/b]:
+
+[code]
+# 1. build dependencies (Ubuntu / Debian)
+sudo apt update
+sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
+
+# 2. get the tag
+cd ~
+git clone --depth 1 --branch v16.3.0 https://github.com/Neob1844/sost-core.git sost-v1630-src
+cd sost-v1630-src
+git describe --tags --exact-match          # must print: v16.3.0
+
+# 3. configure and build — the build directory MUST be named "build"
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF \
+      -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+
+# 4. verify against the published hashes
+cd build
+sha256sum -c <(grep -E '^[0-9a-f]{64}' ../docs/v16/SHA256SUMS)
+[/code]
+
+[b]Two things that decide whether your hashes match.[/b]
+
+[list]
+[li][b]The build directory must be called [tt]build[/tt].[/b] The source path is normalised out of the binary; the build directory name is [b]not[/b]. Building into [tt]build-v16[/tt] or [tt]out[/tt] produces different bytes from the same commit.[/li]
+[li][b]A different toolchain legitimately produces a different hash.[/b] Cross-machine reproducibility is not claimed. Matching hashes are guaranteed only for the environment above (Ubuntu 22.04.5, gcc 11.4.0, glibc 2.35). A mismatch on a different compiler is expected and is not, by itself, evidence of tampering — but an [b]official downloaded[/b] binary must match exactly.[/li]
+[/list]
+
+If cmake stops with [tt]SbPoW requires libsecp256k1 with schnorrsig module enabled[/tt], your distribution's libsecp256k1 is too old: upgrade the package, or build libsecp256k1 with [tt]--enable-module-schnorrsig[/tt].
+
+[hr]
+
+[size=14pt][b]UPGRADING FROM V16.2.x — SWAP THE NODE[/b][/size]
+
+Because only the node changed, upgrading is one binary. Back up first, then swap the node by its service name or exact PID — never a blanket [tt]pkill -f sost[/tt], which on a machine that also runs a CLI or a miner kills things you did not mean to.
+
+[b]Node under systemd (typical on a server)[/b]
+
+[code]
+TS=$(date -u +%Y%m%d-%H%M%S)
+# keep the old node binary and its hash, so rollback is one command
+cd /path/to/your/build
+cp -a sost-node sost-node.v1623.$TS
+sha256sum sost-node.v1623.$TS > sost-node.v1623.$TS.sha256
+
+sudo systemctl stop sost-node
+sudo install -m 0755 ~/sost-v1630/sost-node /path/to/your/build/sost-node
+sudo systemctl start sost-node
+sleep 20 && systemctl status sost-node --no-pager | head -8
+[/code]
+
+Loading a large chain file takes a few minutes. That is normal; the miner retries meanwhile. [b]There is nothing to do to the miner[/b] — its binary is byte-identical to the one you already run.
+
+[b]Windows / WSL[/b]
+
+Same idea inside your Ubuntu window: stop the node process (Ctrl+C in its terminal, or [tt]kill[/tt] its exact PID), install the new [tt]sost-node[/tt], start it again with your usual command. The miner keeps running.
+
+[hr]
+
+[size=14pt][b]VERIFY THE UPGRADE — in this order[/b][/size]
+
+[code]
+# 1. the node binary that is RUNNING, not the file on disk
+PID=$(systemctl show sost-node -p MainPID --value)      # or your manual PID
+sha256sum "$(readlink -f /proc/$PID/exe)"               # must equal 304d056d…
+
+# 2. RPC and P2P are listening
+ss -ltn | grep -E '18232|19333'
+
+# 3. the chain is advancing and matches the network
+./sost-cli --rpc 127.0.0.1:18232 --rpc-user your-user \
+  --rpc-pass-file ~/.sost/rpc.pass --wallet ~/sost-keys/your-wallet.json getbalance
+
+# 4. your miner is still building templates and getting blocks accepted,
+#    and a block you mine is credited to YOUR usual address (unchanged).
+[/code]
+
+[hr]
+
+[size=14pt][b]RPC PASSWORDS AND NODE SECURITY[/b][/size]
+
+Every node operator uses their [b]own[/b] RPC credentials. There is no universal SOST RPC password, nobody can give you one, and nobody should ever ask you for yours. It is [b]not[/b] your wallet passphrase. The miner authenticates to [b]your[/b] node, so node and miner must use the same credentials.
+
+[code]
+mkdir -p ~/.sost && umask 077
+openssl rand -base64 30 > ~/.sost/rpc.pass
+chmod 600 ~/.sost/rpc.pass
+[/code]
+
+Point everything at the file instead of typing the secret:
+
+[code]
+sost-node  --rpc-user your-user --rpc-pass-file ~/.sost/rpc.pass  ...
+sost-miner --rpc-user your-user --rpc-pass-file ~/.sost/rpc.pass  ...
+sost-cli   --rpc-user your-user --rpc-pass-file ~/.sost/rpc.pass  ...
+[/code]
+
+The file must be mode 600, owned by you, one line and nothing else — the binaries refuse anything else rather than reading a secret other local users can see. Anything typed on a command line is visible to every user on the machine through [tt]ps[/tt].
+
+[b]HTTP 401.[/b] The miner prints [tt]*** RPC AUTHENTICATION REJECTED (HTTP 401) ***[/tt]. That is not a rejected block — the node never validated it. Check: same [tt]--rpc-user[/tt] on both sides; the password file holds one line and nothing else; the node was restarted after you changed its password; and you are talking to your own node. Do not expose an unauthenticated RPC service to the public Internet.
+
+[hr]
+
+[size=14pt][b]YOUR EXISTING WALLET AND SOST REMAIN COMPATIBLE[/b][/size]
+
+You do not need to create a new wallet, change your mining address or transfer your SOST. Existing v1 wallets remain supported, with no conversion and no deadline. Encrypted v2 wallets are an [b]optional[/b] security improvement (AES-256-GCM); encrypting is not required to keep mining or to receive normal DTD, and it does not change your address or your SbPoW identity. If you do it, the procedure never overwrites your only copy:
+
+[code]
+# 1. export an ENCRYPTED COPY (the original stays where it is)
+sost-cli --wallet ~/sost-keys/your-wallet.json wallet-export \
+  --encrypted --output ~/sost-keys/your-wallet.v2.json
+
+# 2. RECOVERY DRILL — restore into a different file and compare the ADDRESSES
+sost-cli --wallet /tmp/restore-test.json newwallet
+sost-cli --wallet /tmp/restore-test.json wallet-import \
+  --encrypted --input ~/sost-keys/your-wallet.v2.json
+diff <(sost-cli --wallet ~/sost-keys/your-wallet.json listaddresses | awk '{print $1}') \
+     <(sost-cli --wallet /tmp/restore-test.json        listaddresses | awk '{print $1}') \
+  && echo "SAME ADDRESSES"
+
+# 3. only then mine one block with the encrypted wallet
+sost-miner --wallet ~/sost-keys/your-wallet.v2.json --mining-key-label "your-label" \
+  --wallet-passphrase-file ~/.sost/wallet.pass   ...rest of your usual flags...
+[/code]
+
+[b]The passphrase flag differs between tools.[/b] [tt]sost-cli[/tt] takes [tt]--passphrase-fd <n>[/tt]; [tt]sost-miner[/tt] takes [tt]--wallet-passphrase-file <path>[/tt] or [tt]--wallet-passphrase-fd <n>[/tt] — a descriptor number or a mode-600 file, never the passphrase on the command line. [b]Keep the v1 file until the encrypted one has mined a block.[/b] The passphrase cannot be recovered.
+
+[b]Never share your private keys, wallet passwords or recovery information.[/b]
+
+[hr]
+
+[size=14pt][b]DTD JACKPOT V2 — FULL INSTRUCTIONS[/b][/size]
+
+The new consensus rules activate automatically at block #30,000. There are two separate reward mechanisms; do not confuse them.
+
+[b]Normal DTD[/b] keeps everything you already rely on: the same payout logic, the same every-block cadence (3-of-3, as since V15 at #25,000), the same uniform selection and the same seed. It needs [b]no[/b] NODE_BIND, [b]no[/b] heartbeats and [b]no[/b] PoPC bond. What changes from #30,000 is only [b]who qualifies[/b]: the activity window drops to [b]288 blocks[/b] (~2 days); the 6-block producer cooldown [b]yields[/b] if applying it would leave nobody eligible; the 10%/288 anti-dominance gate is [b]armed only at 11 or more distinct miners[/b]. While a single miner is active it can therefore take 100% of the block (50% miner + 50% DTD) — designed behaviour of a small network, not a bug.
+
+[b]DTD Jackpot V2[/b] is a separate, independent draw, every 288 blocks (~48 h), base 100 SOST with rollover up to a hard cap of 500 — paid from the existing historical reserve, [b]no new SOST is emitted[/b]. To be eligible you need all of:
+
+[list=1]
+[li]a valid SbPoW mining identity — the key behind [tt]--mining-key-label[/tt];[/li]
+[li]at least [b]3 valid mined blocks in the previous 2,016 blocks[/b] (~14 days);[/li]
+[li]an active [b]NODE_BIND[/b] linking a node key to that mining key;[/li]
+[li][b]heartbeats[/b], on a ramp (below).[/li]
+[/list]
+
+[b]The heartbeat ramp — read this so you are not scared off.[/b] The first V2 draw at [b]#30,186[/b] requires [b]0/0 heartbeats[/b]: no epoch has completed yet, so nobody is excluded for lacking heartbeat history. It then rises 1-of-1 (#30,474), 2-of-2 (#30,762), 3-of-3 (#31,050), and settles at the permanent rule — [b]3 of the last 4 epochs of 288 blocks[/b] — from [b]#31,338[/b]. That ramp is one rule counting completed epochs, not a second fork.
+
+[b]Node participation determines eligibility. Proof-of-Work determines weight (linear in your mined blocks). Running more nodes adds no weight. Being eligible is not winning.[/b]
+
+[b]— Prepare the node key now (allowed before #30,000):[/b]
+
+[code]
+# the node key is NOT your wallet key and NOT your RPC password.
+# it identifies your node; it cannot move coins, but back it up.
+mkdir -p ~/.sost && umask 077
+openssl rand -hex 32 > ~/.sost/node.key
+chmod 600 ~/.sost/node.key
+[/code]
+
+You can create and protect the key today. You [b]cannot register it[/b] until V16 is live at #30,000 — the transaction type does not exist before that height.
+
+[b]— After #30,000: build, broadcast and confirm the NODE_BIND:[/b]
+
+[code]
+# build the bind with the SAME label your miner signs blocks with
+sost-cli --wallet ~/sost-keys/your-wallet.json \
+  --mining-key-label "your-label" \
+  createnodebind 1 --node-key-file ~/.sost/node.key
+#   -> prints, on stderr, which mining key it bound; on stdout, the raw tx hex.
+#   If the label does not exist it refuses and lists your wallet's labels.
+
+# broadcast it
+sost-cli --rpc 127.0.0.1:18232 --rpc-user your-user \
+  --rpc-pass-file ~/.sost/rpc.pass sendrawtransaction <the hex>
+#   -> returns a txid. If it does NOT, do not resend blindly — check getrawmempool first.
+
+# confirm it landed in a block
+sost-cli --rpc 127.0.0.1:18232 --rpc-user your-user \
+  --rpc-pass-file ~/.sost/rpc.pass getrawtransaction <the txid>
+[/code]
+
+[b]— Turn on automatic heartbeats (one restart of the node, not the miner):[/b]
+
+Add [tt]--node-key-file ~/.sost/node.key[/tt] to the node's command line (or its systemd unit) and restart the node once. From then on the node signs and broadcasts [b]one NODE_HEARTBEAT per epoch (288 blocks) by itself[/b]. You do not run a heartbeat command by hand. Your only job is to keep the node up: miss an epoch and that heartbeat is simply absent — the permanent rule is 3 of the last 4, so one gap survives, two in a row do not. Confirm it started:
+
+[code]
+grep -a "auto-heartbeat" /var/log/sost-node.log | tail -2
+#   want: [NODE-HEARTBEAT] auto-heartbeat enabled for node pubkey …
+#   then, once per epoch: emitted heartbeat for epoch N
+[/code]
+
+[b]— Check your eligibility (the real proof — there is NO "getnodebinds"):[/b]
+
+[code]
+curl -s -u "your-user:$(cat ~/.sost/rpc.pass)" -H 'content-type: application/json' \
+  --data '{"method":"checkhistoricaljackpoteligibility","params":["sost1your...address"],"id":1}' \
+  http://127.0.0.1:18232/
+[/code]
+
+It returns [tt]node_bound[/tt], [tt]pow_blocks[/tt], [tt]heartbeats_valid[/tt], [tt]heartbeats_required[/tt], [tt]eligible[/tt] and, when you are not, [tt]reasons[/tt] — one or more of [tt]no_sbpow_blocks_in_window[/tt], [tt]pow_below_minimum[/tt], [tt]not_node_bound[/tt], [tt]heartbeats_short[/tt]. The proof your bind worked is not "I sent the transaction"; it is this call answering [tt]"node_bound": true[/tt] and [tt]"eligible": true[/tt]. Check it before #30,186.
+
+[b]Common errors and what they mean:[/b]
+[list]
+[li][tt]this wallet has no key labelled 'X'[/tt] — the label you passed is not in the wallet; the command lists the labels it does have. Use the one your miner signs with.[/li]
+[li][tt]node key … must contain exactly 64 hex characters[/tt] / refuses to read the file — the node key file is malformed or not mode 600. Regenerate as above.[/li]
+[li][tt]"reasons":["not_node_bound"][/tt] after broadcasting — the bind transaction has not been included in a block yet, or it was never accepted. Check the txid with getrawtransaction / getrawmempool.[/li]
+[li][tt]"reasons":["heartbeats_short"][/tt] — only relevant after #31,050; make sure the node runs with [tt]--node-key-file[/tt] and has been up across the epochs.[/li]
+[/list]
+
+[b]Rotating the node key.[/b] If you ever replace the node key, register the new one with the next [tt]bind_seq[/tt] (2, then 3, …). The highest accepted sequence for your mining key is the active binding.
+
+[hr]
+
+[size=14pt][b]ROLLING BACK[/b][/size]
+
+The on-disk chain format is unchanged, so rollback is the old node binary and nothing else — no reindex, no migration, in either direction. A v16.3.0 node and a v16.2.3 node read the same chain files.
+
+[code]
+sudo systemctl stop sost-node
+sudo install -m 0755 /path/to/your/build/sost-node.v1623.<timestamp> /path/to/your/build/sost-node
+sudo systemctl start sost-node
+[/code]
+
+Caveat: a node rolled back to v16.2.3 again cannot full-sync from genesis — that is the very thing v16.3.0 fixes. Roll back only a node that is already synced.
+
+[hr]
+
+[size=14pt][b]DEVELOPER NOTE[/b][/size]
+
+SOST is being developed with engineering rigor, but that does not guarantee success, future value, liquidity, exchange listings, or community adoption.
+
+Right now SOST is still an experimental native Proof-of-Work network in pre-market testing. Miners can participate with the current reference miner using CPU-oriented mining and approximately 8 GB of RAM, but this does not mean that SOST will necessarily become valuable.
+
+The future of the project depends on several factors, none of which is guaranteed: that it can comply with applicable crypto, tax and possibly financial regulations where it may operate; that miners, node operators, developers and the wider community decide to support it; and that one or more exchanges may decide, at their own discretion, to list SOST in the future.
+
+ConvergenceX is a native and experimental Proof-of-Work system, different from traditional PoW designs, deployed directly on mainnet. Although the code has many internal tests and is being tested publicly, [b]it has not been audited by an independent security firm[/b]. We are walking an unknown path together. Mine, run a node and participate only with what you can afford to lose.
+
+[hr]
+
+[size=14pt][b]OFFICIAL DOWNLOADS AND DOCUMENTATION[/b][/size]
+
+[b]V16.3.0 release and verified binaries:[/b]
+[url=https://github.com/Neob1844/sost-core/releases/tag/v16.3.0]Download SOST V16.3.0[/url]
+
+[b]Full miner and node guide — download to NODE_BIND and heartbeats:[/b]
+[url=https://sostcore.com/sost-upgrade.html]sostcore.com/sost-upgrade.html[/url]
+
+[b]Official website:[/b] [url=https://sostcore.com]https://sostcore.com[/url]
+[b]Explorer:[/b] [url=https://sostcore.com/sost-explorer.html]https://sostcore.com/sost-explorer.html[/url]
+[b]Source code:[/b] [url=https://github.com/Neob1844/sost-core]https://github.com/Neob1844/sost-core[/url]
+
+[hr]
+
+Update your node to v16.3.0. Your miner and CLI are the same binaries as v16.2.3, byte for byte — nothing to change there.
+
+SOST is experimental open-source software distributed under the MIT license and provided without warranty. It has not been externally audited. Mining, node operation and any market activity are undertaken at the participant's own responsibility.
+
+Best regards,
+
+Neob

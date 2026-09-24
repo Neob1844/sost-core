@@ -32,9 +32,9 @@ consensus, wallets unchanged; CLI keeps NODE_BIND `--mining-key-label` /
 ## SHA256SUMS (real hashes of this release)
 
 ```
-5a45ffeb4ab2120bb6877ad1151c300391b9ecb211652417e46590d850fec90e  sost-node
-89b43c07dda17553eb56ecf3bb17ecb433a8c882710b650b1907aad96d171a92  sost-miner
-212ecbddbfa6f77815e390e07b02687582ca7d6d955a9f34201cd9b8f39baf6c  sost-cli
+304d056d504960b4179543672f14bee28146788b985363a5e95d476cc6b1492e  sost-node
+2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner
+489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  sost-cli
 ```
 
 ## Install (new node from scratch)
