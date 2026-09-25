@@ -33,6 +33,7 @@
 #include "sost/node_participation.h"   // V16 — node participation state
 #include "sost/crypto.h"   // sha256 — used by --dry-run-replay UTXO root
 #include "sost/mempool.h"
+#include "sost/p2p_frame.h"   // V16.3.x — shared P2P frame parser (fuzzed directly)
 #include "sost/tx_validation.h"
 #include "sost/atomic_swap_helpers.h"  // OTC-2.5 HTLC read-only RPC (ClassifyHtlcStatus)
 #include "sost/atomic_swap.h"          // atomic_swap_htlc_active_at (block-path HTLC tx gate, V15)
@@ -8167,64 +8168,20 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
     // --- Helper: try to extract one complete P2P message from recv_buf ---
     // Returns true if a complete message was extracted into `out`.
     // For encrypted connections, handles both ENCR and plaintext frames.
+    // Thin wrapper over the shared, fuzzed frame parser in sost/p2p_frame.h so
+    // the node and the fuzzer exercise byte-for-byte the same framing code. The
+    // ChaCha20-Poly1305 decrypt is injected; everything else lives in the header.
     auto try_parse_message = [&](P2PMsg& out) -> bool {
-        if (recv_buf.size() < 12) return false; // need header
-
-        uint32_t magic = read_u32(recv_buf.data());
-        if (magic != P2P_MAGIC) {
-            // Bad magic — discard one byte and let caller retry
-            recv_buf.erase(recv_buf.begin());
-            return false;
-        }
-
-        char cmd[5];
-        memcpy(cmd, recv_buf.data() + 4, 4);
-        cmd[4] = 0;
-        uint32_t payload_len = read_u32(recv_buf.data() + 8);
-
-        if (payload_len > MAX_P2P_MSG_SIZE) {
-            // Corrupt length — skip this header
-            recv_buf.erase(recv_buf.begin(), recv_buf.begin() + 12);
-            return false;
-        }
-
-        size_t frame_size = 12 + payload_len;
-        if (recv_buf.size() < frame_size) return false; // incomplete
-
-        if (crypto.encrypted && strcmp(cmd, "ENCR") == 0) {
-            // Encrypted frame: payload = ciphertext(N-16) + tag(16)
-            if (payload_len < 20) {
-                recv_buf.erase(recv_buf.begin(), recv_buf.begin() + frame_size);
-                return false;
-            }
-            uint32_t clen = payload_len - 16;
-            const uint8_t* cipher_ptr = recv_buf.data() + 12;
-            const uint8_t* tag_ptr = recv_buf.data() + 12 + clen;
-
-            std::vector<uint8_t> plain(clen);
-            uint64_t nonce_val = crypto.recv_nonce;
-            if (!chacha20_poly1305_decrypt(crypto.recv_key, nonce_val,
-                    cipher_ptr, clen, tag_ptr, plain.data())) {
-                recv_buf.erase(recv_buf.begin(), recv_buf.begin() + frame_size);
-                return false;
-            }
-            crypto.recv_nonce = nonce_val + 1;
-
-            if (clen < 4) {
-                recv_buf.erase(recv_buf.begin(), recv_buf.begin() + frame_size);
-                return false;
-            }
-            memcpy(out.cmd, plain.data(), 4);
-            out.cmd[4] = 0;
-            out.payload.assign(plain.begin() + 4, plain.end());
-        } else {
-            // Plaintext frame
-            memcpy(out.cmd, cmd, 5);
-            out.payload.assign(recv_buf.begin() + 12, recv_buf.begin() + frame_size);
-        }
-
-        recv_buf.erase(recv_buf.begin(), recv_buf.begin() + frame_size);
-        return true;
+        sost_p2p::ParsedFrame pf; pf.payload = &out.payload;
+        bool ok = sost_p2p::try_parse_frame(
+            recv_buf, crypto.encrypted, crypto.recv_nonce, pf,
+            [&](const uint8_t* c, uint32_t clen, const uint8_t* tag,
+                uint8_t* plain, uint64_t nonce) -> bool {
+                return chacha20_poly1305_decrypt(crypto.recv_key, nonce,
+                                                 c, clen, tag, plain);
+            });
+        if (ok) memcpy(out.cmd, pf.cmd, 5);
+        return ok;
     };
 
     bool should_disconnect = false;
