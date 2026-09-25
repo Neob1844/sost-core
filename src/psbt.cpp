@@ -43,7 +43,7 @@ static const char B64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0
 
 static std::string b64_encode(const std::string& in) {
     std::string out;
-    int val = 0, valb = -6;
+    uint32_t val = 0; int valb = -6;  // val unsigned: base64 shifts are well-defined (no signed-overflow UB)
     for (unsigned char c : in) {
         val = (val << 8) + c;
         valb += 8;
@@ -64,7 +64,7 @@ static std::string b64_decode(const std::string& in) {
         init = true;
     }
     std::string out;
-    int val = 0, valb = -8;
+    uint32_t val = 0; int valb = -8;  // val unsigned: base64 shifts well-defined (no signed-overflow UB)
     for (unsigned char c : in) {
         if (T[c] == -1) break;
         val = (val << 6) + T[c];
