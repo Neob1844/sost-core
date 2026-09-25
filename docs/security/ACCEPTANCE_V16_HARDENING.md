@@ -1,6 +1,7 @@
 # Informe de aceptación — Endurecimiento de seguridad (no-consenso) sobre v16.3.0
 
 Rama: `feat/fork-store-hardening` · candidato de release de endurecimiento, **no desplegado**.
+Veredicto: **APTO para producción** (sync cerrada en verde; sin bloqueantes técnicos).
 Objetivo: decidir si la versión endurecida está lista para producción **sin cambiar el consenso**
 (activación, emisión, SbPoW, DTD, NODE_BIND, Jackpot intactos).
 
@@ -37,27 +38,46 @@ Objetivo: decidir si la versión endurecida está lista para producción **sin c
 | Fuzzing tx/bloque | ✅ >23 M ejec., 0 hallazgos |
 | Fuzzing framing P2P (mirror de `try_parse_message`) | ✅ 186k ejec./76 s, cov saturada, 0 crashes; corpus conservado |
 | Interoperabilidad v16.3.0 ↔ endurecido (cifrado y claro) | ✅ 4 direcciones, 0 rechazos |
-| Sync completa génesis→punta (hashes + estado UTXO) | ⏳ EN CURSO — se cierra abajo |
+| Sync completa génesis→punta (hashes + estado UTXO) | ✅ **8/8 hashes MATCH** (0,1,5038,10k,15k,20k,25k,punta) + UTXO idéntico |
 
-## 4. Sincronización completa (pendiente de cierre)
+## 4. Sincronización completa (CERRADA — VERDE)
 
-Dos nodos endurecidos (uno con P2P cifrado, otro en claro) sincronizan desde génesis contra un
-nodo de referencia en la punta actual (26.973). Al alcanzar la punta se comparan hash de bloque
-por altura y estado UTXO. Estado al momento de escribir: en progreso, **0 rechazos, 0 baneos**.
+Dos nodos endurecidos (P2P cifrado y en claro) sincronizaron desde génesis contra un nodo de
+referencia hasta la punta actual **26.973**, con **0 rechazos y 0 baneos** en todo el trayecto.
 
-> _Fila a completar cuando el monitor confirme `enc==plain==26973`:_
-> - Hash de punta endurecido (cifrado): `____` · (claro): `____` · referencia: `____` → MATCH?
-> - Recuento UTXO / hash de conjunto UTXO endurecido vs referencia → MATCH?
+**Comparación de hash de bloque por altura** (referencia vs cifrado vs claro):
+
+| Altura | Hash (16 hex) | Veredicto |
+|---|---|---|
+| 0 (génesis) | `6517916b98ab9f80` | MATCH |
+| 1 | `02cd911caffad16b` | MATCH |
+| 5038 (borde tabla de excepciones) | `4556ac446a5d7be6` | MATCH |
+| 10000 | `a6f59f1f2f0e6b03` | MATCH |
+| 15000 | `4a8ddb8df0ddd9a4` | MATCH |
+| 20000 | `5907d3b39eee2ce8` | MATCH |
+| 25000 | `a8fb4673dee26c93` | MATCH |
+| 26973 (punta) | `f4e28b935fdcbd28` | MATCH |
+
+**Estado UTXO** (los tres nodos, idéntico): `utxo_count = 66239`, `total_supply = 211773.10678562`
+(gold_vault, popc_pool, dtd_lottery y circulating también coinciden byte a byte via `getsupplyinfo`).
+
+**Sello con el binario DEFINITIVO** (el que corrió la sync precedía a V6+subred): el binario final
+`sost-node` sha256 `12e1f0b3cadaec5e…` (con V6 y eviction por subred) cargó y validó la misma cadena
+persistida y reprodujo **exactamente** la referencia — punta `f4e28b935fdcbd28…`, `utxo_count = 66239`,
+`total_supply = 211773.10678562`. Confirmado que V6 (`signal` en `main`) y la eviction por subred (sólo
+el *store* de forks transitorios) **no alteran la ruta de validación/conexión** de bloques.
+
+_Conclusión §4: la versión endurecida produce una cadena y un estado UTXO idénticos bit a bit a la
+referencia._
+
 
 ## 5. Recomendación
 
 - **Los seis hallazgos están corregidos y verificados**; ninguno toca consenso; 119/119 en verde.
 - V6 es motivo suficiente por sí solo para publicar la release de endurecimiento (producción es
   vulnerable a un DoS trivial de disponibilidad).
-- **Bloqueante restante para el veredicto de producción**: cierre de la sync completa (§4) con el
-  binario definitivo. El binario que corre la sync actual precede a V6 y al fix de subred, que **no
-  tocan la ruta de sincronización**; aun así, para el sello final se re-verifica que el binario
-  definitivo produce el mismo hash de punta.
+- **Sync completa CERRADA en verde** (§4): 8/8 hashes MATCH + UTXO idéntico, sellado además con el
+  binario definitivo (V6+subred, sha `12e1f0b3`). **No quedan bloqueantes técnicos** para el veredicto.
 - **Fuera de alcance de esta release** (registrado en el masterplan, fases A–H): fuzzers restantes
   (mempool/NODE_BIND/latidos/Jackpot), laboratorio masivo a escala de cientos de peers,
   invariantes monetarios, modelo de referencia property-based, eclipse/particiones, builds
