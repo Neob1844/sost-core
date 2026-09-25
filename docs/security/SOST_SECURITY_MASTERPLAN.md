@@ -24,8 +24,11 @@ Rama de esta fase: `feat/fork-store-hardening` (publicada en GitHub, sin merge).
 **Reorg E2E:** verificada con el binario endurecido (arnés devnet): un fork con más
 trabajo reorganiza, desconecta el jackpot viejo, conecta el nuevo y el estado
 resultante == estado limpio.
-**Sync desde génesis:** en curso hasta la punta con el binario endurecido; a través
-de las 66 excepciones ya verificado (5500/5500, 0 rechazos, 0 DROPPED en sync normal).
+**Sync desde génesis:** **HECHO+VERIFICADO** hasta la punta 26.973 con el binario
+endurecido (cifrado y claro): 8/8 hashes de bloque MATCH + estado UTXO idéntico
+(utxo_count 66239, supply 211773.10678562), 0 rechazos. Sellado además con el
+binario definitivo (V6+subred, sha 12e1f0b3) que reproduce la referencia. Detalle
+en docs/security/ACCEPTANCE_V16_HARDENING.md §4.
 **Interoperabilidad v16.3.0 ↔ endurecido:** 0 rechazos en ambas direcciones,
 cifrado y sin cifrar.
 
