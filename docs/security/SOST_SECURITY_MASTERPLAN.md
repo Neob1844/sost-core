@@ -78,3 +78,9 @@ NO es v16.3.1: se incorpora a la Release v16.3.0 existente como revisión "sec1"
   CI (TSan, fuzzer P2P gated, checkpoints/btc-watch) al masterplan.
 - Test de checkpoints corregido (CHECK activa en Debug+Release, ancla 3554); suite 119/119 en Release y Debug/ASan.
 - Entregables: docs/security/V16_3_0_SEC1_{RELEASE,ACCEPTANCE,INCORPORATION}.md, docs/v16/SHA256SUMS.v16.3.0-sec1. Estado: **APTA, pendiente de autorización para incorporar a la Release v16.3.0.**
+
+## Fase C — estado real (ejecutado)
+- subsidy/emisión: modelo bit-exacto independiente, 0 divergencias vs C++ (30.307 alturas) y == cadena real. **HECHO**.
+- invariantes monetarias I1-I6: **HECHO** (30.245 alturas + identidad vs C++).
+- cASERT: el sim Python existente es de comportamiento (parity validator: LOW confidence, 2 divergencias HIGH). Modelo bit-exacto independiente de cASERT = **PENDIENTE** (grande; no marcado como superado).
+- DTD/Jackpot/NODE_BIND/heartbeat/UTXO transition: **PENDIENTE**.
