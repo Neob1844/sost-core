@@ -12,6 +12,7 @@ step(){ printf "\n=== %s ===\n" "$1"; }
 
 step "Release unit+consensus (ctest, btc-* excluded: need bitcoind)"
 if [ -d build ]; then
+  cmake --build build -j"$(nproc)" >/tmp/g_build.log 2>&1 || { echo "  build failed"; }
   if ctest --test-dir build -E "btc-watch|btc-funding|bitcoin-backend|btc-swap-state" >/tmp/g_ct.log 2>&1; then
     echo "  PASS ($(grep -oE '[0-9]+ tests passed' /tmp/g_ct.log | tail -1))"
   else echo "  FAIL"; grep -E 'FAILED' /tmp/g_ct.log|head; VALID_REJ=1; fi
