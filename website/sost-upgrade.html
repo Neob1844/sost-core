@@ -19,14 +19,14 @@
 <link rel="icon" type="image/png" href="sost-logo.png?v=v392">
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST — Upgrade your node and miner (window #29,900 → #30,000)</title>
-<meta name="description" content="How to update an already-running SOST node and miner to v16.3.0 inside the agreed window, after block #29,900 and before #30,000. You keep your coins, wallet, keys and payout address.">
+<title>SOST — Upgrade your node to v16.3.0 (node fix · full sync from genesis)</title>
+<meta name="description" content="How to update an already-running SOST node to v16.3.0. Only the node changed (full sync from genesis now works); the miner and CLI are byte-identical to v16.2.3, so you just swap the node. You keep your coins, wallet, keys and payout address.">
 <meta name="keywords" content="SOST quickstart, how to mine SOST, SOST setup, build SOST, run SOST node, SOST mining guide">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SOST V16.3.0 — Upgrade your node and miner">
-<meta property="og:description" content="Update window after #29,900 and before #30,000. Verified commands for manual, systemd and WSL setups.">
+<meta property="og:title" content="SOST V16.3.0 — Upgrade your node (node fix)">
+<meta property="og:description" content="v16.3.0 changes only the node (full sync from genesis); miner and CLI byte-identical to v16.2.3. Verified commands for manual, systemd and WSL setups.">
 <meta property="og:url" content="https://sostcore.com/sost-upgrade.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
@@ -320,7 +320,7 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
     <div style="font-size:11px;letter-spacing:2px;color:var(--text3,#7b8794);margin-bottom:8px">WHERE THE CHAIN IS RIGHT NOW</div>
     <div id="mgBadge" class="mg-badge" style="border-color:#7b8794;color:#9fb6c4">reading the chain&hellip;</div>
     <div id="mgLine" style="font-size:13.5px;line-height:1.7;margin-top:10px;color:var(--text2,#cbd5e1)">
-      V16 activates at block <b>#30,000</b>. The coordinated upgrade window is <b>after #29,900 and before #30,000</b>.
+      V16 activates at block <b>#30,000</b>, automatically by block height. <b>v16.3.0</b> changes only the node (full sync from genesis now works); the miner and CLI are byte-identical to v16.2.3, so you just <b>swap the node</b> &mdash; before #30,000 if you are still on pre-V16 software.
     </div>
     <div style="font-size:12px;color:var(--text3,#7b8794);margin-top:9px;line-height:1.6">
       Three different things, often confused:
@@ -736,15 +736,15 @@ function mgFallback(txt,done){
        l.innerHTML='V16 activated at block <b>#30,000</b>. The first DTD Jackpot V2 draw is <b>#'+fc(FIRST)+'</b>'+
          (h>=FIRST?' and has already taken place.':' — '+fc(FIRST-h)+' blocks away.');
      } else if(h>=WIN){
-       b.textContent='UPGRADE WINDOW OPEN · chain at #'+fc(h);
+       b.textContent='UPDATE YOUR NODE · chain at #'+fc(h);
        b.style.borderColor='#fb010d'; b.style.color='#ff6b6b';
-       l.innerHTML='<b>Install now.</b> The window closes at <b>#30,000</b> — '+fc(V16-h)+
-         ' blocks away. Update the node AND the miner.';
+       l.innerHTML='<b>Swap the node now.</b> V16 activates at <b>#30,000</b> — '+fc(V16-h)+
+         ' blocks away. v16.3.0 changes only the node; the miner and CLI are byte-identical to v16.2.3.';
      } else {
        b.textContent='NOT YET ACTIVE · chain at #'+fc(h)+' · '+fc(V16-h)+' blocks to go';
        b.style.borderColor='#fbbf24'; b.style.color='#fbbf24';
-       l.innerHTML='Preparation phase. Download and verify now; install during the window, '+
-         '<b>after #'+fc(WIN)+' and before #'+fc(V16)+'</b> — that window opens in '+fc(WIN-h)+' blocks.';
+       l.innerHTML='Download and verify <b>v16.3.0</b> now, and swap the node <b>before #'+fc(V16)+'</b> — '+
+         fc(V16-h)+' blocks away. Only the node changed; the miner and CLI are byte-identical to v16.2.3.';
      }
    }).catch(function(){});
 })();
@@ -789,7 +789,7 @@ function showOS(os) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v477" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->

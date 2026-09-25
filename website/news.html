@@ -224,14 +224,14 @@
   </section>
 
 
-<!-- V16 — activation schedule and the coordinated upgrade window -->
+<!-- V16 — activation schedule (v16.3.0, node-only update) -->
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <div class="section-id">// V16 CONSENSUS &middot; <span id="v16State">SCHEDULED</span> &middot; block&nbsp;30,000 &middot; upgrade window #29,900&rarr;#30,000</div>
+      <div class="section-id">// V16 CONSENSUS &middot; <span id="v16State">SCHEDULED</span> &middot; block&nbsp;30,000 &middot; v16.3.0 &mdash; node-only update</div>
       <div class="section-dates">Published: 2026-09-23 &middot; Last updated: 2026-09-23</div>
       <h2 class="section-title">SOST V16 — <span id="v16Head">activation scheduled for</span> block <span class="accent" style="color:#ffd166">30,000</span></h2>
-      <div class="section-sub"><span id="v16Live" style="display:inline-block;margin-bottom:6px;padding:3px 9px;border:1px solid #ffd166;border-radius:999px;font:700 11px ui-monospace;letter-spacing:1px;color:#ffd166">NOT YET ACTIVE &middot; checking the chain…</span><br>The coordinated operator window is <b style="color:#ffd166">after block&nbsp;#29,900 and before #30,000</b>. Activation itself is automatic, by block height: nothing to run at that block.</div>
+      <div class="section-sub"><span id="v16Live" style="display:inline-block;margin-bottom:6px;padding:3px 9px;border:1px solid #ffd166;border-radius:999px;font:700 11px ui-monospace;letter-spacing:1px;color:#ffd166">NOT YET ACTIVE &middot; checking the chain…</span><br><b style="color:#ffd166">v16.3.0</b> is the current release and changes <b>only the node</b> (full sync from genesis now works); the miner and CLI are byte-identical to v16.2.3, so you just swap the node before #30,000. Activation itself is automatic, by block height: nothing to run at that block.</div>
     </div>
     <div class="info-card">
       <p><b>What activates.</b> Two things, one activation. <b>DTD-normal eligibility</b> is re-pointed at current miners — recency drops to <b>288 blocks</b> at every height, the 6-block producer cooldown <b>yields</b> when applying it would leave the draw with nobody, and the 10%/288 anti-dominance gate is <b>armed only at 11 or more distinct miners</b>. And the <b>DTD Jackpot becomes an independent draw</b> (V2): node-gated by NODE_BIND plus heartbeats, weighted linearly by SbPoW blocks in the previous <b>2,016</b>, with no cooldown and no anti-dominance.</p>
@@ -1081,7 +1081,7 @@ sudo systemctl restart sost-miner</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v477" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- NON-CUSTODIAL DISCLAIMER (footer) -->
@@ -1248,8 +1248,8 @@ sudo systemctl restart sost-miner</pre>
       set('v16Head','active since');
       set('v16Live','<span style="display:inline-block;padding:3px 9px;border:1px solid #39ff14;border-radius:999px;font:700 11px ui-monospace;letter-spacing:1px;color:#39ff14">ACTIVE &middot; since block #'+fc(V16)+'</span>');
     } else if(h>=WINDOW){
-      set('v16State','UPGRADE WINDOW OPEN');
-      set('v16Live','<span style="display:inline-block;padding:3px 9px;border:1px solid #fb010d;border-radius:999px;font:700 11px ui-monospace;letter-spacing:1px;color:#fb010d">UPGRADE WINDOW OPEN &middot; '+fc(V16-h)+' blocks to activation</span>');
+      set('v16State','UPDATE YOUR NODE');
+      set('v16Live','<span style="display:inline-block;padding:3px 9px;border:1px solid #fb010d;border-radius:999px;font:700 11px ui-monospace;letter-spacing:1px;color:#fb010d">UPDATE YOUR NODE (v16.3.0) &middot; '+fc(V16-h)+' blocks to activation</span>');
     } else {
       set('v16Live','<span style="display:inline-block;padding:3px 9px;border:1px solid #ffd166;border-radius:999px;font:700 11px ui-monospace;letter-spacing:1px;color:#ffd166">NOT YET ACTIVE &middot; chain at #'+fc(h)+' &middot; '+fc(V16-h)+' blocks to go</span>');
     }

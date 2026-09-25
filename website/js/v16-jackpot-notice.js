@@ -132,25 +132,27 @@
   <button type="button" class="sost-v16-head" aria-expanded="false" aria-controls="sostV16Body" title="Open the DTD Jackpot V2 advance notice">
     <span class="sost-v16-icon" aria-hidden="true">🏆</span>
     <span class="sost-v16-titles">
-      <span class="sost-v16-title">SOST V16.2.3 &mdash; DTD Eligibility + Jackpot V2 &middot; Miner &amp; Node Operator Notice</span>
-      <span class="sost-v16-sub">Install the new binaries on your <b>node AND your miner</b> &mdash; <b>after block #29,900 and before #30,000</b> &middot; Normal DTD eligibility DOES change</span>
+      <span class="sost-v16-title">SOST V16.3.0 &mdash; Official release (node fix included) &middot; Miner &amp; Node Operator Notice</span>
+      <span class="sost-v16-sub">New node binary &mdash; <b>full sync from genesis now works</b> (v16.2.3 did not). Only the node changed; <b>miner &amp; CLI are byte-identical</b> &mdash; just swap the node. Activation #30,000, automatic by height.</span>
     </span>
     <span class="sost-v16-chip">ACTIVATION #30,000</span>
-    <span class="sost-v16-redchip">&#9888; UPDATE WINDOW &mdash; AFTER #29,900, BEFORE #30,000</span>
+    <span class="sost-v16-redchip">&#9888; V16.3.0 &mdash; UPDATE YOUR NODE BEFORE #30,000</span>
     <span class="sost-v16-cta"><span class="sost-v16-cta-label" data-when="closed">Miner guide</span><span class="sost-v16-cta-label" data-when="open" hidden>Hide</span><span class="sost-v16-chev" aria-hidden="true">&#9662;</span></span>
   </button>
 
   <div class="sost-v16-body" id="sostV16Body" hidden>
 
     <div class="sost-v16-blink">
-      <span class="hdr">&#9888; Mandatory action for every miner and node operator</span>
-      Install the <b>new V16.2.3 binaries on your node AND on your miner</b> and restart both &mdash;
-      <span class="win">after block #29,900 and before block #30,000</span>. That is the coordinated
-      update window for the network: everyone switches inside the same ~16&ndash;17&nbsp;hour stretch, so
-      the whole network crosses the activation running the same code. Get the binaries and verify their
-      SHA256 <b>before</b> the window opens, so the window itself is only stop, install, restart.
-      A validating node still on older consensus software at #30,000 <b>may diverge from the V16 chain</b>.
-      <div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.05)"><div style="font-size:12.5px;font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:7px">&#9654; SOST V16 &mdash; MINER &amp; NODE GUIDE</div><div style="font-size:11.5px;line-height:1.65;color:#b9c6d4;margin-bottom:9px">Download and verify &middot; who needs a node &middot; your RPC password (there is no universal one) &middot; the exact start commands &middot; wallet encryption &middot; DTD vs Jackpot V2 &middot; NODE_BIND &middot; backups &middot; troubleshooting.</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;font-family:var(--code,monospace)"><a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:5px 11px;border-radius:5px;text-decoration:none">OPEN THE FULL GUIDE</a><a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Download &amp; verify</a><a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">RPC password</a><a href="sost-upgrade.html#s5" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Start commands</a><a href="sost-upgrade.html#s8" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">NODE_BIND</a><a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">GitHub release</a></div><div style="font-size:10.5px;color:#7b8794;margin-top:8px;line-height:1.55">Already on v16.2.x? v16.3.0 changes only the node (full sync from genesis); miner and CLI are byte-identical to v16.2.3. Swap the node.</div></div>
+      <span class="hdr">&#9888; What to do &mdash; for every miner and node operator</span>
+      <b>SOST V16.3.0 is the current release and replaces v16.2.3.</b> It changes <b>no consensus rule</b>:
+      V16 still activates on its own, by block height, at <span class="win">#30,000</span>, and the first
+      DTD Jackpot V2 draw is still #30,186. <b>Only the node binary changed</b> &mdash; the miner and the CLI
+      are <b>byte-identical to v16.2.3</b> (same SHA-256). So if your node and miner are already running and
+      synced, you only need to <b>swap <code>sost-node</code></b>; the miner is not touched, and
+      <b>nobody restarts anything at #30,000</b>. The fix that matters: a fresh node can now
+      <b>full-sync from genesis</b> (v16.2.3 stalled at heights 4,160&ndash;5,410). A validating node still on
+      <b>pre-V16 (V15)</b> software at #30,000 <b>may diverge from the V16 chain</b> &mdash; update before then.
+      <div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.05)"><div style="font-size:12.5px;font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:7px">&#9654; SOST V16 &mdash; MINER &amp; NODE GUIDE</div><div style="font-size:11.5px;line-height:1.65;color:#b9c6d4;margin-bottom:9px">Download and verify &middot; who needs a node &middot; your RPC password (there is no universal one) &middot; the exact start commands &middot; wallet encryption &middot; DTD vs Jackpot V2 &middot; NODE_BIND &middot; backups &middot; troubleshooting.</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;font-family:var(--code,monospace)"><a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:5px 11px;border-radius:5px;text-decoration:none">OPEN THE FULL GUIDE</a><a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Download &amp; verify</a><a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">RPC password</a><a href="sost-upgrade.html#s5" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Start commands</a><a href="sost-upgrade.html#s8" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">NODE_BIND</a><a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">GitHub release</a></div><div style="font-size:10.5px;color:#7b8794;margin-top:8px;line-height:1.55">Already on v16.2.x? v16.3.0 changes <b>only the node</b> (full sync from genesis); miner and CLI are byte-identical to v16.2.3. Swap the node.</div></div>
     </div>
 
     <div class="sost-v16-alert">
@@ -160,10 +162,10 @@
     </div>
 
     <div class="sost-v16-nums">
-      <div class="sost-v16-num"><span class="n">#29,900 &rarr; #30,000</span><span class="l"><b>Update window</b> &mdash; install the new binaries here</span></div>
+      <div class="sost-v16-num"><span class="n">v16.3.0</span><span class="l"><b>Recommended release</b> &mdash; node fix; swap the node</span></div>
       <div class="sost-v16-num"><span class="n">#30,000</span><span class="l">V16 activates automatically by block height</span></div>
       <div class="sost-v16-num"><span class="n">#30,186</span><span class="l">First DTD Jackpot V2 draw</span></div>
-      <div class="sost-v16-num"><span class="n">v16.2.3</span><span class="l">The binaries to install &mdash; node AND miner</span></div>
+      <div class="sost-v16-num"><span class="n">NODE ONLY</span><span class="l">miner &amp; CLI byte-identical to v16.2.3 (same SHA-256)</span></div>
       <div class="sost-v16-num"><span class="n">288</span><span class="l">Jackpot cadence &amp; heartbeat epoch (unchanged)</span></div>
       <div class="sost-v16-num"><span class="n">100 &rarr; 500</span><span class="l">Jackpot base SOST, rollover cap &mdash; existing historical reserve, <b>no new emission</b></span></div>
     </div>
@@ -189,9 +191,9 @@
       <div class="sost-v16-card miner">
         <h4>&#9935; If you mine</h4>
         <ol>
-          <li><b>Before the window:</b> get <b>v16.3.0</b> &mdash; official binaries at <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases</a> (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, <code>SHA256SUMS</code>). Compiling is optional; a downloaded binary whose <b>SHA256 matches</b> is equally valid. If you do build it, use <code>-B build</code>: the published hashes only reproduce from a build directory with that name.</li>
+          <li>Get <b>v16.3.0</b> &mdash; official binaries at <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases</a> (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, <code>SHA256SUMS</code>). Compiling is optional; a downloaded binary whose <b>SHA256 matches</b> is equally valid. If you do build it, use <code>-B build</code>: the published hashes only reproduce from a build directory with that name.</li>
           <li>Verify the version and the official <b>SHA256</b>.</li>
-          <li><b>In the window (after #29,900, before #30,000):</b> stop your node and your miner, install the v16.3.0 node (miner and CLI are unchanged from v16.2.3), restart both. Step-by-step, with the commands for systemd / manual / WSL: <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">OPERATOR UPGRADE GUIDE</a>.</li>
+          <li><b>Swap the node:</b> stop <code>sost-node</code>, install the v16.3.0 node binary, restart it. <b>Your miner is byte-identical to v16.2.3 &mdash; nothing to change there.</b> Step-by-step, with the commands for systemd / manual / WSL: <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">OPERATOR UPGRADE GUIDE</a>.</li>
           <li>Keep mining normally &mdash; V16 activates by itself at #30,000. No command, no config switch, no restart exactly at the activation height.</li>
           <li>Register your <b>NODE_BIND</b> once V2 is active.</li>
           <li>Check your eligibility and PoW weight in the Explorer.</li>
@@ -201,8 +203,8 @@
         <h4>&#9881; If you run a node</h4>
         <ol>
           <li>The V16 upgrade is <b>mandatory for validating nodes</b>: below #30,000 it follows current V15 rules, from #30,000 it follows V16 rules.</li>
-          <li>Install the <b>v16.2.3</b> node binary in the update window: <b>after #29,900, before #30,000</b>.</li>
-          <li>Nodes still running the old consensus software after #30,000 <b>may diverge from the V16 chain</b>.</li>
+          <li>Install the <b>v16.3.0</b> node binary &mdash; it also lets a fresh node <b>full-sync from genesis</b>. On any v16.2.x you only swap the node.</li>
+          <li>Nodes still on <b>pre-V16 (V15)</b> consensus software after #30,000 <b>may diverge from the V16 chain</b> &mdash; update before then.</li>
           <li>Create/configure your <b>node identity</b> and keep the node running.</li>
           <li>Maintain the signed <b>heartbeats</b> (the guide will cover automatic maintenance).</li>
           <li>Only needed for the Jackpot &mdash; normal DTD requires none of this.</li>
@@ -231,7 +233,7 @@
     <p>Normal DTD and DTD Jackpot are independent draws at a Jackpot height &mdash; the two winners may be different miners, or the same one. Nothing prevents that.</p>
 
     <div class="sost-v16-warn">
-      <b>&#9888; Operational notice.</b> <b style="color:#39ff14">v16.3.0 is RELEASED.</b> The tag, the three binaries (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>) and <code>SHA256SUMS</code> are published and downloadable now &mdash; <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700">releases/tag/v16.3.0</a> &mdash; together with the step-by-step <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>. v16.3.0 changes only <b>sost-node</b> (full sync from genesis now works); <b>sost-miner</b> and <b>sost-cli</b> are byte-identical to v16.2.3. Verify with <code>sha256sum -c SHA256SUMS</code> before running anything. <b>Do not update from unofficial binaries or unverified sources.</b> SOST is experimental MIT-licensed software provided without warranty; mining, node operation and any market activity are at the participant's own risk.
+      <b>&#9888; Operational notice.</b> <b style="color:#39ff14">v16.3.0 is RELEASED</b> and replaces v16.2.3 as the recommended version. The tag, the three binaries (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>) and <code>SHA256SUMS</code> are published and downloadable now &mdash; <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700">releases/tag/v16.3.0</a> &mdash; together with the step-by-step <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>. <b>Only the node binary changed</b> (full sync from genesis now works); the miner and CLI are byte-identical to v16.2.3. Verify with <code>sha256sum -c SHA256SUMS</code> before running anything. <b>Do not update from unofficial binaries or unverified sources.</b> SOST is experimental MIT-licensed software provided without warranty; mining, node operation and any market activity are at the participant's own risk.
     </div>
 
     <div class="sost-v16-links">

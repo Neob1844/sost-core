@@ -2127,7 +2127,7 @@ function dtdEligibilityBanner(height, progressHtml){
         elig2+'<li>everything above &mdash; cooldown raised to <b>6 blocks</b></li><li><b>1-of-3</b> cadence (superseded at #25,000 by every-block)</li><li><b>anti-dominance gate</b>: excluded if &ge; 10% of the last 288 blocks</li><li><b>SbPoW-activity gate</b>: must have a recent SbPoW-signed block</li>','#22c55e')
     +era(e3,'Blocks 25,000 &rarr; 30,000 &middot; V15 Final Decentralization',
         elig3+'<li>everything above</li><li><b>+ recency window</b>: must have mined &ge; 1 block in the last <b>5,000</b> (20,000 at a jackpot height) &mdash; active miners only</li><li><b>draw cadence 3-of-3</b>: the DTD now draws on <b>every block</b>, superseding the 1-of-3 steady state</li><li><b>50% miner / 50% DTD</b> every block (Gold-Vault + PoPC emission redirected to DTD)</li><li><span style="color:var(--gold)">◈</span> <b>DTD Jackpot</b>: the existing reserve returned to active miners</li><li style="color:var(--text3)">No PoPC-contract requirement &mdash; the old PoPC eligibility gate is retired (DTD never requires PoPC)</li>','#c084fc')
-    +era(e4,'From block 30,000 &middot; V16.1 rules &middot; software v16.2.3 &mdash; current miners only',
+    +era(e4,'From block 30,000 &middot; V16.1 rules &middot; software v16.3.0 &mdash; current miners only',
         elig4+'<li><b>recency tightened to 288 blocks</b> (~2 days), at EVERY height &mdash; the wider jackpot-height window is gone, because the jackpot now has its own winner</li>'
         +'<li><b>cooldown yields</b>: the 6-block recent-producer exclusion is skipped when applying it would leave the draw with nobody</li>'
         +'<li><b>anti-dominance armed only at &ge;11 distinct miners</b> in the 288-block window &mdash; below that it would exclude the only miners securing the chain</li>'
@@ -2568,8 +2568,8 @@ async function renderDTDPanel(body,title,silent){
       + '<code>include/sost/lottery.h</code> (eligibility, cadence, seed, '
       + 'pending/rollover), <code>src/jackpot_v2.cpp</code> (the independent '
       + 'Jackpot draw from #30,000) and <code>include/sost/params.h</code> '
-      + '(every activation height). Current release: <b>v16.2.3</b> &mdash; '
-      + 'it changes no consensus rule. Click the title again to hide this '
+      + '(every activation height). Current release: <b>v16.3.0</b> &mdash; '
+      + 'it changes no consensus rule (node fix: full sync from genesis). Click the title again to hide this '
       + 'panel.</p>'
 
       + '</div>';
@@ -8595,7 +8595,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <script src="js/sost-music.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/v16-jackpot-notice.js?v=v477" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v478" defer></script>
 <script>
 // Wire the chiptune button. Each click plays a fresh random melody
 // (Web Audio requires a user gesture, so the click itself unlocks
