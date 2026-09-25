@@ -56,3 +56,25 @@ Sólo entra en el fork de #30.000 una corrección de **consenso** con vulnerabil
 reproducible, corrección probada y análisis de compatibilidad, y con autorización
 explícita. Todo lo NO-consenso (V1–V5 y fases A–H) se distribuye antes, compatible
 con v16.3.0, sin fork.
+
+
+## Release candidate v16.3.1 (security hardening, NODE-ONLY, NON-CONSENSUS) — VERIFICADO, sin publicar
+
+Commit congelado **260ffd02** (rama feat/fork-store-hardening), base v16.3.0 (ec2bea2c).
+Empaqueta V1–V6 + la extracción del parser P2P (P4). Solo cambia `sost-node`
+(c2b06b91); `sost-miner` (2ef9d0a7) y `sost-cli` (489f4374) byte-idénticos a v16.3.0.
+
+- Diff vs v16.3.0: solo src/sost-node.cpp; 0 ficheros de consenso; no cambia
+  emisión/SbPoW/DTD/NODE_BIND/Jackpot/#30.000.
+- SIGPIPE/EPIPE/escrituras: auditado (write_exact devuelve false en EPIPE).
+- Campaña prolongada 300 s: vivo, CPU 24%, RSS 482 MB, RPC 52 ms, fork store 150,
+  recupera; v16.3.0 muere en ~6 s.
+- ASan/UBSan + 119 tests: 0 hallazgos de memoria. GitHub Actions 260ffd02: verde.
+- Fuzzer sobre el parser de producción real (p2p_frame.h): 0 crashes.
+- Sync génesis→26.973 con el binario definitivo: 9/9 hashes + UTXO idénticos.
+  Interop v16.3.1↔v16.3.0 cifrado/claro: 0 rechazos.
+- Residual (NO bloqueante, fuera del hotfix): test unit `checkpoints` contradice el
+  ancla assumevalid 3554 ya presente en v16.3.0 (arreglar el test aparte); huecos de
+  CI (TSan, fuzzer P2P gated, checkpoints/btc-watch) al masterplan.
+- Entregables: docs/security/V16_3_1_RELEASE.md, V16_3_1_ACCEPTANCE.md,
+  docs/v16/SHA256SUMS.v16.3.1. Estado: **APTO, pendiente de autorización para publicar.**
