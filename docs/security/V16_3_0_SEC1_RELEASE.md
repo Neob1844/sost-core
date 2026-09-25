@@ -1,14 +1,14 @@
 # SOST v16.3.0 — Security revision "sec1" (node-only, NON-CONSENSUS)
 
-Public version stays **v16.3.0**. Revision label **sec1**. Source commit **260ffd02**
+Public version stays **v16.3.0**. Revision label **sec1**. Source commit **1a675744**
 (revision tag **v16.3.0-sec1**). Baseline v16.3.0 (`ec2bea2c`). Not published, not
 deployed — pending owner authorisation.
 
 ## 1. What this revision is
 
-A node-only, non-consensus security revision of v16.3.0. It fixes availability and
-resource-exhaustion defects found in the adversarial lab; it changes **no** consensus
-rule. `sost-miner` and `sost-cli` are **byte-identical to v16.3.0** — operators swap
+A node-only, non-consensus security revision of v16.3.0. It fixes availability and resource-exhaustion defects found in the adversarial lab, plus a
+pre-existing base64 signed-shift UB reachable over P2P (beacon notices); it changes **no**
+consensus rule. `sost-miner` and `sost-cli` are **byte-identical to v16.3.0** — operators swap
 only the node.
 
 | Fix | What it does | Consensus? |
@@ -97,7 +97,7 @@ git clone --depth 1 --branch v16.3.0-sec1 https://github.com/Neob1844/sost-core.
 git rev-parse HEAD          # the sec1 revision commit
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
-sha256sum build/sost-node       # must equal d3212aea (beacon base64 UB fixed; was d3212aea)…
+sha256sum build/sost-node       # must equal d3212aea…
 ```
 The build directory MUST be named `build` (the source path is normalised out of the
 binary, the directory name is not). Matching hashes are guaranteed only for the

@@ -12,7 +12,7 @@ as they are — the revision is *added*, never substituted silently.
 |---|---|
 | Public version (unchanged) | **v16.3.0** |
 | Revision label | **sec1** |
-| Source commit (node build) | **260ffd02** (P4 parser extraction; V1–V6). Tests/docs land on top but do not change the node binary. |
+| Source commit (node build) | **1a675744** (P4 parser extraction; V1–V6). Tests/docs land on top but do not change the node binary. |
 | New `sost-node` SHA-256 | `d3212aea4eb5793ab7670d5e096173091731d04cb972c96975e5851001272213` |
 | Original `sost-node` SHA-256 (kept) | `304d056d504960b4179543672f14bee28146788b985363a5e95d476cc6b1492e` |
 | `sost-miner` / `sost-cli` | unchanged (`2ef9d0a7…` / `489f4374…`) |
@@ -29,13 +29,13 @@ as they are — the revision is *added*, never substituted silently.
    `v16.3.0-sec1` at the merge commit. This is a revision label, not a new minor version, and it
    leaves `v16.3.0` untouched.
 3. On the **existing v16.3.0 GitHub release**, keep every original asset and **add**:
-   - `sost-node-sec1`  (the hardened node, `d3212aea (beacon base64 UB fixed; was d3212aea)…`) — a *distinct filename* so the original
+   - `sost-node-sec1`  (the hardened node, `d3212aea…`) — a *distinct filename* so the original
      `sost-node` (`304d056d…`) is still downloadable side-by-side.
    - `SHA256SUMS.sec1` (this repo's `docs/v16/SHA256SUMS.v16.3.0-sec1`).
    - Edit the release **body** to add a "🔒 Security revision sec1" section: new node hash, source
-     commit `260ffd02`, the six fixes, "miner & CLI unchanged", and the swap-node procedure.
+     commit `1a675744`, the six fixes, "miner & CLI unchanged", and the swap-node procedure.
 4. **Traceability note in the release body:** the original `sost-node` (`304d056d`) remains the
-   artifact of the initial v16.3.0 cut; `sost-node-sec1` (`d3212aea (beacon base64 UB fixed; was d3212aea)`) is the security-revised node.
+   artifact of the initial v16.3.0 cut; `sost-node-sec1` (`d3212aea`) is the security-revised node.
    Operators verifying an already-downloaded original binary still match the original SHA-256.
 
 ### Alternative (Option B)
@@ -46,7 +46,7 @@ separation, two pages. Option A matches "one public v16.3.0 with an identifiable
 ```
 sha256sum sost-node-sec1     # must equal d3212aea4eb5793ab7670d5e096173091731d04cb972c96975e5851001272213
 ```
-Source rebuild (reproducible): build commit `260ffd02` in a dir named `build`, Release, SBPOW=ON,
+Source rebuild (reproducible): build commit `1a675744` in a dir named `build`, Release, SBPOW=ON,
 TESTNET_FORKS=OFF → same hash.
 
 ## Web / Explorer / BitcoinTalk (only after the revision is published)

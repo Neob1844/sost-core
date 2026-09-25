@@ -1,4 +1,4 @@
-# SOST v16.3.0 — security revision "sec1" (node-only, NON-CONSENSUS). Source commit 260ffd02.
+# SOST v16.3.0 — security revision "sec1" (node-only, NON-CONSENSUS). Source commit 1a675744.
 # Built: Ubuntu 22.04.5, gcc 11.4.0, glibc 2.35; build dir named "build"; SBPOW=ON, TESTNET_FORKS=OFF, Release.
 #
 # This manifest lists ONLY the sec1 asset (the revised node). Download sost-node-sec1

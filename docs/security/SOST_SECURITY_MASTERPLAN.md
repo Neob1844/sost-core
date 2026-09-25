@@ -60,16 +60,16 @@ con v16.3.0, sin fork.
 
 ## Revisión de seguridad "sec1" de v16.3.0 (NODE-ONLY, NON-CONSENSUS) — VERIFICADA, sin publicar
 
-Commit congelado **260ffd02** (rama feat/fork-store-hardening), base v16.3.0 (ec2bea2c).
+Commit congelado **1a675744** (rama feat/fork-store-hardening), base v16.3.0 (ec2bea2c).
 NO es v16.3.1: se incorpora a la Release v16.3.0 existente como revisión "sec1" (tag v16.3.0 sin mover, originales conservados). Empaqueta V1–V6 + P4. Solo cambia `sost-node`
-(d3212aea (beacon base64 UB fixed; was d3212aea)); `sost-miner` (2ef9d0a7) y `sost-cli` (489f4374) byte-idénticos a v16.3.0.
+(d3212aea); `sost-miner` (2ef9d0a7) y `sost-cli` (489f4374) byte-idénticos a v16.3.0.
 
 - Diff vs v16.3.0: solo src/sost-node.cpp; 0 ficheros de consenso; no cambia
   emisión/SbPoW/DTD/NODE_BIND/Jackpot/#30.000.
 - SIGPIPE/EPIPE/escrituras: auditado (write_exact devuelve false en EPIPE).
 - Campaña prolongada 300 s: vivo, CPU 24%, RSS 482 MB, RPC 52 ms, fork store 150,
   recupera; v16.3.0 muere en ~6 s.
-- ASan/UBSan + 119 tests: 0 hallazgos de memoria. GitHub Actions 260ffd02: verde.
+- ASan/UBSan + 119 tests: 0 hallazgos de memoria. GitHub Actions 1a675744: verde.
 - Fuzzer sobre el parser de producción real (p2p_frame.h): 0 crashes.
 - Sync génesis→26.973 con el binario definitivo: 9/9 hashes + UTXO idénticos.
   Interop v16.3.1↔v16.3.0 cifrado/claro: 0 rechazos.
