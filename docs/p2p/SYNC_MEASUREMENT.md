@@ -72,3 +72,24 @@ The O(N²) disk-write cost is eliminated; per-block cost is flat again. Node bui
   the on-disk chain must still load to the identical tip/UTXO after an IBD crash+resume.
 - Confirm crash-during-IBD resume: restart mid-sync must load the last periodic save and re-sync the
   gap to the identical tip hash.
+
+## DESPUÉS full + correctness (real, measured)
+Full genesis→tip with the fix: **1,092.8 s = 18.2 min** (was 202 min) — **~11.1× faster**, and
+**under the 60-minute target on this WSL/HDD host** (demonstrated, not promised). Peak RSS 510 MB,
+mining-ready (first getblocktemplate) at the tip in 0.0 s.
+
+Crash-during-IBD resume test: synced to 7,558, `kill -9`, restarted → loaded ~6,607 (last periodic
+save, not from 0), re-synced the gap, and block hashes at 6,000 / 8,000 / 10,000 / 12,000 all MATCH
+the reference node with 0 rejects. The periodic-save chain file is valid and resumes to the identical
+chain. Consensus/validation path is unchanged — only write cadence.
+
+## Regression gate (fast-sync item 7)
+Full ctest on the fixed binary (53101a42…): **115/115 pass** (only the 4 btc-* tests excluded — need
+a live bitcoind). No regression from the save-cadence change.
+
+## Verdict
+Bottleneck #1 (O(N²) full chain.json rewrite per block) is CONFIRMED and FIXED, node-only and
+non-consensus: genesis→tip **202 min → 18.2 min (~11×)** on WSL/HDD, meeting the <60 min target here;
+crash-during-IBD resumes to the identical chain (hashes match, 0 rejects); 115/115 tests pass.
+READY for a node-only sync revision once combined and re-verified with the sec1 hardening (kept
+separate for now). Bugs A/B (block-locator / getheaders convergence) remain the next sync workstream.
