@@ -84,3 +84,6 @@ NO es v16.3.1: se incorpora a la Release v16.3.0 existente como revisión "sec1"
 - invariantes monetarias I1-I6: **HECHO** (30.245 alturas + identidad vs C++).
 - cASERT: el sim Python existente es de comportamiento (parity validator: LOW confidence, 2 divergencias HIGH). Modelo bit-exacto independiente de cASERT = **PENDIENTE** (grande; no marcado como superado).
 - DTD/Jackpot/NODE_BIND/heartbeat/UTXO transition: **PENDIENTE**.
+
+## sec1 sync CERRADO EN VERDE (binario FINAL d3212aea)
+9/9 hashes MATCH + UTXO 66239 + emision 21177310678562 idénticos vs referencia; cifrado+claro; 0 rechazos. sec1 = APTA (pendiente solo tu autorización de publicación). Tiempo end-to-end 5h03m CONTAMINADO (medición limpia pendiente).

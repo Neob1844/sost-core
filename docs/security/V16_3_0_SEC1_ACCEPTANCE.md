@@ -43,6 +43,9 @@ item — see residuals.
   reproducibility holds.
 - CI `btc-*` excluded (need a live bitcoind regtest).
 
+## Sync wall-clock (NOT a clean benchmark)
+End-to-end 5h03m for 26,973 blocks (~1.48 blk/s) on i9-10885H / 23 GB / WSL2 disk reported rotational=1 — but **contaminated**: concurrent clean builds, ASan runs, the churn campaign and Gauntlet work ran on the same machine during this sync. A clean, isolated, instrumented sync-time measurement (per the fast-sync directive) is pending and will be the representative figure.
+
 ## Standing constraints honoured
 No merge, no publish, no deploy. Consensus, emission, SbPoW, DTD, NODE_BIND, Jackpot and the #30,000
 schedule unchanged. User's WSL miner (PID 562789), wallet, keys, NODE_BIND and STRATO untouched.
