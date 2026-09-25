@@ -1,4 +1,4 @@
-# SOST v16.3.1 — Security hardening release (NODE-ONLY, NON-CONSENSUS)
+# SOST v16.3.0 — Security revision "sec1" (node-only, NON-CONSENSUS)
 
 Candidate commit (frozen): **260ffd02** on `feat/fork-store-hardening`.
 Baseline: **v16.3.0** (`ec2bea2c`). Not published, not deployed — pending owner authorisation.
@@ -26,7 +26,7 @@ Built in the canonical `build/` directory (Ubuntu 22.04.5, gcc 11.4.0, glibc 2.3
 `-DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release`.
 
 ```
-c2b06b91eb9da9f4736cd514df3f7e7616a8961f46b17442d7c171c2f345ac2c  sost-node    (v16.3.1 — new; was 304d056d… in v16.3.0)
+c2b06b91eb9da9f4736cd514df3f7e7616a8961f46b17442d7c171c2f345ac2c  sost-node    (v16.3.0 (security revision sec1) — new; was 304d056d… in v16.3.0)
 2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner   (byte-identical to v16.3.0/v16.2.3)
 489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  sost-cli     (byte-identical to v16.3.0/v16.2.3)
 ```
@@ -59,14 +59,14 @@ sleep 20 && systemctl status sost-node --no-pager | head -8
 
 # 3. verify the RUNNING binary is the new one
 PID=$(systemctl show sost-node -p MainPID --value)
-sha256sum "$(readlink -f /proc/$PID/exe)"     # must equal the v16.3.1 node hash
+sha256sum "$(readlink -f /proc/$PID/exe)"     # must equal the v16.3.0 (security revision sec1) node hash
 
 # the miner keeps running untouched — its binary did not change.
 ```
 
 ## 4. Rollback plan
 
-The on-disk chain format is unchanged (v16.3.1 and v16.3.0 read the same files),
+The on-disk chain format is unchanged (v16.3.0 (security revision sec1) and v16.3.0 read the same files),
 so rollback is one binary and nothing else — no reindex, no migration.
 
 ```bash
@@ -75,14 +75,14 @@ sudo install -m 0755 /path/to/your/build/sost-node.v1630.<timestamp> /path/to/yo
 sudo systemctl start sost-node
 ```
 
-Caveat: v16.3.1, like v16.3.0, is required for a full sync from genesis. Roll back
-only a node that is already synced. A v16.3.1 node and a v16.3.0 node interoperate
+Caveat: v16.3.0 (security revision sec1), like v16.3.0, is required for a full sync from genesis. Roll back
+only a node that is already synced. A v16.3.0 (security revision sec1) node and a v16.3.0 node interoperate
 in both directions (verified — §5 of the acceptance report).
 
 ## 5. Reproducible build (to finalise the node hash before publishing)
 
 ```bash
-git clone --depth 1 --branch <v16.3.1 tag> https://github.com/Neob1844/sost-core.git src && cd src
+git clone --depth 1 --branch <v16.3.0 (security revision sec1) tag> https://github.com/Neob1844/sost-core.git src && cd src
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
 sha256sum build/sost-node build/sost-miner build/sost-cli

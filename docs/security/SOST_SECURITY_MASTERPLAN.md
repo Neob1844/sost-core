@@ -58,10 +58,10 @@ explícita. Todo lo NO-consenso (V1–V5 y fases A–H) se distribuye antes, com
 con v16.3.0, sin fork.
 
 
-## Release candidate v16.3.1 (security hardening, NODE-ONLY, NON-CONSENSUS) — VERIFICADO, sin publicar
+## Revisión de seguridad "sec1" de v16.3.0 (NODE-ONLY, NON-CONSENSUS) — VERIFICADA, sin publicar
 
 Commit congelado **260ffd02** (rama feat/fork-store-hardening), base v16.3.0 (ec2bea2c).
-Empaqueta V1–V6 + la extracción del parser P2P (P4). Solo cambia `sost-node`
+NO es v16.3.1: se incorpora a la Release v16.3.0 existente como revisión "sec1" (tag v16.3.0 sin mover, originales conservados). Empaqueta V1–V6 + P4. Solo cambia `sost-node`
 (c2b06b91); `sost-miner` (2ef9d0a7) y `sost-cli` (489f4374) byte-idénticos a v16.3.0.
 
 - Diff vs v16.3.0: solo src/sost-node.cpp; 0 ficheros de consenso; no cambia
@@ -76,5 +76,5 @@ Empaqueta V1–V6 + la extracción del parser P2P (P4). Solo cambia `sost-node`
 - Residual (NO bloqueante, fuera del hotfix): test unit `checkpoints` contradice el
   ancla assumevalid 3554 ya presente en v16.3.0 (arreglar el test aparte); huecos de
   CI (TSan, fuzzer P2P gated, checkpoints/btc-watch) al masterplan.
-- Entregables: docs/security/V16_3_1_RELEASE.md, V16_3_1_ACCEPTANCE.md,
-  docs/v16/SHA256SUMS.v16.3.1. Estado: **APTO, pendiente de autorización para publicar.**
+- Test de checkpoints corregido (CHECK activa en Debug+Release, ancla 3554); suite 119/119 en Release y Debug/ASan.
+- Entregables: docs/security/V16_3_0_SEC1_{RELEASE,ACCEPTANCE,INCORPORATION}.md, docs/v16/SHA256SUMS.v16.3.0-sec1. Estado: **APTA, pendiente de autorización para incorporar a la Release v16.3.0.**
