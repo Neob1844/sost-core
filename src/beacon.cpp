@@ -135,7 +135,7 @@ inline int b64_value(char c) {
 bool b64_decode(const std::string& b64, std::vector<uint8_t>& out) {
     out.clear();
     out.reserve(b64.size() * 3 / 4);
-    int val = 0, bits = 0;
+    uint32_t val = 0; int bits = 0;  // val unsigned: base64 shift well-defined (no signed-overflow UB)
     for (char c : b64) {
         if (c == '=') break;
         if (c == ' ' || c == '\n' || c == '\r' || c == '\t') continue;

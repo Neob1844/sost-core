@@ -27,7 +27,7 @@ The revised node is published as a **new, distinctly-named asset** on the existi
 v16.3.0 release, so the original `sost-node` stays downloadable for traceability.
 
 ```
-c2b06b91eb9da9f4736cd514df3f7e7616a8961f46b17442d7c171c2f345ac2c  sost-node-sec1   (NEW — the revised node)
+d3212aea4eb5793ab7670d5e096173091731d04cb972c96975e5851001272213  sost-node-sec1   (NEW — the revised node)
 2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner       (unchanged, == v16.3.0)
 489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  sost-cli         (unchanged, == v16.3.0)
 304d056d504960b4179543672f14bee28146788b985363a5e95d476cc6b1492e  sost-node        (ORIGINAL v16.3.0, kept for traceability)
@@ -67,7 +67,7 @@ sleep 20 && systemctl status sost-node --no-pager | head -8
 # 3. verify the RUNNING node is the sec1 build (not the file on disk)
 PID=$(systemctl show sost-node -p MainPID --value)
 sha256sum "$(readlink -f /proc/$PID/exe)"
-#    must equal  c2b06b91eb9da9f4736cd514df3f7e7616a8961f46b17442d7c171c2f345ac2c
+#    must equal  d3212aea4eb5793ab7670d5e096173091731d04cb972c96975e5851001272213
 ```
 
 The miner keeps running untouched — its binary did not change. On Windows/WSL the same
@@ -97,7 +97,7 @@ git clone --depth 1 --branch v16.3.0-sec1 https://github.com/Neob1844/sost-core.
 git rev-parse HEAD          # the sec1 revision commit
 cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
-sha256sum build/sost-node       # must equal c2b06b91…
+sha256sum build/sost-node       # must equal d3212aea (beacon base64 UB fixed; was d3212aea)…
 ```
 The build directory MUST be named `build` (the source path is normalised out of the
 binary, the directory name is not). Matching hashes are guaranteed only for the

@@ -62,7 +62,7 @@ con v16.3.0, sin fork.
 
 Commit congelado **260ffd02** (rama feat/fork-store-hardening), base v16.3.0 (ec2bea2c).
 NO es v16.3.1: se incorpora a la Release v16.3.0 existente como revisión "sec1" (tag v16.3.0 sin mover, originales conservados). Empaqueta V1–V6 + P4. Solo cambia `sost-node`
-(c2b06b91); `sost-miner` (2ef9d0a7) y `sost-cli` (489f4374) byte-idénticos a v16.3.0.
+(d3212aea (beacon base64 UB fixed; was d3212aea)); `sost-miner` (2ef9d0a7) y `sost-cli` (489f4374) byte-idénticos a v16.3.0.
 
 - Diff vs v16.3.0: solo src/sost-node.cpp; 0 ficheros de consenso; no cambia
   emisión/SbPoW/DTD/NODE_BIND/Jackpot/#30.000.
