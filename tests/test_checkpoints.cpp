@@ -2,60 +2,71 @@
 // MIT License. See LICENSE file.
 //
 // test_checkpoints.cpp — Tests for hard checkpoint and assumevalid fast sync.
+//
+// Checks run in BOTH Debug and Release: CHECK() is a real runtime assertion that
+// records failures and makes main() exit non-zero, independent of NDEBUG (plain
+// assert() is compiled out under Release and would make these tests vacuous).
 #include "sost/checkpoints.h"
 #include "sost/params.h"
-#include <cassert>
 #include <cstdio>
+#include <string>
+
+static int g_fails = 0;
+#define CHECK(cond) do { if (!(cond)) { \
+    printf("  FAIL: %s  (%s:%d)\n", #cond, __FILE__, __LINE__); ++g_fails; } } while (0)
 
 // ═══════════════════════════════════════════════════════════
-// 1. Hard checkpoint exact match
+// 1. Hard checkpoint exact match (HARD_CHECKPOINTS is empty)
 // ═══════════════════════════════════════════════════════════
 
 void test_hard_checkpoint_empty() {
-    // At genesis, HARD_CHECKPOINTS is empty, so everything is false
-    assert(!sost::is_hard_checkpoint(0, "0000000000"));
-    assert(!sost::is_hard_checkpoint(0, "anything"));
-    assert(!sost::is_hard_checkpoint(1, "anything"));
-    assert(!sost::is_hard_checkpoint(100, "anything"));
-    assert(!sost::is_hard_checkpoint(999999, "anything"));
+    CHECK(!sost::is_hard_checkpoint(0, "0000000000"));
+    CHECK(!sost::is_hard_checkpoint(0, "anything"));
+    CHECK(!sost::is_hard_checkpoint(1, "anything"));
+    CHECK(!sost::is_hard_checkpoint(100, "anything"));
+    CHECK(!sost::is_hard_checkpoint(999999, "anything"));
     printf("PASS: hard checkpoint empty — nothing matches\n");
 }
 
 void test_hard_checkpoint_wrong_hash() {
-    // Even at a height that could be a checkpoint, wrong hash must fail
-    assert(!sost::is_hard_checkpoint(0, "wrong_hash"));
-    assert(!sost::is_hard_checkpoint(0, ""));
+    CHECK(!sost::is_hard_checkpoint(0, "wrong_hash"));
+    CHECK(!sost::is_hard_checkpoint(0, ""));
     printf("PASS: hard checkpoint wrong hash — rejected\n");
 }
 
 void test_lower_height_not_trusted() {
-    // CRITICAL: lower height alone must NOT be enough for trust.
-    // With LAST_HARD_CHECKPOINT_HEIGHT=0, height 0 with wrong hash must fail.
-    assert(!sost::is_hard_checkpoint(0, "not_the_right_hash"));
-    // Height below any checkpoint with wrong hash must fail
-    assert(!sost::is_hard_checkpoint(0, "fake"));
+    // Lower height alone must NOT be enough for trust.
+    CHECK(!sost::is_hard_checkpoint(0, "not_the_right_hash"));
+    CHECK(!sost::is_hard_checkpoint(0, "fake"));
     printf("PASS: lower height alone NOT trusted\n");
 }
 
 // ═══════════════════════════════════════════════════════════
-// 2. Assumevalid behavior
+// 2. Assumevalid behaviour — the SHIPPED anchor (height 3554)
 // ═══════════════════════════════════════════════════════════
 
-void test_no_assumevalid_anchor() {
-    // With empty ASSUMEVALID_BLOCK_HASH, no anchor exists
-    assert(!sost::has_assumevalid_anchor());
-    // Therefore no block can be under assumevalid range
-    assert(!sost::is_block_under_assumevalid(0, true));
-    assert(!sost::is_block_under_assumevalid(0, false));
-    assert(!sost::is_block_under_assumevalid(50, true));
-    assert(!sost::is_block_under_assumevalid(50, false));
-    printf("PASS: no assumevalid anchor — no trust\n");
+void test_assumevalid_anchor_present() {
+    // The release ships an assumevalid anchor at height 3554. This test asserts
+    // the shipped configuration, not an empty one.
+    CHECK(sost::has_assumevalid_anchor());
+    CHECK(sost::get_assumevalid_height() == 3554);
+    CHECK(sost::get_assumevalid_hash().size() == 64);
+
+    // With the anchor ON the active chain, blocks AT OR BELOW the height are
+    // under assumevalid; blocks above it are not.
+    CHECK(sost::is_block_under_assumevalid(0, true));
+    CHECK(sost::is_block_under_assumevalid(50, true));
+    CHECK(sost::is_block_under_assumevalid(3554, true));      // boundary inclusive
+    CHECK(!sost::is_block_under_assumevalid(3555, true));     // just above
+    CHECK(!sost::is_block_under_assumevalid(999999, true));
+    printf("PASS: assumevalid anchor present at 3554 — range correct\n");
 }
 
 void test_assumevalid_anchor_not_on_chain() {
-    // Even if has_assumevalid_anchor() were true, if anchor is not
-    // on active chain, no trust. Test with chain_contains_anchor=false.
-    assert(!sost::is_block_under_assumevalid(50, false));
+    // If the anchor is NOT on the active chain, no block is trusted, at any height.
+    CHECK(!sost::is_block_under_assumevalid(0, false));
+    CHECK(!sost::is_block_under_assumevalid(50, false));
+    CHECK(!sost::is_block_under_assumevalid(3554, false));
     printf("PASS: anchor not on active chain — no trust\n");
 }
 
@@ -64,25 +75,31 @@ void test_assumevalid_anchor_not_on_chain() {
 // ═══════════════════════════════════════════════════════════
 
 void test_full_verify_overrides_all() {
-    // --full-verify must always return false (never skip CX)
-    // Even with checkpoint match or assumevalid
-    assert(!sost::can_skip_cx_recomputation(0, "any", true, true));
-    assert(!sost::can_skip_cx_recomputation(0, "any", false, true));
-    assert(!sost::can_skip_cx_recomputation(100, "any", true, true));
-    assert(!sost::can_skip_cx_recomputation(999999, "any", true, true));
+    // --full-verify must always return false (never skip CX), even under the anchor.
+    CHECK(!sost::can_skip_cx_recomputation(0, "any", true, true));
+    CHECK(!sost::can_skip_cx_recomputation(0, "any", false, true));
+    CHECK(!sost::can_skip_cx_recomputation(100, "any", true, true));
+    CHECK(!sost::can_skip_cx_recomputation(3554, "any", true, true));
+    CHECK(!sost::can_skip_cx_recomputation(999999, "any", true, true));
     printf("PASS: --full-verify overrides all skip logic\n");
 }
 
 // ═══════════════════════════════════════════════════════════
-// 4. Master decision function
+// 4. Master decision function — with the shipped anchor
 // ═══════════════════════════════════════════════════════════
 
-void test_can_skip_empty_state() {
-    // With no checkpoints and no assumevalid, can_skip must always be false
-    assert(!sost::can_skip_cx_recomputation(0, "any", false, false));
-    assert(!sost::can_skip_cx_recomputation(100, "any", false, false));
-    assert(!sost::can_skip_cx_recomputation(0, "any", true, false));
-    printf("PASS: empty state — no skip possible\n");
+void test_can_skip_with_anchor() {
+    // No hard checkpoints exist, so skipping is driven purely by assumevalid.
+    // Anchor NOT on chain (chain_contains_anchor=false): never skip.
+    CHECK(!sost::can_skip_cx_recomputation(0, "any", false, false));
+    CHECK(!sost::can_skip_cx_recomputation(100, "any", false, false));
+    CHECK(!sost::can_skip_cx_recomputation(3554, "any", false, false));
+    // Anchor ON chain: skip at/below 3554, verify above it.
+    CHECK(sost::can_skip_cx_recomputation(0, "any", true, false));
+    CHECK(sost::can_skip_cx_recomputation(3554, "any", true, false));
+    CHECK(!sost::can_skip_cx_recomputation(3555, "any", true, false));
+    CHECK(!sost::can_skip_cx_recomputation(999999, "any", true, false));
+    printf("PASS: can_skip driven by assumevalid anchor (<=3554 on chain)\n");
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -90,19 +107,17 @@ void test_can_skip_empty_state() {
 // ═══════════════════════════════════════════════════════════
 
 void test_consensus_params_unchanged() {
-    // Verify critical consensus constants are not touched
-    assert(sost::GENESIS_TIME == 1773597600);
-    assert(sost::GENESIS_BITSQ == 765730);
-    assert(sost::R0_STOCKS == 785100863);
-    assert(sost::TARGET_SPACING == 600);
-    assert(sost::BLOCKS_PER_EPOCH == 131553);
-    assert(sost::CX_N == 32);
-    assert(sost::CX_ROUNDS_M == 100000);
-    assert(sost::CX_SCRATCH_M == 4096);
-    assert(sost::BITSQ_HALF_LIFE == 172800);
-    // Constitutional addresses
-    assert(std::string(sost::ADDR_GOLD_VAULT) == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d");
-    assert(std::string(sost::ADDR_POPC_POOL) == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f");
+    CHECK(sost::GENESIS_TIME == 1773597600);
+    CHECK(sost::GENESIS_BITSQ == 765730);
+    CHECK(sost::R0_STOCKS == 785100863);
+    CHECK(sost::TARGET_SPACING == 600);
+    CHECK(sost::BLOCKS_PER_EPOCH == 131553);
+    CHECK(sost::CX_N == 32);
+    CHECK(sost::CX_ROUNDS_M == 100000);
+    CHECK(sost::CX_SCRATCH_M == 4096);
+    CHECK(sost::BITSQ_HALF_LIFE == 172800);
+    CHECK(std::string(sost::ADDR_GOLD_VAULT) == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d");
+    CHECK(std::string(sost::ADDR_POPC_POOL) == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f");
     printf("PASS: consensus parameters unchanged\n");
 }
 
@@ -111,47 +126,36 @@ void test_consensus_params_unchanged() {
 // ═══════════════════════════════════════════════════════════
 
 void test_checkpoint_data_consistency() {
-    // LAST_HARD_CHECKPOINT_HEIGHT must match actual checkpoint list
     if (sost::HARD_CHECKPOINTS.empty()) {
-        assert(sost::LAST_HARD_CHECKPOINT_HEIGHT == 0);
+        CHECK(sost::LAST_HARD_CHECKPOINT_HEIGHT == 0);
     } else {
         uint32_t max_h = 0;
-        for (const auto& cp : sost::HARD_CHECKPOINTS) {
+        for (const auto& cp : sost::HARD_CHECKPOINTS)
             if (cp.height > max_h) max_h = cp.height;
-        }
-        assert(sost::LAST_HARD_CHECKPOINT_HEIGHT == max_h);
+        CHECK(sost::LAST_HARD_CHECKPOINT_HEIGHT == max_h);
     }
-    // ASSUMEVALID_HEIGHT must be consistent with hash
+    // ASSUMEVALID_HEIGHT and hash must be mutually consistent.
     if (sost::ASSUMEVALID_BLOCK_HASH.empty()) {
-        assert(sost::ASSUMEVALID_HEIGHT == 0);
+        CHECK(sost::ASSUMEVALID_HEIGHT == 0);
+    } else {
+        CHECK(sost::ASSUMEVALID_BLOCK_HASH.size() == 64);
+        CHECK(sost::ASSUMEVALID_HEIGHT > 0);
     }
     printf("PASS: checkpoint data consistency\n");
 }
 
 int main() {
     printf("=== SOST Checkpoint Fast Sync Tests ===\n\n");
-
-    // 1. Hard checkpoint exact match
     test_hard_checkpoint_empty();
     test_hard_checkpoint_wrong_hash();
     test_lower_height_not_trusted();
-
-    // 2. Assumevalid behavior
-    test_no_assumevalid_anchor();
+    test_assumevalid_anchor_present();
     test_assumevalid_anchor_not_on_chain();
-
-    // 3. Full verify override
     test_full_verify_overrides_all();
-
-    // 4. Master decision
-    test_can_skip_empty_state();
-
-    // 5. No parameter drift
+    test_can_skip_with_anchor();
     test_consensus_params_unchanged();
-
-    // 6. Data consistency
     test_checkpoint_data_consistency();
-
-    printf("\n=== All checkpoint tests PASSED ===\n");
-    return 0;
+    if (g_fails == 0) { printf("\n=== All checkpoint tests PASSED ===\n"); return 0; }
+    printf("\n=== %d checkpoint CHECK(s) FAILED ===\n", g_fails);
+    return 1;
 }
