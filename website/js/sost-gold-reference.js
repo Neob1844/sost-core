@@ -1,17 +1,22 @@
 /* sost-gold-reference.js — SINGLE shared source for the SOST gold reference.
- * 1 SOST is referenced to 1.14 mg of gold. This is a MONETARY REFERENCE, not a
+ * 1 SOST is VOLUNTARILY DENOMINATED as 1/1000 of the gold content of the Bretton
+ * Woods dollar (official parity 35 USD per troy ounce): 0.8886707657142857 mg of
+ * gold. This is a MONETARY REFERENCE and a project denomination choice, not a
  * market price, not a peg, not collateral, not redeemable. Every public page must
  * consume the constants + formula from here — never re-implement them inline.
  */
 (function (root) {
   "use strict";
-  var WEIGHT_MG = 1.14;            // grams reference weight, in milligrams
+  // Exact, single source of truth: 1/1000 of the Bretton Woods dollar gold content.
+  // (troy_oz_grams / 35 USD-per-oz) grams-per-dollar == mg-per-SOST after the /1000
+  // denomination and the g->mg factor cancel. = 0.8886707657142857 mg.
+  var WEIGHT_MG = 31.1034768 / 35;  // 0.8886707657142857 mg (Bretton Woods reference)
   var MG_PER_TROY_OZ = 31103.4768; // milligrams per troy ounce
   var GOLD_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd';
 
   // Canonical conversions (pure — the ONLY place these live).
   function sostFromOz(goldUsdPerOz) { return (Number(goldUsdPerOz) || 0) * WEIGHT_MG / MG_PER_TROY_OZ; }
-  function sostFromGram(goldUsdPerGram) { return (Number(goldUsdPerGram) || 0) * (WEIGHT_MG / 1000); } // = *0.00114
+  function sostFromGram(goldUsdPerGram) { return (Number(goldUsdPerGram) || 0) * (WEIGHT_MG / 1000); } // = *0.0008886707657142857
   function gramFromOz(oz) { return (Number(oz) || 0) / 31.1034768; }
   function mgFromOz(oz) { return (Number(oz) || 0) / MG_PER_TROY_OZ; } // USD per mg of gold from an oz price
 
