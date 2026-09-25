@@ -1,5 +1,10 @@
-# SOST v16.3.0 — security revision sec1 — security hardening (node-only, non-consensus). Frozen commit 260ffd02.
-# Built: Ubuntu 22.04.5, gcc 11.4.0, glibc 2.35; -B build; SBPOW=ON, TESTNET_FORKS=OFF, Release.
-c2b06b91eb9da9f4736cd514df3f7e7616a8961f46b17442d7c171c2f345ac2c  sost-node
-2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  sost-miner
-489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  sost-cli
+# SOST v16.3.0 — security revision "sec1" (node-only, NON-CONSENSUS). Source commit 260ffd02.
+# Built: Ubuntu 22.04.5, gcc 11.4.0, glibc 2.35; build dir named "build"; SBPOW=ON, TESTNET_FORKS=OFF, Release.
+#
+# This manifest lists ONLY the sec1 asset (the revised node). Download sost-node-sec1
+# from the v16.3.0 release and verify it here in an empty directory:
+#     sha256sum -c SHA256SUMS.sec1      ->  sost-node-sec1: OK
+# sost-miner and sost-cli are UNCHANGED from the original v16.3.0 assets (do not re-download):
+#     sost-miner  2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  (== v16.3.0)
+#     sost-cli    489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  (== v16.3.0)
+c2b06b91eb9da9f4736cd514df3f7e7616a8961f46b17442d7c171c2f345ac2c  sost-node-sec1

@@ -32,9 +32,10 @@ jobs:
         run: |
           # Exclude tests that need external infrastructure not present on the runner:
           #  - btc-watch/btc-funding/bitcoin-backend/btc-swap-state need a live bitcoind regtest;
-          #  - checkpoints depends on a dynamic-assumevalid config file (environment-dependent).
+          #  (checkpoints is INCLUDED now — the test asserts the shipped assumevalid anchor and
+          #   runs real CHECK()s active in both Release and Debug.)
           # Everything else (all SOST consensus/unit tests) is a REQUIRED gate.
-          ctest --test-dir build --output-on-failure -E "btc-watch|btc-funding|bitcoin-backend|btc-swap-state|checkpoints"
+          ctest --test-dir build --output-on-failure -E "btc-watch|btc-funding|bitcoin-backend|btc-swap-state"
 
   asan-ubsan:
     runs-on: ubuntu-22.04
@@ -73,7 +74,10 @@ jobs:
             tests/fuzz/fuzz_tx_block.cpp build/libsost-core.a -lcrypto -lssl -lsecp256k1 -o fuzz_txblock
           clang++ -std=c++17 -O1 -g -fsanitize=fuzzer,address,undefined -I include \
             tests/fuzz/fuzz_json_rpc.cpp src/json_rpc.cpp -o fuzz_json
+          clang++ -std=c++17 -O1 -g -fsanitize=fuzzer,address,undefined -I include \
+            tests/fuzz/fuzz_p2p_frame.cpp -o fuzz_p2pframe
       - name: fuzz smoke (REQUIRED — 90s each, any crash fails)
         run: |
           ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./fuzz_txblock -max_total_time=90 tests/fuzz/corpus_tx_block
           ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./fuzz_json     -max_total_time=90
+          ASAN_OPTIONS=abort_on_error=1:detect_leaks=0 ./fuzz_p2pframe -max_total_time=90 tests/fuzz/corpus_p2p_frame
