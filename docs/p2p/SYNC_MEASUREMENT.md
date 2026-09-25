@@ -53,3 +53,22 @@ chain content is identical, only the write cadence changes.
 On THIS WSL/HDD host, 202 min is disk-bound by the O(N²) rewrite. Fixing #1 alone should cut the
 tail dramatically; an SSD host plus the fix is the realistic path to the <60 min goal. Not promised
 until measured DESPUÉS.
+
+## Fix implemented + ANTES/DESPUÉS (partial, real)
+Change: during IBD, save the full chain every 2,000 accepted blocks instead of every block; keep
+per-block saving once at the live tip (block timestamp within ~40 min of now). `src/sost-node.cpp`
+at the auto-save site. Non-consensus, node-only; on-disk content unchanged.
+
+| Metric | ANTES (save every block) | DESPUÉS (save every 2,000 in IBD) |
+|---|---|---|
+| genesis → block 10,000 | 1,174.2 s | **96.6 s** (~12.2× faster) |
+
+The O(N²) disk-write cost is eliminated; per-block cost is flat again. Node built
+(53101a42…) from feat/p2p-headers-first-ibd (main base + this fix).
+
+## Pending before this can ship
+- Full DESPUÉS measurement genesis→tip (state the total; do not promise <60 min until measured).
+- Re-run consensus / reorg / P2P-adversarial / genesis-sync tests after the change (fast-sync item 7):
+  the on-disk chain must still load to the identical tip/UTXO after an IBD crash+resume.
+- Confirm crash-during-IBD resume: restart mid-sync must load the last periodic save and re-sync the
+  gap to the identical tip hash.

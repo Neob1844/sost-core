@@ -7362,10 +7362,21 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     // Clean up fork blocks that are now too old
     cleanup_old_forks();
 
-    // v0.3.2: Auto-save chain immediately after every accepted block
+    // v0.3.2: Auto-save chain after every accepted block.
+    // v16.3.x SYNC-PERF (NON-CONSENSUS, node-only): rewriting the entire chain.json
+    // on every block is O(N) per block = O(N^2) over an initial sync — the measured
+    // 35->1 blk/s deceleration. During bulk catch-up (block timestamp far in the
+    // past) save only on a periodic boundary; once at the live tip (recent block)
+    // save every block as before. On-disk content is byte-identical — only the write
+    // cadence changes. A crash during IBD resumes from the last save and re-syncs
+    // the gap. Does not touch consensus, block format, emission or the wire protocol.
     if (!g_chain_path.empty()) {
-        if (!save_chain_internal(g_chain_path)) {
-            printf("[BLOCK] WARNING: chain auto-save failed!\n");
+        static const int64_t CHAIN_SAVE_IBD_INTERVAL = 2000;
+        bool _live = (std::time(nullptr) - (time_t)sb.timestamp) < (4 * sost::TARGET_SPACING);
+        if (_live || (height % CHAIN_SAVE_IBD_INTERVAL == 0)) {
+            if (!save_chain_internal(g_chain_path)) {
+                printf("[BLOCK] WARNING: chain auto-save failed!\n");
+            }
         }
     }
 
