@@ -54,3 +54,27 @@ Keep the version string **v16.3.0** everywhere; add a "security revision sec1" n
 node SHA-256. Bump the shared banner cache-bust (`?v=v478` → `v479`) so browsers refetch. Do not
 announce a new version. The three-fixes list in the BitcoinTalk post gains the SIGPIPE availability
 fix and the fork/orphan-store hardening; the node hash line shows both the original and sec1 hashes.
+
+## Release-body text to add to the existing v16.3.0 release (point 7)
+
+Prepend this block at the TOP of the v16.3.0 release description (original text kept below it):
+
+```markdown
+> ## 🔒 Security revision — sec1 (node-only, non-consensus)
+> A hardened node is available as an **additional** asset on this release. It fixes an
+> availability DoS (a peer closing a socket mid-write could kill the node via SIGPIPE) plus
+> fork/orphan-store resource-exhaustion hardening. **No consensus rule changes**; activation is
+> still automatic at #30,000 and the first DTD Jackpot V2 is still #30,186.
+>
+> - **New node:** [`sost-node-sec1`](https://github.com/Neob1844/sost-core/releases/download/v16.3.0/sost-node-sec1)
+>   · SHA-256 `c2b06b91eb9da9f4736cd514df3f7e7616a8961f46b17442d7c171c2f345ac2c`
+>   · manifest [`SHA256SUMS.sec1`](https://github.com/Neob1844/sost-core/releases/download/v16.3.0/SHA256SUMS.sec1)
+> - **Source of the revision:** tag [`v16.3.0-sec1`](https://github.com/Neob1844/sost-core/tree/v16.3.0-sec1)
+> - **`sost-miner` and `sost-cli` are unchanged** (same SHA-256 as v16.3.0) — swap only the node.
+> - The **original** `sost-node` (`304d056d…`) and `SHA256SUMS` remain on this release for
+>   traceability. Verify and install `sost-node-sec1` per the operator guide.
+```
+
+The original `v16.3.0` tag, the original `sost-node` asset, and the original `SHA256SUMS` are
+left byte-for-byte intact. The GitHub "Source code (zip/tar.gz)" attached to the `v16.3.0` tag
+still contains the original source; to build the revised node, check out tag `v16.3.0-sec1`.
