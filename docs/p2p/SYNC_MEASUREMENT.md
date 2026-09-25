@@ -93,3 +93,13 @@ non-consensus: genesis→tip **202 min → 18.2 min (~11×)** on WSL/HDD, meetin
 crash-during-IBD resumes to the identical chain (hashes match, 0 rejects); 115/115 tests pass.
 READY for a node-only sync revision once combined and re-verified with the sec1 hardening (kept
 separate for now). Bugs A/B (block-locator / getheaders convergence) remain the next sync workstream.
+
+## Write-interruption atomicity (P2 next-step 1) — VERIFIED
+save_chain_internal writes `chain.json.tmp` then atomically renames it over `chain.json`. Killed the
+node with `kill -9` at height 6015 — during/just after the periodic 6000 save. On-disk `chain.json`
+was left at height 6000 (2001... 6001 blocks), valid and JSON-parseable; the partial `.tmp` is
+discarded. Restart log: "Chain: 6001 blocks, height=6000, UTXOs=17964 · Node running · Peer
+connected" — loaded the last complete save and resumed. A mid-write crash NEVER corrupts chain.json;
+the worst case is losing up to one save interval (≤2000 blocks) which is re-synced. Combined with the
+earlier crash-resume run (hashes at 6k/8k/10k/12k MATCH, 0 rejects), write-interruption recovery holds.
+Still pending: adversarial reorgs with the batched save; fresh-install on Windows + Linux.
