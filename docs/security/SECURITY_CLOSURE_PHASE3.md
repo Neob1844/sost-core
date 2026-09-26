@@ -3,7 +3,20 @@
 All on the integrated candidate `integration/sec2-p2p-ibd` (node `c0c21da0`). Simulated peers are
 a Python protocol client, NOT independent real nodes.
 
-## 2A — Real mainnet sync from genesis (integrated binary) — VERIFIED (partial-height, real)
+## 2A — Real FULL mainnet sync from genesis (integrated binary) — COMPLETE (real, hash-verified)
+**Definitive run:** the integrated binary synced **genesis → tip (28,077) in 25m06s (1506 s)**; the
+**tip hash matches the public mainnet RPC exactly**, and hashes at h=1/12000/20000/25000 also match
+(5/5) — the binary follows the real highest-verified-work chain across every historical activation
+(V11/V12/V13/V15). Emission at the V15 transition #25000 is correct (subsidy 785100863,
+miner_reward = 50% split). Sync source: an available already-synced local peer (the internet seed
+DNS did not resolve from the lab box); the chain content is the REAL mainnet chain (hash-verified),
+so this validates the binary's sync+verification logic regardless of source.
+**Honest timing correction:** the prior "18.2 min" figure (from the standalone P2P branch) does NOT
+reproduce here — the real full sync is **~25 min** on this box, with the per-interval rate declining
+from ~115 blk/s (fast-sync ≤ checkpoint) to ~8–15 blk/s in the 24k–28k range (heavier late blocks).
+Correctness is fully verified; the 18.2 min claim is retracted for this binary/environment.
+
+### (superseded) earlier partial note
 Isolated lab node (mainnet profile, no miner, NOT STRATO), connected to the real default seeds,
 synced from block 0. Measured on THE INTEGRATED BINARY:
 - genesis → **height 5,587 in 121 s**; ≤ assumevalid(3554) fast-sync ~115 blk/s, post-checkpoint
