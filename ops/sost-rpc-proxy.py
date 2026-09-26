@@ -54,6 +54,28 @@ def denied_to_public(method):
     return method in PUBLIC_DENY_METHODS
 
 
+# INTERIM MITIGATION (remove once the sec2 node — hash 5b50a448… — is deployed).
+# The v16.3.0/sec1 node CRASHES on malformed params to these anonymous read methods:
+#   * getblockhash with a non-numeric height -> uncaught std::stoll -> node aborts;
+#   * getblock with a nested-array param      -> json_get_params infinite loop -> OOM.
+# Both are reachable through this public gateway (no-auth reads). Validate their param
+# SHAPE here and reject malformed input with 400 before it reaches the node. Additive at
+# the gateway (no node/consensus change); valid explorer calls (getblockhash [<int>],
+# getblock ["<64-hex>"]) pass unchanged.
+_HEX = set('0123456789abcdefABCDEF')
+def bad_public_params(method, params):
+    """True iff params for a crash-prone public read method are malformed."""
+    if method == 'getblockhash':
+        return not (isinstance(params, list) and len(params) == 1 and (
+            isinstance(params[0], int) or
+            (isinstance(params[0], str) and params[0].lstrip('-').isdigit())))
+    if method == 'getblock':
+        return not (isinstance(params, list) and len(params) >= 1 and
+                    isinstance(params[0], str) and len(params[0]) == 64 and
+                    all(c in _HEX for c in params[0]))
+    return False
+
+
 def clean_request(data):
     """Reserialize to a canonical single-method JSON-RPC body. Drops any extra fields so a
     crafted request cannot smuggle a second `method` past the node; the node then parses
@@ -109,6 +131,11 @@ def make_handler(auth_header):
                         'error': {'code': -32601,
                                   'message': 'method not available on the public gateway; '
                                              'run your own node'}}))
+                if bad_public_params(method, data.get('params', [])):
+                    sys.stderr.write('[rpc-proxy] method=%s code=400 bad_params=1\n' % method)
+                    return self._send(400, json.dumps({
+                        'jsonrpc': '2.0', 'id': data.get('id', 1),
+                        'error': {'code': -32602, 'message': 'invalid parameters'}}))
                 body = clean_request(data).encode()
                 req = urllib.request.Request(NODE_URL, data=body, headers={'Content-Type': 'application/json'})
                 if needs_node_auth(method):
