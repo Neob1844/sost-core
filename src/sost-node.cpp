@@ -2799,6 +2799,35 @@ static std::string handle_getrawblock(const std::string& id, const std::vector<s
 
 static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>& p) {
     g_miner_stats.getblocktemplate_calls.fetch_add(1, std::memory_order_relaxed);
+    // SAFETY (IBD mining gate): refuse to hand the local miner a template while a connected,
+    // version-acked peer advertises a materially higher height — i.e. we KNOW we are behind
+    // (e.g. right after a genesis fallback from a corrupt chain.json). Mining on a stale tip
+    // would fork the network. NON-CONSENSUS: does not change block validation/acceptance; it
+    // only prevents the LOCAL miner from starting on a known-behind tip. Bootstrap/solo (no
+    // peers, or we are at/above every peer) is unaffected. Locks g_peers_mu ONLY (released)
+    // before g_chain_mu below, so no lock-order inversion.
+    {
+        // Gate ONLY on our OWN validated tip height vs the last hard checkpoint. Our tip reached
+        // this height through full PoW validation, so it is a cryptographically-grounded, LOCAL
+        // signal — immune to Sybil / eclipse / lying peers. If we have not even reached the
+        // trusted checkpoint we are provably not at the network tip (e.g. a genesis fallback
+        // from a corrupt chain.json) and must not mine a competing chain. A synced node ALWAYS
+        // mines regardless of any peer's ANNOUNCED height (the earlier peer-height gate was a
+        // remote DoS: one lying peer could deny mining). DEV/TESTNET floor is 0 so solo/bootstrap
+        // mining works; a DEV-only env override enables deterministic testing.
+        int64_t mining_min_height = 0;
+        if (ACTIVE_PROFILE == Profile::MAINNET) {
+            mining_min_height = (int64_t)sost::LAST_HARD_CHECKPOINT_HEIGHT;
+        } else {
+            const char* ov = getenv("SOST_DEV_MINING_MIN_HEIGHT");
+            if (ov && *ov) mining_min_height = atoll(ov);
+        }
+        if (g_chain_height < mining_min_height) {
+            return rpc_error(id, -10, "node not synced to the trusted checkpoint (tip height " +
+                std::to_string(g_chain_height) + " < " + std::to_string(mining_min_height) +
+                ") — refusing block template to avoid mining on a stale/genesis tip");
+        }
+    }
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     // V14.7: pass the height this template will be mined at (tip + 1) so an
     // EXPIRED HTLC LOCK is kept out of the block (never poisons it — see R17).
