@@ -2568,6 +2568,24 @@ static std::string handle_getrawblock(const std::string& id, const std::vector<s
 
 static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>& p) {
     g_miner_stats.getblocktemplate_calls.fetch_add(1, std::memory_order_relaxed);
+    // SAFETY (IBD mining gate): refuse to hand the local miner a template while a connected,
+    // version-acked peer advertises a materially higher height — i.e. we KNOW we are behind
+    // (e.g. right after a genesis fallback from a corrupt chain.json). Mining on a stale tip
+    // would fork the network. NON-CONSENSUS: does not change block validation/acceptance; it
+    // only prevents the LOCAL miner from starting on a known-behind tip. Bootstrap/solo (no
+    // peers, or we are at/above every peer) is unaffected. Locks g_peers_mu ONLY (released)
+    // before g_chain_mu below, so no lock-order inversion.
+    {
+        static const int64_t IBD_MINING_LAG_MARGIN = 2; // blocks
+        int64_t my_h = g_chain_height;
+        int64_t best_peer = -1;
+        { std::lock_guard<std::mutex> lk2(g_peers_mu);
+          for (auto& pr : g_peers) if (pr.version_acked && pr.their_height > best_peer) best_peer = pr.their_height; }
+        if (best_peer > my_h + IBD_MINING_LAG_MARGIN) {
+            return rpc_error(id, -10, "node still syncing: peer height " + std::to_string(best_peer) +
+                             " > local " + std::to_string(my_h) + " — refusing block template to avoid mining on a stale tip");
+        }
+    }
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     // V14.7: pass the height this template will be mined at (tip + 1) so an
     // EXPIRED HTLC LOCK is kept out of the block (never poisons it — see R17).
