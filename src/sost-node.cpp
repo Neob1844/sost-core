@@ -5835,6 +5835,13 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         if (!parent_known) {
             // ORPHAN: parent not known locally
             std::lock_guard<std::mutex> lk(g_block_index_mu);
+            // Already parked as an orphan? A resend carries no new information, and the dedup
+            // carve-out above deliberately lets resends reach here — so without this guard a peer
+            // resending ONE orphan would insert a fresh g_orphans_by_prev entry each time (it is a
+            // multimap), filling the pool to MAX_ORPHAN_BLOCKS with duplicates of a single block and
+            // evicting real orphans (a cheap memory/DoS). The legitimate cascade is unaffected:
+            // process_orphans_for_parent ERASES the orphan from g_block_index before re-running it.
+            if (g_block_index.count(bid)) { fflush(stdout); return false; }
             if (g_orphans_by_prev.size() < MAX_ORPHAN_BLOCKS) {
                 BlockIndexEntry entry;
                 entry.block_id = from_hex(bid);
