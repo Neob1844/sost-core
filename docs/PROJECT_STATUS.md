@@ -22,10 +22,10 @@ Mainnet snapshot: block 27,972 (2026-09-25). #29,900 ≈ 1,928 blocks away.
 - **Pending / risks:** (a) kill DURING a chain.json write (mid-write atomicity, not only between saves); (b) adversarial reorgs with batched save; (c) fresh-install test on Windows + Linux; (d) not yet combined with sec1 into one verified binary.
 - **Next action:** write-interruption test + adversarial reorg test (P2 next-steps 1).
 
-## P3 — Bitcoin-Core-style P2P (locator / headers-first)  ·  audited; implementation pending
-- **Branch:** `feat/p2p-headers-first-ibd` · **audit commit:** `496c6c10` (`docs/p2p/PHASE1_AUDIT.md`)
-- **Findings:** Bug A partial (their_height updates on blocks, not on headers/inv; no getheaders); Bug B structural (height-based sync, no locator → forks don't converge at the source; orphans stored but parent not requested). ConvergenceX header-verifiability = open item.
-- **Next action:** empirically reproduce A and B (forked nodes must auto-converge to the highest-verified-work chain, no manual restart) → stage block locator + getheaders + peer-state update + orphan-parent recovery, backward-compatible; then parallel download, peer diversity, stale-tip guard.
+## P3 — Bitcoin-Core-style P2P (locator / headers-first)  ·  fork convergence FIXED (branch); headers-first still pending
+- **Branch:** `feat/p2p-headers-first-ibd` · **fix commit:** `73b85b1b` · **audit commit:** `496c6c10` (`docs/p2p/PHASE1_AUDIT.md`, `docs/p2p/FORK_CONVERGENCE_AB.md`)
+- **DONE — A/B reproduced + fixed:** empirically reproduced with two devnet nodes; the 4-layer defect (request only above tip / no ancestor; fork never assembles from out-of-order orphans; orphan/fork fragments deduped away at BOTH the BLCK layer and process_block; progress measured by BLCK-arrived not chain-advanced — so the honest higher-work peer was BANNED as "empty DONE spam"). Fixed backward-compatibly over the existing height-based GETB (serving peer unchanged): ancestor walk-back (block locator as height requests) + orphan cascade on fork storage + dedup carve-out for pending orphan/fork + progress=chain-advanced. **Result: shallow fork (2-block reorg) AND genesis-deep fork (no shared history) both converge automatically over P2P, no manual restart (~3s).** Regression: normal linear IBD + devnet reorg/payout/mempool/rollover/jackpot_v2 E2E all PASS; compiles clean in mainnet profile; no consensus rule changed.
+- **Next action:** fuller headers-first (download header chain first to know fork point + target, then parallel block download); ConvergenceX header-verifiability audit; peer diversity + stale-tip guard. Branch only — no merge/publish without authorization.
 
 ## P4 — Security Gauntlet  ·  PARTIAL (do not call partials PASS)
 - **Branch:** `feat/fork-store-hardening` (B/C/F/H) · latest security commit on branch.
