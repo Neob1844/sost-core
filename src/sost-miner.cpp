@@ -592,6 +592,7 @@ struct BlockTemplateResult {
     std::vector<std::string> tx_hexes;
     int64_t total_fees;
     int count;
+    bool node_unsynced = false;  // node refused the template: tip is stale/genesis (do not mine)
 };
 
 static int hex_val(char c) {
@@ -626,6 +627,15 @@ static BlockTemplateResult fetch_block_template() {
         gbt_params = "[\"" + g_miner_address + "\"]";
     std::string resp = rpc_call("getblocktemplate", gbt_params);
     if (resp.empty()) return result;
+    // Node stale-tip mining gate: it refuses a template while our validated tip is below the
+    // trusted checkpoint (e.g. genesis fallback from a corrupt chain.json). Honor it — do NOT
+    // mine on a stale/genesis tip. Attacker-independent: the node gates on its OWN tip height,
+    // never on peer-announced height, so a lying peer cannot trip this.
+    if (resp.find("stale/genesis tip") != std::string::npos ||
+        resp.find("not synced to the trusted checkpoint") != std::string::npos) {
+        result.node_unsynced = true;
+        return result;
+    }
 
     int64_t fees_val = jint(resp, "total_fees");
     result.total_fees = (fees_val > 0) ? fees_val : 0;
@@ -1345,6 +1355,12 @@ static bool mine_one_block(Profile prof, uint32_t max_nonce, bool sim_time) {
     std::vector<std::string> mempool_tx_hexes;
     if (!g_rpc_url.empty()) {
         auto tmpl = fetch_block_template();
+        if (tmpl.node_unsynced) {
+            printf("[MINER] node reports NOT SYNCED (stale/genesis tip) — skipping round, not mining.\n");
+            fflush(stdout);
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+            return false; // never mine on a stale tip
+        }
         if (tmpl.count > 0) {
             total_fees = tmpl.total_fees;
             for (size_t ti = 0; ti < tmpl.tx_raws.size(); ++ti) {
