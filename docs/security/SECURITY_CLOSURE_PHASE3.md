@@ -46,3 +46,32 @@ requires either a most-recent-checkpoint or a **minimum-chainwork floor** (both 
 still peer-independent) — recommended as a release-time tightening (bump the constant per release).
 Fundamental limit: a node cannot KNOW it is at the network tip in isolation without some external
 reference; we therefore do NOT improvise a consensus change and keep the stable, DoS-immune bound.
+
+## Update — negative-case exceptions, disk-full, doc fix (follow-up)
+
+### Exceptions — positive AND negative (empirical)
+- **Positive (live):** during the real genesis sync the node LOGS the exceptions being applied with
+  block-id confirmation — e.g. `historic param exception at h=5038 ... block_id confirmed` and
+  `historic replay exception at h=5150..5158 ... accepted`. All 66 real historical blocks validate
+  through their exceptions during sync.
+- **Negative:** a tampered block at an exception height (nonce-flipped, and bits_q-altered) is
+  REJECTED (-25). The guard applies the historical params ONLY when the recomputed block_id equals
+  the recorded hash (`historic_param_id_matches`), so a tampered block (different id) does not get
+  the exception and fails full validation.
+- **Doc contradiction FIXED:** the 47 PARAM exceptions reach 5038 (`HISTORIC_PARAM_MAX_HEIGHT`), but
+  the 19 REPLAY/cASERT exceptions (`HISTORIC_REPLAY_EXCEPTIONS`) reach **5410**. `HISTORIC_EXCEPTIONS_ASSESSMENT.md`
+  updated (max exception height = 5410, still historical, cannot apply > 5410).
+
+### Disk-full during write — fail-safe
+Simulated without privileges by making `<chain>.tmp` a directory so the save's write fails cleanly
+(disk-full / ENOSPC-equivalent; the failure mode is identical to the already-proven write-interruption:
+the `.tmp` write fails → the atomic rename never runs → the real file is untouched). Result: node
+stays ALIVE and keeps mining in memory, logs `WARNING: chain auto-save failed!` (8×), the real
+chain.json is **byte-intact**, and after freeing the "disk" a restart **recovers the last good saved
+state (h=8) with no corruption**.
+
+### V16 transition
+The #30,000 activation logic (Historical Jackpot V2 rollover + first PAID node-gated weighted jackpot)
+is validated on the integrated binary by `run_v16_devnet_jackpot_v2` (9/0) at scaled devnet heights —
+same consensus code path as mainnet #29,900/#30,000. Mainnet heights cannot be reached in the fast
+devnet; the logic (not the literal height) is what the test exercises.

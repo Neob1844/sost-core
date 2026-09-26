@@ -1,12 +1,12 @@
 # Assessment of the 66 historical height+hash exceptions (Step 6)
 
 Two hardcoded tables in `src/sost-node.cpp` used for correct resync-from-genesis:
-- **(1) cASERT exceptions — 19 blocks** (13–22 Apr 2026, early heights).
-- **(2) Param-table exceptions — 47 blocks** (heights **4715–5038**, `HISTORIC_PARAM_MAX_HEIGHT=5038`).
+- **(1) Replay/cASERT exceptions — 19 blocks**, heights 4160–5410 (`HISTORIC_REPLAY_EXCEPTIONS`).
+- **(2) Param-table exceptions — 47 blocks**, heights 4715–**5038** (`HISTORIC_PARAM_MAX_HEIGHT=5038`).
 
 ## Findings — NO unintended trust/validation problem
-1. **Strictly historical / cannot apply forward.** Max height 5038; the chain is at ~28,035 and
-   the #30,000 fork is future. Neither table can match any height > 5038 → **zero forward attack
+1. **Strictly historical / cannot apply forward.** Max exception height = **5410** (the 19 replay/cASERT exceptions reach 5410; the 47 param exceptions reach 5038 — the earlier "max 5038" was WRONG for the replay table); the chain is at ~28,035 and
+   the #30,000 fork is future. Neither table can match any height > 5410 → **zero forward attack
    surface** (irrelevant to the #29,900/#30,000 window).
 2. **Exact height + full recomputed block-id anchored.** An exception applies only if the block's
    recomputed `block_id` equals the recorded hash (`historic_param_id_matches`). A different block
