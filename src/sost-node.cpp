@@ -1047,9 +1047,16 @@ static std::vector<std::string> json_get_params(const std::string& json) {
         } else {
             auto p=inner.find_first_of(",] \t\n\r",i);
             if(p==std::string::npos) p=inner.size();
+            // SECURITY: a nested array/object in params (e.g. [[[1]]]) leaves the cursor ON a
+            // ']' or '}', which is a delimiter, so find_first_of returns i itself: the token is
+            // empty and i never advances — an infinite loop appending "" until the node OOMs
+            // (~6 GB per malformed getblock call). Skip a delimiter sitting at the cursor.
+            if(p==i){ i++; continue; }
             r.push_back(inner.substr(i,p-i));
             i=p;
         }
+        // Defense in depth: no RPC method takes anywhere near this many params.
+        if(r.size()>256) break;
     }
     return r;
 }
@@ -4964,6 +4971,12 @@ static std::string dispatch_rpc(const std::string& req) {
 
     // Per-method telemetry. Skip self-instrumentation of getrpcstats so
     // a polling explorer card doesn't dominate the stats it's reading.
+      // SECURITY: several handlers parse params with std::stoll/stoul/stod/from_hex or vector
+      // indexing that THROW on malformed input (getblockhash with a non-numeric height threw
+      // std::invalid_argument -> std::terminate -> the whole node aborted from ONE unauthenticated
+      // RPC call). Convert any uncaught handler exception into a JSON-RPC error so the node stays
+      // alive. Purely defensive: valid calls unaffected, no consensus path touched.
+      try {
     if (method == "getrpcstats") {
         return it->second(id,json_get_params(req));
     }
@@ -4982,6 +4995,11 @@ static std::string dispatch_rpc(const std::string& req) {
         stats->errors.fetch_add(1, std::memory_order_relaxed);
     }
     return resp;
+      } catch (const std::exception& e) {
+          return rpc_error(id, -32603, std::string("internal error: ") + e.what());
+      } catch (...) {
+          return rpc_error(id, -32603, "internal error");
+      }
 }
 
 // =============================================================================
