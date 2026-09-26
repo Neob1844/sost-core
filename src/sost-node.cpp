@@ -5744,9 +5744,26 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     // try_reorganize() replay them through the FULL validation path onto the
     // rolled-back tip (no validation is bypassed — only this relay-dedup cache).
     if (!reorg_connect) {
-        std::lock_guard<std::mutex> lk2(g_known_mu);
-        if (g_known_blocks.count(bid)) {
-            return false; // silently ignore — not an error
+        // A block we already hold ONLY as a disconnected orphan or a fork fragment must NOT
+        // be deduped away: out-of-order sync can store it with an undercounted (or unknown)
+        // cumulative work before its parent arrives, and the later in-order delivery is our
+        // one chance to re-run it with the parent connected and recompute its true work. Only
+        // a block that is genuinely settled (on the active chain, or already a fully-accounted
+        // fork) is safe to drop as a relay duplicate. Without this carve-out the poisoned
+        // fragment is frozen and the heavier chain can reorg partway but never all the way.
+        bool pending = false;
+        {
+            std::lock_guard<std::mutex> lk(g_block_index_mu);
+            auto it = g_block_index.find(bid);
+            if (it != g_block_index.end() &&
+                (it->second.status == BlockStatus::ORPHAN || it->second.status == BlockStatus::FORK))
+                pending = true;
+        }
+        if (!pending) {
+            std::lock_guard<std::mutex> lk2(g_known_mu);
+            if (g_known_blocks.count(bid)) {
+                return false; // silently ignore — not an error
+            }
         }
     }
 
@@ -5904,6 +5921,19 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             try { try_reorganize(bid); }
             catch (const std::exception& e) { fprintf(stderr, "[ERROR] try_reorganize: %s\n", e.what()); }
         }
+          // Whether or not THIS block just won, pull in any orphans that were waiting on it
+          // as their parent. During sync a fork grows OUT OF ORDER — a child block can arrive
+          // (and be parked as an orphan) before the parent that connects it to a block we hold.
+          // The active-chain accept path reconnects orphans (process_orphans_for_parent after
+          // add_block), but a block landing on a *fork* took this branch and returned without
+          // ever doing so, so the alternative chain could never assemble past its first stored
+          // fragment — its cumulative work stayed undercounted and a legitimately-heavier chain
+          // never triggered a reorg. Reconnecting here lets the fork accumulate block by block
+          // until it out-works the active tip, at which point the reorg above fires on the block
+          // that crosses over. g_block_index_mu is released; process_orphans_for_parent re-locks
+          // it in short scopes and re-enters process_block under the recursive g_chain_mu held.
+          try { process_orphans_for_parent(bid); }
+          catch (const std::exception& e) { fprintf(stderr, "[ERROR] process_orphans_for_parent(fork): %s\n", e.what()); }
         fflush(stdout);
         return false; // Don't add to main chain yet
     }
@@ -7808,7 +7838,14 @@ static void process_orphans_for_parent(const std::string& parent_hash_hex) {
         if (!raw_json.empty()) {
             printf("[ORPHAN] Re-processing orphan block %s (parent now available)\n",
                    orphan_hash.substr(0,16).c_str());
-            process_block(raw_json);
+            // reorg_connect=true so the relay-dedup guard at the top of process_block does not
+            // silently drop this block: it was marked "known" when first parked as an orphan, and
+            // we have just erased it from the index precisely so it can run the FULL path again now
+            // that its parent connects. Without this bypass the cascade dies after one step (parent
+            // reconnects, but its now-available children are rejected as duplicates), so an
+            // out-of-order fork never assembles and a heavier chain never triggers a reorg.
+            // reorg_connect ONLY lifts the dedup cache — no validation is skipped.
+            process_block(raw_json, /*reorg_connect=*/true);
         }
     }
 }
@@ -7921,6 +7958,14 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         std::chrono::steady_clock::time_point last_progress;
         int retries{0};
         int empty_done_count{0};  // consecutive DONE with 0 blocks received
+        // Exponential back-off used to locate the common ancestor when our chain
+        // diverged at/below our tip. 0 = not searching. See the DONE handler.
+        int64_t ancestor_step{0};
+        // g_chain_height at the moment we sent the current GETB batch. Progress is
+        // "the active chain advanced" (a cascade-driven reorg counts) — NOT merely
+        // "a BLCK arrived" — so a reorg that fires inside process_block still resets
+        // the ancestor search instead of walking past the tip we just reached.
+        int64_t height_before_batch{-1};
         // Blocks still expected from a GETB batch WE asked for. This is the
         // only thing that entitles a peer to the relaxed sync rate, and it
         // only ever goes up when this node sends a GETB — never on anything
@@ -8033,6 +8078,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
 
             uint8_t buf[8];
             write_i64(buf, g_chain_height + 1);
+            sync.height_before_batch = g_chain_height;
             p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
             // Credit exactly what this batch may return. The serving loop stops
             // at GETB_BATCH_MAX, so anything beyond it was never asked for.
@@ -8097,6 +8143,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     sync.empty_done_count = 0;
                     uint8_t buf[8];
                     write_i64(buf, g_chain_height + 1);
+                    sync.height_before_batch = g_chain_height;
                     p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
                     // Credit exactly what this batch may return. The serving loop stops
                     // at GETB_BATCH_MAX, so anything beyond it was never asked for.
@@ -8122,6 +8169,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 sync.retries = 0;
                 uint8_t buf[8];
                 write_i64(buf, g_chain_height + 1);
+                sync.height_before_batch = g_chain_height;
                 p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
                 // Credit exactly what this batch may return. The serving loop stops
                 // at GETB_BATCH_MAX, so anything beyond it was never asked for.
@@ -8203,6 +8251,18 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     std::lock_guard<std::mutex> lk3(g_known_mu);
                     already_have = g_known_blocks.count(blk_bid_check) > 0;
                 }
+                  // A block we hold ONLY as a disconnected orphan or an unconnected fork fragment is
+                  // NOT a benign echo: re-delivery is our chance to reconnect it now that its parent may
+                  // sit on the active chain (e.g. right after a reorg moved the tip onto its branch — the
+                  // last block of a fork we adopted arrives exactly this way). Let it reach process_block,
+                  // which extends the tip or recomputes its fork work. A settled block still dedups below.
+                  if (already_have) {
+                      std::lock_guard<std::mutex> lkfi(g_block_index_mu);
+                      auto itfi = g_block_index.find(blk_bid_check);
+                      if (itfi != g_block_index.end() &&
+                          (itfi->second.status == BlockStatus::ORPHAN || itfi->second.status == BlockStatus::FORK))
+                          already_have = false;
+                  }
                 if (!already_have) {
                     std::lock_guard<std::recursive_mutex> lkc(g_chain_mu);
                     if (blk_height >= 0 && blk_height <= g_chain_height
@@ -8321,33 +8381,74 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             sync.outstanding = 0;
 
             if (sync.mode == SyncState::HISTORICAL && g_chain_height < sync.peer_height) {
-                // Track empty DONE responses (peer claims height but sends no blocks)
-                if (sync.blocks_received == 0) {
-                    sync.empty_done_count++;
-                    if (sync.empty_done_count >= MAX_EMPTY_DONE) {
-                        printf("[SYNC] Peer %s sent %d consecutive empty DONEs (claims height %lld "
-                               "but sends no blocks) — disconnecting as suspicious\n",
-                               addr.c_str(), sync.empty_done_count, (long long)sync.peer_height);
-                        if (add_misbehavior(fd, addr, 50, "empty DONE spam (fake height)")) return false;
-                        sync.mode = SyncState::IDLE;
-                        return true;
+                int64_t next_start;
+                // Progress = the ACTIVE CHAIN advanced during this batch. That covers both a
+                // straightforward forward extension AND a reorg triggered by the out-of-order
+                // orphan cascade inside process_block (which never touches sync.blocks_received).
+                // Using blocks_received alone made the node reorg partway, then — still seeing
+                // "0 blocks received" — keep walking back past the very tip it had just reached
+                // and finally drop the honest peer one block short of full convergence.
+                bool progressed = (sync.blocks_received > 0) ||
+                                  (sync.height_before_batch >= 0 && g_chain_height > sync.height_before_batch);
+                if (!progressed) {
+                    // An empty batch while the peer claims MORE height than us has two causes:
+                    //  (a) the peer is lying about its height (no such blocks exist), or
+                    //  (b) our chains DIVERGED at or below our current tip, so the peer's
+                    //      block at g_chain_height+1 does not extend OUR tip — it lands as an
+                    //      orphan or a short fragment fork and we make no forward progress.
+                    // Plain height-based sync cannot tell these apart or recover from (b):
+                    // re-requesting the same g_chain_height+1 loops forever, and the old code
+                    // then wrongly punished an HONEST higher-work peer as an "empty DONE spam"
+                    // attacker. Recover by walking the GETB start height BACKWARDS (exponential
+                    // back-off toward genesis) to locate the common ancestor — a block locator
+                    // expressed over the existing height-based GETB, so it is fully backward
+                    // compatible (the serving peer already answers GETB by height along its own
+                    // active chain). Once we request from at/below the fork point we receive the
+                    // peer's divergent branch starting from a block we already hold; it connects
+                    // down to genesis, its TRUE cumulative work is computed, and the normal reorg
+                    // path switches us to it if it outweighs ours. See docs/p2p/.
+                    if (sync.range_start <= 1) {
+                        // We already requested from genesis and STILL nothing connects: the peer
+                        // genuinely shares no chain with us beyond what we hold. Only now is the
+                        // "fake height" verdict justified.
+                        sync.empty_done_count++;
+                        if (sync.empty_done_count >= MAX_EMPTY_DONE) {
+                            printf("[SYNC] Peer %s: no common ancestor after full walk-back to genesis "
+                                   "(claims height %lld) — disconnecting as suspicious\n",
+                                   addr.c_str(), (long long)sync.peer_height);
+                            if (add_misbehavior(fd, addr, 50, "no common ancestor (fake height)")) return false;
+                            sync.mode = SyncState::IDLE;
+                            return true;
+                        }
+                        next_start = 1;
+                        printf("[SYNC] Empty batch from %s at genesis (attempt %d/%d)\n",
+                               addr.c_str(), sync.empty_done_count, MAX_EMPTY_DONE);
+                    } else {
+                        int64_t back = (sync.ancestor_step == 0) ? 1 : sync.ancestor_step * 2;
+                        sync.ancestor_step = back;
+                        next_start = g_chain_height + 1 - back;
+                        if (next_start < 1) next_start = 1;
+                        printf("[SYNC] Diverged below tip vs %s (peer=%lld, we=%lld) — ancestor "
+                               "walk-back, requesting from %lld (step=%lld)\n",
+                               addr.c_str(), (long long)sync.peer_height, (long long)g_chain_height,
+                               (long long)next_start, (long long)back);
                     }
-                    printf("[SYNC] Empty DONE #%d from %s (claims %lld, we have %lld)\n",
-                           sync.empty_done_count, addr.c_str(),
-                           (long long)sync.peer_height, (long long)g_chain_height);
                 } else {
-                    sync.empty_done_count = 0; // reset on successful block receipt
+                    // Progress: either normal forward sync or the fork branch is now connecting
+                    // (a reorg advanced our tip). Resume forward from our current tip and clear
+                    // the ancestor-search state.
+                    sync.empty_done_count = 0;
+                    sync.ancestor_step = 0;
+                    next_start = g_chain_height + 1;
+                    printf("[SYNC] DONE at height %lld, requesting %lld..%lld\n",
+                           (long long)g_chain_height, (long long)next_start, (long long)sync.peer_height);
                 }
-
-                // Request next batch
-                printf("[SYNC] DONE at height %lld, requesting %lld..%lld\n",
-                       (long long)g_chain_height,
-                       (long long)(g_chain_height + 1), (long long)sync.peer_height);
-                sync.range_start = g_chain_height + 1;
+                sync.range_start = next_start;
                 sync.blocks_received = 0;
                 sync.last_progress = std::chrono::steady_clock::now();
                 uint8_t buf[8];
-                write_i64(buf, g_chain_height + 1);
+                write_i64(buf, next_start);
+                sync.height_before_batch = g_chain_height;
                 p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
                 // Credit exactly what this batch may return. The serving loop stops
                 // at GETB_BATCH_MAX, so anything beyond it was never asked for.
