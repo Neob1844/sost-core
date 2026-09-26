@@ -1,0 +1,15 @@
+# SOST v16.3.0 — security revision "sec2" (node-only, NON-CONSENSUS).
+# sec2 = sec1 (fork-store hardening) + two RPC crash-hardening fixes. Supersedes sec1.
+# Source: branch release/v16.3.0-sec1-rpc (sec1 base 32cabab2 + RPC fix ebe4f790).
+# Build (REPRODUCIBLE): gcc/glibc as v16.3.0; build dir named EXACTLY "build" and located
+#   INSIDE the source tree (so -ffile-prefix-map=<src>=/sost normalizes BOTH source and build
+#   paths to /sost — an out-of-tree or differently-named build dir changes the node hash);
+#   cmake flags: -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release.
+#
+# This manifest lists ONLY the sec2 asset (the revised node). Verify in an empty directory:
+#     sha256sum -c SHA256SUMS.v16.3.0-sec2   ->  sost-node-sec2: OK
+# sost-miner and sost-cli are UNCHANGED from the original v16.3.0 assets (byte-identical to
+# v16.3.0 AND sec1 — do NOT re-download or overwrite them):
+#     sost-miner  2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2  (== v16.3.0)
+#     sost-cli    489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07  (== v16.3.0)
+5b50a448f3e319ef6137da61093750bd6d286cc508ff69fe994cf3532c4fa157  sost-node-sec2
