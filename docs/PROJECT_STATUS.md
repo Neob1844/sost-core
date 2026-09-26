@@ -1,3 +1,15 @@
+# SOST — master status (DONE / TESTING / BLOCKED / NOT STARTED)
+
+**Deadline snapshot (real mainnet height read 2026-09-26): height 28035 → ~1865 blocks to #29,900 (~13 days @600s), ~1965 to #30,000 (V16 activation).**
+
+**Autonomous execution mandate active:** advance through dev-branch work without asking per-task; NEVER publish/deploy/merge-to-main/spend/sign/touch STRATO/miner/wallet/NODE_BIND/consensus without express authorization. Branches frozen & on GitHub: sec1 `feat/fork-store-hardening` 32cabab2 · sec2 `release/v16.3.0-sec1-rpc` (node 5b50a448, miner/cli==v16.3.0) · RPC `fix/rpc-crash-hardening` · proxy-mitigation `fix/rpc-proxy-interim-mitigation` · P2P `feat/p2p-headers-first-ibd` · gauntlet `test/security-gauntlet` · atomic-swap `feat/btc-atomic-swap-complete`. Tag v16.3.0 intact.
+
+**Gauntlet status:** C cASERT bit-exact **DONE** (14,896 vectors, 0 div, `GAUNTLET_C_CASERT_BITEXACT.md`) · E durability/chaos **DONE** (all corruption variants fail-safe, `GAUNTLET_E_DURABILITY.md`) · CPU-DoS/TSan(0 races)/ASan+UBSan/reproducible+SBOM(G) **DONE** · A fuzzing (RPC+block) **DONE** for sec2 surface · **D mass adversarial lab (100s peers, eclipse, partition/heal) = NOT STARTED** · disk-full-during-save = BLOCKED-on-env (privileged tmpfs). H orchestrator partial.
+
+**Phase 1 (sec2) = PREPARED, BLOCKED on 3 independent prod authorizations** (A proxy mitigation, B release publish, C STRATO swap) — procedures written + lab-verified, none executed.
+
+---
+
 # SOST — Master status tracker
 
 Single source of truth for every authorized workstream. Priority until block #29,900:
