@@ -913,6 +913,14 @@ static std::vector<std::string> json_get_tx_hexes(const std::string& block_json)
 static void p2p_broadcast_tx(const std::string& hex_str, int exclude_fd = -1);
 static bool process_block(const std::string& block_json, bool reorg_connect = false);
 static bool save_chain_internal(const std::string& path);  // v0.3.2: no-lock save
+
+// Durability policy: count CONSECUTIVE chain-save failures. If persistence keeps failing (e.g. a
+// full or read-only disk) we must stop producing blocks the node cannot persist — otherwise a
+// restart silently loses accepted blocks. getblocktemplate refuses once this reaches the threshold.
+// This is driven only by LOCAL disk state; a peer cannot cause a save failure, so it is NOT a
+// remotely-triggerable mining stop (unlike a naive peer-height IBD gate).
+static std::atomic<int> g_consecutive_save_failures{0};
+static constexpr int SAVE_FAILURE_HALT_THRESHOLD = 3;
 static bool decode_tx_hex(const std::string& tx_hex, std::vector<Byte>& out_raw);
 static std::vector<sost::PopcV15Event> node_collect_popc_events(int64_t height);  // P5: read-only RPC observability
 
@@ -2569,6 +2577,17 @@ static std::string handle_getrawblock(const std::string& id, const std::vector<s
 static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>& p) {
     g_miner_stats.getblocktemplate_calls.fetch_add(1, std::memory_order_relaxed);
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    // Durability gate: if the chain has failed to persist SAVE_FAILURE_HALT_THRESHOLD times in a
+    // row, refuse to hand out work. Producing blocks we cannot save risks losing them on restart.
+    // Local-only trigger (disk failure) — not peer-influenced. The miner honors this -10 error.
+    {
+        int sf = g_consecutive_save_failures.load(std::memory_order_relaxed);
+        if (sf >= SAVE_FAILURE_HALT_THRESHOLD) {
+            return rpc_error(id, -10,
+                "node cannot persist chain state (" + std::to_string(sf) +
+                " consecutive save failures); mining halted until the disk recovers");
+        }
+    }
     // V14.7: pass the height this template will be mined at (tip + 1) so an
     // EXPIRED HTLC LOCK is kept out of the block (never poisons it — see R17).
     auto tmpl = g_mempool.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, NODE_MAX_BLOCK_TX_BYTES, g_chain_height + 1);
@@ -7412,7 +7431,11 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         bool _live = (std::time(nullptr) - (time_t)sb.timestamp) < (4 * sost::TARGET_SPACING);
         if (_live || (height % CHAIN_SAVE_IBD_INTERVAL == 0)) {
             if (!save_chain_internal(g_chain_path)) {
-                printf("[BLOCK] WARNING: chain auto-save failed!\n");
+                int sf = g_consecutive_save_failures.fetch_add(1, std::memory_order_relaxed) + 1;
+                printf("[BLOCK] WARNING: chain auto-save failed! (%d consecutive)%s\n", sf,
+                       sf >= SAVE_FAILURE_HALT_THRESHOLD ? " — mining will halt (getblocktemplate)" : "");
+            } else {
+                g_consecutive_save_failures.store(0, std::memory_order_relaxed);
             }
         }
     }
@@ -9255,10 +9278,38 @@ static bool save_chain_internal(const std::string& path) {
     f.flush();
     if (!f.good()) return false;
     f.close();
+    // Durability (power-loss, not just crash): fsync the temp file so its bytes reach stable
+    // storage BEFORE the rename. A bare rename is crash-safe (atomic dir entry) but NOT
+    // power-loss-safe — after a power cut the renamed file could still hold unflushed/zeroed
+    // data. If the tmp fsync fails the data is not durable, so we must NOT publish it via rename.
+    {
+        int tfd = ::open(tmp_path.c_str(), O_RDONLY);
+        if (tfd < 0) { perror("[SAVE] open(tmp) for fsync failed"); return false; }
+        int fr = ::fsync(tfd);
+        ::close(tfd);
+        if (fr != 0) { perror("[SAVE] fsync(tmp) failed"); return false; }
+    }
     // Atomic rename: tmp → final (prevents corruption on crash mid-write)
     if (std::rename(tmp_path.c_str(), path.c_str()) != 0) {
         perror("[SAVE] rename failed");
         return false;
+    }
+    // Durability: fsync the CONTAINING DIRECTORY so the rename (a directory-entry change) itself
+    // survives a power cut. Best-effort — the bytes are already durable and the rename returned,
+    // so a dir-fsync error is logged but does not fail the save.
+    {
+        std::string dir = path;
+        auto slash = dir.find_last_of('/');
+        if (slash == std::string::npos)      dir = ".";
+        else if (slash == 0)                 dir = "/";
+        else                                 dir = dir.substr(0, slash);
+        int dfd = ::open(dir.c_str(), O_RDONLY
+#ifdef O_DIRECTORY
+                         | O_DIRECTORY
+#endif
+                        );
+        if (dfd >= 0) { if (::fsync(dfd) != 0) perror("[SAVE] fsync(dir) failed"); ::close(dfd); }
+        else perror("[SAVE] open(dir) for fsync failed");
     }
     return true;
 }
@@ -9712,7 +9763,14 @@ int main(int argc, char** argv) {
                     }
                 }
             }
-            if(!chain_path.empty()) save_chain(chain_path);
+            if(!chain_path.empty()) {
+                if (save_chain(chain_path)) g_consecutive_save_failures.store(0, std::memory_order_relaxed);
+                else {
+                    int sf = g_consecutive_save_failures.fetch_add(1, std::memory_order_relaxed) + 1;
+                    printf("[MAIN] WARNING: periodic chain save failed! (%d consecutive)%s\n", sf,
+                           sf >= SAVE_FAILURE_HALT_THRESHOLD ? " — mining halted (getblocktemplate)" : "");
+                }
+            }
             g_popc_registry.save(g_popc_registry_path, nullptr);
         }
     } catch (const std::exception& e) {
