@@ -443,7 +443,15 @@ static const size_t g_num_checkpoints = sizeof(g_checkpoints) / sizeof(g_checkpo
 // ConvergenceX memory-hard requirements, cASERT progressive hardening,
 // and 1000-block coinbase maturity, this provides robust protection
 // against deep reorganization attacks.
+// SACS lab: DEVNET_FAST scales this to 8 so the reorg boundary is testable with real
+// nodes at a tractable block count. The three enforcement points (block-accept, fork
+// cutoff, reorg disconnect) all read this one constant, so the scaled value exercises
+// the identical logic. Mainnet is unchanged (500); this branch never ships to mainnet.
+#if defined(SOST_DEVNET_FORKS)
+static const int64_t MAX_REORG_DEPTH = 8;
+#else
 static const int64_t MAX_REORG_DEPTH = 500;
+#endif
 
 // Fast sync: skip expensive ConvergenceX recomputation for trusted historical blocks.
 // Structural, semantic, and economic validation (header, timestamp, cASERT bitsQ, commit<=target,
