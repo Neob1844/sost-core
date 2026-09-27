@@ -89,6 +89,14 @@ int main(int argc,char**argv){
     if(!r.ok){fprintf(stderr,"refund fail: %s\n",r.error.c_str());return 1;}
     printf("%s\n",r.raw_tx_hex.c_str()); return 0;
   }
+  if(mode=="extract"){
+    // extract <claim_raw_tx_hex> <input_index> <expected_hashlock> -> revealed preimage
+    // Uses the REAL watcher code (ExtractBtcHtlcPreimageFromTxHex) that bridges the chains.
+    std::string raw=argv[2]; uint32_t idx=atoi(argv[3]); auto hl=arr<32>(argv[4]);
+    auto r=ExtractBtcHtlcPreimageFromTxHex(raw, idx, hl);
+    if(!r.ok){fprintf(stderr,"extract fail: %s\n",r.error.c_str());return 1;}
+    printf("%s\n", hex(r.bytes).c_str()); return 0;
+  }
   if(mode=="txid"){
     // txid <raw_tx_hex> -> the DISPLAY txid (what bitcoin-cli shows), via API helpers
     auto t=ComputeBtcTxid(argv[2]);
