@@ -25,8 +25,16 @@ atomic-swap protocol that is proven end-to-end in the lab (see `docs/v15/CROSS_C
   #FB010D/#DAA520, Space Grotesk + JetBrains Mono). Responsive (desktop + mobile). Wallet connect
   is a placeholder that never requests a seed/key. `node --check` clean.
 - **Phase 2 SWAP / Phase 3 TRADE**: shells built with honest empty/DEMO states.
-- **Phase 4 price & liquidity** (Price Reference Adapter, liquidity simulator): NOT built — needs a
-  real CEX market first; only a clearly-labelled simulated lab price is permissible until then.
+- **Phase 4 price & liquidity: modules built + tested (23/23).** `js/dex-price-adapter.js` (decoupled
+  Price Reference Adapter — lab returns a non-executable simulated reference; a future CEX source
+  yields bid/ask/depth/volume/age/status but a *reference is never executable*), `js/dex-rfq.js`
+  (signed-quote book with expiry, reserved-inventory check, replay + double-accept protection),
+  `js/dex-liquidity-sim.js` ($2,000 SOST/USDC inventory simulator for INDEPENDENT providers —
+  spread, max-quote size, per-offer reservation, fill/PnL/fees, suspend on stale ref or depletion,
+  adverse-shock model). Tests: `js/test/dex-phase4.test.js` (node, 23/23). The gold reference
+  (1.14 mg) is NEVER used as a market price — see `GOLD_REFERENCE_RECONCILIATION.md`. No real
+  funds; the owner is not assumed to self-trade. UI wiring of these modules into the dashboard is
+  the remaining Phase-4 step.
 - **Phase 5 orderbook / signed-quote engine**: NOT built (design only).
 - **Phase 6 real atomic-swap wiring** (SOST devnet ⇄ BTC regtest / Anvil): the underlying swap is
   proven in the lab; wiring the dashboard to the live coordinator/watcher is the next step.
