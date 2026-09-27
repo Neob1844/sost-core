@@ -1,3 +1,5 @@
+> **MASTER LEDGER:** see `docs/security/MASTER_CLOSURE.md` @ `integration/sec2-p2p-ibd` — full DONE/TESTING/BLOCKED, findings (fsync gap; seed-DNS not resolving + no peer persistence ⇒ bootstrap depends on STRATO, decentralization NOT yet achieved), NODE_BIND prepare-vs-include, and continuation checkpoint for Fases 3-7. sec2 A/B/C BLOCKED-on-owner (STRATO unprotected until ≥A authorized).
+
 # SOST — master status (DONE / TESTING / BLOCKED / NOT STARTED)
 
 **Deadline snapshot (real mainnet height 28073, 2026-09-26): ~1827 to #29,900, ~1927 to #30,000.**
