@@ -133,3 +133,49 @@ legally the hard part.**
 - Phase-1-only first (passport/traceability), or research Phase-2 native assets in parallel on devnet?
 - Which first pilot category (collectible / machinery / warehouse goods / real estate)?
 - Asset Finance: research now as a lab-only module, or defer until Universal Assets Phase 1–2 land?
+
+## 6b. Asset Finance — owner's completed proposal (folded in; still RESEARCH/lab-only)
+Three SEPARATE services so registering ≠ valuing ≠ financing (tokenize a machine without ever
+taking a loan; miners never obliged to lend):
+- **Valuation distinguishes three amounts that must not be conflated:** *estimated asset value*
+  (data/evidence-based) → *net recoverable value* (what a forced sale nets after costs/time/risk) →
+  *admissible financing* (capped by recoverable value AND by the SOST lenders actually willing to
+  commit). Output is an interval with uncertainty, never an official appraisal or a promised
+  recovery. Missing key documents ⇒ engine reports "insufficiently evidenced valuation", never a
+  fabricated figure; complex/large loans require an independent appraisal.
+- **Where the SOST comes from:** only from parties who VOLUNTARILY lend their own SOST. Two
+  structures to study: *bilateral loan* (one borrower, one lender, negotiated terms — simplest,
+  cleanly separates tech registry from financial activity) vs *funding pool* (many contributors,
+  needs liquidity mgmt, loss rules, investor disclosure, withdrawal mechanics, and an appropriate
+  legal structure). Miners may lend their OWN earned coins in either; the protocol NEVER auto-lends
+  mining rewards, consensus reserves, or the Gold Vault, and NEVER mints new SOST to pay interest —
+  interest comes solely from the borrower.
+- **Excavator example (SIMULATION, no real funds):** market value ~€100k, net recoverable ~€60k,
+  loan €20k (20% LTV), 12m, 8% illustrative. At a hypothetical SOST=€0.10 with enough liquidity:
+  borrow 200,000 SOST, repay 216,000 SOST. **Volatility risk is explicit:** if SOST doubles, the
+  borrower needs ~€43.2k worth to repay a loan that gave them €20k; if SOST falls, lenders recover
+  fewer euros. Hence a second modality to study: **debt denominated in EUR, paid in SOST at a
+  verifiable rate each due date** (cuts denomination risk; liquidity/slippage risk remains).
+- **Physical-collateral enforcement is the hardest problem:** software can't repossess an
+  excavator. Requires a validly constituted, enforceable guarantee, borrower's capacity to grant
+  it, and a legal execution procedure (registries/notaries/custodians/courts per asset+jurisdiction).
+  Must prevent the same excavator backing three loans by hiding prior liens ⇒ the passport must
+  surface guarantee existence, priority, validity and available verifications. The digital passport
+  does NOT replace the legal guarantee.
+- **[LEGAL] Spain/EU specifics to analyse with counsel:** taking repayable funds from the public is
+  RESERVED to authorized entities (Banco de España) — so NO "SOST savings account" guaranteeing
+  repayment without a studied legal structure. Crowdfunding/PFP regimes (CNMV + EU ECSPR) cover
+  credit-risk assessment, conflicts of interest, loan-portfolio mgmt — applicability to
+  SOST-denominated loans needs specialist review. An ESMA/EBA joint report notes crypto-asset
+  lending is NOT expressly among MiCA-defined services — which does NOT exempt it from other
+  financial/AML/consumer rules. Likely path: partner with an AUTHORIZED platform/entity for the
+  regulated parts while SOST provides only the technology.
+- **Phasing:** (1) Universal Assets passports — no finance; (2) Asset Intelligence valuation engine
+  (intervals, evidence, scenarios); (3) Asset Finance simulator + bilateral prototype on an
+  isolated net, no deposits/real funds; (4) real financing only if viable, with appraisers/counsel/
+  authorized entities; a common pool is investigated separately.
+- **Essential distinction:** a tokenized asset's price and SOST's price are INDEPENDENT. The engine
+  can estimate a machine's value and admissible financing; it CANNOT guarantee enough SOST demand
+  to turn that financing into euros without material loss. Therefore start with the universal
+  passport + assisted valuation; keep financing an optional later function — a utility for any
+  sector, without turning SOST into a financial entity or touching its monetary rules.
