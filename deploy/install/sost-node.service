@@ -1,0 +1,42 @@
+[Unit]
+Description=SOST full node
+Documentation=https://sostcore.com
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Run as an unprivileged service account — NEVER root.
+# (Running the node as root once, then as 'sost' via systemd, leaves the data dir
+#  root-owned and the DB silently read-only for the service. See install script.)
+User=sost
+Group=sost
+
+# --- paths (installer fills DATA_DIR / BIN_DIR) ---
+Environment=SOST_DATA=/var/lib/sost
+ExecStart=/usr/local/bin/sost-node \
+    --chain      /var/lib/sost/chain.json \
+    --wallet     /var/lib/sost/wallet.json \
+    --genesis    /var/lib/sost/genesis.json \
+    --port       18333 \
+    --rpc-port   18332 \
+    --rpc-user   sostrpc \
+    --rpc-pass-file /etc/sost/rpc.pass \
+    --node-key-file /etc/sost/node.key
+
+# Secrets come from mode-600 files, never argv (argv is world-readable via ps/proc).
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=120
+
+# --- hardening ---
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/sost
+StateDirectory=sost
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target
