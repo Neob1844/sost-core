@@ -49,3 +49,17 @@ SOST with S.
   double-claim) — partially covered (wrong-preimage rejected by all three chains' hash check;
   premature refund rejected by CLTV/R24; BTC reorg proven); a consolidated adversarial run is the
   next step. Security for REAL funds still requires the independent audit (state 4).
+
+## Adversarial matrix (step 5) — results
+Verified live in the lab across the three chains:
+| Case | EVM (Anvil) | BTC (regtest) | SOST (devnet) |
+|---|---|---|---|
+| Wrong preimage | `WRONG_PREIMAGE` revert ✅ | driver refuses to build + script `OP_EQUALVERIFY` fails ✅ | R-rule sha256 mismatch (same claim path) |
+| Premature refund | revert ✅ | `non-final` / CLTV ✅ | `R24: refund window not yet open` ✅ |
+| Double-claim | `NOT_LOCKED` revert ✅ | prev UTXO already spent (consensus) | prev UTXO already spent (consensus) |
+| Claim after timeout | `TIMEOUT_PASSED` revert ✅ | (CLTV allows refund path only) | — |
+| Post-timeout refund (honest recovery) | `status 0x1` ✅ | proven (earlier) ✅ | mechanism proven (R24 enforces window) |
+| Reorg | — | claim survives `invalidateblock`, reconfirms, preimage intact ✅ | — |
+
+Scripts: `evm_adversarial_matrix.sh` (EVM, 5/5). BTC wrong-preimage + reorg in the btc regtest
+scripts. Never-fund → the other party refunds after its timeout (refund paths above).
