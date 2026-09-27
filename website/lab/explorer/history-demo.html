@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Explorer History (lab)</title>
+<style>
+  :root{--bg:#060a0f;--panel:#0d1117;--bd:#1b2430;--txt:#dce4ec;--txt2:#8b9aab;--red:#FB010D;--gold:#DAA520;--green:#25c26e;--amber:#f0a92b;--cyan:#67e8f9;--mono:"JetBrains Mono",monospace}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;padding:22px;line-height:1.5}
+  h1{font-size:18px;margin:0 0 4px} .sub{color:var(--txt2);font-size:12px;margin-bottom:16px}
+  .ctl{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  select,button{background:var(--panel);border:1px solid var(--bd);color:var(--txt);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer}
+  .rpcbar{font-family:var(--mono);font-size:12px;color:var(--txt2);margin-bottom:8px} .rpcbar b{color:var(--cyan)} .trunc{color:var(--amber)}
+  table.hist{width:100%;border-collapse:collapse;font-size:12.5px} .hist th{text-align:left;color:var(--txt2);font-weight:600;border-bottom:1px solid var(--bd);padding:7px 8px}
+  .hist td{border-bottom:1px solid var(--bd);padding:8px;vertical-align:top} .txid{font-family:var(--mono);color:var(--cyan)}
+  .out{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:2px 0} .kind{font-family:var(--mono);color:var(--txt)} .amt{color:var(--gold);font-family:var(--mono)}
+  .fl{font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:5px;border:1px solid var(--bd);color:var(--txt2)}
+  .fl.warn{color:var(--amber);border-color:rgba(240,169,43,.4)} .fl.swap{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  .fl.passport{color:var(--gold);border-color:rgba(218,165,32,.4)} .fl.lock{color:var(--red);border-color:rgba(251,1,13,.4)} .fl.change{color:var(--green);border-color:rgba(37,194,110,.4)}
+  .rec{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 22px;max-width:520px} .rec .r{display:flex;justify-content:space-between;border-bottom:1px solid var(--bd);padding:5px 0;font-size:13px}
+  .rec .r b{font-family:var(--mono)} .rr{grid-column:1/-1;padding:8px;border-radius:8px;text-align:center;font-weight:700}
+  .rr.good{background:rgba(37,194,110,.12);color:var(--green)} .rr.bad{background:rgba(251,1,13,.12);color:var(--red)}
+  .more{margin-top:10px}
+</style>
+</head>
+<body>
+  <h1>Explorer — paginated history + reconciliation <span style="color:var(--amber);font-size:11px">LAB</span></h1>
+  <div class="sub">Read-only, hard RPC cost budget. Mock chain; not wired to the live explorer. Address: <code>sost1alice</code></div>
+  <div class="ctl">
+    <select id="filter">
+      <option value="all">all</option><option value="coinbase">coinbase</option>
+      <option value="atomic_swap">atomic swap (HTLC)</option><option value="asset_passport">asset passport</option>
+      <option value="timelocked">time-locked</option>
+    </select>
+    <button onclick="load(null)">Reload</button>
+    <button onclick="reconcile()">Reconcile</button>
+  </div>
+  <div id="view"></div>
+  <div id="rec"></div>
+
+<script src="../../js/explorer-history.js"></script>
+<script src="history-view.js"></script>
+<script>
+"use strict";
+// mock chain identical in shape to what the real read-only RPC returns
+var TIP=2000, A="sost1alice";
+var TXS={
+  cb:{txid:"cb",height:1500,vin:[],vout:[{address:A,amount:50,type:0x01,height:1500}]},
+  t1:{txid:"t1",height:100,vin:[{address:"sost1x",amount:30,type:0}],vout:[{address:A,amount:30,type:0,height:100}]},
+  t2:{txid:"t2",height:200,vin:[{address:A,amount:30,type:0}],vout:[{address:"sost1bob",amount:20,type:0,height:200,capsule:{mode:"doc_ref",doc_hash:"abcdef0123456789"}},{address:A,amount:10,type:0,height:200}]},
+  t3:{txid:"t3",height:300,vin:[{address:A,amount:5,type:0}],vout:[{address:A,amount:5,type:0x12,height:300}]},
+  t4:{txid:"t4",height:400,vin:[{address:A,amount:8,type:0}],vout:[{address:A,amount:8,type:0x10,height:400}]}
+};
+var ORDER=["cb","t1","t2","t3","t4"];
+var rpc={
+  tipHeight:function(){return TIP;},
+  addressTxids:function(a,o){var s=o.cursor?+o.cursor:0;var sl=ORDER.slice(s,s+(o.limit||25));return {txids:sl,nextCursor:s+sl.length<ORDER.length?String(s+sl.length):null};},
+  getTx:function(id){return TXS[id];},
+  addressInfo:function(){return {balance:70};}
+};
+var reader=SOSTExplorerHistory.makeHistoryReader(rpc,{pageSize:10,maxRpcPerPage:50});
+function load(cursor){ var f=document.getElementById('filter').value; var p=reader.page(A,cursor,f); SOSTHistoryView.renderPage(document.getElementById('view'),p,A);
+  var b=document.querySelector('#view .more'); if(b) b.onclick=function(){ load(b.getAttribute('data-cursor')); }; document.getElementById('rec').innerHTML=''; }
+function reconcile(){ var r=SOSTExplorerHistory.makeHistoryReader(rpc,{}).reconcile(A); SOSTHistoryView.renderReconcile(document.getElementById('rec'),r); }
+window.addEventListener('load',function(){ load(null); });
+</script>
+</body>
+</html>
