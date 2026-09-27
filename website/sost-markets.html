@@ -383,7 +383,7 @@
     <div class="section-header">
       <div class="section-id">SOST REFERENCE VALUE</div>
       <div class="section-title">SOST Reference Value <span class="accent">(Gold Reference)</span></div>
-      <div class="section-sub">1 SOST = 1.14 mg of gold, expressed in 60 fiat currencies &mdash; source: gold spot + forex rates. <strong style="color:#fbbf24">This is NOT a market price. No active trading exists yet.</strong></div>
+      <div class="section-sub">1 SOST = 0.8886707657 mg of gold, expressed in 60 fiat currencies &mdash; source: gold spot + forex rates. <strong style="color:#fbbf24">This is NOT a market price. No active trading exists yet.</strong></div>
       <div style="margin:12px 0;padding:10px 16px;background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.2);font-size:11px;line-height:1.7;color:#999;font-family:monospace">
         <div style="color:#fbbf24;font-weight:600;letter-spacing:1px;margin-bottom:6px">// PRICE DISCOVERY STATUS</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:10px">
@@ -423,9 +423,9 @@
       <div class="cp-range" id="cpSostRange"></div>
       <div id="cpSostDisclaimer" style="margin-top:10px;padding:10px 14px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:monospace;display:none">
         <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// GOLD REFERENCE — NOT A MARKET PRICE</div>
-        <div>SOST is not listed on any exchange and has no <b>market</b> price. The value shown is a <b style="color:#ffd700">gold reference</b>: 1 SOST expressed as a fixed <b>1.14 mg of gold</b> — informational only, not a tradeable price.</div>
+        <div>SOST is not listed on any exchange and has no <b>market</b> price. The value shown is a <b style="color:#ffd700">gold reference</b>: 1 SOST expressed as a fixed <b>0.8886707657 mg of gold</b> — informational only, not a tradeable price.</div>
         <div style="color:#4ade80;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
-          Gold reference = <span style="color:#ffd700;font-weight:600" id="cpSostDiscPrice">$0.15</span> &nbsp;(1 SOST = 1.14 mg gold · informational, not a market price)
+          Gold reference = <span style="color:#ffd700;font-weight:600" id="cpSostDiscPrice">$0.15</span> &nbsp;(1 SOST = 0.8886707657 mg gold · informational, not a market price)
         </div>
         <div style="margin-top:6px">If SOST is ever admitted to trading on a CEX or DEX, only then could a market price exist; this section would then show actual market data.</div>
         <div style="margin-top:6px">Protocol-held gold commitment — <b>no peg, collateral backing, redemption right or legal claim for SOST holders.</b></div>
@@ -469,15 +469,15 @@
     <div class="section-header">
       <div class="section-id">SOST PAIRS</div>
       <div class="section-title">SOST Trading <span class="accent">Pairs</span></div>
-      <div class="section-sub">Simulated pair rates derived from the gold reference price (1 SOST = 1.14 mg gold)</div>
+      <div class="section-sub">Simulated pair rates derived from the gold reference price (1 SOST = 0.8886707657 mg gold)</div>
     </div>
     <div style="margin-bottom:16px;padding:12px 16px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:monospace">
       <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// SIMULATED PAIR DATA &mdash; NOT LIVE MARKET</div>
       <div>SOST is <strong>not currently listed</strong> on any centralized or decentralized exchange. The pair rates below are
       <strong>theoretical values</strong> derived algorithmically from the PoPC (Proof of Personal Custody) reference price
       and the live market price of each counterpart asset.</div>
-      <div style="margin-top:6px;color:#666">The gold reference expresses 1 SOST as a fixed 1.14 mg of gold &mdash; informational, not a price floor or guarantee:
-      <code style="color:#4ade80">price = 1.14 mg &times; gold_spot (fixed gold weight)</code>.
+      <div style="margin-top:6px;color:#666">The gold reference expresses 1 SOST as a fixed 0.8886707657 mg of gold &mdash; informational, not a price floor or guarantee:
+      <code style="color:#4ade80">price = 0.8886707657 mg &times; gold_spot (fixed gold weight)</code>.
       This is a <strong>logical valuation</strong>, not a traded market price. Actual trading rates will differ once SOST
       is listed, as market price is determined by supply, demand, and liquidity &mdash; not solely by backing.</div>
       <div style="margin-top:6px;color:#555">Verify gold commitments: <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Etherscan &nearr;</a></div>
@@ -852,7 +852,7 @@
             html4 += '<tr class="sost-gold-chart-row" style="display:none"><td colspan="7" style="padding:0">' +
               '<div style="background:#060606;border:1px solid #1a1a1a;border-top:none">' +
               '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px">' +
-              '<span style="font-size:10px;color:#888;letter-spacing:1px">SOST gold reference (1.14 mg) — 24H</span>' +
+              '<span style="font-size:10px;color:#888;letter-spacing:1px">SOST gold reference (0.8886707657 mg) — 24H</span>' +
               '<button onclick="event.stopPropagation();this.closest(\'.sost-gold-chart-row\').style.display=\'none\'" style="background:none;border:1px solid #333;color:#666;cursor:pointer;font-size:10px;padding:2px 8px;font-family:inherit">X</button>' +
               '</div>' +
               '<div style="position:relative">' +
@@ -1006,7 +1006,7 @@
   }
 
   function showSostPopcPrice() {
-    // Show the SOST gold reference (1 SOST = 1.14 mg of gold) consistently across the markets
+    // Show the SOST gold reference (1 SOST = 0.8886707657 mg of gold) consistently across the markets
     // view — big price, fiat table and chart. Informational reference, NOT a market price.
     var refUsd = calcSostPopcPrice();
     // Update the big SOST price display
@@ -1020,11 +1020,11 @@
       pEl.style.fontSize = '14px';
     }
     var chEl = document.getElementById('cpSostChange');
-    if (chEl) { chEl.textContent = 'Gold reference price (1.14 mg)'; chEl.style.color = 'var(--text-dim,#888)'; }
+    if (chEl) { chEl.textContent = 'Gold reference price (0.8886707657 mg)'; chEl.style.color = 'var(--text-dim,#888)'; }
     var rEl = document.getElementById('cpSostRange');
     if (rEl && refUsd && _sostRefGoldP && _sostRefSup) {
-      rEl.innerHTML = 'Gold reference: 1.14 mg &times; $' + (window.SOSTGold.mgFromOz(_sostRefGoldP)).toFixed(5) + '/mg = $' + (window.SOSTGold.sostFromOz(_sostRefGoldP)).toFixed(4) + '/SOST'
-        + '<br><span style="font-size:9px;color:var(--text-dim,#666)">Not a market price. Based on the fixed 1.14 mg gold reference. Will be replaced when SOST is listed on an exchange.</span>';
+      rEl.innerHTML = 'Gold reference: 0.8886707657 mg &times; $' + (window.SOSTGold.mgFromOz(_sostRefGoldP)).toFixed(5) + '/mg = $' + (window.SOSTGold.sostFromOz(_sostRefGoldP)).toFixed(4) + '/SOST'
+        + '<br><span style="font-size:9px;color:var(--text-dim,#666)">Not a market price. Based on the fixed 0.8886707657 mg gold reference. Will be replaced when SOST is listed on an exchange.</span>';
     }
     // Update disclaimer with dynamic values
     var discEl = document.getElementById('cpSostDisclaimer');
@@ -1055,7 +1055,7 @@
     });
     if (refUsd && _sostRefGoldP) {
       html += '<tr><td colspan="3" style="text-align:center;padding:12px;font-size:10px;color:#666;border-top:1px solid #222">'
-        + '1 SOST = 1.14 mg of gold = $' + refUsd.toFixed(6) + '/SOST. Not a market price.'
+        + '1 SOST = 0.8886707657 mg of gold = $' + refUsd.toFixed(6) + '/SOST. Not a market price.'
         + '</td></tr>';
     }
     tbody.innerHTML = html;
