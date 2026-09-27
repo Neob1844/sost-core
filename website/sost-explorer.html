@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="js/sost-gold-reference.js?v=v399"></script>
+<script src="js/sost-gold-reference.js?v=v400"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- Cache-Control: tell every browser to NEVER cache this HTML.
      Cards added to the dashboard (CIRCULATING SUPPLY canary-yellow,
@@ -570,6 +570,13 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
+<!-- Address Inspector: read-only reconciliation + paginated UTXO holdings (bounded RPC) -->
+<div class="search" style="margin-top:-4px"><div class="search-box" style="gap:8px;flex-wrap:wrap">
+  <span class="search-pre">inspect&gt;</span>
+  <input id="ainAddr" placeholder="sost1… — reconcile balance + paginated UTXO holdings" onkeydown="if(event.key==='Enter')ainInspect()" style="flex:1 1 340px"/>
+  <button onclick="ainInspect()">INSPECT</button>
+</div></div>
+<div id="ainOut" style="max-width:1400px;margin:8px auto 0;padding:0 24px"></div>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- V16 DTD JACKPOT V2 ADVANCE NOTICE — injected by js/v16-jackpot-notice.js -->
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -1071,16 +1078,16 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
         <canvas id="chartSost"></canvas>
       </div>
       <div style="display:flex;align-items:center;gap:16px;margin-top:8px;font-family:var(--code)">
-        <span style="font-size:10px;color:var(--text3)"><span style="display:inline-block;width:8px;height:2px;background:#fb010d;margin-right:4px;vertical-align:middle"></span>SOST (1.14 mg gold) &nbsp;&nbsp;<span style="display:inline-block;width:8px;height:2px;background:#b8860b;margin-right:4px;vertical-align:middle"></span>Gold (1 mg)</span>
+        <span style="font-size:10px;color:var(--text3)"><span style="display:inline-block;width:8px;height:2px;background:#fb010d;margin-right:4px;vertical-align:middle"></span>SOST (0.8886707657 mg gold) &nbsp;&nbsp;<span style="display:inline-block;width:8px;height:2px;background:#b8860b;margin-right:4px;vertical-align:middle"></span>Gold (1 mg)</span>
         <span id="sostChartStatus" style="font-size:10px;color:var(--text3);margin-left:auto"></span>
       </div>
-      <p style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5;border-left:2px solid #ffd700;padding-left:8px">Gold spot (XAU/USD), month-end close. The SOST line is the gold line &times; the fixed reference weight (1.14&nbsp;mg) &mdash; it moves only with gold, never by decree. Gold reference, <b>not a market price</b>; once SOST is listed, its price evolves on its own, no longer tied to gold.</p>
+      <p style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5;border-left:2px solid #ffd700;padding-left:8px">Gold spot (XAU/USD), month-end close. The SOST line is the gold line &times; the fixed reference weight (0.8886707657&nbsp;mg) &mdash; it moves only with gold, never by decree. Gold reference, <b>not a market price</b>; once SOST is listed, its price evolves on its own, no longer tied to gold.</p>
       <div class="price-card-range" id="sostRange"></div>
       <div id="sostDisclaimer" style="margin-top:10px;padding:10px 14px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:var(--code,monospace);display:none">
         <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// MONETARY REFERENCE — GOLD-DENOMINATED · NOT A PRICE</div>
-        <div>SOST is not listed on any exchange and has no market price yet. As a transparent unit of account, <b style="color:#ffd700">1 SOST is referenced to 1.14 mg of gold</b> — the reference rises and falls only with the gold price, never by decree.</div>
+        <div>SOST is not listed on any exchange and has no market price yet. As a transparent unit of account, <b style="color:#ffd700">1 SOST is referenced to 0.8886707657 mg of gold</b> — the reference rises and falls only with the gold price, never by decree.</div>
         <div style="color:#ffd700;margin:6px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:3px;font-size:10px">
-          1 SOST &equiv; 1.14 mg gold &asymp; <span style="font-weight:600" id="sostDiscPrice">$0.00</span> &nbsp;(reference value · tracks gold spot)
+          1 SOST &equiv; 0.8886707657 mg gold &asymp; <span style="font-weight:600" id="sostDiscPrice">$0.00</span> &nbsp;(reference value · tracks gold spot)
         </div>
         <div style="margin-top:6px"><b>Reference, not a peg.</b> If SOST is ever admitted to trading on a CEX/DEX, its market price is then set by supply and demand and may differ materially from this reference. This gold reference sets only an initial listing / first-liquidity anchor.</div>
         <div style="margin-top:6px"><b>Not redeemable</b> for gold — no peg, collateral backing, redemption right or legal claim for SOST holders.</div>
@@ -8259,10 +8266,10 @@ function calcSostRefPrice(){
   var supply=0,bh=0;
   while(bh<=h){var ep=Math.floor(bh/EP);var r=R0*Math.pow(Q,ep);var ee=Math.min((ep+1)*EP-1,h);supply+=r*(ee-bh+1);bh=ee+1;}
   sostRefSupply=supply;
-  // ---- V15 GOLD REFERENCE: 1 SOST is referenced to a FIXED weight of gold (1.14 mg).
+  // ---- V15 GOLD REFERENCE: 1 SOST is referenced to a FIXED weight of gold (0.8886707657 mg).
   // Informational unit of account, NOT a peg, NOT redeemable. The reference tracks the
   // live gold price (XAUT/PAXG spot) scaled by the fixed weight. See sost-reference.html.
-  var OZ_G=31.1034768, MG=1.14;                 // troy ounce in grams · reference weight (mg)
+  var OZ_G=31.1034768, MG=0.8886707657;                 // troy ounce in grams · reference weight (mg)
   var FACTOR=(MG/1000)/OZ_G;                     // multiply an oz-USD price -> per-SOST reference USD
   var goldPerG=goldPrice/OZ_G;
   var refUSD=window.SOSTGold.sostFromOz(goldPrice); // gold reference per SOST (shared source: js/sost-gold-reference.js)
@@ -8271,7 +8278,7 @@ function calcSostRefPrice(){
   var el=document.getElementById('sostPrice');
   if(el){ el.textContent='$'+refUSD.toFixed(4); el.style.color='var(--gold)'; el.style.fontSize=''; }
   var chEl=document.getElementById('sostChange');
-  if(chEl){ chEl.style.color='var(--gold)'; chEl.innerHTML='1 SOST &equiv; 1.14 mg gold &middot; reference, not a peg'; }
+  if(chEl){ chEl.style.color='var(--gold)'; chEl.innerHTML='1 SOST &equiv; 0.8886707657 mg gold &middot; reference, not a peg'; }
   var rangeEl=document.getElementById('sostRange');
   if(rangeEl){ rangeEl.innerHTML='Gold reference &middot; gold spot $'+goldPerG.toFixed(2)+'/g &middot; derived from a fixed gold weight, updates with gold &middot; <a href="sost-reference.html" style="color:var(--cyan);text-decoration:none">Full gold reference &rarr;</a>'; }
   var discEl=document.getElementById('sostDisclaimer'); if(discEl)discEl.style.display='block';
@@ -9018,13 +9025,13 @@ function fetchSostChart(){
   if(!canvasEl||typeof Chart==='undefined')return;
   if(_chartInstances.sost)return;   // static monthly data — draw once
   var GD={"labels": ["2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07"], "sost": [0.05572,0.05396,0.05547,0.05369,0.05562,0.05828,0.0581,0.05759,0.06176,0.06335,0.0653,0.07242,0.07221,0.0691,0.06883,0.06513,0.06951,0.06766,0.06354,0.06256,0.06482,0.06987,0.06487,0.06647,0.06647,0.06438,0.06534,0.06501,0.06701,0.06584,0.06993,0.071,0.06951,0.06733,0.06623,0.0647,0.0627,0.06083,0.05986,0.06482,0.06687,0.07066,0.06697,0.07213,0.07292,0.07192,0.07036,0.07199,0.0711,0.06774,0.07267,0.07461,0.0756,0.07467,0.07489,0.08182,0.08373,0.0853,0.08528,0.08971,0.09176,0.09657,0.10067,0.09713,0.09617,0.10249,0.10445,0.11452,0.12066,0.12053,0.12106,0.12093,0.12696,0.14181,0.14645,0.15454,0.15802,0.17833,0.19344,0.17167,0.16938,0.16649,0.14689,0.1507], "gold": [0.04888,0.04733,0.04866,0.04709,0.04879,0.05113,0.05096,0.05052,0.05418,0.05557,0.05728,0.06353,0.06334,0.06062,0.06038,0.05713,0.06097,0.05935,0.05573,0.05488,0.05686,0.06129,0.0569,0.05831,0.0583,0.05648,0.05732,0.05703,0.05878,0.05776,0.06134,0.06228,0.06097,0.05906,0.05809,0.05675,0.055,0.05336,0.05251,0.05686,0.05866,0.06198,0.05874,0.06327,0.06397,0.06309,0.06172,0.06315,0.06236,0.05942,0.06375,0.06545,0.06631,0.0655,0.06569,0.07177,0.07345,0.07483,0.0748,0.07869,0.08049,0.08471,0.0883,0.0852,0.08436,0.0899,0.09162,0.10046,0.10584,0.10573,0.10619,0.10608,0.11136,0.1244,0.12846,0.13556,0.13861,0.15643,0.16969,0.15059,0.14858,0.14605,0.12885,0.13219]};
-  var ctx=canvasEl.getContext('2d');
+  try{if(window.SOSTGold){GD.sost=GD.gold.map(function(g){return +(g*window.SOSTGold.WEIGHT_MG).toFixed(5);});}}catch(e){}  var ctx=canvasEl.getContext('2d');
   var grad=ctx.createLinearGradient(0,0,0,160);
   grad.addColorStop(0,'rgba(251,1,13,0.20)');grad.addColorStop(1,'rgba(251,1,13,0)');
   _chartInstances.sost=new Chart(ctx,{
     type:'line',
     data:{labels:GD.labels,datasets:[
-      {label:'SOST gold reference (1.14 mg)',data:GD.sost,borderColor:'#fb010d',backgroundColor:grad,fill:true,borderWidth:2,pointRadius:0,tension:0.25},
+      {label:'SOST gold reference (0.8886707657 mg)',data:GD.sost,borderColor:'#fb010d',backgroundColor:grad,fill:true,borderWidth:2,pointRadius:0,tension:0.25},
       {label:'Gold (1 mg)',data:GD.gold,borderColor:'#b8860b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.25}
     ]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'rgba(10,10,10,0.95)',titleColor:'#94a3b8',bodyColor:'#ffd700',borderColor:'#333',borderWidth:1,titleFont:{family:"'Fira Code',monospace",size:10},bodyFont:{family:"'Fira Code',monospace",size:11,weight:'bold'},padding:10,displayColors:true,callbacks:{label:function(c){return c.dataset.label+': $'+c.parsed.y.toLocaleString(undefined,{minimumFractionDigits:4,maximumFractionDigits:5});}}}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:8,callback:function(v,i){var l=GD.labels[i]||"";return (l.slice(5)==="01"||i===0)?l.slice(0,4):"";}},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#64748b',font:{size:9},callback:function(v){return '$'+v.toFixed(3);}},grid:{color:'#1a1a1a'}}}}
@@ -9682,5 +9689,84 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
 })();
 </script>
 
+<script>
+/* Address Inspector — read-only reconciliation + paginated UTXO holdings.
+   Bounded to 3 RPC calls (getblockcount + getaddressinfo + getaddressflows), all
+   read-only. Reconciles Σ(UTXO amounts) vs the node-reported balance and classifies
+   coinbase maturity / locks. Uses the page's existing rpc() helper. Additive; does
+   not touch any existing explorer code. */
+(function(){
+  "use strict";
+  var COINBASE_MATURITY = 1000;                 // mainnet (consensus_constants.h)
+  var TYPE={0:'transfer',1:'coinbase·miner',2:'coinbase·gold',3:'coinbase·popc',4:'coinbase·lottery',16:'bond-lock',17:'escrow-lock',18:'htlc-lock',19:'htlc-claim',32:'burn',48:'node-protocol'};
+  var LOCKED={16:1,17:1,18:1};
+  var _utxos=[], _addr='', _page=0, _tip=0, PER=25;
+  function n8(x){ return (Math.round(x*1e8)/1e8); }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function sh(h){ return h&&h.length>16?h.slice(0,10)+'···'+h.slice(-6):h; }
+
+  window.ainInspect = async function(){
+    var out=document.getElementById('ainOut');
+    var addr=(document.getElementById('ainAddr').value||'').trim();
+    if(!addr){ out.innerHTML=''; return; }
+    out.innerHTML='<div style="color:var(--text3,#7d8b99);font:12px ui-monospace;padding:8px 0">inspecting '+esc(addr)+'… (read-only, ≤3 RPC calls)</div>';
+    try{
+      _tip = await rpc('getblockcount',[]);
+      var info = await rpc('getaddressinfo',[addr]);
+      var flows = null; try{ flows = await rpc('getaddressflows',[addr]); }catch(e){}
+      if(!info || info.isvalid===false){ out.innerHTML='<div style="color:#ff8a8a;font:12px ui-monospace;padding:8px 0">Not a valid SOST address.</div>'; return; }
+      _addr=addr; _page=0;
+      _utxos=(info.utxos||[]).slice().sort(function(a,b){return b.height-a.height;});
+      var sumU=0, immature=0, locked=0;
+      _utxos.forEach(function(u){ sumU+=u.amount;
+        if(u.coinbase && (_tip-u.height+1)<COINBASE_MATURITY) immature+=u.amount;
+        if(LOCKED[u.type]) locked+=u.amount; });
+      var bal=info.balance||0;
+      var matches = Math.abs(n8(sumU)-n8(bal))<1e-6;
+      var spendable = n8(bal-immature-locked);
+      var recvNM = flows? (flows.received_non_mining||0)/1e8 : null;
+      var sentNM = flows? (flows.sent_non_mining||0)/1e8 : null;
+      function card(k,v,c){ return '<div style="border:1px solid var(--border,#1b2430);border-radius:8px;background:var(--bg2,#0a0f16);padding:12px 14px;min-width:150px"><div style="font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--text3,#7d8b99)">'+k+'</div><div style="font:600 18px ui-monospace;margin-top:5px;color:'+(c||'var(--text,#e6edf3)')+'">'+v+'</div></div>'; }
+      var html='<div style="display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 4px">'
+        + card('Balance (node)', n8(bal).toFixed(8))
+        + card('Σ UTXO amounts', n8(sumU).toFixed(8), matches?'#25c26e':'#ff5a5f')
+        + card('Reconciles', matches?'✓ match':'✗ MISMATCH', matches?'#25c26e':'#ff5a5f')
+        + card('UTXOs', String(info.utxo_count!=null?info.utxo_count:_utxos.length))
+        + card('Immature coinbase', n8(immature).toFixed(4), immature>0?'#f0a92b':undefined)
+        + card('Locked (bond/escrow/htlc)', n8(locked).toFixed(4), locked>0?'#f0a92b':undefined)
+        + card('Spendable now', spendable.toFixed(8), '#67e8f9')
+        + (recvNM!=null?card('Received (non-mining)', n8(recvNM).toFixed(4)):'')
+        + (sentNM!=null?card('Sent (non-mining)', n8(sentNM).toFixed(4)):'')
+        + '</div>'
+        + '<div style="font-size:10.5px;color:var(--text3,#7d8b99);margin:2px 0 8px">Reconciliation = Σ(unspent UTXO amounts) vs node balance. Coinbase matures after '+COINBASE_MATURITY+' confirmations. Read-only; bounded to 3 RPC calls. Full per-transaction history needs a node address→txid index RPC (not yet exposed); this inspects current holdings.</div>'
+        + '<div id="ainList"></div>';
+      out.innerHTML=html;
+      renderPage();
+    }catch(e){ out.innerHTML='<div style="color:#ff8a8a;font:12px ui-monospace;padding:8px 0">Inspect failed: '+esc((e&&e.message)||e)+'</div>'; }
+  };
+  function renderPage(){
+    var el=document.getElementById('ainList'); if(!el) return;
+    var pages=Math.max(1,Math.ceil(_utxos.length/PER)); if(_page>=pages)_page=pages-1; if(_page<0)_page=0;
+    var start=_page*PER, slice=_utxos.slice(start,start+PER);
+    var rows=slice.map(function(u){
+      var flags=[]; if(u.coinbase && (_tip-u.height+1)<COINBASE_MATURITY) flags.push('<span style="color:#f0a92b">immature('+(_tip-u.height+1)+'/'+COINBASE_MATURITY+')</span>');
+      if(LOCKED[u.type]) flags.push('<span style="color:#ff8a8a">locked</span>');
+      return '<tr><td style="font:11px ui-monospace;color:#67e8f9">'+sh(u.txid)+':'+u.vout+'</td>'
+        + '<td style="text-align:right;font:11px ui-monospace">'+n8(u.amount).toFixed(8)+'</td>'
+        + '<td style="text-align:right;color:var(--text3,#7d8b99)">'+u.height+'</td>'
+        + '<td style="color:var(--text3,#7d8b99)">'+(TYPE[u.type]||('type '+u.type))+'</td>'
+        + '<td>'+flags.join(' ')+'</td></tr>'; }).join('');
+    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+      + '<thead><tr style="color:var(--text3,#7d8b99);text-align:left"><th style="padding:6px 8px">outpoint</th><th style="text-align:right;padding:6px 8px">amount</th><th style="text-align:right;padding:6px 8px">height</th><th style="padding:6px 8px">type</th><th style="padding:6px 8px">flags</th></tr></thead>'
+      + '<tbody>'+(rows||'<tr><td colspan="5" style="padding:10px;color:var(--text3,#7d8b99)">no UTXOs</td></tr>')+'</tbody></table></div>'
+      + '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:12px">'
+      + '<button onclick="ainPage(-1)" '+(_page<=0?'disabled':'')+' style="background:var(--bg2,#0a0f16);border:1px solid var(--border,#1b2430);color:var(--text,#e6edf3);border-radius:6px;padding:5px 12px;cursor:pointer">‹ prev</button>'
+      + '<span style="color:var(--text3,#7d8b99)">page '+(_page+1)+' / '+pages+' · '+_utxos.length+' UTXOs</span>'
+      + '<button onclick="ainPage(1)" '+(_page>=pages-1?'disabled':'')+' style="background:var(--bg2,#0a0f16);border:1px solid var(--border,#1b2430);color:var(--text,#e6edf3);border-radius:6px;padding:5px 12px;cursor:pointer">next ›</button>'
+      + '</div>';
+  }
+  window.ainPage=function(d){ _page+=d; renderPage(); };
+})();
+</script>
 </body>
 </html>
