@@ -62,6 +62,7 @@
 #include "sost/beacon_p2p.h"
 
 #include <fstream>
+#include <sys/stat.h>   // chmod (peers.json mode 0600)
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/in.h>
@@ -414,6 +415,81 @@ struct Peer {
 };
 static std::vector<Peer> g_peers;
 static std::mutex g_peers_mu;
+
+// =============================================================================
+// Peer persistence (isolated feature) — remember known-good peers so a node that
+// has connected once can bootstrap WITHOUT the STRATO seeds on restart.
+//
+// Anti-poisoning / anti-eclipse: we persist ONLY addresses we ourselves dialed
+// OUTBOUND and that completed the version handshake — never a peer-gossiped or
+// inbound source address. So there is no third-party address-injection vector
+// here (a peer cannot make us persist an address of its choosing). Full ADDR
+// gossip (discovering NEW peers) is a separate, review-gated protocol change.
+// =============================================================================
+static std::set<std::string> g_known_peers;      // "host:port" dial targets, validated
+static std::mutex            g_known_peers_mu;
+static std::string           g_peers_file;        // set at startup; empty = disabled
+static const size_t          MAX_KNOWN_PEERS = 128;
+
+// Accept only a plain "host:port" with a sane port. Loopback/private is allowed
+// (devnet/LAN labs legitimately use them); the safety property is provenance
+// (we dialed it), not the address range.
+static bool valid_peer_addr(const std::string& a) {
+    auto c = a.rfind(':');
+    if (c == std::string::npos || c == 0 || c + 1 >= a.size()) return false;
+    std::string host = a.substr(0, c), ps = a.substr(c + 1);
+    if (host.empty() || host.size() > 255) return false;
+    for (char ch : ps) if (ch < '0' || ch > '9') return false;
+    long port = atol(ps.c_str());
+    return port >= 1 && port <= 65535;
+}
+
+static void save_peers_file() {
+    if (g_peers_file.empty()) return;
+    std::vector<std::string> snap;
+    { std::lock_guard<std::mutex> lk(g_known_peers_mu);
+      for (const auto& a : g_known_peers) { snap.push_back(a); if (snap.size() >= MAX_KNOWN_PEERS) break; } }
+    std::string tmp = g_peers_file + ".tmp";
+    std::ofstream f(tmp, std::ios::trunc);
+    if (!f) return;
+    f << "[";
+    for (size_t i = 0; i < snap.size(); ++i) f << (i?",":"") << "\"" << snap[i] << "\"";
+    f << "]\n";
+    f.flush(); if (!f.good()) return;
+    f.close();
+    ::chmod(tmp.c_str(), 0600);
+    std::rename(tmp.c_str(), g_peers_file.c_str());
+}
+
+static void load_peers_file() {
+    if (g_peers_file.empty()) return;
+    std::ifstream f(g_peers_file);
+    if (!f) return;
+    std::string all((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    // minimal JSON-array-of-strings parse (no dependency)
+    size_t i = 0;
+    while (i < all.size()) {
+        if (all[i] == '"') {
+            size_t j = all.find('"', i + 1);
+            if (j == std::string::npos) break;
+            std::string a = all.substr(i + 1, j - i - 1);
+            if (valid_peer_addr(a)) {
+                std::lock_guard<std::mutex> lk(g_known_peers_mu);
+                if (g_known_peers.size() < MAX_KNOWN_PEERS) g_known_peers.insert(a);
+            }
+            i = j + 1;
+        } else ++i;
+    }
+}
+
+// Record a peer we successfully dialed (outbound + handshake acked).
+static void remember_peer(const std::string& addr) {
+    if (g_peers_file.empty() || !valid_peer_addr(addr)) return;
+    bool added = false;
+    { std::lock_guard<std::mutex> lk(g_known_peers_mu);
+      if (g_known_peers.size() < MAX_KNOWN_PEERS && !g_known_peers.count(addr)) { g_known_peers.insert(addr); added = true; } }
+    if (added) save_peers_file();
+}
 
 // Get per-fd write mutex (returns nullptr if peer not found)
 static std::shared_ptr<std::mutex> get_peer_write_mu(int fd) {
@@ -8132,7 +8208,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 }
                 {
                     std::lock_guard<std::mutex> lk(g_peers_mu);
-                    for (auto& p : g_peers) if (p.fd == fd) { p.their_height = their_h; p.version_acked = true; break; }
+                    for (auto& p : g_peers) if (p.fd == fd) { p.their_height = their_h; p.version_acked = true; if (p.outbound) remember_peer(p.addr); break; }
                 }
                 p2p_send_adaptive(fd, crypto, "VACK", nullptr, 0);
                 printf("[P2P] %s: version OK, their height=%lld\n", addr.c_str(), (long long)their_h);
@@ -8162,7 +8238,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             int64_t their_h = -1;
             {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
-                for (auto& p : g_peers) if (p.fd == fd) { p.version_acked = true; their_h = p.their_height; break; }
+                for (auto& p : g_peers) if (p.fd == fd) { p.version_acked = true; if (p.outbound) remember_peer(p.addr); their_h = p.their_height; break; }
             }
             if (their_h > g_chain_height) {
                 printf("[SYNC] Peer %s has height %lld, we have %lld — requesting blocks %lld..%lld\n",
@@ -9645,6 +9721,23 @@ int main(int argc, char** argv) {
     // fail closed and are skipped, so this degrades gracefully to EU-only until
     // the seed-apac/seed-us DNS records + nodes exist. Peer exchange grows the
     // mesh from whatever connects, so 2-3 bootstrap seeds is plenty.
+      // Peer persistence: remember-and-redial known-good peers so a node that has
+      // connected once no longer depends on the STRATO seeds. The store lives next
+      // to chain.json (peers.json). Dial every remembered peer up front, IN ADDITION
+      // to seeds/--connect, so bootstrap succeeds even when every seed is unreachable.
+      if(!chain_path.empty()){
+          auto sl = chain_path.find_last_of('/');
+          std::string dir = (sl==std::string::npos) ? std::string(".") : chain_path.substr(0, sl==0?1:sl);
+          g_peers_file = dir + "/peers.json";
+      } else { g_peers_file = "peers.json"; }
+      load_peers_file();
+      {
+          std::vector<std::string> known;
+          { std::lock_guard<std::mutex> lk(g_known_peers_mu); for (const auto& a : g_known_peers) known.push_back(a); }
+          if(!known.empty()) printf("[P2P] redialing %zu remembered peer(s) from %s\n", known.size(), g_peers_file.c_str());
+          for(const auto& a : known){ auto c=a.rfind(':'); connect_peer(a.substr(0,c), atoi(a.substr(c+1).c_str())); }
+      }
+
     if(connect_addrs.empty()){
         static const char* DEFAULT_SEEDS[] = {
             "seed-eu.sostcore.com",
@@ -9700,7 +9793,9 @@ int main(int argc, char** argv) {
                     }
                 }
                 // Auto-reconnect: if no peers and we have connect addresses, reconnect
-                if(g_peers.empty() && !connect_addrs.empty()){
+                bool have_known;
+                { std::lock_guard<std::mutex> lk(g_known_peers_mu); have_known = !g_known_peers.empty(); }
+                if(g_peers.empty() && (!connect_addrs.empty() || have_known)){
                     printf("[P2P] No peers connected, attempting reconnect...\n");
                     for(const auto& a:connect_addrs){
                         auto colon=a.rfind(':');
@@ -9710,9 +9805,14 @@ int main(int argc, char** argv) {
                             connect_peer(a, P2P_PORT_DEFAULT);
                         }
                     }
+                    // also redial remembered peers (bootstrap without STRATO)
+                    std::vector<std::string> known;
+                    { std::lock_guard<std::mutex> lk(g_known_peers_mu); for(const auto& a:g_known_peers) known.push_back(a); }
+                    for(const auto& a:known){ auto c=a.rfind(':'); connect_peer(a.substr(0,c), atoi(a.substr(c+1).c_str())); }
                 }
             }
             if(!chain_path.empty()) save_chain(chain_path);
+            save_peers_file();
             g_popc_registry.save(g_popc_registry_path, nullptr);
         }
     } catch (const std::exception& e) {
