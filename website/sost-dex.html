@@ -28,7 +28,7 @@
   body{
     background:var(--bg); color:var(--txt); font-family:var(--sans);
     font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
-    min-height:100vh;
+    min-height:100vh; overflow-x:hidden;
   }
   body::before{ /* faint top glow, subtle */
     content:""; position:fixed; inset:0 0 auto 0; height:340px; pointer-events:none;
@@ -200,6 +200,10 @@
   .wchoice:hover{border-color:var(--red)}
   .wchoice .ic{width:34px;height:34px;border-radius:9px; display:grid; place-items:center; font-weight:700; font-family:var(--mono); font-size:13px; flex:none}
   .wchoice small{display:block; color:var(--txt-3); font-size:11.5px; font-weight:400; margin-top:2px}
+  .wnetlabel{font-size:10px; letter-spacing:1.4px; text-transform:uppercase; color:var(--txt-4); font-family:var(--mono); margin:12px 2px 7px}
+  .wchoice.wmissing{cursor:default; opacity:.55}
+  .wchoice.wmissing:hover{border-color:var(--border-2)}
+  .wtag{font-size:9.5px; letter-spacing:.6px; color:var(--txt-4); border:1px solid var(--border-2); border-radius:5px; padding:2px 7px; white-space:nowrap; font-family:var(--mono)}
   .modal .disclaim{font-size:11px; color:var(--txt-4); margin:6px 0 0; line-height:1.6}
   .modal .x{float:right; background:none;border:0;color:var(--txt-3); font-size:20px; cursor:pointer; line-height:1; margin:-4px -4px 0 0}
 
@@ -501,11 +505,24 @@ function onQuoteInputs(){
     try{ evm = window.SOSTWallets? await SOSTWallets.discoverEvm(window,250):[]; }catch(e){}
     try{ btc = window.SOSTWallets? SOSTWallets.discoverBtc(window):[]; }catch(e){}
     window.__evm=evm; window.__btc=btc;
-    var html='';
-    evm.forEach(function(e,i){ html+=provBtn('evm',i,e.info.name,'Ethereum / EVM',' eth'.trim()); });
-    btc.forEach(function(b,i){ var cap=SOSTWallets.btcCapable(b.provider); html+=provBtn('btc',i,b.info.name,'Bitcoin '+(cap?'PSBT ok':'no PSBT'),'btc'); });
-    cpEl.innerHTML = html || '<div class="disclaim">No EVM or Bitcoin wallet extension detected. Install MetaMask / Rabby / Coinbase (EVM) or Xverse / UniSat (Bitcoin). The SOST bridge works without an extension.</div>';
+    // Curated multichain support list — ALWAYS shown so the manager is visible; an entry is
+    // only clickable when its extension is actually detected (no fabricated connections).
+    var EVM=[{n:'MetaMask',re:/meta ?mask/i},{n:'Rabby',re:/rabby/i},{n:'Coinbase Wallet',re:/coinbase/i}];
+    var BTCW=[{n:'Xverse',re:/xverse/i},{n:'UniSat',re:/unisat/i}];
+    function idxOf(list,re){ for(var i=0;i<list.length;i++){ if(re.test((list[i].info&&list[i].info.name)||'')) return i; } return -1; }
+    var html='<div class="wnetlabel">Ethereum / EVM counterparty</div>';
+    EVM.forEach(function(w){ var i=idxOf(evm,w.re);
+      html += i>=0 ? provBtn('evm',i,w.n,'EVM · detected','eth') : walletDisabled(w.n,'EVM','eth','not detected'); });
+    // any other EIP-6963 provider not in the curated list
+    evm.forEach(function(e,i){ if(!EVM.some(function(w){return w.re.test(e.info.name);})) html+=provBtn('evm',i,e.info.name,'EVM · detected','eth'); });
+    html+='<div class="wnetlabel">Bitcoin counterparty · must sign PSBT</div>';
+    BTCW.forEach(function(w){ var i=idxOf(btc,w.re); var cap=i>=0&&SOSTWallets.btcCapable(btc[i].provider);
+      html += i<0 ? walletDisabled(w.n,'Bitcoin','btc','not detected')
+                  : (cap ? provBtn('btc',i,w.n,'Bitcoin · PSBT ✓','btc') : walletDisabled(w.n,'Bitcoin','btc','no PSBT')); });
+    btc.forEach(function(b,i){ if(!BTCW.some(function(w){return w.re.test(b.info.name);})){ var c=SOSTWallets.btcCapable(b.provider); html+=(c?provBtn('btc',i,b.info.name,'Bitcoin · PSBT ✓','btc'):walletDisabled(b.info.name,'Bitcoin','btc','no PSBT')); } });
+    cpEl.innerHTML = html;
   }
+  function walletDisabled(name,net,sym,tag){ return '<div class="wchoice wmissing"><span class="ic tk '+sym+'">'+icGlyph(sym)+'</span><span>'+name+'<small>'+net+'</small></span><span style="flex:1"></span><span class="wtag">'+tag+'</span></div>'; }
   async function doConnectSost(){ try{ var c=await SOSTWallets.connectSost(window,{}); WM.setSost(c); afterConnect(); }catch(e){ alert('SOST wallet: '+e.message); } }
   async function connectCp(kind,i){ try{ var c = kind==='evm' ? await SOSTWallets.connectEvm(window.__evm[i].provider, function(ev){ afterConnect(); }) : await SOSTWallets.connectBtc(window.__btc[i]); if(kind==='btc' && !c.capable){ alert('This Bitcoin wallet cannot sign PSBTs; it cannot claim/refund the HTLC. '+(c.warn||'')); } WM.setCp(c); afterConnect(); }catch(e){ alert(kind.toUpperCase()+' wallet: '+e.message); } }
   function disconnectSlot(slot){ WM.clear(slot); afterConnect(); }
