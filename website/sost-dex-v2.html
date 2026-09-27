@@ -369,6 +369,9 @@
   </div>
 </div>
 
+<script src="js/dex-price-adapter.js"></script>
+<script src="js/dex-rfq.js"></script>
+<script src="js/dex-liquidity-sim.js"></script>
 <script>
 "use strict";
 /* SOST DEX V2 — Phase 1 dashboard shell. DEMO ONLY: no real prices, balances, quotes,
@@ -429,7 +432,31 @@ function refreshCta(){
   // connected but no executable quote -> get quote (which will report none), then disabled review
   cta.textContent='Get Quote'; cta.disabled=false; cta.classList.add('secondary');
 }
-function ctaClick(){
+  function ctaClick(){
+    if(!connected){ openWallet(); return; }
+    var cta=document.getElementById('swapCta');
+    // Ask the REAL RFQ engine. Fail-closed: no maker + no verifier in the lab => no firm quote,
+    // and we surface ITS reason, never a fabricated price. (Live maker/coordinator wiring is next.)
+    var reason='no maker connected';
+    try{
+      if(window.SOSTRfq){
+        var book=SOSTRfq.makeBook({});
+        var r=book.validate({maker:'lab',nonce:1,amount:Number(document.getElementById('payAmt').value)||0,price:0,confirmedInventory:0,expiry:Date.now()+1}, Date.now());
+        reason=r.error||'no executable quote';
+      }
+    }catch(e){ reason='quote engine error'; }
+    try{
+      if(window.SOSTPriceAdapter){
+        SOSTPriceAdapter.makeAdapter({source:null}).getReference('SOST/USDC', Date.now()).then(function(ref){
+          document.getElementById('qRef').textContent = ref.simulated ? 'lab reference (not executable)' : (ref.last||'—');
+        });
+      }
+    }catch(e){}
+    cta.textContent='No executable quote'; cta.disabled=true; cta.classList.remove('secondary');
+    var qe=document.getElementById('quoteEmpty'); qe.style.display='flex';
+    qe.querySelector('span').innerHTML='No executable quote available &mdash; <b style="color:var(--txt-3);font-weight:600">'+reason+'</b>. The RFQ engine is fail-closed: with no maker and no signature verifier in the lab, no firm quote can be produced.';
+    var ql=document.getElementById('qLiq'); if(ql) ql.textContent=reason;
+  }
   if(!connected){ openWallet(); return; }
   // "get quote" -> honest: none available in the lab
   var cta=document.getElementById('swapCta');
