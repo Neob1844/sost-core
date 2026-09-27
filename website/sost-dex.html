@@ -414,6 +414,13 @@ try{ var t=localStorage.getItem('sost_dex_tab'); if(t){ var el=[].find.call(tabs
 
 /* ---- swap asset selection (DEMO; no prices) ---- */
 var ASSETS=[['SOST','sost','S'],['USDC','usdc','U'],['USDT','usdt','T'],['BTC','btc','₿'],['ETH','eth','Ξ'],['PAXG','paxg','G'],['XAUT','xaut','X']];
+var ASSET_STATUS={
+  USDT:{s:'disabled',r:'USDT transfer returns no value — incompatible with the HTLC contract (needs SafeERC20)'},
+  PAXG:{s:'disabled',r:'PAXG fee-on-transfer breaks the fixed-amount escrow (needs balance-delta accounting)'},
+  XAUT:{s:'disabled',r:'XAUT pending live compatibility test on a fork'},
+  USDC:{s:'caveat',r:'USDC blacklist/pause (Circle) can freeze a swap mid-flight'}
+};
+function assetBlock(){ var a=[ASSETS[pay][0],ASSETS[recv][0]]; for(var i=0;i<a.length;i++){ var st=ASSET_STATUS[a[i]]; if(st&&st.s==='disabled') return a[i]+': '+st.r; } return null; }
 var pay=0, recv=1;
 function paint(){
   var p=ASSETS[pay], r=ASSETS[recv];
@@ -471,7 +478,11 @@ function onQuoteInputs(){
   function updateWalletHeader(){ var s=WM.state(), parts=[]; if(s.sost)parts.push('SOST'); if(s.cp)parts.push(s.cp.network.toUpperCase());
     var dot=document.getElementById('wdot'), lbl=document.getElementById('walletLabel');
     if(parts.length){ dot.classList.add('on'); lbl.textContent=parts.join(' + '); } else { dot.classList.remove('on'); lbl.textContent='Connect Wallet'; } }
-  function refreshCta(){ var cta=document.getElementById('swapCta'); var r=WM.swapReady(pairLabel());
+  function refreshCta(){ var cta=document.getElementById('swapCta');
+    var blk=assetBlock();
+    if(blk){ cta.textContent='Asset disabled'; cta.disabled=true; cta.title=blk; cta.classList.remove('secondary');
+      var qe=document.getElementById('quoteEmpty'); if(qe){ qe.style.display='flex'; var sp=qe.querySelector('span'); if(sp) sp.innerHTML='This asset is <b style="color:var(--amber)">disabled</b> — '+blk+'. See docs/dex/ASSET_COMPATIBILITY.md.'; } return; }
+    var r=WM.swapReady(pairLabel());
     if(r.ready){ cta.textContent='Get Quote'; cta.disabled=false; cta.classList.add('secondary'); }
     else { cta.textContent='Connect Wallet'; cta.title=r.why||''; cta.disabled=false; cta.classList.remove('secondary'); } }
   function ctaClick(){
