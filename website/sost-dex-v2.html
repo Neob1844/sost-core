@@ -348,6 +348,12 @@
         <h3>Atomic swap lifecycle <span class="pill demo" style="margin-left:6px">Demo</span></h3>
         <div class="cap">The real state comes from both chains and the HTLC protocol — never from decorative timers. Below mirrors a completed lab swap (SOST ⇄ BTC).</div>
         <div class="steps" id="steps"></div>
+          <div id="relayBar" style="margin-top:18px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--panel-3);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span class="pill demo" id="relayPill">Lab relay: checking&hellip;</span>
+            <span style="font-size:12px;color:var(--txt-3)" id="relayMsg">Looking for the local lab relay on 127.0.0.1:8781&hellip;</span>
+            <span style="flex:1"></span>
+            <button class="cta" id="labSwapBtn" style="width:auto;padding:9px 16px;font-size:13px" disabled onclick="startLabSwap()">Start lab SOST/BTC swap</button>
+          </div>
       </div>
     </div>
     <p class="lab-note">This mirrors a real laboratory swap: SOST devnet ⇄ Bitcoin regtest, funds bridged by the preimage revealed on-chain. A swap is only <b>Completed</b> after both legs confirm the required depth.</p>
@@ -457,12 +463,6 @@ function refreshCta(){
     qe.querySelector('span').innerHTML='No executable quote available &mdash; <b style="color:var(--txt-3);font-weight:600">'+reason+'</b>. The RFQ engine is fail-closed: with no maker and no signature verifier in the lab, no firm quote can be produced.';
     var ql=document.getElementById('qLiq'); if(ql) ql.textContent=reason;
   }
-  if(!connected){ openWallet(); return; }
-  // "get quote" -> honest: none available in the lab
-  var cta=document.getElementById('swapCta');
-  cta.textContent='No executable quote'; cta.disabled=true; cta.classList.remove('secondary');
-  document.getElementById('qLiq').textContent='no maker connected';
-}
 
 /* ---- trade order form ---- */
 document.querySelectorAll('#mseg button').forEach(function(b){ b.addEventListener('click', function(){
@@ -529,6 +529,55 @@ var CUR=9; // demo: a completed swap
     wrap.appendChild(div);
   });
 })();
+
+/* ---- lab relay client (Activity): REAL verified state, graceful when absent ---- */
+var RELAY='http://127.0.0.1:8781';
+var RELAY_STATE={QuoteRequested:0,Accepted:2,SostLocked:4,CounterpartyLocked:5,PreimageRevealed:7,Claiming:8,Completed:9,Refunded:-1};
+function renderSteps(cur, refunded){
+  var wrap=document.getElementById('steps'); wrap.innerHTML='';
+  LIFECYCLE.forEach(function(s,i){
+    var cls = refunded ? (i<=3?'done':'todo') : (i<cur?'done':(i===cur?'cur':'todo'));
+    var mark = refunded ? (i<=3?'\u2713':'\u2014') : (i<cur?'\u2713':(i===cur?'\u25cf':(i+1)));
+    var div=document.createElement('div'); div.className='step '+cls;
+    div.innerHTML='<div class="rail"><div class="pip">'+mark+'</div><div class="line"></div></div>'+
+      '<div class="body"><div class="st">'+s[0]+'</div><div class="meta">'+s[1]+'</div></div>';
+    wrap.appendChild(div);
+  });
+}
+var labSwapId=null, labPoll=null;
+function relayHealth(){
+  fetch(RELAY+'/api/health').then(function(r){return r.json();}).then(function(h){
+    var pill=document.getElementById('relayPill'), msg=document.getElementById('relayMsg'), btn=document.getElementById('labSwapBtn');
+    pill.className='pill ok'; pill.textContent='Lab relay: connected';
+    msg.textContent='SOST '+(h.sost&&h.sost.up?'up (h='+h.sost.height+')':'down')+' \u00b7 BTC '+(h.btc&&h.btc.up?'up':'down')+' \u00b7 EVM '+(h.evm&&h.evm.up?'up':'down')+' \u00b7 harness '+(h.harness?'ready':'missing');
+    btn.disabled=!(h.sost&&h.sost.up&&h.btc&&h.btc.up&&h.harness);
+  }).catch(function(){
+    var pill=document.getElementById('relayPill'), msg=document.getElementById('relayMsg');
+    pill.className='pill demo'; pill.textContent='Lab relay: not running';
+    msg.textContent='Start website/lab/dex_lab_relay.py to run a REAL lab swap here. Showing a demo lifecycle meanwhile.';
+    document.getElementById('labSwapBtn').disabled=true;
+  });
+}
+function startLabSwap(){
+  var btn=document.getElementById('labSwapBtn'); btn.disabled=true; btn.textContent='Running\u2026';
+  fetch(RELAY+'/api/swap/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pair:'SOST/BTC'})})
+    .then(function(r){return r.json();}).then(function(d){
+      labSwapId=d.id; if(labPoll) clearInterval(labPoll);
+      labPoll=setInterval(pollLabSwap, 4000); pollLabSwap();
+    }).catch(function(){ btn.disabled=false; btn.textContent='Start lab SOST/BTC swap'; });
+}
+function pollLabSwap(){
+  if(!labSwapId) return;
+  fetch(RELAY+'/api/swap/'+labSwapId).then(function(r){return r.json();}).then(function(d){
+    var refunded=(d.state==='Refunded');
+    var cur=RELAY_STATE[d.state]; if(cur==null) cur=1;
+    renderSteps(refunded?9:cur, refunded);
+    document.getElementById('relayMsg').textContent='Swap '+labSwapId+' \u00b7 VERIFIED state: '+d.state+(d.coord_state?(' \u00b7 coordinator: '+d.coord_state):'');
+    if(d.state==='Completed'||refunded){ clearInterval(labPoll); var b=document.getElementById('labSwapBtn'); b.disabled=false; b.textContent='Start lab SOST/BTC swap'; }
+  }).catch(function(){});
+}
+var _actBtn=document.querySelector('nav.tabs button[data-view="activity"]');
+if(_actBtn) _actBtn.addEventListener('click', relayHealth);
 
 paint(); refreshCta();
 </script>
