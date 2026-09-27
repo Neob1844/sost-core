@@ -2149,7 +2149,7 @@ int main(int argc, char** argv) {
                                   tx, chain_height, &err,
                                   /*capsule_payload=*/nullptr,
                                   /*mark_spent=*/false,
-                                  from_pkh)) {
+                                  from_pkh, /*popc_carrier=*/nullptr, g_fee_rate)) {
             fprintf(stderr, "Error: %s\n", err.c_str());
             return 1;
         }
@@ -2170,7 +2170,7 @@ int main(int argc, char** argv) {
                                       tx2, chain_height, &err,
                                       /*capsule_payload=*/nullptr,
                                       /*mark_spent=*/false,
-                                      from_pkh)) {
+                                      from_pkh, /*popc_carrier=*/nullptr, g_fee_rate)) {
                 fprintf(stderr, "Error (fee adjustment): %s\n", err.c_str());
                 return 1;
             }
@@ -2189,7 +2189,7 @@ int main(int argc, char** argv) {
                                           tx3, chain_height, &err,
                                           /*capsule_payload=*/nullptr,
                                           /*mark_spent=*/false,
-                                          from_pkh)) {
+                                          from_pkh, /*popc_carrier=*/nullptr, g_fee_rate)) {
                     fprintf(stderr, "Error (final fee pass): %s\n", err.c_str());
                     return 1;
                 }

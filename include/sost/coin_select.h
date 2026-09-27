@@ -17,6 +17,19 @@ namespace sost { namespace coinselect {
 inline constexpr int64_t APPROX_INPUT_BYTES  = 148;
 inline constexpr int64_t APPROX_CHANGE_BYTES = 34;   // one extra output if change is created
 
+// Upper bound on how many (largest, economic) UTXOs the Branch-and-Bound search considers, so a
+// wallet with thousands of UTXOs cannot drive BnB into deep recursion / pathological runtime. The
+// largest-effective-first FALLBACK still ranges over ALL economic UTXOs, so this only caps the
+// changeless-match attempt, never the ability to fund the send.
+inline constexpr size_t  BNB_MAX_CANDIDATES  = 256;
+
+// Cost (in stocks) of a change output the wallet would have to spend later; a surplus below this is
+// dust and should be absorbed into the fee rather than materialised as an output. fee_rate is the
+// per-byte rate; guarded to >= 1 (consensus S8 floor).
+inline int64_t dust_threshold(int64_t fee_rate) {
+    return APPROX_INPUT_BYTES * (fee_rate > 0 ? fee_rate : 1);
+}
+
 struct Result {
     std::vector<size_t> indices;  // chosen indices into the input `amounts`
     int64_t total_in = 0;
@@ -80,8 +93,13 @@ inline Result select(const std::vector<int64_t>& amounts, int64_t needed, int64_
     std::sort(econ.begin(), econ.end(), [](auto&a,auto&b){ return a.first > b.first; });
     std::sort(uneco.begin(), uneco.end(), [](auto&a,auto&b){ return a.first > b.first; });
 
-    // 1) BnB over economic UTXOs for a changeless match
-    auto bnb_sel = bnb(econ, needed, APPROX_CHANGE_BYTES * (fee_rate > 0 ? fee_rate : 1));
+    // 1) BnB over economic UTXOs for a changeless match. Cap the candidate set to the
+    //    BNB_MAX_CANDIDATES largest so a huge wallet cannot force deep recursion; econ is already
+    //    sorted DESC, so this keeps the highest-value (most likely to match) UTXOs. The fallback
+    //    below still ranges over ALL economic UTXOs, so fundability is never reduced by the cap.
+    std::vector<std::pair<int64_t,size_t>> bnb_cand = econ;
+    if (bnb_cand.size() > BNB_MAX_CANDIDATES) bnb_cand.resize(BNB_MAX_CANDIDATES);
+    auto bnb_sel = bnb(bnb_cand, needed, APPROX_CHANGE_BYTES * (fee_rate > 0 ? fee_rate : 1));
     if (!bnb_sel.empty()) {
         r.indices = bnb_sel; r.bnb = true;
         for (size_t idx : r.indices) r.total_in += amounts[idx];

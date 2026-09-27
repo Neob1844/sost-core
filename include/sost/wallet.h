@@ -129,7 +129,8 @@ public:
         const std::vector<Byte>* capsule_payload = nullptr,
         bool mark_spent = true,
         const PubKeyHash* from_pkh = nullptr,
-        const std::vector<Byte>* popc_carrier_payload = nullptr);
+        const std::vector<Byte>* popc_carrier_payload = nullptr,
+        int64_t fee_rate = 10);   // per-byte rate for the economic/dust heuristic (NOT the fee itself)
 
     // sendmany: single TRANSFER tx with N outputs (one per recipient).
     // Caller passes a vector of (address, amount) pairs. Change (if any)

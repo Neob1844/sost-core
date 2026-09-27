@@ -336,8 +336,14 @@ Wallet::CoinSelection Wallet::select_coins(const std::vector<WalletUTXO>& unspen
         if (from_pkh && u.pkh != *from_pkh) continue;                // --from pin
         std::string a = address_encode(u.pkh);
         if (a == GOLD || a == POPC) continue;                        // constitutional, never spent
-        if (u.lock_until != 0 && chain_height >= 0 &&
-            (uint64_t)chain_height < u.lock_until) continue;          // BOND/ESCROW lock not yet unlocked
+        if (u.lock_until != 0) {                                     // BOND/ESCROW time-locked output
+            // Fail CLOSED: a time-locked output is spendable ONLY when we positively know the chain
+            // height has reached its unlock. If the height is unknown (chain_height < 0, e.g. the
+            // node query failed), we must NOT spend it — an unknown state must never be treated as
+            // "unlocked", or a transient RPC error could burn locked bond/escrow funds.
+            if (chain_height < 0) continue;                          // unknown height -> never spend a lock
+            if ((uint64_t)chain_height < u.lock_until) continue;     // not yet unlocked
+        }
         amts.push_back(u.amount); orig.push_back(i);
     }
     auto r = sost::coinselect::select(amts, needed, fee_rate);
@@ -358,7 +364,8 @@ bool Wallet::create_transaction(
     const std::vector<Byte>* capsule_payload,
     bool mark_spent,
     const PubKeyHash* from_pkh,
-    const std::vector<Byte>* popc_carrier_payload)
+    const std::vector<Byte>* popc_carrier_payload,
+    int64_t fee_rate)
 {
     if (amount <= 0) {
         if (err) *err = "amount must be positive";
@@ -384,7 +391,7 @@ bool Wallet::create_transaction(
     int64_t total_in = 0;
 
     {  // UNIFIED coin selection (BnB + largest-effective-first + constraints)
-        auto _cs = select_coins(unspent, needed, from_pkh, chain_height, 10);
+        auto _cs = select_coins(unspent, needed, from_pkh, chain_height, fee_rate);
         selected = _cs.selected;
         total_in = _cs.total_in;
     }
@@ -519,6 +526,10 @@ bool Wallet::create_transaction(
     // when from_pkh is set (so spending from key A never silently moves
     // change to key B); otherwise falls back to the first input's pkh.
     int64_t change = total_in - needed;
+        // Absorb dust change into the fee: a surplus smaller than the cost to spend it later is
+        // uneconomic and defeats BnB's changeless intent (materialising a dust output). The
+        // recipient still receives the exact amount; the tiny remainder goes to the miner fee.
+        if (change > 0 && change < sost::coinselect::dust_threshold(fee_rate)) change = 0;
     if (change > 0) {
         const PubKeyHash& change_pkh = from_pkh ? *from_pkh
                                                 : unspent[selected[0]].pkh;
@@ -666,6 +677,10 @@ bool Wallet::create_transaction_many(
 
     // Optional change output appended last → first input's address.
     int64_t change = total_in - needed;
+        // Absorb dust change into the fee: a surplus smaller than the cost to spend it later is
+        // uneconomic and defeats BnB's changeless intent (materialising a dust output). The
+        // recipient still receives the exact amount; the tiny remainder goes to the miner fee.
+        if (change > 0 && change < sost::coinselect::dust_threshold(10)) change = 0;
     if (change > 0) {
         const WalletKey* change_key = find_key_by_pkh(unspent[selected[0]].pkh);
         if (!change_key) {
@@ -769,6 +784,10 @@ bool Wallet::create_bond_transaction(
 
     // Output 1: change
     int64_t change = total_in - needed;
+        // Absorb dust change into the fee: a surplus smaller than the cost to spend it later is
+        // uneconomic and defeats BnB's changeless intent (materialising a dust output). The
+        // recipient still receives the exact amount; the tiny remainder goes to the miner fee.
+        if (change > 0 && change < sost::coinselect::dust_threshold(10)) change = 0;
     if (change > 0) {
         const WalletKey* change_key = find_key_by_pkh(unspent[selected[0]].pkh);
         TxOutput out{};
@@ -860,6 +879,10 @@ bool Wallet::create_escrow_transaction(
 
     // Output 1: change
     int64_t change = total_in - needed;
+        // Absorb dust change into the fee: a surplus smaller than the cost to spend it later is
+        // uneconomic and defeats BnB's changeless intent (materialising a dust output). The
+        // recipient still receives the exact amount; the tiny remainder goes to the miner fee.
+        if (change > 0 && change < sost::coinselect::dust_threshold(10)) change = 0;
     if (change > 0) {
         const WalletKey* change_key = find_key_by_pkh(unspent[selected[0]].pkh);
         TxOutput out{};

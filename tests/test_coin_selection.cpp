@@ -65,6 +65,26 @@ int main(){
     auto r1=select(a,300*SOST,10), r2=select(a,300*SOST,10);
     CHECK(r1.indices==r2.indices, "H deterministic");
   }
+    // I) BnB candidate cap (E): a wallet with MANY (>BNB_MAX_CANDIDATES) economic UTXOs must still
+    //    fund the send via the fallback even though BnB only sees the top-K. No crash, ok=true.
+    {
+      std::vector<int64_t> a(500, 10*SOST);   // 500 identical economic UTXOs
+      auto r=select(a, 3000*SOST, 10);        // needs 300 of them -> fallback territory
+      CHECK(r.ok && r.total_in>=3000*SOST, "I funds large-wallet send despite BnB cap");
+      CHECK(r.indices.size()>=300, "I selection count is sane for the target");
+    }
+    // J) BnB cap does not break funding a send with 300 varied UTXOs.
+    {
+      std::vector<int64_t> a; for(int i=0;i<300;i++) a.push_back((int64_t)(i+1)*SOST);
+      auto r=select(a, 300*SOST, 10);
+      CHECK(r.ok, "J still funds with 300 varied UTXOs");
+    }
+    // K) dust_threshold helper: floors fee_rate at 1 and scales with rate.
+    {
+      CHECK(dust_threshold(10) == APPROX_INPUT_BYTES*10, "K dust threshold scales with rate");
+      CHECK(dust_threshold(0)  == APPROX_INPUT_BYTES*1,  "K dust threshold floors rate at 1");
+      CHECK(dust_threshold(-5) == APPROX_INPUT_BYTES*1,  "K dust threshold floors negative rate");
+    }
   printf("COIN-SELECT TESTS: PASS=%d FAIL=%d\n", PASS, FAIL);
   return FAIL?1:0;
 }
