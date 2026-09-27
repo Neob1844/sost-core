@@ -63,3 +63,23 @@ Verified live in the lab across the three chains:
 
 Scripts: `evm_adversarial_matrix.sh` (EVM, 5/5). BTC wrong-preimage + reorg in the btc regtest
 scripts. Never-fund → the other party refunds after its timeout (refund paths above).
+
+## Coordinator as effective controller + recovery (FASE 1)
+The real C++ `Coordinator` now GOVERNS a live swap (not just unit-tested). `coord_gate` reconstructs
+the coordinator by replaying an append-only event log, so the swap harness calls it once per
+transition and only advances when the coordinator AUTHORIZES the observed event.
+
+- **Governed live SOST↔BTC swap** (`scripts/xswap_sost_btc_coordinated.sh`, `coord_gate.cpp`):
+  `create → AwaitingSostLock →(MarkSostLockSeen)→ AwaitingCounterpartyLock →(MarkCounterpartyLockSeen)
+  → BothLocked →(MarkPreimageKnown)→ ClaimReady →(MarkCounterpartyClaimSeen)→ Claimed`. Each real
+  on-chain step is gated by the coordinator; it emitted the correct `next_safe_action` at every
+  state and reached the terminal `Claimed`. Alice 0.49998 BTC, Bob 1.999 SOST.
+- **Governance (rejections):** the coordinator rejects out-of-order events (e.g. `MarkSostClaimSeen`
+  from `AwaitingSostLock`) and refuses to advance when the timeout order is invalid
+  (initiator requires `T_sost > T_btc`).
+- **Persisted-state recovery (coordinator restart):** a FRESH `coord_gate` process replays the log
+  and recovers the exact state (`Claimed`, preimage_known=1); a regressive event on the terminal
+  state is rejected. This is the "recover the persisted state after a coordinator restart" case.
+- **SOST refund positive path** (`scripts/sost_htlc_refund_test.sh`): fund → early refund REJECTED
+  (R24 timelock) → past timeout → refund ACCEPTED → Alice recovered her SOST, Bob got nothing.
+  (The earlier runaway was a kill-logic bug in the harness; the miner respects `--blocks`.)
