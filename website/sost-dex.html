@@ -427,6 +427,7 @@
   </div>
 </div>
 
+<script src="js/asset-registry.js"></script>
 <script src="js/dex-token-icons.js"></script>
 <script src="js/dex-wallets.js"></script>
   <script src="js/dex-price-adapter.js"></script>
@@ -450,12 +451,17 @@ try{ var t=localStorage.getItem('sost_dex_tab'); if(t){ var el=[].find.call(tabs
 
 /* ---- swap asset selection (DEMO; no prices) ---- */
 var ASSETS=[['SOST','sost','S'],['USDC','usdc','U'],['USDT','usdt','T'],['BTC','btc','₿'],['ETH','eth','Ξ'],['PAXG','paxg','G'],['XAUT','xaut','X']];
-var ASSET_STATUS={
-  USDT:{s:'disabled',r:'USDT transfer returns no value — incompatible with the HTLC contract (needs SafeERC20)'},
-  PAXG:{s:'disabled',r:'PAXG fee-on-transfer breaks the fixed-amount escrow (needs balance-delta accounting)'},
-  XAUT:{s:'disabled',r:'XAUT pending live compatibility test on a fork'},
-  USDC:{s:'caveat',r:'USDC blacklist/pause (Circle) can freeze a swap mid-flight'}
-};
+/* Status derives from the CANONICAL registry (js/asset-registry.js) so Atomic Swap and
+   DEX V2 never diverge. Falls back to an inline copy only if the registry is absent. */
+var ASSET_STATUS=(function(){
+  if(window.SOSTAssets){ var m={}; Object.keys(SOSTAssets.ASSETS).forEach(function(k){ var st=SOSTAssets.ASSETS[k].status; if(st.state!=='ok') m[k]={s:st.state,r:st.reason}; }); return m; }
+  return {
+    USDT:{s:'disabled',r:'USDT transfer returns no boolean — needs SafeERC20-style handling'},
+    PAXG:{s:'disabled',r:'PAXG fee-on-transfer breaks fixed-amount escrow (needs balance-delta accounting)'},
+    XAUT:{s:'disabled',r:'XAUT real-contract behaviour not yet verified on a pinned fork'},
+    USDC:{s:'caveat',r:'USDC blacklist/pause (Circle) can freeze a swap mid-flight'}
+  };
+})();
 var DEFAULT_QUOTE_MSG='No executable quote available. Connect to a live quote provider to price this swap. <b style="color:var(--txt-3);font-weight:400">In the lab there is no market maker yet, so no firm quote can be shown.</b>';
 function assetBlock(){ var a=[ASSETS[pay][0],ASSETS[recv][0]]; for(var i=0;i<a.length;i++){ var st=ASSET_STATUS[a[i]]; if(st&&st.s==='disabled') return a[i]+': '+st.r; } return null; }
 var pay=0, recv=1;
@@ -463,10 +469,12 @@ function paint(){
   var p=ASSETS[pay], r=ASSETS[recv];
   document.getElementById('paySym').textContent=p[0];
   var payTk=document.getElementById('payTk'); payTk.className='tk '+p[1];
-  if(window.SOSTTokenIcons){ SOSTTokenIcons.paintInto(payTk,p[0]); } else { payTk.textContent=p[2]; }
+  if(window.SOSTAssets){ payTk.innerHTML=SOSTAssets.logoHtml(p[0]); payTk.setAttribute('aria-label',p[0]); }
+  else if(window.SOSTTokenIcons){ SOSTTokenIcons.paintInto(payTk,p[0]); } else { payTk.textContent=p[2]; }
   document.getElementById('recvSym').textContent=r[0];
   var recvTk=document.getElementById('recvTk'); recvTk.className='tk '+r[1];
-  if(window.SOSTTokenIcons){ SOSTTokenIcons.paintInto(recvTk,r[0]); } else { recvTk.textContent=r[2]; }
+  if(window.SOSTAssets){ recvTk.innerHTML=SOSTAssets.logoHtml(r[0]); recvTk.setAttribute('aria-label',r[0]); }
+  else if(window.SOSTTokenIcons){ SOSTTokenIcons.paintInto(recvTk,r[0]); } else { recvTk.textContent=r[2]; }
   document.getElementById('minSuf').textContent=r[0];
 }
 function cycleAsset(which){
