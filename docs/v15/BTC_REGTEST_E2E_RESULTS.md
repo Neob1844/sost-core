@@ -69,3 +69,16 @@ cmake --build build-otc3a --target test-atomic-swap-btc-signing -j$(nproc)
 # bitcoin-cli displays, or the claim/refund spends the wrong outpoint
 # (bad-txns-inputs-missingorspent).
 ```
+
+## REORG / recovery (added) — real regtest reorg
+Funded the P2WSH, broadcast+mined the SOST-signed claim (1 conf), then `bitcoin-cli invalidateblock`
+on the claim's block to simulate a chain reorg:
+- The claim tx **returned to the mempool** (recovery), unconfirmed.
+- Re-mining **reconfirmed** it on the new chain (2 conf).
+- The revealed **preimage in the witness still matches** after reorg+recovery (the cross-chain
+  secret is not lost by a reorg).
+
+So the BTC HTLC claim survives a Bitcoin reorg at real consensus level. The complementary
+funding-reorg / re-broadcast-on-restart behavior is covered by the SOST-side watcher
+(`btc_watch` unit suite 26/26: reorg-aware `ReconcileBtcSwapWithChain`, check-before-send, no
+re-broadcast on restart). Repro: `scripts/btc_htlc_regtest_reorg_test.sh`.
