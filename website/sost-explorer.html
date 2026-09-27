@@ -570,6 +570,13 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <input id="searchIn" placeholder="block height, hash, txid, or sost1 address..." onkeydown="if(event.key==='Enter')doSearch()"/>
   <button onclick="doSearch()">FIND</button>
 </div></div>
+<!-- Address Inspector: read-only reconciliation + paginated UTXO holdings (bounded RPC) -->
+<div class="search" style="margin-top:-4px"><div class="search-box" style="gap:8px;flex-wrap:wrap">
+  <span class="search-pre">inspect&gt;</span>
+  <input id="ainAddr" placeholder="sost1… — reconcile balance + paginated UTXO holdings" onkeydown="if(event.key==='Enter')ainInspect()" style="flex:1 1 340px"/>
+  <button onclick="ainInspect()">INSPECT</button>
+</div></div>
+<div id="ainOut" style="max-width:1400px;margin:8px auto 0;padding:0 24px"></div>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- V16 DTD JACKPOT V2 ADVANCE NOTICE — injected by js/v16-jackpot-notice.js -->
 <!-- ════════════════════════════════════════════════════════════ -->
@@ -9682,5 +9689,84 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
 })();
 </script>
 
+<script>
+/* Address Inspector — read-only reconciliation + paginated UTXO holdings.
+   Bounded to 3 RPC calls (getblockcount + getaddressinfo + getaddressflows), all
+   read-only. Reconciles Σ(UTXO amounts) vs the node-reported balance and classifies
+   coinbase maturity / locks. Uses the page's existing rpc() helper. Additive; does
+   not touch any existing explorer code. */
+(function(){
+  "use strict";
+  var COINBASE_MATURITY = 1000;                 // mainnet (consensus_constants.h)
+  var TYPE={0:'transfer',1:'coinbase·miner',2:'coinbase·gold',3:'coinbase·popc',4:'coinbase·lottery',16:'bond-lock',17:'escrow-lock',18:'htlc-lock',19:'htlc-claim',32:'burn',48:'node-protocol'};
+  var LOCKED={16:1,17:1,18:1};
+  var _utxos=[], _addr='', _page=0, _tip=0, PER=25;
+  function n8(x){ return (Math.round(x*1e8)/1e8); }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function sh(h){ return h&&h.length>16?h.slice(0,10)+'···'+h.slice(-6):h; }
+
+  window.ainInspect = async function(){
+    var out=document.getElementById('ainOut');
+    var addr=(document.getElementById('ainAddr').value||'').trim();
+    if(!addr){ out.innerHTML=''; return; }
+    out.innerHTML='<div style="color:var(--text3,#7d8b99);font:12px ui-monospace;padding:8px 0">inspecting '+esc(addr)+'… (read-only, ≤3 RPC calls)</div>';
+    try{
+      _tip = await rpc('getblockcount',[]);
+      var info = await rpc('getaddressinfo',[addr]);
+      var flows = null; try{ flows = await rpc('getaddressflows',[addr]); }catch(e){}
+      if(!info || info.isvalid===false){ out.innerHTML='<div style="color:#ff8a8a;font:12px ui-monospace;padding:8px 0">Not a valid SOST address.</div>'; return; }
+      _addr=addr; _page=0;
+      _utxos=(info.utxos||[]).slice().sort(function(a,b){return b.height-a.height;});
+      var sumU=0, immature=0, locked=0;
+      _utxos.forEach(function(u){ sumU+=u.amount;
+        if(u.coinbase && (_tip-u.height+1)<COINBASE_MATURITY) immature+=u.amount;
+        if(LOCKED[u.type]) locked+=u.amount; });
+      var bal=info.balance||0;
+      var matches = Math.abs(n8(sumU)-n8(bal))<1e-6;
+      var spendable = n8(bal-immature-locked);
+      var recvNM = flows? (flows.received_non_mining||0)/1e8 : null;
+      var sentNM = flows? (flows.sent_non_mining||0)/1e8 : null;
+      function card(k,v,c){ return '<div style="border:1px solid var(--border,#1b2430);border-radius:8px;background:var(--bg2,#0a0f16);padding:12px 14px;min-width:150px"><div style="font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--text3,#7d8b99)">'+k+'</div><div style="font:600 18px ui-monospace;margin-top:5px;color:'+(c||'var(--text,#e6edf3)')+'">'+v+'</div></div>'; }
+      var html='<div style="display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 4px">'
+        + card('Balance (node)', n8(bal).toFixed(8))
+        + card('Σ UTXO amounts', n8(sumU).toFixed(8), matches?'#25c26e':'#ff5a5f')
+        + card('Reconciles', matches?'✓ match':'✗ MISMATCH', matches?'#25c26e':'#ff5a5f')
+        + card('UTXOs', String(info.utxo_count!=null?info.utxo_count:_utxos.length))
+        + card('Immature coinbase', n8(immature).toFixed(4), immature>0?'#f0a92b':undefined)
+        + card('Locked (bond/escrow/htlc)', n8(locked).toFixed(4), locked>0?'#f0a92b':undefined)
+        + card('Spendable now', spendable.toFixed(8), '#67e8f9')
+        + (recvNM!=null?card('Received (non-mining)', n8(recvNM).toFixed(4)):'')
+        + (sentNM!=null?card('Sent (non-mining)', n8(sentNM).toFixed(4)):'')
+        + '</div>'
+        + '<div style="font-size:10.5px;color:var(--text3,#7d8b99);margin:2px 0 8px">Reconciliation = Σ(unspent UTXO amounts) vs node balance. Coinbase matures after '+COINBASE_MATURITY+' confirmations. Read-only; bounded to 3 RPC calls. Full per-transaction history needs a node address→txid index RPC (not yet exposed); this inspects current holdings.</div>'
+        + '<div id="ainList"></div>';
+      out.innerHTML=html;
+      renderPage();
+    }catch(e){ out.innerHTML='<div style="color:#ff8a8a;font:12px ui-monospace;padding:8px 0">Inspect failed: '+esc((e&&e.message)||e)+'</div>'; }
+  };
+  function renderPage(){
+    var el=document.getElementById('ainList'); if(!el) return;
+    var pages=Math.max(1,Math.ceil(_utxos.length/PER)); if(_page>=pages)_page=pages-1; if(_page<0)_page=0;
+    var start=_page*PER, slice=_utxos.slice(start,start+PER);
+    var rows=slice.map(function(u){
+      var flags=[]; if(u.coinbase && (_tip-u.height+1)<COINBASE_MATURITY) flags.push('<span style="color:#f0a92b">immature('+(_tip-u.height+1)+'/'+COINBASE_MATURITY+')</span>');
+      if(LOCKED[u.type]) flags.push('<span style="color:#ff8a8a">locked</span>');
+      return '<tr><td style="font:11px ui-monospace;color:#67e8f9">'+sh(u.txid)+':'+u.vout+'</td>'
+        + '<td style="text-align:right;font:11px ui-monospace">'+n8(u.amount).toFixed(8)+'</td>'
+        + '<td style="text-align:right;color:var(--text3,#7d8b99)">'+u.height+'</td>'
+        + '<td style="color:var(--text3,#7d8b99)">'+(TYPE[u.type]||('type '+u.type))+'</td>'
+        + '<td>'+flags.join(' ')+'</td></tr>'; }).join('');
+    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+      + '<thead><tr style="color:var(--text3,#7d8b99);text-align:left"><th style="padding:6px 8px">outpoint</th><th style="text-align:right;padding:6px 8px">amount</th><th style="text-align:right;padding:6px 8px">height</th><th style="padding:6px 8px">type</th><th style="padding:6px 8px">flags</th></tr></thead>'
+      + '<tbody>'+(rows||'<tr><td colspan="5" style="padding:10px;color:var(--text3,#7d8b99)">no UTXOs</td></tr>')+'</tbody></table></div>'
+      + '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:12px">'
+      + '<button onclick="ainPage(-1)" '+(_page<=0?'disabled':'')+' style="background:var(--bg2,#0a0f16);border:1px solid var(--border,#1b2430);color:var(--text,#e6edf3);border-radius:6px;padding:5px 12px;cursor:pointer">‹ prev</button>'
+      + '<span style="color:var(--text3,#7d8b99)">page '+(_page+1)+' / '+pages+' · '+_utxos.length+' UTXOs</span>'
+      + '<button onclick="ainPage(1)" '+(_page>=pages-1?'disabled':'')+' style="background:var(--bg2,#0a0f16);border:1px solid var(--border,#1b2430);color:var(--text,#e6edf3);border-radius:6px;padding:5px 12px;cursor:pointer">next ›</button>'
+      + '</div>';
+  }
+  window.ainPage=function(d){ _page+=d; renderPage(); };
+})();
+</script>
 </body>
 </html>
