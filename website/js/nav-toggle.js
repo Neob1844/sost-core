@@ -229,6 +229,7 @@
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-universal-assets.html" style="color:#DAA520">Universal Assets</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>

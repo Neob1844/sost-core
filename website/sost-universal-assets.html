@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="js/nav-toggle.js?v=v400" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index,follow">
+<link rel="icon" type="image/png" href="sost-logo.png?v=v392">
+<title>SOST Universal Assets</title>
+<meta name="description" content="SOST Universal Assets — an open, optional registry + issuance layer for any real or digital asset. Asset Passport, Asset Intelligence and an Asset Finance simulator. Laboratory preview; no native token issuance or real lending is active.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000; --panel:#070707; --card:#0b0b0d; --card2:#101014;
+    --border:#1b1b20; --border2:#2a2a31;
+    --red:#fb010d; --red2:#ff2d3b; --red-soft:rgba(251,1,13,.08);
+    --gold:#DAA520; --gold2:#e9c463; --gold-soft:rgba(218,165,32,.10);
+    --green:#25c26e; --amber:#f0a92b; --cyan:#22d3ee;
+    --txt:#e6edf3; --txt2:#9aa7b4; --txt3:#6a7684; --txt4:#48505c;
+    --mono:'JetBrains Mono',monospace; --sans:'Space Grotesk',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:14px;line-height:1.7;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--border) 60px,var(--border) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,var(--border) 60px,var(--border) 61px);opacity:.10;pointer-events:none;z-index:0}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
+  a{color:var(--cyan);text-decoration:none}
+  /* canonical global nav (scoped) */
+  body>nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);padding:10px 0}
+  body>nav .container{max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  body>nav .nav-logo{font-family:var(--sans);font-weight:700;font-size:22px;color:var(--txt);letter-spacing:3px;text-decoration:none;display:flex;align-items:center;gap:12px}
+  body>nav .nav-logo .brand-sost{color:var(--red);font-size:1.76em}
+  body>nav .nav-links{display:flex;gap:4px;flex-wrap:wrap}
+  body>nav .nav-links a{color:var(--txt3);text-decoration:none;font-size:13.2px;padding:4px 10px;border-radius:4px;letter-spacing:.5px;white-space:nowrap}
+  body>nav .nav-links a:hover{color:var(--txt);background:rgba(255,255,255,.05)}
+  body>nav .nav-hamburger{display:none;background:none;border:1px solid var(--border2);color:var(--txt3);font-size:20px;padding:4px 8px;cursor:pointer;border-radius:4px;line-height:1}
+  @keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
+  @media(max-width:768px){body>nav .nav-hamburger{display:block}body>nav .nav-links{display:none;width:100%}body>nav .nav-links.open{display:flex}}
+
+  .banner{background:var(--gold-soft);border:1px solid var(--gold);color:var(--gold2);border-radius:9px;padding:11px 15px;margin:18px 0;font-size:12px;letter-spacing:.3px;text-align:center}
+  .hero{padding:60px 0 34px}
+  .eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+  .eyebrow::before{content:'// '}
+  h1{font-family:var(--sans);font-size:clamp(30px,5vw,50px);font-weight:700;line-height:1.08;letter-spacing:-1px}
+  h1 .r{color:var(--red)}
+  .lede{font-size:15px;color:var(--txt2);max-width:74ch;margin-top:18px;font-weight:300}
+  .chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:22px}
+  .chip{font-size:11px;letter-spacing:.5px;padding:6px 11px;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;background:var(--card)}
+  .chip.red{border-color:var(--red);color:#ff8a8a;background:var(--red-soft)}
+  section.blk{padding:34px 0;border-top:1px solid var(--border)}
+  h2{font-family:var(--sans);font-size:clamp(20px,3vw,27px);font-weight:600;letter-spacing:-.4px;margin-bottom:6px}
+  h2 .g{color:var(--gold)}
+  .sub{color:var(--txt3);font-size:13px;margin-bottom:20px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+  .comp{border:1px solid var(--border);border-top:3px solid var(--gold);border-radius:9px;background:var(--card);padding:18px}
+  .comp.red{border-top-color:var(--red)} .comp.cyan{border-top-color:var(--cyan)} .comp.green{border-top-color:var(--green)}
+  .comp h3{font-size:15px;margin-bottom:7px} .comp p{font-size:12.5px;color:var(--txt2);line-height:1.7}
+  .comp .tag{display:inline-block;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--txt4);border:1px solid var(--border2);border-radius:4px;padding:2px 7px;margin-top:10px}
+  /* demo panels */
+  .demo{border:1px solid var(--border);border-radius:11px;background:var(--card);padding:18px;margin-top:14px}
+  .demo .row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+  label{display:block;font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--txt3);margin:0 0 4px}
+  select,input{background:var(--card2);border:1px solid var(--border2);color:var(--txt);border-radius:7px;padding:8px 10px;font-family:var(--sans);font-size:13px}
+  button.run{background:var(--red);border:0;color:#fff;font-weight:700;border-radius:8px;padding:9px 16px;cursor:pointer;font-size:13px}
+  button.run.gold{background:var(--gold);color:#2a1f00}
+  .out{margin-top:14px;font-family:var(--mono);font-size:12px}
+  .kv{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--border)}
+  .kv .k{color:var(--txt3)} .kv .v{color:var(--txt);text-align:right;word-break:break-all;max-width:66%}
+  .states{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+  .st{font-family:var(--mono);font-size:10.5px;font-weight:600;padding:5px 9px;border-radius:6px;border:1px solid}
+  .st.on{color:var(--green);border-color:rgba(37,194,110,.4);background:rgba(37,194,110,.10)}
+  .st.off{color:var(--txt3);border-color:var(--border2);background:var(--card2)}
+  .st.warn{color:var(--amber);border-color:rgba(240,169,43,.4);background:rgba(240,169,43,.10)}
+  .note{font-size:11px;color:var(--txt4);margin-top:10px;line-height:1.6}
+  .traceline{font-size:10.5px;color:var(--txt3);border-left:2px solid var(--border2);padding:3px 0 3px 9px;margin:3px 0;word-break:break-word}
+  footer{border-top:1px solid var(--border);padding:26px 0;color:var(--txt4);font-size:12px;text-align:center;margin-top:20px}
+</style>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="sost-explorer.html" class="nav-logo">
+      <img src="sost-logo.png?v=v392" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+    </a>
+    <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
+      <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
+    </a>
+    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links"></div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="banner">LABORATORY PREVIEW · No native token issuance and no real lending are active. Everything below is a documentary / simulation prototype using fictional assets. Not an offer of any financial product.</div>
+
+  <div class="hero">
+    <div class="eyebrow">Open registry &amp; issuance layer</div>
+    <h1>SOST <span class="r">Universal Assets</span></h1>
+    <p class="lede">An optional, universal layer to describe, value and (in the future) tokenize <b style="color:var(--txt)">any</b> real or digital asset or right — machinery, real estate, precious metals, commodities, art, vehicles, contractual rights, digital assets. SOST proves <b style="color:var(--txt)">who</b> registered a claim, <b style="color:var(--txt)">under what rules</b>, and <b style="color:var(--txt)">its history</b>. It does not decide the legal meaning, guarantee value, custody the asset, or enforce off-chain promises. SOST the coin keeps its supply and only pays fees. This is a universal platform — not specific to mining or any single sector.</p>
+    <div class="chips">
+      <span class="chip">Universal &mdash; any asset class</span>
+      <span class="chip">SOST supply untouched</span>
+      <span class="chip red">Not native tokenization (yet)</span>
+      <span class="chip red">Asset Finance = simulator only</span>
+    </div>
+  </div>
+
+  <section class="blk">
+    <h2>The <span class="g">building blocks</span></h2>
+    <div class="sub">Four components today, plus a future consensus module. Each is honest about what it proves.</div>
+    <div class="grid">
+      <div class="comp gold"><h3>Asset Passport</h3><p>A canonical, hashed description of an asset: issuer, owner declaration, jurisdiction, rights, documents (each SHA-256'd), and an off-chain locator. Anchored on SOST via a Capsule <code>doc_ref</code> — no consensus change.</p><span class="tag">documentary · live-capable</span></div>
+      <div class="comp cyan"><h3>Asset Intelligence</h3><p>A modular, fully-traceable valuation engine: classification → evidence quality → per-category model → range → haircuts → confidence → suggested LTV. Every figure carries its rule and inputs. No opaque AI.</p><span class="tag">deterministic · traceable</span></div>
+      <div class="comp green"><h3>Asset Finance</h3><p>A voluntary lending <b>simulator</b>: bilateral / multi-lender / pool structures with default and liquidation waterfalls. A hard invariant proves no SOST is ever minted. No real loans, no fund-raising.</p><span class="tag">simulation only</span></div>
+      <div class="comp red"><h3>Native UTXO assets</h3><p>A future consensus module (specification only) for issuing/transferring/burning assets natively on the SOST UTXO ledger, with immutable genesis policy and per-asset supply accounting. Gated behind adversarial tests, devnet, audit and a coordinated upgrade — <b>not</b> part of the current hard fork.</p><span class="tag">specification · future</span></div>
+    </div>
+  </section>
+
+  <!-- ============ ASSET PASSPORT ============ -->
+  <section class="blk">
+    <h2>Asset <span class="g">Passport</span> &mdash; try it</h2>
+    <div class="sub">Build a passport for a fictional asset. Anchoring a manifest hash proves a document set existed at a time — it is NOT proof of ownership, authenticity or any legal right.</div>
+    <div class="demo">
+      <div class="row">
+        <div><label>Category</label><select id="apCat"></select></div>
+        <div style="flex:1 1 200px"><label>Issuer</label><input id="apIssuer" value="sost1issuerexample" style="width:100%"></div>
+        <div style="flex:1 1 200px"><label>Off-chain locator</label><input id="apLoc" value="ipfs://Qm-demo-manifest" style="width:100%"></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1 1 100%"><label>Owner declaration</label><input id="apDecl" value="I declare I hold the asset described here." style="width:100%"></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1 1 100%"><label>Documents (name: text, one per line)</label>
+          <textarea id="apDocs" style="width:100%;min-height:56px;background:var(--card2);border:1px solid var(--border2);color:var(--txt);border-radius:7px;padding:8px 10px;font-family:var(--sans);font-size:13px">invoice.pdf: INVOICE CONTENT
+serial-report.pdf: SN-12345 condition A</textarea></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="run" onclick="apBuild()">Build passport &amp; hash</button></div>
+      <div class="out" id="apOut"></div>
+    </div>
+  </section>
+
+  <!-- ============ ASSET INTELLIGENCE ============ -->
+  <section class="blk">
+    <h2>Asset <span class="g">Intelligence</span> &mdash; try it</h2>
+    <div class="sub">A traceable valuation of a fictional 1&nbsp;kg gold bar. Every number below is produced by an explicit rule over the inputs — expand the trace.</div>
+    <div class="demo">
+      <div class="row">
+        <div><label>Weight (g)</label><input id="aiW" value="1000" style="width:110px"></div>
+        <div><label>Purity</label><input id="aiP" value="0.999" style="width:90px"></div>
+        <div><label>Gold USD / g</label><input id="aiG" value="137.60" style="width:110px"></div>
+        <div><label>Evidence</label><select id="aiE"><option value="full">assay + weight + reference</option><option value="weak">none (weak)</option></select></div>
+        <button class="run gold" onclick="aiRun()">Value</button>
+      </div>
+      <div class="out" id="aiOut"></div>
+    </div>
+  </section>
+
+  <!-- ============ ASSET FINANCE ============ -->
+  <section class="blk">
+    <h2>Asset <span class="g">Finance</span> &mdash; simulator</h2>
+    <div class="sub">A voluntary loan against the asset above, purely simulated. The conservation check proves money to lenders only ever comes from borrower payments + collateral — no SOST is minted, no reserves used.</div>
+    <div class="demo">
+      <div class="row">
+        <div><label>Principal (SOST)</label><input id="afP" value="30000" style="width:120px"></div>
+        <div><label>Annual rate</label><input id="afR" value="0.10" style="width:90px"></div>
+        <div><label>Term (months)</label><input id="afT" value="12" style="width:90px"></div>
+        <div><label>Scenario</label><select id="afS"><option value="repay">repaid in full</option><option value="default">default @ month 6</option></select></div>
+        <button class="run" onclick="afRun()">Simulate</button>
+      </div>
+      <div class="out" id="afOut"></div>
+      <div class="note">Simulation only. Token collateral is a claim on an off-chain asset, not enforceable physical collateral. This does not raise funds, offer loans, or promise returns.</div>
+    </div>
+  </section>
+
+  <section class="blk">
+    <h2>Boundaries &amp; honesty</h2>
+    <div class="grid">
+      <div class="comp red"><h3>What SOST does</h3><p>Proves the issuer, the rules, the unit count, control and the history of a registered claim. Anchors document hashes. Runs transparent valuation and simulation.</p></div>
+      <div class="comp"><h3>What it does NOT do</h3><p>It does not certify off-chain truth, guarantee value, custody your asset, make a token proof of ownership, or (today) issue native assets or provide real loans.</p></div>
+      <div class="comp"><h3>Separation</h3><p>SOST Universal Assets is a general-purpose layer. GeaSpirit is a completely separate project and is not part of this platform.</p></div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  SOST Universal Assets &middot; laboratory preview &middot; <a href="index.html">Home</a> &middot; <a href="sost-dex.html">Atomic Swap DEX</a> &middot; <a href="sost-explorer.html">Explorer</a>
+  <div style="margin-top:6px;color:var(--txt4)">Fictional demos. No native issuance, no real lending, no consensus change. Not financial advice.</div>
+</footer>
+
+<script src="js/asset-passport.js"></script>
+<script src="js/asset-intelligence.js"></script>
+<script src="js/asset-finance.js"></script>
+<script>
+"use strict";
+var AP=window.SOSTAssetPassport, AI=window.SOSTAssetIntelligence, AF=window.SOSTAssetFinance;
+(function(){ var s=document.getElementById('apCat'); (AP?AP.CATEGORIES:[]).forEach(function(c){ var o=document.createElement('option'); o.value=c; o.textContent=c.replace(/_/g,' '); s.appendChild(o); }); })();
+function kv(k,v){ return '<div class="kv"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>'; }
+function esc(s){ return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+
+async function apBuild(){
+  if(!AP){ return; }
+  var docs=document.getElementById('apDocs').value.split('\n').map(function(l){var i=l.indexOf(':');return i<0?null:{name:l.slice(0,i).trim(),text:l.slice(i+1).trim()};}).filter(Boolean);
+  var p=await AP.buildPassport({category:document.getElementById('apCat').value,issuer:document.getElementById('apIssuer').value,nonce:'0',
+    ownerDeclaration:document.getElementById('apDecl').value,jurisdiction:'ES',rights:'as declared',locator:document.getElementById('apLoc').value,documents:docs});
+  var cap=AP.capsuleDocRef(p), cls=AP.classify(p,false,Date.now());
+  var st='<div class="states">'
+    +'<span class="st '+(cls.DECLARED_BY_ISSUER?'on':'off')+'">DECLARED BY ISSUER</span>'
+    +'<span class="st '+(cls.VERIFIED_BY_THIRD_PARTY?'on':'off')+'">VERIFIED BY THIRD PARTY</span>'
+    +'<span class="st off">ANCHORED ON SOST</span>'
+    +'<span class="st warn">LEGAL RIGHT NOT VERIFIED</span></div>';
+  document.getElementById('apOut').innerHTML =
+    kv('Asset ID', esc(p.manifest.assetId))
+    + kv('Manifest hash (SHA-256)', esc(p.manifestHash))
+    + kv('Documents hashed', p.manifest.documents.length)
+    + kv('Capsule doc_ref', cap.ok? (cap.bytes+' / '+cap.max+' bytes ✓') : esc(cap.error))
+    + st
+    + '<div class="note">The four states are separate concepts. A matching on-chain hash proves integrity, never ownership or authenticity.</div>';
+}
+
+function aiRun(){
+  if(!AI){ return; }
+  var full=document.getElementById('aiE').value==='full';
+  var r=AI.value({category:'precious_metal',weight_g:+document.getElementById('aiW').value,purity:+document.getElementById('aiP').value,spot_per_g:+document.getElementById('aiG').value,
+    evidence: full?{assay:true,weight:true,spot_reference:true}:{}});
+  var trace=(r.trace||[]).slice(0,4).map(function(t){return '<div class="traceline">'+esc(t.rule)+': '+esc(t.formula||JSON.stringify(t.inputs))+'</div>';}).join('');
+  document.getElementById('aiOut').innerHTML =
+    kv('Market value (low / base / high)', '$'+r.market_value_low.toLocaleString()+' / $'+r.market_value_base.toLocaleString()+' / $'+r.market_value_high.toLocaleString())
+    + kv('Recoverable value', '$'+r.recoverable_value.toLocaleString())
+    + kv('Confidence', (r.confidence*100).toFixed(0)+'%')
+    + kv('Suggested LTV', (r.suggested_LTV*100).toFixed(0)+'%  (max loan $'+r.suggested_max_loan.toLocaleString()+')')
+    + (r.missing_evidence.length? kv('Missing evidence', esc(r.missing_evidence.join(', '))):'')
+    + '<div class="note">Traceable — first rules shown:</div>'+trace
+    + '<div class="note">'+esc(r.disclaimer)+'</div>';
+}
+
+function afRun(){
+  if(!AI||!AF){ return; }
+  // collateral from the Intelligence demo inputs
+  var col=AI.value({category:'precious_metal',weight_g:+document.getElementById('aiW').value,purity:+document.getElementById('aiP').value,spot_per_g:+document.getElementById('aiG').value,evidence:{assay:true,weight:true,spot_reference:true}});
+  var principal=+document.getElementById('afP').value;
+  var cfg={principal:principal,annual_rate:+document.getElementById('afR').value,term_months:+document.getElementById('afT').value,payment_structure:'interest_only',
+    structure_type:'bilateral',currency:'SOST',collateral:{recoverable_value:col.recoverable_value,suggested_max_loan:col.suggested_max_loan},
+    lenders:[{id:'L1',amount:principal}]};
+  if(document.getElementById('afS').value==='default') cfg.default_at_month=6;
+  var res=AF.simulateLoan(cfg);
+  if(!res.ok){ document.getElementById('afOut').innerHTML=kv('Rejected', esc((res.errors||[]).join('; '))); return; }
+  document.getElementById('afOut').innerHTML =
+    kv('Structure', res.structure_type+' · '+res.currency)
+    + kv('Monthly payment', res.monthly_payment.toLocaleString())
+    + kv('Total to lenders', res.total_to_lenders.toLocaleString())
+    + kv('Defaulted', res.defaulted? 'yes':'no')
+    + (res.total_lender_loss? kv('Lender loss', res.total_lender_loss.toLocaleString()):'')
+    + kv('Conservation (no mint)', res.invariants.no_mint? '✓ money to lenders = borrower + collateral' : '✗ VIOLATED')
+    + '<div class="note">'+esc(res.disclaimer)+'</div>';
+}
+</script>
+</body>
+</html>
