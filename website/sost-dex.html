@@ -96,7 +96,9 @@
   .asset{display:inline-flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--border-2);
     padding:8px 13px; border-radius:999px; font-weight:600; font-size:15px; cursor:pointer; white-space:nowrap; transition:border-color .15s}
   .asset:hover{border-color:var(--border-strong)}
-  .asset .tk{width:22px;height:22px;border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:700; font-family:var(--mono); color:#04070c}
+  .asset .tk{width:22px;height:22px;border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:700; font-family:var(--mono); color:#04070c; overflow:hidden}
+  .asset .tk svg{width:100%;height:100%;display:block}
+  .wchoice .ic svg{width:100%;height:100%;display:block}
   .tk.sost{background:linear-gradient(140deg,var(--red),var(--red-dim)); color:#fff}
   .tk.usdc{background:#2775ca; color:#fff}
   .tk.btc{background:#f7931a; color:#fff}
@@ -392,6 +394,7 @@
   </div>
 </div>
 
+<script src="js/dex-token-icons.js"></script>
 <script src="js/dex-wallets.js"></script>
   <script src="js/dex-price-adapter.js"></script>
 <script src="js/dex-rfq.js"></script>
@@ -425,9 +428,11 @@ var pay=0, recv=1;
 function paint(){
   var p=ASSETS[pay], r=ASSETS[recv];
   document.getElementById('paySym').textContent=p[0];
-  document.getElementById('payTk').className='tk '+p[1]; document.getElementById('payTk').textContent=p[2];
+  var payTk=document.getElementById('payTk'); payTk.className='tk '+p[1];
+  if(window.SOSTTokenIcons){ SOSTTokenIcons.paintInto(payTk,p[0]); } else { payTk.textContent=p[2]; }
   document.getElementById('recvSym').textContent=r[0];
-  document.getElementById('recvTk').className='tk '+r[1]; document.getElementById('recvTk').textContent=r[2];
+  var recvTk=document.getElementById('recvTk'); recvTk.className='tk '+r[1];
+  if(window.SOSTTokenIcons){ SOSTTokenIcons.paintInto(recvTk,r[0]); } else { recvTk.textContent=r[2]; }
   document.getElementById('minSuf').textContent=r[0];
 }
 function cycleAsset(which){
@@ -453,12 +458,13 @@ function onQuoteInputs(){
   function shortA(a){ return a? (a.slice(0,8)+'…'+a.slice(-6)) : ''; }
   function openWallet(){ document.getElementById('walletModal').classList.add('open'); renderWalletModal(); }
   function closeWallet(){ document.getElementById('walletModal').classList.remove('open'); }
-  function connRow(net,sym,addr,slot){ return '<div class="wchoice" style="cursor:default"><span class="ic tk '+sym+'">'+sym.charAt(0).toUpperCase()+'</span><span>'+net+' connected<small>'+shortA(addr)+'</small></span><span style="flex:1"></span><button onclick="disconnectSlot(\''+slot+'\')" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer">Disconnect</button></div>'; }
-  function provBtn(kind,i,name,sub,sym){ return '<button class="wchoice" onclick="connectCp(\''+kind+'\','+i+')"><span class="ic tk '+sym+'">'+sym.charAt(0).toUpperCase()+'</span><span>'+name+'<small>'+sub+'</small></span></button>'; }
+  function icGlyph(sym){ var m={sost:'SOST',btc:'BTC',eth:'ETH'}; var t=m[sym]; return (window.SOSTTokenIcons&&t)?SOSTTokenIcons.svg(t):sym.charAt(0).toUpperCase(); }
+  function connRow(net,sym,addr,slot){ return '<div class="wchoice" style="cursor:default"><span class="ic tk '+sym+'">'+icGlyph(sym)+'</span><span>'+net+' connected<small>'+shortA(addr)+'</small></span><span style="flex:1"></span><button onclick="disconnectSlot(\''+slot+'\')" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer">Disconnect</button></div>'; }
+  function provBtn(kind,i,name,sub,sym){ var s=sym.trim(); return '<button class="wchoice" onclick="connectCp(\''+kind+'\','+i+')"><span class="ic tk '+s+'">'+icGlyph(s)+'</span><span>'+name+'<small>'+sub+'</small></span></button>'; }
   async function renderWalletModal(){
     var st=WM.state();
     document.getElementById('wmSost').innerHTML = st.sost ? connRow('SOST','sost',st.sost.address,'sost')
-      : '<button class="wchoice" onclick="doConnectSost()"><span class="ic tk sost">S</span><span>SOST Wallet<small>native bridge, no seed in the DEX</small></span></button>';
+      : '<button class="wchoice" onclick="doConnectSost()"><span class="ic tk sost">'+icGlyph('sost')+'</span><span>SOST Wallet<small>native bridge, no seed in the DEX</small></span></button>';
     var cpEl=document.getElementById('wmCp');
     if(st.cp){ cpEl.innerHTML=connRow(st.cp.network.toUpperCase(), st.cp.network==='btc'?'btc':'eth', st.cp.address,'cp'); return; }
     cpEl.innerHTML='<div class="disclaim">discovering wallet extensions…</div>';
