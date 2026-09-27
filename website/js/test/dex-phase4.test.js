@@ -17,16 +17,41 @@ let P=0,F=0; function chk(c,m){ if(c){P++;} else {F++; console.log('  [FAIL] '+m
   const r3 = await a2.getReference('SOST/USDC', 999999); // stale
   chk(r3.fresh===false, 'adapter: stale reference flagged');
 
-  // --- RFQ: validation, expiry, replay, double-accept ---
+  // --- RFQ (HARDENED): fail-closed verifier, confirmed/committed/available, replay, recovery ---
+  // FAIL-CLOSED: no verifier -> reject everything
+  const noVer = RFQ.makeBook({});
+  chk(!noVer.validate({maker:'0xabc',nonce:1,amount:10,price:0.15,confirmedInventory:100,expiry:2000},1000).ok,
+      'rfq: NO verifier -> reject (fail-closed, no accept-any default)');
+  chk(!noVer.durable(), 'rfq: in-memory book reports durable()=false');
+
   const book = RFQ.makeBook({verify:()=>true});
-  const q = {maker:'0xabc', nonce:1, amount:100, price:0.15, reservedInventory:100, expiry:2000};
+  const q = {maker:'0xabc', nonce:1, amount:100, price:0.15, confirmedInventory:250, expiry:2000};
   chk(book.validate(q,1000).ok, 'rfq: valid quote passes');
   chk(!book.validate({...q,expiry:500},1000).ok, 'rfq: expired quote rejected');
-  chk(!book.validate({...q,reservedInventory:50},1000).ok, 'rfq: under-reserved rejected');
+  chk(!book.validate({...q,confirmedInventory:50},1000).ok, 'rfq: amount>confirmed rejected');
   chk(!RFQ.makeBook({verify:()=>false}).validate(q,1000).ok, 'rfq: bad signature rejected');
-  chk(book.accept(q,1000).ok, 'rfq: first accept ok');
-  chk(!book.accept(q,1000).ok, 'rfq: double-accept (replay) blocked');
-  chk(!book.validate(q,1000).ok, 'rfq: re-validate after accept -> replay');
+  // available accounting: 250 confirmed, commit 100 -> available 150
+  chk(book.accept(q,1000).ok, 'rfq: first accept ok (commits 100)');
+  chk(book.committedFor('0xabc')===100, 'rfq: committed tracked (100)');
+  chk(book.availableFor({maker:'0xabc',confirmedInventory:250})===150, 'rfq: available = confirmed - committed (150)');
+  chk(!book.accept(q,1000).ok, 'rfq: double-accept (same nonce) blocked');
+  // a second quote from same maker for 200 must fail (only 150 available)
+  chk(!book.accept({...q,nonce:2,amount:200},1000).ok, 'rfq: over-available second accept rejected (inventory not double-spent)');
+  // a 150 second quote fits exactly
+  chk(book.accept({...q,nonce:3,amount:150},1000).ok, 'rfq: exact-available accept ok (commits to 250)');
+  chk(book.committedFor('0xabc')===250, 'rfq: fully committed (250)');
+  // release frees inventory
+  chk(book.release({maker:'0xabc',nonce:1}).ok && book.committedFor('0xabc')===150, 'rfq: release frees committed inventory');
+
+  // restart recovery via injected durable store
+  let saved=null; const store={load:()=>saved, save:(st)=>{saved=JSON.parse(JSON.stringify(st));}};
+  const b1 = RFQ.makeBook({verify:()=>true, store});
+  chk(b1.durable(), 'rfq: store-backed book reports durable()=true');
+  b1.accept({maker:'0xdef',nonce:9,amount:40,price:0.15,confirmedInventory:100,expiry:2000},1000);
+  const b2 = RFQ.makeBook({verify:()=>true, store});  // "restart"
+  chk(b2.committedFor('0xdef')===40, 'rfq: committed state recovered after restart');
+  chk(!b2.accept({maker:'0xdef',nonce:9,amount:40,price:0.15,confirmedInventory:100,expiry:2000},1000).ok,
+      'rfq: replayed nonce rejected after restart');
 
   // --- Liquidity simulator ---
   const sim = SIM.makeSim({usdc:1000, refPrice:0.15, spreadBps:150, maxQuoteUsd:100, feeBps:30});

@@ -44,3 +44,20 @@ atomic-swap protocol that is proven end-to-end in the lab (see `docs/v15/CROSS_C
 Production page intact; no deploy; no mainnet/real funds; no consensus/V16 change; no own EVM or
 new coin; wallet flows never ask for seed/keys; never simulate an executable price or liquidity
 that does not exist.
+
+## RFQ hardening (P1 — done, 33/33 node tests)
+`js/dex-rfq.js` rewritten fail-closed and audited per review feedback:
+- **No permissive default verifier.** With no signature verifier configured, EVERY quote is
+  rejected (`no signature verifier configured (fail-closed)`) — there is no accept-any path.
+- **Confirmed / committed / available inventory.** A quote carries `confirmedInventory`; the book
+  tracks `committed` per maker; `available = confirmed − committed`. An accept that exceeds
+  available is rejected, so the same inventory cannot be double-spent across concurrent quotes.
+- **Atomic accept** (single-threaded check-then-commit), **replay/double-accept** blocked by nonce,
+  **release** frees a commitment on failure/refund.
+- **Restart recovery** via an injectable durable `store` (load/save); `durable()` reports whether
+  the book is store-backed (false = in-memory lab prototype, not a production engine).
+Tests: `js/test/dex-phase4.test.js` (node) — 33/33 (price adapter + RFQ + liquidity sim).
+
+## DEX V2 linked from the atomic-swap section (dev branch, not deployed)
+`website/atomic-swap.html` now carries a hero CTA + nav link to `sost-dex-v2.html`, both marked
+"laboratory/testnet preview · no real prices, orders, or liquidity". Production is NOT deployed.
