@@ -169,6 +169,12 @@ BtcAddressResult EncodeP2WSHAddress(
     const std::array<uint8_t, 32>& witness_program,
     const std::string& bitcoin_network);
 
+// Funder's own native-segwit P2WPKH address from a private key (derive pubkey ->
+// hash160 -> OP_0 push20). Used to fund the funder before SignBtcHtlcLockFunding.
+BtcAddressResult EncodeP2WPKHAddress(
+    const std::array<uint8_t, 32>& private_key,
+    const std::string& bitcoin_network);
+
 // =============================================================================
 // Phase C.5 — minimal libwally-backed helpers (TEST VECTOR ONLY)
 // =============================================================================
@@ -368,6 +374,22 @@ BtcBytesResult ExtractBtcHtlcPreimageFromTxHex(
 // This is the identifier a funding-detection / confirmation layer keys
 // on. Pure; no network.
 BtcBytesResult ComputeBtcTxid(const std::string& raw_tx_hex);
+
+// ---- txid byte-order helpers (remove the manual-reversal footgun) ----
+//
+// Bitcoin Core / `bitcoin-cli` DISPLAY a txid big-endian (the 64-hex string in
+// getrawtransaction, sendtoaddress, block explorers). libwally — and therefore
+// every *_txid / prev_txid / lock_txid argument of this API — uses the INTERNAL
+// little-endian order (the reverse). Passing a display txid straight into
+// SignBtcHtlcClaim/Refund/LockFunding spends the WRONG outpoint and the node
+// rejects it (`bad-txns-inputs-missingorspent`). Convert explicitly instead of
+// hand-reversing bytes in a script:
+//   DisplayTxidToInternal: 64-hex string from bitcoin-cli -> Bytes32 for signing.
+//   InternalTxidToDisplay: Bytes32 (e.g. ComputeBtcTxid) -> the 64-hex string
+//                          bitcoin-cli shows, for lookups on the node.
+// Round-trip exact: InternalTxidToDisplay(DisplayTxidToInternal(x)) == x.
+BtcBytesResult DisplayTxidToInternal(const std::string& display_txid_hex);   // bytes = 32B internal
+std::string    InternalTxidToDisplay(const std::array<uint8_t, 32>& internal_txid);
 
 } // namespace btc
 } // namespace atomic_swap

@@ -41,7 +41,7 @@ Repro drivers/scripts: `scripts/btc_htlc_regtest_driver.cpp`, `scripts/otc_rehea
 - `docs/v15/BTC_ATOMIC_SWAP_RUNBOOK.md` — operator runbook.
 
 ## Known limitations / explicitly NOT done (auditor should weigh these)
-- `SignBtcHtlcLockFunding` is a **stub**; regtest funding uses `bitcoin-cli sendtoaddress`.
+- `SignBtcHtlcLockFunding` is IMPLEMENTED + regtest-validated (real code-driven funding P2WPKH->P2WSH); `EncodeP2WPKHAddress` added for funder addresses.
 - **No external cryptographic review yet** — this package requests exactly that, plus an adversarial
   fee/locktime review, BEFORE any consideration of enabling `SOST_BTC_HTLC_SIGNING` outside a lab,
   and well before any `ATOMIC_SWAP_HTLC_ACTIVATION_HEIGHT` discussion.

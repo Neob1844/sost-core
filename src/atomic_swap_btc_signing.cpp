@@ -608,6 +608,45 @@ BtcAddressResult EncodeP2WSHAddress(
 #endif
 }
 
+// Derive the funder's own P2WPKH (native segwit v0, 20-byte) address from a
+// private key. Needed to fund the funder before SignBtcHtlcLockFunding spends it
+// into the HTLC — so the lab never has to guess bitcoind's address format.
+BtcAddressResult EncodeP2WPKHAddress(
+    const std::array<uint8_t, 32>& private_key,
+    const std::string& bitcoin_network)
+{
+#if defined(SOST_BTC_HTLC_SIGNING_HAS_LIBWALLY)
+    ensure_wally_init();
+    BtcAddressResult r;
+    const char* hrp = nullptr;
+    if (bitcoin_network == "mainnet")      hrp = "bc";
+    else if (bitcoin_network == "testnet") hrp = "tb";
+    else if (bitcoin_network == "regtest") hrp = "bcrt";
+    else { r.ok = false; r.error = "EncodeP2WPKHAddress: unsupported network '" + bitcoin_network + "'"; return r; }
+    auto pk = DeriveBtcCompressedPubkey(private_key);
+    if (!pk.ok || pk.bytes.size() != EC_PUBLIC_KEY_LEN) {
+        r.ok = false; r.error = "EncodeP2WPKHAddress: pubkey derivation failed: " + pk.error; return r;
+    }
+    unsigned char h160[HASH160_LEN];
+    int rc = wally_hash160(pk.bytes.data(), pk.bytes.size(), h160, sizeof(h160));
+    if (rc != 0) { r.ok = false; r.error = "EncodeP2WPKHAddress: wally_hash160 failed"; return r; }
+    unsigned char segwit_script[22];
+    segwit_script[0] = 0x00;  // OP_0
+    segwit_script[1] = 0x14;  // push 20
+    std::memcpy(segwit_script + 2, h160, HASH160_LEN);
+    char* addr = nullptr;
+    rc = wally_addr_segwit_from_bytes(segwit_script, sizeof(segwit_script), hrp, 0, &addr);
+    if (rc != 0 || addr == nullptr) {
+        r.ok = false; r.error = "EncodeP2WPKHAddress: wally_addr_segwit_from_bytes failed (rc=" + std::to_string(rc) + ")"; return r;
+    }
+    r.address = addr; wally_free_string(addr); r.ok = true; return r;
+#else
+    (void)private_key; (void)bitcoin_network;
+    return disabled_address_result();
+#endif
+}
+
+
 // =============================================================================
 // Phase C.5 — libwally-backed leaf helpers (test-vector scope only)
 // =============================================================================
@@ -1141,6 +1180,57 @@ BtcBytesResult ComputeBtcTxid(const std::string& raw_tx_hex)
     return disabled_bytes_result();
 #endif
 }
+
+// ---- txid byte-order helpers (pure; work in both ON and OFF builds) ----
+// See the header: bitcoin-cli DISPLAYS txids big-endian; libwally uses INTERNAL
+// little-endian. These make the conversion explicit and validated so no caller
+// has to hand-reverse bytes in a script.
+BtcBytesResult DisplayTxidToInternal(const std::string& display_txid_hex) {
+    BtcBytesResult r;
+    if (display_txid_hex.size() != 64) {
+        r.ok = false;
+        r.error = "DisplayTxidToInternal: expected 64 hex chars, got "
+                  + std::to_string(display_txid_hex.size());
+        return r;
+    }
+    std::array<uint8_t, 32> be{};
+    for (size_t i = 0; i < 32; ++i) {
+        auto nib = [](char c, bool& ok) -> int {
+            if (c >= '0' && c <= '9') return c - '0';
+            if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+            if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+            ok = false; return 0;
+        };
+        bool ok = true;
+        int hi = nib(display_txid_hex[2*i], ok);
+        int lo = nib(display_txid_hex[2*i+1], ok);
+        if (!ok) {
+            r.ok = false;
+            r.error = "DisplayTxidToInternal: non-hex character in txid";
+            return r;
+        }
+        be[i] = (uint8_t)((hi << 4) | lo);
+    }
+    // internal (libwally) order is the reverse of the display byte order.
+    r.bytes.resize(32);
+    for (size_t i = 0; i < 32; ++i) r.bytes[i] = be[31 - i];
+    r.ok = true;
+    return r;
+}
+
+std::string InternalTxidToDisplay(const std::array<uint8_t, 32>& internal_txid) {
+    static const char* H = "0123456789abcdef";
+    std::string out;
+    out.reserve(64);
+    // display is the reverse of the internal byte order.
+    for (size_t i = 0; i < 32; ++i) {
+        uint8_t b = internal_txid[31 - i];
+        out.push_back(H[b >> 4]);
+        out.push_back(H[b & 0x0f]);
+    }
+    return out;
+}
+
 
 }  // namespace btc
 }  // namespace atomic_swap
