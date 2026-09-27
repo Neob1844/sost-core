@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOST Asset Studio</title>
+<meta name="description" content="SOST Asset Studio (lab) — create a universal Asset Passport, hash documents, anchor a manifest via a Capsule doc_ref. Not proof of legal ownership.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{--bg:#05070A;--panel:#0D1117;--panel2:#10161f;--bd:#1b2430;--bd2:#232f3d;--red:#FB010D;--gold:#DAA520;--green:#25c26e;--amber:#f0a92b;--txt:#eef2f6;--txt2:#a9b6c4;--txt3:#6d7d8e;--mono:"JetBrains Mono",monospace;--sans:"Space Grotesk",system-ui,sans-serif}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);line-height:1.5}
+  .num{font-family:var(--mono)}
+  .wrap{max-width:900px;margin:0 auto;padding:26px 20px 70px}
+  header{display:flex;align-items:center;gap:13px;margin-bottom:8px}
+  .logo{width:44px;height:44px;border-radius:11px;background:linear-gradient(150deg,var(--red),#c40910);display:grid;place-items:center;box-shadow:0 0 26px -2px rgba(251,1,13,.55);flex:none;font-weight:800;color:#fff;font-size:20px}
+  h1{font-size:22px;margin:0}
+  .sub{font-size:10.5px;letter-spacing:2.2px;text-transform:uppercase;color:var(--txt3);margin-top:4px}
+  .badge{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:1.2px;color:var(--gold);border:1px solid rgba(218,165,32,.4);background:rgba(218,165,32,.1);padding:6px 11px;border-radius:7px}
+  .lab-note{font-size:12px;color:var(--txt3);border:1px solid var(--amber);background:rgba(240,169,43,.08);color:var(--amber);border-radius:9px;padding:10px 13px;margin:16px 0}
+  .panel{background:var(--panel);border:1px solid var(--bd);border-radius:13px;padding:18px;margin-top:16px}
+  .sec{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:var(--txt3);font-weight:600;margin:0 0 10px}
+  .cats{display:flex;flex-wrap:wrap;gap:8px}
+  .cat{padding:9px 13px;border-radius:9px;border:1px solid var(--bd2);background:var(--panel2);color:var(--txt2);cursor:pointer;font-size:13px}
+  .cat.on{border-color:var(--red);color:var(--txt)}
+  label{display:block;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--txt3);font-weight:600;margin:12px 0 5px}
+  input,textarea{width:100%;background:var(--panel2);border:1px solid var(--bd);border-radius:8px;color:var(--txt);font-family:var(--sans);font-size:14px;padding:10px 12px}
+  textarea{min-height:56px;resize:vertical} input:focus,textarea:focus{outline:none;border-color:var(--bd2)}
+  .btn{padding:11px 16px;border-radius:10px;border:0;background:var(--red);color:#fff;font-weight:700;font-size:14px;cursor:pointer}
+  .btn.sec{background:var(--panel2);border:1px solid var(--bd2);color:var(--txt)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .kv{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:6px 0;border-bottom:1px solid var(--bd)}
+  .kv .k{color:var(--txt3)} .kv .v{font-family:var(--mono);color:var(--txt2);word-break:break-all;text-align:right;max-width:70%}
+  .states{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .st{font-family:var(--mono);font-size:11px;font-weight:600;padding:6px 11px;border-radius:7px;border:1px solid}
+  .st.on{color:var(--green);border-color:rgba(37,194,110,.4);background:rgba(37,194,110,.1)}
+  .st.off{color:var(--txt3);border-color:var(--bd2);background:var(--panel2)}
+  .st.warn{color:var(--amber);border-color:rgba(240,169,43,.4);background:rgba(240,169,43,.1)}
+  .doc{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--bd);font-family:var(--mono);color:var(--txt2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="logo">◆</span>
+    <div><h1>SOST Asset Studio</h1><div class="sub">Universal Asset Passport · lab</div></div>
+    <span class="badge">TESTNET · LAB</span>
+  </header>
+  <div class="lab-note">Prototype. Anchoring a manifest hash on SOST proves a document set existed at a time — it is <b>NOT</b> proof of ownership, authenticity or any enforceable legal right. Documents stay off-chain; only hashes + a locator are anchored.</div>
+
+  <div class="panel">
+    <p class="sec">1 · What are you registering?</p>
+    <div class="cats" id="cats"></div>
+  </div>
+
+  <div class="panel">
+    <p class="sec">2 · Passport details</p>
+    <label>Issuer (SOST address / identity)</label><input id="issuer" value="sost1issuerexample" >
+    <label>Owner declaration</label><textarea id="decl">I declare I hold the asset described here.</textarea>
+    <label>Jurisdiction</label><input id="juris" value="ES">
+    <label>Rights the token would represent</label><textarea id="rights">Right to receive the physical asset on settlement.</textarea>
+    <label>Off-chain locator (IPFS/HTTPS to the full document set)</label><input id="loc" value="ipfs://Qm-demo">
+    <label>Documents (one "name: text" per line — text stands in for the file bytes)</label>
+    <textarea id="docs">invoice.pdf: INVOICE CONTENT
+serial-report.pdf: SN-12345 condition A
+photo.jpg: PHOTO-BYTES</textarea>
+    <label>Third-party attestation (optional) — "by | statement | expiresAt(ms) | revoked(0/1)"</label>
+    <input id="att" value="independent-appraiser | verified SN + condition | 9999999999999 | 0">
+    <div class="row">
+      <button class="btn" onclick="build()">Build passport &amp; compute hashes</button>
+      <button class="btn sec" onclick="verifyNow()">Verify integrity</button>
+    </div>
+  </div>
+
+  <div class="panel" id="out" style="display:none">
+    <p class="sec">3 · Result</p>
+    <div id="kvs"></div>
+    <p class="sec" style="margin-top:16px">Claim status — four separate concepts</p>
+    <div class="states" id="states"></div>
+    <p class="sec" style="margin-top:16px">Documents (SHA-256)</p>
+    <div id="doclist"></div>
+    <p class="sec" style="margin-top:16px">On-chain anchor (SOST Capsule doc_ref)</p>
+    <div id="capsule"></div>
+  </div>
+</div>
+
+<script src="asset-passport.js"></script>
+<script>
+"use strict";
+var AP=window.SOSTAssetPassport;
+var CAT='machinery', lastPass=null;
+(function(){ var wrap=document.getElementById('cats'); AP.CATEGORIES.forEach(function(c){ var b=document.createElement('div'); b.className='cat'+(c===CAT?' on':''); b.textContent=c.replace(/_/g,' '); b.onclick=function(){CAT=c; document.querySelectorAll('.cat').forEach(function(x){x.classList.remove('on');}); b.classList.add('on');}; wrap.appendChild(b); });})();
+function parseDocs(){ return document.getElementById('docs').value.split('\n').map(function(l){var i=l.indexOf(':'); return i<0?null:{name:l.slice(0,i).trim(), text:l.slice(i+1).trim()};}).filter(Boolean); }
+function parseAtt(){ var v=document.getElementById('att').value.trim(); if(!v) return []; var p=v.split('|').map(function(x){return x.trim();}); return [{by:p[0], statement:p[1], expiresAt:Number(p[2])||null, revoked:p[3]==='1'}]; }
+async function build(){
+  lastPass = await AP.buildPassport({ category:CAT, issuer:document.getElementById('issuer').value, nonce:'0',
+    ownerDeclaration:document.getElementById('decl').value, jurisdiction:document.getElementById('juris').value,
+    rights:document.getElementById('rights').value, locator:document.getElementById('loc').value,
+    documents:parseDocs(), attestations:parseAtt() });
+  var cap=AP.capsuleDocRef(lastPass), cls=AP.classify(lastPass, false /*not yet anchored*/, Date.now());
+  document.getElementById('out').style.display='block';
+  document.getElementById('kvs').innerHTML =
+    kv('Asset ID', lastPass.manifest.assetId)+kv('Category', lastPass.manifest.category)+kv('Issuer', lastPass.manifest.issuer)+kv('Manifest hash (SHA-256)', lastPass.manifestHash);
+  var st=document.getElementById('states'); st.innerHTML='';
+  st.appendChild(badge('DECLARED BY ISSUER', cls.DECLARED_BY_ISSUER?'on':'off'));
+  st.appendChild(badge('VERIFIED BY THIRD PARTY'+(cls.validAttestations?' ('+cls.validAttestations+')':''), cls.VERIFIED_BY_THIRD_PARTY?'on':'off'));
+  st.appendChild(badge('ANCHORED ON SOST', 'off'));
+  st.appendChild(badge('LEGAL RIGHT NOT VERIFIED','warn'));
+  var dl=document.getElementById('doclist'); dl.innerHTML='';
+  lastPass.manifest.documents.forEach(function(d){ var e=document.createElement('div'); e.className='doc'; e.innerHTML='<span>'+d.name+'</span><span>'+d.sha256.slice(0,24)+'…</span>'; dl.appendChild(e); });
+  document.getElementById('capsule').innerHTML = cap.ok
+    ? '<div class="doc"><span>doc_ref payload</span><span>'+cap.bytes+' / '+cap.max+' B ✓</span></div><div class="doc"><span>encoded</span><span>'+cap.encoded.replace(/</g,'&lt;').slice(0,80)+'…</span></div>'
+    : '<div class="doc" style="color:var(--amber)">'+cap.error+'</div>';
+}
+async function verifyNow(){ if(!lastPass){ build(); return; } var v=await AP.verify(lastPass, parseDocs());
+  alert('Integrity: manifest '+(v.manifestMatches?'OK':'MISMATCH')+' · documents '+(v.allDocsMatch?'all match':'TAMPER DETECTED')); }
+function kv(k,v){ return '<div class="kv"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>'; }
+function badge(t,c){ var s=document.createElement('span'); s.className='st '+c; s.textContent=t; return s; }
+</script>
+</body>
+</html>
