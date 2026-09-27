@@ -382,16 +382,18 @@
 <div class="modal-bg" id="walletModal" onclick="if(event.target===this)closeWallet()">
   <div class="modal">
     <button class="x" onclick="closeWallet()" aria-label="Close">×</button>
-    <h3>Connect a wallet</h3>
-    <p>Sign with a compatible, auditable wallet adapter. This preview never asks for a seed phrase or private key.</p>
-    <button class="wchoice" onclick="connectDemo('SOST')"><span class="ic tk sost">S</span><span>SOST wallet<small>Native chain · sign transfers &amp; HTLC locks</small></span></button>
-    <button class="wchoice" onclick="connectDemo('EVM')"><span class="ic tk eth">Ξ</span><span>EVM wallet<small>Ethereum-compatible · AtomicSwapHTLC</small></span></button>
-    <button class="wchoice" onclick="connectDemo('BTC')"><span class="ic tk btc">₿</span><span>Bitcoin wallet<small>P2WSH HTLC funding &amp; claim</small></span></button>
-    <p class="disclaim">Lab preview: wallet connection is a placeholder. No real accounts are linked and no operations are broadcast.</p>
+    <h3>Connect wallets</h3>
+    <p>A cross-chain swap needs a SOST wallet <b>and</b> the counterparty-chain wallet. The DEX never sees any seed or private key — it only requests addresses and signatures.</p>
+    <div style="font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin:6px 0 8px">SOST network</div>
+    <div id="wmSost"></div>
+    <div style="font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin:14px 0 8px">Counterparty &middot; EVM / Bitcoin</div>
+    <div id="wmCp"></div>
+    <p class="disclaim">EVM via EIP-6963/EIP-1193 (MetaMask, Rabby, Coinbase). Bitcoin via Xverse/UniSat &mdash; a wallet is only usable if it can sign PSBTs (P2WSH claim/refund), not just send BTC.</p>
   </div>
 </div>
 
-<script src="js/dex-price-adapter.js"></script>
+<script src="js/dex-wallets.js"></script>
+  <script src="js/dex-price-adapter.js"></script>
 <script src="js/dex-rfq.js"></script>
 <script src="js/dex-liquidity-sim.js"></script>
 <script>
@@ -436,26 +438,44 @@ function onQuoteInputs(){
   refreshCta();
 }
 
-/* ---- wallet (DEMO) ---- */
-var connected=null;
-function openWallet(){ document.getElementById('walletModal').classList.add('open'); }
-function closeWallet(){ document.getElementById('walletModal').classList.remove('open'); }
-function connectDemo(kind){
-  connected=kind; closeWallet();
-  document.getElementById('wdot').classList.add('on');
-  document.getElementById('walletLabel').textContent=kind+' · demo';
-  document.getElementById('payBal').textContent='0.00';
-  document.getElementById('recvBal').textContent='0.00';
-  refreshCta();
-}
-function refreshCta(){
-  var cta=document.getElementById('swapCta');
-  if(!connected){ cta.textContent='Connect Wallet'; cta.disabled=false; cta.classList.remove('secondary'); return; }
-  // connected but no executable quote -> get quote (which will report none), then disabled review
-  cta.textContent='Get Quote'; cta.disabled=false; cta.classList.add('secondary');
-}
+  /* ---- REAL wallet manager (EIP-6963/1193 EVM, PSBT BTC, SOST bridge) ---- */
+  var WM = (window.SOSTWallets ? SOSTWallets.makeManager() : {state:function(){return{sost:null,cp:null};},setSost:function(){},setCp:function(){},clear:function(){},swapReady:function(){return{ready:false,why:'wallet module missing'};}});
+  function evmAsset(sym){ return ['USDC','USDT','ETH','PAXG','XAUT'].indexOf(sym)>=0; }
+  function reqCpNetwork(){ var a=[ASSETS[pay][0],ASSETS[recv][0]]; if(a.indexOf('BTC')>=0) return 'btc'; if(a.some(evmAsset)) return 'evm'; return null; }
+  function pairLabel(){ var n=reqCpNetwork(); return n==='btc'?'SOST/BTC':(n==='evm'?'SOST/ETH':'SOST/SOST'); }
+  function shortA(a){ return a? (a.slice(0,8)+'…'+a.slice(-6)) : ''; }
+  function openWallet(){ document.getElementById('walletModal').classList.add('open'); renderWalletModal(); }
+  function closeWallet(){ document.getElementById('walletModal').classList.remove('open'); }
+  function connRow(net,sym,addr,slot){ return '<div class="wchoice" style="cursor:default"><span class="ic tk '+sym+'">'+sym.charAt(0).toUpperCase()+'</span><span>'+net+' connected<small>'+shortA(addr)+'</small></span><span style="flex:1"></span><button onclick="disconnectSlot(\''+slot+'\')" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer">Disconnect</button></div>'; }
+  function provBtn(kind,i,name,sub,sym){ return '<button class="wchoice" onclick="connectCp(\''+kind+'\','+i+')"><span class="ic tk '+sym+'">'+sym.charAt(0).toUpperCase()+'</span><span>'+name+'<small>'+sub+'</small></span></button>'; }
+  async function renderWalletModal(){
+    var st=WM.state();
+    document.getElementById('wmSost').innerHTML = st.sost ? connRow('SOST','sost',st.sost.address,'sost')
+      : '<button class="wchoice" onclick="doConnectSost()"><span class="ic tk sost">S</span><span>SOST Wallet<small>native bridge, no seed in the DEX</small></span></button>';
+    var cpEl=document.getElementById('wmCp');
+    if(st.cp){ cpEl.innerHTML=connRow(st.cp.network.toUpperCase(), st.cp.network==='btc'?'btc':'eth', st.cp.address,'cp'); return; }
+    cpEl.innerHTML='<div class="disclaim">discovering wallet extensions…</div>';
+    var evm=[], btc=[];
+    try{ evm = window.SOSTWallets? await SOSTWallets.discoverEvm(window,250):[]; }catch(e){}
+    try{ btc = window.SOSTWallets? SOSTWallets.discoverBtc(window):[]; }catch(e){}
+    window.__evm=evm; window.__btc=btc;
+    var html='';
+    evm.forEach(function(e,i){ html+=provBtn('evm',i,e.info.name,'Ethereum / EVM',' eth'.trim()); });
+    btc.forEach(function(b,i){ var cap=SOSTWallets.btcCapable(b.provider); html+=provBtn('btc',i,b.info.name,'Bitcoin '+(cap?'PSBT ok':'no PSBT'),'btc'); });
+    cpEl.innerHTML = html || '<div class="disclaim">No EVM or Bitcoin wallet extension detected. Install MetaMask / Rabby / Coinbase (EVM) or Xverse / UniSat (Bitcoin). The SOST bridge works without an extension.</div>';
+  }
+  async function doConnectSost(){ try{ var c=await SOSTWallets.connectSost(window,{}); WM.setSost(c); afterConnect(); }catch(e){ alert('SOST wallet: '+e.message); } }
+  async function connectCp(kind,i){ try{ var c = kind==='evm' ? await SOSTWallets.connectEvm(window.__evm[i].provider, function(ev){ afterConnect(); }) : await SOSTWallets.connectBtc(window.__btc[i]); if(kind==='btc' && !c.capable){ alert('This Bitcoin wallet cannot sign PSBTs; it cannot claim/refund the HTLC. '+(c.warn||'')); } WM.setCp(c); afterConnect(); }catch(e){ alert(kind.toUpperCase()+' wallet: '+e.message); } }
+  function disconnectSlot(slot){ WM.clear(slot); afterConnect(); }
+  function afterConnect(){ updateWalletHeader(); refreshCta(); renderWalletModal(); }
+  function updateWalletHeader(){ var s=WM.state(), parts=[]; if(s.sost)parts.push('SOST'); if(s.cp)parts.push(s.cp.network.toUpperCase());
+    var dot=document.getElementById('wdot'), lbl=document.getElementById('walletLabel');
+    if(parts.length){ dot.classList.add('on'); lbl.textContent=parts.join(' + '); } else { dot.classList.remove('on'); lbl.textContent='Connect Wallet'; } }
+  function refreshCta(){ var cta=document.getElementById('swapCta'); var r=WM.swapReady(pairLabel());
+    if(r.ready){ cta.textContent='Get Quote'; cta.disabled=false; cta.classList.add('secondary'); }
+    else { cta.textContent='Connect Wallet'; cta.title=r.why||''; cta.disabled=false; cta.classList.remove('secondary'); } }
   function ctaClick(){
-    if(!connected){ openWallet(); return; }
+    if(!WM.swapReady(pairLabel()).ready){ openWallet(); return; }
     var cta=document.getElementById('swapCta');
     // Ask the REAL RFQ engine. Fail-closed: no maker + no verifier in the lab => no firm quote,
     // and we surface ITS reason, never a fabricated price. (Live maker/coordinator wiring is next.)

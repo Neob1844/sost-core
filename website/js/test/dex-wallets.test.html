@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"><title>pending</title></head><body>
+<!-- Headless test: loads dex-wallets.js and exercises the adapters against MOCKED standard
+     providers (EIP-6963 EVM, injected UniSat, manager gating). Real-extension E2E needs a
+     browser with MetaMask/Xverse/UniSat installed. Run: chrome --headless --dump-dom this file. -->
+<script src="../dex-wallets.js"></script>
+<script>
+(async function(){ var P=0,F=0,fails=[]; function chk(c,m){ if(c)P++; else{F++;fails.push(m);} } var W=SOSTWallets;
+ var evmProvider={isMetaMask:true,request:function(a){return Promise.resolve(a.method==='eth_requestAccounts'?['0xabc0000000000000000000000000000000000001']:a.method==='eth_chainId'?'0x1':a.method==='eth_getBalance'?'0x2386f26fc10000':null);},on:function(){}};
+ window.addEventListener('eip6963:requestProvider',function(){window.dispatchEvent(new CustomEvent('eip6963:announceProvider',{detail:{info:{name:'MetaMask',rdns:'io.metamask'},provider:evmProvider}}));});
+ var evm=await W.discoverEvm(window,150); chk(evm.length===1&&evm[0].info.name==='MetaMask','EIP-6963 discovers MetaMask');
+ var ec=await W.connectEvm(evm[0].provider); chk(ec.address==='0xabc0000000000000000000000000000000000001','connectEvm address'); chk(ec.chainId==='0x1','chainId'); chk(ec.balanceWei==='10000000000000000','balance decode'); chk(ec.capable===true,'evm capable');
+ window.unisat={requestAccounts:function(){return Promise.resolve(['bc1qexampleaddr']);},getBalance:function(){return Promise.resolve({confirmed:50000});},signPsbt:function(){}};
+ var btc=W.discoverBtc(window); chk(btc.length===1&&btc[0].info.name==='UniSat','discovers UniSat'); chk(W.btcCapable(window.unisat)===true,'UniSat PSBT capable');
+ var bc=await W.connectBtc(btc[0]); chk(bc.address==='bc1qexampleaddr'&&bc.balanceSats===50000,'connectBtc addr+balance'); chk(bc.capable===true,'btc capable with signPsbt');
+ chk(W.btcCapable({})===false,'send-only NOT capable');
+ var m=W.makeManager(); chk(m.swapReady('SOST/BTC').ready===false,'no wallets -> not ready');
+ m.setSost({network:'sost',address:'sost1x',capable:true}); chk(m.swapReady('SOST/BTC').ready===false,'sost only -> not ready');
+ m.setCp({network:'evm',address:'0x1',capable:true}); chk(m.swapReady('SOST/BTC').ready===false,'wrong cp net -> not ready');
+ m.setCp({network:'btc',address:'bc1',capable:false,warn:'no psbt'}); chk(m.swapReady('SOST/BTC').ready===false,'btc not-capable -> not ready');
+ m.setCp({network:'btc',address:'bc1',capable:true}); chk(m.swapReady('SOST/BTC').ready===true,'sost+capable-btc -> READY');
+ chk(m.swapReady('SOST/ETH').ready===false,'SOST/ETH needs evm cp -> not ready');
+ document.title='WALLET-ADAPTER TESTS: PASS='+P+' FAIL='+F+(F?(' :: '+fails.join(' | ')):''); })().catch(function(e){document.title='ERR '+e.message;});
+</script></body></html>
