@@ -110,6 +110,14 @@ public:
     // 0-value output to the unspendable PoPC V15 marker pkh is appended carrying
     // these bytes (a PoPC V15 carrier — testnet PoPC soak tooling). The bytes are
     // signed in alongside the rest of the tx; the wallet does NOT validate them.
+    // Unified coin selection (BnB + largest-effective-first + constraints). Wallet-only.
+    // Filters: spendable-by-us, optional --from pin, never constitutional (Gold Vault/PoPC),
+    // never locked (BOND/ESCROW lock_until > chain_height). maturity already applied by list_unspent.
+    struct CoinSelection { std::vector<size_t> selected; int64_t total_in{0}; bool ok{false}; };
+    CoinSelection select_coins(const std::vector<WalletUTXO>& unspent, int64_t needed,
+                               const PubKeyHash* from_pkh, int64_t chain_height,
+                               int64_t fee_rate = 10) const;
+
     bool create_transaction(
         const std::string& to_addr,
         int64_t amount,

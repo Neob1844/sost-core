@@ -3,6 +3,7 @@
 //
 // wallet.cpp — SOST Wallet (real secp256k1 keys via tx_signer)
 #include "sost/wallet.h"
+#include "sost/coin_select.h"
 #include "sost/serialize.h"
 #include "sost/emission.h"
 #include "sost/popc_v15.h"      // POPC_V15_MARKER_PKH (testnet PoPC carrier tooling)
@@ -322,6 +323,30 @@ bool Wallet::import_genesis(const std::string& genesis_json_path, std::string* e
 // Transaction creation
 // =============================================================================
 
+
+Wallet::CoinSelection Wallet::select_coins(const std::vector<WalletUTXO>& unspent, int64_t needed,
+        const PubKeyHash* from_pkh, int64_t chain_height, int64_t fee_rate) const {
+    static const std::string GOLD = "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d";
+    static const std::string POPC = "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f";
+    std::vector<int64_t> amts; std::vector<size_t> orig;
+    amts.reserve(unspent.size()); orig.reserve(unspent.size());
+    for (size_t i = 0; i < unspent.size(); ++i) {
+        const auto& u = unspent[i];
+        if (!find_key_by_pkh(u.pkh)) continue;                       // spendable by us
+        if (from_pkh && u.pkh != *from_pkh) continue;                // --from pin
+        std::string a = address_encode(u.pkh);
+        if (a == GOLD || a == POPC) continue;                        // constitutional, never spent
+        if (u.lock_until != 0 && chain_height >= 0 &&
+            (uint64_t)chain_height < u.lock_until) continue;          // BOND/ESCROW lock not yet unlocked
+        amts.push_back(u.amount); orig.push_back(i);
+    }
+    auto r = sost::coinselect::select(amts, needed, fee_rate);
+    CoinSelection out; out.total_in = r.total_in; out.ok = r.ok;
+    out.selected.reserve(r.indices.size());
+    for (size_t k : r.indices) out.selected.push_back(orig[k]);
+    return out;
+}
+
 bool Wallet::create_transaction(
     const std::string& to_addr,
     int64_t amount,
@@ -358,21 +383,10 @@ bool Wallet::create_transaction(
     std::vector<size_t> selected;
     int64_t total_in = 0;
 
-    for (size_t i = 0; i < unspent.size(); ++i) {
-        const auto& u = unspent[i];
-        // Only spend UTXOs we have keys for
-        if (!find_key_by_pkh(u.pkh)) continue;
-        // --from-label / --from-address pin: restrict to one source pkh.
-        if (from_pkh && u.pkh != *from_pkh) continue;
-        // Never spend constitutional UTXOs (gold vault, popc pool) in transfers
-        std::string utxo_addr = address_encode(u.pkh);
-        if (utxo_addr == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" ||  // GOLD VAULT
-            utxo_addr == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f") {  // POPC POOL
-            continue;
-        }
-        selected.push_back(i);
-        total_in += u.amount;
-        if (total_in >= needed) break;
+    {  // UNIFIED coin selection (BnB + largest-effective-first + constraints)
+        auto _cs = select_coins(unspent, needed, from_pkh, chain_height, 10);
+        selected = _cs.selected;
+        total_in = _cs.total_in;
     }
 
 // ==========================================================================
@@ -607,15 +621,10 @@ bool Wallet::create_transaction_many(
     auto unspent = list_unspent(chain_height);
     std::vector<size_t> selected;
     int64_t total_in = 0;
-    for (size_t i = 0; i < unspent.size(); ++i) {
-        const auto& u = unspent[i];
-        if (!find_key_by_pkh(u.pkh)) continue;
-        std::string utxo_addr = address_encode(u.pkh);
-        if (utxo_addr == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" ||
-            utxo_addr == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f") continue;
-        selected.push_back(i);
-        total_in += u.amount;
-        if (total_in >= needed) break;
+    {  // UNIFIED coin selection (BnB + largest-effective-first + constraints)
+        auto _cs = select_coins(unspent, needed, nullptr, chain_height, 10);
+        selected = _cs.selected;
+        total_in = _cs.total_in;
     }
 
     if (total_in < needed) {
@@ -718,19 +727,10 @@ bool Wallet::create_bond_transaction(
     // Select spendable UTXOs (exclude locked bonds, constitutional addresses)
     std::vector<size_t> selected;
     int64_t total_in = 0;
-    for (size_t i = 0; i < unspent.size(); ++i) {
-        const auto& u = unspent[i];
-        if (!find_key_by_pkh(u.pkh)) continue;
-        // Skip constitutional
-        std::string utxo_addr = address_encode(u.pkh);
-        if (utxo_addr == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" ||
-            utxo_addr == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f") continue;
-        // Skip still-locked bonds/escrows
-        if ((u.output_type == OUT_BOND_LOCK || u.output_type == OUT_ESCROW_LOCK) &&
-            chain_height >= 0 && (uint64_t)chain_height < u.lock_until) continue;
-        selected.push_back(i);
-        total_in += u.amount;
-        if (total_in >= needed) break;
+    {  // UNIFIED coin selection (BnB + largest-effective-first + constraints)
+        auto _cs = select_coins(unspent, needed, nullptr, chain_height, 10);
+        selected = _cs.selected;
+        total_in = _cs.total_in;
     }
 
     if (total_in < needed) {
@@ -814,17 +814,10 @@ bool Wallet::create_escrow_transaction(
 
     std::vector<size_t> selected;
     int64_t total_in = 0;
-    for (size_t i = 0; i < unspent.size(); ++i) {
-        const auto& u = unspent[i];
-        if (!find_key_by_pkh(u.pkh)) continue;
-        std::string utxo_addr = address_encode(u.pkh);
-        if (utxo_addr == "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d" ||
-            utxo_addr == "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f") continue;
-        if ((u.output_type == OUT_BOND_LOCK || u.output_type == OUT_ESCROW_LOCK) &&
-            chain_height >= 0 && (uint64_t)chain_height < u.lock_until) continue;
-        selected.push_back(i);
-        total_in += u.amount;
-        if (total_in >= needed) break;
+    {  // UNIFIED coin selection (BnB + largest-effective-first + constraints)
+        auto _cs = select_coins(unspent, needed, nullptr, chain_height, 10);
+        selected = _cs.selected;
+        total_in = _cs.total_in;
     }
 
     if (total_in < needed) {
