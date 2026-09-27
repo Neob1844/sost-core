@@ -425,10 +425,16 @@
     <div style="font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin:14px 0 8px">Counterparty &middot; EVM / Bitcoin</div>
     <div id="wmCp"></div>
     <p class="disclaim">EVM via EIP-6963/EIP-1193 (MetaMask, Rabby, Coinbase). Bitcoin via Xverse/UniSat &mdash; a wallet is only usable if it can sign PSBTs (P2WSH claim/refund), not just send BTC.</p>
+    <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+      <div style="font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin-bottom:8px">Security &middot; 2FA for sensitive actions</div>
+      <div id="wmSec"></div>
+      <p class="disclaim">Optional local authenticator (TOTP) gate before connecting a wallet or executing a swap. Local to this browser; a UX safeguard, not custody security &mdash; your wallet's own signature prompt is the real control.</p>
+    </div>
   </div>
 </div>
 
 <script src="js/asset-registry.js"></script>
+<script src="js/dex-security-gate.js"></script>
 <script src="js/dex-token-icons.js"></script>
 <script src="js/dex-wallets.js"></script>
   <script src="js/dex-price-adapter.js"></script>
@@ -504,8 +510,35 @@ function onQuoteInputs(){
   function icGlyph(sym){ var m={sost:'SOST',btc:'BTC',eth:'ETH'}; var t=m[sym]; return (window.SOSTTokenIcons&&t)?SOSTTokenIcons.svg(t):sym.charAt(0).toUpperCase(); }
   function connRow(net,sym,addr,slot){ return '<div class="wchoice" style="cursor:default"><span class="ic tk '+sym+'">'+icGlyph(sym)+'</span><span>'+net+' connected<small>'+shortA(addr)+'</small></span><span style="flex:1"></span><button onclick="disconnectSlot(\''+slot+'\')" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer">Disconnect</button></div>'; }
   function provBtn(kind,i,name,sub,sym){ var s=sym.trim(); return '<button class="wchoice" onclick="connectCp(\''+kind+'\','+i+')"><span class="ic tk '+s+'">'+icGlyph(s)+'</span><span>'+name+'<small>'+sub+'</small></span></button>'; }
+  function renderSec(){
+    var el=document.getElementById('wmSec'); if(!el||!window.SOSTDexGate) return;
+    if(SOSTDexGate.is2FAEnabled()){
+      el.innerHTML='<div class="wchoice" style="cursor:default"><span class="ic tk" style="background:var(--green-soft);color:var(--green)">✓</span><span>Authenticator 2FA enabled<small>required before connect / swap</small></span><span style="flex:1"></span><button onclick="sgDisable2FA()" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer">Disable</button></div>';
+    } else {
+      el.innerHTML='<button class="wchoice" onclick="sgEnable2FA()"><span class="ic tk" style="background:var(--panel-2);color:var(--gold)">🔒</span><span>Enable authenticator 2FA<small>add a TOTP code (Google Authenticator, Aegis, 1Password…)</small></span></button>';
+    }
+  }
+  function sgEnable2FA(){
+    var s=SOSTDexGate.enable2FA('wallet'); var el=document.getElementById('wmSec');
+    el.innerHTML='<div style="border:1px solid var(--border-2);border-radius:10px;padding:12px;background:var(--panel-3)">'
+      +'<div style="font-size:12px;color:var(--txt-2);margin-bottom:8px">Add this to your authenticator app (manual key or otpauth URI), then confirm a code to activate:</div>'
+      +'<div style="font-family:var(--mono);font-size:12px;word-break:break-all;color:var(--gold);background:var(--panel-2);border-radius:7px;padding:8px;margin-bottom:8px">'+s.secret+'</div>'
+      +'<div style="font-size:10px;color:var(--txt-4);word-break:break-all;margin-bottom:10px">'+s.otpauth.replace(/</g,'&lt;')+'</div>'
+      +'<div style="display:flex;gap:8px"><input id="sgSetup" inputmode="numeric" maxlength="6" placeholder="000000" style="flex:1;background:var(--panel-2);border:1px solid var(--border-2);color:var(--txt);border-radius:8px;padding:9px;font-family:var(--mono);font-size:16px;letter-spacing:3px;text-align:center">'
+      +'<button onclick="sgConfirm2FA()" style="background:var(--red);border:0;color:#fff;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer">Activate</button></div>'
+      +'<div id="sgSetupErr" style="color:#ff8a8a;font-size:11px;min-height:14px;margin-top:6px"></div></div>';
+  }
+  async function sgConfirm2FA(){
+    var code=(document.getElementById('sgSetup').value||'').trim();
+    // The secret is already stored (from Enable). Verify a live code before treating 2FA as
+    // active; on mismatch keep the SAME secret so the user can retry (do not regenerate).
+    if(await SOSTDexGate.verify(code)){ renderSec(); }
+    else { var e=document.getElementById('sgSetupErr'); if(e) e.textContent='Code did not match — check the key in your authenticator app and try again (2FA stays pending until a code matches).'; }
+  }
+  function sgDisable2FA(){ if(window.SOSTDexGate){ SOSTDexGate.disable2FA(); renderSec(); } }
   async function renderWalletModal(){
     var st=WM.state();
+    renderSec();
     document.getElementById('wmSost').innerHTML = st.sost ? connRow('SOST','sost',st.sost.address,'sost')
       : '<button class="wchoice" onclick="doConnectSost()"><span class="ic tk sost">'+icGlyph('sost')+'</span><span>SOST Wallet<small>native bridge, no seed in the DEX</small></span></button>';
     var cpEl=document.getElementById('wmCp');
@@ -533,8 +566,13 @@ function onQuoteInputs(){
     cpEl.innerHTML = html;
   }
   function walletDisabled(name,net,sym,tag){ return '<div class="wchoice wmissing"><span class="ic tk '+sym+'">'+icGlyph(sym)+'</span><span>'+name+'<small>'+net+'</small></span><span style="flex:1"></span><span class="wtag">'+tag+'</span></div>'; }
-  async function doConnectSost(){ try{ var c=await SOSTWallets.connectSost(window,{}); WM.setSost(c); afterConnect(); }catch(e){ alert('SOST wallet: '+e.message); } }
-  async function connectCp(kind,i){ try{ var c = kind==='evm' ? await SOSTWallets.connectEvm(window.__evm[i].provider, function(ev){ afterConnect(); }) : await SOSTWallets.connectBtc(window.__btc[i]); if(kind==='btc' && !c.capable){ alert('This Bitcoin wallet cannot sign PSBTs; it cannot claim/refund the HTLC. '+(c.warn||'')); } WM.setCp(c); afterConnect(); }catch(e){ alert(kind.toUpperCase()+' wallet: '+e.message); } }
+  // sensitive action → double-confirm (+ TOTP 2FA if the viewer enabled it)
+  function sgGuard(title, body, run){
+    if(!window.SOSTDexGate) return run();
+    return SOSTDexGate.guard(run,{title:title, body:body, ack:'I understand — this connects a wallet to the SOST DEX (a non-custodial preview; no funds move and no keys are shared).', confirmText:'Connect', require2FA:true});
+  }
+  async function doConnectSost(){ sgGuard('Connect SOST Wallet','You are connecting your SOST wallet via the bridge (no seed/private key is shared with the DEX).', async function(){ try{ var c=await SOSTWallets.connectSost(window,{}); WM.setSost(c); afterConnect(); }catch(e){ alert('SOST wallet: '+e.message); } }); }
+  async function connectCp(kind,i){ sgGuard('Connect '+kind.toUpperCase()+' wallet','You are connecting a counterparty '+kind.toUpperCase()+' wallet. It will only be asked to sign when you explicitly execute a swap (real trading is disabled in this preview).', async function(){ try{ var c = kind==='evm' ? await SOSTWallets.connectEvm(window.__evm[i].provider, function(ev){ afterConnect(); }) : await SOSTWallets.connectBtc(window.__btc[i]); if(kind==='btc' && !c.capable){ alert('This Bitcoin wallet cannot sign PSBTs; it cannot claim/refund the HTLC. '+(c.warn||'')); } WM.setCp(c); afterConnect(); }catch(e){ alert(kind.toUpperCase()+' wallet: '+e.message); } }); }
   function disconnectSlot(slot){ WM.clear(slot); afterConnect(); }
   function afterConnect(){ updateWalletHeader(); refreshCta(); renderWalletModal(); }
   function updateWalletHeader(){ var s=WM.state(), parts=[]; if(s.sost)parts.push('SOST'); if(s.cp)parts.push(s.cp.network.toUpperCase());
