@@ -584,7 +584,7 @@
    ========================================================================== */
 (function(){
   "use strict";
-  var LOGO='asset-layer-logo.png?v=v432';
+  var LOGO='asset-layer-logo.png?v=v434';
   function styleOnce(){
     if(document.getElementById('sost-tok-logo-style')) return;
     var st=document.createElement('style'); st.id='sost-tok-logo-style';
