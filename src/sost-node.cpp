@@ -460,6 +460,15 @@ static const int64_t MAX_REORG_DEPTH = 500;
 // --full-verify forces full CX recomputation for all blocks.
 static bool g_full_verify_mode = false;
 static bool g_verbose = false;  // --verbose: show CX-VERIFY and PARSE debug output
+// --noseed / --disable-dns-seeds : NON-CONSENSUS isolation flag (P2P bootstrap
+// only). When set, the node performs ZERO DNS queries to the default seed
+// hostnames and makes NO external auto-connections — it connects only to peers
+// given explicitly via --connect. Flag OFF (default) = current behaviour intact.
+// This never touches consensus, difficulty, mining, PoPC, or block validation;
+// it only suppresses the DEFAULT_SEEDS bootstrap. Used for isolated devnet labs
+// (e.g. SACS reorg experiments) so the local chain can advance without a seed
+// pulling the node into IBD/fast-sync against mainnet.
+static bool g_noseed = false;
 
 // Known blocks: blocks we've already accepted or stored as fork/orphan.
 // Used to silently ignore re-broadcast of blocks we already know about.
@@ -9286,6 +9295,9 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--no-fast-sync")){
             g_full_verify_mode = true;
         }
+        else if(!strcmp(argv[i],"--noseed")||!strcmp(argv[i],"--disable-dns-seeds")){
+            g_noseed = true;   // NON-CONSENSUS: skip default DNS seeds + all external auto-connect
+        }
         else if(!strcmp(argv[i],"--verbose")||!strcmp(argv[i],"-v")){
             g_verbose = true;
         }
@@ -9312,6 +9324,9 @@ int main(int argc, char** argv) {
             printf("  --p2p-enc off|on|required      P2P encryption mode (default: off)\n");
             printf("  --full-verify              Force full ConvergenceX verification (no fast sync)\n");
             printf("  --no-fast-sync             Same as --full-verify\n");
+            printf("  --noseed                   Isolation (NON-CONSENSUS): no DNS seeds, no external\n");
+            printf("                             auto-connect. Only explicit --connect peers are used.\n");
+            printf("  --disable-dns-seeds        Alias for --noseed\n");
             printf("  --dry-run-replay           Replay chain, print UTXO-set root + height, exit (no P2P/RPC)\n");
             printf("  --verbose / -v             Show CX-VERIFY and PARSE debug output\n");
             return 0;
@@ -9534,7 +9549,14 @@ int main(int argc, char** argv) {
     // fail closed and are skipped, so this degrades gracefully to EU-only until
     // the seed-apac/seed-us DNS records + nodes exist. Peer exchange grows the
     // mesh from whatever connects, so 2-3 bootstrap seeds is plenty.
-    if(connect_addrs.empty()){
+    if(g_noseed){
+        // Isolation mode: no DNS seed resolution, no external auto-connections.
+        // Only explicit --connect peers (dialed just below) are used. This makes
+        // ZERO getaddrinfo() calls to the default seed hostnames.
+        printf("[P2P] --noseed: DNS seeds and external auto-connect DISABLED. "
+               "Using only %zu explicit --connect peer(s).\n", connect_addrs.size());
+    }
+    else if(connect_addrs.empty()){
         static const char* DEFAULT_SEEDS[] = {
             "seed-eu.sostcore.com",
             "seed-apac.sostcore.com",
