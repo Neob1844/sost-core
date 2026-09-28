@@ -802,6 +802,159 @@ static std::string json_escape(const std::string& s) {
 }
 
 // =============================================================================
+// SACS REORG MONITOR (P4) — SOST Autonomous Chain Safety
+// -----------------------------------------------------------------------------
+// In-process, bounded, read-only-observable record of the chain fork/reorg
+// lifecycle. This is an OBSERVER ONLY: it never changes block selection, mining,
+// difficulty, or validation — removing it would not change consensus. It records
+// no private keys and no wallet/sensitive data (only public block hashes, heights,
+// chainwork, depths). Memory is bounded by a fixed-size ring (cannot OOM); the
+// optional JSONL sink appends one bounded line per event. Exposed read-only over
+// RPC by P5 (getsacsstatus / getsacsevents), never wired to the public gateway.
+// =============================================================================
+namespace sacs {
+    enum class Ev {
+        FORK_DETECTED, REORG_STARTED, REORG_COMPLETED, REORG_REJECTED,
+        DEEP_REORG_ALERT, TX_REORGED, TX_CONFLICTED, RECOVERY_STARTED,
+        RECOVERY_COMPLETED, CHAIN_DATA_INCOMPLETE, PERSISTENCE_ERROR
+    };
+    static const char* ev_name(Ev e){
+        switch(e){
+            case Ev::FORK_DETECTED:        return "FORK_DETECTED";
+            case Ev::REORG_STARTED:        return "REORG_STARTED";
+            case Ev::REORG_COMPLETED:      return "REORG_COMPLETED";
+            case Ev::REORG_REJECTED:       return "REORG_REJECTED";
+            case Ev::DEEP_REORG_ALERT:     return "DEEP_REORG_ALERT";
+            case Ev::TX_REORGED:           return "TX_REORGED";
+            case Ev::TX_CONFLICTED:        return "TX_CONFLICTED";
+            case Ev::RECOVERY_STARTED:     return "RECOVERY_STARTED";
+            case Ev::RECOVERY_COMPLETED:   return "RECOVERY_COMPLETED";
+            case Ev::CHAIN_DATA_INCOMPLETE:return "CHAIN_DATA_INCOMPLETE";
+            case Ev::PERSISTENCE_ERROR:    return "PERSISTENCE_ERROR";
+        }
+        return "UNKNOWN";
+    }
+    struct Rec {
+        uint64_t    seq{0};
+        int64_t     ts{0};
+        Ev          type{Ev::FORK_DETECTED};
+        std::string old_tip, new_tip, ancestor;   // block hashes (public)
+        int64_t     ancestor_height{-1};
+        int64_t     disconnect_depth{-1};
+        int64_t     connect_depth{-1};
+        std::string old_work, new_work;            // cumulative chainwork (hex)
+        std::string result;                        // "converged" | "rejected" | ...
+        std::string detail;                        // short free text (bounded)
+    };
+
+    static std::mutex                      g_mu;
+    static std::deque<Rec>                 g_ring;
+    static const size_t                    RING_MAX = 512;         // hard cap: cannot OOM
+    static uint64_t                        g_seq = 0;
+    static std::map<std::string,uint64_t>  g_counts;               // per-type monotonic counters
+    static std::string                     g_sink_path;            // optional JSONL file ("" = none)
+    // Depth at/above which a reorg raises DEEP_REORG_ALERT. Set at startup:
+    // devnet uses a small value so the lab can exercise it; mainnet uses a high
+    // value near the reorg cap. Purely advisory (an event), never a consensus gate.
+    static int64_t                         g_deep_threshold = 6;
+
+    static const size_t DETAIL_MAX = 240;
+
+    static std::string rec_json(const Rec& r){
+        auto q=[](const std::string& s){ return std::string("\"")+json_escape(s)+"\""; };
+        std::string o = "{";
+        o += "\"seq\":" + std::to_string(r.seq);
+        o += ",\"ts\":" + std::to_string(r.ts);
+        o += ",\"type\":" + q(ev_name(r.type));
+        if(!r.old_tip.empty())   o += ",\"old_tip_hash\":" + q(r.old_tip);
+        if(!r.new_tip.empty())   o += ",\"new_tip_hash\":" + q(r.new_tip);
+        if(!r.ancestor.empty())  o += ",\"common_ancestor_hash\":" + q(r.ancestor);
+        if(r.ancestor_height>=0) o += ",\"common_ancestor_height\":" + std::to_string(r.ancestor_height);
+        if(r.disconnect_depth>=0)o += ",\"disconnect_depth\":" + std::to_string(r.disconnect_depth);
+        if(r.connect_depth>=0)   o += ",\"connect_depth\":" + std::to_string(r.connect_depth);
+        if(!r.old_work.empty())  o += ",\"old_chainwork\":" + q(r.old_work);
+        if(!r.new_work.empty())  o += ",\"new_chainwork\":" + q(r.new_work);
+        if(!r.result.empty())    o += ",\"result\":" + q(r.result);
+        if(!r.detail.empty())    o += ",\"detail\":" + q(r.detail);
+        o += "}";
+        return o;
+    }
+
+    static void emit(Rec r){
+        if(r.detail.size()>DETAIL_MAX) r.detail.resize(DETAIL_MAX);
+        std::string line;
+        {
+            std::lock_guard<std::mutex> lk(g_mu);
+            r.seq = ++g_seq;
+            r.ts  = (int64_t)time(nullptr);
+            g_counts[ev_name(r.type)]++;
+            g_ring.push_back(r);
+            while(g_ring.size() > RING_MAX) g_ring.pop_front();
+            line = rec_json(r);
+        }
+        // Always tag stdout with one bounded line (shows up in node.log).
+        printf("[SACS] %s\n", line.c_str()); fflush(stdout);
+        // Optional durable JSONL sink.
+        if(!g_sink_path.empty()){
+            FILE* f = fopen(g_sink_path.c_str(), "a");
+            if(f){ fprintf(f, "%s\n", line.c_str()); fclose(f); }
+        }
+    }
+
+    // Convenience emitters used by the reorg code paths.
+    static void fork_detected(const std::string& active_tip, int64_t active_h,
+                              const std::string& fork_tip, int64_t fork_h,
+                              const std::string& active_work, const std::string& fork_work,
+                              bool more_work){
+        Rec r; r.type=Ev::FORK_DETECTED; r.old_tip=active_tip; r.new_tip=fork_tip;
+        r.old_work=active_work; r.new_work=fork_work;
+        r.detail = "active_h="+std::to_string(active_h)+" fork_h="+std::to_string(fork_h)+
+                   (more_work?" fork_has_more_work":" fork_has_less_or_equal_work");
+        emit(r);
+    }
+
+    // Read-only snapshot for RPC (bounded page). Returns events with seq > after_seq,
+    // up to `limit` (clamped). Oldest-first within the page.
+    static std::string events_json(uint64_t after_seq, size_t limit){
+        if(limit==0) limit=50;
+        if(limit>200) limit=200;               // hard page cap
+        std::lock_guard<std::mutex> lk(g_mu);
+        std::string o = "{\"latest_seq\":" + std::to_string(g_seq) +
+                        ",\"ring_size\":" + std::to_string(g_ring.size()) +
+                        ",\"ring_max\":" + std::to_string(RING_MAX) +
+                        ",\"events\":[";
+        size_t n=0; bool first=true;
+        for(const auto& r : g_ring){
+            if(r.seq <= after_seq) continue;
+            if(n>=limit) break;
+            if(!first) o += ",";
+            o += rec_json(r); first=false; ++n;
+        }
+        o += "],\"returned\":" + std::to_string(n);
+        // next_after = seq of last returned (client pages by passing it back)
+        uint64_t next_after = after_seq;
+        if(n>0){ for(auto it=g_ring.rbegin(); it!=g_ring.rend(); ++it){ if(it->seq>after_seq){ next_after=it->seq; break; } } }
+        o += ",\"next_after\":" + std::to_string(next_after) + "}";
+        return o;
+    }
+
+    static std::string status_json(){
+        std::lock_guard<std::mutex> lk(g_mu);
+        std::string o = "{\"latest_seq\":" + std::to_string(g_seq) +
+                        ",\"ring_size\":" + std::to_string(g_ring.size()) +
+                        ",\"ring_max\":" + std::to_string(RING_MAX) +
+                        ",\"deep_reorg_threshold\":" + std::to_string(g_deep_threshold) +
+                        ",\"counts\":{";
+        bool first=true;
+        for(const auto& [k,v] : g_counts){ if(!first) o+=","; o+="\""+k+"\":"+std::to_string(v); first=false; }
+        o += "}";
+        if(!g_ring.empty()) o += ",\"last_event\":" + rec_json(g_ring.back());
+        o += "}";
+        return o;
+    }
+}
+
+// =============================================================================
 // JSON parser (very small, sufficient for this node)
 // =============================================================================
 
@@ -1068,6 +1221,20 @@ static std::string rpc_error(const std::string& id, int code, const std::string&
 static std::string handle_getblockcount(const std::string& id, const std::vector<std::string>&) {
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     return rpc_result(id, std::to_string(g_chain_height));
+}
+
+// P5 — SACS read-only RPC. These ONLY read the bounded in-memory monitor ring
+// (P4). They cannot stop mining/consensus, mutate any state, loop unboundedly, or
+// OOM: pagination is clamped server-side and the ring itself is fixed-size. Not
+// exposed via the public gateway. No private keys / sensitive data are returned.
+static std::string handle_getsacsstatus(const std::string& id, const std::vector<std::string>&) {
+    return rpc_result(id, sacs::status_json());
+}
+static std::string handle_getsacsevents(const std::string& id, const std::vector<std::string>& p) {
+    unsigned long long after_seq = 0; size_t limit = 50;
+    if (p.size() >= 1 && !p[0].empty()) { try { after_seq = std::stoull(p[0]); } catch (...) { return rpc_error(id,-8,"after_seq must be a non-negative integer"); } }
+    if (p.size() >= 2 && !p[1].empty()) { try { long v = std::stol(p[1]); if (v < 0) return rpc_error(id,-8,"limit must be >= 0"); limit = (size_t)v; } catch (...) { return rpc_error(id,-8,"limit must be an integer"); } }
+    return rpc_result(id, sacs::events_json((uint64_t)after_seq, limit));  // limit re-clamped inside (<=200)
 }
 
 static std::string handle_getbestblockhash(const std::string& id, const std::vector<std::string>&) {
@@ -4711,6 +4878,8 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getrawmempool",handle_getrawmempool},
     {"getrawtransaction",handle_getrawtransaction},
     {"getpeerinfo",handle_getpeerinfo},
+    {"getsacsstatus",handle_getsacsstatus},
+    {"getsacsevents",handle_getsacsevents},
     {"submitblock",handle_submitblock},
     {"getblocktemplate",handle_getblocktemplate},
     {"getrawblock",handle_getrawblock},
@@ -5901,6 +6070,10 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                     // g_chain_mu and the whole node freezes). Defer the reorg until AFTER
                     // this scope releases g_block_index_mu (below).
                     needs_reorg = true;
+                    sacs::fork_detected(g_blocks.empty()?std::string():to_hex(g_blocks.back().block_id.data(),32),
+                                        g_chain_height, bid, height,
+                                        to_hex(active_tip_work.data(),32), to_hex(entry.cumulative_work.data(),32),
+                                        /*more_work=*/true);
                 } else {
                     auto cw_strip = [](const Bytes32& w) -> std::string {
                         std::string h = to_hex(w.data(), 32);
@@ -5911,6 +6084,10 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                            "Fork work vs active: 0x%s vs 0x%s\n",
                            cw_strip(entry.cumulative_work).c_str(),
                            cw_strip(active_tip_work).c_str());
+                    sacs::fork_detected(g_blocks.empty()?std::string():to_hex(g_blocks.back().block_id.data(),32),
+                                        g_chain_height, bid, height,
+                                        to_hex(active_tip_work.data(),32), to_hex(entry.cumulative_work.data(),32),
+                                        /*more_work=*/false);
                 }
             }
         }
@@ -7383,6 +7560,12 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     if (!g_chain_path.empty()) {
         if (!save_chain_internal(g_chain_path)) {
             printf("[BLOCK] WARNING: chain auto-save failed!\n");
+            {
+                sacs::Rec r; r.type=sacs::Ev::PERSISTENCE_ERROR; r.result="save_failed";
+                r.new_tip=g_blocks.empty()?std::string():to_hex(g_blocks.back().block_id.data(),32);
+                r.detail="chain auto-save failed at height "+std::to_string((long long)g_chain_height);
+                sacs::emit(r);
+            }
         }
     }
 
@@ -7496,6 +7679,15 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     if (disconnect_count > MAX_REORG_DEPTH) {
         printf("[REORG] Rejected: depth %lld exceeds REORG_LIMIT %lld\n",
                (long long)disconnect_count, (long long)MAX_REORG_DEPTH);
+        {
+            sacs::Rec r; r.type=sacs::Ev::REORG_REJECTED; r.result="rejected_depth";
+            r.old_tip=to_hex(g_blocks.back().block_id.data(),32);
+            r.new_tip=to_hex(fork_chain.back().block_id.data(),32);
+            r.ancestor=to_hex(g_blocks[fork_point].block_id.data(),32); r.ancestor_height=fork_point;
+            r.disconnect_depth=disconnect_count; r.connect_depth=connect_count;
+            r.detail="disconnect "+std::to_string(disconnect_count)+" > MAX_REORG_DEPTH "+std::to_string((long long)MAX_REORG_DEPTH);
+            sacs::emit(r);
+        }
         return false;
     }
 
@@ -7528,6 +7720,27 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     printf("[REORG] Connecting %lld blocks\n", (long long)connect_count);
     fflush(stdout);
 
+    // SACS monitor — snapshot identifiers for the reorg lifecycle. Captured here at
+    // function scope (before disconnect mutates g_blocks) so REORG_COMPLETED /
+    // RECOVERY_* below can report the correct old/new tip and work.
+    const std::string sacs_orig_tip = to_hex(g_blocks.back().block_id.data(),32);
+    const std::string sacs_new_tip  = to_hex(fork_chain.back().block_id.data(),32);
+    const std::string sacs_ancestor = to_hex(g_blocks[fork_point].block_id.data(),32);
+    const std::string sacs_old_work = to_hex(active_tip_work.data(),32);
+    const std::string sacs_new_work = to_hex(fork_tip_work.data(),32);
+    {
+        sacs::Rec r; r.type=sacs::Ev::REORG_STARTED; r.result="started";
+        r.old_tip=sacs_orig_tip; r.new_tip=sacs_new_tip; r.ancestor=sacs_ancestor; r.ancestor_height=fork_point;
+        r.disconnect_depth=disconnect_count; r.connect_depth=connect_count;
+        r.old_work=sacs_old_work; r.new_work=sacs_new_work;
+        sacs::emit(r);
+        if (disconnect_count >= sacs::g_deep_threshold) {
+            sacs::Rec d=r; d.type=sacs::Ev::DEEP_REORG_ALERT; d.result="deep";
+            d.detail="disconnect_depth "+std::to_string(disconnect_count)+" >= alert threshold "+std::to_string((long long)sacs::g_deep_threshold);
+            sacs::emit(d);
+        }
+    }
+
     // Step 5: SNAPSHOT current state for atomic rollback
     // Save everything needed to restore on failure
     std::vector<StoredBlock> saved_blocks(g_blocks.begin() + fork_point + 1, g_blocks.end());
@@ -7543,6 +7756,11 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     for (int64_t h = g_chain_height; h > fork_point; --h) {
         if (h >= (int64_t)g_blocks.size() || h >= (int64_t)g_block_undos.size()) {
             printf("[REORG] ABORTED: missing undo data for height %lld\n", (long long)h);
+            {
+                sacs::Rec r; r.type=sacs::Ev::CHAIN_DATA_INCOMPLETE; r.result="aborted";
+                r.ancestor=sacs_ancestor; r.ancestor_height=fork_point; r.disconnect_depth=disconnect_count;
+                r.detail="missing undo data at height "+std::to_string((long long)h); sacs::emit(r);
+            }
             return false;
         }
         // Deserialize transactions
@@ -7610,6 +7828,12 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     if (!connect_success) {
         // ROLLBACK: disconnect whatever we connected from the fork
         printf("[REORG] Rolling back %zu fork blocks...\n", connected);
+        {
+            sacs::Rec r; r.type=sacs::Ev::RECOVERY_STARTED; r.result="rollback";
+            r.old_tip=sacs_orig_tip; r.new_tip=sacs_new_tip; r.ancestor=sacs_ancestor; r.ancestor_height=fork_point;
+            r.detail="connect failed; rolling back "+std::to_string(connected)+" partially-connected fork blocks";
+            sacs::emit(r);
+        }
         for (int64_t h = g_chain_height; h > fork_point; --h) {
             std::vector<Transaction> txs;
             for (const auto& hex : g_blocks[h].tx_hexes) {
@@ -7691,6 +7915,12 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
                to_hex(g_blocks.back().block_id.data(),32).substr(0,16).c_str(),
                (long long)g_chain_height);
         fflush(stdout);
+        {
+            sacs::Rec r; r.type=sacs::Ev::RECOVERY_COMPLETED; r.result="restored";
+            r.old_tip=sacs_new_tip; r.new_tip=to_hex(g_blocks.back().block_id.data(),32);
+            r.ancestor=sacs_ancestor; r.ancestor_height=fork_point;
+            r.detail="atomic rollback OK; original chain restored"; sacs::emit(r);
+        }
         return false;
     }
 
@@ -7735,6 +7965,19 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
            to_hex(g_blocks.back().block_id.data(), 32).substr(0, 16).c_str(), (long long)g_chain_height);
     printf("[REORG] Recovered %d transactions to mempool (%d conflicts discarded)\n", recovered, conflicts);
     fflush(stdout);
+    {
+        sacs::Rec r; r.type=sacs::Ev::REORG_COMPLETED; r.result="converged";
+        r.old_tip=sacs_orig_tip; r.new_tip=to_hex(g_blocks.back().block_id.data(),32);
+        r.ancestor=sacs_ancestor; r.ancestor_height=fork_point;
+        r.disconnect_depth=disconnect_count; r.connect_depth=connect_count;
+        r.old_work=sacs_old_work; r.new_work=sacs_new_work;
+        r.detail="recovered "+std::to_string(recovered)+" txs, "+std::to_string(conflicts)+" conflicts";
+        sacs::emit(r);
+        if (recovered>0){ sacs::Rec t; t.type=sacs::Ev::TX_REORGED; t.result="reentered_mempool";
+            t.detail=std::to_string(recovered)+" tx re-entered mempool after disconnect"; sacs::emit(t); }
+        if (conflicts>0){ sacs::Rec c; c.type=sacs::Ev::TX_CONFLICTED; c.result="conflicted";
+            c.detail=std::to_string(conflicts)+" tx conflicted with new branch / discarded"; sacs::emit(c); }
+    }
 
     // Clean up: mark fork blocks as ACTIVE in index, remove from fork status
     {
@@ -9335,6 +9578,14 @@ int main(int argc, char** argv) {
 
     // FIX #1: Apply profile AFTER parsing all args, BEFORE any crypto/chain ops
     ACTIVE_PROFILE = selected_profile;
+
+    // SACS monitor (P4) startup config — NON-CONSENSUS. The alert threshold is
+    // advisory only (emits DEEP_REORG_ALERT); it never gates a reorg. Devnet uses
+    // a small value so the lab can exercise the alert; mainnet uses a high value
+    // near the reorg cap. A JSONL sink is enabled next to the chain file if one is
+    // configured, so events survive across restarts for offline inspection.
+    sacs::g_deep_threshold = (ACTIVE_PROFILE == sost::Profile::MAINNET) ? 400 : 6;
+    if (!chain_path.empty()) sacs::g_sink_path = chain_path + ".sacs.jsonl";
 
     // P1.5 — runtime startup safety check (NOT a consensus rule).
     // Refuse to launch a mainnet binary that lacks the Phase 2 SbPoW
