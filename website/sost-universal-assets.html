@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="js/nav-toggle.js?v=v400" defer></script>
+<script src="js/nav-toggle.js?v=v431" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="index,follow">
@@ -96,7 +96,7 @@
   <div class="banner">LABORATORY PREVIEW · No native token issuance and no real lending are active. Everything below is a documentary / simulation prototype using fictional assets. Not an offer of any financial product.</div>
 
   <div class="hero">
-    <div class="eyebrow">Open registry &amp; issuance layer</div>
+    <div class="eyebrow">Asset Layer &middot; ALPHA</div>
     <h1>SOST <span class="r">Universal Assets</span></h1>
     <p class="lede">An optional, universal layer to describe, value and (in the future) tokenize <b style="color:var(--txt)">any</b> real or digital asset or right — machinery, real estate, precious metals, commodities, art, vehicles, contractual rights, digital assets. SOST proves <b style="color:var(--txt)">who</b> registered a claim, <b style="color:var(--txt)">under what rules</b>, and <b style="color:var(--txt)">its history</b>. It does not decide the legal meaning, guarantee value, custody the asset, or enforce off-chain promises. SOST the coin keeps its supply and only pays fees. This is a universal platform — not specific to mining or any single sector.</p>
     <div class="chips">
@@ -106,6 +106,42 @@
       <span class="chip red">Asset Finance = simulator only</span>
     </div>
   </div>
+
+  <section class="blk">
+    <h2>What is <span class="r">live today</span></h2>
+    <div class="sub">The Asset Layer is ALPHA. This is exactly what works now, what is being finished, and what is only a future protocol module. Nothing here changes SOST supply or consensus.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:8px">
+
+      <div style="border:1px solid var(--border2);border-radius:14px;background:linear-gradient(180deg,rgba(37,194,110,.06),transparent 60%);padding:18px 18px 16px">
+        <div style="font:800 12px/1 var(--mono);letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:12px">● Available now</div>
+        <ul style="margin:0;padding-left:18px;color:var(--txt);font-size:14px;line-height:1.7">
+          <li><b>Asset Passport</b> — build a structured claim for any asset</li>
+          <li><b>Document hashing &amp; integrity</b> — SHA-256 file fingerprints, tamper detection</li>
+          <li><b>Capsule <code>doc_ref</code> preparation</b> — the on-chain anchor payload</li>
+          <li><b>Asset Intelligence</b> — structured description &amp; scoring</li>
+          <li><b>Asset Finance</b> — <span style="color:var(--amber)">simulation only</span>, no real lending</li>
+        </ul>
+      </div>
+
+      <div style="border:1px solid var(--border2);border-radius:14px;background:linear-gradient(180deg,rgba(240,169,43,.07),transparent 60%);padding:18px 18px 16px">
+        <div style="font:800 12px/1 var(--mono);letter-spacing:2px;color:var(--amber);text-transform:uppercase;margin-bottom:12px">◐ In development</div>
+        <ul style="margin:0;padding-left:18px;color:var(--txt);font-size:14px;line-height:1.7">
+          <li><b>Complete on-chain Asset Passport round-trip</b> — manifest hash → signed capsule tx → node acceptance → mined block → confirmation → read-back → hash match → tamper test</li>
+          <li>Until proven, a passport shows <span class="st warn" style="font-size:10px">ANCHOR READY</span> — never “anchored”.</li>
+        </ul>
+      </div>
+
+      <div style="border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,rgba(251,1,13,.05),transparent 60%);padding:18px 18px 16px">
+        <div style="font:800 12px/1 var(--mono);letter-spacing:2px;color:var(--red2);text-transform:uppercase;margin-bottom:12px">○ Future protocol layer</div>
+        <ul style="margin:0;padding-left:18px;color:var(--txt2);font-size:14px;line-height:1.7">
+          <li><b>Native UTXO asset issuance</b></li>
+          <li><b>Native transfer / burn / reissue</b></li>
+          <li style="color:var(--txt3)">Requires a future gated consensus module. <b style="color:var(--txt2)">Not active. Not scheduled on mainnet.</b></li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
 
   <section class="blk">
     <h2>The <span class="g">building blocks</span></h2>
@@ -208,7 +244,7 @@ async function apBuild(){
   var st='<div class="states">'
     +'<span class="st '+(cls.DECLARED_BY_ISSUER?'on':'off')+'">DECLARED BY ISSUER</span>'
     +'<span class="st '+(cls.VERIFIED_BY_THIRD_PARTY?'on':'off')+'">VERIFIED BY THIRD PARTY</span>'
-    +'<span class="st off">ANCHORED ON SOST</span>'
+    +'<span class="st warn">ANCHOR READY · PENDING ON-CHAIN VERIFICATION</span>'
     +'<span class="st warn">LEGAL RIGHT NOT VERIFIED</span></div>';
   document.getElementById('apOut').innerHTML =
     kv('Asset ID', esc(p.manifest.assetId))
