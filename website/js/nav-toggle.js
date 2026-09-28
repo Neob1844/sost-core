@@ -577,8 +577,8 @@
 /* ============================================================================
    SOST TOKENIZATION (Asset Layer) — global nav logo. A COLOUR-INVERTED TWIN of the
    SOST logo: identical size, shape and silhouette (asset-layer-logo.png is a pixel
-   swap of sost-logo.png — red body, black Σ). No text, no badge. Fixed WHITE glow
-   (it does NOT pulse — only the SOST mark pulses). Sits IMMEDIATELY BEFORE the
+   swap of sost-logo.png — red body, black Σ). No text, no badge. PULSING WHITE glow
+   (in sync with the SOST mark). Sits IMMEDIATELY BEFORE the
    ConvergenceX logo. Links to sost-universal-assets.html. Additional module; never
    replaces the SOST logo. No consensus/backend involvement.
    ========================================================================== */
@@ -591,10 +591,10 @@
     st.textContent=[
       'a.sost-tok-logo{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;',
       'text-decoration:none;-webkit-tap-highlight-color:transparent;transition:transform .15s ease}',
-      'a.sost-tok-logo img{object-fit:cover;display:block;',
-      'filter:drop-shadow(0 0 12px rgba(255,255,255,.95)) drop-shadow(0 0 30px rgba(255,255,255,.55))}',
+      'a.sost-tok-logo img{object-fit:cover;display:block;animation:tokLogoPulse 3.6s ease-in-out infinite}',
+      '@keyframes tokLogoPulse{0%,100%{filter:drop-shadow(0 0 4px rgba(255,255,255,.5)) drop-shadow(0 0 10px rgba(255,255,255,.3))}50%{filter:drop-shadow(0 0 22px rgba(255,255,255,1)) drop-shadow(0 0 52px rgba(255,255,255,.9)) drop-shadow(0 0 88px rgba(255,255,255,.6))}}',
       'a.sost-tok-logo:hover{transform:translateY(-1px)}',
-      'a.sost-tok-logo:hover img{filter:drop-shadow(0 0 18px rgba(255,255,255,1)) drop-shadow(0 0 42px rgba(255,255,255,.8))}',
+      '@media(prefers-reduced-motion:reduce){a.sost-tok-logo img{animation:none;filter:drop-shadow(0 0 14px rgba(255,255,255,.95)) drop-shadow(0 0 34px rgba(255,255,255,.6))}}',
       /* start the right-hand group, immediately before ConvergenceX (steal its margin) */
       'nav .container > a.sost-tok-logo{margin-left:auto !important}',
       'nav .container > a.sost-tok-logo + a[href="casert-spec.html"]{margin-left:0 !important;flex:0 0 auto !important}',
