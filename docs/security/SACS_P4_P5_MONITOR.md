@@ -56,9 +56,13 @@ JSON-RPC error (no crash).
   → RECOVERY_COMPLETED (`atomic rollback OK; original chain restored`); B kept its own
   chain (h=8).
 
+## Runtime-proven later
+`TX_REORGED` is runtime-proven by P6 (see SACS_P6_TXSAFETY.md): a real tx re-entered
+the mempool after its confirming block was reorged out (`TX_REORGED: 1 tx re-entered
+mempool after disconnect`).
+
 ## Honestly not yet runtime-exercised (code-complete, compiled, code-reviewed)
-`TX_REORGED` / `TX_CONFLICTED` (needs non-coinbase txs in disconnected blocks — the
-test chains are coinbase-only, so mempool recovery counted 0), `CHAIN_DATA_INCOMPLETE`
+`TX_CONFLICTED` (needs a confirmed double-spend of a re-entering tx's input), `CHAIN_DATA_INCOMPLETE`
 (needs corrupted/missing undo data), `PERSISTENCE_ERROR` (needs a chain-save failure).
 These emit sites are wired at the corresponding code paths but were NOT triggered at
 runtime here, so they are NOT marked PASS.
