@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="js/nav-toggle.js?v=v431" defer></script>
+<script src="js/nav-toggle.js?v=v432" defer></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="index,follow">
@@ -154,6 +154,125 @@
     </div>
   </section>
 
+  <!-- ============ TOKENIZATION (how it works + studio) ============ -->
+  <style>
+    .tk-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;counter-reset:tk}
+    .tk-step{position:relative;border:1px solid var(--border);border-radius:10px;background:var(--card);padding:16px 14px 14px}
+    .tk-step::before{counter-increment:tk;content:counter(tk);position:absolute;top:-11px;left:12px;width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;font-family:var(--sans);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(251,1,13,.5)}
+    .tk-step h4{font-family:var(--sans);font-size:13.5px;margin:6px 0 5px;color:var(--txt)}
+    .tk-step p{font-size:11.5px;color:var(--txt2);line-height:1.6}
+    .tk-pipe{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+    .tk-pill{border:1px solid var(--border2);background:var(--card2);border-radius:20px;padding:6px 12px;font-size:11px;color:var(--txt2);white-space:nowrap}
+    .tk-arrow{color:var(--red2);font-weight:700}
+    .tk-eng{border:1px dashed var(--border2);border-radius:10px;background:var(--card);padding:16px;margin-top:12px}
+    .tk-formula{background:#050506;border:1px solid var(--border);border-radius:9px;padding:14px 16px;margin:8px 0;font-size:13px;color:var(--gold2);overflow-x:auto}
+    .tk-formula .muted{color:var(--txt3)}
+    table.tk{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+    table.tk th,table.tk td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+    table.tk th{color:var(--txt3);font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
+    table.tk td:last-child,table.tk th:last-child{text-align:right;font-family:var(--mono)}
+    .tk-studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+    @media(max-width:720px){.tk-studio-grid{grid-template-columns:1fr}}
+    .tk-card{border:1px solid var(--border);border-top:3px solid var(--gold);border-radius:10px;background:var(--card);padding:16px}
+    .tk-card.red{border-top-color:var(--red)}
+    .tk-card h4{font-family:var(--sans);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt3);margin-bottom:12px}
+    .tk-big{font-family:var(--sans);font-weight:800;font-size:30px;line-height:1;letter-spacing:-1px;color:var(--txt)}
+    .tk-big.red{color:var(--red2)} .tk-big.gold{color:var(--gold2)}
+    .tk-sub{font-size:11px;color:var(--txt3);margin-top:4px}
+    .tk-conf{height:8px;border-radius:5px;background:var(--card2);overflow:hidden;margin-top:8px}
+    .tk-conf>i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--gold))}
+  </style>
+  <section class="blk" id="tokenization">
+    <div class="eyebrow">Tokenization</div>
+    <h2>How an asset becomes <span class="g">tokens</span></h2>
+    <div class="sub">The core rule: an asset's value comes from <b>its own economic reality</b> — never from SOST's supply. SOST is the gas, the unit of exchange and the settlement asset; its supply is untouched. Everything below is a planning model (PREVIEW): no native token is minted yet.</div>
+
+    <div class="grid">
+      <div class="comp gold"><h3>Asset value ≠ token supply</h3><p>Two independent numbers. <b>Value</b> is what the asset is worth (from comparables, evidence, income, risk, liquidity). <b>Supply</b> is how many tokens you choose to divide it into. Never derive one from SOST's supply — that would mix two economies.</p><span class="tag">first principle</span></div>
+      <div class="comp cyan"><h3>SOST has three roles</h3><p><b>1 · Gas</b> — pays for emission, transfer and registry ops. <b>2 · Unit of exchange</b> — token prices are quoted and settled in SOST. <b>3 · Settlement</b> — the liquidation asset. It is <b>never</b> collateral and is <b>never</b> minted to back anything.</p><span class="tag">gas · exchange · settlement</span></div>
+      <div class="comp red"><h3>Supply stays fixed</h3><p>Each asset gets its <b>own</b> token supply. SOST keeps its protocol supply intact. When SOST's market price moves, the <i>number</i> of the asset's tokens does not change — only how many SOST are needed to buy them.</p><span class="tag">tokenomics safe</span></div>
+    </div>
+
+    <h3 style="font-family:var(--sans);font-size:15px;margin:26px 0 12px;color:var(--txt)">The 6-step flow</h3>
+    <div class="tk-steps">
+      <div class="tk-step"><h4>Introduce the asset</h4><p>Real estate, machinery, gold, a vehicle, art, contractual rights, a commodity…</p></div>
+      <div class="tk-step"><h4>Provide the data</h4><p>The form adapts to the asset type: age, condition, location, brand/model, income, liens, certifications.</p></div>
+      <div class="tk-step"><h4>Asset Intelligence values it</h4><p>Returns market value, a conservative recoverable value and a confidence level — every figure traceable.</p></div>
+      <div class="tk-step"><h4>Asset Passport is created</h4><p>Documents, SHA-256 hashes, declared owner, characteristics, valuation and evidence — anchored via a Capsule <code>doc_ref</code>.</p></div>
+      <div class="tk-step"><h4>Choose the tokenization</h4><p>e.g. a €100,000 asset → 100,000 tokens → 1 token = 1/100,000 of the asset.</p></div>
+      <div class="tk-step"><h4>Market prices it in SOST</h4><p>The token's cost in SOST follows SOST's effective quote at that moment — the token count never changes.</p></div>
+    </div>
+
+    <h3 style="font-family:var(--sans);font-size:15px;margin:26px 0 10px;color:var(--txt)">Universal Asset Valuation Engine</h3>
+    <div class="tk-eng">
+      <div class="tk-pipe">
+        <span class="tk-pill">data</span><span class="tk-arrow">→</span>
+        <span class="tk-pill">evidence</span><span class="tk-arrow">→</span>
+        <span class="tk-pill">asset-specific model</span><span class="tk-arrow">→</span>
+        <span class="tk-pill">comparables</span><span class="tk-arrow">→</span>
+        <span class="tk-pill">adjustments</span><span class="tk-arrow">→</span>
+        <span class="tk-pill">risk</span><span class="tk-arrow">→</span>
+        <span class="tk-pill">liquidity</span><span class="tk-arrow">→</span>
+        <span class="tk-pill" style="border-color:var(--gold);color:var(--gold2)">valuation range + confidence</span>
+      </div>
+      <div class="note" style="margin-top:12px">Not an "AI that says what it's worth" — a deterministic, fully-traceable architecture. It never reads SOST's supply as an input; SOST only enters at the final conversion step.</div>
+    </div>
+
+    <h3 style="font-family:var(--sans);font-size:15px;margin:26px 0 8px;color:var(--txt)">The three formulas</h3>
+    <div class="tk-formula">V<sub>asset</sub> = f( data, market, evidence, risk, liquidity ) <span class="muted">&nbsp;&nbsp;// from the asset's own reality</span></div>
+    <div class="tk-formula">Supply<sub>asset</sub> = g( V<sub>asset</sub>, granularity ) <span class="muted">&nbsp;&nbsp;// how many tokens you divide it into</span></div>
+    <div class="tk-formula">Price<sub>token in SOST</sub> = ( V<sub>asset</sub> / Supply<sub>asset</sub> ) / Price<sub>SOST</sub> <span class="muted">&nbsp;&nbsp;// the only place SOST enters</span></div>
+
+    <h3 style="font-family:var(--sans);font-size:15px;margin:26px 0 6px;color:var(--txt)">Suggested granularity</h3>
+    <div class="sub" style="margin-bottom:0">The engine proposes a supply that yields a comfortable trading unit. You can always override it.</div>
+    <table class="tk">
+      <thead><tr><th>Asset value</th><th>Suggested supply</th><th>Initial reference</th></tr></thead>
+      <tbody>
+        <tr><td>€10,000</td><td>10,000 tokens</td><td>≈ 1 / token</td></tr>
+        <tr><td>€250,000</td><td>250,000 tokens</td><td>≈ 1 / token</td></tr>
+        <tr><td>€3,500,000</td><td>3,500,000 tokens</td><td>≈ 1 / token</td></tr>
+        <tr><td>€500,000,000</td><td>50,000,000 tokens</td><td>≈ 10 / token</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============ TOKENIZATION STUDIO (interactive) ============ -->
+    <h3 style="font-family:var(--sans);font-size:15px;margin:30px 0 4px;color:var(--txt)">Tokenization Studio <span style="font-size:11px;color:var(--amber);letter-spacing:1px">· PREVIEW / PLANNING</span></h3>
+    <div class="sub">Enter an asset value and see the full proposal: valuation, recommended supply, and the price in SOST. Nothing is minted or traded — this is a planning calculator.</div>
+    <div class="demo">
+      <div class="row">
+        <div><label>Asset value</label><input id="tkVal" value="100000" style="width:130px"></div>
+        <div><label>Currency</label><select id="tkCur"><option>€</option><option>$</option><option>£</option></select></div>
+        <div><label>Evidence quality</label><select id="tkEv">
+          <option value="strong">strong (docs + comparables)</option>
+          <option value="medium" selected>medium</option>
+          <option value="weak">weak (declared only)</option></select></div>
+        <div><label>Granularity</label><select id="tkGr">
+          <option value="auto" selected>auto (comfortable unit)</option>
+          <option value="unit">1 token = 1 unit</option>
+          <option value="custom">custom price / token</option></select></div>
+        <div id="tkCustomWrap" style="display:none"><label>Target / token</label><input id="tkCustom" value="10" style="width:90px"></div>
+        <div><label>SOST price <span style="color:var(--amber)">(illustrative)</span></label><input id="tkSost" value="0.12" style="width:100px"></div>
+        <button class="run gold" onclick="tkRun()">Compute tokenization</button>
+      </div>
+      <div class="tk-studio-grid">
+        <div class="tk-card" id="tkValuation"></div>
+        <div class="tk-card red" id="tkTokens"></div>
+      </div>
+      <div class="tk-card" id="tkBuy" style="border-top-color:var(--cyan);margin-top:14px"></div>
+      <div class="note">The SOST price is an <b>illustrative assumption you type in</b> — it is <b>not</b> a live market quote and SOST is not yet listed. The valuation figures are a deterministic demo, not a professional appraisal. No tokens are created and no order is placed.</div>
+    </div>
+
+    <h3 style="font-family:var(--sans);font-size:15px;margin:26px 0 8px;color:var(--txt)">Worked example</h3>
+    <div class="comp" style="border-top-color:var(--cyan)">
+      <p style="font-size:12.5px;color:var(--txt2);line-height:1.8">
+      A machine is valued at <b style="color:var(--txt)">€100,000</b>. The owner tokenizes it into <b style="color:var(--txt)">100,000 tokens</b>, so <b>1 token = 0.001%</b> of the asset and the initial reference is <b>1&nbsp;€/token</b>.<br>
+      If <b>1 SOST = €0.12</b>, buying <b>€1,000</b> of tokens costs <b style="color:var(--gold2)">≈ 8,333 SOST</b> (1,000 / 0.12).<br>
+      If tomorrow <b>1 SOST = €0.20</b>, the same €1,000 of tokens costs <b style="color:var(--gold2)">5,000 SOST</b>.<br>
+      <span style="color:var(--txt3)">The token count never changed — only how many SOST are needed to buy them. SOST supply is untouched throughout.</span></p>
+    </div>
+  </section>
+
+
   <!-- ============ ASSET PASSPORT ============ -->
   <section class="blk">
     <h2>Asset <span class="g">Passport</span> &mdash; try it</h2>
@@ -291,6 +410,61 @@ function afRun(){
     + kv('Conservation (no mint)', res.invariants.no_mint? '✓ money to lenders = borrower + collateral' : '✗ VIOLATED')
     + '<div class="note">'+esc(res.disclaimer)+'</div>';
 }
+
+/* ===================== TOKENIZATION STUDIO ===================== *
+ * Deterministic planning model. Asset value comes from its own reality;
+ * SOST only enters at the final conversion. Nothing is minted or traded. */
+function tkNum(x){ return Number(String(x).replace(/[^0-9.\-]/g,'')) || 0; }
+function tkFmt(n,d){ return (isFinite(n)?n:0).toLocaleString('en-US',{maximumFractionDigits:d||0,minimumFractionDigits:d||0}); }
+function tkNiceSupply(v,target){
+  var raw = v/target; if(!isFinite(raw)||raw<=0) return 1;
+  // round to 3 significant figures for a clean, tradeable supply
+  var mag = Math.pow(10, Math.floor(Math.log10(raw))-2);
+  return Math.max(1, Math.round(raw/mag)*mag);
+}
+function tkRun(){
+  var V   = tkNum(document.getElementById('tkVal').value);
+  var cur = document.getElementById('tkCur').value;
+  var ev  = document.getElementById('tkEv').value;
+  var gr  = document.getElementById('tkGr').value;
+  var sost= tkNum(document.getElementById('tkSost').value);
+  var EV = {strong:{conf:0.88,band:0.06,hc:0.80}, medium:{conf:0.74,band:0.10,hc:0.70}, weak:{conf:0.55,band:0.18,hc:0.55}}[ev];
+  var low = V*(1-EV.band), high = V*(1+EV.band), recoverable = V*EV.hc;
+  var supply, target;
+  if(gr==='unit'){ supply = Math.max(1, Math.round(V)); }
+  else if(gr==='custom'){ target = Math.max(1e-9, tkNum(document.getElementById('tkCustom').value)); supply = tkNiceSupply(V,target); }
+  else { target = V<=1e6 ? 1 : (V<=1e8 ? 10 : 100); supply = tkNiceSupply(V,target); }
+  var initPrice = V/supply;                 // currency per token
+  var sostPerToken = sost>0 ? initPrice/sost : 0;
+
+  document.getElementById('tkValuation').innerHTML =
+      '<h4>Valuation</h4>'
+    + '<div class="tk-big gold">'+cur+tkFmt(V)+'</div><div class="tk-sub">estimated market value</div>'
+    + '<div class="kv" style="margin-top:12px"><span class="k">Defensible range</span><span class="v">'+cur+tkFmt(low)+' – '+cur+tkFmt(high)+'</span></div>'
+    + '<div class="kv"><span class="k">Recoverable (conservative)</span><span class="v">'+cur+tkFmt(recoverable)+'</span></div>'
+    + '<div class="kv"><span class="k">Confidence</span><span class="v">'+(EV.conf*100).toFixed(0)+'%</span></div>'
+    + '<div class="tk-conf"><i style="width:'+(EV.conf*100).toFixed(0)+'%"></i></div>';
+
+  document.getElementById('tkTokens').innerHTML =
+      '<h4>Tokenization</h4>'
+    + '<div class="tk-big red">'+tkFmt(supply)+'</div><div class="tk-sub">recommended token supply · 1 token = '+(100/supply).toPrecision(3)+'% of the asset</div>'
+    + '<div class="kv" style="margin-top:12px"><span class="k">Initial reference price</span><span class="v">'+cur+tkFmt(initPrice, initPrice<1?4:2)+' / token</span></div>'
+    + '<div class="kv"><span class="k">At SOST '+cur+tkFmt(sost,4)+'</span><span class="v">'+tkFmt(sostPerToken, sostPerToken<10?4:2)+' SOST / token</span></div>'
+    + '<div class="kv"><span class="k">SOST supply impact</span><span class="v" style="color:var(--green)">0 — none minted</span></div>';
+
+  var buyCur = 1000, buyTokens = initPrice>0 ? buyCur/initPrice : 0, buySost = sost>0 ? buyCur/sost : 0;
+  document.getElementById('tkBuy').innerHTML =
+      '<h4>Buy example</h4>'
+    + '<div style="font-size:13px;color:var(--txt2);line-height:1.9">Buying <b style="color:var(--txt)">'+cur+tkFmt(buyCur)+'</b> of this asset ≈ '
+    + '<b style="color:var(--txt)">'+tkFmt(buyTokens,2)+' tokens</b>, settled for <b style="color:var(--gold2)">'+tkFmt(buySost,2)+' SOST</b>.<br>'
+    + '<span style="color:var(--txt3)">If SOST doubles in price, the same '+cur+tkFmt(buyCur)+' costs half the SOST — the token count is unchanged.</span></div>';
+}
+(function(){
+  var gr=document.getElementById('tkGr'), cw=document.getElementById('tkCustomWrap');
+  if(gr){ gr.addEventListener('change',function(){ cw.style.display = gr.value==='custom'?'':'none'; tkRun(); }); }
+  ['tkVal','tkCur','tkEv','tkSost','tkCustom'].forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener('input',tkRun); });
+  if(document.getElementById('tkVal')) tkRun();
+})();
 </script>
 </body>
 </html>

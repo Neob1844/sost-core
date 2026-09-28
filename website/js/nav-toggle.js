@@ -575,58 +575,53 @@
 })();
 
 /* ============================================================================
-   SOST ASSET LAYER — global nav module (Universal Assets). Injected into the
-   large-button row on every canonical-nav page so it never drifts. Visual invert
-   of the SOST logo: red ground, black Σ. Fixed red core + subtle gold halo glow
-   (NOT green — must not read as DTD; NOT the main-logo pulse). Links to
-   sost-universal-assets.html. Status: ALPHA. Additional module — never replaces
-   the SOST logo. No consensus/backend involvement.
+   SOST TOKENIZATION (Asset Layer) — global nav logo. A COLOUR-INVERTED TWIN of the
+   SOST logo: identical size, shape and silhouette (asset-layer-logo.png is a pixel
+   swap of sost-logo.png — red body, black Σ). No text, no badge. Fixed WHITE glow
+   (it does NOT pulse — only the SOST mark pulses). Sits IMMEDIATELY BEFORE the
+   ConvergenceX logo. Links to sost-universal-assets.html. Additional module; never
+   replaces the SOST logo. No consensus/backend involvement.
    ========================================================================== */
 (function(){
   "use strict";
+  var LOGO='asset-layer-logo.png?v=v432';
   function styleOnce(){
-    if(document.getElementById('sost-al-btn-style')) return;
-    var st=document.createElement('style'); st.id='sost-al-btn-style';
+    if(document.getElementById('sost-tok-logo-style')) return;
+    var st=document.createElement('style'); st.id='sost-tok-logo-style';
     st.textContent=[
-      '.sost-al-btn{position:relative;display:inline-flex;flex-direction:column;align-items:center;',
-      'justify-content:center;border-radius:20%;background:linear-gradient(150deg,#fb010d,#c40910);',
-      'border:1px solid #7a0206;text-decoration:none;line-height:1;flex:0 0 auto;overflow:hidden;',
-      '-webkit-tap-highlight-color:transparent;',
-      'box-shadow:0 0 14px rgba(251,1,13,.7),0 0 30px rgba(251,1,13,.4),0 0 48px rgba(218,165,32,.30)}',
-      '.sost-al-btn:hover{border-color:#ffd400;transform:translateY(-1px);',
-      'transition:transform .15s ease,border-color .2s ease}',
-      '.sost-al-btn .al-sigma{color:#000;font-weight:900;line-height:1;text-shadow:0 0 3px rgba(0,0,0,.35)}',
-      '.sost-al-btn .al-txt{color:#fff;font-weight:800;letter-spacing:.6px;text-align:center;margin-top:2px}',
-      '.sost-al-btn .al-alpha{position:absolute;top:4px;right:5px;color:#3a2a00;background:#DAA520;',
-      'border-radius:3px;padding:1px 3px;font-weight:800;letter-spacing:.5px;line-height:1}',
-      'body.nav-collapsed nav .sost-al-btn{display:none !important}'
+      'a.sost-tok-logo{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;',
+      'text-decoration:none;-webkit-tap-highlight-color:transparent;transition:transform .15s ease}',
+      'a.sost-tok-logo img{object-fit:cover;display:block;',
+      'filter:drop-shadow(0 0 12px rgba(255,255,255,.95)) drop-shadow(0 0 30px rgba(255,255,255,.55))}',
+      'a.sost-tok-logo:hover{transform:translateY(-1px)}',
+      'a.sost-tok-logo:hover img{filter:drop-shadow(0 0 18px rgba(255,255,255,1)) drop-shadow(0 0 42px rgba(255,255,255,.8))}',
+      /* start the right-hand group, immediately before ConvergenceX (steal its margin) */
+      'nav .container > a.sost-tok-logo{margin-left:auto !important}',
+      'nav .container > a.sost-tok-logo + a[href="casert-spec.html"]{margin-left:0 !important;flex:0 0 auto !important}',
+      /* hide with the rest of the bar under HIDE NAV */
+      'body.nav-collapsed nav a.sost-tok-logo{display:none !important}'
     ].join('');
     (document.head||document.documentElement).appendChild(st);
   }
   function inject(){
     var nav=document.querySelector('nav'); if(!nav) return;
-    if(nav.querySelector('.sost-al-btn') || nav.querySelector('a[href="sost-universal-assets.html"].sost-al-btn')) return;
-    // anchor on the Atomic Swap DEX tile (the large-button row marker)
-    var atomic=nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
-    if(!atomic) return;                        // no large-button row on this page
-    // guard against double-inject (only the injected .sost-al-btn counts; the text link is separate)
+    if(nav.querySelector('a.sost-tok-logo')) return;
+    var cx=nav.querySelector('a[href="casert-spec.html"]'); if(!cx) return; // no canonical bar here
     styleOnce();
-    var sz=atomic.offsetWidth||72;
+    // EXACTLY the SOST logo size (110 on every page); fall back to ConvergenceX/110.
+    var sImg=nav.querySelector('.nav-logo img');
+    var sz=(sImg&&sImg.offsetWidth) || (cx.querySelector('img')&&cx.querySelector('img').offsetWidth) || cx.offsetWidth || 110;
     var a=document.createElement('a');
-    a.href='sost-universal-assets.html'; a.title='SOST Asset Layer — Universal Assets (ALPHA)';
-    a.className='sost-al-btn';
-    a.style.width=sz+'px'; a.style.height=sz+'px'; a.style.minWidth=sz+'px';
-    var big=Math.max(20,Math.round(sz*0.42)), small=Math.max(7,Math.round(sz*0.095)), al=Math.max(6,Math.round(sz*0.08));
-    a.innerHTML='<span class="al-sigma" style="font-size:'+big+'px">Σ</span>'
-      +'<span class="al-txt" style="font-size:'+small+'px">ASSET<br>LAYER</span>'
-      +'<span class="al-alpha" style="font-size:'+al+'px">ALPHA</span>';
-    // place between Atomic Swap DEX and NEWS: before the NEWS button if present, else right after Atomic Swap
-    var news=nav.querySelector('a[href="news.html"]');
-    if(news && news.parentNode) news.parentNode.insertBefore(a, news);
-    else atomic.parentNode.insertBefore(a, atomic.nextSibling);
+    a.href='sost-universal-assets.html'; a.className='sost-tok-logo';
+    a.title='SOST Tokenization — Universal Assets';
+    a.setAttribute('aria-label','SOST Tokenization — Universal Assets');
+    var img=document.createElement('img');
+    img.src=LOGO; img.alt='SOST Tokenization';
+    img.width=sz; img.height=sz; img.style.width=sz+'px'; img.style.height=sz+'px';
+    a.appendChild(img);
+    cx.parentNode.insertBefore(a, cx);   // JUST BEFORE ConvergenceX
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',inject,{once:true});
   else inject();
-  // run once more after NEWS/DTD injectors have settled, so ordering is deterministic
-  setTimeout(inject,0); setTimeout(inject,300);
+  setTimeout(inject,0); setTimeout(inject,350); setTimeout(inject,800);
 })();
