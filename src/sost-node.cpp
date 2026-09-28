@@ -469,6 +469,14 @@ static bool g_verbose = false;  // --verbose: show CX-VERIFY and PARSE debug out
 // (e.g. SACS reorg experiments) so the local chain can advance without a seed
 // pulling the node into IBD/fast-sync against mainnet.
 static bool g_noseed = false;
+// --sacs-recovery-mode : SACS Delivery B research prototype (DEV PROFILE ONLY).
+// When set on a devnet node, the reorg depth cap is NO LONGER a hard reject: a reorg
+// deeper than MAX_REORG_DEPTH raises a DEEP_REORG_ALERT (via the SACS monitor) and then
+// PROCEEDS, selecting the chain with the highest fully-validated cumulative work. This
+// lets two long-partitioned segments reconverge automatically without an operator,
+// checkpoint, or quorum. It is IGNORED (hard-rejected) on TESTNET/MAINNET so V16 and the
+// mainnet MAX_REORG_DEPTH=500 hard cap are untouched. Research/devnet only — NOT V16.
+static bool g_sacs_recovery_mode = false;
 
 // Known blocks: blocks we've already accepted or stored as fork/orphan.
 // Used to silently ignore re-broadcast of blocks we already know about.
@@ -7391,9 +7399,18 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     // Reorg depth limit: reject blocks that would require undoing more than MAX_REORG_DEPTH blocks
     // (Currently chain is append-only, but this guards against future reorg logic)
     if(height < g_chain_height - MAX_REORG_DEPTH){
-        printf("[BLOCK] REJECTED: height %lld is beyond max reorg depth (%lld blocks behind tip %lld)\n",
-               (long long)height, (long long)MAX_REORG_DEPTH, (long long)g_chain_height);
-        return false;
+        // SACS Delivery B (devnet research): don't reject deep fork blocks outright —
+        // storing them is what lets a long-partitioned segment be assembled and then
+        // reconverge on higher work. Mainnet/testnet keep the hard reject (V16 intact).
+        if(g_sacs_recovery_mode){
+            printf("[BLOCK][SACS-RECOVERY] Accepting deep fork block at height %lld (%lld behind tip %lld) "
+                   "for possible reconvergence.\n",
+                   (long long)height, (long long)(g_chain_height-height), (long long)g_chain_height);
+        } else {
+            printf("[BLOCK] REJECTED: height %lld is beyond max reorg depth (%lld blocks behind tip %lld)\n",
+                   (long long)height, (long long)MAX_REORG_DEPTH, (long long)g_chain_height);
+            return false;
+        }
     }
 
     // Reject blocks that would reorg past a checkpoint
@@ -7677,18 +7694,35 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
 
     // Step 3: Verify limits
     if (disconnect_count > MAX_REORG_DEPTH) {
-        printf("[REORG] Rejected: depth %lld exceeds REORG_LIMIT %lld\n",
-               (long long)disconnect_count, (long long)MAX_REORG_DEPTH);
-        {
-            sacs::Rec r; r.type=sacs::Ev::REORG_REJECTED; r.result="rejected_depth";
+        if (g_sacs_recovery_mode) {
+            // SACS Delivery B (devnet research): the depth cap is ADVISORY here — raise a
+            // DEEP_REORG_ALERT and proceed. The reorg still requires strictly higher
+            // fully-validated cumulative work (checked in Step 4 below) and is still
+            // atomic (Steps 5–7). This is what lets two segments separated by more than
+            // the limit reconverge automatically, with no operator/checkpoint/quorum.
+            printf("[REORG][SACS-RECOVERY] Depth %lld exceeds cap %lld — proceeding (advisory alert).\n",
+                   (long long)disconnect_count, (long long)MAX_REORG_DEPTH);
+            sacs::Rec r; r.type=sacs::Ev::DEEP_REORG_ALERT; r.result="recovery_proceed";
             r.old_tip=to_hex(g_blocks.back().block_id.data(),32);
             r.new_tip=to_hex(fork_chain.back().block_id.data(),32);
             r.ancestor=to_hex(g_blocks[fork_point].block_id.data(),32); r.ancestor_height=fork_point;
             r.disconnect_depth=disconnect_count; r.connect_depth=connect_count;
-            r.detail="disconnect "+std::to_string(disconnect_count)+" > MAX_REORG_DEPTH "+std::to_string((long long)MAX_REORG_DEPTH);
+            r.detail="recovery-mode reorg: disconnect "+std::to_string(disconnect_count)+" > cap "+std::to_string((long long)MAX_REORG_DEPTH)+"; proceeding on higher work";
             sacs::emit(r);
+        } else {
+            printf("[REORG] Rejected: depth %lld exceeds REORG_LIMIT %lld\n",
+                   (long long)disconnect_count, (long long)MAX_REORG_DEPTH);
+            {
+                sacs::Rec r; r.type=sacs::Ev::REORG_REJECTED; r.result="rejected_depth";
+                r.old_tip=to_hex(g_blocks.back().block_id.data(),32);
+                r.new_tip=to_hex(fork_chain.back().block_id.data(),32);
+                r.ancestor=to_hex(g_blocks[fork_point].block_id.data(),32); r.ancestor_height=fork_point;
+                r.disconnect_depth=disconnect_count; r.connect_depth=connect_count;
+                r.detail="disconnect "+std::to_string(disconnect_count)+" > MAX_REORG_DEPTH "+std::to_string((long long)MAX_REORG_DEPTH);
+                sacs::emit(r);
+            }
+            return false;
         }
-        return false;
     }
 
     // Reject reorg past a checkpoint
@@ -9541,6 +9575,9 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--noseed")||!strcmp(argv[i],"--disable-dns-seeds")){
             g_noseed = true;   // NON-CONSENSUS: skip default DNS seeds + all external auto-connect
         }
+        else if(!strcmp(argv[i],"--sacs-recovery-mode")){
+            g_sacs_recovery_mode = true;   // SACS Delivery B — DEV profile only (enforced at startup)
+        }
         else if(!strcmp(argv[i],"--verbose")||!strcmp(argv[i],"-v")){
             g_verbose = true;
         }
@@ -9570,6 +9607,9 @@ int main(int argc, char** argv) {
             printf("  --noseed                   Isolation (NON-CONSENSUS): no DNS seeds, no external\n");
             printf("                             auto-connect. Only explicit --connect peers are used.\n");
             printf("  --disable-dns-seeds        Alias for --noseed\n");
+            printf("  --sacs-recovery-mode       SACS Delivery B (DEV ONLY): reorg depth cap becomes an\n");
+            printf("                             advisory DEEP_REORG_ALERT, not a hard reject; selects\n");
+            printf("                             highest fully-validated work. Ignored on testnet/mainnet.\n");
             printf("  --dry-run-replay           Replay chain, print UTXO-set root + height, exit (no P2P/RPC)\n");
             printf("  --verbose / -v             Show CX-VERIFY and PARSE debug output\n");
             return 0;
@@ -9586,6 +9626,16 @@ int main(int argc, char** argv) {
     // configured, so events survive across restarts for offline inspection.
     sacs::g_deep_threshold = (ACTIVE_PROFILE == sost::Profile::MAINNET) ? 400 : 6;
     if (!chain_path.empty()) sacs::g_sink_path = chain_path + ".sacs.jsonl";
+
+    // SACS Delivery B (--sacs-recovery-mode) is a DEV-profile-only research prototype.
+    // Refuse it on TESTNET/MAINNET so the mainnet hard reorg cap (V16) is never relaxed.
+    if (g_sacs_recovery_mode && ACTIVE_PROFILE != sost::Profile::DEV) {
+        fprintf(stderr, "[SACS] --sacs-recovery-mode is DEV-profile only; IGNORED on this network.\n");
+        g_sacs_recovery_mode = false;
+    }
+    if (g_sacs_recovery_mode)
+        printf("[SACS] Delivery B recovery mode ENABLED (devnet): reorg depth cap is advisory "
+               "(DEEP_REORG_ALERT) not a hard reject. Selecting highest fully-validated work.\n");
 
     // P1.5 — runtime startup safety check (NOT a consensus rule).
     // Refuse to launch a mainnet binary that lacks the Phase 2 SbPoW
