@@ -813,67 +813,76 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
 
   </style>
   <section class="blk" id="compare">
-    <div class="eyebrow">How it compares</div>
-    <h2>SOST Asset Registry vs <span class="g">leading tokenization platforms</span></h2>
-    <div class="sub">An honest map, not a scoreboard. SOST is strongest <b>before</b> issuance — evidence, provenance and per-claim verification of what an asset is. The established platforms are far more developed in <b>regulated issuance, trading and servicing</b>. Different layers of the same pipeline: <b>Asset → Passport → Right → Token → Compliance → Market</b>.</div>
-    <div class="cmp-wrap">
-      <table class="cmp">
-        <thead><tr>
-          <th>Dimension</th><th class="sost">SOST</th><th>Tokeny</th><th>Securitize</th><th>Mattereum</th><th>Centrifuge</th>
-        </tr></thead>
-        <tbody>
-          <tr><td class="dim">Primary focus</td><td class="sost">Verifiable pre-issuance record</td><td>Security-token compliance</td><td>Regulated digital securities</td><td>Legal twin of physical assets</td><td>RWA credit funds</td></tr>
-          <tr><td class="dim">Per-claim provenance</td><td class="sost y">✅</td><td class="n">—</td><td class="n">—</td><td class="p">◑</td><td class="n">—</td></tr>
-          <tr><td class="dim">Per-claim verification states</td><td class="sost y">✅</td><td class="p">◑</td><td class="p">◑</td><td class="p">◑</td><td class="n">—</td></tr>
-          <tr><td class="dim">Reproducible canonical hash</td><td class="sost y">✅</td><td class="n">—</td><td class="n">—</td><td class="p">◑</td><td class="n">—</td></tr>
-          <tr><td class="dim">Own L1 blockchain</td><td class="sost y">✅</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="y">✅</td></tr>
-          <tr><td class="dim">KYC / AML · regulated issuance</td><td class="sost f">○ future</td><td class="y">✅</td><td class="y">✅</td><td class="p">◑</td><td class="y">✅</td></tr>
-          <tr><td class="dim">Secondary market</td><td class="sost f">○ future</td><td class="p">◑</td><td class="y">✅</td><td class="p">◑</td><td class="p">◑</td></tr>
-          <tr><td class="dim">Strongest at</td><td class="sost">Evidence + provenance + verification</td><td>Transfer-rule compliance</td><td>End-to-end regulated</td><td>Legal enforceability</td><td>On-chain NAV</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <details style="margin-top:10px"><summary style="cursor:pointer;color:var(--cyan);font-size:12px;letter-spacing:.5px">View full comparison (24 dimensions)</summary>
-    <div class="cmp-wrap" style="margin-top:10px">
-      <table class="cmp">
-        <thead><tr>
-          <th>Dimension</th>
-          <th class="sost">SOST Asset Registry</th>
-          <th>Tokeny (ERC-3643)</th>
-          <th>Securitize</th>
-          <th>Mattereum</th>
-          <th>Centrifuge</th>
-        </tr></thead>
-        <tbody>
-          <tr><td class="dim">Primary focus</td><td class="sost">Verifiable pre-issuance asset dossier</td><td>Regulated security-token compliance</td><td>End-to-end regulated digital securities</td><td>Legal "digital twin" of physical assets</td><td>RWA credit funds on-chain</td></tr>
-          <tr><td class="dim">Start of the flow</td><td class="sost">Describe &amp; evidence the asset</td><td>You already know the instrument</td><td>Issue a security / fund</td><td>Document the physical asset</td><td>Pool of financial assets</td></tr>
-          <tr><td class="dim">Evidence / document dossier</td><td class="sost y">✅ core</td><td class="p">◑ limited</td><td class="y">✅ (KYC/offering docs)</td><td class="y">✅ core</td><td class="p">◑ asset-level</td></tr>
-          <tr><td class="dim">Per-claim provenance (who said each fact)</td><td class="sost y">✅ core differentiator</td><td class="n">— </td><td class="n">—</td><td class="p">◑ expert warranties</td><td class="n">—</td></tr>
-          <tr><td class="dim">Per-claim verification states</td><td class="sost y">✅ declared→attested→independently verified</td><td class="p">◑ identity-level</td><td class="p">◑ investor-level</td><td class="p">◑ per-warranty</td><td class="n">—</td></tr>
-          <tr><td class="dim">Structured typed rights</td><td class="sost y">✅ 6 subtypes (no legal wrapper)</td><td class="p">◑ security token</td><td class="p">◑ security</td><td class="y">✅ legal wrapper</td><td class="p">◑ tranche shares</td></tr>
-          <tr><td class="dim">Legal classification stance</td><td class="sost">"NOT DETERMINED BY SOST" (records facts)</td><td>Built for securities compliance</td><td>Regulated securities</td><td>Legally enforceable twin</td><td>SPV-based securities</td></tr>
-          <tr><td class="dim">Built-in valuation model</td><td class="sost y">✅ deterministic + as a claim</td><td class="n">—</td><td class="p">◑ via services</td><td class="p">◑ via experts</td><td class="y">✅ NAV/accounting</td></tr>
-          <tr><td class="dim">Reproducible canonical hash (3rd-party re-verify)</td><td class="sost y">✅ public test vectors</td><td class="n">—</td><td class="n">—</td><td class="p">◑ IPFS/hashing</td><td class="n">—</td></tr>
-          <tr><td class="dim">Own L1 blockchain</td><td class="sost y">✅ SOST PoW L1</td><td class="n">— (EVM)</td><td class="n">— (multi-chain)</td><td class="n">— (Ethereum)</td><td class="y">✅ Centrifuge/Polkadot</td></tr>
-          <tr><td class="dim">Token model</td><td class="sost">Documentary passport now · native UTXO = future</td><td>ERC-3643 permissioned</td><td>Multi-standard securities</td><td>NFT + legal wrapper</td><td>Pool/tranche tokens</td></tr>
-          <tr><td class="dim">KYC / AML onboarding</td><td class="sost f">○ future module</td><td class="y">✅ core</td><td class="y">✅ core</td><td class="p">◑ via partners</td><td class="y">✅</td></tr>
-          <tr><td class="dim">Investor identity / whitelist</td><td class="sost f">○ future</td><td class="y">✅ ONCHAINID</td><td class="y">✅ ID registry</td><td class="p">◑</td><td class="y">✅</td></tr>
-          <tr><td class="dim">Transfer restrictions / compliance rules</td><td class="sost f">○ future (architecturally prepared)</td><td class="y">✅ core</td><td class="y">✅</td><td class="p">◑</td><td class="y">✅</td></tr>
-          <tr><td class="dim">Custody</td><td class="sost">Never custodies funds</td><td class="p">◑ via partners</td><td class="y">✅ own custody</td><td class="p">◑ physical custodian</td><td class="p">◑ via SPV</td></tr>
-          <tr><td class="dim">Primary issuance</td><td class="sost">Documentary now</td><td class="y">✅</td><td class="y">✅</td><td class="y">✅</td><td class="y">✅</td></tr>
-          <tr><td class="dim">Secondary trading / marketplace</td><td class="sost f">○ future</td><td class="p">◑ via exchanges</td><td class="y">✅ ATS/markets</td><td class="p">◑ marketplace</td><td class="p">◑ limited</td></tr>
-          <tr><td class="dim">Settlement</td><td class="sost">SOST or external-documented (no custody)</td><td class="p">◑ on-chain/DvP</td><td class="y">✅ incl. atomic vs stablecoin</td><td class="p">◑ on-chain</td><td class="p">◑ on-chain</td></tr>
-          <tr><td class="dim">NAV / fund accounting</td><td class="sost n">—</td><td class="n">—</td><td class="y">✅</td><td class="n">—</td><td class="y">✅ core</td></tr>
-          <tr><td class="dim">Regulatory licences / regime</td><td class="sost">None — records facts, not an intermediary</td><td>Enables issuer compliance</td><td class="y">✅ transfer agent / broker-dealer / ATS</td><td>Legal contracts + arbitration</td><td>Via issuers / SPVs</td></tr>
-          <tr><td class="dim">Target users</td><td class="sost">Asset owners &amp; verifiers, pre-issuance</td><td>Issuers / institutions</td><td>Funds / institutions</td><td>Physical-asset owners</td><td>Asset managers / DeFi</td></tr>
-          <tr><td class="dim">Open / self-serve</td><td class="sost y">✅ self-serve web · MIT</td><td class="p">◑ T-REX standard open</td><td class="n">— managed</td><td class="n">— managed</td><td class="p">◑ protocol</td></tr>
-          <tr><td class="dim">Maturity</td><td class="sost">Live web (v2) · anchor lab-verified, mainnet pending</td><td class="y">Production, mature</td><td class="y">Production, most complete</td><td class="p">Niche / operational</td><td class="y">Production</td></tr>
-          <tr><td class="dim">Strongest at</td><td class="sost">Evidence + provenance + per-claim verification + reproducible hash</td><td>Compliant transfer rules</td><td>Full regulated issuance+trading+servicing</td><td>Legal enforceability of physical assets</td><td>On-chain NAV for credit</td></tr>
-        </tbody>
-      </table>
-    </div>
-    </details>
-    <div class="cmp-legend"><span class="y">✅</span> core / yes &nbsp;·&nbsp; <span class="p">◑</span> partial / via partners &nbsp;·&nbsp; <span class="f">○</span> future / planned &nbsp;·&nbsp; <span class="n">—</span> not offered. Competitor rows describe publicly-documented positioning and evolve; verify current capabilities with each vendor. SOST does not claim to replace regulated issuance platforms — it aims to be the verifiable evidence layer that should come <i>before</i> them.</div>
+    <style>
+    #tokcmp-root .tc-head{margin-bottom:6px}
+    #tokcmp-root .tc-eyebrow{font-size:.72rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);font-weight:700}
+    #tokcmp-root h2{margin:.2em 0 .3em}
+    #tokcmp-root .tc-plat{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.74rem;letter-spacing:.14em;color:var(--txt3);margin:4px 0 10px}
+    #tokcmp-root .tc-plat span.sost{color:var(--gold);font-weight:800}
+    #tokcmp-root .tc-plat i{color:var(--txt4);font-style:normal}
+    #tokcmp-root .tc-note{color:var(--txt2);font-size:.9rem;max-width:70ch}
+    #tokcmp-root .tc-cards{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:16px 0}
+    @media(max-width:1100px){#tokcmp-root .tc-cards{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:560px){#tokcmp-root .tc-cards{grid-template-columns:1fr 1fr}}
+    #tokcmp-root .tc-card{border:1px solid var(--border2);border-radius:10px;padding:10px;background:var(--card2);display:flex;flex-direction:column;gap:4px}
+    #tokcmp-root .tc-card.sost{border-color:var(--gold);box-shadow:0 0 0 1px rgba(218,165,32,.25) inset}
+    #tokcmp-root .tc-cn{font-weight:800;color:var(--gold);font-size:.92rem}
+    #tokcmp-root .tc-cf{font-size:.72rem;color:var(--txt);font-weight:700}
+    #tokcmp-root .tc-cm{font-size:.68rem;color:var(--txt3)}
+    #tokcmp-root .tc-cd{font-size:.7rem;color:var(--txt2);line-height:1.35}
+    #tokcmp-root .tc-cmat{font-size:.66rem;color:var(--txt4);margin-top:auto;padding-top:4px}
+    #tokcmp-root .tc-controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin:8px 0}
+    #tokcmp-root .tc-tabs{display:flex;flex-wrap:wrap;gap:6px}
+    #tokcmp-root .tc-tab{background:var(--card2);border:1px solid var(--border2);color:var(--txt2);border-radius:999px;padding:6px 13px;font-size:.78rem;cursor:pointer;font-weight:600}
+    #tokcmp-root .tc-tab.active{background:var(--gold);border-color:var(--gold);color:#1a1204}
+    #tokcmp-root .tc-tab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+    #tokcmp-root .tc-filter{font-size:.76rem;color:var(--txt3)}
+    #tokcmp-root .tc-filter select{background:var(--card);color:var(--txt);border:1px solid var(--border2);border-radius:7px;padding:5px 8px;font-size:.78rem}
+    #tokcmp-root .tc-legend{font-size:.74rem;color:var(--txt3);margin:6px 0 10px}
+    #tokcmp-root .tc-scroll{overflow-x:auto;border:1px solid var(--border2);border-radius:10px}
+    #tokcmp-root table.tc-tbl{border-collapse:collapse;width:100%;min-width:640px;font-size:.82rem}
+    #tokcmp-root .tc-tbl th,.tc-tbl td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)}
+    #tokcmp-root .tc-tbl thead th{position:sticky;top:0;background:var(--card2);z-index:2;color:var(--txt2);font-size:.74rem;letter-spacing:.04em}
+    #tokcmp-root .tc-tbl thead th.sost{color:var(--gold)}
+    #tokcmp-root .tc-tbl .tc-dimh,.tc-tbl .tc-dim{position:sticky;left:0;background:var(--card2);z-index:1;text-align:left;font-weight:600;color:var(--txt);min-width:180px}
+    #tokcmp-root .tc-tbl thead .tc-dimh{z-index:3}
+    #tokcmp-root .tc-tbl tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+    #tokcmp-root .tc-tbl tbody tr:nth-child(even) .tc-dim{background:var(--card)}
+    #tokcmp-root .tc-cell{cursor:pointer}
+    #tokcmp-root .tc-cell.sost{background:rgba(218,165,32,.05)}
+    #tokcmp-root .tc-cell:hover{background:rgba(218,165,32,.13)}
+    #tokcmp-root .tc-cell:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+    #tokcmp-root .tc-st{color:var(--txt4);font-size:.8rem}
+    #tokcmp-root .tc-st.on{color:var(--gold2)}
+    #tokcmp-root .tc-none{color:var(--txt4)}
+    #tokcmp-root .tc-na{color:var(--txt4);font-size:.68rem;letter-spacing:.05em}
+    #tokcmp-root .tc-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:5px;vertical-align:middle}
+    #tokcmp-root .tc-dot.c{background:var(--green)} .tc-dot.g{background:#e6b34d} .tc-dot.f{background:var(--txt4)}
+    #tokcmp-root .tc-detail{margin-top:12px;border:1px dashed var(--border2);border-radius:10px;padding:12px 14px;color:var(--txt3);font-size:.86rem;min-height:44px}
+    #tokcmp-root .tc-detail.open{border-style:solid;border-color:var(--gold);background:var(--card2);color:var(--txt2)}
+    #tokcmp-root .tc-dh{font-size:.95rem;color:var(--txt);margin-bottom:4px}
+    #tokcmp-root .tc-dscore{margin:2px 0 6px}
+    #tokcmp-root .tc-badge{margin-left:8px;font-size:.64rem;font-weight:800;letter-spacing:.06em;padding:2px 7px;border-radius:999px;border:1px solid}
+    #tokcmp-root .tc-badge.c{color:#7ee2a8;border-color:var(--green)} .tc-badge.g{color:#e6b34d;border-color:#8a6a1e} .tc-badge.f{color:var(--txt3);border-color:var(--border2)}
+    #tokcmp-root .tc-dwhy{color:var(--txt);font-size:.9rem;margin:4px 0}
+    #tokcmp-root .tc-dsrc{font-size:.78rem;color:var(--txt3)} .tc-dsrc a{color:var(--gold2)}
+    #tokcmp-root .tc-dver{font-size:.7rem;color:var(--txt4);margin-top:3px}
+    #tokcmp-root .tc-block{margin-top:22px} .tc-block h3{color:var(--gold);font-size:1rem;margin:0 0 8px}
+    #tokcmp-root .tc-how{display:flex;flex-direction:column;gap:5px}
+    #tokcmp-root .tc-howrow{display:grid;grid-template-columns:130px 1fr;gap:10px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:.8rem}
+    #tokcmp-root .tc-howrow.sost{border-color:var(--gold)}
+    #tokcmp-root .tc-hn{font-weight:800;color:var(--gold2)} .tc-hf{color:var(--txt2)}
+    #tokcmp-root .tc-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:760px){#tokcmp-root .tc-two{grid-template-columns:1fr}#tokcmp-root .tc-howrow{grid-template-columns:1fr}}
+    #tokcmp-root .tc-ul{margin:0;padding-left:18px;color:var(--txt2);font-size:.86rem;line-height:1.5}
+    #tokcmp-root .tc-ul.warn li::marker{color:#e6b34d}
+    #tokcmp-root .tc-mini{font-size:.72rem;color:var(--txt4);margin-top:6px}
+    #tokcmp-root .tc-method{margin-top:20px;border-top:1px solid var(--border2);padding-top:10px}
+    #tokcmp-root .tc-method summary{cursor:pointer;color:var(--gold2);font-size:.82rem;letter-spacing:.04em;font-weight:600}
+    #tokcmp-root .tc-mbody{font-size:.82rem;color:var(--txt2);margin-top:8px} .tc-mbody p{max-width:80ch}
+    #tokcmp-root .tc-srcrow{padding:3px 0;border-bottom:1px solid var(--border);font-size:.78rem} .tc-srcrow a{color:var(--gold2)}
+    </style>
+    <div id="tokcmp-root">Loading comparison…</div>
   </section>
 
   <section class="blk">
@@ -1339,5 +1348,7 @@ function fundDemo(){
   }catch(e){ out.innerHTML='<div class="tk-sub">error: '+(e&&e.message||e)+'</div>'; }
 }
 </script>
+<script src="js/tokenization-comparison-data.js"></script>
+<script src="js/tokenization-comparison.js"></script>
 </body>
 </html>
