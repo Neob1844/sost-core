@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="index,follow">
 <link rel="icon" type="image/png" href="sost-logo.png?v=v392">
-<title>SOST Universal Assets</title>
+<title>SOST Tokenization & Offers</title>
 <meta name="description" content="SOST Universal Assets — an open, optional registry + issuance layer for any real or digital asset. Asset Passport, Asset Intelligence and an Asset Finance simulator. Laboratory preview; no native token issuance or real lending is active.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -115,6 +115,39 @@
       <span class="chip">Asset Passport</span><span class="chip">Asset Intelligence</span><span class="chip">Tokenization Studio</span><span class="chip">Verification</span>
     </div>
   </div>
+
+  <!-- ============ TOKENIZATION & OFFERS — entry hub: What do you want to do? ============ -->
+  <section class="blk" id="hub">
+    <div class="eyebrow">Tokenization &amp; Offers &middot; one Passport, four ways to offer it</div>
+    <h2>What do you want to <span class="g">do</span>?</h2>
+    <div class="sub">Every path starts from the same verifiable <b>Asset (or Project) Passport</b>. Tokenize is a live registry product today. Auction, Draw and Project Funding are engine-complete and mainnet-ready, with public real-money execution held behind a <b>regulatory gate</b> until legal authorization — nothing here changes SOST supply or consensus.</div>
+    <div class="hub-grid">
+      <a class="hub-card" href="#create">
+        <div class="hub-t">Tokenize</div>
+        <div class="hub-d">Divide a right into units.</div>
+        <span class="hub-b live">Registry / Passport &middot; mainnet-capable</span>
+        <span class="hub-n">Native token issuance — future protocol module</span>
+      </a>
+      <a class="hub-card" href="#offer">
+        <div class="hub-t">Auction</div>
+        <div class="hub-d">Sell to the highest valid bidder.</div>
+        <span class="hub-b gate">Engine complete &middot; mainnet-ready</span>
+        <span class="hub-n">Regulatory gate closed</span>
+      </a>
+      <a class="hub-card" href="#offer">
+        <div class="hub-t">Draw</div>
+        <div class="hub-d">Allocate an asset through a verifiable draw.</div>
+        <span class="hub-b gate">Engine complete &middot; mainnet-ready</span>
+        <span class="hub-n">Regulatory gate closed</span>
+      </a>
+      <a class="hub-card" href="#offer">
+        <div class="hub-t">Project Funding</div>
+        <div class="hub-d">Fund something that will be built.</div>
+        <span class="hub-b gate">Engine complete &middot; mainnet-ready</span>
+        <span class="hub-n">Regulatory gate closed</span>
+      </a>
+    </div>
+  </section>
 
   <!-- ============ SOST ASSET REGISTRY — current product, human-readable first layer ============ -->
   <section class="blk" id="registry">
@@ -418,7 +451,7 @@
 
   <section class="blk">
     <h2>What is <span class="r">live today</span></h2>
-    <div class="sub">The Asset Layer is ALPHA. This is exactly what works now, what is being finished, and what is only a future protocol module. Nothing here changes SOST supply or consensus.</div>
+    <div class="sub">Tokenize · Auction · Draw · Project Funding — one Asset (or Project) Passport, four ways to offer it. Below is exactly what works now, what is engine-complete/mainnet-ready behind a regulatory gate, and what is a future protocol module. Nothing here changes SOST supply or consensus.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:8px">
 
       <div style="border:1px solid var(--border2);border-radius:14px;background:linear-gradient(180deg,rgba(37,194,110,.06),transparent 60%);padding:18px 18px 16px">
@@ -764,6 +797,20 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
     table.cmp tr:hover td{background:rgba(255,255,255,.02)}
     table.cmp .y{color:var(--green)} table.cmp .p{color:var(--amber)} table.cmp .f{color:var(--cyan)} table.cmp .n{color:var(--txt4)}
     .cmp-legend{font-size:11px;color:var(--txt3);margin-top:10px}
+  
+  .hub-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+  @media(max-width:860px){.hub-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.hub-grid{grid-template-columns:1fr}}
+  .hub-card{display:flex;flex-direction:column;gap:7px;text-decoration:none;padding:18px 16px;border:1px solid var(--border2);border-radius:14px;background:var(--card);transition:border-color .15s,transform .15s,box-shadow .15s}
+  .hub-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.28)}
+  .hub-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .hub-t{font-size:1.22rem;font-weight:800;color:var(--gold);letter-spacing:.2px}
+  .hub-d{color:var(--txt2);font-size:.94rem;flex:1}
+  .hub-b{align-self:flex-start;font-size:.7rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid}
+  .hub-b.live{color:#7ee2a8;border-color:var(--green);background:rgba(46,160,90,.08)}
+  .hub-b.gate{color:#e6b34d;border-color:#8a6a1e;background:rgba(218,165,32,.08)}
+  .hub-n{font-size:.72rem;color:var(--txt4)}
+
   </style>
   <section class="blk" id="compare">
     <div class="eyebrow">How it compares</div>

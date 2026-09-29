@@ -229,7 +229,7 @@
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
-      <a href="sost-universal-assets.html" style="color:#DAA520">Asset Layer</a>
+      <a href="sost-universal-assets.html" style="color:#DAA520">Tokenization &amp; Offers</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
@@ -613,8 +613,8 @@
     var sz=(sImg&&sImg.offsetWidth) || (cx.querySelector('img')&&cx.querySelector('img').offsetWidth) || cx.offsetWidth || 110;
     var a=document.createElement('a');
     a.href='sost-universal-assets.html'; a.className='sost-tok-logo';
-    a.title='SOST Tokenization — Universal Assets';
-    a.setAttribute('aria-label','SOST Tokenization — Universal Assets');
+    a.title='SOST Tokenization & Offers';
+    a.setAttribute('aria-label','SOST Tokenization & Offers');
     var img=document.createElement('img');
     img.src=LOGO; img.alt='SOST Tokenization';
     img.width=sz; img.height=sz; img.style.width=sz+'px'; img.style.height=sz+'px';
