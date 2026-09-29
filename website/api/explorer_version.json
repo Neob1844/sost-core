@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-29-v479-unique-nodes",
-  "note": "Explorer UNIQUE NODES card now reads getnetworksummary from the RPC gateway (ops/sost-rpc-proxy.py): the local mainnet node counts once, only while its RPC answers on mainnet/correct genesis with a tip younger than 2 h, plus distinct external P2P machines with a completed handshake; the node's own loopback pair is excluded. Sub-line 'seed-visible peers' replaced by 'N local · M external'; ACTIVE NODES section shows LOCAL NODE / CONNECTED EXTERNAL PEERS / DISCOVERED ACTIVE NODES (n/a: the P2P protocol has no address exchange) / TOTAL UNIQUE. No node, P2P, consensus or V16 change."
+  "v": "2026-09-29-v480-active-nodes-local",
+  "note": "ACTIVE NODES now shows the LOCAL NODE (STRATO) as its own block above the peer table: status, live height, tip age, network and real process uptime, all from getnetworksummary (ONLINE only while mainnet + mainnet genesis + tip < 2 h; STALE/DEGRADED/OFFLINE shown as such; unreadable fields omitted). It is not a fake P2P peer row. The table is titled EXTERNAL PEERS with an 'N connected' count, counters are labelled external peers, the empty table reads 'no external peers connected', and the footnote defines LOCAL NODE / EXTERNAL PEERS / UNIQUE NODES and miner != node. No node, P2P, consensus or V16 change."
 }

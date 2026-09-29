@@ -65,6 +65,9 @@ MAINNET_GENESIS = '6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699
 # on a healthy chain; past this the node is serving a chain that has stopped moving.
 TIP_STALE_S = 7200
 SUMMARY_CACHE_S = 10
+# Public name of the node this gateway fronts. Shown by the Explorer as the LOCAL
+# NODE; it is a label, never an address.
+LOCAL_NODE_LABEL = 'STRATO'
 
 
 def _peer_host(addr):
@@ -96,7 +99,7 @@ def self_connection_indexes(peers):
     return marked
 
 
-def summarize_network(info, tip_time, peers, now, info_error=None):
+def summarize_network(info, tip_time, peers, now, info_error=None, boot_time=None):
     """Pure function: node reads -> network summary. See NETWORK_SUMMARY_METHOD."""
     reasons = []
     if info_error or not isinstance(info, dict):
@@ -134,6 +137,12 @@ def summarize_network(info, tip_time, peers, now, info_error=None):
             'online': local_online,
             'height': info.get('blocks') if isinstance(info, dict) else None,
             'tip_age_s': int(now - tip_time) if isinstance(tip_time, (int, float)) else None,
+            # Process uptime from the node's own boot timestamp (getminerstats); None
+            # when it cannot be read, never a guess.
+            'uptime_s': (int(now - boot_time)
+                         if isinstance(boot_time, (int, float)) and 0 < boot_time <= now else None),
+            'label': LOCAL_NODE_LABEL,
+            'network': info.get('profile') if isinstance(info, dict) else None,
             'reasons': reasons,
         },
         'local_nodes': local,
@@ -182,7 +191,14 @@ def network_summary(read=_node_read, clock=time.time):
             peers = read('getpeerinfo')
         except Exception:
             peers = []
-        value = summarize_network(info, tip_time, peers, now, info_error=err)
+        boot = None
+        if err is None:
+            try:
+                ms = read('getminerstats')
+                boot = ms.get('boot_time_unix') if isinstance(ms, dict) else None
+            except Exception:
+                boot = None
+        value = summarize_network(info, tip_time, peers, now, info_error=err, boot_time=boot)
         _summary_cache.update(at=now, value=value)
         return value
 
