@@ -364,12 +364,27 @@
     <div class="sub">One Asset (or Project) Passport, four ways to bring it to people. Only <b>Tokenize</b> is a current product; the others are future/regulated modules — built and demoable here, never operated on real funds until a legal framework exists.</div>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
       <div class="comp gold"><h3>1 · Tokenize <span style="font-size:10px;color:var(--green)">· CURRENT</span></h3><p>Divide a right into token units. <a href="#create">Create a Passport &rarr;</a></p><span class="tag">divide a right into units</span></div>
-      <div class="comp cyan"><h3>2 · Auction <span style="font-size:10px;color:var(--amber)">· FUTURE</span></h3><p>Recoverable escrow + bids; the highest valid bid wins. No chance involved — legally simpler than a draw, but asset-transfer / AML / tax rules still apply.</p><span class="tag">highest valid bid wins</span></div>
+      <div class="comp cyan"><h3>2 · Auction <span style="font-size:10px;color:var(--amber)">· FUTURE · LIVE DEMO</span></h3><p>Recoverable escrow + bids; the highest valid bid wins. No chance involved — legally simpler than a draw, but asset-transfer / AML / tax rules still apply.</p><span class="tag">highest valid bid wins</span></div>
       <div class="comp red"><h3>3 · Draw <span style="font-size:10px;color:var(--red2)">· FUTURE · REGULATED</span></h3><p>Tickets cover a minimum price; when sold out, a <b>verifiable</b> draw adjudicates the asset. In Spain this is a <b>rifa</b> (DGOJ / Ley 13/2011), not an auction — requires authorisation; disabled for real use.</p><span class="tag">one ticket wins the asset</span></div>
       <div class="comp"><h3>4 · Project Funding <span style="font-size:10px;color:var(--amber)">· FUTURE · REGULATORY-READY</span></h3><p>Fund something not built yet: fund &rarr; build &rarr; verify &rarr; deliver, released by milestones. Debt/revenue/equity offers may be regulated crowdfunding (ECSPR / CNMV PSFP, ≤ €5M).</p><span class="tag">fund → build → deliver</span></div>
     </div>
 
     <div class="chips" style="margin:14px 0 4px"><span class="chip red">Draw &amp; Project Funding: LAUNCH DISABLED — demo only, no real funds</span></div>
+
+    <!-- AUCTION demo -->
+    <h3 style="font-family:var(--sans);font-size:15px;margin:22px 0 6px;color:var(--txt)">Auction &mdash; demo <span style="font-size:11px;color:var(--amber)">· FUTURE / LIVE DEMO / LAB VERIFIED</span></h3>
+    <div class="sub">Highest valid <b>signed</b> bid wins (ties → earliest; no chance). Bidders post a refundable escrow (a <b>reference value</b> → SOST quote, not custodied fiat); losers are refundable, the winner settles. Real funds disabled.</div>
+    <div class="demo">
+      <div class="row">
+        <div><label>Asset</label><input id="aucAsset" value="Gold bar" style="width:150px"></div>
+        <div><label>Starting (EUR)</label><input id="aucStart" value="15000" style="width:110px"></div>
+        <div><label>Reserve (EUR)</label><input id="aucReserve" value="18000" style="width:110px"></div>
+        <div><label>Escrow ref (EUR)</label><input id="aucEscrow" value="100" style="width:110px"></div>
+        <button class="run gold" onclick="auctionDemo()">Run demo auction</button>
+      </div>
+      <div class="tk-card" id="aucOut" style="border-top-color:var(--cyan);margin-top:14px"></div>
+      <div class="note">Auction result and payment <b>settlement</b> are separate; SOST does not custody external funds. Legal: asset-sale / contract / AML / tax rules apply. <b>REAL FUNDS EXECUTION DISABLED</b> — engine + demo only.</div>
+    </div>
 
     <!-- DRAW demo -->
     <h3 style="font-family:var(--sans);font-size:15px;margin:22px 0 6px;color:var(--txt)">Verifiable Draw &mdash; demo <span style="font-size:11px;color:var(--red2)">· FUTURE / REGULATED</span></h3>
@@ -833,6 +848,7 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
 <script src="js/asset-passport-v2.js"></script>
 <script src="js/asset-intelligence.js"></script>
 <script src="js/asset-finance.js"></script>
+<script src="js/asset-auction.js"></script>
 <script src="js/asset-draw.js"></script>
 <script src="js/project-funding.js"></script>
 <script>
@@ -1200,6 +1216,37 @@ async function tkGenPassport(){
 </script>
 <script>
 // ===== Offering-model demos (Draw + Project Funding), application-layer, LAUNCH DISABLED =====
+async function auctionDemo(){
+  var out=document.getElementById('aucOut'); var A=window.SOSTAssetAuction; if(!A){out.innerHTML='<div class="tk-sub">engine not loaded</div>';return;}
+  try{
+    var asset=(document.getElementById('aucAsset').value||'Asset').trim();
+    var start=Math.max(0,parseInt(document.getElementById('aucStart').value)||15000)*100;
+    var reserve=Math.max(0,parseInt(document.getElementById('aucReserve').value)||18000)*100;
+    var escrow=Math.max(0,parseInt(document.getElementById('aucEscrow').value)||100)*100;
+    var a=A.newAuction({auctionId:'demo-'+asset.replace(/[^a-z0-9]/gi,'').slice(0,8),passportId:'sost-asset-demo',seller:'0xSeller',currency:'EUR',network:'devnet',startingPrice:String(start),reservePrice:String(reserve),minimumIncrement:'10000',openingTime:100,closingTime:1000,escrowRequired:true,escrowReferenceAmount:String(escrow),settlementDeadline:2000});
+    A.open(a,100);
+    var bidders=[['0xB1',start+100000],['0xB2',1750000<start?start+250000:1750000],['0xB3',1820000],['0xB4',1890000]];
+    // normalise demo bids as strictly increasing over start
+    var seq=[start+100000, start+250000, start+400000, start+490000];
+    var names=['0xB1','0xB2','0xB3','0xB4'];
+    for(var i=0;i<4;i++){ A.lockEscrow(a,names[i],{sost:'2000000',price:'0.05',source:'oracle-demo',ts:110}); }
+    for(var j=0;j<4;j++){ await A.placeBid(a,{auctionId:a.auctionId,network:'devnet',bidder:names[j],amount:String(seq[j]),currency:'EUR',nonce:'n'+j,expiry:0,signature:'0xsignature-'+j},120+j*10); }
+    A.close(a,1000);
+    var eur=function(c){return '€'+(Number(c)/100).toLocaleString();};
+    var ref=A.refundable(a);
+    var winnerLine = a.winner ? (eur(a.winner.amount)+' by '+a.winner.bidder) : '—';
+    var out1='<h4>'+asset+' &mdash; auction (DEMO)</h4>'
+      +'<div class="kv"><span class="k">Starting / reserve</span><span class="v">'+eur(a.startingPrice)+' / '+eur(a.reservePrice)+'</span></div>'
+      +'<div class="kv"><span class="k">Bids</span><span class="v">'+seq.map(eur).join(' · ')+'</span></div>'
+      +'<div class="kv"><span class="k">Reserve</span><span class="v">'+(a.state!=='FAILED'?'MET ✓':'NOT MET')+'</span></div>'
+      +'<div class="kv"><span class="k">Winner</span><span class="v"><span class="st on" style="font-size:10px">'+winnerLine+'</span></span></div>'
+      +'<div class="kv"><span class="k">Status</span><span class="v">'+a.state+'</span></div>'
+      +'<div class="kv"><span class="k">Loser escrows</span><span class="v">'+(ref.length)+' refundable</span></div>'
+      +'<div class="kv"><span class="k">Settlement</span><span class="v" style="color:var(--txt3)">pending · SOST does not custody external funds</span></div>'
+      +'<div class="note">DEMO / EXAMPLE — highest valid signed bid wins (ties → earliest). Real funds disabled.</div>';
+    out.innerHTML=out1;
+  }catch(e){ out.innerHTML='<div class="tk-sub">error: '+(e&&e.message||e)+'</div>'; }
+}
 async function drawDemo(){
   var out=document.getElementById('drwOut'); var D=window.SOSTAssetDraw; if(!D){out.innerHTML='<div class="tk-sub">engine not loaded</div>';return;}
   try{
