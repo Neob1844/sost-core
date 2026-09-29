@@ -282,8 +282,6 @@
     <button data-view="trade" role="tab">Trade</button>
     <button data-view="orders" role="tab">Orders</button>
     <button data-view="activity" role="tab">Activity</button>
-    <span style="flex:1"></span>
-    <button id="tabsHide" onclick="toggleDexTabs()" title="Hide the Swap/Trade/Orders/Activity tab bar" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-family:var(--mono);font-size:10.5px;letter-spacing:1px;padding:5px 10px;border-radius:6px;cursor:pointer;align-self:center">HIDE TABS ▲</button>
   </nav>
 
   <!-- ============ SWAP ============ -->
@@ -643,16 +641,6 @@ document.querySelectorAll('#ivals button').forEach(function(b){ b.addEventListen
 document.querySelectorAll('#ctype button').forEach(function(b){ b.addEventListener('click', function(){
   document.querySelectorAll('#ctype button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); chartType=b.dataset.ct||'candles'; drawChart();
 });});
-/* dashboard tab-bar hide \u2014 renamed from toggleNav() so it never collides with the
-   canonical global-nav engine (nav-toggle.js exposes window.toggleNav for HIDE NAV). */
-function toggleDexTabs(){
-  var tabs=document.querySelectorAll('nav.tabs button[data-view]');
-  var btn=document.getElementById('tabsHide');
-  var hidden=btn.dataset.hidden==='1';
-  tabs.forEach(function(t){ t.style.display=hidden?'':'none'; });
-  btn.dataset.hidden=hidden?'0':'1';
-  btn.textContent=hidden?'HIDE TABS \u25b2':'SHOW TABS \u25bc';
-}
 
 /* ---- demo chart (clearly labelled; deterministic, not real) ---- */
 function drawChart(){
