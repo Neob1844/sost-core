@@ -382,12 +382,13 @@
         <button class="run gold" onclick="drawDemo()">Sell out &rarr; freeze &rarr; draw</button>
       </div>
       <div class="tk-card" id="drwOut" style="border-top-color:var(--red);margin-top:14px"></div>
-      <div class="note">Escrow of the ticket reference in SOST is <b>refundable</b> while the campaign is open and if it never sells out. Ticket price is quoted in SOST from an oracle reference (e.g. 20 USDC), so the SOST price never changes the minimum the seller needs.</div>
+      <div class="note"><b>20 USDC is a reference value, not custodied USDC</b> — it is converted to an equivalent SOST quote at entry (oracle reference), so the number of tickets needed to cover the seller's minimum is fixed in reference terms regardless of SOST's price. Escrow of that SOST is <b>refundable</b> while the campaign is open and if it never sells out. <b>Open design point (to fix before any real use):</b> who bears the SOST price variation between a participant's entry and campaign close — participant, a stable-reference rail, or a hedging rule. Not decided; not operated on real funds.</div>
     </div>
 
     <!-- PROJECT FUNDING demo -->
     <h3 style="font-family:var(--sans);font-size:15px;margin:22px 0 6px;color:var(--txt)">Project Funding &mdash; demo <span style="font-size:11px;color:var(--amber)">· FUTURE / REGULATORY-READY</span></h3>
-    <div class="sub">You don't tokenize a plant that doesn't exist — you tokenize a <b>right</b> tied to the project. All-or-nothing funding, milestone-gated releases, honest escrow accounting.</div>
+    <div class="sub">While the project doesn't exist yet it carries a <b>Project Passport</b>; when it is built and operating, that becomes an <b>Asset Passport</b> — one continuous record: <b>IDEA → FUNDING → CONSTRUCTION → OPERATION → ASSET</b>. You don't tokenize a plant that doesn't exist — you tokenize a <b>right</b> tied to the project. All-or-nothing funding, milestone-gated releases, honest escrow accounting.</div>
+    <div class="chips" style="margin:0 0 10px"><span class="chip">Project Passport &rarr; Asset Passport</span><span class="chip">IDEA</span><span class="chip">FUNDING</span><span class="chip">CONSTRUCTION</span><span class="chip">OPERATION</span><span class="chip" style="border-color:var(--green);color:#7ee2a8">ASSET</span></div>
     <div class="demo">
       <div class="row">
         <div><label>Project</label><input id="pfName" value="Solar Murcia I" style="width:170px"></div>
