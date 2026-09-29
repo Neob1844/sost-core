@@ -486,10 +486,10 @@
     if(!nav) return;
     // Already there — the home page ships its own inline copy and must not gain a second.
     if(nav.querySelector('.sost-dtd-btn') || nav.querySelector('a[href$="#dtd"]')) return;
-    var anchor=nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
+    var anchor=nav.querySelector('a.atomix-btn')||nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
     if(!anchor) return;                       // no large-button row on this page
     styleOnce();
-    var sz=anchor.offsetWidth||72;            // match the sibling box, whatever this page uses
+    var sz=anchor.offsetWidth; if(!sz||sz<90) sz=110;   // match the sibling box; guard the CSS-load race (avoid the old 72 fallback)
     var a=document.createElement('a');
     a.href='index.html#dtd'; a.title='DTD — Deterministic Token Distribution';
     a.className='sost-dtd-btn';
