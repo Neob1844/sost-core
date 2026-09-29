@@ -52,3 +52,12 @@ did not fire on this reorg path. Also `[REORG] Active work=0000… candidate wor
 height 0` (two fully independent from-genesis chains) — logging/work-accounting on the fork-store→reorg path
 needs review. **Conclusion: boundary behavior is UNRESOLVED and under active lab verification; no doctrinal
 claim about the 500 rule until the code-path vs the analysis is reconciled.** No mainnet/consensus/V16 change.
+
+## SACS V1 mainnet candidate — RC state 2026-09-29
+- **Source:** `research/sost-autonomous-chain-safety` @ `adc25003` (rebased onto main; backup `backup/sacs-pre-rebase-20260929`).
+- **Build:** flags `-DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF` (no `SOST_DEVNET_FORKS`).
+- **NODE SHA256:** `7632211a4b0050e382d11644e632a2f69bf997a9d2721f03b4af0491f3651d64` (deterministic across the node-only and all-targets builds).
+- **CONSENSUS DIFF vs main = ZERO:** the only changed C++ source is `src/sost-node.cpp`; params.h, tx/block validation, pow, cASERT, ConvergenceX, jackpot, lottery, dtd, popc are byte-identical; V16 heights match (Jackpot V2 = 30000, DTD eligibility unchanged). The sost-node.cpp additions are the read-only `namespace sacs` monitor + `getsacsstatus`/`getsacsevents` RPC + advisory event emission on the reorg path; `MAX_REORG_DEPTH=8` and `--sacs-recovery-mode` are `#if SOST_DEVNET_FORKS` / dev-profile only (mainnet keeps the 500 hard-reject, verified in the binary strings).
+- **V16 regression:** `ctest` **119/119 PASS** (56.7s) on the candidate.
+- **REMAINING before ACTIVE:** ASan/UBSan run (not yet); full multi-node adversarial lab (partial: converge_d8 PASS, reject_d9 = devnet limit boundary, unrelated to mainnet 500); merge observability-only source to main (dropping the branch's stale web hunks in favour of main's SACS web sections); RC tag `v16.3.x-sacs1` + SHA256SUMS; then owner-authorised reversible STRATO node swap.
+- **Rollback:** current STRATO node backup binary `/opt/sost/rollback-p2p-20260924_201231/sost-node.official` (byte-verified); swap = stop node by PID → replace `sost-node` → start → health check; rollback = restore the .official binary. No consensus/chain-state migration involved.
