@@ -355,7 +355,7 @@
     // after it (NOT in the small Watch/Home row). Match by its asBtnGlow animation so it
     // is immune to href changes (the tile now points to sost-dex.html, formerly the
     // founder console). Fall back to the legacy hrefs / WATCH icon for old structures.
-    var watch=nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]')||nav.querySelector('a[href="atomic-swap-console.html"]')||nav.querySelector('a[onclick="openSv()"]');
+    var watch=nav.querySelector('a.atomix-btn')||nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]')||nav.querySelector('a[href="atomic-swap-console.html"]')||nav.querySelector('a[onclick="openSv()"]');
     if(!watch) return;                                            // need the logo-button row
     var sz=watch.offsetWidth||110;                               // match the sibling box
     var a=document.createElement('a');
@@ -539,6 +539,8 @@
     }
     nav.querySelectorAll('a[style*="dtdBtnGlow"],.sost-dtd-btn').forEach(function(e){ wrap(e,'dtd'); });
     nav.querySelectorAll('a[style*="asBtnGlow"]').forEach(function(e){ wrap(e,'as'); });
+    // ATOMIX SWAP DEX: same module geometry, its own paint (css/atomix-btn.css).
+    nav.querySelectorAll('a.atomix-btn').forEach(function(e){ wrap(e,'ax'); });
     nav.querySelectorAll('.sost-news-btn').forEach(function(e){ wrap(e,'news'); });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tag,{once:true});
