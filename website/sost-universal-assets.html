@@ -286,7 +286,7 @@
         <!-- dynamic field groups -->
         <div class="apw-rf" id="rf_revenue"><div class="apw-grid" style="margin-top:12px">
           <div><label>Share to token holders (%)</label><input id="apwPct" value="5" style="width:100%"></div>
-          <div><label>Obligor (who must pay/perform)</label><input id="apwObligor" value="Example Mining S.L." style="width:100%"></div>
+          <div><label title="Obligor">Who must pay / perform?</label><input id="apwObligor" value="Example Mining S.L." style="width:100%"></div>
           <div><label>Agreement reference</label><input id="apwAgree" value="contract-9" style="width:100%"></div>
           <div><label>Distribution mechanism</label><input id="apwDist" value="Bank transfer" style="width:100%"></div>
           <div><label>Frequency</label><select id="apwFreq"><option>Quarterly</option><option>Monthly</option><option>Annually</option><option>On event</option><option>Not defined</option></select></div>
@@ -333,7 +333,7 @@
           <div><label>Token name</label><input id="apwTokName" value="Sierra X Units" style="width:100%"></div>
           <div><label>Token symbol</label><input id="apwTokSym" value="SIERRA-X" style="width:100%"></div>
           <div><label>Total units</label><input id="apwSupply" value="1000000" style="width:100%"></div>
-          <div class="apw-adv"><label>Decimals</label><input id="apwDecimals" value="0" style="width:100%"></div>
+          <div class="apw-adv"><label title="Also called decimals">Divisibility</label><input id="apwDecimals" value="0" style="width:100%"></div>
           <div><label>Reference value / unit</label><input id="apwRef" value="—" disabled style="width:100%"></div>
         </div>
         <div class="note"><b>Reference value ≠ market price</b> · <b>token supply ≠ asset value</b> · <b>valuation ≠ liquidity.</b> The SOST price never changes the number of units: 1,000,000 SIERRA-X stay 1,000,000 whether 1 SOST = €0.001 or €10.</div>
@@ -541,7 +541,7 @@
           <option value="OWNERSHIP_OR_EQUITY_LIKE">Ownership / equity-like</option>
           <option value="CUSTOM">Custom / other</option>
         </select></div>
-        <div id="rgObligorWrap" style="flex:1 1 180px"><label>Obligor (who must pay/perform)</label><input id="rgObligor" value="Empresa X S.L." style="width:100%"></div>
+        <div id="rgObligorWrap" style="flex:1 1 180px"><label title="Obligor">Who must pay / perform?</label><input id="rgObligor" value="Empresa X S.L." style="width:100%"></div>
         <div style="flex:1 1 160px"><label>Agreement ref (optional)</label><input id="rgAgree" value="contract-9" style="width:100%"></div>
         <div><label>Owner declared by</label><input id="rgOwner" value="Empresa X S.L." style="width:150px"></div>
         <button class="run gold" onclick="tkGenPassport()">Generate Passport v2</button>
