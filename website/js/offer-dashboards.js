@@ -193,7 +193,84 @@
     });
   }
 
-  function mountAll(){ mountAuction(); mountDraw(); }
+
+  // ---------------- PROJECT FUNDING ----------------
+  var PF=window.SOSTProjectFunding;
+  function fundEx(){ return {project:'Solar plant — Murcia I (5 MW)', promoter:'sost1promoter_demo', model:'REVENUE_SHARE',
+    right:'Pro-rata share of net energy revenue for 10 years', currency:'EUR', target:'2000000', minimum:'1500000',
+    milestones:[{pct:20,desc:'Permits & grid access'},{pct:30,desc:'Civil works'},{pct:20,desc:'Panel installation'},
+      {pct:20,desc:'Grid connection'},{pct:10,desc:'Commissioning & operation'}],
+    commits:['600000','500000','450000','250000']}; }
+
+  function pfRun(cfg){
+    var p=PF.newProject({id:'proj_'+cfg.promoter, project_passport_hash:'pp_'+cfg.promoter, model:cfg.model,
+      right_desc:cfg.right, currency:cfg.currency, settlement_rail:'STABLE_REFERENCE', target:cfg.target, minimum:cfg.minimum,
+      milestones:cfg.milestones});
+    var ev=[{e:'PROJECT_PASSPORT_CREATED'}];
+    cfg.commits.forEach(function(a){ PF.commit(p,a); }); ev.push({e:'FUNDING_RECORDED x'+cfg.commits.length});
+    PF.closeWindow(p, 0); ev.push({e:p.state==='FUNDED'?'MINIMUM_REACHED':'FAILED_REFUND'});
+    if(p.state==='FUNDED'){ PF.activate(p); ev.push({e:'ACTIVATED'});
+      for(var i=0;i<p.milestones.length;i++){ PF.verifyMilestone(p,i); PF.release(p,i); ev.push({e:'MILESTONE_'+(i+1)+'_RELEASED'}); }
+    }
+    if(p.state==='DELIVERED') ev.push({e:'PROJECT_PASSPORT→ASSET_PASSPORT'});
+    p._ev=ev; p._cfg=cfg; p._acct=PF.accounting(p); return p;
+  }
+
+  function pfRender(root, p){
+    var STEPS=['Idea','Project Passport','Funding','Funded','Milestones','Construction','Operation','Asset Passport'];
+    var active=({DRAFT:1,FUNDING:2,FAILED_REFUND:2,FUNDED:3,ACTIVE:4,DELIVERED:7})[p.state]||0;
+    var a=p._acct, relCount=p.milestones.filter(function(m){return m.released;}).length;
+    var next=p.milestones.find(function(m){return !m.released;});
+    // invariant funded == released + escrowed
+    var inv = (BigInt(a.funded)===BigInt(a.released)+BigInt(a.escrowed));
+    var h='';
+    h+='<div class="od-head"><div class="od-title">Project funding dashboard '+badge(p.state)+'</div>'
+      +'<div class="od-sub">Fund what is not built yet · all-or-nothing · milestone-gated releases · Project Passport → Asset Passport · <b>real funds disabled</b></div></div>';
+    h+=stepper(STEPS,active);
+    h+='<div class="od-metrics">'
+      + metric('Project', esc(p._cfg.project))
+      + metric('Model', esc(p.model), esc(p.right_desc||''))
+      + metric('Target', fmtMoney(p.target,p.currency))
+      + metric('Minimum', fmtMoney(p.minimum,p.currency))
+      + metric('Funded', fmtMoney(a.funded,p.currency), a.pct_funded+'% · '+p.funders+' funders')
+      + metric('Released', fmtMoney(a.released,p.currency), 'milestones '+a.milestone)
+      + metric('Escrowed', fmtMoney(a.escrowed,p.currency), 'reserved')
+      + metric('Next milestone', next?esc(next.desc):'— (delivered)', next?(next.pct+'%'):'')
+      +'</div>';
+    // milestones table
+    h+='<div class="od-block"><h4>Milestones <span class="od-mini">(released only when verified + prior released; never by date)</span></h4><div class="od-scroll"><table class="od-tbl"><thead><tr><th>#</th><th>Description</th><th>%</th><th>Verified</th><th>Released</th></tr></thead><tbody>';
+    p.milestones.forEach(function(m){ h+='<tr><td>'+(m.i+1)+'</td><td>'+esc(m.desc)+'</td><td>'+m.pct+'%</td><td>'+(m.verified?'✓':'—')+'</td><td>'+(m.released?badge('SETTLED').replace('SETTLED','RELEASED'):'—')+'</td></tr>'; });
+    h+='</tbody></table></div></div>';
+    // accounting invariant
+    h+='<div class="od-block"><h4>Accounting</h4><div class="od-mini">Integer-safe · '+esc(a.note)+'</div>'
+      +'<div class="od-inv '+(inv?'ok':'bad')+'">funded '+fmtMoney(a.funded,p.currency)+' = released '+fmtMoney(a.released,p.currency)+' + escrowed '+fmtMoney(a.escrowed,p.currency)+' &nbsp; '+(inv?'✓ invariant holds':'✗ INVARIANT BROKEN')+'</div></div>';
+    h+='<div class="od-block"><h4>Event log</h4><div class="od-events">'+p._ev.map(function(e){return '<span class="od-ev">'+esc(e.e)+'</span>';}).join('')+'</div></div>';
+    h+='<div class="od-two"><div class="od-legal"><h4>Legal readiness</h4><ul>'
+      +'<li>Legal classification: <b>NOT DETERMINED BY SOST</b></li>'
+      +'<li>DEBT / REVENUE_SHARE / EQUITY_SPV may be <b>regulated crowdfunding</b> (EU ECSPR / CNMV PSFP, ≤ €5M); MiCA excludes financial instruments</li>'
+      +'<li>On delivery the Project Passport is preserved immutably and a linked <b>Asset Passport</b> is created (never overwritten)</li></ul></div>';
+    h+='<div class="od-gate"><h4>Mainnet execution</h4>'
+      +'<div class="od-gaterow"><span class="od-glabel">PROJECT_FUNDING_EXECUTION</span><span class="od-gval off">DISABLED · REGULATORY GATE</span></div>'
+      +'<div class="od-mini">All-or-nothing logic, milestone gating, ordered releases and accounting run in full. Fund movement is blocked. Server-side gate: pending (slice F).</div></div></div>';
+    h+='<div class="od-block od-adv-only"><h4>Raw state</h4><pre class="od-raw">'+esc(JSON.stringify(p,function(k,v){return k==='_ev'?undefined:v;},1))+'</pre></div>';
+    root.querySelector('.od-body').innerHTML=h;
+  }
+
+  function mountFunding(){
+    var root=document.getElementById('funding-dash'); if(!root||!PF) return;
+    root.innerHTML='<div class="od-toolbar"><button class="od-run" id="pfd-run">Run full lifecycle (example)</button>'
+      +'<label class="od-modes"><input type="checkbox" id="pfd-adv"> Advanced mode</label>'
+      +'<span class="od-gatepill">Real-money execution: DISABLED</span></div>'
+      +'<div class="od-body"><div class="od-empty">Press <b>Run full lifecycle</b> to fund a project all-or-nothing → reach the minimum → activate → release funds milestone by milestone (ordered, verified) → deliver → Project Passport becomes an Asset Passport. No funds move.</div></div>';
+    var advCb=document.getElementById('pfd-adv');
+    advCb.addEventListener('change',function(){ root.classList.toggle('od-advanced', advCb.checked); });
+    document.getElementById('pfd-run').addEventListener('click',function(){ var btn=this; btn.disabled=true; btn.textContent='Running…';
+      try{ var p=pfRun(fundEx()); pfRender(root,p); btn.disabled=false; btn.textContent='Re-run lifecycle'; }
+      catch(e){ root.querySelector('.od-body').innerHTML='<div class="od-empty">Error: '+esc(e.message)+'</div>'; btn.disabled=false; btn.textContent='Run full lifecycle (example)'; }
+    });
+  }
+
+  function mountAll(){ mountAuction(); mountDraw(); mountFunding(); }
   if(document.readyState!=='loading') mountAll(); else document.addEventListener('DOMContentLoaded',mountAll);
-  window.SOSTOfferDash={mountAuction:mountAuction, mountDraw:mountDraw, _runAuction:runAuction, _runDraw:runDraw};
+  window.SOSTOfferDash={mountAuction:mountAuction, mountDraw:mountDraw, mountFunding:mountFunding, _runAuction:runAuction, _runDraw:runDraw, _pfRun:pfRun};
 })();

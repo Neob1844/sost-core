@@ -75,7 +75,10 @@
     var m = p.milestones[i]; assert(m, 'no such milestone');
     assert(m.verified, 'milestone not verified'); assert(!m.released, 'already released');
     if (i > 0) assert(p.milestones[i - 1].released, 'previous milestone not released (ordered)');
-    var tranche = (BigInt(p.target) * BigInt(m.pct)) / 100n;
+    // tranche is a fraction of ACTUAL funds raised (committed), never of target:
+    // an over-minimum-but-under-target project must not release more than was funded
+    // (keeps the invariant funded = released + escrowed; see accounting()).
+    var tranche = (BigInt(p.committed) * BigInt(m.pct)) / 100n;
     m.released = true;
     p.released = (BigInt(p.released) + tranche).toString();
     if (p.milestones.every(function (x) { return x.released; })) p.state = 'DELIVERED';

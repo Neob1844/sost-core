@@ -140,7 +140,7 @@
         <span class="hub-b gate">Engine complete &middot; lab verified</span>
         <span class="hub-n">Mainnet execution: gated</span>
       </a>
-      <a class="hub-card" href="#offer">
+      <a class="hub-card" href="#funding">
         <div class="hub-t">Project Funding</div>
         <div class="hub-d">Fund something that will be built.</div>
         <span class="hub-b gate">Engine complete &middot; lab verified</span>
@@ -774,6 +774,19 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
     <h2>Draw <span class="g">dashboard</span></h2>
     <div class="sub">Allocate an Asset Passport through a <b>verifiable</b> draw: sell tickets to a target, freeze the campaign into a <code>campaignHash</code>, seed the winner from a <b>future SOST block hash</b>, and let anyone recompute the result. Toggle <b>Advanced</b> for the seed, ticket-list hash and raw state. <b>Real funds are disabled</b>; DTD consensus is untouched.</div>
     <div id="draw-dash" class="od-dash">Loading draw dashboard…</div>
+  </section>
+
+  <!-- ============ PROJECT FUNDING DASHBOARD (slice C) ============ -->
+  <section class="blk" id="funding">
+    <style>
+    .od-dash .od-inv{margin-top:6px;font-size:.82rem;padding:8px 11px;border-radius:8px;border:1px solid}
+    .od-dash .od-inv.ok{color:#7ee2a8;border-color:var(--green);background:rgba(46,160,90,.06)}
+    .od-dash .od-inv.bad{color:#ff7a7a;border-color:#7a2a2a;background:rgba(200,40,40,.08)}
+    </style>
+    <div class="eyebrow">Project Funding &middot; engine complete &middot; lab verified &middot; execution gated</div>
+    <h2>Project funding <span class="g">dashboard</span></h2>
+    <div class="sub">Fund something that does not exist yet. All-or-nothing window, milestone-gated ordered releases, integer-safe accounting, and a Project Passport that becomes an Asset Passport on delivery. Toggle <b>Advanced</b> for raw accounting/state. <b>Real funds are disabled</b> behind the regulatory gate.</div>
+    <div id="funding-dash" class="od-dash">Loading project funding dashboard…</div>
   </section>
 
   <section class="blk" id="how">
