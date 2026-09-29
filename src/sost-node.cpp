@@ -7633,6 +7633,16 @@ static void cleanup_old_forks() {
 // Reorganization is atomic: all-or-nothing. If any step fails,
 // the original chain state is fully restored.
 // Selection criterion: best chain = highest cumulative valid work.
+// SACS log helper: format 256-bit cumulative chainwork with leading zeros stripped
+// (raw big-endian work is tiny early in the chain, so substr(0,16) printed all-zeros).
+// Console/log readability only — does NOT affect chain selection, which uses
+// compare_chainwork() on the full 32-byte value. SACS event records keep the full hex.
+static std::string cw_sig(const Bytes32& w) {
+    std::string h = to_hex(w.data(), 32);
+    size_t st = h.find_first_not_of('0');
+    return (st == std::string::npos) ? "0" : h.substr(st);
+}
+
 static bool try_reorganize(const std::string& fork_tip_hash) {
     // Guard against recursive reorg (process_block→try_reorganize→process_block→try_reorganize)
     if (g_in_reorg) {
@@ -7739,19 +7749,20 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     Bytes32 active_tip_work = g_blocks.back().cumulative_work;
     if (compare_chainwork(fork_tip_work, active_tip_work) <= 0) {
         printf("[REORG] Fork has equal or less cumulative work — no reorg. "
-               "Active work=%s, candidate work=%s\n",
-               to_hex(active_tip_work.data(),32).substr(0,16).c_str(),
-               to_hex(fork_tip_work.data(),32).substr(0,16).c_str());
+               "fork_point=%lld disconnect_count=%lld connect_count=%lld "
+               "active_chainwork=0x%s candidate_chainwork=0x%s\n",
+               (long long)fork_point, (long long)disconnect_count, (long long)connect_count,
+               cw_sig(active_tip_work).c_str(), cw_sig(fork_tip_work).c_str());
         return false;
     }
 
-    printf("[REORG] Fork detected at height %lld\n", (long long)fork_point);
-    printf("[REORG] Active work = %s, candidate work = %s\n",
-           to_hex(active_tip_work.data(),32).substr(0,16).c_str(),
-           to_hex(fork_tip_work.data(),32).substr(0,16).c_str());
-    printf("[REORG] Disconnecting %lld blocks (h=%lld..%lld)\n",
-           (long long)disconnect_count, (long long)(fork_point+1), (long long)g_chain_height);
-    printf("[REORG] Connecting %lld blocks\n", (long long)connect_count);
+    printf("[REORG][SACS] fork_point=%lld disconnect_count=%lld connect_count=%lld "
+           "active_chainwork=0x%s candidate_chainwork=0x%s\n",
+           (long long)fork_point, (long long)disconnect_count, (long long)connect_count,
+           cw_sig(active_tip_work).c_str(), cw_sig(fork_tip_work).c_str());
+    printf("[REORG] Disconnecting %lld blocks (h=%lld..%lld), connecting %lld\n",
+           (long long)disconnect_count, (long long)(fork_point+1), (long long)g_chain_height,
+           (long long)connect_count);
     fflush(stdout);
 
     // SACS monitor — snapshot identifiers for the reorg lifecycle. Captured here at
