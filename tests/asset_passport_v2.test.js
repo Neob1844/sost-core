@@ -79,6 +79,41 @@ function throws(fn, m){ try{ fn(); fail++; fails.push(m+' (did not throw)'); con
   ok(cap.ok === true && cap.bytes <= 243, 'v2 doc_ref within 243B body limit');
   ok(cap.body.h === V2_HASH, 'anchor body.h == v2 manifestHash');
 
+  console.log('=== 7. CANONICALIZATION VECTORS CONTRACT (tests/fixtures/canon_vectors.json) ===');
+  const VEC = require('./fixtures/canon_vectors.json');
+  for (const c of VEC.cases) {
+    ok(V2.canon(c.input) === c.canon_expected, 'vector canon: ' + c.name);
+    ok((await V2.sha256Hex(c.canon_expected)) === c.sha256_expected, 'vector sha256: ' + c.name);
+  }
+  const mvRecomputed = await V2.sha256Hex(V2.canon(VEC.manifest_vector.manifest));
+  ok(mvRecomputed === VEC.manifest_vector.manifestHash, 'vector: full manifest hash reproduces (third-party reconstructable)');
+
+  console.log('=== 8. SETTLEMENT (minimal, SOST-does-not-custody) ===');
+  const setc = V2.settlementClaim({settlement_type:'EXTERNAL_DOCUMENTED', reference:'bank-123', hash:'abcd'});
+  ok(setc.class === 'SETTLEMENT_REFERENCE', 'settlement class');
+  ok(setc.value.custody === 'SOST DOES NOT CUSTODY FUNDS', 'settlement states no custody');
+  ok(setc.verification.status === 'NOT_VERIFIED', 'external settlement defaults NOT_VERIFIED');
+  ok(V2.validateClaim(Object.assign({id:'s1'}, setc)) , 'settlement claim validates');
+  throws(() => V2.settlementClaim({settlement_type:'EUR_STABLECOIN'}), 'unknown settlement_type rejected (stablecoin is FUTURE)');
+
+  console.log('=== 9. INTELLIGENCE -> VALUATION CLAIM (coherence adapter) ===');
+  const ivc = V2.intelligenceToValuationClaim({marketValue:100000, low:90000, high:110000, recoverable:70000, confidence:0.62});
+  ok(ivc.class === 'VALUATION', 'intel adapter -> VALUATION');
+  ok(ivc.value.amount === '100000' && typeof ivc.value.amount === 'string', 'intel amount is a string (canonical-safe)');
+  ok(ivc.confidence === 62, 'intel confidence 0..1 mapped to 0..100 integer');
+  ok(ivc.provenance.source_type === 'SOST_CALCULATION', 'intel valuation provenance = SOST_CALCULATION');
+  ok(V2.validateClaim(Object.assign({id:'v'}, ivc)), 'intel valuation claim validates');
+
+  console.log('=== 10. LIQUIDITY HONESTY (five concepts kept distinct) ===');
+  const lh = V2.liquidityHonesty({valuation:'100000', reference_price_per_token:1, currency:'EUR'});
+  ok(lh.executable_liquidity === 'NOT VERIFIED', 'executable liquidity NOT VERIFIED');
+  ok(lh.market_depth === 'NONE OBSERVED', 'market depth NONE OBSERVED');
+  ok(lh.order_book === 'NONE' && lh.market_makers === 'NONE', 'no order book / no makers');
+  ok(lh.scenarios.length === 4, 'four SOST arithmetic scenarios');
+  ok(/SCENARIO/.test(lh.scenarios[0].label), 'scenarios labelled SCENARIO not quote');
+  ok(lh.scenarios.find(s=>s.sost_price==='0.10').sost_per_token === '10.00', 'scenario math: €1 ref @ SOST€0.10 = 10 SOST/token');
+  ok(/REFERENCE PRICE ≠ MARKET PRICE ≠ EXECUTABLE LIQUIDITY/.test(lh.disclaimer), 'liquidity disclaimer separates the concepts');
+
   console.log('\nRESULT: ' + pass + ' passed / ' + fail + ' failed');
   if (fail) { console.log('FAILURES:\n - ' + fails.join('\n - ')); process.exit(1); }
   process.exit(0);

@@ -269,6 +269,82 @@
     };
   }
 
+  // Settlement is MINIMAL and honest: SOST does NOT custody funds. Two modes:
+  //  SOST (on-chain SOST transfer) or EXTERNAL_DOCUMENTED (a reference/hash to an
+  //  off-chain settlement SOST neither holds nor guarantees). Stablecoin/EUR = FUTURE.
+  var SETTLEMENT_TYPES = ['SOST', 'EXTERNAL_DOCUMENTED'];
+  function settlementClaim(o) {
+    assert(SETTLEMENT_TYPES.indexOf(o.settlement_type) >= 0, 'invalid settlement_type: ' + o.settlement_type);
+    return {
+      id: o.id || 'settlement', class: 'SETTLEMENT_REFERENCE',
+      value: {
+        settlement_type: o.settlement_type,
+        reference: o.reference || null, hash: o.hash || null,
+        amount: (o.amount != null ? String(o.amount) : null), currency: o.currency || null,
+        custody: 'SOST DOES NOT CUSTODY FUNDS'
+      },
+      provenance: o.provenance || { source_type: 'DECLARING_PARTY' },
+      verification: { status: o.verification || (o.settlement_type === 'EXTERNAL_DOCUMENTED' ? 'NOT_VERIFIED' : 'DECLARED') },
+      timestamp: o.timestamp || null
+    };
+  }
+
+  // ---- Intelligence engine -> VALUATION claim (coherence adapter) ----------
+  // Turns an Asset-Intelligence result into a provenance-carrying VALUATION claim,
+  // so every displayed valuation is a claim like any other. Confidence 0..1 -> 0..100.
+  function intelligenceToValuationClaim(intel, opts) {
+    opts = opts || {};
+    var conf = intel.confidence;
+    if (conf != null && conf <= 1) conf = Math.round(conf * 100);
+    return valuationClaim({
+      id: opts.id || 'valuation',
+      amount: intel.amount != null ? intel.amount : (intel.marketValue != null ? intel.marketValue : intel.value),
+      currency: intel.currency || opts.currency || 'EUR',
+      range_low: intel.range_low != null ? intel.range_low : intel.low,
+      range_high: intel.range_high != null ? intel.range_high : intel.high,
+      recoverable: intel.recoverable,
+      methodology: intel.methodology || 'SOST Universal Asset Valuation Engine (deterministic, traceable)',
+      assumptions: intel.assumptions || null,
+      confidence: (conf != null ? conf : null),
+      provenance: { source_type: 'SOST_CALCULATION', source_name: 'Asset Intelligence' },
+      verification: 'DECLARED'
+    });
+  }
+
+  // ---- Liquidity HONESTY (display-only; NOT part of the hashed manifest) ----
+  // Keeps five distinct concepts apart so nothing masquerades as market liquidity:
+  //   VALUATION  ≠  REFERENCE PRICE  ≠  EXECUTABLE LIQUIDITY  ≠  MARKET DEPTH  ≠  EXECUTABILITY.
+  // SOST is not listed, so the SOST-price rows are ARITHMETIC SCENARIOS, never quotes.
+  var LIQUIDITY_SOST_SCENARIOS = ['0.001', '0.01', '0.10', '1.00'];
+  function liquidityHonesty(o) {
+    o = o || {};
+    var ref = (o.reference_price_per_token != null) ? Number(o.reference_price_per_token) : null;
+    var cur = o.currency || 'EUR';
+    var scenarios = LIQUIDITY_SOST_SCENARIOS.map(function (p) {
+      var sp = Number(p);
+      var sostPerToken = (ref != null && sp > 0) ? (ref / sp) : null;
+      return {
+        sost_price: p, currency: cur,
+        sost_per_token: sostPerToken != null ? sostPerToken.toFixed(sostPerToken < 10 ? 4 : 2) : null,
+        label: 'SCENARIO — arithmetic equivalence at an assumed SOST price, NOT a market quote'
+      };
+    });
+    return {
+      valuation: (o.valuation != null ? { amount: String(o.valuation), currency: cur } : null),
+      reference_price: (ref != null ? { value: String(ref), currency: cur,
+        basis: 'issuer-declared division of the valuation into token supply' } : null),
+      executable_liquidity: 'NOT VERIFIED',
+      market_depth: 'NONE OBSERVED',
+      executability: 'NOT VERIFIED',
+      order_book: 'NONE',
+      market_makers: 'NONE',
+      scenarios: scenarios,
+      disclaimer: 'REFERENCE PRICE ≠ MARKET PRICE ≠ EXECUTABLE LIQUIDITY. SOST is not listed; ' +
+        'the SOST rows are arithmetic scenarios, not quotes. No order book, no market maker and no ' +
+        'observed depth exist for this asset. Nothing here is a promise of price, liquidity or return.'
+    };
+  }
+
   // ---- on-chain anchor payload (same body shape / limit as v1) -------------
   function capsuleDocRef(passport) {
     var body = { m: 'doc_ref', h: passport.manifestHash, loc: (passport.manifest.locator || '') };
@@ -284,6 +360,8 @@
     sha256Hex: sha256Hex, canon: canon, strip: strip, assetId: assetId,
     validateClaim: validateClaim, buildPassport: buildPassport, rollup: rollup, verify: verify,
     normalizeV1ToClaims: normalizeV1ToClaims, valuationClaim: valuationClaim, rightClaim: rightClaim,
+    settlementClaim: settlementClaim, intelligenceToValuationClaim: intelligenceToValuationClaim,
+    liquidityHonesty: liquidityHonesty, SETTLEMENT_TYPES: SETTLEMENT_TYPES,
     capsuleDocRef: capsuleDocRef
   };
 });

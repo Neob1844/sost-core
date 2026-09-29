@@ -266,7 +266,11 @@
 
     <!-- ============ ASSET REGISTRY — Passport v2 (Claims + Provenance) ============ -->
     <h3 style="font-family:var(--sans);font-size:15px;margin:30px 0 4px;color:var(--txt)">SOST Asset Registry &mdash; generate a <span class="g">Passport (v2)</span> <span style="font-size:11px;color:var(--amber);letter-spacing:1px">· CURRENT PRODUCT</span></h3>
-    <div class="sub">Turns the Studio into a real <b>Asset Passport v2</b>: a set of typed <b>claims</b> (valuation, right, ownership) each carrying its own provenance + verification status, canonicalized to a deterministic <code>manifestHash</code> ready to anchor on SOST. It records <b>facts</b> — it never classifies the token legally.</div>
+    <div class="sub">Turns the Studio into a real <b>Asset Passport v2</b>: a set of typed <b>claims</b> (valuation, right, ownership, settlement) each carrying its own provenance + verification status, canonicalized to a deterministic <code>manifestHash</code> ready to anchor on SOST. It records <b>facts</b> — it never classifies the token legally.</div>
+    <div class="chips" style="margin:2px 0 12px">
+      <span class="chip green">Asset Registry — CURRENT PRODUCT</span>
+      <span class="chip red">Asset Marketplace — FUTURE (no order book, custody, secondary trading or fiat settlement)</span>
+    </div>
     <div class="demo">
       <div class="row">
         <div><label>Right represented by each token</label><select id="rgClass">
@@ -515,9 +519,26 @@ async function tkGenPassport(){
     if(owner) claims.push({id:'owner',class:'OWNERSHIP_DECLARATION',
       value:{declaration:owner+' declares title'},provenance:{source_type:'DECLARING_PARTY'},
       verification:{status:'DECLARED'}});
+    // minimal settlement reference: SOST does NOT custody funds (stablecoin/EUR = future)
+    claims.push(AP2.settlementClaim({settlement_type:'SOST',
+      provenance:{source_type:'DECLARING_PARTY'}}));
     var p=await AP2.buildPassport({issuer:'sost1studioIssuer',nonce:'0',category:'machinery',
       locator:'ipfs://Qm-studio-demo',claims:claims});
     var r=p.rollup, cap=AP2.capsuleDocRef(p);
+    // liquidity honesty: reference price = valuation / (V tokens) -> ~1/token, five concepts kept apart
+    var supply=Math.max(1,Math.round(V)), refPx=V>0?(V/supply):null;
+    var lh=AP2.liquidityHonesty({valuation:String(Math.round(V)),reference_price_per_token:refPx,currency:curCode});
+    var scRows=lh.scenarios.map(function(s){
+      return '<div class="kv"><span class="k">SOST @ '+cur+s.sost_price+'</span>'
+        +'<span class="v">'+(s.sost_per_token||'—')+' SOST / token <span style="color:var(--txt3)">· SCENARIO</span></span></div>';}).join('');
+    var liqHtml='<div class="tk-sub" style="margin-top:14px">Liquidity honesty — five distinct concepts (nothing here is a market quote):</div>'
+      +'<div class="kv"><span class="k">Valuation</span><span class="v">'+cur+tkFmt(V)+'</span></div>'
+      +'<div class="kv"><span class="k">Reference price</span><span class="v">'+cur+(refPx!=null?tkFmt(refPx,refPx<1?4:2):'—')+' / token <span style="color:var(--txt3)">· issuer-declared</span></span></div>'
+      +'<div class="kv"><span class="k">Executable liquidity</span><span class="v"><span class="st warn" style="font-size:10px">NOT VERIFIED</span></span></div>'
+      +'<div class="kv"><span class="k">Market depth</span><span class="v" style="color:var(--txt3)">NONE OBSERVED</span></div>'
+      +'<div class="kv"><span class="k">Order book / market makers</span><span class="v" style="color:var(--txt3)">NONE</span></div>'
+      +scRows
+      +'<div class="note" style="margin-top:8px">'+lh.disclaimer+'</div>';
     var yn=function(b){return b?'<span class="st on" style="font-size:10px">YES</span>':'<span class="st off" style="font-size:10px">NO</span>';};
     var claimRows=p.manifest.claims.map(function(c){
       var src=(c.provenance&&c.provenance.source_type)||'—';
@@ -533,7 +554,8 @@ async function tkGenPassport(){
       +'<div class="kv"><span class="k">Independent legal title verified</span><span class="v">'+yn(r.legal_title_verified)+'</span></div>'
       +'<div class="kv"><span class="k">Legal classification</span><span class="v" style="color:var(--txt3)">'+r.legal_classification+'</span></div>'
       +'<div class="kv"><span class="k">On-chain anchor (doc_ref)</span><span class="v">'+(cap.ok?('READY · '+cap.bytes+'/'+cap.max+'B ✓'):('too big: '+cap.error))+'</span></div>'
-      +'<div class="tk-sub" style="margin-top:10px">Claims ('+r.total+') — what / who says it / verification:</div>'+claimRows;
+      +'<div class="tk-sub" style="margin-top:10px">Claims ('+r.total+') — what / who says it / verification:</div>'+claimRows
+      +liqHtml;
   }catch(e){ out.innerHTML='<h4>Passport v2</h4><div class="tk-sub">error: '+(e&&e.message||e)+'</div>'; }
 }
 (function(){var s=document.getElementById('rgClass'); if(s){ s.addEventListener('change',function(){
