@@ -1135,6 +1135,25 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
   </div>
 </section>
 
+<section class="section" id="sec-sacs">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-id">// AUTONOMOUS CHAIN SAFETY &middot; updated 2026-09-29</div>
+      <h2 class="section-title">Autonomous Chain Safety <span class="accent">(SACS)</span></h2>
+    </div>
+    <div style="max-width:820px;margin:0 auto;font-size:14px;line-height:1.85;color:var(--text-secondary);">
+      <p>SOST is an open Proof-of-Work chain: every node independently verifies blocks and follows the chain with the <b>highest cumulative verified work</b> (not the longest, and never a peer's self-reported work). SOST does <b>not</b> use ChainLocks, masternodes, validator quorums, miner votes or a developer-selected chain. It therefore offers <b>probabilistic PoW security</b>, not mathematically irreversible finality: a sufficiently powerful adversary that produces a <i>valid</i> higher-work chain cannot be excluded by software alone.</p>
+      <p><b>SACS</b> (SOST Autonomous Chain Safety) is a safety layer with two clearly separated parts:</p>
+      <ul>
+        <li><b>Current mainnet.</b> Best-chain-by-cumulative-work selection; atomic reorg with full rollback; <b>MAX_REORG_DEPTH = 500 blocks (~3.5 days)</b> — a reorg deeper than 500 is rejected <i>even if it has more work</i>; hard checkpoints (≤ height 3,554) reject a contradicting chain; 1,000-block coinbase maturity. The 500-block rule protects against certain deep reorgs but can, after an unusually long network partition, prevent automatic convergence to a valid higher-work chain.</li>
+        <li><b>SACS Core — LAB VERIFIED (V16-compatible, not yet deployed).</b> Fork/reorg monitoring, structured chain-safety events, a read-only <code>getchainsafety</code> RPC, a transaction-safety state machine (CONFIRMED → REORGED → REENTERED_MEMPOOL → CONFLICTED) and reconciliation for the wallet, Explorer, DEX and exchanges, plus recovery/persistence hardening. This is observability and application protection — <b>it changes no consensus rule</b>: a SACS alert can make an application wait or pause, never turn a valid block invalid, never halt honest mining. Blockchain truth outranks any local database or UI.</li>
+        <li><b>SACS Deep-Reorg Recovery — FUTURE RESEARCH (devnet only).</b> Studies treating the 500-block depth as an <b>operational alert</b> rather than an automatic rejection, so that after a long partition a node can fully re-verify the alternative branch (work, UTXO, emission, difficulty), protect sensitive operations, and converge on the valid higher-work chain. Any such change is consensus-affecting and would require a future coordinated upgrade — it is <b>not</b> part of the V16 fork at block #30,000.</li>
+      </ul>
+      <p style="color:var(--text-muted,#64748b)"><b>Status:</b> SACS Core is code-complete and lab-verified on a research branch; it is <b>not</b> live on mainnet and no node binary is swapped before #30,000. SACS provides autonomous detection, recovery support and transaction-safety signals — it does not provide absolute, irreversible finality.</p>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="sec-decentralization">
   <div class="container">
     <div class="section-header">

@@ -292,11 +292,34 @@
           <tr><td class="label">Chain selection</td><td class="highlight">Highest cumulative work (NOT longest chain)</td></tr>
           <tr><td class="label">Block work formula</td><td class="value"><code>floor(2^256 / (target + 1))</code></td></tr>
           <tr><td class="label">Fork resolution</td><td class="green">Atomic &mdash; full rollback on failure</td></tr>
-          <tr><td class="label">Max reorg depth</td><td class="value">500 blocks (~3.5 days)</td></tr>
+          <tr><td class="label">Max reorg depth</td><td class="value">500 blocks (~3.5 days) &mdash; existing mainnet rule; a reorg deeper than 500 is rejected even with more work. Its deep-partition trade-off is under <a href="#sacs" style="color:var(--cyan-primary)">SACS</a> research (not a finality guarantee)</td></tr>
           <tr><td class="label">Orphan vs fork</td><td class="value">Separated: orphans (parent unknown) vs fork candidates (parent known)</td></tr>
           <tr><td class="label">Mempool recovery</td><td class="value">Valid non-coinbase txs returned to mempool after reorg; conflicts discarded</td></tr>
         </table>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- SACS — SOST AUTONOMOUS CHAIN SAFETY -->
+<section class="section" id="sacs">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// autonomous chain safety</div>
+      <h2 class="section-title">SOST Autonomous Chain Safety <span class="accent">(SACS)</span> &mdash; <span style="color:var(--amber-primary,#f59e0b)">LAB VERIFIED · RESEARCH</span></h2>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;" class="fade-in">SOST nodes independently verify Proof-of-Work and chain validity. <b>SACS</b> is an autonomous safety layer that detects forks and reorganizations, protects affected transactions and applications, and supports autonomous recovery &mdash; <b>without masternodes, privileged validators, quorums or a developer-selected chain</b>. It is <b>not</b> a finality guarantee and does <b>not</b> make blocks irreversible against an adversary able to produce a valid higher-work chain.</p>
+    <div class="spec-body">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table class="code-table">
+        <tr><td class="label">Chain selection</td><td class="highlight">Highest cumulative VERIFIED work (never height, never peer-reported work)</td></tr>
+        <tr><td class="label">SACS Core (V16-compatible)</td><td class="value">Fork/reorg monitor, structured events, <code>getchainsafety</code> RPC, transaction-safety states (CONFIRMED→REORGED→REENTERED_MEMPOOL→CONFLICTED), wallet/DEX/exchange reconciliation, recovery/persistence &mdash; <b>observability &amp; application safety, no consensus change</b></td></tr>
+        <tr><td class="label">Status (Core)</td><td class="value">LAB VERIFIED on the research branch; <b>not yet deployed to mainnet</b> (no node binary swapped before the #30,000 fork)</td></tr>
+        <tr><td class="label">Deep-reorg model</td><td class="value">Research only (devnet): whether the 500-block hard cap should become an <b>operational alert</b> instead of an automatic rejection, so a valid higher-work chain can be adopted after a long partition. <b>Would require a future coordinated upgrade — never auto-added to V16.</b></td></tr>
+        <tr><td class="label">Mainnet today</td><td class="value">Unchanged: MAX_REORG_DEPTH = 500, hard checkpoints (≤3,554), atomic reorg with rollback</td></tr>
+      </table>
+      </div>
+      <p style="color:var(--text-secondary);line-height:1.8;margin-top:16px;">Principle: <b>consensus decides valid/invalid; SACS observes and protects</b>. A SACS alert can make a wallet, the DEX or an exchange wait for more confirmations or pause a sensitive credit &mdash; it can never, by itself, turn a valid block into an invalid one, nor halt honest mining. Blockchain truth always outranks any local database or UI.</p>
     </div>
   </div>
 </section>
@@ -737,7 +760,7 @@ var D={
 'treasury':'<b>Treasury Safety Profile</b> — Configurable spending limits: daily send limit, per-transaction limit, vault mode (only trusted addresses). Even if someone accesses your wallet, they cannot drain it all at once.',
 'address book':'<b>Trusted Address Book</b> — Save addresses with labels and trust levels (Trusted, Known, Blocked, Unknown). Blocked addresses cannot receive funds. Unknown addresses trigger a first-time send warning.',
 'coinbase maturity':'<b>Coinbase Maturity</b> — Mining rewards cannot be spent until 1,000 blocks (~7 days) after they are mined. Prevents spending coins from blocks that might be orphaned during a chain reorganization.',
-'checkpoints':'<b>Checkpoints</b> — Hardcoded block hashes at known heights. The node rejects any chain that disagrees with these checkpoints. MAX_REORG_DEPTH = 500 blocks (~3.5 days) limits how far back a reorganization can go.',
+'checkpoints':'<b>Checkpoints</b> — Two distinct things. <b>Hard checkpoints</b> are hardcoded (last at height 3,554); the node rejects any chain that disagrees with them (a trust assumption for early history, not a mere optimisation). <b>assumevalid</b> only skips re-running the expensive PoW/signature recomputation for already-trusted history; it does NOT gate chain selection, subsidy, UTXO or difficulty. On STRATO the dynamic checkpoint updater is NOT running (no checkpoint.json is imposed). Separately, MAX_REORG_DEPTH = 500 blocks (~3.5 days) is the reorg-depth rule; a deeper reorg is rejected even with more work — a trade-off SACS research studies.',
 'cASERT':'<b>cASERT</b> — Cascading Absolute Schedule Exponential Rising Targets. Unified difficulty adjustment system. V1: 48h/6.25%. V2 (1450+): 24h/12.5%. V3 (4100+): slew &plusmn;3, lag floor. V3.1 (4110+): stored profile_index, anti-stall always 7200s. V4 (4200+): Ahead Guard clamps bitsQ relaxation to 1.56%/block when &ge;16 ahead. V6 (5000+): slew &plusmn;1, H10/H11 scale=2. Current (5175+): avg288 bitsQ (avg of last 288 intervals vs 600s). Dynamic cap (5260+): 0%/0.5%/1.5%/2.5%/3.0% by deviation, median288 check. Equalizer: emergency-only, height-gated ceiling. Pre-V12 (#5,750..#7,349): H13 ceiling, 21 active E7-H13, 22 reserved H14-H35. V12 (#7,350..#11,999): H20 ceiling, 28 active E7-H20, 15 reserved H21-H35. V13 (#12,000+): H35 ceiling, 43 active E7-H35, 0 reserved (full range live). H10+ margin=115.',
 'ConvergenceX':'<b>ConvergenceX</b> — CPU-friendly, memory-hard Proof-of-Work. Each attempt: 32×32 linear system, 100K sequential rounds, 8GB RAM (4GB dataset + 4GB scratchpad). Sequential dependency and tight memory coupling raise the cost of a competitive ASIC port; no claim is made that one is impossible. Node verification: ~500MB, ~0.2ms.',
 'Capsule':'<b>Capsule Protocol v1</b> — Binary metadata embedded in transaction outputs. 12-byte header + up to 243-byte body. Enables on-chain attestation and proof-of-discovery. Activates at mainnet height 5000.',
