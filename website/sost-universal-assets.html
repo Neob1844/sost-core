@@ -107,7 +107,10 @@
       <span class="chip">SOST supply untouched</span>
       <span class="chip red">Asset Marketplace — future</span>
     </div>
-    <div style="margin-top:20px"><a href="#create" class="run gold" style="display:inline-block;text-decoration:none;padding:11px 22px">Create an Asset Passport &rarr;</a></div>
+    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+      <a href="#create" class="run gold" style="display:inline-block;text-decoration:none;padding:11px 22px">Create an Asset Passport &rarr;</a>
+      <a href="#create" onclick="setTimeout(function(){window.apwExample&&window.apwExample();},60)" class="ghost" style="display:inline-block;text-decoration:none;padding:11px 22px">View example</a>
+    </div>
     <div class="chips" style="margin-top:16px">
       <span class="chip">Asset Passport</span><span class="chip">Asset Intelligence</span><span class="chip">Tokenization Studio</span><span class="chip">Verification</span>
     </div>
@@ -239,6 +242,23 @@
           <div><label>Estimated value</label><input id="apwValue" value="10000000" style="width:100%"></div>
           <div><label>Currency</label><select id="apwCur"><option>EUR</option><option>USD</option><option>GBP</option></select></div>
           <div><label>Declared owner</label><input id="apwOwner" value="Empresa X S.L." style="width:100%"></div>
+          <div style="flex:1 1 100%"><label>Short description</label><input id="apwDesc" value="Open-pit polymetallic project, permitted concession" style="width:100%"></div>
+        </div>
+        <div class="apw-q" style="font-size:14px;margin-top:16px">Evidence <span style="font-size:11px;color:var(--txt3)">· optional, strengthens the record</span></div>
+        <div class="apw-hint">Attach the sources behind your statements. You choose the <b>source</b>; SOST records it and its status (declared until independently checked).</div>
+        <div id="apwEvidence">
+          <div class="apw-grid apw-ev">
+            <div><label>Source</label><select class="apwEvKind"><option value="TECHNICAL_DOCUMENT">Technical report</option><option value="LEGAL_DOCUMENT">Legal document</option><option value="PUBLIC_REGISTRY">Public registry</option><option value="PUBLIC_DATASET">Public dataset</option><option value="THIRD_PARTY_API">URL / reference</option><option value="OTHER">Other</option></select></div>
+            <div style="flex:2 1 260px"><label>Reference / name</label><input class="apwEvRef" value="NI 43-101 technical report #123" style="width:100%"></div>
+          </div>
+          <div class="apw-grid apw-ev">
+            <div><label>Source</label><select class="apwEvKind"><option value="PUBLIC_REGISTRY" selected>Public registry</option><option value="TECHNICAL_DOCUMENT">Technical report</option><option value="LEGAL_DOCUMENT">Legal document</option><option value="PUBLIC_DATASET">Public dataset</option><option value="THIRD_PARTY_API">URL / reference</option><option value="OTHER">Other</option></select></div>
+            <div style="flex:2 1 260px"><label>Reference / name</label><input class="apwEvRef" value="Mining registry concession ES-000123" style="width:100%"></div>
+          </div>
+          <div class="apw-grid apw-ev">
+            <div><label>Source</label><select class="apwEvKind"><option value="TECHNICAL_DOCUMENT">Technical report</option><option value="LEGAL_DOCUMENT">Legal document</option><option value="PUBLIC_REGISTRY">Public registry</option><option value="PUBLIC_DATASET">Public dataset</option><option value="THIRD_PARTY_API">URL / reference</option><option value="OTHER">Other</option></select></div>
+            <div style="flex:2 1 260px"><label>Reference / name</label><input class="apwEvRef" value="" placeholder="(optional third source)" style="width:100%"></div>
+          </div>
         </div>
       </div>
 
@@ -259,6 +279,10 @@
           <div><label>Obligor (who must pay/perform)</label><input id="apwObligor" value="Empresa X S.L." style="width:100%"></div>
           <div><label>Agreement reference</label><input id="apwAgree" value="contract-9" style="width:100%"></div>
           <div><label>Agreement hash (optional)</label><input id="apwAgreeHash" value="" placeholder="sha256 of the signed agreement" style="width:100%"></div>
+          <div><label>Distribution mechanism</label><input id="apwDist" value="Bank transfer" style="width:100%"></div>
+          <div><label>Frequency</label><select id="apwFreq"><option>Quarterly</option><option>Monthly</option><option>Annually</option><option>On event</option><option>Not defined</option></select></div>
+          <div><label>Exit / transfer mechanism</label><input id="apwExit" value="Peer transfer on SOST" style="width:100%"></div>
+          <div><label>Transferability</label><select id="apwTransfer"><option>Freely transferable</option><option>Restricted</option><option>Not transferable</option></select></div>
         </div>
       </div>
 
@@ -276,19 +300,32 @@
           <div><label>Decimals</label><input id="apwDecimals" value="8" style="width:100%"></div>
           <div><label>Reference value / token</label><input id="apwRef" value="—" disabled style="width:100%"></div>
         </div>
-        <div class="note">Reference value is the valuation divided by the supply — it is <b>not</b> a market price and <b>not</b> liquidity.</div>
+        <div class="note"><b>Reference value ≠ market price</b> · <b>valuation ≠ liquidity.</b> Reference value is only the valuation divided by the supply.</div>
+        <div style="margin-top:12px" class="apw-toggle" title="Adds a second, SOST-computed valuation claim (source: SOST calculation), distinct from your declared value">
+          <input type="checkbox" id="apwIntel"> <label for="apwIntel" style="display:inline;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--txt2);cursor:pointer">Add a SOST deterministic estimate (Asset Intelligence) — a ±15% reference band recorded as a separate <b>SOST calculation</b> claim, not an appraisal</label>
+        </div>
       </div>
 
       <!-- STEP 4 -->
       <div class="apw-panel" data-p="4">
-        <div class="apw-q">Transfer &amp; compliance</div>
-        <div class="apw-hint">SOST records the facts. Regulated investor controls are a future module — architecturally prepared, not active.</div>
+        <div class="apw-q">Compliance, settlement &amp; transfer</div>
+        <div class="apw-hint">SOST records facts now; regulated investor controls are a future module — prepared, not active.</div>
+        <div class="comp cyan" style="margin-bottom:12px">
+          <h3 style="font-size:13px">Current — recorded as facts</h3>
+          <div class="apw-grid" style="margin-top:8px">
+            <div><label>Jurisdiction</label><input id="apwJur2" value="" placeholder="(defaults to asset jurisdiction)" style="width:100%"></div>
+            <div><label>Legal verification status</label><input value="NOT DETERMINED BY SOST" disabled style="width:100%"></div>
+            <div><label>Settlement method</label><select id="apwSettle"><option value="SOST">SOST (on-chain transfer)</option><option value="EXTERNAL_DOCUMENTED">External — documented</option></select></div>
+            <div id="apwSettleRefWrap" style="display:none"><label>Settlement reference</label><input id="apwSettleRef" value="" placeholder="off-chain reference / hash" style="width:100%"></div>
+          </div>
+          <div class="note" id="apwCustodyNote" style="display:none">External settlement is only a documented reference — <b>SOST DOES NOT CUSTODY FUNDS</b>. Stablecoin / fiat settlement is a future capability.</div>
+        </div>
         <div class="apw-future">
-          <span class="lbl">Optional · Future regulated mode · NOT ENABLED</span>
+          <span class="lbl">Future regulated mode · NOT IMPLEMENTED</span>
           <div class="apw-toggle"><input type="checkbox" disabled> Identity required for holders</div>
           <div class="apw-toggle"><input type="checkbox" disabled> KYC / AML onboarding</div>
-          <div class="apw-toggle"><input type="checkbox" disabled> Restrict to eligible jurisdictions</div>
-          <div class="apw-toggle"><input type="checkbox" disabled> Transfers only to authorised wallets</div>
+          <div class="apw-toggle"><input type="checkbox" disabled> Investor eligibility · country restrictions · holding limits</div>
+          <div class="apw-toggle"><input type="checkbox" disabled> Transfers only to authorised wallets · freeze / recovery · corporate actions</div>
           <div style="margin-top:8px;color:var(--txt4)">If a declared right may fall under MiCA / MiFID II / securities law, that is for the issuer and their advisers to determine. <b>SOST does not determine legal or regulatory classification.</b></div>
         </div>
       </div>
@@ -859,44 +896,76 @@ async function tkGenPassport(){
   ['apwValue','apwSupply','apwCur'].forEach(function(id){ var e=q(id); if(e){ e.addEventListener('input',recalcRef); e.addEventListener('change',recalcRef); } });
   function prettySource(st){ return ({DECLARING_PARTY:'Asset owner',PUBLIC_REGISTRY:'Public registry',PUBLIC_DATASET:'Public dataset',GEASPIRIT_ANALYSIS:'GeaSpirit analysis',INDEPENDENT_EXPERT:'Independent expert',LABORATORY:'Laboratory',LEGAL_DOCUMENT:'Legal document',TECHNICAL_DOCUMENT:'Technical document',THIRD_PARTY_API:'Third-party API',SOST_CALCULATION:'SOST calculation'})[st]||st||'—'; }
   function prettyVerif(s){ return s==='INDEPENDENTLY_VERIFIED'?'Independently verified':s==='ATTESTED'?'Attested':s==='REJECTED'?'Rejected':s==='CONFLICTING'?'Conflicting':s==='NOT_VERIFIED'?'Not verified':'Declared'; }
-  function gather(){ var cur=q('apwCur').value, rt=picked(q('apwRightOpts'))||'REVENUE_PARTICIPATION'; return { type:picked(q('apwTypeOpts'))||'Other', name:q('apwName').value.trim(), jur:q('apwJur').value.trim(), value:Math.max(0,Math.round(tkNum(q('apwValue').value))), cur:cur, owner:q('apwOwner').value.trim(), right:rt, econ:ECON(rt), pct:q('apwPct').value.trim(), obligor:q('apwObligor').value.trim(), agree:q('apwAgree').value.trim(), agreeHash:q('apwAgreeHash').value.trim(), supply:Math.max(1,Math.round(tkNum(q('apwSupply').value))), decimals:Math.round(tkNum(q('apwDecimals').value)) }; }
+  function gatherEvidence(){ var ev=[]; document.querySelectorAll('#apwEvidence .apw-ev').forEach(function(row){ var k=row.querySelector('.apwEvKind'), r=row.querySelector('.apwEvRef'); var ref=(r&&r.value||'').trim(); if(ref) ev.push({kind:k?k.value:'OTHER', ref:ref}); }); return ev; }
+  function gather(){ var cur=q('apwCur').value, rt=picked(q('apwRightOpts'))||'REVENUE_PARTICIPATION'; return {
+    type:picked(q('apwTypeOpts'))||'Other', name:q('apwName').value.trim(), jur:q('apwJur').value.trim(), desc:(q('apwDesc')&&q('apwDesc').value.trim())||'',
+    value:Math.max(0,Math.round(tkNum(q('apwValue').value))), cur:cur, owner:q('apwOwner').value.trim(), evidence:gatherEvidence(),
+    right:rt, econ:ECON(rt), pct:q('apwPct').value.trim(), obligor:q('apwObligor').value.trim(), agree:q('apwAgree').value.trim(), agreeHash:q('apwAgreeHash').value.trim(),
+    dist:(q('apwDist')&&q('apwDist').value.trim())||'', freq:(q('apwFreq')&&q('apwFreq').value)||'', exit:(q('apwExit')&&q('apwExit').value.trim())||'', transfer:(q('apwTransfer')&&q('apwTransfer').value)||'',
+    supply:Math.max(1,Math.round(tkNum(q('apwSupply').value))), decimals:Math.round(tkNum(q('apwDecimals').value)), intel:!!(q('apwIntel')&&q('apwIntel').checked),
+    settle:(q('apwSettle')&&q('apwSettle').value)||'SOST', settleRef:(q('apwSettleRef')&&q('apwSettleRef').value.trim())||'', jur2:(q('apwJur2')&&q('apwJur2').value.trim())||'' }; }
   function renderReview(){ var d=gather(); recalcRef(); var ref=d.value>0&&d.supply>0?(d.value/d.supply):0;
-    q('apwReview').innerHTML='<h4>'+(d.name||'Asset')+'</h4>'
+    var tier='<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:2px 0 12px;font-size:12px">'
+      +'<span class="chip" style="border-color:var(--green);color:#7ee2a8">ASSET · '+(d.name||'—')+'</span><span style="color:var(--txt4)">→</span>'
+      +'<span class="chip">RIGHT · '+(d.right.replace(/_/g,' ').toLowerCase())+(d.econ?(' '+d.pct+'%'):'')+'</span><span style="color:var(--txt4)">→</span>'
+      +'<span class="chip" style="border-color:var(--gold);color:var(--gold2)">TOKEN · '+d.supply.toLocaleString()+' units</span></div>';
+    q('apwReview').innerHTML='<h4>'+(d.name||'Asset')+'</h4>'+tier
       +'<div class="kv"><span class="k">Asset type</span><span class="v">'+d.type+' · '+(d.jur||'—')+'</span></div>'
       +'<div class="kv"><span class="k">Estimated value</span><span class="v">'+d.cur+' '+d.value.toLocaleString()+' <span class="apw-src">· source: Asset owner · DECLARED</span></span></div>'
+      +'<div class="kv"><span class="k">Evidence</span><span class="v">'+(d.evidence.length||0)+' source'+(d.evidence.length===1?'':'s')+(d.intel?' · + SOST estimate':'')+'</span></div>'
       +'<div class="kv"><span class="k">Token represents</span><span class="v">'+(d.right.replace(/_/g,' ').toLowerCase())+(d.econ?(' · '+d.pct+'%'):'')+'</span></div>'
-      +(d.econ?('<div class="kv"><span class="k">Obligor</span><span class="v">'+(d.obligor||'—')+'</span></div><div class="kv"><span class="k">Agreement</span><span class="v">'+((d.agree||d.agreeHash)?'Attached':'—')+'</span></div>'):'')
+      +(d.econ?('<div class="kv"><span class="k">Obligor</span><span class="v">'+(d.obligor||'—')+'</span></div><div class="kv"><span class="k">Agreement</span><span class="v">'+((d.agree||d.agreeHash)?'Attached':'—')+'</span></div><div class="kv"><span class="k">Transferability</span><span class="v">'+(d.transfer||'—')+'</span></div>'):'')
       +'<div class="kv"><span class="k">Token supply</span><span class="v">'+d.supply.toLocaleString()+' · ref '+d.cur+' '+(ref<1?ref.toFixed(4):ref.toFixed(2))+'/token</span></div>'
-      +'<div class="kv"><span class="k">Compliance</span><span class="v" style="color:var(--txt3)">Regulated controls NOT ENABLED (future)</span></div>'
+      +'<div class="kv"><span class="k">Settlement</span><span class="v">'+(d.settle==='SOST'?'SOST (on-chain)':'External — documented (SOST does not custody funds)')+'</span></div>'
+      +'<div class="kv"><span class="k">Independent verification</span><span class="v" style="color:var(--txt3)">Not yet</span></div>'
+      +'<div class="kv"><span class="k">Liquidity</span><span class="v" style="color:var(--txt3)">Not verified</span></div>'
       +'<div class="kv"><span class="k">Legal classification</span><span class="v" style="color:var(--txt3)">NOT DETERMINED BY SOST</span></div>'; }
   window.apwGenerate=async function(){ var out=q('apwOut'); var AP2=window.SOSTAssetPassportV2; if(!AP2){ out.innerHTML='<div class="note">module not loaded</div>'; return; } var d=gather();
     try{
       var claims=[
-        {id:'identity',class:'IDENTITY',value:{name:d.name,asset_type:d.type,jurisdiction:d.jur},provenance:{source_type:'DECLARING_PARTY',source_name:d.owner||'Asset owner'},verification:{status:'DECLARED'}},
+        {id:'identity',class:'IDENTITY',value:{name:d.name,asset_type:d.type,jurisdiction:d.jur,description:d.desc||null},provenance:{source_type:'DECLARING_PARTY',source_name:d.owner||'Asset owner'},verification:{status:'DECLARED'}},
         {id:'owner',class:'OWNERSHIP_DECLARATION',value:{declaration:(d.owner||'Owner')+' declares title'},provenance:{source_type:'DECLARING_PARTY',source_name:d.owner},verification:{status:'DECLARED'}},
-        AP2.valuationClaim({amount:String(d.value),currency:d.cur,provenance:{source_type:'DECLARING_PARTY',source_name:d.owner||'Asset owner'},verification:'DECLARED'}),
-        AP2.rightClaim({right_type:d.right,description:d.econ?(d.pct+'% participation'):null,economic_rights_declared:d.econ,obligor:d.econ?d.obligor:null,agreement_reference:d.agree||null,agreement_hash:d.agreeHash||null,token_supply:String(d.supply),token_decimals:d.decimals,jurisdiction:d.jur||null,provenance:{source_type:'DECLARING_PARTY',source_name:d.owner},verification:'DECLARED'}),
-        AP2.settlementClaim({settlement_type:'SOST',provenance:{source_type:'DECLARING_PARTY'}})
+        AP2.valuationClaim({id:'valuation-owner',amount:String(d.value),currency:d.cur,provenance:{source_type:'DECLARING_PARTY',source_name:d.owner||'Asset owner'},verification:'DECLARED'}),
+        AP2.rightClaim({right_type:d.right,description:d.econ?(d.pct+'% participation'):null,economic_rights_declared:d.econ,obligor:d.econ?d.obligor:null,agreement_reference:d.agree||null,agreement_hash:d.agreeHash||null,distribution_mechanism:d.econ?(d.dist||null):null,distribution_frequency:d.econ?(d.freq||null):null,exit_mechanism:d.econ?(d.exit||null):null,transferability:d.transfer||null,token_supply:String(d.supply),token_decimals:d.decimals,jurisdiction:(d.jur2||d.jur)||null,provenance:{source_type:'DECLARING_PARTY',source_name:d.owner},verification:'DECLARED'}),
+        AP2.settlementClaim({settlement_type:d.settle,reference:d.settle==='EXTERNAL_DOCUMENTED'?(d.settleRef||null):null,provenance:{source_type:'DECLARING_PARTY'}})
       ];
+      // evidence -> DOCUMENT claims, each with its own source (provenance)
+      d.evidence.forEach(function(e,i){ claims.push({id:'evidence-'+(i+1),class:'DOCUMENT',value:{reference:e.ref},provenance:{source_type:e.kind,source_name:e.ref},verification:{status:'DECLARED'}}); });
+      // optional SOST deterministic estimate -> a separate VALUATION claim (SOST calculation)
+      if(d.intel && d.value>0){ var lo=Math.round(d.value*0.85), hi=Math.round(d.value*1.15);
+        claims.push(AP2.intelligenceToValuationClaim({amount:d.value,low:lo,high:hi,currency:d.cur,confidence:0.6,methodology:'SOST deterministic reference band (±15% around declared value) — informational, not an appraisal'},{id:'valuation-sost'})); }
       var p=await AP2.buildPassport({issuer:'sost1'+(d.owner||'issuer').replace(/[^a-zA-Z0-9]/g,'').slice(0,10),nonce:'0',category:d.type,locator:'',claims:claims});
       var r=p.rollup, cap=AP2.capsuleDocRef(p); var ref=d.value>0&&d.supply>0?(d.value/d.supply):0;
       var lh=AP2.liquidityHonesty({valuation:String(d.value),reference_price_per_token:ref,currency:d.cur});
       var yn=function(b){return b?'<span class="st on" style="font-size:10px">YES</span>':'<span class="st off" style="font-size:10px">NO</span>';};
       var verifiedCount=r.by_status.INDEPENDENTLY_VERIFIED||0, declaredCount=r.by_status.DECLARED||0;
+      var evCount=d.evidence.length, valCount=(r.by_class.VALUATION||0);
+      // lifecycle: only light a stage when it is really true
+      var life=[['REGISTERED',true],['DOCUMENTED',evCount>0],['CLAIMED',true],['VERIFIED',verifiedCount>0],['ANCHORED',false]];
+      var lifeHtml='<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 4px;font-size:10.5px;letter-spacing:.5px">'
+        +life.map(function(s,i){return (i?'<span style="color:var(--txt4)">→</span>':'')+'<span class="st '+(s[1]?'on':'off')+'" style="font-size:10px">'+s[0]+(s[0]==='ANCHORED'?' (ready)':'')+'</span>';}).join('')+'</div>';
+      // coverage: status/presence, NOT a score
+      var cov=[['Identity','present','on'],['Ownership',declaredCount?'declared':'—',declaredCount?'warn':'off'],['Valuation',valCount+' source'+(valCount===1?'':'s'),'on'],['Rights',r.agreement_attached?'agreement attached':(r.economic_rights_declared?'declared':'—'),r.agreement_attached?'on':'warn'],['Evidence',evCount+' hashed/ref','on'],['Independent verification',verifiedCount?(verifiedCount+' claims'):'none yet',verifiedCount?'on':'off']];
+      var covHtml='<div class="tk-sub" style="margin:12px 0 4px">Verification coverage — status, not a score:</div>'
+        +cov.map(function(c){return '<div class="kv"><span class="k">'+c[0]+'</span><span class="v"><span class="st '+c[2]+'" style="font-size:10px">'+c[1]+'</span></span></div>';}).join('');
       var claimRows=p.manifest.claims.map(function(c){ return '<div class="kv"><span class="k">'+c.class.replace(/_/g,' ')+(c.subtype?(' · '+c.subtype.replace(/_/g,' ').toLowerCase()):'')+'</span><span class="v">'+prettySource(c.provenance&&c.provenance.source_type)+' · '+prettyVerif(c.verification&&c.verification.status)+'</span></div>'; }).join('');
       out.innerHTML='<div class="apw-dash"><h4>'+(d.name||'Asset')+' — Asset Passport</h4>'
         +'<div class="apw-pid">'+p.manifest.assetId+'</div>'
+        + lifeHtml
         +'<div class="kv"><span class="k">Passport integrity</span><span class="v"><span class="st on" style="font-size:10px">VERIFIED ✓</span></span></div>'
         +'<div class="kv"><span class="k">Canonical hash</span><span class="v">generated ✓</span></div>'
         +'<div class="kv"><span class="k">Claims</span><span class="v">'+r.total+' total · '+declaredCount+' declared · '+verifiedCount+' independently verified</span></div>'
+        +'<div class="kv"><span class="k">Evidence sources</span><span class="v">'+evCount+'</span></div>'
         +'<div class="kv"><span class="k">Economic rights declared</span><span class="v">'+yn(r.economic_rights_declared)+'</span></div>'
         +'<div class="kv"><span class="k">Obligor identified</span><span class="v">'+yn(r.obligor_identified)+'</span></div>'
         +'<div class="kv"><span class="k">Agreement attached</span><span class="v">'+yn(r.agreement_attached)+'</span></div>'
-        +'<div class="kv"><span class="k">Estimated value</span><span class="v">'+d.cur+' '+d.value.toLocaleString()+'</span></div>'
+        +'<div class="kv"><span class="k">Estimated value</span><span class="v">'+d.cur+' '+d.value.toLocaleString()+(d.intel?' <span class="apw-src">· + SOST estimate '+d.cur+' '+Math.round(d.value*0.85).toLocaleString()+'–'+Math.round(d.value*1.15).toLocaleString()+'</span>':'')+'</span></div>'
+        +'<div class="kv"><span class="k">Settlement</span><span class="v">'+(d.settle==='SOST'?'SOST':'External — documented')+'</span></div>'
         +'<div class="kv"><span class="k">Executable liquidity</span><span class="v"><span class="st warn" style="font-size:10px">NOT VERIFIED</span></span></div>'
         +'<div class="kv"><span class="k">Market depth</span><span class="v" style="color:var(--txt3)">NONE OBSERVED</span></div>'
         +'<div class="kv"><span class="k">Legal classification</span><span class="v" style="color:var(--txt3)">NOT DETERMINED BY SOST</span></div>'
         +'<div class="kv"><span class="k">SOST anchor (doc_ref)</span><span class="v">'+(cap.ok?('READY · '+cap.bytes+'/'+cap.max+'B'):'—')+' · <span style="color:var(--amber)">mainnet pending</span></span></div>'
+        + covHtml
         +'<details style="margin-top:12px"><summary style="cursor:pointer;color:var(--cyan);font-size:11px;letter-spacing:.5px">View technical details</summary>'
           +'<div class="kv" style="margin-top:8px"><span class="k">manifestHash</span><span class="v" style="word-break:break-all">'+p.manifestHash+'</span></div>'
           +'<div class="tk-sub" style="margin:8px 0 4px">Claims — what / who says it / verification:</div>'+claimRows
@@ -906,6 +975,12 @@ async function tkGenPassport(){
       out.scrollIntoView({behavior:'smooth',block:'nearest'});
     }catch(e){ out.innerHTML='<div class="note">error: '+(e&&e.message||e)+'</div>'; }
   };
+  // settlement method: reveal reference + no-custody note only for external
+  (function(){ var s=q('apwSettle'); if(s){ var upd=function(){ var ext=s.value==='EXTERNAL_DOCUMENTED'; var w=q('apwSettleRefWrap'), n=q('apwCustodyNote'); if(w) w.style.display=ext?'':'none'; if(n) n.style.display=ext?'':'none'; }; s.addEventListener('change',upd); upd(); } })();
+  // default step-4 jurisdiction to the asset jurisdiction
+  (function(){ var j2=q('apwJur2'); if(j2 && !j2.value) j2.placeholder='(defaults to '+ (q('apwJur').value||'asset jurisdiction') +')'; })();
+  // View example: the wizard is pre-filled with the Sierra X DEMO; jump to review
+  window.apwExample=function(){ showStep(5); var rv=q('apwReview'); if(rv){ rv.insertAdjacentHTML('afterbegin','<div class="note" style="margin:0 0 8px;color:var(--amber)">DEMO / EXAMPLE — fictional asset, not a real offering.</div>'); } };
   recalcRef();
 })();
 </script>
