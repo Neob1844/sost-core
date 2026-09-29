@@ -99,3 +99,23 @@ MiFID II/securities law, note it prudently; do not resolve the classification au
 GeaSpirit (discovery/intelligence) → deep-link/JSON hand-off → SOST Asset Registry. Data crossing the
 boundary becomes claims with `provenance.source_type = GEASPIRIT_ANALYSIS`. NO GeaSpirit code imported
 into SOST or vice-versa; NO runtime dependency; NO custody/tokenization inside GeaSpirit.
+
+## Implementation status & reproducible contract (2026-09-29)
+Module `website/js/asset-passport-v2.js` (UMD, `window.SOSTAssetPassportV2`) exports: `buildPassport`,
+`verify`, `rollup`, `validateClaim`, `canon`, `strip`, `sha256Hex`, `assetId`, `valuationClaim`,
+`rightClaim`, `settlementClaim`, `intelligenceToValuationClaim` (Asset Intelligence → provenance-carrying
+VALUATION claim; confidence 0..1 → 0..100), `liquidityHonesty` (five distinct concepts + SOST scenarios),
+`normalizeV1ToClaims`, `capsuleDocRef`.
+
+The canonicalization contract is pinned by `tests/fixtures/canon_vectors.json` (12 named cases —
+ordering, unicode keys/strings, optional-null strip, integers, money strings, arrays, empty array,
+ISO-8601 timestamps, edge special string — plus a claim-ordering vector and a full manifest vector).
+For every case, `canon(input)` MUST equal `canon_expected` and `sha256Hex(canon_expected)` MUST equal
+`sha256_expected`; any external implementation reproducing these verifies `manifestHash` byte-for-byte.
+Suite `tests/asset_passport_v2.test.js`: **77/77 pass** (`node tests/asset_passport_v2.test.js`), including
+v1 byte-exact compatibility, v2 determinism, tamper detection, roll-up, settlement, intel adapter,
+liquidity honesty and the vectors contract.
+
+The Studio → Passport wire and this human-readable Registry layer are live on
+`website/sost-universal-assets.html` (`#registry`). On-chain anchor is anchor-ready and DEVNET-verified;
+mainnet anchoring remains a future, authorised step and is never labelled MAINNET LIVE until demonstrated.
