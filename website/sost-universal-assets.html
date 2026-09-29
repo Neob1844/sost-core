@@ -120,31 +120,31 @@
   <section class="blk" id="hub">
     <div class="eyebrow">Tokenization &amp; Offers &middot; one Passport, four ways to offer it</div>
     <h2>What do you want to <span class="g">do</span>?</h2>
-    <div class="sub">Every path starts from the same verifiable <b>Asset (or Project) Passport</b>. Tokenize is a live registry product today. Auction, Draw and Project Funding are engine-complete and mainnet-ready, with public real-money execution held behind a <b>regulatory gate</b> until legal authorization — nothing here changes SOST supply or consensus.</div>
+    <div class="sub">Every path starts from the same verifiable <b>Asset (or Project) Passport</b>. Tokenize is a live registry product today (mainnet anchor pending verification). Auction, Draw and Project Funding are <b>engine-complete and lab-verified</b>; mainnet execution stays <b>gated</b> until the server-side regulatory gate and transaction-path E2E are proven — nothing here changes SOST supply or consensus.</div>
     <div class="hub-grid">
       <a class="hub-card" href="#create">
         <div class="hub-t">Tokenize</div>
         <div class="hub-d">Divide a right into units.</div>
-        <span class="hub-b live">Registry / Passport &middot; mainnet-capable</span>
-        <span class="hub-n">Native token issuance — future protocol module</span>
+        <span class="hub-b live">CURRENT &middot; Live registry</span>
+        <span class="hub-n">Mainnet anchor: pending verification &middot; native tokens: future</span>
       </a>
-      <a class="hub-card" href="#offer">
+      <a class="hub-card" href="#auction">
         <div class="hub-t">Auction</div>
         <div class="hub-d">Sell to the highest valid bidder.</div>
-        <span class="hub-b gate">Engine complete &middot; mainnet-ready</span>
-        <span class="hub-n">Regulatory gate closed</span>
+        <span class="hub-b gate">Engine complete &middot; lab verified</span>
+        <span class="hub-n">Mainnet execution: gated</span>
       </a>
       <a class="hub-card" href="#offer">
         <div class="hub-t">Draw</div>
         <div class="hub-d">Allocate an asset through a verifiable draw.</div>
-        <span class="hub-b gate">Engine complete &middot; mainnet-ready</span>
-        <span class="hub-n">Regulatory gate closed</span>
+        <span class="hub-b gate">Engine complete &middot; lab verified</span>
+        <span class="hub-n">Mainnet execution: gated</span>
       </a>
       <a class="hub-card" href="#offer">
         <div class="hub-t">Project Funding</div>
         <div class="hub-d">Fund something that will be built.</div>
-        <span class="hub-b gate">Engine complete &middot; mainnet-ready</span>
-        <span class="hub-n">Regulatory gate closed</span>
+        <span class="hub-b gate">Engine complete &middot; lab verified</span>
+        <span class="hub-n">Mainnet execution: gated</span>
       </a>
     </div>
   </section>
@@ -451,7 +451,7 @@
 
   <section class="blk">
     <h2>What is <span class="r">live today</span></h2>
-    <div class="sub">Tokenize · Auction · Draw · Project Funding — one Asset (or Project) Passport, four ways to offer it. Below is exactly what works now, what is engine-complete/mainnet-ready behind a regulatory gate, and what is a future protocol module. Nothing here changes SOST supply or consensus.</div>
+    <div class="sub">Tokenize · Auction · Draw · Project Funding — one Asset (or Project) Passport, four ways to offer it. Below is exactly what works now, what is engine-complete/lab-verified behind a gated mainnet path, and what is a future protocol module. Nothing here changes SOST supply or consensus.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:8px">
 
       <div style="border:1px solid var(--border2);border-radius:14px;background:linear-gradient(180deg,rgba(37,194,110,.06),transparent 60%);padding:18px 18px 16px">
@@ -715,6 +715,59 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
   </section>
 
   <!-- ============ HOW SOST TOKENIZATION WORKS ============ -->
+  <!-- ============ AUCTION DASHBOARD (slice A) ============ -->
+  <section class="blk" id="auction">
+    <style>
+    #auction-dash .od-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px}
+    #auction-dash .od-run{background:var(--gold);color:#1a1204;border:none;border-radius:9px;padding:9px 18px;font-weight:800;cursor:pointer;font-size:.86rem}
+    #auction-dash .od-run:disabled{opacity:.6;cursor:default}
+    #auction-dash .od-modes{font-size:.82rem;color:var(--txt2);display:flex;align-items:center;gap:6px}
+    #auction-dash .od-gatepill{margin-left:auto;font-size:.7rem;font-weight:800;letter-spacing:.06em;color:#e6b34d;border:1px solid #8a6a1e;border-radius:999px;padding:3px 10px;background:rgba(218,165,32,.08)}
+    #auction-dash .od-empty{color:var(--txt3);font-size:.9rem;border:1px dashed var(--border2);border-radius:10px;padding:18px}
+    #auction-dash .od-head{margin-bottom:8px}
+    #auction-dash .od-title{font-size:1.15rem;font-weight:800;color:var(--gold);display:flex;align-items:center;gap:10px}
+    #auction-dash .od-sub{color:var(--txt2);font-size:.86rem;margin-top:2px}
+    #auction-dash .od-state{font-size:.66rem;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:999px;border:1px solid}
+    #auction-dash .od-state.d{color:var(--txt3);border-color:var(--border2)} .od-state.o{color:#7fb3ff;border-color:#365}
+    #auction-dash .od-state.g{color:#7ee2a8;border-color:var(--green)} .od-state.w{color:#e6b34d;border-color:#8a6a1e}
+    #auction-dash .od-steps{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:10px 0 14px;font-size:.72rem}
+    #auction-dash .od-step{padding:4px 9px;border-radius:999px;border:1px solid var(--border2);color:var(--txt3)}
+    #auction-dash .od-step.done{color:#7ee2a8;border-color:var(--green)} .od-step.now{color:#1a1204;background:var(--gold);border-color:var(--gold);font-weight:800}
+    #auction-dash .od-steps i{color:var(--txt4);font-style:normal}
+    #auction-dash .od-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 14px}
+    @media(max-width:820px){#auction-dash .od-metrics{grid-template-columns:repeat(2,1fr)}}
+    #auction-dash .od-metric{border:1px solid var(--border2);border-radius:9px;padding:9px 11px;background:var(--card2)}
+    #auction-dash .od-ml{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--txt4)}
+    #auction-dash .od-mv{font-size:1rem;color:var(--txt);font-weight:700;margin-top:2px}
+    #auction-dash .od-ms{font-size:.68rem;color:var(--txt3)}
+    #auction-dash .od-block{margin-top:14px} .od-block h4{color:var(--gold2);font-size:.9rem;margin:0 0 7px}
+    #auction-dash .od-mini{font-size:.7rem;color:var(--txt4);font-weight:400;letter-spacing:0}
+    #auction-dash .od-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
+    #auction-dash table.od-tbl{border-collapse:collapse;width:100%;font-size:.8rem;min-width:360px}
+    #auction-dash .od-tbl th,.od-tbl td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--border)}
+    #auction-dash .od-tbl th{color:var(--txt3);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
+    #auction-dash .od-hash{font-family:var(--mono,monospace);color:var(--txt3);font-size:.72rem}
+    #auction-dash .od-events{display:flex;flex-wrap:wrap;gap:5px}
+    #auction-dash .od-ev{font-size:.7rem;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--txt2)} .od-ev i{color:var(--txt4);font-style:normal;margin-left:3px}
+    #auction-dash .od-two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+    @media(max-width:760px){#auction-dash .od-two{grid-template-columns:1fr}}
+    #auction-dash .od-legal,.od-gate{border:1px solid var(--border2);border-radius:10px;padding:11px 13px}
+    #auction-dash .od-gate{border-color:#8a6a1e;background:rgba(218,165,32,.05)}
+    #auction-dash .od-legal h4,.od-gate h4{margin:0 0 6px}
+    #auction-dash .od-legal ul{margin:0;padding-left:16px;font-size:.8rem;color:var(--txt2);line-height:1.5}
+    #auction-dash .od-gaterow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    #auction-dash .od-glabel{font-family:var(--mono,monospace);font-size:.76rem;color:var(--txt2)}
+    #auction-dash .od-gval.off{font-size:.68rem;font-weight:800;color:#e6b34d}
+    #auction-dash .od-raw{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:.68rem;color:var(--txt3);max-height:280px;overflow:auto;white-space:pre}
+    #auction-dash .od-adv-only{display:none}
+    #auction-dash.od-advanced .od-adv-only{display:block}
+    </style>
+    <div class="eyebrow">Auction &middot; engine complete &middot; lab verified &middot; execution gated</div>
+    <h2>Auction <span class="g">dashboard</span></h2>
+    <div class="sub">Sell an Asset Passport to the highest valid bidder. Signed bids, refundable escrow, reserve, anti-sniping and settlement — the full state machine on the lab-verified engine. Toggle <b>Advanced</b> for signed-bid digests, escrow states and raw state. <b>Real funds are disabled</b> behind the regulatory gate.</div>
+    <div id="auction-dash">Loading auction dashboard…</div>
+  </section>
+
   <section class="blk" id="how">
     <div class="eyebrow">How it works</div>
     <h2>How SOST <span class="g">tokenization</span> works</h2>
@@ -907,6 +960,7 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
 <script src="js/asset-auction.js"></script>
 <script src="js/asset-draw.js"></script>
 <script src="js/project-funding.js"></script>
+<script src="js/offer-dashboards.js"></script>
 <script>
 "use strict";
 var AP=window.SOSTAssetPassport, AI=window.SOSTAssetIntelligence, AF=window.SOSTAssetFinance;
