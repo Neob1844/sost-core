@@ -264,6 +264,28 @@
       <div class="note">The SOST price is an <b>illustrative assumption you type in</b> — it is <b>not</b> a live market quote and SOST is not yet listed. The valuation figures are a deterministic demo, not a professional appraisal. No tokens are created and no order is placed.</div>
     </div>
 
+    <!-- ============ ASSET REGISTRY — Passport v2 (Claims + Provenance) ============ -->
+    <h3 style="font-family:var(--sans);font-size:15px;margin:30px 0 4px;color:var(--txt)">SOST Asset Registry &mdash; generate a <span class="g">Passport (v2)</span> <span style="font-size:11px;color:var(--amber);letter-spacing:1px">· CURRENT PRODUCT</span></h3>
+    <div class="sub">Turns the Studio into a real <b>Asset Passport v2</b>: a set of typed <b>claims</b> (valuation, right, ownership) each carrying its own provenance + verification status, canonicalized to a deterministic <code>manifestHash</code> ready to anchor on SOST. It records <b>facts</b> — it never classifies the token legally.</div>
+    <div class="demo">
+      <div class="row">
+        <div><label>Right represented by each token</label><select id="rgClass">
+          <option value="CERTIFICATE">Certificate / record (no economic right)</option>
+          <option value="USAGE_RIGHT">Usage right</option>
+          <option value="REVENUE_PARTICIPATION" selected>Revenue participation</option>
+          <option value="SALE_PROCEEDS_PARTICIPATION">Sale-proceeds participation</option>
+          <option value="OWNERSHIP_OR_EQUITY_LIKE">Ownership / equity-like</option>
+          <option value="CUSTOM">Custom / other</option>
+        </select></div>
+        <div id="rgObligorWrap" style="flex:1 1 180px"><label>Obligor (who must pay/perform)</label><input id="rgObligor" value="Empresa X S.L." style="width:100%"></div>
+        <div style="flex:1 1 160px"><label>Agreement ref (optional)</label><input id="rgAgree" value="contract-9" style="width:100%"></div>
+        <div><label>Owner declared by</label><input id="rgOwner" value="Empresa X S.L." style="width:150px"></div>
+        <button class="run gold" onclick="tkGenPassport()">Generate Passport v2</button>
+      </div>
+      <div class="tk-card" id="rgOut" style="border-top-color:var(--gold);margin-top:14px"></div>
+      <div class="note">Facts only. <b>SOST does not determine the legal or regulatory classification</b> of the asset or token. Declaration ≠ legal title · on-chain anchor ≠ truth of the claim · token ≠ ownership unless legally constituted · valuation ≠ market price · tokenization ≠ investment offer. If a declared right may fall under MiCA / MiFID II / securities law, that is for the issuer and their advisers to determine.</div>
+    </div>
+
     <h3 style="font-family:var(--sans);font-size:15px;margin:26px 0 8px;color:var(--txt)">Worked example</h3>
     <div class="comp" style="border-top-color:var(--cyan)">
       <p style="font-size:12.5px;color:var(--txt2);line-height:1.8">
@@ -347,6 +369,7 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
 </footer>
 
 <script src="js/asset-passport.js"></script>
+<script src="js/asset-passport-v2.js"></script>
 <script src="js/asset-intelligence.js"></script>
 <script src="js/asset-finance.js"></script>
 <script>
@@ -467,6 +490,56 @@ function tkRun(){
   ['tkVal','tkCur','tkEv','tkSost','tkCustom'].forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener('input',tkRun); });
   if(document.getElementById('tkVal')) tkRun();
 })();
+
+/* ===== SOST Asset Registry — Studio -> Asset Passport v2 (Claims + Provenance) ===== */
+async function tkGenPassport(){
+  var out=document.getElementById('rgOut'); if(!out) return;
+  var AP2=(typeof window!=='undefined'&&window.SOSTAssetPassportV2)?window.SOSTAssetPassportV2:null;
+  if(!AP2){ out.innerHTML='<h4>Passport v2</h4><div class="tk-sub">module not loaded</div>'; return; }
+  var cur=(document.getElementById('tkCur')||{}).value||'€';
+  var V=tkNum((document.getElementById('tkVal')||{}).value);
+  var rc=(document.getElementById('rgClass')||{}).value||'REVENUE_PARTICIPATION';
+  var obligor=((document.getElementById('rgObligor')||{}).value||'').trim();
+  var agree=((document.getElementById('rgAgree')||{}).value||'').trim();
+  var owner=((document.getElementById('rgOwner')||{}).value||'').trim();
+  var econ=(rc==='REVENUE_PARTICIPATION'||rc==='SALE_PROCEEDS_PARTICIPATION'||rc==='OWNERSHIP_OR_EQUITY_LIKE');
+  var curCode={'€':'EUR','$':'USD','£':'GBP'}[cur]||'EUR';
+  try{
+    var claims=[
+      AP2.valuationClaim({amount:String(Math.round(V)),currency:curCode,confidence:78,
+        provenance:{source_type:'SOST_CALCULATION',source_name:'Tokenization Studio'},verification:'DECLARED'}),
+      AP2.rightClaim({right_type:rc, economic_rights_declared:econ,
+        obligor:econ?obligor:null, agreement_reference:agree||null,
+        provenance:{source_type:'DECLARING_PARTY'}, verification:'DECLARED'})
+    ];
+    if(owner) claims.push({id:'owner',class:'OWNERSHIP_DECLARATION',
+      value:{declaration:owner+' declares title'},provenance:{source_type:'DECLARING_PARTY'},
+      verification:{status:'DECLARED'}});
+    var p=await AP2.buildPassport({issuer:'sost1studioIssuer',nonce:'0',category:'machinery',
+      locator:'ipfs://Qm-studio-demo',claims:claims});
+    var r=p.rollup, cap=AP2.capsuleDocRef(p);
+    var yn=function(b){return b?'<span class="st on" style="font-size:10px">YES</span>':'<span class="st off" style="font-size:10px">NO</span>';};
+    var claimRows=p.manifest.claims.map(function(c){
+      var src=(c.provenance&&c.provenance.source_type)||'—';
+      var st=(c.verification&&c.verification.status)||'NOT_VERIFIED';
+      return '<div class="kv"><span class="k">'+c.class+(c.subtype?(' · '+c.subtype):'')+'</span>'
+        +'<span class="v">src: '+src+' · '+st+'</span></div>';
+    }).join('');
+    out.innerHTML='<h4>Asset Passport v2 &mdash; generated</h4>'
+      +'<div class="kv"><span class="k">manifestHash (canonical, anchorable)</span><span class="v" style="word-break:break-all">'+p.manifestHash+'</span></div>'
+      +'<div class="kv"><span class="k">Economic rights declared</span><span class="v">'+yn(r.economic_rights_declared)+'</span></div>'
+      +'<div class="kv"><span class="k">Obligor identified</span><span class="v">'+yn(r.obligor_identified)+'</span></div>'
+      +'<div class="kv"><span class="k">Agreement attached</span><span class="v">'+yn(r.agreement_attached)+'</span></div>'
+      +'<div class="kv"><span class="k">Independent legal title verified</span><span class="v">'+yn(r.legal_title_verified)+'</span></div>'
+      +'<div class="kv"><span class="k">Legal classification</span><span class="v" style="color:var(--txt3)">'+r.legal_classification+'</span></div>'
+      +'<div class="kv"><span class="k">On-chain anchor (doc_ref)</span><span class="v">'+(cap.ok?('READY · '+cap.bytes+'/'+cap.max+'B ✓'):('too big: '+cap.error))+'</span></div>'
+      +'<div class="tk-sub" style="margin-top:10px">Claims ('+r.total+') — what / who says it / verification:</div>'+claimRows;
+  }catch(e){ out.innerHTML='<h4>Passport v2</h4><div class="tk-sub">error: '+(e&&e.message||e)+'</div>'; }
+}
+(function(){var s=document.getElementById('rgClass'); if(s){ s.addEventListener('change',function(){
+  var econ=(s.value==='REVENUE_PARTICIPATION'||s.value==='SALE_PROCEEDS_PARTICIPATION'||s.value==='OWNERSHIP_OR_EQUITY_LIKE');
+  var w=document.getElementById('rgObligorWrap'); if(w) w.style.opacity=econ?'1':'0.45';
+});}})();
 </script>
 </body>
 </html>
