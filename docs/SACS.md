@@ -74,3 +74,12 @@ pre-existing `build-sacs` binary, not a build of the current source. Rebuilt dev
 REORG_LIMIT reject → **persistent split even with more valid work**, restart-stable. This confirms the original
 `SACS_500BLOCK_FINDING` analysis. Mainnet keeps MAX_REORG_DEPTH=500 (unchanged); SACS V1 only DETECTS/ALERTS
 (DEEP_REORG_ALERT). Making the cap advisory (recovery-mode) is the devnet-only deep-reorg research, post-fork.
+
+## Reproducibility A/B — 2026-09-29
+Two independent clean builds at the SAME canonical path (`SOST_ENABLE_PHASE2_SBPOW=ON, TESTNET_FORKS=OFF`,
+Release) → **identical SHA `f9bd667d80291e27b3227906e30d471a6069f23e255ff33f3ccf0bbc0f838222`** → **REPRODUCIBLE = PASS**.
+Note: the binary embeds the absolute build-directory path, so a build at a *different* dir name yields a
+different SHA (only the embedded path cascades; no `__DATE__`/`__TIME__` in source). Therefore the official
+RC SHA MUST be pinned to a canonical build path (release convention: build dir named `build/`), and ideally
+hardened with `-ffile-prefix-map=`/`-fdebug-prefix-map=` for path-independent reproducibility. Prior SHAs are
+path artifacts: `7632211a…` (build-mainnet-sacs), `fcab8570…` (build-repro-b), `f9bd667d…` (build-canon x2).
