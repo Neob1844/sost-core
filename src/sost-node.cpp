@@ -764,13 +764,49 @@ static std::string capsule_summary_json(const std::vector<uint8_t>& payload) {
     }
     // sealed-* types intentionally do not extract any text — body is opaque.
 
+    // doc_ref (public, type 0x03): expose file_hash / manifest_hash / locator so the
+    // Asset Passport on-chain round-trip can read the anchored hash straight from the
+    // node RPC (no client-side payload parsing). Body layout @offset 12:
+    //   capsule_id(8) file_size(4) file_hash(32) manifest_hash(32) locator_len(1) locator(N)
+    std::string doc_extra;
+    if (type == 0x03 && body_len >= 77) {
+        const size_t off = 12;
+        uint32_t file_size = (uint32_t)payload[off+8]
+                           | ((uint32_t)payload[off+9]  << 8)
+                           | ((uint32_t)payload[off+10] << 16)
+                           | ((uint32_t)payload[off+11] << 24);
+        std::string fh = to_hex(&payload[off+12], 32);
+        std::string mh = to_hex(&payload[off+44], 32);
+        uint8_t loclen = payload[off+76];
+        std::string loc;
+        if (off + 77u + loclen <= payload.size())
+            loc.assign(payload.begin()+off+77, payload.begin()+off+77+loclen);
+        std::ostringstream d;
+        d << ",\"file_size\":"     << file_size
+          << ",\"file_hash\":\""   << fh << "\""
+          << ",\"manifest_hash\":\"" << mh << "\""
+          << ",\"locator\":\""     << json_escape(loc) << "\"";
+        doc_extra = d.str();
+    }
+
     std::ostringstream o;
     o << "{\"type\":\""     << capsule_type_name(type)
       << "\",\"template\":\"" << template_id_name(tmpl)
       << "\",\"body_len\":" << (int)body_len
-      << ",\"text\":\""     << json_escape(text)
-      << "\"}";
+      << ",\"text\":\""     << json_escape(text) << "\""
+      << doc_extra
+      << "}";
     return o.str();
+}
+
+// first_capsule_payload — Asset Passport doc_ref (and other capsules) may sit on ANY
+// output, not necessarily output[0]. Return the first output whose payload parses as an
+// SCPv1 capsule ('SC' magic), else the first non-empty payload, else empty.
+static const std::vector<uint8_t>& first_capsule_payload(const std::vector<TxOutput>& outs){
+    static const std::vector<uint8_t> s_empty;
+    for(const auto& o : outs) if(o.payload.size()>=2 && o.payload[0]==0x53 && o.payload[1]==0x43) return o.payload;
+    for(const auto& o : outs) if(!o.payload.empty()) return o.payload;
+    return s_empty;
 }
 
 static std::string json_escape(const std::string& s) {
@@ -2423,10 +2459,14 @@ static std::string handle_getrawtransaction(const std::string& id, const std::ve
                 if(tid==txid){
                     bool verbose2=(p.size()>1&&p[1]!="0"&&p[1]!="false");
                     if(!verbose2) return rpc_result(id,"\""+to_hex(raw2.data(),raw2.size())+"\"");
+                    // Asset Passport / capsule readback: expose the doc_ref (or any)
+                    // capsule summary — scanning ALL outputs, not just output[0].
+                    const auto& _cp=first_capsule_payload(t.outputs);
+                    std::string _capj = _cp.empty()? std::string() : (",\"capsule\":"+capsule_summary_json(_cp));
                     return rpc_result(id,"{\"txid\":\""+to_hex(txid.data(),32)
                         +"\",\"size\":"+std::to_string(raw2.size())
                         +",\"confirmed\":true,\"block_height\":"+std::to_string(b.height)
-                        +",\"hex\":\""+to_hex(raw2.data(),raw2.size())+"\"}");
+                        +",\"hex\":\""+to_hex(raw2.data(),raw2.size())+"\""+_capj+"}");
                 }
             }
         }
@@ -2465,7 +2505,9 @@ static std::string handle_getrawtransaction(const std::string& id, const std::ve
         const auto& o=entry->tx.outputs[i];
         s<<"{\"value\":"<<format_sost(o.amount)<<",\"n\":"<<i<<",\"address\":\""<<address_encode(o.pubkey_hash)<<"\"}";
     }
-    s<<"]}";
+    s<<"]";
+    { const auto& _cp=first_capsule_payload(entry->tx.outputs); if(!_cp.empty()) s<<",\"capsule\":"<<capsule_summary_json(_cp); }
+    s<<"}";
     return rpc_result(id,s.str());
 }
 
@@ -2689,9 +2731,7 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
                  <<",\"change_amount\":"<<chg;
             }
         }
-        if(!mentry->tx.outputs.empty() && !mentry->tx.outputs[0].payload.empty()){
-            s<<",\"capsule\":"<<capsule_summary_json(mentry->tx.outputs[0].payload);
-        }
+        { const auto& _cp=first_capsule_payload(mentry->tx.outputs); if(!_cp.empty()) s<<",\"capsule\":"<<capsule_summary_json(_cp);}
         s<<"}";
         return rpc_result(id,s.str());
     }
@@ -2812,9 +2852,7 @@ static std::string handle_gettransaction(const std::string& id, const std::vecto
     }
     // Top-level capsule summary (output[0] only) — convenience for the
     // explorer so it does not have to parse payload_hex itself.
-    if(!tx.outputs.empty() && !tx.outputs[0].payload.empty()){
-        s<<",\"capsule\":"<<capsule_summary_json(tx.outputs[0].payload);
-    }
+    { const auto& _cp=first_capsule_payload(tx.outputs); if(!_cp.empty()) s<<",\"capsule\":"<<capsule_summary_json(_cp); }
     s<<"}";
     return rpc_result(id,s.str());
 }
@@ -3187,9 +3225,7 @@ static std::string handle_listtransfers(const std::string& id, const std::vector
 
             // Capsule summary on output[0]'s payload (NULL when absent).
             std::string cap = "null";
-            if (!tx.outputs.empty() && !tx.outputs[0].payload.empty()) {
-                cap = capsule_summary_json(tx.outputs[0].payload);
-            }
+            { const auto& _cp=first_capsule_payload(tx.outputs); if(!_cp.empty()) cap = capsule_summary_json(_cp); }
 
             if (count > 0) s << ",";
             s << "{\"txid\":\"" << to_hex(txid.data(), 32)

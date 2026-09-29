@@ -192,7 +192,15 @@ struct TxValidationResult {
 struct TxValidationContext {
     Hash256  genesis_hash{};
     int64_t  spend_height{0};   // height of the block being validated
+    // Capsule activation defaults per network at compile time. DEVNET builds
+    // (SOST_DEVNET_FORKS) activate capsules from height 1 so the lab can exercise
+    // the Asset Passport doc_ref round-trip without mining past 7350; mainnet/testnet
+    // binaries are byte-identical (still 7350 / 100). NON-CONSENSUS for mainnet.
+#ifdef SOST_DEVNET_FORKS
+    int64_t  capsule_activation_height{CAPSULE_ACTIVATION_HEIGHT_DEV};
+#else
     int64_t  capsule_activation_height{CAPSULE_ACTIVATION_HEIGHT_MAINNET};
+#endif
     int64_t  bond_activation_height{BOND_ACTIVATION_HEIGHT_MAINNET};
 };
 

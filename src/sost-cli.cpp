@@ -2321,12 +2321,19 @@ int main(int argc, char** argv) {
         // V12-activation-height guard. Capsules on OUT_TRANSFER outputs are
         // rejected by the validator (R14_PAYLOAD_FORBIDDEN) before V12_HEIGHT.
         if (cap_ptr) {
-            if (chain_height < (int64_t)sost::V12_HEIGHT) {
+            // Capsule-attach tooling guard. DEVNET builds (SOST_DEVNET_FORKS) allow
+            // attach from height 1 so the Asset Passport doc_ref round-trip can be
+            // exercised in the lab; mainnet/testnet CLI stays byte-identical (>=7350).
+#ifdef SOST_DEVNET_FORKS
+            const int64_t cap_min_height = 1;
+#else
+            const int64_t cap_min_height = (int64_t)sost::V12_HEIGHT;
+#endif
+            if (chain_height < cap_min_height) {
                 fprintf(stderr,
-                    "ERROR: capsule attach requires chain height >= V12_HEIGHT "
-                    "(%lld); current tip is %lld.\n"
-                    "  Wait until the chain crosses V12 or omit --capsule-mode.\n",
-                    (long long)sost::V12_HEIGHT, (long long)chain_height);
+                    "ERROR: capsule attach requires chain height >= %lld; current tip is %lld.\n"
+                    "  Wait until the chain crosses the capsule-activation height or omit --capsule-mode.\n",
+                    (long long)cap_min_height, (long long)chain_height);
                 return 1;
             }
             // Sealed Capsule (Fase Sealed-1.D): tooling gate at V13_HEIGHT.
