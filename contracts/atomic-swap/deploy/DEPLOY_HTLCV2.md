@@ -40,3 +40,16 @@ only referenced contract until v2's address is filled in.
 ## ACTION REQUIRES OWNER AUTHORIZATION
 DEPLOY AtomicSwapHTLCv2 · network: Sepolia (free) and/or Ethereum mainnet · max cost ≈ 0.03 ETH mainnet /
 ~free Sepolia · you must provide the deployer PRIVATE_KEY + RPC and run the forge script (or approve it).
+
+## Keyless deploy (recommended — the key never leaves your wallet)
+Do NOT give anyone your PRIVATE_KEY. Two safe options:
+- **A) You run forge locally.** `export PRIVATE_KEY=...` on YOUR machine only, then run the forge script
+  above against your RPC. The key stays on your machine.
+- **B) Wallet-signed unsigned tx.** Generate an unsigned creation tx and sign it in your own wallet:
+  ```
+  node contracts/atomic-swap/deploy/make_unsigned_tx.js <chainId> <nonce> <maxFeeGwei> > unsigned-tx.json
+  # chainId 11155111 = Sepolia, 1 = Ethereum mainnet; nonce = your deployer account's next nonce
+  ```
+  Review `unsigned-tx.json` (to:null, data=bytecode, gas 1,400,000), sign it in your wallet / hardware
+  device, and broadcast. The contract has no constructor args, so the deployed code == the audited bytecode
+  (keccak `0xbe82b2ed…004deeb`). This assistant never asks for or handles your private key.
