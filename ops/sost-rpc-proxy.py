@@ -9,6 +9,8 @@ while keeping every other authenticated/admin method blocked.
 
 Policy:
   * method == sendrawtransaction  -> inject the node RPC credentials, forward.
+  * method == getnetworksummary   -> answered by the gateway itself from node READS only
+                                     (see summarize_network); nothing is forwarded as-is.
   * any other method              -> forward WITHOUT credentials, so the node's own gate
                                      applies: reads succeed, every other write returns -401.
 The request body is reserialized to a canonical single-method JSON-RPC object so a crafted
@@ -20,6 +22,8 @@ read at startup from /etc/sost/rpc.env (RPC_USER / RPC_PASS) — never hardcoded
 import json
 import base64
 import sys
+import threading
+import time
 import urllib.request
 import urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -42,6 +46,145 @@ BROADCAST_METHODS = {'sendrawtransaction'}
 # talks to its OWN node, authenticated, not to this gateway. Refused here rather than in
 # the node so the published v16.1.0 binaries and their hashes stay untouched.
 PUBLIC_DENY_METHODS = {'getblocktemplate'}
+
+
+# ── getnetworksummary ────────────────────────────────────────────────────────
+# A synthetic, read-only method answered HERE, not by the node. It is the source of
+# truth for the Explorer's UNIQUE NODES card, which used to count only acked peers from
+# getpeerinfo — so the node serving the Explorer, the one actually holding the chain,
+# never counted itself and the card read 0 while the network was producing blocks.
+#
+# Built only from node reads (getinfo, getblock of the tip, getpeerinfo); nothing on the
+# node, the P2P protocol or consensus changes. The local node counts as 1 ONLY when those
+# reads prove it is up, on mainnet, on the right genesis and with a fresh tip — never a
+# fixed +1. External peers are counted as distinct machines, with this node's own
+# loopback pair removed so it can never be counted twice.
+NETWORK_SUMMARY_METHOD = 'getnetworksummary'
+MAINNET_GENESIS = '6517916b98ab9f807272bf94f89297011dd5512ecea477bd9d692fbafe699f37'
+# 12 target blocks. A slow stretch under a high cASERT profile can leave a tip 1-2 h old
+# on a healthy chain; past this the node is serving a chain that has stopped moving.
+TIP_STALE_S = 7200
+SUMMARY_CACHE_S = 10
+
+
+def _peer_host(addr):
+    t = str(addr or '')
+    i = t.rfind(':')
+    return t[:i] if i > 0 else t
+
+
+def self_connection_indexes(peers):
+    """Indexes of peers that are the two ends of this node dialling itself.
+
+    A node that dials its own seed address sees ONE connection twice: an outbound entry
+    and an inbound entry, opened in the same second, announcing the same height, over the
+    same transport. Not grouped by host — the outbound half reads as the hostname and the
+    inbound half as a (masked) numeric address. Same signature the Explorer used."""
+    marked, used = set(), set()
+    for a, pa in enumerate(peers):
+        if pa.get('direction') != 'outbound' or a in used:
+            continue
+        for b, pb in enumerate(peers):
+            if a == b or b in used or pb.get('direction') != 'inbound':
+                continue
+            if (abs((pa.get('conntime') or 0) - (pb.get('conntime') or 0)) <= 2
+                    and pa.get('height') == pb.get('height')
+                    and pa.get('enc_mode') == pb.get('enc_mode')):
+                marked.update((a, b))
+                used.update((a, b))
+                break
+    return marked
+
+
+def summarize_network(info, tip_time, peers, now, info_error=None):
+    """Pure function: node reads -> network summary. See NETWORK_SUMMARY_METHOD."""
+    reasons = []
+    if info_error or not isinstance(info, dict):
+        status = 'OFFLINE'
+        reasons.append('rpc_unreachable')
+    else:
+        if info.get('profile') != 'mainnet' or info.get('testnet'):
+            reasons.append('not_mainnet')
+        if info.get('genesis_hash') != MAINNET_GENESIS:
+            reasons.append('wrong_genesis')
+        if not isinstance(info.get('blocks'), int) or info.get('blocks') <= 0:
+            reasons.append('no_height')
+        if not isinstance(tip_time, (int, float)):
+            reasons.append('no_tip_time')
+        elif now - tip_time > TIP_STALE_S:
+            reasons.append('tip_stale')
+        status = 'ONLINE' if not reasons else ('STALE' if reasons == ['tip_stale'] else 'DEGRADED')
+    local_online = status == 'ONLINE'
+
+    peers = peers if isinstance(peers, list) else []
+    self_idx = self_connection_indexes(peers)
+    ext_hosts, ext_acked = set(), set()
+    for i, p in enumerate(peers):
+        if i in self_idx:
+            continue
+        h = _peer_host(p.get('addr'))
+        ext_hosts.add(h)
+        if p.get('version_acked'):
+            ext_acked.add(h)
+    connected_external = len(ext_acked)
+    local = 1 if local_online else 0
+    return {
+        'local_node': {
+            'status': status,
+            'online': local_online,
+            'height': info.get('blocks') if isinstance(info, dict) else None,
+            'tip_age_s': int(now - tip_time) if isinstance(tip_time, (int, float)) else None,
+            'reasons': reasons,
+        },
+        'local_nodes': local,
+        'connections': len(peers),
+        'self_connections': len(self_idx),
+        'external_hosts_seen': len(ext_hosts),
+        'connected_external': connected_external,
+        # The P2P protocol has no address exchange (EKEY/VERS/VACK/GETB/PING/PONG only),
+        # so this node cannot learn of peers it is not connected to. Reported as null,
+        # never as a guessed number.
+        'discovered_active': None,
+        'discovered_note': 'no address exchange in the P2P protocol',
+        'unique_active_nodes': local + connected_external,
+        'tip_stale_after_s': TIP_STALE_S,
+        'generated_at': int(now),
+    }
+
+
+def _node_read(method, params=None, timeout=10):
+    body = json.dumps({'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params or []}).encode()
+    req = urllib.request.Request(NODE_URL, data=body, headers={'Content-Type': 'application/json'})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        d = json.loads(r.read())
+    if d.get('error'):
+        raise RuntimeError(str(d['error'])[:120])
+    return d.get('result')
+
+
+_summary_lock = threading.Lock()
+_summary_cache = {'at': 0.0, 'value': None}
+
+
+def network_summary(read=_node_read, clock=time.time):
+    with _summary_lock:
+        now = clock()
+        if _summary_cache['value'] is not None and now - _summary_cache['at'] < SUMMARY_CACHE_S:
+            return _summary_cache['value']
+        info = tip_time = peers = err = None
+        try:
+            info = read('getinfo')
+            tip = read('getblock', [read('getbestblockhash')])
+            tip_time = tip.get('time') if isinstance(tip, dict) else None
+        except Exception as e:  # node down or wedged: report OFFLINE, don't raise
+            err = str(e)[:120]
+        try:
+            peers = read('getpeerinfo')
+        except Exception:
+            peers = []
+        value = summarize_network(info, tip_time, peers, now, info_error=err)
+        _summary_cache.update(at=now, value=value)
+        return value
 
 
 def needs_node_auth(method):
@@ -109,6 +252,11 @@ def make_handler(auth_header):
                         'error': {'code': -32601,
                                   'message': 'method not available on the public gateway; '
                                              'run your own node'}}))
+                if method == NETWORK_SUMMARY_METHOD:
+                    self._send(200, json.dumps({'jsonrpc': '2.0', 'id': data.get('id', 1),
+                                                'result': network_summary()}))
+                    sys.stderr.write('[rpc-proxy] method=%s code=200 synthetic=1\n' % method)
+                    return
                 body = clean_request(data).encode()
                 req = urllib.request.Request(NODE_URL, data=body, headers={'Content-Type': 'application/json'})
                 if needs_node_auth(method):

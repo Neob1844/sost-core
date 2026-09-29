@@ -757,7 +757,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" id="phase2ReadyMinersCard" data-panel="miners" onclick="toggleDashPanel('miners')" title="Cumulative, monotonic count of distinct addresses that have produced an accepted Phase II block since the #12100 (V13) update — it never decreases (all miners that have ever updated, active now or not). Accumulated across visits and floored at the full-chain DTD-eligibility count (PEAK ACTIVE MINERS). Card pulses red permanently as a standing centralisation reminder." style="color:#4488ff;position:relative"><div class="dash-label" style="color:#4488ff">&#9874; UPDATED MINERS</div><div class="dash-val" id="dPhase2Miners" style="color:#4488ff">—</div><div class="dash-sub" id="dPhase2MinersSub" style="color:#4488ff">since #12100 V13</div></div>
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label" style="color:var(--green)">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label" style="color:var(--purple)">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
-  <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Unique Nodes reflects peers currently visible from this seed/node only."><div class="dash-label" style="color:var(--cyan)">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">0</div><div class="dash-sub">seed-visible peers</div></div>
+  <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Active SOST nodes known to this gateway: the local mainnet node (counted once, and only while its RPC answers on mainnet with a fresh tip) plus distinct external machines connected over P2P with a completed handshake. Miners, historical block producers and unverified addresses are not counted. Discovered-but-unconnected nodes are not available: the P2P protocol has no address exchange."><div class="dash-label" style="color:var(--cyan)">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">&mdash;</div><div class="dash-sub" id="dNodesSub">local + active visible peers</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Distinct addresses that have produced at least one accepted block since genesis — MONOTONIC (it never decreases; floored across visits). This is NOT the same as 'eligible now': the live DTD-lottery eligibility count (shown in the DTD panel) rises and falls as miners enter/leave the recent-miner cooldown and the V13 dominance gate. Non-producing nodes (peer-only, validators, observers) are NOT counted. Click for the DTD panel."><div class="dash-label" style="color:var(--cyan)">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div><div class="dash-sub" style="font-size:8.5px;color:var(--text3);line-height:1.4;margin-top:2px">only miners who found &ge;1 block<br>excludes non-producing nodes</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
     <div class="dash-label" style="white-space:nowrap;color:var(--orange)">Token Distribution</div>
@@ -1482,6 +1482,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
   <!-- ACTIVE NODES SECTION -->
   <div class="section" id="nodesSection">
     <div class="sec-head"><div class="sec-title">// <b>ACTIVE NODES</b></div><div class="sec-meta" id="nodesInfo">refreshing...</div></div>
+    <div id="nodesLocal" style="font-size:10px;color:var(--text3);letter-spacing:.5px;margin:-4px 0 10px;line-height:1.6">&mdash;</div>
     <div id="nodesSummary" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;">
       <div style="background:var(--bg2);border:1px solid var(--border);padding:10px 12px;text-align:center;">
         <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:4px;">CONNECTIONS</div>
@@ -7732,10 +7733,6 @@ window.addEventListener('focus',function(){refresh();});
       document.getElementById('nodesInfo').textContent=
         nConn+' connection'+(nConn===1?'':'s')+' \u2014 '+nExtHosts+' external machine'+(nExtHosts===1?'':'s')+
         (nSelfConn?' + '+nSelfConn+' self-connection'+(nSelfConn===1?'':'s'):'');
-      // Update the header card — count only version_acked peers as unique nodes
-      var dNodesEl=document.getElementById('dNodes');
-      // "Unique nodes" must not count this node's own loopback pair as two peers.
-      if(dNodesEl) dNodesEl.textContent=Math.max(0,nAcked-nSelfConn);
       var tbody=document.getElementById('nodesBody');
       if(!peers.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">no peers connected</td></tr>';return;}
       var html='';
@@ -7833,8 +7830,31 @@ window.addEventListener('focus',function(){refresh();});
       document.getElementById('nodesInfo').textContent='error: '+e.message;
     }
   }
-  loadPeerInfo();
-  setInterval(loadPeerInfo,30000);
+  // UNIQUE NODES header card. The number is computed by the RPC gateway
+  // (getnetworksummary, ops/sost-rpc-proxy.py), not here: the local node counts
+  // only while the gateway proves it online, external machines are deduplicated
+  // and this node's own loopback pair is excluded. The page only displays it.
+  async function loadNetworkSummary(){
+    var v=document.getElementById('dNodes'),sub=document.getElementById('dNodesSub');
+    if(!v||!sub) return;
+    try{
+      var s=await rpc('getnetworksummary');
+      var ln=s.local_node||{};
+      v.textContent=s.unique_active_nodes;
+      var st=ln.status==='ONLINE'?'':' <span style="color:var(--yellow)">(local '+String(ln.status||'?').toLowerCase()+')</span>';
+      sub.innerHTML=s.local_nodes+' local &middot; '+s.connected_external+' external'+st;
+      var info=document.getElementById('nodesLocal');
+      if(info) info.innerHTML='LOCAL NODE <b style="color:'+(ln.online?'var(--green)':'var(--yellow)')+'">'+(ln.status||'?')+'</b>'+
+        ' &middot; CONNECTED EXTERNAL PEERS <b>'+s.connected_external+'</b>'+
+        ' &middot; DISCOVERED ACTIVE NODES <b>'+(s.discovered_active==null?'n/a':s.discovered_active)+'</b>'+
+        ' &middot; TOTAL UNIQUE <b>'+s.unique_active_nodes+'</b>';
+    }catch(e){
+      v.innerHTML='&mdash;';
+      sub.textContent='network summary unavailable';
+    }
+  }
+  loadPeerInfo();loadNetworkSummary();
+  setInterval(loadPeerInfo,30000);setInterval(loadNetworkSummary,30000);
 })();
 
 // Node/Miner status badges
