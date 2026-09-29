@@ -95,12 +95,12 @@
 </nav>
 
 <div class="wrap">
-  <div class="banner">LABORATORY PREVIEW · No native token issuance and no real lending are active. Everything below is a documentary / simulation prototype using fictional assets. Not an offer of any financial product.</div>
+  <div class="banner">The <b>Asset Registry</b> below is a live web tool: it builds real, hashed, verifiable Asset Passports today. Native token issuance, real lending and a financial marketplace are <b>not</b> active — those remain a future protocol layer. Examples use fictional assets. Not an offer of any financial product.</div>
 
   <div class="hero">
-    <div class="eyebrow">Asset Layer &middot; ALPHA</div>
+    <div class="eyebrow">Asset Layer &middot; Registry LIVE / Native issuance FUTURE</div>
     <h1>SOST <span class="r">Universal Assets</span></h1>
-    <p class="lede">An optional, universal layer to describe, value and (in the future) tokenize <b style="color:var(--txt)">any</b> real or digital asset or right — machinery, real estate, precious metals, commodities, art, vehicles, contractual rights, digital assets. SOST proves <b style="color:var(--txt)">who</b> registered a claim, <b style="color:var(--txt)">under what rules</b>, and <b style="color:var(--txt)">its history</b>. It does not decide the legal meaning, guarantee value, custody the asset, or enforce off-chain promises. SOST the coin keeps its supply and only pays fees. This is a universal platform — not specific to mining or any single sector.</p>
+    <p class="lede">An optional, universal layer to describe, value and (in the future) tokenize <b style="color:var(--txt)">any</b> real or digital asset or right — machinery, real estate, precious metals, commodities, art, vehicles, contractual rights, digital assets. SOST proves <b style="color:var(--txt)">who</b> declared a claim, <b style="color:var(--txt)">the source and verification behind it</b>, and <b style="color:var(--txt)">its full history</b>. It does not decide the legal meaning, guarantee value, custody the asset, or enforce off-chain promises. SOST the coin keeps its supply and only pays fees. This is a universal platform — not specific to mining or any single sector.</p>
     <div class="chips">
       <span class="chip">Universal &mdash; any asset class</span>
       <span class="chip">SOST supply untouched</span>
@@ -108,6 +108,66 @@
       <span class="chip red">Asset Finance = simulator only</span>
     </div>
   </div>
+
+  <!-- ============ SOST ASSET REGISTRY — current product, human-readable first layer ============ -->
+  <section class="blk" id="registry">
+    <div class="eyebrow">Asset Registry &middot; CURRENT PRODUCT</div>
+    <h2>SOST <span class="g">Asset Registry</span></h2>
+    <div class="sub">A registry turns an asset into a <b>verifiable record</b>. You describe the asset and the right a token represents; the Registry records every material statement together with <b>who said it, the evidence behind it, and whether it was independently verified</b>, then seals the whole record with a fingerprint (<code>manifestHash</code>) that anyone can re-check and that can be anchored on the SOST chain. SOST proves the record's <b>integrity and existence in time</b> — never that a claim is legally true.</div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:6px 0 8px">
+      <span class="chip" style="border-color:var(--green);color:#7ee2a8">Asset</span><span style="color:var(--txt4)">→</span>
+      <span class="chip">Evidence</span><span style="color:var(--txt4)">→</span>
+      <span class="chip">Provenance</span><span style="color:var(--txt4)">→</span>
+      <span class="chip">Valuation</span><span style="color:var(--txt4)">→</span>
+      <span class="chip">Rights</span><span style="color:var(--txt4)">→</span>
+      <span class="chip">Tokenization</span><span style="color:var(--txt4)">→</span>
+      <span class="chip">Settlement ref</span><span style="color:var(--txt4)">→</span>
+      <span class="chip">Review</span><span style="color:var(--txt4)">→</span>
+      <span class="chip" style="border-color:var(--gold);color:var(--gold2)">Asset Passport</span><span style="color:var(--txt4)">→</span>
+      <span class="chip" style="border-color:var(--cyan);color:#7fe3f2">Anchor</span><span style="color:var(--txt4)">→</span>
+      <span class="chip" style="border-color:var(--cyan);color:#7fe3f2">Verification</span>
+    </div>
+    <div class="note" style="margin-bottom:16px">Everything up to and including <b>Asset Passport + Verification</b> works on the web now. <b>Anchor</b> is prepared (anchor-ready <code>doc_ref</code>) and has been verified on a development chain; a mainnet anchor will be shown only when demonstrated on mainnet.</div>
+
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      <!-- Claims v2 explainer, non-technical first -->
+      <div class="comp gold">
+        <h3>Every statement is a <span class="g">Claim</span></h3>
+        <p>In the Registry each material fact is a <b>claim</b> that answers six plain questions — so nobody has to trust a bare number:</p>
+        <div style="margin-top:10px">
+          <div class="kv"><span class="k">WHAT</span><span class="v">Valuation: €10,000,000</span></div>
+          <div class="kv"><span class="k">WHO SAYS IT</span><span class="v">Independent appraiser AB</span></div>
+          <div class="kv"><span class="k">SOURCE / EVIDENCE</span><span class="v">Technical report #123</span></div>
+          <div class="kv"><span class="k">VERIFICATION</span><span class="v"><span class="st on" style="font-size:10px">ATTESTED</span></span></div>
+          <div class="kv"><span class="k">WHEN</span><span class="v">2026-09-29</span></div>
+          <div class="kv"><span class="k">CONFIDENCE</span><span class="v">78%</span></div>
+        </div>
+        <details style="margin-top:12px">
+          <summary style="cursor:pointer;font-size:11px;letter-spacing:.5px;color:var(--cyan)">Technical details — Claims v2 shape</summary>
+          <pre class="traceline" style="white-space:pre-wrap;margin-top:8px">claim {
+  id, class: "VALUATION",
+  value: { amount:"10000000", currency:"EUR" },
+  provenance: { source_type:"INDEPENDENT_EXPERT",
+                source_name:"Appraiser AB",
+                reference:"report-123" },
+  verification: { status:"ATTESTED" },
+  confidence: 78, timestamp: "2026-09-29…"
+}</pre>
+        </details>
+        <span class="tag">what · who · source · verification · when · confidence</span>
+      </div>
+
+      <!-- Registry CURRENT vs Marketplace FUTURE -->
+      <div class="comp cyan">
+        <h3>Registry <span style="color:var(--green)">now</span> · Marketplace <span style="color:var(--txt3)">later</span></h3>
+        <p style="margin-bottom:8px"><b style="color:var(--green)">SOST Asset Registry — CURRENT.</b> Claims, provenance, valuation, structured rights, Passport, canonical hashing, anchoring (anchor-ready), verification and tamper detection.</p>
+        <p><b style="color:var(--txt3)">SOST Asset Marketplace — FUTURE.</b> Financial issuance, secondary trading, distribution of returns, custody, regulated settlement and native on-chain assets. <b>Not implemented, not active</b> and never shown here as a product.</p>
+        <span class="tag">current product vs future protocol</span>
+      </div>
+    </div>
+    <div class="note">Try it below: the <b>Tokenization Studio</b> feeds directly into <b>Generate Passport v2</b>, producing a real <code>manifestHash</code>, a per-claim breakdown and an anchor-ready payload — <a href="#tokenization">jump to the Studio &rarr;</a></div>
+  </section>
 
   <section class="blk">
     <h2>What is <span class="r">live today</span></h2>
@@ -149,7 +209,7 @@
     <h2>The <span class="g">building blocks</span></h2>
     <div class="sub">Four components today, plus a future consensus module. Each is honest about what it proves.</div>
     <div class="grid">
-      <div class="comp gold"><h3>Asset Passport</h3><p>A canonical, hashed description of an asset: issuer, owner declaration, jurisdiction, rights, documents (each SHA-256'd), and an off-chain locator. Anchored on SOST via a Capsule <code>doc_ref</code> — no consensus change.</p><span class="tag">documentary · live-capable</span></div>
+      <div class="comp gold"><h3>Asset Passport</h3><p>A canonical, hashed record of an asset built from <b>typed claims</b> — identity, ownership declaration, valuation, structured rights, documents (each SHA-256'd), settlement reference — <b>each carrying its own provenance and verification status</b>. Sealed into a reproducible <code>manifestHash</code> and anchored on SOST via a Capsule <code>doc_ref</code> — no consensus change.</p><span class="tag">claims v2 · provenance · live-capable</span></div>
       <div class="comp cyan"><h3>Asset Intelligence</h3><p>A modular, fully-traceable valuation engine: classification → evidence quality → per-category model → range → haircuts → confidence → suggested LTV. Every figure carries its rule and inputs. No opaque AI.</p><span class="tag">deterministic · traceable</span></div>
       <div class="comp green"><h3>Asset Finance</h3><p>A voluntary lending <b>simulator</b>: bilateral / multi-lender / pool structures with default and liquidation waterfalls. A hard invariant proves no SOST is ever minted. No real loans, no fund-raising.</p><span class="tag">simulation only</span></div>
       <div class="comp red"><h3>Native UTXO assets</h3><p>A future consensus module (specification only) for issuing/transferring/burning assets natively on the SOST UTXO ledger, with immutable genesis policy and per-asset supply accounting. Gated behind adversarial tests, devnet, audit and a coordinated upgrade — <b>not</b> part of the current hard fork.</p><span class="tag">specification · future</span></div>
@@ -237,6 +297,18 @@
       </tbody>
     </table>
 
+    <!-- what does the token represent? -->
+    <div class="comp gold" style="margin-top:24px">
+      <h3>Creating tokens is not enough — <span class="g">what does each token represent?</span></h3>
+      <p style="margin-bottom:10px">A token is only meaningful if the right behind it is stated. The Registry makes you declare a <b>right type</b> and records the facts around it:</p>
+      <div class="chips" style="margin:0 0 12px">
+        <span class="chip">CERTIFICATE</span><span class="chip">USAGE RIGHT</span><span class="chip">REVENUE PARTICIPATION</span>
+        <span class="chip">SALE-PROCEEDS PARTICIPATION</span><span class="chip">OWNERSHIP / EQUITY-LIKE</span><span class="chip">CUSTOM</span>
+      </div>
+      <p style="margin-bottom:0">It then records, as facts: <b>economic rights declared</b>, <b>obligor identified</b>, <b>agreement attached</b>, <b>agreement hash</b> and <b>independent verification</b>. What it never does: <b style="color:var(--gold2)">LEGAL CLASSIFICATION — NOT DETERMINED BY SOST</b>. Whether a declared right is a security or financial instrument (MiCA / MiFID II) is for the issuer and their advisers to determine.</p>
+      <span class="tag">rights · facts, not legal opinion</span>
+    </div>
+
     <!-- ============ TOKENIZATION STUDIO (interactive) ============ -->
     <h3 style="font-family:var(--sans);font-size:15px;margin:30px 0 4px;color:var(--txt)">Tokenization Studio <span style="font-size:11px;color:var(--amber);letter-spacing:1px">· PREVIEW / PLANNING</span></h3>
     <div class="sub">Enter an asset value and see the full proposal: valuation, recommended supply, and the price in SOST. Nothing is minted or traded — this is a planning calculator.</div>
@@ -305,6 +377,11 @@
   <section class="blk">
     <h2>Asset <span class="g">Passport</span> &mdash; try it</h2>
     <div class="sub">Build a passport for a fictional asset. Anchoring a manifest hash proves a document set existed at a time — it is NOT proof of ownership, authenticity or any legal right.</div>
+    <div class="chips" style="margin:-6px 0 14px">
+      <span class="chip">Asset Passport <b style="color:var(--txt)">V1</b> — LEGACY / SUPPORTED</span>
+      <span class="chip" style="border-color:var(--green);color:#7ee2a8">Asset Passport <b>V2</b> — CURRENT</span>
+    </div>
+    <div class="note" style="margin:-6px 0 14px">This form builds a <b>V1</b> passport. The newer <b>V2</b> model (used by the <a href="#registry">Asset Registry</a> above) adds typed <b>claims</b>, per-claim <b>provenance</b> and <b>verification</b>. V1 passports are <b>never rewritten</b>: they keep their original <code>manifestHash</code> and still verify exactly — V2 simply reads them through a normalized claims view. Neither is obsolete; V2 is the current format for new records.</div>
     <div class="demo">
       <div class="row">
         <div><label>Category</label><select id="apCat"></select></div>

@@ -87,6 +87,9 @@ function throws(fn, m){ try{ fn(); fail++; fails.push(m+' (did not throw)'); con
   }
   const mvRecomputed = await V2.sha256Hex(V2.canon(VEC.manifest_vector.manifest));
   ok(mvRecomputed === VEC.manifest_vector.manifestHash, 'vector: full manifest hash reproduces (third-party reconstructable)');
+  ok(VEC.claim_ordering_vector.equal === true && VEC.claim_ordering_vector.manifestHash === VEC.claim_ordering_vector.manifestHash_shuffled, 'vector: claim ordering is deterministic (shuffled claims -> same manifestHash)');
+  const mvClaimHashes = VEC.manifest_vector.manifest.claims.map(c=>c.id);
+  ok(JSON.stringify(mvClaimHashes) === JSON.stringify(mvClaimHashes.slice().sort()), 'vector: manifest claims stored in sorted id order');
 
   console.log('=== 8. SETTLEMENT (minimal, SOST-does-not-custody) ===');
   const setc = V2.settlementClaim({settlement_type:'EXTERNAL_DOCUMENTED', reference:'bank-123', hash:'abcd'});
