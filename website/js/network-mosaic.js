@@ -8,7 +8,7 @@
  * Data sources (all REUSED from the explorer, read-only):
  *   - window._diffHistory : last ~288 blocks [{h,d,t,miner,lp,lw}] set by
  *                            loadStats() (h=height, d=bits_q, t=unix time,
- *                            miner=miner_address, lp=lottery payout, lw=winner).
+ *                            miner=miner_address, lp=reward payout, lw=winner).
  *   - #dMempool textContent : current mempool size (pending tx count).
  *   - window.rpc(method,params) : the explorer's own RPC helper, used ONLY for
  *                            lazy on-hover block enrichment (hash / tx count /
@@ -185,7 +185,7 @@
     for (var i = 0; i < blocks.length; i++) uniqueMiners[blocks[i].miner || '?'] = 1;
     if (foot) {
       foot.innerHTML = 'Each tile = one block · colour = producer · brightness = difficulty &amp; recency · ' +
-        '<b style="color:#000;background:#c9b3ff;border-radius:3px;padding:0 4px">L</b> = DTD lottery block (click for winner) · ' +
+        '<b style="color:#000;background:#c9b3ff;border-radius:3px;padding:0 4px">L</b> = DTD reward block (click for selected miner) · ' +
         Object.keys(uniqueMiners).length + ' producers in view · hover for detail';
     }
     startAnim();

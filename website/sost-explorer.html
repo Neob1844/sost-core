@@ -5,7 +5,7 @@
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- Cache-Control: tell every browser to NEVER cache this HTML.
      Cards added to the dashboard (CIRCULATING SUPPLY canary-yellow,
-     CIRCULATING MINING red, DTD LOTTERY BALANCE magenta) and other
+     CIRCULATING MINING red, DTD REWARD BALANCE magenta) and other
      post-v302 changes were invisible to operators who had v302
      cached, because no Cache-Control headers were set. With these
      tags, every reload pulls fresh HTML and the dashboard always
@@ -744,13 +744,13 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" id="avgTime1000Card" onclick="toggleDashPanel('avgtime')" style="color:#fb010d" title="Maturity-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fb010d">LONG AVG &middot; 1000</div><div class="dash-val" id="dAvgTime1000" style="color:#fb010d">&mdash;</div><div class="dash-sub" id="dAvgTime1000Sub" style="color:#fb010d">last 1000 blocks &middot; visual</div><div class="dash-lag" id="dAvgTime1000Lag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" id="avgTimeGenesisCard" onclick="toggleDashPanel('avgtime')" style="color:#ec4899" title="All-time average since genesis. O(1) computed as (tip_time - GENESIS_TIME) / tip_height. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#ec4899">AVG &middot; GENESIS</div><div class="dash-val" id="dAvgTimeGenesis" style="color:#ec4899">&mdash;</div><div class="dash-sub" id="dAvgTimeGenesisSub" style="color:#ec4899">since block 0 &middot; visual</div><div class="dash-lag" id="dAvgTimeGenesisLag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label" style="color:var(--green)">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
-  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="True circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE. Counts all SOST currently in user wallets (miners + lottery winners). The DTD lottery payouts ARE circulating — they sit in winners' wallets. The CIRCULATING MINING card next to this one shows only the miner-side share (excluding lottery)."><div class="dash-label" style="color:#FFFF00">CIRCULATING SUPPLY</div><div class="dash-val" id="dCircReal" style="color:#FFFF00">—</div><div class="dash-sub" id="dCircRealSub" style="color:#FFFF00">total − vault − pool</div></div>
-  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Miner-side circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD LOTTERY BALANCE. Excludes DTD lottery payouts (those are shown as part of TRUE CIRCULATING SUPPLY to the left). Computed deterministically from consensus constants (V11 Phase 2 activation #7100, bootstrap cadence 2-of-3 until #12100, then 1-of-3 permanent; 50% of subsidy per triggered block). No background scan required."><div class="dash-label" style="color:var(--red)">CIRCULATING MINING</div><div class="dash-val red" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − lottery</div></div>
+  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="True circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE. Counts all SOST currently in user wallets (miners + reward recipients). The DTD reward payouts ARE circulating — they sit in winners' wallets. The CIRCULATING MINING card next to this one shows only the miner-side share (excluding lottery)."><div class="dash-label" style="color:#FFFF00">CIRCULATING SUPPLY</div><div class="dash-val" id="dCircReal" style="color:#FFFF00">—</div><div class="dash-sub" id="dCircRealSub" style="color:#FFFF00">total − vault − pool</div></div>
+  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Miner-side circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD REWARD BALANCE. Excludes DTD reward payouts (those are shown as part of TRUE CIRCULATING SUPPLY to the left). Computed deterministically from consensus constants (V11 Phase 2 activation #7100, bootstrap cadence 2-of-3 until #12100, then 1-of-3 permanent; 50% of subsidy per triggered block). No background scan required."><div class="dash-label" style="color:var(--red)">CIRCULATING MINING</div><div class="dash-val red" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − lottery</div></div>
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')" title="Gold Vault reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--gold)">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub" id="dGoldBalSub">25%/block · ends at V15 (#25,000)</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')" title="PoPC Pool reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--cyan)">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub" id="dPopcBalSub">25%/block · ends at V15 (#25,000)</div></div>
   <div id="jackpotCard" class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="try{if(window.SJP&&window.SJP.openDash)window.SJP.openDash();}catch(e){};return false;" title="DTD Jackpot — live since #25,290. The existing Gold-Vault + PoPC reserve is progressively returned to active miners: a supply-neutral treasury spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence 288 blocks. Until #30,000 it reuses the DTD winner and its eligibility; from #30,000 (V16.1) it becomes an INDEPENDENT draw — node-gated (NODE_BIND + heartbeats) and weighted linearly by SbPoW blocks in the previous 2,016 — with its own winner, no cooldown and no anti-dominance. First V2 draw #30,186." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--gold)">PLANNED · first #25,290 · 100 SOST</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD lottery since V11 Phase 2 activation (block #7,100). Before V15: 50% of subsidy × triggered blocks (bootstrap 2-of-3 in [7100,12100), then 1-of-3 from #12100). From V15 (block 25,000): DTD receives 50% of EVERY block (the Gold-Vault + PoPC shares are redirected here) — 50% miner / 50% DTD. Click for the full DTD panel detail."><div class="dash-label" style="color:#ff00ff">⚡ DTD LOTTERY DISTRIBUTED BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts · 50% of every block from V15</div></div>
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD reward since V11 Phase 2 activation (block #7,100). Before V15: 50% of subsidy × triggered blocks (bootstrap 2-of-3 in [7100,12100), then 1-of-3 from #12100). From V15 (block 25,000): DTD receives 50% of EVERY block (the Gold-Vault + PoPC shares are redirected here) — 50% miner / 50% DTD. Click for the full DTD panel detail."><div class="dash-label" style="color:#ff00ff">⚡ DTD REWARD DISTRIBUTED BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts · 50% of every block from V15</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label" style="color:var(--purple)">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="SOST network hashrate. The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Click to see how this maps to raw CPU work."><div class="dash-label" style="color:var(--orange)">EST. HASHRATE</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s</div></div>
   <div class="dash-card" data-panel="nextblock" onclick="toggleDashPanel('nextblock')"><div class="dash-label" style="color:var(--blue)">NEXT BLOCK IN</div><div class="dash-val blue countdown-val" id="dCountdown">&mdash;</div><div class="dash-sub" id="dCountdownSub">estimated</div></div>
@@ -759,10 +759,10 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label" style="color:var(--green)">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label" style="color:var(--purple)">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Active SOST nodes known to this gateway: the local mainnet node (counted once, and only while its RPC answers on mainnet with a fresh tip) plus distinct external machines connected over P2P with a completed handshake. Miners, historical block producers and unverified addresses are not counted. Discovered-but-unconnected nodes are not available: the P2P protocol has no address exchange."><div class="dash-label" style="color:var(--cyan)">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">&mdash;</div><div class="dash-sub" id="dNodesSub">local + active visible peers</div></div>
-  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Distinct addresses that have produced at least one accepted block since genesis — MONOTONIC (it never decreases; floored across visits). This is NOT the same as 'eligible now': the live DTD-lottery eligibility count (shown in the DTD panel) rises and falls as miners enter/leave the recent-miner cooldown and the V13 dominance gate. Non-producing nodes (peer-only, validators, observers) are NOT counted. Click for the DTD panel."><div class="dash-label" style="color:var(--cyan)">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div><div class="dash-sub" style="font-size:8.5px;color:var(--text3);line-height:1.4;margin-top:2px">only miners who found &ge;1 block<br>excludes non-producing nodes</div></div>
+  <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Distinct addresses that have produced at least one accepted block since genesis — MONOTONIC (it never decreases; floored across visits). This is NOT the same as 'eligible now': the live DTD-reward eligibility count (shown in the DTD panel) rises and falls as miners enter/leave the recent-miner cooldown and the V13 dominance gate. Non-producing nodes (peer-only, validators, observers) are NOT counted. Click for the DTD panel."><div class="dash-label" style="color:var(--cyan)">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div><div class="dash-sub" style="font-size:8.5px;color:var(--text3);line-height:1.4;margin-top:2px">only miners who found &ge;1 block<br>excludes non-producing nodes</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
     <div class="dash-label" style="white-space:nowrap;color:var(--orange)">Token Distribution</div>
-    <div class="dash-val" style="color:var(--orange)">DTD Lottery</div>
+    <div class="dash-val" style="color:var(--orange)">DTD Reward</div>
     <div class="dash-sub" id="dDTD" style="color:var(--orange)">DASHBOARD</div>
     <div class="dash-sub">click to scan</div>
   </div>
@@ -781,7 +781,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div id="networkMosaicCard"></div>
   <div id="mosaicV15Legend" style="max-width:1400px;margin:6px auto 0;padding:0 4px;font-family:var(--code);font-size:9px;color:var(--text3);display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center">
     <span style="letter-spacing:1px">// BLOCK TYPES</span>
-    <span><b style="color:var(--yellow)">L</b> = DTD Lottery block (pays a winner)</span>
+    <span><b style="color:var(--yellow)">L</b> = DTD reward block (pays the selected miner)</span>
     <span><b style="color:var(--gold)">◈ J</b> = DTD Jackpot block <span style="color:var(--text3)">— appears after V15 activation (first #25,290)</span></span>
     <span style="color:var(--text3)">others = standard / accumulation</span>
   </div>
@@ -1408,7 +1408,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
   </div>
   <div class="section" id="blocksSection">
     <div class="sec-head"><div class="sec-title">// <b style="cursor:pointer" onclick="off=0;loadBlocks();">LATEST BLOCKS</b></div><div class="sec-meta" id="blockRange"></div></div>
-    <table class="tbl"><thead><tr><th>HEIGHT</th><th>HASH</th><th>TXS</th><th>TIME</th><th>INTERVAL</th><th>DIFFICULTY</th><th>MINER</th><th>SUBSIDY</th><th>LOTTERY</th></tr></thead>
+    <table class="tbl"><thead><tr><th>HEIGHT</th><th>HASH</th><th>TXS</th><th>TIME</th><th>INTERVAL</th><th>DIFFICULTY</th><th>MINER</th><th>SUBSIDY</th><th>REWARD</th></tr></thead>
     <tbody id="blocksBody"><tr><td colspan="9" class="ld">loading blocks</td></tr></tbody></table>
     <div class="pager">
       <button onclick="newestPage()" id="btnFirst" style="display:none">⟪ NEWEST</button>
@@ -1863,7 +1863,7 @@ function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(
 // MINERS is anchored separately to the node's producers_total each tick.)
 try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;var pe=localStorage.getItem('sost_peak_miners_ever');var pm=document.getElementById('dPeakMiner');if(pe&&pm)pm.textContent=pe;var bp0=document.getElementById('dMiners');if(pe&&bp0)bp0.textContent=pe;});}catch(e){}
 // Phase X+1 — kick off a silent DTD scan ~3 s after page load so the
-// dashboard CIRCULATING SUPPLY + DTD LOTTERY BALANCE cards populate
+// dashboard CIRCULATING SUPPLY + DTD REWARD BALANCE cards populate
 // with real values without the user having to open the DTD panel.
 // The scan caches into _dtdCache; subsequent updateInfo() ticks re-read
 // the cache and refresh the cards. Wrapped in try/catch so a failure
@@ -1889,7 +1889,7 @@ function dtdRole(addr,row){
   if(role==='GENESIS MINER')return 'Constitutional / Genesis Miner';
   if(role==='GOLD VAULT')return 'Gold Vault';
   if(role==='POPC POOL')return 'PoPC Pool';
-  if(row&&row.minedBlocks>0)return 'Lottery eligible';
+  if(row&&row.minedBlocks>0)return 'Reward-eligible';
   return 'Normal address';
 }
 function dtdStatus(row,height,cooldownSet,domSet){
@@ -1934,13 +1934,13 @@ function renderDTDTable(cache){
   html+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin:10px 0 12px 0">';
   html+=dtdFilterButton('all','all');
   html+=dtdFilterButton('miners','miners');
-  html+=dtdFilterButton('eligible','lottery eligible');
+  html+=dtdFilterButton('eligible','reward-eligible');
   html+=dtdFilterButton('cooldown','cooldown');
   html+=dtdFilterButton('constitutional','constitutional');
   html+=dtdFilterButton('balance','non-zero balance');
   html+='</div>';
   html+='<div style="overflow:auto;max-height:520px;border:1px solid rgba(255,255,255,.06)">';
-  html+='<table class="tbl" style="font-size:10px"><thead><tr><th>ADDRESS</th><th>ROLE / TYPE</th><th>MINED BLOCKS</th><th>MINED SOST</th><th>DTD WON</th><th>RECEIVED SOST</th><th>SENT SOST</th><th>BALANCE</th><th>LAST MINED</th><th>LOTTERY STATUS</th></tr></thead><tbody>';
+  html+='<table class="tbl" style="font-size:10px"><thead><tr><th>ADDRESS</th><th>ROLE / TYPE</th><th>MINED BLOCKS</th><th>MINED SOST</th><th>DTD PAID</th><th>RECEIVED SOST</th><th>SENT SOST</th><th>BALANCE</th><th>LAST MINED</th><th>REWARD STATUS</th></tr></thead><tbody>';
   if(!rows.length){html+='<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:18px">no rows for this filter</td></tr>';}
   for(var i=0;i<rows.length;i++){
     var r=rows[i];
@@ -2102,7 +2102,7 @@ function _drawDtdCharts(ph2,rows,cooldownSet,height){
   })();
 }
 
-// Toggle for the inline "how the DTD lottery works" expander. Installed
+// Toggle for the inline "how the DTD reward works" expander. Installed
 // on the DTD section title so the technical explanation only appears
 // after the user explicitly asks for it.
 window.toggleDtdHowItWorks = function() {
@@ -2156,7 +2156,7 @@ function dtdEligibilityBanner(height, progressHtml){
         elig4+'<li><b>recency tightened to 288 blocks</b> (~2 days), at EVERY height &mdash; the wider jackpot-height window is gone, because the jackpot now has its own winner</li>'
         +'<li><b>cooldown yields</b>: the 6-block recent-producer exclusion is skipped when applying it would leave the draw with nobody</li>'
         +'<li><b>anti-dominance armed only at &ge;11 distinct miners</b> in the 288-block window &mdash; below that it would exclude the only miners securing the chain</li>'
-        +'<li>unchanged: every-block cadence, uniform selection, the seed, the 50/50 split, and NO NODE_BIND / NO heartbeats &mdash; those belong to the Jackpot V2 only</li>'
+        +'<li>unchanged: every-block cadence, uniform selection, the seed, the 50/50 split, and NO NODE_BIND / NO heartbeats &mdash; those belong to the Accumulated Reward V2 only</li>'
         +'<li style="color:#ffd166">Consequence: while a single miner is active it can take <b>100% of the block</b> (50% miner + 50% DTD)</li>','#ffd166')
     +'<div style="margin-top:6px;color:var(--text3);font-size:11.5px">'+(progressHtml||'')+'</div>'
     +'</div>';
@@ -2237,7 +2237,7 @@ async function renderDTDPanel(body,title,silent){
     var CHUNK=100;
     // Phase 2 specific stats: classify each block past V11_PHASE2_HEIGHT (7100)
     // by coinbase shape (PAYOUT iff lottery_payout > 0, else NORMAL while bootstrap
-    // is active, else UPDATE_EMPTY post-bootstrap). Track lottery payouts per
+    // is active, else UPDATE_EMPTY post-bootstrap). Track reward payouts per
     // height for the charts further down.
     var ph2={blocks:0,payoutCount:0,normalCount:0,emptyCount:0,
               lotteryWins:0,winners:{},payouts:[],minerCounts:{},
@@ -2408,7 +2408,7 @@ async function renderDTDPanel(body,title,silent){
       summary+=cell('UPDATE_EMPTY blocks',ph2.emptyCount+'  ('+emptyPct.toFixed(1)+'%)','var(--text3)');
       summary+=cell('lottery wins',String(ph2.lotteryWins),'#ff00ff');
       summary+=cell('unique winners',String(uniqueWinners),'#ff00ff');
-      summary+=cell('avg lottery payout',ph2.lotteryWins>0?(dtdSost8(Math.round(avgLottery))+' SOST'):'0.00000000 SOST','var(--purple)');
+      summary+=cell('avg reward payout',ph2.lotteryWins>0?(dtdSost8(Math.round(avgLottery))+' SOST'):'0.00000000 SOST','var(--purple)');
       summary+=cell('largest single lottery',ph2.largestLottery>0?(dtdSost8(ph2.largestLottery)+' SOST'):'0.00000000 SOST','var(--purple)');
       summary+=cell('phase 2 miner share',dtdSost8(ph2.minerSharePhase2)+' SOST','#fbbf24');
       summary+=cell('phase 2 gold share',dtdSost8(ph2.goldPhase2)+' SOST','var(--gold)');
@@ -2450,7 +2450,7 @@ async function renderDTDPanel(body,title,silent){
           +'<button id="lotteryAuditCloseBtn" onclick="closeLotteryAudit()" title="Close audit and clear results" style="display:none;font-size:14px;font-weight:700;background:transparent;color:#a855f7;border:1px solid rgba(168,85,247,.5);width:34px;height:34px;border-radius:3px;cursor:pointer;line-height:1;padding:0" onmouseover="this.style.background=\'rgba(168,85,247,.15)\'" onmouseout="this.style.background=\'transparent\'">✕</button>'
         +'</div>'
       +'</div>'
-      +'<div style="font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:10px">Re-derives the lottery winner for every PAYOUT block by hashing the same 16-block window the consensus rule uses, then compares against the address that actually received the lottery payout. Any row where <b style="color:#fb010d">Audit winner</b> differs from <b style="color:#22c55e">On-chain winner</b> would be evidence of selection tampering. <b>Cooldown</b> column lists the distinct <i>miners</i> of the cooldown window (5 blocks pre-V13, 6 from V13 / #12,000) — those addresses are excluded from THIS lottery. Winning the lottery does NOT trigger cooldown; only mining a recent block does.</div>'
+      +'<div style="font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:10px">Re-derives the lottery winner for every PAYOUT block by hashing the same 16-block window the consensus rule uses, then compares against the address that actually received the reward payout. Any row where <b style="color:#fb010d">Audit winner</b> differs from <b style="color:#22c55e">On-chain winner</b> would be evidence of selection tampering. <b>Cooldown</b> column lists the distinct <i>miners</i> of the cooldown window (5 blocks pre-V13, 6 from V13 / #12,000) — those addresses are excluded from THIS lottery. Winning the lottery does NOT trigger cooldown; only mining a recent block does.</div>'
       +'<div id="lotteryAuditTable" style="font-size:10px;color:var(--text3)">click <b style="color:#a855f7">▶ RUN AUDIT</b> to scan all PAYOUT blocks</div>'
     +'</div>';
     // Technical explainer panel — hidden by default, toggled by
@@ -2469,17 +2469,17 @@ async function renderDTDPanel(body,title,silent){
       + '<p style="margin:4px 0"><b style="color:var(--text)">1. Block shape '
       + 'classification (Phase II, since #7,100).</b> Every block past the '
       + 'V11 Phase 2 activation height carries a coinbase shape tag derived '
-      + 'from its lottery payout field:'
+      + 'from its reward payout field:'
       + '<br>&bull; <span style="color:#22c55e">PAYOUT</span> &mdash; '
       + '<code>lottery_payout &gt; 0</code>: the block distributes a '
-      + 'lottery prize to a winner address selected by SOST.'
+      + 'reward to the selected miner address selected by SOST.'
       + '<br>&bull; <span style="color:var(--cyan)">NORMAL</span> &mdash; '
       + '<code>lottery_payout = 0</code> while the bootstrap escape valve '
       + 'is still active (no eligible address yet).'
       + '<br>&bull; <span style="color:var(--text3)">UPDATE_EMPTY</span> '
       + '&mdash; <code>lottery_payout = 0</code> after bootstrap, when the '
       + 'consensus rule found no eligible winner this block. The would-be '
-      + 'prize stays in the pending jackpot.</p>'
+      + 'reward stays in the pending accumulated reward.</p>'
 
       + '<p style="margin:4px 0"><b style="color:var(--text)">2. Winner '
       + 'derivation (deterministic, public).</b> For every PAYOUT block at '
@@ -2548,7 +2548,7 @@ async function renderDTDPanel(body,title,silent){
       + 'split.</b> <b style="color:#39ff14">CURRENT (V15, since #25,000): 50% miner / 50% DTD</b> '
       + '(Gold Vault &amp; PoPC <b>new emission = 0</b>). '
       + '<span style="color:var(--text3)">LEGACY (Phase II, pre-V15): base subsidy split 50/25/25 (blocks 0&ndash;24,999; 50/50 miner/DTD since #25,000) miner / Gold Funding Vault / PoPC Pool.</span> '
-      + 'The DTD prize is an ADDITIONAL payout '
+      + 'The DTD reward is an ADDITIONAL payout '
       + 'on top of this split, sourced from the lottery pool, not from '
       + 'the miner&apos;s 50%. The miner therefore always receives their '
       + 'standard share regardless of whether the block is a PAYOUT. '
@@ -2582,7 +2582,7 @@ async function renderDTDPanel(body,title,silent){
       + '&mdash; the Jackpot leaves this draw.</b> Everything above describes '
       + '<b>DTD-normal</b>, which keeps its payout, its every-block cadence, '
       + 'its uniform selection and its seed, and needs <b>no NODE_BIND and no '
-      + 'heartbeats</b>. From #30,000 the <b>DTD Jackpot V2</b> becomes an '
+      + 'heartbeats</b>. From #30,000 the <b>DTD Accumulated Reward V2</b> becomes an '
       + 'independent draw with its own winner: node-gated (NODE_BIND + '
       + 'heartbeats), weighted linearly by SbPoW blocks in the previous '
       + '2,016, with no cooldown and no anti-dominance. The two winners may '
@@ -2615,7 +2615,7 @@ async function renderDTDPanel(body,title,silent){
       window._dtdLotteryByAddr=lotteryByAddr;
       localStorage.setItem('sost_dtd_lottery_v1',JSON.stringify({h:height,by:lotteryByAddr}));
     }catch(e){}
-    // ELIGIBLE NOW (dynamic): miners that could win the DTD lottery right now,
+    // ELIGIBLE NOW (dynamic): miners that could be selected for the DTD reward right now,
     // i.e. excluding the recent-miner cooldown, the V13 dominance gate and
     // SbPoW-inactive addresses. This number legitimately rises and falls.
     var eligibleRows=rows.filter(function(r){
@@ -2734,9 +2734,9 @@ window.loadLotteryAudit = async function(){
 
   // Pre-render skeleton table; rows fill in as RPCs complete.
   var statusHtml='<div id="lotteryAuditStatus" style="margin-bottom:6px;font-size:10px;color:var(--cyan)">scanning 0 / '+total+' PAYOUT blocks...</div>';
-  var TT_BLOCK='Height of the PAYOUT block being audited. Phase 2 schedules a lottery payout on every 3rd reward block; only those blocks appear here.';
+  var TT_BLOCK='Height of the PAYOUT block being audited. Phase 2 schedules a reward payout on every 3rd reward block; only those blocks appear here.';
   var TT_MINER='Address that mined this PAYOUT block. The miner is excluded from winning the lottery on the same block (the cooldown rule covers this and the previous 4 blocks).';
-  var TT_ON='Lottery winner address as recorded on-chain — the address that actually received the DTD Lottery payout output in this block.';
+  var TT_ON='Lottery winner address as recorded on-chain — the address that actually received the DTD Reward payout output in this block.';
   var TT_AUDIT='Lottery winner address re-derived in real time from the same 16-block window the consensus rule uses (sha256(SOST_LOTTERY_V11 || prev16_hashes || height_le)). Same input → same winner. Any divergence from ON-CHAIN WINNER is evidence of selection tampering.';
   var TT_WIDX='Index of the winner inside the eligible-set list at this block. Deterministic: idx = first 8 bytes of seed mod eligible_count.';
   var TT_ELIG='Number of eligible addresses considered for this block — coinbase-bearing addresses minus the cooldown set (recent distinct miners: 5 pre-V13, 6 from V13 / #12,000) and, from #12,100, minus the V13 anti-dominance set (any address with ≥10% of the last 288 blocks).';
@@ -3129,7 +3129,7 @@ async function updateDashboard(info){
     // diffs[] contains the latest AVG_WINDOW_LONG (1000) blocks already, so we
     // cover all post-fork blocks today and well into the future.
     var ph2set={};
-    // Auto-hydrate the DTD lottery-by-address cache from the freshly fetched
+    // Auto-hydrate the DTD reward-by-address cache from the freshly fetched
     // diffs[] window (last 1000 blocks). Replaces the old behaviour where the
     // cache only populated after the user opened the DTD section. With this
     // every showAddress call sees the lottery wins instantly. As Phase 2
@@ -3478,7 +3478,7 @@ async function updateDashboard(info){
     document.getElementById('dGoldBal').textContent=bg.toFixed(4)+' SOST';
     document.getElementById('dPopcBal').textContent=bp.toFixed(4)+' SOST';
     updateV15Cards(info.blocks||0, bg, bp);   // V15: wind-down labels + jackpot reserve
-    // ---- Phase X+2: CIRCULATING SUPPLY + DTD LOTTERY BALANCE (formula) ----
+    // ---- Phase X+2: CIRCULATING SUPPLY + DTD REWARD BALANCE (formula) ----
     // Both cards are computed deterministically from consensus constants
     // and the current tip height — NO background scan needed.
     //
@@ -3516,7 +3516,7 @@ async function updateDashboard(info){
         return want_not_div_by_3 ? (total - div3) : div3;
       }
 
-      // Sum of lottery payouts across all triggered blocks up to currentHeight,
+      // Sum of reward payouts across all triggered blocks up to currentHeight,
       // assuming each triggered block pays out 50% × subsidy(h).
       // Subsidy is constant per epoch -> we batch by epoch.
       function dtdLotteryDistributed(currentHeight){
@@ -5739,7 +5739,7 @@ async function showBlock(hash){
           +'(~'+(savedBitsQ/65536).toFixed(3)+' bits).</span>';
       }
     }
-    c.innerHTML='<div class="dtl-head"><b>Block #'+b.height+'</b> <span class="dtl-tag">confirmed</span> <span style="font-size:10px;color:var(--text3)">'+txC+' tx'+(txC>1?'s':'')+'</span></div><div class="dtl-grid"><div class="k">hash</div><div class="v">'+b.hash+cpBtn(b.hash)+'</div><div class="k">next_hash</div><div class="v">'+nextLink+'</div><div class="k">prev_hash</div><div class="v">'+prevLink+'</div><div class="k">merkle_root</div><div class="v">'+b.merkleroot+cpBtn(b.merkleroot)+'</div><div class="k">timestamp</div><div class="v">'+fTFull(b.time)+' \u00B7 '+fT(b.time)+'</div><div class="k">mining_time</div><div class="v"><span style="color:'+mtColor+';font-weight:600">\u23F1 '+miningTimeStr+'</span> <span style="color:var(--text3)">// time since prev block</span></div><div class="k">bits_q</div><div class="v"><span style="color:var(--purple)">'+b.bits_q.toLocaleString()+'</span> <span style="color:var(--text3)">// Q16.16 compact</span></div><div class="k">bits_real</div><div class="v"><span style="color:var(--orange);font-weight:600">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="color:var(--text3)">// bits_q \u00F7 65536</span></div><div class="k">cASERT_target</div><div class="v"><span style="color:'+getLevelColor(targetProf.H)+';font-weight:600">'+targetProf.name+'</span> <span style="color:var(--text3)">// natural profile from lag ('+casertDesc+'), ceiling '+(b.height>=7350?"H20 (V12)":b.height>=5750?"H13":b.height>=5635?"H12":b.height>=5480?"H11":b.height>=5075?"H10":"H35")+'</span></div><div class="k">cASERT_mined</div><div class="v"><span style="color:'+getLevelColor(displayProf.H)+';font-weight:600">'+displayProf.name+'</span> <span style="color:var(--text3)">// '+reliefNote+'</span></div><div class="k">anti_stall</div><div class="v">'+asHtml+'</div><div class="k" title="V12 4-tier slingshot: bits_q is reduced by a fixed percentage when the current block search elapsed exceeds the tier threshold. Tiers: T1>20m -6.5%, T2>30m -12.5%, T3>60m -25%, T4>120m -37.5%, T5>180m -50%. Source: V12_SLINGSHOT_T*_DROP_BPS in include/sost/params.h.">slingshot</div><div class="v">'+ssHtml+'</div><div class="k">nonce</div><div class="v">'+b.nonce.toLocaleString()+'</div><div class="k">subsidy</div><div class="v"><span style="color:var(--green);font-weight:600">'+fS(b.subsidy)+' SOST</span></div>'+(b.miner_address?'<div class="k" title="Address that mined this block (received the coinbase miner output, 50% of subsidy).">miner</div><div class="v"><span class="td-link" style="color:var(--orange);font-family:monospace;font-size:11px" onclick="showAddress(\''+b.miner_address+'\')">'+b.miner_address+'</span>'+cpBtn(b.miner_address)+'</div>':'')+(b.lottery_winner_address&&parseInt(b.lottery_payout||0,10)>0?'<div class="k" title="Address that received the V11 Phase 2 lottery payout on this triggered block (50% of subsidy plus any rolled-over jackpot).">lottery winner</div><div class="v"><span class="td-link" style="color:#ff00ff;font-family:monospace;font-size:11px" onclick="showAddress(\''+b.lottery_winner_address+'\')">'+b.lottery_winner_address+'</span>'+cpBtn(b.lottery_winner_address)+' <span style="color:var(--text3)">// '+fS(parseInt(b.lottery_payout||0,10))+' SOST PAYOUT</span></div>':'')+'<div class="k">split</div><div class="v"><span style="color:var(--orange)">50%</span> miner \u00B7 <span style="color:var(--gold)">25%</span> gold \u00B7 <span style="color:var(--cyan)">25%</span> popc</div></div>'+renderCasertPanel(signal,b.casert_mode,b.height)+'<div class="block-txs" style="margin-top:20px"><div class="sec-title" style="margin-bottom:8px">// <b>TRANSACTIONS</b> <span style="color:var(--text3);font-weight:400">'+txC+' total</span></div><table class="tbl"><thead><tr><th>TYPE</th><th>DETAIL</th><th>SPLIT / OUTPUTS</th><th>TOTAL</th></tr></thead><tbody>'+txRows+'</tbody></table></div>';
+    c.innerHTML='<div class="dtl-head"><b>Block #'+b.height+'</b> <span class="dtl-tag">confirmed</span> <span style="font-size:10px;color:var(--text3)">'+txC+' tx'+(txC>1?'s':'')+'</span></div><div class="dtl-grid"><div class="k">hash</div><div class="v">'+b.hash+cpBtn(b.hash)+'</div><div class="k">next_hash</div><div class="v">'+nextLink+'</div><div class="k">prev_hash</div><div class="v">'+prevLink+'</div><div class="k">merkle_root</div><div class="v">'+b.merkleroot+cpBtn(b.merkleroot)+'</div><div class="k">timestamp</div><div class="v">'+fTFull(b.time)+' \u00B7 '+fT(b.time)+'</div><div class="k">mining_time</div><div class="v"><span style="color:'+mtColor+';font-weight:600">\u23F1 '+miningTimeStr+'</span> <span style="color:var(--text3)">// time since prev block</span></div><div class="k">bits_q</div><div class="v"><span style="color:var(--purple)">'+b.bits_q.toLocaleString()+'</span> <span style="color:var(--text3)">// Q16.16 compact</span></div><div class="k">bits_real</div><div class="v"><span style="color:var(--orange);font-weight:600">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="color:var(--text3)">// bits_q \u00F7 65536</span></div><div class="k">cASERT_target</div><div class="v"><span style="color:'+getLevelColor(targetProf.H)+';font-weight:600">'+targetProf.name+'</span> <span style="color:var(--text3)">// natural profile from lag ('+casertDesc+'), ceiling '+(b.height>=7350?"H20 (V12)":b.height>=5750?"H13":b.height>=5635?"H12":b.height>=5480?"H11":b.height>=5075?"H10":"H35")+'</span></div><div class="k">cASERT_mined</div><div class="v"><span style="color:'+getLevelColor(displayProf.H)+';font-weight:600">'+displayProf.name+'</span> <span style="color:var(--text3)">// '+reliefNote+'</span></div><div class="k">anti_stall</div><div class="v">'+asHtml+'</div><div class="k" title="V12 4-tier slingshot: bits_q is reduced by a fixed percentage when the current block search elapsed exceeds the tier threshold. Tiers: T1>20m -6.5%, T2>30m -12.5%, T3>60m -25%, T4>120m -37.5%, T5>180m -50%. Source: V12_SLINGSHOT_T*_DROP_BPS in include/sost/params.h.">slingshot</div><div class="v">'+ssHtml+'</div><div class="k">nonce</div><div class="v">'+b.nonce.toLocaleString()+'</div><div class="k">subsidy</div><div class="v"><span style="color:var(--green);font-weight:600">'+fS(b.subsidy)+' SOST</span></div>'+(b.miner_address?'<div class="k" title="Address that mined this block (received the coinbase miner output, 50% of subsidy).">miner</div><div class="v"><span class="td-link" style="color:var(--orange);font-family:monospace;font-size:11px" onclick="showAddress(\''+b.miner_address+'\')">'+b.miner_address+'</span>'+cpBtn(b.miner_address)+'</div>':'')+(b.lottery_winner_address&&parseInt(b.lottery_payout||0,10)>0?'<div class="k" title="Address that received the V11 Phase 2 reward payout on this triggered block (50% of subsidy plus any rolled-over jackpot).">lottery winner</div><div class="v"><span class="td-link" style="color:#ff00ff;font-family:monospace;font-size:11px" onclick="showAddress(\''+b.lottery_winner_address+'\')">'+b.lottery_winner_address+'</span>'+cpBtn(b.lottery_winner_address)+' <span style="color:var(--text3)">// '+fS(parseInt(b.lottery_payout||0,10))+' SOST PAYOUT</span></div>':'')+'<div class="k">split</div><div class="v"><span style="color:var(--orange)">50%</span> miner \u00B7 <span style="color:var(--gold)">25%</span> gold \u00B7 <span style="color:var(--cyan)">25%</span> popc</div></div>'+renderCasertPanel(signal,b.casert_mode,b.height)+'<div class="block-txs" style="margin-top:20px"><div class="sec-title" style="margin-bottom:8px">// <b>TRANSACTIONS</b> <span style="color:var(--text3);font-weight:400">'+txC+' total</span></div><table class="tbl"><thead><tr><th>TYPE</th><th>DETAIL</th><th>SPLIT / OUTPUTS</th><th>TOTAL</th></tr></thead><tbody>'+txRows+'</tbody></table></div>';
     _navStack[_navStack.length-1].label='Block #'+b.height;renderNav();
     window.scrollTo({top:0,behavior:'smooth'});
   }catch(e){c.innerHTML='<div class="td-err">'+e.message+'</div>';}
@@ -6491,7 +6491,7 @@ async function showAddress(addr){
       '↑ GROSS sent (lifetime)',
       '<span id="addrSentVal" style="color:var(--text3)">loading...</span>',
       '<p><b>Sum of every output of this address ever consumed as an input in some TX</b>, lifetime, up to <code>scanned through #N</code>. Sourced from <code>getaddressflows</code>.</p>'+
-      '<p><b>Gross &mdash; includes self-sends.</b> A capsule self-send of 450 SOST adds +450 here even though most of that value came right back as change (which simultaneously added +450 to <code>GROSS received</code> above). A simple consolidation of 39 lottery payouts to pay 150 SOST somewhere also adds the full ~153 SOST that the wallet had to gather as inputs, not just the 150 that actually left.</p>'+
+      '<p><b>Gross &mdash; includes self-sends.</b> A capsule self-send of 450 SOST adds +450 here even though most of that value came right back as change (which simultaneously added +450 to <code>GROSS received</code> above). A simple consolidation of 39 reward payouts to pay 150 SOST somewhere also adds the full ~153 SOST that the wallet had to gather as inputs, not just the 150 that actually left.</p>'+
       '<p><b>Gross sent != real loss.</b> This is the bookkeeping number for inputs consumed across history. To know how much actually left the address externally, see NET external outflow below &mdash; and in the meantime, walk individual outgoing TXs in the per-TX detail view.</p>'+
       '<p><b>Zero means the address has never signed any outgoing TX in its life</b>, not even to consolidate its own mined coinbase. Every UTXO it ever received is still sitting here untouched.</p>',
       'color:#fb010d',
@@ -6524,7 +6524,7 @@ async function showAddress(addr){
         'lot-cur',
         '🎰 DTD LOTTERY (current unspent)',
         '<span style="color:#ff00ff;font-weight:600">'+lottUnspentAmt.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('+lottUnspentCount+' UTXO'+(lottUnspentCount===1?'':'s')+')</span>',
-        '<p><b>Currently unspent lottery payout outputs</b> (<code>OUT_COINBASE_LOTTERY</code>, <code>type=4</code>). Each entry is one DTD Lottery win on a Phase 2 PAYOUT block whose payout output has not yet been moved &mdash; when an entry is spent it disappears from this row immediately.</p>'+
+        '<p><b>Currently unspent reward payout outputs</b> (<code>OUT_COINBASE_LOTTERY</code>, <code>type=4</code>). Each entry is one DTD Reward win on a Phase 2 PAYOUT block whose payout output has not yet been moved &mdash; when an entry is spent it disappears from this row immediately.</p>'+
         '<p>Already excluded from the MINED row above so the three sub-balances (MINED + RECEIVED currently held + LOTTERY current unspent) sum to TOTAL BALANCE without double-counting.</p>'+
         '<p>Lottery outputs are coinbase, so they share the <code>'+COINBASE_MATURITY+' confirmations</code> maturity rule with regular MINED outputs. While immature, a lottery UTXO still appears here but cannot be spent yet &mdash; the maturity column in the UTXO list further down shows how many confirmations remain.</p>',
         'color:#ff00ff'
@@ -6556,14 +6556,14 @@ async function showAddress(addr){
           +';font-weight:600">'+lottLifetimeSost.toFixed(8)+' SOST</span> <span style="color:var(--text3)">('
           +lottLifetimeCount+(lottLifetimeCount===1?' win':' wins')
           +lottDeltaTxt+')</span>',
-        '<p><b>Lifetime sum of DTD Lottery wins for this address</b>, including payouts that have already been spent. The displayed number is the higher of two independent inputs:</p>'+
+        '<p><b>Lifetime sum of DTD Reward wins for this address</b>, including payouts that have already been spent. The displayed number is the higher of two independent inputs:</p>'+
         '<ol>'+
         '<li><b>DTD chain scan.</b> Walks Phase 2 PAYOUT blocks and counts those crediting this address. The auto-scan loaded at page open covers the last 1000 blocks; the full chain walk runs when you open the DTD section of the explorer (results cache for the rest of the session in <code>localStorage</code>).</li>'+
         '<li><b>UTXO floor.</b> Every unspent lottery UTXO at this address is the proof of a past win. The displayed lifetime is never below this floor &mdash; you cannot hold an unspent lottery UTXO you never won.</li>'+
         '</ol>'+
         '<p><b>Partial auto-scan annotation.</b> When the chain scan has not yet covered the full history (typical at page open, since the auto-scan reaches only the last 1000 blocks), the row is annotated with the breakdown <em>"X from scan + Y from UTXO floor"</em>. The displayed total is mathematically correct in both cases &mdash; only the breakdown is partial. Open the DTD section to run the full chain walk and replace the inferred portion with directly-attested wins.</p>'+
         '<p><b>Relation to the current-unspent row above.</b> If lifetime equals current unspent, no lottery wins have been moved yet. If lifetime is larger, the difference is the count of wins already spent or consolidated, shown inline as <em>"N already spent"</em>.</p>'+
-        '<p><b>Persistence.</b> Unlike the current-unspent row, this one persists across sessions (<code>localStorage</code> key <code>sost_dtd_lottery_v1</code>). Re-run the DTD scan after new lottery payouts land to refresh it.</p>',
+        '<p><b>Persistence.</b> Unlike the current-unspent row, this one persists across sessions (<code>localStorage</code> key <code>sost_dtd_lottery_v1</code>). Re-run the DTD scan after new reward payouts land to refresh it.</p>',
         (lottLifetimeIncomplete?'color:#fbbf24':'color:#ff00ff')
       );
     }else if(lottUnspentCount===0){
@@ -6571,9 +6571,9 @@ async function showAddress(addr){
         'lot-life',
         '🎰 DTD LOTTERY',
         '<span style="color:var(--text3)">no lottery UTXOs · open DTD section to confirm lifetime</span>',
-        '<p><b>No DTD Lottery payouts are currently held at this address.</b> That is the snapshot answer.</p>'+
+        '<p><b>No DTD Reward payouts are currently held at this address.</b> That is the snapshot answer.</p>'+
         '<p>For a definitive lifetime answer (whether any lottery has ever been won and already spent), open the DTD section of the explorer. It walks Phase 2 PAYOUT blocks looking for <code>OUT_COINBASE_LOTTERY</code> outputs paid to this address and caches the result for the rest of the session in <code>localStorage</code>.</p>'+
-        '<p>If the DTD scan also reports zero, this address has never won a DTD Lottery payout.</p>',
+        '<p>If the DTD scan also reports zero, this address has never won a DTD Reward payout.</p>',
         'color:#ff00ff'
       );
     }else{
@@ -6980,7 +6980,7 @@ function renderAddrCharts(utxos){
       (mature?'<div style="width:'+mPct+'%;background:#3a3a3a;height:100%;border-radius:3px 0 0 3px;" title="Mature: '+mature+' UTXOs ('+mPct+'%) \u2014 Spendable"></div>':'')+
       (almost?'<div style="width:'+aPct+'%;background:#555;height:100%;" title="Almost mature: '+almost+' UTXOs ('+aPct+'%) \u2014 500-999 confirmations"></div>':'')+
       (immature?'<div style="width:'+iPct+'%;background:#666;height:100%;border-radius:0 3px 3px 0;" title="Immature: '+immature+' UTXOs ('+iPct+'%) \u2014 Less than 500 confirmations"></div>':'');
-    var lottLegend=lottUtxos?(' &nbsp; <span style="color:#ff00ff;" title="DTD Lottery payouts (OUT_COINBASE_LOTTERY, type=4) currently unspent at this address. Spent lottery wins are not in this count \u2014 they are reflected in TOTAL BALANCE via change outputs.">\u{1F3B0}</span> Lottery: '+lottUtxos+' ('+lottAmt.toFixed(8)+' SOST)'):'';
+    var lottLegend=lottUtxos?(' &nbsp; <span style="color:#ff00ff;" title="DTD Reward payouts (OUT_COINBASE_LOTTERY, type=4) currently unspent at this address. Spent lottery wins are not in this count \u2014 they are reflected in TOTAL BALANCE via change outputs.">\u{1F3B0}</span> Lottery: '+lottUtxos+' ('+lottAmt.toFixed(8)+' SOST)'):'';
     matLeg.innerHTML='<span style="color:#3a3a3a;">\u25A0</span> Mature: '+mature+' ('+mPct+'%) &nbsp; '+
       (almost?'<span style="color:#555;">\u25A0</span> Almost: '+almost+' ('+aPct+'%) &nbsp; ':'')+
       (immature?'<span style="color:#666;">\u25A0</span> Immature: '+immature+' ('+iPct+'%)':'')+lottLegend;
@@ -9411,7 +9411,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
           '<div class="sjpd-v" style="font-size:13px;line-height:1.5">&ge;3 blocks / 2,016<br>+ NODE_BIND</div>'+
           '<div style="font-size:8px;color:var(--text3);margin-top:3px;line-height:1.35">the '+(state.jpEligible!=null||state.jpPrelim!=null?'count on the left does':'current count does')+' <b>not</b> carry over \u00B7 first draw #30,186 needs <b>0/0</b> heartbeats</div>'+
         '</div>'+
-        // The recent-miner cooldown belongs to DTD NORMAL and DTD Jackpot V2 has
+        // The recent-miner cooldown belongs to DTD NORMAL and DTD Accumulated Reward V2 has
         // none, so a cooldown card inside the JACKPOT panel only ever taught people
         // the wrong rule. The slot now opens the archive of paid jackpots instead;
         // the cooldown itself is still explained (and listed) in the eligibility
@@ -9440,7 +9440,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       '<div class="sjpd-note" style="margin-top:2px;border-left:2px solid #f59e0b;padding-left:8px">'+
         '<b>Normal DTD only \u2014 not the Jackpot.</b> The miners of the last '+cdWindow+' blocks are '+
         'temporarily excluded from the <i>normal</i> DTD draw (based on having mined recently, not on having won). '+
-        '<b>DTD Jackpot V2 has no cooldown and no anti-dominance.</b> '+
+        '<b>DTD Accumulated Reward V2 has no cooldown and no anti-dominance.</b> '+
         'Currently <b>'+cdCount+'</b> identit'+(cdArr.length===1?'y':'ies')+' in cooldown '+
         '<span style="cursor:pointer;color:#22d3ee" onclick="event.stopPropagation();window._sjpdCdOpen=!window._sjpdCdOpen;var e=document.getElementById(\'sjpd-cd-list\');if(e)e.style.display=window._sjpdCdOpen?\'block\':\'none\';">[list]</span>'+
         '<div id="sjpd-cd-list" style="display:'+(window._sjpdCdOpen?'block':'none')+';margin-top:8px;border-top:1px solid #1d2731;padding-top:6px">'+cdListHtml+'</div>'+

@@ -1,7 +1,7 @@
-// SOST V16 — DTD Jackpot V2 advance notice — site-wide collapsible banner
+// SOST V16 — DTD Accumulated Reward V2 advance notice — site-wide collapsible banner
 //
 // One source of truth for the miner / node-operator advance notice about the
-// DTD Jackpot V2 activation at block #30,000. Included on every page.
+// DTD Accumulated Reward V2 activation at block #30,000. Included on every page.
 //
 // Placement:
 //   - if the page contains <div id="sost-v16-notice-mount"></div> the banner is
@@ -127,9 +127,9 @@
 }`;
 
   var NOTICE_HTML = `
-<div class="sost-v16" role="region" aria-label="SOST V16 DTD Jackpot V2 advance notice">
+<div class="sost-v16" role="region" aria-label="SOST V16 DTD Accumulated Reward V2 advance notice">
  <div class="sost-v16-inner">
-  <button type="button" class="sost-v16-head" aria-expanded="false" aria-controls="sostV16Body" title="Open the DTD Jackpot V2 advance notice">
+  <button type="button" class="sost-v16-head" aria-expanded="false" aria-controls="sostV16Body" title="Open the DTD Accumulated Reward V2 advance notice">
     <span class="sost-v16-icon" aria-hidden="true">🏆</span>
     <span class="sost-v16-titles">
       <span class="sost-v16-title">SOST V16.3.0 &mdash; Official release (node fix included) &middot; Miner &amp; Node Operator Notice</span>
@@ -146,25 +146,25 @@
       <span class="hdr">&#9888; What to do &mdash; for every miner and node operator</span>
       <b>SOST V16.3.0 is the current release and replaces v16.2.3.</b> It changes <b>no consensus rule</b>:
       V16 still activates on its own, by block height, at <span class="win">#30,000</span>, and the first
-      DTD Jackpot V2 draw is still #30,186. <b>Only the node binary changed</b> &mdash; the miner and the CLI
+      DTD Accumulated Reward V2 draw is still #30,186. <b>Only the node binary changed</b> &mdash; the miner and the CLI
       are <b>byte-identical to v16.2.3</b> (same SHA-256). So if your node and miner are already running and
       synced, you only need to <b>swap <code>sost-node</code></b>; the miner is not touched, and
       <b>nobody restarts anything at #30,000</b>. The fix that matters: a fresh node can now
       <b>full-sync from genesis</b> (v16.2.3 stalled at heights 4,160&ndash;5,410). A validating node still on
       <b>pre-V16 (V15)</b> software at #30,000 <b>may diverge from the V16 chain</b> &mdash; update before then.
-      <div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.05)"><div style="font-size:12.5px;font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:7px">&#9654; SOST V16 &mdash; MINER &amp; NODE GUIDE</div><div style="font-size:11.5px;line-height:1.65;color:#b9c6d4;margin-bottom:9px">Download and verify &middot; who needs a node &middot; your RPC password (there is no universal one) &middot; the exact start commands &middot; wallet encryption &middot; DTD vs Jackpot V2 &middot; NODE_BIND &middot; backups &middot; troubleshooting.</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;font-family:var(--code,monospace)"><a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:5px 11px;border-radius:5px;text-decoration:none">OPEN THE FULL GUIDE</a><a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Download &amp; verify</a><a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">RPC password</a><a href="sost-upgrade.html#s5" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Start commands</a><a href="sost-upgrade.html#s8" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">NODE_BIND</a><a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">GitHub release</a></div><div style="font-size:10.5px;color:#7b8794;margin-top:8px;line-height:1.55">Already on v16.2.x? v16.3.0 changes <b>only the node</b> (full sync from genesis); miner and CLI are byte-identical to v16.2.3. Swap the node.</div></div>
+      <div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.05)"><div style="font-size:12.5px;font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:7px">&#9654; SOST V16 &mdash; MINER &amp; NODE GUIDE</div><div style="font-size:11.5px;line-height:1.65;color:#b9c6d4;margin-bottom:9px">Download and verify &middot; who needs a node &middot; your RPC password (there is no universal one) &middot; the exact start commands &middot; wallet encryption &middot; DTD vs Accumulated Reward V2 &middot; NODE_BIND &middot; backups &middot; troubleshooting.</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;font-family:var(--code,monospace)"><a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:5px 11px;border-radius:5px;text-decoration:none">OPEN THE FULL GUIDE</a><a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Download &amp; verify</a><a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">RPC password</a><a href="sost-upgrade.html#s5" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Start commands</a><a href="sost-upgrade.html#s8" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">NODE_BIND</a><a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">GitHub release</a></div><div style="font-size:10.5px;color:#7b8794;margin-top:8px;line-height:1.55">Already on v16.2.x? v16.3.0 changes <b>only the node</b> (full sync from genesis); miner and CLI are byte-identical to v16.2.3. Swap the node.</div></div>
     </div>
 
     <div class="sost-v16-alert">
       <span class="k">CORRECTION &mdash; V16.1 ALSO CHANGES NORMAL DTD ELIGIBILITY.</span><br>
       An earlier version of this notice said normal DTD would not change. That is no longer true. Normal DTD keeps its <b>payout logic, its every-block cadence, its uniform selection and its seed</b>, and it still needs <b>no NODE_BIND and no heartbeats</b> &mdash; but from #30,000 <b>who qualifies</b> changes: the activity window drops to <b>288 blocks</b> (~2 days), the 6-block cooldown <b>yields if applying it would leave nobody eligible</b>, and the 10%/288 anti-dominance gate is <b>armed only at 11 or more distinct miners</b>. While a single miner is active it can therefore take 100% of the block (50% miner + 50% DTD). An active SbPoW miner keeps participating in normal DTD exactly as today.
-      <b>DTD Jackpot V2</b> becomes a separate, independent draw that rewards miners who contribute <b>real Proof-of-Work</b> <i>and</i> <b>verified node participation</b>.
+      <b>DTD Accumulated Reward V2</b> becomes a separate, independent draw that rewards miners who contribute <b>real Proof-of-Work</b> <i>and</i> <b>verified node participation</b>.
     </div>
 
     <div class="sost-v16-nums">
       <div class="sost-v16-num"><span class="n">v16.3.0</span><span class="l"><b>Recommended release</b> &mdash; node fix; swap the node</span></div>
       <div class="sost-v16-num"><span class="n">#30,000</span><span class="l">V16 activates automatically by block height</span></div>
-      <div class="sost-v16-num"><span class="n">#30,186</span><span class="l">First DTD Jackpot V2 draw</span></div>
+      <div class="sost-v16-num"><span class="n">#30,186</span><span class="l">First DTD Accumulated Reward V2 draw</span></div>
       <div class="sost-v16-num"><span class="n">NODE ONLY</span><span class="l">miner &amp; CLI byte-identical to v16.2.3 (same SHA-256)</span></div>
       <div class="sost-v16-num"><span class="n">288</span><span class="l">Jackpot cadence &amp; heartbeat epoch (unchanged)</span></div>
       <div class="sost-v16-num"><span class="n">100 &rarr; 500</span><span class="l">Jackpot base SOST, rollover cap &mdash; existing historical reserve, <b>no new emission</b></span></div>
@@ -184,7 +184,7 @@
       <li>Verified node participation through periodic signed <b>NODE_HEARTBEAT</b> messages (~every 288 blocks, referencing recent chain state).
           <b style="color:#39ff14">For the FIRST draw at #30,186 this requirement is 0/0</b> &mdash; NODE_BIND only becomes available at #30,000, so no epoch has completed yet and nobody can be excluded for lacking heartbeat history. The requirement then ramps 1/1 &rarr; 2/2 &rarr; 3/3 and settles at the permanent 3-of-4 from #31,338. That ramp is the same rule counting completed epochs, <b>not</b> a second fork.</li>
     </ol>
-    <p>Then: <b>Jackpot weight = number of valid SbPoW blocks you mined in the previous 2,016 blocks.</b> A miner with 10 eligible blocks has twice the probability of one with 5 &mdash; not a guaranteed win. DTD Jackpot V2 has <b>no cooldown and no anti-dominance</b> on purpose: ~20% of eligible work should mean ~20% of the probability. With no eligible participants the prize <b>rolls over</b> (up to the 500 SOST cap) &mdash; no fallback winner is invented.</p>
+    <p>Then: <b>Reward weight = number of valid SbPoW blocks you mined in the previous 2,016 blocks.</b> A miner with 10 eligible blocks has twice the probability of one with 5 &mdash; not a guaranteed selection. DTD Accumulated Reward V2 has <b>no cooldown and no anti-dominance</b> on purpose: ~20% of eligible work should mean ~20% of the probability. With no eligible participants the accumulated reward <b>rolls over</b> (up to the 500 SOST cap) &mdash; no fallback winner is invented.</p>
 
     <div class="sost-v16-h cy">What you actually have to do</div>
     <div class="sost-v16-cols">
@@ -221,7 +221,7 @@
 #31,338+  NODE_BIND required   heartbeats 3 of the previous 4</div>
 
     <div class="sost-v16-h">What a heartbeat does and does not prove</div>
-    <p>It proves that an authorised node identity participated cryptographically relative to the canonical chain state. It does <b>not</b> prove a unique physical machine, a unique country or 24/7 uptime &mdash; hence <b>verified node participation</b>, not "verified independent physical node". This limitation grants no extra Jackpot weight, because extra nodes give no weighting advantage.</p>
+    <p>It proves that an authorised node identity participated cryptographically relative to the canonical chain state. It does <b>not</b> prove a unique physical machine, a unique country or 24/7 uptime &mdash; hence <b>verified node participation</b>, not "verified independent physical node". This limitation grants no extra Reward weight, because extra nodes give no weighting advantage.</p>
 
     <div class="sost-v16-h">What does NOT change</div>
     <ul>
@@ -288,7 +288,7 @@
       var isOpen = btn.getAttribute('aria-expanded') === 'true';
       var next = !isOpen;
       btn.setAttribute('aria-expanded', next ? 'true' : 'false');
-      btn.setAttribute('title', next ? 'Hide the DTD Jackpot V2 advance notice' : 'Open the DTD Jackpot V2 advance notice');
+      btn.setAttribute('title', next ? 'Hide the DTD Accumulated Reward V2 advance notice' : 'Open the DTD Accumulated Reward V2 advance notice');
       if (next) {
         body.removeAttribute('hidden');
         if (closed) closed.setAttribute('hidden', '');
