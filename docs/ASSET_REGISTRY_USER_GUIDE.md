@@ -11,7 +11,7 @@ independently verified**, the right a token represents, and seals it into a fing
 can re-check and that can be anchored on the SOST chain. SOST proves integrity and existence-in-time —
 **never** that a claim is legally true, and it never decides the legal classification of the asset or token.
 
-## Register an asset in five steps (sostcore.com/sost-universal-assets.html#create)
+## Register an asset in four steps (sostcore.com/sost-universal-assets.html#create)
 1. **Asset** — pick a type (real estate, mining, company, commodity, equipment, IP, collectible, other),
    name it, give the jurisdiction, an estimated value and the declared owner, and (optionally) attach
    **evidence** sources (technical report, public registry, dataset, URL…). You choose the *source*;
