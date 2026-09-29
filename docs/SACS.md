@@ -61,3 +61,16 @@ claim about the 500 rule until the code-path vs the analysis is reconciled.** No
 - **V16 regression:** `ctest` **119/119 PASS** (56.7s) on the candidate.
 - **REMAINING before ACTIVE:** ASan/UBSan run (not yet); full multi-node adversarial lab (partial: converge_d8 PASS, reject_d9 = devnet limit boundary, unrelated to mainnet 500); merge observability-only source to main (dropping the branch's stale web hunks in favour of main's SACS web sections); RC tag `v16.3.x-sacs1` + SHA256SUMS; then owner-authorised reversible STRATO node swap.
 - **Rollback:** current STRATO node backup binary `/opt/sost/rollback-p2p-20260924_201231/sost-node.official` (byte-verified); swap = stop node by PID → replace `sost-node` → start → health check; rollback = restore the .official binary. No consensus/chain-state migration involved.
+
+## d9 anomaly RESOLVED — 2026-09-29 (fresh-binary re-run)
+The earlier "reject_d9 converged at limit+1" was a **stale-binary artifact**: the first run used the
+pre-existing `build-sacs` binary, not a build of the current source. Rebuilt devnet fresh from `adc25003`
+(node SHA `15a8ca80…`) and re-ran `sacs_p2_reorg.sh` (recovery-mode OFF):
+- **converge_d8 (disconnect 8 = limit): PASS** — B adopts A's more-work chain; UTXO A==B (`02a772cf…`); restart stable.
+- **reject_d9 (disconnect 9 = limit+1): PASS** — `[REORG] Rejected: depth 9 exceeds REORG_LIMIT 8`; B keeps its
+  own chain (tip `004d6032…`, A at `98279dd0…`); **UTXO roots DIFFER → PERSISTENT SPLIT**; survives restart.
+
+**Conclusion (confirmed on the real code path, scaled limit=8):** ≤ limit → converge to most-work; > limit →
+REORG_LIMIT reject → **persistent split even with more valid work**, restart-stable. This confirms the original
+`SACS_500BLOCK_FINDING` analysis. Mainnet keeps MAX_REORG_DEPTH=500 (unchanged); SACS V1 only DETECTS/ALERTS
+(DEEP_REORG_ALERT). Making the cap advisory (recovery-mode) is the devnet-only deep-reorg research, post-fork.

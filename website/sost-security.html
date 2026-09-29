@@ -292,7 +292,7 @@
           <tr><td class="label">Chain selection</td><td class="highlight">Highest cumulative work (NOT longest chain)</td></tr>
           <tr><td class="label">Block work formula</td><td class="value"><code>floor(2^256 / (target + 1))</code></td></tr>
           <tr><td class="label">Fork resolution</td><td class="green">Atomic &mdash; full rollback on failure</td></tr>
-          <tr><td class="label">Max reorg depth</td><td class="value">500 blocks (~3.5 days) &mdash; a depth rule present in code (3 enforcement sites). Whether a &gt;500 reorg actually rejects or still converges to more-work is <a href="#sacs" style="color:var(--cyan-primary)">under active SACS lab verification</a> (a fresh scaled devnet run converged at limit+1, being reconciled with the earlier analysis). Not a finality guarantee.</td></tr>
+          <tr><td class="label">Max reorg depth</td><td class="value">500 blocks (~3.5 days). Confirmed on the real code path (scaled devnet lab): a reorg at/below the cap converges to the most-work chain; a reorg deeper than the cap is REJECTED &mdash; the node keeps its own chain even against more valid work, producing a persistent split (restart-stable). This bounds deep reorgs but can prevent automatic convergence after a very long partition &mdash; the <a href="#sacs" style="color:var(--cyan-primary)">deep-reorg recovery</a> for that case is devnet research, post-fork. Not a finality guarantee.</td></tr>
           <tr><td class="label">Orphan vs fork</td><td class="value">Separated: orphans (parent unknown) vs fork candidates (parent known)</td></tr>
           <tr><td class="label">Mempool recovery</td><td class="value">Valid non-coinbase txs returned to mempool after reorg; conflicts discarded</td></tr>
         </table>
@@ -315,7 +315,7 @@
         <tr><td class="label">Chain selection</td><td class="highlight">Highest cumulative VERIFIED work (never height, never peer-reported work)</td></tr>
         <tr><td class="label">SACS Core (V16-compatible)</td><td class="value">Fork/reorg monitor, structured events, <code>getchainsafety</code> RPC, transaction-safety states (CONFIRMED→REORGED→REENTERED_MEMPOOL→CONFLICTED), wallet/DEX/exchange reconciliation, recovery/persistence &mdash; <b>observability &amp; application safety, no consensus change</b></td></tr>
         <tr><td class="label">Status (Core)</td><td class="value">LAB VERIFIED on the research branch; <b>not yet deployed to mainnet</b> (no node binary swapped before the #30,000 fork)</td></tr>
-        <tr><td class="label">Deep-reorg model</td><td class="value">Research only (devnet): whether/how the 500-block depth rule should behave at the boundary (a fresh devnet run converged at limit+1 rather than splitting — under reconciliation) and whether it should be an <b>operational alert</b> rather than an automatic rejection. <b>Would require a future coordinated upgrade — never auto-added to V16.</b></td></tr>
+        <tr><td class="label">Deep-reorg model</td><td class="value">Research only (devnet): whether the 500-block cap should become an <b>operational alert</b> (a valid higher-work chain adopted after re-verification) rather than an automatic rejection. <b>Would require a future coordinated upgrade — never auto-added to V16.</b></td></tr>
         <tr><td class="label">Mainnet today</td><td class="value">Unchanged: MAX_REORG_DEPTH = 500, hard checkpoints (≤3,554), atomic reorg with rollback</td></tr>
       </table>
       </div>
