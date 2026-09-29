@@ -7797,6 +7797,15 @@ static void process_orphans_for_parent(const std::string& parent_hash_hex) {
         if (!raw_json.empty()) {
             printf("[ORPHAN] Re-processing orphan block %s (parent now available)\n",
                    orphan_hash.substr(0,16).c_str());
+            // Storing the orphan marked it known. Left in the set, process_block's
+            // relay-dedup guard returns false before validating, the orphan (already
+            // erased from the index above) is lost, and every later block is
+            // classified against a chain that never gets it: the node stops
+            // advancing until restarted. Forget it here so it gets the full path.
+            {
+                std::lock_guard<std::mutex> lk(g_known_mu);
+                g_known_blocks.erase(orphan_hash);
+            }
             process_block(raw_json);
         }
     }
@@ -8201,7 +8210,27 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     }
                 }
             }
-            if (already_have) return true; // silently skip — benign relay, no penalty
+            if (already_have) {
+                // The echo is still information: a peer relaying a block to us
+                // HAS that block. their_height was otherwise only refreshed by
+                // VERSION (once, at connect) and by blocks WE accepted from the
+                // peer, so a node that relays but never mines stayed frozen at
+                // its handshake height here — and 50 blocks later
+                // broadcast_block_to_peers() skipped it as "still syncing" for
+                // good: a pure relay node stopped receiving blocks ~8 h after
+                // connecting. A peer claiming a higher height only makes us
+                // send it more; it gains nothing by lying.
+                if (blk_height > 0) {
+                    std::lock_guard<std::mutex> lk_ph(g_peers_mu);
+                    for (auto& p : g_peers)
+                        if (p.fd == fd) {
+                            if (blk_height > p.their_height) p.their_height = blk_height;
+                            p.last_seen = time(nullptr);
+                            break;
+                        }
+                }
+                return true; // benign relay, no penalty
+            }
 
             // New block we did not ask for: relay traffic, subject to the
             // steady-state limit like anyone else's. Solicited blocks skip the
@@ -9177,6 +9206,10 @@ int main(int argc, char** argv) {
     signal(SIGSEGV, crash_handler);
     signal(SIGABRT, crash_handler);
     signal(SIGFPE,  crash_handler);
+    // A peer that closes its end (inbound limit, cooldown, restart) turns our next
+    // write into SIGPIPE, whose default action kills the process. systemd ignores
+    // it for its services (IgnoreSIGPIPE=yes), a node started from a shell does not.
+    signal(SIGPIPE, SIG_IGN);
     setbuf(stdout, NULL); // unbuffered for crash visibility
 
     // Telemetry boot timestamp for the getminerstats RPC.
@@ -9580,16 +9613,34 @@ int main(int argc, char** argv) {
                         p2p_send(p.fd,"PING",nullptr,0);
                     }
                 }
-                // Auto-reconnect: if no peers and we have connect addresses, reconnect
-                if(g_peers.empty() && !connect_addrs.empty()){
-                    printf("[P2P] No peers connected, attempting reconnect...\n");
+            }
+            // Auto-reconnect, per configured target. It used to fire only when the
+            // node had NO peers at all, so with two static peers the loss of one was
+            // permanent while the other stayed up, and it dialled while holding
+            // g_peers_mu (a black-holed target blocks connect() for minutes).
+            // Outbound peers keep the exact "host:port" string they were dialled
+            // with, which is what identifies a configured target as connected.
+            {
+                std::vector<std::string> missing;
+                {
+                    std::lock_guard<std::mutex> lk(g_peers_mu);
                     for(const auto& a:connect_addrs){
-                        auto colon=a.rfind(':');
-                        if(colon!=std::string::npos){
-                            connect_peer(a.substr(0,colon), atoi(a.substr(colon+1).c_str()));
-                        } else {
-                            connect_peer(a, P2P_PORT_DEFAULT);
-                        }
+                        std::string key = a.rfind(':')==std::string::npos
+                            ? a+":"+std::to_string(P2P_PORT_DEFAULT) : a;
+                        bool up=false;
+                        for(const auto& p:g_peers) if(p.outbound && p.addr==key){ up=true; break; }
+                        if(!up) missing.push_back(a);
+                    }
+                }
+                if(!missing.empty())
+                    printf("[P2P] %zu of %zu configured peer(s) not connected, redialling\n",
+                           missing.size(), connect_addrs.size());
+                for(const auto& a:missing){
+                    auto colon=a.rfind(':');
+                    if(colon!=std::string::npos){
+                        connect_peer(a.substr(0,colon), atoi(a.substr(colon+1).c_str()));
+                    } else {
+                        connect_peer(a, P2P_PORT_DEFAULT);
                     }
                 }
             }
