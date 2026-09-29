@@ -7399,13 +7399,17 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     // Reorg depth limit: reject blocks that would require undoing more than MAX_REORG_DEPTH blocks
     // (Currently chain is append-only, but this guards against future reorg logic)
     if(height < g_chain_height - MAX_REORG_DEPTH){
-        // SACS Delivery B (devnet research): don't reject deep fork blocks outright —
-        // storing them is what lets a long-partitioned segment be assembled and then
-        // reconverge on higher work. Mainnet/testnet keep the hard reject (V16 intact).
-        if(g_sacs_recovery_mode){
-            printf("[BLOCK][SACS-RECOVERY] Accepting deep fork block at height %lld (%lld behind tip %lld) "
-                   "for possible reconvergence.\n",
-                   (long long)height, (long long)(g_chain_height-height), (long long)g_chain_height);
+        // SACS V2 (CONSENSUS): from SACS_V2_ACTIVATION_HEIGHT, store deep fork blocks that
+        // are themselves post-activation (height >= activation) instead of rejecting them,
+        // so try_reorganize can later evaluate the fork by STRICT valid cumulative work.
+        // Pre-activation blocks keep the legacy hard reject (V16 history protected). The
+        // devnet research flag g_sacs_recovery_mode (DEV profile only) keeps the same path.
+        const bool v2_store = (height >= sost::SACS_V2_ACTIVATION_HEIGHT);
+        if(g_sacs_recovery_mode || v2_store){
+            printf("[BLOCK][SACS-V2] Storing deep fork block at height %lld (%lld behind tip %lld) "
+                   "for possible higher-work reconvergence (%s).\n",
+                   (long long)height, (long long)(g_chain_height-height), (long long)g_chain_height,
+                   v2_store ? "post-activation" : "devnet recovery-mode");
         } else {
             printf("[BLOCK] REJECTED: height %lld is beyond max reorg depth (%lld blocks behind tip %lld)\n",
                    (long long)height, (long long)MAX_REORG_DEPTH, (long long)g_chain_height);
@@ -7704,15 +7708,21 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
 
     // Step 3: Verify limits
     if (disconnect_count > MAX_REORG_DEPTH) {
-        if (g_sacs_recovery_mode) {
-            // SACS Delivery B (devnet research): the depth cap is ADVISORY here — raise a
-            // DEEP_REORG_ALERT and proceed. The reorg still requires strictly higher
-            // fully-validated cumulative work (checked in Step 4 below) and is still
-            // atomic (Steps 5–7). This is what lets two segments separated by more than
-            // the limit reconverge automatically, with no operator/checkpoint/quorum.
-            printf("[REORG][SACS-RECOVERY] Depth %lld exceeds cap %lld — proceeding (advisory alert).\n",
-                   (long long)disconnect_count, (long long)MAX_REORG_DEPTH);
-            sacs::Rec r; r.type=sacs::Ev::DEEP_REORG_ALERT; r.result="recovery_proceed";
+        // SACS V2 (CONSENSUS, activates at SACS_V2_ACTIVATION_HEIGHT): from activation,
+        // for forks whose FORK POINT is at/after the activation height, the depth cap is
+        // no longer a hard rejection but a DEEP-REORG ALARM THRESHOLD. The reorg is then
+        // allowed ONLY via the SAME safety gates that already follow: the checkpoint
+        // guard (below), the STRICT cumulative-work test in Step 4 (never height), and
+        // full per-block re-validation in the connect loop. Pre-activation fork points
+        // keep the legacy hard cap, so pre-fork history cannot be rewritten. The devnet
+        // research flag g_sacs_recovery_mode (DEV profile only) keeps the same path.
+        const bool v2_deep_reorg = (fork_point >= sost::SACS_V2_ACTIVATION_HEIGHT);
+        if (g_sacs_recovery_mode || v2_deep_reorg) {
+            printf("[REORG][SACS-V2] Deep reorg: fork_point=%lld depth=%lld exceeds cap %lld — "
+                   "ALARM + full-validation path (%s). Winner decided by strictly higher VALID work, never height.\n",
+                   (long long)fork_point, (long long)disconnect_count, (long long)MAX_REORG_DEPTH,
+                   v2_deep_reorg ? "fork_point>=SACS_V2_ACTIVATION_HEIGHT" : "devnet recovery-mode");
+            sacs::Rec r; r.type=sacs::Ev::DEEP_REORG_ALERT; r.result= v2_deep_reorg ? "v2_deep_reorg_proceed" : "recovery_proceed";
             r.old_tip=to_hex(g_blocks.back().block_id.data(),32);
             r.new_tip=to_hex(fork_chain.back().block_id.data(),32);
             r.ancestor=to_hex(g_blocks[fork_point].block_id.data(),32); r.ancestor_height=fork_point;

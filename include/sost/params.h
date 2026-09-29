@@ -674,6 +674,23 @@ inline constexpr int32_t CASERT_PROFILE_COUNT = 43;
 
 inline constexpr int64_t  DYNAMIC_FEE_ACTIVATION_HEIGHT   = 10000;
 
+// ---------------------------------------------------------------------------
+// SACS V2 — deep-reorg recovery activation (CONSENSUS CHANGE, hard fork #30000).
+// Before this height (and for any fork whose FORK POINT is below it), the
+// MAX_REORG_DEPTH cap is a HARD consensus rejection (legacy behaviour, unchanged).
+// From this height, for forks whose fork point is at/after it, the cap becomes a
+// DEEP-REORG ALARM THRESHOLD: a deeper reorg is allowed ONLY if the candidate
+// chain is fully valid AND has STRICTLY greater verified cumulative work (never
+// by height, never by vote, never by any central authority). Pre-activation
+// history stays protected by the legacy cap. Mainnet activates at the existing
+// V16 fork height so no second hard fork is needed.
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t  SACS_V2_ACTIVATION_HEIGHT      = 42;      // DEVNET_FAST ONLY (test forks before/after 42)
+#else
+inline constexpr int64_t  SACS_V2_ACTIVATION_HEIGHT      = 30000;   // mainnet — same height as V16
+#endif
+
+
 // Base relay fee (same as current)
 inline constexpr int64_t  DYNAMIC_FEE_BASE                = 1;     // stocks/byte (floor)
 // V14 (block 15000): raise the NORMAL relay/mempool floor 1 -> 10 stocks/byte.
