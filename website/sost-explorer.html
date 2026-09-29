@@ -745,7 +745,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   <div class="dash-card" id="avgTimeGenesisCard" onclick="toggleDashPanel('avgtime')" style="color:#ec4899" title="All-time average since genesis. O(1) computed as (tip_time - GENESIS_TIME) / tip_height. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#ec4899">AVG &middot; GENESIS</div><div class="dash-val" id="dAvgTimeGenesis" style="color:#ec4899">&mdash;</div><div class="dash-sub" id="dAvgTimeGenesisSub" style="color:#ec4899">since block 0 &middot; visual</div><div class="dash-lag" id="dAvgTimeGenesisLag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label" style="color:var(--green)">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="True circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE. Counts all SOST currently in user wallets (miners + reward recipients). The DTD reward payouts ARE circulating — they sit in winners' wallets. The CIRCULATING MINING card next to this one shows only the miner-side share (excluding lottery)."><div class="dash-label" style="color:#FFFF00">CIRCULATING SUPPLY</div><div class="dash-val" id="dCircReal" style="color:#FFFF00">—</div><div class="dash-sub" id="dCircRealSub" style="color:#FFFF00">total − vault − pool</div></div>
-  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Miner-side circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD REWARD BALANCE. Excludes DTD reward payouts (those are shown as part of TRUE CIRCULATING SUPPLY to the left). Computed deterministically from consensus constants (V11 Phase 2 activation #7100, bootstrap cadence 2-of-3 until #12100, then 1-of-3 permanent; 50% of subsidy per triggered block). No background scan required."><div class="dash-label" style="color:var(--red)">CIRCULATING MINING</div><div class="dash-val red" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − lottery</div></div>
+  <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="Miner-side circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE − DTD REWARD BALANCE. Excludes DTD reward payouts (those are shown as part of TRUE CIRCULATING SUPPLY to the left). Computed deterministically from consensus constants (V11 Phase 2 activation #7100, bootstrap cadence 2-of-3 until #12100, then 1-of-3 permanent; 50% of subsidy per triggered block). No background scan required."><div class="dash-label" style="color:var(--red)">CIRCULATING MINING</div><div class="dash-val red" id="dCirc">—</div><div class="dash-sub" id="dCircSub">total − vault − pool − reward</div></div>
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')" title="Gold Vault reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--gold)">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub" id="dGoldBalSub">25%/block · ends at V15 (#25,000)</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')" title="PoPC Pool reserve. Until block 25,000 it receives 25% of every block reward. At V15 that emission ENDS and the accumulated reserve is progressively returned to active miners through the DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--cyan)">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub" id="dPopcBalSub">25%/block · ends at V15 (#25,000)</div></div>
@@ -3056,18 +3056,18 @@ async function updateDashboard(info){
   document.getElementById('dHeight').textContent='#'+fComma(info.blocks);
   var nextLotteryHeight=(info.blocks||0)+1;
   var nextLotteryLabel='pre-Phase 2';
-  if(nextLotteryHeight>=7100&&nextLotteryHeight<12100)nextLotteryLabel=((nextLotteryHeight%3)!==0)?'LOTTERY':'NORMAL';
+  if(nextLotteryHeight>=7100&&nextLotteryHeight<12100)nextLotteryLabel=((nextLotteryHeight%3)!==0)?'REWARD':'NORMAL';
   else if(nextLotteryHeight>=12100){
     var _isLot=((nextLotteryHeight%3)===0);
     if(nextLotteryHeight>=V15_H){
       // V15: 50% miner / 50% DTD every block. Lottery-cadence blocks PAY OUT
       // (jackpot on every 96th since V15); other blocks ACCUMULATE the DTD share.
-      nextLotteryLabel=_isLot?(jpIsOpportunity(nextLotteryHeight)?'JACKPOT':'LOTTERY'):'ACCUMULATE';
+      nextLotteryLabel=_isLot?(jpIsOpportunity(nextLotteryHeight)?'ACCUM. REWARD':'REWARD'):'ACCUMULATE';
     } else {
-      nextLotteryLabel=_isLot?'LOTTERY':'NORMAL';
+      nextLotteryLabel=_isLot?'REWARD':'NORMAL';
     }
   }
-  var _nextColor=(nextLotteryLabel==='JACKPOT')?'var(--gold)':'var(--yellow)';
+  var _nextColor=(nextLotteryLabel==='ACCUM. REWARD')?'var(--gold)':'var(--yellow)';
   document.getElementById('dHeightSub').innerHTML=fComma(info.utxo_count)+' UTXOs &middot;<br><span style="color:'+_nextColor+';font-weight:600">next: '+nextLotteryLabel+'</span>';
   // V5 activation banner removed after successful fork activation at block 4,300.
   // Network confirmed on V5: all connected peers on V5 chain, no split observed.
@@ -3559,7 +3559,7 @@ async function updateDashboard(info){
       if(circRealEl)  circRealEl.textContent  = fComma(circReal.toFixed(4)) + ' SOST';
       if(circRealSub) circRealSub.textContent = 'total − vault − pool';
       if(circEl)      circEl.textContent      = fComma(circMine.toFixed(4)) + ' SOST';
-      if(circSub)     circSub.textContent     = 'total − vault − pool − lottery';
+      if(circSub)     circSub.textContent     = 'total − vault − pool − reward';
       if(dtdEl)       dtdEl.textContent       = fComma(dtd.toFixed(4)) + ' SOST';
       if(dtdSub){
         // Three cadence eras, not two: is_lottery_block() returns true for EVERY
