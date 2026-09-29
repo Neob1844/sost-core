@@ -357,6 +357,49 @@
     </div>
   </section>
 
+  <!-- ============ WAYS TO OFFER AN ASSET — Tokenize / Auction / Draw / Fund ============ -->
+  <section class="blk" id="offer">
+    <div class="eyebrow">Offering models</div>
+    <h2>How do you want to <span class="g">offer this asset</span>?</h2>
+    <div class="sub">One Asset (or Project) Passport, four ways to bring it to people. Only <b>Tokenize</b> is a current product; the others are future/regulated modules — built and demoable here, never operated on real funds until a legal framework exists.</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
+      <div class="comp gold"><h3>1 · Tokenize <span style="font-size:10px;color:var(--green)">· CURRENT</span></h3><p>Divide a right into token units. <a href="#create">Create a Passport &rarr;</a></p><span class="tag">divide a right into units</span></div>
+      <div class="comp cyan"><h3>2 · Auction <span style="font-size:10px;color:var(--amber)">· FUTURE</span></h3><p>Recoverable escrow + bids; the highest valid bid wins. No chance involved — legally simpler than a draw, but asset-transfer / AML / tax rules still apply.</p><span class="tag">highest valid bid wins</span></div>
+      <div class="comp red"><h3>3 · Draw <span style="font-size:10px;color:var(--red2)">· FUTURE · REGULATED</span></h3><p>Tickets cover a minimum price; when sold out, a <b>verifiable</b> draw adjudicates the asset. In Spain this is a <b>rifa</b> (DGOJ / Ley 13/2011), not an auction — requires authorisation; disabled for real use.</p><span class="tag">one ticket wins the asset</span></div>
+      <div class="comp"><h3>4 · Project Funding <span style="font-size:10px;color:var(--amber)">· FUTURE · REGULATORY-READY</span></h3><p>Fund something not built yet: fund &rarr; build &rarr; verify &rarr; deliver, released by milestones. Debt/revenue/equity offers may be regulated crowdfunding (ECSPR / CNMV PSFP, ≤ €5M).</p><span class="tag">fund → build → deliver</span></div>
+    </div>
+
+    <div class="chips" style="margin:14px 0 4px"><span class="chip red">Draw &amp; Project Funding: LAUNCH DISABLED — demo only, no real funds</span></div>
+
+    <!-- DRAW demo -->
+    <h3 style="font-family:var(--sans);font-size:15px;margin:22px 0 6px;color:var(--txt)">Verifiable Draw &mdash; demo <span style="font-size:11px;color:var(--red2)">· FUTURE / REGULATED</span></h3>
+    <div class="sub">Reuses the DTD <i>philosophy</i> (commit-then-reveal; nobody can pick the winner after the seed is known) as an application-layer engine — it does <b>not</b> touch the DTD jackpot or consensus.</div>
+    <div class="demo">
+      <div class="row">
+        <div><label>Asset</label><input id="drwAsset" value="Gold bar 20,000 EUR" style="width:180px"></div>
+        <div><label>Tickets (target)</label><input id="drwN" value="5" style="width:90px"></div>
+        <div><label>Ticket ref</label><input id="drwRef" value="20 USDC" style="width:100px"></div>
+        <button class="run gold" onclick="drawDemo()">Sell out &rarr; freeze &rarr; draw</button>
+      </div>
+      <div class="tk-card" id="drwOut" style="border-top-color:var(--red);margin-top:14px"></div>
+      <div class="note">Escrow of the ticket reference in SOST is <b>refundable</b> while the campaign is open and if it never sells out. Ticket price is quoted in SOST from an oracle reference (e.g. 20 USDC), so the SOST price never changes the minimum the seller needs.</div>
+    </div>
+
+    <!-- PROJECT FUNDING demo -->
+    <h3 style="font-family:var(--sans);font-size:15px;margin:22px 0 6px;color:var(--txt)">Project Funding &mdash; demo <span style="font-size:11px;color:var(--amber)">· FUTURE / REGULATORY-READY</span></h3>
+    <div class="sub">You don't tokenize a plant that doesn't exist — you tokenize a <b>right</b> tied to the project. All-or-nothing funding, milestone-gated releases, honest escrow accounting.</div>
+    <div class="demo">
+      <div class="row">
+        <div><label>Project</label><input id="pfName" value="Solar Murcia I" style="width:170px"></div>
+        <div><label>Target (EUR)</label><input id="pfTarget" value="2000000" style="width:120px"></div>
+        <div><label>Right to funders</label><select id="pfModel"><option value="REVENUE_SHARE">Revenue share</option><option value="PRE_PURCHASE">Pre-purchase</option><option value="DEBT">Debt</option><option value="EQUITY_SPV">Equity / SPV</option></select></div>
+        <button class="run gold" onclick="fundDemo()">Fund &rarr; milestones</button>
+      </div>
+      <div class="tk-card" id="pfOut" style="border-top-color:var(--gold);margin-top:14px"></div>
+      <div class="note">Funds release per <b>verified milestone</b>, never all up front; if the minimum isn't reached by the deadline, everyone is refunded. Offering debt/yield/equity may be a financial instrument or regulated crowdfunding — <b>LEGAL CLASSIFICATION: NOT DETERMINED BY SOST</b>; launch stays disabled until an authorised partner/framework is in place.</div>
+    </div>
+  </section>
+
   <section class="blk">
     <h2>What is <span class="r">live today</span></h2>
     <div class="sub">The Asset Layer is ALPHA. This is exactly what works now, what is being finished, and what is only a future protocol module. Nothing here changes SOST supply or consensus.</div>
@@ -434,7 +477,7 @@
   </style>
   <section class="blk" id="tokenization">
     <div class="eyebrow">Tokenization</div>
-    <h2>How an asset becomes <span class="g">tokens</span></h2>
+    <h2>Tokenize — how an asset becomes <span class="g">tokens</span></h2>
     <div class="sub">The core rule: an asset's value comes from <b>its own economic reality</b> — never from SOST's supply. SOST is the gas, the unit of exchange and the settlement asset; its supply is untouched. Everything below is a planning model (PREVIEW): no native token is minted yet.</div>
 
     <div class="grid">
@@ -789,6 +832,8 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
 <script src="js/asset-passport-v2.js"></script>
 <script src="js/asset-intelligence.js"></script>
 <script src="js/asset-finance.js"></script>
+<script src="js/asset-draw.js"></script>
+<script src="js/project-funding.js"></script>
 <script>
 "use strict";
 var AP=window.SOSTAssetPassport, AI=window.SOSTAssetIntelligence, AF=window.SOSTAssetFinance;
@@ -1151,6 +1196,53 @@ async function tkGenPassport(){
   window.apwExample=function(){ loadDemo('mining'); };
   recalcRef();
 })();
+</script>
+<script>
+// ===== Offering-model demos (Draw + Project Funding), application-layer, LAUNCH DISABLED =====
+async function drawDemo(){
+  var out=document.getElementById('drwOut'); var D=window.SOSTAssetDraw; if(!D){out.innerHTML='<div class="tk-sub">engine not loaded</div>';return;}
+  try{
+    var n=Math.max(2,Math.min(50,parseInt(document.getElementById('drwN').value)||5));
+    var asset=(document.getElementById('drwAsset').value||'Asset').trim();
+    var c=D.newCampaign({asset_passport_hash:'sost-asset-demo-'+asset.replace(/[^a-z0-9]/gi,'').slice(0,10),target_tickets:n,price_ref_usdc:'20',network:'devnet',close_height:1000,entropy_height:1010});
+    for(var i=1;i<=n;i++) D.sellTicket(c,'TICKET-'+String(i).padStart(4,'0'),'buyer'+i);
+    var h=await D.freeze(c);
+    var entropy='3f7a'.repeat(16); // demo: stand-in for a FUTURE block hash at height 1010
+    var r=await D.draw(c,entropy,1010);
+    var v=await D.verify(h,c.tickets,entropy);
+    out.innerHTML='<h4>'+asset+' &mdash; verifiable draw (DEMO)</h4>'
+      +'<div class="kv"><span class="k">Tickets sold / target</span><span class="v">'+c.tickets.length+' / '+n+' &middot; SOLD OUT</span></div>'
+      +'<div class="kv"><span class="k">campaignHash (frozen)</span><span class="v" style="word-break:break-all">'+h+'</span></div>'
+      +'<div class="kv"><span class="k">Entropy source</span><span class="v">block @'+c.entropy_height+' (announced BEFORE it existed)</span></div>'
+      +'<div class="kv"><span class="k">Winning ticket</span><span class="v"><span class="st on" style="font-size:10px">'+r.winner_ticket+'</span> (index '+r.winner_index+')</span></div>'
+      +'<div class="kv"><span class="k">Independent recompute</span><span class="v">'+(v.winner_ticket===r.winner_ticket?'MATCH ✓ (anyone verifies)':'MISMATCH')+'</span></div>'
+      +'<div class="note">DEMO / EXAMPLE. Real operation is a regulated <b>rifa</b> (DGOJ) and is disabled here. Escrow refundable while open / if never sold out.</div>';
+  }catch(e){ out.innerHTML='<div class="tk-sub">error: '+(e&&e.message||e)+'</div>'; }
+}
+function fundDemo(){
+  var out=document.getElementById('pfOut'); var P=window.SOSTProjectFunding; if(!P){out.innerHTML='<div class="tk-sub">engine not loaded</div>';return;}
+  try{
+    var name=(document.getElementById('pfName').value||'Project').trim();
+    var eur=Math.max(1,parseInt(document.getElementById('pfTarget').value)||2000000);
+    var cents=String(eur*100); var minCents=String(Math.round(eur*100*0.75));
+    var model=document.getElementById('pfModel').value;
+    var p=P.newProject({project_passport_hash:'proj-'+name.replace(/[^a-z0-9]/gi,'').slice(0,10),model:model,target:cents,minimum:minCents,right_desc:model==='REVENUE_SHARE'?'8% revenue / 10y':model,currency:'EUR',settlement_rail:'SOST',token_symbol:'PROJ-X',token_supply:'200000',deadline:1000,milestones:[{pct:15,desc:'permits'},{pct:25,desc:'construction start'},{pct:35,desc:'equipment'},{pct:20,desc:'commissioning'},{pct:5,desc:'operation'}]});
+    P.commit(p,String(Math.round(eur*100*0.82))); // 82% committed
+    P.closeWindow(p,1000); P.activate(p);
+    P.verifyMilestone(p,0); var r0=P.release(p,0);
+    var acc=P.accounting(p);
+    var eurf=function(c){return '€'+(Number(c)/100).toLocaleString();};
+    out.innerHTML='<h4>'+name+' &mdash; project funding (DEMO)</h4>'
+      +'<div class="kv"><span class="k">Right to funders</span><span class="v">'+(p.right_desc||model)+'</span></div>'
+      +'<div class="kv"><span class="k">Target / minimum</span><span class="v">'+eurf(cents)+' / '+eurf(minCents)+'</span></div>'
+      +'<div class="kv"><span class="k">Committed</span><span class="v">'+eurf(p.committed)+' &middot; '+acc.pct_funded+'% &middot; '+p.funders+' funder(s)</span></div>'
+      +'<div class="kv"><span class="k">Status</span><span class="v"><span class="st on" style="font-size:10px">'+p.state+'</span></span></div>'
+      +'<div class="kv"><span class="k">Milestone</span><span class="v">'+acc.milestone+' &middot; released '+eurf(acc.released)+'</span></div>'
+      +'<div class="kv"><span class="k">Funded / released / escrowed</span><span class="v">'+eurf(acc.funded)+' / '+eurf(acc.released)+' / '+eurf(acc.escrowed)+'</span></div>'
+      +'<div class="kv"><span class="k">Legal classification</span><span class="v" style="color:var(--txt3)">NOT DETERMINED BY SOST</span></div>'
+      +'<div class="note">'+acc.note+' DEMO / EXAMPLE &mdash; launch disabled until a regulated crowdfunding partner/framework is in place.</div>';
+  }catch(e){ out.innerHTML='<div class="tk-sub">error: '+(e&&e.message||e)+'</div>'; }
+}
 </script>
 </body>
 </html>
