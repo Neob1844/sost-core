@@ -1,0 +1,44 @@
+# SOST mainnet RELAY node — full validation + relay, NO mining, NO public RPC.
+# Binary: official v16.3.0 sost-node, sha256 304d056d504960b4179543672f14bee28146788b985363a5e95d476cc6b1492e
+# (the same release every operator downloads; installer refuses any other hash).
+[Unit]
+Description=SOST mainnet relay node (static peer of seed.sostcore.com)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sost
+Group=sost
+WorkingDirectory=/var/lib/sost-relay
+EnvironmentFile=/etc/sost/relay.env
+# --connect is the ONLY outbound peer (star topology around the reference node).
+# A non-empty --connect list also means the built-in default seeds are never dialled.
+ExecStart=/usr/local/lib/sost/v16.3.0/sost-node \
+    --profile mainnet \
+    --genesis /var/lib/sost-relay/genesis_block.json \
+    --chain   /var/lib/sost-relay/chain.json \
+    --wallet  /var/lib/sost-relay/wallet.json \
+    --port ${P2P_PORT} \
+    --rpc-port ${RPC_PORT} \
+    --rpc-user ${RPC_USER} \
+    --rpc-pass-file /etc/sost/rpc.pass \
+    --p2p-enc on \
+    $SOST_CONNECT
+Restart=always
+RestartSec=10
+TimeoutStopSec=60
+# systemd default, stated because the lab showed why it matters: v16.3.0 does not
+# ignore SIGPIPE itself, and a peer closing its socket must not kill the node.
+IgnoreSIGPIPE=yes
+LimitNOFILE=65536
+StandardOutput=append:/var/log/sost-relay/node.log
+StandardError=append:/var/log/sost-relay/node.log
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/sost-relay /var/log/sost-relay
+
+[Install]
+WantedBy=multi-user.target

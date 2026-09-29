@@ -1,0 +1,14 @@
+[Unit]
+Description=SOST relay watchdog (restart the relay node if it falls behind the public tip)
+After=sost-relay-node.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/sost/relay.env
+Environment=REF_RPC=https://sostcore.com/rpc/public
+Environment=MAX_LAG=2
+Environment=STRIKES=2
+Environment=MIN_GAP_S=900
+Environment="RESTART_CMD=systemctl restart sost-relay-node"
+Environment=STATE=/var/lib/sost-relay-watchdog/state
+ExecStart=/usr/local/lib/sost/sost-relay-watchdog.sh
