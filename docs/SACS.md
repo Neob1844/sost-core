@@ -36,3 +36,19 @@ upgrade, not V16.
 Documented as **LAB VERIFIED · RESEARCH** on `website/sost-security.html#sacs` and
 `website/sost-whitepaper.html#sec-sacs`. Never labelled MAINNET LIVE until an authorised, backed-up,
 reversible deployment after #30,000.
+
+## Fresh devnet lab run — 2026-09-29 (IMPORTANT, must reconcile)
+Ran the branch harness `tests/sacs_p2_reorg.sh` with the existing `build-sacs` binaries (isolated `--noseed`
+nodes; competing chain delivered via `submitblock` → real `try_reorganize`; MAX_REORG_DEPTH scaled to 8):
+- **converge_d8 (disconnect 8 = limit): PASS** — B adopted A's higher-work chain; UTXO root A==B (`509e23a9…`);
+  restart stable.
+- **reject_d9 (disconnect 9 = limit+1): the node CONVERGED instead of rejecting** — B reorged (disconnect 9,
+  connect 10), UTXO root A==B (`890abdf1…`), restart stable; **no REORG_LIMIT rejection was logged**. The
+  harness marks this FAIL because it *expected* a persistent split.
+
+**This CONTRADICTS the analytical `SACS_500BLOCK_FINDING.md`** (which predicted persistent split at limit+1).
+Empirically, in this build, limit+1 did NOT split — the depth guard (`:7479 disconnect_count > MAX_REORG_DEPTH`)
+did not fire on this reorg path. Also `[REORG] Active work=0000… candidate work=0000…` and `Fork detected at
+height 0` (two fully independent from-genesis chains) — logging/work-accounting on the fork-store→reorg path
+needs review. **Conclusion: boundary behavior is UNRESOLVED and under active lab verification; no doctrinal
+claim about the 500 rule until the code-path vs the analysis is reconciled.** No mainnet/consensus/V16 change.
