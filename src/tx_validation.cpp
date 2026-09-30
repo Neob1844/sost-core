@@ -16,6 +16,8 @@
 #include "sost/crypto.h"      // OTC-1 — sha256() for HTLC preimage verification (R21)
 #include "sost/jackpot.h"     // V15 (BLOCKER 2) — reserve freeze: is_reserve_output + gate
 #include "sost/tx_signer.h"   // OTC-1 — SpentOutput / VerifyTransactionInput (HTLC spend dispatch)
+#include "sost/params.h"       // V30000 — native_assets_active_at gate
+#include "sost/native_assets.h" // V30000 — asset output payload parse/bounds
 
 #include <algorithm>
 #include <climits>
@@ -46,6 +48,12 @@ static bool IsActiveOutputType(uint8_t type, int64_t height, int64_t bond_activa
     // always false → R11 rejects HTLC outputs, mainnet stays no-op.
     if ((type == OUT_HTLC_LOCK || type == OUT_HTLC_CLAIM_WITNESS) &&
         atomic_swap_htlc_active_at(height))
+        return true;
+    // V30000 — native asset output types active only once native assets are live
+    // (height >= NATIVE_ASSETS_ACTIVATION_HEIGHT). Pre-activation → R11 rejects them.
+    if ((type == OUT_ASSET_TRANSFER || type == OUT_ASSET_ISSUE_AUTH ||
+         type == OUT_ASSET_BURN     || type == OUT_ASSET_GENESIS_DEF) &&
+        native_assets_active_at(height))
         return true;
     return false;
 }
@@ -117,7 +125,15 @@ static TxValidationResult ValidateStructure(
         bool htlc_tx_type_allowed =
             atomic_swap_htlc_active_at(ctx.spend_height) &&
             (tx.tx_type == TX_TYPE_HTLC_CLAIM || tx.tx_type == TX_TYPE_HTLC_REFUND);
-        if (!std_tx_type && !htlc_tx_type_allowed) {
+        // V30000 — native asset tx types allowed only once native assets are live.
+        // ValidateTransactionConsensus then enforces the SOST-value + signature dimension
+        // for asset txs exactly as for STANDARD; the ASSET dimension (per-asset conservation,
+        // supply/cap/authority) is enforced separately by validate_asset_tx in the block path.
+        bool asset_tx_type_allowed =
+            native_assets_active_at(ctx.spend_height) &&
+            (tx.tx_type == TX_TYPE_ASSET_GENESIS  || tx.tx_type == TX_TYPE_ASSET_ISSUE ||
+             tx.tx_type == TX_TYPE_ASSET_TRANSFER || tx.tx_type == TX_TYPE_ASSET_BURN);
+        if (!std_tx_type && !htlc_tx_type_allowed && !asset_tx_type_allowed) {
             return TxValidationResult::Fail(TxValCode::R2_BAD_TX_TYPE,
                 "R2: invalid tx_type 0x" + HexStr(&tx.tx_type, 1));
         }
@@ -294,6 +310,26 @@ static TxValidationResult ValidateStructure(
                 payload_allowed = true; // validated in R17 above (OTC-1)
             } else if (out.type == OUT_HTLC_CLAIM_WITNESS && atomic_swap_htlc_active_at(ctx.spend_height)) {
                 payload_allowed = true; // validated in R18 above (OTC-1)
+            } else if (native_assets_active_at(ctx.spend_height) &&
+                       (out.type == OUT_ASSET_TRANSFER || out.type == OUT_ASSET_ISSUE_AUTH ||
+                        out.type == OUT_ASSET_BURN     || out.type == OUT_ASSET_GENESIS_DEF)) {
+                // V30000 — asset outputs carry the asset payload; validate its FORMAT here
+                // (defense-in-depth). The ASSET shape/conservation is validate_asset_tx's job.
+                std::string ae;
+                bool pok = false;
+                if (out.type == OUT_ASSET_TRANSFER || out.type == OUT_ASSET_BURN) {
+                    Bytes32 aid; uint64_t amt; pok = parse_asset_amount(out.payload, aid, amt, &ae);
+                } else if (out.type == OUT_ASSET_ISSUE_AUTH) {
+                    Bytes32 aid; pok = parse_asset_auth(out.payload, aid, &ae);
+                } else { // OUT_ASSET_GENESIS_DEF
+                    AssetDef d; pok = parse_asset_def(out.payload, d, &ae);
+                }
+                if (!pok) {
+                    return TxValidationResult::Fail(TxValCode::R14_PAYLOAD_FORBIDDEN,
+                        "R14: output[" + std::to_string(i) + "] malformed asset payload: " + ae,
+                        -1, (int32_t)i);
+                }
+                payload_allowed = true;
             } else if (ctx.spend_height >= ctx.capsule_activation_height) {
                 if (out.type == OUT_TRANSFER) payload_allowed = true;
             }
