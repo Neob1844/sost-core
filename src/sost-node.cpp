@@ -31,6 +31,7 @@
 #include "sost/types.h"
 #include "sost/utxo_set.h"
 #include "sost/node_participation.h"   // V16 — node participation state
+#include "sost/native_assets_index.h"  // V30000 — native-asset index + validator (chain-derived)
 #include "sost/crypto.h"   // sha256 — used by --dry-run-replay UTXO root
 #include "sost/mempool.h"
 #include "sost/tx_validation.h"
@@ -109,6 +110,11 @@ static UtxoSet      g_utxo_set;
 // V16 — node participation state (chain-derived; reorg/reindex-safe).
 static sost::node_participation::NodeState g_node_state;
 static std::map<int64_t, sost::node_participation::ConnectResult> g_node_undos;
+// V30000 — native-asset index (chain-derived supply ledger; reorg/reindex-safe),
+// mirrors the node-participation apply/undo pattern. g_asset_undos journals the
+// per-block deltas so a reorg disconnect restores the index byte-for-byte.
+static sost::NativeAssetIndex g_native_asset_index;
+static std::map<int64_t, std::vector<sost::AssetIndexDelta>> g_asset_undos;
 // V16 — native auto-heartbeat (opt-in via --node-key <hex64>). When enabled the
 // node signs and broadcasts one NODE_HEARTBEAT per epoch for its bound node key,
 // but never before the DTD Jackpot V2 activation height. Reorg-safe: it derives
@@ -5667,6 +5673,54 @@ static void undo_node_state_for_block(int64_t height) {
 }
 
 // ===========================================================================
+// V30000 — native-asset index apply/undo hooks (called alongside every
+// ConnectBlock / DisconnectBlock caller so g_native_asset_index tracks the chain
+// and reorg/reindex are exact) — mirrors the node-participation pattern.
+//
+// The ASSET dimension (per-asset conservation, supply/cap, issuance authority) is
+// validated here via validate_asset_tx against the PRE-block UTXO view + the index
+// (updated incrementally within the block so intra-block duplicate-genesis is
+// caught). The SOST-value + signature dimension of these txs is already enforced
+// in the block tx loop by ValidateTransactionConsensus. v1 policy: an asset tx
+// may not spend an asset UTXO created earlier in the SAME block (asset outputs
+// need 1 confirmation) — such a tx fails validation here and the block is rejected;
+// this is conservative and closes no consensus hole. Pre-activation there are no
+// asset txs, so this is a no-op and replay is byte-identical.
+// ===========================================================================
+static bool apply_asset_state_for_block(const std::vector<Transaction>& txs, int64_t height, std::string& err) {
+    if (!sost::native_assets_active_at(height)) return true;   // no-op pre-activation
+    std::vector<sost::AssetIndexDelta> deltas;
+    for (size_t i = 1; i < txs.size(); ++i) {
+        const uint8_t tt = txs[i].tx_type;
+        if (tt != sost::TX_TYPE_ASSET_GENESIS && tt != sost::TX_TYPE_ASSET_ISSUE &&
+            tt != sost::TX_TYPE_ASSET_TRANSFER && tt != sost::TX_TYPE_ASSET_BURN)
+            continue;
+        Hash256 txid{}; std::string ide;
+        if (!txs[i].ComputeTxId(txid, &ide)) { err = "asset txid compute: " + ide; return false; }
+        std::string ae;
+        sost::AssetTxResult r = sost::validate_asset_tx(txs[i], txid, g_utxo_set,
+                                                        g_native_asset_index, height, &ae);
+        if (r != sost::AssetTxResult::OK) {
+            // roll back any deltas already applied for this block before failing
+            for (auto it = deltas.rbegin(); it != deltas.rend(); ++it) g_native_asset_index.undo(*it);
+            err = std::string("asset tx[") + std::to_string(i) + "]: " + ae;
+            return false;
+        }
+        deltas.push_back(g_native_asset_index.apply(txs[i], txid));
+    }
+    if (!deltas.empty()) g_asset_undos[height] = std::move(deltas);
+    return true;
+}
+static void undo_asset_state_for_block(int64_t height) {
+    auto it = g_asset_undos.find(height);
+    if (it != g_asset_undos.end()) {
+        for (auto rit = it->second.rbegin(); rit != it->second.rend(); ++rit)
+            g_native_asset_index.undo(*rit);
+        g_asset_undos.erase(it);
+    }
+}
+
+// ===========================================================================
 // V16 — native auto-heartbeat thread.
 //
 // Once the DTD Jackpot V2 activation height is reached, a bound node must emit
@@ -6375,7 +6429,16 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         const bool node_block_tx =
             sost::node_participation_active_at(height) &&
             (txs[i].tx_type == TX_TYPE_NODE_BIND || txs[i].tx_type == TX_TYPE_NODE_HEARTBEAT);
-        if(txs[i].tx_type != TX_TYPE_STANDARD && !htlc_block_tx && !jackpot_block_tx && !node_block_tx){
+        // V30000 — native asset txs are valid block tx types once native assets are live.
+        // Unlike jackpot/node txs they are NOT exempted from ValidateTransactionConsensus:
+        // they carry real inputs+signatures, so the SOST-value + signature dimension is
+        // validated by the standard path below; the ASSET dimension is enforced by
+        // apply_asset_state_for_block (validate_asset_tx) at the ConnectBlock call sites.
+        const bool asset_block_tx =
+            sost::native_assets_active_at(height) &&
+            (txs[i].tx_type == TX_TYPE_ASSET_GENESIS  || txs[i].tx_type == TX_TYPE_ASSET_ISSUE ||
+             txs[i].tx_type == TX_TYPE_ASSET_TRANSFER || txs[i].tx_type == TX_TYPE_ASSET_BURN);
+        if(txs[i].tx_type != TX_TYPE_STANDARD && !htlc_block_tx && !jackpot_block_tx && !node_block_tx && !asset_block_tx){
             printf("[BLOCK] REJECTED: non-standard tx at index %zu\n", i);
             return false;
         }
@@ -7481,10 +7544,23 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         }
     }
 
+    // V30000: validate + apply native-asset state (GENESIS/ISSUE/TRANSFER/BURN) against
+    // the PRE-BLOCK UTXO view + asset index — INVALID block if any asset tx is invalid.
+    // Applied before ConnectBlock; rolled back with node state if ConnectBlock fails.
+    {
+        std::string aerr;
+        if (!apply_asset_state_for_block(txs, height, aerr)) {
+            undo_node_state_for_block(height);
+            printf("[BLOCK] REJECTED: native asset: %s\n", aerr.c_str());
+            return false;
+        }
+    }
+
     // Connect block to UTXO set atomically
     BlockUndo undo;
     std::string uerr;
     if(!g_utxo_set.ConnectBlock(txs, height, undo, &uerr)){
+        undo_asset_state_for_block(height);
         undo_node_state_for_block(height);
         printf("[BLOCK] REJECTED: UTXO ConnectBlock failed: %s\n", uerr.c_str());
         return false;
@@ -8015,6 +8091,7 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             return false;
         }
         undo_node_state_for_block(h);
+        undo_asset_state_for_block(h);
         disconnected.push_back(g_blocks[h]);
         disconnected_txs.push_back(txs);
         printf("[REORG] Disconnected block h=%lld\n", (long long)h);
@@ -8078,6 +8155,7 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             std::string derr;
             g_utxo_set.DisconnectBlock(txs, g_block_undos[h], &derr);
             undo_node_state_for_block(h);
+            undo_asset_state_for_block(h);
         }
         g_blocks.resize(fork_point + 1);
         g_block_undos.resize(fork_point + 1);
@@ -8116,7 +8194,17 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
                     break;
                 }
             }
+            {
+                std::string aerr;
+                if (!apply_asset_state_for_block(txs, sb.height, aerr)) {
+                    undo_node_state_for_block(sb.height);
+                    printf("[REORG] CRITICAL: native asset restoring h=%lld: %s\n",
+                           (long long)sb.height, aerr.c_str());
+                    break;
+                }
+            }
             if (!g_utxo_set.ConnectBlock(txs, sb.height, undo, &uerr)) {
+                undo_asset_state_for_block(sb.height);
                 undo_node_state_for_block(sb.height);
                 printf("[REORG] CRITICAL: Cannot restore original block h=%lld: %s\n",
                        (long long)sb.height, uerr.c_str());
@@ -9172,6 +9260,14 @@ static bool load_chain(const std::string& path) {
                     if (!apply_node_state_for_block(txs, height, nerr)) {
                         printf("[CHAIN-LOAD] FATAL: node participation at h=%lld: %s\n",
                                (long long)height, nerr.c_str());
+                        return false;
+                    }
+                }
+                {
+                    std::string aerr;
+                    if (!apply_asset_state_for_block(txs, height, aerr)) {
+                        printf("[CHAIN-LOAD] FATAL: native asset at h=%lld: %s\n",
+                               (long long)height, aerr.c_str());
                         return false;
                     }
                 }
