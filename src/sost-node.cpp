@@ -2489,6 +2489,61 @@ static std::string handle_getnewaddress(const std::string& id, const std::vector
     return rpc_result(id,"\""+key.address+"\"");
 }
 
+// ---- V30000 native asset query RPCs (read the chain-derived asset index + UTXO set) ----
+static std::string asset_state_json(const sost::Bytes32& idb, const sost::AssetState& st){
+    std::ostringstream s;
+    uint64_t circ = st.issued >= st.burned ? (st.issued - st.burned) : 0;
+    s<<"{\"asset_id\":\""<<to_hex(idb.data(),32)<<"\""
+     <<",\"symbol\":\""<<st.def.symbol<<"\""
+     <<",\"name\":\""<<st.def.name<<"\""
+     <<",\"decimals\":"<<(int)st.def.decimals
+     <<",\"supply_policy\":"<<(int)st.def.supply_policy
+     <<",\"reissuable\":"<<(st.def.supply_policy==sost::ASSET_POLICY_CAPPED_REISSUABLE?"true":"false")
+     <<",\"max_supply\":"<<st.def.max_supply
+     <<",\"issued\":"<<st.issued
+     <<",\"burned\":"<<st.burned
+     <<",\"circulating\":"<<circ
+     <<",\"manifest_hash\":\""<<to_hex(st.def.manifest_hash.data(),32)<<"\"}";
+    return s.str();
+}
+static std::string handle_getasset(const std::string& id, const std::vector<std::string>& p){
+    if(p.empty()) return rpc_error(id,-8,"getasset requires <asset_id_hex>");
+    auto raw=from_hex(p[0]); if(raw.size()!=32) return rpc_error(id,-8,"asset_id must be 32-byte hex");
+    sost::Bytes32 idb{}; std::copy(raw.begin(),raw.end(),idb.begin());
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    const sost::AssetState* st=g_native_asset_index.GetAsset(idb);
+    if(!st) return rpc_error(id,-5,"asset not found");
+    return rpc_result(id, asset_state_json(idb,*st));
+}
+static std::string handle_listassets(const std::string& id, const std::vector<std::string>&){
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    std::ostringstream s; s<<"["; bool first=true;
+    for(const auto& kv : g_native_asset_index.map()){
+        if(!first) s<<","; first=false;
+        s<<asset_state_json(kv.first,kv.second);
+    }
+    s<<"]";
+    return rpc_result(id,s.str());
+}
+static std::string handle_getassetbalance(const std::string& id, const std::vector<std::string>& p){
+    if(p.size()<2) return rpc_error(id,-8,"getassetbalance requires <address> <asset_id_hex>");
+    std::array<uint8_t,20> pkh{}; if(!address_decode(p[0],pkh)) return rpc_error(id,-8,"bad address");
+    auto raw=from_hex(p[1]); if(raw.size()!=32) return rpc_error(id,-8,"asset_id must be 32-byte hex");
+    sost::Bytes32 want{}; std::copy(raw.begin(),raw.end(),want.begin());
+    unsigned __int128 bal=0;
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    for(const auto& kv : g_utxo_set.GetMap()){
+        const auto& e=kv.second;
+        if(e.type!=OUT_ASSET_TRANSFER) continue;
+        if(e.pubkey_hash!=pkh) continue;
+        sost::Bytes32 aid; uint64_t amt;
+        if(sost::parse_asset_amount(e.payload,aid,amt) && aid==want) bal+=(unsigned __int128)amt;
+    }
+    std::ostringstream s; s<<"{\"address\":\""<<p[0]<<"\",\"asset_id\":\""<<to_hex(want.data(),32)
+                           <<"\",\"balance\":"<<(unsigned long long)bal<<"}";
+    return rpc_result(id,s.str());
+}
+
 static std::string handle_validateaddress(const std::string& id, const std::vector<std::string>& p) {
     if(p.empty()) return rpc_error(id,-1,"missing address");
     bool valid=address_valid(p[0]); bool mine=g_wallet.has_address(p[0]);
@@ -4900,6 +4955,9 @@ static std::map<std::string,RpcHandler> g_handlers={
     {"getsupplyinfo",handle_getsupplyinfo},
     {"geteligibleminers",handle_geteligibleminers},
     {"getbalance",handle_getbalance},
+    {"getasset",handle_getasset},
+    {"listassets",handle_listassets},
+    {"getassetbalance",handle_getassetbalance},
     {"getnewaddress",handle_getnewaddress},
     {"validateaddress",handle_validateaddress},
     {"listunspent",handle_listunspent},
