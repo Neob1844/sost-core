@@ -147,6 +147,10 @@ bool UtxoSet::ConnectTransaction(
         // enter the spendable UTXO set (no zero-value UTXO pollution). Skip it;
         // the node-participation state is derived separately from the chain.
         if (txout.type == OUT_NODE_PROTOCOL) continue;
+        // V30000: OUT_ASSET_BURN provably destroys asset units — it is UNSPENDABLE and
+        // MUST NOT enter the UTXO set (the burned units are gone; only the asset index's
+        // `burned` counter records them). Its SOST dust is intentionally not recoverable.
+        if (txout.type == OUT_ASSET_BURN) continue;
 
         UTXOEntry entry;
         entry.amount = txout.amount;
@@ -246,6 +250,8 @@ bool UtxoSet::DisconnectTransaction(
         // V16: OUT_NODE_PROTOCOL was never added to the UTXO set (non-spendable),
         // so there is nothing to remove here — mirror the ConnectTransaction skip.
         if (tx.outputs[i].type == OUT_NODE_PROTOCOL) continue;
+        // V30000: OUT_ASSET_BURN was never added either (unspendable) — same mirror.
+        if (tx.outputs[i].type == OUT_ASSET_BURN) continue;
         OutPoint op{txid, (uint32_t)i};
         if (!SpendUTXO(op, nullptr, err)) {
             if (err) *err = "DisconnectTransaction: remove output[" +
@@ -330,7 +336,16 @@ bool UtxoSet::ConnectBlock(
         const bool node_ok =
             sost::node_participation_active_at(height) &&
             (txs[t].tx_type == TX_TYPE_NODE_BIND || txs[t].tx_type == TX_TYPE_NODE_HEARTBEAT);
-        if (txs[t].tx_type != TX_TYPE_STANDARD && !htlc_ok && !jackpot_ok && !node_ok) {
+        // V30000 native assets: GENESIS/ISSUE/TRANSFER/BURN are valid block tx types from
+        // NATIVE_ASSETS_ACTIVATION_HEIGHT (mainnet 30000). They carry real inputs+outputs, so
+        // the UTXO connect phase spends/creates them like a standard tx; the ASSET dimension is
+        // enforced by apply_asset_state_for_block before ConnectBlock. Below activation they are
+        // rejected here (must be standard), so historical replay is byte-identical.
+        const bool asset_ok =
+            sost::native_assets_active_at(height) &&
+            (txs[t].tx_type == TX_TYPE_ASSET_GENESIS  || txs[t].tx_type == TX_TYPE_ASSET_ISSUE ||
+             txs[t].tx_type == TX_TYPE_ASSET_TRANSFER || txs[t].tx_type == TX_TYPE_ASSET_BURN);
+        if (txs[t].tx_type != TX_TYPE_STANDARD && !htlc_ok && !jackpot_ok && !node_ok && !asset_ok) {
             if (err) *err = "ConnectBlock: txs[" + std::to_string(t) + "] must be standard";
             return false;
         }
