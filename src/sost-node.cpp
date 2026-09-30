@@ -261,10 +261,21 @@ static std::mutex g_block_index_mu;
 static std::multimap<std::string, std::string> g_orphans_by_prev; // prev_hash_hex -> block_hash_hex
 static const size_t MAX_ORPHAN_BLOCKS = 200;
 static const size_t MAX_FORK_INDEX_ENTRIES = 1000;
+// SACS V2 resource bound: total bytes held by NON-active fork/orphan entries (raw_json).
+// Measured basis: a coinbase-only block's raw_json ~= 4.4 KB; the absolute per-block ceiling
+// is MAX_P2P_MSG_SIZE (4 MB) with a realistic tx-loaded worst case ~1.5 MB. 256 MB caps the
+// fork store's RAM regardless of entry sizes: with coinbase-only forks the 1000-entry count
+// bound dominates (~4.4 MB); under tx-loaded fork spam the byte bound bites first (~170
+// entries). Enforced by deterministic lowest-work eviction (evict_forks_to_bounds_locked).
+static const size_t MAX_FORK_STORE_BYTES = 256ull * 1024 * 1024;
 
 // Forward declarations for reorg
 static bool try_reorganize(const std::string& fork_tip_hash);
 static void cleanup_old_forks();
+// SACS V2 storage-only fork-store bounding (all require g_block_index_mu held by the caller):
+static size_t fork_store_bytes_locked();
+static size_t evict_forks_to_bounds_locked();
+static bool   make_room_for_fork_locked(const Bytes32& incoming_work);
 static void broadcast_block_to_peers(const StoredBlock& sb, int exclude_fd = -1);
 static void process_orphans_for_parent(const std::string& parent_hash_hex);
 
@@ -6036,31 +6047,46 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         bool needs_reorg = false;
         {
             std::lock_guard<std::mutex> lk(g_block_index_mu);
-            if (g_block_index.size() < MAX_FORK_INDEX_ENTRIES) {
-                BlockIndexEntry entry;
-                entry.block_id = from_hex(bid);
-                entry.prev_hash = prev_h;
-                entry.height = height;
-                entry.bits_q = bits_q;
-                entry.block_work = compute_block_work(bits_q);
-                // Compute cumulative work: parent's cumulative_work + this block's work
-                Bytes32 parent_cw{};
-                // Look up parent's cumulative work
-                auto pit = g_block_index.find(prev_hex);
-                if (pit != g_block_index.end()) {
-                    parent_cw = pit->second.cumulative_work;
-                } else {
-                    // Parent is on active chain — find it
-                    for (const auto& ab : g_blocks) {
-                        if (ab.block_id == prev_h) {
-                            parent_cw = ab.cumulative_work;
-                            break;
-                        }
+            // Build this fork block's index entry (incl. cumulative work) up front, so
+            // resource-bounded admission below can compare it against what is retained.
+            BlockIndexEntry entry;
+            entry.block_id = from_hex(bid);
+            entry.prev_hash = prev_h;
+            entry.height = height;
+            entry.bits_q = bits_q;
+            entry.block_work = compute_block_work(bits_q);
+            // Compute cumulative work: parent's cumulative_work + this block's work
+            Bytes32 parent_cw{};
+            // Look up parent's cumulative work
+            auto pit = g_block_index.find(prev_hex);
+            if (pit != g_block_index.end()) {
+                parent_cw = pit->second.cumulative_work;
+            } else {
+                // Parent is on active chain — find it
+                for (const auto& ab : g_blocks) {
+                    if (ab.block_id == prev_h) {
+                        parent_cw = ab.cumulative_work;
+                        break;
                     }
                 }
-                entry.cumulative_work = add_be256(parent_cw, entry.block_work);
-                entry.status = BlockStatus::FORK;
-                entry.raw_json = block_json;
+            }
+            entry.cumulative_work = add_be256(parent_cw, entry.block_work);
+            entry.status = BlockStatus::FORK;
+            entry.raw_json = block_json;
+
+            // Admission control (resource-bounded fork store):
+            //  - below SACS_V2_ACTIVATION_HEIGHT: hard cap at MAX_FORK_INDEX_ENTRIES; when full
+            //    the incoming fork is dropped — byte-identical to the legacy behaviour.
+            //  - at/after activation: when full, make room by evicting the lowest-work
+            //    non-active entry, but ONLY if this incoming block strictly outranks it (never
+            //    evict a higher-work candidate for a lower-work arrival, never the pinned best).
+            //    Eviction is storage-only/deterministic; a branch re-received later is
+            //    re-evaluated normally (eviction != invalidation).
+            bool admit = g_block_index.size() < MAX_FORK_INDEX_ENTRIES;
+            if (!admit && g_chain_height >= sost::SACS_V2_ACTIVATION_HEIGHT) {
+                admit = make_room_for_fork_locked(entry.cumulative_work);
+            }
+            if (admit) {
                 g_block_index[bid] = entry;
                 mark_block_known(bid);
 
@@ -7603,19 +7629,155 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
 
 // === REORG SUPPORT FUNCTIONS ===
 
+// Sum of raw_json bytes held by NON-active (fork/orphan) index entries. Caller holds mutex.
+static size_t fork_store_bytes_locked() {
+    size_t b = 0;
+    for (const auto& [hash, e] : g_block_index)
+        if (e.status != BlockStatus::ACTIVE) b += e.raw_json.size();
+    return b;
+}
+
+// Deterministic, storage-only eviction to keep the fork store within BOTH resource bounds
+// (MAX_FORK_INDEX_ENTRIES entries and MAX_FORK_STORE_BYTES bytes). Evicts the lowest
+// cumulative-work non-active entries first (ties: lower height, then lexicographically smaller
+// hash — fully deterministic), but NEVER the current highest-work fork tip nor any block on
+// its path back toward the active chain (those are "pinned": the branch most likely to win a
+// reorg). Eviction is NOT invalidation — an evicted branch re-received later is re-evaluated
+// normally. Returns the number of entries evicted. Caller MUST hold g_block_index_mu.
+static size_t evict_forks_to_bounds_locked() {
+    size_t bytes = fork_store_bytes_locked();
+    if (g_block_index.size() <= MAX_FORK_INDEX_ENTRIES && bytes <= MAX_FORK_STORE_BYTES)
+        return 0;
+
+    // Pin the highest-work fork tip and its ancestor path through the index.
+    std::set<std::string> pinned;
+    {
+        std::string best_hash; Bytes32 best_work{}; bool have = false;
+        for (const auto& [hash, e] : g_block_index) {
+            if (e.status == BlockStatus::ACTIVE) continue;
+            if (!have || compare_chainwork(e.cumulative_work, best_work) > 0) {
+                have = true; best_work = e.cumulative_work; best_hash = hash;
+            }
+        }
+        std::string cur = best_hash;
+        while (!cur.empty()) {
+            auto it = g_block_index.find(cur);
+            if (it == g_block_index.end()) break;           // reached active chain / genesis
+            if (!pinned.insert(cur).second) break;          // cycle guard
+            cur = to_hex(it->second.prev_hash.data(), 32);
+        }
+    }
+
+    struct Ev { std::string hash; Bytes32 work; int64_t height; size_t sz; };
+    std::vector<Ev> cand;
+    for (const auto& [hash, e] : g_block_index)
+        if (e.status != BlockStatus::ACTIVE && !pinned.count(hash))
+            cand.push_back({hash, e.cumulative_work, e.height, e.raw_json.size()});
+    std::sort(cand.begin(), cand.end(), [](const Ev& a, const Ev& b){
+        int c = compare_chainwork(a.work, b.work);
+        if (c != 0) return c < 0;
+        if (a.height != b.height) return a.height < b.height;
+        return a.hash < b.hash;
+    });
+
+    size_t evicted = 0;
+    for (const auto& ev : cand) {
+        if (g_block_index.size() <= MAX_FORK_INDEX_ENTRIES && bytes <= MAX_FORK_STORE_BYTES)
+            break;
+        auto it = g_block_index.find(ev.hash);
+        if (it == g_block_index.end()) continue;
+        bytes -= std::min(bytes, it->second.raw_json.size());
+        g_block_index.erase(it);
+        ++evicted;
+    }
+    return evicted;
+}
+
+// Make room for one incoming fork block when the store is full: evict the single lowest-work
+// non-active, non-pinned entry, but ONLY if the incoming block strictly outranks it (so a
+// higher-work candidate is never dropped in favour of a lower-work arrival). Returns true if
+// room now exists. Caller MUST hold g_block_index_mu. Storage-only (eviction != invalidation).
+static bool make_room_for_fork_locked(const Bytes32& incoming_work) {
+    if (g_block_index.size() < MAX_FORK_INDEX_ENTRIES) return true;
+
+    // Pin the highest-work fork tip + ancestor path (same rule as bulk eviction).
+    std::set<std::string> pinned;
+    {
+        std::string best_hash; Bytes32 best_work{}; bool have = false;
+        for (const auto& [hash, e] : g_block_index) {
+            if (e.status == BlockStatus::ACTIVE) continue;
+            if (!have || compare_chainwork(e.cumulative_work, best_work) > 0) {
+                have = true; best_work = e.cumulative_work; best_hash = hash;
+            }
+        }
+        std::string cur = best_hash;
+        while (!cur.empty()) {
+            auto it = g_block_index.find(cur);
+            if (it == g_block_index.end()) break;
+            if (!pinned.insert(cur).second) break;
+            cur = to_hex(it->second.prev_hash.data(), 32);
+        }
+    }
+
+    // Find the lowest-work non-active, non-pinned entry.
+    std::string victim; Bytes32 victim_work{}; int64_t victim_h = 0; bool found = false;
+    for (const auto& [hash, e] : g_block_index) {
+        if (e.status == BlockStatus::ACTIVE || pinned.count(hash)) continue;
+        if (!found ||
+            compare_chainwork(e.cumulative_work, victim_work) < 0 ||
+            (compare_chainwork(e.cumulative_work, victim_work) == 0 &&
+             (e.height < victim_h || (e.height == victim_h && hash < victim)))) {
+            found = true; victim = hash; victim_work = e.cumulative_work; victim_h = e.height;
+        }
+    }
+    if (!found) return false;                                    // only pinned entries remain
+    if (compare_chainwork(incoming_work, victim_work) <= 0)      // incoming no better than victim
+        return false;
+    g_block_index.erase(victim);
+    return true;
+}
+
 static void cleanup_old_forks() {
     std::lock_guard<std::mutex> lk(g_block_index_mu);
     if (g_block_index.empty()) return;
-    int64_t cutoff = g_chain_height - (int64_t)MAX_REORG_DEPTH;
-    std::vector<std::string> to_remove;
-    for (const auto& [hash, entry] : g_block_index) {
-        if (entry.status != BlockStatus::ACTIVE && entry.height < cutoff) {
-            to_remove.push_back(hash);
-        }
-    }
-    for (const auto& h : to_remove) g_block_index.erase(h);
 
-    // Also clean stale orphans
+    // SACS V2 (CONSENSUS, activates at SACS_V2_ACTIVATION_HEIGHT): once the deep-reorg rule is
+    // live, deep fork blocks that the block-accept gate deliberately STORED for possible
+    // higher-work reconvergence must NOT be pruned merely for being below (tip-MAX_REORG_DEPTH).
+    // Pruning them here would erase the very ancestors a later heavier fork tail needs (the P2P
+    // layer never re-requests them → tail orphans → reorg silently impossible). Post-activation
+    // retention is therefore bounded by RESOURCES only (deterministic lowest-work eviction).
+    // Below activation the behaviour is byte-identical to the original depth prune (V16 history
+    // protected). Selection of the active chain is unchanged either way: strictly-higher valid
+    // cumulative work in try_reorganize().
+    const bool v2 = (g_chain_height >= sost::SACS_V2_ACTIVATION_HEIGHT);
+    if (!v2) {
+        int64_t cutoff = g_chain_height - (int64_t)MAX_REORG_DEPTH;
+        std::vector<std::string> to_remove;
+        for (const auto& [hash, entry] : g_block_index) {
+            if (entry.status != BlockStatus::ACTIVE && entry.height < cutoff) {
+                to_remove.push_back(hash);
+            }
+        }
+        for (const auto& h : to_remove) g_block_index.erase(h);
+        if (!to_remove.empty())
+            printf("[REORG] Cleaned %zu stale fork/orphan blocks (below height %lld)\n",
+                   to_remove.size(), (long long)cutoff);
+    } else {
+        // Drop only entries that failed validation; retain valid fork candidates regardless of
+        // depth, bounded by resources via deterministic lowest-work eviction.
+        std::vector<std::string> invalid;
+        for (const auto& [hash, entry] : g_block_index)
+            if (entry.status == BlockStatus::INVALID) invalid.push_back(hash);
+        for (const auto& h : invalid) g_block_index.erase(h);
+        size_t evicted = evict_forks_to_bounds_locked();
+        if (!invalid.empty() || evicted)
+            printf("[REORG][SACS-V2] Dropped %zu invalid + evicted %zu low-work fork blocks "
+                   "(resource-bounded retention; entries=%zu, bytes=%zu)\n",
+                   invalid.size(), evicted, g_block_index.size(), fork_store_bytes_locked());
+    }
+
+    // Clean stale orphans whose referenced block is no longer indexed (both paths).
     std::vector<std::string> orphan_keys_to_remove;
     for (const auto& [prev, hash] : g_orphans_by_prev) {
         if (g_block_index.find(hash) == g_block_index.end()) {
@@ -7624,13 +7786,7 @@ static void cleanup_old_forks() {
     }
     for (const auto& k : orphan_keys_to_remove) g_orphans_by_prev.erase(k);
 
-    if (!to_remove.empty())
-        printf("[REORG] Cleaned %zu stale fork/orphan blocks (below height %lld)\n",
-               to_remove.size(), (long long)cutoff);
-
-    // g_known_blocks is now pruned via FIFO in mark_block_known() — no manual cap needed here
-    {
-    }
+    // g_known_blocks is pruned via FIFO in mark_block_known() — no manual cap needed here.
 }
 
 // === ATOMIC REORG: try_reorganize ===
