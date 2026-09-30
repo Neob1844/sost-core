@@ -3231,8 +3231,10 @@ static std::string handle_getaddressutxos(const std::string& id, const std::vect
               << ",\"output_type\":" << (int)kv.second.type
               << ",\"coinbase\":" << (kv.second.is_coinbase ? "true" : "false")
               << ",\"mature\":" << (mature ? "true" : "false")
-              << ",\"spendable\":" << (!isLocked && mature ? "true" : "false")
-              << "}";
+              << ",\"spendable\":" << (!isLocked && mature ? "true" : "false");
+            if(!kv.second.payload.empty())
+              s << ",\"payload\":\"" << to_hex(kv.second.payload.data(), kv.second.payload.size()) << "\"";
+            s << "}";
         }
     }
     s << "]";
