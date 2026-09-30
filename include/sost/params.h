@@ -690,6 +690,21 @@ inline constexpr int64_t  SACS_V2_ACTIVATION_HEIGHT      = 42;      // DEVNET_FA
 inline constexpr int64_t  SACS_V2_ACTIVATION_HEIGHT      = 30000;   // mainnet — same height as V16
 #endif
 
+// Native Assets (V30000). Activates the sovereign native-asset consensus layer
+// (ASSET_GENESIS/ISSUE/TRANSFER/BURN tx types + asset-carrying outputs). Below this
+// height the validator rejects every asset tx/out type, so pre-activation and historical
+// replay are byte-identical (these types have never been mined). Mainnet activates at the
+// existing V16 fork height (30000) — no second hard fork. Public USE is separately gated
+// at the interface layer (see native_assets_public_enabled), but consensus is LIVE.
+#if defined(SOST_DEVNET_FORKS)
+inline constexpr int64_t  NATIVE_ASSETS_ACTIVATION_HEIGHT = 42;     // DEVNET_FAST ONLY (test before/after 42)
+#else
+inline constexpr int64_t  NATIVE_ASSETS_ACTIVATION_HEIGHT = 30000;  // mainnet — same height as V16/SACS V2
+#endif
+inline bool native_assets_active_at(int64_t height) {
+    return height >= NATIVE_ASSETS_ACTIVATION_HEIGHT;
+}
+
 
 // Base relay fee (same as current)
 inline constexpr int64_t  DYNAMIC_FEE_BASE                = 1;     // stocks/byte (floor)

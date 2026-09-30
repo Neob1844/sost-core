@@ -87,6 +87,28 @@ constexpr uint8_t OUT_BURN          = 0x20;
 constexpr uint8_t OUT_NODE_PROTOCOL = 0x30;
 
 // -----------------------------------------------------------------------------
+// Native Assets (V30000). Sovereign, minimal, non-custodial token layer on the
+// SOST UTXO — SEPARATE from SOST value (an asset is never new SOST; STOCKS_PER_SOST
+// and SOST supply are unchanged). All types below are gated by
+// native_assets_active_at() (height >= NATIVE_ASSETS_ACTIVATION_HEIGHT; mainnet 30000).
+// Below activation the validator rejects them, so pre-activation / historical replay
+// stays byte-identical. TX-type and OUT-type are SEPARATE enums (no collision with the
+// 0x30 OUT_NODE_PROTOCOL output code). See include/sost/native_assets.h + spec.
+// -----------------------------------------------------------------------------
+constexpr uint8_t TX_TYPE_ASSET_GENESIS  = 0x30; // create an asset (mint genesis supply)
+constexpr uint8_t TX_TYPE_ASSET_ISSUE    = 0x31; // issue more of a CAPPED_REISSUABLE asset
+constexpr uint8_t TX_TYPE_ASSET_TRANSFER = 0x32; // move asset units between holders
+constexpr uint8_t TX_TYPE_ASSET_BURN     = 0x33; // provably destroy asset units
+
+// Asset-carrying outputs. Each carries {asset_id, asset_amount} (and, for the def
+// output, the asset definition) in the output payload; the output's SOST `amount`
+// carries only dust/fee-economics value, never asset value.
+constexpr uint8_t OUT_ASSET_TRANSFER    = 0x40; // spendable asset UTXO: [asset_id(32)|amount(8 LE)]
+constexpr uint8_t OUT_ASSET_ISSUE_AUTH  = 0x41; // issuance-authority UTXO (CAPPED_REISSUABLE only)
+constexpr uint8_t OUT_ASSET_BURN        = 0x42; // unspendable: provably destroys asset_amount
+constexpr uint8_t OUT_ASSET_GENESIS_DEF = 0x43; // asset definition (symbol/name/decimals/policy/cap/manifest)
+
+// -----------------------------------------------------------------------------
 // TxInput
 // -----------------------------------------------------------------------------
 
