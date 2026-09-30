@@ -2228,6 +2228,60 @@ int main(int argc, char** argv) {
     }
 
     // =====================================================================
+    // createasset <symbol> <name> <decimals> <fixed|capped> <max_supply> <mint> [manifest_hex]
+    // V30000 — build + broadcast a native-asset GENESIS transaction.
+    // =====================================================================
+    if (cmd == "createasset") {
+        if (argc < arg_start + 7) {
+            fprintf(stderr, "Usage: sost-cli createasset <symbol> <name> <decimals> <fixed|capped> <max_supply> <mint> [manifest_hex]\n");
+            return 1;
+        }
+        sost::AssetDef def;
+        def.symbol = argv[arg_start + 1];
+        def.name   = argv[arg_start + 2];
+        def.decimals = (uint8_t)atoi(argv[arg_start + 3]);
+        std::string pol = argv[arg_start + 4];
+        def.supply_policy = (pol == "capped" || pol == "reissuable")
+            ? sost::ASSET_POLICY_CAPPED_REISSUABLE : sost::ASSET_POLICY_FIXED;
+        def.max_supply = strtoull(argv[arg_start + 5], nullptr, 10);
+        uint64_t mint  = strtoull(argv[arg_start + 6], nullptr, 10);
+        if (argc > arg_start + 7) {
+            auto mh = sost::from_hex(argv[arg_start + 7]);
+            if (mh.size() == 32) std::copy(mh.begin(), mh.end(), def.manifest_hash.begin());
+        }
+        int64_t chain_height = query_chain_height();
+        if (chain_height < 0) { fprintf(stderr, "Error: cannot reach node\n"); return 1; }
+        // genesis hash from the node (devnet/mainnet differ; signing depends on it)
+        sost::Hash256 genesis_hash{};
+        { std::string gi = rpc_call("getinfo");
+          auto p = gi.find("\"genesis_hash\":\"");
+          if (p != std::string::npos) { auto h = gi.substr(p + 16, 64);
+            auto raw = sost::from_hex(h); if (raw.size() == 32) std::copy(raw.begin(), raw.end(), genesis_hash.begin()); } }
+        std::string src_addr; sost::PubKeyHash src_pkh{};
+        if (!resolve_source_address(w, src_addr, src_pkh)) return 1;
+        w.clear_utxos();
+        sync_wallet_utxos_from_node(w, src_addr);
+        int64_t dust = 10000;               // >= DUST_THRESHOLD (SOST-side floor)
+        int64_t fee  = calculate_fee(700);  // small fixed-shape tx; generous single-pass fee
+        sost::Transaction tx; sost::Bytes32 aid; std::string aerr;
+        if (!w.create_asset_genesis_transaction(def, mint, dust, fee, genesis_hash, tx, &aid, chain_height, &aerr)) {
+            fprintf(stderr, "Error: %s\n", aerr.c_str()); return 1;
+        }
+        std::vector<sost::Byte> raw; std::string se;
+        if (!tx.Serialize(raw, &se)) { fprintf(stderr, "Serialize: %s\n", se.c_str()); return 1; }
+        std::string resp = rpc_call("sendrawtransaction", "[\"" + to_hex(raw.data(), raw.size()) + "\"]");
+        sost::Hash256 txid; tx.ComputeTxId(txid);
+        printf("Asset genesis built + broadcast.\n");
+        printf("  asset_id: %s\n", to_hex(aid.data(), 32).c_str());
+        printf("  symbol:   %s  policy: %s  max_supply: %llu  mint: %llu\n",
+               def.symbol.c_str(), (def.supply_policy==sost::ASSET_POLICY_CAPPED_REISSUABLE?"capped":"fixed"),
+               (unsigned long long)def.max_supply, (unsigned long long)mint);
+        printf("  txid:     %s\n", to_hex(txid.data(), 32).c_str());
+        printf("  node:     %s\n", resp.c_str());
+        std::string we; w.save(wallet_path, &we);
+        return 0;
+    }
+
     // send <to_addr> <amount_sost>
     //
     // v1.3: automatic fee, queries node for height, two-pass build
