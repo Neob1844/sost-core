@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-29-v480-active-nodes-local",
-  "note": "ACTIVE NODES now shows the LOCAL NODE (STRATO) as its own block above the peer table: status, live height, tip age, network and real process uptime, all from getnetworksummary (ONLINE only while mainnet + mainnet genesis + tip < 2 h; STALE/DEGRADED/OFFLINE shown as such; unreadable fields omitted). It is not a fake P2P peer row. The table is titled EXTERNAL PEERS with an 'N connected' count, counters are labelled external peers, the empty table reads 'no external peers connected', and the footnote defines LOCAL NODE / EXTERNAL PEERS / UNIQUE NODES and miner != node. No node, P2P, consensus or V16 change."
+  "v": "2026-09-30-v483-inspect-close",
+  "note": "Address Inspector (inspect>) gets a close X (top-right of the results panel, 36x36, aria-label 'cerrar') on every panel state: loading, result and error. Closing clears the panel and the inspection state (balance, UTXO list, current page, tip), empties the inspect> field and focuses it; an RPC answer that arrives after closing, or for an older inspect, is dropped instead of re-opening stale data. INSPECT with an empty field takes the same close path. search>, reconciliation and UTXO pagination logic unchanged."
 }

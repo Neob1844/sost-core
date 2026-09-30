@@ -9770,6 +9770,32 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
   var TYPE={0:'transfer',1:'coinbase·miner',2:'coinbase·gold',3:'coinbase·popc',4:'coinbase·lottery',16:'bond-lock',17:'escrow-lock',18:'htlc-lock',19:'htlc-claim',32:'burn',48:'node-protocol'};
   var LOCKED={16:1,17:1,18:1};
   var _utxos=[], _addr='', _page=0, _tip=0, PER=25;
+  // Bumped by every inspect and by close: an answer that arrives for an older
+  // request (or after the panel was closed) is dropped instead of re-opening it.
+  var _req=0;
+  function resetState(){ _utxos=[]; _addr=''; _page=0; _tip=0; }
+  // Every state of the panel (loading, error, result) sits under the same header,
+  // so there is always a way to dismiss it.
+  var XBTN='style="flex:0 0 auto;min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;'
+    +'background:var(--bg2,#0a0f16);border:1px solid var(--border,#1b2430);color:var(--text3,#7d8b99);border-radius:6px;'
+    +'font:600 16px ui-monospace,monospace;line-height:1;cursor:pointer" '
+    +'onmouseover="this.style.color=\'var(--text,#e6edf3)\';this.style.borderColor=\'var(--text3,#7d8b99)\'" '
+    +'onmouseout="this.style.color=\'var(--text3,#7d8b99)\';this.style.borderColor=\'var(--border,#1b2430)\'"';
+  function panel(addr, body){
+    return '<div id="ainPanel" style="border-top:1px solid var(--border,#1b2430);padding-top:6px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 4px">'
+      + '<div style="font:10px ui-monospace,monospace;letter-spacing:1px;color:var(--text3,#7d8b99);overflow-wrap:anywhere;min-width:0">ADDRESS INSPECTOR'
+      + (addr?' · <span style="color:var(--text,#e6edf3)">'+esc(addr)+'</span>':'')+'</div>'
+      + '<button type="button" onclick="ainClose()" aria-label="cerrar" title="Close inspector" '+XBTN+'>&#x2715;</button>'
+      + '</div>'+body+'</div>';
+  }
+  // Close: remove the panel, forget this inspection (balance, UTXOs, page, tip)
+  // and leave the inspect> field empty and focused for the next query.
+  window.ainClose = function(){
+    _req++; resetState();
+    var out=document.getElementById('ainOut'); if(out) out.innerHTML='';
+    var inp=document.getElementById('ainAddr'); if(inp){ inp.value=''; try{ inp.focus(); }catch(e){} }
+  };
   function n8(x){ return (Math.round(x*1e8)/1e8); }
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function sh(h){ return h&&h.length>16?h.slice(0,10)+'···'+h.slice(-6):h; }
@@ -9777,13 +9803,19 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
   window.ainInspect = async function(){
     var out=document.getElementById('ainOut');
     var addr=(document.getElementById('ainAddr').value||'').trim();
-    if(!addr){ out.innerHTML=''; return; }
-    out.innerHTML='<div style="color:var(--text3,#7d8b99);font:12px ui-monospace;padding:8px 0">inspecting '+esc(addr)+'… (read-only, ≤3 RPC calls)</div>';
+    // Empty input = same path as the X: nothing stays on screen or in memory.
+    if(!addr){ window.ainClose(); return; }
+    var my=++_req; resetState();
+    out.innerHTML=panel(addr,'<div style="color:var(--text3,#7d8b99);font:12px ui-monospace;padding:8px 0">inspecting '+esc(addr)+'… (read-only, ≤3 RPC calls)</div>');
     try{
-      _tip = await rpc('getblockcount',[]);
+      var tip = await rpc('getblockcount',[]);
+      if(my!==_req) return;
       var info = await rpc('getaddressinfo',[addr]);
+      if(my!==_req) return;
       var flows = null; try{ flows = await rpc('getaddressflows',[addr]); }catch(e){}
-      if(!info || info.isvalid===false){ out.innerHTML='<div style="color:#ff8a8a;font:12px ui-monospace;padding:8px 0">Not a valid SOST address.</div>'; return; }
+      if(my!==_req) return;
+      _tip = tip;
+      if(!info || info.isvalid===false){ out.innerHTML=panel(addr,'<div style="color:#ff8a8a;font:12px ui-monospace;padding:8px 0">Not a valid SOST address.</div>'); return; }
       _addr=addr; _page=0;
       _utxos=(info.utxos||[]).slice().sort(function(a,b){return b.height-a.height;});
       var sumU=0, immature=0, locked=0;
@@ -9809,9 +9841,9 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
         + '</div>'
         + '<div style="font-size:10.5px;color:var(--text3,#7d8b99);margin:2px 0 8px">Reconciliation = Σ(unspent UTXO amounts) vs node balance. Coinbase matures after '+COINBASE_MATURITY+' confirmations. Read-only; bounded to 3 RPC calls. Full per-transaction history needs a node address→txid index RPC (not yet exposed); this inspects current holdings.</div>'
         + '<div id="ainList"></div>';
-      out.innerHTML=html;
+      out.innerHTML=panel(addr,html);
       renderPage();
-    }catch(e){ out.innerHTML='<div style="color:#ff8a8a;font:12px ui-monospace;padding:8px 0">Inspect failed: '+esc((e&&e.message)||e)+'</div>'; }
+    }catch(e){ if(my!==_req) return; out.innerHTML=panel(addr,'<div style="color:#ff8a8a;font:12px ui-monospace;padding:8px 0">Inspect failed: '+esc((e&&e.message)||e)+'</div>'); }
   };
   function renderPage(){
     var el=document.getElementById('ainList'); if(!el) return;
