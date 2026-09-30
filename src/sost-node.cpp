@@ -2563,6 +2563,8 @@ static std::string handle_listunspent(const std::string& id, const std::vector<s
          <<",\"confirmations\":"<<(g_chain_height-u.height+1)<<",\"spendable\":"<<(isLocked?"false":"true");
         if(u.output_type==0x10)s<<",\"type\":\"bond\",\"lock_until\":"<<u.lock_until;
         else if(u.output_type==0x11)s<<",\"type\":\"escrow\",\"lock_until\":"<<u.lock_until;
+        s<<",\"output_type\":"<<(int)u.output_type;   // V30000: numeric type for asset-aware clients
+        if(!u.payload.empty()) s<<",\"payload\":\""<<to_hex(u.payload.data(),u.payload.size())<<"\"";
         s<<"}";
     }
     s<<"]"; return rpc_result(id,s.str());
@@ -7709,6 +7711,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                 wu.pkh = o.pubkey_hash;
                 wu.height = height;
                 wu.spent = false;
+                wu.payload = o.payload;   // V30000: asset UTXOs carry {asset_id|amount}
                 g_wallet.add_utxo(wu);
             }
         }
@@ -9350,6 +9353,7 @@ static bool load_chain(const std::string& path) {
                                 wu.pkh = o.pubkey_hash;
                                 wu.height = height;
                                 wu.spent = false;
+                                wu.payload = o.payload;   // V30000: asset UTXO payload
                                 g_wallet.add_utxo(wu);
                             }
                         }
@@ -10169,6 +10173,7 @@ int main(int argc, char** argv) {
                 wu.pkh = entry.pubkey_hash;
                 wu.height = entry.height;
                 wu.spent = false;
+                wu.payload = entry.payload;   // V30000: asset UTXO payload
                 g_wallet.add_utxo(wu);
                 rescan_count++;
             }

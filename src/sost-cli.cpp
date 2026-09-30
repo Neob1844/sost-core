@@ -653,6 +653,7 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w,
             u.get_int("output_type", output_type);
             u.get_bool("coinbase", is_coinbase);
             u.get_bool("spendable", spendable);
+            std::string payload_hex; u.get_str("payload", payload_hex);  // V30000: asset UTXO payload
 
             if (!txid_hex.empty() && amount_stocks > 0 && spendable) {
                 sost::WalletUTXO utxo{};
@@ -661,6 +662,7 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w,
                 utxo.amount = amount_stocks;
                 utxo.height = height;
                 utxo.spent = false;
+                if (!payload_hex.empty()) utxo.payload = sost::from_hex(payload_hex);
                 if (output_type > 0) {
                     utxo.output_type = (uint8_t)output_type;
                 } else if (is_coinbase) {
@@ -2278,6 +2280,53 @@ int main(int argc, char** argv) {
                (unsigned long long)def.max_supply, (unsigned long long)mint);
         printf("  txid:     %s\n", to_hex(txid.data(), 32).c_str());
         printf("  node:     %s\n", resp.c_str());
+        std::string we; w.save(wallet_path, &we);
+        return 0;
+    }
+
+    // transferasset <asset_id_hex> <to_address> <amount> | burnasset <asset_id> <amount>
+    // | issueasset <asset_id> <amount>  (V30000)
+    // =====================================================================
+    if (cmd == "transferasset" || cmd == "burnasset" || cmd == "issueasset") {
+        bool is_transfer = (cmd == "transferasset");
+        int need_args = is_transfer ? 4 : 3;
+        if (argc < arg_start + need_args) {
+            fprintf(stderr, "Usage: sost-cli %s <asset_id_hex> %s<amount>\n",
+                    cmd.c_str(), is_transfer ? "<to_address> " : "");
+            return 1;
+        }
+        auto idraw = sost::from_hex(argv[arg_start + 1]);
+        if (idraw.size() != 32) { fprintf(stderr, "asset_id must be 32-byte hex\n"); return 1; }
+        sost::Bytes32 asset_id{}; std::copy(idraw.begin(), idraw.end(), asset_id.begin());
+        sost::PubKeyHash to_pkh{}; uint64_t amount;
+        if (is_transfer) {
+            if (!sost::address_decode(argv[arg_start + 2], to_pkh)) { fprintf(stderr, "bad to_address\n"); return 1; }
+            amount = strtoull(argv[arg_start + 3], nullptr, 10);
+        } else {
+            amount = strtoull(argv[arg_start + 2], nullptr, 10);
+        }
+        int64_t chain_height = query_chain_height();
+        if (chain_height < 0) { fprintf(stderr, "Error: cannot reach node\n"); return 1; }
+        sost::Hash256 genesis_hash{};
+        { std::string gi = rpc_call("getinfo"); auto p = gi.find("\"genesis_hash\":\"");
+          if (p != std::string::npos) { auto h = gi.substr(p + 16, 64);
+            auto raw = sost::from_hex(h); if (raw.size() == 32) std::copy(raw.begin(), raw.end(), genesis_hash.begin()); } }
+        std::string src_addr; sost::PubKeyHash src_pkh{};
+        if (!resolve_source_address(w, src_addr, src_pkh)) return 1;
+        w.clear_utxos();
+        sync_wallet_utxos_from_node(w, src_addr);
+        int64_t dust = 10000; int64_t fee = calculate_fee(700);
+        sost::Transaction tx; std::string aerr; bool ok = false;
+        if (cmd == "transferasset")   ok = w.create_asset_transfer_transaction(asset_id, to_pkh, amount, dust, fee, genesis_hash, tx, chain_height, &aerr);
+        else if (cmd == "burnasset")  ok = w.create_asset_burn_transaction(asset_id, amount, dust, fee, genesis_hash, tx, chain_height, &aerr);
+        else                          ok = w.create_asset_issue_transaction(asset_id, amount, dust, fee, genesis_hash, tx, chain_height, &aerr);
+        if (!ok) { fprintf(stderr, "Error: %s\n", aerr.c_str()); return 1; }
+        std::vector<sost::Byte> raw; std::string se;
+        if (!tx.Serialize(raw, &se)) { fprintf(stderr, "Serialize: %s\n", se.c_str()); return 1; }
+        std::string resp = rpc_call("sendrawtransaction", "[\"" + to_hex(raw.data(), raw.size()) + "\"]");
+        sost::Hash256 txid; tx.ComputeTxId(txid);
+        printf("%s: amount=%llu asset=%s\n  txid: %s\n  node: %s\n", cmd.c_str(),
+               (unsigned long long)amount, argv[arg_start + 1], to_hex(txid.data(), 32).c_str(), resp.c_str());
         std::string we; w.save(wallet_path, &we);
         return 0;
     }
