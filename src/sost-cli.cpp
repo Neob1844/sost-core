@@ -662,7 +662,12 @@ static int sync_wallet_utxos_from_node(sost::Wallet& w,
                 utxo.amount = amount_stocks;
                 utxo.height = height;
                 utxo.spent = false;
-                if (!payload_hex.empty()) utxo.payload = sost::from_hex(payload_hex);
+                if (!payload_hex.empty() && (payload_hex.size() % 2) == 0) {
+                    utxo.payload.clear();
+                    utxo.payload.reserve(payload_hex.size() / 2);
+                    for (size_t k = 0; k + 1 < payload_hex.size(); k += 2)
+                        utxo.payload.push_back((uint8_t)strtol(payload_hex.substr(k, 2).c_str(), nullptr, 16));
+                }
                 if (output_type > 0) {
                     utxo.output_type = (uint8_t)output_type;
                 } else if (is_coinbase) {
