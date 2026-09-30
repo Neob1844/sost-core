@@ -805,7 +805,14 @@ TxValidationResult ValidateTransactionPolicy(
     int payload_count = 0;
     for (size_t i = 0; i < tx.outputs.size(); ++i) {
         if (!tx.outputs[i].payload.empty()) {
-            ++payload_count;
+            // Typed payloads (HTLC / native-asset) are structured protocol data, NOT capsule
+            // metadata: they neither count toward the standard capsule-payload limit nor pass
+            // through the capsule-policy check. (HTLC LOCK carried only 1 payload so this does
+            // not change its behaviour; asset genesis carries 2-3, which is legitimate.)
+            const uint8_t _pt = tx.outputs[i].type;
+            const bool asset_typed_payload = native_assets_active_at(ctx.spend_height) &&
+                (_pt == OUT_ASSET_TRANSFER || _pt == OUT_ASSET_ISSUE_AUTH ||
+                 _pt == OUT_ASSET_BURN     || _pt == OUT_ASSET_GENESIS_DEF);
 
             if (tx.outputs[i].payload.size() > MAX_PAYLOAD_STANDARD) {
                 return TxValidationResult::Fail(TxValCode::P_PAYLOAD_TOO_LARGE,
@@ -834,7 +841,9 @@ TxValidationResult ValidateTransactionPolicy(
             bool htlc_typed_payload = atomic_swap_relay_active_at(ctx.spend_height) &&
                 (tx.outputs[i].type == OUT_HTLC_LOCK ||
                  tx.outputs[i].type == OUT_HTLC_CLAIM_WITNESS);
-            if (ctx.spend_height >= ctx.capsule_activation_height && !htlc_typed_payload) {
+            // Only untyped (capsule-metadata) payloads count toward the standard limit.
+            if (!htlc_typed_payload && !asset_typed_payload) ++payload_count;
+            if (ctx.spend_height >= ctx.capsule_activation_height && !htlc_typed_payload && !asset_typed_payload) {
                 auto cap_result = ValidateCapsulePolicy(tx.outputs[i].payload);
                 if (!cap_result.ok) {
                     return TxValidationResult::Fail(TxValCode::P_BAD_CAPSULE,
