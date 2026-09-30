@@ -4,6 +4,7 @@
 #include "sost/address.h"
 #include "sost/transaction.h"
 #include "sost/consensus_constants.h"   // COINBASE_MATURITY
+#include "sost/native_assets.h"         // V30000 — AssetDef + asset payload serialization
 #include <vector>
 #include <string>
 #include <map>
@@ -34,6 +35,7 @@ struct WalletUTXO {
     bool     spent;
     uint64_t lock_until{0};   // BOND_LOCK/ESCROW_LOCK: height at which output unlocks (0 = no lock)
     PubKeyHash beneficiary{}; // ESCROW_LOCK only: beneficiary pubkey hash
+    std::vector<Byte> payload{}; // V30000: typed-output payload (asset_id|amount for OUT_ASSET_*)
 };
 
 // -------------------------------------------------------------------------
@@ -164,6 +166,59 @@ public:
         int64_t fee,
         uint64_t lock_until,
         const PubKeyHash& beneficiary_pkh,
+        const Hash256& genesis_hash,
+        Transaction& out_tx,
+        int64_t chain_height = -1,
+        std::string* err = nullptr);
+
+    // ---- V30000 native asset builders (spend SOST for fee + per-output dust) ----
+    // GENESIS: create an asset. asset_id = H(first-input outpoint). def carries
+    // symbol/name/decimals/policy/max_supply/manifest_hash. mint_amount units are
+    // minted to the sender; FIXED must mint == max_supply; CAPPED also emits one
+    // issuance-authority UTXO to the sender. `out_asset_id` returns the derived id.
+    bool create_asset_genesis_transaction(
+        const AssetDef& def,
+        uint64_t mint_amount,
+        int64_t dust,
+        int64_t fee,
+        const Hash256& genesis_hash,
+        Transaction& out_tx,
+        Bytes32* out_asset_id = nullptr,
+        int64_t chain_height = -1,
+        std::string* err = nullptr);
+
+    // TRANSFER: move `asset_amount` of `asset_id` to `to_pkh`; asset change (if any)
+    // returns to the sender; SOST covers fee + dust. Selects the sender's asset UTXOs
+    // of `asset_id` plus SOST UTXOs for fee/dust.
+    bool create_asset_transfer_transaction(
+        const Bytes32& asset_id,
+        const PubKeyHash& to_pkh,
+        uint64_t asset_amount,
+        int64_t dust,
+        int64_t fee,
+        const Hash256& genesis_hash,
+        Transaction& out_tx,
+        int64_t chain_height = -1,
+        std::string* err = nullptr);
+
+    // BURN: destroy `asset_amount` of `asset_id` (asset change returns to sender).
+    bool create_asset_burn_transaction(
+        const Bytes32& asset_id,
+        uint64_t asset_amount,
+        int64_t dust,
+        int64_t fee,
+        const Hash256& genesis_hash,
+        Transaction& out_tx,
+        int64_t chain_height = -1,
+        std::string* err = nullptr);
+
+    // ISSUE: mint `mint_amount` more of a CAPPED_REISSUABLE `asset_id` (spends the
+    // sender's issuance-authority UTXO and recreates it).
+    bool create_asset_issue_transaction(
+        const Bytes32& asset_id,
+        uint64_t mint_amount,
+        int64_t dust,
+        int64_t fee,
         const Hash256& genesis_hash,
         Transaction& out_tx,
         int64_t chain_height = -1,

@@ -894,6 +894,222 @@ bool Wallet::create_escrow_transaction(
     return true;
 }
 
+// ===========================================================================
+// V30000 — native asset transaction builders. Mirror create_bond_transaction:
+// select the sender's spendable UTXOs, build typed outputs + change, sign each
+// input. SOST value conservation: sum(SOST in) == dust*(#asset outputs) + fee +
+// SOST change. Asset value lives in the output payload, never in the SOST amount.
+// ===========================================================================
+namespace {
+constexpr const char* kConstA = "sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d";
+constexpr const char* kConstB = "sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f";
+} // namespace
+
+// Common: pick SOST-spendable UTXOs (own key, not asset, not locked, not constitutional)
+// up to `need_stocks`; returns indices + total. Returns false if insufficient.
+bool Wallet::create_asset_genesis_transaction(
+    const AssetDef& def, uint64_t mint_amount, int64_t dust, int64_t fee,
+    const Hash256& genesis_hash, Transaction& out_tx, Bytes32* out_asset_id,
+    int64_t chain_height, std::string* err)
+{
+    if (mint_amount == 0) { if (err) *err = "mint_amount must be > 0"; return false; }
+    if (dust <= 0 || fee < 0) { if (err) *err = "bad dust/fee"; return false; }
+    if (def.supply_policy == ASSET_POLICY_FIXED && mint_amount != def.max_supply) {
+        if (err) *err = "FIXED asset must mint exactly max_supply"; return false; }
+    if (mint_amount > def.max_supply) { if (err) *err = "mint > max_supply"; return false; }
+
+    int n_asset_out = 2 + (def.supply_policy == ASSET_POLICY_CAPPED_REISSUABLE ? 1 : 0); // def+mint(+auth)
+    int64_t need = fee + dust * (int64_t)n_asset_out;
+    auto unspent = list_unspent(chain_height);
+    std::vector<size_t> sel; int64_t total_in = 0;
+    for (size_t i = 0; i < unspent.size() && total_in < need; ++i) {
+        const auto& u = unspent[i];
+        if (!find_key_by_pkh(u.pkh)) continue;
+        if (sost::is_asset_output(u.output_type)) continue;   // asset UTXO not SOST-spendable for fee
+        std::string a = address_encode(u.pkh);
+        if (a == kConstA || a == kConstB) continue;
+        if ((u.output_type == OUT_BOND_LOCK || u.output_type == OUT_ESCROW_LOCK) &&
+            chain_height >= 0 && (uint64_t)chain_height < u.lock_until) continue;
+        sel.push_back(i); total_in += u.amount;
+    }
+    if (total_in < need) { if (err) *err = "insufficient SOST for genesis fee+dust"; return false; }
+
+    out_tx = Transaction{}; out_tx.version = 1; out_tx.tx_type = TX_TYPE_ASSET_GENESIS;
+    for (size_t idx : sel) { TxInput in{}; in.prev_txid = unspent[idx].txid; in.prev_index = unspent[idx].vout; out_tx.inputs.push_back(in); }
+    const PubKeyHash sender = unspent[sel[0]].pkh;
+    Bytes32 asset_id = sost::compute_asset_id(out_tx.inputs[0].prev_txid, out_tx.inputs[0].prev_index);
+    if (out_asset_id) *out_asset_id = asset_id;
+    // output 0: genesis def
+    { TxOutput o{}; o.amount = dust; o.type = OUT_ASSET_GENESIS_DEF; o.pubkey_hash = sender; o.payload = sost::serialize_asset_def(def); out_tx.outputs.push_back(o); }
+    // output 1: mint to sender
+    { TxOutput o{}; o.amount = dust; o.type = OUT_ASSET_TRANSFER; o.pubkey_hash = sender; o.payload = sost::serialize_asset_amount(asset_id, mint_amount); out_tx.outputs.push_back(o); }
+    // output 2 (CAPPED only): issuance authority to sender
+    if (def.supply_policy == ASSET_POLICY_CAPPED_REISSUABLE) {
+        TxOutput o{}; o.amount = dust; o.type = OUT_ASSET_ISSUE_AUTH; o.pubkey_hash = sender; o.payload = sost::serialize_asset_auth(asset_id); out_tx.outputs.push_back(o); }
+    // SOST change
+    int64_t change = total_in - need;
+    if (change > 0) { TxOutput o{}; o.amount = change; o.type = OUT_TRANSFER; o.pubkey_hash = sender; out_tx.outputs.push_back(o); }
+    // sign
+    for (size_t i = 0; i < sel.size(); ++i) {
+        const auto& u = unspent[sel[i]]; const WalletKey* k = find_key_by_pkh(u.pkh);
+        SpentOutput sp; sp.amount = u.amount; sp.type = u.output_type;
+        if (!SignTransactionInput(out_tx, i, sp, genesis_hash, k->privkey, err)) return false;
+    }
+    for (size_t idx : sel) mark_spent(unspent[idx].txid, unspent[idx].vout);
+    return true;
+}
+
+// Shared helper for transfer/burn: select the sender's asset UTXOs of `asset_id`
+// (>= want) + SOST UTXOs for the fee/dust shortfall. `out_tx` gets inputs + the
+// asset change output; caller adds the destination/burn output before signing.
+bool Wallet::create_asset_transfer_transaction(
+    const Bytes32& asset_id, const PubKeyHash& to_pkh, uint64_t asset_amount,
+    int64_t dust, int64_t fee, const Hash256& genesis_hash, Transaction& out_tx,
+    int64_t chain_height, std::string* err)
+{
+    if (asset_amount == 0) { if (err) *err = "asset_amount must be > 0"; return false; }
+    if (dust <= 0 || fee < 0) { if (err) *err = "bad dust/fee"; return false; }
+    auto unspent = list_unspent(chain_height);
+    // 1) select asset UTXOs of this id
+    std::vector<size_t> asel; uint64_t asset_in = 0; int64_t asset_dust_in = 0;
+    for (size_t i = 0; i < unspent.size() && asset_in < asset_amount; ++i) {
+        const auto& u = unspent[i];
+        if (u.output_type != OUT_ASSET_TRANSFER) continue;
+        if (!find_key_by_pkh(u.pkh)) continue;
+        Bytes32 aid; uint64_t amt;
+        if (!sost::parse_asset_amount(u.payload, aid, amt) || !(aid == asset_id)) continue;
+        asel.push_back(i); asset_in += amt; asset_dust_in += u.amount;
+    }
+    if (asset_in < asset_amount) { if (err) *err = "insufficient asset balance"; return false; }
+    uint64_t asset_change = asset_in - asset_amount;
+    int n_asset_out = 1 + (asset_change > 0 ? 1 : 0);
+    // 2) SOST needed = fee + dust*(#asset outputs) - asset dust already flowing in
+    int64_t need_sost = fee + dust * (int64_t)n_asset_out - asset_dust_in;
+    std::vector<size_t> ssel; int64_t sost_in = 0;
+    if (need_sost > 0) {
+        for (size_t i = 0; i < unspent.size() && sost_in < need_sost; ++i) {
+            const auto& u = unspent[i];
+            if (!find_key_by_pkh(u.pkh)) continue;
+            if (sost::is_asset_output(u.output_type)) continue;
+            std::string a = address_encode(u.pkh);
+            if (a == kConstA || a == kConstB) continue;
+            if ((u.output_type == OUT_BOND_LOCK || u.output_type == OUT_ESCROW_LOCK) &&
+                chain_height >= 0 && (uint64_t)chain_height < u.lock_until) continue;
+            ssel.push_back(i); sost_in += u.amount;
+        }
+        if (sost_in < need_sost) { if (err) *err = "insufficient SOST for fee/dust"; return false; }
+    }
+    out_tx = Transaction{}; out_tx.version = 1; out_tx.tx_type = TX_TYPE_ASSET_TRANSFER;
+    for (size_t idx : asel) { TxInput in{}; in.prev_txid = unspent[idx].txid; in.prev_index = unspent[idx].vout; out_tx.inputs.push_back(in); }
+    for (size_t idx : ssel) { TxInput in{}; in.prev_txid = unspent[idx].txid; in.prev_index = unspent[idx].vout; out_tx.inputs.push_back(in); }
+    const PubKeyHash sender = unspent[asel[0]].pkh;
+    // dest asset output
+    { TxOutput o{}; o.amount = dust; o.type = OUT_ASSET_TRANSFER; o.pubkey_hash = to_pkh; o.payload = sost::serialize_asset_amount(asset_id, asset_amount); out_tx.outputs.push_back(o); }
+    // asset change
+    if (asset_change > 0) { TxOutput o{}; o.amount = dust; o.type = OUT_ASSET_TRANSFER; o.pubkey_hash = sender; o.payload = sost::serialize_asset_amount(asset_id, asset_change); out_tx.outputs.push_back(o); }
+    // SOST change = (asset dust in + sost in) - dust*(#asset outputs) - fee
+    int64_t sost_change = (asset_dust_in + sost_in) - dust * (int64_t)n_asset_out - fee;
+    if (sost_change > 0) { TxOutput o{}; o.amount = sost_change; o.type = OUT_TRANSFER; o.pubkey_hash = sender; out_tx.outputs.push_back(o); }
+    // sign all inputs (asset then sost)
+    size_t si = 0;
+    for (size_t idx : asel) { const auto& u = unspent[idx]; const WalletKey* k = find_key_by_pkh(u.pkh); SpentOutput sp; sp.amount = u.amount; sp.type = u.output_type; if (!SignTransactionInput(out_tx, si++, sp, genesis_hash, k->privkey, err)) return false; }
+    for (size_t idx : ssel) { const auto& u = unspent[idx]; const WalletKey* k = find_key_by_pkh(u.pkh); SpentOutput sp; sp.amount = u.amount; sp.type = u.output_type; if (!SignTransactionInput(out_tx, si++, sp, genesis_hash, k->privkey, err)) return false; }
+    for (size_t idx : asel) mark_spent(unspent[idx].txid, unspent[idx].vout);
+    for (size_t idx : ssel) mark_spent(unspent[idx].txid, unspent[idx].vout);
+    return true;
+}
+
+bool Wallet::create_asset_burn_transaction(
+    const Bytes32& asset_id, uint64_t asset_amount, int64_t dust, int64_t fee,
+    const Hash256& genesis_hash, Transaction& out_tx, int64_t chain_height, std::string* err)
+{
+    if (asset_amount == 0) { if (err) *err = "burn amount must be > 0"; return false; }
+    if (dust <= 0 || fee < 0) { if (err) *err = "bad dust/fee"; return false; }
+    auto unspent = list_unspent(chain_height);
+    std::vector<size_t> asel; uint64_t asset_in = 0; int64_t asset_dust_in = 0;
+    for (size_t i = 0; i < unspent.size() && asset_in < asset_amount; ++i) {
+        const auto& u = unspent[i];
+        if (u.output_type != OUT_ASSET_TRANSFER || !find_key_by_pkh(u.pkh)) continue;
+        Bytes32 aid; uint64_t amt;
+        if (!sost::parse_asset_amount(u.payload, aid, amt) || !(aid == asset_id)) continue;
+        asel.push_back(i); asset_in += amt; asset_dust_in += u.amount;
+    }
+    if (asset_in < asset_amount) { if (err) *err = "insufficient asset balance to burn"; return false; }
+    uint64_t asset_change = asset_in - asset_amount;
+    int n_asset_out = 1 + (asset_change > 0 ? 1 : 0); // burn output (+ change)
+    int64_t need_sost = fee + dust * (int64_t)n_asset_out - asset_dust_in;
+    std::vector<size_t> ssel; int64_t sost_in = 0;
+    if (need_sost > 0) {
+        for (size_t i = 0; i < unspent.size() && sost_in < need_sost; ++i) {
+            const auto& u = unspent[i];
+            if (!find_key_by_pkh(u.pkh) || sost::is_asset_output(u.output_type)) continue;
+            std::string a = address_encode(u.pkh); if (a == kConstA || a == kConstB) continue;
+            if ((u.output_type == OUT_BOND_LOCK || u.output_type == OUT_ESCROW_LOCK) && chain_height >= 0 && (uint64_t)chain_height < u.lock_until) continue;
+            ssel.push_back(i); sost_in += u.amount;
+        }
+        if (sost_in < need_sost) { if (err) *err = "insufficient SOST for burn fee/dust"; return false; }
+    }
+    out_tx = Transaction{}; out_tx.version = 1; out_tx.tx_type = TX_TYPE_ASSET_BURN;
+    for (size_t idx : asel) { TxInput in{}; in.prev_txid = unspent[idx].txid; in.prev_index = unspent[idx].vout; out_tx.inputs.push_back(in); }
+    for (size_t idx : ssel) { TxInput in{}; in.prev_txid = unspent[idx].txid; in.prev_index = unspent[idx].vout; out_tx.inputs.push_back(in); }
+    const PubKeyHash sender = unspent[asel[0]].pkh;
+    { TxOutput o{}; o.amount = dust; o.type = OUT_ASSET_BURN; o.pubkey_hash = sender; o.payload = sost::serialize_asset_amount(asset_id, asset_amount); out_tx.outputs.push_back(o); }
+    if (asset_change > 0) { TxOutput o{}; o.amount = dust; o.type = OUT_ASSET_TRANSFER; o.pubkey_hash = sender; o.payload = sost::serialize_asset_amount(asset_id, asset_change); out_tx.outputs.push_back(o); }
+    int64_t sost_change = (asset_dust_in + sost_in) - dust * (int64_t)n_asset_out - fee;
+    if (sost_change > 0) { TxOutput o{}; o.amount = sost_change; o.type = OUT_TRANSFER; o.pubkey_hash = sender; out_tx.outputs.push_back(o); }
+    size_t si = 0;
+    for (size_t idx : asel) { const auto& u = unspent[idx]; const WalletKey* k = find_key_by_pkh(u.pkh); SpentOutput sp; sp.amount = u.amount; sp.type = u.output_type; if (!SignTransactionInput(out_tx, si++, sp, genesis_hash, k->privkey, err)) return false; }
+    for (size_t idx : ssel) { const auto& u = unspent[idx]; const WalletKey* k = find_key_by_pkh(u.pkh); SpentOutput sp; sp.amount = u.amount; sp.type = u.output_type; if (!SignTransactionInput(out_tx, si++, sp, genesis_hash, k->privkey, err)) return false; }
+    for (size_t idx : asel) mark_spent(unspent[idx].txid, unspent[idx].vout);
+    for (size_t idx : ssel) mark_spent(unspent[idx].txid, unspent[idx].vout);
+    return true;
+}
+
+bool Wallet::create_asset_issue_transaction(
+    const Bytes32& asset_id, uint64_t mint_amount, int64_t dust, int64_t fee,
+    const Hash256& genesis_hash, Transaction& out_tx, int64_t chain_height, std::string* err)
+{
+    if (mint_amount == 0) { if (err) *err = "mint_amount must be > 0"; return false; }
+    if (dust <= 0 || fee < 0) { if (err) *err = "bad dust/fee"; return false; }
+    auto unspent = list_unspent(chain_height);
+    // find the issuance-authority UTXO for this asset owned by us
+    int auth_idx = -1; int64_t auth_dust = 0;
+    for (size_t i = 0; i < unspent.size(); ++i) {
+        const auto& u = unspent[i];
+        if (u.output_type != OUT_ASSET_ISSUE_AUTH || !find_key_by_pkh(u.pkh)) continue;
+        Bytes32 aid;
+        if (sost::parse_asset_auth(u.payload, aid) && aid == asset_id) { auth_idx = (int)i; auth_dust = u.amount; break; }
+    }
+    if (auth_idx < 0) { if (err) *err = "no issuance-authority UTXO for this asset in wallet"; return false; }
+    int n_asset_out = 2; // mint + recreated authority
+    int64_t need_sost = fee + dust * (int64_t)n_asset_out - auth_dust;
+    std::vector<size_t> ssel; int64_t sost_in = 0;
+    if (need_sost > 0) {
+        for (size_t i = 0; i < unspent.size() && sost_in < need_sost; ++i) {
+            const auto& u = unspent[i];
+            if (!find_key_by_pkh(u.pkh) || sost::is_asset_output(u.output_type)) continue;
+            std::string a = address_encode(u.pkh); if (a == kConstA || a == kConstB) continue;
+            if ((u.output_type == OUT_BOND_LOCK || u.output_type == OUT_ESCROW_LOCK) && chain_height >= 0 && (uint64_t)chain_height < u.lock_until) continue;
+            ssel.push_back(i); sost_in += u.amount;
+        }
+        if (sost_in < need_sost) { if (err) *err = "insufficient SOST for issue fee/dust"; return false; }
+    }
+    out_tx = Transaction{}; out_tx.version = 1; out_tx.tx_type = TX_TYPE_ASSET_ISSUE;
+    { TxInput in{}; in.prev_txid = unspent[auth_idx].txid; in.prev_index = unspent[auth_idx].vout; out_tx.inputs.push_back(in); }
+    for (size_t idx : ssel) { TxInput in{}; in.prev_txid = unspent[idx].txid; in.prev_index = unspent[idx].vout; out_tx.inputs.push_back(in); }
+    const PubKeyHash sender = unspent[auth_idx].pkh;
+    { TxOutput o{}; o.amount = dust; o.type = OUT_ASSET_TRANSFER; o.pubkey_hash = sender; o.payload = sost::serialize_asset_amount(asset_id, mint_amount); out_tx.outputs.push_back(o); }
+    { TxOutput o{}; o.amount = dust; o.type = OUT_ASSET_ISSUE_AUTH; o.pubkey_hash = sender; o.payload = sost::serialize_asset_auth(asset_id); out_tx.outputs.push_back(o); }
+    int64_t sost_change = (auth_dust + sost_in) - dust * (int64_t)n_asset_out - fee;
+    if (sost_change > 0) { TxOutput o{}; o.amount = sost_change; o.type = OUT_TRANSFER; o.pubkey_hash = sender; out_tx.outputs.push_back(o); }
+    size_t si = 0;
+    { const auto& u = unspent[auth_idx]; const WalletKey* k = find_key_by_pkh(u.pkh); SpentOutput sp; sp.amount = u.amount; sp.type = u.output_type; if (!SignTransactionInput(out_tx, si++, sp, genesis_hash, k->privkey, err)) return false; }
+    for (size_t idx : ssel) { const auto& u = unspent[idx]; const WalletKey* k = find_key_by_pkh(u.pkh); SpentOutput sp; sp.amount = u.amount; sp.type = u.output_type; if (!SignTransactionInput(out_tx, si++, sp, genesis_hash, k->privkey, err)) return false; }
+    mark_spent(unspent[auth_idx].txid, unspent[auth_idx].vout);
+    for (size_t idx : ssel) mark_spent(unspent[idx].txid, unspent[idx].vout);
+    return true;
+}
+
 // Walks tx.inputs and marks each (prev_txid, prev_index) as spent in the
 // wallet's UTXO list. Used by callers that build a tx via the no-mark
 // variants (create_transaction_many) and only want the local state to
