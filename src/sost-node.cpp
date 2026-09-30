@@ -260,7 +260,12 @@ static std::mutex g_block_index_mu;
 // Key: prev_hash_hex (so we can re-process when parent arrives)
 static std::multimap<std::string, std::string> g_orphans_by_prev; // prev_hash_hex -> block_hash_hex
 static const size_t MAX_ORPHAN_BLOCKS = 200;
-static const size_t MAX_FORK_INDEX_ENTRIES = 1000;
+// Fork-store entry-count budget — bounds NON-active (fork/orphan) entries only (see
+// fork_store_count_locked), NOT the active chain (every active block is also kept in
+// g_block_index). Sized so MAX_FORK_STORE_BYTES (256 MB) is the binding RAM constraint and a
+// deep fork (e.g. a 1000-deep reorg = 1005 fork entries) fits without evicting the ancestors
+// try_reorganize needs.
+static const size_t MAX_FORK_INDEX_ENTRIES = 65536;
 // SACS V2 resource bound: total bytes held by NON-active fork/orphan entries (raw_json).
 // Measured basis: a coinbase-only block's raw_json ~= 4.4 KB; the absolute per-block ceiling
 // is MAX_P2P_MSG_SIZE (4 MB) with a realistic tx-loaded worst case ~1.5 MB. 256 MB caps the
@@ -273,6 +278,7 @@ static const size_t MAX_FORK_STORE_BYTES = 256ull * 1024 * 1024;
 static bool try_reorganize(const std::string& fork_tip_hash);
 static void cleanup_old_forks();
 // SACS V2 storage-only fork-store bounding (all require g_block_index_mu held by the caller):
+static size_t fork_store_count_locked();   // count of NON-active (fork/orphan) entries only
 static size_t fork_store_bytes_locked();
 static size_t evict_forks_to_bounds_locked();
 static bool   make_room_for_fork_locked(const Bytes32& incoming_work);
@@ -6082,7 +6088,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
             //    evict a higher-work candidate for a lower-work arrival, never the pinned best).
             //    Eviction is storage-only/deterministic; a branch re-received later is
             //    re-evaluated normally (eviction != invalidation).
-            bool admit = g_block_index.size() < MAX_FORK_INDEX_ENTRIES;
+            bool admit = fork_store_count_locked() < MAX_FORK_INDEX_ENTRIES;
             if (!admit && g_chain_height >= sost::SACS_V2_ACTIVATION_HEIGHT) {
                 admit = make_room_for_fork_locked(entry.cumulative_work);
             }
@@ -7637,6 +7643,19 @@ static size_t fork_store_bytes_locked() {
     return b;
 }
 
+// Count of NON-active (fork/orphan) index entries only. The fork-store budget must bound the
+// retained fork data, NOT the active chain: every accepted active block is also kept in
+// g_block_index (status=ACTIVE, no cap/prune), so at mainnet heights the active count alone
+// dwarfs the cap. Counting the total would make a deep reorg (active + a deep fork > cap) evict
+// the fork ancestors try_reorganize needs — silently breaking SACS V2's deep-reorg purpose.
+// Caller MUST hold g_block_index_mu.
+static size_t fork_store_count_locked() {
+    size_t n = 0;
+    for (const auto& [hash, e] : g_block_index)
+        if (e.status != BlockStatus::ACTIVE) ++n;
+    return n;
+}
+
 // Deterministic, storage-only eviction to keep the fork store within BOTH resource bounds
 // (MAX_FORK_INDEX_ENTRIES entries and MAX_FORK_STORE_BYTES bytes). Evicts the lowest
 // cumulative-work non-active entries first (ties: lower height, then lexicographically smaller
@@ -7646,7 +7665,7 @@ static size_t fork_store_bytes_locked() {
 // normally. Returns the number of entries evicted. Caller MUST hold g_block_index_mu.
 static size_t evict_forks_to_bounds_locked() {
     size_t bytes = fork_store_bytes_locked();
-    if (g_block_index.size() <= MAX_FORK_INDEX_ENTRIES && bytes <= MAX_FORK_STORE_BYTES)
+    if (fork_store_count_locked() <= MAX_FORK_INDEX_ENTRIES && bytes <= MAX_FORK_STORE_BYTES)
         return 0;
 
     // Pin the highest-work fork tip and its ancestor path through the index.
@@ -7681,13 +7700,15 @@ static size_t evict_forks_to_bounds_locked() {
     });
 
     size_t evicted = 0;
+    size_t ncount = fork_store_count_locked();   // NON-active entries (tracked incrementally)
     for (const auto& ev : cand) {
-        if (g_block_index.size() <= MAX_FORK_INDEX_ENTRIES && bytes <= MAX_FORK_STORE_BYTES)
+        if (ncount <= MAX_FORK_INDEX_ENTRIES && bytes <= MAX_FORK_STORE_BYTES)
             break;
         auto it = g_block_index.find(ev.hash);
         if (it == g_block_index.end()) continue;
         bytes -= std::min(bytes, it->second.raw_json.size());
         g_block_index.erase(it);
+        --ncount;
         ++evicted;
     }
     return evicted;
@@ -7698,7 +7719,7 @@ static size_t evict_forks_to_bounds_locked() {
 // higher-work candidate is never dropped in favour of a lower-work arrival). Returns true if
 // room now exists. Caller MUST hold g_block_index_mu. Storage-only (eviction != invalidation).
 static bool make_room_for_fork_locked(const Bytes32& incoming_work) {
-    if (g_block_index.size() < MAX_FORK_INDEX_ENTRIES) return true;
+    if (fork_store_count_locked() < MAX_FORK_INDEX_ENTRIES) return true;
 
     // Pin the highest-work fork tip + ancestor path (same rule as bulk eviction).
     std::set<std::string> pinned;
