@@ -43,6 +43,7 @@
 #include "sost/hd_wallet.h"
 #include "sost/addressbook.h"
 #include "sost/wallet_policy.h"
+#include "sost/native_assets_modalities.h"
 #include "sost/atomic_swap_helpers.h"  // OTC-1 HTLC builders / OTC-2 CLI wiring
 #include "sost/types.h"
 #include "sost/params.h"
@@ -2335,6 +2336,29 @@ int main(int argc, char** argv) {
         std::string we; w.save(wallet_path, &we);
         return 0;
     }
+
+    // drawwinner <block_hash_hex> <draw_id_hex> <N>  (V30000)
+    //
+    // Publicly recompute a Draw winner from on-chain data. Anyone can run this:
+    //   block_hash = getblockhash(close_height)  (the committed entropy source)
+    //   draw_id    = 32-byte draw identifier
+    //   N          = number of canonically-ordered entries
+    // Prints the 0-based winner index. Matches the node/settlement computation
+    // byte-for-byte, so a draw settlement can be independently verified.
+    if (cmd == "drawwinner") {
+        if (argc < arg_start + 4) {
+            fprintf(stderr, "Usage: sost-cli drawwinner <block_hash_hex> <draw_id_hex> <N>\n");
+            return 1;
+        }
+        sost::Bytes32 bh = sost::from_hex(argv[arg_start + 1]);
+        sost::Bytes32 did = sost::from_hex(argv[arg_start + 2]);
+        uint64_t N = strtoull(argv[arg_start + 3], nullptr, 10);
+        if (N == 0) { fprintf(stderr, "N must be > 0\n"); return 1; }
+        uint64_t idx = sost::modalities::draw_select_index(bh, did, N);
+        printf("draw_winner_index: %llu  (of %llu)\n", (unsigned long long)idx, (unsigned long long)N);
+        return 0;
+    }
+
 
     // send <to_addr> <amount_sost>
     //
