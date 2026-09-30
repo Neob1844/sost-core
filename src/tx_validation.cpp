@@ -730,6 +730,14 @@ TxValidationResult ValidateTransactionConsensus(
         if (!allowed && atomic_swap_htlc_active_at(ctx.spend_height)) {
             allowed = (t == OUT_HTLC_LOCK || t == OUT_HTLC_CLAIM_WITNESS);
         }
+        // V30000 — native asset output types are valid in an asset tx once native assets
+        // are live (height >= NATIVE_ASSETS_ACTIVATION_HEIGHT). Their structure/payload is
+        // validated by R14; the ASSET dimension by validate_asset_tx in the block path.
+        // Pre-activation this is false, so replay stays byte-identical.
+        if (!allowed && native_assets_active_at(ctx.spend_height)) {
+            allowed = (t == OUT_ASSET_TRANSFER || t == OUT_ASSET_ISSUE_AUTH ||
+                       t == OUT_ASSET_BURN     || t == OUT_ASSET_GENESIS_DEF);
+        }
         if (!allowed) {
             return TxValidationResult::Fail(TxValCode::S9_BAD_STD_OUTPUT_TYPE,
                 "S9: standard tx output[" + std::to_string(i) +
