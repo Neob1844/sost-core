@@ -164,10 +164,15 @@ inline AssetTxResult validate_asset_tx(const Transaction& tx,
 
     // ============================ per-type rules ============================
     if (tt == TX_TYPE_ASSET_GENESIS) {
+        (void)genesis_def_vout;
         if (genesis_def_count != 1) return set(AssetTxResult::GENESIS_SHAPE);
+        if (tx.inputs.empty()) return set(AssetTxResult::GENESIS_SHAPE);  // need an outpoint to derive id
         if (!in_amt.empty()) return set(AssetTxResult::GENESIS_SHAPE);   // genesis consumes no assets
         if (!burn_amt.empty()) return set(AssetTxResult::GENESIS_SHAPE);
-        Bytes32 new_id = compute_asset_id(txid, (uint32_t)genesis_def_vout);
+        // asset_id derives from the FIRST INPUT's outpoint (unique, known before outputs are
+        // built) — NOT from this tx's txid, which would be circular (the mint output carries
+        // the asset_id, so it cannot depend on the txid that hashes that output).
+        Bytes32 new_id = compute_asset_id(tx.inputs[0].prev_txid, tx.inputs[0].prev_index);
         if (assets.GetAsset(new_id) != nullptr) return set(AssetTxResult::GENESIS_DUP);
         // every asset-bearing output must reference exactly this new asset_id
         for (const auto& kv : out_amt)      if (!(kv.first == new_id)) return set(AssetTxResult::GENESIS_SHAPE);

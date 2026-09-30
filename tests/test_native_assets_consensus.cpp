@@ -26,7 +26,7 @@ int main(){
   {
     MapUtxo u; MapAssets a;
     AssetDef d; d.symbol="AU"; d.name="Gold"; d.decimals=8; d.supply_policy=ASSET_POLICY_FIXED; d.max_supply=1000;
-    Transaction tx; tx.tx_type=TX_TYPE_ASSET_GENESIS;
+    Transaction tx; tx.tx_type=TX_TYPE_ASSET_GENESIS; tx.inputs.push_back(mkin(gtxid,0));
     tx.outputs.push_back(mkout(OUT_ASSET_GENESIS_DEF, serialize_asset_def(d))); // vout 0
     Bytes32 id=compute_asset_id(gtxid,0);
     tx.outputs.push_back(mkout(OUT_ASSET_TRANSFER, serialize_asset_amount(id,1000))); // mint == cap
@@ -52,7 +52,7 @@ int main(){
     MapUtxo u; MapAssets a;
     AssetDef d; d.symbol="RC"; d.name="Reissuable"; d.decimals=2; d.supply_policy=ASSET_POLICY_CAPPED_REISSUABLE; d.max_supply=1000;
     Bytes32 id=compute_asset_id(gtxid,0);
-    Transaction g; g.tx_type=TX_TYPE_ASSET_GENESIS;
+    Transaction g; g.tx_type=TX_TYPE_ASSET_GENESIS; g.inputs.push_back(mkin(gtxid,0));
     g.outputs.push_back(mkout(OUT_ASSET_GENESIS_DEF, serialize_asset_def(d)));
     g.outputs.push_back(mkout(OUT_ASSET_TRANSFER, serialize_asset_amount(id,400)));
     g.outputs.push_back(mkout(OUT_ASSET_ISSUE_AUTH, serialize_asset_auth(id)));

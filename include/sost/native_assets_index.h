@@ -55,7 +55,10 @@ public:
                         parse_asset_def(tx.outputs[i].payload, def); def_vout = i; have_def = true; break;
                     }
                 if (!have_def) { d.kind = 0; return d; }             // defensive (validated upstream)
-                Bytes32 id = compute_asset_id(txid, (uint32_t)def_vout);
+                (void)def_vout;
+                if (tx.inputs.empty()) { d.kind = 0; return d; }     // defensive
+                // asset_id = H(first-input outpoint) — same derivation as the validator.
+                Bytes32 id = compute_asset_id(tx.inputs[0].prev_txid, tx.inputs[0].prev_index);
                 uint64_t mint = 0;
                 for (const auto& o : tx.outputs)
                     if (o.type == OUT_ASSET_TRANSFER) {

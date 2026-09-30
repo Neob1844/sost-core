@@ -49,12 +49,16 @@ inline constexpr int64_t  ASSET_OUTPUT_DUST_STOCKS     = 1;
 // bounded number of outputs, each <= max_supply <= this ceiling).
 inline constexpr uint64_t ASSET_MAX_SUPPLY_CEILING     = 4611686018427387904ULL; // 2^62
 
-// ---- asset_id: deterministic, collision-free from the genesis outpoint ----
-inline Bytes32 compute_asset_id(const Hash256& genesis_txid, uint32_t genesis_vout) {
+// ---- asset_id: deterministic, collision-free from the genesis tx's FIRST INPUT outpoint ----
+// asset_id = SHA256( first_input.prev_txid(32) || first_input.prev_index(4 LE) ).
+// The spent outpoint is globally unique (can't be double-spent) AND is known BEFORE the
+// genesis tx's outputs are built — so the mint output can embed the asset_id without the
+// circular dependency that deriving from this tx's own txid would create.
+inline Bytes32 compute_asset_id(const Hash256& input_txid, uint32_t input_vout) {
     std::vector<uint8_t> buf;
     buf.reserve(ASSET_ID_LEN + 4);
-    buf.insert(buf.end(), genesis_txid.begin(), genesis_txid.end());
-    for (int i = 0; i < 4; ++i) buf.push_back((uint8_t)((genesis_vout >> (8 * i)) & 0xff)); // LE
+    buf.insert(buf.end(), input_txid.begin(), input_txid.end());
+    for (int i = 0; i < 4; ++i) buf.push_back((uint8_t)((input_vout >> (8 * i)) & 0xff)); // LE
     return sha256(buf.data(), buf.size());
 }
 

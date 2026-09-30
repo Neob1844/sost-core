@@ -11,8 +11,8 @@ int main(){
   Hash256 gtx=H(1);
   // genesis CAPPED, mint 400, cap 1000
   AssetDef d; d.symbol="RC"; d.decimals=2; d.supply_policy=ASSET_POLICY_CAPPED_REISSUABLE; d.max_supply=1000;
-  Bytes32 id=compute_asset_id(gtx,0);
-  Transaction g; g.tx_type=TX_TYPE_ASSET_GENESIS;
+  Bytes32 id=compute_asset_id(Hash256{},0);  // genesis input outpoint = (zero,0)
+  Transaction g; g.tx_type=TX_TYPE_ASSET_GENESIS; g.inputs.push_back({});
   g.outputs.push_back(mkout(OUT_ASSET_GENESIS_DEF, serialize_asset_def(d)));
   g.outputs.push_back(mkout(OUT_ASSET_TRANSFER, serialize_asset_amount(id,400)));
   g.outputs.push_back(mkout(OUT_ASSET_ISSUE_AUTH, serialize_asset_auth(id)));
