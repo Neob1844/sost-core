@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-# Deliver source node's blocks [1..H] to dest node via getrawblock+submitblock,
-# parent-first, so dest can assemble the competing fork and let the REAL reorg
-# engine decide by cumulative work. Prints per-height accept/reject.
+# Deliver source node's blocks [START..H] to dest node via getblockhash+getrawblock+submitblock,
+# parent-first. START defaults to 1. Delivering only a TAIL (START>1) models a real peer that
+# announces new blocks without re-sending ancestors the dest once saw (and may have pruned).
+# Prints per-height accept/reject and a summary + the first hash that fails to connect.
 import sys, json, urllib.request
 def rpc(port, method, params):
     req=urllib.request.Request(f"http://127.0.0.1:{port}/",
@@ -14,18 +15,21 @@ def rpc(port, method, params):
         return None, str(e)
 def main():
     src, dst, H = sys.argv[1], sys.argv[2], int(sys.argv[3])
-    acc=rej=0
-    for h in range(1, H+1):
-        bh,err = rpc(src,"getblockhash",[h])
-        if not bh: print(f"  h{h}: getblockhash FAIL {err}"); continue
+    START = int(sys.argv[4]) if len(sys.argv)>4 else 1
+    acc=rej=0; first_reject=None
+    for hgt in range(START, H+1):
+        bh,err = rpc(src,"getblockhash",[hgt])
+        if not bh: print(f"  h{hgt}: getblockhash FAIL {err}"); continue
         raw,err = rpc(src,"getrawblock",[bh])
-        if not raw: print(f"  h{h}: getrawblock FAIL {err}"); continue
+        if not raw: print(f"  h{hgt}: getrawblock FAIL {err}"); continue
         res,err = rpc(dst,"submitblock",[raw])
         ok = (res in (True,"true")) or (res is True)
         if ok: acc+=1
-        else: rej+=1
-        # brief per-height line only for first, last, and rejects to keep output tight
-        if h in (1,H) or not ok:
-            print(f"  h{h} {bh[:16]} -> submitblock: {'ACCEPT' if ok else 'reject/fork-stored'} {('' if ok else (err or res))}")
-    print(f"  fed {H} blocks: {acc} direct-accept, {rej} fork-stored/other")
+        else:
+            rej+=1
+            if first_reject is None: first_reject=(hgt,bh)
+        if hgt in (START,H) or not ok:
+            print(f"  h{hgt} {bh[:16]} -> submitblock: {'ACCEPT' if ok else 'reject/fork-stored/orphan'} {('' if ok else (err or res))}")
+    print(f"  fed [{START}..{H}]: {acc} direct-accept, {rej} fork-stored/orphan/other")
+    if first_reject: print(f"  FIRST_NONACCEPT h{first_reject[0]} hash={first_reject[1]}")
 if __name__=="__main__": main()
