@@ -19,14 +19,14 @@
 <link rel="icon" type="image/png" href="sost-logo.png?v=v392">
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST — Upgrade your node to v16.3.0 (node fix · full sync from genesis)</title>
-<meta name="description" content="How to update an already-running SOST node to v16.3.0. Only the node changed (full sync from genesis now works); the miner and CLI are byte-identical to v16.2.3, so you just swap the node. You keep your coins, wallet, keys and payout address.">
+<title>SOST — Upgrade to V30000 (node, miner &amp; CLI · #30,000 network upgrade)</title>
+<meta name="description" content="How to update an already-running SOST node, miner and CLI to V30000 before the #30,000 network upgrade. All three binaries changed &mdash; re-download, verify and swap all three. You keep your coins, wallet, keys and payout address.">
 <meta name="keywords" content="SOST quickstart, how to mine SOST, SOST setup, build SOST, run SOST node, SOST mining guide">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SOST V16.3.0 — Upgrade your node (node fix)">
-<meta property="og:description" content="v16.3.0 changes only the node (full sync from genesis); miner and CLI byte-identical to v16.2.3. Verified commands for manual, systemd and WSL setups.">
+<meta property="og:title" content="SOST V30000 — Upgrade node, miner &amp; CLI (#30,000)">
+<meta property="og:description" content="V30000 changes all three binaries (node, miner and CLI); none byte-identical to v16.2.x. Verified commands for manual, systemd and WSL setups.">
 <meta property="og:url" content="https://sostcore.com/sost-upgrade.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
@@ -257,7 +257,7 @@
 </nav>
 
 <style>
-/* ── Guía de mineros V16.3.0 ─────────────────────────────────────────────
+/* ── Guía de mineros V30000 ─────────────────────────────────────────────
    Secciones plegables nativas (<details>): funcionan sin JavaScript, así que
    la guía sigue siendo legible si el script falla o el navegador lo bloquea.
    Nada aquí depende del estado de la sesión del Explorer.                */
@@ -309,7 +309,7 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
 <section class="hero">
   <div class="container">
     <h1 style="font-family:var(--font-display);letter-spacing:2px">SOST V16 &mdash; <span style="color:var(--red-primary)">MINER &amp; NODE GUIDE</span></h1>
-    <p style="font-size:17px;max-width:860px">Everything you need to install, configure and run SOST V16.3.0 &mdash; and to decide whether you want to enter the DTD Jackpot V2 draw. Written for someone who has never run a node before, with the exact commands for someone who has.</p>
+    <p style="font-size:17px;max-width:860px">Everything you need to install, configure and run SOST V30000 &mdash; and to decide whether you want to enter the DTD Jackpot V2 draw. Written for someone who has never run a node before, with the exact commands for someone who has.</p>
   </div>
 </section>
 
@@ -320,7 +320,7 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
     <div style="font-size:11px;letter-spacing:2px;color:var(--text3,#7b8794);margin-bottom:8px">WHERE THE CHAIN IS RIGHT NOW</div>
     <div id="mgBadge" class="mg-badge" style="border-color:#7b8794;color:#9fb6c4">reading the chain&hellip;</div>
     <div id="mgLine" style="font-size:13.5px;line-height:1.7;margin-top:10px;color:var(--text2,#cbd5e1)">
-      V16 activates at block <b>#30,000</b>, automatically by block height. <b>v16.3.0</b> changes only the node (full sync from genesis now works); the miner and CLI are byte-identical to v16.2.3, so you just <b>swap the node</b> &mdash; before #30,000 if you are still on pre-V16 software.
+      V30000 activates at block <b>#30,000</b>, automatically by block height. <b>V30000 changes all three binaries</b> (node, miner and CLI; none byte-identical to v16.2.x) &mdash; <b>re-download, verify and swap all three</b> before #30,000.
     </div>
     <div style="font-size:12px;color:var(--text3,#7b8794);margin-top:9px;line-height:1.6">
       Three different things, often confused:
@@ -344,16 +344,17 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
   </div>
 
   <div class="mg-note mg-ok">
-    <b>Already running v16.2.x? Update your NODE to v16.3.0.</b>
-      v16.3.0 changes only <code>sost-node</code> (it makes a full sync from genesis complete). <code>sost-miner</code>
-      and <code>sost-cli</code> are <b>byte-identical</b> to v16.2.3 &mdash; the same SHA-256, nothing to change there.
-      So the upgrade is one binary: swap <code>sost-node</code>, and your miner keeps running.
+    <b>Already running an older version? Update to V30000 before #30,000.</b>
+      V30000 changes <b>all three binaries</b> &mdash; <code>sost-node</code>, <code>sost-miner</code>
+      and <code>sost-cli</code>. <b>None are byte-identical to v16.2.x</b> &mdash; re-download all three, verify each
+      against the official SHA-256, and swap all three. #30,000 activates the native-asset / tokenization / DEX
+      layer (admin-gated, public access disabled) alongside DTD Jackpot V2.
   </div>
 
   <!-- ═══ 2 · DOWNLOAD ════════════════════════════════════════════════ -->
   <details class="mg" id="s2"><summary>1 &middot; Download the official binaries and verify them</summary><div class="mg-in">
     <p>Everything is published in one place:
-      <a href="https://github.com/Neob1844/sost-core/releases/tag/v16.3.0" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v16.3.0</a>.
+      <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-rc1" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v30000-rc1</a>.
       Download <code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code> and <code>SHA256SUMS</code>.</p>
 
     <h4>Verify before you run anything</h4>
@@ -434,7 +435,7 @@ chmod 600 ~/.sost/rpc.pass</pre></div>
 
   <!-- ═══ 5 · START ═══════════════════════════════════════════════════ -->
   <details class="mg" id="s5"><summary>4 &middot; Starting your node and your miner</summary><div class="mg-in">
-    <p>Every option below was checked against <code>--help</code> on the published v16.3.0 binaries. Paths, labels and users
+    <p>Every option below was checked against <code>--help</code> on the published V30000 binaries. Paths, labels and users
       are placeholders &mdash; replace them with yours.</p>
 
     <h4>Start a node</h4>
@@ -683,14 +684,14 @@ chmod 600 ~/.sost/node.key</pre></div>
           0 rejects, all 66 exceptions used once each.</li>
       </ul>
         <div class="mg-note mg-ok">
-          <b>This is fixed and downloadable in v16.3.0</b> (the binaries at the top of this page). A node from
-          v16.3.0 completes a full sync from genesis; you no longer need a pre-seeded <code>chain.json</code>.
-          <b>v16.2.3 does NOT contain the fix</b> &mdash; if you downloaded v16.2.3 and have not synced, update the
-          node binary to v16.3.0. Only <code>sost-node</code> changed; <code>sost-miner</code> and
-          <code>sost-cli</code> are the same binaries as v16.2.3.
+          <b>This is fixed and downloadable in V30000</b> (the binaries at the top of this page). A node from
+          V30000 completes a full sync from genesis; you no longer need a pre-seeded <code>chain.json</code>.
+          <b>Older versions do NOT contain the fix</b> &mdash; update to V30000. All three binaries
+          (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>) changed in V30000 and are
+          <b>not</b> byte-identical to v16.2.x; re-download and verify all three.
         </div>
         <p>We describe as <i>done</i> only what is proven: the fix is <b>merged in GitHub</b>, <b>running on the
-          production node</b>, and <b>published as a signed binary release (v16.3.0)</b> whose downloaded artifacts
+          production node</b>, and <b>published as a signed binary release (V30000)</b> whose downloaded artifacts
           were re-verified against their SHA-256. No external security audit of this software has been performed.</p></div></details>
 
   <p style="margin-top:34px;font-size:13.5px;color:var(--text3,#7b8794);line-height:1.75">
@@ -739,12 +740,12 @@ function mgFallback(txt,done){
        b.textContent='UPDATE YOUR NODE · chain at #'+fc(h);
        b.style.borderColor='#fb010d'; b.style.color='#ff6b6b';
        l.innerHTML='<b>Swap the node now.</b> V16 activates at <b>#30,000</b> — '+fc(V16-h)+
-         ' blocks away. v16.3.0 changes only the node; the miner and CLI are byte-identical to v16.2.3.';
+         ' blocks away. V30000 changes all three binaries; re-download and swap node, miner and cli.';
      } else {
        b.textContent='NOT YET ACTIVE · chain at #'+fc(h)+' · '+fc(V16-h)+' blocks to go';
        b.style.borderColor='#fbbf24'; b.style.color='#fbbf24';
-       l.innerHTML='Download and verify <b>v16.3.0</b> now, and swap the node <b>before #'+fc(V16)+'</b> — '+
-         fc(V16-h)+' blocks away. Only the node changed; the miner and CLI are byte-identical to v16.2.3.';
+       l.innerHTML='Download and verify <b>V30000</b> now, and swap node, miner and cli <b>before #'+fc(V16)+'</b> — '+
+         fc(V16-h)+' blocks away. All three binaries changed; swap node, miner and cli.';
      }
    }).catch(function(){});
 })();
