@@ -16,7 +16,7 @@ N=$(nice -n 5 "$BIN/sost-node" --profile dev --noseed --genesis "$G" --chain "$R
 for i in $(seq 1 60);do curl -s --max-time 2 -o /dev/null http://127.0.0.1:$RPCP/ 2>/dev/null&&break;sw 0.5;done
 mine(){ nice -n 5 timeout 400 "$BIN/sost-miner" --profile dev --genesis "$G" --chain "$R/chain.json" --wallet "$R/w.json" --mining-key-label seller --rpc 127.0.0.1:$RPCP --rpc-user u --rpc-pass-file "$R/pass" --blocks "$1" --realtime --threads 4 >>"$R/miner.log" 2>&1; }
 abal(){ rpc getassetbalance "[\"$1\",\"$2\"]" | grep -oE '"balance":[0-9]+' | grep -oE '[0-9]+'; }
-sbal(){ rpc getbalance "[\"$1\"]" | grep -oE '"available":"[0-9.]+"' | grep -oE '[0-9.]+' | head -1; }
+sbal(){ local st=$(rpc getaddressbalance "[\"$1\"]" | grep -oE '"balance_stocks":[0-9]+' | grep -oE '[0-9]+'); awk -v s="${st:-0}" 'BEGIN{printf "%.2f", s/1e8}'; }
 echo "[$(date +%T)] minando 55..."; mine 55
 echo "[$(date +%T)] createasset ARTPZ (tokenized item, supply 500)..."
 AID=$(CLI createasset ARTPZ "Auction Item" 0 fixed 500 500 --from-address "$SELLER" 2>&1 | grep -oE 'asset_id: [0-9a-f]{64}' | grep -oE '[0-9a-f]{64}')
