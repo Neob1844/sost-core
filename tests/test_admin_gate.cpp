@@ -74,6 +74,14 @@ int main(){
     auto r=ValidateTransactionConsensus(tx, v, ctxAt(H, adminPkh));
     TEST("standard (non-asset) tx is NOT gated by S14", r.code!=TxValCode::S14_RESTRICTED_DEV_MODE);
   }
+  // ---- BAKED authority (real mainnet build value) ----
+  {
+    std::array<uint8_t,20> expect={0xad,0x01,0xa1,0xce,0x3a,0xe7,0xd0,0xdb,0xcc,0x1b,0xaa,0xe7,0xa1,0x1e,0x9e,0xcd,0xe2,0x86,0x83,0xa2};
+    TEST("ADMIN_AUTHORITY_PKH is baked (non-zero -> not fail-closed)", admin_authority_is_set(ADMIN_AUTHORITY_PKH));
+    TEST("ADMIN_AUTHORITY_PKH == admin address pkh (sost1ad01a...a2)", ADMIN_AUTHORITY_PKH==expect);
+    EmptyView v2; auto r=ValidateTransactionConsensus(assetTx(mkpub(9)), v2, ctxAt(H, std::array<uint8_t,20>{}));
+    TEST("baked gate active: ctx-unset non-admin asset tx -> S14 (falls back to baked)", !r.ok && r.code==TxValCode::S14_RESTRICTED_DEV_MODE);
+  }
   std::printf("\n== Summary: %d passed, %d failed ==\n",g_pass,g_fail);
   return g_fail?1:0;
 }

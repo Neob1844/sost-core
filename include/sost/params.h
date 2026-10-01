@@ -735,7 +735,7 @@ inline constexpr int64_t RESTRICTED_DEV_MODE_END_HEIGHT  = INT64_MAX; // lift vi
 // -DSOST_ADMIN_PKH_BYTES=... for devnet tests; the shipped default is the all-zero
 // fail-closed placeholder.
 #ifndef SOST_ADMIN_PKH_BYTES
-#define SOST_ADMIN_PKH_BYTES {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+#define SOST_ADMIN_PKH_BYTES {0xad,0x01,0xa1,0xce,0x3a,0xe7,0xd0,0xdb,0xcc,0x1b,0xaa,0xe7,0xa1,0x1e,0x9e,0xcd,0xe2,0x86,0x83,0xa2} /* sost1ad01a1ce3ae7d0dbcc1baae7a11e9ecde28683a2 */
 #endif
 inline constexpr std::array<uint8_t,20> ADMIN_AUTHORITY_PKH = SOST_ADMIN_PKH_BYTES;
 
