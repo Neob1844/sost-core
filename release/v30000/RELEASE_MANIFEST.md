@@ -1,24 +1,23 @@
-# SOST V30000 release candidate — manifest
+# SOST V30000 FINAL release candidate — manifest
 
 - Branch: feat/v30000-native-assets
-- Commit: 52b7be70a2fecfad759e1d3c9c5a55a15297979d
-- Build: clean, from scratch; Release; -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF (MAINNET profile)
-- Node version: v0.4.0 (Profile: MAINNET, enforces activation at #30000)
+- FINAL commit: ba64978f7ba5fc26218d0454daf651033baa1700
+- Build: CLEAN from scratch (build-v30000-final) · Release · -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF (MAINNET)
+- Node: SOST Node v0.4.0 (Profile MAINNET; enforces native-assets + admin gate activation at #30000)
 - Bundles: V16 + SEC2 + SACS V1 + SACS V2 + native-asset layer + 4 modalities + DEX + admin consensus gate (S14)
+- Builds are NOT bit-reproducible (embedded build metadata); hashes below are from this clean final build.
 
-## Binaries (SHA256 — see SHA256SUMS.txt)
-    edde13dccb8ef80853b6d0196203e2bb95ba042b536e3ed441864e5714e8f133  sost-node
-    85a07bfca401f6aee3e2fd87593cabeb9d4106b2fe681660d3412d678e1ce1bc  sost-miner
-    61643f6984e7f972dce41bda58eb92b678d279a36cab76ac4408a3ba0f2e959b  sost-cli
+## Binaries (SHA256)
+    66fb9428970ed02de1e3c80d0e646f2b05fc9d2dab3dc316fbf361f309c22e8f  sost-node
+    eec96efb02bde61cae150f51b3cedb46e55a5dd5e903496a278e90257aa64951  sost-miner
+    ecd7e7eb978c212920649af7e18040aa3e8dd14d75ee9ab24f73e428909f1f74  sost-cli
 
-## IMPORTANT — admin authority not yet baked
-This RC was built with the ALL-ZERO ADMIN_AUTHORITY_PKH placeholder (fail-closed:
-no native-asset op executes until a real admin address is baked). The FINAL mainnet
-build must set ADMIN_AUTHORITY_PKH to the operator's admin address pkh (public value;
-see docs/v30000/ADMIN_CONSENSUS_GATE.md) — this changes the binary hashes. Regenerate
-SHA256SUMS after that build.
+## Admin authority (REQUIRED before the truly-final mainnet binary)
+Built with the ALL-ZERO ADMIN_AUTHORITY_PKH placeholder = FAIL-CLOSED (no native-asset op
+executes until the operator's real admin address pkh is baked). Baking it changes the
+hashes; regenerate SHA256SUMS. Procedure: docs/v30000/ADMIN_CONSENSUS_GATE.md. The admin
+PUBLIC key/address is all that is needed; the private key never touches the build.
 
-## Mainnet consensus (verified on this build)
-- native_assets activation height = 30000
-- restricted developer mode active from 30000, admin-gated (S14), indefinite (END=INT64_MAX)
-- pre-30000 asset tx/out types inert (R2/R11) — byte-identical historical replay
+## Consensus (verified on this build, mainnet activation = 30000)
+- native-assets + admin restricted gate activate at #30000; pre-30000 inert (byte-identical replay)
+- restricted developer mode indefinite (RESTRICTED_DEV_MODE_END_HEIGHT = INT64_MAX); lifting = future height-gated release (fork)
