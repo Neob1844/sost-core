@@ -17,7 +17,21 @@
 #include "sost/jackpot.h"     // V15 (BLOCKER 2) — reserve freeze: is_reserve_output + gate
 #include "sost/tx_signer.h"   // OTC-1 — SpentOutput / VerifyTransactionInput (HTLC spend dispatch)
 #include "sost/params.h"       // V30000 — native_assets_active_at gate
-#include "sost/native_assets.h" // V30000 — asset output payload parse/bounds
+#include "sost/native_assets.h"
+
+// V30000 restricted developer mode (S14): a native-asset tx is admin-authorised
+// iff it carries an input whose pubkey hashes to the admin authority pkh. That
+// input's ECDSA signature is already consensus-verified by the R/S rules, so this
+// reuses the existing signature machinery — no new crypto, minimal consensus surface.
+static bool sost_tx_has_admin_authorization(const sost::Transaction& tx,
+                                            const std::array<uint8_t,20>& admin_pkh) {
+    for (const auto& in : tx.inputs) {
+        bool allzero = true; for (auto b : in.pubkey) if (b) { allzero = false; break; }
+        if (allzero) continue;                       // coinbase / unsigned input
+        if (sost::ComputePubKeyHash(in.pubkey) == admin_pkh) return true;
+    }
+    return false;
+} // V30000 — asset output payload parse/bounds
 
 #include <algorithm>
 #include <climits>
@@ -136,6 +150,24 @@ static TxValidationResult ValidateStructure(
         if (!std_tx_type && !htlc_tx_type_allowed && !asset_tx_type_allowed) {
             return TxValidationResult::Fail(TxValCode::R2_BAD_TX_TYPE,
                 "R2: invalid tx_type 0x" + HexStr(&tx.tx_type, 1));
+        }
+    }
+
+    // S14 (V30000): RESTRICTED DEVELOPER MODE — native-asset operations are gated at
+    // the PROTOCOL level to the admin authority during the controlled phase. An
+    // unauthorised ASSET_GENESIS/ISSUE/TRANSFER/BURN is rejected by CONSENSUS, so it
+    // cannot be mined even if hand-crafted via CLI/RPC. The authority pkh is taken
+    // from the context (node sets it from ADMIN_AUTHORITY_PKH); it falls back to the
+    // compile-time constant so consensus is deterministic. Fail-closed: if no real
+    // authority is configured (all-zero placeholder), NO asset op may execute.
+    if (restricted_dev_mode_active_at(ctx.spend_height) &&
+        (tx.tx_type == TX_TYPE_ASSET_GENESIS  || tx.tx_type == TX_TYPE_ASSET_ISSUE ||
+         tx.tx_type == TX_TYPE_ASSET_TRANSFER || tx.tx_type == TX_TYPE_ASSET_BURN)) {
+        std::array<uint8_t,20> admin = admin_authority_is_set(ctx.admin_authority_pkh)
+            ? ctx.admin_authority_pkh : ADMIN_AUTHORITY_PKH;
+        if (!(admin_authority_is_set(admin) && sost_tx_has_admin_authorization(tx, admin))) {
+            return TxValidationResult::Fail(TxValCode::S14_RESTRICTED_DEV_MODE,
+                "S14: restricted developer mode \u2014 native-asset operation requires admin authorization");
         }
     }
 

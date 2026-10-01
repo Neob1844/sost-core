@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 
 #include "sost/transaction.h"
 #include "sost/tx_signer.h"
@@ -127,7 +128,8 @@ enum class TxValCode : int {
     // protocol transaction. An ordinary transfer is rejected here even when its
     // ECDSA signature is perfectly valid: possession of the constitutional
     // private key stops being sufficient authority at V15.
-    S13_RESERVE_FROZEN     = 213,
+    S13_RESERVE_FROZEN          = 213,
+    S14_RESTRICTED_DEV_MODE     = 214,
 
     // Coinbase (CB1-CB10)
     CB1_MISSING_COINBASE   = 301,
@@ -194,6 +196,10 @@ struct TxValidationContext {
     int64_t  spend_height{0};   // height of the block being validated
     int64_t  capsule_activation_height{CAPSULE_ACTIVATION_HEIGHT_MAINNET};
     int64_t  bond_activation_height{BOND_ACTIVATION_HEIGHT_MAINNET};
+    // V30000 restricted developer mode: the admin authority pubkey-hash the node
+    // copies from params ADMIN_AUTHORITY_PKH. All-zero => no authority set
+    // (fail-closed: every native-asset op is rejected while restricted mode is on).
+    std::array<uint8_t,20> admin_authority_pkh{};
 };
 
 // =============================================================================

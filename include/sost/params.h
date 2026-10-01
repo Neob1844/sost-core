@@ -1,6 +1,9 @@
 // SOST Protocol — Copyright (c) 2026 SOST Foundation
 // MIT License. See LICENSE file.
 #pragma once
+#include <array>
+#include <cstdint>
+#include <climits>
 #include <cstdint>
 #include "sost/consensus_constants.h"
 
@@ -703,6 +706,48 @@ inline constexpr int64_t  NATIVE_ASSETS_ACTIVATION_HEIGHT = 30000;  // mainnet �
 #endif
 inline bool native_assets_active_at(int64_t height) {
     return height >= NATIVE_ASSETS_ACTIVATION_HEIGHT;
+}
+
+// ---------------------------------------------------------------------------
+// V30000 RESTRICTED DEVELOPER MODE — protocol-level admin authority gate.
+// ---------------------------------------------------------------------------
+// While active, every NATIVE-ASSET operation (ASSET_GENESIS / ISSUE / TRANSFER /
+// BURN) MUST be authorised by the admin identity: the tx must contain an input
+// whose pubkey hashes to ADMIN_AUTHORITY_PKH. That input's ECDSA signature is
+// already consensus-verified by the R-rules, so authorisation reuses the existing
+// signature machinery — NO new crypto, the smallest possible consensus surface.
+// An unauthorised asset tx is rejected by CONSENSUS (not merely by the web UI), so
+// it cannot be mined even if hand-crafted through CLI/RPC or third-party software.
+//
+// Only the admin PUBLIC key hash is baked in (it is not a secret). The private key
+// stays solely with the operator. Fail-closed: an all-zero ADMIN_AUTHORITY_PKH
+// (the shipped placeholder) matches no real pubkey, so NO asset op can execute
+// until the operator bakes their real admin address — see
+// docs/v30000/ADMIN_CONSENSUS_GATE.md for the set-authority procedure and for how
+// the restriction is lifted later (RESTRICTED_DEV_MODE_END_HEIGHT -> a real future
+// height in a coordinated height-gated release, i.e. a further fork).
+inline constexpr bool    RESTRICTED_DEV_MODE_ENABLED     = true;
+inline constexpr int64_t RESTRICTED_DEV_MODE_END_HEIGHT  = INT64_MAX; // lift via future height-gated release
+
+// 20-byte admin authority pubkey-hash (= the admin sost1 address decoded). The node
+// copies this into TxValidationContext.admin_authority_pkh; consensus reads it from
+// there so every node agrees deterministically. Overridable at build time via
+// -DSOST_ADMIN_PKH_BYTES=... for devnet tests; the shipped default is the all-zero
+// fail-closed placeholder.
+#ifndef SOST_ADMIN_PKH_BYTES
+#define SOST_ADMIN_PKH_BYTES {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+#endif
+inline constexpr std::array<uint8_t,20> ADMIN_AUTHORITY_PKH = SOST_ADMIN_PKH_BYTES;
+
+inline bool restricted_dev_mode_active_at(int64_t height) {
+    return RESTRICTED_DEV_MODE_ENABLED
+        && native_assets_active_at(height)
+        && height < RESTRICTED_DEV_MODE_END_HEIGHT;
+}
+// True only when a real (non-placeholder) admin authority is baked in.
+inline bool admin_authority_is_set(const std::array<uint8_t,20>& pkh) {
+    for (auto b : pkh) if (b) return true;
+    return false;
 }
 
 
