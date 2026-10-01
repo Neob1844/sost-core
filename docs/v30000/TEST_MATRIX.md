@@ -79,3 +79,11 @@ NODE  a1dde8086b821945e2d91a820b3294c519a66078dcb1767f3bb7af828fb0c411
 MINER eec96efb02bde61cae150f51b3cedb46e55a5dd5e903496a278e90257aa64951
 CLI   c8ae00b9a6745f7c84cc8791b9994d32052a07d1fed12aa82c4e283fba2f691b
 PEERS READY: NO (operator confirmation/upgrade of the 2 external peers required — PEER_COORDINATION.md)
+
+## RC_FINAL certification (2026-10-01, node 78fefb67, SEC2 included)
+- **SEC2 full battery** (final node): malformed-crash (`getblockhash["str"]`/`[null]`) → clean error, ALIVE · deep-nesting (7-level) → ALIVE RSS bounded · 5000-param resource → cap-256, ALIVE · **fuzz 300 malformed → ALIVE, RSS flat 9.1 MB** · post-attack getblockcount OK · 0 crash markers → **SEC2_NODE_SURVIVES: PASS**
+- **ASAN/UBSAN** (sanitizer node build): SEC2 battery + 120 malformed calls → **0 sanitizer reports, node ALIVE = CLEAN**
+- **Joint regression ctest: 119/119 PASS, 0 failed** (incl. convergencex-v11/SBPOW, transcript-v2, escrow, gold-vault, popc-single-model, dynamic-rewards, profile-magic — covers V16 / SACS / SBPOW / core consensus)
+- **Asset/modality/gate suite: 9/9 PASS** vs final lib
+- **Live on final build:** gate-live (admin OK + non-admin `-25 S14`), auction (atomic swap), draw (entropy+settlement), restart (index rebuild) — all PASS
+- **SACS V2:** two-chain reorg (reject depth 9 > limit 8) + resource depth-200 (converged, UTXO A==B, RSS 16 MB) — PASS
