@@ -103,3 +103,12 @@ archive/geaspirit-separation/
 build-*/
 popc_registry.json
 artifacts/v15-final-validation/
+tests/test_admin_gate
+tests/test_draw_selection
+tests/test_native_assets_activation
+tests/test_native_assets_index
+tests/test_project_funding
+tests/test_native_assets_consensus
+tests/test_native_assets_serial
+tests/test_atomic_swap_orderbook
+tests/test_reorg
