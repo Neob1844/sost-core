@@ -63,7 +63,10 @@ int main(){
     auto r=ValidateTransactionConsensus(MakeGenesis(),v,Ctx(A));
     TEST("POST: ASSET_GENESIS passes R2 (type active)", r.code!=TxValCode::R2_BAD_TX_TYPE);
     TEST("POST: ASSET_GENESIS not rejected as inactive output (R11)", r.code!=TxValCode::R11_INACTIVE_TYPE);
-    TEST("POST: ASSET_GENESIS reaches input-resolution (fails S1, gate cleared)", !r.ok && r.code==TxValCode::S1_UTXO_NOT_FOUND);
+    // NOTE: with RESTRICTED DEVELOPER MODE active at/after activation, an asset tx that
+    // passed R2/R11 is next caught by the admin gate (S14) when no admin authority is
+    // present in the context (fail-closed). That is the correct post-activation behavior.
+    TEST("POST: ASSET_GENESIS past activation gate -> admin gate (S14_RESTRICTED_DEV_MODE)", !r.ok && r.code==TxValCode::S14_RESTRICTED_DEV_MODE);
   }
   // POST-activation: asset OUTPUT type accepted past R11.
   {
