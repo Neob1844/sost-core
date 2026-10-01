@@ -8,8 +8,12 @@
  * Flags (public OFF by default; developer access allowed):
  *     DEX_PUBLIC_ENABLED          = false
  *     TOKENIZATION_PUBLIC_ENABLED = false
- * Developer unlock: ?dev=1 (persists in localStorage) or localStorage
- * sost_dev_access === '1'. Public users have neither -> blocked.
+ * NO insecure bypass: there is deliberately NO ?dev=1 / localStorage / query-string
+ * developer unlock. This JS layer is a NOTICE + soft execution block only — it is NOT
+ * an access-control mechanism. ACCESS is controlled server-side (nginx admin auth,
+ * deploy/nginx-tokenization-auth.conf) and AUTHORITY is enforced at consensus by the
+ * admin protocol gate (S14, docs/v30000/ADMIN_CONSENSUS_GATE.md). Admin operations are
+ * performed via the CLI with the admin key, never through this unauthenticated UI path.
  *
  * The notice reflects the REAL state and auto-switches on chain height:
  *   height < 30000  OR not mainnet-validated ->  pre-activation copy
@@ -38,18 +42,9 @@
   function publicEnabled() {
     return CFG.surface === 'DEX' ? DEX_PUBLIC_ENABLED : TOKENIZATION_PUBLIC_ENABLED;
   }
-  function isDeveloper() {
-    try {
-      if (/[?&]dev=1(&|$)/.test(location.search)) localStorage.setItem('sost_dev_access', '1');
-      if (/[?&]dev=0(&|$)/.test(location.search)) localStorage.removeItem('sost_dev_access');
-      return localStorage.getItem('sost_dev_access') === '1';
-    } catch (e) { return false; }
-  }
-  function blocked() { return !publicEnabled() && !isDeveloper(); }
+  function blocked() { return !publicEnabled(); }  // no JS bypass; access=nginx auth, authority=consensus S14
 
   function noticeLines(height) {
-    // Four dynamic states: future public-enabled / post-activation restricted /
-    // pre-activation / (fallback). Copy reflects the REAL protocol state.
     if (publicEnabled()) {
       return ['LIVE AT PROTOCOL LEVEL', 'PUBLIC ACCESS ENABLED',
               'EXPERIMENTAL \u2014 USE AT YOUR OWN RISK',
@@ -61,8 +56,8 @@
               'PENDING REGULATORY READINESS'];
     }
     return ['IMPLEMENTED & VALIDATED', 'ACTIVATES AT BLOCK #30,000', 'NOT YET ACTIVE ON MAINNET',
-            'PUBLIC ACCESS RESTRICTED', 'DEVELOPER ACCESS ONLY', 'EXPERIMENTAL PROTOCOL',
-            'PENDING FURTHER MAINNET VALIDATION & REGULATORY READINESS'];
+            'PUBLIC ACCESS RESTRICTED', 'CONTROLLED DEVELOPER ACCESS', 'EXPERIMENTAL PROTOCOL',
+            'PENDING MAINNET VALIDATION AND REGULATORY READINESS'];
   }
 
   var ACTIONS = (CFG.actionSelectors && CFG.actionSelectors.length)
@@ -99,9 +94,7 @@
     var b = document.createElement('div');
     b.className = 'sost-gate-banner'; b.setAttribute('role', 'status');
     var lines = noticeLines(height);
-    var devNote = isDeveloper()
-      ? '<span style="border-color:#2e7;background:rgba(34,238,119,.12);color:#9f9">DEVELOPER ACCESS ACTIVE</span>'
-      : '';
+    var devNote = '';
     b.innerHTML =
       '<h4>' + (CFG.label || 'SOST ' + (CFG.surface === 'DEX' ? 'DEX' : 'Tokenization')) + ' — access notice</h4>' +
       '<div class="sost-gate-tags">' + lines.map(function (l) { return '<span>' + l + '</span>'; }).join('') + devNote + '</div>' +
@@ -205,7 +198,7 @@
     var mo = new MutationObserver(function () { disableActions(); veilPanel(); });
     try { mo.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
     // expose read-only state for tests / debugging
-    window.SOST_GATE = { blocked: blocked, isDeveloper: isDeveloper, publicEnabled: publicEnabled,
+    window.SOST_GATE = { blocked: blocked, publicEnabled: publicEnabled,
       flags: { DEX_PUBLIC_ENABLED: DEX_PUBLIC_ENABLED, TOKENIZATION_PUBLIC_ENABLED: TOKENIZATION_PUBLIC_ENABLED,
         MAINNET_VALIDATED: MAINNET_VALIDATED, ACTIVATION_HEIGHT: ACTIVATION_HEIGHT } };
   }
