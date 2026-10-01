@@ -42,3 +42,21 @@ UtxoSet::ConnectBlock). Nothing is a mock.
 - PUBLIC ACCESS GATED (real barrier) + DEVELOPER ACCESS: **YES**
 - REGULATORY NOTICES REFLECT REAL STATE (not "LIVE AT PROTOCOL LEVEL"): **YES**
 - DEPLOYED TO PRODUCTION: **NO** (branch only, by design)
+
+## V30000 PRODUCTION RELEASE — additional verification (2026-10-01)
+| # | Criterion | Kind | Result |
+|---|---|---|---|
+| 16 | Admin consensus gate (S14) — admin-authorised passes, non-admin rejected, fail-closed, non-asset not gated | consensus unit (devnet+mainnet libs) | **8/8 PASS** (test_admin_gate) |
+| 17 | Activation boundary 29999 -> 30000 -> 30001 on the MAINNET build (activation=30000) | consensus | **11/11 PASS** (test_native_assets_activation vs build-v30000-prod) |
+| 18 | Web public-access gate + 4-state notice | puppeteer | **8/8 PASS** (earlier) + copy updated to the 4-state wording |
+| 19 | Server-side admin auth (nginx bcrypt, rate-limit, deny-by-default) | config prepared | READY (operator sets credentials; not deployed) |
+| 20 | Clean MAINNET build node/miner/cli + SHA256 | build | **OK** (v0.4.0 MAINNET; SHA256SUMS.txt) |
+| 21 | SACS V2 regression | prior-validated | resource_v2 500/501/550 PASS + GATE A/B/C (earlier this session); heavy sacs_p* node harness NOT re-run this turn |
+
+## Honest gaps for the FINAL build
+- The RC binaries use the **all-zero ADMIN_AUTHORITY_PKH placeholder** (fail-closed). The
+  FINAL mainnet binaries must bake the operator's real admin address pkh — this changes
+  the hashes; SHA256SUMS must be regenerated. (The admin pubkey/address is public; the
+  private key is never needed by the build.)
+- Live-node reorg (two competing chains) not scripted; reorg-safety proven at index level.
+- Full sacs_p* node harness not re-run this turn (prior-validated).
