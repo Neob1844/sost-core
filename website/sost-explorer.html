@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-09-24-v476-version-strings">
+<meta name="explorer-html-version" content="2026-10-01-v480-robust-live-refresh">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -1693,7 +1693,7 @@ async function rpc(m,p){
   var TIMEOUT_MS=15000;
   for(var a=0;a<3;a++){try{
     var ac=new AbortController();var tid=setTimeout(function(){ac.abort();},TIMEOUT_MS);
-    var r=await fetch(RPC,{method:'POST',headers:hdrs,body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p}),signal:ac.signal});
+    var r=await fetch(RPC,{method:'POST',cache:'no-store',headers:hdrs,body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p}),signal:ac.signal});
     clearTimeout(tid);
     if(r.status===401)throw new Error('Authentication failed (401) — check RPC username and password');
     if(!r.ok)throw new Error('HTTP '+r.status+' '+r.statusText);
@@ -7596,12 +7596,68 @@ async function loadLatestTxs(){
     renderTxTable();
   }catch(e){document.getElementById('txBody').innerHTML='<tr><td colspan="8" class="td-err">'+e.message+'</td></tr>';}
 }
-async function refresh(){if(_loading)return;_loading=true;try{var _ok=await loadStats();if(!_ok){_loading=false;return;}await Promise.all([loadBlocks(),loadLatestTxs(),loadMempool()]);}finally{_loading=false;}}
-refresh();setInterval(refresh,30000);
-// Force refresh on tab visibility / window focus — browsers throttle setInterval
-// in background tabs, so without this the data goes stale after a few minutes idle.
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')refresh();});
-window.addEventListener('focus',function(){refresh();});
+async function refresh(){if(_loading)return;_loading=true;window._loadingStartedAt=Date.now();try{var _ok=await loadStats();if(!_ok){_loading=false;return;}await Promise.all([loadBlocks(),loadLatestTxs(),loadMempool()]);}finally{_loading=false;}}
+refresh();
+// === Robust long-session live driver (v480) ================================
+// Replaces the naive 30s setInterval. Guarantees the page keeps catching up to
+// the chain tip across background throttling, tab freeze/resume (Page
+// Lifecycle), laptop sleep, and transient network loss — with NO manual F5.
+//   - watchdog abandons a refresh cycle whose awaits got frozen mid-flight
+//     (the real cause of "stale until F5": _loading stuck true forever);
+//   - a cheap getblockcount tip-poll every ~5s triggers an immediate full
+//     refresh the instant the height changes (near-real-time new blocks);
+//   - exponential backoff on RPC failure, auto-recovery when the node returns;
+//   - a SINGLE self-rescheduling timeout (not setInterval) so a slow cycle can
+//     never overlap or stack duplicate timers;
+//   - immediate catch-up on visibility/focus/pageshow/online/resume.
+(function(){
+  var FULL_MS=30000;   // full-refresh floor (blocks+txs+mempool+dashboard)
+  var TIP_MS=5000;     // lightweight tip poll (getblockcount only)
+  var STUCK_MS=60000;  // watchdog: abandon a cycle stuck loading this long
+  var _lastFull=Date.now(), _lastTipH=(typeof H==='number'?H:-1), _backoff=0, _tipInflight=false, _loopArmed=false, _loopTimer=null;
+
+  async function safeRefresh(reason){
+    // Self-heal: if a prior refresh froze mid-await, _loading never cleared and
+    // every subsequent refresh early-returns. Abandon that zombie cycle.
+    if(_loading && window._loadingStartedAt && (Date.now()-window._loadingStartedAt)>STUCK_MS){
+      try{console.warn('[explorer] refresh watchdog: abandoning stuck cycle ('+reason+')');}catch(e){}
+      _loading=false;
+    }
+    if(_loading)return;
+    _lastFull=Date.now();
+    try{await refresh();}catch(e){}
+  }
+  async function tipPoll(){
+    if(_tipInflight)return;
+    _tipInflight=true;
+    try{
+      var h=await rpc('getblockcount');
+      _backoff=0;
+      if(typeof h==='number'){
+        if(_lastTipH>=0 && h!==_lastTipH){ await safeRefresh('tip-change'); }
+        _lastTipH=h;
+      }
+    }catch(e){
+      _backoff=Math.min((_backoff||TIP_MS)*2, 60000); // exponential backoff
+    }finally{_tipInflight=false;}
+  }
+  async function loop(){
+    try{
+      await tipPoll();
+      if(Date.now()-_lastFull>=FULL_MS) await safeRefresh('floor');
+    }catch(e){}
+    _loopTimer=setTimeout(loop, _backoff || TIP_MS);
+  }
+  function startLoop(){ if(_loopArmed)return; _loopArmed=true; loop(); }
+  function kick(reason){ _backoff=0; safeRefresh(reason); tipPoll(); }
+
+  startLoop();
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')kick('visible');});
+  window.addEventListener('focus',function(){kick('focus');});
+  window.addEventListener('pageshow',function(){kick('pageshow');});          // bfcache restore
+  window.addEventListener('online',function(){kick('online');});              // network restored
+  document.addEventListener('resume',function(){kick('resume');});            // Page Lifecycle unfreeze
+})();
 
 // Version-based auto-reload: checks api/explorer_version.json every 60s.
 // When version changes (after git push), reloads page automatically.

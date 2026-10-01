@@ -1,4 +1,4 @@
 {
-  "v": "2026-09-29-v479-unique-nodes",
-  "note": "Explorer UNIQUE NODES card now reads getnetworksummary from the RPC gateway (ops/sost-rpc-proxy.py): the local mainnet node counts once, only while its RPC answers on mainnet/correct genesis with a tip younger than 2 h, plus distinct external P2P machines with a completed handshake; the node's own loopback pair is excluded. Sub-line 'seed-visible peers' replaced by 'N local · M external'; ACTIVE NODES section shows LOCAL NODE / CONNECTED EXTERNAL PEERS / DISCOVERED ACTIVE NODES (n/a: the P2P protocol has no address exchange) / TOTAL UNIQUE. No node, P2P, consensus or V16 change."
+  "v": "2026-10-01-v480-robust-live-refresh",
+  "note": "Explorer live refresh hardened for long sessions: self-healing watchdog abandons a refresh cycle frozen mid-await (root cause of 'stale until manual F5' — _loading stuck true); a cheap getblockcount tip-poll every ~5s triggers an immediate full refresh the instant the height changes; exponential backoff + auto-recovery on RPC loss; a single self-rescheduling timeout (no setInterval) so slow cycles never stack duplicate timers; immediate catch-up on visibility/focus/pageshow/online/resume; cache:no-store on RPC. No node, P2P, consensus or V16 change."
 }
