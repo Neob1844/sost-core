@@ -33,15 +33,14 @@ for k in 0 1 2 3; do
   P[$k]=$(CLI getnewaddress "p$k" 2>/dev/null | grep -oE 'sost1[0-9a-z]+' | head -1)
 done
 # fund participants so they can pay the entry
-for k in 0 1 2 3; do CLI send "${P[$k]}" 5 --from-address "$ORG" >/dev/null 2>&1; done
-mine 2
+for k in 0 1 2 3; do CLI send "${P[$k]}" 5 --from-address "$ORG" --yes >/dev/null 2>&1; mine 1; done
+for k in 0 1 2 3; do echo "  funded p$k bal=$(rpc getbalance "[\"${P[$k]}\"]" | grep -oE '"available":"[0-9.]+"' | grep -oE '[0-9.]+' | head -1)"; done
 POOL=$(CLI getnewaddress pool 2>/dev/null | grep -oE 'sost1[0-9a-z]+' | head -1)
 echo "  pool=$POOL"
 for k in 0 1 2 3; do
-  T=$(CLI send "$POOL" 1 --from-address "${P[$k]}" 2>&1 | grep -oE '[0-9a-f]{64}' | head -1)
-  TXIDS[$k]="$T"; echo "  entry p$k=${P[$k]} txid=$T"
+  T=$(CLI send "$POOL" 1 --from-address "${P[$k]}" --yes 2>&1 | grep -oE '[0-9a-f]{64}' | head -1)
+  TXIDS[$k]="$T"; echo "  entry p$k=${P[$k]} txid=$T"; mine 1
 done
-mine 3
 # 3) draw_id + close height + entropy
 DRAW_ID=$(printf 'SOST-DRAW-1' | sha256sum | cut -c1-64)
 CLOSE=$(num "$(rpc getblockcount)"); CLOSE=$((CLOSE+3))
