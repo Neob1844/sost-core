@@ -1,0 +1,13 @@
+{
+  "contract": "AtomicSwapHTLCv2",
+  "creation_bytecode_keccak256": "0xbe82b2ed28271272808f25f639d66d0b308911af41fe43d50617a5d5d004deeb",
+  "solc": "0.8.24",
+  "optimizer_runs": 200,
+  "creation_gas_estimate": 1234479,
+  "addresses": {
+    "ethereum": null,
+    "sepolia": null,
+    "bnb": null
+  },
+  "note": "addresses are null until an OWNER deploys and pastes them here; the DEX keeps v2-only assets (USDT/PAXG/XAUT) DISABLED while the address for the active network is null."
+}

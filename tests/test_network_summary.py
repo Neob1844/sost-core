@@ -93,3 +93,24 @@ def test_network_summary_survives_node_down_and_caches():
 
 def test_network_summary_is_not_authenticated():
     assert proxy.needs_node_auth(proxy.NETWORK_SUMMARY_METHOD) is False
+
+
+def test_local_node_uptime_label_network():
+    s = proxy.summarize_network(INFO, NOW - 300, [], NOW, boot_time=NOW - 412522)
+    ln = s['local_node']
+    assert ln['uptime_s'] == 412522 and ln['label'] == 'STRATO' and ln['network'] == 'mainnet'
+
+
+def test_uptime_is_none_when_unknown_or_nonsense():
+    assert summ([])['local_node']['uptime_s'] is None
+    assert proxy.summarize_network(INFO, NOW - 300, [], NOW, boot_time=NOW + 50)['local_node']['uptime_s'] is None
+    assert proxy.summarize_network(None, None, [], NOW, info_error='x')['local_node']['uptime_s'] is None
+
+
+def test_network_summary_reads_boot_time():
+    calls = {'getinfo': INFO, 'getbestblockhash': 'ab' * 32, 'getblock': {'time': NOW - 60},
+             'getpeerinfo': [], 'getminerstats': {'boot_time_unix': NOW - 1000}}
+    proxy._summary_cache.update(at=0.0, value=None)
+    s = proxy.network_summary(read=lambda m, p=None: calls[m], clock=lambda: NOW)
+    assert s['local_node']['status'] == 'ONLINE' and s['local_node']['uptime_s'] == 1000
+    proxy._summary_cache.update(at=0.0, value=None)

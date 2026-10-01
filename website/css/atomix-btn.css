@@ -1,0 +1,138 @@
+/* ATOMIX SWAP DEX nav tile.
+ *
+ * Geometry is NOT defined here. The tile keeps the inline 110x110 box of the old
+ * ATOMIC SWAP DEX tile, and js/nav-toggle.js wraps it like every other large
+ * module (kind "ax"): the element is masked to the shared superellipse, its
+ * ::before carries the body, and the halo is a drop-shadow on the wrapper so it
+ * follows that same silhouette. This file only paints that module:
+ *
+ *   wrapper  (.sq-wrap-ax)  halo walking the palette with a soft pulse
+ *   element  (.sq-ax)       1px outline = a drifting rainbow
+ *   ::before                dark lens over a drifting multicolour field + light sweep
+ *   ::after                 energy core that breathes behind the symbol
+ *
+ * Palette: violet, magenta, electric blue, cyan, lime, gold, soft orange.
+ * Nothing here changes size or position (no transform, margin or padding on the
+ * tile, and the masked pseudo-elements never move). */
+
+/* ---- wrapped module (normal case, js/nav-toggle.js present) ---------------- */
+
+.sq-wrap.sq-wrap-ax{animation:atomixHalo 10.5s linear infinite}
+
+.sq.sq-ax{
+  background:linear-gradient(90deg,#8b5cf6,#e879f9,#3b82f6,#22d3ee,#a3e635,#facc15,#fb923c,#8b5cf6) 0 0/400% 100% !important;
+  animation:atomixRing 8s linear infinite !important;
+  transition:filter .25s ease;
+}
+.sq.sq-ax::before{
+  /* top to bottom: light sweep / dark core that opens towards the rim / the
+   * multicolour field, sized so several hues are on the tile at once */
+  background:
+    linear-gradient(115deg,rgba(255,255,255,0) 40%,rgba(255,255,255,.13) 50%,rgba(255,255,255,0) 60%) 0 0/300% 100%,
+    radial-gradient(ellipse 62% 60% at 50% 46%,rgba(6,3,14,.94) 0%,rgba(6,3,14,.86) 45%,rgba(6,3,14,.35) 78%,rgba(6,3,14,0) 100%) 0 0/100% 100% no-repeat,
+    linear-gradient(180deg,rgba(255,255,255,.06) 0%,rgba(0,0,0,0) 45%,rgba(0,0,0,.28) 100%) 0 0/100% 100% no-repeat,
+    linear-gradient(90deg,#8b5cf6,#e879f9,#3b82f6,#22d3ee,#a3e635,#facc15,#fb923c,#8b5cf6) 0 0/200% 100% repeat-x,
+    #07040f;
+  animation:atomixField 12s linear infinite;
+}
+.sq.sq-ax::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:radial-gradient(circle at 50% 34%,rgba(240,171,252,.55) 0%,rgba(139,92,246,.30) 18%,rgba(59,130,246,.12) 32%,rgba(0,0,0,0) 46%);
+  mix-blend-mode:screen;
+  animation:atomixCore 3.4s ease-in-out infinite;
+}
+.sq.sq-ax:hover{filter:brightness(1.18) saturate(1.15)}
+.sq.sq-ax:active{filter:brightness(1.05)}
+/* The element is masked, and a mask clips its own outline: the focus ring goes
+ * on the wrapper instead. */
+.sq-wrap.sq-wrap-ax:focus-within{outline:2px solid #67e8f9;outline-offset:3px;border-radius:26%}
+.sq.sq-ax:focus-visible{outline:none}
+
+/* ---- shared content styling --------------------------------------------- */
+
+.atomix-btn .atomix-icon{
+  background:linear-gradient(90deg,#c084fc,#f0abfc,#60a5fa,#67e8f9,#bef264,#fde047,#fdba74,#c084fc) 0 0/300% 100%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:#e9d5ff; /* where background-clip:text is unsupported */
+  filter:drop-shadow(0 0 5px rgba(232,121,249,.9)) drop-shadow(0 0 12px rgba(103,232,249,.55));
+  animation:atomixText 6s linear infinite;
+}
+.atomix-btn .atomix-label{
+  color:#fff;
+  text-shadow:0 0 2px #000,0 1px 3px rgba(0,0,0,.95),0 0 10px rgba(167,139,250,.7);
+}
+
+/* ---- fallback: not wrapped (no JS) -> keeps the inline rounded tile ------- */
+
+.atomix-btn:not(.sq){
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  background:radial-gradient(circle at 50% 40%,#1b0d33 0%,#0b0618 58%,#05030c 100%);
+  animation:atomixBorder 10.5s linear infinite;
+}
+.atomix-btn:not(.sq)::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:
+    radial-gradient(circle at 50% 42%,rgba(8,4,18,.30) 0%,rgba(8,4,18,.70) 58%,rgba(5,3,12,.90) 100%) 0 0/100% 100% no-repeat,
+    linear-gradient(90deg,#8b5cf6,#e879f9,#3b82f6,#22d3ee,#a3e635,#facc15,#fb923c,#8b5cf6) 0 0/200% 100% repeat-x;
+  animation:atomixFieldPlain 12s linear infinite;
+}
+.atomix-btn:not(.sq):hover{filter:brightness(1.18) saturate(1.15)}
+.atomix-btn:not(.sq):focus-visible{outline:2px solid #67e8f9;outline-offset:3px}
+
+/* ---- keyframes ------------------------------------------------------------ */
+
+@keyframes atomixRing{to{background-position:400% 0}}
+@keyframes atomixText{to{background-position:300% 0}}
+/* The sweep crosses once per cycle (third of the time) and rests off-tile; the
+ * field drifts one full period so the loop has no seam. */
+@keyframes atomixField{
+  0%  {background-position:150% 0,0 0,0 0,0% 0,0 0}
+  33% {background-position:-50% 0,0 0,0 0,66.6% 0,0 0}
+  100%{background-position:-50% 0,0 0,0 0,200% 0,0 0}
+}
+@keyframes atomixFieldPlain{
+  0%  {background-position:0 0,0% 0%}
+  100%{background-position:0 0,200% 0}
+}
+@keyframes atomixCore{0%,100%{opacity:.55}50%{opacity:1}}
+/* Halo: one colour per stop, alternating a resting and a swollen radius so the
+ * colour walk and the pulse share one filter. */
+@keyframes atomixHalo{
+  0%,100%{filter:drop-shadow(0 0 9px rgba(168,85,247,.85)) drop-shadow(0 0 22px rgba(168,85,247,.45))}
+  7%  {filter:drop-shadow(0 0 16px rgba(200,100,248,.95)) drop-shadow(0 0 38px rgba(200,100,248,.55))}
+  14% {filter:drop-shadow(0 0 9px rgba(232,121,249,.85)) drop-shadow(0 0 22px rgba(232,121,249,.45))}
+  21% {filter:drop-shadow(0 0 16px rgba(140,120,250,.95)) drop-shadow(0 0 38px rgba(140,120,250,.55))}
+  28% {filter:drop-shadow(0 0 9px rgba(59,130,246,.9))  drop-shadow(0 0 22px rgba(59,130,246,.5))}
+  35% {filter:drop-shadow(0 0 16px rgba(46,170,242,.95)) drop-shadow(0 0 38px rgba(46,170,242,.55))}
+  42% {filter:drop-shadow(0 0 9px rgba(34,211,238,.9))  drop-shadow(0 0 22px rgba(34,211,238,.5))}
+  50% {filter:drop-shadow(0 0 16px rgba(100,220,150,.95)) drop-shadow(0 0 38px rgba(100,220,150,.55))}
+  57% {filter:drop-shadow(0 0 9px rgba(163,230,53,.85)) drop-shadow(0 0 22px rgba(163,230,53,.45))}
+  64% {filter:drop-shadow(0 0 16px rgba(206,217,37,.95)) drop-shadow(0 0 38px rgba(206,217,37,.55))}
+  71% {filter:drop-shadow(0 0 9px rgba(250,204,21,.85)) drop-shadow(0 0 22px rgba(250,204,21,.45))}
+  78% {filter:drop-shadow(0 0 16px rgba(250,175,40,.95)) drop-shadow(0 0 38px rgba(250,175,40,.55))}
+  85% {filter:drop-shadow(0 0 9px rgba(251,146,60,.85)) drop-shadow(0 0 22px rgba(251,146,60,.45))}
+  92% {filter:drop-shadow(0 0 16px rgba(210,116,154,.95)) drop-shadow(0 0 38px rgba(210,116,154,.55))}
+}
+@keyframes atomixBorder{
+  0%,100%{border-color:#a855f7;box-shadow:0 0 12px rgba(168,85,247,.75),0 0 28px rgba(168,85,247,.35)}
+  28%{border-color:#3b82f6;box-shadow:0 0 16px rgba(59,130,246,.8),0 0 36px rgba(59,130,246,.4)}
+  57%{border-color:#a3e635;box-shadow:0 0 12px rgba(163,230,53,.7),0 0 28px rgba(163,230,53,.32)}
+  85%{border-color:#fb923c;box-shadow:0 0 16px rgba(251,146,60,.75),0 0 36px rgba(251,146,60,.38)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .sq-wrap.sq-wrap-ax{animation:none;filter:drop-shadow(0 0 12px rgba(168,85,247,.8)) drop-shadow(0 0 26px rgba(59,130,246,.4))}
+  .sq.sq-ax{animation:none !important}
+  .sq.sq-ax::before,.sq.sq-ax::after,.atomix-btn .atomix-icon,
+  .atomix-btn:not(.sq),.atomix-btn:not(.sq)::before{animation:none}
+}

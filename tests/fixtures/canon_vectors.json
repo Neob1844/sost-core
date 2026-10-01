@@ -1,0 +1,208 @@
+{
+  "vectors_version": 1,
+  "description": "Official SOST Asset Registry v2 canonicalization contract (RFC-8785-lite). For every case, canon(input) MUST equal canon_expected and sha256Hex(canon_expected) MUST equal sha256_expected. Rules: object keys sorted by UTF-16 code unit ascending; null/undefined optional fields stripped before canon; strings via JSON.stringify escaping (Unicode preserved, hashed as UTF-8); numbers MUST be integers (non-integers throw -> money/decimals/timestamps are strings); arrays preserved in order; a passport claims[] is pre-sorted by claim id. Any external implementation reproducing these verifies manifestHash byte-for-byte.",
+  "cases": [
+    {
+      "name": "empty_object",
+      "input": {},
+      "canon_expected": "{}",
+      "sha256_expected": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "name": "ordering_keys",
+      "input": {
+        "2": 5,
+        "10": 4,
+        "b": 1,
+        "a": 2,
+        "Z": 3
+      },
+      "canon_expected": "{\"10\":4,\"2\":5,\"Z\":3,\"a\":2,\"b\":1}",
+      "sha256_expected": "bbdfafaa7c09c3907d5410f8bbceb074436e290784be6670c326f1724e89cb98"
+    },
+    {
+      "name": "ordering_unicode_keys",
+      "input": {
+        "é": 1,
+        "z": 2,
+        "A": 3,
+        "_": 4
+      },
+      "canon_expected": "{\"A\":3,\"_\":4,\"z\":2,\"é\":1}",
+      "sha256_expected": "9f6a34c8698c0f4b0de07ce7e8ca9de7cccbfa8e1b4737158f9b526a6e29084f"
+    },
+    {
+      "name": "nested_and_array",
+      "input": {
+        "z": [
+          3,
+          1,
+          2
+        ],
+        "a": {
+          "y": "x",
+          "b": null
+        }
+      },
+      "canon_expected": "{\"a\":{\"b\":null,\"y\":\"x\"},\"z\":[3,1,2]}",
+      "sha256_expected": "e907f0a4cf628b2d8cb04f081cd6db6e9ca67e07dd0eb85410f15d5010f24d0d"
+    },
+    {
+      "name": "optional_null_stripped",
+      "input": {
+        "a": 1,
+        "c": {
+          "e": 2
+        }
+      },
+      "canon_expected": "{\"a\":1,\"c\":{\"e\":2}}",
+      "sha256_expected": "1b8905379adef73bf44fcd14d4d1c2abfa81f437ce35a2be023b2890d65762ea"
+    },
+    {
+      "name": "unicode_string",
+      "input": {
+        "s": "caña—€—日本語—😀"
+      },
+      "canon_expected": "{\"s\":\"caña—€—日本語—😀\"}",
+      "sha256_expected": "77c8473f3ea664ae4578f7163123b5a8329eb9b76f05cdcdf0a5ff963b728388"
+    },
+    {
+      "name": "booleans_and_integers",
+      "input": {
+        "t": true,
+        "f": false,
+        "zero": 0,
+        "neg": -7,
+        "big": 100000000
+      },
+      "canon_expected": "{\"big\":100000000,\"f\":false,\"neg\":-7,\"t\":true,\"zero\":0}",
+      "sha256_expected": "eef4174d3ba14256db05049a3ce48a122d88194df8e10a270d28bd4afd0f8e53"
+    },
+    {
+      "name": "money_strings",
+      "input": {
+        "amount": "1234.56",
+        "currency": "EUR",
+        "range_low": "0.00010000"
+      },
+      "canon_expected": "{\"amount\":\"1234.56\",\"currency\":\"EUR\",\"range_low\":\"0.00010000\"}",
+      "sha256_expected": "d0da7c0cd886ed137c65148f39607c1ef23f0292e0c4cbaaa29fb6c9788efd30"
+    },
+    {
+      "name": "arrays_in_order",
+      "input": {
+        "arr": [
+          {
+            "id": "c2"
+          },
+          {
+            "id": "c1"
+          },
+          {
+            "id": "c10"
+          }
+        ]
+      },
+      "canon_expected": "{\"arr\":[{\"id\":\"c2\"},{\"id\":\"c1\"},{\"id\":\"c10\"}]}",
+      "sha256_expected": "f08b632ca6567ae2f0f0bb7e214be1d7bea63225f4c9ffd545ecf7ea6323e060"
+    },
+    {
+      "name": "empty_array_kept",
+      "input": {
+        "arr": []
+      },
+      "canon_expected": "{\"arr\":[]}",
+      "sha256_expected": "3a4fcd86c2fec910985cc6cca01b7e6e260e139e273fe39ab9e8284330a19174"
+    },
+    {
+      "name": "timestamps_iso8601",
+      "input": {
+        "issued": "2026-09-29T09:22:00Z",
+        "effective": "2026-09-29",
+        "tz": "2026-09-29T11:22:00+02:00"
+      },
+      "canon_expected": "{\"effective\":\"2026-09-29\",\"issued\":\"2026-09-29T09:22:00Z\",\"tz\":\"2026-09-29T11:22:00+02:00\"}",
+      "sha256_expected": "1f4e726ab8dfb5a6c2e32d0233eff1864b2a5faf89f60cfad0666a614c45bc5d"
+    },
+    {
+      "name": "edge_empty_and_special_string",
+      "input": {
+        "s": "",
+        "q": "\"quote\\backslash\ttab\nnl",
+        "u": " "
+      },
+      "canon_expected": "{\"q\":\"\\\"quote\\\\backslash\\ttab\\nnl\",\"s\":\"\",\"u\":\" \"}",
+      "sha256_expected": "b1ec054805e53b3974e356bd2addd2db8bfaec23cf7db6b1671653d224ecebfc"
+    }
+  ],
+  "claim_ordering_vector": {
+    "note": "claims supplied in two different orders MUST produce the same manifestHash (claims[] sorted by id).",
+    "manifestHash": "c8f6e923f4f27e9149d4f3e36d3a32f730c270b96319a9600d8f80cdf5272c27",
+    "manifestHash_shuffled": "c8f6e923f4f27e9149d4f3e36d3a32f730c270b96319a9600d8f80cdf5272c27",
+    "equal": true
+  },
+  "manifest_vector": {
+    "manifest": {
+      "schema_version": 2,
+      "assetId": "sost-asset-fixedvector0000000000000000000000000000",
+      "issuer": "Issuer A",
+      "category": "machinery",
+      "locator": "ipfs://demo",
+      "claims": [
+        {
+          "id": "c-right",
+          "class": "RIGHT",
+          "value": {
+            "right_type": "REVENUE_PARTICIPATION",
+            "economic_rights_declared": true,
+            "obligor": "Issuer A",
+            "agreement_reference": "contract-9",
+            "token_supply": "100000",
+            "token_decimals": 8
+          },
+          "provenance": {
+            "source_type": "DECLARING_PARTY"
+          },
+          "verification": {
+            "status": "DECLARED"
+          },
+          "timestamp": "2026-09-29T09:22:00Z",
+          "subtype": "REVENUE_PARTICIPATION"
+        },
+        {
+          "id": "c-settle",
+          "class": "SETTLEMENT_REFERENCE",
+          "value": {
+            "settlement_type": "EXTERNAL_DOCUMENTED",
+            "reference": "bank-ref-123",
+            "hash": "deadbeef",
+            "custody": "SOST DOES NOT CUSTODY FUNDS"
+          },
+          "provenance": {
+            "source_type": "DECLARING_PARTY"
+          },
+          "verification": {
+            "status": "NOT_VERIFIED"
+          }
+        },
+        {
+          "id": "c-val",
+          "class": "VALUATION",
+          "value": {
+            "amount": "100000",
+            "currency": "EUR"
+          },
+          "provenance": {
+            "source_type": "SOST_CALCULATION"
+          },
+          "verification": {
+            "status": "DECLARED"
+          },
+          "confidence": 62,
+          "timestamp": "2026-09-29T09:22:00Z"
+        }
+      ]
+    },
+    "manifestHash": "c8f6e923f4f27e9149d4f3e36d3a32f730c270b96319a9600d8f80cdf5272c27"
+  }
+}

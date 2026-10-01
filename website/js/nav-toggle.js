@@ -229,7 +229,7 @@
       <a href="sost-transactions.html">Transactions</a>
       <a href="sost-gold-reserve.html">Metals Reserve</a>
       <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
-      <a href="sost-universal-assets.html" style="color:#DAA520">Asset Layer</a>
+      <a href="sost-universal-assets.html" style="color:#DAA520">Tokenization &amp; Offers</a>
       <a href="sost-popc.html">PoPC</a>
       <a href="sost-tokenomics.html">Tokenomics</a>
       <a href="sost-roadmap.html">Roadmap</a>
@@ -355,7 +355,7 @@
     // after it (NOT in the small Watch/Home row). Match by its asBtnGlow animation so it
     // is immune to href changes (the tile now points to sost-dex.html, formerly the
     // founder console). Fall back to the legacy hrefs / WATCH icon for old structures.
-    var watch=nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]')||nav.querySelector('a[href="atomic-swap-console.html"]')||nav.querySelector('a[onclick="openSv()"]');
+    var watch=nav.querySelector('a.atomix-btn')||nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]')||nav.querySelector('a[href="atomic-swap-console.html"]')||nav.querySelector('a[onclick="openSv()"]');
     if(!watch) return;                                            // need the logo-button row
     var sz=watch.offsetWidth||110;                               // match the sibling box
     var a=document.createElement('a');
@@ -486,10 +486,10 @@
     if(!nav) return;
     // Already there — the home page ships its own inline copy and must not gain a second.
     if(nav.querySelector('.sost-dtd-btn') || nav.querySelector('a[href$="#dtd"]')) return;
-    var anchor=nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
+    var anchor=nav.querySelector('a.atomix-btn')||nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
     if(!anchor) return;                       // no large-button row on this page
     styleOnce();
-    var sz=anchor.offsetWidth||72;            // match the sibling box, whatever this page uses
+    var sz=anchor.offsetWidth; if(!sz||sz<90) sz=110;   // match the sibling box; guard the CSS-load race (avoid the old 72 fallback)
     var a=document.createElement('a');
     a.href='index.html#dtd'; a.title='DTD — Deterministic Token Distribution';
     a.className='sost-dtd-btn';
@@ -539,6 +539,8 @@
     }
     nav.querySelectorAll('a[style*="dtdBtnGlow"],.sost-dtd-btn').forEach(function(e){ wrap(e,'dtd'); });
     nav.querySelectorAll('a[style*="asBtnGlow"]').forEach(function(e){ wrap(e,'as'); });
+    // ATOMIX SWAP DEX: same module geometry, its own paint (css/atomix-btn.css).
+    nav.querySelectorAll('a.atomix-btn').forEach(function(e){ wrap(e,'ax'); });
     nav.querySelectorAll('.sost-news-btn').forEach(function(e){ wrap(e,'news'); });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tag,{once:true});
@@ -613,8 +615,8 @@
     var sz=(sImg&&sImg.offsetWidth) || (cx.querySelector('img')&&cx.querySelector('img').offsetWidth) || cx.offsetWidth || 110;
     var a=document.createElement('a');
     a.href='sost-universal-assets.html'; a.className='sost-tok-logo';
-    a.title='SOST Tokenization — Universal Assets';
-    a.setAttribute('aria-label','SOST Tokenization — Universal Assets');
+    a.title='SOST Tokenization & Offers';
+    a.setAttribute('aria-label','SOST Tokenization & Offers');
     var img=document.createElement('img');
     img.src=LOGO; img.alt='SOST Tokenization';
     img.width=sz; img.height=sz; img.style.width=sz+'px'; img.style.height=sz+'px';

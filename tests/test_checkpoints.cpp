@@ -42,14 +42,22 @@ void test_lower_height_not_trusted() {
 // ═══════════════════════════════════════════════════════════
 
 void test_no_assumevalid_anchor() {
-    // With empty ASSUMEVALID_BLOCK_HASH, no anchor exists
-    assert(!sost::has_assumevalid_anchor());
-    // Therefore no block can be under assumevalid range
-    assert(!sost::is_block_under_assumevalid(0, true));
-    assert(!sost::is_block_under_assumevalid(0, false));
-    assert(!sost::is_block_under_assumevalid(50, true));
-    assert(!sost::is_block_under_assumevalid(50, false));
-    printf("PASS: no assumevalid anchor — no trust\n");
+    // Reality (2026-09): SOST ships a compiled-in assumevalid anchor at the last
+    // hard checkpoint (height 3554, hash 5034a6...). This test asserts the REAL
+    // intended behaviour. (The previous version assumed an EMPTY anchor and only
+    // "passed" in Release because NDEBUG disables assert(); it fails under a Debug/
+    // ASan build. assumevalid is a sig/PoW-recompute SKIP for trusted history only
+    // — it never gates chain selection, subsidy, UTXO or difficulty.)
+    assert(sost::has_assumevalid_anchor());
+    assert(sost::get_assumevalid_height() == 3554);
+    // A block on the anchor-containing chain at/below 3554 is under assumevalid;
+    // above it, or on a chain lacking the anchor, it is not.
+    assert(sost::is_block_under_assumevalid(0, true));
+    assert(sost::is_block_under_assumevalid(50, true));
+    assert(sost::is_block_under_assumevalid(3554, true));
+    assert(!sost::is_block_under_assumevalid(3555, true));
+    assert(!sost::is_block_under_assumevalid(50, false));   // chain lacks the anchor
+    printf("PASS: assumevalid anchor present at 3554 — sig/PoW-skip only, no chain-gating\n");
 }
 
 void test_assumevalid_anchor_not_on_chain() {
@@ -78,11 +86,17 @@ void test_full_verify_overrides_all() {
 // ═══════════════════════════════════════════════════════════
 
 void test_can_skip_empty_state() {
-    // With no checkpoints and no assumevalid, can_skip must always be false
+    // A chain that does NOT contain the assumevalid anchor can never skip.
     assert(!sost::can_skip_cx_recomputation(0, "any", false, false));
     assert(!sost::can_skip_cx_recomputation(100, "any", false, false));
-    assert(!sost::can_skip_cx_recomputation(0, "any", true, false));
-    printf("PASS: empty state — no skip possible\n");
+    // On the anchor-containing chain, a block at/below the anchor (3554) MAY skip
+    // the expensive ConvergenceX recomputation (sig/PoW re-verify), while a block
+    // above the anchor may NOT. (Previously asserted !skip assuming an empty anchor.)
+    assert(sost::can_skip_cx_recomputation(0, "any", true, false));
+    assert(sost::can_skip_cx_recomputation(3554, "any", true, false));
+    assert(!sost::can_skip_cx_recomputation(3555, "any", true, false));
+    assert(!sost::can_skip_cx_recomputation(0, "any", true, true));  // full-verify never skips
+    printf("PASS: assumevalid skip only <=3554 on the anchor chain, never under full-verify\n");
 }
 
 // ═══════════════════════════════════════════════════════════

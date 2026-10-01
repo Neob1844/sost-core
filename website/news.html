@@ -99,7 +99,8 @@
   @keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v434" defer></script>
+<script src="js/nav-toggle.js?v=v482" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -120,7 +121,7 @@
     </a>
     
       <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
-      <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomix Swap DEX" aria-label="Atomix Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIX<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
@@ -201,6 +202,75 @@
   </div>
 </section>
 
+  <!-- Multi-model offering framework -->
+  <section class="section" id="offering-framework">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-id">// ASSET REGISTRY &middot; offering models &middot; <span style="color:#4ade80">LIVE WEB (Tokenize)</span> + LAB-VERIFIED demos</div>
+        <div class="section-dates">Published: 2026-09-29 &middot; Last updated: 2026-09-29</div>
+        <h2 class="section-title">SOST introduces a <span class="accent" style="color:#DAA520">multi-model asset &amp; project offering</span> framework</h2>
+        <div class="section-sub">One Asset (or Project) Passport, four ways to bring it to people: <b>Tokenize</b>, <b>Auction</b>, <b>Draw</b>, <b>Project Funding</b>.</div>
+      </div>
+      <div class="info-card">
+        <ul style="margin:0;padding-left:20px;line-height:1.85;color:#c9d4e0">
+          <li><b>Tokenize — CURRENT / LIVE WEB.</b> Divide a right into token units (the existing Asset Registry v2).</li>
+          <li><b>Auction — FUTURE / LIVE DEMO / LAB VERIFIED.</b> Highest valid signed bid wins; refundable bid escrow; reserve + anti-sniping.</li>
+          <li><b>Draw — FUTURE / REGULATED / LIVE DEMO.</b> Tickets cover a minimum, then a third-party-verifiable commit-then-reveal draw (Spanish <i>rifa</i> rules apply).</li>
+          <li><b>Project Funding — FUTURE / REGULATORY-READY / LIVE DEMO.</b> Fund something not built yet; all-or-nothing; milestone-gated releases; Project Passport → Asset Passport.</li>
+        </ul>
+        <p style="margin-top:10px"><b>Real-funds execution is DISABLED</b> for Auction / Draw / Project Funding — full engines + live demos + tests only, pending legal framework and settlement rail. Engines: Auction 29/29, Draw+Funding 25/25 tests. No consensus/V16/#30,000/STRATO change. <a href="sost-universal-assets.html#offer" style="color:#DAA520;font-weight:700">Open the offering models</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Asset Passport v2 / SOST Asset Registry — Claims + Provenance -->
+  <section class="section" id="asset-registry-v2">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-id">// ASSET REGISTRY &middot; Asset Passport v2 &middot; <span style="color:#4ade80">REGISTRY V2 — LIVE WEB / ANCHOR-READY</span> &middot; web/lab, no consensus change</div>
+        <div class="section-dates">Published: 2026-09-29 &middot; Last updated: 2026-09-29</div>
+        <h2 class="section-title">Asset Passport v2 introduces <span class="accent" style="color:#DAA520">Claims + Provenance</span></h2>
+        <div class="section-sub">SOST Universal Assets moves from a tokenization sheet to a real registry: every material statement about an asset is now a typed <b>claim</b> that records <b>what</b> it is, <b>who says it</b>, its <b>source/evidence</b>, its <b>verification status</b>, <b>when</b>, and a <b>confidence</b> — sealed into a reproducible <code>manifestHash</code> anyone can re-check.</div>
+      </div>
+      <div class="info-card">
+        <p><b>What shipped.</b> The Asset Registry now builds <b>Asset Passport v2</b> records from typed claims — Identity, Ownership Declaration, Valuation, structured Rights, Documents and a Settlement reference — <b>each carrying its own provenance and verification</b>. A roll-up summarises the record (economic rights declared, obligor identified, agreement attached, independent verification) without ever hiding a single claim's state, and always states <b>LEGAL CLASSIFICATION: NOT DETERMINED BY SOST</b>.</p>
+        <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
+          <li><b>Structured Rights.</b> A token must say what it represents: Certificate · Usage right · Revenue participation · Sale-proceeds participation · Ownership/equity-like · Custom — with obligor, agreement reference and agreement hash recorded as facts.</li>
+          <li><b>Integrated valuation.</b> Asset Intelligence output now flows in as a provenance-carrying VALUATION claim (methodology, assumptions, confidence, timestamp) — one conceptual model, not two.</li>
+          <li><b>Tokenization Studio &rarr; Passport.</b> What you enter in the Studio now generates a real v2 passport: claims, roll-up, <code>manifestHash</code> and an anchor-ready <code>doc_ref</code> payload.</li>
+          <li><b>Liquidity honesty.</b> Valuation, reference price, executable liquidity, market depth and executability are shown as five <b>distinct</b> things; SOST price rows are labelled arithmetic <b>scenarios</b>, never quotes; with no verifiable book, executable liquidity reads <b>NOT VERIFIED</b>.</li>
+          <li><b>Full v1 compatibility.</b> Existing v1 passports are <b>never rewritten</b>, keep their original hash and still verify exactly; v2 reads them through a normalized claims view. Neither format is obsolete.</li>
+          <li><b>Reproducible hashing + tamper detection.</b> Canonicalization is pinned by an <b>official test-vector contract</b> in the repo, so a third party can reproduce any <code>manifestHash</code> byte-for-byte; changing one byte changes the hash. <b>77/77 Asset Passport v2 tests pass.</b></li>
+          <li><b>Guided flow — ASSET → RIGHT → TOKEN → PASSPORT.</b> A four-step wizard drives the Claims engine underneath (claims, provenance, valuation, canonical hash) so a non-technical owner produces a verifiable Asset Passport without touching JSON. It covers physical assets, debt/receivables, equity-like rights, royalties and custom rights, generates an automated legal-readiness note (not a legal determination), and ships loadable DEMO examples (mining, real estate, debt, royalty). A comparison against Tokeny, Securitize, Mattereum and Centrifuge is on the same page.</li>
+          <li><b>Registry vs Marketplace.</b> <span style="color:#4ade80">Asset Registry = CURRENT</span> (claims, provenance, valuation, rights, passport, hashing, anchoring, verification). <span style="color:#64748b">Asset Marketplace = FUTURE</span> (financial issuance, secondary trading, distribution, custody, regulated settlement, native assets) — not implemented, not active.</li>
+        </ul>
+        <p style="margin-top:10px"><b>Status is exact.</b> The Registry is <b>live on the web</b> and passports are <b>anchor-ready</b>; the on-chain anchor round-trip has been verified on a development chain. It is <b>not</b> claimed as a mainnet anchor until demonstrated on mainnet. No consensus, node, supply or V16 (#30,000) behaviour is touched.</p>
+        <p style="margin-top:10px"><a href="sost-universal-assets.html#registry" style="color:#DAA520;font-weight:700">Open the Asset Registry</a> &middot; <a href="sost-universal-assets.html#tokenization" style="color:#22d3ee">Tokenization Studio &rarr; Passport</a> &middot; <a href="https://github.com/Neob1844/sost-core/blob/main/docs/ASSET_REGISTRY_V2.md" target="_blank" rel="noopener" style="color:#22d3ee">View documentation</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Atomic swaps + Asset Passport on-chain — laboratory verification milestones -->
+  <section class="section" id="lab-verified-2026-09">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-id">// ENGINEERING &middot; <span style="color:#f59e0b">LAB VERIFIED</span> &middot; not on testnet or mainnet</div>
+        <div class="section-dates">Published: 2026-09-29 &middot; Last updated: 2026-09-29</div>
+        <h2 class="section-title">Atomic swaps and on-chain Asset Passport reach <span class="accent" style="color:#f59e0b">laboratory verification</span></h2>
+        <div class="section-sub">Three engineering workstreams crossed from "code" to "runs end-to-end against real infrastructure" — in a local laboratory only. None is enabled on testnet or mainnet, and none touches SOST consensus or funds.</div>
+      </div>
+      <div class="info-card">
+        <ul style="margin:0;padding-left:20px;line-height:1.85;color:#c9d4e0">
+          <li><b>EVM atomic swap — <span style="color:#f59e0b">LAB VERIFIED</span>.</b> The HTLC contract passes 57 unit tests (including non-standard-return, fee-on-transfer, reentrancy, wrong-preimage and timeout cases) and a full end-to-end run on a live local Anvil node (native + ERC-20 claim, wrong-preimage revert, refund after timeout).</li>
+          <li><b>BTC atomic swap — <span style="color:#f59e0b">LAB VERIFIED</span>.</b> Real Bitcoin Core <code>regtest</code>: exact P2WSH funding, preimage reveal and claim, plus a reorg test where the claim returns to the mempool. Bitcoin signing stays OFF by default.</li>
+          <li><b>Asset Passport on-chain — <span style="color:#f59e0b">LAB VERIFIED</span>.</b> A full capsule <code>doc_ref</code> round-trip on a development chain: manifest hash &rarr; signed capsule tx &rarr; node acceptance &rarr; mined block &rarr; read-back &rarr; hash match &rarr; tamper test. Mainnet anchoring remains a future, authorised step.</li>
+          <li><b>V16 cutover safety battery — <span style="color:#f59e0b">LAB VERIFIED</span>.</b> The V16 activation lifecycle exercised on an isolated fast devnet. Mainnet V16 still activates at <b>#30,000</b> — unchanged.</li>
+        </ul>
+        <p style="margin-top:10px"><b>Why the label matters.</b> "Runs on regtest / Anvil / devnet" is <b>not</b> "live on mainnet". Each item above is real, reproducible laboratory evidence — and is labelled exactly that. <a href="atomic-swap.html" style="color:#22d3ee">Atomic Swap / DEX</a> &middot; <a href="news.html#v16-consensus" style="color:#22d3ee">V16 schedule</a></p>
+      </div>
+    </div>
+  </section>
+
   <!-- V30000 — #30,000 network upgrade released: node + miner + cli -->
   <section class="section">
     <div class="container">
@@ -208,7 +278,7 @@
         <div class="section-id">// RELEASE &middot; V30000 &middot; node + miner + cli changed &middot; #30,000 network upgrade</div>
         <div class="section-dates">Published: 2026-09-24 &middot; Last updated: 2026-09-24</div>
         <h2 class="section-title">V30000: the <span class="accent" style="color:#39ff14">#30,000 network upgrade</span> is released — swap all three binaries</h2>
-        <div class="section-sub">All three binaries changed &mdash; <b>sost-node</b>, <b>sost-miner</b> and <b>sost-cli</b>; none are byte-identical to v16.2.x. #30,000 activates the full V30000 bundle (DTD Jackpot V2 plus the admin-gated native-asset / tokenization / DEX layer, public access disabled); the first DTD Jackpot V2 is still #30,186.</div>
+        <div class="section-sub">All three binaries changed &mdash; <b>sost-node</b>, <b>sost-miner</b> and <b>sost-cli</b>; none are byte-identical to v16.2.x. #30,000 activates the full V30000 bundle (DTD Accumulated Reward V2 plus the admin-gated native-asset / tokenization / DEX layer, public access disabled); the first DTD Accumulated Reward V2 is still #30,186.</div>
       </div>
       <div class="info-card">
         <p><b>The fix.</b> A node built from v16.2.3 could not complete a full synchronisation from block&nbsp;0: it stopped on <b>66 historical blocks</b> (heights 4,160&ndash;5,410) mined in April&nbsp;2026 under consensus parameters that were later changed. V30000 pins each of the 66 by <b>height and full block hash</b> — changing no rule for any new block — and also fixes P2P block serving and a sync-time rate-limit that could ban the peer serving you the chain. A full genesis&rarr;tip sync was verified end to end, encrypted and plaintext, matching the reference node with zero rejects; 119/119 tests pass.</p>
@@ -225,7 +295,7 @@
 
 
 <!-- V16 — activation schedule (V30000, node + miner + cli update) -->
-<section class="section">
+<section class="section" id="v16-consensus">
   <div class="container">
     <div class="section-header">
       <div class="section-id">// V16 CONSENSUS &middot; <span id="v16State">SCHEDULED</span> &middot; block&nbsp;30,000 &middot; V30000 &mdash; node + miner + cli update</div>
@@ -236,7 +306,7 @@
     <div class="info-card">
       <p><b>What activates.</b> Two things, one activation. <b>DTD-normal eligibility</b> is re-pointed at current miners — recency drops to <b>288 blocks</b> at every height, the 6-block producer cooldown <b>yields</b> when applying it would leave the draw with nobody, and the 10%/288 anti-dominance gate is <b>armed only at 11 or more distinct miners</b>. And the <b>DTD Jackpot becomes an independent draw</b> (V2): node-gated by NODE_BIND plus heartbeats, weighted linearly by SbPoW blocks in the previous <b>2,016</b>, with no cooldown and no anti-dominance.</p>
       <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
-        <li><b>First DTD Jackpot V2 draw:</b> block <b>#30,186</b> — it requires a valid NODE_BIND and &ge;3 SbPoW blocks in the previous 2,016, but <b>zero heartbeats (0/0)</b>: no epoch has completed yet, so nobody is excluded for lacking history. The requirement ramps 1/1 &rarr; 2/2 &rarr; 3/3 and settles at the permanent 3-of-4 from <b>#31,338</b>. That ramp is one rule counting epochs, <b>not</b> a second fork.</li>
+        <li><b>First DTD Accumulated Reward V2 draw:</b> block <b>#30,186</b> — it requires a valid NODE_BIND and &ge;3 SbPoW blocks in the previous 2,016, but <b>zero heartbeats (0/0)</b>: no epoch has completed yet, so nobody is excluded for lacking history. The requirement ramps 1/1 &rarr; 2/2 &rarr; 3/3 and settles at the permanent 3-of-4 from <b>#31,338</b>. That ramp is one rule counting epochs, <b>not</b> a second fork.</li>
         <li><b>Payout economics unchanged:</b> base 100&nbsp;SOST, rollover to a 500&nbsp;SOST cap, spent from the existing historical reserve. <b>No new emission.</b></li>
         <li><b>DTD-normal needs no NODE_BIND, no heartbeats and no PoPC bond</b> — it stays permissionless at every height.</li>
         <li><b>A validating node still on pre-V16 software after #30,000 may diverge.</b> The window is a coordination decision, not a consensus rule.</li>
@@ -253,7 +323,7 @@
       <div class="section-id">// RELEASE &middot; v16.2.3 &middot; official binaries published &middot; consensus unchanged</div>
       <div class="section-dates">Published: 2026-09-23 &middot; Last updated: 2026-09-23</div>
       <h2 class="section-title">v16.2.3: no credential this protocol asks you to handle needs to live in <span class="accent" style="color:#fb010d">argv</span></h2>
-      <div class="section-sub">Four releases in the v16.2.x line, all shipping the <b>same node and miner binaries</b> — only the CLI changed. Consensus is untouched: V16 still activates at #30,000 and the first Jackpot V2 is still #30,186.</div>
+      <div class="section-sub">Four releases in the v16.2.x line, all shipping the <b>same node and miner binaries</b> — only the CLI changed. Consensus is untouched: V16 still activates at #30,000 and the first Accumulated Reward V2 is still #30,186.</div>
     </div>
     <div class="info-card">
       <p><b>The problem.</b> Until now the RPC password, the node heartbeat key and the wallet passphrase all had to be typed on a command line or echoed on screen. <code>/proc/&lt;pid&gt;/cmdline</code> is world-readable, so <code>ps</code> handed them to any other local account on the machine.</p>
@@ -283,7 +353,7 @@
     </div>
     <div class="info-card">
       <p><b>What was wrong.</b> The homepage hero still told a new visitor that every block allocates 25% to a Gold Vault and 25% to PoPC, "hardcoded at genesis". The FAQ said the same, the protocol spec validated blocks against "the 50/25/25 split" without mentioning that the rule changed at #25,000, and the Gold Reserve page reported a green <b>ACCUMULATING</b> status for a vault that has received nothing since V15.</p>
-      <p><b>Worse, and now fixed:</b> the whitepaper stated in two places that the DTD lottery would require an active PoPC bond from block 30,000. <b>It does not, at any height.</b> On mainnet the PoPC eligibility gate ships deactivated and the DTD is permissionless — mining one valid block is the only requirement.</p>
+      <p><b>Worse, and now fixed:</b> the whitepaper stated in two places that the DTD reward would require an active PoPC bond from block 30,000. <b>It does not, at any height.</b> On mainnet the PoPC eligibility gate ships deactivated and the DTD is permissionless — mining one valid block is the only requirement.</p>
       <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
         <li><b>Nothing was deleted.</b> Blocks 0&ndash;24,999 really were paid 50/25/25 and any validator still reproduces them, so the historical rule is kept, dated and visibly historical.</li>
         <li><b>Nothing was burned or redirected.</b> The vault and pool addresses still hold what they received and remain auditable in the explorer; the DTD Jackpot returns that reserve to active miners as a supply-neutral spend.</li>
@@ -307,7 +377,7 @@
     <div class="info-card">
       <p>The archive opens from five places — the <b>JACKPOT ARCHIVE</b> card, the <b>JACKPOTS PAID</b> card, the <b>View all jackpots</b> button, the winner overlay after a live or replayed jackpot, and the jackpot dashboard — all calling one component over one data source.</p>
       <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
-        <li><b>A cooldown card was removed from the jackpot panel.</b> The recent-miner cooldown is a <b>normal-DTD</b> rule and the Jackpot V2 draw has none — showing it among the jackpot metrics taught the opposite of the rule. It now lives in the eligibility section, labelled "Normal DTD only — not the Jackpot", with the same list of identities currently excluded.</li>
+        <li><b>A cooldown card was removed from the jackpot panel.</b> The recent-miner cooldown is a <b>normal-DTD</b> rule and the Accumulated Reward V2 draw has none — showing it among the jackpot metrics taught the opposite of the rule. It now lives in the eligibility section, labelled "Normal DTD only — not the Jackpot", with the same list of identities currently excluded.</li>
         <li><b>Two eligibility numbers, never one.</b> The 20,000-block count is the rule in force <i>today</i> and does not carry over. Beside it there is now a card headed "FROM #30,000 — DIFFERENT RULE": &ge;3 blocks per 2,016 plus NODE_BIND, and the first draw's 0/0 heartbeats.</li>
         <li><b>Cadence corrected.</b> The panel still called the DTD cadence "permanent 1-of-3". Since V15 the DTD draws on <b>every block</b> (3-of-3) — which is why blocks whose height is not a multiple of 3 pay a DTD share.</li>
         <li>The V16 preview inside the panel also quoted the old <b>5,000</b>-block PoW window; the rule is <b>2,016</b>.</li>
@@ -719,15 +789,15 @@ sudo systemctl restart sost-miner</pre>
       <h3>At block 12,000</h3>
       <ul>
         <li><b>Full cASERT equalizer range E7&ndash;H35 active</b> (ceiling H20 &rarr; H35).</li>
-        <li><b>DTD lottery recent-winner cooldown 5 &rarr; 6 blocks.</b></li>
+        <li><b>DTD reward recent-winner cooldown 5 &rarr; 6 blocks.</b></li>
         <li><b>Future-timestamp drift cap 60&nbsp;s &rarr; 30&nbsp;s</b> &mdash; a clock more than 30&nbsp;s ahead produces blocks validators reject. <b>NTP strongly recommended.</b></li>
         <li><b>Beacon Phase II-A</b> (operator-signed advisory notices) + <b>II-B</b> (3-of-5 threshold, default-off until 5 custodians) + <b>III</b> (P2P gossip). Advisory-only &mdash; never affects mining rewards or block validity. <a href="beacon.html" style="color:#22d3ee">&rarr; Beacon guide</a></li>
         <li><b>SbPoW hardening</b> &mdash; the signed PoW preimage grows from 7 to 11 fields (adds <code>timestamp</code>, <code>bits_q</code>, <code>merkle_root</code>, a chain-specific <code>genesis_hash</code> salt); domain tag &rarr; <code>SOST/POW-SIG/v13</code>.</li>
       </ul>
       <h3 style="margin-top:14px">At block 12,100 &mdash; automatic, no action needed</h3>
       <ul>
-        <li><b>DTD lottery cadence 2-of-3 (bootstrap) &rarr; 1-of-3 (permanent).</b></li>
-        <li><b>Anti-dominance gate</b> &mdash; any miner address holding &ge;&nbsp;10&nbsp;% of the previous 288 blocks is excluded from DTD lottery eligibility until its rolling share drops below 10&nbsp;%. Only miners with at least one SbPoW-signed block (most recent block at height &ge;&nbsp;7,100) are eligible. Dominant miners keep their full 50&nbsp;% miner reward; reversible per-block, no slash, no admin authority.</li>
+        <li><b>DTD reward cadence 2-of-3 (bootstrap) &rarr; 1-of-3 (permanent).</b></li>
+        <li><b>Anti-dominance gate</b> &mdash; any miner address holding &ge;&nbsp;10&nbsp;% of the previous 288 blocks is excluded from DTD reward eligibility until its rolling share drops below 10&nbsp;%. Only miners with at least one SbPoW-signed block (most recent block at height &ge;&nbsp;7,100) are eligible. Dominant miners keep their full 50&nbsp;% miner reward; reversible per-block, no slash, no admin authority.</li>
       </ul>
       <p style="font-size:11.5px;color:var(--text-dim);margin-top:6px">V13 RC1 published with signed <code>SHA256SUMS</code> (release key fingerprint <code>41B1A46E…2AE41A04</code>); binary upload remains a manual operator step.</p>
     </div>
@@ -762,12 +832,12 @@ sudo systemctl restart sost-miner</pre>
     <div class="section-header">
       <div class="section-id">// V11 &amp; V12 &middot; SbPoW, LOTTERY &amp; CAPSULES</div>
       <div class="section-dates">Published: 2026-05-05 &middot; Last updated: 2026-05-20</div>
-      <h2 class="section-title">SbPoW, the <span class="accent">DTD lottery</span> &amp; capsules</h2>
+      <h2 class="section-title">SbPoW, the <span class="accent">DTD reward</span> &amp; capsules</h2>
     </div>
     <div class="info-card">
       <ul>
         <li><b>V12 &mdash; block 7,350:</b> cASERT ceiling H13 &rarr; H20; same-block 4-tier <b>Slingshot</b> anti-stall; Capsule Protocol v1 (binary metadata).</li>
-        <li><b>V11 Phase 2 &mdash; block 7,100 (LIVE):</b> <b>Signed PoW (SbPoW)</b> &mdash; every mined block carries a Schnorr signature over the PoW preimage &mdash; plus the <b>fair-share DTD lottery</b> with jackpot rollover (redistributes SOST-side share on triggered blocks).</li>
+        <li><b>V11 Phase 2 &mdash; block 7,100 (LIVE):</b> <b>Signed PoW (SbPoW)</b> &mdash; every mined block carries a Schnorr signature over the PoW preimage &mdash; plus the <b>fair-share DTD reward</b> with jackpot rollover (redistributes SOST-side share on triggered blocks).</li>
         <li><b>V11 Phase 1 &mdash; block 7,000:</b> extended linear difficulty cascade + state-dependent dataset access. <span style="color:var(--text-dim)">(Useful-Compute infrastructure is dry-run / testing only &mdash; rewards remain POSTPONED.)</span></li>
       </ul>
     </div>
@@ -786,11 +856,11 @@ sudo systemctl restart sost-miner</pre>
 
     <div class="info-card">
       <h3>V11 Phase 2 activation &mdash; chain paused at 7,099, then resumed (2026-05-04)</h3>
-      <p>Phase 2 (SbPoW + DTD lottery) activated at block <b>7,100</b>. The chain paused at height <b>7,099</b> for ~90&nbsp;minutes: miners were producing v2 headers that validators correctly rejected with <code>v2 header missing miner_pubkey</code>. This was a <b>miner-side serialization bug, not a consensus failure</b> &mdash; the validator was doing exactly its job.</p>
+      <p>Phase 2 (SbPoW + DTD reward) activated at block <b>7,100</b>. The chain paused at height <b>7,099</b> for ~90&nbsp;minutes: miners were producing v2 headers that validators correctly rejected with <code>v2 header missing miner_pubkey</code>. This was a <b>miner-side serialization bug, not a consensus failure</b> &mdash; the validator was doing exactly its job.</p>
       <ul>
         <li class="yes">Pre-7,100 chain intact, holder funds safe, chain paused (not corrupted).</li>
         <li class="yes">Resolved by a correctly rebuilt miner from <code>main</code>; first valid Phase 2 block <b>#7,100</b>, verified through #7,104.</li>
-        <li class="yes">DTD lottery live immediately: first payouts at #7100 / #7102 / #7103 of <code>3.92550431 SOST</code> each (<code>11.77651293 SOST</code> total), 36 eligible addresses, pending jackpot 0.</li>
+        <li class="yes">DTD reward live immediately: first payouts at #7100 / #7102 / #7103 of <code>3.92550431 SOST</code> each (<code>11.77651293 SOST</code> total), 36 eligible addresses, pending jackpot 0.</li>
         <li><b>Cooldown clarified:</b> the recent-miner cooldown excludes addresses that <i>mined</i> recently, not addresses that <i>won</i> the lottery. Winning the lottery never triggers cooldown.</li>
       </ul>
       <p style="color:var(--text-dim)"><b>Lesson, on the record:</b> the v1&rarr;v2 header path was not exercised end-to-end against a running validator under production load. Every future hard fork now requires an end-to-end production rehearsal before a finite mainnet activation height is set.</p>
@@ -1008,7 +1078,7 @@ sudo systemctl restart sost-miner</pre>
 
     <div class="info-card">
       <h3>Concentration, reported &mdash; not hidden</h3>
-      <p>When one address grew dominant, the distribution was published openly: over 288 blocks (25 unique miners), top-1&nbsp;&asymp;&nbsp;41.8&nbsp;%, top-3&nbsp;&asymp;&nbsp;61&nbsp;%, top-10&nbsp;&asymp;&nbsp;80&nbsp;%, with the structural risks named (no unilateral reorg below 51&nbsp;%, selfish-mining profitability from ~33&nbsp;%, a top-3 coalition crossing 51&nbsp;%). The active-miner peak (~39) fell to ~7 after the SbPoW + V12 upgrades &mdash; an honestly-stated cost of closing the consensus pieces before the commercial side. <b>No official pool</b> is offered (SbPoW makes classic pools unfeasible, and a central pool would be a 51&nbsp;% target); the <b>DTD lottery</b> and <b>PoPC</b> are the cooperative answer so a small miner earns recurring upside after a single block, and a holder can earn via custody without out-hashing anyone.</p>
+      <p>When one address grew dominant, the distribution was published openly: over 288 blocks (25 unique miners), top-1&nbsp;&asymp;&nbsp;41.8&nbsp;%, top-3&nbsp;&asymp;&nbsp;61&nbsp;%, top-10&nbsp;&asymp;&nbsp;80&nbsp;%, with the structural risks named (no unilateral reorg below 51&nbsp;%, selfish-mining profitability from ~33&nbsp;%, a top-3 coalition crossing 51&nbsp;%). The active-miner peak (~39) fell to ~7 after the SbPoW + V12 upgrades &mdash; an honestly-stated cost of closing the consensus pieces before the commercial side. <b>No official pool</b> is offered (SbPoW makes classic pools unfeasible, and a central pool would be a 51&nbsp;% target); the <b>DTD reward</b> and <b>PoPC</b> are the cooperative answer so a small miner earns recurring upside after a single block, and a holder can earn via custody without out-hashing anyone.</p>
     </div>
 
     <div class="info-card">
@@ -1022,8 +1092,8 @@ sudo systemctl restart sost-miner</pre>
     </div>
 
     <div class="info-card">
-      <h3>DTD lottery audit &amp; V11 staged rollout</h3>
-      <p>After a display concern, the DTD lottery was cross-checked three ways &mdash; consensus re-derivation from the deterministic seed, the node UTXO set, and the explorer address balance &mdash; and all three matched; only the wording was off (lottery UTXOs are now labelled <code>LOTTERY</code> not generic <code>OUTPUT</code>, and lifetime wins are separated from current unspent balance). For the record, V11 shipped in two stages: <b>Phase&nbsp;1 (block 7,000)</b> &mdash; extended cASERT cascade + <b>state-dependent dataset access</b> (the index derives from the previous round&apos;s SHA-256 state, closing predictable-prefetch optimisations); <b>Phase&nbsp;2 (block 7,100)</b> &mdash; SbPoW + DTD lottery + jackpot rollover, with a triangular emergency-relief cascade.</p>
+      <h3>DTD reward audit &amp; V11 staged rollout</h3>
+      <p>After a display concern, the DTD reward was cross-checked three ways &mdash; consensus re-derivation from the deterministic seed, the node UTXO set, and the explorer address balance &mdash; and all three matched; only the wording was off (lottery UTXOs are now labelled <code>LOTTERY</code> not generic <code>OUTPUT</code>, and lifetime wins are separated from current unspent balance). For the record, V11 shipped in two stages: <b>Phase&nbsp;1 (block 7,000)</b> &mdash; extended cASERT cascade + <b>state-dependent dataset access</b> (the index derives from the previous round&apos;s SHA-256 state, closing predictable-prefetch optimisations); <b>Phase&nbsp;2 (block 7,100)</b> &mdash; SbPoW + DTD reward + jackpot rollover, with a triangular emergency-relief cascade.</p>
     </div>
   </div>
 </section>

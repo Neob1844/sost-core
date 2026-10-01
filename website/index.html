@@ -683,7 +683,8 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}@keyframes dtdBtnGlow{0%,100%{box-shadow:0 0 14px rgba(57,255,20,.5),0 0 26px rgba(74,222,128,.28)}50%{box-shadow:0 0 30px rgba(57,255,20,1),0 0 60px rgba(74,222,128,.7),0 0 90px rgba(124,255,160,.45)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v434" defer></script>
+<script src="js/nav-toggle.js?v=v482" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
 
@@ -874,7 +875,7 @@
     <a href="#dtd" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:radial-gradient(circle at 50% 35%,#0f2417,#07120b);border:1px solid #39ff14;text-decoration:none;line-height:1;flex:0 0 auto;animation:dtdBtnGlow 2s ease-in-out infinite;overflow:hidden;" title="DTD — Deterministic Token Distribution"><span style="color:#39ff14;font-size:30px;font-weight:900;letter-spacing:1px;text-shadow:0 0 14px rgba(57,255,20,.85)">DTD</span><span style="color:#7CFFA0;font-size:9.5px;font-weight:700;letter-spacing:.4px;text-align:center;margin-top:3px">TOKEN<br>DISTRIBUTION</span></a>
     <!-- 4th nav icon: open the SOST 2-minute intro video in a modal.
          Sized to match home's larger 110×110 PoPC DEX (other pages use 72×72). -->
-    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+    <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomix Swap DEX" aria-label="Atomix Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIX<br>SWAP DEX</span></a>
     <button class="nav-toggle" id="navToggleBtn" type="button" onclick="toggleNav()" title="Hide / show the top navigation">▲ HIDE NAV</button>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
@@ -1409,7 +1410,7 @@
             The Jackpot winner <b>is</b> the DTD draw winner of that jackpot block — it reuses the <b>exact same eligibility set</b> as the base draw (signed miner + recent-winner cooldown + anti-dominance + uniform, keyless selection).<br><br>
             <b style="color:#7CFFA0">No separate entry</b> — there is no ticket, no purchase, no fiat/$-amount rule and no new selection engine.<br>
             <b style="color:#7CFFA0">Broad by design</b> — a jackpot candidate must have mined <b>&ge;1 block in the last 20,000 blocks</b> (~19 weeks) — a much wider window than the normal draw&rsquo;s 5,000. The DTD Jackpot returns the vault to ~the whole network, not a recent few.<br>
-            <b style="color:#7CFFA0">Must have an eligible winner</b> — if a jackpot block has no eligible address, <b>nothing is paid</b>: the prize rolls over to the next jackpot and the reserve is left untouched.
+            <b style="color:#7CFFA0">Must have an eligible winner</b> — if a jackpot block has no eligible address, <b>nothing is paid</b>: the accumulated reward rolls over to the next reward block and the reserve is left untouched.
           </p>
         </div>
       </div>
@@ -1464,7 +1465,7 @@
             <li>Consensus constants live in <code>include/sost/params.h</code> &mdash; the hard cap, and the emission split for each height range (<code>50/25/25</code> for blocks 0&ndash;24,999, <code>50/50</code> miner/DTD from #25,000)</li>
             <li>Observable gold reserve &mdash; <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan-primary)">Etherscan</a></li>
             <li>SbPoW miner-identity binding &mdash; every block from <code>#7,100</code> carries a Schnorr signature over its PoW commitment</li>
-            <li>V13 anti-dominance DTD gate at <code>#12,100</code> &mdash; addresses with &ge; 10 % share of the previous 288 blocks are excluded from the DTD lottery until their rolling share drops below 10 %, and only miners with an SbPoW-signed block (most recent block at height &ge; 7,100) are eligible; logic lives in <code>src/lottery.cpp::compute_lottery_eligibility_set</code> and <code>include/sost/params.h::is_dtd_dominant</code> / <code>is_sbpow_eligible</code></li>
+            <li>V13 anti-dominance DTD gate at <code>#12,100</code> &mdash; addresses with &ge; 10 % share of the previous 288 blocks are excluded from the DTD reward until their rolling share drops below 10 %, and only miners with an SbPoW-signed block (most recent block at height &ge; 7,100) are eligible; logic lives in <code>src/lottery.cpp::compute_lottery_eligibility_set</code> and <code>include/sost/params.h::is_dtd_dominant</code> / <code>is_sbpow_eligible</code></li>
             <li>Deterministic build &mdash; rebuild from <code>main</code> and the output hash matches the running binary</li>
             <li>Mainnet operation publicly logged &mdash; every incident in the BCT announcement thread</li>
           </ul>
