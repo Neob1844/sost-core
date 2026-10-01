@@ -201,6 +201,28 @@ public:
         int64_t chain_height = -1,
         std::string* err = nullptr);
 
+    // AUCTION settlement — ATOMIC asset<->SOST swap in a single transaction.
+    // Seller supplies `asset_amount` of `asset_id` (from asset_from); buyer supplies
+    // `price_sost` (from sost_from). Outputs: asset->asset_to (buyer), SOST->sost_to
+    // (seller), asset change->asset_from, SOST change->sost_from. All-or-nothing: the
+    // asset and the payment move in the same tx or not at all (no custody, no new
+    // consensus rule — reuses OUT_ASSET_TRANSFER + OUT_TRANSFER). In a single-wallet
+    // test the wallet holds every key; in production the two sides co-sign.
+    bool create_asset_swap_transaction(
+        const Bytes32& asset_id,
+        uint64_t asset_amount,
+        const PubKeyHash& asset_from,
+        const PubKeyHash& asset_to,
+        const PubKeyHash& sost_from,
+        const PubKeyHash& sost_to,
+        uint64_t price_sost,
+        int64_t dust,
+        int64_t fee,
+        const Hash256& genesis_hash,
+        Transaction& out_tx,
+        int64_t chain_height = -1,
+        std::string* err = nullptr);
+
     // BURN: destroy `asset_amount` of `asset_id` (asset change returns to sender).
     bool create_asset_burn_transaction(
         const Bytes32& asset_id,

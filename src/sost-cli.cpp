@@ -2359,6 +2359,51 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    // auctionsettle <asset_id_hex> <asset_amount> <seller_addr> <buyer_addr> <price_sost_stocks>  (V30000)
+    //
+    // ATOMIC auction settlement: one transaction exchanges the asset for SOST.
+    // Seller gives asset_amount of asset_id -> buyer; buyer pays price (stocks) -> seller.
+    // All-or-nothing at consensus level. The wallet must hold BOTH sides' keys (single
+    // custodian / test); in production the two parties co-sign the same tx.
+    if (cmd == "auctionsettle") {
+        if (argc < arg_start + 6) {
+            fprintf(stderr, "Usage: sost-cli auctionsettle <asset_id_hex> <asset_amount> <seller_addr> <buyer_addr> <price_stocks>\n");
+            return 1;
+        }
+        auto idraw = sost::from_hex(argv[arg_start + 1]);
+        if (idraw.size() != 32) { fprintf(stderr, "asset_id must be 32-byte hex\n"); return 1; }
+        sost::Bytes32 asset_id{}; std::copy(idraw.begin(), idraw.end(), asset_id.begin());
+        uint64_t asset_amount = strtoull(argv[arg_start + 2], nullptr, 10);
+        sost::PubKeyHash seller{}, buyer{};
+        if (!sost::address_decode(argv[arg_start + 3], seller)) { fprintf(stderr, "bad seller_addr\n"); return 1; }
+        if (!sost::address_decode(argv[arg_start + 4], buyer))  { fprintf(stderr, "bad buyer_addr\n"); return 1; }
+        uint64_t price = strtoull(argv[arg_start + 5], nullptr, 10);
+        int64_t chain_height = query_chain_height();
+        if (chain_height < 0) { fprintf(stderr, "Error: cannot reach node\n"); return 1; }
+        sost::Hash256 genesis_hash{};
+        { std::string gi = rpc_call("getinfo"); auto pp = gi.find("\"genesis_hash\":\"");
+          if (pp != std::string::npos) { auto h = gi.substr(pp + 16, 64);
+            auto raw = sost::from_hex(h); if (raw.size() == 32) std::copy(raw.begin(), raw.end(), genesis_hash.begin()); } }
+        // sync from BOTH sides so the wallet sees the seller's asset UTXO and the buyer's SOST
+        w.clear_utxos();
+        sync_wallet_utxos_from_node(w, argv[arg_start + 3]);
+        sync_wallet_utxos_from_node(w, argv[arg_start + 4]);
+        int64_t dust = 10000; int64_t fee = calculate_fee(800);
+        sost::Transaction tx; std::string aerr;
+        bool ok = w.create_asset_swap_transaction(asset_id, asset_amount, seller, buyer, buyer, seller,
+                                                  price, dust, fee, genesis_hash, tx, chain_height, &aerr);
+        if (!ok) { fprintf(stderr, "Error: %s\n", aerr.c_str()); return 1; }
+        std::vector<sost::Byte> raw; std::string se;
+        if (!tx.Serialize(raw, &se)) { fprintf(stderr, "Serialize: %s\n", se.c_str()); return 1; }
+        std::string resp = rpc_call("sendrawtransaction", "[\"" + to_hex(raw.data(), raw.size()) + "\"]");
+        sost::Hash256 txid; tx.ComputeTxId(txid);
+        printf("auctionsettle: asset=%s amount=%llu price=%llu\n  txid: %s\n  node: %s\n",
+               argv[arg_start + 1], (unsigned long long)asset_amount, (unsigned long long)price,
+               to_hex(txid.data(), 32).c_str(), resp.c_str());
+        std::string we; w.save(wallet_path, &we);
+        return 0;
+    }
+
 
     // send <to_addr> <amount_sost>
     //
