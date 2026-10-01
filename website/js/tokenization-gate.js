@@ -48,13 +48,21 @@
   function blocked() { return !publicEnabled() && !isDeveloper(); }
 
   function noticeLines(height) {
-    var live = MAINNET_VALIDATED && height != null && height >= ACTIVATION_HEIGHT;
-    return live
-      ? ['LIVE AT PROTOCOL LEVEL', 'PUBLIC ACCESS RESTRICTED',
-         'DEVELOPER / CONTROLLED MAINNET USE', 'PENDING REGULATORY READINESS']
-      : ['IMPLEMENTED & DEVNET-VALIDATED', 'ACTIVATES AT BLOCK #30,000',
-         'NOT YET LIVE ON MAINNET', 'PUBLIC ACCESS RESTRICTED',
-         'DEVELOPER / CONTROLLED TESTING', 'PENDING REGULATORY READINESS'];
+    // Four dynamic states: future public-enabled / post-activation restricted /
+    // pre-activation / (fallback). Copy reflects the REAL protocol state.
+    if (publicEnabled()) {
+      return ['LIVE AT PROTOCOL LEVEL', 'PUBLIC ACCESS ENABLED',
+              'EXPERIMENTAL \u2014 USE AT YOUR OWN RISK',
+              'SUBJECT TO APPLICABLE REGULATORY REQUIREMENTS / AUTHORISATIONS WHERE REQUIRED'];
+    }
+    if (height != null && height >= ACTIVATION_HEIGHT) {
+      return ['LIVE AT PROTOCOL LEVEL', 'MAINNET \u2014 CONTROLLED DEVELOPER ACCESS',
+              'PUBLIC ACCESS RESTRICTED', 'EXPERIMENTAL / MAINNET VALIDATION IN PROGRESS',
+              'PENDING REGULATORY READINESS'];
+    }
+    return ['IMPLEMENTED & VALIDATED', 'ACTIVATES AT BLOCK #30,000', 'NOT YET ACTIVE ON MAINNET',
+            'PUBLIC ACCESS RESTRICTED', 'DEVELOPER ACCESS ONLY', 'EXPERIMENTAL PROTOCOL',
+            'PENDING FURTHER MAINNET VALIDATION & REGULATORY READINESS'];
   }
 
   var ACTIONS = (CFG.actionSelectors && CFG.actionSelectors.length)
@@ -98,8 +106,12 @@
       '<h4>' + (CFG.label || 'SOST ' + (CFG.surface === 'DEX' ? 'DEX' : 'Tokenization')) + ' — access notice</h4>' +
       '<div class="sost-gate-tags">' + lines.map(function (l) { return '<span>' + l + '</span>'; }).join('') + devNote + '</div>' +
       (CFG.modalities ? '<div class="sost-gate-foot">Modalities: ' + CFG.modalities.join(' · ') + '</div>' : '') +
-      '<div class="sost-gate-foot">Technical availability does not constitute regulatory authorization.' +
-      (blocked() ? ' Public execution is disabled; operations are restricted to developer / controlled testing.' : '') +
+      '<div class="sost-gate-foot"><b>Technical availability does not constitute regulatory authorization.</b><br>' +
+      'The DEX and Tokenization systems are technically operational at protocol level but remain restricted to ' +
+      'controlled developer use while SOST completes mainnet validation, security testing and assessment of the ' +
+      'regulatory requirements applicable to offering these services publicly. Public access will remain disabled ' +
+      'until SOST determines that the required technical, security and applicable regulatory conditions have been satisfied.' +
+      (blocked() ? '' : '') +
       '</div>';
     return b;
   }
