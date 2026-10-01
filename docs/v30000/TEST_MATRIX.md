@@ -60,3 +60,22 @@ UtxoSet::ConnectBlock). Nothing is a mock.
   private key is never needed by the build.)
 - Live-node reorg (two competing chains) not scripted; reorg-safety proven at index level.
 - Full sacs_p* node harness not re-run this turn (prior-validated).
+
+## FINAL BUILD re-run (2026-10-01, baked admin sost1ad01a...a2, build-v30000-final / build-v30000-devadmin)
+| Test | Result |
+|---|---|
+| Full consensus/unit suite (9 suites) vs final MAINNET lib | **9/9 PASS** |
+| Activation boundary 29999→30000→30001 (mainnet lib) | **11/11 PASS** |
+| Admin protocol gate S14 — LIVE node: admin create OK + non-admin create REJECTED (`-25 consensus: S14`) + not in index | **PASS** (e2e_gate_live) |
+| LIVE TWO-CHAIN REORG — converge_d8 converges; reject_d9 rejected (depth 9 > REORG_LIMIT 8), restart-stable | **PASS** (sacs_p2_reorg) |
+| SACS V2 heavy resource harness depth 200 — converged + UTXO root A==B + restart-stable + RSS 16 MB bounded | **PASS** (sacs_v2_resource_final) |
+| RESTART — asset index rebuilt identically (issued 3000/burned 500/circ 2500) under gate | **PASS** (e2e_restart_final) |
+| MEMPOOL — admin asset tx accepted to mempool+mined; non-admin rejected at sendrawtransaction | **PASS** (within e2e_gate_live) |
+| Web admin auth (nginx bcrypt) LIVE | **PASS** deny-side (401 no-creds / 401 wrong / 301 http→https / 429 rate-limit / 200 public); owner verifies successful login |
+| Sanitizers (ASAN/UBSAN) on new pure logic | **CLEAN** |
+
+FINAL COMMIT f0537f3893aaca29653a98819aa68bdf07be8dd9
+NODE  a1dde8086b821945e2d91a820b3294c519a66078dcb1767f3bb7af828fb0c411
+MINER eec96efb02bde61cae150f51b3cedb46e55a5dd5e903496a278e90257aa64951
+CLI   c8ae00b9a6745f7c84cc8791b9994d32052a07d1fed12aa82c4e283fba2f691b
+PEERS READY: NO (operator confirmation/upgrade of the 2 external peers required — PEER_COORDINATION.md)
