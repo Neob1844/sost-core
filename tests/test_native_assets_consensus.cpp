@@ -1,4 +1,5 @@
 // STEP 3-8: native-asset consensus validator — happy paths + adversarial rejects.
+#include "sost/params.h"
 #include "sost/native_assets_validation.h"
 #include <cstdio>
 #include <map>
@@ -19,7 +20,7 @@ static TxInput mkin(Hash256 txid,uint32_t idx){ TxInput i; i.prev_txid=txid; i.p
 static Hash256 H(uint8_t seed){ Hash256 h{}; h[0]=seed; h[31]=seed; return h; }
 
 int main(){
-  const int64_t HT=100; // >= devnet activation 42
+  const int64_t HT=NATIVE_ASSETS_ACTIVATION_HEIGHT+100; // build-agnostic: >= activation (devnet 42 / mainnet 30000)
   Hash256 gtxid=H(9);
 
   // ---------- GENESIS (FIXED) happy ----------
