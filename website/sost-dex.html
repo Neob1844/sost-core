@@ -234,9 +234,10 @@
   @keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
   @media(max-width:768px){body>nav .nav-hamburger{display:block}body>nav .nav-links{display:none;width:100%}body>nav .nav-links.open{display:flex}}
 </style>
-<script src="js/nav-toggle.js?v=v392" defer></script>
+<script src="js/nav-toggle.js?v=v482" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <script>window.__SOST_GATE_CFG__={"surface": "DEX", "label": "SOST Atomic Swap DEX", "actionSelectors": ["#swapCta", "#tradeCta", "#labSwapBtn", ".cta", "button[type=submit]"]};</script>
-<script src="js/tokenization-gate.js?v=v30000-1"></script>
+<script src="js/tokenization-gate.js?v=v30000"></script>
 </head>
 <body>
 <!-- Canonical SOST global navigation (identical mechanism to every other page).
@@ -250,7 +251,7 @@
     <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
       <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
     </a>
-    <a href="sost-dex.html" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;text-decoration:none;line-height:1;flex:0 0 auto;animation:asBtnGlow 2s ease-in-out infinite;" title="Atomic Swap DEX"><span style="color:#ffd400;font-size:34px;font-weight:900;text-shadow:0 0 12px rgba(255,212,0,.75);margin-bottom:2px">&#9883;</span><span style="color:#ffd400;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+    <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomix Swap DEX" aria-label="Atomix Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIX<br>SWAP DEX</span></a>
     <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
     <div class="nav-links"></div>
   </div>
@@ -284,8 +285,6 @@
     <button data-view="trade" role="tab">Trade</button>
     <button data-view="orders" role="tab">Orders</button>
     <button data-view="activity" role="tab">Activity</button>
-    <span style="flex:1"></span>
-    <button id="tabsHide" onclick="toggleDexTabs()" title="Hide the Swap/Trade/Orders/Activity tab bar" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-family:var(--mono);font-size:10.5px;letter-spacing:1px;padding:5px 10px;border-radius:6px;cursor:pointer;align-self:center">HIDE TABS ▲</button>
   </nav>
 
   <!-- ============ SWAP ============ -->
@@ -645,16 +644,6 @@ document.querySelectorAll('#ivals button').forEach(function(b){ b.addEventListen
 document.querySelectorAll('#ctype button').forEach(function(b){ b.addEventListener('click', function(){
   document.querySelectorAll('#ctype button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); chartType=b.dataset.ct||'candles'; drawChart();
 });});
-/* dashboard tab-bar hide \u2014 renamed from toggleNav() so it never collides with the
-   canonical global-nav engine (nav-toggle.js exposes window.toggleNav for HIDE NAV). */
-function toggleDexTabs(){
-  var tabs=document.querySelectorAll('nav.tabs button[data-view]');
-  var btn=document.getElementById('tabsHide');
-  var hidden=btn.dataset.hidden==='1';
-  tabs.forEach(function(t){ t.style.display=hidden?'':'none'; });
-  btn.dataset.hidden=hidden?'0':'1';
-  btn.textContent=hidden?'HIDE TABS \u25b2':'SHOW TABS \u25bc';
-}
 
 /* ---- demo chart (clearly labelled; deterministic, not real) ---- */
 function drawChart(){
