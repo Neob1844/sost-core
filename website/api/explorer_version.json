@@ -1,4 +1,4 @@
 {
-  "v": "2026-10-01-v485-rpc-concurrency-gate",
-  "note": "Long-session live refresh (v484: self-healing watchdog + 5s tip-poll + immediate refresh on height change + backoff + catch-up on visibility/focus/pageshow/online/resume + no-store RPC) PLUS v485 client-side RPC concurrency gate: panel fan-out is metered below the shared /rpc gateway rate limit (max 6 in-flight, rest queued), cutting the 503 burst and console noise on long sessions. No node, P2P, consensus or V16 change."
+  "v": "2026-10-01-v487-dashboard-scan-async",
+  "note": "Dashboard fix: updateDashboard ran a 1000-block (~2000 RPC getblockhash+getblock) history scan synchronously on every refresh; through the rate-limited public /rpc gateway it never completed within a session, so everything AFTER it (supply, circulating, gold/popc/dtd balances, the load overlay dismissal) stayed blank and, because loadStats never returned, the latest-blocks and latest-transactions tables never loaded either. Fix: the history scan (sparklines / difficulty / producer charts) is now fire-and-forget (not awaited in the critical path) with an overlap guard, and its depth was cut 1000->288 (the sparkline window). Supply/balances/overlay/tables now populate immediately; charts fill in asynchronously. No node/consensus change."
 }

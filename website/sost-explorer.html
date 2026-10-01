@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-01-v485-rpc-concurrency-gate">
+<meta name="explorer-html-version" content="2026-10-01-v487-dashboard-scan-async">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -1697,17 +1697,14 @@ function getLevelLabel(signal){
 }
 function cpBtn(t){return '<button class="cp-btn" onclick="event.stopPropagation();copyText(this,\''+t.replace(/'/g,"\\'")+'\')">\u29C9</button>';}
 function copyText(b,t){navigator.clipboard.writeText(t).then(function(){b.classList.add('copied');b.textContent='\u2713';setTimeout(function(){b.classList.remove('copied');b.textContent='\u29C9';},1500);});}
-// Client-side RPC concurrency gate (v485). The explorer's panels fan out many
-// getblock/getrawtransaction/peer/miner reads; unbounded bursts hit the shared
-// /rpc gateway's rate limit and come back 503 (retried, but noisy in console
-// and wasteful on long sessions). Cap in-flight requests and queue the rest so
-// the burst is metered below the gateway limit. Every caller already routes
-// through rpc(), so this smooths ALL of them without touching panel logic.
-var _rpcActive=0, _rpcQueue=[], RPC_MAX_CONCURRENT=6;
-function _rpcGate(){ return new Promise(function(res){ if(_rpcActive<RPC_MAX_CONCURRENT){_rpcActive++;res();} else {_rpcQueue.push(res);} }); }
-function _rpcRelease(){ if(_rpcQueue.length){ var r=_rpcQueue.shift(); r(); } else { _rpcActive=Math.max(0,_rpcActive-1); } }
-async function rpc(m,p){ await _rpcGate(); try{ return await _rpcRaw(m,p); } finally{ _rpcRelease(); } }
-async function _rpcRaw(m,p){
+// v486: the v485 client-side RPC concurrency gate (max 6 in-flight + FIFO queue)
+// was REVERTED. The explorer fans out ~2000 reads per refresh cycle; a 6-wide
+// gate built an unbounded backlog (queue 70+) that starved time-sensitive
+// dashboard reads (getsupplyinfo / getaddressinfo), leaving supply / circulating
+// / balances blank, the block & tx tables empty and the load overlay stuck.
+// Direct rpc() (the browser's own connection pool does the limiting) restores
+// the dashboard; the residual 503 console noise is cosmetic and already retried.
+async function rpc(m,p){
   p=p||[];
   var hdrs={'Content-Type':'application/json'};
   if(RPC_USER&&RPC_PASS)hdrs['Authorization']='Basic '+btoa(RPC_USER+':'+RPC_PASS);
@@ -3083,7 +3080,7 @@ async function updateDashboard(info){
   // Network confirmed on V5: all connected peers on V5 chain, no split observed.
   document.getElementById('dMempool').textContent=info.mempool_size;
   document.getElementById('dMempoolSub').textContent=info.mempool_size===1?'pending tx':'pending txs';
-  try{var times=[];var times600=[];var times1000=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var AVG_WINDOW_LONG=1000;var fetchDepth=Math.max(AVG_WINDOW_LONG,50);
+  (async function(){ if(window.__sostScanRunning)return; window.__sostScanRunning=true;   try{var times=[];var times600=[];var times1000=[];var diffs=[];var minerSet=new Set();var AVG_WINDOW=288;var AVG_WINDOW_LONG=1000;var fetchDepth=Math.max(AVG_WINDOW,50); /* v487: was AVG_WINDOW_LONG(1000); 1000-block (~2000 RPC) per-refresh scan starved the dashboard */
     // v36 — parallel block fetch in chunks of 50. Cuts initial load from ~5min
     // to a few seconds. Order is preserved by processing chunk results in the
     // same descending sequence used by _diffHistory.slice(0,AVG_WINDOW).reverse().
@@ -3455,6 +3452,7 @@ async function updateDashboard(info){
       console.warn('Block fetch failed, using fallback timing',e);
     }
   }
+  window.__sostScanRunning=false; })();
   var sub=785100863,ts2=BigInt(sub)*BigInt(info.blocks+1),tSOST=Number(ts2)/1e8;
   document.getElementById('dSupply').textContent=fComma(tSOST.toFixed(4))+' SOST';
   /* drawReserveBars() removed — replaced by price charts */
