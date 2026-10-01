@@ -1,4 +1,4 @@
 {
-  "v": "2026-10-01-v480-robust-live-refresh",
-  "note": "Explorer live refresh hardened for long sessions: self-healing watchdog abandons a refresh cycle frozen mid-await (root cause of 'stale until manual F5' — _loading stuck true); a cheap getblockcount tip-poll every ~5s triggers an immediate full refresh the instant the height changes; exponential backoff + auto-recovery on RPC loss; a single self-rescheduling timeout (no setInterval) so slow cycles never stack duplicate timers; immediate catch-up on visibility/focus/pageshow/online/resume; cache:no-store on RPC. No node, P2P, consensus or V16 change."
+  "v": "2026-10-01-v485-rpc-concurrency-gate",
+  "note": "Long-session live refresh (v484: self-healing watchdog + 5s tip-poll + immediate refresh on height change + backoff + catch-up on visibility/focus/pageshow/online/resume + no-store RPC) PLUS v485 client-side RPC concurrency gate: panel fan-out is metered below the shared /rpc gateway rate limit (max 6 in-flight, rest queued), cutting the 503 burst and console noise on long sessions. No node, P2P, consensus or V16 change."
 }
