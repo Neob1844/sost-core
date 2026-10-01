@@ -45,6 +45,17 @@ STATE_SAVE_INTERVAL = 60      # seconds between saves, and saved again on a clea
 # EnvironmentFile) — never from the repository, never sent to a browser, never logged.
 API_KEY = os.environ.get('COINGECKO_API_KEY', '').strip()
 UPSTREAM = 'https://api.coingecko.com/api/v3/coins/{asset}/market_chart'
+# Long-history source (3Y/5Y). CoinGecko's keyless plan hard-caps history at 365 days,
+# so multi-year ranges come from Yahoo Finance's public chart API instead: free, no key,
+# daily candles going back years for all four assets. Ratios (vs=btc/eth) are derived
+# from two USD series aligned by UTC date — never by mixing dates. Short ranges keep
+# using CoinGecko (it serves intraday granularity Yahoo's daily candles cannot).
+YAHOO_URL = 'https://query1.finance.yahoo.com/v8/finance/chart/{sym}-USD'
+YAHOO_SYM = {'tether-gold': 'XAUT', 'pax-gold': 'PAX-gold-placeholder',
+             'bitcoin': 'BTC', 'ethereum': 'ETH'}
+# pax-gold's Yahoo symbol is PAXG (not pax-gold); set explicitly to avoid the dash clash.
+YAHOO_SYM['pax-gold'] = 'PAXG'
+LONG_HISTORY_DAYS = 365          # strictly greater than this -> Yahoo
 USER_AGENT = 'sost-market-proxy/1.0 (+https://sostcore.com)'
 
 # ---------------------------------------------------------------- allowlist
@@ -217,7 +228,75 @@ def parse_params(query):
     return asset, vs, label, days
 
 
+def _yahoo_usd_series(sym, days):
+    """Daily USD closes for one Yahoo symbol over the trailing `days`. [] on failure."""
+    now = int(time.time())
+    url = YAHOO_URL.format(sym=sym) + '?' + urllib.parse.urlencode(
+        {'period1': now - days * 86400, 'period2': now, 'interval': '1d'})
+    req = urllib.request.Request(
+        url, headers={'User-Agent': USER_AGENT, 'Accept': 'application/json'})
+    with urllib.request.urlopen(req, timeout=TIMEOUT[days]) as r:
+        body = json.loads(r.read().decode('utf-8'))
+    res = (body.get('chart') or {}).get('result')
+    if not res:
+        return []
+    r0 = res[0]
+    ts = r0.get('timestamp') or []
+    quote = ((r0.get('indicators') or {}).get('quote') or [{}])[0].get('close') or []
+    out = []
+    for t, c in zip(ts, quote):
+        if c is not None and c > 0:
+            out.append([int(t) * 1000, float(c)])
+    return out
+
+
+def _utc_day(ms):
+    return time.strftime('%Y-%m-%d', time.gmtime(ms // 1000))
+
+
+def _fetch_yahoo(asset, vs, days):
+    """Long-history fetch (3Y/5Y). Returns (prices, reason) like _fetch_upstream.
+    vs=usd -> the asset's own USD close series. vs=btc/eth -> asset_USD / denom_USD,
+    aligned by UTC date so prices from different days are never divided together."""
+    sym = YAHOO_SYM[asset]
+    try:
+        base = _yahoo_usd_series(sym, days)
+        if not base:
+            _last_upstream_failure[0] = time.time()
+            return [], 'empty'
+        if vs == 'usd':
+            _last_upstream_success[0] = time.time()
+            return base, 'ok'
+        denom_sym = 'BTC' if vs == 'btc' else 'ETH'
+        denom = _yahoo_usd_series(denom_sym, days)
+        if not denom:
+            _last_upstream_failure[0] = time.time()
+            return [], 'empty'
+        dmap = {}
+        for t, c in denom:
+            dmap[_utc_day(t)] = c
+        out = []
+        for t, c in base:
+            dc = dmap.get(_utc_day(t))
+            if dc and dc > 0:
+                out.append([t, c / dc])
+        if not out:
+            return [], 'empty'
+        _last_upstream_success[0] = time.time()
+        return out, 'ok'
+    except urllib.error.HTTPError as e:
+        _last_upstream_failure[0] = time.time()
+        return None, ('rate_limited' if e.code == 429 else 'http_error')
+    except Exception:
+        _last_upstream_failure[0] = time.time()
+        return None, 'network'
+
+
 def _fetch_upstream(asset, vs, days):
+    # 3Y/5Y exceed CoinGecko's keyless 365-day cap -> long-history source (Yahoo).
+    if days > LONG_HISTORY_DAYS:
+        _bump('upstream_requests')
+        return _fetch_yahoo(asset, vs, days)
     """One upstream request. Returns (prices, reason). prices is None on failure."""
     url = UPSTREAM.format(asset=asset) + '?' + urllib.parse.urlencode(
         {'vs_currency': vs, 'days': days})
