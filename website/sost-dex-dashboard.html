@@ -449,6 +449,11 @@
   <script src="js/dex-price-adapter.js"></script>
 <script src="js/dex-rfq.js"></script>
 <script src="js/dex-liquidity-sim.js"></script>
+<!-- DEVNET ADMIN E2E only: real cross-chain connectors + the real SOST<->ETH/USDC flow.
+     Loaded on every dashboard open but ONLY activated on the ?devnet=1 admin path;
+     the public path and public trading stay disabled. -->
+<script src="js/dex-connectors.js"></script>
+<script src="js/dex-devnet-flow.js"></script>
 <script>
 "use strict";
 /* SOST DEX V2 — Phase 1 dashboard shell. DEMO ONLY: no real prices, balances, quotes,
@@ -508,6 +513,7 @@ function onQuoteInputs(){
   full.style.display='none'; empty.style.display='flex';
   document.getElementById('recvAmt').value='';
   refreshCta();
+  try{ if(window.SOSTDexDevnet && SOSTDexDevnet.active() && window.__dexDevnetReady) SOSTDexDevnet.init(window.__dexCtx); }catch(e){}
 }
 
   /* ---- REAL wallet manager (EIP-6963/1193 EVM, PSBT BTC, SOST bridge) ---- */
@@ -592,9 +598,10 @@ function onQuoteInputs(){
     return SOSTDexGate.guard(run,{title:title, body:body, ack:'I understand — this connects a wallet to the SOST DEX (a non-custodial preview; no funds move and no keys are shared).', confirmText:'Connect', require2FA:true});
   }
   async function doConnectSost(){ sgGuard('Connect SOST Wallet','You are connecting your SOST wallet via the bridge (no seed/private key is shared with the DEX).', async function(){ try{ var c=await SOSTWallets.connectSost(window,{}); WM.setSost(c); afterConnect(); }catch(e){ alert('SOST wallet: '+e.message); } }); }
-  async function connectCp(kind,i){ sgGuard('Connect '+kind.toUpperCase()+' wallet','You are connecting a counterparty '+kind.toUpperCase()+' wallet. It will only be asked to sign when you explicitly execute a swap (real trading is disabled in this preview).', async function(){ try{ var c = kind==='evm' ? await SOSTWallets.connectEvm(window.__evm[i].provider, function(ev){ afterConnect(); }) : await SOSTWallets.connectBtc(window.__btc[i]); if(kind==='btc' && !c.capable){ alert('This Bitcoin wallet cannot sign PSBTs; it cannot claim/refund the HTLC. '+(c.warn||'')); } WM.setCp(c); afterConnect(); }catch(e){ alert(kind.toUpperCase()+' wallet: '+e.message); } }); }
+  async function connectCp(kind,i){ sgGuard('Connect '+kind.toUpperCase()+' wallet','You are connecting a counterparty '+kind.toUpperCase()+' wallet. It will only be asked to sign when you explicitly execute a swap (real trading is disabled in this preview).', async function(){ try{ var c = kind==='evm' ? await SOSTWallets.connectEvm(window.__evm[i].provider, function(ev){ afterConnect(); }) : await SOSTWallets.connectBtc(window.__btc[i]); try{ window.__cpProvider = kind==='evm' ? window.__evm[i].provider : (window.__btc[i]&&window.__btc[i].provider); }catch(_e){} if(kind==='btc' && !c.capable){ alert('This Bitcoin wallet cannot sign PSBTs; it cannot claim/refund the HTLC. '+(c.warn||'')); } WM.setCp(c); afterConnect(); }catch(e){ alert(kind.toUpperCase()+' wallet: '+e.message); } }); }
   function disconnectSlot(slot){ WM.clear(slot); afterConnect(); }
-  function afterConnect(){ updateWalletHeader(); refreshCta(); renderWalletModal(); }
+  function afterConnect(){ updateWalletHeader(); refreshCta(); renderWalletModal();
+    try{ if(window.SOSTDexDevnet && SOSTDexDevnet.active() && window.__dexDevnetReady) SOSTDexDevnet.init(window.__dexCtx); }catch(e){} }
   function updateWalletHeader(){ var s=WM.state(), parts=[]; if(s.sost)parts.push('SOST'); if(s.cp)parts.push(s.cp.network.toUpperCase());
     var dot=document.getElementById('wdot'), lbl=document.getElementById('walletLabel');
     if(parts.length){ dot.classList.add('on'); lbl.textContent=parts.join(' + '); } else { dot.classList.remove('on'); lbl.textContent='Connect Wallets'; } }
@@ -610,6 +617,9 @@ function onQuoteInputs(){
     if(r.ready){ cta.textContent='Get Quote'; cta.disabled=false; cta.title=''; cta.classList.add('secondary'); }
     else { cta.textContent='Connect Wallet'; cta.title=r.why||''; cta.disabled=false; cta.classList.remove('secondary'); } }
   function ctaClick(){
+    // DEVNET ADMIN E2E: drive the REAL SOST<->ETH/USDC atomic-swap flow (no mocks),
+    // never the "no executable quote" stub. Only on the ?devnet=1 admin path.
+    if(window.SOSTDexDevnet && SOSTDexDevnet.active()){ SOSTDexDevnet.onCta(); return; }
     if(!WM.swapReady(pairLabel()).ready){ openWallet(); return; }
     var cta=document.getElementById('swapCta');
     // Ask the REAL RFQ engine. Fail-closed: no maker + no verifier in the lab => no firm quote,
@@ -780,6 +790,18 @@ paint(); refreshCta();
       window.DEVNET=c;
       if(info){ info.style.display='block';
         info.innerHTML='DEVNET \u00b7 SOST RPC '+c.sost_rpc+' \u00b7 EVM '+c.evm_rpc+' (chainId '+c.evm_chain_id+') \u00b7 HTLC v2 '+c.htlc_v2+' \u00b7 pairs '+(c.pairs||[]).join(',')+' \u00b7 public trading '+(c.public_trading?'ENABLED':'disabled'); }
+      // Hand the REAL admin E2E flow its context and mount the devnet panel. The swap CTA
+      // now drives the real SOST<->ETH/USDC atomic swap (no mocks); public path unchanged.
+      try{
+        window.__dexCtx={
+          wm:WM,
+          assets:function(){ return {pay:ASSETS[pay][0], recv:ASSETS[recv][0]}; },
+          payAmount:function(){ return (document.getElementById('payAmt')||{}).value; },
+          cpProvider:function(){ return window.__cpProvider||null; },
+          connectWallets:openWallet
+        };
+        if(window.SOSTDexDevnet){ SOSTDexDevnet.init(window.__dexCtx); window.__dexDevnetReady=true; }
+      }catch(e){}
     }).catch(function(){ if(info){ info.style.display='block'; info.innerHTML='&#9888; DEVNET config not found \u2014 run: bash scripts/run-sost-eth-devnet.sh up'; } });
   }catch(e){}
 })();
