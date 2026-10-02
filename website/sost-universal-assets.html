@@ -173,6 +173,94 @@
     </div>
   </section>
 
+  <!-- ============ REGULATORY REQUIREMENTS BY JURISDICTION ============ -->
+  <style>
+  .reg-wrap{margin-top:14px}
+  .reg-top>summary,.reg-cont>summary{cursor:pointer;list-style:none;font-weight:800;letter-spacing:.3px}
+  .reg-top>summary::-webkit-details-marker,.reg-cont>summary::-webkit-details-marker{display:none}
+  .reg-top{border:1px solid var(--border2,#333);border-radius:14px;background:linear-gradient(180deg,rgba(218,165,32,.05),transparent 60%);padding:16px 18px}
+  .reg-top>summary{font-size:16px;color:var(--gold2,#DAA520)}
+  .reg-top>summary::before{content:"▸ ";color:var(--gold2,#DAA520)}
+  .reg-top[open]>summary::before{content:"▾ "}
+  .reg-note{font-size:11px;color:var(--txt3,#8b98a8);margin:6px 0 0}
+  .reg-warn{margin:12px 0;padding:12px 14px;border-left:3px solid #fb010d;background:rgba(251,1,13,.06);border-radius:0 8px 8px 0;font-size:12px;line-height:1.65;color:#ffdede}
+  .reg-areas{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;margin:8px 0;font-size:12px;color:var(--txt2,#c9d4e0);line-height:1.6}
+  .reg-cont{border:1px solid var(--border,#2a2a2a);border-radius:10px;margin:8px 0;padding:10px 13px;background:rgba(255,255,255,.02)}
+  .reg-cont>summary{font-size:13.5px;color:#e7e7ea}
+  .reg-cont>summary::before{content:"▸ ";color:var(--cyan,#22d3ee)} .reg-cont[open]>summary::before{content:"▾ "}
+  .reg-j{font-size:12px;line-height:1.7;color:var(--txt2,#c9d4e0);padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.07)}
+  .reg-j:last-child{border-bottom:0} .reg-j b{color:#fff}
+  .reg-j a{color:var(--cyan,#22d3ee);text-decoration:none} .reg-j a:hover{text-decoration:underline}
+  .reg-sup{color:var(--gold2,#DAA520);font-weight:700}
+  .reg-asset{border:1px solid rgba(34,211,238,.25);border-radius:10px;margin:7px 0;padding:9px 12px;background:rgba(34,211,238,.04)}
+  .reg-asset>summary{cursor:pointer;list-style:none;font-size:12.5px;font-weight:700;color:#bfe9ff}
+  .reg-asset>summary::-webkit-details-marker{display:none}
+  .reg-asset>summary::before{content:"▸ "} .reg-asset[open]>summary::before{content:"▾ "}
+  .reg-asset p{font-size:12px;color:var(--txt2,#c9d4e0);line-height:1.65;margin:7px 0 2px}
+  .reg-tag{display:inline-block;font:700 10px/1 var(--mono,monospace);letter-spacing:1px;color:#0a0a0a;background:var(--gold2,#DAA520);padding:4px 8px;border-radius:5px;margin-top:4px}
+  </style>
+  <section class="blk" id="reg" style="padding-top:4px">
+    <details class="reg-wrap reg-top">
+      <summary>Regulatory requirements by jurisdiction</summary>
+      <div class="reg-note">Regulatory information last reviewed: 2026-10-02 &middot; <span class="reg-tag">INFORMATIONAL ORIENTATION &middot; NOT LEGAL ADVICE</span></div>
+
+      <p style="font-size:12.5px;color:var(--txt2,#c9d4e0);line-height:1.7;margin:10px 0 4px">Continents below are navigation only — no continent has a single law. Each opens to the supranational framework(s) where they exist and the principal national regulators. For any asset the relevant requirements depend on the asset, the rights the token represents, the issuer, the investors and where it is offered.</p>
+
+      <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gold2,#DAA520);margin-top:10px">TYPICAL AREAS TO VERIFY (may apply depending on asset / structure / rights / offering / investor location)</div>
+      <div class="reg-areas">
+        <span>&middot; ownership / title</span><span>&middot; issuer identity</span><span>&middot; asset valuation</span>
+        <span>&middot; legal rights represented by the token</span><span>&middot; securities / financial-instrument classification</span>
+        <span>&middot; prospectus / offering requirements</span><span>&middot; KYC / AML</span><span>&middot; investor eligibility / restrictions</span>
+        <span>&middot; custody</span><span>&middot; transfer restrictions</span><span>&middot; tax</span><span>&middot; audit</span>
+        <span>&middot; regulator authorization / licensing (where applicable)</span><span>&middot; consumer / investor disclosures</span>
+      </div>
+
+      <div class="reg-warn">
+        <b>Jurisdiction-specific requirements apply.</b> These summaries are high-level regulatory orientation only and do not constitute legal advice or a complete statement of applicable law. National, regional, state/provincial, sector-specific and asset-specific rules may impose additional requirements depending on the asset, token rights, issuer, investors, offering structure, custody model and place of distribution. <b>Where requirements overlap, the stricter or additionally applicable obligations may need to be satisfied.</b> The applicant is responsible for obtaining appropriate professional advice and satisfying every applicable requirement before SOST will consider activation.<br><br>
+        <b>Technical eligibility does not imply legal eligibility.</b> &middot; <b>LEGAL CLASSIFICATION: NOT DETERMINED BY SOST.</b>
+      </div>
+
+      <details class="reg-cont"><summary>Europe</summary>
+        <div class="reg-j"><b>European Union / EEA</b> &middot; Frameworks: <span class="reg-sup">MiCA</span> (crypto-assets) &middot; MiFID II / Prospectus Regulation (financial instruments) &middot; AMLD (KYC/AML), applied by each national competent authority. Regulators: <a href="https://www.esma.europa.eu" target="_blank" rel="noopener">ESMA</a>, <a href="https://www.eba.europa.eu" target="_blank" rel="noopener">EBA</a></div><div class="reg-j"><b>United Kingdom</b> &middot; <a href="https://www.fca.org.uk" target="_blank" rel="noopener">FCA</a> &middot; FSMA, cryptoasset financial-promotion regime</div><div class="reg-j"><b>Switzerland</b> &middot; <a href="https://www.finma.ch" target="_blank" rel="noopener">FINMA</a> &middot; DLT Act, token categorisation (payment / utility / asset)</div><div class="reg-j"><b>Russia</b> &middot; <a href="https://www.cbr.ru" target="_blank" rel="noopener">Bank of Russia</a> &middot; Digital Financial Assets law</div>
+      </details>
+
+      <details class="reg-cont"><summary>North America</summary>
+        <div class="reg-j"><b>United States</b> &middot; <a href="https://www.sec.gov" target="_blank" rel="noopener">SEC</a> (securities / Howey) &middot; <a href="https://www.cftc.gov" target="_blank" rel="noopener">CFTC</a> (commodities) &middot; <a href="https://www.fincen.gov" target="_blank" rel="noopener">FinCEN</a> (AML) &middot; state regulators (e.g. NYDFS)</div><div class="reg-j"><b>Canada</b> &middot; <a href="https://www.securities-administrators.ca" target="_blank" rel="noopener">CSA</a> + provincial (e.g. <a href="https://www.osc.ca" target="_blank" rel="noopener">OSC</a>) &middot; FINTRAC (AML)</div><div class="reg-j"><b>Mexico</b> &middot; <a href="https://www.gob.mx/cnbv" target="_blank" rel="noopener">CNBV</a> + Banco de México &middot; Ley Fintech</div>
+      </details>
+
+      <details class="reg-cont"><summary>Latin America</summary>
+        <div class="reg-j"><b>Brazil</b> &middot; <a href="https://www.gov.br/cvm" target="_blank" rel="noopener">CVM</a> + <a href="https://www.bcb.gov.br" target="_blank" rel="noopener">Banco Central</a> &middot; Lei 14.478 (virtual assets)</div><div class="reg-j"><b>Argentina</b> &middot; <a href="https://www.argentina.gob.ar/cnv" target="_blank" rel="noopener">CNV</a></div><div class="reg-j"><b>Chile</b> &middot; <a href="https://www.cmfchile.cl" target="_blank" rel="noopener">CMF</a> &middot; Ley Fintech 21.521</div><div class="reg-j"><b>Colombia</b> &middot; <a href="https://www.superfinanciera.gov.co" target="_blank" rel="noopener">Superintendencia Financiera (SFC)</a></div>
+        <div class="reg-note">Other relevant markets (Peru, Uruguay, Mexico — see North America) may have their own regimes; confirm locally.</div>
+      </details>
+
+      <details class="reg-cont"><summary>Asia-Pacific</summary>
+        <div class="reg-j"><b>China (mainland)</b> &middot; <a href="https://www.csrc.gov.cn" target="_blank" rel="noopener">CSRC</a> / <a href="http://www.pbc.gov.cn" target="_blank" rel="noopener">PBoC</a> &middot; crypto issuance &amp; trading are <b>prohibited</b> in mainland China</div><div class="reg-j"><b>Hong Kong</b> &middot; <a href="https://www.sfc.hk" target="_blank" rel="noopener">SFC</a> &middot; VASP licensing</div><div class="reg-j"><b>Singapore</b> &middot; <a href="https://www.mas.gov.sg" target="_blank" rel="noopener">MAS</a> &middot; Payment Services Act / Securities and Futures Act</div><div class="reg-j"><b>Japan</b> &middot; <a href="https://www.fsa.go.jp/en" target="_blank" rel="noopener">FSA</a> &middot; Payment Services Act / FIEA</div><div class="reg-j"><b>South Korea</b> &middot; <a href="https://www.fsc.go.kr/eng" target="_blank" rel="noopener">FSC</a> &middot; Virtual Asset User Protection Act</div><div class="reg-j"><b>Australia</b> &middot; <a href="https://asic.gov.au" target="_blank" rel="noopener">ASIC</a> + AUSTRAC (AML)</div>
+      </details>
+
+      <details class="reg-cont"><summary>Middle East</summary>
+        <div class="reg-j"><b>United Arab Emirates</b> &middot; <a href="https://www.vara.ae" target="_blank" rel="noopener">VARA</a> (Dubai) &middot; <a href="https://www.sca.gov.ae" target="_blank" rel="noopener">SCA</a> (federal) &middot; ADGM <a href="https://www.adgm.com" target="_blank" rel="noopener">FSRA</a> / <a href="https://www.dfsa.ae" target="_blank" rel="noopener">DFSA</a> (financial free zones)</div><div class="reg-j"><b>Saudi Arabia</b> &middot; <a href="https://cma.org.sa/en" target="_blank" rel="noopener">CMA</a> + <a href="https://www.sama.gov.sa/en-US" target="_blank" rel="noopener">SAMA</a></div>
+        <div class="reg-note">Other GCC/MENA jurisdictions (Bahrain CBB, Qatar QFCRA, etc.) have their own regimes; confirm locally.</div>
+      </details>
+
+      <details class="reg-cont"><summary>Africa</summary>
+        <div class="reg-j"><b>South Africa</b> &middot; <a href="https://www.fsca.co.za" target="_blank" rel="noopener">FSCA</a> &middot; crypto assets declared financial products</div><div class="reg-j"><b>Nigeria</b> &middot; <a href="https://sec.gov.ng" target="_blank" rel="noopener">SEC Nigeria</a></div>
+        <div class="reg-note">Other markets (Kenya, Ghana, Egypt, etc.) are developing frameworks; confirm with the national regulator.</div>
+      </details>
+
+      <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:var(--cyan,#22d3ee);margin:16px 0 4px">ASSET-CLASS CONTEXTUAL CHECKLIST — possible additional checks</div>
+      <details class="reg-asset"><summary>Real estate</summary><p>Title registry; liens / encumbrances; property valuation; transfer formalities; SPV structure; tax.</p></details>
+      <details class="reg-asset"><summary>Equity / company shares</summary><p>Corporate authorization; shareholder register; securities classification; offering documentation; transfer restrictions.</p></details>
+      <details class="reg-asset"><summary>Debt / revenue participation</summary><p>Financial-instrument analysis; prospectus / crowdfunding rules; interest / yield disclosures; investor eligibility.</p></details>
+      <details class="reg-asset"><summary>Commodities / gold</summary><p>Title &amp; custody; vault evidence; assay; insurance; redemption rights.</p></details>
+      <details class="reg-asset"><summary>IP / royalties</summary><p>Rights ownership &amp; chain of title; licensing terms; royalty accounting; enforceability.</p></details>
+      <details class="reg-asset"><summary>Project Funding</summary><p>Crowdfunding rules; all-or-nothing &amp; milestone disclosures; use-of-funds transparency; investor protection.</p></details>
+      <details class="reg-asset"><summary>Auction</summary><p>Fair-process &amp; consumer rules; AML on participants; settlement finality; asset-transfer formalities.</p></details>
+      <details class="reg-asset"><summary>Draw</summary><p>Gaming / lottery / <i>rifa</i> licensing (often requires specific authorization); prize &amp; odds disclosure; strong consumer protection. Higher regulatory risk — treat as regulated.</p></details>
+
+      <div class="reg-note" style="margin-top:14px">Official sources link to each competent regulator. SOST is not a legal adviser and not a regulatory authority; this section is orientation to help an applicant engage qualified counsel and the relevant regulator. <b>LEGAL CLASSIFICATION: NOT DETERMINED BY SOST.</b></div>
+    </details>
+  </section>
+
   <!-- ============ SOST ASSET REGISTRY — current product, human-readable first layer ============ -->
   <section class="blk" id="registry">
     <div class="eyebrow">Asset Registry &middot; CURRENT PRODUCT</div>
