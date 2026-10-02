@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SOST DEX — Operational Dashboard (admin)</title>
-<meta name="description" content="SOST DEX V2 — native cross-chain swap & trade dashboard (laboratory / testnet preview; no real prices, orders, or liquidity).">
+<meta name="description" content="SOST DEX V2 — native cross-chain swap & trade dashboard (mainnet pre-activation preview (activates #30,000) · controlled developer access; no real prices, orders, or liquidity).">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
@@ -275,8 +275,8 @@
       </div>
     </div>
     <span class="top-spacer"></span>
-    <span class="badge test" id="modeBadge">Testnet · Lab</span>
-    <button class="btn-wallet" id="walletBtn" onclick="openWallet()"><span class="dot" id="wdot"></span><span id="walletLabel">Connect Wallet</span></button>
+    <span class="badge test" id="modeBadge" title="V30000 is deployed on mainnet; the protocol activates automatically at block #30,000. Controlled developer access; public trading disabled. This interface uses demo data and non-executable quotes during validation.">MAINNET · PRE-ACTIVATION #30,000</span>
+    <button class="btn-wallet" id="walletBtn" onclick="openWallet()"><span class="dot" id="wdot"></span><span id="walletLabel">Connect Wallets</span></button>
   </header>
 
   <nav class="tabs" role="tablist">
@@ -331,7 +331,7 @@
 
         <button class="cta" id="swapCta" onclick="ctaClick()">Connect Wallet</button>
       </div>
-      <p class="lab-note"><b>Conceptual view.</b> No real prices, balances, or executable quotes are shown. The swap engine settles as a native atomic swap (SOST ⇄ BTC / EVM) — never an instant custodial trade — and only executes against a real counterparty quote, which does not exist yet.</p>
+      <p class="lab-note"><b>Pre-activation preview.</b> No real prices, balances, or executable quotes are shown. The swap engine settles as a native atomic swap (SOST ⇄ BTC / EVM) — never an instant custodial trade — and only executes against a real counterparty quote, which does not exist yet.</p>
     </div>
   </section>
 
@@ -479,7 +479,7 @@ var ASSET_STATUS=(function(){
   };
 })();
 var DEFAULT_QUOTE_MSG='No executable quote available. Connect to a live quote provider to price this swap. <b style="color:var(--txt-3);font-weight:400">In the lab there is no market maker yet, so no firm quote can be shown.</b>';
-function assetBlock(){ var a=[ASSETS[pay][0],ASSETS[recv][0]]; for(var i=0;i<a.length;i++){ var st=ASSET_STATUS[a[i]]; if(st&&st.s==='disabled') return a[i]+': '+st.r; } return null; }
+function assetBlock(){ var a=[ASSETS[pay][0],ASSETS[recv][0]]; for(var i=0;i<a.length;i++){ var st=ASSET_STATUS[a[i]]; if(st&&st.s==='disabled') return a[i]; } return null; }
 var pay=0, recv=1;
 function paint(){
   var p=ASSETS[pay], r=ASSETS[recv];
@@ -555,7 +555,7 @@ function onQuoteInputs(){
     var st=WM.state();
     renderSec();
     document.getElementById('wmSost').innerHTML = st.sost ? connRow('SOST','sost',st.sost.address,'sost')
-      : '<button class="wchoice" onclick="doConnectSost()"><span class="ic tk sost">'+icGlyph('sost')+'</span><span>SOST Wallet<small>native bridge, no seed in the DEX</small></span></button>';
+      : '<button class="wchoice" onclick="doConnectSost()"><span class="ic tk sost">'+icGlyph('sost')+'</span><span>Connect SOST Wallet<small>native bridge, no seed in the DEX</small></span></button>';
     var cpEl=document.getElementById('wmCp');
     if(st.cp){ cpEl.innerHTML=connRow(st.cp.network.toUpperCase(), st.cp.network==='btc'?'btc':'eth', st.cp.address,'cp'); return; }
     cpEl.innerHTML='<div class="disclaim">discovering wallet extensions…</div>';
@@ -568,12 +568,12 @@ function onQuoteInputs(){
     var EVM=[{n:'MetaMask',re:/meta ?mask/i},{n:'Rabby',re:/rabby/i},{n:'Coinbase Wallet',re:/coinbase/i}];
     var BTCW=[{n:'Xverse',re:/xverse/i},{n:'UniSat',re:/unisat/i}];
     function idxOf(list,re){ for(var i=0;i<list.length;i++){ if(re.test((list[i].info&&list[i].info.name)||'')) return i; } return -1; }
-    var html='<div class="wnetlabel">Ethereum / EVM counterparty</div>';
+    var html='<div class="wnetlabel">Connect EVM Wallet (MetaMask) · counterparty</div>';
     EVM.forEach(function(w){ var i=idxOf(evm,w.re);
       html += i>=0 ? provBtn('evm',i,w.n,'EVM · detected','eth') : walletDisabled(w.n,'EVM','eth','not detected'); });
     // any other EIP-6963 provider not in the curated list
     evm.forEach(function(e,i){ if(!EVM.some(function(w){return w.re.test(e.info.name);})) html+=provBtn('evm',i,e.info.name,'EVM · detected','eth'); });
-    html+='<div class="wnetlabel">Bitcoin counterparty · must sign PSBT</div>';
+    html+='<div class="wnetlabel">Connect Bitcoin Wallet · counterparty · must sign PSBT</div>';
     BTCW.forEach(function(w){ var i=idxOf(btc,w.re); var cap=i>=0&&SOSTWallets.btcCapable(btc[i].provider);
       html += i<0 ? walletDisabled(w.n,'Bitcoin','btc','not detected')
                   : (cap ? provBtn('btc',i,w.n,'Bitcoin · PSBT ✓','btc') : walletDisabled(w.n,'Bitcoin','btc','no PSBT')); });
@@ -592,11 +592,12 @@ function onQuoteInputs(){
   function afterConnect(){ updateWalletHeader(); refreshCta(); renderWalletModal(); }
   function updateWalletHeader(){ var s=WM.state(), parts=[]; if(s.sost)parts.push('SOST'); if(s.cp)parts.push(s.cp.network.toUpperCase());
     var dot=document.getElementById('wdot'), lbl=document.getElementById('walletLabel');
-    if(parts.length){ dot.classList.add('on'); lbl.textContent=parts.join(' + '); } else { dot.classList.remove('on'); lbl.textContent='Connect Wallet'; } }
+    if(parts.length){ dot.classList.add('on'); lbl.textContent=parts.join(' + '); } else { dot.classList.remove('on'); lbl.textContent='Connect Wallets'; } }
   function refreshCta(){ var cta=document.getElementById('swapCta');
     var blk=assetBlock();
-    if(blk){ cta.textContent='Asset disabled'; cta.disabled=true; cta.title=blk; cta.classList.remove('secondary');
-      var qe=document.getElementById('quoteEmpty'); if(qe){ qe.style.display='flex'; var sp=qe.querySelector('span'); if(sp) sp.innerHTML='This asset is <b style="color:var(--amber)">disabled</b> — '+blk+'. See docs/dex/ASSET_COMPATIBILITY.md.'; } return; }
+    if(blk){ var _st=(window.ASSET_STATUS&&ASSET_STATUS[blk])||(typeof ASSET_STATUS!=='undefined'?ASSET_STATUS[blk]:null)||{}; var _r=(_st&&_st.r)||'compatibility work in progress';
+      cta.textContent='Temporarily unavailable'; cta.disabled=true; cta.title=blk+' — temporarily unavailable'; cta.classList.remove('secondary');
+      var qe=document.getElementById('quoteEmpty'); if(qe){ qe.style.display='flex'; var sp=qe.querySelector('span'); if(sp) sp.innerHTML='<b style="color:var(--amber)">'+blk+' — temporarily unavailable.</b> Compatibility work in progress.<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--txt-3)">Advanced · asset compatibility</summary><span style="color:var(--txt-3);font-weight:400">'+_r+' &mdash; see docs/dex/ASSET_COMPATIBILITY.md.</span></details>'; } return; }
     // NOT blocked: restore the default quote message so a prior disabled-asset warning
     // (e.g. XAUT) can never persist after switching to a different pair (state-reset fix).
     var qe2=document.getElementById('quoteEmpty'); if(qe2){ var sp2=qe2.querySelector('span'); if(sp2) sp2.innerHTML=DEFAULT_QUOTE_MSG; }
