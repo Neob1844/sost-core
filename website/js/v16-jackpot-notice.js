@@ -151,6 +151,23 @@
       v16.2.x</b> &mdash; re-download and verify all three against the official <code>SHA256SUMS</code>, and
       <b>swap all three</b>. A validating node or miner not on V30000 by #30,000 <b>may diverge from the
       V30000 chain</b> &mdash; update before then.
+      <div style="margin:12px 0;padding:11px 13px;border:2px solid #fb010d;border-radius:8px;background:rgba(251,1,13,.08)">
+        <b style="color:#ff6b6b;letter-spacing:.6px">&#9888; CRITICAL UPGRADE WINDOW &mdash; be on V30000 BEFORE #30,000.</b>
+        You may update any time, but do your <b>final recompile / download + restart of BOTH the node and the miner</b>
+        in the window <b class="win">after block #29,900 and before #30,000</b>, so you are certainly running V30000 at
+        activation. (Nothing is restarted <i>at</i> #30,000 itself &mdash; the fork activates by height; this restart only
+        puts you on the new binaries.)
+      </div>
+      <div class="sost-v16-code">#  recompile (build dir MUST be named "build") - or download + verify instead
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+sha256sum -c SHA256SUMS            # sost-node / sost-miner / sost-cli must ALL print: OK
+
+#  in the #29,900 -> #30,000 window: swap all three, restart NODE then MINER
+sudo systemctl stop sost-node
+sudo install -m 0755 build/sost-node /path/to/your/sost-node
+sudo systemctl start sost-node
+#  restart your miner on the new build/sost-miner (your usual flags, incl. --realtime)</div>
       <div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.05)"><div style="font-size:12.5px;font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:7px">&#9654; SOST V30000 &mdash; MINER &amp; NODE GUIDE</div><div style="font-size:11.5px;line-height:1.65;color:#b9c6d4;margin-bottom:9px">Download and verify all three binaries &middot; who needs a node &middot; your RPC password (there is no universal one) &middot; the exact start commands &middot; wallet encryption &middot; DTD vs Jackpot V2 &middot; NODE_BIND &middot; backups &middot; troubleshooting.</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;font-family:var(--code,monospace)"><a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:5px 11px;border-radius:5px;text-decoration:none">OPEN THE FULL GUIDE</a><a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Download &amp; verify</a><a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">RPC password</a><a href="sost-upgrade.html#s5" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Start commands</a><a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-rc1" target="_blank" rel="noopener" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">GitHub release</a></div><div style="font-size:10.5px;color:#7b8794;margin-top:8px;line-height:1.55">On any older version? <b>All three binaries changed</b> in V30000 &mdash; swap node, miner and cli, and verify each SHA256.</div></div>
     </div>
 
