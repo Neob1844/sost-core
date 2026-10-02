@@ -317,6 +317,7 @@
 <script src="js/security.js?v=v392"></script>
 <script src="js/wallet-export.js?v=v392"></script>
 <script src="js/sost-gateway.js?v=v392"></script>
+<script src="js/sost-wallet-bridge.js?v=v492"></script>
 <script src="js/nav-toggle.js?v=v482" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
@@ -5799,6 +5800,8 @@ window.unlockWallet = async function() {
     document.getElementById('unlockError').classList.add('hidden');
     resetLockTimer();
     showView('dashboard');
+    // Resume any DEX bridge request that was waiting on unlock.
+    if (typeof window._bridgeFlushUnlock === 'function') window._bridgeFlushUnlock();
   } catch (e) {
     const err = document.getElementById('unlockError');
     err.textContent = 'Wrong password';
@@ -6737,6 +6740,349 @@ function initExtensions() {
 
 init();
 initExtensions();
+
+// ===========================================================================
+//  DEX ATOMIC-SWAP BRIDGE — serve address / build / sign to the DEX dashboard
+//  via postMessage (js/sost-wallet-bridge.js). The private key/seed NEVER leaves
+//  this module: the dashboard receives only the address, UNSIGNED hex, or SIGNED
+//  hex. The pure protocol + security core lives in sost-wallet-bridge.js; here we
+//  inject the REAL address / HTLC builder (node RPC) / local signer, and a visible
+//  user-authorization modal for signing (never silent). See the atomic-swap RPC
+//  createhtlclock/claimhtlc/refundhtlc (unsigned) + the SOST sighash in
+//  buildAndSignTx() which this reuses for the single HTLC input.
+// ===========================================================================
+(function wireDexBridge() {
+  if (!window.SOSTWalletBridge) { console.warn('[BRIDGE] sost-wallet-bridge.js not loaded'); return; }
+
+  var HTLC_FEE_STOCKS_DEFAULT = 10000;   // 0.0001 SOST
+  var HTLC_MARKER_DUST_DEFAULT = 1;      // minimal claim-witness marker output
+  var OUT_HTLC_LOCK = 0x12;              // include/sost/transaction.h
+
+  // Allowlist: devnet dashboard on :8899 + this page's own origin. An operator can
+  // widen it via window.SOST_BRIDGE_ALLOWED_ORIGINS (array) before this runs.
+  var allowlist = (Array.isArray(window.SOST_BRIDGE_ALLOWED_ORIGINS) && window.SOST_BRIDGE_ALLOWED_ORIGINS.length)
+    ? window.SOST_BRIDGE_ALLOWED_ORIGINS
+    : window.SOSTWalletBridge.DEFAULT_ALLOWED_ORIGINS;
+  var selfOrigin = location.origin;
+
+  // --- low-level SOST tx read helpers (CompactSize / LE ints) --------------
+  function _rU32LE(b, o) { var v = b[o.i] | (b[o.i+1]<<8) | (b[o.i+2]<<16) | (b[o.i+3]*0x1000000); o.i += 4; return v >>> 0; }
+  function _rU64LE(b, o) { var lo=0, hi=0, k; for(k=0;k<4;k++) lo += b[o.i+k]*Math.pow(2,8*k); for(k=0;k<4;k++) hi += b[o.i+4+k]*Math.pow(2,8*k); o.i += 8; return hi*0x100000000 + lo; }
+  function _rCompact(b, o) { var n=b[o.i++]; if(n<0xfd) return n; if(n===0xfd){ var v=b[o.i]|(b[o.i+1]<<8); o.i+=2; return v; } if(n===0xfe){ var w=_rU32LE(b,o); return w; } var r=0,k; for(k=0;k<8;k++) r+=b[o.i+k]*Math.pow(2,8*k); o.i+=8; return r; }
+
+  // Parse ANY SOST tx (signed or unsigned template — inputs always carry the
+  // 64-byte sig + 33-byte pubkey slots). Mirrors transaction.cpp serialization.
+  function parseSostTx(hex) {
+    var bytes = hexToBytes(String(hex).replace(/^0x/, ''));
+    var o = { i: 0 };
+    var version = _rU32LE(bytes, o);
+    var tx_type = bytes[o.i++];
+    var nin = _rCompact(bytes, o);
+    var inputs = [];
+    for (var a = 0; a < nin; a++) {
+      var prev_txid = bytesToHex(bytes.slice(o.i, o.i+32)); o.i += 32;
+      var prev_index = _rU32LE(bytes, o);
+      o.i += 64; // signature slot
+      o.i += 33; // pubkey slot
+      inputs.push({ prev_txid: prev_txid, prev_index: prev_index });
+    }
+    var nout = _rCompact(bytes, o);
+    var outputs = [];
+    for (var c = 0; c < nout; c++) {
+      var amount = _rU64LE(bytes, o);
+      var type = bytes[o.i++];
+      var pkh = bytesToHex(bytes.slice(o.i, o.i+20)); o.i += 20;
+      var plen = bytes[o.i] | (bytes[o.i+1]<<8); o.i += 2;
+      var payload = bytes.slice(o.i, o.i+plen); o.i += plen;
+      outputs.push({ amount: amount, type: type, pkh: pkh, payload: payload });
+    }
+    return { version: version, tx_type: tx_type, inputs: inputs, outputs: outputs };
+  }
+
+  // Sign a parsed SOST tx with the UNLOCKED wallet key. Reuses the exact SOST
+  // sighash from buildAndSignTx() (uniform across tx_type — tx_signer.cpp
+  // ComputeSighash includes tx_type + the 1-byte-payload-len hashOutputs quirk).
+  // `spend` = [{amount,type}] of the prevout each input spends (not on the wire).
+  function signParsedSostTx(parsed, spend) {
+    if (!wallet || wallet.watchOnly) throw new Error('wallet locked');
+    var pubKeyBytes = hexToBytes(wallet.pubKey);
+    var genesisBytes = hexToBytes(GENESIS_HASH);
+    var i;
+
+    var hp = [];
+    for (i = 0; i < parsed.inputs.length; i++) { hp.push(hexToBytes(parsed.inputs[i].prev_txid)); hp.push(writeU32LE(parsed.inputs[i].prev_index)); }
+    var hashPrevouts = doubleSha256(concatBytes.apply(null, hp));
+
+    var ho = [];
+    for (i = 0; i < parsed.outputs.length; i++) {
+      var out = parsed.outputs[i];
+      var pl = out.payload || new Uint8Array(0);
+      if (pl.length > 255) throw new Error('output payload exceeds 255 bytes (sighash limit)');
+      ho.push(writeU64LE(out.amount));
+      ho.push(new Uint8Array([out.type & 0xFF]));
+      ho.push(hexToBytes(out.pkh));
+      ho.push(new Uint8Array([pl.length & 0xFF]));   // u8 payload_len (sighash-only, matches C++)
+      if (pl.length) ho.push(pl);
+    }
+    var hashOutputs = doubleSha256(concatBytes.apply(null, ho));
+
+    var sigs = [];
+    for (i = 0; i < parsed.inputs.length; i++) {
+      var inp = parsed.inputs[i];
+      var sp = (spend && spend[i]) || { amount: 0, type: 0 };
+      var preimage = concatBytes(
+        writeU32LE(parsed.version),
+        new Uint8Array([parsed.tx_type & 0xFF]),
+        hashPrevouts,
+        hexToBytes(inp.prev_txid),
+        writeU32LE(inp.prev_index),
+        writeU64LE(sp.amount),
+        new Uint8Array([sp.type & 0xFF]),
+        hashOutputs,
+        genesisBytes
+      );
+      var h = doubleSha256(preimage);
+      var sig = secp.sign(h, wallet.privKey, { lowS: true });
+      sigs.push(sig.toCompactRawBytes());
+    }
+
+    var parts = [];
+    parts.push(writeU32LE(parsed.version));
+    parts.push(new Uint8Array([parsed.tx_type & 0xFF]));
+    parts.push(encodeVarInt(parsed.inputs.length));
+    for (i = 0; i < parsed.inputs.length; i++) {
+      parts.push(hexToBytes(parsed.inputs[i].prev_txid));
+      parts.push(writeU32LE(parsed.inputs[i].prev_index));
+      parts.push(sigs[i]);
+      parts.push(pubKeyBytes);
+    }
+    parts.push(encodeVarInt(parsed.outputs.length));
+    for (i = 0; i < parsed.outputs.length; i++) {
+      var o2 = parsed.outputs[i];
+      var pl2 = o2.payload || new Uint8Array(0);
+      parts.push(writeU64LE(o2.amount));
+      parts.push(new Uint8Array([o2.type & 0xFF]));
+      parts.push(hexToBytes(o2.pkh));
+      parts.push(new Uint8Array([pl2.length & 0xFF, (pl2.length >>> 8) & 0xFF])); // u16 LE on the wire
+      if (pl2.length) parts.push(pl2);
+    }
+    return bytesToHex(concatBytes.apply(null, parts));
+  }
+
+  // Wait until the wallet is unlocked (resolve immediately if already unlocked /
+  // watch-only). Shows the lock screen and resolves when unlockWallet() succeeds.
+  var _bridgeUnlockWaiters = [];
+  window._bridgeFlushUnlock = function () {
+    var ws = _bridgeUnlockWaiters; _bridgeUnlockWaiters = [];
+    ws.forEach(function (w) { try { w(wallet); } catch (e) {} });
+  };
+  function ensureWalletLoaded(needKey) {
+    if (wallet && (!needKey || !wallet.watchOnly)) return Promise.resolve(wallet);
+    if (wallet && wallet.watchOnly && needKey) return Promise.reject(new Error('watch-only wallet cannot sign'));
+    // locked: surface the unlock screen and wait (bounded).
+    try {
+      document.getElementById('lockScreen').classList.remove('hidden');
+      document.getElementById('app').style.filter = 'blur(8px)';
+      document.getElementById('app').style.pointerEvents = 'none';
+    } catch (e) {}
+    return new Promise(function (resolve, reject) {
+      var done = false;
+      var w = function (wlt) { if (done) return; done = true; (wlt && (!needKey || !wlt.watchOnly)) ? resolve(wlt) : reject(new Error('wallet locked')); };
+      _bridgeUnlockWaiters.push(w);
+      setTimeout(function () { if (!done) { done = true; var k = _bridgeUnlockWaiters.indexOf(w); if (k >= 0) _bridgeUnlockWaiters.splice(k, 1); reject(new Error('wallet locked')); } }, 115000);
+    });
+  }
+
+  // Resolve the lock output amount (stocks) for claim/refund from chain truth.
+  async function lockAmountStocks(lockTxid, lockVout) {
+    var hex = await rpcCall('getrawtransaction', [lockTxid]);
+    if (typeof hex !== 'string') hex = (hex && hex.hex) || '';
+    var tx = parseSostTx(hex);
+    var out = tx.outputs[lockVout];
+    if (!out) throw new Error('lock vout ' + lockVout + ' not found');
+    return out.amount;
+  }
+
+  // ---- injected callbacks for the bridge ----------------------------------
+  async function bridgeGetAddress() {
+    await ensureWalletLoaded(false);
+    var bal = null;
+    try { var info = await rpcCall('getaddressinfo', [wallet.address]); if (info && info.balance != null) bal = Math.round(info.balance * SAT); } catch (e) {}
+    return { address: wallet.address, balanceStocks: bal };
+  }
+
+  async function bridgeBuildHtlc(payload) {
+    await ensureWalletLoaded(false);
+    var fee = (payload.fee != null) ? payload.fee : HTLC_FEE_STOCKS_DEFAULT;
+    var strip = function (x) { return String(x || '').replace(/^0x/i, ''); };
+
+    if (payload.kind === 'htlc_lock') {
+      var nodeInfo = await rpcCall('getinfo');
+      var ai = await rpcCall('getaddressinfo', [wallet.address]);
+      var chainHeight = nodeInfo.blocks || 0;
+      var utxos = (ai.utxos || [])
+        .map(function (u) { return Object.assign({}, u, { amountStocks: Math.round((u.amount || 0) * SAT), confs: chainHeight - (u.height || 0) }); })
+        .filter(function (u) { return !u.coinbase || u.confs >= 1000; })
+        .sort(function (a, b) { return a.amountStocks - b.amountStocks; });
+      var need = payload.amount + fee;
+      var sel = utxos.filter(function (u) { return u.amountStocks >= need; })[0];
+      if (!sel) throw new Error('no single UTXO covers the lock amount + fee (' + formatSost(need) + ' SOST). Consolidate funds first — the HTLC lock takes one input.');
+      var res = await rpcCall('createhtlclock', [
+        sel.txid, String(sel.vout), String(sel.amountStocks), wallet.address.slice(5),
+        strip(payload.hashlock), String(payload.refund_height),
+        payload.claim_address.slice(5), payload.refund_address.slice(5),
+        String(payload.amount), String(fee)
+      ]);
+      return {
+        rawUnsignedHex: res.raw_tx_hex || res,
+        spend: [{ amount: sel.amountStocks, type: sel.output_type || 0 }],
+        summary: { action: 'HTLC LOCK', from: wallet.address, amountSost: payload.amount / SAT,
+                   feeSost: fee / SAT, hashlock: '0x' + strip(payload.hashlock),
+                   refund_height: payload.refund_height, claim_address: payload.claim_address,
+                   refund_address: payload.refund_address, funding_utxo: sel.txid + ':' + sel.vout }
+      };
+    }
+
+    if (payload.kind === 'htlc_claim') {
+      var lockAmtC = await lockAmountStocks(payload.lock_txid, payload.lock_vout);
+      var marker = (payload.marker_dust_amount != null) ? payload.marker_dust_amount : HTLC_MARKER_DUST_DEFAULT;
+      var destC = (payload.claim_address ? payload.claim_address.slice(5) : wallet.address.slice(5));
+      var resC = await rpcCall('claimhtlc', [
+        payload.lock_txid, String(payload.lock_vout), String(lockAmtC),
+        strip(payload.preimage), destC, String(marker), String(fee)
+      ]);
+      return {
+        rawUnsignedHex: resC.raw_tx_hex || resC,
+        spend: [{ amount: lockAmtC, type: OUT_HTLC_LOCK }],
+        summary: { action: 'HTLC CLAIM (reveals preimage)', lock: payload.lock_txid + ':' + payload.lock_vout,
+                   amountSost: lockAmtC / SAT, feeSost: fee / SAT, to: 'sost1' + destC }
+      };
+    }
+
+    if (payload.kind === 'htlc_refund') {
+      var lockAmtR = await lockAmountStocks(payload.lock_txid, payload.lock_vout);
+      var destR = (payload.refund_address ? payload.refund_address.slice(5) : wallet.address.slice(5));
+      var resR = await rpcCall('refundhtlc', [
+        payload.lock_txid, String(payload.lock_vout), String(lockAmtR), destR, String(fee)
+      ]);
+      return {
+        rawUnsignedHex: resR.raw_tx_hex || resR,
+        spend: [{ amount: lockAmtR, type: OUT_HTLC_LOCK }],
+        summary: { action: 'HTLC REFUND', lock: payload.lock_txid + ':' + payload.lock_vout,
+                   amountSost: lockAmtR / SAT, feeSost: fee / SAT, to: 'sost1' + destR }
+      };
+    }
+    throw new Error('unknown build kind');
+  }
+
+  // Visible authorization modal — signing is NEVER silent. Resolves true only on
+  // an explicit Approve click; false on Reject / backdrop / Escape.
+  function authorizeSignModal(summary, rawUnsignedHex) {
+    return new Promise(function (resolve) {
+      var ov = document.createElement('div');
+      ov.setAttribute('role', 'dialog');
+      ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;padding:18px;';
+      var rows = '';
+      var s = summary || {};
+      Object.keys(s).forEach(function (k) {
+        var v = s[k];
+        rows += '<tr><td style="color:#9aa;padding:3px 10px 3px 0;vertical-align:top;white-space:nowrap">' + k + '</td>' +
+                '<td style="color:#e6e6e6;word-break:break-all;font-family:monospace;font-size:11px">' + String(v) + '</td></tr>';
+      });
+      var shortHex = (rawUnsignedHex || '').slice(0, 120) + ((rawUnsignedHex || '').length > 120 ? '…' : '');
+      ov.innerHTML =
+        '<div style="max-width:520px;width:100%;background:#15161a;border:1px solid #fb010d55;border-radius:8px;padding:20px 22px;font-family:system-ui,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,0.6)">' +
+          '<div style="color:#fb010d;font-weight:700;letter-spacing:1px;font-size:12px;margin-bottom:6px">⚠ AUTHORIZE DEX SIGNATURE</div>' +
+          '<div style="color:#cfd2d6;font-size:12.5px;line-height:1.6;margin-bottom:12px">The DEX is asking this wallet to sign the transaction below with your SOST key. Your private key stays in this browser — only the <b>signed transaction</b> is returned. Review it, then approve or reject.</div>' +
+          '<table style="font-size:12px;margin-bottom:12px">' + rows + '</table>' +
+          '<div style="color:#8a8d92;font-size:10px;margin-bottom:4px">Unsigned tx (hex)</div>' +
+          '<div style="font-family:monospace;font-size:10px;color:#6f7378;word-break:break-all;background:#0c0d10;border:1px solid #2a2c31;border-radius:4px;padding:8px;margin-bottom:16px">' + shortHex + '</div>' +
+          '<div style="display:flex;gap:10px;justify-content:flex-end">' +
+            '<button id="_brjRej" style="background:#2a2c31;color:#e6e6e6;border:none;border-radius:4px;padding:9px 16px;font-size:13px;cursor:pointer">Reject</button>' +
+            '<button id="_brjApp" style="background:#fb010d;color:#fff;border:none;border-radius:4px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">Approve &amp; Sign</button>' +
+          '</div>' +
+        '</div>';
+      function close(result) {
+        try { document.removeEventListener('keydown', onKey, true); } catch (e) {}
+        if (ov.parentNode) ov.parentNode.removeChild(ov);
+        resolve(result);
+      }
+      function onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); close(false); } }
+      document.body.appendChild(ov);
+      ov.querySelector('#_brjApp').addEventListener('click', function () { close(true); });
+      ov.querySelector('#_brjRej').addEventListener('click', function () { close(false); });
+      ov.addEventListener('click', function (e) { if (e.target === ov) close(false); });
+      document.addEventListener('keydown', onKey, true);
+      try { if (typeof resetLockTimer === 'function') resetLockTimer(); } catch (e) {}
+    });
+  }
+
+  async function bridgeAuthorizeSign(payload, summary) {
+    await ensureWalletLoaded(true);  // must be unlocked + not watch-only to sign
+    var tx = (payload && payload.tx != null) ? payload.tx : payload;
+    var rawHex = (typeof tx === 'string') ? tx : (tx && tx.rawUnsignedHex);
+    var sum = summary || (tx && tx.summary) || null;
+    if (!sum) {
+      // derive a minimal summary from the tx so the user still sees what they sign
+      try { var p = parseSostTx(rawHex); sum = { tx_type: '0x' + (p.tx_type.toString(16)), inputs: p.inputs.length, outputs: p.outputs.length,
+             total_out_sost: p.outputs.reduce(function (a, o) { return a + o.amount; }, 0) / SAT }; } catch (e) { sum = { note: 'raw tx' }; }
+    }
+    return authorizeSignModal(sum, rawHex);
+  }
+
+  async function bridgeSignTx(payload) {
+    await ensureWalletLoaded(true);
+    var tx = (payload && payload.tx != null) ? payload.tx : payload;
+    var rawHex = (typeof tx === 'string') ? tx : (tx && tx.rawUnsignedHex);
+    var spend = (tx && tx.spend) || (payload && payload.spend) || null;
+    if (!rawHex) throw new Error('no unsigned tx to sign');
+    var parsed = parseSostTx(rawHex);
+    if (!spend) {
+      // Fallback: assume a single HTLC-lock-spend input; the summary normally
+      // carries spend[] from build. Without it we cannot know spent amount/type.
+      throw new Error('missing spend metadata (build result must carry spend[])');
+    }
+    var signedHex = signParsedSostTx(parsed, spend);
+    // HTLC lock output is output[0]; surface vout 0 as a convenience.
+    var vout = (parsed.tx_type === 0x00 && parsed.outputs[0] && parsed.outputs[0].type === OUT_HTLC_LOCK) ? 0 : null;
+    try { if (typeof resetLockTimer === 'function') resetLockTimer(); } catch (e) {}
+    return { signedHex: signedHex, vout: vout };
+  }
+
+  // ---- build the responder + listen ---------------------------------------
+  var responder = window.SOSTWalletBridge.createResponder({
+    allowlist: allowlist,
+    selfOrigin: selfOrigin,
+    getAddress: bridgeGetAddress,
+    buildHtlc: bridgeBuildHtlc,
+    signTx: bridgeSignTx,
+    authorizeSign: bridgeAuthorizeSign,
+    post: function (target, origin, msg) {
+      var win = target || window.opener || window.parent;
+      if (!win || win === window) return;
+      try { win.postMessage(msg, origin || '*'); } catch (e) { console.warn('[BRIDGE] post failed', e); }
+    },
+    log: function () { try { console.log.apply(console, ['[BRIDGE]'].concat([].slice.call(arguments))); } catch (e) {} }
+  });
+
+  window.addEventListener('message', function (ev) { responder.handleMessage(ev); });
+
+  // Hash bootstrap: the dashboard opens us at #<action>=<reqId>. connect/address
+  // auto-respond to the opener; build/sign wait for the opener to post the payload
+  // (the hash carries no params). The opener origin for the reply is the first
+  // allowed origin (dashboard) when we cannot read window.opener's origin.
+  (function bootstrapFromHash() {
+    var opener = window.opener || window.parent;
+    if (!opener || opener === window) return;
+    responder.handleHash(location.hash, opener, allowlist[0]).then(function (r) {
+      if (r && r.pending) {
+        console.log('[BRIDGE] awaiting ' + r.action + ' payload from the DEX for ' + r.reqId);
+      }
+    });
+  })();
+
+  console.log('[BRIDGE] DEX atomic-swap bridge armed (origins: ' + allowlist.join(', ') + ')');
+})();
 
 // a separate project Access sign-message removed: a separate project and SOST are unrelated products.
 

@@ -247,19 +247,32 @@
       return new Promise(function (resolve, reject) {
         var id = 'req-' + type + '-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
         var popup = root.open ? root.open(walletUrl + '#' + type + '=' + id, 'sostwallet', 'width=460,height=720') : null;
-        var done = false;
+        var done = false, poll = null;
+        // Post the request params to the wallet popup at OUR origin only (never '*').
+        // The wallet validates origin + reqId + schema and ignores duplicates, so we
+        // poll-post until it answers (covers the popup not having its listener ready yet).
+        var targetOrigin = (root.location && root.location.origin) ? root.location.origin : null;
+        var reqMsg = Object.assign({ reqId: id, type: 'sost:' + type }, payload || {});
+        function stop() { done = true; if (poll) { clearInterval(poll); poll = null; } if (root.removeEventListener) root.removeEventListener('message', onMsg); }
         function onMsg(ev) {
           var d = ev && ev.data;
           if (!d || d.reqId !== id || d.type !== ('sost:' + type)) return;
-          done = true; if (root.removeEventListener) root.removeEventListener('message', onMsg);
+          stop();
           if (d.error) return reject(new Error(d.error));
           resolve(d.result != null ? d.result : d);
         }
         if (root.addEventListener) root.addEventListener('message', onMsg);
+        if (popup && popup.postMessage && targetOrigin) {
+          poll = setInterval(function () {
+            if (done) { clearInterval(poll); poll = null; return; }
+            try { popup.postMessage(reqMsg, targetOrigin); } catch (e) {}
+          }, 300);
+          try { popup.postMessage(reqMsg, targetOrigin); } catch (e) {}
+        }
         setTimeout(function () {
-          if (!done) { if (root.removeEventListener) root.removeEventListener('message', onMsg); reject(new Error('SOST wallet "' + type + '" timed out — open ' + walletUrl + ' and approve the request')); }
+          if (!done) { stop(); reject(new Error('SOST wallet "' + type + '" timed out — open ' + walletUrl + ' and approve the request')); }
         }, timeoutMs || 120000);
-        if (!popup) reject(new Error('popup blocked — allow popups for the SOST wallet bridge'));
+        if (!popup) { if (poll) { clearInterval(poll); poll = null; } reject(new Error('popup blocked — allow popups for the SOST wallet bridge')); }
       });
     }
     // bridge contract expected by SOSTDexConnectors.sost(bridge)
