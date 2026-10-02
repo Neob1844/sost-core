@@ -60,6 +60,16 @@ up(){
       | awk '/Deployed to:/{print $3}' > "$RUN/htlc_v2.addr" )
   [ -s "$RUN/htlc_v2.addr" ] || { echo "deploy failed:"; cat "$RUN/deploy.err"; exit 1; }
   say "HTLC v2 @ $(cat "$RUN/htlc_v2.addr")"
+  say "deploying mock USDC (devnet only; NOT USDT/PAXG/XAUT)"
+  TEST_ADDR=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+  ( cd "$ROOT/contracts/atomic-swap"
+    forge create test/mocks/MockERC20.sol:MockERC20 --rpc-url "$ANVIL_RPC" --private-key "$TEST_PK" --broadcast \
+      --constructor-args "USD Coin (mock devnet)" "USDC" 2>"$RUN/usdc.err" | awk '/Deployed to:/{print $3}' > "$RUN/usdc.addr" )
+  if [ -s "$RUN/usdc.addr" ]; then
+    cast send "$(cat "$RUN/usdc.addr")" "mint(address,uint256)" "$TEST_ADDR" 1000000000000000000000 \
+      --rpc-url "$ANVIL_RPC" --private-key "$TEST_PK" >/dev/null 2>&1 || true
+    say "mock USDC @ $(cat "$RUN/usdc.addr") (minted 1000 to $TEST_ADDR)"
+  else say "mock USDC deploy skipped (SOST/ETH still fully functional)"; fi
 
   say "starting SOST devnet node (--profile dev, HTLC activates at height 11)"
   "$NODE_BIN" --profile dev --genesis "$ROOT/genesis_block.json" \
@@ -104,7 +114,7 @@ up(){
 { "mode":"devnet", "public_trading":false, "admin_only":true,
   "sost_rpc":"http://127.0.0.1:$RPC_PORT", "sost_rpc_user":"devadmin",
   "evm_rpc":"$ANVIL_RPC", "evm_chain_id":31337,
-  "htlc_v2":"$(cat "$RUN/htlc_v2.addr")", "pairs":["SOST/ETH","SOST/USDC"] }
+  "htlc_v2":"$(cat "$RUN/htlc_v2.addr")", "usdc_token":"$(cat "$RUN/usdc.addr" 2>/dev/null)", "usdc_decimals":18, "pairs":["SOST/ETH","SOST/USDC"] }
 EOF
   say "wrote website/dex-devnet-config.json (public_trading=false, admin_only=true)"
 
