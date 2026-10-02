@@ -275,493 +275,57 @@
     </div>
     <span class="top-spacer"></span>
     <span class="badge test" id="modeBadge">Testnet · Lab</span>
-    <button class="btn-wallet" id="walletBtn" onclick="openWallet()"><span class="dot" id="wdot"></span><span id="walletLabel">Connect Wallet</span></button>
+    <a class="btn-wallet" href="sost-dex-dashboard.html" style="text-decoration:none"><span class="dot"></span><span>Open Dashboard</span></a>
   </header>
 
-  <nav class="tabs" role="tablist">
-    <button class="active" data-view="swap" role="tab">Swap</button>
-    <button data-view="trade" role="tab">Trade</button>
-    <button data-view="orders" role="tab">Orders</button>
-    <button data-view="activity" role="tab">Activity</button>
-  </nav>
-
-  <!-- ============ SWAP ============ -->
-  <section class="view active" id="view-swap">
-    <div class="swap-col">
-      <div class="panel swap-card">
-        <div class="leg">
-          <div class="lbl">You pay</div>
-          <div class="row">
-            <input id="payAmt" class="num" inputmode="decimal" placeholder="0.0" value="1000" oninput="onQuoteInputs()">
-            <button class="asset" onclick="cycleAsset('pay')"><span class="tk sost" id="payTk">S</span><span id="paySym">SOST</span></button>
-          </div>
-          <div class="bal">Balance <span class="num" id="payBal">—</span> · connect a wallet to load</div>
-        </div>
-
-        <div class="invert"><button onclick="invert()" aria-label="Invert pair">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 20l-3-3M7 4l3 3M17 20V4M17 4l3 3M17 4l-3 3" transform="rotate(0)"/></svg>
-        </button></div>
-
-        <div class="leg">
-          <div class="lbl">You receive</div>
-          <div class="row">
-            <input id="recvAmt" class="num" inputmode="decimal" placeholder="—" readonly>
-            <button class="asset" onclick="cycleAsset('recv')"><span class="tk usdc" id="recvTk">U</span><span id="recvSym">USDC</span></button>
-          </div>
-          <div class="bal">Balance <span class="num" id="recvBal">—</span></div>
-        </div>
-
-        <div class="quote empty" id="quoteEmpty">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-          <span>No executable quote available. Connect to a live quote provider to price this swap. <b style="color:var(--txt-3);font-weight:400">In the lab there is no market maker yet, so no firm quote can be shown.</b></span>
-        </div>
-
-        <div class="quote" id="quoteFull" style="display:none">
-          <div class="qrow"><span class="k">Reference price</span><span class="v" id="qRef">—</span></div>
-          <div class="qrow"><span class="k">Source · age</span><span class="v warn" id="qSrc">no live source</span></div>
-          <div class="qrow"><span class="k">Firm counterparty quote</span><span class="v warn">none</span></div>
-          <div class="qrow"><span class="k">Est. network fees</span><span class="v" id="qFees">—</span></div>
-          <div class="qrow"><span class="k">Minimum received</span><span class="v" id="qMin">—</span></div>
-          <div class="qrow"><span class="k">Settlement (both chains)</span><span class="v" id="qTime">—</span></div>
-          <div class="qrow"><span class="k">HTLC timeouts</span><span class="v" id="qTimeout">—</span></div>
-          <div class="qrow"><span class="k">Slippage / variance risk</span><span class="v" id="qSlip">—</span></div>
-          <div class="qrow"><span class="k">Liquidity status</span><span class="v warn" id="qLiq">unavailable</span></div>
-        </div>
-
-        <button class="cta" id="swapCta" onclick="ctaClick()">Connect Wallet</button>
-      </div>
-      <p class="lab-note"><b>Conceptual view.</b> No real prices, balances, or executable quotes are shown. The swap engine settles as a native atomic swap (SOST ⇄ BTC / EVM) — never an instant custodial trade — and only executes against a real counterparty quote, which does not exist yet.</p>
+  <!-- ============ WHAT THE SOST DEX IS (public information) ============ -->
+  <section class="view active">
+    <div class="panel" style="padding:22px 22px 6px">
+      <div class="section-title" style="padding:0 0 10px">What the SOST DEX is</div>
+      <p style="margin:0 0 14px;color:var(--txt-2);font-size:14px;line-height:1.65">The SOST DEX is a <b style="color:var(--txt)">non-custodial, cross-chain exchange</b> built on the SOST protocol. There is no pooled custody and no order-book operator holding funds: trades settle as <b style="color:var(--txt)">atomic swaps</b> and offers are <b style="color:var(--txt)">cryptographically signed</b> by the party that makes them. The DEX never holds a seed or a private key &mdash; it only requests addresses and signatures from your own wallet.</p>
     </div>
-  </section>
 
-  <!-- ============ TRADE ============ -->
-  <section class="view" id="view-trade">
-    <div class="trade-grid">
-      <div class="panel">
-        <div class="chart-head">
-          <span class="pair">SOST / USDC</span>
-          <span class="last num" id="tradeLast">— <span style="color:var(--txt-4)">no trades</span></span>
-          <span class="intervals" id="ctype" style="margin-left:auto">
-            <button class="on" data-ct="candles">Candles</button><button data-ct="line">Line</button>
-          </span>
-          <span class="intervals" id="ivals" style="margin-left:10px">
-            <button data-tf="1m">1m</button><button data-tf="5m">5m</button><button class="on" data-tf="15m">15m</button><button data-tf="1H">1H</button><button data-tf="4H">4H</button><button data-tf="1D">1D</button><button data-tf="1W">1W</button>
-          </span>
+    <div class="trade-grid" style="margin-top:16px">
+      <div class="panel" style="padding:20px">
+        <div class="section-title" style="padding:0 0 10px">How it works</div>
+        <div style="display:flex;gap:13px;align-items:flex-start;margin-bottom:16px">
+          <span class="pill ok" style="flex:none;margin-top:1px">Live &middot; #16,000</span>
+          <div style="font-size:13px;color:var(--txt-2);line-height:1.6"><b style="color:var(--txt)">Atomic-swap HTLC settlement.</b> Each trade locks both legs in Hash-Time-Locked Contracts. The preimage that claims one chain reveals the secret that claims the other, so either both legs settle or both refund &mdash; no counterparty can walk away with one side. The SOST-side HTLC primitive has been live on-chain since block <b style="color:var(--txt)">#16,000</b>.</div>
         </div>
-        <div class="chart-wrap">
-          <span class="chart-demo">Demo series · not real market data</span>
-          <canvas id="chart" width="760" height="300"></canvas>
+        <div style="display:flex;gap:13px;align-items:flex-start">
+          <span class="pill demo" style="flex:none;margin-top:1px">Signed offers</span>
+          <div style="font-size:13px;color:var(--txt-2);line-height:1.6"><b style="color:var(--txt)">Signed-offer orderbook.</b> Offers are discovered off-chain, each signed with a nonce and an expiry and validated bilaterally before anyone funds an HTLC. Placing or cancelling an offer never moves funds on its own; funds move only when you approve an HTLC reservation.</div>
         </div>
       </div>
-      <div class="panel order-panel">
-        <div class="seg" id="mseg">
-          <button class="on" data-mode="market">Market</button>
-          <button data-mode="limit">Limit</button>
-        </div>
-        <div class="form-body">
-          <div class="seg" style="padding:0 0 4px">
-            <button class="on" data-side="buy" onclick="setSide(this,'buy')" style="color:var(--green)">Buy SOST</button>
-            <button data-side="sell" onclick="setSide(this,'sell')" style="color:var(--red)">Sell SOST</button>
-          </div>
-          <div class="field"><label>Amount</label><div class="inp"><input class="num" placeholder="0.0"><span class="suf">SOST</span></div></div>
-          <div class="field" id="limitPrice" style="display:none"><label>Limit price</label><div class="inp"><input class="num" placeholder="0.0"><span class="suf">USDC</span></div></div>
-          <div class="field" id="limitExpiry" style="display:none"><label>Expiry</label><div class="inp"><input value="24h" readonly><span class="suf">GTC</span></div></div>
-          <div class="field"><label>Minimum received</label><div class="inp"><input class="num" placeholder="—" readonly><span class="suf" id="minSuf">USDC</span></div></div>
-          <button class="cta" disabled id="tradeCta" style="margin-top:16px">No executable quote</button>
-          <p class="mkt-note" id="mktNote">A <b style="color:var(--txt-2)">Market</b> order consumes a <b style="color:var(--txt-2)">firm, available</b> counterparty quote — not a CEX last-price. With no market maker connected in the lab, market orders cannot execute. Cross-chain settlement is shown as real two-chain progress, never as instant.</p>
-        </div>
-      </div>
-    </div>
-    <div class="panel" style="margin-top:16px">
-      <div class="section-title">Your orders &amp; fills</div>
-      <div class="empty-state"><div class="big">No orders</div>Signed limit orders and fills will appear here once an order-relay and a counterparty are connected. Placing an order never locks funds until you approve a reservation.</div>
-    </div>
-  </section>
 
-  <!-- ============ ORDERS ============ -->
-  <section class="view" id="view-orders">
-    <div class="panel">
-      <div class="section-title">Active orders <span class="pill demo" style="margin-left:8px">Demo · empty</span></div>
-      <div class="empty-state"><div class="big">No active orders</div>Limit orders are discovered off-chain, signed with a nonce + expiry, and matched bilaterally. Cancellation blocks new acceptances but never reverses an HTLC already funded.</div>
-    </div>
-    <div class="panel" style="margin-top:16px">
-      <div class="section-title">Order history</div>
-      <div class="tbl-wrap">
-        <table class="grid">
-          <thead><tr><th>Time</th><th>Pair</th><th>Side</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
-          <tbody><tr><td colspan="6" style="text-align:center;color:var(--txt-4);padding:34px">— no history in the lab —</td></tr></tbody>
-        </table>
+      <div class="panel" style="padding:20px">
+        <div class="section-title" style="padding:0 0 10px">Current status</div>
+        <div class="qrow" style="padding:8px 0;border-bottom:1px dashed var(--border-2)"><span class="k">SOST-layer DEX</span><span class="v warn">activates #30,000</span></div>
+        <div class="qrow" style="padding:8px 0;border-bottom:1px dashed var(--border-2)"><span class="k">Activation</span><span class="v">automatic by block height</span></div>
+        <div class="qrow" style="padding:8px 0;border-bottom:1px dashed var(--border-2)"><span class="k">Consensus gate</span><span class="v warn">S14 RESTRICTED DEVELOPER MODE</span></div>
+        <div class="qrow" style="padding:8px 0;border-bottom:1px dashed var(--border-2)"><span class="k">Public access</span><span class="v warn">disabled</span></div>
+        <div class="qrow" style="padding:8px 0"><span class="k">Public trading</span><span class="v warn">none</span></div>
+        <p class="mkt-note" style="margin-top:14px">The SOST-layer DEX (atomic-swap settlement + signed-offer orderbook) <b style="color:var(--txt-2)">activates at block #30,000</b>, but even after activation it stays <b style="color:var(--txt-2)">admin-gated at consensus</b> under S14 RESTRICTED DEVELOPER MODE with public access disabled. There is no public trading today. No real prices, orders, liquidity or executable quotes are shown or implied. Not an offer, solicitation or invitation to trade.</p>
       </div>
     </div>
-  </section>
 
-  <!-- ============ ACTIVITY ============ -->
-  <section class="view" id="view-activity">
-    <div class="panel">
-      <div class="tracker">
-        <h3>Atomic swap lifecycle <span class="pill demo" style="margin-left:6px">Demo</span></h3>
-        <div class="cap">The real state comes from both chains and the HTLC protocol — never from decorative timers. Below mirrors a completed lab swap (SOST ⇄ BTC).</div>
-        <div class="steps" id="steps"></div>
-          <div id="relayBar" style="margin-top:18px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--panel-3);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            <span class="pill demo" id="relayPill">Lab relay: checking&hellip;</span>
-            <span style="font-size:12px;color:var(--txt-3)" id="relayMsg">Looking for the local lab relay on 127.0.0.1:8781&hellip;</span>
-            <span style="flex:1"></span>
-            <button class="cta" id="labSwapBtn" style="width:auto;padding:9px 16px;font-size:13px" disabled onclick="startLabSwap()">Start lab SOST/BTC swap</button>
-          </div>
+    <!-- ============ OPEN DASHBOARD ============ -->
+    <div class="panel" style="margin-top:16px;padding:26px 24px;text-align:center">
+      <div class="section-title" style="padding:0 0 10px">Operational interface</div>
+      <p style="max-width:620px;margin:0 auto 20px;color:var(--txt-2);font-size:14px;line-height:1.65">Trading, placing signed offers and RFQ are <b style="color:var(--txt)">operational actions</b> &mdash; they run in the authenticated dashboard and are enforced by the consensus admin gate (S14). Public trading is disabled.</p>
+      <a class="cta" href="sost-dex-dashboard.html" style="display:inline-block;width:auto;padding:16px 42px;text-decoration:none;margin-top:0">OPEN DASHBOARD</a>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;max-width:760px;margin:26px auto 2px;text-align:left">
+        <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Swap</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Native SOST &#8644; BTC / EVM atomic swap against a real counterparty quote.</div></div>
+        <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Trade</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Market and signed limit orders filled against firm counterparty quotes.</div></div>
+        <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Orders</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Active signed offers and order history, matched bilaterally off-chain.</div></div>
+        <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Activity</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Atomic-swap lifecycle tracked as real two-chain state, never instant.</div></div>
       </div>
+      <p class="mkt-note" style="max-width:640px;margin:20px auto 0;text-align:center">The dashboard is a laboratory preview: it shows a clearly-labelled demo chart (deterministic, not real market data) and a fail-closed RFQ &mdash; with no market maker and no signature verifier connected, it produces no firm quote. No real prices, orders, liquidity or executable quotes are shown or implied.</p>
     </div>
-    <p class="lab-note">This mirrors a real laboratory swap: SOST devnet ⇄ Bitcoin regtest, funds bridged by the preimage revealed on-chain. A swap is only <b>Completed</b> after both legs confirm the required depth.</p>
   </section>
 
   <p class="lab-note" style="margin-top:34px; color:var(--txt-4)">SOST DEX V2 — the SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE); public access disabled — no public trading. No real prices, orders, liquidity, or executable quotes are shown or implied. Not an offer or solicitation.</p>
 </div>
 
-<!-- wallet modal -->
-<div class="modal-bg" id="walletModal" onclick="if(event.target===this)closeWallet()">
-  <div class="modal">
-    <div class="modal-head">
-      <button class="x" onclick="closeWallet()" aria-label="Close">×</button>
-      <h3>Connect wallets</h3>
-    </div>
-    <div class="modal-body">
-    <p>A cross-chain swap needs a SOST wallet <b>and</b> the counterparty-chain wallet. The DEX never sees any seed or private key — it only requests addresses and signatures.</p>
-    <div style="font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin:6px 0 8px">SOST network</div>
-    <div id="wmSost"></div>
-    <div style="font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin:14px 0 8px">Counterparty &middot; EVM / Bitcoin</div>
-    <div id="wmCp"></div>
-    <p class="disclaim">EVM via EIP-6963/EIP-1193 (MetaMask, Rabby, Coinbase). Bitcoin via Xverse/UniSat &mdash; a wallet is only usable if it can sign PSBTs (P2WSH claim/refund), not just send BTC.</p>
-    <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
-      <div style="font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--txt-3);font-weight:600;margin-bottom:8px">Security &middot; 2FA for sensitive actions</div>
-      <div id="wmSec"></div>
-      <p class="disclaim">Optional local authenticator (TOTP) gate before connecting a wallet or executing a swap. Local to this browser; a UX safeguard, not custody security &mdash; your wallet's own signature prompt is the real control.</p>
-    </div>
-    </div><!-- /modal-body -->
-  </div>
-</div>
-
-<script src="js/asset-registry.js"></script>
-<script src="js/dex-security-gate.js"></script>
-<script src="js/dex-token-icons.js"></script>
-<script src="js/dex-wallets.js"></script>
-  <script src="js/dex-price-adapter.js"></script>
-<script src="js/dex-rfq.js"></script>
-<script src="js/dex-liquidity-sim.js"></script>
-<script>
-"use strict";
-/* SOST DEX V2 — Phase 1 dashboard shell. DEMO ONLY: no real prices, balances, quotes,
-   orders or liquidity. State is illustrative; the SOST-layer DEX activates at #30,000
-   (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE),
-   public access disabled. */
-
-/* ---- tab routing ---- */
-var tabs = document.querySelectorAll('nav.tabs button');
-tabs.forEach(function(b){ b.addEventListener('click', function(){
-  tabs.forEach(function(x){x.classList.remove('active');}); b.classList.add('active');
-  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
-  document.getElementById('view-'+b.dataset.view).classList.add('active');
-  try{ localStorage.setItem('sost_dex_tab', b.dataset.view); }catch(e){}
-  if(b.dataset.view==='trade') drawChart();
-});});
-try{ var t=localStorage.getItem('sost_dex_tab'); if(t){ var el=[].find.call(tabs,function(b){return b.dataset.view===t;}); if(el) el.click(); } }catch(e){}
-
-/* ---- swap asset selection (DEMO; no prices) ---- */
-var ASSETS=[['SOST','sost','S'],['USDC','usdc','U'],['USDT','usdt','T'],['BTC','btc','₿'],['ETH','eth','Ξ'],['PAXG','paxg','G'],['XAUT','xaut','X']];
-/* Status derives from the CANONICAL registry (js/asset-registry.js) so Atomic Swap and
-   DEX V2 never diverge. Falls back to an inline copy only if the registry is absent. */
-var ASSET_STATUS=(function(){
-  if(window.SOSTAssets){ var m={}; Object.keys(SOSTAssets.ASSETS).forEach(function(k){ var st=SOSTAssets.ASSETS[k].status; if(st.state!=='ok') m[k]={s:st.state,r:st.reason}; }); return m; }
-  return {
-    USDT:{s:'disabled',r:'USDT transfer returns no boolean — needs SafeERC20-style handling'},
-    PAXG:{s:'disabled',r:'PAXG fee-on-transfer breaks fixed-amount escrow (needs balance-delta accounting)'},
-    XAUT:{s:'disabled',r:'XAUT real-contract behaviour not yet verified on a pinned fork'},
-    USDC:{s:'caveat',r:'USDC blacklist/pause (Circle) can freeze a swap mid-flight'}
-  };
-})();
-var DEFAULT_QUOTE_MSG='No executable quote available. Connect to a live quote provider to price this swap. <b style="color:var(--txt-3);font-weight:400">In the lab there is no market maker yet, so no firm quote can be shown.</b>';
-function assetBlock(){ var a=[ASSETS[pay][0],ASSETS[recv][0]]; for(var i=0;i<a.length;i++){ var st=ASSET_STATUS[a[i]]; if(st&&st.s==='disabled') return a[i]+': '+st.r; } return null; }
-var pay=0, recv=1;
-function paint(){
-  var p=ASSETS[pay], r=ASSETS[recv];
-  document.getElementById('paySym').textContent=p[0];
-  var payTk=document.getElementById('payTk'); payTk.className='tk '+p[1];
-  if(window.SOSTAssets){ payTk.innerHTML=SOSTAssets.logoHtml(p[0]); payTk.setAttribute('aria-label',p[0]); }
-  else if(window.SOSTTokenIcons){ SOSTTokenIcons.paintInto(payTk,p[0]); } else { payTk.textContent=p[2]; }
-  document.getElementById('recvSym').textContent=r[0];
-  var recvTk=document.getElementById('recvTk'); recvTk.className='tk '+r[1];
-  if(window.SOSTAssets){ recvTk.innerHTML=SOSTAssets.logoHtml(r[0]); recvTk.setAttribute('aria-label',r[0]); }
-  else if(window.SOSTTokenIcons){ SOSTTokenIcons.paintInto(recvTk,r[0]); } else { recvTk.textContent=r[2]; }
-  document.getElementById('minSuf').textContent=r[0];
-}
-function cycleAsset(which){
-  if(which==='pay'){ pay=(pay+1)%ASSETS.length; if(pay===recv) recv=(recv+1)%ASSETS.length; }
-  else { recv=(recv+1)%ASSETS.length; if(recv===pay) pay=(pay+1)%ASSETS.length; }
-  paint(); onQuoteInputs();
-}
-function invert(){ var t=pay; pay=recv; recv=t; paint(); onQuoteInputs(); }
-
-/* quote state: with no live provider, always "no executable quote" (honest) */
-function onQuoteInputs(){
-  var full=document.getElementById('quoteFull'), empty=document.getElementById('quoteEmpty');
-  full.style.display='none'; empty.style.display='flex';
-  document.getElementById('recvAmt').value='';
-  refreshCta();
-}
-
-  /* ---- REAL wallet manager (EIP-6963/1193 EVM, PSBT BTC, SOST bridge) ---- */
-  var WM = (window.SOSTWallets ? SOSTWallets.makeManager() : {state:function(){return{sost:null,cp:null};},setSost:function(){},setCp:function(){},clear:function(){},swapReady:function(){return{ready:false,why:'wallet module missing'};}});
-  function evmAsset(sym){ return ['USDC','USDT','ETH','PAXG','XAUT'].indexOf(sym)>=0; }
-  function reqCpNetwork(){ var a=[ASSETS[pay][0],ASSETS[recv][0]]; if(a.indexOf('BTC')>=0) return 'btc'; if(a.some(evmAsset)) return 'evm'; return null; }
-  function pairLabel(){ var n=reqCpNetwork(); return n==='btc'?'SOST/BTC':(n==='evm'?'SOST/ETH':'SOST/SOST'); }
-  function shortA(a){ return a? (a.slice(0,8)+'…'+a.slice(-6)) : ''; }
-  function openWallet(){ document.getElementById('walletModal').classList.add('open'); renderWalletModal(); }
-  function closeWallet(){ document.getElementById('walletModal').classList.remove('open'); }
-  function icGlyph(sym){
-    // SOST uses the OFFICIAL logo (sost-logo.png via the canonical registry), same as the
-    // rest of the site; BTC/ETH use neutral original glyphs (no licensed third-party art).
-    if(sym==='sost' && window.SOSTAssets){ return SOSTAssets.logoHtml('SOST'); }
-    var m={sost:'SOST',btc:'BTC',eth:'ETH'}; var t=m[sym];
-    return (window.SOSTTokenIcons&&t)?SOSTTokenIcons.svg(t):sym.charAt(0).toUpperCase();
-  }
-  function connRow(net,sym,addr,slot){ return '<div class="wchoice" style="cursor:default"><span class="ic tk '+sym+'">'+icGlyph(sym)+'</span><span>'+net+' connected<small>'+shortA(addr)+'</small></span><span style="flex:1"></span><button onclick="disconnectSlot(\''+slot+'\')" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer">Disconnect</button></div>'; }
-  function provBtn(kind,i,name,sub,sym){ var s=sym.trim(); return '<button class="wchoice" onclick="connectCp(\''+kind+'\','+i+')"><span class="ic tk '+s+'">'+icGlyph(s)+'</span><span>'+name+'<small>'+sub+'</small></span></button>'; }
-  function renderSec(){
-    var el=document.getElementById('wmSec'); if(!el||!window.SOSTDexGate) return;
-    if(SOSTDexGate.is2FAEnabled()){
-      el.innerHTML='<div class="wchoice" style="cursor:default"><span class="ic tk" style="background:var(--green-soft);color:var(--green)">✓</span><span>Authenticator 2FA enabled<small>required before connect / swap</small></span><span style="flex:1"></span><button onclick="sgDisable2FA()" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer">Disable</button></div>';
-    } else {
-      el.innerHTML='<button class="wchoice" onclick="sgEnable2FA()"><span class="ic tk" style="background:var(--panel-2);color:var(--gold)">🔒</span><span>Enable authenticator 2FA<small>add a TOTP code (Google Authenticator, Aegis, 1Password…)</small></span></button>';
-    }
-  }
-  function sgEnable2FA(){
-    var s=SOSTDexGate.enable2FA('wallet'); var el=document.getElementById('wmSec');
-    el.innerHTML='<div style="border:1px solid var(--border-2);border-radius:10px;padding:12px;background:var(--panel-3)">'
-      +'<div style="font-size:12px;color:var(--txt-2);margin-bottom:8px">Add this to your authenticator app (manual key or otpauth URI), then confirm a code to activate:</div>'
-      +'<div style="font-family:var(--mono);font-size:12px;word-break:break-all;color:var(--gold);background:var(--panel-2);border-radius:7px;padding:8px;margin-bottom:8px">'+s.secret+'</div>'
-      +'<div style="font-size:10px;color:var(--txt-4);word-break:break-all;margin-bottom:10px">'+s.otpauth.replace(/</g,'&lt;')+'</div>'
-      +'<div style="display:flex;gap:8px"><input id="sgSetup" inputmode="numeric" maxlength="6" placeholder="000000" style="flex:1;background:var(--panel-2);border:1px solid var(--border-2);color:var(--txt);border-radius:8px;padding:9px;font-family:var(--mono);font-size:16px;letter-spacing:3px;text-align:center">'
-      +'<button onclick="sgConfirm2FA()" style="background:var(--red);border:0;color:#fff;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer">Activate</button></div>'
-      +'<div id="sgSetupErr" style="color:#ff8a8a;font-size:11px;min-height:14px;margin-top:6px"></div></div>';
-  }
-  async function sgConfirm2FA(){
-    var code=(document.getElementById('sgSetup').value||'').trim();
-    // The secret is already stored (from Enable). Verify a live code before treating 2FA as
-    // active; on mismatch keep the SAME secret so the user can retry (do not regenerate).
-    if(await SOSTDexGate.verify(code)){ renderSec(); }
-    else { var e=document.getElementById('sgSetupErr'); if(e) e.textContent='Code did not match — check the key in your authenticator app and try again (2FA stays pending until a code matches).'; }
-  }
-  function sgDisable2FA(){ if(window.SOSTDexGate){ SOSTDexGate.disable2FA(); renderSec(); } }
-  async function renderWalletModal(){
-    var st=WM.state();
-    renderSec();
-    document.getElementById('wmSost').innerHTML = st.sost ? connRow('SOST','sost',st.sost.address,'sost')
-      : '<button class="wchoice" onclick="doConnectSost()"><span class="ic tk sost">'+icGlyph('sost')+'</span><span>SOST Wallet<small>native bridge, no seed in the DEX</small></span></button>';
-    var cpEl=document.getElementById('wmCp');
-    if(st.cp){ cpEl.innerHTML=connRow(st.cp.network.toUpperCase(), st.cp.network==='btc'?'btc':'eth', st.cp.address,'cp'); return; }
-    cpEl.innerHTML='<div class="disclaim">discovering wallet extensions…</div>';
-    var evm=[], btc=[];
-    try{ evm = window.SOSTWallets? await SOSTWallets.discoverEvm(window,250):[]; }catch(e){}
-    try{ btc = window.SOSTWallets? SOSTWallets.discoverBtc(window):[]; }catch(e){}
-    window.__evm=evm; window.__btc=btc;
-    // Curated multichain support list — ALWAYS shown so the manager is visible; an entry is
-    // only clickable when its extension is actually detected (no fabricated connections).
-    var EVM=[{n:'MetaMask',re:/meta ?mask/i},{n:'Rabby',re:/rabby/i},{n:'Coinbase Wallet',re:/coinbase/i}];
-    var BTCW=[{n:'Xverse',re:/xverse/i},{n:'UniSat',re:/unisat/i}];
-    function idxOf(list,re){ for(var i=0;i<list.length;i++){ if(re.test((list[i].info&&list[i].info.name)||'')) return i; } return -1; }
-    var html='<div class="wnetlabel">Ethereum / EVM counterparty</div>';
-    EVM.forEach(function(w){ var i=idxOf(evm,w.re);
-      html += i>=0 ? provBtn('evm',i,w.n,'EVM · detected','eth') : walletDisabled(w.n,'EVM','eth','not detected'); });
-    // any other EIP-6963 provider not in the curated list
-    evm.forEach(function(e,i){ if(!EVM.some(function(w){return w.re.test(e.info.name);})) html+=provBtn('evm',i,e.info.name,'EVM · detected','eth'); });
-    html+='<div class="wnetlabel">Bitcoin counterparty · must sign PSBT</div>';
-    BTCW.forEach(function(w){ var i=idxOf(btc,w.re); var cap=i>=0&&SOSTWallets.btcCapable(btc[i].provider);
-      html += i<0 ? walletDisabled(w.n,'Bitcoin','btc','not detected')
-                  : (cap ? provBtn('btc',i,w.n,'Bitcoin · PSBT ✓','btc') : walletDisabled(w.n,'Bitcoin','btc','no PSBT')); });
-    btc.forEach(function(b,i){ if(!BTCW.some(function(w){return w.re.test(b.info.name);})){ var c=SOSTWallets.btcCapable(b.provider); html+=(c?provBtn('btc',i,b.info.name,'Bitcoin · PSBT ✓','btc'):walletDisabled(b.info.name,'Bitcoin','btc','no PSBT')); } });
-    cpEl.innerHTML = html;
-  }
-  function walletDisabled(name,net,sym,tag){ return '<div class="wchoice wmissing"><span class="ic tk '+sym+'">'+icGlyph(sym)+'</span><span>'+name+'<small>'+net+'</small></span><span style="flex:1"></span><span class="wtag">'+tag+'</span></div>'; }
-  // sensitive action → double-confirm (+ TOTP 2FA if the viewer enabled it)
-  function sgGuard(title, body, run){
-    if(!window.SOSTDexGate) return run();
-    return SOSTDexGate.guard(run,{title:title, body:body, ack:'I understand — this connects a wallet to the SOST DEX (a non-custodial preview; no funds move and no keys are shared).', confirmText:'Connect', require2FA:true});
-  }
-  async function doConnectSost(){ sgGuard('Connect SOST Wallet','You are connecting your SOST wallet via the bridge (no seed/private key is shared with the DEX).', async function(){ try{ var c=await SOSTWallets.connectSost(window,{}); WM.setSost(c); afterConnect(); }catch(e){ alert('SOST wallet: '+e.message); } }); }
-  async function connectCp(kind,i){ sgGuard('Connect '+kind.toUpperCase()+' wallet','You are connecting a counterparty '+kind.toUpperCase()+' wallet. It will only be asked to sign when you explicitly execute a swap (real trading is disabled in this preview).', async function(){ try{ var c = kind==='evm' ? await SOSTWallets.connectEvm(window.__evm[i].provider, function(ev){ afterConnect(); }) : await SOSTWallets.connectBtc(window.__btc[i]); if(kind==='btc' && !c.capable){ alert('This Bitcoin wallet cannot sign PSBTs; it cannot claim/refund the HTLC. '+(c.warn||'')); } WM.setCp(c); afterConnect(); }catch(e){ alert(kind.toUpperCase()+' wallet: '+e.message); } }); }
-  function disconnectSlot(slot){ WM.clear(slot); afterConnect(); }
-  function afterConnect(){ updateWalletHeader(); refreshCta(); renderWalletModal(); }
-  function updateWalletHeader(){ var s=WM.state(), parts=[]; if(s.sost)parts.push('SOST'); if(s.cp)parts.push(s.cp.network.toUpperCase());
-    var dot=document.getElementById('wdot'), lbl=document.getElementById('walletLabel');
-    if(parts.length){ dot.classList.add('on'); lbl.textContent=parts.join(' + '); } else { dot.classList.remove('on'); lbl.textContent='Connect Wallet'; } }
-  function refreshCta(){ var cta=document.getElementById('swapCta');
-    var blk=assetBlock();
-    if(blk){ cta.textContent='Asset disabled'; cta.disabled=true; cta.title=blk; cta.classList.remove('secondary');
-      var qe=document.getElementById('quoteEmpty'); if(qe){ qe.style.display='flex'; var sp=qe.querySelector('span'); if(sp) sp.innerHTML='This asset is <b style="color:var(--amber)">disabled</b> — '+blk+'. See docs/dex/ASSET_COMPATIBILITY.md.'; } return; }
-    // NOT blocked: restore the default quote message so a prior disabled-asset warning
-    // (e.g. XAUT) can never persist after switching to a different pair (state-reset fix).
-    var qe2=document.getElementById('quoteEmpty'); if(qe2){ var sp2=qe2.querySelector('span'); if(sp2) sp2.innerHTML=DEFAULT_QUOTE_MSG; }
-    var r=WM.swapReady(pairLabel());
-    if(r.ready){ cta.textContent='Get Quote'; cta.disabled=false; cta.title=''; cta.classList.add('secondary'); }
-    else { cta.textContent='Connect Wallet'; cta.title=r.why||''; cta.disabled=false; cta.classList.remove('secondary'); } }
-  function ctaClick(){
-    if(!WM.swapReady(pairLabel()).ready){ openWallet(); return; }
-    var cta=document.getElementById('swapCta');
-    // Ask the REAL RFQ engine. Fail-closed: no maker + no verifier in the lab => no firm quote,
-    // and we surface ITS reason, never a fabricated price. (Live maker/coordinator wiring is next.)
-    var reason='no maker connected';
-    try{
-      if(window.SOSTRfq){
-        var book=SOSTRfq.makeBook({});
-        var r=book.validate({maker:'lab',nonce:1,amount:Number(document.getElementById('payAmt').value)||0,price:0,confirmedInventory:0,expiry:Date.now()+1}, Date.now());
-        reason=r.error||'no executable quote';
-      }
-    }catch(e){ reason='quote engine error'; }
-    try{
-      if(window.SOSTPriceAdapter){
-        SOSTPriceAdapter.makeAdapter({source:null}).getReference('SOST/USDC', Date.now()).then(function(ref){
-          document.getElementById('qRef').textContent = ref.simulated ? 'lab reference (not executable)' : (ref.last||'—');
-        });
-      }
-    }catch(e){}
-    cta.textContent='No executable quote'; cta.disabled=true; cta.classList.remove('secondary');
-    var qe=document.getElementById('quoteEmpty'); qe.style.display='flex';
-    qe.querySelector('span').innerHTML='No executable quote available &mdash; <b style="color:var(--txt-3);font-weight:600">'+reason+'</b>. The RFQ engine is fail-closed: with no maker and no signature verifier in the lab, no firm quote can be produced.';
-    var ql=document.getElementById('qLiq'); if(ql) ql.textContent=reason;
-  }
-
-/* ---- trade order form ---- */
-document.querySelectorAll('#mseg button').forEach(function(b){ b.addEventListener('click', function(){
-  document.querySelectorAll('#mseg button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on');
-  var lim=b.dataset.mode==='limit';
-  document.getElementById('limitPrice').style.display=lim?'block':'none';
-  document.getElementById('limitExpiry').style.display=lim?'block':'none';
-  document.getElementById('mktNote').style.display=lim?'none':'block';
-});});
-function setSide(btn,side){ btn.parentNode.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); btn.classList.add('on'); }
-var chartType='candles', chartTF='15m';
-document.querySelectorAll('#ivals button').forEach(function(b){ b.addEventListener('click', function(){
-  document.querySelectorAll('#ivals button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); chartTF=b.dataset.tf||chartTF; drawChart();
-});});
-document.querySelectorAll('#ctype button').forEach(function(b){ b.addEventListener('click', function(){
-  document.querySelectorAll('#ctype button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); chartType=b.dataset.ct||'candles'; drawChart();
-});});
-
-/* ---- demo chart (clearly labelled; deterministic, not real) ---- */
-function drawChart(){
-  var c=document.getElementById('chart'); if(!c) return;
-  var dpr=Math.min(window.devicePixelRatio||1,2);
-  var w=c.clientWidth||760, h=300;
-  c.width=w*dpr; c.height=h*dpr; var g=c.getContext('2d'); g.scale(dpr,dpr);
-  g.clearRect(0,0,w,h);
-  var pad=18;
-  // faint grid
-  g.strokeStyle='rgba(255,255,255,.05)'; g.lineWidth=1;
-  for(var i=1;i<5;i++){ var gy=pad+(h-2*pad)*i/5; g.beginPath(); g.moveTo(pad,gy); g.lineTo(w-pad,gy); g.stroke(); }
-  // deterministic OHLC series; the timeframe seeds a different but stable walk (NOT market data)
-  var tfSeed={ '1m':11,'5m':29,'15m':7,'1H':53,'4H':97,'1D':131,'1W':199 }[chartTF]||7;
-  var n=(chartType==='candles')?40:56, seed=tfSeed, v=100, ohlc=[], line=[];
-  function rnd(){ seed=(seed*1103515245+12345)&0x7fffffff; return (seed%1000)/1000; }
-  for(var k=0;k<n;k++){
-    var o=v, cl=Math.max(55, o+(rnd()-0.48)*7);
-    var hi=Math.max(o,cl)+rnd()*3, lo=Math.min(o,cl)-rnd()*3;
-    ohlc.push([o,hi,lo,cl]); line.push(cl); v=cl;
-  }
-  var lo_all=Math.min.apply(null,ohlc.map(function(x){return x[2];}));
-  var hi_all=Math.max.apply(null,ohlc.map(function(x){return x[1];}));
-  function X(i){return pad+(w-2*pad)*i/(n-1);} function Y(val){return pad+(h-2*pad)*(1-(val-lo_all)/(hi_all-lo_all||1));}
-  if(chartType==='candles'){
-    var cw=Math.max(2,(w-2*pad)/n*0.6);
-    for(var q=0;q<n;q++){ var o=ohlc[q][0],hi=ohlc[q][1],lo=ohlc[q][2],cl=ohlc[q][3];
-      var up=cl>=o, col=up?'#25c26e':'#FB010D'; var cx=X(q);
-      g.strokeStyle=col; g.lineWidth=1; g.beginPath(); g.moveTo(cx,Y(hi)); g.lineTo(cx,Y(lo)); g.stroke();
-      g.fillStyle=col; var yo=Y(o),yc=Y(cl); g.fillRect(cx-cw/2, Math.min(yo,yc), cw, Math.max(1,Math.abs(yc-yo)));
-    }
-  } else {
-    var grad=g.createLinearGradient(0,0,0,h); grad.addColorStop(0,'rgba(251,1,13,.22)'); grad.addColorStop(1,'rgba(251,1,13,0)');
-    g.beginPath(); g.moveTo(X(0),Y(line[0])); for(var j=1;j<n;j++) g.lineTo(X(j),Y(line[j]));
-    g.lineTo(X(n-1),h-pad); g.lineTo(X(0),h-pad); g.closePath(); g.fillStyle=grad; g.fill();
-    g.beginPath(); g.moveTo(X(0),Y(line[0])); for(var m=1;m<n;m++) g.lineTo(X(m),Y(line[m]));
-    g.strokeStyle='#FB010D'; g.lineWidth=2; g.stroke();
-    g.beginPath(); g.arc(X(n-1),Y(line[n-1]),3.5,0,7); g.fillStyle='#FB010D'; g.fill();
-  }
-}
-window.addEventListener('resize', function(){ if(document.getElementById('view-trade').classList.contains('active')) drawChart(); });
-
-/* ---- activity: canonical HTLC lifecycle (mirrors a real lab swap) ---- */
-var LIFECYCLE=[
-  ['Quote requested','off-chain RFQ to a maker'],
-  ['Quote received','firm price + expiry'],
-  ['Accepted','both sides agree H, amounts, timeouts'],
-  ['Awaiting funding','maker & taker prepare HTLCs'],
-  ['First chain funded','SOST HTLC locked'],
-  ['Second chain funded','BTC HTLC (P2WSH) locked'],
-  ['Confirming','required depth on both chains'],
-  ['Preimage revealed','claim on chain A exposes the secret'],
-  ['Claiming','watcher claims chain B with the secret'],
-  ['Completed','both legs settled · balances reconciled']
-];
-var CUR=9; // demo: a completed swap
-(function(){
-  var wrap=document.getElementById('steps');
-  LIFECYCLE.forEach(function(s,i){
-    var cls = i<CUR?'done':(i===CUR?'cur':'todo');
-    var mark = i<CUR?'✓':(i===CUR?'●':(i+1));
-    var div=document.createElement('div'); div.className='step '+cls;
-    div.innerHTML='<div class="rail"><div class="pip">'+mark+'</div><div class="line"></div></div>'+
-      '<div class="body"><div class="st">'+s[0]+'</div><div class="meta">'+s[1]+'</div></div>';
-    wrap.appendChild(div);
-  });
-})();
-
-/* ---- lab relay client (Activity): REAL verified state, graceful when absent ---- */
-var RELAY='http://127.0.0.1:8781';
-var RELAY_STATE={QuoteRequested:0,Accepted:2,SostLocked:4,CounterpartyLocked:5,PreimageRevealed:7,Claiming:8,Completed:9,Refunded:-1};
-function renderSteps(cur, refunded){
-  var wrap=document.getElementById('steps'); wrap.innerHTML='';
-  LIFECYCLE.forEach(function(s,i){
-    var cls = refunded ? (i<=3?'done':'todo') : (i<cur?'done':(i===cur?'cur':'todo'));
-    var mark = refunded ? (i<=3?'\u2713':'\u2014') : (i<cur?'\u2713':(i===cur?'\u25cf':(i+1)));
-    var div=document.createElement('div'); div.className='step '+cls;
-    div.innerHTML='<div class="rail"><div class="pip">'+mark+'</div><div class="line"></div></div>'+
-      '<div class="body"><div class="st">'+s[0]+'</div><div class="meta">'+s[1]+'</div></div>';
-    wrap.appendChild(div);
-  });
-}
-var labSwapId=null, labPoll=null;
-function relayHealth(){
-  fetch(RELAY+'/api/health').then(function(r){return r.json();}).then(function(h){
-    var pill=document.getElementById('relayPill'), msg=document.getElementById('relayMsg'), btn=document.getElementById('labSwapBtn');
-    pill.className='pill ok'; pill.textContent='Lab relay: connected';
-    msg.textContent='SOST '+(h.sost&&h.sost.up?'up (h='+h.sost.height+')':'down')+' \u00b7 BTC '+(h.btc&&h.btc.up?'up':'down')+' \u00b7 EVM '+(h.evm&&h.evm.up?'up':'down')+' \u00b7 harness '+(h.harness?'ready':'missing');
-    btn.disabled=!(h.sost&&h.sost.up&&h.btc&&h.btc.up&&h.harness);
-  }).catch(function(){
-    var pill=document.getElementById('relayPill'), msg=document.getElementById('relayMsg');
-    pill.className='pill demo'; pill.textContent='Lab relay: not running';
-    msg.textContent='Start website/lab/dex_lab_relay.py to run a REAL lab swap here. Showing a demo lifecycle meanwhile.';
-    document.getElementById('labSwapBtn').disabled=true;
-  });
-}
-function startLabSwap(){
-  var btn=document.getElementById('labSwapBtn'); btn.disabled=true; btn.textContent='Running\u2026';
-  fetch(RELAY+'/api/swap/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pair:'SOST/BTC'})})
-    .then(function(r){return r.json();}).then(function(d){
-      labSwapId=d.id; if(labPoll) clearInterval(labPoll);
-      labPoll=setInterval(pollLabSwap, 4000); pollLabSwap();
-    }).catch(function(){ btn.disabled=false; btn.textContent='Start lab SOST/BTC swap'; });
-}
-function pollLabSwap(){
-  if(!labSwapId) return;
-  fetch(RELAY+'/api/swap/'+labSwapId).then(function(r){return r.json();}).then(function(d){
-    var refunded=(d.state==='Refunded');
-    var cur=RELAY_STATE[d.state]; if(cur==null) cur=1;
-    renderSteps(refunded?9:cur, refunded);
-    document.getElementById('relayMsg').textContent='Swap '+labSwapId+' \u00b7 VERIFIED state: '+d.state+(d.coord_state?(' \u00b7 coordinator: '+d.coord_state):'');
-    if(d.state==='Completed'||refunded){ clearInterval(labPoll); var b=document.getElementById('labSwapBtn'); b.disabled=false; b.textContent='Start lab SOST/BTC swap'; }
-  }).catch(function(){});
-}
-var _actBtn=document.querySelector('nav.tabs button[data-view="activity"]');
-if(_actBtn) _actBtn.addEventListener('click', relayHealth);
-
-paint(); refreshCta();
-</script>
 </body>
 </html>
