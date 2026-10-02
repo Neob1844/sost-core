@@ -82,11 +82,41 @@ mine(){ # mine <addr> <wallet> <n>
   "$MINER" --profile dev --rpc "127.0.0.1:$RPC_PORT" --address "$1" --wallet "$2" \
     --mining-key-label default --blocks "$3" --threads 2 --realtime >>"$WORK/miner.log" 2>&1; }
 to_stocks(){ python3 -c "print(int(round(float('$1')*100000000)))"; }
-# mature, spendable coinbase UTXO #$1 of Alice: prints "txid vout amount_stocks"
-#   listunspent line: "txid: <TX>  vout: <V>  amount: <AMT> SOST  height: <H> [coinbase] ..."
-pick_utxo(){ "$CLI" --wallet "$WORK/alice.json" --node "127.0.0.1:$RPC_PORT" listunspent 2>&1 \
-  | awk -v n="$1" '/\[coinbase\]/ && !/IMMATURE/{c++; if(c==n){print $2, $4, $6; exit}}' \
-  | { read -r tx vout amt; [ -n "$tx" ] && echo "$tx $vout $(to_stocks "$amt")"; }; }
+# DETERMINISTIC coinbase-UTXO picker for Alice. Prints "txid vout amount_stocks".
+#   Source of truth is the node's getaddressutxos RPC, whose integer
+#   "amount_stocks" field is EXACTLY the value stored in the UTXO set and used
+#   to build the input sighash — no float/SOST-decimal round-trip (the old
+#   listunspent $6 awk column could round to a stock value the node disagreed
+#   with, breaking the signer's sighash -> E6). We take the FIRST UNSPENT,
+#   MATURE, non-locked coinbase UTXO with amount_stocks >= LOCK_AMT+FEE that has
+#   not already been consumed by an earlier lock this run (deduped by txid:vout
+#   in $WORK/used_utxos), and record it so the next call cannot reuse it.
+pick_utxo(){
+  local need=$((LOCK_AMT + FEE)) used_file="$WORK/used_utxos"
+  srpc getaddressutxos "[\"$ALICE\"]" \
+  | python3 -c '
+import sys, json, os
+need = int(sys.argv[1]); used_file = sys.argv[2]
+used = set()
+if os.path.exists(used_file):
+    with open(used_file) as f:
+        used = set(x.strip() for x in f if x.strip())
+try:
+    utxos = json.load(sys.stdin).get("result", []) or []
+except Exception:
+    utxos = []
+for u in utxos:
+    if not u.get("coinbase"): continue
+    if not u.get("mature"): continue
+    if u.get("spendable") is False: continue
+    amt = u.get("amount_stocks")
+    if not isinstance(amt, int) or amt < need: continue
+    key = "%s:%d" % (u.get("txid",""), int(u.get("vout",0)))
+    if key in used: continue
+    with open(used_file, "a") as f: f.write(key + "\n")
+    print(u["txid"], int(u["vout"]), amt)
+    break
+' "$need" "$used_file"; }
 # on-chain SOST balance (float) of a wallet
 sbalance(){ "$CLI" --wallet "$1" --node "127.0.0.1:$RPC_PORT" listunspent 2>&1 \
   | awk '/On chain:/{for(i=1;i<=NF;i++) if($i=="SOST") print $(i-1)}' | head -1; }
@@ -96,10 +126,15 @@ hstatus(){ "$CLI" --node "127.0.0.1:$RPC_PORT" gethtlcstatus "$1" 0 2>&1 \
 try:
   d=json.load(sys.stdin).get('result',{}); print(d.get('$2',''))
 except Exception: print('')"; }
-# build+sign+broadcast a SOST HTLC lock funded by Alice's coinbase UTXO #$1
-sost_lock(){ # sost_lock <utxo_index> <refund_height>  -> echoes lock txid or ERR:
-  local u; u="$(pick_utxo "$1")"; [ -n "$u" ] || { echo "ERR:no-utxo"; return; }
+# build+sign+broadcast a SOST HTLC lock funded by a fresh mature coinbase UTXO
+sost_lock(){ # sost_lock <lock_label> <refund_height>  -> echoes lock txid or ERR:
+  local u; u="$(pick_utxo)"; [ -n "$u" ] || { echo "ERR:no-utxo"; return; }
   local ptx pvout pst; read -r ptx pvout pst <<<"$u"
+  # log the exact funding UTXO (to stderr so it is not captured as the txid).
+  # The SAME $pst integer amount feeds createhtlclock AND sost-signtx below,
+  # so the signer's sighash matches the node's.
+  printf '%s[e2e]%s SOST lock #%s funded by UTXO %s:%s amount=%s stocks (refund@%s)\n' \
+         "$c_c" "$c_0" "$1" "$ptx" "$pvout" "$pst" "$2" >&2
   local uns sig
   uns="$("$CLI" createhtlclock "$ptx" "$pvout" "$pst" "$APKH" "$HASHLOCK" "$2" \
           "$BPKH" "$APKH" "$LOCK_AMT" "$FEE" 2>>"$WORK/cli.err" \
