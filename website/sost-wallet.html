@@ -4346,7 +4346,7 @@ function updatePopcActivation(height) {
     badge.style.background = 'rgba(251,191,36,0.1)';
     badge.style.border = '1px solid rgba(251,191,36,0.3)';
     badge.style.color = '#fbbf24';
-    badge.textContent = '⏳ PoPC activates at block 10,000 (~' + daysLeft + ' days) — Currently #' + height;
+    badge.textContent = '⏳ PoPC activates at block 25,000 (~' + daysLeft + ' days) — Currently #' + height;
     if (form) form.style.opacity = '0.5';
     if (btn) btn.disabled = true;
   }
@@ -4357,7 +4357,7 @@ window.registerPopc = function() {
   if (!ethAddr.startsWith('0x') || ethAddr.length !== 42) {
     return showError('popcResult', 'Invalid Ethereum address. Must be 0x + 40 hex characters.');
   }
-  showError('popcResult', 'Registration will be available when PoPC launches. Bond Lock transactions activate at block 10,000. Your registration data is saved locally.');
+  showError('popcResult', 'Registration will be available when PoPC launches. Bond Lock transactions activate at block 25,000. Your registration data is saved locally.');
   // Save to localStorage for when PoPC goes live
   const reg = { ethAddr, xaut: parseFloat(document.getElementById('popcXaut').value)||0,
                 paxg: parseFloat(document.getElementById('popcPaxg').value)||0,

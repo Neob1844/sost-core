@@ -15,7 +15,7 @@
 <link rel="icon" type="image/png" href="sost-logo.png?v=v392">
 <meta name="robots" content="noindex,nofollow">
 <title>SOST Atomic Swap Console — Founder-only (DO NOT USE)</title>
-<meta name="description" content="Founder-only guided console for SOST Atomic Swap V14 (HTLC). Educational + command generator. Not public, not custody, no private keys in the browser.">
+<meta name="description" content="Founder-only guided console for the SOST Atomic Swap (HTLC), current release. Educational + command generator. Not public, not custody, no private keys in the browser.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -177,7 +177,7 @@
   <p class="hero-sub">A guided, <b>founder-only</b> console for SOST &harr; EVM cross-chain atomic swaps (HTLC). Both SOST-side gates are <b>already live</b> &mdash; HTLC consensus acceptance since <b>block 16,000</b>, mempool relay since <b>block 17,000</b>. That does <b>not</b> make the feature available to third parties: the EVM contract is undeployed and unaudited, and the <b>Bitcoin leg is OFF</b> in the official binaries. It <b>explains</b>, <b>validates</b> and <b>generates the exact <code>sost-cli</code> commands</b> for you to run in your own terminal. It never asks for a seed phrase or private key, never signs, never broadcasts, and never sends your secret anywhere.</p>
   <div class="chips">
     <span class="chip red"><span class="dot"></span>DO NOT USE · Founder-only</span>
-    <span class="chip amber">Unaudited · EVM-only (BTC = V15)</span>
+    <span class="chip amber">Unaudited · EVM-only · BTC signing OFF by default (lab-verified on Bitcoin Core regtest + reorg test), not enabled in official binaries</span>
     <span class="chip cyan" id="statusChip"><span class="dot"></span>Status: checking…</span>
     <span class="chip" id="heightChip">Height: —</span>
     <span class="chip green"><a href="atomic-swap.html" style="color:inherit;text-decoration:none">← Consumer Atomic Swap (simple view)</a></span>
@@ -217,7 +217,7 @@
         <div class="e"><b>refund_height</b><br>The SOST block height at/after which you may refund. Set it LATER than the counterparty's EVM timeout.</div>
         <div class="e"><b>reorg</b><br>A chain reorganisation can un-mine a claim after the secret is already public on the other chain — the classic cross-chain risk.</div>
         <div class="e"><b>Why native first</b><br>ETH/BNB native behave predictably. USDT/PAXG/XAUT (non-standard / fee-on-transfer) can break the locked-amount accounting — not for first tests.</div>
-        <div class="e"><b>Why BTC is off</b><br>BTC HTLC signing is not active until V15; the BTC builder is a stub.</div>
+        <div class="e"><b>Why BTC is off</b><br>BTC signing OFF by default (lab-verified on Bitcoin Core regtest + reorg test); not enabled in official binaries; the BTC builder is a stub.</div>
       </div>
     </div>
   </div>
@@ -290,7 +290,7 @@
   <div class="panel" id="p-evm">
     <div class="card">
       <h2>EVM operate — real LOCK / CLAIM / REFUND (MetaMask)</h2>
-      <p>This runs the <b>real</b> <code>AtomicSwapHTLC</code> contract via your wallet: it builds the exact calldata (verified against the contract ABI) and your wallet signs &amp; sends. ETH/BNB native + ERC-20 (USDT/USDC/PAXG/XAUT). <b>BTC is excluded (V15).</b> No seed/private key ever touches this page.</p>
+      <p>This runs the <b>real</b> <code>AtomicSwapHTLC</code> contract via your wallet: it builds the exact calldata (verified against the contract ABI) and your wallet signs &amp; sends. ETH/BNB native + ERC-20 (USDT/USDC/PAXG/XAUT). <b>BTC is excluded (signing OFF by default).</b> No seed/private key ever touches this page.</p>
       <div class="warnmsg err" id="evmDeployWarn"><b>Contract status:</b> the <code>AtomicSwapHTLC</code> contract is <b>NOT deployed</b> by default (unaudited). Operations stay disabled until you deploy it and paste its address per network below. This is intentional — the console will not let you call a contract that does not exist.</div>
     </div>
 
@@ -431,7 +431,7 @@
       <ol style="font-size:13px;color:var(--text-secondary);line-height:1.9;padding-left:20px">
         <li><b>Connect MetaMask</b> → you will see your address, the network and your gas balance.</li>
         <li>Paste the deployed <b>contract address</b> → click <b>“Verify contract code”</b> (it must show <b style="color:#4ade80">EXACT</b>).</li>
-        <li>Choose asset <b>Native (ETH/BNB)</b> and a <b>tiny amount</b>. (ERC-20 is disabled for safety; BTC is for V15.)</li>
+        <li>Choose asset <b>Native (ETH/BNB)</b> and a <b>tiny amount</b>. (ERC-20 is disabled for safety; BTC signing is OFF by default (lab-verified on regtest, not in official binaries).)</li>
         <li>Click <b>“New S+H”</b> to generate the secret and the hashlock → <b>save the secret</b> (without it you cannot claim). “Random” generates the swapId.</li>
         <li>Set <b>refundTime</b> (current EVM block + margin) and the claimer/refunder addresses.</li>
         <li>Click <b>LOCK</b> → review the box (network, contract, amount) and sign in MetaMask. It returns the tx with an explorer link.</li>

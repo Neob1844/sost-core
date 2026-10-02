@@ -240,7 +240,7 @@
     <div class="hero-label fade-in">Governance Transparency</div>
     <h1 class="fade-in delay-1">Governance <span>Balances</span></h1>
     <p class="hero-sub fade-in delay-2">Real-time transparency for Protocol PoPC commitments, reserve accumulation, and smart contract registry. All data publicly verifiable on-chain.</p>
-    <p class="fade-in delay-3" style="margin-top:14px;font-size:12px;"><a href="sost-gold-reserve.html" style="color:#FFD700;font-weight:600;">→ Gold &amp; Metals Reserve — accumulation active, governed spending not active</a></p>
+    <p class="fade-in delay-3" style="margin-top:14px;font-size:12px;"><a href="sost-gold-reserve.html" style="color:#FFD700;font-weight:600;">→ Gold &amp; Metals Reserve — accumulation ended at #25,000; governed spending not active</a></p>
   </div>
 </section>
 
@@ -309,8 +309,8 @@
         <table class="code-table">
           <tr><th>Field</th><th>Value</th></tr>
           <tr><td>Address</td><td style="font-size:11px;word-break:break-all;color:var(--gold)">0xd38955822b88867CD010946F0Ba25680B9DfC7a6</td></tr>
-          <tr><td>Purpose</td><td>This wallet holds the foundation's XAUT/PAXG Metals Reserve holdings (separate from PoPC bonds). Funding pending — estimated May 28, 2026.</td></tr>
-          <tr><td>Status</td><td style="color:#eab308;font-weight:600;">PENDING — contract not yet signed.</td></tr>
+          <tr><td>Purpose</td><td>This wallet holds the foundation's XAUT/PAXG Metals Reserve holdings (separate from PoPC bonds). Funding pending; the earlier May 28, 2026 estimate has passed (superseded).</td></tr>
+          <tr><td>Status</td><td style="color:#eab308;font-weight:600;">SUPERSEDED / CLOSED — contract not signed; earlier estimate has passed.</td></tr>
           <tr><td>Verify on Etherscan</td><td><a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:var(--cyan-primary);text-decoration:none;font-size:11px;word-break:break-all;">etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6</a></td></tr>
         </table>
       </div>
@@ -391,8 +391,8 @@ var GENESIS_REWARD = 7.85100863;
 var BLOCKS_PER_HOUR = 6;
 
 var FOUNDATION_CONTRACTS = [
-  { model: 'Metals Reserve', asset: 'XAUT', amount: '0.5 oz', duration: '3 months', start: 'May 28, 2026', end: 'Aug 28, 2026', status: 'PENDING', contract: '0x68749665FF8D2d112Fa859AA293F07A622782F38', etherscan: 'etherscan.io/token/0x6874...2F38' },
-  { model: 'Metals Reserve', asset: 'PAXG', amount: '0.5 oz', duration: '3 months', start: 'May 28, 2026', end: 'Aug 28, 2026', status: 'PENDING', contract: '0x45804880De22913dAFE09f4980848ECE6EcbAf78', etherscan: 'etherscan.io/token/0x4580...bAf78' }
+  { model: 'Metals Reserve', asset: 'XAUT', amount: '0.5 oz', duration: '3 months', start: 'May 28, 2026', end: 'Aug 28, 2026', status: 'SUPERSEDED', contract: '0x68749665FF8D2d112Fa859AA293F07A622782F38', etherscan: 'etherscan.io/token/0x6874...2F38' },
+  { model: 'Metals Reserve', asset: 'PAXG', amount: '0.5 oz', duration: '3 months', start: 'May 28, 2026', end: 'Aug 28, 2026', status: 'SUPERSEDED', contract: '0x45804880De22913dAFE09f4980848ECE6EcbAf78', etherscan: 'etherscan.io/token/0x4580...bAf78' }
 ];
 
 /* ── Live Data State ── */
@@ -494,7 +494,7 @@ function updateDonut(xautOz, paxgOz) {
   if (!hasData) {
     canvas.style.display = 'none';
     placeholder.className = 'chart-placeholder';
-    placeholder.innerHTML = 'No balances detected<br>Awaiting contract deployment — March 28, 2026';
+    placeholder.innerHTML = 'No balances detected<br>Awaiting contract deployment (superseded; earlier March 28, 2026 estimate has passed)';
     if (donutChart) { donutChart.destroy(); donutChart = null; }
     return;
   }

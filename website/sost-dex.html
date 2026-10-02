@@ -257,7 +257,7 @@
 <div class="wrap">
 
   <div style="margin:0 0 14px;padding:11px 15px;border-radius:10px;border:1px solid #f0a92b;background:rgba(240,169,43,.10);color:#f0a92b;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.3px;text-align:center">
-    PREVIEW &middot; NOT ACTIVE &mdash; laboratory/testnet interface. No real prices, orders, liquidity or executable quotes. Real trading is disabled. Not an offer, solicitation or invitation to trade. Public launch pending CEX price, security audit and regulatory review.
+    SOST-layer DEX &mdash; activates at block #30,000 (automatic by height) but is admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled &mdash; no public trading. No real prices, orders, liquidity or executable quotes. Not an offer, solicitation or invitation to trade. Public launch pending CEX price, security audit and regulatory review.
   </div>
   <div style="margin:-6px 0 14px;font-size:12px;color:var(--txt-3);text-align:center">Looking for the encrypted OTC deal-channel console (signed offers, deal market, positions)? <a href="sost-dex-otc.html" style="color:var(--gold)">Open the OTC console &rarr;</a></div>
 
@@ -413,7 +413,7 @@
     <p class="lab-note">This mirrors a real laboratory swap: SOST devnet ⇄ Bitcoin regtest, funds bridged by the preimage revealed on-chain. A swap is only <b>Completed</b> after both legs confirm the required depth.</p>
   </section>
 
-  <p class="lab-note" style="margin-top:34px; color:var(--txt-4)">SOST DEX V2 — laboratory / testnet preview. The public DEX is not active. No real prices, orders, liquidity, or executable quotes are shown or implied. Not an offer or solicitation.</p>
+  <p class="lab-note" style="margin-top:34px; color:var(--txt-4)">SOST DEX V2 — the SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE); public access disabled — no public trading. No real prices, orders, liquidity, or executable quotes are shown or implied. Not an offer or solicitation.</p>
 </div>
 
 <!-- wallet modal -->
@@ -449,7 +449,9 @@
 <script>
 "use strict";
 /* SOST DEX V2 — Phase 1 dashboard shell. DEMO ONLY: no real prices, balances, quotes,
-   orders or liquidity. State is illustrative; real wiring lands in later lab phases. */
+   orders or liquidity. State is illustrative; the SOST-layer DEX activates at #30,000
+   (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE),
+   public access disabled. */
 
 /* ---- tab routing ---- */
 var tabs = document.querySelectorAll('nav.tabs button');

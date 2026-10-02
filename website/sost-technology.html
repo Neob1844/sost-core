@@ -20,19 +20,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Technology — ConvergenceX PoW, cASERT Difficulty, metals reserve (historical)</title>
-<meta name="description" content="ConvergenceX: 8GB memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
+<meta name="description" content="ConvergenceX: 8GB-total (4 GB dataset + 4 GB scratchpad) memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
 <meta name="keywords" content="ConvergenceX, cASERT, memory hard mining, CPU mining, proof of work, difficulty adjustment, metals reserve (historical), Feigenbaum emission, SOST technology">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SOST Technology — ConvergenceX PoW, cASERT Difficulty">
-<meta property="og:description" content="ConvergenceX: 8GB memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
+<meta property="og:description" content="ConvergenceX: 8GB-total (4 GB dataset + 4 GB scratchpad) memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
 <meta property="og:url" content="https://sostcore.com/sost-technology.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST Technology — ConvergenceX PoW, cASERT Difficulty">
-<meta name="twitter:description" content="ConvergenceX: 8GB memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
+<meta name="twitter:description" content="ConvergenceX: 8GB-total (4 GB dataset + 4 GB scratchpad) memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
@@ -1422,13 +1422,14 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
     <div class="section-header fade-in">
       <div class="section-id">SOVEREIGN VALUE STACK</div>
       <h2 class="section-title">E2E, SOST DEX, <span class="accent">PoPC Contracts</span></h2>
+      <div style="margin-top:12px;"><span class="spec-tag immutable">HISTORICAL design (superseded)</span></div>
     </div>
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in delay-1">
-      Beyond the consensus layer, SOST builds a complete sovereign value stack: encrypted peer coordination,
-      a decentralized exchange for tokenized gold, and immutable on-chain escrow contracts.
-      Each layer reinforces the others &mdash; private negotiation feeds the DEX, the DEX settles through
-      PoPC escrow, and escrow enforces the constitutional reserve.
-    </p>
+    <div style="max-width:1000px;margin:0 0 24px;padding:14px 18px;border:2px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.08);color:var(--text-secondary);line-height:1.75;font-size:13.5px;" class="fade-in delay-1">
+      <b style="color:#f59e0b;">Superseded.</b> The gold-escrow / Model-B DEX described below is a retired design kept for reference.
+      Today, real trading is the <b>non-custodial Atomic Swap DEX</b>; a <b>SOST-layer DEX</b> activates at <b>#30,000</b>
+      (admin-gated under S14 restricted developer mode, public access disabled). <b>PoPC is now a single native-SOST bond</b>
+      &mdash; no gold escrow and no PoPC DEX. The tables that follow document the original architecture only.
+    </div>
 
     <!-- E2E Encrypted Coordination -->
     <div class="spec-block fade-in delay-1" style="margin-bottom:20px;">

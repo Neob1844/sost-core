@@ -757,8 +757,8 @@
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-id">02 &mdash; ACTIVATION</div>
-      <h2 class="section-title">Activating at <span class="accent">Block 5000</span></h2>
-      <div style="margin-top:12px;"><span class="spec-tag consensus">CONSENSUS UPGRADE</span></div>
+      <h2 class="section-title">Activated at <span class="accent">Block 5000</span></h2>
+      <div style="margin-top:12px;"><span class="spec-tag consensus">ACTIVE SINCE #5,000</span></div>
     </div>
 
     <div class="spec-block fade-in delay-1">
@@ -1400,40 +1400,23 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
   </div>
 </section>
 
-<!-- FUTURE RESEARCH -->
+<!-- WORKS TODAY + FUTURE RESEARCH -->
 <section class="section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-id">04 &mdash; FUTURE</div>
-      <h2 class="section-title">Future <span class="accent">Research</span></h2>
+      <div class="section-id">04 &mdash; TRANSACTION FEATURES</div>
+      <h2 class="section-title">Works Today &amp; <span class="accent">Research</span></h2>
     </div>
 
+    <div style="margin-bottom:12px;"><span class="spec-tag consensus">WORKS TODAY / POLICY</span></div>
     <div class="mode-grid fade-in delay-1">
       <div class="mode-card">
         <div class="mode-name">
-          <span class="indicator" style="background:var(--cyan-primary)"></span>
+          <span class="indicator" style="background:var(--green-primary)"></span>
           Multisig (M-of-N)
         </div>
         <div class="mode-params">
-          <span>Fixed output type OUT_MULTISIG without full scripting. Medium complexity.</span>
-        </div>
-      </div>
-      <div class="mode-card">
-        <div class="mode-name">
-          <span class="indicator" style="background:var(--cyan-primary)"></span>
-          Relative Timelocks (CSV-like)
-        </div>
-        <div class="mode-params">
-          <span>Enables payment channels. Requires sequence number field. Medium complexity.</span>
-        </div>
-      </div>
-      <div class="mode-card">
-        <div class="mode-name">
-          <span class="indicator" style="background:var(--red-primary)"></span>
-          HTLC
-        </div>
-        <div class="mode-params">
-          <span>Hash timelock contracts for Lightning compatibility. High complexity.</span>
+          <span>Supported today via the OUT_MULTISIG output type &mdash; M-of-N spends without full scripting.</span>
         </div>
       </div>
       <div class="mode-card">
@@ -1442,7 +1425,29 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
           RBF / CPFP
         </div>
         <div class="mode-params">
-          <span>Mempool-only changes, no consensus change needed. Low complexity.</span>
+          <span>Mempool/policy fee-bumping. Works today &mdash; no consensus change needed.</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-name">
+          <span class="indicator" style="background:var(--red-primary)"></span>
+          Atomic-swap HTLC
+        </div>
+        <div class="mode-params">
+          <span>SOST-native hash-timelock contracts &mdash; active since #16,000 (relay #17,000).</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:28px 0 12px;"><span class="spec-tag overlay">FUTURE RESEARCH</span></div>
+    <div class="mode-grid fade-in delay-1">
+      <div class="mode-card">
+        <div class="mode-name">
+          <span class="indicator" style="background:var(--cyan-primary)"></span>
+          Relative Timelocks (CSV-like)
+        </div>
+        <div class="mode-params">
+          <span>Enables payment channels. Requires sequence number field. Medium complexity.</span>
         </div>
       </div>
       <div class="mode-card">
@@ -1458,11 +1463,14 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
 
     <div class="disclaimer-box fade-in delay-2">
       <p>
-        These features represent potential future upgrades to the SOST transaction architecture.
+        The research items above represent potential future upgrades to the SOST transaction architecture.
         Implementation will follow the type-based activation pattern established by BOND_LOCK and
         ESCROW_LOCK. No timeline commitments are made. Each upgrade requires a consensus change and
         will only be deployed after thorough testing, formal verification where applicable, and
         community review. SOST prioritizes correctness and security over feature velocity.
+        Separately, <strong>#30,000</strong> adds admin-gated native-asset transaction types
+        (ASSET_GENESIS / ISSUE / TRANSFER / BURN) under S14 restricted developer mode &mdash;
+        public access disabled.
       </p>
     </div>
   </div>

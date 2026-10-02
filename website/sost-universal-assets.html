@@ -96,7 +96,7 @@
 </nav>
 
 <div class="wrap">
-  <div class="banner">The <b>Asset Registry</b> below is a live web tool: it builds real, hashed, verifiable Asset Passports today. Native token issuance, real lending and a financial marketplace are <b>not</b> active — those remain a future protocol layer. Examples use fictional assets. Not an offer of any financial product.</div>
+  <div class="banner">The <b>Asset Registry</b> below is a live web tool: it builds real, hashed, verifiable Asset Passports today. Native token issuance, real lending and a financial marketplace <b>activate at block #30,000</b> (automatic by height) but are <b>admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled</b> — technical availability ≠ regulatory authorization. Examples use fictional assets. Not an offer of any financial product.</div>
 
   <div class="hero">
     <div class="eyebrow">SOST Asset Registry &middot; Register &rarr; Verify &rarr; Tokenize</div>
@@ -106,7 +106,7 @@
       <span class="chip" style="border-color:var(--green);color:#7ee2a8">Asset Registry — live web</span>
       <span class="chip">Any asset class</span>
       <span class="chip">SOST supply untouched</span>
-      <span class="chip red">Asset Marketplace — future</span>
+      <span class="chip red">Asset Marketplace — activates #30,000 · admin-gated · public access disabled</span>
     </div>
     <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
       <a href="#create" class="run gold" style="display:inline-block;text-decoration:none;padding:11px 22px">Create an Asset Passport &rarr;</a>
@@ -133,19 +133,19 @@
         <div class="hub-t">Auction</div>
         <div class="hub-d">Sell to the highest valid bidder.</div>
         <span class="hub-b gate">Engine complete &middot; lab verified</span>
-        <span class="hub-n">Mainnet execution: gated</span>
+        <span class="hub-n">Activates at #30,000 — admin-gated, public access disabled</span>
       </a>
       <a class="hub-card" href="#draw">
         <div class="hub-t">Draw</div>
         <div class="hub-d">Allocate an asset through a verifiable draw.</div>
         <span class="hub-b gate">Engine complete &middot; lab verified</span>
-        <span class="hub-n">Mainnet execution: gated</span>
+        <span class="hub-n">Activates at #30,000 — admin-gated, public access disabled</span>
       </a>
       <a class="hub-card" href="#funding">
         <div class="hub-t">Project Funding</div>
         <div class="hub-d">Fund something that will be built.</div>
         <span class="hub-b gate">Engine complete &middot; lab verified</span>
-        <span class="hub-n">Mainnet execution: gated</span>
+        <span class="hub-n">Activates at #30,000 — admin-gated, public access disabled</span>
       </a>
     </div>
   </section>
@@ -181,7 +181,7 @@
           <div class="kv"><span class="k">WHO SAYS IT</span><span class="v">Independent appraiser AB</span></div>
           <div class="kv"><span class="k">SOURCE / EVIDENCE</span><span class="v">Technical report #123</span></div>
           <div class="kv"><span class="k">VERIFICATION</span><span class="v"><span class="st on" style="font-size:10px">ATTESTED</span></span></div>
-          <div class="kv"><span class="k">WHEN</span><span class="v">2026-09-29</span></div>
+          <div class="kv"><span class="k">WHEN</span><span class="v">2026-10-02</span></div>
           <div class="kv"><span class="k">CONFIDENCE</span><span class="v">78%</span></div>
         </div>
         <details style="margin-top:12px">
@@ -193,7 +193,7 @@
                 source_name:"Appraiser AB",
                 reference:"report-123" },
   verification: { status:"ATTESTED" },
-  confidence: 78, timestamp: "2026-09-29…"
+  confidence: 78, timestamp: "2026-10-02…"
 }</pre>
         </details>
         <span class="tag">what · who · source · verification · when · confidence</span>
@@ -203,7 +203,7 @@
       <div class="comp cyan">
         <h3>Registry <span style="color:var(--green)">now</span> · Marketplace <span style="color:var(--txt3)">later</span></h3>
         <p style="margin-bottom:8px"><b style="color:var(--green)">SOST Asset Registry — CURRENT.</b> Claims, provenance, valuation, structured rights, Passport, canonical hashing, anchoring (anchor-ready), verification and tamper detection.</p>
-        <p><b style="color:var(--txt3)">SOST Asset Marketplace — FUTURE.</b> Financial issuance, secondary trading, distribution of returns, custody, regulated settlement and native on-chain assets. <b>Not implemented, not active</b> and never shown here as a product.</p>
+        <p><b style="color:var(--txt3)">SOST Asset Marketplace.</b> Financial issuance, secondary trading, distribution of returns, custody, regulated settlement and native on-chain assets. These <b>activate at block #30,000</b> (automatic by height) but are <b>admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled</b>, and never shown here as a product. Technical availability ≠ regulatory authorization.</p>
         <span class="tag">current product vs future protocol</span>
       </div>
     </div>
@@ -398,9 +398,9 @@
     <div class="sub">One Asset (or Project) Passport, four ways to bring it to people. Only <b>Tokenize</b> is a current product; the others are future/regulated modules — built and demoable here, never operated on real funds until a legal framework exists.</div>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
       <div class="comp gold"><h3>1 · Tokenize <span style="font-size:10px;color:var(--green)">· CURRENT</span></h3><p>Divide a right into token units. <a href="#create">Create a Passport &rarr;</a></p><span class="tag">divide a right into units</span></div>
-      <div class="comp cyan"><h3>2 · Auction <span style="font-size:10px;color:var(--amber)">· FUTURE · LIVE DEMO</span></h3><p>Recoverable escrow + bids; the highest valid bid wins. No chance involved — legally simpler than a draw, but asset-transfer / AML / tax rules still apply.</p><span class="tag">highest valid bid wins</span></div>
-      <div class="comp red"><h3>3 · Draw <span style="font-size:10px;color:var(--red2)">· FUTURE · REGULATED</span></h3><p>Tickets cover a minimum price; when sold out, a <b>verifiable</b> draw adjudicates the asset. In Spain this is a <b>rifa</b> (DGOJ / Ley 13/2011), not an auction — requires authorisation; disabled for real use.</p><span class="tag">one ticket wins the asset</span></div>
-      <div class="comp"><h3>4 · Project Funding <span style="font-size:10px;color:var(--amber)">· FUTURE · REGULATORY-READY</span></h3><p>Fund something not built yet: fund &rarr; build &rarr; verify &rarr; deliver, released by milestones. Debt/revenue/equity offers may be regulated crowdfunding (ECSPR / CNMV PSFP, ≤ €5M).</p><span class="tag">fund → build → deliver</span></div>
+      <div class="comp cyan"><h3>2 · Auction <span style="font-size:10px;color:var(--amber)">· ACTIVATES #30,000 · ADMIN-GATED · LIVE DEMO</span></h3><p>Recoverable escrow + bids; the highest valid bid wins. No chance involved — legally simpler than a draw, but asset-transfer / AML / tax rules still apply.</p><span class="tag">highest valid bid wins</span></div>
+      <div class="comp red"><h3>3 · Draw <span style="font-size:10px;color:var(--red2)">· ACTIVATES #30,000 · ADMIN-GATED · REGULATED</span></h3><p>Tickets cover a minimum price; when sold out, a <b>verifiable</b> draw adjudicates the asset. In Spain this is a <b>rifa</b> (DGOJ / Ley 13/2011), not an auction — requires authorisation; disabled for real use.</p><span class="tag">one ticket wins the asset</span></div>
+      <div class="comp"><h3>4 · Project Funding <span style="font-size:10px;color:var(--amber)">· ACTIVATES #30,000 · ADMIN-GATED · REGULATORY-READY</span></h3><p>Fund something not built yet: fund &rarr; build &rarr; verify &rarr; deliver, released by milestones. Debt/revenue/equity offers may be regulated crowdfunding (ECSPR / CNMV PSFP, ≤ €5M).</p><span class="tag">fund → build → deliver</span></div>
     </div>
 
     <div class="chips" style="margin:14px 0 4px"><span class="chip red">Draw &amp; Project Funding: LAUNCH DISABLED — demo only, no real funds</span></div>
@@ -835,7 +835,7 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
       <div class="comp red"><h3>SOST does NOT automatically</h3><p>Prove legal ownership · validate every owner declaration · guarantee valuation · guarantee liquidity · make a financial offering lawful · custody external funds · determine legal or regulatory classification.</p></div>
     </div>
     <h3 style="font-family:var(--sans);font-size:15px;margin:22px 0 8px;color:var(--txt)">Future regulated layer — direction, not a claim of authorisation</h3>
-    <div class="sub" style="margin-bottom:12px">Informational overview as of 2026-09-29; not legal advice. Requirements depend on the legal classification and jurisdiction.</div>
+    <div class="sub" style="margin-bottom:12px">Informational overview as of 2026-10-02; not legal advice. Requirements depend on the legal classification and jurisdiction.</div>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
       <div class="comp cyan"><h3>If the token is NOT a financial instrument</h3><p>It may fall under MiCA or other regimes depending on its characteristics.</p></div>
       <div class="comp cyan"><h3>If the token IS a financial instrument</h3><p>MiCA is <b>not</b> the applicable regime for the instrument itself; MiFID II / securities-markets law and national rules apply. ESMA classifies by the rights actually attached, case by case — the label or technology does not change the substance.</p></div>
@@ -855,7 +855,7 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
     <div class="sub">The units of an asset are independent of the SOST price. SOST is the network that registers, verifies and (where liquidity exists) settles them — not the asset itself.</div>
     <div class="comp" style="border-top-color:var(--cyan)"><p style="font-size:12.5px;color:var(--txt2);line-height:1.8">
       <b style="color:var(--txt)">1,000,000 SIERRA-X stay 1,000,000 SIERRA-X</b> whether 1 SOST = €0.001 or €10. The SOST price only matters when SOST is used for fees, settlement or as a reference — never to define how many units an asset has.<br>
-      A token unit is <b>not</b> a fraction of SOST: all SOST are fungible, so a colored/native-asset layer would be needed to tag units on-chain. That <b>SOST Native Assets</b> layer is a <b>future protocol phase</b> (post-V16), not part of today's Registry — it is never built near a consensus fork.</p>
+      A token unit is <b>not</b> a fraction of SOST: all SOST are fungible, so a colored/native-asset layer is needed to tag units on-chain. That <b>SOST Native Assets</b> layer <b>activates at block #30,000</b> (automatic by height) but is <b>admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled</b> — technical availability ≠ regulatory authorization, and it is never operated near a consensus fork.</p>
       <span class="tag">valuation ≠ token supply ≠ SOST price ≠ liquidity</span>
     </div>
   </section>

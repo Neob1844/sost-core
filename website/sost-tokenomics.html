@@ -878,8 +878,9 @@ sum    = <span class="num">785,100,863</span> &check;
       <div class="spec-body">
         <table class="code-table">
           <tr><td class="key">Miners (50%)</td><td class="val"><code>2,334,600</code> SOST</td></tr>
-          <tr><td class="key">Gold Vault (25%)</td><td class="val"><code>1,167,300</code> SOST</td></tr>
-          <tr><td class="key">PoPC Pool (25%)</td><td class="val"><code>1,167,300</code> SOST</td></tr>
+          <tr><td class="key">Gold Vault (25%)</td><td class="val"><code>1,167,300</code> SOST <span class="comment">// historical pre-V15 split (blocks 0&ndash;24,999); 0 since #25,000</span></td></tr>
+          <tr><td class="key">PoPC Pool (25%)</td><td class="val"><code>1,167,300</code> SOST <span class="comment">// historical pre-V15 split (blocks 0&ndash;24,999); 0 since #25,000</span></td></tr>
+          <tr><td class="key">Since #25,000 (V15)</td><td class="val">50% miner / 50% DTD <span class="comment">// gold-vault &amp; PoPC shares are 0 today</span></td></tr>
           <tr><td class="key">Maximum supply</td><td class="val"><code>4,669,201</code> SOST (hard cap)</td></tr>
           <tr><td class="key">Premine</td><td class="val"><code>0</code> SOST &mdash; zero</td></tr>
           <tr><td class="key">ICO / VCs</td><td class="val">None</td></tr>
@@ -918,7 +919,7 @@ sum    = <span class="num">785,100,863</span> &check;
           <tr><td class="key">Initial reward</td><td class="val">BTC: <code>50</code>/block &middot; SOST: <code>7.851</code>/block</td></tr>
           <tr><td class="key">Decay method</td><td class="val">BTC: halving every 210k blocks &middot; SOST: smooth 9.03% annual</td></tr>
           <tr><td class="key">Decay events</td><td class="val">BTC: cliff (50% overnight) &middot; SOST: continuous (no cliffs)</td></tr>
-          <tr><td class="key">Mining allocation</td><td class="val">BTC: 100% miner &middot; SOST: 50% miner, 25% gold, 25% PoPC</td></tr>
+          <tr><td class="key">Mining allocation</td><td class="val">BTC: 100% miner &middot; SOST: 50% miner, 25% gold, 25% PoPC (blocks 0&ndash;24,999; 50% miner / 50% DTD since #25,000)</td></tr>
           <tr><td class="key">Smallest unit</td><td class="val">BTC: 1 satoshi (10&#x207B;&#x2078;) &middot; SOST: 1 stock (10&#x207B;&#x2078;)</td></tr>
           <tr><td class="key">~95% emission</td><td class="val">BTC: ~2036 (year 28) &middot; SOST: ~2056 (year 30)</td></tr>
         </table>

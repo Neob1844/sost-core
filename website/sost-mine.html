@@ -230,7 +230,7 @@ nav .nav-links { width: 100%; }
      ══════════════════════════════════════════════════════════════════════ -->
 <div style="max-width:1000px;margin:20px auto;padding:18px 20px;border:1px solid rgba(57,255,20,.45);border-radius:10px;background:linear-gradient(150deg,rgba(57,255,20,.06),rgba(34,211,238,.04))">
   <div style="font-size:11px;letter-spacing:2px;color:#7b8794;margin-bottom:7px">FULL REFERENCE</div>
-  <div style="font-size:19px;font-weight:800;color:#39ff14;margin-bottom:8px">SOST V16 &mdash; Miner &amp; Node Guide</div>
+  <div style="font-size:19px;font-weight:800;color:#39ff14;margin-bottom:8px">SOST V30000 &mdash; Miner &amp; Node Guide</div>
   <div style="font-size:14px;line-height:1.7;color:#b9c6d4;margin-bottom:14px">
     This page gets you mining in ten minutes. The guide answers everything that comes after:
     where your RPC password comes from (<b>there is no universal one</b> &mdash; you create it),
@@ -246,11 +246,10 @@ nav .nav-links { width: 100%; }
     <a href="sost-upgrade.html#s8" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:7px 11px;border-radius:6px;text-decoration:none">Backups</a>
     <a href="sost-upgrade.html#s9" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:7px 11px;border-radius:6px;text-decoration:none">Troubleshooting</a>
   </div>
-  <div style="margin-top:13px;padding:10px 13px;border-left:3px solid #fb010d;background:rgba(251,1,13,.07);font-size:12.5px;line-height:1.65;color:#d7c2c2">
-    <b style="color:#ff6b6b">Before you build a node from scratch:</b> a full sync from the genesis block
-    currently stalls on 19 historical blocks (heights 4,160&ndash;5,410) that the published binaries cannot
-    re-validate. It is diagnosed and a bounded fix is designed, but <b>not deployed</b>. Start from a recent
-    <code>chain.json</code> instead. <a href="sost-upgrade.html#s11" style="color:#ff9f9f">Full status &rarr;</a>
+  <div style="margin-top:13px;padding:10px 13px;border-left:3px solid #2ecc71;background:rgba(46,204,113,.08);font-size:12.5px;line-height:1.65;color:#c2d7c8">
+    <b style="color:#5be58a">Building a node from scratch:</b> this is fixed in <b>V30000</b> &mdash; a V30000 node
+    completes a full sync from the genesis block, so a pre-seeded <code>chain.json</code> is no longer required.
+    <a href="sost-upgrade.html#s11" style="color:#9fe8b2">Full status &rarr;</a>
   </div>
 </div>
 

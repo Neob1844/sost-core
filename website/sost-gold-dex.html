@@ -18,7 +18,7 @@
 <link rel="canonical" href="https://sostcore.com/sost-gold-dex.html">
 <link rel="icon" type="image/png" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOST Atomic Swap DEX & OTC — SOST</title>
+<title>SOST Atomic Swap DEX & OTC</title>
 <meta name="description" content="SOST Atomic Swap DEX & OTC: non-custodial peer-to-peer swaps for XAUT/PAXG gold tokens and SOST, with on-chain HTLC / smart-contract escrow, signed offers (ED25519) and encrypted deal channels (X25519). SOST never custodies funds.">
 <meta name="keywords" content="SOST atomic swap DEX, OTC, non-custodial swap, tokenized gold, XAUT, PAXG, HTLC escrow, signed offers, encrypted deal channels">
 <meta name="author" content="SOST">
@@ -170,7 +170,7 @@ footer a{color:var(--t3);text-decoration:none}
 
 
 <!-- HERO -->
-<div style="max-width:1100px;margin:14px auto 0;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center">&#9216; <b>Reframing in progress &mdash; Atomic Swap / OTC.</b> Trading PoPC staking contracts (buy/sell/split positions, sell reward rights) is <b>disabled</b> (<code>POPC_DEX_ENABLED=false</code>) and not part of V15. PoPC is a non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. This surface is being converted into non-custodial swap &amp; OTC coordination (signed offers, encrypted deal channels).</div>
+<div style="max-width:1100px;margin:14px auto 0;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center">&#9216; <b>Reframing &mdash; Atomic Swap / OTC.</b> Trading PoPC staking contracts (buy/sell/split positions, sell reward rights) is <b>disabled</b> (<code>POPC_DEX_ENABLED=false</code>) in the current release (V30000); the signed-offer SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled. PoPC is a non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. This surface is non-custodial swap &amp; OTC coordination (signed offers, encrypted deal channels).</div>
 <div style="max-width:1000px;margin:14px auto;padding:12px 16px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);font-size:13.5px;line-height:1.6" data-sost-hist="1">
 <b style="color:#f59e0b">HISTORICAL ECONOMICS ON THIS PAGE.</b> Text below describing a <b>50/25/25</b> split, a Gold Funding Vault emission stream or a PoPC Pool share is true only for blocks <b>below #25,000</b>. Since <b>V15</b> the split is <b>50% miner / 50% DTD</b> and the gold and PoPC emission shares are <b>zero</b>; the DTD is <b>permissionless</b> (no PoPC bond required). Current: <a href="sost-protocol-spec.html" style="color:#39ff14">protocol spec</a> &middot; <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>.
 </div>
@@ -257,7 +257,7 @@ footer a{color:var(--t3);text-decoration:none}
 <section style="border-bottom:none;padding-bottom:0"><div class="c">
 <h2>Ownership Rules <span style="color:var(--t1)">(Historical &mdash; Model B)</span></h2>
 
-<div class="warn"><strong>Historical / superseded.</strong> The split-ownership design below (Model B &ldquo;SOSTEscrow&rdquo; positions with separable principal and reward rights) is <strong>historical</strong> and has been <strong>superseded by the single native SOST bond model</strong>. PoPC is now one non-tradeable native SOST bond &mdash; create, monitor, claim &mdash; with no separable or sellable reward rights; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. None of the transfer flows described here are active, and trading PoPC positions or reward rights is disabled (<code>POPC_DEX_ENABLED=false</code>) and not part of V15. Retained for reference only.</div>
+<div class="warn"><strong>Historical / superseded.</strong> The split-ownership design below (Model B &ldquo;SOSTEscrow&rdquo; positions with separable principal and reward rights) is <strong>historical</strong> and has been <strong>superseded by the single native SOST bond model</strong>. PoPC is now one non-tradeable native SOST bond &mdash; create, monitor, claim &mdash; with no separable or sellable reward rights; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. None of the transfer flows described here are active, and trading PoPC positions or reward rights is disabled (<code>POPC_DEX_ENABLED=false</code>) and not part of the current release (V30000). Retained for reference only.</div>
 
 <div style="background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--red);padding:20px;border-radius:4px;line-height:1.8;font-size:12px;color:var(--t2);margin-bottom:20px">
 <p style="color:var(--t1);font-weight:600;margin-bottom:8px">Historical rule (Model B)</p>
@@ -305,7 +305,7 @@ footer a{color:var(--t3);text-decoration:none}
 </table>
 
 <div style="background:var(--bg2);border:1px solid var(--bdr);border-left:3px solid var(--gold);padding:14px;border-radius:4px;font-size:11px;color:var(--t2);line-height:1.8">
-<strong style="color:var(--gold)">Historical status:</strong> The Model B SOSTEscrow components above were testnet-only (Sepolia) and are <strong>superseded by the single native SOST bond model</strong>. They are not deployed to mainnet, not part of V15, and no PoPC position or reward-right transfer is active. See <a href="sost-popc.html" style="color:var(--gold);text-decoration:underline">PoPC Bond Staking</a> for the current non-tradeable bond design.
+<strong style="color:var(--gold)">Historical status:</strong> The Model B SOSTEscrow components above were testnet-only (Sepolia) and are <strong>superseded by the single native SOST bond model</strong>. They are not deployed to mainnet, not part of the current release (V30000), and no PoPC position or reward-right transfer is active. See <a href="sost-popc.html" style="color:var(--gold);text-decoration:underline">PoPC Bond Staking</a> for the current non-tradeable bond design.
 </div>
 
 </div></section>
@@ -566,7 +566,7 @@ is a <em>separate</em> internal research system; it does not run inside the DEX 
 </div>
 
 <section style="padding-top:24px"><div class="c">
-<div class="warn"><strong>Historical / superseded.</strong> The dual-model PoPC design below (Model A self-custody and Model B escrow) is <strong>historical</strong>. PoPC has been redesigned to a <strong>single native SOST bond</strong> &mdash; the only collateral and the only thing slashable &mdash; created, monitored and claimed as a staking product that activates at <strong>V15 / block 25,000</strong>. PoPC bonds are <strong>not tradeable</strong> and there is no separable reward right. The optional &ldquo;Gold Boost&rdquo; is a reward boost only (never collateral, never slashed) and is disabled on mainnet. The spec below is retained for reference only &mdash; see <a href="sost-popc.html" style="color:var(--cyan);text-decoration:underline">PoPC Bond Staking</a> for the current model.</div>
+<div class="warn"><strong>Historical / superseded.</strong> The dual-model PoPC design below (Model A self-custody and Model B escrow) is <strong>historical</strong>. PoPC has been redesigned to a <strong>single native SOST bond</strong> &mdash; the only collateral and the only thing slashable &mdash; created, monitored and claimed as a staking product. The single-bond model is defined on mainnet since <strong>#25,000 (V15, live)</strong>, but PoPC staking is currently <strong>paused / legacy</strong> and not operating. PoPC bonds are <strong>not tradeable</strong> and there is no separable reward right. The optional &ldquo;Gold Boost&rdquo; is a reward boost only (never collateral, never slashed) and is disabled on mainnet. The spec below is retained for reference only &mdash; see <a href="sost-popc.html" style="color:var(--cyan);text-decoration:underline">PoPC Bond Staking</a> for the current model.</div>
 </div></section>
 
 <!-- 6. MODEL A vs MODEL B -->
@@ -694,7 +694,7 @@ Blacklist:      After 3 slashes (permanent ban from Model A)</pre>
 <h2>12. Gold Vault <span class="cyan">Governance</span></h2>
 <p>Constitutional governance rules for the Gold Vault. These rules are immutable and enforced at consensus level.</p>
 
-<div class="warn"><strong>Activation:</strong> Gold Vault governance rules GV1&ndash;GV4 activate at V15 / block 25,000.</div>
+<div class="warn"><strong>Gold Vault governance:</strong> deferred on mainnet (INT64_MAX); it activates nothing.</div>
 
 <table>
 <tr><th>Rule</th><th>Name</th><th>Description</th></tr>

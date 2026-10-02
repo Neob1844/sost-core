@@ -727,9 +727,9 @@
       Reserve
     </h1>
     <p class="hero-sub fade-in delay-2">
-      Transparent SOST-side accumulation today. Tokenized gold reserve planned.
-      <strong>Governed spending is not active.</strong> Every mined block allocates 25%
-      of issuance to an on-chain Gold Vault by consensus. The design below &mdash; sale
+      Transparent SOST-side accumulation until #25,000. Tokenized gold reserve planned.
+      <strong>Governed spending is not active.</strong> Every mined block allocated 25%
+      of issuance to an on-chain Gold Vault by consensus until #25,000; that share is <strong>0 since V15</strong>. The design below &mdash; sale
       governance, an Ethereum custody vault, tokenized-gold rails &mdash; is the roadmap,
       not something running today.
     </p>
@@ -752,7 +752,7 @@
     <div style="background:rgba(251,1,13,0.06);border:1px solid #fb010d;border-radius:8px;padding:20px 24px;margin-bottom:32px;">
       <div style="font-size:11px;letter-spacing:2px;color:#fb010d;margin-bottom:8px;">CURRENT STATE</div>
       <div style="font-size:16px;line-height:1.7;color:var(--text-primary);font-weight:500;">
-        The Gold Vault accumulates SOST today. Governed spending is not active.
+        The Gold Vault accumulated SOST until #25,000; it is no longer funded since V15 (#25,000). Governed spending is not active.
         No SOST from the vault is currently being sold or moved.
       </div>
     </div>
@@ -781,7 +781,7 @@
       </div>
       <div class="mode-card">
         <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Governance Gates</div>
-        <div class="mode-params"><span style="color:#FFD700;font-weight:600;">DEFERRED</span><br>G1&ndash;G5, planned V15 (block 25,000)</div>
+        <div class="mode-params"><span style="color:#FFD700;font-weight:600;">DEFERRED (INT64_MAX)</span><br>G1&ndash;G5 &middot; no activation height set</div>
       </div>
       <div class="mode-card">
         <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>Protocol Registry</div>
@@ -1015,7 +1015,7 @@
     <!-- staged plan -->
     <div class="mode-grid" style="margin-top:12px;">
       <div class="mode-card">
-        <div class="mode-name"><span class="indicator" style="background:#fb010d;box-shadow:0 0 6px #fb010d;"></span>No earlier than block 20,000 — FOUNDER TEST</div>
+        <div class="mode-name"><span class="indicator" style="background:#fb010d;box-shadow:0 0 6px #fb010d;"></span>FOUNDER TEST — subject to Safe setup + legal review; not scheduled by block height</div>
         <div class="mode-params">1 symbolic op, founder only, <span style="color:var(--text-primary);">50&ndash;100 SOST</span>, PAXG via atomic swap → Safe, Forge Proof published. Subject to Safe setup, legal review and internal approval. <span style="color:#fb010d;">Planned, not active — not a commitment.</span></div>
       </div>
       <div class="mode-card">
@@ -1023,8 +1023,8 @@
         <div class="mode-params">Audit the circuit: Safe works? Forge Proof clear/auditable? no flow errors? no legal/commercial confusion? Public status stays "founder-only test, public Forge not active."</div>
       </div>
       <div class="mode-card">
-        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>No earlier than block 25,000 — LIMITED (may be considered)</div>
-        <div class="mode-params">May be considered no earlier than block 25,000, only if the founder test, legal review and registry process are successful. Same caps, whitelist / sealed-bid first, atomic settlement, gold → Safe only, emergency stop. Not a public AMM.</div>
+        <div class="mode-name"><span class="indicator" style="background:#FFD700;box-shadow:0 0 6px #FFD700;"></span>LIMITED (may be considered) — subject to Safe setup + legal review; not scheduled by block height</div>
+        <div class="mode-params">May be considered subject to Safe setup + legal review, only if the founder test, legal review and registry process are successful. Same caps, whitelist / sealed-bid first, atomic settlement, gold → Safe only, emergency stop. Not a public AMM.</div>
       </div>
       <div class="mode-card">
         <div class="mode-name"><span class="indicator" style="background:var(--text-dim);"></span>Later — PUBLIC PARTICIPATION</div>

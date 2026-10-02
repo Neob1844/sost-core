@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PoPC Bond Staking — Single Native SOST Bond (Create / Monitor / Claim)</title>
-<meta name="description" content="PoPC Bond Staking specification: the single native SOST bond — the only collateral and the only slashable asset. Create, monitor and claim. Activates at V15 / block 25,000. Not tradeable in V15. Includes historical reference for the superseded Model A / Model B Ethereum escrow design.">
+<meta name="description" content="PoPC Bond Staking specification: the single native SOST bond — the only collateral and the only slashable asset. Create, monitor and claim. Its V15 / block 25,000 activation height is now past; the bond model is paused / superseded by DTD (legacy reference). Not tradeable in V15. Includes historical reference for the superseded Model A / Model B Ethereum escrow design.">
 <meta name="keywords" content="PoPC bond staking, SOST bond, native SOST bond, create monitor claim, PoPC V15, SOST staking, Proof of Personal Custody">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
@@ -234,7 +234,7 @@
   <div class="container">
     <div class="hero-label fade-in">PoPC Bond Staking — Single Native SOST Bond</div>
     <h1 class="fade-in delay-1">PoPC Bond <span>Staking</span></h1>
-    <p class="hero-sub fade-in delay-2">Specification for the single native SOST bond — the only collateral and the only slashable asset in PoPC. A staking product: <strong>create</strong> a bond, <strong>monitor</strong> it, then <strong>claim</strong> your reward. Activates at <strong>V15 / block 25,000</strong> and is <strong>not tradeable in V15</strong>. Gold Boost is an optional reward boost only — never collateral, never slashed — and is disabled on mainnet. The earlier Model A / Model B Ethereum SOSTEscrow design below is preserved as historical / superseded reference.</p>
+    <p class="hero-sub fade-in delay-2">Specification for the single native SOST bond — the only collateral and the only slashable asset in PoPC. A staking product: <strong>create</strong> a bond, <strong>monitor</strong> it, then <strong>claim</strong> your reward. Its V15 / #25,000 activation height is now past, and the bond model is <strong>paused / superseded by DTD</strong> (legacy / reference). Gold Boost is an optional reward boost only — never collateral, never slashed — and is disabled on mainnet. The earlier Model A / Model B Ethereum SOSTEscrow design below is preserved as historical / superseded reference.</p>
   </div>
 </section>
 
@@ -242,7 +242,7 @@
 <section style="padding:0;">
   <div class="container" style="padding-top:24px;">
     <div style="background:rgba(192,132,252,0.08);border:1px solid rgba(192,132,252,0.35);border-radius:8px;padding:16px 20px;font-size:12px;color:var(--text-secondary);line-height:1.8;">
-      <strong style="color:#c084fc;">&#9776; CURRENT MODEL — SINGLE NATIVE SOST BOND</strong> &mdash; PoPC has been redesigned to a <strong>single native SOST bond</strong>: the only collateral and the only slashable asset. It is a <strong>staking product</strong> — create / monitor / claim — that activates at <strong>V15 / block 25,000</strong> and is <strong>not tradeable in V15</strong>. <strong style="color:#c084fc;">This single-bond model supersedes Model A, Model B and the Ethereum SOSTEscrow design</strong> shown further down this page, which is retained only as historical reference. <strong>Gold Boost</strong> is an optional reward boost only — never collateral, never slashed — and is <strong>disabled on mainnet</strong>. Everything below referencing the Ethereum escrow / XAUT-PAXG verification / Model A / Model B is <span style="color:#c084fc;">HISTORICAL / SUPERSEDED</span>.
+      <strong style="color:#c084fc;">&#9776; CURRENT MODEL — SINGLE NATIVE SOST BOND</strong> &mdash; PoPC has been redesigned to a <strong>single native SOST bond</strong>: the only collateral and the only slashable asset. It is a <strong>staking product</strong> — create / monitor / claim — whose V15 / #25,000 activation height is now past; the bond model is <strong>paused / superseded by DTD</strong> (legacy / reference). <strong style="color:#c084fc;">This single-bond model supersedes Model A, Model B and the Ethereum SOSTEscrow design</strong> shown further down this page, which is retained only as historical reference. <strong>Gold Boost</strong> is an optional reward boost only — never collateral, never slashed — and is <strong>disabled on mainnet</strong>. Everything below referencing the Ethereum escrow / XAUT-PAXG verification / Model A / Model B is <span style="color:#c084fc;">HISTORICAL / SUPERSEDED</span>.
     </div>
   </div>
 </section>
@@ -311,7 +311,7 @@
       <div class="stat-card fade-in delay-2" id="popcCardActive">
         <div class="stat-label">Active Contracts</div>
         <div class="stat-val" style="color:var(--cyan-primary)">0</div>
-        <div class="stat-sub">Model A + Model B</div>
+        <div class="stat-sub">Model A + Model B <span style="color:#c084fc;">(superseded naming &mdash; single native bond)</span></div>
       </div>
       <div class="stat-card fade-in delay-1" id="popcCardRewards">
         <div class="stat-label">Total Rewards Paid</div>
@@ -581,7 +581,7 @@
       <div class="section-title">Gold Vault <span class="accent">Governance</span></div>
     </div>
     <div class="notice" style="border-left-color:var(--gold);margin-bottom:24px;">
-      <strong>Activation:</strong> Gold Vault governance activates at <strong>V15 / block 25,000</strong> (GV_GOVERNANCE_ACTIVATION). Until then, vault funds accumulate but cannot be spent.
+      <strong>Activation:</strong> Gold Vault governance is <strong>DEFERRED (INT64_MAX)</strong> (GV_GOVERNANCE_ACTIVATION); it was <strong>NOT activated at #25,000</strong>. The vault is no longer funded since V15 (#25,000).
     </div>
     <div class="spec-block fade-in delay-1">
       <div class="spec-header"><div class="spec-icon gold"></div><span class="spec-label">Spending Rules (GV1&ndash;GV4)</span><span class="spec-tag">CONSENSUS-ENFORCED</span></div>
@@ -590,7 +590,7 @@
           <tr><th>Rule</th><th>Type</th><th>Vote Required</th><th>Condition</th></tr>
           <tr><td class="highlight">GV1</td><td class="green">Gold Purchase</td><td class="green">No</td><td>TX contains GV_PAYLOAD_GOLD_PURCHASE marker (0x47). Direct gold acquisition for vault backing.</td></tr>
           <tr><td class="highlight">GV2</td><td style="color:#fbbf24">Small Operational</td><td class="green">No</td><td>&le; 10% of monthly vault balance (GV_MONTHLY_LIMIT_PCT). Within 4,320-block window (GV_MONTHLY_WINDOW ~30 days). Fresh window if expired.</td></tr>
-          <tr><td class="highlight">GV3</td><td style="color:#fb923c">Large / Non-standard</td><td style="color:#e63946;font-weight:600">Yes &mdash; miner vote</td><td>Epoch 0&ndash;1 (blocks 25,000&ndash;263,105): 95% threshold. Epoch 2+ (block 263,106+): 95% threshold. Voting window: 288 blocks (~48h).</td></tr>
+          <tr><td class="highlight">GV3</td><td style="color:#fb923c">Large / Non-standard</td><td style="color:#e63946;font-weight:600">Yes &mdash; miner vote</td><td><strong style="color:#FFD700;">DEFERRED (INT64_MAX) &mdash; not live.</strong> As designed: Epoch 0&ndash;1: 95% threshold. Epoch 2+: 95% threshold. Voting window: 288 blocks (~48h). No activation height is set; these thresholds are not in effect.</td></tr>
           <tr><td class="highlight">GV4</td><td style="color:#e63946">Rejected</td><td>&mdash;</td><td>Spend doesn't match any rule &rarr; returned to vault automatically.</td></tr>
         </table>
       </div>
@@ -667,7 +667,7 @@
       <div class="spec-body"><div class="empty-state">No slashed contracts.</div></div>
     </div>
     <div class="notice">
-      <strong>Activation:</strong> The single native SOST bond activates at <strong>V15 / block 25,000</strong> (BOND_ACTIVATION_HEIGHT_MAINNET). Bonds are created, monitored and claimed on the SOST chain and are not tradeable in V15. Community bonds will appear here as participants register. The Model A / Model B columns above reflect the historical / superseded design.
+      <strong>Activation:</strong> The single native SOST bond&rsquo;s V15 / #25,000 activation height (BOND_ACTIVATION_HEIGHT_MAINNET) is now past; the bond model is <strong>paused / superseded by DTD</strong> and retained as legacy / reference. Bonds are created, monitored and claimed on the SOST chain and are not tradeable in V15. The Model A / Model B columns above reflect the historical / superseded design.
     </div>
   </div>
 </section>

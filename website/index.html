@@ -1344,7 +1344,7 @@
       The <b style="color:#39ff14">DTD (Deterministic Token Distribution)</b> is a consensus-run, per-draw distribution of
       the block&rsquo;s value to eligible network participants &mdash; <b>deterministic</b> (the winner is computed by the
       rules, not chosen by anyone), <b>keyless</b> at SOST layer, and <b>supply-neutral</b> (it moves coins, it never
-      mints them). It runs today and intensifies at V15.
+      mints them). It runs today and intensified at V15 (#25,000), where the split became 50% miner / 50% DTD.
     </p>
 
     <!-- DIAGRAM 1 — emission split before / after V15 -->
@@ -1377,16 +1377,22 @@
           At <b>V15 (#25,000)</b> it moves to <b style="color:#39ff14">3-of-3 &mdash; a draw on EVERY block</b>, permanently.
           Same total value, <b>3&times; more &amp; smaller payouts</b> &mdash; maximum decentralization. Eligibility is
           gated (recent-producer cooldown, anti-dominance) so payouts spread across many participants.<br><br>
-          <b style="color:#ffd166">At V16.1 (#30,000) the draw itself does not change</b> &mdash; still every block, still uniform,
+          <b style="color:#ffd166">At V16 (#30,000) the draw itself does not change</b> &mdash; still every block, still uniform,
           still never weighted by PoW, same seed, same 50/50 split &mdash; but <b style="color:#ffd166">who qualifies does</b>.
           See the gates below.
         </p>
+        <div style="margin-top:12px;border:1px solid #c084fc;border-radius:8px;background:rgba(192,132,252,.06);padding:12px 14px">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#c084fc;margin-bottom:7px">#30,000 ALSO ACTIVATES &mdash; ADMIN-GATED, PUBLIC ACCESS DISABLED</div>
+          <p class="four-pillar-body" style="margin:0;font-size:12.5px">
+            The same #30,000 activation brings on-chain a <b>native-asset layer</b> (asset genesis / issue / transfer / burn, conservation + supply-cap safety, reorg-safe index), <b>four tokenization modalities</b> (Tokenize, Auction, Draw, Project Funding) and a <b>SOST-layer DEX</b>. While <b>RESTRICTED DEVELOPER MODE (S14)</b> is in force, every native-asset operation must carry an admin-authorized input or the network rejects it at consensus, and <b>public access is disabled</b> &mdash; no CLI, RPC or browser bypass. Technical availability is not regulatory authorization; ordinary SOST transfers are unaffected.
+          </p>
+        </div>
         <div style="margin-top:12px;border:1px solid #2b7a3d;border-radius:8px;background:rgba(57,255,20,.05);padding:12px 14px">
           <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#39ff14;margin-bottom:7px">WHO IS ELIGIBLE TO WIN</div>
           <p class="four-pillar-body" style="margin:0;font-size:12.5px">
             The winner is drawn <b>deterministically and uniformly</b> from the set of addresses that pass <b>every</b> gate (any one excludes an address):<br><br>
             <b style="color:#39ff14">Active signed miner</b> — must be a real SbPoW-signed miner identity (its most recent block at height &ge; <b>#7,100</b>); enforced from #12,100. No signed identity, no eligibility.<br>
-            <b style="color:#39ff14">Active miner (recency)</b> — from #25,000, must have mined <b>&ge;1 block in the last 5,000 blocks</b>. <b style="color:#ffd166">From #30,000 (V16.1) this tightens to the last 288 blocks</b> (~2 days), at every height including jackpot heights; dormant addresses drop out until they mine again.<br>
+            <b style="color:#39ff14">Active miner (recency)</b> — from #25,000, must have mined <b>&ge;1 block in the last 5,000 blocks</b>. <b style="color:#ffd166">From #30,000 (V16) this tightens to the last 288 blocks</b> (~2 days), at every height including jackpot heights; dormant addresses drop out until they mine again.<br>
             <b style="color:#39ff14">Recent-producer cooldown</b> — excluded if it produced any of the previous <b>6 blocks</b> (5 before V13) — stops back-to-back wins. Note it keys on <b>having mined</b>, not on having won. <b style="color:#ffd166">From #30,000 it yields when applying it would leave the draw with nobody</b>.<br>
             <b style="color:#39ff14">Anti-dominance cap</b> — excluded if its share of the last <b>288 blocks is &ge; 10%</b> (from #12,100) — caps concentration. <b style="color:#ffd166">From #30,000 the gate is armed only when the window holds &ge;11 distinct miners</b>: below that it would exclude the very miners keeping the chain alive, so with a single active miner that miner can take 100% of the block (50% miner + 50% DTD).<br>
             <b style="color:#39ff14">Uniform &amp; keyless</b> — every eligible address has the <b>same probability</b>; the winner is computed from chain state by the rules — never weighted by balance, stake or any payment.<br><br>
@@ -1439,7 +1445,7 @@
     </div>
 
     <p class="fade-in delay-3" style="margin-top:22px;font-size:11.5px;color:var(--text-dim);text-align:center;font-family:var(--font-mono);letter-spacing:1.2px">
-      Deterministic Token Distribution &middot; activates at block #25,000 &middot; supply-neutral &middot; enforced by consensus &middot; any change needs a network-adopted upgrade
+      Deterministic Token Distribution &middot; active since block #25,000 &middot; supply-neutral &middot; enforced by consensus &middot; any change needs a network-adopted upgrade
     </p>
   </div>
 </section>

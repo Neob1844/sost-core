@@ -333,6 +333,8 @@
       <h2 class="section-title">Bond <span class="accent">Deterrence</span></h2>
     </div>
 
+    <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-left:3px solid #fbbf24;padding:14px 16px;border-radius:4px;margin-bottom:20px;font-size:13px;color:var(--text-secondary);line-height:1.8;" class="fade-in"><strong style="color:#fbbf24;">HISTORICAL / SUPERSEDED.</strong> The multi-layer gold-custody bond mechanics described below (30% of gold value, redistribution to PoPC Pool / Gold Vault, star track-record) belong to the retired PoPC gold-custody design. PoPC was redesigned to a <strong>single native-SOST bond</strong> and is now <strong>paused / legacy</strong>, superseded by DTD / DTD Jackpot, with zero emission since V15 (#25,000). This section is retained for historical reference.</div>
+
     <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">The bond does not make fraud impossible — it makes it costly. Four layers of deterrence combine to make large-scale systematic fraud economically irrational.</p>
 
     <div class="mode-grid fade-in delay-1">
@@ -367,6 +369,8 @@
       <div class="section-id"></div>
       <h2 class="section-title">Audit &amp; Oracle <span class="accent">Resistance</span></h2>
     </div>
+
+    <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-left:3px solid #fbbf24;padding:14px 16px;border-radius:4px;margin-bottom:20px;font-size:13px;color:var(--text-secondary);line-height:1.8;" class="fade-in"><strong style="color:#fbbf24;">HISTORICAL / SUPERSEDED.</strong> The ConvergenceX entropy-audit and bond-pricing mechanics below describe the retired PoPC gold-custody design. PoPC is now a <strong>single native-SOST bond</strong>, <strong>paused / legacy</strong> (superseded by DTD / DTD Jackpot), with zero emission since V15 (#25,000). Retained for historical reference.</div>
 
     <div class="spec-block fade-in delay-1">
       <div class="spec-header">
@@ -596,6 +600,7 @@
           <tr><td class="label">RBF (Replace-by-Fee) mempool policy</td><td class="green">Complete</td></tr>
           <tr><td class="label">CPFP (Child-Pays-for-Parent) miner policy</td><td class="green">Complete</td></tr>
           <tr><td class="label">HD wallet (BIP39 seed phrases)</td><td class="green">Complete — web + CLI compatible</td></tr>
+          <tr><td class="label">SEC2 (V30000) — RPC hardening: getblockhash/getblock crash fixes (dispatch try/catch, JSON parser delimiter-advance, nested-array cap)</td><td class="green">Complete</td></tr>
         </table>
       </div>
     </div>
@@ -611,28 +616,28 @@
     <!-- POST-QUANTUM CRYPTOGRAPHY -->
     <div class="section-header fade-in">
       <div class="section-id">POST-QUANTUM</div>
-      <h2 class="section-title">Quantum <span class="accent">Resistance</span> Roadmap</h2>
+      <h2 class="section-title">Post-Quantum <span class="accent">Research</span> Track</h2>
     </div>
 
-    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:20px" class="fade-in delay-1">SOST uses secp256k1 ECDSA (same as Bitcoin) for transaction signatures. While no practical quantum threat exists today, SOST has a constitutional migration plan to post-quantum cryptography.</p>
+    <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:20px" class="fade-in delay-1">SOST uses secp256k1 ECDSA (same as Bitcoin) for transaction signatures, and ECDSA remains the active signing scheme. Post-quantum cryptography is an <strong>open research track</strong> &mdash; it is <strong>not active</strong>, has <strong>no activation height or date</strong>, and makes no quantum-resistance claim. The notes below record the direction of that research, not a committed deployment schedule.</p>
 
     <table class="spec-table fade-in delay-2" style="margin-bottom:20px">
-      <tr><td class="label">Current scheme</td><td class="value">ECDSA secp256k1 (libsecp256k1) — 64-byte signatures</td></tr>
-      <tr><td class="label">Selected PQC algorithm</td><td class="value" style="color:var(--green-primary)">ML-DSA (NIST FIPS 204; formerly CRYSTALS-Dilithium)</td></tr>
+      <tr><td class="label">Current scheme</td><td class="value">ECDSA secp256k1 (libsecp256k1) — 64-byte signatures — active</td></tr>
+      <tr><td class="label">PQC algorithm under study</td><td class="value">ML-DSA (NIST FIPS 204; formerly CRYSTALS-Dilithium) — candidate, not adopted</td></tr>
       <tr><td class="label">PQC signature size</td><td class="value">2,420 bytes (Level 3)</td></tr>
-      <tr><td class="label">PQC address prefix</td><td class="value" style="color:var(--cyan-primary)">sost2 (reserved)</td></tr>
-      <tr><td class="label">SHA-256 status</td><td class="value" style="color:var(--green-primary)">Safe — Grover reduces to 128-bit, still sufficient</td></tr>
-      <tr><td class="label">Quantum threat timeline</td><td class="value">~4,000 logical qubits needed — estimated 10-15 years away</td></tr>
+      <tr><td class="label">PQC address prefix</td><td class="value">sost2 — reserved, not active</td></tr>
+      <tr><td class="label">SHA-256 status</td><td class="value">Grover reduces to 128-bit, still sufficient</td></tr>
     </table>
 
     <div style="background:var(--bg-card,#0a0a0a);border:1px solid var(--border-dim,#1a1a1a);border-left:3px solid var(--cyan-primary,#22d3ee);padding:16px 20px;margin-bottom:24px;border-radius:0 6px 6px 0" class="fade-in delay-3">
-      <div style="font-size:11px;color:var(--cyan-primary);letter-spacing:1px;font-weight:600;margin-bottom:8px">MIGRATION TIMELINE</div>
+      <div style="font-size:11px;color:var(--cyan-primary);letter-spacing:1px;font-weight:600;margin-bottom:8px">RESEARCH TRACK — NO ACTIVATION HEIGHT OR DATE</div>
       <div style="font-size:12px;color:var(--text-secondary);line-height:1.8">
-        <b style="color:var(--green-primary)">Phase 1 (COMPLETED)</b> — Algorithm selected: ML-DSA<br>
-        <b>Phase 2 (2027)</b> — liboqs prototype integration<br>
-        <b>Phase 3 (2028 Q1)</b> — Dual signatures on testnet (sost1 + sost2)<br>
-        <b>Phase 4 (2028 Q3)</b> — Mainnet activation of sost2 addresses<br>
-        <b>Phase 5 (2030+)</b> — ECDSA deprecation via 75% miner vote
+        This is a research direction only. There is <b>no committed activation height, date, or quarter</b>, and nothing below is scheduled or deployed:<br>
+        &bull; Evaluate PQC candidates (ML-DSA under study)<br>
+        &bull; Prototype integration (liboqs)<br>
+        &bull; Dual-signature experiments on testnet (sost1 + sost2)<br>
+        &bull; Any eventual mainnet adoption would require a future announced fork and miner consent<br>
+        ECDSA remains the active signing scheme until and unless that happens.
       </div>
     </div>
 
@@ -712,7 +717,7 @@ in the project&rsquo;s Security Hall of Fame.</pre>
     </div>
 
     <div class="notice fade-in delay-4" style="border-left-color:var(--cyan-primary);">
-      <strong>License:</strong> SOST uses the MIT License — fully open source<a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--cyan-primary);">LICENSE</a> file for full terms.
+      <strong>License:</strong> SOST uses the MIT License — fully open source. See the <a href="https://github.com/Neob1844/sost-core/blob/main/LICENSE" target="_blank" rel="noopener" style="color:var(--cyan-primary);">LICENSE</a> file for full terms.
     </div>
   </div>
 </section>

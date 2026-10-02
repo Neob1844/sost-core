@@ -201,7 +201,7 @@
     <div class="nav-links">
             <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
             <a href="index.html">Home</a>
-      <a href="sost-dex.html" style="color:var(--red-primary);font-weight:700" title="SOST Atomic Swap Console — founder-only">⚛ Atomic Swap</a>
+      <a href="sost-dex.html" style="color:var(--red-primary);font-weight:700" title="SOST Atomic Swap DEX — preview">⚛ Atomic Swap</a>
       <a href="sost-protocol-spec.html">Layer 1</a>
       <a href="sost-genesis.html">Genesis</a>
       <a href="sost-technology.html">Technology</a>
@@ -246,7 +246,7 @@
 
 
 <!-- HERO -->
-<div style="max-width:1100px;margin:14px auto 0;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center">&#9216; <b>Reframing in progress &mdash; Atomic Swap / OTC.</b> Trading PoPC staking contracts (buy/sell/split positions, sell reward rights) is <b>disabled</b> (<code>POPC_DEX_ENABLED=false</code>) and not part of V15. PoPC is a non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. This surface is being converted into non-custodial swap &amp; OTC coordination (signed offers, encrypted deal channels).</div>
+<div style="max-width:1100px;margin:14px auto 0;padding:10px 16px;border:1px solid rgba(255,206,84,.35);border-radius:10px;background:rgba(255,206,84,.06);color:#ffce54;font-size:13px;line-height:1.6;text-align:center">&#9216; <b>Reframing &mdash; Atomic Swap / OTC.</b> Trading PoPC staking contracts (buy/sell/split positions, sell reward rights) is <b>disabled</b> (<code>POPC_DEX_ENABLED=false</code>) in the current release (V30000); the signed-offer SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled. PoPC is a non-tradeable native SOST bond &mdash; see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>. This surface is non-custodial swap &amp; OTC coordination (signed offers, encrypted deal channels).</div>
 <section class="hero">
   <div class="container">
     <div class="hero-label">OTC / P2P COMMUNITY</div>
@@ -458,16 +458,16 @@
 <!-- ============ ATOMIC SWAP V14 — FOUNDER CONSOLE ============ -->
 <section style="border-bottom:1px solid var(--border-dim);background:rgba(58,160,255,0.05)" id="atomic-swap-v14">
   <div class="container" style="padding:48px 0">
-    <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// V14 &middot; OTC ATOMIC SWAP</div>
+    <div style="color:var(--text-muted);font-size:11px;letter-spacing:2px;margin-bottom:4px">// OTC ATOMIC SWAP</div>
     <h2 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--text-primary);margin:0 0 8px">SOST Atomic Swap <span style="color:#3aa0ff">Console</span></h2>
     <div style="margin:6px 0 14px">
       <span style="display:inline-flex;align-items:center;background:rgba(251,1,13,0.15);border:1px solid #fb010d;border-radius:4px;padding:6px 12px;color:#fb010d;font-weight:900;letter-spacing:1.2px;font-size:11px">&#9888; FOUNDER-ONLY &middot; DO NOT USE</span>
     </div>
     <p style="font-size:13px;color:var(--text-secondary);line-height:1.8;max-width:760px">
-      Cross-chain HTLC atomic swaps activate at <b>V14 (block 15,000)</b>, <b>EVM-only</b>: SOST &harr; <b>ETH/BNB native</b> first. ERC-20 (USDT/USDC/PAXG/XAUT) is <b>disabled for safety</b> until SafeERC20 + balance-delta accounting + tests land; <b>SOST &harr; BTC is deferred to V15</b>. The system is in <b>founder-only testing and is NOT externally audited</b> &mdash; <b>do not use it, you can permanently lose your funds</b>. The console never holds your keys or seed phrase: it builds the exact calldata and your own wallet signs.
+      SOST-native HTLC is <b>live since block 16,000</b> (relay/policy since block 17,000). <b>SOST &harr; EVM</b> is <b>founder-testing only</b> &mdash; the EVM counterparty contract is <b>undeployed and unaudited</b>: SOST &harr; <b>ETH/BNB native</b> first. ERC-20 (USDT/USDC/PAXG/XAUT) is <b>disabled for safety</b> until SafeERC20 + balance-delta accounting + tests land; <b>SOST &harr; BTC is OFF by default</b> (lab-verified on Bitcoin Core regtest), not enabled in official binaries. The system is in <b>founder-only testing and is NOT externally audited</b> &mdash; <b>do not use it, you can permanently lose your funds</b>. The console never holds your keys or seed phrase: it builds the exact calldata and your own wallet signs.
     </p>
     <a href="sost-dex.html" style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:linear-gradient(135deg,#2a0f2c,#4a1f4d);border:1px solid #f5c518;border-radius:6px;padding:12px 22px;color:#ffd400;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.2px;text-decoration:none;animation:asBtnGlow 2s ease-in-out infinite">&#9883; Open Atomic Swap Console &rarr;</a>
-    <p style="font-size:11px;color:var(--text-muted);margin-top:10px">Recommended first: rehearse on Sepolia / BNB testnet. Mainnet locks are gated on SOST height &ge; 15,010 + the readiness checklist. This OTC page itself is a non-custodial community board &mdash; SOST never custodies funds, escrows, or guarantees counterparties.</p>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:10px">Recommended first: rehearse on Sepolia / BNB testnet. Mainnet locks are gated on SOST height SOST height &ge; 16,000ge; 16,000 + the readiness checklist. This OTC page itself is a non-custodial community board &mdash; SOST never custodies funds, escrows, or guarantees counterparties.</p>
   </div>
 </section>
 

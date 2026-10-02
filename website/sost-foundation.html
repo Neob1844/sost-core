@@ -341,7 +341,7 @@
           <tr><td class="label">Purchase pause</td><td class="value">May pause gold purchases without consensus. Disclosed via batch reports.</td></tr>
           <tr><td class="label">CEX-listing reserve</td><td class="value">May allocate up to 50% of the Gold Vault&rsquo;s SOST exclusively for future CEX listings.</td></tr>
           <tr><td class="label">Purchase redirection</td><td class="value">Redirect future purchases between issuers (e.g., if issuer risk increases).</td></tr>
-          <tr><td class="label">PoPC contract management</td><td class="value">May pause new PoPC contracts for critical bugs. Existing contracts unaffected.</td></tr>
+          <tr><td class="label">PoPC contract management <em style="color:#c084fc;">(historical / superseded)</em></td><td class="value">May pause new PoPC contracts for critical bugs. Existing contracts unaffected. <em style="color:#c084fc;">Historical: PoPC is paused/superseded by DTD; single native-SOST bond model.</em></td></tr>
           <tr><td class="label">Dissolution declaration</td><td class="value">Only after dead-man switch triggers (90 days zero blocks). 60-day public timelock.</td></tr>
         </table>
       </div>
@@ -358,8 +358,8 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Source</th><th>Rate</th><th>Use</th></tr>
-          <tr><td class="label">Model A consensus fee</td><td class="value">3% of reward</td><td class="value">Infrastructure, watcher, security audits, development</td></tr>
-          <tr><td class="label">Model B network fee</td><td class="value">8% of reward</td><td class="value">Same destination, higher rate due to greater operational burden</td></tr>
+          <tr><td class="label">Model A consensus fee <em style="color:#c084fc;">(historical / superseded)</em></td><td class="value">3% of reward</td><td class="value">Infrastructure, watcher, security audits, development</td></tr>
+          <tr><td class="label">Model B network fee <em style="color:#c084fc;">(historical / superseded)</em></td><td class="value">8% of reward</td><td class="value">Same destination, higher rate due to greater operational burden</td></tr>
           <tr><td class="label">Fee destination</td><td class="green">Protocol operational wallet (<a href="sost-explorer.html" onclick="sessionStorage.setItem('sost_search','sost1059d1ef8639bcf47ec35e9299c17dc0452c3df33')" target="_blank" style="color:var(--green-primary);text-decoration:underline">publicly auditable</a>)</td><td class="label"></td></tr>
           <tr><td class="label">Fee changes</td><td class="value">30-day advance public notice, apply only to new contracts</td><td class="label"></td></tr>
         </table>
@@ -376,19 +376,23 @@
       <h2 class="section-title">Protocol <span class="accent">PoPC Commitments</span></h2>
     </div>
 
+    <div class="notice fade-in" style="border-left-color:#c084fc;margin-bottom:24px;">
+      <strong style="color:#c084fc;">HISTORICAL / SUPERSEDED.</strong> The commitments below describe the earlier Model A &ldquo;autocustody&rdquo; design (an XAUT/PAXG custody commitment backed by a bond). PoPC has since been redesigned to a <strong>single native-SOST bond</strong> &mdash; gold is <strong>never collateral and never slashable</strong> &mdash; and is itself paused/superseded by DTD. This section is retained for reference only.
+    </div>
+
     <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px;" class="fade-in">SOST is the first PoPC participant &mdash; a consensus validation commitment to demonstrate the system end-to-end before opening to external participants. Same rules apply. No exceptions.</p>
 
     <div class="notice fade-in delay-1" style="border-left-color:var(--cyan-primary);">
-      <strong>Equal treatment:</strong> SOST pays the standard network fee on all PoPC commitments (3% Model A, 8% Model B) &mdash; the same rate as any third-party participant. No exceptions.
+      <strong>Equal treatment:</strong> SOST pays the standard network fee on all PoPC commitments (3% Model A, 8% Model B) &mdash; the same rate as any third-party participant. No exceptions. <em>(Historical / superseded &mdash; Model A/B naming no longer applies under the single native-SOST bond.)</em>
     </div>
 
     <div class="spec-block fade-in delay-2">
       <div class="spec-header">
         <div class="spec-header-left">
           <div class="spec-icon green"></div>
-          <span class="spec-label">Active Commitments</span>
+          <span class="spec-label">Commitments (historical)</span>
         </div>
-        <span class="spec-tag">MODEL A &mdash; AUTOCUSTODY</span>
+        <span class="spec-tag">HISTORICAL / SUPERSEDED &mdash; MODEL A AUTOCUSTODY</span>
       </div>
       <div class="spec-body">
         <table class="code-table">
@@ -402,8 +406,8 @@
           <tr><td class="label">Protocol fee</td><td class="value">3% (Model A)</td><td class="value">3% (Model A)</td></tr>
           <tr>
             <td class="label">Status</td>
-            <td><span style="display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;letter-spacing:1px;font-weight:600;background:rgba(100,100,100,0.2);color:var(--text-dim);" id="status-001">PENDING</span></td>
-            <td><span style="display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;letter-spacing:1px;font-weight:600;background:rgba(100,100,100,0.2);color:var(--text-dim);" id="status-002">PENDING</span></td>
+            <td><span style="display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;letter-spacing:1px;font-weight:600;background:rgba(100,100,100,0.2);color:var(--text-dim);" id="status-001">SUPERSEDED</span></td>
+            <td><span style="display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;letter-spacing:1px;font-weight:600;background:rgba(100,100,100,0.2);color:var(--text-dim);" id="status-002">SUPERSEDED</span></td>
           </tr>
         </table>
       </div>
@@ -496,14 +500,14 @@
         <table class="code-table">
           <tr><th>Rule</th><th>Provision</th></tr>
           <tr><td class="highlight">C1</td><td class="value">Total supply upper-bounded by ~4,669,201 SOST by construction. Only issuance is subsidy(height).</td></tr>
-          <tr><td class="highlight">C2</td><td class="value">Coinbase split immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc.</td></tr>
+          <tr><td class="highlight">C2</td><td class="value">Coinbase split immutable: q=reward//4, gold=q, popc=q, miner=reward-gold-popc. <em style="color:#c084fc;">Historical (superseded since V15 / #25,000): the gold and PoPC shares ended at #25,000; the split is now 50% miner / 50% DTD.</em></td></tr>
           <tr><td class="highlight">C3</td><td class="value">Gold Funding Vault destination immutable. Heritage Reserve sealed. Emergency dual gate only.</td></tr>
           <tr><td class="highlight">C4</td><td class="value">Reserve shall not be sold except under Emergency Catastrophe (E2) or Dissolution.</td></tr>
           <tr><td class="highlight">C5</td><td class="value">Dissolution requires 90 days zero blocks + 60-day public timelock.</td></tr>
           <tr><td class="highlight">C6</td><td class="value">Dissolution is one-way and irreversible.</td></tr>
           <tr><td class="highlight">C7</td><td class="value">Slash is automatic. No human can override once triggered.</td></tr>
-          <tr><td class="highlight">C8</td><td class="value">Slash split 50/50 (PoPC Pool / Gold Funding Vault). No burn. Immutable.</td></tr>
-          <tr><td class="highlight">C9</td><td class="value">Dynamic bond table: 12% to 30% based on SOST/gold ratio.</td></tr>
+          <tr><td class="highlight">C8</td><td class="value">Slash split 50/50 (PoPC Pool / Gold Funding Vault). No burn. Immutable. <em style="color:#c084fc;">Historical (superseded since V15): PoPC slash/pool mechanics belong to the earlier design; the single native-SOST bond model applies now.</em></td></tr>
+          <tr><td class="highlight">C9</td><td class="value">Dynamic bond table: 12% to 30% based on SOST/gold ratio. <em style="color:#c084fc;">Historical (superseded since V15): the single native-SOST bond model applies now; gold is never collateral.</em></td></tr>
           <tr><td class="highlight">C10</td><td class="value">No admin key, pause function, or upgrade proxy on PoW chain.</td></tr>
           <tr><td class="highlight">C11</td><td class="value">ConvergenceX parameters fixed at genesis for epoch 0.</td></tr>
           <tr><td class="highlight">C12</td><td class="value">All consensus arithmetic is integer-only. Zero floating-point.</td></tr>

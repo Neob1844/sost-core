@@ -278,7 +278,7 @@
   /* === END NAV CSS === */
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
-<!-- V15: PoPC contract/position trading is disabled. PoPC is a non-tradeable native SOST bond.
+<!-- Current release (V30000): PoPC contract/position trading is disabled. PoPC is a non-tradeable native SOST bond.
      This single global flag gates all legacy PoPC position-trading UI (see popc-dex-gate.js).
      Must stay false. The Atomic Swap / OTC surface is unaffected. -->
 <script>window.POPC_DEX_ENABLED = false;</script>
@@ -386,7 +386,7 @@
       <div style="color:var(--text-secondary)">Non-custodial swaps, OTC coordination, signed offers, and encrypted deal channels.</div>
       <div style="color:#fbbf24;font-weight:700;margin:8px 0 4px">&#9670; PoPC Bond Staking <span style="font-weight:400;color:var(--text-secondary)">(separate product)</span></div>
       <div style="color:var(--text-secondary)">Create, monitor, and claim native SOST bonds &mdash; <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</div>
-      <div style="color:#ffce54;margin-top:8px;font-size:12px">&#9216; <b>PoPC bonds are not tradeable in V15.</b> PoPC contract trading is disabled (<code>POPC_DEX_ENABLED=false</code>).</div>
+      <div style="color:#ffce54;margin-top:8px;font-size:12px">&#9216; <b>PoPC bonds are not tradeable in the current release (V30000).</b> PoPC contract trading is disabled (<code>POPC_DEX_ENABLED=false</code>). The signed-offer SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled.</div>
     </div>
     <div class="hero-actions fade-in delay-2">
       <a href="javascript:void(0)" class="hero-btn hero-btn-orange" onclick="var el=document.getElementById('trade-composer');if(el){var y=el.getBoundingClientRect().top+window.scrollY-150;window.scrollTo({top:y,behavior:'smooth'});}setTimeout(function(){var c=document.querySelector('[data-action=otc]');if(c)c.click();},500)"><span>&#9998;</span> OTC REQUEST</a>
@@ -402,7 +402,7 @@
         <span style="color:var(--gold);font-weight:700;text-align:right;">3.</span><span style="color:var(--text-secondary)">Verify terms and transaction IDs &mdash; confirm amounts, addresses and on-chain txids before acting</span>
         <span style="color:var(--gold);font-weight:700;text-align:right;">4.</span><span style="color:var(--text-secondary)">Execute or refund through the non-custodial atomic-swap flow &mdash; on-chain HTLC / smart-contract escrow, SOST never custodies funds</span>
       </div>
-      <p style="margin-top:16px;font-size:11px;color:var(--text-dim);line-height:1.7;font-style:italic;border-top:1px solid var(--border-dim);padding-top:12px;">This is the Atomic Swap / OTC surface. SOST does not custody funds, intermediate, settle, or arbitrate trades. PoPC Bond Staking is a separate product and PoPC bonds are not tradeable in V15.</p>
+      <p style="margin-top:16px;font-size:11px;color:var(--text-dim);line-height:1.7;font-style:italic;border-top:1px solid var(--border-dim);padding-top:12px;">This is the Atomic Swap / OTC surface. SOST does not custody funds, intermediate, settle, or arbitrate trades. PoPC Bond Staking is a separate product and PoPC bonds are not tradeable in the current release (V30000). The signed-offer SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled.</p>
     </div>
     <div class="hero-badges fade-in delay-4" style="margin-top:20px;">
       <span class="hero-badge" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;">LIMITED ALPHA</span>
@@ -775,7 +775,7 @@
     </div>
     <div id="liveStatus" style="font-size:10px;color:var(--text-muted);margin-top:8px;text-align:right;"></div>
 
-    <!-- LEGACY PoPC position chart (Sepolia "SOSTEscrow V2"). DISABLED in V15: PoPC is a
+    <!-- LEGACY PoPC position chart (Sepolia "SOSTEscrow V2"). DISABLED in the current release (V30000): PoPC is a
          non-tradeable native SOST bond, there is no live PoPC position/escrow data here.
          Gated behind POPC_DEX_ENABLED=false (see popc-dex-gate.js); kept commented for reference.
     <div style="margin-top:24px;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:10px;padding:24px;position:relative;overflow:hidden">
@@ -919,7 +919,7 @@
         <div class="field-help" id="help-actions" style="margin-bottom:12px">
           <b>Coordinate a non-custodial swap / OTC deal:</b><br><br>
           <b>OTC Request:</b> Propose your terms (asset, amount, price, expiry) as a client-side signed offer and share it through an encrypted deal channel. You sign and settle every action yourself via on-chain HTLC / smart-contract escrow — SOST never custodies funds.<br><br>
-          <span style="color:#ffce54">&#9216; PoPC position/contract trading (buy/sell full position, sell reward right) is disabled in V15 — PoPC is a non-tradeable native SOST bond. See <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</span>
+          <span style="color:#ffce54">&#9216; PoPC position/contract trading (buy/sell full position, sell reward right) is disabled in the current release (V30000) — PoPC is a non-tradeable native SOST bond. See <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</span>
         </div>
         <div class="option-grid" id="actionOptions">
           <!-- LEGACY PoPC position-trade actions. DISABLED in V15 (POPC_DEX_ENABLED=false).
