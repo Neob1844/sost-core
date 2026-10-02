@@ -286,6 +286,8 @@
     <button data-view="activity" role="tab">Activity</button>
   </nav>
 
+  <div id="devnetInfo" style="display:none;max-width:1100px;margin:8px auto 0;padding:9px 14px;border:1px solid #39ff14;border-radius:8px;background:rgba(57,255,20,.06);font:600 11px/1.5 ui-monospace,monospace;color:#bff5c9;word-break:break-all">DEVNET</div>
+
   <!-- ============ SWAP ============ -->
   <section class="view active" id="view-swap">
     <div class="swap-col">
@@ -523,7 +525,7 @@ function onQuoteInputs(){
     var m={sost:'SOST',btc:'BTC',eth:'ETH'}; var t=m[sym];
     return (window.SOSTTokenIcons&&t)?SOSTTokenIcons.svg(t):sym.charAt(0).toUpperCase();
   }
-  function connRow(net,sym,addr,slot){ return '<div class="wchoice" style="cursor:default"><span class="ic tk '+sym+'">'+icGlyph(sym)+'</span><span>'+net+' connected<small>'+shortA(addr)+'</small></span><span style="flex:1"></span><button onclick="disconnectSlot(\''+slot+'\')" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer">Disconnect</button></div>'; }
+  function connRow(net,sym,addr,slot,extra){ return '<div class="wchoice" style="cursor:default"><span class="ic tk '+sym+'">'+icGlyph(sym)+'</span><span>'+net+' connected<small>'+shortA(addr)+'</small></span><span style="flex:1"></span><button onclick="disconnectSlot(\''+slot+'\')" style="background:none;border:1px solid var(--border-2);color:var(--txt-3);font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer">Disconnect</button>'+(extra?'<div style="flex-basis:100%;font:600 10.5px/1.5 ui-monospace,monospace;margin-top:7px;color:var(--txt-3);word-break:break-all">'+extra+'</div>':'')+'</div>'; }
   function provBtn(kind,i,name,sub,sym){ var s=sym.trim(); return '<button class="wchoice" onclick="connectCp(\''+kind+'\','+i+')"><span class="ic tk '+s+'">'+icGlyph(s)+'</span><span>'+name+'<small>'+sub+'</small></span></button>'; }
   function renderSec(){
     var el=document.getElementById('wmSec'); if(!el||!window.SOSTDexGate) return;
@@ -557,7 +559,10 @@ function onQuoteInputs(){
     document.getElementById('wmSost').innerHTML = st.sost ? connRow('SOST','sost',st.sost.address,'sost')
       : '<button class="wchoice" onclick="doConnectSost()"><span class="ic tk sost">'+icGlyph('sost')+'</span><span>Connect SOST Wallet<small>native bridge, no seed in the DEX</small></span></button>';
     var cpEl=document.getElementById('wmCp');
-    if(st.cp){ cpEl.innerHTML=connRow(st.cp.network.toUpperCase(), st.cp.network==='btc'?'btc':'eth', st.cp.address,'cp'); return; }
+    if(st.cp){ var _ex='';
+      if(st.cp.network==='evm'){ var _cid=parseInt(st.cp.chainId||'0x0',16); var _want=(window.DEVNET&&window.DEVNET.evm_chain_id)||null;
+        _ex='EVM chainId '+_cid+(_want?(_cid===_want?' &middot; <b style="color:var(--green,#39ff14)">network match (Anvil devnet)</b>':' &middot; <b style="color:#fb010d">&#9888; wrong network &mdash; expected '+_want+'</b>'):''); }
+      cpEl.innerHTML=connRow(st.cp.network.toUpperCase(), st.cp.network==='btc'?'btc':'eth', st.cp.address,'cp',_ex); return; }
     cpEl.innerHTML='<div class="disclaim">discovering wallet extensions…</div>';
     var evm=[], btc=[];
     try{ evm = window.SOSTWallets? await SOSTWallets.discoverEvm(window,250):[]; }catch(e){}
@@ -764,6 +769,20 @@ var _actBtn=document.querySelector('nav.tabs button[data-view="activity"]');
 if(_actBtn) _actBtn.addEventListener('click', relayHealth);
 
 paint(); refreshCta();
+/* ---- DEVNET ADMIN E2E boot (?devnet=1) — Phase 1: connect + addresses + network ---- */
+(function devnetBoot(){
+  try{
+    var q=new URLSearchParams(location.search); if(q.get('devnet')!=='1') return;
+    var b=document.getElementById('modeBadge');
+    if(b){ b.textContent='DEVNET · ADMIN E2E (SOST\u21c4ETH)'; b.title='Local reproducible devnet (SOST regtest + Anvil). No real funds, no public trading, admin/developer only.'; }
+    var info=document.getElementById('devnetInfo');
+    fetch('dex-devnet-config.json',{cache:'no-store'}).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(c){
+      window.DEVNET=c;
+      if(info){ info.style.display='block';
+        info.innerHTML='DEVNET \u00b7 SOST RPC '+c.sost_rpc+' \u00b7 EVM '+c.evm_rpc+' (chainId '+c.evm_chain_id+') \u00b7 HTLC v2 '+c.htlc_v2+' \u00b7 pairs '+(c.pairs||[]).join(',')+' \u00b7 public trading '+(c.public_trading?'ENABLED':'disabled'); }
+    }).catch(function(){ if(info){ info.style.display='block'; info.innerHTML='&#9888; DEVNET config not found \u2014 run: bash scripts/run-sost-eth-devnet.sh up'; } });
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
