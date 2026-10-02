@@ -179,6 +179,85 @@
   </div>
 </section>
 
+<!-- DECENTRALIZATION AUDIT — featured, glow + pulse -->
+<style>
+@keyframes decGlowPulse{0%,100%{box-shadow:0 0 18px rgba(34,211,238,.28),0 0 44px rgba(57,255,20,.10),inset 0 0 22px rgba(34,211,238,.05)}50%{box-shadow:0 0 30px rgba(34,211,238,.55),0 0 80px rgba(57,255,20,.20),inset 0 0 30px rgba(34,211,238,.10)}}
+@keyframes decDot{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
+.dec-wrap{max-width:1100px;margin:0 auto;border:2px solid #22d3ee;border-radius:16px;
+  background:linear-gradient(160deg,rgba(34,211,238,.06),rgba(10,15,28,.6) 55%,rgba(57,255,20,.05));
+  padding:26px 28px;animation:decGlowPulse 3.4s ease-in-out infinite}
+.dec-eyebrow{font-family:var(--font-mono,ui-monospace,monospace);font-size:11px;letter-spacing:2px;color:#22d3ee;text-transform:uppercase}
+.dec-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#39ff14;margin-right:7px;box-shadow:0 0 10px #39ff14;animation:decDot 1.6s ease-in-out infinite;vertical-align:middle}
+.dec-h{font-size:26px;line-height:1.2;font-weight:900;margin:8px 0 4px;color:#eaf6ff;text-wrap:balance}
+.dec-h .g{background:linear-gradient(90deg,#22d3ee,#39ff14);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dec-quote{margin:16px 0;padding:12px 16px;border-left:3px solid #39ff14;background:rgba(57,255,20,.06);border-radius:0 8px 8px 0;color:#d7ffe6;font-size:14.5px;line-height:1.6}
+.dec-h3{font-size:14px;letter-spacing:.5px;color:#fbbf24;margin:20px 0 6px;font-weight:800}
+.dec-wrap p{color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:7px 0}
+.dec-wrap ul{margin:6px 0 6px 18px;padding:0;color:#c9d6e2;font-size:13px;line-height:1.75}
+.dec-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:8px}
+.dec-card{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:13px 15px;background:rgba(255,255,255,.02)}
+.dec-card.cons{border-color:rgba(57,255,20,.4)} .dec-card.ops{border-color:rgba(251,191,36,.4)}
+.dec-flow{font-family:var(--font-mono,monospace);font-size:12.5px;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:11px 13px;margin:8px 0}
+.dec-status{margin-top:20px;border:1px solid rgba(34,211,238,.45);border-radius:10px;background:rgba(34,211,238,.05);padding:14px 16px}
+.dec-status .srow{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.08);font-size:12.5px}
+.dec-status .srow:last-child{border-bottom:0}.dec-status .k{color:#9fb6c4}.dec-status .v{color:#eaf6ff;font-weight:700;text-align:right}
+.dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
+@media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
+</style>
+<section class="section"><div class="container">
+  <div class="dec-wrap">
+    <div class="dec-eyebrow"><span class="dec-dot"></span>// PROTOCOL · DECENTRALIZATION AUDIT · 2026-10-02</div>
+    <h2 class="dec-h">SOST Protocol Decentralization Audit — <span class="g">from decentralized consensus to operational autonomy</span></h2>
+    <p>SOST has completed an internal decentralization audit focused not only on consensus, but on the wider operational infrastructure required for the network to function independently.</p>
+    <div class="dec-quote"><b>Objective:</b> move SOST toward the highest practical degree of decentralization and operational autonomy, so the protocol can continue functioning with minimal human intervention and without dependence on any single operator, server or organization.</div>
+    <p>SOST already operates as an open Proof-of-Work network in which blocks are produced and validated according to protocol rules rather than by a central authority. The audit nevertheless distinguishes between two different concepts.</p>
+    <div class="dec-cols">
+      <div class="dec-card cons"><div class="dec-h3" style="margin-top:0;color:#39ff14">1 · Consensus decentralization</div>
+        <p style="margin-top:4px">The blockchain does not depend on a central database or administrator to decide which blocks are valid. Independent miners and nodes can validate blocks, verify Proof-of-Work, keep their own copy of the chain, reject invalid blocks, propagate transactions, and join or leave freely. <b>No central server can rewrite balances, mint SOST outside the rules, or replace the canonical validation rules.</b></p>
+      </div>
+      <div class="dec-card ops"><div class="dec-h3" style="margin-top:0">2 · Operational decentralization</div>
+        <p style="margin-top:4px">A chain can have decentralized consensus while still depending operationally on a few infrastructure services. The audit therefore also examined bootstrap, peer discovery, DNS seeds, persistent peer databases, reconnect/redial, public RPC, explorers, software distribution, release verification, mining participation, independent operators, and recovery procedures. <b>This is where SOST is still progressively reducing dependencies.</b></p>
+      </div>
+    </div>
+    <div class="dec-h3">What has already improved</div>
+    <ul>
+      <li>Persistent peer storage + automatic redial, so nodes are less dependent on a single bootstrap connection (implemented, lab-verified).</li>
+      <li>External miners and nodes already operate independently from the core development infrastructure.</li>
+      <li>NODE_BIND and NODE_HEARTBEAT encourage real node participation, while Proof-of-Work remains the source of mining weight.</li>
+    </ul>
+    <p style="color:#9fb6c4;font-size:12.5px">The protocol does <b>not</b> pretend that one cryptographic node identity necessarily equals one independent physical machine or one independent operator — that distinction is intentional and stated honestly.</p>
+    <div class="dec-h3">What still depends on external infrastructure</div>
+    <p>Some services necessarily operate outside consensus: website hosting, DNS, public explorers, RPC gateways, software repositories, download mirrors, bootstrap nodes and monitoring. They improve accessibility, but must not become points of protocol control.</p>
+    <div class="dec-quote">External infrastructure may help users find, observe or interact with SOST, but it should not determine consensus or be essential for the blockchain itself to survive. If an explorer goes down, blocks keep being produced. If the website disappears, nodes keep validating. If one VPS goes offline, independent peers keep relaying. If one bootstrap service fails, previously-connected nodes reconnect through persistent peer knowledge.</div>
+    <div class="dec-h3">Current decentralization priorities</div>
+    <ul>
+      <li>More independent public nodes and more independent miners.</li>
+      <li>Multi-source peer discovery; no dependence on a single VPS or bootstrap node.</li>
+      <li>Reproducible build procedures; operators independently verifying release hashes.</li>
+      <li>Open-source release infrastructure + multiple software distribution paths.</li>
+      <li>More external review of releases and protocol changes.</li>
+      <li><b>A prolonged test deliberately removing the primary infrastructure node</b> (e.g. ~24h) to confirm independent nodes keep mining, validating and propagating — and documented recovery procedures.</li>
+    </ul>
+    <div class="dec-h3">Automation as a decentralization tool</div>
+    <p>The goal is not merely to distribute servers, but to reduce discretionary human intervention. Where possible, protocol behaviour is deterministic, height-triggered, self-validating, automatically recoverable, independently reproducible and observable from public chain state. For example, V30000 activates automatically at block #30,000 — no operator "switches on" consensus.</p>
+    <div class="dec-flow">routine operation →  rules → nodes → validation → automatic execution<br>not             →  administrator → manual decision → network action</div>
+    <div class="dec-h3">Decentralization is a process, not a binary label</div>
+    <p>SOST does not claim decentralization is all-or-nothing. A network can be decentralized at consensus level while still improving the diversity of its infrastructure, operators and software distribution. SOST treats decentralization as a measurable engineering objective, not a marketing claim; future audits will keep examining miner concentration, node diversity, bootstrap dependencies, infrastructure concentration, software reproducibility, third-party participation and protocol autonomy.</p>
+    <div class="dec-quote" style="border-left-color:#22d3ee;background:rgba(34,211,238,.07);color:#d6f6ff"><b>External infrastructure may assist the protocol, but it must not control the protocol.</b><br><span style="color:#9fb6c4;font-size:13px">No single server, operator, website, miner or organization should be required for SOST to continue validating and extending its blockchain.</span></div>
+    <div class="dec-status">
+      <div class="dec-h3" style="margin:0 0 6px">Current status</div>
+      <div class="srow"><span class="k">Consensus</span><span class="v ok">decentralized Proof-of-Work</span></div>
+      <div class="srow"><span class="k">Independent miners</span><span class="v ok">active</span></div>
+      <div class="srow"><span class="k">Independent peers</span><span class="v ok">active</span></div>
+      <div class="srow"><span class="k">Persistent peer recovery</span><span class="v ok">implemented</span></div>
+      <div class="srow"><span class="k">Single-server dependency</span><span class="v prog">being reduced</span></div>
+      <div class="srow"><span class="k">Reproducible operator deployment</span><span class="v prog">in progress</span></div>
+      <div class="srow"><span class="k">External infrastructure independence test</span><span class="v plan">planned</span></div>
+      <div class="srow"><span class="k">Goal</span><span class="v">maximum practical protocol autonomy</span></div>
+    </div>
+  </div>
+</div></section>
+
 <!-- TRACEABILITY — featured principle -->
 <section class="section" style="padding:40px 0">
   <div class="container">
