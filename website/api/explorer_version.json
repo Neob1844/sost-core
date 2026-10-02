@@ -1,4 +1,4 @@
 {
-  "v": "2026-10-01-v487-dashboard-scan-async",
-  "note": "Dashboard fix: updateDashboard ran a 1000-block (~2000 RPC getblockhash+getblock) history scan synchronously on every refresh; through the rate-limited public /rpc gateway it never completed within a session, so everything AFTER it (supply, circulating, gold/popc/dtd balances, the load overlay dismissal) stayed blank and, because loadStats never returned, the latest-blocks and latest-transactions tables never loaded either. Fix: the history scan (sparklines / difficulty / producer charts) is now fire-and-forget (not awaited in the critical path) with an overlap guard, and its depth was cut 1000->288 (the sparkline window). Supply/balances/overlay/tables now populate immediately; charts fill in asynchronously. No node/consensus change."
+  "v": "2026-10-02-v488-banner-refresh",
+  "note": "Banner/label refresh for V15-now-active + V30000: LIVE GATE STATE shows V15 ACTIVE since #25,000; Gold Vault / PoPC cards past-tense (emission ended at #25,000); DTD Jackpot default LIVE (first #25,290); atomic-swap banner past-tense (HTLC consensus live since #16,000, real cross-chain swaps still founder-testing, BTC OFF by default). No node/consensus/dashboard-logic change."
 }
