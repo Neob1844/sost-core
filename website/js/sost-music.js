@@ -484,6 +484,11 @@ function toggleMute() {
 
 function createMuteButton() {
   if (document.getElementById('sost-mute-btn')) return;
+  // Canonical audio control is the inline #nesMuteBtn (bottom-left). Where it is
+  // present, do NOT auto-inject this second (bottom-right) button — both toggle the
+  // same engine + the same 'sost_music_muted' flag, so a second one is a duplicate
+  // that overlaps REPLAY JACKPOT on the explorer. Engine stays fully loaded.
+  if (document.getElementById('nesMuteBtn')) return;
   var btn = document.createElement('button');
   btn.id = 'sost-mute-btn';
   btn.setAttribute('aria-label', 'Toggle music');
