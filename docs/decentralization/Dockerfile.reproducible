@@ -1,0 +1,83 @@
+# =============================================================================
+# SOST V30000 — Reproducible build image
+# =============================================================================
+# Builds sost-node, sost-miner and sost-cli from the published source tag and
+# prints the SHA-256 of each binary so you can compare against the official
+# SHA256SUMS.txt.  This image does NOT touch, replace or rebuild any running
+# mainnet binary — it only compiles a fresh copy inside a throwaway container.
+#
+# Reproducibility note: matching the official hashes requires matching the
+# official toolchain (Ubuntu 22.04.5, gcc/g++ 11.4.0, GNU ld 2.38, CMake 3.22.1,
+# glibc 2.35). A different compiler / linker / libc can produce a different but
+# equally valid binary. A mismatch is not, by itself, evidence of tampering —
+# see REPRODUCIBLE_BUILD.md. The build is path-independent (-ffile-prefix-map),
+# so the directory you build in does not affect the hash.
+#
+# Usage:
+#   docker build -f docs/decentralization/Dockerfile.reproducible \
+#                -t sost-repro:v30000 .
+# The three sha256sum lines are printed at the end of the build log.
+# To extract the binaries, see REPRODUCIBLE_BUILD.md ("Extracting the binaries").
+# -----------------------------------------------------------------------------
+
+# Ubuntu 22.04 LTS (jammy). The official hashes were produced on 22.04.5.
+# The 22.04 tag tracks the latest jammy point release; pin to a digest below
+# if you need to freeze the exact base image.
+FROM ubuntu:22.04
+
+# Deterministic, non-interactive apt; stable locale/timezone.
+ENV DEBIAN_FRONTEND=noninteractive \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    SOURCE_DATE_EPOCH=0
+
+# --- Build dependencies (exact set used by the official build) --------------
+#   build-essential     -> gcc/g++ 11.4.0, GNU ld 2.38, make (glibc 2.35)
+#   cmake               -> 3.22.1 (repo requires >= 3.16)
+#   git                 -> to clone the tag
+#   libssl-dev          -> OpenSSL (find_package(OpenSSL REQUIRED) -> OpenSSL::Crypto)
+#   libsecp256k1-dev    -> libsecp256k1 WITH the schnorrsig module header
+#                          (secp256k1_schnorrsig.h); REQUIRED by SbPoW (Phase 2).
+#                          jammy ships 0.1~20210825-2, which includes schnorrsig.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        git \
+        ca-certificates \
+        libssl-dev \
+        libsecp256k1-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Record the toolchain versions into the build log for auditing.
+RUN gcc --version | head -1 \
+    && ld --version | head -1 \
+    && cmake --version | head -1 \
+    && ldd --version | head -1 \
+    && test -f /usr/include/secp256k1_schnorrsig.h \
+         && echo "secp256k1_schnorrsig.h: present (SbPoW buildable)"
+
+# --- Clone the exact published source tag -----------------------------------
+ARG SOST_TAG=v30000
+ARG SOST_REPO=https://github.com/Neob1844/sost-core.git
+WORKDIR /sost
+RUN git clone --depth 1 --branch "${SOST_TAG}" "${SOST_REPO}" /sost \
+    && echo "commit: $(git rev-parse HEAD)"
+
+# --- Configure + build with the EXACT mainnet flags -------------------------
+#   -DSOST_ENABLE_PHASE2_SBPOW=ON   REQUIRED for mainnet (default ON). OFF forks
+#                                   the node off the network at every Phase-2 block.
+#   -DSOST_TESTNET_FORKS=OFF        REQUIRED for mainnet (default OFF). ON lowers
+#                                   fork heights and will NOT match mainnet.
+#   -DCMAKE_BUILD_TYPE=Release      matches the official build.
+RUN cmake -S . -B build \
+        -DSOST_ENABLE_PHASE2_SBPOW=ON \
+        -DSOST_TESTNET_FORKS=OFF \
+        -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+
+# --- Print the SHA-256 of the three binaries for comparison -----------------
+RUN echo "=== SOST V30000 reproducible build — SHA256 ===" \
+    && sha256sum build/sost-node build/sost-miner build/sost-cli
+
+# Binaries live at /sost/build/{sost-node,sost-miner,sost-cli}.
+CMD ["sha256sum", "/sost/build/sost-node", "/sost/build/sost-miner", "/sost/build/sost-cli"]
