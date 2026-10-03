@@ -9407,6 +9407,20 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
   }
   function replay(){ replayLast(); }
   window.SJP=window.SJP||{}; window.SJP.replayLast=replayLast;
+  // Silent cache warm-up: if nothing is cached yet, fetch the last real jackpot
+  // once in the background and store it (no overlay), so the very first REPLAY
+  // click is instant too. Also surfaces the button if a past jackpot exists.
+  function prefetchLast(){
+    if(g(LS_DATA,null)) return;                    // already cached -> replay already instant
+    if(typeof window.rpc!=='function') return;
+    window.rpc('getblockcount',[]).then(function(h){
+      var tip=parseInt(h,10)||0; if(tip<JP_FIRST) return;
+      var lastJp=JP_FIRST+Math.floor((tip-JP_FIRST)/CAD)*CAD;
+      detect(lastJp).then(function(d){
+        if(d&&d.winner){ s(LS_DATA,JSON.stringify(d)); var rb=document.getElementById('sjp-replay'); if(rb) rb.classList.add('on'); }
+      }).catch(function(){});
+    }).catch(function(){});
+  }
   // ---- canonical raw-tx parser (matches src/transaction.cpp byte layout) ----
   // tx: version u32le | tx_type u8 | vin(compact) | inputs[133B each:
   //     32 prev_txid +4 prev_index +64 sig +33 pubkey] | vout(compact) |
@@ -9477,7 +9491,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
   // wire UI + start polling (light, 25s)
   document.addEventListener('DOMContentLoaded',function(){
     var rb=document.getElementById('sjp-replay'); if(rb){ if(g(LS_DATA,null)) rb.classList.add('on'); rb.onclick=replay; }
-    setInterval(poll,25000); setTimeout(poll,4000);
+    setInterval(poll,25000); setTimeout(poll,4000); setTimeout(prefetchLast,1200);
   });
   // expose a demo hook (isolated; never touches live state)
   window.SOSTJackpotDemo=function(){ reveal(FIXTURE,true); };
