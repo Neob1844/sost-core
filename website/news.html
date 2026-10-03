@@ -221,14 +221,14 @@
     </div>
     <div class="dec-h3">What has already improved</div>
     <ul>
-      <li>Persistent peer storage + automatic redial, so nodes are less dependent on a single bootstrap connection (implemented, lab-verified).</li>
+      <li>Configured-peer redial is implemented for explicitly configured <code>--connect</code> peers (internally verified). General persistent peer storage and peer-address gossip (ADDR/GETADDR) are not present in the current released code and remain planned / in progress.</li>
       <li>External miners and nodes already operate independently from the core development infrastructure.</li>
       <li>NODE_BIND and NODE_HEARTBEAT encourage real node participation, while Proof-of-Work remains the source of mining weight.</li>
     </ul>
     <p style="color:#9fb6c4;font-size:12.5px">The protocol does <b>not</b> pretend that one cryptographic node identity necessarily equals one independent physical machine or one independent operator — that distinction is intentional and stated honestly.</p>
     <div class="dec-h3">What still depends on external infrastructure</div>
     <p>Some services necessarily operate outside consensus: website hosting, DNS, public explorers, RPC gateways, software repositories, download mirrors, bootstrap nodes and monitoring. They improve accessibility, but must not become points of protocol control.</p>
-    <div class="dec-quote">External infrastructure may help users find, observe or interact with SOST, but it should not determine consensus or be essential for the blockchain itself to survive. If an explorer goes down, blocks keep being produced. If the website disappears, nodes keep validating. If one VPS goes offline, independent peers keep relaying. If one bootstrap service fails, previously-connected nodes reconnect through persistent peer knowledge.</div>
+    <div class="dec-quote">External infrastructure may help users find, observe or interact with SOST, but it should not determine consensus or be essential for the blockchain itself to survive. If an explorer goes down, blocks keep being produced. If the website disappears, nodes keep validating. If one VPS goes offline, independent peers keep relaying. If one bootstrap service fails, explicitly configured peers are re-dialled automatically; broader autonomous peer persistence is on the roadmap.</div>
     <div class="dec-h3">Current decentralization priorities</div>
     <ul>
       <li>More independent public nodes and more independent miners.</li>
@@ -249,7 +249,8 @@
       <div class="srow"><span class="k">Consensus</span><span class="v ok">decentralized Proof-of-Work</span></div>
       <div class="srow"><span class="k">Independent miners</span><span class="v ok">active</span></div>
       <div class="srow"><span class="k">Independent peers</span><span class="v ok">active</span></div>
-      <div class="srow"><span class="k">Persistent peer recovery</span><span class="v ok">implemented</span></div>
+      <div class="srow"><span class="k">Configured-peer redial (--connect)</span><span class="v ok">implemented</span></div>
+      <div class="srow"><span class="k">Persistent peer storage / ADDR gossip</span><span class="v">planned / in progress</span></div>
       <div class="srow"><span class="k">Single-server dependency</span><span class="v prog">being reduced</span></div>
       <div class="srow"><span class="k">Reproducible operator deployment</span><span class="v prog">in progress</span></div>
       <div class="srow"><span class="k">External infrastructure independence test</span><span class="v plan">planned</span></div>
