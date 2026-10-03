@@ -715,7 +715,7 @@ var CUR=9; // demo: a completed swap
 })();
 
 /* ---- lab relay client (Activity): REAL verified state, graceful when absent ---- */
-var RELAY='http://127.0.0.1:8781';
+var RELAY=(location.hostname==='127.0.0.1'||location.hostname==='localhost'||location.hostname==='[::1]')?'http://127.0.0.1:8781':null; /* devnet-local only: never fetched on https production -> no mixed content */
 var RELAY_STATE={QuoteRequested:0,Accepted:2,SostLocked:4,CounterpartyLocked:5,PreimageRevealed:7,Claiming:8,Completed:9,Refunded:-1};
 function renderSteps(cur, refunded){
   var wrap=document.getElementById('steps'); wrap.innerHTML='';
@@ -730,7 +730,7 @@ function renderSteps(cur, refunded){
 }
 var labSwapId=null, labPoll=null;
 function relayHealth(){
-  fetch(RELAY+'/api/health').then(function(r){return r.json();}).then(function(h){
+  RELAY&&fetch(RELAY+'/api/health').then(function(r){return r.json();}).then(function(h){
     var pill=document.getElementById('relayPill'), msg=document.getElementById('relayMsg'), btn=document.getElementById('labSwapBtn');
     pill.className='pill ok'; pill.textContent='Lab relay: connected';
     msg.textContent='SOST '+(h.sost&&h.sost.up?'up (h='+h.sost.height+')':'down')+' \u00b7 BTC '+(h.btc&&h.btc.up?'up':'down')+' \u00b7 EVM '+(h.evm&&h.evm.up?'up':'down')+' \u00b7 harness '+(h.harness?'ready':'missing');
@@ -744,7 +744,7 @@ function relayHealth(){
 }
 function startLabSwap(){
   var btn=document.getElementById('labSwapBtn'); btn.disabled=true; btn.textContent='Running\u2026';
-  fetch(RELAY+'/api/swap/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pair:'SOST/BTC'})})
+  RELAY&&fetch(RELAY+'/api/swap/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pair:'SOST/BTC'})})
     .then(function(r){return r.json();}).then(function(d){
       labSwapId=d.id; if(labPoll) clearInterval(labPoll);
       labPoll=setInterval(pollLabSwap, 4000); pollLabSwap();
@@ -752,7 +752,7 @@ function startLabSwap(){
 }
 function pollLabSwap(){
   if(!labSwapId) return;
-  fetch(RELAY+'/api/swap/'+labSwapId).then(function(r){return r.json();}).then(function(d){
+  RELAY&&fetch(RELAY+'/api/swap/'+labSwapId).then(function(r){return r.json();}).then(function(d){
     var refunded=(d.state==='Refunded');
     var cur=RELAY_STATE[d.state]; if(cur==null) cur=1;
     renderSteps(refunded?9:cur, refunded);
