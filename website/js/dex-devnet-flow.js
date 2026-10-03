@@ -53,6 +53,10 @@
   };
   var EVM_STATE = ['NONE', 'LOCKED', 'CLAIMED', 'REFUNDED'];
   var REFUND_WINDOW_BLOCKS = 500; // devnet HTLC refund opens this many blocks ahead
+  var QUOTE_LIFETIME_SECS = 90;   // firm-quote lifetime (price-lock + expiry policy)
+  // quote/RFQ + cancellation policy (pure logic). Loaded on the page or via require in tests.
+  var QP = (typeof root !== 'undefined' && root.SOSTDexQuotePolicy) ||
+    (function () { try { return require('./dex-quote-policy.js'); } catch (e) { return null; } })();
 
   // ---- small hex / ABI helpers ----------------------------------------------
   function strip0x(h) { return (h || '').replace(/^0x/, ''); }
@@ -359,6 +363,10 @@
       pay: a.pay, recv: a.recv,
       amount: ctx.payAmount(),
       step: 'OFFER', rfq: 'DRAFT',
+      // QUOTE / RFQ policy state (price-lock + expiry + cancellation)
+      quote: null,           // firm quote object (SOSTDexQuotePolicy.makeQuote)
+      reservation: null,     // price-lock snapshot once the quote is reserved
+      orderState: 'OPEN',    // cancellation state machine: OPEN -> QUOTE_RESERVED -> FUNDED -> ...
       hashlock: null,
       evmSwapId: null,
       sost: { txid: null, vout: null, status: null },
@@ -367,8 +375,56 @@
     };
   }
 
+  // ---------------------------------------------------------------------------
+  //  QUOTE / RFQ (price-lock + expiry) — devnet quote source
+  // ---------------------------------------------------------------------------
+  // HONEST / fail-closed: a market quote must come from a real quote source. In
+  // this single-operator devnet there is no external maker, so the ONLY quote
+  // source is the atomic swap's actual MECHANICAL rate — the flow locks the same
+  // base `amount` on both legs, i.e. an exact 1:1 devnet rate. That is the TRUE
+  // executed rate (not a fabricated market price), and it is labelled as such in
+  // the UI. If a real maker is ever wired via ctx.quoteSource(), it is used
+  // instead; with no source at all the request fails closed (no fabricated price).
+  function devnetQuoteSource() {
+    if (ctx && typeof ctx.quoteSource === 'function') { var s = ctx.quoteSource(); if (typeof s === 'function') return s; }
+    return function (params) {
+      // 1:1 mechanical devnet rate — both legs lock the same base amount.
+      return { price: '1', minimumReceived: String(params.amount), counterparty: 'devnet (1:1 mechanical · not a market price)' };
+    };
+  }
+  // Build + attach a FIRM quote to the active swap (90s lifetime, live countdown).
+  function requestQuote() {
+    if (!QP || !current) return Promise.resolve(null);
+    var a = ctx.assets();
+    return QP.requestFirmQuote(devnetQuoteSource(), {
+      pair: a.pay + '/' + a.recv, side: 'sell', amount: current.amount
+    }, Date.now(), QUOTE_LIFETIME_SECS).then(function (q) {
+      current.quote = q; current.reservation = null;
+      if (current.orderState === 'EXPIRED' || current.orderState === 'OPEN') current.orderState = 'SIGNED_OFFER';
+      persist(); renderPanel();
+      return q;
+    }).catch(function (e) {
+      current.quote = null; fail('Quote unavailable — ' + ((e && e.message) || e)); return null;
+    });
+  }
+  // Is the first HTLC funded? (a funded leg => no simple cancel; only settle/refund)
+  function isFunded(s) { return !!(s && ((s.sost && s.sost.txid) || (s.evm && s.evm.lockTx))); }
+  // Keep the order-state machine in sync with on-chain facts.
+  function syncOrderState(s) {
+    if (!s) return;
+    if (s.step === 'COMPLETE') { s.orderState = 'SETTLED'; return; }
+    if (s.step === 'REFUNDED') { s.orderState = 'REFUNDED'; return; }
+    if (s.orderState === 'CANCELLED') return;
+    if (isFunded(s)) { s.orderState = 'FUNDED'; return; }
+    if (s.reservation) { s.orderState = 'QUOTE_RESERVED'; return; }
+    if (s.quote) { QP && QP.refreshState(s.quote, Date.now()); s.orderState = (s.quote.state === 'EXPIRED') ? 'EXPIRED' : 'SIGNED_OFFER'; return; }
+    s.orderState = 'OPEN';
+  }
+
   function persist() {
-    if (!current || !root.SOSTDexRFQ) return;
+    if (!current) return;
+    syncOrderState(current);
+    if (!root.SOSTDexRFQ) return;
     try {
       var map = root.SOSTDexRFQ.loadAll();
       map[current.id] = current;
@@ -429,8 +485,78 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
   function shortHash(h) { h = String(h || ''); return h.length > 20 ? (h.slice(0, 12) + '…' + h.slice(-8)) : h; }
 
+  // Stop any live quote countdown (cleared on every re-render).
+  var quoteTimer = null;
+  function stopQuoteTimer() { if (quoteTimer) { clearInterval(quoteTimer); quoteTimer = null; } }
+
+  // The QUOTE / RFQ card: pair, side, rate, minimum received, and a live
+  // "QUOTE EXPIRES IN MM:SS" countdown. Once the first HTLC is funded it is
+  // replaced by the atomic-swap-in-progress + refund-availability notice.
+  function renderQuoteBox() {
+    if (!QP || !current) return '';
+    var a = ctx.assets();
+    // Funded: atomic swap in progress — no quote clock, show refund availability.
+    if (isFunded(current) && current.step !== 'COMPLETE' && current.step !== 'REFUNDED') {
+      var rh = (current.sost && current.sost.refund_height) || current.sostRefundHeight;
+      var after = (current.evm && current.evm.refundTime) ? ('EVM block ' + current.evm.refundTime) : (rh ? ('SOST height ' + rh) : 'the HTLC refund height');
+      return '<div class="quote" style="border:1px solid var(--amber);border-radius:10px;margin-top:14px;padding:12px 14px;background:rgba(240,169,43,.06)">'
+        + '<div style="font:700 12px/1.4 var(--mono);color:var(--amber);letter-spacing:.5px">ATOMIC SWAP IN PROGRESS</div>'
+        + '<div style="font-size:11.5px;color:var(--txt-3);margin-top:4px">A funded HTLC cannot be cancelled — the swap can only SETTLE, or TIME OUT → REFUND.</div>'
+        + '<div class="qrow"><span class="k">Pair · side</span><span class="v">' + esc(a.pay + '/' + a.recv) + ' · ' + esc((current.quote && current.quote.side) || 'sell') + '</span></div>'
+        + '<div class="qrow"><span class="k">Refund available after</span><span class="v warn">' + esc(after) + '</span></div>'
+        + '</div>';
+    }
+    var q = current.quote;
+    if (!q) {
+      return '<div class="quote" style="border:1px dashed var(--border-2);border-radius:10px;margin-top:14px;padding:12px 14px">'
+        + '<div style="font-size:12px;color:var(--txt-3)">No firm quote yet. Request a quote to lock an exact rate for ' + QUOTE_LIFETIME_SECS + 's before any funds move.</div>'
+        + '<button class="cta secondary" id="dnQuote" style="width:auto;padding:9px 14px;margin:10px 0 0">Request quote</button>'
+        + '</div>';
+    }
+    QP.refreshState(q, Date.now());
+    var expired = (q.state === 'EXPIRED') || QP.isExpired(q, Date.now());
+    var cd = expired ? 'EXPIRED' : ('QUOTE EXPIRES IN ' + QP.formatCountdown(QP.remainingSecs(q, Date.now())));
+    var cdColor = expired ? 'var(--red)' : 'var(--green)';
+    return '<div class="quote" style="border:1px solid ' + (expired ? 'var(--red)' : 'var(--border-2)') + ';border-radius:10px;margin-top:14px;padding:12px 14px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+      + '<b style="font-size:12.5px">Firm quote ' + (current.reservation ? '· <span style="color:var(--gold)">PRICE-LOCKED</span>' : '') + '</b>'
+      + '<span id="dnCountdown" style="font:700 12px/1 var(--mono);letter-spacing:.5px;color:' + cdColor + '">' + cd + '</span></div>'
+      + '<div class="qrow"><span class="k">Pair · side</span><span class="v">' + esc(q.pair) + ' · ' + esc(q.side) + '</span></div>'
+      + '<div class="qrow"><span class="k">Rate</span><span class="v">' + esc(q.price) + ' ' + esc(a.recv) + '/' + esc(a.pay) + '</span></div>'
+      + '<div class="qrow"><span class="k">Amount</span><span class="v">' + esc(q.amount) + ' ' + esc(a.pay) + '</span></div>'
+      + '<div class="qrow"><span class="k">Minimum received</span><span class="v">' + esc(q.minimumReceived) + ' ' + esc(a.recv) + '</span></div>'
+      + '<div class="qrow"><span class="k">Counterparty</span><span class="v">' + esc(q.counterparty) + '</span></div>'
+      + '<div class="qrow"><span class="k">Quote digest</span><span class="v">' + esc(shortHash(q.digest)) + '</span></div>'
+      + (expired
+        ? '<div style="font-size:11.5px;color:var(--red);margin-top:8px">Quote expired — request a new quote. An expired quote cannot be executed.</div>'
+          + '<button class="cta secondary" id="dnQuote" style="width:auto;padding:9px 14px;margin:8px 0 0">Request new quote</button>'
+        : '<div style="font-size:11px;color:var(--txt-4);margin-top:8px">Executable only while FIRM and before the countdown reaches 00:00. Confirm to proceed; funding requires your explicit action.</div>')
+      + '</div>';
+  }
+
+  // Tick the countdown once per second; flip to EXPIRED + re-render at 00:00.
+  function startQuoteCountdown() {
+    stopQuoteTimer();
+    if (!QP || !current || !current.quote || isFunded(current)) return;
+    if (current.step === 'COMPLETE' || current.step === 'REFUNDED') return;
+    QP.refreshState(current.quote, Date.now());
+    if (current.quote.state !== 'FIRM') return;
+    quoteTimer = setInterval(function () {
+      if (!current || !current.quote) { stopQuoteTimer(); return; }
+      var rem = QP.remainingSecs(current.quote, Date.now());
+      var cdEl = el('dnCountdown');
+      if (rem <= 0) {
+        QP.refreshState(current.quote, Date.now());   // -> EXPIRED
+        stopQuoteTimer(); persist(); renderPanel();    // re-render disables the CTA
+        return;
+      }
+      if (cdEl) cdEl.textContent = 'QUOTE EXPIRES IN ' + QP.formatCountdown(rem);
+    }, 1000);
+  }
+
   function renderPanel() {
-    var host = el('devnetFlow'); if (!host) return;
+    var host = el('devnetFlow'); if (!host) { stopQuoteTimer(); return; }
+    if (current) syncOrderState(current);
     var connected = ctx.wm.state();
     var a = ctx.assets();
     var block = assetDisabled(a.pay) || assetDisabled(a.recv);
@@ -463,6 +589,20 @@
     var errBox = (current && current.error) ? '<div style="margin-top:10px;padding:9px 12px;border:1px solid var(--red);border-radius:8px;background:var(--red-soft);color:#ffb3b3;font:600 12px/1.5 var(--mono)">' + esc(current.error) + '</div>' : '';
     var blockBox = block ? '<div style="margin-top:10px;padding:9px 12px;border:1px solid var(--amber);border-radius:8px;background:rgba(240,169,43,.1);color:var(--amber);font:600 12px/1.5 var(--mono)">' + esc(block) + ' — temporarily unavailable (unselectable into a live route).</div>' : '';
 
+    var cancelledBox = (current && current.orderState === 'CANCELLED')
+      ? '<div style="margin-top:10px;padding:9px 12px;border:1px solid var(--border-2);border-radius:8px;background:var(--panel-3);color:var(--txt-3);font:600 12px/1.5 var(--mono)">Swap cancelled before funding. No HTLC was funded; no funds moved. Start a new swap to request a fresh quote.</div>'
+      : '';
+
+    // policy-derived UI flags
+    var funded = isFunded(current);
+    var quoteReady = !!(current && current.quote && QP && QP.isExecutable(current.quote, Date.now()));
+    var cancelable = !!(current && QP && QP.canCancel(current.orderState) && !funded);
+    var inProgress = !!(current && current.step !== 'COMPLETE' && current.step !== 'REFUNDED' && current.orderState !== 'CANCELLED');
+    var runLabel = (!current || current.step === 'OFFER' || current.step === 'COMPLETE' || current.step === 'REFUNDED' || current.orderState === 'CANCELLED')
+      ? ((current && quoteReady && !funded) ? 'Confirm & start swap' : 'Start full swap')
+      : 'Continue swap';
+    var runDisabled = block || (inProgress && !!current.quote && !funded && !quoteReady);
+
     var needPass = !sostPass();
     var passBox = needPass
       ? '<div style="margin-top:10px;display:flex;gap:8px;align-items:center"><input id="dnPass" type="password" placeholder="devnet SOST RPC password (user ' + esc((root.DEVNET || {}).sost_rpc_user || '') + ')" style="flex:1;background:var(--panel-2);border:1px solid var(--border-2);color:var(--txt);border-radius:8px;padding:8px;font-family:var(--mono);font-size:12px"><button id="dnPassBtn" class="cta secondary" style="width:auto;padding:8px 12px;margin:0">Set</button></div>'
@@ -477,27 +617,46 @@
       + '<div style="font-size:11.5px;color:var(--txt-3);margin:8px 0 14px">Local reproducible devnet (SOST --profile dev + Anvil + AtomicSwapHTLCv2). No real funds. Browser verification against a live devnet is an owner step.</div>'
       + '<div class="quote" style="border:0;padding:0;margin:0">' + bal + '</div>'
       + passBox
+      + (current ? renderQuoteBox() : '')
       + '<div class="steps" style="margin-top:16px">' + steps + '</div>'
       + (legs ? ('<div class="quote" style="border-top:1px dashed var(--border-2);margin-top:12px;padding-top:12px">' + legs + '</div>') : '')
-      + errBox + blockBox
+      + errBox + cancelledBox + blockBox
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">'
-      + '<button class="cta" id="dnRun" style="width:auto;padding:12px 18px;margin:0"' + (block ? ' disabled' : '') + '>' + (current && current.step !== 'OFFER' && current.step !== 'COMPLETE' && current.step !== 'REFUNDED' ? 'Continue swap' : 'Start full swap') + '</button>'
+      + '<button class="cta" id="dnRun" style="width:auto;padding:12px 18px;margin:0"' + (runDisabled ? ' disabled' : '') + '>' + runLabel + '</button>'
       + '<button class="cta secondary" id="dnRefresh" style="width:auto;padding:12px 18px;margin:0">Refresh balances</button>'
-      + (current && current.step !== 'COMPLETE' && current.step !== 'REFUNDED' ? '<button class="cta secondary" id="dnRefund" style="width:auto;padding:12px 18px;margin:0">Refund</button>' : '')
+      + (cancelable ? '<button class="cta secondary" id="dnCancel" style="width:auto;padding:12px 18px;margin:0">Cancel</button>' : '')
+      + (funded && inProgress ? '<button class="cta secondary" id="dnRefund" style="width:auto;padding:12px 18px;margin:0">Claim refund</button>' : '')
       + (current ? '<button class="cta secondary" id="dnReset" style="width:auto;padding:12px 18px;margin:0">New swap</button>' : '')
       + '</div>'
       + '</div>';
 
     wireButtons();
     refreshBalances();
+    startQuoteCountdown();
   }
 
   function wireButtons() {
     var run = el('dnRun'); if (run) run.onclick = onRun;
     var rf = el('dnRefresh'); if (rf) rf.onclick = refreshBalances;
     var rb = el('dnRefund'); if (rb) rb.onclick = onRefund;
-    var rs = el('dnReset'); if (rs) rs.onclick = function () { current = null; renderPanel(); };
+    var rs = el('dnReset'); if (rs) rs.onclick = function () { stopQuoteTimer(); current = null; renderPanel(); };
     var pb = el('dnPassBtn'); if (pb) pb.onclick = function () { var v = (el('dnPass') || {}).value || ''; if (v) { setSostPass(v); renderPanel(); } };
+    var qb = el('dnQuote'); if (qb) qb.onclick = function () { if (!current) current = freshSwap(); current.error = null; requestQuote(); };
+    var cb = el('dnCancel'); if (cb) cb.onclick = onCancel;
+  }
+
+  // CANCEL — allowed only before the first HTLC is funded; the policy state
+  // machine refuses (with a clear message) once funded. Never touches a tx.
+  function onCancel() {
+    if (!current || !QP) return;
+    syncOrderState(current);
+    try {
+      QP.cancelOrder(current);        // throws if FUNDED
+      current.error = null; stopQuoteTimer();
+      persist(); renderPanel();
+    } catch (e) {
+      fail((e && e.message) || QP.CANCEL_REFUSED_MSG);
+    }
   }
 
   async function refreshBalances() {
@@ -563,8 +722,20 @@
 
       var st = ctx.wm.state();
       var evmAddr = st.cp.address, sostAddr = st.sost.address;
-      if (!current || current.step === 'COMPLETE' || current.step === 'REFUNDED') { current = freshSwap(); }
+      if (!current || current.step === 'COMPLETE' || current.step === 'REFUNDED' || current.orderState === 'CANCELLED') { current = freshSwap(); }
       current.error = null;
+
+      // QUOTE GATE — a FIRM, non-expired quote is REQUIRED before anything is
+      // funded, and the user must explicitly confirm it. Nothing is locked here.
+      if (!isFunded(current) && QP) {
+        QP.refreshState(current.quote, Date.now());
+        if (!current.quote || !QP.isExecutable(current.quote, Date.now())) {
+          if (current.quote && current.quote.state === 'EXPIRED') current.error = 'Quote expired — request a new quote before executing.';
+          syncOrderState(current); persist(); renderPanel();
+          if (!current.quote) await requestQuote();   // first click fetches the firm quote (then user confirms)
+          return;
+        }
+      }
 
       // PHASE 6 — OFFER + ACCEPT + RESERVE (hashlock) ------------------------
       if (current.step === 'OFFER') {
@@ -573,6 +744,11 @@
       }
       if (current.step === 'ACCEPT') { current.step = 'RESERVE'; persist(); renderPanel(); }
       if (current.step === 'RESERVE') {
+        // Price-LOCK the firm quote: once reserved, no price change can slip through.
+        if (QP && current.quote && !current.reservation) {
+          current.reservation = QP.reserveQuote(current.quote, Date.now());
+          current.orderState = 'QUOTE_RESERVED';
+        }
         var pre = randomPreimageHex();
         var hl = await root.SOSTDexRFQ.hashlock(pre); // sha256(preimage) — SAME primitive both chains
         current.hashlock = '0x' + hl;
@@ -583,6 +759,15 @@
 
       // PHASE 4 — LOCK SOST HTLC ---------------------------------------------
       if (current.step === 'LOCK_SOST') {
+        // Final integrity + staleness gate BEFORE the first HTLC is funded:
+        //   - a MODIFIED quote (price/amount/expiry tampered) is rejected,
+        //   - a STALE quote (expired since reservation) is rejected,
+        //   - the reserved price is enforced (no post-reservation price drift).
+        if (QP && current.quote) {
+          var vq = QP.verifyQuote(current.quote, Date.now());
+          if (!vq.ok) throw new Error(vq.reason + ' — request a new quote before funding.');
+          if (current.reservation) QP.assertUnchanged(current.reservation, current.quote);
+        }
         var tip = await sostRpc('getblockcount', []);
         var refundH = Number(tip) + REFUND_WINDOW_BLOCKS;
         var amtStocks = parseUnits(current.amount, 8).toString();
@@ -595,6 +780,8 @@
           refundAddress: sostAddr
         });
         current.sost = { txid: lock.txid, vout: lock.vout, status: 'locked' };
+        current.sostRefundHeight = refundH;   // for the "Refund available after" notice (display only)
+        current.orderState = 'FUNDED';         // first HTLC funded — no simple cancel from here
         setStep('LOCK_EVM');
       }
 

@@ -366,9 +366,9 @@
             <button class="on" data-side="buy" onclick="setSide(this,'buy')" style="color:var(--green)">Buy SOST</button>
             <button data-side="sell" onclick="setSide(this,'sell')" style="color:var(--red)">Sell SOST</button>
           </div>
-          <div class="field"><label>Amount</label><div class="inp"><input class="num" placeholder="0.0"><span class="suf">SOST</span></div></div>
-          <div class="field" id="limitPrice" style="display:none"><label>Limit price</label><div class="inp"><input class="num" placeholder="0.0"><span class="suf">USDC</span></div></div>
-          <div class="field" id="limitExpiry" style="display:none"><label>Expiry</label><div class="inp"><input value="24h" readonly><span class="suf">GTC</span></div></div>
+          <div class="field"><label>Amount</label><div class="inp"><input id="limAmt" class="num" placeholder="0.0" oninput="refreshLimitPreview()"><span class="suf">SOST</span></div></div>
+          <div class="field" id="limitPrice" style="display:none"><label>Limit price</label><div class="inp"><input id="limPrice" class="num" placeholder="0.0" oninput="refreshLimitPreview()"><span class="suf">USDC</span></div></div>
+          <div class="field" id="limitExpiry" style="display:none"><label>Expiry</label><div class="inp"><select id="limExpiry" onchange="refreshLimitPreview()" style="flex:1;min-width:0;background:none;border:0;color:var(--txt);font-family:var(--mono);font-size:15px"><option value="15m">15 minutes</option><option value="1h">1 hour</option><option value="24h" selected>24 hours</option><option value="7d">7 days</option><option value="GTC">Good-Till-Cancelled</option></select></div><div id="limIntent" style="font-size:11.5px;color:var(--txt-3);margin-top:7px;font-family:var(--mono)"></div></div>
           <div class="field"><label>Minimum received</label><div class="inp"><input class="num" placeholder="—" readonly><span class="suf" id="minSuf">USDC</span></div></div>
           <button class="cta" disabled id="tradeCta" style="margin-top:16px">No executable quote</button>
           <p class="mkt-note" id="mktNote">A <b style="color:var(--txt-2)">Market</b> order consumes a <b style="color:var(--txt-2)">firm, available</b> counterparty quote — not a CEX last-price. With no market maker connected in the lab, market orders cannot execute. Cross-chain settlement is shown as real two-chain progress, never as instant.</p>
@@ -448,6 +448,7 @@
 <script src="js/dex-wallets.js"></script>
   <script src="js/dex-price-adapter.js"></script>
 <script src="js/dex-rfq.js"></script>
+<script src="js/dex-quote-policy.js"></script>
 <script src="js/dex-liquidity-sim.js"></script>
 <!-- DEVNET ADMIN E2E only: real cross-chain connectors + the real SOST<->ETH/USDC flow.
      Loaded on every dashboard open but ONLY activated on the ?devnet=1 admin path;
@@ -652,8 +653,25 @@ document.querySelectorAll('#mseg button').forEach(function(b){ b.addEventListene
   document.getElementById('limitPrice').style.display=lim?'block':'none';
   document.getElementById('limitExpiry').style.display=lim?'block':'none';
   document.getElementById('mktNote').style.display=lim?'none':'block';
+  if(lim) refreshLimitPreview();
 });});
-function setSide(btn,side){ btn.parentNode.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); btn.classList.add('on'); }
+var tradeSide='buy';
+function setSide(btn,side){ btn.parentNode.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); btn.classList.add('on'); tradeSide=side; refreshLimitPreview(); }
+/* ---- LIMIT order policy preview (no market price fabricated — the limit price
+   is the user's own chosen target). Shows the human intent + a real expiry from
+   the selectable presets, and states the cancellation rule. ---- */
+function refreshLimitPreview(){
+  var out=document.getElementById('limIntent'); if(!out||!window.SOSTDexQuotePolicy) return;
+  var amt=((document.getElementById('limAmt')||{}).value||'').trim();
+  var price=((document.getElementById('limPrice')||{}).value||'').trim();
+  var exp=((document.getElementById('limExpiry')||{}).value)||'GTC';
+  if(!amt||!price||!(parseFloat(amt)>0)||!(parseFloat(price)>0)){ out.textContent=''; return; }
+  try{
+    var o=SOSTDexQuotePolicy.newLimitOrder({side:tradeSide,amount:amt,price:price,quoteAsset:'USDC',expiry:exp});
+    var when=o.expires_at==null?'never (Good-Till-Cancelled)':new Date(o.expires_at*1000).toLocaleString();
+    out.innerHTML=SOSTDexQuotePolicy.limitLabel(o)+' &middot; expires '+when+' &middot; <span style="color:var(--txt-4)">cancelable until an HTLC is funded</span>';
+  }catch(e){ out.textContent=''; }
+}
 var chartType='candles', chartTF='15m';
 document.querySelectorAll('#ivals button').forEach(function(b){ b.addEventListener('click', function(){
   document.querySelectorAll('#ivals button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); chartTF=b.dataset.tf||chartTF; drawChart();
