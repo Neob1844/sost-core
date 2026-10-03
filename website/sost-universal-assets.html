@@ -277,10 +277,11 @@
         <div style="color:var(--green);font-weight:800;font-size:12px;letter-spacing:.8px;margin-bottom:8px">&#10003; WHAT SOST VERIFIES (cryptographically)</div>
         <div style="font-size:12.5px;color:var(--txt);line-height:1.6">&ldquo;This identified professional has issued <b>this</b> opinion on <b>these</b> documents, in this jurisdiction, on this date.&rdquo;</div>
         <ul style="font-size:12px;color:var(--txt2);line-height:1.7;margin:8px 0 0;padding-left:18px">
-          <li>the signature is valid and who issued it (credential);</li>
+          <li>the signature is valid and who issued it;</li>
+          <li>the issuer&rsquo;s professional credential &mdash; <code>professional_registry</code>, <code>credential_id</code>, <code>jurisdiction</code> &mdash; checked against the official registry where possible (<code>credential_checked_at</code>);</li>
           <li>it corresponds to the exact document (hash match);</li>
           <li>the document has not changed since;</li>
-          <li>it is not expired;</li>
+          <li>it is not expired, and its lifecycle status is still <b>ACTIVE</b> (not SUPERSEDED / REVOKED / EXPIRED);</li>
           <li>the platform&rsquo;s internal requirements for that case are met.</li>
         </ul>
       </div>
@@ -368,16 +369,18 @@ ASSET PASSPORT  &#9472;&#9472;&#9472;&#9656;  TOKENIZATION (admin-gated, #30,000
             <td style="padding:9px 10px;border-bottom:1px solid var(--border)">Ownership of the asset, the rights the token represents, legal structure, valuation where relevant. Typically <b>Ownership + Legal (+ Valuation)</b>.</td></tr>
         <tr><td style="padding:9px 10px;border-bottom:1px solid var(--border);color:var(--txt);font-weight:700">Auction</td>
             <td style="padding:9px 10px;border-bottom:1px solid var(--border);color:#8fe3f0">Depends on the asset</td>
-            <td style="padding:9px 10px;border-bottom:1px solid var(--border)">That the seller may dispose of the asset and remains authorised to sell; sale conditions; auction-specific rules. If the asset is an <b>already-verified SOST asset</b>, the existing Passport evidence is <b>reused</b> &mdash; only the auction terms are new.</td></tr>
+            <td style="padding:9px 10px;border-bottom:1px solid var(--border)">That the seller may dispose of the asset and remains authorised to sell; sale conditions; auction-specific rules. If the asset is an <b>already-verified SOST asset</b>, existing Passport evidence may be <b>reused</b> &mdash; but <b>only after SOST automatically re-checks</b> that those attestations are still valid and that owner, asset, jurisdiction and transfer rights are unchanged; otherwise a fresh attestation is required. Only the auction terms are genuinely new.</td></tr>
         <tr><td style="padding:9px 10px;border-bottom:1px solid var(--border);color:var(--txt);font-weight:700">Project Funding</td>
             <td style="padding:9px 10px;border-bottom:1px solid var(--border);color:#f5c889">Usually yes</td>
             <td style="padding:9px 10px;border-bottom:1px solid var(--border)">Who receives the money, what rights the funder obtains, conditions, risks, refunds, possible consideration as investment/security. Typically <b>Legal + corporate/issuer verification</b> &mdash; an appraiser is usually not needed.</td></tr>
         <tr><td style="padding:9px 10px;border-bottom:1px solid var(--border);color:var(--txt);font-weight:700">Draw</td>
-            <td style="padding:9px 10px;border-bottom:1px solid var(--border);color:#f5c889">Probably essential first</td>
+            <td style="padding:9px 10px;border-bottom:1px solid var(--border);color:#8fe3f0">Depends on jurisdiction</td>
             <td style="padding:9px 10px;border-bottom:1px solid var(--border)">Legality of the raffle/draw in the jurisdiction, permits/licences if applicable, rules, prize, eligibility, selection mechanism, result transparency. Typically <b>Legal/regulatory + prize ownership + draw rules</b>; kept restricted until each jurisdiction is clear.</td></tr>
       </tbody>
     </table>
     </div>
+
+    <div class="note" style="margin:8px 0 0"><b>Orientation, not a universal rule.</b> The table above is typical guidance. For every case the engine resolves each requirement as <b>REQUIRED</b> / <b>OPTIONAL</b> / <b>NOT REQUIRED</b> from the specific <b>jurisdiction + structure</b> &mdash; e.g. a Draw is not hard-coded as &ldquo;expert always required&rdquo;; it is resolved per jurisdiction. A single person or organization may issue more than one attestation type (e.g. LEGAL and OWNERSHIP) <b>only if they hold the appropriate credential for each</b> &mdash; never forced to hire three different people artificially.</div>
 
     <!-- worked examples of the dynamic requirement sets -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:12px 0">
@@ -388,8 +391,9 @@ Legal ........... <span style="color:var(--green)">REQUIRED</span>
 Valuation ....... <span style="color:var(--green)">REQUIRED</span></pre></div>
       <div style="background:#050505;border:1px solid var(--border);border-radius:10px;padding:12px 14px"><pre style="margin:0;font-family:ui-monospace,monospace;font-size:11px;line-height:1.7;color:var(--txt2);white-space:pre">AUCTION &middot; VERIFIED SOST ASSET
 
-Ownership ....... <span style="color:var(--cyan)">EXISTING PASSPORT</span>
-Legal ........... <span style="color:var(--cyan)">EXISTING / CURRENT</span>
+Ownership ....... <span style="color:var(--cyan)">REUSED IF VALID</span>
+Legal ........... <span style="color:var(--cyan)">REUSED IF VALID</span>
+Re-validation ... <span style="color:var(--green)">REQUIRED</span>
 Valuation ....... <span style="color:var(--amber)">OPTIONAL</span>
 Auction terms ... <span style="color:var(--green)">REQUIRED</span></pre></div>
       <div style="background:#050505;border:1px solid var(--border);border-radius:10px;padding:12px 14px"><pre style="margin:0;font-family:ui-monospace,monospace;font-size:11px;line-height:1.7;color:var(--txt2);white-space:pre">DRAW
@@ -408,15 +412,20 @@ Draw rules ........ <span style="color:var(--green)">REQUIRED</span></pre></div>
     <!-- registry record format -->
     <div style="background:#050505;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:12px 0;overflow-x:auto">
       <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gold2);margin-bottom:8px">HOW THE PROTOCOL REGISTRY RECORDS IT</div>
-      <pre style="margin:0;font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.7;color:var(--txt2);white-space:pre">ATTESTATION TYPE :  LEGAL REVIEW
-ISSUER           :  Law Firm X / Lawyer Y   (identified credential)
-JURISDICTION     :  Spain / EU
-SCOPE            :  Tokenization structure
-DOCUMENT HASH    :  abc123&hellip;
-ISSUED           :  2026-10-03
-SIGNATURE        :  <span style="color:var(--green)">VALID</span>
-STATUS           :  <span style="color:var(--green)">PROFESSIONAL ATTESTATION PROVIDED</span></pre>
+      <pre style="margin:0;font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.7;color:var(--txt2);white-space:pre">ATTESTATION TYPE      :  LEGAL REVIEW
+ISSUER                :  Law Firm X / Lawyer Y
+PROFESSIONAL REGISTRY :  national bar / official registry
+CREDENTIAL ID         :  &lt;registry / bar number&gt;
+CREDENTIAL CHECKED AT :  2026-10-03   (against the registry, where possible)
+JURISDICTION          :  Spain / EU
+SCOPE                 :  Tokenization structure
+DOCUMENT HASH         :  abc123&hellip;
+ISSUED / EXPIRES      :  2026-10-03 / 2027-10-03
+SIGNATURE             :  <span style="color:var(--green)">VALID</span>
+STATUS                :  <span style="color:var(--green)">ACTIVE</span>   (ACTIVE / SUPERSEDED / REVOKED / EXPIRED)
+RECORD                :  <span style="color:var(--green)">PROFESSIONAL ATTESTATION PROVIDED</span></pre>
       <div style="font-family:ui-monospace,monospace;font-size:11px;color:var(--txt3);margin-top:8px">Never recorded: <span style="color:var(--red2)">&ldquo;SOST CERTIFIES THIS IS LEGAL&rdquo;</span> &mdash; SOST records that an identified professional provided an attestation; it does not endorse its conclusion.</div>
+      <div style="font-size:11.5px;color:var(--txt2);line-height:1.6;margin-top:8px"><b>Lifecycle &amp; revocation.</b> Every attestation carries <code>issued_at</code>, <code>expires_at</code> and a <code>status</code> (ACTIVE / SUPERSEDED / REVOKED / EXPIRED) &mdash; a lawyer may withdraw an opinion, an appraiser may correct a valuation, an authorisation may lapse. A superseded or revoked attestation is <b>never deleted</b>: the history is append-only, so the record always shows exactly what was relied on, by whom, and when.</div>
     </div>
 
     <!-- jurisdiction caveat -->
@@ -426,6 +435,8 @@ STATUS           :  <span style="color:var(--green)">PROFESSIONAL ATTESTATION PR
       <a href="https://eur-lex.europa.eu/eli/reg/2023/1114/oj/eng" target="_blank" rel="noopener" style="color:var(--cyan)">EUR-Lex &mdash; MiCA Regulation (EU) 2023/1114</a>.
       This is informational orientation, <b>not legal advice</b>, and does not determine the classification of any token.
     </div>
+
+    <div class="note" style="margin:10px 0"><b>V1 scope &mdash; deliberately out, for now.</b> Professional Attestation V1 intentionally does <b>not</b> include expert reputation, expert staking, rewards, validator consensus, or a fee marketplace. Those are added only if and when real tokenization volume justifies them. V1 is just: require the right attestations, verify them cryptographically, record their lifecycle.</div>
 
     <div style="border:1px solid var(--border2);border-left:3px solid var(--gold);border-radius:10px;background:var(--gold-soft);padding:12px 15px;margin:12px 0;font-size:12.5px;color:var(--txt);line-height:1.7">
       <b style="color:var(--gold2)">V1 model.</b> The applicant pays their own experts; SOST neither custodies nor distributes their fees; SOST only <b>requires and cryptographically verifies</b> the attestations a given case needs. No validator network, no in-house legal team, no fixed cost for the protocol &mdash; one verification infrastructure with dynamic, reusable requirements.
