@@ -9387,13 +9387,23 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
   function _revealStored(){ var d=g(LS_DATA,null); if(d){ try{ reveal(JSON.parse(d),false); return true; }catch(e){} } return false; }
   // Canonical replay: reconstruct the LAST REAL jackpot from chain and reveal it. Never the demo fixture from the UI.
   function replayLast(){
-    if(typeof window.rpc!=='function'){ _revealStored(); return; }
+    // INSTANT PATH: reveal the last cached jackpot immediately — no network wait.
+    // The cache (sjp_lastData) is written whenever a real jackpot is celebrated or
+    // detected, so a replay is instant in the common case instead of blocking on
+    // two sequential RPC round-trips (getblockcount -> detect).
+    var storedRaw=g(LS_DATA,null), storedBlock=null, shown=false;
+    if(storedRaw){ try{ var sd=JSON.parse(storedRaw); storedBlock=String(sd.block); reveal(sd,false); shown=true; }catch(e){ storedRaw=null; } }
+    // BACKGROUND REFRESH: confirm against the chain; only re-reveal if a NEWER jackpot is found.
+    if(typeof window.rpc!=='function'){ if(!shown) _revealStored(); return; }
     window.rpc('getblockcount',[]).then(function(h){
       var tip=parseInt(h,10)||0;
-      if(tip<JP_FIRST){ _revealStored(); return; }
+      if(tip<JP_FIRST){ if(!shown) _revealStored(); return; }
       var lastJp=JP_FIRST+Math.floor((tip-JP_FIRST)/CAD)*CAD;
-      detect(lastJp).then(function(d){ if(d&&d.winner){ reveal(d,false); } else if(!_revealStored()){ /* no real jackpot yet */ } });
-    }).catch(function(){ _revealStored(); });
+      detect(lastJp).then(function(d){
+        if(d&&d.winner){ s(LS_DATA,JSON.stringify(d)); if(String(d.block)!==storedBlock) reveal(d,false); }
+        else if(!shown){ _revealStored(); }
+      });
+    }).catch(function(){ if(!shown) _revealStored(); });
   }
   function replay(){ replayLast(); }
   window.SJP=window.SJP||{}; window.SJP.replayLast=replayLast;
