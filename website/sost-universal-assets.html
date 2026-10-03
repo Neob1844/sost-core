@@ -261,6 +261,177 @@
     </details>
   </section>
 
+  <!-- ============ PROFESSIONAL ATTESTATION MODEL ============ -->
+  <section class="blk" id="attestation">
+    <div class="eyebrow">Verification &middot; PROFESSIONAL ATTESTATION</div>
+    <h2>Professional <span class="g">Attestation</span></h2>
+    <div class="sub">How the tokenization layer satisfies real-world requirements <b>without SOST ever certifying legality</b>. SOST verifies, cryptographically, that <b>a named professional issued a specific opinion over specific documents</b> — it does <b>not</b> judge whether that opinion is correct, and it never certifies that an asset or offer is legal. The requirements are <b>dynamic</b>: they change with the modality, the asset class and the jurisdiction, so you only ever provide what your specific case needs.</div>
+
+    <div style="border:1px solid var(--border2);border-left:3px solid var(--amber);border-radius:10px;background:rgba(240,169,43,.05);padding:12px 15px;margin:10px 0;font-size:12px;color:var(--txt2);line-height:1.7">
+      <b style="color:var(--amber)">Status.</b> This describes the verification <b>model</b> for the native-asset / tokenization layer, which activates at block <b>#30,000</b> (automatic by height) and is <b>admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled</b>. It is a description of requirements, not a live public service. <b style="color:var(--gold2)">LEGAL CLASSIFICATION IS NOT DETERMINED BY SOST.</b>
+    </div>
+
+    <!-- what SOST verifies vs what it does not -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:12px 0">
+      <div style="border:1px solid #2f6b43;border-radius:10px;background:rgba(37,194,110,.05);padding:14px 16px">
+        <div style="color:var(--green);font-weight:800;font-size:12px;letter-spacing:.8px;margin-bottom:8px">&#10003; WHAT SOST VERIFIES (cryptographically)</div>
+        <div style="font-size:12.5px;color:var(--txt);line-height:1.6">&ldquo;This identified professional has issued <b>this</b> opinion on <b>these</b> documents, in this jurisdiction, on this date.&rdquo;</div>
+        <ul style="font-size:12px;color:var(--txt2);line-height:1.7;margin:8px 0 0;padding-left:18px">
+          <li>the signature is valid and who issued it (credential);</li>
+          <li>it corresponds to the exact document (hash match);</li>
+          <li>the document has not changed since;</li>
+          <li>it is not expired;</li>
+          <li>the platform&rsquo;s internal requirements for that case are met.</li>
+        </ul>
+      </div>
+      <div style="border:1px solid #7a2d20;border-radius:10px;background:rgba(251,1,13,.05);padding:14px 16px">
+        <div style="color:var(--red2);font-weight:800;font-size:12px;letter-spacing:.8px;margin-bottom:8px">&#9888; WHAT SOST NEVER DOES</div>
+        <ul style="font-size:12.5px;color:var(--txt);line-height:1.7;margin:0;padding-left:18px">
+          <li>It does <b>not</b> certify that an asset or offer is legal.</li>
+          <li>It does <b>not</b> decide that the professional&rsquo;s opinion is correct.</li>
+          <li>It does <b>not</b> custody, collect or distribute the expert&rsquo;s fee.</li>
+          <li>It does <b>not</b> determine the regulatory classification of the token.</li>
+        </ul>
+        <div style="margin-top:8px;font-family:ui-monospace,monospace;font-size:11px;color:var(--txt3)">Never: <span style="color:var(--red2)">&ldquo;SOST CERTIFIES THIS IS LEGAL&rdquo;</span></div>
+      </div>
+    </div>
+
+    <!-- flow -->
+    <div style="background:#050505;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:12px 0;overflow-x:auto">
+      <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gold2);margin-bottom:8px">THE FLOW &mdash; SOST NEVER TOUCHES THE MONEY</div>
+      <pre style="margin:0;font-family:ui-monospace,monospace;font-size:12px;line-height:1.6;color:var(--txt2);white-space:pre">CLIENT
+  &#9500;&#9472; pays the expert directly (EUR / USDC / SOST / agreed means)
+  &#9553;
+  &#9660;
+EXPERT  &#9472;&#9472;&#9472;&#9656; signed attestation (over the exact document hash)
+  &#9553;
+  &#9660;
+SOST REGISTRY  &#9472;&#9472;&#9472;&#9656; verify signature &middot; verify document hash &middot; verify credential &middot; check expiry
+  &#9553;
+  &#9660;
+ASSET PASSPORT  &#9472;&#9472;&#9472;&#9656;  TOKENIZATION (admin-gated, #30,000)</pre>
+    </div>
+
+    <!-- who pays -->
+    <div class="note" style="margin:10px 0">
+      <b>Who pays the expert &mdash; and how.</b> The applicant pays their own lawyer / appraiser / auditor <b>directly</b>, exactly as they would for any business operation. <b>SOST does not custody or distribute those fees.</b> You may <b>bring your own expert</b> (you already have a lawyer? perfect &mdash; you are not required to use a &ldquo;SOST&rdquo; one). SOST may later publish a list of professionals who accept this kind of work, but even then the expert <b>invoices the client</b>, and payment (EUR, USDC, SOST or another agreed means) is arranged <b>directly between them</b> &mdash; the protocol does not participate in it.
+    </div>
+
+    <!-- three levels -->
+    <h3 style="font-size:15px;color:var(--gold2);margin:16px 0 8px">Three levels &mdash; use only the one your case needs</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">
+      <div style="border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:10px;background:var(--panel);padding:12px 14px">
+        <div style="color:var(--green);font-weight:800;font-size:12px;margin-bottom:5px">1 &middot; AUTOMATIC ONLY</div>
+        <div style="font-size:12px;color:var(--txt2);line-height:1.6">For anything a machine can prove: hashes, signatures, technical identity, Passport consistency, dates, documents present, correct contract, supply. No human needed.</div>
+      </div>
+      <div style="border:1px solid var(--border2);border-top:2px solid var(--amber);border-radius:10px;background:var(--panel);padding:12px 14px">
+        <div style="color:var(--amber);font-weight:800;font-size:12px;margin-bottom:5px">2 &middot; EXPERT</div>
+        <div style="font-size:12px;color:var(--txt2);line-height:1.6">When rights or law must be interpreted: equity, debt, real-estate investment, revenue rights, certain public offers. A signed professional opinion is required.</div>
+      </div>
+      <div style="border:1px solid var(--border2);border-top:2px solid var(--cyan);border-radius:10px;background:var(--panel);padding:12px 14px">
+        <div style="color:var(--cyan);font-weight:800;font-size:12px;margin-bottom:5px">3 &middot; SPECIALIST</div>
+        <div style="font-size:12px;color:var(--txt2);line-height:1.6">Added only when the asset demands it: an appraiser for real estate, an auditor/custodian for gold, an IP specialist for certain rights, etc.</div>
+      </div>
+    </div>
+    <div class="note" style="margin:8px 0 0">No &ldquo;three validators must vote&rdquo; scheme &mdash; that adds cost with no benefit. One verification infrastructure, dynamic requirements.</div>
+
+    <!-- attestation types + common automatic core -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:14px 0">
+      <div style="border:1px solid var(--border2);border-radius:10px;background:var(--panel);padding:13px 15px">
+        <div style="color:var(--gold2);font-weight:800;font-size:12px;letter-spacing:.8px;margin-bottom:7px">INITIAL ATTESTATION TYPES</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px">
+          <span class="chip" style="border-color:var(--amber);color:#f5c889">LEGAL</span>
+          <span class="chip" style="border-color:var(--green);color:#7ee2a8">OWNERSHIP</span>
+          <span class="chip" style="border-color:var(--cyan);color:#8fe3f0">VALUATION</span>
+        </div>
+        <div style="font-size:12px;color:var(--txt2);line-height:1.6">The system decides automatically which of these it needs from <b>asset class + jurisdiction</b>. More specialist types can be added later; these three cover the common cases.</div>
+      </div>
+      <div style="border:1px solid var(--border2);border-radius:10px;background:var(--panel);padding:13px 15px">
+        <div style="color:var(--gold2);font-weight:800;font-size:12px;letter-spacing:.8px;margin-bottom:7px">COMMON AUTOMATIC CORE (all four modalities)</div>
+        <div style="font-family:ui-monospace,monospace;font-size:11px;color:var(--txt3);margin-bottom:6px">identity &rarr; jurisdiction &rarr; documents &rarr; hashes &rarr; signatures &rarr; Asset Passport &rarr; Regulatory Record</div>
+        <div style="font-size:12px;color:var(--txt2);line-height:1.6">SOST always checks automatically: documents present, hashes, signatures, that nothing was modified, dates/expirations, who submitted it, declared jurisdiction, and version history. Only <b>after</b> this comes the part that changes per modality.</div>
+      </div>
+    </div>
+
+    <!-- PER-MODALITY MATRIX -->
+    <h3 style="font-size:15px;color:var(--gold2);margin:16px 0 8px">Requirements vary by modality</h3>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:620px">
+      <thead><tr style="text-align:left;color:var(--txt3);font-size:10px;letter-spacing:1px;text-transform:uppercase">
+        <th style="padding:8px 10px;border-bottom:1px solid var(--border2)">Modality</th>
+        <th style="padding:8px 10px;border-bottom:1px solid var(--border2)">Expert likely?</th>
+        <th style="padding:8px 10px;border-bottom:1px solid var(--border2)">What is checked</th>
+      </tr></thead>
+      <tbody style="color:var(--txt2)">
+        <tr><td style="padding:9px 10px;border-bottom:1px solid var(--border);color:var(--txt);font-weight:700">Tokenize</td>
+            <td style="padding:9px 10px;border-bottom:1px solid var(--border);color:#f5c889">Yes, frequently</td>
+            <td style="padding:9px 10px;border-bottom:1px solid var(--border)">Ownership of the asset, the rights the token represents, legal structure, valuation where relevant. Typically <b>Ownership + Legal (+ Valuation)</b>.</td></tr>
+        <tr><td style="padding:9px 10px;border-bottom:1px solid var(--border);color:var(--txt);font-weight:700">Auction</td>
+            <td style="padding:9px 10px;border-bottom:1px solid var(--border);color:#8fe3f0">Depends on the asset</td>
+            <td style="padding:9px 10px;border-bottom:1px solid var(--border)">That the seller may dispose of the asset and remains authorised to sell; sale conditions; auction-specific rules. If the asset is an <b>already-verified SOST asset</b>, the existing Passport evidence is <b>reused</b> &mdash; only the auction terms are new.</td></tr>
+        <tr><td style="padding:9px 10px;border-bottom:1px solid var(--border);color:var(--txt);font-weight:700">Project Funding</td>
+            <td style="padding:9px 10px;border-bottom:1px solid var(--border);color:#f5c889">Usually yes</td>
+            <td style="padding:9px 10px;border-bottom:1px solid var(--border)">Who receives the money, what rights the funder obtains, conditions, risks, refunds, possible consideration as investment/security. Typically <b>Legal + corporate/issuer verification</b> &mdash; an appraiser is usually not needed.</td></tr>
+        <tr><td style="padding:9px 10px;border-bottom:1px solid var(--border);color:var(--txt);font-weight:700">Draw</td>
+            <td style="padding:9px 10px;border-bottom:1px solid var(--border);color:#f5c889">Probably essential first</td>
+            <td style="padding:9px 10px;border-bottom:1px solid var(--border)">Legality of the raffle/draw in the jurisdiction, permits/licences if applicable, rules, prize, eligibility, selection mechanism, result transparency. Typically <b>Legal/regulatory + prize ownership + draw rules</b>; kept restricted until each jurisdiction is clear.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- worked examples of the dynamic requirement sets -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:12px 0">
+      <div style="background:#050505;border:1px solid var(--border);border-radius:10px;padding:12px 14px"><pre style="margin:0;font-family:ui-monospace,monospace;font-size:11px;line-height:1.7;color:var(--txt2);white-space:pre">TOKENIZE &middot; REAL ESTATE
+
+Ownership ....... <span style="color:var(--green)">REQUIRED</span>
+Legal ........... <span style="color:var(--green)">REQUIRED</span>
+Valuation ....... <span style="color:var(--green)">REQUIRED</span></pre></div>
+      <div style="background:#050505;border:1px solid var(--border);border-radius:10px;padding:12px 14px"><pre style="margin:0;font-family:ui-monospace,monospace;font-size:11px;line-height:1.7;color:var(--txt2);white-space:pre">AUCTION &middot; VERIFIED SOST ASSET
+
+Ownership ....... <span style="color:var(--cyan)">EXISTING PASSPORT</span>
+Legal ........... <span style="color:var(--cyan)">EXISTING / CURRENT</span>
+Valuation ....... <span style="color:var(--amber)">OPTIONAL</span>
+Auction terms ... <span style="color:var(--green)">REQUIRED</span></pre></div>
+      <div style="background:#050505;border:1px solid var(--border);border-radius:10px;padding:12px 14px"><pre style="margin:0;font-family:ui-monospace,monospace;font-size:11px;line-height:1.7;color:var(--txt2);white-space:pre">DRAW
+
+Legal / regulatory  <span style="color:var(--green)">REQUIRED</span>
+Prize ownership ... <span style="color:var(--green)">REQUIRED</span>
+Valuation ......... <span style="color:var(--amber)">USUALLY NOT</span>
+Draw rules ........ <span style="color:var(--green)">REQUIRED</span></pre></div>
+    </div>
+
+    <!-- reusable -->
+    <div class="note" style="margin:10px 0">
+      <b>Attestations are reusable while valid.</b> If a property already has verified ownership, a current valuation, a legal opinion and an Asset Passport, you do <b>not</b> pay three professionals again each time it is used (e.g. in an Auction). The evidence is reused, and a new attestation is requested <b>only</b> when it <b>expires</b>, or when the <b>asset</b>, the <b>owner</b>, the <b>jurisdiction</b> or the <b>legal structure</b> changes materially. One verification infrastructure; dynamic requirements per modality + asset + jurisdiction &mdash; so tokenization does not become a bureaucracy.
+    </div>
+
+    <!-- registry record format -->
+    <div style="background:#050505;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:12px 0;overflow-x:auto">
+      <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gold2);margin-bottom:8px">HOW THE PROTOCOL REGISTRY RECORDS IT</div>
+      <pre style="margin:0;font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.7;color:var(--txt2);white-space:pre">ATTESTATION TYPE :  LEGAL REVIEW
+ISSUER           :  Law Firm X / Lawyer Y   (identified credential)
+JURISDICTION     :  Spain / EU
+SCOPE            :  Tokenization structure
+DOCUMENT HASH    :  abc123&hellip;
+ISSUED           :  2026-10-03
+SIGNATURE        :  <span style="color:var(--green)">VALID</span>
+STATUS           :  <span style="color:var(--green)">PROFESSIONAL ATTESTATION PROVIDED</span></pre>
+      <div style="font-family:ui-monospace,monospace;font-size:11px;color:var(--txt3);margin-top:8px">Never recorded: <span style="color:var(--red2)">&ldquo;SOST CERTIFIES THIS IS LEGAL&rdquo;</span> &mdash; SOST records that an identified professional provided an attestation; it does not endorse its conclusion.</div>
+    </div>
+
+    <!-- jurisdiction caveat -->
+    <div class="note" style="margin:10px 0">
+      <b>Why a professional opinion can matter (EU example).</b> Classification depends on the specific rights the token represents and is assessed <b>case by case</b> (CNMV). Importantly, tokens that qualify as <b>financial instruments fall outside MiCA</b> and come under the existing financial-services framework &mdash; which is exactly why, for certain real tokenizations (equity, debt, investment rights, some real-estate structures), a signed professional opinion is appropriate before activation. References:
+      <a href="https://www.cnmv.es/DocPortal/Publicaciones/MONOGRAFIAS/InformeActivosDigitales.pdf" target="_blank" rel="noopener" style="color:var(--cyan)">CNMV &mdash; Informe sobre activos digitales</a> &middot;
+      <a href="https://eur-lex.europa.eu/eli/reg/2023/1114/oj/eng" target="_blank" rel="noopener" style="color:var(--cyan)">EUR-Lex &mdash; MiCA Regulation (EU) 2023/1114</a>.
+      This is informational orientation, <b>not legal advice</b>, and does not determine the classification of any token.
+    </div>
+
+    <div style="border:1px solid var(--border2);border-left:3px solid var(--gold);border-radius:10px;background:var(--gold-soft);padding:12px 15px;margin:12px 0;font-size:12.5px;color:var(--txt);line-height:1.7">
+      <b style="color:var(--gold2)">V1 model.</b> The applicant pays their own experts; SOST neither custodies nor distributes their fees; SOST only <b>requires and cryptographically verifies</b> the attestations a given case needs. No validator network, no in-house legal team, no fixed cost for the protocol &mdash; one verification infrastructure with dynamic, reusable requirements.
+    </div>
+  </section>
+
   <!-- ============ SOST ASSET REGISTRY — current product, human-readable first layer ============ -->
   <section class="blk" id="registry">
     <div class="eyebrow">Asset Registry &middot; CURRENT PRODUCT</div>
