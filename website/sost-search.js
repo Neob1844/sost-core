@@ -1,5 +1,8 @@
 (function() {
   'use strict';
+  /* Canonical global search = the inline horizontal bar (.gs-search-bar / #gsSearchIn).
+     The nav mini-toggle init() is retained but no longer invoked to avoid a duplicate
+     global search; initInlineSearch() already skips the explorer (it has #searchIn). */
 
   var EXPLORER = 'sost-explorer.html';
 
@@ -308,9 +311,8 @@
   document.head.appendChild(style);
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { init(); initInlineSearch(); });
+    document.addEventListener('DOMContentLoaded', function() { initInlineSearch(); });
   } else {
-    init();
     initInlineSearch();
   }
 })();
