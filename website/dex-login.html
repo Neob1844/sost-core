@@ -45,6 +45,7 @@ button:hover{filter:brightness(1.08)} button:disabled{opacity:.5;cursor:default}
 <script>
 (function(){
   var f=document.getElementById('f'),b=document.getElementById('b'),e=document.getElementById('e');
+  if(/[?&]expired=1/.test(location.search)){ e.textContent='Session expired. Please sign in again.'; }
   f.addEventListener('submit',function(ev){
     ev.preventDefault(); e.textContent=''; b.disabled=true; b.textContent='Authenticating…';
     fetch('/_dashauth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
