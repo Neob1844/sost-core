@@ -772,7 +772,7 @@
       <div class="spec-body">
         <p class="spec-desc">
           Time-locked output. Funds locked until specified block height. 8-byte payload:
-          lock_until as uint64_t LE. Used by PoPC Model B for custody bonds.
+          lock_until as uint64_t LE. A time-locked custody bond output type.
         </p>
       </div>
     </div>
@@ -1595,8 +1595,8 @@ document.getElementById('downloadPageBtn').addEventListener('click', function(e)
 var D={
 'P2PKH':'<b>P2PKH</b> — Pay-to-Public-Key-Hash. The standard SOST transaction type. Sends funds to a 20-byte hash of the recipient\'s public key. Spending requires a valid ECDSA signature.',
 'P2SH':'<b>P2SH</b> — Pay-to-Script-Hash. Sends SOST to the hash of a spending script (e.g., multisig redeemScript). Conditions are revealed only when spending. Addresses start with sost3.',
-'BOND_LOCK':'<b>BOND_LOCK (0x10)</b> — Locks SOST as collateral for Proof-of-Personal-Custody gold commitments. The bond is slashed if custody conditions are violated.',
-'ESCROW_LOCK':'<b>ESCROW_LOCK (0x11)</b> — Time-locked escrow for PoPC Model B. Gold held in immutable contract, SOST reward paid upfront.',
+'BOND_LOCK':'<b>BOND_LOCK (0x10)</b> — Locks SOST as a time-locked collateral bond. Slashed only on a consensus-defined bond failure.',
+'ESCROW_LOCK':'<b>ESCROW_LOCK (0x11)</b> — Time-locked escrow output type with a designated beneficiary (lock_until + beneficiary_pkh).',
 'Capsule':'<b>Capsule Protocol v1</b> — Binary metadata in transaction outputs. 12-byte header + up to 243-byte body. On-chain attestation and proof-of-discovery. Activates at block 5000.',
 'RBF':'<b>Replace-by-Fee</b> — Replace a stuck mempool transaction with a higher-fee version. Opt-in policy.',
 'CPFP':'<b>Child-Pays-for-Parent</b> — A child transaction pays enough fees to make both itself and its stuck parent attractive to miners.',

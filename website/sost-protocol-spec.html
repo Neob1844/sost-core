@@ -177,49 +177,11 @@ footer a{color:var(--t3);text-decoration:none}
   </div>
 </section>
 
-<!-- =================== V13 RC1 STATUS BLOCK (static, no JS) =================== -->
-<!-- Source of truth: website/api/v13_release_candidate.json -->
-<!--                  + docs/V13_RELEASE_CANDIDATE.md -->
-<!--                  + docs/V13_MINER_OPERATOR_CHECKLIST.md -->
+<!-- V13 historical note (RC1 banner retired) -->
 <section><div class="c">
-<div style="background:linear-gradient(180deg,rgba(245,158,11,.08),rgba(0,0,0,.18));border:2px solid #f59e0b;border-left:6px solid #f59e0b;border-radius:4px;padding:14px 18px;margin:14px 0">
-  <div style="color:#f59e0b;font-size:14px;font-weight:900;letter-spacing:1.2px;margin-bottom:8px">
-    ⚡ V13 RELEASE CANDIDATE (v13-rc1) &mdash; ACTIVATION AT BLOCK 12,000
-  </div>
-  <div style="font-size:12px;line-height:1.7;color:var(--t1)">
-    V13 ships four <b>confirmed</b> items at block 12,000:
-    <b>all cASERT equalizer profiles E7-H35 active</b>,
-    <b>DTD lottery cooldown 5 &rarr; 6 blocks</b>,
-    <b>future-timestamp drift cap 60 s &rarr; 30 s</b> (<b style="color:#f59e0b">NTP synchronisation strongly recommended post-V13</b>),
-    and <b>Beacon Phase II-A</b> (local <code>notices.json</code>, file-only, signed, no P2P, no HTTP).
-    Per the <b>V13 Public Scope Update (2026-05-18)</b> in <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code>:
-    <b>PoPC Model A + B</b>, <b>SOSTEscrow Ethereum bridge</b> and <b>Gold Vault governance</b> are <b>DEFERRED to V14 / block 15,000</b> — five of nine PoPC gates and five of six Vault gates are RED today, and shipping half-implemented consensus at block 12,000 is worse than waiting.
-    <b>Beacon Phase II-A</b> (single-sig) and <b>Phase III</b> (P2P gossip with 4&nbsp;KB cap, 32-notice LRU dedup, 8/min/peer rate limit) <b>activate at V13_HEIGHT</b>. <b>Phase II-B</b> (3-of-5 threshold sigs + revocation + mirror metadata) is implemented and tested but ships <b>default-off</b> behind <code>BEACON_IIB_THRESHOLD_ACTIVATION_HEIGHT = INT64_MAX</code> until five independent custodians are ready. All Beacon phases are advisory-only and do not affect consensus, mining, or block validity.
-    <b style="color:#22c55e">DTD anti-dominance gate at block 12,100</b> &mdash; bundled with the cadence flip, any address whose share of the previous <b>288 blocks is &ge; 10 %</b> is excluded from the DTD lottery eligibility set until the rolling share drops below 10 %. A companion SbPoW-activity gate admits only miners with at least one SbPoW-signed block (most recent block at height &ge; 7,100). Dominant miners keep their normal 50 % miner share; they only miss the redistributed 25 % + 25 % network-side share on triggered blocks. Automatic, reversible, no admin authority. See <code>docs/V13_DTD_DOMINANCE_GATE.md</code>.
-    <b style="color:#f59e0b">PoPC eligibility gate is a no-op at V16 height &mdash; DEACTIVATED</b> &mdash; the activation constant <code>DTD_POPC_GATE_CONSENSUS_ACTIVE</code> ships as <code>false</code> on mainnet, so no PoPC bond is required to be eligible: the <b>DTD is permissionless</b>. (The gate was originally wired for a block-30,000 grace window but PoPC state lives in <code>popc_registry.json</code>, a per-node local file not derivable from chain state, so the rule stays a no-op on eligibility.) See <code>docs/V14_DTD_POPC_ELIGIBILITY.md</code>.
-    <b>Memory-Lock per-instance</b> is <b>REJECTED</b> — numerical analysis shows it would penalise small miners more than rigs, the opposite of the declared anti-pool goal; SbPoW remains SOST's only anti-pool defense.
-    The DTD lottery decision opens to the community at block 12,100.
-    Beacon is a loudspeaker, not a remote control: it MAY inform, it MAY NOT restart, MAY NOT block, MAY NOT change consensus, MAY NOT execute commands.
-  </div>
-  <div style="margin-top:10px;font-size:11px;color:var(--t2)">
-    <b>Public scope update (2026-05-18):</b> <code>docs/V13_PUBLIC_SCOPE_UPDATE.md</code> &middot;
-    Public RC manifest: <code>/api/v13_release_candidate.json</code> &middot;
-    Full operator note: <code>docs/V13_RELEASE_CANDIDATE.md</code> &middot;
-    Miner / operator checklist: <code>docs/V13_MINER_OPERATOR_CHECKLIST.md</code> &middot;
-    Activation plan: <code>docs/V13_ACTIVATION_PLAN.md</code> &middot;
-    Readiness gates: <code>docs/V13_READINESS_GATES.md</code> &middot;
-    DTD flip 12,100 verified: <code>docs/V13_DTD_FLIP_12100_AUTOMATIC.md</code>
-  </div>
-  <div style="margin-top:6px;font-size:11px;color:var(--t2)">
-    <b>Public V13 RC1 artifact metadata (SHA256SUMS SIGNED, binaries NOT yet uploaded — <code>release_status = signed_metadata_only</code>):</b>
-    <code>/api/v13_rc1_artifact_manifest.json</code> &middot;
-    <code>/api/v13_rc1_SHA256SUMS.txt</code> &middot;
-    <code>/api/v13_rc1_SHA256SUMS.asc</code> &middot;
-    <code>docs/V13_RC1_PUBLIC_ARTIFACT_METADATA.md</code> &middot;
-    <code>docs/V13_RC1_SIGNING_AND_PUBLICATION_CHECKLIST.md</code> &middot;
-    <code>docs/V13_RC1_ARTIFACT_BUNDLE.md</code> &middot;
-    <code>docs/V13_BINARY_PREFLIGHT.md</code>
-  </div>
+<div style="background:linear-gradient(180deg,rgba(34,197,94,.06),rgba(0,0,0,.18));border:1px solid #2a2a30;border-left:4px solid #22c55e;border-radius:4px;padding:12px 16px;margin:14px 0">
+  <div style="color:#22c55e;font-size:13px;font-weight:900;letter-spacing:1px;margin-bottom:6px">V13 &mdash; HISTORICAL (activated at block 12,000)</div>
+  <div style="font-size:12px;line-height:1.7;color:var(--t1)">V13 activated at block <b>12,000</b> (cASERT profiles E7&ndash;H35, DTD cooldown 5&rarr;6, drift cap 60s&rarr;30s, Beacon Phase II-A/III) together with the <b>DTD anti-dominance gate at 12,100</b> (any address with &ge;10% of the last 288 blocks is excluded from DTD eligibility; plus an SbPoW-signed-miner gate). These have been live on mainnet for a long time. <b>The current release is <span style="color:#f59e0b">V30000</span></b>, published with signed SHA-256 manifests; V15 (#25,000) moved emission to 50% miner / 50% DTD and V16 / V30000 activates at #30,000. The former &ldquo;V13 RC1&rdquo; release-candidate status is retired.</div>
 </div>
 </div></section>
 
@@ -523,7 +485,7 @@ Hard cap: 466,920,160,910,299 stocks (~4,669,201 SOST)</pre>
 <p>User deposits XAUT/PAXG in immutable EVM escrow (no admin key, no upgrade proxy). Reward paid immediately from PoPC Pool. No bond, no slash risk. Lower rewards: 0.4/1.5/3.5/5.5/8% of gold value (1-5 year tiers), network fee 8%. Same dynamic participation tiers apply.</p>
 
 <h3>Activation Timeline</h3>
-<p>On-chain BOND_LOCK/ESCROW_LOCK: height 5000 (~35 days post-genesis). PoPC Ethereum contracts: Q1 2027 target. Full custody audit system: Q1 2027 target. Gold purchases: no earlier than Q2 2027 (8 months post public launch, per rule G4).</p>
+<p><b style="color:#c084fc">&#9888; Historical / superseded.</b> BOND_LOCK / ESCROW_LOCK output types exist on-chain, but the former PoPC Ethereum-escrow design (Model A/B gold custody and custody-audit system) is <b>paused / legacy</b>, superseded by the single native SOST bond (gold is an optional reward boost only &mdash; never collateral, never escrow). PoPC is non-tradeable. There is no active 2027 PoPC-contract or gold-purchase deliverable.</p>
 
 <div class="warn" style="margin-top:12px;"><strong>Timeline Flexibility Notice:</strong> SOST reserves the right to accelerate or delay any committed timeline if it determines that SOST can be implemented with maximum guarantees of technical reliability and security, or if additional development time is required to meet those standards.</div>
 </div></section>

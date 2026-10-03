@@ -204,7 +204,7 @@ nav .nav-links { width: 100%; }
 
 <header class="hero">
   <div class="container">
-    <div class="hero-label">MINE SOST &middot; v0.8 &middot; SOLO-MINER-FIRST</div>
+    <div class="hero-label">MINE SOST &middot; V30000 &middot; SOLO-MINER-FIRST</div>
     <h1>Mine <span>SOST</span> in 10 minutes.</h1>
     <p class="hero-sub">A native PoW chain. CPU-friendly, memory-hard. No pool required, no pool offered &mdash; SOST is experimenting with a solo-miner-first model. Pre-market testing only.</p>
     <div class="protocol-badge">
@@ -444,9 +444,9 @@ Miner address: sost1...   (derived from wallet key)</div>
     <details>
       <summary>Segfault or instability with many threads</summary>
       <div>
-        <p>Drop to 16, then 8 threads. ConvergenceX is bandwidth-bound; very wide thread counts (64+) on machines with lots of cores can stress the monitor path. The block-monitor race in v0.7 was fixed in v0.8 (commit <code>6680319</code>) &mdash; make sure you are on v0.8 or later:</p>
+        <p>Drop to 16, then 8 threads. ConvergenceX is bandwidth-bound; very wide thread counts (64+) on machines with lots of cores can stress the monitor path. Always run the current <b>V30000</b> miner (an early block-monitor race was fixed long ago):</p>
         <div class="code">./sost-miner --help | head -1
-<span class="c"># &rarr; "SOST Miner v0.8 (multi-threaded)"</span></div>
+<span class="c"># &rarr; prints the current miner version (multi-threaded)</span></div>
       </div>
     </details>
 

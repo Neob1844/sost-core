@@ -303,7 +303,7 @@
         <span class="spec-tag">DEDICATED VPS</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;">SOST runs on dedicated infrastructure with hardened Linux, automated SSL via Let's Encrypt, and defense-in-depth security. The node process is managed by systemd with automatic restarts, and RPC is bound to localhost only, proxied through nginx for public read-only access.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;">SOST runs on dedicated infrastructure with hardened Linux, automated SSL via Let's Encrypt, and defense-in-depth security. The node process is managed by systemd with automatic restarts, and RPC is bound to localhost only, proxied through nginx. The public RPC gateway serves read queries and transaction broadcast (<code>sendrawtransaction</code>); wallet and administrative methods require authentication.</p>
         <table class="code-table" style="margin-top:16px;">
           <tr><th>Component</th><th>Details</th></tr>
           <tr><td class="label">Ports open</td><td class="value">22 (SSH), 80 (HTTP), 443 (HTTPS), 19333 (P2P)</td></tr>

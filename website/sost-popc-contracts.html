@@ -263,7 +263,7 @@
         </div>
         <div>
           <div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-bottom:3px;">SEPOLIA ESCROW</div>
-          <div id="alphaEscrow" style="color:var(--text-dim);">pending deployment</div>
+          <div id="alphaEscrow" style="color:var(--text-dim);">not deployed (historical)</div>
         </div>
         <div>
           <div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-bottom:3px;">LATEST DEMO DEAL</div>
@@ -288,7 +288,7 @@
     var dl=document.getElementById('alphaDeal');
     var ph=document.getElementById('alphaPhase');
     if(m)m.textContent=d.alpha_mode+' — '+d.status;
-    if(e)e.textContent=d.sepolia&&d.sepolia.escrow_address!=='pending deployment'?d.sepolia.escrow_address:'pending deployment';
+    if(e)e.textContent=d.sepolia&&d.sepolia.escrow_address!=='pending deployment'?d.sepolia.escrow_address:'not deployed (historical)';
     if(dl&&d.latest_demo&&d.latest_demo.deal_id)dl.textContent=d.latest_demo.deal_id+' ('+d.latest_demo.outcome+')';
     if(ph)ph.textContent='PHASE '+d.phase;
   }).catch(function(){});
@@ -649,12 +649,12 @@
       <div class="section-title">Contract <span class="accent">Registry</span></div>
     </div>
     <div class="spec-block fade-in delay-1">
-      <div class="spec-header"><div class="spec-icon green"></div><span class="spec-label">Active Contracts</span><span class="spec-tag">ON-CHAIN VERIFIED</span></div>
+      <div class="spec-header"><div class="spec-icon green"></div><span class="spec-label">Model A / B Contracts (historical)</span><span class="spec-tag">NEVER DEPLOYED</span></div>
       <div class="spec-body" style="overflow-x:auto">
         <table class="code-table">
           <tr><th>ID</th><th>Model</th><th>Asset</th><th>Amount</th><th>Duration</th><th>Start</th><th>End</th><th>Status</th><th>ETH Address</th></tr>
-          <tr><td class="highlight">FOUND-001</td><td>A</td><td class="gold">XAUT</td><td>0.5 oz</td><td>3 months</td><td>TBD</td><td>TBD</td><td class="pending">PENDING</td><td style="font-size:10px">pending deployment</td></tr>
-          <tr><td class="highlight">FOUND-002</td><td>B</td><td class="gold">PAXG</td><td>0.5 oz</td><td>3 months</td><td>TBD</td><td>TBD</td><td class="pending">PENDING</td><td style="font-size:10px">pending deployment</td></tr>
+          <tr><td class="highlight">FOUND-001</td><td>A</td><td class="gold">XAUT</td><td>0.5 oz</td><td>3 months</td><td>TBD</td><td>TBD</td><td class="pending">NEVER DEPLOYED</td><td style="font-size:10px">superseded &mdash; single SOST bond</td></tr>
+          <tr><td class="highlight">FOUND-002</td><td>B</td><td class="gold">PAXG</td><td>0.5 oz</td><td>3 months</td><td>TBD</td><td>TBD</td><td class="pending">NEVER DEPLOYED</td><td style="font-size:10px">superseded &mdash; single SOST bond</td></tr>
         </table>
       </div>
     </div>

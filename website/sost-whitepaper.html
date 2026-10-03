@@ -1101,7 +1101,7 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
     <ul style="margin:0 0 12px 20px;padding:0;line-height:1.7">
       <li><b>Client-side ED25519-signed offers.</b> The offer payload (action, position-id, maker SOST address, maker ETH address, SOST amount, gold amount, price, expiry) is signed in the user's browser. The signing key is encrypted with Argon2id from the user's passphrase and never leaves the device.</li>
       <li><b>End-to-end encrypted relay.</b> X25519 envelopes carry the signed offers between users. The relay server transports bytes but cannot read the cleartext, cannot alter the payload (MAC verified client-side), and cannot impersonate either party.</li>
-      <li><b>On-chain Ethereum escrow.</b> Where gold tokens move (XAUT, PAXG), they sit in the audited <code>SOSTEscrow.sol</code> smart contract. <b>SOST holds no keys to that contract.</b> Releases happen by on-chain logic the two parties trigger themselves &mdash; no admin, no operator, no oracle.</li>
+      <li><b>On-chain Ethereum escrow.</b> Where gold tokens move (XAUT, PAXG), they sit in the experimental <code>SOSTEscrow.sol</code> contract. <b>SOST holds no keys to that contract.</b> Releases happen by on-chain logic the two parties trigger themselves &mdash; no admin, no operator, no oracle.</li>
     </ul>
     <p style="margin-bottom:0">SOST cannot reverse trades, cannot recover funds sent to a wrong address, cannot compel delivery, and cannot verify off-chain promises. <b>That was the design.</b> What it did instead: enforced structural integrity of every signed payload, anchored every trade in cryptographic primitives, and surfaced 26 known scam patterns via the client-side Sentinel chat layer.</p>
     </div>
