@@ -290,7 +290,7 @@
         <div class="section-title" style="padding:0 0 10px">How it works</div>
         <div style="display:flex;gap:13px;align-items:flex-start;margin-bottom:16px">
           <span class="pill ok" style="flex:none;margin-top:1px">Live &middot; #16,000</span>
-          <div style="font-size:13px;color:var(--txt-2);line-height:1.6"><b style="color:var(--txt)">Atomic-swap HTLC settlement.</b> Each trade locks both legs in Hash-Time-Locked Contracts. The preimage that claims one chain reveals the secret that claims the other, so either both legs settle or both refund &mdash; no counterparty can walk away with one side. The SOST-side HTLC primitive has been live on-chain since block <b style="color:var(--txt)">#16,000</b>.</div>
+          <div style="font-size:13px;color:var(--txt-2);line-height:1.6"><b style="color:var(--txt)">Atomic-swap HTLC settlement.</b> Each trade locks both legs in Hash-Time-Locked Contracts. The protocol is designed so that a party cannot successfully claim one leg without revealing the information required to claim the other; if settlement does not complete within the timelocks, the refund paths become available &mdash; so no counterparty can take one side and leave the other stranded. The SOST-side HTLC primitive has been live on-chain since block <b style="color:var(--txt)">#16,000</b>.</div>
         </div>
         <div style="display:flex;gap:13px;align-items:flex-start">
           <span class="pill demo" style="flex:none;margin-top:1px">Signed offers</span>
@@ -320,7 +320,7 @@
         <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Orders</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Active signed offers and order history, matched bilaterally off-chain.</div></div>
         <div style="padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--panel-3)"><div style="font-weight:600;font-size:13.5px;margin-bottom:3px">Activity</div><div style="font-size:11.5px;color:var(--txt-3);line-height:1.55">Atomic-swap lifecycle tracked as real two-chain state, never instant.</div></div>
       </div>
-      <p class="mkt-note" style="max-width:640px;margin:20px auto 0;text-align:center">The dashboard is a laboratory preview: it shows a clearly-labelled demo chart (deterministic, not real market data) and a fail-closed RFQ &mdash; with no market maker and no signature verifier connected, it produces no firm quote. No real prices, orders, liquidity or executable quotes are shown or implied.</p>
+      <p class="mkt-note" style="max-width:640px;margin:20px auto 0;text-align:center">The public interface remains informational. The authenticated dashboard is a <b style="color:var(--txt)">controlled developer interface</b> &mdash; real execution remains restricted and public trading is disabled. No real prices, orders, liquidity or executable quotes are shown or implied here.</p>
     </div>
   </section>
 
