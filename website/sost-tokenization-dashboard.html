@@ -386,9 +386,10 @@
           <div style="font-size:12px;line-height:1.65;color:var(--txt2,#c9d4e0)">Jurisdiction-specific, asset-specific and offering-specific requirements may apply. <b style="color:#fff">Technical eligibility does not imply legal eligibility.</b> <b style="color:var(--gold2,#DAA520)">LEGAL CLASSIFICATION: NOT DETERMINED BY SOST.</b></div>
           <a href="sost-universal-assets.html#reg" target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;font-size:11.5px;color:var(--cyan,#22d3ee);border:1px solid rgba(34,211,238,.45);padding:6px 12px;border-radius:6px;text-decoration:none">View regulatory requirements by jurisdiction &rarr;</a>
           <label style="display:flex;gap:9px;align-items:flex-start;margin-top:12px;font-size:12px;line-height:1.55;color:var(--txt2,#c9d4e0);cursor:pointer">
-            <input type="checkbox" id="regConfirm" style="margin-top:2px;flex:none" onchange="var b=document.getElementById('apwGenBtn'); if(b){ b.disabled=!this.checked; b.title=this.checked?'':'Confirm the regulatory-documentation statement first'; }">
+            <input type="checkbox" id="regConfirm" style="margin-top:2px;flex:none" onchange="window.apwRegConfirm&&window.apwRegConfirm(this)">
             <span>I confirm that the applicable legal, ownership, valuation, offering, custody, audit and regulatory documentation has been provided and reviewed.</span>
           </label>
+          <div id="regRecStatus" style="margin-top:10px;font:600 10.5px/1.5 var(--mono,monospace);letter-spacing:.4px;color:var(--txt3,#6a7684)">Regulatory record: not prepared. Confirm above to prepare, hash and acknowledge it.</div>
         </div>
         <button class="run gold" id="apwGenBtn" style="margin-top:14px;width:100%;padding:12px" onclick="apwGenerate()" disabled title="Confirm the regulatory-documentation statement first">GENERATE ASSET PASSPORT</button>
         <div id="apwOut" style="margin-top:14px"></div>
@@ -987,6 +988,8 @@ serial-report.pdf: SN-12345 condition A</textarea></div>
 
 <script src="js/asset-passport.js"></script>
 <script src="js/asset-passport-v2.js"></script>
+<script src="js/regulatory-record.js?v=v483"></script>
+<script src="js/passport-versioning.js?v=v483"></script>
 <script src="js/asset-intelligence.js"></script>
 <script src="js/asset-finance.js"></script>
 <script src="js/asset-auction.js"></script>
@@ -1287,10 +1290,102 @@ async function tkGenPassport(){
     if(d.intel && d.value>0){ var lo=Math.round(d.value*0.85),hi=Math.round(d.value*1.15); claims.push(AP2.intelligenceToValuationClaim({amount:d.value,low:lo,high:hi,currency:d.cur,confidence:0.6,methodology:'SOST deterministic reference band (±15% around declared value) — informational, not an appraisal'},{id:'valuation-sost'})); }
     return claims;
   }
+  // ===== REGULATORY RECORD + PASSPORT VERSIONING (integrity layer) =====
+  var REG=window.SOSTRegulatoryRecord, VER=window.SOSTPassportVersioning;
+  var regReviewed=null;         // the record the applicant acknowledged (reviewed state)
+  var passportLedgers={};       // assetId -> non-overwriting sensitive-evidence ledger
+  // the applicant's declared regulatory documents, derived from the wizard (references, DECLARED)
+  function regDocsFromWizard(d){
+    var docs=(d.evidence||[]).map(function(e){ return {document_type:e.kind||'OTHER', filename:e.ref, text:e.ref,
+      provenance:{source_type:e.kind||'OTHER', source_name:e.ref}, verification_status:'DECLARED'}; });
+    // the owner-declared valuation is itself a reviewable regulatory input
+    docs.push({document_type:'INDEPENDENT_VALUATION', filename:'declared-valuation', text:d.cur+' '+d.value+' · '+(d.name||''),
+      provenance:{source_type:'DECLARING_PARTY', source_name:d.owner||'Declaring party'}, verification_status:'DECLARED'});
+    return docs;
+  }
+  // checkbox -> prepare + hash + acknowledge the record (drives the integrity layer, not only the button)
+  window.apwRegConfirm=async function(cb){
+    var btn=q('apwGenBtn'), status=document.getElementById('regRecStatus');
+    if(!cb.checked){ regReviewed=null; if(btn){ btn.disabled=true; btn.title='Confirm the regulatory-documentation statement first'; }
+      if(status){ status.style.color='var(--txt3)'; status.textContent='Regulatory record: not prepared. Confirm above to prepare, hash and acknowledge it.'; } return; }
+    if(btn){ btn.disabled=true; btn.title='Preparing regulatory record...'; }
+    if(status){ status.style.color='var(--amber)'; status.textContent='Preparing + hashing regulatory record...'; }
+    try{
+      if(!REG) throw new Error('regulatory module not loaded');
+      var d=gather(), docs=regDocsFromWizard(d), ack=new Date().toISOString();
+      var rr=await REG.buildRegulatoryRecord({jurisdiction:d.jur,asset_class:d.type,offering_model:d.right,
+        applicant:d.owner||'Declaring party',reviewer_id:'admin:tokenization-studio',documents:docs,
+        applicant_declaration:'The applicable legal, ownership, valuation, offering, custody, audit and regulatory documentation has been provided and reviewed.',
+        acknowledgement_timestamp:ack});
+      regReviewed={recordResult:rr,ack:ack};
+      if(btn){ btn.disabled=false; btn.title=''; }
+      if(status){ status.style.color='var(--green)';
+        status.innerHTML='Regulatory record v'+rr.record.record_version+' prepared &amp; acknowledged · hash '+esc(rr.record_hash.slice(0,16))+'… · '+rr.record.documents.length+' document(s) · '+rr.missing_documents.length+' still missing from the derived checklist · <b>LEGAL CLASSIFICATION: NOT DETERMINED BY SOST</b>'; }
+    }catch(e){ regReviewed=null; if(btn){ btn.disabled=true; } if(status){ status.style.color='#ff6b6b'; status.textContent='Regulatory record error: '+(e&&e.message||e); } }
+  };
+  // record sensitive-evidence versions into the (non-overwriting) ledger for this asset
+  async function recordEvidenceVersions(assetId,d,recRes){
+    if(!VER) return null;
+    var L=passportLedgers[assetId]||(passportLedgers[assetId]=VER.newLedger());
+    await VER.putEvidence(L,{evidence_class:'VALUATION',content:d.cur+'|'+d.value,reason:'declared reference valuation',
+      provenance:{source_type:'DECLARING_PARTY',source_name:d.owner},verification_status:'DECLARED',retain:true});
+    if(d.owner) await VER.putEvidence(L,{evidence_class:'TITLE_OWNERSHIP',content:'title:'+d.owner+'|'+(d.jur||''),reason:'ownership declaration',
+      provenance:{source_type:'DECLARING_PARTY',source_name:d.owner},verification_status:'DECLARED',retain:true});
+    if(recRes) await VER.putEvidence(L,{evidence_class:'REGULATORY_AUTHORIZATION',hash:recRes.record_hash,reason:'regulatory record v'+recRes.record.record_version,
+      reference:'regulatory-record',provenance:{source_type:'DECLARING_PARTY',source_name:d.owner},verification_status:'DECLARED'});
+    return L;
+  }
+  // verify the whole evidence history for the last generated passport
+  window.apwVerifyHistory=async function(){
+    if(!VER||!lastP) return; var L=passportLedgers[lastP.manifest.assetId]; var el=document.getElementById('apwHistVerify');
+    if(!L||!el) return;
+    try{ var v=await VER.verifyHistory(L);
+      el.innerHTML=v.ok?'<span class="st on" style="font-size:10px">HISTORY VERIFIED ✓ — every version links to its predecessor hash</span>'
+        :'<span class="st warn" style="font-size:10px">HISTORY INTEGRITY FAILED — '+esc(JSON.stringify(v.classes))+'</span>';
+    }catch(e){ el.textContent='verify error: '+(e&&e.message||e); }
+  };
+  function regAndVersionPanels(d,p){
+    var out='';
+    if(p.regulatoryRecord){ var rr=p.regulatoryRecord;
+      var docRows=(rr.documents||[]).map(function(x){ return '<div class="kv"><span class="k">'+esc(x.document_type)+'</span><span class="v">'+esc((x.sha256||'').slice(0,12))+'… · <span class="st '+(x.verification_status==='INDEPENDENTLY VERIFIED'?'on':(x.verification_status==='DOCUMENT PROVIDED'?'warn':'off'))+'" style="font-size:9.5px">'+esc(x.verification_status)+'</span> · v'+x.version+'</span></div>'; }).join('');
+      out+='<div class="apw-dash" style="border-top-color:var(--red);margin-top:12px"><h4>Regulatory record — v'+rr.record_version+' (in the Passport &amp; manifestHash)</h4>'
+        +'<div class="kv"><span class="k">regulatory_record_hash</span><span class="v" style="word-break:break-all">'+esc(p.regulatoryRecordHash)+'</span></div>'
+        +'<div class="kv"><span class="k">Jurisdiction · asset class · offering</span><span class="v">'+esc(rr.jurisdiction||'—')+' · '+esc(rr.asset_class||'—')+' · '+esc(rr.offering_model||'—')+'</span></div>'
+        +'<div class="kv"><span class="k">Checklist version</span><span class="v">'+esc(rr.checklist_version)+'</span></div>'
+        +'<div class="kv"><span class="k">Acknowledged at</span><span class="v">'+esc(rr.acknowledgement_timestamp||'—')+'</span></div>'
+        +(rr.previous_record_hash?'<div class="kv"><span class="k">Previous record hash</span><span class="v" style="word-break:break-all">'+esc(rr.previous_record_hash)+'</span></div>':'')
+        +'<div class="kv"><span class="k">Legal classification</span><span class="v" style="color:var(--txt3)">'+esc(rr.legal_classification)+'</span></div>'
+        +'<div class="tk-sub" style="margin:10px 0 4px">Declared documents (SHA-256 · state · version):</div>'+docRows
+        +'<div class="note" style="margin-top:8px">Integrity record — NOT a legal validation. States are only DECLARED / DOCUMENT PROVIDED / INDEPENDENTLY VERIFIED; SOST never auto-asserts LEGAL / COMPLIANT / AUTHORIZED.</div></div>';
+    }
+    var L=passportLedgers[p.manifest.assetId];
+    if(L && VER){
+      var rows=Object.keys(L.entries).map(function(cls){ var list=L.entries[cls], cur=list[list.length-1];
+        var hist=list.map(function(v){ return 'v'+v.version+' '+(v.hash||'').slice(0,10)+'…'; }).join(' → ');
+        return '<div class="kv"><span class="k">'+esc(cls.replace(/_/g,' '))+'</span><span class="v">CURRENT v'+cur.version+' · '+esc(cur.verification_status)+'<br><span style="color:var(--txt3);font-size:10px">history: '+esc(hist)+'</span></span></div>'; }).join('');
+      out+='<div class="apw-dash" style="border-top-color:var(--cyan);margin-top:12px"><h4>Passport versioning — sensitive evidence (never overwritten)</h4>'
+        +rows
+        +'<div style="margin-top:10px"><button class="ghost" onclick="apwVerifyHistory()">Verify whole history</button> <span id="apwHistVerify" style="margin-left:8px"></span></div>'
+        +'<div class="note" style="margin-top:8px">Each change appends a new version keeping the previous hash + timestamp + reason + provenance + verification_status. Current + full history shown; verifiable end-to-end.</div></div>';
+    }
+    return out;
+  }
   window.apwGenerate=async function(){ var out=q('apwOut'); var AP2=window.SOSTAssetPassportV2; if(!AP2){ out.innerHTML='<div class="note">module not loaded</div>'; return; } var d=gather();
+    // REGISTRY INTEGRITY GATE — refuses EXECUTE regardless of the checkbox's disabled state.
+    if(!REG){ out.innerHTML='<div style="border:1px solid #fb010d;border-radius:10px;background:rgba(251,1,13,.08);padding:13px 15px;color:#ff8a8a;font:600 12px/1.6 var(--mono)">⛔ EXECUTE REFUSED — regulatory integrity module not loaded.</div>'; return; }
+    var gateAck=(q('regConfirm')&&q('regConfirm').checked && regReviewed)?regReviewed.ack:null;
+    try{
+      await REG.assertCanGenerate({ recordResult: regReviewed?regReviewed.recordResult:null,
+        acknowledgement_timestamp: gateAck, presentedDocuments: regDocsFromWizard(d) });
+    }catch(gateErr){
+      out.innerHTML='<div style="border:1px solid #fb010d;border-radius:10px;background:rgba(251,1,13,.08);padding:13px 15px;color:#ff8a8a;font:600 12px/1.6 var(--mono)">⛔ '+esc(gateErr.message)+'</div>';
+      out.scrollIntoView({behavior:'smooth',block:'nearest'}); return;
+    }
     try{
       var claims=buildClaims(AP2,d);
-      var p=await AP2.buildPassport({issuer:'sost1'+(d.owner||'issuer').replace(/[^a-zA-Z0-9]/g,'').slice(0,10),nonce:'0',category:d.type,locator:'',claims:claims});
+      var fields={issuer:'sost1'+(d.owner||'issuer').replace(/[^a-zA-Z0-9]/g,'').slice(0,10),nonce:'0',category:d.type,locator:'',claims:claims};
+      var p=await REG.buildPassportWithRegulatory(fields, regReviewed.recordResult);
+      await recordEvidenceVersions(p.manifest.assetId,d,regReviewed.recordResult);
       lastP=p; lastD=d; var r=p.rollup, cap=AP2.capsuleDocRef(p); var ref=d.value>0&&d.supply>0?(d.value/d.supply):0;
       var lh=AP2.liquidityHonesty({valuation:String(d.value),reference_price_per_token:ref,currency:d.cur});
       var yn=function(b){return b?'<span class="st on" style="font-size:10px">YES</span>':'<span class="st off" style="font-size:10px">NO</span>';};
@@ -1324,6 +1419,7 @@ async function tkGenPassport(){
           +'<div class="tk-sub" style="margin:10px 0 4px">SOST price scenarios (arithmetic, not quotes):</div>'
           +lh.scenarios.map(function(s){return '<div class="kv"><span class="k">SOST @ '+d.cur+' '+s.sost_price+'</span><span class="v">'+(s.sost_per_token||'—')+' SOST/unit · SCENARIO</span></div>';}).join('')
         +'</details></div>';
+      out.insertAdjacentHTML('beforeend', regAndVersionPanels(d,p));
       out.scrollIntoView({behavior:'smooth',block:'nearest'});
     }catch(e){ out.innerHTML='<div class="note">error: '+(e&&e.message||e)+'</div>'; }
   };

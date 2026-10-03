@@ -1480,6 +1480,20 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
     <tbody id="mpBody"><tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px">empty</td></tr></tbody></table>
   </div>
 
+  <!-- NETWORK HEALTH PANEL (section 11) — fed from the explorer's own RPC
+       (getinfo / getbestblockhash / getnetworksummary) + protocol-status.json.
+       No node data is invented: every value is a live RPC read or the manifest.
+       Deliberately shows no "% nodes upgraded" (no evidence for it). -->
+  <div class="section" id="netHealthSection">
+    <div class="sec-head"><div class="sec-title">// <b>NETWORK HEALTH</b></div><div class="sec-meta" id="nhNetStatus">checking&hellip;</div></div>
+    <div id="netHealthCard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;background:var(--bg2);border:1px solid var(--border);padding:10px 12px;margin-bottom:8px;">
+      <div style="grid-column:1/-1;font-size:10px;color:var(--text3)">loading network health&hellip;</div>
+    </div>
+    <div style="font-size:8px;color:var(--text3);line-height:1.7;font-family:var(--code);margin-bottom:16px">
+      Live from this node's RPC (<code>getinfo</code>, <code>getbestblockhash</code>, <code>getnetworksummary</code>) and the site manifest <code>protocol-status.json</code>. Activation state flips from <b>PRE-ACTIVATION</b> to <b>V30000 ACTIVE</b> at the manifest activation height. Network status is derived only from node reachability and tip age &mdash; it never asserts a share of upgraded peers.
+    </div>
+  </div>
+
   <!-- ACTIVE NODES SECTION -->
   <div class="section" id="nodesSection">
     <div class="sec-head"><div class="sec-title">// <b>ACTIVE NODES</b></div><div class="sec-meta" id="nodesInfo">refreshing...</div></div>
@@ -2600,7 +2614,7 @@ async function renderDTDPanel(body,title,silent){
       + '<code>include/sost/lottery.h</code> (eligibility, cadence, seed, '
       + 'pending/rollover), <code>src/jackpot_v2.cpp</code> (the independent '
       + 'Jackpot draw from #30,000) and <code>include/sost/params.h</code> '
-      + '(every activation height). Current release: <b>V30000</b> &mdash; '
+      + '(every activation height). Current release: <b data-manifest="release">V30000</b> &mdash; '
       + 'it changes no consensus rule (node fix: full sync from genesis). Click the title again to hide this '
       + 'panel.</p>'
 
@@ -7960,6 +7974,108 @@ refresh();
   }
   loadPeerInfo();loadNetworkSummary();
   setInterval(loadPeerInfo,30000);setInterval(loadNetworkSummary,30000);
+})();
+
+// ── NETWORK HEALTH PANEL (section 11) ─────────────────────────────────────
+// Reuses the explorer's own rpc() helper + protocol-status.json. Every field
+// is a live RPC read or a manifest value — nothing is invented. There is NO
+// "% nodes upgraded" metric: the chain gives no evidence for one.
+(function(){
+  var MANIFEST=null;
+  function loadManifest(){
+    if(MANIFEST) return Promise.resolve(MANIFEST);
+    return fetch('protocol-status.json?t='+Date.now())
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(d){MANIFEST=d;return d;})
+      .catch(function(){return null;});
+  }
+  // Fill any [data-manifest] element on the page from the manifest, so release/
+  // activation strings baked into other panels can't drift from the single
+  // source of truth. Runs each tick to catch panels rendered after load.
+  function applyManifestEls(man){
+    if(!man) return;
+    var els=document.querySelectorAll('[data-manifest]');
+    for(var i=0;i<els.length;i++){
+      var k=els[i].getAttribute('data-manifest'),v=null;
+      if(k==='release') v=man.release;
+      else if(k==='release_tag') v=man.release_tag;
+      else if(k==='activation') v=(man.activation_height!=null)?('#'+Number(man.activation_height).toLocaleString('en-US')):null;
+      else if(k==='activation_height') v=(man.activation_height!=null)?String(man.activation_height):null;
+      else if(k==='security_mode') v=man.security_mode;
+      if(v!=null) els[i].textContent=v;
+    }
+  }
+  function nhAge(sec){
+    if(sec==null||sec<0) return '—';
+    if(sec<60) return Math.floor(sec)+'s ago';
+    if(sec<3600) return Math.floor(sec/60)+'m ago';
+    if(sec<86400) return Math.floor(sec/3600)+'h '+Math.floor((sec%3600)/60)+'m ago';
+    return Math.floor(sec/86400)+'d ago';
+  }
+  function nhCell(k,val,c){
+    if(val==null||val==='') return '';
+    return '<div><div style="font-size:8px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">'+k+'</div>'+
+           '<div style="font-size:12px;font-weight:600;color:'+(c||'var(--text)')+';overflow-wrap:anywhere">'+val+'</div></div>';
+  }
+  async function loadNetworkHealth(){
+    var card=document.getElementById('netHealthCard'), badge=document.getElementById('nhNetStatus');
+    if(!card) return;
+    var man=await loadManifest();
+    applyManifestEls(man);
+    var activation=(man&&man.activation_height!=null)?Number(man.activation_height):30000;
+    var release=(man&&man.release)||'V30000';
+
+    // Live node reads through the existing rpc() helper (same auth, timeouts,
+    // retry as every other explorer RPC). Each is independently fault-tolerant.
+    var info=null,tipHash=null,netsum=null;
+    try{ info=await rpc('getinfo'); }catch(e){ info=null; }
+    if(info){ try{ tipHash=await rpc('getbestblockhash'); }catch(e){ tipHash=_tipBlockHash||null; } }
+    else { tipHash=_tipBlockHash||null; }
+    try{ netsum=await rpc('getnetworksummary'); }catch(e){ netsum=null; }
+    var ln=(netsum&&netsum.local_node)||null;
+
+    var height = (info&&info.blocks!=null) ? Number(info.blocks) : (H||null);
+    var version = (info&&info.version) ? info.version : null;
+    var peers = (info&&info.connections!=null) ? Number(info.connections)
+              : (netsum&&netsum.connected_external!=null ? Number(netsum.connected_external) : null);
+    var tipAge = (ln&&ln.tip_age_s!=null) ? Number(ln.tip_age_s) : null;
+
+    // Activation state label (section 11 requirement).
+    var actState,actClr;
+    if(height==null){ actState='—'; actClr='var(--text3)'; }
+    else if(height>=activation){ actState=release+' ACTIVE'; actClr='var(--green)'; }
+    else { actState='PRE-ACTIVATION'; actClr='var(--cyan)'; }
+    var remaining = (height!=null) ? Math.max(0,activation-height) : null;
+
+    // Network status — derived ONLY from reachability + tip age + the local
+    // node's own reported status. DIVERGENCE is asserted only if the gateway
+    // explicitly reports it; it is never guessed.
+    var status,statusClr;
+    if(!info && !netsum){ status='DEGRADED'; statusClr='var(--orange)'; }
+    else if(ln && (ln.status==='DIVERGENCE'||ln.status==='FORK'||ln.diverged===true)){ status='DIVERGENCE DETECTED'; statusClr='var(--red)'; }
+    else if((tipAge!=null && tipAge>7200) || (ln && (ln.status==='OFFLINE'||ln.status==='DEGRADED'))){ status='DEGRADED'; statusClr='var(--orange)'; }
+    else if(ln && ln.status==='STALE'){ status='DEGRADED'; statusClr='var(--yellow)'; }
+    else { status='HEALTHY'; statusClr='var(--green)'; }
+
+    if(badge){ badge.innerHTML='<b style="color:'+statusClr+'">'+status+'</b>'; }
+
+    var tipShort = tipHash ? (String(tipHash).slice(0,12)+'···'+String(tipHash).slice(-6)) : null;
+    card.innerHTML=
+      nhCell('CURRENT HEIGHT', height!=null?height.toLocaleString('en-US'):null,'var(--red)')+
+      nhCell('ACTIVATION', '#'+activation.toLocaleString('en-US'))+
+      nhCell('BLOCKS REMAINING', remaining!=null?(remaining===0?'0 (reached)':remaining.toLocaleString('en-US')):null, remaining===0?'var(--green)':'var(--text)')+
+      nhCell('ACTIVATION STATE', actState, actClr)+
+      nhCell('NODE VERSION', version?('v'+String(version).replace(/^v/,'')):null,'var(--cyan)')+
+      nhCell('TIP HASH', tipShort,'var(--purple)')+
+      nhCell('LAST BLOCK', tipAge!=null?nhAge(tipAge):null)+
+      nhCell('PEERS', peers!=null?peers:null)+
+      nhCell('NETWORK STATUS', status, statusClr);
+    if(!card.innerHTML){
+      card.innerHTML='<div style="grid-column:1/-1;font-size:10px;color:var(--yellow)">network health unavailable (node did not answer)</div>';
+    }
+  }
+  loadNetworkHealth();
+  setInterval(loadNetworkHealth,30000);
 })();
 
 // Node/Miner status badges

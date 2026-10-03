@@ -103,3 +103,6 @@ archive/geaspirit-separation/
 build-*/
 popc_registry.json
 artifacts/v15-final-validation/
+.devnet/
+website/dex-devnet-config.json
+/err

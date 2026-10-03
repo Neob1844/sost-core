@@ -1091,6 +1091,54 @@
     })();
     </script>
 
+    <!-- PROTOCOL STATUS (section 12) — read from the single-source-of-truth
+         manifest protocol-status.json at runtime so release / activation /
+         status strings here can never contradict the explorer or the manifest. -->
+    <div style="margin-top:14px;text-align:center;">
+      <div id="protocolStatusLive" style="display:inline-block;background:#0d0d0d;border:1px solid #1c1c1c;border-radius:6px;padding:8px 20px;font-family:var(--font-mono);font-size:10px;letter-spacing:.5px;color:#777;">
+        <span style="color:#555">loading protocol status&hellip;</span>
+      </div>
+    </div>
+    <script>
+    // Reads website/protocol-status.json (the canonical manifest) and renders
+    // the release / activation / mode strings. A live getblockcount decides the
+    // PRE-ACTIVATION vs ACTIVE label; nothing here is hardcoded except the
+    // graceful fallback if the manifest cannot be fetched.
+    (function(){
+      var el=document.getElementById('protocolStatusLive');
+      if(!el) return;
+      function chip(label,val,clr){
+        return '<span style="color:#555">'+label+'</span> <span style="color:'+(clr||'#cfd8d2')+';font-weight:600">'+val+'</span>';
+      }
+      fetch('protocol-status.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(m){
+        if(!m){ el.innerHTML='<span style="color:#555">protocol status unavailable</span>'; return; }
+        var act=(m.activation_height!=null)?Number(m.activation_height):null;
+        function render(height){
+          var state='<span style="color:#555">activation state unknown</span>';
+          if(height!=null && act!=null){
+            if(height>=act) state=chip('STATE',(m.release||'V30000')+' ACTIVE','#00ff88');
+            else state=chip('STATE','PRE-ACTIVATION','#67e8f9');
+          }
+          var sep=' <span style="color:#2a2a2a">&middot;</span> ';
+          el.innerHTML=
+            chip('RELEASE',(m.release||'')+(m.release_tag?' ('+m.release_tag+')':''),'#ffd700')+sep+
+            chip('ACTIVATION',act!=null?('#'+act.toLocaleString('en-US')):'—')+sep+
+            state+sep+
+            chip('TOKENIZATION',m.tokenization_status||'—','#c084fc')+sep+
+            chip('PUBLIC TRADING',(m.public_trading===true)?'enabled':'disabled',(m.public_trading===true)?'#00ff88':'#fb923c')+sep+
+            chip('S14',m.S14||'—','#fbbf24')+sep+
+            chip('MODE',m.security_mode||'—','#67e8f9');
+        }
+        // Live height decides PRE vs ACTIVE. If the node is unreachable, still
+        // render the manifest strings with an unknown state (never guess).
+        fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"getblockcount","params":[],"id":1}'})
+          .then(function(r){return r.json();})
+          .then(function(j){ var h=(j&&j.result!=null)?Number(j.result):null; render(h); })
+          .catch(function(){ render(null); });
+      }).catch(function(){ el.innerHTML='<span style="color:#555">protocol status unavailable</span>'; });
+    })();
+    </script>
+
   </div>
 </section>
 

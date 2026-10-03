@@ -1,0 +1,16 @@
+{
+  "_comment": "SINGLE SOURCE OF TRUTH for SOST public-web protocol status. Other pages (sost-explorer.html, index.html) fetch this at runtime so release/activation/status strings can never contradict each other. current_height is deliberately null: it is a runtime value the explorer fills from the live node, never baked in and left to go stale. Editing this file is the only place these status strings should change.",
+  "release": "V30000",
+  "release_tag": "v30000",
+  "activation_height": 30000,
+  "current_height": null,
+  "dex_protocol_status": "activates #30000 (devnet wiring only; EVM mainnet NOT deployed)",
+  "tokenization_status": "admin-gated",
+  "public_trading": false,
+  "admin_gate": true,
+  "S14": "RESTRICTED_DEVELOPER_MODE active",
+  "native_assets": "activate #30000",
+  "jackpot_v2": "activates #30000 (first #30186)",
+  "security_mode": "SEC2",
+  "last_updated": "2026-10-03"
+}
