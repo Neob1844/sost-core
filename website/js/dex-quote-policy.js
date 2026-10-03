@@ -47,6 +47,50 @@
     'Cannot cancel — the first HTLC is funded. From here the swap can only SETTLE, ' +
     'or TIMEOUT → REFUND. A confirmed on-chain HTLC is never reverted by a cancel.';
 
+  // ---- ORDER / QUOTE LIFECYCLE (section 5) -----------------------------------
+  // The explicit, user-facing lifecycle vocabulary. The internal ORDER_STATES
+  // above drive the existing cancel machinery; LIFECYCLE is the canonical public
+  // state set + its allowed transitions. CANCEL is allowed before funding only;
+  // after FUNDED the only paths are SETTLING->COMPLETE or REFUND_AVAILABLE->REFUNDED.
+  var LIFECYCLE_STATES = ['OPEN', 'QUOTED', 'RESERVED', 'FUNDED', 'SETTLING', 'COMPLETE',
+    'CANCELLED', 'EXPIRED', 'REFUND_AVAILABLE', 'REFUNDED', 'FAILED'];
+  var LIFECYCLE_ALLOWED = {
+    OPEN: ['QUOTED', 'CANCELLED', 'EXPIRED', 'FAILED'],
+    QUOTED: ['RESERVED', 'OPEN', 'CANCELLED', 'EXPIRED', 'FAILED'],
+    RESERVED: ['FUNDED', 'CANCELLED', 'EXPIRED', 'FAILED'],
+    FUNDED: ['SETTLING', 'REFUND_AVAILABLE', 'FAILED'],       // NO cancel from here
+    SETTLING: ['COMPLETE', 'REFUND_AVAILABLE', 'FAILED'],
+    REFUND_AVAILABLE: ['REFUNDED', 'FAILED'],
+    COMPLETE: [], CANCELLED: [], EXPIRED: [], REFUNDED: [], FAILED: []
+  };
+  var LIFECYCLE_CANCELABLE = { OPEN: 1, QUOTED: 1, RESERVED: 1 };   // pre-funding only
+  function lifecycleCanCancel(state) { return !!LIFECYCLE_CANCELABLE[state]; }
+  function lifecycleCanTransition(from, to) { return (LIFECYCLE_ALLOWED[from] || []).indexOf(to) >= 0; }
+  function lifecycleTransition(order, to) {
+    assert(LIFECYCLE_STATES.indexOf(to) >= 0, 'unknown lifecycle state: ' + to);
+    var from = order.lifecycle || 'OPEN';
+    if (from === to) return order;                       // idempotent
+    if (to === 'CANCELLED') assert(lifecycleCanCancel(from), CANCEL_REFUSED_MSG);
+    assert(lifecycleCanTransition(from, to), 'illegal lifecycle transition ' + from + ' -> ' + to);
+    order.lifecycle = to;
+    order.lifecycleHistory = (order.lifecycleHistory || [from]).concat([to]);
+    return order;
+  }
+  // Map the internal order/step facts to the public lifecycle label.
+  function lifecycleFor(internalState) {
+    switch (internalState) {
+      case 'OPEN': return 'OPEN';
+      case 'SIGNED_OFFER': return 'QUOTED';
+      case 'QUOTE_RESERVED': return 'RESERVED';
+      case 'FUNDED': return 'FUNDED';
+      case 'SETTLED': return 'COMPLETE';
+      case 'REFUNDED': return 'REFUNDED';
+      case 'CANCELLED': return 'CANCELLED';
+      case 'EXPIRED': return 'EXPIRED';
+      default: return (LIFECYCLE_STATES.indexOf(internalState) >= 0) ? internalState : 'OPEN';
+    }
+  }
+
   function assert(c, m) { if (!c) throw new Error(m); }
   function nowSecs(nowMs) { return Math.floor((nowMs == null ? Date.now() : nowMs) / 1000); }
 
@@ -112,17 +156,29 @@
   // The EXACT binding fields a maker signs. Tampering with any of them changes
   // the digest, so a modified quote (amount/price/expiry/counterparty/nonce/
   // side/pair) is rejected by verifyQuote before anything is funded.
+  // ANTI-REPLAY DOMAIN BINDING (section 4): every signed field a quote commits
+  // to. A signature for SOST/ETH devnet does NOT verify for mainnet / SOST/USDC /
+  // another HTLC contract / another chainId / another amount / another expiry,
+  // because each of those changes this object and therefore the digest.
   function bindingFields(q) {
     return {
       domain: QUOTE_DOMAIN, version: QUOTE_VERSION,
+      environment: String(q.environment || ''),       // devnet | testnet | mainnet
+      chainIdA: String(q.chainIdA || ''),              // SOST leg chain id
+      chainIdB: String(q.chainIdB || ''),              // counterparty (EVM/BTC) chain id
       pair: String(q.pair), side: String(q.side),
       amount: String(q.amount), price: String(q.price),
       minimumReceived: String(q.minimumReceived),
+      maker: String(q.maker || ''),
+      taker: String(q.taker || ''),
       counterparty: String(q.counterparty || ''),
+      htlcContract: String(q.htlcContract || '').toLowerCase(),
       nonce: String(q.nonce),
       created_at: q.created_at | 0, expires_at: q.expires_at | 0
     };
   }
+  // The execution-context fields a verifier REQUIRES the quote to be bound to.
+  var CONTEXT_FIELDS = ['environment', 'chainIdA', 'chainIdB', 'pair', 'side', 'htlcContract'];
   function canon(o) {
     if (o === null || typeof o !== 'object') return JSON.stringify(o);
     if (Array.isArray(o)) return '[' + o.map(canon).join(',') + ']';
@@ -152,10 +208,16 @@
     assert(life > 0, 'lifetime must be > 0');
     var q = {
       domain: QUOTE_DOMAIN, version: QUOTE_VERSION,
+      environment: String(params.environment || ''),
+      chainIdA: String(params.chainIdA || ''),
+      chainIdB: String(params.chainIdB || ''),
       pair: String(params.pair), side: String(params.side),
       amount: String(params.amount), price: String(params.price),
       minimumReceived: String(params.minimumReceived != null ? params.minimumReceived : params.amount),
+      maker: String(params.maker || ''),
+      taker: String(params.taker || ''),
       counterparty: String(params.counterparty || ''),
+      htlcContract: String(params.htlcContract || '').toLowerCase(),
       nonce: String(params.nonce != null ? params.nonce : randNonce()),
       created_at: created, expires_at: created + life,
       state: 'FIRM', reserved: false
@@ -191,6 +253,28 @@
     if (q.state !== 'FIRM') return { ok: false, reason: 'quote is not FIRM (state=' + q.state + ')' };
     return { ok: true, reason: '' };
   }
+
+  // verifyQuoteFor: verifyQuote PLUS anti-replay context binding. `ctx` carries the
+  // execution context the caller is about to act in (environment, chainIdA, chainIdB,
+  // pair, side, htlcContract). A quote bound to a DIFFERENT context is REJECTED — a
+  // SOST/ETH devnet quote will NOT verify for mainnet / SOST/USDC / another contract /
+  // another chainId. Returns {ok, reason}.
+  function verifyQuoteFor(q, ctx, nowMs) {
+    var base = verifyQuote(q, nowMs);
+    if (!base.ok) return base;
+    ctx = ctx || {};
+    for (var i = 0; i < CONTEXT_FIELDS.length; i++) {
+      var f = CONTEXT_FIELDS[i];
+      if (ctx[f] == null) continue; // only check fields the caller pins
+      var want = (f === 'htlcContract') ? String(ctx[f]).toLowerCase() : String(ctx[f]);
+      var got = (f === 'htlcContract') ? String(q[f] || '').toLowerCase() : String(q[f] || '');
+      if (want !== got) {
+        return { ok: false, reason: 'anti-replay: quote ' + f + '="' + got + '" does not match the execution context "' + want + '" — this quote is bound to a different ' + f + ' (rejected)' };
+      }
+    }
+    return { ok: true, reason: '' };
+  }
+  function assertBinding(q, ctx, nowMs) { var v = verifyQuoteFor(q, ctx, nowMs); assert(v.ok, v.reason); return true; }
 
   // ---- reservation = PRICE LOCK ----------------------------------------------
   // After a quote is reserved, the price is pinned. assertUnchanged() rejects ANY
@@ -275,6 +359,8 @@
       if (!rate || rate.price == null) throw new Error('quote source returned no firm price — fail-closed (nothing to lock)');
       return makeQuote({
         pair: params.pair, side: params.side, amount: params.amount,
+        environment: params.environment, chainIdA: params.chainIdA, chainIdB: params.chainIdB,
+        maker: params.maker, taker: params.taker, htlcContract: params.htlcContract,
         price: rate.price, minimumReceived: rate.minimumReceived, counterparty: rate.counterparty,
         signature: rate.signature
       }, nowMs, lifetimeSecs);
@@ -286,10 +372,14 @@
     DEFAULT_LIFETIME_SECS: DEFAULT_LIFETIME_SECS,
     EXPIRY_PRESETS: EXPIRY_PRESETS, EXPIRY_LABEL: EXPIRY_LABEL,
     ORDER_STATES: ORDER_STATES, CANCELABLE: CANCELABLE, CANCEL_REFUSED_MSG: CANCEL_REFUSED_MSG,
-    sha256hex: sha256hex, quoteDigest: quoteDigest,
+    LIFECYCLE_STATES: LIFECYCLE_STATES, LIFECYCLE_ALLOWED: LIFECYCLE_ALLOWED,
+    lifecycleCanCancel: lifecycleCanCancel, lifecycleCanTransition: lifecycleCanTransition,
+    lifecycleTransition: lifecycleTransition, lifecycleFor: lifecycleFor,
+    sha256hex: sha256hex, quoteDigest: quoteDigest, CONTEXT_FIELDS: CONTEXT_FIELDS,
     makeQuote: makeQuote, isExpired: isExpired, remainingSecs: remainingSecs,
     formatCountdown: formatCountdown, refreshState: refreshState, isExecutable: isExecutable,
-    verifyQuote: verifyQuote, reserveQuote: reserveQuote, assertUnchanged: assertUnchanged,
+    verifyQuote: verifyQuote, verifyQuoteFor: verifyQuoteFor, assertBinding: assertBinding,
+    reserveQuote: reserveQuote, assertUnchanged: assertUnchanged,
     canCancel: canCancel, cancelOrder: cancelOrder, availableActions: availableActions,
     newLimitOrder: newLimitOrder, limitExpired: limitExpired, limitStatus: limitStatus, limitLabel: limitLabel,
     requestFirmQuote: requestFirmQuote

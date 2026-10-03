@@ -57,6 +57,12 @@
   // quote/RFQ + cancellation policy (pure logic). Loaded on the page or via require in tests.
   var QP = (typeof root !== 'undefined' && root.SOSTDexQuotePolicy) ||
     (function () { try { return require('./dex-quote-policy.js'); } catch (e) { return null; } })();
+  // swap/timelock policy (staggered HTLC timeouts + validation + pinning + signing summary).
+  var SW = (typeof root !== 'undefined' && root.SOSTDexSwapPolicy) ||
+    (function () { try { return require('./dex-swap-policy.js'); } catch (e) { return null; } })();
+  // token allowlist (contract-identity, never the wallet symbol).
+  var AL = (typeof root !== 'undefined' && root.SOSTDexTokenAllowlist) ||
+    (function () { try { return require('./dex-token-allowlist.js'); } catch (e) { return null; } })();
 
   // ---- small hex / ABI helpers ----------------------------------------------
   function strip0x(h) { return (h || '').replace(/^0x/, ''); }
@@ -304,6 +310,9 @@
       claim_address: params.claimAddress,   // sost1...
       refund_address: params.refundAddress  // sost1...
     });
+    // Attach the human-readable summary so the wallet's authorizeSign() shows it
+    // (the bridge reads tx.summary). Never request an opaque signature.
+    if (params.summary && unsigned && typeof unsigned === 'object') unsigned.summary = params.summary;
     var signed = await conn.sign(unsigned);       // {hex,txid,vout}
     var txid = await conn.broadcast(signed);      // node returns the txid string
     if (typeof txid !== 'string') txid = (signed && signed.txid) || txid;
@@ -385,6 +394,56 @@
   // executed rate (not a fabricated market price), and it is labelled as such in
   // the UI. If a real maker is ever wired via ctx.quoteSource(), it is used
   // instead; with no source at all the request fails closed (no fabricated price).
+  // The execution context that binds quotes + pins the HTLC contract (anti-replay).
+  //   environment : devnet (this admin path is devnet-only)
+  //   chainIdA    : the SOST leg chain tag; chainIdB : the EVM counterparty chainId
+  //   htlcContract: the PINNED EVM HTLC address for env+chainId (from local config)
+  function swapCtx() {
+    var D = root.DEVNET || {};
+    var env = 'devnet';
+    var chainIdB = D.evm_chain_id != null ? String(D.evm_chain_id) : '';
+    var htlc = (SW && SW.resolveExpectedHtlc(env, D.evm_chain_id, 'v2', D)) || D.htlc_v2 || '';
+    return { env: env, chainIdA: 'sost:' + env, chainIdB: chainIdB, htlcContract: String(htlc).toLowerCase(), version: 'v2' };
+  }
+  // Allowlist the counterparty (EVM) asset by its REAL contract — never the symbol.
+  function allowlistRecv(recvSym) {
+    if (!AL) return { ok: true, status: 'no-allowlist' };
+    var D = root.DEVNET || {};
+    AL.registerFromConfig(D);
+    var cid = D.evm_chain_id;
+    if (recvSym === 'ETH') return AL.checkToken(cid, 'ETH', null, 18);
+    if (recvSym === 'USDC') return AL.checkToken(cid, 'USDC', usdcToken(), usdcDecimals());
+    return AL.checkToken(cid, recvSym, null, null);
+  }
+  // Build the canonical human-readable signing summary for the active swap.
+  function buildSummary(s, tl) {
+    if (!SW) return null;
+    var a = ctx.assets();
+    var q = s.quote || {};
+    var c = swapCtx();
+    var shortRefund = (tl && tl.short && tl.short.refundHeight != null)
+      ? (tl.short.chain + ' block ' + tl.short.refundHeight) : (s.evm && s.evm.refundTime ? ('EVM block ' + s.evm.refundTime) : 'the EVM HTLC refund height');
+    var longRefund = (tl && tl.long && tl.long.refundHeight != null)
+      ? ('SOST height ' + tl.long.refundHeight) : (s.sostRefundHeight ? ('SOST height ' + s.sostRefundHeight) : 'the SOST HTLC refund height');
+    return SW.buildSigningSummary({
+      youPay: s.amount + ' ' + a.pay,
+      youReceive: (q.minimumReceived || s.amount) + ' ' + a.recv,
+      pair: a.pay + '/' + a.recv,
+      side: q.side || 'sell',
+      rate: (q.price || '1') + ' ' + a.recv + '/' + a.pay,
+      minimumReceived: (q.minimumReceived || s.amount) + ' ' + a.recv,
+      fees: 'network/gas only (no protocol fee in this devnet preview)',
+      counterparty: q.counterparty || 'devnet (1:1 mechanical)',
+      networkA: 'SOST ' + c.chainIdA,
+      networkB: a.recv === 'BTC' ? 'Bitcoin' : ('EVM chainId ' + c.chainIdB),
+      htlcContract: c.htlcContract || '(SOST native HTLC script)',
+      quoteExpiry: q.expires_at ? ('t=' + q.expires_at + ' (' + QUOTE_LIFETIME_SECS + 's quote lock — SEPARATE from the HTLC timelock)') : (QUOTE_LIFETIME_SECS + 's'),
+      htlcTimelock: tl ? ('short ~' + (tl.short.timeoutSecs / 3600) + 'h / long SOST ~' + (tl.long.timeoutSecs / 3600) + 'h') : '',
+      refundAvailableAt: 'short leg: ' + shortRefund + ' · SOST: ' + longRefund,
+      nonce: q.nonce || s.evmSwapId || s.id
+    });
+  }
+
   function devnetQuoteSource() {
     if (ctx && typeof ctx.quoteSource === 'function') { var s = ctx.quoteSource(); if (typeof s === 'function') return s; }
     return function (params) {
@@ -396,8 +455,12 @@
   function requestQuote() {
     if (!QP || !current) return Promise.resolve(null);
     var a = ctx.assets();
+    var c = swapCtx();
+    var st = ctx.wm.state();
     return QP.requestFirmQuote(devnetQuoteSource(), {
-      pair: a.pay + '/' + a.recv, side: 'sell', amount: current.amount
+      pair: a.pay + '/' + a.recv, side: 'sell', amount: current.amount,
+      environment: c.env, chainIdA: c.chainIdA, chainIdB: c.chainIdB, htlcContract: c.htlcContract,
+      maker: (st.sost && st.sost.address) || '', taker: (st.cp && st.cp.address) || ''
     }, Date.now(), QUOTE_LIFETIME_SECS).then(function (q) {
       current.quote = q; current.reservation = null;
       if (current.orderState === 'EXPIRED' || current.orderState === 'OPEN') current.orderState = 'SIGNED_OFFER';
@@ -534,6 +597,33 @@
       + '</div>';
   }
 
+  // REVIEW & SIGN — the canonical human-readable summary + staggered timelock
+  // policy + the PINNED HTLC the wallet will be asked to sign against. Shown
+  // BEFORE funding; after funding it shows the exact persisted refund deadlines.
+  function renderReviewBox() {
+    if (!SW || !current) return '';
+    if (current.step === 'COMPLETE' || current.step === 'REFUNDED' || current.orderState === 'CANCELLED') return '';
+    var a = ctx.assets();
+    var tl = current.timelocks;
+    try { if (!tl) tl = SW.computeTimelocks(a.pay + '/' + a.recv, { env: swapCtx().env }); } catch (e) { return ''; }
+    var c = swapCtx();
+    var expected = c.htlcContract || '(not pinned)';
+    var summary = current.summary || buildSummary(current, tl);
+    var rows = (SW.SUMMARY_FIELDS || []).map(function (f) {
+      return '<div class="qrow"><span class="k">' + f[1] + '</span><span class="v">' + esc(summary ? summary[f[0]] : '') + '</span></div>';
+    }).join('');
+    var funded = isFunded(current);
+    return '<div class="quote" style="border:1px solid var(--border-2);border-radius:10px;margin-top:14px;padding:12px 14px">'
+      + '<div style="font:700 12px/1.4 var(--mono);color:var(--gold);letter-spacing:.5px">' + (funded ? 'SIGNED SWAP — DEADLINES' : 'REVIEW & SIGN — human-readable (no opaque signature)') + '</div>'
+      + '<div class="qrow"><span class="k">EXPECTED HTLC</span><span class="v" style="color:var(--amber)">' + esc(expected) + '</span></div>'
+      + rows
+      + '<div style="border-top:1px dashed var(--border-2);margin-top:10px;padding-top:10px">'
+      + '<div style="font:600 11px/1.6 var(--mono);color:var(--txt-3)">' + esc(SW.shortLegRefundDisplay(tl)) + '</div>'
+      + '<div style="font:600 11px/1.6 var(--mono);color:var(--txt-3)">' + esc(SW.sostRefundDisplay(tl)) + '</div>'
+      + '<div style="font:700 11px/1.6 var(--mono);color:var(--green)">' + esc(SW.safetyGapDisplay(tl)) + '</div>'
+      + '</div></div>';
+  }
+
   // Tick the countdown once per second; flip to EXPIRED + re-render at 00:00.
   function startQuoteCountdown() {
     stopQuoteTimer();
@@ -618,6 +708,7 @@
       + '<div class="quote" style="border:0;padding:0;margin:0">' + bal + '</div>'
       + passBox
       + (current ? renderQuoteBox() : '')
+      + (current ? renderReviewBox() : '')
       + '<div class="steps" style="margin-top:16px">' + steps + '</div>'
       + (legs ? ('<div class="quote" style="border-top:1px dashed var(--border-2);margin-top:12px;padding-top:12px">' + legs + '</div>') : '')
       + errBox + cancelledBox + blockBox
@@ -720,6 +811,11 @@
       if (!ready.ready) { ctx.connectWallets(); return; }
       if (!sostPass()) { fail('Set the devnet SOST RPC password first (admin-only).'); return; }
 
+      // TOKEN ALLOWLIST GATE — identify the counterparty asset by its REAL contract
+      // (never the wallet symbol). A fake/disabled/wrong-decimals token is rejected.
+      var alc = allowlistRecv(a.recv);
+      if (!alc.ok) { fail('Token allowlist rejected ' + a.recv + ' — ' + alc.reason); return; }
+
       var st = ctx.wm.state();
       var evmAddr = st.cp.address, sostAddr = st.sost.address;
       if (!current || current.step === 'COMPLETE' || current.step === 'REFUNDED' || current.orderState === 'CANCELLED') { current = freshSwap(); }
@@ -744,6 +840,17 @@
       }
       if (current.step === 'ACCEPT') { current.step = 'RESERVE'; persist(); renderPanel(); }
       if (current.step === 'RESERVE') {
+        // TIMELOCK POLICY — compute the staggered HTLC timeouts and VALIDATE them
+        // BEFORE anything is funded: long leg (SOST) must outlive the short leg by
+        // the 24h safety gap, else REJECT the swap construction.
+        if (SW) {
+          current.timelocks = SW.computeTimelocks(a.pay + '/' + a.recv, { env: swapCtx().env });
+          SW.validateTimelocks(current.timelocks);   // throws REVERSED/INSUFFICIENT GAP
+        }
+        // ANTI-REPLAY — the reserved quote must be bound to THIS execution context
+        // (environment, chainIds, pair, side, HTLC contract). A cross-context quote
+        // (mainnet / other pair / other contract / other chainId) is rejected here.
+        if (QP && current.quote) QP.assertBinding(current.quote, swapCtx(), Date.now());
         // Price-LOCK the firm quote: once reserved, no price change can slip through.
         if (QP && current.quote && !current.reservation) {
           current.reservation = QP.reserveQuote(current.quote, Date.now());
@@ -769,18 +876,28 @@
           if (current.reservation) QP.assertUnchanged(current.reservation, current.quote);
         }
         var tip = await sostRpc('getblockcount', []);
-        var refundH = Number(tip) + REFUND_WINDOW_BLOCKS;
+        // SOST = the LONG leg. Refund height = tip + the policy's long-leg block offset
+        // (288 on mainnet; devnet-scaled for fast testing). Single source: SW policy.
+        var longBlocks = (current.timelocks && current.timelocks.long.refundBlocks) || REFUND_WINDOW_BLOCKS;
+        var refundH = Number(tip) + longBlocks;
+        if (current.timelocks) current.timelocks.long.refundHeight = refundH;
+        current.sostRefundHeight = refundH;   // persisted deadline (retained across reload)
         var amtStocks = parseUnits(current.amount, 8).toString();
+        // HUMAN-READABLE SIGNING — the canonical, non-opaque summary shown to the
+        // wallet before it signs (and in the dashboard). Never an opaque signature.
+        var summary = buildSummary(current, current.timelocks);
+        if (summary && SW && !SW.summaryComplete(summary)) throw new Error('refusing to request a signature — the human-readable summary is incomplete.');
         setBusy('Locking SOST HTLC (build + sign in the SOST wallet)…');
         var lock = await sostLock({
           amountStocks: amtStocks, hashlock: current.hashlock, refundHeight: refundH,
           // claimer = the party that RECEIVES SOST (the counterparty); in the single-operator
           // devnet both wallets are the operator's, so claim+refund both resolve to sostAddr.
           claimAddress: sostAddr,
-          refundAddress: sostAddr
+          refundAddress: sostAddr,
+          summary: summary   // rides on the unsigned tx -> wallet authorizeSign shows it
         });
+        current.summary = summary;
         current.sost = { txid: lock.txid, vout: lock.vout, status: 'locked' };
-        current.sostRefundHeight = refundH;   // for the "Refund available after" notice (display only)
         current.orderState = 'FUNDED';         // first HTLC funded — no simple cancel from here
         setStep('LOCK_EVM');
       }
@@ -789,8 +906,16 @@
       if (current.step === 'LOCK_EVM') {
         var conn = evmConn();
         await ensureEvmChain(conn);
+        // CONTRACT PINNING — CRITICAL: the EVM HTLC address in use MUST equal the
+        // pinned expected contract for this env+chainId+version. Never sign against
+        // a silently-provided/remote contract.
+        if (SW) SW.assertPinnedContract(htlcAddr(), { env: swapCtx().env, chainId: (root.DEVNET || {}).evm_chain_id, version: 'v2', cfg: root.DEVNET });
         var head = await evmRead('eth_blockNumber', []);
-        var refundTime = Number(BigInt(head)) + REFUND_WINDOW_BLOCKS;
+        // EVM = the SHORT leg. Refund (block.number) = head + the policy's short-leg
+        // block offset (7200 ≈24h on mainnet; devnet-scaled for fast testing).
+        var shortBlocks = (current.timelocks && current.timelocks.short.refundBlocks) || REFUND_WINDOW_BLOCKS;
+        var refundTime = Number(BigInt(head)) + shortBlocks;
+        if (current.timelocks) current.timelocks.short.refundHeight = refundTime;
         current.evm.refundTime = refundTime;
         var recvSym = a.recv;
         setBusy('Locking EVM HTLC…');
@@ -925,6 +1050,12 @@
   // ===========================================================================
   function init(context) {
     ctx = context;
+    // Pin the devnet HTLC contract + allowlist entries from the LOCAL config (never remote).
+    try {
+      var D = root.DEVNET || {};
+      if (SW && D.htlc_v2 && D.evm_chain_id != null) SW.registerPin('devnet', D.evm_chain_id, 'v2', String(D.htlc_v2).toLowerCase());
+      if (AL) AL.registerFromConfig(D);
+    } catch (e) {}
     // mount host under the swap card
     if (!el('devnetFlow')) {
       var host = document.createElement('div');
@@ -951,6 +1082,8 @@
     encLockNative: encLockNative, encLockERC20: encLockERC20,
     encClaimNative: encClaimNative, encClaimERC20: encClaimERC20,
     encRefundNative: encRefundNative, encRefundERC20: encRefundERC20,
-    evmGetSwap: evmGetSwap, sostHtlcStatus: sostHtlcStatus, reconcileOnLoad: reconcileOnLoad
+    evmGetSwap: evmGetSwap, sostHtlcStatus: sostHtlcStatus, reconcileOnLoad: reconcileOnLoad,
+    // security/policy bundle (exposed for console/tests)
+    swapCtx: swapCtx, allowlistRecv: allowlistRecv, buildSummary: buildSummary
   };
 });
