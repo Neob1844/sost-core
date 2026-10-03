@@ -4,7 +4,7 @@ Status: **ANALYSIS / DOCUMENTATION ONLY.** No consensus change. No hard fork. No
 height chosen. Deliverable for review before any protocol upgrade is considered.
 
 Author: NeoB. Simulation subsidy S = 7.851 SOST/block (epoch 0; ~constant over 1k–10k horizons).
-Block target 600 s ⇒ 288 blocks/day, 105,120 blocks/year.
+**Block target = 600 s (10 min)** ⇒ **144 blocks/day, 52,560 blocks/year**. Observed mainnet: 288-mean 604 s, 1000-mean 596.7 s (≈ target). [CORRECTION: an earlier draft used 5 min/block; all calendar times below are at 600 s.]
 
 ---
 
@@ -35,7 +35,7 @@ financed by a fixed fraction of each block's scheduled emission.
 
 ## 2. Proposed mature-network model (PROPOSAL)
 
-**75% Block Miner · 20% Normal DTD · 5% Accumulated Jackpot Reserve.** 75+20+5 = 100% of the
+**75% Block Miner · 20% Normal DTD · 5% Accumulated Jackpot Reserve.** Status: **CANDIDATE MODEL — PROPOSED, NOT CONSENSUS, no activation height, no final interval.** 75+20+5 = 100% of the
 *existing* scheduled emission — **no new emission, max supply unchanged**.
 
 - 75% miner: strengthens the PoW security incentive; PoW still decides who produces the block.
@@ -51,18 +51,33 @@ to 100%** (PASS). The jackpot creates no SOST; it redistributes a pre-reserved s
 
 equiv = jackpot_fraction × interval, expressed in block-rewards (BR); SOST at 7.851/block.
 
-| Interval | ~days | jackpots/yr | equiv (×BR) @5% | SOST @7.851 |
-|---|---|---|---|---|
-| 1,000 | 3.5 | 105 | 50× | ≈ 393 |
-| 2,500 | 8.7 | 42 | 125× | ≈ 981 |
-| **5,000** | **17.4** | **21** | **250×** | **≈ 1,963** |
-| 10,000 | 34.7 | 10.5 | 500× | ≈ 3,926 |
+Block count is subsidy-independent; calendar time uses the **verified 600 s** target (and observed ~597 s).
 
-At **10% (80/10/10)** the SOST doubles (e.g. 10,000 blocks → 1,000×BR ≈ 7,851 SOST).
+| Interval | target days | obs days (597 s) | jackpots/yr | @5% equiv | @5% SOST | @10% SOST |
+|---|---|---|---|---|---|---|
+| 1,000 | 6.94 | 6.91 | 52.6 | 50×BR | ≈ 393 | ≈ 785 |
+| 2,500 | 17.36 | 17.27 | 21.0 | 125×BR | ≈ 981 | ≈ 1,963 |
+| 4,320 (~30 d) | 30.00 | 29.85 | 12.2 | 216×BR | ≈ 1,696 | ≈ 3,392 |
+| 5,000 | 34.72 | 34.55 | 10.5 | 250×BR | ≈ 1,963 | ≈ 3,926 |
+| 10,000 | 69.44 | 69.10 | 5.3 | 500×BR | ≈ 3,926 | ≈ 7,851 |
 
-**Recommendation: 5,000-block interval** (~17 days, ~1,963 SOST per draw). 1,000 (~3.5 d) is too
-frequent to feel like a jackpot; 10,000 (~35 d) is more dramatic but less visible. Simulate 1k/2.5k/
-5k/10k before fixing. Subsidy decays per epoch, so recompute SOST amounts at the actual height.
+SOST amounts are illustrative at 7.851 SOST/block (epoch 0); recompute at the real subsidy per height.
+
+### Interval comparison (UX + security) — NO final interval chosen
+| | 2,500 (~17 d) | 4,320 (~30 d) | 5,000 (~35 d) |
+|---|---|---|---|
+| jackpots/yr | 21 | 12 | 10.5 |
+| @5% SOST | ≈ 981 | ≈ 1,696 | ≈ 1,963 |
+| "jackpot feel" | moderate (biweekly) | strong (monthly, clean cadence) | strong (~monthly) |
+| reorg/grinding incentive | lower (smaller prize) | moderate | higher (largest prize) |
+| small-miner effect | more frequent chances, smaller prize | balanced | fewer chances, larger prize |
+| dominant effect | same expected share; variance ↓ | — | same expected share; variance ↑ |
+
+Reading: **2,500** = more frequent, smaller, lowest manipulation incentive. **4,320 (~30 d)** = a clean
+monthly cadence with a meaningful prize and moderate risk. **5,000** = ~monthly with the largest prize
+(and the largest reorg/grinding incentive). A ~30-day cadence (≈4,320) is attractive for messaging
+("a monthly jackpot"); 2,500 is the most conservative on security. **Interval NOT fixed — compare
+1k/2.5k/4.32k/5k/10k in a full agent simulation before any proposal is finalised.**
 
 ---
 
@@ -131,19 +146,31 @@ fixed.**
 
 ---
 
-## 7. Randomness
+## 7. Randomness (verified in `src/lottery.cpp`)
 
-Current DTD/jackpot selection is **deterministic from chain state** (block-hash entropy at the draw
-height), uniform among eligible, computed by the rules — not chosen by anyone. Requirements for the
-jackpot draw:
-- entropy source = the draw block's hash (and prior committed state), fixed only when the block is
-  mined;
-- **deterministic to verify, unpredictable before commitment**;
-- the block producer must not be able to grind the winner (bound the selection to data they cannot
-  cheaply bias — e.g. future-committed hashes / VDF-style delay if grinding risk is material);
-- reproducible and verifiable by any node; **no centralized oracle.**
-Audit item: quantify the block producer's ability to influence the draw by choosing which block to
-publish (self-selection), and whether the reward justifies withholding/grinding.
+The current DTD winner selection is **deterministic from chain state**:
+`seed = sha256(LOTTERY_RNG_DOMAIN || prev_block_hash || height)`, `winner = u64(seed) % eligible_count`
+(`select_lottery_winner_index`). **Crucially the entropy is the PREVIOUS block's hash**, already
+committed and final — so the producer of the draw block **cannot grind its own block content to bias
+the winner.** A stronger variant already exists: `select_lottery_winner_index_from_history` combines a
+**window of multiple prior committed blocks** (`LOTTERY_RNG_HISTORY_BLOCKS`), which is the
+"deterministic non-oracle, multi-block entropy" construction. No oracle is used; any node reproduces it.
+
+Grinding/reorg analysis for a *large* jackpot:
+- **Jackpot-block grinding by the draw producer: NOT possible** — seed depends on prior block(s), not
+  the draw block.
+- **Prev-block producer / reorg bias:** the producer of block `h-1` (or a reorg of it) could influence
+  the single-`prev_block_hash` seed. For a large prize this becomes worth a shallow reorg. **Mitigation:
+  use the history (multi-block) seed for the jackpot** — biasing then requires controlling/reorging
+  several prior blocks, which is far more expensive.
+- **Reorg incentive vs prize size:** bound the per-draw jackpot below what finality economically
+  protects at the prevailing hashrate, and require coinbase-maturity (1,000 conf) before the jackpot
+  output is spendable, so a reorg cannot cheaply capture-and-spend it.
+- **Producer self-selection:** a block's own producer is not excluded from its draw, but with
+  producer-independent entropy they have no advantage.
+
+**Is the draw-block hash alone sufficient? No for a large jackpot — prefer the existing multi-block
+history seed.** Deterministic to verify, unpredictable before the relevant prior blocks are committed.
 
 ---
 
@@ -200,8 +227,8 @@ As the network matures, SOST may evolve the split toward **75% miner / 20% norma
 accumulated jackpot**, financed entirely from the existing scheduled emission (75+20+5 = 100%; no
 new emission; max supply 4,669,201 unchanged). The intent: strengthen the PoW security incentive
 while preserving a non-hashrate-proportional distribution and a periodic, visible jackpot for
-eligible miners. Proposed jackpot cadence: ~5,000 blocks (~17 days), accumulating ≈250× the block
-reward per draw (illustrative; recompute at the actual subsidy).
+eligible miners. A jackpot cadence (block count) is **not fixed** here; candidate cadences under study include
+~2,500 / ~4,320 (~30 days) / ~5,000 blocks (all amounts illustrative; recompute at the actual subsidy).
 
 > **This model is a proposed future evolution and is NOT part of current consensus unless and until
 > activated through a defined, height-gated protocol upgrade.** A mature network does not imply
