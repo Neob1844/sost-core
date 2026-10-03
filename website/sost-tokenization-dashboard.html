@@ -381,7 +381,16 @@
         <div class="apw-q">Review &amp; generate</div>
         <div class="apw-hint">Owner statements are <b>declared</b>; a registry, appraiser, lawyer or GeaSpirit analysis can later upgrade a claim to <b>independently verified</b>.</div>
         <div id="apwReview" class="apw-dash" style="border-top-color:var(--cyan)"></div>
-        <button class="run gold" style="margin-top:14px;width:100%;padding:12px" onclick="apwGenerate()">GENERATE ASSET PASSPORT</button>
+        <div class="reg-gate" style="margin-top:14px;border:1px solid #fb010d;border-radius:10px;background:rgba(251,1,13,.06);padding:13px 15px">
+          <div style="font:800 12px/1.3 var(--mono,monospace);letter-spacing:.8px;color:#ff6b6b;margin-bottom:7px">&#9888; REGULATORY REVIEW REQUIRED BEFORE ACTIVATION</div>
+          <div style="font-size:12px;line-height:1.65;color:var(--txt2,#c9d4e0)">Jurisdiction-specific, asset-specific and offering-specific requirements may apply. <b style="color:#fff">Technical eligibility does not imply legal eligibility.</b> <b style="color:var(--gold2,#DAA520)">LEGAL CLASSIFICATION: NOT DETERMINED BY SOST.</b></div>
+          <a href="sost-universal-assets.html#reg" target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;font-size:11.5px;color:var(--cyan,#22d3ee);border:1px solid rgba(34,211,238,.45);padding:6px 12px;border-radius:6px;text-decoration:none">View regulatory requirements by jurisdiction &rarr;</a>
+          <label style="display:flex;gap:9px;align-items:flex-start;margin-top:12px;font-size:12px;line-height:1.55;color:var(--txt2,#c9d4e0);cursor:pointer">
+            <input type="checkbox" id="regConfirm" style="margin-top:2px;flex:none" onchange="var b=document.getElementById('apwGenBtn'); if(b){ b.disabled=!this.checked; b.title=this.checked?'':'Confirm the regulatory-documentation statement first'; }">
+            <span>I confirm that the applicable legal, ownership, valuation, offering, custody, audit and regulatory documentation has been provided and reviewed.</span>
+          </label>
+        </div>
+        <button class="run gold" id="apwGenBtn" style="margin-top:14px;width:100%;padding:12px" onclick="apwGenerate()" disabled title="Confirm the regulatory-documentation statement first">GENERATE ASSET PASSPORT</button>
         <div id="apwOut" style="margin-top:14px"></div>
       </div>
 
