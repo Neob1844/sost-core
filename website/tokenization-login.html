@@ -1,0 +1,57 @@
+<title>Private Tokenization Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{--acc:#DAA520;--bg:#000;--panel:#0a0d12;--txt:#e9eef5;--dim:#8b98a8;--line:#1c232d}
+*{box-sizing:border-box} html,body{margin:0;height:100%}
+body{background:#000;color:var(--txt);font:15px/1.5 ui-sans-serif,-apple-system,Segoe UI,Roboto,system-ui,sans-serif;
+ display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden}
+.bg{position:fixed;inset:0;background:
+  radial-gradient(60vmax 60vmax at 50% 42%, color-mix(in srgb,var(--acc) 10%, transparent), transparent 60%),#000;z-index:0}
+.card{position:relative;z-index:1;width:min(92vw,400px);text-align:center;padding:8px}
+.emblem{position:relative;width:132px;height:132px;margin:0 auto 22px;display:grid;place-items:center}
+.emblem img{width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--acc) 55%,transparent));position:relative;z-index:2}
+.emblem::before{content:"";position:absolute;inset:-6px;border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--acc) 38%,transparent),transparent 62%);
+  filter:blur(8px);animation:pulse 3.6s ease-in-out infinite;z-index:1}
+@keyframes pulse{0%,100%{opacity:.45;transform:scale(.92)}50%{opacity:1;transform:scale(1.08)}}
+h1{font-size:19px;font-weight:700;letter-spacing:.3px;margin:0 0 4px}
+.sub{color:var(--dim);font-size:12.5px;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 26px}
+form{display:flex;flex-direction:column;gap:11px}
+input{background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--txt);
+ padding:13px 15px;font-size:15px;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+button{margin-top:6px;background:var(--acc);color:#06090d;border:0;border-radius:10px;padding:13px;
+ font-size:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:filter .15s}
+button:hover{filter:brightness(1.08)} button:disabled{opacity:.5;cursor:default}
+.err{min-height:18px;color:#ff6b6b;font-size:12.5px;margin-top:4px}
+.note{color:var(--dim);font-size:11px;margin-top:22px;line-height:1.6}
+.lock{color:var(--acc);font-weight:700}
+@media (prefers-reduced-motion:reduce){.emblem::before{animation:none;opacity:.6}}
+</style>
+<div class="bg"></div>
+<div class="card">
+  <div class="emblem"><img src="sost-logo.png" alt="SOST"></div>
+  <h1>Private Tokenization Dashboard</h1>
+  <div class="sub">Restricted developer access</div>
+  <form id="f" autocomplete="off">
+    <input id="u" name="u" type="text" placeholder="Username" autocomplete="username" required autofocus>
+    <input id="p" name="p" type="password" placeholder="Password" autocomplete="current-password" required>
+    <button id="b" type="submit">Enter dashboard</button>
+    <div class="err" id="e"></div>
+  </form>
+  <div class="note"><span class="lock">&#128274; Restricted developer access.</span> Server-side authentication over HTTPS. No credentials or secrets are stored in this page. Operations remain gated by the consensus admin gate (S14).</div>
+</div>
+<script>
+(function(){
+  var f=document.getElementById('f'),b=document.getElementById('b'),e=document.getElementById('e');
+  f.addEventListener('submit',function(ev){
+    ev.preventDefault(); e.textContent=''; b.disabled=true; b.textContent='Authenticating…';
+    fetch('/_dashauth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({u:document.getElementById('u').value,p:document.getElementById('p').value,dash:'tok'})})
+    .then(function(r){ if(r.ok){ location.replace('/sost-tokenization-dashboard.html'); return; } return r.status; })
+    .then(function(code){ if(code){ e.textContent=(code===429?'Too many attempts — wait and retry.':'Invalid credentials.'); b.disabled=false; b.textContent='Enter dashboard'; } })
+    .catch(function(){ e.textContent='Connection error.'; b.disabled=false; b.textContent='Enter dashboard'; });
+  });
+})();
+</script>
