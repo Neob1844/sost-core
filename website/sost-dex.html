@@ -327,5 +327,42 @@
   <p class="lab-note" style="margin-top:34px; color:var(--txt-4)">SOST DEX V2 — the SOST-layer DEX activates at block #30,000 (automatic by height), admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE); public access disabled — no public trading. No real prices, orders, liquidity, or executable quotes are shown or implied. Not an offer or solicitation.</p>
 </div>
 
+<style id="dex-hero-fx">
+/* SOST DEX hero — supernova-artifact violet, bigger, animated shine + glow */
+.top .brand{gap:16px}
+.top .brand .logo{display:grid;place-items:center;width:54px;height:54px;border-radius:15px;
+  background:radial-gradient(circle at 50% 36%,rgba(168,85,247,.30),rgba(168,85,247,.04) 72%),#0b0710;
+  border:1px solid rgba(168,85,247,.55);
+  box-shadow:0 0 0 1px rgba(168,85,247,.25),0 6px 26px -6px rgba(168,85,247,.65),inset 0 0 18px -6px rgba(168,85,247,.6);
+  animation:dexLogoGlow 3.4s ease-in-out infinite}
+.top .brand .logo svg{width:30px;height:30px;stroke:#e9d5ff;
+  filter:drop-shadow(0 0 5px rgba(168,85,247,.95)) drop-shadow(0 0 12px rgba(168,85,247,.55))}
+.top .brand h1{
+  font-size:42px;font-weight:900;letter-spacing:.5px;line-height:1;margin:0;
+  background:linear-gradient(100deg,#7c3aed 0%,#a855f7 20%,#e9d5ff 40%,#ffffff 50%,#e9d5ff 60%,#a855f7 80%,#7c3aed 100%);
+  background-size:260% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:#cba6f7;
+  filter:drop-shadow(0 0 10px rgba(168,85,247,.6)) drop-shadow(0 0 28px rgba(168,85,247,.38));
+  animation:dexShine 4.2s linear infinite}
+.top .brand .sub{
+  font-size:12.5px;letter-spacing:4.5px;margin-top:8px;text-transform:uppercase;font-weight:800;
+  background:linear-gradient(90deg,#a855f7,#e9d5ff,#a855f7);background-size:220% 100%;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#c4a2ef;
+  text-shadow:0 0 14px rgba(168,85,247,.28);
+  animation:dexShine 5.6s linear infinite}
+@keyframes dexShine{0%{background-position:170% 0}100%{background-position:-170% 0}}
+@keyframes dexLogoGlow{
+  0%,100%{box-shadow:0 0 0 1px rgba(168,85,247,.22),0 6px 22px -8px rgba(168,85,247,.5),inset 0 0 16px -8px rgba(168,85,247,.5)}
+  50%{box-shadow:0 0 0 1px rgba(168,85,247,.42),0 10px 34px -6px rgba(168,85,247,.85),inset 0 0 22px -4px rgba(168,85,247,.82)}}
+@media(max-width:560px){
+  .top .brand h1{font-size:31px}
+  .top .brand .logo{width:46px;height:46px}
+  .top .brand .logo svg{width:26px;height:26px}
+}
+@media(prefers-reduced-motion:reduce){
+  .top .brand h1,.top .brand .sub,.top .brand .logo{animation:none}
+}
+</style>
 </body>
 </html>
