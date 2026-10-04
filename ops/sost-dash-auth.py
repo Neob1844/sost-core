@@ -23,7 +23,8 @@ SECRET_PATH= os.environ.get("DASH_SECRET_PATH", "/etc/sost/dash-auth.secret")
 TFA_PATH   = os.environ.get("DASH_2FA_PATH", "/etc/sost/dash-2fa.json")
 AUDIT_PATH = os.environ.get("DASH_AUDIT_LOG", "/opt/sost/logs/dash-auth-audit.log")
 PORT       = int(os.environ.get("DASH_PORT", "18322"))
-TTL        = 8*3600            # session lifetime
+TTL        = 8*3600            # absolute cap (unused for idle sessions)
+IDLE       = int(os.environ.get("DASH_IDLE", "75"))   # idle/away timeout: session dies this many secs after the last heartbeat
 PENDING_TTL= 300               # 5 min to complete the 2nd factor
 COOKIE     = "sost_dash"
 PCOOKIE    = "sost_dash_pending"
@@ -214,6 +215,13 @@ class H(http.server.BaseHTTPRequestHandler):
             audit("logout", u, ip)
             return self._send(204, [("Set-Cookie", _clear(COOKIE)), ("Set-Cookie", _clear(PCOOKIE))])
 
+        if self.path == "/_dashauth/ping":
+            # heartbeat: refresh an active session's idle window (dashboard pings while visible)
+            v = self._cookieval(COOKIE); d = check_token(v) if v else None
+            if not d:
+                return self._send(401)
+            return self._send(204, [("Set-Cookie", _cookie(COOKIE, make_token(d.get("u",""), d.get("d",""), IDLE), IDLE))])
+
         lk = locked(ip)
         if lk or rl_hit(ip):
             audit("lockout", "", ip)
@@ -234,7 +242,7 @@ class H(http.server.BaseHTTPRequestHandler):
                 return self._send(200, [("Set-Cookie", _cookie(PCOOKIE, pend, PENDING_TTL))], body)
             # 2FA not active -> password-only session (rollout/back-compat)
             note_success(ip); audit("login_success", user, ip)
-            return self._send(204, [("Set-Cookie", _cookie(COOKIE, make_token(user, dash, TTL), TTL))])
+            return self._send(204, [("Set-Cookie", _cookie(COOKIE, make_token(user, dash, IDLE), IDLE))])
 
         if self.path == "/_dashauth/verify-otp":
             pv = self._cookieval(PCOOKIE); pend = check_token(pv, pend=True) if pv else None
@@ -249,11 +257,11 @@ class H(http.server.BaseHTTPRequestHandler):
             time.sleep(0.4)
             if rec.get("secret") and totp_verify(rec["secret"], otp):
                 note_success(ip); audit("otp_success", user, ip)
-                return self._send(204, [("Set-Cookie", _cookie(COOKIE, make_token(user, dash, TTL), TTL)),
+                return self._send(204, [("Set-Cookie", _cookie(COOKIE, make_token(user, dash, IDLE), IDLE)),
                                         ("Set-Cookie", _clear(PCOOKIE))])
             if consume_backup(user, otp):
                 note_success(ip); audit("backup_used", user, ip)
-                return self._send(204, [("Set-Cookie", _cookie(COOKIE, make_token(user, dash, TTL), TTL)),
+                return self._send(204, [("Set-Cookie", _cookie(COOKIE, make_token(user, dash, IDLE), IDLE)),
                                         ("Set-Cookie", _clear(PCOOKIE))])
             note_fail(ip); audit("otp_fail", user, ip); return self._send(401)
 

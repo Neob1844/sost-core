@@ -1567,5 +1567,23 @@ function fundDemo(){
   }
 })();
 </script>
+<script>
+/* SOST dashboard idle/away auto-lock: the session stays alive only while THIS
+   dashboard is visible. Leaving (navigate away / hide the tab) stops the heartbeat,
+   so the session expires server-side (~75s) and returning requires a fresh login. */
+(function(){
+  var IV=20000, LOGIN='/tokenization-login.html?expired=1';
+  function ping(){
+    if(document.visibilityState!=='visible') return;
+    fetch('/_dashauth/ping',{method:'POST',credentials:'same-origin',cache:'no-store'})
+      .then(function(r){ if(r.status===401){ location.replace(LOGIN); } })
+      .catch(function(){});
+  }
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') ping(); });
+  window.addEventListener('pageshow', ping);
+  setInterval(ping, IV);
+  ping();
+})();
+</script>
 </body>
 </html>
