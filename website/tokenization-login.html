@@ -46,14 +46,31 @@ button:hover{filter:brightness(1.08)} button:disabled{opacity:.5;cursor:default}
 <script>
 (function(){
   var f=document.getElementById('f'),b=document.getElementById('b'),e=document.getElementById('e');
+  var DASH='/sost-tokenization-dashboard.html', DBOX='tok';
   if(/[?&]expired=1/.test(location.search)){ e.textContent='Session expired. Please sign in again.'; }
+  var otpWrap=document.createElement('div'); otpWrap.style.display='none'; otpWrap.style.marginTop='4px';
+  otpWrap.innerHTML='<input id="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9A-Za-z-]*" maxlength="19" placeholder="6-digit code (or backup code)"><button id="ob" type="button">Verify code</button>';
+  f.parentNode.insertBefore(otpWrap, f.nextSibling);
+  var otp=otpWrap.querySelector('#otp'), ob=otpWrap.querySelector('#ob');
+  function showOtp(){ f.style.display='none'; otpWrap.style.display='block'; e.textContent='Enter the 6-digit code from your authenticator app (or a backup code).'; otp.focus(); }
   f.addEventListener('submit',function(ev){
     ev.preventDefault(); e.textContent=''; b.disabled=true; b.textContent='Authenticating…';
     fetch('/_dashauth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-      body:JSON.stringify({u:document.getElementById('u').value,p:document.getElementById('p').value,dash:'tok'})})
-    .then(function(r){ if(r.ok){ location.replace('/sost-tokenization-dashboard.html'); return; } return r.status; })
-    .then(function(code){ if(code){ e.textContent=(code===429?'Too many attempts — wait and retry.':'Invalid credentials.'); b.disabled=false; b.textContent='Enter dashboard'; } })
-    .catch(function(){ e.textContent='Connection error.'; b.disabled=false; b.textContent='Enter dashboard'; });
+      body:JSON.stringify({u:document.getElementById('u').value,p:document.getElementById('p').value,dash:DBOX})})
+    .then(function(r){
+      if(r.status===204){ location.replace(DASH); return; }
+      if(r.status===200){ return r.json().then(function(j){ if(j&&j.otp_required){ showOtp(); } else { location.replace(DASH); } }); }
+      e.textContent=(r.status===429?'Too many attempts — wait and retry.':'Invalid credentials.'); b.disabled=false; b.textContent='Enter dashboard';
+    }).catch(function(){ e.textContent='Connection error.'; b.disabled=false; b.textContent='Enter dashboard'; });
   });
+  ob.addEventListener('click',function(){
+    e.textContent=''; ob.disabled=true; ob.textContent='Verifying…';
+    fetch('/_dashauth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({otp:otp.value})})
+    .then(function(r){ if(r.status===204){ location.replace(DASH); return; }
+      e.textContent=(r.status===429?'Too many attempts — wait and retry.':'Invalid code. Try again.'); ob.disabled=false; ob.textContent='Verify code'; })
+    .catch(function(){ e.textContent='Connection error.'; ob.disabled=false; ob.textContent='Verify code'; });
+  });
+  otp.addEventListener('keydown',function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); ob.click(); } });
 })();
 </script>
