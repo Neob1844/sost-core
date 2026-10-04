@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-04-v489-reload">
+<meta name="explorer-html-version" content="2026-10-04-v491-dtd-loadguard">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -585,7 +585,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
   </div>
 </nav>
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-04-v489-reload';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-04-v491-dtd-loadguard';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -607,17 +607,20 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
   </div>
 </div></div>
 <div class="config">
+  <div style="flex-basis:100%;font-size:10px;line-height:1.5;color:var(--text3);margin-bottom:4px"><b style="color:var(--text2)">Advanced RPC connection — optional.</b> The public Explorer works without RPC credentials.</div>
   <span class="config-label">RPC&gt;</span>
   <input id="rpcUrl" value="/rpc" spellcheck="false"/>
   <span class="config-label" style="margin-left:8px">USER&gt;</span>
   <input id="rpcUser" value="" placeholder="rpc username" type="password" spellcheck="false" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore="true" name="sost-rpc-user-nofill" style="width:120px"/>
   <span class="config-label" style="margin-left:8px">PASS&gt;</span>
   <input id="rpcPass" value="" placeholder="rpc password" type="password" spellcheck="false" autocomplete="new-password" autocorrect="off" data-lpignore="true" data-1p-ignore="true" name="sost-rpc-pass-nofill" style="width:120px"/>
+  <div style="flex-basis:100%;font-size:9.5px;line-height:1.5;color:#e0a96d;margin:4px 0 6px">⚠ Use only the RPC username/password of <b>your own SOST node</b>. Never enter wallet private keys, seed phrases, S14 keys or NODE_BIND private keys.</div>
   <button onclick="connectRPC()">CONNECT</button>
   <span style="color:var(--text3);margin-left:12px;font-size:9px;">MY MINER&gt;</span>
   <input id="myMinerAddr" value="" placeholder="sost1... (for block alerts)" spellcheck="false" style="width:180px;font-size:10px;"
     onchange="localStorage.setItem('sost_my_miner',this.value.trim());_myMinerAddress=this.value.trim();"/>
   <script>document.getElementById('myMinerAddr').value=localStorage.getItem('sost_my_miner')||'';</script>
+  <div style="flex-basis:100%;font-size:9.5px;line-height:1.5;color:var(--text3);margin-top:3px">Optional public SOST mining address — used for block highlighting/alerts only.</div>
 </div>
 <div class="search"><div class="search-box">
   <span class="search-pre">search&gt;</span>
@@ -2290,7 +2293,7 @@ async function renderDTDPanel(body,title,silent){
             }
             var _ddc=document.getElementById('dDTD');
             if(_ddc&&typeof _dtdCached.eligibleCount==='number')
-              _ddc.textContent=_dtdCached.eligibleCount+' eligible';
+              _ddc.textContent=_dtdCached.eligibleCount+' eligible miners';
             var _ddp=document.getElementById('dPeakMiner');
             if(_ddp&&typeof _dtdCached.peakMinersEver==='number')
               _ddp.textContent=_dtdCached.peakMinersEver;
@@ -2710,7 +2713,7 @@ async function renderDTDPanel(body,title,silent){
     var peakMinersEver=rows.filter(function(r){return (r.minedBlocks||0)>0;}).length;
     try{var _pe=parseInt(localStorage.getItem('sost_peak_miners_ever')||'0',10)||0;
       if(peakMinersEver<_pe)peakMinersEver=_pe;else localStorage.setItem('sost_peak_miners_ever',String(peakMinersEver));}catch(e){}
-    var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
+    var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible miners';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
     var dpm=document.getElementById('dPeakMiner');if(dpm){dpm.textContent=peakMinersEver;}
     // UPDATED MINERS (since #7100) — the full-chain scan knows the TRUE set of
     // distinct Phase-2 producers (ph2.minerCounts). Merge it into the monotonic
@@ -8891,6 +8894,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 </script>
 <script src="sost-search.js?v=v392"></script>
 <!-- CRT + retro sounds -->
+<style>@media(max-width:560px){#nesMuteBtn{font-size:16px !important;padding:2px 6px !important;opacity:.55;line-height:1}#nesMuteBtn:active{opacity:1}}</style>
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:calc(16px + env(safe-area-inset-left,0px));right:auto;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <script src="js/retro-sounds.js?v=v392"></script>
@@ -9594,6 +9598,19 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var active=tip>=25000, prePayout=tip<JP_FIRST;
     var status=!active?'PLANNED':(prePayout?'ACTIVE · WAITING FOR #'+fc(JP_FIRST):'ACTIVE');
     var winner=state.jpWinner||state.winner||'NOT YET DETERMINED';
+    // --- loading/error guards: never show tip:0-derived historical values as if live ---
+    var _loaded=tip>0,_failed=!!state.loadError,_LD='LOADING\u2026';
+    function _sw(a){a=String(a||'');return (a.indexOf('sost1')===0&&a.length>18)?(a.slice(0,10)+'\u2026'+a.slice(-6)):a;}
+    var _nhD=_failed?'DATA UNAVAILABLE':(_loaded?('#'+fc(nh)):_LD);
+    var _remD=_failed?'RETRYING':(_loaded?fc(rem):_LD);
+    var _etaD=_failed?'\u2014':(_loaded?('~'+eta(rem)):_LD);
+    var _statD=_failed?'DATA UNAVAILABLE \u00B7 RETRYING':(_loaded?status:_LD);
+    var _paidD=_failed?'\u2014':(_loaded?fc(paid):_LD);
+    var _eligD=_failed?'\u2014':(state.eligible!=null?esc(elig):_LD);
+    var _winFull=(state.jpWinner||state.winner||'');
+    var _winD=_failed?'\u2014':(_loaded?((_winFull&&_winFull.indexOf('sost1')===0)?
+      '<span title="'+esc(_winFull)+'" data-full="'+esc(_winFull)+'" data-short="'+esc(_sw(_winFull))+'" style="cursor:pointer;word-break:break-all;overflow-wrap:anywhere" onclick="try{navigator.clipboard.writeText(this.getAttribute(\'data-full\'));this.textContent=\'copied \u2713\';}catch(e){}">'+esc(_sw(_winFull))+'</span>'
+      :esc(winner)):_LD);
     var myMiner=''; try{myMiner=localStorage.getItem('sost_my_miner')||'';}catch(_e){}
     // history + replay gating: only surface a real, paid jackpot (never before the first)
     var _lastH=state.jpHeight||(nextH(tip)-CAD);
@@ -9623,6 +9640,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var jpEDisp, jpEStat;
     if(state.jpPrelim!=null){ jpEDisp=esc(state.jpPrelim); jpEStat='PRELIMINARY &middot; final at #'+fc(nh); }
     else if(state.jpEligible!=null){ jpEDisp=esc(state.jpEligible); jpEStat='FINAL &middot; verified at #'+fc(state.jpHeight||JP_FIRST); }
+    else if(!_loaded){ jpEDisp='<span style="font-size:12px;color:var(--text3)">'+(_failed?'DATA UNAVAILABLE':'LOADING\u2026')+'</span>'; jpEStat=''; }
     else { jpEDisp='<span style="font-size:12px;color:var(--text3)">calculated at #'+fc(nh)+'</span>'; jpEStat=''; }
     var V2H=30000, V2FIRST=30186, _v2rem=Math.max(0,V2H-tip);
     var v2Banner = (tip < V2H)
@@ -9645,11 +9663,11 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       v2Banner+
       '<div class="sjpd-grid">'+
         '<div class="sjpd-c"><div class="sjpd-l">RESERVE</div><div class="sjpd-v">'+esc(reserve)+'</div></div>'+
-        '<div class="sjpd-c"><div class="sjpd-l">NEXT JACKPOT</div><div class="sjpd-v c">#'+fc(nh)+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">NEXT JACKPOT</div><div class="sjpd-v c">'+_nhD+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">EXPECTED PAYOUT</div><div class="sjpd-v g">100 SOST</div></div>'+
-        '<div class="sjpd-c"><div class="sjpd-l">BLOCKS REMAINING</div><div class="sjpd-v">'+fc(rem)+'</div></div>'+
-        '<div class="sjpd-c"><div class="sjpd-l">ESTIMATED TIME</div><div class="sjpd-v">~'+eta(rem)+'</div></div>'+
-        '<div class="sjpd-c"><div class="sjpd-l">RECENTLY ACTIVE (288)</div><div class="sjpd-v g">'+esc(elig)+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">BLOCKS REMAINING</div><div class="sjpd-v">'+_remD+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">ESTIMATED TIME</div><div class="sjpd-v">'+_etaD+'</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">RECENTLY ACTIVE (288)</div><div class="sjpd-v g">'+_eligD+'</div></div>'+
         // Two eligibility numbers, never one: the 20k count is the rule in force
         // TODAY and it does not carry over. Showing it alone invited the reading
         // that these addresses are already qualified for the V2 draw.
@@ -9670,17 +9688,17 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
              'title="Every DTD Jackpot paid so far: block, winner, amount, eligible set and transaction." '+
              'onclick="event.stopPropagation();if(window.SJP&&window.SJP.openArchive)window.SJP.openArchive();">'+
           '<div class="sjpd-l" style="color:#39ff14">\uD83D\uDCDC JACKPOT ARCHIVE</div>'+
-          '<div class="sjpd-v g">'+fc(paid)+'</div>'+
+          '<div class="sjpd-v g">'+_paidD+'</div>'+
           '<div style="font-size:8px;color:var(--text3);margin-top:2px;line-height:1.35">jackpots paid \u00B7 click to view all winners</div>'+
         '</div>'+
         '<div class="sjpd-c" style="cursor:pointer" title="Click to open the full jackpot archive" '+
              'onclick="event.stopPropagation();if(window.SJP&&window.SJP.openArchive)window.SJP.openArchive();">'+
-          '<div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+fc(paid)+'</div>'+
+          '<div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+_paidD+'</div>'+
           '<div style="font-size:8px;color:var(--text3);margin-top:2px">click to view all winners</div>'+
         '</div>'+
       '</div>'+
-      '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+esc(status)+'</div>'+
-        '<div class="sjpd-l" style="margin-top:8px">LAST WINNER</div><div class="sjpd-v" style="font-size:13px">'+esc(winner)+'</div></div>'+
+      '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+_statD+'</div>'+
+        '<div class="sjpd-l" style="margin-top:8px">LAST WINNER</div><div class="sjpd-v" style="font-size:13px;word-break:break-all;overflow-wrap:anywhere">'+_winD+'</div></div>'+
       '<div class="sjpd-sec">DTD JACKPOT ELIGIBILITY</div>'+
       '<div class="sjpd-note">Until #30,000 the DTD Jackpot reuses the DTD winner and its eligibility (a wider <b>20,000-block</b> recency window instead of 5,000, plus the same gates: recent-producer cooldown, anti-dominance, SbPoW). <b style="color:#ffd166">From #30,000 (V16.1) it is an INDEPENDENT draw</b> with its own winner: node-gated (NODE_BIND + heartbeats), weighted linearly by SbPoW blocks in the previous 2,016, <b>no cooldown and no anti-dominance</b>. DTD-normal keeps its payout and needs neither NODE_BIND nor heartbeats, but its own eligibility tightens the same day (288-block recency, conditional cooldown, anti-dominance only at &ge;11 miners). </div>'+
       '<div class="sjpd-note" style="margin-top:2px"><b>100 SOST</b> base reward. Unpaid jackpots (no eligible winner) roll over to the next eligible jackpot, up to a <b>500 SOST</b> maximum. The first jackpot (#'+fc(JP_FIRST)+') pays <b>100 SOST</b> (no prior rollover). The Explorer always shows the <b>real on-chain amount</b> from the jackpot transaction.</div>'+
@@ -9724,7 +9742,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     // deterministic fields from the live permanent card + RPC (real data only)
     var reserve=(document.getElementById('dJackReserve')||{}).textContent||'—';
     var state={reserve:reserve,tip:0,eligible:null,paid:0,winner:null};
-    render(state);  // render immediately with card data
+    render(state);  // render immediately (shows LOADING until live data arrives)
     if(typeof window.rpc==='function'){
       window.rpc('getblockcount',[]).then(function(h){ state.tip=parseInt(h,10)||0;
         return window.rpc('geteligibleminers',[]); }).then(function(g){
@@ -9755,8 +9773,8 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
                 render(state); }).catch(function(){}); })
             .catch(function(){ render(state); });
           }
-        }).catch(function(){});
-    }
+        }).catch(function(){ state.loadError=true; render(state); });
+    } else { state.loadError=true; render(state); }
   }
   // Eligibility checker: winner badge is canonical from chain (works now); the CURRENT/PRELIMINARY
   // eligibility uses ONLY the node's canonical gethistoricaljackpotstatus.eligible_addresses[] —

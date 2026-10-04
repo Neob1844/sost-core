@@ -1,4 +1,4 @@
 {
-  "v": "2026-10-04-v489-reload",
-  "note": "Forced reload of open Explorer tabs to pick up the current build (global nav, mosaic R=Reward, visitor counter, splash fix). Self-heal only: no node/miner/CLI/consensus change."
+  "v": "2026-10-04-v491-dtd-loadguard",
+  "note": "DTD card loading guards complete (incl. JACKPOT ELIGIBLE NOW), last-winner mobile overflow fix, eligible-miners label, compact mobile audio, RPC help. Frontend only."
 }
