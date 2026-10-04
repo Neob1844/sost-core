@@ -1,4 +1,4 @@
 {
-  "v": "2026-10-04-v492-rpc-myminer",
-  "note": "RPC panel clarity: CONNECT->CONNECT RPC (RPC-only), updated RPC warning, MY MINER marked separate-from-RPC with saved-feedback. Frontend only."
+  "v": "2026-10-05-v493-rpc-rows",
+  "note": "RPC panel 2-row layout: Row1 RPC/USER/PASS/CONNECT RPC, Row2 MY MINER (separate). Frontend only."
 }

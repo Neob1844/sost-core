@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-04-v492-rpc-myminer">
+<meta name="explorer-html-version" content="2026-10-05-v493-rpc-rows">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -585,7 +585,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
   </div>
 </nav>
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-04-v492-rpc-myminer';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-05-v493-rpc-rows';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -608,20 +608,26 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </div></div>
 <div class="config">
   <div style="flex-basis:100%;font-size:10px;line-height:1.5;color:var(--text3);margin-bottom:4px"><b style="color:var(--text2)">Advanced RPC connection — optional.</b> The public Explorer works without RPC credentials.</div>
-  <span class="config-label">RPC&gt;</span>
-  <input id="rpcUrl" value="/rpc" spellcheck="false"/>
-  <span class="config-label" style="margin-left:8px">USER&gt;</span>
-  <input id="rpcUser" value="" placeholder="rpc username" type="password" spellcheck="false" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore="true" name="sost-rpc-user-nofill" style="width:120px"/>
-  <span class="config-label" style="margin-left:8px">PASS&gt;</span>
-  <input id="rpcPass" value="" placeholder="rpc password" type="password" spellcheck="false" autocomplete="new-password" autocorrect="off" data-lpignore="true" data-1p-ignore="true" name="sost-rpc-pass-nofill" style="width:120px"/>
+  <!-- ROW 1 — RPC connection (CONNECT RPC applies ONLY to these three fields) -->
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-basis:100%">
+    <span class="config-label">RPC&gt;</span>
+    <input id="rpcUrl" value="/rpc" spellcheck="false"/>
+    <span class="config-label">USER&gt;</span>
+    <input id="rpcUser" value="" placeholder="rpc username" type="password" spellcheck="false" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore="true" name="sost-rpc-user-nofill" style="width:120px"/>
+    <span class="config-label">PASS&gt;</span>
+    <input id="rpcPass" value="" placeholder="rpc password" type="password" spellcheck="false" autocomplete="new-password" autocorrect="off" data-lpignore="true" data-1p-ignore="true" name="sost-rpc-pass-nofill" style="width:120px"/>
+    <button onclick="connectRPC()">CONNECT RPC</button>
+  </div>
   <div style="flex-basis:100%;font-size:9.5px;line-height:1.5;color:#e0a96d;margin:4px 0 6px">⚠ <b>RPC credentials only.</b> Enter the RPC username and password configured for <b>your own SOST node</b>. Never enter wallet passwords, seed phrases, private keys, S14 keys or NODE_BIND private keys.</div>
-  <button onclick="connectRPC()">CONNECT RPC</button>
-  <span style="color:var(--text3);margin-left:12px;font-size:9px;">MY MINER&gt;</span>
-  <input id="myMinerAddr" value="" placeholder="sost1... (for block alerts)" spellcheck="false" style="width:180px;font-size:10px;"
-    onchange="var v=this.value.trim();localStorage.setItem('sost_my_miner',v);_myMinerAddress=v;var s=document.getElementById('myMinerSaved');if(s){if(!v){s.style.display='none';}else{var ok=/^sost1[0-9a-f]{40}$/i.test(v);s.textContent=ok?'Miner address saved \u2713':'Saved \u2713 · check format (sost1 + 40 hex)';s.style.color=ok?'#39ff14':'#e0a96d';s.style.display='inline';}}"/>
-  <span id="myMinerSaved" style="font-size:10px;margin-left:8px;display:none"></span>
+  <!-- ROW 2 — MY MINER (independent of RPC; local only) -->
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-basis:100%;border-top:1px solid var(--border);padding-top:8px;margin-top:2px">
+    <span class="config-label" style="color:var(--text3)">MY MINER&gt;</span>
+    <input id="myMinerAddr" value="" placeholder="sost1... (for block alerts)" spellcheck="false" style="width:180px;font-size:10px;"
+      onchange="var v=this.value.trim();localStorage.setItem('sost_my_miner',v);_myMinerAddress=v;var s=document.getElementById('myMinerSaved');if(s){if(!v){s.style.display='none';}else{var ok=/^sost1[0-9a-f]{40}$/i.test(v);s.textContent=ok?'Miner address saved \u2713':'Saved \u2713 · check format (sost1 + 40 hex)';s.style.color=ok?'#39ff14':'#e0a96d';s.style.display='inline';}}"/>
+    <span id="myMinerSaved" style="font-size:10px;margin-left:4px;display:none"></span>
+    <span style="flex-basis:100%;font-size:9.5px;line-height:1.5;color:var(--text3);margin-top:3px"><b style="color:var(--text2)">MY MINER is separate from RPC.</b> Optional public mining address for block highlighting/alerts only.</span>
+  </div>
   <script>document.getElementById('myMinerAddr').value=localStorage.getItem('sost_my_miner')||'';</script>
-  <div style="flex-basis:100%;font-size:9.5px;line-height:1.5;color:var(--text3);margin-top:3px">Separate from RPC. Optional public sost1… mining address for block highlighting/alerts.</div>
 </div>
 <div class="search"><div class="search-box">
   <span class="search-pre">search&gt;</span>
