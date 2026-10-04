@@ -507,35 +507,85 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
   },2000);
 })();
 </script>
-<nav style="position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);padding:18px 0;">
-  <div style="max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;">
-    <div class="nav-row-brand" style="display:flex;align-items:center;gap:14px;flex:1 1 auto;flex-wrap:wrap;">
-      <a href="index.html" style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:#e2e8f0;letter-spacing:3px;text-decoration:none;display:flex;align-items:center;gap:14px;flex:0 0 auto;">
-        <img src="sost-logo.png?v=v392" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6));animation:sostLogoPulse 3.6s ease-in-out infinite"><span><span style="color:#fb010d">SOST</span> EXPLORER</span>
-      </a>
-      <a href="sost-universal-assets.html" title="SOST Tokenization — Universal Assets" aria-label="SOST Tokenization" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:50%;text-decoration:none;flex:0 0 auto;line-height:1;overflow:hidden;border:2px solid #fb010d;background:rgba(251,1,13,.08);box-shadow:0 0 14px rgba(251,1,13,.5)"><img src="sost-logo.png?v=v394" alt="SOST Tokenization" style="height:66px;width:66px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(251,1,13,.9))"></a>
-      <a href="casert-spec.html" title="ConvergenceX — memory-hard PoW" aria-label="ConvergenceX" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:50%;text-decoration:none;flex:0 0 auto;line-height:1;overflow:hidden;border:2px solid #22d3ee;background:#000;box-shadow:0 0 14px rgba(34,211,238,.5)"><img src="convergencex-logo.png?v=v394" alt="ConvergenceX" style="height:74px;width:74px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(34,211,238,.9));image-rendering:-webkit-optimize-contrast"></a>
-      <a href="index.html#dtd" title="DTD — Deterministic Token Distribution" aria-label="DTD Token Distribution" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:50%;text-decoration:none;flex:0 0 auto;line-height:1;overflow:hidden;border:2px solid #4ade80;background:rgba(74,222,128,.08);box-shadow:0 0 14px rgba(74,222,128,.45)"><span style="font-size:30px;font-weight:900;color:#4ade80">DTD</span></a>
-      <a href="sost-dex.html" class="atomix-btn" title="Atomix Swap DEX" aria-label="Atomix Swap DEX" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:50%;text-decoration:none;flex:0 0 auto;line-height:1;overflow:hidden;border:2px solid #a855f7;background:rgba(168,85,247,.08);box-shadow:0 0 14px rgba(168,85,247,.5)"><span class="atomix-icon" style="font-size:34px;font-weight:900;color:#c084fc">&#9883;</span></a>
-      <a href="news.html" title="SOST News" aria-label="News" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:50%;text-decoration:none;flex:0 0 auto;line-height:1;overflow:hidden;border:2px solid #DAA520;background:rgba(218,165,32,.07);box-shadow:0 0 14px rgba(218,165,32,.45)"><span style="font-size:34px">&#128240;</span></a>
-    </div>
-    <div class="nav-row-links" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:0 0 auto;">
-      <span class="net-badge" id="netBadgeNav"><span class="net-dot"></span>MAINNET</span>
-      <a class="header-link" style="cursor:pointer" onclick="showCXInfo()"><span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">O</span><span style="color:hsl(190,85%,55%)">N</span><span style="color:hsl(160,85%,50%)">V</span><span style="color:hsl(130,85%,50%)">E</span><span style="color:hsl(100,85%,50%)">R</span><span style="color:hsl(70,85%,50%)">G</span><span style="color:hsl(50,85%,50%)">E</span><span style="color:hsl(35,85%,50%)">N</span><span style="color:hsl(20,85%,50%)">C</span><span style="color:hsl(5,85%,45%)">E</span><span style="color:#fb010d">X</span></a>
-      <a class="header-link markets-live" href="sost-markets.html" title="SOST live markets">MARKETS LIVE</a>
-      <span id="vcx-sost" style="display:inline-flex;align-items:center"></span>
-      <a class="header-link" href="https://sostcore.com" target="_blank">WEBSITE</a>
-      <a class="header-link" href="sost-app/" style="color:var(--cyan)">📱 APP</a>
-      <a class="header-link" href="https://github.com/Neob1844/sost-core" target="_blank">GITHUB</a>
-      <a class="header-link" href="sost-dex.html" style="color:#f59e0b">SOST DEX</a>
-      <a class="header-link" href="protocol-registry.html" style="color:#d946ef">PROTOCOL REGISTRY</a>
-      <a class="header-link" href="beacon.html" style="color:#22d3ee">BEACON</a>
-      <a class="header-link" href="sost-wallet.html" style="color:#fb010d;font-weight:700">WALLET</a>
+<style id="explorer-global-nav-css">
+nav{--red-primary:#fb010d;--cyan-primary:#22d3ee;--green-primary:#4ade80;--gold:#b8860b;--text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-dim:#64748b;--border-dim:#1a1a1a;--border-med:#2a2a2a;--bg-card:#0a0a0a;--red-subtle:#fb010d18;--font-display:'Space Grotesk',sans-serif;--font-mono:'JetBrains Mono','IBM Plex Mono',monospace;
+  position:sticky;top:0;z-index:100;background:rgba(0,0,0,.94);border-bottom:1px solid var(--border-dim);backdrop-filter:blur(16px);padding:12px 0;}
+nav .container{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.nav-logo{font-family:var(--font-display);font-weight:700;font-size:26px;color:var(--text-primary);letter-spacing:3px;text-decoration:none;display:flex;align-items:center;gap:14px;}
+.nav-logo .brand-sost{color:var(--red-primary);font-size:1.76em;}
+.nav-toggle{background:transparent;border:1px solid var(--border-med);color:var(--text-secondary);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;padding:5px 10px;border-radius:12px;cursor:pointer;flex:0 0 auto;transition:all .2s;}
+.nav-toggle:hover{color:var(--text-primary);border-color:var(--red-primary);}
+body.nav-collapsed nav{padding:4px 0;}
+body.nav-collapsed nav .nav-logo,body.nav-collapsed nav a[href="casert-spec.html"],body.nav-collapsed nav a[href="sost-dex.html"],body.nav-collapsed nav a[href="index.html#dtd"],body.nav-collapsed nav a.sost-tok-logo,body.nav-collapsed nav .nav-links,body.nav-collapsed nav .nav-hamburger{display:none !important;}
+body.nav-collapsed nav .container{justify-content:flex-end;}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap;}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-size:13.2px;font-weight:400;padding:4px 10px;border-radius:4px;transition:all .2s;letter-spacing:.5px;white-space:nowrap;}
+.nav-links a:hover{color:var(--text-primary);background:var(--bg-card);}
+.nav-links a.active{color:var(--red-primary);background:var(--red-subtle);}
+.nav-hamburger{display:none;background:none;border:1px solid var(--border-dim);color:var(--text-dim);font-size:20px;padding:4px 8px;cursor:pointer;border-radius:4px;line-height:1;}
+@media(max-width:768px){.nav-hamburger{display:block;}.nav-links{display:none;width:100%;}.nav-links.open{display:flex;}}
+@keyframes dtdBtnGlow{0%,100%{box-shadow:0 0 14px rgba(57,255,20,.5),0 0 26px rgba(74,222,128,.28)}50%{box-shadow:0 0 30px rgba(57,255,20,1),0 0 60px rgba(74,222,128,.7),0 0 90px rgba(124,255,160,.45)}}
+@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
+</style>
+<nav>
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="sost-logo.png?v=v392" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span> EXPLORER</span>
+    </a>
+    <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
+      <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
+    </a>
+    <a href="index.html#dtd" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;background:radial-gradient(circle at 50% 35%,#0f2417,#07120b);border:1px solid #39ff14;text-decoration:none;line-height:1;flex:0 0 auto;animation:dtdBtnGlow 2s ease-in-out infinite;overflow:hidden;" title="DTD — Deterministic Token Distribution"><span style="color:#39ff14;font-size:30px;font-weight:900;letter-spacing:1px;text-shadow:0 0 14px rgba(57,255,20,.85)">DTD</span><span style="color:#7CFFA0;font-size:9.5px;font-weight:700;letter-spacing:.4px;text-align:center;margin-top:3px">TOKEN<br>DISTRIBUTION</span></a>
+    <!-- 4th nav icon: open the SOST 2-minute intro video in a modal.
+         Sized to match home's larger 110×110 PoPC DEX (other pages use 72×72). -->
+    <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomix Swap DEX" aria-label="Atomix Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIX<br>SWAP DEX</span></a>
+    <button class="nav-toggle" id="navToggleBtn" type="button" onclick="toggleNav()" title="Hide / show the top navigation">▲ HIDE NAV</button>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+            <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
+            <a href="index.html">Home</a>
+      <a href="sost-protocol-spec.html">Layer 1</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-decentralization.html" style="color:var(--cyan-primary)">Decentralization</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <!-- DEX link replaced by rainbow button next to logo -->
+      <a href="sost-gold-dex.html">Atomic Swap DEX</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html" style="color:#fbbf24" class="active">Explorer</a>
+      <a href="sost-help.html">Help</a>
+      <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
+      <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
+      <a href="sost-contact.html">Contact</a>
     </div>
   </div>
 </nav>
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-04-nav5c';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-04-globalnav';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
