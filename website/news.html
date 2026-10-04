@@ -204,6 +204,79 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<section class="section" id="eng-readiness-2026-10-04"><div class="container">
+  <div style="border:1px solid var(--border-med,#2a2a2a);border-radius:14px;background:linear-gradient(180deg,rgba(74,222,128,.04),transparent 60%);padding:20px 22px">
+    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:var(--green-primary,#4ade80)">// ENGINEERING &middot; V30000 PRE-ACTIVATION READINESS &middot; 2026-10-04</div>
+    <h2 style="font-size:23px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0)">SOST completes pre-#30,000 security, DEX, asset-registry and decentralization readiness work</h2>
+    <div style="font-size:11px;color:var(--text-muted,#475569)">Published: 2026-10-04 &middot; current chain state is read live from <code>protocol-status.json</code>, not hard-coded here.</div>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7;margin:10px 0 4px">Recent work hardened the public surface and advanced the devnet DEX, the asset registry/attestation model and the decentralization toolkit. <b>None of it changed consensus or the V30000 binaries</b> &mdash; node/miner/cli remain byte-identical to the published release and still enforce V30000 at block #30,000.</p>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 2px;font:700 9px/1 ui-monospace;letter-spacing:.6px">
+      <span style="color:#4ade80;border:1px solid #2f6b43;border-radius:3px;padding:3px 7px">CURRENT/LIVE</span>
+      <span style="color:#fbbf24;border:1px solid #6b5316;border-radius:3px;padding:3px 7px">MAINNET PRE-ACTIVATION</span>
+      <span style="color:#fbbf24;border:1px solid #6b5316;border-radius:3px;padding:3px 7px">ADMIN-GATED</span>
+      <span style="color:#22d3ee;border:1px solid #1b5b66;border-radius:3px;padding:3px 7px">DEVNET / LAB</span>
+      <span style="color:#67e8f9;border:1px solid #1b5b66;border-radius:3px;padding:3px 7px">IN PROGRESS</span>
+      <span style="color:#94a3b8;border:1px solid #3a3a3a;border-radius:3px;padding:3px 7px">PLANNED</span>
+      <span style="color:#c084fc;border:1px solid #5a3a7a;border-radius:3px;padding:3px 7px">RESEARCH / PROPOSAL</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:12px">
+
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #4ade80;border-radius:10px;padding:13px 15px">
+        <div style="color:#4ade80;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:7px">A &middot; V30000 <span style="color:#fbbf24">MAINNET PRE-ACTIVATION</span></div>
+        <ul style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0;padding-left:16px">
+          <li>V30000 is the <b>final release</b>; activation is automatic at block <b>#30,000</b> &mdash; no restart required at the fork.</li>
+          <li>All three binaries changed vs pre-V30000 and remain final:</li>
+        </ul>
+        <div style="font:11px/1.6 ui-monospace;color:#64748b;background:#060606;border:1px solid #161616;border-radius:7px;padding:8px 10px;margin-top:6px;word-break:break-all">node&nbsp; 78fefb67a15615f3df1b0a4f498239ccba07ba47ce6e333d13d5d2afdcecbb56<br>miner eec96efb02bde61cae150f51b3cedb46e55a5dd5e903496a278e90257aa64951<br>cli&nbsp;&nbsp; c8ae00b9a6745f7c84cc8791b9994d32052a07d1fed12aa82c4e283fba2f691b</div>
+      </div>
+
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #22d3ee;border-radius:10px;padding:13px 15px">
+        <div style="color:#22d3ee;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:7px">B &middot; DEX <span style="color:#22d3ee">DEVNET</span></div>
+        <ul style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0;padding-left:16px">
+          <li>Non-custodial cross-chain: signed offers / RFQ, HTLC settlement; SOST wallet controls the SOST leg, MetaMask the EVM leg; the server never receives keys/seed.</li>
+          <li><b>Devnet-implemented:</b> SOST&harr;ETH, SOST&harr;USDC, wallet bridge, human-readable signing, anti-replay domain binding, 90-second firm quote, cancel-before-funding, settle-or-timeout/refund, visible lifecycle, token/contract allowlist + contract pinning, centralized timelock policy (SOST long leg 288 blk/~48h, EVM short ~24h, BTC short 144 blk/~24h, ~24h min safety gap).</li>
+          <li style="color:#ff6b6b"><b>PUBLIC TRADING: DISABLED</b> &middot; MAINNET EVM CONTRACT: NOT DEPLOYED &middot; REAL FUNDS: NOT USED &middot; BROWSER E2E: pending owner verification &middot; EXTERNAL SECURITY AUDIT: NOT COMPLETED.</li>
+          <li>USDT / PAXG / XAUT: <span style="color:#ff6b6b">DISABLED</span>. USDC: only the exact contract allowlisted per chainId. No real prices/liquidity/market.</li>
+        </ul>
+      </div>
+
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #DAA520;border-radius:10px;padding:13px 15px">
+        <div style="color:#e9c463;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:7px">C &middot; TOKENIZATION / ASSET REGISTRY <span style="color:#fbbf24">ADMIN-GATED @#30,000</span></div>
+        <ul style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0;padding-left:16px">
+          <li><b>Asset Passport</b> (web, current): claims + provenance, reproducible <code>manifestHash</code>, tamper detection, non-destructive document versioning.</li>
+          <li><b>Regulatory Record:</b> jurisdiction, asset class, checklist version, document hashes, acknowledgement, history/versioning &mdash; folded into the Passport/manifestHash.</li>
+          <li><b>Professional Attestation model:</b> client pays the expert directly (bring your own expert); expert issues a signed attestation; SOST verifies signature/credential/document-hash/expiry/lifecycle (ACTIVE/SUPERSEDED/REVOKED/EXPIRED). Types: LEGAL / OWNERSHIP / VALUATION; requirements vary by Tokenize / Auction / Project Funding / Draw. <b>SOST verifies who issued it, not whether the opinion is correct.</b></li>
+          <li><b>Regulatory requirements by jurisdiction:</b> 21 framework cards (EU/EEA, UK, Switzerland, Russia, US, Canada, Mexico, Brazil, Argentina, Chile, Colombia, China, Hong&nbsp;Kong, Singapore, Japan, South Korea, Australia, UAE, Saudi Arabia, South Africa, Nigeria) with official regulator links &mdash; informational orientation, not legal advice.</li>
+          <li>Native-asset protocol layer ships in V30000, <b>activates #30,000, admin-gated (S14), public access disabled</b>; <b>no public marketplace.</b> <b style="color:#e9c463">LEGAL CLASSIFICATION: NOT DETERMINED BY SOST.</b></li>
+        </ul>
+      </div>
+
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #fb010d;border-radius:10px;padding:13px 15px">
+        <div style="color:#fb010d;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:7px">D &middot; SECURITY &amp; DECENTRALIZATION</div>
+        <ul style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0;padding-left:16px">
+          <li><b>Security/ops:</b> secret permissions hardened, exposed RPC credential rotated (old one rejected on auth-gated methods), HTTPS/TLS valid, DEX mixed-content fixed, private dashboards moved from Basic-Auth popup to custom server-side sessions (HttpOnly+Secure+SameSite cookies, deny-by-default, rate-limiting, logout), Network Health panel, <code>protocol-status.json</code> as single source of truth. No consensus/binary changes.</li>
+          <li><b>Decentralization (implemented / internally verified):</b> configured-peer <code>--connect</code> redial, reproducible-build docs + tooling, <code>decentralization-status.json</code>, public decentralization metrics panel, miner-onboarding + independent-node guides, bootstrap-dependency audit, release-verification tooling.</li>
+          <li><b>Decentralization (planned / in progress):</b> general persistent peer store, ADDR/GETADDR peer gossip, independent/multiple DNS seeds, broader bootstrap independence, 24h primary-infrastructure independence test, future reduction/removal of S14 subject to readiness criteria.</li>
+          <li><b>Permissionless Proof-of-Work consensus architecture; operational decentralization is an ongoing engineering objective.</b> A connected peer/IP is <b>not</b> evidence of an independent operator. Not &ldquo;fully decentralized&rdquo;.</li>
+          <li>Release-signing tooling (minisign/GPG) is prepared; offline key custody remains an owner operational step.</li>
+          <li>Web accuracy: 41-section factual audit completed, stale current-state claims corrected, duplicated global search fixed (one canonical search per page), explorer mute/replay overlap corrected.</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div style="background:rgba(192,132,252,.05);border:1px solid #5a3a7a;border-left:3px solid #c084fc;border-radius:10px;padding:13px 16px;margin-top:12px">
+      <div style="color:#c084fc;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:6px">E &middot; FUTURE REWARD EVOLUTION <span style="color:#c084fc">RESEARCH &middot; PROPOSAL &middot; NOT CONSENSUS</span></div>
+      <p style="font-size:12.5px;color:#cbb6e6;line-height:1.7;margin:0 0 6px"><b>Current consensus is unchanged: 50% miner / 50% DTD.</b> SOST is <b>simulating</b> a possible mature-network evolution that gives more issuance directly to Proof-of-Work, a smaller continuous DTD, and a separate accumulated jackpot reserve &mdash; funded entirely from existing emission (no new supply).</p>
+      <p style="font-size:12.5px;color:#cbb6e6;line-height:1.7;margin:0 0 6px"><b>This is a trade-off, not a free improvement.</b> Simulation (S1 high-concentration): moving 50/50 &rarr; 75/20/5 raises the dominant miner&rsquo;s share (36%&rarr;46% for 56% hash), lowers the small-miner uplift (2.58&times;&rarr;1.79&times;) and raises income inequality (Gini 0.26&rarr;0.39). 70/25/5 preserves more redistribution; 80/10/10 pushes furthest toward PoW. <b>No model is declared &ldquo;better&rdquo;</b> &mdash; it depends on future maturity and miner concentration.</p>
+      <p style="font-size:12.5px;color:#cbb6e6;line-height:1.7;margin:0"><b>Under study (ranges, nothing fixed):</b> miner 70&ndash;80% / DTD 15&ndash;25% / jackpot 5&ndash;10%; jackpot interval ~2,500&ndash;5,000 blocks (block time verified 600&nbsp;s). A key simulation finding: a uniform-per-identity jackpot is Sybil-gameable, so a large jackpot would need <b>PoW-weighted, capped</b> eligibility (V2-style), not a bare address/identity draw. <b>No activation height. No final interval. No consensus change. Any implementation would require a hard fork.</b> 75/20/5 is a <b>candidate only</b>.</p>
+    </div>
+
+    <div style="font-size:11px;color:#64748b;margin-top:12px">Links: <a href="sost-decentralization.html" style="color:#22d3ee">Decentralization status</a> &middot; <a href="sost-universal-assets.html" style="color:#22d3ee">Tokenization</a> &middot; <a href="sost-dex.html" style="color:#22d3ee">SOST DEX</a> &middot; <a href="sost-explorer.html" style="color:#22d3ee">Explorer</a> &middot; <a href="protocol-status.json" style="color:#22d3ee">protocol-status.json</a></div>
+  </div>
+</div></section>
+
 <section class="section"><div class="container">
   <div class="dec-wrap">
     <div class="dec-eyebrow"><span class="dec-dot"></span>// PROTOCOL · DECENTRALIZATION AUDIT · 2026-10-02</div>
@@ -322,7 +395,7 @@
           <li><b>Full v1 compatibility.</b> Existing v1 passports are <b>never rewritten</b>, keep their original hash and still verify exactly; v2 reads them through a normalized claims view. Neither format is obsolete.</li>
           <li><b>Reproducible hashing + tamper detection.</b> Canonicalization is pinned by an <b>official test-vector contract</b> in the repo, so a third party can reproduce any <code>manifestHash</code> byte-for-byte; changing one byte changes the hash. <b>77/77 Asset Passport v2 tests pass.</b></li>
           <li><b>Guided flow — ASSET → RIGHT → TOKEN → PASSPORT.</b> A four-step wizard drives the Claims engine underneath (claims, provenance, valuation, canonical hash) so a non-technical owner produces a verifiable Asset Passport without touching JSON. It covers physical assets, debt/receivables, equity-like rights, royalties and custom rights, generates an automated legal-readiness note (not a legal determination), and ships loadable DEMO examples (mining, real estate, debt, royalty). A comparison against Tokeny, Securitize, Mattereum and Centrifuge is on the same page.</li>
-          <li><b>Registry vs Marketplace.</b> <span style="color:#4ade80">Asset Registry = CURRENT</span> (claims, provenance, valuation, rights, passport, hashing, anchoring, verification). <span style="color:#64748b">Asset Marketplace = FUTURE</span> (financial issuance, secondary trading, distribution, custody, regulated settlement, native assets) — not implemented, not active.</li>
+          <li><b>Registry vs protocol layer vs marketplace.</b> <span style="color:#4ade80">Asset Registry = CURRENT</span> (web: claims, provenance, valuation, rights, passport, hashing, anchoring, verification). <span style="color:#fbbf24">Native-asset protocol layer = IN V30000, admin-gated</span> &mdash; the on-chain asset primitives (genesis/issue/transfer/burn) + tokenization modalities + SOST-layer DEX ship in the V30000 release and <b>activate at #30,000</b> (automatic by height) but are <b>admin-gated at consensus (S14 RESTRICTED DEVELOPER MODE) with public access disabled</b>. <span style="color:#ff6b6b">Public regulated marketplace = NOT LIVE</span> (no public trading, no custody, no regulated settlement). Implemented protocol primitives are not a public marketplace.</li>
         </ul>
         <p style="margin-top:10px"><b>Status is exact.</b> The Registry is <b>live on the web</b> and passports are <b>anchor-ready</b>; the on-chain anchor round-trip has been verified on a development chain. It is <b>not</b> claimed as a mainnet anchor until demonstrated on mainnet. No consensus, node, supply or V16 (#30,000) behaviour is touched.</p>
         <p style="margin-top:10px"><a href="sost-universal-assets.html#registry" style="color:#DAA520;font-weight:700">Open the Asset Registry</a> &middot; <a href="sost-universal-assets.html#tokenization" style="color:#22d3ee">Tokenization Studio &rarr; Passport</a> &middot; <a href="https://github.com/Neob1844/sost-core/blob/main/docs/ASSET_REGISTRY_V2.md" target="_blank" rel="noopener" style="color:#22d3ee">View documentation</a></p>
