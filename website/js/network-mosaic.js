@@ -185,7 +185,7 @@
     for (var i = 0; i < blocks.length; i++) uniqueMiners[blocks[i].miner || '?'] = 1;
     if (foot) {
       foot.innerHTML = 'Each tile = one block · colour = producer · brightness = difficulty &amp; recency · ' +
-        '<b style="color:#000;background:#c9b3ff;border-radius:3px;padding:0 4px">L</b> = DTD reward block (click for selected miner) · ' +
+        '<b style="color:#000;background:#c9b3ff;border-radius:3px;padding:0 4px">R</b> = DTD reward block (click for selected miner) · ' +
         Object.keys(uniqueMiners).length + ' producers in view · hover for detail';
     }
     startAnim();
@@ -260,7 +260,7 @@
       offCtx.lineWidth = 1;
       roundRect(offCtx, x + .5, y + .5, L.tile - 1, L.tile - 1, Math.min(3, L.tile / 6));
       offCtx.stroke();
-      // DTD lottery marker: a bold black "L" (white-outlined so it reads on any tile colour).
+      // DTD reward marker: a bold black "R" (white-outlined so it reads on any tile colour).
       if (b.lp > 0 && L.tile >= 10) {
         var lfs = Math.max(9, Math.round(L.tile * 0.62));
         offCtx.font = '900 ' + lfs + 'px system-ui,Segoe UI,Arial,sans-serif';
@@ -268,9 +268,9 @@
         var lcx = x + L.tile / 2, lcy = y + L.tile / 2 + 0.5;
         offCtx.lineWidth = Math.max(2, lfs * 0.16);
         offCtx.strokeStyle = 'rgba(255,255,255,.88)';
-        offCtx.strokeText('L', lcx, lcy);
+        offCtx.strokeText('R', lcx, lcy);
         offCtx.fillStyle = '#000';
-        offCtx.fillText('L', lcx, lcy);
+        offCtx.fillText('R', lcx, lcy);
       }
     }
     // store tile geometry for hit-testing (map order-slot -> block index)
@@ -400,7 +400,7 @@
     lines.push('time&nbsp;&nbsp;&nbsp;' + fmtAgo(b.t));
     if (enr && enr.tx_count != null) lines.push('txs&nbsp;&nbsp;&nbsp;&nbsp;' + enr.tx_count);
     if (enr && enr.subsidy != null) lines.push('reward&nbsp;' + fmtSost(enr.subsidy) + ' SOST');
-    else if (b.lp > 0) lines.push('lottery&nbsp;' + fmtSost(b.lp) + ' SOST');
+    else if (b.lp > 0) lines.push('reward&nbsp;' + fmtSost(b.lp) + ' SOST');
     if (b.lp > 0 && b.lw) {
       lines.push('<span style="color:var(--purple)">&#127881; DTD winner&nbsp;' + shortAddr(b.lw) + '</span>');
       lines.push('<span style="color:var(--text3);font-size:10px">click &rarr; open winner address</span>');
