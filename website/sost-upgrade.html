@@ -309,7 +309,7 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
 
 <section class="hero">
   <div class="container">
-    <h1 style="font-family:var(--font-display);letter-spacing:2px">SOST V16 &mdash; <span style="color:var(--red-primary)">MINER &amp; NODE GUIDE</span></h1>
+    <h1 style="font-family:var(--font-display);letter-spacing:2px">SOST V30000 &mdash; <span style="color:var(--red-primary)">MINER &amp; NODE GUIDE</span></h1>
     <p style="font-size:17px;max-width:860px">Everything you need to install, configure and run SOST V30000 &mdash; and to decide whether you want to enter the DTD Jackpot V2 draw. Written for someone who has never run a node before, with the exact commands for someone who has.</p>
   </div>
 </section>
@@ -363,9 +363,9 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
     <p>Or check them one by one against the published values:</p>
     <table>
       <tr><th>File</th><th>SHA-256</th></tr>
-      <tr><td><code>sost-node</code></td><td class="mg-hash">304d056d504960b4179543672f14bee28146788b985363a5e95d476cc6b1492e</td></tr>
-      <tr><td><code>sost-miner</code></td><td class="mg-hash">2ef9d0a77f243224ac088460818d6b360c689a7a3fa9555738e2b3b3e0112fe2</td></tr>
-      <tr><td><code>sost-cli</code></td><td class="mg-hash">489f43741437a08b2d617c21020061c042f42d4609bbe6547d28f08ca5e07d07</td></tr>
+      <tr><td><code>sost-node</code></td><td class="mg-hash">78fefb67a15615f3df1b0a4f498239ccba07ba47ce6e333d13d5d2afdcecbb56</td></tr>
+      <tr><td><code>sost-miner</code></td><td class="mg-hash">eec96efb02bde61cae150f51b3cedb46e55a5dd5e903496a278e90257aa64951</td></tr>
+      <tr><td><code>sost-cli</code></td><td class="mg-hash">c8ae00b9a6745f7c84cc8791b9994d32052a07d1fed12aa82c4e283fba2f691b</td></tr>
     </table>
     <div class="mg-note mg-warn">
       <b>If the hash does not match, stop.</b> Downloading a file from the right URL does not make it the right file.
@@ -557,7 +557,7 @@ chmod 600 ~/.sost/rpc.pass</pre></div>
       the Jackpot V2 draw.
     </div>
     <h4>Preparing is not registering</h4>
-    <p>You can <b>create and protect the key today</b>. You <b>cannot register it</b> until V16 is live at #30,000 &mdash; the
+    <p>You can <b>create and protect the key today</b>. You <b>cannot register it</b> until V30000 is live at #30,000 &mdash; the
       transaction type does not exist before that height, and broadcasting it early achieves nothing.</p>
     <h4>Now: create the node key</h4>
     <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>umask 077
@@ -589,7 +589,7 @@ chmod 600 ~/.sost/node.key</pre></div>
       <h4>Keeping the heartbeats alive</h4>
       <p>Once the node runs with <code>--node-key-file</code>, it does the heartbeats <b>by itself</b>: a thread
         signs and broadcasts <b>one NODE_HEARTBEAT per epoch</b> &mdash; an epoch is <b>288 blocks (~48&nbsp;h)</b>,
-        the same cadence as the jackpot &mdash; but only once the node is bound and V16 is live (#30,000). You do
+        the same cadence as the jackpot &mdash; but only once the node is bound and V30000 is live (#30,000). You do
         not run <code>nodeheartbeat</code> by hand; that command exists only for unusual setups where the signing
         node is not the one you want emitting.</p>
       <p>What you actually have to do is <b>keep the node up</b>. Miss an epoch (node down, key removed) and that
@@ -661,7 +661,7 @@ chmod 600 ~/.sost/node.key</pre></div>
     <p><b>No.</b> Activation is automatic. Install the binaries in the window, and then leave your node alone. The only later
       restart is optional: adding <code>--node-key-file</code> for the Jackpot.</p>
     <h4>"What if I stay on the old version?"</h4>
-    <p>Before #30,000, nothing happens. From #30,000 a pre-V16 node applies the old rules and will reject blocks the network
+    <p>Before #30,000, nothing happens. From #30,000 a pre-V30000 node applies the old rules and will reject blocks the network
       accepts &mdash; it follows a chain nobody else is on. Your coins are safe; your node is not useful.</p>
   </div></details>
 
@@ -733,14 +733,14 @@ function mgFallback(txt,done){
      var b=document.getElementById('mgBadge'), l=document.getElementById('mgLine');
      if(!b||!l) return;
      if(h>=V16){
-       b.textContent='V16 ACTIVE · chain at #'+fc(h);
+       b.textContent='V30000 ACTIVE · chain at #'+fc(h);
        b.style.borderColor='#39ff14'; b.style.color='#39ff14';
-       l.innerHTML='V16 activated at block <b>#30,000</b>. The first DTD Jackpot V2 draw is <b>#'+fc(FIRST)+'</b>'+
+       l.innerHTML='V30000 activated at block <b>#30,000</b>. The first DTD Jackpot V2 draw is <b>#'+fc(FIRST)+'</b>'+
          (h>=FIRST?' and has already taken place.':' — '+fc(FIRST-h)+' blocks away.');
      } else if(h>=WIN){
        b.textContent='UPDATE YOUR NODE · chain at #'+fc(h);
        b.style.borderColor='#fb010d'; b.style.color='#ff6b6b';
-       l.innerHTML='<b>Swap the node now.</b> V16 activates at <b>#30,000</b> — '+fc(V16-h)+
+       l.innerHTML='<b>Swap the node now.</b> V30000 activates at <b>#30,000</b> — '+fc(V16-h)+
          ' blocks away. V30000 changes all three binaries; re-download and swap node, miner and cli.';
      } else {
        b.textContent='NOT YET ACTIVE · chain at #'+fc(h)+' · '+fc(V16-h)+' blocks to go';
