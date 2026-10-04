@@ -508,12 +508,12 @@
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--red-subtle);color:var(--red-primary);">STEP 1</div>
         <h3>Download</h3>
-        <p>Clone the repository from GitHub:<br><code style="color:var(--cyan-primary)">git clone https://github.com/Neob1844/sost-core.git</code></p>
+        <p>Clone the repository and check out the <b>V30000 release tag</b> (not <code>main</code>):<br><code style="color:var(--cyan-primary)">git clone https://github.com/Neob1844/sost-core.git</code><br><code style="color:var(--cyan-primary)">cd sost-core &amp;&amp; git fetch --tags &amp;&amp; git checkout v30000</code></p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--cyan-dim);color:var(--cyan-primary);">STEP 2</div>
         <h3>Compile</h3>
-        <p>Build from source (C++17, CMake):<br><code style="color:var(--cyan-primary)">mkdir build && cd build && cmake .. && make -j$(nproc)</code></p>
+        <p>Build from source (C++17, CMake):<br><code style="color:var(--cyan-primary)">mkdir build && cd build && cmake .. && make -j$(nproc)</code><br><span style="color:#ffd166;font-size:12px">Build the <b>v30000</b> tag (above), not <code>main</code> — main does not currently reproduce the V30000 release. Prefer prebuilt binaries? See the <a href="sost-upgrade.html" style="color:#39ff14">upgrade guide</a>.</span></p>
       </div>
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">STEP 3</div>

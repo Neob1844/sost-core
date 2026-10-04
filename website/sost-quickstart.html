@@ -425,9 +425,12 @@
         <p>Copy and paste these commands <strong style="color:var(--text-primary)">one at a time</strong>. Press Enter after each one:</p>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">git clone https://github.com/Neob1844/sost-core.git</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">cd sost-core</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">git fetch --tags</span></div>
+        <div class="code-block"><span class="prompt">$ </span><span class="cmd">git checkout v30000</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">mkdir build &amp;&amp; cd build</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">cmake .. -DCMAKE_BUILD_TYPE=Release</span></div>
         <div class="code-block"><span class="prompt">$ </span><span class="cmd">make -j$(nproc)</span></div>
+        <div style="margin:12px 0;padding:12px 14px;border:1px solid #ffd166;border-left:3px solid #ffd166;border-radius:8px;background:rgba(255,209,102,.07);font-size:13px;line-height:1.6;color:#d8c9a0"><b style="color:#ffd166">Important for block #30,000.</b> The V30000 release source is the <b>v30000 tag</b> (checked out above). Building the current <code>main</code> branch does <b>not</b> currently reproduce the V30000 release, so a node built from <code>main</code> would apply the old rules at #30,000 and fork off the network. New operators must build from the <b>v30000</b> tag &mdash; or use the published V30000 binaries.<div style="margin-top:6px">Prefer prebuilt V30000 binaries? See the <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">upgrade guide</a> &mdash; official release tag <b>v30000</b> with node / miner / cli SHA-256 (<code>SHA256SUMS</code>).</div></div>
         <p>The last command takes 2&ndash;5 minutes. Lots of text will scroll &mdash; that's normal. Wait until you see <span style="color:var(--green-primary)">[100%] Built target</span>.</p>
       </div>
     </div>
