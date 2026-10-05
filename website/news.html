@@ -204,6 +204,180 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<!-- ============ WAR-ROOM: SECURITY + DECENTRALIZATION (2026-10-05) ============ -->
+<section class="section" id="security-decentralization-2026-10-05"><div class="container">
+  <div style="border:1px solid var(--border-med,#2a2a2a);border-radius:14px;background:linear-gradient(180deg,rgba(34,211,238,.05),transparent 60%);padding:20px 22px">
+    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:var(--green-primary,#4ade80)">// ENGINEERING &middot; SECURITY &amp; DECENTRALIZATION &middot; V30000 &rarr; V30000.1 CANDIDATE &middot; 2026-10-05</div>
+    <h2 style="font-size:23px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0)">SOST pushes toward <span style="color:#22d3ee">maximum practical decentralization</span> and mature-network security engineering</h2>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7;margin:4px 0 2px"><b>V30000 security is already frozen and verified.</b> A <b>V30000.1 candidate</b> is now being stress-tested to reduce infrastructure dependency and strengthen autonomous peer discovery. <b>It is not deployed.</b></p>
+    <div style="font-size:11px;color:var(--text-muted,#475569)">Published: 2026-10-05 &middot; chain height is read live (<code>protocol-status.json</code> + node), never baked in. Current: <code id="wr-live-height">reading live…</code></div>
+
+    <!-- badge legend -->
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 2px;font:700 9px/1 ui-monospace;letter-spacing:.6px">
+      <span style="color:#4ade80;border:1px solid #2f6b43;border-radius:3px;padding:3px 7px">LIVE</span>
+      <span style="color:#22d3ee;border:1px solid #1b5b66;border-radius:3px;padding:3px 7px">LAB VERIFIED</span>
+      <span style="color:#a78bfa;border:1px solid #5a3a7a;border-radius:3px;padding:3px 7px">FINAL CANDIDATE</span>
+      <span style="color:#67e8f9;border:1px solid #1b5b66;border-radius:3px;padding:3px 7px">IN PROGRESS</span>
+      <span style="color:#94a3b8;border:1px solid #3a3a3a;border-radius:3px;padding:3px 7px">PLANNED</span>
+      <span style="color:#fbbf24;border:1px solid #6b5316;border-radius:3px;padding:3px 7px">EXTERNAL MATURITY</span>
+    </div>
+
+    <!-- 1. intro -->
+    <p style="font-size:13px;color:#c9d6e2;line-height:1.75;margin:12px 0 4px">In plain terms: SOST is trying to depend as little as possible on <b>sostcore.com, any single server, any single bootstrap service and any single operator</b>, while hardening the software against malicious inputs, RPC failures, peer poisoning, eclipse attempts, memory/resource abuse, network partitions and operator mistakes. The stated objective is <b style="color:#22d3ee">maximum practical protocol autonomy</b> &mdash; <u>not</u> a claim of &ldquo;100% decentralization&rdquo;.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:12px">
+
+      <!-- 2. D1/D2 -->
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #a78bfa;border-radius:10px;padding:13px 15px">
+        <div style="color:#a78bfa;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:7px">PEER AUTONOMY (D1/D2) <span style="color:#a78bfa">FINAL CANDIDATE</span> &middot; <span style="color:#22d3ee">LAB VERIFIED</span> &middot; <span style="color:#ff6b6b">NOT YET PROMOTED TO MAINNET</span></div>
+        <ul style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0;padding-left:16px">
+          <li><b>Peer store</b> &mdash; a node remembers verified peers and can reconnect to them after a restart.</li>
+          <li><b>ADDR / GETADDR</b> &mdash; compatible nodes exchange peer addresses so the network can discover more peers autonomously.</li>
+          <li><b>seeds.txt</b> &mdash; operators can configure independent bootstrap seeds without recompiling.</li>
+          <li><b>Automatic redial</b> &mdash; a node that loses all peers actively retries known / configured / seed peers.</li>
+          <li><b>Backward compatibility</b> &mdash; new nodes interoperate with existing V30000 nodes.</li>
+        </ul>
+      </div>
+
+      <!-- 3. lab-demonstrated -->
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #22d3ee;border-radius:10px;padding:13px 15px">
+        <div style="color:#22d3ee;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:7px">WHAT WE HAVE DEMONSTRATED IN LAB <span style="color:#22d3ee">LAB VERIFIED</span></div>
+        <ul style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0;padding-left:16px">
+          <li>OLD&harr;NEW compatibility: <span class="ok">PASS</span></li>
+          <li>Peer-store torture tests: <span class="ok">PASS</span></li>
+          <li>ADDR parser fuzz: <b>200,000 iterations</b> under ASan/UBSan</li>
+          <li>Adversarial / eclipse / poisoning tests: <span class="ok">PASS</span></li>
+          <li><b>500,000 junk addresses</b> tested with bounded memory impact</li>
+          <li>Partition &rarr; reconnect &rarr; heavier valid chain wins: <span class="ok">PASS</span></li>
+          <li>Node bootstrap <b>without sostcore.com</b> using peers.txt/seeds.txt: <span class="ok">PASS</span></li>
+          <li>Long mixed OLD/NEW soak: no split / no misbehavior / no reconnect storm</li>
+          <li>ctest: <b>122/122</b> &middot; ASan / UBSan / LeakSanitizer: <span class="ok">PASS</span></li>
+          <li>Secret scan: <span class="ok">PASS</span> &middot; package self-verification: <span class="ok">PASS</span></li>
+        </ul>
+        <p style="font-size:11px;color:#64748b;line-height:1.6;margin:8px 0 0">Lab tests demonstrate that the candidate can bootstrap and recover <b>without sostcore.com when independent peer sources are available</b>. This is a laboratory result, not a statement about current mainnet.</p>
+      </div>
+    </div>
+
+    <!-- 4. diagram -->
+    <div style="font:12px/1.55 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:12px 0;overflow-x:auto"><div style="color:#fbbf24;font-weight:800;margin-bottom:6px">ARCHITECTURAL GOAL &mdash; not a statement of current mainnet state</div><pre style="margin:0;white-space:pre">BEFORE / CENTRAL DEPENDENCY          TARGET / AUTONOMOUS MESH
+
+          SOSTCORE                     node ----- node ----- node
+             |                          |        /   \        |
+    ---------+---------                 |       /     \       |
+    |        |        |                node --------------- node
+   node    node    node                   \                 /
+                                              external seed</pre><div style="color:#c9d6e2;margin-top:8px;white-space:normal">The goal is that <b>no single SOST-operated website, VPS, RPC endpoint or bootstrap service is required for the chain to continue operating</b>. This is a <b style="color:#fbbf24">TARGET / architectural goal</b>, not today&rsquo;s mainnet state.</div></div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:4px">
+
+      <!-- 5. LIVE V30000 security -->
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #4ade80;border-radius:10px;padding:13px 15px">
+        <div style="color:#4ade80;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:7px">SECURITY ALREADY IN V30000 <span style="color:#4ade80">LIVE / FROZEN</span></div>
+        <ul style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0;padding-left:16px">
+          <li>SEC2 RPC hardening</li>
+          <li>SACS V2 activating at <b>#30,000</b></li>
+          <li>Native asset layer (admin-gated, public access disabled)</li>
+          <li>Existing consensus test battery</li>
+          <li>Gateway defense-in-depth</li>
+          <li>Hardened admin authentication / 2FA</li>
+          <li>Verified release hashes (node/miner/cli)</li>
+        </ul>
+        <p style="font-size:11px;color:#64748b;line-height:1.6;margin:8px 0 0">D1/D2 peer autonomy is <b>not</b> part of this LIVE set yet &mdash; it is the V30000.1 candidate under test.</p>
+      </div>
+
+      <!-- 6. learning from mature networks -->
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #fbbf24;border-radius:10px;padding:13px 15px">
+        <div style="color:#fbbf24;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:7px">LEARNING FROM MATURE NETWORKS</div>
+        <p style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0 0 6px">SOST cannot manufacture Bitcoin&rsquo;s or Ethereum&rsquo;s years of real-world operation, independent operators, adversarial exposure or external review. What SOST <i>can</i> adopt are mature engineering disciplines:</p>
+        <ul style="font-size:11.5px;color:#94a3b8;line-height:1.7;margin:0;padding-left:16px">
+          <li>bounded network inputs &middot; fuzz testing &middot; ASan / UBSan / LeakSanitizer</li>
+          <li>RPC hardening &middot; eclipse / peer-poisoning testing</li>
+          <li>memory / peer / connection limits</li>
+          <li>deterministic / reproducible builds &middot; verifiable SHA256 release manifests</li>
+          <li>OLD&harr;NEW compatibility &middot; partition / recovery &middot; bootstrap-loss tests</li>
+          <li>secret scanning &middot; rollback procedures &middot; known-good fallback release</li>
+        </ul>
+        <p style="font-size:11.5px;color:#fbbf24;line-height:1.6;margin:8px 0 0"><b>These practices reduce engineering risk. They do not make SOST equivalent in security maturity to Bitcoin or Ethereum.</b></p>
+      </div>
+    </div>
+
+    <!-- 7. war-room status -->
+    <div style="margin-top:12px;border:1px solid rgba(34,211,238,.45);border-radius:10px;background:rgba(34,211,238,.05);padding:14px 16px">
+      <div style="color:#22d3ee;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:8px">CURRENT WAR-ROOM STATUS</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 18px;font-size:12.5px">
+        <div style="display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.08);padding:4px 0"><span style="color:#9fb6c4">CURRENT RELEASE</span><span style="color:#4ade80;font-weight:700">V30000 (LIVE)</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.08);padding:4px 0"><span style="color:#9fb6c4">FALLBACK</span><span style="color:#4ade80;font-weight:700">known-good V30000</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.08);padding:4px 0"><span style="color:#9fb6c4">FINAL CANDIDATE</span><span style="color:#a78bfa;font-weight:700">V30000.1 candidate (D1/D2)</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.08);padding:4px 0"><span style="color:#9fb6c4">STATUS</span><span style="color:#fbbf24;font-weight:700">STRESS TESTING / PRE-LOCK</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.08);padding:4px 0"><span style="color:#9fb6c4">LOCK TARGET</span><span style="color:#67e8f9;font-weight:700">around #29,750</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.08);padding:4px 0"><span style="color:#9fb6c4">COORDINATED UPGRADE</span><span style="color:#67e8f9;font-weight:700">after #29,900</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#9fb6c4">ACTIVATION</span><span style="color:#eaf6ff;font-weight:700">#30,000</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#9fb6c4">LIVE HEIGHT</span><span id="wr-live-height-2" style="color:#eaf6ff;font-weight:700">reading live…</span></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:12px">
+      <!-- 8. what we are doing now -->
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #67e8f9;border-radius:10px;padding:13px 15px">
+        <div style="color:#67e8f9;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:7px">WHAT WE ARE DOING NOW <span style="color:#67e8f9">IN PROGRESS</span></div>
+        <p style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0 0 6px">We are no longer adding unrelated features. We are trying to <b>break the candidate before promotion</b>. Current work:</p>
+        <ul style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0;padding-left:16px">
+          <li>long soak testing</li>
+          <li>seeds.txt flakiness root-cause investigation</li>
+          <li>independent watcher / observer</li>
+          <li>reproducible release builds &middot; final package verification</li>
+          <li>OLD/NEW compatibility &middot; adversarial P2P tests</li>
+        </ul>
+        <p style="font-size:11px;color:#64748b;line-height:1.6;margin:8px 0 0">Current V30000 remains untouched as fallback until final GO.</p>
+      </div>
+
+      <!-- 9. before #29,900 -->
+      <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-top:2px solid #a78bfa;border-radius:10px;padding:13px 15px">
+        <div style="color:#a78bfa;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:7px">TARGET BEFORE #29,900 <span style="color:#a78bfa">CANDIDATE &mdash; SUBJECT TO FINAL GATE</span></div>
+        <p style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0 0 6px">If all final gates pass: <b>V30000 + SEC2 + SACS V2 + native assets + D1/D2 peer autonomy</b>, adding:</p>
+        <ul style="font-size:12px;color:#94a3b8;line-height:1.7;margin:0;padding-left:16px">
+          <li>less dependence on sostcore.com</li>
+          <li>remembered verified peers &middot; autonomous peer discovery</li>
+          <li>independent operator seeds &middot; automatic reconnection</li>
+          <li>bounded hostile peer data</li>
+          <li>reproducible release build &middot; verifiable package &middot; known rollback path</li>
+        </ul>
+        <p style="font-size:11px;color:#a78bfa;line-height:1.6;margin:8px 0 0"><b>CANDIDATE &mdash; subject to final gate. Not promoted until owner GO.</b></p>
+      </div>
+    </div>
+
+    <!-- 10. after #30,000 -->
+    <div style="margin-top:12px;background:rgba(251,191,36,.05);border:1px solid #6b5316;border-left:3px solid #fbbf24;border-radius:10px;padding:13px 16px">
+      <div style="color:#fbbf24;font:800 11px/1 ui-monospace;letter-spacing:1px;margin-bottom:6px">AFTER #30,000 &mdash; CODE IS ONLY PART OF DECENTRALIZATION <span style="color:#fbbf24">EXTERNAL MATURITY</span></div>
+      <p style="font-size:12.5px;color:#e6d9b6;line-height:1.7;margin:0 0 6px">Beyond the software, decentralization then needs to grow in: independent third-party nodes, independent miners, geographic diversity, ASN/provider diversity, external seed operators, independent release mirrors, external security audit, independent code review, longer adversarial exposure and greater hashrate distribution.</p>
+      <p style="font-size:12.5px;color:#e6d9b6;line-height:1.7;margin:0"><b>These cannot be created by code alone. They require independent operators, time and external participation.</b></p>
+    </div>
+
+    <!-- 11. closing -->
+    <div style="margin-top:14px;padding:12px 16px;border-left:3px solid #22d3ee;background:rgba(34,211,238,.06);border-radius:0 8px 8px 0">
+      <p style="font-size:13.5px;color:#d7f0ff;line-height:1.65;margin:0 0 8px;font-style:italic">&ldquo;SOST&rsquo;s objective is not to claim decentralization. It is to remove dependencies one by one, test that they are really gone, and make the protocol increasingly capable of surviving without its original infrastructure or operator.&rdquo;</p>
+      <div style="font:800 11px/1.8 ui-monospace,monospace;letter-spacing:.5px;color:#9fe8ff">Engineering decentralization now.<br>Operational decentralization next.<br>Network maturity over time.</div>
+    </div>
+
+    <!-- disclaimers -->
+    <div style="margin-top:12px;font-size:11px;color:#64748b;line-height:1.7">
+      <b style="color:#fbbf24">Disclaimers.</b> D1/D2 peer autonomy is a <b>final candidate under test, not deployed to mainnet</b>. Lab results show bootstrap/recovery without sostcore.com <i>when independent peer sources are available</i>; this is not a statement that mainnet no longer depends on sostcore.com today. These engineering practices reduce risk but <b>do not make SOST equivalent in security maturity to Bitcoin or Ethereum</b>. SOST runs permissionless Proof-of-Work consensus; operational decentralization is an ongoing objective and SOST is <b>not &ldquo;fully decentralized&rdquo;</b>. No consensus, binaries, node, miner, hashes, activation height, SACS or SEC2 were changed by this update &mdash; news/documentation only.
+      <div style="margin-top:8px">Links: <a href="sost-decentralization.html" style="color:#22d3ee">Decentralization status</a> &middot; <a href="sost-upgrade.html" style="color:#22d3ee">V30000 operator guide</a> &middot; <a href="sost-explorer.html" style="color:#22d3ee">Explorer</a> &middot; <a href="protocol-status.json" style="color:#22d3ee">protocol-status.json</a></div>
+    </div>
+  </div>
+</div></section>
+<script>
+(function(){
+  function setH(txt){ ['wr-live-height','wr-live-height-2'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=txt; }); }
+  function fmt(h){ return '#'+Number(h).toLocaleString('en-US'); }
+  // Prefer the public RPC (same source the explorer uses); fall back to protocol-status.json; then a neutral note.
+  fetch('/rpc/public',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({method:'getblockcount',params:[],id:1})})
+    .then(function(r){return r.json();})
+    .then(function(j){ if(j&&typeof j.result==='number'){ setH(fmt(j.result)); } else { throw 0; } })
+    .catch(function(){ fetch('protocol-status.json').then(function(r){return r.json();}).then(function(j){ if(j&&j.current_height){ setH(fmt(j.current_height)); } else { setH('read live — see Explorer'); } }).catch(function(){ setH('read live — see Explorer'); }); });
+})();
+</script>
+
 <section class="section" id="eng-readiness-2026-10-04"><div class="container">
   <div style="border:1px solid var(--border-med,#2a2a2a);border-radius:14px;background:linear-gradient(180deg,rgba(74,222,128,.04),transparent 60%);padding:20px 22px">
     <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:var(--green-primary,#4ade80)">// ENGINEERING &middot; V30000 PRE-ACTIVATION READINESS &middot; 2026-10-04</div>
