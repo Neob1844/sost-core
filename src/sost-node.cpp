@@ -647,6 +647,7 @@ static bool g_verbose = false;  // --verbose: show CX-VERIFY and PARSE debug out
 // (e.g. SACS reorg experiments) so the local chain can advance without a seed
 // pulling the node into IBD/fast-sync against mainnet.
 static bool g_noseed = false;
+static std::string g_p2p_bind_ip = ""; // --p2p-bind: source/listen IP (lab multi-homing; default INADDR_ANY)
 // --sacs-recovery-mode : SACS Delivery B research prototype (DEV PROFILE ONLY).
 // When set on a devnet node, the reorg depth cap is NO LONGER a hard reject: a reorg
 // deeper than MAX_REORG_DEPTH raises a DEEP_REORG_ALERT (via the SACS monitor) and then
@@ -8896,7 +8897,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 }
                 p2p_send_adaptive(fd, crypto, "VACK", nullptr, 0);
                 // D1: ask capable peers for addresses ONCE (old peers never get GADR -> no penalty).
-                if (send_gadr) p2p_send_adaptive(fd, crypto, "GADR", nullptr, 0);
+                if (send_gadr) { p2p_send_adaptive(fd, crypto, "GADR", nullptr, 0); printf("[P2P] %s: sent GADR (peer supports ADDR)\n", addr.c_str()); }
                 printf("[P2P] %s: version OK, their height=%lld\n", addr.c_str(), (long long)their_h);
 
                 if (their_h > g_chain_height) {
@@ -9230,8 +9231,10 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                   if (now - p.last_addr_serve >= ADDR_SERVE_MIN_INTERVAL) { p.last_addr_serve = now; serve = true; }
                   break; } }
             if (serve) {
-                std::vector<uint8_t> pl = serialize_addrs(addrs_to_share(g_chain_path), 100);
+                std::vector<std::string> share = addrs_to_share(g_chain_path);
+                std::vector<uint8_t> pl = serialize_addrs(share, 100);
                 p2p_send_adaptive(fd, crypto, "ADDR", pl.data(), pl.size());
+                printf("[P2P] %s: served ADDR (%zu addrs)\n", addr.c_str(), share.size());
             }
         }
         else if (!strcmp(msg.cmd, "ADDR")) {
@@ -9240,7 +9243,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             bool malformed=false;
             std::vector<std::string> got = parse_addr_payload(msg.payload.data(), msg.payload.size(), &malformed);
             if (malformed) { if (add_misbehavior(fd, addr, 10, "malformed ADDR")) return false; }
-            if (!got.empty()) add_addr_candidates(got);
+            if (!got.empty()) { add_addr_candidates(got); printf("[P2P] %s: received ADDR, %zu candidate(s)\n", addr.c_str(), got.size()); }
         }
         else {
             if (add_misbehavior(fd, addr, 10, "unknown command")) return false;
@@ -9804,7 +9807,9 @@ static void rpc_server_thread(int port) {
 static void p2p_server_thread(int port) {
     int srv=socket(AF_INET,SOCK_STREAM,0); if(srv<0){perror("p2p socket");return;}
     int opt=1; setsockopt(srv,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
-    struct sockaddr_in addr{}; addr.sin_family=AF_INET; addr.sin_addr.s_addr=INADDR_ANY; addr.sin_port=htons(port);
+    struct sockaddr_in addr{}; addr.sin_family=AF_INET; addr.sin_port=htons(port);
+    if(!g_p2p_bind_ip.empty() && inet_pton(AF_INET, g_p2p_bind_ip.c_str(), &addr.sin_addr)==1){}
+    else addr.sin_addr.s_addr=INADDR_ANY;
     if(bind(srv,(struct sockaddr*)&addr,sizeof(addr))<0){perror("p2p bind");close(srv);return;}
     listen(srv,128);
     printf("[P2P] Listening on port %d\n",port);
@@ -9899,6 +9904,13 @@ static bool connect_peer(const std::string& host, int port) {
     }
     int fd=socket(res->ai_family,res->ai_socktype,res->ai_protocol);
     if(fd<0){freeaddrinfo(res);return false;}
+    if(!g_p2p_bind_ip.empty()){
+        struct sockaddr_in src{}; src.sin_family=AF_INET; src.sin_port=0;
+        if(inet_pton(AF_INET, g_p2p_bind_ip.c_str(), &src.sin_addr)==1){
+            int o=1; setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&o,sizeof(o));
+            if(bind(fd,(struct sockaddr*)&src,sizeof(src))<0){ /* best-effort source IP */ }
+        }
+    }
     if(connect(fd,res->ai_addr,res->ai_addrlen)<0){
         printf("[P2P] Cannot connect to %s:%d\n",host.c_str(),port);
         close(fd); freeaddrinfo(res); return false;
@@ -10057,6 +10069,7 @@ int main(int argc, char** argv) {
         else if(!strcmp(argv[i],"--genesis")&&i+1<argc) genesis_path=argv[++i];
         else if(!strcmp(argv[i],"--chain")&&i+1<argc) chain_path=argv[++i];
         else if(!strcmp(argv[i],"--connect")&&i+1<argc) connect_addrs.push_back(argv[++i]);
+        else if(!strcmp(argv[i],"--p2p-bind")&&i+1<argc) g_p2p_bind_ip=argv[++i];
         else if(!strcmp(argv[i],"--rpc-user")&&i+1<argc) g_rpc_user=argv[++i];
         else if(!strcmp(argv[i],"--rpc-pass")&&i+1<argc) g_rpc_pass=argv[++i];
         // --node-key <hex> keeps working for compatibility, but it puts a private
