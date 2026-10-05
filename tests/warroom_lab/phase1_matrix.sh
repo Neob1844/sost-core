@@ -42,11 +42,15 @@ gadr=$(( $(cnt "$DN1/node.log" "sent GADR")+$(cnt "$DN2/node.log" "sent GADR")+$
 echo "  GADR sent=$gadr  ADDR served=$served received=$recv"
 [[ $gadr -ge 1 && $served -ge 1 && $recv -ge 1 ]] && ok "ADDR gossip exchanged (GADR+served+received)" || bad "no ADDR gossip"
 MA=$("$OLD/sost-cli" --wallet "$LAB/mw.json" newwallet 2>&1 | grep -oE 'sost1[a-z0-9]+' | head -1)
-"$OLD/sost-miner" --profile dev --rpc 127.0.0.1:20402 --address "$MA" --wallet "$LAB/mw.json" --mining-key-label default --blocks 8 --threads 3 >"$LAB/miner.log" 2>&1 & MP=$!; PIDS+=($MP)
-for _ in $(seq 1 60); do [[ "$(height 20402)" -ge 8 ]] 2>/dev/null && break; sleep 2; done; kill $MP 2>/dev/null; sleep 8
+PROP_N=5   # functional target: at least N blocks must be mined+accepted (not a magic absolute height)
+BASE1=$(height 20402); BASE1=${BASE1:-0}
+"$OLD/sost-miner" --profile dev --genesis "$GEN" --rpc 127.0.0.1:20402 --address "$MA" --wallet "$LAB/mw.json" --mining-key-label default --blocks 20 --threads 3 --realtime >"$LAB/miner.log" 2>&1 & MP=$!; PIDS+=($MP)
+# EVENT-BASED: wait until the miner node has ACCEPTED >= PROP_N blocks past base (generous 240s safety timeout)
+for _ in $(seq 1 120); do c=$(height 20402); [[ -n "$c" && "$c" -ge $((BASE1+PROP_N)) ]] && break; sleep 2; done; kill $MP 2>/dev/null; sleep 8
 H1=$(height 20402); ref="$H1:$(tiphash 20402)"; sa=1
 for rp in 20404 20406 20408 20410; do r="$(height $rp):$(tiphash $rp)"; echo "  rpc$rp=$r"; [[ "$r" == "$ref" ]] || sa=0; done
-[[ $sa -eq 1 && "${H1:-0}" -ge 8 ]] && ok "block propagation: all 5 same height+tip" || bad "divergence ref=$ref"
+# PASS = all 5 converged to the SAME tip+height AND the miner actually produced >= PROP_N accepted blocks
+[[ $sa -eq 1 && "$((H1-BASE1))" -ge "$PROP_N" ]] && ok "block propagation: all 5 same tip+height, $((H1-BASE1)) blocks accepted (event-based)" || bad "divergence ref=$ref accepted=$((H1-BASE1))"
 echo "--- gossip functional: kill NEW1; NEW3 must survive via gossiped candidate ---"
 kill $PN1 2>/dev/null; sleep 40
 n3=$(npeers 20410); echo "  NEW3 peers after NEW1 death=$n3"; grep -E "Peer connected: 127.0.0.1:20401|reconnect" "$DN3/node.log" | tail -2 | sed 's/^/    /'
