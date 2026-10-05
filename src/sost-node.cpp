@@ -70,6 +70,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <sys/stat.h>   // chmod (D1 peer store)
 #include <fcntl.h>
 #include <cstdio>
 #include <cstdlib>
@@ -446,6 +447,72 @@ static std::shared_ptr<std::mutex> get_peer_write_mu(int fd) {
     }
     return nullptr;
 }
+
+// ===== D1 PEER AUTONOMY (non-consensus, no wire-protocol change) =====================
+// Default bootstrap seeds, file-scope so BOTH initial bootstrap and the maintenance
+// auto-reconnect can use them. (Was a local array inside main().)
+static const char* const DEFAULT_SEEDS[] = {
+    "seed-eu.sostcore.com",
+    "seed-apac.sostcore.com",
+    "seed-us.sostcore.com",
+    "seed.sostcore.com",   // backward-compatible alias (currently -> EU)
+};
+static const int    NUM_DEFAULT_SEEDS = (int)(sizeof(DEFAULT_SEEDS)/sizeof(DEFAULT_SEEDS[0]));
+static const size_t PEER_STORE_MAX    = 256;  // hard cap: bounded, no unbounded growth
+
+static std::string peer_store_path(const std::string& chain_path){
+    std::string dir = ".";
+    if(!chain_path.empty()){
+        auto pos = chain_path.find_last_of('/');
+        dir = (pos==std::string::npos) ? std::string(".") : chain_path.substr(0,pos);
+        if(dir.empty()) dir = "/";
+    }
+    return dir + "/peers.txt";
+}
+// Persist GOOD outbound peers (dialable, handshake-complete), deduped + capped,
+// atomic write (tmp+rename), mode 600. Lets a node redial known-good peers after a
+// restart or after losing all peers — WITHOUT any new wire message (full backward compat).
+static void save_peer_store(const std::string& chain_path){
+    std::vector<std::string> addrs;
+    {
+        std::lock_guard<std::mutex> lk(g_peers_mu);
+        for(const auto& p : g_peers){
+            if(p.outbound && p.version_acked && !p.addr.empty()){
+                if(std::find(addrs.begin(),addrs.end(),p.addr)==addrs.end())
+                    addrs.push_back(p.addr);
+                if(addrs.size()>=PEER_STORE_MAX) break;
+            }
+        }
+    }
+    if(addrs.empty()) return;   // never wipe a good store with an empty set
+    std::string path = peer_store_path(chain_path);
+    std::string tmp  = path + ".tmp";
+    FILE* fp = fopen(tmp.c_str(),"w");
+    if(!fp) return;
+    for(const auto& a : addrs) fprintf(fp,"%s\n",a.c_str());
+    fflush(fp); fclose(fp);
+    chmod(tmp.c_str(),0600);
+    rename(tmp.c_str(),path.c_str());
+}
+// Load stored peer addresses (bounded, validated). Returns "host:port" strings.
+static std::vector<std::string> load_peer_store(const std::string& chain_path){
+    std::vector<std::string> out;
+    std::string path = peer_store_path(chain_path);
+    FILE* fp = fopen(path.c_str(),"r");
+    if(!fp) return out;
+    char line[256];
+    while(fgets(line,sizeof(line),fp) && out.size()<PEER_STORE_MAX){
+        std::string ln(line);
+        while(!ln.empty() && (ln.back()=='\n'||ln.back()=='\r'||ln.back()==' ')) ln.pop_back();
+        if(ln.empty() || ln.find(':')==std::string::npos) continue;  // need host:port
+        bool ok=true; for(char c: ln){ if((unsigned char)c<32){ ok=false; break; } }
+        if(ok) out.push_back(ln);
+    }
+    fclose(fp);
+    return out;
+}
+// =====================================================================================
+
 
 // Checkpoints: known block_id at specific heights (hex → height)
 // Prevents deep reorgs past a checkpoint and validates chain integrity.
@@ -10235,28 +10302,35 @@ int main(int argc, char** argv) {
                "Using only %zu explicit --connect peer(s).\n", connect_addrs.size());
     }
     else if(connect_addrs.empty()){
-        static const char* DEFAULT_SEEDS[] = {
-            "seed-eu.sostcore.com",
-            "seed-apac.sostcore.com",
-            "seed-us.sostcore.com",
-            "seed.sostcore.com",   // backward-compatible alias (currently -> EU)
-        };
-        const int NSEEDS = (int)(sizeof(DEFAULT_SEEDS)/sizeof(DEFAULT_SEEDS[0]));
-        const int WANT = 3;        // connect to up to 3 default seeds
-        printf("[P2P] No --connect specified; trying %d default seeds (want up to %d)...\n", NSEEDS, WANT);
+        const int WANT = 3;        // connect to up to 3 peers
         int connected = 0;
-        for(int i=0;i<NSEEDS && connected<WANT;++i){
-            if(connect_peer(DEFAULT_SEEDS[i], P2P_PORT_DEFAULT)){
-                printf("[P2P]   seed connected: %s\n", DEFAULT_SEEDS[i]);
-                ++connected;
-            } else {
-                printf("[P2P]   seed unavailable: %s\n", DEFAULT_SEEDS[i]);
+        // D1: redial known-good peers from the persistent store FIRST (survives restart
+        // and reduces dependence on the seed DNS). No wire change — we just dial them.
+        std::vector<std::string> stored = load_peer_store(chain_path);
+        if(!stored.empty()){
+            printf("[P2P] peer store: trying up to %d of %zu stored peer(s)...\n", WANT, stored.size());
+            for(size_t i=0;i<stored.size() && connected<WANT;++i){
+                auto colon=stored[i].rfind(':');
+                std::string host = (colon==std::string::npos)? stored[i] : stored[i].substr(0,colon);
+                int port = (colon==std::string::npos)? P2P_PORT_DEFAULT : atoi(stored[i].substr(colon+1).c_str());
+                if(connect_peer(host, port)){ printf("[P2P]   stored peer connected: %s\n", stored[i].c_str()); ++connected; }
+            }
+        }
+        // Fill remaining slots from the default seeds.
+        if(connected<WANT){
+            printf("[P2P] trying %d default seeds (want up to %d, have %d)...\n", NUM_DEFAULT_SEEDS, WANT, connected);
+            for(int i=0;i<NUM_DEFAULT_SEEDS && connected<WANT;++i){
+                if(connect_peer(DEFAULT_SEEDS[i], P2P_PORT_DEFAULT)){
+                    printf("[P2P]   seed connected: %s\n", DEFAULT_SEEDS[i]); ++connected;
+                } else {
+                    printf("[P2P]   seed unavailable: %s\n", DEFAULT_SEEDS[i]);
+                }
             }
         }
         if(connected==0)
-            printf("[P2P] WARNING: no default seed reachable — pass --connect <host:port> to bootstrap.\n");
+            printf("[P2P] WARNING: no stored peer or default seed reachable — pass --connect <host:port> to bootstrap.\n");
         else
-            printf("[P2P] bootstrapped from %d default seed(s).\n", connected);
+            printf("[P2P] bootstrapped from %d peer(s) (store+seeds).\n", connected);
     }
     for(const auto& a:connect_addrs){
         auto colon=a.rfind(':');
@@ -10273,31 +10347,45 @@ int main(int argc, char** argv) {
     try {
         while(g_running){
             std::this_thread::sleep_for(std::chrono::seconds(30));
+            bool need_reconnect=false;
             {
                 std::lock_guard<std::mutex> lk(g_peers_mu);
                 for(auto& p:g_peers){
                     if(p.their_height >= 0 && p.their_height < (int64_t)g_blocks.size() - 50)
                         continue;
-                    // Serialize with the peer's own writer. This PING is sent
-                    // from the MAIN thread while handle_peer may be midway
-                    // through a block frame; without the mutex the two writes
-                    // interleave on the same socket and corrupt both. Every
-                    // other writer already takes it — this one was the exception.
+                    // Serialize with the peer's own writer (see note below).
                     if(p.version_acked){
                         std::lock_guard<std::mutex> wlk(*p.write_mu);
                         p2p_send(p.fd,"PING",nullptr,0);
                     }
                 }
-                // Auto-reconnect: if no peers and we have connect addresses, reconnect
-                if(g_peers.empty() && !connect_addrs.empty()){
-                    printf("[P2P] No peers connected, attempting reconnect...\n");
-                    for(const auto& a:connect_addrs){
-                        auto colon=a.rfind(':');
-                        if(colon!=std::string::npos){
-                            connect_peer(a.substr(0,colon), atoi(a.substr(colon+1).c_str()));
-                        } else {
-                            connect_peer(a, P2P_PORT_DEFAULT);
-                        }
+                need_reconnect = g_peers.empty();
+            }
+            // D1: persist good outbound peers every cycle (own lock inside).
+            save_peer_store(chain_path);
+            // D1: if we have NO peers, redial from (a) explicit --connect, (b) the peer
+            // store, (c) the default seeds (unless --noseed). Done OUTSIDE the peers lock
+            // so the blocking connect() never stalls other peer writers. This closes the
+            // old gap where a seed-only node that lost all peers never redialed.
+            if(need_reconnect){
+                int want=3, got=0;
+                printf("[P2P] No peers connected, attempting reconnect (connect/store/seeds)...\n");
+                for(const auto& a:connect_addrs){
+                    if(got>=want) break;
+                    auto colon=a.rfind(':');
+                    if(colon!=std::string::npos){ if(connect_peer(a.substr(0,colon), atoi(a.substr(colon+1).c_str()))) ++got; }
+                    else { if(connect_peer(a, P2P_PORT_DEFAULT)) ++got; }
+                }
+                std::vector<std::string> stored = load_peer_store(chain_path);
+                for(size_t i=0;i<stored.size() && got<want;++i){
+                    auto colon=stored[i].rfind(':');
+                    std::string host=(colon==std::string::npos)?stored[i]:stored[i].substr(0,colon);
+                    int port=(colon==std::string::npos)?P2P_PORT_DEFAULT:atoi(stored[i].substr(colon+1).c_str());
+                    if(connect_peer(host,port)) ++got;
+                }
+                if(!g_noseed){
+                    for(int i=0;i<NUM_DEFAULT_SEEDS && got<want;++i){
+                        if(connect_peer(DEFAULT_SEEDS[i], P2P_PORT_DEFAULT)) ++got;
                     }
                 }
             }
