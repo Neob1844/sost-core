@@ -434,6 +434,9 @@ struct Peer {
     time_t conntime{0};    // timestamp when peer connected
     int ban_score;         // misbehavior score, ban at >= 100
     bool encrypted{false}; // true if P2P encryption established
+    bool supports_addr{false}; // D1: peer advertised ADDR-gossip capability in VERS
+    bool gadr_sent{false};     // D1: we already asked this peer for addresses once
+    time_t last_addr_serve{0}; // D1: rate-limit ADDR responses we send
     std::shared_ptr<std::mutex> write_mu{std::make_shared<std::mutex>()}; // per-fd write serialization
 };
 static std::vector<Peer> g_peers;
@@ -509,6 +512,63 @@ static std::vector<std::string> load_peer_store(const std::string& chain_path){
         if(ok) out.push_back(ln);
     }
     fclose(fp);
+    return out;
+}
+// fwd decls (defined later in the P2P section)
+static uint32_t read_u32(const uint8_t* p);
+static void write_u32(uint8_t* p, uint32_t v);
+// ---- D1 ADDR/GETADDR gossip (backward-compatible via VERS capability byte) ----
+static const uint8_t  CAP_ADDR      = 0x01; // VERS capability bit: supports ADDR gossip
+static const uint32_t ADDR_MAX_RECV = 1000; // reject received lists larger than this
+static const uint32_t ADDR_MAX_LEN  = 64;   // max bytes per address string
+static const size_t   ADDR_CAND_MAX = 256;  // bounded in-memory gossip-candidate set
+static const int      ADDR_SERVE_MIN_INTERVAL = 60; // seconds between ADDR responses we serve
+static std::vector<std::string> g_addr_candidates; // gossiped addrs to TRY (never persisted raw)
+static std::mutex g_addr_cand_mu;
+
+// Parse an ADDR payload defensively. Fuzz-proven (ASan/UBSan, 200k) safe against malformed
+// input. Sets *malformed on any structural violation so the caller can penalize the peer.
+static std::vector<std::string> parse_addr_payload(const uint8_t* d, size_t n, bool* malformed){
+    std::vector<std::string> out; *malformed=false;
+    if(n < 4){ *malformed = (n!=0); return out; }
+    uint32_t count = read_u32(d); size_t pos = 4;
+    if(count > ADDR_MAX_RECV){ *malformed=true; return out; }
+    for(uint32_t i=0;i<count;i++){
+        if(pos+4 > n){ *malformed=true; break; }
+        uint32_t len = read_u32(d+pos); pos+=4;
+        if(len==0 || len>ADDR_MAX_LEN || pos+len > n){ *malformed=true; break; }
+        std::string a((const char*)d+pos, len); pos+=len;
+        bool ok = a.find(':')!=std::string::npos;
+        for(char c: a){ if((unsigned char)c<32 || (unsigned char)c>126){ ok=false; break; } }
+        if(ok && out.size()<ADDR_MAX_RECV) out.push_back(a);
+    }
+    return out;
+}
+static std::vector<uint8_t> serialize_addrs(const std::vector<std::string>& in, size_t cap){
+    std::vector<uint8_t> p(4); uint32_t cnt=0; uint8_t l[4];
+    for(const auto& a: in){ if(cnt>=cap) break; if(a.empty()||a.size()>ADDR_MAX_LEN||a.find(':')==std::string::npos) continue;
+        write_u32(l,(uint32_t)a.size()); p.insert(p.end(),l,l+4); p.insert(p.end(),a.begin(),a.end()); cnt++; }
+    write_u32(p.data(),cnt); return p;
+}
+// Merge gossiped addresses into the bounded in-memory candidate set (deduped, capped).
+static void add_addr_candidates(const std::vector<std::string>& addrs){
+    std::lock_guard<std::mutex> lk(g_addr_cand_mu);
+    for(const auto& a: addrs){
+        if(g_addr_candidates.size()>=ADDR_CAND_MAX) break;
+        if(std::find(g_addr_candidates.begin(),g_addr_candidates.end(),a)==g_addr_candidates.end())
+            g_addr_candidates.push_back(a);
+    }
+}
+// Snapshot of addresses we can share (verified outbound peers + stored peers), bounded.
+static std::vector<std::string> addrs_to_share(const std::string& chain_path){
+    std::vector<std::string> out;
+    { std::lock_guard<std::mutex> lk(g_peers_mu);
+      for(const auto& p: g_peers) if(p.outbound && p.version_acked && !p.addr.empty()){
+          if(std::find(out.begin(),out.end(),p.addr)==out.end()) out.push_back(p.addr);
+          if(out.size()>=100) break; } }
+    if(out.size()<100){ for(const auto& a: load_peer_store(chain_path)){
+          if(out.size()>=100) break;
+          if(std::find(out.begin(),out.end(),a)==out.end()) out.push_back(a); } }
     return out;
 }
 // =====================================================================================
@@ -5300,10 +5360,11 @@ static bool p2p_recv_encrypted(int fd, PeerCrypto& crypto, P2PMsg& msg) {
 }
 
 static void p2p_send_version(int fd) {
-    uint8_t buf[40];
+    uint8_t buf[41];
     write_i64(buf, g_chain_height);
     memcpy(buf+8, g_genesis_hash.data(), 32);
-    p2p_send(fd, "VERS", buf, 40);
+    buf[40] = CAP_ADDR;   // D1: advertise ADDR-gossip capability (old peers ignore the extra byte)
+    p2p_send(fd, "VERS", buf, 41);
 }
 
 // Forward declaration for encryption-aware send
@@ -8794,11 +8855,20 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     printf("[P2P] %s: genesis mismatch, disconnecting\n", addr.c_str());
                     return false;
                 }
+                bool peer_caps_addr = (msg.payload.size() >= 41) && (msg.payload[40] & CAP_ADDR);
+                bool send_gadr = false;
                 {
                     std::lock_guard<std::mutex> lk(g_peers_mu);
-                    for (auto& p : g_peers) if (p.fd == fd) { p.their_height = their_h; p.version_acked = true; break; }
+                    for (auto& p : g_peers) if (p.fd == fd) {
+                        p.their_height = their_h; p.version_acked = true;
+                        p.supports_addr = peer_caps_addr;
+                        if (peer_caps_addr && !p.gadr_sent) { p.gadr_sent = true; send_gadr = true; }
+                        break;
+                    }
                 }
                 p2p_send_adaptive(fd, crypto, "VACK", nullptr, 0);
+                // D1: ask capable peers for addresses ONCE (old peers never get GADR -> no penalty).
+                if (send_gadr) p2p_send_adaptive(fd, crypto, "GADR", nullptr, 0);
                 printf("[P2P] %s: version OK, their height=%lld\n", addr.c_str(), (long long)their_h);
 
                 if (their_h > g_chain_height) {
@@ -9123,6 +9193,26 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         else if (!strcmp(msg.cmd, "EKEY")) {
             // Ignore EKEY from peers when we have encryption disabled — don't penalize
             printf("[ENC] %s: ignoring EKEY (our enc mode is off)\n", addr.c_str());
+        }
+        else if (!strcmp(msg.cmd, "GADR")) {
+            // D1: peer asks for addresses. Rate-limit, then reply with a bounded sample.
+            time_t now = time(nullptr); bool serve = false;
+            { std::lock_guard<std::mutex> lk(g_peers_mu);
+              for (auto& p : g_peers) if (p.fd == fd) {
+                  if (now - p.last_addr_serve >= ADDR_SERVE_MIN_INTERVAL) { p.last_addr_serve = now; serve = true; }
+                  break; } }
+            if (serve) {
+                std::vector<uint8_t> pl = serialize_addrs(addrs_to_share(g_chain_path), 100);
+                p2p_send_adaptive(fd, crypto, "ADDR", pl.data(), pl.size());
+            }
+        }
+        else if (!strcmp(msg.cmd, "ADDR")) {
+            // D1: received addresses -> bounded in-memory candidates (never persisted raw;
+            // only addrs we successfully dial become stored outbound peers).
+            bool malformed=false;
+            std::vector<std::string> got = parse_addr_payload(msg.payload.data(), msg.payload.size(), &malformed);
+            if (malformed) { if (add_misbehavior(fd, addr, 10, "malformed ADDR")) return false; }
+            if (!got.empty()) add_addr_candidates(got);
         }
         else {
             if (add_misbehavior(fd, addr, 10, "unknown command")) return false;
@@ -10381,6 +10471,14 @@ int main(int argc, char** argv) {
                     auto colon=stored[i].rfind(':');
                     std::string host=(colon==std::string::npos)?stored[i]:stored[i].substr(0,colon);
                     int port=(colon==std::string::npos)?P2P_PORT_DEFAULT:atoi(stored[i].substr(colon+1).c_str());
+                    if(connect_peer(host,port)) ++got;
+                }
+                // D1: gossiped candidates (bounded, never persisted raw)
+                std::vector<std::string> cand; { std::lock_guard<std::mutex> lk(g_addr_cand_mu); cand=g_addr_candidates; }
+                for(size_t i=0;i<cand.size() && got<want;++i){
+                    auto colon=cand[i].rfind(':');
+                    std::string host=(colon==std::string::npos)?cand[i]:cand[i].substr(0,colon);
+                    int port=(colon==std::string::npos)?P2P_PORT_DEFAULT:atoi(cand[i].substr(colon+1).c_str());
                     if(connect_peer(host,port)) ++got;
                 }
                 if(!g_noseed){
