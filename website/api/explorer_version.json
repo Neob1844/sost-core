@@ -1,4 +1,4 @@
 {
-  "v": "2026-10-05-v497-navcounter-sibling",
-  "note": "Site-visit counter now sits in the nav as a sibling of .nav-links so js/nav-toggle.js (which rebuilds .nav-links) no longer wipes it; collapsed button, right-aligned. Frontend only; no consensus."
+  "v": "2026-10-05-v498-navcounter-hide",
+  "note": "HIDE NAV now also hides the #vcx-sost site-visit counter: added it to the nav-collapsed display:none rule in index, explorer and js/nav-toggle.js (v483). Frontend only; no consensus."
 }

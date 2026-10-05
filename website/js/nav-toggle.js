@@ -86,6 +86,7 @@
       "body.nav-collapsed nav { padding: 4px 0 !important; min-height: 0 !important; height: auto !important; }",
       "body.nav-collapsed nav .nav-logo,",
       "body.nav-collapsed nav .nav-links,",
+      "body.nav-collapsed nav #vcx-sost,",
       "body.nav-collapsed nav a[href=\"casert-spec.html\"],",
       "body.nav-collapsed nav a[href=\"sost-dex.html\"],",
       "body.nav-collapsed nav a[href=\"sost-popc.html\"],",
