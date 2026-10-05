@@ -11,18 +11,18 @@
   binary/P2P revision of the v30000 line, NOT a consensus or schedule change.
 
 ## Naming proposal
-Primary: **`v30000.1`** — reads as "the v30000 consensus line, binary revision 1".
+Primary: **V30000 (one release; the improved candidate = V30000 FINAL CANDIDATE)** — reads as "the v30000 consensus line, binary revision 1".
 It keeps #30,000 unambiguous, matches the dotted-tag convention already in use
 (v16.2.3), and signals to operators that consensus is unchanged from v30000 while the
 node binary gained the D1/D2 peer-autonomy layer. The deployed `v30000` (`c9e0d629`,
-node 78fefb67) stays valid and fork-compatible; `v30000.1` is a drop-in node upgrade.
+node 78fefb67) stays valid and fork-compatible; `V30000 FINAL CANDIDATE` is a drop-in node upgrade.
 
 Alternative: `v30000-final`. Rejected as primary because the deployed v30000 is already
 live and "final" would wrongly imply it was provisional.
 
 ## Composition rule (enforced)
 - miner and cli are byte-identical to v30000 in a controlled build (Gate 1) — they are
-  republished in v30000.1 ONLY so the release is one coherent set with one SHA256SUMS;
+  republished in V30000 FINAL CANDIDATE ONLY so the release is one coherent set with one SHA256SUMS;
   their code did not change.
 - node is the only binary with a code delta (sost-node.cpp +310/-36, P2P only).
 - Zero consensus files changed vs v30000 (Gate 5).
