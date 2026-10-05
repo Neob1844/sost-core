@@ -5308,7 +5308,7 @@ static bool write_exact(int fd, const void* buf, size_t len) {
     size_t sent=0;
     const uint8_t* p=static_cast<const uint8_t*>(buf);
     while(sent<len){
-        ssize_t n=write(fd,p+sent,len-sent);
+        ssize_t n=send(fd,p+sent,len-sent,MSG_NOSIGNAL); // MSG_NOSIGNAL: never raise SIGPIPE on a closed peer
         if(n<0){
             if(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR){
                 // Socket buffer full — wait up to 5s for space.
@@ -10067,6 +10067,10 @@ int main(int argc, char** argv) {
     signal(SIGSEGV, crash_handler);
     signal(SIGABRT, crash_handler);
     signal(SIGFPE,  crash_handler);
+    // SIGPIPE DoS fix: a peer that abruptly closes its socket while we are writing to it
+    // must NOT terminate the node. Ignore SIGPIPE so write()/send() return EPIPE instead,
+    // which write_exact() turns into a clean peer drop. (Belt; MSG_NOSIGNAL below is suspenders.)
+    signal(SIGPIPE, SIG_IGN);
     setbuf(stdout, NULL); // unbuffered for crash visibility
 
     // Telemetry boot timestamp for the getminerstats RPC.
