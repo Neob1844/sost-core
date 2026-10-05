@@ -1,4 +1,4 @@
 {
-  "v": "2026-10-05-v494-reward-research",
-  "note": "Reward-evolution research notice (80/15/5 @ #40k/#50k; 5% accumulates in the existing DTD Jackpot pool, not a direct node payment) + TOTAL SOST PAID jackpot tile. Frontend/docs only; no consensus."
+  "v": "2026-10-05-v495-banner-trim",
+  "note": "Reward-research banner: removed the '80/15/5 supersedes 75/20/5' line from the explorer/index notice. Frontend/docs only; no consensus."
 }
