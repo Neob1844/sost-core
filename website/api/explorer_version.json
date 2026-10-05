@@ -1,4 +1,4 @@
 {
-  "v": "2026-10-05-v495-banner-trim",
-  "note": "Reward-research banner: removed the '80/15/5 supersedes 75/20/5' line from the explorer/index notice. Frontend/docs only; no consensus."
+  "v": "2026-10-05-v496-navcounter",
+  "note": "Site-visit counter moved into the top nav on index + explorer (last item, collapsed by default); explorer label unified to 'site visits'; same shared counter. Frontend only; no consensus."
 }
