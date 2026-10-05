@@ -27,6 +27,7 @@
 #include "sost/wallet.h"
 #include "sost/address.h"
 #include "sost/params.h"
+#include "sost/p2p_addr_filter.h"
 #include "sost/transaction.h"
 #include "sost/types.h"
 #include "sost/utxo_set.h"
@@ -520,8 +521,14 @@ static void save_peer_store(const std::string& chain_path){
     std::string tmp  = path + ".tmp";
     FILE* fp = fopen(tmp.c_str(),"w");
     if(!fp) return;
-    for(const auto& a : addrs) fprintf(fp,"%s\n",a.c_str());
-    fflush(fp); fclose(fp);
+    bool werr=false;
+    for(const auto& a : addrs) if(fprintf(fp,"%s\n",a.c_str())<0){ werr=true; break; }
+    // Durability: flush+fsync and verify no write error BEFORE the atomic rename, so a
+    // full-disk / IO failure mid-write can never rename a truncated tmp over a good store.
+    if(fflush(fp)!=0) werr=true;
+    if(!werr && fsync(fileno(fp))!=0) werr=true;
+    fclose(fp);
+    if(werr){ unlink(tmp.c_str()); return; }   // keep the previous good store intact
     chmod(tmp.c_str(),0600);
     rename(tmp.c_str(),path.c_str());
 }
@@ -578,13 +585,29 @@ static std::vector<uint8_t> serialize_addrs(const std::vector<std::string>& in, 
         write_u32(l,(uint32_t)a.size()); p.insert(p.end(),l,l+4); p.insert(p.end(),a.begin(),a.end()); cnt++; }
     write_u32(p.data(),cnt); return p;
 }
-// Merge gossiped addresses into the bounded in-memory candidate set (deduped, capped).
+// Gossip safety: is `host` a legitimate dial target for a GOSSIPED (untrusted) address?
+// Operator-trusted sources (--connect, seeds.txt, DEFAULT_SEEDS, the peer store) bypass this
+// entirely — only addresses a peer told us about are screened. On mainnet/testnet we require a
+// public IPv4 literal: this closes (a) blind SSRF / internal-port probing (no 127/10/172.16/
+// 192.168/169.254-metadata/CGNAT/0/multicast targets) and (b) DNS abuse (no getaddrinfo on an
+// attacker-supplied hostname — gossip must be an IP, not a name). Devnet bypasses so the
+// loopback lab mesh keeps working.
+static bool gossip_target_ok(const std::string& host){
+    // Pure policy lives in include/sost/p2p_addr_filter.h (unit-tested). Devnet bypasses.
+    return sost::p2p_gossip_target_ok(host, ACTIVE_PROFILE == sost::Profile::DEV);
+}
+// Merge gossiped addresses into the bounded in-memory candidate set. Screened at the door
+// (gossip_target_ok), deduped, and FIFO-evicting at the cap so an early junk flood can NEVER
+// permanently lock out later legitimate gossip (bounded, no unbounded growth).
 static void add_addr_candidates(const std::vector<std::string>& addrs){
     std::lock_guard<std::mutex> lk(g_addr_cand_mu);
     for(const auto& a: addrs){
-        if(g_addr_candidates.size()>=ADDR_CAND_MAX) break;
-        if(std::find(g_addr_candidates.begin(),g_addr_candidates.end(),a)==g_addr_candidates.end())
-            g_addr_candidates.push_back(a);
+        std::string host=a; auto c=a.rfind(':'); if(c!=std::string::npos) host=a.substr(0,c);
+        if(!gossip_target_ok(host)) continue;                    // SSRF/DNS screen (mainnet/testnet)
+        if(std::find(g_addr_candidates.begin(),g_addr_candidates.end(),a)!=g_addr_candidates.end()) continue;
+        if(g_addr_candidates.size()>=ADDR_CAND_MAX)
+            g_addr_candidates.erase(g_addr_candidates.begin()); // FIFO: drop oldest, never block new
+        g_addr_candidates.push_back(a);
     }
 }
 // Snapshot of addresses we can share (verified outbound peers + stored peers), bounded.
@@ -10529,6 +10552,7 @@ int main(int argc, char** argv) {
                     auto colon=cand[i].rfind(':');
                     std::string host=(colon==std::string::npos)?cand[i]:cand[i].substr(0,colon);
                     int port=(colon==std::string::npos)?P2P_PORT_DEFAULT:atoi(cand[i].substr(colon+1).c_str());
+                    if(!gossip_target_ok(host)) continue;   // defense-in-depth SSRF/DNS guard on gossiped targets
                     if(connect_peer(host,port)) ++got;
                 }
                 if(!g_noseed){

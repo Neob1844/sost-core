@@ -1074,6 +1074,16 @@ add_executable(test-v13-gold-vault-slice1 tests/test_v13_gold_vault_slice1.cpp)
 target_link_libraries(test-v13-gold-vault-slice1 PRIVATE sost-core)
 add_test(NAME v13-gold-vault-slice1 COMMAND test-v13-gold-vault-slice1)
 
+# D1/D2 peer-autonomy tests (standalone — no consensus link). Run under ctest so the
+# release battery covers peer store, ADDR parsing fuzz, and the gossip SSRF/DNS filter.
+add_executable(d1-peer-store tests/d1_peer_store_test.cpp)
+add_test(NAME d1-peer-store COMMAND d1-peer-store)
+add_executable(d1-addr-fuzz tests/d1_addr_gossip_fuzz.cpp)
+add_test(NAME d1-addr-fuzz COMMAND d1-addr-fuzz)
+add_executable(d1-gossip-filter tests/d1_gossip_filter_test.cpp)
+target_include_directories(d1-gossip-filter PRIVATE include)
+add_test(NAME d1-gossip-filter COMMAND d1-gossip-filter)
+
 add_executable(sost-genesis src/genesis.cpp)
 target_link_libraries(sost-genesis PRIVATE sost-core)
 
