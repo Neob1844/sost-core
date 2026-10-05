@@ -23,8 +23,13 @@
 - **Anti-poisoning:** received ADDR addresses go into a BOUNDED in-memory candidate set (≤256), tried by the redial loop; they are **never persisted raw** — only addresses we successfully dial become stored outbound peers. Malformed ADDR → +10 misbehavior.
 - **Parser is fuzz-proven:** `tests/d1_addr_gossip_fuzz.cpp` — 8/8 unit + **200k random/truncated inputs under ASan+UBSan, zero crashes/OOB/UB**; bound invariants hold (count ≤1000, len ≤64, never reads past buffer).
 
+## D2 — operator-supplied independent seeds (config file) — IMPLEMENTED
+- The node reads `<datadir>/seeds.txt` (one `host` or `host:port` per line, `#` comments, max 64) and tries those bootstrap seeds BEFORE the built-in sostcore.com defaults, at startup AND in the maintenance redial.
+- **Bootstrap-independence without a new binary:** the community can add INDEPENDENT seed operators/domains just by editing a text file — no recompile. Combined with the peer store, a node no longer depends solely on the sostcore.com seed DNS. See `docs/seeds.txt.example`.
+- Validated (bounded 64, control-char rejected, port range checked). Non-consensus, no wire change.
+
 ## NOT yet done (next increments on this branch, still POST-#30,000, require soak + adversarial)
-- **D2** multi-domain seeds + fallback IP list (DEFAULT_SEEDS change).
+- Multiple INDEPENDENT default seed domains/registrars baked in (needs the owner to actually run seeds on other domains) + an optional compiled fallback-IP list.
 - Multi-node soak + adversarial lab + canary before any deploy.
 
 ## Release gate before deploying this (post-#30,000)

@@ -463,6 +463,34 @@ static const char* const DEFAULT_SEEDS[] = {
 static const int    NUM_DEFAULT_SEEDS = (int)(sizeof(DEFAULT_SEEDS)/sizeof(DEFAULT_SEEDS[0]));
 static const size_t PEER_STORE_MAX    = 256;  // hard cap: bounded, no unbounded growth
 
+// D2: operator-supplied extra bootstrap seeds, one "host" or "host:port" per line, in
+// <datadir>/seeds.txt. Lets the community add INDEPENDENT seeds without a new binary —
+// a bootstrap-independence lever (does not change consensus or the wire protocol).
+static std::string config_dir_of(const std::string& chain_path){
+    std::string dir="."; if(!chain_path.empty()){ auto p=chain_path.find_last_of('/');
+        dir=(p==std::string::npos)?std::string("."):chain_path.substr(0,p); if(dir.empty())dir="/"; }
+    return dir;
+}
+static std::vector<std::pair<std::string,int> > load_extra_seeds(const std::string& chain_path){
+    std::vector<std::pair<std::string,int> > out;
+    std::string path = config_dir_of(chain_path) + "/seeds.txt";
+    FILE* fp=fopen(path.c_str(),"r"); if(!fp) return out;
+    char line[256];
+    while(fgets(line,sizeof(line),fp) && out.size()<64){
+        std::string ln(line);
+        while(!ln.empty()&&(ln.back()=='\n'||ln.back()=='\r'||ln.back()==' '||ln.back()=='\t'))ln.pop_back();
+        if(ln.empty()||ln[0]=='#') continue;
+        bool ok=true; for(char c:ln) if((unsigned char)c<32){ok=false;break;} if(!ok) continue;
+        auto colon=ln.rfind(':');
+        if(colon!=std::string::npos && colon>0 && colon<ln.size()-1){
+            int port=atoi(ln.substr(colon+1).c_str());
+            if(port>0 && port<65536) out.push_back({ln.substr(0,colon),port});
+        } else {
+            out.push_back({ln, 19333});
+        }
+    }
+    fclose(fp); return out;
+}
 static std::string peer_store_path(const std::string& chain_path){
     std::string dir = ".";
     if(!chain_path.empty()){
@@ -10406,6 +10434,15 @@ int main(int argc, char** argv) {
                 if(connect_peer(host, port)){ printf("[P2P]   stored peer connected: %s\n", stored[i].c_str()); ++connected; }
             }
         }
+        // D2: operator-supplied independent seeds (seeds.txt) — tried before defaults.
+        if(connected<WANT){
+            auto extra = load_extra_seeds(chain_path);
+            if(!extra.empty()){
+                printf("[P2P] trying %zu operator seed(s) from seeds.txt...\n", extra.size());
+                for(size_t i=0;i<extra.size() && connected<WANT;++i)
+                    if(connect_peer(extra[i].first, extra[i].second)){ printf("[P2P]   seeds.txt connected: %s:%d\n", extra[i].first.c_str(), extra[i].second); ++connected; }
+            }
+        }
         // Fill remaining slots from the default seeds.
         if(connected<WANT){
             printf("[P2P] trying %d default seeds (want up to %d, have %d)...\n", NUM_DEFAULT_SEEDS, WANT, connected);
@@ -10482,6 +10519,8 @@ int main(int argc, char** argv) {
                     if(connect_peer(host,port)) ++got;
                 }
                 if(!g_noseed){
+                    for(const auto& es: load_extra_seeds(chain_path)){ if(got>=want) break;
+                        if(connect_peer(es.first, es.second)) ++got; }
                     for(int i=0;i<NUM_DEFAULT_SEEDS && got<want;++i){
                         if(connect_peer(DEFAULT_SEEDS[i], P2P_PORT_DEFAULT)) ++got;
                     }

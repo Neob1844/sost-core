@@ -1,0 +1,10 @@
+# SOST operator seeds — copy to <datadir>/seeds.txt (next to chain.json).
+# One bootstrap seed per line: "host" (default port 19333) or "host:port".
+# Lines starting with # are ignored. Max 64 entries.
+# Lets you add INDEPENDENT bootstrap sources (other operators / domains) WITHOUT
+# recompiling the node. Tried before the built-in sostcore.com seeds.
+#
+# examples:
+# seed.someoneelse.example
+# 203.0.113.42:19333
+# node.community-sost.org
