@@ -9613,6 +9613,15 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var _etaD=_failed?'\u2014':(_loaded?('~'+eta(rem)):_LD);
     var _statD=_failed?'DATA UNAVAILABLE \u00B7 RETRYING':(_loaded?status:_LD);
     var _paidD=_failed?'\u2014':(_loaded?fc(paid):_LD);
+    // TOTAL SOST paid via DTD jackpot: on-chain sum of every paid jackpot amount (cached; computed once).
+    var _totalD=_failed?'\u2014':(_loaded?(window._sjpdTotalPaid!=null?(fc(Math.round(window._sjpdTotalPaid))+' SOST'):'computing\u2026'):_LD);
+    if(_loaded && window._sjpdTotalPaid==null && !window._sjpdTotalBusy && window.SJP && typeof window.SJP.reconstruct==='function'){
+      window._sjpdTotalBusy=true;
+      (function(){ var sum=0, seen=0, chain=Promise.resolve();
+        for(var jh=JP_FIRST; jh<=tip; jh+=CAD){ (function(H){ chain=chain.then(function(){ return window.SJP.reconstruct(H).then(function(rec){ if(rec&&rec.winner&&rec.amount!=null){ sum+=(typeof rec.amount==='number'?rec.amount:parseFloat(rec.amount||0)); seen++; } }).catch(function(){}); }); })(jh); }
+        chain.then(function(){ window._sjpdTotalPaid=sum; window._sjpdTotalBusy=false; var el=document.getElementById('sjpd-total-paid'); if(el) el.textContent=fc(Math.round(sum))+' SOST'; });
+      })();
+    }
     var _eligD=_failed?'\u2014':(state.eligible!=null?esc(elig):_LD);
     var _winFull=(state.jpWinner||state.winner||'');
     var _winD=_failed?'\u2014':(_loaded?((_winFull&&_winFull.indexOf('sost1')===0)?
@@ -9702,6 +9711,11 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
              'onclick="event.stopPropagation();if(window.SJP&&window.SJP.openArchive)window.SJP.openArchive();">'+
           '<div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+_paidD+'</div>'+
           '<div style="font-size:8px;color:var(--text3);margin-top:2px">click to view all winners</div>'+
+        '</div>'+
+        '<div class="sjpd-c" style="cursor:pointer" title="Total SOST paid out via DTD Jackpot so far — on-chain sum of every paid jackpot amount. Click to view all winners." '+
+             'onclick="event.stopPropagation();if(window.SJP&&window.SJP.openArchive)window.SJP.openArchive();">'+
+          '<div class="sjpd-l">TOTAL SOST PAID</div><div class="sjpd-v g" id="sjpd-total-paid">'+_totalD+'</div>'+
+          '<div style="font-size:8px;color:var(--text3);margin-top:2px">via DTD jackpot · on-chain sum</div>'+
         '</div>'+
       '</div>'+
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+_statD+'</div>'+
