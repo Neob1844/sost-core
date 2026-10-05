@@ -1,0 +1,6 @@
+# Pass independent peers directly on the command line (works on the current v30000 release):
+#   ./sost-node ... --connect host1:19333 --connect 203.0.113.9:19333
+# Or (D1/D2 release) list them in <datadir>/peers.txt (auto-redial) / seeds.txt (bootstrap).
+host-a.example:19333
+host-b.example:19333
+203.0.113.9:19333

@@ -1,0 +1,5 @@
+# Allow inbound P2P (19333) so other nodes can bootstrap from you. Keep RPC (18232) LOCAL only.
+# ufw:
+ufw allow 19333/tcp comment 'SOST P2P'
+ufw deny  18232/tcp comment 'SOST RPC local-only'   # RPC must stay on 127.0.0.1 (never public)
+# nftables equivalent: accept tcp dport 19333 ; drop tcp dport 18232 from non-loopback

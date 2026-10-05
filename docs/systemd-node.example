@@ -1,0 +1,15 @@
+# /etc/systemd/system/sost-node.service  — independent node, auto-restart, survives reboot
+[Unit]
+Description=SOST full node (independent operator)
+After=network-online.target
+Wants=network-online.target
+[Service]
+User=sost
+ExecStart=/opt/sost/sost-node --genesis /opt/sost/genesis_block.json --chain /var/lib/sost/chain.json \
+  --rpc-user %i --rpc-pass-file /etc/sost/rpc.pass --profile mainnet --p2p-enc on \
+  --connect seed-eu.sostcore.com:19333
+Restart=always
+RestartSec=5
+LimitNOFILE=8192
+[Install]
+WantedBy=multi-user.target

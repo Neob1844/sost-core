@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Independent-node health check (cron every 5 min). No secrets echoed.
+RP=${RPC_PASS_FILE:-~/.sost/rpc.pass}; U=${RPC_USER:-admin}
+j(){ curl -s --max-time 8 -u "$U:$(cat $RP)" -d "{\"method\":\"$1\",\"id\":1}" http://127.0.0.1:18232; }
+H=$(j getblockcount | grep -oE '[0-9]+' | head -1)
+P=$(j getpeerinfo | grep -oc '"addr"')
+[ -z "$H" ] && { echo "CRIT node RPC down"; exit 2; }
+[ "${P:-0}" -lt 1 ] && echo "WARN 0 peers (bootstrap/redial should recover)"
+echo "ok height=$H peers=$P"
