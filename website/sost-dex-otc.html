@@ -838,7 +838,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       which validates inputs and generates the exact <code>sost-cli</code> / MetaMask actions &mdash; it never holds keys,
       never signs, never broadcasts for you. <b>You</b> sign and broadcast every action.
     </p>
-    <div style="font-size:11px;color:#ffce54;margin-bottom:16px">&#9216; PoPC bonds are <b>not tradeable</b> in V15 — this surface is swaps / OTC only. For bonds see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</div>
+    <div style="font-size:11px;color:#ffce54;margin-bottom:16px">&#9216; PoPC bonds are <b>not tradeable</b> in the current release (V30000) — this surface is swaps / OTC only. For bonds see <a href="sost-popc.html" style="color:inherit;text-decoration:underline">PoPC Bond Staking</a>.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
       <a href="atomic-swap-console.html#readiness" style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:14px 16px;display:block">
         <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px">STEP 1 · READINESS</div>
@@ -1551,7 +1551,7 @@ function populateComposerDropdown(data) {
 /* ── Render My Positions ── */
 function renderMyPositions(data) {
   var tbody = document.getElementById('myPosBody');
-  if (!tbody) return; // legacy PoPC position tab disabled in V15 (POPC_DEX_ENABLED=false)
+  if (!tbody) return; // legacy PoPC position tab disabled in the current release (V30000) (POPC_DEX_ENABLED=false)
   if (!data.positions || data.positions.length === 0) {
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:40px 20px;">No positions found.</td></tr>';
     return;
@@ -1582,7 +1582,7 @@ function renderMyPositions(data) {
 /* ── Render Market ── */
 function renderMarket(data) {
   var tbody = document.getElementById('marketBody');
-  if (!tbody) return; // legacy PoPC market tab disabled in V15 (POPC_DEX_ENABLED=false)
+  if (!tbody) return; // legacy PoPC market tab disabled in the current release (V30000) (POPC_DEX_ENABLED=false)
   if (!data.positions || data.positions.length === 0) {
     tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:40px 20px;">No positions available on the market.</td></tr>';
     return;

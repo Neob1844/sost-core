@@ -20,19 +20,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PoPC Bond Staking — Single Native SOST Bond (Create / Monitor / Claim)</title>
-<meta name="description" content="PoPC Bond Staking specification: the single native SOST bond — the only collateral and the only slashable asset. Create, monitor and claim. Its V15 / block 25,000 activation height is now past; the bond model is paused / superseded by DTD (legacy reference). Not tradeable in V15. Includes historical reference for the superseded Model A / Model B Ethereum escrow design.">
+<meta name="description" content="PoPC Bond Staking specification: the single native SOST bond — the only collateral and the only slashable asset. Create, monitor and claim. Its V15 / block 25,000 activation height is now past; the bond model is paused / superseded by DTD (legacy reference). Not tradeable in the current release (V30000). Includes historical reference for the superseded Model A / Model B Ethereum escrow design.">
 <meta name="keywords" content="PoPC bond staking, SOST bond, native SOST bond, create monitor claim, PoPC V15, SOST staking, Proof of Personal Custody">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="PoPC Bond Staking — Single Native SOST Bond (Create / Monitor / Claim)">
-<meta property="og:description" content="PoPC Bond Staking: one native SOST bond, the only collateral and the only slashable asset. Create / monitor / claim. Activates V15 / block 25,000. Not tradeable in V15.">
+<meta property="og:description" content="PoPC Bond Staking: one native SOST bond, the only collateral and the only slashable asset. Create / monitor / claim. Activates V15 / block 25,000. Not tradeable in the current release (V30000).">
 <meta property="og:url" content="https://sostcore.com/sost-popc-contracts.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="PoPC Bond Staking — Single Native SOST Bond (Create / Monitor / Claim)">
-<meta name="twitter:description" content="PoPC Bond Staking: one native SOST bond, the only collateral and the only slashable asset. Create / monitor / claim. Activates V15 / block 25,000. Not tradeable in V15.">
+<meta name="twitter:description" content="PoPC Bond Staking: one native SOST bond, the only collateral and the only slashable asset. Create / monitor / claim. Activates V15 / block 25,000. Not tradeable in the current release (V30000).">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -340,7 +340,7 @@
       <div class="section-title">Model A vs <span class="accent">Model B</span> — HISTORICAL</div>
     </div>
     <div class="notice" style="border-left-color:#c084fc;">
-      <strong style="color:#c084fc;">HISTORICAL / SUPERSEDED.</strong> The two-model design below (MODEL A — self-custody bonds, MODEL B — Ethereum escrow) is the earlier PoPC architecture. It has been superseded by the single native SOST bond (the only collateral, the only slashable asset). The single bond is a staking product — create / monitor / claim — and is <strong>not tradeable in V15</strong>. The figures below are kept for reference only.
+      <strong style="color:#c084fc;">HISTORICAL / SUPERSEDED.</strong> The two-model design below (MODEL A — self-custody bonds, MODEL B — Ethereum escrow) is the earlier PoPC architecture. It has been superseded by the single native SOST bond (the only collateral, the only slashable asset). The single bond is a staking product — create / monitor / claim — and is <strong>not tradeable in the current release (V30000)</strong>. The figures below are kept for reference only.
     </div>
     <div class="spec-block fade-in delay-1">
       <div class="spec-header"><div class="spec-icon" style="background:#c084fc;box-shadow:0 0 6px rgba(192,132,252,0.4)"></div><span class="spec-label">Contract Models Comparison — historical</span><span class="spec-tag" style="color:#c084fc;border-color:rgba(192,132,252,0.3)">HISTORICAL / SUPERSEDED</span></div>
@@ -353,7 +353,7 @@
           <tr><td class="highlight">Protocol fee</td><td class="green">3% (POPC_PROTOCOL_FEE_A_BPS = 300)</td><td style="color:var(--cyan-primary)">8% (POPC_PROTOCOL_FEE_B_BPS = 800)</td></tr>
           <tr><td class="highlight">Audits</td><td>Entropy-based via ConvergenceX (30%&ndash;5% by reputation)</td><td>None (escrow is self-verifying)</td></tr>
           <tr><td class="highlight">Slash risk</td><td style="color:#fb923c">Yes &mdash; 50% to PoPC Pool / 50% to Gold Vault</td><td class="green">None</td></tr>
-          <tr><td class="highlight">Transferable</td><td colspan="2" style="text-align:center;color:#c084fc">Historical design only — the current single native SOST bond is NOT tradeable in V15 (no position/contract trading)</td></tr>
+          <tr><td class="highlight">Transferable</td><td colspan="2" style="text-align:center;color:#c084fc">Historical design only — the current single native SOST bond is NOT tradeable in the current release (V30000) (no position/contract trading)</td></tr>
           <tr><td class="highlight">Discount rate (pricing)</td><td>12% annually (higher risk)</td><td>5% annually (lower risk)</td></tr>
           <tr><td class="highlight">Reward floor</td><td>1% or 10 SOST minimum (POPC_REWARD_FLOOR_A)</td><td>0.5% or 5 SOST minimum (POPC_REWARD_FLOOR_B)</td></tr>
           <tr><td class="highlight">Hard cap per contract</td><td colspan="2" style="text-align:center">1,000 SOST (POPC_MAX_REWARD_STOCKS = 100,000,000,000 stocks)</td></tr>
@@ -667,7 +667,7 @@
       <div class="spec-body"><div class="empty-state">No slashed contracts.</div></div>
     </div>
     <div class="notice">
-      <strong>Activation:</strong> The single native SOST bond&rsquo;s V15 / #25,000 activation height (BOND_ACTIVATION_HEIGHT_MAINNET) is now past; the bond model is <strong>paused / superseded by DTD</strong> and retained as legacy / reference. Bonds are created, monitored and claimed on the SOST chain and are not tradeable in V15. The Model A / Model B columns above reflect the historical / superseded design.
+      <strong>Activation:</strong> The single native SOST bond&rsquo;s V15 / #25,000 activation height (BOND_ACTIVATION_HEIGHT_MAINNET) is now past; the bond model is <strong>paused / superseded by DTD</strong> and retained as legacy / reference. Bonds are created, monitored and claimed on the SOST chain and are not tradeable in the current release (V30000). The Model A / Model B columns above reflect the historical / superseded design.
     </div>
   </div>
 </section>
