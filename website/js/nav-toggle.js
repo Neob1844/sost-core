@@ -557,7 +557,7 @@
     }
     nav.querySelectorAll('a[style*="dtdBtnGlow"],.sost-dtd-btn').forEach(function(e){ wrap(e,'dtd'); });
     nav.querySelectorAll('a[style*="asBtnGlow"]').forEach(function(e){ wrap(e,'as'); });
-    // ATOMIX SWAP DEX: same module geometry, its own paint (css/atomix-btn.css).
+    // ATOMIC SWAP DEX: same module geometry, its own paint (css/atomix-btn.css).
     nav.querySelectorAll('a.atomix-btn').forEach(function(e){ wrap(e,'ax'); });
     nav.querySelectorAll('.sost-news-btn').forEach(function(e){ wrap(e,'news'); });
   }
