@@ -283,12 +283,57 @@
   function sxRgba(h,a){ var n=parseInt(h.slice(1),16); return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'; }
   function styleNavButtons(nl){
     if(!document.getElementById('sost-nav-sx-style')){ var st=document.createElement('style'); st.id='sost-nav-sx-style';
-      st.textContent="nav .nav-links{gap:6px!important;row-gap:6px!important}\nnav .nav-links a.sx{position:relative;display:inline-flex!important;align-items:center;gap:7px;padding:5px 11px 5px 9px!important;border-radius:3px!important;font-family:ui-monospace,\"JetBrains Mono\",Menlo,Consolas,monospace!important;font-size:10.5px!important;font-weight:600!important;letter-spacing:1.1px!important;text-transform:uppercase;line-height:1.15!important;color:var(--c)!important;text-decoration:none!important;text-shadow:0 0 8px var(--c45);border:1px solid var(--c35)!important;border-bottom-color:var(--c55)!important;background:linear-gradient(var(--c),var(--c)) 0 0/7px 1.5px no-repeat,linear-gradient(var(--c),var(--c)) 0 0/1.5px 7px no-repeat,linear-gradient(var(--c),var(--c)) 100% 100%/7px 1.5px no-repeat,linear-gradient(var(--c),var(--c)) 100% 100%/1.5px 7px no-repeat,linear-gradient(180deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,0) 48%,rgba(0,0,0,.28) 100%),linear-gradient(90deg,var(--c10),rgba(9,11,15,.94) 62%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.7),0 1px 0 rgba(0,0,0,.85),0 0 12px -7px var(--c);transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease,filter .2s ease}\nnav .nav-links a.sx{overflow:hidden}nav .nav-links a.sx::after{content:\"\";position:absolute;top:0;bottom:0;left:-60%;width:45%;pointer-events:none;background:linear-gradient(105deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.22) 50%,rgba(255,255,255,0) 100%);transform:skewX(-18deg);opacity:0}nav .nav-links a.sx:hover::after{animation:sxSweep .65s ease-out 1}@keyframes sxSweep{0%{left:-60%;opacity:1}100%{left:125%;opacity:1}}\nnav .nav-links a.sx::before{content:\"\";width:5px;height:5px;border-radius:50%;flex:0 0 auto;background:var(--c);box-shadow:0 0 6px var(--c),0 0 2px var(--c);opacity:.9}\nnav .nav-links a.sx:hover{transform:translateY(-1px);filter:brightness(1.18);border-color:var(--c)!important;background-color:transparent!important;box-shadow:inset 0 0 12px -5px var(--c),0 0 16px -4px var(--c),0 2px 0 rgba(0,0,0,.85)}\nnav .nav-links a.sx:focus-visible{outline:1px solid var(--c);outline-offset:2px}\nnav .nav-links a.sx.active{border:1px solid var(--c)!important;box-shadow:inset 0 0 14px -4px var(--c),0 0 18px -3px var(--c)}\nnav .nav-links a.sx.active::before{animation:sxLed 1.3s ease-in-out infinite}\n@keyframes sxLed{0%,100%{opacity:1;box-shadow:0 0 8px var(--c),0 0 3px var(--c)}50%{opacity:.25;box-shadow:none}}\n@media (prefers-reduced-motion:reduce){nav .nav-links a.sx,nav .nav-links a.sx::before,nav .nav-links a.sx::after{transition:none!important;animation:none!important}}"; (document.head||document.documentElement).appendChild(st); }
+      st.textContent="nav .nav-links{gap:6px!important;row-gap:6px!important}\nnav .nav-links.sx-rect{flex-direction:column!important;align-items:stretch!important;flex-wrap:nowrap!important;flex:1 1 100%!important;width:100%!important;max-width:100%!important;box-sizing:border-box}\nnav .nav-links .sx-row{display:flex;gap:6px;width:100%}\nnav .nav-links.sx-rect a.sx{justify-content:center;white-space:nowrap;min-width:0}\nnav .nav-links a.sx{position:relative;display:inline-flex!important;align-items:center;gap:7px;padding:5px 11px 5px 9px!important;border-radius:3px!important;font-family:ui-monospace,\"JetBrains Mono\",Menlo,Consolas,monospace!important;font-size:10.5px!important;font-weight:600!important;letter-spacing:1.1px!important;text-transform:uppercase;line-height:1.15!important;color:var(--c)!important;text-decoration:none!important;text-shadow:0 0 8px var(--c45);border:1px solid var(--c35)!important;border-bottom-color:var(--c55)!important;background:linear-gradient(var(--c),var(--c)) 0 0/7px 1.5px no-repeat,linear-gradient(var(--c),var(--c)) 0 0/1.5px 7px no-repeat,linear-gradient(var(--c),var(--c)) 100% 100%/7px 1.5px no-repeat,linear-gradient(var(--c),var(--c)) 100% 100%/1.5px 7px no-repeat,linear-gradient(180deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,0) 48%,rgba(0,0,0,.28) 100%),linear-gradient(90deg,var(--c10),rgba(9,11,15,.94) 62%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.7),0 1px 0 rgba(0,0,0,.85),0 0 12px -7px var(--c);transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease,filter .2s ease}\nnav .nav-links a.sx{overflow:hidden}nav .nav-links a.sx::after{content:\"\";position:absolute;top:0;bottom:0;left:-60%;width:45%;pointer-events:none;background:linear-gradient(105deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.22) 50%,rgba(255,255,255,0) 100%);transform:skewX(-18deg);opacity:0}nav .nav-links a.sx:hover::after{animation:sxSweep .65s ease-out 1}@keyframes sxSweep{0%{left:-60%;opacity:1}100%{left:125%;opacity:1}}\nnav .nav-links a.sx::before{content:\"\";width:5px;height:5px;border-radius:50%;flex:0 0 auto;background:var(--c);box-shadow:0 0 6px var(--c),0 0 2px var(--c);opacity:.9}\nnav .nav-links a.sx:hover{transform:translateY(-1px);filter:brightness(1.18);border-color:var(--c)!important;background-color:transparent!important;box-shadow:inset 0 0 12px -5px var(--c),0 0 16px -4px var(--c),0 2px 0 rgba(0,0,0,.85)}\nnav .nav-links a.sx:focus-visible{outline:1px solid var(--c);outline-offset:2px}\nnav .nav-links a.sx.active{border:1px solid var(--c)!important;box-shadow:inset 0 0 14px -4px var(--c),0 0 18px -3px var(--c)}\nnav .nav-links a.sx.active::before{animation:sxLed 1.3s ease-in-out infinite}\n@keyframes sxLed{0%,100%{opacity:1;box-shadow:0 0 8px var(--c),0 0 3px var(--c)}50%{opacity:.25;box-shadow:none}}\n@media (prefers-reduced-motion:reduce){nav .nav-links a.sx,nav .nav-links a.sx::before,nav .nav-links a.sx::after{transition:none!important;animation:none!important}}"; (document.head||document.documentElement).appendChild(st); }
     var as=nl.querySelectorAll('a[href]');
     for(var i=0;i<as.length;i++){ var c=SOST_NAV_COLORS[as[i].getAttribute('href')]; if(!c) continue;
       as[i].style.color=''; as[i].classList.add('sx'); as[i].style.setProperty('--c',c);
       as[i].style.setProperty('--c10',sxRgba(c,.10)); as[i].style.setProperty('--c35',sxRgba(c,.35));
       as[i].style.setProperty('--c45',sxRgba(c,.45)); as[i].style.setProperty('--c55',sxRgba(c,.55)); }
+  }
+
+  /* RECTANGLE LAYOUT: the buttons are split, IN ORDER, into the fewest rows that fit, with the rows
+     balanced (linear partition minimising the widest row). Each row then stretches to the full width,
+     every button growing in proportion to its natural width — so the block is an exact rectangle
+     (both edges aligned on every row, the last one included). Re-run on resize / when the mobile menu
+     opens (ResizeObserver) and once fonts are ready. */
+  var SX_GAP = 6;
+  function sxPartition(w, avail){
+    var n=w.length, pre=[0]; for(var i=0;i<n;i++) pre.push(pre[i]+w[i]);
+    function rowW(a,b){ return pre[b]-pre[a]+SX_GAP*(b-a-1); }
+    for(var R=1;R<=n;R++){
+      // dp[k][j] = minimal possible max-row-width placing first j items in k rows
+      var dp=[], cut=[]; for(var k=0;k<=R;k++){ dp.push(new Array(n+1).fill(Infinity)); cut.push(new Array(n+1).fill(0)); }
+      dp[0][0]=0;
+      for(var k=1;k<=R;k++) for(var j=k;j<=n;j++) for(var t=k-1;t<j;t++){
+        var v=Math.max(dp[k-1][t], rowW(t,j)); if(v<dp[k][j]){ dp[k][j]=v; cut[k][j]=t; } }
+      if(dp[R][n]<=avail){ var rows=[], j2=n; for(var k2=R;k2>=1;k2--){ var t2=cut[k2][j2]; rows.unshift([t2,j2]); j2=t2; } return rows; }
+    }
+    return w.map(function(_,i){ return [i,i+1]; });
+  }
+  function layoutNavRect(nl){
+    var as=[].slice.call(nl.querySelectorAll('a.sx')); if(!as.length) return;
+    nl.classList.add('sx-rect');
+    var cs=getComputedStyle(nl), avail=nl.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0)-2; if(avail<=0) return;
+    if(nl._sxW===avail && nl._sxDone) return;
+    // flatten (undo a previous layout) and measure natural widths
+    nl.classList.remove('sx-rect');
+    as.forEach(function(a){ a.style.flex='0 0 auto'; nl.appendChild(a); });
+    [].slice.call(nl.querySelectorAll('.sx-row')).forEach(function(r){ r.remove(); });
+    var w=as.map(function(a){ return Math.ceil(a.getBoundingClientRect().width); });
+    var rows=sxPartition(w, avail);
+    rows.forEach(function(r){
+      var row=document.createElement('div'); row.className='sx-row';
+      for(var i=r[0];i<r[1];i++){ as[i].style.flex=w[i]+' 0 auto'; row.appendChild(as[i]); }
+      nl.appendChild(row);
+    });
+    nl.classList.add('sx-rect'); nl._sxW=avail; nl._sxDone=true;
+  }
+  function sxWatch(nl){
+    var run=function(){ nl._sxDone=false; layoutNavRect(nl); };
+    if(window.ResizeObserver){ var last=0; new ResizeObserver(function(){ var cw=nl.clientWidth; if(cw && cw!==last){ last=cw; run(); } }).observe(nl); }
+    else window.addEventListener('resize',run);
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(run);
+    run();
   }
   function injectNav(){
     var nl = document.querySelector("nav .nav-links");
@@ -301,6 +346,7 @@
       if((as[i].getAttribute("href")||"").toLowerCase() === page){ as[i].classList.add("active"); }
     }
     styleNavButtons(nl);
+    sxWatch(nl);
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", injectNav, {once:true});
   else injectNav();
