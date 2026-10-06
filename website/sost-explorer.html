@@ -453,7 +453,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v487" defer></script>
+<script src="js/nav-toggle.js?v=v488" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
@@ -596,7 +596,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-06-v502-dtd-parallel-retry-logofine';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-06-v503-blocktime-eligible-counter-newsdiagrams';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -814,8 +814,8 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 <div class="dashboard" id="dashboard">
   <div class="dash-card" data-panel="height" onclick="toggleDashPanel('height')"><div class="dash-label" style="color:var(--red)">BLOCK HEIGHT</div><div class="dash-val red" id="dHeight">—</div><div class="dash-sub" id="dHeightSub">loading...</div></div>
   <div class="dash-card" data-panel="avgtime" id="avgTimeCard" onclick="toggleDashPanel('avgtime')" style="color:#4488ff;border:2px solid #fb010d;box-shadow:0 0 14px rgba(251,1,13,.4),inset 0 0 6px rgba(251,1,13,.18);position:relative" title="Consensus-relevant average. cASERT bitsQ adjusts based on this 288-block window."><div style="position:absolute;top:-8px;right:8px;background:#fb010d;color:#fff;font-size:8px;font-weight:800;letter-spacing:1.5px;padding:2px 6px;border-radius:3px;box-shadow:0 0 6px rgba(251,1,13,.6)">CONSENSUS</div><div class="dash-label" style="color:#4488ff">AVG BLOCK TIME</div><div class="dash-val" id="dAvgTime" style="color:#4488ff">&mdash;</div><div class="dash-sub" id="dAvgTimeSub" style="color:#4488ff">last 288 blocks</div><div class="dash-lag" id="dAvgTimeLag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
-  <div class="dash-card" id="avgTime600Card" onclick="toggleDashPanel('avgtime')" style="color:#fbbf24" title="Long-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fbbf24">LONG AVG &middot; 600</div><div class="dash-val" id="dAvgTime600" style="color:#fbbf24">&mdash;</div><div class="dash-sub" id="dAvgTime600Sub" style="color:#fbbf24">last 600 blocks &middot; visual</div><div class="dash-lag" id="dAvgTime600Lag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
-  <div class="dash-card" id="avgTime1000Card" onclick="toggleDashPanel('avgtime')" style="color:#fb010d" title="Maturity-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fb010d">LONG AVG &middot; 1000</div><div class="dash-val" id="dAvgTime1000" style="color:#fb010d">&mdash;</div><div class="dash-sub" id="dAvgTime1000Sub" style="color:#fb010d">last 1000 blocks &middot; visual</div><div class="dash-lag" id="dAvgTime1000Lag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
+  <div class="dash-card" id="avgTime600Card" onclick="toggleDashPanel('avgtime')" style="color:#fbbf24" title="Long-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fbbf24">LAST 600 BLOCKS</div><div class="dash-val" id="dAvgTime600" style="color:#fbbf24">&mdash;</div><div class="dash-sub" id="dAvgTime600Sub" style="color:#fbbf24">600 blocks &middot; rolling average</div><div class="dash-lag" id="dAvgTime600Lag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
+  <div class="dash-card" id="avgTime1000Card" onclick="toggleDashPanel('avgtime')" style="color:#fb010d" title="Maturity-window informational metric. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#fb010d">LAST 1,000 BLOCKS</div><div class="dash-val" id="dAvgTime1000" style="color:#fb010d">&mdash;</div><div class="dash-sub" id="dAvgTime1000Sub" style="color:#fb010d">1,000 blocks &middot; rolling average</div><div class="dash-lag" id="dAvgTime1000Lag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" id="avgTimeGenesisCard" onclick="toggleDashPanel('avgtime')" style="color:#ec4899" title="All-time average since genesis. O(1) computed as (tip_time - GENESIS_TIME) / tip_height. Not used by consensus. avg288 is the consensus-relevant average."><div class="dash-label" style="color:#ec4899">AVG &middot; GENESIS</div><div class="dash-val" id="dAvgTimeGenesis" style="color:#ec4899">&mdash;</div><div class="dash-sub" id="dAvgTimeGenesisSub" style="color:#ec4899">since block 0 &middot; visual</div><div class="dash-lag" id="dAvgTimeGenesisLag" style="font-size:9px;letter-spacing:0.5px;margin-top:2px;color:#9CA3AF">&mdash;</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')"><div class="dash-label" style="color:var(--green)">TOTAL SUPPLY</div><div class="dash-val green" id="dSupply">—</div><div class="dash-sub" id="dSupplySub">SOST emitted</div></div>
   <div class="dash-card" data-panel="supply" onclick="toggleDashPanel('supply')" title="True circulating SOST = TOTAL SUPPLY − GOLD VAULT BALANCE − POPC POOL BALANCE. Counts all SOST currently in user wallets (miners + reward recipients). The DTD reward payouts ARE circulating — they sit in winners' wallets. The CIRCULATING MINING card next to this one shows only the miner-side share (excluding lottery)."><div class="dash-label" style="color:#FFFF00">CIRCULATING SUPPLY</div><div class="dash-val" id="dCircReal" style="color:#FFFF00">—</div><div class="dash-sub" id="dCircRealSub" style="color:#FFFF00">total − vault − pool</div></div>
@@ -2426,7 +2426,7 @@ async function renderDTDPanel(body,title,silent){
         _blkDone+=hs.length; _scanProgress();
       }
     }
-    await Promise.all(Array.from({length:Math.min(3,Math.max(1,_chunkStarts.length))},function(){return _chunkWorker();}));
+    await Promise.all(Array.from({length:Math.min(2,Math.max(1,_chunkStarts.length))},function(){return _chunkWorker();}));
     var gv=ensure('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d');if(gv)gv.receivedStocks=totalGold;
     var pp=ensure('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f');if(pp)pp.receivedStocks=totalPopc;
     // Rebuild the dominance (288-block) + cooldown windows from the unified
@@ -3194,13 +3194,12 @@ async function updateDashboard(info){
     // same descending sequence used by _diffHistory.slice(0,AVG_WINDOW).reverse().
     var _heights=[];for(var _h=info.blocks;_h>Math.max(0,info.blocks-fetchDepth);_h--)_heights.push(_h);
     var CHUNK=50;
+    // retry so a transient RPC failure never drops a block from the 288 window
+    // (a dropped block would make the eligible-now gates diverge across devices).
+    function _bget(_hh){var T=4;return (function att(n){return rpc('getblockhash',[String(_hh)]).then(function(_hash){return _hash?rpc('getblock',[_hash]):null;}).then(function(bb){return (bb!=null)?bb:(n<T?new Promise(function(z){setTimeout(z,140*(n+1));}).then(function(){return att(n+1);}):null);}).catch(function(){return n<T?new Promise(function(z){setTimeout(z,140*(n+1));}).then(function(){return att(n+1);}):null;});})(0);}
     for(var _ci=0;_ci<_heights.length;_ci+=CHUNK){
       var _chunk=_heights.slice(_ci,_ci+CHUNK);
-      var _blocks=await Promise.all(_chunk.map(function(_hh){
-        return rpc('getblockhash',[String(_hh)])
-          .then(function(_hash){return rpc('getblock',[_hash]);})
-          .catch(function(){return null;});
-      }));
+      var _blocks=await Promise.all(_chunk.map(function(_hh){ return _bget(_hh); }));
       for(var _bi=0;_bi<_chunk.length;_bi++){
         var b=_blocks[_bi];var h=_chunk[_bi];
         if(!b)continue;
@@ -3224,6 +3223,28 @@ async function updateDashboard(info){
     // blocks rather than relying on push order.
     diffs.sort(function(a,b){return b.h-a.h;});
     _diffHistory=diffs.slice(0,AVG_WINDOW).reverse();drawSparkline();
+    // -- DTD eligible-now (headline card) : fast, device-independent, EXACT. --
+    // eligible_now = producers_total (authoritative, from geteligibleminers) minus
+    // the addresses excluded RIGHT NOW by the two V13 gates. Both gates look ONLY at
+    // the last 288 blocks (already fetched above): the recent-miner cooldown (miners
+    // of the last cdWindow blocks) and the anti-dominance gate (>=10% of the last 288
+    // blocks, from #12,100). Mathematically identical to the full chain-scan
+    // eligibleRows (same rules, same windows), but O(288)+0 RPC -> desktop and mobile
+    // show the SAME number instantly at the same tip. Eligibility rules unchanged.
+    try{
+      var _prodTot=parseInt(window._nodeProducersTotal,10)||0;
+      if(_prodTot>0 && diffs.length>0){
+        var _cdW=(info.blocks>=12000)?6:5, _win288=Math.min(288,info.blocks+1), _l288={}, _excl={};
+        for(var _di=0; _di<diffs.length; _di++){ var _m=diffs[_di].miner; if(!_m) continue;
+          if(_di<_cdW) _excl[_m]=true;                                   // last cdW blocks = cooldown
+          if(diffs[_di].h>info.blocks-288) _l288[_m]=(_l288[_m]||0)+1; } // dominance counts
+        if(info.blocks>=12100){ for(var _a in _l288){ if(Math.floor(_l288[_a]*10000/_win288)>=1000)_excl[_a]=true; } }
+        var _elig=_prodTot-Object.keys(_excl).length; if(_elig<0)_elig=0;
+        window._dtdEligibleFast=_elig;
+        var _ddE=document.getElementById('dDTD'); if(_ddE)_ddE.textContent=_elig+' eligible miners';
+        try{localStorage.setItem('sost_dtd_eligible_count',_elig+' eligible miners');}catch(e){}
+      }
+    }catch(_eF){}
     // Producer Distribution can render its recent window (24h) from this fast
     // ~288-block buffer immediately, without waiting for the full-chain scan.
     try{ if(window.renderProducerDist) window.renderProducerDist(); }catch(ePD){}
@@ -3451,10 +3472,43 @@ async function updateDashboard(info){
         c.style.animation='avgPulse 3.5s ease-in-out infinite';
       }
     }
-    _applyLongAvgPulse('avgTime600Card','dAvgTime600','dAvgTime600Sub',times600,'#fbbf24',600);
-    _renderLag('dAvgTime600Lag',(times600.length>=2)?(times600[0]-times600[times600.length-1])/(times600.length-1):0,times600.length-1);
-    _applyLongAvgPulse('avgTime1000Card','dAvgTime1000','dAvgTime1000Sub',times1000,'#fb010d',AVG_WINDOW_LONG);
-    _renderLag('dAvgTime1000Lag',(times1000.length>=2)?(times1000[0]-times1000[times1000.length-1])/(times1000.length-1):0,times1000.length-1);
+    // -- LAST 600 / LAST 1000 rolling averages: TRUE windows, single source. --
+    // The per-tick dashboard fetch above loads only 288 blocks (keeps the UI fast).
+    // These two cards need 600 / 1000 REAL blocks, so a SEPARATE background window
+    // cache (height->time) is kept incrementally: the first run fills up to 1000, then
+    // later ticks fetch ONLY the new tip delta. It NEVER reuses the 288 window.
+    function _btGet(hh){var T=4;return (function att(n){return rpc('getblockhash',[String(hh)]).then(function(hash){return hash?rpc('getblock',[hash]):null;}).then(function(b){return (b&&typeof b.time==='number')?b.time:(n<T?new Promise(function(z){setTimeout(z,160*(n+1));}).then(function(){return att(n+1);}):null);}).catch(function(){return n<T?new Promise(function(z){setTimeout(z,160*(n+1));}).then(function(){return att(n+1);}):null;});})(0);}
+    function _renderLongAvg(byH,tip){
+      var hs=Object.keys(byH).map(Number).filter(function(h){return h<=tip;}).sort(function(a,b){return b-a;});
+      function win(n){var t=[];for(var i=0;i<hs.length&&t.length<n;i++)t.push(byH[hs[i]]);return t;}
+      var t6=win(600),t1=win(1000);
+      _applyLongAvgPulse('avgTime600Card','dAvgTime600','dAvgTime600Sub',t6,'#fbbf24',600);
+      _applyLongAvgPulse('avgTime1000Card','dAvgTime1000','dAvgTime1000Sub',t1,'#fb010d',1000);
+      var s6=document.getElementById('dAvgTime600Sub'); if(s6)s6.textContent=(t6.length>=600)?'600 blocks · rolling average':(t6.length.toLocaleString()+' / 600 blocks available');
+      var s1=document.getElementById('dAvgTime1000Sub'); if(s1)s1.textContent=(t1.length>=1000)?'1,000 blocks · rolling average':(t1.length.toLocaleString()+' / 1,000 blocks available');
+      _renderLag('dAvgTime600Lag',(t6.length>=2)?(t6[0]-t6[t6.length-1])/(t6.length-1):0,t6.length-1);
+      _renderLag('dAvgTime1000Lag',(t1.length>=2)?(t1[0]-t1[t1.length-1])/(t1.length-1):0,t1.length-1);
+    }
+    async function _updateLongAvgCards(tip){
+      if(window._btBusy||!tip||tip<2)return; window._btBusy=true;
+      try{
+        if(!window._btByH){ window._btByH={}; try{var raw=localStorage.getItem('sost_bt_v1'); if(raw){var o=JSON.parse(raw); if(o&&o.byH)window._btByH=o.byH;}}catch(e){} }
+        var byH=window._btByH, lo=Math.max(1,tip-999);
+        for(var k in byH){ if(+k<lo-100) delete byH[k]; }
+        var missing=[]; for(var h=tip;h>=lo;h--){ if(byH[h]==null)missing.push(h); }
+        _renderLongAvg(byH,tip);
+        var CZ=24;
+        for(var i=0;i<missing.length;i+=CZ){
+          var sl=missing.slice(i,i+CZ);
+          var rr=await Promise.all(sl.map(function(hh){return _btGet(hh);}));
+          for(var j=0;j<sl.length;j++){ if(rr[j]!=null)byH[sl[j]]=rr[j]; }
+          _renderLongAvg(byH,tip);
+        }
+        try{localStorage.setItem('sost_bt_v1',JSON.stringify({tip:tip,byH:byH}));}catch(e){}
+      }catch(e){}
+      window._btBusy=false;
+    }
+    _updateLongAvgCards(info.blocks);
     // Genesis-to-now average (all-time, O(1) computation). Not consensus.
     function _applyDirectAvgPulse(cardId,valId,subId,avgSec,baseTextColor,subText){
       var c=document.getElementById(cardId);var v=document.getElementById(valId);var s=document.getElementById(subId);
@@ -3486,7 +3540,7 @@ async function updateDashboard(info){
       }
     }
     var _avgGenesis=(times.length>0&&info.blocks>0)?((times[0]-GENESIS_TS)/info.blocks):0;
-    _applyDirectAvgPulse('avgTimeGenesisCard','dAvgTimeGenesis','dAvgTimeGenesisSub',_avgGenesis,'#ec4899','since block 0 · '+info.blocks+' blocks · visual');
+    _applyDirectAvgPulse('avgTimeGenesisCard','dAvgTimeGenesis','dAvgTimeGenesisSub',_avgGenesis,'#ec4899','since block 0 · '+info.blocks+' blocks');
     _renderLag('dAvgTimeGenesisLag',_avgGenesis,info.blocks);
     // Dual hashrate display (SOST has profile-dependent stability filter,
     // so a single number is misleading; we show both).

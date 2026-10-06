@@ -643,3 +643,76 @@
   else inject();
   setTimeout(inject,0); setTimeout(inject,350); setTimeout(inject,800);
 })();
+
+
+/* ============================================================================
+   SITE-VISIT COUNTER — on every page's top nav (same place & behaviour as Home).
+   Reuses a page's existing #vcx-sost host (Home/Explorer ship one inline); on all
+   other pages it injects the host as a sibling of .nav-links so HIDE NAV folds it
+   away too. Collapsed by default (a discreet "▸ site visits" button); one shared
+   /counter backend (site=sostcore) so the number is identical everywhere.
+   ========================================================================== */
+(function(){
+  "use strict";
+  if(!document.getElementById('vcx-counter-style')){
+    var st=document.createElement('style'); st.id='vcx-counter-style';
+    st.textContent=".vcx{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border:1px solid var(--vcx-bd);border-radius:999px;background:var(--vcx-bg);font-family:ui-monospace,Menlo,Consolas,monospace;vertical-align:middle}"
+    +".vcx-dot{width:7px;height:7px;border-radius:50%;background:var(--vcx-ac);box-shadow:0 0 8px var(--vcx-ac);animation:vcxP 1.8s ease-in-out infinite;flex:0 0 auto}"
+    +"@keyframes vcxP{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}"
+    +".vcx-num{display:inline-flex;font-weight:700;font-size:15px;letter-spacing:.5px;color:var(--vcx-ac);text-shadow:0 0 10px var(--vcx-ac)}"
+    +".vcx-d{display:inline-block;height:1.25em;width:.64em;overflow:hidden}"
+    +".vcx-s{display:flex;flex-direction:column;transition:transform 1.6s cubic-bezier(.16,1,.3,1)}"
+    +".vcx-s>i{height:1.25em;line-height:1.25em;text-align:center;font-style:normal}"
+    +".vcx-sep{display:inline-block;width:.32em;text-align:center;opacity:.65;color:var(--vcx-ac)}"
+    +".vcx-lbl{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--vcx-mut)}"
+    +".vcx-btn{font:600 10px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:1.3px;text-transform:uppercase;color:var(--vcx-mut);background:transparent;border:1px solid var(--vcx-bd);border-radius:999px;padding:6px 12px;cursor:pointer;opacity:.7;transition:opacity .2s,color .2s,border-color .2s}"
+    +".vcx-btn:hover{opacity:1;color:var(--vcx-ac);border-color:var(--vcx-ac)}";
+    (document.head||document.documentElement).appendChild(st);
+  }
+  function fmt(n){ return Number(n).toLocaleString('en-US'); }
+  function build(el,val){
+    var s=fmt(val); el.innerHTML='';
+    for(var i=0;i<s.length;i++){ var ch=s[i];
+      if(ch<'0'||ch>'9'){ var sp=document.createElement('span'); sp.className='vcx-sep'; sp.textContent=ch; el.appendChild(sp); continue; }
+      var d=document.createElement('span'); d.className='vcx-d';
+      var stc=document.createElement('span'); stc.className='vcx-s';
+      for(var k=0;k<=9;k++){ var it=document.createElement('i'); it.textContent=k; stc.appendChild(it); }
+      d.appendChild(stc); el.appendChild(d);
+      (function(stc,t){ stc.style.transform='translateY(0)'; setTimeout(function(){ stc.style.transform='translateY(-'+(t*10)+'%)'; },80); })(stc,+ch);
+    }
+  }
+  function ensureHost(){
+    var h=document.getElementById('vcx-sost'); if(h) return h;
+    var nav=document.querySelector('nav'); if(!nav) return null;
+    var nl=nav.querySelector('.nav-links'); var parent=(nl&&nl.parentNode)||nav;
+    h=document.createElement('span'); h.id='vcx-sost';
+    h.style.cssText='margin-left:auto;display:inline-flex;align-items:center';
+    if(nl&&nl.parentNode){ nl.parentNode.insertBefore(h, nl.nextSibling); } else { parent.appendChild(h); }
+    return h;
+  }
+  function mountCounter(){
+    var host=ensureHost(); if(!host) return;
+    if(host.querySelector('.vcx-btn')) return;        // already mounted (Home/Explorer inline, or earlier call)
+    var o={site:'sostcore',seed:3375,base:'/counter',btn:'▸ site visits',accent:'#4ade80',border:'#16331f',bg:'rgba(8,16,10,.7)',mut:'#5f7a68',label:'site visits'};
+    host.style.setProperty('--vcx-ac',o.accent); host.style.setProperty('--vcx-bd',o.border);
+    host.style.setProperty('--vcx-bg',o.bg); host.style.setProperty('--vcx-mut',o.mut);
+    var sk='vcx_'+o.site, hit=!sessionStorage.getItem(sk);
+    if(hit){ try{sessionStorage.setItem(sk,'1');}catch(e){} fetch(o.base+'?site='+encodeURIComponent(o.site)+'&hit=1').catch(function(){}); }
+    var btn=document.createElement('button'); btn.type='button'; btn.className='vcx-btn'; btn.textContent=o.btn;
+    var box=document.createElement('span'); box.className='vcx'; box.style.display='none';
+    var dot=document.createElement('span'); dot.className='vcx-dot';
+    var num=document.createElement('span'); num.className='vcx-num';
+    var lbl=document.createElement('span'); lbl.className='vcx-lbl'; lbl.textContent=o.label;
+    box.appendChild(dot); box.appendChild(num); box.appendChild(lbl);
+    host.appendChild(btn); host.appendChild(box);
+    btn.addEventListener('click',function(){
+      btn.style.display='none'; box.style.display='inline-flex'; build(num,o.seed);
+      fetch(o.base+'?site='+encodeURIComponent(o.site)).then(function(r){return r.json();}).then(function(d){
+        if(d&&typeof d.count==='number') build(num,d.count);
+      }).catch(function(){});
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',mountCounter,{once:true});
+  else mountCounter();
+  setTimeout(mountCounter,600); setTimeout(mountCounter,1600);
+})();

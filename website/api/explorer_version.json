@@ -1,4 +1,4 @@
 {
-  "v": "2026-10-06-v502-dtd-parallel-retry-logofine",
-  "note": "DTD scan: retry-on-failure (no silently dropped blocks -> deterministic eligible, fixes device divergence) + pipelined parallel fetch + 'Scanning X / Y blocks' progress; incremental acc cache reused. Logo fine-tune: Atomix/News inner nudged down ~7px, ConvergenceX inner +5% (scale 1.3125). Frontend only."
+  "v": "2026-10-06-v503-blocktime-eligible-counter-newsdiagrams",
+  "note": "Explorer: LAST 600 / LAST 1,000 BLOCKS cards now use TRUE incremental windows (not 288); DTD eligible-now computed instantly from producers_total minus 288-window cooldown/dominance (deterministic across devices). Site-visit counter now on every page's nav. News: decentralization audit diagrams + peer-store accuracy update. Frontend only."
 }

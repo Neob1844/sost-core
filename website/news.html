@@ -99,7 +99,7 @@
   @keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v482" defer></script>
+<script src="js/nav-toggle.js?v=v488" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
@@ -601,6 +601,23 @@ NODE STAYS ALIVE</pre></div>
 </div></section>
 
 <section class="section"><div class="container">
+  <style>
+  .dec-diagram{margin:16px 0 6px;border:1px solid rgba(34,211,238,.25);border-radius:12px;background:rgba(5,10,18,.5);padding:14px 14px 10px;overflow-x:auto}
+  .dec-diagram svg{display:block;width:100%;height:auto;max-width:720px;margin:0 auto}
+  .dec-dcap{font-size:11.5px;color:#9fb6c4;text-align:center;margin-top:8px;line-height:1.5}
+  .dec-res-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;margin:14px 0 4px}
+  .dec-res-card{border:1px solid rgba(57,255,20,.3);border-radius:10px;background:rgba(57,255,20,.04);padding:11px 13px}
+  .dec-res-card .f{color:#fb6a6a;font-weight:800;font-size:12px;letter-spacing:.3px}
+  .dec-res-card .a{color:#39ff14;font-weight:800;font-size:13px;margin-top:3px}
+  .dec-res-card .d{color:#9fb6c4;font-size:11px;margin-top:3px;line-height:1.5}
+  .dec-flow2{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 4px}
+  .dec-fchip{font-family:var(--font-mono,ui-monospace,monospace);font-size:12px;font-weight:700;padding:7px 11px;border-radius:8px;border:1px solid;white-space:nowrap}
+  .dec-fchip.g{color:#0a0a0c;background:#39ff14;border-color:#39ff14}
+  .dec-fchip.gh{color:#9fe8ff;background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.4)}
+  .dec-fchip.bad{color:#ff9a9a;background:rgba(251,1,13,.08);border-color:rgba(251,1,13,.4);text-decoration:line-through;opacity:.8}
+  .dec-farrow{color:#22d3ee;font-weight:800}
+  .dec-flabel{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#9fb6c4;width:100%;margin-top:6px}
+  </style>
   <div class="dec-wrap" id="decentralization">
     <div class="dec-eyebrow"><span class="dec-dot"></span>// PROTOCOL · DECENTRALIZATION AUDIT · 2026-10-02</div>
     <h2 class="dec-h">SOST Protocol Decentralization Audit — <span class="g">from decentralized consensus to operational autonomy</span></h2>
@@ -615,9 +632,23 @@ NODE STAYS ALIVE</pre></div>
         <p style="margin-top:4px">A chain can have decentralized consensus while still depending operationally on a few infrastructure services. The audit therefore also examined bootstrap, peer discovery, DNS seeds, persistent peer databases, reconnect/redial, public RPC, explorers, software distribution, release verification, mining participation, independent operators, and recovery procedures. <b>This is where SOST is still progressively reducing dependencies.</b></p>
       </div>
     </div>
+    <div class="dec-diagram">
+      <svg viewBox="0 0 700 250" role="img" aria-label="Two layers: consensus decentralized, operational infrastructure being decentralized">
+        <rect x="40" y="24" width="620" height="88" rx="14" fill="rgba(57,255,20,.06)" stroke="#39ff14" stroke-width="2"/>
+        <text x="60" y="52" fill="#39ff14" font-family="ui-monospace,monospace" font-size="15" font-weight="800">&#9670; CONSENSUS LAYER &#8212; decentralized Proof-of-Work &#10003;</text>
+        <text x="60" y="76" fill="#cfe9d8" font-family="ui-monospace,monospace" font-size="12">Independent miners &amp; nodes validate blocks &#183; verify PoW &#183; reject invalid blocks</text>
+        <text x="60" y="97" fill="#cfe9d8" font-family="ui-monospace,monospace" font-size="12">No central authority can rewrite balances or change the rules</text>
+        <text x="350" y="134" fill="#9fb6c4" font-family="ui-monospace,monospace" font-size="11" text-anchor="middle">rests on &#8212; but must never be controlled by &#8595;</text>
+        <rect x="40" y="148" width="620" height="88" rx="14" fill="rgba(251,191,36,.05)" stroke="#fbbf24" stroke-width="2" stroke-dasharray="7 5"/>
+        <text x="60" y="176" fill="#fbbf24" font-family="ui-monospace,monospace" font-size="15" font-weight="800">&#9881; OPERATIONAL INFRASTRUCTURE &#8212; being decentralized &#8635;</text>
+        <text x="60" y="200" fill="#e7d6ad" font-family="ui-monospace,monospace" font-size="12">bootstrap &#183; DNS seeds &#183; peer discovery &#183; public RPC &#183; explorers &#183; release distribution</text>
+        <text x="60" y="221" fill="#e7d6ad" font-family="ui-monospace,monospace" font-size="12">helps access &#8212; must not become a point of protocol control</text>
+      </svg>
+      <div class="dec-dcap">SOST is <b style="color:#39ff14">decentralized at the consensus layer today</b>; the <b style="color:#fbbf24">operational layer</b> is being progressively decentralized.</div>
+    </div>
     <div class="dec-h3">What has already improved</div>
     <ul>
-      <li>Configured-peer redial is implemented for explicitly configured <code>--connect</code> peers (internally verified). General persistent peer storage and peer-address gossip (ADDR/GETADDR) are not present in the current released code and remain planned / in progress.</li>
+      <li>Configured-peer redial is implemented for explicitly configured <code>--connect</code> peers (internally verified). General persistent peer storage and peer-address gossip (ADDR/GETADDR) are now <b>implemented and internally verified</b> in the SOST codebase, but are <b>not yet in the currently-deployed mainnet binary</b> &mdash; they are staged for an upcoming release.</li>
       <li>External miners and nodes already operate independently from the core development infrastructure.</li>
       <li>NODE_BIND and NODE_HEARTBEAT encourage real node participation, while Proof-of-Work remains the source of mining weight.</li>
     </ul>
@@ -625,6 +656,12 @@ NODE STAYS ALIVE</pre></div>
     <div class="dec-h3">What still depends on external infrastructure</div>
     <p>Some services necessarily operate outside consensus: website hosting, DNS, public explorers, RPC gateways, software repositories, download mirrors, bootstrap nodes and monitoring. They improve accessibility, but must not become points of protocol control.</p>
     <div class="dec-quote">External infrastructure may help users find, observe or interact with SOST, but it should not determine consensus or be essential for the blockchain itself to survive. If an explorer goes down, blocks keep being produced. If the website disappears, nodes keep validating. If one VPS goes offline, independent peers keep relaying. If one bootstrap service fails, explicitly configured peers are re-dialled automatically; broader autonomous peer persistence is on the roadmap.</div>
+    <div class="dec-res-grid">
+      <div class="dec-res-card"><div class="f">&#10007; Explorer goes down</div><div class="a">&#10003; Blocks keep being produced</div><div class="d">The explorer only observes the chain &#8212; it holds no consensus role.</div></div>
+      <div class="dec-res-card"><div class="f">&#10007; Website disappears</div><div class="a">&#10003; Nodes keep validating</div><div class="d">The site hosts no consensus logic.</div></div>
+      <div class="dec-res-card"><div class="f">&#10007; One VPS goes offline</div><div class="a">&#10003; Independent peers keep relaying</div><div class="d">No single machine is required to extend the chain.</div></div>
+      <div class="dec-res-card"><div class="f">&#10007; A bootstrap service fails</div><div class="a">&#10003; Configured peers re-dial automatically</div><div class="d">Broader autonomous peer persistence is on the roadmap.</div></div>
+    </div>
     <div class="dec-h3">Current decentralization priorities</div>
     <ul>
       <li>More independent public nodes and more independent miners.</li>
@@ -636,7 +673,18 @@ NODE STAYS ALIVE</pre></div>
     </ul>
     <div class="dec-h3">Automation as a decentralization tool</div>
     <p>The goal is not merely to distribute servers, but to reduce discretionary human intervention. Where possible, protocol behaviour is deterministic, height-triggered, self-validating, automatically recoverable, independently reproducible and observable from public chain state. For example, V30000 activates automatically at block #30,000 — no operator "switches on" consensus.</p>
-    <div class="dec-flow">routine operation →  rules → nodes → validation → automatic execution<br>not             →  administrator → manual decision → network action</div>
+    <div class="dec-flow2">
+      <span class="dec-flabel">How SOST operates &#8212; deterministic, height-triggered, no operator switch</span>
+      <span class="dec-fchip gh">routine operation</span><span class="dec-farrow">&#8594;</span>
+      <span class="dec-fchip g">rules</span><span class="dec-farrow">&#8594;</span>
+      <span class="dec-fchip g">nodes</span><span class="dec-farrow">&#8594;</span>
+      <span class="dec-fchip g">validation</span><span class="dec-farrow">&#8594;</span>
+      <span class="dec-fchip g">automatic execution</span>
+      <span class="dec-flabel">Not this &#8212; discretionary human control</span>
+      <span class="dec-fchip bad">administrator</span><span class="dec-farrow" style="opacity:.4">&#8594;</span>
+      <span class="dec-fchip bad">manual decision</span><span class="dec-farrow" style="opacity:.4">&#8594;</span>
+      <span class="dec-fchip bad">network action</span>
+    </div>
     <div class="dec-h3">Decentralization is a process, not a binary label</div>
     <p>SOST does not claim decentralization is all-or-nothing. A network can be decentralized at consensus level while still improving the diversity of its infrastructure, operators and software distribution. SOST treats decentralization as a measurable engineering objective, not a marketing claim; future audits will keep examining miner concentration, node diversity, bootstrap dependencies, infrastructure concentration, software reproducibility, third-party participation and protocol autonomy.</p>
     <div class="dec-quote" style="border-left-color:#22d3ee;background:rgba(34,211,238,.07);color:#d6f6ff"><b>External infrastructure may assist the protocol, but it must not control the protocol.</b><br><span style="color:#9fb6c4;font-size:13px">No single server, operator, website, miner or organization should be required for SOST to continue validating and extending its blockchain.</span></div>
@@ -646,7 +694,7 @@ NODE STAYS ALIVE</pre></div>
       <div class="srow"><span class="k">Independent miners</span><span class="v ok">active</span></div>
       <div class="srow"><span class="k">Independent peers</span><span class="v ok">active</span></div>
       <div class="srow"><span class="k">Configured-peer redial (--connect)</span><span class="v ok">implemented</span></div>
-      <div class="srow"><span class="k">Persistent peer storage / ADDR gossip</span><span class="v">planned / in progress</span></div>
+      <div class="srow"><span class="k">Persistent peer storage / ADDR gossip</span><span class="v">built &middot; pending release</span></div>
       <div class="srow"><span class="k">Single-server dependency</span><span class="v prog">being reduced</span></div>
       <div class="srow"><span class="k">Reproducible operator deployment</span><span class="v prog">in progress</span></div>
       <div class="srow"><span class="k">External infrastructure independence test</span><span class="v plan">planned</span></div>
