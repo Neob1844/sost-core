@@ -1,1 +1,1 @@
-{ "v": "2026-10-06-v506-final-frontend", "note": "Final frontend propagation: nav-toggle v490 (Atomix/News inner text sized to match DTD TOKEN DISTRIBUTION). Forces auto-reload of open explorers. No node/consensus/V30000/war-room." }
+{ "v": "2026-10-06-v507-autoreload-fix", "note": "Fix: checkVersion regex matched __EXPLORER_BUILD=<quoted> but the embedded value is unquoted (=V), so auto-reload never detected a new version. Now matches var V='2026-…'. Auto-reload works for explorers loaded from here on." }
