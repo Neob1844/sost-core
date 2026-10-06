@@ -276,6 +276,20 @@
       <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
       <a href="sost-contact.html">Contact</a>
 `;
+  /* Console-style nav buttons: every section gets its OWN colour, all taken from colours the
+     site already uses; no two neighbours (window of 4) are alike — min ΔE76 31. Mine=bright SOST red,
+     Price Reference=gold, Explorer=amber, Markets=LIVE green are kept on purpose. */
+  var SOST_NAV_COLORS = {"javascript:void(0)":"#f59e0b","index.html":"#d946ef","sost-genesis.html":"#22d3ee","sost-technology.html":"#00ff88","sost-transactions.html":"#ff8a8a","sost-gold-reserve.html":"#ff6600","sost-reference.html":"#d4af37","sost-universal-assets.html":"#ff00ff","sost-popc.html":"#00aaff","sost-tokenomics.html":"#39ff14","sost-roadmap.html":"#26a17b","sost-protocol-spec.html":"#b8860b","sost-whitepaper.html":"#ff5ccd","sost-mine.html":"#ff2d3b","sost-network-status.html":"#88ff00","sost-mining-calculator.html":"#38bdf8","sost-why-no-pools.html":"#fde68a","sost-getting-started.html":"#f472b6","sost-quickstart.html":"#ff6b35","sost-community.html":"#d7ff00","sost-foundation.html":"#9fe8ff","sost-foundation-balances.html":"#ffd166","sost-popc-contracts.html":"#ec4899","sost-popc-quickstart.html":"#cfe88a","sost-e2e.html":"#4488ff","sost-gold-dex.html":"#7ee2a8","sost-security.html":"#ffb86b","sost-faq.html":"#cbb6e6","beacon.html":"#e879f9","protocol-registry.html":"#a3e635","casert-spec.html":"#ff6b6b","sost-explorer.html":"#fbbf24","sost-help.html":"#7fb3ff","sost-miner-troubleshooter.html":"#c084fc","sost-markets.html":"#4ade80","sost-infrastructure.html":"#e6d9b6","sost-otc.html":"#ffff00","sost-wallet.html":"#ff8800","sost-app/":"#00ffff","sost-talk.html":"#8b9bf4","sost-contact.html":"#f5c889"};
+  function sxRgba(h,a){ var n=parseInt(h.slice(1),16); return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'; }
+  function styleNavButtons(nl){
+    if(!document.getElementById('sost-nav-sx-style')){ var st=document.createElement('style'); st.id='sost-nav-sx-style';
+      st.textContent="nav .nav-links{gap:6px!important;row-gap:6px!important}\nnav .nav-links a.sx{position:relative;display:inline-flex!important;align-items:center;gap:7px;padding:5px 11px 5px 9px!important;border-radius:3px!important;font-family:ui-monospace,\"JetBrains Mono\",Menlo,Consolas,monospace!important;font-size:10.5px!important;font-weight:600!important;letter-spacing:1.1px!important;text-transform:uppercase;line-height:1.15!important;color:var(--c)!important;text-decoration:none!important;text-shadow:0 0 8px var(--c45);border:1px solid var(--c35)!important;border-bottom-color:var(--c55)!important;background:linear-gradient(var(--c),var(--c)) 0 0/7px 1.5px no-repeat,linear-gradient(var(--c),var(--c)) 0 0/1.5px 7px no-repeat,linear-gradient(var(--c),var(--c)) 100% 100%/7px 1.5px no-repeat,linear-gradient(var(--c),var(--c)) 100% 100%/1.5px 7px no-repeat,linear-gradient(180deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,0) 48%,rgba(0,0,0,.28) 100%),linear-gradient(90deg,var(--c10),rgba(9,11,15,.94) 62%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.7),0 1px 0 rgba(0,0,0,.85),0 0 12px -7px var(--c);transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease,filter .2s ease}\nnav .nav-links a.sx{overflow:hidden}nav .nav-links a.sx::after{content:\"\";position:absolute;top:0;bottom:0;left:-60%;width:45%;pointer-events:none;background:linear-gradient(105deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.22) 50%,rgba(255,255,255,0) 100%);transform:skewX(-18deg);opacity:0}nav .nav-links a.sx:hover::after{animation:sxSweep .65s ease-out 1}@keyframes sxSweep{0%{left:-60%;opacity:1}100%{left:125%;opacity:1}}\nnav .nav-links a.sx::before{content:\"\";width:5px;height:5px;border-radius:50%;flex:0 0 auto;background:var(--c);box-shadow:0 0 6px var(--c),0 0 2px var(--c);opacity:.9}\nnav .nav-links a.sx:hover{transform:translateY(-1px);filter:brightness(1.18);border-color:var(--c)!important;background-color:transparent!important;box-shadow:inset 0 0 12px -5px var(--c),0 0 16px -4px var(--c),0 2px 0 rgba(0,0,0,.85)}\nnav .nav-links a.sx:focus-visible{outline:1px solid var(--c);outline-offset:2px}\nnav .nav-links a.sx.active{border:1px solid var(--c)!important;box-shadow:inset 0 0 14px -4px var(--c),0 0 18px -3px var(--c)}\nnav .nav-links a.sx.active::before{animation:sxLed 1.3s ease-in-out infinite}\n@keyframes sxLed{0%,100%{opacity:1;box-shadow:0 0 8px var(--c),0 0 3px var(--c)}50%{opacity:.25;box-shadow:none}}\n@media (prefers-reduced-motion:reduce){nav .nav-links a.sx,nav .nav-links a.sx::before,nav .nav-links a.sx::after{transition:none!important;animation:none!important}}"; (document.head||document.documentElement).appendChild(st); }
+    var as=nl.querySelectorAll('a[href]');
+    for(var i=0;i<as.length;i++){ var c=SOST_NAV_COLORS[as[i].getAttribute('href')]; if(!c) continue;
+      as[i].style.color=''; as[i].classList.add('sx'); as[i].style.setProperty('--c',c);
+      as[i].style.setProperty('--c10',sxRgba(c,.10)); as[i].style.setProperty('--c35',sxRgba(c,.35));
+      as[i].style.setProperty('--c45',sxRgba(c,.45)); as[i].style.setProperty('--c55',sxRgba(c,.55)); }
+  }
   function injectNav(){
     var nl = document.querySelector("nav .nav-links");
     if(!nl) return;
@@ -286,6 +300,7 @@
     for(var i=0;i<as.length;i++){
       if((as[i].getAttribute("href")||"").toLowerCase() === page){ as[i].classList.add("active"); }
     }
+    styleNavButtons(nl);
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", injectNav, {once:true});
   else injectNav();
