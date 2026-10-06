@@ -148,6 +148,16 @@
 
   function applyState(collapsed) {
     document.body.classList.toggle("nav-collapsed", collapsed);
+    // MOBILE: HIDE NAV must also fold away the expanded hamburger menu. The
+    // mobile menu is shown via `.nav-links.open` (display:flex !important),
+    // which out-specifies the collapse rule and would otherwise keep the full
+    // link list on screen. Dropping `.open` when collapsing lets the collapse
+    // rule hide it; the hamburger stays visible to reopen it. No-op on desktop
+    // (nav-links has no `.open` there).
+    if (collapsed) {
+      var _nl = document.querySelector("nav .nav-links");
+      if (_nl) _nl.classList.remove("open");
+    }
     var btns = document.querySelectorAll(".sost-nav-toggle, #navToggleBtn");
     btns.forEach(function (b) {
       b.textContent = collapsed ? "▼ SHOW NAV" : "▲ HIDE NAV";

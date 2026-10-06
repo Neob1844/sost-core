@@ -453,7 +453,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v483" defer></script>
+<script src="js/nav-toggle.js?v=v484" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
@@ -595,7 +595,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-05-v498-navcounter-hide';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-06-v499-mobile-explorer-fixes';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1955,7 +1955,7 @@ function addrLinkShort(addr){return '<span class="td-link" onclick="showAddress(
 // instead of an empty "click to scan" placeholder. The silent DTD scan kicked
 // off a few seconds after load refreshes them to the current value. (UPDATED
 // MINERS is anchored separately to the node's producers_total each tick.)
-try{document.addEventListener('DOMContentLoaded',function(){var v=localStorage.getItem('sost_dtd_eligible_count');var e=document.getElementById('dDTD');if(v&&e)e.textContent=v;var pe=localStorage.getItem('sost_peak_miners_ever');var pm=document.getElementById('dPeakMiner');if(pe&&pm)pm.textContent=pe;var bp0=document.getElementById('dMiners');if(pe&&bp0)bp0.textContent=pe;});}catch(e){}
+try{document.addEventListener('DOMContentLoaded',function(){var e=document.getElementById('dDTD');if(e)e.textContent='computing\u2026';var pe=localStorage.getItem('sost_peak_miners_ever');var pm=document.getElementById('dPeakMiner');if(pe&&pm)pm.textContent=pe;var bp0=document.getElementById('dMiners');if(pe&&bp0)bp0.textContent=pe;});}catch(e){}
 // Phase X+1 — kick off a silent DTD scan ~3 s after page load so the
 // dashboard CIRCULATING SUPPLY + DTD REWARD BALANCE cards populate
 // with real values without the user having to open the DTD panel.
@@ -8914,7 +8914,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:calc(16px + env(safe-area-inset-left,0px));right:auto;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <script src="js/retro-sounds.js?v=v392"></script>
-<script src="js/sost-music.js?v=v392"></script>
+<script src="js/sost-music.js?v=v493"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/v16-jackpot-notice.js?v=v491" defer></script>
@@ -9381,7 +9381,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
 .sjp-actions{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:16px;flex-wrap:wrap}
 .sjp-btn{background:#111a12;border:1px solid #2b7a3d;color:#d6ffe0;border-radius:9px;padding:8px 14px;font:600 12px ui-monospace;cursor:pointer}
 .sjp-btn:hover{background:#16241a}
-#sjp-replay{position:fixed;right:14px;bottom:14px;z-index:9500;background:linear-gradient(135deg,#141006,#0a0a0c);
+#sjp-replay{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:9500;background:linear-gradient(135deg,#141006,#0a0a0c);
   border:1px solid #ffd166;color:#ffd166;border-radius:10px;padding:8px 12px;font:700 11px ui-monospace;letter-spacing:.5px;cursor:pointer;
   box-shadow:0 0 14px rgba(245,209,102,.25);display:none}
 #sjp-replay.on{display:block}
@@ -9623,13 +9623,26 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var _statD=_failed?'DATA UNAVAILABLE \u00B7 RETRYING':(_loaded?status:_LD);
     var _paidD=_failed?'\u2014':(_loaded?fc(paid):_LD);
     // TOTAL SOST paid via DTD jackpot: on-chain sum of every paid jackpot amount (cached; computed once).
+    // TOTAL SOST paid via DTD jackpot — ON-CHAIN sum, cached by the most-recent
+    // jackpot height (the total only changes when a new jackpot pays). Shown
+    // instantly from cache when the jackpot epoch is unchanged, then validated
+    // in the background with PARALLEL on-chain reconstruction. Never hardcoded.
+    var _lastJp=(tip>=JP_FIRST)?(JP_FIRST+Math.floor((tip-JP_FIRST)/CAD)*CAD):0;
+    if(_loaded && window._sjpdTotalPaid==null){
+      try{var _tc=JSON.parse(localStorage.getItem('sost_sjpd_total_v2')||'null');
+        if(_tc&&_tc.lastJp===_lastJp&&typeof _tc.total==='number') window._sjpdTotalPaid=_tc.total;}catch(e){}
+    }
     var _totalD=_failed?'\u2014':(_loaded?(window._sjpdTotalPaid!=null?(fc(Math.round(window._sjpdTotalPaid))+' SOST'):'computing\u2026'):_LD);
-    if(_loaded && window._sjpdTotalPaid==null && !window._sjpdTotalBusy && window.SJP && typeof window.SJP.reconstruct==='function'){
+    if(_loaded && !window._sjpdTotalBusy && window._sjpdTotalComputedFor!==_lastJp && window.SJP && typeof window.SJP.reconstruct==='function'){
       window._sjpdTotalBusy=true;
-      (function(){ var sum=0, seen=0, chain=Promise.resolve();
-        for(var jh=JP_FIRST; jh<=tip; jh+=CAD){ (function(H){ chain=chain.then(function(){ return window.SJP.reconstruct(H).then(function(rec){ if(rec&&rec.winner&&rec.amount!=null){ sum+=(typeof rec.amount==='number'?rec.amount:parseFloat(rec.amount||0)); seen++; } }).catch(function(){}); }); })(jh); }
-        chain.then(function(){ window._sjpdTotalPaid=sum; window._sjpdTotalBusy=false; var el=document.getElementById('sjpd-total-paid'); if(el) el.textContent=fc(Math.round(sum))+' SOST'; });
-      })();
+      (function(lastJp){
+        var hs=[]; for(var jh=JP_FIRST; jh<=tip; jh+=CAD) hs.push(jh);
+        Promise.all(hs.map(function(H){ return window.SJP.reconstruct(H).then(function(rec){ return (rec&&rec.winner&&rec.amount!=null)?(typeof rec.amount==='number'?rec.amount:parseFloat(rec.amount||0)):0; }).catch(function(){return 0;}); }))
+          .then(function(amts){ var sum=0; for(var i=0;i<amts.length;i++) sum+=amts[i];
+            window._sjpdTotalPaid=sum; window._sjpdTotalBusy=false; window._sjpdTotalComputedFor=lastJp;
+            try{localStorage.setItem('sost_sjpd_total_v2',JSON.stringify({lastJp:lastJp,total:sum}));}catch(e){}
+            var el=document.getElementById('sjpd-total-paid'); if(el) el.textContent=fc(Math.round(sum))+' SOST'; });
+      })(_lastJp);
     }
     var _eligD=_failed?'\u2014':(state.eligible!=null?esc(elig):_LD);
     var _winFull=(state.jpWinner||state.winner||'');
