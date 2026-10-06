@@ -1408,6 +1408,25 @@
       mints them). It runs today and intensified at V15 (#25,000), where the split became 50% miner / 50% DTD.
     </p>
 
+    <div class="fade-in delay-2" style="max-width:900px;margin:4px auto 22px;border:1px solid rgba(57,255,20,.35);border-left:4px solid #39ff14;border-radius:12px;background:rgba(57,255,20,.05);padding:18px 22px;text-align:left">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#39ff14;font-weight:800;margin-bottom:10px">How the DTD works &middot; deterministic &amp; auditable</div>
+      <p style="color:#c9d6e2;font-size:13.5px;line-height:1.7;margin:0 0 10px">In plain terms, <b style="color:#eaf6ff">deterministic token distribution</b> means the split is computed from <b>fixed, reproducible rules</b> &mdash; never chosen by anyone.</p>
+      <div style="border-left:3px solid #22d3ee;background:rgba(34,211,238,.06);border-radius:0 8px 8px 0;padding:10px 14px;color:#d6f6ff;font-size:14px;line-height:1.6;margin:10px 0">If two people look at the <b>same blockchain data</b>, they must get <b>exactly the same result</b>.</div>
+      <p style="color:#c9d6e2;font-size:13px;line-height:1.7;margin:0 0 12px">It does <b>not</b> depend on who runs the calculation, which phone or computer, the browser, the internet speed, or any manual decision.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0">
+        <div style="border:1px solid rgba(57,255,20,.4);border-radius:10px;background:rgba(57,255,20,.04);padding:12px 14px">
+          <div style="color:#39ff14;font-weight:800;font-size:12px;margin-bottom:5px">&#10003; Deterministic</div>
+          <div style="color:#c9d6e2;font-size:12.5px;line-height:1.6">Rule: &ldquo;Distribute 100 SOST among every eligible address of the last 288 blocks by this exact formula.&rdquo; If there are <b style="color:#eaf6ff">193</b> eligible and the formula is fixed, <b>every</b> node that computes it gets the same <b style="color:#eaf6ff">193</b> eligible and the same split.</div>
+        </div>
+        <div style="border:1px solid rgba(251,1,13,.4);border-radius:10px;background:rgba(251,1,13,.04);padding:12px 14px">
+          <div style="color:#fb6a6a;font-weight:800;font-size:12px;margin-bottom:5px">&#10007; Not deterministic</div>
+          <div style="color:#c9d6e2;font-size:12.5px;line-height:1.6">Rule: &ldquo;If an RPC call fails, skip that block.&rdquo; A slow phone could skip more blocks than a laptop and read <b style="color:#fb6a6a">111</b> eligible while another reads <b style="color:#eaf6ff">193</b> &mdash; exactly the kind of defect SOST fixed.</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;color:#39ff14;background:#07120b;border:1px solid rgba(57,255,20,.3);border-radius:8px;padding:10px;margin:12px 0">same blocks + same rules + same state = same result</div>
+      <p style="color:#c9d6e2;font-size:13px;line-height:1.7;margin:0"><b style="color:#22d3ee">Auditable by anyone.</b> Because the outcome is pure consensus data, anyone can re-derive the eligible set and the winner straight from the public chain and confirm it matches &mdash; via the explorer&rsquo;s <code>getlotteryaudit</code> (per jackpot) or by recomputing the eligibility set over the last 288 blocks. You never have to trust a website or a person.</p>
+    </div>
+
     <!-- DIAGRAM 1 — emission split before / after V15 -->
     <div class="fade-in delay-2" style="max-width:900px;margin:0 auto 10px">
       <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:1.5px;color:var(--text-muted);text-align:center;margin-bottom:8px">EMISSION SPLIT &mdash; BEFORE vs AT V15</div>
