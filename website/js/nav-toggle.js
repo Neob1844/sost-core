@@ -41,7 +41,7 @@
       "  transition: transform .18s ease, color .18s ease, border-color .2s ease;",
       "  box-shadow: 0 0 8px rgba(251,1,13,0.42), 0 0 18px rgba(245,158,11,0.22);",
       "  text-shadow: 0 0 6px rgba(251,1,13,0.55);",
-      "  animation: sostNavPulse 2.4s ease-in-out infinite;",
+      "  animation: sostNavPulse 3.1s ease-in-out infinite;",
       "  -webkit-tap-highlight-color: transparent;",
       "}",
       // Watch is the one nav link that HAS a box, and it inherited .nav-links a at 4px —
@@ -132,7 +132,7 @@
       "   smaller 18px override — force the standard size everywhere). */
       "nav .nav-logo { font-size: 26px !important; letter-spacing: 3px !important; gap: 14px !important; }",
       /* The ONLY pulsing logo on the whole site: the SOST mark — min->max glow. */
-      "nav .nav-logo img { animation: sostLogoPulse 3.6s ease-in-out infinite; }",
+      "nav .nav-logo img { animation: sostLogoPulse 4.7s ease-in-out infinite; }",
       "@keyframes sostLogoPulse {",
       "  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,1,13,.45)) drop-shadow(0 0 10px rgba(251,1,13,.25)); }",
       "  50% { filter: drop-shadow(0 0 22px rgba(251,1,13,1)) drop-shadow(0 0 52px rgba(251,1,13,.92)) drop-shadow(0 0 88px rgba(251,1,13,.6)); }",
@@ -325,7 +325,7 @@
          is what the logo PNG's own alpha measures. Read from the file, not chosen by eye.
          ------------------------------------------------------------------------------------ */
       '.sq-wrap{display:inline-flex;flex:0 0 auto;line-height:0;',
-      '  animation:sqPulse 2.2s ease-in-out infinite}',
+      '  animation:sqPulse 2.9s ease-in-out infinite}',
       '@keyframes sqPulse{',
       '  0%,100%{filter:drop-shadow(0 0 9px var(--g1)) drop-shadow(0 0 20px var(--g2))}',
       '  50%{filter:drop-shadow(0 0 20px var(--g1)) drop-shadow(0 0 42px var(--g2))',
@@ -354,6 +354,11 @@
       '  filter:none !important;border-radius:0 !important;display:block;background:#000003}',
       '.sost-news-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20%;background:linear-gradient(135deg,#1b1206,#2c1d08,#3a2a0a);border:1px solid rgba(245,158,11,.6);text-decoration:none;line-height:1;flex:0 0 auto;box-shadow:0 0 20px rgba(245,158,11,.95),0 0 40px rgba(245,158,11,.55);overflow:hidden;-webkit-tap-highlight-color:transparent}',
       '.sost-news-btn:hover{border-color:rgba(255,200,87,.95);transform:translateY(-1px);transition:transform .15s ease,border-color .2s ease}',
+      '/* inner-logo enlargement: inner content only, outer circle unchanged */',
+      'nav img[src*="convergencex-logo"]{transform:scale(1.25)}',
+      'nav a.atomix-btn .atomix-icon,nav a.atomix-btn .atomix-label{transform:scale(1.25)}',
+      'nav .sost-news-btn>span{transform:scale(1.25)}',
+      'nav a[href$="#dtd"]>span,nav .sost-dtd-btn>span{transform:scale(1.05)}',
       'body.nav-collapsed nav .sost-news-btn{display:none !important}'
     ].join('\n');
     (document.head||document.documentElement).appendChild(st);
@@ -485,7 +490,7 @@
       '.sost-dtd-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;',
       'border-radius:20%;background:radial-gradient(circle at 50% 35%,#0f2417,#07120b);',
       'border:1px solid #39ff14;text-decoration:none;line-height:1;flex:0 0 auto;',
-      'animation:dtdBtnGlow 2s ease-in-out infinite;overflow:hidden;',
+      'animation:dtdBtnGlow 2.6s ease-in-out infinite;overflow:hidden;',
       '-webkit-tap-highlight-color:transparent}',
       '.sost-dtd-btn:hover{border-color:#7CFFA0;transform:translateY(-1px);transition:transform .15s ease,border-color .2s ease}',
       'body.nav-collapsed nav .sost-dtd-btn{display:none !important}'
@@ -604,7 +609,7 @@
     st.textContent=[
       'a.sost-tok-logo{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;',
       'text-decoration:none;-webkit-tap-highlight-color:transparent;transition:transform .15s ease}',
-      'a.sost-tok-logo img{object-fit:cover;display:block;animation:tokLogoPulse 3.6s ease-in-out infinite}',
+      'a.sost-tok-logo img{object-fit:cover;display:block;animation:tokLogoPulse 4.7s ease-in-out infinite}',
       '@keyframes tokLogoPulse{0%,100%{filter:drop-shadow(0 0 4px rgba(255,255,255,.5)) drop-shadow(0 0 10px rgba(255,255,255,.3))}50%{filter:drop-shadow(0 0 22px rgba(255,255,255,1)) drop-shadow(0 0 52px rgba(255,255,255,.9)) drop-shadow(0 0 88px rgba(255,255,255,.6))}}',
       'a.sost-tok-logo:hover{transform:translateY(-1px)}',
       '@media(prefers-reduced-motion:reduce){a.sost-tok-logo img{animation:none;filter:drop-shadow(0 0 14px rgba(255,255,255,.95)) drop-shadow(0 0 34px rgba(255,255,255,.6))}}',
