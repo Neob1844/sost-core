@@ -1,1 +1,1 @@
-{ "v": "2026-10-06-v508-dtd-deterministic", "note": "DTD nav logo: added 'DETERMINISTIC' to the label (now DETERMINISTIC / TOKEN / DISTRIBUTION, 3 lines) — fits inside the 110px circle (measured: 83px wide, ~13px side margin). Circle/icon/DTD glyph unchanged. nav-toggle v491." }
+{"v": "2026-10-06-v509-sost-logo-atomic-counter", "note": "Forces every open explorer to reload and pick up: site-visit counter rolls once straight to the live count (no stop at the 3,375 seed); nav tile ATOMIX -> ATOMIC SWAP DEX; official coin logos in tables, SOST logo 20.24px. nav-toggle v492."}
