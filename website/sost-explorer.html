@@ -596,7 +596,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-06-v503-blocktime-eligible-counter-newsdiagrams';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-06-v504-silent-scan-off';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1963,16 +1963,14 @@ try{document.addEventListener('DOMContentLoaded',function(){var e=document.getEl
 // The scan caches into _dtdCache; subsequent updateInfo() ticks re-read
 // the cache and refresh the cards. Wrapped in try/catch so a failure
 // here can never break the explorer.
-try{document.addEventListener('DOMContentLoaded',function(){
-  setTimeout(function(){
-    try{
-      if(typeof renderDTDPanel==='function'){
-        // Silent mode: don't render any panel; just populate _dtdCache.
-        renderDTDPanel(null,null,true);
-      }
-    }catch(e){console.warn('silent DTD scan:',e);}
-  },3000);
-});}catch(e){}
+// v503: the automatic silent FULL-CHAIN DTD scan is DISABLED. The dashboard no
+// longer needs it: the DTD eligible card is computed instantly from the node's
+// producers_total minus the 288-window cooldown/dominance gates, and the supply
+// cards read the authoritative getsupplyinfo RPC. The ~29k-block scan only drove
+// node load + starved the fast cards. The full per-address scan now runs ONLY
+// on demand when the user opens the DTD panel (renderDTDPanel non-silent).
+// (Left as a no-op block so the structure/line layout is unchanged.)
+try{document.addEventListener('DOMContentLoaded',function(){ /* silent DTD scan disabled (v503) */ });}catch(e){}
 var _dtdCache=null;
 var _dtdFilter='all';
 function dtdStocks(v){v=Number(v||0);return isFinite(v)?v:0;}
