@@ -879,6 +879,10 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
             <td class="key">Verification</td>
             <td class="val">Two-stage pipeline <span class="comment">// cheap header check → full recompute</span></td>
           </tr>
+          <tr>
+            <td class="key">SbPoW (since #7,100)</td>
+            <td class="val">Signature-Bound PoW <span class="comment">// every valid block carries a signature from the miner identity key over the header &mdash; pools that delegate work without sharing the key are cryptographically self-defeating</span></td>
+          </tr>
         </tbody></table>
       </div>
     </div>
@@ -1031,7 +1035,7 @@ new_powDiffQ = <span class="fn">clamp</span>( adjusted, MIN_BITSQ, MAX_BITSQ )
           (pre-V12 #5,750..#7,349: 21 active E7&ndash;H13, 22 reserved H14&ndash;H35; V12 #7,350..#11,999: 28 active E7&ndash;H20, 15 reserved H21&ndash;H35; V13 #12,000+: 43 active E7&ndash;H35, 0 reserved) that adjust
           ConvergenceX stability parameters, and (3) anti-stall recovery. The equalizer uses
           5 EWMA signals to compute a weighted control signal U, which selects a profile from
-          deep easing (E7) through baseline (B0) to ceiling. Ceiling: H13 pre-V12 / H20 V12 (#7,350+).
+          deep easing (E7) through baseline (B0) to ceiling. Ceiling: <b>H35 since V13 (#12,000+)</b> &mdash; historically H13 pre-V12 / H20 V12 (#7,350..#11,999).
         </p>
 
         <div class="code-snippet" data-label="CONTROL SIGNAL U (5-signal EWMA equalizer)">
@@ -1101,20 +1105,20 @@ H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</
           <div class="mode-card">
             <div class="mode-name">
               <span class="indicator" style="background:var(--red-primary)"></span>
-              H6&ndash;H20 HARDENING
+              H6&ndash;H35 HARDENING
             </div>
             <div class="mode-params">
-              scale=2 &middot; k=5&ndash;9 &middot; margin=135&ndash;115 &middot; steps=6&ndash;9<br>
-              <em>Progressive hardening. <b>Pre-V12:</b> H13 ceiling (#5,750..#7,349), H14&ndash;H35 reserved. <b>V12 (#7,350+):</b> H20 ceiling, H14&ndash;H20 active, H21&ndash;H35 reserved (margin=115). Relief valve: E7 at 605s.</em>
+              scale=2 &middot; k=5&ndash;20 &middot; margin=135&ndash;115 &middot; steps=6&ndash;20<br>
+              <em>Progressive hardening. <b>V13 (#12,000+): all of H6&ndash;H35 active</b>, H35 ceiling (k=20, steps=20, margin=115). Historical: H13 ceiling pre-V12 (#5,750..#7,349); H20 ceiling V12 (#7,350..#11,999). Relief valve: granular drop of 1 level per 60 s from 600 s (V10, #6,700+), floor E7 &mdash; historical V8: single E7 cliff at 605 s.</em>
             </div>
           </div>
         </div>
 
         <div class="code-snippet" data-label="ANTI-STALL (mining only)" style="margin-top:16px;">
 <span class="cmt">// Zone-based decay to B0 — mining only</span>
-<span class="cmt">// Activation: 3,600s (1 hour, V5+) — V3.1+</span>
+<span class="cmt">// Activation: 7,200s (2 hours) — current floor; 3,600s applied only in the V5–V6 era</span>
 stall = now - last_block_time
-threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">// 1 hour (V5+)</span>
+threshold = ANTISTALL_FLOOR = <span class="num">7200</span>  <span class="cmt">// 2 hours (current)</span>
 
 <span class="kw">if</span> stall &gt;= threshold:
     <span class="cmt">// Zone decay rates (current level determines speed):</span>
@@ -1132,7 +1136,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
             &bull; Lag-dominant gains (60% of total signal) prevent oscillation between E4 and H9.<br>
             &bull; Slew rate &plusmn;1/block (V6, block 5,000+) ensures smooth profile transitions.<br>
             &bull; Behind schedule &rarr; cap at B0 prevents hardening when blocks are slow.<br>
-            &bull; Anti-stall: 3,600s (1 hour, V5+), zone-based decay to B0 (H10&ndash;H7: 600s/lvl, H6&ndash;H4: 900s/lvl, H3&ndash;H1: 1200s/lvl). Easing E1&ndash;E7 only after 6h extra at B0. Relief valve: E7 at 605s (block 5,750+). Lag-adjust ~6s.
+            &bull; Anti-stall: 7,200s (2 hours, current floor; 3,600s only in the V5&ndash;V6 era), zone-based decay to B0 (H10&ndash;H7: 600s/lvl, H6&ndash;H4: 900s/lvl, H3&ndash;H1: 1200s/lvl). Easing E1&ndash;E7 only after 6h extra at B0. Relief valve: granular drop of 1 level per 60 s from 600 s (V10, #6,700+), floor E7 &mdash; historical V8: single E7 cliff at 605 s. Lag-adjust ~6s.
           </p>
         </div>
 
@@ -1143,7 +1147,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
           </tr>
           <tr>
             <td class="key">CASERT_H_MAX</td>
-            <td class="val"><code>13 / 20</code> <span class="comment">// H13 ceiling pre-V12 (#5,750..#7,349) / H20 ceiling V12 (#7,350+). Total: 43 profiles.</span></td>
+            <td class="val"><code>35</code> <span class="comment">// H35 ceiling since V13 (#12,000+), all 43 profiles active. Historical: H13 pre-V12, H20 V12 (#7,350..#11,999).</span></td>
           </tr>
           <tr>
             <td class="key">K_R / K_L / K_I / K_B / K_V</td>
@@ -1155,7 +1159,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
           </tr>
           <tr>
             <td class="key">ANTISTALL_FLOOR</td>
-            <td class="val"><code>3600</code> <span class="comment">// 1 hour minimum (V5+) before decay</span></td>
+            <td class="val"><code>7200</code> <span class="comment">// 2 hours minimum before decay (current; 3600 only in the V5–V6 era)</span></td>
           </tr>
           <tr>
             <td class="key">ANTISTALL_DECAY</td>
@@ -1237,7 +1241,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
             </tr>
             <tr>
               <td class="key">MAX_FUTURE_DRIFT</td>
-              <td class="val"><code>600</code> seconds</td>
+              <td class="val"><code>30</code> seconds <span class="comment">// since V13 (#12,000); earlier 600 s, then 60 s</span></td>
             </tr>
             <tr>
               <td class="key">Rule: ts &gt; MTP</td>
@@ -1314,7 +1318,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
           </tr>
           <tr>
             <td class="key">Fork resolution</td>
-            <td class="val"><strong>Atomic.</strong> If a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is restored. MAX_REORG_DEPTH = 500 blocks (~3.5 days).</td>
+            <td class="val"><strong>Atomic.</strong> If a better chain is found, the node disconnects current blocks, connects the new chain, and recovers orphaned transactions to the mempool. If any block in the new chain fails validation, the entire reorganization is aborted and the original chain is restored. MAX_REORG_DEPTH = 500 blocks (~3.5 days) for history before #30,000. <b>From #30,000 (SACS V2, V30000 release):</b> deep fork blocks beyond 500 that are post-activation are kept and evaluated strictly by valid cumulative work instead of being hard-rejected.</td>
           </tr>
         </tbody></table>
       </div>
@@ -1340,6 +1344,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
           <tr><td class="label">Disk</td><td class="value">Minimal (~1 KB per block)</td></tr>
           <tr><td class="label">System</td><td class="value">2 GB total, any OS</td></tr>
           <tr><td class="label">Verify speed</td><td class="green">~0.2 ms per block (Transcript V2)</td></tr>
+          <tr><td class="label">Full sync</td><td class="green">~25 min genesis &rarr; tip (measured 25m06s to #28,077, V30000)</td></tr>
         </table>
       </div>
       <div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:8px;padding:20px;">
@@ -1498,7 +1503,7 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
       <h2 class="section-title">Post-Quantum <span class="accent">Security</span></h2>
     </div>
     <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px" class="fade-in delay-1">
-      SOST uses the same secp256k1 ECDSA signatures as Bitcoin. For the post-quantum era, SOST has selected <b style="color:var(--cyan-primary)">ML-DSA</b> (NIST FIPS 204) as the migration target. A new address prefix <code style="color:var(--green-primary)">sost2</code> is reserved for post-quantum addresses. Migration follows a 5-phase plan: research (done) → prototype (2027) → dual signatures (2028) → mainnet (2028 Q3) → ECDSA deprecation (2030+). SHA-256 hashing remains quantum-safe.
+      SOST uses the same secp256k1 ECDSA signatures as Bitcoin. For the post-quantum era, SOST is studying <b style="color:var(--cyan-primary)">ML-DSA</b> (NIST FIPS 204) as the leading candidate &mdash; a candidate, not adopted. The address prefix <code style="color:var(--green-primary)">sost2</code> is reserved (not active) for post-quantum addresses. This is research direction, not a committed deployment schedule. SHA-256 hashing remains quantum-safe.
     </p>
 
       <div class="section-id">PoW COMPARISON</div>
@@ -1519,12 +1524,12 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
             <td class="val" style="width:25%;color:var(--text-dim);"><img src="assets/coins/xmr.svg" alt="" width="16" height="16" loading="lazy" decoding="async" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;display:inline-block;">Monero (RandomX)</td>
             <td class="val" style="width:25%;color:var(--red-primary);"><img src="assets/coins/sost.png" alt="" width="20" height="20" loading="lazy" decoding="async" style="width:20.24px;height:20.24px;vertical-align:-5px;margin-right:6px;display:inline-block;border-radius:3px;">SOST (ConvergenceX)</td>
           </tr>
-          <tr><td class="key">PoW verify cost</td><td class="val">~1&mu;s</td><td class="val">~50ms</td><td class="val" style="color:var(--text-primary);">~5&ndash;30s</td></tr>
+          <tr><td class="key">PoW verify cost</td><td class="val">~1&mu;s</td><td class="val">~50ms</td><td class="val" style="color:var(--green-primary);">~0.2 ms proof check (Transcript V2) &middot; full recompute only for deep validation</td></tr>
           <tr><td class="key">Memory (mining)</td><td class="val">Negligible</td><td class="val">256MB&ndash;2GB</td><td class="val" style="color:var(--text-primary);">8GB (4GB scratchpad + 4GB dataset)</td></tr>
           <tr><td class="key">Memory (node)</td><td class="val">Negligible</td><td class="val">~256MB</td><td class="val" style="color:var(--text-primary);">~500MB (no scratchpad/dataset)</td></tr>
           <tr><td class="key">ASIC resistance</td><td class="val" style="color:var(--red-primary);">None</td><td class="val" style="color:var(--green-primary);">High</td><td class="val" style="color:var(--green-primary);">Very high</td></tr>
-          <tr><td class="key">Full sync time</td><td class="val">~hours</td><td class="val">~days</td><td class="val" style="color:var(--text-primary);">~weeks</td></tr>
-          <tr><td class="key">Fast sync time</td><td class="val">~minutes</td><td class="val">~hours</td><td class="val" style="color:var(--green-primary);">~minutes</td></tr>
+          <tr><td class="key">Full sync time</td><td class="val">~hours</td><td class="val">~days</td><td class="val" style="color:var(--green-primary);"><b>~25 min</b> &mdash; measured: genesis &rarr; #28,077 in 25m06s, every block validated, tip + 5 checkpoint hashes matched (V30000 release)</td></tr>
+          <tr><td class="key">Fast sync time</td><td class="val">~minutes</td><td class="val">~hours</td><td class="val" style="color:var(--green-primary);">not needed &mdash; the full verified sync above is the normal path</td></tr>
           <tr><td class="key">Verification layers</td><td class="val">4</td><td class="val">4</td><td class="val" style="color:var(--text-primary);">8</td></tr>
           <tr><td class="key">Difficulty adjust</td><td class="val">Every 2,016 blocks (~2 weeks)</td><td class="val">Every block (LWMA)</td><td class="val" style="color:var(--green-primary);">Every block (cASERT PID)</td></tr>
           <tr><td class="key">Response speed</td><td class="val" style="color:var(--red-primary);">2-week lag</td><td class="val">~720-block EWMA (~24h)</td><td class="val" style="color:var(--green-primary);">8-block short + 96-block long EWMA</td></tr>
@@ -1534,11 +1539,11 @@ threshold = ANTISTALL_FLOOR = <span class="num">3600</span>  <span class="cmt">/
           <tr><td class="key">Dynamic profiles</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--green-primary);">43 profiles (V13 #12,000+: all 43 active E7&ndash;H35, 0 reserved)</td></tr>
           <tr><td class="key">Math type</td><td class="val">Floating-point</td><td class="val">128-bit integer</td><td class="val" style="color:var(--green-primary);">Q16.16 fixed-point (zero float)</td></tr>
           <tr><td class="key">Block time</td><td class="val">600s</td><td class="val">120s</td><td class="val" style="color:var(--text-primary);">600s</td></tr>
-          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">Zone-based decay (H10&rarr;B0, always 3600s activation, then E1-E7 after 6h)</td></tr>
-          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E7&ndash;H13 pre-V12 / E7&ndash;H20 V12 (#7,350+) (&plusmn;1/block V6+, slew rate limited, emergency-only)</td></tr>
+          <tr><td class="key">Anti-stall</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">Zone-based decay (H10&rarr;B0, 7,200s activation, then E1-E7 after 6h)</td></tr>
+          <tr><td class="key">Anti-acceleration</td><td class="val" style="color:var(--red-primary);">None</td><td class="val">LWMA</td><td class="val" style="color:var(--green-primary);">cASERT Equalizer E7&ndash;H35 since V13 (#12,000+) (&plusmn;1/block V6+, slew rate limited, emergency-only)</td></tr>
           <tr><td class="key">Emission</td><td class="val">Halving / 210K blocks</td><td class="val">Tail emission</td><td class="val" style="color:var(--text-primary);">Smooth exp. decay (q=e<sup>-&frac14;</sup>)</td></tr>
           <tr><td class="key">Max supply</td><td class="val">21M BTC</td><td class="val">Infinite</td><td class="val" style="color:var(--text-primary);">~4,669,201 SOST</td></tr>
-          <tr><td class="key">Constitutional reserve</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--green-primary);">25% gold + 25% PoPC</td></tr>
+          <tr><td class="key">Constitutional reserve</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--text-muted);">None</td><td class="val" style="color:var(--green-primary);">None since V15 (#25,000): 50% miner / 50% DTD <span style="color:var(--text-muted)">(pre-V15: 25% gold + 25% PoPC)</span></td></tr>
         </table>
       </div>
     </div>
