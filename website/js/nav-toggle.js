@@ -357,9 +357,9 @@
       '/* inner-logo enlargement: inner content only, outer circle unchanged */',
       'nav img[src*="convergencex-logo"]{transform:scale(1.3125)}',
       'nav a.atomix-btn .atomix-icon{transform:translateY(7px) scale(1.25)}',
-      'nav a.atomix-btn .atomix-label{transform:translateY(7px) scale(1.1875)}',
+      'nav a.atomix-btn .atomix-label{transform:translateY(7px) scale(0.906)}',
       'nav .sost-news-btn>span{transform:translateY(7px) scale(1.25)}',
-      'nav .sost-news-btn>span:last-child{transform:translateY(7px) scale(1.1875)}',
+      'nav .sost-news-btn>span:last-child{transform:translateY(7px) scale(0.997)}',
       'nav a[href$="#dtd"]>span,nav .sost-dtd-btn>span{transform:scale(1.05)}',
       'body.nav-collapsed nav .sost-news-btn{display:none !important}'
     ].join('\n');
