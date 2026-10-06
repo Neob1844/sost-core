@@ -516,7 +516,7 @@
     a.innerHTML='<span style="color:#39ff14;font-size:'+big+'px;font-weight:900;letter-spacing:1px;'
       +'text-shadow:0 0 14px rgba(57,255,20,.85)">DTD</span>'
       +'<span style="color:#7CFFA0;font-size:'+small+'px;font-weight:700;letter-spacing:.4px;'
-      +'text-align:center;margin-top:2px">TOKEN<br>DISTRIBUTION</span>';
+      +'text-align:center;margin-top:2px">DETERMINISTIC<br>TOKEN<br>DISTRIBUTION</span>';
     anchor.parentNode.insertBefore(a, anchor);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',injectDtdBtn,{once:true});

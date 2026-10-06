@@ -1,1 +1,1 @@
-{ "v": "2026-10-06-v507-autoreload-fix", "note": "Fix: checkVersion regex matched __EXPLORER_BUILD=<quoted> but the embedded value is unquoted (=V), so auto-reload never detected a new version. Now matches var V='2026-…'. Auto-reload works for explorers loaded from here on." }
+{ "v": "2026-10-06-v508-dtd-deterministic", "note": "DTD nav logo: added 'DETERMINISTIC' to the label (now DETERMINISTIC / TOKEN / DISTRIBUTION, 3 lines) — fits inside the 110px circle (measured: 83px wide, ~13px side margin). Circle/icon/DTD glyph unchanged. nav-toggle v491." }
