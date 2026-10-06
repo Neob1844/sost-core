@@ -453,7 +453,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v486" defer></script>
+<script src="js/nav-toggle.js?v=v487" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
@@ -596,7 +596,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-06-v501-news-and-updates';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-06-v502-dtd-parallel-retry-logofine';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/__EXPLORER_BUILD\s*=\s*['"]([^'"]+)['"]/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -2367,12 +2367,14 @@ async function renderDTDPanel(body,title,silent){
         }
       }
     }catch(eAccR){_scanStart=0;recentBlocks=[];}
-    for(var start=_scanStart;start<=height;start+=CHUNK){
-      var hs=[];for(var h=start;h<=Math.min(height,start+CHUNK-1);h++)hs.push(h);
-      var hashes=await Promise.all(hs.map(function(hh){return rpc('getblockhash',[String(hh)]).catch(function(){return null;});}));
-      var blocks=await Promise.all(hashes.map(function(hash){return hash?rpc('getblock',[hash]).catch(function(){return null;}):null;}));
-      for(var bi=0;bi<blocks.length;bi++){
-        var b=blocks[bi];if(!b)continue;
+    // RPC retry: a failed getblockhash/getblock must NOT silently drop a block —
+    // a skipped block undercounts miners and makes the eligible number diverge
+    // across devices (the real cause of the 193-vs-111 split under load). Retry
+    // with backoff so every block is processed -> deterministic, identical result.
+    function _rpcRetry(m,pr){var tries=5;return (function att(n){return rpc(m,pr).then(function(r){return (r!=null)?r:(n<tries?new Promise(function(z){setTimeout(z,160*(n+1));}).then(function(){return att(n+1);}):null);}).catch(function(){return n<tries?new Promise(function(z){setTimeout(z,160*(n+1));}).then(function(){return att(n+1);}):null;});})(0);}
+    // Per-block accumulation — identical logic to the previous serial scan.
+    function processBlock(b){
+      if(!b)return;
         var subsidy=dtdStocks(b.subsidy);
         var minerReward=Object.prototype.hasOwnProperty.call(b,'miner_reward')?dtdStocks(b.miner_reward):Math.floor(subsidy/2);
         var goldReward=Object.prototype.hasOwnProperty.call(b,'gold_vault_reward')?dtdStocks(b.gold_vault_reward):Math.floor(subsidy/4);
@@ -2404,9 +2406,27 @@ async function renderDTDPanel(body,title,silent){
           }
           if(b.miner_address)ph2.minerCounts[b.miner_address]=(ph2.minerCounts[b.miner_address]||0)+1;
         }
-      }
-      if(!silent&&start%(CHUNK*5)===0){body.innerHTML=dtdEligibilityBanner(height,'Scanning public chain data&hellip; <span style="color:var(--cyan)">#'+Math.min(height,start+CHUNK-1)+' / #'+height+'</span>');}
     }
+    // PIPELINED parallel scan: several chunks fetched concurrently so the network
+    // is never idle between barriers. Accumulation is additive and recentBlocks is
+    // sorted afterwards, so the result is byte-identical to the serial scan.
+    var _chunkStarts=[]; for(var _cs=_scanStart;_cs<=height;_cs+=CHUNK)_chunkStarts.push(_cs);
+    var _ckIdx=0, _blkDone=0, _blkTotal=Math.max(0,height-_scanStart+1);
+    function _scanProgress(){
+      if(!silent){ body.innerHTML=dtdEligibilityBanner(height,'Scanning public chain data&hellip; <span style="color:var(--cyan)">'+_blkDone.toLocaleString()+' / '+_blkTotal.toLocaleString()+' blocks</span>'); }
+      var _dp=document.getElementById('dDTD'); if(_dp && /computing|Scanning/i.test(_dp.textContent)) _dp.textContent='Scanning '+_blkDone.toLocaleString()+' / '+_blkTotal.toLocaleString();
+    }
+    async function _chunkWorker(){
+      while(_ckIdx<_chunkStarts.length){
+        var start=_chunkStarts[_ckIdx++];
+        var hs=[];for(var h=start;h<=Math.min(height,start+CHUNK-1);h++)hs.push(h);
+        var hashes=await Promise.all(hs.map(function(hh){return _rpcRetry('getblockhash',[String(hh)]);}));
+        var blocks=await Promise.all(hashes.map(function(hash){return hash?_rpcRetry('getblock',[hash]):null;}));
+        for(var bi=0;bi<blocks.length;bi++){ processBlock(blocks[bi]); }
+        _blkDone+=hs.length; _scanProgress();
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(3,Math.max(1,_chunkStarts.length))},function(){return _chunkWorker();}));
     var gv=ensure('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d');if(gv)gv.receivedStocks=totalGold;
     var pp=ensure('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f');if(pp)pp.receivedStocks=totalPopc;
     // Rebuild the dominance (288-block) + cooldown windows from the unified

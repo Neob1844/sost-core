@@ -355,9 +355,9 @@
       '.sost-news-btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border-radius:20%;background:linear-gradient(135deg,#1b1206,#2c1d08,#3a2a0a);border:1px solid rgba(245,158,11,.6);text-decoration:none;line-height:1;flex:0 0 auto;box-shadow:0 0 20px rgba(245,158,11,.95),0 0 40px rgba(245,158,11,.55);overflow:hidden;-webkit-tap-highlight-color:transparent}',
       '.sost-news-btn:hover{border-color:rgba(255,200,87,.95);transform:translateY(-1px);transition:transform .15s ease,border-color .2s ease}',
       '/* inner-logo enlargement: inner content only, outer circle unchanged */',
-      'nav img[src*="convergencex-logo"]{transform:scale(1.25)}',
-      'nav a.atomix-btn .atomix-icon,nav a.atomix-btn .atomix-label{transform:scale(1.25)}',
-      'nav .sost-news-btn>span{transform:scale(1.25)}',
+      'nav img[src*="convergencex-logo"]{transform:scale(1.3125)}',
+      'nav a.atomix-btn .atomix-icon,nav a.atomix-btn .atomix-label{transform:translateY(7px) scale(1.25)}',
+      'nav .sost-news-btn>span{transform:translateY(7px) scale(1.25)}',
       'nav a[href$="#dtd"]>span,nav .sost-dtd-btn>span{transform:scale(1.05)}',
       'body.nav-collapsed nav .sost-news-btn{display:none !important}'
     ].join('\n');
