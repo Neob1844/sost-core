@@ -364,7 +364,7 @@
       <div class="mode-card">
         <div class="mode-tag" style="background:var(--green-dim);color:var(--green-primary);">ANTI-STALL</div>
         <h3 style="color:var(--green-primary)">Decay Anti-Stall</h3>
-        <p>If no block is found for an extended period, the cASERT level decays to B0 via zone-based rates. Activation: always 7,200s (2 hours) since V3.1. Easing profiles E1&ndash;E4 activate only after 6 hours extra at B0. This prevents mining deadlock when hashrate drops suddenly.</p>
+        <p>If no block is found for an extended period, the cASERT level decays to B0 via zone-based rates. Activation: <b>7,200&nbsp;s (2 hours)</b> at current heights (the active anti-stall floor; a shorter 3,600&nbsp;s / 60-min floor applied only during the V5&ndash;V6 era and is not in force today). Easing profiles E1&ndash;E4 activate only after 6 hours extra at B0. This prevents mining deadlock when hashrate drops suddenly. <b>Note &mdash; Slingshot vs anti-stall:</b> they are complementary, not duplicates. Slingshot is a fast, per-block relief that shoves <i>bitsQ</i> down the moment a block runs long; this anti-stall decay is the slow backstop that walks the <i>equalizer profile</i> back to B0 after a prolonged (2&nbsp;h+) outage. They act on different variables.</p>
         <div style="margin-top:12px;padding:12px 16px;background:var(--bg-hover);border:1px solid var(--border-dim);border-radius:6px;">
           <div style="font-size:10px;letter-spacing:2px;color:var(--green-primary);margin-bottom:8px;">ZONE-BASED DECAY TO B0</div>
           <p style="font-size:12px;color:var(--text-secondary);line-height:1.8;margin:0;">
@@ -478,7 +478,7 @@
           <tr><td class="label">V1</td><td class="value">Genesis</td><td class="value">48h half-life, 6.25% delta cap, &plusmn;1 slew rate</td></tr>
           <tr><td class="label">V2</td><td class="highlight">1,450</td><td class="value">24h half-life, 12.5% delta cap</td></tr>
           <tr><td class="label">V3</td><td class="highlight">4,100</td><td class="value">Slew rate &plusmn;1 &rarr; &plusmn;3, lag floor (lag/8 minimum profile), improved equalizer responsiveness</td></tr>
-          <tr><td class="label">V3.1</td><td class="highlight">4,110</td><td class="value">Stored profile_index from BlockMeta (prevents slew rate bypass), anti-stall always 7,200s</td></tr>
+          <tr><td class="label">V3.1</td><td class="highlight">4,110</td><td class="value">Stored profile_index from BlockMeta (prevents slew rate bypass), anti-stall floor set to 7,200s</td></tr>
           <tr><td class="label">V4</td><td class="highlight">4,200</td><td class="cyan">Ahead Guard: clamps bitsQ relaxation to 1.56%/block when chain &ge;16 blocks ahead (H8+). Hysteresis: enter &ge;16, exit &le;8</td></tr>
           <tr><td class="label">V6</td><td class="highlight">5,000</td><td class="cyan">Slew rate &plusmn;3 &rarr; &plusmn;1, H10&ndash;H35 scale=2 (V6 calibration), H35 hardest (k=20, steps=20, margin=115)</td></tr>
           <tr><td class="label">V7 avg288</td><td class="highlight">5,175</td><td class="cyan">bitsQ switches to avg288-based: avg of last 288 block intervals vs 600s target. Half-life exponential no longer used (preserved for historical blocks only)</td></tr>
@@ -521,7 +521,7 @@
       <div class="spec-body">
         <table class="code-table">
           <tr><th>Feature</th><th>Description</th></tr>
-          <tr><td class="label">Anti-stall decay</td><td class="value">Decay activates after 7,200s (always 2 hours) without a block &mdash; zone-based, proportional, no ceiling</td></tr>
+          <tr><td class="label">Anti-stall decay</td><td class="value">Decay activates after 7,200s (2 hours, current active floor) without a block &mdash; zone-based, proportional, no ceiling</td></tr>
           <tr><td class="label">Level system</td><td class="value">Discrete levels (not continuous) for deterministic consensus &mdash; any two nodes compute the same level</td></tr>
           <tr><td class="label">Floor at B0</td><td class="value">Chain always gets at least B0 stability requirements, even when behind schedule</td></tr>
           <tr><td class="label">Stateless recalculation</td><td class="value">Any node can compute the cASERT level from the chain alone, no extra state needed</td></tr>
