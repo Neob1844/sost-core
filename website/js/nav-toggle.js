@@ -378,9 +378,9 @@
     a.href='news.html'; a.title='News & Updates';
     a.className='sost-news-btn';
     a.style.width=sz+'px'; a.style.height=sz+'px'; a.style.minWidth=sz+'px';
-    var ic=Math.round(sz*0.30), tx=Math.max(9,Math.round(sz*0.115));
+    var ic=Math.round(sz*0.26), tx=Math.max(8,Math.round(sz*0.093));
     a.innerHTML='<span style="font-size:'+ic+'px;line-height:1;margin-bottom:2px">📰</span>'
-      +'<span style="color:#f59e0b;font-size:'+tx+'px;font-weight:900;letter-spacing:1px;text-shadow:0 0 8px rgba(245,158,11,.6)">NEWS</span>';
+      +'<span style="color:#f59e0b;font-size:'+tx+'px;font-weight:900;letter-spacing:.5px;line-height:1.08;text-align:center;text-shadow:0 0 8px rgba(245,158,11,.6)">NEWS &amp;<br>UPDATES</span>';
     watch.parentNode.insertBefore(a, watch.nextSibling);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',injectNewsBtn,{once:true});

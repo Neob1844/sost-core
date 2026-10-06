@@ -1,4 +1,4 @@
 {
-  "v": "2026-10-06-v500-logos-pulse-decentrallink",
-  "note": "Header logos: inner content enlarged (ConvergenceX/Atomix/News +25%, DTD +5%) with outer circle/spacing/header unchanged; pulse ~32% slower. Banner: added 'More decentralization information here' link to news.html#decentralization. Frontend only."
+  "v": "2026-10-06-v501-news-and-updates",
+  "note": "Renamed the News section to 'News & Updates': nav tile label (two-line) + news.html heading. Frontend only."
 }
