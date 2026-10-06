@@ -699,7 +699,13 @@
     host.style.setProperty('--vcx-ac',o.accent); host.style.setProperty('--vcx-bd',o.border);
     host.style.setProperty('--vcx-bg',o.bg); host.style.setProperty('--vcx-mut',o.mut);
     var sk='vcx_'+o.site, hit=!sessionStorage.getItem(sk);
-    if(hit){ try{sessionStorage.setItem(sk,'1');}catch(e){} fetch(o.base+'?site='+encodeURIComponent(o.site)+'&hit=1').catch(function(){}); }
+    if(hit){ try{sessionStorage.setItem(sk,'1');}catch(e){} }
+    // ONE request on load: registers the visit (first page of the session) and returns the real count,
+    // so the odometer rolls ONCE, straight to the live number. seed is only a fallback if /counter is down.
+    var real=null, shown=false;
+    var ready=fetch(o.base+'?site='+encodeURIComponent(o.site)+(hit?'&hit=1':'')).then(function(r){return r.json();}).then(function(d){
+      if(d&&typeof d.count==='number') real=d.count;
+    }).catch(function(){});
     var btn=document.createElement('button'); btn.type='button'; btn.className='vcx-btn'; btn.textContent=o.btn;
     var box=document.createElement('span'); box.className='vcx'; box.style.display='none';
     var dot=document.createElement('span'); dot.className='vcx-dot';
@@ -707,11 +713,11 @@
     var lbl=document.createElement('span'); lbl.className='vcx-lbl'; lbl.textContent=o.label;
     box.appendChild(dot); box.appendChild(num); box.appendChild(lbl);
     host.appendChild(btn); host.appendChild(box);
+    function show(){ if(shown) return; shown=true; build(num, real!==null?real:o.seed); }
     btn.addEventListener('click',function(){
-      btn.style.display='none'; box.style.display='inline-flex'; build(num,o.seed);
-      fetch(o.base+'?site='+encodeURIComponent(o.site)).then(function(r){return r.json();}).then(function(d){
-        if(d&&typeof d.count==='number') build(num,d.count);
-      }).catch(function(){});
+      btn.style.display='none'; box.style.display='inline-flex';
+      if(real!==null){ show(); return; }
+      num.textContent='\u2026'; ready.then(show); setTimeout(show,4000);
     });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',mountCounter,{once:true});
