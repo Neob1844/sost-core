@@ -159,6 +159,11 @@ inline bool is_asset_output(uint8_t t) {
     return t == OUT_ASSET_TRANSFER || t == OUT_ASSET_ISSUE_AUTH ||
            t == OUT_ASSET_BURN     || t == OUT_ASSET_GENESIS_DEF;
 }
+// the ONLY tx types allowed to create, move or destroy native-asset state
+inline bool is_asset_tx_type(uint8_t tx_type) {
+    return tx_type == TX_TYPE_ASSET_GENESIS  || tx_type == TX_TYPE_ASSET_ISSUE ||
+           tx_type == TX_TYPE_ASSET_TRANSFER || tx_type == TX_TYPE_ASSET_BURN;
+}
 // spendable in a later tx (creates a live UTXO with an asset facet)
 inline bool is_spendable_asset_output(uint8_t t) {
     return t == OUT_ASSET_TRANSFER || t == OUT_ASSET_ISSUE_AUTH;

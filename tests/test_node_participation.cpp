@@ -407,6 +407,17 @@ static void test_mempool_antispam() {
     sost::TxValidationContext ctx; ctx.spend_height = sost::HIST_JACKPOT_V2_HEIGHT + 1; // activation live
     auto acc=[&](const Transaction& tx){ return mp.AcceptToMempool(tx, utxo, ctx, 1000).accepted; };
 
+    // EMERGENCY 2026-10-08: no validator installed -> every node tx is rejected (fail-closed)
+    TEST("no node-tx validator installed -> NODE_BIND rejected (fail-closed)",
+         !acc(build_node_bind_tx(make_bind(2,3,1))));
+    // a validator that refuses -> rejected, and nothing enters the pool
+    mp.SetNodeTxValidator([](const Transaction&, int64_t, std::string& why){ why = "refused"; return false; });
+    TEST("validator refuses -> NODE_BIND rejected", !acc(build_node_bind_tx(make_bind(2,3,1))));
+    TEST("validator refuses -> NODE_HEARTBEAT rejected", !acc(build_node_heartbeat_tx(make_hb(3,0,Bytes32{}))));
+    TEST("validator refuses -> pool still empty", mp.Size() == 0);
+    // the anti-spam index logic below is exercised with a permissive validator
+    mp.SetNodeTxValidator([](const Transaction&, int64_t, std::string&){ return true; });
+
     // before activation -> rejected
     { sost::TxValidationContext c0; c0.spend_height = sost::HIST_JACKPOT_V2_HEIGHT - 1;
       auto r=mp.AcceptToMempool(build_node_bind_tx(make_bind(2,3,1)), utxo, c0, 1000);
@@ -439,18 +450,99 @@ static void test_mempool_antispam() {
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// EMERGENCY 2026-10-08 — MAINNET FAIL-CLOSED. On a mainnet build node participation
+// is DEFERRED (NODE_PARTICIPATION_ACTIVATION_HEIGHT == INT64_MAX): no node tx is ever
+// valid — not in a block, not in the mempool — so no miner is ever node-bound and the
+// Jackpot V2 eligible set is empty (rollover, nothing paid). The activation-dependent
+// suites above run on devnet/testnet builds, where participation is live.
+static void test_mainnet_fail_closed() {
+    TEST("mainnet: NODE_PARTICIPATION_ACTIVATION_HEIGHT == INT64_MAX",
+         NODE_PARTICIPATION_ACTIVATION_HEIGHT == INT64_MAX);
+    TEST("mainnet: HIST_JACKPOT_V2_HEIGHT stays 30000 (owner-locked)", HIST_JACKPOT_V2_HEIGHT == 30000);
+    const int64_t hs[] = {29999, 30000, 30186, 30287, 30288, 31338, 40000, 1000000000LL, INT64_MAX - 1};
+    bool all_off = true;
+    for (int64_t h : hs) all_off = all_off && !node_participation_active_at(h);
+    TEST("mainnet: participation inactive at 29999/30000/30186/30288/31338/40000/1e9/MAX-1", all_off);
+
+    // valid-signature bind / heartbeat are rejected at every V2 height
+    TEST("mainnet: valid NODE_BIND rejected at #30,000 (before_activation)",
+         !check_bind(make_bind(2, 3, 1), 30000).ok &&
+         std::string(check_bind(make_bind(2, 3, 1), 30000).reason) == "before_activation");
+    TEST("mainnet: valid NODE_BIND rejected at #30,186", !check_bind(make_bind(2, 3, 1), 30186).ok);
+    TEST("mainnet: NODE_HEARTBEAT rejected at #30,288 (epoch boundary)",
+         !check_heartbeat(make_hb(3, 1, TIP0()), 30288, A, L, TIP0()).ok);
+
+    // a block carrying any node tx is INVALID at every V2 height
+    for (int64_t h : {30000LL, 30186LL, 30288LL, 31338LL}) {
+        NodeState st;
+        BlockNodeTxs b; b.binds.push_back(make_bind(2, 3, 1));
+        auto r = connect_block_node_txs(st, b, h, A, L, block_hash_at);
+        char m[96]; std::snprintf(m, sizeof m, "mainnet: block with NODE_BIND at #%lld INVALID", (long long)h);
+        TEST(m, !r.ok && st.binds().empty());
+        BlockNodeTxs hb; hb.heartbeats.push_back(make_hb(3, 0, TIP0()));
+        auto r2 = connect_block_node_txs(st, hb, h, A, L, block_hash_at);
+        std::snprintf(m, sizeof m, "mainnet: block with NODE_HEARTBEAT at #%lld INVALID", (long long)h);
+        TEST(m, !r2.ok && st.heartbeats().empty());
+    }
+    // an empty block is fine (no node tx -> nothing to reject)
+    { NodeState st; BlockNodeTxs none; TEST("mainnet: block without node txs connects", connect_block_node_txs(st, none, 30186, A, L, block_hash_at).ok); }
+
+    // mempool: even with a permissive validator installed, the activation guard rejects
+    {
+        sost::Mempool mp; sost::UtxoSet utxo;
+        mp.SetNodeTxValidator([](const Transaction&, int64_t, std::string&){ return true; });
+        for (int64_t h : {30000LL, 30186LL, 30288LL}) {
+            sost::TxValidationContext c; c.spend_height = h;
+            const bool b = mp.AcceptToMempool(build_node_bind_tx(make_bind(2, 3, 1)), utxo, c, 1000).accepted;
+            const bool k = mp.AcceptToMempool(build_node_heartbeat_tx(make_hb(3, 0, TIP0())), utxo, c, 1000).accepted;
+            char m[96]; std::snprintf(m, sizeof m, "mainnet: mempool rejects NODE_BIND+HEARTBEAT at #%lld", (long long)h);
+            TEST(m, !b && !k);
+        }
+        TEST("mainnet: mempool holds no node tx", mp.Size() == 0);
+    }
+
+    // Jackpot V2 at the first V2 draw (#30,186): with no binding possible, every PoW
+    // candidate fails JV2_NOT_NODE_BOUND -> eligible set empty -> no winner -> rollover.
+    {
+        std::vector<JackpotV2Candidate> cands;
+        for (uint8_t i = 1; i <= 6; ++i) {
+            JackpotV2Candidate c; c.mining_pkh.fill(i); c.sbpow_valid = true;
+            c.pow_blocks = 300; c.node_bound = false; c.heartbeats_in_window = 0;
+            cands.push_back(c);
+        }
+        const int64_t H = 30186;
+        auto w = jv2_build_weighted_set(cands, HIST_JACKPOT_V2_HEIGHT, NODE_EPOCH_LENGTH, H);
+        Bytes32 seed{}; seed.fill(0x5a);
+        TEST("mainnet: #30,186 Jackpot V2 eligible set EMPTY (nobody node-bound)", w.empty());
+        TEST("mainnet: #30,186 Jackpot V2 has NO winner (-> rollover)", jv2_select_winner_index(w, seed) == -1);
+        sost::jackpot::JackpotResult jr = sost::jackpot::hist_jackpot_apply(
+            H, jv2_select_winner_index(w, seed) >= 0, 1000 * STOCKS_PER_SOST, 0);
+        TEST("mainnet: #30,186 no payout, reserve intact, base accrues to rollover (no burn)",
+             !jr.paid && jr.payout == 0 && jr.reserve_after == 1000 * STOCKS_PER_SOST && jr.rollover_after > 0);
+        TEST("mainnet: ramp 0/0 at #30,186 does not bypass the NODE_BIND requirement",
+             jv2_eligibility_reason(cands[0], HIST_JACKPOT_V2_HEIGHT, NODE_EPOCH_LENGTH, H) & JV2_NOT_NODE_BOUND);
+    }
+}
+
 int main() {
     printf("== test_node_participation (V16 NODE_BIND/HEARTBEAT tx layer) ==\n");
     test_serialization();
-    test_bind_validation_and_activation_guard();
-    test_heartbeat_validation();
     test_state_reorg_and_rules();
     test_final_eligibility_metric();
-    test_block_processing();
     test_reindex_parity();
-    test_payout_integration();
     test_tx_encoding();
-    test_mempool_antispam();
+    test_payout_integration();
+    if (node_participation_active_at(A)) {
+        // devnet / testnet builds: participation is live at A -> full feature coverage
+        test_bind_validation_and_activation_guard();
+        test_heartbeat_validation();
+        test_block_processing();
+        test_mempool_antispam();
+    } else {
+        // mainnet build: participation DEFERRED -> prove it is fail-closed everywhere
+        test_mainnet_fail_closed();
+    }
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail ? 1 : 0;
 }

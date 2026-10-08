@@ -110,10 +110,11 @@ MempoolAcceptResult Mempool::AcceptToMempool(
 
     // V16: node-participation txs (NODE_BIND / NODE_HEARTBEAT) are 0-value / 0-fee
     // protocol txs (no UTXO inputs). They bypass the fee/input/relay-floor path.
-    // Only the canonical SHAPE is checked here; full validation (activation guard,
-    // Schnorr signature, tip_ref, node-state seq/uniqueness/dedup) is done by the
-    // node's sendrawtransaction handler (which has chain + node-state access) and,
-    // authoritatively, by ConnectBlock's connect_block_node_txs before acceptance.
+    // Shape is checked here; full validation (Schnorr signature, epoch, tip_ref,
+    // node-state seq/uniqueness/dedup) runs through the node-installed validator
+    // (SetNodeTxValidator), which applies connect_block_node_txs — the same rule
+    // ConnectBlock enforces — before admission. (Until 2026-10-08 only the shape was
+    // checked and an invalid node tx could poison every block template.)
     if (tx.tx_type == TX_TYPE_NODE_BIND || tx.tx_type == TX_TYPE_NODE_HEARTBEAT) {
         // Activation guard at RELAY time: a node tx that would be invalid at the
         // next block MUST NOT enter the mempool — otherwise it poisons the miner's
@@ -129,6 +130,18 @@ MempoolAcceptResult Mempool::AcceptToMempool(
         // Rate-limit: cap total pending node txs (cheap DoS bound before any parse).
         if (node_bind_pending_.size() + node_hb_pending_.size() >= NODE_TX_MEMPOOL_MAX)
             return MempoolAcceptResult::Fail(MempoolAcceptCode::POLICY_FAIL, "node-tx mempool full", nid);
+        // EMERGENCY 2026-10-08: full consensus validation BEFORE admission (signature,
+        // epoch, tip_ref, binding ownership, seq, dedup — the block rule itself). A node
+        // tx that would make the next block invalid never enters the pool. Fail-closed.
+        {
+            std::string why;
+            if (!node_tx_validator_)
+                return MempoolAcceptResult::Fail(MempoolAcceptCode::CONSENSUS_FAIL,
+                    "node tx rejected: no node-tx validator installed (fail-closed)", nid);
+            if (!node_tx_validator_(tx, ctx.spend_height, why))
+                return MempoolAcceptResult::Fail(MempoolAcceptCode::CONSENSUS_FAIL,
+                    "node tx invalid: " + why, nid);
+        }
 
         // Helper to finish acceptance once policy passes.
         auto accept = [&]() {

@@ -439,6 +439,16 @@ static TxValidationResult ValidateInputs(
                 (int32_t)i);
         }
 
+        // S15 (EMERGENCY 2026-10-08) — an asset-carrying UTXO may be spent ONLY by an
+        // ASSET_* tx. A STANDARD/HTLC tx spending it would move or destroy asset state
+        // outside validate_asset_tx. No asset UTXO exists on any historical block, so
+        // this can never change the validity of an already-mined transaction.
+        if (is_asset_output(utxo.type) && !is_asset_tx_type(tx.tx_type)) {
+            return TxValidationResult::Fail(TxValCode::S15_ASSET_STATE_NON_ASSET_TX,
+                "S15: input[" + std::to_string(i) + "] spends a native-asset output from a "
+                "non-asset tx (type 0x" + HexStr(&tx.tx_type, 1) + ")", (int32_t)i);
+        }
+
         // -------------------------------------------------------------------
         // S13 (V15, BLOCKER 2) — CONSTITUTIONAL RESERVE FREEZE.
         //
@@ -766,9 +776,19 @@ TxValidationResult ValidateTransactionConsensus(
         // are live (height >= NATIVE_ASSETS_ACTIVATION_HEIGHT). Their structure/payload is
         // validated by R14; the ASSET dimension by validate_asset_tx in the block path.
         // Pre-activation this is false, so replay stays byte-identical.
-        if (!allowed && native_assets_active_at(ctx.spend_height)) {
+        if (!allowed && native_assets_active_at(ctx.spend_height) && is_asset_tx_type(tx.tx_type)) {
             allowed = (t == OUT_ASSET_TRANSFER || t == OUT_ASSET_ISSUE_AUTH ||
                        t == OUT_ASSET_BURN     || t == OUT_ASSET_GENESIS_DEF);
+        }
+        // EMERGENCY 2026-10-08 (CRITICAL #3): the asset allowance above is bound to the
+        // ASSET_* tx types. A STANDARD/HTLC tx carrying an asset output (which would burn
+        // SOST into an unspendable OUT_ASSET_BURN, counterfeit units via OUT_ASSET_TRANSFER,
+        // or bypass S14/max_supply) is rejected with its own code.
+        if (!allowed && is_asset_output(t) && !is_asset_tx_type(tx.tx_type)) {
+            return TxValidationResult::Fail(TxValCode::S15_ASSET_STATE_NON_ASSET_TX,
+                "S15: non-asset tx (type 0x" + HexStr(&tx.tx_type, 1) + ") output[" +
+                std::to_string(i) + "] carries native-asset type 0x" + HexStr(&t, 1),
+                -1, (int32_t)i);
         }
         if (!allowed) {
             return TxValidationResult::Fail(TxValCode::S9_BAD_STD_OUTPUT_TYPE,

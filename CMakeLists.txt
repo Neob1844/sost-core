@@ -913,6 +913,34 @@ add_executable(test-node-participation tests/test_node_participation.cpp)
 target_link_libraries(test-node-participation PRIVATE sost-core)
 add_test(NAME node-participation COMMAND test-node-participation)
 
+# EMERGENCY 2026-10-08 (V30000 audit) — regression suite for node-tx mempool poisoning,
+# the STANDARD-tx native-asset bypass and the mainnet fail-closed deferral. Build-agnostic.
+add_executable(test-emergency-v30000 tests/test_emergency_v30000.cpp)
+target_link_libraries(test-emergency-v30000 PRIVATE sost-core)
+add_test(NAME emergency-v30000 COMMAND test-emergency-v30000)
+
+# Native-asset suites (existed but were never registered with ctest). Serialization and
+# index are pure; activation / consensus / admin gate exercise the LIVE layer, so they
+# run only where it is live (devnet/testnet) — on mainnet the layer is deferred and its
+# fail-closed behaviour is covered by emergency-v30000.
+add_executable(test-native-assets-serial tests/test_native_assets_serial.cpp)
+target_link_libraries(test-native-assets-serial PRIVATE sost-core)
+add_test(NAME native-assets-serial COMMAND test-native-assets-serial)
+add_executable(test-native-assets-index tests/test_native_assets_index.cpp)
+target_link_libraries(test-native-assets-index PRIVATE sost-core)
+add_test(NAME native-assets-index COMMAND test-native-assets-index)
+if(SOST_DEVNET_FORKS OR SOST_TESTNET_FORKS)
+    add_executable(test-native-assets-activation tests/test_native_assets_activation.cpp)
+    target_link_libraries(test-native-assets-activation PRIVATE sost-core)
+    add_test(NAME native-assets-activation COMMAND test-native-assets-activation)
+    add_executable(test-native-assets-consensus tests/test_native_assets_consensus.cpp)
+    target_link_libraries(test-native-assets-consensus PRIVATE sost-core)
+    add_test(NAME native-assets-consensus COMMAND test-native-assets-consensus)
+    add_executable(test-admin-gate tests/test_admin_gate.cpp)
+    target_link_libraries(test-admin-gate PRIVATE sost-core)
+    add_test(NAME admin-gate COMMAND test-admin-gate)
+endif()
+
 # V15 activation boundary (P9) — header-only; compiled per active profile. On mainnet it must
 # see V15_HEIGHT=25000 and a clean 24999/25000 boundary + jackpot-first at 25290 (no off-by-one).
 add_executable(test-v15-activation-boundary tests/test_v15_activation_boundary.cpp)

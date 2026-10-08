@@ -130,6 +130,10 @@ enum class TxValCode : int {
     // private key stops being sufficient authority at V15.
     S13_RESERVE_FROZEN          = 213,
     S14_RESTRICTED_DEV_MODE     = 214,
+    // EMERGENCY 2026-10-08 — native-asset state (asset outputs / asset UTXOs) may be
+    // created, moved or destroyed ONLY by an ASSET_* tx type. A STANDARD / HTLC tx that
+    // carries or spends asset state is consensus-invalid (closes the S9 bypass).
+    S15_ASSET_STATE_NON_ASSET_TX = 215,
 
     // Coinbase (CB1-CB10)
     CB1_MISSING_COINBASE   = 301,

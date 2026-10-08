@@ -3024,12 +3024,14 @@ static std::string handle_getrawblock(const std::string& id, const std::vector<s
     return rpc_result(id, "\"" + json_escape(raw) + "\"");
 }
 
+static void filter_template_node_txs(Mempool::BlockTemplate& t, int64_t next_height);  // EMERGENCY 2026-10-08 (defined with the node-state hooks)
 static std::string handle_getblocktemplate(const std::string& id, const std::vector<std::string>& p) {
     g_miner_stats.getblocktemplate_calls.fetch_add(1, std::memory_order_relaxed);
     std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
     // V14.7: pass the height this template will be mined at (tip + 1) so an
     // EXPIRED HTLC LOCK is kept out of the block (never poisons it — see R17).
     auto tmpl = g_mempool.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, NODE_MAX_BLOCK_TX_BYTES, g_chain_height + 1);
+    filter_template_node_txs(tmpl, g_chain_height + 1);   // EMERGENCY 2026-10-08: never serve a poisoned template
 
     // Compute next block info
     int64_t next_height = g_chain_height + 1;
@@ -5930,6 +5932,82 @@ static void undo_node_state_for_block(int64_t height) {
         sost::node_participation::disconnect_block_node_txs(g_node_state, it->second);
         g_node_undos.erase(it);
     }
+}
+
+// ===========================================================================
+// EMERGENCY 2026-10-08 (V30000 audit, CRITICAL #2) — node txs are validated with
+// the AUTHORITATIVE block rule before they can reach the mempool or a template.
+// connect_block_node_txs runs on a SCRATCH copy of the live node state, so the
+// check is exactly what ConnectBlock will enforce at `height` (activation guard,
+// signature, epoch / tip_ref, binding ownership, seq, same-block caps, dedup) and
+// the live state is never mutated. Used by:
+//   * the mempool validator hook (every AcceptToMempool path: sendrawtransaction,
+//     P2P relay, reorg re-add, auto-heartbeat), one tx at a time;
+//   * the block template, cumulatively, so two individually-valid node txs that
+//     conflict inside one block (or a heartbeat gone stale at an epoch boundary)
+//     are dropped instead of poisoning the block.
+// ===========================================================================
+static bool node_txs_valid_for_block(const std::vector<const Transaction*>& node_txs,
+                                     int64_t height, std::string& why) {
+    namespace np = sost::node_participation;
+    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+    np::BlockNodeTxs bnt;
+    for (const Transaction* t : node_txs) {
+        const char* r = nullptr;
+        auto k = np::classify_node_tx(*t);
+        if (k == np::NodeTxKind::Bind) {
+            np::NodeBindTx b;
+            if (!np::extract_bind(*t, b, &r)) { why = std::string("node_bind_encoding:") + (r ? r : ""); return false; }
+            bnt.binds.push_back(b);
+        } else if (k == np::NodeTxKind::Heartbeat) {
+            np::NodeHeartbeatTx hb;
+            if (!np::extract_heartbeat(*t, hb, &r)) { why = std::string("node_hb_encoding:") + (r ? r : ""); return false; }
+            bnt.heartbeats.push_back(hb);
+        } else {
+            why = "not_a_node_tx"; return false;
+        }
+    }
+    np::NodeState scratch = g_node_state;
+    auto res = np::connect_block_node_txs(scratch, bnt, height,
+                   sost::HIST_JACKPOT_V2_HEIGHT, sost::NODE_EPOCH_LENGTH, node_block_hash_at);
+    if (!res.ok) { why = res.reason ? res.reason : "invalid"; return false; }
+    return true;
+}
+
+static void install_mempool_node_tx_validator() {
+    g_mempool.SetNodeTxValidator([](const Transaction& tx, int64_t spend_height, std::string& why) {
+        return node_txs_valid_for_block({&tx}, spend_height, why);
+    });
+}
+
+// Drop (and evict from the mempool) every node tx that would make a block at
+// `next_height` invalid when combined with the node txs already kept.
+static void filter_template_node_txs(Mempool::BlockTemplate& t, int64_t next_height) {
+    std::vector<const Transaction*> kept_node;
+    std::vector<size_t> keep;
+    std::vector<Hash256> drop;
+    keep.reserve(t.txs.size());
+    for (size_t i = 0; i < t.txs.size(); ++i) {
+        const uint8_t ty = t.txs[i].tx_type;
+        if (ty != TX_TYPE_NODE_BIND && ty != TX_TYPE_NODE_HEARTBEAT) { keep.push_back(i); continue; }
+        kept_node.push_back(&t.txs[i]);
+        std::string why;
+        if (node_txs_valid_for_block(kept_node, next_height, why)) { keep.push_back(i); continue; }
+        kept_node.pop_back();
+        if (i < t.txids.size()) drop.push_back(t.txids[i]);
+        printf("[TEMPLATE] dropped invalid node tx at h=%lld: %s\n", (long long)next_height, why.c_str());
+    }
+    if (keep.size() == t.txs.size()) return;
+    Mempool::BlockTemplate out;
+    out.total_fees = t.total_fees;   // node txs carry 0 fee
+    for (size_t i : keep) {
+        out.txs.push_back(t.txs[i]);
+        if (i < t.txids.size()) out.txids.push_back(t.txids[i]);
+    }
+    out.total_size = 0;
+    for (const auto& id : out.txids) if (const MempoolEntry* me = g_mempool.GetEntry(id)) out.total_size += me->size;
+    for (const auto& id : drop) g_mempool.RemoveTransaction(id);
+    t = std::move(out);
 }
 
 // ===========================================================================
@@ -10291,6 +10369,7 @@ int main(int argc, char** argv) {
            sost::get_assumevalid_height(),
            sost::get_assumevalid_hash().substr(0,16).c_str());
 
+    install_mempool_node_tx_validator();   // EMERGENCY 2026-10-08: node txs fully validated before admission
     if(!load_genesis(genesis_path)){fprintf(stderr,"Error: cannot load genesis\n");return 1;}
     printf("Genesis: %s\n",to_hex(g_genesis_hash.data(),32).c_str());
 

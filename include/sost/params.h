@@ -699,10 +699,18 @@ inline constexpr int64_t  SACS_V2_ACTIVATION_HEIGHT      = 30000;   // mainnet �
 // replay are byte-identical (these types have never been mined). Mainnet activates at the
 // existing V16 fork height (30000) — no second hard fork. Public USE is separately gated
 // at the interface layer (see native_assets_public_enabled), but consensus is LIVE.
+//
+// EMERGENCY 2026-10-08 (V30000 audit, CRITICAL #3 + MEDIUM #7): MAINNET FAIL-CLOSED.
+// The asset layer is deferred on mainnet (INT64_MAX = never active): asset tx types and
+// asset output types stay rejected by R2/R11/S9/ConnectBlock exactly as for every block
+// ever mined, so nothing changes for historical replay and no asset state can exist.
+// Re-enabling requires a NEW, separately audited fork height. Devnet/testnet unchanged.
 #if defined(SOST_DEVNET_FORKS)
 inline constexpr int64_t  NATIVE_ASSETS_ACTIVATION_HEIGHT = 42;     // DEVNET_FAST ONLY (test before/after 42)
+#elif defined(SOST_TESTNET_FORKS)
+inline constexpr int64_t  NATIVE_ASSETS_ACTIVATION_HEIGHT = 30000;  // TESTNET (unchanged)
 #else
-inline constexpr int64_t  NATIVE_ASSETS_ACTIVATION_HEIGHT = 30000;  // mainnet — same height as V16/SACS V2
+inline constexpr int64_t  NATIVE_ASSETS_ACTIVATION_HEIGHT = INT64_MAX;  // MAINNET — DEFERRED (fail-closed)
 #endif
 inline bool native_assets_active_at(int64_t height) {
     return height >= NATIVE_ASSETS_ACTIVATION_HEIGHT;
@@ -1419,8 +1427,23 @@ inline constexpr bool is_hist_jackpot_v2_height(int64_t height) {
 // accepted in a block ONLY from the V2 activation height. Below it the validator
 // rejects them (must be standard) so historical replay is byte-identical. This
 // is the block-level ACTIVATION GUARD for V16.
+//
+// EMERGENCY 2026-10-08 (V30000 audit, CRITICAL #2 + HIGH #4/#5): MAINNET FAIL-CLOSED.
+// NODE_BIND / NODE_HEARTBEAT are deferred on mainnet (INT64_MAX = never active). With no
+// bind ever valid, no mining_pkh is node-bound, the Jackpot V2 eligible set is EMPTY at
+// every V2 jackpot height, and the draw rolls over (nothing paid, reserve untouched).
+// HIST_JACKPOT_V2_HEIGHT itself (owner-locked 30000), the V2 cadence, payout economics,
+// the 50/50 split and the supply are all unchanged — only node eligibility fails closed.
+// Devnet/testnet keep participation at the V2 height so the feature stays testable.
+#if defined(SOST_DEVNET_FORKS) || defined(SOST_TESTNET_FORKS)
+inline constexpr int64_t NODE_PARTICIPATION_ACTIVATION_HEIGHT = HIST_JACKPOT_V2_HEIGHT;
+#else
+inline constexpr int64_t NODE_PARTICIPATION_ACTIVATION_HEIGHT = INT64_MAX;  // MAINNET — DEFERRED
+#endif
+static_assert(NODE_PARTICIPATION_ACTIVATION_HEIGHT >= HIST_JACKPOT_V2_HEIGHT,
+              "node participation can never precede the V2 jackpot activation");
 inline constexpr bool node_participation_active_at(int64_t height) {
-    return height >= HIST_JACKPOT_V2_HEIGHT;
+    return height >= NODE_PARTICIPATION_ACTIVATION_HEIGHT;
 }
 
 // =============================================================================

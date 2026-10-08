@@ -8,6 +8,7 @@
 #include <sost/utxo_set.h>
 
 #include <map>
+#include <functional>
 #include <set>
 #include <string>
 #include <vector>
@@ -99,6 +100,18 @@ class Mempool {
 public:
     explicit Mempool(size_t max_entries = DEFAULT_MEMPOOL_MAX_ENTRIES);
 
+    // EMERGENCY 2026-10-08 (V30000 audit, CRITICAL #2) — FULL node-tx validation
+    // before mempool admission. NODE_BIND / NODE_HEARTBEAT need chain + node-state
+    // context (signature, epoch, tip_ref, ownership, seq, dedup) that the mempool does
+    // not have, so the node installs a validator that runs the SAME authoritative
+    // block rule (connect_block_node_txs) against a copy of the live node state.
+    // Every admission path (sendrawtransaction, P2P relay, reorg re-add, auto-heartbeat)
+    // goes through AcceptToMempool, so none can bypass it. FAIL-CLOSED: with no
+    // validator installed every node tx is rejected.
+    using NodeTxValidator =
+        std::function<bool(const Transaction& tx, int64_t spend_height, std::string& why)>;
+    void SetNodeTxValidator(NodeTxValidator v) { node_tx_validator_ = std::move(v); }
+
     // Enable/disable full RBF (default: enabled)
     void SetRBFEnabled(bool enabled) { rbf_enabled_ = enabled; }
     bool RBFEnabled() const { return rbf_enabled_; }
@@ -159,6 +172,7 @@ public:
     size_t CountByAddress(const std::string& address) const;
 
 private:
+    NodeTxValidator node_tx_validator_;   // EMERGENCY 2026-10-08 (see SetNodeTxValidator)
     size_t max_entries_;
     bool rbf_enabled_{true};  // full RBF enabled by default
 
