@@ -151,7 +151,7 @@
       and verify all three against the official <code>SHA256SUMS</code>. The upgrade activates automatically by block
       height at <span class="win">#30,000</span> &mdash; nothing needs to be restarted at #30,000 itself.
       <div style="margin:12px 0;padding:11px 13px;border:2px solid #fb010d;border-radius:8px;background:rgba(251,1,13,.08)">
-        <b style="color:#ff6b6b;letter-spacing:.6px">&#9888; BE ON THE CURRENT V30000 EMERGENCY BUILD BEFORE #30,000.</b>
+        <b style="color:#ff6b6b;letter-spacing:.6px">&#9888; BE ON THE V30000 FINAL SECURITY BUILD BEFORE #30,000.</b>
         Install it <b>now &mdash; you do not need to wait</b>. The window
         <b class="win">#29,900 &rarr; #30,000</b> is the recommended <b>FINAL VERIFICATION WINDOW</b>: a last check that your
         node and miner are actually running V30000 at activation (and the moment for a final restart if you updated but have
@@ -195,7 +195,7 @@ sha256sum -c SHA256SUMS            # sost-node / sost-miner / sost-cli must ALL 
       <span class="k">WHAT #30,000 ACTIVATES ON MAINNET.</span><br>
       <b>DTD Jackpot V2</b> (the DTD jackpot draw that rewards real Proof-of-Work plus verified node participation)
       activates by block height at #30,000. <b>The native-asset / tokenization / DEX layer does NOT activate on mainnet</b>
-      &mdash; it is <b>deferred and fail-closed</b> in the V30000 emergency build: asset transactions and asset outputs are
+      &mdash; it is <b>deferred and fail-closed</b> in the V30000 FINAL SECURITY BUILD: asset transactions and asset outputs are
       rejected by consensus. Technical availability does not constitute regulatory authorization. Normal DTD and
       ordinary SOST transfers are unaffected.
     </div>
