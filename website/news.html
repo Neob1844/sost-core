@@ -836,11 +836,11 @@ NODE STAYS ALIVE</pre></div>
         <p><b>The fix.</b> A node built from v16.2.3 could not complete a full synchronisation from block&nbsp;0: it stopped on <b>66 historical blocks</b> (heights 4,160&ndash;5,410) mined in April&nbsp;2026 under consensus parameters that were later changed. V30000 pins each of the 66 by <b>height and full block hash</b> — changing no rule for any new block — and also fixes P2P block serving and a sync-time rate-limit that could ban the peer serving you the chain. A full genesis&rarr;tip sync was verified end to end, encrypted and plaintext, matching the reference node with zero rejects; 119/119 tests pass.</p>
         <ul style="margin:8px 0 0;padding-left:20px;line-height:1.8;color:#c9d4e0">
           <li><b>All three binaries changed.</b> <code>sost-node</code>, <code>sost-miner</code> and <code>sost-cli</code> are <b>not</b> byte-identical to v16.2.x &mdash; re-download, verify and swap all three.</li>
-          <li><b>V30000 SHA-256:</b> node <code>78fefb67…</code> &middot; miner <code>eec96efb…</code> &middot; cli <code>c8ae00b9…</code>.</li>
+          <li><b style="color:#ff6b6b">SUPERSEDED &mdash; do not install:</b> original V30000 SHA-256 node <code>78fefb67…</code> &middot; miner <code>eec96efb…</code> &middot; cli <code>c8ae00b9…</code>. Use the V30000 FINAL SECURITY BUILD (top of this page).</li>
           <li><b>What #30,000 activates:</b> DTD Jackpot V2 <i>and</i> the native-asset / tokenization / DEX layer &mdash; the asset layer is <b>admin-gated at consensus and public access is disabled</b> (technical availability is not regulatory authorization). Ordinary SOST transfers are unaffected.</li>
         </ul>
-        <p style="margin-top:10px"><b>Official binaries — verify before running anything:</b></p>
-        <p style="margin-top:6px"><a href="https://github.com/Neob1844/sost-core/releases/tag/v30000" target="_blank" rel="noopener" style="color:#22d3ee">Release and SHA256SUMS</a> &middot; step-by-step <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>. Build directory must be named <code>build</code> if you compile.</p>
+        <p style="margin-top:10px"><b>Current official binaries — verify before running anything:</b></p>
+        <p style="margin-top:6px"><a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee">V30000 FINAL SECURITY BUILD — release and SHA256SUMS</a> (the original v30000 release is superseded) &middot; step-by-step <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>. Build directory must be named <code>build</code> if you compile.</p>
       </div>
     </div>
   </section>
