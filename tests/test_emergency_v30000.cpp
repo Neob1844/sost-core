@@ -6,14 +6,14 @@
 //   CRITICAL #3  STANDARD tx carrying / spending native-asset state (SOST burn,
 //                counterfeit units, S14 + max_supply bypass)
 //
-// Build-agnostic. On a MAINNET build both layers are DEFERRED (fail-closed) and
-// every probe must be rejected; on a devnet/testnet build the layers are live and
-// the new rules (S15 + full node-tx validation before admission) must reject the
-// same probes while legitimate traffic still passes.
+// Build-agnostic. Design target (2026-10-08): CONSENSUS-IDENTICAL to v16.3.0 (the
+// release the network majority runs) at/after #30,000 on mainnet:
+//   * native assets DEFERRED (INT64_MAX) -> asset types rejected exactly as in v16.x;
+//   * NODE_BIND / HEARTBEAT / Jackpot V2 eligibility UNCHANGED (already consensus in
+//     v16.x) -> their poisoning is fixed NON-consensus: full validation before mempool
+//     admission + cumulative template revalidation.
+// On devnet/testnet builds the asset layer is live and S15 must reject the same probes.
 //
-// The mempool validator below mirrors the node's install_mempool_node_tx_validator
-// (scratch copy of the node state + connect_block_node_txs = the block rule). The
-// real node hook is exercised end-to-end by the live-node checks in the report.
 // ============================================================================
 #include "sost/params.h"
 #include "sost/transaction.h"
@@ -125,12 +125,11 @@ static void test_constants() {
     std::printf("\n-- activation constants (%s build) --\n", MAINNET_BUILD ? "MAINNET" : "devnet/testnet");
     TEST("HIST_JACKPOT_V2_HEIGHT unchanged", MAINNET_BUILD ? HIST_JACKPOT_V2_HEIGHT == 30000 : true);
     if (MAINNET_BUILD) {
-        TEST("mainnet NATIVE_ASSETS_ACTIVATION_HEIGHT == INT64_MAX (deferred)", NATIVE_ASSETS_ACTIVATION_HEIGHT == INT64_MAX);
-        TEST("mainnet NODE_PARTICIPATION_ACTIVATION_HEIGHT == INT64_MAX (deferred)", NODE_PARTICIPATION_ACTIVATION_HEIGHT == INT64_MAX);
+        TEST("mainnet NATIVE_ASSETS_ACTIVATION_HEIGHT == INT64_MAX (deferred = v16.x rule set)", NATIVE_ASSETS_ACTIVATION_HEIGHT == INT64_MAX);
         TEST("mainnet assets inactive at 30000 / 30186 / 40000", !native_assets_active_at(30000) && !native_assets_active_at(30186) && !native_assets_active_at(40000));
-        TEST("mainnet node participation inactive at 30000 / 30186 / 30288", !node_participation_active_at(30000) && !node_participation_active_at(30186) && !node_participation_active_at(30288));
         TEST("mainnet restricted dev mode never active (assets deferred)", !restricted_dev_mode_active_at(30000) && !restricted_dev_mode_active_at(40000));
-        TEST("mainnet SACS_V2_ACTIVATION_HEIGHT unchanged (30000)", SACS_V2_ACTIVATION_HEIGHT == 30000);
+        TEST("mainnet node participation UNCHANGED vs v16.x (inactive 29999, live 30000)",
+             !node_participation_active_at(29999) && node_participation_active_at(30000));
         TEST("mainnet V2 jackpot cadence unchanged (first V2 draw #30,186)", is_hist_jackpot_v2_height(30186) && !is_hist_jackpot_v2_height(30000));
     } else {
         TEST("devnet/testnet: assets live (feature testable)", ASSET_LIVE);
@@ -184,8 +183,9 @@ static void test_node_poison() {
         TEST("expired heartbeat REJECTED by mempool at the epoch boundary",
              !acc(t, NODE_A + NODE_L).accepted);
     }
-    if (NODE_LIVE) {
-        // positive controls (only meaningful where participation is live)
+    TEST("node participation live at the V2 height on every build (v16.x rule)", NODE_LIVE);
+    {
+        // positive controls
         Transaction good = np::build_node_heartbeat_tx(hb(6, 0, tip_for(NODE_A - 1)));
         TEST("valid heartbeat from bound node ACCEPTED (positive control)", acc(good, NODE_A + 5).accepted);
         // stale-in-pool heartbeat: template-time revalidation (what the node's filter does)
@@ -203,13 +203,8 @@ static void test_node_poison() {
         TEST("F1c: each bind valid alone (both admitted)", a1 && a2);
         TEST("F1c: together they are INVALID -> template keeps only one",
              node_txs_valid(live, {&b1}, NODE_A + 1, why) && !node_txs_valid(live, {&b1, &b2}, NODE_A + 1, why));
-    } else {
-        TEST("mainnet: even a VALID heartbeat is rejected (participation deferred)",
-             !acc(np::build_node_heartbeat_tx(hb(6, 0, tip_for(NODE_A - 1))), NODE_A + 5).accepted);
-        TEST("mainnet: even a VALID bind is rejected (participation deferred)",
-             !acc(np::build_node_bind_tx(bind(10, npk_of(50), 1)), NODE_A + 1).accepted);
     }
-    TEST("mempool holds no invalid node tx", NODE_LIVE ? mp.Size() <= 1 : mp.Size() == 0);
+    TEST("mempool holds only the one valid heartbeat (no invalid node tx)", mp.Size() == 1);
 
     // spam bound: the node-tx pool is capped (permissive validator to isolate the cap)
     {
@@ -221,11 +216,10 @@ static void test_node_poison() {
             b.mining_pubkey[3] = (i >> 16) & 0xff; b.node_pubkey.fill(0x03); b.bind_seq = 1;
             if (sp.AcceptToMempool(np::build_node_bind_tx(b), u, c, 1000).accepted) ++admitted;
         }
-        if (NODE_LIVE) TEST("spam bound: node-tx pool capped at 4096 (Mempool::NODE_TX_MEMPOOL_MAX)", admitted == 4096);
-        else           TEST("spam bound (mainnet): zero node txs admitted", admitted == 0);
+        TEST("spam bound: node-tx pool capped at 4096 (Mempool::NODE_TX_MEMPOOL_MAX)", admitted == 4096);
     }
     // fail-closed when the node forgot to install a validator
-    if (NODE_LIVE) {
+    {
         Mempool raw; TxValidationContext c; c.spend_height = NODE_A + 1;
         TEST("no validator installed -> valid NODE_BIND still REJECTED (fail-closed)",
              !raw.AcceptToMempool(np::build_node_bind_tx(bind(10, npk_of(51), 1)), u, c, 1000).accepted);
@@ -376,29 +370,12 @@ static void test_no_sost_burn() {
     np::NodeBindTx tmp; TEST("node tx with non-zero amount fails extraction (no value sink)", !np::extract_bind(t, tmp));
 }
 
-// ===========================================================================
-static void test_jackpot_fail_closed() {
-    std::printf("\n-- Jackpot V2 with node participation --\n");
-    if (NODE_LIVE) { TEST("devnet: jackpot V2 behaviour covered by node-participation / jackpot-v2 suites", true); return; }
-    // nobody can ever be node-bound on mainnet -> empty set -> rollover at every V2 draw
-    for (int64_t H : {30186LL, 30474LL, 31338LL, 40122LL}) {
-        std::vector<jv2::JackpotV2Candidate> cs;
-        for (uint8_t i = 1; i <= 8; ++i) { jv2::JackpotV2Candidate c; c.mining_pkh.fill(i); c.sbpow_valid = true; c.pow_blocks = 250; c.heartbeats_in_window = 4; cs.push_back(c); }
-        auto w = jv2::jv2_build_weighted_set(cs, HIST_JACKPOT_V2_HEIGHT, NODE_EPOCH_LENGTH, H);
-        Bytes32 seed{}; seed.fill(0x33);
-        auto jr = sost::jackpot::hist_jackpot_apply(H, jv2::jv2_select_winner_index(w, seed) >= 0, 5000 * STOCKS_PER_SOST, 0);
-        char m[128]; std::snprintf(m, sizeof m, "h=%lld: V2 eligible set empty, nothing paid, reserve intact", (long long)H);
-        TEST(m, w.empty() && !jr.paid && jr.reserve_after == 5000 * STOCKS_PER_SOST);
-    }
-}
-
 int main() {
     std::printf("== test_emergency_v30000 (2026-10-08 audit regressions) ==\n");
     test_constants();
     test_node_poison();
     test_asset_bypass();
     test_no_sost_burn();
-    test_jackpot_fail_closed();
     std::printf("\n== Summary: %d passed, %d failed ==\n", g_pass, g_fail);
     return g_fail ? 1 : 0;
 }

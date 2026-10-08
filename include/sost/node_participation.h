@@ -81,7 +81,7 @@ bool extract_heartbeat(const Transaction&, NodeHeartbeatTx& out, const char** re
 
 // ---- Structural validation (activation guard + fields + signature) ----------
 struct BindCheck { bool ok{false}; PubKeyHash mining_pkh{}; const char* reason{"ok"}; };
-// Verifies: activation guard (node_participation_active_at; mainnet DEFERRED); mining_sig over
+// Verifies: activation guard (height >= HIST_JACKPOT_V2_HEIGHT); mining_sig over
 // bind_message(derive_pkh(mining_pubkey), node_pubkey, bind_seq). State rules
 // (seq monotonic, node_pubkey uniqueness) are enforced separately at apply time.
 BindCheck check_bind(const NodeBindTx& tx, int64_t height);

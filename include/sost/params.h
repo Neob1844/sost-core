@@ -703,7 +703,8 @@ inline constexpr int64_t  SACS_V2_ACTIVATION_HEIGHT      = 30000;   // mainnet �
 // EMERGENCY 2026-10-08 (V30000 audit, CRITICAL #3 + MEDIUM #7): MAINNET FAIL-CLOSED.
 // The asset layer is deferred on mainnet (INT64_MAX = never active): asset tx types and
 // asset output types stay rejected by R2/R11/S9/ConnectBlock exactly as for every block
-// ever mined, so nothing changes for historical replay and no asset state can exist.
+// ever mined — i.e. exactly the v16.3.0 rule set the network majority runs (v16.x has no
+// asset types at all), so this RESTORES consensus identity with v16.x at/after #30,000.
 // Re-enabling requires a NEW, separately audited fork height. Devnet/testnet unchanged.
 #if defined(SOST_DEVNET_FORKS)
 inline constexpr int64_t  NATIVE_ASSETS_ACTIVATION_HEIGHT = 42;     // DEVNET_FAST ONLY (test before/after 42)
@@ -1428,22 +1429,13 @@ inline constexpr bool is_hist_jackpot_v2_height(int64_t height) {
 // rejects them (must be standard) so historical replay is byte-identical. This
 // is the block-level ACTIVATION GUARD for V16.
 //
-// EMERGENCY 2026-10-08 (V30000 audit, CRITICAL #2 + HIGH #4/#5): MAINNET FAIL-CLOSED.
-// NODE_BIND / NODE_HEARTBEAT are deferred on mainnet (INT64_MAX = never active). With no
-// bind ever valid, no mining_pkh is node-bound, the Jackpot V2 eligible set is EMPTY at
-// every V2 jackpot height, and the draw rolls over (nothing paid, reserve untouched).
-// HIST_JACKPOT_V2_HEIGHT itself (owner-locked 30000), the V2 cadence, payout economics,
-// the 50/50 split and the supply are all unchanged — only node eligibility fails closed.
-// Devnet/testnet keep participation at the V2 height so the feature stays testable.
-#if defined(SOST_DEVNET_FORKS) || defined(SOST_TESTNET_FORKS)
-inline constexpr int64_t NODE_PARTICIPATION_ACTIVATION_HEIGHT = HIST_JACKPOT_V2_HEIGHT;
-#else
-inline constexpr int64_t NODE_PARTICIPATION_ACTIVATION_HEIGHT = INT64_MAX;  // MAINNET — DEFERRED
-#endif
-static_assert(NODE_PARTICIPATION_ACTIVATION_HEIGHT >= HIST_JACKPOT_V2_HEIGHT,
-              "node participation can never precede the V2 jackpot activation");
+// EMERGENCY 2026-10-08: deliberately NOT changed. NODE_BIND / NODE_HEARTBEAT / Jackpot V2
+// eligibility are already consensus in every v16.x release the network majority runs;
+// gating them here would split from that majority at the first bind and diverge the
+// #30,186 payout. Their audit findings are fixed NON-consensus instead (full validation
+// before mempool admission + template revalidation, see Mempool::SetNodeTxValidator).
 inline constexpr bool node_participation_active_at(int64_t height) {
-    return height >= NODE_PARTICIPATION_ACTIVATION_HEIGHT;
+    return height >= HIST_JACKPOT_V2_HEIGHT;
 }
 
 // =============================================================================
