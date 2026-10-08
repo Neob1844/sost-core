@@ -441,6 +441,20 @@ size_t Mempool::RemoveExpiredHtlcLocks(int64_t next_height) {
 }
 
 // ---------------------------------------------------------------------------
+// RevalidateNodeTxs (EMERGENCY 2026-10-08)
+// ---------------------------------------------------------------------------
+size_t Mempool::RevalidateNodeTxs(int64_t next_height) {
+    std::vector<Hash256> dead;
+    for (const auto& [txid, e] : entries_) {
+        if (e.tx.tx_type != TX_TYPE_NODE_BIND && e.tx.tx_type != TX_TYPE_NODE_HEARTBEAT) continue;
+        std::string why;
+        if (!node_tx_validator_ || !node_tx_validator_(e.tx, next_height, why)) dead.push_back(txid);
+    }
+    for (const auto& id : dead) RemoveTransaction(id);
+    return dead.size();
+}
+
+// ---------------------------------------------------------------------------
 // BuildBlockTemplate
 // ---------------------------------------------------------------------------
 

@@ -111,6 +111,13 @@ public:
     using NodeTxValidator =
         std::function<bool(const Transaction& tx, int64_t spend_height, std::string& why)>;
     void SetNodeTxValidator(NodeTxValidator v) { node_tx_validator_ = std::move(v); }
+    // Re-run the node-tx validator on every pending NODE_BIND / NODE_HEARTBEAT at
+    // `next_height` and evict the ones that can no longer be mined (stale heartbeat after
+    // an epoch boundary, bind already applied, binding rotated away, ...). Called after
+    // every block connect so a dead node tx neither lingers nor occupies the node-tx cap.
+    // Fail-closed: with no validator installed every pending node tx is evicted.
+    // Returns the number of entries removed.
+    size_t RevalidateNodeTxs(int64_t next_height);
 
     // Enable/disable full RBF (default: enabled)
     void SetRBFEnabled(bool enabled) { rbf_enabled_ = enabled; }

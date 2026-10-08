@@ -155,14 +155,19 @@ HeartbeatCheck check_heartbeat(const NodeHeartbeatTx& tx, int64_t inclusion_heig
 }
 
 // ---- reorg-safe state ------------------------------------------------------
-bool NodeState::bind_acceptable(const PubKeyHash& mining_pkh, const NodePubKey& node_pubkey,
-                                uint64_t bind_seq, int64_t H) const {
-    DerivedBindState st = jv2_derive_bind_state(binds_, H);
+// Pure rule over an already-derived bind state (shared by bind_acceptable, the block
+// path and the mempool policy, so all three are the SAME predicate).
+bool bind_acceptable_in(const DerivedBindState& st, const PubKeyHash& mining_pkh,
+                        const NodePubKey& node_pubkey, uint64_t bind_seq) {
     auto oit = st.owner.find(node_pubkey);
     if (oit != st.owner.end() && oit->second != mining_pkh) return false;   // owned by another miner
     auto mit = st.max_seq.find(mining_pkh);
     if (mit != st.max_seq.end() && (int64_t)bind_seq <= mit->second) return false; // not strictly greater
     return true;
+}
+bool NodeState::bind_acceptable(const PubKeyHash& mining_pkh, const NodePubKey& node_pubkey,
+                                uint64_t bind_seq, int64_t H) const {
+    return bind_acceptable_in(jv2_derive_bind_state(binds_, H), mining_pkh, node_pubkey, bind_seq);
 }
 
 void NodeState::apply_bind(const PubKeyHash& mining_pkh, const NodePubKey& node_pubkey,
@@ -223,6 +228,12 @@ ConnectResult connect_block_node_txs(
         r.ok = true; return r;
     }
 
+    // PERFORMANCE (2026-10-08, audit HIGH #5; semantics UNCHANGED): the pre-block bind state
+    // is a pure function of (state.binds(), height) and `state` is not mutated until the
+    // APPLY step below, so it is derived ONCE here instead of once per bind (it was
+    // O(binds_in_block x N log N)). Every former call site evaluated exactly this value.
+    const DerivedBindState preblock = jv2_derive_bind_state(state.binds(), height);
+
     // ---- validate BINDS (structural + same-block caps + pre-block accept) ----
     std::set<PubKeyHash> block_bind_miners;
     std::set<NodePubKey> block_bind_nodes;
@@ -233,7 +244,7 @@ ConnectResult connect_block_node_txs(
         if (!block_bind_miners.insert(bc.mining_pkh).second) { r.reason = "double_bind_same_block"; return r; }
         if (!block_bind_nodes.insert(b.node_pubkey).second)  { r.reason = "node_pubkey_twice_same_block"; return r; }
         // pre-block state acceptance (seq strictly increasing + global uniqueness)
-        if (!state.bind_acceptable(bc.mining_pkh, b.node_pubkey, b.bind_seq, height)) { r.reason = "bind_not_acceptable"; return r; }
+        if (!bind_acceptable_in(preblock, bc.mining_pkh, b.node_pubkey, b.bind_seq)) { r.reason = "bind_not_acceptable"; return r; }
         NodeBindRecord rec; rec.mining_pkh = bc.mining_pkh; rec.node_pubkey = b.node_pubkey;
         rec.bind_seq = (int64_t)b.bind_seq; rec.inclusion_height = height;
         to_bind.push_back(rec);
@@ -248,7 +259,7 @@ ConnectResult connect_block_node_txs(
     }
     // PRE-BLOCK bindings: this block's binds are NOT yet applied, so this is the
     // state at the START of block H. Order-independent by construction.
-    auto preblock_active = state.active_bindings(height);
+    const auto& preblock_active = preblock.active;
     std::set<std::pair<std::array<uint8_t,20>, int64_t>> block_hb;
     std::vector<std::pair<PubKeyHash,int64_t>> to_hb;
     for (const auto& h : txs.heartbeats) {
@@ -280,4 +291,119 @@ void disconnect_block_node_txs(NodeState& state, const ConnectResult& applied) {
     for (int i = 0; i < applied.hbs_applied;   ++i) state.undo_heartbeat();
 }
 
+// ---- Mempool / block-template POLICY (NON-consensus) — EMERGENCY 2026-10-08 ----
+NodeTxPolicyContext make_node_tx_policy_context(const NodeState& live, int64_t height, int64_t A, int64_t L,
+                                                const std::function<bool(int64_t, Bytes32&)>& block_hash_at) {
+    NodeTxPolicyContext c;
+    c.height = height; c.A = A; c.L = L;
+    c.active = node_participation_active_at(height);
+    c.nbinds = live.binds().size(); c.nhbs = live.heartbeats().size();
+    if (!c.active) return c;
+    c.preblock = jv2_derive_bind_state(live.binds(), height);
+    const int64_t e = jackpot_v2::jv2_epoch_of_height(A, L, height);
+    if (e >= 0) {
+        const int64_t ref_h = jackpot_v2::jv2_epoch_start(A, L, e) - 1;
+        c.have_tip = block_hash_at(ref_h, c.expected_tip);
+    }
+    for (const auto& kv : c.preblock.active) c.owner_of_node[kv.second.node_pubkey] = kv.first;
+    return c;
+}
+
+// Exactly the per-tx checks connect_block_node_txs applies to a block holding ONLY this tx
+// (same helpers, same pre-block state); the same-block caps are handled by the selector.
+NodeTxVerdict judge_node_tx(const NodeTxPolicyContext& c, const NodeState& live, const Transaction& tx) {
+    NodeTxVerdict v;
+    const char* r = nullptr;
+    const NodeTxKind k = classify_node_tx(tx);
+    if (k == NodeTxKind::None) { v.reason = "not_a_node_tx"; return v; }
+    if (!c.active)             { v.reason = "node_tx_before_activation"; return v; }
+    if (k == NodeTxKind::Bind) {
+        NodeBindTx b;
+        if (!extract_bind(tx, b, &r)) { v.reason = std::string("node_bind_encoding:") + (r ? r : ""); return v; }
+        BindCheck bc = check_bind(b, c.height);
+        if (!bc.ok) { v.reason = bc.reason; return v; }
+        if (!bind_acceptable_in(c.preblock, bc.mining_pkh, b.node_pubkey, b.bind_seq)) { v.reason = "bind_not_acceptable"; return v; }
+        v.kind = NodeTxKind::Bind; v.mining_pkh = bc.mining_pkh; v.node_pubkey = b.node_pubkey;
+    } else {
+        NodeHeartbeatTx h;
+        if (!extract_heartbeat(tx, h, &r)) { v.reason = std::string("node_hb_encoding:") + (r ? r : ""); return v; }
+        if (!c.have_tip) { v.reason = "no_tip_ref"; return v; }
+        HeartbeatCheck hc = check_heartbeat(h, c.height, c.A, c.L, c.expected_tip);
+        if (!hc.ok) { v.reason = hc.reason; return v; }
+        auto it = c.owner_of_node.find(h.node_pubkey);
+        if (it == c.owner_of_node.end()) { v.reason = "heartbeat_node_not_active_preblock"; return v; }
+        if (live.has_heartbeat(it->second, (int64_t)h.epoch_idx)) { v.reason = "heartbeat_already_on_chain"; return v; }
+        v.kind = NodeTxKind::Heartbeat; v.mining_pkh = it->second; v.epoch_idx = (int64_t)h.epoch_idx;
+    }
+    v.ok = true; v.reason = "ok";
+    return v;
+}
+
+bool node_txs_valid_for_block(const NodeState& live, const std::vector<const Transaction*>& txs,
+                              int64_t height, int64_t A, int64_t L,
+                              const std::function<bool(int64_t, Bytes32&)>& block_hash_at,
+                              std::string* why) {
+    BlockNodeTxs bnt;
+    for (const Transaction* t : txs) {
+        const char* r = nullptr;
+        switch (classify_node_tx(*t)) {
+        case NodeTxKind::Bind: {
+            NodeBindTx b;
+            if (!extract_bind(*t, b, &r)) { if (why) *why = std::string("node_bind_encoding:") + (r ? r : ""); return false; }
+            bnt.binds.push_back(b);
+            break; }
+        case NodeTxKind::Heartbeat: {
+            NodeHeartbeatTx h;
+            if (!extract_heartbeat(*t, h, &r)) { if (why) *why = std::string("node_hb_encoding:") + (r ? r : ""); return false; }
+            bnt.heartbeats.push_back(h);
+            break; }
+        default:
+            if (why) *why = "not_a_node_tx";
+            return false;
+        }
+    }
+    NodeState scratch = live;                      // never mutate the live state
+    ConnectResult res = connect_block_node_txs(scratch, bnt, height, A, L, block_hash_at);
+    if (!res.ok) { if (why) *why = res.reason ? res.reason : "invalid"; return false; }
+    return true;
+}
+
+NodeTxSelection select_node_txs_for_template(const NodeTxPolicyContext& c, const NodeState& live,
+                                             const std::vector<const Transaction*>& txs,
+                                             const std::function<bool(int64_t, Bytes32&)>& block_hash_at,
+                                             size_t max_keep) {
+    NodeTxSelection sel;
+    std::set<PubKeyHash> bind_miners;
+    std::set<NodePubKey> bind_nodes;
+    std::set<std::pair<PubKeyHash, int64_t>> hb_keys;
+    for (size_t i = 0; i < txs.size(); ++i) {
+        NodeTxVerdict v = judge_node_tx(c, live, *txs[i]);
+        if (!v.ok) { sel.invalid.emplace_back(i, v.reason); continue; }    // can never be mined here
+        if (sel.keep.size() >= max_keep) { sel.deferred.push_back(i); continue; }
+        // the same-block caps of connect_block_node_txs
+        if (v.kind == NodeTxKind::Bind) {
+            if (bind_miners.count(v.mining_pkh) || bind_nodes.count(v.node_pubkey)) { sel.deferred.push_back(i); continue; }
+            bind_miners.insert(v.mining_pkh); bind_nodes.insert(v.node_pubkey);
+        } else {
+            auto key = std::make_pair(v.mining_pkh, v.epoch_idx);
+            if (hb_keys.count(key)) { sel.deferred.push_back(i); continue; }
+            hb_keys.insert(key);
+        }
+        sel.keep.push_back(i);
+    }
+    // Belt and braces: the kept set must pass the AUTHORITATIVE block rule. If it ever does
+    // not (policy/consensus drift), carry NO node tx — a template without them is always valid.
+    if (!sel.keep.empty()) {
+        std::vector<const Transaction*> kept;
+        for (size_t i : sel.keep) kept.push_back(txs[i]);
+        std::string why;
+        if (!node_txs_valid_for_block(live, kept, c.height, c.A, c.L, block_hash_at, &why)) {
+            for (size_t i : sel.keep) sel.deferred.push_back(i);
+            sel.keep.clear();
+            sel.assertion_failed = true;
+            sel.assertion_reason = why;
+        }
+    }
+    return sel;
+}
 } // namespace sost::node_participation

@@ -16,6 +16,7 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <string>
 
 #include "sost/jackpot_v2.h"   // NodeBindRecord, HeartbeatRecord, NodePubKey, queries
 #include "sost/sbpow.h"        // MinerPubkey, MinerSignature, verify_sbpow_signature, derive_pkh_from_pubkey
@@ -94,6 +95,10 @@ struct HeartbeatCheck { bool ok{false}; const char* reason{"ok"}; };
 HeartbeatCheck check_heartbeat(const NodeHeartbeatTx& tx, int64_t inclusion_height,
                                int64_t A, int64_t L, const Bytes32& expected_tip_ref);
 
+// Pure bind-acceptance rule over an already-derived bind state (see NodeState::bind_acceptable).
+bool bind_acceptable_in(const jackpot_v2::DerivedBindState& st, const PubKeyHash& mining_pkh,
+                        const NodePubKey& node_pubkey, uint64_t bind_seq);
+
 // ---- Reorg-safe node-participation state ------------------------------------
 class NodeState {
 public:
@@ -161,5 +166,65 @@ ConnectResult connect_block_node_txs(
 
 // Exact reversal for DisconnectBlock (reorg): pops what connect applied.
 void disconnect_block_node_txs(NodeState& state, const ConnectResult& applied);
+
+// ---- Mempool / block-template POLICY (NON-consensus) — EMERGENCY 2026-10-08 ----
+// The audit (CRITICAL #2) showed node txs entering the mempool with shape checks only:
+// one invalid NODE_BIND / NODE_HEARTBEAT in a template made every mined block invalid.
+// These helpers apply the AUTHORITATIVE block rule (connect_block_node_txs) to a SCRATCH
+// copy of the live state, so policy can never be looser than consensus, and they never
+// mutate `live`. They change no block-validity rule (v16.x-compatible by construction).
+//
+// True iff a block at `height` containing exactly `txs` (node txs only) would pass
+// connect_block_node_txs against `live`. `why` receives the consensus reason on failure.
+bool node_txs_valid_for_block(const NodeState& live, const std::vector<const Transaction*>& txs,
+                              int64_t height, int64_t A, int64_t L,
+                              const std::function<bool(int64_t, Bytes32&)>& block_hash_at,
+                              std::string* why = nullptr);
+
+// Upper bound on node txs one template may carry. Policy only (consensus accepts more);
+// bounds the per-block validation cost our own miners impose (audit HIGH #5). Heartbeats
+// need 1 per miner per 288-block epoch, so 64/block is ample for any realistic miner count.
+constexpr size_t MAX_NODE_TXS_PER_TEMPLATE = 64;
+
+// Everything the per-tx policy needs at one height, derived ONCE from the live state
+// (O(N log N)); judging a tx against it is then O(log N) + one signature check. The node
+// caches it per (tip, height) and rebuilds it whenever the node state changes.
+struct NodeTxPolicyContext {
+    int64_t height{0}, A{0}, L{0};
+    bool    active{false};
+    bool    have_tip{false};
+    Bytes32 expected_tip{};
+    size_t  nbinds{0}, nhbs{0};                     // live-state size it was built from
+    jackpot_v2::DerivedBindState preblock;          // == what connect_block_node_txs derives
+    std::map<NodePubKey, PubKeyHash> owner_of_node; // node key -> miner, active pre-block
+};
+NodeTxPolicyContext make_node_tx_policy_context(const NodeState& live, int64_t height, int64_t A, int64_t L,
+                                                const std::function<bool(int64_t, Bytes32&)>& block_hash_at);
+
+struct NodeTxVerdict {
+    bool        ok{false};
+    std::string reason{"invalid"};
+    NodeTxKind  kind{NodeTxKind::None};
+    PubKeyHash  mining_pkh{};        // bind: the miner; heartbeat: the resolved owner
+    NodePubKey  node_pubkey{};       // bind only
+    int64_t     epoch_idx{-1};       // heartbeat only
+};
+// The per-tx checks of connect_block_node_txs for a block holding only `tx`.
+NodeTxVerdict judge_node_tx(const NodeTxPolicyContext& c, const NodeState& live, const Transaction& tx);
+
+struct NodeTxSelection {
+    std::vector<size_t> keep;                              // indices into the input, in order
+    std::vector<std::pair<size_t, std::string>> invalid;   // can never be mined at this height -> evict
+    std::vector<size_t> deferred;                          // valid but conflicting / over the cap -> keep in pool
+    bool        assertion_failed{false};                   // kept set failed the block rule (then keep is empty)
+    std::string assertion_reason;
+};
+// Greedy, order-preserving selection: per-tx verdicts + the same-block caps (one bind per
+// miner, one bind per node key, one heartbeat per (owner, epoch)), capped at max_keep, then
+// ONE authoritative connect_block_node_txs check on the kept set (fail-safe: keep nothing).
+NodeTxSelection select_node_txs_for_template(const NodeTxPolicyContext& c, const NodeState& live,
+                                             const std::vector<const Transaction*>& txs,
+                                             const std::function<bool(int64_t, Bytes32&)>& block_hash_at,
+                                             size_t max_keep = MAX_NODE_TXS_PER_TEMPLATE);
 
 } // namespace sost::node_participation

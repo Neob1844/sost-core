@@ -5947,66 +5947,79 @@ static void undo_node_state_for_block(int64_t height) {
 //     conflict inside one block (or a heartbeat gone stale at an epoch boundary)
 //     are dropped instead of poisoning the block.
 // ===========================================================================
-static bool node_txs_valid_for_block(const std::vector<const Transaction*>& node_txs,
-                                     int64_t height, std::string& why) {
-    namespace np = sost::node_participation;
-    std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
-    np::BlockNodeTxs bnt;
-    for (const Transaction* t : node_txs) {
-        const char* r = nullptr;
-        auto k = np::classify_node_tx(*t);
-        if (k == np::NodeTxKind::Bind) {
-            np::NodeBindTx b;
-            if (!np::extract_bind(*t, b, &r)) { why = std::string("node_bind_encoding:") + (r ? r : ""); return false; }
-            bnt.binds.push_back(b);
-        } else if (k == np::NodeTxKind::Heartbeat) {
-            np::NodeHeartbeatTx hb;
-            if (!np::extract_heartbeat(*t, hb, &r)) { why = std::string("node_hb_encoding:") + (r ? r : ""); return false; }
-            bnt.heartbeats.push_back(hb);
-        } else {
-            why = "not_a_node_tx"; return false;
-        }
+// Policy context cache: derived ONCE per (height, tip, node-state size) instead of once per
+// judged tx (deriving the bind state is O(N log N) in the number of on-chain binds — audit
+// HIGH #5). The node state only changes when a block connects/disconnects, which changes
+// the tip, so the key is exact. Guarded by g_chain_mu.
+struct NodePolicyCache {
+    bool valid{false};
+    int64_t height{0};
+    std::string tip;
+    size_t nbinds{0}, nhbs{0};
+    sost::node_participation::NodeTxPolicyContext ctx;
+};
+static NodePolicyCache g_node_policy_cache;
+static const sost::node_participation::NodeTxPolicyContext& node_policy_ctx(int64_t height) {
+    const std::string tip = g_blocks.empty() ? std::string() : to_hex(g_blocks.back().block_id.data(), 32);
+    NodePolicyCache& c = g_node_policy_cache;
+    if (!(c.valid && c.height == height && c.tip == tip &&
+          c.nbinds == g_node_state.binds().size() && c.nhbs == g_node_state.heartbeats().size())) {
+        c.ctx = sost::node_participation::make_node_tx_policy_context(
+            g_node_state, height, sost::HIST_JACKPOT_V2_HEIGHT, sost::NODE_EPOCH_LENGTH, node_block_hash_at);
+        c.height = height; c.tip = tip;
+        c.nbinds = g_node_state.binds().size(); c.nhbs = g_node_state.heartbeats().size();
+        c.valid = true;
     }
-    np::NodeState scratch = g_node_state;
-    auto res = np::connect_block_node_txs(scratch, bnt, height,
-                   sost::HIST_JACKPOT_V2_HEIGHT, sost::NODE_EPOCH_LENGTH, node_block_hash_at);
-    if (!res.ok) { why = res.reason ? res.reason : "invalid"; return false; }
-    return true;
+    return c.ctx;
 }
 
 static void install_mempool_node_tx_validator() {
     g_mempool.SetNodeTxValidator([](const Transaction& tx, int64_t spend_height, std::string& why) {
-        return node_txs_valid_for_block({&tx}, spend_height, why);
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        auto v = sost::node_participation::judge_node_tx(node_policy_ctx(spend_height), g_node_state, tx);
+        why = v.reason;
+        return v.ok;
     });
 }
 
-// Drop (and evict from the mempool) every node tx that would make a block at
-// `next_height` invalid when combined with the node txs already kept.
+// Keep only node txs that form a valid block at `next_height` together (per-tx verdicts +
+// same-block caps, capped at MAX_NODE_TXS_PER_TEMPLATE, then one authoritative block-rule
+// check); evict the ones that can never be mined at that height.
 static void filter_template_node_txs(Mempool::BlockTemplate& t, int64_t next_height) {
-    std::vector<const Transaction*> kept_node;
-    std::vector<size_t> keep;
-    std::vector<Hash256> drop;
-    keep.reserve(t.txs.size());
+    namespace np = sost::node_participation;
+    std::vector<const Transaction*> node_txs;
+    std::vector<size_t> node_pos;                 // position of each node tx inside t.txs
     for (size_t i = 0; i < t.txs.size(); ++i) {
         const uint8_t ty = t.txs[i].tx_type;
-        if (ty != TX_TYPE_NODE_BIND && ty != TX_TYPE_NODE_HEARTBEAT) { keep.push_back(i); continue; }
-        kept_node.push_back(&t.txs[i]);
-        std::string why;
-        if (node_txs_valid_for_block(kept_node, next_height, why)) { keep.push_back(i); continue; }
-        kept_node.pop_back();
-        if (i < t.txids.size()) drop.push_back(t.txids[i]);
+        if (ty == TX_TYPE_NODE_BIND || ty == TX_TYPE_NODE_HEARTBEAT) { node_txs.push_back(&t.txs[i]); node_pos.push_back(i); }
+    }
+    if (node_txs.empty()) return;
+    np::NodeTxSelection sel;
+    {
+        std::lock_guard<std::recursive_mutex> lk(g_chain_mu);
+        sel = np::select_node_txs_for_template(node_policy_ctx(next_height), g_node_state, node_txs, node_block_hash_at);
+    }
+    if (sel.assertion_failed)
+        printf("[TEMPLATE] WARNING: node-tx set failed the block rule (%s) — template carries no node tx\n",
+               sel.assertion_reason.c_str());
+    if (sel.keep.size() == node_txs.size()) return;
+    std::vector<bool> drop(t.txs.size(), false);
+    std::vector<Hash256> evict;
+    for (const auto& [k, why] : sel.invalid) {
+        drop[node_pos[k]] = true;
+        if (node_pos[k] < t.txids.size()) evict.push_back(t.txids[node_pos[k]]);
         printf("[TEMPLATE] dropped invalid node tx at h=%lld: %s\n", (long long)next_height, why.c_str());
     }
-    if (keep.size() == t.txs.size()) return;
+    for (size_t k : sel.deferred) drop[node_pos[k]] = true;   // valid, retried next template
     Mempool::BlockTemplate out;
-    out.total_fees = t.total_fees;   // node txs carry 0 fee
-    for (size_t i : keep) {
+    out.total_fees = t.total_fees;                // node txs carry 0 fee
+    for (size_t i = 0; i < t.txs.size(); ++i) {
+        if (drop[i]) continue;
         out.txs.push_back(t.txs[i]);
         if (i < t.txids.size()) out.txids.push_back(t.txids[i]);
     }
-    out.total_size = 0;
     for (const auto& id : out.txids) if (const MempoolEntry* me = g_mempool.GetEntry(id)) out.total_size += me->size;
-    for (const auto& id : drop) g_mempool.RemoveTransaction(id);
+    for (const auto& id : evict) g_mempool.RemoveTransaction(id);
     t = std::move(out);
 }
 
@@ -8007,6 +8020,10 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     // (R17) and must not linger to poison the next block template. No-op < V14.7.
     {
         size_t exp = g_mempool.RemoveExpiredHtlcLocks(height + 1);
+        // EMERGENCY 2026-10-08: evict node txs that can no longer be mined (stale heartbeat
+        // after an epoch boundary, bind already applied, ...). Policy only.
+        if (size_t dn = g_mempool.RevalidateNodeTxs(height + 1))
+            printf("[MEMPOOL] evicted %zu node tx(s) no longer valid at h=%lld\n", dn, (long long)(height + 1));
         if(exp>0) printf("[BLOCK] Mempool: %zu expired HTLC lock(s) evicted\n", exp);
     }
 

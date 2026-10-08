@@ -85,18 +85,20 @@ static np::NodeHeartbeatTx hb(uint32_t ns, uint64_t ep, const Bytes32& tip) {
 static Bytes32 tip_for(int64_t h) { Bytes32 t{}; t.fill((uint8_t)(0x40 + (h & 0x3f))); return t; }
 static bool hash_at(int64_t h, Bytes32& out) { out = tip_for(h); return true; }
 
-// Mirror of the node's validator: authoritative block rule on a scratch state.
+// Authoritative block rule on a scratch copy (set validity).
 static bool node_txs_valid(const np::NodeState& live, const std::vector<const Transaction*>& txs,
                            int64_t height, std::string& why) {
-    np::BlockNodeTxs bnt;
-    for (const Transaction* t : txs) {
-        if (t->tx_type == TX_TYPE_NODE_BIND) { np::NodeBindTx b; if (!np::extract_bind(*t, b)) { why = "enc"; return false; } bnt.binds.push_back(b); }
-        else { np::NodeHeartbeatTx h; if (!np::extract_heartbeat(*t, h)) { why = "enc"; return false; } bnt.heartbeats.push_back(h); }
-    }
-    np::NodeState scratch = live;
-    auto r = np::connect_block_node_txs(scratch, bnt, height, NODE_A, NODE_L, hash_at);
-    if (!r.ok) { why = r.reason; return false; }
-    return true;
+    return np::node_txs_valid_for_block(live, txs, height, NODE_A, NODE_L, hash_at, &why);
+}
+// The REAL per-tx policy the node installs (judge_node_tx over a per-height context).
+static bool judge(const np::NodeState& live, const Transaction& tx, int64_t h, std::string& why) {
+    auto c = np::make_node_tx_policy_context(live, h, NODE_A, NODE_L, hash_at);
+    auto v = np::judge_node_tx(c, live, tx); why = v.reason; return v.ok;
+}
+static np::NodeTxSelection selectT(const np::NodeState& live, const std::vector<const Transaction*>& v, int64_t h,
+                                   size_t cap = np::MAX_NODE_TXS_PER_TEMPLATE) {
+    auto c = np::make_node_tx_policy_context(live, h, NODE_A, NODE_L, hash_at);
+    return np::select_node_txs_for_template(c, live, v, hash_at, cap);
 }
 
 // ---------------------------------------------------------------------------
@@ -139,15 +141,23 @@ static void test_constants() {
 }
 
 // ===========================================================================
-static void test_node_poison() {
-    std::printf("\n-- node-tx poisoning (CRITICAL #2) at h=%lld --\n", (long long)NODE_A);
-    np::NodeState live;          // empty chain node state
-    Mempool mp; UtxoSet u;
-    mp.SetNodeTxValidator([&](const Transaction& tx, int64_t h, std::string& why) {
-        return node_txs_valid(live, {&tx}, h, why);
+// B/F/G — node-tx admission (mempool), template selection, post-block eviction.
+// Uses the REAL library policy (judge_node_tx / select_node_txs_for_template over
+// make_node_tx_policy_context) — the exact functions the node installs.
+static Mempool make_pool(const np::NodeState& live) {
+    Mempool mp;
+    mp.SetNodeTxValidator([&live](const Transaction& tx, int64_t h, std::string& why) {
+        return judge(live, tx, h, why);
     });
-    auto acc = [&](const Transaction& tx, int64_t h) {
-        TxValidationContext c; c.spend_height = h; return mp.AcceptToMempool(tx, u, c, 1000);
+    return mp;
+}
+
+static void test_node_poison() {
+    std::printf("\n-- B: node-tx poisoning (CRITICAL #2), A=%lld L=%lld --\n", (long long)NODE_A, (long long)NODE_L);
+    np::NodeState live;          // empty chain node state
+    Mempool mp = make_pool(live); UtxoSet u;
+    auto acc = [&](Mempool& m, const Transaction& tx, int64_t h) {
+        TxValidationContext c; c.spend_height = h; return m.AcceptToMempool(tx, u, c, 1000);
     };
 
     // 138-byte poison: canonical shape, garbage signature (the audit PoC F1)
@@ -155,59 +165,114 @@ static void test_node_poison() {
         np::NodeBindTx b = bind(1, npk_of(2), 1); b.mining_sig.fill(0x00);
         Transaction t = np::build_node_bind_tx(b);
         TEST("PoC payload is exactly 138 bytes", t.outputs.size() == 1 && t.outputs[0].payload.size() == 138);
-        auto r = acc(t, NODE_A);
+        auto r = acc(mp, t, NODE_A);
         TEST("138-byte bad-sig NODE_BIND REJECTED by mempool", !r.accepted);
+        TEST("  ... reason is the consensus rule (bad_signature)", r.reason.find("bad_signature") != std::string::npos);
         TEST("138-byte poison never reaches the template", mp.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, 500 * 1024, NODE_A).txs.empty());
     }
-    // invalid NODE_BIND: tampered seq vs signed message
     { np::NodeBindTx b = bind(3, npk_of(4), 1); b.bind_seq = 2;
-      TEST("invalid NODE_BIND (seq != signed) REJECTED", !acc(np::build_node_bind_tx(b), NODE_A).accepted); }
-    // invalid NODE_HEARTBEAT: node key not bound to anyone
-    TEST("invalid NODE_HEARTBEAT (unbound node key) REJECTED",
-         !acc(np::build_node_heartbeat_tx(hb(77, 0, tip_for(NODE_A - 1))), NODE_A + 5).accepted);
-    // bad signature heartbeat (bind node 6 first so only the sig is wrong)
-    live.apply_bind(pkh_of(5), npk_of(6), 1, NODE_A);   // effective NODE_A+1
+      TEST("invalid NODE_BIND (seq != signed message) REJECTED", !acc(mp, np::build_node_bind_tx(b), NODE_A).accepted); }
+    { np::NodeBindTx b = bind(3, npk_of(4), 1); b.node_pubkey[7] ^= 0x10;   // sig covers node key
+      TEST("invalid NODE_BIND (node key swapped after signing) REJECTED", !acc(mp, np::build_node_bind_tx(b), NODE_A).accepted); }
+    { Transaction t = np::build_node_bind_tx(bind(3, npk_of(4), 1)); t.outputs[0].amount = 1;
+      TEST("NODE_BIND carrying SOST value REJECTED", !acc(mp, t, NODE_A).accepted); }
+    TEST("NODE_BIND before activation REJECTED", !acc(mp, np::build_node_bind_tx(bind(3, npk_of(4), 1)), NODE_A - 1).accepted);
+
+    // ---- F: heartbeat rules ----
+    std::printf("\n-- F: NODE_HEARTBEAT rules --\n");
+    TEST("heartbeat from UNBOUND node key REJECTED",
+         !acc(mp, np::build_node_heartbeat_tx(hb(77, 0, tip_for(NODE_A - 1))), NODE_A + 5).accepted);
+    live.apply_bind(pkh_of(5), npk_of(6), 1, NODE_A);   // miner 5 -> node 6, effective NODE_A+1
     { np::NodeHeartbeatTx h = hb(6, 0, tip_for(NODE_A - 1)); h.node_sig[5] ^= 0x01;
-      TEST("bad-signature NODE_HEARTBEAT REJECTED", !acc(np::build_node_heartbeat_tx(h), NODE_A + 5).accepted); }
-    // future epoch (epoch 1 submitted inside epoch 0)
-    TEST("future-epoch NODE_HEARTBEAT REJECTED",
-         !acc(np::build_node_heartbeat_tx(hb(6, 1, tip_for(NODE_A + NODE_L - 1))), NODE_A + 5).accepted);
-    // wrong tip_ref
-    TEST("wrong tip_ref NODE_HEARTBEAT REJECTED",
-         !acc(np::build_node_heartbeat_tx(hb(6, 0, tip_for(12345))), NODE_A + 5).accepted);
-    // expired heartbeat at the epoch boundary (#30,288 on mainnet geometry)
+      TEST("bad-signature heartbeat REJECTED", !acc(mp, np::build_node_heartbeat_tx(h), NODE_A + 5).accepted); }
+    { np::NodeHeartbeatTx h = hb(6, 0, tip_for(NODE_A - 1));
+      sbpow::MinerPrivkey sk; sbpow::MinerPubkey pk; mk(99, sk, pk);                 // signed by the WRONG key
+      sbpow::sign_sbpow_commitment(sk, np::heartbeat_message(h.node_pubkey, 0, h.tip_ref_hash), h.node_sig);
+      TEST("heartbeat signed by a key that is not the node key (wrong owner) REJECTED",
+           !acc(mp, np::build_node_heartbeat_tx(h), NODE_A + 5).accepted); }
+    TEST("future-epoch heartbeat REJECTED",
+         !acc(mp, np::build_node_heartbeat_tx(hb(6, 1, tip_for(NODE_A + NODE_L - 1))), NODE_A + 5).accepted);
+    TEST("wrong tip_ref heartbeat REJECTED",
+         !acc(mp, np::build_node_heartbeat_tx(hb(6, 0, tip_for(12345))), NODE_A + 5).accepted);
+    TEST("heartbeat at bind inclusion height (binding not yet effective) REJECTED",
+         !acc(mp, np::build_node_heartbeat_tx(hb(6, 0, tip_for(NODE_A - 1))), NODE_A).accepted);
+
+    // epoch transition: last block of epoch 0 / first of epoch 1 / second of epoch 1
+    const int64_t last0 = NODE_A + NODE_L - 1, first1 = NODE_A + NODE_L, second1 = NODE_A + NODE_L + 1;
     {
-        Transaction t = np::build_node_heartbeat_tx(hb(6, 0, tip_for(NODE_A - 1)));
-        std::string why;
-        TEST("epoch-0 heartbeat is INVALID once the block is in epoch 1 (boundary)",
-             !node_txs_valid(live, {&t}, NODE_A + NODE_L, why));
-        TEST("expired heartbeat REJECTED by mempool at the epoch boundary",
-             !acc(t, NODE_A + NODE_L).accepted);
+        Transaction e0 = np::build_node_heartbeat_tx(hb(6, 0, tip_for(NODE_A - 1)));
+        Transaction e1 = np::build_node_heartbeat_tx(hb(6, 1, tip_for(first1 - 1)));
+        std::string w;
+        char m[160];
+        std::snprintf(m, sizeof m, "epoch-0 heartbeat VALID at #%lld (last block of epoch 0)", (long long)last0);
+        TEST(m, node_txs_valid(live, {&e0}, last0, w));
+        std::snprintf(m, sizeof m, "epoch-0 heartbeat INVALID at #%lld (first block of epoch 1)", (long long)first1);
+        TEST(m, !node_txs_valid(live, {&e0}, first1, w));
+        std::snprintf(m, sizeof m, "epoch-0 heartbeat INVALID at #%lld", (long long)second1);
+        TEST(m, !node_txs_valid(live, {&e0}, second1, w));
+        std::snprintf(m, sizeof m, "epoch-1 heartbeat INVALID at #%lld (future epoch)", (long long)last0);
+        TEST(m, !node_txs_valid(live, {&e1}, last0, w));
+        std::snprintf(m, sizeof m, "epoch-1 heartbeat VALID at #%lld and #%lld", (long long)first1, (long long)second1);
+        TEST(m, node_txs_valid(live, {&e1}, first1, w) && node_txs_valid(live, {&e1}, second1, w));
+
+        // stale-in-pool: admitted while valid, the boundary passes, it is evicted + never templated
+        Mempool sp = make_pool(live);
+        TEST("epoch-0 heartbeat admitted at the last block of epoch 0", acc(sp, e0, last0).accepted);
+        Mempool::BlockTemplate t = sp.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, 500 * 1024, first1);
+        std::vector<const Transaction*> v; for (auto& x : t.txs) v.push_back(&x);
+        auto sel = selectT(live, v, first1);
+        TEST("template at the epoch boundary keeps 0 of the stale heartbeat (marked invalid)",
+             sel.keep.empty() && sel.invalid.size() == 1);
+        TEST("post-block revalidation EVICTS the expired heartbeat", sp.RevalidateNodeTxs(first1) == 1 && sp.Size() == 0);
     }
-    TEST("node participation live at the V2 height on every build (v16.x rule)", NODE_LIVE);
+    // replay / duplicate
     {
-        // positive controls
-        Transaction good = np::build_node_heartbeat_tx(hb(6, 0, tip_for(NODE_A - 1)));
-        TEST("valid heartbeat from bound node ACCEPTED (positive control)", acc(good, NODE_A + 5).accepted);
-        // stale-in-pool heartbeat: template-time revalidation (what the node's filter does)
-        std::string why;
-        TEST("in-pool heartbeat becomes invalid at the next epoch -> template filter drops it",
-             !node_txs_valid(live, {&good}, NODE_A + NODE_L, why));
-        // same-block conflict: two miners bind the SAME node key (F1c)
-        Mempool mp2; mp2.SetNodeTxValidator([&](const Transaction& tx, int64_t h, std::string& w) {
-            return node_txs_valid(live, {&tx}, h, w); });
-        TxValidationContext c; c.spend_height = NODE_A + 1;
+        Transaction g = np::build_node_heartbeat_tx(hb(6, 0, tip_for(NODE_A - 1)));
+        TEST("valid heartbeat ACCEPTED (positive control)", acc(mp, g, NODE_A + 5).accepted);
+        TEST("exact duplicate heartbeat REJECTED (already in pool)", !acc(mp, g, NODE_A + 5).accepted);
+        np::NodeState after = live; after.record_heartbeat(pkh_of(5), 0);          // it got mined
+        std::string w;
+        TEST("replay of a heartbeat already on chain is INVALID", !node_txs_valid(after, {&g}, NODE_A + 6, w));
+        Mempool rp = make_pool(after);
+        TEST("replay REJECTED by mempool", !acc(rp, g, NODE_A + 6).accepted);
+        // reorg: the block that carried it is disconnected -> valid again (state is exact on undo)
+        np::NodeState reorged = after; reorged.undo_heartbeat();
+        TEST("after the carrying block is reorged out the heartbeat is valid again",
+             node_txs_valid(reorged, {&g}, NODE_A + 6, w));
+        // rotation: miner 5 rotates to node 8 -> node 6's heartbeat no longer counts
+        np::NodeState rot = live; rot.apply_bind(pkh_of(5), npk_of(8), 2, NODE_A + 2);
+        TEST("heartbeat by a rotated-away node key is INVALID", !node_txs_valid(rot, {&g}, NODE_A + 5, w));
+    }
+
+    // same-block conflicts (audit F1c): each valid alone, together an invalid block
+    {
+        Mempool m2 = make_pool(live);
         Transaction b1 = np::build_node_bind_tx(bind(10, npk_of(50), 1));
         Transaction b2 = np::build_node_bind_tx(bind(11, npk_of(50), 1));
-        const bool a1 = mp2.AcceptToMempool(b1, u, c, 1000).accepted;
-        const bool a2 = mp2.AcceptToMempool(b2, u, c, 1000).accepted;
-        TEST("F1c: each bind valid alone (both admitted)", a1 && a2);
-        TEST("F1c: together they are INVALID -> template keeps only one",
-             node_txs_valid(live, {&b1}, NODE_A + 1, why) && !node_txs_valid(live, {&b1, &b2}, NODE_A + 1, why));
+        TEST("F1c: bind(miner10,node50) admitted", acc(m2, b1, NODE_A + 1).accepted);
+        TEST("F1c: bind(miner11,node50) admitted (valid alone)", acc(m2, b2, NODE_A + 1).accepted);
+        auto t = m2.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, 500 * 1024, NODE_A + 1);
+        std::vector<const Transaction*> v; for (auto& x : t.txs) v.push_back(&x);
+        auto sel = selectT(live, v, NODE_A + 1);
+        std::vector<const Transaction*> kept; for (size_t k : sel.keep) kept.push_back(v[k]);
+        std::string w;
+        TEST("F1c: template keeps exactly ONE of the conflicting binds", sel.keep.size() == 1 && sel.deferred.size() == 1);
+        TEST("F1c: the kept set is a VALID block", node_txs_valid(live, kept, NODE_A + 1, w));
+        np::NodeState mined = live; np::BlockNodeTxs bnt; np::NodeBindTx bb; np::extract_bind(*kept[0], bb); bnt.binds.push_back(bb);
+        np::connect_block_node_txs(mined, bnt, NODE_A + 1, NODE_A, NODE_L, hash_at);
+        Mempool m3 = make_pool(mined);
+        TEST("F1c: after the first bind is mined the loser is INVALID (bind_not_acceptable)",
+             !node_txs_valid(mined, {v[sel.deferred[0]]}, NODE_A + 2, w));
+        (void)m3;
     }
-    TEST("mempool holds only the one valid heartbeat (no invalid node tx)", mp.Size() == 1);
+    // no validator installed -> fail-closed
+    { Mempool raw; TxValidationContext c; c.spend_height = NODE_A + 1;
+      TEST("no validator installed -> valid NODE_BIND still REJECTED (fail-closed)",
+           !raw.AcceptToMempool(np::build_node_bind_tx(bind(10, npk_of(51), 1)), u, c, 1000).accepted);
+      TEST("no validator installed -> RevalidateNodeTxs evicts nothing it cannot judge (pool empty)", raw.RevalidateNodeTxs(NODE_A + 2) == 0); }
 
-    // spam bound: the node-tx pool is capped (permissive validator to isolate the cap)
+    // ---- G: spam / complexity bounds ----
+    std::printf("\n-- G: spam / complexity bounds --\n");
     {
         Mempool sp; sp.SetNodeTxValidator([](const Transaction&, int64_t, std::string&) { return true; });
         TxValidationContext c; c.spend_height = NODE_A + 1;
@@ -217,14 +282,153 @@ static void test_node_poison() {
             b.mining_pubkey[3] = (i >> 16) & 0xff; b.node_pubkey.fill(0x03); b.bind_seq = 1;
             if (sp.AcceptToMempool(np::build_node_bind_tx(b), u, c, 1000).accepted) ++admitted;
         }
-        TEST("spam bound: node-tx pool capped at 4096 (Mempool::NODE_TX_MEMPOOL_MAX)", admitted == 4096);
+        TEST("node-tx pool capped at 4096 (Mempool::NODE_TX_MEMPOOL_MAX)", admitted == 4096);
     }
-    // fail-closed when the node forgot to install a validator
     {
-        Mempool raw; TxValidationContext c; c.spend_height = NODE_A + 1;
-        TEST("no validator installed -> valid NODE_BIND still REJECTED (fail-closed)",
-             !raw.AcceptToMempool(np::build_node_bind_tx(bind(10, npk_of(51), 1)), u, c, 1000).accepted);
+        // template cap: 100 valid, non-conflicting binds -> at most MAX_NODE_TXS_PER_TEMPLATE kept
+        std::vector<Transaction> bs;
+        for (uint32_t i = 0; i < 100; ++i) bs.push_back(np::build_node_bind_tx(bind(1000 + i, npk_of(5000 + i), 1)));
+        std::vector<const Transaction*> v; for (auto& x : bs) v.push_back(&x);
+        auto sel = selectT(np::NodeState{}, v, NODE_A + 1);
+        TEST("template carries at most MAX_NODE_TXS_PER_TEMPLATE node txs (rest deferred, not evicted)",
+             sel.keep.size() == np::MAX_NODE_TXS_PER_TEMPLATE && sel.deferred.size() == 100 - np::MAX_NODE_TXS_PER_TEMPLATE && sel.invalid.empty());
     }
+}
+
+// ===========================================================================
+// E — NODE_BIND takeover (audit F2). The fix (proof of node-key possession) changes the
+// NODE_BIND wire format = CONSENSUS FIX REQUIRED: YES. It is NOT shipped (the v16.x
+// majority would split). This test pins the CURRENT v16-compatible behaviour so the
+// future fork's regression has a baseline: it is EXPECTED to flip when that fork lands.
+static void test_bind_takeover_known() {
+    std::printf("\n-- E: NODE_BIND takeover (KNOWN, consensus fix required; EXPECTED under v16 rules) --\n");
+    np::NodeState st;
+    const np::NodePubKey victim_node = npk_of(50);
+    np::BlockNodeTxs b1; b1.binds.push_back(bind(99, victim_node, 1));       // attacker miner 99 claims it first
+    auto c1 = np::connect_block_node_txs(st, b1, NODE_A + 1, NODE_A, NODE_L, hash_at);
+    np::BlockNodeTxs b2; b2.binds.push_back(bind(10, victim_node, 1));       // the real owner tries later
+    auto c2 = np::connect_block_node_txs(st, b2, NODE_A + 2, NODE_A, NODE_L, hash_at);
+    np::BlockNodeTxs b3; b3.heartbeats.push_back(hb(50, 0, tip_for(NODE_A - 1)));   // victim's node heartbeats
+    auto c3 = np::connect_block_node_txs(st, b3, NODE_A + 3, NODE_A, NODE_L, hash_at);
+    TEST("EXPECTED (v16 rule): attacker bind of a foreign node key is consensus-valid", c1.ok);
+    TEST("EXPECTED (v16 rule): the real owner can no longer bind that node key", !c2.ok);
+    TEST("EXPECTED (v16 rule): the victim node's heartbeat is credited to the attacker",
+         c3.ok && st.heartbeats_in_window(pkh_of(99), NODE_A, NODE_L, NODE_A + NODE_L) == 1 &&
+         st.heartbeats_in_window(pkh_of(10), NODE_A, NODE_L, NODE_A + NODE_L) == 0);
+    // bounded impact: the victim recovers eligibility by binding a FRESH node key
+    np::BlockNodeTxs b4; b4.binds.push_back(bind(10, npk_of(51), 1));
+    TEST("impact bounded: the victim can bind a fresh node key immediately",
+         np::connect_block_node_txs(st, b4, NODE_A + 4, NODE_A, NODE_L, hash_at).ok);
+    // no value moves: node txs carry 0 SOST and never touch the UTXO set
+    TEST("impact bounded: node txs carry no SOST value (amount 0, non-spendable output)",
+         np::build_node_bind_tx(bind(99, victim_node, 1)).outputs[0].amount == 0 && !np::output_is_spendable(OUT_NODE_PROTOCOL));
+}
+
+// ===========================================================================
+// Differential proofs for the 2026-10-08 performance refactor + the policy layer.
+//  (1) connect_block_node_txs (pre-block state derived ONCE) == the pre-refactor algorithm
+//      (bind_acceptable re-derived per bind) on randomized states/blocks: same ok, same
+//      reason, same resulting state.
+//  (2) judge_node_tx (policy) == connect_block_node_txs on a single-tx block: the policy
+//      is never looser (nor stricter) than the consensus rule.
+namespace ref {
+using namespace sost::node_participation;
+static ConnectResult connect_old(NodeState& state, const BlockNodeTxs& txs, int64_t height, int64_t A, int64_t L,
+                                 const std::function<bool(int64_t, Bytes32&)>& block_hash_at) {
+    ConnectResult r;
+    if (!node_participation_active_at(height)) {
+        if (!txs.binds.empty() || !txs.heartbeats.empty()) { r.reason = "node_tx_before_activation"; return r; }
+        r.ok = true; return r;
+    }
+    std::set<PubKeyHash> mi; std::set<NodePubKey> no; std::vector<jv2::NodeBindRecord> to_bind;
+    for (const auto& b : txs.binds) {
+        BindCheck bc = check_bind(b, height);
+        if (!bc.ok) { r.reason = bc.reason; return r; }
+        if (!mi.insert(bc.mining_pkh).second) { r.reason = "double_bind_same_block"; return r; }
+        if (!no.insert(b.node_pubkey).second)  { r.reason = "node_pubkey_twice_same_block"; return r; }
+        if (!state.bind_acceptable(bc.mining_pkh, b.node_pubkey, b.bind_seq, height)) { r.reason = "bind_not_acceptable"; return r; }
+        jv2::NodeBindRecord rec; rec.mining_pkh = bc.mining_pkh; rec.node_pubkey = b.node_pubkey;
+        rec.bind_seq = (int64_t)b.bind_seq; rec.inclusion_height = height; to_bind.push_back(rec);
+    }
+    const int64_t e = jv2::jv2_epoch_of_height(A, L, height);
+    Bytes32 tip{};
+    if (e >= 0) { if (!block_hash_at(jv2::jv2_epoch_start(A, L, e) - 1, tip)) { r.reason = "no_tip_ref"; return r; } }
+    auto pre = state.active_bindings(height);
+    std::set<std::pair<std::array<uint8_t,20>, int64_t>> bh; std::vector<std::pair<PubKeyHash,int64_t>> to_hb;
+    for (const auto& h : txs.heartbeats) {
+        HeartbeatCheck hc = check_heartbeat(h, height, A, L, tip);
+        if (!hc.ok) { r.reason = hc.reason; return r; }
+        const PubKeyHash* owner = nullptr;
+        for (const auto& kv : pre) if (kv.second.node_pubkey == h.node_pubkey) { owner = &kv.first; break; }
+        if (!owner) { r.reason = "heartbeat_node_not_active_preblock"; return r; }
+        auto key = std::make_pair(*owner, (int64_t)h.epoch_idx);
+        if (!bh.insert(key).second) { r.reason = "dup_heartbeat_same_block"; return r; }
+        if (state.has_heartbeat(*owner, (int64_t)h.epoch_idx)) { r.reason = "heartbeat_already_on_chain"; return r; }
+        to_hb.emplace_back(*owner, (int64_t)h.epoch_idx);
+    }
+    for (const auto& x : to_hb) state.record_heartbeat(x.first, x.second);
+    for (const auto& rec : to_bind) state.apply_bind(rec.mining_pkh, rec.node_pubkey, (uint64_t)rec.bind_seq, rec.inclusion_height);
+    r.ok = true; r.binds_applied = (int)to_bind.size(); r.hbs_applied = (int)to_hb.size();
+    return r;
+}
+} // namespace ref
+
+static bool same_state(const np::NodeState& a, const np::NodeState& b) {
+    if (a.binds().size() != b.binds().size() || a.heartbeats().size() != b.heartbeats().size()) return false;
+    for (size_t i = 0; i < a.binds().size(); ++i) {
+        const auto& x = a.binds()[i]; const auto& y = b.binds()[i];
+        if (!(x.mining_pkh == y.mining_pkh && x.node_pubkey == y.node_pubkey && x.bind_seq == y.bind_seq && x.inclusion_height == y.inclusion_height)) return false;
+    }
+    for (size_t i = 0; i < a.heartbeats().size(); ++i)
+        if (!(a.heartbeats()[i].mining_pkh == b.heartbeats()[i].mining_pkh && a.heartbeats()[i].epoch_idx == b.heartbeats()[i].epoch_idx)) return false;
+    return true;
+}
+
+static void test_differential() {
+    std::printf("\n-- differential: refactored block rule == pre-refactor; policy == block rule --\n");
+    uint64_t seed = 0x5057d1ffULL;
+    auto rnd = [&]() { seed ^= seed << 13; seed ^= seed >> 7; seed ^= seed << 17; return seed; };
+    int blocks = 0, mism_block = 0, txs = 0, mism_policy = 0, accepted = 0;
+    np::NodeState s_new, s_old;
+    for (int step = 0; step < 400; ++step) {
+        const int64_t h = NODE_A + 1 + step;
+        np::BlockNodeTxs b;
+        const int nb = (int)(rnd() % 4), nh = (int)(rnd() % 4);
+        for (int i = 0; i < nb; ++i) {
+            np::NodeBindTx x = bind(1 + (uint32_t)(rnd() % 12), npk_of(100 + (uint32_t)(rnd() % 10)), 1 + rnd() % 4);
+            if (rnd() % 10 == 0) x.mining_sig[3] ^= 1;                  // occasional bad signature
+            b.binds.push_back(x);
+        }
+        const int64_t ep = jv2::jv2_epoch_of_height(NODE_A, NODE_L, h);
+        for (int i = 0; i < nh; ++i) {
+            const int64_t e = (rnd() % 6 == 0) ? ep + 1 : ep;           // occasional future epoch
+            b.heartbeats.push_back(hb(100 + (uint32_t)(rnd() % 10), (uint64_t)e,
+                                      tip_for(jv2::jv2_epoch_start(NODE_A, NODE_L, ep) - 1)));
+        }
+        // (2) policy vs single-tx block rule, against the pre-block state
+        for (const auto& x : b.binds) {
+            Transaction t = np::build_node_bind_tx(x); std::string w1, w2;
+            if (judge(s_new, t, h, w1) != node_txs_valid(s_new, {&t}, h, w2)) ++mism_policy;
+            ++txs;
+        }
+        for (const auto& x : b.heartbeats) {
+            Transaction t = np::build_node_heartbeat_tx(x); std::string w1, w2;
+            if (judge(s_new, t, h, w1) != node_txs_valid(s_new, {&t}, h, w2)) ++mism_policy;
+            ++txs;
+        }
+        // (1) refactored vs reference block rule
+        auto r1 = np::connect_block_node_txs(s_new, b, h, NODE_A, NODE_L, hash_at);
+        auto r2 = ref::connect_old(s_old, b, h, NODE_A, NODE_L, hash_at);
+        ++blocks; if (r1.ok) ++accepted;
+        if (r1.ok != r2.ok || std::string(r1.reason) != std::string(r2.reason) ||
+            r1.binds_applied != r2.binds_applied || r1.hbs_applied != r2.hbs_applied || !same_state(s_new, s_old)) ++mism_block;
+    }
+    char m[200];
+    std::snprintf(m, sizeof m, "refactored connect_block_node_txs == pre-refactor on %d random blocks (%d accepted, final binds=%zu hbs=%zu)",
+                  blocks, accepted, s_new.binds().size(), s_new.heartbeats().size());
+    TEST(m, mism_block == 0 && accepted > 20 && accepted < blocks);
+    std::snprintf(m, sizeof m, "judge_node_tx == single-tx block rule on %d random node txs (policy never looser)", txs);
+    TEST(m, mism_policy == 0 && txs > 500);
 }
 
 // ===========================================================================
@@ -375,6 +579,8 @@ int main() {
     std::printf("== test_emergency_v30000 (2026-10-08 audit regressions) ==\n");
     test_constants();
     test_node_poison();
+    test_bind_takeover_known();
+    test_differential();
     test_asset_bypass();
     test_no_sost_burn();
     std::printf("\n== Summary: %d passed, %d failed ==\n", g_pass, g_fail);
