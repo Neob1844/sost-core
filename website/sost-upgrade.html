@@ -570,6 +570,7 @@ chmod 600 ~/.sost/node.key</pre></div>
     <p>This is a <b>different key</b> from your mining key and from your wallet. It identifies your node. It cannot move
       coins &mdash; but whoever holds it can impersonate your node's heartbeats, so treat it as a secret and back it up
       (see the next section).</p>
+    <div class="mg-note mg-warn"><b>&#9888; DO NOT SUBMIT A NODE_BIND YET.</b> Wait for the explicit go-ahead in the site banner. From #30,000 NODE_BIND uses the new two-signature ownership rule (mining key + node key); a bind mined while a major miner still runs an older build could split the chain. ALL validating nodes and miners must be on the V30000 FINAL SECURITY BUILD first.</div>
     <h4>After #30,000: build the transaction</h4>
     <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>./sost-cli --wallet ~/sost-keys/my-wallet.json \
   --mining-key-label "my-mining-key" \

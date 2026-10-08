@@ -177,6 +177,7 @@ sha256sum -c SHA256SUMS            # sost-node / sost-miner / sost-cli must ALL 
         <li>Verify that subsequent heartbeats are associated with that node.</li>
         <li>If the registered owner is not yours, stop relying on Jackpot eligibility and report it to the SOST developers.</li>
       </ol>
+      <div style="margin:8px 0;padding:8px 11px;border:2px solid #fb010d;border-radius:7px;background:rgba(251,1,13,.08)"><b style="color:#ff6b6b">&#9888; DO NOT SUBMIT A NODE_BIND YET.</b> Wait for the explicit go-ahead in this notice. NODE_BIND is a hard-fork rule: a bind mined while any major miner still runs an older build could split the chain. The go-ahead will be posted here once the network's miners have confirmed the FINAL build.</div>
       <b>New ownership protection, active from #30,000:</b> a NODE_BIND must be signed by <b>both</b> your mining key and
       your <b>node key</b>, so only the holder of a node key can bind it, and a bind cannot be copied to another miner.
       NODE_BIND affects <b>Jackpot eligibility only</b>. It does <b>NOT</b> give access to your wallet, does <b>NOT</b> allow
