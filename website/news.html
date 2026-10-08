@@ -210,14 +210,14 @@
     <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#ff6b6b">// OPERATOR NOTICE &middot; V30000 FINAL SECURITY BUILD &middot; 2026-10-08</div>
     <h2 style="font-size:23px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0)">V30000 FINAL SECURITY BUILD &mdash; update <span style="color:#ff6b6b">node + miner + CLI</span> before #30,000</h2>
     <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7">A final pre-activation security review of V30000 found and fixed issues in transaction admission, native-asset validation, peer recovery after a chain split and NODE_BIND ownership. <b>All earlier V30000 builds &mdash; the original v30000 release, v30000-rc1 and the intermediate emergency build &mdash; are SUPERSEDED.</b> Do not install them. <b>All three binaries changed</b>; verify each against the official <code>SHA256SUMS</code>.</p>
-    <div style="font:12px/1.7 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:12px 0;overflow-x:auto"><pre style="margin:0;white-space:pre">V30000 FINAL SECURITY BUILD   commit __FINAL_COMMIT__
-sost-node    __NODE_SHA__
-sost-miner   __MINER_SHA__
-sost-cli     __CLI_SHA__
+    <div style="font:12px/1.7 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:12px 0;overflow-x:auto"><pre style="margin:0;white-space:pre">V30000 FINAL SECURITY BUILD   commit 3acd952bd2c3
+sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd
+sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75
+sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b
 
 sha256sum -c SHA256SUMS      # all three must print: OK</pre></div>
     <ul style="font-size:13px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:8px 0 8px 18px">
-      <li><b>Download:</b> <a href="https://github.com/Neob1844/sost-core/releases/tag/__REL_TAG__" target="_blank" rel="noopener" style="color:#22d3ee">github.com/Neob1844/sost-core/releases/tag/__REL_TAG__</a> &middot; step-by-step: <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>.</li>
+      <li><b>Download:</b> <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee">github.com/Neob1844/sost-core/releases/tag/v30000-final</a> &middot; step-by-step: <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>.</li>
       <li><b>Activation is automatic at #30,000</b> by block height. Nothing needs to be restarted exactly at #30,000 &mdash; but every validating node and every miner <b>must already run this build before #30,000</b>; older software may diverge from the chain from that height.</li>
       <li><b style="color:#ff6b6b">Do not submit a NODE_BIND until the go-ahead is posted in the site banner.</b> NODE_BIND is a hard-fork rule; every miner must be on this build first.</li>
       <li><b>NODE_BIND (after #30,000):</b> a bind now carries a second signature by your <b>node key</b>, so only the holder of a node key can bind it. Command (unchanged): <code>sost-cli --wallet &lt;wallet.json&gt; --mining-key-label &lt;label&gt; createnodebind 1 --node-key-file ~/.sost/node.key</code>. After it confirms, check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it gives no access to wallets and cannot create, spend or burn SOST.</li>
@@ -1703,7 +1703,7 @@ sudo systemctl restart sost-miner</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v392" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v513" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v514" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- NON-CUSTODIAL DISCLAIMER (footer) -->
