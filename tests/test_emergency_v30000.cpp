@@ -130,6 +130,7 @@ static void test_constants() {
         TEST("mainnet restricted dev mode never active (assets deferred)", !restricted_dev_mode_active_at(30000) && !restricted_dev_mode_active_at(40000));
         TEST("mainnet node participation UNCHANGED vs v16.x (inactive 29999, live 30000)",
              !node_participation_active_at(29999) && node_participation_active_at(30000));
+        TEST("mainnet SACS_V2_ACTIVATION_HEIGHT == INT64_MAX (legacy 500 cap = v16.x)", SACS_V2_ACTIVATION_HEIGHT == INT64_MAX);
         TEST("mainnet V2 jackpot cadence unchanged (first V2 draw #30,186)", is_hist_jackpot_v2_height(30186) && !is_hist_jackpot_v2_height(30000));
     } else {
         TEST("devnet/testnet: assets live (feature testable)", ASSET_LIVE);

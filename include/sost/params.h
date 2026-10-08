@@ -687,10 +687,19 @@ inline constexpr int64_t  DYNAMIC_FEE_ACTIVATION_HEIGHT   = 10000;
 // by height, never by vote, never by any central authority). Pre-activation
 // history stays protected by the legacy cap. Mainnet activates at the existing
 // V16 fork height so no second hard fork is needed.
+//
+// EMERGENCY 2026-10-08: MAINNET DEFERRED (INT64_MAX). The network majority runs a v16.x
+// release, which enforces the legacy 500-block hard cap. Activating V2 on only part of
+// the network would make chain selection differ in exactly the deep-reorg cases V2 was
+// built for (V2 nodes follow a deeper heavier chain, v16 nodes refuse it -> split), and
+// V2 also lifts the cap that bounds PoW-free fork/reorg storms (audit HIGH #6). Deferring
+// keeps chain selection identical to v16.x. Re-activation = a coordinated future fork.
 #if defined(SOST_DEVNET_FORKS)
 inline constexpr int64_t  SACS_V2_ACTIVATION_HEIGHT      = 42;      // DEVNET_FAST ONLY (test forks before/after 42)
+#elif defined(SOST_TESTNET_FORKS)
+inline constexpr int64_t  SACS_V2_ACTIVATION_HEIGHT      = 30000;   // TESTNET (unchanged)
 #else
-inline constexpr int64_t  SACS_V2_ACTIVATION_HEIGHT      = 30000;   // mainnet — same height as V16
+inline constexpr int64_t  SACS_V2_ACTIVATION_HEIGHT      = INT64_MAX;  // MAINNET — DEFERRED (legacy cap, = v16.x)
 #endif
 
 // Native Assets (V30000). Activates the sovereign native-asset consensus layer
