@@ -31,6 +31,8 @@
 #include "sost/consensus_constants.h"
 
 #include <cstdio>
+#include <map>
+#include <chrono>
 #include <string>
 #include <vector>
 
@@ -63,9 +65,12 @@ static bool mk(uint32_t seed, sbpow::MinerPrivkey& sk, sbpow::MinerPubkey& pk) {
     sk.fill(0x11); sk[0] = seed & 0xff; sk[1] = (seed >> 8) & 0xff; sk[3] = 1;
     return sbpow::derive_compressed_pubkey_from_privkey(sk, pk);
 }
+static std::map<np::NodePubKey, uint32_t>& node_seeds() { static std::map<np::NodePubKey, uint32_t> m; return m; }
 static np::NodePubKey npk_of(uint32_t s) {
     sbpow::MinerPrivkey sk; sbpow::MinerPubkey pk; mk(s, sk, pk);
-    np::NodePubKey n; std::copy(pk.begin(), pk.end(), n.begin()); return n;
+    np::NodePubKey n; std::copy(pk.begin(), pk.end(), n.begin());
+    node_seeds()[n] = s;   // lets bind() produce the v2 node-key signature for this key
+    return n;
 }
 static PubKeyHash pkh_of(uint32_t s) {
     sbpow::MinerPrivkey sk; sbpow::MinerPubkey pk; mk(s, sk, pk); return sbpow::derive_pkh_from_pubkey(pk);
@@ -74,6 +79,12 @@ static np::NodeBindTx bind(uint32_t ms, const np::NodePubKey& n, uint64_t seq) {
     np::NodeBindTx t; sbpow::MinerPrivkey sk; sbpow::MinerPubkey pk; mk(ms, sk, pk);
     t.mining_pubkey = pk; t.node_pubkey = n; t.bind_seq = seq;
     sbpow::sign_sbpow_commitment(sk, np::bind_message(sbpow::derive_pkh_from_pubkey(pk), n, seq), t.mining_sig);
+    t.version = 2;   // NODE_BIND v2: node-key proof (left zero if the node key is unknown here)
+    auto it = node_seeds().find(n);
+    if (it != node_seeds().end()) {
+        sbpow::MinerPrivkey nsk; sbpow::MinerPubkey npk; mk(it->second, nsk, npk);
+        sbpow::sign_sbpow_commitment(nsk, np::bind_node_message(sbpow::derive_pkh_from_pubkey(pk), n, seq), t.node_sig);
+    }
     return t;
 }
 static np::NodeHeartbeatTx hb(uint32_t ns, uint64_t ep, const Bytes32& tip) {
@@ -162,7 +173,7 @@ static void test_node_poison() {
 
     // 138-byte poison: canonical shape, garbage signature (the audit PoC F1)
     {
-        np::NodeBindTx b = bind(1, npk_of(2), 1); b.mining_sig.fill(0x00);
+        np::NodeBindTx b = bind(1, npk_of(2), 1); b.mining_sig.fill(0x00); b.version = 1;   // the exact audit PoC (v1 wire)
         Transaction t = np::build_node_bind_tx(b);
         TEST("PoC payload is exactly 138 bytes", t.outputs.size() == 1 && t.outputs[0].payload.size() == 138);
         auto r = acc(mp, t, NODE_A);
@@ -300,28 +311,101 @@ static void test_node_poison() {
 // NODE_BIND wire format = CONSENSUS FIX REQUIRED: YES. It is NOT shipped (the v16.x
 // majority would split). This test pins the CURRENT v16-compatible behaviour so the
 // future fork's regression has a baseline: it is EXPECTED to flip when that fork lands.
-static void test_bind_takeover_known() {
-    std::printf("\n-- E: NODE_BIND takeover (KNOWN, consensus fix required; EXPECTED under v16 rules) --\n");
-    np::NodeState st;
+// NODE_BIND v2 — FIXED in the V30000 coordinated hard fork: from NODE_BIND_V2_HEIGHT
+// (== node-participation activation) a bind must also carry a node-key signature over
+// bind_node_message(miner_pkh, node_pubkey, seq). Each attack case FAILS on cb8a1a33 (v1 rule,
+// mining signature only) and PASSES here.
+static np::NodeBindTx attacker_bind(uint32_t attacker, const np::NodePubKey& victim_node, uint64_t seq,
+                                    const sbpow::MinerSignature* forged_node_sig = nullptr) {
+    np::NodeBindTx t; sbpow::MinerPrivkey sk; sbpow::MinerPubkey pk; mk(attacker, sk, pk);
+    t.mining_pubkey = pk; t.node_pubkey = victim_node; t.bind_seq = seq; t.version = 2;
+    const PubKeyHash apkh = sbpow::derive_pkh_from_pubkey(pk);
+    sbpow::sign_sbpow_commitment(sk, np::bind_message(apkh, victim_node, seq), t.mining_sig);
+    if (forged_node_sig) t.node_sig = *forged_node_sig;     // e.g. copied from the victim's tx
+    else sbpow::sign_sbpow_commitment(sk, np::bind_node_message(apkh, victim_node, seq), t.node_sig);
+    return t;
+}
+static void test_bind_takeover_fixed() {
+    std::printf("\n-- E: NODE_BIND takeover — FIXED (NODE_BIND v2 node-key proof) --\n");
     const np::NodePubKey victim_node = npk_of(50);
-    np::BlockNodeTxs b1; b1.binds.push_back(bind(99, victim_node, 1));       // attacker miner 99 claims it first
-    auto c1 = np::connect_block_node_txs(st, b1, NODE_A + 1, NODE_A, NODE_L, hash_at);
-    np::BlockNodeTxs b2; b2.binds.push_back(bind(10, victim_node, 1));       // the real owner tries later
-    auto c2 = np::connect_block_node_txs(st, b2, NODE_A + 2, NODE_A, NODE_L, hash_at);
-    np::BlockNodeTxs b3; b3.heartbeats.push_back(hb(50, 0, tip_for(NODE_A - 1)));   // victim's node heartbeats
-    auto c3 = np::connect_block_node_txs(st, b3, NODE_A + 3, NODE_A, NODE_L, hash_at);
-    TEST("EXPECTED (v16 rule): attacker bind of a foreign node key is consensus-valid", c1.ok);
-    TEST("EXPECTED (v16 rule): the real owner can no longer bind that node key", !c2.ok);
-    TEST("EXPECTED (v16 rule): the victim node's heartbeat is credited to the attacker",
-         c3.ok && st.heartbeats_in_window(pkh_of(99), NODE_A, NODE_L, NODE_A + NODE_L) == 1 &&
-         st.heartbeats_in_window(pkh_of(10), NODE_A, NODE_L, NODE_A + NODE_L) == 0);
-    // bounded impact: the victim recovers eligibility by binding a FRESH node key
-    np::BlockNodeTxs b4; b4.binds.push_back(bind(10, npk_of(51), 1));
-    TEST("impact bounded: the victim can bind a fresh node key immediately",
-         np::connect_block_node_txs(st, b4, NODE_A + 4, NODE_A, NODE_L, hash_at).ok);
-    // no value moves: node txs carry 0 SOST and never touch the UTXO set
-    TEST("impact bounded: node txs carry no SOST value (amount 0, non-spendable output)",
-         np::build_node_bind_tx(bind(99, victim_node, 1)).outputs[0].amount == 0 && !np::output_is_spendable(OUT_NODE_PROTOCOL));
+    auto conn = [&](np::NodeState& st, std::vector<np::NodeBindTx> binds, int64_t h) {
+        np::BlockNodeTxs b; b.binds = std::move(binds); return np::connect_block_node_txs(st, b, h, NODE_A, NODE_L, hash_at);
+    };
+    { np::NodeState st; auto c = conn(st, {attacker_bind(99, victim_node, 1)}, NODE_A + 1);
+      TEST("E1 attacker binds victim node key -> REJECT", !c.ok && std::string(c.reason) == "bad_node_signature"); }
+    { np::NodeState st; np::NodeBindTx v = bind(10, victim_node, 1);
+      TEST("E2a legit victim bind (dual-signed) accepted", conn(st, {v}, NODE_A + 1).ok);
+      auto c = conn(st, {attacker_bind(99, victim_node, 1, &v.node_sig)}, NODE_A + 2);
+      TEST("E2 attacker overwrite with the victim's copied node_sig -> REJECT", !c.ok);
+      np::BlockNodeTxs hbb; hbb.heartbeats.push_back(hb(50, 0, tip_for(NODE_A - 1)));
+      auto c3 = np::connect_block_node_txs(st, hbb, NODE_A + 3, NODE_A, NODE_L, hash_at);
+      TEST("E2b victim node heartbeat credited to the VICTIM, not the attacker",
+           c3.ok && st.heartbeats_in_window(pkh_of(10), NODE_A, NODE_L, NODE_A + NODE_L) == 1 &&
+           st.heartbeats_in_window(pkh_of(99), NODE_A, NODE_L, NODE_A + NODE_L) == 0); }
+    { np::NodeState st; np::NodeBindTx v = bind(10, victim_node, 1); v.node_sig[5] ^= 0x01;
+      TEST("E3 corrupted node_sig -> REJECT", !conn(st, {v}, NODE_A + 1).ok); }
+    { np::NodeState st; np::NodeBindTx v = bind(10, victim_node, 1);
+      np::NodeBindTx w = attacker_bind(11, victim_node, 1, &v.node_sig);
+      TEST("E4 node_sig made for another miner -> REJECT", !conn(st, {w}, NODE_A + 1).ok);
+      np::NodeBindTx x = bind(10, victim_node, 1); x.mining_sig[9] ^= 0x01;
+      TEST("E4b bad mining signature -> REJECT", !conn(st, {x}, NODE_A + 1).ok); }
+    { np::NodeState st; np::NodeBindTx v1 = bind(10, victim_node, 1);
+      conn(st, {v1}, NODE_A + 1);
+      TEST("E5 replay of the same bind -> REJECT", !conn(st, {v1}, NODE_A + 2).ok);
+      TEST("E5b rotation by the owner (seq 2, fresh node key) accepted", conn(st, {bind(10, npk_of(52), 2)}, NODE_A + 3).ok);
+      TEST("E5c replay of the old seq-1 bind after rotation -> REJECT", !conn(st, {v1}, NODE_A + 4).ok); }
+    { np::NodeState st; np::NodeBindTx v = bind(10, victim_node, 1);
+      auto c = conn(st, {v, v}, NODE_A + 1);
+      TEST("E6 same bind twice in one block -> INVALID block (deterministic)",
+           !c.ok && std::string(c.reason) == "double_bind_same_block" && st.binds().empty()); }
+    { np::NodeState st; np::NodeBindTx v = bind(10, victim_node, 1);
+      auto c = conn(st, {v}, NODE_A + 1); auto snap = st.binds();
+      np::disconnect_block_node_txs(st, c);
+      TEST("E7 reorg undo restores empty state", st.binds().empty());
+      auto c2 = conn(st, {v}, NODE_A + 1);
+      TEST("E7b reconnect after reorg -> identical state", c2.ok && st.binds().size() == snap.size() &&
+           st.binds()[0].mining_pkh == snap[0].mining_pkh && st.binds()[0].node_pubkey == snap[0].node_pubkey); }
+    { std::vector<std::vector<np::NodeBindTx>> chain = {{bind(10, victim_node, 1)}, {bind(12, npk_of(53), 1)}, {bind(10, npk_of(54), 2)}};
+      np::NodeState live, rebuilt;
+      for (size_t i = 0; i < chain.size(); ++i) conn(live, chain[i], NODE_A + 1 + (int64_t)i);
+      for (size_t i = 0; i < chain.size(); ++i) conn(rebuilt, chain[i], NODE_A + 1 + (int64_t)i);
+      bool same = live.binds().size() == rebuilt.binds().size();
+      for (size_t i = 0; same && i < live.binds().size(); ++i)
+          same = live.binds()[i].mining_pkh == rebuilt.binds()[i].mining_pkh &&
+                 live.binds()[i].node_pubkey == rebuilt.binds()[i].node_pubkey &&
+                 live.binds()[i].bind_seq == rebuilt.binds()[i].bind_seq;
+      TEST("E8 restart: state rebuilt from chain == live state", same && live.binds().size() == 3); }
+    { np::NodeBindTx v = bind(10, victim_node, 1);
+      Transaction t = np::build_node_bind_tx(v); np::NodeBindTx o;
+      TEST("E9 v2 payload is exactly 202 bytes", t.outputs[0].payload.size() == 202);
+      Transaction t1 = t; t1.outputs[0].payload.pop_back();
+      TEST("E9b 201-byte payload -> extract REJECT", !np::extract_bind(t1, o));
+      Transaction t2 = t; t2.outputs[0].payload.push_back(0);
+      TEST("E9c 203-byte payload -> extract REJECT", !np::extract_bind(t2, o));
+      np::NodeBindTx legacy = v; legacy.version = 1;
+      Transaction t3 = np::build_node_bind_tx(legacy);
+      TEST("E9d legacy 138-byte v1 bind decodes", np::extract_bind(t3, o) && o.version == 1);
+      np::NodeState st;
+      TEST("E9e legacy v1 bind at/after activation -> REJECT (hard-fork rule)",
+           !conn(st, {o}, NODE_A).ok && std::string(np::check_bind(o, NODE_A).reason) == "bind_v1_after_v2_height"); }
+    { np::NodeState live; Mempool mp = make_pool(live); UtxoSet u; TxValidationContext c; c.spend_height = NODE_A;
+      int admitted = 0; auto t0 = std::chrono::steady_clock::now();
+      for (uint32_t i = 0; i < 4096; ++i)
+          if (mp.AcceptToMempool(np::build_node_bind_tx(attacker_bind(2000 + i, npk_of(9000 + (i % 64)), 1)), u, c, 1000).accepted) ++admitted;
+      double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+      std::printf("    4096 forged binds judged in %.1f ms\n", ms);
+      TEST("E10 4096 forged binds: 0 admitted, template empty", admitted == 0 &&
+           mp.BuildBlockTemplate(MAX_BLOCK_TX_COUNT, 500 * 1024, NODE_A).txs.empty());
+      TEST("E10b bounded cost (< 10 s for 4096)", ms < 10000.0); }
+    { np::NodeBindTx v = bind(10, victim_node, 1);
+      TEST("G1 h=A-1 (#29,999): any bind INVALID (before activation)", !np::check_bind(v, NODE_A - 1).ok);
+      TEST("G2 h=A (#30,000): dual-signed v2 bind valid", np::check_bind(v, NODE_A).ok);
+      TEST("G3 h=A+1 (#30,001): dual-signed v2 bind valid", np::check_bind(v, NODE_A + 1).ok);
+      np::NodeState st; auto c = conn(st, {v}, NODE_A); np::disconnect_block_node_txs(st, c);
+      auto c2 = conn(st, {v}, NODE_A);
+      TEST("G4 reorg below the gate and re-cross: same result", c.ok && c2.ok && st.binds().size() == 1); }
+    TEST("E11 node txs carry no SOST value (amount 0, non-spendable output)",
+         np::build_node_bind_tx(bind(10, victim_node, 1)).outputs[0].amount == 0 && !np::output_is_spendable(OUT_NODE_PROTOCOL));
 }
 
 // ===========================================================================
@@ -579,7 +663,7 @@ int main() {
     std::printf("== test_emergency_v30000 (2026-10-08 audit regressions) ==\n");
     test_constants();
     test_node_poison();
-    test_bind_takeover_known();
+    test_bind_takeover_fixed();
     test_differential();
     test_asset_bypass();
     test_no_sost_burn();

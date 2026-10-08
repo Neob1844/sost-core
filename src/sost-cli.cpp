@@ -3427,6 +3427,16 @@ int main(int argc, char** argv) {
             sost::PubKeyHash pkh = sost::sbpow::derive_pkh_from_pubkey(mpk);
             sost::Bytes32 msg = sost::node_participation::bind_message(pkh, npk, seq);
             if (!sost::sbpow::sign_sbpow_commitment(msk, msg, b.mining_sig)) { fprintf(stderr, "Error: sign failed\n"); return 1; }
+            // NODE_BIND v2: binds are only valid from node-participation activation, and on this
+            // network that is also NODE_BIND_V2_HEIGHT (except a testnet build, which keeps v1), so
+            // the node key also signs — proof that this operator holds the node private key.
+            if (sost::NODE_BIND_V2_HEIGHT != INT64_MAX) {
+                b.version = 2;
+                sost::Bytes32 nmsg = sost::node_participation::bind_node_message(pkh, npk, seq);
+                if (!sost::sbpow::sign_sbpow_commitment(nsk, nmsg, b.node_sig)) { fprintf(stderr, "Error: node-key sign failed\n"); return 1; }
+            } else {
+                b.version = 1;
+            }
             sost::Transaction tx = sost::node_participation::build_node_bind_tx(b);
             std::vector<sost::Byte> raw; std::string e;
             if (!tx.Serialize(raw, &e)) { fprintf(stderr, "Error: serialize: %s\n", e.c_str()); return 1; }

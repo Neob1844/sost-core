@@ -45,6 +45,8 @@ static NodeBindTx make_bind(uint8_t mseed, uint8_t nseed, uint64_t seq) {
     PubKeyHash pkh = derive_pkh_from_pubkey(mpk);
     Bytes32 msg = bind_message(pkh, npk, seq);
     sign_sbpow_commitment(msk, msg, t.mining_sig);
+    t.version = 2;   // NODE_BIND v2: the node key also signs (proof of node-key possession)
+    sign_sbpow_commitment(nsk, bind_node_message(pkh, npk, seq), t.node_sig);
     return t;
 }
 
@@ -69,7 +71,7 @@ static JackpotV2Candidate cand(uint8_t b, int64_t pow, bool bound, int64_t hb, b
 static void test_serialization() {
     NodeBindTx b = make_bind(2, 3, 7);
     auto sb = serialize_bind(b);
-    TEST("NODE_BIND serialized == 138 bytes", sb.size() == NODE_BIND_WIRE_BYTES && sb.size() == 138);
+    TEST("NODE_BIND v2 serialized == 202 bytes", sb.size() == NODE_BIND_WIRE_BYTES && sb.size() == 202);
     NodeBindTx b2;
     TEST("NODE_BIND round-trips", deserialize_bind(sb, b2)
          && b2.mining_pubkey == b.mining_pubkey && b2.node_pubkey == b.node_pubkey

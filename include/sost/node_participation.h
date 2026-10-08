@@ -36,6 +36,10 @@ struct NodeBindTx {
     NodePubKey     node_pubkey{};    // 33B compressed
     uint64_t       bind_seq{0};
     MinerSignature mining_sig{};     // 64B Schnorr by the MINING key over bind_message()
+    // NODE_BIND v2 (from NODE_BIND_V2_HEIGHT): 64B Schnorr by the NODE key over
+    // bind_node_message() — proof that the binder holds the node private key.
+    MinerSignature node_sig{};
+    uint8_t        version{2};       // 1 = 138-byte legacy payload, 2 = 202-byte payload (wire-derived)
 };
 struct NodeHeartbeatTx {
     NodePubKey     node_pubkey{};    // 33B compressed
@@ -44,7 +48,8 @@ struct NodeHeartbeatTx {
     MinerSignature node_sig{};       // 64B Schnorr by the NODE key over heartbeat_message()
 };
 
-constexpr size_t NODE_BIND_WIRE_BYTES      = 33 + 33 + 8 + 64;   // 138
+constexpr size_t NODE_BIND_WIRE_BYTES_V1   = 33 + 33 + 8 + 64;        // 138 (legacy, below NODE_BIND_V2_HEIGHT)
+constexpr size_t NODE_BIND_WIRE_BYTES      = 33 + 33 + 8 + 64 + 64;   // 202 (v2: + node_sig)
 constexpr size_t NODE_HEARTBEAT_WIRE_BYTES = 33 + 8 + 32 + 64;   // 137
 
 // ---- Serialization (canonical, fixed-size, byte-exact) ---------------------
@@ -55,6 +60,8 @@ bool deserialize_heartbeat(const std::vector<uint8_t>&, NodeHeartbeatTx&);
 
 // ---- Signing messages (domain-separated; NEVER reuse the DTD/block message) -
 Bytes32 bind_message(const PubKeyHash& mining_pkh, const NodePubKey& node_pubkey, uint64_t bind_seq);
+// NODE_BIND v2 node-key message: distinct domain, commits to the SAME (pkh, node_pubkey, seq).
+Bytes32 bind_node_message(const PubKeyHash& mining_pkh, const NodePubKey& node_pubkey, uint64_t bind_seq);
 Bytes32 heartbeat_message(const NodePubKey& node_pubkey, uint64_t epoch_idx, const Bytes32& tip_ref_hash);
 
 // ---- Transaction transport (single 0-value OUT_NODE_PROTOCOL output) --------
@@ -83,7 +90,9 @@ bool extract_heartbeat(const Transaction&, NodeHeartbeatTx& out, const char** re
 // ---- Structural validation (activation guard + fields + signature) ----------
 struct BindCheck { bool ok{false}; PubKeyHash mining_pkh{}; const char* reason{"ok"}; };
 // Verifies: activation guard (height >= HIST_JACKPOT_V2_HEIGHT); mining_sig over
-// bind_message(derive_pkh(mining_pubkey), node_pubkey, bind_seq). State rules
+// bind_message(derive_pkh(mining_pubkey), node_pubkey, bind_seq); and from NODE_BIND_V2_HEIGHT
+// the payload must be v2 with node_sig over bind_node_message(...) by node_pubkey (below the
+// gate the payload must be v1). State rules
 // (seq monotonic, node_pubkey uniqueness) are enforced separately at apply time.
 BindCheck check_bind(const NodeBindTx& tx, int64_t height);
 

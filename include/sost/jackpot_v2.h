@@ -49,6 +49,7 @@ using NodePubKey = std::array<uint8_t, 33>;
 // Domain-separation tags (never reuse the DTD seed).
 inline constexpr char JACKPOT_V2_DOMAIN[]  = "SOST_HIST_JACKPOT";
 inline constexpr char NODE_BIND_DOMAIN[]   = "SOST_NODE_BIND";
+inline constexpr char NODE_BIND_NODEKEY_DOMAIN[] = "SOST_NODE_BIND_NODEKEY_V2";  // node-key proof (NODE_BIND v2)
 inline constexpr char NODE_HB_DOMAIN[]     = "SOST_NODE_HEARTBEAT";
 
 // ---------------------------------------------------------------------------

@@ -1415,6 +1415,17 @@ inline constexpr int64_t NODE_EPOCH_LENGTH      = 288;    // TESTNET epoch == ja
 inline constexpr int64_t HIST_JACKPOT_V2_HEIGHT = 30000;  // MAINNET — OWNER-LOCKED, DO NOT CHANGE
 inline constexpr int64_t NODE_EPOCH_LENGTH      = 288;    // MAINNET epoch == jackpot cadence
 #endif
+// NODE_BIND v2 (V30000 coordinated hard fork, 2026-10-08): from this height a NODE_BIND must
+// carry a second BIP-340 signature by the NODE key (proof of node-key possession), closing the
+// node-key takeover. Equal to the node-participation activation on mainnet and devnet, so a v1
+// (mining-signature-only) bind is never valid there. TESTNET keeps v1 (its history may hold v1
+// binds); enabling it there needs a future testnet height.
+#if defined(SOST_TESTNET_FORKS)
+inline constexpr int64_t NODE_BIND_V2_HEIGHT    = INT64_MAX;
+#else
+inline constexpr int64_t NODE_BIND_V2_HEIGHT    = HIST_JACKPOT_V2_HEIGHT;
+#endif
+inline constexpr bool node_bind_v2_at(int64_t height) { return height >= NODE_BIND_V2_HEIGHT; }
 inline constexpr int64_t JACKPOT_V2_POW_WINDOW  = 2016;   // PoW weight/eligibility window [h-2016, h-1] (~14 d)
 inline constexpr int64_t JACKPOT_V2_MIN_BLOCKS  = 3;      // minimum SbPoW blocks in the window to enter
 inline constexpr int64_t HEARTBEAT_MAX_WINDOW   = 4;      // permanent heartbeat window (of last 4 epochs)

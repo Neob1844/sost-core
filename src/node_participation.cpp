@@ -26,6 +26,7 @@ std::vector<uint8_t> serialize_bind(const NodeBindTx& t) {
     append(b, t.node_pubkey.data(),   t.node_pubkey.size());
     append_u64_le(b, t.bind_seq);
     append(b, t.mining_sig.data(),    t.mining_sig.size());
+    if (t.version >= 2) append(b, t.node_sig.data(), t.node_sig.size());
     return b;
 }
 std::vector<uint8_t> serialize_heartbeat(const NodeHeartbeatTx& t) {
@@ -38,12 +39,19 @@ std::vector<uint8_t> serialize_heartbeat(const NodeHeartbeatTx& t) {
     return b;
 }
 bool deserialize_bind(const std::vector<uint8_t>& b, NodeBindTx& out) {
-    if (b.size() != NODE_BIND_WIRE_BYTES) return false;
+    if (b.size() != NODE_BIND_WIRE_BYTES && b.size() != NODE_BIND_WIRE_BYTES_V1) return false;
     size_t o = 0;
     std::memcpy(out.mining_pubkey.data(), b.data() + o, 33); o += 33;
     std::memcpy(out.node_pubkey.data(),   b.data() + o, 33); o += 33;
     out.bind_seq = read_u64_le(b.data() + o); o += 8;
     std::memcpy(out.mining_sig.data(),    b.data() + o, 64); o += 64;
+    out.node_sig.fill(0);
+    if (b.size() == NODE_BIND_WIRE_BYTES) {
+        std::memcpy(out.node_sig.data(), b.data() + o, 64); o += 64;
+        out.version = 2;
+    } else {
+        out.version = 1;
+    }
     return true;
 }
 bool deserialize_heartbeat(const std::vector<uint8_t>& b, NodeHeartbeatTx& out) {
@@ -96,7 +104,10 @@ static bool extract_payload(const Transaction& tx, uint8_t want_type, size_t wan
 
 bool extract_bind(const Transaction& tx, NodeBindTx& out, const char** reason) {
     std::vector<uint8_t> p;
-    if (!extract_payload(tx, TX_TYPE_NODE_BIND, NODE_BIND_WIRE_BYTES, p, reason)) return false;
+    // Both wire sizes are well-formed here; which one is VALID at a height is check_bind's rule.
+    const size_t plen = (tx.outputs.size() == 1) ? tx.outputs[0].payload.size() : 0;
+    const size_t want = (plen == NODE_BIND_WIRE_BYTES_V1) ? NODE_BIND_WIRE_BYTES_V1 : NODE_BIND_WIRE_BYTES;
+    if (!extract_payload(tx, TX_TYPE_NODE_BIND, want, p, reason)) return false;
     if (!deserialize_bind(p, out)) { if (reason) *reason = "bad_encoding"; return false; }
     if (reason) *reason = "ok";
     return true;
@@ -120,6 +131,16 @@ Bytes32 bind_message(const PubKeyHash& mining_pkh, const NodePubKey& node_pubkey
     append_u64_le(m, bind_seq);
     return sha256(m);
 }
+Bytes32 bind_node_message(const PubKeyHash& mining_pkh, const NodePubKey& node_pubkey, uint64_t bind_seq) {
+    std::vector<uint8_t> m;
+    const size_t dl = sizeof(NODE_BIND_NODEKEY_DOMAIN) - 1;
+    m.insert(m.end(), reinterpret_cast<const uint8_t*>(NODE_BIND_NODEKEY_DOMAIN),
+                      reinterpret_cast<const uint8_t*>(NODE_BIND_NODEKEY_DOMAIN) + dl);
+    append(m, mining_pkh.data(), mining_pkh.size());
+    append(m, node_pubkey.data(), node_pubkey.size());
+    append_u64_le(m, bind_seq);
+    return sha256(m);
+}
 Bytes32 heartbeat_message(const NodePubKey& node_pubkey, uint64_t epoch_idx, const Bytes32& tip_ref_hash) {
     std::vector<uint8_t> m;
     const size_t dl = sizeof(NODE_HB_DOMAIN) - 1;
@@ -138,6 +159,14 @@ BindCheck check_bind(const NodeBindTx& tx, int64_t height) {
     c.mining_pkh = derive_pkh_from_pubkey(tx.mining_pubkey);
     const Bytes32 msg = bind_message(c.mining_pkh, tx.node_pubkey, tx.bind_seq);
     if (!verify_sbpow_signature(tx.mining_pubkey, msg, tx.mining_sig)) { c.reason = "bad_signature"; return c; }
+    // NODE_BIND v2 (coordinated V30000 hard fork): proof of node-key possession.
+    if (node_bind_v2_at(height)) {
+        if (tx.version != 2) { c.reason = "bind_v1_after_v2_height"; return c; }
+        const Bytes32 nmsg = bind_node_message(c.mining_pkh, tx.node_pubkey, tx.bind_seq);
+        if (!verify_sbpow_signature(tx.node_pubkey, nmsg, tx.node_sig)) { c.reason = "bad_node_signature"; return c; }
+    } else {
+        if (tx.version != 1) { c.reason = "bind_v2_before_v2_height"; return c; }
+    }
     c.ok = true; return c;
 }
 
