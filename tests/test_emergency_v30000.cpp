@@ -232,13 +232,13 @@ static void test_node_poison() {
         TEST("exact duplicate heartbeat REJECTED (already in pool)", !acc(mp, g, NODE_A + 5).accepted);
         np::NodeState after = live; after.record_heartbeat(pkh_of(5), 0);          // it got mined
         std::string w;
-        TEST("replay of a heartbeat already on chain is INVALID", !node_txs_valid(after, {&g}, NODE_A + 6, w));
+        TEST("replay of a heartbeat already on chain is INVALID", !node_txs_valid(after, {&g}, NODE_A + 5, w) && w == "heartbeat_already_on_chain");
         Mempool rp = make_pool(after);
-        TEST("replay REJECTED by mempool", !acc(rp, g, NODE_A + 6).accepted);
+        TEST("replay REJECTED by mempool", !acc(rp, g, NODE_A + 5).accepted);
         // reorg: the block that carried it is disconnected -> valid again (state is exact on undo)
         np::NodeState reorged = after; reorged.undo_heartbeat();
         TEST("after the carrying block is reorged out the heartbeat is valid again",
-             node_txs_valid(reorged, {&g}, NODE_A + 6, w));
+             node_txs_valid(reorged, {&g}, NODE_A + 5, w));
         // rotation: miner 5 rotates to node 8 -> node 6's heartbeat no longer counts
         np::NodeState rot = live; rot.apply_bind(pkh_of(5), npk_of(8), 2, NODE_A + 2);
         TEST("heartbeat by a rotated-away node key is INVALID", !node_txs_valid(rot, {&g}, NODE_A + 5, w));
