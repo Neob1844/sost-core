@@ -292,6 +292,7 @@ static size_t evict_forks_to_bounds_locked();
 static bool   make_room_for_fork_locked(const Bytes32& incoming_work);
 static void broadcast_block_to_peers(const StoredBlock& sb, int exclude_fd = -1);
 static void process_orphans_for_parent(const std::string& parent_hash_hex);
+static void process_orphans_on_active_tail();
 
 // P2P state
 static const uint32_t P2P_MAGIC = 0x534F5354; // "SOST"
@@ -687,6 +688,12 @@ static std::unordered_set<std::string> g_known_blocks; // block_id hex
 static std::deque<std::string> g_known_blocks_order;   // FIFO for pruning
 static const size_t MAX_KNOWN_BLOCKS = 50000;
 static std::mutex g_known_mu;
+
+// Forget a block id (only used to re-process a stored orphan once its parent is placed).
+static void unmark_block_known(const std::string& hash) {
+    std::lock_guard<std::mutex> lk(g_known_mu);
+    g_known_blocks.erase(hash);
+}
 
 // Add block hash to known set with FIFO pruning
 static void mark_block_known(const std::string& hash) {
@@ -6420,15 +6427,44 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         // Check if parent is known (in active chain or block index)
         std::string prev_hex = to_hex(prev_h.data(), 32);
         bool parent_known = false;
+        int64_t parent_height = -1;
 
         // Check active chain
-        for (const auto& ab : g_blocks) {
-            if (ab.block_id == prev_h) { parent_known = true; break; }
+        for (size_t ai = 0; ai < g_blocks.size(); ++ai) {
+            if (g_blocks[ai].block_id == prev_h) { parent_known = true; parent_height = (int64_t)ai; break; }
         }
-        // Check block index (fork blocks)
+        // Check block index (fork blocks). An ORPHAN parent is NOT a known parent: its
+        // cumulative work is unknown (stored as zero), so a child linked to it would count
+        // its branch work from 0 and could never win — the 2026-10-08 chain-split bug. Such
+        // a child is itself an orphan until the branch connects to a block we really have.
+        // A block whose parent failed validation is rejected outright (and remembered).
         if (!parent_known) {
             std::lock_guard<std::mutex> lk(g_block_index_mu);
-            parent_known = g_block_index.count(prev_hex) > 0;
+            auto pit = g_block_index.find(prev_hex);
+            if (pit != g_block_index.end()) {
+                if (pit->second.status == BlockStatus::INVALID) {
+                    BlockIndexEntry bad;
+                    bad.block_id = from_hex(bid); bad.prev_hash = prev_h; bad.height = height;
+                    bad.bits_q = bits_q; bad.status = BlockStatus::INVALID;
+                    g_block_index[bid] = bad;
+                    printf("[FORK] Block h=%lld bid=%s REJECTED: descends from invalid block %s\n",
+                           (long long)height, bid.substr(0,16).c_str(), prev_hex.substr(0,16).c_str());
+                    fflush(stdout);
+                    record_block_reject("descends from invalid block");
+                    return false;
+                }
+                if (pit->second.status != BlockStatus::ORPHAN) {
+                    parent_known = true;
+                    parent_height = pit->second.height;
+                }
+            }
+        }
+        if (parent_known && parent_height != height - 1) {
+            printf("[FORK] Block h=%lld bid=%s REJECTED: parent height %lld != h-1\n",
+                   (long long)height, bid.substr(0,16).c_str(), (long long)parent_height);
+            fflush(stdout);
+            record_block_reject("fork block height mismatch");
+            return false;
         }
 
         if (!parent_known) {
@@ -6456,6 +6492,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
 
         // FORK CANDIDATE: parent is known but block doesn't extend active tip
         bool needs_reorg = false;
+        bool fork_admitted = false;
         {
             std::lock_guard<std::mutex> lk(g_block_index_mu);
             // Build this fork block's index entry (incl. cumulative work) up front, so
@@ -6498,6 +6535,7 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
                 admit = make_room_for_fork_locked(entry.cumulative_work);
             }
             if (admit) {
+                fork_admitted = true;
                 g_block_index[bid] = entry;
                 mark_block_known(bid);
 
@@ -6539,9 +6577,19 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
         // g_block_index_mu is now RELEASED. Safe to reorganize: this thread still
         // holds the recursive g_chain_mu (from process_block), and try_reorganize()
         // re-locks g_block_index_mu itself in short, self-contained scopes.
+        bool reorged = false;
         if (needs_reorg) {
-            try { try_reorganize(bid); }
+            try { reorged = try_reorganize(bid); }
             catch (const std::exception& e) { fprintf(stderr, "[ERROR] try_reorganize: %s\n", e.what()); }
+        }
+        // Orphans that were waiting for this block can now be placed: they become fork
+        // candidates with REAL cumulative work (or extend the tip after a reorg), which is
+        // what lets a branch first seen out of order win on work. After a reorg, also place
+        // orphans that were waiting on any block the reorg connected (deferred during it).
+        if (fork_admitted && !g_in_reorg) {
+            if (reorged) process_orphans_on_active_tail();
+            try { process_orphans_for_parent(bid); }
+            catch (const std::exception& e) { fprintf(stderr, "[ERROR] process_orphans_for_parent: %s\n", e.what()); }
         }
         fflush(stdout);
         return false; // Don't add to main chain yet
@@ -8462,6 +8510,7 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     // If any block fails, we MUST restore the original chain (atomic guarantee)
     size_t connected = 0;
     bool connect_success = true;
+    size_t invalid_from = SIZE_MAX;
 
     for (size_t i = 0; i < fork_chain.size(); ++i) {
 #ifdef SOST_DEVNET_FORKS
@@ -8481,10 +8530,16 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             break;
         }
 #endif
+        g_last_reject_reason.clear();
         if (!process_block(fork_chain[i].raw_json, /*reorg_connect=*/true)) {
-            printf("[REORG] ABORTED: block at height %lld failed validation\n",
-                   (long long)fork_chain[i].height);
+            printf("[REORG] ABORTED: block at height %lld failed validation (%s)\n",
+                   (long long)fork_chain[i].height, g_last_reject_reason.c_str());
             connect_success = false;
+            // A block that fails full validation is invalid for good (except a future
+            // timestamp, which only means "not yet"): remember it and everything built on
+            // it, so the same branch cannot trigger disconnect/reconnect storms again.
+            if (g_last_reject_reason != "timestamp too far in future")
+                invalid_from = i;
             break;
         }
         connected++;
@@ -8578,10 +8633,14 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
         // (otherwise a stale ACTIVE fork entry survives at a height it no longer occupies).
         {
             std::lock_guard<std::mutex> lk(g_block_index_mu);
-            for (const auto& fc : fork_chain) {
-                auto it = g_block_index.find(to_hex(fc.block_id.data(), 32));
-                if (it != g_block_index.end()) it->second.status = BlockStatus::FORK;
+            for (size_t fi = 0; fi < fork_chain.size(); ++fi) {
+                auto it = g_block_index.find(to_hex(fork_chain[fi].block_id.data(), 32));
+                if (it != g_block_index.end())
+                    it->second.status = (fi >= invalid_from) ? BlockStatus::INVALID : BlockStatus::FORK;
             }
+            if (invalid_from != SIZE_MAX)
+                printf("[REORG] Marked %zu fork block(s) INVALID from h=%lld\n",
+                       fork_chain.size() - invalid_from, (long long)fork_chain[invalid_from].height);
             for (const auto& sb : saved_blocks) {
                 auto it = g_block_index.find(to_hex(sb.block_id.data(), 32));
                 if (it != g_block_index.end()) it->second.status = BlockStatus::ACTIVE;
@@ -8710,6 +8769,10 @@ static void broadcast_block_to_peers(const StoredBlock& sb, int exclude_fd) {
 // === ORPHAN PROCESSING ===
 // When a new block is accepted, check if any orphan blocks were waiting for it
 static void process_orphans_for_parent(const std::string& parent_hash_hex) {
+    // Never re-enter process_block for orphans while a reorg is connecting its fork chain:
+    // an orphan extending a block mid-reorg would move the tip under try_reorganize. They
+    // stay queued and are placed by process_orphans_on_active_tail() once the reorg is over.
+    if (g_in_reorg) return;
     std::vector<std::string> to_process;
     {
         std::lock_guard<std::mutex> lk(g_block_index_mu);
@@ -8733,8 +8796,30 @@ static void process_orphans_for_parent(const std::string& parent_hash_hex) {
         if (!raw_json.empty()) {
             printf("[ORPHAN] Re-processing orphan block %s (parent now available)\n",
                    orphan_hash.substr(0,16).c_str());
+            // The orphan was marked known when stored; process_block's relay-dedup would
+            // then silently drop it here and the branch could never be connected.
+            unmark_block_known(orphan_hash);
             process_block(raw_json);
         }
+    }
+}
+
+// After a successful reorg: place orphans waiting on any block of the active tail (the reorg
+// defers orphan processing while it connects). Bounded by the reorg window.
+static void process_orphans_on_active_tail() {
+    std::vector<std::string> parents;
+    {
+        std::lock_guard<std::recursive_mutex> lkc(g_chain_mu);
+        std::lock_guard<std::mutex> lk(g_block_index_mu);
+        int64_t lo = std::max<int64_t>(0, g_chain_height - 2 * (int64_t)MAX_REORG_DEPTH);
+        for (int64_t h = lo; h <= g_chain_height && h < (int64_t)g_blocks.size(); ++h) {
+            std::string id = to_hex(g_blocks[h].block_id.data(), 32);
+            if (g_orphans_by_prev.count(id)) parents.push_back(id);
+        }
+    }
+    for (const auto& p : parents) {
+        try { process_orphans_for_parent(p); }
+        catch (const std::exception& e) { fprintf(stderr, "[ERROR] process_orphans_for_parent: %s\n", e.what()); }
     }
 }
 
@@ -8851,10 +8936,58 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
         // only ever goes up when this node sends a GETB — never on anything
         // the peer says. See the BLCK handler.
         int64_t outstanding{0};
+        // Fork-point discovery (non-consensus, wire-compatible: plain GETB by height).
+        // A peer on another branch answers "our height + 1" with blocks whose parents we do
+        // not have. Instead of stalling on orphans we walk back with GETB from lower heights
+        // (distance doubling) until its branch connects to a block we have, then continue
+        // forward along ITS branch; fork choice stays with cumulative work in process_block.
+        int64_t batch_served{0};       // any block received this batch (incl. ones we have)
+        int64_t batch_new{0};          // new blocks (accepted, fork or orphan) this batch
+        int64_t batch_orphans{0};      // of which stored as orphans (parent unknown)
+        int64_t batch_max_placed{-1};  // highest height accepted or stored as fork this batch
+        int64_t lowest_orphan{-1};     // lowest orphan height seen while probing
+        int64_t probe_dist{0};         // current walk-back distance (0 = not probing)
+        int64_t next_from{-1};         // where the next GETB starts
     };
     static constexpr int MAX_EMPTY_DONE = 3; // disconnect after 3 empty DONEs
+    static constexpr int64_t PROBE_START = 25;    // first walk-back distance
+    static constexpr int64_t PROBE_MAX   = 4096;  // give up beyond this (> deep-reorg alarm window)
     SyncState sync;
     sync.last_progress = std::chrono::steady_clock::now();
+    auto reset_batch = [&]() {
+        sync.batch_served = 0; sync.batch_new = 0; sync.batch_orphans = 0; sync.batch_max_placed = -1;
+    };
+    // Send one GETB starting at `from` and credit exactly one batch.
+    auto send_getb = [&](int64_t from) {
+        if (from < 1) from = 1;
+        sync.range_start = from;
+        sync.next_from = from;
+        sync.blocks_received = 0;
+        reset_batch();
+        sync.last_progress = std::chrono::steady_clock::now();
+        uint8_t buf[8];
+        write_i64(buf, from);
+        p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
+        sync.outstanding = GETB_BATCH_MAX;
+    };
+    // Start (or continue) walking back from the lowest orphan seen.
+    auto probe_back = [&]() -> bool {
+        sync.probe_dist = (sync.probe_dist <= 0) ? PROBE_START : sync.probe_dist * 2;
+        if (sync.probe_dist > PROBE_MAX || sync.lowest_orphan <= 1) {
+            printf("[SYNC] %s: fork point not found within %lld blocks — giving up on this peer's branch\n",
+                   addr.c_str(), (long long)PROBE_MAX);
+            sync.probe_dist = 0; sync.lowest_orphan = -1;
+            sync.mode = SyncState::LIVE;
+            return false;
+        }
+        int64_t from = sync.lowest_orphan - sync.probe_dist;
+        printf("[SYNC] %s: blocks do not connect (lowest orphan h=%lld) — fork-point probe from h=%lld (distance %lld)\n",
+               addr.c_str(), (long long)sync.lowest_orphan, (long long)std::max<int64_t>(1, from),
+               (long long)sync.probe_dist);
+        sync.mode = SyncState::HISTORICAL;
+        send_getb(from);
+        return true;
+    };
 
     // Input buffer for incremental message parsing
     std::vector<uint8_t> recv_buf;
@@ -8954,6 +9087,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                    (long long)sync.peer_height, (long long)(g_chain_height + 1));
             sync.range_start = g_chain_height + 1;
             sync.blocks_received = 0;
+            reset_batch();
             sync.last_progress = now;
 
             uint8_t buf[8];
@@ -9026,6 +9160,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     sync.peer_height = their_h;
                     sync.range_start = g_chain_height + 1;
                     sync.blocks_received = 0;
+                    reset_batch();
                     sync.last_progress = std::chrono::steady_clock::now();
                     sync.retries = 0;
                     sync.empty_done_count = 0;
@@ -9052,6 +9187,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 sync.peer_height = their_h;
                 sync.range_start = g_chain_height + 1;
                 sync.blocks_received = 0;
+                reset_batch();
                 sync.last_progress = std::chrono::steady_clock::now();
                 sync.retries = 0;
                 uint8_t buf[8];
@@ -9146,6 +9282,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                     }
                 }
             }
+            if (solicited) ++sync.batch_served;
             if (already_have) return true; // silently skip — benign relay, no penalty
 
             // New block we did not ask for: relay traffic, subject to the
@@ -9171,7 +9308,25 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 }
 
                 if (stored_as_fork) {
-                    // Block was valid but stored as fork/orphan — no penalty
+                    // Block was stored as fork/orphan — no penalty. Track it for fork-point
+                    // discovery: an orphan means this peer's branch does not (yet) connect.
+                    BlockStatus st = BlockStatus::FORK;
+                    {
+                        std::lock_guard<std::mutex> lkx(g_block_index_mu);
+                        auto it = g_block_index.find(blk_bid);
+                        if (it != g_block_index.end()) st = it->second.status;
+                    }
+                    if (blk_height > sync.peer_height) sync.peer_height = blk_height;
+                    ++sync.batch_new;
+                    if (st == BlockStatus::ORPHAN) {
+                        ++sync.batch_orphans;
+                        if (sync.lowest_orphan < 0 || blk_height < sync.lowest_orphan)
+                            sync.lowest_orphan = blk_height;
+                        // Unsolicited orphan (relay) and no request in flight: start probing.
+                        if (!solicited && sync.outstanding == 0) probe_back();
+                    } else if (blk_height > sync.batch_max_placed) {
+                        sync.batch_max_placed = blk_height;
+                    }
                 } else if (blk_bid.size() != 64) {
                     if (add_misbehavior(fd, addr, 25, "malformed block")) return false;
                 } else if (blk_bitsq == 0) {
@@ -9214,6 +9369,9 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                         }
                     }
                 }
+                ++sync.batch_new;
+                if (blk_height > sync.batch_max_placed) sync.batch_max_placed = blk_height;
+                if (blk_height > sync.peer_height) sync.peer_height = blk_height;
                 if (sync.mode == SyncState::HISTORICAL) {
                     printf("[SYNC] Received block #%lld from %s\n", (long long)blk_height, addr.c_str());
                     sync.blocks_received++;
@@ -9254,6 +9412,38 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
             // If we ask for another batch below, it re-credits from zero.
             sync.outstanding = 0;
 
+            // Fork-point discovery paths (see SyncState). Plain sync on our own branch never
+            // enters them: there every block is accepted and we continue from our tip.
+            if (sync.mode == SyncState::HISTORICAL && sync.batch_max_placed >= 0
+                && sync.batch_max_placed > g_chain_height) {
+                // Peer's branch connected (stored as fork) but is not active: keep walking
+                // forward along it; process_block reorgs as soon as it has more work.
+                sync.empty_done_count = 0; sync.probe_dist = 0; sync.lowest_orphan = -1;
+                int64_t nf = sync.batch_max_placed + 1;
+                if (nf <= sync.peer_height) {
+                    printf("[SYNC] %s: following peer branch from h=%lld (peer %lld, our tip %lld)\n",
+                           addr.c_str(), (long long)nf, (long long)sync.peer_height, (long long)g_chain_height);
+                    send_getb(nf);
+                } else {
+                    printf("[SYNC] %s: peer branch fully received (tip h=%lld); fork choice by work done\n",
+                           addr.c_str(), (long long)sync.batch_max_placed);
+                    sync.mode = SyncState::LIVE;
+                }
+                return true;
+            }
+            if (sync.mode == SyncState::HISTORICAL && sync.batch_max_placed < 0 && sync.batch_orphans > 0) {
+                sync.empty_done_count = 0;
+                probe_back();
+                return true;
+            }
+            if (sync.mode == SyncState::HISTORICAL && sync.probe_dist > 0 && sync.batch_new == 0
+                && sync.batch_served > 0) {
+                // The whole probe batch was blocks we already have: the fork point is above
+                // it. Scan forward from the end of that batch.
+                send_getb(sync.next_from + GETB_BATCH_MAX);
+                return true;
+            }
+
             if (sync.mode == SyncState::HISTORICAL && g_chain_height < sync.peer_height) {
                 // Track empty DONE responses (peer claims height but sends no blocks)
                 if (sync.blocks_received == 0) {
@@ -9277,15 +9467,7 @@ static void handle_peer(int fd, const std::string& addr, bool outbound) {
                 printf("[SYNC] DONE at height %lld, requesting %lld..%lld\n",
                        (long long)g_chain_height,
                        (long long)(g_chain_height + 1), (long long)sync.peer_height);
-                sync.range_start = g_chain_height + 1;
-                sync.blocks_received = 0;
-                sync.last_progress = std::chrono::steady_clock::now();
-                uint8_t buf[8];
-                write_i64(buf, g_chain_height + 1);
-                p2p_send_adaptive(fd, crypto, "GETB", buf, 8);
-                // Credit exactly what this batch may return. The serving loop stops
-                // at GETB_BATCH_MAX, so anything beyond it was never asked for.
-                sync.outstanding = GETB_BATCH_MAX;
+                send_getb(g_chain_height + 1);
             } else if (sync.mode == SyncState::HISTORICAL) {
                 printf("[SYNC] Sync complete: height %lld\n", (long long)g_chain_height);
                 sync.mode = SyncState::LIVE;
