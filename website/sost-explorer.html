@@ -19,7 +19,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-06-v511-rect-nav">
+<meta name="explorer-html-version" content="2026-10-08-v512-research-banner-40000">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -586,17 +586,19 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
   </div>
 </nav>
 <details class="reward-research-update" style="margin:10px auto;max-width:1040px;background:rgba(215,255,0,.055);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:8px;padding:8px 14px;color:#e8ffb0">
-  <summary style="cursor:pointer;color:#d7ff00;font:800 12px ui-monospace;letter-spacing:.5px;text-shadow:0 0 8px rgba(215,255,0,.4);list-style:none">&#11042; RESEARCH NOTICE &mdash; future reward evolution (NOT consensus) &middot; click to expand</summary>
+  <summary style="cursor:pointer;color:#d7ff00;font:800 12px ui-monospace;letter-spacing:.5px;text-shadow:0 0 8px rgba(215,255,0,.4);list-style:none">&#11042; RESEARCH NOTICE &mdash; #40,000 research horizon: reward evolution &middot; decentralization &middot; asset ecosystem (NOT consensus) &middot; click to expand</summary>
   <div style="margin-top:9px;font-size:12px;line-height:1.7;text-shadow:0 0 6px rgba(215,255,0,.18)">
-    <b>Most likely current research scenario (not consensus):</b> a future activation around <b style="color:#d7ff00">block #40,000 or #50,000</b> with <b style="color:#d7ff00">80% direct PoW miner reward / 15% normal DTD per block / 5% into the existing DTD Jackpot pool</b>.
-    The 5% is <b>not a direct node payment</b>: it <b>accumulates in the DTD Jackpot pool V30000 already distributes</b>, and when jackpots are paid the existing eligibility framework (including node / NODE_BIND requirements) still applies. <b>No new supply</b> &mdash; all three come from existing block emission. Current consensus is unchanged (50% miner / 50% DTD); the structure and heights are research candidates only and would require a <b>future hard fork</b>.
-    <b style="color:#d7ff00">SOST is also actively pursuing full decentralization of the system as soon as possible.</b>
+    <b>#30,000 builds the foundation. #40,000 is the current target research horizon for the next coordinated upgrade</b> &mdash; <b style="color:#d7ff00">not an activation commitment</b>: nothing is scheduled until code, tests, external audit and a public announcement exist (if not ready, it moves later, e.g. #50,000). Three research pillars:
+    <div style="margin:7px 0 0 4px"><b style="color:#d7ff00">1 &middot; Reward evolution.</b> Most likely research scenario: <b style="color:#d7ff00">80% direct PoW miner reward / 15% normal DTD per block / 5% into the existing DTD Jackpot pool</b>. The 5% is <b>not a direct node payment</b>: it <b>accumulates in the DTD Jackpot pool V30000 already distributes</b>, and when jackpots are paid the existing eligibility framework (including node / NODE_BIND requirements) still applies. <b>No new supply</b> &mdash; all three come from existing block emission.</div>
+    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">2 &middot; Decentralization.</b> Maximum practical protocol decentralization: peer persistence, independent seeds, address gossip and autonomous peer discovery (foundations already built and tested in the lab), plus more independent nodes, operators, providers, geographies and miners &mdash; no dependency on SOSTcore infrastructure for consensus.</div>
+    <div style="margin:5px 0 0 4px"><b style="color:#d7ff00">3 &middot; Economic infrastructure.</b> Research target: mature the native-asset framework and build the <b>SOST Asset Market</b> (order book, price discovery, atomic settlement) together with deeper Asset Passport integration (economic rights, regulatory classification). The intended initial state is <b style="color:#d7ff00">technically functional but developer-gated</b>, with no public access until external audits, legal/regulatory integration and an explicit public-access decision.</div>
+    <div style="margin-top:7px"><b>Current consensus is unchanged</b> (50% miner / 50% DTD). At #30,000, V30000 adds a <b>restricted</b> native-asset framework &mdash; admin-gated, fail-closed, disabled for the public, no public activation date. Every #40,000 change above is a research candidate and would require a <b>future hard fork</b>.</div>
     <div style="margin-top:8px"><a href="news.html#decentralization" style="color:#39ff14;font-weight:700;text-decoration:none;border-bottom:1px solid rgba(57,255,20,.5);text-shadow:0 0 6px rgba(57,255,20,.3)">&#8594; More decentralization information here</a></div>
   </div>
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-06-v511-rect-nav';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-08-v512-research-banner-40000';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
