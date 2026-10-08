@@ -133,10 +133,10 @@
     <span class="sost-v16-icon" aria-hidden="true">&#9889;</span>
     <span class="sost-v16-titles">
       <span class="sost-v16-title">SOST V30000 &mdash; #30,000 network upgrade &middot; Miner &amp; Node Operator Notice</span>
-      <span class="sost-v16-sub"><b>All three binaries changed</b> &mdash; node, miner <b>and</b> CLI. <b>None are byte-identical to v16.2.x.</b> Re-download and verify all three. Activation #30,000, automatic by block height.</span>
+      <span class="sost-v16-sub"><b>EMERGENCY SECURITY BUILD &mdash; final verification in progress.</b> Do <b>NOT</b> install the earlier V30000 / v30000-rc1 binaries. The final verified SHA256 of node, miner <b>and</b> CLI will be published here before #29,900. Activation #30,000, automatic by block height.</span>
     </span>
     <span class="sost-v16-chip">ACTIVATION #30,000</span>
-    <span class="sost-v16-redchip">&#9888; V30000 &mdash; UPDATE NODE + MINER + CLI BEFORE #30,000</span>
+    <span class="sost-v16-redchip">&#9888; V30000 EMERGENCY BUILD &mdash; DO NOT INSTALL EARLIER V30000 BINARIES</span>
     <span class="sost-v16-cta"><span class="sost-v16-cta-label" data-when="closed">Operator guide</span><span class="sost-v16-cta-label" data-when="open" hidden>Hide</span><span class="sost-v16-chev" aria-hidden="true">&#9662;</span></span>
   </button>
 
@@ -144,52 +144,68 @@
 
     <div class="sost-v16-blink">
       <span class="hdr">&#9888; What to do &mdash; for every miner and node operator</span>
-      <b>SOST V30000 is the current release and replaces v16.2.3.</b> It activates automatically, by block
-      height, at <span class="win">#30,000</span> &mdash; no flag day, nobody restarts anything at the
-      activation height. <b>All three binaries changed</b> in this release: <code>sost-node</code>,
-      <code>sost-miner</code> <b>and</b> <code>sost-cli</code>. <b>None of them are byte-identical to
-      v16.2.x</b> &mdash; re-download and verify all three against the official <code>SHA256SUMS</code>, and
-      <b>swap all three</b>. A validating node or miner not on V30000 by #30,000 <b>may diverge from the
-      V30000 chain</b> &mdash; update before then.
+      <b>SOST V30000 &mdash; EMERGENCY SECURITY BUILD. NODE + MINER + CLI UPDATE REQUIRED.</b> All three binaries
+      are changing again following the final pre-activation security hardening. <b>Do not install or keep using an
+      earlier V30000 (or v30000-rc1) binary simply because it was previously downloaded</b> &mdash; those builds are
+      superseded. The final verified <code>SHA256</code> of <code>sost-node</code>, <code>sost-miner</code> and
+      <code>sost-cli</code> will be published <b>here</b> and in the operator guide before #29,900, together with the
+      verified package. The upgrade activates automatically by block height at <span class="win">#30,000</span> &mdash;
+      nothing needs to be restarted at #30,000 itself.
       <div style="margin:12px 0;padding:11px 13px;border:2px solid #fb010d;border-radius:8px;background:rgba(251,1,13,.08)">
-        <b style="color:#ff6b6b;letter-spacing:.6px">&#9888; BE ON V30000 BEFORE #30,000.</b>
-        Install V30000 at <b>any time before #30,000 &mdash; you do not need to wait</b>. The window
+        <b style="color:#ff6b6b;letter-spacing:.6px">&#9888; BE ON THE CURRENT V30000 EMERGENCY BUILD BEFORE #30,000.</b>
+        Install it <b>as soon as the final hashes are published here &mdash; you do not need to wait</b>. The window
         <b class="win">#29,900 &rarr; #30,000</b> is the recommended <b>FINAL VERIFICATION WINDOW</b>: a last check that your
         node and miner are actually running V30000 at activation (and the moment for a final restart if you updated but have
         not restarted yet) &mdash; it is <b>not</b> the only valid time to install. A node or miner not on V30000 by #30,000
         <b>may diverge from the V30000 chain</b>. (Nothing is restarted <i>at</i> #30,000 itself &mdash; the fork activates by height.)
       </div>
-      <div class="sost-v16-code">#  recompile (build dir MUST be named "build") - or download + verify instead
-cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
-sha256sum -c SHA256SUMS            # sost-node / sost-miner / sost-cli must ALL print: OK
+      <div class="sost-v16-code">FINAL VERIFIED SHA256  (V30000 EMERGENCY BUILD)
+sost-node    PENDING &mdash; published here before #29,900
+sost-miner   PENDING &mdash; published here before #29,900
+sost-cli     PENDING &mdash; published here before #29,900
 
-#  final check in the #29,900 -> #30,000 window (or earlier): on V30000, restart NODE then MINER
-sudo systemctl stop sost-node
-sudo install -m 0755 build/sost-node /path/to/your/sost-node
-sudo systemctl start sost-node
-#  restart your miner on the new build/sost-miner (your usual flags, incl. --realtime)</div>
-      <div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.05)"><div style="font-size:12.5px;font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:7px">&#9654; SOST V30000 &mdash; MINER &amp; NODE GUIDE</div><div style="font-size:11.5px;line-height:1.65;color:#b9c6d4;margin-bottom:9px">Download and verify all three binaries &middot; who needs a node &middot; your RPC password (there is no universal one) &middot; the exact start commands &middot; wallet encryption &middot; DTD vs Jackpot V2 &middot; NODE_BIND &middot; backups &middot; troubleshooting.</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;font-family:var(--code,monospace)"><a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:5px 11px;border-radius:5px;text-decoration:none">OPEN THE FULL GUIDE</a><a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Download &amp; verify</a><a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">RPC password</a><a href="sost-upgrade.html#s5" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Start commands</a><a href="https://github.com/Neob1844/sost-core/releases/tag/v30000" target="_blank" rel="noopener" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">GitHub release</a></div><div style="font-size:10.5px;color:#7b8794;margin-top:8px;line-height:1.55">On any older version? <b>All three binaries changed</b> in V30000 &mdash; swap node, miner and cli, and verify each SHA256.</div></div>
+#  until then: do NOT replace your running binaries with the earlier v30000 / v30000-rc1 release
+#  when published: sha256sum -c SHA256SUMS  -> sost-node / sost-miner / sost-cli must ALL print: OK</div>
+      <div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.05)"><div style="font-size:12.5px;font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:7px">&#9654; SOST V30000 &mdash; MINER &amp; NODE GUIDE</div><div style="font-size:11.5px;line-height:1.65;color:#b9c6d4;margin-bottom:9px">Download and verify all three binaries &middot; who needs a node &middot; your RPC password (there is no universal one) &middot; the exact start commands &middot; wallet encryption &middot; DTD vs Jackpot V2 &middot; NODE_BIND &middot; backups &middot; troubleshooting.</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;font-family:var(--code,monospace)"><a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:5px 11px;border-radius:5px;text-decoration:none">OPEN THE FULL GUIDE</a><a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Download &amp; verify</a><a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">RPC password</a><a href="sost-upgrade.html#s5" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Start commands</a><span style="color:#ff9b9b;border:1px solid rgba(251,1,13,.45);padding:5px 9px;border-radius:5px">GitHub release: final build pending</span></div><div style="font-size:10.5px;color:#7b8794;margin-top:8px;line-height:1.55">On any older version, <b>including earlier V30000 downloads</b>? Wait for the final emergency hashes here, then swap node, miner and cli and verify each SHA256.</div></div>
+    </div>
+
+    <div style="margin:12px 0;padding:12px 14px;border:1px solid rgba(34,211,238,.5);border-radius:8px;background:rgba(34,211,238,.05);font-size:12.5px;line-height:1.65;color:#cfd8e3">
+      <div style="font-weight:800;color:#22d3ee;letter-spacing:.4px;margin-bottom:6px">NODE_BIND &mdash; IMPORTANT AFTER ACTIVATION</div>
+      If you operate a node and want DTD Jackpot eligibility:
+      <ol style="margin:6px 0 6px 18px">
+        <li>Register your <b>NODE_BIND</b> after activation (#30,000), using the final V30000 build.</li>
+        <li>Verify that the registered owner/address is <b>your</b> intended address.</li>
+        <li>Verify that subsequent heartbeats are associated with that node.</li>
+        <li>If the registered owner is not yours, stop relying on Jackpot eligibility and report it to the SOST developers.</li>
+      </ol>
+      NODE_BIND affects <b>Jackpot eligibility only</b>. It does <b>NOT</b> give access to your wallet, does <b>NOT</b> allow
+      another party to spend your SOST, and can <b>NOT</b> create or burn SOST. A stronger cryptographic NODE_BIND
+      ownership rule is being evaluated for the final V30000 build; whether it is included will be stated here with the
+      final hashes &mdash; otherwise it is planned for a future coordinated consensus upgrade.
+    </div>
+    <div style="margin:12px 0;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.04);font-size:12.5px;line-height:1.7;color:#cfd8e3">
+      <div style="font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:6px">V30000 SAFETY STATUS (MAINNET)</div>
+      <b>Native Assets:</b> DEFERRED / FAIL-CLOSED on mainnet.<br>
+      <b>SACS V2:</b> DEFERRED on mainnet for compatibility.<br>
+      <b>Current monetary consensus:</b> 50% Miner / 50% DTD.<br>
+      <b>SOST native burn:</b> NONE &mdash; SOST has no burn mechanism.
     </div>
 
     <div class="sost-v16-alert">
-      <span class="k">WHAT #30,000 ACTIVATES &mdash; TWO INDEPENDENT THINGS.</span><br>
-      <b>(1) DTD Jackpot V2</b> (the DTD jackpot draw that rewards real Proof-of-Work plus verified node
-      participation) and <b>(2) the native-asset layer</b>: on-chain assets plus four tokenization
-      modalities (Tokenize, Auction, Draw, Project Funding) and a SOST-layer DEX. Both activate by block
-      height at #30,000.
-      <b>During RESTRICTED DEVELOPER MODE the native-asset / tokenization / DEX layer is admin-gated at
-      consensus</b> &mdash; every asset operation must be authorised by the admin key or the network rejects
-      it &mdash; and <b>public access is DISABLED</b>. Technical availability does not constitute regulatory
-      authorization. Normal DTD and ordinary SOST transfers are unaffected.
+      <span class="k">WHAT #30,000 ACTIVATES ON MAINNET.</span><br>
+      <b>DTD Jackpot V2</b> (the DTD jackpot draw that rewards real Proof-of-Work plus verified node participation)
+      activates by block height at #30,000. <b>The native-asset / tokenization / DEX layer does NOT activate on mainnet</b>
+      &mdash; it is <b>deferred and fail-closed</b> in the V30000 emergency build: asset transactions and asset outputs are
+      rejected by consensus. Technical availability does not constitute regulatory authorization. Normal DTD and
+      ordinary SOST transfers are unaffected.
     </div>
 
     <div class="sost-v16-nums">
-      <div class="sost-v16-num"><span class="n">V30000</span><span class="l"><b>Current release</b> &mdash; swap node, miner and cli</span></div>
+      <div class="sost-v16-num"><span class="n">V30000</span><span class="l"><b>Emergency build</b> &mdash; final hashes published here</span></div>
       <div class="sost-v16-num"><span class="n">#30,000</span><span class="l">V30000 activates automatically by block height</span></div>
       <div class="sost-v16-num"><span class="n">#30,186</span><span class="l">First DTD Jackpot V2 draw</span></div>
       <div class="sost-v16-num"><span class="n">ALL THREE</span><span class="l">node, miner &amp; cli all changed &mdash; verify each SHA-256</span></div>
-      <div class="sost-v16-num"><span class="n">ADMIN-GATED</span><span class="l">native assets / tokenization / DEX &mdash; public access DISABLED</span></div>
+      <div class="sost-v16-num"><span class="n">DEFERRED</span><span class="l">native assets / tokenization / DEX &mdash; fail-closed on mainnet</span></div>
       <div class="sost-v16-num"><span class="n">288</span><span class="l">Jackpot cadence &amp; heartbeat epoch (unchanged)</span></div>
     </div>
 
@@ -214,7 +230,7 @@ sudo systemctl start sost-node
       <div class="sost-v16-card miner">
         <h4>&#9935; If you mine</h4>
         <ol>
-          <li>Get <b>V30000</b> &mdash; official binaries at <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases</a> (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, <code>SHA256SUMS</code>). Compiling is optional; a downloaded binary whose <b>SHA256 matches</b> is equally valid. If you do build it, use <code>-B build</code>: the published hashes only reproduce from a build directory with that name.</li>
+          <li>Get the <b>V30000 emergency build</b> once its final hashes are published in this notice (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, <code>SHA256SUMS</code>). <b>Do not use the earlier v30000 / v30000-rc1 release binaries.</b> Compiling is optional; a downloaded binary whose <b>SHA256 matches</b> is equally valid. If you do build it, use <code>-B build</code>: the published hashes only reproduce from a build directory with that name.</li>
           <li>Verify the version and the official <b>SHA256 of all three binaries</b>.</li>
           <li><b>Swap all three:</b> stop <code>sost-node</code>, install the V30000 node, miner and cli, restart. <b>All three changed in V30000 &mdash; none are byte-identical to v16.2.x.</b> Step-by-step, with commands for systemd / manual / WSL: <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">OPERATOR UPGRADE GUIDE</a>.</li>
           <li>Keep mining normally &mdash; V30000 activates by itself at #30,000. No command, no config switch, no restart exactly at the activation height.</li>
@@ -256,7 +272,7 @@ sudo systemctl start sost-node
     </ul>
 
     <div class="sost-v16-warn">
-      <b>&#9888; Operational notice.</b> <b style="color:#39ff14">V30000 is RELEASED</b> and replaces v16.2.3 as the recommended version. The tag, the three binaries (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>) and <code>SHA256SUMS</code> are published and downloadable now &mdash; <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700">releases/tag/v30000</a> &mdash; together with the step-by-step <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a>. <b>All three binaries changed</b> &mdash; verify each with <code>sha256sum -c SHA256SUMS</code> before running anything, and swap all three. <b>Do not update from unofficial binaries or unverified sources.</b> SOST is experimental MIT-licensed software provided without warranty; mining, node operation and any market activity are at the participant's own risk.
+      <b>&#9888; Operational notice.</b> <b style="color:#ff6b6b">The earlier V30000 / v30000-rc1 release binaries are SUPERSEDED &mdash; do not install them.</b> The V30000 emergency build (node, miner and cli) is in final verification; its <code>SHA256SUMS</code> and download will be published in this notice and in the step-by-step <a href="sost-upgrade.html" style="color:#39ff14;font-weight:700">operator guide</a> before #29,900. Verify each binary with <code>sha256sum -c SHA256SUMS</code> before running anything, and swap all three. <b>Do not update from unofficial binaries or unverified sources.</b> SOST is experimental MIT-licensed software provided without warranty; mining, node operation and any market activity are at the participant's own risk.
     </div>
 
     <div class="sost-v16-links">
