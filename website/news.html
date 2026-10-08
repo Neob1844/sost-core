@@ -224,6 +224,76 @@ sha256sum -c SHA256SUMS      # all three must print: OK</pre></div>
       <li><b>Native Assets:</b> DEFERRED / FAIL-CLOSED on mainnet. <b>SACS V2:</b> DEFERRED on mainnet.</li>
       <li><b>Monetary rule unchanged:</b> 50% miner / 50% DTD. <b>SOST has no burn mechanism</b> &mdash; none supported, none planned.</li>
     </ul>
+    <div style="margin:14px 0;padding:12px 14px;border:2px solid #fb010d;border-radius:9px;background:rgba(251,1,13,.07);font-size:13.5px;line-height:1.7;color:#e9eef5">
+      <b style="color:#ff6b6b;font-size:15px">&#9888; ALL NODES AND ALL MINERS: INSTALL AND RESTART ON THE FINAL BUILD BEFORE #30,000.</b><br>
+      <b>Now</b> &mdash; install it as soon as you read this (it follows current rules until #30,000; do not wait).<br>
+      <b style="color:#ff6b6b">#29,900 &rarr; #30,000 &mdash; mandatory final check:</b> your node <b>and</b> your miner must be running these exact hashes. If not, update and restart now.<br>
+      <b>#30,000</b> &mdash; activation is automatic by block height. <b style="color:#ff6b6b">An old binary at #30,000 can split from the chain.</b>
+    </div>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">OPTION A &middot; RECOMPILE FROM SOURCE (Ubuntu / Debian / WSL2)</div>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Verified: a clean clone of the tag built exactly like this reproduces the three official hashes byte-for-byte (Ubuntu 22.04, gcc 11.4).</p>
+    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># 1. build dependencies (once)
+sudo apt update
+sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
+
+# 2. get the FINAL source
+git clone https://github.com/Neob1844/sost-core.git sost-v30000-final
+cd sost-v30000-final
+git checkout v30000-final
+git log -1 --format=%H        # must print 3acd952bd2c321fe9c6cb276259ff712d6b466bb
+
+# 3. build &mdash; the build directory MUST be named "build"
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+
+# 4. verify
+sha256sum build/sost-node build/sost-miner build/sost-cli
+#   ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd  build/sost-node
+#   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75  build/sost-miner
+#   09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b  build/sost-cli</pre>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Different hashes? Your compiler or libraries differ from the reference build &mdash; use Option B. <b style="color:#ff6b6b">Never run a binary whose hash you cannot match.</b></p>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">OPTION B &middot; DOWNLOAD THE OFFICIAL BINARIES</div>
+    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre">mkdir sost-v30000-final &amp;&amp; cd sost-v30000-final
+for f in sost-node sost-miner sost-cli SHA256SUMS; do
+  wget -q https://github.com/Neob1844/sost-core/releases/download/v30000-final/$f
+done
+sha256sum -c SHA256SUMS       # all three MUST print: OK
+chmod +x sost-node sost-miner sost-cli</pre>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">RESTART YOUR NODE ON THE NEW sost-node</div>
+    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># systemd:
+sudo systemctl stop sost-node
+sudo cp /path/to/your/sost-node /path/to/your/sost-node.bak-before-final     # rollback copy
+sudo install -m 0755 build/sost-node /path/to/your/sost-node                 # (Option B: ./sost-node)
+sha256sum /path/to/your/sost-node                                            # ef608cf9e7f6434f...
+sudo systemctl start sost-node
+
+# by hand: stop it (Ctrl+C), then start the NEW binary with your usual flags
+./sost-node --genesis genesis_block.json --chain chain.json \
+  --rpc-user &lt;your-user&gt; --rpc-pass-file ~/.sost/rpc.pass \
+  --profile mainnet --p2p-enc on
+
+# check: up, on the chain, with peers
+curl -s -u &lt;your-user&gt;:$(cat ~/.sost/rpc.pass) -H 'content-type: application/json' \
+  --data '{"method":"getblockcount","params":[],"id":1}' http://127.0.0.1:18232/
+curl -s -u &lt;your-user&gt;:$(cat ~/.sost/rpc.pass) -H 'content-type: application/json' \
+  --data '{"method":"getpeerinfo","params":[],"id":1}' http://127.0.0.1:18232/</pre>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Your chain data is kept &mdash; no resync, no reindex.</p>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">RESTART YOUR MINER ON THE NEW sost-miner</div>
+    <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># stop the old miner (Ctrl+C, or kill its PID &mdash; never a broad pkill on a shared box)
+sha256sum build/sost-miner     # 53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75
+
+./build/sost-miner \
+  --wallet ~/sost-keys/my-wallet.json \
+  --mining-key-label "my-mining-key" \
+  --genesis genesis_block.json \
+  --rpc 127.0.0.1:18232 \
+  --rpc-user &lt;your-user&gt; \
+  --rpc-pass-file ~/.sost/rpc.pass \
+  --blocks 999999 --max-nonce 500000 \
+  --profile mainnet --realtime --threads &lt;N&gt;</pre>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0"><b>--realtime is mandatory</b> (without it every block is rejected: &ldquo;timestamp too far in future&rdquo;). Healthy miner output: <code>bitsQ sync ... node canonical=...</code>, <code>[MINING] h=&lt;height+1&gt;</code>, and on a find <code>[BLOCK N] ... submitted to node OK</code>.</p>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">NODE_BIND &mdash; DO NOT SUBMIT YET</div>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Wait for the explicit go-ahead in the site banner. When announced, use the FINAL CLI (same command, it now signs with both keys): <code>./build/sost-cli --wallet ~/sost-keys/my-wallet.json --mining-key-label "my-mining-key" createnodebind 1 --node-key-file ~/.sost/node.key</code>. Then check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it cannot touch wallets or create, spend or burn SOST.</p>
     <p style="font-size:11px;color:#64748b;line-height:1.6;margin:8px 0 0">Earlier news items below describe the superseded builds and are kept as history only.</p>
   </div>
 </div></section>
