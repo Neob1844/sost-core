@@ -345,10 +345,10 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
   </div>
 
   <div class="mg-note mg-ok">
-    <b>V30000 EMERGENCY SECURITY BUILD &mdash; NODE + MINER + CLI UPDATE REQUIRED before #30,000.</b>
-      All three binaries are changing again following the final pre-activation security hardening.
-      <b>Do not install or keep using the earlier V30000 / v30000-rc1 binaries</b> &mdash; they are superseded.
-      The final verified SHA-256 values are published in section 1 below before #29,900.
+    <b>V30000 FINAL SECURITY BUILD &mdash; NODE + MINER + CLI UPDATE REQUIRED before #30,000.</b>
+      All three binaries changed following the final pre-activation security hardening.
+      <b>Do not install or keep using earlier V30000 / RC / emergency builds</b> &mdash; they are superseded and may
+      diverge from the chain at #30,000. The verified SHA-256 values are in section 1 below.
       On mainnet, #30,000 activates DTD Jackpot V2 only: <b>Native Assets are DEFERRED / FAIL-CLOSED</b>,
       <b>SACS V2 is DEFERRED</b>, the monetary rule stays <b>50% Miner / 50% DTD</b>, and <b>SOST has no burn mechanism</b>.
   </div>
@@ -356,9 +356,10 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
   <!-- ═══ 2 · DOWNLOAD ════════════════════════════════════════════════ -->
   <details class="mg" id="s2"><summary>1 &middot; Download the official binaries and verify them</summary><div class="mg-in">
     <div class="mg-note mg-warn">
-      <b>The earlier V30000 release (github.com/Neob1844/sost-core/releases/tag/v30000, and v30000-rc1) is SUPERSEDED &mdash; do not install it.</b>
-      The V30000 emergency build is in final verification. Its download link, <code>SHA256SUMS</code> and the three
-      values below will be published here before #29,900.
+      <b>Download the V30000 FINAL SECURITY BUILD:</b>
+      <a href="https://github.com/Neob1844/sost-core/releases/tag/__REL_TAG__" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/__REL_TAG__</a>
+      (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, <code>SHA256SUMS</code>; source commit <code>__FINAL_COMMIT__</code>).
+      The earlier v30000, v30000-rc1 and emergency builds are <b>SUPERSEDED</b> &mdash; do not install them.
     </div>
 
     <h4>Verify before you run anything</h4>
@@ -366,9 +367,9 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
     <p>Or check them one by one against the published values:</p>
     <table>
       <tr><th>File</th><th>SHA-256</th></tr>
-      <tr><td><code>sost-node</code></td><td class="mg-hash">PENDING &mdash; V30000 emergency build, published before #29,900</td></tr>
-      <tr><td><code>sost-miner</code></td><td class="mg-hash">PENDING &mdash; V30000 emergency build, published before #29,900</td></tr>
-      <tr><td><code>sost-cli</code></td><td class="mg-hash">PENDING &mdash; V30000 emergency build, published before #29,900</td></tr>
+      <tr><td><code>sost-node</code></td><td class="mg-hash">__NODE_SHA__</td></tr>
+      <tr><td><code>sost-miner</code></td><td class="mg-hash">__MINER_SHA__</td></tr>
+      <tr><td><code>sost-cli</code></td><td class="mg-hash">__CLI_SHA__</td></tr>
     </table>
     <div class="mg-note mg-warn">
       <b>If the hash does not match, stop.</b> Downloading a file from the right URL does not make it the right file.
@@ -588,9 +589,9 @@ chmod 600 ~/.sost/node.key</pre></div>
         <li>If the registered owner is not yours, stop relying on Jackpot eligibility and report it to the SOST developers.</li>
       </ol>
       NODE_BIND affects <b>Jackpot eligibility only</b>: it does <b>not</b> give anyone access to your wallet, does <b>not</b>
-      let anyone spend your SOST, and can <b>not</b> create or burn SOST. A stronger cryptographic NODE_BIND ownership rule is
-      being evaluated for the final V30000 emergency build; whether it is included will be stated with the final hashes
-      (section 1) &mdash; otherwise it is planned for a future coordinated consensus upgrade.
+      let anyone spend your SOST, and can <b>not</b> create or burn SOST. From #30,000 the FINAL build enforces a stronger ownership rule:
+      a NODE_BIND must be signed by <b>both</b> your mining key and your <b>node key</b> (the CLI does both from the command above),
+      so only the holder of a node key can bind it and a bind cannot be copied to another miner.
     </div>
     <h4>Then: broadcast it and check it landed</h4>
     <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>curl -s -X POST https://sostcore.com/rpc/public \
