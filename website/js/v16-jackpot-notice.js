@@ -293,7 +293,7 @@ sha256sum -c SHA256SUMS            # sost-node / sost-miner / sost-cli must ALL 
       <a href="mailto:sost@sostcore.com">&#9993; sost@sostcore.com</a>
     </div>
 
-    <div class="sost-v16-foot">Sovereign Stock Token &middot; ConvergenceX native L1 Proof-of-Work &middot; Open source (MIT). Use the official BitcoinTalk thread as the primary reference for the #30,000 network upgrade. &mdash; NeoB</div>
+    <div class="sost-v16-foot">Sovereign Stock Token &middot; ConvergenceX native L1 Proof-of-Work &middot; Open source (MIT). Use the official BitcoinTalk thread as the primary reference for the #30,000 network upgrade. &mdash; Neob</div>
   </div>
  </div>
 </div>`;
