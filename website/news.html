@@ -218,17 +218,17 @@ sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b
 sha256sum -c SHA256SUMS      # all three must print: OK</pre></div>
     <ul style="font-size:13px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:8px 0 8px 18px">
       <li><b>Download:</b> <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee">github.com/Neob1844/sost-core/releases/tag/v30000-final</a> &middot; step-by-step: <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>.</li>
-      <li><b>Activation is automatic at #30,000</b> by block height. Nothing needs to be restarted exactly at #30,000 &mdash; but every validating node and every miner <b>must already run this build before #30,000</b>; older software may diverge from the chain from that height.</li>
+      <li><b>Activation is automatic at #30,000</b> by block height. Nothing needs to be restarted exactly at #30,000 &mdash; but every validating node and every miner <b>must restart on this build between #29,900 and #30,000</b> and still run it at #30,000; older software may split from the chain and will not apply the new protocol rules.</li>
       <li><b style="color:#ff6b6b">Do not submit a NODE_BIND until the go-ahead is posted in the site banner.</b> NODE_BIND is a hard-fork rule; every miner must be on this build first.</li>
       <li><b>NODE_BIND (after #30,000):</b> a bind now carries a second signature by your <b>node key</b>, so only the holder of a node key can bind it. Command (unchanged): <code>sost-cli --wallet &lt;wallet.json&gt; --mining-key-label &lt;label&gt; createnodebind 1 --node-key-file ~/.sost/node.key</code>. After it confirms, check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it gives no access to wallets and cannot create, spend or burn SOST.</li>
       <li><b>Native Assets:</b> DEFERRED / FAIL-CLOSED on mainnet. <b>SACS V2:</b> DEFERRED on mainnet.</li>
       <li><b>Monetary rule unchanged:</b> 50% miner / 50% DTD. <b>SOST has no burn mechanism</b> &mdash; none supported, none planned.</li>
     </ul>
     <div style="margin:14px 0;padding:12px 14px;border:2px solid #fb010d;border-radius:9px;background:rgba(251,1,13,.07);font-size:13.5px;line-height:1.7;color:#e9eef5">
-      <b style="color:#ff6b6b;font-size:15px">&#9888; ALL NODES AND ALL MINERS: INSTALL AND RESTART ON THE FINAL BUILD BEFORE #30,000.</b><br>
-      <b>Now</b> &mdash; install it as soon as you read this (it follows current rules until #30,000; do not wait).<br>
-      <b style="color:#ff6b6b">#29,900 &rarr; #30,000 &mdash; mandatory final check:</b> your node <b>and</b> your miner must be running these exact hashes. If not, update and restart now.<br>
-      <b>#30,000</b> &mdash; activation is automatic by block height. <b style="color:#ff6b6b">An old binary at #30,000 can split from the chain.</b>
+      <b style="color:#ff6b6b;font-size:15px">&#9888; ALL NODES AND ALL MINERS: RECOMPILE (OR DOWNLOAD AND VERIFY) THE NEW BINARIES AND RESTART NODE AND MINER AFTER BLOCK #29,900 AND BEFORE BLOCK #30,000.</b><br>
+      <b>Now</b> &mdash; you can already build or download the FINAL binaries and verify their SHA256 (steps below).<br>
+      <b style="color:#ff6b6b">#29,900 &rarr; #30,000 &mdash; MANDATORY:</b> restart your node <b>and</b> your miner on the FINAL binaries, and keep them running through #30,000.<br>
+      <b>#30,000</b> &mdash; activation is automatic by block height. <b style="color:#ff6b6b">Otherwise there is a real danger of a CHAIN SPLIT, and the new protocol changes will NOT apply to your node or miner.</b>
     </div>
     <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">OPTION A &middot; RECOMPILE FROM SOURCE (Ubuntu / Debian / WSL2)</div>
     <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Verified: a clean clone of the tag built exactly like this reproduces the three official hashes byte-for-byte (Ubuntu 22.04, gcc 11.4).</p>
@@ -259,7 +259,7 @@ for f in sost-node sost-miner sost-cli SHA256SUMS; do
 done
 sha256sum -c SHA256SUMS       # all three MUST print: OK
 chmod +x sost-node sost-miner sost-cli</pre>
-    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">RESTART YOUR NODE ON THE NEW sost-node</div>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">RESTART YOUR NODE ON THE NEW sost-node &mdash; between #29,900 and #30,000</div>
     <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># systemd:
 sudo systemctl stop sost-node
 sudo cp /path/to/your/sost-node /path/to/your/sost-node.bak-before-final     # rollback copy
@@ -278,7 +278,7 @@ curl -s -u &lt;your-user&gt;:$(cat ~/.sost/rpc.pass) -H 'content-type: applicati
 curl -s -u &lt;your-user&gt;:$(cat ~/.sost/rpc.pass) -H 'content-type: application/json' \
   --data '{"method":"getpeerinfo","params":[],"id":1}' http://127.0.0.1:18232/</pre>
     <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Your chain data is kept &mdash; no resync, no reindex.</p>
-    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">RESTART YOUR MINER ON THE NEW sost-miner</div>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">RESTART YOUR MINER ON THE NEW sost-miner &mdash; between #29,900 and #30,000</div>
     <pre style="font:12px/1.65 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre"># stop the old miner (Ctrl+C, or kill its PID &mdash; never a broad pkill on a shared box)
 sha256sum build/sost-miner     # 53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75
 
