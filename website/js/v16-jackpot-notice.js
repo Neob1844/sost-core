@@ -170,8 +170,38 @@ sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd
 sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75
 sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b
 
-sha256sum -c SHA256SUMS            # sost-node / sost-miner / sost-cli must ALL print: OK
-#  then: stop node -> install new sost-node -> start node; restart your miner on the new sost-miner (usual flags, incl. --realtime)</div>
+sha256sum -c SHA256SUMS            # sost-node / sost-miner / sost-cli must ALL print: OK</div>
+      <div style="margin:12px 0 4px;font:800 13px ui-monospace,monospace;color:#ffd166;letter-spacing:.4px">&#9654; HOW TO DO IT &mdash; 4 SIMPLE STEPS (do steps 3 and 4 between #29,900 and #30,000)</div>
+      <div class="sost-v16-code"># 1. GET THE NEW BINARIES  (A: recompile  -or-  B: download)
+#    A) recompile (Ubuntu/Debian/WSL2):
+sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
+git clone https://github.com/Neob1844/sost-core.git sost-final &amp;&amp; cd sost-final
+git checkout v30000-final
+cmake -S . -B build -DSOST_ENABLE_PHASE2_SBPOW=ON -DSOST_TESTNET_FORKS=OFF -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target sost-node sost-miner sost-cli -j"$(nproc)"
+cd build
+#    B) or download the official binaries:
+#    for f in sost-node sost-miner sost-cli SHA256SUMS; do wget -q https://github.com/Neob1844/sost-core/releases/download/v30000-final/$f; done; chmod +x sost-*
+
+# 2. VERIFY  (must match exactly)
+sha256sum sost-node sost-miner sost-cli
+#   ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd  sost-node
+#   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75  sost-miner
+#   09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b  sost-cli
+
+# 3. RESTART THE NODE on the new sost-node   (between #29,900 and #30,000)
+#    systemd:  sudo systemctl stop sost-node
+#              sudo install -m 0755 sost-node /path/to/your/sost-node
+#              sudo systemctl start sost-node
+#    by hand:  stop the old node (Ctrl+C) and start the NEW ./sost-node with your usual flags
+
+# 4. RESTART THE MINER on the new sost-miner   (between #29,900 and #30,000)
+#    stop the old miner (Ctrl+C), then start the NEW one with your usual flags, e.g.:
+./sost-miner --wallet ~/sost-keys/my-wallet.json --mining-key-label "my-mining-key" \\
+  --genesis genesis_block.json --rpc 127.0.0.1:18232 --rpc-user &lt;user&gt; --rpc-pass-file ~/.sost/rpc.pass \\
+  --blocks 999999 --max-nonce 500000 --profile mainnet --realtime --threads &lt;N&gt;
+#    (--realtime is mandatory. Your chain data is kept: no resync.)</div>
+      <div style="font-size:11.5px;color:#9fb6c4;margin:4px 0 0">Hash different after recompiling? Use option B (official binaries). <b>Never run a binary whose SHA256 does not match.</b> Full guide with every case: <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>.</div>
       <div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(57,255,20,.45);border-radius:8px;background:rgba(57,255,20,.05)"><div style="font-size:12.5px;font-weight:800;color:#39ff14;letter-spacing:.4px;margin-bottom:7px">&#9654; SOST V30000 &mdash; MINER &amp; NODE GUIDE</div><div style="font-size:11.5px;line-height:1.65;color:#b9c6d4;margin-bottom:9px">Download and verify all three binaries &middot; who needs a node &middot; your RPC password (there is no universal one) &middot; the exact start commands &middot; wallet encryption &middot; DTD vs Jackpot V2 &middot; NODE_BIND &middot; backups &middot; troubleshooting.</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;font-family:var(--code,monospace)"><a href="sost-upgrade.html" style="color:#0a0a0a;background:#39ff14;font-weight:800;padding:5px 11px;border-radius:5px;text-decoration:none">OPEN THE FULL GUIDE</a><a href="sost-upgrade.html#s2" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Download &amp; verify</a><a href="sost-upgrade.html#s4" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">RPC password</a><a href="sost-upgrade.html#s5" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">Start commands</a><a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#9fe8ff;border:1px solid rgba(34,211,238,.45);padding:5px 9px;border-radius:5px;text-decoration:none">GitHub release (FINAL)</a></div><div style="font-size:10.5px;color:#7b8794;margin-top:8px;line-height:1.55">On any older version, <b>including earlier V30000 / RC / emergency downloads</b>? Swap node, miner and cli to the FINAL SECURITY BUILD and verify each SHA256.</div></div>
     </div>
 
