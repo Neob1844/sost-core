@@ -1,1 +1,1 @@
-{"v": "2026-10-09-v516-restart-window-29900-30000", "note": "V30000 FINAL: all nodes and miners must recompile/verify and RESTART node + miner between #29,900 and #30,000 or risk a chain split. Native assets section corrected (DEFERRED/FAIL-CLOSED)."}
+{"v": "2026-10-09-v517-neob-spelling", "note": "Owner name spelled Neob across the site. V30000 FINAL: restart node + miner between #29,900 and #30,000."}
