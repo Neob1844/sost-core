@@ -963,12 +963,12 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <option value="">-- Select a position --</option>
             <option value="__new__">+ Create New (type ID below)</option>
           </select>
-          <input type="text" class="form-control" id="composerPositionCustom" placeholder="e.g. POS-2026-0001-XAUT-NeoB" oninput="customPositionInput()" style="margin-top:4px;">
+          <input type="text" class="form-control" id="composerPositionCustom" placeholder="e.g. POS-2026-0001-XAUT-Neob" oninput="customPositionInput()" style="margin-top:4px;">
           <div class="field-help" id="help-posid">
             <b>What is a Position ID?</b><br>
             A unique identifier for a gold-referenced position in the SOST system. Each position represents a PoPC commitment — gold locked in escrow that generates SOST rewards.<br><br>
             <b>Where do I find it?</b> If you already have a position, select it from the dropdown. If you're creating a new offer, type the position ID that the seller gave you.<br><br>
-            <b>Example:</b> <code>POS-2026-0001-XAUT-NeoB</code><br>
+            <b>Example:</b> <code>POS-2026-0001-XAUT-Neob</code><br>
             Format: POS-[year]-[number]-[gold type]-[owner name]
           </div>
         </div>
@@ -1038,7 +1038,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <input type="text" class="form-control" id="paramPosId" placeholder="Auto-filled or type manually" oninput="updatePreview()">
             <div class="field-help" id="help-posid-pro">
               <b>Pro mode only.</b> The position ID is auto-filled from Step 2. Only change this if you know the exact ID and need to override.<br><br>
-              <b>Example:</b> <code>POS-2026-0001-XAUT-NeoB</code>
+              <b>Example:</b> <code>POS-2026-0001-XAUT-Neob</code>
             </div>
           </div>
         </div>
@@ -1892,7 +1892,7 @@ setInterval(fetchAll, _refreshMs);
   }).catch(function(){});
 })();
 </script>
-<script src="js/developer-note.js?v=v392" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
 <script src="js/v16-jackpot-notice.js?v=v516" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->

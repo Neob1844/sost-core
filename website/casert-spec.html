@@ -258,7 +258,7 @@
         <span class="spec-tag">EXPONENTIAL FOUNDATION (2020)</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">cASERT's bitsQ primary controller originally used an exponential moving average formula (half-life based), pioneered by Mark Lundeberg and Jonathan Toomim for Bitcoin Cash (November 2020 hard fork). Since block 5,175, bitsQ uses an avg288-based model: it compares the average of the last 288 block intervals against the 600s target. Since block 5,270, a dynamic cap scales with deviation (0% dead band at &plusmn;15s, then 0%/0.5%/1.0%/2.0%/3.0% max). Median removed from consensus (block 5,270+). Block 5,323 hotfix. The half-life exponential is preserved for pre-5175 blocks only. cASERT was designed by NeoB for SOST (2026), extending the controller with equalizer profiles and anti-stall decay into a unified consensus-rate control system for ConvergenceX.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">cASERT's bitsQ primary controller originally used an exponential moving average formula (half-life based), pioneered by Mark Lundeberg and Jonathan Toomim for Bitcoin Cash (November 2020 hard fork). Since block 5,175, bitsQ uses an avg288-based model: it compares the average of the last 288 block intervals against the 600s target. Since block 5,270, a dynamic cap scales with deviation (0% dead band at &plusmn;15s, then 0%/0.5%/1.0%/2.0%/3.0% max). Median removed from consensus (block 5,270+). Block 5,323 hotfix. The half-life exponential is preserved for pre-5175 blocks only. cASERT was designed by Neob for SOST (2026), extending the controller with equalizer profiles and anti-stall decay into a unified consensus-rate control system for ConvergenceX.</p>
         <table class="code-table">
           <tr><th>Property</th><th>Detail</th></tr>
           <tr><td class="label">Core formula</td><td class="value" style="font-family:var(--font-mono);">next_bitsq = anchor_bitsq * 2^(-td / halflife)</td></tr>
@@ -626,7 +626,7 @@
 <script src="js/retro-sounds.js?v=v392"></script>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
-<script src="js/developer-note.js?v=v392" defer></script>
+<script src="js/developer-note.js?v=v393" defer></script>
 <script src="js/v16-jackpot-notice.js?v=v516" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
