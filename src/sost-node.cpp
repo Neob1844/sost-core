@@ -8089,8 +8089,10 @@ static bool process_block(const std::string& block_json, bool reorg_connect) {
     // Clean up fork blocks that are now too old
     cleanup_old_forks();
 
-    // v0.3.2: Auto-save chain immediately after every accepted block
-    if (!g_chain_path.empty()) {
+    // v0.3.2: Auto-save chain immediately after every accepted block — except while a reorg
+    // is connecting its candidate branch: that transition is persisted once by try_reorganize
+    // when it is fully accepted (or the restored chain when it is rolled back) — V30000-11.
+    if (!g_chain_path.empty() && !reorg_connect) {
         if (!save_chain_internal(g_chain_path)) {
             printf("[BLOCK] WARNING: chain auto-save failed!\n");
             {
@@ -8304,6 +8306,65 @@ static std::string cw_sig(const Bytes32& w) {
     return (st == std::string::npos) ? "0" : h.substr(st);
 }
 
+// ---------------------------------------------------------------------------
+// Chain-state integrity helpers (non-consensus, V30000 FINAL hardening: audit V30000-09/10/11).
+// ---------------------------------------------------------------------------
+// Deterministic UTXO-set root (same algorithm as --dry-run-replay): used to prove that a
+// failed reorg restored the EXACT pre-reorg state before RECOVERY_COMPLETED is declared.
+static std::array<uint8_t,32> utxo_set_root_now() {
+    std::array<uint8_t,32> root{};
+    for (const auto& kv : g_utxo_set.GetMap()) {
+        const OutPoint&  op = kv.first;
+        const UTXOEntry& e  = kv.second;
+        std::vector<uint8_t> b;
+        b.reserve(96 + e.payload.size());
+        b.insert(b.end(), root.begin(), root.end());
+        b.insert(b.end(), op.txid.begin(), op.txid.end());
+        for (int i=0;i<4;i++) b.push_back((uint8_t)((op.index>>(8*i))&0xff));
+        for (int i=0;i<8;i++) b.push_back((uint8_t)(((uint64_t)e.amount>>(8*i))&0xff));
+        b.push_back(e.type);
+        b.insert(b.end(), e.pubkey_hash.begin(), e.pubkey_hash.end());
+        for (int i=0;i<2;i++) b.push_back((uint8_t)((e.payload_len>>(8*i))&0xff));
+        b.insert(b.end(), e.payload.begin(), e.payload.end());
+        for (int i=0;i<8;i++) b.push_back((uint8_t)(((uint64_t)e.height>>(8*i))&0xff));
+        b.push_back(e.is_coinbase?1:0);
+        root = sost::sha256(b);
+    }
+    return root;
+}
+
+// The in-memory chain state can no longer be proven consistent (a disconnect / rollback /
+// restore step failed part-way). Never serve partial state: stop at once WITHOUT saving.
+// chain.json is never written while a reorg is in flight (see process_block), so it still
+// holds the last fully consistent chain; the service manager restarts the node, which
+// replays it through ConnectBlock.
+[[noreturn]] static void fatal_chain_state(const std::string& why) {
+    printf("[FATAL] chain state integrity: %s\n"
+           "[FATAL] in-memory state can no longer be trusted - exiting WITHOUT saving; "
+           "restart reloads the last consistent chain.json\n", why.c_str());
+    sacs::Rec r; r.type=sacs::Ev::CHAIN_DATA_INCOMPLETE; r.result="fatal_stop"; r.detail=why;
+    sacs::emit(r);
+    fflush(stdout); fflush(stderr);
+    _exit(70);
+}
+
+#ifdef SOST_DEVNET_FORKS
+// DEV/test-only fault injection for the reorg recovery paths (V30000-10 regressions).
+// SOST_DEV_REORG_FAULT="<phase>:<index>", phase in {disconnect, rollback, restore}.
+// One-shot; inert unless the node runs Profile::DEV; compiled out of mainnet/testnet.
+static bool dev_reorg_fault(const char* phase, int idx) {
+    static const std::string spec = [](){ const char* e = getenv("SOST_DEV_REORG_FAULT"); return std::string(e ? e : ""); }();
+    static bool fired = false;
+    if (fired || spec.empty() || ACTIVE_PROFILE != sost::Profile::DEV) return false;
+    if (spec != std::string(phase) + ":" + std::to_string(idx)) return false;
+    fired = true;
+    printf("[REORG][DEV-FAULT] injected failure at %s:%d\n", phase, idx); fflush(stdout);
+    return true;
+}
+#else
+static inline bool dev_reorg_fault(const char*, int) { return false; }
+#endif
+
 static bool try_reorganize(const std::string& fork_tip_hash) {
     // Guard against recursive reorg (process_block→try_reorganize→process_block→try_reorganize)
     if (g_in_reorg) {
@@ -8458,6 +8519,11 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
     std::vector<StoredBlock> saved_blocks(g_blocks.begin() + fork_point + 1, g_blocks.end());
     std::vector<BlockUndo> saved_undos(g_block_undos.begin() + fork_point + 1, g_block_undos.end());
     int64_t saved_height = g_chain_height;
+    // Integrity anchors: a failed reorg may only report RECOVERY_COMPLETED if tip, height and
+    // the UTXO-set root are byte-identical to these (V30000-10).
+    const Hash256 pre_reorg_tip = g_blocks.back().block_id;
+    const std::array<uint8_t,32> pre_reorg_utxo_root = utxo_set_root_now();
+    int disconnected_count = 0;
     // Save mempool state (txids) for potential restoration
     // (We don't deep-copy mempool; instead we re-add txs on failure)
 
@@ -8467,6 +8533,9 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
 
     for (int64_t h = g_chain_height; h > fork_point; --h) {
         if (h >= (int64_t)g_blocks.size() || h >= (int64_t)g_block_undos.size()) {
+            if (disconnected_count > 0)
+                fatal_chain_state("reorg: missing undo data at h=" + std::to_string((long long)h) +
+                                  " after " + std::to_string(disconnected_count) + " block(s) already disconnected");
             printf("[REORG] ABORTED: missing undo data for height %lld\n", (long long)h);
             {
                 sacs::Rec r; r.type=sacs::Ev::CHAIN_DATA_INCOMPLETE; r.result="aborted";
@@ -8485,15 +8554,14 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             }
         }
         std::string derr;
-        if (!g_utxo_set.DisconnectBlock(txs, g_block_undos[h], &derr)) {
-            printf("[REORG] ABORTED: DisconnectBlock failed at height %lld: %s\n", (long long)h, derr.c_str());
-            printf("[REORG] Rolled back to original tip %s\n",
-                   to_hex(g_blocks.back().block_id.data(),32).substr(0,16).c_str());
-            // Blocks are still in g_blocks, UTXO state is inconsistent — try to reconnect
-            // the blocks we just disconnected
-            // (This shouldn't happen since DisconnectBlock uses recorded undo data)
-            return false;
+        if (txs.size() != g_blocks[h].tx_hexes.size() || dev_reorg_fault("disconnect", disconnected_count) ||
+            !g_utxo_set.DisconnectBlock(txs, g_block_undos[h], &derr)) {
+            // DisconnectBlock is not atomic and earlier blocks may already be disconnected:
+            // the state cannot be proven consistent -> stop, never serve it (V30000-10).
+            fatal_chain_state("reorg: disconnect failed at h=" + std::to_string((long long)h) +
+                              " (" + (derr.empty() ? std::string("tx decode / injected fault") : derr) + ")");
         }
+        ++disconnected_count;
         undo_node_state_for_block(h);
         undo_asset_state_for_block(h);
         disconnected.push_back(g_blocks[h]);
@@ -8564,7 +8632,11 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
                 }
             }
             std::string derr;
-            g_utxo_set.DisconnectBlock(txs, g_block_undos[h], &derr);
+            if (txs.size() != g_blocks[h].tx_hexes.size() ||
+                dev_reorg_fault("rollback", (int)(g_chain_height - h)) ||
+                !g_utxo_set.DisconnectBlock(txs, g_block_undos[h], &derr))
+                fatal_chain_state("reorg rollback: disconnecting candidate block h=" + std::to_string((long long)h) +
+                                  " failed (" + (derr.empty() ? std::string("tx decode / injected fault") : derr) + ")");
             undo_node_state_for_block(h);
             undo_asset_state_for_block(h);
         }
@@ -8592,35 +8664,29 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             {
                 std::string jerr;
                 if (!validate_live_jackpot(txs, sb.height, jerr)) {
-                    printf("[REORG] CRITICAL: Historical Jackpot mismatch restoring h=%lld: %s\n",
-                           (long long)sb.height, jerr.c_str());
-                    break;
+                    fatal_chain_state("reorg restore: Historical Jackpot mismatch at h=" +
+                                      std::to_string((long long)sb.height) + ": " + jerr);
                 }
             }
             {
                 std::string nerr;
                 if (!apply_node_state_for_block(txs, sb.height, nerr)) {
-                    printf("[REORG] CRITICAL: node participation restoring h=%lld: %s\n",
-                           (long long)sb.height, nerr.c_str());
-                    break;
+                    fatal_chain_state("reorg restore: node participation at h=" +
+                                      std::to_string((long long)sb.height) + ": " + nerr);
                 }
             }
             {
                 std::string aerr;
                 if (!apply_asset_state_for_block(txs, sb.height, aerr)) {
-                    undo_node_state_for_block(sb.height);
-                    printf("[REORG] CRITICAL: native asset restoring h=%lld: %s\n",
-                           (long long)sb.height, aerr.c_str());
-                    break;
+                    fatal_chain_state("reorg restore: native asset at h=" +
+                                      std::to_string((long long)sb.height) + ": " + aerr);
                 }
             }
-            if (!g_utxo_set.ConnectBlock(txs, sb.height, undo, &uerr)) {
-                undo_asset_state_for_block(sb.height);
-                undo_node_state_for_block(sb.height);
-                printf("[REORG] CRITICAL: Cannot restore original block h=%lld: %s\n",
-                       (long long)sb.height, uerr.c_str());
-                // This should never happen — the original chain was valid
-                break;
+            if (txs.size() != sb.tx_hexes.size() || dev_reorg_fault("restore", (int)ri) ||
+                !g_utxo_set.ConnectBlock(txs, sb.height, undo, &uerr)) {
+                fatal_chain_state("reorg restore: cannot reconnect original block h=" +
+                                  std::to_string((long long)sb.height) + " (" +
+                                  (uerr.empty() ? std::string("tx decode / injected fault") : uerr) + ")");
             }
             g_blocks.push_back(sb);
             g_block_undos.push_back(undo);
@@ -8646,7 +8712,16 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
                 if (it != g_block_index.end()) it->second.status = BlockStatus::ACTIVE;
             }
         }
-        printf("[REORG] Rolled back to original tip %s at height %lld\n",
+        // Prove the restore before declaring it (V30000-10): same tip, same height, same
+        // UTXO-set root as the snapshot taken before anything was disconnected.
+        if (g_blocks.empty() || g_blocks.back().block_id != pre_reorg_tip || g_chain_height != saved_height ||
+            utxo_set_root_now() != pre_reorg_utxo_root)
+            fatal_chain_state("reorg rollback finished but tip/height/UTXO root differ from the pre-reorg snapshot");
+        // Persist the restored chain at once (V30000-11): chain.json must never keep
+        // representing an abandoned candidate branch.
+        if (!g_chain_path.empty() && !save_chain_internal(g_chain_path))
+            printf("[REORG] WARNING: saving the restored chain failed\n");
+        printf("[REORG] Rolled back to original tip %s at height %lld (tip + UTXO root verified)\n",
                to_hex(g_blocks.back().block_id.data(),32).substr(0,16).c_str(),
                (long long)g_chain_height);
         fflush(stdout);
@@ -8729,6 +8804,11 @@ static bool try_reorganize(const std::string& fork_tip_hash) {
             if (it != g_block_index.end()) it->second.status = BlockStatus::FORK;
         }
     }
+
+    // The whole transition is accepted: persist it once (V30000-11 — nothing was written
+    // to chain.json while the candidate branch was being connected).
+    if (!g_chain_path.empty() && !save_chain_internal(g_chain_path))
+        printf("[REORG] WARNING: saving the reorganized chain failed\n");
 
     return true;
 }
@@ -9689,6 +9769,24 @@ static bool load_genesis(const std::string& path) {
     return true;
 }
 
+// V30000-09: a persisted block that cannot be replayed exactly (missing/bad tx data,
+// deserialize failure, jackpot/node/asset rule failure, ConnectBlock failure) is never
+// accepted: loading stops at the last fully replayed block (height and chainwork do not
+// advance, every hook of the failed block is undone by the caller), the damaged file is
+// kept aside for forensics, and the missing blocks are re-downloaded from peers.
+static int64_t g_chain_load_failed_height = -1;
+static void chain_load_fail(const std::string& path, int64_t height, const std::string& why) {
+    g_chain_load_failed_height = height;
+    printf("[CHAIN-LOAD] FATAL: cannot replay block h=%lld from %s: %s\n"
+           "[CHAIN-LOAD] block NOT accepted; chain loaded up to h=%lld only; the rest will be "
+           "re-downloaded from peers\n",
+           (long long)height, path.c_str(), why.c_str(), (long long)height - 1);
+    std::string keep = path + ".corrupt-h" + std::to_string((long long)height);
+    std::ifstream src(path, std::ios::binary); std::ofstream dst(keep, std::ios::binary | std::ios::trunc);
+    if (src && dst) { dst << src.rdbuf(); printf("[CHAIN-LOAD] damaged file preserved as %s\n", keep.c_str()); }
+    fflush(stdout);
+}
+
 static bool load_chain(const std::string& path) {
     std::ifstream f(path); if(!f) return false;
     std::string json((std::istreambuf_iterator<char>(f)),std::istreambuf_iterator<char>());
@@ -9782,137 +9880,91 @@ static bool load_chain(const std::string& path) {
         } // else keeps 0 default
         sb.raw_block_json=bj; // preserve full JSON for P2P relay
 
-        // Parse transactions if present (v0.3.2+)
+        // Parse transactions (v0.3.2+). Every block >= 1 on every network carries them; the
+        // old coinbase-only reconstruction (pre-v0.3.2 files) is gone: a block whose data
+        // cannot be fully replayed is NEVER accepted (V30000-09) — see chain_load_fail().
         sb.tx_hexes = json_get_tx_hexes(bj);
 
-        if (!sb.tx_hexes.empty()) {
-            // FULL REPLAY: deserialize all TXs and connect to UTXO set
-            std::vector<Transaction> txs;
-            txs.reserve(sb.tx_hexes.size());
-            bool tx_ok = true;
+        std::vector<Transaction> txs;
+        txs.reserve(sb.tx_hexes.size());
+        std::string fail;
+        if (sb.tx_hexes.empty()) fail = "block has no transaction data";
+        for (const auto& hx : sb.tx_hexes) {
+            if (!fail.empty()) break;
+            std::vector<Byte> raw;
+            if (!decode_tx_hex(hx, raw)) { fail = "bad tx hex"; break; }
+            Transaction tx; std::string derr;
+            if (!Transaction::Deserialize(raw, tx, &derr)) { fail = "tx deserialize failed: " + derr; break; }
+            txs.push_back(std::move(tx));
+        }
+        if (!fail.empty()) { chain_load_fail(path, height, fail); break; }
 
-            for (const auto& hx : sb.tx_hexes) {
-                std::vector<Byte> raw;
-                if (!decode_tx_hex(hx, raw)) {
-                    printf("[CHAIN-LOAD] Warning: bad tx hex at height %lld, falling back to coinbase-only\n",
-                           (long long)height);
-                    tx_ok = false;
-                    break;
-                }
-                Transaction tx; std::string derr;
-                if (!Transaction::Deserialize(raw, tx, &derr)) {
-                    printf("[CHAIN-LOAD] Warning: tx deserialize failed at height %lld: %s\n",
-                           (long long)height, derr.c_str());
-                    tx_ok = false;
-                    break;
-                }
-                txs.push_back(std::move(tx));
+        // Reindex hardening: a persisted jackpot block must STILL match the canonical
+        // reconstruction, so a tampered datadir cannot inject a fraudulent reserve
+        // spend on load. Same single authorization as process_block/reorg.
+        {
+            std::string jerr;
+            if (!validate_live_jackpot(txs, height, jerr)) {
+                chain_load_fail(path, height, "Historical Jackpot mismatch: " + jerr); break;
             }
-
-            if (tx_ok && !txs.empty()) {
-                // Use ConnectBlock to atomically update UTXO set
-                BlockUndo undo;
-                std::string uerr;
-                // Reindex hardening: a persisted jackpot block must STILL match the canonical
-                // reconstruction, so a tampered datadir cannot inject a fraudulent reserve
-                // spend on load. Same single authorization as process_block/reorg.
-                {
-                    std::string jerr;
-                    if (!validate_live_jackpot(txs, height, jerr)) {
-                        printf("[CHAIN-LOAD] FATAL: Historical Jackpot mismatch at h=%lld: %s\n",
-                               (long long)height, jerr.c_str());
-                        return false;
-                    }
-                }
-                {
-                    std::string nerr;
-                    if (!apply_node_state_for_block(txs, height, nerr)) {
-                        printf("[CHAIN-LOAD] FATAL: node participation at h=%lld: %s\n",
-                               (long long)height, nerr.c_str());
-                        return false;
-                    }
-                }
-                {
-                    std::string aerr;
-                    if (!apply_asset_state_for_block(txs, height, aerr)) {
-                        printf("[CHAIN-LOAD] FATAL: native asset at h=%lld: %s\n",
-                               (long long)height, aerr.c_str());
-                        return false;
-                    }
-                }
-                if (g_utxo_set.ConnectBlock(txs, height, undo, &uerr)) {
-                    // Also register wallet UTXOs
-                    for (size_t ti = 1; ti < txs.size(); ++ti) {
-                        for (const auto& in : txs[ti].inputs) {
-                            g_wallet.mark_spent(in.prev_txid, in.prev_index);
-                        }
-                    }
-                    for (const auto& tx : txs) {
-                        Hash256 txid{}; tx.ComputeTxId(txid, nullptr);
-                        for (size_t oi = 0; oi < tx.outputs.size(); ++oi) {
-                            const auto& o = tx.outputs[oi];
-                            std::string addr = address_encode(o.pubkey_hash);
-                            if (g_wallet.has_address(addr)) {
-                                WalletUTXO wu;
-                                wu.txid = txid;
-                                wu.vout = (uint32_t)oi;
-                                wu.amount = o.amount;
-                                wu.output_type = o.type;
-                                wu.pkh = o.pubkey_hash;
-                                wu.height = height;
-                                wu.spent = false;
-                                wu.payload = o.payload;   // V30000: asset UTXO payload
-                                g_wallet.add_utxo(wu);
-                            }
-                        }
-                    }
-                    // TX-INDEX: index all txs from this block
-                    for(size_t ti=0; ti<txs.size(); ++ti){
-                        Hash256 txid_i{}; txs[ti].ComputeTxId(txid_i, nullptr);
-                        g_tx_index[txid_i] = {height, (uint32_t)ti};
-                    }
-                    // Compute cumulative chainwork
-                    Bytes32 bw = compute_block_work(sb.bits_q);
-                    Bytes32 parent_cw = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
-                    sb.cumulative_work = add_be256(parent_cw, bw);
-                    g_block_undos.push_back(undo); // Store undo for reorg support
-                    g_blocks.push_back(sb);
-                    mark_block_known(bid);
-                    continue;  // skip the legacy coinbase-only path below
-                } else {
-                    printf("[CHAIN-LOAD] Warning: ConnectBlock failed at height %lld: %s (falling back)\n",
-                           (long long)height, uerr.c_str());
+        }
+        {
+            std::string nerr;
+            if (!apply_node_state_for_block(txs, height, nerr)) {        // atomic on failure
+                chain_load_fail(path, height, "node participation: " + nerr); break;
+            }
+        }
+        {
+            std::string aerr;
+            if (!apply_asset_state_for_block(txs, height, aerr)) {       // atomic on failure
+                undo_node_state_for_block(height);
+                chain_load_fail(path, height, "native asset: " + aerr); break;
+            }
+        }
+        BlockUndo undo;
+        std::string uerr;
+        if (!g_utxo_set.ConnectBlock(txs, height, undo, &uerr)) {        // rolls itself back
+            undo_asset_state_for_block(height);
+            undo_node_state_for_block(height);
+            chain_load_fail(path, height, "ConnectBlock failed: " + uerr); break;
+        }
+        // Also register wallet UTXOs
+        for (size_t ti = 1; ti < txs.size(); ++ti) {
+            for (const auto& in : txs[ti].inputs) {
+                g_wallet.mark_spent(in.prev_txid, in.prev_index);
+            }
+        }
+        for (const auto& tx : txs) {
+            Hash256 txid{}; tx.ComputeTxId(txid, nullptr);
+            for (size_t oi = 0; oi < tx.outputs.size(); ++oi) {
+                const auto& o = tx.outputs[oi];
+                std::string addr = address_encode(o.pubkey_hash);
+                if (g_wallet.has_address(addr)) {
+                    WalletUTXO wu;
+                    wu.txid = txid;
+                    wu.vout = (uint32_t)oi;
+                    wu.amount = o.amount;
+                    wu.output_type = o.type;
+                    wu.pkh = o.pubkey_hash;
+                    wu.height = height;
+                    wu.spent = false;
+                    wu.payload = o.payload;   // V30000: asset UTXO payload
+                    g_wallet.add_utxo(wu);
                 }
             }
         }
-
-        // LEGACY fallback: no transactions field → reconstruct coinbase only
-        g_tx_index[sb.block_id] = {height, 0};  // TX-INDEX: pseudo-index
+        // TX-INDEX: index all txs from this block
+        for(size_t ti=0; ti<txs.size(); ++ti){
+            Hash256 txid_i{}; txs[ti].ComputeTxId(txid_i, nullptr);
+            g_tx_index[txid_i] = {height, (uint32_t)ti};
+        }
         // Compute cumulative chainwork
         Bytes32 bw = compute_block_work(sb.bits_q);
         Bytes32 parent_cw = g_blocks.empty() ? Bytes32{} : g_blocks.back().cumulative_work;
         sb.cumulative_work = add_be256(parent_cw, bw);
+        g_block_undos.push_back(undo); // Store undo for reorg support
         g_blocks.push_back(sb);
-        // REORG FIX: g_block_undos is a per-height parallel vector to g_blocks
-        // (try_reorganize indexes g_block_undos[h]). A coinbase-only legacy block
-        // (e.g. genesis) spends no inputs, so its undo is genuinely empty — but we
-        // MUST still push it to keep g_block_undos height-aligned with g_blocks.
-        // Omitting it left the undo vector permanently off-by-one, which aborted
-        // every post-restart reorg with "missing undo data for height N".
-        g_block_undos.push_back(BlockUndo{});
         mark_block_known(bid);
-        struct{const char*a;int64_t v;uint8_t t;}cb[3]={
-            {ADDR_MINER_FOUNDER,sb.miner_reward,OUT_COINBASE_MINER},
-            {ADDR_GOLD_VAULT,sb.gold_vault_reward,OUT_COINBASE_GOLD},
-            {ADDR_POPC_POOL,sb.popc_pool_reward,OUT_COINBASE_POPC},
-        };
-        for(int i=0;i<3;++i){
-            PubKeyHash pkh{}; address_decode(cb[i].a,pkh);
-            OutPoint op; op.txid=sb.block_id; op.index=(uint32_t)i;
-            UTXOEntry e; e.amount=cb[i].v; e.type=cb[i].t; e.pubkey_hash=pkh; e.height=height; e.is_coinbase=true;
-            e.payload_len=0; e.payload.clear();
-            std::string err; g_utxo_set.AddUTXO(op,e,&err);
-        }
     }
 
     g_chain_height = (int64_t)g_blocks.size() - 1;
@@ -10606,12 +10658,15 @@ int main(int argc, char** argv) {
             b.push_back(e.is_coinbase?1:0);
             root = sost::sha256(b);
         }
+        if (g_chain_load_failed_height >= 0) {
+            printf("DRYRUN load_failed_at: %lld\n", (long long)g_chain_load_failed_height);
+        }
         printf("DRYRUN final_height: %lld\n",(long long)g_chain_height);
         printf("DRYRUN utxo_count: %zu\n", g_utxo_set.Size());
         printf("DRYRUN utxo_set_root: %s\n", to_hex(root.data(),32).c_str());
         printf("DRYRUN tip_block_id: %s\n",
                g_blocks.empty()?"none":to_hex(g_blocks.back().block_id.data(),32).c_str());
-        return 0;
+        return g_chain_load_failed_height >= 0 ? 3 : 0;
     }
 
     // V12 hard fork startup notice. Printed after chain load so the local
