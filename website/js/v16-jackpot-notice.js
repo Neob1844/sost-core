@@ -136,12 +136,20 @@
       <span class="sost-v16-sub"><b>V30000 FINAL SECURITY BUILD &mdash; update node + miner + CLI before #30,000.</b> Do <b>NOT</b> install earlier V30000 / RC / emergency builds. Verify the three SHA256 below. Activation #30,000, automatic by block height.</span>
     </span>
     <span class="sost-v16-chip">ACTIVATION #30,000</span>
-    <span class="sost-v16-redchip">&#9888; V30000 FINAL SECURITY BUILD &mdash; UPDATE NODE + MINER + CLI BEFORE #30,000</span>
+    <span class="sost-v16-redchip">&#9888; RECOMPILE + RESTART NODE &amp; MINER BETWEEN #29,900 AND #30,000 &mdash; OR RISK A CHAIN SPLIT</span>
     <span class="sost-v16-cta"><span class="sost-v16-cta-label" data-when="closed">Operator guide</span><span class="sost-v16-cta-label" data-when="open" hidden>Hide</span><span class="sost-v16-chev" aria-hidden="true">&#9662;</span></span>
   </button>
 
   <div class="sost-v16-body" id="sostV16Body" hidden>
 
+    <div style="margin:0 0 14px;padding:16px 18px;border:3px solid #fb010d;border-radius:10px;background:linear-gradient(135deg,rgba(251,1,13,.22),rgba(251,1,13,.07));box-shadow:0 0 26px rgba(251,1,13,.45);text-align:center;line-height:1.6">
+      <div style="font:900 18px/1.3 ui-monospace,monospace;color:#ff4d4d;letter-spacing:.6px;text-shadow:0 0 10px rgba(251,1,13,.6)">&#9888; MANDATORY FOR EVERY NODE AND EVERY MINER &#9888;</div>
+      <div style="font-size:15px;color:#fff;margin-top:8px"><b>RECOMPILE</b> (or download and verify) the new <b>sost-node + sost-miner + sost-cli</b><br>
+      and <b style="color:#ffd166">RESTART YOUR NODE AND YOUR MINER</b> on them<br>
+      <b style="font-size:17px;color:#ffd166">AFTER BLOCK #29,900 AND BEFORE BLOCK #30,000.</b></div>
+      <div style="font-size:14px;color:#ffb3b3;margin-top:8px"><b>Otherwise there is a real danger of a CHAIN SPLIT</b>, and the new protocol changes and security improvements
+      will <b>NOT</b> apply to your node or miner. Check the SHA256 below before restarting.</div>
+    </div>
     <div class="sost-v16-blink">
       <span class="hdr">&#9888; What to do &mdash; for every miner and node operator</span>
       <b>SOST V30000 FINAL SECURITY BUILD. NODE + MINER + CLI UPDATE REQUIRED BEFORE #30,000.</b> All three binaries
@@ -151,12 +159,11 @@
       and verify all three against the official <code>SHA256SUMS</code>. The upgrade activates automatically by block
       height at <span class="win">#30,000</span> &mdash; nothing needs to be restarted at #30,000 itself.
       <div style="margin:12px 0;padding:11px 13px;border:2px solid #fb010d;border-radius:8px;background:rgba(251,1,13,.08)">
-        <b style="color:#ff6b6b;letter-spacing:.6px">&#9888; BE ON THE V30000 FINAL SECURITY BUILD BEFORE #30,000.</b>
-        Install it <b>now &mdash; you do not need to wait</b>. The window
-        <b class="win">#29,900 &rarr; #30,000</b> is the recommended <b>FINAL VERIFICATION WINDOW</b>: a last check that your
-        node and miner are actually running V30000 at activation (and the moment for a final restart if you updated but have
-        not restarted yet) &mdash; it is <b>not</b> the only valid time to install. A node or miner not on V30000 by #30,000
-        <b>may diverge from the V30000 chain</b>. (Nothing is restarted <i>at</i> #30,000 itself &mdash; the fork activates by height.)
+        <b style="color:#ff6b6b;letter-spacing:.6px">&#9888; RESTART NODE + MINER ON THE FINAL BUILD BETWEEN #29,900 AND #30,000.</b>
+        You may build or download the FINAL binaries and verify them now, but the <b>restart of your node and your miner on
+        them must happen after #29,900 and before #30,000</b>, and you must <b>still be running them at #30,000</b>.
+        A node or miner that reaches #30,000 on an older binary <b>may split from the chain</b> and will <b>not</b> apply the new
+        protocol rules. (Nothing is restarted <i>at</i> #30,000 itself &mdash; the fork activates by height.)
       </div>
       <div class="sost-v16-code">FINAL VERIFIED SHA256  (V30000 FINAL SECURITY BUILD, commit 3acd952bd2c3)
 sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd
@@ -259,8 +266,11 @@ sha256sum -c SHA256SUMS            # sost-node / sost-miner / sost-cli must ALL 
 #31,050   NODE_BIND required   heartbeats 3/3
 #31,338+  NODE_BIND required   heartbeats 3 of the previous 4</div>
 
-    <div class="sost-v16-h">Native assets, tokenization &amp; DEX &mdash; admin-gated, public access disabled</div>
-    <p>#30,000 also activates an on-chain <b>native-asset layer</b> (asset genesis / issue / transfer / burn, with conservation and supply-cap safety and a reorg-safe index), <b>four tokenization modalities</b> (Tokenize, Auction, Draw, Project Funding) and a <b>SOST-layer DEX</b>. While <b>RESTRICTED DEVELOPER MODE</b> is in force, every native-asset operation must carry an <b>admin-authorised input</b> or the network rejects it at consensus &mdash; there is no CLI, RPC, <code>?dev=1</code> or browser bypass. <b>Public access is DISABLED</b>; the web console is behind server-side admin authentication. Lifting the gate requires a future height-gated release. Technical availability is not regulatory authorization.</p>
+    <div class="sost-v16-h">Native assets, tokenization &amp; DEX &mdash; DEFERRED / FAIL-CLOSED on mainnet</div>
+    <p><b>#30,000 does NOT activate the native-asset layer on mainnet.</b> In the V30000 FINAL SECURITY BUILD the asset layer
+    (asset genesis / issue / transfer / burn, the tokenization modalities and the SOST-layer DEX) is <b>deferred and fail-closed</b>:
+    asset transactions and asset outputs are rejected by consensus, exactly as before #30,000. Enabling it would require a future,
+    separately audited and coordinated height-gated release. Technical availability is not regulatory authorization.</p>
 
     <div class="sost-v16-h">What does NOT change</div>
     <ul>
