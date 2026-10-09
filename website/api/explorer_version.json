@@ -1,1 +1,1 @@
-{"v": "2026-10-09-v518-simple-4-steps", "note": "Banner + guide: simple 4-step recompile/verify/restart node+miner commands (restart between #29,900 and #30,000)."}
+{"v": "2026-10-09-v519-banner-under-logos", "note": "Frontend fix: V30000 banner sits in page flow under the sticky logo header (z-index auto; index placement after research notice). No protocol change."}

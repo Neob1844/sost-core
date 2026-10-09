@@ -20,7 +20,7 @@
 
   var CSS = `
 .sost-v16{--v16-gold:#fbbf24;--v16-mag:#e879f9;--v16-cyan:#22d3ee;--v16-green:#4ade80;
-  position:relative;z-index:8900;max-width:1400px;margin:10px auto;padding:2px;border-radius:12px;
+  position:relative;z-index:auto;max-width:1400px;margin:10px auto;padding:2px;border-radius:12px;
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
   background:linear-gradient(115deg,#fbbf24,#e879f9 28%,#22d3ee 52%,#4ade80 74%,#fbbf24);
   background-size:300% 300%;animation:sost-v16-flow 9s linear infinite;
@@ -344,8 +344,16 @@ sha256sum sost-node sost-miner sost-cli
     if (mount) {
       mount.appendChild(node);
     } else {
+      // Page flow placement, like the other site banners: right under the sticky logo/nav
+      // header (after the research notice when present) — never above the logos.
+      var research = document.querySelector('body > .reward-research-update');
+      var topNav = document.querySelector('body > nav');
       var devnote = document.querySelector('.sost-devnote-strip');
-      if (devnote && devnote.parentNode) {
+      if (research && research.parentNode) {
+        research.parentNode.insertBefore(node, research.nextSibling);
+      } else if (topNav && topNav.parentNode) {
+        topNav.parentNode.insertBefore(node, topNav.nextSibling);
+      } else if (devnote && devnote.parentNode) {
         devnote.parentNode.insertBefore(node, devnote.nextSibling);
       } else if (document.body.firstChild) {
         document.body.insertBefore(node, document.body.firstChild);
