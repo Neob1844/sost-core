@@ -23,10 +23,10 @@
   'use strict';
   var GENESIS_TIME = 1773597600, SPACING = 600, VIEW = 288, H_MAX = 35, E_MIN = -7;
   var series = null, seriesAt = 0, seriesBusy = false;
-  var rows = [], lastTip = 0, crossIdx = -1, colorMode = 'miner';
+  var rows = [], lastTip = 0, crossIdx = -1, colorMode = 'timing';
   var anim = { k: 0, start: 0 }, rafId = 0;
-  var mount, chipsEl, readEl, panels = [], built = false;
-  try { var cm = localStorage.getItem('sost_cr_color'); if (cm === 'timing') colorMode = 'timing'; } catch (e) {}
+  var mount, chipsEl, readEl, storyEl, legEl, panels = [], built = false;
+  try { var cm = localStorage.getItem('sost_cr_color'); if (cm === 'miner') colorMode = 'miner'; } catch (e) {}
 
   /* -- shared helpers (same producer colours as the Network Mosaic) --------- */
   function hashHue(s) {
@@ -141,14 +141,6 @@
     var head = el('div', 'display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;position:relative');
     head.appendChild(el('div', '', '<div style="font-size:11px;letter-spacing:2px;color:var(--text3)">// <b style="color:var(--cyan)">CONVERGENCEX CONTROL ROOM</b></div>' +
       '<div style="font-size:9px;letter-spacing:.8px;color:var(--text3);margin-top:3px">last 288 blocks &middot; difficulty = bitsQ + Equalizer &middot; every value recomputed from public block data with the consensus rules</div>'));
-    var modes = el('div', 'display:flex;gap:5px;align-items:center;font-size:8px;letter-spacing:1.2px;color:var(--text3)', 'INTERVAL COLOUR ');
-    [['miner', 'MINER'], ['timing', 'TIMING']].forEach(function (m) {
-      var b = el('button', '', m[1]); b.className = 'cr-btn' + (colorMode === m[0] ? ' on' : '');
-      b.onclick = function () { colorMode = m[0]; try { localStorage.setItem('sost_cr_color', colorMode); } catch (e) {}
-        [].forEach.call(modes.querySelectorAll('button'), function (x) { x.className = 'cr-btn' + (x.textContent === m[1] ? ' on' : ''); }); paintAll(); };
-      modes.appendChild(b);
-    });
-    head.appendChild(modes);
     mount.appendChild(head);
     chipsEl = el('div', 'display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;position:relative');
     mount.appendChild(chipsEl);
@@ -162,10 +154,24 @@
       bindCross(cv, P);
       return P;
     }
-    var p1 = panel('crLag', 'SCHEDULE LAG &rarr; EQUALIZER', 'blocks ahead of the 600 s schedule (area) and the profile each block was mined at (line)', 150, 118);
+    var et = el('div', '', '<span><b>EQUALIZER</b> &nbsp;<i>how the chain sets the structural work of each block</i></span><span id="crLagSide"></span>'); et.className = 'cr-pt';
+    mount.appendChild(et);
+    storyEl = el('div', 'display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;margin:4px 0 6px');
+    mount.appendChild(storyEl);
+    var sc = document.createElement('canvas'); sc.className = 'cr-cv'; sc.id = 'crScale'; sc.style.cursor = 'default';
+    mount.appendChild(sc);
+    var ps = { id: 'crScale', cv: sc, h: 92, hm: 92, off: null, geo: null, draw: drawScale, noX: true };
+    panels.push(ps);
+    var p1 = panel('crLag', 'SCHEDULE LAG', 'blocks ahead of the 600 s timetable &middot; this is what sets the Equalizer target', 96, 80);
     p1.draw = drawLag;
-    var rib = panel('crRib', 'EQUALIZER PROFILE', 'E7 blue &rarr; B0 green &rarr; H35 red', 16, 14); rib.draw = drawRibbon;
-    var p2 = panel('crInt', 'BLOCK INTERVALS', 'time since the previous block &middot; reference lines = consensus thresholds', 150, 120); p2.draw = drawIntervals;
+    var p2 = panel('crInt', 'BLOCK TIMES', 'how long each block took &middot; target 10 min', 150, 120); p2.draw = drawIntervals;
+    legEl = el('div', 'display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:8.5px;color:var(--text3);margin:2px 0 0 0');
+    mount.insertBefore(legEl, p2.cv);
+    var rib = panel('crRib', 'PROFILE OF EACH BLOCK',
+      'one slice per block, aligned with the block times above &middot; ' +
+      '<span style="display:inline-block;vertical-align:middle;width:84px;height:7px;border-radius:2px;background:linear-gradient(90deg,' + profColor(-7, 50) + ',' + profColor(0, 50) + ',' + profColor(17, 50) + ',' + profColor(35, 50) + ')"></span> ' +
+      'E7 easiest &middot; B0 &middot; H35 hardest &middot; long blocks get easier profiles', 22, 20);
+    rib.draw = drawRibbon;
     var p3 = panel('crDiff', 'DIFFICULTY ENGINE &middot; bitsQ', 'avg288 deviation from 600 s (line) against the consensus step bands; gold = bitsQ', 140, 118); p3.draw = drawDiff;
     var p4 = panel('crBV', 'BURST &amp; VOLATILITY', 'rolling 72 intervals &middot; orange = % blocks &lt; 5 min &middot; cyan = stdev / 600 s', 110, 96); p4.draw = drawBV;
     readEl = el('div'); readEl.id = 'crRead'; mount.appendChild(readEl);
@@ -208,42 +214,56 @@
   }
 
   function drawLag(c, G) {
-    var lo = 0, hi = 0, i;
-    rows.forEach(function (r) { lo = Math.min(lo, r.lag, r.p == null ? 0 : r.p); hi = Math.max(hi, r.lag, r.p == null ? 0 : r.p); });
-    hi = Math.max(hi + 2, 8); lo = Math.min(lo - 1, 0);
+    var lo = 0, hi = 4, i;
+    rows.forEach(function (r) { lo = Math.min(lo, r.lag); hi = Math.max(hi, r.lag); });
+    hi = Math.ceil((hi + 2) / 5) * 5; lo = Math.min(0, Math.floor(lo / 5) * 5);
     var Y = function (v) { return G.pad.t + G.ch - (v - lo) / (hi - lo) * G.ch; };
-    for (var g = Math.ceil(lo / 5) * 5; g <= hi; g += 5) gridY(c, G, Y(g), g === 0 ? 'B0' : (g > 0 ? 'H' + g : 'E' + (-g)), g === 0 ? 'rgba(255,255,255,.14)' : null);
-    // lag area
+    gridY(c, G, Y(0), '0', 'rgba(255,255,255,.14)');
+    gridY(c, G, Y(hi), '+' + hi);
     var grad = c.createLinearGradient(0, G.pad.t, 0, G.pad.t + G.ch);
-    grad.addColorStop(0, 'rgba(34,211,238,.32)'); grad.addColorStop(1, 'rgba(34,211,238,.02)');
+    grad.addColorStop(0, 'rgba(34,211,238,.45)'); grad.addColorStop(1, 'rgba(34,211,238,.03)');
     c.beginPath(); c.moveTo(xOf(G, 0), Y(0));
     for (i = 0; i < rows.length; i++) c.lineTo(xOf(G, i), Y(rows[i].lag));
     c.lineTo(xOf(G, rows.length - 1), Y(0)); c.closePath(); c.fillStyle = grad; c.fill();
     c.beginPath(); for (i = 0; i < rows.length; i++) { var y = Y(rows[i].lag); if (i) c.lineTo(xOf(G, i), y); else c.moveTo(xOf(G, i), y); }
-    c.strokeStyle = 'rgba(34,211,238,.85)'; c.lineWidth = 1.2; c.stroke();
-    // cascade easing: base -> selected profile
-    for (i = 0; i < rows.length; i++) {
-      var r = rows[i]; if (!r.drop || r.p == null) continue;
-      c.strokeStyle = 'rgba(192,132,252,.22)'; c.lineWidth = Math.max(1, G.colW * 0.6);
-      c.beginPath(); c.moveTo(xOf(G, i), Y(r.base)); c.lineTo(xOf(G, i), Y(r.p)); c.stroke();
-    }
-    // node profile (step line)
-    c.beginPath();
-    for (i = 0; i < rows.length; i++) {
-      if (rows[i].p == null) continue;
-      var x0 = G.pad.l + i * G.colW, x1 = x0 + G.colW, yy = Y(rows[i].p);
-      if (i === 0) c.moveTo(x0, yy); else c.lineTo(x0, yy);
-      c.lineTo(x1, yy);
-    }
-    c.strokeStyle = 'rgba(240,140,252,.95)'; c.lineWidth = 1.1; c.shadowColor = 'rgba(232,121,249,.55)'; c.shadowBlur = 4; c.stroke(); c.shadowBlur = 0;
-    for (i = 0; i < rows.length; i++) if (rows[i].match === false) { c.fillStyle = '#ef4444'; c.beginPath(); c.arc(xOf(G, i), Y(rows[i].p), 2.4, 0, 7); c.fill(); }
+    c.strokeStyle = '#22d3ee'; c.lineWidth = 1.6; c.shadowColor = 'rgba(34,211,238,.7)'; c.shadowBlur = 6; c.stroke(); c.shadowBlur = 0;
     var last = rows[rows.length - 1];
-    c.textAlign = 'left'; c.fillStyle = '#22d3ee'; c.fillText('lag ' + (last.lag > 0 ? '+' : '') + last.lag, G.W - G.pad.r + 5, Y(last.lag) + 3);
-    if (last.p != null) { c.fillStyle = '#e879f9'; c.fillText(profName(last.p), G.W - G.pad.r + 5, Y(last.p) + (Math.abs(Y(last.p) - Y(last.lag)) < 10 ? 13 : 3)); }
+    c.fillStyle = '#22d3ee'; c.textAlign = 'left'; c.font = 'bold 10px "Fira Code",monospace';
+    c.fillText((last.lag > 0 ? '+' : '') + last.lag, G.W - G.pad.r + 5, Y(last.lag) + 4);
+  }
+  // Equalizer scale: E7 ... B0 ... H35, histogram of the profiles used in view,
+  // target (from the schedule lag) and the profile the selected block was mined at.
+  function drawScale(c, G) {
+    var r = rows[crossIdx >= 0 ? crossIdx : rows.length - 1];
+    var L = G.pad.l, R = G.W - G.pad.r, w = R - L, P0 = -7, P1 = 35;
+    var X = function (p) { return L + (p - P0 + 0.5) / (P1 - P0 + 1) * w; };
+    var cnt = {}, mx = 1, i;
+    rows.forEach(function (x) { if (x.p != null) { cnt[x.p] = (cnt[x.p] || 0) + 1; mx = Math.max(mx, cnt[x.p]); } });
+    var barY = G.mob ? 40 : 44, hh = barY - 14, cw = w / (P1 - P0 + 1);
+    for (var p = P0; p <= P1; p++) {
+      var v = cnt[p] || 0; if (!v) continue;
+      var bh = Math.max(2, v / mx * hh);
+      c.fillStyle = profColor(p, 46); c.globalAlpha = 0.55; c.fillRect(X(p) - cw * 0.38, barY - 3 - bh, cw * 0.76, bh); c.globalAlpha = 1;
+    }
+    for (i = 0; i <= w; i += 2) { c.fillStyle = profColor(P0 + (i / w) * (P1 - P0 + 1) - 0.5, 44); c.fillRect(L + i, barY, 2, 9); }
+    c.fillStyle = '#5b6473'; c.textAlign = 'center'; c.font = '8px "Fira Code",monospace';
+    [-7, 0, 5, 10, 15, 20, 25, 30, 35].forEach(function (q) { if (G.mob && (q === 5 || q === 15 || q === 25)) return; c.fillText(profName(q), X(q), barY + 20); });
+    c.fillStyle = '#7a8794'; c.textAlign = 'left'; c.fillText('← easier', L, barY + 31);
+    c.textAlign = 'right'; c.fillText('harder →', R, barY + 31);
+    if (!r) return;
+    var xt = X(r.base), xa = X(r.p == null ? r.model : r.p);
+    if (r.drop && r.p != null) {   // cascade arrow: target -> mined
+      c.strokeStyle = 'rgba(192,132,252,.9)'; c.lineWidth = 1.5; c.setLineDash([3, 2]);
+      c.beginPath(); c.moveTo(xt, barY + 4.5); c.lineTo(xa + 6, barY + 4.5); c.stroke(); c.setLineDash([]);
+    }
+    c.fillStyle = '#22d3ee'; c.beginPath(); c.moveTo(xt, barY - 1); c.lineTo(xt - 6, barY - 10); c.lineTo(xt + 6, barY - 10); c.closePath(); c.fill();
+    c.font = 'bold 9px "Fira Code",monospace'; c.textAlign = 'center'; c.fillText('target ' + profName(r.base), Math.min(R - 30, Math.max(L + 30, xt)), barY - 13);
+    c.beginPath(); c.arc(xa, barY + 4.5, 6.5, 0, 7); c.fillStyle = profColor(r.p, 58); c.fill(); c.lineWidth = 2; c.strokeStyle = '#fff'; c.stroke();
+    c.fillStyle = '#fff'; c.textAlign = 'center'; c.fillText('mined ' + profName(r.p), Math.min(R - 34, Math.max(L + 34, xa)), barY + 44);
   }
   function drawRibbon(c, G) {
     for (var i = 0; i < rows.length; i++) {
-      c.fillStyle = rows[i].p == null ? '#222' : profColor(rows[i].p, 46);
+      c.fillStyle = rows[i].p == null ? '#222' : profColor(rows[i].p, 50);
       c.fillRect(G.pad.l + i * G.colW, G.pad.t, Math.max(1, G.colW - (G.colW > 3 ? 0.6 : 0)), G.ch);
     }
   }
@@ -252,22 +272,28 @@
     rows.forEach(function (r) { if (r.dt > mx) mx = r.dt; });
     mx = Math.min(mx, 4 * 3600);
     var Y = function (s) { return G.pad.t + G.ch - Math.sqrt(Math.max(0, Math.min(s, mx)) / mx) * G.ch; };
-    [[300, '5m', null], [1800, '30m', null]].forEach(function (g) { if (g[0] <= mx) gridY(c, G, Y(g[0]), g[1]); });
+    [[0, '0'], [300, '5m'], [1800, '30m'], [3600, '1h'], [7200, '2h']].forEach(function (g) { if (g[0] <= mx) gridY(c, G, Y(g[0]), g[1]); });
     for (i = 0; i < rows.length; i++) {
       var r = rows[i], x = G.pad.l + i * G.colW, w = Math.max(1, G.colW - (G.colW > 3 ? 1 : 0.2));
       var col = colorMode === 'timing' ? timingColor(r.dt) : window.sostProducerColor(r.m, 52);
       var y = Y(r.dt);
-      c.fillStyle = col; c.globalAlpha = 0.92; c.fillRect(x, y, w, G.pad.t + G.ch - y); c.globalAlpha = 1;
-      if (r.dt > 2700) { c.fillStyle = r.dt > 7200 ? '#ef4444' : '#f97316'; c.fillRect(x, G.pad.t, w, 2); }
+      c.fillStyle = col; c.globalAlpha = 0.9; c.fillRect(x, y, w, G.pad.t + G.ch - y); c.globalAlpha = 1;
     }
-    var refs = [[540, '9m cascade', 'rgba(192,132,252,.75)', [2, 3]], [600, '10m target', 'rgba(251,191,36,.95)', [5, 3]],
-                [1200, '20m slingshot', 'rgba(249,115,22,.85)', [2, 3]], [3600, '60m anti-stall', 'rgba(239,68,68,.85)', [2, 3]]];
-    refs.forEach(function (rf) {
-      if (rf[0] > mx) return;
-      var y = Y(rf[0]); c.save(); c.setLineDash(rf[3]); c.strokeStyle = rf[2]; c.lineWidth = 1;
-      c.beginPath(); c.moveTo(G.pad.l, y + 0.5); c.lineTo(G.W - G.pad.r, y + 0.5); c.stroke(); c.restore();
-      c.fillStyle = rf[2]; c.textAlign = 'left'; c.fillText(G.mob ? rf[1].split(' ')[0] : rf[1], G.W - G.pad.r + 4, y + 3 + (rf[0] === 540 ? -4 : (rf[0] === 600 ? 5 : 0)));
-    });
+    // the 10-minute target: the one line that matters
+    var yt = Y(600);
+    c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 1.4; c.shadowColor = 'rgba(255,255,255,.6)'; c.shadowBlur = 4;
+    c.beginPath(); c.moveTo(G.pad.l, yt + 0.5); c.lineTo(G.W - G.pad.r, yt + 0.5); c.stroke(); c.shadowBlur = 0;
+    c.fillStyle = '#fff'; c.textAlign = 'left'; c.font = 'bold 9px "Fira Code",monospace';
+    c.fillText(G.mob ? '10m' : '10 min', G.W - G.pad.r + 4, yt + 3);
+    c.font = '8px "Fira Code",monospace';
+    if (!G.mob) {
+      [[1200, 'difficulty relief', 'rgba(249,115,22,.75)'], [3600, 'anti-stall', 'rgba(239,68,68,.8)']].forEach(function (rf) {
+        if (rf[0] > mx) return;
+        var y = Y(rf[0]); c.save(); c.setLineDash([2, 4]); c.strokeStyle = rf[2]; c.lineWidth = 1;
+        c.beginPath(); c.moveTo(G.pad.l, y + 0.5); c.lineTo(G.W - G.pad.r, y + 0.5); c.stroke(); c.restore();
+        c.fillStyle = rf[2]; c.textAlign = 'left'; c.fillText((rf[0] / 60) + 'm ' + rf[1], G.W - G.pad.r + 4, y + 3);
+      });
+    }
   }
   function drawDiff(c, G) {
     var R = 80, i, have = rows.filter(function (r) { return r.dev != null; });
@@ -328,6 +354,7 @@
       var P = panels[i], G = P.geo; if (!P.off || !G) continue;
       var c = P.cv.getContext('2d');
       c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, P.cv.width, P.cv.height);
+      if (P.noX) { c.drawImage(P.off, 0, 0); continue; }
       if (k) {
         var shift = (1 - e) * k * G.colW * G.dpr, px = G.pad.l * G.dpr, pw = P.cv.width - px - G.pad.r * G.dpr;
         c.drawImage(P.off, 0, 0, px, P.cv.height, 0, 0, px, P.cv.height);
@@ -340,7 +367,7 @@
         c.fillStyle = 'rgba(255,255,255,' + (0.35 * (1 - e)).toFixed(3) + ')';
         c.fillRect(G.pad.l + (G.n - k) * G.colW, G.pad.t, k * G.colW, G.ch);
       }
-      if (crossIdx >= 0 && crossIdx < rows.length) {
+      if (crossIdx >= 0 && crossIdx < rows.length && !P.noX) {
         var x = xOf(G, crossIdx);
         c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x + 0.5, 0); c.lineTo(x + 0.5, G.H); c.stroke();
         c.fillStyle = 'rgba(255,255,255,.07)'; c.fillRect(G.pad.l + crossIdx * G.colW, 0, Math.max(2, G.colW), G.H);
@@ -351,7 +378,7 @@
   function setCross(i, fromMosaic) {
     if (i === crossIdx) return;
     crossIdx = i;
-    readout();
+    readout(); story(); repaintScale();
     if (!rafId) blitAll(performance.now());
     if (!fromMosaic) {
       window.__sostCrossH = (i >= 0 && rows[i]) ? rows[i].h : null;
@@ -403,12 +430,63 @@
       chip('INTERVAL avg · median', fmtDur(avg) + ' · ' + fmtDur(dts[Math.floor(n / 2)]), 'var(--text2)') +
       chip('PRODUCERS', String(nMiners), 'var(--text2)') +
       chip('EQUALIZER MODEL', known ? matched + '/' + known + ' ✓' : '—', matched === known ? '#22c55e' : '#f97316');
+    if (legEl) {
+      var lg = '';
+      if (colorMode === 'timing') {
+        [['#38bdf8', 'under 5 min'], ['#22c55e', '5–15 min (on target)'], ['#eab308', '15–30 min'], ['#f97316', '30–60 min'], ['#ef4444', 'over 1 h']].forEach(function (x) {
+          lg += '<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + x[0] + ';vertical-align:middle;margin-right:4px"></span>' + x[1] + '</span>';
+        });
+      } else {
+        Object.keys(shares).sort(function (a, b) { return shares[b] - shares[a]; }).slice(0, 6).forEach(function (a) {
+          lg += '<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + window.sostProducerColor(a, 52) + ';vertical-align:middle;margin-right:4px"></span>' + shortA(a) + ' · ' + shares[a] + '</span>';
+        });
+      }
+      lg += '<span style="margin-left:auto;display:inline-flex;gap:4px;align-items:center">COLOUR BY ' +
+        '<button class="cr-btn' + (colorMode === 'timing' ? ' on' : '') + '" data-cm="timing">SPEED</button>' +
+        '<button class="cr-btn' + (colorMode === 'miner' ? ' on' : '') + '" data-cm="miner">MINER</button></span>';
+      legEl.innerHTML = lg;
+      [].forEach.call(legEl.querySelectorAll('button'), function (bt) {
+        bt.onclick = function () { colorMode = bt.getAttribute('data-cm'); try { localStorage.setItem('sost_cr_color', colorMode); } catch (e) {} chips(false); paintAll(); };
+      });
+    }
+    var s4 = document.getElementById('crIntSide');
+    if (s4) s4.innerHTML = '<span style="color:var(--text2)">avg ' + fmtDur(avg) + ' &middot; median ' + fmtDur(dts[Math.floor(n / 2)]) + '</span>';
     var side = document.getElementById('crLagSide');
-    if (side) side.innerHTML = '<span style="color:' + (matched === known ? '#22c55e' : '#f97316') + '">consensus model reproduces ' + matched + ' of ' + known + ' node profiles</span>';
+    if (side) side.innerHTML = '<span style="color:' + (matched === known ? '#22c55e' : '#f97316') + '">' + (matched === known ? '✓ ' : '') + 'rule check: ' + matched + '/' + known + ' blocks match the node</span>';
     var s2 = document.getElementById('crDiffSide');
     if (s2) s2.innerHTML = inBand ? '<span style="color:#22c55e">inside the dead band → bitsQ unchanged</span>' : '<span style="color:#f97316">outside the dead band → bitsQ moving</span>';
     var s3 = document.getElementById('crBVSide');
     if (s3 && last.burst != null) s3.innerHTML = '<span style="color:#fb923c">BURST ' + last.burst.toFixed(1) + '%</span> · <span style="color:#67e8f9">VOL ' + last.vol.toFixed(1) + '%</span>';
+  }
+  function repaintScale() {
+    for (var i = 0; i < panels.length; i++) {
+      var P = panels[i]; if (!P.noX || !P.off || !P.geo) continue;
+      var c = P.off.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, P.off.width, P.off.height);
+      c.setTransform(P.geo.dpr, 0, 0, P.geo.dpr, 0, 0); c.font = '8px "Fira Code",monospace'; P.draw(c, P.geo, P);
+    }
+  }
+  function story() {
+    if (!storyEl || !rows.length) return;
+    var r = rows[crossIdx >= 0 ? crossIdx : rows.length - 1];
+    function card(k, v, col, sub, big) {
+      return '<div style="flex:1 1 150px;min-width:130px;padding:8px 11px;border:1px solid ' + col.replace(')', ',.35)').replace('rgb(', 'rgba(').replace('hsl(', 'hsla(') +
+        ';border-left:3px solid ' + col + ';background:rgba(0,0,0,.3);border-radius:3px"><div style="font-size:8px;letter-spacing:1.4px;color:var(--text3)">' + k + '</div>' +
+        '<div style="font-size:' + (big ? 17 : 14) + 'px;font-weight:800;color:' + col + ';margin-top:2px">' + v + '</div>' +
+        '<div style="font-size:9px;color:var(--text3);margin-top:2px;line-height:1.4">' + sub + '</div></div>';
+    }
+    var narrow = (mount.clientWidth || 800) < 620;
+    var arrow = narrow ? '<div style="flex:1 1 100%;text-align:center;color:var(--text3);font-size:12px;line-height:10px">&darr;</div>'
+                       : '<div style="display:flex;align-items:center;color:var(--text3);font-size:15px;padding:0 1px">&rarr;</div>';
+    var ahead = r.lag > 0;
+    var c1 = card('SCHEDULE', ahead ? '+' + r.lag + ' blocks' : (r.lag === 0 ? 'on time' : r.lag + ' blocks'),
+      '#22d3ee', ahead ? 'chain is ahead of the 10-min timetable' : 'chain is on / behind the timetable');
+    var c2 = card('TARGET', profName(r.base), profColor(r.base, 60), ahead ? 'target = blocks ahead (max H35)' : 'not ahead &rarr; easiest normal level B0');
+    var c3 = r.drop
+      ? card('THIS BLOCK TOOK', fmtDur(r.dt), '#c084fc', 'over 9 min &rarr; eased ' + r.drop + ' level' + (r.drop > 1 ? 's' : '') + ' (V12 cascade)')
+      : card('THIS BLOCK TOOK', fmtDur(r.dt), '#64748b', 'under 9 min &rarr; no easing');
+    var c4 = card('MINED AT', profName(r.p) + (r.match ? ' <span style="font-size:12px;color:#22c55e">✓</span>' : (r.match === false ? ' <span style="font-size:12px;color:#ef4444">≠</span>' : '')),
+      profColor(r.p, 62), 'block #' + r.h.toLocaleString('en-US') + (r.match ? ' &middot; matches the node' : ''), true);
+    storyEl.innerHTML = c1 + arrow + c2 + arrow + c3 + arrow + c4;
   }
   function readout() {
     if (!readEl || !rows.length) return;
@@ -440,7 +518,7 @@
     var flash = !!k;
     rows = nr; lastTip = tip;
     if (crossIdx >= rows.length) crossIdx = -1;
-    chips(flash); readout();
+    chips(flash); readout(); story();
     paintAll();
     var reduce = false; try { reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
     if (k && !reduce) { anim.k = k; anim.start = performance.now(); if (!rafId) rafId = requestAnimationFrame(blitAll); }
