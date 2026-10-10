@@ -12,7 +12,7 @@
     function tick(){
       rpcAny('getblockcount').then(function(h){ h=parseInt(h,10); if(!(h>=30000)) return; window._dtdTip=h;
         if(h===lastTip && window._dtdLot) return; lastTip=h;
-        return rpcAny('getlotterystate').then(function(l){ if(l&&l.height_next===h+1){ window._dtdLot=l; window.setDTDCard(null); } });
+        return rpcAny('getlotterystate').then(function(l){ if(l&&l.height_next===h+1){ window._dtdLot=l; window.setDTDCard(null); if(window.dtdRefreshCurrent) window.dtdRefreshCurrent(); } });
       }).catch(function(){});
     }
     window.addEventListener('load',function(){ setTimeout(tick,1500); setInterval(tick,20000); });
@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-10-v522-dtd-eligible-next-winner-node-release">
+<meta name="explorer-html-version" content="2026-10-10-v523-dtd-instant-current-state-history-snapshot">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -640,7 +640,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-10-v522-dtd-eligible-next-winner-node-release';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-10-v523-dtd-instant-current-state-history-snapshot';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -2032,6 +2032,12 @@ function dtdRole(addr,row){
   return 'Normal address';
 }
 function dtdStatus(row,height,cooldownSet,domSet){
+  if(height>=30000){
+    // HISTORICAL column only. Current V30000 eligibility comes from getlotterystate (dtdCurrentStatus).
+    if(!row||row.minedBlocks<=0)return 'Not a miner';
+    if((row.lastMined||0)<7100)return 'Eligible historically (until #12,100)';
+    return 'Eligible historically';
+  }
   if(height<7100)return (row&&row.minedBlocks>0)?'eligible at 7100':'pre-Phase 2';
   if(!row||row.minedBlocks<=0)return 'Not eligible';
   if(cooldownSet[row.addr])return 'Cooldown';
@@ -2043,6 +2049,7 @@ function dtdStatus(row,height,cooldownSet,domSet){
 }
 function dtdStatusColor(status){
   if(status==='Eligible')return 'var(--green)';
+  if(/historically/.test(status))return 'var(--text2)';
   if(status==='Cooldown')return '#fbbf24';
   if(status==='Dominance gate')return '#fb010d';
   if(status==='pre-Phase 2'||status==='eligible at 7100')return 'var(--cyan)';
@@ -2058,8 +2065,9 @@ function renderDTDTable(cache){
   var rows=cache.rows.slice();
   rows=rows.filter(function(r){
     if(_dtdFilter==='miners')return r.minedBlocks>0;
-    if(_dtdFilter==='eligible')return r.status==='Eligible'||(cache.height<7100&&r.minedBlocks>0);
-    if(_dtdFilter==='cooldown')return r.status==='Cooldown';
+    if(_dtdFilter==='eligible')return cache.height>=30000?dtdCurrentStatus(r).l==='ELIGIBLE':(r.status==='Eligible'||(cache.height<7100&&r.minedBlocks>0));
+    if(_dtdFilter==='cooldown')return cache.height>=30000?dtdCurrentStatus(r).l==='COOLDOWN':r.status==='Cooldown';
+    if(_dtdFilter==='inactive')return dtdCurrentStatus(r).l==='INACTIVE';
     if(_dtdFilter==='constitutional')return !!ROLES[r.addr];
     if(_dtdFilter==='balance')return r.balanceStocks!==null&&r.balanceStocks>0;
     return true;
@@ -2073,14 +2081,16 @@ function renderDTDTable(cache){
   html+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin:10px 0 12px 0">';
   html+=dtdFilterButton('all','all');
   html+=dtdFilterButton('miners','miners');
-  html+=dtdFilterButton('eligible','reward-eligible');
-  html+=dtdFilterButton('cooldown','cooldown');
+  html+=dtdFilterButton('eligible','current eligible');
+  html+=dtdFilterButton('cooldown','current cooldown');
+  if(cache.height>=30000)html+=dtdFilterButton('inactive','inactive (>288)');
   html+=dtdFilterButton('constitutional','constitutional');
   html+=dtdFilterButton('balance','non-zero balance');
   html+='</div>';
+  if(cache.height>=30000)html+='<div style="font-size:10px;color:var(--text3);line-height:1.6;margin:0 0 8px">Historical eligibility reflects the rules and activity of each miner during its active period. Current V30000 eligibility is calculated from the live 288-block window and current consensus state (node <code>getlotterystate</code>). <span style="color:var(--green)">green</span> = current eligible &middot; <span style="color:#fbbf24">yellow</span> = current cooldown &middot; grey = inactive.</div>';
   html+='<div style="overflow:auto;max-height:520px;border:1px solid rgba(255,255,255,.06)">';
-  html+='<table class="tbl" style="font-size:10px"><thead><tr><th>ADDRESS</th><th>ROLE / TYPE</th><th>MINED BLOCKS</th><th>MINED SOST</th><th>DTD PAID</th><th>RECEIVED SOST</th><th>SENT SOST</th><th>BALANCE</th><th>LAST MINED</th><th>REWARD STATUS</th></tr></thead><tbody>';
-  if(!rows.length){html+='<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:18px">no rows for this filter</td></tr>';}
+  html+='<table class="tbl" style="font-size:10px"><thead><tr><th>ADDRESS</th><th>ROLE / TYPE</th><th>MINED BLOCKS</th><th>MINED SOST</th><th>DTD PAID</th><th>RECEIVED SOST</th><th>SENT SOST</th><th>BALANCE</th><th>LAST MINED</th><th>HISTORICAL STATUS</th><th>CURRENT V30000 STATUS</th></tr></thead><tbody>';
+  if(!rows.length){html+='<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:18px">no rows for this filter</td></tr>';}
   for(var i=0;i<rows.length;i++){
     var r=rows[i];
     var role=dtdRole(r.addr,r);
@@ -2102,6 +2112,8 @@ function renderDTDTable(cache){
     html+='<td style="text-align:right;color:'+(r.balanceStocks>0?'var(--green)':'var(--text3)')+'">'+bal+'</td>';
     html+='<td style="text-align:right;color:var(--text3)">'+(r.lastMined?('#'+r.lastMined):'—')+'</td>';
     html+='<td style="text-align:right;color:'+dtdStatusColor(r.status)+';font-weight:600">'+r.status+'</td>';
+    var cs=dtdCurrentStatus(r);
+    html+='<td style="text-align:right;color:'+cs.c+';font-weight:700" title="'+(cs.n||'')+'">'+cs.l+(cs.n?'<div style="font-size:8.5px;font-weight:400;color:var(--text3)">'+cs.n+'</div>':'')+'</td>';
     html+='</tr>';
   }
   html+='</tbody></table></div>';
@@ -2257,6 +2269,135 @@ window.toggleDtdHowItWorks = function() {
 
 // Eligibility-criteria banner shown WHILE the DTD chain scan runs (and as the
 // live progress line). Highlights which of the three eras the chain is in.
+// ---------------------------------------------------------------------------------------------
+// v523 — DTD panel opens INSTANTLY from the node's canonical current state (getlotterystate).
+// No chain scan on a normal click. Identities = miners of the last 288 blocks (the fast path
+// already holds them; otherwise 288 blocks are read once), with the V30000 rules applied exactly
+// as src/lottery.cpp does: 288-block recency -> 6-block cooldown (from getlotterystate
+// previous_cooldown_block_winners) that YIELDS if it would empty the set -> anti-dominance only
+// with >= 11 active miners (>= 10% of the window). The result is shown as identities ONLY when it
+// reproduces the node's eligible_count and contains the node's projected winner.
+// The full-chain history is a separate, on-demand, incremental + cached load.
+// ---------------------------------------------------------------------------------------------
+function _dtdProg(msg){return '<div style="font-size:11px;color:var(--text3);padding:8px 2px">'+msg+'</div>';}
+window._dtdCurState=null;
+async function dtdComputeCurrent(){
+  var tip=parseInt(await rpc('getblockcount'),10), lot=await rpc('getlotterystate');
+  if(!lot||lot.height_next!==tip+1){ tip=parseInt(await rpc('getblockcount'),10); lot=await rpc('getlotterystate'); }
+  if(!lot||lot.height_next!==tip+1) throw new Error('the tip moved while reading; retrying on the next block');
+  // 288-block window kept as height -> miner. Seeded by the dashboard fast path (blocks it
+  // already fetched); only heights still missing are read, a few at a time (normally 0-2).
+  var W=window._dtdWinMap||(window._dtdWinMap={}), need=[];
+  for(var h=tip;h>tip-288&&h>=0;h--) if(!Object.prototype.hasOwnProperty.call(W,h)) need.push(h);
+  function getB(hh,n){ n=n||0; return rpc('getblockhash',[String(hh)]).then(function(x){return x?rpc('getblock',[x]):null;})
+    .then(function(b){ if(b) return b; throw new Error('empty'); })
+    .catch(function(e){ if(n>=4) throw new Error('block #'+hh+' unavailable'); return new Promise(function(z){setTimeout(z,400*(n+1));}).then(function(){return getB(hh,n+1);}); }); }
+  for(var i=0;i<need.length;i+=6){
+    var ch=need.slice(i,i+6);
+    var bl=await Promise.all(ch.map(function(hh){return getB(hh);}));
+    for(var j=0;j<bl.length;j++) W[ch[j]]=bl[j].miner_address||'';
+  }
+  Object.keys(W).forEach(function(k){ if(+k<=tip-400) delete W[k]; });
+  var counts={};
+  for(var h2=tip;h2>tip-288&&h2>=0;h2--){ var m=W[h2]; if(m) counts[m]=(counts[m]||0)+1; }
+  window._active288Counts=counts; window._active288Miners=Object.keys(counts); window._active288Tip=tip;
+  var active=Object.keys(counts).sort();
+  var cd={}; (lot.previous_cooldown_block_winners||[]).forEach(function(p){ if(p) cd['sost1'+p]=true; });
+  var win=Math.min(288,tip+1), domArmed=active.length>=11, dom={};
+  if(domArmed) active.forEach(function(a){ if(counts[a]*10000>=1000*win) dom[a]=true; });
+  var s1=active.filter(function(a){return !cd[a]&&!dom[a];}), set=s1, fallback=false;
+  if(!s1.length&&Object.keys(cd).length){ fallback=true; set=active.filter(function(a){return !dom[a];}); }
+  var el={}; set.forEach(function(a){el[a]=true;});
+  var winner=lot.lottery_winner_pkh?('sost1'+lot.lottery_winner_pkh):'';
+  var consistent=(set.length===lot.eligible_count)&&(!winner||!!el[winner]);
+  window._dtdCurState={tip:tip,lot:lot,counts:counts,active:active,cdSet:cd,domArmed:domArmed,domSet:dom,
+    fallback:fallback,eligible:el,eligibleList:set,winner:winner,consistent:consistent,win:win};
+  return window._dtdCurState;
+}
+function dtdCurrentStatus(r){
+  var c=window._dtdCurState, a=r&&r.addr;
+  if(!c) return {l:'loading…',c:'var(--text3)'};
+  if(!a||!(r.minedBlocks>0)&&!c.counts[a]) return {l:'—',c:'var(--text3)',n:'not a miner'};
+  if(!c.counts[a]) return {l:'INACTIVE',c:'var(--text3)',n:'No block in last 288'};
+  if(!c.consistent) return {l:'ACTIVE',c:'var(--cyan)',n:'see node count (getlotterystate)'};
+  if(c.eligible[a]) return {l:'ELIGIBLE',c:'var(--green)',n:(c.fallback&&c.cdSet[a])?'Cooldown fallback active':''};
+  if(c.domSet[a]) return {l:'DOMINANCE GATE',c:'#fb010d',n:'≥10% of last 288 (gate armed: ≥11 miners)'};
+  if(c.cdSet[a]) return {l:'COOLDOWN',c:'#fbbf24',n:'mined one of the last 6 blocks'};
+  return {l:'NOT ELIGIBLE',c:'var(--text3)'};
+}
+function dtdRenderCurrent(err){
+  var host=document.getElementById('dtdCurHost'); if(!host) return;
+  var c=window._dtdCurState;
+  if(!c){ host.innerHTML=_dtdProg(err?('<span style="color:#fb010d">'+err+'</span>'):'Reading current DTD state from the node (getlotterystate)&hellip;'); return; }
+  var L=c.lot, f=function(n){return Number(n).toLocaleString('en-US');};
+  function cell(k,v,col,sub){return '<div style="border:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.22);padding:8px"><div style="color:var(--text3);letter-spacing:1px;font-size:9.5px">'+k+'</div><div style="color:'+(col||'var(--text)')+';font-weight:700;margin-top:3px;font-size:12px">'+v+'</div>'+(sub?'<div style="color:var(--text3);font-size:9px;margin-top:2px;line-height:1.4">'+sub+'</div>':'')+'</div>';}
+  var cdN=Object.keys(c.cdSet).length, domN=Object.keys(c.domSet).length;
+  var lnk=function(a){return '<span class="td-link" onclick="showAddress(\''+a+'\')" title="'+a+'" style="white-space:nowrap">'+a.slice(0,10)+'…'+a.slice(-4)+'</span>';};
+  var h='<div style="padding:10px 12px;border-left:3px solid #22c55e;background:rgba(34,197,94,.05);border-radius:3px;margin-bottom:12px">'
+    +'<div style="color:#22c55e;font-size:10px;font-weight:800;letter-spacing:2px;margin-bottom:8px">// CURRENT DTD STATE &middot; NEXT BLOCK #'+f(L.height_next)+' &middot; source: node getlotterystate (live, updates every block)</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px">'
+    +cell('ELIGIBLE MINERS (node)',f(L.eligible_count),'var(--green)','getlotterystate.eligible_count')
+    +cell('ACTIVE · 288-BLOCK WINDOW',f(c.active.length),'var(--cyan)','blocks #'+f(Math.max(0,c.tip-287))+' → #'+f(c.tip))
+    +cell('COOLDOWN · 6 BLOCKS',c.fallback?'FALLBACK ACTIVE':(cdN?cdN+' excluded':'none'),c.fallback?'#ffd166':'#fbbf24',c.fallback?'applying it would leave nobody eligible, so it is skipped for this block':'miners of blocks #'+f(L.height_next-6)+'–#'+f(c.tip))
+    +cell('ANTI-DOMINANCE',c.domArmed?(domN+' excluded'):'NOT ARMED',c.domArmed?'#fb010d':'var(--text3)',c.domArmed?'≥10% of the 288 window':'armed only with ≥11 active miners ('+c.active.length+' now)')
+    +cell('PROJECTED NEXT DTD WINNER',c.winner?lnk(c.winner):'—','#ffd166','at the current tip · final only once #'+f(L.height_next)+' is mined')
+    +cell('DTD PAYOUT (next block)',L.lottery_payout!=null?dtdSost8(L.lottery_payout)+' SOST':'—','var(--purple)','50% of the block subsidy')
+    +'</div>';
+  if(c.consistent){
+    h+='<div style="overflow:auto;margin-top:10px"><table class="tbl" style="font-size:10px"><thead><tr><th>ACTIVE MINER</th><th>BLOCKS /288</th><th>LAST 6</th><th>STATUS NOW</th></tr></thead><tbody>';
+    c.active.slice().sort(function(a,b){return c.counts[b]-c.counts[a];}).forEach(function(a){
+      var st=dtdCurrentStatus({addr:a,minedBlocks:1});
+      h+='<tr><td>'+lnk(a)+'</td><td style="text-align:right">'+c.counts[a]+'</td><td style="text-align:right">'+(c.cdSet[a]?'yes':'no')+'</td><td style="text-align:right;color:'+st.c+';font-weight:700">'+st.l+(st.n?'<div style="font-weight:400;color:var(--text3);font-size:8.5px">'+st.n+'</div>':'')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  } else {
+    h+='<div style="margin-top:8px;font-size:10px;color:#fbbf24">Identity reconstruction from the 288-block window does not reproduce the node count yet; showing the node count only (it is authoritative).</div>';
+  }
+  h+='</div>';
+  host.innerHTML=h;
+}
+var _dtdCurBusy=false;
+window.dtdRefreshCurrent=async function(){
+  if(!document.getElementById('dtdCurHost')||_dtdCurBusy) return;
+  _dtdCurBusy=true;
+  var lastErr=null;
+  for(var at=0;at<4;at++){
+    try{ await dtdComputeCurrent(); lastErr=null; break; }
+    catch(e){ lastErr=e; await new Promise(function(z){setTimeout(z,700*(at+1));}); }
+  }
+  try{
+    if(lastErr){ if(!window._dtdCurState) dtdRenderCurrent('Current state unavailable: '+((lastErr&&lastErr.message)||lastErr)); }
+    else{ dtdRenderCurrent(); if(_dtdCache&&document.getElementById('dtdTableHost')) renderDTDTable(_dtdCache); }
+  }catch(eR){}
+  finally{ _dtdCurBusy=false; }
+};
+function _dtdHistNote(){
+  try{ var a=JSON.parse(localStorage.getItem('sost_dtd_acc_v3')||'null'); var tip=H||0;
+    if(a&&typeof a.scannedHeight==='number') return 'cached in this browser up to #'+a.scannedHeight.toLocaleString('en-US')+' &mdash; loading scans only the '+Math.max(0,tip-a.scannedHeight).toLocaleString('en-US')+' newer blocks';
+  }catch(e){}
+  return 'starts from the server snapshot of the chain history (refreshed every 5 minutes) and scans only the newer blocks; later loads are incremental from this browser\'s cache';
+}
+window.dtdLoadHistory=function(){
+  var hb=document.getElementById('dtdHistBody'), b=document.getElementById('dtdHistBtn'); if(!hb) return;
+  if(b){ b.disabled=true; b.textContent='LOADING…'; }
+  _renderDTDHistory(hb,null,false).then(function(){ try{ if(_dtdCache&&window._dtdCurState) renderDTDTable(_dtdCache); }catch(e){} if(b){ b.disabled=false; b.textContent='RELOAD DTD HISTORY'; } var n=document.getElementById('dtdHistNote'); if(n)n.innerHTML=_dtdHistNote(); });
+};
+function _dtdSetTitle(title){
+  if(title) title.innerHTML='<span style="cursor:pointer;user-select:none" onclick="window.toggleDtdHowItWorks()" title="Click for the technical explanation of the lottery (available after loading the history)">// DTD &middot; DETERMINISTIC TOKEN DISTRIBUTION <span id="dtdHowChev" style="color:var(--text3);font-size:11px">▴</span></span>';
+}
+async function renderDTDPanel(body,title,silent){
+  if(silent||(H||0)<30000) return _renderDTDHistory(body,title,silent);
+  _dtdSetTitle(title);
+  body.innerHTML='<div id="dtdCurHost"></div>'
+    +'<div style="margin:6px 0 10px;padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:3px;background:rgba(255,0,255,.03)">'
+    +'<div style="color:#ff00ff;font-size:10px;font-weight:800;letter-spacing:2px;margin-bottom:6px">// HISTORICAL DTD ANALYSIS</div>'
+    +'<div style="font-size:10.5px;color:var(--text3);line-height:1.6;margin-bottom:8px">Lifetime totals, Phase 2 statistics, charts and the per-address table with historical and current status. Not needed for the current state above. <span id="dtdHistNote">'+_dtdHistNote()+'</span>.</div>'
+    +'<button id="dtdHistBtn" class="tx-filter active" onclick="dtdLoadHistory()">LOAD FULL DTD HISTORY</button></div>'
+    +'<div id="dtdHistBody"></div>'
+    +dtdEligibilityBanner(H||0,'');
+  dtdRenderCurrent();
+  await window.dtdRefreshCurrent();
+}
 function dtdEligibilityBanner(height, progressHtml){
   function era(active, title, items, color){
     return '<div style="border-left:3px solid '+color+';background:'+(active?'rgba(34,211,238,.08)':'rgba(255,255,255,.02)')+';padding:8px 12px;border-radius:3px;margin-bottom:7px;opacity:'+(active?1:.6)+'">'
@@ -2280,14 +2421,15 @@ function dtdEligibilityBanner(height, progressHtml){
   if(!poolPhase1)poolPhase1=50;   // documented Phase-1 peak fallback
   try{ var _m=String(localStorage.getItem('sost_dtd_eligible_count')||'').match(/(\d+)/); if(_m)eligNow=parseInt(_m[1],10); }catch(_e){}
   var elig1='<li style="color:#22c55e"><b>Eligible miners: up to '+poolPhase1+'</b> &middot; phase complete (static)</li>';
-  var elig2='<li style="color:#22c55e"><b>Eligible miners now: '+(eligNow!=null?eligNow:'&mdash;')+'</b> &middot; dynamic, moves every block</li>';
-  var elig3='<li style="color:#c084fc"><b>Eligible miners: &mdash;</b> &middot; dynamic once block 25,000 (V15) is reached</li>';
-  var elig4='<li style="color:#ffd166"><b>Eligible miners: &mdash;</b> &middot; dynamic from block 30,000 (V16.1)</li>';
+  var _lotN=(window._dtdLot&&window._dtdLot.eligible_count!=null)?window._dtdLot.eligible_count:null;
+  var elig2=e2?'<li style="color:#22c55e"><b>Eligible miners now: '+(eligNow!=null?eligNow:'&mdash;')+'</b> &middot; dynamic, moves every block</li>':'<li style="color:#22c55e"><b>phase complete</b> &middot; historical rules</li>';
+  var elig3=e3?'<li style="color:#c084fc"><b>Eligible miners now: '+(eligNow!=null?eligNow:'&mdash;')+'</b> &middot; dynamic, moves every block</li>':(h>=30000?'<li style="color:#c084fc"><b>phase complete</b> &middot; historical rules</li>':'<li style="color:#c084fc"><b>Eligible miners: &mdash;</b> &middot; dynamic once block 25,000 (V15) is reached</li>');
+  var elig4='<li style="color:#ffd166"><b>Eligible miners now: '+(e4&&_lotN!=null?_lotN:'&mdash;')+'</b> &middot; node getlotterystate, moves every block</li>';
   return '<div style="max-width:820px;margin:0 auto 4px">'
     +'<div style="font-size:12px;font-weight:800;color:var(--cyan);letter-spacing:1px;margin-bottom:8px">// DTD LOTTERY &mdash; ELIGIBILITY CRITERIA TIMELINE</div>'
     +era(e1,'Blocks 7,100 &rarr; 12,100 &middot; original (V11 Phase&nbsp;2)',
         elig1+'<li>SbPoW-signed miner identity (block at height &ge; 7,100)</li><li>address has mined &ge; 1 valid block</li><li>recent-miner cooldown: 5 blocks</li><li>bootstrap cadence 2-of-3</li>','#fbbf24')
-    +era(e2,'Blocks 12,100 &rarr; 25,000 &middot; current gates (V13)',
+    +era(e2,'Blocks 12,100 &rarr; 25,000 &middot; V13 gates',
         elig2+'<li>everything above &mdash; cooldown raised to <b>6 blocks</b></li><li><b>1-of-3</b> cadence (superseded at #25,000 by every-block)</li><li><b>anti-dominance gate</b>: excluded if &ge; 10% of the last 288 blocks</li><li><b>SbPoW-activity gate</b>: must have a recent SbPoW-signed block</li>','#22c55e')
     +era(e3,'Blocks 25,000 &rarr; 30,000 &middot; V15 Final Decentralization',
         elig3+'<li>everything above</li><li><b>+ recency window</b>: must have mined &ge; 1 block in the last <b>5,000</b> (20,000 at a jackpot height) &mdash; active miners only</li><li><b>draw cadence 3-of-3</b>: the DTD now draws on <b>every block</b>, superseding the 1-of-3 steady state</li><li><b>50% miner / 50% DTD</b> every block (Gold-Vault + PoPC emission redirected to DTD)</li><li><span style="color:var(--gold)">◈</span> <b>DTD Jackpot</b>: the existing reserve returned to active miners</li><li style="color:var(--text3)">No PoPC-contract requirement &mdash; the old PoPC eligibility gate is retired (DTD never requires PoPC)</li>','#c084fc')
@@ -2300,7 +2442,7 @@ function dtdEligibilityBanner(height, progressHtml){
     +'<div style="margin-top:6px;color:var(--text3);font-size:11.5px">'+(progressHtml||'')+'</div>'
     +'</div>';
 }
-async function renderDTDPanel(body,title,silent){
+async function _renderDTDHistory(body,title,silent){
   // Make the title clickable. The expander only takes effect once the
   // body has loaded (the panel below is part of `body.innerHTML` and
   // does not exist before this function runs).
@@ -2317,7 +2459,7 @@ async function renderDTDPanel(body,title,silent){
     + '<span id="dtdHowChev" style="color:var(--text3);font-size:11px">'
     + '▴</span>'
     + '</span>';
-  if(!silent)body.innerHTML=dtdEligibilityBanner(H||0,'Scanning public chain data&hellip; <span style="color:var(--cyan)">this may take a moment</span>');
+  if(!silent)body.innerHTML=_dtdProg('Loading DTD history&hellip; <span style="color:var(--cyan)">reading cache</span>');
   try{
     var height=H||await rpc('getblockcount');
 
@@ -2396,10 +2538,20 @@ async function renderDTDPanel(body,title,silent){
     // 288-block dominance window + cooldown window can be rebuilt exactly.
     var recentBlocks=[];
     var _scanStart=0;
+    // v523: seed from the server snapshot (ops/dtd-history-snapshot.py — a read-only replay
+    // of the same per-block accumulation, regenerated every few minutes) when it is ahead of
+    // this browser's own cache, so a first load scans only the blocks after the snapshot.
+    var _snapAcc=null;
+    if(!silent){ try{
+      var _sr=await fetch('/api/dtd_history_acc.json?t='+Math.floor(Date.now()/60000),{cache:'no-store'});
+      if(_sr.ok){ var _sj=await _sr.json(); if(_sj&&typeof _sj.scannedHeight==='number'&&_sj.scannedHeight>=7100&&_sj.scannedHeight<=height&&_sj.t&&_sj.rows) _snapAcc=_sj; }
+    }catch(eSnap){} }
     try{
       var _accRaw=localStorage.getItem('sost_dtd_acc_v3');
-      if(_accRaw){
-        var _acc=JSON.parse(_accRaw);
+      var _accLoc=null; try{ _accLoc=_accRaw?JSON.parse(_accRaw):null; }catch(eP){ _accLoc=null; }
+      if(_snapAcc&&(!_accLoc||typeof _accLoc.scannedHeight!=='number'||_accLoc.scannedHeight<_snapAcc.scannedHeight||_accLoc.scannedHeight>height)) _accLoc=_snapAcc;
+      if(_accLoc){
+        var _acc=_accLoc;
         if(_acc&&typeof _acc.scannedHeight==='number'&&_acc.scannedHeight>=7100&&_acc.scannedHeight<=height&&_acc.t&&_acc.rows){
           totalSubsidy=_acc.t.s||0;totalMiner=_acc.t.m||0;totalGold=_acc.t.g||0;totalPopc=_acc.t.p||0;totalLottery=_acc.t.l||0;
           Object.keys(_acc.rows).forEach(function(a){var e=ensure(a),s=_acc.rows[a];if(e){e.minedBlocks=s.mb||0;e.minedStocks=s.ms||0;e.dtdWonStocks=s.dws||0;e.dtdWonCount=s.dwc||0;e.lastMined=s.lm||0;}});
@@ -2455,7 +2607,7 @@ async function renderDTDPanel(body,title,silent){
     var _chunkStarts=[]; for(var _cs=_scanStart;_cs<=height;_cs+=CHUNK)_chunkStarts.push(_cs);
     var _ckIdx=0, _blkDone=0, _blkTotal=Math.max(0,height-_scanStart+1);
     function _scanProgress(){
-      if(!silent){ body.innerHTML=dtdEligibilityBanner(height,'Scanning public chain data&hellip; <span style="color:var(--cyan)">'+_blkDone.toLocaleString()+' / '+_blkTotal.toLocaleString()+' blocks</span>'); }
+      if(!silent){ body.innerHTML=_dtdProg('Scanning chain history&hellip; <span style="color:var(--cyan)">'+_blkDone.toLocaleString()+' / '+_blkTotal.toLocaleString()+' blocks</span>'+(_scanStart>0?' <span style="color:var(--text3)">(incremental: #'+_scanStart.toLocaleString()+' &rarr; #'+height.toLocaleString()+', earlier blocks from cache)</span>':' <span style="color:var(--text3)">(full scan: server snapshot unavailable)</span>')); }
       var _dp=document.getElementById('dDTD'); if(_dp && /computing|Scanning/i.test(_dp.textContent)) _dp.textContent='Scanning '+_blkDone.toLocaleString()+' / '+_blkTotal.toLocaleString();
     }
     async function _chunkWorker(){
@@ -2491,6 +2643,14 @@ async function renderDTDPanel(body,title,silent){
     var domSet={},win288=Math.min(288,height+1);
     if(height>=12100){Object.keys(last288).forEach(function(a){
       if(Math.floor(last288[a]*10000/win288)>=1000)domSet[a]=true;});}
+    if(height>=30000){
+      // V30000: cooldown yields when it would empty the set, and anti-dominance is armed only
+      // with >= 11 active miners. Use the live node-derived state so the history never shows a
+      // gate the node is not applying.
+      var _cur=null; try{ _cur=await dtdComputeCurrent(); }catch(eCur){}
+      cooldownSet={}; domSet={};
+      if(_cur){ Object.keys(_cur.cdSet).forEach(function(a){cooldownSet[a]=true;}); Object.keys(_cur.domSet).forEach(function(a){domSet[a]=true;}); }
+    }
     var addrs=Object.keys(rowsByAddr);
     await Promise.all(addrs.slice(0,120).map(function(addr){return rpc('getaddressinfo',[addr]).then(function(info){
       var bal=0,rec=0;
@@ -3283,7 +3443,8 @@ async function updateDashboard(info){
         for(var _di=0; _di<diffs.length; _di++){ var _m=diffs[_di].miner; if(!_m) continue;
           if(_di<_cdW) _excl[_m]=true;                                   // last cdW blocks = cooldown
           if(diffs[_di].h>info.blocks-288) _l288[_m]=(_l288[_m]||0)+1; } // dominance counts
-        window._active288Miners=Object.keys(_l288); window._active288Tip=info.blocks;
+        window._active288Miners=Object.keys(_l288); window._active288Counts=_l288; window._active288Tip=info.blocks;
+        window._dtdWinMap=window._dtdWinMap||{}; for(var _dw=0;_dw<diffs.length;_dw++){ if(diffs[_dw].h>info.blocks-300) window._dtdWinMap[diffs[_dw].h]=diffs[_dw].miner||''; }
         if(info.blocks>=12100){ for(var _a in _l288){ if(Math.floor(_l288[_a]*10000/_win288)>=1000)_excl[_a]=true; } }
         var _elig=_prodTot-Object.keys(_excl).length; if(_elig<0)_elig=0;
         window._dtdEligibleFast=_elig;
