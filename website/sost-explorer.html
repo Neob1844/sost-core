@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-10-v527-control-room-equalizer-story">
+<meta name="explorer-html-version" content="2026-10-10-v528-address-fastpath-jackpot-index">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -640,7 +640,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-10-v527-control-room-equalizer-story';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-10-v528-address-fastpath-jackpot-index';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -6599,23 +6599,46 @@ function _buildUtxoRow(u,txidCounts){
  * the TYPE column updates without a hard reload. Best-effort: any RPC
  * failure leaves change_self undefined so the legacy heuristic stays
  * the fallback. */
+function _addrJpCard(jpWins){
+  var _fmt8=function(n){return Number(n||0).toFixed(8);};
+  var jpTotal=0; jpWins.forEach(function(w){jpTotal+=w.amount;});
+  var _jpF=jpWins.length?jpWins[0]:null;
+  return '<div style="background:linear-gradient(135deg,rgba(245,209,102,.12),rgba(57,255,20,.10));border:1px solid #ffd166;border-radius:6px;padding:8px 10px"><div style="font-size:10px;color:#ffd166">\uD83C\uDFE6 DTD JACKPOT</div><div style="font-weight:800;color:#39ff14;font-size:15px">'+_fmt8(jpTotal)+' SOST</div><div style="font-size:9px;color:#ffd166">'+jpWins.length+' jackpot'+(jpWins.length===1?'':'s')+(_jpF?(' \u00B7 Block #'+fComma(_jpF.h)):'')+'</div>'+((_jpF&&_jpF.h===25290)?'<div style="font-size:8px;letter-spacing:.6px;color:#39ff14;margin-top:3px">\uD83C\uDFC6 FIRST DTD JACKPOT WINNER \u00B7 \u2713 VERIFIED ON-CHAIN</div>':'')+((_jpF&&_jpF.txid)?('<div style="font-size:8px;margin-top:2px"><span class="sjp-w" onclick="(window.showTxDetail&&showTxDetail(\''+_jpF.txid+'\'))" style="color:#22d3ee;cursor:pointer">view jackpot tx</span></div>'):'')+'</div>';
+}
 async function _enrichUtxosWithChangeSelf(addr){
-  if(!Array.isArray(window._addrUtxos)||!window._addrUtxos.length)return;
+  var arr=window._addrUtxos;
+  if(!Array.isArray(arr)||!arr.length)return;
   var uniqTxids=Object.create(null);
-  for(var i=0;i<window._addrUtxos.length;i++){
-    var u=window._addrUtxos[i];
+  for(var i=0;i<arr.length;i++){
+    var u=arr[i];
     if(!u||u.coinbase)continue;
     if(u.txid)uniqTxids[u.txid]=true;
   }
   var txidList=Object.keys(uniqTxids);
   if(!txidList.length)return;
-  var results=await Promise.all(txidList.map(function(tid){
-    return rpc('gettransaction',[tid]).then(function(tx){return {tid:tid,tx:tx};}).catch(function(){return {tid:tid,tx:null};});
-  }));
+  var C=window._txVinCache||(window._txVinCache=new Map());
+  var results=[], qi=0;
+  async function worker(){
+    while(qi<txidList.length){
+      var tid=txidList[qi++];
+      if(!C.has(tid)){
+        C.set(tid,rpc('gettransaction',[tid]).then(function(t){return (t&&Array.isArray(t.vin))?{vin:t.vin.map(function(v){return {address:v&&v.address};})}:null;}));
+      }
+      var tx=null;
+      try{ tx=await C.get(tid); }catch(e){}
+      if(!tx)C.delete(tid);
+      results.push({tid:tid,tx:tx});
+    }
+  }
+  var ws=[];for(var wi=0;wi<Math.min(8,txidList.length);wi++)ws.push(worker());
+  await Promise.all(ws);
+  // The user may have opened another address meanwhile: never apply these
+  // flags to someone else's UTXO list.
+  if(window._addrUtxos!==arr)return;
   var byTxid={};
   for(var r=0;r<results.length;r++)byTxid[results[r].tid]=results[r].tx;
-  for(var j=0;j<window._addrUtxos.length;j++){
-    var u2=window._addrUtxos[j];
+  for(var j=0;j<arr.length;j++){
+    var u2=arr[j];
     if(!u2||u2.coinbase){if(u2)u2.change_self=false;continue;}
     var tx=byTxid[u2.txid||''];
     if(!tx||!Array.isArray(tx.vin)){continue;}
@@ -6713,12 +6736,34 @@ function _addrBalRow(id, labelHtml, valueHtml, helpHtml, labelStyle, extraLblAtt
     + '<div class="v">'+valueHtml+'</div>'
     + '<div class="k-help-body" id="help-'+id+'">'+helpHtml+'</div>';
 }
+/* Address view fast path (v528). getaddressinfo is served by the node's
+ * UTXO set (one RPC, no chain walk); its result is kept per address and
+ * per tip so reopening the same address at the same tip is instant. A
+ * generation counter drops a slow render if the user already opened
+ * something else. Historical jackpot wins come from the incremental
+ * jackpot index (SJPIDX) and fill their own slot after first paint. */
+var _addrInfoCache=new Map(); // addr -> {tip, a}
+function _addrInfoGet(addr){
+  var e=_addrInfoCache.get(addr);
+  if(e&&e.tip===H)return Promise.resolve(e.a);
+  var tip=H;
+  return rpc('getaddressinfo',[addr]).then(function(a){
+    _addrInfoCache.delete(addr);_addrInfoCache.set(addr,{tip:tip,a:a});
+    while(_addrInfoCache.size>12)_addrInfoCache.delete(_addrInfoCache.keys().next().value);
+    return a;
+  });
+}
 async function showAddress(addr){
   openDetail();var c=document.getElementById('detailContent');
   pushNav('addr',sH(addr),addr);
-  c.innerHTML='<div class="ld">loading address</div>';
+  var _gen=(window.__addrGen=(window.__addrGen||0)+1);
+  var _r0=ROLES[addr]||null;
+  c.innerHTML='<div class="dtl-head"><b>Address</b>'+(_r0?' <span class="dtl-tag">'+_r0+'</span>':'')+'</div>'
+    +'<div class="dtl-grid"><div class="k">address</div><div class="v" style="color:var(--cyan);word-break:break-all">'+String(addr).replace(/[^0-9A-Za-z]/g,'')+'</div>'
+    +'<div class="k">balance</div><div class="v"><span class="ld" style="padding:0;text-align:left;display:inline">reading UTXO set</span></div></div>';
   try{
-    var a=await rpc('getaddressinfo',[addr]);
+    var a=await _addrInfoGet(addr);
+    if(_gen!==window.__addrGen)return;
     var role=ROLES[a.address]||null;
     var roleColor=role==='GOLD VAULT'?'gold':role==='POPC POOL'?'cyan':'yellow';
     var roleBadge=role?'<span class="dtl-tag" style="border-color:var(--'+roleColor+');color:var(--'+roleColor+')">'+role+'</span>':'';
@@ -6987,11 +7032,8 @@ async function showAddress(addr){
     var txidCounts={};for(var ui=0;ui<sorted.length;ui++){var tid=sorted[ui].txid||'';txidCounts[tid]=(txidCounts[tid]||0)+1;}
     window._addrUtxos=sorted;window._addrTxidCounts=txidCounts;window._addrPage=0;window._addrPageSize=10;
     // EARNINGS BREAKDOWN — detect DTD Jackpot win(s) for this address (canonical, from chain)
-    var jpWins=[], jpTotal=0;
-    try{ if(typeof window.jpIsOpportunity==='function' && window.SJP && typeof window.SJP.reconstruct==='function'){
-      for(var _jh=25290; _jh<=H; _jh+=288){ var _rec=await window.SJP.reconstruct(_jh);
-        if(_rec && _rec.winner===addr){ jpWins.push({h:_jh,amount:_rec.amount,txid:_rec.txid}); jpTotal+=_rec.amount; } }
-    } }catch(_e){}
+    var jpWins=[], jpTotal=0, _jpReady=false;
+    try{ if(window.SJPIDX){ var _jw=window.SJPIDX.winsFor(addr,H); if(_jw){ _jpReady=true; jpWins=_jw; jpWins.forEach(function(w){jpTotal+=w.amount;}); } } }catch(_e){}
     var utxoRows=_buildUtxoPage(0);
     var _fmt8=function(n){return Number(n||0).toFixed(8);};
     var _jpF=jpWins.length?jpWins[0]:null;
@@ -7000,7 +7042,7 @@ async function showAddress(addr){
       +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">'
       +'<div><div style="font-size:10px;color:var(--text3)">\u26CF MINING REWARDS</div><div style="font-weight:700;color:#fbbf24;font-size:15px">'+_fmt8(minedAmt)+' SOST</div><div style="font-size:9px;color:var(--text3)">'+minedCount+' block'+(minedCount===1?'':'s')+'</div></div>'
       +'<div><div style="font-size:10px;color:var(--text3)">\uD83C\uDFB0 DTD DISTRIBUTION</div><div style="font-weight:700;color:#ff00ff;font-size:15px">'+_fmt8(lottLifetimeSost)+' SOST</div><div style="font-size:9px;color:var(--text3)">'+lottLifetimeCount+' win'+(lottLifetimeCount===1?'':'s')+'</div></div>'
-      +(jpTotal>0?('<div style="background:linear-gradient(135deg,rgba(245,209,102,.12),rgba(57,255,20,.10));border:1px solid #ffd166;border-radius:6px;padding:8px 10px"><div style="font-size:10px;color:#ffd166">\uD83C\uDFE6 DTD JACKPOT</div><div style="font-weight:800;color:#39ff14;font-size:15px">'+_fmt8(jpTotal)+' SOST</div><div style="font-size:9px;color:#ffd166">'+jpWins.length+' jackpot'+(jpWins.length===1?'':'s')+(_jpF?(' \u00B7 Block #'+fComma(_jpF.h)):'')+'</div>'+((_jpF&&_jpF.h===25290)?'<div style="font-size:8px;letter-spacing:.6px;color:#39ff14;margin-top:3px">\uD83C\uDFC6 FIRST DTD JACKPOT WINNER \u00B7 \u2713 VERIFIED ON-CHAIN</div>':'')+((_jpF&&_jpF.txid)?('<div style="font-size:8px;margin-top:2px"><span class="sjp-w" onclick="(window.showTxDetail&&showTxDetail(\''+_jpF.txid+'\'))" style="color:#22d3ee;cursor:pointer">view jackpot tx</span></div>'):'')+'</div>'):'')
+      +(jpTotal>0?_addrJpCard(jpWins):(_jpReady?'':'<div id="addrJpSlot" style="border:1px dashed #ffd16655;border-radius:6px;padding:8px 10px"><div style="font-size:10px;color:#ffd166">\uD83C\uDFE6 DTD JACKPOT</div><div style="font-size:10px;color:var(--text3)">checking jackpot index\u2026</div></div>'))
       +'</div></div>';
     c.innerHTML='<div class="dtl-head"><b>Address</b> '+roleBadge+' '+mineBadge+'</div>'+breakdownHtml+
       '<div class="dtl-grid">'+
@@ -7062,6 +7104,16 @@ async function showAddress(addr){
     // effort: failures fall back to the legacy heuristic that ships
     // with _buildUtxoRow.
     _enrichUtxosWithChangeSelf(a.address).catch(function(){});
+    if(!_jpReady&&window.SJPIDX){
+      window.SJPIDX.ensure(H).then(function(){
+        var slot=document.getElementById('addrJpSlot');
+        if(!slot||_gen!==window.__addrGen)return;
+        var w=window.SJPIDX.winsFor(addr,H);
+        if(!w){slot.innerHTML='<div style="font-size:10px;color:#ffd166">\uD83C\uDFE6 DTD JACKPOT</div><div style="font-size:10px;color:var(--text3)">index unavailable \u2014 retry later</div>';return;}
+        if(!w.length){slot.remove();return;}
+        slot.outerHTML=_addrJpCard(w);
+      }).catch(function(){var slot=document.getElementById('addrJpSlot');if(slot)slot.remove();});
+    }
     // Async hydrate the GROSS-LIFETIME rows. One getaddressflows call
     // populates both the gross-received and gross-sent figures so the
     // reader can see them side by side. The first call after a new
@@ -10260,6 +10312,65 @@ tr.sjp-blkrow .sjp-v{color:#0a0a0c;background:#39ff14;font:800 9px/1 ui-monospac
   };
   // record a confirmed jackpot into the shared cache (single source of truth)
   window.SJP.recordJackpot=function(d){ if(d&&d.block!=null){ window.SJP.jackpots[d.block]={winner:d.winner,amount:d.amount,txid:d.txid}; } };
+  // Incremental jackpot index (v528). One entry per jackpot height, stored
+  // with the block hash it was read from. Built once per browser, then only
+  // jackpot heights above the indexed tip are read. Entries inside the
+  // reorg window are re-checked with getblockhash and re-read on mismatch;
+  // entries above a lower tip (rollback) are dropped. RPC failures are never
+  // cached. "No jackpot" entries are re-read when the Explorer build changes,
+  // so a parser fix is never masked by an old result.
+  window.SJPIDX=(function(){
+    var KEY='sost_jpidx_v1', REORG=600, FIRST=25290, STEP=288, B=String(window.__EXPLORER_BUILD||'');
+    var st={tip:0,build:B,e:{}}, busy=null;
+    try{ var raw=localStorage.getItem(KEY); if(raw){ var o=JSON.parse(raw); if(o&&o.e&&typeof o.tip==='number') st=o; } }catch(e){}
+    function save(){ try{ localStorage.setItem(KEY,JSON.stringify(st)); }catch(e){} }
+    function seed(h,r){ if(r&&r.w){ var c=window.SJP.jackpots[h]; if(!(c&&c.txid)) window.SJP.jackpots[h]={winner:r.w,amount:r.a,txid:r.t,block:h}; } }
+    Object.keys(st.e).forEach(function(h){ seed(+h,st.e[h]); });
+    function heights(tip){ var out=[]; for(var h=FIRST;h<=tip;h+=STEP) if(isOpp(h)) out.push(h); return out; }
+    function read(h){
+      return window.rpc('getblockhash',[h]).then(function(hash){ if(!hash) throw new Error('no hash');
+        return window.rpc('getblock',[hash]).then(function(b){
+          var tx=b&&(b.txids||[]); if(!tx||tx.length<2) return {b:hash};
+          var jid=tx[1];
+          return window.rpc('getrawtransaction',[jid,true]).then(function(t){
+            var hex=t&&(t.hex||t.raw); if(!hex) throw new Error('no hex');
+            var p=window.sjpParseJackpotTx?window.sjpParseJackpotTx(hex):null;
+            if(!p||p.tx_type!==2||p.out_type!==0) return {b:hash};
+            return {b:hash,w:p.winner,a:p.amount,t:jid};
+          });
+        });
+      });
+    }
+    function ensure(tip){
+      if(!tip||typeof window.rpc!=='function') return Promise.resolve(false);
+      if(busy) return busy;
+      busy=(async function(){
+        var hs=heights(tip);
+        Object.keys(st.e).forEach(function(k){ if(+k>tip){ delete st.e[k]; delete window.SJP.jackpots[k]; } });
+        if(st.build!==B){ Object.keys(st.e).forEach(function(k){ if(!st.e[k].w) delete st.e[k]; }); st.build=B; }
+        var recent=hs.filter(function(h){ return st.e[h]&&h>tip-REORG; });
+        await Promise.all(recent.map(function(h){ return window.rpc('getblockhash',[h]).then(function(hash){
+          if(hash!==st.e[h].b){ delete st.e[h]; delete window.SJP.jackpots[h]; } }); }));
+        var todo=hs.filter(function(h){ return !st.e[h]; }), qi=0, failed=0;
+        async function worker(){ while(qi<todo.length){ var h=todo[qi++]; try{ var r=await read(h); st.e[h]=r; seed(h,r); }catch(e){ failed++; } } }
+        var ws=[]; for(var i=0;i<Math.min(6,todo.length);i++) ws.push(worker());
+        await Promise.all(ws);
+        if(!failed) st.tip=tip;
+        save();
+        return !failed;
+      })().finally(function(){ busy=null; });
+      return busy;
+    }
+    // Wins of `addr` from the index, or null when the index does not cover `tip` yet.
+    function winsFor(addr,tip){
+      if(st.tip!==tip) return null;
+      var hs=heights(tip), out=[];
+      for(var i=0;i<hs.length;i++){ var r=st.e[hs[i]]; if(!r) return null; if(r.w===addr) out.push({h:hs[i],amount:r.a,txid:r.t}); }
+      return out;
+    }
+    setTimeout(function(){ if(typeof H==='number'&&H>0) ensure(H).catch(function(){}); },12000);
+    return {ensure:ensure, winsFor:winsFor, state:function(){ return st; }};
+  })();
   // DEMO/fixture: inject a sample jackpot at the first height and reload the block table (isolated; never real data)
   window.SJP.demoRow=function(){ window.SJP.jackpots[25290]={winner:'sost1demo0000000000000000000000000000demo',amount:100,txid:'demo'}; if(typeof window.loadBlocks==='function') window.loadBlocks(); };
 })();
