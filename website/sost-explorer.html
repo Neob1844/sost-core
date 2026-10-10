@@ -6,11 +6,38 @@
   // window, so the headline is the node's active_288 (producers in the last 288 blocks).
   // The older count (producers since #7,100 minus the V13 gates) is pre-#30,000 history and
   // is never shown as "eligible miners" after activation.
+  (function(){
+    var lastTip=-1;
+    function rpcAny(m,p){ return (typeof window.rpc==='function')?window.rpc(m,p||[]):Promise.reject('no rpc'); }
+    function tick(){
+      rpcAny('getblockcount').then(function(h){ h=parseInt(h,10); if(!(h>=30000)) return; window._dtdTip=h;
+        if(h===lastTip && window._dtdLot) return; lastTip=h;
+        return rpcAny('getlotterystate').then(function(l){ if(l&&l.height_next===h+1){ window._dtdLot=l; window.setDTDCard(null); } });
+      }).catch(function(){});
+    }
+    window.addEventListener('load',function(){ setTimeout(tick,1500); setInterval(tick,20000); });
+  })();
   window.setDTDCard=function(legacyCount){
     var el=document.getElementById('dDTD'); if(!el) return;
     var tip=parseInt(window._dtdTip,10)||0, a288=window._active288;
     var txt;
-    if(tip>=30000 && a288!=null && !isNaN(a288)){ txt=a288+' active miners \u00B7 288-block window'; el.title='DTD eligible pool from #30,000 = miners active in the last 288 blocks (node geteligibleminers.active_288). Historical producers since #7,100: '+(window._nodeProducersTotal||'\u2014'); }
+    var lot=window._dtdLot;
+    if(tip>=30000 && lot && lot.eligible_count!=null){
+      txt=lot.eligible_count+' ELIGIBLE MINERS \u00B7 288-BLOCK WINDOW';
+      el.title='Normal DTD eligibility for the next block, from the node (getlotterystate.eligible_count). Historical producers since #7,100 ('+(window._nodeProducersTotal||'\u2014')+') are NOT eligible miners.';
+      // Identities: the eligible set is always a subset of the miners active in the 288-block
+      // window; when both sizes are equal they are the SAME set, so the list is exact.
+      var who=document.getElementById('dDTDWho'), act=window._active288Miners;
+      if(who){
+        if(act && window._active288Tip===lot.height_next-1 && act.length===lot.eligible_count){
+          who.innerHTML='eligible: '+act.map(function(a){ var s2=String(a); return '<span style="cursor:pointer;color:#22d3ee" title="'+s2+'" onclick="event.stopPropagation();showAddress(\''+s2+'\')">'+s2.slice(0,10)+'\u2026'+s2.slice(-4)+'</span>'; }).join(', ');
+        } else who.textContent='eligible identities: open the scan (click)';
+      }
+      var nx=document.getElementById('dDTDNext');
+      if(nx){ var wp=lot.lottery_winner_pkh?('sost1'+String(lot.lottery_winner_pkh)):null;
+        nx.innerHTML='NEXT BLOCK #'+Number(lot.height_next).toLocaleString('en-US')+' \u00B7 PROJECTED NEXT DTD WINNER \u2014 CURRENT TIP: '+(wp?('<span style="cursor:pointer;color:#ffd166" title="'+wp+' \u2014 projection at the current tip; final only once block #'+lot.height_next+' is mined (can change with a new tip or reorg)" onclick="event.stopPropagation();showAddress(\''+wp+'\')">'+wp.slice(0,10)+'\u2026'+wp.slice(-4)+'</span>'):'\u2014'); }
+    }
+    else if(tip>=30000 && a288!=null && !isNaN(a288)){ txt=a288+' active miners \u00B7 288-block window'; el.title='DTD eligible pool from #30,000 = miners active in the last 288 blocks (node geteligibleminers.active_288). Historical producers since #7,100: '+(window._nodeProducersTotal||'\u2014'); }
     else if(legacyCount!=null){ txt=legacyCount+' eligible miners'; }
     else return;
     el.textContent=txt; try{localStorage.setItem('sost_dtd_eligible_count',txt);}catch(e){}
@@ -34,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-10-v521-v30000-active-final1">
+<meta name="explorer-html-version" content="2026-10-10-v522-dtd-eligible-next-winner-node-release">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -613,7 +640,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-10-v521-v30000-active-final1';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-10-v522-dtd-eligible-next-winner-node-release';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -855,6 +882,8 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
     <div class="dash-label" style="white-space:nowrap;color:var(--orange)">Token Distribution</div>
     <div class="dash-val" style="color:var(--orange)">DTD Reward</div>
     <div class="dash-sub" id="dDTD" style="color:var(--orange)">DASHBOARD</div>
+    <div class="dash-sub" id="dDTDWho" style="font-size:9px;color:var(--text2);overflow-wrap:anywhere"></div>
+    <div class="dash-sub" id="dDTDNext" style="font-size:9px;color:var(--text3);overflow-wrap:anywhere"></div>
     <div class="dash-sub">click to scan</div>
   </div>
 </div>
@@ -3254,6 +3283,7 @@ async function updateDashboard(info){
         for(var _di=0; _di<diffs.length; _di++){ var _m=diffs[_di].miner; if(!_m) continue;
           if(_di<_cdW) _excl[_m]=true;                                   // last cdW blocks = cooldown
           if(diffs[_di].h>info.blocks-288) _l288[_m]=(_l288[_m]||0)+1; } // dominance counts
+        window._active288Miners=Object.keys(_l288); window._active288Tip=info.blocks;
         if(info.blocks>=12100){ for(var _a in _l288){ if(Math.floor(_l288[_a]*10000/_win288)>=1000)_excl[_a]=true; } }
         var _elig=_prodTot-Object.keys(_excl).length; if(_elig<0)_elig=0;
         window._dtdEligibleFast=_elig;
@@ -8145,6 +8175,7 @@ refresh();
 // "% nodes upgraded" metric: the chain gives no evidence for one.
 (function(){
   var MANIFEST=null;
+  function esc(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);}); }
   function loadManifest(){
     if(MANIFEST) return Promise.resolve(MANIFEST);
     return fetch('protocol-status.json?t='+Date.now())
@@ -8228,7 +8259,12 @@ refresh();
       nhCell('ACTIVATION', '#'+activation.toLocaleString('en-US'))+
       nhCell('BLOCKS REMAINING', remaining!=null?(remaining===0?'0 (reached)':remaining.toLocaleString('en-US')):null, remaining===0?'var(--green)':'var(--text)')+
       nhCell('ACTIVATION STATE', actState, actClr)+
-      nhCell('NODE VERSION', version?('v'+String(version).replace(/^v/,'')):null,'var(--cyan)')+
+      // Release/build come from the site release manifest (protocol-status.json), which records
+      // the build deployed on this node; getinfo's "version" is a stale internal string, kept only
+      // as a secondary detail.
+      nhCell('NODE RELEASE', (man&&man.node_release)?esc(man.node_release):null,'var(--cyan)')+
+      nhCell('NODE BUILD (SHA256)', (man&&man.node_build_sha256)?('<span title="sost-node SHA-256 of the build deployed on this node (release manifest)" style="font-size:10px">'+esc(man.node_build_sha256)+'</span>'):null,'var(--cyan)')+
+      nhCell('INTERNAL VERSION STRING', version?('<span style="font-size:10px;color:var(--text3)">v'+esc(String(version).replace(/^v/,''))+' (getinfo, legacy)</span>'):null,'var(--text3)')+
       nhCell('TIP HASH', tipShort,'var(--purple)')+
       nhCell('LAST BLOCK', tipAge!=null?nhAge(tipAge):null)+
       nhCell('PEERS', peers!=null?peers:null)+

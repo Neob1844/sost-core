@@ -1,1 +1,1 @@
-{"v": "2026-10-10-v521-v30000-active-final1", "note": "V30000 active; optional node-only hardening v30000-final.1 (7ca5ea63) announced; miner/CLI unchanged."}
+{"v": "2026-10-10-v522-dtd-eligible-next-winner-node-release", "note": "DTD card: eligible count + identities + projected next winner (getlotterystate); node release/build from release manifest. Frontend only."}
