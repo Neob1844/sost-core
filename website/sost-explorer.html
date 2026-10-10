@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  // DTD headline card. From #30,000 (V16) normal DTD eligibility is the 288-block recency
+  // window, so the headline is the node's active_288 (producers in the last 288 blocks).
+  // The older count (producers since #7,100 minus the V13 gates) is pre-#30,000 history and
+  // is never shown as "eligible miners" after activation.
+  window.setDTDCard=function(legacyCount){
+    var el=document.getElementById('dDTD'); if(!el) return;
+    var tip=parseInt(window._dtdTip,10)||0, a288=window._active288;
+    var txt;
+    if(tip>=30000 && a288!=null && !isNaN(a288)){ txt=a288+' active miners \u00B7 288-block window'; el.title='DTD eligible pool from #30,000 = miners active in the last 288 blocks (node geteligibleminers.active_288). Historical producers since #7,100: '+(window._nodeProducersTotal||'\u2014'); }
+    else if(legacyCount!=null){ txt=legacyCount+' eligible miners'; }
+    else return;
+    el.textContent=txt; try{localStorage.setItem('sost_dtd_eligible_count',txt);}catch(e){}
+  };
+</script>
 <script src="js/sost-gold-reference.js?v=v400"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- Cache-Control: tell every browser to NEVER cache this HTML.
@@ -19,7 +34,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-09-v519-banner-under-logos">
+<meta name="explorer-html-version" content="2026-10-10-v520-jackpot-v2-eligibility-dtd-active288">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -598,7 +613,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-09-v519-banner-under-logos';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-10-v520-jackpot-v2-eligibility-dtd-active288';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -2308,9 +2323,7 @@ async function renderDTDPanel(body,title,silent){
               catch(eC){console.warn('[dtd cache] chart re-render failed',eC);}
               renderDTDTable(_dtdCache);
             }
-            var _ddc=document.getElementById('dDTD');
-            if(_ddc&&typeof _dtdCached.eligibleCount==='number')
-              _ddc.textContent=_dtdCached.eligibleCount+' eligible miners';
+            if(typeof _dtdCached.eligibleCount==='number') window.setDTDCard(_dtdCached.eligibleCount);
             var _ddp=document.getElementById('dPeakMiner');
             if(_ddp&&typeof _dtdCached.peakMinersEver==='number')
               _ddp.textContent=_dtdCached.peakMinersEver;
@@ -2750,7 +2763,7 @@ async function renderDTDPanel(body,title,silent){
     var peakMinersEver=rows.filter(function(r){return (r.minedBlocks||0)>0;}).length;
     try{var _pe=parseInt(localStorage.getItem('sost_peak_miners_ever')||'0',10)||0;
       if(peakMinersEver<_pe)peakMinersEver=_pe;else localStorage.setItem('sost_peak_miners_ever',String(peakMinersEver));}catch(e){}
-    var dd=document.getElementById('dDTD');if(dd){dd.textContent=eligibleRows+' eligible miners';try{localStorage.setItem('sost_dtd_eligible_count',dd.textContent);}catch(e){}}
+    window.setDTDCard(eligibleRows);
     var dpm=document.getElementById('dPeakMiner');if(dpm){dpm.textContent=peakMinersEver;}
     // UPDATED MINERS (since #7100) — the full-chain scan knows the TRUE set of
     // distinct Phase-2 producers (ph2.minerCounts). Merge it into the monotonic
@@ -3105,6 +3118,9 @@ async function updateDashboard(info){
   // simply leave the peak card to its existing scan/cache value.
   rpc('geteligibleminers').then(function(gem){
     if(!gem)return;
+    if(gem.active_288!=null) window._active288=parseInt(gem.active_288,10);
+    if(gem.chain_tip!=null) window._dtdTip=parseInt(gem.chain_tip,10);
+    try{ window.setDTDCard(null); }catch(_eS){}
     var producers=parseInt(gem.producers_total,10)||0;
     if(producers>0){
       window._nodeProducersTotal=producers;   // authoritative UPDATED-MINERS value
@@ -3241,8 +3257,7 @@ async function updateDashboard(info){
         if(info.blocks>=12100){ for(var _a in _l288){ if(Math.floor(_l288[_a]*10000/_win288)>=1000)_excl[_a]=true; } }
         var _elig=_prodTot-Object.keys(_excl).length; if(_elig<0)_elig=0;
         window._dtdEligibleFast=_elig;
-        var _ddE=document.getElementById('dDTD'); if(_ddE)_ddE.textContent=_elig+' eligible miners';
-        try{localStorage.setItem('sost_dtd_eligible_count',_elig+' eligible miners');}catch(e){}
+        window.setDTDCard(_elig);
       }
     }catch(_eF){}
     // Producer Distribution can render its recent window (24h) from this fast
@@ -9762,6 +9777,20 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     else if(!_loaded){ jpEDisp='<span style="font-size:12px;color:var(--text3)">'+(_failed?'DATA UNAVAILABLE':'LOADING\u2026')+'</span>'; jpEStat=''; }
     else { jpEDisp='<span style="font-size:12px;color:var(--text3)">calculated at #'+fc(nh)+'</span>'; jpEStat=''; }
     var V2H=30000, V2FIRST=30186, _v2rem=Math.max(0,V2H-tip);
+    var _v2=state.v2||null;
+    var _v2EligD=_v2?esc(String(_v2.eligible_count)):'<span style="font-size:12px;color:var(--text3)">'+(state.v2Error?'DATA UNAVAILABLE':'LOADING\u2026')+'</span>';
+    var _v2Zero=!!(_v2&&_v2.eligible_count===0);
+    var _v2HbD=_v2?(esc(String(_v2.heartbeat_required))+(_v2.heartbeat_window?(' / '+esc(String(_v2.heartbeat_window))):'')):'\u2014';
+    var _v2Pot=(_v2&&_v2.current_pot_stocks!=null)?(Math.round(_v2.current_pot_stocks/1e6)/100)+' SOST':'100 SOST';
+    var _v2Cand=(_v2&&Object.prototype.toString.call(_v2.candidates)==='[object Array]')?_v2.candidates:[];
+    var v2CandHtml=(tip>=V2H)
+      ? ('<div style="margin:10px 0 4px;font:800 10px ui-monospace;letter-spacing:.8px;color:#ffd166">JACKPOT V2 CANDIDATES &middot; #'+fc(nh)+' <span style="font-weight:400;color:var(--text3)">(PoW candidate &ne; eligible: NODE_BIND required)</span></div>'
+         +(_v2Cand.length
+           ? ('<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font:11px ui-monospace"><tr style="color:var(--text3);font-size:9px;text-align:left"><th style="padding:3px 6px">ADDRESS</th><th style="padding:3px 6px">PoW BLOCKS (2,016)</th><th style="padding:3px 6px">NODE_BIND</th><th style="padding:3px 6px">HEARTBEATS</th><th style="padding:3px 6px">ELIGIBLE</th></tr>'
+              +_v2Cand.map(function(c){ var a=String(c.address||''); return '<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px;color:#22d3ee;cursor:pointer" title="'+esc(a)+'" onclick="event.stopPropagation();showAddress(\''+esc(a)+'\')">'+esc(a.substr(0,12)+'\u2026'+a.substr(-4))+'</td><td style="padding:4px 6px">'+esc(String(c.pow_blocks))+'</td><td style="padding:4px 6px;color:'+(c.node_bound?'#39ff14':'#fb010d')+'">'+(c.node_bound?'\u2714 bound':'\u2718 not bound')+'</td><td style="padding:4px 6px">'+esc(String(c.heartbeats))+' / '+esc(String(c.heartbeats_required))+'</td><td style="padding:4px 6px;font-weight:800;color:'+(c.eligible?'#39ff14':'#fb010d')+'">'+(c.eligible?'YES':'NO')+'</td></tr>'; }).join('')
+              +'</table></div>')
+           : '<div style="font-size:11px;color:var(--text3)">'+(_v2?'No PoW candidates in the 2,016-block window.':(state.v2Error?'Data unavailable.':'Loading\u2026'))+'</div>'))
+      : '';
     var v2Banner = (tip < V2H)
       ? ('<div style="border:1px solid #f5b301;border-radius:8px;padding:11px 13px;margin:2px 0 14px;background:rgba(245,179,1,.07)">'
          +'<div style="font:800 11px ui-monospace;letter-spacing:.8px;color:#ffd166">&#11014;&#65039; V16 UPGRADE &middot; DTD JACKPOT V2 &middot; PREVIEW</div>'
@@ -9783,21 +9812,32 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       '<div class="sjpd-grid">'+
         '<div class="sjpd-c"><div class="sjpd-l">RESERVE</div><div class="sjpd-v">'+esc(reserve)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">NEXT JACKPOT</div><div class="sjpd-v c">'+_nhD+'</div></div>'+
-        '<div class="sjpd-c"><div class="sjpd-l">EXPECTED PAYOUT</div><div class="sjpd-v g">100 SOST</div></div>'+
+        '<div class="sjpd-c"><div class="sjpd-l">EXPECTED PAYOUT</div><div class="sjpd-v g">'+esc(tip>=V2H?_v2Pot:'100 SOST')+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">BLOCKS REMAINING</div><div class="sjpd-v">'+_remD+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">ESTIMATED TIME</div><div class="sjpd-v">'+_etaD+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">RECENTLY ACTIVE (288)</div><div class="sjpd-v g">'+_eligD+'</div></div>'+
         // Two eligibility numbers, never one: the 20k count is the rule in force
         // TODAY and it does not carry over. Showing it alone invited the reading
         // that these addresses are already qualified for the V2 draw.
-        '<div class="sjpd-c"><div class="sjpd-l">JACKPOT ELIGIBLE NOW (20k)</div><div class="sjpd-v c">'+jpEDisp+'</div>'+
+        ((tip>=V2H)
+          // V2 is ACTIVE: the only authoritative eligible set is the node's getjackpotv2audit
+          // for the next V2 draw. A PoW candidate is NOT eligible without NODE_BIND.
+          ? ('<div class="sjpd-c"><div class="sjpd-l">JACKPOT V2 ELIGIBLE &middot; #'+fc(nh)+'</div><div class="sjpd-v c">'+_v2EligD+'</div>'+
+               '<div style="font-size:8px;letter-spacing:.6px;color:var(--text3);margin-top:2px">source: node getjackpotv2audit</div>'+
+               (_v2Zero?'<div style="font-size:8px;letter-spacing:.4px;color:#f5b301;margin-top:2px">nobody eligible yet &rarr; this draw rolls over</div>':'')+'</div>'+
+             '<div class="sjpd-c" style="border-color:#39ff14">'+
+               '<div class="sjpd-l" style="color:#39ff14">V2 RULE (ACTIVE)</div>'+
+               '<div class="sjpd-v" style="font-size:13px;line-height:1.5">&ge;3 blocks / 2,016<br>+ NODE_BIND</div>'+
+               '<div style="font-size:8px;color:var(--text3);margin-top:3px;line-height:1.35">heartbeats required now: <b>'+_v2HbD+'</b> &middot; a PoW candidate without NODE_BIND is <b>not</b> eligible</div>'+
+             '</div>')
+          : (        '<div class="sjpd-c"><div class="sjpd-l">JACKPOT ELIGIBLE NOW (20k)</div><div class="sjpd-v c">'+jpEDisp+'</div>'+
           '<div style="font-size:8px;letter-spacing:.6px;color:var(--text3);margin-top:2px">current rule \u00B7 until #29,999</div>'+
           (jpEStat?'<div style="font-size:8px;letter-spacing:.6px;color:var(--gold);margin-top:2px">'+jpEStat+'</div>':'')+'</div>'+
         '<div class="sjpd-c" style="border-color:#ffd166">'+
           '<div class="sjpd-l" style="color:#ffd166">FROM #30,000 \u2014 DIFFERENT RULE</div>'+
           '<div class="sjpd-v" style="font-size:13px;line-height:1.5">&ge;3 blocks / 2,016<br>+ NODE_BIND</div>'+
           '<div style="font-size:8px;color:var(--text3);margin-top:3px;line-height:1.35">the '+(state.jpEligible!=null||state.jpPrelim!=null?'count on the left does':'current count does')+' <b>not</b> carry over \u00B7 first draw #30,186 needs <b>0/0</b> heartbeats</div>'+
-        '</div>'+
+        '</div>'))+
         // The recent-miner cooldown belongs to DTD NORMAL and DTD Accumulated Reward V2 has
         // none, so a cooldown card inside the JACKPOT panel only ever taught people
         // the wrong rule. The slot now opens the archive of paid jackpots instead;
@@ -9821,6 +9861,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
           '<div style="font-size:8px;color:var(--text3);margin-top:2px">via DTD jackpot · on-chain sum</div>'+
         '</div>'+
       '</div>'+
+      v2CandHtml+
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+_statD+'</div>'+
         '<div class="sjpd-l" style="margin-top:8px">LAST WINNER</div><div class="sjpd-v" style="font-size:13px;word-break:break-all;overflow-wrap:anywhere">'+_winD+'</div></div>'+
       '<div class="sjpd-sec">DTD JACKPOT ELIGIBILITY</div>'+
@@ -9861,6 +9902,9 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     document.addEventListener('keydown',function esch(e){ if(e.key==='Escape'){close();document.removeEventListener('keydown',esch);} });
     }catch(_werr){ try{console.warn('[sjp] dashboard wiring:',_werr&&_werr.message);}catch(_e){} }
   }
+  // Next V2 draw height (first #30,186, then every 288 blocks).
+  function jpV2Next(tip){ var f=30186; return tip<f ? f : f+Math.ceil((tip+1-f)/288)*288; }
+  window.jpV2Next=jpV2Next;
   function openDash(){
     _dashOpen=true;
     // deterministic fields from the live permanent card + RPC (real data only)
@@ -9869,6 +9913,11 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     render(state);  // render immediately (shows LOADING until live data arrives)
     if(typeof window.rpc==='function'){
       window.rpc('getblockcount',[]).then(function(h){ state.tip=parseInt(h,10)||0;
+        if(state.tip>=30000){
+          // V2 is active: the authoritative eligible set for the next V2 draw.
+          window.rpc('getjackpotv2audit',[String(jpV2Next(state.tip))]).then(function(a){ if(a){ state.v2=a; render(state); } })
+            .catch(function(){ state.v2Error=true; render(state); });
+        }
         return window.rpc('geteligibleminers',[]); }).then(function(g){
           if(g&&g.active_288!=null) state.eligible=g.active_288;
           // canonical jackpot eligible_count + winner from getlotteryaudit at the last
@@ -9890,7 +9939,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
             .then(function(b){ if(b){ if(b.txids&&b.txids.length>1) state.jpTxid=b.txids[1];
                 if(b.lottery_payout!=null) state.jpDtd=parseInt(b.lottery_payout,10)/1e8; render(state); } })
             .then(function(){ return window.rpc('gethistoricaljackpotstatus',[]).then(function(st){
-                if(st){ if(st.eligible_count!=null) state.jpPrelim=st.eligible_count;
+                if(st){ if(st.eligible_count!=null && state.tip<30000) state.jpPrelim=st.eligible_count;
                         if(st.reserve!=null) state.reserve=st.reserve+' SOST';
                         if(st.cooldown_window!=null) state.cooldownWindow=st.cooldown_window;
                         if(Object.prototype.toString.call(st.cooldown_addresses)==='[object Array]') state.cooldownList=st.cooldown_addresses; }
@@ -9919,10 +9968,20 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       }
       return chain.then(function(){ return {tip:tip,nh:nh,won:won}; });
     }).then(function(ctx){
+      if(ctx.tip>=30000){ ctx.v2h=jpV2Next(ctx.tip);
+        return window.rpc('getjackpotv2audit',[String(ctx.v2h)]).then(function(a){ ctx.v2=a; return ctx; }).catch(function(){ ctx.v2=null; return ctx; }); }
       return window.rpc('gethistoricaljackpotstatus',[]).then(function(st){ ctx.st=st; return ctx; }).catch(function(){ ctx.st=null; return ctx; });
     }).then(function(ctx){
       var winBadge=''; if(ctx.won.length){ var w=ctx.won[0]; winBadge='<div style="margin-top:6px;background:linear-gradient(135deg,rgba(245,209,102,.14),rgba(57,255,20,.10));border:1px solid #ffd166;border-radius:6px;padding:7px 10px;font-size:10px"><b style="color:#ffd166">\uD83C\uDFC6 WINNER OF DTD JACKPOT #'+fc(w.h)+'</b> &middot; <b style="color:#39ff14">+'+esc(w.amount)+' SOST</b> &middot; VERIFIED ON-CHAIN</div>'; }
       var st=ctx.st, main='';
+      if(ctx.tip>=30000){
+        var c=null; var cs=(ctx.v2&&Object.prototype.toString.call(ctx.v2.candidates)==='[object Array]')?ctx.v2.candidates:[];
+        for(var ci=0;ci<cs.length;ci++){ if(cs[ci].address===addr){ c=cs[ci]; break; } }
+        if(!ctx.v2) main='<div style="color:var(--text3);font-size:11px">Jackpot V2 eligibility data unavailable right now (getjackpotv2audit).</div>';
+        else if(c&&c.eligible) main='<div style="color:#39ff14;font-weight:800;text-shadow:0 0 8px rgba(57,255,20,.5)">\uD83D\uDFE2 ELIGIBLE FOR JACKPOT V2 #'+fc(ctx.v2h)+'</div><div style="font-size:10px;color:var(--text3)">'+esc(short)+' &middot; '+esc(String(c.pow_blocks))+' PoW blocks (2,016) &middot; NODE_BIND \u2714 &middot; heartbeats '+esc(String(c.heartbeats))+'/'+esc(String(c.heartbeats_required))+'</div>';
+        else if(c) main='<div style="color:#fb010d;font-weight:800">\uD83D\uDD34 NOT ELIGIBLE FOR JACKPOT V2 #'+fc(ctx.v2h)+'</div><div style="font-size:10px;color:var(--text3)">'+esc(short)+' &middot; PoW candidate ('+esc(String(c.pow_blocks))+' blocks) but '+(c.node_bound?('heartbeats '+esc(String(c.heartbeats))+'/'+esc(String(c.heartbeats_required))):'<b>no NODE_BIND</b>')+'</div>';
+        else main='<div style="color:#fb010d;font-weight:800">\uD83D\uDD34 NOT ELIGIBLE FOR JACKPOT V2 #'+fc(ctx.v2h)+'</div><div style="font-size:10px;color:var(--text3)">'+esc(short)+' &middot; needs &ge;3 SbPoW blocks in the last 2,016 + NODE_BIND</div>';
+      } else
       if(st&&Object.prototype.toString.call(st.eligible_addresses)==='[object Array]'){
         var cool=(Object.prototype.toString.call(st.cooldown_addresses)==='[object Array]')&&st.cooldown_addresses.indexOf(addr)>=0;
         var elig=st.eligible_addresses.indexOf(addr)>=0;

@@ -1,1 +1,1 @@
-{"v": "2026-10-09-v519-banner-under-logos", "note": "Frontend fix: V30000 banner sits in page flow under the sticky logo header (z-index auto; index placement after research notice). No protocol change."}
+{"v": "2026-10-10-v520-jackpot-v2-eligibility-dtd-active288", "note": "Explorer: Jackpot V2 eligible count from getjackpotv2audit (NODE_BIND-gated, candidates table, checker); DTD card shows active_288 after #30,000. Frontend only."}
