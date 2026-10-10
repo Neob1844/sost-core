@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-10-v524-casert-docs-current-rule">
+<meta name="explorer-html-version" content="2026-10-10-v525-mosaic-live-network-pulse">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -640,7 +640,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-10-v524-casert-docs-current-rule';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-10-v525-mosaic-live-network-pulse';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -902,11 +902,11 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
   <div id="mosaicV15Legend" style="max-width:1400px;margin:6px auto 0;padding:0 4px;font-family:var(--code);font-size:9px;color:var(--text3);display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center">
     <span style="letter-spacing:1px">// BLOCK TYPES</span>
     <span><b style="color:var(--yellow)">R</b> = DTD reward block (pays the selected miner)</span>
-    <span><b style="color:var(--gold)">◈ J</b> = DTD Jackpot block <span style="color:var(--text3)">— appears after V15 activation (first #25,290)</span></span>
-    <span style="color:var(--text3)">others = standard / accumulation</span>
+    <span><b style="color:var(--gold)">◆ J</b> = Jackpot draw height (every 288 blocks from #25,290; Jackpot V2 from #30,186)</span>
+    <span style="color:var(--text3)">• = block without a DTD payout</span>
   </div>
 </div>
-<script src="js/network-mosaic.js?v=v365" defer></script>
+<script src="js/network-mosaic.js?v=v366" defer></script>
 
 <!-- ===== BLOCK PRODUCERS DISTRIBUTION (observability card) ===== -->
 <div class="section" id="producerDistSection">
@@ -3411,7 +3411,7 @@ async function updateDashboard(info){
         if(h>info.blocks-AVG_WINDOW)times.push(b.time);
         if(h>info.blocks-600)times600.push(b.time);
         if(h>info.blocks-AVG_WINDOW_LONG)times1000.push(b.time);
-        diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||'',lp:parseInt(b.lottery_payout||0,10),lw:b.lottery_winner_address||''});
+        diffs.push({h:b.height,d:b.bits_q,t:b.time,miner:b.miner_address||'',lp:parseInt(b.lottery_payout||0,10),lw:b.lottery_winner_address||'',p:(b.casert_profile_index!=null?parseInt(b.casert_profile_index,10):null),pm:b.casert_mode||''});
         if(b.miner_address && h>info.blocks-AVG_WINDOW)minerSet.add(b.miner_address);
       }
     }

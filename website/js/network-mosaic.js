@@ -31,6 +31,42 @@
   var lastBlocks = [];             // snapshot used for hit-testing
   var hoverIdx = -1;
   var blockCache = {};             // height -> enriched getblock result
+  // LIVE NETWORK PULSE (v2). Every visual channel encodes a real block property:
+  //   colour = producer · glow = recency · border = bitsQ · texture = Equalizer profile
+  //   symbol = block type (R = DTD reward, J = Jackpot draw height) · side mark = slow block
+  //   pulse  = a block that arrived while the page is open (LIVE only).
+  var colorMode = 'producer';      // producer | difficulty | timing
+  var live = true;
+  var pulses = {};                 // height -> performance.now() when it arrived
+  var lastTipSeen = 0;
+  var hoverMiner = '', focusMiner = '';
+  var dtByH = {};                  // height -> seconds since the previous block (when known)
+  var panelEl = null, modesEl = null;
+  try {
+    var _cm = localStorage.getItem('sost_mosaic_mode'); if (/^(producer|difficulty|timing)$/.test(_cm || '')) colorMode = _cm;
+    var _lv = localStorage.getItem('sost_mosaic_live');
+    if (_lv === '0') live = false;
+    else if (_lv == null && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) live = false;
+  } catch (e) {}
+  function isJackpotHeight(h) { return h >= 25290 && (h - 25290) % 288 === 0; }
+  function profName(p, pm) {
+    if (pm) return pm;
+    if (p == null || isNaN(p)) return '';
+    return p < 0 ? 'E' + (-p) : (p === 0 ? 'B0' : 'H' + p);
+  }
+  function fmtDur(s) {
+    if (s == null) return '—';
+    var m = Math.floor(s / 60), r = Math.round(s % 60);
+    return m ? (m + 'm ' + (r < 10 ? '0' : '') + r + 's') : (r + 's');
+  }
+  function timingColor(dt) {
+    if (dt == null) return 'hsl(0,0%,26%)';
+    if (dt < 300) return '#38bdf8';      // fast  (< 5 min)
+    if (dt < 900) return '#22c55e';      // on target (5-15 min)
+    if (dt < 1800) return '#eab308';     // slow  (15-30 min)
+    if (dt < 3600) return '#f97316';     // very slow (30-60 min)
+    return '#ef4444';                    // stall (> 60 min)
+  }
 
   /* -- helpers ------------------------------------------------------------- */
   function el(tag, css, txt) {
@@ -116,6 +152,8 @@
     head.appendChild(tabsEl);
     mount.appendChild(head);
 
+    modesEl = el('div', 'display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:-4px 0 10px;font-size:8.5px;letter-spacing:1.2px;color:var(--text3);');
+    mount.appendChild(modesEl);
     bodyEl = el('div', 'position:relative;min-height:150px;');
     mount.appendChild(bodyEl);
 
@@ -136,6 +174,26 @@
     return true;
   }
 
+  function renderModes() {
+    if (!modesEl) return;
+    modesEl.style.display = currentTab === 'blocks' ? 'flex' : 'none';
+    modesEl.innerHTML = '';
+    modesEl.appendChild(el('span', 'margin-right:2px', 'COLOR BY'));
+    [['producer', 'MINER'], ['difficulty', 'DIFFICULTY'], ['timing', 'TIMING']].forEach(function (m) {
+      var a = colorMode === m[0];
+      var b = el('button', 'background:' + (a ? 'var(--bg4)' : 'transparent') + ';color:' + (a ? 'var(--cyan)' : 'var(--text2)') +
+        ';border:1px solid ' + (a ? 'var(--cyan)' : 'var(--border)') + ';font-family:var(--code);font-size:8.5px;letter-spacing:1.2px;padding:4px 9px;cursor:pointer;border-radius:2px', m[1]);
+      b.onclick = function () { colorMode = m[0]; try { localStorage.setItem('sost_mosaic_mode', colorMode); } catch (e) {} render(); };
+      modesEl.appendChild(b);
+    });
+    var lv = el('button', 'margin-left:6px;background:transparent;color:' + (live ? '#22c55e' : 'var(--text3)') + ';border:1px solid ' +
+      (live ? 'rgba(34,197,94,.6)' : 'var(--border)') + ';font-family:var(--code);font-size:8.5px;letter-spacing:1.2px;padding:4px 9px;cursor:pointer;border-radius:2px',
+      (live ? '\u25CF ' : '\u25CB ') + 'LIVE');
+    lv.title = 'LIVE: a block that arrives while this page is open pulses once and the newest blocks glow. Off = static mosaic.';
+    lv.onclick = function () { live = !live; try { localStorage.setItem('sost_mosaic_live', live ? '1' : '0'); } catch (e) {} render(); };
+    modesEl.appendChild(lv);
+  }
+
   function highlightTab() {
     if (!tabsEl) return;
     var btns = tabsEl.querySelectorAll('button');
@@ -148,6 +206,7 @@
   }
   function setTab(name) {
     currentTab = name;
+    closePanel();
     highlightTab();
     render();
   }
@@ -167,6 +226,16 @@
       return;
     }
     lastBlocks = blocks;
+    dtByH = {};
+    for (var k = 1; k < blocks.length; k++) {
+      if (blocks[k].h === blocks[k - 1].h + 1) dtByH[blocks[k].h] = blocks[k].t - blocks[k - 1].t;
+    }
+    var newest = blocks[blocks.length - 1].h, nowT = performance.now();
+    if (lastTipSeen && newest > lastTipSeen && live) {
+      for (var nh = Math.max(lastTipSeen + 1, newest - 5); nh <= newest; nh++) pulses[nh] = nowT;
+    }
+    if (newest > lastTipSeen) lastTipSeen = newest;
+    for (var ph in pulses) { if (nowT - pulses[ph] > 4000) delete pulses[ph]; }
 
     var wrap = el('div', 'position:relative;');
     canvas = document.createElement('canvas');
@@ -178,16 +247,31 @@
     layoutAndPaint();
 
     canvas.onmousemove = onCanvasMove;
-    canvas.onmouseleave = function () { hoverIdx = -1; hideTip(); };
+    canvas.onmouseleave = function () { hoverIdx = -1; hoverMiner = ''; hideTip(); };
     canvas.onclick = onCanvasClick;
 
     var uniqueMiners = {};
     for (var i = 0; i < blocks.length; i++) uniqueMiners[blocks[i].miner || '?'] = 1;
+    var dMin = Infinity, dMax = -Infinity;
+    for (i = 0; i < blocks.length; i++) { if (blocks[i].d < dMin) dMin = blocks[i].d; if (blocks[i].d > dMax) dMax = blocks[i].d; }
     if (foot) {
-      foot.innerHTML = 'Each tile = one block · colour = producer · brightness = difficulty &amp; recency · ' +
-        '<b style="color:#000;background:#c9b3ff;border-radius:3px;padding:0 4px">R</b> = DTD reward block (click for selected miner) · ' +
-        Object.keys(uniqueMiners).length + ' producers in view · hover for detail';
+      var chip = function (bg, txt) { return '<b style="color:#000;background:' + bg + ';border-radius:3px;padding:0 4px">' + txt + '</b>'; };
+      var pMin = 99, pMax = -99;
+      for (i = 0; i < blocks.length; i++) if (blocks[i].p != null) { if (blocks[i].p < pMin) pMin = blocks[i].p; if (blocks[i].p > pMax) pMax = blocks[i].p; }
+      var head = colorMode === 'difficulty'
+        ? 'colour = Equalizer profile (<span style="color:hsl(220,70%,60%)">E7</span> → <span style="color:hsl(150,70%,50%)">B0</span> → <span style="color:hsl(0,70%,55%)">H35</span>; in view ' +
+          (pMin <= pMax ? profName(pMin) + '–' + profName(pMax) : 'n/a') + ') · border = bitsQ (' +
+          (dMin === dMax ? 'constant in view: ' + (dMin / 65536).toFixed(4) : (dMin / 65536).toFixed(4) + '–' + (dMax / 65536).toFixed(4)) + ')'
+        : colorMode === 'timing'
+          ? 'colour = time since previous block: <span style="color:#38bdf8">&lt;5m</span> · <span style="color:#22c55e">5–15m</span> · <span style="color:#eab308">15–30m</span> · <span style="color:#f97316">30–60m</span> · <span style="color:#ef4444">&gt;60m</span> (target 10m)'
+          : 'colour = producer';
+      foot.innerHTML = 'Each tile = one block, newest top-left · ' + head +
+        ' · glow = recency · border = bitsQ (thicker = higher) · texture = Equalizer profile (hatch density rises with H level, dots = E easing profiles, plain = B0) · ' +
+        chip('#c9b3ff', 'R') + ' DTD reward · ' + chip('#ffd166', 'J') + ' Jackpot draw height · ' +
+        '<span style="color:#f97316">▌</span> side mark = block took &gt;45 min · ' +
+        Object.keys(uniqueMiners).length + ' producers in view · hover = that producer\'s blocks · tap/click = producer card';
     }
+    renderModes();
     startAnim();
   }
 
@@ -239,38 +323,91 @@
     var n = lastBlocks.length;
 
     offCtx.clearRect(0, 0, L.w, L.h);
+    var rr = Math.min(3, L.tile / 6);
     for (i = 0; i < n; i++) {
       var b = lastBlocks[i];
-      // Newest block last in array -> draw top-left as newest (reverse index).
       var order = n - 1 - i;                    // 0 = newest
       var col = order % L.cols;
       var row = Math.floor(order / L.cols);
       var x = L.pad + col * (L.tile + L.pad);
       var y = L.pad + row * (L.tile + L.pad);
-      var hue = hashHue(b.miner);
-      var norm = ((b.d || dMin) - dMin) / span;         // 0..1 difficulty
-      var recency = 1 - (order / Math.max(1, n));        // 0..1 (newest ~1)
-      var light = 30 + norm * 26 + recency * 10;         // 30..66%
-      var sat = 58 + recency * 14;
-      offCtx.fillStyle = 'hsl(' + hue + ',' + sat + '%,' + light + '%)';
-      roundRect(offCtx, x, y, L.tile, L.tile, Math.min(3, L.tile / 6));
+      var norm = ((b.d || dMin) - dMin) / span;          // 0..1 bitsQ within view
+      var recency = 1 - (order / Math.max(1, n));         // 0..1 (newest ~1)
+      var fill;
+      if (colorMode === 'difficulty') {
+        // ConvergenceX difficulty = bitsQ (border) + Equalizer profile (colour): E7 blue -> B0 green -> H35 red.
+        var pp = (b.p != null && !isNaN(b.p)) ? b.p : 0;
+        var hueD = pp <= 0 ? 150 + (-pp / 7) * 70 : 150 - Math.min(1, pp / 35) * 150;
+        fill = 'hsl(' + Math.round(hueD) + ',70%,' + (30 + Math.min(1, Math.abs(pp) / 35) * 14 + recency * 10).toFixed(1) + '%)';
+      } else if (colorMode === 'timing') {
+        fill = timingColor(dtByH[b.h]);
+      } else {
+        fill = 'hsl(' + hashHue(b.miner) + ',' + (56 + recency * 16).toFixed(1) + '%,' + (30 + recency * 26).toFixed(1) + '%)';
+      }
+      offCtx.fillStyle = fill;
+      roundRect(offCtx, x, y, L.tile, L.tile, rr);
       offCtx.fill();
-      // faint inner border for definition
-      offCtx.strokeStyle = 'rgba(0,0,0,.35)';
-      offCtx.lineWidth = 1;
-      roundRect(offCtx, x + .5, y + .5, L.tile - 1, L.tile - 1, Math.min(3, L.tile / 6));
+      if (colorMode === 'timing') {            // recency still readable in timing mode
+        offCtx.fillStyle = 'rgba(0,0,0,' + (0.42 * (1 - recency)).toFixed(3) + ')';
+        roundRect(offCtx, x, y, L.tile, L.tile, rr); offCtx.fill();
+      }
+      // texture = Equalizer profile
+      var p = b.p;
+      if (p != null && !isNaN(p) && p !== 0 && L.tile >= 10) {
+        offCtx.save();
+        roundRect(offCtx, x, y, L.tile, L.tile, rr); offCtx.clip();
+        offCtx.strokeStyle = 'rgba(0,0,0,.30)'; offCtx.fillStyle = 'rgba(0,0,0,.34)';
+        if (p > 0) {
+          var lines = 1 + Math.floor(p / 6);            // H1-H5:1 ... H30-H35:6 hatch lines
+          var stepH = (L.tile * 2) / (lines + 1);
+          offCtx.lineWidth = 1;
+          for (var hl = 1; hl <= lines; hl++) {
+            var o2 = hl * stepH;
+            offCtx.beginPath(); offCtx.moveTo(x + o2, y); offCtx.lineTo(x + o2 - L.tile, y + L.tile); offCtx.stroke();
+          }
+        } else {
+          var dots = -p, rad = Math.max(1, L.tile / 16);   // E1..E7: 1..7 dots
+          for (var dd = 0; dd < dots; dd++) {
+            var ang = (dd / dots) * Math.PI * 2;
+            offCtx.beginPath(); offCtx.arc(x + L.tile / 2 + Math.cos(ang) * L.tile * 0.28, y + L.tile / 2 + Math.sin(ang) * L.tile * 0.28, rad, 0, Math.PI * 2); offCtx.fill();
+          }
+        }
+        offCtx.restore();
+      }
+      // border = bitsQ (thicker/brighter = higher numeric difficulty in view)
+      {
+        offCtx.strokeStyle = 'rgba(255,255,255,' + (0.10 + 0.55 * norm).toFixed(3) + ')';
+        offCtx.lineWidth = 0.6 + 1.6 * norm;
+      }
+      var lw2 = offCtx.lineWidth / 2;
+      roundRect(offCtx, x + lw2, y + lw2, L.tile - 2 * lw2, L.tile - 2 * lw2, rr);
       offCtx.stroke();
-      // DTD reward marker: a bold black "R" (white-outlined so it reads on any tile colour).
-      if (b.lp > 0 && L.tile >= 10) {
-        var lfs = Math.max(9, Math.round(L.tile * 0.62));
-        offCtx.font = '900 ' + lfs + 'px system-ui,Segoe UI,Arial,sans-serif';
+      // side mark = slow block (> 45 min since the previous block)
+      var dt = dtByH[b.h];
+      if (dt != null && dt > 2700) {
+        offCtx.fillStyle = dt > 7200 ? '#ef4444' : '#f97316';
+        offCtx.fillRect(x, y + 1, Math.max(2, L.tile / 9), L.tile - 2);
+      }
+      // symbol = block type
+      if (L.tile >= 10) {
         offCtx.textAlign = 'center'; offCtx.textBaseline = 'middle';
-        var lcx = x + L.tile / 2, lcy = y + L.tile / 2 + 0.5;
-        offCtx.lineWidth = Math.max(2, lfs * 0.16);
-        offCtx.strokeStyle = 'rgba(255,255,255,.88)';
-        offCtx.strokeText('R', lcx, lcy);
-        offCtx.fillStyle = '#000';
-        offCtx.fillText('R', lcx, lcy);
+        var cx = x + L.tile / 2, cy = y + L.tile / 2 + 0.5;
+        if (isJackpotHeight(b.h)) {
+          var dr = L.tile * 0.34;
+          offCtx.beginPath(); offCtx.moveTo(cx, cy - dr); offCtx.lineTo(cx + dr, cy); offCtx.lineTo(cx, cy + dr); offCtx.lineTo(cx - dr, cy); offCtx.closePath();
+          offCtx.fillStyle = '#ffd166'; offCtx.fill(); offCtx.strokeStyle = 'rgba(0,0,0,.6)'; offCtx.lineWidth = 1; offCtx.stroke();
+          offCtx.font = '900 ' + Math.max(7, Math.round(L.tile * 0.36)) + 'px system-ui,Segoe UI,Arial,sans-serif';
+          offCtx.fillStyle = '#000'; offCtx.fillText('J', cx, cy + 0.5);
+        } else if (b.lp > 0) {
+          var lfs = Math.max(8, Math.round(L.tile * 0.46));
+          offCtx.font = '800 ' + lfs + 'px system-ui,Segoe UI,Arial,sans-serif';
+          offCtx.lineWidth = Math.max(1.5, lfs * 0.14);
+          offCtx.strokeStyle = 'rgba(255,255,255,.55)'; offCtx.strokeText('R', cx, cy);
+          offCtx.fillStyle = 'rgba(0,0,0,.78)'; offCtx.fillText('R', cx, cy);
+        } else {
+          offCtx.beginPath(); offCtx.arc(cx, cy, Math.max(1.2, L.tile / 12), 0, Math.PI * 2);
+          offCtx.fillStyle = 'rgba(255,255,255,.55)'; offCtx.fill();
+        }
       }
     }
     // store tile geometry for hit-testing (map order-slot -> block index)
@@ -296,28 +433,74 @@
     ctx.drawImage(offCanvas, 0, 0);
     ctx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
 
-    // Subtle pulsing glow on the newest few blocks (orders 0..4).
-    var pulse = 0.5 + 0.5 * Math.sin(t / 620);
-    var recent = Math.min(5, L.geo ? L.geo.n : 0);
-    for (var o = 0; o < recent; o++) {
-      var r = tileRectForOrder(o, L);
-      var a = (0.10 + 0.22 * pulse) * (1 - o / 6);
-      ctx.save();
-      ctx.shadowColor = 'rgba(192,132,252,' + (0.55 * (1 - o / 6)) + ')';
-      ctx.shadowBlur = 8 + 8 * pulse;
-      ctx.strokeStyle = 'rgba(192,132,252,' + a + ')';
-      ctx.lineWidth = 1.5;
-      roundRect(ctx, r.x + .5, r.y + .5, r.s - 1, r.s - 1, Math.min(3, r.s / 6));
-      ctx.stroke();
-      ctx.restore();
+    var n = L.geo ? L.geo.n : 0, rr = Math.min(3, L.tile / 6);
+    // Producer trajectory: hovering (or the open producer card) dims every other producer.
+    var hm = hoverMiner || focusMiner;
+    if (hm) {
+      ctx.fillStyle = 'rgba(6,6,6,.66)';
+      for (var di = 0; di < n; di++) {
+        if ((lastBlocks[di].miner || '') === hm) continue;
+        var dr = tileRectForOrder(n - 1 - di, L);
+        ctx.fillRect(dr.x - 0.5, dr.y - 0.5, dr.s + 1, dr.s + 1);
+      }
+    }
+    if (live) {
+      // Recency glow on the newest few blocks.
+      var pulse = 0.5 + 0.5 * Math.sin(t / 620);
+      var recent = Math.min(5, n);
+      for (var o = 0; o < recent; o++) {
+        var r = tileRectForOrder(o, L);
+        var a = (0.10 + 0.22 * pulse) * (1 - o / 6);
+        ctx.save();
+        ctx.shadowColor = 'rgba(192,132,252,' + (0.55 * (1 - o / 6)) + ')';
+        ctx.shadowBlur = 8 + 8 * pulse;
+        ctx.strokeStyle = 'rgba(192,132,252,' + a + ')';
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, r.x + .5, r.y + .5, r.s - 1, r.s - 1, rr);
+        ctx.stroke();
+        ctx.restore();
+      }
+      // Jackpot draw heights: a discreet animated gold border.
+      for (var ji = 0; ji < n; ji++) {
+        if (!isJackpotHeight(lastBlocks[ji].h)) continue;
+        var jr = tileRectForOrder(n - 1 - ji, L);
+        ctx.save(); ctx.setLineDash([3, 3]); ctx.lineDashOffset = -(t / 90) % 6;
+        ctx.strokeStyle = 'rgba(255,209,102,.95)'; ctx.lineWidth = 1.5;
+        roundRect(ctx, jr.x - 1, jr.y - 1, jr.s + 2, jr.s + 2, rr + 1); ctx.stroke(); ctx.restore();
+      }
+      // New-block pulse: the tile swells ~15% and emits one ring (1.1 s); a new Jackpot
+      // height also sends one gold sweep across its row.
+      var now = performance.now();
+      for (var ph in pulses) {
+        var age = now - pulses[ph];
+        if (age > 1400) continue;
+        var idx = -1;
+        for (var q = n - 1; q >= 0 && q >= n - 12; q--) { if (lastBlocks[q].h === +ph) { idx = q; break; } }
+        if (idx < 0) continue;
+        var pr = tileRectForOrder(n - 1 - idx, L), k = Math.min(1, age / 1100), ease = 1 - Math.pow(1 - k, 3);
+        var sc = 1 + 0.15 * (1 - ease), sw = pr.s * sc, sx = pr.x - (sw - pr.s) / 2, sy = pr.y - (sw - pr.s) / 2;
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(offCanvas, pr.x * L.dpr, pr.y * L.dpr, pr.s * L.dpr, pr.s * L.dpr, sx * L.dpr, sy * L.dpr, sw * L.dpr, sw * L.dpr);
+        ctx.restore();
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,' + (0.7 * (1 - ease)).toFixed(3) + ')';
+        ctx.lineWidth = 1.5;
+        var ring = pr.s * (0.6 + 1.2 * ease);
+        roundRect(ctx, pr.x + pr.s / 2 - ring / 2, pr.y + pr.s / 2 - ring / 2, ring, ring, rr + 2); ctx.stroke();
+        if (isJackpotHeight(+ph)) {
+          var rowY = pr.y, sweepX = L.pad + (L.w - 2 * L.pad) * k;
+          ctx.fillStyle = 'rgba(255,209,102,' + (0.55 * (1 - k)).toFixed(3) + ')';
+          ctx.fillRect(sweepX - 3, rowY, 6, pr.s);
+        }
+        ctx.restore();
+      }
     }
     // Hover ring
     if (hoverIdx >= 0 && lastLayout.geo) {
-      var order = lastLayout.geo.n - 1 - hoverIdx;
-      var hr = tileRectForOrder(order, L);
+      var hr = tileRectForOrder(lastLayout.geo.n - 1 - hoverIdx, L);
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1.5;
-      roundRect(ctx, hr.x + .5, hr.y + .5, hr.s - 1, hr.s - 1, Math.min(3, hr.s / 6));
+      roundRect(ctx, hr.x + .5, hr.y + .5, hr.s - 1, hr.s - 1, rr);
       ctx.stroke();
     }
   }
@@ -325,9 +508,10 @@
   function startAnim() {
     stopAnim();
     animStart = performance.now();
+    var lastDraw = 0;
     var loop = function (now) {
       if (currentTab !== 'blocks' || !canvas) { rafId = 0; return; }
-      blitFrame(now - animStart);
+      if (live || now - lastDraw > 120) { blitFrame(now - animStart); lastDraw = now; }
       rafId = requestAnimationFrame(loop);
     };
     rafId = requestAnimationFrame(loop);
@@ -368,26 +552,84 @@
     var py = ev.clientY - rect.top;
     var idx = hitTest(px, py);
     if (idx !== hoverIdx) hoverIdx = idx;
-    if (idx < 0) { hideTip(); return; }
+    if (idx < 0) { hoverMiner = ''; hideTip(); return; }
+    hoverMiner = lastBlocks[idx].miner || '';
+    if (panelEl && ev.sourceCapabilities && ev.sourceCapabilities.firesTouchEvents) return;
     showBlockTip(lastBlocks[idx], ev);
     maybeEnrich(lastBlocks[idx], ev);
   }
   function onCanvasClick(ev) {
     var rect = canvas.getBoundingClientRect();
     var idx = hitTest(ev.clientX - rect.left, ev.clientY - rect.top);
-    if (idx < 0) return;
-    var h = lastBlocks[idx].h;
-    // Every tile (lottery or not) opens the block/tx data via the explorer's own
-    // search — from there the user can reach the winner / any wallet. The DTD
-    // winner itself is shown in the hover tooltip.
-    // Reuse the explorer's own search if present; otherwise no-op.
-    try {
-      var inp = document.getElementById('searchIn');
-      if (inp && typeof window.doSearch === 'function') {
-        inp.value = String(h);
-        window.doSearch();
-      }
-    } catch (e) {}
+    if (idx < 0) { closePanel(); return; }
+    hideTip();
+    openPanel(lastBlocks[idx]);
+  }
+
+  /* -- producer card (stays inside the mosaic) ------------------------------ */
+  function closePanel() { focusMiner = ''; if (panelEl) { panelEl.remove(); panelEl = null; } }
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function openPanel(b) {
+    closePanel();
+    var m = b.miner || '';
+    focusMiner = m;
+    var blocks = lastBlocks, n = blocks.length, mine = 0, last = 0;
+    for (var i = 0; i < n; i++) if ((blocks[i].miner || '') === m) { mine++; if (blocks[i].h > last) last = blocks[i].h; }
+    var share = n ? (100 * mine / n) : 0, segs = 20, full = Math.round(share / 100 * segs);
+    var bar = '<span style="color:hsl(' + hashHue(m) + ',70%,60%)">' + new Array(full + 1).join('\u2588') + '</span><span style="color:var(--text3)">' + new Array(segs - full + 1).join('\u2591') + '</span>';
+    var mob = (mount.clientWidth || 400) < 520;
+    panelEl = el('div', 'position:absolute;z-index:320;top:' + (mob ? '58px' : '46px') + ';' + (mob ? 'left:8px;right:8px;' : 'right:12px;width:300px;') +
+      'background:#08080a;isolation:isolate;opacity:1;border:1px solid hsl(' + hashHue(m) + ',60%,45%);border-radius:4px;padding:11px 13px;font-family:var(--code);font-size:10px;line-height:1.75;color:#e2e8f0;box-shadow:0 0 18px rgba(0,0,0,.6)');
+    var dtx = dtByH[b.h];
+    panelEl.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="color:hsl(' + hashHue(m) + ',70%,62%);word-break:break-all">' + esc(m ? (m.slice(0, 12) + '\u2026' + m.slice(-6)) : 'unknown') + '</b>' +
+      '<span data-x style="cursor:pointer;color:var(--text3);font-size:13px;padding:0 4px">\u00D7</span></div>' +
+      '<div style="color:var(--text3);font-size:9px;letter-spacing:1px;margin-top:4px">LAST ' + n + ' BLOCKS</div>' +
+      '<div style="letter-spacing:0;font-size:11px">' + bar + '</div>' +
+      '<div>Blocks: <b>' + mine + '</b> &middot; Share: <b>' + share.toFixed(1) + '%</b></div>' +
+      '<div>Last block: <b>#' + (last ? last.toLocaleString('en-US') : '\u2014') + '</b></div>' +
+      '<div>Current DTD: <b data-dtd style="color:var(--text3)">checking\u2026</b></div>' +
+      '<div>Jackpot V2: <b data-jp style="color:var(--text3)">checking\u2026</b></div>' +
+      '<div style="margin-top:6px;padding-top:6px;border-top:1px solid #222;color:var(--text3);font-size:9px">Tapped block #' + b.h.toLocaleString('en-US') + ' &middot; ' +
+        esc(profName(b.p, b.pm) || '\u2014') + ' &middot; bitsQ ' + ((b.d || 0) / 65536).toFixed(4) + ' &middot; ' + (dtx != null ? fmtDur(dtx) : '\u2014') + ' after previous</div>' +
+      '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">' +
+        '<button data-blk style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);font-family:var(--code);font-size:9px;padding:4px 8px;cursor:pointer">OPEN BLOCK #' + b.h + '</button>' +
+        (m ? '<button data-addr style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);font-family:var(--code);font-size:9px;padding:4px 8px;cursor:pointer">OPEN ADDRESS</button>' : '') +
+      '</div>';
+    mount.appendChild(panelEl);
+    panelEl.querySelector('[data-x]').onclick = closePanel;
+    panelEl.querySelector('[data-blk]').onclick = function () {
+      try { var inp = document.getElementById('searchIn'); if (inp && typeof window.doSearch === 'function') { inp.value = String(b.h); window.doSearch(); } } catch (e) {}
+      closePanel();
+    };
+    var ab = panelEl.querySelector('[data-addr]');
+    if (ab) ab.onclick = function () { try { if (typeof window.showAddress === 'function') window.showAddress(m); } catch (e) {} closePanel(); };
+    var myPanel = panelEl;
+    // Current DTD status: the explorer's canonical current state (getlotterystate based).
+    (function () {
+      var put = function (txt, col) { var e2 = myPanel.querySelector('[data-dtd]'); if (e2) { e2.textContent = txt; e2.style.color = col; } };
+      var st = window._dtdCurState;
+      var p0 = (st && st.tip === lastTipSeen) ? Promise.resolve(st)
+        : (typeof window.dtdComputeCurrent === 'function' ? window.dtdComputeCurrent() : Promise.reject('n/a'));
+      p0.then(function () {
+        if (typeof window.dtdCurrentStatus !== 'function') throw 'n/a';
+        var cs = window.dtdCurrentStatus({ addr: m, minedBlocks: mine });
+        put(cs.l.charAt(0) + cs.l.slice(1).toLowerCase() + (cs.n ? ' (' + cs.n + ')' : ''), cs.c);
+      }).catch(function () { put('open the DTD panel', 'var(--text3)'); });
+    })();
+    // Jackpot V2: the node's own audit for the next draw (read-only).
+    (function () {
+      var put = function (txt, col) { var e3 = myPanel.querySelector('[data-jp]'); if (e3) { e3.textContent = txt; e3.style.color = col; } };
+      if (typeof window.rpc !== 'function' || !lastTipSeen) { put('\u2014', 'var(--text3)'); return; }
+      var f = 30186, nx = lastTipSeen < f ? f : f + Math.ceil((lastTipSeen + 1 - f) / 288) * 288;
+      window.rpc('getjackpotv2audit', [String(nx)]).then(function (a) {
+        var c = null, cs2 = (a && a.candidates) || [];
+        for (var j = 0; j < cs2.length; j++) if (cs2[j].address === m) { c = cs2[j]; break; }
+        if (!c) { put('not a candidate for #' + nx.toLocaleString('en-US'), 'var(--text3)'); return; }
+        if (c.eligible) put('Eligible for #' + nx.toLocaleString('en-US') + ' (' + c.pow_blocks + ' PoW blocks)', '#22c55e');
+        else put((c.node_bound ? 'Bound' : 'Not bound') + ' \u00B7 ' + c.pow_blocks + ' PoW blocks \u00B7 not eligible for #' + nx.toLocaleString('en-US'), '#fbbf24');
+      }).catch(function () { put('\u2014', 'var(--text3)'); });
+    })();
   }
 
   function showBlockTip(b, ev) {
@@ -397,17 +639,21 @@
     lines.push('<b style="color:var(--purple)">BLOCK #' + b.h + '</b>');
     if (enr && enr.hash) lines.push('hash&nbsp;&nbsp;&nbsp;' + shortHash(enr.hash));
     lines.push('miner&nbsp;&nbsp;' + (b.miner ? shortAddr(b.miner) : '<i>unknown</i>'));
-    lines.push('time&nbsp;&nbsp;&nbsp;' + fmtAgo(b.t));
+    lines.push('time&nbsp;&nbsp;&nbsp;' + fmtAgo(b.t) + (dtByH[b.h] != null ? ' &middot; ' + fmtDur(dtByH[b.h]) + ' after previous' : ''));
+    if (isJackpotHeight(b.h)) lines.push('<span style="color:#ffd166">&#9670; Jackpot draw height' + (b.h >= 30186 ? ' (V2)' : ' (V15)') + '</span>');
     if (enr && enr.tx_count != null) lines.push('txs&nbsp;&nbsp;&nbsp;&nbsp;' + enr.tx_count);
     if (enr && enr.subsidy != null) lines.push('reward&nbsp;' + fmtSost(enr.subsidy) + ' SOST');
     else if (b.lp > 0) lines.push('reward&nbsp;' + fmtSost(b.lp) + ' SOST');
     if (b.lp > 0 && b.lw) {
       lines.push('<span style="color:var(--purple)">&#127881; DTD winner&nbsp;' + shortAddr(b.lw) + '</span>');
-      lines.push('<span style="color:var(--text3);font-size:10px">click &rarr; open winner address</span>');
     }
-    var prof = enr && (enr.casert_mode || null);
-    if (prof) lines.push('cASERT&nbsp;' + prof);
-    if (b.d != null) lines.push('bits_q&nbsp;' + b.d.toLocaleString());
+    var prof = profName(b.p, b.pm) || (enr && enr.casert_mode) || '';
+    if (prof) lines.push('Equalizer&nbsp;' + prof);
+    if (b.d != null) lines.push('bitsQ&nbsp;&nbsp;' + (b.d / 65536).toFixed(4) + ' <span style="color:var(--text3)">(' + b.d.toLocaleString() + ')</span>');
+    if (b.miner) {
+      var cnt = 0; for (var ci = 0; ci < lastBlocks.length; ci++) if (lastBlocks[ci].miner === b.miner) cnt++;
+      lines.push('<span style="color:var(--text3)">producer: ' + cnt + ' of ' + lastBlocks.length + ' blocks in view &middot; click for card</span>');
+    }
     if (!enr) lines.push('<span style="color:var(--text3)">loading detail…</span>');
     tipEl.innerHTML = lines.join('<br>');
     positionTip(ev);
@@ -437,7 +683,7 @@
       if (!blk) { delete blockCache[h]; return; }
       blockCache[h] = blk;
       // If still hovering this block, refresh the tooltip in place.
-      if (currentTab === 'blocks' && hoverIdx >= 0 &&
+      if (currentTab === 'blocks' && hoverIdx >= 0 && tipEl && tipEl.style.display === 'block' && !panelEl &&
           lastBlocks[hoverIdx] && lastBlocks[hoverIdx].h === h) {
         showBlockTip(lastBlocks[hoverIdx], ev);
       }
@@ -581,6 +827,7 @@
 
   function render() {
     if (!bodyEl) return;
+    renderModes();
     if (currentTab === 'blocks') renderBlocks();
     else if (currentTab === 'mempool') renderMempool();
     else renderProducers();
