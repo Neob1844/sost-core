@@ -1545,12 +1545,12 @@ sudo systemctl restart sost-miner</pre>
         <thead><tr style="color:var(--text-muted);text-align:left;border-bottom:1px solid var(--border-dim)"><th style="padding:6px 10px 6px 0">Fork</th><th style="padding:6px 10px">Block</th><th style="padding:6px 0">Change</th></tr></thead>
         <tbody>
           <tr><td style="padding:5px 10px 5px 0"><b>V10</b></td><td style="padding:5px 10px">6,700</td><td style="padding:5px 0">Granular relief calibration (1&nbsp;s/60&nbsp;s steps from 600&nbsp;s)</td></tr>
-          <tr><td style="padding:5px 10px 5px 0">Final calibration</td><td style="padding:5px 10px">5,750</td><td style="padding:5px 0">H13 ceiling, E7 relief@605&nbsp;s, full 43-profile range (E7&ndash;H35 defined)</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">Final calibration</td><td style="padding:5px 10px">5,750</td><td style="padding:5px 0">H13 ceiling, E7 relief@605&nbsp;s (HISTORICAL, until 6,549), full 43-profile range (E7&ndash;H35 defined)</td></tr>
           <tr><td style="padding:5px 10px 5px 0">H12 + relief</td><td style="padding:5px 10px">5,635</td><td style="padding:5px 0">17 active profiles; relief valve H1@630&nbsp;s</td></tr>
           <tr><td style="padding:5px 10px 5px 0">Profile floor</td><td style="padding:5px 10px">5,560</td><td style="padding:5px 0">Miners cannot declare a profile below the deterministic floor</td></tr>
           <tr><td style="padding:5px 10px 5px 0">H11 ceiling</td><td style="padding:5px 10px">5,480</td><td style="padding:5px 0">16 of 43 profiles active</td></tr>
           <tr><td style="padding:5px 10px 5px 0">Direct lag mapping</td><td style="padding:5px 10px">5,323</td><td style="padding:5px 0">profile = clamp(lag, 0, ceiling); asymmetric descent</td></tr>
-          <tr><td style="padding:5px 10px 5px 0">Dynamic cap + median</td><td style="padding:5px 10px">5,260</td><td style="padding:5px 0">Per-block cap scaling with deviation; median288 override</td></tr>
+          <tr><td style="padding:5px 10px 5px 0">Dynamic cap + median</td><td style="padding:5px 10px">5,260</td><td style="padding:5px 0">Per-block cap scaling with deviation; &plusmn;30&nbsp;s dead band + median288 override (HISTORICAL 5,260&ndash;5,269; current &plusmn;15&nbsp;s rule from 5,270)</td></tr>
           <tr><td style="padding:5px 10px 5px 0"><b>V6++</b></td><td style="padding:5px 10px">5,175</td><td style="padding:5px 0">avg288 bitsQ replaces the anchor-based exponential formula</td></tr>
           <tr><td style="padding:5px 10px 5px 0">H10 ceiling</td><td style="padding:5px 10px">5,075</td><td style="padding:5px 0">15 active profiles (E4&ndash;H10), 25 reserved</td></tr>
           <tr><td style="padding:5px 10px 5px 0">V6 calibration</td><td style="padding:5px 10px">5,050</td><td style="padding:5px 0">Dynamic lag cap, live lag from wall clock, 40 profiles active</td></tr>
@@ -1589,7 +1589,7 @@ sudo systemctl restart sost-miner</pre>
       <h3>The H10 stability cliff &mdash; nobody could mine, at any hashrate (V6, block 5,000)</h3>
       <p>Miners reported 0.0% stability at H10 even with 64 threads and ~370&nbsp;att/s. Cause: the stability-basin parameter <code>scale</code> jumped from 2 (H9) to <b>3</b> (H10) &mdash; a cliff, not a gradient; at scale&nbsp;3 essentially no nonce passes the basin check. It affected every miner equally, regardless of hardware, and drove the sawtooth (push to H10 &rarr; nobody mines &rarr; stall &rarr; anti-stall drop &rarr; fast blocks &rarr; repeat). <span style="color:var(--text-dim)">(diagnosed from vostokzyf and oswaldzc reports)</span></p>
       <ul>
-        <li class="yes">Scale&nbsp;3 permanently retired; all profiles unified at scale&nbsp;2 with a uniform 5-point margin gradient. Confirmed mineable within hours (blocks 4,976&ndash;4,984).</li>
+        <li class="yes">Scale&nbsp;3 permanently retired; the hard profiles unified at scale&nbsp;2 with a uniform 5-point margin gradient (current table: scale&nbsp;1 for E7&ndash;H4, scale&nbsp;2 for H5&ndash;H35). Confirmed mineable within hours (blocks 4,976&ndash;4,984).</li>
       </ul>
     </div>
 
@@ -1603,7 +1603,7 @@ sudo systemctl restart sost-miner</pre>
       <p>The numeric controller was rebuilt mid-week: the genesis-anchored exponential (which accumulated lag and spiked ~27%) was replaced by an <b>avg288</b> controller comparing the last 288 intervals to 600&nbsp;s. A fixed 12.5%-per-block cap proved too violent for a 288-window signal; a brief median override then over-corrected (saturating at 3%/block). The endpoint: median removed from consensus, a &plusmn;15&nbsp;s dead band, and a <b>dynamic cap</b> scaling 0% / 0.5% / 1% / 2% / 3% by deviation. The PID equalizer was later simplified to direct lag-mapping (<code>profile = clamp(lag, 0, ceiling)</code>) with asymmetric descent: rise immediately, fall &le;1 level per block.</p>
     </div>
 
-    <p style="font-size:12px;color:var(--text-dim);margin-top:4px">The 43-profile architecture (E7&ndash;H35) reached its final form at block 5,750 (H13 ceiling, E7 relief&nbsp;@605&nbsp;s). Higher profiles (H14&ndash;H35) remain defined and activate only as network hashrate grows.</p>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:4px">The 43-profile architecture (E7&ndash;H35) reached its final form at block 5,750 (H13 ceiling, E7 relief&nbsp;@605&nbsp;s). Higher profiles (H14&ndash;H35) were then reserved; they were activated at V12 (H14&ndash;H20, block 7,350) and V13 (H21&ndash;H35, block 12,000), where the H35 ceiling is current. The 605&nbsp;s relief valve is HISTORICAL (blocks 5,750&ndash;6,549), superseded by the V12 triangular cascade.</p>
   </div>
 </section>
 
@@ -1710,7 +1710,7 @@ sudo systemctl restart sost-miner</pre>
 
     <div class="info-card">
       <h3>&ldquo;CPU-only&rdquo; &rarr; &ldquo;CPU-friendly, memory-hard&rdquo; &mdash; a corrected claim</h3>
-      <p>An end-to-end consensus audit confirmed ConvergenceX is intact, but also that SOST <b>does not enforce CPU-only mining</b> &mdash; the algorithm structure (parallel k-loop, 32&times;32 matvec, branch-free perturbations) is amenable to optimised/GPU implementations, which is legitimate competition under the current rules. Rather than keep an overstated claim, the framing was corrected to <b>&ldquo;CPU-friendly, memory-hard PoW&rdquo;</b> across the site and header, and real GPU-resistance was deferred to a properly designed future fork. A separate display bug was fixed: the explorer&apos;s <code>EST. HASHRATE</code> was dimensionally wrong (<code>bitsQ/blocktime</code>); it now shows a Bitcoin-style hashrate and the effective ConvergenceX attempts/sec side by side.</p>
+      <p>An end-to-end consensus audit confirmed ConvergenceX is intact, but also that SOST <b>does not enforce CPU-only mining</b> &mdash; the algorithm structure (parallel k-loop, 32&times;32 matvec, branch-free perturbations) is amenable to optimised/GPU implementations, which is legitimate competition under the current rules. Rather than keep an overstated claim, the framing was corrected to <b>&ldquo;CPU-friendly, memory-hard PoW&rdquo;</b> across the site and header, and real GPU-resistance was deferred to a properly designed future fork. A separate display bug was fixed: the explorer&apos;s <code>EST. HASHRATE</code> was dimensionally wrong (<code>bitsQ/blocktime</code>); it now shows a ConvergenceX attempt-rate estimate and the effective ConvergenceX attempts/sec side by side. Attempts per second alone do not describe SOST&apos;s computational cost: read it together with bitsQ, the active Equalizer profile and the number/distribution of miners. It is not comparable to Bitcoin SHA-256 hashrate.</p>
     </div>
 
     <div class="info-card">

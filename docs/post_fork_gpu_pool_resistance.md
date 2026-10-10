@@ -101,7 +101,7 @@ weeks to give us data instead of speculation:
 - Consecutive blocks by the same address.
 - Sub-60 s blocks per miner.
 - Timestamp anomalies (post-fork: deltas at the MTP boundary).
-- Estimated per-miner hashrate (Bitcoin-style).
+- Estimated per-miner ConvergenceX attempt rate (not comparable to SHA-256 hashrate).
 - Effective per-miner attempts/sec (profile-adjusted) where possible.
 - Sudden dominance alerts (e.g. top miner crossing 30 % over a
   rolling window).

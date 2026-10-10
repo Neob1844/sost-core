@@ -3,6 +3,8 @@
 **Date:** 2026-03-25
 **Status:** Analysis document — describes current state and recommends future direction
 
+> **HISTORICAL SNAPSHOT (cASERT):** this document reflects the chain as of its date. Current mainnet rule: target 600 s; bitsQ Q16.16 recomputed every block (avg288 since #5,175; dead band ±15 s and 0.5/1.0/2.0/3.0% steps since #5,270); Equalizer 43 profiles E7–H35 (table since #5,750, ceiling H35 since #12,000) selected by the direct lag map since #5,323; anti-stall at 60 min; V12 triangular cascade since #7,350. The 40-profile E4–H35 range and the PID/EWMA selector are HISTORICAL.
+
 ---
 
 ## Executive Summary

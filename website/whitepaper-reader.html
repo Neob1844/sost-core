@@ -482,7 +482,7 @@
 <div class="wp-spacer"></div>
 <p class="wp-p">global contraction for sufficiently large perturbations.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">The cASERT equalizer adaptively selects (k, steps, scale) for liveness, with a bidirectional policy: it hardens (H1–H35) when the chain is ahead of schedule (emission protection) and eases (E1–E4) when the chain has been behind schedule for 6+ hours at B0 (liveness support).</p>
+<p class="wp-p">The cASERT equalizer adaptively selects (k, steps, scale) for liveness, with a bidirectional policy: it hardens (H1–H35) when the chain is ahead of schedule (emission protection) and eases down to E7 (liveness support: anti-stall after 60 min without a block, V12 triangular cascade within the current block). The Equalizer changes only the structural work profile; numeric difficulty is bitsQ.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Phase 5: Commitment &amp; Target Check</p>
 <p class="wp-p">COMMITMENT (binds all proof components):</p>
@@ -580,9 +580,16 @@
 <p class="wp-p">The intensity of perturbation probes adapts to network conditions through the cASERT</p>
 <p class="wp-p">equalizer (Section 3.12). The equalizer uses a <strong>bidirectional block-lag</strong> signal: it compares</p>
 <p class="wp-p">the actual number of blocks mined against the ideal schedule (genesis + height × 600s)</p>
-<p class="wp-p">and increases computational cost when the chain is running <strong>ahead</strong> of schedule (H1–H35), or decreases it when the chain has been <strong>behind</strong> schedule for 6+ hours at B0 (E1–E4).</p>
+<p class="wp-p">and increases computational cost when the chain is running <strong>ahead</strong> of schedule (H1–H35), or decreases it (down to E7) on stalls and slow blocks (anti-stall, V12 cascade).</p>
 <div class="wp-spacer"></div>
-<pre class="wp-code-inline">  lag = expected_blocks - actual_blocks</pre>
+<p class="wp-p"><strong>CURRENT MAINNET RULE (direct lag map, since block 5,323):</strong></p>
+<pre class="wp-code-inline">  lag = (h - 1) - floor((prev.time - GENESIS_TIME) / 600)   // positive = chain AHEAD of schedule</pre>
+<pre class="wp-code-inline">  target profile = B0 if lag ≤ 0, else min(lag, ceiling)     // ceiling H35 since block 12,000</pre>
+<pre class="wp-code-inline">  hardening (up): immediate · easing (down): ≥ 1 level/block · lag ≤ 0 → at most B0</pre>
+<pre class="wp-code-inline">  anti-stall (60 min without a block) and V12 triangular cascade can ease further, floor E7</pre>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>HISTORICAL — pre-genesis design concept, not implemented on mainnet:</strong></p>
+<pre class="wp-code-inline">  lag = expected_blocks - actual_blocks   (concept sign convention)</pre>
 <pre class="wp-code-inline">  expected_blocks = floor((wall_clock_now - GENESIS_TIME) / TARGET_SPACING)</pre>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  lag ≥ 0 (on schedule or behind)  → L1  (neutral, baseline)</pre>
@@ -593,7 +600,7 @@
 <pre class="wp-code-inline">  lag &lt; 0, 76 ≤ |lag| ≤ 100        → L5  (strong hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 101              → L6+ (unbounded: level = 6 + floor((ahead - 101) / 50))</pre>
 <div class="wp-spacer"></div>
-<div style="background:rgba(251,191,36,0.08);border:1px solid #fbbf24;padding:12px 16px;margin:12px 0;font-size:12px;color:#fbbf24;line-height:1.7;"><b>⚠ IMPLEMENTATION NOTE (v4.5):</b> The level system below (L1–L6+) was the pre-genesis design. The mainnet implementation uses <b>43 discrete profiles (E7 through H35)</b> with <b>direct lag mapping (block 5,320+): profile = clamp(lag, 0, ceiling). Upward: immediate. Downward: max 1 level/block (block 5,323 hotfix).</b> Each profile has independently tuned scale, k, steps, and margin. See <a href="casert-spec.html" style="color:#67e8f9;">cASERT Specification</a> for current parameters. Final calibration at block 5,750: H13 ceiling, E7 relief valve at 605s, 43 profiles E7–H35, lag-adjust ~6s.</div>
+<div style="background:rgba(251,191,36,0.08);border:1px solid #fbbf24;padding:12px 16px;margin:12px 0;font-size:12px;color:#fbbf24;line-height:1.7;"><b>⚠ IMPLEMENTATION NOTE:</b> The level system (L1–L6+) shown here is a pre-genesis design concept — not implemented. The mainnet implementation uses <b>43 discrete profiles (E7 through H35, table since block 5,750)</b> with <b>direct lag mapping (block 5,323+): profile = B0 if lag ≤ 0, else min(lag, ceiling); ceiling H35 since block 12,000. Upward: immediate. Downward: at least 1 level per block.</b> Easing: anti-stall at 60 min without a block, plus the V12 triangular cascade (from block 7,350, up to 28 levels, floor E7). Each profile has its own scale, k, steps, and margin. See <a href="casert-spec.html" style="color:#67e8f9;">cASERT Specification</a> for current parameters. HISTORICAL (blocks 5,750–6,549): H13 ceiling, E7 relief valve at 605 s.</div>
 <p class="wp-p">Stability parameters by level (pre-genesis design — see note above):</p>
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  Mainnet profiles: E7(-7) through H35(+35), 43 total</pre>
@@ -621,11 +628,11 @@
 <p class="wp-p">more blocks ahead of schedule (excess hashrate producing blocks faster than 600s),</p>
 <p class="wp-p">the equalizer progressively increases the perturbation scale from L2 through L5, making each</p>
 <p class="wp-p">mining attempt more computationally expensive. When the chain has been behind schedule for</p>
-<p class="wp-p">6+ hours at B0, the equalizer eases (E1–E4), reducing perturbation cost to support liveness.</p>
+<p class="wp-p">6+ hours at B0, the equalizer eases (down to E7 in the mainnet implementation), reducing perturbation cost to support liveness.</p>
 <p class="wp-p">This bidirectional policy ensures hardening activates for emission protection and easing</p>
 <p class="wp-p">activates when the chain genuinely needs liveness support.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p"><strong>Decay Anti-Stall (cASERT layer 3):</strong></p>
+<p class="wp-p"><strong>Decay Anti-Stall (cASERT layer 3) — pre-genesis design concept, not implemented.</strong> Current mainnet anti-stall: activates after 3,600 s (60 min) without a block; first drop immediate, then one level per 600 / 900 / 1,200 s for H≥7 / H4–H6 / H1–H3; after 6 h at B0, −1 level per 1,800 s down to E7. 7,200 s activation was HISTORICAL (before block 4,300).</p>
 <p class="wp-p">If no block found for max(ahead &times; 600s, 7200s) &mdash; proportional to blocks ahead, no ceiling &mdash; the effective level decays: L8+ drops 1/10min, L4&ndash;L7 drops 1/20min, L2&ndash;L3 drops 1/30min, L1 is floor. Cost uses the <strong>current</strong> effective level as it drops. When mining resumes, decay stops instantly. Block validation uses raw schedule level.</p>
 <p class="wp-p" style="background:rgba(74,222,128,0.05);border-left:3px solid #4ade80;padding:8px 12px;margin:8px 0;"><strong style="color:#4ade80;">Worked Example &mdash; L10 (450 blocks ahead):</strong><br>Activation: max(450 &times; 600, 7200) = 270,000s (75h). After activation: L10&rarr;L8 FAST (30min) &middot; L7&rarr;L4 MEDIUM (80min) &middot; L3&rarr;L1 SLOW (60min). Total decay: <strong>170 min (2h 50m)</strong>. Total from mining start: <strong>~78 hours</strong>.</p>
 <div class="wp-spacer"></div>
@@ -916,7 +923,7 @@ PROPERTIES:
 <tr><td>RAM required (mining)</td><td>~0 MB</td><td>2,048 MB (2 GB)</td><td>1-4 GB (growing DAG)</td><td>~8,192 MB (4 GB dataset + 4 GB scratchpad)</td></tr>
 <tr><td>RAM required (node)</td><td>~0 MB</td><td>~256 MB</td><td>~256 MB</td><td>~500 MB (no dataset/scratchpad)</td></tr>
 <tr><td>ASIC advantage</td><td>&gt;1,000×</td><td>~3-5× estimated</td><td>~2-5× (Ethash ASICs exist)</td><td>Designed for low multiples (hypothesis; formal benchmark pending)</td></tr>
-<tr><td>Difficulty adjustment</td><td>Every 2,016 blocks (~2 weeks)</td><td>Every block (simple ratio)</td><td>Every block (bomb + ratio)</td><td>Every block (cASERT bitsQ Q16.16, avg288-based since block 5,175, dynamic cap since 5,260)</td></tr>
+<tr><td>Difficulty adjustment</td><td>Every 2,016 blocks (~2 weeks)</td><td>Every block (simple ratio)</td><td>Every block (bomb + ratio)</td><td>Every block (cASERT bitsQ Q16.16, avg288-based since block 5,175, dynamic cap since 5,270)</td></tr>
 <tr><td>Mathematical certificate</td><td>None</td><td>None</td><td>None</td><td>Stability basin proof (k probes × g steps)</td></tr>
 <tr><td>Useful entropy output</td><td>Block hash only</td><td>Block hash only</td><td>Block hash only</td><td>Entropy triple (block_id + commit + cp_root)</td></tr>
 <tr><td>Consensus arithmetic</td><td>Integer (nBits, subsidy)</td><td>Integer + float (VM)</td><td>Integer</td><td>100% integer (zero floating-point)</td></tr>
@@ -932,8 +939,8 @@ PROPERTIES:
 <p class="wp-p">Regularization λ           100</p>
 <p class="wp-p">Checkpoint interval        6,250 (16 checkpoints)</p>
 <p class="wp-p">Difficulty encoding        SOSTCompact Q16.16</p>
-<p class="wp-p">Difficulty algorithm       cASERT bitsQ, avg288-based (block 5,175+), dynamic cap (block 5,260+)</p>
-<p class="wp-p">Per-block delta cap        Dynamic (5,260+): 0%/0.5%/1.5%/2.5%/3.0% (legacy: 12.5% V2)</p>
+<p class="wp-p">Difficulty algorithm       cASERT bitsQ, avg288-based (block 5,175+), dynamic cap (block 5,270+)</p>
+<p class="wp-p">Per-block delta cap        Dynamic (5,270+): dead band ±15 s (0%), then 0.5%/1.0%/2.0%/3.0% (HISTORICAL: 12.5% V2, blocks 1,450–5,174)</p>
 <p class="wp-p">cASERT equalizer signal    Block lag vs ideal schedule (bidirectional)</p>
 <p class="wp-p">Equalizer profiles         E7(-7) through H35(+35), 43 total</p>
 <p class="wp-p">Stability baseline         scale=1, k=4, margin=165, steps=4, stab_shift=20</p>
@@ -947,7 +954,8 @@ PROPERTIES:
 <p class="wp-p">fast chain → increase powDiffQ → smaller target → harder</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Per-block delta cap bounds the response:</p>
-<p class="wp-p">Dynamic cap (block 5,260+): 0% dead band (&plusmn;30s), 0.5%/1.5%/2.5%/3.0% max. Legacy: 12.5% (V2, blocks 1,450&ndash;5,174)</p>
+<p class="wp-p"><strong>CURRENT MAINNET RULE (block 5,270+):</strong> target 600 s; bitsQ is Q16.16 and recomputed every block; avg = mean of clamped intervals over the last 288 blocks, dev = avg &minus; 600; dead band &plusmn;15 s (no change); per-block step 0.5% for |dev| in (15,60] s, 1.0% for (60,120] s, 2.0% for (120,240] s, 3.0% above 240 s. Slow chain &rarr; easier, fast chain &rarr; harder; clamped to [1.0, 255.0]. Slingshot relief (V12, block 7,350+) on the current block&rsquo;s elapsed time: &gt;1,200 s &minus;6.5%, &gt;1,800 s &minus;12.5%, &gt;3,600 s &minus;25%, &gt;7,200 s &minus;37.5%, &gt;10,800 s &minus;50%.</p>
+<p class="wp-p"><strong>HISTORICAL:</strong> &lt;5,175 anchor exponential (half-life 48 h, cap 6.25% before 1,450; half-life 24 h, cap 12.5% for 1,450&ndash;5,174); 5,175&ndash;5,259 avg288 with &plusmn;30 s dead band and flat 12.5% cap; 5,260&ndash;5,269 &plusmn;30 s dead band with median288 override, steps 0.5%/1.5%/2.5%/3.0%.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.12 cASERT Equalizer — Consensus-Critical Structural Correction</p>
 <div class="wp-spacer"></div>
@@ -958,9 +966,24 @@ PROPERTIES:
 <p class="wp-p">blocks since genesis and the actual chain height. The equalizer is <strong>bidirectional</strong>: it</p>
 <p class="wp-p">increases computational cost when the chain is ahead of schedule (H1–H35, emission</p>
 <p class="wp-p">protection) and decreases it when the chain has been behind schedule for 6+ hours at B0</p>
-<p class="wp-p">(E1–E4, liveness support). cASERT bitsQ handles numerical difficulty adjustment in both directions.</p>
+<p class="wp-p">(down to E7, liveness support). cASERT bitsQ handles numerical difficulty adjustment in both directions.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">SIGNAL COMPUTATION (block lag):</p>
+<p class="wp-p"><strong>CONVERGENCEX DIFFICULTY CONTROL = bitsQ + Equalizer.</strong> bitsQ regulates the numeric difficulty of the target; the Equalizer regulates the structural cost profile of each ConvergenceX attempt under the cASERT rules. Both are recomputed and verified by every node. They are two independent controls of one consensus.</p>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>CURRENT MAINNET RULE (Equalizer):</strong></p>
+<pre class="wp-code-inline">  lag = (h - 1) - floor((prev.time - GENESIS_TIME) / 600)   // positive = chain AHEAD of schedule</pre>
+<pre class="wp-code-inline">  target profile = B0 if lag ≤ 0, else min(lag, ceiling)     // direct lag map since block 5,323</pre>
+<pre class="wp-code-inline">  43 profiles E7(-7)…B0…H35(+35), table since block 5,750; ceiling H35 since block 12,000</pre>
+<pre class="wp-code-inline">  hardening (up): immediate · easing (down): at least 1 level per block · lag ≤ 0 → at most B0</pre>
+<pre class="wp-code-inline">  anti-stall: 3,600 s (60 min) without a block → first drop immediate, then 1 level per</pre>
+<pre class="wp-code-inline">    600 / 900 / 1,200 s for H≥7 / H4–H6 / H1–H3; after 6 h, −1 level per 1,800 s down to E7</pre>
+<pre class="wp-code-inline">  V12 triangular cascade (block 7,350+): elapsed ≥ 540 s → n = min(1+(elapsed−540)/60, 7),</pre>
+<pre class="wp-code-inline">    drop = n(n+1)/2 = 1,3,6,10,15,21,28 levels at 540…≥900 s, floor E7</pre>
+<pre class="wp-code-inline">  The validator recomputes the profile; the declared profile_index must equal it.</pre>
+<pre class="wp-code-inline">  The Equalizer changes only stab_scale / stab_steps / stab_k / stab_margin, never bitsQ.</pre>
+<div class="wp-spacer"></div>
+<p class="wp-p"><strong>HISTORICAL — pre-genesis design concept, not implemented</strong> (kept for reference; the sign convention and L1–L6 levels below are NOT the mainnet rule):</p>
+<p class="wp-p">SIGNAL COMPUTATION (block lag, concept):</p>
 <pre class="wp-code-inline">  expected_blocks = floor((wall_clock_now - GENESIS_TIME) / TARGET_SPACING)</pre>
 <pre class="wp-code-inline">  actual_blocks   = current chain height</pre>
 <pre class="wp-code-inline">  lag             = expected_blocks - actual_blocks</pre>
@@ -973,7 +996,7 @@ PROPERTIES:
 <pre class="wp-code-inline">  and the consensus GENESIS_TIME constant. The signal is deterministic for any</pre>
 <pre class="wp-code-inline">  observer at the same wall-clock moment and chain height.</pre>
 <div class="wp-spacer"></div>
-<p class="wp-p">LEVEL ASSIGNMENT (bidirectional, block-count thresholds):</p>
+<p class="wp-p">LEVEL ASSIGNMENT (pre-genesis concept, not implemented):</p>
 <pre class="wp-code-inline">  lag ≥ 0                      → L1  (behind or on-time: neutral)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, |lag| &lt; 5           → L1  (slightly ahead: neutral)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, 5 ≤ |lag| ≤ 25     → L2  (light hardening)</pre>
@@ -982,7 +1005,7 @@ PROPERTIES:
 <pre class="wp-code-inline">  lag &lt; 0, 76 ≤ |lag| ≤ 100   → L5  (strong hardening)</pre>
 <pre class="wp-code-inline">  lag &lt; 0, |lag| ≥ 101         → L6+ (unbounded: level = 6 + floor((ahead - 101) / 50))</pre>
 <div class="wp-spacer"></div>
-<div style="background:rgba(251,191,36,0.08);border:1px solid #fbbf24;padding:12px 16px;margin:12px 0;font-size:12px;color:#fbbf24;line-height:1.7;"><b>⚠ IMPLEMENTATION NOTE (v4.5):</b> Mainnet uses 43 profiles (E7–H35) with variable scale, k, steps, margin per profile. Direct lag mapping (block 5,320+) replaces PID controller. Asymmetric descent: up=immediate, down=max 1/block (block 5,323). Final calibration at block 5,750: H13 ceiling, E7 relief valve (605s), 43 profiles. See <a href="casert-spec.html" style="color:#67e8f9;">cASERT Spec</a>.</div>
+<div style="background:rgba(251,191,36,0.08);border:1px solid #fbbf24;padding:12px 16px;margin:12px 0;font-size:12px;color:#fbbf24;line-height:1.7;"><b>⚠ IMPLEMENTATION NOTE:</b> Mainnet uses 43 profiles (E7–H35) with variable scale, k, steps, margin per profile. Direct lag mapping (block 5,323+) replaced the PID/EWMA controller (now HISTORICAL). Asymmetric: up = immediate, down = at least 1 level/block. HISTORICAL calibration (blocks 5,750–6,549): H13 ceiling, E7 relief valve at 605 s; superseded by V12 cascade (block 7,350) and the H35 ceiling (block 12,000). See <a href="casert-spec.html" style="color:#67e8f9;">cASERT Spec</a>.</div>
 <p class="wp-p">STABILITY PARAMETERS (mainnet — see note above):</p>
 <pre class="wp-code-inline">  43 profiles: E7(-7) through H35(+35)</pre>
 <pre class="wp-code-inline">  B0 baseline: scale=1, k=4, steps=4, margin=165</pre>
@@ -990,6 +1013,7 @@ PROPERTIES:
 <div class="wp-spacer"></div>
 <pre class="wp-code-inline">  compute_cost = scale × k × steps</pre>
 <div class="wp-spacer"></div>
+<pre class="wp-code-inline">  (pre-genesis concept, not implemented:)</pre>
 <pre class="wp-code-inline">  L1: 1 × 4 × 4 = 16  (neutral baseline)</pre>
 <pre class="wp-code-inline">  L2: 2 × 4 × 4 = 32  (100% harder than baseline)</pre>
 <pre class="wp-code-inline">  L3: 3 × 4 × 4 = 48  (200% harder than baseline)</pre>
@@ -1001,7 +1025,7 @@ PROPERTIES:
 <pre class="wp-code-inline">  The cASERT equalizer addresses a specific threat: an attacker (or sudden hashrate influx)</pre>
 <pre class="wp-code-inline">  mining blocks much faster than the 600s target, which would accelerate coin</pre>
 <pre class="wp-code-inline">  emission before cASERT bitsQ can fully compensate. bitsQ adjusts numerical difficulty</pre>
-<pre class="wp-code-inline">  every block, but its response is bounded by the dynamic cap (0%/0.5%/1.5%/2.5%/3.0%, block 5,260+).</pre>
+<pre class="wp-code-inline">  every block, but its response is bounded by the dynamic cap (0%/0.5%/1.0%/2.0%/3.0%, block 5,270+).</pre>
 <pre class="wp-code-inline">  A massive hashrate spike can outrun the bitsQ delta cap for many blocks,</pre>
 <pre class="wp-code-inline">  emitting coins ahead of the intended schedule.</pre>
 <div class="wp-spacer"></div>
@@ -1011,7 +1035,9 @@ PROPERTIES:
 <pre class="wp-code-inline">  making each ConvergenceX attempt more expensive regardless of the numerical</pre>
 <pre class="wp-code-inline">  difficulty. This slows down block production even if bitsQ hasn&#x27;t caught up yet.</pre>
 <div class="wp-spacer"></div>
-<pre class="wp-code-inline">  Critically, the equalizer **never relaxes below B0**. When the chain is behind schedule (lag &gt; 0), </pre>
+<pre class="wp-code-inline">  (Pre-genesis concept — on mainnet the lag map never targets below B0, but anti-stall</pre>
+<pre class="wp-code-inline">  and the V12 cascade can ease down to E7 during slow blocks.)</pre>
+<pre class="wp-code-inline">  In the concept, the equalizer never relaxes below B0. When the chain is behind schedule, </pre>
 <pre class="wp-code-inline">  it stays at B0 (the genesis baseline) and cASERT bitsQ handles recovery by</pre>
 <pre class="wp-code-inline">  lowering numerical difficulty. This avoids double-penalizing a struggling chain:</pre>
 <pre class="wp-code-inline">  bitsQ makes blocks easier to find, and the equalizer stays out of the way.</pre>
@@ -1036,7 +1062,7 @@ PROPERTIES:
 <pre class="wp-code-inline">  wall-clock time, which is objective and independently verifiable by any observer.</pre>
 <pre class="wp-code-inline">  It requires no window, no averaging, and no error capping.</pre>
 <div class="wp-spacer"></div>
-<p class="wp-p">WALL-CLOCK SECURITY:</p>
+<p class="wp-p">WALL-CLOCK SECURITY (pre-genesis concept — mainnet computes lag from prev.time, the previous block&rsquo;s timestamp, bounded by MTP and the 30 s future-drift limit, so every validator reaches the same result):</p>
 <pre class="wp-code-inline">  The cASERT equalizer uses time(nullptr) (wall-clock time), not block timestamps. Block timestamps</pre>
 <pre class="wp-code-inline">  are miner-controlled within MTP/future-drift bounds and could be manipulated to</pre>
 <pre class="wp-code-inline">  fake the lag signal. Wall-clock time is the node&#x27;s own system clock, which is not</pre>
@@ -1108,7 +1134,7 @@ PROPERTIES:
 <div class="wp-spacer"></div>
 <p class="wp-p">Rule A: ts &gt; MTP</p>
 <p class="wp-p">Here: 1,771,700,109 &gt; 1,771,697,922 → OK (difference 2,187s).</p>
-<p class="wp-p">Rule B: ts &lt;= now + MAX_FUTURE_DRIFT (e.g., 600s) → prevents &quot;future blocks&quot;.</p>
+<p class="wp-p">Rule B: ts &lt;= now + future-drift limit → prevents &quot;future blocks&quot;. Current: 30 s (block 12,000+); HISTORICAL: 60 s (6,550–11,999), 600 s (before 6,550).</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">3.14.3 cASERT bitsQ Difficulty (powDiffQ → target)</p>
 <div class="wp-spacer"></div>
@@ -2445,13 +2471,13 @@ a non-negotiable prerequisite — not a trade-off.</pre>
 <p class="wp-p">The bidirectional block-lag model (Section 3.12) prevents the cASERT equalizer from being weaponized while supporting liveness:</p>
 <div class="wp-spacer"></div>
 <div class="wp-bullet">An attacker with high hashrate mining blocks quickly pushes the chain ahead of schedule.</div>
-<div class="wp-bullet">Ahead of schedule → the equalizer escalates from B0 to H1 → H2 → H3 → H4 → H5 (max). Stability verification becomes progressively more expensive.</div>
+<div class="wp-bullet">Ahead of schedule → the equalizer escalates from B0 to H1 → H2 → … up to the H35 ceiling (direct lag map). Stability verification becomes progressively more expensive.</div>
 <div class="wp-bullet">The attacker gains nothing — the faster they mine, the harder each attempt becomes.</div>
 <div class="wp-spacer"></div>
 <p class="wp-p">When the chain is behind schedule, the equalizer initially stays at B0 (baseline), letting cASERT bitsQ handle difficulty reduction.</p>
-<p class="wp-p">If the chain remains behind schedule for 6+ hours at B0, the equalizer eases (E1–E4), reducing perturbation cost to actively support liveness. cASERT bitsQ and the E-level easing work together to recover a stalled chain.</p>
+<p class="wp-p">On slow blocks the equalizer eases further: the V12 triangular cascade (from 540 s of block elapsed time, up to 28 levels) and the anti-stall (after 60 min without a block; after 6 h at B0, −1 level per 1,800 s) can reach E7, reducing perturbation cost to actively support liveness. cASERT bitsQ (including slingshot relief) and the E-level easing work together to recover a stalled chain.</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">The block-lag metric is objective, global, and tamper-resistant: it uses wall-clock time (not block timestamps) compared against genesis, so miners cannot manipulate the signal by setting favorable timestamps. Any observer can independently verify the lag at any moment.</p>
+<p class="wp-p">The block-lag metric is objective, global, and deterministic: lag = (h − 1) − floor((prev.time − genesis)/600), computed from the previous block&rsquo;s timestamp, which is bounded by MTP and the 30 s future-drift limit. Every validator recomputes the same profile for a given block.</p>
 <div class="wp-spacer"></div>
 <h4 id="sec-67" class="wp-h">9.6 Emergency Procedures</h4>
 <div class="wp-spacer"></div>
@@ -2541,8 +2567,8 @@ C16: Progressive decentralization is irreversible. At V6 activation (block 10,00
 <tr><td>Initial reward</td><td>7.85100863 SOST/block</td></tr>
 <tr><td>Coinbase split</td><td>q=reward//4; gold=q, popc=q, miner=reward-gold-popc</td></tr>
 <tr><td>Annual decay</td><td>~9.03% (smooth, no halvings)</td></tr>
-<tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, per-block, avg288-based (block 5,175+), dynamic cap (5,260+): 0% dead band (&plusmn;30s), 0.5%/1.5%/2.5%/3.0% max. Median288 reality check. Legacy half-life preserved for pre-5175 blocks</td></tr>
-<tr><td>cASERT Equalizer</td><td>43 consensus-critical profiles E7(-7) through H35(+35), B0 baseline, independently tuned per profile, bidirectional: hardens (H1–H35) when ahead of schedule, eases (E1–E7) when behind schedule for 6+ hours at B0. All profiles use scale=2. H35 {scale=2, k=20, steps=20, margin=115} as the maximum.</td></tr>
+<tr><td>Difficulty</td><td>cASERT bitsQ Q16.16, per-block, avg288-based (block 5,175+), dynamic cap (5,270+): 0% dead band (&plusmn;15 s), 0.5%/1.0%/2.0%/3.0% max. HISTORICAL: median288 reality check only for blocks 5,260&ndash;5,269 (&plusmn;30 s, 0.5/1.5/2.5/3%); anchor half-life (48 h, then 24 h from 1,450) only for pre-5,175 blocks</td></tr>
+<tr><td>cASERT Equalizer</td><td>43 consensus-critical profiles E7(-7) through H35(+35), B0 baseline, independently tuned per profile, bidirectional: hardens (H1–H35) when ahead of schedule, eases down to E7 (V12 cascade + 60-min anti-stall). Scale 1 for E7–H4, scale 2 for H5–H35. H35 {scale=2, k=20, steps=20, margin=115} as the maximum.</td></tr>
 <tr><td>Stability check</td><td>k probes × g steps, dual criteria (local non-explosion + global contraction)</td></tr>
 <tr><td>Checkpoints</td><td>16 per attempt, Merkle tree, SPV-verifiable</td></tr>
 <tr><td>Sync modes</td><td>FULL / ADAPTIVE (default) / BASIC bootstrap</td></tr>
@@ -2749,8 +2775,12 @@ MONETARY PARAMETERS:
 
 DIFFICULTY PARAMETERS:
   Q16_ONE                      = 65,536
-  HALF_LIFE                    = 86,400     // 24 hours (V2, blocks 1,450-5,174 only; avg288-based since 5,175)
-  MAX_FUTURE_DRIFT             = 600
+  TARGET_SPACING               = 600        // seconds
+  BITSQ_HALF_LIFE              = 172,800    // 48 hours — HISTORICAL (blocks < 1,450)
+  BITSQ_HALF_LIFE_V2           = 86,400     // 24 hours — HISTORICAL (blocks 1,450-5,174; avg288-based since 5,175)
+  MAX_FUTURE_DRIFT             = 600        // HISTORICAL (blocks < 6,550)
+  MAX_FUTURE_DRIFT_STAGED      = 60         // HISTORICAL (blocks 6,550-11,999)
+  future-drift limit (current) = 30         // seconds, block 12,000+
 
 cASERT EQUALIZER PARAMETERS:
   CASERT_H_MIN                 = -7    // E7 (emergency easing)
@@ -2758,20 +2788,22 @@ cASERT EQUALIZER PARAMETERS:
   CASERT_PROFILE_COUNT         = 43    // E7 through H35
   CASERT_V2_FORK_HEIGHT        = 1,450 // 24h halflife + 12.5% cap (historical, replaced by avg288 at 5,175)
   CASERT_V3_FORK_HEIGHT        = 4,100 // slew rate ±3 (V3); returned to ±1 at V6
-  CASERT_V6_FORK_HEIGHT        = 5,000 // slew rate ±1, H10/H11 scale=2. V6 calibration (block 5,050): dynamic lag cap H ≤ lag, 43 profiles E7–H35, anti-stall 60 min. Block 5,323: asymmetric descent hotfix (down max 1/block).
-  CASERT_AVG288_FORK_HEIGHT    = 5,175 // bitsQ switches to avg288-based (no half-life). Compares avg of last 288 intervals vs 600s target.
-  CASERT_DYNCAP_FORK_HEIGHT    = 5,270 // Dynamic cap: 0% dead band (±15s), 0.5%/1.0%/2.0%/3.0% max. Median288 removed from consensus at block 5,270.
-  CASERT_V6_SLEW_RATE          = 1     // max ±1 profile level per block (V6)
-  CASERT_V3_LAG_FLOOR_DIV      = 8     // lag floor = lag / 8
-  // PID gains: OBSOLETE (block 5,320+). Replaced by direct lag mapping: profile = clamp(lag, 0, H10).
-  // 43 profiles with variable scale(1-2), k(1-20), steps(1-20), margin(115-200)
-  // Above L5: level = 6 + floor((blocks_ahead - 101) / 50)
-  CASERT_DECAY_STEP            = 50    // blocks per additional level beyond L5
-  FIXED_K                      = 4
-  FIXED_STEPS                  = 4
-  FIXED_MARGIN                 = 180
+  CASERT_V4_FORK_HEIGHT        = 4,170 // HISTORICAL (Ahead Guard 4,170-4,999)
+  CASERT_V5_FORK_HEIGHT        = 4,300 // anti-stall activation 7,200 s → 3,600 s
+  CASERT_V6_FORK_HEIGHT        = 5,000 // slew rate ±1 (HISTORICAL PID era)
+  CASERT_V6PP_HEIGHT           = 5,175 // bitsQ switches to avg288-based (no half-life). Compares avg of last 288 intervals vs 600 s target.
+  (literal height in casert.cpp) 5,270 // Dynamic cap: 0% dead band (±15 s), 0.5%/1.0%/2.0%/3.0% max. Median288 override (5,260-5,269) removed.
+  CASERT_DIRECT_LAG_HEIGHT     = 5,323 // Equalizer direct lag map: B0 if lag ≤ 0, else min(lag, ceiling); up immediate, down ≥ 1 level/block
+  CASERT_V6_SLEW_RATE          = 1     // HISTORICAL (PID era): max ±1 profile level per block
+  CASERT_V3_LAG_FLOOR_DIV      = 8     // HISTORICAL: lag floor = lag / 8
+  // PID/EWMA gains: HISTORICAL (bypassed since block 5,323). Replaced by direct lag mapping.
+  // 43-profile table since block 5,750: scale 1 (E7–H4) / 2 (H5–H35), k 1-20, steps 1-20, margin 115-200
+  // Profile ceiling: H35 since block 12,000 (H20 from 7,350; H13 from 5,750)
+  // Pre-genesis design concept — not implemented: L1–L6+ levels, CASERT_DECAY_STEP = 50,
+  //   FIXED_K = 4, FIXED_STEPS = 4, FIXED_MARGIN = 180
 
 EMERGENCY PARAMETERS:
+  // Pre-genesis design concept — not implemented as these constant names:
   EMERGENCY_WINDOW_BLOCKS      = 144       // ~24 hours at 600s/block
   EMERGENCY_THRESHOLD_NUM      = 95        // 95%
   EMERGENCY_THRESHOLD_DEN      = 100
@@ -3133,7 +3165,8 @@ SERIALIZATION (consensus-critical fix):
     Normative specification of EmergencyProposal, PoW signaling,
     Execution Order, Ethereum contract verification,
     and mandatory audit trail.</pre>
-<h3 id="sec-86" class="wp-h">Appendix I: Errata v3.5 (Security, Fees &amp; Slash Reform)</h3>
+<h3 id="sec-86" class="wp-h">Appendix I: Errata v3.5 (Security, Fees &amp; Slash Reform) — HISTORICAL</h3>
+<p class="wp-p"><em>HISTORICAL: the cASERT L-level / E1–E4 description in this errata is a pre-genesis design concept, not implemented. Current rule: Section 3.12.</em></p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Changes from v3.4 to v3.5:</p>
 <div class="wp-spacer"></div>
@@ -3176,7 +3209,7 @@ SERIALIZATION (consensus-critical fix):
 <div class="wp-bullet">  71) CASERT parameters: replaced by</div>
 <pre class="wp-code-inline">      L2_THRESHOLD=5, L3_THRESHOLD=26, L4_THRESHOLD=51, L5_THRESHOLD=76, L6_THRESHOLD=101 (blocks ahead, unbounded beyond L5).</pre>
 <div class="wp-spacer"></div>
-<h3 id="sec-87" class="wp-h">Appendix J: Errata v3.7 (cASERT v4 — Scale = Level, L5+ Exception)</h3>
+<h3 id="sec-87" class="wp-h">Appendix J: Errata v3.7 (cASERT v4 — Scale = Level, L5+ Exception) — HISTORICAL, pre-genesis design concept, not implemented</h3>
 <div class="wp-spacer"></div>
 <p class="wp-p">Changes from v3.6 to v3.7:</p>
 <div class="wp-spacer"></div>
@@ -3289,7 +3322,7 @@ TEST COVERAGE:
 <div class="wp-spacer"></div>
 <p class="wp-p">Last updated: 2026-10-02</p>
 <div class="wp-spacer"></div>
-<h3 class="wp-h">Appendix N: Errata v3.10 (Beneficiary Handoff, Relief Valve, H12)</h3>
+<h3 class="wp-h">Appendix N: Errata v3.10 (Beneficiary Handoff, Relief Valve, H12) — HISTORICAL</h3>
 <div class="wp-spacer"></div>
 <p class="wp-p">Changes from v3.9 to v3.10:</p>
 <pre class="wp-code-inline">
@@ -3310,7 +3343,8 @@ TEST COVERAGE:
 
 105) Total: 550 tests (Python 272 + TypeScript 231 + Solidity 47), 0 failures</pre>
 <div class="wp-spacer"></div>
-<h3 class="wp-h">Appendix O: Errata v3.11 (Final Calibration, Block 5,750)</h3>
+<h3 class="wp-h">Appendix O: Errata v3.11 (Calibration, Block 5,750) — HISTORICAL</h3>
+<p class="wp-p"><em>HISTORICAL: the H13 ceiling and the E7@605 s relief valve applied to blocks 5,750–6,549. Superseded by the V10/V11/V12 relief ladder (V12 triangular cascade from block 7,350), the H20 ceiling (7,350) and the H35 ceiling (12,000). The 43-profile table itself remains current.</em></p>
 <div class="wp-spacer"></div>
 <p class="wp-p">Changes from v3.10 to v3.11:</p>
 <pre class="wp-code-inline">
@@ -3321,7 +3355,7 @@ FINAL CALIBRATION (block 5,750):
 108) 3 new easing profiles: E7, E6, E5 prepended to table
 109) E4-H2 margins recalibrated to 5-point gradient (185&rarr;155)
 110) Lag-adjust interval reduced from 30s to ~6s
-111) cASERT equalizer implementation and calibration complete.
+111) cASERT equalizer calibration (as of block 5,750; later superseded, see note above).
      Additional hardening profiles will activate as hashrate grows.
 
 SOST DEX:

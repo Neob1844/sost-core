@@ -5,9 +5,46 @@ ConvergenceX — SOST native proof-of-work specification (plain text)
 Status:        Live on SOST mainnet
 Repository:    https://github.com/Neob1844/sost-core
 Author:        NeoB
-Last update:   block 6,700 (V10 granular relief cascade)
+Last update:   block 6,700 (V10 granular relief cascade) snapshot;
+               current-rule summary below updated for mainnet
 Companion:     https://sostcore.com/casert-spec.html
 PDF:           https://sostcore.com/convergencex_whitepaper.pdf
+
+----------------------------------------------------------------
+0. CURRENT MAINNET RULE (read this first)
+----------------------------------------------------------------
+
+  CONVERGENCEX DIFFICULTY CONTROL = bitsQ + Equalizer.
+  bitsQ regulates the numeric difficulty of the target; the
+  Equalizer regulates the structural cost profile of each
+  ConvergenceX attempt under the cASERT rules. Both are
+  recomputed and verified by every node.
+
+  Target           600 s
+  bitsQ            Q16.16, recomputed every block; avg288
+                   (block 5,175+); dead band ±15 s; per-block
+                   step 0.5% / 1.0% / 2.0% / 3.0% for |dev| in
+                   (15,60] / (60,120] / (120,240] / >240 s
+                   (block 5,270+)
+  Slingshot        V12 (block 7,350+), current block elapsed:
+                   >1200 s −6.5%, >1800 s −12.5%, >3600 s −25%,
+                   >7200 s −37.5%, >10800 s −50%
+  Equalizer        43 profiles E7..H35 (table since 5,750;
+                   scale 1 for E7–H4, scale 2 for H5–H35);
+                   ceiling H35 since block 12,000
+  Selection        direct lag map (block 5,323+):
+                   lag = (h−1) − floor((prev.time − genesis)/600),
+                   positive = ahead; target = B0 if lag ≤ 0,
+                   else min(lag, ceiling); up immediate,
+                   down at least 1 level per block
+  Relief           V12 triangular cascade (block 7,350+): from
+                   540 s elapsed, drop 1,3,6,10,15,21,28 levels
+                   (540..≥900 s), floor E7
+  Anti-stall       3,600 s (60 min) without a block
+  Future drift     30 s (block 12,000+)
+
+  Sections 2–8 below are the block-6,700 snapshot. Items marked
+  HISTORICAL there no longer describe the current rule.
 
 ----------------------------------------------------------------
 1. Memory-hard PoW
@@ -37,8 +74,9 @@ function; cASERT decides which profile that work is run against.
   EPOCH_LENGTH         = 131,553 blocks
   Difficulty mode      = bitsQ Q16.16, per-block
                           (V5 avg288-based since block 5,175,
-                           dynamic cap since block 5,260,
-                           median removed since block 5,270)
+                           dynamic cap since block 5,270
+                           (HISTORICAL ±30 s / median288
+                           variant 5,260–5,269 only))
 
 The chain self-converges toward the 600-second target. Any
 deviation gets pulled back by bitsQ; the equalizer profile and
@@ -50,25 +88,35 @@ the relief valve handle the asymmetry of slow vs fast blocks.
 
   Range            E7 (-7) ... B0 (0) ... H13 (+13) ... H35 (+35)
   Active range     pre-V12 (#5,750..#7,349): E7 ... H13   (21 profiles)
-                   V12 (#7,350+):           E7 ... H20   (28 profiles)
-  Reserved range   pre-V12: H14 ... H35  /  V12: H21 ... H35  (margin = 115)
+                   V12 (#7,350..#11,999):   E7 ... H20   (28 profiles)
+                   V13 (#12,000+):          E7 ... H35   (43 profiles, current)
+  Reserved range   none since V13 (HISTORICAL: pre-V12 H14 ... H35 /
+                   V12 H21 ... H35)  (margin = 115)
   Floor            E7  (CASERT_H_MIN)
-  Ceiling          H13 pre-V12 (#5,750..#7,349); H20 from V12 (#7,350+); previously H10/H11/H12
-  Easing           E1..E7 only after 6+ hours at B0
-  Slew             ±1 profile level per block (V6 calibration)
+  Ceiling          H35 since V13 (#12,000+); HISTORICAL: H13 pre-V12,
+                   H20 V12 (#7,350..#11,999), earlier H10/H11/H12
+  Easing           E1..E7 via the relief cascade on a slow block or
+                   anti-stall (after 6+ hours at B0)
+  Selection        direct lag map since block 5,323 (see section 0)
+  Slew             HISTORICAL: ±1 profile level per block (V6,
+                   blocks 5,000–5,322); current: up immediate, down
+                   at least 1 level per block
   Anti-stall       60 minutes — emergency-only zone-based decay
                    targeting B0
   Lag cap          H ≤ lag (V6, block 5,050+)
-  Lag floor        profile ≥ lag/8
+  Lag floor        HISTORICAL (PID era): profile ≥ lag/8
 
 ----------------------------------------------------------------
-4. Relief valve — V8 / V9 / V10 cascade
+4. Relief valve — V8 / V9 / V10 cascade (HISTORICAL)
 ----------------------------------------------------------------
 
 The relief valve is the single rule that handles a slow block.
-It has been refined three times. Each fork is forward-only.
+HISTORICAL: V8, V9 and V10 below were superseded by V11
+(block 7,000 linear / 7,100 triangular cap 21) and by the
+current V12 triangular cascade (block 7,350+, cap 28 levels).
+Each fork is forward-only.
 
-  V8 single E7 cliff   (block 5,750+)
+  V8 single E7 cliff   (blocks 5,750–6,549, HISTORICAL)
     rule:        if elapsed > 605 s, profile snaps to E7
     notes:       removes the H10/H11 dead-zone created when a
                  block goes long; turned into a reaction-speed
@@ -85,7 +133,7 @@ It has been refined three times. Each fork is forward-only.
                  because each step over-relaxed by two profile
                  levels relative to what bitsQ wanted
 
-  V10 granular cascade (block 6,700+)        ← currently active
+  V10 granular cascade (block 6,700+)        ← HISTORICAL (active at this snapshot)
     rule:        drop 1 profile level every 60 s, starting at
                  600 s elapsed
     floor:       E7
@@ -120,8 +168,10 @@ It has been refined three times. Each fork is forward-only.
 5. Anti-stall
 ----------------------------------------------------------------
 
-  Activation       3,600 s (60 min) since V3.1
-  Decay zones      H13–H7  : 600 s/level   (10 min)
+  Activation       3,600 s (60 min) since V5 (block 4,300);
+                   7,200 s HISTORICAL before block 4,300
+  First drop       immediate
+  Decay zones      H≥7     : 600 s/level   (10 min)
                    H6–H4   : 900 s/level   (15 min)
                    H3–H1   : 1,200 s/level (20 min)
                    B0      : natural destination
@@ -139,29 +189,39 @@ the day-to-day mechanism.
   V2 (block 1,450)      24h half-life, 12.5% delta cap
   V3 (block 4,100)      slew rate ±1 → ±3, lag floor lag/8
   V3.1 (block 4,110)    stored profile_index from BlockMeta;
-                        anti-stall always 7,200 s
-  V4 (block 4,200)      Ahead Guard — 1.56%/block when ≥16 blocks
-                        ahead (H8+); hysteresis enter ≥16, exit ≤8
-  V6 (block 5,000)      slew ±3 → ±1; H10–H35 scale=2
+                        anti-stall 7,200 s
+  V4 (block 4,170)      Ahead Guard (#4,170–#4,999 only) — bitsQ
+                        down-cap 1/64 (~1.56%)/block when ≥16 blocks
+                        ahead; hysteresis enter ≥16, exit ≤8
+  V5 (block 4,300)      anti-stall 7,200 s → 3,600 s (still current)
+  V6 (block 5,000)      slew ±3 → ±1; H10–H35 scale 2
   V6 calibration        block 5,050: dynamic lag cap H ≤ lag,
                         live lag from wall clock
   V7 avg288 (5,175)     bitsQ avg288-based; half-life off (kept
                         for historical blocks)
-  V7 dyncap (5,270)     0% dead band ±15 s, 0%/0.5%/1.5%/2.5%/3.0%
-                        max scaling; median removed (5,270);
-                        block 5,323 hotfix
-  V8 cliff (5,750)      single relief cliff to E7 at 605 s; H13
-                        ceiling
+  (5,260–5,269)         HISTORICAL: ±30 s dead band, 0.5/1.5/2.5/3.0%
+                        steps, median288 override
+  V7 dyncap (5,270)     0% dead band ±15 s, then 0.5%/1.0%/2.0%/3.0%
+                        max scaling; median removed (5,270) — current
+  Direct lag (5,323)    Equalizer direct lag map replaces PID/EWMA
+                        (no bitsQ change)
+  V8 cliff (5,750)      43-profile table E7–H35; single relief cliff
+                        to E7 at 605 s (HISTORICAL); H13 ceiling
   V9 staged (6,550)     staged cascade drop 3/60 s from 540 s;
                         MAX_FUTURE_DRIFT_STAGED = 60 s
   V10 granular (6,700)  granular cascade drop 1/60 s from 600 s;
                         lag-advance disabled
+  V11 (7,000 / 7,100)   Slingshot; linear cascade, then triangular
+                        cascade cap 21
+  V12 (7,350)           triangular cascade cap 28 (current); 5-tier
+                        Slingshot; ceiling H20
+  V13 (12,000)          ceiling H35 (all 43 active); drift cap 30 s
 
 All forks are forward-only (no regenesis). Nodes enforce fork
 rules based on block height.
 
 ----------------------------------------------------------------
-7. Operator update — V10 deployment
+7. Operator update — V10 deployment (HISTORICAL)
 ----------------------------------------------------------------
 
     cd ~/SOST/sostcore/sost-core
@@ -171,10 +231,11 @@ rules based on block height.
     cmake --build . --target sost-node sost-miner -j$(nproc)
     # then restart sost-node and sost-miner
 
-NTP must be active (the +60 s drift cap is unchanged).
+NTP must be active (the +60 s drift cap was unchanged at V10;
+the current drift cap is 30 s since block 12,000).
 
 ----------------------------------------------------------------
-8. What does NOT change at V10
+8. What does NOT change at V10 (HISTORICAL)
 ----------------------------------------------------------------
 
   • Block reward, halving schedule, supply curve.

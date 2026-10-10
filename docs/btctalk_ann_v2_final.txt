@@ -84,7 +84,7 @@ SOST is [b]experimental software[/b]. It is a [b]completely new, original proof-
 [tr][td]Max supply[/td][td]4,669,201 SOST (hard cap by construction)[/td][/tr]
 [tr][td]Emission[/td][td]Exponential decay, q = e^(-1/4) ≈ 0.7788[/td][/tr]
 [tr][td]Coinbase split[/td][td]50% miner / 25% Gold Funding Vault / 25% PoPC Pool[/td][/tr]
-[tr][td]Difficulty[/td][td]cASERT unified. V1 (blocks <1450): 48h halflife, 6.25% cap. V2 (blocks >=1450): 24h halflife, 12.5% cap. 40 equalizer profiles E4-H35.[/td][/tr]
+[tr][td]Difficulty[/td][td]cASERT unified. V1 (blocks <1450): 48h halflife, 6.25% cap. V2 (blocks >=1450): 24h halflife, 12.5% cap. 43 equalizer profiles E7-H35 (40 profiles E4-H35 before block 5,750). Current: avg288 bitsQ (block 5,175+), dead band ±15 s, 0.5/1/2/3% cap (block 5,270+).[/td][/tr]
 [tr][td]Encoding[/td][td]SOSTCompact Q16.16 fixed-point[/td][/tr]
 [tr][td]Coinbase maturity[/td][td]1,000 blocks (~7 days)[/td][/tr]
 [tr][td]Premine[/td][td]NONE[/td][/tr]
@@ -129,7 +129,7 @@ ConvergenceX is not a hash lottery. Each mining attempt requires solving a 32×3
 
 [b]Memory-hard:[/b] 4GB dataset + 4GB scratchpad = ~8GB total mining memory. Node validation: ~500MB only.
 [b]Per-block program:[/b] 256-operation program changes every block. No fixed ASIC circuit can optimize for it.
-[b]cASERT difficulty:[/b] Per-block adjustment, 40 equalizer profiles, anti-stall recovery zones.
+[b]cASERT difficulty:[/b] Per-block adjustment, 43 equalizer profiles (E7-H35), anti-stall recovery zones.
 [b]Integer-only consensus:[/b] Zero floating-point operations. Q16.16 fixed-point difficulty encoding.
 
 [b]Difficulty adjustment — how SOST compares:[/b]
@@ -139,8 +139,8 @@ ConvergenceX is not a hash lottery. Each mining attempt requires solving a 32×3
 [tr][td]Adjustment frequency[/td][td]Every 2,016 blocks (~2 weeks)[/td][td]Every block[/td][td]Every block[/td][/tr]
 [tr][td]Response speed[/td][td]2-week lag[/td][td]~720-block EWMA[/td][td]8-block short + 96-block long EWMA[/td][/tr]
 [tr][td]Halflife[/td][td]~2 weeks (fixed)[/td][td]~720 blocks (~24h)[/td][td]24h, with 5 PID-weighted signals[/td][/tr]
-[tr][td]Max change per block[/td][td]N/A (bulk)[/td][td]EWMA smoothed[/td][td]12.5% hard cap per block[/td][/tr]
-[tr][td]Dynamic profiles[/td][td]None (1 formula)[/td][td]None (1 formula)[/td][td]40 profiles (E4 through H35)[/td][/tr]
+[tr][td]Max change per block[/td][td]N/A (bulk)[/td][td]EWMA smoothed[/td][td]dynamic cap 0.5-3% per block (±15 s dead band, block 5,270+; 12.5% before 5,175)[/td][/tr]
+[tr][td]Dynamic profiles[/td][td]None (1 formula)[/td][td]None (1 formula)[/td][td]43 profiles (E7 through H35)[/td][/tr]
 [tr][td]Anti-stall[/td][td]None[/td][td]None[/td][td]Zone-based decay + emergency easing[/td][/tr]
 [tr][td]Control signals[/td][td]1 (time delta)[/td][td]1 (timestamp EWMA)[/td][td]5 (rate, lag, integrator, burst, volatility)[/td][/tr]
 [tr][td]Math type[/td][td]Floating-point[/td][td]128-bit integer[/td][td]Q16.16 fixed-point (zero float)[/td][/tr]

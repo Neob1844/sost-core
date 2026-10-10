@@ -203,7 +203,7 @@ curl -s -u <user>:<pass> -X POST -H "Content-Type: application/json" \
 |-----------|-------|
 | Algorithm | ConvergenceX Transcript V2 (CPU, 8GB RAM mining: 4GB dataset + 4GB scratchpad; ~500MB node validation via 11-phase segment/round verification at ~0.2ms, ASIC-resistant) |
 | Block time | 10 minutes target |
-| Difficulty | cASERT unified (bitsQ Q16.16, 40 equalizer profiles E4-H35). V1 (blocks <1450): 48h halflife, 6.25% delta cap. V2 (blocks 1450-5174): 24h halflife, 12.5% delta cap. **Current (block 5175+): avg288 bitsQ (compares avg of last 288 block intervals vs 600s target). Dynamic cap (block 5260+): scales 0%/0.5%/1.5%/2.5%/3.0% by deviation with median288 check. Equalizer: emergency-only, ceiling H10, 40 profiles (15 active E4-H10, 25 reserved H11-H35), H11+ margin=115.** |
+| Difficulty | cASERT unified (bitsQ Q16.16 + 43 equalizer profiles E7-H35). V1 (blocks <1450): 48h halflife, 6.25% delta cap. V2 (blocks 1450-5174): 24h halflife, 12.5% delta cap. HISTORICAL 5260-5269: ±30 s dead band, 0.5%/1.5%/2.5%/3.0%, median288 check. **Current: target 600 s; avg288 bitsQ (block 5175+, compares avg of last 288 block intervals vs 600s target), recomputed every block. Dynamic cap (block 5270+): dead band ±15 s, then 0.5%/1.0%/2.0%/3.0% by deviation. Equalizer (structural work profile, never touches bitsQ): 43 profiles E7-H35 (table since block 5750), direct lag map since block 5323, ceiling H35 since block 12000, anti-stall 60 min, V12 triangular cascade (block 7350+). H10+ margin=115.** |
 | Initial block reward | 7.85100863 SOST |
 | Emission | Smooth exponential decay, q = e^(-1/4) |
 | Epoch length | 131,553 blocks (~2.503 years, Feigenbaum alpha) |
@@ -269,7 +269,7 @@ Active output types at height 5000: `OUT_BOND_LOCK` (0x10), `OUT_ESCROW_LOCK` (0
 
 Standalone HTML file (`explorer.html`) that connects to your node's RPC with authentication.
 
-Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT equalizer profiles (E4-H35), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
+Features: dashboard with block height/supply/hashrate, difficulty progress bar, Gold Reserves tracker, PoPC Pool tracker, emission curve chart, chain timing panel, block detail with cASERT equalizer profiles (E7-H35), address view with mature/immature balances, Foundation Reserves page, smart search, RPC auth, auto-refresh (10s), responsive design.
 
 ## Security Status
 
@@ -277,7 +277,7 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 |-----------|--------|
 | Transaction signing (libsecp256k1) | Complete |
 | Consensus validation (R1-R14, S1-S12, CB1-CB10) | Complete |
-| cASERT bitsQ difficulty adjustment (L1-L5 fixed, L6+ unbounded) | Complete |
+| cASERT bitsQ difficulty adjustment (avg288 + dynamic cap) and Equalizer (43 profiles E7-H35, direct lag map) | Complete |
 | Mempool validation and relay | Complete |
 | Transaction confirmation in blocks | Complete |
 | RPC authentication (--rpc-user/--rpc-pass) | Complete |
@@ -298,11 +298,11 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 | Build hardening (6 compiler/linker flags) | Complete |
 | Capsule Protocol v1 (binary tx metadata, height 5000) | Complete |
 | cASERT V2 fork (24h halflife, 12.5% cap, block 1450) | Complete (historical) |
-| cASERT avg288 bitsQ (block 5175+) + dynamic cap (block 5260+) | Complete |
+| cASERT avg288 bitsQ (block 5175+) + dynamic cap (block 5270+; 5260-5269 historical variant) | Complete |
 
 **28/28 CTest targets pass.**
 
-**cASERT profile update note:** No regenesis required. Genesis block hash, commit format, and Transcript V2 verification semantics are unchanged. However, the expanded cASERT profile range (E4-H35, 40 profiles) is consensus-affecting across software versions: the node validates the miner's declared profile against the permitted range. All nodes and miners must run the updated binary before launch to ensure consistent profile validation.
+**cASERT profile update note:** No regenesis required. Genesis block hash, commit format, and Transcript V2 verification semantics are unchanged. However, the expanded cASERT profile range (E4-H35, 40 profiles at the time; 43 profiles E7-H35 since block 5750) is consensus-affecting across software versions: the node validates the miner's declared profile against the permitted range. All nodes and miners must run the updated binary before launch to ensure consistent profile validation.
 
 ## Fast Sync
 

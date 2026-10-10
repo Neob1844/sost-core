@@ -1,1 +1,1 @@
-{"v": "2026-10-10-v523-dtd-instant-current-state-history-snapshot", "note": "DTD panel opens instantly from getlotterystate (no chain scan); full history on demand, seeded from a server snapshot and incremental; history table separates historical vs current V30000 status. Frontend/API only."}
+{"v": "2026-10-10-v524-casert-docs-current-rule", "note": "cASERT/bitsQ/Equalizer documentation aligned with mainnet consensus (dead band 15 s, steps 0.5/1/2/3% from #5,270, direct lag map #5,323, anti-stall 60 min); hashrate relabelled ConvergenceX attempt rate. Text only."}

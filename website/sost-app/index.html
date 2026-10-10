@@ -2036,12 +2036,12 @@ SectionRenderers.dashboard = function(el) {
         lagLeadColor = '#4ade80';
       }
 
-      // cASERT profile: use RPC casert_profile (authoritative from C++ PID controller)
+      // cASERT profile: use RPC casert_profile (authoritative from the C++ consensus engine, direct lag map)
       const casertProfile = info.casert_profile || 'B0';
 
       // ── Extra node telemetry (cheap, single-RPC) so the app dashboard matches
-      //    the explorer: EST. HASHRATE, NEXT BLOCK IN, MINING ATTEMPTS, RPC ACTIVITY.
-      // EST. HASHRATE — Bitcoin-style estimate: 2^(bits_real) / target_spacing.
+      //    the explorer: CONVERGENCEX ATTEMPT RATE, NEXT BLOCK IN, MINING ATTEMPTS, RPC ACTIVITY.
+      // CONVERGENCEX ATTEMPT RATE (est.): 2^(bits_real) / target_spacing. Not comparable to SHA-256 hashrate.
       let estHashrate = 'N/A';
       if (rawBitsQ > 0) {
         const hps = Math.pow(2, rawBitsQ / 65536) / 600;
@@ -2125,7 +2125,7 @@ SectionRenderers.dashboard = function(el) {
         <div class="stat-row"><span class="stat-label">LAST BLOCK</span><span class="stat-value">${lastBlockTime}</span></div>
         <div class="stat-row"><span class="stat-label">AVG BLOCK · 288</span><span class="stat-value" style="color:#22d3ee">${avg288} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">consensus window · last 288 vs 600 s (cASERT bitsQ)</span></span></div>
         <div class="stat-row"><span class="stat-label">NEXT BLOCK IN</span><span class="stat-value" style="color:var(--pip-dim)">${nextBlockIn} <span style="font-size:9px">(est. @10min)</span></span></div>
-        <div class="stat-row"><span class="stat-label">EST. HASHRATE</span><span class="stat-value" style="color:#f59e0b">${estHashrate} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(Bitcoin-style)</span></span></div>
+        <div class="stat-row" title="Attempts per second alone do not describe SOST&#39;s computational cost: read it together with bitsQ, the active Equalizer profile and the number/distribution of miners. It is not comparable to Bitcoin SHA-256 hashrate."><span class="stat-label">CONVERGENCEX ATTEMPT RATE (est.)</span><span class="stat-value" style="color:#f59e0b">${estHashrate} <span style="font-size:9px;color:var(--pip-dim);font-weight:400">(ConvergenceX attempts; not SHA-256 comparable)</span></span></div>
         <div class="stat-row"><span class="stat-label">MINING ATTEMPTS</span><span class="stat-value" style="font-size:11px">${miningAttempts}</span></div>
         <div class="stat-row"><span class="stat-label">RPC ACTIVITY</span><span class="stat-value" style="font-size:11px">${rpcActivity}</span></div>
         <div class="stat-row"><span class="stat-label">CASERT PROFILE</span><span class="stat-value">${casertProfile}</span></div>
@@ -2200,7 +2200,7 @@ function addTooltips() {
   const tips = {
     'DIFFICULTY': 'How hard it is to mine a block. Adjusted every block by cASERT algorithm. Higher = more compute needed.',
     'CONNECTIONS': 'Number of peer nodes connected to this node. More connections = better network health.',
-    'CASERT PROFILE': 'Current equalizer profile for difficulty adjustment. 43 profiles E7-H35 (V13 #12,000+: H35 ceiling, all 43 active, 0 reserved). Emergency-only — bitsQ avg288 is the primary controller. Relief valve: E7 at 605s.',
+    'CASERT PROFILE': 'Current equalizer profile for difficulty adjustment. 43 profiles E7-H35 (V13 #12,000+: H35 ceiling, all 43 active, 0 reserved), selected by the direct lag map (block 5,323+). It sets the ConvergenceX structural work profile; bitsQ avg288 sets the numeric difficulty. Relief: V12 triangular cascade (block 7,350+, up to 28 levels, floor E7) and anti-stall at 60 min. HISTORICAL: E7 relief valve at 605s (blocks 5,750-6,549).',
     'DECAY FACTOR q': 'Feigenbaum exponential decay: q = e^(-1/4). Each epoch, the block reward shrinks by this factor. Ensures smooth emission curve.',
     'EPOCH LENGTH': '131,553 blocks per epoch (~2.5 years). At each epoch boundary, the reward decreases according to the decay factor.',
     'GENESIS REWARD': 'The very first block reward: 7.85100863 SOST. All subsequent rewards decay from this starting point.',
@@ -2215,7 +2215,7 @@ function addTooltips() {
     'GOLD VAULT': '25% of every block reward goes to the Gold Vault — a constitutional treasury address hardcoded in the protocol.',
     // Consensus section
     'POW ALGORITHM': 'ConvergenceX: CPU-friendly, memory-hard proof-of-work using gradient descent on a random 32×32 matrix. Requires ~8GB RAM for mining. Reference miner is CPU-oriented; protocol does not enforce CPU-only at consensus level.',
-    'CASERT (Q16.16)': 'Per-block difficulty adjustment in Q16.16 fixed-point format. Current (block 5175+): avg288 bitsQ (avg of last 288 intervals vs 600s). Dynamic cap (5270+): 0%/0.5%/1.0%/2.0%/3.0% by deviation. Median removed from consensus (block 5,270+). Block 5,323 hotfix. 40 equalizer profiles (E4-H35, H10 ceiling).',
+    'CASERT (Q16.16)': 'Per-block difficulty adjustment in Q16.16 fixed-point format. Current (block 5175+): avg288 bitsQ (avg of last 288 intervals vs 600s). Dynamic cap (5270+): dead band ±15s, then 0.5%/1.0%/2.0%/3.0% by deviation. Median removed from consensus (block 5,270+). Equalizer: 43 profiles (E7-H35, ceiling H35 since block 12,000), direct lag map since block 5,323.',
     'MAX BLOCK SIZE': '1,000,000 bytes (1MB). Maximum size of a serialized block including all transactions.',
     'MAX TX SIZE': '100,000 bytes consensus limit, 16,000 bytes policy limit. Prevents oversized transactions.',
     'MIN RELAY FEE': '1 stock per byte. Minimum fee rate for a transaction to be relayed by nodes. 1 stock = 0.00000001 SOST.',
@@ -2368,7 +2368,7 @@ SectionRenderers.documents = function(el) {
     ['ConvergenceX PoW', 'CPU-friendly, memory-hard gradient descent over random 32x32 matrix', 'ConvergenceX is a 2-layer PoW system: gradient descent optimization (mining, ~8GB) + checkpoint merkle verification (nodes, ~500MB). Mining requires solving an optimization problem on a random matrix seeded by the block header. Memory-hard, CPU-friendly design — no public claim that GPU/ASIC ports are impossible.'],
     ['Transaction Design', 'UTXO model with R/S/CB validation rules', 'R-rules (R1-R14): structural validation. S-rules (S1-S12): spend validation with UTXO lookup, pubkey hash, ECDSA verify. CB-rules (CB1-CB10): coinbase output order enforcement. Sighash: BIP143-simplified 146-byte preimage.'],
     ['Capsule Protocol v1', 'Binary metadata for TX outputs (12B header + 243B body)', 'Capsule Protocol encodes structured metadata in transaction outputs. 12-byte header contains version, type, and length. Up to 243 bytes of application-specific payload. Activates at mainnet height 5000.'],
-    ['cASERT Difficulty', 'Unified rate control with avg288 bitsQ + equalizer', 'Per-block difficulty adjustment. V1 (blocks <1450): 48h halflife, 6.25% delta cap (historical). V2 (blocks 1450-5174): 24h halflife, 12.5% delta cap (historical). Current (block 5175+): avg288 bitsQ compares avg of last 288 block intervals vs 600s target. Dynamic cap (5270+): scales 0%/0.5%/1.0%/2.0%/3.0% by deviation. Median removed from consensus (block 5,270+). Block 5,323 hotfix. Equalizer: emergency-only, 43 profiles; ceiling H13 (5,750+) → H20 (V12, 7,350+) → H35 (V13, 12,000+: all 43 active, 0 reserved). Relief valve: E7 at 605s. Final calibration complete.'],
+    ['cASERT Difficulty', 'Unified rate control with avg288 bitsQ + equalizer', 'Per-block difficulty adjustment. V1 (blocks <1450): 48h halflife, 6.25% delta cap (historical). V2 (blocks 1450-5174): 24h halflife, 12.5% delta cap (historical). Current (block 5175+): avg288 bitsQ compares avg of last 288 block intervals vs 600s target. Dynamic cap (5270+): scales 0%/0.5%/1.0%/2.0%/3.0% by deviation. Dead band ±15s. Median removed from consensus (block 5,270+). Equalizer: 43 profiles, direct lag map (block 5,323+); ceiling H13 (5,750+) → H20 (V12, 7,350+) → H35 (V13, 12,000+: all 43 active, 0 reserved). Relief: V12 triangular cascade (7,350+) + anti-stall at 60 min. HISTORICAL: E7 relief valve at 605s (5,750-6,549).'],
     ['Emission Schedule', 'Smooth exponential decay, epoch = 131,553 blocks', 'Genesis reward: 7.85100863 SOST. Decay factor q=e^(-1/4). Epoch length: 131,553 blocks (~2.5 years). Max supply converges to ~4,669,201 SOST. All values in stocks (1 SOST = 100,000,000 stocks).'],
     ['Security Audit', '20 cryptographic and consensus security features', '6 layers of protection: ECDSA secp256k1, LOW-S enforcement, 4-layer block validation, UTXO model, coinbase maturity (1000 blocks), constitutional addresses. RBF + CPFP for fee market. P2SH multisig support.'],
     ['HD Wallet (BIP39)', '12-word seed phrases, PBKDF2-HMAC-SHA512', 'Deterministic key derivation from 12-word mnemonic. Compatible with web wallet. Encrypted wallet storage (AES-256-GCM + scrypt). Address format: sost1 + 40 hex chars.'],
@@ -2748,7 +2748,8 @@ SectionRenderers.roadmap = function(el) {
       <div class="stat-row"><span class="stat-label">BLOCK 4,170</span><span class="stat-value stat-ok">cASERT V4 (sentinel fix, Ahead Guard)</span></div>
       <div class="stat-row"><span class="stat-label">BLOCK 4,300</span><span class="stat-value stat-ok">cASERT V5 (liveness + determinism)</span></div>
       <div class="stat-row"><span class="stat-label">BLOCK 5,175</span><span class="stat-value stat-ok">avg288 bitsQ (replaces half-life exponential)</span></div>
-      <div class="stat-row"><span class="stat-label">BLOCK 5,270</span><span class="stat-value stat-ok">Dynamic cap (0%–3.0% by deviation). Median removed from consensus. Block 5,323 hotfix</span></div>
+      <div class="stat-row"><span class="stat-label">BLOCK 5,270</span><span class="stat-value stat-ok">Dynamic cap (±15s dead band, 0.5/1/2/3% by deviation). Median removed from consensus</span></div>
+      <div class="stat-row"><span class="stat-label">BLOCK 5,323</span><span class="stat-value stat-ok">Equalizer direct lag map (replaces PID/EWMA selector)</span></div>
     </div>
     <div class="pip-panel">
       <h2>// PHASE 2 — POPC ACTIVATION</h2>

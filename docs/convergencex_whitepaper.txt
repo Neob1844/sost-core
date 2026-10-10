@@ -299,11 +299,13 @@ The intensity of perturbation probes adapts to network conditions through the cA
 equalizer (Section 3.12). The equalizer is emergency-only and consensus-critical. It uses
 43 profiles total. Active range height-gated:
   Pre-V12 (#5,750..#7,349): 21 active E7-H13, 22 reserved H14-H35.
-  V12 (#7,350+):           28 active E7-H20, 15 reserved H21-H35.
-CASERT_H_MIN=-7. H13 pre-V12 ceiling, H20 V12 ceiling, H35 max reserved. H10-H35 margin=115. B0 is baseline.
+  V12 (#7,350..#11,999):   28 active E7-H20, 15 reserved H21-H35.
+  V13 (#12,000+, current): 43 active E7-H35, 0 reserved.
+CASERT_H_MIN=-7. H13 pre-V12 ceiling, H20 V12 ceiling, H35 current ceiling (V13). H10-H35 margin=115. B0 is baseline.
 This completes the cASERT equalizer calibration.
 
-Profile table (struct: {scale, steps, k, margin}):
+Profile table (struct: {scale, steps, k, margin}) — HISTORICAL draft values, superseded; the
+current consensus table is in Section 3.12 (E7{1,1,1,200} … B0{1,4,4,165} … H35{2,20,20,115}):
 
 | Profile | Scale | Steps | k | Margin |
 |---|---|---|---|---|
@@ -339,7 +341,7 @@ Anti-Stall Decay (zone-based, targeting B0):
     H3–H1: drop 1 level every 1200s (20 min/level)
     B0   : natural destination, no further decay toward easing
   Easing (E1–E7) only after 6+ additional hours at B0 (1800s/level).
-  Relief valve (block 5,750+): drops to E7 after 605s (10m 05s).
+  Relief valve: HISTORICAL E7 after 605s (blocks 5,750-6,549); current V12 triangular cascade (block 7,350+).
   When mining resumes, decay stops instantly. Block validation
   always uses the raw schedule level (no decay applied).
 
@@ -732,12 +734,13 @@ Checkpoint interval        6,250 (16 checkpoints)
 Difficulty encoding        SOSTCompact Q16.16
 Difficulty algorithm       cASERT bitsQ (V1: 48h half-life, V2: 24h half-life from block 1450; V5 (block 5175+): avg288-based with dynamic cap)
 Per-block delta cap        V1: 6.25% (1/16), V2: 12.5% (1/8) from block 1450; V5 (block 5270+): dynamic cap — ±15s dead band, 0%/0.5%/1.0%/2.0%/3.0% max based on deviation; median removed from consensus at block 5,270, avg288 is the sole signal
-Equalizer profiles         43 total. Pre-V12 (#5,750..#7,349): 21 active E7-H13, 22 reserved H14-H35. V12 (#7,350+): 28 active E7-H20, 15 reserved H21-H35. H35 max reserved.
+Equalizer profiles         43 total (table since block 5,750). Pre-V12 (#5,750..#7,349): 21 active E7-H13. V12 (#7,350..#11,999): 28 active E7-H20. V13 (#12,000+, current): all 43 active E7-H35, ceiling H35.
 cASERT model               unified: bitsQ primary + equalizer (emergency-only) + anti-stall
 CASERT_H_MIN               -7
-CASERT_H_MAX               35 (H13 ceiling pre-V12 / H20 ceiling V12 #7,350+; H21-H35 reserved post-V12; H10-H35 margin=115)
-cASERT decay               zone-based anti-stall targeting B0: H13-H7 600s/level, H6-H4 900s/level, H3-H1 1200s/level; easing E1-E7 after 6+ additional hours at B0 (1800s/level)
-Relief valve               block elapsed > 605s → E7 (block 5,750+); was H1@630s (block 5,635-5,749)
+CASERT_H_MAX               35 (ceiling H35 since V13 #12,000; HISTORICAL: H13 pre-V12, H20 V12 #7,350..#11,999; H10-H35 margin=115)
+Equalizer selection        direct lag map (CASERT_DIRECT_LAG_HEIGHT = 5,323): lag = (h-1) - floor((prev.time - genesis)/600), positive = ahead; target = B0 if lag <= 0, else min(lag, ceiling); up immediate, down at least 1 level/block
+cASERT decay               anti-stall after 3,600s (60 min) without a block, first drop immediate, then H>=7 600s/level, H6-H4 900s/level, H3-H1 1200s/level to B0; easing E1-E7 after 6+ additional hours at B0 (1800s/level)
+Relief valve               current: V12 triangular cascade (block 7,350+): elapsed >= 540s, n = min(1+(elapsed-540)/60, 7), drop n(n+1)/2 = 1..28 levels, floor E7. HISTORICAL: E7 at 605s (blocks 5,750-6,549); H1@630s (blocks 5,635-5,749)
 Block target spacing       600s
 Stability baseline (B0)    scale=1, steps=4, k=4, margin=165
 
@@ -759,6 +762,13 @@ fast chain → increase powDiffQ → smaller target → harder
 Historical: V1 (blocks <1450): 48h half-life exponential, 6.25% cap; V2 (blocks >=1450): 24h half-life exponential, 12.5% cap.
 Current: V5 (block 5175+): avg288-based — compares average of last 288 block intervals against 600s target. Replaces anchor-based exponential for current blocks (historical fork descriptions preserved).
 Dynamic cap (block 5270+): ±15s dead band, 0%/0.5%/1.0%/2.0%/3.0% max based on deviation. Median removed from consensus at block 5,270; avg288 is the sole signal.
+HISTORICAL: blocks 5,175-5,259 used a ±30s dead band with a flat 12.5% cap; blocks 5,260-5,269 a ±30s dead band with median288 override and 0.5/1.5/2.5/3.0% steps.
+Slingshot (V12, block 7,350+): on the current block elapsed time: >1200s -6.5%, >1800s -12.5%, >3600s -25%, >7200s -37.5%, >10800s -50%.
+
+CONVERGENCEX DIFFICULTY CONTROL = bitsQ + Equalizer. bitsQ regulates the numeric
+difficulty of the target; the Equalizer regulates the structural cost profile of
+each ConvergenceX attempt under the cASERT rules. Both are recomputed and verified
+by every node.
 
 3.12 cASERT Equalizer (Consensus-Critical)
 
@@ -769,8 +779,9 @@ equalizer profile. Both bitsQ and equalizer profile are consensus-critical.
 The equalizer is emergency-only. It uses 43 profiles from E7(-7) through H35(+35):
 Active range is height-gated:
   Pre-V12 (#5,750..#7,349): 21 active E7..H13, 22 reserved H14..H35.
-  V12 (#7,350+):           28 active E7..H20, 15 reserved H21..H35.
-CASERT_H_MIN=-7. Ceiling H13 pre-V12 / H20 V12. Max reserved H35. H10-H35 margin=115.
+  V12 (#7,350..#11,999):   28 active E7..H20, 15 reserved H21..H35.
+  V13 (#12,000+, current): 43 active E7..H35, 0 reserved.
+CASERT_H_MIN=-7. Ceiling H35 since V13 (HISTORICAL: H13 pre-V12 / H20 V12). H10-H35 margin=115.
 B0 is baseline. This completes the cASERT equalizer calibration.
 It adjusts stability verification intensity based on how far ahead the chain
 is relative to the ideal schedule.
@@ -793,28 +804,36 @@ PROFILE TABLE (struct: {scale, steps, k, margin}) — block 5,750+:
   H7(+7):  scale=2, steps=6, k=6, margin=130
   H8(+8):  scale=2, steps=7, k=6, margin=125
   H9(+9):  scale=2, steps=7, k=7, margin=120
-  H10(+10): scale=2, steps=7, k=8, margin=115  (active)
-  H11(+11): scale=2, steps=8, k=8, margin=110  (active)
-  H12(+12): scale=2, steps=8, k=9, margin=105  (active)
+  H10(+10): scale=2, steps=8, k=7, margin=115
+  H11(+11): scale=2, steps=8, k=8, margin=115
+  H12(+12): scale=2, steps=9, k=8, margin=115
   H13(+13):  scale=2, steps=9,     k=9,     margin=115   (pre-V12 ceiling, #5,750..#7,349)
-  H14-H20:   scale=2, steps=9-12,  k=10-13,  margin=115   (activated at V12 #7,350+; H20 = new ceiling)
-  H21-H35:   scale=2, steps=13-20, k=13-20,  margin=115   (reserved R post-V12; H35 max reserved)
+  H14-H20:   scale=2, steps=10-13, k=9-12,   margin=115   (activated at V12 #7,350+; H20 = V12 ceiling)
+  H21-H35:   scale=2, steps=13-20, k=13-20,  margin=115   (active since V13 #12,000+; H35 = current ceiling)
 
-SIGNAL COMPUTATION (deterministic, block-timestamp based):
+SIGNAL COMPUTATION — CURRENT (direct lag map, block 5,323+):
+  lag    = (h - 1) - floor((prev.time - GENESIS_TIME) / 600)   // positive = AHEAD
+  target = B0 if lag <= 0, else min(lag, ceiling)
+  up (hardening) immediate; down (easing) at least 1 level per block
+  V12 triangular cascade (block 7,350+): elapsed >= 540s -> drop 1,3,6,10,15,21,28 levels
+  (540..>=900s), floor E7. Validator recomputes; declared profile must equal it.
+
+SIGNAL COMPUTATION — HISTORICAL (genesis design, opposite sign convention):
   expected_time = GENESIS_TIME + height * TARGET_SPACING
   elapsed       = latest_block_time - GENESIS_TIME
   expected_h    = elapsed / TARGET_SPACING
   lag           = expected_h - current_height
   ahead         = max(0, -lag)
 
-DECAY ANTI-STALL (zone-based, targeting B0):
+DECAY ANTI-STALL (zone-based, targeting B0; activates after 3,600s / 60 min
+without a block since block 4,300 — 7,200s HISTORICAL before 4,300; first drop immediate):
   Hardening profiles decay toward B0 (natural destination):
     H13–H7: drop 1 level every 600s (10 min/level)
     H6–H4: drop 1 level every 900s (15 min/level)
     H3–H1: drop 1 level every 1200s (20 min/level)
     B0   : natural destination, no further decay toward easing
   Easing (E1–E7) only after 6+ additional hours at B0 (1800s/level).
-  Relief valve (block 5,750+): drops to E7 after 605s (10m 05s).
+  Relief valve: HISTORICAL E7 after 605s (blocks 5,750-6,549); current V12 triangular cascade (block 7,350+).
 
   Decay uses real time (std::time), not block timestamps.
   This prevents permanent stall if cASERT levels become too high for
@@ -822,18 +841,18 @@ DECAY ANTI-STALL (zone-based, targeting B0):
 
 DETERMINISM: cASERT derives its signal from on-chain block data
 (height, timestamp) and consensus constants. Timestamp manipulation
-is bounded by MTP and MAX_FUTURE_DRIFT. The decay component uses
+is bounded by MTP and the future-drift limit (30s since block 12,000). The decay component uses
 wall-clock time for mining only — it does not affect block validation.
 
 ASYMMETRIC POLICY:
   When the chain is ahead of schedule, cASERT hardens through profiles
-  H1-H13 (pre-V12 ceiling) / H1-H20 (V12 ceiling, #7,350+), progressively tightening stability requirements (scale, steps,
+  H1-H35 (H35 ceiling since #12,000; HISTORICAL H13 pre-V12 / H20 V12), progressively tightening stability requirements (scale, steps,
   k, and margin all adjust per profile). An attacker with high hashrate
   mining blocks quickly pushes the ahead count up, facing increasingly
   strict stability requirements. The attacker gains nothing. cASERT
-  only eases below B0 (into E1-E4) when the chain is behind schedule
-  and has been at B0 for 6+ hours — which is when cASERT bitsQ also
-  handles difficulty reduction to maintain liveness.
+  eases below B0 (down to E7) through the V12 triangular cascade on a
+  slow block, or through anti-stall after 6+ hours at B0 — while cASERT
+  bitsQ (with slingshot relief) handles difficulty reduction to maintain liveness.
 
 3.13 Node Synchronization and Verification Policy
 
@@ -902,7 +921,7 @@ scale=1, steps=6, k=5, margin=150
 
 Rule A: ts > MTP
 Here: 1,771,700,109 > 1,771,697,922 → OK (difference 2,187s).
-Rule B: ts <= now + MAX_FUTURE_DRIFT (e.g., 600s) → prevents "future blocks".
+Rule B: ts <= now + future-drift limit → prevents "future blocks". Current: 30s (block 12,000+); HISTORICAL: 60s (6,550-11,999), 600s (before 6,550).
 
 3.14.3 cASERT bitsQ Difficulty (powDiffQ → target)
 
@@ -919,10 +938,10 @@ then clamp per-block change and global bounds.
 
 3.14.4 cASERT Equalizer — What the stability parameters mean
 
-scale=2: each perturbation component in [-2, +2] (all profiles now use scale=2) ("how far we poke")
-k=4: number of probes (more probes = stronger certificate)
-steps=4: refinement steps per probe
-margin=180: tolerated bounded growth in local distance
+scale: each perturbation component in [-scale, +scale] (scale 1 for E7-H4, scale 2 for H5-H35) ("how far we poke")
+k: number of probes (more probes = stronger certificate; B0 k=4)
+steps: refinement steps per probe (B0 steps=4)
+margin: tolerated bounded growth in local distance (B0 margin=165)
 stab_shift=20: conservative refinement step size (smaller updates)
 
 3.14.5 One mining attempt (simple pipeline)
@@ -2503,7 +2522,7 @@ NOTE: The protocol developer reserves the right to accelerate or delay any commi
 | Coinbase split | q=reward//4; gold=q, popc=q, miner=reward-gold-popc |
 | Annual decay | ~9.03% (smooth, no halvings) |
 | Difficulty | cASERT bitsQ Q16.16, per-block; V1: 48h half-life, 6.25% cap; V2 (block 1450+): 24h half-life, 12.5% cap; V5 (block 5175+): avg288-based with dynamic cap (±15s dead band, 0%/0.5%/1.0%/2.0%/3.0%; median removed at block 5,270, avg288 sole signal) |
-| cASERT equalizer | Emergency-only, consensus-critical, 43 profiles. Pre-V12 (#5,750..#7,349): 21 active E7-H13, 22 reserved H14-H35. V12 (#7,350+): 28 active E7-H20 (new ceiling), 15 reserved H21-H35. H35 max reserved, H10-H35 margin=115, B0 baseline. Slew rate: ±1 profile/block (V6, block 5,000+). Triangular cascade extended 6→7 steps at V12. Relief valve: E7@605s (block 5,750+) |
+| cASERT equalizer | Emergency-only, consensus-critical, 43 profiles. Pre-V12 (#5,750..#7,349): 21 active E7-H13, 22 reserved H14-H35. V12 (#7,350+): 28 active E7-H20 (new ceiling), 15 reserved H21-H35. H35 max reserved, H10-H35 margin=115, B0 baseline. Direct lag map since block 5,323 (HISTORICAL slew ±1 profile/block, V6 5,000-5,322). V13 (#12,000+): all 43 active, ceiling H35. Current relief: V12 triangular cascade (7 steps, max 28 levels); HISTORICAL E7@605s (5,750-6,549) |
 | Stability check | k probes × g steps, dual criteria (local non-explosion + global contraction) |
 | Checkpoints | 16 per attempt, Merkle tree, SPV-verifiable |
 | Sync modes | FULL / ADAPTIVE (default) / BASIC bootstrap |
@@ -3082,16 +3101,16 @@ DIFFICULTY PARAMETERS:
   Q16_ONE                      = 65,536
   BITSQ_HALF_LIFE (V1)         = 172,800   // 48h — blocks < 1450
   BITSQ_HALF_LIFE_V2 (V2)      = 86,400    // 24h — blocks >= 1450
-  MAX_FUTURE_DRIFT             = 600
+  MAX_FUTURE_DRIFT             = 600       // HISTORICAL (blocks < 6,550); 60 s 6,550-11,999; current 30 s (block 12,000+)
 
 cASERT EQUALIZER PARAMETERS (consensus-critical, 43 profiles):
   CASERT_H_MIN                 = -7    // E7 is lowest profile (block 5,750+)
-  CASERT_H_MAX                 = 35    // all scale=2 (V6), H35 hardest reserved
+  CASERT_H_MAX                 = 35    // scale 2 for H5-H35, H35 hardest; active since V13 (#12,000+)
   CASERT_MAX_ACTIVE_PROFILE_PRE_V12 = 13    // pre-V12 ceiling (#5,750..#7,349)
   CASERT_MAX_ACTIVE_PROFILE_V12     = 20    // V12 ceiling (#7,350+)
   // 43 profiles: E7(-7) through H35(+35), each with {scale, steps, k, margin}
   // B0(0) baseline: scale=1, steps=4, k=4, margin=165
-  // Relief valve: block elapsed > 605s → E7 (block 5,750+)
+  // Relief valve: HISTORICAL E7 at 605s (5,750-6,549); current V12 triangular cascade (7,350+)
   // See profile table in Section 3.12
 
 cASERT DECAY ANTI-STALL (zone-based, targeting B0):
@@ -3523,10 +3542,10 @@ Changes from v3.4 to v3.5:
   cASERT MODIFICATIONS:
   70) cASERT rewritten: 43 discrete profiles E7(-7) through H35(+35),
       each with unique {scale, steps, k, margin}. CASERT_H_MIN=-7,
-      CASERT_H_MAX=35 (all scale=2 above H4, H35 hardest reserved).
+      CASERT_H_MAX=35 (scale 2 above H4, H35 hardest).
   71) Anti-stall: zone-based decay targeting B0. H10-H7: 600s/level,
-      H6-H4: 900s/level, H3-H1: 1200s/level. Easing E1-E4 after 6h+
-      at B0 (1800s/level).
+      H6-H4: 900s/level, H3-H1: 1200s/level. Easing after 6h+
+      at B0 (1800s/level), down to E7 in the current implementation.
 
 ## Appendix M: Removed — Adaptive Mode (Historical, Non-Normative)
 

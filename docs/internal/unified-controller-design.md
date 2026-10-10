@@ -12,7 +12,7 @@
 The current system uses two independent difficulty controllers:
 
 - **bitsQ**: numeric difficulty (hash must be below target). Controlled by exponential adjustment with half-life and delta cap.
-- **Equalizer**: structural difficulty (solution must pass stability basin test). Controlled by PID with 5 signals, 40 profiles.
+- **Equalizer**: structural difficulty (solution must pass stability basin test). Controlled by PID with 5 signals, 40 profiles (as of this memo; HISTORICAL — since block 5,323 the Equalizer uses the direct lag map over 43 profiles E7–H35).
 
 These two controllers operate in parallel, each reacting to chain timing signals independently. Production data from blocks 5,000–5,155 has shown that this creates coordination problems:
 
