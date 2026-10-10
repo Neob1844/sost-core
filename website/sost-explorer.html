@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-10-v525-mosaic-live-network-pulse">
+<meta name="explorer-html-version" content="2026-10-10-v526-convergencex-control-room">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -640,7 +640,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-10-v525-mosaic-live-network-pulse';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-10-v526-convergencex-control-room';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -906,7 +906,8 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
     <span style="color:var(--text3)">• = block without a DTD payout</span>
   </div>
 </div>
-<script src="js/network-mosaic.js?v=v366" defer></script>
+<script src="js/network-mosaic.js?v=v367" defer></script>
+<script src="js/control-room.js?v=v1" defer></script>
 
 <!-- ===== BLOCK PRODUCERS DISTRIBUTION (observability card) ===== -->
 <div class="section" id="producerDistSection">
@@ -9493,11 +9494,14 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
   // Network Mosaic uses, so the 24h/recent window shows IMMEDIATELY instead of waiting
   // for the full-chain scan. Both are ascending by height with {h, miner}.
   function pdRecent(){
-    var full=window._recentBlocks;
-    if(full&&full.length) return full;
-    var dh=window._diffHistory;
-    if(dh&&dh.length) return dh.map(function(x){return {h:x.h||0,m:x.miner||''};}).filter(function(x){return x.m;});
-    return null;
+    // Longest contiguous recent buffer available: the full-chain scan, the Control Room
+    // block series (~1,200 blocks from /api/block_series.json + live buffer), or the
+    // dashboard's 288-block buffer.
+    var full=window._recentBlocks, cr=window.__sostChainRows, dh=window._diffHistory, best=null;
+    if(full&&full.length) best=full;
+    if(cr&&cr.length&&(!best||cr.length>best.length)) best=cr.map(function(x){return {h:x.h,m:x.m||''};}).filter(function(x){return x.m;});
+    if(!best&&dh&&dh.length) best=dh.map(function(x){return {h:x.h||0,m:x.miner||''};}).filter(function(x){return x.m;});
+    return best;
   }
   var _segs=[];
   function shortA(a){ return a? (a.slice(0,10)+'…'+a.slice(-4)) : 'unknown'; }
@@ -9530,7 +9534,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
     var _e=document.getElementById('pdEmpty'); if(_e)_e.style.display='none';
     var W=cv.width,H=cv.height,cx=W/2,cy=H/2,rO=Math.min(W,H)/2-6,rI=rO*0.58;
     ctx.clearRect(0,0,W,H); _segs=[];
-    var segs=top.map(function(s,i){return {a:s.a,n:s.n,c:PALETTE[i%PALETTE.length]};});
+    var segs=top.map(function(s,i){return {a:s.a,n:s.n,c:(window.sostProducerColor?window.sostProducerColor(s.a,54):PALETTE[i%PALETTE.length])};});
     if(otherN>0) segs.push({a:'Others',n:otherN,c:OTHERS});
     var ang=-Math.PI/2;
     segs.forEach(function(s){ var a2=ang+2*Math.PI*(s.n/total);
@@ -9552,7 +9556,8 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
       var prod=isAddr
         ? '<span onclick="showAddress(\''+full+'\')" title="Open producer address" style="color:#22d3ee;cursor:pointer;text-decoration:underline">'+shortA(full)+'</span>'
         : shortA(full);
-      return '<tr><td>'+(i+1)+'</td><td style="font-family:monospace">'+prod+'</td><td>'+s.n+'</td><td>'+(100*s.n/total).toFixed(1)+'%</td><td>#'+(last[full]||'—')+'</td></tr>';
+      var sw=(isAddr&&window.sostProducerColor)?'<span style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px;vertical-align:middle;background:'+window.sostProducerColor(full,54)+'"></span>':'';
+      return '<tr><td>'+(i+1)+'</td><td style="font-family:monospace">'+sw+prod+'</td><td>'+s.n+'</td><td>'+(100*s.n/total).toFixed(1)+'%</td><td>#'+(last[full]||'—')+'</td></tr>';
     }).join('');
   }
   function metrics(arr,total){

@@ -48,6 +48,17 @@
     if (_lv === '0') live = false;
     else if (_lv == null && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) live = false;
   } catch (e) {}
+  // Linked crosshair with the ConvergenceX Control Room (js/control-room.js).
+  var crossInH = null, crossOutH = null;
+  function crossOut(h) {
+    if (h === crossOutH) return; crossOutH = h;
+    try { window.dispatchEvent(new CustomEvent('sost-cross', { detail: { h: h, src: 'mosaic' } })); } catch (e) {}
+  }
+  window.addEventListener('sost-cross', function (ev) {
+    if (!ev.detail || ev.detail.src === 'mosaic') return;
+    crossInH = ev.detail.h;
+    if (!live && typeof blitFrame === 'function') { try { blitFrame(0); } catch (e) {} }
+  });
   function isJackpotHeight(h) { return h >= 25290 && (h - 25290) % 288 === 0; }
   function profName(p, pm) {
     if (pm) return pm;
@@ -247,7 +258,7 @@
     layoutAndPaint();
 
     canvas.onmousemove = onCanvasMove;
-    canvas.onmouseleave = function () { hoverIdx = -1; hoverMiner = ''; hideTip(); };
+    canvas.onmouseleave = function () { hoverIdx = -1; hoverMiner = ''; hideTip(); crossOut(null); };
     canvas.onclick = onCanvasClick;
 
     var uniqueMiners = {};
@@ -495,6 +506,15 @@
         ctx.restore();
       }
     }
+    // Block under the Control Room crosshair
+    if (crossInH != null && hoverIdx < 0) {
+      for (var ci = n - 1; ci >= 0; ci--) if (lastBlocks[ci].h === crossInH) {
+        var cr2 = tileRectForOrder(n - 1 - ci, L);
+        ctx.save(); ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 2; ctx.shadowColor = 'rgba(34,211,238,.9)'; ctx.shadowBlur = 10;
+        roundRect(ctx, cr2.x - 1, cr2.y - 1, cr2.s + 2, cr2.s + 2, rr + 1); ctx.stroke(); ctx.restore();
+        break;
+      }
+    }
     // Hover ring
     if (hoverIdx >= 0 && lastLayout.geo) {
       var hr = tileRectForOrder(lastLayout.geo.n - 1 - hoverIdx, L);
@@ -552,8 +572,9 @@
     var py = ev.clientY - rect.top;
     var idx = hitTest(px, py);
     if (idx !== hoverIdx) hoverIdx = idx;
-    if (idx < 0) { hoverMiner = ''; hideTip(); return; }
+    if (idx < 0) { hoverMiner = ''; hideTip(); crossOut(null); return; }
     hoverMiner = lastBlocks[idx].miner || '';
+    crossOut(lastBlocks[idx].h);
     if (panelEl && ev.sourceCapabilities && ev.sourceCapabilities.firesTouchEvents) return;
     showBlockTip(lastBlocks[idx], ev);
     maybeEnrich(lastBlocks[idx], ev);

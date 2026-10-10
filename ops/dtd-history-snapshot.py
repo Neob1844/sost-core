@@ -21,6 +21,8 @@ RPC_USER = os.environ.get("RPC_USER", "")
 RPC_PASS_FILE = os.environ.get("RPC_PASS_FILE", "/etc/sost/rpc.pass")
 STATE = os.environ.get("DTD_STATE", "/var/lib/sost-dtd/acc_state.json")
 OUT = os.environ.get("DTD_OUT", "/var/www/sost-website/website/api/dtd_history_acc.json")
+SERIES_OUT = os.environ.get("SERIES_OUT", "/var/www/sost-website/website/api/block_series.json")
+SERIES_N = int(os.environ.get("SERIES_N", "1200"))
 FINALITY = int(os.environ.get("DTD_FINALITY", "6"))
 PHASE2_START = 7100
 RECENT_KEEP = 13000
@@ -107,6 +109,11 @@ def process_block(acc, b):
         if miner:
             ph2["minerCounts"][miner] = ph2["minerCounts"].get(miner, 0) + 1
 
+def series_row(b):
+    # [height, time, bits_q, casert_profile_index, miner_address] - public header fields only.
+    p = b.get("casert_profile_index")
+    return [b.get("height"), b.get("time"), b.get("bits_q"), (int(p) if p is not None else None), b.get("miner_address") or ""]
+
 def atomic_write(path, text, mode=0o644):
     d = os.path.dirname(path)
     os.makedirs(d, exist_ok=True)
@@ -127,6 +134,14 @@ def main():
             acc = fresh()
     tip = int(rpc("getblockcount", []))
     target = tip - FINALITY
+    series = acc.get("series") or []
+    backfilled = False
+    if acc["scannedHeight"] >= 0 and (not series or series[-1][0] != acc["scannedHeight"]):
+        backfilled = True
+        # backfill the recent block series (state created before the series existed)
+        series = []
+        for hh in range(max(0, acc["scannedHeight"] - SERIES_N + 1), acc["scannedHeight"] + 1):
+            series.append(series_row(rpc("getblock", [rpc("getblockhash", [str(hh)])])))
     h = acc["scannedHeight"] + 1
     last_hash = acc["scannedHash"]
     while h <= target:
@@ -135,9 +150,12 @@ def main():
         if b is None or b.get("height") != h:
             raise RuntimeError(f"bad block at #{h}")
         process_block(acc, b)
+        series.append(series_row(b))
         last_hash = hh
         h += 1
-    if h - 1 == acc["scannedHeight"] and os.path.exists(OUT):
+    series = series[-SERIES_N:]
+    acc["series"] = series
+    if h - 1 == acc["scannedHeight"] and not backfilled and os.path.exists(OUT) and os.path.exists(SERIES_OUT):
         return
     acc["scannedHeight"] = h - 1
     acc["scannedHash"] = last_hash
@@ -146,6 +164,9 @@ def main():
     pub = {k: acc[k] for k in ("scannedHeight", "scannedHash", "t", "rows", "ph2", "recent")}
     pub["generated_by"] = "dtd-history-snapshot (read-only replay of public chain data)"
     atomic_write(OUT, json.dumps(pub, separators=(",", ":")))
+    atomic_write(SERIES_OUT, json.dumps({"tip": acc["scannedHeight"], "fields": ["h", "t", "bits_q", "profile", "miner"],
+                                         "rows": series, "genesis_time": 1773597600, "target_spacing": 600},
+                                        separators=(",", ":")))
     print(f"snapshot at #{acc['scannedHeight']} ({len(acc['rows'])} addresses)")
 
 if __name__ == "__main__":
