@@ -204,6 +204,21 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<!-- ============ V30000 ACTIVE + FINAL.1 NODE HARDENING (2026-10-10) ============ -->
+<section class="section" id="v30000-active-final1"><div class="container">
+  <div style="border:2px solid #39ff14;border-radius:14px;background:linear-gradient(180deg,rgba(57,255,20,.06),transparent 60%);padding:20px 22px">
+    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#39ff14">// NETWORK UPDATE &middot; V30000 ACTIVE &middot; 2026-10-10</div>
+    <h2 style="font-size:23px;margin:10px 0 6px;color:var(--text-primary,#e2e8f0)">V30000 is active &mdash; optional <span style="color:#39ff14">node-only hardening</span> (v30000-final.1)</h2>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7">Block <b>#30,000</b> activated on schedule with no reorg, no rejected block and no node restart. Nodes and miners on <b>V30000 FINAL</b> need no action.</p>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.7"><b>v30000-final.1</b> is an <b>optional, recommended update for node operators</b>: it replaces <b>only <code>sost-node</code></b> and changes <b>no consensus rule</b> (blocks, rewards 50/50, supply and NODE_BIND unchanged). It hardens chain replay (a damaged chain file is never half-loaded), failed-reorg recovery (stop rather than serve partial state) and chain-file persistence during reorgs. <b><code>sost-miner</code> and <code>sost-cli</code> are byte-identical</b> &mdash; miners do not recompile.</p>
+    <div style="font:12px/1.7 ui-monospace,monospace;color:#9fe8ff;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:12px 0;overflow-x:auto"><pre style="margin:0;white-space:pre">sost-node    7ca5ea630a50f45d70cedd073c1bbb239abd69ac6f2e30c316236121c601b736   (v30000-final.1, optional)
+sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd   (V30000 FINAL, still valid)
+sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75   (unchanged)
+sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b   (unchanged)</pre></div>
+    <p style="font-size:13px;color:var(--text-secondary,#94a3b8);line-height:1.7">Release: <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final.1" target="_blank" rel="noopener" style="color:#22d3ee">releases/tag/v30000-final.1</a>. Install: stop node &rarr; replace <code>sost-node</code> &rarr; verify SHA256 &rarr; start node (chain data kept). <b style="color:#ff6b6b">NODE_BIND remains on hold</b> until the go-ahead in the site banner. Still on an older binary? Update to V30000 FINAL now.</p>
+  </div>
+</div></section>
+
 <!-- ============ V30000 FINAL SECURITY BUILD (2026-10-08) ============ -->
 <section class="section" id="v30000-final-security-build"><div class="container">
   <div style="border:2px solid #fb010d;border-radius:14px;background:linear-gradient(180deg,rgba(251,1,13,.07),transparent 60%);padding:20px 22px">
@@ -1773,7 +1788,7 @@ sudo systemctl restart sost-miner</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v519" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v521" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- NON-CUSTODIAL DISCLAIMER (footer) -->

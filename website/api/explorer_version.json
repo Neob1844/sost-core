@@ -1,1 +1,1 @@
-{"v": "2026-10-10-v520-jackpot-v2-eligibility-dtd-active288", "note": "Explorer: Jackpot V2 eligible count from getjackpotv2audit (NODE_BIND-gated, candidates table, checker); DTD card shows active_288 after #30,000. Frontend only."}
+{"v": "2026-10-10-v521-v30000-active-final1", "note": "V30000 active; optional node-only hardening v30000-final.1 (7ca5ea63) announced; miner/CLI unchanged."}

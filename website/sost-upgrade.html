@@ -359,7 +359,11 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
       <b>Download the V30000 FINAL SECURITY BUILD:</b>
       <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v30000-final</a>
       (<code>sost-node</code>, <code>sost-miner</code>, <code>sost-cli</code>, <code>SHA256SUMS</code>; source commit <code>3acd952bd2c3</code>).
-      The earlier v30000, v30000-rc1 and emergency builds are <b>SUPERSEDED</b> &mdash; do not install them.
+      The earlier v30000, v30000-rc1 and emergency builds are <b>SUPERSEDED</b> &mdash; do not install them.<br>
+      <b>Optional node-only hardening (v30000-final.1):</b>
+      <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final.1" target="_blank" rel="noopener">github.com/Neob1844/sost-core/releases/tag/v30000-final.1</a>
+      &mdash; replaces only <code>sost-node</code> (fail-closed chain replay, safe failed-reorg recovery, no chain-file writes during a reorg).
+      <b>No consensus change</b>; <code>sost-miner</code> and <code>sost-cli</code> are identical, so miners do not recompile. Either node hash below is valid.
     </div>
 
     <div class="mg-note mg-warn"><b>MANDATORY: every node and every miner must restart on the FINAL build between #29,900 and #30,000</b>, or risk a chain split and miss the new protocol rules.</div>
@@ -399,6 +403,7 @@ sha256sum sost-node sost-miner sost-cli
     <table>
       <tr><th>File</th><th>SHA-256</th></tr>
       <tr><td><code>sost-node</code></td><td class="mg-hash">ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd</td></tr>
+      <tr><td><code>sost-node</code> (v30000-final.1, optional hardening)</td><td class="mg-hash">7ca5ea630a50f45d70cedd073c1bbb239abd69ac6f2e30c316236121c601b736</td></tr>
       <tr><td><code>sost-miner</code></td><td class="mg-hash">53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75</td></tr>
       <tr><td><code>sost-cli</code></td><td class="mg-hash">09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b</td></tr>
     </table>
@@ -839,7 +844,7 @@ function showOS(os) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v519" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v521" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->

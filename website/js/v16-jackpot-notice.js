@@ -133,46 +133,42 @@
     <span class="sost-v16-icon" aria-hidden="true">&#9889;</span>
     <span class="sost-v16-titles">
       <span class="sost-v16-title">SOST V30000 &mdash; #30,000 network upgrade &middot; Miner &amp; Node Operator Notice</span>
-      <span class="sost-v16-sub"><b>V30000 FINAL SECURITY BUILD &mdash; update node + miner + CLI before #30,000.</b> Do <b>NOT</b> install earlier V30000 / RC / emergency builds. Verify the three SHA256 below. Activation #30,000, automatic by block height.</span>
+      <span class="sost-v16-sub"><b>V30000 IS ACTIVE since block #30,000.</b> Optional <b>node-only</b> hardening update available (v30000-final.1, no consensus change). Miner and CLI unchanged. Still on an older binary? Update to V30000 FINAL now.</span>
     </span>
-    <span class="sost-v16-chip">ACTIVATION #30,000</span>
-    <span class="sost-v16-redchip">&#9888; RECOMPILE + RESTART NODE &amp; MINER BETWEEN #29,900 AND #30,000 &mdash; OR RISK A CHAIN SPLIT</span>
+    <span class="sost-v16-chip">ACTIVE SINCE #30,000</span>
+    <span class="sost-v16-redchip" style="background:linear-gradient(90deg,#16a34a,#15803d);border-color:#39ff14">&#10004; V30000 ACTIVE &mdash; OPTIONAL NODE HARDENING UPDATE (node-only, no consensus change)</span>
     <span class="sost-v16-cta"><span class="sost-v16-cta-label" data-when="closed">Operator guide</span><span class="sost-v16-cta-label" data-when="open" hidden>Hide</span><span class="sost-v16-chev" aria-hidden="true">&#9662;</span></span>
   </button>
 
   <div class="sost-v16-body" id="sostV16Body" hidden>
 
-    <div style="margin:0 0 14px;padding:16px 18px;border:3px solid #fb010d;border-radius:10px;background:linear-gradient(135deg,rgba(251,1,13,.22),rgba(251,1,13,.07));box-shadow:0 0 26px rgba(251,1,13,.45);text-align:center;line-height:1.6">
-      <div style="font:900 18px/1.3 ui-monospace,monospace;color:#ff4d4d;letter-spacing:.6px;text-shadow:0 0 10px rgba(251,1,13,.6)">&#9888; MANDATORY FOR EVERY NODE AND EVERY MINER &#9888;</div>
-      <div style="font-size:15px;color:#fff;margin-top:8px"><b>RECOMPILE</b> (or download and verify) the new <b>sost-node + sost-miner + sost-cli</b><br>
-      and <b style="color:#ffd166">RESTART YOUR NODE AND YOUR MINER</b> on them<br>
-      <b style="font-size:17px;color:#ffd166">AFTER BLOCK #29,900 AND BEFORE BLOCK #30,000.</b></div>
-      <div style="font-size:14px;color:#ffb3b3;margin-top:8px"><b>Otherwise there is a real danger of a CHAIN SPLIT</b>, and the new protocol changes and security improvements
-      will <b>NOT</b> apply to your node or miner. Check the SHA256 below before restarting.</div>
+    <div style="margin:0 0 14px;padding:16px 18px;border:3px solid #39ff14;border-radius:10px;background:linear-gradient(135deg,rgba(57,255,20,.14),rgba(57,255,20,.04));box-shadow:0 0 22px rgba(57,255,20,.35);text-align:center;line-height:1.6">
+      <div style="font:900 18px/1.3 ui-monospace,monospace;color:#39ff14;letter-spacing:.6px">&#10004; V30000 IS ACTIVE SINCE BLOCK #30,000</div>
+      <div style="font-size:14.5px;color:#fff;margin-top:8px">Nodes and miners running <b>V30000 FINAL</b> are on the correct chain &mdash; <b>no action required</b>.<br>
+      <b style="color:#ffd166">Optional, recommended for node operators:</b> the <b>v30000-final.1 node hardening update</b> &mdash; <b>sost-node only</b>,
+      <b>no consensus change</b>, miner and CLI <b>unchanged</b> (miners do not recompile).</div>
+      <div style="font-size:13px;color:#ffb3b3;margin-top:8px"><b>Still running an older binary</b> (v16.x, v30000, v30000-rc1, emergency builds)?
+      Update to V30000 FINAL <b>now</b> &mdash; old binaries can split from the chain at the first NODE_BIND.</div>
     </div>
     <div class="sost-v16-blink">
       <span class="hdr">&#9888; What to do &mdash; for every miner and node operator</span>
-      <b>SOST V30000 FINAL SECURITY BUILD. NODE + MINER + CLI UPDATE REQUIRED BEFORE #30,000.</b> All three binaries
-      changed following the final pre-activation security hardening. <b>DO NOT INSTALL EARLIER V30000 / RC / EMERGENCY
-      BUILDS</b> &mdash; they are superseded, and a node or miner still running one may diverge from the chain at #30,000.
-      Download from <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700">releases/tag/v30000-final</a>
-      and verify all three against the official <code>SHA256SUMS</code>. The upgrade activates automatically by block
-      height at <span class="win">#30,000</span> &mdash; nothing needs to be restarted at #30,000 itself.
-      <div style="margin:12px 0;padding:11px 13px;border:2px solid #fb010d;border-radius:8px;background:rgba(251,1,13,.08)">
-        <b style="color:#ff6b6b;letter-spacing:.6px">&#9888; RESTART NODE + MINER ON THE FINAL BUILD BETWEEN #29,900 AND #30,000.</b>
-        You may build or download the FINAL binaries and verify them now, but the <b>restart of your node and your miner on
-        them must happen after #29,900 and before #30,000</b>, and you must <b>still be running them at #30,000</b>.
-        A node or miner that reaches #30,000 on an older binary <b>may split from the chain</b> and will <b>not</b> apply the new
-        protocol rules. (Nothing is restarted <i>at</i> #30,000 itself &mdash; the fork activates by height.)
-      </div>
-      <div class="sost-v16-code">FINAL VERIFIED SHA256  (V30000 FINAL SECURITY BUILD, commit 3acd952bd2c3)
-sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd
-sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75
-sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b
+      <b>V30000 is active.</b> The valid consensus build is <b>V30000 FINAL</b>
+      (<a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700">releases/tag/v30000-final</a>).
+      Node operators may additionally install the optional <b>node-only hardening</b>
+      (<a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final.1" target="_blank" rel="noopener" style="color:#22d3ee;font-weight:700">releases/tag/v30000-final.1</a>):
+      it makes chain replay fail-closed on a damaged chain file, stops instead of serving partial state if a failed reorg
+      cannot be restored, and never writes the chain file while a reorg is in progress. <b>It does not change block rules,
+      rewards (50% miner / 50% DTD), supply or NODE_BIND.</b> Earlier v30000 / RC / emergency builds remain <b>superseded</b>.
+      <div class="sost-v16-code">VALID SHA256 &mdash; V30000
+sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd   (V30000 FINAL)
+sost-node    7ca5ea630a50f45d70cedd073c1bbb239abd69ac6f2e30c316236121c601b736   (v30000-final.1 hardened, optional)
+sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75   (same in both)
+sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b   (same in both)
 
-sha256sum -c SHA256SUMS            # sost-node / sost-miner / sost-cli must ALL print: OK</div>
-      <div style="margin:12px 0 4px;font:800 13px ui-monospace,monospace;color:#ffd166;letter-spacing:.4px">&#9654; HOW TO DO IT &mdash; 4 SIMPLE STEPS (do steps 3 and 4 between #29,900 and #30,000)</div>
+sha256sum sost-node sost-miner sost-cli     # node must match ONE of the two node lines</div>
+      <div style="margin:12px 0 4px;font:800 13px ui-monospace,monospace;color:#ffd166;letter-spacing:.4px">&#9654; NOT YET ON V30000 FINAL? &mdash; 4 SIMPLE STEPS (do them now)</div>
       <div class="sost-v16-code"># 1. GET THE NEW BINARIES  (A: recompile  -or-  B: download)
+#    (node operators wanting the optional hardening: use tag/release v30000-final.1 instead of v30000-final)
 #    A) recompile (Ubuntu/Debian/WSL2):
 sudo apt install -y build-essential cmake git libssl-dev libsecp256k1-dev
 git clone https://github.com/Neob1844/sost-core.git sost-final &amp;&amp; cd sost-final
@@ -189,13 +185,13 @@ sha256sum sost-node sost-miner sost-cli
 #   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75  sost-miner
 #   09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b  sost-cli
 
-# 3. RESTART THE NODE on the new sost-node   (between #29,900 and #30,000)
+# 3. RESTART THE NODE on the new sost-node   (now)
 #    systemd:  sudo systemctl stop sost-node
 #              sudo install -m 0755 sost-node /path/to/your/sost-node
 #              sudo systemctl start sost-node
 #    by hand:  stop the old node (Ctrl+C) and start the NEW ./sost-node with your usual flags
 
-# 4. RESTART THE MINER on the new sost-miner   (between #29,900 and #30,000)
+# 4. RESTART THE MINER on the new sost-miner   (now)
 #    stop the old miner (Ctrl+C), then start the NEW one with your usual flags, e.g.:
 ./sost-miner --wallet ~/sost-keys/my-wallet.json --mining-key-label "my-mining-key" \\
   --genesis genesis_block.json --rpc 127.0.0.1:18232 --rpc-user &lt;user&gt; --rpc-pass-file ~/.sost/rpc.pass \\
