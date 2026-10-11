@@ -338,7 +338,7 @@ details.mg>summary:hover{background:rgba(34,211,238,.05)}
     <a href="#s5"><b>4 &middot; Start node &amp; miner</b>Verified commands</a>
     <a href="#s6"><b>5 &middot; Encryption</b>Three separate things</a>
     <a href="#s7"><b>6 &middot; DTD vs Jackpot V2</b>What you get without doing anything</a>
-    <a href="#s8"><b>7 &middot; NODE_BIND</b>Optional, and only after #30,000</a>
+    <a href="#s8"><b>7 &middot; NODE_BIND</b>Optional &middot; open now</a>
     <a href="#s9"><b>8 &middot; Backups &amp; mistakes</b>What to keep, what leaks</a>
     <a href="#s10"><b>9 &middot; Troubleshooting</b>The messages you will actually see</a>
     <a href="#s11"><b>10 &middot; Network status</b>What is not fixed yet</a>
@@ -591,7 +591,7 @@ chmod 600 ~/.sost/rpc.pass</pre></div>
   </div></details>
 
   <!-- ═══ 8 · NODE_BIND ═══════════════════════════════════════════════ -->
-  <details class="mg" id="s8"><summary>7 &middot; NODE_BIND &mdash; optional, and not before #30,000</summary><div class="mg-in">
+  <details class="mg" id="s8"><summary>7 &middot; NODE_BIND &mdash; optional &middot; open now</summary><div class="mg-in">
     <div class="mg-note mg-info">
       <b>You do not need this to mine.</b> Mining and normal DTD work without it. NODE_BIND exists for one reason: to enter
       the Jackpot V2 draw.
@@ -606,7 +606,7 @@ chmod 600 ~/.sost/node.key</pre></div>
     <p>This is a <b>different key</b> from your mining key and from your wallet. It identifies your node. It cannot move
       coins &mdash; but whoever holds it can impersonate your node's heartbeats, so treat it as a secret and back it up
       (see the next section).</p>
-    <div class="mg-note mg-warn"><b>&#9888; DO NOT SUBMIT A NODE_BIND YET.</b> Wait for the explicit go-ahead in the site banner. From #30,000 NODE_BIND uses the new two-signature ownership rule (mining key + node key); a bind mined while a major miner still runs an older build could split the chain. ALL validating nodes and miners must be on the V30000 FINAL SECURITY BUILD first.</div>
+    <div class="mg-note mg-info"><b>&#10004; NODE_BIND is open (go-ahead given 11 Oct 2026).</b> The first two-signature NODE_BIND confirmed in block <b>#30,194</b>, its first automatic NODE_HEARTBEAT in <b>#30,196</b>, and the chain has kept building on both. Use the <b>V30000 FINAL</b> CLI below: since #30,000 a bind carries the two-signature ownership rule (mining key + node key). Your node and miner must be on V30000 FINAL.</div>
     <h4>After #30,000: build the transaction</h4>
     <div class="mg-cmd"><button class="mg-copy" onclick="mgCopy(this)">COPY</button><pre>./sost-cli --wallet ~/sost-keys/my-wallet.json \
   --mining-key-label "my-mining-key" \
@@ -844,7 +844,7 @@ function showOS(os) {
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v521" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 <!-- ════════════════════════════════════════════════════════════ -->
 <!-- SOST intro video modal player (1:58, 1920x1080, H.264 / AAC) -->

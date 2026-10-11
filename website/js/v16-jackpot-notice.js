@@ -133,7 +133,7 @@
     <span class="sost-v16-icon" aria-hidden="true">&#9889;</span>
     <span class="sost-v16-titles">
       <span class="sost-v16-title">SOST V30000 &mdash; #30,000 network upgrade &middot; Miner &amp; Node Operator Notice</span>
-      <span class="sost-v16-sub"><b>V30000 IS ACTIVE since block #30,000.</b> Optional <b>node-only</b> hardening update available (v30000-final.1, no consensus change). Miner and CLI unchanged. Still on an older binary? Update to V30000 FINAL now.</span>
+      <span class="sost-v16-sub"><b>V30000 IS ACTIVE since block #30,000.</b> Optional <b>node-only</b> hardening update available (v30000-final.1, no consensus change). Miner and CLI unchanged. <b>DTD Jackpot V2 active &middot; NODE_BIND open</b> (first bind #30,194, first heartbeat #30,196). Still on an older binary? Update to V30000 FINAL now.</span>
     </span>
     <span class="sost-v16-chip">ACTIVE SINCE #30,000</span>
     <span class="sost-v16-redchip" style="background:linear-gradient(90deg,#16a34a,#15803d);border-color:#39ff14">&#10004; V30000 ACTIVE &mdash; OPTIONAL NODE HARDENING UPDATE (node-only, no consensus change)</span>
@@ -148,7 +148,7 @@
       <b style="color:#ffd166">Optional, recommended for node operators:</b> the <b>v30000-final.1 node hardening update</b> &mdash; <b>sost-node only</b>,
       <b>no consensus change</b>, miner and CLI <b>unchanged</b> (miners do not recompile).</div>
       <div style="font-size:13px;color:#ffb3b3;margin-top:8px"><b>Still running an older binary</b> (v16.x, v30000, v30000-rc1, emergency builds)?
-      Update to V30000 FINAL <b>now</b> &mdash; old binaries can split from the chain at the first NODE_BIND.</div>
+      Update to V30000 FINAL <b>now</b> &mdash; the first NODE_BIND is on chain since #30,194, and only V30000 FINAL follows the V30000 rules.</div>
     </div>
     <div class="sost-v16-blink">
       <span class="hdr">&#9888; What to do &mdash; for every miner and node operator</span>
@@ -210,7 +210,7 @@ sha256sum sost-node sost-miner sost-cli
         <li>Verify that subsequent heartbeats are associated with that node.</li>
         <li>If the registered owner is not yours, stop relying on Jackpot eligibility and report it to the SOST developers.</li>
       </ol>
-      <div style="margin:8px 0;padding:8px 11px;border:2px solid #fb010d;border-radius:7px;background:rgba(251,1,13,.08)"><b style="color:#ff6b6b">&#9888; DO NOT SUBMIT A NODE_BIND YET.</b> Wait for the explicit go-ahead in this notice. NODE_BIND is a hard-fork rule: a bind mined while any major miner still runs an older build could split the chain. The go-ahead will be posted here once the network's miners have confirmed the FINAL build.</div>
+      <div style="margin:8px 0;padding:8px 11px;border:2px solid #39ff14;border-radius:7px;background:rgba(57,255,20,.07)"><b style="color:#39ff14">&#10004; NODE_BIND IS OPEN &mdash; GO-AHEAD GIVEN (11 OCT 2026).</b> The first two-signature NODE_BIND confirmed in block <b>#30,194</b>, its first automatic NODE_HEARTBEAT in <b>#30,196</b>, and the chain has kept building on both. Miners on <b>V30000 FINAL</b> can register now: create the bind with the command above, broadcast it, and run your node with <code>--node-key-file</code> so it emits its own heartbeat once per 288-block epoch. Eligibility for each draw is decided by consensus &mdash; check it with <code>checkhistoricaljackpoteligibility</code>.</div>
       <b>New ownership protection, active from #30,000:</b> a NODE_BIND must be signed by <b>both</b> your mining key and
       your <b>node key</b>, so only the holder of a node key can bind it, and a bind cannot be copied to another miner.
       NODE_BIND affects <b>Jackpot eligibility only</b>. It does <b>NOT</b> give access to your wallet, does <b>NOT</b> allow

@@ -204,6 +204,30 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<!-- ============ NODE_BIND OPEN: FIRST BIND #30,194 + FIRST HEARTBEAT #30,196 (2026-10-11) ============ -->
+<section class="section" id="node-bind-open"><div class="container">
+  <article style="border:2px solid #39ff14;border-radius:14px;background:linear-gradient(180deg,rgba(57,255,20,.06),transparent 60%);padding:20px 22px">
+    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#39ff14">// MAINNET &middot; VERIFIED ON-CHAIN &middot; 11 OCT 2026</div>
+    <h2 style="font-size:24px;margin:10px 0 4px;color:var(--text-primary,#e2e8f0);text-wrap:balance">NODE_BIND is open: first bind <span style="color:#39ff14">#30,194</span>, first heartbeat <span style="color:#39ff14">#30,196</span></h2>
+    <div style="font-size:14px;color:#c9f7c0;margin-bottom:10px">DTD Jackpot V2 now has an eligible candidate for the next draw, #30,474</div>
+    <div style="font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.75;border:1px solid #1f3a20;border-radius:8px;padding:12px 14px;background:rgba(0,0,0,.25);color:#cdd6e0;margin:12px 0;overflow-wrap:anywhere">
+      <b style="color:#22d3ee">#30,194</b> &mdash; NODE_BIND (tx type 0x20) <code>36c2fc8c&hellip;cd90111</code> &check; two signatures: mining key + node key<br>
+      <b style="color:#22d3ee">#30,196</b> &mdash; NODE_HEARTBEAT (tx type 0x21) <code>4a7380a9&hellip;01e7268</code> &check; emitted automatically by the bound node<br>
+      <b style="color:#ffd166">#30,474</b> &mdash; Jackpot V2 audit at #30,205: PoW candidates <b>2</b> &middot; eligible <b>1</b> (NODE_BIND &check;, heartbeat <b>1/1</b>) &middot; pot <b>200 SOST</b> (100 base + 100 rolled over from #30,186)
+    </div>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">The first NODE_BIND under the V30000 two-signature rule was mined in block <b>#30,194</b> &mdash; by a different miner from the one it binds, whose operator has confirmed running V30000 FINAL.1 &mdash; and the chain has kept building on it. Two blocks later, at <b>#30,196</b>, the bound node's automatic heartbeat confirmed. The go-ahead is therefore given: <b>NODE_BIND is open</b> for every miner running V30000 FINAL.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#39ff14;margin:18px 0 6px;font-weight:800">For miners who want the Jackpot</h3>
+    <ol style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:6px 0 6px 18px">
+      <li>Create the bind with the V30000 FINAL CLI and broadcast it (step 7 of the <a href="sost-upgrade.html#s8" style="color:#22d3ee">upgrade guide</a>).</li>
+      <li>Run your node with <code>--node-key-file</code>: from then on it signs <b>one heartbeat per 288-block epoch</b> by itself.</li>
+      <li>Check the result with <code>checkhistoricaljackpoteligibility</code>: <code>node_bound</code>, <code>heartbeats_valid</code> / <code>heartbeats_required</code> and <code>pow_blocks</code>.</li>
+    </ol>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">For <b>#30,474</b> the requirement is one heartbeat in epoch 0 (blocks <b>#30,000&ndash;#30,287</b>). A bind takes effect the block after it confirms, and the node stops attempting its epoch-0 heartbeat after #30,284, so a bind confirmed in good time before that still counts for #30,474. Later draws ramp up to 3 heartbeats in the last 4 epochs. Eligibility is decided at the draw by consensus; the audit above is a snapshot, not a result.</p>
+    <figure style="margin:14px 0 6px"><img src="media/dtd-jackpot-v2-30474.png" alt="Explorer DTD Jackpot panel at #30,197: next jackpot #30,474, expected payout 200 SOST, current rollover 100 SOST, one eligible candidate with NODE_BIND bound and heartbeat 1/1" loading="lazy" style="display:block;width:100%;max-width:620px;height:auto;border:1px solid #1f3a20;border-radius:8px"><figcaption style="font-size:11.5px;color:#7c8a99;margin-top:6px">Explorer DTD Jackpot panel, snapshot at #30,197.</figcaption></figure>
+    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Sources: <code>getblock</code> #30,194 / #30,196 and <code>getrawtransaction</code> (tx types 0x20 / 0x21) and <code>getjackpotv2audit 30474</code> on the public node; heartbeat window and bind activation in <code>src/jackpot_v2.cpp</code> and <code>src/sost-node.cpp</code>.</p>
+  </article>
+</div></section>
+
 <!-- ============ FIRST JACKPOT V2 DRAW #30,186 + TWO INDEPENDENT DRAWS (2026-10-11) ============ -->
 <section class="section" id="jackpot-v2-first-draw"><div class="container">
   <article style="border:2px solid #ffd166;border-radius:14px;background:linear-gradient(180deg,rgba(255,209,102,.06),transparent 60%);padding:20px 22px">
@@ -271,7 +295,7 @@
 sost-node    ef608cf9e7f6434f8d60b29c3287ca7045cb83de1be1ddf585a9176bf45b39cd   (V30000 FINAL, still valid)
 sost-miner   53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00ca7eba8302b8a1e75   (unchanged)
 sost-cli     09d9a5022b3c03dfbe85df1ea728f931f5287712739921e17138e89dad14f62b   (unchanged)</pre></div>
-    <p style="font-size:13px;color:var(--text-secondary,#94a3b8);line-height:1.7">Release: <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final.1" target="_blank" rel="noopener" style="color:#22d3ee">releases/tag/v30000-final.1</a>. Install: stop node &rarr; replace <code>sost-node</code> &rarr; verify SHA256 &rarr; start node (chain data kept). <b style="color:#ff6b6b">NODE_BIND remains on hold</b> until the go-ahead in the site banner. Still on an older binary? Update to V30000 FINAL now.</p>
+    <p style="font-size:13px;color:var(--text-secondary,#94a3b8);line-height:1.7">Release: <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final.1" target="_blank" rel="noopener" style="color:#22d3ee">releases/tag/v30000-final.1</a>. Install: stop node &rarr; replace <code>sost-node</code> &rarr; verify SHA256 &rarr; start node (chain data kept). <b style="color:#39ff14">Update 11 Oct: NODE_BIND is open</b> &mdash; first bind #30,194, first heartbeat #30,196 (see the NODE_BIND article above). Still on an older binary? Update to V30000 FINAL now.</p>
   </div>
 </div></section>
 
@@ -290,7 +314,7 @@ sha256sum -c SHA256SUMS      # all three must print: OK</pre></div>
     <ul style="font-size:13px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:8px 0 8px 18px">
       <li><b>Download:</b> <a href="https://github.com/Neob1844/sost-core/releases/tag/v30000-final" target="_blank" rel="noopener" style="color:#22d3ee">github.com/Neob1844/sost-core/releases/tag/v30000-final</a> &middot; step-by-step: <a href="sost-upgrade.html" style="color:#39ff14">operator guide</a>.</li>
       <li><b>Activation is automatic at #30,000</b> by block height. Nothing needs to be restarted exactly at #30,000 &mdash; but every validating node and every miner <b>must restart on this build between #29,900 and #30,000</b> and still run it at #30,000; older software may split from the chain and will not apply the new protocol rules.</li>
-      <li><b style="color:#ff6b6b">Do not submit a NODE_BIND until the go-ahead is posted in the site banner.</b> NODE_BIND is a hard-fork rule; every miner must be on this build first.</li>
+      <li><b style="color:#39ff14">Update 11 Oct 2026: the go-ahead is given &mdash; NODE_BIND is open.</b> Until then the instruction here was to wait; the first bind confirmed at #30,194 and its first heartbeat at #30,196. Every miner must still be on this build.</li>
       <li><b>NODE_BIND (after #30,000):</b> a bind now carries a second signature by your <b>node key</b>, so only the holder of a node key can bind it. Command (unchanged): <code>sost-cli --wallet &lt;wallet.json&gt; --mining-key-label &lt;label&gt; createnodebind 1 --node-key-file ~/.sost/node.key</code>. After it confirms, check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it gives no access to wallets and cannot create, spend or burn SOST.</li>
       <li><b>Native Assets:</b> DEFERRED / FAIL-CLOSED on mainnet. <b>SACS V2:</b> DEFERRED on mainnet.</li>
       <li><b>Monetary rule unchanged:</b> 50% miner / 50% DTD. <b>SOST has no burn mechanism</b> &mdash; none supported, none planned.</li>
@@ -363,8 +387,8 @@ sha256sum build/sost-miner     # 53c83836bc16e32cd0b9bdda5d15e8936a217079dacde00
   --blocks 999999 --max-nonce 500000 \
   --profile mainnet --realtime --threads &lt;N&gt;</pre>
     <p style="font-size:12.5px;color:#94a3b8;margin:2px 0"><b>--realtime is mandatory</b> (without it every block is rejected: &ldquo;timestamp too far in future&rdquo;). Healthy miner output: <code>bitsQ sync ... node canonical=...</code>, <code>[MINING] h=&lt;height+1&gt;</code>, and on a find <code>[BLOCK N] ... submitted to node OK</code>.</p>
-    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">NODE_BIND &mdash; DO NOT SUBMIT YET</div>
-    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">Wait for the explicit go-ahead in the site banner. When announced, use the FINAL CLI (same command, it now signs with both keys): <code>./build/sost-cli --wallet ~/sost-keys/my-wallet.json --mining-key-label "my-mining-key" createnodebind 1 --node-key-file ~/.sost/node.key</code>. Then check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it cannot touch wallets or create, spend or burn SOST.</p>
+    <div style="font:800 13px ui-monospace,monospace;color:#39ff14;letter-spacing:.5px;margin:16px 0 4px">NODE_BIND &mdash; OPEN SINCE 11 OCT 2026 (first bind #30,194)</div>
+    <p style="font-size:12.5px;color:#94a3b8;margin:2px 0">The go-ahead is given. Use the FINAL CLI (same command, it now signs with both keys): <code>./build/sost-cli --wallet ~/sost-keys/my-wallet.json --mining-key-label "my-mining-key" createnodebind 1 --node-key-file ~/.sost/node.key</code>. Then check that the registered owner is your mining address and that your heartbeats follow. NODE_BIND only affects Jackpot eligibility; it cannot touch wallets or create, spend or burn SOST.</p>
     <p style="font-size:11px;color:#64748b;line-height:1.6;margin:8px 0 0">Earlier news items below describe the superseded builds and are kept as history only.</p>
   </div>
 </div></section>
@@ -1844,7 +1868,7 @@ sudo systemctl restart sost-miner</pre>
 <script src="js/sost-pwa-install.js?v=v392"></script>
 <script src="js/crt-effects.js?v=v392"></script>
 <script src="js/developer-note.js?v=v393" defer></script>
-<script src="js/v16-jackpot-notice.js?v=v521" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
 <script src="js/sost-music.js?v=v392"></script>
 
 <!-- NON-CUSTODIAL DISCLAIMER (footer) -->
