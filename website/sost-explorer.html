@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-11-v530-real-ohlc-candles">
+<meta name="explorer-html-version" content="2026-10-11-v531-candles-everywhere-cr-card">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -627,13 +627,76 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
     <span id="vcx-sost" style="margin-left:auto;display:inline-flex;align-items:center"></span>
   </div>
 </nav>
-<!-- Control Room V2 entry (v529). The classic Explorer below is unchanged; the Control Room is a separate
-     page fed by one server-side read-only collector (browsers never call the node). -->
-<a href="sost-control-room.html" class="cr2-entry" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:10px auto;max-width:1040px;padding:12px 16px;border-radius:10px;text-decoration:none;border:1px solid #22d3ee;background:linear-gradient(100deg,rgba(34,211,238,.10),rgba(57,255,20,.06) 60%,rgba(0,0,0,0));box-shadow:0 0 22px rgba(34,211,238,.12)">
-  <span style="font:900 13px ui-monospace,monospace;letter-spacing:1.2px;color:#22d3ee;white-space:nowrap">&#9673; CONTROL ROOM V2 &middot; NEW</span>
-  <span style="flex:1 1 260px;min-width:0;font:12px/1.5 ui-monospace,monospace;color:#cdd6e0">Live network pulse of the last 144 blocks, Equalizer explained block by block, normal DTD and Jackpot V2 side by side, active vs historical clearly separated.</span>
-  <span style="font:800 12px ui-monospace,monospace;color:#39ff14;white-space:nowrap">OPEN &rarr;</span>
+<!-- Control Room entry card (v531). Replaces the v529 banner. The whole card is one link; the live
+     figures come from the same static document the Control Room reads (/api/control_room.json, written
+     by one server-side collector): this card never calls the node. Without that file it stays a plain link. -->
+<style>
+.crx{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px 22px;align-items:center;max-width:1040px;margin:12px auto;padding:18px 20px;border-radius:14px;text-decoration:none;color:#cdd6e0;
+  border:1px solid rgba(34,211,238,.55);background:radial-gradient(120% 140% at 0% 0%,rgba(34,211,238,.16),rgba(34,211,238,0) 55%),linear-gradient(135deg,#071318,#05090c 60%,#0a0f08);
+  box-shadow:0 0 0 1px rgba(34,211,238,.08) inset,0 10px 30px rgba(0,0,0,.45),0 0 26px rgba(34,211,238,.12);transition:transform .18s,box-shadow .18s,border-color .18s;position:relative;overflow:hidden}
+.crx:hover,.crx:focus-visible{transform:translateY(-2px);border-color:#22d3ee;box-shadow:0 0 0 1px rgba(34,211,238,.25) inset,0 14px 34px rgba(0,0,0,.5),0 0 38px rgba(34,211,238,.28);outline:none}
+.crx-ico{width:58px;height:58px;border-radius:50%;position:relative;display:grid;place-items:center;background:radial-gradient(circle,rgba(57,255,20,.25),rgba(57,255,20,0) 70%)}
+.crx-ico i{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(57,255,20,.55);animation:crxPing 2.4s ease-out infinite}
+.crx-ico i+i{animation-delay:1.2s}
+.crx-ico b{width:14px;height:14px;border-radius:50%;background:#39ff14;box-shadow:0 0 14px #39ff14}
+@keyframes crxPing{0%{transform:scale(.35);opacity:1}100%{transform:scale(1);opacity:0}}
+@media (prefers-reduced-motion:reduce){.crx-ico i{animation:none;opacity:.5}}
+.crx-k{font:800 10.5px ui-monospace,monospace;letter-spacing:2px;color:#22d3ee}
+.crx-k em{font-style:normal;color:#39ff14;margin-left:8px;padding:1px 6px;border:1px solid rgba(57,255,20,.5);border-radius:4px;font-size:9px;letter-spacing:1px}
+.crx-h{font:800 20px/1.25 'Space Grotesk',system-ui,sans-serif;color:#f1f5f9;margin:4px 0 2px;letter-spacing:.2px}
+.crx-d{font:12px/1.5 ui-monospace,monospace;color:#94a3b8}
+.crx-stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.crx-s{min-width:0;padding:6px 10px;border:1px solid #16303a;border-radius:8px;background:rgba(0,0,0,.35)}
+.crx-s span{display:block;font:700 8.5px ui-monospace,monospace;letter-spacing:1.3px;color:#64748b}
+.crx-s b{display:block;font:700 14px ui-monospace,monospace;color:#e2e8f0;white-space:nowrap}
+.crx-s b.g{color:#39ff14}.crx-s b.y{color:#ffd166}
+.crx-strip{display:flex;gap:2px;height:8px;margin-top:10px}.crx-strip i{flex:1;border-radius:1px;opacity:.9}
+.crx-go{display:inline-flex;align-items:center;gap:10px;padding:13px 20px;border-radius:10px;font:800 13px ui-monospace,monospace;letter-spacing:1.4px;color:#04130a;
+  background:linear-gradient(180deg,#5cff3d,#2fd40f);box-shadow:0 0 18px rgba(57,255,20,.35);white-space:nowrap}
+.crx:hover .crx-go{box-shadow:0 0 26px rgba(57,255,20,.6)}
+@media (max-width:760px){.crx{grid-template-columns:minmax(0,1fr);margin:10px 16px;padding:16px}.crx-ico{display:none}.crx-go{justify-content:center}.crx-h{font-size:17px}
+  .crx-stats{display:grid;grid-template-columns:1fr 1fr}.crx-s b{font-size:12.5px;white-space:normal}}
+</style>
+<a href="sost-control-room.html" class="crx" id="crxCard" aria-label="Open the SOST Control Room: live network console">
+  <div class="crx-ico" aria-hidden="true"><i></i><i></i><b></b></div>
+  <div style="min-width:0">
+    <div class="crx-k">SOST CONTROL ROOM <em>LIVE</em></div>
+    <div class="crx-h">Live network console</div>
+    <div class="crx-d">Every block within seconds &middot; Equalizer explained block by block &middot; normal DTD and Jackpot V2 side by side &middot; active vs historical, never mixed.</div>
+    <div class="crx-stats" id="crxStats" aria-live="off"></div>
+    <div class="crx-strip" id="crxStrip" aria-hidden="true"></div>
+  </div>
+  <span class="crx-go">OPEN CONTROL ROOM <span aria-hidden="true">&rarr;</span></span>
 </a>
+<script>
+(function(){
+  var C=['#fb010d','#22d3ee','#39ff14','#fbbf24','#a78bfa','#f472b6','#60a5fa','#f97316'],skew=0,tipT=null,busy=false;
+  function n(v){return v==null?'—':Number(v).toLocaleString('en-US');}
+  function ago(s){s=Math.max(0,Math.floor(s));return s<60?s+'s':s<3600?Math.floor(s/60)+'m '+(s%60)+'s':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m';}
+  function tick(){var e=document.getElementById('crxAge');if(e&&tipT)e.textContent=ago(Date.now()/1000+skew-tipT);}
+  function load(){
+    if(busy||document.hidden)return;busy=true;
+    fetch('/api/control_room.json',{cache:'no-cache'}).then(function(r){var d=Date.parse(r.headers.get('date')||'');if(!isNaN(d)){var k=Math.round((d-Date.now())/1000);skew=Math.abs(k)>=2?k:0;}return r.ok?r.json():null;}).then(function(doc){
+      if(!doc||!doc.bundle)return;
+      var b=doc.bundle,db=b.deltaBlocks||{},f=db.fields||[],rows=db.rows||[],ti=f.indexOf('time'),mi=f.indexOf('miner_address');
+      if(rows.length)tipT=rows[rows.length-1][ti];
+      var last=rows.slice(-288),seen={};last.forEach(function(r){seen[r[mi]]=(seen[r[mi]]||0)+1;});
+      var rank=Object.keys(seen).sort(function(a,c){return seen[c]-seen[a];});
+      var hj=b.hjack||{},jv=b.jv2||{};
+      document.getElementById('crxStats').innerHTML=
+        '<div class="crx-s"><span>HEIGHT</span><b>#'+n(doc.height)+'</b></div>'+
+        '<div class="crx-s"><span>LAST BLOCK</span><b class="g" id="crxAge">—</b></div>'+
+        '<div class="crx-s"><span>ACTIVE MINERS &middot; 288</span><b>'+n(rank.length)+'</b></div>'+
+        (hj.next_jackpot_height?'<div class="crx-s"><span>NEXT JACKPOT</span><b class="y">#'+n(hj.next_jackpot_height)+' &middot; '+n(hj.blocks_remaining)+' blk</b></div>':'')+
+        (jv.current_pot_stocks!=null?'<div class="crx-s"><span>JACKPOT POT &middot; ELIGIBLE</span><b class="y">'+n(jv.current_pot_stocks/1e8)+' SOST &middot; '+n(jv.eligible_count)+'</b></div>':'');
+      document.getElementById('crxStrip').innerHTML=rows.slice(-48).map(function(r){var i=rank.indexOf(r[mi]);return '<i style="background:'+(i>=0&&i<C.length?C[i]:'#6b7280')+'"></i>';}).join('');
+      tick();
+    }).catch(function(){}).then(function(){busy=false;});
+  }
+  load();setInterval(load,10000);setInterval(tick,1000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+})();
+</script>
 <details class="reward-research-update" style="margin:10px auto;max-width:1040px;background:rgba(215,255,0,.055);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:8px;padding:8px 14px;color:#e8ffb0">
   <summary style="cursor:pointer;color:#d7ff00;font:800 12px ui-monospace;letter-spacing:.5px;text-shadow:0 0 8px rgba(215,255,0,.4);list-style:none">&#11042; RESEARCH NOTICE &mdash; #40,000 research horizon: reward evolution &middot; decentralization &middot; asset ecosystem (NOT consensus) &middot; click to expand</summary>
   <div style="margin-top:9px;font-size:12px;line-height:1.7;text-shadow:0 0 6px rgba(215,255,0,.18)">
@@ -647,7 +710,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-11-v530-real-ohlc-candles';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-11-v531-candles-everywhere-cr-card';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -10697,6 +10760,6 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
   window.ainPage=function(d){ _page+=d; renderPage(); };
 })();
 </script>
-<script src="js/market-candles.js?v=530" defer></script>
+<script src="js/market-candles.js?v=531" defer></script>
 </body>
 </html>
