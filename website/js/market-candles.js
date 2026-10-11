@@ -11,9 +11,9 @@
  * Each candle is one real interval of one real traded market, exactly as the venue returned
  * it: X/USD from Yahoo Finance, XAUT/BTC and PAXG/BTC from Binance spot, PAXG/ETH from
  * Kraken spot. A cross rate is never computed from two USD series. XAUT/ETH has no market
- * on any venue, so it has no candles and says so. A range whose real candles are mostly
- * empty (no trade in the interval: high == low) is disabled with the reason, instead of
- * drawing a row of flat dashes.
+ * on any venue, so it has no candles and says so. Thin markets: every interval that traded is
+ * drawn at its own time; intervals without trades stay EMPTY GAPS (the gateway removes the
+ * exchange's carried-forward rows, nothing is filled). "CANDLES UNAVAILABLE" only at 0 real candles.
  */
 (function () {
   'use strict';
@@ -33,7 +33,7 @@
   var UNIT = { usd: '$', btc: '₿', eth: 'Ξ' };
   var UP = '#2ee66b', DOWN = '#ff3b47', GRID = 'rgba(255,255,255,.06)', AXIS = '#6a6a6a';
   var NO_OHLC = 'Real OHLC not available for this timeframe.';
-  var THIN = 0.5;           // > 50% of the real candles without a single trade -> too thin to read
+  var SPARSE_NOTE = 0.1;    // show the "sparse market" note when >= 10% of the intervals had no trade
   var REFRESH_MS = 60000, RETRY_MS = 20000;
   var data = {}, inflight = {};
 
@@ -63,7 +63,8 @@
   }
   function venue(src) { return /^binance/.test(src) ? 'Binance ' + src.split(' ')[1] + ' spot' : /^kraken/.test(src) ? 'Kraken ' + src.split(' ')[1] + ' spot' : 'Yahoo Finance'; }
 
-  /* p.kind: 'ok' | 'no_market' (permanent) | 'thin' (permanent for this range) | 'error' (transient) */
+  /* p.kind: 'ok' (>= 1 real candle) | 'no_market' (no venue lists the pair) | 'none' (0 real candles in
+     this range) | 'error' (transient). Intervals without trades are gaps, never filled. */
   function load(s, range, cb) {
     var k = s.asset + '|' + s.vs + '|' + range, have = data[k];
     if (have && Date.now() - have._at < (have.kind === 'error' ? RETRY_MS : REFRESH_MS)) return cb(have);
@@ -75,10 +76,7 @@
       .then(function (x) {
         var p = x.j || {};
         if (p.source_status === 'no_market') { p.kind = 'no_market'; return done(p); }
-        if (x.ok && p.mode === 'ohlc' && p.candles && p.candles.length) {
-          p.kind = (p.no_trade || 0) / p.candles.length > THIN ? 'thin' : 'ok';
-          return done(p);
-        }
+        if (x.ok && p.mode === 'ohlc' && p.candles) { p.kind = p.candles.length ? 'ok' : 'none'; return done(p); }
         done({ kind: 'error', error: p.error || 'unavailable' });
       }, function () { done({ kind: 'error', error: 'network' }); });
   }
@@ -205,14 +203,14 @@
     (function next(i) {
       if (i >= ranges.length || self.mode !== 'candles' || self.scanned !== tag) return;
       load(s, ranges[i], function (p) {
-        if (p.kind === 'thin') self.markRange(ranges[i], false, thinWhy(p));
+        if (p.kind === 'none') self.markRange(ranges[i], false, NONE_WHY);
         else if (p.kind === 'ok') self.markRange(ranges[i], true);
         setTimeout(function () { next(i + 1); }, 350);
       });
     })(0);
   };
 
-  function thinWhy(p) { return 'Market too thin at this timeframe: ' + p.no_trade + ' of ' + p.candles.length + ' real candles have no trade.'; }
+  var NONE_WHY = 'The market returned 0 real OHLC candles for this range (no trades).';
 
   Card.prototype.show = function (text, info) {
     this.candles = null; this.shown = null; this.clear();
@@ -234,10 +232,10 @@
         return self.show('<b>NO REAL ' + s.label.replace(/ /g, '') + ' MARKET</b><span>No exchange lists ' + s.label.replace(/ /g, '') + ', so real candles do not exist. LINE stays available.</span>',
           'CANDLES UNAVAILABLE FOR THIS PAIR');
       }
-      if (p.kind === 'thin') {
-        self.markRange(range, false, thinWhy(p));
+      if (p.kind === 'none') {
+        self.markRange(range, false, NONE_WHY);
         self.scan();
-        return self.show('<b>CANDLES UNAVAILABLE FOR THIS RANGE</b><span>' + thinWhy(p) + ' Try a longer range.</span>',
+        return self.show('<b>CANDLES UNAVAILABLE FOR THIS RANGE</b><span>' + NONE_WHY + ' LINE stays available.</span>',
           s.label + ' · ' + venue(p.source));
       }
       if (p.kind === 'error') {
@@ -252,6 +250,8 @@
       self.info.innerHTML = '<b>' + s.label + '</b> · ' + p.candles.length + ' real ' + p.interval + ' candles · ' + venue(p.source) +
         (listed ? ' · <span style="color:#fbbf24">history since ' + new Date(first).toISOString().slice(0, 10) + '</span>' : '') +
         (p.source_status === 'stale' ? ' · <span style="color:#fbbf24">stale ' + Math.round(p.age_s / 60) + ' min</span>' : '') +
+        (p.expected_intervals && p.empty_intervals / p.expected_intervals >= SPARSE_NOTE ? ' · <span style="color:#94a3b8">Sparse market · ' +
+          p.empty_intervals + ' of ' + p.expected_intervals + ' intervals had no trades (gaps)</span>' : '') +
         ' · last close <b>' + money(last[4], s.vs) + '</b>';
       self.draw();
       self.scan();
@@ -277,9 +277,13 @@
     var pad = (hi - lo) * 0.06 || hi * 0.001; lo -= pad; hi += pad;
     var pw = g.w - g.L - g.R, ph = g.h - g.T - g.B;
     var y = function (v) { return g.T + (hi - v) / (hi - lo) * ph; };
-    var slot = pw / n, bw = Math.max(1, Math.min(14, slot * 0.68));
-    var x = function (i) { return g.L + slot * (i + 0.5); };
-    this.geo = { x: x, slot: slot, L: g.L, n: n };
+    // Time axis: every candle sits at its own interval; intervals without trades stay empty (gaps).
+    var P = this.payload, ivMs = P.interval_s ? P.interval_s * 1000 : (n > 1 ? (k[n - 1][0] - k[0][0]) / (n - 1) : 1);
+    var t0 = P.window_start_ms != null ? Math.min(P.window_start_ms, k[0][0]) : k[0][0];
+    var t1 = Math.max(P.window_end_ms != null ? P.window_end_ms : 0, k[n - 1][0] + ivMs);
+    var slots = Math.max(1, (t1 - t0) / ivMs), slot = pw / slots, bw = Math.max(1, Math.min(14, slot * 0.68));
+    var x = function (i) { return g.L + ((k[i][0] - t0) / ivMs + 0.5) * slot; };
+    this.geo = { x: x, slot: slot, L: g.L, n: n, t0: t0, ivMs: ivMs };
     ctx.clearRect(0, 0, g.w, g.h);
     ctx.font = '9px "Fira Code", monospace'; ctx.textBaseline = 'middle';
     for (var i = 0; i <= 4; i++) {
@@ -289,10 +293,10 @@
     }
     var iv = this.payload.interval;
     ctx.textBaseline = 'alphabetic';
-    [0, Math.floor(n / 2), n - 1].forEach(function (i, j) {
-      var t = when(k[i][0], iv).replace(' UTC', ''), s = daily(iv) ? t : t.slice(5);
+    [t0, (t0 + t1) / 2, t1 - ivMs].forEach(function (tt, j) {
+      var t = when(tt, iv).replace(' UTC', ''), s = daily(iv) ? t : t.slice(5);
       ctx.textAlign = j === 0 ? 'left' : j === 2 ? 'right' : 'center';
-      ctx.fillStyle = AXIS; ctx.fillText(s, j === 0 ? g.L : j === 2 ? g.w - g.R : x(i), g.h - 4);
+      ctx.fillStyle = AXIS; ctx.fillText(s, j === 0 ? g.L : j === 2 ? g.w - g.R : g.L + pw / 2, g.h - 4);
     });
     for (i = 0; i < n; i++) {
       var c = k[i], up = c[4] >= c[1], col = up ? UP : DOWN, cx = Math.round(x(i)) + 0.5;
@@ -311,7 +315,10 @@
 
   Card.prototype.pointer = function (px) {
     if (!this.geo) return;
-    var i = Math.max(0, Math.min(this.geo.n - 1, Math.floor((px - this.geo.L) / this.geo.slot)));
+    // Tooltip only over an interval that has a real candle; a gap shows nothing.
+    var G = this.geo, si = Math.floor((px - G.L) / G.slot), i = -1;
+    for (var q = 0; q < G.n; q++) if (Math.floor((this.candles[q][0] - G.t0) / G.ivMs) === si) { i = q; break; }
+    if (i < 0) { this.hover = -1; this.tip.style.display = 'none'; this.draw(); return; }
     this.hover = i; this.draw();
     var c = this.candles[i], p = this.payload, vs = this.s().vs;
     this.tip.innerHTML = '<div class="d">' + when(c[0], p.interval) + ' · ' + p.interval + '</div>' +

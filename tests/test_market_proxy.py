@@ -560,7 +560,7 @@ class OhlcCandles(unittest.TestCase):
             self.calls.append((asset, vs, label))
             _real_sleep(0.05)
             return {'candles': [[1000, 10.0, 12.0, 9.0, 11.0, 5.0]], 'interval': mp.OHLC_PLAN[label][0],
-                    'dropped_null': 0, 'dropped_invalid': 0, 'source': 'yahoo-finance'}, 'ok'
+                    'interval_s': 1800, 'dropped_null': 0, 'dropped_invalid': 0, 'source': 'yahoo-finance'}, 'ok'
         mp._fetch_ohlc = fake
 
     def tearDown(self):
@@ -804,3 +804,48 @@ class JsonSnapshots(unittest.TestCase):
         self.assertEqual(mp.json_target('spot', self.q('group=gold_ref'))[2], 'coingecko')   # documented reference source
         self.assertEqual(mp.json_ttl('json|fx|latest'), 3600)
         self.assertEqual(mp.json_ttl('json|fxh|EUR|7D'), 21600)
+
+
+class SparseMarkets(unittest.TestCase):
+    """Intervals without trades are gaps: exchange-filled rows are removed, never drawn, never invented."""
+
+    def run_fetch(self, rows, label='24H'):
+        real = mp._venue_get
+        mp._venue_get = lambda venue, url: rows
+        try:
+            return mp._fetch_ohlc('tether-gold', 'btc', label)
+        finally:
+            mp._venue_get = real
+
+    def test_filled_rows_become_gaps(self):
+        now = int(time.time())
+        t = lambda k: (now - 3600 * k) * 1000
+        rows = [[t(10), '0.0504', '0.0504', '0.0504', '0.0504', '0'],      # filled: no trade -> gap
+                [t(9), '0.0504', '0.0506', '0.0503', '0.0505', '1.2'],      # real
+                [t(8), '0.0505', '0.0505', '0.0505', '0.0505', '0'],        # filled -> gap
+                [t(7), '0.0505', '0.0505', '0.0505', '0.0505', '0.3']]      # one trade at one price: REAL (thin dash)
+        res, why = self.run_fetch(rows)
+        self.assertEqual(why, 'ok')
+        self.assertEqual([k[0] for k in res['candles']], [t(9), t(7)])
+        self.assertEqual(res['dropped_filled'], 2)
+        self.assertEqual(res['expected_intervals'], 48)
+        self.assertEqual(res['empty_intervals'], 46)
+        self.assertEqual(len(res['candles']) + res['empty_intervals'], res['expected_intervals'])
+
+    def test_zero_real_candles_is_reported_not_synthesized(self):
+        now = int(time.time())
+        res, why = self.run_fetch([[(now - 600) * 1000, '1', '1', '1', '1', '0']])
+        self.assertEqual((why, res['candles']), ('ok', []))
+        self.assertEqual(mp._ohlc_payload(dict(res, fetched_at=time.time()), 'fresh', time.time())['source_status'], 'no_candles')
+
+    def test_pre_rule_cache_entries_are_not_restored(self):
+        d = tempfile.mkdtemp(); old = mp.STATE_FILE
+        try:
+            mp.STATE_FILE = os.path.join(d, 'c.json')
+            with open(mp.STATE_FILE, 'w') as f:
+                json.dump({'version': 1, 'entries': {'bitcoin|usd|24H|ohlc': {'candles': [], 'interval': '30m', 'fetched_at': time.time()}}}, f)
+            with mp._cache_lock:
+                mp._cache.clear()
+            self.assertEqual(mp.load_state(), 0)
+        finally:
+            mp.STATE_FILE = old; shutil.rmtree(d)

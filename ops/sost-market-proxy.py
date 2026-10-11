@@ -175,8 +175,8 @@ def load_state():
             if len(parts) == 4 and parts[3] == 'ohlc':
                 if parts[2] not in OHLC_PLAN or not ((parts[1] == 'usd' and parts[0] in OHLC_ASSETS)
                                                     or MARKETS.get((parts[0], parts[1]))) \
-                        or not isinstance(entry.get('candles'), list):
-                    continue
+                        or not isinstance(entry.get('candles'), list) or entry.get('interval_s') is None:
+                    continue          # pre-gap-rule entries may hold filled rows: refetch instead
                 age = now - float(entry.get('fetched_at', 0))
                 if age < 0 or age > min(OHLC_TTL[parts[2]] * STALE_FACTOR, STALE_MAX):
                     continue
@@ -659,10 +659,16 @@ def _fetch_ohlc(asset, vs, label):
         return None, 'malformed_' + str(e)
     cut = (now - window) * 1000
     candles = [k for k in candles if k[0] >= cut]
-    if not candles:
-        return None, 'empty'
-    return {'candles': candles, 'interval': interval, 'dropped_null': null, 'dropped_invalid': bad,
-            'no_trade': sum(1 for k in candles if k[2] == k[3]), 'source': source,
+    # An exchange answers an interval with no trades with a filled row: open = high = low = close =
+    # the previous close, volume 0. That row is a carried-forward price, not an OHLC of that interval,
+    # so it is removed and the interval stays an empty GAP. Only intervals that traded are served.
+    filled = [k for k in candles if k[5] == 0 and k[1] == k[2] == k[3] == k[4]]
+    real = [k for k in candles if not (k[5] == 0 and k[1] == k[2] == k[3] == k[4])]
+    expected = max(1, window // INTERVAL_S[interval])
+    return {'candles': real, 'interval': interval, 'interval_s': INTERVAL_S[interval],
+            'window_start_ms': cut, 'window_end_ms': now * 1000, 'expected_intervals': expected,
+            'empty_intervals': max(0, expected - len(real)), 'dropped_filled': len(filled),
+            'dropped_null': null, 'dropped_invalid': bad, 'no_trade': 0, 'source': source,
             'volume_unit': vol_unit}, 'ok'
 
 
@@ -718,7 +724,8 @@ def _refresh_ohlc(key, asset, vs, label):
     return 'fresh'
 
 
-OHLC_FIELDS = ('candles', 'interval', 'source', 'dropped_null', 'dropped_invalid', 'no_trade', 'volume_unit', 'status')
+OHLC_FIELDS = ('candles', 'interval', 'source', 'dropped_null', 'dropped_invalid', 'no_trade', 'volume_unit', 'status',
+               'interval_s', 'window_start_ms', 'window_end_ms', 'expected_intervals', 'empty_intervals', 'dropped_filled')
 
 
 def _ohlc_payload(entry, status, now, reason=None):
@@ -726,7 +733,10 @@ def _ohlc_payload(entry, status, now, reason=None):
          'source': entry.get('source', 'yahoo-finance'), 'dropped_null': entry.get('dropped_null', 0),
          'dropped_invalid': entry.get('dropped_invalid', 0),
          'no_trade': entry.get('no_trade', sum(1 for k in entry['candles'] if k[2] == k[3])),
-         'volume_unit': entry.get('volume_unit', 'USD'), 'source_status': status,
+         'volume_unit': entry.get('volume_unit', 'USD'), 'source_status': status if entry['candles'] else 'no_candles',
+         'interval_s': entry.get('interval_s'), 'window_start_ms': entry.get('window_start_ms'),
+         'window_end_ms': entry.get('window_end_ms'), 'expected_intervals': entry.get('expected_intervals'),
+         'empty_intervals': entry.get('empty_intervals'), 'dropped_filled': entry.get('dropped_filled', 0),
          'age_s': int(now - entry['fetched_at']),
          'fields': ['t_ms', 'open', 'high', 'low', 'close', 'volume']}
     if reason:
