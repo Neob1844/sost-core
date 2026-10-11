@@ -99,7 +99,7 @@
   @keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v534" defer></script>
+<script src="js/nav-toggle.js?v=v535" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
@@ -204,6 +204,60 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<!-- ============ FUTURE DTD DESIGN: ADAPTIVE NODE PARTICIPATION (design proposal, 2026-10-11) ============ -->
+<section class="section" id="future-dtd-adaptive-node-participation"><div class="container">
+  <article style="border:2px solid #22d3ee;border-radius:14px;background:linear-gradient(180deg,rgba(34,211,238,.06),transparent 60%);padding:20px 22px">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#22d3ee">// DESIGN PROPOSAL &middot; 11 OCT 2026</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#fbbf24;border:1px solid #fbbf24;border-radius:6px;padding:3px 8px">NOT ACTIVE</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#fbbf24;border:1px solid #fbbf24;border-radius:6px;padding:3px 8px">NO ACTIVATION HEIGHT</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#94a3b8;border:1px solid #475569;border-radius:6px;padding:3px 8px">NO CONSENSUS CHANGE</span>
+    </div>
+    <h2 style="font-size:24px;margin:12px 0 4px;color:var(--text-primary,#e2e8f0);text-wrap:balance">Future DTD design: adaptive node participation</h2>
+    <div style="font-size:14px;color:#bdeff8;margin-bottom:10px">More miners running nodes &mdash; without making it harder to join while the network is small</div>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>Nothing changes today.</b> This is a design direction published for discussion. The current rules stay exactly as they are, no threshold has been chosen and no activation height exists. Any future change would need implementation, simulation, tests, review and audit, a public notice and an explicit activation rule.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#22d3ee;margin:18px 0 6px;font-weight:800">The rules today (V30000)</h3>
+    <div style="font:12px/1.65 ui-monospace,monospace;color:#cfe6f2;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre">MINER REWARD      valid mining &middot; never depends on NODE_BIND
+
+DTD NORMAL        every block, one draw
+                  &middot; mined within the last 288 blocks
+                  &middot; recent-producer cooldown: addresses that produced any of the
+                    previous 6 blocks are skipped, with a fallback that drops the
+                    cooldown if it would leave nobody eligible
+                  &middot; anti-dominance, only when 11 or more distinct miners are active
+                  &middot; NO NODE_BIND &middot; NO heartbeats
+
+DTD JACKPOT V2    every 288 blocks, a separate independent draw
+                  &middot; at least 3 SbPoW blocks in the last 2,016
+                  &middot; NODE_BIND required &middot; heartbeats required</div>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#22d3ee;margin:18px 0 6px;font-weight:800">Why more nodes matter &mdash; and why not to require them too early</h3>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Every independent node that validates the chain makes SOST harder to censor and harder to mislead. Jackpot V2 already rewards miners who run a node. Requiring NODE_BIND for the <b>normal</b> DTD as well would push even more miners to run one &mdash; but doing it while the network is small could slow adoption: a new miner who only wants to mine would lose access to the normal DTD on day one.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#22d3ee;margin:18px 0 6px;font-weight:800">The idea: adapt to the network's maturity</h3>
+    <div style="font:12px/1.65 ui-monospace,monospace;color:#cfe6f2;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre">SMALL / EARLY NETWORK
+  &rarr; normal DTD stays open to recent miners
+  &rarr; NODE_BIND optional for normal DTD
+  &rarr; NODE_BIND + heartbeats required only for Jackpot V2
+
+MATURE NETWORK  (only once objective maturity conditions hold)
+  &rarr; normal DTD MAY also require an active bound node identity
+  &rarr; the miner's own block reward is never affected</div>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">In plain words: <b>early on, mining alone is enough for the normal DTD.</b> Once enough miners already run nodes, and keep running them, the protocol could ask for NODE_BIND for the normal DTD too. Miners could still mine and receive their mining share either way &mdash; the gate would affect <b>DTD eligibility only</b>, never block validity and never the base block reward.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#22d3ee;margin:18px 0 6px;font-weight:800">The trap a naive rule would create</h3>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">If the switch depended only on a simple count &mdash; &ldquo;when N miners have a bound node, require it for everyone&rdquo; &mdash; a miner could prefer <b>not</b> to bind a node, to help keep the stricter gate from activating. The design must therefore not use a single naive threshold. It must study at least:</p>
+    <ul style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:6px 0 6px 18px">
+      <li><b>Hysteresis</b> &mdash; a higher threshold to turn the gate ON than to turn it OFF.</li>
+      <li><b>Persistence</b> &mdash; the condition must hold over a sustained period, across several windows.</li>
+      <li><b>Delayed activation</b> &mdash; once maturity is detected, activate only after a known delay or a future height.</li>
+      <li><b>No oscillation</b> &mdash; never switching ON and OFF every few blocks.</li>
+      <li><b>Incentive compatibility</b> &mdash; refusing NODE_BIND on purpose must never pay.</li>
+    </ul>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Maturity should not be measured by NODE_BIND count alone, but by a <b>combination</b> of distinct active miners, distinct active bound node identities, the share of miners with an active bound node, persistence over time, network stability, observable node diversity, a minimum duration before activation and protection against temporary spikes. <b>No number is proposed here</b>: the thresholds have to come out of simulation and incentive analysis.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#22d3ee;margin:18px 0 6px;font-weight:800">Running a node first has to be easy</h3>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Before NODE_BIND is required more broadly, running a node should be close to one click. Target experience (design direction, not a shipped feature): <b>Enable full participation</b> &rarr; run node &middot; run miner &middot; create NODE_BIND &middot; automatic heartbeats &middot; Jackpot eligibility.</p>
+    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Separate from <b>#40,000</b>: the planned 80% miner / 15% DTD normal / 5% DTD Jackpot split and this proposal are two different decisions and are not tied to the same activation. Terminology: NODE_BIND proves a cryptographic link between a mining key and a node key &mdash; a <b>bound node identity</b> &mdash; not that a physical machine is unique. Full technical note: <a href="sost-whitepaper.html#adaptive-node-participation" style="color:#22d3ee">whitepaper</a>.</p>
+  </article>
+</div></section>
+
 <!-- ============ NODE_BIND OPEN: FIRST BIND #30,194 + FIRST HEARTBEAT #30,196 (2026-10-11) ============ -->
 <section class="section" id="node-bind-open"><div class="container">
   <article style="border:2px solid #39ff14;border-radius:14px;background:linear-gradient(180deg,rgba(57,255,20,.06),transparent 60%);padding:20px 22px">
@@ -1896,8 +1950,8 @@ sudo systemctl restart sost-miner</pre>
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4?v=20261011','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST in 3 Minutes</span>
           <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>

@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-11-v533c-earnings-prefetch">
+<meta name="explorer-html-version" content="2026-10-11-v535-emission-charts">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -311,10 +311,24 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 }
 
 @media(max-width:768px){.price-overlays-wide{padding:0 16px}}
-.emission-card{background:var(--bg2);border:1px solid var(--border);padding:16px 20px}
-.emission-title{font-size:11px;letter-spacing:2px;color:var(--text3);margin-bottom:12px}
-.emission-title b{color:var(--purple)}
-.emission-canvas{width:100%;height:220px}
+.emission-card{position:relative;overflow:hidden;border-radius:14px;border:1px solid #23202c;padding:20px 24px 18px;
+  background:radial-gradient(120% 90% at 0% 0%,rgba(192,132,252,.10),transparent 55%),radial-gradient(120% 90% at 100% 100%,rgba(74,222,128,.07),transparent 55%),linear-gradient(180deg,#0f0e13,#08080a);
+  box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 10px 30px rgba(0,0,0,.4)}
+.emission-card::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,#c084fc,#4ade80 60%,transparent)}
+.emission-title{font-size:12px;letter-spacing:2px;color:#8a8a9a;margin-bottom:12px}
+.emission-title b{color:#d8b4fe;text-shadow:0 0 14px rgba(192,132,252,.45)}
+.emission-canvas{width:100%;height:300px}
+.em-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:4px 0 14px}
+.em-stat{border:1px solid #26232f;border-radius:10px;padding:9px 12px;background:rgba(0,0,0,.28)}
+.em-stat span{display:block;font-size:9px;letter-spacing:1.4px;color:#7d7a8c;text-transform:uppercase}
+.em-stat b{display:block;font-size:15px;font-weight:700;color:#ece9f5;font-variant-numeric:tabular-nums;margin-top:3px;white-space:nowrap}
+.em-stat.now{border-color:rgba(251,1,13,.45);background:rgba(251,1,13,.06)}.em-stat.now b{color:#ff5a66}
+.em-legend{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.em-pill{display:inline-flex;align-items:center;gap:8px;font-size:11px;color:#c8c8d4;border:1px solid #2a2733;border-radius:999px;padding:5px 12px;background:rgba(0,0,0,.25)}
+.em-pill i{display:inline-block;width:18px;height:4px;border-radius:2px}
+.em-sub{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin:22px 0 8px;padding-top:16px;border-top:1px solid #1d1b24}
+.em-sub .t{font-size:12px;letter-spacing:2px;color:#8a8a9a}.em-sub .t b{color:#86efac}
+@media(max-width:768px){.emission-card{padding:16px}.emission-canvas{height:240px}.em-stat b{font-size:13px}}
 .tbl{width:100%;border-collapse:collapse;border:1px solid var(--border)}
 .tbl th{text-align:left;padding:8px 14px;font-size:10px;letter-spacing:2px;color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border);font-weight:400}
 .tbl td{padding:9px 14px;font-size:12px;border-bottom:1px solid var(--border);transition:background .1s}
@@ -495,7 +509,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v534" defer></script>
+<script src="js/nav-toggle.js?v=v535" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="stylesheet" href="css/price-cards-v2.css?v=532">
 </head>
@@ -711,7 +725,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-11-v533c-earnings-prefetch';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-11-v535-emission-charts';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1433,16 +1447,27 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
         <b style="color:var(--gold)">Why Feigenbaum?</b><br>
         The Feigenbaum constants (δ = 4.6692..., α = 2.5029...) are universal mathematical constants from chaos theory that describe the rate at which period-doubling bifurcations occur in dynamical systems. In SOST, they are used purely as irrational constants to set the supply cap and epoch length — values that cannot be derived from simple fractions, making them resistant to arbitrary parameter choices. The emission curve is deterministic, immutable, and verifiable by anyone from the genesis block.
       </div>
-      <canvas class="emission-canvas" id="emissionCanvas" style="height:220px"></canvas>
-      <div style="display:flex;gap:20px;margin-top:8px;flex-wrap:wrap;align-items:center">
-        <span style="font-size:9px;color:var(--text3)">─ <span style="color:var(--purple)">█</span> block reward</span>
-        <span style="font-size:9px;color:var(--text3)">┈ <span style="color:var(--green)">█</span> cumulative supply</span>
-        <span style="font-size:9px;color:var(--text3)">┃ <span style="color:var(--red)">█</span> current position</span>
-        <span style="font-size:9px;color:var(--text3);margin-left:auto">supply<sub>max</sub> = δ·10⁶ ≈ 4,669,201 SOST</span>
+      <div class="em-stats" id="emStats">
+        <div class="em-stat"><span>Genesis reward R&#8320;</span><b>7.85100863 /blk</b></div>
+        <div class="em-stat"><span>Decay per epoch</span><b>q = e<sup>-&frac14;</sup> &asymp; 0.7788</b></div>
+        <div class="em-stat"><span>Epoch length (&alpha;&middot;10&#8309;)</span><b>131,553 blk &middot; ~2.5 y</b></div>
+        <div class="em-stat"><span>Hard cap (&delta;&middot;10&#8310;)</span><b>4,669,201 SOST</b></div>
+        <div class="em-stat now"><span>Now</span><b id="emNowStat">&mdash;</b></div>
       </div>
-      <div style="margin-top:16px">
-        <div style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px">// FULL EMISSION · 82 EPOCHS · ~205 YEARS</div>
-        <canvas id="emissionFullCanvas" style="height:140px;width:100%"></canvas>
+      <canvas class="emission-canvas" id="emissionCanvas" style="height:300px"></canvas>
+      <div class="em-legend">
+        <span class="em-pill"><i style="background:linear-gradient(90deg,#c084fc,#a855f7)"></i>block reward (SOST / block, left axis)</span>
+        <span class="em-pill"><i style="background:repeating-linear-gradient(90deg,#4ade80 0 6px,transparent 6px 9px)"></i>cumulative supply (right axis)</span>
+        <span class="em-pill"><i style="background:#fb010d"></i>current position</span>
+        <span class="em-pill"><i style="background:repeating-linear-gradient(90deg,#86efac 0 4px,transparent 4px 8px)"></i>95% of supply (~30 y)</span>
+      </div>
+      <div class="em-sub"><div class="t">// <b>FULL EMISSION</b> &middot; 82 EPOCHS &middot; ~205 YEARS</div><div style="font-size:11px;color:#8a8a9a">the cap is approached, never reached</div></div>
+      <canvas id="emissionFullCanvas" style="height:190px;width:100%"></canvas>
+      <div class="em-legend">
+        <span class="em-pill"><i style="background:#4ade80"></i>cumulative supply</span>
+        <span class="em-pill"><i style="background:rgba(192,132,252,.7)"></i>reward per epoch</span>
+        <span class="em-pill"><i style="background:repeating-linear-gradient(90deg,#fbbf24 0 4px,transparent 4px 8px)"></i>hard cap 4,669,201</span>
+        <span class="em-pill"><i style="background:#fb010d"></i>now</span>
       </div>
     </div>
   </div>
@@ -2808,7 +2833,9 @@ async function _renderDTDHistory(body,title,silent){
       if(height>=12000)summary+='<div style="margin-top:8px;padding:8px 10px;background:rgba(34,197,94,.05);border-left:3px solid #22c55e;border-radius:3px;font-size:10px;color:var(--text3);line-height:1.6">'
         +'<b style="color:'+(height>=30000?'#ffd166':'#22c55e')+'">'+(height>=30000?'V16.1 DTD eligibility (active)':'V13 DTD eligibility (active)')+'</b> &mdash; recent-producer cooldown <b>'+cdWindow+' blocks</b> (was 5)'
         +(height>=30000?' — <b>yields if it would leave nobody eligible</b>':'')
-        +(height>=12100?'; '+(height>=25000?'<b>3-of-3</b> (every block) cadence + active-miner recency (5,000 / 20,000 jackpot); ':'<b>1-of-3</b> cadence; ')+'<b>anti-dominance gate</b> excludes any address with &ge; 10% of the last 288 blocks ('+win288+'-block window); <b>SbPoW-activity gate</b> requires a block at height &ge; 7,100.':'; anti-dominance + 1-of-3 cadence activate at #12,100.')
+        +(height>=30000
+          ? '; <b>3-of-3</b> (every block) cadence + active-miner recency <b>288 blocks</b> at every height; <b>anti-dominance gate</b> (&ge; 10% of the last 288 blocks) armed <b>only when &ge; 11 distinct miners</b> are active; <b>SbPoW-activity gate</b> requires a block at height &ge; 7,100; no NODE_BIND / heartbeats for the normal DTD.'
+          : (height>=12100?'; '+(height>=25000?'<b>3-of-3</b> (every block) cadence + active-miner recency (5,000 / 20,000 jackpot); ':'<b>1-of-3</b> cadence; ')+'<b>anti-dominance gate</b> excludes any address with &ge; 10% of the last 288 blocks ('+win288+'-block window); <b>SbPoW-activity gate</b> requires a block at height &ge; 7,100.':'; anti-dominance + 1-of-3 cadence activate at #12,100.'))
         +'</div>';
       // Charts row: schedule pie · lottery distribution bar · top miners bar
       summary+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-top:8px">'
@@ -4190,38 +4217,57 @@ function updateChainSync(){
 setInterval(function(){try{updateChainSync();}catch(e){}},1000);
 
 var EMI={EPOCH:131553,R0:785100863,q:0.7788007830714049,SUPPLY_MAX:466920160910299,ALPHA_YEARS:2.502907875095892,TOTAL_EPOCHS:12};
-function getEpochData(){var d=[];var cum=0;for(var e=0;e<=EMI.TOTAL_EPOCHS;e++){var re=Math.floor(EMI.R0*Math.pow(EMI.q,e));var ee=(re*EMI.EPOCH)/1e8;cum+=ee;d.push({epoch:e,reward:re/1e8,epoch_emission:ee,cumulative:cum,year:e*EMI.ALPHA_YEARS,pct:cum/(EMI.SUPPLY_MAX/1e8)*100,miner:re/1e8*0.5,gold:re/1e8*0.25,popc:re/1e8*0.25});}return d;}
+function getEpochData(){var d=[];var cum=0;for(var e=0;e<=EMI.TOTAL_EPOCHS;e++){var re=Math.floor(EMI.R0*Math.pow(EMI.q,e));var ee=(re*EMI.EPOCH)/1e8;cum+=ee;d.push({epoch:e,reward:re/1e8,epoch_emission:ee,cumulative:cum,year:e*EMI.ALPHA_YEARS,pct:cum/(EMI.SUPPLY_MAX/1e8)*100,miner:re/1e8*0.5,dtd:re/1e8*0.5});}return d;}
 var _emTip=null;
+function _emFont(px,w){return (w||'')+' '+px+'px "Fira Code", ui-monospace, monospace';}
+function _emFmtS(v){return v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(0)+'k':Math.floor(v).toLocaleString();}
+function _emPill(ctx,x,y,txt,bg,fg){ctx.font=_emFont(10,'bold');var w=ctx.measureText(txt).width+14;ctx.fillStyle=bg;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x-w/2,y-9,w,18,9);else ctx.rect(x-w/2,y-9,w,18);ctx.fill();ctx.fillStyle=fg;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,x,y+.5);ctx.textBaseline='alphabetic';}
 function drawEmissionChart(ch){
   var cv=document.getElementById('emissionCanvas'),ctx=cv.getContext('2d');
   var dpr=window.devicePixelRatio||1,rect=cv.getBoundingClientRect();
   cv.width=rect.width*dpr;cv.height=rect.height*dpr;ctx.scale(dpr,dpr);
-  var W=rect.width,Hc=rect.height,data=getEpochData(),maxR=data[0].reward,maxC=EMI.SUPPLY_MAX/1e8;
-  var p={t:28,b:40,l:60,r:60},cW=W-p.l-p.r,cH=Hc-p.t-p.b,ce=ch/EMI.EPOCH;
+  var W=rect.width,Hc=rect.height,data=getEpochData(),maxR=data[0].reward,maxC=EMI.SUPPLY_MAX/1e8,narrow=W<560;
+  var p={t:40,b:48,l:narrow?44:62,r:narrow?44:66},cW=W-p.l-p.r,cH=Hc-p.t-p.b,ce=ch/EMI.EPOCH,N=EMI.TOTAL_EPOCHS;
+  var X=function(e){return p.l+(e/N)*cW;},YR=function(v){return p.t+cH-(v/maxR)*cH;},YC=function(v){return p.t+cH-(v/maxC)*cH;};
   ctx.clearRect(0,0,W,Hc);
-  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
-  for(var i=0;i<=4;i++){var y=p.t+i*(cH/4);ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();ctx.fillStyle='rgba(192,132,252,.4)';ctx.font='9px "Fira Code"';ctx.textAlign='right';ctx.fillText((maxR*(4-i)/4).toFixed(2),p.l-6,y+3);}
-  for(var e=0;e<=EMI.TOTAL_EPOCHS;e++){var x=p.l+(e/EMI.TOTAL_EPOCHS)*cW;ctx.strokeStyle=e%3===0?'rgba(255,255,255,.06)':'rgba(255,255,255,.025)';ctx.beginPath();ctx.moveTo(x,p.t);ctx.lineTo(x,p.t+cH);ctx.stroke();}
-  ctx.beginPath();ctx.strokeStyle='rgba(192,132,252,.8)';ctx.lineWidth=2;
-  for(var e2=0;e2<=EMI.TOTAL_EPOCHS;e2++){var x1=p.l+(e2/EMI.TOTAL_EPOCHS)*cW,x2=p.l+((e2+1)/EMI.TOTAL_EPOCHS)*cW,y2=p.t+cH-(data[e2].reward/maxR)*cH;if(e2===0)ctx.moveTo(x1,y2);else ctx.lineTo(x1,y2);if(e2<EMI.TOTAL_EPOCHS)ctx.lineTo(x2,y2);}
-  ctx.stroke();ctx.lineTo(p.l+cW,p.t+cH);ctx.lineTo(p.l,p.t+cH);ctx.closePath();
-  var g1=ctx.createLinearGradient(0,p.t,0,p.t+cH);g1.addColorStop(0,'rgba(192,132,252,.12)');g1.addColorStop(1,'rgba(192,132,252,.01)');ctx.fillStyle=g1;ctx.fill();
-  ctx.beginPath();ctx.strokeStyle='rgba(74,222,128,.6)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
-  for(var e3=0;e3<=EMI.TOTAL_EPOCHS;e3++){var x3=p.l+(e3/EMI.TOTAL_EPOCHS)*cW,y3=p.t+cH-(data[e3].cumulative/maxC)*cH;if(e3===0)ctx.moveTo(x3,y3);else ctx.lineTo(x3,y3);}
-  ctx.stroke();ctx.setLineDash([]);
-  ctx.textAlign='left';for(var i2=0;i2<=4;i2++){var y4=p.t+i2*(cH/4),v=maxC*(4-i2)/4;ctx.fillStyle='rgba(74,222,128,.35)';ctx.font='9px "Fira Code"';ctx.fillText(v>=1e6?(v/1e6).toFixed(1)+'M':Math.floor(v).toLocaleString(),W-p.r+6,y4+3);}
-  ctx.textAlign='center';for(var e4=0;e4<=EMI.TOTAL_EPOCHS;e4++){var x4=p.l+(e4/EMI.TOTAL_EPOCHS)*cW;ctx.fillStyle=e4===Math.floor(ce)?'rgba(251,1,13,.9)':'rgba(255,255,255,.2)';ctx.font=e4===Math.floor(ce)?'bold 9px "Fira Code"':'9px "Fira Code"';ctx.fillText(e4.toString(),x4,p.t+cH+14);ctx.fillStyle='rgba(255,255,255,.12)';ctx.font='8px "Fira Code"';ctx.fillText('~'+(e4*EMI.ALPHA_YEARS).toFixed(1)+'y',x4,p.t+cH+26);}
-  for(var e5=0;e5<EMI.TOTAL_EPOCHS;e5++){var x5a=p.l+(e5/EMI.TOTAL_EPOCHS)*cW+1,x5b=p.l+((e5+1)/EMI.TOTAL_EPOCHS)*cW-1,bw=x5b-x5a,by=p.t+cH+1;ctx.fillStyle='rgba(251,146,60,.25)';ctx.fillRect(x5a,by,bw*.5,3);ctx.fillStyle='rgba(245,158,11,.35)';ctx.fillRect(x5a+bw*.5,by,bw*.25,3);ctx.fillStyle='rgba(103,232,249,.25)';ctx.fillRect(x5a+bw*.75,by,bw*.25,3);}
-  var cx=p.l+(ce/EMI.TOTAL_EPOCHS)*cW;ctx.strokeStyle='rgba(251,1,13,.7)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(cx,p.t);ctx.lineTo(cx,p.t+cH);ctx.stroke();ctx.setLineDash([]);
-  var cr=EMI.R0*Math.pow(EMI.q,Math.floor(ce))/1e8,cy=p.t+cH-(cr/maxR)*cH;
-  ctx.fillStyle='#fb010d';ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx,cy,2,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(251,1,13,.9)';ctx.font='bold 9px "Fira Code"';ctx.textAlign='center';ctx.fillText('\u25B2 NOW',cx,p.t-6);
-  ctx.fillStyle='rgba(251,1,13,.6)';ctx.font='8px "Fira Code"';ctx.fillText(cr.toFixed(4)+' SOST/blk',cx,p.t-16);
-  for(var e6=0;e6<=EMI.TOTAL_EPOCHS;e6++){var x6=p.l+(e6/EMI.TOTAL_EPOCHS)*cW,y6=p.t+cH-(data[e6].reward/maxR)*cH;ctx.fillStyle='rgba(192,132,252,.6)';ctx.beginPath();ctx.arc(x6,y6,2.5,0,Math.PI*2);ctx.fill();}
-  var y95=p.t+cH-.95*cH;ctx.strokeStyle='rgba(74,222,128,.2)';ctx.lineWidth=1;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(p.l,y95);ctx.lineTo(W-p.r,y95);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle='rgba(74,222,128,.3)';ctx.font='8px "Fira Code"';ctx.textAlign='left';ctx.fillText('95% supply (~30y)',p.l+4,y95-4);
+  // grid
+  for(var i=0;i<=4;i++){var y=p.t+i*(cH/4);ctx.strokeStyle=i===4?'rgba(255,255,255,.14)':'rgba(255,255,255,.05)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();
+    ctx.fillStyle='#b99ae6';ctx.font=_emFont(10);ctx.textAlign='right';ctx.fillText((maxR*(4-i)/4).toFixed(2),p.l-8,y+3);
+    ctx.fillStyle='#6ee7a0';ctx.textAlign='left';ctx.fillText(_emFmtS(maxC*(4-i)/4),W-p.r+8,y+3);}
+  for(var e=0;e<=N;e++){ctx.strokeStyle='rgba(255,255,255,'+(e%3===0?.06:.025)+')';ctx.beginPath();ctx.moveTo(X(e),p.t);ctx.lineTo(X(e),p.t+cH);ctx.stroke();}
+  // axis titles
+  if(!narrow){   // on phones the legend names the axes; rotated titles would sit on the tick labels
+    ctx.save();ctx.fillStyle='#9d83c9';ctx.font=_emFont(10);ctx.translate(12,p.t+cH/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText('SOST / block',0,0);ctx.restore();
+    ctx.save();ctx.fillStyle='#5fc98a';ctx.font=_emFont(10);ctx.translate(W-10,p.t+cH/2);ctx.rotate(Math.PI/2);ctx.textAlign='center';ctx.fillText('cumulative supply',0,0);ctx.restore();}
+  // 95% line
+  var y95=YC(.95*maxC);ctx.strokeStyle='rgba(134,239,172,.45)';ctx.lineWidth=1;ctx.setLineDash([6,5]);ctx.beginPath();ctx.moveTo(p.l,y95);ctx.lineTo(W-p.r,y95);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#86efac';ctx.font=_emFont(10);if(narrow){ctx.textAlign='center';ctx.fillText('95% · ~30 y',X(4.6),y95+16);}else{ctx.textAlign='right';ctx.fillText('95% of supply · ~30 years',W-p.r-8,y95+16);}
+  // reward step area + line with glow
+  ctx.beginPath();for(var e2=0;e2<=N;e2++){var yv=YR(data[e2].reward);if(e2===0)ctx.moveTo(X(0),yv);else ctx.lineTo(X(e2),yv);if(e2<N)ctx.lineTo(X(e2+1),yv);}
+  ctx.lineTo(X(N),p.t+cH);ctx.lineTo(X(0),p.t+cH);ctx.closePath();
+  var g1=ctx.createLinearGradient(0,p.t,0,p.t+cH);g1.addColorStop(0,'rgba(192,132,252,.32)');g1.addColorStop(1,'rgba(192,132,252,.02)');ctx.fillStyle=g1;ctx.fill();
+  ctx.beginPath();for(var e3=0;e3<=N;e3++){var yv3=YR(data[e3].reward);if(e3===0)ctx.moveTo(X(0),yv3);else ctx.lineTo(X(e3),yv3);if(e3<N)ctx.lineTo(X(e3+1),yv3);}
+  ctx.save();ctx.shadowColor='rgba(192,132,252,.8)';ctx.shadowBlur=10;ctx.strokeStyle='#c084fc';ctx.lineWidth=2.5;ctx.stroke();ctx.restore();
+  for(var e4=0;e4<=N;e4++){ctx.fillStyle='#e9d5ff';ctx.beginPath();ctx.arc(X(e4),YR(data[e4].reward),2.6,0,Math.PI*2);ctx.fill();}
+  // cumulative curve (dashed, glowing)
+  ctx.beginPath();for(var e5=0;e5<=N;e5++){var yc=YC(data[e5].cumulative);if(e5===0)ctx.moveTo(X(0),yc);else ctx.lineTo(X(e5),yc);}
+  ctx.save();ctx.shadowColor='rgba(74,222,128,.7)';ctx.shadowBlur=8;ctx.strokeStyle='#4ade80';ctx.lineWidth=2;ctx.setLineDash([7,4]);ctx.stroke();ctx.restore();ctx.setLineDash([]);
+  // x axis: epochs + years
+  for(var e6=0;e6<=N;e6++){var xx=X(e6),cur=e6===Math.floor(ce);
+    if(narrow&&e6%2&&!cur)continue;
+    ctx.textAlign='center';ctx.fillStyle=cur?'#ff5a66':'#a3a3b2';ctx.font=_emFont(10,cur?'bold':'');ctx.fillText(String(e6),xx,p.t+cH+16);
+    ctx.fillStyle='#6f6c80';ctx.font=_emFont(9);ctx.fillText('~'+(e6*EMI.ALPHA_YEARS).toFixed(0)+'y',xx,p.t+cH+30);}
+  ctx.fillStyle='#6f6c80';ctx.font=_emFont(9);ctx.textAlign='right';ctx.fillText('epoch · years',W-p.r,p.t+cH+44);
+  // NOW marker
+  var cx=X(Math.min(ce,N)),cr=EMI.R0*Math.pow(EMI.q,Math.floor(ce))/1e8,cy=YR(cr);
+  ctx.strokeStyle='rgba(251,1,13,.75)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(cx,p.t);ctx.lineTo(cx,p.t+cH);ctx.stroke();ctx.setLineDash([]);
+  ctx.save();ctx.shadowColor='#fb010d';ctx.shadowBlur=14;ctx.fillStyle='#fb010d';ctx.beginPath();ctx.arc(cx,cy,6,0,Math.PI*2);ctx.fill();ctx.restore();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx,cy,2.4,0,Math.PI*2);ctx.fill();
+  _emPill(ctx,Math.max(p.l+60,Math.min(W-p.r-60,cx)),p.t-22,'NOW · '+cr.toFixed(4)+' SOST/blk','rgba(251,1,13,.9)','#fff');
+  // stats chip
+  var cumNow=0;for(var k=0;k<Math.floor(ce);k++)cumNow+=data[k].epoch_emission;cumNow+=(ce-Math.floor(ce))*EMI.EPOCH*cr;
+  var ns=document.getElementById('emNowStat');if(ns)ns.textContent='epoch '+Math.floor(ce)+' · '+cr.toFixed(4)+' · '+(cumNow/maxC*100).toFixed(2)+'%';
   cv._epochData=data;cv._params={pad:p,cW:cW,cH:cH,maxR:maxR,maxCum:maxC,currentEpoch:ce};
-  // Draw full 82-epoch chart
   drawFullEmission(ch);
 }
 function drawFullEmission(ch){
@@ -4229,66 +4275,38 @@ function drawFullEmission(ch){
   var ctx=cv.getContext('2d');
   var dpr=window.devicePixelRatio||1,rect=cv.getBoundingClientRect();
   cv.width=rect.width*dpr;cv.height=rect.height*dpr;ctx.scale(dpr,dpr);
-  var W=rect.width,Hc=rect.height;
+  var W=rect.width,Hc=rect.height,narrow=W<560;
   var FULL_EPOCHS=82,q=EMI.q,R0=EMI.R0/1e8,maxS=EMI.SUPPLY_MAX/1e8;
-  var p={t:16,b:28,l:50,r:50},cW=W-p.l-p.r,cH=Hc-p.t-p.b;
-  var ce=ch/EMI.EPOCH;
+  var p={t:24,b:34,l:narrow?44:62,r:narrow?44:66},cW=W-p.l-p.r,cH=Hc-p.t-p.b,ce=ch/EMI.EPOCH;
+  var X=function(e){return p.l+(e/FULL_EPOCHS)*cW;},Y=function(v){return p.t+cH-(v/maxS)*cH;};
   ctx.clearRect(0,0,W,Hc);
-  // Background grid
-  ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=1;
-  for(var i=0;i<=4;i++){var y=p.t+i*(cH/4);ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();}
-  // Cumulative supply curve
-  var cum=0;
-  ctx.beginPath();ctx.strokeStyle='rgba(74,222,128,.5)';ctx.lineWidth=1.5;
-  for(var e=0;e<=FULL_EPOCHS;e++){
-    var re=R0*Math.pow(q,e);var ee=re*EMI.EPOCH;cum+=ee;
-    var x=p.l+(e/FULL_EPOCHS)*cW,y2=p.t+cH-(cum/maxS)*cH;
-    if(e===0)ctx.moveTo(x,y2);else ctx.lineTo(x,y2);
-  }
-  ctx.stroke();
-  // Fill under curve
-  ctx.lineTo(p.l+cW,p.t+cH);ctx.lineTo(p.l,p.t+cH);ctx.closePath();
-  var g=ctx.createLinearGradient(0,p.t,0,p.t+cH);g.addColorStop(0,'rgba(74,222,128,.08)');g.addColorStop(1,'rgba(74,222,128,.01)');ctx.fillStyle=g;ctx.fill();
-  // Reward bars (tiny)
-  for(var e2=0;e2<FULL_EPOCHS;e2++){
-    var re2=R0*Math.pow(q,e2);
-    var x1=p.l+(e2/FULL_EPOCHS)*cW,bw=cW/FULL_EPOCHS-1;
-    var bh=(re2/R0)*cH*0.3;
-    ctx.fillStyle='rgba(192,132,252,.3)';
-    ctx.fillRect(x1,p.t+cH-bh,Math.max(1,bw),bh);
-  }
-  // 95% line
-  var y95=p.t+cH-.95*cH;ctx.strokeStyle='rgba(74,222,128,.2)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
-  ctx.beginPath();ctx.moveTo(p.l,y95);ctx.lineTo(W-p.r,y95);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle='rgba(74,222,128,.3)';ctx.font='8px "Fira Code"';ctx.textAlign='left';ctx.fillText('95% (~30y, epoch 12)',p.l+4,y95-3);
-  // Current position
-  var cx2=p.l+(ce/FULL_EPOCHS)*cW;
-  ctx.strokeStyle='rgba(251,1,13,.5)';ctx.lineWidth=1;ctx.setLineDash([2,2]);
-  ctx.beginPath();ctx.moveTo(cx2,p.t);ctx.lineTo(cx2,p.t+cH);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle='rgba(251,1,13,.7)';ctx.font='bold 8px "Fira Code"';ctx.textAlign='center';ctx.fillText('NOW',cx2,p.t-3);
-  // X axis labels
-  ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,.2)';ctx.font='8px "Fira Code"';
-  for(var e3=0;e3<=FULL_EPOCHS;e3+=10){
-    var x3=p.l+(e3/FULL_EPOCHS)*cW;
-    ctx.fillText(e3.toString(),x3,p.t+cH+12);
-    ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillText('~'+(e3*EMI.ALPHA_YEARS).toFixed(0)+'y',x3,p.t+cH+22);
-    ctx.fillStyle='rgba(255,255,255,.2)';
-  }
-  // Y axis
-  ctx.textAlign='right';ctx.fillStyle='rgba(74,222,128,.3)';ctx.font='8px "Fira Code"';
-  for(var i2=0;i2<=4;i2++){var y3=p.t+i2*(cH/4),v=maxS*(4-i2)/4;ctx.fillText(v>=1e6?(v/1e6).toFixed(1)+'M':Math.floor(v).toLocaleString(),p.l-4,y3+3);}
-  // Left axis: reward
-  ctx.textAlign='left';ctx.fillStyle='rgba(192,132,252,.3)';
-  ctx.fillText(R0.toFixed(2)+'/blk',W-p.r+4,p.t+3);
-  ctx.fillText('0',W-p.r+4,p.t+cH+3);
-  // Store epoch data for tooltip
+  for(var i=0;i<=4;i++){var y=p.t+i*(cH/4);ctx.strokeStyle=i===4?'rgba(255,255,255,.14)':'rgba(255,255,255,.045)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();
+    ctx.fillStyle='#6ee7a0';ctx.font=_emFont(10);ctx.textAlign='right';ctx.fillText(_emFmtS(maxS*(4-i)/4),p.l-8,y+3);}
+  // reward bars
+  for(var e2=0;e2<FULL_EPOCHS;e2++){var re2=R0*Math.pow(q,e2),bw=Math.max(1,cW/FULL_EPOCHS-1.5),bh=(re2/R0)*cH*.55;
+    var gb=ctx.createLinearGradient(0,p.t+cH-bh,0,p.t+cH);gb.addColorStop(0,'rgba(192,132,252,.75)');gb.addColorStop(1,'rgba(192,132,252,.12)');ctx.fillStyle=gb;ctx.fillRect(X(e2)+.5,p.t+cH-bh,bw,bh);}
+  // cap line
+  ctx.strokeStyle='rgba(251,191,36,.6)';ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(p.l,Y(maxS));ctx.lineTo(W-p.r,Y(maxS));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#fbbf24';ctx.font=_emFont(10);ctx.textAlign='right';ctx.fillText('hard cap 4,669,201',W-p.r-6,Y(maxS)-7);
+  // cumulative area
+  var cum=0,pts=[];for(var e=0;e<=FULL_EPOCHS;e++){cum+=R0*Math.pow(q,e)*EMI.EPOCH;pts.push([X(e),Y(cum)]);}
+  ctx.beginPath();pts.forEach(function(pt,ix){if(ix)ctx.lineTo(pt[0],pt[1]);else ctx.moveTo(pt[0],pt[1]);});ctx.lineTo(X(FULL_EPOCHS),p.t+cH);ctx.lineTo(X(0),p.t+cH);ctx.closePath();
+  var g=ctx.createLinearGradient(0,p.t,0,p.t+cH);g.addColorStop(0,'rgba(74,222,128,.28)');g.addColorStop(1,'rgba(74,222,128,.02)');ctx.fillStyle=g;ctx.fill();
+  ctx.beginPath();pts.forEach(function(pt,ix){if(ix)ctx.lineTo(pt[0],pt[1]);else ctx.moveTo(pt[0],pt[1]);});
+  ctx.save();ctx.shadowColor='rgba(74,222,128,.75)';ctx.shadowBlur=9;ctx.strokeStyle='#4ade80';ctx.lineWidth=2.2;ctx.stroke();ctx.restore();
+  // 95% marker at epoch 12
+  var y95=Y(.95*maxS);ctx.strokeStyle='rgba(134,239,172,.4)';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(p.l,y95);ctx.lineTo(W-p.r,y95);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#86efac';ctx.font=_emFont(10);ctx.textAlign='center';ctx.fillText('95% · epoch 12 · ~30 y',X(narrow?50:42),y95+16);
+  // now
+  var cx2=X(ce);ctx.strokeStyle='rgba(251,1,13,.75)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(cx2,p.t);ctx.lineTo(cx2,p.t+cH);ctx.stroke();ctx.setLineDash([]);
+  _emPill(ctx,Math.max(p.l+26,cx2),p.t-12,'NOW','rgba(251,1,13,.9)','#fff');
+  // x axis
+  for(var e3=0;e3<=FULL_EPOCHS;e3+=(narrow?20:10)){var x3=X(e3);ctx.textAlign='center';ctx.fillStyle='#a3a3b2';ctx.font=_emFont(10);ctx.fillText(String(e3),x3,p.t+cH+15);ctx.fillStyle='#6f6c80';ctx.font=_emFont(9);ctx.fillText('~'+(e3*EMI.ALPHA_YEARS).toFixed(0)+'y',x3,p.t+cH+28);}
+  // right axis: reward scale for the bars
+  ctx.textAlign='left';ctx.fillStyle='#b99ae6';ctx.font=_emFont(10);ctx.fillText(R0.toFixed(2)+(narrow?'':'/blk'),W-p.r+8,p.t+cH-cH*.55+4);ctx.fillText('0',W-p.r+8,p.t+cH+3);
   var fullData=[];var cumT=0;
-  for(var e4=0;e4<=FULL_EPOCHS;e4++){
-    var re4=R0*Math.pow(q,e4);var ee4=re4*EMI.EPOCH;cumT+=ee4;
-    fullData.push({epoch:e4,reward:re4,epoch_emission:ee4,cumulative:cumT,
-      year:e4*EMI.ALPHA_YEARS,pct:cumT/maxS*100,
-      miner:re4*0.5,gold:re4*0.25,popc:re4*0.25});
-  }
+  for(var e4=0;e4<=FULL_EPOCHS;e4++){var re4=R0*Math.pow(q,e4);var ee4=re4*EMI.EPOCH;cumT+=ee4;
+    fullData.push({epoch:e4,reward:re4,epoch_emission:ee4,cumulative:cumT,year:e4*EMI.ALPHA_YEARS,pct:cumT/maxS*100,miner:re4*0.5,dtd:re4*0.5});}
   cv._fullData=fullData;cv._fullParams={pad:p,cW:cW,cH:cH,FULL_EPOCHS:FULL_EPOCHS};
 }
 var _emFullTip=null;
@@ -4297,7 +4315,7 @@ document.getElementById('emissionFullCanvas').addEventListener('mousemove',funct
   var fp=this._fullParams,e=Math.max(0,Math.min(fp.FULL_EPOCHS,Math.floor((mx-fp.pad.l)/fp.cW*fp.FULL_EPOCHS))),d=this._fullData[e];if(!d)return;
   if(!_emFullTip){_emFullTip=document.createElement('div');_emFullTip.style.cssText='position:fixed;background:rgba(6,6,6,.95);border:1px solid var(--border2);padding:10px 14px;font-family:var(--code);font-size:10px;line-height:1.8;color:var(--text);pointer-events:none;z-index:200;min-width:220px';document.body.appendChild(_emFullTip);}
   _emFullTip.style.display='block';_emFullTip.style.left=(evt.clientX+16)+'px';_emFullTip.style.top=(evt.clientY-10)+'px';
-  _emFullTip.innerHTML='<span style="color:var(--purple);font-weight:600">EPOCH '+d.epoch+'</span> <span style="color:var(--text3)">\u00B7 ~'+d.year.toFixed(1)+' years</span><br><span style="color:var(--text3)">reward:</span> <span style="color:var(--purple)">'+d.reward.toFixed(8)+'</span> SOST/blk<br><span style="color:var(--text3)">split:</span> <span style="color:var(--orange)">'+d.miner.toFixed(4)+'</span> \u00B7 <span style="color:var(--gold)">'+d.gold.toFixed(4)+'</span> \u00B7 <span style="color:var(--cyan)">'+d.popc.toFixed(4)+'</span><br><span style="color:var(--text3)">epoch emission:</span> <span style="color:var(--green)">'+Math.floor(d.epoch_emission).toLocaleString()+' SOST</span><br><span style="color:var(--text3)">cumulative:</span> <span style="color:var(--green)">'+Math.floor(d.cumulative).toLocaleString()+'</span> ('+d.pct.toFixed(2)+'%)<br><span style="color:var(--text3)">remaining:</span> '+(100-d.pct).toFixed(2)+'%';
+  _emFullTip.innerHTML='<span style="color:var(--purple);font-weight:600">EPOCH '+d.epoch+'</span> <span style="color:var(--text3)">\u00B7 ~'+d.year.toFixed(1)+' years</span><br><span style="color:var(--text3)">reward:</span> <span style="color:var(--purple)">'+d.reward.toFixed(8)+'</span> SOST/blk<br><span style="color:var(--text3)">split today:</span> <span style="color:var(--orange)">'+d.miner.toFixed(4)+' miner</span> \u00B7 <span style="color:#39ff14">'+d.dtd.toFixed(4)+' DTD</span> <span style="color:var(--text3)">(50/50 since #25,000)</span><br><span style="color:var(--text3)">epoch emission:</span> <span style="color:var(--green)">'+Math.floor(d.epoch_emission).toLocaleString()+' SOST</span><br><span style="color:var(--text3)">cumulative:</span> <span style="color:var(--green)">'+Math.floor(d.cumulative).toLocaleString()+'</span> ('+d.pct.toFixed(2)+'%)<br><span style="color:var(--text3)">remaining:</span> '+(100-d.pct).toFixed(2)+'%';
 });
 document.getElementById('emissionFullCanvas').addEventListener('mouseleave',function(){if(_emFullTip)_emFullTip.style.display='none';});
 document.getElementById('emissionCanvas').addEventListener('mousemove',function(evt){
@@ -4305,7 +4323,7 @@ document.getElementById('emissionCanvas').addEventListener('mousemove',function(
   var params=this._params,e=Math.max(0,Math.min(EMI.TOTAL_EPOCHS,Math.floor((mx-params.pad.l)/params.cW*EMI.TOTAL_EPOCHS))),d=this._epochData[e];if(!d)return;
   if(!_emTip){_emTip=document.createElement('div');_emTip.style.cssText='position:fixed;background:rgba(6,6,6,.95);border:1px solid var(--border2);padding:10px 14px;font-family:var(--code);font-size:10px;line-height:1.8;color:var(--text);pointer-events:none;z-index:200;min-width:200px';document.body.appendChild(_emTip);}
   _emTip.style.display='block';_emTip.style.left=(evt.clientX+16)+'px';_emTip.style.top=(evt.clientY-10)+'px';
-  _emTip.innerHTML='<span style="color:var(--purple);font-weight:600">EPOCH '+d.epoch+'</span> <span style="color:var(--text3)">\u00B7 ~'+d.year.toFixed(1)+'y</span><br><span style="color:var(--text3)">reward:</span> <span style="color:var(--purple)">'+d.reward.toFixed(8)+'</span>/blk<br><span style="color:var(--text3)">split:</span> <span style="color:var(--orange)">'+d.miner.toFixed(4)+'</span>\u00B7<span style="color:var(--gold)">'+d.gold.toFixed(4)+'</span>\u00B7<span style="color:var(--cyan)">'+d.popc.toFixed(4)+'</span><br><span style="color:var(--text3)">epoch:</span> <span style="color:var(--green)">'+Math.floor(d.epoch_emission).toLocaleString()+' SOST</span><br><span style="color:var(--text3)">cumul:</span> <span style="color:var(--green)">'+Math.floor(d.cumulative).toLocaleString()+'</span> ('+d.pct.toFixed(1)+'%)';
+  _emTip.innerHTML='<span style="color:var(--purple);font-weight:600">EPOCH '+d.epoch+'</span> <span style="color:var(--text3)">\u00B7 ~'+d.year.toFixed(1)+'y</span><br><span style="color:var(--text3)">reward:</span> <span style="color:var(--purple)">'+d.reward.toFixed(8)+'</span>/blk<br><span style="color:var(--text3)">split today:</span> <span style="color:var(--orange)">'+d.miner.toFixed(4)+' miner</span>\u00B7<span style="color:#39ff14">'+d.dtd.toFixed(4)+' DTD</span><br><span style="color:var(--text3)">epoch:</span> <span style="color:var(--green)">'+Math.floor(d.epoch_emission).toLocaleString()+' SOST</span><br><span style="color:var(--text3)">cumul:</span> <span style="color:var(--green)">'+Math.floor(d.cumulative).toLocaleString()+'</span> ('+d.pct.toFixed(1)+'%)';
 });
 document.getElementById('emissionCanvas').addEventListener('mouseleave',function(){if(_emTip)_emTip.style.display='none';});
 function drawSparkline(){
@@ -9451,8 +9469,8 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
       <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
       <div class="sv-cards">
         <button class="sv-card sv-card-sost" type="button"
-          onclick="pickSv('sost-intro.mp4?v=20261011','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
-          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
           <span class="sv-card-h">SOST in 3 Minutes</span>
           <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
         </button>
