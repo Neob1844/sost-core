@@ -316,8 +316,8 @@
   Card.prototype.pointer = function (px) {
     if (!this.geo) return;
     // Tooltip only over an interval that has a real candle; a gap shows nothing.
-    var G = this.geo, si = Math.floor((px - G.L) / G.slot), i = -1;
-    for (var q = 0; q < G.n; q++) if (Math.floor((this.candles[q][0] - G.t0) / G.ivMs) === si) { i = q; break; }
+    var G = this.geo, i = -1, best = G.slot / 2;   // the candle whose centre is within half an interval
+    for (var q = 0; q < G.n; q++) { var d = Math.abs(G.x(q) - px); if (d <= best) { best = d; i = q; } }
     if (i < 0) { this.hover = -1; this.tip.style.display = 'none'; this.draw(); return; }
     this.hover = i; this.draw();
     var c = this.candles[i], p = this.payload, vs = this.s().vs;
