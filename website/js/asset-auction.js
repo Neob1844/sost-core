@@ -6,7 +6,7 @@
  * backed by a refundable escrow (a REFERENCE value converted to a SOST quote,
  * never custodied fiat/USDC). Losers' escrows are refundable; the winner's may
  * apply to settlement. Real funds are DISABLED — engine + demo + tests only.
- * Application layer: no consensus / node / STRATO / DTD change.
+ * Application layer: no consensus / node / production node / DTD change.
  */
 (function (root, factory) {
   var m = factory();

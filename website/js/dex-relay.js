@@ -7,7 +7,7 @@
  * backend in production — e.g. SQLite/HTTP; an in-memory Map in tests) so the
  * lifecycle logic is unit-testable. Guards: signature-shape, digest match,
  * expiry, network binding, and single-acceptance (no replay / double-fill).
- * No consensus/node/STRATO change.
+ * No consensus/node/production-node change.
  */
 (function (root, factory) {
   var m = factory(function () {

@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-11-v540-skin-rest">
+<meta name="explorer-html-version" content="2026-10-11-v541-peer-reliability">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -801,7 +801,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-11-v540-skin-rest';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-11-v541-peer-reliability';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1829,19 +1829,21 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
         <div style="font-size:8px;color:var(--text3);margin-top:3px;line-height:1.5">external peers</div>
       </div>
     </div>
-    <table class="tbl"><thead><tr><th>NODE</th><th>DIRECTION</th><th title="The height the peer announced in its VERSION handshake. It is NOT a live reading: for a long-lived connection it stays frozen at the value announced when the connection was opened.">HEIGHT @ HANDSHAKE</th><th title="That announced height minus our tip NOW. A large negative number on an old connection usually means the announcement is old, not that the peer is stuck.">DRIFT vs OUR TIP</th><th>TRANSPORT</th><th>UPTIME</th><th>STATUS</th><th>RELIABILITY</th></tr></thead>
+    <table class="tbl"><thead><tr><th>NODE</th><th>DIRECTION</th><th title="The height the peer announced at handshake, raised by the node each time this peer relays it a NEW block on this connection. A synced peer that never relays a block first keeps its handshake value, so a lower number here does not prove the peer is behind.">LAST HEIGHT SEEN</th><th title="Last height seen from this peer minus our tip now. Only meaningful when the peer is relaying blocks or the connection is fresh.">DRIFT vs OUR TIP</th><th>TRANSPORT</th><th>UPTIME</th><th>STATUS</th><th>RELIABILITY</th></tr></thead>
     <tbody id="nodesBody"><tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">loading...</td></tr></tbody></table>
     <div style="font-size:8px;color:var(--text3);margin-top:8px;line-height:1.8;font-family:var(--code);">
-      <b style="color:var(--cyan)">HEIGHT @ HANDSHAKE</b> = what the peer said when the connection opened. It does not tick.
-      A peer showing a large negative drift on a day-old connection is usually just an old announcement.<br>
+      <b style="color:var(--cyan)">LAST HEIGHT SEEN</b> = the height the peer announced at handshake, raised by the node each time this peer relays it a new block.
+      <b>synced</b> = within 2 blocks of our tip &middot; <b>near tip</b> = within 5 &middot; <b>behind</b> = far behind on a connection younger than 30 min (really syncing) &middot;
+      <b>silent</b> = has not relayed a newer block on an older connection: its real height is unknown (drift shown with <b>?</b>), not proof that it is stuck.<br>
       <b style="color:var(--gold)">SELF?</b> = probably the two ends of one connection this node opened to its own address, so the peer list counts it twice. Signature, not proof: outbound + inbound opened in the same second, same announced height, same transport.
       <b style="color:var(--cyan)">xN</b> = several connections to the same machine.<br>
       <b style="color:var(--gold)">&#9733; SEED CANDIDATE</b> = reliability &ge;70 + synced + version acked + uptime &gt;24h<br>
-      <b>Reliability score:</b> uptime (0-40pts) + delta accuracy (0-30pts) + handshake (0-15pts) + encrypted (+10) + outbound (+5) &minus; ban penalty<br>
+      <b>Reliability score</b> (this connection only, as seen from our node): uptime of the current connection (0-40: 1h=10, 1d=20, 3d=30, 7d=40) + sync evidence (synced 30 &middot; near tip 20 &middot; silent 15 &middot; behind 5) + version handshake (15) + encrypted (+10) + outbound (+5) &minus; ban penalty.
+      It resets when a peer reconnects and it cannot tell who runs the peer: a per-identity score needs NODE_BIND (see the design note).<br>
       <span style="color:var(--green)">&#9632; EXCELLENT (80-100)</span> &middot; <span style="color:var(--cyan)">&#9632; GOOD (60-79)</span> &middot; <span style="color:var(--yellow)">&#9632; FAIR (40-59)</span> &middot; <span style="color:var(--orange)">&#9632; LOW (20-39)</span> &middot; <span style="color:var(--red)">&#9632; POOR (0-19)</span>
     </div>
     <div style="font-size:9px;color:var(--text3);margin-top:4px;line-height:1.6;font-family:var(--code);">
-      <b>LOCAL NODE</b> = the SOST node this Explorer reads (STRATO); shown ONLINE only while it answers on mainnet, with the mainnet genesis and a tip younger than 2 h.
+      <b>LOCAL NODE</b> = the SOST node this Explorer reads; shown ONLINE only while it answers on mainnet, with the mainnet genesis and a tip younger than 2 h.
       <b>EXTERNAL PEERS</b> = other nodes connected to it over P2P; the counters and the table above are external peers only.
       <b>UNIQUE NODES</b> = the local node when online + distinct external machines with a completed handshake.
       A miner is not a node, and a block producer is not an active node: neither is counted here.<br>
@@ -8442,11 +8444,17 @@ refresh();
           else deltaClr=(connSec0<1800?'var(--yellow)':'var(--text3)');
         }
         var encClr=p.enc_mode==='encrypted'?'var(--purple)':'var(--text3)';
-        var statusTxt='handshaking';var statusClr='var(--yellow)';
+        // What the node actually knows (src/sost-node.cpp): their_height = handshake height,
+        // raised only when this peer relays an ACCEPTED new block on this connection.
+        // So: near tip = proven synced; far behind on a FRESH connection = really behind
+        // (syncing); far behind on an OLD connection = silent relay, sync state unknown.
+        var statusTxt='handshaking';var statusClr='var(--yellow)';var syncEv='none';
         if(p.version_acked){
           var isNearTip=(p.height>=0&&tipH>0&&p.height>=(tipH-2));
-          if(isNearTip){statusTxt='synced';statusClr='var(--green)';}
-          else{statusTxt='tracking';statusClr='var(--orange)';}
+          if(isNearTip){statusTxt='synced';statusClr='var(--green)';syncEv='synced';}
+          else if(p.height>=0&&tipH>0&&p.height>=(tipH-5)){statusTxt='near tip';statusClr='var(--cyan)';syncEv='near';}
+          else if(connSec0<1800){statusTxt='behind';statusClr='var(--orange)';syncEv='behind';}
+          else{statusTxt='silent';statusClr='var(--text3)';syncEv='silent';}
         }
         var dirClr=p.direction==='inbound'?'var(--cyan)':'var(--orange)';
         var connSec=(p.conntime&&p.conntime>0)?(nowSec-p.conntime):0;
@@ -8464,13 +8472,12 @@ refresh();
         else if(connSec>=259200)relScore+=30;    // 3+ days
         else if(connSec>=86400)relScore+=20;     // 1+ day
         else if(connSec>=3600)relScore+=10;      // 1+ hour
-        // Delta: 0-30 points (30 if delta==0)
-        if(typeof delta==='number'){
-          if(delta===0)relScore+=30;
-          else if(Math.abs(delta)<=2)relScore+=25;
-          else if(Math.abs(delta)<=5)relScore+=15;
-          else relScore+=5;
-        }
+        // Sync evidence: 0-30 points. A silent peer is UNKNOWN, not behind: it gets
+        // the middle value instead of being punished for an old handshake height.
+        if(syncEv==='synced')relScore+=(delta===0?30:25);
+        else if(syncEv==='near')relScore+=20;
+        else if(syncEv==='silent')relScore+=15;
+        else if(syncEv==='behind')relScore+=5;
         // Version acked: 0-15 points
         if(p.version_acked)relScore+=15;
         // Ban score penalty: -10 per 10 points
@@ -8506,9 +8513,10 @@ refresh();
         // when it was announced is the difference between "this peer is 109
         // blocks behind" and "this peer said that 18 hours ago".
         var annAge=connSec>=3600?(Math.floor(connSec/3600)+'h ago'):(connSec>=60?(Math.floor(connSec/60)+'m ago'):'just now');
+        var hNote=(syncEv==='synced'||syncEv==='near')?'live \u00b7 relaying blocks':(syncEv==='silent'?'no new block relayed \u00b7 conn '+annAge:'handshake '+annAge);
         html+='<td style="color:var(--text);">'+(p.height>=0?p.height:'\u2014')+
-              '<div style="font-size:8px;color:var(--text3);line-height:1.4">announced '+annAge+'</div></td>';
-        html+='<td style="color:'+deltaClr+';font-weight:600;">'+(typeof delta==='number'?(delta>0?'+':'')+delta:delta)+'</td>';
+              '<div style="font-size:8px;color:var(--text3);line-height:1.4">'+hNote+'</div></td>';
+        html+='<td style="color:'+(syncEv==='silent'?'var(--text3)':deltaClr)+';font-weight:600;"'+(syncEv==='silent'?' title="Peer has not relayed a newer block on this connection; its real height is unknown."':'')+'>'+(typeof delta==='number'?(syncEv==='silent'?'? ':'')+(delta>0?'+':'')+delta:delta)+'</td>';
         html+='<td style="color:'+encClr+';">'+p.enc_mode+'</td>';
         html+='<td style="font-size:10px;color:var(--text2);">'+uptimeStr+'</td>';
         html+='<td style="color:'+statusClr+';">'+statusTxt+(p.ban_score>0?' <span style="color:var(--red);font-size:9px;">[ban:'+p.ban_score+']</span>':'')+'</td>';
@@ -8562,7 +8570,7 @@ refresh();
     if(ln.tip_age_s!=null) tip=(ln.status==='ONLINE'?'synced':'stale')+' &middot; last block '+fmtDur(ln.tip_age_s)+' ago';
     var f=function(k,val,c){ return val==null?'':'<div><div style="font-size:8px;color:var(--text3);letter-spacing:1px;margin-bottom:3px">'+k+'</div><div style="font-size:12px;font-weight:600;color:'+(c||'var(--text)')+';overflow-wrap:anywhere">'+val+'</div></div>'; };
     el.innerHTML=
-      f('NODE',(ln.label?ln.label+' &middot; ':'')+'LOCAL NODE','var(--cyan)')+
+      f('NODE',(ln.label||'LOCAL NODE'),'var(--cyan)')+
       f('DIRECTION','LOCAL')+
       f('STATUS',ln.status||'?',clr)+
       f('HEIGHT',ln.height!=null?Number(ln.height).toLocaleString('en-US'):null)+

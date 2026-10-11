@@ -9,7 +9,7 @@
  * verification are the wallet's job (browser) — this module only defines what is
  * signed and enforces the binding rules; signature bytes are opaque here.
  *
- * Pure web/lab. No consensus/node/STRATO change.
+ * Pure web/lab. No consensus/node/production-node change.
  */
 (function (root, factory) {
   var m = factory();

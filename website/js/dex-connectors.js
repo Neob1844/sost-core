@@ -6,7 +6,7 @@
  * balances and signatures. Provider injection makes the whole layer unit-
  * testable with mock providers; REAL-WALLET-VERIFIED is an owner step in a
  * real browser, but the connector code + logic is complete and tested here.
- * No consensus/node/STRATO change.
+ * No consensus/node/production-node change.
  */
 (function (root, factory) {
   var m = factory();
