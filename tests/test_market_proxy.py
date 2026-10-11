@@ -699,3 +699,89 @@ class OhlcCandles(unittest.TestCase):
             mp.urllib.request.urlopen = real
         self.assertIsNone(res)
         self.assertEqual(reason, 'granularity_mismatch')
+
+
+class JsonSnapshots(unittest.TestCase):
+    """Markets page documents (spot prices, FX latest, FX history) behind the gateway."""
+
+    GOOD = {'spot': {'tether-gold': {'usd': 4180.0}}, 'fx': {'result': 'success', 'rates': {'EUR': 0.9}},
+            'fxh': {'rates': {'2026-10-10': {'EUR': 0.9}}}}
+
+    def setUp(self):
+        with mp._cache_lock:
+            mp._cache.clear()
+        self.calls = []
+        self.real = mp._fetch_json
+        self.next = None
+
+        def fake(kind, venue, url):
+            self.calls.append((kind, venue, url))
+            _real_sleep(0.05)
+            return self.next if self.next is not None else (self.GOOD[kind], 'ok')
+        mp._fetch_json = fake
+
+    def tearDown(self):
+        mp._fetch_json = self.real
+
+    def q(self, s):
+        return urllib.parse.parse_qs(s)
+
+    def test_only_allowlisted_names_are_accepted(self):
+        for mode, s in (('spot', 'group=gold_all'), ('fx', ''), ('fxhist', 'code=eur&range=7d')):
+            mp.json_target(mode, self.q(s))
+        for mode, s in (('spot', 'group=everything'), ('spot', 'group=https://evil'), ('fxhist', 'code=XXX&range=7D'),
+                        ('fxhist', 'code=EUR&range=9Y'), ('other', '')):
+            with self.assertRaises(ValueError):
+                mp.json_target(mode, self.q(s))
+
+    def test_urls_are_built_from_constants(self):
+        _, _, venue, url = mp.json_target('spot', self.q('group=crypto'))
+        self.assertEqual(venue, 'coingecko')
+        self.assertTrue(url().startswith(mp.CG_SIMPLE + '?'))
+        _, _, venue, url = mp.json_target('fxhist', self.q('code=EUR&range=30D'))
+        self.assertTrue(url().startswith(mp.FRANKFURTER_URL) and url().endswith('base=USD&symbols=EUR'))
+        self.assertEqual(mp.json_target('fx', self.q(''))[3](), mp.FX_URL)
+
+    def test_gold_all_covers_every_currency_the_page_shows(self):
+        vs = mp.SPOT_GROUPS['gold_all']['vs_currencies'].split(',')
+        self.assertEqual(len(vs), len(mp.SPOT_FIAT) + len(mp.SPOT_CRYPTO_CODES))
+        self.assertIn('eur', vs); self.assertIn('xlm', vs)
+
+    def test_cache_and_dedup(self):
+        key, kind, venue, url = mp.json_target('spot', self.q('group=gold_usd'))
+        ts = [threading.Thread(target=mp.get_json, args=(key, kind, venue, url)) for _ in range(15)]
+        [t.start() for t in ts]; [t.join() for t in ts]
+        self.assertEqual(len(self.calls), 1)
+        body, st, src = mp.get_json(key, kind, venue, url)
+        self.assertEqual((st, src), (200, 'cached'))
+
+    def test_failure_serves_last_good_and_never_caches_an_error(self):
+        key, kind, venue, url = mp.json_target('fx', self.q(''))
+        mp.get_json(key, kind, venue, url)
+        mp._cache[key]['fetched_at'] -= mp.JSON_TTL['fx'] + 1
+        self.next = (None, 'rate_limited')
+        body, st, src = mp.get_json(key, kind, venue, url)
+        self.assertEqual((st, src, body), (200, 'stale', self.GOOD['fx']))
+        key2, kind2, venue2, url2 = mp.json_target('spot', self.q('group=stable'))
+        body, st, src = mp.get_json(key2, kind2, venue2, url2)
+        self.assertEqual((st, src), (503, 'error'))
+        self.assertNotIn(key2, mp._cache)
+
+    def test_error_bodies_are_rejected(self):
+        self.assertFalse(mp._json_ok('spot', {'status': {'error_code': 429}}))
+        self.assertFalse(mp._json_ok('fx', {'result': 'error'}))
+        self.assertFalse(mp._json_ok('fxh', {'message': 'not found'}))
+        self.assertTrue(mp._json_ok('spot', self.GOOD['spot']))
+
+    def test_snapshots_survive_a_restart_and_do_not_break_warming(self):
+        d = tempfile.mkdtemp(); old = mp.STATE_FILE
+        try:
+            mp.STATE_FILE = os.path.join(d, 'c.json')
+            for mode, s in (('spot', 'group=crypto'), ('fx', ''), ('fxhist', 'code=EUR&range=7D')):
+                mp.get_json(*mp.json_target(mode, self.q(s)))
+            self.assertTrue(mp.save_state())
+            mp._cache.clear()
+            self.assertEqual(mp.load_state(), 3)
+            self.assertIn('json|fxh|EUR|7D', mp._cache)
+        finally:
+            mp.STATE_FILE = old; shutil.rmtree(d)

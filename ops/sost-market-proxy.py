@@ -115,7 +115,7 @@ _rate_all = {}                   # ip -> [timestamps]   (all requests)
 _rate_lock = threading.Lock()
 
 STATS = {'client_requests': 0, 'upstream_requests': 0, 'cache_hits': 0,
-         'ohlc_upstream_requests': 0, 'ohlc_cache_hits': 0, 'ohlc_rejected_responses': 0,
+         'ohlc_upstream_requests': 0, 'ohlc_cache_hits': 0, 'ohlc_rejected_responses': 0, 'json_cache_hits': 0,
          'dedup_hits': 0, 'stale_served': 0, 'errors': 0, 'rejected': 0,
          'peak_upstream_concurrency': 0}
 _stats_lock = threading.Lock()
@@ -159,6 +159,19 @@ def load_state():
     for key, entry in (blob.get('entries') or {}).items():
         try:
             parts = key.split('|')
+            if parts[0] == 'json':
+                kind = parts[1] if len(parts) > 1 else ''
+                ok = (kind == 'spot' and len(parts) == 3 and parts[2] in SPOT_GROUPS) or \
+                     (kind == 'fx' and parts[2:] == ['latest']) or \
+                     (kind == 'fxh' and len(parts) == 4 and parts[2] in FX_CODES and parts[3] in FXHIST_BACK)
+                age = now - float(entry.get('fetched_at', 0))
+                if not ok or not _json_ok(kind, entry.get('body')) or age < 0 \
+                        or age > min(JSON_TTL[kind] * STALE_FACTOR, STALE_MAX):
+                    continue
+                with _cache_lock:
+                    _cache[key] = {'body': entry['body'], 'fetched_at': float(entry['fetched_at']), 'status': 'ok'}
+                restored += 1
+                continue
             if len(parts) == 4 and parts[3] == 'ohlc':
                 if parts[2] not in OHLC_PLAN or not ((parts[1] == 'usd' and parts[0] in OHLC_ASSETS)
                                                     or MARKETS.get((parts[0], parts[1]))) \
@@ -721,6 +734,149 @@ def _ohlc_payload(entry, status, now, reason=None):
     return p
 
 
+# ---------------------------------------------------------------- JSON snapshots (Markets page)
+# Fixed, allowlisted upstream documents the Markets page used to fetch from every browser
+# (and partly could not: the site CSP blocks open.er-api.com and frankfurter). The caller
+# picks a NAME from these tables, never a URL, a host or a free-form parameter. Bodies are
+# passed through in the provider's own shape so the page logic is unchanged; the gateway
+# adds shared caching, de-duplication, last-good-on-failure (persisted across restarts)
+# and the per-IP upstream budget.
+SPOT_FIAT = ('usd', 'cad', 'mxn', 'brl', 'ars', 'clp', 'cop', 'pen', 'eur', 'gbp', 'chf', 'nok', 'sek', 'dkk',
+             'pln', 'czk', 'rub', 'try', 'ils', 'jpy', 'cny', 'krw', 'hkd', 'twd', 'sgd', 'thb', 'myr', 'idr',
+             'php', 'vnd', 'inr', 'pkr', 'aed', 'sar', 'kwd', 'qar', 'bhd', 'aud', 'nzd', 'zar', 'ngn', 'egp')
+SPOT_CRYPTO_IDS = ('bitcoin', 'ethereum', 'binancecoin', 'solana', 'ripple', 'polkadot', 'chainlink',
+                   'litecoin', 'bitcoin-cash', 'stellar')
+SPOT_CRYPTO_CODES = ('btc', 'eth', 'bnb', 'sol', 'xrp', 'dot', 'link', 'ltc', 'bch', 'xlm')
+CG_SIMPLE = 'https://api.coingecko.com/api/v3/simple/price'
+SPOT_GROUPS = {   # name -> CoinGecko simple/price query (constants only)
+    'gold_usd': {'ids': 'tether-gold,pax-gold', 'vs_currencies': 'usd'},
+    'gold_all': {'ids': 'tether-gold,pax-gold', 'include_24hr_change': 'true',
+                 'vs_currencies': ','.join(SPOT_FIAT + SPOT_CRYPTO_CODES)},
+    'stable': {'ids': 'usd-coin,tether', 'vs_currencies': 'usd', 'include_24hr_change': 'true'},
+    'crypto': {'ids': ','.join(SPOT_CRYPTO_IDS), 'vs_currencies': 'usd', 'include_24hr_change': 'true'},
+}
+FX_URL = 'https://open.er-api.com/v6/latest/USD'
+FRANKFURTER_URL = 'https://api.frankfurter.dev/v1/'
+FX_CODES = ('CAD', 'MXN', 'BRL', 'ARS', 'CLP', 'COP', 'PEN', 'UYU', 'CRC', 'DOP', 'GTQ', 'PYG', 'BOB', 'NIO',
+            'HNL', 'HTG', 'EUR', 'GBP', 'CHF', 'NOK', 'SEK', 'DKK', 'ISK', 'PLN', 'CZK', 'RUB', 'TRY', 'ILS',
+            'JPY', 'CNY', 'KRW', 'HKD', 'TWD', 'SGD', 'THB', 'MYR', 'IDR', 'PHP', 'VND', 'INR', 'PKR', 'AED',
+            'SAR', 'KWD', 'QAR', 'BHD', 'OMR', 'AUD', 'NZD', 'ZAR', 'NGN', 'EGP', 'KES', 'GHS', 'MAD', 'TZS',
+            'ETB', 'XOF', 'CDF')
+FXHIST_BACK = {'1H': 3, '4H': 3, '8H': 3, '24H': 4, '3D': 6, '7D': 10, '30D': 33, '6M': 183, '1Y': 368,
+               '3Y': 1098, '5Y': 1828}   # days of ECB daily history behind each range (as the page used)
+JSON_TTL = {'spot': 60, 'fx': 3600, 'fxh': 21600}
+_venue.update({'erapi': {'sem': threading.BoundedSemaphore(1), 'lock': threading.Lock(), 'last': [0.0], 'gap': 1.0},
+               'frankfurter': {'sem': threading.BoundedSemaphore(2), 'lock': threading.Lock(), 'last': [0.0], 'gap': 0.3}})
+
+
+def json_target(mode, q):
+    """(cache key, kind, venue, url-builder) for an allowlisted request, or raises ValueError."""
+    one = lambda n: (q.get(n) or [''])[0].strip()
+    if mode == 'spot':
+        g = one('group')
+        if g not in SPOT_GROUPS:
+            raise ValueError('group')
+        return 'json|spot|' + g, 'spot', 'coingecko', lambda: CG_SIMPLE + '?' + urllib.parse.urlencode(SPOT_GROUPS[g])
+    if mode == 'fx':
+        return 'json|fx|latest', 'fx', 'erapi', lambda: FX_URL
+    if mode == 'fxhist':
+        code, label = one('code').upper(), one('range').upper()
+        if code not in FX_CODES:
+            raise ValueError('code')
+        if label not in FXHIST_BACK:
+            raise ValueError('range')
+
+        def url():
+            end = time.gmtime()
+            start = time.gmtime(time.time() - FXHIST_BACK[label] * 86400)
+            return FRANKFURTER_URL + time.strftime('%Y-%m-%d', start) + '..' + time.strftime('%Y-%m-%d', end) + \
+                '?' + urllib.parse.urlencode({'base': 'USD', 'symbols': code})
+        return 'json|fxh|%s|%s' % (code, label), 'fxh', 'frankfurter', url
+    raise ValueError('mode')
+
+
+def _json_ok(kind, body):
+    """Only a well-formed answer is cached — an error body must never overwrite a good copy."""
+    if not isinstance(body, dict):
+        return False
+    if kind == 'spot':
+        return bool(body) and 'status' not in body and all(
+            isinstance(v, dict) and v and all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in v.values())
+            for v in body.values())
+    if kind == 'fx':
+        return body.get('result') == 'success' and isinstance(body.get('rates'), dict) and body['rates']
+    return isinstance(body.get('rates'), dict) and bool(body['rates'])
+
+
+def _fetch_json(kind, venue, url):
+    try:
+        if venue == 'coingecko':            # shares the CoinGecko budget and gap with the LINE series
+            headers = {'User-Agent': USER_AGENT, 'Accept': 'application/json'}
+            if API_KEY:
+                headers['x-cg-demo-api-key'] = API_KEY
+            with _upstream_sem:
+                with _gap_lock:
+                    wait = MIN_UPSTREAM_GAP - (time.time() - _last_upstream[0])
+                    if wait > 0:
+                        time.sleep(wait)
+                    _last_upstream[0] = time.time()
+                _bump('upstream_requests')
+                with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=15) as r:
+                    body = json.loads(r.read().decode('utf-8'))
+        else:
+            body = _venue_get(venue, url)
+    except urllib.error.HTTPError as e:
+        if venue == 'coingecko' and e.code == 429:
+            _last_upstream_failure[0] = _last_upstream_429[0] = time.time()
+        return None, ('rate_limited' if e.code == 429 else 'http_error')
+    except Exception:
+        return None, 'network'
+    if not _json_ok(kind, body):
+        if venue == 'coingecko' and isinstance(body, dict) and (body.get('status') or {}).get('error_code') == 429:
+            return None, 'rate_limited'
+        return None, 'bad_body'
+    return body, 'ok'
+
+
+def get_json(key, kind, venue, url_fn):
+    """Cache -> dedup -> upstream -> last good copy. Returns (body, http_status, source_status)."""
+    ttl, now = JSON_TTL[kind], time.time()
+    with _cache_lock:
+        entry = _cache.get(key)
+    if entry and now - entry['fetched_at'] < ttl:
+        _bump('json_cache_hits')
+        return entry['body'], 200, 'cached'
+    with _inflight_lock:
+        ev = _inflight.get(key)
+        leader = ev is None
+        if leader:
+            ev = threading.Event()
+            _inflight[key] = ev
+    if not leader:
+        _bump('dedup_hits')
+        ev.wait(timeout=30)
+        with _cache_lock:
+            entry = _cache.get(key)
+        return (entry['body'], 200, 'cached') if entry else ({'error': 'upstream_unavailable'}, 503, 'error')
+    try:
+        body, reason = _fetch_json(kind, venue, url_fn())
+        if body is not None:
+            with _cache_lock:
+                _cache[key] = {'body': body, 'fetched_at': time.time(), 'status': 'ok'}
+        else:
+            _bump('errors')
+    finally:
+        with _inflight_lock:
+            _inflight.pop(key, None)
+        ev.set()
+    if body is not None:
+        return body, 200, 'fresh'
+    if entry and time.time() - entry['fetched_at'] < min(ttl * STALE_FACTOR, STALE_MAX):
+        _bump('stale_served')
+        return entry['body'], 200, 'stale'
+    return {'error': reason}, 503, 'error'
+
+
 def _payload(entry, status, now, reason=None):
     if entry.get('status') == 'out_of_range':
         status = 'out_of_range'
@@ -739,10 +895,12 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
 
-    def _send(self, status, obj, cache_seconds=0):
+    def _send(self, status, obj, cache_seconds=0, source_status=None):
         body = json.dumps(obj).encode('utf-8')
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
+        if source_status:          # JSON snapshots keep the provider's body shape: status goes in a header
+            self.send_header('X-Source-Status', source_status)
         self.send_header('Content-Length', str(len(body)))
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Cache-Control',
@@ -787,7 +945,23 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         _bump('client_requests')
-        if urllib.parse.parse_qs(parsed.query).get('mode', [''])[0] == 'ohlc':
+        q = urllib.parse.parse_qs(parsed.query)
+        mode = q.get('mode', [''])[0]
+        if mode in ('spot', 'fx', 'fxhist'):
+            try:
+                key, kind, venue, url_fn = json_target(mode, q)
+            except ValueError as e:
+                _bump('rejected')
+                self._send(400, {'error': 'bad_%s' % e, 'source_status': 'error'})
+                return
+            if not _fresh(key, JSON_TTL[kind]) and not _rate_ok(ip):
+                _bump('rejected')
+                self._send(429, {'error': 'rate_limited_local', 'source_status': 'error'})
+                return
+            body, status, src = get_json(key, kind, venue, url_fn)
+            self._send(status, body, cache_seconds=JSON_TTL[kind] // 4 if status == 200 else 0, source_status=src)
+            return
+        if mode == 'ohlc':
             try:
                 asset, vs, label = parse_ohlc_params(parsed.query)
             except ValueError as e:
@@ -855,7 +1029,7 @@ def _warm_loop():
             due = None
             with _cache_lock:
                 for key, entry in _cache.items():
-                    if entry.get('status') == 'out_of_range':
+                    if entry.get('status') == 'out_of_range' or key.startswith('json|'):
                         continue
                     ttl = _entry_ttl(key)
                     age = now - entry['fetched_at']

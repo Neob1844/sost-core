@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="js/sost-gold-reference.js?v=v400"></script>
+<script src="js/sost-gold-reference.js?v=v532"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -668,7 +668,7 @@
   function fetchForex(cb) {
     var controller = new AbortController();
     var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
-    fetch('https://open.er-api.com/v6/latest/USD', { signal: controller.signal })
+    fetch('/api/market-history?mode=fx', { signal: controller.signal })   // SOST gateway: shared cache of open.er-api latest USD
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.result !== 'success' || !data.rates) throw new Error('Bad response');
@@ -737,10 +737,12 @@
 
   // ===== GOLD + CRYPTO =====
   function fetchGold(cb) {
-    var goldUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&include_24hr_change=true&vs_currencies=' + allVsCurrencies;
-    var stableUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,tether&vs_currencies=usd&include_24hr_change=true';
-    var cryptoIds = Object.keys(CRYPTO_IDS).map(function(k) { return CRYPTO_IDS[k]; }).join(',');
-    var cryptoUsdUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=' + cryptoIds + '&vs_currencies=usd&include_24hr_change=true';
+    // SOST gateway (Explorer API): the same CoinGecko simple/price documents, fetched once and shared
+    // by every visitor (cache, de-dup, last good copy). gold_all = XAUT/PAXG in every currency of this
+    // page (allVsCurrencies), stable = USDC/USDT, crypto = the CRYPTO_IDS coins in USD.
+    var goldUrl = '/api/market-history?mode=spot&group=gold_all';
+    var stableUrl = '/api/market-history?mode=spot&group=stable';
+    var cryptoUsdUrl = '/api/market-history?mode=spot&group=crypto';
 
     var controller = new AbortController();
     var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
@@ -921,31 +923,6 @@
     return undefined;
   }
 
-  function tryFetchSost(id, vs, fallback, doneCb) {
-    var controller = new AbortController();
-    var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
-    fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + id + '&vs_currencies=' + vs, { signal: controller.signal })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!data[id] || !data[id].usd) { fallback(); return; }
-        var prices = data[id];
-        var tbody = document.getElementById('sostFiatBody');
-        var html = '';
-        CURRENCY_GROUPS.forEach(function(g) {
-          html += regionRow(g.region, 3);
-          g.currencies.forEach(function(c) {
-            var p = (c.code === 'USD') ? prices.usd : sostInCurrency(prices, c.code);
-            html += '<tr><td><span class="currency-name">' + c.name + '</span></td><td>' + c.code + '</td>' +
-              '<td class="price-val">' + (p !== undefined ? c.symbol + ' ' + fmt(p, p < 1 ? 8 : p < 100 ? 4 : 2) : '<span class="price-na">&mdash;</span>') + '</td></tr>';
-          });
-        });
-        tbody.innerHTML = html;
-        if (doneCb) doneCb();
-      })
-      .catch(function() { fallback(); })
-      .finally(function() { clearTimeout(timeoutId); });
-  }
-
   // Calculate SOST PoPC reference price — same formula as explorer
   // sost_price = (1.2 oz × avg(XAUT, PAXG)) / supply
   // XAUT and PAXG prices come from CoinGecko (they ARE listed). SOST is NOT.
@@ -978,7 +955,7 @@
     if (!xp && !pp) {
       try {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd', false);
+        xhr.open('GET', '/api/market-history?mode=spot&group=gold_usd', false);
         xhr.timeout = 5000;
         xhr.send();
         if (xhr.status === 200) {
@@ -1701,13 +1678,9 @@
   }
 
   function getFiatDetailUrl(code, period) {
-    // Frankfurter (keyless, ECB reference rates, daily). CryptoCompare forex now needs a key.
-    // Returns USD->code over a date range; parser inverts to USD-per-unit. Daily resolution.
-    var back = { '1H':3,'4H':3,'8H':3,'24H':4,'3D':6,'7D':10,'30D':33,'6M':183,'1Y':368,'3Y':1098,'5Y':1828 }[period] || 10;
-    var end = new Date();
-    var start = new Date(end.getTime() - back * 86400000);
-    function fmt(dt) { return dt.toISOString().slice(0, 10); }
-    return 'https://api.frankfurter.dev/v1/' + fmt(start) + '..' + fmt(end) + '?base=USD&symbols=' + code;
+    // Frankfurter (keyless, ECB reference rates, daily) through the SOST gateway: the gateway builds
+    // the same date range per period and caches it. Returns USD->code; parser inverts to USD-per-unit.
+    return '/api/market-history?mode=fxhist&code=' + encodeURIComponent(code) + '&range=' + encodeURIComponent(period);
   }
 
   function showFiatDetailModal(code) {
