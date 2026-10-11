@@ -36,7 +36,10 @@ build() {
   echo "   -> $out (${TOT}s)"
 }
 if [ "$WHICH" = intro ] || [ "$WHICH" = both ]; then
-  build intro film-intro.html "$W/sost-intro.mp4" assets/music/Convergence.mp3 8 10 12 11 11 11 12 13 12 12 10 10 9
+  # Convergence + Starfire (10 s crossfade): the film outlasts one track
+  [ -f assets/music/intro-score.mp3 ] || "$FF" -loglevel error -y -i assets/music/Convergence.mp3 -i assets/music/Starfire.mp3 \
+    -filter_complex "[0:a][1:a]acrossfade=d=10:c1=tri:c2=tri[a]" -map "[a]" -b:a 320k assets/music/intro-score.mp3
+  build intro film-intro.html "$W/sost-intro.mp4" assets/music/intro-score.mp3 $(python3 -c "import re;print(' '.join(re.findall(r'dur:(\\d+)',open('film-intro.html').read())))")
 fi
 if [ "$WHICH" = mech ] || [ "$WHICH" = both ]; then
   build mech film-mech.html "$W/sost-mechanisms.mp4" assets/music/Aphelion.mp3 8 9 13 10 12 13 12 13 12 13 13 14 9

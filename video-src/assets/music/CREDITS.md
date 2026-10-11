@@ -7,6 +7,7 @@ Both tracks: Scott Buckley — www.scottbuckley.com.au — released under Creati
 | file | title | used in |
 |---|---|---|
 | Convergence.mp3 (https://www.scottbuckley.com.au/library/wp-content/uploads/2026/04/Convergence.mp3) | 'Convergence' by Scott Buckley (CC-BY 4.0) | sost-intro.mp4 |
+| Starfire.mp3 (https://www.scottbuckley.com.au/library/wp-content/uploads/2026/01/Starfire.mp3) | 'Starfire' by Scott Buckley (CC-BY 4.0) | sost-intro.mp4 (second half; intro-score.mp3 = Convergence + Starfire, 10 s crossfade) |
 | Aphelion.mp3 (https://www.scottbuckley.com.au/library/wp-content/uploads/2026/04/Aphelion.mp3) | 'Aphelion' by Scott Buckley (CC-BY 4.0) | sost-mechanisms.mp4 |
 
 The credit is shown on each film's end card and next to the player on the site.

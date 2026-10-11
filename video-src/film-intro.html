@@ -124,7 +124,21 @@ window.FILM={title:'SOST in 3 Minutes',scenes:[
       '<div class="h2" style="margin-top:26px;color:'+col+'">50%</div><div class="lead" style="font-size:28px;margin-top:6px"><b>'+label+'</b><br>'+sub+'</div></div>';
   }
   return '<div class="wrap" style="padding-top:110px"><div class="kick" style="text-align:center;'+I(t,.2)+'">How every block is shared &middot; since #25,000</div>'+
+    '<div class="lead" style="position:absolute;left:0;right:0;bottom:190px;text-align:center;'+I(t,6.4)+'"><b style="color:#D07BFF">DTD</b> = <b>Deterministic Token Distribution</b> &mdash; the same public rules on every node.</div>'+
     blk+half(-1,'#FF3D4F','to the miner','who found the block')+half(1,'#D07BFF','to the DTD','one active miner, picked<br>by deterministic rules')+'</div>';
+}},
+
+/* 4b — the next split at #40,000 */
+{name:'DTD at #40,000',dur:12,pal:'violet',acc:'#D07BFF',draw:function(t){
+  var m=F.eio(F.p(t,3.2,7.0)), a=50+30*m, b=50-35*m, c=5*m;
+  return '<div class="wrap" style="display:flex;flex-direction:column;justify-content:center;gap:52px"><div class="stack"><div class="kick" style="'+I(t,.2)+'">Deterministic Token Distribution &middot; next upgrade</div>'+
+    '<div class="h1" style="'+I(t,.5)+'">At block <span class="acc">#40,000</span></div></div>'+
+    '<div style="'+I(t,1.2)+'"><div class="small" style="margin-bottom:14px">'+(m<.5?'TODAY &middot; 50% MINER / 50% DTD':'FROM #40,000')+'</div>'+
+      '<div class="seg" style="display:flex;height:120px;border-radius:20px;overflow:hidden;border:2px solid rgba(255,255,255,.12)">'+
+      '<div style="width:'+a.toFixed(2)+'%;background:linear-gradient(180deg,#FF3D4F,#9b1424);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;font-size:46px;color:#fff">'+Math.round(a)+'%<span class="small" style="color:#fff">miner</span></div>'+
+      '<div style="width:'+b.toFixed(2)+'%;background:linear-gradient(180deg,#D07BFF,#5a2a8a);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;font-size:46px;color:#fff;white-space:nowrap;overflow:hidden">'+Math.round(b)+'%<span class="small" style="color:#fff">DTD normal</span></div>'+
+      '<div style="width:'+c.toFixed(2)+'%;background:linear-gradient(180deg,#FFC96B,#a8741c);display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;font-size:30px;color:#fff;overflow:hidden">'+(c>2?Math.round(c)+'%':'')+'</div></div></div>'+
+    '<div class="lead" style="font-size:28px;'+I(t,7.4)+'"><b>80% miner &middot; 15% DTD normal &middot; 5% DTD Jackpot</b> &mdash; the 5% accumulates in the DTD Jackpot pool.<br><span style="color:#8B98A4">Takes effect with the #40,000 upgrade.</span></div></div>';
 }},
 
 /* 5 — atomic swap */
@@ -188,6 +202,80 @@ window.FILM={title:'SOST in 3 Minutes',scenes:[
     '<div class="lead" style="text-align:center;font-size:26px;'+I(t,5.4)+'">Same verifiable Passport behind every offer.</div></div>';
 }},
 
+/* 8b — one asset, one Passport, four offers */
+{name:'One Passport',dur:11,pal:'gold',acc:'#FFC96B',draw:function(t){
+  var br=[['Tokenize','#4FE6BE'],['Auction','#FFC96B'],['Draw','#FFC96B'],['Project Funding','#FFC96B']];
+  var k=F.eio(F.p(t,3.4,5.6));
+  function boxc(txt,col,st,w){return '<div style="width:'+(w||320)+'px;margin:0 auto;padding:22px;border-radius:18px;text-align:center;border:2px solid '+col+';background:'+col+'18;box-shadow:0 0 30px '+col+'44;font-family:var(--sans);font-weight:700;font-size:34px;color:#fff;'+st+'">'+txt+'</div>';}
+  return '<div class="wrap" style="display:flex;flex-direction:column;justify-content:center;gap:34px;text-align:center">'+
+    '<div class="kick" style="'+I(t,.2)+'">How it works</div>'+
+    boxc('One asset','#ffffff',I(t,.6))+
+    '<div style="font-size:44px;color:#FFC96B;'+I(t,1.4)+'">&darr;</div>'+
+    boxc('One Asset Passport','#FFC96B',I(t,1.8),460)+
+    '<div class="small" style="'+I(t,2.8)+'">&darr; choose how to offer it &darr;</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:26px">'+br.map(function(x,i){return '<div style="opacity:'+F.k(t,3.4+i*.35,.6).toFixed(3)+';transform:translateY('+((1-k)*30).toFixed(1)+'px)">'+boxc(x[0],x[1],'font-size:30px',300)+'</div>';}).join('')+'</div>'+
+    '<div class="lead" style="font-size:27px;'+I(t,6.4)+'">You never create four records of the same asset. <b>One Passport</b>; only the offer changes.</div></div>';
+}},
+
+/* 8c — example Passport: a farm */
+{name:'Example',dur:12,pal:'gold',acc:'#FFC96B',draw:function(t){
+  var rows=[['Asset','Farm &middot; Murcia, Spain (example)'],['Owner','who offers it, identified'],['Documents','deeds, cadastre, permits'],['Rights','what a holder would get'],['Valuation','how, by whom, when'],['Conditions','terms of the offer']];
+  return '<div class="wrap split wide-r"><div class="photo" style="height:640px;--glow:rgba(255,201,107,.2);'+I(t,.2,1.1,0,.94)+'"><img src="'+P+'vineyard.jpg" style="'+F.kb(t,12,1.05,1.16,1.5,0)+'"><span class="cap">illustrative photo</span></div>'+
+    '<div class="box" style="--bc:rgba(255,201,107,.55);--bg2:rgba(255,201,107,.12);padding:40px 44px;'+I(t,.8)+'"><div class="kick" style="color:#FFC96B">Asset Passport</div>'+
+    '<div style="margin-top:26px;display:flex;flex-direction:column;gap:18px">'+rows.map(function(r,i){return '<div style="display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:baseline;'+F.fromR(t,1.6+i*.55,.6,40)+'"><span class="small" style="color:#FFC96B">'+r[0].toUpperCase()+'</span><span class="lead" style="font-size:28px;color:#fff">'+r[1]+'</span></div>';}).join('')+'</div>'+
+    '<div class="small" style="margin-top:30px;'+I(t,5.6)+'">Every line is a claim: who declared it, and whether it was independently verified.</div></div></div>';
+}},
+
+/* 8d — Tokenize */
+{name:'Tokenize',dur:13,pal:'teal',acc:'#4FE6BE',draw:function(t){
+  var n=Math.floor(F.eio(F.p(t,3.0,7.5))*100), cells='';
+  for(var i=0;i<100;i++){var on=i<n; cells+='<i style="display:block;width:38px;height:38px;border-radius:7px;border:1px solid '+(on?'#4FE6BE':'#2a3a36')+';background:'+(on?'rgba(79,230,190,.28)':'rgba(255,255,255,.02)')+';box-shadow:'+(on?'0 0 10px rgba(79,230,190,.35)':'none')+'"></i>';}
+  return '<div class="wrap split"><div class="stack"><div class="kick" style="'+I(t,.2)+'">1 &middot; Tokenize &middot; <b style="color:#4FE6BE">LIVE &middot; registry</b></div>'+
+    '<div class="h1" style="'+I(t,.5)+'">Divide a <span class="acc">right</span> into units.</div>'+
+    '<div class="lead" style="'+I(t,1.4)+'">Example: a property valued at <b>&euro;100,000</b><br>&rarr; <b style="color:#4FE6BE">'+F.count(t,3.0,4.5,100000)+'</b> units of the right it carries.</div>'+
+    '<div class="lead" style="font-size:27px;'+I(t,8.0)+'">How many units, what each one gives you and how it can be transferred: <b>the rules you define</b>, written into the Passport.</div></div>'+
+    '<div style="'+I(t,1.0)+'"><div style="display:grid;grid-template-columns:repeat(10,38px);gap:10px;justify-content:center">'+cells+'</div><div class="small" style="text-align:center;margin-top:16px">each square = 1,000 units</div></div></div>';
+}},
+
+/* 8e — Auction */
+{name:'Auction',dur:12,pal:'gold',acc:'#FFC96B',draw:function(t){
+  var bids=[['Bidder A','92,000'],['Bidder B','96,500'],['Bidder C','101,200'],['Bidder D','99,000 &middot; invalid']];
+  return '<div class="wrap split"><div class="stack"><div class="kick" style="'+I(t,.2)+'">2 &middot; Auction</div>'+
+    '<div class="h1" style="'+I(t,.5)+'">Sell to the <span class="acc">highest valid</span> bidder.</div>'+
+    '<div class="lead" style="'+I(t,1.4)+'">Bids are recorded under the auction\'s rules. When it closes, the best <b>valid</b> bid wins &mdash; an invalid one never does.</div></div>'+
+    '<div style="display:flex;flex-direction:column;gap:20px">'+bids.map(function(b,i){var a=2.2+i*1.0, win=i===2&&t>7.4, bad=i===3&&t>6.8;
+      return '<div class="box" style="--bc:'+(win?'rgba(79,230,190,.8)':bad?'rgba(255,61,79,.6)':'rgba(255,201,107,.45)')+';--bg2:'+(win?'rgba(79,230,190,.25)':'rgba(0,0,0,0)')+';display:flex;justify-content:space-between;align-items:center;padding:24px 32px;'+F.fromR(t,a,.6)+(bad?';opacity:.45':'')+'"><span class="lead" style="color:#fff">'+b[0]+'</span><span class="h2" style="font-size:40px;color:'+(win?'#4FE6BE':bad?'#FF6A78':'#FFC96B')+'">&euro;'+b[1]+'</span>'+(win?'<span class="pill" style="--bc:rgba(79,230,190,.8);font-size:22px">WINS</span>':'')+'</div>';}).join('')+'</div></div>';
+}},
+
+/* 8f — Draw */
+{name:'Draw',dur:12,pal:'violet',acc:'#D07BFF',draw:function(t){
+  var parts=''; var pick=11, roll=F.p(t,3.4,7.4), cur=Math.floor(roll*37)%16, done=t>7.6;
+  for(var i=0;i<16;i++){var on=done?i===pick:i===cur;
+    parts+='<div style="width:104px;height:104px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;font-size:28px;color:#fff;border:3px solid '+(on?(done?'#4FE6BE':'#D07BFF'):'#3a3046')+';background:'+(on?(done?'rgba(79,230,190,.3)':'rgba(208,123,255,.3)'):'rgba(255,255,255,.03)')+';box-shadow:'+(on?'0 0 34px '+(done?'#4FE6BE':'#D07BFF'):'none')+';transform:scale('+(done&&i===pick?1.15:1)+')">'+(i+1)+'</div>';}
+  return '<div class="wrap split"><div class="stack"><div class="kick" style="'+I(t,.2)+'">3 &middot; Draw</div>'+
+    '<div class="h1" style="'+I(t,.5)+'">Allocate through a <span class="acc">verifiable draw</span>.</div>'+
+    '<div class="lead" style="'+I(t,1.4)+'">The participants and the rules are fixed first. The result comes from public data that <b>anyone can recompute</b> &mdash; nobody picks the winner by hand.</div></div>'+
+    '<div style="display:grid;grid-template-columns:repeat(4,104px);gap:28px;justify-content:center;'+I(t,1.0)+'">'+parts+'</div></div>';
+}},
+
+/* 8g — Project Funding */
+{name:'Project Funding',dur:12,pal:'teal',acc:'#4FE6BE',draw:function(t){
+  var f=F.eio(F.p(t,3.0,8.6));
+  return '<div class="wrap split wide-r"><div class="photo" style="height:600px;--glow:rgba(79,230,190,.2);'+I(t,.2,1.1,0,.94)+'"><img src="'+P+'solar.jpg" style="'+F.kb(t,12,1.05,1.15,-1.5,0)+'"><span class="cap">e.g. solar installation &middot; irrigation &middot; improvements</span></div>'+
+    '<div class="stack"><div class="kick" style="'+I(t,.4)+'">4 &middot; Project Funding</div>'+
+    '<div class="h1" style="font-size:74px;'+I(t,.7)+'">Fund something that <span class="acc">will be built</span>.</div>'+
+    '<div class="lead" style="'+I(t,1.6)+'">Raise money for a project that does not exist yet &mdash; a solar plant, irrigation, an improvement to the farm &mdash; under conditions set in its Passport.</div>'+
+    '<div style="'+I(t,2.6)+'"><div class="small">FUNDING PROGRESS (illustration)</div><div style="height:30px;border-radius:15px;margin-top:12px;background:rgba(255,255,255,.08);overflow:hidden"><div style="height:100%;width:'+(100*f*.78).toFixed(1)+'%;background:linear-gradient(90deg,#4FE6BE,#1aa58a)"></div></div><div class="lead" style="margin-top:12px;font-size:26px">'+Math.round(78*f)+'% of the target</div></div></div></div>';
+}},
+
+/* 8h — what the status labels mean */
+{name:'Status',dur:11,pal:'teal',acc:'#4FE6BE',draw:function(t){
+  return '<div class="wrap" style="display:flex;flex-direction:column;justify-content:center;gap:50px"><div class="stack" style="text-align:center"><div class="kick" style="'+I(t,.2)+'">What the labels mean</div><div class="h2" style="'+I(t,.5)+'">Honest about <span class="acc">what is live</span>.</div></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">'+
+      '<div class="box" style="--bc:rgba(79,230,190,.7);--bg2:rgba(79,230,190,.16);padding:40px;'+I(t,1.4)+'"><span class="badge" style="color:#4FE6BE;border:1px solid #4FE6BE88;background:#4FE6BE14;font-size:22px">LIVE &middot; REGISTRY</span><div class="h2" style="font-size:40px;margin-top:22px">Tokenize</div><div class="lead" style="font-size:27px;margin-top:12px">Available today in the Asset Registry.</div></div>'+
+      '<div class="box" style="--bc:rgba(255,201,107,.7);--bg2:rgba(255,201,107,.16);padding:40px;'+I(t,3.0)+'"><span class="badge" style="color:#FFC96B;border:1px solid #FFC96B88;background:#FFC96B14;font-size:22px">ENGINE COMPLETE &middot; LAB VERIFIED</span><div class="h2" style="font-size:40px;margin-top:22px">Auction &middot; Draw &middot; Project Funding</div><div class="lead" style="font-size:27px;margin-top:12px">Built and tested in the lab &mdash; <b>not open to the public</b> in production yet.</div></div></div></div>';
+}},
+
 /* 9 — the native-asset layer, gated */
 {name:'On chain',dur:12,pal:'violet',acc:'#D07BFF',draw:function(t){
   var ops=['issue','transfer','burn','conservation','supply-cap safety','reorg-safe index'];
@@ -209,6 +297,14 @@ window.FILM={title:'SOST in 3 Minutes',scenes:[
     '<div class="pill" style="--bc:rgba(255,201,107,.6);font-size:28px;'+I(t,5.2)+'">Tokenization never mints SOST &middot; the supply stays 4,669,201</div></div>';
 }},
 
+/* 10b — legal notice */
+{name:'Legal',dur:13,pal:'red',acc:'#FFC96B',draw:function(t){
+  return '<div class="wrap center" style="gap:40px"><div style="'+I(t,.2,.9,0,.8)+'"><svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#FFC96B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M6 7h12M6 7l-3 6a3 3 0 0 0 6 0zM18 7l-3 6a3 3 0 0 0 6 0z"/></svg></div>'+
+    '<div class="kick" style="'+I(t,.6)+'">Important</div>'+
+    '<div class="h2" style="font-size:50px;line-height:1.25;'+I(t,1.0,1)+'">Deploying any of these mechanisms is bound to<br><span class="acc">strict compliance</span> with the law of the<br>jurisdiction or country where it is applied.</div>'+
+    '<div class="lead" style="font-size:28px;'+I(t,4.6,1)+'">The Passport and the blockchain prove <b>records, signatures, rules and operations</b>.<br>On their own they do <b>not</b> turn a token into legal title to a house, a farm or a company &mdash;<br>that depends on how the rights are defined in law and on the applicable regulation.</div></div>';
+}},
+
 /* 11 — who runs it */
 {name:'Who runs it',dur:10,pal:'teal',acc:'#4FE6BE',draw:function(t){
   var dots=''; for(var i=0;i<60;i++){var a=K(t,1.6+i*.05,.4), c=i%7===0?'#4FE6BE':'#7C8A96', p=F.pulse(t+i*.37,2.4);
@@ -227,7 +323,7 @@ window.FILM={title:'SOST in 3 Minutes',scenes:[
     '<span class="chip"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.6 2.6 15 0 18C9.4 18.4 9.4 5.6 12 3z"/></svg><span>sostcore.com</span></span>'+
     '<span class="chip"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M21.5 3.5 2.8 10.6l6.4 2.3 2.3 6.4z"/><path d="M21.5 3.5 9.2 12.9"/></svg><span>t.me/SOSTProtocolOfficial</span></span></div>'+
     '<div class="credits" style="'+I(t,1.8)+'">Open source &middot; MIT &middot; Sovereign Stock Token<br>'+
-    'Music: &lsquo;Convergence&rsquo; by Scott Buckley &mdash; CC BY 4.0 &middot; scottbuckley.com.au<br>'+
+    'Music: &lsquo;Convergence&rsquo; and &lsquo;Starfire&rsquo; by Scott Buckley &mdash; CC BY 4.0 &middot; scottbuckley.com.au<br>'+
     'Photos: Wikimedia Commons &mdash; CC0 / public domain</div></div>';
 }}
 ]};
