@@ -204,6 +204,35 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<!-- ============ FIRST JACKPOT V2 DRAW #30,186 + TWO INDEPENDENT DRAWS (2026-10-11) ============ -->
+<section class="section" id="jackpot-v2-first-draw"><div class="container">
+  <article style="border:2px solid #ffd166;border-radius:14px;background:linear-gradient(180deg,rgba(255,209,102,.06),transparent 60%);padding:20px 22px">
+    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#ffd166">// MAINNET &middot; VERIFIED ON-CHAIN &middot; 11 OCT 2026</div>
+    <h2 style="font-size:24px;margin:10px 0 4px;color:var(--text-primary,#e2e8f0);text-wrap:balance">First Jackpot V2 draw <span style="color:#ffd166">#30,186</span>: no eligible winner, 100 SOST rolled over</h2>
+    <div style="font-size:14px;color:#ffe9b0;margin-bottom:10px">And why the normal DTD and the Jackpot are two independent draws</div>
+    <div style="font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.75;border:1px solid #3a3320;border-radius:8px;padding:12px 14px;background:rgba(0,0,0,.25);color:#cdd6e0;margin:12px 0">
+      <b style="color:#22d3ee">BLOCK #30,186</b><br>
+      &boxvr; <b style="color:#39ff14">NORMAL DTD</b> (every block) &mdash; winner paid <b>3.9255 SOST</b> &check;<br>
+      &boxur; <b style="color:#ffd166">JACKPOT V2</b> (jackpot height) &mdash; PoW candidates <b>2</b> &middot; eligible <b>0</b> (no NODE_BIND) &rarr; <b style="color:#f5b301">no winner &middot; 0 SOST paid &middot; +100 SOST rolled over</b><br>
+      &nbsp;&nbsp;&nbsp;&rarr; next draw <b>#30,474</b> &middot; pot <b>200 SOST</b>
+    </div>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#fbbf24;margin:18px 0 6px;font-weight:800">What happened</h3>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Block <b>#30,186</b> was the first DTD Jackpot draw under the V2 rules active since #30,000. The node's canonical audit (<code>getjackpotv2audit 30186</code>) lists two miner identities with enough SbPoW blocks, but neither had a confirmed <b>NODE_BIND</b>, so <b>no address was eligible</b>. As the rule says, nothing was paid and the 100 SOST pot <b>rolled over</b>: the next draw at <b>#30,474</b> carries <b>200 SOST</b> (the cap is 500). Consensus behaved exactly as specified; the reserve was not touched.</p>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">The same block also paid its <b>normal DTD</b> &mdash; 3.9255 SOST to that block's DTD winner. That payment is <b>not</b> the jackpot. Earlier Explorer labels showed it as a "lottery winner" next to the jackpot panel, which made it look as if the jackpot had been won; the Explorer now separates the two draws everywhere (block detail, jackpot panel, archive) and counts <b>draws</b>, <b>jackpots paid</b> and <b>no-winner draws</b> separately.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#fbbf24;margin:18px 0 6px;font-weight:800">Two draws, one block</h3>
+    <ul style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:6px 0 6px 18px">
+      <li><b style="color:#39ff14">Normal DTD &mdash; every block.</b> Miners active in the recent window, minus the recent-producer <b>cooldown</b> (with a fallback when the cooldown would leave nobody) and the <b>anti-dominance</b> rule (applied when enough miners are active). Uniform pick. Pays 50% of the block subsidy.</li>
+      <li><b style="color:#ffd166">Jackpot V2 &mdash; every 288 blocks.</b> <b>NODE_BIND</b> + the required <b>heartbeats</b> (0 for the first draw, then one per completed 288-block epoch, ramping to 3 of the last 4) + at least <b>3 SbPoW blocks in the last 2,016</b>. Pick <b>weighted by those blocks</b>. <b>No cooldown, no anti-dominance.</b></li>
+    </ul>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Because the eligible sets and the rules are different, the two draws can pick <b>different winners in the same block</b> &mdash; one miner can take the normal DTD while another takes the jackpot. The same miner can also win both, if both draws select it.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#fbbf24;margin:18px 0 6px;font-weight:800">Same public entropy, separate seeds</h3>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Both draws read the same public inputs: the hashes of the <b>16 previous blocks</b> and the height. Each hashes them under its <b>own domain tag</b> &mdash; <code>SOST_LOTTERY_V11</code> for the normal DTD, <code>SOST_HIST_JACKPOT</code> for the Jackpot &mdash; so each draw has its own seed and its own roll. Nothing is secret: anyone can recompute both winners (or the absence of one) from the chain.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#fbbf24;margin:18px 0 6px;font-weight:800">For miners</h3>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">To be eligible for <b>#30,474</b> a miner needs a confirmed NODE_BIND and <b>one heartbeat in epoch 0 (blocks #30,000&ndash;#30,287)</b>, emitted automatically by a node started with <code>--node-key-file</code> once its bind has confirmed. After #30,287 an epoch-0 heartbeat can no longer be added, so a miner that misses it is not eligible for #30,474; heartbeats in later epochs count toward later draws as the requirement ramps up.</p>
+    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Sources: <code>getjackpotv2audit</code> on the public node; consensus code <code>src/jackpot_v2.cpp</code> (eligibility, heartbeat window, weighted pick, seed domain), <code>include/sost/lottery.h</code> (normal DTD seed), <code>src/node_participation.cpp</code> (NODE_BIND / heartbeat checks).</p>
+  </article>
+</div></section>
+
 <!-- ============ CONVERGENCEX ASIC RESISTANCE (2026-10-10) ============ -->
 <section class="section" id="convergencex-asic-resistance"><div class="container">
   <article style="border:2px solid #22d3ee;border-radius:14px;background:linear-gradient(180deg,rgba(34,211,238,.06),transparent 60%);padding:20px 22px">

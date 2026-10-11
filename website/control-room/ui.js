@@ -103,13 +103,14 @@
       <div class="sub">Cross-check from the block series: ${num(mi.active288Series.value)}</div>
       <div class="tbl-wrap"><table><thead><tr><th>Producer</th><th>Blocks</th><th>Share</th><th></th></tr></thead><tbody>${shares}</tbody></table></div></div>`);
 
-    html.push(`<div class="p"><h3>DTD (V30000) ${tag('live')}${src(d.eligibleNext)}</h3>
+    html.push(`<div class="p"><h3>Normal DTD — every block ${tag('live')}${src(d.eligibleNext)}</h3>
       <div class="big">${num(d.eligibleNext.value)} <small>eligible for #${num(d.nextHeight.value)}</small></div>
       <div class="kv"><span class="k">Cooldown window</span><span class="v">${num(d.cooldownWindow.value)} blocks</span>
       <span class="k">In cooldown</span><span class="v">${(d.cooldownMiners.value || []).map(addr).join(', ') || 'none'}</span>
       <span class="k">Payout</span><span class="v">${num(d.payout.value, 8)} SOST</span></div>
       <div class="proj"><div class="lbl">PROJECTED NEXT DTD WINNER — CURRENT TIP</div>${addr(d.projectedWinner.value)}
-      <div class="sub">Projection for #${num(d.nextHeight.value)} if mined on the current tip. <b>The projection changes when the chain tip changes</b>; it is not a confirmed winner until block #${num(d.nextHeight.value)} exists.</div></div></div>`);
+      <div class="sub">Projection for #${num(d.nextHeight.value)} if mined on the current tip. <b>The projection changes when the chain tip changes</b>; it is not a confirmed winner until block #${num(d.nextHeight.value)} exists.</div></div>
+      <div class="sub">Independent of the DTD Jackpot: at a jackpot height both draws run in the same block, each with its own rules and its own winner (or none).</div></div>`);
 
     const prs = n.peers.map((p) => `<tr><td>${esc(p.addr)}</td><td>${esc(p.direction)}</td><td>${num(p.height)}</td><td>${p.acked ? '✔' : '…'}</td></tr>`).join('');
     html.push(`<div class="p"><h3>Network ${tag('live')}${src(n.uniqueActiveNodes)}</h3>
@@ -132,6 +133,7 @@
       ${j.rolloverIfNoneEligible.value ? '<div class="sub" style="margin-top:8px"><span class="pill warn">ROLLOVER if still 0 eligible at the draw</span></div>' : ''}
       <div class="kv"><span class="k">Pot / reserve</span><span class="v">${num(j.pot.value, 2)} / ${num(j.reserve.value, 2)} SOST</span>
       <span class="k">Rules</span><span class="v">≥ ${num(j.minPowBlocks.value)} PoW blocks in ${num(j.powWindow.value)} · heartbeats ${num(j.heartbeatRequired.value)}</span></div>
+      <div class="sub">A separate draw from the normal DTD: NODE_BIND + heartbeats + SbPoW blocks, weighted by PoW, no cooldown and no anti-dominance. The normal DTD winner of a jackpot block is <b>not</b> the jackpot winner.</div>
       <div class="tbl-wrap"><table><thead><tr><th>Candidate</th><th>PoW blocks</th><th>NODE_BIND</th><th>Heartbeats</th><th>Eligible</th></tr></thead><tbody>${cand}</tbody></table></div></div>`);
 
     html.push(`<div class="p w6"><h3>Supply ${tag('live')}${src(s.total)}</h3>

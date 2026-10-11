@@ -1487,20 +1487,51 @@
         <div class="four-pillar-headline" style="font-size:22px">Every 288 blocks (~48h)</div>
         <p class="four-pillar-body">
           The DTD Jackpot returns the reserve <b>already accumulated</b> in the Gold Vault + PoPC addresses
-          (~<b>52,000 SOST</b> at V15) back to DTD winners &mdash; instead of leaving it locked in an off-chain-referenced vault.<br><br>
+          (~<b>52,000 SOST</b> at V15) back to the miners who run the network &mdash; instead of leaving it locked in an off-chain-referenced vault.<br><br>
           It fires on a <b>288-block cadence (~48 h)</b>, paying a jackpot of <b>base 100 / cap 500 SOST</b>, first at
           height <b>#25,290</b>, draining over <b>~3 years</b>. It is <b>supply-neutral</b> (it only moves coins that
           already exist) and <b>ends when the reserve is empty</b> &mdash; after which only the normal per-block DTD remains.
         </p>
         <div style="margin-top:12px;border:1px solid #2b7a3d;border-radius:8px;background:rgba(124,255,160,.05);padding:12px 14px">
-          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#7CFFA0;margin-bottom:7px">WHO IS ELIGIBLE TO WIN</div>
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;color:#7CFFA0;margin-bottom:7px">WHO IS ELIGIBLE TO WIN &middot; FROM #30,000 (JACKPOT V2)</div>
           <p class="four-pillar-body" style="margin:0;font-size:12.5px">
-            The Jackpot winner <b>is</b> the DTD draw winner of that jackpot block — it reuses the <b>exact same eligibility set</b> as the base draw (signed miner + recent-winner cooldown + anti-dominance + uniform, keyless selection).<br><br>
-            <b style="color:#7CFFA0">No separate entry</b> — there is no ticket, no purchase, no fiat/$-amount rule and no new selection engine.<br>
-            <b style="color:#7CFFA0">Broad by design</b> — a jackpot candidate must have mined <b>&ge;1 block in the last 20,000 blocks</b> (~19 weeks) — a much wider window than the normal draw&rsquo;s 5,000. The DTD Jackpot returns the vault to ~the whole network, not a recent few.<br>
-            <b style="color:#7CFFA0">Must have an eligible winner</b> — if a jackpot block has no eligible address, <b>nothing is paid</b>: the accumulated reward rolls over to the next reward block and the reserve is left untouched.
+            From block <b>#30,000</b> the Jackpot is an <b style="color:#7CFFA0">independent draw</b> with its own eligibility and its own winner:<br>
+            <b style="color:#7CFFA0">Active node</b> &mdash; the miner identity must have a confirmed <b>NODE_BIND</b> (mining key + node key) and the required <b>heartbeats</b> (none for the first draw, then one per completed 288-block epoch, ramping to 3 of the last 4 epochs).<br>
+            <b style="color:#7CFFA0">Real work</b> &mdash; at least <b>3 SbPoW blocks in the last 2,016</b>; the chance of winning is <b>linear in those blocks</b>.<br>
+            <b style="color:#7CFFA0">No cooldown and no anti-dominance</b> &mdash; those belong to the normal per-block DTD only.<br>
+            <b style="color:#7CFFA0">Must have an eligible winner</b> &mdash; with no eligible address <b>nothing is paid</b> and the pot rolls over to the next draw (cap 500 SOST).<br><br>
+            <span style="color:var(--text-dim)">Historical (#25,290&ndash;#29,898): the jackpot went to the DTD winner of the jackpot block, with a 20,000-block recency window.</span>
           </p>
         </div>
+      </div>
+    </div>
+
+    <!-- TWO DRAWS IN ONE BLOCK (normal DTD vs Jackpot V2) -->
+    <div class="fade-in delay-2" id="dtd-two-draws" style="max-width:940px;margin:22px auto 8px;border:1px solid #22d3ee;border-radius:10px;background:rgba(34,211,238,.05);padding:18px 22px;scroll-margin-top:90px">
+      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:#22d3ee;margin-bottom:8px">// TWO INDEPENDENT DRAWS &middot; ONE BLOCK</div>
+      <p style="margin:0 0 10px;color:var(--text-primary);font-size:14px;line-height:1.65">
+        The <b>normal DTD</b> runs in <b>every block</b>. The <b>DTD Jackpot V2</b> runs only at jackpot heights (every 288 blocks: #30,186, #30,474, &hellip;).
+        At a jackpot height <b>both draws happen in the same block</b>, and they are <b>independent</b>: different eligible sets, different rules, different winners.
+        One miner can win the normal DTD while another wins the Jackpot; the same miner can also win both if both draws select it.
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0">
+        <div style="border:1px solid #2b7a3d;border-radius:8px;padding:12px 14px;background:rgba(57,255,20,.04)">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.3px;color:#39ff14;margin-bottom:6px">NORMAL DTD &middot; EVERY BLOCK</div>
+          <div style="font-size:12.5px;line-height:1.65;color:var(--text-dim)">Eligible: miners active in the recent window, minus the recent-producer <b>cooldown</b> (with a fallback when the cooldown would leave nobody) and the <b>anti-dominance</b> rule (applied when enough miners are active). Uniform pick. Pays 50% of the block subsidy.</div>
+        </div>
+        <div style="border:1px solid #7a6a1f;border-radius:8px;padding:12px 14px;background:rgba(255,209,102,.05)">
+          <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.3px;color:#ffd166;margin-bottom:6px">JACKPOT V2 &middot; EVERY 288 BLOCKS</div>
+          <div style="font-size:12.5px;line-height:1.65;color:var(--text-dim)">Eligible: <b>NODE_BIND</b> + required <b>heartbeats</b> + &ge;3 SbPoW blocks in the last 2,016. Pick <b>weighted by PoW blocks</b>. <b>No cooldown, no anti-dominance.</b> Base 100 SOST, rollover up to 500.</div>
+        </div>
+      </div>
+      <p style="margin:0 0 10px;color:var(--text-dim);font-size:12.5px;line-height:1.65">
+        <b style="color:var(--text-primary)">Randomness.</b> Both draws read the same public entropy &mdash; the hashes of the 16 previous blocks and the height &mdash; but each hashes it under its own domain tag
+        (<code>SOST_LOTTERY_V11</code> for the normal DTD, <code>SOST_HIST_JACKPOT</code> for the Jackpot), so each gets its own seed and its own roll. Anyone can recompute both from the chain.
+      </p>
+      <div style="font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-dim);border-top:1px solid #17353f;padding-top:10px">
+        <b style="color:#22d3ee">Example &mdash; block #30,186</b> (first Jackpot V2 draw)<br>
+        Normal DTD: <b style="color:#39ff14">paid</b> to the block&rsquo;s DTD winner (3.9255 SOST).<br>
+        Jackpot V2: 2 PoW candidates, <b>0 eligible</b> (no NODE_BIND yet) &rarr; <b style="color:#f5b301">no winner, 0 SOST paid, +100 SOST rolled over</b> &rarr; next draw <b>#30,474</b> with a <b>200 SOST</b> pot.
       </div>
     </div>
 

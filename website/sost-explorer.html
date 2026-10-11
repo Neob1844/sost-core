@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-10-v528-address-fastpath-jackpot-index">
+<meta name="explorer-html-version" content="2026-10-11-v529-dtd-vs-jackpot-separation">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -627,6 +627,13 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
     <span id="vcx-sost" style="margin-left:auto;display:inline-flex;align-items:center"></span>
   </div>
 </nav>
+<!-- Control Room V2 entry (v529). The classic Explorer below is unchanged; the Control Room is a separate
+     page fed by one server-side read-only collector (browsers never call the node). -->
+<a href="sost-control-room.html" class="cr2-entry" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:10px auto;max-width:1040px;padding:12px 16px;border-radius:10px;text-decoration:none;border:1px solid #22d3ee;background:linear-gradient(100deg,rgba(34,211,238,.10),rgba(57,255,20,.06) 60%,rgba(0,0,0,0));box-shadow:0 0 22px rgba(34,211,238,.12)">
+  <span style="font:900 13px ui-monospace,monospace;letter-spacing:1.2px;color:#22d3ee;white-space:nowrap">&#9673; CONTROL ROOM V2 &middot; NEW</span>
+  <span style="flex:1 1 260px;min-width:0;font:12px/1.5 ui-monospace,monospace;color:#cdd6e0">Live network pulse of the last 144 blocks, Equalizer explained block by block, normal DTD and Jackpot V2 side by side, active vs historical clearly separated.</span>
+  <span style="font:800 12px ui-monospace,monospace;color:#39ff14;white-space:nowrap">OPEN &rarr;</span>
+</a>
 <details class="reward-research-update" style="margin:10px auto;max-width:1040px;background:rgba(215,255,0,.055);border:1px solid #7a8a00;border-left:4px solid #d7ff00;border-radius:8px;padding:8px 14px;color:#e8ffb0">
   <summary style="cursor:pointer;color:#d7ff00;font:800 12px ui-monospace;letter-spacing:.5px;text-shadow:0 0 8px rgba(215,255,0,.4);list-style:none">&#11042; RESEARCH NOTICE &mdash; #40,000 research horizon: reward evolution &middot; decentralization &middot; asset ecosystem (NOT consensus) &middot; click to expand</summary>
   <div style="margin-top:9px;font-size:12px;line-height:1.7;text-shadow:0 0 6px rgba(215,255,0,.18)">
@@ -640,7 +647,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-10-v528-address-fastpath-jackpot-index';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-11-v529-dtd-vs-jackpot-separation';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -6116,7 +6123,8 @@ async function showBlock(hash){
           +'(~'+(savedBitsQ/65536).toFixed(3)+' bits).</span>';
       }
     }
-    c.innerHTML='<div class="dtl-head"><b>Block #'+b.height+'</b> <span class="dtl-tag">confirmed</span> <span style="font-size:10px;color:var(--text3)">'+txC+' tx'+(txC>1?'s':'')+'</span></div><div class="dtl-grid"><div class="k">hash</div><div class="v">'+b.hash+cpBtn(b.hash)+'</div><div class="k">next_hash</div><div class="v">'+nextLink+'</div><div class="k">prev_hash</div><div class="v">'+prevLink+'</div><div class="k">merkle_root</div><div class="v">'+b.merkleroot+cpBtn(b.merkleroot)+'</div><div class="k">timestamp</div><div class="v">'+fTFull(b.time)+' \u00B7 '+fT(b.time)+'</div><div class="k">mining_time</div><div class="v"><span style="color:'+mtColor+';font-weight:600">\u23F1 '+miningTimeStr+'</span> <span style="color:var(--text3)">// time since prev block</span></div><div class="k">bits_q</div><div class="v"><span style="color:var(--purple)">'+b.bits_q.toLocaleString()+'</span> <span style="color:var(--text3)">// Q16.16 compact</span></div><div class="k">bits_real</div><div class="v"><span style="color:var(--orange);font-weight:600">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="color:var(--text3)">// bits_q \u00F7 65536</span></div><div class="k">cASERT_target</div><div class="v"><span style="color:'+getLevelColor(targetProf.H)+';font-weight:600">'+targetProf.name+'</span> <span style="color:var(--text3)">// natural profile from lag ('+casertDesc+'), ceiling '+(b.height>=7350?"H20 (V12)":b.height>=5750?"H13":b.height>=5635?"H12":b.height>=5480?"H11":b.height>=5075?"H10":"H35")+'</span></div><div class="k">cASERT_mined</div><div class="v"><span style="color:'+getLevelColor(displayProf.H)+';font-weight:600">'+displayProf.name+'</span> <span style="color:var(--text3)">// '+reliefNote+'</span></div><div class="k">anti_stall</div><div class="v">'+asHtml+'</div><div class="k" title="V12 4-tier slingshot: bits_q is reduced by a fixed percentage when the current block search elapsed exceeds the tier threshold. Tiers: T1>20m -6.5%, T2>30m -12.5%, T3>60m -25%, T4>120m -37.5%, T5>180m -50%. Source: V12_SLINGSHOT_T*_DROP_BPS in include/sost/params.h.">slingshot</div><div class="v">'+ssHtml+'</div><div class="k">nonce</div><div class="v">'+b.nonce.toLocaleString()+'</div><div class="k">subsidy</div><div class="v"><span style="color:var(--green);font-weight:600">'+fS(b.subsidy)+' SOST</span></div>'+(b.miner_address?'<div class="k" title="Address that mined this block (received the coinbase miner output, 50% of subsidy).">miner</div><div class="v"><span class="td-link" style="color:var(--orange);font-family:monospace;font-size:11px" onclick="showAddress(\''+b.miner_address+'\')">'+b.miner_address+'</span>'+cpBtn(b.miner_address)+'</div>':'')+(b.lottery_winner_address&&parseInt(b.lottery_payout||0,10)>0?'<div class="k" title="Address that received the V11 Phase 2 reward payout on this triggered block (50% of subsidy plus any rolled-over jackpot).">lottery winner</div><div class="v"><span class="td-link" style="color:#ff00ff;font-family:monospace;font-size:11px" onclick="showAddress(\''+b.lottery_winner_address+'\')">'+b.lottery_winner_address+'</span>'+cpBtn(b.lottery_winner_address)+' <span style="color:var(--text3)">// '+fS(parseInt(b.lottery_payout||0,10))+' SOST PAYOUT</span></div>':'')+'<div class="k">split</div><div class="v"><span style="color:var(--orange)">50%</span> miner \u00B7 <span style="color:var(--gold)">25%</span> gold \u00B7 <span style="color:var(--cyan)">25%</span> popc</div></div>'+renderCasertPanel(signal,b.casert_mode,b.height)+'<div class="block-txs" style="margin-top:20px"><div class="sec-title" style="margin-bottom:8px">// <b>TRANSACTIONS</b> <span style="color:var(--text3);font-weight:400">'+txC+' total</span></div><table class="tbl"><thead><tr><th>TYPE</th><th>DETAIL</th><th>SPLIT / OUTPUTS</th><th>TOTAL</th></tr></thead><tbody>'+txRows+'</tbody></table></div>';
+    c.innerHTML='<div class="dtl-head"><b>Block #'+b.height+'</b> <span class="dtl-tag">confirmed</span> <span style="font-size:10px;color:var(--text3)">'+txC+' tx'+(txC>1?'s':'')+'</span></div><div class="dtl-grid"><div class="k">hash</div><div class="v">'+b.hash+cpBtn(b.hash)+'</div><div class="k">next_hash</div><div class="v">'+nextLink+'</div><div class="k">prev_hash</div><div class="v">'+prevLink+'</div><div class="k">merkle_root</div><div class="v">'+b.merkleroot+cpBtn(b.merkleroot)+'</div><div class="k">timestamp</div><div class="v">'+fTFull(b.time)+' \u00B7 '+fT(b.time)+'</div><div class="k">mining_time</div><div class="v"><span style="color:'+mtColor+';font-weight:600">\u23F1 '+miningTimeStr+'</span> <span style="color:var(--text3)">// time since prev block</span></div><div class="k">bits_q</div><div class="v"><span style="color:var(--purple)">'+b.bits_q.toLocaleString()+'</span> <span style="color:var(--text3)">// Q16.16 compact</span></div><div class="k">bits_real</div><div class="v"><span style="color:var(--orange);font-weight:600">'+(b.bits_q/65536).toFixed(3)+'</span> <span style="color:var(--text3)">// bits_q \u00F7 65536</span></div><div class="k">cASERT_target</div><div class="v"><span style="color:'+getLevelColor(targetProf.H)+';font-weight:600">'+targetProf.name+'</span> <span style="color:var(--text3)">// natural profile from lag ('+casertDesc+'), ceiling '+(b.height>=7350?"H20 (V12)":b.height>=5750?"H13":b.height>=5635?"H12":b.height>=5480?"H11":b.height>=5075?"H10":"H35")+'</span></div><div class="k">cASERT_mined</div><div class="v"><span style="color:'+getLevelColor(displayProf.H)+';font-weight:600">'+displayProf.name+'</span> <span style="color:var(--text3)">// '+reliefNote+'</span></div><div class="k">anti_stall</div><div class="v">'+asHtml+'</div><div class="k" title="V12 4-tier slingshot: bits_q is reduced by a fixed percentage when the current block search elapsed exceeds the tier threshold. Tiers: T1>20m -6.5%, T2>30m -12.5%, T3>60m -25%, T4>120m -37.5%, T5>180m -50%. Source: V12_SLINGSHOT_T*_DROP_BPS in include/sost/params.h.">slingshot</div><div class="v">'+ssHtml+'</div><div class="k">nonce</div><div class="v">'+b.nonce.toLocaleString()+'</div><div class="k">subsidy</div><div class="v"><span style="color:var(--green);font-weight:600">'+fS(b.subsidy)+' SOST</span></div>'+(b.miner_address?'<div class="k" title="Address that mined this block (received the coinbase miner output, 50% of subsidy).">miner</div><div class="v"><span class="td-link" style="color:var(--orange);font-family:monospace;font-size:11px" onclick="showAddress(\''+b.miner_address+'\')">'+b.miner_address+'</span>'+cpBtn(b.miner_address)+'</div>':'')+(b.lottery_winner_address&&parseInt(b.lottery_payout||0,10)>0?'<div class="k" title="Normal DTD (every block): address that received this block\'s DTD payout (50% of the subsidy). This is NOT the DTD Jackpot; a jackpot draw, when this block is a jackpot height, is shown in its own row below.">DTD winner (normal)</div><div class="v"><span class="td-link" style="color:#ff00ff;font-family:monospace;font-size:11px" onclick="showAddress(\''+b.lottery_winner_address+'\')">'+b.lottery_winner_address+'</span>'+cpBtn(b.lottery_winner_address)+' <span style="color:var(--text3)">// '+fS(parseInt(b.lottery_payout||0,10))+' SOST normal DTD payout</span></div>':'')+((window.jpIsOpportunity?window.jpIsOpportunity(b.height):(b.height>=25290&&(b.height-25290)%288===0))?'<div class="k" title="DTD Jackpot draw at this height. Independent of the normal DTD: it has its own eligibility, its own winner (or none) and its own payout.">DTD jackpot draw</div><div class="v" id="dtlJpDraw" data-h="'+b.height+'"><span style="color:var(--text3)">reading the draw from the chain\u2026</span></div>':'')+'<div class="k">split</div><div class="v"><span style="color:var(--orange)">50%</span> miner \u00B7 <span style="color:var(--gold)">25%</span> gold \u00B7 <span style="color:var(--cyan)">25%</span> popc</div></div>'+renderCasertPanel(signal,b.casert_mode,b.height)+'<div class="block-txs" style="margin-top:20px"><div class="sec-title" style="margin-bottom:8px">// <b>TRANSACTIONS</b> <span style="color:var(--text3);font-weight:400">'+txC+' total</span></div><table class="tbl"><thead><tr><th>TYPE</th><th>DETAIL</th><th>SPLIT / OUTPUTS</th><th>TOTAL</th></tr></thead><tbody>'+txRows+'</tbody></table></div>';
+    if(document.getElementById('dtlJpDraw')&&window.SJP&&window.SJP.drawSummary) window.SJP.drawSummary(b.height).then(function(t){ var el=document.getElementById('dtlJpDraw'); if(el&&el.getAttribute('data-h')===String(b.height)) el.innerHTML=t; });
     _navStack[_navStack.length-1].label='Block #'+b.height;renderNav();
     window.scrollTo({top:0,behavior:'smooth'});
   }catch(e){c.innerHTML='<div class="td-err">'+e.message+'</div>';}
@@ -9971,7 +9979,10 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     var _remD=_failed?'RETRYING':(_loaded?fc(rem):_LD);
     var _etaD=_failed?'\u2014':(_loaded?('~'+eta(rem)):_LD);
     var _statD=_failed?'DATA UNAVAILABLE \u00B7 RETRYING':(_loaded?status:_LD);
-    var _paidD=_failed?'\u2014':(_loaded?fc(paid):_LD);
+    var _drawsN=state.draws||0;
+    var _paidD=_failed?'\u2014':(_loaded?(window._sjpdPaid!=null?fc(window._sjpdPaid):'computing\u2026'):_LD);
+    var _drawsD=_failed?'\u2014':(_loaded?fc(_drawsN):_LD);
+    var _noWinD=_failed?'\u2014':(_loaded?(window._sjpdPaid!=null?fc(Math.max(0,_drawsN-window._sjpdPaid)):'computing\u2026'):_LD);
     // TOTAL SOST paid via DTD jackpot: on-chain sum of every paid jackpot amount (cached; computed once).
     // TOTAL SOST paid via DTD jackpot — ON-CHAIN sum, cached by the most-recent
     // jackpot height (the total only changes when a new jackpot pays). Shown
@@ -9979,49 +9990,63 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     // in the background with PARALLEL on-chain reconstruction. Never hardcoded.
     var _lastJp=(tip>=JP_FIRST)?(JP_FIRST+Math.floor((tip-JP_FIRST)/CAD)*CAD):0;
     if(_loaded && window._sjpdTotalPaid==null){
-      try{var _tc=JSON.parse(localStorage.getItem('sost_sjpd_total_v2')||'null');
-        if(_tc&&_tc.lastJp===_lastJp&&typeof _tc.total==='number') window._sjpdTotalPaid=_tc.total;}catch(e){}
+      try{var _tc=JSON.parse(localStorage.getItem('sost_sjpd_total_v3')||'null');
+        if(_tc&&_tc.lastJp===_lastJp&&typeof _tc.total==='number'){ window._sjpdTotalPaid=_tc.total; window._sjpdPaid=_tc.paid; window._sjpdLastPaid=_tc.last; }}catch(e){}
     }
     var _totalD=_failed?'\u2014':(_loaded?(window._sjpdTotalPaid!=null?(fc(Math.round(window._sjpdTotalPaid))+' SOST'):'computing\u2026'):_LD);
     if(_loaded && !window._sjpdTotalBusy && window._sjpdTotalComputedFor!==_lastJp && window.SJP && typeof window.SJP.reconstruct==='function'){
       window._sjpdTotalBusy=true;
       (function(lastJp){
         var hs=[]; for(var jh=JP_FIRST; jh<=tip; jh+=CAD) hs.push(jh);
-        Promise.all(hs.map(function(H){ return window.SJP.reconstruct(H).then(function(rec){ return (rec&&rec.winner&&rec.amount!=null)?(typeof rec.amount==='number'?rec.amount:parseFloat(rec.amount||0)):0; }).catch(function(){return 0;}); }))
-          .then(function(amts){ var sum=0; for(var i=0;i<amts.length;i++) sum+=amts[i];
-            window._sjpdTotalPaid=sum; window._sjpdTotalBusy=false; window._sjpdTotalComputedFor=lastJp;
-            try{localStorage.setItem('sost_sjpd_total_v2',JSON.stringify({lastJp:lastJp,total:sum}));}catch(e){}
-            var el=document.getElementById('sjpd-total-paid'); if(el) el.textContent=fc(Math.round(sum))+' SOST'; });
+        Promise.all(hs.map(function(H){ return window.SJP.reconstruct(H).then(function(rec){ return (rec&&rec.winner&&rec.amount!=null)?{h:H,w:rec.winner,a:(typeof rec.amount==='number'?rec.amount:parseFloat(rec.amount||0)),t:rec.txid}:null; }).catch(function(){return null;}); }))
+          .then(function(recs){ var sum=0, n=0, last=null; for(var i=0;i<recs.length;i++) if(recs[i]){ sum+=recs[i].a; n++; if(!last||recs[i].h>last.h) last=recs[i]; }
+            window._sjpdTotalPaid=sum; window._sjpdPaid=n; window._sjpdLastPaid=last; window._sjpdTotalBusy=false; window._sjpdTotalComputedFor=lastJp;
+            try{localStorage.setItem('sost_sjpd_total_v3',JSON.stringify({lastJp:lastJp,total:sum,paid:n,last:last}));}catch(e){}
+            if(window.SJP&&window.SJP._rerender) window.SJP._rerender(); });
       })(_lastJp);
     }
     var _eligD=_failed?'\u2014':(state.eligible!=null?esc(elig):_LD);
-    var _winFull=(state.jpWinner||state.winner||'');
+    // LAST WINNER = winner of the last jackpot actually PAID (jackpot tx on chain) — never the
+    // normal DTD winner of a jackpot-height block, and never a draw with no eligible winner.
+    var _lp=window._sjpdLastPaid||null;
+    var _winFull=_lp?_lp.w:((tip<30000)?(state.jpWinner||state.winner||''):'');
+    if(!_lp&&tip>=30000) winner=(window._sjpdPaid==null?'computing\u2026':'NONE YET');
     var _winD=_failed?'\u2014':(_loaded?((_winFull&&_winFull.indexOf('sost1')===0)?
       '<span title="'+esc(_winFull)+'" data-full="'+esc(_winFull)+'" data-short="'+esc(_sw(_winFull))+'" style="cursor:pointer;word-break:break-all;overflow-wrap:anywhere" onclick="try{navigator.clipboard.writeText(this.getAttribute(\'data-full\'));this.textContent=\'copied \u2713\';}catch(e){}">'+esc(_sw(_winFull))+'</span>'
       :esc(winner)):_LD);
     var myMiner=''; try{myMiner=localStorage.getItem('sost_my_miner')||'';}catch(_e){}
     // history + replay gating: only surface a real, paid jackpot (never before the first)
-    var _lastH=state.jpHeight||(nextH(tip)-CAD);
+    var _lastH=_lp?_lp.h:(state.jpHeight||(nextH(tip)-CAD));
     var _jd=(window.SJP&&SJP.jackpots)?SJP.jackpots[_lastH]:null;
-    var _w=(_jd&&_jd.winner)||state.jpWinner||'';
-    var _amt=(_jd&&_jd.amount!=null)?_jd.amount:100;
+    var _w=_lp?_lp.w:((_jd&&_jd.winner)||(tip<30000?state.jpWinner:'')||'');
+    var _amt=_lp?_lp.a:((_jd&&_jd.amount!=null)?_jd.amount:100);
+    if(_lp&&_lp.t) state.jpTxid=_lp.t;
+    // When the last DRAW had no eligible winner, say so first, separately from the normal DTD.
+    var _ld=state.lastDraw||null;
+    var lastDrawHtml=(_ld&&!_ld.winner&&_ld.rolled!=null)
+      ? ('<div style="border:1px solid #f5b301;border-radius:6px;padding:8px 10px;margin-bottom:8px;background:rgba(245,179,1,.06)">'
+         +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>LAST DRAW #'+fc(_ld.h)+' &middot; JACKPOT V2</b><span style="font-size:8px;letter-spacing:.8px;color:#0a0a0c;background:#f5b301;padding:2px 6px;border-radius:4px;font-weight:800">VERIFIED &middot; ROLLOVER</span></div>'
+         +'<div style="margin-top:5px;font-size:11px"><b style="color:#f5b301">NO ELIGIBLE WINNER</b> &middot; candidates '+fc(_ld.cand||0)+' &middot; eligible 0 &middot; <b>0 SOST paid</b> &middot; <b style="color:#ffd166">+'+(Math.round(_ld.rolled*1e4)/1e4)+' SOST rolled over</b> to #'+fc(_ld.h+CAD)+'</div>'
+         +(_ld.dtdWinner?('<div style="font-size:10px;color:var(--text3);margin-top:3px">Normal DTD of block #'+fc(_ld.h)+' (a different draw): <span class="sjp-w" onclick="showAddress(\''+esc(_ld.dtdWinner)+'\')" style="color:#22d3ee;cursor:pointer">'+esc(_sw(_ld.dtdWinner))+'</span> +'+(Math.round((_ld.dtd||0)*1e4)/1e4)+' SOST</div>'):'')
+         +'</div>')
+      : '';
     var _wshort=_w?(_w.length>16?_w.substr(0,10)+'…'+_w.substr(-4):_w):'—';
     var _tx=state.jpTxid||''; var _dtd=(state.jpDtd!=null)?state.jpDtd.toFixed(4):null;
-    var histHtml=(paid>0&&_w)
+    var histHtml=lastDrawHtml+((paid>0&&_w)
       ? ('<div style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;background:rgba(245,209,102,.05)">'
          +'<div style="display:flex;justify-content:space-between;align-items:center"><b>BLOCK #'+fc(_lastH)+'</b><span style="font-size:8px;letter-spacing:.8px;color:#0a0a0c;background:#39ff14;padding:2px 6px;border-radius:4px;font-weight:800">VERIFIED ON-CHAIN</span></div>'
          +'<div style="margin-top:5px;font-size:11px"><span style="color:var(--text3)">WINNER </span>&#127942; <span class="sjp-w" onclick="showAddress(\''+esc(_w)+'\')" style="color:#39ff14;cursor:pointer" title="'+esc(_w)+'">'+esc(_wshort)+'</span></div>'
-         +'<div style="font-size:11px">'+(_dtd!=null?('<span style="color:var(--text3)">DTD PAYOUT </span>'+_dtd+' SOST &middot; '):'')+'<span style="color:var(--text3)">DTD JACKPOT </span><b style="color:#ffd166">+'+esc(_amt)+' SOST</b></div>'
+         +'<div style="font-size:11px">'+(_dtd!=null&&!_lp?('<span style="color:var(--text3)">NORMAL DTD </span>'+_dtd+' SOST &middot; '):'')+'<span style="color:var(--text3)">DTD JACKPOT </span><b style="color:#ffd166">+'+esc(_amt)+' SOST</b></div>'
          +'<div style="font-size:11px"><span style="color:var(--text3)">ELIGIBLE </span>'+esc(state.jpEligible!=null?state.jpEligible:'\u2014')+' <span style="color:var(--text3)">(20k window)</span>'+(_tx?(' &middot; <span class="sjp-w" onclick="(window.showTxDetail&&showTxDetail(\''+esc(_tx)+'\'))" style="cursor:pointer;color:#22d3ee">view tx</span>'):'')+'</div>'
-         +'</div>'+(paid>1?('<div style="font-size:9px;color:var(--text3);margin-top:4px">+ '+(paid-1)+' earlier jackpot(s)</div>'):''))
-      : 'No DTD jackpots paid yet.';
+         +'</div>'+((window._sjpdPaid||0)>1?('<div style="font-size:9px;color:var(--text3);margin-top:4px">+ '+(window._sjpdPaid-1)+' earlier paid jackpot(s)</div>'):''))
+      : (lastDrawHtml?'':'No DTD jackpots paid yet.'));
     var legendHtml='<div style="display:flex;flex-wrap:wrap;gap:10px;font-size:9px;color:var(--text3);margin:8px 0 2px">'
       +'<span>&#127942; WINNER</span><span style="color:#39ff14">&#128994; DTD JACKPOT ELIGIBLE</span><span style="color:#22d3ee">&#128309; DTD ELIGIBLE</span><span style="color:#f5b301">&#128992; COOLDOWN</span><span>&#9899; NOT ELIGIBLE</span></div>';
     // Replay needs a known last winner; the ARCHIVE does not — it reconstructs from
     // the chain — so the two buttons are gated separately. Before this, a visitor
     // whose last-winner lookup had not landed yet saw no way into the archive at all.
     var _replayOne=(paid>0&&_w)?'<button class="sjpd-x" id="sjpd-replay" style="margin:0">&#127920; Replay last jackpot</button>':'';
-    var _archiveOne='<button class="sjpd-x" id="sjpd-archive-btn" style="margin:0;border-color:#2b7a3d;color:#39ff14">&#128220; View all jackpots'+(paid>0?' ('+paid+')':'')+'</button>';
+    var _archiveOne='<button class="sjpd-x" id="sjpd-archive-btn" style="margin:0;border-color:#2b7a3d;color:#39ff14">&#128220; View all draws'+(_drawsN>0?' ('+_drawsN+')':'')+'</button>';
     var replayBtn='<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">'+_replayOne+_archiveOne+'</div>';
     // JACKPOT ELIGIBLE (20k): FINAL (getlotteryaudit at a mined jackpot height) >
     // PRELIMINARY (future eligible_addresses[] preview at tip) > pending label.
@@ -10100,20 +10125,22 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
         '<div class="sjpd-c sjpd-archive-card" style="cursor:pointer;border-color:#2b7a3d" '+
              'title="Every DTD Jackpot paid so far: block, winner, amount, eligible set and transaction." '+
              'onclick="event.stopPropagation();if(window.SJP&&window.SJP.openArchive)window.SJP.openArchive();">'+
-          '<div class="sjpd-l" style="color:#39ff14">\uD83D\uDCDC JACKPOT ARCHIVE</div>'+
-          '<div class="sjpd-v g">'+_paidD+'</div>'+
-          '<div style="font-size:8px;color:var(--text3);margin-top:2px;line-height:1.35">jackpots paid \u00B7 click to view all winners</div>'+
+          '<div class="sjpd-l" style="color:#39ff14">\uD83D\uDCDC JACKPOT DRAWS</div>'+
+          '<div class="sjpd-v g">'+_drawsD+'</div>'+
+          '<div style="font-size:8px;color:var(--text3);margin-top:2px;line-height:1.35">draws held \u00B7 no-winner draws: <b>'+_noWinD+'</b> \u00B7 click for the archive</div>'+
         '</div>'+
         '<div class="sjpd-c" style="cursor:pointer" title="Click to open the full jackpot archive" '+
              'onclick="event.stopPropagation();if(window.SJP&&window.SJP.openArchive)window.SJP.openArchive();">'+
           '<div class="sjpd-l">JACKPOTS PAID</div><div class="sjpd-v">'+_paidD+'</div>'+
-          '<div style="font-size:8px;color:var(--text3);margin-top:2px">click to view all winners</div>'+
+          '<div style="font-size:8px;color:var(--text3);margin-top:2px">draws with a winner (jackpot tx on chain)</div>'+
         '</div>'+
         '<div class="sjpd-c" style="cursor:pointer" title="Total SOST paid out via DTD Jackpot so far — on-chain sum of every paid jackpot amount. Click to view all winners." '+
              'onclick="event.stopPropagation();if(window.SJP&&window.SJP.openArchive)window.SJP.openArchive();">'+
-          '<div class="sjpd-l">TOTAL SOST PAID</div><div class="sjpd-v g" id="sjpd-total-paid">'+_totalD+'</div>'+
-          '<div style="font-size:8px;color:var(--text3);margin-top:2px">via DTD jackpot · on-chain sum</div>'+
+          '<div class="sjpd-l">TOTAL JACKPOT PAID</div><div class="sjpd-v g" id="sjpd-total-paid">'+_totalD+'</div>'+
+          '<div style="font-size:8px;color:var(--text3);margin-top:2px">on-chain sum of jackpot txs \u00B7 normal DTD not included</div>'+
         '</div>'+
+        ((tip>=V2H&&_v2)?('<div class="sjpd-c"><div class="sjpd-l">CURRENT ROLLOVER</div><div class="sjpd-v g">'+(Math.round((_v2.rollover_stocks||0)/1e6)/100)+' SOST</div>'+
+          '<div style="font-size:8px;color:var(--text3);margin-top:2px">carried into #'+fc(nh)+' \u00B7 next pot '+esc(_v2Pot)+'</div></div>'):'')+
       '</div>'+
       v2CandHtml+
       '<div class="sjpd-c" style="margin-bottom:12px"><div class="sjpd-l">STATUS</div><div class="sjpd-v g" style="font-size:13px">'+_statD+'</div>'+
@@ -10164,6 +10191,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     // deterministic fields from the live permanent card + RPC (real data only)
     var reserve=(document.getElementById('dJackReserve')||{}).textContent||'—';
     var state={reserve:reserve,tip:0,eligible:null,paid:0,winner:null};
+    window.SJP._rerender=function(){ if(_dashOpen) render(state); };
     render(state);  // render immediately (shows LOADING until live data arrives)
     if(typeof window.rpc==='function'){
       window.rpc('getblockcount',[]).then(function(h){ state.tip=parseInt(h,10)||0;
@@ -10177,9 +10205,20 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
           // canonical jackpot eligible_count + winner from getlotteryaudit at the last
           // jackpot height (compute_lottery_eligibility_set applies the 20,000 window).
           var lastJp = state.tip>=JP_FIRST ? (JP_FIRST + Math.floor((state.tip-JP_FIRST)/CAD)*CAD) : 0;
-          state.paid = state.tip>=JP_FIRST ? (Math.floor((state.tip-JP_FIRST)/CAD)+1) : 0;
+          // DRAWS held so far (every jackpot height reached). How many were actually PAID comes
+          // from the chain (jackpot transaction present), computed below — a draw is not a payment.
+          state.draws = state.tip>=JP_FIRST ? (Math.floor((state.tip-JP_FIRST)/CAD)+1) : 0;
+          state.paid = state.draws;   // archive-button count only; the paid metric is window._sjpdPaid
           render(state);
-          if(lastJp && lastJp<=state.tip){
+          if(lastJp && lastJp>=30000 && window.SJP && window.SJP.gatherDraw){
+            // Jackpot V2 draw: canonical source is getjackpotv2audit (independent of the normal DTD).
+            window.SJP.gatherDraw(lastJp).then(function(o){ state.lastDraw=o; if(o.elig!=null) state.jpEligible=o.elig; render(state); });
+            window.rpc('gethistoricaljackpotstatus',[]).then(function(st){
+                if(st){ if(st.reserve!=null) state.reserve=st.reserve+' SOST';
+                        if(st.cooldown_window!=null) state.cooldownWindow=st.cooldown_window;
+                        if(Object.prototype.toString.call(st.cooldown_addresses)==='[object Array]') state.cooldownList=st.cooldown_addresses; }
+                render(state); }).catch(function(){});
+          } else if(lastJp && lastJp<=state.tip){
             window.rpc('getlotteryaudit',[String(lastJp)]).then(function(a){
               if(a){
                 if(a.eligible_count!=null) state.jpEligible=a.eligible_count;
@@ -10417,23 +10456,42 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
     if(s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; }
   function amtSost(v){ var n=(typeof v==='number')?v:parseFloat(v||0); return (Math.round(n*1e4)/1e4).toString(); }
 
-  // Gather one jackpot fully from CANONICAL chain data.
+  // Gather one jackpot DRAW fully from CANONICAL chain data. A draw is not a payment:
+  // the jackpot is paid only when the block carries the jackpot transaction. From #30,000
+  // (Jackpot V2) eligibility comes from getjackpotv2audit; with 0 eligible nothing is paid
+  // and the pot rolls over. The NORMAL DTD of the same block (lottery_payout /
+  // lottery_winner_address) is a different draw and is reported separately.
+  var V2H=30000;
   function gather(h){
-    var out={h:h, hash:null, winner:null, amount:null, txid:null, dtd:null, elig:null, ts:null};
+    var out={h:h, hash:null, winner:null, amount:null, txid:null, dtd:null, dtdWinner:null, elig:null, cand:null, ts:null, v2:h>=V2H, rolled:null, ok:false};
     return window.rpc('getblockhash',[h]).then(function(hash){
       if(!hash) return out; out.hash=hash;
       return window.rpc('getblock',[hash]).then(function(b){
-        if(b){ out.ts=b.time||null; if(b.lottery_payout!=null) out.dtd=parseInt(b.lottery_payout,10)/1e8; }
+        if(b){ out.ts=b.time||null; if(b.lottery_payout!=null) out.dtd=parseInt(b.lottery_payout,10)/1e8;
+               if(b.lottery_winner_address&&parseInt(b.lottery_payout||0,10)>0) out.dtdWinner=b.lottery_winner_address; }
         return window.SJP.reconstruct(h);
       }).then(function(rec){
         if(rec){ out.winner=rec.winner; out.amount=rec.amount; out.txid=rec.txid; }
-        return window.rpc('getlotteryaudit',[String(h)]).catch(function(){return null;});
+        return (out.v2?window.rpc('getjackpotv2audit',[String(h)]):window.rpc('getlotteryaudit',[String(h)])).catch(function(){return null;});
       }).then(function(a){
-        if(a&&a.eligible_count!=null) out.elig=a.eligible_count;
+        if(a&&a.eligible_count!=null){ out.elig=a.eligible_count; out.ok=true; }
+        if(out.v2&&a){ out.cand=(a.candidates||[]).length;
+          if(!out.winner&&a.eligible_count===0&&a.current_pot_stocks!=null) out.rolled=a.current_pot_stocks/1e8; }
         return out;
       });
     }).catch(function(){ return out; });
   }
+  window.SJP.gatherDraw=gather;
+  // One-line canonical summary of the jackpot draw at h (block detail).
+  window.SJP.drawSummary=function(h){
+    return gather(h).then(function(o){
+      var nx=o.h+CAD;
+      if(o.winner) return '<span style="color:#39ff14">&#127942; jackpot paid</span> to <span class="td-link" style="color:#39ff14;font-family:monospace;font-size:11px" onclick="showAddress(\''+esc(o.winner)+'\')">'+esc(short(o.winner))+'</span> <b style="color:#ffd166">+'+amtSost(o.amount)+' SOST</b> <span style="color:var(--text3)">// '+(o.v2?'Jackpot V2':'DTD Jackpot (pre-V2)')+(o.elig!=null?' \u00B7 eligible '+fc(o.elig):'')+'</span>';
+      if(o.rolled!=null) return '<b style="color:#f5b301">NO ELIGIBLE WINNER</b> <span style="color:var(--text3)">// Jackpot V2 \u00B7 candidates '+fc(o.cand||0)+' \u00B7 eligible 0 \u00B7 <b style="color:var(--text)">0 SOST paid</b> \u00B7 <b style="color:#ffd166">+'+amtSost(o.rolled)+' SOST rolled over</b> to #'+fc(nx)+'</span>';
+      if(!o.ok) return '<span style="color:var(--text3)">draw data unavailable (node RPC)</span>';
+      return '<span style="color:var(--text3)">no jackpot transaction in this block \u00B7 eligible '+fc(o.elig)+'</span>';
+    });
+  };
 
   // The archive is a fixed overlay at z-index 99999 that stays open when a row is
   // clicked, so showBlock/showAddress/showTxDetail opened the detail panel BEHIND it and
@@ -10446,12 +10504,16 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
 
   function rowHtml(o){
     var blk=o.hash?'<a class="sjpa-lnk" onclick="SJP.go(\'showBlock\',\''+esc(o.hash)+'\')">#'+fc(o.h)+'</a>':('#'+fc(o.h));
-    var win=o.winner?'<a class="sjpa-lnk" onclick="SJP.go(\'showAddress\',\''+esc(o.winner)+'\')" title="'+esc(o.winner)+'">'+esc(short(o.winner))+'</a>':'<span class="sjpa-mut">pending</span>';
-    var jp=(o.amount!=null)?'<span class="sjpa-amt">+'+amtSost(o.amount)+' SOST</span>':'<span class="sjpa-mut">—</span>';
-    var dtd=(o.dtd!=null&&o.dtd>0)?'<span class="sjpa-dtd">'+amtSost(o.dtd)+' SOST</span>':'<span class="sjpa-mut">—</span>';
-    var el=(o.elig!=null)?fc(o.elig):'<span class="sjpa-mut">—</span>';
+    var win=o.winner?'<a class="sjpa-lnk" onclick="SJP.go(\'showAddress\',\''+esc(o.winner)+'\')" title="'+esc(o.winner)+'">'+esc(short(o.winner))+'</a>'
+           :(o.rolled!=null?'<span style="color:#f5b301;font-weight:800">NO ELIGIBLE WINNER</span>':'<span class="sjpa-mut">pending</span>');
+    var jp=(o.amount!=null)?'<span class="sjpa-amt">+'+amtSost(o.amount)+' SOST</span>'
+           :(o.rolled!=null?'<span class="sjpa-mut">0 SOST paid</span> <span class="sjpa-amt">+'+amtSost(o.rolled)+' rolled over</span>':'<span class="sjpa-mut">—</span>');
+    var dtdW=o.dtdWinner?'<a class="sjpa-lnk" onclick="SJP.go(\'showAddress\',\''+esc(o.dtdWinner)+'\')" title="'+esc(o.dtdWinner)+'">'+esc(short(o.dtdWinner))+'</a> ':'';
+    var dtd=(o.dtd!=null&&o.dtd>0)?dtdW+'<span class="sjpa-dtd">'+amtSost(o.dtd)+' SOST</span>':'<span class="sjpa-mut">—</span>';
+    var el=(o.elig!=null)?(fc(o.elig)+(o.v2?' <span class="sjpa-mut">V2</span>':' <span class="sjpa-mut">20k</span>')):'<span class="sjpa-mut">—</span>';
     var tx=o.txid?'<a class="sjpa-lnk" onclick="SJP.go(\'showTxDetail\',\''+esc(o.txid)+'\')">view tx</a>':'<span class="sjpa-mut">—</span>';
-    var st=o.winner?'<span class="sjpa-badge">VERIFIED ON-CHAIN</span>':'<span class="sjpa-mut">unconfirmed</span>';
+    var st=o.winner?'<span class="sjpa-badge">VERIFIED ON-CHAIN</span>'
+           :(o.rolled!=null?'<span class="sjpa-badge" style="background:#f5b301">VERIFIED · ROLLOVER</span>':'<span class="sjpa-mut">unconfirmed</span>');
     var age=o.ts?'<span class="sjpa-mut">'+esc(ago(o.ts))+'</span>':'';
     return '<tr><td>'+blk+'</td><td>'+age+'</td><td>'+win+'</td><td>'+jp+'</td><td>'+dtd+'</td><td>'+el+'</td><td>'+tx+'</td><td>'+st+'</td></tr>';
   }
@@ -10459,13 +10521,15 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
   function render(list){
     var body=document.getElementById('sjpa-body'); if(!body) return;
     var paid=list.filter(function(o){return o.winner;});
-    if(!paid.length){ body.innerHTML='<div class="sjpa-empty">No jackpots have been paid yet.</div>'; return; }
+    var nowin=list.filter(function(o){return !o.winner&&o.rolled!=null;});
+    if(!list.length){ body.innerHTML='<div class="sjpa-empty">No jackpot draws yet.</div>'; return; }
     var totalJp=paid.reduce(function(s,o){return s+((typeof o.amount==='number')?o.amount:parseFloat(o.amount||0));},0);
     var totalDtd=list.reduce(function(s,o){return s+((o.dtd!=null)?o.dtd:0);},0);
-    var sum='<div class="sjpa-sum"><b>'+paid.length+'</b> jackpot'+(paid.length>1?'s':'')+' paid · DTD Jackpot distributed <b>+'+amtSost(totalJp)+' SOST</b> · with DTD <b>'+amtSost(totalDtd)+' SOST</b> · reconstructed from the canonical chain</div>';
+    var sum='<div class="sjpa-sum"><b>'+list.length+'</b> draw'+(list.length>1?'s':'')+' · <b>'+paid.length+'</b> jackpot'+(paid.length!==1?'s':'')+' paid · <b>'+nowin.length+'</b> without an eligible winner (rolled over) · jackpot paid in total <b>+'+amtSost(totalJp)+' SOST</b> · reconstructed from the canonical chain'
+      +'<br><span style="font-weight:400">The NORMAL DTD column is the ordinary per-block DTD of the same block: a different draw with its own winner. Normal DTD paid in these blocks: '+amtSost(totalDtd)+' SOST.</span></div>';
     var rows=list.map(rowHtml).join('');
     body.innerHTML=sum+'<div class="sjpa-wrap"><table class="sjpa-t"><thead><tr>'+
-      '<th>BLOCK</th><th>AGE</th><th>WINNER</th><th>DTD JACKPOT</th><th>DTD PAYOUT</th><th>ELIGIBLE</th><th>TX</th><th>STATUS</th>'+
+      '<th>BLOCK</th><th>AGE</th><th>JACKPOT WINNER</th><th>DTD JACKPOT</th><th>NORMAL DTD (same block)</th><th>JACKPOT ELIGIBLE</th><th>TX</th><th>STATUS</th>'+
       '</tr></thead><tbody>'+rows+'</tbody></table></div>';
   }
 
