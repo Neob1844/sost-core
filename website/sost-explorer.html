@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-11-v541-peer-reliability">
+<meta name="explorer-html-version" content="2026-10-11-v542-bound-nodes">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -801,7 +801,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-11-v541-peer-reliability';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-11-v542-bound-nodes';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1850,6 +1850,29 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
       Disclaimer: This view shows the local SOST node and the P2P peers currently connected to it. It is not a complete global network census.
       Node IDs are derived hashes — no IP addresses are exposed. Node count, heights, and encryption status reflect
       this node's local perspective and may differ from the global network state.
+    </div>
+
+    <!-- BOUND NODES: node identities from the CHAIN (NODE_BIND + NODE_HEARTBEAT, from #30,000),
+         indexed by ops/node-participation-indexer.py -> /api/node_participation.json. Independent of
+         which peers happen to be connected to this node right now. -->
+    <div id="boundNodesWrap" style="margin-top:22px">
+      <div class="sec-head"><div class="sec-title">// <b style="color:#39ff14;text-shadow:0 0 12px rgba(57,255,20,.5)">BOUND NODES</b> &middot; NODE_BIND ON CHAIN</div><div class="sec-meta" id="bnMeta">loading&hellip;</div></div>
+      <div id="bnSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px"></div>
+      <div style="overflow-x:auto"><table class="tbl" id="bnTable"><thead><tr>
+        <th title="The node public key bound on chain (NODE_BIND). An identity, not a physical machine.">BOUND NODE</th>
+        <th title="The mining address that signed the bind.">MINER IDENTITY</th>
+        <th title="Blocks since the active bind was mined.">BIND AGE</th>
+        <th title="Completed epochs since the bind with a valid heartbeat / completed epochs since the bind.">HEARTBEAT COVERAGE</th>
+        <th title="Consecutive epochs with a valid heartbeat, ending at the current or last completed epoch.">CURRENT STREAK</th>
+        <th title="Latest epoch with a heartbeat included in a canonical block.">LAST VERIFIED EPOCH</th>
+        <th>STATUS</th>
+        <th title="NODE condition of the next Jackpot V2 draw: heartbeats in the last completed epochs (3 of 4, ramped). PoW blocks are a separate condition. Cross-checked against the node's own getjackpotv2audit.">NEXT DRAW (NODE)</th>
+      </tr></thead><tbody id="bnBody"><tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">loading&hellip;</td></tr></tbody></table></div>
+      <div style="font-size:8px;color:var(--text3);margin-top:8px;line-height:1.8;font-family:var(--code)">
+        From canonical blocks only: every <b>NODE_BIND</b> and <b>NODE_HEARTBEAT</b> since #30,000, replayed in height order (reorg-safe). A heartbeat names its epoch and the canonical tip it saw, and consensus only accepts it if both are right.
+        <b style="color:#39ff14">ACTIVE</b> = heartbeat in the current or last completed epoch &middot; <b style="color:var(--yellow)">NEW</b> = bound in the current or last epoch, no heartbeat yet &middot; <b style="color:var(--orange)">LAPSED</b> = missed the last completed epoch.<br>
+        A valid heartbeat proves control of the node key and that it followed the canonical chain at that time. It does <b>not</b> prove one unique physical machine, and it is not linked to a P2P connection above (that needs an authenticated handshake, a future node change).
+      </div>
     </div>
   </div>
 </div>
@@ -10913,6 +10936,51 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
   var sxPend=false;
   try{new MutationObserver(function(){if(sxPend)return;sxPend=true;requestAnimationFrame(function(){sxPend=false;sxSkin();});})
     .observe(document.body,{childList:true,subtree:true});}catch(e){setInterval(sxSkin,4000);}
+})();
+</script>
+<script>
+/* BOUND NODES — reads /api/node_participation.json (chain-derived, see ops/node-participation-indexer.py). */
+(function(){
+  function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);});}
+  function sh(a,n){a=String(a||'');return a.length>2*n+1?a.slice(0,n)+'…'+a.slice(-4):a;}
+  function age(b){var m=b*10;return b+' blk · ~'+(m>=2880?(m/1440).toFixed(1)+' d':(m>=60?Math.round(m/60)+' h':m+' min'));}
+  function chip(l,v,c){return '<div style="border:1px solid #26232f;border-radius:10px;padding:9px 12px;background:rgba(0,0,0,.28)"><div style="font-size:8px;letter-spacing:1.4px;color:#8f8ca0">'+l+'</div><div style="font-size:15px;font-weight:700;color:'+c+';text-shadow:0 0 12px '+c+'55">'+v+'</div></div>';}
+  var etag=null;
+  async function load(){
+    try{
+      var r=await fetch('api/node_participation.json',{cache:'no-cache',headers:etag?{'If-None-Match':etag}:{}});
+      if(r.status===304)return; if(!r.ok)throw new Error('HTTP '+r.status);
+      etag=r.headers.get('ETag'); var d=await r.json();
+      var t=d.totals||{}, into=(d.tip-(d.current_epoch_start||0)+1);
+      document.getElementById('bnMeta').textContent='epoch '+d.current_epoch+' · block '+into+'/'+d.epoch_length+' · indexed to #'+(d.tip||0).toLocaleString();
+      document.getElementById('bnSummary').innerHTML=
+        chip('BOUND IDENTITIES',t.bound_identities||0,'#39ff14')+chip('ACTIVE',t.active||0,'#4ade80')+
+        chip('BIND TXS',t.bind_txs||0,'#22d3ee')+chip('HEARTBEAT TXS',t.heartbeat_txs||0,'#c084fc')+
+        chip('NEXT JACKPOT',(d.next_jackpot&&d.next_jackpot.height?'#'+d.next_jackpot.height.toLocaleString():'—'),'#fbbf24');
+      var rows=(d.nodes||[]).map(function(n){
+        var sc=n.status==='ACTIVE'?'#39ff14':(n.status==='NEW'?'var(--yellow)':'var(--orange)');
+        var cov=n.epochs_expected?(n.epochs_covered+'/'+n.epochs_expected+' · '+Math.round(100*n.coverage)+'%'):'first epoch';
+        var nj=n.next_jackpot||{}, au=n.audit;
+        var njTxt=(nj.node_condition_met?'<span style="color:#39ff14">✓</span> ':'<span style="color:var(--orange)">✗</span> ')+nj.in_window+'/'+nj.required+' hb'+
+          (au?(' · <span style="color:'+(au.match?'#4ade80':'var(--red)')+'" title="node getjackpotv2audit: bound='+au.node_bound+', heartbeats='+au.heartbeats+'">audit '+(au.match?'✓':'≠')+'</span>'):'');
+        return '<tr>'+
+          '<td style="color:#39ff14;font-size:11px" title="'+esc(n.node_key)+'">'+esc(sh(n.node_key,10))+(n.binds_total>1?' <span style="font-size:8px;color:var(--text3)">rebind ×'+(n.binds_total-1)+'</span>':'')+'</td>'+
+          '<td><a style="color:var(--purple);cursor:pointer" onclick="showAddress(\''+esc(n.miner)+'\')">'+esc(sh(n.miner,10))+'</a></td>'+
+          '<td style="font-size:11px">'+age(n.bind_age_blocks)+'<div style="font-size:8px;color:var(--text3)">bind #'+n.bind_height.toLocaleString()+' · v'+n.bind_version+'</div></td>'+
+          '<td>'+cov+'</td>'+
+          '<td style="color:'+(n.streak?'#4ade80':'var(--text3)')+';font-weight:600">'+n.streak+' epoch'+(n.streak===1?'':'s')+'</td>'+
+          '<td>'+(n.last_epoch==null?'—':'epoch '+n.last_epoch+'<div style="font-size:8px;color:var(--text3)">#'+n.last_heartbeat_height.toLocaleString()+(n.current_epoch_sent?' · this epoch ✓':'')+'</div>')+'</td>'+
+          '<td style="color:'+sc+';font-weight:700;text-shadow:0 0 10px '+sc+'66">'+n.status+'</td>'+
+          '<td style="font-size:11px">'+njTxt+'<div style="font-size:8px;color:var(--text3)">#'+(nj.height||0).toLocaleString()+'</div></td>'+
+        '</tr>';
+      }).join('');
+      document.getElementById('bnBody').innerHTML=rows||'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">no node bound on chain yet</td></tr>';
+    }catch(e){
+      document.getElementById('bnMeta').textContent='bound-node index unavailable';
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load);else load();
+  setInterval(function(){if(!document.hidden)load();},60000);
 })();
 </script>
 </body>
