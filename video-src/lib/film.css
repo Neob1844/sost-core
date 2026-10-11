@@ -1,0 +1,43 @@
+/* SOST films (2026-10) — shared layout on top of brand.css. Everything animated is set inline
+   by lib/film.js as a pure function of t; nothing here animates on its own. */
+.scene{position:absolute;inset:0;z-index:1}
+.wrap{position:absolute;inset:0;padding:120px 150px 150px}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:90px;align-items:center}
+.split.wide-r{grid-template-columns:.9fr 1.1fr}
+.kick{font-family:var(--mono);font-size:24px;letter-spacing:.34em;color:#8B98A4;text-transform:uppercase}
+.kick b{color:var(--acc,#FF3D4F);font-weight:700}
+.h1{font-family:var(--sans);font-weight:700;font-size:86px;line-height:1.06;letter-spacing:-.02em;color:var(--white);
+  text-shadow:0 6px 40px rgba(0,0,0,.55)}
+.h2{font-family:var(--sans);font-weight:700;font-size:64px;line-height:1.1;letter-spacing:-.015em;color:var(--white);
+  text-shadow:0 6px 34px rgba(0,0,0,.55)}
+.acc{color:var(--acc,#FF3D4F)}
+.lead{font-family:var(--mono);font-size:30px;line-height:1.55;color:#B9C4CE;text-shadow:0 3px 18px rgba(0,0,0,.6)}
+.lead b{color:var(--white)}
+.small{font-family:var(--mono);font-size:22px;color:#7E8A95;letter-spacing:.04em}
+.stack>*+*{margin-top:34px}
+.bul{display:flex;flex-direction:column;gap:20px}
+.bul div{font-family:var(--mono);font-size:34px;color:var(--white);display:flex;gap:20px;align-items:center}
+.bul i{width:14px;height:14px;border-radius:50%;background:var(--acc,#FF3D4F);box-shadow:0 0 16px var(--acc,#FF3D4F);flex:none}
+
+/* photo card with slow Ken Burns (scale/translate set inline) */
+.photo{position:relative;border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.14);
+  box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 40px var(--glow,rgba(255,61,79,.18))}
+.photo img{display:block;width:100%;height:100%;object-fit:cover;transform-origin:50% 50%}
+.photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.62))}
+.photo .cap{position:absolute;left:28px;bottom:22px;z-index:2;font-family:var(--mono);font-size:24px;color:#E8EDF2;letter-spacing:.08em}
+
+/* glowing boxes */
+.box{border:2px solid var(--bc,rgba(255,61,79,.6));border-radius:20px;background:rgba(10,12,18,.66);
+  box-shadow:0 0 34px var(--bg2,rgba(255,61,79,.18)),inset 0 0 26px rgba(255,255,255,.03)}
+.pill{display:inline-flex;align-items:center;gap:12px;border:2px solid var(--bc,rgba(255,61,79,.55));border-radius:999px;
+  padding:12px 26px;font-family:var(--mono);font-size:26px;color:var(--white);background:rgba(10,12,18,.55)}
+
+/* chapter rail, bottom-left */
+.rail{position:absolute;left:150px;bottom:64px;z-index:3;display:flex;align-items:center;gap:22px;
+  font-family:var(--mono);font-size:20px;letter-spacing:.24em;color:#6F7C88;text-transform:uppercase}
+.rail .bar{width:260px;height:3px;background:rgba(255,255,255,.10);border-radius:2px;overflow:hidden}
+.rail .bar span{display:block;height:100%;background:var(--acc,#FF3D4F)}
+
+/* end-card credits */
+.credits{font-family:var(--mono);font-size:19px;color:#6F7C88;line-height:1.7;text-align:center;margin-top:44px}
