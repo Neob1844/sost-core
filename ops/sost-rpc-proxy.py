@@ -67,7 +67,7 @@ TIP_STALE_S = 7200
 SUMMARY_CACHE_S = 10
 # Public name of the node this gateway fronts. Shown by the Explorer as the LOCAL
 # NODE; it is a label, never an address.
-LOCAL_NODE_LABEL = 'STRATO'
+LOCAL_NODE_LABEL = 'SOST NODE · EU'
 
 
 def _peer_host(addr):
