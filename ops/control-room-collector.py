@@ -9,9 +9,9 @@ a static JSON file.
 
 Per-group TTLs (seconds). A group is also refreshed immediately when the tip height changes
 (marked "+tip").
-  tip       getblockcount                                             3
-  head      getbestblockhash, getmempoolinfo                          10 +tip
-  info      getinfo (bitsQ next, Equalizer floor-now: time dependent) 10
+  tip       getblockcount                                             1
+  head      getbestblockhash, getmempoolinfo                          15 +tip
+  info      getinfo (bitsQ next, Equalizer floor-now: time dependent)  3
   blocks    getblockhash/getblock for new heights (immutable, cached)  +tip
   dtd       getlotterystate                                           30 +tip
   jackpot   gethistoricaljackpotstatus, getjackpotv2audit(next)       30 +tip
@@ -19,7 +19,8 @@ Per-group TTLs (seconds). A group is also refreshed immediately when the tip hei
   supply    getsupplyinfo                                             60 +tip
   network   getpeerinfo, getnetworksummary                            15
   node      getminerstats                                             30
-Steady state ≈ 0.9 RPC/s in total (+2 calls per new block), independent of the number of visitors. Cold fill of the 300-block window: ≤ 8 RPC per 1-s cycle for ~75 s.
+Steady state ≈ 1.8 RPC/s in total (+~10 calls once per new block), independent of the number of visitors.
+A new block is seen within ~1 s and written in the same cycle (the document records when: tip_changed_at). Cold fill of the 300-block window: ≤ 8 RPC per 1-s cycle for ~75 s.
 
 Usage:
   collector.py --rpc http://127.0.0.1:18299/ --out /var/www/sost-website/website/api/control_room.json
@@ -36,7 +37,7 @@ import urllib.request
 READ_ONLY = frozenset({"getinfo", "getblockcount", "getbestblockhash", "getblockhash", "getblock", "getsupplyinfo",
                        "getlotterystate", "geteligibleminers", "gethistoricaljackpotstatus", "getjackpotv2audit",
                        "getmempoolinfo", "getnetworksummary", "getminerstats", "getpeerinfo"})
-TTL = {"tip": 3, "head": 10, "info": 10, "dtd": 30, "jackpot": 30, "miners": 60, "supply": 60, "network": 15, "node": 30}
+TTL = {"tip": 1, "head": 15, "info": 3, "dtd": 30, "jackpot": 30, "miners": 60, "supply": 60, "network": 15, "node": 30}
 ON_TIP = {"head", "dtd", "jackpot", "miners", "supply"}
 BLOCK_BUDGET = 4    # at most 4 new blocks (8 RPC) per 1-s cycle: cold fill is spread over ~75 s, never a burst
 MISSING_RETRY = 600 # a height that did not answer is retried after 10 min, not every cycle
@@ -75,6 +76,7 @@ class Collector:
         self.observed = []        # facts observed by the collector (restarts, peer drops), newest last
         self._boot = None
         self._peers = None
+        self.tip_changed_at = None   # wall time (s, float) when this collector first saw the current tip height
 
     def rpc(self, method, params=None):
         if method not in READ_ONLY:
@@ -111,6 +113,8 @@ class Collector:
             if not isinstance(h, int) or h <= 0:
                 raise RuntimeError(f"invalid getblockcount {h!r}")
             tip_changed = h != self.height
+            if tip_changed:
+                self.tip_changed_at = time.time()
             self.height = h
             self.fetched["tip"] = now
         if self.due("head", now, tip_changed):
@@ -209,6 +213,7 @@ class Collector:
             "session": {"observed": self.observed},
         }
         return {"schema": SCHEMA, "collected_at": int(time.time()), "height": self.height, "ttl": TTL,
+                "tip_changed_at": round(self.tip_changed_at, 3) if self.tip_changed_at else None,
                 "fetched": {g: int(t) for g, t in self.fetched.items()}, "errors": d.get("errors", {}),
                 "collector": {"rpc_calls_total": self.calls, "observer": "collector (server side)"},
                 "bundle": bundle}
@@ -253,6 +258,7 @@ def main():
     c = Collector(a.rpc, a.series_path if os.path.exists(a.series_path) else None, a.series_url)
     last_write, last_digest = 0, None
     while True:
+        t0 = time.time()
         try:
             c.step()
             now = time.time()
@@ -267,7 +273,7 @@ def main():
             c.data.setdefault("errors", {})["loop"] = f"{type(e).__name__}: {e}"[:200]
         if a.once:
             break
-        time.sleep(1)
+        time.sleep(max(0.05, 1.0 - (time.time() - t0)))   # 1-s cadence including the cycle's own work
 
 
 if __name__ == "__main__":

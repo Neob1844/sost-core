@@ -14,6 +14,10 @@
     if (s < 3600) return sign + Math.floor(s / 60) + 'm ' + (s % 60) + 's';
     return sign + Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
   };
+  const hms = (s) => { s = Math.floor(s); return s < 3600 ? dur(s) : Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm ' + (s % 60) + 's'; };
+  // Values that depend only on the clock carry their reference time and are advanced locally every
+  // second by tick(), without any request: tip age, countdowns, uptime.
+  const tk = (t, kind, text) => t == null ? text : `<span class="tk" data-t="${t}" data-k="${kind}">${text}</span>`;
   const src = (metric) => metric && metric.source ? `<span class="src" title="${esc('Source: ' + metric.source)}" aria-label="${esc('Source: ' + metric.source)}">i</span>` : '';
   const addr = (a) => a ? `<span class="addr" title="${esc(a)}">${esc(S.shortAddr(a))}</span>` : '—';
   const tag = (scope) => scope === 'window' ? '<span class="tag win">WINDOW</span>' : '<span class="tag live">LIVE</span>';
@@ -66,7 +70,7 @@
     const html = [];
     html.push(`<div class="p" id="pChain"><h3>Chain ${tag('live')}${src(ch.height)}</h3>
       <div class="big">#${num(ch.height.value)}</div>
-      <div class="kv"><span class="k">Tip age</span><span class="v">${dur(ch.tipAge.value)}</span>
+      <div class="kv"><span class="k">Tip age</span><span class="v">${tk(st.tipTime, 'ago', dur(ch.tipAge.value))}</span>
       <span class="k">Latest interval</span><span class="v">${dur(ch.latestInterval.value)}</span>
       <span class="k">Latest producer</span><span class="v">${addr(ch.latestProducer.value)}</span>
       <span class="k">Mempool</span><span class="v">${num(ch.mempool.value)} tx</span></div></div>`);
@@ -126,7 +130,7 @@
       <div class="tiles">
         ${tile('target', 'Next draw', '#' + num(j.nextHeight.value), '')}
         ${tile('instant', 'Blocks left', num(j.blocksRemaining.value), '')}
-        ${tile('instant', 'ETA', '~' + dur(j.etaSeconds.value), '× 600 s estimate')}
+        ${tile('instant', 'ETA', '~' + tk(st.tipTime != null && j.etaSeconds.value != null ? st.tipTime + j.etaSeconds.value : null, 'until', dur(j.etaSeconds.value)), '600 s per block from the tip time (estimate)')}
         ${tile('instant', 'Eligible', num(j.eligible.value) + ' / ' + num(j.candidates.value), 'getjackpotv2audit')}
         ${tile('instant', 'NODE_BIND', num(nb.bound.value) + ' / ' + num(nb.of.value), 'candidates bound')}
       </div>
@@ -153,7 +157,7 @@
     $('eventGrid').innerHTML = `
       <div class="evi"><div class="t">Blocks submitted to node (since boot)</div><div class="n">${num(sb.accepted)} / ${num(sb.received)}</div><div class="d">accepted / received · rejected ${num(sb.rejected)} (${reasons})</div></div>
       <div class="evi"><div class="t">Misbehavior events (since boot)</div><div class="n">${num(e.misbehavior.value)}</div><div class="d">getminerstats</div></div>
-      <div class="evi"><div class="t">Public node uptime</div><div class="n">${dur(e.nodeUptime.value)}</div><div class="d">boot ${e.nodeBoot.value ? new Date(e.nodeBoot.value * 1000).toISOString().slice(0, 16).replace('T', ' ') + 'Z' : '—'}</div></div>
+      <div class="evi"><div class="t">Public node uptime</div><div class="n">${tk(e.nodeBoot.value, 'ago', dur(e.nodeUptime.value))}</div><div class="d">boot ${e.nodeBoot.value ? new Date(e.nodeBoot.value * 1000).toISOString().slice(0, 16).replace('T', ' ') + 'Z' : '—'}</div></div>
       <div class="evi"><div class="t">Reorgs</div><div class="n">n/a</div><div class="d">not exposed by the public RPC — shown as unknown, never as 0</div></div>
       <div class="evi"><div class="t">Observed by the collector</div><div class="n">${num(e.observed.length)}</div><div class="d">${obs}</div></div>`;
   }
@@ -225,13 +229,13 @@
     const a = st.active, j = a.jackpot;
     const chip = (l, n2, s2) => `<div class="chip"><div class="l">${esc(l)}</div><div class="n">${n2}</div><div class="s">${s2}</div></div>`;
     $('hero').innerHTML = `<div><div class="cap"><span class="dot"></span>Block height · live</div><div class="hh">#${num(a.chain.height.value)}</div>
-        <div class="sub">tip ${dur(a.chain.tipAge.value)} ago · by ${addr(a.chain.latestProducer.value)}</div></div>
+        <div class="sub">tip ${tk(st.tipTime, 'ago', dur(a.chain.tipAge.value))} ago · by ${addr(a.chain.latestProducer.value)}</div></div>
       <div class="chips">
         ${chip('Avg block time · 288', dur(a.timing.avg288.value), 'target 600 s')}
         ${chip('bitsQ', num(a.consensus.bitsQ.value), 'numeric target')}
         ${chip('Equalizer', esc(a.consensus.equalizerNext.value || '—'), 'structural profile, next block')}
         ${chip('Active miners · 288', num(a.miners.active288.value), 'last 288 blocks')}
-        ${chip('Next jackpot', '#' + num(j.nextHeight.value), num(j.blocksRemaining.value) + ' blocks · ~' + dur(j.etaSeconds.value))}
+        ${chip('Next jackpot', '#' + num(j.nextHeight.value), num(j.blocksRemaining.value) + ' blocks · ~' + tk(st.tipTime != null && j.etaSeconds.value != null ? st.tipTime + j.etaSeconds.value : null, 'until', dur(j.etaSeconds.value)))}
         ${chip('Supply', num(a.supply.total.value, 2), 'SOST')}
       </div>`;
   }
@@ -252,31 +256,56 @@
     lastHeight = st.meta.height;
   }
 
-  // ---- driver: download the collector document every 5 s; render only when it changed ----
+  // ---- driver: revalidate the collector document every second (HTTP 304 when unchanged, so an
+  // unchanged second costs a header, not a download); render only when it changed. Clock-only values
+  // advance locally every second with no request at all. Paused while the tab is hidden.
+  const POLL_MS = 1000;
   const source = new window.CRSource();
-  let lastCollected = null, busy = false;
+  let lastCollected = null, lastDoc = null, busy = false;
+  window.__crLatency = [];   // per new tip: collector saw it → this browser drew it (server clock, ms)
+  function tick() {
+    const now = source.now();
+    document.querySelectorAll('.tk').forEach((el) => {
+      const t = Number(el.dataset.t);
+      el.textContent = el.dataset.k === 'until' ? (t - now > 0 ? hms(t - now) : 'due') : hms(Math.max(0, now - t));
+    });
+    if (lastDoc && !lastDoc.replay) {
+      const age = Math.max(0, Math.floor(now - lastDoc.collected_at));
+      const stale = age > 45;   // the collector rewrites at least every 15 s
+      $('srcBadge').textContent = stale ? 'DATA STALE · collector ' + age + ' s ago' : 'LIVE · read-only snapshot';
+      $('srcBadge').className = 'badge ' + (stale ? 'err' : 'live');
+    }
+  }
   async function refresh() {
-    if (busy) return; busy = true;
+    if (busy || document.hidden) return; busy = true;
     try {
       const { doc, bundle } = await source.load();
-      const age = Math.floor(Date.now() / 1000) - doc.collected_at;
       if (doc.collected_at !== lastCollected) {
         const st = S.normalize(bundle);
+        st.tipTime = st.active.chain.tipAge.value != null ? st.meta.fetchedAt - st.active.chain.tipAge.value : null;
+        const newTip = lastHeight != null && st.meta.height > lastHeight;
         window.__crState = st; window.__crDoc = doc; window.__crDownloads = source.downloads;
         render(st);
+        if (newTip && doc.tip_changed_at) {
+          window.__crLatency.push({ height: st.meta.height, ms: Math.round((source.now() - doc.tip_changed_at) * 1000) });
+          window.__crLatency = window.__crLatency.slice(-20);
+        }
         lastCollected = doc.collected_at;
       }
-      const stale = !doc.replay && age > 45;   // collector heartbeat is 15 s
-      $('srcBadge').textContent = doc.replay ? 'REPLAY · snapshot ' + new Date(doc.collected_at * 1000).toISOString().slice(0, 16).replace('T', ' ') + 'Z'
-        : stale ? 'DATA STALE · collector ' + age + ' s ago' : 'LIVE · read-only snapshot';
-      $('srcBadge').className = 'badge ' + (doc.replay ? 'replay' : stale ? 'err' : 'live');
+      lastDoc = doc;
+      if (doc.replay) {
+        $('srcBadge').textContent = 'REPLAY · snapshot ' + new Date(doc.collected_at * 1000).toISOString().slice(0, 16).replace('T', ' ') + 'Z';
+        $('srcBadge').className = 'badge replay';
+      }
       $('updated').textContent = 'collected ' + new Date(doc.collected_at * 1000).toISOString().slice(11, 19) + 'Z';
+      tick();
     } catch (e) {
       $('srcBadge').textContent = 'DATA UNAVAILABLE — ' + e.message.slice(0, 60);
       $('srcBadge').className = 'badge err';
     } finally { busy = false; }
   }
   refresh();
-  setInterval(refresh, 5000);
+  setInterval(refresh, POLL_MS);
+  (function second() { tick(); setTimeout(second, 1000 - ((source.now() * 1000) % 1000) + 5); })();   // on the second boundary
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
 })();
