@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-11-v533a-sparse-candles-cr-nav">
+<meta name="explorer-html-version" content="2026-10-11-v533-earnings-sparse-candles">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -711,7 +711,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-11-v533a-sparse-candles-cr-nav';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-11-v533-earnings-sparse-candles';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -6671,6 +6671,42 @@ function _buildUtxoRow(u,txidCounts){
  * the TYPE column updates without a hard reload. Best-effort: any RPC
  * failure leaves change_self undefined so the legacy heuristic stays
  * the fallback. */
+// ---- Address earnings index (server side, static JSON; revalidated with ETag, refreshed per block) ----
+var _aeDoc=null,_aeAt=0,_aeBusy=null;
+function _loadEarnings(){
+  if(_aeDoc&&Date.now()-_aeAt<15000)return Promise.resolve(_aeDoc);
+  if(_aeBusy)return _aeBusy;
+  _aeBusy=fetch('/api/address_earnings.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    .then(function(d){if(d&&d.addresses){_aeDoc=d;_aeAt=Date.now();}return _aeDoc;})
+    .catch(function(){return _aeDoc;}).then(function(d){_aeBusy=null;return d;});
+  return _aeBusy;
+}
+function _earningsHtml(addr,doc,tip){
+  var f8=function(sat){return (Number(sat||0)/1e8).toLocaleString('en-US',{minimumFractionDigits:8,maximumFractionDigits:8});};
+  var n=function(v){return Number(v||0).toLocaleString('en-US');};
+  var head='<div style="font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:10px">// EARNINGS BREAKDOWN <span style="letter-spacing:.5px;text-transform:none">\u00b7 lifetime rewards earned on-chain (not balance)</span></div>';
+  var card=function(icon,label,color,val,sub,extra){return '<div style="border:1px solid '+color+'33;border-radius:6px;padding:8px 10px;background:'+color+'0d"><div style="font-size:10px;color:'+color+';letter-spacing:.5px">'+icon+' '+label+'</div><div style="font-weight:700;color:'+color+';font-size:15px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere">'+val+'</div><div style="font-size:9px;color:var(--text3)">'+sub+'</div>'+(extra||'')+'</div>';};
+  if(!doc||typeof doc.tip!=='number'||(typeof tip==='number'&&doc.tip<tip-2)){
+    var msg=doc?('lifetime index syncing \u2014 indexed to #'+n(doc.tip)+' of #'+n(tip)):'loading the lifetime earnings index\u2026';
+    return head+'<div style="font-size:11px;color:var(--text3)">'+msg+'</div>';
+  }
+  var r=(doc.addresses||{})[addr]||[0,0,0,0,0,0,0,0];
+  var total=r[0]+r[2]+r[4];
+  var jpDetail='';
+  if(r[5]>0){
+    var v2s=r[4]-r[6],v2n=r[5]-r[7];
+    jpDetail='<div style="font-size:9px;color:var(--text3);margin-top:3px">'+(r[7]?'\u2514 V1: '+f8(r[6])+' SOST \u00b7 '+r[7]+' win'+(r[7]===1?'':'s')+'<br>':'')+(v2n?'\u2514 V2: '+f8(v2s)+' SOST \u00b7 '+v2n+' win'+(v2n===1?'':'s'):'')+'</div>';
+  }
+  return head+'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">'
+    +card('\u26CF','MINING REWARDS','#fbbf24',f8(r[0])+' SOST',n(r[1])+' block'+(r[1]===1?'':'s'))
+    +card('\uD83C\uDFB0','DTD NORMAL','#ff00ff',f8(r[2])+' SOST',n(r[3])+' win'+(r[3]===1?'':'s'))
+    +card('\uD83C\uDFC6','DTD JACKPOT','#ffd166',f8(r[4])+' SOST',n(r[5])+' win'+(r[5]===1?'':'s')+' \u00b7 paid on-chain',jpDetail)
+    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:9px;border-top:1px solid var(--border)">'
+    +'<div style="font-size:10px;letter-spacing:1.5px;color:var(--text2)">TOTAL EARNED <span style="letter-spacing:0;color:var(--text3)">= mining + DTD normal + DTD jackpot</span></div>'
+    +'<div style="font-weight:800;font-size:17px;color:#39ff14;font-variant-numeric:tabular-nums">'+f8(total)+' SOST</div></div>'
+    +'<div style="font-size:9px;color:var(--text3);margin-top:6px">Source: canonical blocks indexed to #'+n(doc.tip)+' (miner reward, DTD payout, mined jackpot transactions). Excludes transfers received, change and current balance.</div>';
+}
 function _addrJpCard(jpWins){
   var _fmt8=function(n){return Number(n||0).toFixed(8);};
   var jpTotal=0; jpWins.forEach(function(w){jpTotal+=w.amount;});
@@ -7103,19 +7139,13 @@ async function showAddress(addr){
     // UTXO pagination — store data globally for page rendering
     var txidCounts={};for(var ui=0;ui<sorted.length;ui++){var tid=sorted[ui].txid||'';txidCounts[tid]=(txidCounts[tid]||0)+1;}
     window._addrUtxos=sorted;window._addrTxidCounts=txidCounts;window._addrPage=0;window._addrPageSize=10;
-    // EARNINGS BREAKDOWN — detect DTD Jackpot win(s) for this address (canonical, from chain)
-    var jpWins=[], jpTotal=0, _jpReady=false;
-    try{ if(window.SJPIDX){ var _jw=window.SJPIDX.winsFor(addr,H); if(_jw){ _jpReady=true; jpWins=_jw; jpWins.forEach(function(w){jpTotal+=w.amount;}); } } }catch(_e){}
     var utxoRows=_buildUtxoPage(0);
     var _fmt8=function(n){return Number(n||0).toFixed(8);};
-    var _jpF=jpWins.length?jpWins[0]:null;
-    var breakdownHtml='<div style="margin:10px 0 4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px">'
-      +'<div style="font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:10px">// EARNINGS BREAKDOWN</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">'
-      +'<div><div style="font-size:10px;color:var(--text3)">\u26CF MINING REWARDS</div><div style="font-weight:700;color:#fbbf24;font-size:15px">'+_fmt8(minedAmt)+' SOST</div><div style="font-size:9px;color:var(--text3)">'+minedCount+' block'+(minedCount===1?'':'s')+'</div></div>'
-      +'<div><div style="font-size:10px;color:var(--text3)">\uD83C\uDFB0 DTD DISTRIBUTION</div><div style="font-weight:700;color:#ff00ff;font-size:15px">'+_fmt8(lottLifetimeSost)+' SOST</div><div style="font-size:9px;color:var(--text3)">'+lottLifetimeCount+' win'+(lottLifetimeCount===1?'':'s')+'</div></div>'
-      +(jpTotal>0?_addrJpCard(jpWins):(_jpReady?'':'<div id="addrJpSlot" style="border:1px dashed #ffd16655;border-radius:6px;padding:8px 10px"><div style="font-size:10px;color:#ffd166">\uD83C\uDFE6 DTD JACKPOT</div><div style="font-size:10px;color:var(--text3)">checking jackpot index\u2026</div></div>'))
-      +'</div></div>';
+    // EARNINGS BREAKDOWN (v533): lifetime reward earnings from the server-side chain index
+    // (/api/address_earnings.json, one static file for every address, built block by block from
+    // canonical blocks: miner_reward, lottery_payout and mined jackpot transactions; reorg-safe).
+    // No balance, UTXO or heuristic enters these numbers; the browser makes no RPC for them.
+    var breakdownHtml='<div id="addrEarnings" style="margin:10px 0 4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px">'+_earningsHtml(addr,null,H)+'</div>';
     c.innerHTML='<div class="dtl-head"><b>Address</b> '+roleBadge+' '+mineBadge+'</div>'+breakdownHtml+
       '<div class="dtl-grid">'+
         '<div class="k">address</div><div class="v" style="color:var(--cyan)">'+a.address+cpBtn(a.address)+'</div>'+
@@ -7176,16 +7206,10 @@ async function showAddress(addr){
     // effort: failures fall back to the legacy heuristic that ships
     // with _buildUtxoRow.
     _enrichUtxosWithChangeSelf(a.address).catch(function(){});
-    if(!_jpReady&&window.SJPIDX){
-      window.SJPIDX.ensure(H).then(function(){
-        var slot=document.getElementById('addrJpSlot');
-        if(!slot||_gen!==window.__addrGen)return;
-        var w=window.SJPIDX.winsFor(addr,H);
-        if(!w){slot.innerHTML='<div style="font-size:10px;color:#ffd166">\uD83C\uDFE6 DTD JACKPOT</div><div style="font-size:10px;color:var(--text3)">index unavailable \u2014 retry later</div>';return;}
-        if(!w.length){slot.remove();return;}
-        slot.outerHTML=_addrJpCard(w);
-      }).catch(function(){var slot=document.getElementById('addrJpSlot');if(slot)slot.remove();});
-    }
+    _loadEarnings().then(function(doc){
+      var box=document.getElementById('addrEarnings');
+      if(box&&_gen===window.__addrGen) box.innerHTML=_earningsHtml(addr,doc,H);
+    });
     // Async hydrate the GROSS-LIFETIME rows. One getaddressflows call
     // populates both the gross-received and gross-sent figures so the
     // reader can see them side by side. The first call after a new
