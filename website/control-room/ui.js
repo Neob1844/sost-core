@@ -308,4 +308,20 @@
   setInterval(refresh, POLL_MS);
   (function second() { tick(); setTimeout(second, 1000 - ((source.now() * 1000) % 1000) + 5); })();   // on the second boundary
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+
+  // HIDE NAV / SHOW NAV — hides the sticky top bar; the choice is remembered on this browser only.
+  const navHide = $('navHide'), navShow = $('navShow');
+  function setNav(hidden) {
+    document.body.classList.toggle('cr-nav-hidden', hidden);
+    if (navShow) navShow.hidden = !hidden;
+    if (navHide) navHide.setAttribute('aria-expanded', String(!hidden));
+    try { localStorage.setItem('sost_cr_nav_hidden', hidden ? '1' : '0'); } catch (e) {}
+  }
+  if (navHide && navShow) {
+    navHide.addEventListener('click', () => { setNav(true); navShow.focus(); });
+    navShow.addEventListener('click', () => { setNav(false); navHide.focus(); });
+    let saved = null;
+    try { saved = localStorage.getItem('sost_cr_nav_hidden'); } catch (e) {}
+    if (saved === '1') setNav(true);
+  }
 })();

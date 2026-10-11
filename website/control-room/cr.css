@@ -160,3 +160,38 @@ td { padding: 6px 8px; border-bottom: 1px solid var(--line); font-family: var(--
 @media (max-width: 1100px) { .mosaic { grid-template-columns: repeat(18, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .mosaic { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; } }
 @media (prefers-reduced-motion: reduce) { .mosaic .b.fresh { animation: none; } .mosaic .b { transition: none; } }
+
+/* "EXPLORER →" back link in the header: premium neon pill CTA (visual only — same element, text and href). */
+.top a.badge[href="sost-explorer.html"] {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 10px 20px;
+  font: 800 13px/1 var(--mono); letter-spacing: 1.6px; color: #e9fdff;
+  border: 1.5px solid #22d3ee; border-radius: 999px;
+  background: linear-gradient(180deg, rgba(34,211,238,.30), rgba(8,51,68,.85));
+  text-shadow: 0 0 8px rgba(34,211,238,.75);
+  box-shadow: 0 0 0 1px rgba(34,211,238,.18) inset, 0 0 14px rgba(34,211,238,.55), 0 0 30px rgba(34,211,238,.22);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+}
+.top a.badge[href="sost-explorer.html"]:hover {
+  color: #fff; transform: translateY(-2px) scale(1.04);
+  background: linear-gradient(180deg, rgba(34,211,238,.48), rgba(8,70,92,.9));
+  box-shadow: 0 0 0 1px rgba(103,232,249,.45) inset, 0 0 22px rgba(34,211,238,.85), 0 0 46px rgba(34,211,238,.4);
+}
+.top a.badge[href="sost-explorer.html"]:active { transform: translateY(0) scale(.99); }
+.top a.badge[href="sost-explorer.html"]:focus-visible {
+  outline: 3px solid #fde047; outline-offset: 3px;
+  box-shadow: 0 0 0 1px rgba(103,232,249,.45) inset, 0 0 22px rgba(34,211,238,.85);
+}
+@media (max-width: 600px) {
+  .top a.badge[href="sost-explorer.html"] { min-height: 44px; padding: 11px 18px; font-size: 12.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .top a.badge[href="sost-explorer.html"], .top a.badge[href="sost-explorer.html"]:hover { transition: none; transform: none; }
+}
+
+/* HIDE NAV / SHOW NAV — same size as the header data pills (.badge) */
+.navbtn { background: transparent; cursor: pointer; color: var(--muted); font: 700 10.5px/1 var(--mono); }
+.navbtn:hover { color: var(--text); border-color: var(--cyan); }
+.navbtn:focus-visible { outline: 2px solid #fde047; outline-offset: 2px; }
+.navshow { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); right: 12px; z-index: 6; background: rgba(5,6,7,.92);
+  box-shadow: 0 0 10px rgba(34,211,238,.25); }
+body.cr-nav-hidden .top { display: none; }
