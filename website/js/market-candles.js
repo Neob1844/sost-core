@@ -31,7 +31,7 @@
     { key: 'ovbtceth', series: [BU, EU] }
   ];
   var UNIT = { usd: '$', btc: '₿', eth: 'Ξ' };
-  var UP = '#2ee66b', DOWN = '#ff3b47', GRID = 'rgba(255,255,255,.06)', AXIS = '#6a6a6a';
+  var UP = '#2ee66b', DOWN = '#ff3b47', GRID = 'rgba(255,255,255,.055)', AXIS = '#9a96ad';
   var NO_OHLC = 'Real OHLC not available for this timeframe.';
   var SPARSE_NOTE = 0.1;    // show the "sparse market" note when >= 10% of the intervals had no trade
   var REFRESH_MS = 60000, RETRY_MS = 20000;
@@ -285,7 +285,7 @@
     var x = function (i) { return g.L + ((k[i][0] - t0) / ivMs + 0.5) * slot; };
     this.geo = { x: x, slot: slot, L: g.L, n: n, t0: t0, ivMs: ivMs };
     ctx.clearRect(0, 0, g.w, g.h);
-    ctx.font = '9px "Fira Code", monospace'; ctx.textBaseline = 'middle';
+    ctx.font = '10px "Fira Code", monospace'; ctx.textBaseline = 'middle';
     for (var i = 0; i <= 4; i++) {
       var v = lo + (hi - lo) * i / 4, yy = Math.round(y(v)) + 0.5;
       ctx.strokeStyle = GRID; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(g.L, yy); ctx.lineTo(g.w - g.R, yy); ctx.stroke();
@@ -303,9 +303,18 @@
       ctx.strokeStyle = col; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(cx, Math.round(y(c[2]))); ctx.lineTo(cx, Math.round(y(c[3]))); ctx.stroke();   // wick: low -> high
       var top = y(Math.max(c[1], c[4])), bot = y(Math.min(c[1], c[4]));
-      ctx.fillStyle = col;
+      ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = bw >= 3 ? 6 : 0;   // soft glow, same look as the line charts
       ctx.fillRect(Math.round(cx - bw / 2), Math.round(top), Math.max(1, Math.round(bw)), Math.max(1, Math.round(bot - top)));  // body: open -> close
+      ctx.shadowBlur = 0;
     }
+    // last close: dashed level + value pill on the price axis
+    var lc = k[n - 1], lcol = lc[4] >= lc[1] ? UP : DOWN, ly = Math.round(y(lc[4])) + 0.5;
+    ctx.strokeStyle = lcol; ctx.globalAlpha = 0.55; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(g.L, ly); ctx.lineTo(g.w - g.R, ly); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    var lt = axis(lc[4], vs); ctx.font = 'bold 10px "Fira Code", monospace'; var lw = ctx.measureText(lt).width + 8;
+    ctx.fillStyle = lcol; ctx.shadowColor = lcol; ctx.shadowBlur = 8;
+    ctx.fillRect(g.w - g.R + 2, ly - 8, Math.min(lw, g.R - 2), 16); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#050505'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(lt, g.w - g.R + 6, ly + 0.5); ctx.textBaseline = 'alphabetic';
     if (this.hover >= 0 && this.hover < n) {
       var hx = Math.round(x(this.hover)) + 0.5;
       ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.setLineDash([3, 3]);
