@@ -801,5 +801,6 @@ class JsonSnapshots(unittest.TestCase):
     def test_group_ttls(self):
         self.assertEqual(mp.json_ttl('json|spot|crypto'), 30)
         self.assertEqual(mp.json_ttl('json|spot|stable'), 600)
+        self.assertEqual(mp.json_target('spot', self.q('group=gold_ref'))[2], 'coingecko')   # documented reference source
         self.assertEqual(mp.json_ttl('json|fx|latest'), 3600)
         self.assertEqual(mp.json_ttl('json|fxh|EUR|7D'), 21600)

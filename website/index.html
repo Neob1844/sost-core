@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="js/sost-gold-reference.js?v=v532"></script>
+<script src="js/sost-gold-reference.js?v=v532c"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -2050,7 +2050,7 @@
 var _sharedGold={xaut:0,paxg:0,avg:0,ts:''};
 
 (function(){
-  var GOLD_URL='https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd';
+  var GOLD_URL='/api/market-history?mode=spot&group=gold_ref';   // CoinGecko XAUT+PAXG via the SOST gateway
   var valEl=document.getElementById('goldPriceVal');
   var subEl=document.getElementById('goldPriceSub');
   function fmt(n){return '$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -2243,8 +2243,9 @@ function fetchGoldChart(){
   var statusEl=document.getElementById('goldChartStatus');
   if(statusEl)statusEl.textContent='loading...';
   Promise.all([
-    fetch('https://api.coingecko.com/api/v3/coins/tether-gold/market_chart?vs_currency=usd&days=1').then(function(r){return r.json();}),
-    fetch('https://api.coingecko.com/api/v3/coins/pax-gold/market_chart?vs_currency=usd&days=1').then(function(r){return r.json();})
+    // CoinGecko market_chart (days=1) through the SOST gateway: same series, shared cache, {prices:[...]}
+    fetch('/api/market-history?asset=tether-gold&vs=usd&days=1').then(function(r){return r.json();}),
+    fetch('/api/market-history?asset=pax-gold&vs=usd&days=1').then(function(r){return r.json();})
   ]).then(function(res){
     var xautPrices=res[0].prices||[];
     var paxgPrices=res[1].prices||[];

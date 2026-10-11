@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="js/sost-gold-reference.js?v=v532"></script>
+<script src="js/sost-gold-reference.js?v=v532c"></script>
 <style id="sost-global-zoom">html{zoom:1.0}</style>
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -379,7 +379,7 @@ function _liveUnavailable(){
   _rref('asof','Live gold reference temporarily unavailable \u2014 showing the last month-end snapshot ('+D.labels[last]+').');
 }
 function refreshLive(){
-  fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether-gold&vs_currencies=usd')
+  fetch('/api/market-history?mode=spot&group=gold_ref')   // CoinGecko XAUT via the SOST gateway (shared cache)
    .then(function(r){ if(!r.ok) throw new Error('http'); return r.json(); }).then(function(j){
      var oz=j&&j['tether-gold']&&j['tether-gold'].usd; if(!oz){ _liveUnavailable(); return; }
      var perG=window.SOSTGold.gramFromOz(oz), perMg=perG/1000, s=window.SOSTGold.sostFromOz(oz), d=new Date();
@@ -425,7 +425,7 @@ draw();let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw
 
 <script>
 (function(){
-  var COINGECKO_URL='https://api.coingecko.com/api/v3/simple/price?ids=tether-gold,pax-gold&vs_currencies=usd';
+  var COINGECKO_URL='/api/market-history?mode=spot&group=gold_ref';   // CoinGecko XAUT+PAXG via the SOST gateway
   var banner=document.createElement('div');
   banner.id='goldPriceBanner';
   banner.style.cssText='background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:16px 24px;margin:24px auto;max-width:1100px;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;font-family:var(--font-mono);font-size:13px;position:relative;z-index:1;';

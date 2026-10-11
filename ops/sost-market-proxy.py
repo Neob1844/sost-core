@@ -757,6 +757,8 @@ BINANCE_SPOT = {'crypto': dict(zip(SPOT_CRYPTO_IDS, ('BTCUSDT', 'ETHUSDT', 'BNBU
                 'gold_usd': {'tether-gold': 'XAUTUSDT', 'pax-gold': 'PAXGUSDT'}}
 SPOT_GROUPS = {   # name -> CoinGecko simple/price query (constants only)
     'gold_usd': {'ids': 'tether-gold,pax-gold', 'vs_currencies': 'usd'},
+    # the SOST gold reference is documented as CoinGecko XAUT/PAXG: it keeps that source
+    'gold_ref': {'ids': 'tether-gold,pax-gold', 'vs_currencies': 'usd'},
     'gold_all': {'ids': 'tether-gold,pax-gold', 'include_24hr_change': 'true',
                  'vs_currencies': ','.join(SPOT_FIAT + SPOT_CRYPTO_CODES)},
     'stable': {'ids': 'usd-coin,tether', 'vs_currencies': 'usd', 'include_24hr_change': 'true'},
@@ -772,7 +774,7 @@ FX_CODES = ('CAD', 'MXN', 'BRL', 'ARS', 'CLP', 'COP', 'PEN', 'UYU', 'CRC', 'DOP'
 FXHIST_BACK = {'1H': 3, '4H': 3, '8H': 3, '24H': 4, '3D': 6, '7D': 10, '30D': 33, '6M': 183, '1Y': 368,
                '3Y': 1098, '5Y': 1828}   # days of ECB daily history behind each range (as the page used)
 JSON_TTL = {'spot': 60, 'fx': 3600, 'fxh': 21600}
-GROUP_TTL = {'crypto': 30, 'gold_usd': 30, 'gold_all': 180, 'stable': 600}
+GROUP_TTL = {'crypto': 30, 'gold_usd': 30, 'gold_ref': 120, 'gold_all': 180, 'stable': 600}
 
 
 def json_ttl(key):

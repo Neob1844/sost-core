@@ -31,7 +31,7 @@
   var HISTORICAL_WEIGHT_MG = 1.14;      // superseded reference — historical/context ONLY
 
   // CoinGecko simple/price for XAUT + PAXG in USD, served by the SOST gateway (shared cache, last good copy).
-  var GOLD_URL = '/api/market-history?mode=spot&group=gold_usd';
+  var GOLD_URL = '/api/market-history?mode=spot&group=gold_ref';
 
   // Canonical conversions (pure — the ONLY place these live).
   // USD/SOST = gold_USD_per_gram × 0.0008886707657
