@@ -1,0 +1,19 @@
+[Unit]
+Description=SOST node participation indexer (read-only; NODE_BIND + NODE_HEARTBEAT per bound identity -> /api/node_participation.json)
+After=network-online.target sost-rpc-proxy.service
+Wants=sost-rpc-proxy.service
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/sost/ops/node-participation-indexer.py --rpc http://127.0.0.1:18299/ --state /var/lib/sost-node-participation/state.json --out /var/www/sost-website/website/api/node_participation.json
+Restart=always
+RestartSec=10
+StateDirectory=sost-node-participation
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/sost-website/website/api /var/lib/sost-node-participation
+Nice=10
+
+[Install]
+WantedBy=multi-user.target
