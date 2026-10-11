@@ -100,7 +100,8 @@ MIN_UPSTREAM_GAP = 0.35          # seconds between upstream requests
 UPSTREAM_ATTEMPTS = 2
 UPSTREAM_BACKOFF_CAP = 3.0
 
-RATE_LIMIT_PER_MIN = 120         # per client IP
+RATE_LIMIT_PER_MIN = 120         # per client IP, requests that would reach an upstream provider
+RATE_LIMIT_CACHED_PER_MIN = 600  # per client IP, every request (anti-abuse; a fresh cache hit costs nothing upstream)
 
 _cache = {}                      # key -> {'prices', 'fetched_at', 'status'}
 _cache_lock = threading.Lock()
@@ -109,7 +110,8 @@ _inflight_lock = threading.Lock()
 _upstream_sem = threading.BoundedSemaphore(MAX_UPSTREAM_CONCURRENCY)
 _gap_lock = threading.Lock()
 _last_upstream = [0.0]
-_rate = {}                       # ip -> [timestamps]
+_rate = {}                       # ip -> [timestamps]   (upstream-touching requests)
+_rate_all = {}                   # ip -> [timestamps]   (all requests)
 _rate_lock = threading.Lock()
 
 STATS = {'client_requests': 0, 'upstream_requests': 0, 'cache_hits': 0,
@@ -158,15 +160,15 @@ def load_state():
         try:
             parts = key.split('|')
             if len(parts) == 4 and parts[3] == 'ohlc':
-                if parts[0] not in OHLC_ASSETS or parts[1] != 'usd' or parts[2] not in OHLC_PLAN \
+                if parts[2] not in OHLC_PLAN or not ((parts[1] == 'usd' and parts[0] in OHLC_ASSETS)
+                                                    or MARKETS.get((parts[0], parts[1]))) \
                         or not isinstance(entry.get('candles'), list):
                     continue
                 age = now - float(entry.get('fetched_at', 0))
                 if age < 0 or age > min(OHLC_TTL[parts[2]] * STALE_FACTOR, STALE_MAX):
                     continue
                 with _cache_lock:
-                    _cache[key] = {k: entry.get(k) for k in ('candles', 'interval', 'source',
-                                                            'dropped_null', 'dropped_invalid', 'status')}
+                    _cache[key] = {k: entry.get(k) for k in OHLC_FIELDS}
                     _cache[key]['fetched_at'] = float(entry['fetched_at'])
                 restored += 1
                 continue
@@ -201,16 +203,29 @@ def _bump(name, n=1):
         STATS[name] = STATS.get(name, 0) + n
 
 
-def _rate_ok(ip):
+def _rate_ok(ip, table=None, limit=None):
+    table = _rate if table is None else table
+    limit = RATE_LIMIT_PER_MIN if limit is None else limit
     now = time.time()
     with _rate_lock:
-        hits = [t for t in _rate.get(ip, []) if now - t < 60]
-        if len(hits) >= RATE_LIMIT_PER_MIN:
-            _rate[ip] = hits
+        hits = [t for t in table.get(ip, []) if now - t < 60]
+        if len(hits) >= limit:
+            table[ip] = hits
             return False
         hits.append(now)
-        _rate[ip] = hits
+        table[ip] = hits
         return True
+
+
+def _fresh(key, ttl):
+    """True when `key` would be answered from a fresh cache entry (no upstream request)."""
+    with _cache_lock:
+        e = _cache.get(key)
+    if not e:
+        return False
+    if e.get('status') == 'out_of_range':
+        ttl = OUT_OF_RANGE_TTL
+    return time.time() - e['fetched_at'] < ttl
 
 
 def parse_params(query):
@@ -246,18 +261,20 @@ def parse_params(query):
 
 
 def parse_ohlc_params(query):
-    """mode=ohlc: (asset, range label) from the allowlist, USD only. Raises ValueError."""
+    """mode=ohlc: (asset, vs, range label) from the allowlist. Raises ValueError. A cross
+    pair is accepted only where MARKETS lists it (a real market, or explicitly none)."""
     q = urllib.parse.parse_qs(query, keep_blank_values=False)
     one = lambda n: (q.get(n) or [''])[0].strip()
-    asset = one('asset')
-    if asset not in OHLC_ASSETS:
-        raise ValueError('asset')
-    if (one('vs') or 'usd') != 'usd':
-        raise ValueError('vs')                 # ratio candles are never built
+    asset, vs = one('asset'), one('vs') or 'usd'
+    if vs == 'usd':
+        if asset not in OHLC_ASSETS:
+            raise ValueError('asset')
+    elif (asset, vs) not in MARKETS:
+        raise ValueError('vs')                 # e.g. bitcoin/btc: not a market
     label = one('range').upper()
     if label not in OHLC_PLAN:
         raise ValueError('range')
-    return asset, label
+    return asset, vs, label
 
 
 def _yahoo_usd_series(sym, days):
@@ -456,33 +473,76 @@ def get_series(asset, vs, days):
 
 # ---------------------------------------------------------------- OHLC candles
 # A separate dataset from the LINE series above: its own cache keys
-# (asset|usd|RANGE|ohlc), its own TTLs, its own upstream slot. Only REAL provider
-# candles are served — every candle is one provider interval, exactly as the provider
-# returned it. Nothing is derived from the close series, nothing is aggregated or
-# resampled, nothing is interpolated, and an invalid candle is dropped (and counted),
-# never repaired. Source: Yahoo Finance chart API, which returns real open/high/low/
-# close/volume arrays for all four assets at every interval used here (verified
-# against the live API on 2026-10-11 before this was written). CoinGecko /ohlc was
-# also verified real, but it has no volume, only 30m/4h/4d granularity and shares the
-# keyless budget the LINE charts depend on, so it is not used for candles.
-OHLC_ASSETS = ASSETS                      # USD candles for all four assets
-# range label -> (provider interval, window in seconds). One candle = one interval.
+# (asset|vs|RANGE|ohlc), its own TTLs, its own upstream slots. Only REAL candles of a
+# REAL market are served — every candle is one provider interval of one traded market,
+# exactly as the provider returned it. Nothing is derived from the close series, nothing
+# is aggregated, resampled or interpolated, a cross rate is NEVER computed by dividing two
+# USD candles (the high of a ratio is not the ratio of the highs), and an invalid candle
+# is dropped (and counted), never repaired.
+#
+# Markets (each verified against the live API on 2026-10-11 before it was written):
+#   X/USD      Yahoo Finance chart API (BTC-USD, ETH-USD, PAXG-USD, XAUT-USD)
+#   XAUT/BTC   Binance spot XAUTBTC   (listed March 2026: long ranges start at the listing)
+#   PAXG/BTC   Binance spot PAXGBTC
+#   PAXG/ETH   Kraken spot PAXGETH
+#   XAUT/ETH   no market on Binance, Kraken, Bitfinex, OKX, KuCoin, Gate or Yahoo ->
+#              answered as `no_market`, never synthesized.
+#   CODE/USDT  Binance spot, for the assets the Markets page charts (sost-markets.html):
+#              XAUT PAXG BTC ETH BNB SOL XRP DOT LINK LTC BCH XLM USDC. Same market the page
+#              used to call from every browser; now one shared, cached fetch through here.
+# CoinGecko /ohlc was also verified real, but it has no volume, only 30m/4h/4d candles
+# and shares the keyless budget the LINE charts depend on, so it is not used.
+# Each payload counts `no_trade` candles (high == low: nobody traded in that interval).
+# Thin cross markets have many of them at short ranges; the client uses the count to
+# say so instead of drawing a row of flat dashes.
+OHLC_ASSETS = ASSETS
 OHLC_PLAN = {'1H': ('5m', 3600), '4H': ('5m', 4 * 3600), '8H': ('15m', 8 * 3600),
              '24H': ('30m', 86400), '3D': ('1h', 3 * 86400), '7D': ('90m', 7 * 86400),
              '30D': ('1d', 30 * 86400), '6M': ('1d', 182 * 86400), '1Y': ('1wk', 365 * 86400),
              '3Y': ('1wk', 1095 * 86400), '5Y': ('1mo', 1826 * 86400)}
-INTERVAL_S = {'5m': 300, '15m': 900, '30m': 1800, '1h': 3600, '90m': 5400,
-              '1d': 86400, '1wk': 7 * 86400, '1mo': 31 * 86400}
+INTERVAL_S = {'1m': 60, '5m': 300, '15m': 900, '30m': 1800, '1h': 3600, '90m': 5400, '4h': 14400,
+              '1d': 86400, '1wk': 7 * 86400, '1mo': 31 * 86400, '15d': 15 * 86400}
+# Exchanges have no 90m candle: 7D uses their real 4h candle; Kraken has no monthly
+# candle: 5Y uses its real 15-day candle. Always a native interval of that venue.
+VENUE_PLAN = {'7D': ('4h', 7 * 86400)}
+KRAKEN_5Y = ('15d', 1826 * 86400)
+BINANCE_IV = {'1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1h': '1h', '4h': '4h', '1d': '1d', '1wk': '1w', '1mo': '1M'}
+KRAKEN_IV = {'5m': 5, '15m': 15, '30m': 30, '1h': 60, '4h': 240, '1d': 1440, '1wk': 10080, '15d': 21600}
+MARKETS = {('tether-gold', 'btc'): ('binance', 'XAUTBTC', 'XAUT'),
+           ('pax-gold', 'btc'): ('binance', 'PAXGBTC', 'PAXG'),
+           ('pax-gold', 'eth'): ('kraken', 'PAXGETH', 'PAXG'),
+           ('tether-gold', 'eth'): None}       # no real market anywhere
+USDT_CODES = ('XAUT', 'PAXG', 'BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'DOT', 'LINK', 'LTC', 'BCH', 'XLM', 'USDC')
+MARKETS.update({(c, 'usdt'): ('binance', c + 'USDT', c) for c in USDT_CODES})
+# Liquid USDT books trade every minute: 1H uses the real 1m candle (60 of them) there.
+USDT_PLAN = {'1H': ('1m', 3600), '7D': ('4h', 7 * 86400)}
+BINANCE_URL = 'https://api.binance.com/api/v3/klines'
+KRAKEN_URL = 'https://api.kraken.com/0/public/OHLC'
 OHLC_TTL = {'1H': 60, '4H': 60, '8H': 120, '24H': 120, '3D': 300, '7D': 300,
             '30D': 900, '6M': 3600, '1Y': 3600, '3Y': 21600, '5Y': 21600}
 OHLC_TIMEOUT = 15
-_yahoo_sem = threading.BoundedSemaphore(2)
-_yahoo_gap_lock = threading.Lock()
-_last_yahoo = [0.0]
+# One slot + gap per provider: a slow or limited venue never delays another.
+_venue = {v: {'sem': threading.BoundedSemaphore(n), 'lock': threading.Lock(), 'last': [0.0], 'gap': g}
+          for v, n, g in (('yahoo', 2, MIN_UPSTREAM_GAP), ('binance', 2, 0.25), ('kraken', 1, 1.6))}
 
 
-def ohlc_key(asset, label):
-    return '%s|usd|%s|ohlc' % (asset, label)
+def ohlc_key(asset, vs, label):
+    return '%s|%s|%s|ohlc' % (asset, vs, label)
+
+
+def ohlc_plan(asset, vs, label):
+    """(venue, symbol, interval, window_s, volume_unit) or None when no real market exists."""
+    if vs == 'usd':
+        iv, win = OHLC_PLAN[label]
+        return 'yahoo', YAHOO_SYM[asset] + '-USD', iv, win, 'USD'
+    m = MARKETS.get((asset, vs))
+    if m is None:
+        return None
+    venue, sym, base = m
+    iv, win = (USDT_PLAN if vs == 'usdt' else VENUE_PLAN).get(label, OHLC_PLAN[label])
+    if venue == 'kraken' and label == '5Y':
+        iv, win = KRAKEN_5Y
+    return venue, sym, iv, win, base
 
 
 def validate_ohlc(ts, quote):
@@ -513,37 +573,74 @@ def validate_ohlc(ts, quote):
     return out, null, bad
 
 
-def _fetch_ohlc(asset, label):
-    """One upstream request. Returns (result_dict, reason); result is None on failure."""
-    interval, window = OHLC_PLAN[label]
-    now = int(time.time())
-    url = YAHOO_URL.format(sym=YAHOO_SYM[asset]) + '?' + urllib.parse.urlencode(
-        {'interval': interval, 'period1': now - window - INTERVAL_S[interval], 'period2': now})
+def _rows_to_arrays(rows, ti, oi, hi, li, ci, vi, t_scale):
+    """Exchange row lists -> the column arrays validate_ohlc checks (strings -> floats)."""
+    def f(x):
+        try:
+            return float(x)
+        except (TypeError, ValueError):
+            return None
+    ts = [int(r[ti]) // t_scale if r and r[ti] is not None else None for r in rows]
+    return ts, {'open': [f(r[oi]) for r in rows], 'high': [f(r[hi]) for r in rows],
+                'low': [f(r[li]) for r in rows], 'close': [f(r[ci]) for r in rows],
+                'volume': [f(r[vi]) for r in rows]}
+
+
+def _venue_get(venue, url):
+    v = _venue[venue]
     req = urllib.request.Request(url, headers={'User-Agent': USER_AGENT, 'Accept': 'application/json'})
-    with _yahoo_sem:
-        with _yahoo_gap_lock:
-            wait = MIN_UPSTREAM_GAP - (time.time() - _last_yahoo[0])
+    with v['sem']:
+        with v['lock']:
+            wait = v['gap'] - (time.time() - v['last'][0])
             if wait > 0:
                 time.sleep(wait)
-            _last_yahoo[0] = time.time()
+            v['last'][0] = time.time()
         _bump('ohlc_upstream_requests')
-        try:
-            with urllib.request.urlopen(req, timeout=OHLC_TIMEOUT) as r:
-                body = json.loads(r.read().decode('utf-8'))
-        except urllib.error.HTTPError as e:
-            return None, ('rate_limited' if e.code == 429 else 'http_error')
-        except Exception:
-            return None, 'network'
-    res = (body.get('chart') or {}).get('result') if isinstance(body, dict) else None
-    if not res:
-        return None, 'empty'
-    r0 = res[0]
-    meta = r0.get('meta') or {}
-    if meta.get('dataGranularity') not in (None, interval):
-        return None, 'granularity_mismatch'       # never relabel another interval
+        with urllib.request.urlopen(req, timeout=OHLC_TIMEOUT) as r:
+            return json.loads(r.read().decode('utf-8'))
+
+
+def _fetch_ohlc(asset, vs, label):
+    """One upstream request. Returns (result_dict, reason); result is None on failure."""
+    plan = ohlc_plan(asset, vs, label)
+    if plan is None:
+        return None, 'no_market'
+    venue, sym, interval, window, vol_unit = plan
+    now = int(time.time())
+    start = now - window - INTERVAL_S[interval]
     try:
-        candles, null, bad = validate_ohlc(r0.get('timestamp') or [],
-                                           ((r0.get('indicators') or {}).get('quote') or [{}])[0])
+        if venue == 'yahoo':
+            body = _venue_get('yahoo', YAHOO_URL.format(sym=sym[:-4]) + '?' + urllib.parse.urlencode(
+                {'interval': interval, 'period1': start, 'period2': now}))
+            res = (body.get('chart') or {}).get('result') if isinstance(body, dict) else None
+            if not res:
+                return None, 'empty'
+            r0 = res[0]
+            if (r0.get('meta') or {}).get('dataGranularity') not in (None, interval):
+                return None, 'granularity_mismatch'       # never relabel another interval
+            ts, quote = r0.get('timestamp') or [], ((r0.get('indicators') or {}).get('quote') or [{}])[0]
+            source = 'yahoo-finance'
+        elif venue == 'binance':
+            body = _venue_get('binance', BINANCE_URL + '?' + urllib.parse.urlencode(
+                {'symbol': sym, 'interval': BINANCE_IV[interval], 'startTime': start * 1000, 'limit': 1000}))
+            if not isinstance(body, list):
+                return None, 'empty'
+            ts, quote = _rows_to_arrays(body, 0, 1, 2, 3, 4, 5, 1000)
+            source = 'binance ' + sym
+        else:
+            body = _venue_get('kraken', KRAKEN_URL + '?' + urllib.parse.urlencode(
+                {'pair': sym, 'interval': KRAKEN_IV[interval], 'since': start}))
+            if not isinstance(body, dict) or body.get('error'):
+                return None, ('rate_limited' if 'Too many' in str(body.get('error')) else 'http_error')
+            rows = next((v for k, v in (body.get('result') or {}).items() if k != 'last'), [])
+            ts, quote = _rows_to_arrays(rows, 0, 1, 2, 3, 4, 6, 1)
+            source = 'kraken ' + sym
+    except urllib.error.HTTPError as e:
+        return None, ('rate_limited' if e.code in (418, 429) else 'http_error')
+    except Exception:
+        return None, 'network'
+    try:
+        candles, null, bad = validate_ohlc(ts, quote)
     except ValueError as e:
         _bump('ohlc_rejected_responses')
         return None, 'malformed_' + str(e)
@@ -551,13 +648,17 @@ def _fetch_ohlc(asset, label):
     candles = [k for k in candles if k[0] >= cut]
     if not candles:
         return None, 'empty'
-    return {'candles': candles, 'interval': interval, 'dropped_null': null,
-            'dropped_invalid': bad, 'source': 'yahoo-finance'}, 'ok'
+    return {'candles': candles, 'interval': interval, 'dropped_null': null, 'dropped_invalid': bad,
+            'no_trade': sum(1 for k in candles if k[2] == k[3]), 'source': source,
+            'volume_unit': vol_unit}, 'ok'
 
 
-def get_ohlc(asset, label):
+def get_ohlc(asset, vs, label):
     """Cache -> dedup -> upstream, the same discipline as get_series. (payload, status)."""
-    key = ohlc_key(asset, label)
+    if ohlc_plan(asset, vs, label) is None:
+        return {'mode': 'ohlc', 'candles': [], 'source_status': 'no_market',
+                'error': 'no_real_market'}, 200
+    key = ohlc_key(asset, vs, label)
     ttl, now = OHLC_TTL[label], time.time()
     with _cache_lock:
         entry = _cache.get(key)
@@ -579,7 +680,7 @@ def get_ohlc(asset, label):
             return _ohlc_payload(entry, 'cached', time.time()), 200
         return {'error': 'upstream_unavailable', 'source_status': 'error'}, 503
     try:
-        outcome = _refresh_ohlc(key, asset, label)
+        outcome = _refresh_ohlc(key, asset, vs, label)
     finally:
         with _inflight_lock:
             _inflight.pop(key, None)
@@ -594,8 +695,8 @@ def get_ohlc(asset, label):
     return {'error': outcome, 'source_status': 'unavailable'}, 503
 
 
-def _refresh_ohlc(key, asset, label):
-    res, reason = _fetch_ohlc(asset, label)
+def _refresh_ohlc(key, asset, vs, label):
+    res, reason = _fetch_ohlc(asset, vs, label)
     if res is None:
         _bump('errors')
         return reason
@@ -604,10 +705,15 @@ def _refresh_ohlc(key, asset, label):
     return 'fresh'
 
 
+OHLC_FIELDS = ('candles', 'interval', 'source', 'dropped_null', 'dropped_invalid', 'no_trade', 'volume_unit', 'status')
+
+
 def _ohlc_payload(entry, status, now, reason=None):
     p = {'mode': 'ohlc', 'candles': entry['candles'], 'interval': entry['interval'],
          'source': entry.get('source', 'yahoo-finance'), 'dropped_null': entry.get('dropped_null', 0),
-         'dropped_invalid': entry.get('dropped_invalid', 0), 'source_status': status,
+         'dropped_invalid': entry.get('dropped_invalid', 0),
+         'no_trade': entry.get('no_trade', sum(1 for k in entry['candles'] if k[2] == k[3])),
+         'volume_unit': entry.get('volume_unit', 'USD'), 'source_status': status,
          'age_s': int(now - entry['fetched_at']),
          'fields': ['t_ms', 'open', 'high', 'low', 'close', 'volume']}
     if reason:
@@ -675,7 +781,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         ip = self.headers.get('X-Real-IP') or self.client_address[0]
-        if not _rate_ok(ip):
+        if not _rate_ok(ip, _rate_all, RATE_LIMIT_CACHED_PER_MIN):
             _bump('rejected')
             self._send(429, {'error': 'rate_limited_local', 'source_status': 'error'})
             return
@@ -683,13 +789,18 @@ class Handler(BaseHTTPRequestHandler):
         _bump('client_requests')
         if urllib.parse.parse_qs(parsed.query).get('mode', [''])[0] == 'ohlc':
             try:
-                asset, label = parse_ohlc_params(parsed.query)
+                asset, vs, label = parse_ohlc_params(parsed.query)
             except ValueError as e:
                 _bump('rejected')
                 self._send(400, {'error': 'bad_%s' % e, 'source_status': 'error'})
                 return
-            payload, status = get_ohlc(asset, label)
-            payload.update({'asset': asset, 'vs': 'usd', 'range': label})
+            if not _fresh(ohlc_key(asset, vs, label), OHLC_TTL[label]) and ohlc_plan(asset, vs, label) is not None \
+                    and not _rate_ok(ip):
+                _bump('rejected')
+                self._send(429, {'error': 'rate_limited_local', 'source_status': 'error'})
+                return
+            payload, status = get_ohlc(asset, vs, label)
+            payload.update({'asset': asset, 'vs': vs, 'range': label})
             self._send(status, payload, cache_seconds=OHLC_TTL[label] // 2 if status == 200 else 0)
             return
         try:
@@ -699,6 +810,10 @@ class Handler(BaseHTTPRequestHandler):
             self._send(400, {'error': 'bad_%s' % e, 'source_status': 'error'})
             return
 
+        if not _fresh('%s|%s|%d' % (asset, vs, days), TTL[days]) and not _rate_ok(ip):
+            _bump('rejected')
+            self._send(429, {'error': 'rate_limited_local', 'source_status': 'error'})
+            return
         payload, status = get_series(asset, vs, days)
         payload.update({'asset': asset, 'vs': vs, 'range': label, 'days': days})
         self._send(status, payload, cache_seconds=TTL[days] // 2 if status == 200 else 0)
@@ -763,7 +878,7 @@ def _warm_loop():
                 _inflight[key] = ev
             try:
                 if len(parts) == 4:
-                    _refresh_ohlc(key, parts[0], parts[2])
+                    _refresh_ohlc(key, parts[0], parts[1], parts[2])
                 else:
                     _refresh(key, parts[0], parts[1], int(parts[2]))
             finally:

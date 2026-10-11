@@ -1096,9 +1096,16 @@
   }
 
   // ===== CHART DRAWING ENGINE =====
+  // Gold charts load through the SOST market gateway (/api/market-history, the Explorer's API):
+  // one shared, cached fetch for every visitor instead of each browser calling the exchange.
+  // Same market as before (Binance spot XAUT/USDT, PAXG/USDT); the LINE is the close of each
+  // real candle, and CANDLES (js/market-candles.js) draws those same candles.
+  var GW_CODE = { 'tether-gold': 'XAUT', 'pax-gold': 'PAXG' };
+  var DAYS_LABEL = { 1: '24H', 3: '3D', 7: '7D', 30: '30D', 180: '6M', 365: '1Y' };
   function getChartData(prefix, cgId) {
     if (!cgId) return [];
     var tf = activeTfs[prefix] || '24H';
+    if (GW_CODE[cgId]) return (chartCache[cgId] && chartCache[cgId]['L' + tf]) || [];
     var def = TF_MAP[tf];
     var raw = (chartCache[cgId] && chartCache[cgId][def.days]) || [];
     if (!raw.length) return [];
@@ -1106,19 +1113,18 @@
     return raw;
   }
 
-  function fetchChartHist(cgId, days, cb) {
-    // Binance public klines (keyless, CORS *). CoinGecko market_chart is rate-limited (429).
-    // XAUT (Tether Gold) and PAXG (Pax Gold) both trade on Binance as USDT pairs.
-    var SYM = { 'tether-gold': 'XAUTUSDT', 'pax-gold': 'PAXGUSDT' };
-    var sym = SYM[cgId];
-    if (!sym) { if (cb) cb(); return; } // sost-ref / unknown ids use local data, never fetched here
-    var iv = { 1: ['15m', 96], 3: ['1h', 72], 7: ['1h', 168], 30: ['4h', 180], 180: ['1d', 180], 365: ['1d', 365] }[days] || ['1h', 168];
-    fetch('https://api.binance.com/api/v3/klines?symbol=' + sym + '&interval=' + iv[0] + '&limit=' + iv[1])
+  function fetchChartHist(cgId, days, cb, label) {
+    var code = GW_CODE[cgId];
+    if (!code) { if (cb) cb(); return; } // sost-ref / unknown ids use local data, never fetched here
+    label = label || DAYS_LABEL[days] || '24H';
+    fetch('/api/market-history?asset=' + code + '&vs=usdt&range=' + label + '&mode=ohlc')
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        if (Array.isArray(d) && d.length) {
+        if (d && d.candles && d.candles.length) {
+          var closes = d.candles.map(function(k) { return [k[0], k[4]]; });
           if (!chartCache[cgId]) chartCache[cgId] = {};
-          chartCache[cgId][days] = d.map(function(k) { return [k[0], parseFloat(k[4])]; });
+          chartCache[cgId]['L' + label] = closes;
+          if (DAYS_LABEL[days] === label) chartCache[cgId][days] = closes;   // other sections read the 24H series
         }
         if (cb) cb();
       }).catch(function() { if (cb) cb(); });
@@ -1234,9 +1240,9 @@
         btn.classList.add('active');
         activeTfs[prefix] = btn.getAttribute('data-tf');
         var days = TF_MAP[activeTfs[prefix]].days;
-        if (chartCache[cgId] && chartCache[cgId][days]) { drawMktChart(prefix, cgId, color); }
+        if (getChartData(prefix, cgId).length) { drawMktChart(prefix, cgId, color); }
         else if (cgId === 'sost-ref') { drawMktChart(prefix, cgId, color); /* local only, no CoinGecko */ }
-        else { fetchChartHist(cgId, days, function() { drawMktChart(prefix, cgId, color); }); }
+        else { fetchChartHist(cgId, days, function() { drawMktChart(prefix, cgId, color); }, activeTfs[prefix]); }
       });
     });
   }
@@ -1254,6 +1260,14 @@
     });
   }
 
+  // LINE | CANDLES on a chart panel: real Binance spot candles served by the SOST gateway.
+  function attachCandles(prefix, code) {
+    var C = window.SOSTCandles, tf = document.getElementById(prefix + 'TfBtns');
+    if (!C || !tf) return;
+    C.attach({ key: 'mkt_' + prefix, series: [C.series(code, 'usdt', code + ' / USDT')], tf: tf, btnSel: '.cp-tf-btn', attr: 'data-tf',
+      card: tf.parentNode, wrap: tf.parentNode.querySelector('.cp-chart-wrap'), rangeEl: document.getElementById(prefix + 'Range') });
+  }
+
   // ===== GOLD SPOT CHART =====
   var goldChartInited = false;
   function initGoldChart() {
@@ -1261,6 +1275,7 @@
     goldChartInited = true;
     setupChartTfBtns('cpGold', 'tether-gold', '#b8860b');
     setupChartTooltip('cpGold', 'tether-gold', '#b8860b');
+    attachCandles('cpGold', 'XAUT');
     fetchChartHist('tether-gold', 1, function() {
       var d = chartCache['tether-gold'] && chartCache['tether-gold'][1];
       if (d && d.length) {
@@ -1278,6 +1293,7 @@
     activeTfs.cpPaxg = '24H';
     setupChartTfBtns('cpPaxg', 'pax-gold', '#4ade80');
     setupChartTooltip('cpPaxg', 'pax-gold', '#4ade80');
+    attachCandles('cpPaxg', 'PAXG');
     fetchChartHist('pax-gold', 1, function() {
       var d = chartCache['pax-gold'] && chartCache['pax-gold'][1];
       if (d && d.length) {
@@ -1380,21 +1396,17 @@
   var coinDetailActivePeriod = '7D';
   var coinDetailActiveCode = '';
 
+  function coinMarket(code) { return code === 'USDT' ? 'USDC' : code; }   // no USDT/USDT book: USDC (~$1) stands in
   function getCoinDetailUrl(code, period) {
-    // Binance public klines (keyless, CORS *). CryptoCompare now requires an API key.
-    // USDT has no USDTUSDT pair — use USDC (~$1) as proxy so the stablecoin row still charts.
-    var sym = (code === 'USDT' ? 'USDC' : code) + 'USDT';
-    var p = {
-      '1H':  ['1m', 60],  '4H': ['1m', 240], '8H': ['5m', 96],
-      '24H': ['1h', 24],  '3D': ['1h', 72],  '7D': ['1h', 168],
-      '30D': ['4h', 180], '6M': ['1d', 180], '1Y': ['1d', 365],
-      '3Y':  ['1w', 156], '5Y': ['1w', 260]
-    }[period] || ['1h', 168];
-    return 'https://api.binance.com/api/v3/klines?symbol=' + sym + '&interval=' + p[0] + '&limit=' + p[1];
+    // Binance spot CODE/USDT through the SOST market gateway (the Explorer's API): shared cache,
+    // no per-browser calls to the exchange. Each point is the close of a real candle.
+    return '/api/market-history?asset=' + coinMarket(code) + '&vs=usdt&range=' + encodeURIComponent(period) + '&mode=ohlc';
   }
 
+  var coinDetailIsCrypto = false;
   function showCoinDetailModal(cgId, code) {
     closeCoinDetailModal();
+    coinDetailIsCrypto = true;
     coinDetailActiveCode = code;
     coinDetailActivePeriod = '7D';
 
@@ -1449,6 +1461,12 @@
     });
 
     fetchCoinDetailData(code, '7D');
+    if (window.SOSTCandles) {
+      var mc = coinMarket(code);
+      window.SOSTCandles.attach({ key: 'mkt_coin', series: [window.SOSTCandles.series(mc, 'usdt', mc + ' / USDT')],
+        tf: document.getElementById('coinDetailPeriods'), btnSel: '.coin-detail-period-btn', attr: 'data-period',
+        card: panel, wrap: panel.querySelector('.coin-detail-chart-wrap'), rangeEl: null });
+    }
   }
 
   function fetchCoinDetailData(code, period) {
@@ -1462,8 +1480,8 @@
     fetch(url, { signal: controller.signal })
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        if (!Array.isArray(d) || d.length < 2) throw new Error('No data');
-        var data = d.map(function(k) { return [k[0], parseFloat(k[4])]; }); // [openTime, close]
+        if (!d || !d.candles || d.candles.length < 2) throw new Error('No data');
+        var data = d.candles.map(function(k) { return [k[0], k[4]]; }); // [openTime, close]
         drawCoinDetailChart(data, code, period);
       })
       .catch(function() {
@@ -1694,6 +1712,7 @@
 
   function showFiatDetailModal(code) {
     closeCoinDetailModal();
+    coinDetailIsCrypto = false;
     coinDetailActiveCode = code;
     coinDetailActivePeriod = '7D';
 
@@ -1920,21 +1939,25 @@
   }
 
   function refreshCharts() {
+    // Open crypto detail modal: reload its line through the gateway (candles reload themselves)
+    if (coinDetailIsCrypto && document.getElementById('coinDetailOverlay') && coinDetailActiveCode) {
+      fetchCoinDetailData(coinDetailActiveCode, coinDetailActivePeriod);
+    }
     // Refresh Gold Spot chart if open
     var goldPanel = document.getElementById('goldChartPanel');
     if (goldPanel && goldPanel.classList.contains('open')) {
       var gDays = TF_MAP[activeTfs.cpGold || '24H'].days;
-      fetchChartHist('tether-gold', gDays, function() { drawMktChart('cpGold', 'tether-gold', '#b8860b'); });
+      fetchChartHist('tether-gold', gDays, function() { drawMktChart('cpGold', 'tether-gold', '#b8860b'); }, activeTfs.cpGold || '24H');
     }
     // Refresh PAXG chart if open
     var paxgPanel = document.getElementById('paxgChartPanel');
     if (paxgPanel && paxgPanel.classList.contains('open')) {
       var pDays = TF_MAP[activeTfs.cpPaxg || '24H'].days;
       fetchChartHist('pax-gold', pDays, function() {
-        var d = chartCache['pax-gold'] && chartCache['pax-gold'][pDays];
+        var d = getChartData('cpPaxg', 'pax-gold');
         if (d && d.length) document.getElementById('cpPaxgPrice').textContent = fmtUsd(d[d.length-1][1]);
         drawMktChart('cpPaxg', 'pax-gold', '#4ade80');
-      });
+      }, activeTfs.cpPaxg || '24H');
     }
     // Refresh SOST chart if open (recalculate from PoPC, no CoinGecko)
     var sostPanel = document.getElementById('sostChartPanel');
@@ -2457,5 +2480,6 @@
     if(e.key==='Escape') closeSv(null,true);
   });
 </script>
+<script src="js/market-candles.js?v=531" defer></script>
 </body>
 </html>
