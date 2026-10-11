@@ -503,7 +503,7 @@
       +'<button class="sv-card sv-card-sost" type="button" onclick="pickSv(\'sost-intro.mp4?v=20261011b\',\'SOST in 3 Minutes &middot; protocol, mining &amp; tokenization\')">'
       +'<span class="sv-thumb" style="background-image:url(\'sost-intro-poster.jpg?v=20261011b\')"><span class="sv-play">&#9654;</span></span>'
       +'<span class="sv-card-h">SOST in 3 Minutes</span><span class="sv-card-s">Protocol, mining &amp; tokenization</span></button>'
-      +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-mechanisms.mp4?v=20261011\',\'SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot\')">'
+      +'<button class="sv-card sv-card-mech" type="button" onclick="pickSv(\'sost-mechanisms.mp4?v=20261011b\',\'SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot\')">'
       +'<span class="sv-thumb" style="background-image:url(\'sost-mechanisms-poster.jpg?v=20261011\')"><span class="sv-play">&#9654;</span></span>'
       +'<span class="sv-card-h">SOST Mechanisms</span><span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span></button>'
       +'</div></div>'
