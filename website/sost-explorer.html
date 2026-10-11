@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-11-v535-emission-charts">
+<meta name="explorer-html-version" content="2026-10-11-v538-pro-skin">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -507,6 +507,51 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .jackpot-gold-pulse { animation:jackpotGoldPulse 1.6s ease-in-out infinite; }
 @media (prefers-reduced-motion:reduce){ .jackpot-gold-pulse{ animation:none; border-color:rgba(245,158,11,.6); box-shadow:0 0 14px rgba(245,158,11,.28) } }
 
+/* ── v538 PRO SKIN: glossy accent tiles (same language as the emission charts / price cards).
+   Each tile gets --acc = the r,g,b of its own value colour (tagged by sxSkin() below), so a
+   green number gets a green glow, a gold one a gold glow, etc. Pure presentation. */
+.sx-tile{--acc:140,140,160;position:relative;border-radius:12px!important;
+  background:radial-gradient(120% 90% at 0% 0%,rgba(var(--acc),.15),transparent 60%),linear-gradient(180deg,#111117,#08080b)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 8px 22px rgba(0,0,0,.45),0 0 18px rgba(var(--acc),.10);
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.sx-tile:not(#avgTimeCard):not(.jackpot-gold-pulse){border:1px solid rgba(var(--acc),.30)!important}
+.sx-tile::before{content:"";position:absolute;left:14px;right:14px;top:0;height:2px;border-radius:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(var(--acc),.95),transparent);box-shadow:0 0 10px rgba(var(--acc),.7)}
+.sx-tile:hover{transform:translateY(-2px);border-color:rgba(var(--acc),.62)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 12px 28px rgba(0,0,0,.5),0 0 26px rgba(var(--acc),.26)}
+.chain-sync-wrap .sx-tile{padding:12px 14px}
+.chain-sync-wrap>div>div:nth-child(2){align-items:start}
+.sx-val span,.sx-val div{text-shadow:none}
+#netHealthCard>.sx-tile,#localNodeCard>.sx-tile{padding:10px 12px}
+.sx-tile>div:first-child:not(.dash-label):not([style*="position:absolute"]){color:#8f8ca0!important}
+.sx-val{text-shadow:0 0 14px rgba(var(--acc),.55),0 0 2px rgba(var(--acc),.45);font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.dash-card .dash-val{font-size:20px;font-weight:700}
+.dash-label{color:#8f8ca0}
+.dash-card .dash-sub{color:#7d7a8e}
+/* panels */
+.sx-panel{position:relative;border-radius:14px!important;border:1px solid #24212d!important;
+  background:radial-gradient(120% 90% at 0% 0%,rgba(34,211,238,.07),transparent 55%),radial-gradient(120% 90% at 100% 100%,rgba(192,132,252,.06),transparent 55%),linear-gradient(180deg,#0f0e13,#08080a)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 10px 30px rgba(0,0,0,.4)}
+.sx-panel::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;border-radius:14px 14px 0 0;background:linear-gradient(90deg,#22d3ee,#c084fc 60%,transparent);pointer-events:none}
+#miningPanel{border-radius:14px!important;border:1px solid rgba(251,191,36,.28)!important;border-left:3px solid #fbbf24!important;
+  background:radial-gradient(110% 80% at 0% 0%,rgba(251,191,36,.10),transparent 55%),radial-gradient(110% 80% at 100% 100%,rgba(251,1,13,.06),transparent 55%),linear-gradient(180deg,#121014,#08080a)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 10px 30px rgba(0,0,0,.45),0 0 26px rgba(251,191,36,.10)}
+#netHealthCard,#localNodeCard{padding:12px!important;gap:10px!important}
+/* section titles + tables */
+.sec-title b{text-shadow:0 0 12px rgba(251,1,13,.55)}
+.tbl{border-collapse:separate;border-spacing:0;border:1px solid #23202c;border-radius:12px;overflow:hidden;
+  background:linear-gradient(180deg,#0d0c11,#08080a);box-shadow:0 10px 28px rgba(0,0,0,.4)}
+.tbl th{background:linear-gradient(180deg,#17151e,#110f16);color:#9a96ad;border-bottom:1px solid #2a2634}
+.tbl td{border-bottom:1px solid #18161f}
+.tbl tbody tr:nth-child(even) td{background:rgba(255,255,255,.012)}
+.tbl tr:hover td{background:linear-gradient(90deg,rgba(251,1,13,.10),rgba(251,1,13,.03))}
+.pager button,.tx-filter{border-radius:999px;border-color:#2a2733;background:rgba(0,0,0,.25)}
+.pager button:hover{box-shadow:0 0 14px rgba(251,1,13,.35)}
+.tx-filter:hover{box-shadow:0 0 12px rgba(34,211,238,.3)}
+.tx-filter.active{box-shadow:0 0 14px rgba(251,1,13,.35)}
+#mpTreemap,#mpBlocksViz>div{border-radius:12px!important;border-color:#23202c!important;background:radial-gradient(120% 90% at 0% 0%,rgba(192,132,252,.06),transparent 55%),linear-gradient(180deg,#0f0e13,#08080a)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 8px 22px rgba(0,0,0,.35)}
+@media (prefers-reduced-motion:reduce){.sx-tile,.sx-tile:hover{transition:none;transform:none}}
+
 </style>
 <script src="js/security.js?v=v392"></script>
 <script src="js/nav-toggle.js?v=v537" defer></script>
@@ -725,7 +770,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-11-v535-emission-charts';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-11-v538-pro-skin';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -10806,5 +10851,30 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
 })();
 </script>
 <script src="js/market-candles.js?v=533b" defer></script>
+<script>
+/* v538 pro skin: tag tiles with their value colour (r,g,b) so the CSS can glow in that colour.
+   Re-run on a timer because several panels are re-rendered from live RPC data. */
+(function(){
+  var TILES=[['.dash-card','.dash-val'],['.chain-sync-wrap>div>div:nth-child(2)>div>[id^="cs"]:not([id$="Sub"])',null],['#mpFeePanel>div',':scope>div:nth-child(2)'],
+             ['#nodesSummary>div',':scope>div:nth-child(2)'],['#netHealthCard>div',':scope>div:nth-child(2)'],['#localNodeCard>div',':scope>div:nth-child(2)']];
+  function rgb(el){var m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(el).color||'');if(!m)return null;
+    var r=+m[1],g=+m[2],b=+m[3];return (r<95&&g<95&&b<95)?null:r+','+g+','+b;}
+  function sxSkin(){
+    try{
+      TILES.forEach(function(t){document.querySelectorAll(t[0]).forEach(function(n){
+        var tile=t[1]?n:n.parentElement,val=t[1]?n.querySelector(t[1]):n;
+        if(!tile||!val||tile.style.gridColumn==='1 / -1')return;
+        tile.classList.add('sx-tile');val.classList.add('sx-val');
+        var c=rgb(val);if(c&&tile.style.getPropertyValue('--acc')!==c)tile.style.setProperty('--acc',c);});});
+      ['.chain-sync-wrap>div','#netHealthCard','#localNodeCard'].forEach(function(q){var e=document.querySelector(q);if(e)e.classList.add('sx-panel');});
+    }catch(e){}
+  }
+  window.sxSkin=sxSkin;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sxSkin);else sxSkin();
+  var sxPend=false;
+  try{new MutationObserver(function(){if(sxPend)return;sxPend=true;requestAnimationFrame(function(){sxPend=false;sxSkin();});})
+    .observe(document.body,{childList:true,subtree:true});}catch(e){setInterval(sxSkin,4000);}
+})();
+</script>
 </body>
 </html>
