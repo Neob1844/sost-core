@@ -8,7 +8,8 @@ Both tracks: Scott Buckley — www.scottbuckley.com.au — released under Creati
 |---|---|---|
 | Convergence.mp3 (https://www.scottbuckley.com.au/library/wp-content/uploads/2026/04/Convergence.mp3) | 'Convergence' by Scott Buckley (CC-BY 4.0) | sost-intro.mp4 (first part) |
 | Starfire.mp3 (https://www.scottbuckley.com.au/library/wp-content/uploads/2026/01/Starfire.mp3) | 'Starfire' by Scott Buckley (CC-BY 4.0) | sost-intro.mp4 (second half; intro-score.mp3 = Convergence + Starfire, 10 s crossfade) |
-| VictorLux.mp3 (https://www.scottbuckley.com.au/library/wp-content/uploads/2023/05/VictorLux.mp3) | 'Victor Lux' by Scott Buckley (CC-BY 4.0) | sost-mechanisms.mp4 (since 2026-10-11) |
+| Sentinel.mp3 (https://www.scottbuckley.com.au/library/wp-content/uploads/2024/04/Sentinel.mp3) | 'Sentinel' by Scott Buckley (CC-BY 4.0) | sost-mechanisms.mp4 (since v537) |
+| VictorLux.mp3 (https://www.scottbuckley.com.au/library/wp-content/uploads/2023/05/VictorLux.mp3) | 'Victor Lux' by Scott Buckley (CC-BY 4.0) | no longer used (was sost-mechanisms.mp4, v536) |
 | Aphelion.mp3 (https://www.scottbuckley.com.au/library/wp-content/uploads/2026/04/Aphelion.mp3) | 'Aphelion' by Scott Buckley (CC-BY 4.0) | no longer used (was sost-mechanisms.mp4, v534-v535) |
 
 The credit is shown on each film's end card and next to the player on the site.

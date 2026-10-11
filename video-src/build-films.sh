@@ -42,5 +42,5 @@ if [ "$WHICH" = intro ] || [ "$WHICH" = both ]; then
   build intro film-intro.html "$W/sost-intro.mp4" assets/music/intro-score.mp3 $(python3 -c "import re;print(' '.join(re.findall(r'dur:(\\d+)',open('film-intro.html').read())))")
 fi
 if [ "$WHICH" = mech ] || [ "$WHICH" = both ]; then
-  build mech film-mech.html "$W/sost-mechanisms.mp4" assets/music/VictorLux.mp3 8 9 13 10 12 13 12 13 12 13 13 14 9
+  build mech film-mech.html "$W/sost-mechanisms.mp4" assets/music/Sentinel.mp3 8 9 13 10 12 13 12 13 12 13 13 14 9
 fi
