@@ -527,3 +527,122 @@ class ProviderKey(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+
+
+class OhlcCandles(unittest.TestCase):
+    """mode=ohlc: real provider candles only, separate cache, never repaired."""
+
+    def setUp(self):
+        with mp._cache_lock:
+            mp._cache.clear()
+        self.calls = []
+        self.real = mp._fetch_ohlc
+
+        def fake(asset, label):
+            self.calls.append((asset, label))
+            _real_sleep(0.05)
+            return {'candles': [[1000, 10.0, 12.0, 9.0, 11.0, 5.0]], 'interval': mp.OHLC_PLAN[label][0],
+                    'dropped_null': 0, 'dropped_invalid': 0, 'source': 'yahoo-finance'}, 'ok'
+        mp._fetch_ohlc = fake
+
+    def tearDown(self):
+        mp._fetch_ohlc = self.real
+
+    def test_validate_keeps_real_candles_unchanged(self):
+        out, null, bad = mp.validate_ohlc([1, 2], {'open': [10, 11], 'high': [12, 11.5], 'low': [9, 10.5],
+                                                   'close': [11, 11.2], 'volume': [7, 0]})
+        self.assertEqual(out, [[1000, 10.0, 12.0, 9.0, 11.0, 7], [2000, 11.0, 11.5, 10.5, 11.2, 0]])
+        self.assertEqual((null, bad), (0, 0))
+
+    def test_null_candles_are_dropped_not_filled(self):
+        out, null, bad = mp.validate_ohlc([1, 2, 3], {'open': [10, None, 10], 'high': [12, 12, 12],
+                                                      'low': [9, 9, 9], 'close': [11, 11, 11]})
+        self.assertEqual([k[0] for k in out], [1000, 3000])
+        self.assertEqual(null, 1)
+
+    def test_invalid_candles_are_dropped_never_corrected(self):
+        out, null, bad = mp.validate_ohlc([1, 2, 3], {'open': [10, 10, 10], 'high': [9, 12, 12],
+                                                      'low': [9, 11, 8], 'close': [11, 11, 13]})
+        # #1 high < close, #2 low > open, #3 high < close: all three violate, none is repaired
+        self.assertEqual(out, [])
+        self.assertEqual(bad, 3)
+
+    def test_length_mismatch_rejects_the_whole_response(self):
+        with self.assertRaises(ValueError):
+            mp.validate_ohlc([1, 2], {'open': [1, 2], 'high': [1], 'low': [1, 2], 'close': [1, 2]})
+
+    def test_ratio_candles_are_refused(self):
+        for q in ('asset=tether-gold&vs=btc&range=24H&mode=ohlc', 'asset=pax-gold&vs=eth&range=1Y&mode=ohlc'):
+            with self.assertRaises(ValueError):
+                mp.parse_ohlc_params(q)
+        with self.assertRaises(ValueError):
+            mp.parse_ohlc_params('asset=bitcoin&range=2H&mode=ohlc')
+        self.assertEqual(mp.parse_ohlc_params('asset=bitcoin&range=7d&mode=ohlc'), ('bitcoin', '7D'))
+
+    def test_every_line_range_has_an_ohlc_plan(self):
+        self.assertEqual(set(mp.OHLC_PLAN), set(mp.RANGES))
+        for label, (iv, win) in mp.OHLC_PLAN.items():
+            self.assertIn(iv, mp.INTERVAL_S)
+            self.assertIn(label, mp.OHLC_TTL)
+            self.assertGreaterEqual(win // mp.INTERVAL_S[iv], 10, label)   # enough candles to read
+            self.assertLessEqual(win // mp.INTERVAL_S[iv], 200, label)    # never needle-thin
+
+    def test_ohlc_and_line_never_share_a_cache_entry(self):
+        mp.get_ohlc('bitcoin', '24H')
+        self.assertIn('bitcoin|usd|24H|ohlc', mp._cache)
+        self.assertNotIn('bitcoin|usd|1', mp._cache)
+        self.assertIsNone(mp._cache.get('bitcoin|usd|1'))
+
+    def test_second_visit_is_a_cache_hit(self):
+        mp.get_ohlc('pax-gold', '7D')
+        p, st = mp.get_ohlc('pax-gold', '7D')
+        self.assertEqual((st, p['source_status']), (200, 'cached'))
+        self.assertEqual(len(self.calls), 1)
+
+    def test_concurrent_visitors_produce_one_upstream_request(self):
+        ts = [threading.Thread(target=mp.get_ohlc, args=('ethereum', '1H')) for _ in range(20)]
+        [t.start() for t in ts]
+        [t.join() for t in ts]
+        self.assertEqual(len(self.calls), 1)
+
+    def test_failure_serves_stale_then_unavailable(self):
+        mp.get_ohlc('tether-gold', '24H')
+        mp._cache['tether-gold|usd|24H|ohlc']['fetched_at'] -= mp.OHLC_TTL['24H'] + 1
+        mp._fetch_ohlc = lambda a, l: (None, 'rate_limited')
+        p, st = mp.get_ohlc('tether-gold', '24H')
+        self.assertEqual((st, p['source_status'], p['upstream_error']), (200, 'stale', 'rate_limited'))
+        p, st = mp.get_ohlc('tether-gold', '3D')      # nothing cached for this one
+        self.assertEqual((st, p['source_status']), (503, 'unavailable'))
+        self.assertNotIn('candles', p)
+
+    def test_ohlc_entries_survive_a_restart(self):
+        d = tempfile.mkdtemp()
+        old = mp.STATE_FILE
+        try:
+            mp.STATE_FILE = os.path.join(d, 'c.json')
+            mp.get_ohlc('bitcoin', '30D')
+            self.assertTrue(mp.save_state())
+            mp._cache.clear()
+            self.assertGreaterEqual(mp.load_state(), 1)
+            self.assertEqual(mp._cache['bitcoin|usd|30D|ohlc']['candles'], [[1000, 10.0, 12.0, 9.0, 11.0, 5.0]])
+            self.assertEqual(mp._entry_ttl('bitcoin|usd|30D|ohlc'), mp.OHLC_TTL['30D'])
+        finally:
+            mp.STATE_FILE = old
+            shutil.rmtree(d)
+
+    def test_real_fetch_rejects_a_relabelled_granularity(self):
+        body = json.dumps({'chart': {'result': [{'meta': {'dataGranularity': '1d'}, 'timestamp': [int(time.time())],
+                                                 'indicators': {'quote': [{'open': [1], 'high': [2], 'low': [1], 'close': [2]}]}}]}})
+
+        class R:
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def read(self): return body.encode()
+        real = mp.urllib.request.urlopen
+        mp.urllib.request.urlopen = lambda *a, **k: R()
+        try:
+            res, reason = self.real('bitcoin', '24H')        # asks 30m, provider says 1d
+        finally:
+            mp.urllib.request.urlopen = real
+        self.assertIsNone(res)
+        self.assertEqual(reason, 'granularity_mismatch')

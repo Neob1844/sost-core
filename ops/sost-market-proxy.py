@@ -22,6 +22,9 @@ Behaviour:
     is still inside the stale window, instead of leaving a chart blank;
   * per-IP rate limit, so one client cannot drain the shared budget.
 
+OHLC candles (mode=ohlc) are a separate dataset with their own cache keys: see the
+"OHLC candles" section. They are real provider candles only, never derived from closes.
+
 Listens on 127.0.0.1:18310; nginx /api/market-history proxies to it.
 No credentials of any kind are used or stored: the upstream endpoint is keyless.
 """
@@ -110,6 +113,7 @@ _rate = {}                       # ip -> [timestamps]
 _rate_lock = threading.Lock()
 
 STATS = {'client_requests': 0, 'upstream_requests': 0, 'cache_hits': 0,
+         'ohlc_upstream_requests': 0, 'ohlc_cache_hits': 0, 'ohlc_rejected_responses': 0,
          'dedup_hits': 0, 'stale_served': 0, 'errors': 0, 'rejected': 0,
          'peak_upstream_concurrency': 0}
 _stats_lock = threading.Lock()
@@ -153,6 +157,19 @@ def load_state():
     for key, entry in (blob.get('entries') or {}).items():
         try:
             parts = key.split('|')
+            if len(parts) == 4 and parts[3] == 'ohlc':
+                if parts[0] not in OHLC_ASSETS or parts[1] != 'usd' or parts[2] not in OHLC_PLAN \
+                        or not isinstance(entry.get('candles'), list):
+                    continue
+                age = now - float(entry.get('fetched_at', 0))
+                if age < 0 or age > min(OHLC_TTL[parts[2]] * STALE_FACTOR, STALE_MAX):
+                    continue
+                with _cache_lock:
+                    _cache[key] = {k: entry.get(k) for k in ('candles', 'interval', 'source',
+                                                            'dropped_null', 'dropped_invalid', 'status')}
+                    _cache[key]['fetched_at'] = float(entry['fetched_at'])
+                restored += 1
+                continue
             if len(parts) != 3 or parts[0] not in ASSETS or parts[1] not in VS:
                 continue
             days = int(parts[2])
@@ -226,6 +243,21 @@ def parse_params(query):
     else:
         raise ValueError('range')
     return asset, vs, label, days
+
+
+def parse_ohlc_params(query):
+    """mode=ohlc: (asset, range label) from the allowlist, USD only. Raises ValueError."""
+    q = urllib.parse.parse_qs(query, keep_blank_values=False)
+    one = lambda n: (q.get(n) or [''])[0].strip()
+    asset = one('asset')
+    if asset not in OHLC_ASSETS:
+        raise ValueError('asset')
+    if (one('vs') or 'usd') != 'usd':
+        raise ValueError('vs')                 # ratio candles are never built
+    label = one('range').upper()
+    if label not in OHLC_PLAN:
+        raise ValueError('range')
+    return asset, label
 
 
 def _yahoo_usd_series(sym, days):
@@ -422,6 +454,167 @@ def get_series(asset, vs, days):
     return {'error': outcome, 'source_status': 'error'}, 503
 
 
+# ---------------------------------------------------------------- OHLC candles
+# A separate dataset from the LINE series above: its own cache keys
+# (asset|usd|RANGE|ohlc), its own TTLs, its own upstream slot. Only REAL provider
+# candles are served — every candle is one provider interval, exactly as the provider
+# returned it. Nothing is derived from the close series, nothing is aggregated or
+# resampled, nothing is interpolated, and an invalid candle is dropped (and counted),
+# never repaired. Source: Yahoo Finance chart API, which returns real open/high/low/
+# close/volume arrays for all four assets at every interval used here (verified
+# against the live API on 2026-10-11 before this was written). CoinGecko /ohlc was
+# also verified real, but it has no volume, only 30m/4h/4d granularity and shares the
+# keyless budget the LINE charts depend on, so it is not used for candles.
+OHLC_ASSETS = ASSETS                      # USD candles for all four assets
+# range label -> (provider interval, window in seconds). One candle = one interval.
+OHLC_PLAN = {'1H': ('5m', 3600), '4H': ('5m', 4 * 3600), '8H': ('15m', 8 * 3600),
+             '24H': ('30m', 86400), '3D': ('1h', 3 * 86400), '7D': ('90m', 7 * 86400),
+             '30D': ('1d', 30 * 86400), '6M': ('1d', 182 * 86400), '1Y': ('1wk', 365 * 86400),
+             '3Y': ('1wk', 1095 * 86400), '5Y': ('1mo', 1826 * 86400)}
+INTERVAL_S = {'5m': 300, '15m': 900, '30m': 1800, '1h': 3600, '90m': 5400,
+              '1d': 86400, '1wk': 7 * 86400, '1mo': 31 * 86400}
+OHLC_TTL = {'1H': 60, '4H': 60, '8H': 120, '24H': 120, '3D': 300, '7D': 300,
+            '30D': 900, '6M': 3600, '1Y': 3600, '3Y': 21600, '5Y': 21600}
+OHLC_TIMEOUT = 15
+_yahoo_sem = threading.BoundedSemaphore(2)
+_yahoo_gap_lock = threading.Lock()
+_last_yahoo = [0.0]
+
+
+def ohlc_key(asset, label):
+    return '%s|usd|%s|ohlc' % (asset, label)
+
+
+def validate_ohlc(ts, quote):
+    """Provider arrays -> (candles, dropped_null, dropped_invalid) or raises ValueError.
+    Arrays of different lengths mean the response cannot be trusted at all: rejected
+    whole. Otherwise a candle with a missing/non-positive value is dropped as null, a
+    candle that breaks low <= min(open, close), high >= max(open, close), low <= high
+    is dropped as invalid. Kept candles are passed through unchanged."""
+    cols = [quote.get(k) for k in ('open', 'high', 'low', 'close')]
+    if not isinstance(ts, list) or any(not isinstance(c, list) for c in cols):
+        raise ValueError('missing_arrays')
+    if any(len(c) != len(ts) for c in cols):
+        raise ValueError('length_mismatch')
+    vol = quote.get('volume')
+    if not isinstance(vol, list) or len(vol) != len(ts):
+        vol = None
+    out, null, bad = [], 0, 0
+    for i, t in enumerate(ts):
+        o, h, l, c = (col[i] for col in cols)
+        if t is None or any(not isinstance(x, (int, float)) or x <= 0 for x in (o, h, l, c)):
+            null += 1
+            continue
+        if not (l <= min(o, c) and h >= max(o, c) and l <= h):
+            bad += 1
+            continue
+        v = vol[i] if vol and isinstance(vol[i], (int, float)) and vol[i] >= 0 else None
+        out.append([int(t) * 1000, float(o), float(h), float(l), float(c), v])
+    return out, null, bad
+
+
+def _fetch_ohlc(asset, label):
+    """One upstream request. Returns (result_dict, reason); result is None on failure."""
+    interval, window = OHLC_PLAN[label]
+    now = int(time.time())
+    url = YAHOO_URL.format(sym=YAHOO_SYM[asset]) + '?' + urllib.parse.urlencode(
+        {'interval': interval, 'period1': now - window - INTERVAL_S[interval], 'period2': now})
+    req = urllib.request.Request(url, headers={'User-Agent': USER_AGENT, 'Accept': 'application/json'})
+    with _yahoo_sem:
+        with _yahoo_gap_lock:
+            wait = MIN_UPSTREAM_GAP - (time.time() - _last_yahoo[0])
+            if wait > 0:
+                time.sleep(wait)
+            _last_yahoo[0] = time.time()
+        _bump('ohlc_upstream_requests')
+        try:
+            with urllib.request.urlopen(req, timeout=OHLC_TIMEOUT) as r:
+                body = json.loads(r.read().decode('utf-8'))
+        except urllib.error.HTTPError as e:
+            return None, ('rate_limited' if e.code == 429 else 'http_error')
+        except Exception:
+            return None, 'network'
+    res = (body.get('chart') or {}).get('result') if isinstance(body, dict) else None
+    if not res:
+        return None, 'empty'
+    r0 = res[0]
+    meta = r0.get('meta') or {}
+    if meta.get('dataGranularity') not in (None, interval):
+        return None, 'granularity_mismatch'       # never relabel another interval
+    try:
+        candles, null, bad = validate_ohlc(r0.get('timestamp') or [],
+                                           ((r0.get('indicators') or {}).get('quote') or [{}])[0])
+    except ValueError as e:
+        _bump('ohlc_rejected_responses')
+        return None, 'malformed_' + str(e)
+    cut = (now - window) * 1000
+    candles = [k for k in candles if k[0] >= cut]
+    if not candles:
+        return None, 'empty'
+    return {'candles': candles, 'interval': interval, 'dropped_null': null,
+            'dropped_invalid': bad, 'source': 'yahoo-finance'}, 'ok'
+
+
+def get_ohlc(asset, label):
+    """Cache -> dedup -> upstream, the same discipline as get_series. (payload, status)."""
+    key = ohlc_key(asset, label)
+    ttl, now = OHLC_TTL[label], time.time()
+    with _cache_lock:
+        entry = _cache.get(key)
+    if entry and now - entry['fetched_at'] < ttl:
+        _bump('ohlc_cache_hits')
+        return _ohlc_payload(entry, 'cached', now), 200
+    with _inflight_lock:
+        ev = _inflight.get(key)
+        leader = ev is None
+        if leader:
+            ev = threading.Event()
+            _inflight[key] = ev
+    if not leader:
+        _bump('dedup_hits')
+        ev.wait(timeout=30)
+        with _cache_lock:
+            entry = _cache.get(key)
+        if entry:
+            return _ohlc_payload(entry, 'cached', time.time()), 200
+        return {'error': 'upstream_unavailable', 'source_status': 'error'}, 503
+    try:
+        outcome = _refresh_ohlc(key, asset, label)
+    finally:
+        with _inflight_lock:
+            _inflight.pop(key, None)
+        ev.set()
+    with _cache_lock:
+        entry = _cache.get(key)
+    if outcome == 'fresh' and entry:
+        return _ohlc_payload(entry, 'fresh', time.time()), 200
+    if entry and time.time() - entry['fetched_at'] < min(ttl * STALE_FACTOR, STALE_MAX):
+        _bump('stale_served')
+        return _ohlc_payload(entry, 'stale', time.time(), reason=outcome), 200
+    return {'error': outcome, 'source_status': 'unavailable'}, 503
+
+
+def _refresh_ohlc(key, asset, label):
+    res, reason = _fetch_ohlc(asset, label)
+    if res is None:
+        _bump('errors')
+        return reason
+    with _cache_lock:
+        _cache[key] = dict(res, fetched_at=time.time(), status='ok')
+    return 'fresh'
+
+
+def _ohlc_payload(entry, status, now, reason=None):
+    p = {'mode': 'ohlc', 'candles': entry['candles'], 'interval': entry['interval'],
+         'source': entry.get('source', 'yahoo-finance'), 'dropped_null': entry.get('dropped_null', 0),
+         'dropped_invalid': entry.get('dropped_invalid', 0), 'source_status': status,
+         'age_s': int(now - entry['fetched_at']),
+         'fields': ['t_ms', 'open', 'high', 'low', 'close', 'volume']}
+    if reason:
+        p['upstream_error'] = reason
+    return p
+
+
 def _payload(entry, status, now, reason=None):
     if entry.get('status') == 'out_of_range':
         status = 'out_of_range'
@@ -488,6 +681,17 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         _bump('client_requests')
+        if urllib.parse.parse_qs(parsed.query).get('mode', [''])[0] == 'ohlc':
+            try:
+                asset, label = parse_ohlc_params(parsed.query)
+            except ValueError as e:
+                _bump('rejected')
+                self._send(400, {'error': 'bad_%s' % e, 'source_status': 'error'})
+                return
+            payload, status = get_ohlc(asset, label)
+            payload.update({'asset': asset, 'vs': 'usd', 'range': label})
+            self._send(status, payload, cache_seconds=OHLC_TTL[label] // 2 if status == 200 else 0)
+            return
         try:
             asset, vs, label, days = parse_params(parsed.query)
         except ValueError as e:
@@ -512,6 +716,11 @@ WARM_LEAD = 0.75            # refresh once an entry is this far through its TTL
 WARM_COOLDOWN = 120         # pause warming this long after upstream refuses us
 
 
+def _entry_ttl(key):
+    parts = key.split('|')
+    return OHLC_TTL[parts[2]] if len(parts) == 4 else TTL[int(parts[2])]
+
+
 def _warm_loop():
     """Keep the working set warm with a trickle, so a visitor never pays for a cold
     entry and never depends on arriving at the right moment.
@@ -533,17 +742,16 @@ def _warm_loop():
                 for key, entry in _cache.items():
                     if entry.get('status') == 'out_of_range':
                         continue
-                    days = int(key.split('|')[2])
+                    ttl = _entry_ttl(key)
                     age = now - entry['fetched_at']
-                    if age < TTL[days] * WARM_LEAD:
+                    if age < ttl * WARM_LEAD:
                         continue
-                    if due is None or age / TTL[days] > due[1]:
-                        due = (key, age / TTL[days])
+                    if due is None or age / ttl > due[1]:
+                        due = (key, age / ttl)
             if not due:
                 continue
             key = due[0]
-            asset, vs, days = key.split('|')
-            days = int(days)
+            parts = key.split('|')
             # Refresh directly rather than through get_series: the entry is still inside
             # its TTL — that is the point of warming it early — so get_series would just
             # hand back the cache. Take the in-flight slot so a real request arriving now
@@ -554,7 +762,10 @@ def _warm_loop():
                 ev = threading.Event()
                 _inflight[key] = ev
             try:
-                _refresh(key, asset, vs, days)
+                if len(parts) == 4:
+                    _refresh_ohlc(key, parts[0], parts[2])
+                else:
+                    _refresh(key, parts[0], parts[1], int(parts[2]))
             finally:
                 with _inflight_lock:
                     _inflight.pop(key, None)
