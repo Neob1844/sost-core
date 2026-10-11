@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-11-v538-pro-skin">
+<meta name="explorer-html-version" content="2026-10-11-v539-avg-pulse">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -398,7 +398,13 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .casert-tbl .cn{color:var(--orange)}.casert-tbl .cg{color:var(--green)}
 .casert-pulse td{animation:casertPulse 1.5s ease-in-out infinite}
 @keyframes casertPulse{0%,100%{background:rgba(255,0,64,.05)}50%{background:rgba(255,0,64,.18)}}
-@keyframes avgPulse{0%,100%{background:rgba(var(--ap-r),var(--ap-g),var(--ap-b),var(--ap-lo))}50%{background:rgba(var(--ap-r),var(--ap-g),var(--ap-b),var(--ap-hi))}}
+/* AVG BLOCK TIME pulse: green and fast near 600 s, slower further out, yellow at the edges of
+   540-660 s, red outside. Animates background-COLOR + glow so it shows through the v538 skin. */
+@keyframes avgPulse{
+  0%,100%{background-color:rgba(var(--ap-r),var(--ap-g),var(--ap-b),var(--ap-lo));
+    box-shadow:inset 0 0 10px rgba(var(--ap-r),var(--ap-g),var(--ap-b),var(--ap-lo)),0 0 6px rgba(var(--ap-r),var(--ap-g),var(--ap-b),var(--ap-lo))}
+  50%{background-color:rgba(var(--ap-r),var(--ap-g),var(--ap-b),var(--ap-hi));
+    box-shadow:inset 0 0 26px rgba(var(--ap-r),var(--ap-g),var(--ap-b),var(--ap-hi)),0 0 24px rgba(var(--ap-r),var(--ap-g),var(--ap-b),var(--ap-hi))}}
 .lv-1{color:#4ade80;font-weight:600}.lv-2{color:#67e8f9;font-weight:600}
 .lv-3{color:#fbbf24;font-weight:600}.lv-4{color:#fb923c;font-weight:600}
 .lv-5{color:#fb010d;font-weight:600}.lv-6{color:#ff2040;font-weight:700}
@@ -511,7 +517,8 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
    Each tile gets --acc = the r,g,b of its own value colour (tagged by sxSkin() below), so a
    green number gets a green glow, a gold one a gold glow, etc. Pure presentation. */
 .sx-tile{--acc:140,140,160;position:relative;border-radius:12px!important;
-  background:radial-gradient(120% 90% at 0% 0%,rgba(var(--acc),.15),transparent 60%),linear-gradient(180deg,#111117,#08080b)!important;
+  background-color:#0a0a0d;
+  background-image:radial-gradient(120% 90% at 0% 0%,rgba(var(--acc),.15),transparent 60%),linear-gradient(180deg,rgba(17,17,23,.62),rgba(8,8,11,.62))!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 8px 22px rgba(0,0,0,.45),0 0 18px rgba(var(--acc),.10);
   transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
 .sx-tile:not(#avgTimeCard):not(.jackpot-gold-pulse){border:1px solid rgba(var(--acc),.30)!important}
@@ -770,7 +777,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-11-v538-pro-skin';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-11-v539-avg-pulse';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -3751,7 +3758,7 @@ async function updateDashboard(info){
     var pr,pg,pb;
     if(avg>=570&&avg<=630){pr=0;pg=255;pb=136;}       // green
     else if(avg>=540&&avg<=660){pr=255;pg=221;pb=0;}   // yellow (edges of healthy)
-    else if(avg<540){pr=255;pg=136;pb=0;}              // orange (too fast)
+    else if(avg<540){pr=255;pg=68;pb=68;}               // red (far too fast)
     else{pr=255;pg=68;pb=68;}                          // red (too slow)
     if(inRange){
       var ratio=Math.max(0,1-(dist/60));
@@ -3764,7 +3771,7 @@ async function updateDashboard(info){
     } else {
       // Outside 540-660: gentle pulse in orange or red
       card.style.setProperty('--ap-r',pr);card.style.setProperty('--ap-g',pg);card.style.setProperty('--ap-b',pb);
-      card.style.setProperty('--ap-lo','0.03');card.style.setProperty('--ap-hi','0.10');
+      card.style.setProperty('--ap-lo','0.05');card.style.setProperty('--ap-hi','0.28');
       card.style.animation='avgPulse 3.5s ease-in-out infinite';
     }
     // Lag indicator helper: positive = ahead (chain faster than 600s target),
@@ -3808,7 +3815,7 @@ async function updateDashboard(info){
       var rr,gg,bb;
       if(a>=570&&a<=630){rr=0;gg=255;bb=136;}
       else if(a>=540&&a<=660){rr=255;gg=221;bb=0;}
-      else if(a<540){rr=255;gg=136;bb=0;}
+      else if(a<540){rr=255;gg=68;bb=68;}
       else{rr=255;gg=68;bb=68;}
       if(inR){
         var rt=Math.max(0,1-(d2/60));
@@ -3818,7 +3825,7 @@ async function updateDashboard(info){
         c.style.animation='avgPulse '+sp.toFixed(1)+'s ease-in-out infinite';
       } else {
         c.style.setProperty('--ap-r',rr);c.style.setProperty('--ap-g',gg);c.style.setProperty('--ap-b',bb);
-        c.style.setProperty('--ap-lo','0.03');c.style.setProperty('--ap-hi','0.10');
+        c.style.setProperty('--ap-lo','0.05');c.style.setProperty('--ap-hi','0.28');
         c.style.animation='avgPulse 3.5s ease-in-out infinite';
       }
     }
@@ -3875,7 +3882,7 @@ async function updateDashboard(info){
       var rr,gg,bb;
       if(avgSec>=570&&avgSec<=630){rr=0;gg=255;bb=136;}
       else if(avgSec>=540&&avgSec<=660){rr=255;gg=221;bb=0;}
-      else if(avgSec<540){rr=255;gg=136;bb=0;}
+      else if(avgSec<540){rr=255;gg=68;bb=68;}
       else{rr=255;gg=68;bb=68;}
       if(inR){
         var rt=Math.max(0,1-(d2/60));
@@ -3885,7 +3892,7 @@ async function updateDashboard(info){
         c.style.animation='avgPulse '+sp.toFixed(1)+'s ease-in-out infinite';
       } else {
         c.style.setProperty('--ap-r',rr);c.style.setProperty('--ap-g',gg);c.style.setProperty('--ap-b',bb);
-        c.style.setProperty('--ap-lo','0.03');c.style.setProperty('--ap-hi','0.10');
+        c.style.setProperty('--ap-lo','0.05');c.style.setProperty('--ap-hi','0.28');
         c.style.animation='avgPulse 3.5s ease-in-out infinite';
       }
     }
