@@ -21,7 +21,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mine SOST in 10 Minutes — Solo CPU Mining Guide</title>
 <meta name="description" content="Step-by-step guide to start mining SOST on a single CPU machine in about 10 minutes. Native PoW, solo-miner-first, pre-market testing.">
-<meta name="keywords" content="mine SOST, SOST mining, CPU mining, solo mining, ConvergenceX, install SOST, build SOST">
+<meta name="keywords" content="mine SOST, SOST mining, CPU mining, solo mining, ConvergenceX mining, Bitcoin ASIC SOST, install SOST, build SOST">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
@@ -402,6 +402,29 @@ Miner address: sost1...   (derived from wallet key)</div>
         </ul>
       </div>
     </div>
+  </div>
+</section>
+
+<section id="asic-hashrate">
+  <div class="container">
+    <div class="section-id">ASIC RESISTANCE</div>
+    <h2 class="section-title">Why Bitcoin ASIC hashrate <span class="accent">does not transfer</span> to SOST</h2>
+    <p>A 4.8 TH/s SHA-256 Bitcoin miner does not become a 4.8 TH/s SOST miner. The two numbers describe fundamentally different workloads. A Bitcoin ASIC runs one fixed SHA-256d pipeline over 80-byte block headers. A SOST miner must run the complete ConvergenceX computation that consensus requires: about 8 GB of working memory, 100,000 sequential rounds whose results decide the next memory reads, a 32&times;32 integer system and a stability proof.</p>
+    <style>@media(max-width:600px){.asic-neq{flex-direction:column}.asic-neq>div{width:100%;max-width:none!important;flex:0 0 auto!important}}</style>
+    <div class="asic-neq" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;margin:18px 0">
+      <div style="flex:1 1 220px;max-width:300px;border:1px solid rgba(247,147,26,.5);border-radius:10px;padding:14px 16px;text-align:center;min-width:0">
+        <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.5px;color:#f7931a">BITCOIN</div>
+        <div style="font:800 22px/1.3 ui-monospace,monospace;margin-top:6px">4.8 TH/s</div>
+        <div style="font-size:12px;opacity:.8">SHA-256d</div>
+      </div>
+      <div style="font:800 34px/1 ui-monospace,monospace;color:#fb010d" aria-label="is not equal to">&ne;</div>
+      <div style="flex:1 1 220px;max-width:300px;border:1px solid rgba(57,255,20,.5);border-radius:10px;padding:14px 16px;text-align:center;min-width:0">
+        <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.5px;color:#39ff14">SOST</div>
+        <div style="font:800 22px/1.3 ui-monospace,monospace;margin-top:6px">4.8 TH/s</div>
+        <div style="font-size:12px;opacity:.8">ConvergenceX &mdash; not a meaningful unit</div>
+      </div>
+    </div>
+    <p>ConvergenceX performance should be compared in <b>valid attempts per second</b>, under the active <b>bitsQ</b> target and <b>Equalizer</b> profile &mdash; not in Bitcoin-equivalent TH/s. ConvergenceX is <b>ASIC-resistant by design</b>; that does not mean specialized hardware is impossible, only that a useful accelerator would have to implement the real memory-hard, sequential workload instead of reusing Bitcoin hashrate. Technical detail: <a href="sost-technology.html#asic-resistance">Technology &rarr; Strong ASIC resistance by design</a>.</p>
   </div>
 </section>
 

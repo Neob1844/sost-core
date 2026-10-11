@@ -20,19 +20,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Technology — ConvergenceX PoW, cASERT Difficulty, metals reserve (historical)</title>
-<meta name="description" content="ConvergenceX: 8GB-total (4 GB dataset + 4 GB scratchpad) memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
-<meta name="keywords" content="ConvergenceX, cASERT, memory hard mining, CPU mining, proof of work, difficulty adjustment, metals reserve (historical), Feigenbaum emission, SOST technology">
+<meta name="description" content="ConvergenceX: 8GB-total (4 GB dataset + 4 GB scratchpad) memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. ASIC-resistant by design: Bitcoin SHA-256d hashrate does not transfer to ConvergenceX. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
+<meta name="keywords" content="ConvergenceX, ASIC resistant proof of work, cASERT, memory hard mining, CPU mining, proof of work, difficulty adjustment, metals reserve (historical), Feigenbaum emission, SOST technology">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SOST Technology — ConvergenceX PoW, cASERT Difficulty">
-<meta property="og:description" content="ConvergenceX: 8GB-total (4 GB dataset + 4 GB scratchpad) memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
+<meta property="og:description" content="ConvergenceX: 8GB-total (4 GB dataset + 4 GB scratchpad) memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. ASIC-resistant by design: Bitcoin SHA-256d hashrate does not transfer to ConvergenceX. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
 <meta property="og:url" content="https://sostcore.com/sost-technology.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST Technology — ConvergenceX PoW, cASERT Difficulty">
-<meta name="twitter:description" content="ConvergenceX: 8GB-total (4 GB dataset + 4 GB scratchpad) memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
+<meta name="twitter:description" content="ConvergenceX: 8GB-total (4 GB dataset + 4 GB scratchpad) memory-hard CPU mining. cASERT bidirectional difficulty adjustment with 43 profiles. ASIC-resistant by design: Bitcoin SHA-256d hashrate does not transfer to ConvergenceX. Coinbase split 50% miner / 50% DTD since #25,000 (50/25/25 before). Feigenbaum emission curve.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
@@ -827,14 +827,16 @@ seed       = <span class="fn">SHA256</span>( MAGIC || <span class="str">"SEED"</
 <span class="cmt">// 3. Gradient descent with scratchpad mixing (memory-hard)</span>
 <span class="kw">for</span> r <span class="kw">in</span> <span class="num">1</span>..<span class="num">100,000</span>:
     x[i] -= ( A(x)[i] - b[i] ) &gt;&gt; lr_shift          <span class="cmt">// gradient step</span>
-    x[j] ^= <span class="fn">mix_from_scratch</span>( scratchpad, idx )   <span class="cmt">// ASIC resistance</span>
-    state  = <span class="fn">SHA256</span>( state || mix_data || round )   <span class="cmt">// state chain</span>
+    m[0..3] = <span class="fn">scratchpad</span>[ idx(state, r) ]               <span class="cmt">// 4 state-dependent reads (4 GB)</span>
+    m[0..1] ^= <span class="fn">program</span>( dataset[ state ], r )          <span class="cmt">// per-block program on the 4 GB dataset (state-indexed since #7,000)</span>
+    x[j] ^= / += m[k]                                   <span class="cmt">// mix into 4 coordinates</span>
+    state  = <span class="fn">SHA256</span>( state || m || x[j] || r )     <span class="cmt">// the next round needs this result</span>
 
-<span class="cmt">// 4. Verify stability basin (k perturbation probes)</span>
+<span class="cmt">// 4. Verify stability basin (k probes x steps, set by the active Equalizer profile)</span>
 (is_stable, metric) = <span class="fn">verify_convergence_stability_basin</span>( x_final, M, b, ... )
 
 <span class="cmt">// 5. Compute commitment</span>
-commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</span> || header_core || seed || state || x || segments_root || cp_root || metric )
+commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</span> || header_core || seed || state || x || cp_root || segments_root || metric || profile_index )
 <span class="kw">require</span>  commit &lt;= target   <span class="kw">AND</span>   is_stable == <span class="num">true</span>
         </div>
 
@@ -864,12 +866,12 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
             <td class="val"><code>6,250</code> <span class="comment">// rounds/16, Merkle-committed</span></td>
           </tr>
           <tr>
-            <td class="key">CX_STABILITY_K</td>
-            <td class="val"><code>4</code> <span class="comment">// perturbation probes per attempt</span></td>
+            <td class="key">Stability probes (k)</td>
+            <td class="val"><code>1&ndash;20</code> <span class="comment">// set by the active Equalizer profile (B0 = 4, E7 = 1, H35 = 20)</span></td>
           </tr>
           <tr>
-            <td class="key">CX_STABILITY_GRADIENT_STEPS</td>
-            <td class="val"><code>3</code> <span class="comment">// refinement steps per probe</span></td>
+            <td class="key">Refinement steps per probe</td>
+            <td class="val"><code>1&ndash;20</code> <span class="comment">// set by the active Equalizer profile (B0 = 4, E7 = 1, H35 = 20)</span></td>
           </tr>
           <tr>
             <td class="key">Scratchpad derivation</td>
@@ -916,13 +918,99 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
           </tr>
           <tr>
             <td class="key">Perturbation scale</td>
-            <td class="val"><code>3</code> <span class="comment">// uniform in [-scale, +scale]</span></td>
+            <td class="val"><code>1&ndash;2</code> <span class="comment">// uniform in [-scale, +scale]; set by the Equalizer profile (E7&ndash;H4 = 1, H5&ndash;H35 = 2)</span></td>
           </tr>
           <tr>
             <td class="key">Stability LR shift</td>
             <td class="val"><code>20</code> <span class="comment">// lr_shift + 2 (more conservative)</span></td>
           </tr>
         </tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ASIC RESISTANCE BY DESIGN (2026-10-10) — every figure traced to sost-core consensus code -->
+<style>
+.asic-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:18px}
+.asic-col{border:1px solid var(--border-dim,rgba(255,255,255,.12));border-radius:10px;padding:16px 18px;background:rgba(255,255,255,.015);min-width:0}
+.asic-col h4{margin:0 0 10px;font:800 12px/1.2 var(--font-mono,ui-monospace,monospace);letter-spacing:1.4px;text-transform:uppercase}
+.asic-col.btc h4{color:#f7931a}.asic-col.cx h4{color:var(--green-primary,#39ff14)}
+.asic-flow{font:12.5px/1.75 var(--font-mono,ui-monospace,monospace);color:var(--text-secondary,#94a3b8);white-space:pre;overflow-x:auto;margin:0}
+.asic-flow b{color:var(--text-primary,#e2e8f0);font-weight:700}
+.asic-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:18px 0 6px}
+.asic-stat{border:1px solid var(--border-dim,rgba(255,255,255,.12));border-radius:10px;padding:12px 14px;text-align:center;min-width:0}
+.asic-stat .n{font:800 22px/1.1 var(--font-mono,ui-monospace,monospace);color:var(--text-primary,#e2e8f0)}
+.asic-stat .l{font-size:11.5px;color:var(--text-secondary,#94a3b8);margin-top:4px;line-height:1.4}
+.asic-quote{margin:18px 0 4px;padding:14px 18px;border-left:3px solid var(--green-primary,#39ff14);background:rgba(57,255,20,.05);border-radius:0 8px 8px 0;font-size:15px;line-height:1.6;color:var(--text-primary,#e2e8f0)}
+</style>
+<section class="section" id="asic-resistance">
+  <div class="container">
+    <div class="spec-block fade-in">
+      <div class="spec-header">
+        <div class="spec-header-left">
+          <div class="spec-icon green"></div>
+          <span class="spec-name">Strong ASIC resistance by design</span>
+        </div>
+        <span class="spec-tag consensus">PROTOCOL PROPERTY</span>
+      </div>
+      <div class="spec-body">
+        <p class="spec-desc">
+          ConvergenceX is intentionally hostile to fixed-function mining hardware. Unlike Bitcoin's massively
+          parallel SHA-256d search, each ConvergenceX attempt combines a large memory working set,
+          state-dependent memory access, a program derived from the previous block and
+          <strong>100,000 sequential rounds</strong>. The output of one round decides which memory the next
+          round reads, so a single attempt cannot be split into independent pieces.
+        </p>
+        <div class="asic-stats">
+          <div class="asic-stat"><div class="n">~8 GB</div><div class="l">working memory<br>4 GB dataset + 4 GB scratchpad</div></div>
+          <div class="asic-stat"><div class="n">100,000</div><div class="l">sequential rounds<br>per attempt</div></div>
+          <div class="asic-stat"><div class="n">32&times;32</div><div class="l">integer linear system<br>gradient descent</div></div>
+          <div class="asic-stat"><div class="n">bitsQ + Equalizer</div><div class="l">numeric target +<br>structural work profile</div></div>
+        </div>
+        <div class="asic-wrap">
+          <div class="asic-col btc"><h4>Bitcoin ASIC</h4><pre class="asic-flow"><b>80-byte header</b>
+  &darr; SHA-256d    nonce 0
+  &darr; SHA-256d    nonce 1
+  &darr; SHA-256d    nonce 2
+  &hellip;
+<b>trillions of independent hashes / s</b>
+(every nonce can be tried in parallel)</pre></div>
+          <div class="asic-col cx"><h4>ConvergenceX attempt</h4><pre class="asic-flow"><b>~8 GB working set</b>
+  &darr; round 1 &rarr; state
+  &darr; round 2 &rarr; state   (reads chosen by state)
+  &hellip;
+  &darr; round 100,000
+<b>stability basin</b>   (Equalizer profile)
+  &darr; commit &le; target   (<b>bitsQ</b>)</pre></div>
+        </div>
+        <div class="asic-quote">ConvergenceX does not try to beat ASICs at SHA-256. It changes the computational problem.</div>
+        <p class="spec-desc">
+          A Bitcoin ASIC is extraordinarily efficient because its silicon is built for one narrow task: hashing
+          80-byte Bitcoin headers with SHA-256d while sweeping a nonce. It takes header fields in and only reports
+          nonces that pass a target &mdash; it does not run programs, hold gigabytes of state or return
+          intermediate results. ConvergenceX uses single SHA-256 as the link between memory-bound, state-dependent
+          steps, so <strong>fixed-function Bitcoin SHA-256d ASICs cannot directly mine ConvergenceX</strong>, and
+          Bitcoin TH/s cannot be converted into ConvergenceX attempts per second.
+        </p>
+        <p class="spec-desc">
+          Difficulty is controlled by two complementary consensus mechanisms: <strong>bitsQ</strong> regulates the
+          numerical target the commit must meet, and the <strong>Equalizer</strong> (43 profiles, E7&ndash;H35)
+          regulates the structural work profile &mdash; how many perturbation probes and refinement steps a
+          valid stability proof must survive. The profile index is bound into the commit, so a miner cannot
+          use an easier profile than consensus requires.
+        </p>
+        <p class="spec-desc" style="opacity:.85">
+          This does not claim that specialized hardware can never be built. ConvergenceX is designed to substantially
+          reduce the advantage of fixed-function ASIC specialization: a useful accelerator would have to implement the
+          actual workload &mdash; low-latency random access to gigabytes of memory, the sequential dependency chain and
+          the per-block program &mdash; rather than reuse conventional Bitcoin ASIC hashrate.
+        </p>
+        <p class="spec-desc" style="font-size:12px;opacity:.75">
+          Sources (public, <code>Neob1844/sost-core</code>): <code>src/pow/convergencex.cpp</code> (attempt loop, state update, commit),
+          <code>include/sost/params.h</code> (<code>CX_N</code>, <code>CX_ROUNDS_M</code>, <code>CX_SCRATCH_M</code>, <code>CASERT_PROFILES</code>),
+          <code>src/pow/casert.cpp</code> (bitsQ, Equalizer).
+        </p>
       </div>
     </div>
   </div>
@@ -1413,7 +1501,7 @@ threshold = ANTISTALL_FLOOR_V6C = <span class="num">3600</span>  <span class="cm
         <div class="p-desc">
           8 GB total mining memory (4 GB scratchpad + 4 GB dataset) with 100,000 sequential
           iterations. Node validation requires only ~500 MB. Throughput is bounded by memory
-          bandwidth and latency, not raw compute — making ASIC development economically impractical.
+          bandwidth and latency, not raw compute — substantially reducing the advantage of fixed-function ASICs.
         </div>
       </div>
       <div class="principle-card fade-in delay-2" style="--card-accent:var(--cyan-primary);">
@@ -1557,7 +1645,7 @@ threshold = ANTISTALL_FLOOR_V6C = <span class="num">3600</span>  <span class="cm
           <tr><td class="key">PoW verify cost</td><td class="val">~1&mu;s</td><td class="val">~50ms</td><td class="val" style="color:var(--green-primary);">~0.2 ms proof check (Transcript V2) &middot; full recompute only for deep validation</td></tr>
           <tr><td class="key">Memory (mining)</td><td class="val">Negligible</td><td class="val">256MB&ndash;2GB</td><td class="val" style="color:var(--text-primary);">8GB (4GB scratchpad + 4GB dataset)</td></tr>
           <tr><td class="key">Memory (node)</td><td class="val">Negligible</td><td class="val">~256MB</td><td class="val" style="color:var(--text-primary);">~500MB (no scratchpad/dataset)</td></tr>
-          <tr><td class="key">ASIC resistance</td><td class="val" style="color:var(--red-primary);">None</td><td class="val" style="color:var(--green-primary);">High</td><td class="val" style="color:var(--green-primary);">Very high</td></tr>
+          <tr><td class="key">ASIC resistance</td><td class="val" style="color:var(--red-primary);">None</td><td class="val" style="color:var(--green-primary);">High</td><td class="val" style="color:var(--green-primary);">High by design (memory-hard, sequential)</td></tr>
           <tr><td class="key">Full sync time</td><td class="val">~hours</td><td class="val">~days</td><td class="val" style="color:var(--green-primary);"><b>~25 min</b> &mdash; measured: genesis &rarr; #28,077 in 25m06s, tip + 5 checkpoint hashes matched the live chain (V30000 release); checkpointed blocks skip only the full ConvergenceX recompute (<code>--full-verify</code> forces it)</td></tr>
           <tr><td class="key">Fast sync time</td><td class="val">~minutes</td><td class="val">~hours</td><td class="val" style="color:var(--green-primary);">not needed &mdash; the full verified sync above is the normal path</td></tr>
           <tr><td class="key">Verification layers</td><td class="val">4</td><td class="val">4</td><td class="val" style="color:var(--text-primary);">8</td></tr>

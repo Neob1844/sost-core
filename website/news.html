@@ -204,6 +204,33 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<!-- ============ CONVERGENCEX ASIC RESISTANCE (2026-10-10) ============ -->
+<section class="section" id="convergencex-asic-resistance"><div class="container">
+  <article style="border:2px solid #22d3ee;border-radius:14px;background:linear-gradient(180deg,rgba(34,211,238,.06),transparent 60%);padding:20px 22px">
+    <div style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#22d3ee">// PROTOCOL &middot; RESEARCH &middot; 10 OCT 2026</div>
+    <h2 style="font-size:24px;margin:10px 0 4px;color:var(--text-primary,#e2e8f0);text-wrap:balance">Inside ConvergenceX: <span style="color:#39ff14">ASIC Resistance by Architecture</span></h2>
+    <div style="font-size:14px;color:#9fe8ff;margin-bottom:10px">ConvergenceX: why Bitcoin ASIC hashrate does not translate to SOST</div>
+    <blockquote style="margin:14px 0;padding:12px 16px;border-left:3px solid #39ff14;background:rgba(57,255,20,.06);border-radius:0 8px 8px 0;color:#d7ffe6;font-size:15px;line-height:1.6">ConvergenceX does not try to beat ASICs at SHA-256. It changes the computational problem.</blockquote>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#fbbf24;margin:18px 0 6px;font-weight:800">The problem it solves</h3>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">Bitcoin's proof of work is a search: hash an 80-byte header with SHA-256d, change the nonce, repeat. Every try is independent, so the work parallelizes perfectly and fixed-function silicon wins by orders of magnitude. ConvergenceX was designed so that a single attempt is a long, memory-bound, sequential computation instead of one cheap, independent hash.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#fbbf24;margin:18px 0 6px;font-weight:800">What one ConvergenceX attempt does</h3>
+    <ul style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:6px 0 6px 18px">
+      <li><b>~8 GB working memory:</b> a 4 GB dataset regenerated per block and a 4 GB scratchpad keyed per epoch.</li>
+      <li><b>100,000 sequential rounds.</b> Each round runs a gradient step on a <b>32&times;32 integer linear system</b>, reads four scratchpad words and one dataset word at addresses chosen by the current state, applies an instruction from a <b>program derived from the previous block</b>, and hashes the result into the next state. Round <i>r+1</i> cannot start before round <i>r</i> finishes.</li>
+      <li><b>Stability basin:</b> the final solution must survive perturbation probes &mdash; how many, and how strict, is set by consensus.</li>
+      <li><b>Checkpoints and Transcript V2:</b> Merkle-committed checkpoints and segments let nodes verify a block in milliseconds without the 8 GB.</li>
+      <li><b>Commit:</b> one hash binding all of the above, which must meet the target.</li>
+    </ul>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#fbbf24;margin:18px 0 6px;font-weight:800">Two difficulty controls, not one</h3>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>bitsQ</b> sets the numerical target the commit must meet (Q16.16, adjusted every block). The <b>Equalizer</b> (43 profiles, E7&ndash;H35) sets the structural work profile &mdash; the perturbation probes and refinement steps a valid stability proof must survive. The profile index is bound into the commit, so nobody can mine with an easier profile than consensus requires.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#fbbf24;margin:18px 0 6px;font-weight:800">Why Bitcoin TH/s does not carry over</h3>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">A Bitcoin ASIC takes header fields in, sweeps nonces internally and only reports nonces that pass a target. It does not run programs, hold gigabytes of state or hand back intermediate hashes. ConvergenceX does use SHA-256, but as single SHA-256 on its own message formats, linking memory-bound and state-dependent steps whose next input depends on the previous output. So <b>fixed-function Bitcoin SHA-256d ASICs cannot directly mine ConvergenceX</b>, and a 4.8 TH/s Bitcoin miner is not a 4.8 TH/s SOST miner &mdash; the units measure different work. ConvergenceX performance is measured in <b>valid attempts per second</b> under the active bitsQ target and Equalizer profile.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#fbbf24;margin:18px 0 6px;font-weight:800">What "ASIC-resistant" does and does not mean</h3>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">ConvergenceX is <b>ASIC-resistant by design</b>: it is built to substantially reduce the advantage of fixed-function ASIC specialization. It is <b>not</b> a claim that specialized hardware can never exist. Any useful accelerator would have to implement the actual ConvergenceX workload &mdash; low-latency random access to gigabytes of memory, the sequential dependency chain and the per-block program &mdash; where today's CPUs are already well matched.</p>
+    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Every figure above comes from the public consensus code in <code>Neob1844/sost-core</code>: <code>src/pow/convergencex.cpp</code>, <code>include/sost/params.h</code> (<code>CX_N=32</code>, <code>CX_ROUNDS_M=100000</code>, <code>CX_SCRATCH_M=4096</code>, <code>CASERT_PROFILES</code>) and <code>src/pow/casert.cpp</code>. More: <a href="sost-technology.html#asic-resistance" style="color:#22d3ee">Technology &rarr; Strong ASIC resistance by design</a> &middot; <a href="sost-mine.html#asic-hashrate" style="color:#39ff14">Mine &rarr; Why Bitcoin ASIC hashrate does not transfer</a>.</p>
+  </article>
+</div></section>
+
 <!-- ============ V30000 ACTIVE + FINAL.1 NODE HARDENING (2026-10-10) ============ -->
 <section class="section" id="v30000-active-final1"><div class="container">
   <div style="border:2px solid #39ff14;border-radius:14px;background:linear-gradient(180deg,rgba(57,255,20,.06),transparent 60%);padding:20px 22px">
