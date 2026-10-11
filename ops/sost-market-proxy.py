@@ -166,7 +166,7 @@ def load_state():
                      (kind == 'fxh' and len(parts) == 4 and parts[2] in FX_CODES and parts[3] in FXHIST_BACK)
                 age = now - float(entry.get('fetched_at', 0))
                 if not ok or not _json_ok(kind, entry.get('body')) or age < 0 \
-                        or age > min(JSON_TTL[kind] * STALE_FACTOR, STALE_MAX):
+                        or age > min(json_ttl(key) * STALE_FACTOR, STALE_MAX):
                     continue
                 with _cache_lock:
                     _cache[key] = {'body': entry['body'], 'fetched_at': float(entry['fetched_at']), 'status': 'ok'}
@@ -748,6 +748,13 @@ SPOT_CRYPTO_IDS = ('bitcoin', 'ethereum', 'binancecoin', 'solana', 'ripple', 'po
                    'litecoin', 'bitcoin-cash', 'stellar')
 SPOT_CRYPTO_CODES = ('btc', 'eth', 'bnb', 'sol', 'xrp', 'dot', 'link', 'ltc', 'bch', 'xlm')
 CG_SIMPLE = 'https://api.coingecko.com/api/v3/simple/price'
+# crypto + gold_usd come from Binance spot 24h tickers (USDT books, the market the Markets charts use;
+# generous public limits); gold in 60 currencies and the stablecoins have no exchange book in those
+# quotes, so they stay on CoinGecko, with long TTLs and background refresh to protect its keyless budget.
+BINANCE_TICKER = 'https://api.binance.com/api/v3/ticker/24hr'
+BINANCE_SPOT = {'crypto': dict(zip(SPOT_CRYPTO_IDS, ('BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT', 'DOTUSDT',
+                                                      'LINKUSDT', 'LTCUSDT', 'BCHUSDT', 'XLMUSDT'))),
+                'gold_usd': {'tether-gold': 'XAUTUSDT', 'pax-gold': 'PAXGUSDT'}}
 SPOT_GROUPS = {   # name -> CoinGecko simple/price query (constants only)
     'gold_usd': {'ids': 'tether-gold,pax-gold', 'vs_currencies': 'usd'},
     'gold_all': {'ids': 'tether-gold,pax-gold', 'include_24hr_change': 'true',
@@ -765,6 +772,14 @@ FX_CODES = ('CAD', 'MXN', 'BRL', 'ARS', 'CLP', 'COP', 'PEN', 'UYU', 'CRC', 'DOP'
 FXHIST_BACK = {'1H': 3, '4H': 3, '8H': 3, '24H': 4, '3D': 6, '7D': 10, '30D': 33, '6M': 183, '1Y': 368,
                '3Y': 1098, '5Y': 1828}   # days of ECB daily history behind each range (as the page used)
 JSON_TTL = {'spot': 60, 'fx': 3600, 'fxh': 21600}
+GROUP_TTL = {'crypto': 30, 'gold_usd': 30, 'gold_all': 180, 'stable': 600}
+
+
+def json_ttl(key):
+    parts = key.split('|')
+    if parts[1] == 'spot':
+        return GROUP_TTL.get(parts[2], JSON_TTL['spot'])
+    return JSON_TTL[parts[1]]
 _venue.update({'erapi': {'sem': threading.BoundedSemaphore(1), 'lock': threading.Lock(), 'last': [0.0], 'gap': 1.0},
                'frankfurter': {'sem': threading.BoundedSemaphore(2), 'lock': threading.Lock(), 'last': [0.0], 'gap': 0.3}})
 
@@ -776,6 +791,9 @@ def json_target(mode, q):
         g = one('group')
         if g not in SPOT_GROUPS:
             raise ValueError('group')
+        if g in BINANCE_SPOT:
+            syms = json.dumps(sorted(BINANCE_SPOT[g].values()), separators=(',', ':'))
+            return 'json|spot|' + g, 'spot', 'binance', lambda: BINANCE_TICKER + '?' + urllib.parse.urlencode({'symbols': syms})
         return 'json|spot|' + g, 'spot', 'coingecko', lambda: CG_SIMPLE + '?' + urllib.parse.urlencode(SPOT_GROUPS[g])
     if mode == 'fx':
         return 'json|fx|latest', 'fx', 'erapi', lambda: FX_URL
@@ -825,6 +843,8 @@ def _fetch_json(kind, venue, url):
                     body = json.loads(r.read().decode('utf-8'))
         else:
             body = _venue_get(venue, url)
+            if venue == 'binance':        # 24h tickers -> the simple/price shape the page reads
+                body = _binance_to_simple(url, body)
     except urllib.error.HTTPError as e:
         if venue == 'coingecko' and e.code == 429:
             _last_upstream_failure[0] = _last_upstream_429[0] = time.time()
@@ -838,9 +858,29 @@ def _fetch_json(kind, venue, url):
     return body, 'ok'
 
 
+def _binance_to_simple(url, rows):
+    """[{symbol,lastPrice,priceChangePercent}] -> {id: {'usd': last, 'usd_24h_change': pct}}.
+    Real last trade and 24h change of each USDT book; nothing interpolated. A missing symbol is
+    simply absent (the page shows its own dash), never filled."""
+    if not isinstance(rows, list):
+        return None
+    group = next(g for g, m in BINANCE_SPOT.items() if all(sym in url for sym in m.values()))
+    by_sym = {r.get('symbol'): r for r in rows if isinstance(r, dict)}
+    out = {}
+    for cid, sym in BINANCE_SPOT[group].items():
+        r = by_sym.get(sym)
+        try:
+            last, pct = float(r['lastPrice']), float(r['priceChangePercent'])
+        except (TypeError, KeyError, ValueError):
+            continue
+        if last > 0:
+            out[cid] = {'usd': last, 'usd_24h_change': pct}
+    return out
+
+
 def get_json(key, kind, venue, url_fn):
     """Cache -> dedup -> upstream -> last good copy. Returns (body, http_status, source_status)."""
-    ttl, now = JSON_TTL[kind], time.time()
+    ttl, now = json_ttl(key), time.time()
     with _cache_lock:
         entry = _cache.get(key)
     if entry and now - entry['fetched_at'] < ttl:
@@ -954,12 +994,12 @@ class Handler(BaseHTTPRequestHandler):
                 _bump('rejected')
                 self._send(400, {'error': 'bad_%s' % e, 'source_status': 'error'})
                 return
-            if not _fresh(key, JSON_TTL[kind]) and not _rate_ok(ip):
+            if not _fresh(key, json_ttl(key)) and not _rate_ok(ip):
                 _bump('rejected')
                 self._send(429, {'error': 'rate_limited_local', 'source_status': 'error'})
                 return
             body, status, src = get_json(key, kind, venue, url_fn)
-            self._send(status, body, cache_seconds=JSON_TTL[kind] // 4 if status == 200 else 0, source_status=src)
+            self._send(status, body, cache_seconds=min(json_ttl(key) // 4, 30) if status == 200 else 0, source_status=src)
             return
         if mode == 'ohlc':
             try:
@@ -1005,6 +1045,22 @@ WARM_LEAD = 0.75            # refresh once an entry is this far through its TTL
 WARM_COOLDOWN = 120         # pause warming this long after upstream refuses us
 
 
+def _refresh_json_key(key):
+    """Warm a JSON snapshot by its cache key (the in-flight slot is held by the caller)."""
+    parts = key.split('|')
+    if parts[1] == 'spot':
+        q = {'group': [parts[2]]}
+    elif parts[1] == 'fxh':
+        q = {'code': [parts[2]], 'range': [parts[3]]}
+    else:
+        q = {}
+    k2, kind, venue, url_fn = json_target({'spot': 'spot', 'fx': 'fx', 'fxh': 'fxhist'}[parts[1]], q)
+    body, reason = _fetch_json(kind, venue, url_fn())
+    if body is not None:
+        with _cache_lock:
+            _cache[k2] = {'body': body, 'fetched_at': time.time(), 'status': 'ok'}
+
+
 def _entry_ttl(key):
     parts = key.split('|')
     return OHLC_TTL[parts[2]] if len(parts) == 4 else TTL[int(parts[2])]
@@ -1029,9 +1085,9 @@ def _warm_loop():
             due = None
             with _cache_lock:
                 for key, entry in _cache.items():
-                    if entry.get('status') == 'out_of_range' or key.startswith('json|'):
+                    if entry.get('status') == 'out_of_range':
                         continue
-                    ttl = _entry_ttl(key)
+                    ttl = json_ttl(key) if key.startswith('json|') else _entry_ttl(key)
                     age = now - entry['fetched_at']
                     if age < ttl * WARM_LEAD:
                         continue
@@ -1051,7 +1107,9 @@ def _warm_loop():
                 ev = threading.Event()
                 _inflight[key] = ev
             try:
-                if len(parts) == 4:
+                if parts[0] == 'json':
+                    _refresh_json_key(key)
+                elif len(parts) == 4:
                     _refresh_ohlc(key, parts[0], parts[1], parts[2])
                 else:
                     _refresh(key, parts[0], parts[1], int(parts[2]))

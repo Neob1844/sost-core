@@ -735,9 +735,12 @@ class JsonSnapshots(unittest.TestCase):
                 mp.json_target(mode, self.q(s))
 
     def test_urls_are_built_from_constants(self):
-        _, _, venue, url = mp.json_target('spot', self.q('group=crypto'))
+        _, _, venue, url = mp.json_target('spot', self.q('group=stable'))
         self.assertEqual(venue, 'coingecko')
         self.assertTrue(url().startswith(mp.CG_SIMPLE + '?'))
+        _, _, venue, url = mp.json_target('spot', self.q('group=crypto'))
+        self.assertEqual(venue, 'binance')
+        self.assertTrue(url().startswith(mp.BINANCE_TICKER + '?symbols='))
         _, _, venue, url = mp.json_target('fxhist', self.q('code=EUR&range=30D'))
         self.assertTrue(url().startswith(mp.FRANKFURTER_URL) and url().endswith('base=USD&symbols=EUR'))
         self.assertEqual(mp.json_target('fx', self.q(''))[3](), mp.FX_URL)
@@ -785,3 +788,18 @@ class JsonSnapshots(unittest.TestCase):
             self.assertIn('json|fxh|EUR|7D', mp._cache)
         finally:
             mp.STATE_FILE = old; shutil.rmtree(d)
+
+    def test_binance_tickers_become_the_simple_price_shape(self):
+        url = mp.json_target('spot', self.q('group=gold_usd'))[3]()
+        rows = [{'symbol': 'XAUTUSDT', 'lastPrice': '4180.5', 'priceChangePercent': '-0.10'},
+                {'symbol': 'PAXGUSDT', 'lastPrice': 'bad', 'priceChangePercent': '0.2'}]
+        out = mp._binance_to_simple(url, rows)
+        self.assertEqual(out, {'tether-gold': {'usd': 4180.5, 'usd_24h_change': -0.1}})   # bad row dropped, not filled
+        self.assertTrue(mp._json_ok('spot', out))
+        self.assertIsNone(mp._binance_to_simple(url, {'code': -1121}))
+
+    def test_group_ttls(self):
+        self.assertEqual(mp.json_ttl('json|spot|crypto'), 30)
+        self.assertEqual(mp.json_ttl('json|spot|stable'), 600)
+        self.assertEqual(mp.json_ttl('json|fx|latest'), 3600)
+        self.assertEqual(mp.json_ttl('json|fxh|EUR|7D'), 21600)
