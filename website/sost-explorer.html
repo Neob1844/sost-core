@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-11-v539-avg-pulse">
+<meta name="explorer-html-version" content="2026-10-11-v540-skin-rest">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -558,6 +558,30 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .tx-filter.active{box-shadow:0 0 14px rgba(251,1,13,.35)}
 #mpTreemap,#mpBlocksViz>div{border-radius:12px!important;border-color:#23202c!important;background:radial-gradient(120% 90% at 0% 0%,rgba(192,132,252,.06),transparent 55%),linear-gradient(180deg,#0f0e13,#08080a)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 8px 22px rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){.sx-tile,.sx-tile:hover{transition:none;transform:none}}
+/* v540: rest of the page in the same language */
+#networkMosaicCard,#convxCR,#producerDistSection,.stats-code{position:relative;border-radius:14px!important;border:1px solid #24212d!important;
+  background:radial-gradient(120% 90% at 0% 0%,rgba(192,132,252,.07),transparent 55%),radial-gradient(120% 90% at 100% 100%,rgba(34,211,238,.05),transparent 55%),linear-gradient(180deg,#0f0e13,#08080a)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 10px 30px rgba(0,0,0,.4)!important}
+#networkMosaicCard::before,#convxCR::before,#producerDistSection::before,.stats-code::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;border-radius:14px 14px 0 0;pointer-events:none}
+#networkMosaicCard::before{background:linear-gradient(90deg,#c084fc,#fbbf24 60%,transparent)}
+#convxCR::before{background:linear-gradient(90deg,#22d3ee,#4ade80 60%,transparent)}
+#producerDistSection::before{background:linear-gradient(90deg,#fb010d,#c084fc 60%,transparent)}
+.stats-code::before{background:linear-gradient(90deg,#22d3ee,#c084fc 60%,transparent)}
+.stats-code{padding:18px 22px!important}
+#convxCR .cr-chip{border-radius:10px}
+/* search + RPC fields */
+.search-box{border-radius:12px;overflow:hidden;border-color:#2a2733;background:linear-gradient(180deg,#111017,#0a090d);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.search-box:focus-within{border-color:rgba(251,1,13,.75);box-shadow:0 0 0 1px rgba(251,1,13,.25),0 0 22px rgba(251,1,13,.28)}
+.search-box input,.search-pre{background:transparent!important}
+.search-box button{background:linear-gradient(180deg,rgba(251,1,13,.18),rgba(251,1,13,.08))}
+.search-box button:hover{box-shadow:0 0 18px rgba(251,1,13,.55)}
+.config input{border-radius:8px}
+.config input:focus{border-color:rgba(74,222,128,.6);box-shadow:0 0 12px rgba(74,222,128,.25)}
+/* chain timing: line up with the other cards, all six tiles on one row on desktop */
+.chain-sync-wrap{padding:0!important}
+.search+.search{margin-top:8px!important}
+.chain-sync-wrap>div>div:nth-child(2){grid-template-columns:repeat(auto-fit,minmax(180px,1fr))!important}
+
 
 </style>
 <script src="js/security.js?v=v392"></script>
@@ -777,7 +801,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-11-v539-avg-pulse';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-11-v540-skin-rest';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -10863,7 +10887,7 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
    Re-run on a timer because several panels are re-rendered from live RPC data. */
 (function(){
   var TILES=[['.dash-card','.dash-val'],['.chain-sync-wrap>div>div:nth-child(2)>div>[id^="cs"]:not([id$="Sub"])',null],['#mpFeePanel>div',':scope>div:nth-child(2)'],
-             ['#nodesSummary>div',':scope>div:nth-child(2)'],['#netHealthCard>div',':scope>div:nth-child(2)'],['#localNodeCard>div',':scope>div:nth-child(2)']];
+             ['#nodesSummary>div',':scope>div:nth-child(2)'],['#netHealthCard>div',':scope>div:nth-child(2)'],['#localNodeCard>div',':scope>div:nth-child(2)'],['#convxCR .cr-chip',':scope>b']];
   function rgb(el){var m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(el).color||'');if(!m)return null;
     var r=+m[1],g=+m[2],b=+m[3];return (r<95&&g<95&&b<95)?null:r+','+g+','+b;}
   function sxSkin(){
