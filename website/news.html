@@ -99,7 +99,7 @@
   @keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v537" defer></script>
+<script src="js/nav-toggle.js?v=v553" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
@@ -204,6 +204,24 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<!-- ============ RESEARCH ROADMAP: wSOST & GOLD RESERVE V2 (2026-10-12) ============ -->
+<section class="section" id="wsost-gold-reserve-v2"><div class="container">
+  <article style="border:2px solid #ff1e28;border-radius:14px;background:linear-gradient(180deg,rgba(255,30,40,.06),transparent 60%);padding:20px 22px">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#ff5a5f">// RESEARCH ROADMAP &middot; 12 OCT 2026</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#67e8f9;border:1px solid #1b5b66;border-radius:6px;padding:3px 8px">#40,000 RESEARCH HORIZON</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#ff6b6b;border:1px solid #7a2b2b;border-radius:6px;padding:3px 8px">NOT LIVE</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#94a3b8;border:1px solid #475569;border-radius:6px;padding:3px 8px">NO CONSENSUS CHANGE</span>
+    </div>
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px">
+      <img src="assets/wsost/wsost-gold-vault-256.png?v=v553" width="96" height="96" alt="wSOST &amp; Gold Vault" style="width:96px;height:96px;filter:drop-shadow(0 0 12px rgba(255,30,40,.6))">
+      <h2 style="flex:1 1 260px;font-size:24px;margin:0;color:var(--text-primary,#e2e8f0);text-wrap:balance">wSOST, Gold Reserve V2 and on-chain governance &mdash; the research roadmap is public</h2>
+    </div>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">A new page, <a href="sost-wsost-gold-vault.html" style="color:#ffd166">wSOST &amp; Gold Vault</a> (also the new red circle in the top navigation), explains the whole design with examples: <b>wSOST</b> (1 wSOST = 1 native SOST locked; only wSOST is burned, native SOST never), a separate <b>Gold Reserve V2</b> of tokenized gold that never mints wSOST and has no withdrawal function, and <b>governance</b> where each eligible miner-with-a-bound-node identity casts one on-chain vote and a migration needs YES from two thirds of the whole census plus 4 of 5 guardians, a timelock and a pre-named successor vault.</p>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>Nothing is live.</b> No bridge or Ethereum contract is deployed, Gold Reserve V2 holds nothing, and current consensus stays 50% miner / 50% DTD. #40,000 is a research horizon, not an activation commitment. No price, floor or listing is promised.</p>
+  </article>
+</div></section>
+
 <!-- ============ EXPLAINER: POW CONTROL IN THREE LAYERS + SOST vs BTC vs ETH (2026-10-12) ============ -->
 <section class="section" id="pow-three-layers-btc-eth"><div class="container">
   <article style="border:2px solid #ffd166;border-radius:14px;background:linear-gradient(180deg,rgba(255,209,102,.06),transparent 60%);padding:20px 22px">
@@ -2149,6 +2167,6 @@ sudo systemctl restart sost-miner</pre>
   }).catch(function(){ /* node unreachable: the static text stays as written */ });
 })();
 </script>
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 </body>
 </html>

@@ -1121,6 +1121,86 @@ staking chain. ASIC resistance by memory hardness is a design goal that must sur
 years of adversaries; it is not a proven fact. Final decentralization is not written in
 C++: it comes from independent people running the code without needing its authors.
 
+3.16 Research Horizon — wSOST, Gold Reserve V2 and On-Chain Governance (design, not deployed)
+
+STATUS: research / design only. No bridge, no Ethereum contract and no Gold Reserve V2
+funds exist. Current consensus (50% miner / 50% DTD) is unchanged. Block #40,000 is the
+current coordinated research horizon, NOT an activation commitment; if engineering,
+external audit, legal or operational gates are not complete, the work moves later.
+Public explanation: sostcore.com/sost-wsost-gold-vault.html
+
+Invariants:
+
+```
+1 wSOST = 1 native SOST locked in the Bridge Vault   (only wSOST is ever burned)
+Gold never mints wSOST                               (Gold Reserve V2 is a separate reserve)
+Native SOST is never burned
+```
+
+Five accounts, never combined or double-counted: (1) native SOST; (2) bridge-locked SOST;
+(3) wSOST, the ERC-20 representation of (2); (4) Gold Reserve V2 (XAUT initially, PAXG
+gated pending availability/legal review); (5) the historical Gold Vault + PoPC Pool,
+frozen since #25,000 and committed to the DTD Jackpot.
+
+Example — wrap and unwrap:
+
+```
+Juan holds 1,000 SOST and wraps 500:
+  500 SOST stay native · 500 SOST locked in the Bridge Vault · 500 wSOST on Ethereum
+  (deposit capsule: WSOST:0x<recipient>, 48 of the 80 open-note bytes)
+Juan burns 200 wSOST:
+  200 wSOST destroyed -> 200 native SOST released (release capsule WSOST-RELEASE:<burnId>)
+No SOST is created or destroyed at any step.
+```
+
+Bridge trust model: native multisig is not active on mainnet, so the pilot is a capped
+operator bridge: one cold single-key Bridge Vault (sost1) with a hard exposure cap and
+offline signing behind a swappable signer interface; 2-of-3 EIP-712 observer
+attestations (an operator quorum, not decentralized; relayers hold no mint authority);
+30 confirmations as a provisional, recalibratable policy (a 1-block reorg replaced block
+#30,297); full proof-of-reserves reconciliation of deposits, mints, burns and releases
+with states BALANCED / PENDING / CRITICAL (totalSupply <= backing is necessary but not
+sufficient). Target: a future, explicitly activated native multisig (new output type,
+not 0x30).
+
+Gold Reserve V2 powers:
+
+```
+withdraw(address)    does not exist
+pause                2-of-5 guardians, moves nothing
+critical rescue      4-of-5 guardians, only to the predefined Quarantine Vault
+final migration      4-of-5 guardians + YES >= ceil(2/3 x full eligible census)
+                     + timelock + exact successor vault named in the frozen proposal
+```
+
+The informational ratio (gold reserve value / circulating SOST, e.g. $250,000 / 2,000,000
+= $0.125) is not a redemption value and not a floor. Words never used: gold-backed, peg,
+floor, redeemable. The Gold -> wSOST desk (selling EXISTING treasury wSOST for XAUT at an
+auction or TWAP price) is designed and gated off; gold arriving never mints wSOST.
+
+Governance constitution:
+
+```
+proposal   frozen before voting: id, source vault/asset, successor vault/asset,
+           successor code hash, snapshot, close, timelock, reason; any change voids votes
+census     identities eligible at the snapshot (mining + NODE_BIND + heartbeats,
+           minimum binding age under research); one identity = one vote
+vote       self-transfer from the identity:
+           sost-cli send <id> 0.001 --from-address <id> --capsule-mode open-note \
+                    --capsule-text "SOSTGOV1|GRV2-004|S35712|YES"   (YES|NO|ABSTAIN)
+           the last valid vote confirmed in (snapshot, close] counts
+approval   YES >= ceil(2/3 x TOTAL census), not of those who voted; ABSTAIN is never YES
+example    census 12 -> 8 YES needed; 8 YES/2 NO/2 none -> approved;
+           7 YES/0 NO/5 none -> not approved
+finality   result final once the close block is buried by the finality depth
+phase      A advisory now; B binding only after objective maturity criteria (under research)
+```
+
+Limitation: SOST votes do not execute Ethereum state; guardians do. A guardian majority
+ignoring a valid vote would be publicly provable, not technically impossible. Security
+therefore rests on four layers: guardians, SOST vote, timelock and the contract's
+destination restrictions.
+
 ## 4. Monetary Policy
 ### 4.1 Feigenbaum Emission Schedule (Consensus-Critical)
 

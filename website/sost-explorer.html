@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-12-v552-public-truth">
+<meta name="explorer-html-version" content="2026-10-12-v553-wsost-gold-vault">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -628,7 +628,7 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v537" defer></script>
+<script src="js/nav-toggle.js?v=v553" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 <link rel="stylesheet" href="css/price-cards-v2.css?v=532">
 </head>
@@ -842,9 +842,26 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
     <div style="margin-top:8px"><a href="news.html#decentralization" style="color:#39ff14;font-weight:700;text-decoration:none;border-bottom:1px solid rgba(57,255,20,.5);text-shadow:0 0 6px rgba(57,255,20,.3)">&#8594; More decentralization information here</a></div>
   </div>
 </details>
+<a href="sost-wsost-gold-vault.html" class="wsost-research-card" title="wSOST &amp; Gold Vault — research roadmap (not live)" style="display:block;margin:10px auto;max-width:1040px;text-decoration:none;background:linear-gradient(90deg,rgba(255,30,40,.07),rgba(255,209,102,.05));border:1px solid #7a1b1f;border-left:4px solid #ff1e28;border-radius:8px;padding:10px 14px;color:#f3d9da">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <img src="assets/wsost/wsost-gold-vault-128.png?v=v553" width="44" height="44" alt="" style="width:44px;height:44px;flex:0 0 auto;filter:drop-shadow(0 0 8px rgba(255,30,40,.6))">
+    <div style="flex:1 1 260px;min-width:0">
+      <div style="font:800 12px ui-monospace,monospace;letter-spacing:.6px;color:#ff5a5f"><span style="color:#fff">w</span>SOST &amp; GOLD VAULT &middot; RESEARCH ROADMAP <span style="color:#67e8f9;border:1px solid #1b5b66;border-radius:5px;padding:1px 6px;font-size:10px">NOT LIVE</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:4px 14px;margin-top:6px;font-size:11.5px;line-height:1.5">
+        <div><b style="color:#fff">wSOST</b> &middot; planned 1:1 bridge (1 wSOST = 1 SOST locked)</div>
+        <div><b style="color:#f59e0b">Gold Vault</b> &middot; historical, frozen Jackpot reserve</div>
+        <div><b style="color:#ffd166">Gold Reserve V2</b> &middot; future external gold reserve</div>
+        <div><b style="color:#39ff14">Governance</b> &middot; eligible-identity on-chain voting</div>
+        <div><b style="color:#d7ff00">#40,000</b> &middot; research horizon, not a commitment</div>
+        <div><b style="color:#fff">Current consensus</b> &middot; 50% miner / 50% DTD</div>
+      </div>
+    </div>
+    <span style="font:800 11px ui-monospace,monospace;color:#ffd166;white-space:nowrap">OPEN &rarr;</span>
+  </div>
+</a>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-12-v550-unique-nodes-label';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-12-v553-wsost-gold-vault';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -9519,7 +9536,7 @@ window.addEventListener('resize',function(){['xaut','paxg','xautbtc','paxgbtc','
   }
 })();
 </script>
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <!-- CRT + retro sounds -->
 <style>@media(max-width:560px){#nesMuteBtn{font-size:16px !important;padding:2px 6px !important;opacity:.55;line-height:1}#nesMuteBtn:active{opacity:1}}</style>
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:calc(16px + env(safe-area-inset-left,0px));right:auto;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>

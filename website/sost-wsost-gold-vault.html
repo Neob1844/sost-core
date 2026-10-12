@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style id="sost-global-zoom">html{zoom:1.0}</style>
+<!-- M26 favicon + icon pack -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=v392">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=v392">
+<link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png?v=v392">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#05070a">
+<!-- M26 OG / Twitter fallback -->
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta charset="UTF-8">
+<link rel="canonical" href="https://sostcore.com/sost-wsost-gold-vault.html">
+<link rel="icon" type="image/png" href="sost-logo.png?v=v392">
+<link rel="apple-touch-icon" href="sost-logo.png?v=v392">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>wSOST &amp; Gold Reserve V2 — SOST research roadmap (bridge, gold reserve, governance)</title>
+<meta name="description" content="wSOST (1 wSOST = 1 native SOST locked), Gold Reserve V2 of tokenized gold, on-chain SOST governance and the #40,000 research horizon. Research roadmap, not live: no bridge deployed, current consensus 50% miner / 50% DTD unchanged.">
+<meta name="keywords" content="wSOST, wrapped SOST, SOST bridge, Gold Reserve V2, Gold Vault, XAUT, governance, SOST governance, block 40000, research horizon">
+<meta name="author" content="SOST">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="wSOST &amp; Gold Reserve V2 — SOST research roadmap">
+<meta property="og:description" content="wSOST (1 wSOST = 1 native SOST locked), Gold Reserve V2 of tokenized gold, on-chain SOST governance and the #40,000 research horizon. Research roadmap, not live: no bridge deployed, current consensus 50% miner / 50% DTD unchanged.">
+<meta property="og:url" content="https://sostcore.com/sost-wsost-gold-vault.html">
+<meta property="og:site_name" content="SOST">
+<meta property="og:image" content="https://sostcore.com/assets/wsost/wsost-gold-vault-512.png?v=v553">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="wSOST &amp; Gold Reserve V2 — SOST research roadmap">
+<meta name="twitter:description" content="wSOST (1 wSOST = 1 native SOST locked), Gold Reserve V2 of tokenized gold, on-chain SOST governance and the #40,000 research horizon. Research roadmap, not live: no bridge deployed, current consensus 50% miner / 50% DTD unchanged.">
+<meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=v392">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #000000;
+    --bg-panel: #050505;
+    --bg-card: #111720;
+    --bg-hover: #151c28;
+    --border-dim: #1a2233;
+    --border-med: #243044;
+    --border-bright: #2d4a6f;
+    --red-primary: #fb010d;
+    --red-bright: #ff2d3b;
+    --red-dim: #8b1a22;
+    --red-glow: #fb010d33;
+    --red-subtle: #fb010d18;
+    --green-primary: #4ade80;
+    --green-dim: #22c55e44;
+    --cyan-primary: #22d3ee;
+    --cyan-dim: #22d3ee33;
+    --red-accent: #fb010d;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-display: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-med) var(--bg-deep);
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px),
+      repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-dim) 60px, var(--border-dim) 61px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0.94);
+    border-bottom: 1px solid var(--border-dim);
+    backdrop-filter: blur(16px);
+    padding: 12px 0;
+  }
+  nav .container{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;flex-wrap:wrap;}
+  .nav-logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-logo .brand-sost {
+    color: var(--red-primary);font-size:1.76em}
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13.2px;
+    font-weight: 400;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .nav-links a:hover {
+    color: var(--text-primary);
+    background: var(--bg-card);
+  }
+  .nav-links a.active {
+
+    color: var(--red-primary);
+    background: var(--red-subtle);
+    border-bottom: none;
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border-dim);
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 300px;
+    background: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(230,57,70,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-label {
+    font-size: 11px;
+    color: var(--red-primary);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-label::before {
+    content: '//';
+    color: var(--text-muted);
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+  }
+  .hero h1 span {
+    color: var(--red-primary);
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 680px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .protocol-badge {
+    margin-top: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    border: 1px solid var(--border-med);
+    border-radius: 6px;
+    background: var(--bg-card);
+    font-size: 11px;
+  }
+  .protocol-badge .tag {
+    color: var(--green-primary);
+    font-weight: 600;
+  }
+  .protocol-badge .sep {
+    color: var(--text-muted);
+  }
+  .protocol-badge .val {
+    color: var(--text-secondary);
+  }
+
+  /* ---- DOWNLOAD BAR ---- */
+  .download-bar {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--red-dim);
+    border-radius: 5px;
+    background: linear-gradient(135deg, rgba(230,57,70,0.12), rgba(230,57,70,0.04));
+    color: var(--red-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+  .dl-btn:hover {
+    background: linear-gradient(135deg, rgba(230,57,70,0.22), rgba(230,57,70,0.10));
+    border-color: var(--red-primary);
+    box-shadow: 0 0 16px rgba(230,57,70,0.15);
+    transform: translateY(-1px);
+  }
+  .dl-btn svg {
+    width: 14px; height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .dl-btn.secondary {
+    border-color: var(--border-med);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+  }
+  .dl-btn.secondary:hover {
+    border-color: var(--border-bright);
+    color: var(--text-primary);
+    box-shadow: none;
+  }
+
+  /* ---- SECTION ---- */
+  .section {
+    padding: 64px 0;
+    border-bottom: 1px solid var(--border-dim);
+  }
+  .section-header {
+    margin-bottom: 40px;
+  }
+  .section-id {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+  .section-title .accent {
+    color: var(--red-primary);
+  }
+
+  /* ---- SPEC BLOCK ---- */
+  .spec-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    transition: border-color 0.3s;
+  }
+  .spec-block:hover {
+    border-color: var(--border-med);
+  }
+  .spec-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-dim);
+    background: var(--bg-panel);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .spec-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-icon {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+  .spec-icon.red { background: var(--red-primary); box-shadow: 0 0 8px var(--red-glow); }
+  .spec-icon.green { background: var(--green-primary); box-shadow: 0 0 6px var(--green-dim); }
+  .spec-icon.cyan { background: var(--cyan-primary); box-shadow: 0 0 6px var(--cyan-dim); }
+
+  .spec-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+  }
+  .spec-tag {
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border: 1px solid var(--border-dim);
+    border-radius: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .spec-tag.consensus { color: var(--green-primary); border-color: var(--green-dim); }
+  .spec-tag.overlay { color: var(--cyan-primary); border-color: var(--cyan-dim); }
+  .spec-tag.immutable { color: var(--red-primary); border-color: var(--red-glow); }
+
+  .spec-body {
+    padding: 20px;
+  }
+  .spec-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
+
+  /* ---- CODE TABLE ---- */
+  .code-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .code-table tr {
+    border-bottom: 1px solid var(--border-dim);
+    transition: background 0.15s;
+  }
+  .code-table tr:last-child { border-bottom: none; }
+  .code-table tr:hover { background: var(--bg-hover); }
+  .code-table td {
+    padding: 8px 12px;
+    vertical-align: top;
+  }
+  .code-table .key {
+    color: var(--red-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    width: 240px;
+    min-width: 180px;
+  }
+  .code-table .val {
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+  .code-table .val code {
+    color: var(--green-primary);
+    background: rgba(34, 197, 94, 0.08);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+  .code-table .val .comment {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ---- ARCH DIAGRAM ---- */
+  .arch-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 32px 0;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .arch-node {
+    flex: 1;
+    min-width: 160px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+    transition: border-color 0.3s, transform 0.2s;
+  }
+  .arch-node:first-child { border-radius: 8px 0 0 8px; }
+  .arch-node:last-child { border-radius: 0 8px 8px 0; }
+  .arch-node:hover {
+    border-color: var(--red-primary);
+    z-index: 2;
+    transform: translateY(-2px);
+  }
+  .arch-node::after {
+    content: '→';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+    z-index: 3;
+  }
+  .arch-node:last-child::after { display: none; }
+  .arch-node .node-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+  }
+  .arch-node .node-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .arch-node .node-detail {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ---- CODE SNIPPET ---- */
+  .code-snippet {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-size: 11px;
+    line-height: 1.8;
+    position: relative;
+  }
+  .code-snippet::before {
+    content: attr(data-label);
+    position: absolute;
+    top: 0; right: 0;
+    background: var(--border-dim);
+    color: var(--text-muted);
+    font-size: 10px;
+    padding: 2px 10px;
+    border-radius: 0 6px 0 4px;
+    letter-spacing: 1px;
+  }
+  .code-snippet .kw { color: var(--cyan-primary); }
+  .code-snippet .fn { color: var(--red-primary); }
+  .code-snippet .str { color: var(--green-primary); }
+  .code-snippet .num { color: var(--red-primary); }
+  .code-snippet .cmt { color: var(--text-muted); font-style: italic; }
+
+  /* ---- MODE GRID ---- */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .mode-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    border-radius: 6px;
+    padding: 16px;
+    transition: border-color 0.3s;
+  }
+  .mode-card:hover { border-color: var(--border-med); }
+  .mode-card .mode-name {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mode-card .mode-name .indicator {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .mode-card .mode-params {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .mode-card .mode-params span {
+    color: var(--text-secondary);
+  }
+
+  /* ---- PRINCIPLE CARDS ---- */
+  .principles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .principle-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    padding: 24px;
+    transition: border-color 0.3s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .principle-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--card-accent, var(--red-primary));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .principle-card:hover {
+    border-color: var(--border-med);
+    transform: translateY(-2px);
+  }
+  .principle-card:hover::before { opacity: 1; }
+  .principle-card .p-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .principle-card .p-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  /* ---- FOOTER ---- */
+  footer {
+    padding: 48px 0;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  footer a {
+    color: var(--red-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: var(--red-primary); }
+  .footer-logo {
+    width: 32px; height: 32px;
+    margin: 0 auto 12px;
+    opacity: 0.4;
+    filter: grayscale(0.3);
+  }
+
+  /* ---- ANIMATIONS ---- */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 0.6s ease forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 768px) {
+    .hero { padding: 48px 0 40px; }
+    .section { padding: 40px 0; }
+    .arch-flow { flex-direction: column; }
+    .arch-node { border-radius: 0 !important; }
+    .arch-node:first-child { border-radius: 8px 8px 0 0 !important; }
+    .arch-node:last-child { border-radius: 0 0 8px 8px !important; }
+    .arch-node::after {
+      content: '↓';
+      right: 50%; top: auto; bottom: -8px;
+      transform: translateX(50%);
+    }
+    .code-table .key { width: auto; min-width: 140px; }
+    .nav-links { display: none; width:100%; } .nav-links.open { display:flex; } .nav-hamburger { display:block; }
+    .download-bar { flex-direction: column; }
+  }
+
+  /* === CANONICAL NAV CSS === */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.94); border-bottom: 1px solid var(--border-dim); backdrop-filter: blur(16px); padding: 12px 0; }
+  nav .container{ display: flex; align-items: center; justify-content: space-between; gap: 16px;flex-wrap:wrap;}
+  .nav-logo { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--text-primary); letter-spacing: 3px; text-decoration: none; display: flex; align-items: center; gap: 14px; }
+  .nav-logo .brand-sost { color: var(--red-primary);font-size:1.76em}
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 13.2px; font-weight: 400; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap; }
+  .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .nav-links a.active { color: var(--red-primary); border-bottom: 1px solid var(--red-primary); }
+  .nav-hamburger { display: none; background: none; border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 20px; padding: 4px 8px; cursor: pointer; border-radius: 4px; line-height: 1; }
+  @media (max-width: 768px) { .nav-hamburger { display: block; } .nav-links { display: none; width: 100%; } .nav-links.open { display: flex; } }
+  /* === END NAV CSS === */
+@keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
+</style>
+<script src="js/security.js?v=v392"></script>
+<script src="js/nav-toggle.js?v=v553" defer></script>
+<link rel="stylesheet" href="css/atomix-btn.css?v=v481">
+</head>
+<body>
+
+
+
+
+
+
+<nav>
+  <div class="container">
+    <a href="sost-explorer.html" class="nav-logo">
+      <img src="sost-logo.png?v=v392" alt="SOST" style="height:110px;width:110px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(251,1,13,.95)) drop-shadow(0 0 30px rgba(251,1,13,.6))"><span><span class="brand-sost">SOST</span></span>
+    </a>
+    <a href="casert-spec.html" style="flex:1 1 0;display:flex;justify-content:center;align-items:center;text-decoration:none;" title="ConvergenceX — memory-hard PoW">
+      <img src="convergencex-logo.png?v=v392" alt="ConvergenceX" style="width:110px;height:110px;border-radius:20%;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,211,238,.95)) drop-shadow(0 0 30px rgba(34,211,238,.6));image-rendering:-webkit-optimize-contrast">
+    </a>
+    
+      <!-- 4th nav icon: open the SOST 2-minute intro video in a modal -->
+      <a href="sost-dex.html" class="atomix-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:110px;height:110px;min-width:110px;border-radius:20%;border:1px solid #a855f7;text-decoration:none;line-height:1;flex:0 0 auto;" title="Atomic Swap DEX" aria-label="Atomic Swap DEX"><span class="atomix-icon" style="font-size:34px;font-weight:900;margin-bottom:2px">&#9883;</span><span class="atomix-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center">ATOMIC<br>SWAP DEX</span></a>
+    <button class="nav-hamburger" onclick="this.nextElementSibling.classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+            <a href="javascript:void(0)" data-watch="1" onclick="openSv()" title="Watch · SOST videos">▶ Watch</a>
+            <a href="index.html">Home</a>
+      <a href="sost-protocol-spec.html">Layer 1</a>
+      <a href="sost-genesis.html">Genesis</a>
+      <a href="sost-technology.html">Technology</a>
+      <a href="sost-transactions.html">Transactions</a>
+      <a href="sost-gold-reserve.html">Metals Reserve</a>
+      <a href="sost-reference.html" style="color:#e3b23c">SOST Price Reference</a>
+      <a href="sost-tokenomics.html">Tokenomics</a>
+      <a href="sost-roadmap.html">Roadmap</a>
+      <a href="sost-protocol-spec.html">Protocol Spec</a>
+      <a href="sost-whitepaper.html">Whitepaper</a>
+      <a href="sost-mine.html" style="color:var(--red-primary)">Mine</a>
+      <a href="sost-network-status.html">Network</a>
+      <a href="sost-mining-calculator.html">Calculator</a>
+      <a href="sost-why-no-pools.html">Why No Pools</a>
+      <a href="sost-getting-started.html">Getting Started</a>
+      <a href="sost-quickstart.html">Quick Start</a>
+      <a href="sost-community.html">Community</a>
+      <a href="sost-foundation.html">Governance</a>
+      <a href="sost-foundation-balances.html">Governance Balances</a>
+      <a href="sost-e2e.html" style="color:var(--green-primary)">E2E Protocol</a>
+      <!-- DEX link replaced by rainbow button next to logo -->
+      <a href="sost-gold-dex.html">Atomic Swap DEX</a>
+      <a href="sost-security.html">Security</a>
+      <a href="sost-faq.html">FAQ</a>
+      <a href="protocol-registry.html" style="color:#d946ef">Protocol Registry</a>
+      <a href="casert-spec.html">cASERT</a>
+      <a href="sost-explorer.html" style="color:#fbbf24">Explorer</a>
+      <a href="sost-help.html">Help</a>
+      <a href="sost-miner-troubleshooter.html">Troubleshooter</a>
+      <a href="sost-markets.html">Markets <span style="display:inline-block;font-size:7px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:2px;letter-spacing:0.5px;font-weight:600;line-height:1;text-shadow:0 0 6px rgba(74,222,128,0.4);">LIVE</span></a>
+      <a href="sost-infrastructure.html">Infrastructure</a>
+      <a href="sost-otc.html" style="color:var(--green-primary)">OTC / P2P</a>
+      <a href="sost-wallet.html" style="color:#fb010d">Wallet</a>
+      <a href="sost-app/" style="color:var(--cyan-primary)">📱 App</a>
+      <a href="sost-talk.html" style="color:var(--gold)"><span style="color:var(--red-primary)">SOST</span> Talk</a>
+      <a href="sost-contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+
+
+
+
+<!-- NAV -->
+
+
+<!-- ============ wSOST & GOLD RESERVE V2 — PUBLIC RESEARCH PAGE (2026-10-12) ============ -->
+<style>
+.wg{--bg:#07090e;--line:rgba(255,255,255,.1);--gold:#ffd166;--red:#ff3b3f;--cyan:#22d3ee;--green:#39ff14;--txt:#c9d6e2;--dim:#8b9aab;color:var(--txt);font-size:14.5px;line-height:1.75;min-width:0;max-width:100%}
+.wg h3{font-size:20px;margin:24px 0 8px;color:#eef4fb;line-height:1.3}
+.wg h4{font:800 12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:1.4px;color:var(--gold);margin:18px 0 6px;text-transform:uppercase}
+.wg p{margin:8px 0}.wg b{color:#fff}
+.wg code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:#ffe08a;overflow-wrap:anywhere}
+.wg .pre{font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#d8e6f0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0;white-space:pre;overflow-x:auto;max-width:min(100%,calc(100vw - 24px))}
+.wg .g{color:var(--gold)}.wg .c{color:var(--cyan)}.wg .k{color:var(--green)}.wg .r{color:var(--red)}.wg .d{color:#6b7a8c}
+.wg .box{border-left:3px solid var(--gold);background:rgba(255,209,102,.05);border-radius:0 8px 8px 0;padding:11px 15px;margin:12px 0}
+.wg .box.red{border-color:var(--red);background:rgba(255,59,63,.06)}.wg .box.cyan{border-color:var(--cyan);background:rgba(34,211,238,.05)}.wg .box.green{border-color:var(--green);background:rgba(57,255,20,.04)}.wg .box.gray{border-color:#64748b;background:rgba(100,116,139,.07)}
+.wg .bt{font:800 11px ui-monospace,monospace;letter-spacing:1.6px;color:var(--gold);margin-bottom:4px}
+.wg .box.red .bt{color:var(--red)}.wg .box.cyan .bt{color:var(--cyan)}.wg .box.green .bt{color:var(--green)}.wg .box.gray .bt{color:#a8b5c6}
+.wg .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:12px 0}
+.wg .card{border:1px solid var(--line);border-radius:10px;padding:13px 15px;background:rgba(255,255,255,.02);min-width:0}
+.wg .card .h{font:800 12px ui-monospace,monospace;letter-spacing:1.2px;margin-bottom:6px}
+.wg .tw{overflow-x:auto;margin:10px 0;max-width:min(100%,calc(100vw - 24px))}
+.wg table{border-collapse:collapse;width:100%;min-width:520px;font-size:13px}
+.wg th{font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:var(--dim);text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,.18)}
+.wg td{padding:8px;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:top}
+.wg ul{margin:6px 0 6px 18px;padding:0}.wg li{margin:4px 0}
+.st{display:inline-block;font:800 10px ui-monospace,monospace;letter-spacing:1px;padding:3px 8px;border-radius:6px;white-space:nowrap;vertical-align:1px;margin:0 3px 3px 0}
+.st.live{color:#39ff14;border:1px solid #2f8f1c;background:rgba(57,255,20,.07)}
+.st.hist{color:#f59e0b;border:1px solid #8a5a0b;background:rgba(245,158,11,.07)}
+.st.res{color:#67e8f9;border:1px solid #1b5b66;background:rgba(34,211,238,.07)}
+.st.cc{color:#c084fc;border:1px solid #5a3a7a;background:rgba(192,132,252,.07)}
+.st.nd{color:#ff6b6b;border:1px solid #7a2b2b;background:rgba(255,107,107,.07)}
+.st.gated{color:#fbbf24;border:1px solid #8a6b0b;background:rgba(251,191,36,.07)}
+.st.ret{color:#94a3b8;border:1px solid #475569;background:rgba(148,163,184,.07)}
+.wg-hero{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.wg-hero img{width:170px;height:170px;flex:0 0 auto;filter:drop-shadow(0 0 18px rgba(255,30,40,.55))}
+.wg-hero .t{flex:1 1 300px;min-width:0}
+.wg-not{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:14px 0}
+.wg-not div{border:1px solid #7a2b2b;background:rgba(255,59,63,.07);border-radius:8px;padding:9px 12px;font:800 11.5px ui-monospace,monospace;letter-spacing:.8px;color:#ffb3b5}
+.wg-toc{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.wg-toc a{font:700 11px ui-monospace,monospace;letter-spacing:.6px;color:#cfe6f2;border:1px solid var(--line);border-radius:6px;padding:5px 9px;text-decoration:none;background:rgba(255,255,255,.02)}
+.wg-toc a:hover{border-color:var(--gold);color:var(--gold)}
+.wg-in{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.wg-in input{flex:1 1 260px;min-width:0;background:#05070a;border:1px solid #2a3442;border-radius:8px;color:#e6eef7;padding:9px 11px;font:13px ui-monospace,monospace}
+.wg-in button{background:rgba(255,209,102,.1);border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:9px 14px;font:800 12px ui-monospace,monospace;letter-spacing:1px;cursor:pointer}
+.wg-res .row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed rgba(255,255,255,.08);padding:6px 0;font:13px ui-monospace,monospace}
+.wg-live{font:13px ui-monospace,monospace;color:#e6eef7}
+@media(max-width:560px){.wg{font-size:14px}.wg .pre{font-size:10.5px;padding:10px}.wg-hero img{width:120px;height:120px}}
+</style>
+
+<section class="section" id="wsost-hero"><div class="container"><div class="wg">
+ <div class="wg-hero">
+  <img src="assets/wsost/wsost-gold-vault-512.png?v=v553" width="170" height="170" alt="wSOST &amp; Gold Vault">
+  <div class="t">
+   <div style="font:800 12px ui-monospace,monospace;letter-spacing:2.5px;color:#ffd166">BRIDGE &middot; GOLD RESERVE &middot; GOVERNANCE</div>
+   <h1 style="font-size:34px;line-height:1.15;margin:6px 0 8px;color:#fff"><span style="color:#fff">w</span><span style="color:#ff1e28">SOST</span> &amp; <span style="color:#ffd166">Gold Reserve V2</span></h1>
+   <span class="st res">RESEARCH / DEVELOPMENT ROADMAP</span> <span class="st res">#40,000 RESEARCH HORIZON</span> <span class="st nd">NOT AN ACTIVATION COMMITMENT</span>
+   <p style="margin-top:10px">How SOST could reach Ethereum wallets, DEXs and exchanges without creating a single new coin, and how a separate, publicly verifiable reserve of tokenized gold could grow around the ecosystem &mdash; governed by the miners who also run nodes.</p>
+  </div>
+ </div>
+ <div class="wg-not"><div>&#9940; NOT LIVE</div><div>&#9940; NO MAINNET BRIDGE DEPLOYED</div><div>&#9940; NO GOLD RESERVE V2 FUNDS YET</div><div>&#9989; CURRENT SOST CONSENSUS UNCHANGED</div></div>
+ <div class="box cyan"><div class="bt">#30,000 &rarr; #40,000</div><b>#30,000 built the current foundation</b> (V30000 is live). <b>#40,000 is the current coordinated research horizon</b> for the next major phase. <b>Nothing activates automatically at #40,000.</b> If engineering, external audit, legal or operational gates are not complete, the work moves later (for example #50,000). Every consensus change would need its own release, tests, audit and public notice.</div>
+ <div class="wg-toc">
+  <a href="#what">wSOST</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#desk">Gold &rarr; wSOST desk</a><a href="#trust">Bridge trust</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
+ </div>
+</div></div></section>
+
+<section class="section" id="what"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">BRIDGE</div><h2 class="section-title">What is <span class="accent">wSOST?</span></h2></div>
+ <span class="st res">RESEARCH</span> <span class="st nd">NOT DEPLOYED</span>
+ <p><b>wSOST is not another coin.</b> It is a token on Ethereum that represents native SOST one-for-one. The SOST it represents stays on the SOST blockchain, locked in a dedicated Bridge Vault, until the wSOST is turned back into SOST.</p>
+ <div class="box"><div class="bt">CANONICAL RULE</div><b style="font-size:17px">1 wSOST = 1 native SOST locked</b></div>
+ <h4>Example &mdash; Juan wraps 500 SOST</h4>
+ <div class="pre">JUAN HAS           1,000 SOST
+Juan wraps           500 SOST
+
+  500 SOST  ──LOCK──▶  Bridge Vault (SOST chain)  ══▶  500 wSOST (Ethereum)
+
+RESULT
+  500 SOST  remain native in Juan's wallet
+  500 SOST  are locked in the Bridge Vault
+  500 wSOST exist on Ethereum
+<span class="k">NO NEW SOST WAS CREATED.</span> The same 1,000 SOST still exist.</div>
+ <h4>Example &mdash; Juan unwraps 200 wSOST</h4>
+ <div class="pre">Juan burns           200 wSOST   (Ethereum)
+  200 wSOST destroyed  ══▶  200 native SOST released from the Bridge Vault
+                            (minus the SOST network fee)</div>
+ <div class="box red"><div class="bt">PERMANENT SOST INVARIANT</div>Only <b>wSOST</b> is burned during unwrap. <b>Native SOST is never burned.</b></div>
+ <h4>How a deposit would work (design)</h4>
+ <div class="pre">sost-cli send &lt;BRIDGE_VAULT&gt; 500 --capsule-mode open-note \
+         --capsule-text "WSOST:0x9f2c…41aa"        <span class="d"># 48 bytes of the 80-byte capsule limit</span></div>
+ <p>The Ethereum recipient travels inside a <b>capsule</b>, a data field active on SOST since block 7,350. No consensus change, no new transaction type and no special wallet are needed.</p>
+ <h3>Why wSOST would exist</h3>
+ <p>Integrating a brand-new Layer-1 is real work for wallets and exchanges; Ethereum and ERC-20 tokens are already integrated almost everywhere. wSOST would make SOST reachable from:</p>
+ <ul><li>Ethereum wallets;</li><li>DEX liquidity pools and therefore public price discovery;</li><li>exchanges where ERC-20 support reduces Layer-1 integration work;</li><li>future DeFi compatibility.</li></ul>
+ <div class="box gray"><div class="bt">WHAT IT DOES NOT DO</div>wSOST may reduce technical integration friction, but <b>listing, liquidity, legal review and exchange due diligence remain independent requirements</b>. It guarantees no listing anywhere.</div>
+</div></div></section>
+
+<section class="section" id="price"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">MARKETS</div><h2 class="section-title">Price discovery &mdash; <span class="accent">the 1:1 arbitrage</span></h2></div>
+ <span class="st res">RESEARCH</span>
+ <div class="pre">Native SOST offered at     $0.30
+wSOST trading at           $0.80
+
+buy 1 SOST at $0.30  →  wrap 1:1  →  receive 1 wSOST  →  sell near $0.80   = <span class="g">+$0.50</span>
+
+Many people do it  →  SOST demand ↑ · wSOST supply ↑  →  prices move together</div>
+ <p>So, once the bridge is liquid and freely usable, the <b>wSOST market price is expected to become a market reference for native SOST</b>. Prices are <b>not guaranteed identical</b>: bridge risk, fees, liquidity, access restrictions and finality delays can create temporary premiums or discounts. A large, persistent gap would mean wrapping is not freely available or the bridge is impaired.</p>
+</div></div></section>
+
+<section class="section" id="value"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">CONCEPT</div><h2 class="section-title">Five sources of <span class="accent">SOST value</span></h2></div>
+ <div class="tw"><table>
+  <tr><th>#</th><th>Source</th><th>What it means</th><th>Status</th></tr>
+  <tr><td>1</td><td>Monetary scarcity</td><td>Hard cap 4,669,201 SOST, smooth decaying emission</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>2</td><td>PoW network security</td><td>ConvergenceX Proof of Work, nodes verifying every rule</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>3</td><td>Utility</td><td>DTD, Jackpot V2, capsules, atomic swaps, future native assets</td><td><span class="st live">LIVE</span> <span class="st gated">PARTLY GATED</span></td></tr>
+  <tr><td>4</td><td>Market access &amp; liquidity</td><td>wSOST on Ethereum, DEX pools, exchange integration</td><td><span class="st res">RESEARCH</span></td></tr>
+  <tr><td>5</td><td>External Gold Reserve V2</td><td>Publicly verifiable tokenized gold held by the ecosystem</td><td><span class="st res">RESEARCH</span></td></tr>
+ </table></div>
+ <div class="box gray"><div class="bt">GOLD DOES NOT SET THE PRICE</div>The market determines the price of SOST. A gold reserve is verifiable ecosystem wealth &mdash; like the cash a company holds, its shares can trade far above or below it.</div>
+</div></div></section>
+
+<section class="section" id="boxes"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">ACCOUNTING</div><h2 class="section-title">Five accounts &mdash; <span class="accent">never mixed</span></h2></div>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#ff3b3f">BOX 1 &middot; NATIVE SOST</div>Ordinary circulating SOST on the SOST chain. <span class="st live">LIVE</span></div>
+  <div class="card"><div class="h" style="color:#ff8a8d">BOX 2 &middot; BRIDGE-LOCKED SOST</div>Native SOST locked specifically against wSOST. <span class="st res">RESEARCH</span></div>
+  <div class="card"><div class="h" style="color:#fff">BOX 3 &middot; wSOST</div>The ERC-20 representation of BOX 2, one for one. <span class="st res">RESEARCH</span></div>
+  <div class="card"><div class="h" style="color:#ffd166">BOX 4 &middot; GOLD RESERVE V2</div>External tokenized-gold reserve on Ethereum. <span class="st res">RESEARCH</span></div>
+  <div class="card"><div class="h" style="color:#f59e0b">BOX 5 &middot; HISTORICAL GOLD VAULT + PoPC</div>Legacy SOST reserve already committed to the DTD Jackpot. <span class="st hist">HISTORICAL</span> <span class="st live">FROZEN &middot; LIVE</span></div>
+ </div>
+ <div class="box red"><div class="bt">RULE</div><b>THESE FIVE BALANCES MUST NEVER BE COMBINED OR DOUBLE-COUNTED.</b> Box 2 backs Box 3 and nothing else. Box 4 never backs wSOST. Box 5 is never used by the bridge or by Gold Reserve V2.</div>
+</div></div></section>
+
+<section class="section" id="historical"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">HISTORY</div><h2 class="section-title">The historical <span class="accent">Gold Vault</span></h2></div>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#f59e0b">HISTORICAL &middot; BLOCKS 0&ndash;24,999</div>50% miner &middot; 25% Gold Vault &middot; 25% PoPC Pool (draw blocks from #7,100 paid 50% miner / 50% lottery). <span class="st hist">HISTORICAL</span></div>
+  <div class="card"><div class="h" style="color:#39ff14">CURRENT &middot; FROM #25,000</div>50% miner &middot; 50% normal DTD. Gold Vault and PoPC receive <b>0%</b> of new emission. Their balances are <b>frozen by consensus</b> and pay the DTD Jackpot. <span class="st live">LIVE</span></div>
+ </div>
+ <div class="wg-live" id="wgLiveReserve">Live reserve: loading&hellip;</div>
+ <p>The Genesis Gold Vault is the <b>conceptual ancestor</b> of Gold Reserve V2 &mdash; a rule-bound reserve with one purpose and public accounting &mdash; but it is <b>not the same reserve</b>. It accumulated SOST; Gold Reserve V2 would hold tokenized gold. <b>Historical Gold Vault &ne; Gold Reserve V2.</b></p>
+</div></div></section>
+
+<section class="section" id="grv2"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">RESERVE</div><h2 class="section-title">Gold Reserve <span class="accent">V2</span></h2></div>
+ <span class="st res">RESEARCH</span> <span class="st nd">NOT DEPLOYED</span>
+ <p>A new, external reserve on Ethereum. It receives <b>tokenized gold</b> &mdash; not newly emitted SOST &mdash; and it <b>never mints wSOST</b>.</p>
+ <div class="tw"><table><tr><th>Asset</th><th>Role</th><th>Status</th></tr>
+  <tr><td>XAUT (Tether Gold)</td><td>initial intended asset</td><td><span class="st res">RESEARCH</span></td></tr>
+  <tr><td>PAXG (Paxos Gold)</td><td>possible later asset; reportedly not offered in the EU</td><td><span class="st gated">GATED UNTIL LEGAL / AVAILABILITY REVIEW</span></td></tr></table></div>
+ <div class="pre"><span class="c">SOST LOCKED</span>       → backs wSOST 1:1
+<span class="g">GOLD RESERVE V2</span>   → holds external gold assets
+                     these two statements are never mixed</div>
+ <h3>What the reserve means &mdash; and what it does not</h3>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#39ff14">ALLOWED WORDING</div>publicly verifiable reserve &middot; on-chain reserve &middot; rule-constrained reserve &middot; ecosystem reserve &middot; informational reserve ratio</div>
+  <div class="card"><div class="h" style="color:#ff3b3f">NEVER SAID</div>gold-backed SOST &middot; guaranteed backing &middot; peg &middot; price floor &middot; redeemable gold &middot; guaranteed value &middot; "$X guaranteed per SOST"</div>
+ </div>
+ <div class="pre">Gold Reserve V2          $250,000
+Circulating SOST         2,000,000
+Informational ratio      $250,000 / 2,000,000 = <span class="g">$0.125 of gold reserve per circulating SOST</span></div>
+ <div class="box red"><div class="bt">READ THIS</div><b>THIS IS NOT A REDEMPTION VALUE. THIS IS NOT A GUARANTEED FLOOR.</b> A SOST holder has no right to claim any of the gold.</div>
+ <div class="box gray"><div class="bt">ISSUER RISK</div>XAUT and PAXG are issued by companies that can freeze, upgrade or retire their tokens. "Perpetual" can only ever mean "under the reserve's own rules", which is why an emergency migration path exists.</div>
+</div></div></section>
+
+<section class="section" id="desk"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">FUTURE MODULE</div><h2 class="section-title">Gold &rarr; wSOST <span class="accent">desk</span></h2></div>
+ <span class="st nd">NOT LIVE</span> <span class="st gated">GATED OFF</span>
+ <div class="pre">Treasury holds            10,000 wSOST
+already backed by         10,000 native SOST locked
+
+A user contributes        XAUT worth $1,000
+Gold Reserve V2 receives  $1,000 of XAUT  (permanently)
+The user receives         EXISTING treasury wSOST at the applicable market / auction price
+
+Native SOST supply        <span class="k">unchanged</span>
+wSOST supply              <span class="k">unchanged</span>  — gold arriving does not mint wSOST</div>
+ <p>Pricing must eventually use a <b>transparent auction</b> or a <b>reliable liquid-market / TWAP methodology</b> &mdash; never an arbitrary permanent founder price. This is a sale, not a donation, so the module stays off until legal review and pricing gates pass.</p>
+</div></div></section>
+
+<section class="section" id="trust"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">TRUST MODEL</div><h2 class="section-title">How the bridge would be <span class="accent">secured</span></h2></div>
+ <div class="box red"><div class="bt">HONEST STARTING POINT</div>SOST mainnet does <b>not</b> have operational native multisig today (it exists only as library code). A fully trustless bridge would need Ethereum to verify ConvergenceX blocks, which is impractical in gas. So the bridge relies on attestations &mdash; and we say so.</div>
+ <div class="tw"><table><tr><th>Option</th><th>SOST side</th><th>Use</th></tr>
+  <tr><td><b>A &mdash; Capped operator bridge pilot</b></td><td>one cold single-key Bridge Vault (sost1), offline signing, hard exposure cap, public proof of reserves</td><td><span class="st res">TEMPORARY &middot; RESEARCH</span></td></tr>
+  <tr><td>B &mdash; custom threshold / MPC cryptography</td><td>key never assembled</td><td><span class="st ret">REJECTED FOR NOW</span></td></tr>
+  <tr><td><b>C &mdash; native SOST multisig</b></td><td>real M-of-N SOST outputs via a future, explicitly activated consensus upgrade</td><td><span class="st res">TARGET</span></td></tr></table></div>
+ <p>The pilot is called a <b>capped operator bridge pilot</b> &mdash; federated attestation plus a capped native vault. It is <b>not trustless and not decentralized</b>. The release path talks to a swappable signer interface, so moving from A to C does not redesign deposits, attestations or the Ethereum contract.</p>
+ <h3>Observers &mdash; the attestation network</h3>
+ <div class="pre">Stage-1 example: 3 observers · 2-of-3 threshold
+
+each observer checks independently:
+  correct SOST transaction ................ ✓
+  pays the Bridge Vault ................... ✓
+  amount .................................. ✓
+  Ethereum address from the capsule ....... ✓
+  confirmations / canonical block ......... ✓
+  deposit id (txid:vout) never minted ..... ✓
+→ signs an EIP-712 attestation (chain id, contract, version, nonce)
+→ wSOST contract mints only with ≥ 2 of 3 valid attestations</div>
+ <div class="box"><div class="bt">RELAYER ≠ SIGNER</div>Anyone may relay signatures to Ethereum; a relayer has no mint authority. During the pilot the observers are operator machines &mdash; a <b>2-of-3 operator quorum</b>, not independent parties.</div>
+ <h3>Confirmations</h3>
+ <p>SOST has observed real short reorganisations (one block replaced at #30,297). The provisional pilot value is <b>30 confirmations &asymp; 5 hours</b> at 10-minute blocks. <span class="st res">PROVISIONAL POLICY</span> &mdash; not a protocol constant; it will be recalibrated from measured network behaviour.</p>
+</div></div></section>
+
+<section class="section" id="por"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">TRANSPARENCY</div><h2 class="section-title">Proof of <span class="accent">reserves</span></h2></div>
+ <span class="st res">RESEARCH</span>
+ <div class="pre">CONFIRMED NATIVE DEPOSITS   PENDING DEPOSITS     MINTED wSOST
+BURNS                       PENDING RELEASES     COMPLETED RELEASES
+BRIDGE VAULT BALANCE        wSOST TOTAL SUPPLY   STATUS: BALANCED · PENDING · CRITICAL</div>
+ <p>The basic invariant is <code>wSOST.totalSupply ≤ confirmed native SOST backing</code>. That inequality is <b>necessary but not sufficient</b>: a deposit minted twice and a release paid twice can cancel out in the balance. So the indexer reconciles every deposit id, mint, burn and release separately. The SOST side is derived from the SOST chain; the Ethereum side from Ethereum; the browser is never the source of truth.</p>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#39ff14">HEALTHY</div><div class="pre" style="margin:0">500 SOST deposit
+→ waiting confirmations   PENDING
+→ 500 wSOST minted        BALANCED</div></div>
+  <div class="card"><div class="h" style="color:#ff3b3f">FAILURE</div><div class="pre" style="margin:0">100,000 SOST locked
+150,000 wSOST supply
+STATUS  CRITICAL
+ACTION  MINTING PAUSED</div></div>
+ </div>
+ <p>A failure is shown, never hidden. Transfers of existing wSOST continue while minting is paused.</p>
+</div></div></section>
+
+<section class="section" id="emergency"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">SAFETY</div><h2 class="section-title">Withdrawals &amp; <span class="accent">emergency powers</span></h2></div>
+ <span class="st res">RESEARCH</span>
+ <div class="box red"><div class="bt">NORMAL WITHDRAWALS: NOT ALLOWED</div>Gold Reserve V2 contains <b>no <code>withdraw(address)</code></b> and no equivalent unrestricted destination. The reserve can never go to a founder wallet, a guardian wallet, an arbitrary wallet, an exchange deposit or a treasury account.</div>
+ <div class="tw"><table><tr><th>Power</th><th>Who</th><th>Effect</th></tr>
+  <tr><td><b>PAUSE</b></td><td>2-of-5 guardians</td><td>stops relevant reserve operations. <b>Pause does not move gold.</b> Stolen pause keys can only stop the safe.</td></tr>
+  <tr><td><b>CRITICAL RESCUE</b></td><td>4-of-5 guardians, short timelock</td><td>Gold Reserve &rarr; the <b>predefined Quarantine Vault</b> only, which itself has no withdrawal. Temporary safe custody, not a final migration.</td></tr>
+  <tr><td><b>FINAL MIGRATION</b></td><td>all four keys at once (below)</td><td>moves assets only to the exact successor vault in the frozen proposal</td></tr>
+  <tr><td>Guardian recovery</td><td>6 months inactivity + public notice + long timelock</td><td>replaces guardians; cannot move assets</td></tr></table></div>
+ <h4>Critical rescue example</h4>
+ <div class="pre">XAUT issuer announces a critical freeze in 6 hours — no time for a 48-hour vote
+  4/5 guardians → CRITICAL RESCUE → <span class="g">Quarantine Vault</span> (fixed at deployment)
+  later, calmly: guardians + SOST vote → final successor vault
+never possible, even with 100% of signers:
+  <span class="r">→ founder wallet ✗   → exchange ✗   → sold for USDT ✗   → shared out to miners ✗</span></div>
+ <h3>Final migration &mdash; every key at the same time</h3>
+ <div class="pre">1. Guardians        4-of-5
+2. SOST governance  YES from at least 2/3 OF THE FULL ELIGIBLE CENSUS
+3. Timelock         completed
+4. Destination      only the exact successor Gold Reserve Vault in the frozen proposal
+If ANY one fails → <span class="r">NO MIGRATION</span></div>
+ <div class="tw"><table><tr><th>Guardians</th><th>SOST vote</th><th>Destination</th><th>Timelock</th><th>Result</th></tr>
+  <tr><td>4/5 ✓</td><td>8/12 ✓</td><td>approved successor ✓</td><td>done ✓</td><td><span class="st live">MIGRATES</span></td></tr>
+  <tr><td>5/5 ✓</td><td>7/12 ✗</td><td>approved successor ✓</td><td>&mdash;</td><td><span class="st nd">DOES NOT MOVE</span></td></tr>
+  <tr><td>4/5 ✓</td><td>10/12 ✓</td><td>personal wallet ✗</td><td>&mdash;</td><td><span class="st nd">DOES NOT MOVE</span></td></tr>
+  <tr><td>4/5 ✓</td><td>10/12 ✓</td><td>approved successor ✓</td><td>running ✗</td><td><span class="st gated">NOT YET</span></td></tr></table></div>
+ <div class="pre">contract surface (design):
+  NO   withdraw(address destination)              — does not exist
+  YES  pause()                                    — 2/5; moves nothing
+  YES  rescueToQuarantine(asset)                  — 4/5; fixed Quarantine Vault only
+  YES  migrate(asset, successorVault, proposalId) — registered successor, approved code hash,
+                                                    allowed gold asset, same restrictions,
+                                                    recorded SOST tally hash, timelock elapsed</div>
+</div></div></section>
+
+<section class="section" id="governance"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">GOVERNANCE</div><h2 class="section-title">The second key: <span class="accent">SOST participants</span></h2></div>
+ <span class="st res">RESEARCH</span> <span class="st res">PHASE A: ADVISORY</span>
+ <h3>The proposal is frozen before anyone votes</h3>
+ <div class="pre">PROPOSAL_ID          GRV2-004
+SOURCE_VAULT         GoldReserveVaultV2         SOURCE_ASSET      XAUT v1
+SUCCESSOR_VAULT      GoldReserveVaultV3         SUCCESSOR_ASSET   XAUT v2
+SUCCESSOR_CODE_HASH  0x1234…                    TIMELOCK          7 days
+SNAPSHOT_HEIGHT      #35,712                    VOTING_CLOSE      #36,000
+REASON               official XAUT protocol migration</div>
+ <p>Miners do not vote on "should we move the gold?" &mdash; they vote on one exact instruction. <b>If any material field changes, the old vote is invalid</b> and a new proposal and a new vote are required.</p>
+ <h3>Who can vote</h3>
+ <div class="tw"><table><tr><th>Check</th><th>Rule (frozen at the snapshot)</th></tr>
+  <tr><td>Mining identity</td><td>valid SbPoW mining identity with the required recent mining activity</td></tr>
+  <tr><td>NODE_BIND</td><td>active binding of that identity to a node key</td></tr>
+  <tr><td>Heartbeats</td><td>required heartbeat participation (the Jackpot V2 framework)</td></tr>
+  <tr><td>Snapshot</td><td>eligibility is fixed at SNAPSHOT_HEIGHT; a later NODE_BIND or later mining does not enter that proposal</td></tr>
+  <tr><td>Binding age</td><td>a minimum NODE_BIND age before the snapshot &mdash; value under research</td></tr></table></div>
+ <div class="box"><div class="bt">ONE IDENTITY = ONE VOTE</div>Governance is <b>not</b> weighted by PoW block count (the Jackpot is; governance is not), so a dominant miner cannot decide the reserve alone. NODE_BIND does not prove one unique human: this is <b>protocol-identity governance, not one-human-one-vote</b>.</div>
+</div></div></section>
+
+<section class="section" id="vote"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">ON-CHAIN</div><h2 class="section-title">How a vote is <span class="accent">cast and counted</span></h2></div>
+ <span class="st res">RESEARCH</span>
+ <div class="pre">sost-cli send &lt;identity&gt; 0.001 \
+  --from-address &lt;identity&gt; \
+  --capsule-mode open-note \
+  --capsule-text "SOSTGOV1|GRV2-004|S35712|YES"      <span class="d"># or NO / ABSTAIN</span></div>
+ <p>The vote is a normal SOST transaction from the eligible identity to itself, carrying the choice in a capsule (28 of the verified 80 bytes). Because it spends from that identity, <b>chain validation itself proves control of the private key</b> &mdash; no new message-signing tool is needed. The website <b>never</b> asks for a private key, seed phrase, wallet file or password, and it does not run a central poll: the votes are on the SOST blockchain, and anyone can recount them.</p>
+ <div class="tw"><table><tr><th>Rule</th><th>Exact definition</th></tr>
+  <tr><td>Valid vote</td><td>all inputs spend from the identity; the capsule output pays the same identity; text exactly <code>SOSTGOV1|&lt;proposal&gt;|S&lt;snapshot&gt;|YES|NO|ABSTAIN</code>; confirmed in (snapshot, close]</td></tr>
+  <tr><td>Changing a vote</td><td>allowed &mdash; the <b>last valid confirmed vote before VOTING_CLOSE</b> counts; earlier votes stay on chain</td></tr>
+  <tr><td>Approval</td><td><b>YES &ge; ceil(2/3 &times; TOTAL FIXED ELIGIBLE CENSUS)</b> &mdash; not 2/3 of those who voted</td></tr>
+  <tr><td>ABSTAIN</td><td>recorded as participation; never counts as YES</td></tr>
+  <tr><td>Finality</td><td>VOTING CLOSED &rarr; FINALITY PENDING &rarr; FINAL RESULT once the close block is buried by the governance finality depth</td></tr></table></div>
+ <div class="pre">Census 12  →  YES needed = ceil(12 × 2/3) = <span class="g">8</span>
+
+Case A   8 YES · 2 NO · 2 no vote     → <span class="k">APPROVED</span>
+Case B   7 YES · 0 NO · 5 no vote     → <span class="r">NOT APPROVED</span>  (100% of voters said YES — only 7 of 12)
+Case C   7 YES · 0 NO · 5 ABSTAIN     → <span class="r">NOT APPROVED</span>  (abstention is not YES)
+Change   #35,800 YES → #35,850 NO     → counted as <span class="r">NO</span>; both remain on chain</div>
+ <h3>Status panel &mdash; example</h3>
+ <span class="st ret">ILLUSTRATIVE EXAMPLE &middot; NO LIVE PROPOSAL EXISTS</span>
+ <div class="pre">PROPOSAL GRV2-004          STATUS     VOTING
+ELIGIBLE CENSUS   12       REQUIRED YES  8
+YES 8 · NO 2 · ABSTAIN 1 · NO VOTE 1     VOTE      PASSED
+GUARDIANS        4 / 5     TIMELOCK   4d 11h remaining
+SUCCESSOR        GoldReserveVaultV3      EXECUTION  WAITING</div>
+ <div class="box red"><div class="bt">WHAT THE VOTE IS NOT</div>SOST voting does not execute Ethereum state directly; guardians execute. If a sufficient guardian majority deliberately ignored a valid vote, the breach would be <b>publicly provable</b> from both chains, but SOST consensus cannot itself stop it. Security comes from four layers &mdash; <b>guardians, SOST vote, timelock and the contract's destination restrictions</b>. This is not trustless cross-chain governance.</div>
+ <h3>Advisory first, binding later</h3>
+ <div class="tw"><table><tr><th>Phase</th><th>Meaning</th></tr>
+  <tr><td><b>A &mdash; Advisory</b></td><td>votes run, are public and verifiable, but do not control a vault. The network is small today (very few eligible identities); calling that "the community" would not be honest.</td></tr>
+  <tr><td><b>B &mdash; Binding</b></td><td>only after an objective, persistent participation condition is met. <b>Maturity criteria under research</b> &mdash; no threshold is set without simulation. A UI existing does not make governance binding.</td></tr></table></div>
+</div></div></section>
+
+<section class="section" id="check"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">TRY IT</div><h2 class="section-title">Check my <span class="accent">voting eligibility</span></h2></div>
+ <span class="st res">PREVIEW</span>
+ <p>No proposal is open, so this checks your mining identity against the <b>current Jackpot V2 participation framework</b> &mdash; the base of the planned voter census &mdash; using the chain-derived participation index. Binding age is still under research.</p>
+ <div class="wg-in"><input id="wgAddr" placeholder="sost1… (your mining identity)" spellcheck="false" autocomplete="off"><button type="button" id="wgBtn">CHECK</button></div>
+ <div class="wg-res" id="wgRes"></div>
+ <p style="font-size:12.5px;color:#8b9aab">If a future wallet integration exists, it would build the vote transaction locally. This page never collects keys.</p>
+</div></div></section>
+
+<section class="section" id="h40000"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">#40,000</div><h2 class="section-title">Research horizon &mdash; <span class="accent">not an activation commitment</span></h2></div>
+ <div class="box cyan"><div class="bt">RESEARCH NOTICE</div><b>#30,000 builds the foundation. #40,000 is the current target research horizon for the next coordinated upgrade &mdash; not an activation commitment.</b> Nothing is scheduled until code, tests, external audit and a public announcement exist. If not ready, it moves later (for example #50,000). <b>Current consensus remains 50% miner / 50% DTD.</b></div>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#d7ff00">PILLAR 1 &middot; REWARD EVOLUTION</div>Research scenario: <b>80% direct PoW miner &middot; 15% normal DTD &middot; 5% into the existing DTD Jackpot pool</b>. The 5% is <b>not a direct node payment</b>: it accumulates in the Jackpot pool, paid under the applicable Jackpot eligibility rules. <b>No new supply</b> &mdash; all from existing block emission. <span class="st res">RESEARCH</span></div>
+  <div class="card"><div class="h" style="color:#d7ff00">PILLAR 2 &middot; DECENTRALIZATION</div>Peer persistence, independent seeds, address gossip, autonomous peer discovery; more independent nodes, operators, providers, jurisdictions and miners; no consensus dependency on sostcore.com infrastructure. Full decentralization is <b>not</b> claimed. <span class="st res">RESEARCH</span></div>
+  <div class="card"><div class="h" style="color:#d7ff00">PILLAR 3 &middot; ECONOMIC INFRASTRUCTURE</div>A mature native-asset framework and the SOST Asset Market: order book, price discovery, atomic settlement, deeper Asset Passport integration, economic-right descriptions and regulatory classification. Intended initial state: technically functional but <b>developer-gated</b>. <span class="st res">RESEARCH</span></div>
+ </div>
+ <div class="box gray"><div class="bt">NATIVE ASSETS TODAY</div>At #30,000 V30000 introduced the technical foundation for native assets in a restricted form: <span class="st gated">ADMIN / DEVELOPER GATED</span> <span class="st gated">FAIL-CLOSED</span> <span class="st nd">NOT PUBLICLY ACTIVATED</span> &mdash; no public activation date. The Asset Market is not live.</div>
+ <p>wSOST, Gold Reserve V2 and governance are part of this research horizon. Unlike the 80/15/5 scenario, they need <b>no SOST consensus change</b>: they would run on Ethereum and on existing SOST capsules, behind their own engineering, audit and legal gates.</p>
+</div></div></section>
+
+<section class="section" id="compare"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">CONTEXT</div><h2 class="section-title">Bitcoin &middot; Ethereum &middot; <span class="accent">SOST</span></h2></div>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#f7931a">BITCOIN</div><b>Consensus:</b> PoW (SHA-256d). <b>Incentive:</b> the miner/pool receives subsidy + fees. <b>Nodes:</b> validate every rule, unpaid. <b>Wrapped:</b> external wrapped-BTC products exist. <b>Gold reserve:</b> none at protocol level.</div>
+  <div class="card"><div class="h" style="color:#a5a6ff">ETHEREUM</div><b>Consensus:</b> PoS. <b>Participants:</b> validators stake ETH (32 ETH solo). <b>Execution:</b> smart contracts, ERC-20 tokens, DeFi.</div>
+  <div class="card"><div class="h" style="color:#ff3b3f">SOST</div><b>Consensus:</b> ConvergenceX PoW. <b>Block:</b> 50% direct miner / 50% normal DTD. <b>Also:</b> DTD Jackpot V2 with NODE_BIND + heartbeats; SOST-side atomic swap HTLC; <span class="st res">PLANNED</span> wSOST bridge and Gold Reserve V2.</div>
+ </div>
+ <div class="box"><div class="bt">SOST COMBINES WORK + PARTICIPATION INCENTIVES</div>No claim of superiority is made. <b>Nodes are a gate, not a multiplier:</b> the direct mining reward does not grow because a miner runs a node; normal DTD does not require NODE_BIND today; Jackpot V2 uses node participation as an eligibility condition, with weight set by real PoW blocks.</div>
+ <p><b>One Proof of Work, two control dials.</b> ConvergenceX defines the work of every attempt. <b>bitsQ</b> sets how rare a winning commit must be (every block; 288-block average; ±15 s dead band; steps 0.5% / 1% / 2% / &asymp;3.03%). The <b>Equalizer</b> sets how demanding each attempt is (43 profiles E7&hellip;B0&hellip;H35 from the schedule lag) and never changes bitsQ. Full rules: <a href="sost-technology.html#pow-control" style="color:#ffd166">Technology</a> &middot; comparison with examples: <a href="sost-technology.html#btc-eth-sost" style="color:#ffd166">SOST vs Bitcoin vs Ethereum</a>.</p>
+</div></div></section>
+
+<section class="section" id="acquire"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">HOW TO GET SOST</div><h2 class="section-title">Three ways &mdash; <span class="accent">plus wrapping</span></h2></div>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#39ff14">&#9874; 1 &middot; MINE IT</div>ConvergenceX on CPU + RAM; the finder receives 50% of the block reward. <span class="st live">LIVE</span></div>
+  <div class="card"><div class="h" style="color:#39ff14">&#127922; 2 &middot; EARN IT THROUGH DTD</div>Every block, the other 50% goes to one eligible recent miner; plus the Jackpot every 288 blocks. <span class="st live">LIVE</span></div>
+  <div class="card"><div class="h" style="color:#39ff14">&#9883; 3 &middot; SWAP FOR IT</div>Atomic swap: SOST-side HTLC consensus-active since #16,000. <span class="st live">SOST SIDE LIVE</span> EVM contract <span class="st cc">CODE COMPLETE</span> <span class="st nd">NOT DEPLOYED</span>. An atomic swap transfers existing SOST; it creates none.</div>
+ </div>
+ <div class="box gray"><div class="bt">WRAP IT &mdash; SOST &harr; wSOST</div><span class="st res">PLANNED</span> Wrapping is <b>not a fourth issuance source</b>: it moves existing SOST into a 1:1 representation on Ethereum.</div>
+</div></div></section>
+
+<section class="section" id="status"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">STATE</div><h2 class="section-title">Current / future <span class="accent">status matrix</span></h2></div>
+ <div class="tw"><table><tr><th>Item</th><th>State</th></tr>
+  <tr><td>Block reward 50% miner / 50% DTD</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>DTD Jackpot V2 (NODE_BIND + heartbeats)</td><td><span class="st live">LIVE</span></td></tr>
+  <tr><td>Gold Vault 25% / PoPC 25% emission</td><td><span class="st hist">HISTORICAL</span> (blocks 0&ndash;24,999)</td></tr>
+  <tr><td>Gold Vault + PoPC balances</td><td><span class="st live">FROZEN</span> &middot; fund the Jackpot</td></tr>
+  <tr><td>"Gold floor" / gold backing per SOST</td><td><span class="st ret">RETIRED DESIGN</span></td></tr>
+  <tr><td>Native multisig (sost3)</td><td><span class="st nd">NOT ACTIVE</span> &middot; library code only</td></tr>
+  <tr><td>SOST-side HTLC</td><td><span class="st live">LIVE</span> (consensus since #16,000)</td></tr>
+  <tr><td>EVM atomic-swap contract</td><td><span class="st cc">CODE COMPLETE</span> <span class="st nd">NOT DEPLOYED</span></td></tr>
+  <tr><td>BTC atomic-swap signing</td><td>lab-verified on a development branch &middot; <span class="st nd">DISABLED ON MAINNET</span></td></tr>
+  <tr><td>Native assets / Asset Market</td><td><span class="st gated">DEVELOPER GATED</span></td></tr>
+  <tr><td>wSOST bridge</td><td><span class="st res">RESEARCH</span> <span class="st nd">NOT DEPLOYED</span></td></tr>
+  <tr><td>Gold Reserve V2</td><td><span class="st res">RESEARCH</span> <span class="st nd">NOT DEPLOYED</span></td></tr>
+  <tr><td>Gold &rarr; wSOST desk</td><td><span class="st gated">GATED OFF</span></td></tr>
+  <tr><td>On-chain SOST governance</td><td><span class="st res">RESEARCH</span> &middot; advisory first</td></tr>
+  <tr><td>80 / 15 / 5 reward scenario</td><td><span class="st res">RESEARCH</span> &middot; would need a future hard fork</td></tr></table></div>
+ <div class="box red"><div class="bt">NO PRICE PROMISES</div>Nothing on this page is a price forecast, a guaranteed appreciation, a price floor, an investment return or a listing guarantee. Price-discovery mechanics are explained for education only. Full technical detail: <a href="sost-explorer.html" style="color:#ffd166">Explorer</a> &middot; <a href="whitepaper-reader.html#sec-research" style="color:#ffd166">Whitepaper &sect;3.16</a>.</div>
+</div></div></section>
+
+<script>
+(function(){
+  "use strict";
+  function rpc(m,p){ return fetch('/rpc/public',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({method:m,params:p||[],id:1})}).then(function(r){return r.json();}).then(function(j){return j.result;}); }
+  function fmt(x){ var n=Number(x); return isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:2}):'—'; }
+  var el=document.getElementById('wgLiveReserve');
+  rpc('getsupplyinfo').then(function(s){
+    if(!s||!el) return;
+    var gv=Number(s.gold_vault_balance), pp=Number(s.popc_pool_balance);
+    el.innerHTML='<span class="st live">LIVE · BLOCK #'+fmt(s.block_height)+'</span> Gold Vault <b>'+fmt(gv)+'</b> SOST · PoPC Pool <b>'+fmt(pp)+'</b> SOST · frozen Jackpot reserve <b>'+fmt(gv+pp)+'</b> SOST · circulating supply <b>'+fmt(s.circulating_supply)+'</b> SOST';
+  }).catch(function(){ if(el) el.textContent='Live reserve unavailable right now (public RPC).'; });
+
+  function row(k,ok,v){ var c=ok===true?'#39ff14':(ok===false?'#ff6b6b':'#fbbf24'); var t=ok===true?'PASS':(ok===false?'FAIL':'—'); return '<div class="row"><span>'+k+'</span><span style="color:'+c+'">'+t+(v?' · '+v:'')+'</span></div>'; }
+  function check(){
+    var a=(document.getElementById('wgAddr').value||'').trim(), out=document.getElementById('wgRes');
+    if(!/^sost1[0-9a-f]{40}$/i.test(a)){ out.innerHTML='<div style="color:#ff6b6b">Enter a valid sost1 address (sost1 + 40 hex characters).</div>'; return; }
+    out.innerHTML='Checking…';
+    fetch('api/node_participation.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(d){
+      var j=d&&d.jackpot; if(!j){ out.innerHTML='Participation index unavailable right now.'; return; }
+      var c=(j.candidates||[]).concat(j.lookup||[]).filter(function(x){return x.address===a;})[0];
+      var pow=c?c.pow_blocks||0:0, bound=c?!!c.node_bound:false, hb=c?c.heartbeats||0:0, hr=c?c.heartbeats_required||0:(j.heartbeat_required||0);
+      var okPow=pow>=(j.min_pow_blocks||3), okHb=bound&&hb>=hr, all=okPow&&bound&&okHb;
+      out.innerHTML=row('MINING ACTIVITY',okPow,pow+' SbPoW blocks / '+(j.pow_window||2016)+' (min '+(j.min_pow_blocks||3)+')')+
+        row('NODE_BIND',bound,bound?'active':'none on chain')+
+        row('HEARTBEATS',bound?okHb:false,hb+' / '+hr+' required for #'+fmt(j.height))+
+        row('SNAPSHOT',null,'no open proposal')+row('BINDING AGE',null,'rule under research')+
+        '<div style="margin-top:8px;font:800 13px ui-monospace,monospace;color:'+(all?'#39ff14':'#ff6b6b')+'">'+(all?'WOULD BE ELIGIBLE UNDER TODAY\'S PARTICIPATION RULES':'NOT ELIGIBLE UNDER TODAY\'S PARTICIPATION RULES')+'</div>'+
+        '<div style="font-size:12px;color:#8b9aab">Preview only: governance is not live and no vote can be cast yet. Index tip #'+fmt(d.tip)+'.</div>';
+    }).catch(function(){ out.innerHTML='Participation index unavailable right now.'; });
+  }
+  var b=document.getElementById('wgBtn'); if(b) b.addEventListener('click',check);
+  var i=document.getElementById('wgAddr'); if(i) i.addEventListener('keydown',function(e){ if(e.key==='Enter') check(); });
+})();
+</script>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p style="margin-bottom:8px;letter-spacing:4px;font-size:14px;color:var(--text-dim);">SOST</p>
+    <p>Sovereign Stock Token &middot; <a href="https://github.com/SOST-Protocol/sost-core" target="_blank" rel="noopener">GitHub</a> &middot; <a href="sost-whitepaper.html">Whitepaper</a> &middot; <a href="#">BTCTalk ANN</a></p>
+    <p style="margin-top:8px;">Genesis: 2026-03-15 18:00:00 UTC &middot; <span style="color:hsl(240,85%,65%)">C</span><span style="color:hsl(220,85%,60%)">o</span><span style="color:hsl(190,85%,55%)">n</span><span style="color:hsl(160,85%,50%)">v</span><span style="color:hsl(130,85%,50%)">e</span><span style="color:hsl(100,85%,50%)">r</span><span style="color:hsl(70,85%,50%)">g</span><span style="color:hsl(50,85%,50%)">e</span><span style="color:hsl(35,85%,50%)">n</span><span style="color:hsl(20,85%,50%)">c</span><span style="color:hsl(5,85%,45%)">e</span><span style="color:#fb010d">X</span> proof-of-work</p>
+    <p style="margin-top:4px;font-size:11px;color:var(--text-dim);">Open source. <a href="sost-license.html" style="color:inherit;">MIT License — fully open source</a></p>
+  </div>
+</footer>
+<script>
+// Self-download functionality
+</script>
+
+
+
+<script src="sost-search.js?v=v553"></script>
+<link rel="stylesheet" href="css/crt-effects.css?v=v392">
+<div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
+<script src="js/retro-sounds.js?v=v392"></script>
+<script src="js/sost-pwa-install.js?v=v392"></script>
+<script src="js/crt-effects.js?v=v392"></script>
+<script src="js/developer-note.js?v=v393" defer></script>
+<script src="js/v16-jackpot-notice.js?v=v530" defer></script>
+<script src="js/sost-music.js?v=v392"></script>
+
+<!-- ============== BEACON — ADVISORY NOTICE CHANNEL (V13) ============== -->
+<section class="section" style="border-top:1px solid var(--border-dim)">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">// BEACON</div>
+      <h2 class="section-title">Beacon &mdash; <span class="accent">Advisory Channel</span></h2>
+      <p class="section-sub">Signed operator notices, propagated between nodes. <b>Advisory only.</b> Does not affect mining rewards, block validity, chain selection, transaction validation, wallet balances, PoPC, Gold Vault, or consensus.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
+      <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:20px">
+        <h3 style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:10px">Phase II-A &mdash; local notices</h3>
+        <p style="color:var(--text-secondary);font-size:13px;line-height:1.65">Each node reads <code>notices.json</code> on startup. ECDSA-SHA256 signature verification against a hardcoded operator pubkey. Failure modes (bad signature, wrong network, expired, malformed) are silent drops. Active at <b>V13_HEIGHT (12,000)</b>.</p>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:20px">
+        <h3 style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:10px">Phase II-B &mdash; threshold + revocation</h3>
+        <p style="color:var(--text-secondary);font-size:13px;line-height:1.65">Adds N-of-M threshold signatures (default <b>3-of-5</b>), revocation by notice ID (only threshold-signed notices can revoke), and an optional <code>mirror_url</code> metadata field (never fetched by the node). Active at <b>V13_HEIGHT</b>.</p>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:6px;padding:20px">
+        <h3 style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:10px">Phase III &mdash; P2P gossip</h3>
+        <p style="color:var(--text-secondary);font-size:13px;line-height:1.65">Nodes gossip verified notices via a <code>BCNN</code> dispatcher with hard limits: <b>4&nbsp;KB</b> max notice, <b>32-notice LRU</b> dedup cache, <b>8 notices/peer/min</b> rate limit. Bad-signature notices are silently dropped; oversized/malformed/rate-limit hits earn peer misbehavior. Active at <b>V13_HEIGHT</b>.</p>
+      </div>
+    </div>
+
+    <p style="color:var(--text-dim);font-size:12px;line-height:1.7;margin-top:24px">
+      <b>Hard invariant.</b> No Beacon code path links into block validation, mining validity, or chain commit. Beacon
+      cannot reject, invalidate, or affect the canonical chain. Rollback is a single-line constant revert
+      (<code>BEACON_P2P_ACTIVATION_HEIGHT</code> to <code>INT64_MAX</code> in <code>include/sost/params.h</code>).
+    </p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ -->
+<!-- SOST Watch films (2026-10 rebuild, 1920x1080, H.264 / AAC; music Scott Buckley, CC BY 4.0) -->
+<!-- ════════════════════════════════════════════════════════════ -->
+<div id="sv-modal" class="sv-modal" aria-hidden="true" onclick="closeSv(event)">
+  <div class="sv-content" onclick="event.stopPropagation()">
+    <button class="sv-close" type="button" onclick="closeSv(null,true)" aria-label="Close">&times;</button>
+    <!-- STEP 1 — chooser -->
+    <div id="sv-chooser" class="sv-chooser">
+      <div class="sv-ch-title">&#9654; CHOOSE A VIDEO</div>
+      <div class="sv-cards">
+        <button class="sv-card sv-card-sost" type="button"
+          onclick="pickSv('sost-intro.mp4?v=20261011b','SOST in 3 Minutes &middot; protocol, mining &amp; tokenization')">
+          <span class="sv-thumb" style="background-image:url('sost-intro-poster.jpg?v=20261011b')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST in 3 Minutes</span>
+          <span class="sv-card-s">Protocol, mining &amp; tokenization</span>
+        </button>
+        <button class="sv-card sv-card-mech" type="button"
+          onclick="pickSv('sost-mechanisms.mp4?v=20261011c','SOST Mechanisms &middot; Atomic Swap, DTD &amp; DTD Jackpot')">
+          <span class="sv-thumb" style="background-image:url('sost-mechanisms-poster.jpg?v=20261011')"><span class="sv-play">&#9654;</span></span>
+          <span class="sv-card-h">SOST Mechanisms</span>
+          <span class="sv-card-s">Atomic Swap, DTD &amp; DTD Jackpot &middot; how the three mechanisms work</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — player -->
+    <div id="sv-player" class="sv-player" style="display:none">
+      <video id="sv-video" class="sv-video" controls preload="metadata" playsinline>
+        <source id="sv-source" src="" type="video/mp4">
+        Your browser does not support HTML5 video.
+      </video>
+      <div class="sv-caption" id="sv-caption"></div>
+      <button class="sv-back" type="button" onclick="backSv()">&larr;&nbsp; Choose another video</button>
+    </div>
+  </div>
+</div>
+<style>
+  .sv-modal{
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,.975); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    align-items:center; justify-content:center;
+  }
+  .sv-modal.open{ display:flex; }
+  .sv-content{ position:relative; max-width:92vw; max-height:88vh;
+    display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .sv-video{ max-width:92vw; max-height:80vh; background:#000;
+    border-radius:10px; box-shadow:0 0 60px rgba(251,1,13,.18); outline:none; }
+  .sv-close{
+    position:absolute; top:-46px; right:-2px;
+    background:rgba(0,0,0,.8); border:1px solid rgba(255,255,255,.22);
+    color:#fff; width:38px; height:38px; border-radius:50%;
+    font-size:22px; line-height:1; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sv-close:hover{ background:rgba(251,1,13,.4); border-color:#fb010d; }
+  .sv-caption{ text-align:center; font-size:11px; letter-spacing:3px;
+    color:#94a3b8; font-family:'JetBrains Mono','IBM Plex Mono',monospace;
+    text-transform:uppercase; }
+  .sv-player{ flex-direction:column; gap:14px; align-items:center; }
+  /* chooser */
+  .sv-ch-title{ text-align:center; font-size:12px; letter-spacing:4px; color:#22d3ee;
+    font-family:'JetBrains Mono','IBM Plex Mono',monospace; text-transform:uppercase; margin-bottom:6px; }
+  .sv-cards{ display:flex; gap:22px; flex-wrap:wrap; justify-content:center; max-width:92vw; }
+  /* A single film must look chosen, not like a card went missing: the chooser widens and
+     the heading says how many there are. */
+  .sv-cards .sv-card:only-child{width:560px;max-width:76vw}
+  .sv-cards .sv-card:only-child .sv-thumb{aspect-ratio:16/9}
+
+  .sv-card{ width:340px; max-width:42vw; min-width:240px; background:linear-gradient(160deg,#0a1117,#0c1620);
+    border:1px solid rgba(34,211,238,.30); border-radius:14px; padding:0 0 16px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:stretch; overflow:hidden; text-align:left;
+    transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+  .sv-card:hover{ transform:translateY(-4px); }
+  .sv-card-sost:hover{ border-color:#22d3ee; box-shadow:0 0 26px rgba(34,211,238,.35); }
+  .sv-card-gea{ border-color:rgba(0,255,65,.30); }
+  .sv-card-gea:hover{ border-color:#00ff41; box-shadow:0 0 26px rgba(0,255,65,.30); }
+  .sv-thumb{ position:relative; width:100%; aspect-ratio:16/9; background:#000 center/cover no-repeat;
+    display:flex; align-items:center; justify-content:center; }
+  .sv-play{ width:58px; height:58px; border-radius:50%; background:rgba(0,0,0,.55);
+    border:2px solid rgba(255,255,255,.85); color:#fff; font-size:22px;
+    display:flex; align-items:center; justify-content:center; padding-left:4px; transition:transform .18s ease; }
+  .sv-card:hover .sv-play{ transform:scale(1.12); }
+  .sv-card-h{ font-size:18px; font-weight:800; color:#e5e7eb; margin:14px 16px 2px;
+    font-family:'Inter',system-ui,sans-serif; }
+  .sv-card-s{ font-size:12.5px; color:#94a3b8; margin:0 16px; font-family:'Inter',system-ui,sans-serif; }
+  .sv-back{ background:transparent; border:1px solid rgba(255,255,255,.22); color:#cbd5e1;
+    border-radius:8px; padding:7px 14px; font-size:12px; cursor:pointer; letter-spacing:1px; }
+  .sv-back:hover{ border-color:#22d3ee; color:#22d3ee; }
+  @media(max-width:560px){ .sv-card{ max-width:88vw; } .sv-cards{ gap:14px; } }
+  /* HIDE NAV (sost_nav_collapsed) also hides this WATCH button */
+  body.nav-collapsed nav a[onclick="openSv()"]{ display:none !important; }
+</style>
+<script>
+  function openSv(){
+    var m=document.getElementById('sv-modal');
+    m.classList.add('open'); m.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    backSv();  // always start on the chooser
+  }
+  function pickSv(src,cap){
+    document.getElementById('sv-chooser').style.display='none';
+    document.getElementById('sv-player').style.display='flex';
+    document.getElementById('sv-caption').innerHTML=cap;
+    var v=document.getElementById('sv-video'), s=document.getElementById('sv-source');
+    s.setAttribute('src',src); v.load();
+    try{ v.currentTime=0; v.play().catch(function(){}); }catch(e){}
+  }
+  function backSv(){
+    var v=document.getElementById('sv-video');
+    try{ v.pause(); }catch(e){}
+    document.getElementById('sv-player').style.display='none';
+    document.getElementById('sv-chooser').style.display='block';
+  }
+  function closeSv(evt, force){
+    if(evt && !force && evt.target.id!=='sv-modal') return;
+    var m=document.getElementById('sv-modal');
+    m.classList.remove('open'); m.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    var v=document.getElementById('sv-video');
+    try{ v.pause(); }catch(e){}
+  }
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') closeSv(null,true);
+  });
+</script>
+</body></html>

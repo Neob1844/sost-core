@@ -785,3 +785,60 @@
   else mountCounter();
   setTimeout(mountCounter,600); setTimeout(mountCounter,1600);
 })();
+
+/* ============================================================================
+   wSOST & GOLD VAULT — large circular nav module (research roadmap page).
+   Sits between ATOMIC SWAP DEX and NEWS & UPDATES in the large-button row of every
+   page that has one (Explorer included). Circular by design: the emblem is the SOST
+   Sigma inside a single red ring ("wrapped"). Links to sost-wsost-gold-vault.html.
+   Research page only — no consensus, bridge or wallet involvement.
+   ========================================================================== */
+(function(){
+  "use strict";
+  var IMG='assets/wsost/wsost-gold-vault-256.webp?v=v553', IMG_PNG='assets/wsost/wsost-gold-vault-256.png?v=v553';
+  function styleOnce(){
+    if(document.getElementById('sost-wsost-btn-style')) return;
+    var st=document.createElement('style'); st.id='sost-wsost-btn-style';
+    st.textContent=[
+      'a.sost-wsost-btn{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:50%;',
+      'text-decoration:none;-webkit-tap-highlight-color:transparent;transition:transform .15s ease;line-height:0}',
+      'a.sost-wsost-btn img{display:block;width:100%;height:100%;object-fit:contain;border-radius:50%;',
+      'animation:wsostGlow 3.4s ease-in-out infinite}',
+      '@keyframes wsostGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(255,30,40,.55)) drop-shadow(0 0 14px rgba(255,30,40,.3))}',
+      '50%{filter:drop-shadow(0 0 16px rgba(255,30,40,.95)) drop-shadow(0 0 34px rgba(255,30,40,.55)) drop-shadow(0 0 4px rgba(255,209,102,.5))}}',
+      'a.sost-wsost-btn:hover{transform:translateY(-1px) scale(1.03)}',
+      'a.sost-wsost-btn:focus-visible{outline:2px solid #ffd166;outline-offset:3px}',
+      '@media(prefers-reduced-motion:reduce){a.sost-wsost-btn img{animation:none;filter:drop-shadow(0 0 12px rgba(255,30,40,.8))}}',
+      'body.nav-collapsed nav a.sost-wsost-btn{display:none !important}'
+    ].join('');
+    (document.head||document.documentElement).appendChild(st);
+  }
+  function inject(){
+    var nav=document.querySelector('nav'); if(!nav) return;
+    if(nav.querySelector('a.sost-wsost-btn')) return;
+    var ax=nav.querySelector('a.atomix-btn')||nav.querySelector('a[style*="asBtnGlow"]')||nav.querySelector('a[href="sost-dex.html"]');
+    if(!ax) return;                                         // no large-button row on this page
+    styleOnce();
+    var sz=ax.offsetWidth; if(!sz||sz<60) sz=110;
+    var a=document.createElement('a');
+    a.href='sost-wsost-gold-vault.html'; a.className='sost-wsost-btn';
+    a.title='wSOST & Gold Vault — bridge, Gold Reserve V2 and governance (research roadmap, not live)';
+    a.setAttribute('aria-label','wSOST & Gold Vault');
+    a.style.width=sz+'px'; a.style.height=sz+'px'; a.style.minWidth=sz+'px';
+    var pic=document.createElement('picture');
+    pic.innerHTML='<source srcset="'+IMG+'" type="image/webp">';
+    var img=document.createElement('img'); img.src=IMG_PNG; img.alt='wSOST & Gold Vault'; img.width=sz; img.height=sz;
+    pic.appendChild(img); a.appendChild(pic);
+    pic.style.cssText='display:block;width:100%;height:100%';
+    // Before NEWS & UPDATES (or its square wrapper); otherwise right after ATOMIC SWAP DEX.
+    var news=nav.querySelector('.sost-news-btn')||nav.querySelector('a[href="news.html"]');
+    var newsBox=news&&news.parentElement&&news.parentElement.classList.contains('sq-wrap')?news.parentElement:news;
+    var axBox=ax.parentElement&&ax.parentElement.classList.contains('sq-wrap')?ax.parentElement:ax;
+    if(newsBox&&newsBox.parentNode===axBox.parentNode) newsBox.parentNode.insertBefore(a,newsBox);
+    else axBox.parentNode.insertBefore(a,axBox.nextSibling);
+  }
+  function run(){ inject(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run,{once:true});
+  else run();
+  setTimeout(run,0); setTimeout(run,450); setTimeout(run,1300);
+})();

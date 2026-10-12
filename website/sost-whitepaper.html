@@ -645,7 +645,7 @@
 </style>
 
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v537" defer></script>
+<script src="js/nav-toggle.js?v=v553" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
@@ -1462,6 +1462,45 @@ Creating nodes adds nothing. Doing work does.</div>
   </div>
 </section>
 
+<section class="section" id="research-horizon">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">RESEARCH HORIZON #40,000</div>
+      <h2 class="section-title">wSOST, Gold Reserve V2 <span class="accent">&amp; governance</span></h2>
+    </div>
+<div class="cx3" id="research-wsost-grv2">
+<div class="cx-t" style="color:#22d3ee">RESEARCH / DESIGN &middot; NOT DEPLOYED &middot; NO CONSENSUS CHANGE</div>
+<h3>wSOST, Gold Reserve V2 and on-chain governance (#40,000 research horizon)</h3>
+<p>Designed, not deployed: no bridge, no Ethereum contract and no Gold Reserve V2 funds exist, and current consensus (50% miner / 50% DTD) is unchanged. #40,000 is a research horizon, <b>not an activation commitment</b>. Full public explanation: <a href="sost-wsost-gold-vault.html" style="color:#ffd166">wSOST &amp; Gold Vault</a>.</p>
+<h4>Three invariants</h4>
+<div class="cx-pre">1 wSOST = 1 native SOST locked in the Bridge Vault      (only wSOST is ever burned)
+Gold never mints wSOST                                   (Gold Reserve V2 is a separate reserve)
+Native SOST is never burned</div>
+<h4>Five accounts, never combined</h4>
+<div class="cx-pre">1 native SOST · 2 bridge-locked SOST · 3 wSOST (= box 2) · 4 Gold Reserve V2 (XAUT; PAXG gated)
+5 historical Gold Vault + PoPC (frozen since #25,000, committed to the DTD Jackpot)</div>
+<h4>Bridge trust model</h4>
+<p>Native multisig is not active on mainnet, so the pilot would be a <b>capped operator bridge</b>: one cold single-key Bridge Vault (sost1) with a hard exposure cap and offline signing, deposits carrying the Ethereum recipient in a capsule (<code>WSOST:0x…</code>), 2-of-3 EIP-712 observer attestations (an operator quorum, not decentralized), 30 confirmations as a provisional policy (a 1-block reorg was observed at #30,297), and full proof-of-reserves reconciliation (BALANCED / PENDING / CRITICAL; <code>totalSupply ≤ backing</code> is necessary but not sufficient). Target: a future native multisig consensus upgrade.</p>
+<h4>Gold Reserve V2 powers</h4>
+<div class="cx-pre">withdraw(address)                         does not exist
+pause                     2-of-5          moves nothing
+critical rescue           4-of-5          only to the predefined Quarantine Vault
+final migration           4-of-5 guardians + YES ≥ ceil(2/3 × full eligible census)
+                          + timelock + exact successor vault named in the frozen proposal</div>
+<h4>Governance constitution</h4>
+<div class="cx-pre">census     eligible identities at the snapshot (mining + NODE_BIND + heartbeats); one identity = one vote
+vote       self-transfer from the identity with capsule  SOSTGOV1|&lt;proposal&gt;|S&lt;snapshot&gt;|YES|NO|ABSTAIN
+           (28 of 80 bytes); last valid vote confirmed before the close counts
+approval   YES ≥ ceil(2/3 × TOTAL census) — not of those who voted; ABSTAIN is never YES
+example    census 12 → 8 YES needed · 8/2/2 approved · 7 YES + 5 no vote → not approved
+finality   result final only after the close block is buried
+phase      advisory first; binding only after objective maturity criteria (under research)</div>
+<p style="font-size:12.5px;color:#8b9aab">SOST votes do not execute Ethereum state: guardians do. Ignoring a valid vote would be publicly provable, not technically impossible &mdash; hence four layers: guardians, vote, timelock and destination-restricted contract. The Gold &rarr; wSOST desk (selling existing treasury wSOST for XAUT at auction/TWAP prices) is designed and gated off. Wording never used: gold-backed, peg, floor, redeemable.</p>
+</div>
+
+  </div>
+</section>
+
 <section class="section" id="sec-positioning">
   <div class="container pos-section">
     <div class="section-header">
@@ -1730,7 +1769,7 @@ document.querySelectorAll('.dl-btn[data-download]').forEach(function(btn) {
 });
 </script>
 
-<script src="sost-search.js?v=v392"></script>
+<script src="sost-search.js?v=v553"></script>
 <link rel="stylesheet" href="css/crt-effects.css?v=v392">
 <div id="nesMuteBtn" onclick="nesToggleMute()" title="NES chiptune — click to mute" style="position:fixed;bottom:12px;right:12px;z-index:9999;cursor:pointer;font-size:20px;background:rgba(0,0,0,0.6);border:1px solid #333;border-radius:6px;padding:4px 8px;opacity:0.7;transition:opacity 0.3s">&#127918;</div>
 <script src="js/retro-sounds.js?v=v392"></script>
