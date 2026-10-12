@@ -3,7 +3,8 @@ src = "src"
 out = "out"
 test = "test"
 libs = ["../atomic-swap/lib"]
-remappings = ["forge-std/=../atomic-swap/lib/forge-std/src/"]
+remappings = ["forge-std/=../atomic-swap/lib/forge-std/src/", "atomic-swap/=../atomic-swap/src/"]
+allow_paths = ["../atomic-swap"]
 solc = "0.8.24"
 optimizer = true
 optimizer_runs = 200
