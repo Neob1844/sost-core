@@ -284,6 +284,28 @@ def example_bind_in_epoch1():
                                          "eligible": False, "weight": 0}, b, eps, A + L + 10, rows[0]["height"])}
 
 
+def heartbeat_rule():
+    """Steady-state heartbeat rule after the one-time bootstrap ramp, with generic rolling-window examples.
+    Every PASS/FAIL below is computed with the same HB_REQUIRED / HB_WINDOW the draws use (illustrative
+    histories, not real candidates)."""
+    labels = "ABCDEFGH"
+
+    def windows(hist, steps):
+        out = []
+        for k in range(steps):
+            w = hist[k:k + HB_WINDOW]
+            have = sum(w)
+            out.append({"epochs": [{"label": labels[k + i], "confirmed": bool(v)} for i, v in enumerate(w)],
+                        "have": have, "required": HB_REQUIRED, "window": HB_WINDOW, "pass": have >= HB_REQUIRED})
+        return out
+    ramp = ramp_table()
+    return {"required": HB_REQUIRED, "window": HB_WINDOW, "epoch_length": L,
+            "permanent_from": ramp[-1]["height"], "bootstrap": ramp,
+            "rolling": windows([1, 1, 0, 1, 1], 2),
+            "one_missed": windows([1, 1, 0, 1], 1)[0], "two_missed": windows([1, 0, 0, 1], 1)[0],
+            "recovery": windows([1, 0, 0, 1, 1, 1], 3)}
+
+
 def atomic_write(path, text, mode=0o644):
     d = os.path.dirname(os.path.abspath(path))
     os.makedirs(d, exist_ok=True)
@@ -459,7 +481,7 @@ class Indexer:
                        "eligible_count": self.audit.get("eligible_count"), "total_weight": tw,
                        "current_pot_stocks": self.audit.get("current_pot_stocks"), "candidates": cands, "lookup": others,
                        "ramp": ramp_table(), "calendar": [{"epoch": e, "range": epoch_range(e)} for e in range(0, max(5, cur_ep + 2))],
-                       "example": example_bind_in_epoch1(),
+                       "example": example_bind_in_epoch1(), "heartbeat_rule": heartbeat_rule(),
                        "source": "getjackpotv2audit(#%d) read at tip #%d; eligibility verdict = the node's" % (J, tip)}
         return {"schema": SCHEMA, "updated_at": int(time.time()), "tip": tip,
                 "tip_hash": self.rows[-1][1] if self.rows else None,

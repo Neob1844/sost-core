@@ -248,6 +248,15 @@ class T(unittest.TestCase):
         self.assertEqual([(d["height"], d["eligible_by_heartbeats"]) for d in ex["draws"]],
                          [(30474, False), (30762, False), (31050, False), (31338, True)])
 
+    def test_heartbeat_rule_examples(self):
+        r = npi.heartbeat_rule()
+        self.assertEqual((r["required"], r["window"], r["permanent_from"]), (3, 4, 31338))
+        self.assertEqual([w["pass"] for w in r["rolling"]], [True, True])
+        self.assertEqual([e["label"] for e in r["rolling"][1]["epochs"]], ["B", "C", "D", "E"])
+        self.assertEqual((r["one_missed"]["have"], r["one_missed"]["pass"]), (3, True))
+        self.assertEqual((r["two_missed"]["have"], r["two_missed"]["pass"]), (2, False))
+        self.assertEqual([(w["have"], w["pass"]) for w in r["recovery"]], [(2, False), (2, False), (3, True)])
+
     def test_state_roundtrip(self):
         c = FakeChain(npi.A)
         c.add([bind_hex(pub(1), pub(2), 1)])
