@@ -5,21 +5,27 @@
  * onclick) from ever firing while public access is disabled. Action controls
  * are also set disabled, and a blocking veil covers the operation panel.
  *
- * Flags (public OFF by default; developer access allowed):
+ * Flags (public OFF):
  *     DEX_PUBLIC_ENABLED          = false
  *     TOKENIZATION_PUBLIC_ENABLED = false
  * NO insecure bypass: there is deliberately NO ?dev=1 / localStorage / query-string
  * developer unlock. This JS layer is a NOTICE + soft execution block only — it is NOT
- * an access-control mechanism. ACCESS is controlled server-side (nginx admin auth,
- * deploy/nginx-tokenization-auth.conf) and AUTHORITY is enforced at consensus by the
- * admin protocol gate (S14, docs/v30000/ADMIN_CONSENSUS_GATE.md). Admin operations are
- * performed via the CLI with the admin key, never through this unauthenticated UI path.
+ * an access-control mechanism and NOT consensus security.
  *
- * The notice reflects the REAL state and auto-switches on chain height:
- *   height < 30000  OR not mainnet-validated ->  pre-activation copy
- *   height >= 30000 AND MAINNET_VALIDATED     ->  LIVE copy
- * MAINNET_VALIDATED stays false until #30000 has activated AND mainnet is
- * validated by hand — technical availability is never claimed early.
+ * MAINNET STATE: Native Assets / Tokenization are DEFERRED on SOST mainnet. The
+ * implementation exists in the production source, but mainnet consensus keeps it
+ * fail-closed (NATIVE_ASSETS_ACTIVATION_HEIGHT = INT64_MAX in include/sost/params.h):
+ * every native-asset transaction and output type is rejected. They did NOT activate at
+ * block #30,000 and are NOT live at protocol level. Any future activation needs a new,
+ * explicitly coordinated and audited hard-fork height. The protection is consensus.
+ * Server-side access control, where it exists, covers specific admin dashboard pages
+ * only; the public pages that may load this script are NOT behind server-side auth.
+ *
+ * HISTORICAL (obsolete, kept for context): the V30000 plan activated assets at #30,000
+ * and switched this notice to a "LIVE" copy at that height; deploy/nginx-tokenization-auth.conf
+ * described a basic-auth lock on the public pages. Neither is the deployed state — the
+ * 2026-10-08 emergency release deferred mainnet assets. Both height branches below now
+ * show the deferred copy.
  *
  * Per-page config (set BEFORE this script):
  *   window.__SOST_GATE_CFG__ = {
@@ -44,20 +50,26 @@
   }
   function blocked() { return !publicEnabled(); }  // no JS bypass; access=nginx auth, authority=consensus S14
 
+  var DEFERRED_LINES = ['PUBLIC ACCESS RESTRICTED',
+    'NATIVE ASSETS / TOKENIZATION: DEFERRED ON MAINNET',
+    'NOT LIVE AT PROTOCOL LEVEL \u2014 MAINNET CONSENSUS REJECTS ASSET TRANSACTIONS',
+    'FUTURE ACTIVATION REQUIRES A NEW AUDITED HARD FORK',
+    'DEX / TOKENIZATION PUBLIC ACTIVATION GATED',
+    'RESEARCH / TEST NETWORKS ONLY'];
+
   function noticeLines(height) {
+    // Unreachable while both public flags are false (they only change in a future audited release).
     if (publicEnabled()) {
       return ['LIVE AT PROTOCOL LEVEL', 'PUBLIC ACCESS ENABLED',
               'EXPERIMENTAL \u2014 USE AT YOUR OWN RISK',
               'SUBJECT TO APPLICABLE REGULATORY REQUIREMENTS / AUTHORISATIONS WHERE REQUIRED'];
     }
+    // Historical height switch (V30000 plan). Mainnet assets were deferred, so both branches
+    // show the same deferred copy; #30,000 is NOT an activation.
     if (height != null && height >= ACTIVATION_HEIGHT) {
-      return ['LIVE AT PROTOCOL LEVEL', 'MAINNET \u2014 CONTROLLED DEVELOPER ACCESS',
-              'PUBLIC ACCESS RESTRICTED', 'EXPERIMENTAL / MAINNET VALIDATION IN PROGRESS',
-              'PENDING REGULATORY READINESS'];
+      return DEFERRED_LINES.slice();
     }
-    return ['IMPLEMENTED & VALIDATED', 'ACTIVATES AT BLOCK #30,000', 'NOT YET ACTIVE ON MAINNET',
-            'PUBLIC ACCESS RESTRICTED', 'CONTROLLED DEVELOPER ACCESS', 'EXPERIMENTAL PROTOCOL',
-            'PENDING MAINNET VALIDATION AND REGULATORY READINESS'];
+    return DEFERRED_LINES.slice();
   }
 
   var ACTIONS = (CFG.actionSelectors && CFG.actionSelectors.length)
@@ -100,10 +112,10 @@
       '<div class="sost-gate-tags">' + lines.map(function (l) { return '<span>' + l + '</span>'; }).join('') + devNote + '</div>' +
       (CFG.modalities ? '<div class="sost-gate-foot">Modalities: ' + CFG.modalities.join(' · ') + '</div>' : '') +
       '<div class="sost-gate-foot"><b>Technical availability does not constitute regulatory authorization.</b><br>' +
-      'The DEX and Tokenization systems are technically operational at protocol level but remain restricted to ' +
-      'controlled developer use while SOST completes mainnet validation, security testing and assessment of the ' +
-      'regulatory requirements applicable to offering these services publicly. Public access will remain disabled ' +
-      'until SOST determines that the required technical, security and applicable regulatory conditions have been satisfied.' +
+      'Native Assets remain deferred on SOST mainnet. The implementation exists in the production source, but mainnet ' +
+      'consensus keeps it fail-closed: native-asset transaction and output types are rejected. Public activation ' +
+      'requires a future, explicitly coordinated and audited hard fork. DEX / Tokenization public access remains ' +
+      'disabled. This notice is an interface gate only; it is not a security mechanism.' +
       (blocked() ? '' : '') +
       '</div>';
     return b;
@@ -147,9 +159,9 @@
     if (!m) {
       m = document.createElement('div'); m.id = 'sostGateModal'; m.className = 'sost-gate-modal';
       m.innerHTML = '<div class="box"><h3>Public access restricted</h3>' +
-        '<p>This operation is <b>implemented and devnet-validated</b> but <b>not yet live on mainnet</b> ' +
-        '(activates at block #30,000). Public execution is disabled pending regulatory readiness. ' +
-        'Access is limited to developer / controlled testing.<br><br>' +
+        '<p>Native Assets / Tokenization are <b>deferred on SOST mainnet</b> and <b>not live at protocol level</b>: ' +
+        'mainnet consensus rejects native-asset transactions. Activation would require a future audited hard fork. ' +
+        'Public execution is disabled; this page is for research and test networks only.<br><br>' +
         'Technical availability does not constitute regulatory authorization.</p>' +
         '<button type="button">Understood</button></div>';
       document.body.appendChild(m);
