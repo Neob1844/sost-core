@@ -38,6 +38,7 @@
 #include "sost/atomic_swap.h"          // atomic_swap_htlc_active_at (block-path HTLC tx gate, V15)
 #include "sost/emission.h"
 #include "sost/pow/casert.h"
+#include "sost/casert_meta_window.h"
 #include "sost/subsidy.h"
 #include "sost/merkle.h"
 #include "sost/serialize.h"
@@ -1075,9 +1076,10 @@ static std::string handle_getblockhash(const std::string& id, const std::vector<
 // g_chain_mu for seconds on every getinfo / getblocktemplate / getblock poll and
 // starved all other RPC. Caller must hold g_chain_mu. NOT a consensus change.
 static std::vector<BlockMeta> build_casert_meta(size_t end_exclusive) {
-    constexpr size_t CASERT_META_WINDOW = 512;   // > 288 window + margin; proven identical
     if (end_exclusive > g_blocks.size()) end_exclusive = g_blocks.size();
-    size_t start = (end_exclusive > CASERT_META_WINDOW) ? (end_exclusive - CASERT_META_WINDOW) : 0;
+    // 512-block window only on the V6++ rule; pre-V6++ heights need the chain
+    // from genesis (see sost/casert_meta_window.h). Identical at mainnet tip.
+    size_t start = sost::casert_meta_window_start(end_exclusive);
     std::vector<BlockMeta> meta; meta.reserve(end_exclusive - start);
     for (size_t i = start; i < end_exclusive; ++i) {
         const auto& b = g_blocks[i];
