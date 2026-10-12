@@ -820,7 +820,7 @@
     if(!ax) return;                                         // no large-button row on this page
     styleOnce();
     var sz=ax.offsetWidth; if(!sz||sz<60) sz=110;
-    sz=Math.round(sz*1.2);                                  // 20% larger than the sibling modules (owner request)
+    sz=Math.round(sz*1.2*0.93);                             // +20% then -7% vs the sibling modules (owner request)
     var a=document.createElement('a');
     a.href='sost-wsost-gold-vault.html'; a.className='sost-wsost-btn';
     a.title='wSOST & Gold Vault — bridge, Gold Reserve V2 and governance (research roadmap, not live)';
