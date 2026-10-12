@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-12-v555-explorer-callout">
+<meta name="explorer-html-version" content="2026-10-12-v556-dtd-winners">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -861,7 +861,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </a>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-12-v555-explorer-callout';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-12-v556-dtd-winners';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1154,6 +1154,128 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
   </div>
   <div id="pdNote" style="font-size:10px;color:var(--text3);margin-top:10px">Share of blocks by producer address. The donut appears once the explorer's block scan finishes.</div>
 </div>
+
+<!-- ===== DTD WINNERS DISTRIBUTION: normal DTD + DTD Jackpot V2 (observability card) ===== -->
+<div class="section" id="dtdWinnersSection">
+  <div class="sec-head"><div class="sec-title">// <b>DTD WINNERS DISTRIBUTION</b></div><div class="sec-meta">Who received normal DTD and DTD Jackpot V2 payouts</div></div>
+  <div class="dwz-grid">
+    <div class="dwz-col">
+      <div class="dwz-h" style="color:#22d3ee">NORMAL DTD &middot; every block</div>
+      <div class="dwz-ctl" data-kind="dtd"></div>
+      <div class="dwz-donut"><canvas id="dwzDtd" width="220" height="220"></canvas><div class="dwz-empty" id="dwzDtdEmpty">Loading DTD<br>payouts&hellip;</div></div>
+      <div class="dwz-met" id="dwzDtdMet"></div>
+      <div style="overflow-x:auto"><table class="tbl dwz-t"><thead><tr><th>#</th><th>WINNER</th><th>WINS</th><th>SOST</th><th>SHARE</th><th>LAST</th></tr></thead><tbody id="dwzDtdBody"></tbody></table></div>
+    </div>
+    <div class="dwz-col">
+      <div class="dwz-h" style="color:#ffd166">DTD JACKPOT V2 &middot; every 288 blocks</div>
+      <div class="dwz-ctl" data-kind="jp"></div>
+      <div class="dwz-donut"><canvas id="dwzJp" width="220" height="220"></canvas><div class="dwz-empty" id="dwzJpEmpty">Loading jackpot<br>draws&hellip;</div></div>
+      <div class="dwz-met" id="dwzJpMet"></div>
+      <div style="overflow-x:auto"><table class="tbl dwz-t"><thead><tr><th>#</th><th>WINNER</th><th>WINS</th><th>SOST</th><th>SHARE</th><th>LAST</th></tr></thead><tbody id="dwzJpBody"></tbody></table></div>
+    </div>
+  </div>
+  <div style="font-size:10px;color:var(--text3);margin-top:10px">Periods are block-count proxies (48h = 288 blocks, 3D = 432, 1W = 1,008, 1M = 4,320, 3M = 12,960; All = everything recorded). Normal DTD: one draw per block, uniform among eligible recent miners. Jackpot V2 (from #30,000): one draw every 288 blocks, weighted by PoW blocks, NODE_BIND + heartbeats required; a draw with no eligible miner rolls over (shown grey). Read from the canonical chain.</div>
+</div>
+<style>
+.dwz-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px}
+.dwz-col{min-width:0}
+.dwz-h{font:800 11px var(--font-mono,ui-monospace,monospace);letter-spacing:1.2px;margin-bottom:6px}
+.dwz-ctl{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.dwz-ctl button{background:transparent;border:1px solid #2a2a2a;color:#9aa6b2;border-radius:5px;padding:4px 10px;font:11px 'Fira Code',monospace;cursor:pointer}
+.dwz-ctl button.on{background:rgba(34,211,238,.15);color:#22d3ee;border-color:#22d3ee}
+.dwz-donut{position:relative;width:220px;height:220px;margin:0 auto 10px;max-width:100%}
+.dwz-donut canvas{max-width:100%;height:auto}
+.dwz-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:var(--text3);line-height:1.6}
+.dwz-met{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin-bottom:10px}
+.dwz-t{width:100%;font-size:12px}
+</style>
+<script>
+(function(){
+  "use strict";
+  var PER=[{k:'48h',l:'48h',n:288},{k:'3d',l:'3D',n:432},{k:'1w',l:'1W',n:1008},{k:'1m',l:'1M',n:4320},{k:'3m',l:'3M',n:12960},{k:'all',l:'All',n:0}];
+  var V2H=30000, JP_FIRST=25290, CAD=288, V2FIRST=30186;
+  var st={dtd:'48h',jp:'all'}, jpCache={};
+  var PAL=['#22d3ee','#ffd166','#39ff14','#c084fc','#fb7185','#60a5fa','#f59e0b','#4ade80','#e879f9','#94a3b8'];
+  function col(a,i){ return (a&&window.sostProducerColor)?window.sostProducerColor(a,54):PAL[i%PAL.length]; }
+  function short(a){ return a?(a.slice(0,10)+'…'+a.slice(-4)):'?'; }
+  function sost(st_){ return (st_/1e8).toLocaleString('en-US',{maximumFractionDigits:2}); }
+  var snap=null;
+  function payouts(){ var w=window._dtdPayouts; if(w&&w.length&&window._dtdTip&&(!snap||window._dtdTip>=snap.h)) return w; return snap?snap.p:null; }
+  function tip(){ if(window._dtdPayouts&&window._dtdTip&&(!snap||window._dtdTip>=snap.h)) return window._dtdTip; return snap?snap.h:(window._dtdTip||0); }
+  function loadSnap(){
+    return fetch('/api/dtd_history_acc.json?t='+Math.floor(Date.now()/60000),{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+      if(j&&typeof j.scannedHeight==='number'&&j.ph2&&j.ph2.payouts) snap={h:j.scannedHeight,p:j.ph2.payouts};
+    }).catch(function(){});
+  }
+  function donut(id,segs,total,label){
+    var cv=document.getElementById(id); if(!cv||!cv.getContext) return; var x=cv.getContext('2d');
+    var W=cv.width,cx=W/2,cy=W/2,rO=W/2-6,rI=rO*0.58,a=-Math.PI/2; x.clearRect(0,0,W,W);
+    segs.forEach(function(s){ var b=a+2*Math.PI*(s.n/total); x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,rO,a,b);x.closePath();x.fillStyle=s.c;x.fill(); a=b; });
+    x.beginPath();x.arc(cx,cy,rI,0,2*Math.PI);x.fillStyle='#05070a';x.fill();
+    x.fillStyle='#e6edf3';x.textAlign='center';x.font='bold 19px "Fira Code",monospace';x.fillText(String(total),cx,cy-1);
+    x.fillStyle='#7a8794';x.font='9px "Fira Code",monospace';x.fillText(label,cx,cy+13);
+  }
+  function empty(id,html){ var e=document.getElementById(id); if(e){ e.innerHTML=html; e.style.display=html?'flex':'none'; } }
+  function controls(kind,render){
+    var c=document.querySelector('.dwz-ctl[data-kind="'+kind+'"]'); if(!c) return;
+    c.innerHTML=PER.map(function(p){ return '<button type="button" data-k="'+p.k+'" class="'+(p.k===st[kind]?'on':'')+'">'+p.l+'</button>'; }).join('');
+    Array.prototype.forEach.call(c.querySelectorAll('button'),function(b){ b.onclick=function(){ st[kind]=b.getAttribute('data-k'); controls(kind,render); render(); }; });
+  }
+  function nFor(k){ for(var i=0;i<PER.length;i++) if(PER[i].k===k) return PER[i].n; return 0; }
+  function table(id,rows,totalWins){
+    var tb=document.getElementById(id); if(!tb) return;
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="6" style="color:var(--text3)">No winners in this period.</td></tr>'; return; }
+    tb.innerHTML=rows.slice(0,15).map(function(r,i){
+      return '<tr><td>'+(i+1)+'</td><td style="font-family:monospace"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px;vertical-align:middle;background:'+col(r.a,i)+'"></span>'+
+        '<span onclick="showAddress(\''+r.a+'\')" style="color:#22d3ee;cursor:pointer;text-decoration:underline">'+short(r.a)+'</span></td><td>'+r.n+'</td><td>'+sost(r.s)+'</td><td>'+(100*r.n/totalWins).toFixed(1)+'%</td><td>#'+r.last.toLocaleString('en-US')+'</td></tr>';
+    }).join('');
+  }
+  function met(id,items){ var m=document.getElementById(id); if(m) m.innerHTML=items.map(function(it){ return '<div><div style="color:var(--text3);font-size:10px">'+it[0]+'</div><div style="font-weight:600;color:'+(it[2]||'#e6edf3')+'">'+it[1]+'</div></div>'; }).join(''); }
+  function agg(list){ var by={}; list.forEach(function(p){ var r=by[p.addr]||(by[p.addr]={a:p.addr,n:0,s:0,last:0}); r.n++; r.s+=p.amt||0; r.last=Math.max(r.last,p.h); }); return Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return b.n-a.n||b.s-a.s;}); }
+
+  function renderDtd(){
+    var pays=payouts(), t=tip();
+    if(!pays||!pays.length||!t){ empty('dwzDtdEmpty','Loading DTD<br>payouts&hellip;'); return; }
+    var n=nFor(st.dtd), list=n?pays.filter(function(p){return p.h>t-n;}):pays;
+    if(!list.length){ empty('dwzDtdEmpty','No DTD payouts<br>in this period'); table('dwzDtdBody',[],1); met('dwzDtdMet',[]); var cv=document.getElementById('dwzDtd'); if(cv) cv.getContext('2d').clearRect(0,0,cv.width,cv.height); return; }
+    empty('dwzDtdEmpty','');
+    var rows=agg(list), tot=list.length, top=rows.slice(0,10), other=rows.slice(10).reduce(function(s,r){return s+r.n;},0);
+    var segs=top.map(function(r,i){return {n:r.n,c:col(r.a,i)};}); if(other) segs.push({n:other,c:'#334155'});
+    donut('dwzDtd',segs,tot,'PAYOUTS');
+    var paid=list.reduce(function(s,p){return s+(p.amt||0);},0);
+    met('dwzDtdMet',[['PAYOUTS',tot.toLocaleString('en-US')],['UNIQUE WINNERS',String(rows.length)],['TOP 1',(100*rows[0].n/tot).toFixed(1)+'%',rows[0].n/tot>0.5?'#fb010d':'#22d3ee'],['PAID',sost(paid)+' SOST','#39ff14']]);
+    table('dwzDtdBody',rows,tot);
+  }
+
+  function v2Heights(t,n){ var hs=[]; for(var h=V2FIRST; h<=t; h+=CAD){ if(!n||h>t-n) hs.push(h); } return hs; }
+  function renderJp(){
+    var t=tip(); if(!t){ empty('dwzJpEmpty','Loading jackpot<br>draws&hellip;'); return; }
+    var hs=v2Heights(t,nFor(st.jp));
+    if(!hs.length){ empty('dwzJpEmpty','No Jackpot V2 draw<br>in this period'); table('dwzJpBody',[],1); met('dwzJpMet',[['DRAWS','0']]); var cv=document.getElementById('dwzJp'); if(cv) cv.getContext('2d').clearRect(0,0,cv.width,cv.height); return; }
+    var need=hs.filter(function(h){return !jpCache[h];});
+    if(need.length && window.SJP && typeof window.SJP.gatherDraw==='function'){
+      empty('dwzJpEmpty','Reading '+need.length+' draw'+(need.length>1?'s':'')+'&hellip;');
+      Promise.all(need.map(function(h){ return window.SJP.gatherDraw(h).then(function(o){ jpCache[h]=o||{h:h}; }).catch(function(){ jpCache[h]={h:h,err:true}; }); })).then(renderJp);
+      return;
+    }
+    var draws=hs.map(function(h){return jpCache[h]||{h:h};});
+    var won=draws.filter(function(o){return o.winner;}).map(function(o){ return {h:o.h,addr:o.winner,amt:(typeof o.amount==='number'?o.amount:parseFloat(o.amount||0))*1e8}; });
+    var rolled=draws.filter(function(o){return !o.winner;}).length;
+    var rows=agg(won);
+    var segs=rows.slice(0,10).map(function(r,i){return {n:r.n,c:col(r.a,i)};}); if(rolled) segs.push({n:rolled,c:'#3a3f4b'});
+    empty('dwzJpEmpty','');
+    donut('dwzJp',segs,draws.length,'DRAWS');
+    var paid=won.reduce(function(s,p){return s+p.amt;},0);
+    met('dwzJpMet',[['DRAWS',String(draws.length)],['WITH WINNER',String(won.length),'#39ff14'],['ROLLED OVER',String(rolled),rolled?'#f5b301':'#e6edf3'],['PAID',sost(paid)+' SOST','#ffd166']]);
+    if(!rows.length){ var tb=document.getElementById('dwzJpBody'); if(tb) tb.innerHTML='<tr><td colspan="6" style="color:var(--text3)">No Jackpot V2 winner yet in this period ('+rolled+' draw'+(rolled!==1?'s':'')+' rolled over: nobody met NODE_BIND + heartbeats + PoW).</td></tr>'; }
+    else table('dwzJpBody',rows,won.length);
+  }
+  window.renderDtdWinners=function(){ controls('dtd',renderDtd); controls('jp',renderJp); renderDtd(); renderJp(); };
+  function boot(){ controls('dtd',renderDtd); controls('jp',renderJp); loadSnap().then(function(){ renderDtd(); setTimeout(renderJp,3000); }); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true}); else boot();
+  setInterval(function(){ if(!document.hidden) loadSnap().then(function(){ renderDtd(); renderJp(); }); },300000);
+})();
+</script>
 
 <!-- CHART 1: Block Production — Real vs Expected -->
 <div class="diff-bar-wrap" id="chartProdWrap">
@@ -3184,6 +3306,7 @@ async function _renderDTDHistory(body,title,silent){
     try{ _drawDtdCharts(ph2,rows,cooldownSet,height); }catch(e){console.warn('[dtd] chart render failed',e);}
     // Expose producer data (read-only) for the Block Producers Distribution card.
     try{ window._producerRows=rows; window._recentBlocks=recentBlocks; window._phase2Start=PHASE2_START; if(window.renderProducerDist) window.renderProducerDist(); }catch(ePD){}
+    try{ window._dtdTip=height; if(window.renderDtdWinners) window.renderDtdWinners(); }catch(eDW){}
     _dtdCache={height:height,rows:rows,totalSubsidy:totalSubsidy,totalMiner:totalMiner,totalGold:totalGold,totalPopc:totalPopc,totalLottery:totalLottery,pending:pending};
     // Cache lottery wins per address so showAddress can display 'DTD LOTTERY RECEIVED'
     // without re-scanning the chain. Only addresses with a non-zero dtdWonStocks are stored.
@@ -3420,7 +3543,7 @@ function openDetail(){
   var p=document.getElementById('detailPanel');
   p.style.display='';
   p.classList.add('show');
-  var hide=['dashboard','diff-bar-wrap','sparkline-wrap','stats','producerDistSection','goldVaultPulse','blocksSection','txSection','mpSection','priceChartsRow'];
+  var hide=['dashboard','diff-bar-wrap','sparkline-wrap','stats','producerDistSection','dtdWinnersSection','goldVaultPulse','blocksSection','txSection','mpSection','priceChartsRow'];
   for(var i=0;i<hide.length;i++){
     var els=document.querySelectorAll('#'+hide[i]+', .'+hide[i]);
     for(var j=0;j<els.length;j++) els[j].style.display='none';
@@ -3429,7 +3552,7 @@ function openDetail(){
 function hideDetail(){
   var p=document.getElementById('detailPanel');
   p.classList.remove('show');p.style.display='none';
-  var show=['dashboard','diff-bar-wrap','sparkline-wrap','stats','producerDistSection','goldVaultPulse','blocksSection','txSection','mpSection','priceChartsRow'];
+  var show=['dashboard','diff-bar-wrap','sparkline-wrap','stats','producerDistSection','dtdWinnersSection','goldVaultPulse','blocksSection','txSection','mpSection','priceChartsRow'];
   for(var i=0;i<show.length;i++){
     var els=document.querySelectorAll('#'+show[i]+', .'+show[i]);
     for(var j=0;j<els.length;j++) els[j].style.display='';

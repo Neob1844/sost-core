@@ -774,7 +774,7 @@
  <div class="wg-not"><div>&#9940; NOT LIVE</div><div>&#9940; NO MAINNET BRIDGE DEPLOYED</div><div>&#9940; NO GOLD RESERVE V2 FUNDS YET</div><div>&#9989; CURRENT SOST CONSENSUS UNCHANGED</div></div>
  <div class="box cyan"><div class="bt">#30,000 &rarr; #40,000</div><b>#30,000 built the current foundation</b> (V30000 is live). <b>#40,000 is the current coordinated research horizon</b> for the next major phase. <b>Nothing activates automatically at #40,000.</b> If engineering, external audit, legal or operational gates are not complete, the work moves later (for example #50,000). Every consensus change would need its own release, tests, audit and public notice.</div>
  <div class="wg-toc">
-  <a href="#what">wSOST</a><a href="#why-wsost">Why wSOST / native SOST</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#desk">Gold &rarr; wSOST desk</a><a href="#trust">Bridge trust</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
+  <a href="#what">wSOST</a><a href="#why-wsost">Why wSOST / native SOST</a><a href="#how-to-wrap">How to wrap / gas</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#desk">Gold &rarr; wSOST desk</a><a href="#trust">Bridge trust</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
  </div>
 </div></div></section>
 
@@ -889,6 +889,68 @@ existing treasury wSOST  →  user
 without creating new native SOST, without creating unbacked wSOST,
 and without touching the historical Jackpot reserve.</div>
  <p>That gives the Genesis reserve philosophy a practical modern infrastructure &mdash; <b>SOST L1 + the wSOST access layer + an external tokenized-gold reserve</b> &mdash; while every accounting layer stays separate. <span class="st gated">GATED OFF</span></p>
+</div></div></section>
+
+<section class="section" id="how-to-wrap"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">USER GUIDE (DESIGN)</div><h2 class="section-title">How wrapping would feel &mdash; <span class="accent">wallets, gas and exchanges</span></h2></div>
+ <span class="st res">RESEARCH</span> <span class="st nd">NOT DEPLOYED</span>
+ <p>Nothing below can be done today. It describes how the planned bridge is designed to work from the user's side.</p>
+ <h3>1 &middot; SOST &rarr; wSOST (wrap)</h3>
+ <p>John holds <b>1,000 SOST</b> and wants 400 of them as wSOST. On the bridge page he enters the amount and an Ethereum address that will receive the wSOST:</p>
+ <div class="pre">Amount               400 SOST
+Ethereum destination 0x1234…   (MetaMask, Rabby, a hardware wallet or any EVM wallet)</div>
+ <p>His SOST wallet sends an ordinary SOST transaction to the Bridge Vault; the transaction carries his Ethereum address in a capsule. The 400 SOST are <b>locked, not destroyed</b>.</p>
+ <div class="pre">JOHN'S SOST WALLET ──400 SOST──▶ BRIDGE VAULT (SOST chain)        capsule: 0x1234…
+
+after 30 SOST confirmations (provisional), the observers check:
+  400 SOST arrived ..................... ✓
+  to the correct Bridge Vault .......... ✓
+  Ethereum address is valid ............ ✓
+  this deposit was never used before ... ✓
+2 of 3 observers sign  →  a relayer submits  →  Ethereum mints
+
+Bridge Vault   400 SOST locked
+John's wallet  400 wSOST</div>
+ <h3>Do I need MetaMask?</h3>
+ <p>Not specifically &mdash; but you need <b>an Ethereum address</b> if you want to hold the wSOST yourself. MetaMask, Rabby, a compatible hardware wallet or any other EVM wallet works. MetaMask is a convenience, not part of the protocol.</p>
+ <h3>Do I need ETH for gas?</h3>
+ <div class="tw"><table>
+  <tr><th>Action</th><th>Who pays what</th></tr>
+  <tr><td><b>Wrap</b> (SOST &rarr; wSOST)</td><td>You pay only the normal <b>SOST fee</b>. The design has the bridge relayer pay the Ethereum gas for the mint, so you need <b>no ETH</b> to wrap.</td></tr>
+  <tr><td>Send wSOST, use a DEX, add liquidity</td><td>You need a little <b>ETH for gas</b> in your Ethereum wallet. ETH is not backing and does not buy SOST; it only pays Ethereum to run the transaction.</td></tr>
+  <tr><td><b>Unwrap</b> (wSOST &rarr; SOST)</td><td>Normally a little <b>ETH for gas</b> for the burn on Ethereum. Gas sponsorship could make this easier later.</td></tr>
+ </table></div>
+ <h3>2 &middot; wSOST &rarr; SOST (unwrap)</h3>
+ <div class="pre">UNWRAP   200 wSOST   →   destination sost1abc…
+
+Ethereum   200 wSOST burned (you pay the gas)
+           ↓ observers confirm the burn
+SOST       the Bridge Vault releases 200 SOST (minus a small published fee allowance) to sost1abc…
+
+John keeps  200 wSOST  +  200 SOST back in his SOST wallet</div>
+ <h3>A complete example</h3>
+ <div class="pre">John starts with 1,000 SOST and wraps 500:
+   500 SOST stay native  ·  500 SOST locked  ·  500 wSOST in his Ethereum wallet
+He sells 100 wSOST on a DEX:
+   500 SOST native  ·  400 wSOST  ·  plus whatever the 100 wSOST sold for
+The 400 remaining wSOST are still backed by 400 locked SOST.</div>
+ <h3>If an exchange lists wSOST</h3>
+ <p>An exchange that supports the wSOST ERC-20 does not have to integrate the SOST chain first. A user could even put <b>the exchange's own wSOST deposit address</b> as the Ethereum destination when wrapping, so the wSOST land directly in the exchange account &mdash; saving one Ethereum transaction. <b>Only do that if the exchange explicitly supports wSOST deposits</b>; tokens sent to an address that does not credit them can be lost.</p>
+ <p>Trading inside an exchange (for example USDT &harr; wSOST) needs no MetaMask and no ETH: the exchange runs its own infrastructure. Ethereum only matters when you withdraw wSOST to your own wallet or use contracts directly.</p>
+ <div class="pre">             SOST MAINNET
+                  │ 400 SOST
+                  ▼
+            BRIDGE VAULT
+                  │ 30 confirmations · 2-of-3 observers
+                  ▼
+              ETHEREUM  ──▶  400 wSOST
+       ┌──────────┼──────────┐
+       ▼          ▼          ▼
+  Ethereum       DEX        CEX
+   wallet
+
+back:  wSOST → burn on Ethereum → observers → Bridge Vault → native SOST</div>
+ <div class="box"><div class="bt">IN ONE SENTENCE</div>To wrap SOST into wSOST you would not need ETH: you send SOST to the bridge and the relayer pays for the mint. Once wSOST sits in your own Ethereum wallet, moving it, using a DEX or unwrapping normally needs a small amount of ETH for gas.</div>
 </div></div></section>
 
 <section class="section" id="price"><div class="container"><div class="wg">
