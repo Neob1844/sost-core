@@ -430,7 +430,7 @@
           <tr>
             <td style="padding:10px 12px;color:var(--text-primary);font-family:var(--font-mono);">coinbase_split</td>
             <td style="padding:10px 12px;font-family:var(--font-mono);color:var(--yellow-primary);">50 / 25 / 25</td>
-            <td style="padding:10px 12px;">Immutable distribution: 392,550,433 to miner (50%), 196,275,215 to Gold Funding Vault (25%), 196,275,215 to PoPC Pool (25%). Enforced by consensus rules CB4–CB7.</td>
+            <td style="padding:10px 12px;">Genesis-era distribution: 392,550,433 to miner (50%), 196,275,215 to Gold Funding Vault (25%), 196,275,215 to PoPC Pool (25%). This rule applied to blocks 0&ndash;24,999; since block 25,000 (V15) the split is 50% miner / 50% DTD.</td>
           </tr>
         </tbody>
       </table>
@@ -494,7 +494,7 @@ grep -n ADDR_POPC_POOL include/sost/params.h</span></li>
 
     <div class="text-block fade-in delay-1">
       <p>The genesis block is the cryptographic anchor of the entire SOST. Every block that follows must be compatible with it. The constitutional addresses, emission schedule, coinbase split, and consensus parameters are all committed at this moment. No entity — including SOST — can alter these values after genesis.</p>
-      <p>There is no premine. Block 0 rewards are split identically to every subsequent block: 50% miner, 25% Gold Funding Vault, 25% PoPC Pool. The founder receives mining rewards only by running a miner, competing equally with every other participant.</p>
+      <p>There is no premine. Block 0 rewards were split like every block up to #24,999: 50% miner, 25% Gold Funding Vault, 25% PoPC Pool (since #25,000: 50% miner / 50% DTD). The founder receives mining rewards only by running a miner, competing equally with every other participant.</p>
     </div>
   </div>
 </section>

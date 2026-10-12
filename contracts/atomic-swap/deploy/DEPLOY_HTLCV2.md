@@ -2,7 +2,7 @@
 
 The v2 HTLC (weird-ERC20-safe: USDT no-return, PAXG fee-on-transfer balance-delta + slippage) is LAB
 VERIFIED (14 tests; full suite 71/71) but **NOT deployed**. Deploying spends gas and is an explicit owner
-action. v1 stays deployed and untouched.
+action. v1 was never deployed either (corrected 2026-10-12: no EVM HTLC contract is deployed on any network; all addresses are null).
 
 ## Facts
 - contract: `contracts/atomic-swap/src/AtomicSwapHTLCv2.sol`, solc 0.8.24, optimizer runs 200

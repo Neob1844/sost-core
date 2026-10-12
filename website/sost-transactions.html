@@ -20,19 +20,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Transactions — P2PKH, Multisig P2SH, RBF, CPFP Fee Market</title>
-<meta name="description" content="SOST transaction types: P2PKH transfers, P2SH multisig (sost3 addresses), Replace-by-Fee (RBF), Child-Pays-for-Parent (CPFP). Dynamic fee market with constitutional split.">
+<meta name="description" content="SOST transaction types: P2PKH transfers, Replace-by-Fee (RBF), Child-Pays-for-Parent (CPFP). Dynamic fee market with constitutional split.">
 <meta name="keywords" content="SOST transactions, P2PKH, multisig, P2SH, RBF, CPFP, fee market, sost3, UTXO, transaction types">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SOST Transactions — P2PKH, Multisig P2SH, RBF, CPFP">
-<meta property="og:description" content="SOST transaction types: P2PKH transfers, P2SH multisig (sost3 addresses), Replace-by-Fee (RBF), Child-Pays-for-Parent (CPFP). Dynamic fee market with constitutional split.">
+<meta property="og:description" content="SOST transaction types: P2PKH transfers, Replace-by-Fee (RBF), Child-Pays-for-Parent (CPFP). Dynamic fee market with constitutional split.">
 <meta property="og:url" content="https://sostcore.com/sost-transactions.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST Transactions — P2PKH, Multisig P2SH, RBF, CPFP">
-<meta name="twitter:description" content="SOST transaction types: P2PKH transfers, P2SH multisig (sost3 addresses), Replace-by-Fee (RBF), Child-Pays-for-Parent (CPFP). Dynamic fee market with constitutional split.">
+<meta name="twitter:description" content="SOST transaction types: P2PKH transfers, Replace-by-Fee (RBF), Child-Pays-for-Parent (CPFP). Dynamic fee market with constitutional split.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1412,11 +1412,11 @@ curl -s -u "$RPC_USER:$RPC_PASS" \
     <div class="mode-grid fade-in delay-1">
       <div class="mode-card">
         <div class="mode-name">
-          <span class="indicator" style="background:var(--green-primary)"></span>
-          Multisig (M-of-N)
+          <span class="indicator" style="background:var(--red-primary)"></span>
+          Multisig (M-of-N) &mdash; NOT AVAILABLE
         </div>
         <div class="mode-params">
-          <span>Supported today via the OUT_MULTISIG output type &mdash; M-of-N spends without full scripting.</span>
+          <span>Not active on mainnet. Multisig/P2SH exists only as library code with unit tests; the network accepts single-key sost1 spends only. A future native multisig would be a new, explicitly activated consensus upgrade.</span>
         </div>
       </div>
       <div class="mode-card">
@@ -1572,7 +1572,7 @@ TPS           &asymp;  TX_per_block / target_block_spacing</pre><p class="spec-d
 </footer>
 <script>
 // Self-download functionality
-document.getElementById('downloadPageBtn').addEventListener('click', function(e) {
+(document.getElementById('downloadPageBtn')||{addEventListener:function(){}}).addEventListener('click', function(e) {
   e.preventDefault();
   const html = document.documentElement.outerHTML;
   const blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html' });
@@ -1604,7 +1604,7 @@ document.getElementById('downloadPageBtn').addEventListener('click', function(e)
 (function(){
 var D={
 'P2PKH':'<b>P2PKH</b> — Pay-to-Public-Key-Hash. The standard SOST transaction type. Sends funds to a 20-byte hash of the recipient\'s public key. Spending requires a valid ECDSA signature.',
-'P2SH':'<b>P2SH</b> — Pay-to-Script-Hash. Sends SOST to the hash of a spending script (e.g., multisig redeemScript). Conditions are revealed only when spending. Addresses start with sost3.',
+'P2SH':'<b>P2SH</b> — Pay-to-Script-Hash. Sends SOST to the hash of a spending script (e.g., multisig redeemScript). Conditions are revealed only when spending. Addresses would start with sost3. NOT active on SOST mainnet (library code only).',
 'BOND_LOCK':'<b>BOND_LOCK (0x10)</b> — Locks SOST as a time-locked collateral bond. Slashed only on a consensus-defined bond failure.',
 'ESCROW_LOCK':'<b>ESCROW_LOCK (0x11)</b> — Time-locked escrow output type with a designated beneficiary (lock_until + beneficiary_pkh).',
 'Capsule':'<b>Capsule Protocol v1</b> — Binary metadata in transaction outputs. 12-byte header + up to 243-byte body. On-chain attestation and proof-of-discovery. Activates at block 5000.',
@@ -1612,9 +1612,9 @@ var D={
 'CPFP':'<b>Child-Pays-for-Parent</b> — A child transaction pays enough fees to make both itself and its stuck parent attractive to miners.',
 'fee rate':'<b>Fee Rate</b> — Fee per byte in stocks/byte. Minimum relay: 1 stock/byte (dynamic after block 10,000 — scales with mempool pressure). Integer arithmetic only.',
 'UTXO':'<b>UTXO</b> — Unspent Transaction Output. Each coin is an unspent output from a previous transaction.',
-'multisig':'<b>Multisig</b> — M-of-N signatures required. Treasury protection via 2-of-3 setup. Max 15 keys.',
+'multisig':'<b>Multisig</b> — M-of-N signatures required (max 15 keys). NOT active on SOST mainnet today: library code only.',
 'sost1':'<b>sost1...</b> — Standard P2PKH address (single-signature).',
-'sost3':'<b>sost3...</b> — P2SH address (script-based, typically multisig).',
+'sost3':'<b>sost3...</b> — reserved P2SH address format (script-based, typically multisig). Not accepted on mainnet today.',
 'LOW-S':'<b>LOW-S</b> — Signature malleability prevention. S value must be in lower half of curve order.'
 };
 var panel=null;

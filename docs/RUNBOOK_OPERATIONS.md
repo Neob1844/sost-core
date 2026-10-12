@@ -161,7 +161,9 @@ sudo systemctl restart sost-node
 
 ---
 
-## 12. Quiero crear una dirección multisig
+## 12. Quiero crear una dirección multisig — NO DISPONIBLE
+
+> **NOT AVAILABLE (corrected 2026-10-12).** Multisig primitives / library code exist, but native multisig is NOT active or usable on SOST mainnet. A future native multisig would be a new, explicitly activated consensus feature (new unused output type, not 0x30). The commands below DO NOT EXIST in `sost-cli`; they are kept only as a record of the original plan.
 
 ```bash
 cd ~/SOST/sostcore/sost-core/build
@@ -171,7 +173,9 @@ La dirección resultante empezará con `sost3`.
 
 ---
 
-## 13. Quiero hacer una transacción PSBT (offline signing)
+## 13. Quiero hacer una transacción PSBT (offline signing) — NO DISPONIBLE
+
+> **NOT AVAILABLE (corrected 2026-10-12).** PSBT exists only as library code + unit tests; `sost-cli psbt create/sign/broadcast` DO NOT EXIST. Offline signing today = single-key sost1 transactions built, signed and moved manually. The block below is the original plan, kept for history.
 
 ```bash
 # 1. Crear PSBT (en computador online)

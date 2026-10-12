@@ -26,7 +26,7 @@
 | BOND_LOCK (0x10) | Section 6.4 | YES | YES | YES (bond-lock) | Block 5000 | OK |
 | ESCROW_LOCK (0x11) | Section 6.8 | YES | YES | YES (bond-lock) | Block 5000 | OK |
 | Capsule Protocol v1 | Section 7 | YES | YES | YES (capsule) | Block 5000 | OK |
-| Multisig P2SH (sost3) | Section 5.6 | YES | YES | YES (multisig) | Block 2000 | OK |
+| Multisig P2SH (sost3) | Section 5.6 | YES | NO — library only (CORRECTED 2026-10-12) | YES (multisig, unit only) | none (MULTISIG_ACTIVATION_HEIGHT=2000 is a dead constant) | NOT ACTIVE |
 | Hard checkpoints | Section 8 | YES | YES | YES (checkpoints) | Genesis | OK |
 | COINBASE_MATURITY = 1000 | Section 2.3 | YES | YES | YES (tx-validation) | Genesis | OK |
 | MAX_BLOCK_BYTES = 1MB | Section 2.3 | YES | YES | YES (block_validation) | Genesis | OK |
@@ -44,7 +44,7 @@
 | Audit entropy | Section 6.3 | NO | YES | YES (popc) | SHA256-based |
 | Etherscan checker | Section 6 | NO | YES (Python) | Manual | scripts/popc_etherscan_checker.py |
 | HD Wallet (BIP39) | Section 9 | NO | YES | YES (hd-wallet) | 12-word seeds |
-| PSBT offline signing | Section 9 | NO | YES | YES (psbt) | JSON + base64 |
+| PSBT offline signing | Section 9 | NO | Library only — no CLI/RPC; multisig finalize is a stub | YES (psbt, unit only) | JSON + base64; NOT usable on mainnet |
 | RBF + CPFP | Section 5.5 | NO | YES | YES (rbf, cpfp) | Fee market |
 | Address Book | — | NO | YES | YES (addressbook) | 4 trust levels |
 | Wallet Policy | — | NO | YES | YES (wallet-policy) | Limits |
@@ -55,7 +55,7 @@
 **ALL consensus features from the whitepaper are implemented and tested.**
 
 No consensus changes are pending. The following features activate at their designated heights:
-- Block 2000: Multisig P2SH (sost3 addresses)
+- ~~Block 2000: Multisig P2SH (sost3 addresses)~~ — CORRECTED 2026-10-12: native multisig did NOT activate at 2000. Multisig primitives / library code exist, but native multisig is NOT active or usable on SOST mainnet (consensus rejects output type 0x30, which V16 reuses as OUT_NODE_PROTOCOL; TxInput carries one signature + one pubkey; addresses accept only sost1). A future native multisig would be a new, explicitly activated consensus feature (new unused output type, not 0x30).
 - Block 5000: BOND_LOCK, ESCROW_LOCK, Capsule Protocol v1
 
 Current chain height: ~1900. All activation heights are ahead of the chain — features will activate automatically when the chain reaches the designated height.

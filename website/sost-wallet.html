@@ -1599,7 +1599,8 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- MULTISIG -->
     <div id="view-multisig" class="view hidden">
       <h2><span class="accent">Multisig</span></h2>
-      <p class="subtitle">Create and manage M-of-N multisig addresses (sost3)</p>
+      <p class="subtitle">M-of-N multisig addresses (sost3) &mdash; not active on mainnet</p>
+      <div class="notice" style="display:block;border:1px solid #fb010d;background:rgba(251,1,13,.08);color:#ffd6d6;padding:12px 14px;border-radius:8px;margin:10px 0 14px;font-size:12.5px;line-height:1.6"><b style="color:#ff5b5b">NOT ACTIVE ON MAINNET &mdash; DO NOT USE.</b> SOST native multisig (sost3) exists only as library code. The network does not accept sost3 outputs and no wallet can send to a sost3 address, so a sost3 address cannot receive funds. Do not share one. The tools below are disabled until a future, explicitly activated multisig upgrade.</div>
       <div class="card">
         <h3>Create Multisig Address</h3>
         <div class="form-group">
@@ -6229,7 +6230,7 @@ window.addToAddressBook = function() {
   const label = document.getElementById('abLabel').value.trim();
   const trust = document.getElementById('abTrust').value;
   const scope = (document.getElementById('abScope') || {}).value || 'private';
-  if (!validateAddress(addr) && !(addr.startsWith('sost3') && addr.length===45)) {
+  if (!validateAddress(addr)) {
     return showError('abResult', 'Invalid SOST address');
   }
   if (!label) return showError('abResult', 'Label is required');
@@ -6676,6 +6677,7 @@ window.broadcastPsbt = function() {
 // ==================== MULTISIG (basic web) ====================
 
 window.createMultisig = function() {
+  return showError('msigResult', 'Native multisig (sost3) is NOT active on SOST mainnet: the network rejects sost3 outputs, so a sost3 address could never receive funds. Address creation is disabled until a future, explicitly activated multisig upgrade.');
   const m = parseInt(document.getElementById('msigM').value);
   const n = parseInt(document.getElementById('msigN').value);
   const pksRaw = document.getElementById('msigPubkeys').value.trim().split('\n').map(s => s.trim()).filter(s => s.length === 66);
@@ -6720,7 +6722,7 @@ window.downloadMultisigConfig = function() {
 };
 
 window.cosignMultisig = function() {
-  showError('msigCosignResult', 'Multisig co-signing requires the SOST script engine JS library (coming soon). Use CLI: sost-cli multisig cosign');
+  showError('msigCosignResult', 'Native multisig is NOT active on SOST mainnet and no multisig co-signing tool exists (CLI or web). Single-key sost1 transactions are the only spendable type today.');
 };
 
 // ==================== INIT EXTENSIONS ====================
@@ -7032,7 +7034,7 @@ var secSections = [
   { id:'sg-multisig', icon:'\uD83D\uDD11', title:'9. MULTI-SIGNATURE (2-OF-3)',
     statusFn:function(){ return {text:'Available',color:'var(--text-dim)'}; },
     scoreFn:function(){ try{return localStorage.getItem('sost_multisig_configs')?1:0;}catch(e){return 0;}},
-    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:var(--text-primary)">REQUIRE MULTIPLE KEYS TO SPEND</b><br>Like a bank vault that needs 2 keys from 3 keyholders. Even if one key is stolen, funds are safe.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.5;overflow-x:auto">3 people have keys:\n  \uD83D\uDD11 Founder\n  \uD83D\uDD11 CTO\n  \uD83D\uDD11 Backup (in a safe)\n\nTo move funds, ANY 2 must sign:\n  Founder + CTO     \u2192 OK\n  Founder + Backup  \u2192 OK\n  CTO     + Backup  \u2192 OK\n  Founder alone     \u2192 BLOCKED</pre><br><b>WHAT IT PROTECTS AGAINST:</b><br>\u2713 Key theft (1 key stolen \u2192 still safe)<br>\u2713 Key loss (1 key lost \u2192 2 others recover)<br>\u2713 Insider threat (no single person can drain)<br>\u2713 Coercion (attacker needs 2 people)<br><br><b>MULTISIG ADDRESSES:</b><br>Regular: sost1abc... (1 signature)<br>Multisig: sost3abc... (M of N signatures)<br><br><button class="btn btn-small" onclick="showView(\'multisig\')" style="font-size:11px">Open Multisig Tool \u2192</button></div>'
+    body:'<div style="color:var(--text-secondary);line-height:1.8;font-size:13px"><b style="color:#ff5b5b">NOT ACTIVE ON MAINNET</b> &mdash; native multisig exists only as library code; sost3 addresses cannot receive funds today. The explanation below describes a future feature.<br><br><b style="color:var(--text-primary)">REQUIRE MULTIPLE KEYS TO SPEND</b><br>Like a bank vault that needs 2 keys from 3 keyholders. Even if one key is stolen, funds are safe.<br><br><pre style="color:var(--cyan-primary);font-size:11px;line-height:1.5;overflow-x:auto">3 people have keys:\n  \uD83D\uDD11 Founder\n  \uD83D\uDD11 CTO\n  \uD83D\uDD11 Backup (in a safe)\n\nTo move funds, ANY 2 must sign:\n  Founder + CTO     \u2192 OK\n  Founder + Backup  \u2192 OK\n  CTO     + Backup  \u2192 OK\n  Founder alone     \u2192 BLOCKED</pre><br><b>WHAT IT PROTECTS AGAINST:</b><br>\u2713 Key theft (1 key stolen \u2192 still safe)<br>\u2713 Key loss (1 key lost \u2192 2 others recover)<br>\u2713 Insider threat (no single person can drain)<br>\u2713 Coercion (attacker needs 2 people)<br><br><b>MULTISIG ADDRESSES:</b><br>Regular: sost1abc... (1 signature)<br>Multisig: sost3abc... (M of N signatures)<br><br><button class="btn btn-small" onclick="showView(\'multisig\')" style="font-size:11px">Open Multisig Tool \u2192</button></div>'
   },
   { id:'sg-autolock', icon:'\u23F0', title:'10. AUTO-LOCK TIMER',
     statusFn:function(){ try{var t=localStorage.getItem('sost_lock_minutes')||'5';return{text:'Locks after '+t+' min',color:'var(--green-primary)'};}catch(e){return{text:'5 min (default)',color:'var(--green-primary)'};}},
@@ -7143,7 +7145,7 @@ var D={
 'BIP39':'<b>BIP39</b> \u2014 Standard for 12-word seed phrases. Same standard as MetaMask, Ledger. One phrase recovers all your keys.',
 'TOTP':'<b>TOTP</b> \u2014 Time-based One-Time Password. The 6-digit code from Google Authenticator. Changes every 30 seconds.',
 'PSBT':'<b>SOST-PSBT</b> \u2014 Offline signing. Create online, sign offline (air-gapped), broadcast online. Private keys never touch the internet.',
-'Multisig':'<b>Multisig</b> \u2014 sost3 addresses requiring M of N signatures. 2-of-3: any 2 keyholders must approve.',
+'Multisig':'<b>Multisig</b> \u2014 sost3 addresses requiring M of N signatures (2-of-3: any 2 keyholders must approve). NOT active on SOST mainnet today: library code only, a future explicitly activated upgrade.',
 'Vault Mode':'<b>Vault Mode</b> \u2014 Only allows sending to trusted address book entries. Prevents unauthorized transfers.',
 'Auto-Lock':'<b>Auto-Lock</b> \u2014 Locks wallet after inactivity (default 5 min). Private keys cleared from memory when locked.',
 'ECDSA':'<b>ECDSA</b> \u2014 Elliptic Curve Digital Signature Algorithm. Proves you own SOST without revealing your private key.',

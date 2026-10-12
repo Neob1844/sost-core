@@ -64,7 +64,7 @@ struct BlockHeader {
 
 | Fork | Height | Type | Change | Date |
 |------|--------|------|--------|------|
-| **Multisig** | 2000 | Hard fork (feature activation) | OP_CHECKMULTISIG, sost3 addresses, P2SH | At genesis |
+| ~~**Multisig**~~ | ~~2000~~ | NEVER ACTIVATED (corrected 2026-10-12) | OP_CHECKMULTISIG, sost3, P2SH exist as library code only; not wired into consensus — native multisig is NOT active on mainnet | — |
 | **cASERT V2** | 1450 | Hard fork (parameter change) | Halflife 48h→24h, delta cap 6.25%→12.5% | ~2026-03-23 |
 | **Bond/Escrow** | 5000 | Hard fork (feature activation) | BOND_LOCK, ESCROW_LOCK output types | Planned |
 | **Capsule v1** | 5000 | Hard fork (feature activation) | Binary metadata in tx outputs | Planned |
@@ -91,7 +91,7 @@ These rules are encoded at genesis and cannot be changed without breaking the so
 | Target spacing | 600 seconds | params.h | Block time |
 | Coinbase maturity | 1,000 blocks | params.h | Reorg safety |
 | Minimum unit | 1 stock = 10^-8 SOST | params.h | Precision |
-| Address format | sost1 (P2PKH), sost3 (P2SH) | address.h | Identity |
+| Address format | sost1 (P2PKH); sost3 (P2SH) is library code only, NOT accepted on mainnet | address.h | Identity |
 | No tail emission | Subsidy → 0 at epoch ~81 | emission.h | Hard cap enforcement |
 | No minting function | No code path creates SOST outside coinbase | All sources | Supply integrity |
 

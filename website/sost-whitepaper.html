@@ -933,7 +933,7 @@ Current operator documentation: <a href="sost-upgrade.html" style="color:#39ff14
         <div class="wp-pillar-tag" style="color:#d4af37">◈ PILLAR 4 &mdash; STORE-OF-VALUE ARCHITECTURE</div>
         <div class="wp-pillar-headline">Up to 50% supply &rarr; gold reserve</div>
         <p class="wp-pillar-body">
-          Every block coinbase is split <code>50&nbsp;/&nbsp;25&nbsp;/&nbsp;25</code> by consensus
+          <b style="color:#f59e0b">HISTORICAL (blocks 0&ndash;24,999; since #25,000 the split is 50% miner / 50% DTD and the vault receives nothing new):</b> every block coinbase was split <code>50&nbsp;/&nbsp;25&nbsp;/&nbsp;25</code> by consensus
           (PoW miner / Gold Funding Vault / PoPC Pool). Over the full emission curve this directs <b>up
           to 50% of total supply</b> into two gold-reserve channels:
           <br><br>
@@ -1679,7 +1679,7 @@ TPS           &asymp;  TX_per_block / target_block_spacing</pre><p class="scw-p"
     <ol style="font-size:13.5px;line-height:1.7;color:var(--text-secondary);margin:0 0 16px 24px">
       <li>The only PoW algorithm in this table that is genuinely native and not derived. SHA-256d was Bitcoin&rsquo;s original; Scrypt comes from Tarsnap; Equihash from Wagner&rsquo;s generalised birthday. Monero&rsquo;s RandomX is the closest other example of an originally designed algorithm, but it carries CryptoNight ancestry. ConvergenceX shares no core structure with any of these.</li>
       <li>The only hard cap in this table derived from a universal mathematical constant (Feigenbaum&rsquo;s &delta;). The other caps are round numbers chosen for marketing alignment.</li>
-      <li>The only chain in this table with a <b>consensus-level allocation toward gold-linked reserves and custody mechanisms</b>: 25% Perpetual Gold Vault one-way TWAP purchases, plus 25% PoPC. <em>This is not a peg, not a redemption claim, not a stablecoin mechanic.</em> The reserve ratio is observable on-chain, not contracted.</li>
+      <li>The only chain in this table with a <b>consensus-level allocation toward gold-linked reserves and custody mechanisms</b> in its history: 25% Gold Vault plus 25% PoPC until block 24,999 (now frozen and funding the DTD Jackpot; 0% of new emission since V15). <em>This is not a peg, not a redemption claim, not a stablecoin mechanic.</em> The reserve ratio is observable on-chain, not contracted.</li>
       <li>Among the chains in this table, SOST combines per-block retarget with the largest mining-RAM footprint (8 GB) of any production CPU-oriented design. Monero is the only direct competitor on the CPU-friendly axis but uses a smaller working set.</li>
       <li>Tightest schedule alignment in the comparison: SOST is currently within ~13 blocks of its target, helped by cASERT&rsquo;s 288-block average and dynamic delta cap (0% within &plusmn;15&nbsp;s, then 0.5% / 1% / 2% / 3% by deviation).</li>
       <li>Hard cap lower than the major PoW comparables in this table. With 4.67M coins capped, SOST&rsquo;s long-run scarcity is steeper than BTC, LTC, BCH, or ZEC. Whether that matters in market terms is a separate question.</li>

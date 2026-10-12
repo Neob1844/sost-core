@@ -289,8 +289,8 @@ Features: dashboard with block height/supply/hashrate, difficulty progress bar, 
 | write_exact() reliable socket writes | Complete |
 | P2P encryption (X25519 + ChaCha20-Poly1305) | Active (default on) |
 | HD Wallet BIP39 (12-word seed phrases) | Complete |
-| SOST-PSBT offline signing | Complete |
-| Native multisig (sost3 addresses, OP_CHECKMULTISIG) | Complete |
+| SOST-PSBT offline signing | Library code + unit tests only — NOT available in CLI/RPC (multisig finalize is a stub) |
+| Native multisig (sost3 addresses, OP_CHECKMULTISIG) | NOT ACTIVE on mainnet — library code + unit tests only; not wired into consensus, addresses, CLI or RPC |
 | Trusted address book (4 trust levels) | Complete |
 | Treasury safety profile (daily limits, vault mode) | Complete |
 | RBF (Replace-by-Fee) | Complete |

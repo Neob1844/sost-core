@@ -110,7 +110,9 @@ sudo cryptsetup close sost_backup
 
 ---
 
-## Multisig Plan (Post Height 2000)
+## Multisig Plan (Post Height 2000) — FUTURE / NOT ACTIVE
+
+> **HISTORICAL PLAN — NOT EXECUTABLE (corrected 2026-10-12).** Native multisig did NOT activate at height 2000: it exists only as library code + unit tests and is not wired into consensus, address handling, the CLI or the RPC. `sost-cli createmultisig` DOES NOT EXIST and `sost3` addresses are not accepted. This procedure requires a future native multisig fork (a new, explicitly activated consensus feature using a new unused output type, not 0x30). Until then, treasury keys remain single-key `sost1`.
 
 ### Timeline
 - Current height: ~1805

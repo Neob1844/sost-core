@@ -64,7 +64,7 @@ miner box vs what needs the second (non-miner) box + external artifacts.
 regtest/E2E + external audit WAIVED_BY_OWNER / WAITING_EXTERNAL_AUDIT — not a discovered defect)
 &nbsp;&nbsp;·&nbsp;&nbsp;original line below:
 **ATOMIC SWAP READINESS: NOT READY** — EVM contract suite + all C++ unit/sim tests are GREEN and the
-EVM HTLC is live @16000, but: BTC HTLC is gated OFF (needs regtest-real redeem/refund + crypto
+EVM HTLC is live @16000 [corrected 2026-10-12: it is the SOST-side HTLC gate that is live @16000; the EVM HTLC is NOT deployed on any network], but: BTC HTLC is gated OFF (needs regtest-real redeem/refund + crypto
 review), the EVM contract is unaudited/undeployed (external audit), and the dashboard has no E2E.
 None is a discovered defect; the gaps are real-environment tests + external audit/liquidity.
 

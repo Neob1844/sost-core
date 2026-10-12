@@ -57,7 +57,7 @@ All changes so far use **height-gated flag days** — new rules activate at a sp
 |------|--------|------|--------|------|
 | Genesis | 0 | — | All constitutional rules | 2026-03-15 |
 | **cASERT V2** | 1450 | Hard fork (parameter) | Halflife 48h→24h, delta cap 6.25%→12.5% | ~2026-03-23 |
-| **Multisig P2SH** | 2000 | Hard fork (feature) | OP_CHECKMULTISIG, sost3 addresses | Pending |
+| ~~**Multisig P2SH**~~ | ~~2000~~ | Hard fork (feature) | OP_CHECKMULTISIG, sost3 addresses | NEVER ACTIVATED (corrected 2026-10-12: library code only, not wired into consensus; NOT active on mainnet) |
 | **Bond/Escrow/Capsule** | 5000 | Hard fork (feature) | BOND_LOCK, ESCROW_LOCK, Capsule Protocol v1 | Pending |
 
 ### How It Works in Code
@@ -214,7 +214,7 @@ These cost nothing to implement and prevent future hard fork complexity:
 | Phase | When | Action |
 |-------|------|--------|
 | **Now** | Block ~1900 | Document reserved types. Publish SIP format. Flag day works. |
-| **Block 2000** | ~April 2026 | Multisig activates. Announce on BTCTalk 2 weeks before. |
+| ~~**Block 2000**~~ | ~April 2026 | ~~Multisig activates.~~ HISTORICAL PLAN — did not happen; native multisig is NOT active on mainnet (corrected 2026-10-12). |
 | **Block 5000** | ~April 2026 | Bond/Escrow/Capsule activates. Major announcement. |
 | **First external miner** | 2026 | Implement P2P version exchange. Plan version-bit signaling. |
 | **10+ miners** | 2027? | Implement BIP9-style signaling (SIP-003). 75% threshold. |

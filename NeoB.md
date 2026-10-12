@@ -104,7 +104,7 @@ Difficulty encoded as bitsQ Q16.16 fixed-point (`include/sost/sostcompact.h`).
 - **Mempool** (`include/sost/mempool.h`) — Fee-rate indexed (rational arithmetic, no floats). BuildBlockTemplate selects by fee-rate. RBF (full Replace-by-Fee) and CPFP (BuildBlockTemplateCPFP) for dynamic fee market.
 - **Emission** (`include/sost/emission.h`, `subsidy.h`) — Smooth exponential decay, q=e^(-1/4), epoch=131553 blocks (~2.5 years). Max supply ~4.669M SOST.
 - **Crypto** — SHA256 via OpenSSL, ECDSA secp256k1 via libsecp256k1, LOW-S enforced.
-- **Address** (`include/sost/address.h`) — Format: `sost1` + 40 hex chars (20-byte pubkey hash). Script hash: `sost3` + 40 hex chars (20-byte HASH160 of redeemScript).
+- **Address** (`include/sost/address.h`) — Format: `sost1` + 40 hex chars (20-byte pubkey hash). Script hash: `sost3` + 40 hex chars (20-byte HASH160 of redeemScript) — library code only; `sost3` is NOT accepted on mainnet (native multisig NOT active).
 - **HD Wallet** (`include/sost/hd_wallet.h`) — BIP39 seed phrases (12 words), PBKDF2-HMAC-SHA512 seed derivation. Compatible with web wallet.
 - **PSBT** (`include/sost/psbt.h`) — SOST-PSBT offline signing format (JSON + base64). Supports P2PKH and multisig inputs.
 - **Script Engine** (`include/sost/script.h`) — Minimal opcodes: OP_CHECKSIG, OP_CHECKMULTISIG, OP_HASH160, OP_EQUAL, etc. P2SH (redeemScript-hash) for multisig. MULTISIG_ACTIVATION_HEIGHT = 2000.

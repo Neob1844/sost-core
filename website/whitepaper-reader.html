@@ -251,7 +251,7 @@
 <a href="#sec-56" class="toc-l1">8. Economic Model</a>
 <a href="#sec-57" class="toc-l2">8.1 Demand Sources for SOST</a>
 <a href="#sec-58" class="toc-l2">8.2 Deflationary Mechanics</a>
-<a href="#sec-59" class="toc-l2">8.3 The Gold Floor</a>
+<a href="#sec-59" class="toc-l2" style="color:#888;">8.3 The Gold Floor (retired, historical)</a>
 <a href="#sec-60" class="toc-l2">8.4 Autoequilibrium: When SOST &gt; Gold</a>
 <a href="#sec-61" class="toc-l1">9. Security Analysis</a>
 <a href="#sec-62" class="toc-l2">9.1 51% Attack Resistance</a>
@@ -1355,7 +1355,7 @@ Creating nodes adds nothing. Doing work does.</div>
 <div class="wp-spacer"></div>
 <p class="wp-p">Metals Reserve Constitution (immutable at genesis)</p>
 <div class="wp-spacer"></div>
-<p class="wp-p">G1 (Consensus Allocation): Every valid block MUST pay the Gold Funding Vault exactly q = reward // 4.</p>
+<p class="wp-p">G1 (Consensus Allocation) &mdash; <b style="color:#f59e0b">HISTORICAL (blocks 0&ndash;24,999)</b>: every valid block had to pay the Gold Funding Vault exactly q = reward // 4. Since V15 (#25,000) the vault receives 0 and its balance is frozen for the DTD Jackpot.</p>
 <p class="wp-p">Any block that fails to do so is invalid.</p>
 <div class="wp-spacer"></div>
 <p class="wp-p">G2 (Two-Vault Separation): Gold Funding Vault is operational; Heritage Reserve is sealed storage.</p>
@@ -2462,11 +2462,12 @@ a non-negotiable prerequisite — not a trade-off.</pre>
 <div class="wp-bullet"><strong>Reputation limits:</strong> large commitments require proven track record — slow unlock of supply pressure.</div>
 <div class="wp-bullet"><strong>Long contracts:</strong> 9 and 12-month commitments remove SOST from circulation for extended periods.</div>
 <div class="wp-spacer"></div>
-<h4 id="sec-59" class="wp-h">8.3 The Gold Floor</h4>
+<h4 id="sec-59" class="wp-h">8.3 The Gold Floor &mdash; RETIRED DESIGN (historical)</h4>
 <div class="wp-spacer"></div>
+<div style="background:rgba(251,191,36,0.08);border:1px solid #fbbf24;padding:12px 16px;margin:12px 0;font-size:12px;color:#fbbf24;line-height:1.7;"><b>RETIRED &mdash; HISTORICAL DESIGN, NOT A CURRENT CLAIM.</b> This section assumed a Gold Vault that kept growing with 25% of every block reward. That allocation ended at block 25,000 (V15): the vault receives nothing new and its frozen balance funds the DTD Jackpot. <b>SOST has no gold floor, no gold backing and no redemption right</b>, and the projections below are not forecasts. A future Gold Reserve V2 (designed, not deployed) would publish only an <i>informational</i> ratio &mdash; never a floor or a price. The original text is kept unchanged below for the historical record.</div>
 <p class="wp-p">As the Gold Reserve grows over years and decades, it creates an observable, verifiable reference floor for SOST. This is not a peg. SOST is not a stablecoin. But any market participant can calculate:</p>
 <div class="wp-spacer"></div>
-<pre class="wp-code">GOLD BACKING PER SOST (observable, not guaranteed):
+<pre class="wp-code" style="opacity:.6">[RETIRED DESIGN] GOLD BACKING PER SOST (observable, not guaranteed):
 
   Year 3:  Gold Reserve = $200,000
            Circulating SOST = ~600,000

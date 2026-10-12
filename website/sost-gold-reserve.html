@@ -1481,7 +1481,7 @@ expiry    = block.timestamp deadline
       </div>
       <div class="spec-body">
         <table class="code-table">
-          <tr><td class="key">G1</td><td class="val">Every valid block MUST pay Gold Vault exactly <code>q = reward // 4</code></td></tr>
+          <tr><td class="key">G1</td><td class="val"><b style="color:#f59e0b">HISTORICAL (blocks 0&ndash;24,999):</b> every valid block had to pay the Gold Vault exactly <code>q = reward // 4</code>. Since V15 (#25,000) the vault receives 0 and its balance is frozen for the DTD Jackpot.</td></tr>
           <tr><td class="key">G2</td><td class="val">Two-vault separation: Funding (operational) + Reserve (cold)</td></tr>
           <tr><td class="key">G3</td><td class="val">Reserve Vault is Heritage sealed; no outbound in normal operation</td></tr>
           <tr><td class="key">G4</td><td class="val">Purchases begin &ge;8 months after public launch + market readiness</td></tr>

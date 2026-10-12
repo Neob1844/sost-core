@@ -20,19 +20,19 @@
 <link rel="apple-touch-icon" href="sost-logo.png?v=v392">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOST Security — 20 Implemented Security Features | Encryption, Multisig, P2P</title>
-<meta name="description" content="20 production security features: AES-256-GCM encryption, multisig 2-of-3, P2P encryption, PSBT offline signing, HD wallet BIP39, wallet policy controls.">
+<meta name="description" content="SOST security features: AES-256-GCM encryption, P2P encryption, HD wallet BIP39, wallet policy controls.">
 <meta name="keywords" content="SOST security, blockchain security, multisig, AES-256, PSBT, offline signing, P2P encryption, wallet security, HD wallet">
 <meta name="author" content="SOST">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SOST Security — 20 Implemented Security Features">
-<meta property="og:description" content="20 production security features: AES-256-GCM encryption, multisig 2-of-3, P2P encryption, PSBT offline signing, HD wallet BIP39, wallet policy controls.">
+<meta property="og:description" content="SOST security features: AES-256-GCM encryption, P2P encryption, HD wallet BIP39, wallet policy controls.">
 <meta property="og:url" content="https://sostcore.com/sost-security.html">
 <meta property="og:site_name" content="SOST">
 <meta property="og:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SOST Security — 20 Implemented Security Features">
-<meta name="twitter:description" content="20 production security features: AES-256-GCM encryption, multisig 2-of-3, P2P encryption, PSBT offline signing, HD wallet BIP39, wallet policy controls.">
+<meta name="twitter:description" content="SOST security features: AES-256-GCM encryption, P2P encryption, HD wallet BIP39, wallet policy controls.">
 <meta name="twitter:image" content="https://sostcore.com/sost-logo.png?v=v392">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -449,7 +449,7 @@
           <tr><td class="label">Anti-stall</td><td class="value" colspan="2">max(lag&times;600, 7200s)</td><td class="value">max(lag&times;600, 7200s)</td><td class="green">Always 7,200s</td><td class="green">Always 7,200s</td><td class="cyan">3,600s</td><td class="cyan">3,600s</td></tr>
           <tr><td class="label">Ahead Guard</td><td class="value" colspan="4">&mdash;</td><td class="cyan">Enter &ge;16, exit &le;8</td><td class="cyan">Enter &ge;16, exit &le;8</td><td class="value">&mdash; (ended #4,999)</td></tr>
         </table>
-        <p style="color:var(--text-dim);font-size:12px;margin-top:8px;line-height:1.8;">All forks are forward-only (no regenesis). This table is HISTORICAL (blocks &lt; 5,175). *V4 Ahead Guard (active #4,170&ndash;#4,999 only): when chain &ge;16 blocks ahead, bitsQ downward delta clamped to 1/64 (&asymp;1.56%) per block. <b>CURRENT MAINNET RULE:</b> bitsQ avg288 (#5,175+) with dead band &plusmn;15 s and 0.5/1.0/2.0/3.0% steps (#5,270+); Equalizer 43 profiles E7&ndash;H35 via direct lag map (#5,323+), anti-stall at 3,600 s (60 min), V12 triangular cascade (#7,350+).</p>
+        <p style="color:var(--text-dim);font-size:12px;margin-top:8px;line-height:1.8;">All forks are forward-only (no regenesis). This table is HISTORICAL (blocks &lt; 5,175). *V4 Ahead Guard (active #4,170&ndash;#4,999 only): when chain &ge;16 blocks ahead, bitsQ downward delta clamped to 1/64 (&asymp;1.56%) per block. <b>CURRENT MAINNET RULE:</b> bitsQ avg288 (#5,175+) with dead band &plusmn;15 s and 0.5/1.0/2.0/&asymp;3.03% steps (#5,270+); Equalizer 43 profiles E7&ndash;H35 via direct lag map (#5,323+), anti-stall at 3,600 s (60 min), V12 triangular cascade (#7,350+).</p>
       </div>
     </div>
   </div>
@@ -553,8 +553,8 @@
           <tr><td class="label">Treasury safety profile</td><td class="green">Complete — daily limits, per-TX limits, vault mode, policy file (~/.sost/wallet_policy.json)</td></tr>
           <tr><td class="label">RBF (Replace-by-Fee)</td><td class="green">Complete — full RBF mempool policy, higher fee-rate replacement, no consensus change</td></tr>
           <tr><td class="label">CPFP (Child-Pays-for-Parent)</td><td class="green">Complete — package fee-rate aware block template builder, miner policy only</td></tr>
-          <tr><td class="label">SOST-PSBT offline signing</td><td class="green">Complete — JSON+base64 format, create/sign/combine/finalize/broadcast</td></tr>
-          <tr><td class="label">Native multisig (sost3)</td><td class="green">Complete — redeemScript-hash M-of-N CHECKMULTISIG, 2-of-3 treasury support</td></tr>
+          <tr><td class="label">SOST-PSBT offline signing</td><td style="color:#f5b301">LIBRARY ONLY — JSON+base64 format in code with unit tests; multisig finalize is a stub; no CLI or RPC command. Not usable on mainnet today (offline signing = single-key raw transaction moved by hand).</td></tr>
+          <tr><td class="label">Native multisig (sost3)</td><td style="color:#f5b301">NOT ACTIVE ON MAINNET — M-of-N CHECKMULTISIG exists as library code with unit tests only; not in consensus, addresses, CLI or RPC. A future native multisig is a separate, explicitly activated upgrade.</td></tr>
           <tr><td class="label">HD wallet (BIP39)</td><td class="green">Complete — 12-word seed phrases, CLI + web wallet compatible</td></tr>
         </table>
       </div>
@@ -758,16 +758,16 @@ var D={
 'ban':'<b>Ban System</b> — Misbehaving peers accumulate penalty points. At 100 points, the peer is banned for 24 hours. Invalid blocks = 100 pts (instant ban). Double-spend attempts = 50 pts. Protects against DoS and eclipse attacks.',
 'RPC auth':'<b>RPC Authentication</b> — The JSON-RPC interface requires username/password (HTTP Basic Auth). Bound to localhost by default. Prevents unauthorized remote access to node control.',
 'BIP39':'<b>BIP39 Seed Phrases</b> — Your wallet generates a 12-word mnemonic from 128 bits of entropy. These 12 words can recover all your private keys on any device. Uses PBKDF2-HMAC-SHA512 with 2048 iterations.',
-'PSBT':'<b>SOST-PSBT</b> — Partially Signed Bitcoin Transaction format adapted for SOST. Create transactions on an online computer, sign them on an air-gapped offline computer. Private keys never touch the internet.',
-'multisig':'<b>Multisig (M-of-N)</b> — Requires multiple signatures to spend funds. A 2-of-3 setup means any 2 of 3 keyholders must approve. Used for treasury protection. Addresses start with sost3.',
-'OP_CHECKMULTISIG':'<b>OP_CHECKMULTISIG</b> — Script opcode that verifies M-of-N signatures against N public keys. Supports up to 15 keys. Activates at block height 2000.',
+'PSBT':'<b>SOST-PSBT</b> — Partially Signed Bitcoin Transaction format adapted for SOST. Create transactions on an online computer, sign them on an air-gapped offline computer. Private keys never touch the internet. In SOST this format exists as library code only; no CLI/RPC command uses it yet.',
+'multisig':'<b>Multisig (M-of-N)</b> — Requires multiple signatures to spend funds. A 2-of-3 setup means any 2 of 3 keyholders must approve. Addresses would start with sost3. NOT active on SOST mainnet today (library code only).',
+'OP_CHECKMULTISIG':'<b>OP_CHECKMULTISIG</b> — Script opcode that verifies M-of-N signatures against N public keys. Supports up to 15 keys. In SOST it exists in library code only; the planned block-2000 activation never took effect in consensus.',
 'RBF':'<b>Replace-by-Fee</b> — If your transaction is stuck in the mempool, you can replace it with a new version that pays a higher fee. The original transaction is dropped. Mempool policy only — no consensus change.',
 'CPFP':'<b>Child-Pays-for-Parent</b> — A new transaction (child) that spends an output from a stuck transaction (parent) can pay enough fees to make both attractive to miners. Package fee-rate optimization.',
 'treasury':'<b>Treasury Safety Profile</b> — Configurable spending limits: daily send limit, per-transaction limit, vault mode (only trusted addresses). Even if someone accesses your wallet, they cannot drain it all at once.',
 'address book':'<b>Trusted Address Book</b> — Save addresses with labels and trust levels (Trusted, Known, Blocked, Unknown). Blocked addresses cannot receive funds. Unknown addresses trigger a first-time send warning.',
 'coinbase maturity':'<b>Coinbase Maturity</b> — Mining rewards cannot be spent until 1,000 blocks (~7 days) after they are mined. Prevents spending coins from blocks that might be orphaned during a chain reorganization.',
 'checkpoints':'<b>Checkpoints</b> — Two distinct things. <b>Hard checkpoints</b> are hardcoded (last at height 3,554); the node rejects any chain that disagrees with them (a trust assumption for early history, not a mere optimisation). <b>assumevalid</b> only skips re-running the expensive PoW/signature recomputation for already-trusted history; it does NOT gate chain selection, subsidy, UTXO or difficulty. On the production node the dynamic checkpoint updater is NOT running (no checkpoint.json is imposed). Separately, MAX_REORG_DEPTH = 500 blocks (~3.5 days) is the reorg-depth rule; a deeper reorg is rejected even with more work — a trade-off SACS research studies.',
-'cASERT':'<b>cASERT</b> — Cascading Absolute Schedule Exponential Rising Targets. Unified difficulty adjustment system. V1: 48h/6.25%. V2 (1450+): 24h/12.5%. V3 (4100+): slew &plusmn;3, lag floor. V3.1 (4110+): stored profile_index, anti-stall 7200s. V4 (4170&ndash;4999): Ahead Guard clamps bitsQ relaxation to 1.56%/block when &ge;16 ahead. V5 (4300+): anti-stall 3600s (60 min, current). V6 (5000+): slew &plusmn;1, H10/H11 scale 2. Current (5175+): avg288 bitsQ (avg of last 288 intervals vs 600s). Dynamic cap (5270+): dead band &plusmn;15s, then 0.5%/1.0%/2.0%/3.0% by deviation (HISTORICAL 5260&ndash;5269: &plusmn;30s, 0.5/1.5/2.5/3%, median288 check). Equalizer: direct lag map (5323+), V12 triangular cascade (7350+), height-gated ceiling. Pre-V12 (#5,750..#7,349): H13 ceiling, 21 active E7-H13, 22 reserved H14-H35. V12 (#7,350..#11,999): H20 ceiling, 28 active E7-H20, 15 reserved H21-H35. V13 (#12,000+): H35 ceiling, 43 active E7-H35, 0 reserved (full range live). H10+ margin=115.',
+'cASERT':'<b>cASERT</b> — Cascading Absolute Schedule Exponential Rising Targets. Unified difficulty adjustment system. V1: 48h/6.25%. V2 (1450+): 24h/12.5%. V3 (4100+): slew &plusmn;3, lag floor. V3.1 (4110+): stored profile_index, anti-stall 7200s. V4 (4170&ndash;4999): Ahead Guard clamps bitsQ relaxation to 1.56%/block when &ge;16 ahead. V5 (4300+): anti-stall 3600s (60 min, current). V6 (5000+): slew &plusmn;1, H10/H11 scale 2. Current (5175+): avg288 bitsQ (avg of last 288 intervals vs 600s). Dynamic cap (5270+): dead band &plusmn;15s, then 0.5%/1.0%/2.0%/&asymp;3.03% by deviation (HISTORICAL 5260&ndash;5269: &plusmn;30s, 0.5/1.5/2.5/3%, median288 check). Equalizer: direct lag map (5323+), V12 triangular cascade (7350+), height-gated ceiling. Pre-V12 (#5,750..#7,349): H13 ceiling, 21 active E7-H13, 22 reserved H14-H35. V12 (#7,350..#11,999): H20 ceiling, 28 active E7-H20, 15 reserved H21-H35. V13 (#12,000+): H35 ceiling, 43 active E7-H35, 0 reserved (full range live). H10+ margin=115.',
 'ConvergenceX':'<b>ConvergenceX</b> — CPU-friendly, memory-hard Proof-of-Work. Each attempt: 32×32 linear system, 100K sequential rounds, 8GB RAM (4GB dataset + 4GB scratchpad). Sequential dependency and tight memory coupling raise the cost of a competitive ASIC port; no claim is made that one is impossible. Node verification: ~500MB, ~0.2ms.',
 'Capsule':'<b>Capsule Protocol v1</b> — Binary metadata embedded in transaction outputs. 12-byte header + up to 243-byte body. Enables on-chain attestation and proof-of-discovery. Activates at mainnet height 5000.',
 'FORTIFY_SOURCE':'<b>Build Hardening</b> — 6 compiler/linker security flags: stack protector, stack clash protection, PIE (ASLR), full RELRO, FORTIFY_SOURCE, -O2. Prevents buffer overflow, stack smashing, and return-oriented programming attacks.',

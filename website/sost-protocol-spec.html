@@ -259,7 +259,7 @@ raw = anchor_bitsq &times; factor
 delta = clamp(raw - prev_bitsq, &plusmn;prev_bitsq/8)
 result = clamp(prev_bitsq + delta, [MIN_BITSQ, MAX_BITSQ])</pre>
 <p><strong>Current (V5, block 5175+):</strong> avg288-based &mdash; compares average of last 288 block intervals against 600s target. Replaces anchor-based exponential.</p>
-<p><strong>Dynamic cap (block 5270+):</strong> 0% dead band &plusmn;15s, then 0%/0.5%/1.0%/2.0%/3.0% max based on deviation. Steps: 0.5% for |dev| in (15,60] s, 1.0% (60,120] s, 2.0% (120,240] s, 3.0% above 240 s. Median removed from consensus (block 5,270+). HISTORICAL: blocks 5,175&ndash;5,259 used a &plusmn;30 s dead band with a flat 12.5% cap; blocks 5,260&ndash;5,269 a &plusmn;30 s dead band with median288 override and 0.5/1.5/2.5/3% steps.</p>
+<p><strong>Dynamic cap (block 5270+):</strong> 0% dead band &plusmn;15s, then 0%/0.5%/1.0%/2.0%/&asymp;3.03% max based on deviation. Steps: 0.5% for |dev| in (15,60] s, 1.0% (60,120] s, 2.0% (120,240] s, 3.0% above 240 s. Median removed from consensus (block 5,270+). HISTORICAL: blocks 5,175&ndash;5,259 used a &plusmn;30 s dead band with a flat 12.5% cap; blocks 5,260&ndash;5,269 a &plusmn;30 s dead band with median288 override and 0.5/1.5/2.5/3% steps.</p>
 <p><strong>Slingshot (V12, block 7,350+):</strong> on the current block&rsquo;s elapsed time: &gt;1,200 s &minus;6.5%, &gt;1,800 s &minus;12.5%, &gt;3,600 s &minus;25%, &gt;7,200 s &minus;37.5%, &gt;10,800 s &minus;50%.</p>
 <p><em>Source: casert.cpp:67-115</em></p>
 
