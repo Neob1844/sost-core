@@ -1145,10 +1145,10 @@ frozen since #25,000 and committed to the DTD Jackpot.
 Example — wrap and unwrap:
 
 ```
-Juan holds 1,000 SOST and wraps 500:
+John holds 1,000 SOST and wraps 500:
   500 SOST stay native · 500 SOST locked in the Bridge Vault · 500 wSOST on Ethereum
   (deposit capsule: WSOST:0x<recipient>, 48 of the 80 open-note bytes)
-Juan burns 200 wSOST:
+John burns 200 wSOST:
   200 wSOST destroyed -> 200 native SOST released (release capsule WSOST-RELEASE:<burnId>)
 No SOST is created or destroyed at any step.
 ```

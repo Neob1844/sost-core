@@ -820,6 +820,7 @@
     if(!ax) return;                                         // no large-button row on this page
     styleOnce();
     var sz=ax.offsetWidth; if(!sz||sz<60) sz=110;
+    sz=Math.round(sz*1.2);                                  // 20% larger than the sibling modules (owner request)
     var a=document.createElement('a');
     a.href='sost-wsost-gold-vault.html'; a.className='sost-wsost-btn';
     a.title='wSOST & Gold Vault — bridge, Gold Reserve V2 and governance (research roadmap, not live)';
@@ -841,4 +842,81 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run,{once:true});
   else run();
   setTimeout(run,0); setTimeout(run,450); setTimeout(run,1300);
+})();
+
+
+/* ============================================================================
+   "CLICK HERE TO OPEN EXPLORER" — red callout above the main SOST logo.
+   Same pattern and timing as the Explorer's jackpot hint (visible 15 s, hidden 15 s,
+   1.6 s soft pulse), in SOST red. A real <a> to the Explorer. Only on pages whose main
+   logo already opens the Explorer (the Explorer itself keeps its HOME logo, no callout).
+   The nav reserves room above the logo so the callout never covers it or leaves the screen.
+   ========================================================================== */
+(function(){
+  "use strict";
+  if(/sost-explorer\.html$/.test(location.pathname)) return;
+  function styleOnce(){
+    if(document.getElementById('sost-xp-callout-style')) return;
+    var st=document.createElement('style'); st.id='sost-xp-callout-style';
+    st.textContent=[
+      'nav.has-xp-callout{padding-top:58px !important}',
+      'nav.has-xp-callout .container{position:relative}',
+      'a.sost-xp-callout{--xp:#fb010d;position:absolute;z-index:60;display:block;box-sizing:border-box;',
+      'background:linear-gradient(135deg,rgba(8,6,8,.97),rgba(26,2,4,.97));border:1px solid var(--xp);border-radius:9px;',
+      'padding:9px 15px;white-space:nowrap;font:600 15px var(--font-mono,ui-monospace,monospace);color:#ff5c63;',
+      'letter-spacing:.4px;text-decoration:none;opacity:0;pointer-events:none;transition:opacity .35s ease;',
+      'animation:xpRedPulse 1.6s ease-in-out infinite}',
+      'a.sost-xp-callout.show,a.sost-xp-callout:focus-visible{opacity:1;pointer-events:auto}',
+      'a.sost-xp-callout:focus-visible{outline:2px solid #ffd6d8;outline-offset:3px}',
+      'a.sost-xp-callout::after{content:"";position:absolute;top:100%;left:var(--pl,50%);transform:translateX(-50%);',
+      'border:8px solid transparent;border-top-color:var(--xp)}',
+      'a.sost-xp-callout .xp-hand{display:inline-block;margin-right:7px;animation:xpBob 1s ease-in-out infinite}',
+      '@keyframes xpBob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}',
+      '@keyframes xpRedPulse{0%,100%{box-shadow:0 0 8px rgba(251,1,13,.35),0 0 16px rgba(251,1,13,.15)}',
+      '50%{box-shadow:0 0 16px rgba(251,1,13,.75),0 0 32px rgba(251,1,13,.35)}}',
+      '@media (prefers-reduced-motion:reduce){a.sost-xp-callout,a.sost-xp-callout .xp-hand{animation:none}}',
+      '@media (max-width:640px){a.sost-xp-callout{font-size:13px;padding:8px 12px}}',
+      'body.nav-collapsed nav a.sost-xp-callout{display:none !important}'
+    ].join('');
+    (document.head||document.documentElement).appendChild(st);
+  }
+  var el=null, img=null, box=null, nav=null;
+  function place(){
+    if(!el||!img||!box) return;
+    var b=box.getBoundingClientRect(), i=img.getBoundingClientRect();
+    if(!i.width) return;
+    var w=el.offsetWidth, h=el.offsetHeight;
+    var cx=i.left+i.width/2-b.left;                         // logo centre, container coordinates
+    var vw=document.documentElement.clientWidth;
+    var left=cx-w/2;
+    var minL=8-b.left, maxL=vw-8-w-b.left;                  // keep the whole target on screen
+    if(left<minL) left=minL; if(left>maxL) left=Math.max(minL,maxL);
+    el.style.left=left+'px';
+    el.style.top=(i.top-b.top-h-11)+'px';
+    el.style.setProperty('--pl',Math.max(12,Math.min(w-12,cx-left))+'px');
+  }
+  function inject(){
+    nav=document.querySelector('nav'); if(!nav||nav.querySelector('a.sost-xp-callout')) return;
+    var logo=nav.querySelector('a.nav-logo[href$="sost-explorer.html"]'); if(!logo) return;
+    img=logo.querySelector('img'); if(!img) return;
+    box=logo.parentNode;
+    styleOnce();
+    nav.classList.add('has-xp-callout');
+    el=document.createElement('a');
+    el.href='https://sostcore.com/sost-explorer.html';
+    el.className='sost-xp-callout';
+    el.setAttribute('aria-label','Open SOST Explorer');
+    el.innerHTML='<span class="xp-hand" aria-hidden="true">&#128070;</span>CLICK HERE TO OPEN EXPLORER';
+    box.appendChild(el);
+    place();
+    window.addEventListener('resize',place);
+    if(img.complete===false) img.addEventListener('load',place);
+    setTimeout(place,400); setTimeout(place,1500);
+    function show(){ place(); el.classList.add('show'); setTimeout(hide,15000); }
+    function hide(){ el.classList.remove('show'); setTimeout(show,15000); }
+    show();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',inject,{once:true});
+  else inject();
+  setTimeout(inject,500);
 })();
