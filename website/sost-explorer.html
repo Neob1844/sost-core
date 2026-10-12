@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-11-v543-candle-glow">
+<meta name="explorer-html-version" content="2026-10-12-v545-eligibility">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -558,6 +558,31 @@ a:hover{color:var(--red2);text-shadow:0 0 8px rgba(251,1,13,.4)}
 .tx-filter.active{box-shadow:0 0 14px rgba(251,1,13,.35)}
 #mpTreemap,#mpBlocksViz>div{border-radius:12px!important;border-color:#23202c!important;background:radial-gradient(120% 90% at 0% 0%,rgba(192,132,252,.06),transparent 55%),linear-gradient(180deg,#0f0e13,#08080a)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 8px 22px rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){.sx-tile,.sx-tile:hover{transition:none;transform:none}}
+/* v545 Jackpot V2 eligibility inspector */
+.elig-btn{margin-top:8px;font:800 9px var(--code);letter-spacing:1.4px;color:#ffd166;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.45);border-radius:999px;padding:5px 11px;cursor:pointer;transition:box-shadow .15s,background .15s}
+.elig-btn:hover{background:rgba(255,209,102,.16);box-shadow:0 0 14px rgba(255,209,102,.4)}
+.eli-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 12px}
+.eli-box{position:relative;width:min(720px,100%);box-sizing:border-box;border-radius:16px;border:1px solid #2a2733;padding:20px 20px 16px;font-family:var(--code);color:var(--text);
+  background:radial-gradient(120% 90% at 0% 0%,rgba(255,209,102,.08),transparent 55%),radial-gradient(120% 90% at 100% 100%,rgba(57,255,20,.05),transparent 55%),linear-gradient(180deg,#111017,#08080a);box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.eli-box::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,#ffd166,#39ff14 60%,transparent)}
+.eli-h{font:800 12px var(--code);letter-spacing:2px;padding-right:40px;color:#ffd166;text-shadow:0 0 12px rgba(255,209,102,.4)}
+.eli-s{font-size:10px;color:#8f8ca0;margin:4px 0 12px;line-height:1.6}
+.eli-x{position:absolute;top:12px;right:12px;background:none;border:1px solid #3a3645;color:#aaa;border-radius:8px;padding:3px 9px;cursor:pointer;font-family:var(--code)}
+.eli-row{border:1px solid #26232f;border-radius:12px;margin:8px 0;background:rgba(0,0,0,.25);overflow:hidden}
+.eli-sum{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(4,minmax(0,1fr));gap:6px;align-items:center;padding:10px 12px;cursor:pointer;font-size:11px}
+.eli-sum:hover{background:rgba(255,255,255,.03)}
+.eli-sum .ad{color:#22d3ee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eli-hd{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(4,minmax(0,1fr));gap:6px;padding:0 12px;font-size:8.5px;letter-spacing:1.2px;color:#7d7a8e}
+.eli-det{display:none;padding:4px 14px 14px;border-top:1px solid #1d1b24;font-size:11px;line-height:1.75}
+.eli-row.open .eli-det{display:block}
+.eli-k{display:grid;grid-template-columns:150px 1fr;gap:2px 10px}
+.eli-k span{color:#8f8ca0}
+.eli-t{font:800 9px var(--code);letter-spacing:1.4px;color:#ffd166;margin:10px 0 3px}
+.eli-yes{color:#39ff14;font-weight:800;text-shadow:0 0 8px rgba(57,255,20,.5)} .eli-no{color:#ff4d5a;font-weight:800}
+.eli-na{color:#8f8ca0} .eli-unk{color:#fbbf24}
+.eli-why{margin-top:12px;border-top:1px solid #1d1b24;padding-top:10px;font-size:10.5px;color:#a7a3b8;line-height:1.7}
+.eli-why summary{cursor:pointer;color:#ffd166;font-weight:800;letter-spacing:1.4px;font-size:10px}
+@media(max-width:560px){.eli-box{padding:16px 12px}.eli-sum,.eli-hd{grid-template-columns:minmax(0,1.3fr) repeat(4,minmax(0,.8fr));font-size:10px}.eli-k{grid-template-columns:118px 1fr}}
 /* v540: rest of the page in the same language */
 #networkMosaicCard,#convxCR,#producerDistSection,.stats-code{position:relative;border-radius:14px!important;border:1px solid #24212d!important;
   background:radial-gradient(120% 90% at 0% 0%,rgba(192,132,252,.07),transparent 55%),radial-gradient(120% 90% at 100% 100%,rgba(34,211,238,.05),transparent 55%),linear-gradient(180deg,#0f0e13,#08080a)!important;
@@ -801,7 +826,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-11-v543-candle-glow';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-12-v545-eligibility';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1028,7 +1053,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
   <div class="dash-card auth-only" style="display:none" id="dMinerCard" onclick="if(_activeMiner)showAddress(_activeMiner)"><div class="dash-label">⛏ MINER BALANCE</div><div class="dash-val orange" id="dMinerBal">loading...</div><div class="dash-sub" id="dMinerSub">loading data…</div></div>
   <div class="dash-card" onclick="showAddress('sost11a9c6fe1de076fc31c8e74ee084f8e5025d2bb4d')" title="Gold Vault reserve. Until block 25,000 it received 25% of every block reward. At V15 (#25,000) that emission ENDED and the accumulated reserve is progressively returned to active miners through the DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--gold)">◆ GOLD VAULT BALANCE</div><div class="dash-val gold" id="dGoldBal">—</div><div class="dash-sub" id="dGoldBalSub">V15: emission ended (#25,000)</div></div>
   <div class="dash-card" onclick="showAddress('sost1d876c5b8580ca8d2818ab0fed393df9cb1c3a30f')" title="PoPC Pool reserve. Until block 25,000 it received 25% of every block reward. At V15 (#25,000) that emission ENDED and the accumulated reserve is progressively returned to active miners through the DTD Jackpot — not a treasury, not founder spend."><div class="dash-label" style="color:var(--cyan)">◇ POPC POOL BALANCE</div><div class="dash-val cyan" id="dPopcBal">—</div><div class="dash-sub" id="dPopcBalSub">V15: emission ended (#25,000)</div></div>
-  <div id="jackpotCard" class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="try{if(window.SJP&&window.SJP.openDash)window.SJP.openDash();}catch(e){};return false;" title="DTD Jackpot — live since #25,290. The existing Gold-Vault + PoPC reserve is progressively returned to active miners: a supply-neutral treasury spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence 288 blocks. Until #30,000 it reuses the DTD winner and its eligibility; from #30,000 (V16.1) it becomes an INDEPENDENT draw — node-gated (NODE_BIND + heartbeats) and weighted linearly by SbPoW blocks in the previous 2,016 — with its own winner, no cooldown and no anti-dominance. First V2 draw #30,186." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--gold)">LIVE · first #25,290 · 100 SOST</div></div>
+  <div id="jackpotCard" class="dash-card jackpot-gold-pulse" data-panel="dtd" onclick="try{if(window.SJP&&window.SJP.openDash)window.SJP.openDash();}catch(e){};return false;" title="DTD Jackpot — live since #25,290. The existing Gold-Vault + PoPC reserve is progressively returned to active miners: a supply-neutral treasury spend (no mint, no treasury, no founder spend). Base 100 SOST + rollover, cap 500, cadence 288 blocks. Until #30,000 it reuses the DTD winner and its eligibility; from #30,000 (V16.1) it becomes an INDEPENDENT draw — node-gated (NODE_BIND + heartbeats) and weighted linearly by SbPoW blocks in the previous 2,016 — with its own winner, no cooldown and no anti-dominance. First V2 draw #30,186." style="position:relative"><div class="dash-label" style="letter-spacing:.5px;color:var(--gold)"><span style="color:var(--gold)">◈</span> DTD JACKPOT</div><div class="dash-val" id="dJackReserve" style="background:linear-gradient(90deg,var(--gold),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">—</div><div class="dash-sub" id="dJackSub" style="color:var(--gold)">LIVE · first #25,290 · 100 SOST</div><button type="button" class="elig-btn" onclick="event.stopPropagation();window.SostElig&&SostElig.open();return false;">CHECK ELIGIBILITY</button></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="SOST distributed via the DTD reward since V11 Phase 2 activation (block #7,100). Before V15: 50% of subsidy × triggered blocks (bootstrap 2-of-3 in [7100,12100), then 1-of-3 from #12100). From V15 (block 25,000): DTD receives 50% of EVERY block (the Gold-Vault + PoPC shares are redirected here) — 50% miner / 50% DTD. Click for the full DTD panel detail."><div class="dash-label" style="color:#ff00ff">⚡ DTD REWARD DISTRIBUTED BALANCE</div><div class="dash-val" id="dDtdBal" style="color:#ff00ff">—</div><div class="dash-sub" id="dDtdBalSub" style="color:#ff00ff">payouts · 50% of every block from V15</div></div>
   <div class="dash-card" data-panel="mempool" onclick="toggleDashPanel('mempool')"><div class="dash-label" style="color:var(--purple)">MEMPOOL</div><div class="dash-val purple" id="dMempool">0</div><div class="dash-sub" id="dMempoolSub">pending txs</div></div>
   <div class="dash-card" data-panel="hashrate" onclick="toggleDashPanel('hashrate')" title="ConvergenceX attempt rate (estimate). The big number is qualified attempts per second — attempts that pass ConvergenceX's stability filter and become valid hash candidates. Attempts per second alone do not describe SOST&#39;s computational cost: read it together with bitsQ, the active Equalizer profile and the number/distribution of miners. It is not comparable to Bitcoin SHA-256 hashrate. Click for details."><div class="dash-label" style="color:var(--orange)">CONVERGENCEX ATTEMPT RATE (est.)</div><div class="dash-val orange" id="dHashrate">&mdash;</div><div class="dash-sub" id="dHashrateSub">H/s</div></div>
@@ -10281,7 +10306,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
       ? ('<div style="margin:10px 0 4px;font:800 10px ui-monospace;letter-spacing:.8px;color:#ffd166">JACKPOT V2 CANDIDATES &middot; #'+fc(nh)+' <span style="font-weight:400;color:var(--text3)">(PoW candidate &ne; eligible: NODE_BIND required)</span></div>'
          +(_v2Cand.length
            ? ('<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font:11px ui-monospace"><tr style="color:var(--text3);font-size:9px;text-align:left"><th style="padding:3px 6px">ADDRESS</th><th style="padding:3px 6px">PoW BLOCKS (2,016)</th><th style="padding:3px 6px">NODE_BIND</th><th style="padding:3px 6px">HEARTBEATS</th><th style="padding:3px 6px">ELIGIBLE</th></tr>'
-              +_v2Cand.map(function(c){ var a=String(c.address||''); return '<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px;color:#22d3ee;cursor:pointer" title="'+esc(a)+'" onclick="event.stopPropagation();showAddress(\''+esc(a)+'\')">'+esc(a.substr(0,12)+'\u2026'+a.substr(-4))+'</td><td style="padding:4px 6px">'+esc(String(c.pow_blocks))+'</td><td style="padding:4px 6px;color:'+(c.node_bound?'#39ff14':'#fb010d')+'">'+(c.node_bound?'\u2714 bound':'\u2718 not bound')+'</td><td style="padding:4px 6px">'+esc(String(c.heartbeats))+' / '+esc(String(c.heartbeats_required))+'</td><td style="padding:4px 6px;font-weight:800;color:'+(c.eligible?'#39ff14':'#fb010d')+'">'+(c.eligible?'YES':'NO')+'</td></tr>'; }).join('')
+              +_v2Cand.map(function(c){ var a=String(c.address||''); return '<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px;color:#22d3ee;cursor:pointer" title="'+esc(a)+'" onclick="event.stopPropagation();showAddress(\''+esc(a)+'\')">'+esc(a.substr(0,12)+'\u2026'+a.substr(-4))+'</td><td style="padding:4px 6px">'+esc(String(c.pow_blocks))+'</td><td style="padding:4px 6px;color:'+(c.node_bound?'#39ff14':'#fb010d')+'">'+(c.node_bound?'\u2714 bound':'\u2718 not bound')+'</td><td style="padding:4px 6px">'+esc(String(c.heartbeats))+' / '+esc(String(c.heartbeats_required))+'</td><td style="padding:4px 6px;font-weight:800;color:'+(c.eligible?'#39ff14':'#fb010d')+';cursor:pointer;text-decoration:underline dotted" title="Why? Open the eligibility detail of this address" onclick="event.stopPropagation();window.SostElig&&SostElig.open(\''+esc(a)+'\')">'+(c.eligible?'YES':'NO')+'</td></tr>'; }).join('')
               +'</table></div>')
            : '<div style="font-size:11px;color:var(--text3)">'+(_v2?'No PoW candidates in the 2,016-block window.':(state.v2Error?'Data unavailable.':'Loading\u2026'))+'</div>'))
       : '';
@@ -10303,6 +10328,7 @@ window.addEventListener('load',function(){ setTimeout(fetchSostChart,400); });
     d.innerHTML='<div class="sjpd-box"><div class="sjpd-hd"><h3>&#127974; DTD JACKPOT</h3>'+
       '<button class="sjpd-x" id="sjpd-x">Close</button></div>'+
       v2Banner+
+      (tip>=V2H?'<div style="display:flex;justify-content:flex-end;margin:-6px 0 10px"><button type="button" class="elig-btn" onclick="event.stopPropagation();window.SostElig&&SostElig.open();">CHECK ELIGIBILITY</button></div>':'')+
       '<div class="sjpd-grid">'+
         '<div class="sjpd-c"><div class="sjpd-l">RESERVE</div><div class="sjpd-v">'+esc(reserve)+'</div></div>'+
         '<div class="sjpd-c"><div class="sjpd-l">NEXT JACKPOT</div><div class="sjpd-v c">'+_nhD+'</div></div>'+
@@ -10981,6 +11007,67 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load);else load();
   setInterval(function(){if(!document.hidden)load();},60000);
+})();
+</script>
+<script>
+/* Jackpot V2 ELIGIBILITY INSPECTOR — presentation only. Every verdict is the node's getjackpotv2audit;
+   reasons, per-epoch heartbeat status and the earliest still-reachable draw are computed server-side by
+   ops/node-participation-indexer.py from the chain and published in /api/node_participation.json. */
+(function(){
+  function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);});}
+  function n(v){return (v==null?'\u2014':Number(v).toLocaleString('en-US'));}
+  function sh(a){a=String(a||'');return a.length>20?a.slice(0,13)+'\u2026'+a.slice(-4):a;}
+  var ICON={pass:'<span class="eli-yes">\u2705 PASS</span>',fail:'<span class="eli-no">\u274C FAIL</span>',not_required:'<span class="eli-na">\u25CB NOT REQUIRED</span>',unknown:'<span class="eli-unk">? UNKNOWN</span>'};
+  var EP={confirmed:'<span class="eli-yes">\u2705 confirmed</span>',missing:'<span class="eli-no">\u274C missing</span>',before_bind:'<span class="eli-no">\u274C before NODE_BIND</span>',pending:'<span class="eli-na">\u25CB pending (epoch still open or future)</span>'};
+  function chk(c){return ICON[(c&&c.result)||'unknown']||ICON.unknown;}
+  function mark(c){var r=(c&&c.result)||'unknown';return r==='pass'?'<span class="eli-yes">\u2705</span>':r==='fail'?'<span class="eli-no">\u274C</span>':r==='not_required'?'<span class="eli-na">\u25CB</span>':'<span class="eli-unk">?</span>';}
+  function epochs(list){return (list||[]).map(function(e){return '<div>Epoch '+e.epoch+' &middot; #'+n(e.range[0])+'\u2013#'+n(e.range[1])+' &nbsp; '+(EP[e.status]||'<span class="eli-unk">? unknown</span>')+'</div>';}).join('')||'<div class="eli-na">\u25CB no completed epoch is required for this draw</div>';}
+  function detail(c,j){
+    var h='<div class="eli-k">'+
+      '<span>Address</span><b style="color:#22d3ee;word-break:break-all;cursor:pointer" onclick="window.showAddress&&showAddress(\''+esc(c.address)+'\')">'+esc(c.address)+'</b>'+
+      '<span>PoW \u2265'+j.min_pow_blocks+' / '+n(j.pow_window)+'</span><b>'+chk(c.checks.pow)+' &nbsp;'+n(c.pow_blocks)+'</b>'+
+      '<span>NODE_BIND</span><b>'+chk(c.checks.node_bind)+' &nbsp;'+esc(c.checks.node_bind.value)+(c.bind_height?' <span class="eli-na">(bound #'+n(c.bind_height)+', epoch '+c.bind_epoch+')</span>':'')+'</b>'+
+      '<span>Heartbeats</span><b>'+chk(c.checks.heartbeats)+' &nbsp;'+esc(c.checks.heartbeats.value)+'</b>'+
+      '<span>Eligible</span><b>'+(c.eligible?'<span class="eli-yes">\u2705 YES</span>':'<span class="eli-no">\u274C NO</span>')+'</b>'+
+      '<span>Weight</span><b>'+n(c.weight)+(c.eligible&&c.share!=null?' <span class="eli-na">\u00b7 '+n(c.weight)+' / '+n(j.total_weight)+' = '+(100*c.share).toFixed(2)+'%</span>':'')+'</b></div>';
+    if(c.eligible) h+='<div class="eli-na" style="font-size:10px">Share of the current eligible draw weight \u2014 not a guaranteed payout: the eligible set can change before #'+n(j.height)+'.</div>';
+    h+='<div class="eli-t">HEARTBEAT STATUS \u00b7 required '+esc(c.heartbeats_required)+(j.heartbeat_window?' of the last '+j.heartbeat_window:'')+' completed epoch'+(j.heartbeat_window===1?'':'s')+'</div>'+epochs(c.epochs);
+    if(c.reasons&&c.reasons.length) h+='<div class="eli-t">REASON</div>'+c.reasons.map(function(r){return '<div>'+esc(r)+'</div>';}).join('');
+    if(c.checks.heartbeats.result==='fail') h+='<div class="eli-na" style="font-size:10px">A missing heartbeat in a CLOSED epoch does not mean the node is offline now; it only means none was confirmed on chain for that epoch.</div>';
+    var e=c.earliest||{};
+    h+='<div class="eli-t">NEXT POSSIBLE ELIGIBILITY</div>';
+    if(e.status==='eligible_now') h+='<div class="eli-yes">Eligible for #'+n(e.height)+' (subject to the state at that block).</div>';
+    else if(e.status==='possible') h+='<div>Earliest possible draw: <b style="color:#ffd166">#'+n(e.height)+'</b></div><div class="eli-na" style="font-size:10px">Requirements before then:</div>'+epochs(e.epochs)+'<div class="eli-na" style="font-size:10px">Assumes '+esc(e.assumes)+'.</div>';
+    else h+='<div class="eli-unk">? Cannot determine yet'+(e.status==='cannot_determine'?' \u2014 this address has no active NODE_BIND.':'.')+'</div>';
+    return h;
+  }
+  function render(d,focus){
+    var j=d&&d.jackpot, b=document.getElementById('eliBody');
+    if(!b) return;
+    if(!j){ b.innerHTML='<div class="eli-unk">? Eligibility data unavailable right now.</div>'; return; }
+    document.getElementById('eliTitle').innerHTML='JACKPOT V2 ELIGIBILITY &middot; NEXT DRAW #'+n(j.height);
+    document.getElementById('eliSub').innerHTML='Verdicts from the node (getjackpotv2audit) &middot; explained from the chain index at tip #'+n(d.tip)+' &middot; eligible '+n(j.eligible_count)+' &middot; total draw weight '+n(j.total_weight)+' &middot; PoW window '+n(j.pow_window)+' blocks &middot; heartbeats '+n(j.heartbeat_required)+' of '+n(j.heartbeat_window);
+    b.innerHTML='<div class="eli-hd"><span>ADDRESS</span><span>POW</span><span>NODE</span><span>HB</span><span>ELIGIBLE</span></div>'+
+      (j.candidates.length?j.candidates.map(function(c,i){
+        return '<div class="eli-row'+(focus&&c.address===focus?' open':'')+'" data-a="'+esc(c.address)+'"><div class="eli-sum" onclick="this.parentNode.classList.toggle(\'open\')">'+
+          '<span class="ad" title="'+esc(c.address)+'">'+esc(sh(c.address))+'</span><span>'+mark(c.checks.pow)+' '+n(c.pow_blocks)+'</span><span>'+mark(c.checks.node_bind)+'</span><span>'+mark(c.checks.heartbeats)+' '+esc(c.heartbeats)+'/'+esc(c.heartbeats_required)+'</span>'+
+          '<span>'+(c.eligible?'<span class="eli-yes">YES</span>':'<span class="eli-no">NO</span>')+'</span></div><div class="eli-det">'+detail(c,j)+'</div></div>';
+      }).join(''):'<div class="eli-na">No PoW candidates in the '+n(j.pow_window)+'-block window.</div>');
+    if(focus){ var r=b.querySelector('.eli-row.open'); if(r) r.scrollIntoView({block:'center'}); }
+  }
+  function close(){ var o=document.getElementById('eliOv'); if(o) o.remove(); document.removeEventListener('keydown',esc_); }
+  function esc_(e){ if(e.key==='Escape') close(); }
+  window.SostElig={ open:function(addr){
+    close();
+    var o=document.createElement('div'); o.className='eli-ov'; o.id='eliOv';
+    o.innerHTML='<div class="eli-box" onclick="event.stopPropagation()"><button class="eli-x" type="button">\u2715</button><div class="eli-h" id="eliTitle">JACKPOT V2 ELIGIBILITY</div><div class="eli-s" id="eliSub">loading\u2026</div><div id="eliBody"><div class="eli-na">loading\u2026</div></div>'+
+      '<details class="eli-why"><summary>WHY?</summary><div style="margin-top:6px">Jackpot V2 requires: <b>\u2265 3 SbPoW blocks</b> in the previous <b>2,016</b> &middot; an <b>active NODE_BIND</b> &middot; the required <b>completed-epoch heartbeats</b> (epochs of 288 blocks from #30,000; ramp 0/0 \u2192 1/1 \u2192 2/2 \u2192 3/3, then 3 of the last 4).<br>'+
+      'Jackpot V2 does <b>not</b> use the recent-producer cooldown or the DTD anti-dominance rule: a large miner is <b>not</b> excluded for its size.<br>Once eligible, <b>draw weight = PoW blocks</b> in the previous 2,016.<br>'+
+      'A heartbeat counts for the epoch it is mined in, only after that epoch has closed; a closed epoch is never back-filled. A valid heartbeat proves control of the bound node key and that it followed the canonical chain at that time, not one physical machine.</div></details></div>';
+    o.addEventListener('click',close); o.querySelector('.eli-x').addEventListener('click',close);
+    document.body.appendChild(o); document.addEventListener('keydown',esc_);
+    fetch('api/node_participation.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(d){render(d,addr);}).catch(function(){render(null);});
+  }};
 })();
 </script>
 </body>
