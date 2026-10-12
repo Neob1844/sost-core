@@ -142,6 +142,20 @@ if(SOST_DEVNET_V2_FIRST_JACKPOT)
     message(WARNING "SOST_DEVNET_V2_FIRST_JACKPOT=ON -- DEVNET V2 activation moved to #18. Test builds only.")
 endif()
 
+# DEVNET only: capsule activation at #300 instead of #7350 (CAPSULE_ACTIVATION_HEIGHT_BUILD in
+# include/sost/tx_validation.h). Lets a fresh devnet test real capsules without waiting for
+# cASERT to walk a 2-second devnet up to #7350. Changes no other height or rule.
+option(SOST_DEVNET_CAPSULE_FAST
+    "DEVNET only: move capsule activation to #300. Test builds only."
+    OFF)
+if(SOST_DEVNET_CAPSULE_FAST)
+    if(NOT SOST_DEVNET_FORKS)
+        message(FATAL_ERROR "SOST_DEVNET_CAPSULE_FAST requires SOST_DEVNET_FORKS=ON — it only moves the DEVNET capsule activation height.")
+    endif()
+    add_compile_definitions(SOST_DEVNET_CAPSULE_FAST)
+    message(WARNING "SOST_DEVNET_CAPSULE_FAST=ON -- DEVNET capsule activation moved to #300. Test builds only.")
+endif()
+
 if(SOST_ENABLE_PHASE2_SBPOW)
     include(CheckIncludeFiles)
     include(CheckSymbolExists)
@@ -714,6 +728,11 @@ add_test(NAME slingshot-v12-tier COMMAND test-slingshot-v12-tier)
 add_executable(test-capsule-v12-activation tests/test_capsule_v12_activation.cpp)
 target_link_libraries(test-capsule-v12-activation PRIVATE sost-core)
 add_test(NAME capsule-v12-activation COMMAND test-capsule-v12-activation)
+
+# Capsule activation through the node's DEFAULT validation context (7349/7350; 299/300 in capsule-fast devnet)
+add_executable(test-capsule-activation-build tests/test_capsule_activation_build.cpp)
+target_link_libraries(test-capsule-activation-build PRIVATE sost-core)
+add_test(NAME capsule-activation-build COMMAND test-capsule-activation-build)
 
 # V12 hard fork — timestamp manipulation safety audit. Pins drift cap,
 # tier spacings, and MTP/min_delta heights so any future change to these

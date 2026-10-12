@@ -1588,9 +1588,9 @@ int main(int argc, char** argv) {
 
             int64_t chain_height = query_chain_height();
             if (chain_height < 0) { fprintf(stderr, "Error: cannot connect to node at %s:%d\n", g_node_host.c_str(), g_node_port); return 1; }
-            if (cap_ptr && chain_height < (int64_t)sost::V12_HEIGHT) {
-                fprintf(stderr, "ERROR: capsule attach requires chain height >= V12_HEIGHT (%lld); tip is %lld\n",
-                        (long long)sost::V12_HEIGHT, (long long)chain_height);
+            if (cap_ptr && chain_height < (int64_t)sost::CAPSULE_ACTIVATION_HEIGHT_BUILD) {
+                fprintf(stderr, "ERROR: capsule attach requires chain height >= capsule activation (%lld); tip is %lld\n",
+                        (long long)sost::CAPSULE_ACTIVATION_HEIGHT_BUILD, (long long)chain_height);
                 return 1;
             }
             const bool sealed = (g_capsule_mode == "sealed-note" || g_capsule_mode == "sealed-doc-ref" || g_capsule_mode == "sealed-structured");
@@ -2573,12 +2573,12 @@ int main(int argc, char** argv) {
         // V12-activation-height guard. Capsules on OUT_TRANSFER outputs are
         // rejected by the validator (R14_PAYLOAD_FORBIDDEN) before V12_HEIGHT.
         if (cap_ptr) {
-            if (chain_height < (int64_t)sost::V12_HEIGHT) {
+            if (chain_height < (int64_t)sost::CAPSULE_ACTIVATION_HEIGHT_BUILD) {
                 fprintf(stderr,
-                    "ERROR: capsule attach requires chain height >= V12_HEIGHT "
+                    "ERROR: capsule attach requires chain height >= capsule activation "
                     "(%lld); current tip is %lld.\n"
-                    "  Wait until the chain crosses V12 or omit --capsule-mode.\n",
-                    (long long)sost::V12_HEIGHT, (long long)chain_height);
+                    "  Wait until the chain crosses it or omit --capsule-mode.\n",
+                    (long long)sost::CAPSULE_ACTIVATION_HEIGHT_BUILD, (long long)chain_height);
                 return 1;
             }
             // Sealed Capsule (Fase Sealed-1.D): tooling gate at V13_HEIGHT.

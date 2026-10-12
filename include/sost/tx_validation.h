@@ -22,6 +22,20 @@ inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_MAINNET = 7350;
 inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_TESTNET = 100;
 inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_DEV     = 1;
 
+// Capsule activation used by the node's validation context and the CLI capsule
+// gate. Every normal build (mainnet, testnet, DEVNET_FAST) uses the mainnet
+// value. SOST_DEVNET_CAPSULE_FAST is a test-only devnet build that moves ONLY
+// this height to 300 so a fresh devnet reaches active capsules in minutes; it
+// requires SOST_DEVNET_FORKS (Profile::DEV + MAGIC_DEV) and changes no other rule.
+#if defined(SOST_DEVNET_CAPSULE_FAST)
+#  if !defined(SOST_DEVNET_FORKS)
+#    error "SOST_DEVNET_CAPSULE_FAST requires SOST_DEVNET_FORKS"
+#  endif
+inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_BUILD   = 300;
+#else
+inline constexpr int64_t  CAPSULE_ACTIVATION_HEIGHT_BUILD   = CAPSULE_ACTIVATION_HEIGHT_MAINNET;
+#endif
+
 // Policy constants (relay / mining preferences, not consensus-enforced)
 inline constexpr int32_t  MAX_TX_BYTES_STANDARD    = 16000;
 inline constexpr uint16_t MAX_INPUTS_STANDARD      = 128;
@@ -192,7 +206,7 @@ struct TxValidationResult {
 struct TxValidationContext {
     Hash256  genesis_hash{};
     int64_t  spend_height{0};   // height of the block being validated
-    int64_t  capsule_activation_height{CAPSULE_ACTIVATION_HEIGHT_MAINNET};
+    int64_t  capsule_activation_height{CAPSULE_ACTIVATION_HEIGHT_BUILD};
     int64_t  bond_activation_height{BOND_ACTIVATION_HEIGHT_MAINNET};
 };
 
