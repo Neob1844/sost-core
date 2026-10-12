@@ -644,7 +644,7 @@
 @keyframes dexBtnRainbow{0%{background-position:0% center}100%{background-position:200% center}}@keyframes dexBtnGlow{0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.5),0 0 32px rgba(74,222,128,0.2)}50%{box-shadow:0 0 24px rgba(245,158,11,0.8),0 0 48px rgba(74,222,128,0.4),0 0 64px rgba(192,132,252,0.3)}}@keyframes asBtnGlow{0%,100%{box-shadow:0 0 10px rgba(255,212,0,.45),0 0 18px rgba(123,45,126,.3)}50%{box-shadow:0 0 26px rgba(255,212,0,1),0 0 52px rgba(123,45,126,.75),0 0 80px rgba(91,42,94,.5)}}
 </style>
 <script src="js/security.js?v=v392"></script>
-<script src="js/nav-toggle.js?v=v553" defer></script>
+<script src="js/nav-toggle.js?v=v554" defer></script>
 <link rel="stylesheet" href="css/atomix-btn.css?v=v481">
 </head>
 <body>
@@ -774,7 +774,7 @@
  <div class="wg-not"><div>&#9940; NOT LIVE</div><div>&#9940; NO MAINNET BRIDGE DEPLOYED</div><div>&#9940; NO GOLD RESERVE V2 FUNDS YET</div><div>&#9989; CURRENT SOST CONSENSUS UNCHANGED</div></div>
  <div class="box cyan"><div class="bt">#30,000 &rarr; #40,000</div><b>#30,000 built the current foundation</b> (V30000 is live). <b>#40,000 is the current coordinated research horizon</b> for the next major phase. <b>Nothing activates automatically at #40,000.</b> If engineering, external audit, legal or operational gates are not complete, the work moves later (for example #50,000). Every consensus change would need its own release, tests, audit and public notice.</div>
  <div class="wg-toc">
-  <a href="#what">wSOST</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#desk">Gold &rarr; wSOST desk</a><a href="#trust">Bridge trust</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
+  <a href="#what">wSOST</a><a href="#why-wsost">Why wSOST / native SOST</a><a href="#price">Price discovery</a><a href="#value">Value sources</a><a href="#boxes">Five boxes</a><a href="#historical">Historical Gold Vault</a><a href="#grv2">Gold Reserve V2</a><a href="#desk">Gold &rarr; wSOST desk</a><a href="#trust">Bridge trust</a><a href="#por">Proof of reserves</a><a href="#emergency">Emergency</a><a href="#governance">Governance</a><a href="#vote">Voting</a><a href="#check">Check eligibility</a><a href="#h40000">#40,000</a><a href="#compare">BTC / ETH / SOST</a><a href="#acquire">Get SOST</a><a href="#status">Status matrix</a>
  </div>
 </div></div></section>
 
@@ -807,6 +807,88 @@ RESULT
  <p>Integrating a brand-new Layer-1 is real work for wallets and exchanges; Ethereum and ERC-20 tokens are already integrated almost everywhere. wSOST would make SOST reachable from:</p>
  <ul><li>Ethereum wallets;</li><li>DEX liquidity pools and therefore public price discovery;</li><li>exchanges where ERC-20 support reduces Layer-1 integration work;</li><li>future DeFi compatibility.</li></ul>
  <div class="box gray"><div class="bt">WHAT IT DOES NOT DO</div>wSOST may reduce technical integration friction, but <b>listing, liquidity, legal review and exchange due diligence remain independent requirements</b>. It guarantees no listing anywhere.</div>
+</div></div></section>
+
+<section class="section" id="why-wsost"><div class="container"><div class="wg">
+ <div class="section-header"><div class="section-id">ACCESS LAYER</div><h2 class="section-title">Why wSOST &mdash; and why <span class="accent">native SOST stays the real asset</span></h2></div>
+ <span class="st res">RESEARCH</span> <span class="st nd">NOT DEPLOYED</span>
+ <h3>The integration barrier</h3>
+ <p>One practical barrier to wider SOST market access is the technical burden a centralized exchange faces when it integrates a new, independent Layer-1 blockchain. Listing native SOST would require the exchange to:</p>
+ <ul>
+  <li>run and maintain a SOST full node;</li>
+  <li>integrate SOST deposits and withdrawals;</li>
+  <li>implement a SOST-specific confirmation and reorganisation policy;</li>
+  <li>monitor wallet and node infrastructure around the clock;</li>
+  <li>review SOST RPC and transaction semantics;</li>
+  <li>build custody and operational tooling for a new chain;</li>
+  <li>carry the security and maintenance work specific to SOST.</li>
+ </ul>
+ <p>Ethereum and ERC-20 infrastructure, on the other hand, is already in place at virtually every major centralized exchange: deposits, withdrawals, custody and monitoring for ERC-20 tokens are standard operations there. For such a venue, integrating an ERC-20 representation is operationally much simpler than integrating a new chain.</p>
+ <div class="box"><div class="bt">WHAT wSOST IS FOR</div><b>wSOST is intended to reduce integration friction for venues that already support Ethereum/ERC-20 infrastructure.</b> It is being researched as an <b>access layer</b>. It does not guarantee that any exchange will list it, and listing, liquidity, legal review and exchange due diligence remain independent requirements.</div>
+ <div class="pre">native SOST  →  lock 1:1  →  wSOST (ERC-20)  →  Ethereum wallets · DEX · compatible CEX infrastructure</div>
+ <h3>What would be listed</h3>
+ <p>The <b>initial exchange-access target is wSOST</b>: the representation offered to CEX and DEX venues where integrating the native SOST chain is impractical or unnecessarily complex. <b>wSOST does not replace SOST.</b> <i>wSOST is designed to make SOST easier to integrate without replacing the native SOST network.</i></p>
+ <div class="box red"><div class="bt">NATIVE SOST &mdash; THE CANONICAL ASSET</div>Native SOST remains:
+  <ul>
+   <li>the real Layer-1 asset;</li>
+   <li>the asset created and distributed by SOST consensus;</li>
+   <li>the asset received through mining, through normal DTD and through the DTD Jackpot;</li>
+   <li>the asset used for native transfers and in the SOST-side atomic swap;</li>
+   <li>the asset locked behind wSOST;</li>
+   <li>the final settlement asset when wSOST is unwrapped.</li>
+  </ul>
+  <b>1 wSOST = 1 native SOST locked.</b> Native SOST is the source asset; wSOST is only its external Ethereum representation. There is <b>no independent wSOST monetary policy</b>, <b>no new native SOST is created by wrapping</b>, and <b>native SOST is never burned</b>.</div>
+ <h4>Example &mdash; Juan reaches an Ethereum-compatible exchange</h4>
+ <div class="pre">JUAN HAS               1,000 native SOST
+He wraps                 400 SOST
+
+RESULT
+  600 native SOST remain in his wallet
+  400 native SOST are locked in the Bridge Vault
+  400 wSOST are issued  →  he can send them to a compatible Ethereum / exchange address
+
+Later he unwraps 100:
+  100 wSOST are burned  →  100 native SOST are released
+
+wSOST is the transport and market representation.
+Native SOST remains the underlying asset.</div>
+ <h3>Three roles, three layers</h3>
+ <div class="grid">
+  <div class="card"><div class="h" style="color:#ff3b3f">NATIVE SOST</div>Canonical Layer-1 asset. Mining, DTD, Jackpot and native settlement. Created only by SOST consensus. <span class="st live">LIVE</span></div>
+  <div class="card"><div class="h" style="color:#fff">wSOST</div>1:1 Ethereum representation. Intended CEX/DEX access layer. Always backed by locked native SOST. Not a new monetary asset. <span class="st res">PLANNED</span> <span class="st nd">NOT DEPLOYED</span></div>
+  <div class="card"><div class="h" style="color:#ffd166">GOLD RESERVE V2</div>External tokenized-gold reserve: XAUT first, other approved gold assets later. Does not mint SOST. Does not mint wSOST. Creates no peg and no guaranteed floor. <span class="st res">PLANNED</span> <span class="st nd">NOT FUNDED</span></div>
+ </div>
+ <div class="pre">MINING / DTD / ATOMIC SWAP
+          ↓
+      NATIVE SOST
+          ↓
+       WRAP 1:1
+          ↓
+        wSOST
+          ↓
+  CEX / DEX / ETHEREUM
+
+XAUT / APPROVED GOLD  →  GOLD RESERVE V2
+
+Historical Gold Vault:  SEPARATE  →  DTD JACKPOT</div>
+ <p><i>Native SOST remains the canonical protocol asset. wSOST is the planned Ethereum-compatible market-access representation. Gold Reserve V2 is the planned external gold-reserve layer.</i></p>
+ <h3>From the Genesis Gold Vault to Gold Reserve V2</h3>
+ <p>The original SOST design introduced a Gold Vault concept from Genesis: part of the early block distribution accumulated in a constitutional reserve, with the long-term idea of connecting SOST with an external gold reserve. That historical architecture later changed. From block <b>#25,000</b>:</p>
+ <ul>
+  <li>the Gold Vault receives <b>0%</b> of new emission;</li>
+  <li>the PoPC Pool receives <b>0%</b> of new emission;</li>
+  <li>the current block distribution is <b>50% miner / 50% DTD</b>;</li>
+  <li>the historical Gold Vault + PoPC balances are <b>frozen and committed to the DTD Jackpot</b>.</li>
+ </ul>
+ <div class="box red"><div class="bt">THE HISTORICAL GOLD VAULT IS NOT REOPENED &mdash; ITS FUNDS ARE NOT REUSED</div>Gold Reserve V2 is a new and completely separate external reserve. <i>Gold Reserve V2 is intended to continue the reserve philosophy introduced at Genesis, while preserving the historical Gold Vault exactly as committed under the current DTD Jackpot architecture.</i> The old Gold Vault does <b>not</b> back wSOST, and Gold Reserve V2 does not reuse or alter its balances. <span class="st hist">HISTORICAL</span> <span class="st live">DTD JACKPOT RESERVE</span></div>
+ <h3>Why wSOST helps the gold-reserve model</h3>
+ <p>wSOST would give SOST an Ethereum-compatible representation, and Gold Reserve V2 would live on the same Ethereum-compatible infrastructure as tokenized gold such as XAUT. In a future, gated phase that makes mechanisms like this possible:</p>
+ <div class="pre">XAUT                     →  Gold Reserve V2
+existing treasury wSOST  →  user
+
+without creating new native SOST, without creating unbacked wSOST,
+and without touching the historical Jackpot reserve.</div>
+ <p>That gives the Genesis reserve philosophy a practical modern infrastructure &mdash; <b>SOST L1 + the wSOST access layer + an external tokenized-gold reserve</b> &mdash; while every accounting layer stays separate. <span class="st gated">GATED OFF</span></p>
 </div></div></section>
 
 <section class="section" id="price"><div class="container"><div class="wg">

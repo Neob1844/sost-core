@@ -795,7 +795,7 @@
    ========================================================================== */
 (function(){
   "use strict";
-  var IMG='assets/wsost/wsost-gold-vault-256.webp?v=v553', IMG_PNG='assets/wsost/wsost-gold-vault-256.png?v=v553';
+  var IMG='assets/wsost/wsost-gold-vault-nav-256.webp?v=v554', IMG_PNG='assets/wsost/wsost-gold-vault-nav-256.png?v=v554';
   function styleOnce(){
     if(document.getElementById('sost-wsost-btn-style')) return;
     var st=document.createElement('style'); st.id='sost-wsost-btn-style';
