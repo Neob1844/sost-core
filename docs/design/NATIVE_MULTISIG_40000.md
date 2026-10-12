@@ -2,8 +2,8 @@
 
 Status: **DESIGN ONLY — not implemented, not activated, IMPLEMENTATION NOT AUTHORIZED.**
 Target: the coordinated #40,000 hard fork (a target, not a commitment; it moves if review is not complete).
-Author: Neob. Date: 2026-10-12. Revision 2 (design review patch).
-**Baseline: the production release source `3acd952b` (V30000 / release-final).** Note: `main` is NOT a descendant of this commit (it lacks the dormant native-assets code); every statement below was checked against `3acd952b`.
+Author: Neob. Date: 2026-10-12. Revision 3 (OUT_BURN registry correction; production baseline 59a4e666).
+**Baseline: production consensus source `3acd952b` (tag `v30000-final`) and production node source `59a4e666` (tag `v30000-final.1`, the binary running on the production node; it changes only `src/sost-node.cpp`).** Note: `main` is NOT a descendant of this commit (it lacks the dormant native-assets code); every statement below was checked against `3acd952b`.
 
 ---
 
@@ -54,11 +54,11 @@ Output types (`TxOutput.type`):
 | 0x12 / 0x13 | OUT_HTLC_LOCK / OUT_HTLC_CLAIM_WITNESS | ACTIVE ≥ 16,000 (relay ≥ 17,000) |
 | 0x14 | (named `OUT_HTLC_REFUND` in older branch docs) | **RESERVED — do not use** (avoid confusion) |
 | 0x15–0x1F | — | FREE |
-| 0x20 | OUT_BURN | ACTIVE special-purpose (unspendable) |
+| 0x20 | OUT_BURN | **RESERVED / INACTIVE — DO NOT ACTIVATE.** Not in `IsActiveOutputType` (R11 rejects creating it); S12 rejects spending it. **Native SOST has no burn mechanism and must never gain one** (the code comment: "SOST supply is immutable … nothing is ever burned"). |
 | 0x21–0x2F | — | FREE |
 | 0x30 | OUT_NODE_PROTOCOL | ACTIVE (V16 NODE_BIND / HEARTBEAT) — ⚠ the dead library `script.h` also defines `OUT_SCRIPT_HASH = 0x30` (collision in unused code; see §1, legacy) |
 | 0x31–0x3F | — | FREE |
-| 0x40 / 0x41 / 0x42 / 0x43 | OUT_ASSET_TRANSFER / ISSUE_AUTH / BURN / GENESIS_DEF | DEFINED in production code, **dormant**: `NATIVE_ASSETS_ACTIVATION_HEIGHT = INT64_MAX` on mainnet (devnet 42, testnet 30,000). (A comment in `transaction.h` still says "mainnet 30000" — stale.) |
+| 0x40 / 0x41 / 0x42 / 0x43 | OUT_ASSET_TRANSFER / ISSUE_AUTH / **ASSET_BURN** / GENESIS_DEF — `OUT_ASSET_BURN 0x42` destroys units of an *issued native asset* only, **never native SOST** | DEFINED in production code, **dormant**: `NATIVE_ASSETS_ACTIVATION_HEIGHT = INT64_MAX` on mainnet (devnet 42, testnet 30,000). (A comment in `transaction.h` still says "mainnet 30000" — stale.) |
 | 0x44–0x4F | — | **RESERVED: native assets** |
 | **0x50** | **OUT_MULTISIG (proposed)** | **PROPOSED, #40,000** |
 | 0x51–0x5F | — | **RESERVED: custody / multisig** |
@@ -149,7 +149,7 @@ SHA256d( "SOST-SIGHASH-V2" ‖ CHAIN_ID(32) ‖ version ‖ tx_type ‖ hashPrev
          ‖ hashOutputs ‖ genesis_hash )
 ```
 
-**CHAIN_ID** is a 32-byte constant stored as **literal bytes in each network's consensus parameter set** (next to its genesis and fork heights). It is never computed at runtime and never derived from a profile name, config file or command-line string; renaming a profile cannot change it. The values were generated once, reproducibly, as `SHA256("SOST-CHAIN-ID-V1|<network>|<genesis hex>")`, and are then frozen as literals:
+**CHAIN_ID** is a 32-byte constant stored as **literal bytes in each network's consensus parameter set** (next to its genesis and fork heights). It is never computed at runtime and never derived from a profile name, config file or command-line string; renaming a profile cannot change it. The values were generated once, reproducibly, as `SHA256("SOST-CHAIN-ID-V1|<network>|<genesis hex>")`, and are then frozen as literals. Consensus uses the literal bytes; they are **never regenerated automatically** (a test asserts the literals, not the derivation):
 
 | Network | CHAIN_ID |
 |---|---|
@@ -428,7 +428,7 @@ Integration (devnet):
 5. **HTLC with an MSH claimant** — would let a multisig vault take part in atomic swaps directly.
 6. **Bridge vault size per policy** — split the vault into several 3-of-5 outputs to limit the blast radius of a single compromised set.
 7. ~~Fate of legacy `script.h` / `psbt.cpp`~~ — decided: remove (or hard-fence) before activation (§1).
-8. Repository hygiene: `main` is not a descendant of the production source `3acd952b`; the #40,000 implementation branch must start from the production lineage, and `main` should be reconciled with it first.
+8. Repository hygiene: `main` and production diverged at `440defe5` (main +237 commits, production +82). The #40,000 implementation must branch from the reconciled production-derived baseline (`reconcile/v30000-production-main`, from `59a4e666`), never from `main`. See docs/reconcile/RECONCILIATION_PLAN.md on that branch.
 
 ---
 
@@ -442,10 +442,13 @@ The canonical wSOST, Gold Reserve V2 and the official HTLC v2 target **Ethereum 
 
 ```
 OUTPUT_TYPE_0x50_COLLISION:      NO (concrete asset types are 0x40–0x43; ranges now fixed formally)
-CANONICAL_OUTPUT_REGISTRY:       §1 — 0x00–0x04 active · 0x10–0x13 active · 0x14 reserved/do-not-use · 0x20 burn · 0x30 node protocol
+CANONICAL_OUTPUT_REGISTRY:       §1 — 0x00–0x04 active · 0x10–0x13 active · 0x14 reserved/do-not-use · 0x20 OUT_BURN RESERVED_INACTIVE (native SOST burn: NEVER) · 0x30 node protocol
                                  · 0x40–0x43 assets (dormant) · 0x44–0x4F reserved assets · 0x50 multisig · 0x51–0x5F reserved custody
 FINAL_MULTISIG_OUTPUT_TYPE:      0x50 OUT_MULTISIG
 NATIVE_ASSET_RESERVED_RANGE:     0x40–0x4F (outputs); tx types 0x30–0x33
+OUT_BURN_0x20_STATUS:            RESERVED_INACTIVE (do not activate)
+NATIVE_SOST_BURN:                NEVER
+OUT_ASSET_BURN_0x42:             ASSET_ONLY (dormant with the asset layer)
 CAPSULE_RULE_CURRENT:            R14 consensus: payload ≤ 512 B on OUT_TRANSFER after capsule activation, format NOT checked by
                                  consensus (Capsule v1 enforced by relay policy only); asset outputs strict format; others forbidden
 CAPSULE_RULE_40000_PROPOSED:     at ≥ MULTISIG_HEIGHT, OUT_MULTISIG payload = empty OR valid Capsule v1 (header+body checked at
