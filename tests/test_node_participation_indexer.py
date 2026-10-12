@@ -190,8 +190,63 @@ class T(unittest.TestCase):
         self.assertEqual(b["epochs"][0]["status"], "before_bind")
         self.assertEqual(b["earliest"]["height"], 31338)                   # 3 of epochs 0-3, epoch 0 impossible
         self.assertEqual([e["status"] for e in b["earliest"]["epochs"]], ["before_bind", "confirmed", "pending", "pending"])
-        self.assertTrue(any("cannot carry a heartbeat" in r for r in b["reasons"]))
+        self.assertTrue(any("was not a heartbeat failure" in r for r in b["reasons"]))
         self.assertFalse(any("dominan" in r.lower() for r in b["reasons"]))
+
+    def _row(self, pow_blocks, bound, hb, req, eligible=False, weight=0):
+        return {"address": "sost1" + "e" * 40, "pow_blocks": pow_blocks, "node_bound": bound, "heartbeats": hb,
+                "heartbeats_required": req, "eligible": eligible, "weight": weight}
+
+    def test_genuine_missing_after_bind_is_not_before_bind(self):
+        b = {"h": npi.A + 5}                                            # bound early in epoch 0, never a heartbeat in it
+        eps = {1: [npi.A + npi.L + 3, "t"]}
+        x = npi.explain_candidate(self._row(50, True, 0, 1), b, eps, npi.A + npi.L + 20, 30474)
+        self.assertEqual(x["epochs"][0]["status"], "missing")
+        self.assertTrue(any("although the identity was already bound" in r for r in x["reasons"]))
+        self.assertFalse(any("not a heartbeat failure" in r for r in x["reasons"]))
+
+    def test_pending_and_heartbeat_height(self):
+        b = {"h": npi.A + 1}
+        eps = {0: [npi.A + 7, "t"]}
+        x = npi.explain_candidate(self._row(50, True, 1, 1, True, 50), b, eps, npi.A + npi.L + 2, 30474)
+        self.assertEqual(x["epochs"][0]["heartbeat_height"], npi.A + 7)
+        self.assertEqual(x["earliest"]["status"], "eligible_now")
+
+    def test_steady_state_three_of_four(self):
+        b = {"h": npi.A + 1}                                            # bound in epoch 0, heartbeats in 1, 2, 3 only
+        eps = {1: [1, ""], 2: [2, ""], 3: [3, ""]}
+        tip = npi.A + 4 * npi.L + 3                                      # epoch 4 open; #31,338 counts epochs 0-3
+        win, req = npi.draw_window(31338)
+        self.assertEqual((win, req), ([0, 1, 2, 3], 3))
+        x = npi.explain_candidate(self._row(50, True, 3, 3, True, 50), b, eps, tip, 31338)
+        self.assertEqual([e["status"] for e in x["epochs"]], ["missing", "confirmed", "confirmed", "confirmed"])
+        self.assertEqual(x["checks"]["heartbeats"]["result"], "pass")
+        # one more miss (epoch 2) breaks 3-of-4: next reachable draw moves on
+        eps2 = {1: [1, ""], 3: [3, ""]}
+        y = npi.explain_candidate(self._row(50, True, 2, 3), b, eps2, tip, 31338)
+        self.assertEqual(y["checks"]["heartbeats"]["result"], "fail")
+        self.assertGreater(y["earliest"]["height"], 31338)
+
+    def test_pow_below_minimum_has_no_promised_height(self):
+        b = {"h": npi.A + 1}
+        eps = {0: [npi.A + 7, ""]}
+        x = npi.explain_candidate(self._row(1, True, 1, 1), b, eps, npi.A + npi.L + 2, 30474)
+        self.assertEqual(x["checks"]["pow"]["result"], "fail")
+        self.assertEqual(x["earliest"]["pow_needed"], 2)
+        self.assertIn("no exact height can be promised", x["earliest"]["why_pow"])
+
+    def test_no_node_bind_cannot_be_dated(self):
+        x = npi.explain_candidate(self._row(40, False, 0, 1), None, {}, npi.A + npi.L + 2, 30474)
+        self.assertEqual(x["checks"]["node_bind"]["result"], "fail")
+        self.assertEqual(x["earliest"]["status"], "cannot_determine")
+        self.assertTrue(all(e["status"] == "before_bind" for e in x["epochs"]))
+
+    def test_ramp_and_generic_example(self):
+        self.assertEqual([(r["height"], r["required"], r["window"]) for r in npi.ramp_table()],
+                         [(30186, 0, 0), (30474, 1, 1), (30762, 2, 2), (31050, 3, 3), (31338, 3, 4)])
+        ex = npi.example_bind_in_epoch1()
+        self.assertEqual([(d["height"], d["eligible_by_heartbeats"]) for d in ex["draws"]],
+                         [(30474, False), (30762, False), (31050, False), (31338, True)])
 
     def test_state_roundtrip(self):
         c = FakeChain(npi.A)

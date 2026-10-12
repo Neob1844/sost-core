@@ -193,34 +193,56 @@ def explain_candidate(c, b, eps, tip, J):
         if e < done:
             return "missing"
         return "pending"                  # current/future epoch: can still be confirmed
-    epochs = [{"epoch": e, "range": epoch_range(e), "status": ep_status(e)} for e in win]
+    def ep_row(e):
+        r = {"epoch": e, "range": epoch_range(e), "status": ep_status(e)}
+        if e in eps:
+            r["heartbeat_height"] = eps[e][0]
+        return r
+    epochs = [ep_row(e) for e in win]
     pow_ok = (c.get("pow_blocks") or 0) >= MIN_POW
     reasons = []
     if not pow_ok:
-        reasons.append(f"Fewer than {MIN_POW} SbPoW blocks in the previous {POW_WINDOW:,} (has {c.get('pow_blocks') or 0}).")
+        reasons.append(f"You have {c.get('pow_blocks') or 0} valid SbPoW block(s) in the previous {POW_WINDOW:,}. Minimum required: {MIN_POW}.")
     if not c.get("node_bound"):
-        reasons.append("No active NODE_BIND for this mining address.")
+        reasons.append("No active NODE_BIND exists for this mining identity.")
     hb = c.get("heartbeats") or 0
     hreq = c.get("heartbeats_required") or 0
     if c.get("node_bound") and hb < hreq:
-        miss = [x for x in epochs if x["status"] in ("missing", "before_bind")]
-        txt = ", ".join(f"epoch {x['epoch']} (#{x['range'][0]:,}–#{x['range'][1]:,})" for x in miss) or "required epochs"
-        reasons.append(f"Missing required heartbeat in completed {txt}: has {hb} of {hreq}.")
-        if any(x["status"] == "before_bind" for x in miss) and b:
-            reasons.append(f"NODE_BIND was confirmed at #{b['h']:,} (epoch {b_ep}); an epoch that ended before the bind cannot carry a heartbeat, and closed epochs are never back-filled.")
+        reasons.append(f"You satisfy {hb} of the {hreq} required completed epoch(s).")
+        bb = [x for x in epochs if x["status"] == "before_bind"]
+        mm = [x for x in epochs if x["status"] == "missing"]
+        if bb and b:
+            reasons.append("The required epoch " + ", ".join(f"{x['epoch']} (#{x['range'][0]:,}–#{x['range'][1]:,})" for x in bb) +
+                           f" closed before your NODE_BIND became active (#{b['h']:,}). This was not a heartbeat failure; a closed epoch can never be filled retroactively.")
+        if mm:
+            reasons.append("No valid heartbeat was confirmed in completed epoch " + ", ".join(f"{x['epoch']} (#{x['range'][0]:,}–#{x['range'][1]:,})" for x in mm) +
+                           " although the identity was already bound. This shows no heartbeat reached the chain in that epoch; it does not by itself prove the node is offline now.")
     earliest = None
-    if c.get("eligible"):
+    if c.get("eligible") is True:
         earliest = {"height": J, "status": "eligible_now", "epochs": epochs}
     elif b is not None:
         for k in range(LOOKAHEAD + 1):
             Jk = J + k * JP_STEP
             wk, rk = draw_window(Jk)
             st = [{"epoch": e, "range": epoch_range(e), "status": ep_status(e)} for e in wk]
+            for x in st:
+                if x["epoch"] in eps:
+                    x["heartbeat_height"] = eps[x["epoch"]][0]
             reachable = sum(1 for x in st if x["status"] in ("confirmed", "pending"))
             if reachable >= rk:
-                earliest = {"height": Jk, "status": "possible", "epochs": st,
+                earliest = {"height": Jk, "status": "possible" if pow_ok else "node_possible_pow_open", "epochs": st,
                             "assumes": f"a heartbeat confirmed in every pending epoch, and >= {MIN_POW} SbPoW blocks in the {POW_WINDOW:,} blocks before #{Jk:,}"}
                 break
+    if earliest is None and b is None:
+        earliest = {"height": None, "status": "cannot_determine",
+                    "why": "No active NODE_BIND: heartbeats can only start after a NODE_BIND is confirmed, so no draw can be dated yet."}
+    if earliest and not pow_ok:
+        why = (f"You currently have {c.get('pow_blocks') or 0} of the {MIN_POW} required SbPoW blocks in the {POW_WINDOW:,}-block window; "
+               "future mining activity decides when this condition is met, so no exact height can be promised.")
+        node_from = earliest.get("height") if earliest.get("status") in ("node_possible_pow_open", "eligible_now") else None
+        earliest = {"height": None, "status": "cannot_determine", "why": why, "why_pow": why,
+                    "pow_needed": MIN_POW - (c.get("pow_blocks") or 0), "node_condition_from": node_from, "epochs": earliest.get("epochs", [])}
+
     def chk(ok, val):
         return {"result": "pass" if ok else "fail", "value": val}
     return {
@@ -229,8 +251,37 @@ def explain_candidate(c, b, eps, tip, J):
         "checks": {"pow": chk(pow_ok, c.get("pow_blocks")), "node_bind": chk(bool(c.get("node_bound")), "bound" if c.get("node_bound") else "not bound"),
                    "heartbeats": ({"result": "not_required", "value": "0 / 0"} if hreq == 0 else chk(hb >= hreq, f"{hb} / {hreq}"))},
         "bind_height": b["h"] if b else None, "bind_epoch": b_ep, "epochs": epochs, "reasons": reasons,
-        "earliest": earliest if earliest else {"height": None, "status": "cannot_determine" if b is None else "beyond_lookahead"},
+        "earliest": earliest if earliest else {"height": None, "status": "beyond_lookahead"},
     }
+
+
+def ramp_table():
+    """Heartbeat requirement per draw from the first V2 draw until the steady state (derived, not typed)."""
+    out, J = [], next_jackpot_after(A - 1)
+    while True:
+        win, req = draw_window(J)
+        out.append({"height": J, "required": req, "window": len(win), "epochs": win})
+        if len(win) >= HB_WINDOW:
+            return out
+        J += JP_STEP
+
+
+def example_bind_in_epoch1():
+    """Generic worked example run through the SAME explain_candidate(): bind during epoch 1, heartbeats in 1, 2, 3."""
+    b = {"h": A + L + 1}
+    eps = {1: [A + L + 4, ""], 2: [A + 2 * L + 4, ""], 3: [A + 3 * L + 4, ""]}
+    tip = A + 4 * L + 2
+    rows = []
+    for r in ramp_table():
+        if r["required"] == 0:
+            continue
+        win, req = r["epochs"], r["required"]
+        have = sum(1 for e in win if e in eps)
+        rows.append({"height": r["height"], "required": req, "window": win, "have": have, "eligible_by_heartbeats": have >= req})
+    return {"bind_epoch": 1, "heartbeat_epochs": [1, 2, 3], "draws": rows,
+            "detail": explain_candidate({"address": "example", "pow_blocks": 100, "node_bound": True,
+                                         "heartbeats": rows[0]["have"], "heartbeats_required": rows[0]["required"],
+                                         "eligible": False, "weight": 0}, b, eps, A + L + 10, rows[0]["height"])}
 
 
 def atomic_write(path, text, mode=0o644):
@@ -389,12 +440,26 @@ class Indexer:
             for c in cands:
                 c["share"] = (c["weight"] / tw) if (tw and c["eligible"]) else None
             cands.sort(key=lambda c: (not c["eligible"], -(c["pow_blocks"] or 0)))
+            seen = {c["address"] for c in cands}
+            others = []
+            for m, bm in bind.items():                 # bound but no PoW in the window: not in the node's candidate list
+                if m in seen:
+                    continue
+                eps_m = hb.get(m, {})
+                row = {"address": m, "pow_blocks": 0, "node_bound": True, "heartbeats": sum(1 for e in win if e in eps_m),
+                       "heartbeats_required": req, "eligible": False, "weight": 0}
+                x = explain_candidate(row, bm, eps_m, tip, J)
+                x["source"] = "chain index (not in the node audit: no SbPoW block in the window)"
+                x["share"] = None
+                others.append(x)
             jackpot = {"height": self.audit.get("height", J), "completed_epochs": self.audit.get("completed_epochs"),
                        "heartbeat_required": self.audit.get("heartbeat_required"), "heartbeat_window": self.audit.get("heartbeat_window"),
                        "window_epochs": [{"epoch": e, "range": epoch_range(e)} for e in win],
                        "pow_window": self.audit.get("pow_window", POW_WINDOW), "min_pow_blocks": self.audit.get("min_pow_blocks", MIN_POW),
                        "eligible_count": self.audit.get("eligible_count"), "total_weight": tw,
-                       "current_pot_stocks": self.audit.get("current_pot_stocks"), "candidates": cands,
+                       "current_pot_stocks": self.audit.get("current_pot_stocks"), "candidates": cands, "lookup": others,
+                       "ramp": ramp_table(), "calendar": [{"epoch": e, "range": epoch_range(e)} for e in range(0, max(5, cur_ep + 2))],
+                       "example": example_bind_in_epoch1(),
                        "source": "getjackpotv2audit(#%d) read at tip #%d; eligibility verdict = the node's" % (J, tip)}
         return {"schema": SCHEMA, "updated_at": int(time.time()), "tip": tip,
                 "tip_hash": self.rows[-1][1] if self.rows else None,
