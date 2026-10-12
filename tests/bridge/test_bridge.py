@@ -321,3 +321,48 @@ def test_mint_amount_or_recipient_differs_from_deposit_is_critical():
                                   bytes.fromhex(d2.block_hash), d2.height))
     rec2 = r2.rec()
     assert rec2.status == CRITICAL and any("recipient mismatch" in x for x in rec2.reasons)
+
+
+# ---------------------------------------------------------------- Stage 2: hostile / conflicting observers
+def _forged(r, att, key, **changes):
+    """an attestation by `key` for the same deposit with some fields changed (malicious observer)."""
+    import dataclasses
+    from sostbridge.eip712 import sign_deposit
+    from sostbridge.observer import Attestation
+    msg = dataclasses.replace(att.msg, **changes)
+    return Attestation(msg=msg, signer=Account.from_key(key).address,
+                       signature=sign_deposit(key, msg, r.eth.chain_id, r.eth.address))
+
+
+def test_malicious_observer_plus_one_honest_cannot_mint():
+    r = Rig()
+    r.chain.add_block([deposit_tx("d", "10")]); r.chain.mine(35)
+    honest = r.attest_all(idx=(0,))[0]
+    evil = _forged(r, honest, KEYS[2], recipient=Account.from_key(b"\x66" * 32).address)
+    assert collect([honest, evil], 2) is None                  # different statements never combine
+    evil_amt = _forged(r, honest, KEYS[2], amount=honest.msg.amount * 10)
+    assert collect([honest, evil_amt], 2) is None
+
+
+def test_conflicting_attestations_honest_majority_wins_and_mints_once():
+    r = Rig()
+    r.chain.add_block([deposit_tx("d", "10")]); r.chain.mine(35)
+    a0, a1 = r.attest_all(idx=(0, 1))
+    evil = _forged(r, a0, KEYS[2], recipient=Account.from_key(b"\x66" * 32).address)
+    msg, sigs = collect([evil, a0, a1], 2)
+    assert msg == a0.msg and msg.recipient == JUAN_ETH
+    r.eth.mint(msg, sigs)
+    assert r.eth.total_supply() == to_stocks("10")
+    with pytest.raises(RuntimeError, match="DepositAlreadyUsed"):  # replay of the same attestation set
+        r.eth.mint(msg, sigs)
+    assert r.rec().status == BALANCED
+
+
+def test_stale_observer_on_old_branch_is_ignored():
+    r = Rig()
+    r.chain.add_block([deposit_tx("d", "10")]); r.chain.mine(35)
+    stale = r.attest_all(idx=(2,))[0]
+    stale = _forged(r, stale, KEYS[2], sostBlockHash=b"\x99" * 32)  # observer following a dead branch
+    a0 = r.attest_all(idx=(0,))[0]
+    assert collect([stale, a0], 2) is None
+    assert not still_canonical(r.chain, stale.msg)
