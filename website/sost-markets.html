@@ -167,6 +167,19 @@
   .cp-chart-wrap { border-radius: 10px; }
   .cp-tooltip, .coin-detail-tooltip, .sost-pair-tooltip { background: rgba(12,11,16,.92) !important; border: 1px solid #3a3645 !important; border-radius: 8px !important; box-shadow: 0 8px 24px rgba(0,0,0,.5); backdrop-filter: blur(4px); }
   .cp-range { color: #8f8ca0; font-size: 10px; }
+  .mkref { margin: 14px 0; padding: 18px 20px; border-radius: 14px; border: 1px solid rgba(255,215,0,.25); position: relative;
+    background: radial-gradient(120% 90% at 0% 0%, rgba(255,215,0,.09), transparent 55%), linear-gradient(180deg, #121008, #08080a);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px rgba(0,0,0,.4); font-family: var(--font-mono); }
+  .mkref::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; border-radius: 14px 14px 0 0; background: linear-gradient(90deg, #ffd700, #fb010d 60%, transparent); }
+  .mkref-k { font-size: 10px; letter-spacing: 2.5px; color: #fbbf24; text-transform: uppercase; }
+  .mkref-h { font-size: 17px; color: #ece9f5; margin: 8px 0; line-height: 1.4; } .mkref-h b { color: #ffd700; text-shadow: 0 0 14px rgba(255,215,0,.4); }
+  .mkref-p { font-size: 11px; color: #a7a3b8; line-height: 1.7; }
+  .mkref-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; } .mkref-tags span { font-size: 9px; letter-spacing: 1px; border: 1px solid #3a3426; color: #d8c99a; padding: 4px 10px; border-radius: 999px; background: rgba(0,0,0,.3); }
+  .mkref-eq { font-size: 18px; color: #ece9f5; margin: 10px 0 4px; } .mkref-eq b { color: #ffd700; font-size: 22px; text-shadow: 0 0 16px rgba(255,215,0,.5); }
+  .mkref-live, .mkref-src { font-size: 10px; color: #8f8ca0; line-height: 1.7; } .mkref-src b { color: #d8d6e3; }
+  .mkref-note { margin-top: 10px; padding: 10px 12px; border-left: 3px solid #fbbf24; background: rgba(251,191,36,.05); font-size: 10.5px; color: #a7a3b8; line-height: 1.7; } .mkref-note b { color: #fbbf24; }
+  .mkref-status { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 10px; color: #8f8ca0; }
+  .mkref-link { display: inline-block; margin-top: 10px; font-size: 10.5px; color: #22d3ee; text-decoration: none; } .mkref-link:hover { text-shadow: 0 0 10px rgba(34,211,238,.6); }
   .chart-toggle { border-radius: 999px; }
   .chart-toggle:hover, .chart-toggle.open { box-shadow: 0 0 14px rgba(251,1,13,.3); }
   .coin-detail-panel { border-radius: 16px !important; border: 1px solid #2a2733 !important;
@@ -414,17 +427,18 @@
     <div class="section-header">
       <div class="section-id">SOST REFERENCE VALUE</div>
       <div class="section-title">SOST Reference Value <span class="accent">(Gold Reference)</span></div>
-      <div class="section-sub">1 SOST = 0.8886707657 mg of gold, expressed in 60 fiat currencies &mdash; source: gold spot + forex rates. <strong style="color:#fbbf24">This is NOT a market price. No active trading exists yet.</strong></div>
-      <div style="margin:12px 0;padding:10px 16px;background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.2);font-size:11px;line-height:1.7;color:#999;font-family:monospace">
-        <div style="color:#fbbf24;font-weight:600;letter-spacing:1px;margin-bottom:6px">// PRICE DISCOVERY STATUS</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:10px">
-          <span>Liquidity:</span><span style="color:#fb010d">Not available</span>
-          <span>Market:</span><span style="color:#fb010d">Not active</span>
-          <span>Exchange listing:</span><span style="color:#fbbf24">Pending &mdash; no confirmed date</span>
-          <span>Valuation model:</span><span style="color:#4ade80">Internal (PoPC)</span>
-          <span>Phase:</span><span style="color:#fbbf24">Pre-Market Testing</span>
-        </div>
-        <div style="margin-top:8px;color:#666;font-size:9px">SOST does not simulate a market &mdash; it prepares for one.</div>
+      <div class="section-sub">1 SOST &equiv; 0.8886707657 mg of gold, expressed in 60 fiat currencies &mdash; source: live gold reference + forex rates. <strong style="color:#fbbf24">A reference, not a market price. No active trading exists yet.</strong></div>
+      <div class="mkref">
+        <div class="mkref-k">Monetary reference &middot; gold-denominated</div>
+        <div class="mkref-h">One SOST is initially referenced to <b>0.8886707657 milligrams of gold</b>.</div>
+        <div class="mkref-p">A transparent unit of account that expresses SOST in a fixed weight of gold &mdash; the same idea that anchored the dollar at Bretton Woods, adapted honestly for an experimental protocol. It is a reference, not a price you are promised. Initially, SOST is referenced to this fixed weight of gold; once it trades, the market will set its price.</div>
+        <div class="mkref-tags"><span>Reference &mdash; not a peg</span><span>Not redeemable for gold</span><span>Not investment advice</span><span>Experimental software</span></div>
+        <div class="mkref-eq">1 SOST &nbsp;&equiv;&nbsp; 0.8886707657 mg gold &nbsp;&asymp;&nbsp; <b id="mkRefUsd">&hellip;</b></div>
+        <div class="mkref-live" id="mkRefLive">Live gold reference &middot; loading gold spot&hellip;</div>
+        <div class="mkref-src" id="mkRefSrc"></div>
+        <div class="mkref-note"><b>&#9889; A PROPOSED initial price &mdash; not a guaranteed or future price.</b> SOST proposes the 0.8886707657 mg gold reference as its initial price for a first centralized-exchange listing. It is a proposal, not a guarantee: the price that actually applies depends on the exchange and on the real orders and liquidity available at listing. Once SOST is listed and trades, the market sets the price freely by supply and demand &mdash; it may move entirely away from this reference. This is an indicative reference, not our own live sell offer.</div>
+        <div class="mkref-status"><span>Liquidity: <b style="color:#fb3b47">not available</b></span><span>Market: <b style="color:#fb3b47">not active</b></span><span>Exchange listing: <b style="color:#fbbf24">pending &mdash; no confirmed date</b></span><span>Reference: <b style="color:#4ade80">0.8886707657 mg gold (1/1000 of a 1944 Bretton Woods dollar)</b></span></div>
+        <a class="mkref-link" href="sost-reference.html">Full gold reference, Bretton Woods derivation and what it is not &rarr;</a>
       </div>
       <button class="chart-toggle" id="sostChartToggle"><span class="ct-arrow">&#9656;</span> SOST GOLD REFERENCE CHART</button>
     </div>
@@ -500,18 +514,18 @@
     <div class="section-header">
       <div class="section-id">SOST PAIRS</div>
       <div class="section-title">SOST Trading <span class="accent">Pairs</span></div>
-      <div class="section-sub">Simulated pair rates derived from the gold reference price (1 SOST = 0.8886707657 mg gold)</div>
+      <div class="section-sub">Reference pair rates derived from the gold reference (1 SOST &equiv; 0.8886707657 mg gold) &mdash; not traded rates</div>
     </div>
     <div style="margin-bottom:16px;padding:12px 16px;border-left:3px solid #ffd700;background:rgba(255,215,0,0.03);font-size:11px;line-height:1.7;color:#999;font-family:monospace">
-      <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// SIMULATED PAIR DATA &mdash; NOT LIVE MARKET</div>
+      <div style="color:#ffb000;font-weight:600;letter-spacing:1px;margin-bottom:6px">// REFERENCE PAIRS &mdash; NOT A LIVE MARKET</div>
       <div>SOST is <strong>not currently listed</strong> on any centralized or decentralized exchange. The pair rates below are
-      <strong>theoretical values</strong> derived algorithmically from the PoPC (Proof of Personal Custody) reference price
-      and the live market price of each counterpart asset.</div>
+      <strong>reference values</strong>: the gold reference (1 SOST &equiv; 0.8886707657 mg gold &times; live gold spot) divided by
+      the live market price of each counterpart asset.</div>
       <div style="margin-top:6px;color:#666">The gold reference expresses 1 SOST as a fixed 0.8886707657 mg of gold &mdash; informational, not a price floor or guarantee:
       <code style="color:#4ade80">price = 0.8886707657 mg &times; gold_spot (fixed gold weight)</code>.
-      This is a <strong>logical valuation</strong>, not a traded market price. Actual trading rates will differ once SOST
-      is listed, as market price is determined by supply, demand, and liquidity &mdash; not solely by backing.</div>
-      <div style="margin-top:6px;color:#555">Verify gold commitments: <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Etherscan &nearr;</a></div>
+      This is a <strong>reference</strong>, not a traded market price and not a promise. Once SOST is listed, the market sets its
+      price by supply, demand and liquidity &mdash; it may move entirely away from this reference.</div>
+      <div style="margin-top:6px;color:#555">Verify network-held gold (not holder-redeemable): <a href="https://etherscan.io/address/0xd38955822b88867CD010946F0Ba25680B9DfC7a6" target="_blank" rel="noopener" style="color:#22d3ee;text-decoration:none">Etherscan &nearr;</a></div>
     </div>
     <table class="data-table" id="sostPairsTable">
       <thead>
@@ -1004,8 +1018,13 @@
       var cached = _loadGoldCache();
       if (cached) { xp = cached.xp; pp = cached.pp; }
     }
+    // Same source as sost-reference.html: SOSTGold (CoinGecko XAUT + PAXG average via the gateway).
+    var G = window.SOSTGold && window.SOSTGold.get();
+    if (G && G.ok && G.goldUsdPerOz > 0) { xp = xp || G.goldUsdPerOz; }
     if (!xp && !pp) return null;
-    _sostRefGoldP = (xp && pp) ? (xp + pp) / 2 : (xp || pp);
+    // Exactly what sost-reference.html shows: CoinGecko XAUT via the gateway; then the shared module; then candles.
+    _sostRefGoldP = (window._mkGoldXaut > 0) ? window._mkGoldXaut
+      : (G && G.ok && G.goldUsdPerOz > 0) ? G.goldUsdPerOz : ((xp && pp) ? (xp + pp) / 2 : (xp || pp));
     // Supply from chain height (use cached or fallback — NO sync XHR)
     var R0=7.85100863, Q=0.7788007830714049, EP=131553;
     var h = window._sostChainHeight || 2254;
@@ -1030,8 +1049,19 @@
       pEl.textContent = 'Loading gold prices...';
       pEl.style.fontSize = '14px';
     }
+    var G = window.SOSTGold && window.SOSTGold.get();
+    var ru = document.getElementById('mkRefUsd');
+    if (ru) ru.textContent = refUsd ? '$' + refUsd.toFixed(4) : 'reference temporarily unavailable';
+    var rl = document.getElementById('mkRefLive');
+    if (rl && refUsd && _sostRefGoldP) rl.textContent = 'Live gold reference \u00b7 gold spot $' + window.SOSTGold.gramFromOz(_sostRefGoldP).toFixed(2) + '/g \u00b7 derived from a fixed gold weight, updated as the gold price moves.';
+    var rs = document.getElementById('mkRefSrc');
+    if (rs && G && G.ok) {
+      var gt = G.ts ? new Date(G.ts) : new Date();
+      rs.innerHTML = 'Live \u00b7 gold ' + gt.toISOString().slice(0, 16).replace('T', ' ') + ' UTC \u00b7 source CoinGecko (via the SOST gateway) \u00b7 ' +
+        'XAUT <b>$' + ((window._mkGoldXaut || 0) ? window._mkGoldXaut.toFixed(2) : '\u2014') + '</b> | PAXG <b>$' + ((window._mkGoldPaxg || 0) ? window._mkGoldPaxg.toFixed(2) : '\u2014') + '</b> | Avg <b>$' + (window._mkGoldXaut && window._mkGoldPaxg ? ((window._mkGoldXaut + window._mkGoldPaxg) / 2).toFixed(2) : G.goldUsdPerOz.toFixed(2)) + '</b> \u00b7 reference uses XAUT';
+    }
     var chEl = document.getElementById('cpSostChange');
-    if (chEl) { chEl.textContent = 'Gold reference price (0.8886707657 mg)'; chEl.style.color = 'var(--text-dim,#888)'; }
+    if (chEl) { chEl.textContent = '1 SOST \u2261 0.8886707657 mg gold \u00b7 reference, not a market price \u00b7 chart: XAUT/USDT candle closes'; chEl.style.color = 'var(--text-dim,#888)'; }
     var rEl = document.getElementById('cpSostRange');
     if (rEl && refUsd && _sostRefGoldP && _sostRefSup) {
       rEl.innerHTML = 'Gold reference: 0.8886707657 mg &times; $' + (window.SOSTGold.mgFromOz(_sostRefGoldP)).toFixed(5) + '/mg = $' + (window.SOSTGold.sostFromOz(_sostRefGoldP)).toFixed(4) + '/SOST'
@@ -1361,8 +1391,8 @@
     sostRefSeries(activeTfs.cpSost || '24H', function() {
       var d1 = (chartCache['sost-ref'] || {})['L' + (activeTfs.cpSost || '24H')];
       var pEl = document.getElementById('cpSostPrice');
-      if (pEl && d1 && d1.length) { pEl.textContent = fmtUsd(d1[d1.length - 1][1]); pEl.style.fontSize = ''; }
       drawMktChart('cpSost', 'sost-ref', '#ffd700');
+      showSostPopcPrice();
     });
     activateSostChart();
   }
@@ -1853,25 +1883,25 @@
 
       if (p.fiat && p.counterpart === 'USD') {
         counterUsd = 1;
-        source = 'PoPC formula';
+        source = 'Gold reference';
       } else if (p.fiat && p.counterpart === 'EUR') {
         counterUsd = forexRates['EUR'] ? (1 / forexRates['EUR']) : null;
-        source = 'PoPC + forex';
+        source = 'Gold ref. + forex';
       } else if (p.stablecoin) {
         // USDT/USDC always ~$1.00
         counterUsd = 1.00;
-        source = 'PoPC + stablecoin ($1.00)';
+        source = 'Gold ref. + stablecoin ($1.00)';
       } else if (p.counterpart === 'PAXG') {
         // PAXG = gold token, use gold price from chart cache (same source as XAUT)
         var pd = chartCache['pax-gold'] && chartCache['pax-gold'][1];
         if (pd && pd.length) counterUsd = pd[pd.length-1][1];
         if (!counterUsd && _sostRefGoldP) counterUsd = _sostRefGoldP; // fallback to gold price
-        source = 'PoPC + gold spot';
+        source = 'Gold ref. + gold spot';
       } else if (p.counterpart === 'XAUT') {
         var xd = chartCache['tether-gold'] && chartCache['tether-gold'][1];
         if (xd && xd.length) counterUsd = xd[xd.length-1][1];
         if (!counterUsd && _sostRefGoldP) counterUsd = _sostRefGoldP;
-        source = 'PoPC + gold spot';
+        source = 'Gold ref. + gold spot';
       } else if (p.cgId) {
         counterUsd = cryptoUsdPrices[p.counterpart] || null;
         if (!counterUsd) {
@@ -1879,7 +1909,7 @@
           var cd = chartCache[p.cgId] && chartCache[p.cgId][1];
           if (cd && cd.length) counterUsd = cd[cd.length-1][1];
         }
-        source = 'PoPC + CoinGecko';
+        source = 'Gold ref. + market';
       }
 
       if (counterUsd && sostUsd) {
@@ -1994,8 +2024,18 @@
   fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'getblockcount',id:1})})
     .then(function(r){return r.json();}).then(function(rr){if(rr&&rr.result)window._sostChainHeight=rr.result;}).catch(function(){});
 
+  function loadGoldReference() {
+    if (!window.SOSTGold) return;
+    fetch(window.SOSTGold.GOLD_URL).then(function(r) { return r.json(); }).then(function(d) {
+      window._mkGoldXaut = (d['tether-gold'] && d['tether-gold'].usd) || 0;
+      window._mkGoldPaxg = (d['pax-gold'] && d['pax-gold'].usd) || 0;
+    }).catch(function() {}).then(function() { return window.SOSTGold.load(); })
+      .then(function() { showSostPopcPrice(); populateSostPairs(); });
+  }
   refreshAll();
+  loadGoldReference();
   setInterval(refreshAll, 60000);
+  setInterval(loadGoldReference, 60000);
 
   setupChartToggle('goldChartToggle', 'goldChartPanel', initGoldChart);
   setupChartToggle('paxgChartToggle', 'paxgChartPanel', initPaxgChart);
