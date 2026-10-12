@@ -61,7 +61,7 @@
      NOT match this value, the browser holds stale cached HTML and
      is force-reloaded immediately. Bump this value alongside
      api/explorer_version.json on every visible-change deploy. -->
-<meta name="explorer-html-version" content="2026-10-12-v548-hb-ramp-guide">
+<meta name="explorer-html-version" content="2026-10-12-v549-nodebind-card">
 <!-- M26 favicon + icon pack -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -844,7 +844,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
 </details>
 
 <script>/* explorer build-version self-heal: reload if a stale cached copy is detected (Telegram/aggressive caches) */
-(function(){var V='2026-10-12-v548-hb-ramp-guide';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
+(function(){var V='2026-10-12-v549-nodebind-card';window.__EXPLORER_BUILD=V;try{fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/var V='(2026-[^']+)'/);if(m&&m[1]&&m[1]!==V){try{if(sessionStorage.getItem('exp_rl_'+m[1]))return;sessionStorage.setItem('exp_rl_'+m[1],'1');}catch(e){}location.reload(true);}}).catch(function(){});}catch(e){}})();
 </script>
 <!-- dtd-supersede notice removed from Explorer only (still on index.html/docs) -->
 
@@ -1081,6 +1081,7 @@ body.nav-collapsed nav .container{justify-content:flex-end;}
   <div class="dash-card" data-panel="mineattempts" onclick="toggleDashPanel('mineattempts')" title="Submitblock attempts received by the local node since boot. Counts both ACCEPTED and REJECTED block submissions. Includes blocks from peers that fail validation — visibility into miners trying with the wrong binary, stale templates, etc. Lifetime counters (since node boot, not persisted)." style="position:relative"><div class="dash-label" style="color:var(--green)">&#9874; MINING ATTEMPTS</div><div class="dash-val" id="dMineAttempts">&mdash;</div><div class="dash-sub" id="dMineAttemptsSub">received &middot; accepted &middot; rejected</div></div>
   <div class="dash-card" data-panel="rpcstats" onclick="toggleDashPanel('rpcstats')" title="Per-method JSON-RPC telemetry for the local node. Lifetime counters since node boot — calls, error responses, average and worst-case latency. Surfaces which APIs are hot, which are slow, and which are erroring without grepping logs. Click to expand the per-method breakdown." style="position:relative"><div class="dash-label" style="color:var(--purple)">&#x1F4E1; RPC ACTIVITY</div><div class="dash-val" id="dRpcAct">&mdash;</div><div class="dash-sub" id="dRpcActSub">methods &middot; calls &middot; errors</div></div>
   <div class="dash-card" onclick="document.getElementById('nodesSection').scrollIntoView({behavior:'smooth'})" title="Active SOST nodes known to this gateway: the local mainnet node (counted once, and only while its RPC answers on mainnet with a fresh tip) plus distinct external machines connected over P2P with a completed handshake. Miners, historical block producers and unverified addresses are not counted. Discovered-but-unconnected nodes are not available: the P2P protocol has no address exchange."><div class="dash-label" style="color:var(--cyan)">&#9741; UNIQUE NODES</div><div class="dash-val cyan" id="dNodes">&mdash;</div><div class="dash-sub" id="dNodesSub">local + active visible peers</div></div>
+  <div class="dash-card" onclick="var w=document.getElementById('boundNodesWrap');if(w)w.scrollIntoView({behavior:'smooth'})" title="Mining identities linked to a node key by a NODE_BIND transaction on chain (from #30,000), indexed from canonical blocks. ACTIVE = heartbeat in the current or last completed epoch. Node-ready = the bound node already meets the heartbeat condition of the next Jackpot V2 draw (PoW is checked separately). A NODE_BIND is a chain identity, not a P2P connection: it is not linked to the UNIQUE NODES count."><div class="dash-label" style="color:#39ff14">&#9939; NODE_BIND</div><div class="dash-val" id="dBound" style="color:#39ff14">&mdash;</div><div class="dash-sub" id="dBoundSub">bound identities on chain</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" title="Distinct addresses that have produced at least one accepted block since genesis — MONOTONIC (it never decreases; floored across visits). This is NOT the same as 'eligible now': the live DTD-reward eligibility count (shown in the DTD panel) rises and falls as miners enter/leave the recent-miner cooldown and the V13 dominance gate. Non-producing nodes (peer-only, validators, observers) are NOT counted. Click for the DTD panel."><div class="dash-label" style="color:var(--cyan)">&#9874; PEAK ACTIVE MINERS</div><div class="dash-val cyan" id="dPeakMiner">&mdash;</div><div class="dash-sub" style="font-size:8.5px;color:var(--text3);line-height:1.4;margin-top:2px">only miners who found &ge;1 block<br>excludes non-producing nodes</div></div>
   <div class="dash-card" data-panel="dtd" onclick="toggleDashPanel('dtd')" style="min-width:230px">
     <div class="dash-label" style="white-space:nowrap;color:var(--orange)">Token Distribution</div>
@@ -1888,7 +1889,7 @@ diffhist:'DIFF HISTORY \u2014 Difficulty Over Time\n\nShows how mining difficult
     <div style="font-size:9px;color:var(--text3);margin-top:4px;line-height:1.6;font-family:var(--code);">
       <b>LOCAL NODE</b> = the SOST node this Explorer reads; shown ONLINE only while it answers on mainnet, with the mainnet genesis and a tip younger than 2 h.
       <b>EXTERNAL PEERS</b> = other nodes connected to it over P2P; the counters and the table above are external peers only.
-      <b>UNIQUE NODES</b> = the local node when online + distinct external machines with a completed handshake.
+      <b>UNIQUE NODES</b> = the local node when online + distinct external machines with a completed handshake. Both the card and this table are snapshots: a peer that connects and drops within seconds can appear in one and not in the other.
       A miner is not a node, and a block producer is not an active node: neither is counted here.<br>
       Disclaimer: This view shows the local SOST node and the P2P peers currently connected to it. It is not a complete global network census.
       Node IDs are derived hashes — no IP addresses are exposed. Node count, heights, and encryption status reflect
@@ -8645,8 +8646,10 @@ refresh();
       f('UPTIME',fmtDur(ln.uptime_s))+
       (ln.reasons&&ln.reasons.length?f('WHY NOT ONLINE',ln.reasons.join(', '),clr):'');
   }
-  loadPeerInfo();loadNetworkSummary();
-  setInterval(loadPeerInfo,30000);setInterval(loadNetworkSummary,30000);
+  // Card and table read back to back in one tick, so a peer that connects and drops
+  // within seconds is far less likely to be in one snapshot and not in the other.
+  function refreshNodes(){ Promise.resolve(loadPeerInfo()).then(loadNetworkSummary,loadNetworkSummary); }
+  refreshNodes(); setInterval(refreshNodes,30000);
 })();
 
 // ── NETWORK HEALTH PANEL (section 11) ─────────────────────────────────────
@@ -10997,6 +11000,10 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
       etag=r.headers.get('ETag'); var d=await r.json();
       var t=d.totals||{}, into=(d.tip-(d.current_epoch_start||0)+1);
       document.getElementById('bnMeta').textContent='epoch '+d.current_epoch+' · block '+into+'/'+d.epoch_length+' · indexed to #'+(d.tip||0).toLocaleString();
+      var dB=document.getElementById('dBound'),dBs=document.getElementById('dBoundSub');
+      if(dB){ var nr=(d.nodes||[]).filter(function(n){return n.next_jackpot&&n.next_jackpot.node_condition_met;}).length;
+        dB.textContent=t.bound_identities||0;
+        dBs.innerHTML=(t.active||0)+' active &middot; '+nr+' node-ready'+(d.next_jackpot&&d.next_jackpot.height?' for #'+d.next_jackpot.height.toLocaleString():''); }
       document.getElementById('bnSummary').innerHTML=
         chip('BOUND IDENTITIES',t.bound_identities||0,'#39ff14')+chip('ACTIVE',t.active||0,'#4ade80')+
         chip('BIND TXS',t.bind_txs||0,'#22d3ee')+chip('HEARTBEAT TXS',t.heartbeat_txs||0,'#c084fc')+
@@ -11021,6 +11028,7 @@ table.sjpa-t tr:hover td{background:rgba(57,255,20,.05)}
       document.getElementById('bnBody').innerHTML=rows||'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px">no node bound on chain yet</td></tr>';
     }catch(e){
       document.getElementById('bnMeta').textContent='bound-node index unavailable';
+      var dB2=document.getElementById('dBound'); if(dB2){dB2.innerHTML='&mdash;';document.getElementById('dBoundSub').textContent='index unavailable';}
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load);else load();
