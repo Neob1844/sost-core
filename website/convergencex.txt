@@ -53,9 +53,10 @@ PDF:           https://sostcore.com/convergencex_whitepaper.pdf
 ConvergenceX is the native PoW used by SOST. It is memory-hard
 by construction:
 
-  - 4 GB pre-built dataset (deterministic, derived from the chain
-    height epoch) +
-  - 4 GB scratchpad (per-thread, allocated for each search burst).
+  - 4 GB dataset (deterministic, rebuilt every block from the
+    previous block hash) +
+  - 4 GB scratchpad (shared by all mining threads, rebuilt once
+    per emission epoch).
 
 A miner that does not have 8 GB of RAM available for the search
 cannot mine. There is no GPU advantage in the reference miner;

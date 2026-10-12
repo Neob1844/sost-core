@@ -204,6 +204,50 @@
 .dec-status .v.ok{color:#39ff14}.dec-status .v.prog{color:#fbbf24}.dec-status .v.plan{color:#67e8f9}
 @media (prefers-reduced-motion:reduce){.dec-wrap,.dec-dot{animation:none}.dec-wrap{box-shadow:0 0 22px rgba(34,211,238,.3)}}
 </style>
+<!-- ============ EXPLAINER: POW CONTROL IN THREE LAYERS + SOST vs BTC vs ETH (2026-10-12) ============ -->
+<section class="section" id="pow-three-layers-btc-eth"><div class="container">
+  <article style="border:2px solid #ffd166;border-radius:14px;background:linear-gradient(180deg,rgba(255,209,102,.06),transparent 60%);padding:20px 22px">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span style="font:800 11px/1 ui-monospace,monospace;letter-spacing:1.6px;color:#ffd166">// EXPLAINER &middot; 12 OCT 2026</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#94a3b8;border:1px solid #475569;border-radius:6px;padding:3px 8px">NO CONSENSUS CHANGE</span>
+      <span style="font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:#39ff14;border:1px solid #39ff14;border-radius:6px;padding:3px 8px">VERIFIED AGAINST THE NODE SOURCE</span>
+    </div>
+    <h2 style="font-size:24px;margin:12px 0 4px;color:var(--text-primary,#e2e8f0);text-wrap:balance">One Proof of Work, two dials &mdash; and how SOST compares with Bitcoin and Ethereum</h2>
+    <div style="font-size:14px;color:#ffe7a8;margin-bottom:10px">Technology page, web whitepaper and the repository whitepaper updated</div>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">SOST keeps blocks at about 600 seconds with <b>two independent controls on the same Proof of Work</b>. We rewrote the explanation so it can be understood in twenty seconds, moved old designs into a clearly labelled historical appendix, and added a plain comparison with Bitcoin and Ethereum, with worked examples.</p>
+    <div style="font:12px/1.6 ui-monospace,monospace;color:#cfe6f2;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre">            CONVERGENCEX  &mdash; the work of every attempt (~8 GB, 100,000 rounds)
+                 │
+       ┌─────────┴─────────┐
+     bitsQ             EQUALIZER
+  how rare must      which profile must
+  the commit be?     each attempt pass?
+  commit &le; target    E7 &hellip; B0 &hellip; H35
+       └─────────┬─────────┘
+            TARGET &asymp; 600 s</div>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>bitsQ</b> is the difficulty of <i>hitting</i> a winning result; the <b>Equalizer</b> is the cost of <i>one attempt</i>. Bitcoin only has the first: a SHA-256d attempt always costs the same. Keeping the two apart is one of SOST's distinctive design choices &mdash; a richer control system, not a claim of superiority.</p>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#ffd166;margin:18px 0 6px;font-weight:800">Corrections made while checking every number against the code</h3>
+    <ul style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75;margin:6px 0 6px 18px">
+      <li>The largest bitsQ step is <b>&asymp;3.03%</b> per block (prev/33), not 3.0%.</li>
+      <li>A chain that is <b>behind</b> schedule never gets an easing profile from the lag alone: lag &le; 0 means at most B0. Easing (E1&ndash;E7) comes only from the V12 cascade on a slow block or from anti-stall.</li>
+      <li>Easing steps are limited to at most max(1, elapsed/600) levels per block.</li>
+      <li>The 4 GB scratchpad is <b>shared</b> by all mining threads and rebuilt once per epoch; the 4 GB dataset is rebuilt every block. It is not "4 GB per thread".</li>
+      <li>Validators recompute the Equalizer profile with the block's own timestamp, so the cascade and anti-stall apply at validation too.</li>
+      <li>The repository whitepaper now states the current coinbase split (50% miner / 50% DTD since block 25,000) and marks the 25% Gold Vault allocation as historical.</li>
+    </ul>
+    <h3 style="font-size:14px;letter-spacing:.4px;color:#ffd166;margin:18px 0 6px;font-weight:800">Who secures the chain, and how they are paid</h3>
+    <div style="font:12px/1.6 ui-monospace,monospace;color:#cfe6f2;background:#07090e;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;white-space:pre">BITCOIN   ASICs + electricity &rarr; whole block reward to the finder (usually a pool)
+ETHEREUM  32 ETH staked per validator &rarr; votes every epoch, sometimes proposes; slashing
+SOST      CPU + RAM + electricity &rarr; 50% to the finder &middot; 50% DTD to a recent miner
+          + DTD Jackpot every 288 blocks for miners who also run a bound node
+
+Example (SOST, epoch 0, no fees): subsidy 7.85100863 SOST
+  finder   3.92550432 SOST     DTD half   3.92550431 SOST &rarr; one eligible miner, uniform draw</div>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75">SOST does not pay nodes simply for existing &mdash; that would invite one person running ten thousand fake nodes. In Jackpot V2 a bound node is the <b>door</b>, real PoW blocks are the <b>weight</b>: more nodes add nothing, more work does. There is no "lock SOST and earn" staking, by design.</p>
+    <p style="font-size:13.5px;color:var(--text-secondary,#94a3b8);line-height:1.75"><b>The honest part.</b> Bitcoin and Ethereum keep producing blocks if you switch off their websites, foundations, largest pools or any single client. SOST still depends on project-run infrastructure and, today, on very few independent operators. The goal is that switching off everything run by SOSTCore changes nothing for the chain &mdash; we are not there yet.</p>
+    <p style="font-size:12.5px;color:#9fb6c4;line-height:1.7">Read more: <a href="sost-technology.html#pow-control" style="color:#ffd166">Technology &mdash; two dials</a> &middot; <a href="sost-technology.html#btc-eth-sost" style="color:#ffd166">SOST vs Bitcoin vs Ethereum</a> &middot; <a href="whitepaper-reader.html#sec-vs" style="color:#ffd166">Whitepaper &sect;3.15</a> &middot; <a href="whitepaper-reader.html#sec-hist-casert" style="color:#ffd166">Historical cASERT designs</a>.</p>
+  </article>
+</div></section>
+
 <!-- ============ FUTURE DTD DESIGN: ADAPTIVE NODE PARTICIPATION (design proposal, 2026-10-11) ============ -->
 <section class="section" id="future-dtd-adaptive-node-participation"><div class="container">
   <article style="border:2px solid #22d3ee;border-radius:14px;background:linear-gradient(180deg,rgba(34,211,238,.06),transparent 60%);padding:20px 22px">

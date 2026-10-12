@@ -1016,6 +1016,107 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
   </div>
 </section>
 
+<!-- POW CONTROL: THREE LAYERS -->
+<section class="section" id="pow-control">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">DIFFICULTY CONTROL</div>
+      <h2 class="section-title">One Proof of Work, <span class="accent">two dials</span></h2>
+    </div>
+<!-- ============ CX3 · POW CONTROL IN THREE LAYERS (2026-10-12) ============ -->
+<style>
+.cx3{min-width:0;max-width:100%;--cx-bg:#07090e;--cx-line:rgba(255,255,255,.1);--cx-gold:#ffd166;--cx-cyan:#22d3ee;--cx-green:#39ff14;--cx-red:#ff5a5f;--cx-txt:#c9d6e2;--cx-dim:#8b9aab;color:var(--cx-txt);font-size:14px;line-height:1.72}
+.cx3 h3{font-size:19px;margin:22px 0 6px;color:#eaf2fb;line-height:1.3}
+.cx3 h4{font:800 11.5px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:1.4px;color:var(--cx-gold);margin:18px 0 6px;text-transform:uppercase}
+.cx3 p{margin:7px 0}
+.cx3 b{color:#fff}
+.cx3 .cx-pre{font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#d8e6f0;background:var(--cx-bg);border:1px solid var(--cx-line);border-radius:8px;padding:12px 14px;margin:10px 0;white-space:pre;overflow-x:auto;max-width:min(100%,calc(100vw - 24px))}
+.cx3 .g{color:var(--cx-gold)}.cx3 .c{color:var(--cx-cyan)}.cx3 .k{color:var(--cx-green)}.cx3 .r{color:var(--cx-red)}.cx3 .d{color:#6b7a8c}
+.cx3 .cx-box{border-left:3px solid var(--cx-gold);background:rgba(255,209,102,.05);border-radius:0 8px 8px 0;padding:10px 14px;margin:12px 0}
+.cx3 .cx-box.cyan{border-color:var(--cx-cyan);background:rgba(34,211,238,.05)}
+.cx3 .cx-box.green{border-color:var(--cx-green);background:rgba(57,255,20,.04)}
+.cx3 .cx-box.red{border-color:var(--cx-red);background:rgba(255,90,95,.05)}
+.cx3 .cx-t{font:800 10.5px ui-monospace,monospace;letter-spacing:1.6px;color:var(--cx-gold);margin-bottom:4px}
+.cx3 .cx-box.cyan .cx-t{color:var(--cx-cyan)}.cx3 .cx-box.green .cx-t{color:var(--cx-green)}.cx3 .cx-box.red .cx-t{color:var(--cx-red)}
+.cx3 .cx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
+.cx3 .cx-card{border:1px solid var(--cx-line);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,.02)}
+.cx3 .cx-card .cx-h{font:800 12px ui-monospace,monospace;letter-spacing:1.2px;margin-bottom:6px}
+.cx3 .cx-tw{overflow-x:auto;margin:10px 0;max-width:min(100%,calc(100vw - 24px))}
+.cx3 table{border-collapse:collapse;width:100%;min-width:560px;font-size:12.5px}
+.cx3 th{font:800 10.5px ui-monospace,monospace;letter-spacing:1px;color:var(--cx-dim);text-align:left;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.18)}
+.cx3 td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:top}
+.cx3 td:first-child{color:var(--cx-dim);white-space:nowrap}
+.cx3 ul{margin:6px 0 6px 18px;padding:0}.cx3 li{margin:3px 0}
+@media(max-width:560px){.cx3{font-size:13.5px}.cx3 .cx-pre{font-size:10.5px;padding:10px}}
+</style>
+<div class="cx3" id="pow-control-three-layers">
+<div class="cx-t" style="color:#22d3ee">CURRENT MAINNET RULE &middot; VERIFIED AGAINST THE NODE SOURCE</div>
+<h3>One Proof of Work, two dials: ConvergenceX + bitsQ + Equalizer</h3>
+<p>SOST keeps blocks at about <b>600 seconds</b> with two independent controls acting on the same Proof of Work. One decides <b>how rare a winning result must be</b>; the other decides <b>how demanding each attempt is</b>. Every node recomputes both and rejects a block that declares anything else.</p>
+<div class="cx-pre">                    <span class="g">CONVERGENCEX</span>
+             the work of every attempt
+   ~8 GB (4 GB dataset + 4 GB scratchpad) &middot; 100,000 rounds
+     32&times;32 integer problem &middot; state-dependent memory
+         per-block program &middot; chained SHA-256
+                         │
+          ┌──────────────┴──────────────┐
+          │                             │
+        <span class="c">bitsQ</span>                       <span class="k">EQUALIZER</span>
+   numeric difficulty           structural hardness
+          │                             │
+  how rare must the            which ConvergenceX profile
+  commit be to win?            must each attempt pass?
+  commit &le; target(bitsQ)       E7 &hellip; B0 &hellip; H35  (43 profiles)
+          │                             │
+          └──────────────┬──────────────┘
+                         ▼
+                 <span class="g">TARGET &asymp; 600 s</span></div>
+<div class="cx-grid">
+ <div class="cx-card"><div class="cx-h" style="color:#ffd166">CONVERGENCEX</div>Decides <b>what work</b> a miner must run: about 8 GB of memory, 100,000 sequential rounds over a 32&times;32 integer problem, memory reads that depend on the running state, a program generated for each block, and a stability check. The result is a 32-byte <b>commit</b>.</div>
+ <div class="cx-card"><div class="cx-h" style="color:#22d3ee">bitsQ</div>Decides <b>how exceptional</b> the commit must be. A block is valid only if <code>commit &le; target(bitsQ)</code>. Blocks too fast &rarr; bitsQ up, target down, harder. Too slow &rarr; bitsQ down, target up, easier. Q16.16 fixed point, integer-only.</div>
+ <div class="cx-card"><div class="cx-h" style="color:#39ff14">EQUALIZER</div>Does <b>not</b> touch the target. It selects one of 43 profiles (E7 easing &hellip; B0 normal &hellip; H35 maximum hardening) that sets the stability parameters every ConvergenceX attempt must satisfy.</div>
+</div>
+<div class="cx-box green"><div class="cx-t">THE IDEA THAT MATTERS</div>SOST keeps two different things apart: the <b>difficulty of hitting</b> a winning result (bitsQ) and the <b>cost of making one attempt</b> (Equalizer). Bitcoin has only the first: one SHA-256d attempt always costs the same, and only the target moves. This does not make SOST "better than Bitcoin" by itself; it is a richer control architecture for a young network.</div>
+<h4>bitsQ &mdash; the exact current rule (block 5,270+)</h4>
+<div class="cx-pre">avg = average of the last 288 block intervals          <span class="d">(each clamped to 1 s … 1 day)</span>
+dev = avg - 600 s
+
+|dev| &le; 15 s        no change                <span class="d">dead band</span>
+|dev| &le; 60 s        at most 0.5 % per block
+|dev| &le; 120 s       at most 1 %
+|dev| &le; 240 s       at most 2 %
+|dev| &gt; 240 s       at most &asymp;3.03 %   <span class="d">(prev / 33)</span>
+inside the cap the step is proportional:  prev &times; (|dev| - 15) / 2400
+
+Slingshot (block 7,350+), same block, if the previous block was slow:
+  &gt;20 min -6.5 % &middot; &gt;30 min -12.5 % &middot; &gt;1 h -25 % &middot; &gt;2 h -37.5 % &middot; &gt;3 h -50 %</div>
+<h4>Equalizer &mdash; the exact current rule (direct lag map, block 5,323+)</h4>
+<div class="cx-pre">lag = (h - 1) - floor((prev.time - genesis) / 600)      <span class="d">positive = chain AHEAD of schedule</span>
+
+lag &le; 0   &rarr;  at most B0          <span class="d">never harden when behind schedule</span>
+lag &gt; 0   &rarr;  H(lag), up to H35   <span class="d">up immediately; down by at most max(1, elapsed/600) levels per block</span>
+
+Easing profiles (E1…E7) come only from:
+  V12 cascade (block 7,350+): this block already took &ge; 540 s
+      drop 1 · 3 · 6 · 10 · 15 · 21 · 28 levels at 540 · 600 · 660 · 720 · 780 · 840 · &ge;900 s
+  anti-stall: no block for 60 min &rarr; step down toward B0, then toward E7 after 6 more hours
+
+The Equalizer changes only stab_scale / stab_steps / stab_k / stab_margin &mdash; never bitsQ.
+Validators recompute the profile; the block's declared profile must match exactly.</div>
+<h4>Worked example</h4>
+<div class="cx-pre"><span class="d">1.</span> The chain is 4 blocks ahead of the 600 s schedule        &rarr; lag = 4 &rarr; profile <span class="k">H4</span>
+   Each attempt must pass stricter stability parameters. bitsQ is unchanged.
+<span class="d">2.</span> The next block has already taken 11 minutes (660 s)       &rarr; cascade drops 6 levels
+   H4 &rarr; <span class="k">E2</span> for this block only: the attempt becomes cheaper, the chain catches up.
+<span class="d">3.</span> The last 288 blocks averaged 640 s                         &rarr; dev = +40 s
+   proportional step = 25/2400 &asymp; 1.04 %, capped at <span class="c">0.5 %</span> &rarr; target slightly easier.</div>
+<div class="cx-box cyan"><div class="cx-t">IN SIMPLE TERMS</div>ConvergenceX is the exam. bitsQ is the pass mark. The Equalizer is how long and hard each exam paper is. If students finish too fast, SOST can raise the pass mark (bitsQ) and, when the class is clearly ahead of schedule, hand out a harder paper (Equalizer). If they are late, the paper gets easier first, and the pass mark follows the 288-block average.</div>
+<p style="font-size:12.5px;color:#8b9aab">Historical designs &mdash; the five-signal PID/EWMA equalizer used before block 5,323, the H13/H20 ceilings of earlier versions, and the pre-genesis "L1&ndash;L6" level concept &mdash; are <b>not</b> current rules. They are kept for reference in the historical appendix only.</p>
+</div>
+
+  </div>
+</section>
+
 <!-- cASERT bitsQ -->
 <section class="section" id="asert">
   <div class="container">
@@ -1042,7 +1143,7 @@ commit = <span class="fn">SHA256</span>( MAGIC || <span class="str">"COMMIT"</sp
           (cap 6.25%, before block 1,450), then 24-hour half-life (V2, blocks 1,450&ndash;5,174) and 12.5% delta cap. Current (V5, block 5,175+): avg288-based
           &mdash; compares average of last 288 block intervals against 600s target, replacing the
           anchor-based exponential. Dynamic cap (block 5,270+): 0% dead band &plusmn;15s, then
-          0%/0.5%/1.0%/2.0%/3.0% max based on deviation. Median288 override (blocks 5,260&ndash;5,269, &plusmn;30 s dead band) is HISTORICAL; removed from consensus at block 5,270.
+          0%/0.5%/1.0%/2.0%/&asymp;3.03% max based on deviation. Median288 override (blocks 5,260&ndash;5,269, &plusmn;30 s dead band) is HISTORICAL; removed from consensus at block 5,270.
         </p>
 
         <div class="code-snippet" data-label="cASERT bitsQ (V5: AVG288-BASED)">
@@ -1055,7 +1156,7 @@ deviation    = avg_interval - <span class="num">600</span>  <span class="cmt">//
 <span class="cmt">// |deviation| &le; 60s: 0.5% max</span>
 <span class="cmt">// |deviation| &le; 120s: 1.0% max</span>
 <span class="cmt">// |deviation| &le; 240s: 2.0% max</span>
-<span class="cmt">// |deviation| &gt; 240s: 3.0% max</span>
+<span class="cmt">// |deviation| &gt; 240s: &asymp;3.03% max (prev/33)</span>
 cap      = dynamic_cap(deviation)
 
 <span class="cmt">// Median removed from consensus (block 5,270+)</span>
@@ -1120,7 +1221,7 @@ new_powDiffQ = <span class="fn">clamp</span>( adjusted, MIN_BITSQ, MAX_BITSQ )
         <p class="spec-desc">
           cASERT (Contextual Adaptive Stability &amp; Emission Rate Targeting) is the unified
           consensus-rate control system. It integrates three components:
-          (1) bitsQ Q16.16 primary hardness regulator, (2) equalizer (emergency-only) with 43 profiles
+          (1) bitsQ Q16.16 primary hardness regulator, (2) the Equalizer with 43 profiles
           (pre-V12 #5,750..#7,349: 21 active E7&ndash;H13, 22 reserved H14&ndash;H35; V12 #7,350..#11,999: 28 active E7&ndash;H20, 15 reserved H21&ndash;H35; V13 #12,000+: 43 active E7&ndash;H35, 0 reserved) that adjust
           ConvergenceX stability parameters, and (3) anti-stall recovery. Ceiling: <b>H35 since V13 (#12,000+)</b> &mdash; historically H13 pre-V12 / H20 V12 (#7,350..#11,999).
         </p>
@@ -1131,14 +1232,14 @@ new_powDiffQ = <span class="fn">clamp</span>( adjusted, MIN_BITSQ, MAX_BITSQ )
         </p>
         <p class="spec-desc">
           <strong>CURRENT MAINNET RULE:</strong> target 600 s &middot; bitsQ Q16.16 recomputed every block &middot;
-          dead band &plusmn;15 s &middot; steps 0.5% / 1.0% / 2.0% / 3.0% (block 5,270+) &middot; Equalizer: 43 profiles
+          dead band &plusmn;15 s &middot; steps 0.5% / 1.0% / 2.0% / &asymp;3.03% (block 5,270+) &middot; Equalizer: 43 profiles
           E7&ndash;H35, direct lag map (block 5,323+), anti-stall at 60 min, V12 triangular cascade (block 7,350+).
         </p>
 
         <div class="code-snippet" data-label="CURRENT: DIRECT LAG MAP (block 5,323+)">
 lag = (h - <span class="num">1</span>) - floor((prev.time - GENESIS_TIME) / <span class="num">600</span>)  <span class="cmt">// positive = chain AHEAD</span>
 target = (lag &lt;= <span class="num">0</span>) ? B0 : min(lag, ceiling)          <span class="cmt">// ceiling H35 (#12,000+)</span>
-<span class="cmt">// Up (hardening): immediate. Down (easing): at least 1 level per block.</span>
+<span class="cmt">// Up (hardening): immediate. Down (easing): at most max(1, elapsed/600) levels per block.</span>
 <span class="cmt">// lag &lt;= 0 → at most B0.</span>
 
 <span class="cmt">// V12 triangular cascade (block 7,350+), on current block elapsed time:</span>
@@ -1151,6 +1252,8 @@ target = (lag &lt;= <span class="num">0</span>) ? B0 : min(lag, ceiling)        
 <span class="cmt">// The Equalizer changes only stab_scale/stab_steps/stab_k/stab_margin — never bitsQ.</span>
         </div>
 
+        <details style="margin:14px 0;border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:8px 12px;background:rgba(251,191,36,.04)">
+          <summary style="cursor:pointer;color:#fbbf24;font:800 11px ui-monospace,monospace;letter-spacing:1.2px">HISTORICAL APPENDIX &mdash; pre-#5,323 five-signal PID/EWMA equalizer (NOT the current rule)</summary>
         <p class="spec-desc">
           <strong>HISTORICAL (before block 5,323):</strong> the equalizer used 5 EWMA signals (PID-style) to compute a
           weighted control signal U. This controller is bypassed since block 5,323 and is shown below for reference only.
@@ -1178,6 +1281,7 @@ H = clamp(U &gt;&gt; <span class="num">16</span>, E7=<span class="num">-7</span>
 H = clamp(H, prev_H - <span class="num">1</span>, prev_H + <span class="num">1</span>)
 <span class="cmt">// prev_H from stored profile_index in BlockMeta (V3.1+)</span>
         </div>
+        </details>
 
         <div class="mode-grid">
           <div class="mode-card">
@@ -1652,7 +1756,7 @@ threshold = ANTISTALL_FLOOR_V6C = <span class="num">3600</span>  <span class="cm
           <tr><td class="key">Difficulty adjust</td><td class="val">Every 2,016 blocks (~2 weeks)</td><td class="val">Every block (LWMA)</td><td class="val" style="color:var(--green-primary);">Every block (cASERT bitsQ avg288 + Equalizer direct lag map)</td></tr>
           <tr><td class="key">Response speed</td><td class="val" style="color:var(--red-primary);">2-week lag</td><td class="val">~720-block EWMA (~24h)</td><td class="val" style="color:var(--green-primary);">288-block average (bitsQ) + per-block lag map (Equalizer)</td></tr>
           <tr><td class="key">Halflife</td><td class="val">~2 weeks (fixed)</td><td class="val">~720 blocks (~24h)</td><td class="val" style="color:var(--text-primary);">V5: avg288-based (historical: 48h half-life, then 24h from #1,450)</td></tr>
-          <tr><td class="key">Max change/block</td><td class="val">N/A (bulk adjust)</td><td class="val">EWMA smoothed</td><td class="val" style="color:var(--green-primary);">Dynamic cap #5,270+: 0% within &plusmn;15 s, then 0.5/1.0/2.0/3.0%</td></tr>
+          <tr><td class="key">Max change/block</td><td class="val">N/A (bulk adjust)</td><td class="val">EWMA smoothed</td><td class="val" style="color:var(--green-primary);">Dynamic cap #5,270+: 0% within &plusmn;15 s, then 0.5/1.0/2.0/&asymp;3.03%</td></tr>
           <tr><td class="key">Control signals</td><td class="val">1 (time delta)</td><td class="val">1 (timestamp EWMA)</td><td class="val" style="color:var(--green-primary);">2 (288-block average interval; schedule lag). HISTORICAL pre-#5,323: 5-signal PID/EWMA</td></tr>
           <tr><td class="key">Dynamic profiles</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--text-muted);">None (1 formula)</td><td class="val" style="color:var(--green-primary);">43 profiles (V13 #12,000+: all 43 active E7&ndash;H35, 0 reserved)</td></tr>
           <tr><td class="key">Math type</td><td class="val">Floating-point</td><td class="val">128-bit integer</td><td class="val" style="color:var(--green-primary);">Q16.16 fixed-point (zero float)</td></tr>
@@ -1665,6 +1769,105 @@ threshold = ANTISTALL_FLOOR_V6C = <span class="num">3600</span>  <span class="cm
         </table>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- SOST vs BITCOIN vs ETHEREUM -->
+<section class="section" id="btc-eth-sost">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-id">SECURITY &amp; INCENTIVES</div>
+      <h2 class="section-title">SOST vs Bitcoin vs <span class="accent">Ethereum</span></h2>
+    </div>
+<!-- ============ CX3 · SOST vs BITCOIN vs ETHEREUM (2026-10-12) ============ -->
+<div class="cx3" id="sost-vs-btc-eth">
+<div class="cx-t" style="color:#ffd166">SECURITY MODELS &middot; SIMPLE COMPARISON WITH EXAMPLES</div>
+<h3>SOST vs Bitcoin vs Ethereum: who secures the chain, and how are they paid?</h3>
+<p>Two different questions are mixed up all the time: <b>how a protocol is designed</b>, and <b>how decentralized its real network is</b>. Bitcoin and Ethereum are remarkable not only for their design but because thousands of independent people and organisations run them, verify them and have real money at stake, year after year. SOST shares the design principles of permissionless consensus; it does not yet have that maturity.</p>
+<div class="cx-grid">
+ <div class="cx-card"><div class="cx-h" style="color:#f7931a">BITCOIN &middot; WORK</div>
+ SHA-256d Proof of Work on specialised ASICs. A block about every 10 minutes; difficulty retargets every 2,016 blocks. The block finder (in practice usually a pool) takes the whole subsidy &mdash; 3.125 BTC since the 2024 halving &mdash; plus fees. Full nodes are not paid, but each one verifies every rule on its own.
+ <div class="cx-pre" style="margin-bottom:0">ASIC + electricity &rarr; SHA-256d attempts
+&rarr; hash &lt; target &rarr; block &rarr; BTC</div></div>
+ <div class="cx-card"><div class="cx-h" style="color:#8c8dfc">ETHEREUM &middot; STAKE</div>
+ Proof of Stake since 2022. A solo validator deposits <b>32 ETH</b>. Time runs in 12-second slots; 32 slots = one epoch (6.4 min). Validators vote (attest) about once per epoch and are occasionally chosen to propose a block. Rewards come from issuance plus, for proposers, priority fees and MEV; the base fee is burned. Equivocation is slashed.
+ <div class="cx-pre" style="margin-bottom:0">32 ETH deposit &rarr; validator
+&rarr; votes + occasional block &rarr; ETH</div></div>
+ <div class="cx-card"><div class="cx-h" style="color:#ff5a5f">SOST &middot; WORK + PARTICIPATION</div>
+ ConvergenceX Proof of Work on ordinary CPUs and RAM. A block about every 10 minutes; bitsQ and the Equalizer adjust every block. The block reward is split 50% to the finder and 50% to the DTD draw among recent miners. A separate Jackpot every 288 blocks rewards miners who also run a bound node.
+ <div class="cx-pre" style="margin-bottom:0">CPU + RAM + electricity &rarr; ConvergenceX
+&rarr; commit &le; target &rarr; block &rarr; 50% + DTD</div></div>
+</div>
+
+<h4>The same day, three ways &mdash; worked examples</h4>
+<div class="cx-pre"><span class="g">BITCOIN</span>   A miner with 1 % of the network hashrate finds on average
+          1 % of ~144 daily blocks &asymp; 1.4 blocks/day, each worth 3.125 BTC + fees.
+          Nothing else. Running a node earns nothing, but it lets you reject
+          any block that breaks the rules &mdash; even one from the largest pool.
+
+<span class="c">ETHEREUM</span>  A validator with 32 ETH attests roughly once every 6.4 minutes
+          and, now and then, is selected to propose a block (bigger reward).
+          The yearly rate is a few percent and moves with the total amount staked.
+          Offline: small penalties, not slashing. Signing two conflicting
+          blocks or votes: slashed &mdash; part of the 32 ETH is destroyed.
+
+<span class="r">SOST</span>      Epoch-0 subsidy is 7.85100863 SOST per block. Miner A finds a block
+          with no fees:
+            A, the finder, receives          <span class="g">3.92550432 SOST</span>   (odd stock goes to the miner)
+            DTD half                         <span class="g">3.92550431 SOST</span>
+          The DTD half goes to ONE eligible recent miner drawn uniformly &mdash;
+          it may be A, or it may be B, a much smaller miner.
+          Every 288 blocks the DTD Jackpot (100 SOST base, up to 500 with
+          rollover, paid from the frozen historical reserve, no new coins)
+          goes to a miner who has &ge; 3 PoW blocks in the last 2,016, an active
+          NODE_BIND and the heartbeat history; the draw is weighted by PoW blocks.</div>
+
+<h4>Side by side</h4>
+<div class="cx-tw"><table>
+<tr><th></th><th>Bitcoin</th><th>Ethereum</th><th>SOST</th></tr>
+<tr><td>Security</td><td>Proof of Work (SHA-256d)</td><td>Proof of Stake</td><td>Proof of Work (ConvergenceX)</td></tr>
+<tr><td>What you commit</td><td>ASICs + energy</td><td>32 ETH (solo validator)</td><td>CPU + RAM + energy; no deposit</td></tr>
+<tr><td>Block producer</td><td>whoever finds the PoW</td><td>validator selected per slot</td><td>whoever finds the PoW</td></tr>
+<tr><td>Votes / attestations</td><td>no</td><td>yes</td><td>no</td></tr>
+<tr><td>Slashing</td><td>no</td><td>yes</td><td>no</td></tr>
+<tr><td>Direct reward</td><td>100% subsidy + fees to the finder</td><td>issuance; proposer also gets fees/MEV</td><td>50% of subsidy + fees to the finder</td></tr>
+<tr><td>Extra reward</td><td>&mdash;</td><td>occasional block proposal</td><td>DTD every block &middot; Jackpot every 288 blocks</td></tr>
+<tr><td>Are nodes paid?</td><td>no</td><td>only as validators</td><td>no &mdash; a bound node is a Jackpot <i>condition</i>, never a multiplier</td></tr>
+<tr><td>Sybil resistance</td><td>hashrate</td><td>staked ETH</td><td>real PoW blocks (SbPoW-signed identities)</td></tr>
+<tr><td>Coins locked to take part</td><td>no</td><td>yes</td><td>no</td></tr>
+<tr><td>Finality</td><td>probabilistic (more blocks = safer)</td><td>explicit, after ~2 epochs (~13 min)</td><td>probabilistic</td></tr>
+<tr><td>Difficulty adjustment</td><td>every 2,016 blocks</td><td>n/a</td><td>every block: bitsQ + Equalizer</td></tr>
+<tr><td>Long-term security budget</td><td>fees after the last halving</td><td>issuance + fees</td><td>fees only after the cap (no tail emission); under current rules half of fees also go to DTD</td></tr>
+</table></div>
+
+<h4>Why SOST does not pay nodes simply for existing</h4>
+<p>Paying every node invites a Sybil attack: one person rents 10,000 cheap servers and claims 10,000 rewards. The Internet cannot tell 100 IPs that are 100 people from 100 IPs that are one person. Jackpot V2 therefore uses the node only as a <b>door</b>, and real PoW as the <b>weight</b>:</p>
+<div class="cx-pre">1 miner &middot; 100 nodes &middot; 100 PoW blocks   &rarr; weight <span class="g">100</span>
+1 miner &middot;   1 node  &middot; 100 PoW blocks   &rarr; weight <span class="g">100</span>
+1 miner &middot;   5 nodes &middot;   2 PoW blocks   &rarr; <span class="r">not eligible</span> (minimum 3)
+Creating nodes adds nothing. Doing work does.</div>
+<p><b>Normal DTD</b> today: an address must have mined in the last 288 blocks; addresses that mined any of the previous 6 blocks are skipped (with a fallback if that would leave nobody); the draw is uniform among the eligible, not proportional to hashrate. An anti-dominance rule (an address with &ge;10% of the last 288 blocks is skipped) exists but switches on only when at least 11 distinct miners are active &mdash; so with today's small miner set it is not in effect. Jackpot V2 has no cooldown and no anti-dominance.</p>
+
+<h4>The honest test of decentralization: what can you switch off?</h4>
+<div class="cx-grid">
+ <div class="cx-card"><div class="cx-h" style="color:#f7931a">BITCOIN</div>Switch off bitcoin.org, the largest exchanges, the largest pool, GitHub and a thousand nodes: blocks keep coming. That is the standard.</div>
+ <div class="cx-card"><div class="cx-h" style="color:#8c8dfc">ETHEREUM</div>Switch off ethereum.org, the Foundation, a large RPC provider, a major staking service or one client implementation: with enough remaining validators, the chain continues.</div>
+ <div class="cx-card"><div class="cx-h" style="color:#ff5a5f">SOST TODAY</div>The project still provides key infrastructure (seed nodes, the public explorer and RPC, release distribution), only a few independent operators exist, and two addresses produced the last 288 blocks. The goal is that switching off everything run by SOSTCore changes nothing for the chain. We are not there yet.</div>
+</div>
+<div class="cx-tw"><table>
+<tr><th>Property</th><th>Bitcoin</th><th>Ethereum</th><th>SOST (goal, if reached)</th></tr>
+<tr><td>Permissionless consensus</td><td>yes</td><td>yes</td><td>yes (today too)</td></tr>
+<tr><td>Your own node verifies all rules</td><td>yes</td><td>yes</td><td>yes (today too)</td></tr>
+<tr><td>Home hardware competitive in block production</td><td>no (ASICs)</td><td>node yes; validating needs 32 ETH</td><td>the design goal &mdash; not yet proven under adversaries</td></tr>
+<tr><td>Client diversity</td><td>moderate</td><td>very high</td><td>one implementation today</td></tr>
+<tr><td>Independent operators</td><td>enormous</td><td>enormous</td><td>must grow a lot</td></tr>
+<tr><td>Years under attack</td><td>~17</td><td>~11</td><td>months</td></tr>
+<tr><td>Dependence on the creator</td><td>none</td><td>very low</td><td>goal: none</td></tr>
+</table></div>
+<div class="cx-box"><div class="cx-t">IN ONE SENTENCE EACH</div><b>Bitcoin</b> is minimalist decentralized money: it does few things and does them with extraordinary resistance. <b>Ethereum</b> is decentralized computation: it accepts much more complexity to run programs, tokens and markets. <b>SOST</b> aims to be Proof-of-Work money on a Bitcoin-like base (UTXO, 10-minute blocks), with ConvergenceX for broad CPU mining, per-block difficulty control, and DTD incentives that reward work and node participation &mdash; without turning into a staking chain. There is no "lock SOST and earn" product, by design.</div>
+<div class="cx-box red"><div class="cx-t">WHAT CANNOT BE WRITTEN IN C++</div>ConvergenceX, bitsQ and the Equalizer can build a good architecture. The final decentralization is not in the code: it comes from independent people running that code without needing us. ASIC resistance by memory hardness is a design goal that has to survive years of adversaries; it is not a proven fact.</div>
+</div>
+
   </div>
 </section>
 

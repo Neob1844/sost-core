@@ -258,7 +258,7 @@
         <span class="spec-tag">EXPONENTIAL FOUNDATION (2020)</span>
       </div>
       <div class="spec-body">
-        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">cASERT's bitsQ primary controller originally used an exponential moving average formula (half-life based), pioneered by Mark Lundeberg and Jonathan Toomim for Bitcoin Cash (November 2020 hard fork). Since block 5,175, bitsQ uses an avg288-based model: it compares the average of the last 288 block intervals against the 600s target. Since block 5,270, a dynamic cap scales with deviation (0% dead band at &plusmn;15s, then 0%/0.5%/1.0%/2.0%/3.0% max). Median removed from consensus (block 5,270+). The half-life exponential is preserved for pre-5175 blocks only. cASERT was designed by Neob for SOST (2026), extending the controller with equalizer profiles and anti-stall decay into a unified consensus-rate control system for ConvergenceX.</p>
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">cASERT's bitsQ primary controller originally used an exponential moving average formula (half-life based), pioneered by Mark Lundeberg and Jonathan Toomim for Bitcoin Cash (November 2020 hard fork). Since block 5,175, bitsQ uses an avg288-based model: it compares the average of the last 288 block intervals against the 600s target. Since block 5,270, a dynamic cap scales with deviation (0% dead band at &plusmn;15s, then 0%/0.5%/1.0%/2.0%/&asymp;3.03% max). Median removed from consensus (block 5,270+). The half-life exponential is preserved for pre-5175 blocks only. cASERT was designed by Neob for SOST (2026), extending the controller with equalizer profiles and anti-stall decay into a unified consensus-rate control system for ConvergenceX.</p>
         <table class="code-table">
           <tr><th>Property</th><th>Detail</th></tr>
           <tr><td class="label">Core formula</td><td class="value" style="font-family:var(--font-mono);">next_bitsq = anchor_bitsq * 2^(-td / halflife)</td></tr>
@@ -266,7 +266,7 @@
           <tr><td class="label">Exponential response</td><td class="value">Difficulty doubles/halves every halflife period</td></tr>
           <tr><td class="label">SOST implementation</td><td class="cyan">Integer-only cubic polynomial approximation of 2^x</td></tr>
           <tr><td class="label">Encoding</td><td class="value">Q16.16 fixed-point arithmetic, no floating point in consensus</td></tr>
-          <tr><td class="label">BITSQ mode (current)</td><td class="highlight">avg288-based (block 5,175+): avg of last 288 intervals vs 600s target. Dynamic cap (5,270+): 0% dead band (&plusmn;15s), 0%/0.5%/1.0%/2.0%/3.0% max. Median removed from consensus (block 5,270+)</td></tr>
+          <tr><td class="label">BITSQ mode (current)</td><td class="highlight">avg288-based (block 5,175+): avg of last 288 intervals vs 600s target. Dynamic cap (5,270+): 0% dead band (&plusmn;15s), 0%/0.5%/1.0%/2.0%/&asymp;3.03% max. Median removed from consensus (block 5,270+)</td></tr>
           <tr><td class="label">Median288</td><td class="highlight">HISTORICAL: median288 override with &plusmn;30 s dead band and 0.5/1.5/2.5/3% steps only for blocks 5,260&ndash;5,269; removed from consensus at block 5,270</td></tr>
           <tr><td class="label">Legacy half-life</td><td class="value">V1: 48h (genesis&ndash;1,449), V2: 24h (1,450&ndash;5,174). Preserved for historical blocks only</td></tr>
           <tr><td class="label">Legacy delta cap</td><td class="value">V1: 6.25%, V2: 12.5% symmetric. Preserved for historical blocks only</td></tr>
@@ -461,7 +461,7 @@
     </div>
 
     <div class="notice fade-in delay-2">
-      <strong>Heritage note:</strong> cASERT's bitsQ controller originally built on BCH's exponential per-block retarget approach (V1: 48h half-life, V2: 24h half-life with 12.5% delta cap). Since block 5,175, bitsQ uses an avg288-based model with a dynamic cap (block 5,270+) that scales with deviation (0% dead band at &plusmn;15s, 0%/0.5%/1.0%/2.0%/3.0% max). Median removed from consensus (block 5,270+). The half-life exponential is preserved for historical blocks only. These changes, combined with the equalizer and anti-stall layers, make cASERT a unified system purpose-built for ConvergenceX.
+      <strong>Heritage note:</strong> cASERT's bitsQ controller originally built on BCH's exponential per-block retarget approach (V1: 48h half-life, V2: 24h half-life with 12.5% delta cap). Since block 5,175, bitsQ uses an avg288-based model with a dynamic cap (block 5,270+) that scales with deviation (0% dead band at &plusmn;15s, 0%/0.5%/1.0%/2.0%/&asymp;3.03% max). Median removed from consensus (block 5,270+). The half-life exponential is preserved for historical blocks only. These changes, combined with the equalizer and anti-stall layers, make cASERT a unified system purpose-built for ConvergenceX.
     </div>
 
     <div class="spec-block fade-in delay-3">
@@ -483,7 +483,7 @@
           <tr><td class="label">V5</td><td class="highlight">4,300</td><td class="cyan">Anti-stall activation 7,200&nbsp;s &rarr; 3,600&nbsp;s (60 min) &mdash; still current</td></tr>
           <tr><td class="label">V6</td><td class="highlight">5,000</td><td class="cyan">Slew rate &plusmn;3 &rarr; &plusmn;1, H10&ndash;H35 scale=2 (V6 calibration), H35 hardest (k=20, steps=20, margin=115)</td></tr>
           <tr><td class="label">V7 avg288</td><td class="highlight">5,175</td><td class="cyan">bitsQ switches to avg288-based: avg of last 288 block intervals vs 600s target. Half-life exponential no longer used (preserved for historical blocks only)</td></tr>
-          <tr><td class="label">V7 dyncap</td><td class="highlight">5,270</td><td class="cyan">Dynamic cap: 0% dead band (&plusmn;15s), 0%/0.5%/1.0%/2.0%/3.0% max scaling with deviation. Median removed from consensus (block 5,270+). (5,260&ndash;5,269 HISTORICAL: &plusmn;30 s with median288 override)</td></tr>
+          <tr><td class="label">V7 dyncap</td><td class="highlight">5,270</td><td class="cyan">Dynamic cap: 0% dead band (&plusmn;15s), 0%/0.5%/1.0%/2.0%/&asymp;3.03% max scaling with deviation. Median removed from consensus (block 5,270+). (5,260&ndash;5,269 HISTORICAL: &plusmn;30 s with median288 override)</td></tr>
           <tr><td class="label">Direct lag</td><td class="highlight">5,323</td><td class="cyan">Equalizer direct lag map replaces the PID/EWMA selector (now HISTORICAL): target = B0 if lag &le; 0, else min(lag, ceiling); up immediate, down at least 1 level/block. No bitsQ change.</td></tr>
           <tr><td class="label">V8 cliff</td><td class="highlight">5,750</td><td class="cyan">43-profile table E7&ndash;H35 (was 40 profiles E4&ndash;H35). HISTORICAL single-step relief valve (5,750&ndash;6,549): profile drops to E7 after 605&nbsp;s without a block. H13 ceiling (was H12). Removes H10/H11 dead-zones during stalls.</td></tr>
           <tr><td class="label">V9 staged</td><td class="highlight">6,550</td><td class="cyan">Staged relief cascade: drop 3 profile levels every 60&nbsp;s starting at 540&nbsp;s elapsed. Floor stays at E7. Future-drift cap MAX_FUTURE_DRIFT_STAGED=60&nbsp;s.</td></tr>
@@ -578,7 +578,7 @@
         <table class="code-table">
           <tr><th>Parameter</th><th>Value</th><th>Description</th></tr>
           <tr><td class="label">BITSQ mode (current)</td><td class="highlight">avg288-based (5,175+)</td><td class="value">Compares avg of last 288 block intervals vs 600s target. Half-life exponential preserved for pre-5175 blocks only</td></tr>
-          <tr><td class="label">BITSQ dynamic cap</td><td class="highlight">0%/0.5%/1.0%/2.0%/3.0% (5,270+)</td><td class="value">Dead band &plusmn;15s (0%), then 0.5% (15&ndash;60 s), 1.0% (60&ndash;120 s), 2.0% (120&ndash;240 s), 3.0% (&gt;240 s). Median removed from consensus (block 5,270+)</td></tr>
+          <tr><td class="label">BITSQ dynamic cap</td><td class="highlight">0%/0.5%/1.0%/2.0%/&asymp;3.03% (5,270+)</td><td class="value">Dead band &plusmn;15s (0%), then 0.5% (15&ndash;60 s), 1.0% (60&ndash;120 s), 2.0% (120&ndash;240 s), 3.0% (&gt;240 s). Median removed from consensus (block 5,270+)</td></tr>
           <tr><td class="label">Legacy HALF_LIFE</td><td class="value">V1: 172,800s (48h), V2: 86,400s (24h)</td><td class="value">Preserved for historical blocks: V1 genesis&ndash;1,449, V2 1,450&ndash;5,174</td></tr>
           <tr><td class="label">Legacy DELTA_CAP</td><td class="value">V1: 6.25%, V2: 12.5%</td><td class="value">Preserved for historical blocks: V1 genesis&ndash;1,449, V2 1,450&ndash;5,174</td></tr>
           <tr><td class="label">TARGET_SPACING</td><td class="highlight">600s</td><td class="value">10-minute target between blocks</td></tr>
